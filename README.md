@@ -96,9 +96,13 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 
 ## 📌 Statut d'avancement
 
+**Session 3 (2026-07-11)** — Backend **déployé en Web App** et fonctionnel : l'API de lecture
+(`doGet`) répond en JSON (`ping`, `getConfig`, `getEquipes`, `getPoules`, `getMatchs`, `getAll`).
+URL rangée dans `frontend/js/config.js`. Prochaine étape : première page web (admin) + écriture
+des données.
+
 **Session 2 (2026-07-11)** — Premier code backend : `setupSheet()` crée automatiquement les 4
-onglets du Sheet avec leurs en-têtes. Prochaine étape : lecture/écriture des données + génération
-du planning.
+onglets du Sheet avec leurs en-têtes.
 
 **Session 1 (2026-07-11)** — Mise en place : structure du projet, documentation initiale,
 définition de la structure du Google Sheet.

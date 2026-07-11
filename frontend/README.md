@@ -6,4 +6,6 @@ Pages web du projet (HTML / CSS / JS), **mobile-first**, à héberger sur un sou
 Pages prévues : `admin.html`, `planning.html`, `live.html`, `scores.html`.
 Fichiers partagés : `css/styles.css`, `js/config.js`, `js/api.js`.
 
+- **`js/config.js`** — ✅ créé. Contient l'URL du backend (`API_URL`), source unique.
+
 Voir [`../docs/architecture.md`](../docs/architecture.md).

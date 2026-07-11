@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 3 — 2026-07-11
+- `backend/Code.gs` : ajout de l'API de **lecture** (`doGet`) qui répond en JSON.
+  Actions : `ping`, `getConfig`, `getEquipes`, `getPoules`, `getMatchs`, `getAll`.
+  Helpers : `lireOngletSimple()` (Equipes/Poules/Matchs) et `lireConfig()` (2 zones).
+- **Backend déployé en Web App** (accès « Tout le monde ») et **testé avec succès** :
+  l'API renvoie bien la config et les catégories.
+- `frontend/js/config.js` : création, stocke l'URL du backend (`API_URL`) — source unique.
+- Documentation `deploiement.md` mise à jour : backend déployé, comment tester, comment
+  redéployer sans changer l'URL, et note sécurité pour la future écriture.
+
 ### Session 2 — 2026-07-11
 - Ajout de `backend/Code.gs` avec la fonction `setupSheet()` : crée automatiquement les 4 onglets
   (`Equipes`, `Poules`, `Matchs`, `Config`) et leurs en-têtes, stylise les en-têtes (charte R92),

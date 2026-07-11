@@ -6,13 +6,13 @@
  *  Ce fichier contient le code qui vit À L'INTÉRIEUR du Google Sheet du tournoi.
  *  Il sert de "backend" : il lit et écrit dans les onglets du Sheet.
  *
- *  POUR L'INSTANT il ne contient qu'une seule fonction : setupSheet().
- *  Son rôle : créer les 4 onglets (Equipes, Poules, Matchs, Config) et y écrire
- *  les en-têtes de colonnes au bon endroit. On la lance UNE SEULE FOIS pour
- *  préparer la base de données.
+ *  Il contient pour l'instant :
+ *   - setupSheet()  : crée les 4 onglets (Equipes, Poules, Matchs, Config) et
+ *                     leurs en-têtes. À lancer UNE SEULE FOIS pour préparer la base.
+ *   - doGet(e)      : répond aux requêtes de LECTURE (renvoie du JSON) une fois
+ *                     le script déployé en "Web App".
  *
- *  (Les fonctions de lecture/écriture et la génération du planning viendront
- *   dans les prochaines sessions.)
+ *  (L'écriture des données et la génération du planning viendront ensuite.)
  * ============================================================================
  */
 
@@ -178,4 +178,179 @@ function stylerEntete(zone) {
   zone.setBackground(COULEUR_FOND_ENTETE)
       .setFontColor(COULEUR_TEXTE_ENTETE)
       .setFontWeight('bold');
+}
+
+
+/**
+ * ============================================================================
+ *  LECTURE DES DONNÉES — l'API qui répond en JSON
+ * ============================================================================
+ *  Une fois le script déployé en "Web App", Google appelle automatiquement
+ *  doGet() chaque fois qu'on ouvre son URL. On lit le paramètre "action" dans
+ *  l'URL (ex : ...?action=getEquipes) pour savoir quelle donnée renvoyer.
+ * ============================================================================
+ */
+
+
+/**
+ * Point d'entrée des requêtes de LECTURE (méthode GET).
+ * @param {Object} e  objet fourni par Google ; e.parameter contient les paramètres de l'URL.
+ * @return {TextOutput}  une réponse au format JSON.
+ */
+function doGet(e) {
+  // e.parameter = les paramètres de l'URL. Si l'URL n'en a aucun, on met un objet vide.
+  var params = (e && e.parameter) ? e.parameter : {};
+  var action = params.action || 'ping'; // par défaut : "ping"
+
+  try {
+    var classeur = SpreadsheetApp.openById(SHEET_ID);
+    var resultat;
+
+    // Selon l'action demandée, on prépare la donnée à renvoyer.
+    switch (action) {
+      case 'ping':
+        // Sert juste à vérifier que la Web App répond bien.
+        resultat = { ok: true, message: 'API Tournoi R92 en ligne' };
+        break;
+
+      case 'getConfig':
+        resultat = lireConfig(classeur);
+        break;
+
+      case 'getEquipes':
+        resultat = lireOngletSimple(classeur, 'Equipes');
+        break;
+
+      case 'getPoules':
+        resultat = lireOngletSimple(classeur, 'Poules');
+        break;
+
+      case 'getMatchs':
+        resultat = lireOngletSimple(classeur, 'Matchs');
+        break;
+
+      case 'getAll':
+        // Tout d'un coup : pratique pour charger une page entière en un seul appel.
+        resultat = {
+          config:  lireConfig(classeur),
+          equipes: lireOngletSimple(classeur, 'Equipes'),
+          poules:  lireOngletSimple(classeur, 'Poules'),
+          matchs:  lireOngletSimple(classeur, 'Matchs')
+        };
+        break;
+
+      default:
+        resultat = { error: 'Action inconnue : ' + action };
+    }
+
+    return repondreJson(resultat);
+
+  } catch (erreur) {
+    // En cas de pépin, on renvoie le message d'erreur en JSON (plus facile à diagnostiquer).
+    return repondreJson({ error: String(erreur) });
+  }
+}
+
+
+/**
+ * Transforme un objet JavaScript en réponse JSON propre.
+ * @param {Object} objet  la donnée à renvoyer
+ * @return {TextOutput}
+ */
+function repondreJson(objet) {
+  return ContentService
+    .createTextOutput(JSON.stringify(objet))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+/**
+ * Lit un onglet "simple" (Equipes, Poules, Matchs) et le transforme en liste d'objets.
+ * La 1re ligne fournit les clés (les en-têtes) ; chaque ligne suivante devient un objet.
+ * Ex : { id_equipe: 'E01', nom_equipe: 'Suresnes 1', categorie: 'M8', poule: 'A' }
+ * @param {Spreadsheet} classeur
+ * @param {string} nomOnglet
+ * @return {Object[]}
+ */
+function lireOngletSimple(classeur, nomOnglet) {
+  var onglet = classeur.getSheetByName(nomOnglet);
+  if (!onglet) return [];
+
+  var donnees = onglet.getDataRange().getValues(); // tableau 2D de toutes les cellules remplies
+  if (donnees.length < 2) return []; // seulement l'en-tête (ou vide) => aucune donnée
+
+  var entetes = donnees[0]; // 1re ligne = noms de colonnes
+  var lignes = [];
+
+  for (var i = 1; i < donnees.length; i++) {
+    var ligne = donnees[i];
+
+    // On saute les lignes entièrement vides.
+    var estVide = ligne.every(function (cell) { return cell === '' || cell === null; });
+    if (estVide) continue;
+
+    var objet = {};
+    for (var c = 0; c < entetes.length; c++) {
+      var cle = entetes[c];
+      if (cle === '') continue; // colonne sans nom => ignorée
+      objet[cle] = ligne[c];
+    }
+    lignes.push(objet);
+  }
+  return lignes;
+}
+
+
+/**
+ * Lit l'onglet Config (2 zones) et renvoie un objet structuré :
+ *   {
+ *     global:     { heure_debut: '09:00', heure_fin: '17:00', ... },
+ *     categories: [ { categorie: 'M8', presente: 'oui', terrains: '1,2', ... }, ... ]
+ *   }
+ * @param {Spreadsheet} classeur
+ * @return {Object}
+ */
+function lireConfig(classeur) {
+  var onglet = classeur.getSheetByName('Config');
+  if (!onglet) return { global: {}, categories: [] };
+
+  var donnees = onglet.getDataRange().getValues();
+
+  // 1) Repérer la ligne d'en-têtes de la zone B : celle dont la 1re cellule vaut "categorie".
+  var ligneEntetesCat = -1;
+  for (var i = 0; i < donnees.length; i++) {
+    if (donnees[i][0] === 'categorie') {
+      ligneEntetesCat = i;
+      break;
+    }
+  }
+
+  // 2) Zone A (réglages globaux) : paires parametre/valeur au-dessus de la zone B.
+  //    On saute la ligne d'en-tête "parametre/valeur", les lignes vides et le titre "— … —".
+  var global = {};
+  var finZoneA = (ligneEntetesCat === -1) ? donnees.length : ligneEntetesCat;
+  for (var r = 1; r < finZoneA; r++) {
+    var param = donnees[r][0];
+    if (param === '' || param === null) continue;         // ligne vide
+    if (String(param).charAt(0) === '—') continue;        // ligne titre "— Réglages… —"
+    global[param] = donnees[r][1];
+  }
+
+  // 3) Zone B (catégories) : chaque ligne sous les en-têtes devient un objet.
+  var categories = [];
+  if (ligneEntetesCat !== -1) {
+    var entetesCat = donnees[ligneEntetesCat];
+    for (var l = ligneEntetesCat + 1; l < donnees.length; l++) {
+      var ligne = donnees[l];
+      if (ligne[0] === '' || ligne[0] === null) continue; // ligne vide => fin du tableau
+      var cat = {};
+      for (var k = 0; k < entetesCat.length; k++) {
+        if (entetesCat[k] === '') continue;
+        cat[entetesCat[k]] = ligne[k];
+      }
+      categories.push(cat);
+    }
+  }
+
+  return { global: global, categories: categories };
 }
