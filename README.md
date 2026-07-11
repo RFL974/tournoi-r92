@@ -73,7 +73,8 @@ tournoi-r92/
 > Cette section sera complétée au fur et à mesure. Voir aussi [`docs/deploiement.md`](docs/deploiement.md).
 
 Étapes prévues :
-1. Créer les 4 onglets du Google Sheet (voir [`docs/structure-google-sheet.md`](docs/structure-google-sheet.md)).
+1. ✅ Créer les 4 onglets du Google Sheet — automatisé via la fonction `setupSheet()` de
+   [`backend/Code.gs`](backend/Code.gs) (voir [`docs/structure-google-sheet.md`](docs/structure-google-sheet.md)).
 2. Coller le code de `backend/Code.gs` dans l'éditeur Apps Script du Sheet et déployer la Web App.
 3. Renseigner l'URL de la Web App dans `frontend/js/config.js`.
 4. Mettre en ligne le dossier `frontend/` (sous-domaine dédié).
@@ -95,7 +96,11 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 
 ## 📌 Statut d'avancement
 
+**Session 2 (2026-07-11)** — Premier code backend : `setupSheet()` crée automatiquement les 4
+onglets du Sheet avec leurs en-têtes. Prochaine étape : lecture/écriture des données + génération
+du planning.
+
 **Session 1 (2026-07-11)** — Mise en place : structure du projet, documentation initiale,
-définition de la structure du Google Sheet. Aucun code fonctionnel encore.
+définition de la structure du Google Sheet.
 
 Voir [`CHANGELOG.md`](CHANGELOG.md) pour le détail.

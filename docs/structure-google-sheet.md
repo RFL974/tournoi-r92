@@ -9,11 +9,21 @@ Le Google Sheet sert de **base de données** du tournoi. Il contient **4 onglets
 (exactement les noms indiqués ci-dessous, en minuscules, sans accents). Le backend s'appuie sur
 ces noms pour lire/écrire les données — il ne faut donc pas les renommer.
 
+> 🛠️ **Création automatique.** Ces onglets et en-têtes sont créés automatiquement par la fonction
+> `setupSheet()` du fichier [`../backend/Code.gs`](../backend/Code.gs), à lancer une fois depuis
+> l'éditeur Apps Script. Pas besoin de les saisir à la main.
+
 ---
 
 ## Onglet `Config`
 
-Cet onglet contient deux zones. On les sépare par une ou deux lignes vides pour la lisibilité.
+Cet onglet contient deux zones. Disposition exacte créée par `setupSheet()` :
+- **Zone A** : lignes **1 à 5** (ligne 1 = en-têtes, lignes 2-5 = les 4 réglages globaux).
+- Ligne 7 : titre `— Réglages par catégorie —`.
+- **Zone B** : en-têtes en ligne **8**, puis une ligne par catégorie à partir de la ligne 9.
+
+Tout l'onglet `Config` est au **format texte** (pour éviter que `09:00` devienne une heure
+et `1,2` un nombre décimal).
 
 ### Zone A — Réglages globaux de la journée
 
