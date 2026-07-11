@@ -5,6 +5,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Note d'intégration — 2026-07-11
+- Précision : les résultats publics seront une **section intégrée au site principal
+  generationr92.fr** (développé en parallèle, dépôt GitHub séparé, pas encore en ligne), et non
+  un simple sous-domaine autonome. Le `data.json` reste le pont d'intégration (techno-agnostique).
+  Docs mises à jour (`README.md`, `deploiement.md`) + correction d'un doublon dans `deploiement.md`.
+
 ### Note d'architecture — 2026-07-11
 - Décision **scalabilité/trafic** documentée (`architecture.md`) : pour supporter potentiellement
   ~1000 visiteurs le jour J, les pages publiques (planning/live) liront un **instantané `data.json`

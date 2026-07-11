@@ -26,8 +26,10 @@ Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
 - **Base de données** : Google Sheets (4 onglets : `Equipes`, `Poules`, `Matchs`, `Config`)
 - **Backend** : Google Apps Script, déployé en **Web App** qui répond en **JSON**
-- **Frontend** : pages web statiques **HTML / CSS / JS**, pensées **mobile-first**,
-  destinées à être intégrées à un sous-domaine de [generationr92.fr](https://generationr92.fr)
+- **Frontend** : pages web statiques **HTML / CSS / JS**, pensées **mobile-first**.
+  Les résultats publics seront **intégrés comme une section du site principal generationr92.fr**
+  (site développé en parallèle, dans un dépôt GitHub séparé). Le pont entre les deux est le
+  fichier `data.json` (voir [`docs/architecture.md`](docs/architecture.md))
 
 Aucun framework, aucune dépendance à installer : c'est volontairement simple et léger.
 
