@@ -10,6 +10,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
   (`Equipes`, `Poules`, `Matchs`, `Config`) et leurs en-têtes, stylise les en-têtes (charte R92),
   fige la 1re ligne, et pré-remplit `Config` (réglages globaux + exemples de catégories M8/M10/M12).
 - Onglet `Config` forcé au format texte pour préserver les heures (`09:00`) et listes de terrains (`1,2`).
+- `setupSheet()` cible le Sheet par son identifiant (`SpreadsheetApp.openById(SHEET_ID)`) plutôt que
+  par le classeur actif : robuste que l'éditeur Apps Script soit lié au Sheet ou en projet indépendant.
+- ✅ **Testé avec succès** : les 4 onglets ont été créés dans le Sheet.
 - Documentation mise à jour (`structure-google-sheet.md` : création auto + disposition exacte des zones).
 
 ### Session 1 — 2026-07-11

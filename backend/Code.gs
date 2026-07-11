@@ -18,6 +18,14 @@
 
 
 /**
+ * Identifiant du Google Sheet du tournoi (la longue suite de caractères dans l'URL du Sheet,
+ * entre "/d/" et "/edit"). On l'indique en clair pour que le script trouve toujours le bon
+ * classeur, même si l'éditeur Apps Script a été ouvert en mode "projet indépendant".
+ */
+var SHEET_ID = '17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U';
+
+
+/**
  * Définition des en-têtes de chaque onglet, au même endroit pour tout centraliser.
  * Si un jour on veut ajouter/renommer une colonne, on ne touche qu'ici.
  * L'ordre des noms = l'ordre des colonnes (de gauche à droite).
@@ -50,9 +58,9 @@ var COULEUR_TEXTE_ENTETE = '#F2F6FB';  // blanc cassé
  * elle ne fait qu'ajouter les onglets et écrire la ligne d'en-tête si besoin.
  */
 function setupSheet() {
-  // "SpreadsheetApp.getActiveSpreadsheet()" = le classeur Google Sheet auquel
-  // ce script est rattaché. C'est notre point d'entrée vers toutes les données.
-  var classeur = SpreadsheetApp.getActiveSpreadsheet();
+  // "SpreadsheetApp.openById(SHEET_ID)" = on ouvre le Google Sheet par son identifiant.
+  // C'est notre point d'entrée vers toutes les données.
+  var classeur = SpreadsheetApp.openById(SHEET_ID);
 
   // 1) On crée les onglets simples (Equipes, Poules, Matchs) avec leurs en-têtes.
   creerOngletAvecEntetes(classeur, 'Equipes', ENTETES.Equipes);
