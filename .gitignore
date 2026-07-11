@@ -1,0 +1,15 @@
+# Fichiers système macOS
+.DS_Store
+
+# Fichiers d'éditeurs
+.vscode/
+.idea/
+*.swp
+
+# Secrets / config locale à ne jamais publier
+# (ex : si un jour on stocke une clé d'API ou une URL privée en dehors du code)
+secrets.js
+*.local
+
+# Dépendances éventuelles (non utilisées pour l'instant, mais au cas où)
+node_modules/
