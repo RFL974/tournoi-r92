@@ -5,6 +5,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Note de migration — 2026-07-11
+- Développement fait sur les **comptes personnels** de Romain ; tout devra basculer sur les
+  **comptes de l'association** (en création). Ajout de `docs/migration-association.md` : check-list
+  de bascule (Sheet, Apps Script/déploiement, dépôt GitHub, domaine, HelloAsso). La centralisation
+  de `SHEET_ID` et `API_URL` rend la migration simple (transférer 3 objets + màj 1-2 valeurs).
+
 ### Note d'intégration — 2026-07-11
 - Précision : les résultats publics seront une **section intégrée au site principal
   generationr92.fr** (développé en parallèle, dépôt GitHub séparé, pas encore en ligne), et non

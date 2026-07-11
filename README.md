@@ -47,6 +47,7 @@ tournoi-r92/
 │   ├── architecture.md          → comment les 3 briques communiquent
 │   ├── structure-google-sheet.md→ colonnes de chaque onglet du Sheet
 │   ├── deploiement.md           → déploiement backend + mise en ligne frontend
+│   ├── migration-association.md → check-list pour passer des comptes perso à ceux de l'asso
 │   └── guide-admin.md           → mode d'emploi de l'organisateur
 │
 ├── backend/                 → code Google Apps Script
