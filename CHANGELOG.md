@@ -5,6 +5,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Note d'architecture — 2026-07-11
+- Décision **scalabilité/trafic** documentée (`architecture.md`) : pour supporter potentiellement
+  ~1000 visiteurs le jour J, les pages publiques (planning/live) liront un **instantané `data.json`
+  servi par CDN** (régénéré par Apps Script à chaque score + toutes les ~1 min), plutôt que
+  d'interroger Apps Script à chaque vue. Écriture = Apps Script ; lecture publique = fichier statique.
+  À implémenter au moment de construire les pages publiques.
+
 ### Session 3 — 2026-07-11
 - `backend/Code.gs` : ajout de l'API de **lecture** (`doGet`) qui répond en JSON.
   Actions : `ping`, `getConfig`, `getEquipes`, `getPoules`, `getMatchs`, `getAll`.
