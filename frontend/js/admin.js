@@ -69,6 +69,9 @@ async function initAdmin() {
 
   // Bouton de génération des poules et du planning.
   document.getElementById('bouton-generer').addEventListener('click', onGenerer);
+
+  // Clic sur une piste d'arbitrage (délégué, car le contenu est régénéré).
+  document.getElementById('arbitrages').addEventListener('click', onClicArbitrage);
 }
 
 /**
@@ -533,12 +536,15 @@ async function rechargerEquipes() {
  * Lance la génération des poules et du planning, puis affiche le résultat.
  */
 async function onGenerer() {
-  const bouton  = document.getElementById('bouton-generer');
-  const message = document.getElementById('message-generation');
-
   if (!confirm('Générer les poules et le planning ?\n\n' +
                'Cela EFFACE les poules, matchs et scores déjà saisis.')) return;
+  await genererMaintenant();
+}
 
+/** Fait réellement la génération (sans reconfirmation) puis rafraîchit tout. */
+async function genererMaintenant() {
+  const bouton  = document.getElementById('bouton-generer');
+  const message = document.getElementById('message-generation');
   const texteBouton = bouton.textContent;
   bouton.disabled = true;
   bouton.textContent = 'Génération…';
@@ -548,11 +554,12 @@ async function onGenerer() {
     const res = await apiPost('genererPoulesEtPlanning', {});
     const nbP = (res && res.nb_poules != null) ? res.nb_poules : '?';
     const nbM = (res && res.nb_matchs != null) ? res.nb_matchs : '?';
-    let texte = '✅ ' + nbP + ' poule(s) et ' + nbM + ' match(s) générés.';
-    if (res && res.avertissements && res.avertissements.length) {
-      texte += '\n⚠️ ' + res.avertissements.join('\n⚠️ ');
-    }
-    afficherMessage(message, texte, (res && res.avertissements && res.avertissements.length) ? 'ko' : 'ok');
+    const enRetard = res && res.avertissements && res.avertissements.length;
+    let texte = '✅ ' + nbP + ' poule(s) et ' + nbM + ' match(s) générés. Fin : ' + (res.heure_fin || '?') + '.';
+    if (enRetard) texte += '\n⚠️ ' + res.avertissements.join('\n⚠️ ');
+    afficherMessage(message, texte, enRetard ? 'ko' : 'ok');
+
+    afficherArbitrages(res); // pistes d'ajustement si dépassement (heure de fin manuelle)
 
     // On recharge tout : planning + réglages (l'heure de fin auto a pu changer).
     const data = await apiGet('getAll');
@@ -567,6 +574,69 @@ async function onGenerer() {
   } finally {
     bouton.disabled = false;
     bouton.textContent = texteBouton;
+  }
+}
+
+/**
+ * Affiche les pistes d'ajustement (arbitrages) quand le planning dépasse l'heure de fin manuelle.
+ * Chaque piste est un bouton : un clic applique le réglage et régénère.
+ */
+function afficherArbitrages(res) {
+  const zone = document.getElementById('arbitrages');
+  if (!res || !res.suggestions || !res.suggestions.length) { zone.innerHTML = ''; return; }
+
+  let html = '<div class="arbitrages">' +
+    '<p class="arb-titre">Le planning finit à <strong>' + echapper(res.heure_fin_projetee) +
+    '</strong>, après ton heure de fin (' + echapper(res.heure_fin) + ').<br>' +
+    'Pistes pour tenir le créneau <span class="arb-note">— clique pour appliquer</span> :</p>' +
+    '<ul class="arb-liste">';
+
+  res.suggestions.forEach(function (s) {
+    const m = s.modif || {};
+    html += '<li>' +
+      '<button type="button" class="arb-item' + (s.tient ? ' tient' : '') + '"' +
+        ' data-type="' + echapper(m.type || '') + '"' +
+        ' data-categorie="' + echapper(m.categorie || '') + '"' +
+        ' data-champ="' + echapper(m.champ || '') + '"' +
+        ' data-valeur="' + echapper(m.valeur || '') + '">' +
+        echapper(s.piste) +
+        ' <span class="arb-fin">→ ' + echapper(s.heure_fin) + ' (−' + s.gain_min + ' min)' +
+        (s.tient ? ' ✅' : '') + '</span>' +
+      '</button></li>';
+  });
+  html += '</ul></div>';
+  zone.innerHTML = html;
+}
+
+/** Clic sur une piste d'arbitrage : applique le réglage puis régénère. */
+async function onClicArbitrage(evenement) {
+  const bouton = evenement.target.closest('.arb-item');
+  if (!bouton) return;
+
+  const type = bouton.getAttribute('data-type');
+  const champ = bouton.getAttribute('data-champ');
+  const valeur = bouton.getAttribute('data-valeur');
+  const categorie = bouton.getAttribute('data-categorie');
+  const message = document.getElementById('message-generation');
+
+  if (!confirm('Appliquer cet ajustement puis régénérer le planning ?')) return;
+
+  bouton.disabled = true;
+  try {
+    if (type === 'global') {
+      const data = {};
+      data[champ] = valeur;
+      await apiPost('enregistrerHoraires', data);
+    } else if (type === 'categorie') {
+      const cat = configCourante.categories.find(function (c) { return c.categorie === categorie; });
+      const maj = Object.assign({}, cat);
+      maj[champ] = valeur;
+      await apiPost('enregistrerCategorie', maj);
+    }
+    await genererMaintenant(); // régénère avec le nouveau réglage
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    bouton.disabled = false;
   }
 }
 

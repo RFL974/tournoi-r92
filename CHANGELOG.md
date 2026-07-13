@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 9 — 2026-07-13
+- **Assistant d'arbitrage** : quand l'heure de fin est fixée manuellement et que le planning la
+  dépasse, la génération propose des **pistes d'ajustement** (commencer plus tôt, réduire pause
+  déjeuner / battement, ajouter un terrain, raccourcir mi-temps, réduire récup, réduire taille de
+  poule). Chaque piste est **réellement simulée** (heure de fin résultante + gain), triée, et
+  marquée ✅ si elle tient le créneau ; elle est **cliquable** pour appliquer le réglage et régénérer.
+- `Code.gs` : planning extrait dans `calculerPlanning()` (réutilisable, sans écriture) ;
+  `analyserArbitrages()` + `construireCandidats()` + `appliquerModif()` + `clonerConfig()`/`trouverCat()`.
+- `admin.js`/`styles.css` : affichage des arbitrages cliquables sous le bouton Générer.
+- Analyseur validé hors-ligne (Node) : leviers correctement classés par impact réel.
+
 ### Session 8 — 2026-07-13
 - **Battement terrain** : nouveau réglage global `battement_terrain_min` — temps pour libérer un
   terrain entre 2 matchs (le terrain n'est réutilisable qu'à `fin + battement`).

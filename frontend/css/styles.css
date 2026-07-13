@@ -379,6 +379,36 @@ select.r-input { cursor: pointer; }
 .table-planning .vs { color: var(--bleu-ciel); font-size: 0.85rem; margin: 0 4px; }
 
 /* ==========================================================================
+   Arbitrages (pistes d'ajustement quand le planning dépasse l'heure de fin)
+   ========================================================================== */
+.arbitrages {
+  margin-top: 12px;
+  border: 1px solid rgba(255, 180, 100, 0.35);
+  background: rgba(255, 170, 80, 0.08);
+  border-radius: var(--rayon);
+  padding: 12px 14px;
+}
+.arb-titre { color: #ffd9a8; font-size: 0.95rem; margin-bottom: 8px; }
+.arb-note { color: var(--bleu-ciel); font-size: 0.85rem; }
+.arb-liste { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.arb-item {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: rgba(3, 16, 36, 0.5);
+  color: var(--texte);
+  border: 1px solid rgba(184, 216, 248, 0.2);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+}
+.arb-item:hover { border-color: var(--accent); background: rgba(46, 143, 224, 0.15); }
+.arb-item.tient { border-color: rgba(120, 220, 130, 0.5); }
+.arb-item .arb-fin { color: var(--bleu-ciel); font-family: 'Barlow Condensed', sans-serif; }
+.arb-item:disabled { opacity: 0.5; cursor: default; }
+
+/* ==========================================================================
    Messages (chargement, erreur)
    ========================================================================== */
 .message {
