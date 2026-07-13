@@ -9,6 +9,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 - **Planning admin séparé matin / après-midi** : `afficherPlanning` scinde désormais chaque catégorie
   en deux tableaux — « 🌅 Matin — poules » (colonne *Poule* A/B/C) et « 🏉 Après-midi — classement
   croisé » (colonne *Niveau* N1-N4). Helper `tableMatchs()` + style `.planning-phase`.
+- **Page de saisie séparée matin / après-midi** : `saisie.html` regroupe aussi les matchs en deux
+  blocs (mêmes sous-titres). La méta d'une carte affiche « Poule A » (matin) ou « Niveau N1 » (après-midi).
 - **Fix ids** : les matchs d'après-midi repartent de M019 à chaque régénération (max calculé sur le
   matin conservé) au lieu de grimper. Comportement de données inchangé.
 

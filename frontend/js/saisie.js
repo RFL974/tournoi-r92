@@ -45,12 +45,27 @@ function afficherMatchs() {
   const cats = [];
   matchs.forEach(function (m) { if (cats.indexOf(m.categorie) < 0) cats.push(m.categorie); });
 
+  // Rend les cartes d'une liste de matchs, triées par heure.
+  function cartes(liste) {
+    return liste.slice()
+      .sort(function (a, b) { return String(a.heure_debut).localeCompare(String(b.heure_debut)); })
+      .map(carteMatch).join('');
+  }
+
   let html = '';
   cats.forEach(function (cat) {
     html += '<h2 style="margin-top:18px;">' + echapper(cat) + '</h2>';
-    const ms = matchs.filter(function (m) { return m.categorie === cat; }).slice()
-      .sort(function (a, b) { return String(a.heure_debut).localeCompare(String(b.heure_debut)); });
-    ms.forEach(function (m) { html += carteMatch(m); });
+    const ms = matchs.filter(function (m) { return m.categorie === cat; });
+    const matin = ms.filter(function (m) { return String(m.phase) !== 'classement'; });
+    const aprem = ms.filter(function (m) { return String(m.phase) === 'classement'; });
+    if (matin.length) {
+      html += '<div class="planning-phase">🌅 Matin — poules</div>';
+      html += cartes(matin);
+    }
+    if (aprem.length) {
+      html += '<div class="planning-phase">🏉 Après-midi — classement croisé</div>';
+      html += cartes(aprem);
+    }
   });
   zone.innerHTML = html;
 }
@@ -60,10 +75,11 @@ function carteMatch(m) {
   const termine = String(m.statut) === 'terminé';
   const sa = (m.score_A === '' || m.score_A == null) ? '' : m.score_A;
   const sb = (m.score_B === '' || m.score_B == null) ? '' : m.score_B;
+  const libellePoule = (String(m.phase) === 'classement' ? 'Niveau ' : 'Poule ') + String(m.poule);
   return '' +
     '<div class="match' + (termine ? ' match-termine' : '') + '" data-id="' + echapper(m.id_match) + '">' +
       '<div class="match-meta">' + echapper(m.heure_debut) + ' · Terrain ' + echapper(String(m.terrain)) +
-        ' · Poule ' + echapper(String(m.poule)) +
+        ' · ' + echapper(libellePoule) +
         (termine ? ' · <span class="badge-ok">✓ terminé</span>' : '') + '</div>' +
       '<div class="match-saisie">' +
         '<span class="eq eq-a">' + echapper(nomEquipe(m.equipe_A)) + '</span>' +
