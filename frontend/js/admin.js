@@ -700,6 +700,26 @@ function afficherPlanning(poules, matchs) {
     return e ? e.nom_equipe : id;
   }
 
+  // Rend un tableau de matchs (triés par heure). enteteCol = intitulé de la 3e colonne.
+  // Renvoie '' si la liste est vide.
+  function tableMatchs(liste, enteteCol) {
+    if (!liste.length) return '';
+    liste = liste.slice().sort(function (a, b) {
+      return String(a.heure_debut).localeCompare(String(b.heure_debut));
+    });
+    let h = '<div class="table-scroll"><table class="table-planning">' +
+            '<thead><tr><th>Heure</th><th>Ter.</th><th>' + enteteCol + '</th><th>Match</th></tr></thead><tbody>';
+    liste.forEach(function (m) {
+      h += '<tr>' +
+             '<td>' + echapper(m.heure_debut) + '</td>' +
+             '<td>' + echapper(String(m.terrain)) + '</td>' +
+             '<td>' + echapper(String(m.poule)) + '</td>' +
+             '<td>' + echapper(nom(m.equipe_A)) + ' <span class="vs">vs</span> ' + echapper(nom(m.equipe_B)) + '</td>' +
+           '</tr>';
+    });
+    return h + '</tbody></table></div>';
+  }
+
   // Liste ordonnée des catégories concernées.
   const cats = [];
   poules.forEach(function (p) { if (cats.indexOf(p.categorie) < 0) cats.push(p.categorie); });
@@ -718,22 +738,18 @@ function afficherPlanning(poules, matchs) {
               (membres.join(', ') || '—') + '</div>';
     });
 
-    // Planning des matchs de la catégorie, triés par heure.
-    const ms = matchs.filter(function (m) { return m.categorie === cat; }).slice()
-      .sort(function (a, b) { return String(a.heure_debut).localeCompare(String(b.heure_debut)); });
+    // Matchs de la catégorie, séparés matin (poules) / après-midi (classement croisé).
+    const ms = matchs.filter(function (m) { return m.categorie === cat; });
+    const matin = ms.filter(function (m) { return String(m.phase) !== 'classement'; });
+    const aprem = ms.filter(function (m) { return String(m.phase) === 'classement'; });
 
-    if (ms.length) {
-      html += '<div class="table-scroll"><table class="table-planning">' +
-              '<thead><tr><th>Heure</th><th>Ter.</th><th>Poule</th><th>Match</th></tr></thead><tbody>';
-      ms.forEach(function (m) {
-        html += '<tr>' +
-                  '<td>' + echapper(m.heure_debut) + '</td>' +
-                  '<td>' + echapper(String(m.terrain)) + '</td>' +
-                  '<td>' + echapper(String(m.poule)) + '</td>' +
-                  '<td>' + echapper(nom(m.equipe_A)) + ' <span class="vs">vs</span> ' + echapper(nom(m.equipe_B)) + '</td>' +
-                '</tr>';
-      });
-      html += '</tbody></table></div>';
+    if (matin.length) {
+      html += '<div class="planning-phase">🌅 Matin — poules</div>';
+      html += tableMatchs(matin, 'Poule');
+    }
+    if (aprem.length) {
+      html += '<div class="planning-phase">🏉 Après-midi — classement croisé</div>';
+      html += tableMatchs(aprem, 'Niveau');
     }
   });
 

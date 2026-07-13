@@ -5,6 +5,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 13 (affichage) — 2026-07-13
+- **Planning admin séparé matin / après-midi** : `afficherPlanning` scinde désormais chaque catégorie
+  en deux tableaux — « 🌅 Matin — poules » (colonne *Poule* A/B/C) et « 🏉 Après-midi — classement
+  croisé » (colonne *Niveau* N1-N4). Helper `tableMatchs()` + style `.planning-phase`.
+- **Fix ids** : les matchs d'après-midi repartent de M019 à chaque régénération (max calculé sur le
+  matin conservé) au lieu de grimper. Comportement de données inchangé.
+
 ### Session 13 — 2026-07-13 (phase après-midi : classement croisé)
 - **Génération de l'après-midi** : nouvelle action d'écriture `genererApresMidi`. À partir du
   classement du matin, construit les matchs en **classement croisé** (les équipes de même rang de

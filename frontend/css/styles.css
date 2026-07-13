@@ -460,3 +460,13 @@ select.r-input { cursor: pointer; }
 .table-classement td { text-align: center; }
 .table-classement .col-equipe { text-align: left; font-weight: 600; }
 .table-classement .col-pts { font-weight: 700; color: var(--texte); }
+
+/* Sous-titre de phase dans le planning admin (Matin / Après-midi) */
+.planning-phase {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  color: var(--texte);
+  margin: 16px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(184, 216, 248, 0.2);
+}
