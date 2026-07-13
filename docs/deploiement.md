@@ -31,10 +31,28 @@ Aucune manip manuelle : après **redéploiement**, l'en-tête `phase` est **cré
 (fonction `assurerColonnePhase`) dès la première génération (matin ou après-midi). Il suffit donc de
 **redéployer** le backend.
 
-### 🔒 À prévoir plus tard (sécurité écriture)
-La Web App est en accès « Tout le monde » (lecture publique nécessaire). Quand on ajoutera
-l'**écriture** (`doPost` : saisie des scores, génération…), il faudra protéger ces actions
-(ex : un mot de passe/clé partagé côté admin) pour qu'un visiteur ne puisse pas modifier les données.
+### 🔒 Sécurité écriture — 2 clés (fait)
+La Web App reste en accès « Tout le monde » (la **lecture** publique est nécessaire), mais les
+**écritures** (`doPost`) sont désormais **protégées par une clé** :
+
+- **Clé ADMIN** → génération des poules/planning, génération de l'après-midi, équipes, réglages.
+- **Clé SCORES** → saisie des scores (page `saisie.html`). Un score validé est **définitif** : le
+  corriger exige la clé scores + une confirmation explicite (bouton « Corriger »).
+
+Les clés sont rangées dans les **Propriétés du script** (jamais dans le code / GitHub).
+
+**Mise en service (une seule fois), après avoir redéployé le nouveau `Code.gs` :**
+1. Dans l'éditeur Apps Script, choisir la fonction **`configurerCles`** dans le menu déroulant, puis
+   **Exécuter** ▶. Deux fenêtres demandent la **clé admin** puis la **clé scores** — les saisir.
+   *(La 1ʳᵉ exécution peut demander d'autoriser le script : accepter.)*
+2. Côté pages : au premier enregistrement, `admin.html` demande la clé admin et `saisie.html` la clé
+   scores. Elles sont **mémorisées sur l'appareil** (pas à re-saisir à chaque fois).
+
+> ⚠️ Tant que `configurerCles` n'a pas été lancé, **toute écriture est refusée** (« Clé non
+> configurée »). C'est voulu : pas de clé côté serveur = pas d'écriture possible.
+
+> 🔑 Pour **changer une clé** plus tard : relancer `configurerCles`. Les appareils déjà configurés
+> redemanderont automatiquement la nouvelle clé (message « Clé incorrecte »).
 
 ## B. Frontend — mise en ligne (à venir)
 

@@ -163,10 +163,21 @@ function lireConfig(classeur) {
 }
 
 /* ===================== ÉCRITURE (doPost) ===================== */
+
+/* Actions protégées par la clé SCORES (les autres écritures exigent la clé ADMIN). */
+var ACTIONS_SCORES = { enregistrerScore: true };
+
 function doPost(e) {
   try {
     var requete = JSON.parse(e.postData.contents);
     var action = requete.action;
+
+    // Contrôle d'accès : chaque écriture exige la bonne clé (scores selon l'action, sinon admin).
+    // Les lectures (doGet) restent ouvertes à tous.
+    var nomCle = ACTIONS_SCORES[action] ? 'CLE_SCORES' : 'CLE_ADMIN';
+    var acces = verifierCle(requete, nomCle);
+    if (!acces.ok) return repondreJson({ error: acces.msg, acces_refuse: true });
+
     var classeur = SpreadsheetApp.openById(SHEET_ID);
     var resultat;
     switch (action) {
@@ -182,6 +193,45 @@ function doPost(e) {
     }
     return repondreJson(resultat);
   } catch (erreur) { return repondreJson({ error: String(erreur) }); }
+}
+
+/* ===================== SÉCURITÉ (clés d'écriture) ===================== */
+
+/**
+ * À LANCER UNE FOIS depuis l'éditeur Apps Script pour définir les 2 clés.
+ * Les clés sont rangées dans les Propriétés du script (jamais dans le code / GitHub).
+ */
+function configurerCles() {
+  var ui = SpreadsheetApp.getUi();
+  var props = PropertiesService.getScriptProperties();
+  var r1 = ui.prompt('Clé ADMIN',
+    'Clé pour la page admin (génération, équipes, réglages) :', ui.ButtonSet.OK_CANCEL);
+  if (r1.getSelectedButton() !== ui.Button.OK) return;
+  props.setProperty('CLE_ADMIN', String(r1.getResponseText()).trim());
+  var r2 = ui.prompt('Clé SCORES',
+    'Clé pour la page de saisie des scores :', ui.ButtonSet.OK_CANCEL);
+  if (r2.getSelectedButton() !== ui.Button.OK) return;
+  props.setProperty('CLE_SCORES', String(r2.getResponseText()).trim());
+  ui.alert('✅ Clés enregistrées',
+    'Les clés ADMIN et SCORES sont définies dans les propriétés du script.', ui.ButtonSet.OK);
+}
+
+/** Lit une clé configurée côté serveur. */
+function lireCle(nom) {
+  return PropertiesService.getScriptProperties().getProperty(nom) || '';
+}
+
+/** Vérifie que la requête porte la bonne clé. Renvoie { ok, msg }. */
+function verifierCle(requete, nomCle) {
+  var attendue = lireCle(nomCle);
+  if (!attendue) return { ok: false, msg: 'Clé non configurée sur le serveur — lance configurerCles() dans l\'éditeur.' };
+  if (String(requete.cle || '') !== attendue) return { ok: false, msg: 'Clé incorrecte.' };
+  return { ok: true };
+}
+
+/** Statut « terminé » robuste au « é » décomposé (NFD) renvoyé par le Sheet. */
+function estTermineServeur(statut) {
+  return /^\s*termin/i.test(String(statut));
 }
 
 function ajouterEquipe(classeur, nom, categorie) {
@@ -325,6 +375,12 @@ function enregistrerScore(classeur, data) {
   for (var i = 0; i < ids.length; i++) {
     if (String(ids[i][0]) === id) {
       var ligne = i + 2;
+      // Un score déjà validé est DÉFINITIF : on refuse de l'écraser sauf correction explicite.
+      var statutActuel = onglet.getRange(ligne, 11).getValue();
+      if (estTermineServeur(statutActuel) && data.modification !== true) {
+        return { error: 'Ce score est déjà validé (définitif). Utilise « Corriger » pour le modifier.',
+                 deja_valide: true };
+      }
       // Colonnes de l'onglet Matchs : 9 = score_A, 10 = score_B, 11 = statut.
       onglet.getRange(ligne, 9, 1, 3).setValues([[sa, sb, 'terminé']]);
       return { ok: true, match: { id_match: id, score_A: sa, score_B: sb, statut: 'terminé' } };

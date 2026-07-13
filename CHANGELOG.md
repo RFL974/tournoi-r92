@@ -5,6 +5,22 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sécurité écriture : 2 clés (admin / scores) — 2026-07-13
+- Les actions d'**écriture** (`doPost`) exigent désormais une **clé**, vérifiée côté backend avant
+  toute modification. Les **lectures** (`doGet`) restent ouvertes (public).
+  - **Clé ADMIN** : génération poules/planning, génération après-midi, équipes, réglages.
+  - **Clé SCORES** : saisie des scores (`enregistrerScore`).
+- **Scores définitifs** : `enregistrerScore` refuse d'écraser un score déjà `terminé` sauf
+  `modification: true`. Côté `saisie.html`, un score validé est **verrouillé** (champs grisés) ;
+  le corriger = bouton « Corriger » → confirmation → « Valider la correction » (envoie modification).
+- **Stockage des clés** : dans les Propriétés du script (jamais dans le code/GitHub), définies via
+  la fonction `configurerCles()` à lancer une fois dans l'éditeur. Côté navigateur, la clé de chaque
+  rôle est mémorisée (localStorage) et redemandée si le serveur la refuse.
+- `Code.gs` : `verifierCle` / `lireCle` / `estTermineServeur` + contrôle d'accès en tête de `doPost`.
+  `api.js` : `apiPostProtege` + gestion des clés locales. `admin.js` : écritures via `ecrireAdmin`.
+- Validé en Node (statut NFC/NFD, mapping des clés) et en preview (verrouillage/correction, stockage
+  des clés). ⚠️ **Backend à redéployer + lancer `configurerCles`** — voir `docs/deploiement.md`.
+
 ### Classement : groupes N1-N4 de l'après-midi — 2026-07-13
 - La page **`classement.html`** affiche désormais **deux sections** : « 🌅 Poules (matin) » (A/B/C)
   et « 🏉 Après-midi — classement croisé par niveau » (N1-N4). Chaque niveau montre sa **composition**

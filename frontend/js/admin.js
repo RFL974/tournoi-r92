@@ -25,6 +25,11 @@ const CHAMPS_CATEGORIE = [
 let configCourante = { global: {}, categories: [] };
 let equipesCourantes = [];
 
+/* Toute écriture depuis l'admin passe par ici : exige la clé ADMIN (voir api.js). */
+function ecrireAdmin(action, data) {
+  return apiPostProtege(action, data, 'admin', 'admin');
+}
+
 /**
  * Vrai si une catégorie est marquée présente ("oui", quelle que soit la casse).
  */
@@ -213,7 +218,7 @@ async function onEnregistrerHoraires(evenement) {
   bouton.textContent = 'Enregistrement…';
 
   try {
-    await apiPost('enregistrerHoraires', data);
+    await ecrireAdmin('enregistrerHoraires', data);
     // On met à jour la config gardée en mémoire.
     configCourante.global = Object.assign({}, configCourante.global, data);
     afficherMessage(message, '✅ Horaires enregistrés.', 'ok');
@@ -325,7 +330,7 @@ async function onEnregistrerCategorie(evenement) {
   bouton.textContent = 'Enregistrement…';
 
   try {
-    await apiPost('enregistrerCategorie', data);
+    await ecrireAdmin('enregistrerCategorie', data);
     // On met à jour la config en mémoire + le menu des équipes, sans tout re-rendre
     // (pour garder le message et l'endroit où on est).
     const idx = configCourante.categories.findIndex(function (c) { return c.categorie === nom; });
@@ -366,7 +371,7 @@ async function onAjouterCategorie(evenement) {
   const bouton = form.querySelector('button');
   bouton.disabled = true;
   try {
-    await apiPost('enregistrerCategorie', data);
+    await ecrireAdmin('enregistrerCategorie', data);
     await rechargerReglages(); // la nouvelle carte apparaît
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
@@ -384,7 +389,7 @@ async function onSupprimerCategorie(bouton) {
 
   bouton.disabled = true;
   try {
-    await apiPost('supprimerCategorie', { categorie: nom });
+    await ecrireAdmin('supprimerCategorie', { categorie: nom });
     await rechargerReglages();
   } catch (erreur) {
     alert('Erreur : ' + erreur.message);
@@ -486,7 +491,7 @@ async function onAjouterEquipe(evenement) {
   bouton.textContent = 'Ajout…';
 
   try {
-    await apiPost('ajouterEquipe', { nom_equipe: nom, categorie: categorie });
+    await ecrireAdmin('ajouterEquipe', { nom_equipe: nom, categorie: categorie });
 
     // Succès : on vide le champ nom, on recharge la liste.
     champNom.value = '';
@@ -517,7 +522,7 @@ async function onClicListe(evenement) {
 
   bouton.disabled = true;
   try {
-    await apiPost('supprimerEquipe', { id_equipe: id });
+    await ecrireAdmin('supprimerEquipe', { id_equipe: id });
     afficherMessage(message, '🗑️ « ' + nom + ' » supprimée.', 'ok');
     await rechargerEquipes();
   } catch (erreur) {
@@ -558,7 +563,7 @@ async function genererMaintenant() {
   afficherMessage(message, 'Génération en cours…', 'ok');
 
   try {
-    const res = await apiPost('genererPoulesEtPlanning', {});
+    const res = await ecrireAdmin('genererPoulesEtPlanning', {});
     const nbP = (res && res.nb_poules != null) ? res.nb_poules : '?';
     const nbM = (res && res.nb_matchs != null) ? res.nb_matchs : '?';
     const enRetard = res && res.avertissements && res.avertissements.length;
@@ -597,7 +602,7 @@ async function onGenererApresMidi() {
   afficherMessage(message, "Génération de l'après-midi…", 'ok');
 
   try {
-    const res = await apiPost('genererApresMidi', {});
+    const res = await ecrireAdmin('genererApresMidi', {});
     const nbM = (res && res.nb_matchs_aprem != null) ? res.nb_matchs_aprem : '?';
     const avert = res && res.avertissements && res.avertissements.length;
     let texte = '✅ ' + nbM + " match(s) d'après-midi générés." +
@@ -667,12 +672,12 @@ async function onClicArbitrage(evenement) {
     if (type === 'global') {
       const data = {};
       data[champ] = valeur;
-      await apiPost('enregistrerHoraires', data);
+      await ecrireAdmin('enregistrerHoraires', data);
     } else if (type === 'categorie') {
       const cat = configCourante.categories.find(function (c) { return c.categorie === categorie; });
       const maj = Object.assign({}, cat);
       maj[champ] = valeur;
-      await apiPost('enregistrerCategorie', maj);
+      await ecrireAdmin('enregistrerCategorie', maj);
     }
     await genererMaintenant(); // régénère avec le nouveau réglage
   } catch (erreur) {

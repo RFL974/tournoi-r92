@@ -81,3 +81,52 @@ async function apiPost(action, data) {
 
   return donnees;
 }
+
+/* ============================================================================
+ *  CLÉS D'ÉCRITURE (admin / scores)
+ *  Les actions d'écriture sont protégées côté backend par une clé. Ici on gère
+ *  la clé côté navigateur : on la stocke sur l'appareil (localStorage) et on
+ *  l'ajoute à chaque requête. `role` vaut 'admin' ou 'scores'.
+ * ========================================================================== */
+
+/** Lit la clé mémorisée pour un rôle ('admin' ou 'scores'). */
+function lireCleLocale(role) {
+  return localStorage.getItem('r92_cle_' + role) || '';
+}
+
+/** Mémorise la clé d'un rôle sur l'appareil. */
+function definirCleLocale(role, cle) {
+  localStorage.setItem('r92_cle_' + role, cle || '');
+}
+
+/** Demande la clé à l'utilisateur (pré-remplie avec la mémorisée). Renvoie null si annulé. */
+function demanderCle(role, message) {
+  const saisie = prompt(message, lireCleLocale(role));
+  if (saisie == null) return null;
+  const propre = saisie.trim();
+  definirCleLocale(role, propre);
+  return propre;
+}
+
+/**
+ * Comme apiPost, mais ajoute la clé du rôle et la redemande une fois si elle est refusée.
+ * @param {string} action
+ * @param {Object} data
+ * @param {string} role     'admin' ou 'scores'
+ * @param {string} libelle  texte affiché à l'utilisateur (ex : "admin", "de saisie des scores")
+ */
+async function apiPostProtege(action, data, role, libelle) {
+  let cle = lireCleLocale(role) || demanderCle(role, 'Entre la clé ' + libelle + ' :');
+  if (cle == null) throw new Error('Action annulée.');
+  try {
+    return await apiPost(action, Object.assign({}, data, { cle: cle }));
+  } catch (err) {
+    // Clé absente/incorrecte côté serveur → on la redemande une fois.
+    if (/cl[ée] incorrecte|acc[èe]s refus|cl[ée] non configur/i.test(err.message)) {
+      const nouvelle = demanderCle(role, 'Clé ' + libelle + ' incorrecte. Réessaie :');
+      if (nouvelle == null) throw new Error('Action annulée.');
+      return await apiPost(action, Object.assign({}, data, { cle: nouvelle }));
+    }
+    throw err;
+  }
+}

@@ -452,6 +452,10 @@ select.r-input { cursor: pointer; }
 }
 .match-saisie .vs { color: var(--bleu-ciel); font-size: 0.85rem; }
 .match-saisie .bouton-valider { flex: 0 0 auto; padding: 8px 14px; }
+/* Champ de score verrouillé (score validé, définitif). */
+.match-saisie .score:disabled { opacity: 0.55; cursor: not-allowed; }
+/* Carte en cours de correction (déverrouillée). */
+.match-edition { border-color: rgba(242, 193, 78, 0.6); }
 
 /* ==========================================================================
    Classement des poules (page classement.html)

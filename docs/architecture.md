@@ -33,6 +33,10 @@ passe par le backend. Ça garde le Sheet protégé et la logique centralisée.
 ### Actions disponibles
 Lecture via `GET` (`doGet`), écriture via `POST` (`doPost`).
 
+> 🔒 **Les écritures exigent une clé** (dans le corps de la requête, champ `cle`) : clé **SCORES**
+> pour `enregistrerScore`, clé **ADMIN** pour toutes les autres écritures. Les lectures sont libres.
+> Détails et mise en service dans [`deploiement.md`](deploiement.md).
+
 | Action | Type | Rôle | Statut |
 |---|---|---|---|
 | `ping` | lecture | Vérifier que l'API répond | ✅ |

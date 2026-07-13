@@ -83,28 +83,40 @@ function carteMatch(m) {
         (termine ? ' · <span class="badge-ok">✓ terminé</span>' : '') + '</div>' +
       '<div class="match-saisie">' +
         '<span class="eq eq-a">' + echapper(nomEquipe(m.equipe_A)) + '</span>' +
-        '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sa)) + '">' +
+        '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sa)) + '"' + (termine ? ' disabled' : '') + '>' +
         '<span class="vs">vs</span>' +
-        '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sb)) + '">' +
+        '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sb)) + '"' + (termine ? ' disabled' : '') + '>' +
         '<span class="eq eq-b">' + echapper(nomEquipe(m.equipe_B)) + '</span>' +
-        '<button class="bouton bouton-valider" type="button">' + (termine ? 'Modifier' : 'Valider') + '</button>' +
+        '<button class="bouton bouton-valider" type="button">' + (termine ? 'Corriger' : 'Valider') + '</button>' +
       '</div>' +
       '<div class="message-form"></div>' +
     '</div>';
 }
 
-/** Un seul écouteur pour tous les boutons « Valider » (délégation d'événement). */
+/** Un seul écouteur pour tous les boutons « Valider / Corriger » (délégation d'événement). */
 document.addEventListener('click', async function (evenement) {
   const bouton = evenement.target.closest('.bouton-valider');
   if (!bouton) return;
 
   const carte = bouton.closest('.match');
-  const id = carte.getAttribute('data-id');
-  const inputs = carte.querySelectorAll('.score');
   const msg = carte.querySelector('.message-form');
+  const enEdition = carte.classList.contains('match-edition');
+  const verrouille = carte.classList.contains('match-termine') && !enEdition;
+
+  // 1) Score validé (définitif) et verrouillé → « Corriger » demande une confirmation
+  //    puis déverrouille les champs, sans encore rien envoyer.
+  if (verrouille) {
+    if (!confirm('Ce score est validé (définitif).\nLe corriger ?')) return;
+    deverrouiller(carte);
+    afficherMessage(msg, 'Corrige le score puis valide.', 'ok');
+    return;
+  }
+
+  // 2) Validation d'un nouveau score OU d'une correction.
+  const inputs = carte.querySelectorAll('.score');
+  const id = carte.getAttribute('data-id');
   const scoreA = inputs[0].value.trim();
   const scoreB = inputs[1].value.trim();
-
   if (scoreA === '' || scoreB === '') {
     afficherMessage(msg, 'Entre les deux scores.', 'ko');
     return;
@@ -112,12 +124,14 @@ document.addEventListener('click', async function (evenement) {
 
   bouton.disabled = true;
   try {
-    const res = await apiPost('enregistrerScore', { id_match: id, score_A: scoreA, score_B: scoreB });
-    // On met à jour la copie locale pour rester cohérent sans recharger la page.
+    // Une correction (mode édition) porte modification:true → autorisée à écraser le définitif.
+    const res = await apiPostProtege('enregistrerScore',
+      { id_match: id, score_A: scoreA, score_B: scoreB, modification: enEdition },
+      'scores', 'de saisie des scores');
+    // Mise à jour de la copie locale pour rester cohérent sans recharger la page.
     const m = matchs.find(function (x) { return x.id_match === id; });
     if (m) { m.score_A = res.match.score_A; m.score_B = res.match.score_B; m.statut = 'terminé'; }
-    carte.classList.add('match-termine');
-    bouton.textContent = 'Modifier';
+    verrouiller(carte);
     afficherMessage(msg, 'Score enregistré ✓', 'ok');
   } catch (err) {
     afficherMessage(msg, err.message, 'ko');
@@ -125,6 +139,26 @@ document.addEventListener('click', async function (evenement) {
     bouton.disabled = false;
   }
 });
+
+/** Passe une carte en mode correction : champs déverrouillés, bouton « Valider la correction ». */
+function deverrouiller(carte) {
+  carte.classList.add('match-edition');
+  carte.querySelectorAll('.score').forEach(function (i) { i.disabled = false; });
+  carte.querySelector('.bouton-valider').textContent = 'Valider la correction';
+}
+
+/** Verrouille une carte (score définitif) : champs grisés, bouton « Corriger », badge terminé. */
+function verrouiller(carte) {
+  carte.classList.remove('match-edition');
+  carte.classList.add('match-termine');
+  carte.querySelectorAll('.score').forEach(function (i) { i.disabled = true; });
+  carte.querySelector('.bouton-valider').textContent = 'Corriger';
+  // Ajoute le badge « ✓ terminé » s'il n'y est pas encore.
+  const meta = carte.querySelector('.match-meta');
+  if (meta && meta.querySelector('.badge-ok') == null) {
+    meta.insertAdjacentHTML('beforeend', ' · <span class="badge-ok">✓ terminé</span>');
+  }
+}
 
 /* --------------------------------------------------------------------------
    PETITES AIDES (identiques à admin.js pour rester cohérent)
