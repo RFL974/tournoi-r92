@@ -1,6 +1,7 @@
 # Structure du Google Sheet
 
-Le Google Sheet sert de **base de données** du tournoi. Il contient **4 onglets**.
+Le Google Sheet sert de **base de données** du tournoi. Il contient **5 onglets**
+(le 5e, `Historique`, est le journal de saison décrit tout en bas).
 
 > URL du Sheet :
 > https://docs.google.com/spreadsheets/d/17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U/edit
@@ -47,7 +48,7 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `categorie` | `U8` | Nom de la catégorie |
 | `presente` | `oui` | La catégorie participe-t-elle à cette édition ? (`oui`/`non`) |
 | `terrains` | `1,2` | Terrains dédiés à cette catégorie (numéros séparés par des virgules) |
-| `taille_poule_cible` | `4` | Nombre d'équipes visé par poule |
+| `nb_poules` | *(vide)* | Nombre de poules. **Vide = Auto** (calculé pour viser ~4 équipes/poule) ; un entier = **forcé** |
 | `format_mi_temps` | `2` | Nombre de mi-temps par match (`1` ou `2`) |
 | `duree_mi_temps_min` | `10` | Durée d'une mi-temps, en minutes |
 | `pause_mi_temps_min` | `2` | Pause entre les deux mi-temps, en minutes (0 si `format_mi_temps = 1`) |
@@ -110,6 +111,36 @@ Une ligne par match. En-têtes :
 
 Pour les matchs de l'**après-midi** (`phase = classement`), la colonne `poule` contient le **niveau**
 du classement croisé (`N1` = groupe des 1ers de poule, `N2` = les 2es, etc.).
+
+---
+
+## Onglet `Historique` (journal de saison)
+
+Cet onglet **n'est jamais effacé** par « Générer poules et planning » (qui, lui, vide
+l'onglet `Matchs`). Il **accumule tous les matchs terminés de la saison**, tournoi après
+tournoi. La page interne **Perfs Racing** (`frontend/perfs.html`, onglet « Saison ») s'en
+sert pour cumuler les rencontres — utile quand le club croise plusieurs fois la même équipe.
+
+**Alimentation automatique :** dès qu'un score est validé (page saisie), le match est recopié
+ici par le backend (`archiverResultat` dans [`../backend/Code.gs`](../backend/Code.gs)). Une
+**correction de score met à jour la même ligne** (pas de doublon). Rien à faire à la main.
+
+| Colonne | Exemple | Signification |
+|---|---|---|
+| `date` | `2026-01-12` | Jour où le score a été validé (≈ date du tournoi) |
+| `tournoi_id` | `2026-01-12 09:03:00` | Identifiant du tournoi (posé à chaque génération). Sert de clé avec `id_match` |
+| `id_match` | `M001` | Identifiant du match **dans son tournoi** |
+| `categorie` | `U8` | Catégorie |
+| `phase` | `poule` | `poule` (matin) ou `classement` (après-midi) |
+| `equipe_A` | `Racing 92` | **Nom** de l'équipe A (et non son id : les noms sont stables d'un tournoi à l'autre) |
+| `equipe_B` | `MASSY` | **Nom** de l'équipe B |
+| `score_A` | `20` | Score de l'équipe A |
+| `score_B` | `5` | Score de l'équipe B |
+
+> 🛠️ **Création automatique.** L'onglet et son en-tête sont créés tout seuls à la première
+> validation de score (fonction `assurerOngletHistorique`) — inutile de les saisir. Les
+> `setupSheet()` neufs le créent déjà. Le paramètre `tournoi_id` apparaît aussi dans la
+> **Zone A** de l'onglet `Config`.
 
 ---
 

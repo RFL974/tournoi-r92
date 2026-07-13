@@ -2,7 +2,7 @@
  * ============================================================================
  *  TOURNOI R92 — Backend Google Apps Script
  * ============================================================================
- *  - setupSheet()  : crée les 4 onglets (à lancer UNE SEULE FOIS au tout début).
+ *  - setupSheet()  : crée les 5 onglets (à lancer UNE SEULE FOIS au tout début).
  *  - doGet(e)      : LECTURE (renvoie du JSON).
  *  - doPost(e)     : ÉCRITURE (équipes, réglages, génération des poules/planning).
  * ============================================================================
@@ -14,7 +14,11 @@ var ENTETES = {
   Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule'],
   Poules: ['id_poule', 'categorie', 'nom_poule'],
   Matchs: ['id_match', 'categorie', 'poule', 'terrain', 'heure_debut', 'heure_fin',
-           'equipe_A', 'equipe_B', 'score_A', 'score_B', 'statut', 'phase']
+           'equipe_A', 'equipe_B', 'score_A', 'score_B', 'statut', 'phase'],
+  // Journal de saison : un match terminé = une ligne, JAMAIS effacée par une génération.
+  // On stocke les NOMS d'équipe (stables d'un tournoi à l'autre, contrairement aux id).
+  Historique: ['date', 'tournoi_id', 'id_match', 'categorie', 'phase',
+               'equipe_A', 'equipe_B', 'score_A', 'score_B']
 };
 var COULEUR_FOND_ENTETE = '#0B2138';
 var COULEUR_TEXTE_ENTETE = '#F2F6FB';
@@ -25,9 +29,10 @@ function setupSheet() {
   creerOngletAvecEntetes(classeur, 'Equipes', ENTETES.Equipes);
   creerOngletAvecEntetes(classeur, 'Poules', ENTETES.Poules);
   creerOngletAvecEntetes(classeur, 'Matchs', ENTETES.Matchs);
+  creerOngletAvecEntetes(classeur, 'Historique', ENTETES.Historique);
   creerOngletConfig(classeur);
   try {
-    SpreadsheetApp.getUi().alert('✅ Base prête !', 'Les 4 onglets ont été créés.',
+    SpreadsheetApp.getUi().alert('✅ Base prête !', 'Les 5 onglets ont été créés.',
       SpreadsheetApp.getUi().ButtonSet.OK);
   } catch (e) { Logger.log('Base prête !'); }
 }
@@ -55,13 +60,14 @@ function creerOngletConfig(classeur) {
   ];
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
-  var entetesCategorie = ['categorie', 'presente', 'terrains', 'taille_poule_cible',
+  // nb_poules : vide = Auto (calculé selon le nombre d'équipes) ; un nombre = forcé.
+  var entetesCategorie = ['categorie', 'presente', 'terrains', 'nb_poules',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min'];
   var exemplesCategorie = [
-    ['U8',  'oui', '1,2', '4', '2', '8',  '2', '15'],
-    ['U10', 'oui', '3,4', '4', '2', '10', '2', '15'],
-    ['U12', 'oui', '5,6', '4', '2', '12', '3', '15'],
-    ['U14', 'oui', '7,8', '4', '2', '15', '3', '20']
+    ['U8',  'oui', '1,2', '', '2', '8',  '2', '15'],
+    ['U10', 'oui', '3,4', '', '2', '10', '2', '15'],
+    ['U12', 'oui', '5,6', '', '2', '12', '3', '15'],
+    ['U14', 'oui', '7,8', '', '2', '15', '3', '20']
   ];
   onglet.getRange(1, 1, 50, 10).setNumberFormat('@');
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
@@ -100,6 +106,7 @@ function doGet(e) {
         };
         break;
       case 'getClassement': resultat = calculerClassement(classeur); break;
+      case 'getHistorique': resultat = lireHistorique(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -323,6 +330,8 @@ function enregistrerCategorie(classeur, data) {
   var nom = (data.categorie || '').toString().trim();
   if (!nom) return { error: 'Nom de catégorie vide.' };
   var onglet = classeur.getSheetByName('Config');
+  // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution).
+  assurerColonneCategorie(classeur, 'nb_poules');
   var donnees = onglet.getDataRange().getValues();
   var hdr = -1;
   for (var i = 0; i < donnees.length; i++) { if (donnees[i][0] === 'categorie') { hdr = i; break; } }
@@ -387,10 +396,93 @@ function enregistrerScore(classeur, data) {
       }
       // Colonnes de l'onglet Matchs : 9 = score_A, 10 = score_B, 11 = statut.
       onglet.getRange(ligne, 9, 1, 3).setValues([[sa, sb, 'terminé']]);
+
+      // Journal de saison : on archive (ou actualise) ce résultat dans l'onglet Historique.
+      // Enveloppé dans un try/catch : l'archivage ne doit JAMAIS empêcher l'enregistrement du score.
+      try {
+        var v = onglet.getRange(ligne, 1, 1, 12).getValues()[0]; // toute la ligne du match
+        archiverResultat(classeur, {
+          id_match: v[0], categorie: v[1], phase: v[11],
+          equipe_A: v[6], equipe_B: v[7], score_A: sa, score_B: sb
+        });
+      } catch (errArchive) { Logger.log('Archivage historique ignoré : ' + errArchive); }
+
       return { ok: true, match: { id_match: id, score_A: sa, score_B: sb, statut: 'terminé' } };
     }
   }
   return { error: 'Match introuvable : ' + id };
+}
+
+/* ===================== JOURNAL DE SAISON (Historique) ===================== */
+/*
+ * L'onglet Historique accumule TOUS les matchs terminés de la saison. Il n'est jamais
+ * effacé par « Générer poules et planning » (qui, lui, vide l'onglet Matchs). Ainsi la
+ * page « Perfs » peut afficher le cumul des rencontres, même contre une équipe croisée
+ * plusieurs fois dans la saison. On repère chaque ligne par (tournoi_id + id_match) pour
+ * qu'une correction de score METTE À JOUR la même ligne au lieu d'en créer une nouvelle.
+ */
+
+/** S'assure que l'onglet Historique existe (migration auto sur un Sheet déjà créé). */
+function assurerOngletHistorique(classeur) {
+  if (!classeur.getSheetByName('Historique')) {
+    creerOngletAvecEntetes(classeur, 'Historique', ENTETES.Historique);
+  }
+  return classeur.getSheetByName('Historique');
+}
+
+/**
+ * Identifiant du tournoi courant, lu dans Config (paramètre `tournoi_id`). S'il est absent
+ * (tournoi généré avant cette évolution), on en crée un maintenant et on le mémorise.
+ * Un nouvel identifiant est posé à chaque « Générer poules et planning ».
+ */
+function assurerTournoiId(classeur) {
+  var config = lireConfig(classeur);
+  var id = (config.global && config.global.tournoi_id) ? String(config.global.tournoi_id).trim() : '';
+  if (!id) {
+    id = Utilities.formatDate(new Date(), classeur.getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+    ecrireParamGlobal(classeur.getSheetByName('Config'), 'tournoi_id', id);
+  }
+  return id;
+}
+
+/**
+ * Recopie (ou actualise) un match terminé dans l'onglet Historique.
+ * @param m { id_match, categorie, phase, equipe_A, equipe_B, score_A, score_B } — equipe_* = identifiants.
+ */
+function archiverResultat(classeur, m) {
+  var tournoiId = assurerTournoiId(classeur);
+  var onglet = assurerOngletHistorique(classeur);
+
+  // Résolution des NOMS d'équipe (stables d'un tournoi à l'autre).
+  var nomsParId = {};
+  lireOngletSimple(classeur, 'Equipes').forEach(function (e) { nomsParId[e.id_equipe] = e.nom_equipe; });
+  var nomA = nomsParId[m.equipe_A] || m.equipe_A;
+  var nomB = nomsParId[m.equipe_B] || m.equipe_B;
+
+  var date = Utilities.formatDate(new Date(), classeur.getSpreadsheetTimeZone(), 'yyyy-MM-dd');
+  var ligne = [date, tournoiId, m.id_match, m.categorie, m.phase, nomA, nomB, m.score_A, m.score_B];
+
+  // Ligne existante pour ce match dans ce tournoi ? (colonnes 2 = tournoi_id, 3 = id_match)
+  var dernier = onglet.getLastRow();
+  var cible = -1;
+  if (dernier >= 2) {
+    var cles = onglet.getRange(2, 2, dernier - 1, 2).getValues();
+    for (var i = 0; i < cles.length; i++) {
+      if (String(cles[i][0]) === String(tournoiId) && String(cles[i][1]) === String(m.id_match)) {
+        cible = i + 2; break;
+      }
+    }
+  }
+  var ligneEcriture = (cible !== -1) ? cible : (onglet.getLastRow() + 1);
+  var plage = onglet.getRange(ligneEcriture, 1, 1, ligne.length);
+  plage.setNumberFormat('@'); // tout en texte (comme les autres onglets)
+  plage.setValues([ligne]);
+}
+
+/** Lit le journal de saison (crée l'onglet au besoin). */
+function lireHistorique(classeur) {
+  assurerOngletHistorique(classeur);
+  return lireOngletSimple(classeur, 'Historique');
 }
 
 /** Renvoie l'entier >= 0 correspondant à v, ou null si v n'est pas un score valide. */
@@ -669,6 +761,50 @@ function clubDe(nom) {
   return String(nom).replace(/\s*[-–—\/]\s*\d{1,3}\s*$/, '').trim().toUpperCase();
 }
 
+/** Taille de poule visée quand le nombre de poules est en mode « Auto ». */
+var TAILLE_IDEALE_POULE = 4;
+
+/**
+ * Nombre de poules d'une catégorie.
+ *   • nb_poules vide / non numérique / < 1  → AUTO : calculé pour viser ~4 équipes/poule.
+ *   • nb_poules = un entier ≥ 1             → FORCÉ (borné au nombre d'équipes).
+ */
+function nombrePoules(cat, nbEquipes) {
+  if (nbEquipes <= 0) return 0;
+  var force = parseInt(cat && cat.nb_poules, 10);
+  if (isFinite(force) && force >= 1) return Math.min(force, nbEquipes);
+  return Math.max(1, Math.ceil(nbEquipes / TAILLE_IDEALE_POULE));
+}
+
+/** Vrai si la catégorie a un nombre de poules FORCÉ (override manuel actif). */
+function poulesForcees(cat) {
+  var force = parseInt(cat && cat.nb_poules, 10);
+  return isFinite(force) && force >= 1;
+}
+
+/**
+ * S'assure que la Zone B de Config possède la colonne `nom` (migration douce d'un Sheet
+ * existant). Si elle manque, on l'ajoute à droite des en-têtes de catégorie. Sans effet
+ * si elle est déjà là. Renvoie true si une colonne a été ajoutée.
+ */
+function assurerColonneCategorie(classeur, nom) {
+  var onglet = classeur.getSheetByName('Config');
+  if (!onglet) return false;
+  var donnees = onglet.getDataRange().getValues();
+  var hdr = -1;
+  for (var i = 0; i < donnees.length; i++) { if (donnees[i][0] === 'categorie') { hdr = i; break; } }
+  if (hdr === -1) return false;
+  var entetes = donnees[hdr];
+  var largeur = 0;
+  for (var k = 0; k < entetes.length; k++) { if (entetes[k] !== '' && entetes[k] !== null) largeur = k + 1; }
+  for (var c = 0; c < largeur; c++) { if (entetes[c] === nom) return false; } // déjà présente
+  var cellule = onglet.getRange(hdr + 1, largeur + 1);
+  cellule.setNumberFormat('@');
+  cellule.setValue(nom);
+  stylerEntete(cellule);
+  return true;
+}
+
 function calculerPlanning(config, equipes, melange) {
   var global = config.global;
   var avert = [];
@@ -690,8 +826,7 @@ function calculerPlanning(config, equipes, melange) {
     if (eqCat.length === 0) { avert.push('Catégorie ' + cat.categorie + ' : aucune équipe.'); return; }
     eqCat = eqCat.slice();
     if (melange) eqCat = melanger(eqCat);
-    var taille = parseInt(cat.taille_poule_cible || '4', 10) || 4;
-    var nbPoules = Math.max(1, Math.ceil(eqCat.length / taille));
+    var nbPoules = nombrePoules(cat, eqCat.length);
     var poulesCat = [];
     for (var p = 0; p < nbPoules; p++) {
       compteurPoule++;
@@ -817,6 +952,8 @@ function genererPoulesEtPlanning(classeur) {
   var config = lireConfig(classeur);
   var equipes = lireOngletSimple(classeur, 'Equipes');
   var global = config.global;
+  // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution).
+  assurerColonneCategorie(classeur, 'nb_poules');
 
   var r = calculerPlanning(config, equipes, true);
   // Fin réelle du tournoi = fin du dernier match d'après-midi (projeté, structure connue).
@@ -828,20 +965,54 @@ function genererPoulesEtPlanning(classeur) {
   var heureFin;
   var suggestions = [];
 
+  // Quelles catégories ont un nombre de poules FORCÉ (override manuel) ?
+  var catsForcees = config.categories.filter(function (c) {
+    return String(c.presente).toLowerCase() === 'oui' && poulesForcees(c);
+  }).map(function (c) { return c.categorie; });
+
+  // Fin projetée en TOUT-AUTO (nb_poules effacés) : sert à mesurer le coût d'un forçage.
+  var finAuto = null;
+  if (catsForcees.length) {
+    var cfgAuto = clonerConfig(config);
+    cfgAuto.categories.forEach(function (c) { c.nb_poules = ''; });
+    finAuto = finJourneeProjetee(cfgAuto, equipes, false);
+  }
+
   if (autoFin) {
     // Heure de fin = fin du dernier match du TOURNOI (après-midi projeté inclus).
     heureFin = (finJournee > 0) ? minVersHm(finJournee) : (global.heure_fin || '');
     if (finJournee > 0) ecrireParamGlobal(classeur.getSheetByName('Config'), 'heure_fin', heureFin);
   } else {
-    // Heure de fin fixée manuellement : on prévient si dépassement + on propose des arbitrages.
+    // Heure de fin fixée manuellement : on prévient si dépassement.
     heureFin = global.heure_fin || '';
     if (finJournee > cible) {
       avert.push('Le tournoi finit à ' + minVersHm(finJournee) + ' (après-midi inclus), après l\'heure de fin (' + heureFin + ').');
-      suggestions = analyserArbitrages(config, equipes, cible);
     }
   }
 
+  // Assistant d'arbitrage. Il se déclenche si :
+  //   (a) l'heure de fin est MANUELLE et le tournoi la dépasse ; OU
+  //   (b) un forçage du nombre de poules RALLONGE la journée par rapport au mode Auto
+  //       (même en heure de fin automatique — cf. décision « dès qu'un forçage déborde »).
+  var depasseManuelle = !autoFin && finJournee > cible;
+  var forcageCouteux = (finAuto !== null) && (finJournee > finAuto + 1); // marge 1 min
+  if (depasseManuelle || forcageCouteux) {
+    if (forcageCouteux) {
+      avert.push('Le forçage du nombre de poules rallonge la journée : fin projetée à ' +
+        minVersHm(finJournee) + ' au lieu de ' + minVersHm(finAuto) + ' en Auto (catégories : ' +
+        catsForcees.join(', ') + ').');
+    }
+    // Cible de l'arbitrage : l'heure de fin manuelle si elle prime, sinon le retour à l'Auto.
+    var cibleArb = depasseManuelle ? cible : finAuto;
+    suggestions = analyserArbitrages(config, equipes, cibleArb);
+  }
+
   ecrireGeneration(classeur, r.poules, r.affectationPoule, r.matchsFinaux);
+
+  // Nouveau tournoi = nouvel identifiant de saison. Les résultats déjà archivés du
+  // tournoi précédent restent dans l'onglet Historique, tagués avec l'ancien identifiant.
+  ecrireParamGlobal(classeur.getSheetByName('Config'), 'tournoi_id',
+    Utilities.formatDate(new Date(), classeur.getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm:ss'));
 
   return {
     ok: true,
@@ -866,7 +1037,7 @@ function analyserArbitrages(config, equipes, cibleMin) {
   // la vraie génération mélange les poules, donc les heures réelles peuvent légèrement
   // différer, mais l'ordre de grandeur des gains reste représentatif.
   var base = finJourneeProjetee(config, equipes, false);
-  var candidats = construireCandidats(config);
+  var candidats = construireCandidats(config, equipes);
   var res = [];
   candidats.forEach(function (cand) {
     var cfg = clonerConfig(config);
@@ -897,8 +1068,9 @@ function appliquerModif(config, modif) {
  *   - label : texte affiché
  *   - modif : { type:'global', champ, valeur } ou { type:'categorie', categorie, champ, valeur }
  */
-function construireCandidats(config) {
+function construireCandidats(config, equipes) {
   var g = config.global, cands = [];
+  equipes = equipes || [];
 
   var debut = hmVersMin(g.heure_debut || '09:00');
   if (debut - 30 >= 0) {
@@ -935,10 +1107,18 @@ function construireCandidats(config) {
         cands.push({ label: nom + ' : récup ' + (rc - 5) + ' min (au lieu de ' + rc + ')',
           modif: { type: 'categorie', categorie: nom, champ: 'recup_entre_matchs_min', valeur: String(rc - 5) } });
       }
-      var tp = parseInt(cat.taille_poule_cible || '4', 10) || 4;
-      if (tp > 2) {
-        cands.push({ label: nom + ' : poules de ' + (tp - 1) + ' (moins de matchs)',
-          modif: { type: 'categorie', categorie: nom, champ: 'taille_poule_cible', valeur: String(tp - 1) } });
+      // Nombre de poules. Plus de poules = poules plus petites = moins de matchs (donc
+      // journée plus courte si les terrains suivent). On propose « une poule de plus ».
+      var nbEq = equipes.filter(function (e) { return e.categorie === nom; }).length;
+      var nbActuel = nombrePoules(cat, nbEq);
+      if (nbEq > 0 && nbActuel + 1 <= nbEq) {
+        cands.push({ label: nom + ' : ' + (nbActuel + 1) + ' poules (au lieu de ' + nbActuel + ', moins de matchs)',
+          modif: { type: 'categorie', categorie: nom, champ: 'nb_poules', valeur: String(nbActuel + 1) } });
+      }
+      // Si le nombre de poules est FORCÉ, proposer le retour au calcul automatique.
+      if (poulesForcees(cat)) {
+        cands.push({ label: nom + ' : revenir au nombre de poules Auto',
+          modif: { type: 'categorie', categorie: nom, champ: 'nb_poules', valeur: '' } });
       }
     });
 

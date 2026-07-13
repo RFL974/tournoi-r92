@@ -14,7 +14,7 @@
 /* Champs modifiables d'une catégorie : clé (dans le Sheet), libellé, type de champ. */
 const CHAMPS_CATEGORIE = [
   { cle: 'terrains',               label: 'Terrains',                  type: 'text' },
-  { cle: 'taille_poule_cible',     label: 'Taille de poule',           type: 'number' },
+  { cle: 'nb_poules',              label: 'Nombre de poules',          type: 'text', placeholder: 'Auto' },
   { cle: 'format_mi_temps',        label: 'Nb mi-temps',               type: 'select', options: ['1', '2'] },
   { cle: 'duree_mi_temps_min',     label: 'Durée mi-temps (min)',      type: 'number' },
   { cle: 'pause_mi_temps_min',     label: 'Pause mi-temps (min)',      type: 'number' },
@@ -305,7 +305,8 @@ function champCategorie(champ, valeur) {
     controle = '<select class="r-input" name="' + champ.cle + '">' + options + '</select>';
   } else {
     const attrs = (champ.type === 'number') ? ' min="0"' : '';
-    controle = '<input class="r-input" type="' + champ.type + '"' + attrs +
+    const ph = champ.placeholder ? ' placeholder="' + echapper(champ.placeholder) + '"' : '';
+    controle = '<input class="r-input" type="' + champ.type + '"' + attrs + ph +
                ' name="' + champ.cle + '" value="' + echapper(valeur) + '">';
   }
   return '<label class="reglage"><span class="r-libelle">' + champ.label + '</span>' + controle + '</label>';
@@ -366,7 +367,7 @@ async function onAjouterCategorie(evenement) {
   if (existe) { afficherMessage(message, 'Cette catégorie existe déjà.', 'ko'); return; }
 
   const data = {
-    categorie: nom, presente: 'oui', terrains: '', taille_poule_cible: '4',
+    categorie: nom, presente: 'oui', terrains: '', nb_poules: '',
     format_mi_temps: '2', duree_mi_temps_min: '10', pause_mi_temps_min: '2',
     recup_entre_matchs_min: '15'
   };
@@ -637,10 +638,18 @@ function afficherArbitrages(res) {
   const zone = document.getElementById('arbitrages');
   if (!res || !res.suggestions || !res.suggestions.length) { zone.innerHTML = ''; return; }
 
+  // L'intro diffère selon la cause : heure de fin manuelle dépassée, ou forçage du
+  // nombre de poules qui rallonge la journée (heure de fin automatique).
+  const intro = res.heure_fin_auto
+    ? 'Le planning finit à <strong>' + echapper(res.heure_fin_projetee) +
+      '</strong> — un forçage du nombre de poules rallonge la journée.<br>' +
+      'Pistes pour raccourcir <span class="arb-note">— clique pour appliquer</span> :'
+    : 'Le planning finit à <strong>' + echapper(res.heure_fin_projetee) +
+      '</strong>, après ton heure de fin (' + echapper(res.heure_fin) + ').<br>' +
+      'Pistes pour tenir le créneau <span class="arb-note">— clique pour appliquer</span> :';
+
   let html = '<div class="arbitrages">' +
-    '<p class="arb-titre">Le planning finit à <strong>' + echapper(res.heure_fin_projetee) +
-    '</strong>, après ton heure de fin (' + echapper(res.heure_fin) + ').<br>' +
-    'Pistes pour tenir le créneau <span class="arb-note">— clique pour appliquer</span> :</p>' +
+    '<p class="arb-titre">' + intro + '</p>' +
     '<ul class="arb-liste">';
 
   res.suggestions.forEach(function (s) {

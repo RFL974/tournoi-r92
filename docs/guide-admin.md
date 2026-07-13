@@ -21,8 +21,10 @@ en direct dans le Google Sheet via le backend.
 Chaque catégorie est modifiable directement :
 - Interrupteur **« Présente »** (une catégorie absente est ignorée dans la génération).
 - **Terrains** dédiés (numéros séparés par des virgules, ex : `1,2,3`).
-- **Taille de poule** visée, **nb de mi-temps**, **durée de mi-temps**, **pause mi-temps**,
-  **récup. entre matchs**.
+- **Nombre de poules** : laisser **vide (« Auto »)** pour un calcul automatique selon le nombre
+  d'équipes (≈ 4 par poule), ou saisir un **nombre** pour le forcer. Si un forçage rallonge trop
+  la journée, l'assistant d'arbitrage propose des pistes (dont « revenir en Auto »).
+- **nb de mi-temps**, **durée de mi-temps**, **pause mi-temps**, **récup. entre matchs**.
 - **« Enregistrer »** par catégorie. On peut **ajouter** (nom, ex `U16`) ou **supprimer** une catégorie.
 
 ### 3. Saisir les équipes (section « Équipes »)
