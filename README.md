@@ -120,8 +120,8 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   (V=3/N=2/D=1, départage à la différence). Code et page vérifiés en local ; **backend à redéployer**.
 - 🟡 **Phase après-midi (classement croisé)** : action `genererApresMidi` + bouton dans l'admin.
   Génère les matchs de l'après-midi depuis le classement du matin et les planifie après le déjeuner
-  (sans effacer le matin). Logique validée (Node). **À faire côté Sheet** : ajouter la colonne
-  `phase` (cellule L1) puis **redéployer** — voir [`docs/deploiement.md`](docs/deploiement.md).
+  (sans effacer le matin). Logique validée (Node). La colonne `phase` est créée automatiquement ;
+  il suffit de **redéployer** le backend — voir [`docs/deploiement.md`](docs/deploiement.md).
 
 **Reste à faire :** la page « Mon planning » (visiteur), la page « Live » (classements + favoris +
 don), puis l'instantané `data.json` pour la lecture publique à grande échelle

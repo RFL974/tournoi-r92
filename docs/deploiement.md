@@ -25,15 +25,11 @@ l'URL change et il faudrait la remettre à jour dans `config.js`. Pour garder la
 
 > **Déployer → Gérer les déploiements → (crayon) Modifier → Version : « Nouvelle version » → Déployer.**
 
-### 🔧 Migration ponctuelle — colonne `phase` (session 13)
+### 🔧 Colonne `phase` (session 13) — migration automatique
 La phase après-midi introduit une colonne **`phase`** en **dernière colonne** de l'onglet `Matchs`.
-Sur un Sheet **déjà créé** avant cette évolution, l'ajouter **une fois** manuellement :
-
-> Onglet `Matchs` → cellule **L1** → taper l'en-tête `phase`.
-
-Puis **redéployer** le backend. Sans cet en-tête, la distinction matin (`poule`) / après-midi
-(`classement`) ne fonctionne pas (une colonne sans en-tête est ignorée à la lecture). Les nouveaux
-Sheets créés via `setupSheet()` contiennent déjà la colonne.
+Aucune manip manuelle : après **redéploiement**, l'en-tête `phase` est **créé automatiquement**
+(fonction `assurerColonnePhase`) dès la première génération (matin ou après-midi). Il suffit donc de
+**redéployer** le backend.
 
 ### 🔒 À prévoir plus tard (sécurité écriture)
 La Web App est en accès « Tout le monde » (lecture publique nécessaire). Quand on ajoutera

@@ -17,7 +17,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 - **Garde-fous** : refuse de générer si des matchs du matin ne sont pas `terminé` ; ignore (avec
   avertissement) une catégorie à une seule poule (pas de croisé possible).
 - **Schéma** : nouvelle colonne `phase` (`poule` / `classement`) en dernière colonne de l'onglet
-  `Matchs`. ⚠️ à ajouter manuellement (cellule L1) sur un Sheet déjà créé — voir `docs/deploiement.md`.
+  `Matchs`, **créée automatiquement** (`assurerColonnePhase`) à la première génération — aucune manip
+  manuelle, il suffit de redéployer le backend.
 - **Frontend** : bouton « 🏉 Générer l'après-midi » dans `admin.html` + handler `onGenererApresMidi`
   (confirmation, résumé, avertissements, rechargement du planning).
 - Logique validée hors-ligne (Node) : croisé correct (N1 = les 1ers), **0 conflit terrain/équipe**,

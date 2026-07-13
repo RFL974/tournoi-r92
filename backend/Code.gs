@@ -560,11 +560,24 @@ function matchObjToRow(m) {
 /** Réécrit entièrement les lignes de l'onglet Matchs (toutes en texte pour préserver "09:30"). */
 function ecrireMatchs(classeur, lignes) {
   var oM = classeur.getSheetByName('Matchs');
+  assurerColonnePhase(oM);
   viderDonnees(oM);
   if (lignes.length) {
     var plage = oM.getRange(2, 1, lignes.length, lignes[0].length);
     plage.setNumberFormat('@');
     plage.setValues(lignes);
+  }
+}
+
+/**
+ * S'assure que l'onglet Matchs possède l'en-tête `phase` (migration auto).
+ * Sur un Sheet créé avant la session 13, ajoute l'en-tête sans intervention manuelle.
+ */
+function assurerColonnePhase(oM) {
+  var lastCol = Math.max(oM.getLastColumn(), 1);
+  var entetes = oM.getRange(1, 1, 1, lastCol).getValues()[0];
+  if (entetes.indexOf('phase') === -1) {
+    oM.getRange(1, entetes.length + 1).setValue('phase');
   }
 }
 
@@ -859,6 +872,7 @@ function ecrireGeneration(classeur, poules, affectationPoule, matchsFinaux) {
     oE.getRange(2, 4, col.length, 1).setValues(col);
   }
   var oM = classeur.getSheetByName('Matchs');
+  assurerColonnePhase(oM);
   viderDonnees(oM);
   if (matchsFinaux.length) {
     var plageM = oM.getRange(2, 1, matchsFinaux.length, matchsFinaux[0].length);
