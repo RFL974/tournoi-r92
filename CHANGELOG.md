@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Mon planning : classements en direct — 2026-07-13
+- Sous les matchs de l'équipe choisie, `planning.html` affiche 3 classements (calculés côté
+  navigateur, même barème) : **sa poule du matin**, **son niveau d'après-midi** (N1-N4), et le
+  **classement général du tournoi** — l'équipe sélectionnée est **surlignée** partout.
+- **Classement général = croisé final** : le Niveau 1 donne les places 1-3, le Niveau 2 les 4-6,
+  etc. ; dans chaque niveau, ordre selon les matchs d'après-midi, puis départage « instant T » par
+  le matin. Avant la génération de l'après-midi, il se replie sur un classement au points du matin.
+- Logique du croisé validée en Node (blocs N1-N4 aux bonnes places, vainqueur de niveau en tête).
+
 ### Noms de clubs en majuscules — 2026-07-13
 - À l'ajout d'une équipe (admin), le nom est **mis en majuscules** (`toUpperCase` dans
   `onAjouterEquipe`) → stocké et affiché en majuscules partout. Champ de saisie en
