@@ -434,8 +434,10 @@ function calculerClassement(classeur) {
   });
 
   // On ne compte que les matchs terminés avec deux scores valides.
+  // estTermineServeur() : robuste au « é » décomposé (NFD) renvoyé par le Sheet —
+  // une comparaison stricte === 'terminé' échouerait et viderait le classement.
   matchs.forEach(function (m) {
-    if (String(m.statut).trim().toLowerCase() !== 'terminé') return;
+    if (!estTermineServeur(m.statut)) return;
     var a = stats[m.equipe_A], b = stats[m.equipe_B];
     if (!a || !b) return;
     var sa = Number(m.score_A), sb = Number(m.score_B);
@@ -498,8 +500,10 @@ function genererApresMidi(classeur) {
     return { ok: false, error: "Aucun match du matin. Génère d'abord les poules et le planning." };
   }
   // Garde-fou : le classement croisé n'a de sens que si le matin est terminé.
+  // Test robuste au NFD (voir estTermineServeur) : sinon des matchs bel et bien
+  // joués passeraient pour « non terminés » et bloqueraient à tort la génération.
   var nonTermines = matin.filter(function (m) {
-    return String(m.statut).trim().toLowerCase() !== 'terminé';
+    return !estTermineServeur(m.statut);
   });
   if (nonTermines.length > 0) {
     return { ok: false, error: nonTermines.length + " match(s) du matin ne sont pas encore terminés. "
