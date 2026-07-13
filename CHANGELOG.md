@@ -6,6 +6,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 ## [Non publié]
 
 ### Session 6 — 2026-07-13
+- Page admin **étape 3b — catégories modifiables depuis la page** (frontend seul, backend déjà en place).
+  - Chaque catégorie devient un formulaire : interrupteur « Présente », terrains, taille de poule,
+    nb de mi-temps, durées, pauses, récup → enregistrement via `enregistrerCategorie`.
+  - Ajout et suppression de catégorie depuis la page (`enregistrerCategorie` / `supprimerCategorie`).
+  - Écouteurs « délégués » sur la zone réglages (résistent au re-rendu) ; le menu des équipes suit
+    les catégories présentes.
 - Page admin **étape 3a — horaires modifiables depuis la page** (écriture dans Config).
 - `backend/Code.gs` : nouvelles actions d'écriture des réglages : `enregistrerHoraires()`,
   `enregistrerCategorie()` (créer/mettre à jour), `supprimerCategorie()`. → **1 redéploiement**

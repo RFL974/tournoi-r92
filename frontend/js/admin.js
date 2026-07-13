@@ -7,15 +7,15 @@
  * ============================================================================
  */
 
-/* Libellés lisibles pour les réglages d'une catégorie. */
-const LIBELLES_CATEGORIE = {
-  terrains:               'Terrains',
-  taille_poule_cible:     'Taille de poule',
-  format_mi_temps:        'Nb mi-temps',
-  duree_mi_temps_min:     'Durée mi-temps',
-  pause_mi_temps_min:     'Pause mi-temps',
-  recup_entre_matchs_min: 'Récup. entre matchs'
-};
+/* Champs modifiables d'une catégorie : clé (dans le Sheet), libellé, type de champ. */
+const CHAMPS_CATEGORIE = [
+  { cle: 'terrains',               label: 'Terrains',                  type: 'text' },
+  { cle: 'taille_poule_cible',     label: 'Taille de poule',           type: 'number' },
+  { cle: 'format_mi_temps',        label: 'Nb mi-temps',               type: 'select', options: ['1', '2'] },
+  { cle: 'duree_mi_temps_min',     label: 'Durée mi-temps (min)',      type: 'number' },
+  { cle: 'pause_mi_temps_min',     label: 'Pause mi-temps (min)',      type: 'number' },
+  { cle: 'recup_entre_matchs_min', label: 'Récup. entre matchs (min)', type: 'number' }
+];
 
 /* On garde en mémoire la config chargée (utile pour regrouper les équipes). */
 let configCourante = { global: {}, categories: [] };
@@ -38,13 +38,9 @@ async function initAdmin() {
     const data = await apiGet('getAll'); // { config, equipes, poules, matchs }
     configCourante = data.config;
 
-    // 1) Réglages
+    // 1) Réglages (horaires + catégories)
     zoneReglages.innerHTML =
       afficherHoraires(data.config.global) + afficherCategories(data.config.categories);
-
-    // On branche le formulaire des horaires (présent seulement si la config a chargé).
-    const formHoraires = document.getElementById('form-horaires');
-    if (formHoraires) formHoraires.addEventListener('submit', onEnregistrerHoraires);
 
     // 2) Équipes : on remplit la liste déroulante des catégories et la liste des équipes
     remplirSelectCategories(data.config.categories);
@@ -56,9 +52,44 @@ async function initAdmin() {
       'Détail : ' + erreur.message + '</div>';
   }
 
-  // On branche le formulaire d'ajout et les boutons de suppression.
+  // On branche le formulaire d'ajout et les boutons de suppression (équipes).
   document.getElementById('form-equipe').addEventListener('submit', onAjouterEquipe);
   document.getElementById('liste-equipes').addEventListener('click', onClicListe);
+
+  // Zone réglages : écouteurs "délégués" (valables même après re-rendu de la zone).
+  // (zoneReglages est déjà déclaré en haut de initAdmin.)
+  zoneReglages.addEventListener('submit', onReglagesSubmit);
+  zoneReglages.addEventListener('click', onReglagesClick);
+}
+
+/**
+ * Aiguille les envois de formulaire de la zone réglages vers la bonne fonction.
+ */
+function onReglagesSubmit(evenement) {
+  const form = evenement.target;
+  if (form.id === 'form-horaires')          return onEnregistrerHoraires(evenement);
+  if (form.id === 'form-ajout-categorie')   return onAjouterCategorie(evenement);
+  if (form.classList.contains('form-categorie')) return onEnregistrerCategorie(evenement);
+}
+
+/**
+ * Aiguille les clics de la zone réglages (boutons "Supprimer" de catégorie).
+ */
+function onReglagesClick(evenement) {
+  const bouton = evenement.target.closest('.bouton-suppr-cat');
+  if (bouton) onSupprimerCategorie(bouton);
+}
+
+/**
+ * Recharge la config depuis le backend et re-affiche toute la zone réglages
+ * (utilisé après ajout/suppression de catégorie).
+ */
+async function rechargerReglages() {
+  const cfg = await apiGet('getConfig');
+  configCourante = cfg;
+  document.getElementById('reglages').innerHTML =
+    afficherHoraires(cfg.global) + afficherCategories(cfg.categories);
+  remplirSelectCategories(cfg.categories); // le menu des équipes suit les catégories présentes
 }
 
 /* --------------------------------------------------------------------------
@@ -144,39 +175,171 @@ async function onEnregistrerHoraires(evenement) {
   }
 }
 
+/**
+ * Affiche les catégories sous forme de FORMULAIRES modifiables (une carte par catégorie),
+ * suivies d'un formulaire pour ajouter une nouvelle catégorie.
+ */
 function afficherCategories(categories) {
-  if (!categories || categories.length === 0) {
-    return '<div class="message">Aucune catégorie configurée.</div>';
-  }
-
   let html = '<h2 style="margin:24px 0 12px;">Catégories</h2>';
 
-  categories.forEach(function (cat) {
-    const badgeStatut = estPresente(cat)
-      ? '<span class="statut-present">Présente</span>'
-      : '<span class="statut-absent">Absente</span>';
+  if (categories && categories.length > 0) {
+    categories.forEach(function (cat) {
+      html += formulaireCategorie(cat);
+    });
+  } else {
+    html += '<p class="vide">Aucune catégorie. Ajoute-en une ci-dessous.</p>';
+  }
 
-    let reglages = '';
-    for (const cle in LIBELLES_CATEGORIE) {
-      const valeur = (cat[cle] != null && cat[cle] !== '') ? cat[cle] : '—';
-      reglages +=
-        '<div class="reglage">' +
-          '<span class="r-libelle">' + LIBELLES_CATEGORIE[cle] + '</span>' +
-          '<span class="r-valeur">' + valeur + '</span>' +
-        '</div>';
-    }
-
-    html +=
-      '<section class="carte categorie">' +
-        '<div class="ligne-info">' +
-          '<span class="badge">' + (cat.categorie || '?') + '</span>' +
-          badgeStatut +
-        '</div>' +
-        '<div class="grille-reglages">' + reglages + '</div>' +
-      '</section>';
-  });
+  // Formulaire d'ajout d'une catégorie.
+  html +=
+    '<form id="form-ajout-categorie" class="carte">' +
+      '<h3 style="color:var(--bleu-ciel);margin-bottom:10px;">Ajouter une catégorie</h3>' +
+      '<div class="form-equipe">' +
+        '<input type="text" name="categorie" placeholder="Nom (ex : U16)" autocomplete="off" required>' +
+        '<button type="submit" class="bouton">Ajouter</button>' +
+      '</div>' +
+      '<div class="message-form" data-role="msg-ajout-cat"></div>' +
+    '</form>';
 
   return html;
+}
+
+/**
+ * Construit le formulaire modifiable d'une catégorie.
+ */
+function formulaireCategorie(cat) {
+  const nom = cat.categorie || '?';
+  const coche = estPresente(cat) ? ' checked' : '';
+
+  let champs = '';
+  CHAMPS_CATEGORIE.forEach(function (champ) {
+    const valeur = (cat[champ.cle] != null) ? String(cat[champ.cle]) : '';
+    champs += champCategorie(champ, valeur);
+  });
+
+  return (
+    '<form class="carte categorie form-categorie" data-cat="' + echapper(nom) + '">' +
+      '<div class="ligne-info">' +
+        '<span class="badge">' + echapper(nom) + '</span>' +
+        '<label class="toggle"><input type="checkbox" name="presente"' + coche + '> Présente</label>' +
+      '</div>' +
+      '<div class="grille-reglages">' + champs + '</div>' +
+      '<div class="ligne-action">' +
+        '<button type="submit" class="bouton">Enregistrer</button>' +
+        '<button type="button" class="bouton-suppr bouton-suppr-cat" data-cat="' + echapper(nom) + '">Supprimer</button>' +
+        '<span class="message-form message-cat"></span>' +
+      '</div>' +
+    '</form>'
+  );
+}
+
+/**
+ * Un champ modifiable d'une catégorie (input texte/nombre ou menu déroulant).
+ * On enveloppe le champ dans un <label> (pas d'id, pour éviter les doublons).
+ */
+function champCategorie(champ, valeur) {
+  let controle;
+  if (champ.type === 'select') {
+    let options = '';
+    champ.options.forEach(function (opt) {
+      options += '<option value="' + opt + '"' + (String(valeur) === opt ? ' selected' : '') + '>' + opt + '</option>';
+    });
+    controle = '<select class="r-input" name="' + champ.cle + '">' + options + '</select>';
+  } else {
+    const attrs = (champ.type === 'number') ? ' min="0"' : '';
+    controle = '<input class="r-input" type="' + champ.type + '"' + attrs +
+               ' name="' + champ.cle + '" value="' + echapper(valeur) + '">';
+  }
+  return '<label class="reglage"><span class="r-libelle">' + champ.label + '</span>' + controle + '</label>';
+}
+
+/**
+ * Enregistre les modifications d'une catégorie.
+ */
+async function onEnregistrerCategorie(evenement) {
+  evenement.preventDefault();
+  const form = evenement.target;
+  const message = form.querySelector('.message-cat');
+  const nom = form.getAttribute('data-cat');
+
+  // On rassemble les valeurs du formulaire.
+  const data = { categorie: nom, presente: form.presente.checked ? 'oui' : 'non' };
+  CHAMPS_CATEGORIE.forEach(function (champ) {
+    data[champ.cle] = form[champ.cle].value;
+  });
+  if (typeof data.terrains === 'string') data.terrains = data.terrains.trim();
+
+  const bouton = form.querySelector('button[type="submit"]');
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Enregistrement…';
+
+  try {
+    await apiPost('enregistrerCategorie', data);
+    // On met à jour la config en mémoire + le menu des équipes, sans tout re-rendre
+    // (pour garder le message et l'endroit où on est).
+    const idx = configCourante.categories.findIndex(function (c) { return c.categorie === nom; });
+    if (idx >= 0) configCourante.categories[idx] = Object.assign({}, configCourante.categories[idx], data);
+    remplirSelectCategories(configCourante.categories);
+    afficherMessage(message, '✅ Enregistré.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
+}
+
+/**
+ * Ajoute une nouvelle catégorie (avec des valeurs de départ modifiables ensuite).
+ */
+async function onAjouterCategorie(evenement) {
+  evenement.preventDefault();
+  const form = evenement.target;
+  const message = form.querySelector('[data-role="msg-ajout-cat"]');
+  const nom = form.categorie.value.trim();
+
+  if (!nom) { afficherMessage(message, 'Indique un nom.', 'ko'); return; }
+
+  // On refuse un doublon (sinon on écraserait la catégorie existante).
+  const existe = configCourante.categories.some(function (c) {
+    return String(c.categorie).toLowerCase() === nom.toLowerCase();
+  });
+  if (existe) { afficherMessage(message, 'Cette catégorie existe déjà.', 'ko'); return; }
+
+  const data = {
+    categorie: nom, presente: 'oui', terrains: '', taille_poule_cible: '4',
+    format_mi_temps: '2', duree_mi_temps_min: '10', pause_mi_temps_min: '2',
+    recup_entre_matchs_min: '15'
+  };
+
+  const bouton = form.querySelector('button');
+  bouton.disabled = true;
+  try {
+    await apiPost('enregistrerCategorie', data);
+    await rechargerReglages(); // la nouvelle carte apparaît
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    bouton.disabled = false;
+  }
+}
+
+/**
+ * Supprime une catégorie (après confirmation).
+ */
+async function onSupprimerCategorie(bouton) {
+  const nom = bouton.getAttribute('data-cat');
+  if (!confirm('Supprimer la catégorie « ' + nom + ' » ?\n' +
+               '(Les équipes de cette catégorie ne sont pas supprimées.)')) return;
+
+  bouton.disabled = true;
+  try {
+    await apiPost('supprimerCategorie', { categorie: nom });
+    await rechargerReglages();
+  } catch (erreur) {
+    alert('Erreur : ' + erreur.message);
+    bouton.disabled = false;
+  }
 }
 
 /* --------------------------------------------------------------------------

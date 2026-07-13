@@ -146,6 +146,9 @@ h1, h2, h3 {
   background: rgba(3, 16, 36, 0.4);
   border-radius: 8px;
   padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 .reglage .r-libelle {
   display: block;
@@ -158,6 +161,37 @@ h1, h2, h3 {
 .reglage .r-valeur {
   font-size: 1.2rem;
   font-weight: 600;
+}
+/* Champ modifiable d'une catégorie (input ou select) */
+.r-input {
+  width: 100%;
+  background: rgba(11, 33, 56, 0.8);
+  color: var(--texte);
+  border: 1px solid rgba(184, 216, 248, 0.25);
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 1.05rem;
+}
+select.r-input { cursor: pointer; }
+
+/* Interrupteur "Présente" */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--bleu-ciel);
+  font-size: 0.95rem;
+}
+.toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 
 /* ==========================================================================

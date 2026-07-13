@@ -13,7 +13,7 @@ puis de suivre les scores et classements en direct.
 
 | # | Fonctionnalité | Statut |
 |---|---|---|
-| 1 | **Page admin** : saisie des équipes, réglages par catégorie et horaires globaux, génération automatique des poules et du planning | 🟡 En cours (affichage réglages ✅ + saisie des équipes ✅ ; reste : génération) |
+| 1 | **Page admin** : saisie des équipes, réglages par catégorie et horaires globaux, génération automatique des poules et du planning | 🟡 En cours (réglages modifiables ✅ + saisie des équipes ✅ ; reste : génération) |
 | 2 | **Mon planning** : un visiteur choisit son équipe et voit uniquement ses matchs | 🔲 À faire |
 | 3 | **Live** : classements par catégorie, derniers scores, favoris (étoile), bannière don HelloAsso | 🔲 À faire |
 | 4 | **Saisie des scores** : formulaire match par match | 🔲 À faire |
