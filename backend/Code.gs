@@ -356,15 +356,6 @@ function supprimerCategorie(classeur, nom) {
   return { error: 'Catégorie introuvable : ' + nom };
 }
 
-/* ===================== GÉNÉRATION POULES + PLANNING ===================== */
-
-/**
- * Calcule (SANS écrire) les poules, les matchs et leurs horaires.
- * @param {Object} config   { global, categories }
- * @param {Object[]} equipes
- * @param {boolean} melange  true = tirage aléatoire des poules ; false = déterministe
- * @return {Object} { poules, affectationPoule, matchsFinaux, maxFin, avert }
- */
 /* ===================== SAISIE DES SCORES ===================== */
 /**
  * Enregistre le score d'un match et le passe en "terminé".
@@ -660,6 +651,14 @@ function assurerColonnePhase(oM) {
   }
 }
 
+/* ===================== GÉNÉRATION POULES + PLANNING ===================== */
+/**
+ * Calcule (SANS écrire) les poules, les matchs et leurs horaires.
+ * @param {Object} config   { global, categories }
+ * @param {Object[]} equipes
+ * @param {boolean} melange  true = tirage aléatoire des poules ; false = déterministe
+ * @return {Object} { poules, affectationPoule, matchsFinaux, maxFin, avert }
+ */
 function calculerPlanning(config, equipes, melange) {
   var global = config.global;
   var avert = [];
@@ -789,6 +788,9 @@ function genererPoulesEtPlanning(classeur) {
  * avec l'heure de fin simulée et s'ils permettent de tenir le créneau.
  */
 function analyserArbitrages(config, equipes, cibleMin) {
+  // Simulation en DÉTERMINISTE (melange=false) pour comparer les pistes à isopérimètre :
+  // la vraie génération mélange les poules, donc les heures réelles peuvent légèrement
+  // différer, mais l'ordre de grandeur des gains reste représentatif.
   var base = calculerPlanning(config, equipes, false).maxFin;
   var candidats = construireCandidats(config);
   var res = [];
