@@ -15,7 +15,7 @@ puis de suivre les scores et classements en direct.
 |---|---|---|
 | 1 | **Page admin** : saisie des équipes, réglages par catégorie et horaires globaux, génération automatique des poules et du planning | ✅ Fait (équipes, réglages, génération poules + planning) |
 | 2 | **Mon planning** : un visiteur choisit son équipe et voit uniquement ses matchs (matin + après-midi, résultats colorés) | 🟡 Fait (page `planning.html`) — en attente d'hébergement |
-| 3 | **Live** : classements par catégorie, derniers scores, favoris (étoile), bannière don HelloAsso | 🔲 À faire |
+| 3 | **Live** : classements par catégorie, derniers scores, favoris (étoile), bandeau don HelloAsso | 🟡 Fait (page `live.html`) — bandeau don en placeholder, en attente d'hébergement |
 | 4 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider) | 🟡 Fait (page + action `enregistrerScore`) — backend à redéployer |
 
 Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
@@ -59,7 +59,7 @@ tournoi-r92/
     ├── saisie.html          → saisie des scores (table de marque)
     ├── classement.html      → classement des poules (lecture seule)
     ├── planning.html        → « Mon planning » visiteur (choix de l'équipe)
-    ├── live.html            → live complet (à venir)
+    ├── live.html            → live public (favoris, derniers scores, classements)
     ├── css/styles.css
     └── js/
         ├── config.js        → réglages partagés (URL du backend, etc.)
@@ -67,10 +67,9 @@ tournoi-r92/
         ├── admin.js
         ├── saisie.js
         ├── classement.js
-        └── planning.js
+        ├── planning.js
+        └── live.js
 ```
-
-> Note : `live.html` (et son script) est **planifié**, pas encore créé.
 
 ---
 
@@ -124,8 +123,12 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   (sans effacer le matin). Logique validée (Node). La colonne `phase` est créée automatiquement ;
   il suffit de **redéployer** le backend — voir [`docs/deploiement.md`](docs/deploiement.md).
 
-**Reste à faire :** la page « Mon planning » (visiteur), la page « Live » (classements + favoris +
-don), puis l'instantané `data.json` pour la lecture publique à grande échelle
-(voir [`docs/architecture.md`](docs/architecture.md)).
+- 🟡 **Mon planning** (`planning.html`) et **Live** (`live.html`) : pages visiteur prêtes, vérifiées
+  en local sur données réelles. En attente d'hébergement. Le bandeau don du Live est un placeholder
+  (URL HelloAsso à renseigner).
+
+**Reste à faire :** renseigner l'URL HelloAsso du bandeau don, protéger les écritures par une clé
+admin (voir [`docs/deploiement.md`](docs/deploiement.md)), puis l'instantané `data.json` et
+l'hébergement / intégration à generationr92.fr (voir [`docs/architecture.md`](docs/architecture.md)).
 
 Détail complet dans [`CHANGELOG.md`](CHANGELOG.md).

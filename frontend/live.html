@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live — Tournoi R92</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="conteneur">
+
+    <header class="entete">
+      <div class="sous-titre">Génération R92</div>
+      <h1>Le tournoi en direct</h1>
+    </header>
+
+    <main>
+      <!-- Bandeau de don. TODO : remplacer le href="#" par l'URL HelloAsso réelle du club. -->
+      <a class="don-bandeau" id="don-lien" href="#" target="_blank" rel="noopener">
+        💛 Soutiens l'école de rugby — <strong>faire un don</strong>
+      </a>
+
+      <section class="carte">
+        <div class="live-barre">
+          <button id="btn-refresh" class="bouton">🔄 Rafraîchir</button>
+          <span id="maj" class="live-maj"></span>
+        </div>
+        <!-- Favoris + derniers scores + classements, injectés par live.js -->
+        <div id="live">
+          <div class="message">Chargement du direct…</div>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/live.js"></script>
+
+</body>
+</html>

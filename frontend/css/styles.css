@@ -461,6 +461,63 @@ select.r-input { cursor: pointer; }
 .table-classement .col-equipe { text-align: left; font-weight: 600; }
 .table-classement .col-pts { font-weight: 700; color: var(--texte); }
 
+/* Page « Live » (live.html) */
+.don-bandeau {
+  display: block;
+  text-align: center;
+  background: linear-gradient(90deg, #b8860b, #e0a92e);
+  color: #1a1000;
+  text-decoration: none;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  padding: 10px 14px;
+  border-radius: var(--rayon);
+  margin-bottom: var(--espace);
+}
+.don-bandeau:hover { filter: brightness(1.08); }
+
+.live-barre {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.live-maj { color: var(--bleu-ciel); font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; }
+
+.live-titre { color: var(--accent); margin: 20px 0 8px; }
+.live-cat { color: var(--bleu-ciel); margin: 14px 0 4px; }
+.live-poule { color: var(--texte); font-family: 'Barlow Condensed', sans-serif; margin: 8px 0 4px; }
+
+/* Étoile favori */
+.etoile {
+  background: none; border: none; cursor: pointer;
+  color: #7f92a8; font-size: 1.2rem; line-height: 1; padding: 0;
+}
+.etoile.on { color: #f2c14e; }
+.fav-ligne { background: rgba(242, 193, 78, 0.08); }
+
+/* Derniers scores */
+.score-ligne {
+  background: rgba(3, 16, 36, 0.5);
+  border: 1px solid rgba(184, 216, 248, 0.12);
+  border-radius: var(--rayon);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+.score-meta { color: var(--bleu-ciel); font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; }
+.score-corps { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.score-corps .gagnant { font-weight: 700; color: #9fe0a0; }
+.score-chiffres { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; white-space: nowrap; }
+
+/* Blocs favoris */
+.fav-bloc { margin-bottom: 12px; }
+.fav-nom { color: #f2c14e; font-weight: 600; margin-bottom: 4px; }
+.fav-match {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 5px 10px; border-left: 2px solid rgba(242, 193, 78, 0.4); margin-bottom: 3px;
+}
+
 /* Page « Mon planning » (planning.html) */
 .mp-label {
   display: block;

@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Page « Live » publique — 2026-07-13
+- Nouvelle page **`live.html`** + `js/live.js` (lecture seule) avec trois sections :
+  **⭐ Mes favoris** (équipes suivies, mémorisées en localStorage — leurs matchs remontent en tête),
+  **📣 Derniers scores** (matchs terminés, plus récents en premier, vainqueur en vert) et
+  **🏆 Classements** par poule (réutilise `getClassement`), chaque équipe suivable via une étoile.
+- **Rafraîchissement** automatique toutes les 60 s + bouton manuel + « Mis à jour à HH:MM ».
+- **Bandeau de don HelloAsso** en placeholder (`href="#"`, `id="don-lien"`) — URL réelle à coller.
+- Styles `.don-bandeau`, `.live-*`, `.etoile`, `.score-*`, `.fav-*`. Vérifiée en preview sur données
+  live (favoris, tri des scores, étoiles cliquables, 0 erreur console).
+
 ### Page « Mon planning » (visiteur) — 2026-07-13
 - Nouvelle page **`planning.html`** + `js/planning.js` : le visiteur choisit son équipe (menu
   groupé par catégorie) et voit **uniquement ses matchs**, séparés matin / après-midi, avec heure,
