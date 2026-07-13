@@ -466,8 +466,10 @@ function genererApresMidi(classeur) {
   avert = avert.concat(plan.avert);
 
   // 3) Réécrire Matchs = matin (inchangé) + nouveaux matchs d'après-midi.
+  // Les identifiants d'après-midi repartent après le dernier id du MATIN (les anciens
+  // matchs d'après-midi sont remplacés), pour rester stables d'une régénération à l'autre.
   var maxNum = 0;
-  matchs.forEach(function (m) {
+  matin.forEach(function (m) {
     var mm = String(m.id_match).match(/^M(\d+)$/);
     if (mm) { var n = parseInt(mm[1], 10); if (n > maxNum) maxNum = n; }
   });
