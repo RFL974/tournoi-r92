@@ -14,31 +14,61 @@
 let equipes = [];
 let matchs = [];
 const CLE_STOCKAGE = 'r92_mon_equipe';
+const INTERVALLE_MS = 60000;
+let derniereSignature = '';
 
-/** Point d'entrée : on charge les données, on remplit le menu, on affiche. */
+/** Point d'entrée : chargement initial + rafraîchissement automatique. */
 async function initPlanning() {
   const sel = document.getElementById('select-equipe');
-  try {
-    const data = await apiGet('getAll');
-    equipes = data.equipes || [];
-    matchs = data.matchs || [];
-    remplirSelect();
-
-    // On restaure le dernier choix mémorisé, s'il existe encore.
-    const memo = localStorage.getItem(CLE_STOCKAGE);
-    if (memo && equipes.some(function (e) { return e.id_equipe === memo; })) {
-      sel.value = memo;
-    }
-    afficher();
-  } catch (err) {
-    document.getElementById('mon-planning').innerHTML =
-      '<p class="vide">Erreur de chargement : ' + echapper(err.message) + '</p>';
-  }
+  await charger(true);
 
   sel.addEventListener('change', function () {
     localStorage.setItem(CLE_STOCKAGE, sel.value);
     afficher();
   });
+  const btn = document.getElementById('btn-refresh-planning');
+  if (btn) btn.addEventListener('click', function () { charger(false); });
+
+  // Rafraîchissement auto : les matchs d'après-midi générés en cours de journée
+  // apparaissent tout seuls (idem mises à jour de scores).
+  setInterval(function () { charger(false); }, INTERVALLE_MS);
+}
+
+/**
+ * (Re)charge les données. Ne ré-affiche QUE si elles ont changé (évite de faire
+ * "sauter" la page à chaque rafraîchissement). Préserve l'équipe sélectionnée.
+ */
+async function charger(premier) {
+  const sel = document.getElementById('select-equipe');
+  const choix = sel.value || localStorage.getItem(CLE_STOCKAGE) || '';
+  try {
+    const data = await apiGet('getAll');
+    const signature = JSON.stringify(data.matchs) + '|' + JSON.stringify(data.equipes);
+    equipes = data.equipes || [];
+    matchs = data.matchs || [];
+    majHeurePlanning();
+
+    if (premier || signature !== derniereSignature) {
+      derniereSignature = signature;
+      remplirSelect();
+      if (choix && equipes.some(function (e) { return e.id_equipe === choix; })) sel.value = choix;
+      afficher();
+    }
+  } catch (err) {
+    if (premier) {
+      document.getElementById('mon-planning').innerHTML =
+        '<p class="vide">Erreur de chargement : ' + echapper(err.message) + '</p>';
+    }
+  }
+}
+
+/** Affiche l'heure de dernière mise à jour. */
+function majHeurePlanning() {
+  const el = document.getElementById('maj-planning');
+  if (!el) return;
+  const d = new Date();
+  el.textContent = 'Mis à jour à ' +
+    String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
 
 /** Remplit le menu déroulant des équipes, groupées par catégorie. */
