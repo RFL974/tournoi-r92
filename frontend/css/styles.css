@@ -452,3 +452,11 @@ select.r-input { cursor: pointer; }
 }
 .match-saisie .vs { color: var(--bleu-ciel); font-size: 0.85rem; }
 .match-saisie .bouton-valider { flex: 0 0 auto; padding: 8px 14px; }
+
+/* ==========================================================================
+   Classement des poules (page classement.html)
+   ========================================================================== */
+.table-classement th,
+.table-classement td { text-align: center; }
+.table-classement .col-equipe { text-align: left; font-weight: 600; }
+.table-classement .col-pts { font-weight: 700; color: var(--texte); }

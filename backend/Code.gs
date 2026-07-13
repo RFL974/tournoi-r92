@@ -99,6 +99,7 @@ function doGet(e) {
           matchs:  lireOngletSimple(classeur, 'Matchs')
         };
         break;
+      case 'getClassement': resultat = calculerClassement(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -339,6 +340,74 @@ function validerScore(v) {
   var n = Number(v);
   if (!isFinite(n) || n < 0 || Math.floor(n) !== n) return null;
   return n;
+}
+
+/* ===================== CLASSEMENT DES POULES ===================== */
+/**
+ * Calcule le classement de chaque poule à partir des matchs "terminé".
+ * Barème : victoire = 3, nul = 2, défaite = 1.
+ * Départage : différence (BP − BC), puis points marqués (BP).
+ * Renvoie [{ categorie, poules: [{ nom_poule, classement: [ {stats...}, ... ] }] }].
+ */
+function calculerClassement(classeur) {
+  var equipes = lireOngletSimple(classeur, 'Equipes');
+  var matchs = lireOngletSimple(classeur, 'Matchs');
+
+  // Stats par identifiant d'équipe (uniquement celles affectées à une poule).
+  var stats = {};
+  var infos = {};
+  equipes.forEach(function (e) {
+    if (!e.poule) return;
+    stats[e.id_equipe] = { id_equipe: e.id_equipe, nom_equipe: e.nom_equipe,
+                           j: 0, v: 0, n: 0, d: 0, bp: 0, bc: 0, diff: 0, pts: 0 };
+    infos[e.id_equipe] = { categorie: e.categorie, poule: e.poule };
+  });
+
+  // On ne compte que les matchs terminés avec deux scores valides.
+  matchs.forEach(function (m) {
+    if (String(m.statut).trim().toLowerCase() !== 'terminé') return;
+    var a = stats[m.equipe_A], b = stats[m.equipe_B];
+    if (!a || !b) return;
+    var sa = Number(m.score_A), sb = Number(m.score_B);
+    if (!isFinite(sa) || !isFinite(sb)) return;
+    enregistrerResultat(a, sa, sb);
+    enregistrerResultat(b, sb, sa);
+  });
+
+  // Regroupe par catégorie puis poule.
+  var parCat = {};
+  Object.keys(stats).forEach(function (id) {
+    var info = infos[id];
+    var cat = (parCat[info.categorie] = parCat[info.categorie] || {});
+    (cat[info.poule] = cat[info.poule] || []).push(stats[id]);
+  });
+
+  // Trie chaque poule et met en forme le résultat.
+  var resultat = [];
+  Object.keys(parCat).sort().forEach(function (cat) {
+    var poules = [];
+    Object.keys(parCat[cat]).sort().forEach(function (nomPoule) {
+      var liste = parCat[cat][nomPoule].sort(comparerClassement);
+      poules.push({ nom_poule: nomPoule, classement: liste });
+    });
+    resultat.push({ categorie: cat, poules: poules });
+  });
+  return resultat;
+}
+
+/** Applique un résultat (points marqués "pour" / encaissés "contre") aux stats d'une équipe. */
+function enregistrerResultat(s, pour, contre) {
+  s.j++; s.bp += pour; s.bc += contre; s.diff = s.bp - s.bc;
+  if (pour > contre) { s.v++; s.pts += 3; }
+  else if (pour === contre) { s.n++; s.pts += 2; }
+  else { s.d++; s.pts += 1; }
+}
+
+/** Ordre du classement : points, puis différence, puis points marqués (tous décroissants). */
+function comparerClassement(a, b) {
+  if (b.pts !== a.pts) return b.pts - a.pts;
+  if (b.diff !== a.diff) return b.diff - a.diff;
+  return b.bp - a.bp;
 }
 
 function calculerPlanning(config, equipes, melange) {

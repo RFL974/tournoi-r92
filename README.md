@@ -57,14 +57,16 @@ tournoi-r92/
 └── frontend/                → pages web
     ├── admin.html           → page organisateur (équipes, réglages, génération)
     ├── saisie.html          → saisie des scores (table de marque)
+    ├── classement.html      → classement des poules (lecture seule)
     ├── planning.html        → « Mon planning » visiteur (à venir)
-    ├── live.html            → classements / live (à venir)
+    ├── live.html            → live complet (à venir)
     ├── css/styles.css
     └── js/
         ├── config.js        → réglages partagés (URL du backend, etc.)
         ├── api.js           → communication avec le backend (apiGet / apiPost)
         ├── admin.js
-        └── saisie.js
+        ├── saisie.js
+        └── classement.js
 ```
 
 > Note : `planning.html` / `live.html` (et leurs scripts) sont **planifiés**, pas encore créés.
@@ -114,11 +116,12 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 - 🟡 **Saisie des scores** : page `saisie.html` (une carte par match, score A/B + Valider) et action
   d'écriture `enregistrerScore` (passe le match en `terminé`). Code et page vérifiés en local ;
   **backend à redéployer** pour activer l'enregistrement en ligne.
+- 🟡 **Classement des poules** : page `classement.html` et action de lecture `getClassement`
+  (V=3/N=2/D=1, départage à la différence). Code et page vérifiés en local ; **backend à redéployer**.
 
-**Reste à faire :** calcul du **classement** de poule (à partir des scores), puis la **phase
-après-midi** (classement croisé, génération en 2 temps — voir [`docs/phases-tournoi.md`](docs/phases-tournoi.md)),
-la page « Mon planning » (visiteur), la page « Live » (classements + favoris + don), puis
-l'instantané `data.json` pour la lecture publique à grande échelle
-(voir [`docs/architecture.md`](docs/architecture.md)).
+**Reste à faire :** la **phase après-midi** (classement croisé, génération en 2 temps — voir
+[`docs/phases-tournoi.md`](docs/phases-tournoi.md)), la page « Mon planning » (visiteur), la page
+« Live » (classements + favoris + don), puis l'instantané `data.json` pour la lecture publique à
+grande échelle (voir [`docs/architecture.md`](docs/architecture.md)).
 
 Détail complet dans [`CHANGELOG.md`](CHANGELOG.md).

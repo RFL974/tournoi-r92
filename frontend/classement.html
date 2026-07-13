@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classement — Tournoi R92</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="conteneur">
+
+    <header class="entete">
+      <div class="sous-titre">Génération R92</div>
+      <h1>Classement des poules</h1>
+    </header>
+
+    <main>
+      <section class="carte">
+        <p class="note-generation">
+          Classement calculé à partir des matchs <em>terminés</em>.<br>
+          Barème : victoire = 3, nul = 2, défaite = 1. Départage : différence (BP − BC), puis points marqués.
+        </p>
+        <!-- Le classement, groupé par catégorie puis par poule, injecté par classement.js -->
+        <div id="classement">
+          <div class="message">Chargement du classement…</div>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/classement.js"></script>
+
+</body>
+</html>

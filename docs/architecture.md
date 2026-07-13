@@ -41,6 +41,7 @@ Lecture via `GET` (`doGet`), écriture via `POST` (`doPost`).
 | `getPoules` | lecture | Liste des poules | ✅ |
 | `getMatchs` | lecture | Liste des matchs (planning + scores) | ✅ |
 | `getAll` | lecture | Tout d'un coup (config + equipes + poules + matchs) | ✅ |
+| `getClassement` | lecture | Classement de chaque poule calculé depuis les matchs `terminé` (V=3/N=2/D=1, départage à la différence puis BP) | ✅ |
 | `ajouterEquipe` | écriture | Ajouter une équipe | ✅ |
 | `supprimerEquipe` | écriture | Supprimer une équipe | ✅ |
 | `enregistrerHoraires` | écriture | Enregistrer les réglages globaux (zone A) | ✅ |

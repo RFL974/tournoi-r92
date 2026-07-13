@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 12 — 2026-07-13 (classement des poules)
+- **Calcul du classement (prérequis 2)** : nouvelle fonction backend `calculerClassement(classeur)` +
+  action de lecture `getClassement`. Pour chaque poule : J / V / N / D / BP / BC / Diff / Pts.
+  Barème **V=3 / N=2 / D=1** ; ne compte que les matchs `terminé` ; tri par **points**, puis
+  **différence** (BP−BC), puis **points marqués**. Cœur **réutilisé tel quel par l'après-midi**.
+- Helpers `enregistrerResultat()` et `comparerClassement()`. Logique validée hors-ligne (Node),
+  dont une **égalité départagée à la différence** et l'exclusion des matchs non terminés.
+- Nouvelle page **`frontend/classement.html`** + `js/classement.js` : un tableau de classement par
+  poule, groupé par catégorie (colonnes centrées, points en gras). Styles `.table-classement`.
+  Vérifiée en preview (rendu desktop + scroll horizontal contenu sur mobile). ⚠️ backend à redéployer.
+
 ### Session 11 — 2026-07-13 (saisie des scores)
 - **Phase après-midi — décisions de conception** (prérequis à l'implémentation) : format retenu =
   **classement croisé** (les équipes de même rang de poule jouent ensemble, round-robin par groupe) ;

@@ -12,7 +12,8 @@
 
 ### Feuille de route (prérequis avant l'après-midi)
 1. **Saisie des scores** — action `enregistrerScore` + page `saisie.html`. ✅ Fait (session 11).
-2. **Calcul du classement** de poule (V=3/N=2/D=1, départage à la différence puis points marqués). ⬜ À faire.
+2. **Calcul du classement** de poule (V=3/N=2/D=1, départage à la différence puis points marqués).
+   ✅ Fait (session 12) : fonction `calculerClassement` + action `getClassement` + page `classement.html`.
 3. **Génération après-midi** (classement croisé). ⬜ À faire — prévoir une colonne `phase` dans `Matchs`.
 
 ## Matin — phase de poules ✅ (fait)
