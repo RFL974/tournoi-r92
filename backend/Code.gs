@@ -143,9 +143,10 @@ function creerOngletConfig(classeur) {
   ];
   // Quelques lignes d'exemple (tu pourras les modifier/supprimer ensuite).
   var exemplesCategorie = [
-    ['M8',  'oui', '1,2', '4', '2', '10', '2', '15'],
-    ['M10', 'oui', '3,4', '4', '2', '12', '3', '15'],
-    ['M12', 'non', '5',   '4', '1', '15', '0', '20']
+    ['U8',  'oui', '1,2', '4', '2', '8',  '2', '15'],
+    ['U10', 'oui', '3,4', '4', '2', '10', '2', '15'],
+    ['U12', 'oui', '5,6', '4', '2', '12', '3', '15'],
+    ['U14', 'oui', '7,8', '4', '2', '15', '3', '20']
   ];
 
   // IMPORTANT : on met TOUT l'onglet Config au format "texte" AVANT d'écrire,

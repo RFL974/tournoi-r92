@@ -42,7 +42,7 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 
 | Colonne | Exemple | Signification |
 |---|---|---|
-| `categorie` | `M8` | Nom de la catégorie |
+| `categorie` | `U8` | Nom de la catégorie |
 | `presente` | `oui` | La catégorie participe-t-elle à cette édition ? (`oui`/`non`) |
 | `terrains` | `1,2` | Terrains dédiés à cette catégorie (numéros séparés par des virgules) |
 | `taille_poule_cible` | `4` | Nombre d'équipes visé par poule |
@@ -53,7 +53,7 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 
 > **Durée totale d'un match** (calculée par le backend) :
 > `format_mi_temps × duree_mi_temps_min + pause_mi_temps_min` (si 2 mi-temps).
-> Exemple M8 : `2 × 10 + 2 = 22 min`.
+> Exemple U8 : `2 × 8 + 2 = 18 min`.
 
 ---
 
@@ -65,7 +65,7 @@ Une ligne par équipe. En-têtes :
 |---|---|---|
 | `id_equipe` | `E01` | Identifiant unique (généré ou saisi) |
 | `nom_equipe` | `Suresnes 1` | Saisi par l'admin |
-| `categorie` | `M8` | Saisi par l'admin |
+| `categorie` | `U8` | Saisi par l'admin |
 | `poule` | `A` | **Auto** — rempli par « Générer poules et planning » |
 
 ---
@@ -78,7 +78,7 @@ et le **classement se calcule** à partir des scores de l'onglet `Matchs`.
 | Colonne | Exemple | Signification |
 |---|---|---|
 | `id_poule` | `P01` | Identifiant unique de la poule |
-| `categorie` | `M8` | Catégorie de la poule |
+| `categorie` | `U8` | Catégorie de la poule |
 | `nom_poule` | `A` | Nom court (A, B, C…) |
 
 ---
@@ -90,7 +90,7 @@ Une ligne par match. En-têtes :
 | Colonne | Exemple | Rempli par |
 |---|---|---|
 | `id_match` | `M001` | Identifiant unique |
-| `categorie` | `M8` | Auto (génération) |
+| `categorie` | `U8` | Auto (génération) |
 | `poule` | `A` | Auto (génération) |
 | `terrain` | `1` | Auto (génération) |
 | `heure_debut` | `09:00` | Auto (génération) |
