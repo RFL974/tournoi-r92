@@ -6,13 +6,12 @@
  *  Ce fichier contient le code qui vit À L'INTÉRIEUR du Google Sheet du tournoi.
  *  Il sert de "backend" : il lit et écrit dans les onglets du Sheet.
  *
- *  Il contient pour l'instant :
- *   - setupSheet()  : crée les 4 onglets (Equipes, Poules, Matchs, Config) et
- *                     leurs en-têtes. À lancer UNE SEULE FOIS pour préparer la base.
+ *  Il contient :
+ *   - setupSheet()  : crée les 4 onglets (à lancer UNE SEULE FOIS au tout début).
  *   - doGet(e)      : requêtes de LECTURE (renvoie du JSON).
- *   - doPost(e)     : requêtes d'ÉCRITURE (ajouter/supprimer une équipe).
+ *   - doPost(e)     : requêtes d'ÉCRITURE (équipes, réglages, génération des poules/planning).
  *
- *  (La génération des poules/planning et la saisie des scores viendront ensuite.)
+ *  (La saisie des scores viendra ensuite.)
  * ============================================================================
  */
 
