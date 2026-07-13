@@ -36,7 +36,7 @@ function afficherClassement(cats) {
     html += '<h2 style="margin-top:18px;">' + echapper(cat.categorie) + '</h2>';
     (cat.poules || []).forEach(function (p) {
       html += '<h3 style="color:var(--bleu-ciel);margin:14px 0 6px;">Poule ' + echapper(p.nom_poule) + '</h3>';
-      html += '<div class="table-scroll"><table class="table-planning table-classement">' +
+      html += '<div class="table-scroll"><table class="table-planning table-classement cl-full">' +
         '<thead><tr><th>#</th><th>Équipe</th><th>J</th><th>V</th><th>N</th><th>D</th>' +
         '<th>BP</th><th>BC</th><th>Diff</th><th>Pts</th></tr></thead><tbody>';
       (p.classement || []).forEach(function (t, i) {

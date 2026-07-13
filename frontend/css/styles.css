@@ -461,6 +461,20 @@ select.r-input { cursor: pointer; }
 .table-classement .col-equipe { text-align: left; font-weight: 600; }
 .table-classement .col-pts { font-weight: 700; color: var(--texte); }
 
+/* Largeurs de colonnes FIXES pour que les tableaux d'une poule à l'autre s'alignent
+   (sinon chaque tableau se dimensionne selon son contenu → décalage). La colonne
+   « Équipe », sans largeur, prend l'espace restant. */
+.cl-live, .cl-full { table-layout: fixed; }
+/* Live : # · étoile · Équipe · J · Diff · Pts */
+.cl-live th:nth-child(1), .cl-live td:nth-child(1) { width: 34px; }
+.cl-live th:nth-child(2), .cl-live td:nth-child(2) { width: 40px; }
+.cl-live th:nth-child(4), .cl-live td:nth-child(4) { width: 46px; }
+.cl-live th:nth-child(5), .cl-live td:nth-child(5) { width: 60px; }
+.cl-live th:nth-child(6), .cl-live td:nth-child(6) { width: 52px; }
+/* Classement complet : # · Équipe · J V N D BP BC Diff Pts */
+.cl-full th:nth-child(1), .cl-full td:nth-child(1) { width: 32px; }
+.cl-full th:nth-child(n+3), .cl-full td:nth-child(n+3) { width: 46px; }
+
 /* Page « Live » (live.html) */
 .don-bandeau {
   display: block;

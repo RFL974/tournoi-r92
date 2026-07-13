@@ -183,7 +183,7 @@ function sectionClassements() {
     h += '<h3 class="live-cat">' + echapper(cat.categorie) + '</h3>';
     (cat.poules || []).forEach(function (p) {
       h += '<div class="live-poule">Poule ' + echapper(p.nom_poule) + '</div>';
-      h += '<div class="table-scroll"><table class="table-planning table-classement">' +
+      h += '<div class="table-scroll"><table class="table-planning table-classement cl-live">' +
         '<thead><tr><th>#</th><th></th><th>Équipe</th><th>J</th><th>Diff</th><th>Pts</th></tr></thead><tbody>';
       (p.classement || []).forEach(function (t, i) {
         const fav = estFavori(t.id_equipe);

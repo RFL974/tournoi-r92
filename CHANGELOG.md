@@ -19,6 +19,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
   gérait mal (page bloquée sur « Chargement… »). Rafraîchissement plus léger.
 - **Alignement** : « Derniers scores » passé en grille scoreboard (`1fr auto 1fr`) — les scores
   s'alignent en colonne centrale au lieu de flotter selon la longueur des noms.
+- **Alignement des classements** : les tableaux d'une poule à l'autre étaient décalés (chaque
+  `<table>` se dimensionnait selon son contenu, ex. « aix en provence »). Passage en
+  `table-layout: fixed` avec largeurs de colonnes fixes (classes `.cl-live` / `.cl-full`) sur les
+  pages `live.html` **et** `classement.html` → colonnes alignées au pixel près.
 
 ### Page « Mon planning » (visiteur) — 2026-07-13
 - Nouvelle page **`planning.html`** + `js/planning.js` : le visiteur choisit son équipe (menu
