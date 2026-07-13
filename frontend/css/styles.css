@@ -460,7 +460,7 @@ select.r-input { cursor: pointer; }
 .match-edition { border-color: rgba(242, 193, 78, 0.6); }
 
 /* ==========================================================================
-   Classement des poules (page classement.html)
+   Classement des poules (onglet « Classements » de tournoi.html)
    ========================================================================== */
 .table-classement th,
 .table-classement td { text-align: center; }
@@ -477,11 +477,14 @@ select.r-input { cursor: pointer; }
 .cl-live th:nth-child(4), .cl-live td:nth-child(4) { width: 46px; }
 .cl-live th:nth-child(5), .cl-live td:nth-child(5) { width: 60px; }
 .cl-live th:nth-child(6), .cl-live td:nth-child(6) { width: 52px; }
-/* Classement complet : # · Équipe · J V N D BP BC Diff Pts */
+/* Classement complet : # · Équipe · J V N D BP BC Diff Pts.
+   Largeurs explicites (Équipe comprise) : la somme dépasse l'écran mobile, donc le tableau
+   déborde et défile horizontalement dans .table-scroll (au lieu d'écraser la colonne Équipe). */
 .cl-full th:nth-child(1), .cl-full td:nth-child(1) { width: 32px; }
-.cl-full th:nth-child(n+3), .cl-full td:nth-child(n+3) { width: 46px; }
+.cl-full th:nth-child(2), .cl-full td:nth-child(2) { width: 120px; }
+.cl-full th:nth-child(n+3), .cl-full td:nth-child(n+3) { width: 44px; }
 
-/* Page « Live » (live.html) */
+/* Onglet « En direct » de tournoi.html (favoris + derniers scores) */
 .don-bandeau {
   display: block;
   text-align: center;
@@ -554,7 +557,7 @@ select.r-input { cursor: pointer; }
   padding: 5px 10px; border-left: 2px solid rgba(242, 193, 78, 0.4); margin-bottom: 3px;
 }
 
-/* Page « Mon planning » (planning.html) */
+/* Onglet « Mon équipe » de tournoi.html */
 .mp-label {
   display: block;
   color: var(--bleu-ciel);
@@ -586,3 +589,116 @@ select.r-input { cursor: pointer; }
   padding-bottom: 4px;
   border-bottom: 1px solid rgba(184, 216, 248, 0.2);
 }
+
+/* ==========================================================================
+   PAGE PERFS RACING (interne) — couleurs V/N/D reprises du planning :
+   vert #9fe0a0 (victoire), rouge #ffb4b4 (défaite), bleu ciel (nul).
+   ========================================================================== */
+
+/* Barre d'onglets (page publique « Le tournoi ») */
+.onglets { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.onglets .onglet { flex: 1 1 auto; }
+
+/* Filtre catégorie global (au-dessus des deux onglets) */
+.mp-filtre { margin-bottom: 14px; }
+
+/* Onglets « Ce tournoi » / « Saison » */
+.perfs-onglets { display: flex; gap: 8px; margin-bottom: 14px; }
+.onglet {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--bleu-ciel);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(184, 216, 248, 0.2);
+  border-radius: var(--rayon);
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.onglet.actif { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Bandeau récapitulatif du club, tout en haut */
+.perfs-global {
+  border: 1px solid rgba(46, 143, 224, 0.35);
+  border-radius: var(--rayon);
+  background: rgba(46, 143, 224, 0.08);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+.perfs-global-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  color: var(--bleu-ciel);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+}
+.perfs-chiffres { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; align-items: baseline; }
+.pc { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; }
+.pc-v { color: #9fe0a0; }
+.pc-n { color: var(--bleu-ciel); }
+.pc-d { color: #ffb4b4; }
+.pc-pct { margin-left: auto; color: var(--texte); font-size: 1.2rem; }
+.perfs-moment-global { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
+.perfs-moment { color: var(--bleu-ciel); font-size: 0.95rem; }
+.perfs-moment strong { color: var(--texte); }
+
+/* Titre d'une catégorie (U8, U10, …) */
+.perfs-cat {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  color: var(--accent);
+  margin: 22px 0 8px;
+  border-bottom: 2px solid rgba(46, 143, 224, 0.35);
+}
+
+/* Carte d'une équipe du club */
+.perfs-equipe {
+  border: 1px solid rgba(184, 216, 248, 0.15);
+  border-radius: var(--rayon);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.perfs-equipe-nom {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--texte);
+}
+.perfs-poule { color: var(--bleu-ciel); font-weight: 500; font-size: 0.85rem; }
+
+/* Ligne de bilan chiffré */
+.perfs-bilan { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0 4px; }
+.perfs-stat { display: flex; flex-direction: column; align-items: center; min-width: 34px; }
+.perfs-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; line-height: 1; color: var(--texte); }
+.perfs-stat-val.gagne { color: #9fe0a0; }
+.perfs-stat-val.perd  { color: #ffb4b4; }
+.perfs-stat-val.nul   { color: var(--bleu-ciel); }
+.perfs-stat-lib { font-size: 0.7rem; color: #7f92a8; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Sous-titre dans une carte équipe (« À quel moment », « Contre qui ») */
+.perfs-sous-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  color: var(--bleu-ciel);
+  margin: 14px 0 6px;
+  font-size: 0.95rem;
+}
+
+/* Frise horaire : pastilles V/N/D dans l'ordre de la journée */
+.frise { overflow-x: auto; padding-bottom: 4px; }
+.frise-rail { display: flex; align-items: center; gap: 0; min-width: min-content; }
+.frise-puce {
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 48px; padding: 4px 6px; border-radius: 8px; flex: 0 0 auto;
+}
+.frise-puce.gagne { background: rgba(159, 224, 160, 0.16); border: 1px solid rgba(159, 224, 160, 0.5); }
+.frise-puce.perd  { background: rgba(255, 180, 180, 0.16); border: 1px solid rgba(255, 180, 180, 0.5); }
+.frise-puce.nul   { background: rgba(184, 216, 248, 0.16); border: 1px solid rgba(184, 216, 248, 0.5); }
+.frise-heure { font-size: 0.72rem; color: var(--bleu-ciel); }
+.frise-issue { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; line-height: 1; }
+.frise-puce.gagne .frise-issue { color: #9fe0a0; }
+.frise-puce.perd  .frise-issue { color: #ffb4b4; }
+.frise-puce.nul   .frise-issue { color: var(--bleu-ciel); }
+.frise-lien { flex: 0 0 auto; width: 14px; height: 2px; background: rgba(184, 216, 248, 0.25); }

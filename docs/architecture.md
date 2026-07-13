@@ -66,10 +66,15 @@ Lecture via `GET` (`doGet`), écriture via `POST` (`doPost`).
 ## 3. Frontend — les pages web
 Pages statiques (HTML/CSS/JS), **mobile-first**. Chaque page a un rôle :
 
+- **`tournoi.html`** — **page publique unique** (2 onglets) : 📋 Mon équipe (matchs + classements
+  d'une équipe, onglet par défaut) et 🏆 Classements (derniers scores du tournoi, puis poules +
+  niveaux croisés). Un **filtre catégorie global** (au-dessus des onglets, masqué s'il n'y a qu'une
+  catégorie) restreint les équipes ET les classements à la catégorie choisie ; « Derniers scores »
+  reste global. Un seul appel `getAll` + rafraîchissement auto. Contient le bandeau don HelloAsso.
+  Remplace les anciennes pages `planning.html`, `live.html` et `classement.html`.
 - **`admin.html`** — saisie des équipes, réglages, bouton de génération.
-- **`planning.html`** — un visiteur choisit son équipe → voit ses matchs.
-- **`live.html`** — classements par catégorie, derniers scores, favoris, don HelloAsso.
-- **`scores.html`** — saisie des scores match par match.
+- **`saisie.html`** — saisie des scores match par match (protégée par la clé scores).
+- **`perfs.html`** — page interne « perfs Racing » (non liée, cf. mémoire projet).
 
 Fichiers JS partagés :
 - **`config.js`** — contient l'URL de la Web App et les constantes communes (couleurs, etc.).
@@ -111,7 +116,7 @@ directement par chaque visiteur à grande échelle :
     à chaque saisie de score **et** via un déclencheur temporel (~toutes les 1 min).
   - Cet instantané est servi par un **CDN** (hébergement statique) → scale à des milliers de
     visiteurs, latence ~50 ms, très fiable.
-  - Les pages `planning.html` et `live.html` lisent ce **fichier statique**, jamais Apps Script.
+  - La page publique `tournoi.html` lit ce **fichier statique**, jamais Apps Script.
   - Fraîcheur du live : rafraîchissement toutes les 30–60 s (largement suffisant pour un tournoi).
 - **Favoris** → déjà en `localStorage` (navigateur du visiteur) : zéro charge serveur.
 
