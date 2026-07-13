@@ -481,7 +481,8 @@ async function onAjouterEquipe(evenement) {
   const bouton   = document.getElementById('bouton-ajouter');
   const message  = document.getElementById('message-equipe');
 
-  const nom = champNom.value.trim();
+  // Nom du club toujours en MAJUSCULES (uniformité d'affichage sur toutes les pages).
+  const nom = champNom.value.trim().toUpperCase();
   const categorie = champCat.value;
 
   if (!nom || !categorie) {

@@ -5,6 +5,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Noms de clubs en majuscules — 2026-07-13
+- À l'ajout d'une équipe (admin), le nom est **mis en majuscules** (`toUpperCase` dans
+  `onAjouterEquipe`) → stocké et affiché en majuscules partout. Champ de saisie en
+  `text-transform: uppercase` pour le retour visuel pendant la frappe.
+
 ### Sécurité : « connexion » à la page (clé demandée une seule fois) — 2026-07-13
 - Avant, la clé était demandée à la première écriture puis à chaque tentative refusée (agaçant).
   Désormais : **une « connexion » à l'ouverture** de `admin.html` et `saisie.html` demande la clé

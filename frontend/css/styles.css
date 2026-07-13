@@ -246,6 +246,8 @@ select.r-input { cursor: pointer; }
   font-size: 1rem;
 }
 .form-equipe input::placeholder { color: #7f92a8; }
+/* Nom du club : affiché en majuscules pendant la saisie (retour visuel). */
+#champ-nom { text-transform: uppercase; }
 
 /* Bouton générique (accent) */
 .bouton {
