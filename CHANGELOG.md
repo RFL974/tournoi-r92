@@ -5,6 +5,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Poules : deux équipes d'un même club séparées — 2026-07-13
+- Nouvelle règle à la génération des poules du matin : **deux équipes d'un même club ne sont pas
+  dans la même poule de départ** (ex. « RACING 92-1 » et « RACING 92-2 »).
+- **Convention de nommage** : pour engager plusieurs équipes d'un club, suffixer par un
+  **séparateur + numéro** : `CLUB-1`, `CLUB-2` (tiret), ou `CLUB/2`. Le club est le nom sans ce
+  suffixe. ⚠️ Les chiffres **collés au nom** (ex. « RACING 92 ») ne sont PAS un suffixe et restent
+  dans le nom du club — utiliser le tiret pour distinguer les équipes.
+- `Code.gs` : helper `clubDe()` (retire un suffixe `-\d` final) + attribution repensée : on place
+  les clubs les plus nombreux d'abord (les plus contraints), chaque équipe dans la poule la moins
+  remplie sans équipe du même club → **contrainte respectée ET poules équilibrées**.
+- Avertissement si un club a plus d'équipes que de poules (séparation alors impossible à 100 %).
+- Validé en Node (500 tirages : 0 conflit, 0 déséquilibre pour des cas réalistes). ⚠️ **Backend à redéployer**.
+
 ### Admin : heure de fin = fin du TOURNOI (après-midi inclus) — 2026-07-13
 - Avant, la génération du matin n'affichait que la **fin des poules du matin**. Or le planning de
   l'après-midi ne dépend que de la **structure** (nombre de matchs du croisé, déterminé par les

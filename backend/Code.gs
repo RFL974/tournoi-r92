@@ -659,6 +659,16 @@ function assurerColonnePhase(oM) {
  * @param {boolean} melange  true = tirage aléatoire des poules ; false = déterministe
  * @return {Object} { poules, affectationPoule, matchsFinaux, maxFin, avert }
  */
+/**
+ * Nom du club à partir du nom d'équipe, en retirant UNIQUEMENT un suffixe d'équipe final
+ * du type « -1 », « - 2 », « /2 » (séparateur + numéro). Ne touche pas aux chiffres collés
+ * au nom (ex : « RACING 92 » reste « RACING 92 »). Sert à ne pas mettre deux équipes d'un
+ * même club dans la même poule de départ.
+ */
+function clubDe(nom) {
+  return String(nom).replace(/\s*[-–—\/]\s*\d{1,3}\s*$/, '').trim().toUpperCase();
+}
+
 function calculerPlanning(config, equipes, melange) {
   var global = config.global;
   var avert = [];
@@ -689,10 +699,34 @@ function calculerPlanning(config, equipes, melange) {
                     categorie: cat.categorie, nom_poule: String.fromCharCode(65 + p), equipes: [] };
       poulesCat.push(poule); poules.push(poule);
     }
-    eqCat.forEach(function (e, i) {
-      var po = poulesCat[i % nbPoules];
-      po.equipes.push(e);
-      affectationPoule[e.id_equipe] = po.nom_poule;
+    // Attribution : deux équipes d'un MÊME CLUB ne vont pas dans la même poule de départ.
+    // On place les clubs les plus NOMBREUX d'abord (les plus contraints), en répartissant
+    // leurs équipes dans des poules différentes ; les clubs à une seule équipe équilibrent
+    // ensuite. Chaque équipe va dans la poule la moins remplie sans équipe du même club
+    // (si aucune — club plus nombreux que le nb de poules — on répartit au mieux).
+    var parClub = {};
+    eqCat.forEach(function (e) { var c = clubDe(e.nom_equipe); (parClub[c] = parClub[c] || []).push(e); });
+    // Avertit si un club a plus d'équipes que de poules (séparation impossible à 100 %).
+    Object.keys(parClub).forEach(function (c) {
+      if (parClub[c].length > nbPoules) {
+        avert.push('Catégorie ' + cat.categorie + ' : le club « ' + c + ' » a ' + parClub[c].length +
+                   ' équipes pour ' + nbPoules + ' poule(s) — certaines seront dans la même poule.');
+      }
+    });
+    var clubs = Object.keys(parClub);
+    if (melange) clubs = melanger(clubs);
+    clubs.sort(function (a, b) { return parClub[b].length - parClub[a].length; });
+    clubs.forEach(function (c) {
+      parClub[c].forEach(function (e) {
+        var eligibles = poulesCat.filter(function (po) {
+          return !po.equipes.some(function (x) { return clubDe(x.nom_equipe) === c; });
+        });
+        if (!eligibles.length) eligibles = poulesCat.slice();
+        eligibles.sort(function (a, b) { return a.equipes.length - b.equipes.length; });
+        var po = eligibles[0];
+        po.equipes.push(e);
+        affectationPoule[e.id_equipe] = po.nom_poule;
+      });
     });
   });
 

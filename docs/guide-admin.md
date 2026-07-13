@@ -26,8 +26,13 @@ Chaque catégorie est modifiable directement :
 - **« Enregistrer »** par catégorie. On peut **ajouter** (nom, ex `U16`) ou **supprimer** une catégorie.
 
 ### 3. Saisir les équipes (section « Équipes »)
-- Taper le **nom**, choisir la **catégorie** (parmi les présentes), **« Ajouter »**.
+- Taper le **nom** (mis automatiquement en MAJUSCULES), choisir la **catégorie** (parmi les
+  présentes), **« Ajouter »**.
 - La liste apparaît, groupée par catégorie ; bouton **« Supprimer »** par équipe.
+- **Plusieurs équipes d'un même club** : les nommer `CLUB-1`, `CLUB-2` (tiret + numéro) — elles
+  seront automatiquement placées dans des **poules différentes** au tirage du matin. *(Attention :
+  un chiffre collé au nom, comme « RACING 92 », fait partie du nom ; utiliser le tiret pour
+  distinguer les équipes : « RACING 92-1 », « RACING 92-2 ».)*
 
 ### 4. Générer les poules et le planning (section « Poules & planning »)
 - Cliquer **« Générer poules et planning »** (confirmation : cela **efface** poules, matchs et
