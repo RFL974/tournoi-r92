@@ -15,6 +15,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 - `frontend/js/admin.js` : chargement via `getAll`, remplissage du menu catégories (présentes),
   ajout/suppression d'équipe avec rechargement de la liste, messages de retour.
 - `frontend/css/styles.css` : styles du formulaire, boutons et liste d'équipes.
+- ✅ **Testé avec succès** : ajout et suppression d'équipes depuis la page fonctionnent
+  (écriture réelle dans l'onglet `Equipes`). POST navigateur → 302 → JSON confirmé.
 
 ### Session 4 — 2026-07-13
 - Début du frontend : **page admin (étape 1 — affichage)**.
