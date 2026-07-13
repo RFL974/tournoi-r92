@@ -34,16 +34,65 @@ function basculerFavori(id) {
 /* ----- Chargement des données ----- */
 async function charger() {
   try {
-    const resultats = await Promise.all([apiGet('getAll'), apiGet('getClassement')]);
-    equipes = resultats[0].equipes || [];
-    matchs = resultats[0].matchs || [];
-    classement = resultats[1] || [];
+    // Un seul appel réseau : on récupère tout et on calcule le classement localement
+    // (Apps Script gère mal 2 requêtes simultanées ; et ça allège le rafraîchissement).
+    const all = await apiGet('getAll');
+    equipes = all.equipes || [];
+    matchs = all.matchs || [];
+    classement = calculerClassementLocal(equipes, matchs);
     majHeure();
     afficher();
   } catch (err) {
     document.getElementById('live').innerHTML =
       '<p class="vide">Erreur de chargement : ' + echapper(err.message) + '</p>';
   }
+}
+
+/* Classement par poule, calculé côté navigateur — MÊME barème que le backend
+   (V=3/N=2/D=1, départage différence puis points marqués ; matchs terminés seulement). */
+function calculerClassementLocal(equipes, matchs) {
+  const stats = {}, infos = {};
+  equipes.forEach(function (e) {
+    if (!e.poule) return;
+    stats[e.id_equipe] = { id_equipe: e.id_equipe, nom_equipe: e.nom_equipe,
+                           j: 0, v: 0, n: 0, d: 0, bp: 0, bc: 0, diff: 0, pts: 0 };
+    infos[e.id_equipe] = { categorie: e.categorie, poule: e.poule };
+  });
+  matchs.forEach(function (m) {
+    if (!estTermine(m.statut)) return;
+    const a = stats[m.equipe_A], b = stats[m.equipe_B];
+    if (!a || !b) return;
+    const sa = Number(m.score_A), sb = Number(m.score_B);
+    if (!isFinite(sa) || !isFinite(sb)) return;
+    appliquerResultat(a, sa, sb);
+    appliquerResultat(b, sb, sa);
+  });
+  const parCat = {};
+  Object.keys(stats).forEach(function (id) {
+    const info = infos[id];
+    const cat = (parCat[info.categorie] = parCat[info.categorie] || {});
+    (cat[info.poule] = cat[info.poule] || []).push(stats[id]);
+  });
+  const res = [];
+  Object.keys(parCat).sort().forEach(function (cat) {
+    const poules = [];
+    Object.keys(parCat[cat]).sort().forEach(function (np) {
+      poules.push({ nom_poule: np, classement: parCat[cat][np].sort(comparerClassement) });
+    });
+    res.push({ categorie: cat, poules: poules });
+  });
+  return res;
+}
+function appliquerResultat(s, pour, contre) {
+  s.j++; s.bp += pour; s.bc += contre; s.diff = s.bp - s.bc;
+  if (pour > contre) { s.v++; s.pts += 3; }
+  else if (pour === contre) { s.n++; s.pts += 2; }
+  else { s.d++; s.pts += 1; }
+}
+function comparerClassement(a, b) {
+  if (b.pts !== a.pts) return b.pts - a.pts;
+  if (b.diff !== a.diff) return b.diff - a.diff;
+  return b.bp - a.bp;
 }
 
 function majHeure() {

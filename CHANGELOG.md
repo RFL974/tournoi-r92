@@ -14,6 +14,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 - **Bandeau de don HelloAsso** en placeholder (`href="#"`, `id="don-lien"`) — URL réelle à coller.
 - Styles `.don-bandeau`, `.live-*`, `.etoile`, `.score-*`, `.fav-*`. Vérifiée en preview sur données
   live (favoris, tri des scores, étoiles cliquables, 0 erreur console).
+- **Robustesse** : un seul appel réseau (`getAll`) ; le classement est **recalculé côté navigateur**
+  (même barème que le backend) au lieu d'un 2ᵉ appel `getClassement` en parallèle qu'Apps Script
+  gérait mal (page bloquée sur « Chargement… »). Rafraîchissement plus léger.
+- **Alignement** : « Derniers scores » passé en grille scoreboard (`1fr auto 1fr`) — les scores
+  s'alignent en colonne centrale au lieu de flotter selon la longueur des noms.
 
 ### Page « Mon planning » (visiteur) — 2026-07-13
 - Nouvelle page **`planning.html`** + `js/planning.js` : le visiteur choisit son équipe (menu

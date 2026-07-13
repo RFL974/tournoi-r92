@@ -506,9 +506,25 @@ select.r-input { cursor: pointer; }
   margin-bottom: 8px;
 }
 .score-meta { color: var(--bleu-ciel); font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; }
-.score-corps { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+/* Scoreboard : nom (aligné à droite) · score centré · nom (aligné à gauche).
+   La colonne centrale à largeur fixe garde tous les scores alignés d'une ligne à l'autre. */
+.score-corps {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+.score-corps > span:first-child { text-align: right; }
+.score-corps > span:last-child  { text-align: left; }
 .score-corps .gagnant { font-weight: 700; color: #9fe0a0; }
-.score-chiffres { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; white-space: nowrap; }
+.score-chiffres {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: center;
+  min-width: 72px;
+}
 
 /* Blocs favoris */
 .fav-bloc { margin-bottom: 12px; }
