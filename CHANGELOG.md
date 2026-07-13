@@ -5,6 +5,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Mon planning : rafraîchissement automatique — 2026-07-13
+- `planning.html` se **rafraîchit tout seul** (toutes les 60 s) + bouton « Rafraîchir » + « Mis à
+  jour à HH:MM ». Ainsi, les **matchs d'après-midi générés en cours de journée apparaissent sans
+  rechargement** (idem mises à jour de scores). Re-render **uniquement si les données ont changé**
+  (signature), pour ne pas faire « sauter » la page, et l'**équipe sélectionnée est préservée**.
+
 ### Mon planning : classements en direct — 2026-07-13
 - Sous les matchs de l'équipe choisie, `planning.html` affiche 3 classements (calculés côté
   navigateur, même barème) : **sa poule du matin**, **son niveau d'après-midi** (N1-N4), et le
