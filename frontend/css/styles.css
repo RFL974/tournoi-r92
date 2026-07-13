@@ -1,0 +1,191 @@
+/* ==========================================================================
+   TOURNOI R92 — Feuille de style commune à toutes les pages
+   Charte : fond marine, bleu ciel, accent bleu vif, texte blanc cassé.
+   Pensée "mobile-first" : les styles de base visent le téléphone, on ajuste
+   ensuite pour les écrans plus larges avec une "media query".
+   ========================================================================== */
+
+/* --- Les couleurs et polices de la charte, définies une fois pour toutes.
+       On les réutilise partout via "var(--nom)". Pour changer une couleur
+       sur tout le site, on ne modifie qu'ici. --- */
+:root {
+  --marine:        #0B2138;  /* fond principal */
+  --marine-fonce:  #031024;  /* fond plus sombre (dégradé, cartes) */
+  --bleu-ciel:     #B8D8F8;  /* textes secondaires, labels */
+  --accent:        #2E8FE0;  /* boutons, éléments importants */
+  --texte:         #F2F6FB;  /* texte courant */
+
+  --rayon:         12px;      /* arrondi des cartes */
+  --espace:        16px;      /* espacement de base */
+}
+
+/* --- Remise à zéro simple + réglages de base --- */
+* {
+  box-sizing: border-box;   /* les paddings n'agrandissent pas la largeur */
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Barlow', system-ui, sans-serif;   /* texte courant */
+  color: var(--texte);
+  background: linear-gradient(160deg, var(--marine) 0%, var(--marine-fonce) 100%);
+  min-height: 100vh;
+  line-height: 1.5;
+  padding: var(--espace);
+}
+
+/* --- Titres : Bebas Neue (grosse typo d'affichage) --- */
+h1, h2, h3 {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+
+/* ==========================================================================
+   En-tête de page
+   ========================================================================== */
+.entete {
+  text-align: center;
+  padding: var(--espace) 0 calc(var(--espace) * 1.5);
+}
+
+.entete h1 {
+  font-size: 2.4rem;
+  color: var(--texte);
+}
+
+.entete .sous-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Cartes (blocs d'information)
+   ========================================================================== */
+.carte {
+  background: rgba(255, 255, 255, 0.05);        /* léger voile clair sur le marine */
+  border: 1px solid rgba(184, 216, 248, 0.15);  /* fin liseré bleu ciel */
+  border-radius: var(--rayon);
+  padding: var(--espace);
+  margin-bottom: var(--espace);
+}
+
+.carte h2 {
+  font-size: 1.5rem;
+  color: var(--bleu-ciel);
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(184, 216, 248, 0.15);
+  padding-bottom: 8px;
+}
+
+/* --- Une ligne "libellé : valeur" (ex : Heure de début : 09:00) --- */
+.ligne-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 6px 0;
+}
+
+.ligne-info .libelle {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--bleu-ciel);
+  font-size: 0.95rem;
+}
+
+.ligne-info .valeur {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+/* ==========================================================================
+   Catégories (une carte par catégorie)
+   ========================================================================== */
+.categorie {
+  border-left: 4px solid var(--accent);   /* liseré d'accent à gauche */
+}
+
+.categorie .badge {
+  display: inline-block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  background: var(--accent);
+  color: #fff;
+  padding: 2px 14px;
+  border-radius: 8px;
+  letter-spacing: 1px;
+}
+
+/* Étiquette "présente" / "absente" */
+.statut-present, .statut-absent {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+.statut-present { background: rgba(46, 143, 224, 0.25); color: var(--bleu-ciel); }
+.statut-absent  { background: rgba(255, 255, 255, 0.08); color: #93a4b8; }
+
+/* Grille des petits réglages d'une catégorie */
+.grille-reglages {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);   /* 2 colonnes sur mobile */
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.reglage {
+  background: rgba(3, 16, 36, 0.4);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.reglage .r-libelle {
+  display: block;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  color: var(--bleu-ciel);
+}
+.reglage .r-valeur {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Messages (chargement, erreur)
+   ========================================================================== */
+.message {
+  text-align: center;
+  padding: var(--espace);
+  color: var(--bleu-ciel);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+}
+.message.erreur {
+  color: #ffb4b4;
+  background: rgba(255, 80, 80, 0.1);
+  border-radius: var(--rayon);
+}
+
+/* ==========================================================================
+   Écrans plus larges (tablette / ordinateur)
+   ========================================================================== */
+@media (min-width: 700px) {
+  body { padding: calc(var(--espace) * 2); }
+
+  /* On centre le contenu et on limite la largeur pour le confort de lecture */
+  .conteneur { max-width: 900px; margin: 0 auto; }
+
+  .entete h1 { font-size: 3.2rem; }
+
+  .grille-reglages { grid-template-columns: repeat(3, 1fr); }
+}

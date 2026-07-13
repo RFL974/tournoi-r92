@@ -13,7 +13,7 @@ puis de suivre les scores et classements en direct.
 
 | # | Fonctionnalité | Statut |
 |---|---|---|
-| 1 | **Page admin** : saisie des équipes, réglages par catégorie et horaires globaux, génération automatique des poules et du planning | 🔲 À faire |
+| 1 | **Page admin** : saisie des équipes, réglages par catégorie et horaires globaux, génération automatique des poules et du planning | 🟡 En cours (affichage des réglages fait) |
 | 2 | **Mon planning** : un visiteur choisit son équipe et voit uniquement ses matchs | 🔲 À faire |
 | 3 | **Live** : classements par catégorie, derniers scores, favoris (étoile), bannière don HelloAsso | 🔲 À faire |
 | 4 | **Saisie des scores** : formulaire match par match | 🔲 À faire |
@@ -99,10 +99,13 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 
 ## 📌 Statut d'avancement
 
+**Session 4 (2026-07-13)** — Début du frontend : **page admin (étape 1)**. Affiche les horaires
+globaux et les catégories lus depuis le backend, aux couleurs de la charte R92 (mobile-first).
+Prochaine étape : saisie des équipes + écriture des données (`doPost`).
+
 **Session 3 (2026-07-11)** — Backend **déployé en Web App** et fonctionnel : l'API de lecture
 (`doGet`) répond en JSON (`ping`, `getConfig`, `getEquipes`, `getPoules`, `getMatchs`, `getAll`).
-URL rangée dans `frontend/js/config.js`. Prochaine étape : première page web (admin) + écriture
-des données.
+URL rangée dans `frontend/js/config.js`.
 
 **Session 2 (2026-07-11)** — Premier code backend : `setupSheet()` crée automatiquement les 4
 onglets du Sheet avec leurs en-têtes.

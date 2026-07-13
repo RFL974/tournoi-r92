@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 4 — 2026-07-13
+- Début du frontend : **page admin (étape 1 — affichage)**.
+- Ajout de `frontend/css/styles.css` : charte R92 (couleurs, polices Bebas Neue / Barlow
+  Condensed / Barlow), mobile-first, cartes et grilles de réglages.
+- Ajout de `frontend/js/api.js` : `apiGet(action)` (lecture des données via `fetch`).
+- Ajout de `frontend/js/admin.js` : lit `getConfig` et affiche horaires globaux + catégories.
+- Ajout de `frontend/admin.html` : structure de la page + chargement des scripts.
+- Ajout de `.claude/launch.json` : config de serveur local pour prévisualiser le frontend.
+- Vérifié : le backend renvoie `access-control-allow-origin: *` → lecture navigateur autorisée.
+
 ### Note de migration — 2026-07-11
 - Développement fait sur les **comptes personnels** de Romain ; tout devra basculer sur les
   **comptes de l'association** (en création). Ajout de `docs/migration-association.md` : check-list

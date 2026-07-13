@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <!-- "viewport" = indispensable pour un affichage correct sur téléphone (mobile-first) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration — Tournoi R92</title>
+
+  <!-- Polices de la charte (Bebas Neue, Barlow Condensed, Barlow) via Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Notre feuille de style commune -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="conteneur">
+
+    <header class="entete">
+      <div class="sous-titre">Génération R92</div>
+      <h1>Administration du tournoi</h1>
+    </header>
+
+    <!-- C'est ici que le JavaScript va injecter les réglages lus depuis le backend.
+         Au départ, on affiche un message "Chargement…". -->
+    <main id="contenu">
+      <div class="message">Chargement des réglages…</div>
+    </main>
+
+  </div>
+
+  <!-- On charge les scripts DANS CET ORDRE :
+       1) config.js  → définit l'URL du backend
+       2) api.js     → fournit apiGet()
+       3) admin.js   → utilise les deux pour afficher la page -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/admin.js"></script>
+
+</body>
+</html>
