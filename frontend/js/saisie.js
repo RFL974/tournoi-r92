@@ -72,7 +72,7 @@ function afficherMatchs() {
 
 /** HTML d'une carte de match (méta + saisie des 2 scores + bouton). */
 function carteMatch(m) {
-  const termine = String(m.statut) === 'terminé';
+  const termine = estTermine(m.statut);
   const sa = (m.score_A === '' || m.score_A == null) ? '' : m.score_A;
   const sb = (m.score_B === '' || m.score_B == null) ? '' : m.score_B;
   const libellePoule = (String(m.phase) === 'classement' ? 'Niveau ' : 'Poule ') + String(m.poule);
@@ -134,6 +134,14 @@ document.addEventListener('click', async function (evenement) {
 function afficherMessage(element, texte, type) {
   element.textContent = texte;
   element.className = 'message-form ' + (type === 'ok' ? 'ok' : 'ko');
+}
+
+/**
+ * Vrai si le statut vaut « terminé », quelle que soit la forme du « é » (NFC/NFD).
+ * Le Sheet peut renvoyer un « é » décomposé ; on teste le préfixe ASCII « termin ».
+ */
+function estTermine(statut) {
+  return /^\s*termin/i.test(String(statut));
 }
 
 /** Neutralise les caractères spéciaux HTML (sécurité d'affichage). */

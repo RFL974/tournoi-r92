@@ -14,7 +14,7 @@ puis de suivre les scores et classements en direct.
 | # | Fonctionnalité | Statut |
 |---|---|---|
 | 1 | **Page admin** : saisie des équipes, réglages par catégorie et horaires globaux, génération automatique des poules et du planning | ✅ Fait (équipes, réglages, génération poules + planning) |
-| 2 | **Mon planning** : un visiteur choisit son équipe et voit uniquement ses matchs | 🔲 À faire |
+| 2 | **Mon planning** : un visiteur choisit son équipe et voit uniquement ses matchs (matin + après-midi, résultats colorés) | 🟡 Fait (page `planning.html`) — en attente d'hébergement |
 | 3 | **Live** : classements par catégorie, derniers scores, favoris (étoile), bannière don HelloAsso | 🔲 À faire |
 | 4 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider) | 🟡 Fait (page + action `enregistrerScore`) — backend à redéployer |
 
@@ -58,7 +58,7 @@ tournoi-r92/
     ├── admin.html           → page organisateur (équipes, réglages, génération)
     ├── saisie.html          → saisie des scores (table de marque)
     ├── classement.html      → classement des poules (lecture seule)
-    ├── planning.html        → « Mon planning » visiteur (à venir)
+    ├── planning.html        → « Mon planning » visiteur (choix de l'équipe)
     ├── live.html            → live complet (à venir)
     ├── css/styles.css
     └── js/
@@ -66,10 +66,11 @@ tournoi-r92/
         ├── api.js           → communication avec le backend (apiGet / apiPost)
         ├── admin.js
         ├── saisie.js
-        └── classement.js
+        ├── classement.js
+        └── planning.js
 ```
 
-> Note : `planning.html` / `live.html` (et leurs scripts) sont **planifiés**, pas encore créés.
+> Note : `live.html` (et son script) est **planifié**, pas encore créé.
 
 ---
 

@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Page « Mon planning » (visiteur) — 2026-07-13
+- Nouvelle page **`planning.html`** + `js/planning.js` : le visiteur choisit son équipe (menu
+  groupé par catégorie) et voit **uniquement ses matchs**, séparés matin / après-midi, avec heure,
+  terrain, adversaire et **résultat coloré** (Victoire vert / Défaite rouge / Nul) du point de vue
+  de l'équipe. Dernier choix mémorisé (localStorage). Vérifiée en preview sur données live.
+- **Fix affichage « terminé »** : le Sheet renvoie parfois le « é » en forme **décomposée** (NFD,
+  8 caractères) — l'égalité stricte `=== 'terminé'` échouait, donc les matchs joués s'affichaient
+  « à venir » et sans le badge « ✓ terminé ». Remplacé par un test robuste `estTermine()` (préfixe
+  ASCII `termin`) dans `planning.js` et `saisie.js`.
+
 ### Session 13 (affichage) — 2026-07-13
 - **Planning admin séparé matin / après-midi** : `afficherPlanning` scinde désormais chaque catégorie
   en deux tableaux — « 🌅 Matin — poules » (colonne *Poule* A/B/C) et « 🏉 Après-midi — classement

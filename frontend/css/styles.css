@@ -461,6 +461,29 @@ select.r-input { cursor: pointer; }
 .table-classement .col-equipe { text-align: left; font-weight: 600; }
 .table-classement .col-pts { font-weight: 700; color: var(--texte); }
 
+/* Page « Mon planning » (planning.html) */
+.mp-label {
+  display: block;
+  color: var(--bleu-ciel);
+  font-family: 'Barlow Condensed', sans-serif;
+  margin-bottom: 6px;
+}
+#select-equipe { margin-bottom: 8px; }
+.mp-ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.mp-adv { font-weight: 600; font-size: 1.05rem; }
+.mp-resultat { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; }
+.mp-resultat.gagne { color: #9fe0a0; }
+.mp-resultat.perd  { color: #ffb4b4; }
+.mp-resultat.nul   { color: var(--bleu-ciel); }
+.mp-avenir { color: #7f92a8; font-style: italic; }
+
 /* Sous-titre de phase dans le planning admin (Matin / Après-midi) */
 .planning-phase {
   font-family: 'Barlow Condensed', sans-serif;
