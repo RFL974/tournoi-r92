@@ -402,6 +402,10 @@ function doPost(e) {
         resultat = supprimerCategorie(classeur, requete.categorie);
         break;
 
+      case 'genererPoulesEtPlanning':
+        resultat = genererPoulesEtPlanning(classeur);
+        break;
+
       default:
         resultat = { error: 'Action inconnue : ' + action };
     }
@@ -587,4 +591,248 @@ function supprimerCategorie(classeur, nom) {
     }
   }
   return { error: 'Catégorie introuvable : ' + nom };
+}
+
+
+/* ============================================================================
+ *  GÉNÉRATION DES POULES ET DU PLANNING
+ * ============================================================================
+ *  1) répartit les équipes de chaque catégorie présente en poules (taille cible),
+ *  2) crée les matchs de poule (tournoi toutes rondes),
+ *  3) calcule les horaires + terrains sans conflit (récup, pause déjeuner, fin).
+ *  Écrit le tout dans les onglets Poules, Equipes (colonne poule) et Matchs.
+ *  ⚠️ Efface les poules et matchs précédents (et donc les scores déjà saisis).
+ * ============================================================================ */
+function genererPoulesEtPlanning(classeur) {
+  var config = lireConfig(classeur);
+  var equipes = lireOngletSimple(classeur, 'Equipes');
+  var global = config.global;
+  var avert = []; // avertissements à remonter à l'utilisateur
+
+  // Horaires globaux convertis en minutes depuis minuit.
+  var tDebut  = hmVersMin(global.heure_debut || '09:00');
+  var tFin    = hmVersMin(global.heure_fin   || '18:00');
+  var dejDeb  = hmVersMin(global.pause_dejeuner_debut || '12:30');
+  var dejDur  = parseInt(global.pause_dejeuner_duree_min || '0', 10) || 0;
+  var dejFin  = dejDeb + dejDur;
+
+  // On ne garde que les catégories présentes.
+  var categories = config.categories.filter(function (c) {
+    return String(c.presente).toLowerCase() === 'oui';
+  });
+
+  /* --- 1) POULES + affectation des équipes --- */
+  var poules = [];            // { id_poule, categorie, nom_poule, equipes:[{...}] }
+  var affectationPoule = {};  // id_equipe -> nom_poule
+  var compteurPoule = 0;
+
+  categories.forEach(function (cat) {
+    var eqCat = equipes.filter(function (e) { return e.categorie === cat.categorie; });
+    if (eqCat.length === 0) { avert.push('Catégorie ' + cat.categorie + ' : aucune équipe.'); return; }
+
+    eqCat = melanger(eqCat.slice()); // mélange pour l'équité
+    var taille = parseInt(cat.taille_poule_cible || '4', 10) || 4;
+    var nbPoules = Math.max(1, Math.ceil(eqCat.length / taille));
+
+    var poulesCat = [];
+    for (var p = 0; p < nbPoules; p++) {
+      compteurPoule++;
+      var poule = {
+        id_poule: 'P' + (compteurPoule < 10 ? '0' + compteurPoule : compteurPoule),
+        categorie: cat.categorie,
+        nom_poule: String.fromCharCode(65 + p), // A, B, C...
+        equipes: []
+      };
+      poulesCat.push(poule);
+      poules.push(poule);
+    }
+
+    // Répartition équilibrée (une équipe par poule à tour de rôle).
+    eqCat.forEach(function (e, i) {
+      var poule = poulesCat[i % nbPoules];
+      poule.equipes.push(e);
+      affectationPoule[e.id_equipe] = poule.nom_poule;
+    });
+  });
+
+  /* --- 2) MATCHS de poule (tournoi toutes rondes) --- */
+  var matchsParCat = {}; // categorie -> [ { poule, equipe_A, equipe_B, round } ]
+  poules.forEach(function (poule) {
+    var ids = poule.equipes.map(function (e) { return e.id_equipe; });
+    if (!matchsParCat[poule.categorie]) matchsParCat[poule.categorie] = [];
+    tourneeToutesRondes(ids).forEach(function (pr) {
+      matchsParCat[poule.categorie].push({
+        poule: poule.nom_poule, equipe_A: pr.a, equipe_B: pr.b, round: pr.round
+      });
+    });
+  });
+
+  /* --- 3) PLANNING (horaires + terrains) --- */
+  var terrainLibre = {}; // n° terrain -> minute où il se libère
+  var equipeLibre = {};  // id_equipe -> minute où elle redevient disponible
+  var matchsFinaux = []; // lignes prêtes pour l'onglet Matchs
+  var compteurMatch = 0;
+
+  categories.forEach(function (cat) {
+    var liste = (matchsParCat[cat.categorie] || []).slice();
+    liste.sort(function (x, y) { return x.round - y.round; }); // espace les matchs d'une même équipe
+
+    var terrains = String(cat.terrains || '').split(',')
+                     .map(function (s) { return s.trim(); })
+                     .filter(function (s) { return s !== ''; });
+    if (terrains.length === 0 && liste.length > 0) {
+      avert.push('Catégorie ' + cat.categorie + ' : aucun terrain défini.');
+    }
+
+    var duree = dureeMatch(cat);
+    var recup = parseInt(cat.recup_entre_matchs_min || '0', 10) || 0;
+
+    liste.forEach(function (m) {
+      terrains.forEach(function (t) { if (terrainLibre[t] == null) terrainLibre[t] = tDebut; });
+      if (equipeLibre[m.equipe_A] == null) equipeLibre[m.equipe_A] = tDebut;
+      if (equipeLibre[m.equipe_B] == null) equipeLibre[m.equipe_B] = tDebut;
+
+      var dispoEquipes = Math.max(equipeLibre[m.equipe_A], equipeLibre[m.equipe_B]);
+
+      // Terrain qui se libère le plus tôt.
+      var terrainChoisi = null, plusTot = Infinity;
+      terrains.forEach(function (t) {
+        if (terrainLibre[t] < plusTot) { plusTot = terrainLibre[t]; terrainChoisi = t; }
+      });
+
+      var debut = (terrainChoisi == null)
+        ? dispoEquipes
+        : Math.max(dispoEquipes, terrainLibre[terrainChoisi]);
+
+      // On saute la pause déjeuner si le match la chevauche.
+      if (dejDur > 0 && debut < dejFin && (debut + duree) > dejDeb) {
+        debut = dejFin;
+      }
+
+      var fin = debut + duree;
+      if (fin > tFin) {
+        avert.push('Catégorie ' + cat.categorie + ' (poule ' + m.poule + ') : un match finit après l\'heure de fin.');
+      }
+
+      if (terrainChoisi != null) terrainLibre[terrainChoisi] = fin;
+      equipeLibre[m.equipe_A] = fin + recup;
+      equipeLibre[m.equipe_B] = fin + recup;
+
+      compteurMatch++;
+      matchsFinaux.push([
+        idMatch(compteurMatch), cat.categorie, m.poule, (terrainChoisi || ''),
+        minVersHm(debut), minVersHm(fin),
+        m.equipe_A, m.equipe_B, '', '', 'à venir'
+      ]);
+    });
+  });
+
+  /* --- 4) ÉCRITURE dans le Sheet --- */
+  ecrireGeneration(classeur, poules, affectationPoule, matchsFinaux);
+
+  return {
+    ok: true,
+    nb_poules: poules.length,
+    nb_matchs: matchsFinaux.length,
+    avertissements: avert
+  };
+}
+
+/** Génère toutes les rencontres d'une poule (méthode du "cercle" / round-robin). */
+function tourneeToutesRondes(ids) {
+  var matches = [];
+  var arr = ids.slice();
+  if (arr.length < 2) return matches;
+  if (arr.length % 2 === 1) arr.push(null); // équipe fictive = repos
+
+  var n = arr.length;
+  var liste = arr.slice();
+  for (var r = 0; r < n - 1; r++) {
+    for (var i = 0; i < n / 2; i++) {
+      var a = liste[i], b = liste[n - 1 - i];
+      if (a !== null && b !== null) matches.push({ a: a, b: b, round: r });
+    }
+    // Rotation : on fixe le 1er élément et on fait tourner les autres.
+    var fixe = liste[0];
+    var reste = liste.slice(1);
+    reste.unshift(reste.pop());
+    liste = [fixe].concat(reste);
+  }
+  return matches;
+}
+
+/** Durée totale d'un match (mi-temps + pause), en minutes. */
+function dureeMatch(cat) {
+  var format = parseInt(cat.format_mi_temps || '1', 10) || 1;
+  var duree  = parseInt(cat.duree_mi_temps_min || '0', 10) || 0;
+  var pause  = parseInt(cat.pause_mi_temps_min || '0', 10) || 0;
+  var total = format * duree + (format >= 2 ? pause : 0);
+  return total > 0 ? total : 10;
+}
+
+/** "HH:MM" -> minutes depuis minuit. */
+function hmVersMin(hm) {
+  var p = String(hm).split(':');
+  return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+}
+
+/** minutes -> "HH:MM". */
+function minVersHm(min) {
+  min = Math.round(min);
+  var h = Math.floor(min / 60), m = min % 60;
+  return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+}
+
+/** Identifiant de match : M001, M002, … */
+function idMatch(n) {
+  if (n < 10)  return 'M00' + n;
+  if (n < 100) return 'M0' + n;
+  return 'M' + n;
+}
+
+/** Mélange un tableau en place (Fisher-Yates). */
+function melanger(a) {
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+/** Écrit poules, colonne poule des équipes, et matchs (en effaçant l'ancien). */
+function ecrireGeneration(classeur, poules, affectationPoule, matchsFinaux) {
+  // Poules
+  var oP = classeur.getSheetByName('Poules');
+  viderDonnees(oP);
+  if (poules.length) {
+    oP.getRange(2, 1, poules.length, 3).setValues(poules.map(function (p) {
+      return [p.id_poule, p.categorie, p.nom_poule];
+    }));
+  }
+
+  // Equipes : colonne "poule" (4e colonne)
+  var oE = classeur.getSheetByName('Equipes');
+  var dernierE = oE.getLastRow();
+  if (dernierE >= 2) {
+    var ids = oE.getRange(2, 1, dernierE - 1, 1).getValues();
+    var col = ids.map(function (r) {
+      return [affectationPoule[r[0]] != null ? affectationPoule[r[0]] : ''];
+    });
+    oE.getRange(2, 4, col.length, 1).setValues(col);
+  }
+
+  // Matchs
+  var oM = classeur.getSheetByName('Matchs');
+  viderDonnees(oM);
+  if (matchsFinaux.length) {
+    oM.getRange(2, 1, matchsFinaux.length, matchsFinaux[0].length).setValues(matchsFinaux);
+  }
+}
+
+/** Efface les données d'un onglet en gardant la ligne d'en-tête. */
+function viderDonnees(onglet) {
+  var dernier = onglet.getLastRow();
+  if (dernier >= 2) {
+    onglet.getRange(2, 1, dernier - 1, onglet.getLastColumn()).clearContent();
+  }
 }

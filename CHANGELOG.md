@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 7 — 2026-07-13
+- Page admin **étape 4 — génération des poules et du planning (backend)**.
+- `backend/Code.gs` : `genererPoulesEtPlanning()` + helpers (`tourneeToutesRondes`, `dureeMatch`,
+  `hmVersMin`/`minVersHm`, `idMatch`, `melanger`, `ecrireGeneration`, `viderDonnees`).
+  Répartit en poules (taille cible), crée les matchs (round-robin), planifie sans conflit
+  (récup entre matchs, terrains dédiés, pause déjeuner évitée, alerte si dépassement de l'heure
+  de fin). Écrit dans Poules, Equipes.poule et Matchs. Action doPost `genererPoulesEtPlanning`.
+- Algorithme validé hors-ligne (Node) : 0 conflit terrains/équipes/récup/déjeuner, round-robin complet.
+- Reste : bouton dans la page admin + affichage du planning généré.
+
 ### Session 6 — 2026-07-13
 - Page admin **étape 3b — catégories modifiables depuis la page** (frontend seul, backend déjà en place).
   - Chaque catégorie devient un formulaire : interrupteur « Présente », terrains, taille de poule,
