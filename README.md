@@ -145,8 +145,12 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   automatiquement. Vérifié en local. Le bandeau don HelloAsso est un **placeholder** (URL à renseigner).
 - 🟡 **Mon planning** et **Live** : en attente d'hébergement.
 
-**Reste à faire :** redéployer le backend (saisie scores + après-midi + clés) et lancer
-`configurerCles()`, renseigner l'URL HelloAsso du bandeau don, puis l'instantané `data.json` et
-l'hébergement / intégration à generationr92.fr (voir [`docs/architecture.md`](docs/architecture.md)).
+**Reste à faire :**
+- **Redéployer le backend** (saisie scores + après-midi + clés) et lancer `configurerCles()`.
+- **Hébergement / intégration** à generationr92.fr via l'instantané `data.json`
+  (voir [`docs/architecture.md`](docs/architecture.md)).
+- ⏳ **À faire plus tard — en attente de la création du compte HelloAsso** : brancher l'URL réelle du
+  bandeau de don. Le compte HelloAsso n'existe pas encore ; en attendant, le bandeau reste un
+  placeholder (`href="#"`, `id="don-lien"` dans `live.html`). L'URL sera à coller une fois le compte créé.
 
 Détail complet dans [`CHANGELOG.md`](CHANGELOG.md).
