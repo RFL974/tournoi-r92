@@ -198,7 +198,20 @@ function doPost(e) {
 /* ===================== SÉCURITÉ (clés d'écriture) ===================== */
 
 /**
- * À LANCER UNE FOIS depuis l'éditeur Apps Script pour définir les 2 clés.
+ * Ajoute un menu « Tournoi R92 » dans le Sheet à l'ouverture, pour lancer configurerCles
+ * depuis le bon contexte (les popups ne marchent PAS depuis le bouton ▶ de l'éditeur).
+ */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Tournoi R92')
+    .addItem('Configurer les clés (admin / scores)', 'configurerCles')
+    .addToUi();
+}
+
+/**
+ * Définit les 2 clés (popups). À lancer depuis le menu « Tournoi R92 » du Sheet
+ * (PAS depuis le bouton ▶ de l'éditeur, où les popups ne s'affichent pas).
+ * Alternative sans code : Paramètres du projet → Propriétés du script → CLE_ADMIN / CLE_SCORES.
  * Les clés sont rangées dans les Propriétés du script (jamais dans le code / GitHub).
  */
 function configurerCles() {

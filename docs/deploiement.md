@@ -41,12 +41,22 @@ La Web App reste en accès « Tout le monde » (la **lecture** publique est néc
 
 Les clés sont rangées dans les **Propriétés du script** (jamais dans le code / GitHub).
 
-**Mise en service (une seule fois), après avoir redéployé le nouveau `Code.gs` :**
-1. Dans l'éditeur Apps Script, choisir la fonction **`configurerCles`** dans le menu déroulant, puis
-   **Exécuter** ▶. Deux fenêtres demandent la **clé admin** puis la **clé scores** — les saisir.
-   *(La 1ʳᵉ exécution peut demander d'autoriser le script : accepter.)*
-2. Côté pages : au premier enregistrement, `admin.html` demande la clé admin et `saisie.html` la clé
-   scores. Elles sont **mémorisées sur l'appareil** (pas à re-saisir à chaque fois).
+**Mise en service (une seule fois) — définir les 2 clés.** Deux méthodes :
+
+- **A. À la main (la plus simple, aucune exécution)** : éditeur Apps Script → **⚙️ Paramètres du
+  projet** → section **« Propriétés du script »** → **Ajouter une propriété** ×2 :
+  `CLE_ADMIN` = *(mot de passe admin)* et `CLE_SCORES` = *(mot de passe scores)* → **Enregistrer**.
+  Effet immédiat, **pas besoin de redéployer** pour ça.
+
+- **B. Par le menu du Sheet** : après avoir collé/déployé le code, **recharger le Google Sheet** →
+  un menu **« Tournoi R92 »** apparaît → **« Configurer les clés »** → saisir les 2 clés dans les
+  popups. *(La 1ʳᵉ fois, autoriser le script.)*
+
+> ⚠️ Ne **pas** lancer `configurerCles` via le bouton ▶ de l'éditeur : les popups ne s'affichent que
+> dans le contexte du Sheet (menu), sinon l'exécution attend une réponse et **expire** au bout de ~6 min.
+
+Ensuite, côté pages : au premier enregistrement, `admin.html` demande la clé admin et `saisie.html`
+la clé scores. Elles sont **mémorisées sur l'appareil** (pas à re-saisir à chaque fois).
 
 > ⚠️ Tant que `configurerCles` n'a pas été lancé, **toute écriture est refusée** (« Clé non
 > configurée »). C'est voulu : pas de clé côté serveur = pas d'écriture possible.
