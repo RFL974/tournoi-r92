@@ -161,6 +161,87 @@ h1, h2, h3 {
 }
 
 /* ==========================================================================
+   Formulaire d'ajout d'équipe + liste des équipes
+   ========================================================================== */
+.form-equipe {
+  display: flex;
+  flex-wrap: wrap;                /* passe à la ligne sur petit écran */
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.form-equipe input[type="text"],
+.form-equipe select {
+  flex: 1 1 150px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(184, 216, 248, 0.25);
+  background: rgba(3, 16, 36, 0.5);
+  color: var(--texte);
+  font-family: 'Barlow', sans-serif;
+  font-size: 1rem;
+}
+.form-equipe input::placeholder { color: #7f92a8; }
+
+/* Bouton générique (accent) */
+.bouton {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.bouton:hover { background: #2477bd; }
+.bouton:disabled { opacity: 0.6; cursor: default; }
+
+/* Message sous le formulaire */
+.message-form { min-height: 1.3em; font-family: 'Barlow Condensed', sans-serif; }
+.message-form.ok { color: #9fe0a0; }
+.message-form.ko { color: #ffb4b4; }
+
+/* Liste des équipes, groupée par catégorie */
+.groupe-categorie { margin-top: 14px; }
+.groupe-categorie h3 {
+  color: var(--bleu-ciel);
+  font-size: 1.3rem;
+  margin-bottom: 6px;
+}
+.groupe-categorie .cat-mini {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem;
+  color: #7f92a8;
+}
+.equipe-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(3, 16, 36, 0.4);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+}
+.equipe-item .nom { font-weight: 600; }
+.bouton-suppr {
+  background: transparent;
+  border: 1px solid rgba(255, 120, 120, 0.4);
+  color: #ffb4b4;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 4px 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+}
+.bouton-suppr:hover { background: rgba(255, 80, 80, 0.15); }
+.bouton-suppr:disabled { opacity: 0.5; cursor: default; }
+
+.vide { color: #7f92a8; font-style: italic; }
+
+/* ==========================================================================
    Messages (chargement, erreur)
    ========================================================================== */
 .message {

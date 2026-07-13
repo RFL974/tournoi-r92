@@ -9,10 +9,10 @@
  *  Il contient pour l'instant :
  *   - setupSheet()  : crée les 4 onglets (Equipes, Poules, Matchs, Config) et
  *                     leurs en-têtes. À lancer UNE SEULE FOIS pour préparer la base.
- *   - doGet(e)      : répond aux requêtes de LECTURE (renvoie du JSON) une fois
- *                     le script déployé en "Web App".
+ *   - doGet(e)      : requêtes de LECTURE (renvoie du JSON).
+ *   - doPost(e)     : requêtes d'ÉCRITURE (ajouter/supprimer une équipe).
  *
- *  (L'écriture des données et la génération du planning viendront ensuite.)
+ *  (La génération des poules/planning et la saisie des scores viendront ensuite.)
  * ============================================================================
  */
 
@@ -354,4 +354,119 @@ function lireConfig(classeur) {
   }
 
   return { global: global, categories: categories };
+}
+
+
+/**
+ * ============================================================================
+ *  ÉCRITURE DES DONNÉES — modifie le Sheet (ajout/suppression)
+ * ============================================================================
+ *  Google appelle doPost() quand une page envoie une requête d'ÉCRITURE.
+ *  La page envoie un petit paquet JSON du type { action: 'ajouterEquipe', ... }.
+ *  On lit "action" pour savoir quoi faire.
+ * ============================================================================
+ */
+
+/**
+ * Point d'entrée des requêtes d'ÉCRITURE (méthode POST).
+ * @param {Object} e  e.postData.contents contient le JSON envoyé par la page.
+ * @return {TextOutput}  réponse JSON.
+ */
+function doPost(e) {
+  try {
+    // On transforme le texte reçu en objet JavaScript.
+    var requete = JSON.parse(e.postData.contents);
+    var action = requete.action;
+
+    var classeur = SpreadsheetApp.openById(SHEET_ID);
+    var resultat;
+
+    switch (action) {
+      case 'ajouterEquipe':
+        resultat = ajouterEquipe(classeur, requete.nom_equipe, requete.categorie);
+        break;
+
+      case 'supprimerEquipe':
+        resultat = supprimerEquipe(classeur, requete.id_equipe);
+        break;
+
+      default:
+        resultat = { error: 'Action inconnue : ' + action };
+    }
+
+    return repondreJson(resultat);
+
+  } catch (erreur) {
+    return repondreJson({ error: String(erreur) });
+  }
+}
+
+/**
+ * Ajoute une équipe dans l'onglet Equipes.
+ * @param {Spreadsheet} classeur
+ * @param {string} nom        nom de l'équipe
+ * @param {string} categorie  ex : 'U8'
+ * @return {Object}  { ok: true, equipe: {...} } ou { error: '...' }
+ */
+function ajouterEquipe(classeur, nom, categorie) {
+  nom = (nom || '').toString().trim();
+  categorie = (categorie || '').toString().trim();
+
+  // Petites vérifications avant d'écrire.
+  if (!nom)       return { error: "Le nom de l'équipe est vide." };
+  if (!categorie) return { error: 'La catégorie est vide.' };
+
+  var onglet = classeur.getSheetByName('Equipes');
+  var id = genererIdEquipe(onglet);
+
+  // appendRow ajoute une ligne à la fin. Colonnes : id, nom, categorie, poule (vide).
+  onglet.appendRow([id, nom, categorie, '']);
+
+  return { ok: true, equipe: { id_equipe: id, nom_equipe: nom, categorie: categorie, poule: '' } };
+}
+
+/**
+ * Supprime une équipe à partir de son identifiant.
+ * @param {Spreadsheet} classeur
+ * @param {string} id  ex : 'E03'
+ * @return {Object}  { ok: true } ou { error: '...' }
+ */
+function supprimerEquipe(classeur, id) {
+  var onglet = classeur.getSheetByName('Equipes');
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return { error: 'Aucune équipe à supprimer.' };
+
+  // On lit la colonne des identifiants (colonne 1), à partir de la ligne 2.
+  var ids = onglet.getRange(2, 1, dernier - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === String(id)) {
+      onglet.deleteRow(i + 2); // +2 car on a commencé à la ligne 2
+      return { ok: true };
+    }
+  }
+  return { error: 'Équipe introuvable : ' + id };
+}
+
+/**
+ * Fabrique l'identifiant d'équipe suivant (E01, E02, …) en regardant les
+ * identifiants déjà présents pour prendre le plus grand + 1.
+ * @param {Sheet} onglet  l'onglet Equipes
+ * @return {string}
+ */
+function genererIdEquipe(onglet) {
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return 'E01'; // aucune équipe encore
+
+  var valeurs = onglet.getRange(2, 1, dernier - 1, 1).getValues();
+  var max = 0;
+  valeurs.forEach(function (ligne) {
+    var m = String(ligne[0]).match(/^E(\d+)$/); // reconnaît "E" suivi de chiffres
+    if (m) {
+      var n = parseInt(m[1], 10);
+      if (n > max) max = n;
+    }
+  });
+
+  var suivant = max + 1;
+  return 'E' + (suivant < 10 ? '0' + suivant : suivant); // E01, E02, …, E10, E11
 }

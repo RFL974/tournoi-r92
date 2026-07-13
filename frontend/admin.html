@@ -23,10 +23,33 @@
       <h1>Administration du tournoi</h1>
     </header>
 
-    <!-- C'est ici que le JavaScript va injecter les réglages lus depuis le backend.
-         Au départ, on affiche un message "Chargement…". -->
-    <main id="contenu">
-      <div class="message">Chargement des réglages…</div>
+    <main>
+
+      <!-- 1) Les réglages (horaires + catégories), injectés par admin.js -->
+      <section id="reglages">
+        <div class="message">Chargement des réglages…</div>
+      </section>
+
+      <!-- 2) La saisie des équipes -->
+      <section class="carte" id="bloc-equipes">
+        <h2>Équipes</h2>
+
+        <!-- Formulaire d'ajout : nom + catégorie -->
+        <form id="form-equipe" class="form-equipe">
+          <input id="champ-nom" type="text" placeholder="Nom de l'équipe" autocomplete="off" required>
+          <select id="champ-categorie" required>
+            <option value="">Catégorie…</option>
+          </select>
+          <button type="submit" class="bouton" id="bouton-ajouter">Ajouter</button>
+        </form>
+
+        <!-- Message de retour (succès / erreur) -->
+        <div id="message-equipe" class="message-form"></div>
+
+        <!-- La liste des équipes, groupée par catégorie -->
+        <div id="liste-equipes"></div>
+      </section>
+
     </main>
 
   </div>

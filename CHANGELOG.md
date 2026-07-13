@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 5 — 2026-07-13
+- Page admin **étape 2 — saisie des équipes** (première ÉCRITURE dans le Sheet).
+- `backend/Code.gs` : ajout de `doPost()` + `ajouterEquipe()`, `supprimerEquipe()`,
+  `genererIdEquipe()` (identifiants auto E01, E02…). → nécessite un **redéploiement** du backend.
+- `frontend/js/api.js` : ajout de `apiPost(action, data)` (POST en `text/plain` pour éviter le
+  preflight CORS non géré par Apps Script).
+- `frontend/admin.html` : section « Équipes » (formulaire nom + catégorie, liste).
+- `frontend/js/admin.js` : chargement via `getAll`, remplissage du menu catégories (présentes),
+  ajout/suppression d'équipe avec rechargement de la liste, messages de retour.
+- `frontend/css/styles.css` : styles du formulaire, boutons et liste d'équipes.
+
 ### Session 4 — 2026-07-13
 - Début du frontend : **page admin (étape 1 — affichage)**.
 - Ajout de `frontend/css/styles.css` : charte R92 (couleurs, polices Bebas Neue / Barlow

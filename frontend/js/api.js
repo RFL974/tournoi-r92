@@ -48,3 +48,36 @@ async function apiGet(action, params) {
 
   return donnees;
 }
+
+/**
+ * Envoie une demande d'ÉCRITURE au backend (ajouter/supprimer…).
+ * @param {string} action  ex : 'ajouterEquipe', 'supprimerEquipe'
+ * @param {Object} [data]  les données à envoyer (ex : { nom_equipe, categorie })
+ * @return {Promise<Object>} la réponse du backend
+ *
+ * Exemple :
+ *   await apiPost('ajouterEquipe', { nom_equipe: 'Suresnes 1', categorie: 'U8' });
+ */
+async function apiPost(action, data) {
+  // On regroupe l'action et les données dans un seul paquet.
+  const corps = Object.assign({ action: action }, data || {});
+
+  const reponse = await fetch(API_URL, {
+    method: 'POST',
+    // On envoie en "text/plain" volontairement : ça évite une vérification
+    // préalable du navigateur (le "preflight" CORS) que Apps Script ne sait pas gérer.
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(corps)
+  });
+
+  if (!reponse.ok) {
+    throw new Error('Le serveur a répondu avec une erreur (' + reponse.status + ').');
+  }
+
+  const donnees = await reponse.json();
+  if (donnees && donnees.error) {
+    throw new Error(donnees.error);
+  }
+
+  return donnees;
+}
