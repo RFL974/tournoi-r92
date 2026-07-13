@@ -17,10 +17,10 @@ ces noms pour lire/écrire les données — il ne faut donc pas les renommer.
 
 ## Onglet `Config`
 
-Cet onglet contient deux zones. Disposition exacte créée par `setupSheet()` :
-- **Zone A** : lignes **1 à 5** (ligne 1 = en-têtes, lignes 2-5 = les 4 réglages globaux).
-- Ligne 7 : titre `— Réglages par catégorie —`.
-- **Zone B** : en-têtes en ligne **8**, puis une ligne par catégorie à partir de la ligne 9.
+Cet onglet contient deux zones : **Zone A** (réglages globaux, en haut, paires
+`parametre`/`valeur`), une ligne vide, un titre `— Réglages par catégorie —`, puis la **Zone B**
+(en-têtes + une ligne par catégorie). Le backend repère les zones **par leur contenu** (nom du
+paramètre, ou ligne dont la 1re cellule vaut `categorie`), donc les numéros de ligne peuvent varier.
 
 Tout l'onglet `Config` est au **format texte** (pour éviter que `09:00` devienne une heure
 et `1,2` un nombre décimal).
@@ -32,7 +32,9 @@ Deux colonnes : `parametre` et `valeur`.
 | parametre | valeur (exemple) | Signification |
 |---|---|---|
 | `heure_debut` | `09:00` | Heure de début du tournoi |
-| `heure_fin` | `17:00` | Heure de fin (limite) |
+| `heure_fin` | `17:00` | Heure de fin — **calculée automatiquement** si `heure_fin_auto = oui` |
+| `heure_fin_auto` | `oui` | Si `oui`, l'heure de fin = fin du dernier match (recalculée à chaque génération) |
+| `battement_terrain_min` | `5` | Temps (min) pour libérer un terrain entre 2 matchs |
 | `pause_dejeuner_debut` | `12:30` | Début de la pause déjeuner |
 | `pause_dejeuner_duree_min` | `60` | Durée de la pause déjeuner, en minutes |
 

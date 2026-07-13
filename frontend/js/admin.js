@@ -65,9 +65,20 @@ async function initAdmin() {
   // (zoneReglages est déjà déclaré en haut de initAdmin.)
   zoneReglages.addEventListener('submit', onReglagesSubmit);
   zoneReglages.addEventListener('click', onReglagesClick);
+  zoneReglages.addEventListener('change', onReglagesChange);
 
   // Bouton de génération des poules et du planning.
   document.getElementById('bouton-generer').addEventListener('click', onGenerer);
+}
+
+/**
+ * Réagit aux changements dans la zone réglages (case « heure de fin auto »).
+ */
+function onReglagesChange(evenement) {
+  if (evenement.target.id === 'h-heure_fin_auto') {
+    const champFin = document.getElementById('h-heure_fin');
+    if (champFin) champFin.disabled = evenement.target.checked; // grisé quand auto
+  }
 }
 
 /**
@@ -109,15 +120,29 @@ async function rechargerReglages() {
  * Les heures utilisent le champ natif <input type="time"> (rouleau sur mobile).
  */
 function afficherHoraires(global) {
-  function val(cle) {
-    return (global && global[cle] != null) ? echapper(String(global[cle])) : '';
+  function val(cle, def) {
+    return (global && global[cle] != null && global[cle] !== '')
+      ? echapper(String(global[cle])) : (def || '');
   }
+  // Heure de fin automatique par défaut (sauf si explicitement 'non').
+  var auto = String((global && global.heure_fin_auto) || 'oui').toLowerCase() !== 'non';
+
   return (
     '<section class="carte">' +
       '<h2>Horaires de la journée</h2>' +
       '<form id="form-horaires" class="form-reglages">' +
         champHeure('heure_debut', 'Heure de début', val('heure_debut')) +
-        champHeure('heure_fin', 'Heure de fin', val('heure_fin')) +
+        // Heure de fin + case "auto"
+        '<div class="champ-reglage">' +
+          '<label for="h-heure_fin">Heure de fin</label>' +
+          '<span class="fin-groupe">' +
+            '<label class="mini-toggle"><input type="checkbox" id="h-heure_fin_auto" name="heure_fin_auto"' +
+              (auto ? ' checked' : '') + '> auto</label>' +
+            '<input type="time" id="h-heure_fin" name="heure_fin" value="' + val('heure_fin') + '"' +
+              (auto ? ' disabled' : '') + '>' +
+          '</span>' +
+        '</div>' +
+        champNombre('battement_terrain_min', 'Battement entre matchs (min)', val('battement_terrain_min', '5')) +
         champHeure('pause_dejeuner_debut', 'Pause déjeuner — début', val('pause_dejeuner_debut')) +
         champNombre('pause_dejeuner_duree_min', 'Pause déjeuner — durée (min)', val('pause_dejeuner_duree_min')) +
         '<div class="ligne-action">' +
@@ -153,15 +178,22 @@ async function onEnregistrerHoraires(evenement) {
   const form = evenement.target;
   const message = document.getElementById('message-horaires');
 
+  const auto = form.heure_fin_auto.checked;
   const data = {
     heure_debut:              form.heure_debut.value,
     heure_fin:                form.heure_fin.value,
+    heure_fin_auto:           auto ? 'oui' : 'non',
+    battement_terrain_min:    form.battement_terrain_min.value,
     pause_dejeuner_debut:     form.pause_dejeuner_debut.value,
     pause_dejeuner_duree_min: form.pause_dejeuner_duree_min.value
   };
 
-  if (!data.heure_debut || !data.heure_fin) {
-    afficherMessage(message, "Renseigne au moins l'heure de début et de fin.", 'ko');
+  if (!data.heure_debut) {
+    afficherMessage(message, "Renseigne l'heure de début.", 'ko');
+    return;
+  }
+  if (!auto && !data.heure_fin) {
+    afficherMessage(message, "Renseigne l'heure de fin (ou coche « auto »).", 'ko');
     return;
   }
 
@@ -522,9 +554,13 @@ async function onGenerer() {
     }
     afficherMessage(message, texte, (res && res.avertissements && res.avertissements.length) ? 'ko' : 'ok');
 
-    // On recharge tout pour afficher le planning (et les poules des équipes).
+    // On recharge tout : planning + réglages (l'heure de fin auto a pu changer).
     const data = await apiGet('getAll');
+    configCourante = data.config;
     equipesCourantes = data.equipes;
+    document.getElementById('reglages').innerHTML =
+      afficherHoraires(data.config.global) + afficherCategories(data.config.categories);
+    remplirSelectCategories(data.config.categories);
     afficherPlanning(data.poules, data.matchs);
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');

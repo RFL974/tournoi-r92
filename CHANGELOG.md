@@ -5,6 +5,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 8 — 2026-07-13
+- **Battement terrain** : nouveau réglage global `battement_terrain_min` — temps pour libérer un
+  terrain entre 2 matchs (le terrain n'est réutilisable qu'à `fin + battement`).
+- **Heure de fin automatique** : nouveau réglage `heure_fin_auto` (`oui`/`non`). En auto, l'heure
+  de fin = fin du dernier match, recalculée et réécrite dans Config à chaque génération ; sinon
+  valeur manuelle (avec alerte si dépassement).
+- `Code.gs` : `enregistrerHoraires` réécrit via `ecrireParamGlobal()` (crée le paramètre s'il
+  manque) ; génération prend en compte battement + heure de fin auto ; défauts ajoutés dans `setupSheet`.
+- `admin.js` / `styles.css` : formulaire horaires avec case « auto » (grise le champ heure de fin)
+  et champ « battement entre matchs » ; le planning et l'heure de fin se rafraîchissent après génération.
+- Algorithme revalidé hors-ligne (Node) : battement respecté, 0 conflit.
+
 ### Session 7 — 2026-07-13
 - Page admin **étape 4 — génération : bouton + affichage du planning (frontend)**.
   - Bouton « Générer poules et planning » (avec confirmation ; prévient que ça efface scores/matchs).

@@ -124,18 +124,21 @@ function creerOngletConfig(classeur) {
     onglet = classeur.insertSheet('Config');
   }
 
-  // --- ZONE A : réglages globaux (lignes 1 à 5) ---
+  // --- ZONE A : réglages globaux ---
   var zoneA = [
-    ['parametre', 'valeur'],            // ligne 1 : en-têtes
-    ['heure_debut', '09:00'],           // ligne 2
-    ['heure_fin', '17:00'],             // ligne 3
-    ['pause_dejeuner_debut', '12:30'],  // ligne 4
-    ['pause_dejeuner_duree_min', '60']  // ligne 5
+    ['parametre', 'valeur'],                 // en-têtes
+    ['heure_debut', '09:00'],
+    ['heure_fin', '17:00'],
+    ['heure_fin_auto', 'oui'],               // 'oui' = heure de fin calculée automatiquement
+    ['battement_terrain_min', '5'],          // temps pour libérer un terrain entre 2 matchs
+    ['pause_dejeuner_debut', '12:30'],
+    ['pause_dejeuner_duree_min', '60']
   ];
 
-  // --- ZONE B : réglages par catégorie (à partir de la ligne 8) ---
-  // On saute une ligne vide (ligne 6) pour aérer, puis un titre en ligne 7.
-  var ligneDebutZoneB = 8;
+  // --- ZONE B : réglages par catégorie ---
+  // On laisse une ligne vide après la zone A, puis un titre, puis les en-têtes.
+  var titreZoneB = zoneA.length + 2;
+  var ligneDebutZoneB = zoneA.length + 3;
   var entetesCategorie = [
     'categorie', 'presente', 'terrains', 'taille_poule_cible',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min'
@@ -156,8 +159,8 @@ function creerOngletConfig(classeur) {
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
   stylerEntete(onglet.getRange(1, 1, 1, 2)); // styliser la ligne d'en-tête de la zone A
 
-  // Petit titre pour la zone B (ligne 7)
-  onglet.getRange(7, 1).setValue('— Réglages par catégorie —').setFontWeight('bold');
+  // Petit titre pour la zone B
+  onglet.getRange(titreZoneB, 1).setValue('— Réglages par catégorie —').setFontWeight('bold');
 
   // Écriture Zone B : en-têtes + exemples
   onglet.getRange(ligneDebutZoneB, 1, 1, entetesCategorie.length).setValues([entetesCategorie]);
@@ -497,24 +500,50 @@ function genererIdEquipe(onglet) {
  */
 function enregistrerHoraires(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
-  var colA = onglet.getRange(1, 1, onglet.getLastRow(), 1).getValues(); // colonne "parametre"
-
-  var champs = ['heure_debut', 'heure_fin', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min'];
-
+  var champs = ['heure_debut', 'heure_fin', 'heure_fin_auto',
+                'battement_terrain_min', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min'];
   champs.forEach(function (champ) {
-    if (data[champ] == null) return; // champ non fourni : on ne touche pas
-    // On cherche la ligne dont la colonne A vaut le nom du paramètre.
-    for (var i = 0; i < colA.length; i++) {
-      if (colA[i][0] === champ) {
-        var cellule = onglet.getRange(i + 1, 2); // colonne B = "valeur"
-        cellule.setNumberFormat('@');            // format texte (préserve "09:00")
-        cellule.setValue(String(data[champ]));
-        break;
-      }
-    }
+    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
   });
-
   return { ok: true };
+}
+
+/**
+ * Écrit un réglage global (zone A de Config). Met à jour la ligne si le paramètre
+ * existe déjà, sinon insère une nouvelle ligne juste avant la zone des catégories.
+ * @param {Sheet} onglet
+ * @param {string} nom
+ * @param {*} valeur
+ */
+function ecrireParamGlobal(onglet, nom, valeur) {
+  var dernier = onglet.getLastRow();
+  var donnees = onglet.getRange(1, 1, dernier, 2).getValues();
+
+  // Le paramètre existe déjà ? -> on met à jour sa valeur.
+  for (var i = 0; i < donnees.length; i++) {
+    if (donnees[i][0] === nom) {
+      var cellule = onglet.getRange(i + 1, 2);
+      cellule.setNumberFormat('@');
+      cellule.setValue(String(valeur));
+      return;
+    }
+  }
+
+  // Sinon : on insère une ligne avant la 1re ligne vide / titre / zone catégories.
+  var insertion = -1;
+  for (var r = 1; r < donnees.length; r++) { // r=1 -> ligne 2 (on saute l'en-tête)
+    var a = donnees[r][0];
+    if (a === '' || a === null || String(a).charAt(0) === '—' || a === 'categorie') {
+      insertion = r + 1; // numéro de ligne (1-indexé)
+      break;
+    }
+  }
+  if (insertion === -1) insertion = dernier + 1;
+
+  onglet.insertRowsBefore(insertion, 1);
+  var plage = onglet.getRange(insertion, 1, 1, 2);
+  plage.setNumberFormat('@');
+  plage.setValues([[nom, String(valeur)]]);
 }
 
 /**
@@ -614,6 +643,9 @@ function genererPoulesEtPlanning(classeur) {
   var dejDeb  = hmVersMin(global.pause_dejeuner_debut || '12:30');
   var dejDur  = parseInt(global.pause_dejeuner_duree_min || '0', 10) || 0;
   var dejFin  = dejDeb + dejDur;
+  var battement = parseInt(global.battement_terrain_min || '0', 10) || 0; // libération terrain
+  var autoFin = String(global.heure_fin_auto || 'oui').toLowerCase() !== 'non'; // heure de fin calculée ?
+  var maxFin = 0; // minute de fin du dernier match (pour l'heure de fin auto)
 
   // On ne garde que les catégories présentes.
   var categories = config.categories.filter(function (c) {
@@ -709,11 +741,13 @@ function genererPoulesEtPlanning(classeur) {
       }
 
       var fin = debut + duree;
-      if (fin > tFin) {
+      if (!autoFin && fin > tFin) {
         avert.push('Catégorie ' + cat.categorie + ' (poule ' + m.poule + ') : un match finit après l\'heure de fin.');
       }
+      if (fin > maxFin) maxFin = fin;
 
-      if (terrainChoisi != null) terrainLibre[terrainChoisi] = fin;
+      // Le terrain n'est réutilisable qu'après le "battement" (temps pour le libérer).
+      if (terrainChoisi != null) terrainLibre[terrainChoisi] = fin + battement;
       equipeLibre[m.equipe_A] = fin + recup;
       equipeLibre[m.equipe_B] = fin + recup;
 
@@ -726,6 +760,12 @@ function genererPoulesEtPlanning(classeur) {
     });
   });
 
+  // Heure de fin : calculée automatiquement (fin du dernier match) si demandé.
+  var heureFinCalculee = (maxFin > 0) ? minVersHm(maxFin) : (global.heure_fin || '');
+  if (autoFin && maxFin > 0) {
+    ecrireParamGlobal(classeur.getSheetByName('Config'), 'heure_fin', heureFinCalculee);
+  }
+
   /* --- 4) ÉCRITURE dans le Sheet --- */
   ecrireGeneration(classeur, poules, affectationPoule, matchsFinaux);
 
@@ -733,6 +773,8 @@ function genererPoulesEtPlanning(classeur) {
     ok: true,
     nb_poules: poules.length,
     nb_matchs: matchsFinaux.length,
+    heure_fin: heureFinCalculee,
+    heure_fin_auto: autoFin,
     avertissements: avert
   };
 }
