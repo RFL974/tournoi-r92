@@ -17,8 +17,9 @@ const CHAMPS_CATEGORIE = [
   { cle: 'recup_entre_matchs_min', label: 'Récup. entre matchs (min)', type: 'number' }
 ];
 
-/* On garde en mémoire la config chargée (utile pour regrouper les équipes). */
+/* On garde en mémoire la config et les équipes chargées (pour l'affichage). */
 let configCourante = { global: {}, categories: [] };
+let equipesCourantes = [];
 
 /**
  * Vrai si une catégorie est marquée présente ("oui", quelle que soit la casse).
@@ -37,6 +38,7 @@ async function initAdmin() {
   try {
     const data = await apiGet('getAll'); // { config, equipes, poules, matchs }
     configCourante = data.config;
+    equipesCourantes = data.equipes;
 
     // 1) Réglages (horaires + catégories)
     zoneReglages.innerHTML =
@@ -45,6 +47,9 @@ async function initAdmin() {
     // 2) Équipes : on remplit la liste déroulante des catégories et la liste des équipes
     remplirSelectCategories(data.config.categories);
     afficherEquipes(data.equipes);
+
+    // 3) Poules & planning déjà générés (s'il y en a)
+    afficherPlanning(data.poules, data.matchs);
 
   } catch (erreur) {
     zoneReglages.innerHTML =
@@ -60,6 +65,9 @@ async function initAdmin() {
   // (zoneReglages est déjà déclaré en haut de initAdmin.)
   zoneReglages.addEventListener('submit', onReglagesSubmit);
   zoneReglages.addEventListener('click', onReglagesClick);
+
+  // Bouton de génération des poules et du planning.
+  document.getElementById('bouton-generer').addEventListener('click', onGenerer);
 }
 
 /**
@@ -481,7 +489,108 @@ async function onClicListe(evenement) {
  */
 async function rechargerEquipes() {
   const equipes = await apiGet('getEquipes');
+  equipesCourantes = equipes;
   afficherEquipes(equipes);
+}
+
+/* --------------------------------------------------------------------------
+   GÉNÉRATION (poules + planning)
+   -------------------------------------------------------------------------- */
+
+/**
+ * Lance la génération des poules et du planning, puis affiche le résultat.
+ */
+async function onGenerer() {
+  const bouton  = document.getElementById('bouton-generer');
+  const message = document.getElementById('message-generation');
+
+  if (!confirm('Générer les poules et le planning ?\n\n' +
+               'Cela EFFACE les poules, matchs et scores déjà saisis.')) return;
+
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Génération…';
+  afficherMessage(message, 'Génération en cours…', 'ok');
+
+  try {
+    const res = await apiPost('genererPoulesEtPlanning', {});
+    const nbP = (res && res.nb_poules != null) ? res.nb_poules : '?';
+    const nbM = (res && res.nb_matchs != null) ? res.nb_matchs : '?';
+    let texte = '✅ ' + nbP + ' poule(s) et ' + nbM + ' match(s) générés.';
+    if (res && res.avertissements && res.avertissements.length) {
+      texte += '\n⚠️ ' + res.avertissements.join('\n⚠️ ');
+    }
+    afficherMessage(message, texte, (res && res.avertissements && res.avertissements.length) ? 'ko' : 'ok');
+
+    // On recharge tout pour afficher le planning (et les poules des équipes).
+    const data = await apiGet('getAll');
+    equipesCourantes = data.equipes;
+    afficherPlanning(data.poules, data.matchs);
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
+}
+
+/**
+ * Affiche les poules (composition) et le planning des matchs, par catégorie.
+ */
+function afficherPlanning(poules, matchs) {
+  const zone = document.getElementById('affichage-planning');
+  poules = poules || [];
+  matchs = matchs || [];
+
+  if (poules.length === 0 && matchs.length === 0) {
+    zone.innerHTML = '<p class="vide">Pas encore de planning. Clique sur « Générer ».</p>';
+    return;
+  }
+
+  // Nom d'une équipe à partir de son identifiant.
+  function nom(id) {
+    const e = equipesCourantes.find(function (x) { return x.id_equipe === id; });
+    return e ? e.nom_equipe : id;
+  }
+
+  // Liste ordonnée des catégories concernées.
+  const cats = [];
+  poules.forEach(function (p) { if (cats.indexOf(p.categorie) < 0) cats.push(p.categorie); });
+  matchs.forEach(function (m) { if (cats.indexOf(m.categorie) < 0) cats.push(m.categorie); });
+
+  let html = '';
+  cats.forEach(function (cat) {
+    html += '<h3 style="color:var(--bleu-ciel);margin:20px 0 8px;">' + echapper(cat) + '</h3>';
+
+    // Composition des poules de la catégorie.
+    poules.filter(function (p) { return p.categorie === cat; }).forEach(function (p) {
+      const membres = equipesCourantes
+        .filter(function (e) { return e.categorie === cat && e.poule === p.nom_poule; })
+        .map(function (e) { return echapper(e.nom_equipe); });
+      html += '<div class="poule-compo"><strong>Poule ' + echapper(p.nom_poule) + '</strong> : ' +
+              (membres.join(', ') || '—') + '</div>';
+    });
+
+    // Planning des matchs de la catégorie, triés par heure.
+    const ms = matchs.filter(function (m) { return m.categorie === cat; }).slice()
+      .sort(function (a, b) { return String(a.heure_debut).localeCompare(String(b.heure_debut)); });
+
+    if (ms.length) {
+      html += '<div class="table-scroll"><table class="table-planning">' +
+              '<thead><tr><th>Heure</th><th>Ter.</th><th>Poule</th><th>Match</th></tr></thead><tbody>';
+      ms.forEach(function (m) {
+        html += '<tr>' +
+                  '<td>' + echapper(m.heure_debut) + '</td>' +
+                  '<td>' + echapper(String(m.terrain)) + '</td>' +
+                  '<td>' + echapper(String(m.poule)) + '</td>' +
+                  '<td>' + echapper(nom(m.equipe_A)) + ' <span class="vs">vs</span> ' + echapper(nom(m.equipe_B)) + '</td>' +
+                '</tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+  });
+
+  zone.innerHTML = html;
 }
 
 /* --------------------------------------------------------------------------

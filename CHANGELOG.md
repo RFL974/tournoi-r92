@@ -6,6 +6,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 ## [Non publié]
 
 ### Session 7 — 2026-07-13
+- Page admin **étape 4 — génération : bouton + affichage du planning (frontend)**.
+  - Bouton « Générer poules et planning » (avec confirmation ; prévient que ça efface scores/matchs).
+  - Affichage : composition des poules + tableau du planning (heure, terrain, poule, match avec
+    noms d'équipes), par catégorie ; le planning existant s'affiche aussi au chargement de la page.
+- Correctif backend : l'onglet `Matchs` est forcé au **format texte** avant écriture (les heures
+  `11:00` étaient converties en valeurs date/heure). Vérifié : les heures s'affichent en `HH:MM`.
 - Page admin **étape 4 — génération des poules et du planning (backend)**.
 - `backend/Code.gs` : `genererPoulesEtPlanning()` + helpers (`tourneeToutesRondes`, `dureeMatch`,
   `hmVersMin`/`minVersHm`, `idMatch`, `melanger`, `ecrireGeneration`, `viderDonnees`).

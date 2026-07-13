@@ -321,6 +321,49 @@ select.r-input { cursor: pointer; }
 .vide { color: #7f92a8; font-style: italic; }
 
 /* ==========================================================================
+   Génération : bouton, note, poules et tableau de planning
+   ========================================================================== */
+.note-generation {
+  color: var(--bleu-ciel);
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+}
+#bloc-generation .message-form { white-space: pre-line; margin-top: 8px; }
+
+.poule-compo {
+  background: rgba(3, 16, 36, 0.4);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+}
+.poule-compo strong { color: var(--accent); }
+
+/* Le tableau peut défiler horizontalement sur petit écran */
+.table-scroll { overflow-x: auto; margin-top: 8px; }
+
+.table-planning {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.table-planning th,
+.table-planning td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(184, 216, 248, 0.12);
+  white-space: nowrap;
+}
+.table-planning th {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--bleu-ciel);
+  font-size: 0.85rem;
+}
+.table-planning td:first-child { font-weight: 600; }
+.table-planning .vs { color: var(--bleu-ciel); font-size: 0.85rem; margin: 0 4px; }
+
+/* ==========================================================================
    Messages (chargement, erreur)
    ========================================================================== */
 .message {
