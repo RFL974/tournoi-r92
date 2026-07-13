@@ -437,6 +437,10 @@ function calculerClassement(classeur) {
   // estTermineServeur() : robuste au « é » décomposé (NFD) renvoyé par le Sheet —
   // une comparaison stricte === 'terminé' échouerait et viderait le classement.
   matchs.forEach(function (m) {
+    // Classement DES POULES : on ne compte que le matin (phase ≠ classement).
+    // Sinon, une fois des scores d'après-midi saisis, une régénération du croisé
+    // partirait d'un classement de poule faussé par les matchs de l'après-midi.
+    if (String(m.phase) === 'classement') return;
     if (!estTermineServeur(m.statut)) return;
     var a = stats[m.equipe_A], b = stats[m.equipe_B];
     if (!a || !b) return;
