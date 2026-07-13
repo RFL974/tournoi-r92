@@ -25,6 +25,8 @@ async function initSaisie() {
   } catch (err) {
     zone.innerHTML = '<p class="vide">Erreur de chargement : ' + echapper(err.message) + '</p>';
   }
+  // « Connexion » : on demande la clé scores une fois à l'ouverture (puis mémorisée).
+  await connexion('scores', 'de saisie des scores');
 }
 
 /** Nom lisible d'une équipe à partir de son identifiant. */

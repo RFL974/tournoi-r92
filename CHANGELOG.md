@@ -5,6 +5,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sécurité : « connexion » à la page (clé demandée une seule fois) — 2026-07-13
+- Avant, la clé était demandée à la première écriture puis à chaque tentative refusée (agaçant).
+  Désormais : **une « connexion » à l'ouverture** de `admin.html` et `saisie.html` demande la clé
+  **une fois**, la **valide** immédiatement, puis toutes les écritures passent en silence.
+- `api.js` : `connexion(role, libelle)` (boucle jusqu'à une clé valide, ne mémorise que si valide) +
+  `cleValide(role, cle)` qui **teste la clé sans rien modifier** (sonde : action d'écriture avec un
+  id bidon → « introuvable » si la clé est bonne, « Clé incorrecte » sinon). Frontend-only, **aucun
+  redéploiement**.
+- `admin.js` / `saisie.js` : appellent `connexion(...)` au chargement.
+- **Fix encodage** : la détection du refus de clé matche des mots **ASCII** (`incorrecte`,
+  `non configur`) car le « é » revient parfois mal encodé (« Cl√© incorrecte ») dans les messages.
+
 ### Sécurité écriture : 2 clés (admin / scores) — 2026-07-13
 - Les actions d'**écriture** (`doPost`) exigent désormais une **clé**, vérifiée côté backend avant
   toute modification. Les **lectures** (`doGet`) restent ouvertes (public).

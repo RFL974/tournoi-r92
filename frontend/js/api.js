@@ -122,11 +122,53 @@ async function apiPostProtege(action, data, role, libelle) {
     return await apiPost(action, Object.assign({}, data, { cle: cle }));
   } catch (err) {
     // Clé absente/incorrecte côté serveur → on la redemande une fois.
-    if (/cl[ée] incorrecte|acc[èe]s refus|cl[ée] non configur/i.test(err.message)) {
+    if (estRefusCle(err.message)) {
       const nouvelle = demanderCle(role, 'Clé ' + libelle + ' incorrecte. Réessaie :');
       if (nouvelle == null) throw new Error('Action annulée.');
       return await apiPost(action, Object.assign({}, data, { cle: nouvelle }));
     }
     throw err;
+  }
+}
+
+/** Erreur signalant une clé absente/refusée par le serveur.
+ *  On matche des mots ASCII ("incorrecte", "non configur") car l'« é » revient
+ *  parfois mal encodé ("Cl√© incorrecte") dans le message renvoyé. */
+function estRefusCle(message) {
+  return /incorrecte|non\s*configur/i.test(String(message));
+}
+
+/**
+ * Vérifie une clé SANS rien modifier : on envoie une action d'écriture avec un
+ * identifiant bidon. Si la clé est bonne, le serveur répond « introuvable » (donc
+ * une erreur qui n'est PAS un refus de clé) ; si elle est mauvaise, « Clé incorrecte ».
+ */
+async function cleValide(role, cle) {
+  const sonde = (role === 'scores')
+    ? { action: 'enregistrerScore', id_match: '__verif_cle__', score_A: 0, score_B: 0 }
+    : { action: 'supprimerEquipe', id_equipe: '__verif_cle__' };
+  try {
+    await apiPost(sonde.action, Object.assign(sonde, { cle: cle }));
+    return true; // improbable (id bidon), mais si ça passe la clé est valide
+  } catch (err) {
+    return !estRefusCle(err.message);
+  }
+}
+
+/**
+ * « Connexion » d'une page protégée : garantit qu'une clé VALIDE est mémorisée pour
+ * le rôle. Si une clé mémorisée est déjà valide → rien à demander (silencieux).
+ * Sinon, demande la clé (en boucle jusqu'à la bonne) et la mémorise.
+ * @return {Promise<boolean>} true si connecté, false si l'utilisateur annule.
+ */
+async function connexion(role, libelle) {
+  const memo = lireCleLocale(role);
+  if (memo && await cleValide(role, memo)) return true;
+  while (true) {
+    const saisie = prompt('🔒 Accès ' + libelle + '\n\nEntre la clé :', '');
+    if (saisie == null) return false; // annulé
+    const cle = saisie.trim();
+    if (cle && await cleValide(role, cle)) { definirCleLocale(role, cle); return true; }
+    alert('Clé incorrecte. Réessaie.');
   }
 }

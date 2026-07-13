@@ -66,6 +66,9 @@ async function initAdmin() {
       'Détail : ' + erreur.message + '</div>';
   }
 
+  // « Connexion » : on demande la clé admin une fois à l'ouverture (puis mémorisée).
+  await connexion('admin', "à l'administration");
+
   // On branche le formulaire d'ajout et les boutons de suppression (équipes).
   document.getElementById('form-equipe').addEventListener('submit', onAjouterEquipe);
   document.getElementById('liste-equipes').addEventListener('click', onClicListe);
