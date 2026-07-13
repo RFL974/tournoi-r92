@@ -5,6 +5,24 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 13 — 2026-07-13 (phase après-midi : classement croisé)
+- **Génération de l'après-midi** : nouvelle action d'écriture `genererApresMidi`. À partir du
+  classement du matin, construit les matchs en **classement croisé** (les équipes de même rang de
+  poule jouent ensemble, en round-robin par groupe — ex. U8 3 poules de 4 → 4 groupes de 3 → 12
+  matchs), puis les **planifie** (terrains + horaires) à la reprise après la pause déjeuner via
+  `planifierApresMidi()` (réutilise récup / battement / durées ; amorce les dispos depuis les fins
+  de matchs du matin pour éviter tout empiètement).
+- **Ajout, pas remplacement** : les matchs du matin (qui portent les scores) ne sont pas effacés ;
+  re-générer ne remplace que les matchs `phase = classement`. Helpers `matchObjToRow()` / `ecrireMatchs()`.
+- **Garde-fous** : refuse de générer si des matchs du matin ne sont pas `terminé` ; ignore (avec
+  avertissement) une catégorie à une seule poule (pas de croisé possible).
+- **Schéma** : nouvelle colonne `phase` (`poule` / `classement`) en dernière colonne de l'onglet
+  `Matchs`. ⚠️ à ajouter manuellement (cellule L1) sur un Sheet déjà créé — voir `docs/deploiement.md`.
+- **Frontend** : bouton « 🏉 Générer l'après-midi » dans `admin.html` + handler `onGenererApresMidi`
+  (confirmation, résumé, avertissements, rechargement du planning).
+- Logique validée hors-ligne (Node) : croisé correct (N1 = les 1ers), **0 conflit terrain/équipe**,
+  reprise après déjeuner, chaque équipe joue 2 matchs. Bouton vérifié en preview. ⚠️ backend à redéployer.
+
 ### Session 12 — 2026-07-13 (classement des poules)
 - **Calcul du classement (prérequis 2)** : nouvelle fonction backend `calculerClassement(classeur)` +
   action de lecture `getClassement`. Pour chaque poule : J / V / N / D / BP / BC / Diff / Pts.

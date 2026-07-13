@@ -102,6 +102,15 @@ Une ligne par match. En-têtes :
 | `score_A` | `15` | **Page de saisie des scores** |
 | `score_B` | `10` | **Page de saisie des scores** |
 | `statut` | `à venir` | `à venir` / `en cours` / `terminé` |
+| `phase` | `poule` | Auto — `poule` (matin) ou `classement` (après-midi) |
+
+> ⚠️ **Migration** : la colonne `phase` a été ajoutée en **dernière colonne (L)**. Sur un Sheet
+> déjà créé avant cette évolution, ajouter manuellement l'en-tête `phase` en **cellule L1** (les
+> `setupSheet()` neufs la créent déjà). Sans cet en-tête, la distinction matin / après-midi ne
+> fonctionne pas (une colonne sans en-tête est ignorée à la lecture).
+
+Pour les matchs de l'**après-midi** (`phase = classement`), la colonne `poule` contient le **niveau**
+du classement croisé (`N1` = groupe des 1ers de poule, `N2` = les 2es, etc.).
 
 ---
 

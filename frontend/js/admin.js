@@ -76,6 +76,9 @@ async function initAdmin() {
 
   // Clic sur une piste d'arbitrage (délégué, car le contenu est régénéré).
   document.getElementById('arbitrages').addEventListener('click', onClicArbitrage);
+
+  // Bouton de génération de la phase après-midi (classement croisé).
+  document.getElementById('bouton-apresmidi').addEventListener('click', onGenererApresMidi);
 }
 
 /**
@@ -574,6 +577,40 @@ async function genererMaintenant() {
     remplirSelectCategories(data.config.categories);
     afficherPlanning(data.poules, data.matchs);
   } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
+}
+
+/** Génère la phase après-midi (classement croisé) à partir du classement du matin. */
+async function onGenererApresMidi() {
+  if (!confirm("Générer les matchs de l'après-midi (classement croisé) ?\n\n" +
+               "Basé sur le classement du matin. N'efface PAS les matchs du matin.")) return;
+
+  const bouton  = document.getElementById('bouton-apresmidi');
+  const message = document.getElementById('message-apresmidi');
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Génération…';
+  afficherMessage(message, "Génération de l'après-midi…", 'ok');
+
+  try {
+    const res = await apiPost('genererApresMidi', {});
+    const nbM = (res && res.nb_matchs_aprem != null) ? res.nb_matchs_aprem : '?';
+    const avert = res && res.avertissements && res.avertissements.length;
+    let texte = '✅ ' + nbM + " match(s) d'après-midi générés." +
+                (res.heure_fin_aprem ? ' Fin : ' + res.heure_fin_aprem + '.' : '');
+    if (avert) texte += '\n⚠️ ' + res.avertissements.join('\n⚠️ ');
+    afficherMessage(message, texte, avert ? 'ko' : 'ok');
+
+    // On recharge le planning (matin + après-midi).
+    const data = await apiGet('getAll');
+    equipesCourantes = data.equipes;
+    afficherPlanning(data.poules, data.matchs);
+  } catch (erreur) {
+    // Les garde-fous backend (scores du matin incomplets…) arrivent ici.
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
     bouton.disabled = false;

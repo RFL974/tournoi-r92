@@ -48,6 +48,7 @@ Lecture via `GET` (`doGet`), écriture via `POST` (`doPost`).
 | `enregistrerCategorie` | écriture | Créer / mettre à jour une catégorie | ✅ |
 | `supprimerCategorie` | écriture | Supprimer une catégorie | ✅ |
 | `genererPoulesEtPlanning` | écriture | Répartir en poules + calculer le planning ; renvoie aussi les arbitrages si l'heure de fin manuelle est dépassée | ✅ |
+| `genererApresMidi` | écriture | Génère la phase après-midi (classement croisé) depuis le classement du matin + la planifie ; ajoute sans effacer le matin | ✅ |
 | `enregistrerScore` | écriture | Enregistrer le score d'un match (`id_match`, `score_A`, `score_B`) et le passer en `terminé` | ✅ |
 
 > **Écriture (POST) :** le frontend envoie le JSON en `text/plain` pour éviter la requête

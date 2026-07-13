@@ -14,7 +14,7 @@ var ENTETES = {
   Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule'],
   Poules: ['id_poule', 'categorie', 'nom_poule'],
   Matchs: ['id_match', 'categorie', 'poule', 'terrain', 'heure_debut', 'heure_fin',
-           'equipe_A', 'equipe_B', 'score_A', 'score_B', 'statut']
+           'equipe_A', 'equipe_B', 'score_A', 'score_B', 'statut', 'phase']
 };
 var COULEUR_FOND_ENTETE = '#0B2138';
 var COULEUR_TEXTE_ENTETE = '#F2F6FB';
@@ -177,6 +177,7 @@ function doPost(e) {
       case 'supprimerCategorie':   resultat = supprimerCategorie(classeur, requete.categorie); break;
       case 'enregistrerScore':     resultat = enregistrerScore(classeur, requete); break;
       case 'genererPoulesEtPlanning': resultat = genererPoulesEtPlanning(classeur); break;
+      case 'genererApresMidi':     resultat = genererApresMidi(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -410,6 +411,163 @@ function comparerClassement(a, b) {
   return b.bp - a.bp;
 }
 
+/* ===================== PHASE APRÈS-MIDI (classement croisé) ===================== */
+/**
+ * Génère la phase après-midi : matchs de "classement croisé" (les équipes de même rang
+ * de poule jouent ensemble, en round-robin), puis les planifie (terrains + horaires)
+ * après la pause déjeuner. AJOUTE ces matchs SANS effacer ceux du matin (qui portent les
+ * scores). Re-générer remplace uniquement les matchs de la phase "classement".
+ */
+function genererApresMidi(classeur) {
+  var config = lireConfig(classeur);
+  var matchs = lireOngletSimple(classeur, 'Matchs');
+  var avert = [];
+
+  // Matchs du matin = tout ce qui n'est pas déjà de la phase "classement".
+  var matin = matchs.filter(function (m) { return String(m.phase) !== 'classement'; });
+  if (matin.length === 0) {
+    return { ok: false, error: "Aucun match du matin. Génère d'abord les poules et le planning." };
+  }
+  // Garde-fou : le classement croisé n'a de sens que si le matin est terminé.
+  var nonTermines = matin.filter(function (m) {
+    return String(m.statut).trim().toLowerCase() !== 'terminé';
+  });
+  if (nonTermines.length > 0) {
+    return { ok: false, error: nonTermines.length + " match(s) du matin ne sont pas encore terminés. "
+             + "Saisis tous les scores du matin avant de générer l'après-midi." };
+  }
+
+  var classement = calculerClassement(classeur);
+
+  // 1) Fixtures de l'après-midi par catégorie (classement croisé, round-robin par rang).
+  var fixturesParCat = {};
+  classement.forEach(function (cat) {
+    if (cat.poules.length < 2) {
+      avert.push('Catégorie ' + cat.categorie + ' : une seule poule, pas de classement croisé possible.');
+      return;
+    }
+    var rangMax = 0;
+    cat.poules.forEach(function (p) { if (p.classement.length > rangMax) rangMax = p.classement.length; });
+    var fixtures = [];
+    for (var r = 0; r < rangMax; r++) {
+      var groupe = [];
+      cat.poules.forEach(function (p) { if (p.classement[r]) groupe.push(p.classement[r].id_equipe); });
+      if (groupe.length < 2) continue; // rang incomplet -> pas de match
+      var label = 'N' + (r + 1);
+      tourneeToutesRondes(groupe).forEach(function (pr) {
+        fixtures.push({ poule: label, equipe_A: pr.a, equipe_B: pr.b, round: pr.round });
+      });
+    }
+    if (fixtures.length) fixturesParCat[cat.categorie] = fixtures;
+  });
+
+  // 2) Planifier (terrains + horaires) après la pause déjeuner.
+  var plan = planifierApresMidi(config, fixturesParCat, matin);
+  avert = avert.concat(plan.avert);
+
+  // 3) Réécrire Matchs = matin (inchangé) + nouveaux matchs d'après-midi.
+  var maxNum = 0;
+  matchs.forEach(function (m) {
+    var mm = String(m.id_match).match(/^M(\d+)$/);
+    if (mm) { var n = parseInt(mm[1], 10); if (n > maxNum) maxNum = n; }
+  });
+  var lignesAprem = plan.matchs.map(function (m, i) {
+    return [ idMatch(maxNum + 1 + i), m.categorie, m.poule, m.terrain, m.heure_debut, m.heure_fin,
+             m.equipe_A, m.equipe_B, '', '', 'à venir', 'classement' ];
+  });
+  var lignesMatin = matin.map(matchObjToRow);
+  ecrireMatchs(classeur, lignesMatin.concat(lignesAprem));
+
+  return {
+    ok: true,
+    nb_matchs_aprem: plan.matchs.length,
+    heure_fin_aprem: plan.maxFin > 0 ? minVersHm(plan.maxFin) : '',
+    avertissements: avert
+  };
+}
+
+/**
+ * Planifie les matchs de l'après-midi (terrains + horaires) à partir de la reprise
+ * (fin de la pause déjeuner), en tenant compte des fins de matchs du matin pour ne pas
+ * empiéter (terrain encore occupé, équipe pas encore récupérée).
+ */
+function planifierApresMidi(config, fixturesParCat, matin) {
+  var global = config.global;
+  var dejDeb = hmVersMin(global.pause_dejeuner_debut || '12:30');
+  var dejDur = parseInt(global.pause_dejeuner_duree_min || '0', 10) || 0;
+  var tReprise = dejDeb + dejDur;
+  var battement = parseInt(global.battement_terrain_min || '0', 10) || 0;
+  var avert = [], maxFin = 0;
+
+  // Fins des matchs du matin (pour amorcer terrains et équipes).
+  var finTerrain = {}, finEquipe = {};
+  matin.forEach(function (m) {
+    var fin = hmVersMin(m.heure_fin);
+    if (m.terrain !== '' && m.terrain != null) finTerrain[m.terrain] = Math.max(finTerrain[m.terrain] || 0, fin);
+    finEquipe[m.equipe_A] = Math.max(finEquipe[m.equipe_A] || 0, fin);
+    finEquipe[m.equipe_B] = Math.max(finEquipe[m.equipe_B] || 0, fin);
+  });
+
+  var categories = config.categories.filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; });
+  var terrainLibre = {}, equipeLibre = {}, resultat = [];
+
+  categories.forEach(function (cat) {
+    var liste = (fixturesParCat[cat.categorie] || []).slice();
+    if (!liste.length) return;
+    liste.sort(function (x, y) { return x.round - y.round; });
+    var terrains = String(cat.terrains || '').split(',')
+                     .map(function (s) { return s.trim(); }).filter(function (s) { return s !== ''; });
+    if (terrains.length === 0) { avert.push('Catégorie ' + cat.categorie + ' : aucun terrain défini (après-midi non planifié).'); return; }
+    var duree = dureeMatch(cat);
+    var recup = parseInt(cat.recup_entre_matchs_min || '0', 10) || 0;
+
+    // Terrain libre après sa dernière fin du matin + battement (au plus tôt à la reprise).
+    terrains.forEach(function (t) {
+      if (terrainLibre[t] == null) terrainLibre[t] = Math.max(tReprise, (finTerrain[t] || 0) + battement);
+    });
+
+    liste.forEach(function (m) {
+      // Équipe disponible après sa récup post-dernier match du matin (au plus tôt à la reprise).
+      if (equipeLibre[m.equipe_A] == null) equipeLibre[m.equipe_A] = Math.max(tReprise, (finEquipe[m.equipe_A] || 0) + recup);
+      if (equipeLibre[m.equipe_B] == null) equipeLibre[m.equipe_B] = Math.max(tReprise, (finEquipe[m.equipe_B] || 0) + recup);
+      var dispoEquipes = Math.max(equipeLibre[m.equipe_A], equipeLibre[m.equipe_B]);
+      var terrainChoisi = null, plusTot = Infinity;
+      terrains.forEach(function (t) { if (terrainLibre[t] < plusTot) { plusTot = terrainLibre[t]; terrainChoisi = t; } });
+      var debut = Math.max(dispoEquipes, terrainLibre[terrainChoisi]);
+      var fin = debut + duree;
+      if (fin > maxFin) maxFin = fin;
+      terrainLibre[terrainChoisi] = fin + battement;
+      equipeLibre[m.equipe_A] = fin + recup;
+      equipeLibre[m.equipe_B] = fin + recup;
+      resultat.push({ categorie: cat.categorie, poule: m.poule, terrain: terrainChoisi,
+                      heure_debut: minVersHm(debut), heure_fin: minVersHm(fin),
+                      equipe_A: m.equipe_A, equipe_B: m.equipe_B });
+    });
+  });
+
+  return { matchs: resultat, maxFin: maxFin, avert: avert };
+}
+
+/** Transforme un match (objet lu depuis l'onglet) en ligne dans l'ordre des colonnes. */
+function matchObjToRow(m) {
+  return [ m.id_match, m.categorie, m.poule, m.terrain, m.heure_debut, m.heure_fin,
+           m.equipe_A, m.equipe_B,
+           (m.score_A == null ? '' : m.score_A),
+           (m.score_B == null ? '' : m.score_B),
+           m.statut, (m.phase ? m.phase : 'poule') ];
+}
+
+/** Réécrit entièrement les lignes de l'onglet Matchs (toutes en texte pour préserver "09:30"). */
+function ecrireMatchs(classeur, lignes) {
+  var oM = classeur.getSheetByName('Matchs');
+  viderDonnees(oM);
+  if (lignes.length) {
+    var plage = oM.getRange(2, 1, lignes.length, lignes[0].length);
+    plage.setNumberFormat('@');
+    plage.setValues(lignes);
+  }
+}
+
 function calculerPlanning(config, equipes, melange) {
   var global = config.global;
   var avert = [];
@@ -484,7 +642,7 @@ function calculerPlanning(config, equipes, melange) {
       equipeLibre[m.equipe_B] = fin + recup;
       compteurMatch++;
       matchsFinaux.push([ idMatch(compteurMatch), cat.categorie, m.poule, (terrainChoisi || ''),
-                          minVersHm(debut), minVersHm(fin), m.equipe_A, m.equipe_B, '', '', 'à venir' ]);
+                          minVersHm(debut), minVersHm(fin), m.equipe_A, m.equipe_B, '', '', 'à venir', 'poule' ]);
     });
   });
 

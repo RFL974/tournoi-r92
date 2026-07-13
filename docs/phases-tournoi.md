@@ -14,7 +14,9 @@
 1. **Saisie des scores** — action `enregistrerScore` + page `saisie.html`. ✅ Fait (session 11).
 2. **Calcul du classement** de poule (V=3/N=2/D=1, départage à la différence puis points marqués).
    ✅ Fait (session 12) : fonction `calculerClassement` + action `getClassement` + page `classement.html`.
-3. **Génération après-midi** (classement croisé). ⬜ À faire — prévoir une colonne `phase` dans `Matchs`.
+3. **Génération après-midi** (classement croisé). ✅ Fait (session 13) : action `genererApresMidi`
+   (construit les matchs croisés + les planifie après le déjeuner, sans effacer le matin) +
+   bouton dans l'admin. Colonne `phase` (`poule`/`classement`) ajoutée à l'onglet `Matchs`.
 
 ## Matin — phase de poules ✅ (fait)
 Championnat : dans chaque poule, chaque équipe rencontre toutes les autres (round-robin).
@@ -41,8 +43,7 @@ Ces matchs dépendent des **résultats du matin** (donc des **scores** saisis). 
 - **Horaires/terrains de l'après-midi** : reprise après la pause déjeuner, mêmes terrains dédiés ?
 - Faut-il une **page/écran dédié** côté admin pour lancer/ajuster la phase de l'après-midi ?
 
-### Impact sur les données
-- L'onglet `Matchs` devra sans doute distinguer la **phase** (poule / classement / finale) —
-  probablement une colonne supplémentaire (ex : `phase`) à prévoir.
-- Les équipes d'un match d'après-midi peuvent être **déterminées par une règle** plutôt que fixées
-  (ex : « 1er de poule A ») tant que les scores ne sont pas connus.
+### Impact sur les données (implémenté)
+- L'onglet `Matchs` distingue la **phase** via la colonne `phase` (`poule` / `classement`) — ✅ ajoutée.
+- Approche retenue = **génération en 2 temps** : les équipes de l'après-midi sont **fixées** au moment
+  de la génération (une fois les scores du matin connus), pas laissées sous forme de règle/libellé.
