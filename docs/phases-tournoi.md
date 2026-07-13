@@ -1,7 +1,19 @@
 # Phases du tournoi (matin / après-midi)
 
-> 🧭 Note de conception pour une **fonctionnalité à venir**. Rien n'est encore implémenté pour
-> l'après-midi ; ce document capture le besoin et les questions à trancher.
+> 🧭 Note de conception. Le **format** de l'après-midi est désormais **décidé** (voir ci-dessous) ;
+> l'implémentation se fait par étapes (prérequis d'abord).
+
+## ✅ Décisions prises (2026-07-13)
+- **Format = classement croisé** : les équipes de **même rang de poule** jouent ensemble (tous les
+  1ers ensemble, tous les 2es, etc.). Chaque groupe de rang = **round-robin**. Ex. U8 réel = 3 poules
+  (A/B/C) → 4 groupes de 3 équipes → 3 matchs par groupe. Adapté rugby jeunes (tout le monde continue).
+- **Fabrication = génération en 2 temps** : bouton « Générer l'après-midi » **après** saisie des
+  scores du matin, qui crée les matchs avec les vraies équipes. (Pas de structure « à trous ».)
+
+### Feuille de route (prérequis avant l'après-midi)
+1. **Saisie des scores** — action `enregistrerScore` + page `saisie.html`. ✅ Fait (session 11).
+2. **Calcul du classement** de poule (V=3/N=2/D=1, départage à la différence puis points marqués). ⬜ À faire.
+3. **Génération après-midi** (classement croisé). ⬜ À faire — prévoir une colonne `phase` dans `Matchs`.
 
 ## Matin — phase de poules ✅ (fait)
 Championnat : dans chaque poule, chaque équipe rencontre toutes les autres (round-robin).

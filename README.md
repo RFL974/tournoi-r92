@@ -16,7 +16,7 @@ puis de suivre les scores et classements en direct.
 | 1 | **Page admin** : saisie des équipes, réglages par catégorie et horaires globaux, génération automatique des poules et du planning | ✅ Fait (équipes, réglages, génération poules + planning) |
 | 2 | **Mon planning** : un visiteur choisit son équipe et voit uniquement ses matchs | 🔲 À faire |
 | 3 | **Live** : classements par catégorie, derniers scores, favoris (étoile), bannière don HelloAsso | 🔲 À faire |
-| 4 | **Saisie des scores** : formulaire match par match | 🔲 À faire |
+| 4 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider) | 🟡 Fait (page + action `enregistrerScore`) — backend à redéployer |
 
 Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
@@ -55,19 +55,19 @@ tournoi-r92/
 │   └── Code.gs
 │
 └── frontend/                → pages web
-    ├── admin.html
-    ├── planning.html
-    ├── live.html
-    ├── scores.html
+    ├── admin.html           → page organisateur (équipes, réglages, génération)
+    ├── saisie.html          → saisie des scores (table de marque)
+    ├── planning.html        → « Mon planning » visiteur (à venir)
+    ├── live.html            → classements / live (à venir)
     ├── css/styles.css
     └── js/
         ├── config.js        → réglages partagés (URL du backend, etc.)
-        ├── api.js           → communication avec le backend
+        ├── api.js           → communication avec le backend (apiGet / apiPost)
         ├── admin.js
-        ├── planning.js
-        ├── live.js
-        └── scores.js
+        └── saisie.js
 ```
+
+> Note : `planning.html` / `live.html` (et leurs scripts) sont **planifiés**, pas encore créés.
 
 ---
 
@@ -111,8 +111,14 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   - génération des poules et du planning **sans conflit**, avec **assistant d'arbitrage** si
     l'heure de fin manuelle est dépassée.
 
-**Reste à faire :** page « Mon planning » (visiteur), page « Live » (classements + favoris + don),
-page « Saisie des scores », puis mise en place de l'instantané `data.json` pour la lecture publique
-à grande échelle (voir [`docs/architecture.md`](docs/architecture.md)).
+- 🟡 **Saisie des scores** : page `saisie.html` (une carte par match, score A/B + Valider) et action
+  d'écriture `enregistrerScore` (passe le match en `terminé`). Code et page vérifiés en local ;
+  **backend à redéployer** pour activer l'enregistrement en ligne.
+
+**Reste à faire :** calcul du **classement** de poule (à partir des scores), puis la **phase
+après-midi** (classement croisé, génération en 2 temps — voir [`docs/phases-tournoi.md`](docs/phases-tournoi.md)),
+la page « Mon planning » (visiteur), la page « Live » (classements + favoris + don), puis
+l'instantané `data.json` pour la lecture publique à grande échelle
+(voir [`docs/architecture.md`](docs/architecture.md)).
 
 Détail complet dans [`CHANGELOG.md`](CHANGELOG.md).

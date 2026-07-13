@@ -174,6 +174,7 @@ function doPost(e) {
       case 'enregistrerHoraires':  resultat = enregistrerHoraires(classeur, requete); break;
       case 'enregistrerCategorie': resultat = enregistrerCategorie(classeur, requete); break;
       case 'supprimerCategorie':   resultat = supprimerCategorie(classeur, requete.categorie); break;
+      case 'enregistrerScore':     resultat = enregistrerScore(classeur, requete); break;
       case 'genererPoulesEtPlanning': resultat = genererPoulesEtPlanning(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
@@ -299,6 +300,47 @@ function supprimerCategorie(classeur, nom) {
  * @param {boolean} melange  true = tirage aléatoire des poules ; false = déterministe
  * @return {Object} { poules, affectationPoule, matchsFinaux, maxFin, avert }
  */
+/* ===================== SAISIE DES SCORES ===================== */
+/**
+ * Enregistre le score d'un match et le passe en "terminé".
+ * Attend { id_match, score_A, score_B }. Les scores doivent être des entiers >= 0.
+ */
+function enregistrerScore(classeur, data) {
+  var id = (data.id_match || '').toString().trim();
+  if (!id) return { error: 'Identifiant de match manquant.' };
+
+  var sa = validerScore(data.score_A);
+  var sb = validerScore(data.score_B);
+  if (sa === null) return { error: 'Score A invalide (entier ≥ 0 attendu).' };
+  if (sb === null) return { error: 'Score B invalide (entier ≥ 0 attendu).' };
+
+  var onglet = classeur.getSheetByName('Matchs');
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return { error: 'Aucun match enregistré.' };
+
+  // On cherche la ligne du match par son identifiant (colonne 1).
+  var ids = onglet.getRange(2, 1, dernier - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === id) {
+      var ligne = i + 2;
+      // Colonnes de l'onglet Matchs : 9 = score_A, 10 = score_B, 11 = statut.
+      onglet.getRange(ligne, 9, 1, 3).setValues([[sa, sb, 'terminé']]);
+      return { ok: true, match: { id_match: id, score_A: sa, score_B: sb, statut: 'terminé' } };
+    }
+  }
+  return { error: 'Match introuvable : ' + id };
+}
+
+/** Renvoie l'entier >= 0 correspondant à v, ou null si v n'est pas un score valide. */
+function validerScore(v) {
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'string') v = v.trim();
+  if (v === '') return null;
+  var n = Number(v);
+  if (!isFinite(n) || n < 0 || Math.floor(n) !== n) return null;
+  return n;
+}
+
 function calculerPlanning(config, equipes, melange) {
   var global = config.global;
   var avert = [];

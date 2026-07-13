@@ -408,3 +408,47 @@ select.r-input { cursor: pointer; }
 
   .grille-reglages { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ==========================================================================
+   Saisie des scores (page saisie.html)
+   ========================================================================== */
+.match {
+  background: rgba(3, 16, 36, 0.5);
+  border: 1px solid rgba(184, 216, 248, 0.15);
+  border-radius: var(--rayon);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.match-termine { border-color: rgba(159, 224, 160, 0.4); }
+
+.match-meta {
+  color: var(--bleu-ciel);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+.badge-ok { color: #9fe0a0; font-weight: 600; }
+
+.match-saisie {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+/* Nom d'équipe : prend la place restante, sans écraser les champs de score. */
+.match-saisie .eq {
+  flex: 1 1 90px;
+  min-width: 80px;
+  font-weight: 600;
+}
+.match-saisie .eq-a { text-align: right; }
+.match-saisie .eq-b { text-align: left; }
+/* Champ de score : petit et centré (on annule le width:100% de .r-input). */
+.match-saisie .score {
+  width: 56px;
+  flex: 0 0 auto;
+  text-align: center;
+  font-weight: 600;
+}
+.match-saisie .vs { color: var(--bleu-ciel); font-size: 0.85rem; }
+.match-saisie .bouton-valider { flex: 0 0 auto; padding: 8px 14px; }

@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "frontend",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8123", "--directory", "frontend"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".claude/serveur-preview.js"],
       "port": 8123
     }
   ]

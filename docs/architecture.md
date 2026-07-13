@@ -47,7 +47,7 @@ Lecture via `GET` (`doGet`), écriture via `POST` (`doPost`).
 | `enregistrerCategorie` | écriture | Créer / mettre à jour une catégorie | ✅ |
 | `supprimerCategorie` | écriture | Supprimer une catégorie | ✅ |
 | `genererPoulesEtPlanning` | écriture | Répartir en poules + calculer le planning ; renvoie aussi les arbitrages si l'heure de fin manuelle est dépassée | ✅ |
-| `saveScore` | écriture | Enregistrer le score d'un match | ⬜ à venir |
+| `enregistrerScore` | écriture | Enregistrer le score d'un match (`id_match`, `score_A`, `score_B`) et le passer en `terminé` | ✅ |
 
 > **Écriture (POST) :** le frontend envoie le JSON en `text/plain` pour éviter la requête
 > préliminaire CORS (« preflight ») qu'Apps Script ne gère pas. Le corps contient `{ action, … }`.

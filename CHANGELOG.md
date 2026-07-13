@@ -5,6 +5,23 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 11 — 2026-07-13 (saisie des scores)
+- **Phase après-midi — décisions de conception** (prérequis à l'implémentation) : format retenu =
+  **classement croisé** (les équipes de même rang de poule jouent ensemble, round-robin par groupe) ;
+  fabrication = **génération en 2 temps** (bouton « Générer l'après-midi » après saisie des scores du
+  matin). Prérequis identifiés, dans l'ordre : (1) saisie des scores, (2) calcul du classement,
+  (3) génération après-midi. Voir `docs/phases-tournoi.md`.
+- **Saisie des scores (prérequis 1)** : nouvelle action d'écriture `enregistrerScore`
+  (`id_match`, `score_A`, `score_B`) qui écrit les scores dans l'onglet `Matchs` et passe le match
+  en `terminé`. Validation des scores (entiers ≥ 0) côté backend via `validerScore()`.
+- Nouvelle page dédiée **`frontend/saisie.html`** + `js/saisie.js` : liste des matchs par catégorie,
+  deux champs de score + bouton **Valider** par match (usage table de marque / téléphone). Un match
+  terminé reste modifiable. Styles ajoutés dans `styles.css` (cartes `.match`).
+- `validerScore()` validé hors-ligne (Node) ; page vérifiée en preview (rendu + garde-fou champ vide
+  + câblage API confirmé). ⚠️ **Backend à redéployer** pour activer l'enregistrement en ligne.
+- Outil de dev : `.claude/serveur-preview.js` (petit serveur statique Node) car le `python3` de
+  l'environnement est bloqué par le sandbox ; `.claude/launch.json` bascule sur Node.
+
 ### Note de conception — 2026-07-13
 - Besoin identifié : la logique de l'**après-midi** diffère du matin (poules) — matchs de
   **classement / phases finales** qui dépendent des **résultats du matin**. Non implémenté ;
