@@ -48,6 +48,7 @@ tournoi-r92/
 │   ├── structure-google-sheet.md→ colonnes de chaque onglet du Sheet
 │   ├── deploiement.md           → déploiement backend + mise en ligne frontend
 │   ├── migration-association.md → check-list pour passer des comptes perso à ceux de l'asso
+│   ├── phases-tournoi.md        → logique matin (poules) / après-midi (finales) — à concevoir
 │   └── guide-admin.md           → mode d'emploi de l'organisateur
 │
 ├── backend/                 → code Google Apps Script

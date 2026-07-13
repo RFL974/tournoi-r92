@@ -5,6 +5,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Note de conception — 2026-07-13
+- Besoin identifié : la logique de l'**après-midi** diffère du matin (poules) — matchs de
+  **classement / phases finales** qui dépendent des **résultats du matin**. Non implémenté ;
+  capturé dans `docs/phases-tournoi.md` (approches possibles + questions à trancher, impact probable :
+  colonne `phase` dans Matchs, génération en 2 temps ou structure à trous).
+
 ### Session 10 — 2026-07-13 (nettoyage & doc)
 - Mise à jour de toute la doc racine : `README.md` (statut consolidé), `docs/architecture.md`
   (table des actions réellement disponibles + notes génération/arbitrage), `docs/guide-admin.md`
