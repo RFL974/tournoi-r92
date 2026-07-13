@@ -9,6 +9,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 - Avant, la clé était demandée à la première écriture puis à chaque tentative refusée (agaçant).
   Désormais : **une « connexion » à l'ouverture** de `admin.html` et `saisie.html` demande la clé
   **une fois**, la **valide** immédiatement, puis toutes les écritures passent en silence.
+- **Stockage en session** (`sessionStorage`, plus `localStorage`) : la clé est oubliée à la fermeture
+  de l'onglet → vraie « connexion » redemandée à chaque nouvelle session (mais silencieuse pendant
+  qu'on travaille, reload compris).
+- **Correction d'un score définitif** : le bouton « Corriger » **redemande la clé scores**
+  (confirmation forte via `demanderCleValide`) avant de déverrouiller — en plus de la connexion.
 - `api.js` : `connexion(role, libelle)` (boucle jusqu'à une clé valide, ne mémorise que si valide) +
   `cleValide(role, cle)` qui **teste la clé sans rien modifier** (sonde : action d'écriture avec un
   id bidon → « introuvable » si la clé est bonne, « Clé incorrecte » sinon). Frontend-only, **aucun

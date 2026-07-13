@@ -105,10 +105,11 @@ document.addEventListener('click', async function (evenement) {
   const enEdition = carte.classList.contains('match-edition');
   const verrouille = carte.classList.contains('match-termine') && !enEdition;
 
-  // 1) Score validé (définitif) et verrouillé → « Corriger » demande une confirmation
-  //    puis déverrouille les champs, sans encore rien envoyer.
+  // 1) Score validé (définitif) et verrouillé → « Corriger » redemande la clé scores
+  //    (confirmation forte), puis déverrouille les champs sans encore rien envoyer.
   if (verrouille) {
-    if (!confirm('Ce score est validé (définitif).\nLe corriger ?')) return;
+    const cle = await demanderCleValide('scores', '🔒 Corriger un score définitif\n\nEntre la clé scores :');
+    if (cle == null) return; // annulé → le score reste verrouillé
     deverrouiller(carte);
     afficherMessage(msg, 'Corrige le score puis valide.', 'ok');
     return;

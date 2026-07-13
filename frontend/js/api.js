@@ -89,14 +89,16 @@ async function apiPost(action, data) {
  *  l'ajoute à chaque requête. `role` vaut 'admin' ou 'scores'.
  * ========================================================================== */
 
-/** Lit la clé mémorisée pour un rôle ('admin' ou 'scores'). */
+/** Lit la clé mémorisée pour un rôle ('admin' ou 'scores') — pour LA SESSION en cours.
+ *  On utilise sessionStorage (et non localStorage) : la clé est oubliée quand l'onglet
+ *  est fermé, donc elle est redemandée à chaque nouvelle « connexion » à la page. */
 function lireCleLocale(role) {
-  return localStorage.getItem('r92_cle_' + role) || '';
+  return sessionStorage.getItem('r92_cle_' + role) || '';
 }
 
-/** Mémorise la clé d'un rôle sur l'appareil. */
+/** Mémorise la clé d'un rôle pour la session en cours. */
 function definirCleLocale(role, cle) {
-  localStorage.setItem('r92_cle_' + role, cle || '');
+  sessionStorage.setItem('r92_cle_' + role, cle || '');
 }
 
 /** Demande la clé à l'utilisateur (pré-remplie avec la mémorisée). Renvoie null si annulé. */
@@ -170,5 +172,20 @@ async function connexion(role, libelle) {
     const cle = saisie.trim();
     if (cle && await cleValide(role, cle)) { definirCleLocale(role, cle); return true; }
     alert('Clé incorrecte. Réessaie.');
+  }
+}
+
+/**
+ * Redemande explicitement la clé d'un rôle et la valide (confirmation forte, ex :
+ * corriger un score définitif). Mémorise la clé pour la session. Renvoie la clé ou
+ * null si annulé.
+ */
+async function demanderCleValide(role, message) {
+  while (true) {
+    const saisie = prompt(message, '');
+    if (saisie == null) return null; // annulé
+    const cle = saisie.trim();
+    if (cle && await cleValide(role, cle)) { definirCleLocale(role, cle); return cle; }
+    alert('Clé incorrecte.');
   }
 }
