@@ -744,12 +744,50 @@ function calculerPlanning(config, equipes, melange) {
  * Génère et ÉCRIT les poules et le planning. Gère l'heure de fin auto/manuelle
  * et, en manuel avec dépassement, propose des arbitrages.
  */
+/**
+ * Projette l'heure de fin de l'APRÈS-MIDI dès la génération du matin, SANS connaître
+ * les équipes : le planning de l'après-midi ne dépend que de la STRUCTURE (nombre de
+ * matchs du classement croisé = déterminé par les poules) + des réglages + de la reprise
+ * après déjeuner. On simule donc avec des équipes fictives. Renvoie l'heure de fin en minutes.
+ */
+function projeterFinApresMidi(config, poules, matchsMatin) {
+  var fixturesParCat = {};
+  config.categories.filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; })
+    .forEach(function (cat) {
+      var poulesCat = poules.filter(function (p) { return p.categorie === cat.categorie; });
+      if (poulesCat.length < 2) return; // une seule poule -> pas de croisé
+      var rangMax = 0;
+      poulesCat.forEach(function (p) { if (p.equipes.length > rangMax) rangMax = p.equipes.length; });
+      var fixtures = [];
+      for (var r = 0; r < rangMax; r++) {
+        var groupe = [];
+        poulesCat.forEach(function (p) { if (p.equipes[r]) groupe.push('PROJ_' + cat.categorie + '_' + p.nom_poule + '_' + r); });
+        if (groupe.length < 2) continue;
+        var label = 'N' + (r + 1);
+        tourneeToutesRondes(groupe).forEach(function (pr) {
+          fixtures.push({ poule: label, equipe_A: pr.a, equipe_B: pr.b, round: pr.round });
+        });
+      }
+      if (fixtures.length) fixturesParCat[cat.categorie] = fixtures;
+    });
+  return planifierApresMidi(config, fixturesParCat, matchsMatin).maxFin;
+}
+
+/** Heure de fin projetée de la JOURNÉE complète (matin + après-midi), en minutes. */
+function finJourneeProjetee(config, equipes, melange) {
+  var r = calculerPlanning(config, equipes, melange);
+  return Math.max(r.maxFin, projeterFinApresMidi(config, r.poules, r.matchsFinaux));
+}
+
 function genererPoulesEtPlanning(classeur) {
   var config = lireConfig(classeur);
   var equipes = lireOngletSimple(classeur, 'Equipes');
   var global = config.global;
 
   var r = calculerPlanning(config, equipes, true);
+  // Fin réelle du tournoi = fin du dernier match d'après-midi (projeté, structure connue).
+  var finApremProj = projeterFinApresMidi(config, r.poules, r.matchsFinaux);
+  var finJournee = Math.max(r.maxFin, finApremProj);
   var avert = r.avert.slice();
   var autoFin = String(global.heure_fin_auto || 'oui').toLowerCase() !== 'non';
   var cible = hmVersMin(global.heure_fin || '18:00');
@@ -757,14 +795,14 @@ function genererPoulesEtPlanning(classeur) {
   var suggestions = [];
 
   if (autoFin) {
-    // Heure de fin = fin du dernier match.
-    heureFin = (r.maxFin > 0) ? minVersHm(r.maxFin) : (global.heure_fin || '');
-    if (r.maxFin > 0) ecrireParamGlobal(classeur.getSheetByName('Config'), 'heure_fin', heureFin);
+    // Heure de fin = fin du dernier match du TOURNOI (après-midi projeté inclus).
+    heureFin = (finJournee > 0) ? minVersHm(finJournee) : (global.heure_fin || '');
+    if (finJournee > 0) ecrireParamGlobal(classeur.getSheetByName('Config'), 'heure_fin', heureFin);
   } else {
     // Heure de fin fixée manuellement : on prévient si dépassement + on propose des arbitrages.
     heureFin = global.heure_fin || '';
-    if (r.maxFin > cible) {
-      avert.push('Le planning finit à ' + minVersHm(r.maxFin) + ', après l\'heure de fin (' + heureFin + ').');
+    if (finJournee > cible) {
+      avert.push('Le tournoi finit à ' + minVersHm(finJournee) + ' (après-midi inclus), après l\'heure de fin (' + heureFin + ').');
       suggestions = analyserArbitrages(config, equipes, cible);
     }
   }
@@ -777,7 +815,9 @@ function genererPoulesEtPlanning(classeur) {
     nb_matchs: r.matchsFinaux.length,
     heure_fin: heureFin,
     heure_fin_auto: autoFin,
-    heure_fin_projetee: (r.maxFin > 0) ? minVersHm(r.maxFin) : '',
+    heure_fin_matin: (r.maxFin > 0) ? minVersHm(r.maxFin) : '',
+    heure_fin_apresmidi: (finApremProj > 0) ? minVersHm(finApremProj) : '',
+    heure_fin_projetee: (finJournee > 0) ? minVersHm(finJournee) : '',
     avertissements: avert,
     suggestions: suggestions
   };
@@ -791,13 +831,13 @@ function analyserArbitrages(config, equipes, cibleMin) {
   // Simulation en DÉTERMINISTE (melange=false) pour comparer les pistes à isopérimètre :
   // la vraie génération mélange les poules, donc les heures réelles peuvent légèrement
   // différer, mais l'ordre de grandeur des gains reste représentatif.
-  var base = calculerPlanning(config, equipes, false).maxFin;
+  var base = finJourneeProjetee(config, equipes, false);
   var candidats = construireCandidats(config);
   var res = [];
   candidats.forEach(function (cand) {
     var cfg = clonerConfig(config);
     appliquerModif(cfg, cand.modif);
-    var fin = calculerPlanning(cfg, equipes, false).maxFin;
+    var fin = finJourneeProjetee(cfg, equipes, false);
     var gain = base - fin;
     if (gain > 0) {
       res.push({ piste: cand.label, heure_fin: minVersHm(fin), gain_min: gain,

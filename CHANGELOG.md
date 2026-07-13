@@ -5,6 +5,21 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : heure de fin = fin du TOURNOI (après-midi inclus) — 2026-07-13
+- Avant, la génération du matin n'affichait que la **fin des poules du matin**. Or le planning de
+  l'après-midi ne dépend que de la **structure** (nombre de matchs du croisé, déterminé par les
+  poules) + des réglages + de la reprise après déjeuner — donc calculable dès le matin, sans
+  connaître les équipes de l'après-midi.
+- `Code.gs` : nouvelle fonction `projeterFinApresMidi` (simule l'après-midi avec des équipes
+  fictives) + `finJourneeProjetee`. `genererPoulesEtPlanning` calcule et renvoie
+  `heure_fin_matin`, `heure_fin_apresmidi` et `heure_fin_projetee` (= **fin du tournoi**) ; en mode
+  auto, c'est cette fin de journée qui est écrite dans `heure_fin`. L'assistant d'arbitrage raisonne
+  désormais sur la **journée complète**.
+- `admin.js` : le message de génération affiche « 🌅 Fin du matin » **et** « 🏁 Fin estimée du
+  tournoi (après-midi inclus) ».
+- Validé en Node : la fin d'après-midi **projetée** (équipes fictives) est **identique** à la fin
+  **réelle** (vraies équipes). ⚠️ **Backend à redéployer**.
+
 ### Mon planning : rafraîchissement automatique — 2026-07-13
 - `planning.html` se **rafraîchit tout seul** (toutes les 60 s) + bouton « Rafraîchir » + « Mis à
   jour à HH:MM ». Ainsi, les **matchs d'après-midi générés en cours de journée apparaissent sans

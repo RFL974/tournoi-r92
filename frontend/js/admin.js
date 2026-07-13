@@ -571,7 +571,9 @@ async function genererMaintenant() {
     const nbP = (res && res.nb_poules != null) ? res.nb_poules : '?';
     const nbM = (res && res.nb_matchs != null) ? res.nb_matchs : '?';
     const enRetard = res && res.avertissements && res.avertissements.length;
-    let texte = '✅ ' + nbP + ' poule(s) et ' + nbM + ' match(s) générés. Fin : ' + (res.heure_fin || '?') + '.';
+    let texte = '✅ ' + nbP + ' poule(s) et ' + nbM + ' match(s) du matin générés.';
+    if (res.heure_fin_matin) texte += '\n🌅 Fin du matin : ' + res.heure_fin_matin + '.';
+    if (res.heure_fin_projetee) texte += '\n🏁 Fin estimée du tournoi (après-midi inclus) : ' + res.heure_fin_projetee + '.';
     if (enRetard) texte += '\n⚠️ ' + res.avertissements.join('\n⚠️ ');
     afficherMessage(message, texte, enRetard ? 'ko' : 'ok');
 
