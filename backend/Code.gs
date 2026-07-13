@@ -824,7 +824,9 @@ function ecrireGeneration(classeur, poules, affectationPoule, matchsFinaux) {
   var oM = classeur.getSheetByName('Matchs');
   viderDonnees(oM);
   if (matchsFinaux.length) {
-    oM.getRange(2, 1, matchsFinaux.length, matchsFinaux[0].length).setValues(matchsFinaux);
+    var plageM = oM.getRange(2, 1, matchsFinaux.length, matchsFinaux[0].length);
+    plageM.setNumberFormat('@'); // format texte : évite que "11:00" devienne une heure/date
+    plageM.setValues(matchsFinaux);
   }
 }
 
