@@ -161,6 +161,51 @@ h1, h2, h3 {
 }
 
 /* ==========================================================================
+   Formulaire de réglages (horaires) — libellé à gauche, champ à droite
+   ========================================================================== */
+.form-reglages { display: flex; flex-direction: column; }
+
+.champ-reglage {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(184, 216, 248, 0.08);
+}
+.champ-reglage label {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--bleu-ciel);
+  font-size: 0.95rem;
+}
+.champ-reglage input {
+  background: rgba(3, 16, 36, 0.6);
+  color: var(--texte);
+  border: 1px solid rgba(184, 216, 248, 0.25);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 1.1rem;
+  width: 130px;
+  text-align: center;
+}
+/* Rend l'icône du sélecteur d'heure visible sur fond sombre */
+.champ-reglage input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.6);
+  cursor: pointer;
+}
+
+.ligne-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
    Formulaire d'ajout d'équipe + liste des équipes
    ========================================================================== */
 .form-equipe {

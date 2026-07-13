@@ -390,6 +390,18 @@ function doPost(e) {
         resultat = supprimerEquipe(classeur, requete.id_equipe);
         break;
 
+      case 'enregistrerHoraires':
+        resultat = enregistrerHoraires(classeur, requete);
+        break;
+
+      case 'enregistrerCategorie':
+        resultat = enregistrerCategorie(classeur, requete);
+        break;
+
+      case 'supprimerCategorie':
+        resultat = supprimerCategorie(classeur, requete.categorie);
+        break;
+
       default:
         resultat = { error: 'Action inconnue : ' + action };
     }
@@ -469,4 +481,110 @@ function genererIdEquipe(onglet) {
 
   var suivant = max + 1;
   return 'E' + (suivant < 10 ? '0' + suivant : suivant); // E01, E02, …, E10, E11
+}
+
+
+/* ===================== ÉCRITURE DES RÉGLAGES (onglet Config) ===================== */
+
+/**
+ * Enregistre les horaires globaux (zone A de l'onglet Config).
+ * @param {Spreadsheet} classeur
+ * @param {Object} data  { heure_debut, heure_fin, pause_dejeuner_debut, pause_dejeuner_duree_min }
+ * @return {Object}
+ */
+function enregistrerHoraires(classeur, data) {
+  var onglet = classeur.getSheetByName('Config');
+  var colA = onglet.getRange(1, 1, onglet.getLastRow(), 1).getValues(); // colonne "parametre"
+
+  var champs = ['heure_debut', 'heure_fin', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min'];
+
+  champs.forEach(function (champ) {
+    if (data[champ] == null) return; // champ non fourni : on ne touche pas
+    // On cherche la ligne dont la colonne A vaut le nom du paramètre.
+    for (var i = 0; i < colA.length; i++) {
+      if (colA[i][0] === champ) {
+        var cellule = onglet.getRange(i + 1, 2); // colonne B = "valeur"
+        cellule.setNumberFormat('@');            // format texte (préserve "09:00")
+        cellule.setValue(String(data[champ]));
+        break;
+      }
+    }
+  });
+
+  return { ok: true };
+}
+
+/**
+ * Crée ou met à jour une catégorie (zone B de l'onglet Config).
+ * Si la catégorie existe déjà (même nom), on met à jour sa ligne ; sinon on l'ajoute.
+ * @param {Spreadsheet} classeur
+ * @param {Object} data  { categorie, presente, terrains, taille_poule_cible, format_mi_temps,
+ *                         duree_mi_temps_min, pause_mi_temps_min, recup_entre_matchs_min }
+ * @return {Object}  { ok: true, nouvelle: true|false }
+ */
+function enregistrerCategorie(classeur, data) {
+  var nom = (data.categorie || '').toString().trim();
+  if (!nom) return { error: 'Nom de catégorie vide.' };
+
+  var onglet = classeur.getSheetByName('Config');
+  var donnees = onglet.getDataRange().getValues();
+
+  // On repère la ligne d'en-têtes de la zone catégories.
+  var hdr = -1;
+  for (var i = 0; i < donnees.length; i++) {
+    if (donnees[i][0] === 'categorie') { hdr = i; break; }
+  }
+  if (hdr === -1) return { error: 'Zone catégories introuvable.' };
+
+  var colonnes = donnees[hdr]; // ex : ['categorie','presente','terrains', ...]
+
+  // On construit la ligne à écrire, dans l'ordre exact des colonnes.
+  var ligneValeurs = colonnes.map(function (c) {
+    return (c && data[c] != null) ? String(data[c]) : '';
+  });
+
+  // On cherche si la catégorie existe déjà, et où finit le tableau.
+  var cible = -1;
+  var derniereLigneData = hdr; // au pire, il n'y a que l'en-tête
+  for (var l = hdr + 1; l < donnees.length; l++) {
+    if (donnees[l][0] === '' || donnees[l][0] === null) break; // fin du tableau
+    derniereLigneData = l;
+    if (String(donnees[l][0]) === nom) cible = l;
+  }
+
+  // Ligne d'écriture (1-indexée) : la ligne existante, ou juste après la dernière.
+  var ligneEcriture = (cible !== -1) ? (cible + 1) : (derniereLigneData + 2);
+
+  var plage = onglet.getRange(ligneEcriture, 1, 1, colonnes.length);
+  plage.setNumberFormat('@'); // format texte (préserve "1,2")
+  plage.setValues([ligneValeurs]);
+
+  return { ok: true, nouvelle: (cible === -1) };
+}
+
+/**
+ * Supprime une catégorie (retire sa ligne dans la zone B de Config).
+ * @param {Spreadsheet} classeur
+ * @param {string} nom  ex : 'U14'
+ * @return {Object}
+ */
+function supprimerCategorie(classeur, nom) {
+  nom = (nom || '').toString().trim();
+  var onglet = classeur.getSheetByName('Config');
+  var donnees = onglet.getDataRange().getValues();
+
+  var hdr = -1;
+  for (var i = 0; i < donnees.length; i++) {
+    if (donnees[i][0] === 'categorie') { hdr = i; break; }
+  }
+  if (hdr === -1) return { error: 'Zone catégories introuvable.' };
+
+  for (var l = hdr + 1; l < donnees.length; l++) {
+    if (donnees[l][0] === '' || donnees[l][0] === null) break;
+    if (String(donnees[l][0]) === nom) {
+      onglet.deleteRow(l + 1); // +1 car deleteRow est 1-indexé
+      return { ok: true };
+    }
+  }
+  return { error: 'Catégorie introuvable : ' + nom };
 }

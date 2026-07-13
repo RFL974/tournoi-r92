@@ -7,14 +7,6 @@
  * ============================================================================
  */
 
-/* Libellés lisibles pour les réglages globaux (au lieu des noms techniques). */
-const LIBELLES_GLOBAUX = {
-  heure_debut:               'Heure de début',
-  heure_fin:                 'Heure de fin',
-  pause_dejeuner_debut:      'Pause déjeuner (début)',
-  pause_dejeuner_duree_min:  'Pause déjeuner (durée, min)'
-};
-
 /* Libellés lisibles pour les réglages d'une catégorie. */
 const LIBELLES_CATEGORIE = {
   terrains:               'Terrains',
@@ -48,7 +40,11 @@ async function initAdmin() {
 
     // 1) Réglages
     zoneReglages.innerHTML =
-      afficherGlobaux(data.config.global) + afficherCategories(data.config.categories);
+      afficherHoraires(data.config.global) + afficherCategories(data.config.categories);
+
+    // On branche le formulaire des horaires (présent seulement si la config a chargé).
+    const formHoraires = document.getElementById('form-horaires');
+    if (formHoraires) formHoraires.addEventListener('submit', onEnregistrerHoraires);
 
     // 2) Équipes : on remplit la liste déroulante des catégories et la liste des équipes
     remplirSelectCategories(data.config.categories);
@@ -69,17 +65,83 @@ async function initAdmin() {
    AFFICHAGE DES RÉGLAGES
    -------------------------------------------------------------------------- */
 
-function afficherGlobaux(global) {
-  let lignes = '';
-  for (const cle in LIBELLES_GLOBAUX) {
-    const valeur = (global && global[cle] != null) ? global[cle] : '—';
-    lignes +=
-      '<div class="ligne-info">' +
-        '<span class="libelle">' + LIBELLES_GLOBAUX[cle] + '</span>' +
-        '<span class="valeur">' + valeur + '</span>' +
-      '</div>';
+/**
+ * Carte "Horaires de la journée" sous forme de FORMULAIRE modifiable.
+ * Les heures utilisent le champ natif <input type="time"> (rouleau sur mobile).
+ */
+function afficherHoraires(global) {
+  function val(cle) {
+    return (global && global[cle] != null) ? echapper(String(global[cle])) : '';
   }
-  return '<section class="carte"><h2>Horaires de la journée</h2>' + lignes + '</section>';
+  return (
+    '<section class="carte">' +
+      '<h2>Horaires de la journée</h2>' +
+      '<form id="form-horaires" class="form-reglages">' +
+        champHeure('heure_debut', 'Heure de début', val('heure_debut')) +
+        champHeure('heure_fin', 'Heure de fin', val('heure_fin')) +
+        champHeure('pause_dejeuner_debut', 'Pause déjeuner — début', val('pause_dejeuner_debut')) +
+        champNombre('pause_dejeuner_duree_min', 'Pause déjeuner — durée (min)', val('pause_dejeuner_duree_min')) +
+        '<div class="ligne-action">' +
+          '<button type="submit" class="bouton">Enregistrer les horaires</button>' +
+          '<span id="message-horaires" class="message-form"></span>' +
+        '</div>' +
+      '</form>' +
+    '</section>'
+  );
+}
+
+/* Un champ "heure" (rouleau natif sur mobile). */
+function champHeure(nom, label, valeur) {
+  return '<div class="champ-reglage">' +
+           '<label for="h-' + nom + '">' + label + '</label>' +
+           '<input type="time" id="h-' + nom + '" name="' + nom + '" value="' + valeur + '">' +
+         '</div>';
+}
+
+/* Un champ "nombre" (ex : durée en minutes). */
+function champNombre(nom, label, valeur) {
+  return '<div class="champ-reglage">' +
+           '<label for="h-' + nom + '">' + label + '</label>' +
+           '<input type="number" id="h-' + nom + '" name="' + nom + '" min="0" step="5" value="' + valeur + '">' +
+         '</div>';
+}
+
+/**
+ * Enregistre les horaires quand on soumet le formulaire.
+ */
+async function onEnregistrerHoraires(evenement) {
+  evenement.preventDefault();
+  const form = evenement.target;
+  const message = document.getElementById('message-horaires');
+
+  const data = {
+    heure_debut:              form.heure_debut.value,
+    heure_fin:                form.heure_fin.value,
+    pause_dejeuner_debut:     form.pause_dejeuner_debut.value,
+    pause_dejeuner_duree_min: form.pause_dejeuner_duree_min.value
+  };
+
+  if (!data.heure_debut || !data.heure_fin) {
+    afficherMessage(message, "Renseigne au moins l'heure de début et de fin.", 'ko');
+    return;
+  }
+
+  const bouton = form.querySelector('button');
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Enregistrement…';
+
+  try {
+    await apiPost('enregistrerHoraires', data);
+    // On met à jour la config gardée en mémoire.
+    configCourante.global = Object.assign({}, configCourante.global, data);
+    afficherMessage(message, '✅ Horaires enregistrés.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
 }
 
 function afficherCategories(categories) {

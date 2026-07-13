@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 6 — 2026-07-13
+- Page admin **étape 3a — horaires modifiables depuis la page** (écriture dans Config).
+- `backend/Code.gs` : nouvelles actions d'écriture des réglages : `enregistrerHoraires()`,
+  `enregistrerCategorie()` (créer/mettre à jour), `supprimerCategorie()`. → **1 redéploiement**
+  couvre aussi l'étape 3b (catégories modifiables) à venir.
+- `frontend/js/admin.js` : la carte « Horaires » devient un formulaire (champs `<input type="time">`
+  = rouleau natif sur mobile) ; enregistrement via `apiPost('enregistrerHoraires', …)`.
+- `frontend/css/styles.css` : styles du formulaire de réglages (libellé/valeur, champ heure sombre).
+
 ### Session 5 — 2026-07-13
 - Page admin **étape 2 — saisie des équipes** (première ÉCRITURE dans le Sheet).
 - `backend/Code.gs` : ajout de `doPost()` + `ajouterEquipe()`, `supprimerEquipe()`,
