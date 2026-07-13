@@ -5,7 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
-### Page « Live » publique — 2026-07-13
+### Classement : groupes N1-N4 de l'après-midi — 2026-07-13
+- La page **`classement.html`** affiche désormais **deux sections** : « 🌅 Poules (matin) » (A/B/C)
+  et « 🏉 Après-midi — classement croisé par niveau » (N1-N4). Chaque niveau montre sa **composition**
+  (dès la génération de l'après-midi) et son **classement** qui se remplit au fil des scores.
+- Calcul **côté navigateur** depuis un seul `getAll` (même barème que le backend), avec les deux
+  phases **comptées séparément** : le classement des poules ne compte que les matchs `phase=poule`,
+  celui des niveaux que les matchs `phase=classement`. Corrige un mélange potentiel une fois les
+  scores de l'après-midi saisis (même correctif appliqué au calcul de la page `live.html`).
+- Vérifié en preview : compositions correctes (N1 = les 1ers de poule…), et le classement d'un
+  niveau se met à jour correctement quand un score arrive (barème V=3/D=1, départage à la différence).
 - Nouvelle page **`live.html`** + `js/live.js` (lecture seule) avec trois sections :
   **⭐ Mes favoris** (équipes suivies, mémorisées en localStorage — leurs matchs remontent en tête),
   **📣 Derniers scores** (matchs terminés, plus récents en premier, vainqueur en vert) et

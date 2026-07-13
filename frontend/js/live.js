@@ -59,6 +59,7 @@ function calculerClassementLocal(equipes, matchs) {
     infos[e.id_equipe] = { categorie: e.categorie, poule: e.poule };
   });
   matchs.forEach(function (m) {
+    if (String(m.phase) === 'classement') return; // le classement des poules ne compte que le matin
     if (!estTermine(m.statut)) return;
     const a = stats[m.equipe_A], b = stats[m.equipe_B];
     if (!a || !b) return;
