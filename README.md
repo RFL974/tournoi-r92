@@ -99,18 +99,19 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 
 ## 📌 Statut d'avancement
 
-**Session 4 (2026-07-13)** — Début du frontend : **page admin (étape 1)**. Affiche les horaires
-globaux et les catégories lus depuis le backend, aux couleurs de la charte R92 (mobile-first).
-Prochaine étape : saisie des équipes + écriture des données (`doPost`).
+**Au 2026-07-13 :**
 
-**Session 3 (2026-07-11)** — Backend **déployé en Web App** et fonctionnel : l'API de lecture
-(`doGet`) répond en JSON (`ping`, `getConfig`, `getEquipes`, `getPoules`, `getMatchs`, `getAll`).
-URL rangée dans `frontend/js/config.js`.
+- ✅ **Base de données** Google Sheets (4 onglets) créée automatiquement (`setupSheet`).
+- ✅ **Backend** déployé en Web App : API de lecture (`doGet`) et d'écriture (`doPost`).
+- ✅ **Page admin** complète et testée :
+  - horaires modifiables (heure de fin auto ou manuelle, battement terrain, pause déjeuner) ;
+  - catégories modifiables (présence, terrains, tailles, durées…) + ajout/suppression ;
+  - saisie des équipes (ajout/suppression) ;
+  - génération des poules et du planning **sans conflit**, avec **assistant d'arbitrage** si
+    l'heure de fin manuelle est dépassée.
 
-**Session 2 (2026-07-11)** — Premier code backend : `setupSheet()` crée automatiquement les 4
-onglets du Sheet avec leurs en-têtes.
+**Reste à faire :** page « Mon planning » (visiteur), page « Live » (classements + favoris + don),
+page « Saisie des scores », puis mise en place de l'instantané `data.json` pour la lecture publique
+à grande échelle (voir [`docs/architecture.md`](docs/architecture.md)).
 
-**Session 1 (2026-07-11)** — Mise en place : structure du projet, documentation initiale,
-définition de la structure du Google Sheet.
-
-Voir [`CHANGELOG.md`](CHANGELOG.md) pour le détail.
+Détail complet dans [`CHANGELOG.md`](CHANGELOG.md).

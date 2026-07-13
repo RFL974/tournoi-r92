@@ -2,8 +2,12 @@
  * ============================================================================
  *  ADMIN — logique de la page d'administration
  * ============================================================================
- *  - Affiche les réglages (horaires globaux + catégories) lus depuis le backend.
- *  - Permet de saisir les équipes (ajout / suppression), écrites dans le Sheet.
+ *  - Affiche et modifie les réglages (horaires globaux + catégories).
+ *  - Saisie des équipes (ajout / suppression).
+ *  - Génération des poules et du planning, avec affichage du résultat.
+ *  - Assistant d'arbitrage : si l'heure de fin manuelle est dépassée, propose
+ *    des ajustements cliquables pour tenir le créneau.
+ *  Tout passe par le backend (voir api.js) qui lit/écrit dans le Google Sheet.
  * ============================================================================
  */
 

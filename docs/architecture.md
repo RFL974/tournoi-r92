@@ -30,17 +30,32 @@ Le frontend appelle l'URL de la Web App avec un paramètre `action` (ex : `?acti
 et le backend renvoie du **JSON**. Le frontend n'accède **jamais** directement au Sheet : tout
 passe par le backend. Ça garde le Sheet protégé et la logique centralisée.
 
-### Actions prévues (indicatif, complété au fil du code)
-| Action | Type | Rôle |
-|---|---|---|
-| `getConfig` | lecture | Réglages globaux + par catégorie |
-| `getEquipes` | lecture | Liste des équipes |
-| `getMatchs` | lecture | Matchs (filtrables par catégorie/équipe) |
-| `getClassements` | lecture | Classements calculés par poule |
-| `saveEquipes` | écriture | Enregistrer/mettre à jour les équipes |
-| `saveConfig` | écriture | Enregistrer les réglages |
-| `genererPoulesEtPlanning` | écriture | Répartir en poules + calculer le planning |
-| `saveScore` | écriture | Enregistrer le score d'un match |
+### Actions disponibles
+Lecture via `GET` (`doGet`), écriture via `POST` (`doPost`).
+
+| Action | Type | Rôle | Statut |
+|---|---|---|---|
+| `ping` | lecture | Vérifier que l'API répond | ✅ |
+| `getConfig` | lecture | Réglages globaux + catégories | ✅ |
+| `getEquipes` | lecture | Liste des équipes | ✅ |
+| `getPoules` | lecture | Liste des poules | ✅ |
+| `getMatchs` | lecture | Liste des matchs (planning + scores) | ✅ |
+| `getAll` | lecture | Tout d'un coup (config + equipes + poules + matchs) | ✅ |
+| `ajouterEquipe` | écriture | Ajouter une équipe | ✅ |
+| `supprimerEquipe` | écriture | Supprimer une équipe | ✅ |
+| `enregistrerHoraires` | écriture | Enregistrer les réglages globaux (zone A) | ✅ |
+| `enregistrerCategorie` | écriture | Créer / mettre à jour une catégorie | ✅ |
+| `supprimerCategorie` | écriture | Supprimer une catégorie | ✅ |
+| `genererPoulesEtPlanning` | écriture | Répartir en poules + calculer le planning ; renvoie aussi les arbitrages si l'heure de fin manuelle est dépassée | ✅ |
+| `saveScore` | écriture | Enregistrer le score d'un match | ⬜ à venir |
+
+> **Écriture (POST) :** le frontend envoie le JSON en `text/plain` pour éviter la requête
+> préliminaire CORS (« preflight ») qu'Apps Script ne gère pas. Le corps contient `{ action, … }`.
+
+> **Génération sans conflit :** l'algorithme respecte terrains dédiés, temps de récupération des
+> équipes, **battement terrain** entre 2 matchs, et **saute la pause déjeuner**. L'**heure de fin**
+> est calculée automatiquement (fin du dernier match) sauf si fixée manuellement ; dans ce cas, en
+> cas de dépassement, l'API propose des **arbitrages** chiffrés (chaque piste est réellement simulée).
 
 ## 3. Frontend — les pages web
 Pages statiques (HTML/CSS/JS), **mobile-first**. Chaque page a un rôle :

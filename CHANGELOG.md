@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Session 10 — 2026-07-13 (nettoyage & doc)
+- Mise à jour de toute la doc racine : `README.md` (statut consolidé), `docs/architecture.md`
+  (table des actions réellement disponibles + notes génération/arbitrage), `docs/guide-admin.md`
+  (mode d'emploi complet de la page admin).
+- Commentaires d'en-tête de `admin.js` complétés (génération + arbitrage).
+- **Code mort supprimé** dans `styles.css` : `.ligne-info .libelle`/`.valeur`, `.statut-present`/
+  `.statut-absent` (anciennes pastilles), `.reglage .r-valeur` — plus générés depuis le passage
+  aux formulaires modifiables.
+
 ### Session 9 — 2026-07-13
 - **Assistant d'arbitrage** : quand l'heure de fin est fixée manuellement et que le planning la
   dépasse, la génération propose des **pistes d'ajustement** (commencer plus tôt, réduire pause
