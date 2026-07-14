@@ -29,7 +29,14 @@
           Entre le score de chaque match puis clique sur <strong>Valider</strong>.<br>
           Le match passe alors en <em>terminé</em> et compte dans le classement.
         </p>
-        <!-- La liste des matchs, groupée par catégorie, injectée par saisie.js -->
+
+        <!-- Filtre catégorie : une table de marque par catégorie. Masqué s'il n'y en a qu'une. -->
+        <div id="filtre-cat-saisie" class="mp-filtre" hidden>
+          <label class="mp-label" for="select-cat-saisie">Catégorie à saisir :</label>
+          <select id="select-cat-saisie" class="r-input"></select>
+        </div>
+
+        <!-- La liste des matchs de la catégorie choisie, injectée par saisie.js -->
         <div id="liste-matchs">
           <div class="message">Chargement des matchs…</div>
         </div>

@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Saisie des scores : filtre par catégorie + matin repliable — 2026-07-14
+- **Une table de marque par catégorie** : un menu déroulant en haut ne montre que les matchs de
+  la catégorie choisie (masqué s'il n'y en a qu'une ; choix mémorisé). Limite fortement le risque
+  d'erreur le jour J.
+- **Le matin devient un accordéon** : replié par défaut **uniquement** quand tous ses matchs sont
+  saisis ET que l'après-midi est généré (on range le matin pour se concentrer sur l'après-midi).
+  Sinon il reste ouvert. Ré-ouvrable d'un clic ; la **correction d'un score du matin reste possible**.
+- 100 % frontend (`saisie.html` + `saisie.js` + CSS accordéon dans `styles.css`).
+
 ### Rafraîchir corrigé (anti-cache) + titre = nom de l'événement — 2026-07-14
 - **Bouton « Rafraîchir » réparé** : `apiGet` ajoutait la réponse au cache navigateur (surtout
   mobile) → les nouveaux scores n'apparaissaient pas. Ajout de `cache: 'no-store'` + paramètre

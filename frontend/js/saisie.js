@@ -13,10 +13,21 @@
 
 let equipes = [];
 let matchs = [];
+let categorieActiveSaisie = '';
+const CLE_CAT_SAISIE = 'r92_saisie_cat';
 
 /** Point d'entrée : on va chercher les données puis on affiche. */
 async function initSaisie() {
   const zone = document.getElementById('liste-matchs');
+
+  // Changement de catégorie (le <select> est statique dans le HTML, on l'écoute une fois).
+  const sel = document.getElementById('select-cat-saisie');
+  if (sel) sel.addEventListener('change', function (e) {
+    categorieActiveSaisie = e.target.value;
+    localStorage.setItem(CLE_CAT_SAISIE, categorieActiveSaisie);
+    afficherMatchs();
+  });
+
   try {
     const data = await apiGet('getAll');
     equipes = data.equipes || [];
@@ -29,46 +40,93 @@ async function initSaisie() {
   await connexion('scores', 'de saisie des scores');
 }
 
+/** Ordre des catégories : par le nombre qu'elles contiennent (U8 < U10 < U12), sinon alphabétique. */
+function comparerCategorie(a, b) {
+  const ma = String(a).match(/\d+/), mb = String(b).match(/\d+/);
+  if (ma && mb && parseInt(ma[0], 10) !== parseInt(mb[0], 10)) return parseInt(ma[0], 10) - parseInt(mb[0], 10);
+  return String(a).localeCompare(String(b));
+}
+
+/**
+ * Remplit le menu déroulant des catégories et fixe la catégorie active (mémorisée si
+ * toujours présente, sinon la première). Le menu se masque s'il n'y a qu'une catégorie.
+ */
+function peuplerFiltreCat() {
+  const bloc = document.getElementById('filtre-cat-saisie');
+  const sel = document.getElementById('select-cat-saisie');
+  const cats = [];
+  matchs.forEach(function (m) { if (cats.indexOf(m.categorie) < 0) cats.push(m.categorie); });
+  cats.sort(comparerCategorie);
+
+  const memo = localStorage.getItem(CLE_CAT_SAISIE) || '';
+  categorieActiveSaisie = (cats.indexOf(memo) >= 0) ? memo : (cats[0] || '');
+
+  sel.innerHTML = cats.map(function (c) {
+    return '<option value="' + echapper(c) + '"' + (c === categorieActiveSaisie ? ' selected' : '') + '>' +
+      echapper(c) + '</option>';
+  }).join('');
+  bloc.hidden = (cats.length <= 1);
+}
+
 /** Nom lisible d'une équipe à partir de son identifiant. */
 function nomEquipe(id) {
   const e = equipes.find(function (x) { return x.id_equipe === id; });
   return e ? e.nom_equipe : id;
 }
 
-/** Construit la liste des matchs, groupée par catégorie et triée par heure. */
+/** Rend les cartes d'une liste de matchs, triées par heure. */
+function cartesMatchs(liste) {
+  return liste.slice()
+    .sort(function (a, b) { return String(a.heure_debut).localeCompare(String(b.heure_debut)); })
+    .map(carteMatch).join('');
+}
+
+/**
+ * Affiche la table de marque de LA catégorie active : matin (dans un accordéon) puis
+ * après-midi. Le matin est replié par défaut uniquement quand il est ENTIÈREMENT saisi
+ * ET que l'après-midi est généré (on le range pour se concentrer sur l'après-midi), mais
+ * il reste ré-ouvrable d'un clic et ses scores restent corrigeables.
+ */
 function afficherMatchs() {
   const zone = document.getElementById('liste-matchs');
   if (!matchs.length) {
+    document.getElementById('filtre-cat-saisie').hidden = true;
     zone.innerHTML = '<p class="vide">Aucun match. Génère d\'abord le planning dans l\'admin.</p>';
     return;
   }
 
-  // Catégories dans leur ordre d'apparition.
-  const cats = [];
-  matchs.forEach(function (m) { if (cats.indexOf(m.categorie) < 0) cats.push(m.categorie); });
+  peuplerFiltreCat(); // remplit le menu + fixe categorieActiveSaisie
 
-  // Rend les cartes d'une liste de matchs, triées par heure.
-  function cartes(liste) {
-    return liste.slice()
-      .sort(function (a, b) { return String(a.heure_debut).localeCompare(String(b.heure_debut)); })
-      .map(carteMatch).join('');
-  }
+  const ms = matchs.filter(function (m) { return m.categorie === categorieActiveSaisie; });
+  const matin = ms.filter(function (m) { return String(m.phase) !== 'classement'; });
+  const aprem = ms.filter(function (m) { return String(m.phase) === 'classement'; });
 
   let html = '';
-  cats.forEach(function (cat) {
-    html += '<h2 style="margin-top:18px;">' + echapper(cat) + '</h2>';
-    const ms = matchs.filter(function (m) { return m.categorie === cat; });
-    const matin = ms.filter(function (m) { return String(m.phase) !== 'classement'; });
-    const aprem = ms.filter(function (m) { return String(m.phase) === 'classement'; });
-    if (matin.length) {
-      html += '<div class="planning-phase">🌅 Matin — poules</div>';
-      html += cartes(matin);
-    }
-    if (aprem.length) {
-      html += '<div class="planning-phase">🏉 Après-midi — classement croisé</div>';
-      html += cartes(aprem);
-    }
-  });
+
+  if (matin.length) {
+    const restants = matin.filter(function (m) { return !estTermine(m.statut); }).length;
+    const apremGenere = aprem.length > 0;
+    const replie = (restants === 0) && apremGenere; // tout saisi + après-midi prêt → on range le matin
+    const resume = (restants === 0)
+      ? 'tous saisis ✓' + (apremGenere ? ' — cliquer pour voir / corriger' : '')
+      : restants + ' à saisir sur ' + matin.length;
+    html +=
+      '<details class="phase-accordeon"' + (replie ? '' : ' open') + '>' +
+        '<summary class="planning-phase phase-sommaire">🌅 Matin — poules' +
+          ' <span class="phase-resume">(' + resume + ')</span></summary>' +
+        '<div class="phase-contenu">' + cartesMatchs(matin) + '</div>' +
+      '</details>';
+  }
+
+  if (aprem.length) {
+    html += '<div class="planning-phase">🏉 Après-midi — classement croisé</div>';
+    html += cartesMatchs(aprem);
+  }
+
+  if (!matin.length && !aprem.length) {
+    html = '<p class="vide">Aucun match pour cette catégorie.</p>';
+  }
+
   zone.innerHTML = html;
 }
 

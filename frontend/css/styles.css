@@ -620,6 +620,36 @@ select.r-input { cursor: pointer; }
 }
 
 /* ==========================================================================
+   Accordéon de phase (page saisie) : le matin se replie une fois clôturé
+   ========================================================================== */
+.phase-accordeon { margin: 0; }
+/* Le <summary> reprend le look de .planning-phase, cliquable + chevron. */
+.phase-sommaire {
+  cursor: pointer;
+  list-style: none;               /* enlève le marqueur natif (Firefox) */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.phase-sommaire::-webkit-details-marker { display: none; } /* enlève la flèche native (WebKit) */
+.phase-sommaire::before {
+  content: '▸';
+  color: var(--bleu-ciel);
+  font-size: 0.9rem;
+  transition: transform 0.15s ease;
+}
+.phase-accordeon[open] .phase-sommaire::before { transform: rotate(90deg); }
+.phase-sommaire:hover { color: var(--accent); }
+.phase-resume {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--bleu-ciel);
+}
+.phase-contenu { margin-top: 8px; }
+
+/* ==========================================================================
    PAGE PERFS RACING (interne) — couleurs V/N/D reprises du planning :
    vert #9fe0a0 (victoire), rouge #ffb4b4 (défaite), bleu ciel (nul).
    ========================================================================== */
