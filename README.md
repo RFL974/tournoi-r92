@@ -18,9 +18,10 @@ puis de suivre les scores et classements en direct — et de garder un **histori
 | 3 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider), scores définitifs verrouillés | ✅ Fait, déployé |
 | 4 | **Phase après-midi** : classement croisé (niveaux N1-N4) depuis les résultats du matin, planifié après le déjeuner | ✅ Fait, déployé |
 | 5 | **Page publique** `tournoi.html` : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, bandeau don HelloAsso | ✅ Code fait — en attente d'hébergement |
-| 6 | **Perfs Racing** (`perfs.html`) : page interne, bilan du tournoi + **cumul de saison** par adversaire | ✅ Code fait |
-| 7 | **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé (jamais effacé par une génération) | ✅ Fait, déployé |
-| 8 | **Sécurité écriture** : lectures publiques, écritures protégées par 2 clés (admin / scores) ; « connexion » demandée une fois par session | ✅ Fait, déployé + clés configurées |
+| 6 | **Publication du tournoi** : bouton admin « Générer le tournoi » (publier / masquer) — la page publique reste un écran « à venir » tant que le tournoi n'est pas publié | ✅ Code fait — backend à redéployer |
+| 7 | **Perfs Racing** (`perfs.html`) : page interne, bilan du tournoi + **cumul de saison** par adversaire | ✅ Code fait |
+| 8 | **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé (jamais effacé par une génération) | ✅ Fait, déployé |
+| 9 | **Sécurité écriture** : lectures publiques, écritures protégées par 2 clés (admin / scores) ; « connexion » demandée une fois par session | ✅ Fait, déployé + clés configurées |
 
 Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
@@ -130,6 +131,9 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   - **Classements** : derniers scores du tournoi, puis poules du matin (A/B/C) + niveaux croisés (N1-N4) ;
   - un **filtre catégorie** global (masqué s'il n'y a qu'une catégorie) adapte les deux onglets ;
   - rafraîchissement automatique (60 s). Bandeau don HelloAsso en **placeholder** (`id="don-lien"`).
+- ✅ **Publication du tournoi** : dans l'admin, bouton **« Générer le tournoi »** (publier / masquer) —
+  distinct de la génération des poules. Tant que le tournoi n'est pas publié, la page publique affiche
+  un écran **« à venir »** (aucune info visible). ⚠️ **Backend à redéployer** (action `publierTournoi`).
 - ✅ **Perfs Racing** (`perfs.html`) : page **interne** (non liée dans le menu), 2 onglets *Ce tournoi*
   et *Saison* (cumul des rencontres par adversaire, via l'historique).
 - ✅ **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé,
@@ -139,8 +143,10 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   (`sessionStorage`). Clés stockées via `configurerCles()` (déjà configurées).
 
 **Reste à faire :**
-- **Hébergement / intégration** du frontend à generationr92.fr (via l'instantané `data.json` —
-  voir [`docs/architecture.md`](docs/architecture.md)).
+- **Redéployer le backend** pour activer l'action `publierTournoi` (fonctionnalité de publication).
+- **Hébergement** des pages sur **GitHub Pages** (ce dépôt) → adresses séparées `…/tournoi.html`
+  (public, à lier dans l'actualité de [boutique-r92](https://rfl974.github.io/boutique-r92/)) et
+  `…/admin.html` (organisateurs, non lié). L'admin reste protégé par la clé même si l'URL est connue.
 - ⏳ **En attente de la création du compte HelloAsso** : brancher l'URL réelle du bandeau de don
   (placeholder `href="#"`, `id="don-lien"` dans `tournoi.html`).
 - **Nettoyer les données de test** du Sheet avant le vrai tournoi.

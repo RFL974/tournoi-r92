@@ -196,6 +196,7 @@ function doPost(e) {
       case 'enregistrerScore':     resultat = enregistrerScore(classeur, requete); break;
       case 'genererPoulesEtPlanning': resultat = genererPoulesEtPlanning(classeur); break;
       case 'genererApresMidi':     resultat = genererApresMidi(classeur); break;
+      case 'publierTournoi':       resultat = publierTournoi(classeur, requete.publie); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -946,6 +947,19 @@ function projeterFinApresMidi(config, poules, matchsMatin) {
 function finJourneeProjetee(config, equipes, melange) {
   var r = calculerPlanning(config, equipes, melange);
   return Math.max(r.maxFin, projeterFinApresMidi(config, r.poules, r.matchsFinaux));
+}
+
+/**
+ * Publie ou masque le tournoi pour le public. Tant que `tournoi_publie` ≠ 'oui', la page
+ * publique tournoi.html affiche un écran « à venir » (aucune info visible). Distinct de la
+ * génération des poules (qui, elle, prépare la structure sans rien publier).
+ * @param publie  true/'oui' pour publier, false/'non' pour masquer.
+ */
+function publierTournoi(classeur, publie) {
+  var valeur = (publie === true || String(publie).toLowerCase() === 'oui'
+                || String(publie).toLowerCase() === 'true') ? 'oui' : 'non';
+  ecrireParamGlobal(classeur.getSheetByName('Config'), 'tournoi_publie', valeur);
+  return { ok: true, tournoi_publie: valeur };
 }
 
 function genererPoulesEtPlanning(classeur) {

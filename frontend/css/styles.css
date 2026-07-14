@@ -26,6 +26,10 @@
   padding: 0;
 }
 
+/* L'attribut HTML `hidden` doit TOUJOURS masquer, même sur les éléments en display:flex
+   (sinon une règle .classe { display: flex } l'emporte sur le [hidden] du navigateur). */
+[hidden] { display: none !important; }
+
 body {
   font-family: 'Barlow', system-ui, sans-serif;   /* texte courant */
   color: var(--texte);
@@ -601,6 +605,15 @@ select.r-input { cursor: pointer; }
 
 /* Filtre catégorie global (au-dessus des deux onglets) */
 .mp-filtre { margin-bottom: 14px; }
+
+/* Écran « à venir » (tournoi pas encore publié) */
+.avenir { text-align: center; padding: 32px 16px; }
+.avenir-emoji { font-size: 3rem; line-height: 1; }
+.avenir-titre { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; color: var(--texte); margin: 12px 0 8px; }
+.avenir-texte { color: var(--bleu-ciel); max-width: 34ch; margin: 0 auto; }
+
+/* État de publication dans l'admin */
+.publication-etat { color: var(--bleu-ciel); margin: 4px 0 10px; }
 
 /* Onglets « Ce tournoi » / « Saison » */
 .perfs-onglets { display: flex; gap: 8px; margin-bottom: 14px; }

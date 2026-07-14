@@ -60,6 +60,9 @@ async function initAdmin() {
     // 3) Poules & planning déjà générés (s'il y en a)
     afficherPlanning(data.poules, data.matchs);
 
+    // 4) État de publication du tournoi (bouton publier / masquer)
+    majPublication();
+
   } catch (erreur) {
     zoneReglages.innerHTML =
       '<div class="message erreur">Impossible de charger les réglages.<br>' +
@@ -87,6 +90,57 @@ async function initAdmin() {
 
   // Bouton de génération de la phase après-midi (classement croisé).
   document.getElementById('bouton-apresmidi').addEventListener('click', onGenererApresMidi);
+
+  // Bouton publier / masquer le tournoi.
+  document.getElementById('bouton-publier').addEventListener('click', onPublier);
+}
+
+/* --------------------------------------------------------------------------
+   PUBLICATION (rendre le tournoi visible ou non sur la page publique)
+   -------------------------------------------------------------------------- */
+
+/** Vrai si le tournoi est actuellement publié (visible du public). */
+function estPublie() {
+  return String(configCourante.global && configCourante.global.tournoi_publie).toLowerCase() === 'oui';
+}
+
+/** Met à jour l'état affiché et le libellé du bouton selon la publication en cours. */
+function majPublication() {
+  const etat = document.getElementById('etat-publication');
+  const bouton = document.getElementById('bouton-publier');
+  if (!etat || !bouton) return;
+  if (estPublie()) {
+    etat.textContent = '🟢 Publié (visible du public)';
+    bouton.textContent = '🙈 Masquer le tournoi';
+  } else {
+    etat.textContent = '⚪️ Non publié (les visiteurs voient « à venir »)';
+    bouton.textContent = '🚀 Générer le tournoi (publier)';
+  }
+}
+
+/** Publie ou masque le tournoi (bascule), avec la clé admin, puis rafraîchit l'affichage. */
+async function onPublier() {
+  const message = document.getElementById('message-publication');
+  const bouton = document.getElementById('bouton-publier');
+  const publier = !estPublie(); // on bascule vers l'état inverse
+  const question = publier
+    ? 'Publier le tournoi ? Il deviendra visible du public sur la page publique.'
+    : 'Masquer le tournoi ? Les visiteurs reverront l\'écran « à venir ».';
+  if (!confirm(question)) return;
+
+  bouton.disabled = true;
+  afficherMessage(message, publier ? 'Publication…' : 'Masquage…', 'ok');
+  try {
+    await ecrireAdmin('publierTournoi', { publie: publier ? 'oui' : 'non' });
+    // On recharge la config pour refléter le nouvel état.
+    configCourante = await apiGet('getConfig');
+    majPublication();
+    afficherMessage(message, publier ? '✅ Tournoi publié.' : '✅ Tournoi masqué.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+  }
 }
 
 /**

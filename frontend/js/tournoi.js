@@ -17,6 +17,7 @@
 
 let equipes = [];
 let matchs = [];
+let config = { global: {} };
 let ongletActif = 'equipe';
 let derniereSignature = '';
 let categorieActive = '';
@@ -69,6 +70,7 @@ async function charger(premier) {
     const signature = JSON.stringify(data.matchs) + '|' + JSON.stringify(data.equipes);
     equipes = data.equipes || [];
     matchs = data.matchs || [];
+    config = data.config || { global: {} };
     majHeure();
 
     if (premier || signature !== derniereSignature) {
@@ -77,6 +79,8 @@ async function charger(premier) {
       peuplerSelect();
       afficherTout();
     }
+    // Verrou de publication (peut changer sans que les matchs/équipes changent).
+    appliquerPublication();
   } catch (err) {
     if (premier) {
       document.getElementById('mon-planning').innerHTML =
@@ -89,6 +93,26 @@ async function charger(premier) {
 function afficherTout() {
   afficherEquipe();
   afficherClassements();
+}
+
+/** Vrai si le tournoi est publié (rendu visible depuis l'admin). */
+function estPublie() {
+  return String(config.global && config.global.tournoi_publie).toLowerCase() === 'oui';
+}
+
+/**
+ * Verrou de publication : tant que le tournoi n'est pas publié, on masque tout le contenu
+ * (barre, onglets, filtre, vues) et on affiche l'écran « à venir ». Sinon, on montre la page.
+ */
+function appliquerPublication() {
+  const pub = estPublie();
+  document.getElementById('tournoi-avenir').hidden = pub;
+  document.getElementById('don-lien').hidden = !pub;
+  document.querySelector('.live-barre').hidden = !pub;
+  document.querySelector('.onglets').hidden = !pub;
+  document.getElementById('vues').hidden = !pub;
+  // Le filtre catégorie : masqué si non publié ; sinon c'est peuplerCategorie qui décide.
+  if (!pub) document.getElementById('filtre-categorie').hidden = true;
 }
 
 function majHeure() {
