@@ -1094,13 +1094,28 @@ function genererPoulesEtPlanning(classeur) {
     }
   }
 
-  // Assistant d'arbitrage. Il se déclenche si :
-  //   (a) l'heure de fin est MANUELLE et le tournoi la dépasse ; OU
-  //   (b) un forçage du nombre de poules RALLONGE la journée par rapport au mode Auto
-  //       (même en heure de fin automatique — cf. décision « dès qu'un forçage déborde »).
+  // Contrainte PAUSE DÉJEUNER : le matin (matchs de poule) doit se terminer AVANT le
+  // début de la pause (créneau contraint pour l'organisateur). Sinon on prévient.
+  var dejDeb = hmVersMin(global.pause_dejeuner_debut || '12:30');
+  var dejDur = parseInt(global.pause_dejeuner_duree_min || '0', 10) || 0;
+  var matinDepasse = (dejDur > 0) && (r.maxFin > dejDeb);
+  if (matinDepasse) {
+    avert.push('Le matin (poules) finit à ' + minVersHm(r.maxFin) +
+      ', après le début de la pause déjeuner (' + minVersHm(dejDeb) + ').');
+  }
+
+  // Assistant d'arbitrage. Une seule cause à la fois, par ordre de priorité :
+  //   1) PAUSE : le matin déborde sur la pause déjeuner (contrainte dure) ;
+  //   2) l'heure de fin est MANUELLE et le tournoi la dépasse ; OU
+  //   3) un forçage du nombre de poules RALLONGE la journée par rapport au mode Auto.
   var depasseManuelle = !autoFin && finJournee > cible;
   var forcageCouteux = (finAuto !== null) && (finJournee > finAuto + 1); // marge 1 min
-  if (depasseManuelle || forcageCouteux) {
+  var causeArb = '';
+  if (matinDepasse) {
+    // Cible : faire finir le matin avant le début de la pause.
+    suggestions = analyserArbitragesMatin(config, equipes, dejDeb);
+    causeArb = 'matin';
+  } else if (depasseManuelle || forcageCouteux) {
     if (forcageCouteux) {
       avert.push('Le forçage du nombre de poules rallonge la journée : fin projetée à ' +
         minVersHm(finJournee) + ' au lieu de ' + minVersHm(finAuto) + ' en Auto (catégories : ' +
@@ -1109,6 +1124,7 @@ function genererPoulesEtPlanning(classeur) {
     // Cible de l'arbitrage : l'heure de fin manuelle si elle prime, sinon le retour à l'Auto.
     var cibleArb = depasseManuelle ? cible : finAuto;
     suggestions = analyserArbitrages(config, equipes, cibleArb);
+    causeArb = autoFin ? 'forcage' : 'fin';
   }
 
   ecrireGeneration(classeur, r.poules, r.affectationPoule, r.matchsFinaux);
@@ -1127,6 +1143,8 @@ function genererPoulesEtPlanning(classeur) {
     heure_fin_matin: (r.maxFin > 0) ? minVersHm(r.maxFin) : '',
     heure_fin_apresmidi: (finApremProj > 0) ? minVersHm(finApremProj) : '',
     heure_fin_projetee: (finJournee > 0) ? minVersHm(finJournee) : '',
+    pause_debut: minVersHm(dejDeb),
+    arbitrage_cause: causeArb,
     avertissements: avert,
     suggestions: suggestions
   };
@@ -1147,6 +1165,34 @@ function analyserArbitrages(config, equipes, cibleMin) {
     var cfg = clonerConfig(config);
     appliquerModif(cfg, cand.modif);
     var fin = finJourneeProjetee(cfg, equipes, false);
+    var gain = base - fin;
+    if (gain > 0) {
+      res.push({ piste: cand.label, heure_fin: minVersHm(fin), gain_min: gain,
+                 tient: (fin <= cibleMin), modif: cand.modif });
+    }
+  });
+  res.sort(function (a, b) { return hmVersMin(a.heure_fin) - hmVersMin(b.heure_fin); });
+  return res.slice(0, 6);
+}
+
+/** Fin projetée du MATIN (dernier match de poule) en DÉTERMINISTE, pour simuler les arbitrages. */
+function finMatinProjetee(config, equipes) {
+  return calculerPlanning(config, equipes, false).maxFin;
+}
+
+/**
+ * Comme analyserArbitrages, mais vise à faire finir le MATIN (poules) avant `cibleMin`
+ * (le début de la pause déjeuner). Les pistes qui ne raccourcissent pas le matin
+ * (ex. « réduire la pause ») ont un gain nul et sont automatiquement écartées.
+ */
+function analyserArbitragesMatin(config, equipes, cibleMin) {
+  var base = finMatinProjetee(config, equipes);
+  var candidats = construireCandidats(config, equipes);
+  var res = [];
+  candidats.forEach(function (cand) {
+    var cfg = clonerConfig(config);
+    appliquerModif(cfg, cand.modif);
+    var fin = finMatinProjetee(cfg, equipes);
     var gain = base - fin;
     if (gain > 0) {
       res.push({ piste: cand.label, heure_fin: minVersHm(fin), gain_min: gain,

@@ -910,15 +910,24 @@ function afficherArbitrages(res) {
   const zone = document.getElementById('arbitrages');
   if (!res || !res.suggestions || !res.suggestions.length) { zone.innerHTML = ''; return; }
 
-  // L'intro diffère selon la cause : heure de fin manuelle dépassée, ou forçage du
-  // nombre de poules qui rallonge la journée (heure de fin automatique).
-  const intro = res.heure_fin_auto
-    ? 'Le planning finit à <strong>' + echapper(res.heure_fin_projetee) +
+  // L'intro diffère selon la cause :
+  //   'matin'   → le matin déborde sur la pause déjeuner (contrainte dure) ;
+  //   'forcage' → un forçage du nombre de poules rallonge la journée (heure de fin auto) ;
+  //   'fin'     → l'heure de fin manuelle est dépassée.
+  let intro;
+  if (res.arbitrage_cause === 'matin') {
+    intro = 'Le matin (poules) finit à <strong>' + echapper(res.heure_fin_matin) +
+      '</strong>, après le début de la pause déjeuner (' + echapper(res.pause_debut) + ').<br>' +
+      'Pistes pour finir le matin avant la pause <span class="arb-note">— clique pour appliquer</span> :';
+  } else if (res.heure_fin_auto) {
+    intro = 'Le planning finit à <strong>' + echapper(res.heure_fin_projetee) +
       '</strong> — un forçage du nombre de poules rallonge la journée.<br>' +
-      'Pistes pour raccourcir <span class="arb-note">— clique pour appliquer</span> :'
-    : 'Le planning finit à <strong>' + echapper(res.heure_fin_projetee) +
+      'Pistes pour raccourcir <span class="arb-note">— clique pour appliquer</span> :';
+  } else {
+    intro = 'Le planning finit à <strong>' + echapper(res.heure_fin_projetee) +
       '</strong>, après ton heure de fin (' + echapper(res.heure_fin) + ').<br>' +
       'Pistes pour tenir le créneau <span class="arb-note">— clique pour appliquer</span> :';
+  }
 
   let html = '<div class="arbitrages">' +
     '<p class="arb-titre">' + intro + '</p>' +

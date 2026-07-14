@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : arbitrage quand le matin déborde sur la pause déjeuner — 2026-07-14
+- La **pause déjeuner** est traitée comme une **contrainte dure** : si le dernier match du
+  **matin (poules)** se termine **après le début de la pause**, la génération lève un
+  avertissement ET propose des **pistes d'arbitrage** pour finir le matin avant la pause
+  (même principe que le dépassement de l'heure de fin manuelle).
+- Backend : détection `matinDepasse` (fin du matin > début de pause) dans `genererPoulesEtPlanning` ;
+  nouvelles fonctions `finMatinProjetee` + `analyserArbitragesMatin` ; nouveaux champs de retour
+  `arbitrage_cause` (`'matin'` / `'forcage'` / `'fin'`) et `pause_debut`.
+- Frontend : `afficherArbitrages` affiche une intro dédiée au cas « matin ».
+- ⚠️ Nécessite de **recopier `backend/Code.gs`** dans Apps Script puis de **redéployer**.
+
 ### Page publique « Le tournoi » : nouveau design aux couleurs du site vitrine — 2026-07-14
 - La page publique adopte la **charte du site vitrine boutique-r92** (navy / bleu ciel / bleu vif,
   polices **Barlow** + **Barlow Condensed**) au lieu de l'ancien thème sombre : en-tête navy avec
