@@ -5,6 +5,22 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Mise en ligne + publication du tournoi + intégration au site vitrine — 2026-07-14
+- **Hébergement GitHub Pages** : le dossier `frontend/` est publié via `.github/workflows/pages.yml`
+  (Settings → Pages → Source : GitHub Actions). URLs séparées : `…/tournoi.html` (public),
+  `…/admin.html` (organisateurs), `…/saisie.html`, `…/perfs.html`. `frontend/index.html` redirige la racine.
+- **Publication du tournoi** : action backend `publierTournoi` + param `tournoi_publie`. La page publique
+  reste un écran « à venir » tant que le tournoi n'est pas publié (`appliquerPublication` + fix CSS
+  `[hidden]{display:none !important}`).
+- **Infos + affiche du tournoi** : actions `enregistrerInfosTournoi` (nom/date/lieu/description) et
+  `enregistrerAffiche` (image redimensionnée côté navigateur → **Google Drive**, `tournoi_affiche_id` ;
+  autorisation Drive via `autoriserDrive()`). Le bouton « Générer le tournoi » enregistre tout PUIS publie.
+- **Intégration boutique-r92** (dépôt séparé) : carte d'actu dynamique (nom + affiche) + **page d'article**
+  `boutique-r92/tournoi.html` (titre, description, date, lieu, affiche) avec bouton « Voir le tournoi en
+  direct », agenda **.ics à 2 rappels** (veille + 2 h) et itinéraire « On y va ». Affiche servie via
+  `lh3.googleusercontent.com/d/{id}` (⚠️ `drive.google.com/thumbnail` bloque le hotlinking).
+- Nettoyage : suppression du code mort (CSS `.etoile`/`.cl-live`/`.fav-bloc|nom|match` de l'ancien système favoris).
+
 ### Page publique unique + filtre catégorie — 2026-07-13
 - **Fusion** des 3 anciennes pages visiteur (`live.html`, `planning.html`, `classement.html`,
   **supprimées** avec leurs JS) en **une seule page `tournoi.html`** (+ `js/tournoi.js`) à **2 onglets** :

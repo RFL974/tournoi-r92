@@ -39,6 +39,18 @@ Deux colonnes : `parametre` et `valeur`.
 | `pause_dejeuner_debut` | `12:30` | Début de la pause déjeuner |
 | `pause_dejeuner_duree_min` | `60` | Durée de la pause déjeuner, en minutes |
 
+Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
+
+| parametre | valeur (exemple) | Signification |
+|---|---|---|
+| `tournoi_id` | `2026-11-11 21:37:00` | Identifiant du tournoi, posé à chaque génération (clé de l'onglet `Historique`) |
+| `tournoi_publie` | `oui` | `oui` = la page publique est visible ; sinon écran « à venir ». Piloté par « Générer le tournoi » |
+| `tournoi_nom` | `Challenge Marc Chevalier` | Nom affiché sur la carte + la page d'article du site vitrine |
+| `tournoi_date` | `2026-11-11` | Date du tournoi (carte, article, agenda .ics) |
+| `tournoi_lieu` | `11 av. Paul Langevin, 92350…` | Lieu (article + itinéraire + agenda .ics) |
+| `tournoi_description` | `Le Challenge…` | Description (carte + article) |
+| `tournoi_affiche_id` | `1-3DZBDd…` | Identifiant du fichier **Google Drive** de l'affiche (affichée via `lh3.googleusercontent.com/d/{id}`) |
+
 ### Zone B — Réglages par catégorie
 
 Un tableau, **une ligne par catégorie**. En-têtes :

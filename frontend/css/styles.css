@@ -474,13 +474,7 @@ select.r-input { cursor: pointer; }
 /* Largeurs de colonnes FIXES pour que les tableaux d'une poule à l'autre s'alignent
    (sinon chaque tableau se dimensionne selon son contenu → décalage). La colonne
    « Équipe », sans largeur, prend l'espace restant. */
-.cl-live, .cl-full { table-layout: fixed; }
-/* Live : # · étoile · Équipe · J · Diff · Pts */
-.cl-live th:nth-child(1), .cl-live td:nth-child(1) { width: 34px; }
-.cl-live th:nth-child(2), .cl-live td:nth-child(2) { width: 40px; }
-.cl-live th:nth-child(4), .cl-live td:nth-child(4) { width: 46px; }
-.cl-live th:nth-child(5), .cl-live td:nth-child(5) { width: 60px; }
-.cl-live th:nth-child(6), .cl-live td:nth-child(6) { width: 52px; }
+.cl-full { table-layout: fixed; }
 /* Classement complet : # · Équipe · J V N D BP BC Diff Pts.
    Largeurs explicites (Équipe comprise) : la somme dépasse l'écran mobile, donc le tableau
    déborde et défile horizontalement dans .table-scroll (au lieu d'écraser la colonne Équipe). */
@@ -488,7 +482,7 @@ select.r-input { cursor: pointer; }
 .cl-full th:nth-child(2), .cl-full td:nth-child(2) { width: 120px; }
 .cl-full th:nth-child(n+3), .cl-full td:nth-child(n+3) { width: 44px; }
 
-/* Onglet « En direct » de tournoi.html (favoris + derniers scores) */
+/* Page publique tournoi.html : bandeau don, barre de rafraîchissement, derniers scores */
 .don-bandeau {
   display: block;
   text-align: center;
@@ -516,12 +510,7 @@ select.r-input { cursor: pointer; }
 .live-cat { color: var(--bleu-ciel); margin: 14px 0 4px; }
 .live-poule { color: var(--texte); font-family: 'Barlow Condensed', sans-serif; margin: 8px 0 4px; }
 
-/* Étoile favori */
-.etoile {
-  background: none; border: none; cursor: pointer;
-  color: #7f92a8; font-size: 1.2rem; line-height: 1; padding: 0;
-}
-.etoile.on { color: #f2c14e; }
+/* Surlignage de l'équipe sélectionnée (onglet « Mon équipe ») */
 .fav-ligne { background: rgba(242, 193, 78, 0.08); }
 
 /* Derniers scores */
@@ -551,14 +540,6 @@ select.r-input { cursor: pointer; }
   white-space: nowrap;
   text-align: center;
   min-width: 72px;
-}
-
-/* Blocs favoris */
-.fav-bloc { margin-bottom: 12px; }
-.fav-nom { color: #f2c14e; font-weight: 600; margin-bottom: 4px; }
-.fav-match {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 5px 10px; border-left: 2px solid rgba(242, 193, 78, 0.4); margin-bottom: 3px;
 }
 
 /* Onglet « Mon équipe » de tournoi.html */

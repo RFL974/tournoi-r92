@@ -17,11 +17,13 @@ puis de suivre les scores et classements en direct — et de garder un **histori
 | 2 | **Génération poules + planning** sans conflit, avec **assistant d'arbitrage** (pistes si l'heure de fin est dépassée ou si un forçage rallonge la journée) | ✅ Fait, déployé |
 | 3 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider), scores définitifs verrouillés | ✅ Fait, déployé |
 | 4 | **Phase après-midi** : classement croisé (niveaux N1-N4) depuis les résultats du matin, planifié après le déjeuner | ✅ Fait, déployé |
-| 5 | **Page publique** `tournoi.html` : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, bandeau don HelloAsso | ✅ Code fait — en attente d'hébergement |
-| 6 | **Publication du tournoi** : bouton admin « Générer le tournoi » (publier / masquer) — la page publique reste un écran « à venir » tant que le tournoi n'est pas publié | ✅ Code fait — backend à redéployer |
-| 7 | **Perfs Racing** (`perfs.html`) : page interne, bilan du tournoi + **cumul de saison** par adversaire | ✅ Code fait |
-| 8 | **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé (jamais effacé par une génération) | ✅ Fait, déployé |
-| 9 | **Sécurité écriture** : lectures publiques, écritures protégées par 2 clés (admin / scores) ; « connexion » demandée une fois par session | ✅ Fait, déployé + clés configurées |
+| 5 | **Page publique** `tournoi.html` : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, bandeau don HelloAsso | ✅ Fait, **en ligne** (GitHub Pages) |
+| 6 | **Publication du tournoi** : bouton admin « Générer le tournoi » (publier / masquer) — la page publique reste un écran « à venir » tant que le tournoi n'est pas publié | ✅ Fait, déployé |
+| 7 | **Infos du tournoi + affiche** : nom, date, lieu, description + **chargeur d'affiche** (stockée dans Google Drive). Enregistrés + publiés d'un clic (« Générer le tournoi ») | ✅ Fait, déployé |
+| 8 | **Intégration au site vitrine** [boutique-r92](https://rfl974.github.io/boutique-r92/) : carte d'actu dynamique (nom + affiche) + **page d'article** (agenda .ics 2 rappels + itinéraire) quand le tournoi est publié | ✅ Fait, en ligne |
+| 9 | **Perfs Racing** (`perfs.html`) : page interne, bilan du tournoi + **cumul de saison** par adversaire | ✅ Fait, en ligne |
+| 10 | **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé (jamais effacé par une génération) | ✅ Fait, déployé |
+| 11 | **Sécurité écriture** : lectures publiques, écritures protégées par 2 clés (admin / scores) ; « connexion » demandée une fois par session | ✅ Fait, déployé + clés configurées |
 
 Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
@@ -31,10 +33,13 @@ Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
 - **Base de données** : Google Sheets (**5 onglets** : `Equipes`, `Poules`, `Matchs`, `Config`, `Historique`)
 - **Backend** : Google Apps Script, déployé en **Web App** qui répond en **JSON**
-- **Frontend** : pages web statiques **HTML / CSS / JS**, pensées **mobile-first**.
-  Les résultats publics seront **intégrés comme une section du site principal generationr92.fr**
-  (site développé en parallèle, dans un dépôt GitHub séparé). Le pont entre les deux est le
-  fichier `data.json` (voir [`docs/architecture.md`](docs/architecture.md))
+- **Frontend** : pages web statiques **HTML / CSS / JS**, pensées **mobile-first**, **hébergées sur
+  GitHub Pages** (workflow `.github/workflows/pages.yml` qui publie le dossier `frontend/`) :
+  - public : **https://rfl974.github.io/tournoi-r92/tournoi.html**
+  - admin : `…/admin.html` · saisie : `…/saisie.html` · perfs (interne) : `…/perfs.html`
+- **Intégration au site vitrine** [boutique-r92](https://github.com/RFL974/boutique-r92) (dépôt séparé) :
+  quand le tournoi est publié, une carte + une page d'article apparaissent dans ses Actualités
+  (elles interrogent le même backend). Voir [`docs/architecture.md`](docs/architecture.md).
 
 Aucun framework, aucune dépendance à installer : c'est volontairement simple et léger.
 
@@ -47,6 +52,8 @@ tournoi-r92/
 ├── README.md                → ce fichier
 ├── CHANGELOG.md             → journal des évolutions
 ├── .gitignore               → fichiers ignorés par Git
+├── .github/workflows/
+│   └── pages.yml            → déploiement auto du dossier frontend/ sur GitHub Pages
 │
 ├── docs/                    → documentation détaillée
 │   ├── architecture.md          → comment les 3 briques communiquent
@@ -60,7 +67,8 @@ tournoi-r92/
 │   └── Code.gs
 │
 └── frontend/                → pages web
-    ├── admin.html           → page organisateur (équipes, réglages, génération)
+    ├── index.html           → redirige la racine vers tournoi.html
+    ├── admin.html           → page organisateur (équipes, réglages, infos tournoi, génération, publication)
     ├── saisie.html          → saisie des scores (table de marque)
     ├── tournoi.html         → page publique unique (onglets Mon équipe / Classements + filtre catégorie)
     ├── perfs.html           → « Perfs Racing » (page interne, non liée)
@@ -78,21 +86,22 @@ tournoi-r92/
 
 ## 🚀 Installation & configuration
 
-> Le backend est **déployé et fonctionnel** (toutes les fonctions ci-dessus répondent en ligne).
-> Il reste principalement à **mettre le frontend en ligne**. Voir [`docs/deploiement.md`](docs/deploiement.md).
+> Le backend **et** le frontend sont **en ligne et fonctionnels**. Voir [`docs/deploiement.md`](docs/deploiement.md).
 
-Étapes :
-1. ✅ Créer les onglets du Google Sheet — automatisé via la fonction `setupSheet()` de
+Étapes (toutes faites) :
+1. ✅ Créer les onglets du Google Sheet — automatisé via `setupSheet()` de
    [`backend/Code.gs`](backend/Code.gs) (voir [`docs/structure-google-sheet.md`](docs/structure-google-sheet.md)).
-   L'onglet `Historique` et la colonne `nb_poules` sont aussi créés automatiquement au besoin.
-2. ✅ Coller le code de `backend/Code.gs` dans l'éditeur Apps Script du Sheet et déployer la Web App.
-3. ✅ Lancer une fois `configurerCles()` dans l'éditeur Apps Script (clés admin / scores stockées dans
-   les Propriétés du script, jamais dans le code).
+   L'onglet `Historique` et la colonne `nb_poules` sont créés automatiquement au besoin.
+2. ✅ Coller `backend/Code.gs` dans l'éditeur Apps Script et déployer la Web App.
+   **Autorisation Google Drive** requise une fois (pour l'affiche) : lancer `autoriserDrive()` dans l'éditeur.
+3. ✅ Lancer une fois `configurerCles()` (clés admin / scores dans les Propriétés du script, jamais dans le code).
 4. ✅ Renseigner l'URL de la Web App dans `frontend/js/config.js`.
-5. ⏳ Mettre en ligne le dossier `frontend/` (sous-domaine dédié) et coller l'URL HelloAsso du bandeau don.
+5. ✅ **Frontend hébergé sur GitHub Pages** (Settings → Pages → Source : **GitHub Actions** ; le workflow
+   `.github/workflows/pages.yml` publie le dossier `frontend/` à chaque push).
 
 > ℹ️ Après toute modification de `backend/Code.gs`, penser à **redéployer une nouvelle version**
-> de la Web App (Apps Script → Gérer les déploiements → Nouvelle version).
+> de la Web App (Apps Script → Gérer les déploiements → Nouvelle version). Le **frontend**, lui, se
+> redéploie **automatiquement** à chaque push sur `main`.
 
 ---
 
@@ -111,7 +120,7 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 
 ## 📌 Statut d'avancement
 
-**Au 2026-07-14 : l'application est complète, déployée et fonctionnelle.**
+**Au 2026-07-14 : l'application est complète, EN LIGNE et fonctionnelle** (backend Apps Script + frontend GitHub Pages + intégration au site vitrine boutique-r92).
 
 - ✅ **Base de données** Google Sheets (5 onglets) créée automatiquement (`setupSheet`).
 - ✅ **Backend** déployé en Web App : API de lecture (`doGet`) et d'écriture (`doPost`), **vérifié en
@@ -131,9 +140,15 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   - **Classements** : derniers scores du tournoi, puis poules du matin (A/B/C) + niveaux croisés (N1-N4) ;
   - un **filtre catégorie** global (masqué s'il n'y a qu'une catégorie) adapte les deux onglets ;
   - rafraîchissement automatique (60 s). Bandeau don HelloAsso en **placeholder** (`id="don-lien"`).
-- ✅ **Publication du tournoi** : dans l'admin, bouton **« Générer le tournoi »** (publier / masquer) —
-  distinct de la génération des poules. Tant que le tournoi n'est pas publié, la page publique affiche
-  un écran **« à venir »** (aucune info visible). ⚠️ **Backend à redéployer** (action `publierTournoi`).
+- ✅ **Publication du tournoi** : dans l'admin, bouton **« Générer le tournoi »** — distinct de la
+  génération des poules. Il **enregistre les infos (nom, date, lieu, description) + l'affiche, puis
+  publie**. Tant que le tournoi n'est pas publié, la page publique affiche un écran **« à venir »**.
+- ✅ **Affiche du tournoi** : chargeur d'image dans l'admin ; l'image est redimensionnée côté navigateur
+  puis **stockée dans Google Drive** (`tournoi_affiche_id` dans Config). Affichée via `lh3.googleusercontent.com`.
+- ✅ **Intégration boutique-r92** : quand le tournoi est publié, une **carte** (nom + affiche) et une
+  **page d'article** (`boutique-r92/tournoi.html`) apparaissent dans les Actualités du site vitrine ;
+  l'article contient un bouton vers le tournoi en direct, un **agenda .ics (2 rappels : veille + 2 h)**
+  et un bouton **itinéraire « On y va »**.
 - ✅ **Perfs Racing** (`perfs.html`) : page **interne** (non liée dans le menu), 2 onglets *Ce tournoi*
   et *Saison* (cumul des rencontres par adversaire, via l'historique).
 - ✅ **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé,
@@ -142,13 +157,12 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   **clé scores**, vérifiées côté backend ; « connexion » demandée **une fois par session**
   (`sessionStorage`). Clés stockées via `configurerCles()` (déjà configurées).
 
-**Reste à faire :**
-- **Redéployer le backend** pour activer l'action `publierTournoi` (fonctionnalité de publication).
-- **Hébergement** des pages sur **GitHub Pages** (ce dépôt) → adresses séparées `…/tournoi.html`
-  (public, à lier dans l'actualité de [boutique-r92](https://rfl974.github.io/boutique-r92/)) et
-  `…/admin.html` (organisateurs, non lié). L'admin reste protégé par la clé même si l'URL est connue.
+**Reste à faire (confort / avant le vrai tournoi) :**
 - ⏳ **En attente de la création du compte HelloAsso** : brancher l'URL réelle du bandeau de don
   (placeholder `href="#"`, `id="don-lien"` dans `tournoi.html`).
-- **Nettoyer les données de test** du Sheet avant le vrai tournoi.
+- **Nettoyer les données de test** du Sheet avant le vrai tournoi (le bouton « Générer poules et
+  planning » repart de zéro ; l'onglet `Historique` n'est PAS effacé).
+- Lier la page publique dans l'actualité de [boutique-r92](https://rfl974.github.io/boutique-r92/) —
+  la carte/l'article apparaissent automatiquement quand le tournoi est publié.
 
 Détail complet dans [`CHANGELOG.md`](CHANGELOG.md).

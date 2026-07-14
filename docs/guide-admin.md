@@ -50,11 +50,23 @@ terrain, raccourcir les mi-temps, réduire la récup ou la taille des poules). C
 l'heure de fin obtenue et si elle **tient** le créneau (✅). **Cliquer** sur une piste applique le
 réglage et régénère automatiquement.
 
-## Pendant le tournoi
-- **Saisie des scores** (page dédiée → à venir) : entrer le score de chaque match terminé.
-- Les **classements** et le **live** se mettront à jour automatiquement.
+### 5. Renseigner les infos du tournoi + l'affiche (section « Infos du tournoi »)
+- Remplir **nom, date, lieu, description** et **charger l'affiche** (un aperçu apparaît).
+- Pas de bouton « enregistrer » ici : c'est **« Générer le tournoi »** (section suivante) qui
+  enregistre tout.
 
-## Pour les visiteurs (à venir)
-- **Mon planning** : chaque personne choisit son équipe et voit uniquement ses matchs.
-- **Live** : classements par catégorie, derniers scores, favoris (étoile stockée dans le
-  navigateur), et lien de don HelloAsso.
+### 6. Générer (publier) le tournoi (section « Générer le tournoi »)
+- Cliquer **« 🚀 Générer le tournoi (publier) »** : ça **enregistre les infos + l'affiche PUIS publie**.
+- La page publique passe alors de l'écran « à venir » au tournoi complet, et une **carte + une page
+  d'article** apparaissent dans les Actualités du site vitrine (boutique-r92).
+- Pour cacher à nouveau : bouton **« 🙈 Masquer le tournoi »**.
+
+## Pendant le tournoi
+- **Saisie des scores** (`saisie.html`) : entrer le score de chaque match terminé (score verrouillé
+  une fois validé ; « Corriger » pour rectifier).
+- Les **classements** et les **derniers scores** se mettent à jour automatiquement (page `tournoi.html`).
+
+## Pour les visiteurs
+- **`tournoi.html`** (page publique unique) : onglet **Mon équipe** (choisir son équipe → ses matchs +
+  classements) et onglet **Classements** (derniers scores + poules + niveaux croisés), avec un
+  **filtre catégorie**. Rafraîchissement automatique.
