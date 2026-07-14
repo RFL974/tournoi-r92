@@ -341,6 +341,16 @@ function enregistrerAffiche(classeur, data) {
   return { ok: true, id: fichier.getId() };
 }
 
+/**
+ * À LANCER UNE FOIS depuis l'éditeur Apps Script (menu « Exécuter ») après avoir collé
+ * cette version : déclenche la demande d'AUTORISATION d'accès à Google Drive, nécessaire
+ * pour enregistrer l'affiche du tournoi. Ne modifie rien.
+ */
+function autoriserDrive() {
+  var nom = DriveApp.getRootFolder().getName();
+  Logger.log('Accès Google Drive OK — dossier racine : ' + nom);
+}
+
 function ecrireParamGlobal(onglet, nom, valeur) {
   var dernier = onglet.getLastRow();
   var donnees = onglet.getRange(1, 1, dernier, 2).getValues();
