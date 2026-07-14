@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Rafraîchir corrigé (anti-cache) + titre = nom de l'événement — 2026-07-14
+- **Bouton « Rafraîchir » réparé** : `apiGet` ajoutait la réponse au cache navigateur (surtout
+  mobile) → les nouveaux scores n'apparaissaient pas. Ajout de `cache: 'no-store'` + paramètre
+  anti-cache unique sur chaque lecture. Concerne toutes les pages (tournoi, perfs, admin…).
+- **Retour visible** : le bouton affiche « ⏳ Rafraîchissement… » pendant la requête, et l'heure
+  « Mis à jour à » affiche désormais les **secondes** (on voit que ça bouge même sans changement).
+- **Titre dynamique** : la page publique « Le tournoi » prend le **nom de l'événement**
+  (`config.global.tournoi_nom`) dans le bandeau ET l'onglet du navigateur ; repli sur « Le tournoi »
+  si le nom n'est pas renseigné.
+
 ### Page publique : podium (top 3) affiché dès qu'il est mathématiquement certain — 2026-07-14
 - Un **encadré podium** apparaît en haut à droite de la carte (pleine largeur sur mobile),
   **commun aux deux onglets** (« Mon équipe » et « Classements ») et **dynamique selon la

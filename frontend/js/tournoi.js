@@ -33,7 +33,7 @@ async function initTournoi() {
   document.querySelectorAll('.onglet[data-onglet]').forEach(function (b) {
     b.addEventListener('click', function () { basculer(b.getAttribute('data-onglet')); });
   });
-  document.getElementById('btn-refresh').addEventListener('click', function () { charger(false); });
+  document.getElementById('btn-refresh').addEventListener('click', onRafraichir);
 
   const sel = document.getElementById('select-equipe');
   sel.addEventListener('change', function () {
@@ -72,6 +72,7 @@ async function charger(premier) {
     matchs = data.matchs || [];
     config = data.config || { global: {} };
     majHeure();
+    majTitre(); // le bandeau prend le nom de l'événement s'il est renseigné
 
     if (premier || signature !== derniereSignature) {
       derniereSignature = signature;
@@ -143,8 +144,40 @@ function appliquerPublication() {
 
 function majHeure() {
   const d = new Date();
-  document.getElementById('maj').textContent = 'Mis à jour à ' +
-    String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  // On affiche les secondes : ainsi chaque rafraîchissement fait VISIBLEMENT bouger
+  // l'heure, même si les données n'ont pas changé (retour clair « ça a marché »).
+  document.getElementById('maj').textContent = 'Mis à jour à ' + hh + ':' + mm + ':' + ss;
+}
+
+/**
+ * Bouton « Rafraîchir » : recharge les données avec un retour visible (bouton désactivé
+ * le temps de la requête), puis remet le libellé.
+ */
+async function onRafraichir() {
+  const btn = document.getElementById('btn-refresh');
+  const texte = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Rafraîchissement…';
+  try {
+    await charger(false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = texte;
+  }
+}
+
+/**
+ * Met le titre de la page (bandeau + onglet du navigateur) au nom de l'événement
+ * saisi dans l'admin (config.global.tournoi_nom), sinon garde « Le tournoi ».
+ */
+function majTitre() {
+  const nom = (config.global && config.global.tournoi_nom || '').toString().trim();
+  const h1 = document.getElementById('titre-tournoi');
+  if (h1) h1.textContent = nom || 'Le tournoi';
+  document.title = (nom || 'Le tournoi') + ' — Génération R92';
 }
 
 /* ==========================================================================

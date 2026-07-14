@@ -32,8 +32,14 @@ async function apiGet(action, params) {
     }
   }
 
-  // fetch() envoie la requête et attend la réponse.
-  const reponse = await fetch(url.toString());
+  // Anti-cache : sans ça, le navigateur (surtout sur mobile) peut resservir une
+  // réponse en cache pour cette même URL → le bouton « Rafraîchir » semblerait
+  // ne rien faire (scores non mis à jour). Un paramètre unique force une vraie requête.
+  url.searchParams.set('_', String(Date.now()));
+
+  // fetch() envoie la requête et attend la réponse. `cache: 'no-store'` désactive
+  // en plus le cache HTTP du navigateur pour cette lecture.
+  const reponse = await fetch(url.toString(), { cache: 'no-store' });
   if (!reponse.ok) {
     throw new Error('Le serveur a répondu avec une erreur (' + reponse.status + ').');
   }

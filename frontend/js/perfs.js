@@ -84,7 +84,8 @@ function majHeure() {
   if (!el) return;
   const d = new Date();
   el.textContent = 'Mis à jour à ' +
-    String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') +
+    ':' + String(d.getSeconds()).padStart(2, '0');
 }
 
 /** Vrai si un nom d'équipe appartient au club recherché. */
