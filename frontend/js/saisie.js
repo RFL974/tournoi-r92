@@ -158,11 +158,14 @@ function carteMatch(m) {
         ' · ' + echapper(libellePoule) +
         (termine ? ' · <span class="badge-ok">✓ terminé</span>' : '') + '</div>' +
       '<div class="match-saisie">' +
-        '<span class="eq eq-a">' + echapper(nomEquipe(m.equipe_A)) + '</span>' +
-        '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sa)) + '"' + (termine ? ' disabled' : '') + '>' +
-        '<span class="vs">vs</span>' +
-        '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sb)) + '"' + (termine ? ' disabled' : '') + '>' +
-        '<span class="eq eq-b">' + echapper(nomEquipe(m.equipe_B)) + '</span>' +
+        '<div class="eq-ligne">' +
+          '<span class="eq">' + echapper(nomEquipe(m.equipe_A)) + '</span>' +
+          '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sa)) + '"' + (termine ? ' disabled' : '') + '>' +
+        '</div>' +
+        '<div class="eq-ligne">' +
+          '<span class="eq">' + echapper(nomEquipe(m.equipe_B)) + '</span>' +
+          '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sb)) + '"' + (termine ? ' disabled' : '') + '>' +
+        '</div>' +
         '<button class="bouton bouton-valider" type="button">' + (termine ? 'Corriger' : 'Valider') + '</button>' +
       '</div>' +
       '<div class="message-form"></div>' +

@@ -5,6 +5,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Saisie des scores : lisible sur téléphone (scoreboard vertical) + fix accordéon iOS — 2026-07-14
+- **Refonte de la carte de match** : chaque équipe sur **sa propre ligne** avec son champ de score
+  à droite (au lieu d'une ligne horizontale qui s'enroulait sur mobile — les deux scores se
+  retrouvaient à côté d'une seule équipe, ambigu et source d'erreur). Clair sur téléphone ET ordinateur.
+- **Fix accordéon sur iOS/Safari** : `<summary>` n'utilise plus `display:flex` (ce qui cassait le
+  pliage/dépliage natif sur Safari mobile) ; chevron rendu en `::before` inline.
+- 100 % frontend (`saisie.js` + `styles.css`).
+
 ### Saisie des scores : filtre par catégorie + matin repliable — 2026-07-14
 - **Une table de marque par catégorie** : un menu déroulant en haut ne montre que les matchs de
   la catégorie choisie (masqué s'il n'y en a qu'une ; choix mémorisé). Limite fortement le risque

@@ -479,29 +479,38 @@ select.r-input { cursor: pointer; }
 }
 .badge-ok { color: #9fe0a0; font-weight: 600; }
 
+/* Scoreboard VERTICAL : chaque équipe sur sa ligne, son score à droite.
+   Clair et sans ambiguïté sur téléphone (fini l'enroulement des scores). */
 .match-saisie {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
-  flex-wrap: wrap;
 }
-/* Nom d'équipe : prend la place restante, sans écraser les champs de score. */
-.match-saisie .eq {
-  flex: 1 1 90px;
-  min-width: 80px;
+/* Une ligne = nom d'équipe (à gauche) + son champ de score (à droite). */
+.eq-ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.eq-ligne .eq {
+  flex: 1 1 auto;
+  min-width: 0;            /* autorise un nom long à s'enrouler sans pousser le score */
   font-weight: 600;
+  text-align: left;
 }
-.match-saisie .eq-a { text-align: right; }
-.match-saisie .eq-b { text-align: left; }
-/* Champ de score : petit et centré (on annule le width:100% de .r-input). */
+/* Champ de score : compact et centré (on annule le width:100% de .r-input). */
 .match-saisie .score {
-  width: 56px;
+  width: 72px;
   flex: 0 0 auto;
   text-align: center;
   font-weight: 600;
 }
-.match-saisie .vs { color: var(--bleu-ciel); font-size: 0.85rem; }
-.match-saisie .bouton-valider { flex: 0 0 auto; padding: 8px 14px; }
+/* Bouton Valider/Corriger : aligné à droite sous les deux équipes. */
+.match-saisie .bouton-valider {
+  align-self: flex-end;
+  flex: 0 0 auto;
+  padding: 8px 18px;
+}
 /* Champ de score verrouillé (score validé, définitif). */
 .match-saisie .score:disabled { opacity: 0.55; cursor: not-allowed; }
 /* Carte en cours de correction (déverrouillée). */
@@ -623,20 +632,22 @@ select.r-input { cursor: pointer; }
    Accordéon de phase (page saisie) : le matin se replie une fois clôturé
    ========================================================================== */
 .phase-accordeon { margin: 0; }
-/* Le <summary> reprend le look de .planning-phase, cliquable + chevron. */
+/* Le <summary> reprend le look de .planning-phase, cliquable + chevron.
+   ⚠️ On NE met PAS `display:flex` sur le <summary> : sur Safari iOS, changer le
+   `display` d'un <summary> casse le pliage/dépliage natif. On garde donc l'affichage
+   par défaut (list-item) et on enlève juste le marqueur, en ajoutant un chevron inline. */
 .phase-sommaire {
   cursor: pointer;
   list-style: none;               /* enlève le marqueur natif (Firefox) */
-  display: flex;
-  align-items: center;
-  gap: 8px;
   user-select: none;
 }
 .phase-sommaire::-webkit-details-marker { display: none; } /* enlève la flèche native (WebKit) */
 .phase-sommaire::before {
   content: '▸';
+  display: inline-block;
   color: var(--bleu-ciel);
   font-size: 0.9rem;
+  margin-right: 8px;
   transition: transform 0.15s ease;
 }
 .phase-accordeon[open] .phase-sommaire::before { transform: rotate(90deg); }
