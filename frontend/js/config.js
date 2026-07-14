@@ -18,3 +18,13 @@
  *  Créer un "Nouveau déploiement" génèrerait une URL DIFFÉRENTE (à éviter).
  */
 const API_URL = "https://script.google.com/macros/s/AKfycbz_jRSNnFCjJvhUiofO6n3lg41ev8_9UDuvVGB_KDpm_EYZVSgwyi55MG8AfKu2JRQFBA/exec";
+
+/**
+ * URL du RELAIS CDN (Cloudflare Worker) — cache "edge" qui encaisse des milliers de
+ * spectateurs sans saturer Apps Script. UNIQUEMENT pour la LECTURE de la page publique.
+ *
+ *  ⚠️ Laisser VIDE ("") tant que le relais n'est pas créé : dans ce cas la page publique
+ *  lit Apps Script directement (comme avant). Dès qu'on colle ici l'URL du Worker
+ *  (ex. "https://tournoi-r92.xxxx.workers.dev"), la page publique lit le relais.
+ */
+const SNAPSHOT_URL = "";

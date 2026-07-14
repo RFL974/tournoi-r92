@@ -63,10 +63,29 @@ function basculer(cible) {
   document.getElementById('vue-classements').hidden = (cible !== 'classements');
 }
 
+/**
+ * Lit les données publiques. En priorité via le RELAIS CDN (config SNAPSHOT_URL) qui tient
+ * une grosse audience ; repli automatique sur Apps Script si le relais est vide ou en panne.
+ * On NE met PAS de paramètre anti-cache ici : on veut au contraire profiter du cache du CDN
+ * (partagé entre tous les spectateurs). Le Worker fixe une fraîcheur courte (~8 s).
+ */
+async function lireDonnees() {
+  if (typeof SNAPSHOT_URL === 'string' && SNAPSHOT_URL) {
+    try {
+      const r = await fetch(SNAPSHOT_URL);
+      if (r.ok) {
+        const d = await r.json();
+        if (d && !d.error && d.matchs) return d; // snapshot valide
+      }
+    } catch (e) { /* relais indisponible → on bascule sur Apps Script */ }
+  }
+  return apiGet('getAll'); // repli (ou mode sans relais)
+}
+
 /** (Re)charge les données. Ne ré-affiche que si elles ont changé (évite le clignotement). */
 async function charger(premier) {
   try {
-    const data = await apiGet('getAll');
+    const data = await lireDonnees();
     const signature = JSON.stringify(data.matchs) + '|' + JSON.stringify(data.equipes);
     equipes = data.equipes || [];
     matchs = data.matchs || [];

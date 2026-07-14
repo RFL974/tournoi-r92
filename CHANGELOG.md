@@ -5,6 +5,20 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Montée en charge : relais CDN pour les spectateurs (Cloudflare) — 2026-07-14
+- Prépare le support de **~1300 spectateurs** en direct sans saturer Apps Script (plafond ~30
+  exécutions simultanées). Apps Script **pousse** un instantané des données vers un cache **edge
+  Cloudflare** à chaque écriture (`pousserSnapshot` appelé après chaque action réussie de `doPost`) ;
+  la page publique lit ce cache (illimité) au lieu d'interroger Apps Script.
+- **Repli automatique intégré** : tant que le relais n'est pas configuré (`SNAPSHOT_URL` vide côté
+  frontend, `RELAIS_URL` non réglé côté Apps Script via `configurerRelais`), tout fonctionne comme
+  avant (lecture directe Apps Script). Idem si le relais tombe en panne.
+- Nouveaux éléments : `cloudflare/worker-tournoi.js` (Worker), `docs/relais-cdn.md` (pas-à-pas de
+  mise en place), `construireSnapshot`/`pousserSnapshot`/`configurerRelais` (backend),
+  `lireDonnees` (frontend), constante `SNAPSHOT_URL` (config.js).
+- ⚠️ Activation : recopier `Code.gs` + redéployer + `configurerRelais(url, cle)`, créer le Worker
+  Cloudflare, puis renseigner `SNAPSHOT_URL`. Voir `docs/relais-cdn.md`.
+
 ### Saisie : repli immédiat de l'accordéon dès le dernier score validé — 2026-07-14
 - Après chaque validation, l'accordéon de la phase se met à jour **en direct** (sans recharger) :
   le compteur « X à saisir » décrémente, et la phase **se replie automatiquement dès la validation

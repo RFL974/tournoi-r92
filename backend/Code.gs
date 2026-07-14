@@ -97,14 +97,7 @@ function doGet(e) {
       case 'getEquipes': resultat = lireOngletSimple(classeur, 'Equipes'); break;
       case 'getPoules':  resultat = lireOngletSimple(classeur, 'Poules'); break;
       case 'getMatchs':  resultat = lireOngletSimple(classeur, 'Matchs'); break;
-      case 'getAll':
-        resultat = {
-          config:  lireConfig(classeur),
-          equipes: lireOngletSimple(classeur, 'Equipes'),
-          poules:  lireOngletSimple(classeur, 'Poules'),
-          matchs:  lireOngletSimple(classeur, 'Matchs')
-        };
-        break;
+      case 'getAll':     resultat = construireSnapshot(classeur); break;
       case 'getClassement': resultat = calculerClassement(classeur); break;
       case 'getHistorique': resultat = lireHistorique(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
@@ -116,6 +109,54 @@ function doGet(e) {
 function repondreJson(objet) {
   return ContentService.createTextOutput(JSON.stringify(objet))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/** Instantané complet des données publiques (même forme que l'action getAll). */
+function construireSnapshot(classeur) {
+  return {
+    config:  lireConfig(classeur),
+    equipes: lireOngletSimple(classeur, 'Equipes'),
+    poules:  lireOngletSimple(classeur, 'Poules'),
+    matchs:  lireOngletSimple(classeur, 'Matchs')
+  };
+}
+
+/* ===================== RELAIS CDN (montée en charge spectateurs) =====================
+ * Pour supporter des milliers de spectateurs sans saturer Apps Script, on POUSSE un
+ * instantané des données vers un cache "edge" (Cloudflare Worker) à CHAQUE écriture.
+ * Les spectateurs lisent ce cache (illimité) au lieu d'interroger Apps Script.
+ *
+ * Réglage (UNE fois, depuis l'éditeur Apps Script) :
+ *   configurerRelais('https://xxxx.workers.dev', 'MA_CLE_SECRETE')
+ * Tant que l'URL n'est pas réglée, pousserSnapshot ne fait rien (repli : tout marche
+ * comme avant, les spectateurs lisent Apps Script directement).
+ * ================================================================================== */
+
+/** À lancer UNE fois dans l'éditeur Apps Script pour mémoriser l'URL et la clé du relais. */
+function configurerRelais(url, cle) {
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty('RELAIS_URL', url || '');
+  props.setProperty('RELAIS_CLE', cle || '');
+  return 'Relais configuré : ' + (url || '(vide)');
+}
+
+/** Pousse l'instantané vers le relais CDN. Silencieux et sans jamais bloquer l'écriture. */
+function pousserSnapshot(classeur) {
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var url = props.getProperty('RELAIS_URL');
+    var cle = props.getProperty('RELAIS_CLE') || '';
+    if (!url) return; // relais non configuré → repli sur Apps Script, on ne fait rien
+    UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: 'Bearer ' + cle },
+      payload: JSON.stringify(construireSnapshot(classeur)),
+      muteHttpExceptions: true
+    });
+  } catch (err) {
+    // On n'échoue JAMAIS une écriture à cause du relais : on ignore l'erreur.
+  }
 }
 
 function lireOngletSimple(classeur, nomOnglet) {
@@ -203,6 +244,9 @@ function doPost(e) {
       case 'enregistrerAffiche':   resultat = enregistrerAffiche(classeur, requete); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
+    // Écriture réussie → on rafraîchit le cache spectateurs (relais CDN). Sans effet si
+    // le relais n'est pas configuré ; n'échoue jamais l'action même si la poussée rate.
+    if (resultat && !resultat.error) pousserSnapshot(classeur);
     return repondreJson(resultat);
   } catch (erreur) { return repondreJson({ error: String(erreur) }); }
 }
