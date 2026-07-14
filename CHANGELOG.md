@@ -5,6 +5,37 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Page publique unique + filtre catégorie — 2026-07-13
+- **Fusion** des 3 anciennes pages visiteur (`live.html`, `planning.html`, `classement.html`,
+  **supprimées** avec leurs JS) en **une seule page `tournoi.html`** (+ `js/tournoi.js`) à **2 onglets** :
+  - **Mon équipe** (défaut) : matchs + 3 classements de l'équipe ;
+  - **Classements** : « Derniers scores » du tournoi en tête, puis poules du matin + niveaux croisés.
+- **Filtre catégorie** global au-dessus des onglets : restreint équipes ET classements à la catégorie
+  choisie ; **auto-masqué** s'il n'y a qu'une catégorie ; tri numérique (U8 < U10 < U12). « Derniers
+  scores » reste global.
+- **Favoris ⭐ retirés** (redondants avec « Mon équipe »). Un seul appel `getAll` + rafraîchissement 60 s.
+
+### Perfs Racing — page interne — 2026-07-13
+- Nouvelle page **`perfs.html`** (+ `js/perfs.js`), **non liée** dans le menu (accès par l'URL), lecture seule.
+- 2 onglets : **Ce tournoi** (bilan + frise horaire par catégorie, via `getAll`) et **Saison** (cumul
+  des rencontres par adversaire, via `getHistorique`). Repère les équipes du club par mot-clé (`racing`).
+
+### Historique de saison (backend) — 2026-07-13
+- Nouvel onglet **`Historique`** du Sheet, **jamais effacé** par une génération, alimenté
+  **automatiquement** à chaque score validé (`archiverResultat` ; clé `tournoi_id`+`id_match` → une
+  correction met à jour la même ligne ; stocke les **noms** d'équipe, stables d'un tournoi à l'autre).
+- Nouvelle action de lecture `getHistorique`. Onglet + `tournoi_id` créés automatiquement.
+
+### Nombre de poules Auto/forcé — 2026-07-13
+- Le réglage catégorie `taille_poule_cible` est remplacé par **`nb_poules`** : vide = **Auto**
+  (~4 équipes/poule), un entier = **forcé** (borné au nombre d'équipes). Colonne migrée automatiquement.
+- **Assistant d'arbitrage étendu** : se déclenche aussi si un forçage rallonge la journée par rapport au
+  mode Auto (pistes « X poules » et « revenir en Auto »).
+
+> ✅ **Backend redéployé** : les évolutions ci-dessus (et celles marquées « backend à redéployer »
+> plus bas) sont **en ligne et vérifiées** (l'API répond à `getHistorique`, `nb_poules`/`tournoi_id`
+> présents dans la config). Reste l'**hébergement du frontend** et l'**URL HelloAsso**.
+
 ### Poules : deux équipes d'un même club séparées — 2026-07-13
 - Nouvelle règle à la génération des poules du matin : **deux équipes d'un même club ne sont pas
   dans la même poule de départ** (ex. « RACING 92-1 » et « RACING 92-2 »).

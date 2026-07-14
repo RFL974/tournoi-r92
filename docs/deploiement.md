@@ -6,7 +6,7 @@
 
 Étapes réalisées :
 1. Coller le contenu de [`backend/Code.gs`](../backend/Code.gs) dans l'éditeur Apps Script du Sheet.
-2. Lancer une fois `setupSheet()` → crée les 4 onglets.
+2. Lancer une fois `setupSheet()` → crée les 5 onglets (dont `Historique`).
 3. **Déployer → Nouveau déploiement → Type : Application Web**.
    - Exécuter en tant que : **Moi**.
    - Qui a accès : **Tout le monde** (nécessaire pour que les visiteurs lisent le planning/live).

@@ -13,7 +13,8 @@
 ### Feuille de route (prérequis avant l'après-midi)
 1. **Saisie des scores** — action `enregistrerScore` + page `saisie.html`. ✅ Fait (session 11).
 2. **Calcul du classement** de poule (V=3/N=2/D=1, départage à la différence puis points marqués).
-   ✅ Fait (session 12) : fonction `calculerClassement` + action `getClassement` + page `classement.html`.
+   ✅ Fait (session 12) : fonction `calculerClassement` + action `getClassement` ; affiché dans
+   l'onglet **« Classements »** de `tournoi.html` (anciennement la page `classement.html`).
 3. **Génération après-midi** (classement croisé). ✅ Fait (session 13) : action `genererApresMidi`
    (construit les matchs croisés + les planifie après le déjeuner, sans effacer le matin) +
    bouton dans l'admin. Colonne `phase` (`poule`/`classement`) ajoutée à l'onglet `Matchs`.

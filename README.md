@@ -3,9 +3,9 @@
 Mini-logiciel interne de gestion de tournois de rugby pour l'association **Génération R92**
 (École de Rugby, Hauts-de-Seine).
 
-Il permet d'organiser une journée de tournoi comportant **plusieurs catégories** (ex : M8 + M10 + M12),
+Il permet d'organiser une journée de tournoi comportant **plusieurs catégories** (ex : U8 + U10 + U12),
 de répartir automatiquement les équipes en poules, de générer le planning horaire sans conflit,
-puis de suivre les scores et classements en direct.
+puis de suivre les scores et classements en direct — et de garder un **historique de saison**.
 
 ---
 
@@ -13,12 +13,14 @@ puis de suivre les scores et classements en direct.
 
 | # | Fonctionnalité | Statut |
 |---|---|---|
-| 1 | **Page admin** : saisie des équipes, réglages par catégorie et horaires globaux, génération automatique des poules et du planning | ✅ Fait (équipes, réglages, génération poules + planning) |
-| 2 | **Phase après-midi** : génération du classement croisé (niveaux N1-N4) depuis les résultats du matin, planifiée après le déjeuner | 🟡 Code prêt (`genererApresMidi` + bouton admin) — backend à redéployer |
-| 3 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider), scores définitifs verrouillés | 🟡 Code prêt (page + action `enregistrerScore`) — backend à redéployer |
-| 4 | **Mon planning** : un visiteur choisit son équipe et voit uniquement ses matchs (matin + après-midi, résultats colorés) + 3 classements en direct (poule, niveau, général croisé), rafraîchis automatiquement | 🟡 Code prêt (page `planning.html`) — en attente d'hébergement |
-| 5 | **Live** : classements par catégorie, derniers scores, favoris (étoile), bandeau don HelloAsso | 🟡 Code prêt (page `live.html`) — bandeau don en placeholder, en attente d'hébergement |
-| 6 | **Sécurité écriture** : lectures publiques, écritures protégées par 2 clés (admin / scores) ; « connexion » demandée une fois par session | ✅ Implémenté (front + back) — backend à redéployer + `configurerCles` |
+| 1 | **Page admin** : équipes, réglages par catégorie et horaires globaux, **nombre de poules Auto ou forcé**, génération automatique des poules et du planning | ✅ Fait, déployé |
+| 2 | **Génération poules + planning** sans conflit, avec **assistant d'arbitrage** (pistes si l'heure de fin est dépassée ou si un forçage rallonge la journée) | ✅ Fait, déployé |
+| 3 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider), scores définitifs verrouillés | ✅ Fait, déployé |
+| 4 | **Phase après-midi** : classement croisé (niveaux N1-N4) depuis les résultats du matin, planifié après le déjeuner | ✅ Fait, déployé |
+| 5 | **Page publique** `tournoi.html` : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, bandeau don HelloAsso | ✅ Code fait — en attente d'hébergement |
+| 6 | **Perfs Racing** (`perfs.html`) : page interne, bilan du tournoi + **cumul de saison** par adversaire | ✅ Code fait |
+| 7 | **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé (jamais effacé par une génération) | ✅ Fait, déployé |
+| 8 | **Sécurité écriture** : lectures publiques, écritures protégées par 2 clés (admin / scores) ; « connexion » demandée une fois par session | ✅ Fait, déployé + clés configurées |
 
 Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
@@ -26,7 +28,7 @@ Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
 ## 🧱 Stack technique
 
-- **Base de données** : Google Sheets (4 onglets : `Equipes`, `Poules`, `Matchs`, `Config`)
+- **Base de données** : Google Sheets (**5 onglets** : `Equipes`, `Poules`, `Matchs`, `Config`, `Historique`)
 - **Backend** : Google Apps Script, déployé en **Web App** qui répond en **JSON**
 - **Frontend** : pages web statiques **HTML / CSS / JS**, pensées **mobile-first**.
   Les résultats publics seront **intégrés comme une section du site principal generationr92.fr**
@@ -59,36 +61,37 @@ tournoi-r92/
 └── frontend/                → pages web
     ├── admin.html           → page organisateur (équipes, réglages, génération)
     ├── saisie.html          → saisie des scores (table de marque)
-    ├── classement.html      → classement des poules (lecture seule)
-    ├── planning.html        → « Mon planning » visiteur (choix de l'équipe)
-    ├── live.html            → live public (favoris, derniers scores, classements)
+    ├── tournoi.html         → page publique unique (onglets Mon équipe / Classements + filtre catégorie)
+    ├── perfs.html           → « Perfs Racing » (page interne, non liée)
     ├── css/styles.css
     └── js/
         ├── config.js        → réglages partagés (URL du backend, etc.)
         ├── api.js           → communication avec le backend (apiGet / apiPost)
         ├── admin.js
         ├── saisie.js
-        ├── classement.js
-        ├── planning.js
-        └── live.js
+        ├── tournoi.js
+        └── perfs.js
 ```
 
 ---
 
 ## 🚀 Installation & configuration
 
-> Le backend et le frontend sont fonctionnels et testés en local. Reste à **redéployer la dernière
-> version du backend** puis à **mettre le frontend en ligne**. Voir [`docs/deploiement.md`](docs/deploiement.md).
+> Le backend est **déployé et fonctionnel** (toutes les fonctions ci-dessus répondent en ligne).
+> Il reste principalement à **mettre le frontend en ligne**. Voir [`docs/deploiement.md`](docs/deploiement.md).
 
 Étapes :
-1. ✅ Créer les 4 onglets du Google Sheet — automatisé via la fonction `setupSheet()` de
+1. ✅ Créer les onglets du Google Sheet — automatisé via la fonction `setupSheet()` de
    [`backend/Code.gs`](backend/Code.gs) (voir [`docs/structure-google-sheet.md`](docs/structure-google-sheet.md)).
+   L'onglet `Historique` et la colonne `nb_poules` sont aussi créés automatiquement au besoin.
 2. ✅ Coller le code de `backend/Code.gs` dans l'éditeur Apps Script du Sheet et déployer la Web App.
-   ⚠️ **À redéployer** pour activer la saisie des scores, la phase après-midi et le contrôle des clés.
-3. Lancer une fois `configurerCles()` dans l'éditeur Apps Script (clés admin / scores stockées dans
+3. ✅ Lancer une fois `configurerCles()` dans l'éditeur Apps Script (clés admin / scores stockées dans
    les Propriétés du script, jamais dans le code).
 4. ✅ Renseigner l'URL de la Web App dans `frontend/js/config.js`.
-5. Mettre en ligne le dossier `frontend/` (sous-domaine dédié) et coller l'URL HelloAsso du bandeau don.
+5. ⏳ Mettre en ligne le dossier `frontend/` (sous-domaine dédié) et coller l'URL HelloAsso du bandeau don.
+
+> ℹ️ Après toute modification de `backend/Code.gs`, penser à **redéployer une nouvelle version**
+> de la Web App (Apps Script → Gérer les déploiements → Nouvelle version).
 
 ---
 
@@ -107,50 +110,39 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 
 ## 📌 Statut d'avancement
 
-**Au 2026-07-13 :**
+**Au 2026-07-14 : l'application est complète, déployée et fonctionnelle.**
 
-- ✅ **Base de données** Google Sheets (4 onglets) créée automatiquement (`setupSheet`).
-- ✅ **Backend** déployé en Web App : API de lecture (`doGet`) et d'écriture (`doPost`).
-- ✅ **Page admin** complète et testée :
-  - horaires modifiables (heure de fin auto ou manuelle, battement terrain, pause déjeuner) ;
-  - catégories modifiables (présence, terrains, tailles, durées…) + ajout/suppression ;
-  - saisie des équipes (ajout/suppression) ;
-  - génération des poules et du planning **sans conflit**, avec **assistant d'arbitrage** si
-    l'heure de fin manuelle est dépassée.
-
-- ✅ **Sécurité écriture (2 clés)** : les lectures (`doGet`) restent publiques ; les écritures
-  (`doPost`) exigent une **clé admin** (équipes, réglages, génération poules/planning et après-midi)
-  ou une **clé scores** (`enregistrerScore`), vérifiées côté backend. Les scores `terminé` sont
-  **verrouillés** (correction possible via `modification: true`, qui redemande la clé). Côté
-  navigateur, une **« connexion »** demande la clé **une fois par session** (`sessionStorage`) puis
-  les écritures passent en silence. Clés stockées dans les Propriétés du script via `configurerCles()`.
-  ⚠️ **Backend à redéployer + lancer `configurerCles`**.
-
-- 🟡 **Saisie des scores** : page `saisie.html` (une carte par match, score A/B + Valider) et action
-  d'écriture `enregistrerScore` (passe le match en `terminé`, score définitif verrouillé). Code et
-  page vérifiés en local ; **backend à redéployer** pour activer l'enregistrement en ligne.
-- 🟡 **Classement des poules** : page `classement.html` et action de lecture `getClassement`
-  (V=3/N=2/D=1, départage à la différence). Deux sections : poules du matin (A/B/C) et après-midi
-  (croisé N1-N4). Code et page vérifiés en local ; **backend à redéployer**.
-- 🟡 **Phase après-midi (classement croisé)** : action `genererApresMidi` + bouton dans l'admin.
-  Génère les matchs de l'après-midi depuis le classement du matin et les planifie après le déjeuner
-  (sans effacer le matin). Logique validée (Node). La colonne `phase` est créée automatiquement ;
-  il suffit de **redéployer** le backend — voir [`docs/deploiement.md`](docs/deploiement.md).
-
-- 🟡 **Mon planning** (`planning.html`) : le visiteur choisit son équipe et voit ses matchs (matin /
-  après-midi, résultats colorés) + **3 classements en direct** — sa poule, son niveau d'après-midi
-  (N1-N4) et le **classement général croisé** — l'équipe surlignée partout. **Rafraîchissement
-  automatique** (60 s) + bouton manuel + heure de mise à jour. Vérifié en local sur données réelles.
-- 🟡 **Live** (`live.html`) : favoris (étoile), derniers scores, classements par poule, rafraîchis
-  automatiquement. Vérifié en local. Le bandeau don HelloAsso est un **placeholder** (URL à renseigner).
-- 🟡 **Mon planning** et **Live** : en attente d'hébergement.
+- ✅ **Base de données** Google Sheets (5 onglets) créée automatiquement (`setupSheet`).
+- ✅ **Backend** déployé en Web App : API de lecture (`doGet`) et d'écriture (`doPost`), **vérifié en
+  ligne** (scores, après-midi, historique, nombre de poules, clés).
+- ✅ **Page admin** complète : horaires (fin auto ou manuelle, battement, pause déjeuner) ; catégories
+  modifiables (présence, terrains, **nombre de poules Auto/forcé**, durées…) + ajout/suppression ;
+  saisie des équipes ; génération des poules et du planning **sans conflit**, avec **assistant
+  d'arbitrage** (heure de fin dépassée **ou** forçage du nombre de poules qui rallonge la journée).
+- ✅ **Saisie des scores** (`saisie.html`) : score validé = **définitif/verrouillé** (correction via
+  bouton « Corriger », qui redemande la clé scores).
+- ✅ **Phase après-midi** (classement croisé) : `genererApresMidi` + bouton admin — génère l'après-midi
+  depuis le classement du matin, planifié après le déjeuner, sans effacer le matin.
+- ✅ **Page publique unique** (`tournoi.html`) — fusionne les anciennes pages *live / mon planning /
+  classement* en **2 onglets** :
+  - **Mon équipe** : le visiteur choisit son équipe → ses matchs (matin + après-midi, résultats
+    colorés) + 3 classements (sa poule, son niveau, le général croisé) ;
+  - **Classements** : derniers scores du tournoi, puis poules du matin (A/B/C) + niveaux croisés (N1-N4) ;
+  - un **filtre catégorie** global (masqué s'il n'y a qu'une catégorie) adapte les deux onglets ;
+  - rafraîchissement automatique (60 s). Bandeau don HelloAsso en **placeholder** (`id="don-lien"`).
+- ✅ **Perfs Racing** (`perfs.html`) : page **interne** (non liée dans le menu), 2 onglets *Ce tournoi*
+  et *Saison* (cumul des rencontres par adversaire, via l'historique).
+- ✅ **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé,
+  **jamais effacé** par une génération (permet le cumul saison des Perfs).
+- ✅ **Sécurité écriture (2 clés)** : lectures publiques ; écritures protégées par **clé admin** ou
+  **clé scores**, vérifiées côté backend ; « connexion » demandée **une fois par session**
+  (`sessionStorage`). Clés stockées via `configurerCles()` (déjà configurées).
 
 **Reste à faire :**
-- **Redéployer le backend** (saisie scores + après-midi + clés) et lancer `configurerCles()`.
-- **Hébergement / intégration** à generationr92.fr via l'instantané `data.json`
-  (voir [`docs/architecture.md`](docs/architecture.md)).
-- ⏳ **À faire plus tard — en attente de la création du compte HelloAsso** : brancher l'URL réelle du
-  bandeau de don. Le compte HelloAsso n'existe pas encore ; en attendant, le bandeau reste un
-  placeholder (`href="#"`, `id="don-lien"` dans `live.html`). L'URL sera à coller une fois le compte créé.
+- **Hébergement / intégration** du frontend à generationr92.fr (via l'instantané `data.json` —
+  voir [`docs/architecture.md`](docs/architecture.md)).
+- ⏳ **En attente de la création du compte HelloAsso** : brancher l'URL réelle du bandeau de don
+  (placeholder `href="#"`, `id="don-lien"` dans `tournoi.html`).
+- **Nettoyer les données de test** du Sheet avant le vrai tournoi.
 
 Détail complet dans [`CHANGELOG.md`](CHANGELOG.md).
