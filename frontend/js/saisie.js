@@ -81,6 +81,22 @@ function cartesMatchs(liste) {
     .map(carteMatch).join('');
 }
 
+/** Rend une phase (matin ou après-midi) dans un accordéon. `replie` = fermé par défaut. */
+function phaseAccordeon(titre, liste, replie, resume) {
+  return '<details class="phase-accordeon"' + (replie ? '' : ' open') + '>' +
+    '<summary class="planning-phase phase-sommaire">' + titre +
+      ' <span class="phase-resume">(' + resume + ')</span></summary>' +
+    '<div class="phase-contenu">' + cartesMatchs(liste) + '</div>' +
+  '</details>';
+}
+
+/** Résumé affiché à côté du titre d'une phase (nombre restant / tout saisi). */
+function resumePhase(restants, total) {
+  return (restants === 0)
+    ? 'tous saisis ✓ — cliquer pour voir / corriger'
+    : restants + ' à saisir sur ' + total;
+}
+
 /**
  * Affiche la table de marque de LA catégorie active : matin (dans un accordéon) puis
  * après-midi. Le matin est replié par défaut uniquement quand il est ENTIÈREMENT saisi
@@ -101,26 +117,26 @@ function afficherMatchs() {
   const matin = ms.filter(function (m) { return String(m.phase) !== 'classement'; });
   const aprem = ms.filter(function (m) { return String(m.phase) === 'classement'; });
 
+  const restantsMatin = matin.filter(function (m) { return !estTermine(m.statut); }).length;
+  const restantsAprem = aprem.filter(function (m) { return !estTermine(m.statut); }).length;
+  const apremGenere = aprem.length > 0;
+
   let html = '';
 
   if (matin.length) {
-    const restants = matin.filter(function (m) { return !estTermine(m.statut); }).length;
-    const apremGenere = aprem.length > 0;
-    const replie = (restants === 0) && apremGenere; // tout saisi + après-midi prêt → on range le matin
-    const resume = (restants === 0)
+    // Le matin se replie une fois entièrement saisi ET l'après-midi généré.
+    const replie = (restantsMatin === 0) && apremGenere;
+    const resume = (restantsMatin === 0)
       ? 'tous saisis ✓' + (apremGenere ? ' — cliquer pour voir / corriger' : '')
-      : restants + ' à saisir sur ' + matin.length;
-    html +=
-      '<details class="phase-accordeon"' + (replie ? '' : ' open') + '>' +
-        '<summary class="planning-phase phase-sommaire">🌅 Matin — poules' +
-          ' <span class="phase-resume">(' + resume + ')</span></summary>' +
-        '<div class="phase-contenu">' + cartesMatchs(matin) + '</div>' +
-      '</details>';
+      : restantsMatin + ' à saisir sur ' + matin.length;
+    html += phaseAccordeon('🌅 Matin — poules', matin, replie, resume);
   }
 
   if (aprem.length) {
-    html += '<div class="planning-phase">🏉 Après-midi — classement croisé</div>';
-    html += cartesMatchs(aprem);
+    // L'après-midi se replie quand tous ses matchs sont terminés (journée bouclée).
+    const replie = (restantsAprem === 0);
+    html += phaseAccordeon('🏉 Après-midi — classement croisé', aprem, replie,
+      resumePhase(restantsAprem, aprem.length));
   }
 
   if (!matin.length && !aprem.length) {
