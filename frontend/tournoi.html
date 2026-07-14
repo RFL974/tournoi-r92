@@ -65,21 +65,29 @@
           💙 Soutenez l'association Génération R92 — <strong>Je fais un don</strong>
         </a>
 
-        <div class="live-barre">
-          <button id="btn-refresh" class="bouton">🔄 Rafraîchir</button>
-          <span id="maj" class="live-maj"></span>
-        </div>
+        <!-- Tête : contrôles à gauche, podium (si certain) dans l'encadré à droite. -->
+        <div class="tete-live">
+          <div class="tete-controls">
+            <div class="live-barre">
+              <button id="btn-refresh" class="bouton">🔄 Rafraîchir</button>
+              <span id="maj" class="live-maj"></span>
+            </div>
 
-        <!-- Barre d'onglets (segmenté). « Mon équipe » est l'onglet par défaut. -->
-        <div class="onglets" role="tablist">
-          <button class="onglet actif" data-onglet="equipe">📋 Mon équipe</button>
-          <button class="onglet" data-onglet="classements">🏆 Classements</button>
-        </div>
+            <!-- Barre d'onglets (segmenté). « Mon équipe » est l'onglet par défaut. -->
+            <div class="onglets" role="tablist">
+              <button class="onglet actif" data-onglet="equipe">📋 Mon équipe</button>
+              <button class="onglet" data-onglet="classements">🏆 Classements</button>
+            </div>
 
-        <!-- Filtre catégorie GLOBAL : pilote les deux onglets. Masqué s'il n'y a qu'une catégorie. -->
-        <div id="filtre-categorie" class="mp-filtre" hidden>
-          <label class="mp-label" for="select-categorie">Choisis ta catégorie :</label>
-          <select id="select-categorie" class="r-input"></select>
+            <!-- Filtre catégorie GLOBAL : pilote les deux onglets. Masqué s'il n'y a qu'une catégorie. -->
+            <div id="filtre-categorie" class="mp-filtre" hidden>
+              <label class="mp-label" for="select-categorie">Choisis ta catégorie :</label>
+              <select id="select-categorie" class="r-input"></select>
+            </div>
+          </div>
+
+          <!-- Podium (top 3) : affiché seulement quand il est mathématiquement certain. -->
+          <aside id="podium" class="podium" hidden></aside>
         </div>
 
         <div id="vues">

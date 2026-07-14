@@ -221,6 +221,62 @@ a:hover { text-decoration: underline; }
 }
 
 /* ---------------------------------------------------------
+   8 bis. TÊTE : contrôles à gauche + PODIUM dans l'encadré à droite
+   --------------------------------------------------------- */
+.tete-live {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.tete-controls { flex: 1 1 auto; min-width: 0; }
+
+/* Le podium prend la place de l'encadré libre en haut à droite. */
+.podium {
+  flex: 0 0 auto;
+  width: 260px;
+  background: var(--surface-clair);
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: var(--ombre);
+}
+.podium-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--navy);
+  text-align: center;
+  margin-bottom: 10px;
+}
+.podium-cat { color: var(--bleu-vif); }
+.podium-ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  margin-bottom: 5px;
+}
+.podium-ligne:last-child { margin-bottom: 0; }
+/* Accent de médaille : or / argent / bronze, en dégradé discret. */
+.podium-1 { background: linear-gradient(90deg, rgba(233, 181, 62, 0.22), rgba(233, 181, 62, 0.04)); }
+.podium-2 { background: linear-gradient(90deg, rgba(150, 164, 180, 0.22), rgba(150, 164, 180, 0.04)); }
+.podium-3 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.20), rgba(205, 127, 50, 0.04)); }
+.podium-rang { font-size: 1.35rem; line-height: 1; flex: 0 0 auto; }
+.podium-nom {
+  font-weight: 700;
+  color: var(--navy);
+  font-size: 0.95rem;
+  line-height: 1.15;
+}
+
+/* Sur mobile/tablette étroite : le podium passe sous les contrôles, pleine largeur. */
+@media (max-width: 720px) {
+  .tete-live { flex-direction: column; }
+  .podium { width: 100%; }
+}
+
+/* ---------------------------------------------------------
    9. BANDEAU DE DON (bleu vif de la charte, ressort comme un CTA)
    --------------------------------------------------------- */
 .don-bandeau {

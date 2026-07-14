@@ -5,6 +5,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Page publique : podium (top 3) affiché dès qu'il est mathématiquement certain — 2026-07-14
+- Un **encadré podium** apparaît en haut à droite de la carte (pleine largeur sur mobile),
+  **commun aux deux onglets** (« Mon équipe » et « Classements ») et **dynamique selon la
+  catégorie** sélectionnée.
+- Il ne s'affiche **que lorsque le trio de tête est verrouillé** — c.-à-d. quand aucun résultat
+  possible des matchs restants ne peut changer les 3 premières places ni leur ordre. Prend en
+  compte **tous les facteurs** du classement général : niveau (figé dès l'après-midi), résultats
+  après-midi puis matin, et le barème V=3/N=2/D=1 avec départage diff/points marqués. Comme les
+  scores sont libres (la diff peut basculer), la certitude repose sur des **écarts de points
+  inatteignables** ; le podium peut donc s'afficher **avant** la fin de tous les matchs.
+- 100 % frontend (`tournoi.js` : `podiumCertain`/`garantiDevant`/`departageGaranti` ; `tournoi.html`
+  + `tournoi-public.css`). Aucun changement backend.
+
 ### Admin : arbitrage quand le matin déborde sur la pause déjeuner — 2026-07-14
 - La **pause déjeuner** est traitée comme une **contrainte dure** : si le dernier match du
   **matin (poules)** se termine **après le début de la pause**, la génération lève un

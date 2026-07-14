@@ -89,10 +89,34 @@ async function charger(premier) {
   }
 }
 
-/** Réaffiche les deux vues d'un coup. */
+/** Réaffiche les deux vues d'un coup (+ le podium, commun aux deux onglets). */
 function afficherTout() {
+  afficherPodium();
   afficherEquipe();
   afficherClassements();
+}
+
+/**
+ * Affiche le podium dans l'encadré commun (visible sur les deux onglets), pour la
+ * catégorie active — mais UNIQUEMENT s'il est mathématiquement certain (cf. podiumCertain).
+ */
+function afficherPodium() {
+  const zone = document.getElementById('podium');
+  if (!zone) return;
+  const top = estPublie() ? podiumCertain(categorieActive) : null;
+  if (!top) { zone.hidden = true; zone.innerHTML = ''; return; }
+
+  const medailles = ['🥇', '🥈', '🥉'];
+  let html = '<div class="podium-titre">🏆 Podium' +
+    (categorieActive ? ' <span class="podium-cat">' + echapper(categorieActive) + '</span>' : '') + '</div>';
+  top.forEach(function (t, i) {
+    html += '<div class="podium-ligne podium-' + (i + 1) + '">' +
+      '<span class="podium-rang">' + medailles[i] + '</span>' +
+      '<span class="podium-nom">' + echapper(t.nom) + '</span>' +
+    '</div>';
+  });
+  zone.innerHTML = html;
+  zone.hidden = false;
 }
 
 /** Vrai si le tournoi est publié (rendu visible depuis l'admin). */
@@ -111,6 +135,8 @@ function appliquerPublication() {
   document.querySelector('.live-barre').hidden = !pub;
   document.querySelector('.onglets').hidden = !pub;
   document.getElementById('vues').hidden = !pub;
+  // Le podium : masqué si non publié ; sinon c'est afficherPodium qui décide (certitude).
+  if (!pub) { const pod = document.getElementById('podium'); if (pod) pod.hidden = true; }
   // Le filtre catégorie : masqué si non publié ; sinon c'est peuplerCategorie qui décide.
   if (!pub) document.getElementById('filtre-categorie').hidden = true;
 }
@@ -461,6 +487,97 @@ function classementGeneral(categorie) {
     if (nx !== ny) return nx - ny;
     return comparer(x.a, y.a) || comparer(x.m, y.m);
   });
+}
+
+/* ==========================================================================
+   PODIUM CERTAIN — top 3 du classement général, affiché UNIQUEMENT quand il
+   est mathématiquement verrouillé (aucun résultat restant ne peut le changer).
+   --------------------------------------------------------------------------
+   Rappels qui fondent le calcul :
+   • Le classement général trie par NIVEAU (figé dès l'après-midi généré),
+     puis résultats de l'après-midi, puis (départage) du matin.
+   • Barème V=3 / N=2 / D=1 : un match rapporte TOUJOURS entre 1 et 3 points.
+   • Les scores sont libres → le goal-average (diff) et les points marqués (bp)
+     peuvent basculer avec un gros score. Donc, tant que deux équipes PEUVENT
+     encore se rejoindre AUX POINTS, leur ordre n'est pas garanti (un large
+     succès pourrait inverser la diff). La certitude n'existe donc que si
+     l'écart de points est INATTEIGNABLE, ou si tout est joué.
+   ========================================================================== */
+
+/** Nombre de matchs NON terminés d'une équipe, pour une phase donnée. */
+function matchsRestants(id, estClassement) {
+  return matchs.filter(function (m) {
+    const cl = (String(m.phase) === 'classement');
+    return cl === estClassement && (m.equipe_A === id || m.equipe_B === id) && !estTermine(m.statut);
+  }).length;
+}
+
+/**
+ * Départage GARANTI sur une clé (après-midi OU matin) entre deux équipes X et Y.
+ * sX/sY = stats de la phase ; remX/remY = matchs restants de cette phase.
+ * Retourne : 'X' (X devant, certain), 'Y' (Y devant, certain),
+ *            'egal' (phase entièrement jouée et strictement à égalité → départage à la clé suivante),
+ *            'incertain' (les fourchettes de points se chevauchent et il reste des matchs).
+ */
+function departageGaranti(sX, sY, remX, remY) {
+  const xMin = sX.pts + remX,     xMax = sX.pts + 3 * remX;
+  const yMin = sY.pts + remY,     yMax = sY.pts + 3 * remY;
+  if (xMin > yMax) return 'X';           // X ne peut plus être rejoint aux points
+  if (xMax < yMin) return 'Y';           // Y ne peut plus être rejoint aux points
+  // Les fourchettes de points se chevauchent : ordre garanti seulement si TOUT est joué.
+  if (remX === 0 && remY === 0) {
+    const c = comparer(sX, sY);          // <0 => X devant ; >0 => Y devant ; 0 => égalité stricte
+    if (c < 0) return 'X';
+    if (c > 0) return 'Y';
+    return 'egal';
+  }
+  return 'incertain';
+}
+
+/**
+ * Vrai si l'équipe X est GARANTIE devant l'équipe Y dans le classement général,
+ * quels que soient les résultats des matchs restants (X, Y = entrées de classementGeneral).
+ */
+function garantiDevant(X, Y) {
+  const nx = niveauNum(X.niveau), ny = niveauNum(Y.niveau);
+  if (nx < ny) return true;              // niveau figé : N1 toujours devant N2…
+  if (nx > ny) return false;
+  // Même niveau → départage après-midi, puis (si égalité stricte) matin.
+  const dA = departageGaranti(X.a, Y.a, matchsRestants(X.id, true), matchsRestants(Y.id, true));
+  if (dA === 'X') return true;
+  if (dA === 'Y' || dA === 'incertain') return false;
+  // dA === 'egal' : après-midi joué et à égalité → on départage au matin.
+  const dM = departageGaranti(X.m, Y.m, matchsRestants(X.id, false), matchsRestants(Y.id, false));
+  return dM === 'X';
+}
+
+/**
+ * Renvoie le podium (top 3 du classement général) SI et seulement s'il est certain :
+ *   - l'après-midi (classement croisé) est généré pour la catégorie ;
+ *   - l'ordre interne du trio est garanti ;
+ *   - le 3e est garanti devant TOUTES les équipes suivantes (frontière verrouillée).
+ * Sinon renvoie null (rien à afficher).
+ */
+function podiumCertain(categorie) {
+  if (!categorie) return null;
+  // Pas d'après-midi généré → le classement final n'est pas encore défini.
+  const aApresMidi = matchs.some(function (m) {
+    return m.categorie === categorie && String(m.phase) === 'classement';
+  });
+  if (!aApresMidi) return null;
+
+  const G = classementGeneral(categorie);
+  if (G.length < 3) return null;                 // pas de podium à 3 sans au moins 3 équipes
+  const top = G.slice(0, 3);
+
+  // Ordre interne du podium (1er devant 2e, 2e devant 3e).
+  if (!garantiDevant(top[0], top[1])) return null;
+  if (!garantiDevant(top[1], top[2])) return null;
+  // Frontière : le 3e doit être garanti devant chaque équipe classée après.
+  for (let k = 3; k < G.length; k++) {
+    if (!garantiDevant(top[2], G[k])) return null;
+  }
+  return top;
 }
 
 /** Tableau compact d'un classement de groupe (poule ou niveau). idSel = équipe surlignée. */
