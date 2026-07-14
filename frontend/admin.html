@@ -76,7 +76,32 @@
         <div id="message-apresmidi" class="message-form"></div>
       </section>
 
-      <!-- 5) Publication : rend le tournoi visible (ou non) sur la page publique -->
+      <!-- 5) Infos du tournoi : alimentent la carte + la page d'article sur le site vitrine -->
+      <section class="carte" id="bloc-infos-tournoi">
+        <h2>Infos du tournoi (pour l'actualité)</h2>
+        <p class="note-generation">
+          Ces informations alimentent la <strong>carte</strong> et la <strong>page d'article</strong>
+          du tournoi dans les actualités du site.
+        </p>
+        <form id="form-infos-tournoi">
+          <label class="reglage"><span class="r-libelle">Nom du tournoi</span>
+            <input class="r-input" type="text" name="tournoi_nom" placeholder="Ex : Tournoi de Noël U8–U12">
+          </label>
+          <label class="reglage"><span class="r-libelle">Date</span>
+            <input class="r-input" type="date" name="tournoi_date">
+          </label>
+          <label class="reglage"><span class="r-libelle">Lieu</span>
+            <input class="r-input" type="text" name="tournoi_lieu" placeholder="Ex : Stade X, 11 av. Y, 92350 Ville">
+          </label>
+          <label class="reglage"><span class="r-libelle">Description</span>
+            <textarea class="r-input" name="tournoi_description" rows="4" placeholder="Quelques phrases de présentation du tournoi…"></textarea>
+          </label>
+          <button type="submit" class="bouton">Enregistrer les infos</button>
+          <div class="message-form" id="message-infos-tournoi"></div>
+        </form>
+      </section>
+
+      <!-- 6) Publication : rend le tournoi visible (ou non) sur la page publique -->
       <section class="carte" id="bloc-publication">
         <h2>Générer le tournoi (publication)</h2>
         <p class="note-generation">

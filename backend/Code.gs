@@ -197,6 +197,7 @@ function doPost(e) {
       case 'genererPoulesEtPlanning': resultat = genererPoulesEtPlanning(classeur); break;
       case 'genererApresMidi':     resultat = genererApresMidi(classeur); break;
       case 'publierTournoi':       resultat = publierTournoi(classeur, requete.publie); break;
+      case 'enregistrerInfosTournoi': resultat = enregistrerInfosTournoi(classeur, requete); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -295,6 +296,19 @@ function enregistrerHoraires(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
   var champs = ['heure_debut', 'heure_fin', 'heure_fin_auto',
                 'battement_terrain_min', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min'];
+  champs.forEach(function (champ) {
+    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
+  });
+  return { ok: true };
+}
+
+/**
+ * Enregistre les INFOS du tournoi affichées côté public (carte d'actualité + page d'article) :
+ * nom, date, lieu, description. Stockées comme paramètres globaux de l'onglet Config.
+ */
+function enregistrerInfosTournoi(classeur, data) {
+  var onglet = classeur.getSheetByName('Config');
+  var champs = ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_description'];
   champs.forEach(function (champ) {
     if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
   });

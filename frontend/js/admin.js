@@ -60,7 +60,8 @@ async function initAdmin() {
     // 3) Poules & planning déjà générés (s'il y en a)
     afficherPlanning(data.poules, data.matchs);
 
-    // 4) État de publication du tournoi (bouton publier / masquer)
+    // 4) Infos du tournoi (nom / date / lieu / description) + état de publication
+    majInfosTournoi();
     majPublication();
 
   } catch (erreur) {
@@ -93,6 +94,46 @@ async function initAdmin() {
 
   // Bouton publier / masquer le tournoi.
   document.getElementById('bouton-publier').addEventListener('click', onPublier);
+
+  // Formulaire des infos du tournoi (nom / date / lieu / description).
+  document.getElementById('form-infos-tournoi').addEventListener('submit', onEnregistrerInfosTournoi);
+}
+
+/* --------------------------------------------------------------------------
+   INFOS DU TOURNOI (nom / date / lieu / description) — pour la carte + l'article
+   -------------------------------------------------------------------------- */
+
+/** Pré-remplit le formulaire des infos du tournoi avec ce qui est déjà enregistré. */
+function majInfosTournoi() {
+  const form = document.getElementById('form-infos-tournoi');
+  if (!form) return;
+  const g = configCourante.global || {};
+  form.tournoi_nom.value = g.tournoi_nom || '';
+  form.tournoi_date.value = g.tournoi_date || '';
+  form.tournoi_lieu.value = g.tournoi_lieu || '';
+  form.tournoi_description.value = g.tournoi_description || '';
+}
+
+/** Enregistre les infos du tournoi (clé admin), puis recharge la config. */
+async function onEnregistrerInfosTournoi(evenement) {
+  evenement.preventDefault();
+  const form = evenement.target;
+  const message = document.getElementById('message-infos-tournoi');
+  const data = {
+    tournoi_nom: form.tournoi_nom.value.trim(),
+    tournoi_date: form.tournoi_date.value,
+    tournoi_lieu: form.tournoi_lieu.value.trim(),
+    tournoi_description: form.tournoi_description.value.trim()
+  };
+  afficherMessage(message, 'Enregistrement…', 'ok');
+  try {
+    await ecrireAdmin('enregistrerInfosTournoi', data);
+    configCourante = await apiGet('getConfig');
+    majInfosTournoi();
+    afficherMessage(message, '✅ Infos du tournoi enregistrées.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  }
 }
 
 /* --------------------------------------------------------------------------
