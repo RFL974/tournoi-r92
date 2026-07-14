@@ -23,7 +23,7 @@ let derniereSignature = '';
 let categorieActive = '';
 const CLE_EQUIPE = 'r92_mon_equipe';
 const CLE_CATEGORIE = 'r92_ma_categorie';
-const INTERVALLE_MS = 60000;
+const INTERVALLE_MS = 10000; // rafraîchissement auto toutes les 10 s (scores + classements en direct)
 
 /* ==========================================================================
    DÉMARRAGE / NAVIGATION
