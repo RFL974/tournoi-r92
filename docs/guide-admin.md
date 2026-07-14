@@ -30,7 +30,10 @@ Chaque catégorie est modifiable directement :
 ### 3. Saisir les équipes (section « Équipes »)
 - Taper le **nom** (mis automatiquement en MAJUSCULES), choisir la **catégorie** (parmi les
   présentes), **« Ajouter »**.
-- La liste apparaît, groupée par catégorie ; bouton **« Supprimer »** par équipe.
+- La liste apparaît, groupée par catégorie. Pour chaque équipe : **« Modifier »** (renommer sur
+  place sans supprimer — valider par Entrée ou le bouton, annuler par Échap) et **« Supprimer »**.
+- En tête de chaque catégorie, **« Tout supprimer »** efface d'un coup toutes ses équipes
+  (utile pour repartir de zéro ; confirmation demandée).
 - **Plusieurs équipes d'un même club** : les nommer `CLUB-1`, `CLUB-2` (tiret + numéro) — elles
   seront automatiquement placées dans des **poules différentes** au tirage du matin. *(Attention :
   un chiffre collé au nom, comme « RACING 92 », fait partie du nom ; utiliser le tiret pour

@@ -189,7 +189,9 @@ function doPost(e) {
     var resultat;
     switch (action) {
       case 'ajouterEquipe':        resultat = ajouterEquipe(classeur, requete.nom_equipe, requete.categorie); break;
+      case 'modifierEquipe':       resultat = modifierEquipe(classeur, requete.id_equipe, requete.nom_equipe); break;
       case 'supprimerEquipe':      resultat = supprimerEquipe(classeur, requete.id_equipe); break;
+      case 'supprimerEquipesCategorie': resultat = supprimerEquipesCategorie(classeur, requete.categorie); break;
       case 'enregistrerHoraires':  resultat = enregistrerHoraires(classeur, requete); break;
       case 'enregistrerCategorie': resultat = enregistrerCategorie(classeur, requete); break;
       case 'supprimerCategorie':   resultat = supprimerCategorie(classeur, requete.categorie); break;
@@ -277,6 +279,44 @@ function supprimerEquipe(classeur, id) {
     if (String(ids[i][0]) === String(id)) { onglet.deleteRow(i + 2); return { ok: true }; }
   }
   return { error: 'Équipe introuvable : ' + id };
+}
+
+/** Renomme une équipe existante (colonne nom_equipe = 2e colonne). */
+function modifierEquipe(classeur, id, nouveauNom) {
+  nouveauNom = (nouveauNom || '').toString().trim();
+  if (!id)         return { error: "Identifiant d'équipe manquant." };
+  if (!nouveauNom) return { error: "Le nom de l'équipe est vide." };
+  var onglet = classeur.getSheetByName('Equipes');
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return { error: 'Aucune équipe à modifier.' };
+  var ids = onglet.getRange(2, 1, dernier - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === String(id)) {
+      onglet.getRange(i + 2, 2).setValue(nouveauNom); // colonne 2 = nom_equipe
+      return { ok: true, equipe: { id_equipe: id, nom_equipe: nouveauNom } };
+    }
+  }
+  return { error: 'Équipe introuvable : ' + id };
+}
+
+/** Supprime toutes les équipes d'une catégorie en une seule opération. */
+function supprimerEquipesCategorie(classeur, categorie) {
+  categorie = (categorie || '').toString().trim();
+  if (!categorie) return { error: 'La catégorie est vide.' };
+  var onglet = classeur.getSheetByName('Equipes');
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return { error: 'Aucune équipe à supprimer.' };
+  // Colonne 3 = catégorie. On supprime du bas vers le haut pour ne pas décaler les indices.
+  var cats = onglet.getRange(2, 3, dernier - 1, 1).getValues();
+  var nbSupprimees = 0;
+  for (var i = cats.length - 1; i >= 0; i--) {
+    if (String(cats[i][0]).trim() === categorie) {
+      onglet.deleteRow(i + 2);
+      nbSupprimees++;
+    }
+  }
+  if (nbSupprimees === 0) return { error: 'Aucune équipe dans la catégorie « ' + categorie + ' ».' };
+  return { ok: true, nb_supprimees: nbSupprimees };
 }
 
 function genererIdEquipe(onglet) {

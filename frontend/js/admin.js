@@ -622,16 +622,23 @@ function afficherEquipes(equipes) {
     let items = '';
     liste.forEach(function (eq) {
       items +=
-        '<div class="equipe-item">' +
+        '<div class="equipe-item" data-id="' + eq.id_equipe + '">' +
           '<span class="nom">' + echapper(eq.nom_equipe) + '</span>' +
-          '<button class="bouton-suppr" data-id="' + eq.id_equipe + '" ' +
-                  'data-nom="' + echapper(eq.nom_equipe) + '">Supprimer</button>' +
+          '<div class="equipe-actions">' +
+            '<button class="bouton-modif" data-id="' + eq.id_equipe + '" ' +
+                    'data-nom="' + echapper(eq.nom_equipe) + '">Modifier</button>' +
+            '<button class="bouton-suppr" data-id="' + eq.id_equipe + '" ' +
+                    'data-nom="' + echapper(eq.nom_equipe) + '">Supprimer</button>' +
+          '</div>' +
         '</div>';
     });
 
     html +=
       '<div class="groupe-categorie">' +
-        '<h3>' + cat + ' <span class="cat-mini">(' + liste.length + ')</span></h3>' +
+        '<h3>' + cat + ' <span class="cat-mini">(' + liste.length + ')</span>' +
+          '<button class="bouton-suppr bouton-suppr-tout" data-cat="' + echapper(cat) + '">' +
+            'Tout supprimer</button>' +
+        '</h3>' +
         items +
       '</div>';
   });
@@ -681,12 +688,25 @@ async function onAjouterEquipe(evenement) {
 }
 
 /**
- * Clic dans la liste : on gère les boutons "Supprimer".
+ * Clic dans la liste : on aiguille vers Modifier, Supprimer, Tout supprimer,
+ * ou les boutons du mini-formulaire d'édition (Enregistrer / Annuler).
  */
 async function onClicListe(evenement) {
-  const bouton = evenement.target.closest('.bouton-suppr');
-  if (!bouton) return; // clic ailleurs que sur un bouton supprimer
+  const cible = evenement.target;
 
+  // ⚠️ Les boutons d'édition (Enregistrer/Annuler) réutilisent les classes
+  // .bouton-modif/.bouton-suppr pour le style : on les teste EN PREMIER.
+  if (cible.closest('.bouton-edit-ok'))     return onEnregistrerNom(cible.closest('.bouton-edit-ok'));
+  if (cible.closest('.bouton-edit-annuler')) return afficherEquipes(equipesCourantes);
+  if (cible.closest('.bouton-modif'))       return onModifierEquipe(cible.closest('.bouton-modif'));
+  if (cible.closest('.bouton-suppr-tout'))  return onSupprimerCategorieEquipes(cible.closest('.bouton-suppr-tout'));
+  if (cible.closest('.bouton-suppr'))       return onSupprimerEquipe(cible.closest('.bouton-suppr'));
+}
+
+/**
+ * Supprime une seule équipe.
+ */
+async function onSupprimerEquipe(bouton) {
   const id = bouton.getAttribute('data-id');
   const nom = bouton.getAttribute('data-nom');
   const message = document.getElementById('message-equipe');
@@ -701,6 +721,90 @@ async function onClicListe(evenement) {
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
     bouton.disabled = false;
+  }
+}
+
+/**
+ * Supprime TOUTES les équipes d'une catégorie d'un seul coup.
+ */
+async function onSupprimerCategorieEquipes(bouton) {
+  const cat = bouton.getAttribute('data-cat');
+  const message = document.getElementById('message-equipe');
+  const combien = equipesCourantes.filter(function (eq) {
+    return (eq.categorie || '(sans catégorie)') === cat;
+  }).length;
+
+  if (!confirm('Supprimer TOUTES les ' + combien + ' équipe(s) de la catégorie « ' + cat + ' » ?\n\n' +
+               'Cette action est irréversible.')) return;
+
+  bouton.disabled = true;
+  bouton.textContent = 'Suppression…';
+  try {
+    const res = await ecrireAdmin('supprimerEquipesCategorie', { categorie: cat });
+    const n = (res && res.nb_supprimees != null) ? res.nb_supprimees : combien;
+    afficherMessage(message, '🗑️ ' + n + ' équipe(s) de « ' + cat + ' » supprimée(s).', 'ok');
+    await rechargerEquipes();
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    bouton.disabled = false;
+    bouton.textContent = 'Tout supprimer';
+  }
+}
+
+/**
+ * Passe une équipe en mode édition : le nom devient un champ modifiable
+ * avec les boutons Enregistrer / Annuler.
+ */
+function onModifierEquipe(bouton) {
+  const id = bouton.getAttribute('data-id');
+  const nom = bouton.getAttribute('data-nom');
+  const item = document.querySelector('.equipe-item[data-id="' + id + '"]');
+  if (!item) return;
+
+  item.innerHTML =
+    '<input class="champ-edit-nom" type="text" value="' + echapper(nom) + '" autocomplete="off">' +
+    '<div class="equipe-actions">' +
+      '<button class="bouton-modif bouton-edit-ok" data-id="' + id + '">Enregistrer</button>' +
+      '<button class="bouton-suppr bouton-edit-annuler">Annuler</button>' +
+    '</div>';
+
+  const champ = item.querySelector('.champ-edit-nom');
+  champ.focus();
+  champ.select();
+  // Entrée = enregistrer, Échap = annuler.
+  champ.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter')  { e.preventDefault(); item.querySelector('.bouton-edit-ok').click(); }
+    if (e.key === 'Escape') { e.preventDefault(); afficherEquipes(equipesCourantes); }
+  });
+}
+
+/**
+ * Enregistre le nouveau nom d'une équipe éditée.
+ */
+async function onEnregistrerNom(bouton) {
+  const id = bouton.getAttribute('data-id');
+  const item = document.querySelector('.equipe-item[data-id="' + id + '"]');
+  const message = document.getElementById('message-equipe');
+  const champ = item ? item.querySelector('.champ-edit-nom') : null;
+  if (!champ) return;
+
+  // Nom du club toujours en MAJUSCULES (cohérence avec l'ajout d'équipe).
+  const nouveauNom = champ.value.trim().toUpperCase();
+  if (!nouveauNom) {
+    afficherMessage(message, "Le nom de l'équipe ne peut pas être vide.", 'ko');
+    return;
+  }
+
+  bouton.disabled = true;
+  bouton.textContent = 'Enregistrement…';
+  try {
+    await ecrireAdmin('modifierEquipe', { id_equipe: id, nom_equipe: nouveauNom });
+    afficherMessage(message, '✏️ Renommée en « ' + nouveauNom + ' ».', 'ok');
+    await rechargerEquipes();
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    bouton.disabled = false;
+    bouton.textContent = 'Enregistrer';
   }
 }
 

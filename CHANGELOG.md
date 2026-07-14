@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin équipes : renommer + supprimer une catégorie entière — 2026-07-14
+- **Renommer une équipe** sans la supprimer : bouton **« Modifier »** par équipe → champ d'édition
+  en ligne (Entrée = enregistrer, Échap = annuler ; nom mis en MAJUSCULES). Nouvelle action backend
+  `modifierEquipe` (met à jour la colonne `nom_equipe`).
+- **« Tout supprimer »** en tête de chaque catégorie : efface toutes ses équipes d'un coup
+  (confirmation demandée). Nouvelle action backend `supprimerEquipesCategorie`.
+- ⚠️ Nécessite de **recopier `backend/Code.gs`** dans Apps Script puis de **redéployer** (Gérer les
+  déploiements → crayon → Nouvelle version) pour que les deux nouvelles actions soient disponibles.
+
 ### Mise en ligne + publication du tournoi + intégration au site vitrine — 2026-07-14
 - **Hébergement GitHub Pages** : le dossier `frontend/` est publié via `.github/workflows/pages.yml`
   (Settings → Pages → Source : GitHub Actions). URLs séparées : `…/tournoi.html` (public),

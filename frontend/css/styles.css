@@ -281,34 +281,72 @@ select.r-input { cursor: pointer; }
   color: var(--bleu-ciel);
   font-size: 1.3rem;
   margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .groupe-categorie .cat-mini {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.9rem;
   color: #7f92a8;
 }
+/* Le bouton "Tout supprimer" se cale à droite du titre de catégorie. */
+.groupe-categorie h3 .bouton-suppr-tout {
+  margin-left: auto;
+  font-size: 0.8rem;
+  padding: 3px 9px;
+}
 .equipe-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
   background: rgba(3, 16, 36, 0.4);
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 6px;
 }
 .equipe-item .nom { font-weight: 600; }
-.bouton-suppr {
+/* Regroupe les boutons Modifier + Supprimer (ou Enregistrer + Annuler). */
+.equipe-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+/* Champ de saisie quand on renomme une équipe en ligne. */
+.champ-edit-nom {
+  flex: 1;
+  min-width: 0;
+  background: rgba(3, 16, 36, 0.6);
+  border: 1px solid rgba(120, 180, 255, 0.4);
+  color: #eaf2ff;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+.bouton-suppr,
+.bouton-modif {
   background: transparent;
-  border: 1px solid rgba(255, 120, 120, 0.4);
-  color: #ffb4b4;
   border-radius: 6px;
   cursor: pointer;
   padding: 4px 10px;
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.85rem;
 }
+.bouton-suppr {
+  border: 1px solid rgba(255, 120, 120, 0.4);
+  color: #ffb4b4;
+}
 .bouton-suppr:hover { background: rgba(255, 80, 80, 0.15); }
-.bouton-suppr:disabled { opacity: 0.5; cursor: default; }
+.bouton-modif {
+  border: 1px solid rgba(120, 180, 255, 0.4);
+  color: #bcd6ff;
+}
+.bouton-modif:hover { background: rgba(80, 150, 255, 0.15); }
+.bouton-suppr:disabled,
+.bouton-modif:disabled { opacity: 0.5; cursor: default; }
 
 .vide { color: #7f92a8; font-style: italic; }
 
