@@ -5,6 +5,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Saisie : repli immédiat de l'accordéon dès le dernier score validé — 2026-07-14
+- Après chaque validation, l'accordéon de la phase se met à jour **en direct** (sans recharger) :
+  le compteur « X à saisir » décrémente, et la phase **se replie automatiquement dès la validation
+  de son dernier score** (après-midi → toujours ; matin → seulement si l'après-midi est déjà généré).
+  Approche chirurgicale (`majAccordeonPhase`) : aucune autre saisie en cours n'est perdue.
+
 ### Saisie des scores : lisible sur téléphone (scoreboard vertical) + fix accordéon iOS — 2026-07-14
 - **Refonte de la carte de match** : chaque équipe sur **sa propre ligne** avec son champ de score
   à droite (au lieu d'une ligne horizontale qui s'enroulait sur mobile — les deux scores se

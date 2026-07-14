@@ -98,6 +98,45 @@ function resumePhase(restants, total) {
 }
 
 /**
+ * Après une validation/correction, met à jour EN DIRECT l'accordéon de la phase du match :
+ *   - décrémente le compteur « X à saisir » ;
+ *   - replie la phase dès que son dernier score est saisi (après-midi → toujours ;
+ *     matin → uniquement si l'après-midi est déjà généré).
+ * Chirurgical : on ne réaffiche pas toute la liste (aucune saisie en cours n'est perdue).
+ */
+function majAccordeonPhase(carte) {
+  const det = carte.closest('details.phase-accordeon');
+  if (!det) return;
+  const m = matchs.find(function (x) { return x.id_match === carte.getAttribute('data-id'); });
+  if (!m) return;
+
+  const estClassement = String(m.phase) === 'classement';
+  const memePhase = matchs.filter(function (x) {
+    return x.categorie === categorieActiveSaisie && (String(x.phase) === 'classement') === estClassement;
+  });
+  const restants = memePhase.filter(function (x) { return !estTermine(x.statut); }).length;
+  const apremGenere = matchs.some(function (x) {
+    return x.categorie === categorieActiveSaisie && String(x.phase) === 'classement';
+  });
+
+  // Compteur à jour (mêmes libellés que l'affichage initial).
+  let resume;
+  if (restants > 0) {
+    resume = restants + ' à saisir sur ' + memePhase.length;
+  } else if (estClassement) {
+    resume = 'tous saisis ✓ — cliquer pour voir / corriger';
+  } else {
+    resume = 'tous saisis ✓' + (apremGenere ? ' — cliquer pour voir / corriger' : '');
+  }
+  const span = det.querySelector('.phase-resume');
+  if (span) span.textContent = '(' + resume + ')';
+
+  // Repli automatique quand la phase est bouclée.
+  const replie = (restants === 0) && (estClassement || apremGenere);
+  if (replie) det.open = false;
+}
+
+/**
  * Affiche la table de marque de LA catégorie active : matin (dans un accordéon) puis
  * après-midi. Le matin est replié par défaut uniquement quand il est ENTIÈREMENT saisi
  * ET que l'après-midi est généré (on le range pour se concentrer sur l'après-midi), mais
@@ -213,6 +252,7 @@ document.addEventListener('click', async function (evenement) {
     if (m) { m.score_A = res.match.score_A; m.score_B = res.match.score_B; m.statut = 'terminé'; }
     verrouiller(carte);
     afficherMessage(msg, 'Score enregistré ✓', 'ok');
+    majAccordeonPhase(carte); // compteur à jour + repli auto dès le dernier score de la phase
   } catch (err) {
     afficherMessage(msg, err.message, 'ko');
   } finally {
