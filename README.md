@@ -17,7 +17,7 @@ puis de suivre les scores et classements en direct — et de garder un **histori
 | 2 | **Génération poules + planning** sans conflit, avec **assistant d'arbitrage** (pistes si l'heure de fin est dépassée ou si un forçage rallonge la journée) | ✅ Fait, déployé |
 | 3 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider), scores définitifs verrouillés | ✅ Fait, déployé |
 | 4 | **Phase après-midi** : classement croisé (niveaux N1-N4) depuis les résultats du matin, planifié après le déjeuner | ✅ Fait, déployé |
-| 5 | **Page publique** `tournoi.html` : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, bandeau don HelloAsso | ✅ Fait, **en ligne** (GitHub Pages) |
+| 5 | **Page publique** `tournoi.html` (thème clair, charte du site vitrine) : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, **podium certain**, bandeau de don vers la page « Faire un don » du site | ✅ Fait, **en ligne** (GitHub Pages) |
 | 6 | **Publication du tournoi** : bouton admin « Générer le tournoi » (publier / masquer) — la page publique reste un écran « à venir » tant que le tournoi n'est pas publié | ✅ Fait, déployé |
 | 7 | **Infos du tournoi + affiche** : nom, date, lieu, description + **chargeur d'affiche** (stockée dans Google Drive). Enregistrés + publiés d'un clic (« Générer le tournoi ») | ✅ Fait, déployé |
 | 8 | **Intégration au site vitrine** [boutique-r92](https://rfl974.github.io/boutique-r92/) : carte d'actu dynamique (nom + affiche) + **page d'article** (agenda .ics 2 rappels + itinéraire) quand le tournoi est publié | ✅ Fait, en ligne |
@@ -56,15 +56,19 @@ tournoi-r92/
 │   └── pages.yml            → déploiement auto du dossier frontend/ sur GitHub Pages
 │
 ├── docs/                    → documentation détaillée
-│   ├── architecture.md          → comment les 3 briques communiquent
+│   ├── guide-utilisateur.md     → ⭐ mode d'emploi complet (organisateur / saisie / visiteur)
+│   ├── passation.md             → ⭐ portabilité : tout transférer vers les comptes de l'asso
+│   ├── architecture.md          → comment les briques communiquent
 │   ├── structure-google-sheet.md→ colonnes de chaque onglet du Sheet
 │   ├── deploiement.md           → déploiement backend + mise en ligne frontend
-│   ├── migration-association.md → check-list pour passer des comptes perso à ceux de l'asso
-│   ├── phases-tournoi.md        → logique matin (poules) / après-midi (classement croisé N1-N4)
-│   └── guide-admin.md           → mode d'emploi de l'organisateur
+│   ├── relais-cdn.md            → montée en charge (cache serveur + relais CDN Cloudflare)
+│   └── phases-tournoi.md        → note de conception (après-midi : classement croisé)
 │
 ├── backend/                 → code Google Apps Script
 │   └── Code.gs
+│
+├── cloudflare/              → relais CDN optionnel (dormant par défaut)
+│   └── worker-tournoi.js
 │
 └── frontend/                → pages web
     ├── index.html           → redirige la racine vers tournoi.html
@@ -72,10 +76,12 @@ tournoi-r92/
     ├── saisie.html          → saisie des scores (table de marque)
     ├── tournoi.html         → page publique unique (onglets Mon équipe / Classements + filtre catégorie)
     ├── perfs.html           → « Perfs Racing » (page interne, non liée)
-    ├── css/styles.css
+    ├── css/
+    │   ├── styles.css           → thème sombre (admin / saisie / perfs)
+    │   └── tournoi-public.css   → thème clair de la page publique (charte du site vitrine)
     └── js/
-        ├── config.js        → réglages partagés (URL du backend, etc.)
-        ├── api.js           → communication avec le backend (apiGet / apiPost)
+        ├── config.js        → réglages partagés (API_URL du backend, SNAPSHOT_URL du relais)
+        ├── api.js           → communication avec le backend (apiGet / apiPost + clés)
         ├── admin.js
         ├── saisie.js
         ├── tournoi.js
@@ -116,6 +122,11 @@ tournoi-r92/
 
 Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels), **Barlow** (texte courant).
 
+> Cette charte **sombre** s'applique aux pages **admin / saisie / perfs** (`css/styles.css`). La
+> **page publique** (`tournoi.html`) a été redesignée en **thème clair** aux couleurs du site
+> vitrine (navy `#0C1C2E` / bleu vif `#2E8FE0`, **Barlow** + **Barlow Condensed**, sans Bebas Neue)
+> via `css/tournoi-public.css`.
+
 ---
 
 ## 📌 Statut d'avancement
@@ -139,7 +150,9 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
     colorés) + 3 classements (sa poule, son niveau, le général croisé) ;
   - **Classements** : derniers scores du tournoi, puis poules du matin (A/B/C) + niveaux croisés (N1-N4) ;
   - un **filtre catégorie** global (masqué s'il n'y a qu'une catégorie) adapte les deux onglets ;
-  - rafraîchissement automatique (60 s). Bandeau don HelloAsso en **placeholder** (`id="don-lien"`).
+  - un **podium** (top 3) s'affiche dès qu'il est mathématiquement certain (par catégorie) ;
+  - rafraîchissement automatique **~15 s** (avec étalement, cf. montée en charge). Le bandeau de don
+    pointe vers la page **« Faire un don »** du site vitrine.
 - ✅ **Publication du tournoi** : dans l'admin, bouton **« Générer le tournoi »** — distinct de la
   génération des poules. Il **enregistre les infos (nom, date, lieu, description) + l'affiche, puis
   publie**. Tant que le tournoi n'est pas publié, la page publique affiche un écran **« à venir »**.
@@ -157,12 +170,17 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   **clé scores**, vérifiées côté backend ; « connexion » demandée **une fois par session**
   (`sessionStorage`). Clés stockées via `configurerCles()` (déjà configurées).
 
+- ✅ **Montée en charge** (milliers de spectateurs) : **cache serveur** (`CacheService`) sur `getAll`
+  + **rafraîchissement étalé ~15 s** côté navigateur ; **relais CDN Cloudflare** codé mais **dormant**
+  (activable pour une garantie « béton »). Repli automatique intégré. Voir [`docs/relais-cdn.md`](docs/relais-cdn.md).
+- ✅ **Saisie** : filtre par catégorie (table de marque) + **accordéons** matin/après-midi qui se
+  replient dès leur dernier score ; lisible sur téléphone (scoreboard vertical).
+
 **Reste à faire (confort / avant le vrai tournoi) :**
-- ⏳ **En attente de la création du compte HelloAsso** : brancher l'URL réelle du bandeau de don
-  (placeholder `href="#"`, `id="don-lien"` dans `tournoi.html`).
 - **Nettoyer les données de test** du Sheet avant le vrai tournoi (le bouton « Générer poules et
   planning » repart de zéro ; l'onglet `Historique` n'est PAS effacé).
-- Lier la page publique dans l'actualité de [boutique-r92](https://rfl974.github.io/boutique-r92/) —
-  la carte/l'article apparaissent automatiquement quand le tournoi est publié.
+- Choisir des **clés admin / scores longues et aléatoires** (voir [`docs/passation.md`](docs/passation.md)).
 
-Détail complet dans [`CHANGELOG.md`](CHANGELOG.md).
+📖 **Mode d'emploi complet** : [`docs/guide-utilisateur.md`](docs/guide-utilisateur.md). ·
+🔀 **Passation / portabilité** : [`docs/passation.md`](docs/passation.md). ·
+🗒️ Détail des évolutions : [`CHANGELOG.md`](CHANGELOG.md).

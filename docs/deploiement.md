@@ -64,17 +64,30 @@ la clé scores. Elles sont **mémorisées sur l'appareil** (pas à re-saisir à 
 > 🔑 Pour **changer une clé** plus tard : relancer `configurerCles`. Les appareils déjà configurés
 > redemanderont automatiquement la nouvelle clé (message « Clé incorrecte »).
 
-## B. Frontend — mise en ligne (à venir)
+### 🖼️ Autorisation Google Drive (affiche) — une fois
+L'affiche du tournoi est stockée dans **Google Drive**. Après avoir collé/déployé le code, lancer
+une fois **`autoriserDrive()`** depuis l'éditeur (menu Exécuter) et **autoriser** l'accès Drive.
+Sans cela, l'enregistrement de l'affiche échouerait.
 
-**Intégration retenue :** les résultats publics seront affichés comme une **section intégrée au
-site principal generationr92.fr**, développé **en parallèle dans un dépôt GitHub séparé** (aussi
-via Claude Code). Ce site n'est pas encore en ligne.
+## B. Frontend — en ligne sur GitHub Pages ✅ (fait)
 
-Principe d'intégration :
-- La partie tournoi est construite de façon **autonome** (elle fonctionne seule pour le développement).
-- Le **`data.json`** (voir `architecture.md`) sert de pont : le site principal lira ce fichier et
-  affichera planning/live/classements dans son propre design.
-- Au moment de l'intégration, reprendre le style (couleurs, en-tête) du dépôt du site principal
-  pour une section « résultats » cohérente.
+Le dossier `frontend/` est **publié automatiquement sur GitHub Pages** à chaque push sur `main`,
+via le workflow [`.github/workflows/pages.yml`](../.github/workflows/pages.yml).
 
-L'hébergement précis (et l'URL publique) sera défini avec le site principal.
+Mise en service (déjà faite) : dépôt GitHub → **Settings → Pages → Source : GitHub Actions**.
+
+Adresses (base `https://rfl974.github.io/tournoi-r92/`) :
+- public : `…/tournoi.html` · admin : `…/admin.html` · saisie : `…/saisie.html` · perfs : `…/perfs.html`
+- `index.html` redirige la racine vers `tournoi.html`.
+
+**Intégration au site vitrine [boutique-r92](https://rfl974.github.io/boutique-r92/)** (dépôt séparé) :
+quand le tournoi est publié, une carte d'actualité et une page d'article y apparaissent (elles
+interrogent le même backend). Le bandeau de don de la page publique pointe vers la page « Faire un
+don » du site vitrine.
+
+> **Changer l'URL publique** (nouveau compte GitHub ou **nom de domaine**) : voir la procédure
+> complète dans [`passation.md`](passation.md) (DNS, domaine personnalisé, liens croisés à mettre à jour).
+
+## C. Montée en charge spectateurs
+Cache serveur + rafraîchissement étalé sont **déjà actifs**. Un **relais CDN Cloudflare** optionnel
+(dormant) peut être activé pour une garantie à très grande échelle : voir [`relais-cdn.md`](relais-cdn.md).

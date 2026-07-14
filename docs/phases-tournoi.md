@@ -23,28 +23,14 @@
 Championnat : dans chaque poule, chaque équipe rencontre toutes les autres (round-robin).
 Généré et planifié par `genererPoulesEtPlanning` (voir [`architecture.md`](architecture.md)).
 
-## Après-midi — phase de classement / finales ⬜ (à concevoir)
-La logique **change** l'après-midi : les rencontres ne sont plus le championnat de poule mais des
-matchs qui **dépendent du classement du matin** (ex : phases finales, matchs de classement).
+## Après-midi — classement croisé ✅ (fait)
+Les rencontres de l'après-midi **dépendent du classement du matin** : les équipes de **même rang de
+poule** jouent ensemble (Niveau 1 = tous les 1ᵉʳˢ, Niveau 2 = tous les 2ᵉˢ, etc.), chaque niveau en
+round-robin. Comme ces matchs dépendent des scores du matin, on procède en **2 temps** : le bouton
+« Générer l'après-midi » les crée **une fois les scores du matin saisis**, avec les vraies équipes
+(pas de structure « à trous »).
 
-### Implication technique majeure
-Ces matchs dépendent des **résultats du matin** (donc des **scores** saisis). Conséquences :
-- On ne peut **pas** générer l'après-midi en même temps que le matin.
-- Deux approches possibles :
-  1. **Génération en 2 temps** : générer l'après-midi une fois les scores du matin saisis.
-  2. **Structure à trous** : créer les créneaux de l'après-midi avec des libellés (« 1er poule A »,
-     « vainqueur quart 1 »…) remplis automatiquement au fur et à mesure des résultats.
-
-### Questions à trancher (prochaine session)
-- **Format exact** de l'après-midi : élimination directe (tableau quart/demi/finale) ?
-  matchs de classement croisés (1ᵉʳ vs 1ᵉʳ, 2ᵉ vs 2ᵉ…) ? autre ?
-- Est-ce **le même format pour toutes les catégories**, ou réglable par catégorie / par édition ?
-- **Classement de poule** : barème déjà défini (V=3 / N=2 / D=1, départage à la différence) —
-  suffisant pour désigner les qualifiés ? gestion fine des égalités ?
-- **Horaires/terrains de l'après-midi** : reprise après la pause déjeuner, mêmes terrains dédiés ?
-- Faut-il une **page/écran dédié** côté admin pour lancer/ajuster la phase de l'après-midi ?
-
-### Impact sur les données (implémenté)
-- L'onglet `Matchs` distingue la **phase** via la colonne `phase` (`poule` / `classement`) — ✅ ajoutée.
-- Approche retenue = **génération en 2 temps** : les équipes de l'après-midi sont **fixées** au moment
-  de la génération (une fois les scores du matin connus), pas laissées sous forme de règle/libellé.
+- L'onglet `Matchs` distingue la phase via la colonne `phase` (`poule` / `classement`).
+- Le **classement général** ordonne par niveau (N1 avant N2…), puis résultats après-midi, puis
+  matin ; barème V=3/N=2/D=1, départage à la différence puis points marqués. Le **podium** de la
+  page publique s'appuie sur ce classement (voir [`guide-utilisateur.md`](guide-utilisateur.md)).

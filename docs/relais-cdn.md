@@ -1,8 +1,15 @@
 # Relais CDN — tenir des milliers de spectateurs
 
+> ℹ️ **État par défaut : DORMANT.** Aujourd'hui, la montée en charge est assurée **gratuitement**
+> par le **cache serveur** (`CacheService` ~10 s sur `getAll`) + le **rafraîchissement étalé ~15 s**
+> côté navigateur — sans aucun outil externe. Ce relais Cloudflare est une **option de secours**
+> (garantie « béton » à très grande échelle) à activer seulement si besoin. Tant que `SNAPSHOT_URL`
+> (config.js) est vide, la page publique lit Apps Script (avec cache) : rien à faire.
+
 ## Pourquoi
 La page publique interroge Google Apps Script, qui plafonne à ~30 exécutions simultanées.
-Avec ~1300 spectateurs qui rafraîchissent toutes les 10 s, Apps Script saturerait.
+Avec ~1300 spectateurs, aux pics de trafic Apps Script pourrait saturer. Le relais déporte alors
+toute la lecture publique sur un CDN mondial.
 
 **Solution :** Apps Script *pousse* une copie des données vers un cache **Cloudflare** (gratuit,
 mondial) à chaque changement. Les spectateurs lisent ce cache, qui encaisse n'importe quelle foule.

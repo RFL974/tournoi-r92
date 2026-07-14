@@ -5,6 +5,23 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Audit complet (code + sécurité + doc), nettoyage et documentation — 2026-07-14
+- **Audit** du backend, du frontend, de la sécurité et de la documentation (4 passes).
+- **Correctifs code** (sans changement fonctionnel) : `LockService` autour de `doPost` (écritures
+  concurrentes sérialisées) ; écriture d'équipe en format texte (anti-injection de formule) ;
+  garde-fou taille du cache serveur (<95 Ko) + snapshot construit une seule fois par écriture ;
+  fix `[hidden] !important` manquant dans `tournoi-public.css` (contrôles visibles sur l'écran
+  « à venir ») ; échappement du nom de catégorie (admin) ; rôles ARIA sur les onglets publics ;
+  suppression de code mort (CSS de la page publique resté dans `styles.css`, variable `ongletActif`).
+- **Sécurité** : audit rassurant (aucun secret dans le repo/historique, écritures protégées,
+  affichage échappé). Recommandations : clés admin/scores **longues et aléatoires**, Sheet en
+  partage **Restreint**. Voir [`docs/passation.md`](docs/passation.md).
+- **Documentation** : nouveau **mode d'emploi complet** [`docs/guide-utilisateur.md`](docs/guide-utilisateur.md)
+  et **doc de passation/portabilité** [`docs/passation.md`](docs/passation.md). Docs périmées
+  corrigées (README, architecture, deploiement, phases-tournoi, backend/frontend README) ;
+  `guide-admin.md` et `migration-association.md` supprimés (remplacés par les deux nouveaux).
+- ⚠️ Les correctifs backend nécessitent de **recopier `Code.gs` + redéployer**.
+
 ### Montée en charge GRATUITE : cache serveur + étalement — 2026-07-14
 - Solution **sans nouvel outil ni coût** (tout reste dans Apps Script + GitHub Pages) pour tenir
   ~1300 spectateurs : **cache serveur** (`CacheService`) sur `getAll` (~10 s) → un seul appel relit

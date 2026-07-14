@@ -1,26 +1,29 @@
 # frontend/
 
-Pages web du projet (HTML / CSS / JS), **mobile-first**, à héberger sur un sous-domaine de
-`generationr92.fr`. Le code arrivera après le backend.
+Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur GitHub Pages**
+(workflow `.github/workflows/pages.yml`, publiées à chaque push sur `main`).
 
-Pages : `tournoi.html` (page publique unique à 3 onglets), `admin.html`, `saisie.html`,
-`perfs.html` (interne). Fichiers partagés : `css/styles.css`, `js/config.js`, `js/api.js`.
+**Pages** (base `https://rfl974.github.io/tournoi-r92/`) :
+- **`tournoi.html`** — page publique unique, **2 onglets** *Mon équipe* / *Classements* + filtre
+  catégorie + podium ; thème clair (`css/tournoi-public.css`, charte du site vitrine).
+- **`admin.html`** — organisateur (réglages, équipes, génération, publication) ; clé admin.
+- **`saisie.html`** — saisie des scores (table de marque, filtre catégorie, accordéons) ; clé scores.
+- **`perfs.html`** — « Perfs Racing », page interne (non liée), lecture seule.
+- **`index.html`** — redirige la racine vers `tournoi.html`.
 
-- **`tournoi.html`** — ✅ page publique : onglets Mon équipe / Classements (fusion des anciennes
-  pages live, planning et classement ; « Derniers scores » en tête de l'onglet Classements).
-- **`admin.html`** — ✅ créée (étape 1 : affiche les réglages en lecture seule).
-- **`css/styles.css`** — ✅ créé. Style commun (charte R92), mobile-first.
-- **`js/config.js`** — ✅ créé. Contient l'URL du backend (`API_URL`), source unique.
-- **`js/api.js`** — ✅ créé. Fonction `apiGet(action)` pour lire les données du backend.
-- **`js/admin.js`** — ✅ créé. Logique de la page admin.
+**Fichiers partagés** :
+- `css/styles.css` (thème sombre admin/saisie/perfs) · `css/tournoi-public.css` (thème clair public).
+- `js/config.js` — `API_URL` (backend) + `SNAPSHOT_URL` (relais CDN, vide par défaut).
+- `js/api.js` — `apiGet` / `apiPost` / `apiPostProtege` + gestion des clés (session).
+- `js/admin.js`, `js/saisie.js`, `js/tournoi.js`, `js/perfs.js` — logique de chaque page.
 
 ## Voir les pages en local
-Ouvrir `admin.html` directement dans le navigateur (double-clic) suffit pour le développement.
-Ou, pour un vrai serveur local, depuis la racine du projet :
+Ouvrir un fichier directement (double-clic) suffit pour un aperçu. Pour un vrai serveur local :
 
 ```bash
 python3 -m http.server 8123 --directory frontend
-# puis ouvrir http://localhost:8123/admin.html
+# puis http://localhost:8123/admin.html
 ```
 
-Voir [`../docs/architecture.md`](../docs/architecture.md).
+Mode d'emploi complet : [`../docs/guide-utilisateur.md`](../docs/guide-utilisateur.md).
+Architecture : [`../docs/architecture.md`](../docs/architecture.md).
