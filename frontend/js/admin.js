@@ -328,7 +328,7 @@ function afficherHoraires(global) {
               (auto ? ' disabled' : '') + '>' +
           '</span>' +
         '</div>' +
-        champNombre('battement_terrain_min', 'Battement entre matchs (min)', val('battement_terrain_min', '5')) +
+        champNombre('battement_terrain_min', 'Battement terrain entre les matchs (min)', val('battement_terrain_min', '5')) +
         champHeure('pause_dejeuner_debut', 'Pause déjeuner — début', val('pause_dejeuner_debut')) +
         champNombre('pause_dejeuner_duree_min', 'Pause déjeuner — durée (min)', val('pause_dejeuner_duree_min')) +
         '<div class="ligne-action">' +
