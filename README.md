@@ -3,7 +3,7 @@
 Mini-logiciel interne de gestion de tournois de rugby pour l'association **Génération R92**
 (École de Rugby, Hauts-de-Seine).
 
-Il permet d'organiser une journée de tournoi comportant **plusieurs catégories** (ex : U8 + U10 + U12),
+Il permet d'organiser une journée de tournoi comportant **plusieurs catégories** (ex : U8 + U10 + U12 + U14),
 de répartir automatiquement les équipes en poules, de générer le planning horaire sans conflit,
 puis de suivre les scores et classements en direct — et de garder un **historique de saison**.
 
