@@ -392,17 +392,26 @@ a:hover { text-decoration: underline; }
   font-size: 0.85rem;
 }
 .table-classement th,
-.table-classement td { text-align: center; }
+.table-classement td { text-align: center; vertical-align: middle; }
 .table-classement .col-equipe { text-align: left; font-weight: 600; color: var(--navy); }
 .table-classement .col-pts { font-weight: 800; color: var(--navy); }
+/* La colonne « Équipe » peut revenir à la ligne : les noms longs
+   (ex. « PUC (PARIS UNIVERSITÉ CLUB)-2 ») ne débordent plus sur la colonne
+   voisine mais s'enroulent dans leur cellule. */
+.table-classement .col-equipe {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
+}
 /* Surlignage de l'équipe choisie */
 .fav-ligne { background: rgba(46, 143, 224, 0.10); }
 
-/* Largeurs fixes pour aligner les tableaux complets d'une poule à l'autre */
+/* Largeurs fixes pour aligner les tableaux complets d'une poule à l'autre.
+   La colonne « Équipe » est plus large (les noms y tiennent sur 1–2 lignes). */
 .cl-full { table-layout: fixed; }
-.cl-full th:nth-child(1), .cl-full td:nth-child(1) { width: 32px; }
-.cl-full th:nth-child(2), .cl-full td:nth-child(2) { width: 120px; }
-.cl-full th:nth-child(n+3), .cl-full td:nth-child(n+3) { width: 44px; }
+.cl-full th:nth-child(1), .cl-full td:nth-child(1) { width: 30px; }
+.cl-full th:nth-child(2), .cl-full td:nth-child(2) { width: 150px; }
+.cl-full th:nth-child(n+3), .cl-full td:nth-child(n+3) { width: 42px; }
 
 /* ---------------------------------------------------------
    15. MESSAGES & ÉTAT VIDE
