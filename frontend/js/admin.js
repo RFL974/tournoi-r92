@@ -24,6 +24,8 @@ const CHAMPS_CATEGORIE = [
 /* On garde en mémoire la config et les équipes chargées (pour l'affichage). */
 let configCourante = { global: {}, categories: [] };
 let equipesCourantes = [];
+/* Affiche du tournoi choisie mais pas encore enregistrée (Data URI redimensionné). */
+let afficheDataURI = '';
 
 /* Toute écriture depuis l'admin passe par ici : exige la clé ADMIN (voir api.js). */
 function ecrireAdmin(action, data) {
@@ -97,6 +99,9 @@ async function initAdmin() {
 
   // Formulaire des infos du tournoi (nom / date / lieu / description).
   document.getElementById('form-infos-tournoi').addEventListener('submit', onEnregistrerInfosTournoi);
+  // Choix d'un fichier d'affiche → aperçu immédiat.
+  document.querySelector('#form-infos-tournoi [name="tournoi_affiche"]')
+    .addEventListener('change', onChoisirAffiche);
 }
 
 /* --------------------------------------------------------------------------
@@ -112,9 +117,68 @@ function majInfosTournoi() {
   form.tournoi_date.value = g.tournoi_date || '';
   form.tournoi_lieu.value = g.tournoi_lieu || '';
   form.tournoi_description.value = g.tournoi_description || '';
+
+  // Aperçu de l'affiche déjà enregistrée (image Drive publique).
+  afficheDataURI = '';
+  const bloc = document.getElementById('apercu-affiche');
+  const img = document.getElementById('apercu-affiche-img');
+  if (g.tournoi_affiche_id) {
+    img.src = urlAffiche(g.tournoi_affiche_id, 600);
+    bloc.hidden = false;
+  } else {
+    img.removeAttribute('src');
+    bloc.hidden = true;
+  }
 }
 
-/** Enregistre les infos du tournoi (clé admin), puis recharge la config. */
+/** URL d'affichage d'une affiche stockée dans Drive (miniature CDN, largeur maxi w). */
+function urlAffiche(id, largeur) {
+  return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + (largeur || 1000);
+}
+
+/** Quand on choisit un fichier : on le redimensionne et on affiche un aperçu immédiat. */
+async function onChoisirAffiche(evenement) {
+  const fichier = evenement.target.files && evenement.target.files[0];
+  const message = document.getElementById('message-infos-tournoi');
+  if (!fichier) { afficheDataURI = ''; return; }
+  try {
+    afficheDataURI = await redimensionnerImage(fichier, 1000, 0.82);
+    const bloc = document.getElementById('apercu-affiche');
+    document.getElementById('apercu-affiche-img').src = afficheDataURI;
+    bloc.hidden = false;
+  } catch (e) {
+    afficheDataURI = '';
+    afficherMessage(message, "⚠️ Image illisible. Choisis un fichier image (JPG, PNG…).", 'ko');
+  }
+}
+
+/**
+ * Redimensionne une image (fichier) à `maxDim` px max sur le plus grand côté et renvoie
+ * un Data URI JPEG (qualité 0..1). Allège fortement le poids avant l'envoi au backend.
+ */
+function redimensionnerImage(fichier, maxDim, qualite) {
+  return new Promise(function (resoudre, rejeter) {
+    const img = new Image();
+    img.onload = function () {
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resoudre(canvas.toDataURL('image/jpeg', qualite));
+    };
+    img.onerror = rejeter;
+    const lecteur = new FileReader();
+    lecteur.onload = function (e) { img.src = e.target.result; };
+    lecteur.onerror = rejeter;
+    lecteur.readAsDataURL(fichier);
+  });
+}
+
+/** Enregistre les infos du tournoi (+ l'affiche si une nouvelle a été choisie), clé admin. */
 async function onEnregistrerInfosTournoi(evenement) {
   evenement.preventDefault();
   const form = evenement.target;
@@ -128,8 +192,13 @@ async function onEnregistrerInfosTournoi(evenement) {
   afficherMessage(message, 'Enregistrement…', 'ok');
   try {
     await ecrireAdmin('enregistrerInfosTournoi', data);
+    if (afficheDataURI) {
+      afficherMessage(message, 'Envoi de l\'affiche…', 'ok');
+      await ecrireAdmin('enregistrerAffiche', { affiche: afficheDataURI });
+    }
     configCourante = await apiGet('getConfig');
     majInfosTournoi();
+    form.tournoi_affiche.value = ''; // on vide le champ fichier
     afficherMessage(message, '✅ Infos du tournoi enregistrées.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');

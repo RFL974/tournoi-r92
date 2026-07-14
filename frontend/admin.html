@@ -96,6 +96,12 @@
           <label class="reglage"><span class="r-libelle">Description</span>
             <textarea class="r-input" name="tournoi_description" rows="4" placeholder="Quelques phrases de présentation du tournoi…"></textarea>
           </label>
+          <label class="reglage"><span class="r-libelle">Affiche du tournoi (image)</span>
+            <input class="r-input" type="file" name="tournoi_affiche" accept="image/*">
+          </label>
+          <div id="apercu-affiche" class="apercu-affiche" hidden>
+            <img id="apercu-affiche-img" alt="Aperçu de l'affiche du tournoi">
+          </div>
           <button type="submit" class="bouton">Enregistrer les infos</button>
           <div class="message-form" id="message-infos-tournoi"></div>
         </form>

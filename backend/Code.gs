@@ -198,6 +198,7 @@ function doPost(e) {
       case 'genererApresMidi':     resultat = genererApresMidi(classeur); break;
       case 'publierTournoi':       resultat = publierTournoi(classeur, requete.publie); break;
       case 'enregistrerInfosTournoi': resultat = enregistrerInfosTournoi(classeur, requete); break;
+      case 'enregistrerAffiche':   resultat = enregistrerAffiche(classeur, requete); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -313,6 +314,31 @@ function enregistrerInfosTournoi(classeur, data) {
     if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
   });
   return { ok: true };
+}
+
+/**
+ * Enregistre l'AFFICHE du tournoi. Reçoit une image encodée en Data URI (base64),
+ * la stocke dans Google Drive (fichier public en lecture) et mémorise son identifiant
+ * dans Config (`tournoi_affiche_id`). L'affiche précédente est mise à la corbeille.
+ * ⚠️ Nécessite l'autorisation d'accès à Google Drive (à accorder une fois au redéploiement).
+ * @param data.affiche  chaîne "data:image/...;base64,...."
+ */
+function enregistrerAffiche(classeur, data) {
+  var uri = String(data.affiche || '');
+  var m = uri.match(/^data:([^;]+);base64,(.*)$/);
+  if (!m) return { error: 'Image invalide (Data URI base64 attendu).' };
+
+  var octets = Utilities.base64Decode(m[2]);
+  var blob = Utilities.newBlob(octets, m[1], 'affiche-tournoi');
+
+  var onglet = classeur.getSheetByName('Config');
+  var ancienId = (lireConfig(classeur).global || {}).tournoi_affiche_id;
+  if (ancienId) { try { DriveApp.getFileById(ancienId).setTrashed(true); } catch (e) {} }
+
+  var fichier = DriveApp.createFile(blob);
+  try { fichier.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
+  ecrireParamGlobal(onglet, 'tournoi_affiche_id', fichier.getId());
+  return { ok: true, id: fichier.getId() };
 }
 
 function ecrireParamGlobal(onglet, nom, valeur) {
