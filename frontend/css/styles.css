@@ -347,6 +347,12 @@ select.r-input { cursor: pointer; }
 .bouton-modif:hover { background: rgba(80, 150, 255, 0.15); }
 .bouton-suppr:disabled,
 .bouton-modif:disabled { opacity: 0.5; cursor: default; }
+/* Boutons réduits à une icône (crayon / corbeille) : carrés et centrés. */
+.bouton-icone {
+  padding: 4px 8px;
+  font-size: 1rem;
+  line-height: 1;
+}
 
 .vide { color: #7f92a8; font-style: italic; }
 
