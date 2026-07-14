@@ -221,13 +221,13 @@ a:hover { text-decoration: underline; }
 }
 
 /* ---------------------------------------------------------
-   9. BANDEAU DE DON (accent doré, ressort comme un CTA)
+   9. BANDEAU DE DON (bleu vif de la charte, ressort comme un CTA)
    --------------------------------------------------------- */
 .don-bandeau {
   display: block;
   text-align: center;
-  background: linear-gradient(90deg, #c8901a, #e9b53e);
-  color: #241500;
+  background: linear-gradient(90deg, var(--bleu-vif), #1f79c6);
+  color: var(--blanc);
   text-decoration: none;
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
@@ -236,8 +236,15 @@ a:hover { text-decoration: underline; }
   padding: 11px 14px;
   border-radius: 10px;
   margin-bottom: 16px;
+  box-shadow: 0 4px 14px rgba(46, 143, 224, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.don-bandeau:hover { filter: brightness(1.05); text-decoration: none; }
+.don-bandeau strong { text-decoration: underline; text-underline-offset: 3px; }
+.don-bandeau:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(46, 143, 224, 0.35);
+  text-decoration: none;
+}
 
 /* ---------------------------------------------------------
    10. ONGLETS (Mon équipe / Classements) — contrôle segmenté
