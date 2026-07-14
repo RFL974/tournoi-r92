@@ -97,8 +97,10 @@ async function initAdmin() {
   // Bouton publier / masquer le tournoi.
   document.getElementById('bouton-publier').addEventListener('click', onPublier);
 
-  // Formulaire des infos du tournoi (nom / date / lieu / description).
-  document.getElementById('form-infos-tournoi').addEventListener('submit', onEnregistrerInfosTournoi);
+  // Les infos du tournoi ne se sauvegardent PAS via un bouton dédié : c'est
+  // « Générer le tournoi » qui les enregistre (voir onPublier). On empêche juste
+  // la soumission du formulaire (touche Entrée) qui rechargerait la page.
+  document.getElementById('form-infos-tournoi').addEventListener('submit', function (e) { e.preventDefault(); });
   // Choix d'un fichier d'affiche → aperçu immédiat.
   document.querySelector('#form-infos-tournoi [name="tournoi_affiche"]')
     .addEventListener('change', onChoisirAffiche);
@@ -178,31 +180,15 @@ function redimensionnerImage(fichier, maxDim, qualite) {
   });
 }
 
-/** Enregistre les infos du tournoi (+ l'affiche si une nouvelle a été choisie), clé admin. */
-async function onEnregistrerInfosTournoi(evenement) {
-  evenement.preventDefault();
-  const form = evenement.target;
-  const message = document.getElementById('message-infos-tournoi');
-  const data = {
+/** Lit les infos saisies dans le formulaire (nom / date / lieu / description). */
+function lireInfosTournoi() {
+  const form = document.getElementById('form-infos-tournoi');
+  return {
     tournoi_nom: form.tournoi_nom.value.trim(),
     tournoi_date: form.tournoi_date.value,
     tournoi_lieu: form.tournoi_lieu.value.trim(),
     tournoi_description: form.tournoi_description.value.trim()
   };
-  afficherMessage(message, 'Enregistrement…', 'ok');
-  try {
-    await ecrireAdmin('enregistrerInfosTournoi', data);
-    if (afficheDataURI) {
-      afficherMessage(message, 'Envoi de l\'affiche…', 'ok');
-      await ecrireAdmin('enregistrerAffiche', { affiche: afficheDataURI });
-    }
-    configCourante = await apiGet('getConfig');
-    majInfosTournoi();
-    form.tournoi_affiche.value = ''; // on vide le champ fichier
-    afficherMessage(message, '✅ Infos du tournoi enregistrées.', 'ok');
-  } catch (erreur) {
-    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
-  }
 }
 
 /* --------------------------------------------------------------------------
@@ -228,24 +214,41 @@ function majPublication() {
   }
 }
 
-/** Publie ou masque le tournoi (bascule), avec la clé admin, puis rafraîchit l'affichage. */
+/**
+ * « Générer le tournoi » (publier) OU « Masquer ». À la génération, on enregistre d'abord
+ * les infos saisies (nom/date/lieu/description) + l'affiche éventuelle, PUIS on publie.
+ * Le masquage, lui, ne fait que dépublier.
+ */
 async function onPublier() {
   const message = document.getElementById('message-publication');
   const bouton = document.getElementById('bouton-publier');
   const publier = !estPublie(); // on bascule vers l'état inverse
   const question = publier
-    ? 'Publier le tournoi ? Il deviendra visible du public sur la page publique.'
+    ? 'Générer et publier le tournoi ?\n\nLes infos saisies (nom, date, lieu, description, affiche) seront enregistrées, et le tournoi deviendra visible du public.'
     : 'Masquer le tournoi ? Les visiteurs reverront l\'écran « à venir ».';
   if (!confirm(question)) return;
 
   bouton.disabled = true;
-  afficherMessage(message, publier ? 'Publication…' : 'Masquage…', 'ok');
   try {
-    await ecrireAdmin('publierTournoi', { publie: publier ? 'oui' : 'non' });
+    if (publier) {
+      afficherMessage(message, 'Enregistrement des infos…', 'ok');
+      await ecrireAdmin('enregistrerInfosTournoi', lireInfosTournoi());
+      if (afficheDataURI) {
+        afficherMessage(message, 'Envoi de l\'affiche…', 'ok');
+        await ecrireAdmin('enregistrerAffiche', { affiche: afficheDataURI });
+      }
+      afficherMessage(message, 'Publication…', 'ok');
+      await ecrireAdmin('publierTournoi', { publie: 'oui' });
+    } else {
+      afficherMessage(message, 'Masquage…', 'ok');
+      await ecrireAdmin('publierTournoi', { publie: 'non' });
+    }
     // On recharge la config pour refléter le nouvel état.
     configCourante = await apiGet('getConfig');
+    majInfosTournoi();
+    document.getElementById('form-infos-tournoi').tournoi_affiche.value = ''; // vide le champ fichier
     majPublication();
-    afficherMessage(message, publier ? '✅ Tournoi publié.' : '✅ Tournoi masqué.', 'ok');
+    afficherMessage(message, publier ? '✅ Tournoi généré et publié.' : '✅ Tournoi masqué.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
