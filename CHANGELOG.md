@@ -5,6 +5,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Montée en charge GRATUITE : cache serveur + étalement — 2026-07-14
+- Solution **sans nouvel outil ni coût** (tout reste dans Apps Script + GitHub Pages) pour tenir
+  ~1300 spectateurs : **cache serveur** (`CacheService`) sur `getAll` (~10 s) → un seul appel relit
+  le Sheet par tranche, les autres reçoivent la copie en mémoire (~200 ms). Cache **rafraîchi à
+  chaque écriture** (`apresEcriture`), donc les scores apparaissent sans retard.
+- Côté navigateur : **étalement (jitter)** des rafraîchissements (`planifierProchainChargement`) pour
+  éviter que tous les spectateurs appellent à la même seconde ; intervalle porté à **~15 s** (marge
+  sous le plafond ~30 exécutions simultanées d'Apps Script).
+- Le **relais CDN Cloudflare reste en sommeil** (dormant, cf. entrée ci-dessous) : activable plus
+  tard pour une garantie « béton » sans rien réécrire.
+- ⚠️ Le cache serveur nécessite de **recopier `Code.gs` + redéployer**.
+
 ### Montée en charge : relais CDN pour les spectateurs (Cloudflare) — 2026-07-14
 - Prépare le support de **~1300 spectateurs** en direct sans saturer Apps Script (plafond ~30
   exécutions simultanées). Apps Script **pousse** un instantané des données vers un cache **edge

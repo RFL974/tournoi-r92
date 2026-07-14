@@ -23,7 +23,8 @@ let derniereSignature = '';
 let categorieActive = '';
 const CLE_EQUIPE = 'r92_mon_equipe';
 const CLE_CATEGORIE = 'r92_ma_categorie';
-const INTERVALLE_MS = 10000; // rafraîchissement auto toutes les 10 s (scores + classements en direct)
+const INTERVALLE_MS = 15000; // rafraîchissement auto ~15 s (marge sous le plafond Apps Script)
+const JITTER_MS = 4000;      // étalement aléatoire : évite que tous les spectateurs appellent en même temps
 
 /* ==========================================================================
    DÉMARRAGE / NAVIGATION
@@ -50,7 +51,20 @@ async function initTournoi() {
   });
 
   await charger(true);
-  setInterval(function () { charger(false); }, INTERVALLE_MS);
+  planifierProchainChargement();
+}
+
+/**
+ * Planifie le prochain rafraîchissement automatique avec un ÉTALEMENT aléatoire (jitter) :
+ * chaque spectateur poll à un instant légèrement différent, ce qui évite les pics où les
+ * 1300 appellent le serveur à la même seconde. On enchaîne APRÈS la fin du chargement
+ * précédent (pas de setInterval) pour ne jamais empiler les requêtes.
+ */
+function planifierProchainChargement() {
+  const delai = INTERVALLE_MS + Math.floor(Math.random() * JITTER_MS);
+  setTimeout(function () {
+    Promise.resolve(charger(false)).finally(planifierProchainChargement);
+  }, delai);
 }
 
 /** Bascule d'onglet : montre une vue, cache l'autre. */

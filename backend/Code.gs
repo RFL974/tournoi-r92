@@ -97,7 +97,12 @@ function doGet(e) {
       case 'getEquipes': resultat = lireOngletSimple(classeur, 'Equipes'); break;
       case 'getPoules':  resultat = lireOngletSimple(classeur, 'Poules'); break;
       case 'getMatchs':  resultat = lireOngletSimple(classeur, 'Matchs'); break;
-      case 'getAll':     resultat = construireSnapshot(classeur); break;
+      // getAll est l'appel MASSIF (page publique, milliers de spectateurs). On sert une
+      // copie mise en cache ~10 s : un seul lecteur relit le Sheet par tranche, les autres
+      // reçoivent la copie instantanément. Le cache est rafraîchi à chaque écriture.
+      case 'getAll':
+        return ContentService.createTextOutput(snapshotJsonCache(classeur))
+          .setMimeType(ContentService.MimeType.JSON);
       case 'getClassement': resultat = calculerClassement(classeur); break;
       case 'getHistorique': resultat = lireHistorique(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
@@ -119,6 +124,32 @@ function construireSnapshot(classeur) {
     poules:  lireOngletSimple(classeur, 'Poules'),
     matchs:  lireOngletSimple(classeur, 'Matchs')
   };
+}
+
+/**
+ * getAll mis en CACHE (~10 s) : gros gain de capacité pour la page publique. Un seul
+ * appel par tranche de 10 s relit le Sheet ; les autres reçoivent la copie en mémoire.
+ * Renvoie directement la CHAÎNE JSON (pas de re-sérialisation).
+ */
+function snapshotJsonCache(classeur) {
+  var cache = CacheService.getScriptCache();
+  var s = cache.get('snapshot_json');
+  if (s) return s;
+  s = JSON.stringify(construireSnapshot(classeur));
+  try { cache.put('snapshot_json', s, 10); } catch (e) {}
+  return s;
+}
+
+/**
+ * Après une écriture réussie : on rafraîchit le cache serveur (les spectateurs voient le
+ * changement dès leur prochain appel) ET on pousse vers le relais CDN s'il est configuré.
+ */
+function apresEcriture(classeur) {
+  try {
+    var json = JSON.stringify(construireSnapshot(classeur));
+    try { CacheService.getScriptCache().put('snapshot_json', json, 10); } catch (e) {}
+    pousserSnapshot(classeur); // sans effet si le relais n'est pas configuré
+  } catch (err) { /* jamais bloquer l'écriture */ }
 }
 
 /* ===================== RELAIS CDN (montée en charge spectateurs) =====================
@@ -244,9 +275,9 @@ function doPost(e) {
       case 'enregistrerAffiche':   resultat = enregistrerAffiche(classeur, requete); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
-    // Écriture réussie → on rafraîchit le cache spectateurs (relais CDN). Sans effet si
-    // le relais n'est pas configuré ; n'échoue jamais l'action même si la poussée rate.
-    if (resultat && !resultat.error) pousserSnapshot(classeur);
+    // Écriture réussie → cache serveur rafraîchi (+ relais CDN si configuré). Sans effet
+    // secondaire bloquant : n'échoue jamais l'action même si le rafraîchissement rate.
+    if (resultat && !resultat.error) apresEcriture(classeur);
     return repondreJson(resultat);
   } catch (erreur) { return repondreJson({ error: String(erreur) }); }
 }
