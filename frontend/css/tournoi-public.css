@@ -64,6 +64,12 @@ a:hover { text-decoration: underline; }
   padding: 0 20px;
 }
 
+/* L'attribut HTML [hidden] doit toujours l'emporter : sans ce !important, une règle
+   auteur en display:flex/block (barre, onglets, bandeau de don) resterait affichée même
+   avec l'attribut hidden — ce qui laisserait apparaître les contrôles sur l'écran « à venir »
+   quand le tournoi n'est pas encore publié. */
+[hidden] { display: none !important; }
+
 /* Lien d'évitement (accessibilité clavier) */
 .lien-evitement {
   position: absolute;

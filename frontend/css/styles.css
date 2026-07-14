@@ -535,21 +535,7 @@ select.r-input { cursor: pointer; }
 .cl-full th:nth-child(2), .cl-full td:nth-child(2) { width: 120px; }
 .cl-full th:nth-child(n+3), .cl-full td:nth-child(n+3) { width: 44px; }
 
-/* Page publique tournoi.html : bandeau don, barre de rafraîchissement, derniers scores */
-.don-bandeau {
-  display: block;
-  text-align: center;
-  background: linear-gradient(90deg, #b8860b, #e0a92e);
-  color: #1a1000;
-  text-decoration: none;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.1rem;
-  padding: 10px 14px;
-  border-radius: var(--rayon);
-  margin-bottom: var(--espace);
-}
-.don-bandeau:hover { filter: brightness(1.08); }
-
+/* Barre de rafraîchissement (utilisée par la page perfs interne). */
 .live-barre {
   display: flex;
   align-items: center;
@@ -559,50 +545,14 @@ select.r-input { cursor: pointer; }
 }
 .live-maj { color: var(--bleu-ciel); font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; }
 
-.live-titre { color: var(--accent); margin: 20px 0 8px; }
-.live-cat { color: var(--bleu-ciel); margin: 14px 0 4px; }
-.live-poule { color: var(--texte); font-family: 'Barlow Condensed', sans-serif; margin: 8px 0 4px; }
-
-/* Surlignage de l'équipe sélectionnée (onglet « Mon équipe ») */
-.fav-ligne { background: rgba(242, 193, 78, 0.08); }
-
-/* Derniers scores */
-.score-ligne {
-  background: rgba(3, 16, 36, 0.5);
-  border: 1px solid rgba(184, 216, 248, 0.12);
-  border-radius: var(--rayon);
-  padding: 8px 12px;
-  margin-bottom: 8px;
-}
-.score-meta { color: var(--bleu-ciel); font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; }
-/* Scoreboard : nom (aligné à droite) · score centré · nom (aligné à gauche).
-   La colonne centrale à largeur fixe garde tous les scores alignés d'une ligne à l'autre. */
-.score-corps {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 12px;
-  margin-top: 4px;
-}
-.score-corps > span:first-child { text-align: right; }
-.score-corps > span:last-child  { text-align: left; }
-.score-corps .gagnant { font-weight: 700; color: #9fe0a0; }
-.score-chiffres {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 600;
-  white-space: nowrap;
-  text-align: center;
-  min-width: 72px;
-}
-
-/* Onglet « Mon équipe » de tournoi.html */
+/* Libellé de champ (ex. filtre catégorie de la page saisie). */
 .mp-label {
   display: block;
   color: var(--bleu-ciel);
   font-family: 'Barlow Condensed', sans-serif;
   margin-bottom: 6px;
 }
-#select-equipe { margin-bottom: 8px; }
+/* Ligne « adversaire · résultat » d'un match (page perfs). */
 .mp-ligne {
   display: flex;
   align-items: center;
@@ -616,7 +566,6 @@ select.r-input { cursor: pointer; }
 .mp-resultat.gagne { color: #9fe0a0; }
 .mp-resultat.perd  { color: #ffb4b4; }
 .mp-resultat.nul   { color: var(--bleu-ciel); }
-.mp-avenir { color: #7f92a8; font-style: italic; }
 
 /* Sous-titre de phase dans le planning admin (Matin / Après-midi) */
 .planning-phase {
@@ -665,18 +614,8 @@ select.r-input { cursor: pointer; }
    vert #9fe0a0 (victoire), rouge #ffb4b4 (défaite), bleu ciel (nul).
    ========================================================================== */
 
-/* Barre d'onglets (page publique « Le tournoi ») */
-.onglets { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
-.onglets .onglet { flex: 1 1 auto; }
-
-/* Filtre catégorie global (au-dessus des deux onglets) */
+/* Filtre catégorie (page saisie : « Catégorie à saisir »). */
 .mp-filtre { margin-bottom: 14px; }
-
-/* Écran « à venir » (tournoi pas encore publié) */
-.avenir { text-align: center; padding: 32px 16px; }
-.avenir-emoji { font-size: 3rem; line-height: 1; }
-.avenir-titre { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; color: var(--texte); margin: 12px 0 8px; }
-.avenir-texte { color: var(--bleu-ciel); max-width: 34ch; margin: 0 auto; }
 
 /* État de publication dans l'admin */
 .publication-etat { color: var(--bleu-ciel); margin: 4px 0 10px; }

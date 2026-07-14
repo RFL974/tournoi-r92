@@ -18,7 +18,6 @@
 let equipes = [];
 let matchs = [];
 let config = { global: {} };
-let ongletActif = 'equipe';
 let derniereSignature = '';
 let categorieActive = '';
 const CLE_EQUIPE = 'r92_mon_equipe';
@@ -69,9 +68,10 @@ function planifierProchainChargement() {
 
 /** Bascule d'onglet : montre une vue, cache l'autre. */
 function basculer(cible) {
-  ongletActif = cible;
   document.querySelectorAll('.onglet[data-onglet]').forEach(function (b) {
-    b.classList.toggle('actif', b.getAttribute('data-onglet') === cible);
+    const actif = b.getAttribute('data-onglet') === cible;
+    b.classList.toggle('actif', actif);
+    b.setAttribute('aria-selected', actif ? 'true' : 'false');
   });
   document.getElementById('vue-equipe').hidden = (cible !== 'equipe');
   document.getElementById('vue-classements').hidden = (cible !== 'classements');

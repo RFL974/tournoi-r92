@@ -635,7 +635,7 @@ function afficherEquipes(equipes) {
 
     html +=
       '<div class="groupe-categorie">' +
-        '<h3>' + cat + ' <span class="cat-mini">(' + liste.length + ')</span>' +
+        '<h3>' + echapper(cat) + ' <span class="cat-mini">(' + liste.length + ')</span>' +
           '<button class="bouton-suppr bouton-suppr-tout" data-cat="' + echapper(cat) + '">' +
             'Tout supprimer</button>' +
         '</h3>' +

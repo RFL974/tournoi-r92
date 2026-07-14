@@ -74,9 +74,9 @@
             </div>
 
             <!-- Barre d'onglets (segmenté). « Mon équipe » est l'onglet par défaut. -->
-            <div class="onglets" role="tablist">
-              <button class="onglet actif" data-onglet="equipe">📋 Mon équipe</button>
-              <button class="onglet" data-onglet="classements">🏆 Classements</button>
+            <div class="onglets" role="tablist" aria-label="Vues du tournoi">
+              <button class="onglet actif" data-onglet="equipe" role="tab" aria-selected="true" aria-controls="vue-equipe">📋 Mon équipe</button>
+              <button class="onglet" data-onglet="classements" role="tab" aria-selected="false" aria-controls="vue-classements">🏆 Classements</button>
             </div>
 
             <!-- Filtre catégorie GLOBAL : pilote les deux onglets. Masqué s'il n'y a qu'une catégorie. -->
@@ -92,7 +92,7 @@
 
         <div id="vues">
           <!-- 📋 Mon équipe : sélecteur + matchs + classements de l'équipe -->
-          <div id="vue-equipe">
+          <div id="vue-equipe" role="tabpanel">
             <label class="mp-label" for="select-equipe">Choisis ton équipe :</label>
             <select id="select-equipe" class="r-input">
               <option value="">— Chargement… —</option>
@@ -103,7 +103,7 @@
           </div>
 
           <!-- 🏆 Classements : derniers scores + poules (matin) + niveaux croisés (après-midi) -->
-          <div id="vue-classements" hidden>
+          <div id="vue-classements" role="tabpanel" hidden>
             <div class="message">Chargement des classements…</div>
           </div>
         </div>

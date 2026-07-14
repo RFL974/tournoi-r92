@@ -136,19 +136,32 @@ function snapshotJsonCache(classeur) {
   var s = cache.get('snapshot_json');
   if (s) return s;
   s = JSON.stringify(construireSnapshot(classeur));
-  try { cache.put('snapshot_json', s, 10); } catch (e) {}
+  mettreEnCacheSnapshot(cache, s);
   return s;
+}
+
+/**
+ * Met le JSON en cache serveur, SAUF s'il dépasse la limite de CacheService (100 Ko) :
+ * au-delà, put() échouerait et le cache resterait vide (chaque appel relirait le Sheet).
+ * Dans ce cas rare (très gros tournoi), mieux vaut ne pas cacher et compter sur le relais CDN.
+ */
+function mettreEnCacheSnapshot(cache, json) {
+  try {
+    // Marge sous 100 Ko (100 000 octets) ; longueur JS ≈ octets pour de l'ASCII/JSON.
+    if (json.length < 95000) cache.put('snapshot_json', json, 10);
+  } catch (e) { /* cache indisponible : on ignore, getAll relira le Sheet */ }
 }
 
 /**
  * Après une écriture réussie : on rafraîchit le cache serveur (les spectateurs voient le
  * changement dès leur prochain appel) ET on pousse vers le relais CDN s'il est configuré.
+ * On ne construit le snapshot QU'UNE fois (partagé entre le cache et le relais).
  */
 function apresEcriture(classeur) {
   try {
     var json = JSON.stringify(construireSnapshot(classeur));
-    try { CacheService.getScriptCache().put('snapshot_json', json, 10); } catch (e) {}
-    pousserSnapshot(classeur); // sans effet si le relais n'est pas configuré
+    mettreEnCacheSnapshot(CacheService.getScriptCache(), json);
+    pousserSnapshot(classeur, json); // sans effet si le relais n'est pas configuré
   } catch (err) { /* jamais bloquer l'écriture */ }
 }
 
@@ -171,8 +184,11 @@ function configurerRelais(url, cle) {
   return 'Relais configuré : ' + (url || '(vide)');
 }
 
-/** Pousse l'instantané vers le relais CDN. Silencieux et sans jamais bloquer l'écriture. */
-function pousserSnapshot(classeur) {
+/**
+ * Pousse l'instantané vers le relais CDN. Silencieux et sans jamais bloquer l'écriture.
+ * @param {string} [json] instantané déjà sérialisé (évite de reconstruire/relire le Sheet).
+ */
+function pousserSnapshot(classeur, json) {
   try {
     var props = PropertiesService.getScriptProperties();
     var url = props.getProperty('RELAIS_URL');
@@ -182,7 +198,7 @@ function pousserSnapshot(classeur) {
       method: 'post',
       contentType: 'application/json',
       headers: { Authorization: 'Bearer ' + cle },
-      payload: JSON.stringify(construireSnapshot(classeur)),
+      payload: json || JSON.stringify(construireSnapshot(classeur)),
       muteHttpExceptions: true
     });
   } catch (err) {
@@ -247,6 +263,7 @@ function lireConfig(classeur) {
 var ACTIONS_SCORES = { enregistrerScore: true };
 
 function doPost(e) {
+  var lock;
   try {
     var requete = JSON.parse(e.postData.contents);
     var action = requete.action;
@@ -256,6 +273,15 @@ function doPost(e) {
     var nomCle = ACTIONS_SCORES[action] ? 'CLE_SCORES' : 'CLE_ADMIN';
     var acces = verifierCle(requete, nomCle);
     if (!acces.ok) return repondreJson({ error: acces.msg, acces_refuse: true });
+
+    // Verrou d'écriture : sérialise les écritures concurrentes (deux marqueurs qui valident
+    // au même instant) pour éviter les collisions d'identifiant et l'écrasement de lignes
+    // dans l'onglet Historique. Attente max 20 s ; au-delà, on demande de réessayer plutôt
+    // que de risquer une écriture corrompue. Le verrou est relâché dans le finally.
+    lock = LockService.getScriptLock();
+    if (!lock.tryLock(20000)) {
+      return repondreJson({ error: 'Serveur momentanément occupé, réessaie dans un instant.' });
+    }
 
     var classeur = SpreadsheetApp.openById(SHEET_ID);
     var resultat;
@@ -279,7 +305,11 @@ function doPost(e) {
     // secondaire bloquant : n'échoue jamais l'action même si le rafraîchissement rate.
     if (resultat && !resultat.error) apresEcriture(classeur);
     return repondreJson(resultat);
-  } catch (erreur) { return repondreJson({ error: String(erreur) }); }
+  } catch (erreur) {
+    return repondreJson({ error: String(erreur) });
+  } finally {
+    if (lock) lock.releaseLock(); // toujours relâcher le verrou (sans erreur s'il n'était pas pris)
+  }
 }
 
 /* ===================== SÉCURITÉ (clés d'écriture) ===================== */
@@ -341,7 +371,14 @@ function ajouterEquipe(classeur, nom, categorie) {
   if (!categorie) return { error: 'La catégorie est vide.' };
   var onglet = classeur.getSheetByName('Equipes');
   var id = genererIdEquipe(onglet);
-  onglet.appendRow([id, nom, categorie, '']);
+  // On écrit en forçant le format TEXTE (@) de la ligne : un nom commençant par
+  // « = + - @ » n'est PAS interprété comme une formule Google Sheets (anti-injection de
+  // formule). getLastRow()+1 vise la même ligne que appendRow, mais permet de fixer le
+  // format AVANT d'écrire la valeur.
+  var ligne = onglet.getLastRow() + 1;
+  var plage = onglet.getRange(ligne, 1, 1, 4);
+  plage.setNumberFormat('@');
+  plage.setValues([[id, nom, categorie, '']]);
   return { ok: true, equipe: { id_equipe: id, nom_equipe: nom, categorie: categorie, poule: '' } };
 }
 
@@ -466,18 +503,28 @@ function autoriserDrive() {
   Logger.log('Accès Google Drive OK — dossier racine : ' + nom);
 }
 
+/**
+ * Écrit un paramètre GLOBAL (clé/valeur) dans la zone A de l'onglet Config. L'onglet Config
+ * contient deux zones : en haut les paramètres globaux (une ligne = nom/valeur), puis un
+ * séparateur (ligne « — … ») et le tableau des catégories (dont l'entête « categorie »).
+ * On veut garder les paramètres globaux GROUPÉS AU-DESSUS de ce séparateur :
+ *   1) si le paramètre existe déjà → on met à jour sa valeur ;
+ *   2) sinon → on l'insère juste avant la 1re ligne vide / le séparateur / l'entête catégories
+ *      (pour ne pas l'écrire au milieu du tableau des catégories) ;
+ *   3) à défaut → à la fin. Le format est forcé en texte (@) pour éviter toute interprétation.
+ */
 function ecrireParamGlobal(onglet, nom, valeur) {
   var dernier = onglet.getLastRow();
   var donnees = onglet.getRange(1, 1, dernier, 2).getValues();
   for (var i = 0; i < donnees.length; i++) {
-    if (donnees[i][0] === nom) {
+    if (donnees[i][0] === nom) { // 1) paramètre déjà présent → mise à jour
       var cellule = onglet.getRange(i + 1, 2);
       cellule.setNumberFormat('@');
       cellule.setValue(String(valeur));
       return;
     }
   }
-  var insertion = -1;
+  var insertion = -1; // 2) point d'insertion = début de zone catégories / 1re ligne vide
   for (var r = 1; r < donnees.length; r++) {
     var a = donnees[r][0];
     if (a === '' || a === null || String(a).charAt(0) === '—' || a === 'categorie') {
@@ -485,7 +532,7 @@ function ecrireParamGlobal(onglet, nom, valeur) {
       break;
     }
   }
-  if (insertion === -1) insertion = dernier + 1;
+  if (insertion === -1) insertion = dernier + 1; // 3) sinon à la fin
   onglet.insertRowsBefore(insertion, 1);
   var plage = onglet.getRange(insertion, 1, 1, 2);
   plage.setNumberFormat('@');
@@ -1361,18 +1408,28 @@ function clonerConfig(config) {
   return JSON.parse(JSON.stringify(config));
 }
 
+/**
+ * Round-robin « chacun contre chacun » par l'ALGORITHME DU CERCLE.
+ * Principe : on aligne les équipes sur deux rangées ; à chaque ronde on appaire l'équipe i
+ * de la rangée du haut avec l'équipe (n-1-i) de la rangée du bas. Puis on FIXE la 1re équipe
+ * et on fait TOURNER toutes les autres d'un cran (rotation) : après n-1 rondes, chaque équipe
+ * a rencontré toutes les autres exactement une fois. Si le nombre d'équipes est impair, on
+ * ajoute un « bye » (null) : l'équipe appariée au bye est au repos cette ronde-là.
+ * @return {Array<{a, b, round}>} la liste des matchs, avec le n° de ronde (pour l'ordonnancement).
+ */
 function tourneeToutesRondes(ids) {
   var matches = [];
   var arr = ids.slice();
   if (arr.length < 2) return matches;
-  if (arr.length % 2 === 1) arr.push(null);
+  if (arr.length % 2 === 1) arr.push(null); // bye pour un effectif impair
   var n = arr.length;
   var liste = arr.slice();
   for (var r = 0; r < n - 1; r++) {
     for (var i = 0; i < n / 2; i++) {
       var a = liste[i], b = liste[n - 1 - i];
-      if (a !== null && b !== null) matches.push({ a: a, b: b, round: r });
+      if (a !== null && b !== null) matches.push({ a: a, b: b, round: r }); // on saute les matchs contre le bye
     }
+    // Rotation : 1re équipe fixe, les autres tournent d'un cran (la dernière repasse en 2e).
     var fixe = liste[0];
     var reste = liste.slice(1);
     reste.unshift(reste.pop());

@@ -25,7 +25,6 @@ const MOT_CLE_CLUB = 'racing';
 let equipes = [];
 let matchs = [];
 let historique = [];
-let ongletActif = 'tournoi'; // 'tournoi' ou 'saison'
 const INTERVALLE_MS = 60000;
 let derniereSignature = '';
 
@@ -43,7 +42,6 @@ async function initPerfs() {
 
 /** Bascule d'onglet (affiche/masque les deux vues). */
 function basculer(cible) {
-  ongletActif = cible;
   document.getElementById('onglet-tournoi').classList.toggle('actif', cible === 'tournoi');
   document.getElementById('onglet-saison').classList.toggle('actif', cible === 'saison');
   document.getElementById('vue-tournoi').hidden = (cible !== 'tournoi');
