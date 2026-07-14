@@ -133,9 +133,10 @@ function majInfosTournoi() {
   }
 }
 
-/** URL d'affichage d'une affiche stockée dans Drive (miniature CDN, largeur maxi w). */
+/** URL d'affichage d'une affiche stockée dans Drive (CDN lh3, largeur maxi w).
+ *  lh3.googleusercontent.com (et non drive.google.com/thumbnail, qui bloque le hotlinking). */
 function urlAffiche(id, largeur) {
-  return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + (largeur || 1000);
+  return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (largeur || 1000);
 }
 
 /** Quand on choisit un fichier : on le redimensionne et on affiche un aperçu immédiat. */
