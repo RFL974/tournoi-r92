@@ -317,10 +317,10 @@ function afficherHoraires(global) {
     '<section class="carte">' +
       '<h2>Horaires de la journée</h2>' +
       '<form id="form-horaires" class="form-reglages">' +
-        champHeure('heure_debut', 'Heure de début', val('heure_debut')) +
+        champHeure('heure_debut', 'Heure de début des matchs', val('heure_debut')) +
         // Heure de fin + case "auto"
         '<div class="champ-reglage">' +
-          '<label for="h-heure_fin">Heure de fin</label>' +
+          '<label for="h-heure_fin">Heure de fin des matchs</label>' +
           '<span class="fin-groupe">' +
             '<label class="mini-toggle"><input type="checkbox" id="h-heure_fin_auto" name="heure_fin_auto"' +
               (auto ? ' checked' : '') + '> auto</label>' +
