@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Page publique « Le tournoi » : nouveau design aux couleurs du site vitrine — 2026-07-14
+- La page publique adopte la **charte du site vitrine boutique-r92** (navy / bleu ciel / bleu vif,
+  polices **Barlow** + **Barlow Condensed**) au lieu de l'ancien thème sombre : en-tête navy avec
+  logo R92 + lien « ← Retour au site », **bandeau de titre** en dégradé navy, contenu dans une
+  **carte blanche**, **pied de page** navy.
+- Nouvelle feuille **`frontend/css/tournoi-public.css`** DÉDIÉE à `tournoi.html` (thème clair).
+  Les pages **admin / saisie / perfs gardent** leur `styles.css` (thème sombre) — aucun impact.
+- Tous les composants fonctionnels (onglets, filtres, cartes de match, derniers scores, tableaux
+  de classement, écran « à venir ») ont été recolorés en thème clair ; logos/favicon/grain servis
+  depuis les assets du site vitrine. **Aucun changement de logique** (`tournoi.js` intact).
+
 ### Admin équipes : renommer + supprimer une catégorie entière — 2026-07-14
 - **Renommer une équipe** sans la supprimer : bouton **« Modifier »** par équipe → champ d'édition
   en ligne (Entrée = enregistrer, Échap = annuler ; nom mis en MAJUSCULES). Nouvelle action backend

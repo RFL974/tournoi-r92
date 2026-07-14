@@ -1,0 +1,455 @@
+/* =========================================================
+   LE TOURNOI — page publique
+   ---------------------------------------------------------
+   Feuille de style DÉDIÉE à tournoi.html, calquée sur la
+   charte du site vitrine (boutique-r92) : navy / bleu ciel /
+   bleu vif, polices Barlow. Les pages admin/saisie/perfs
+   gardent, elles, leur feuille styles.css (thème sombre).
+   Pensé "mobile d'abord".
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. COULEURS DE LA MARQUE (identiques au site vitrine)
+   --------------------------------------------------------- */
+:root {
+  --navy:        #0C1C2E;
+  --navy-clair:  #16304a;
+  --ciel:        #B8D8F8;
+  --bleu-vif:    #2E8FE0;
+  --blanc:       #FFFFFF;
+  --gris-texte:  #3B4A63;
+  --surface-clair: #F5F9FD;
+  --bordure:     #e6edf5;
+  --ombre:       0 1px 3px rgba(12, 28, 46, 0.06);
+
+  /* Résultats (contrastés pour fond clair) */
+  --vert:  #1a8a4a;   /* victoire */
+  --rouge: #c0392b;   /* défaite  */
+
+  --largeur-max: 900px;
+  --rayon: 14px;
+}
+
+/* ---------------------------------------------------------
+   2. BASE
+   --------------------------------------------------------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Barlow', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  color: var(--gris-texte);
+  background: var(--blanc);
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+/* Grain très subtil, comme sur le site vitrine (n'attrape aucun clic) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: soft-light;
+  background: url('https://rfl974.github.io/boutique-r92/assets/img/noise.svg') repeat;
+  background-size: 200px 200px;
+}
+a { color: var(--bleu-vif); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.conteneur {
+  width: 100%;
+  max-width: var(--largeur-max);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Lien d'évitement (accessibilité clavier) */
+.lien-evitement {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--bleu-vif);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 0 0 8px 0;
+  z-index: 10000;
+}
+.lien-evitement:focus { left: 0; }
+
+/* ---------------------------------------------------------
+   3. EN-TÊTE (navy, logo + retour au site)
+   --------------------------------------------------------- */
+.entete {
+  background: var(--navy);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+.entete .conteneur {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.logo img { height: 48px; width: auto; display: block; }
+.lien-retour {
+  color: var(--ciel);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+.lien-retour:hover { background: var(--navy-clair); color: var(--blanc); text-decoration: none; }
+
+/* ---------------------------------------------------------
+   4. BANDEAU DE TITRE (dégradé navy + fine barre bleue)
+   --------------------------------------------------------- */
+.bandeau-titre {
+  position: relative;
+  background: linear-gradient(135deg, var(--navy-clair), var(--navy));
+  color: var(--blanc);
+  padding: 44px 0;
+  overflow: hidden;
+}
+.bandeau-titre::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--bleu-vif);
+}
+.bandeau-titre > .conteneur { position: relative; z-index: 1; }
+.sous-titre {
+  font-family: 'Barlow Condensed', 'Segoe UI', sans-serif;
+  color: #7db8ec;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+.titre-page {
+  font-family: 'Barlow Condensed', 'Segoe UI', sans-serif;
+  font-weight: 800;
+  font-size: 2.2rem;
+  letter-spacing: 0.5px;
+  color: var(--blanc);
+  line-height: 1.05;
+}
+.chapo { color: #c3d6ec; font-size: 1.1rem; margin-top: 12px; max-width: 640px; }
+
+/* ---------------------------------------------------------
+   5. ZONE DE CONTENU + CARTE
+   --------------------------------------------------------- */
+.section { padding: 32px 0 48px; }
+.carte-app {
+  background: var(--blanc);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  padding: 20px 18px 24px;
+}
+
+/* ---------------------------------------------------------
+   6. BOUTONS
+   --------------------------------------------------------- */
+.btn, .bouton {
+  display: inline-block;
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  padding: 8px 16px;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.btn:hover, .bouton:hover { transform: translateY(-1px); text-decoration: none; }
+/* Rafraîchir : contour bleu sur fond clair */
+.bouton {
+  background: transparent;
+  color: var(--bleu-vif);
+  border-color: var(--bleu-vif);
+}
+.bouton:hover { background: var(--bleu-vif); color: var(--blanc); }
+.bouton:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+/* ---------------------------------------------------------
+   7. CHAMPS (menus déroulants équipe / catégorie)
+   --------------------------------------------------------- */
+.r-input {
+  width: 100%;
+  font-family: 'Barlow', sans-serif;
+  font-size: 1rem;
+  color: var(--navy);
+  background: var(--blanc);
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.r-input:focus { outline: none; border-color: var(--bleu-vif); box-shadow: 0 0 0 3px rgba(46, 143, 224, 0.15); }
+.mp-label {
+  display: block;
+  color: var(--navy);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+#select-equipe { margin-bottom: 10px; }
+.mp-filtre { margin-bottom: 16px; }
+
+/* ---------------------------------------------------------
+   8. BARRE "EN DIRECT" (rafraîchir + heure)
+   --------------------------------------------------------- */
+.live-barre {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.live-maj {
+  color: #8a97a6;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem;
+}
+
+/* ---------------------------------------------------------
+   9. BANDEAU DE DON (accent doré, ressort comme un CTA)
+   --------------------------------------------------------- */
+.don-bandeau {
+  display: block;
+  text-align: center;
+  background: linear-gradient(90deg, #c8901a, #e9b53e);
+  color: #241500;
+  text-decoration: none;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.3px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+.don-bandeau:hover { filter: brightness(1.05); text-decoration: none; }
+
+/* ---------------------------------------------------------
+   10. ONGLETS (Mon équipe / Classements) — contrôle segmenté
+   --------------------------------------------------------- */
+.onglets { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 18px; }
+.onglet {
+  flex: 1 1 auto;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 1.02rem;
+  color: var(--navy);
+  background: var(--surface-clair);
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.onglet:hover { border-color: var(--bleu-vif); }
+.onglet.actif {
+  background: var(--bleu-vif);
+  color: var(--blanc);
+  border-color: var(--bleu-vif);
+}
+
+/* ---------------------------------------------------------
+   11. SOUS-TITRES DE PHASE / SECTIONS INTERNES
+   --------------------------------------------------------- */
+.planning-phase {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--navy);
+  margin: 22px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--surface-clair);
+}
+.live-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: var(--navy);
+  margin: 4px 0 10px;
+}
+.live-cat {
+  font-family: 'Barlow Condensed', sans-serif;
+  color: var(--bleu-vif);
+  font-size: 1.15rem;
+  margin: 16px 0 4px;
+}
+.live-poule {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  color: var(--navy);
+  margin: 10px 0 4px;
+}
+
+/* ---------------------------------------------------------
+   12. CARTES DE MATCH (Mon équipe)
+   --------------------------------------------------------- */
+.match {
+  background: var(--surface-clair);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.match-termine { border-color: rgba(26, 138, 74, 0.35); }
+.match-meta {
+  color: #8a97a6;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+.mp-ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mp-adv { font-weight: 700; font-size: 1.05rem; color: var(--navy); }
+.mp-resultat { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
+.mp-resultat.gagne { color: var(--vert); }
+.mp-resultat.perd  { color: var(--rouge); }
+.mp-resultat.nul   { color: var(--bleu-vif); }
+.mp-avenir { color: #8a97a6; font-style: italic; }
+
+/* ---------------------------------------------------------
+   13. DERNIERS SCORES (scoreboard)
+   --------------------------------------------------------- */
+.score-ligne {
+  background: var(--surface-clair);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-bottom: 8px;
+}
+.score-meta {
+  color: #8a97a6;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+}
+.score-corps {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  color: var(--navy);
+}
+.score-corps > span:first-child { text-align: right; }
+.score-corps > span:last-child  { text-align: left; }
+.score-corps .gagnant { font-weight: 700; color: var(--vert); }
+.score-chiffres {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  white-space: nowrap;
+  text-align: center;
+  min-width: 72px;
+  color: var(--navy);
+}
+
+/* ---------------------------------------------------------
+   14. TABLEAUX DE CLASSEMENT
+   --------------------------------------------------------- */
+.table-scroll { overflow-x: auto; margin-top: 8px; }
+.table-planning {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.table-planning th,
+.table-planning td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--bordure);
+  white-space: nowrap;
+}
+.table-planning th {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--bleu-vif);
+  font-size: 0.85rem;
+}
+.table-classement th,
+.table-classement td { text-align: center; }
+.table-classement .col-equipe { text-align: left; font-weight: 600; color: var(--navy); }
+.table-classement .col-pts { font-weight: 800; color: var(--navy); }
+/* Surlignage de l'équipe choisie */
+.fav-ligne { background: rgba(46, 143, 224, 0.10); }
+
+/* Largeurs fixes pour aligner les tableaux complets d'une poule à l'autre */
+.cl-full { table-layout: fixed; }
+.cl-full th:nth-child(1), .cl-full td:nth-child(1) { width: 32px; }
+.cl-full th:nth-child(2), .cl-full td:nth-child(2) { width: 120px; }
+.cl-full th:nth-child(n+3), .cl-full td:nth-child(n+3) { width: 44px; }
+
+/* ---------------------------------------------------------
+   15. MESSAGES & ÉTAT VIDE
+   --------------------------------------------------------- */
+.vide { color: #8a97a6; font-style: italic; }
+.message {
+  text-align: center;
+  padding: 20px;
+  color: #8a97a6;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+}
+
+/* ---------------------------------------------------------
+   16. ÉCRAN "À VENIR" (tournoi pas encore publié)
+   --------------------------------------------------------- */
+.avenir { text-align: center; padding: 40px 16px; }
+.avenir-emoji { font-size: 3.4rem; line-height: 1; }
+.avenir-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 1.9rem;
+  color: var(--navy);
+  margin: 14px 0 8px;
+}
+.avenir-texte { color: var(--gris-texte); max-width: 40ch; margin: 0 auto; }
+
+/* ---------------------------------------------------------
+   17. PIED DE PAGE (navy, comme le site vitrine)
+   --------------------------------------------------------- */
+.pied {
+  background: var(--navy);
+  color: var(--ciel);
+  padding: 36px 0 24px;
+  text-align: center;
+  clip-path: polygon(0 24px, 100% 0, 100% 100%, 0 100%);
+}
+.pied-logo { height: 52px; width: auto; margin: 0 auto 14px; }
+.pied-liens { margin: 6px 0 14px; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; }
+.pied-liens a { color: var(--ciel); font-weight: 600; }
+.pied-liens a:hover { color: var(--blanc); }
+.pied-sep { margin: 0 10px; color: #7f9bb8; }
+.pied p { font-size: 0.85rem; color: #7f9bb8; }
+
+/* ---------------------------------------------------------
+   18. TABLETTE / ORDINATEUR
+   --------------------------------------------------------- */
+@media (min-width: 700px) {
+  .titre-page { font-size: 2.8rem; }
+  .carte-app { padding: 28px 26px 32px; }
+  .onglet { flex: 0 1 auto; padding: 10px 26px; }
+}
+@media (max-width: 480px) {
+  .conteneur { padding: 0 16px; }
+  .titre-page { font-size: 1.9rem; }
+  .bandeau-titre { padding: 34px 0; }
+}

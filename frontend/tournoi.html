@@ -4,29 +4,52 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Le tournoi — Génération R92</title>
+  <meta name="theme-color" content="#0C1C2E">
+  <meta name="description" content="Le tournoi de rugby de Génération R92 en direct : poules, planning et scores en temps réel.">
+  <link rel="icon" type="image/svg+xml" href="https://rfl974.github.io/boutique-r92/assets/img/favicon.svg">
 
+  <!-- Polices de la charte du site vitrine (Barlow + Barlow Condensed) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/styles.css">
+  <!-- Feuille de style DÉDIÉE à la page publique (thème clair, calqué sur boutique-r92) -->
+  <link rel="stylesheet" href="css/tournoi-public.css">
 </head>
 <body>
+
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
 
   <!--
     PAGE PUBLIQUE UNIQUE. Deux onglets : « Mon équipe » (matchs + classements d'une équipe)
     et « Classements » (derniers scores du tournoi + poules + niveaux croisés). Un seul appel
     réseau (getAll) et un seul rafraîchissement auto alimentent les 2 vues. Lecture seule.
   -->
-  <div class="conteneur">
 
-    <header class="entete">
-      <div class="sous-titre">Génération R92</div>
-      <h1>Le tournoi</h1>
-    </header>
+  <!-- ============ EN-TÊTE (navy, comme le site vitrine) ============ -->
+  <header class="entete">
+    <div class="conteneur">
+      <a class="logo" href="https://rfl974.github.io/boutique-r92/index.html">
+        <img src="https://rfl974.github.io/boutique-r92/assets/img/logo-r92.png" alt="Génération R92" width="700" height="558" decoding="async">
+      </a>
+      <a class="lien-retour" href="https://rfl974.github.io/boutique-r92/index.html">← Retour au site</a>
+    </div>
+  </header>
 
-    <main>
-      <section class="carte">
+  <!-- ============ BANDEAU DE TITRE (dégradé navy) ============ -->
+  <section class="bandeau-titre">
+    <div class="conteneur">
+      <p class="sous-titre">En direct</p>
+      <h1 class="titre-page">Le tournoi</h1>
+      <p class="chapo">Poules, planning et scores en temps réel. Choisis ton équipe pour suivre tes matchs.</p>
+    </div>
+  </section>
+
+  <!-- ============ CONTENU ============ -->
+  <main id="contenu" class="section">
+    <div class="conteneur">
+      <div class="carte-app">
+
         <!-- Écran « à venir » : affiché tant que le tournoi n'est pas publié depuis l'admin. -->
         <div id="tournoi-avenir" hidden>
           <div class="avenir">
@@ -76,10 +99,23 @@
             <div class="message">Chargement des classements…</div>
           </div>
         </div>
-      </section>
-    </main>
 
-  </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============ PIED DE PAGE (navy) ============ -->
+  <footer class="pied">
+    <div class="conteneur">
+      <img class="pied-logo" src="https://rfl974.github.io/boutique-r92/assets/img/logo-r92.png" alt="Génération R92" width="700" height="558" decoding="async">
+      <p class="pied-liens">
+        <a href="https://rfl974.github.io/boutique-r92/index.html">Site de l'association</a>
+        <span class="pied-sep">·</span>
+        <a href="https://rfl974.github.io/boutique-r92/contact.html">Contact</a>
+      </p>
+      <p>© Génération R92 — Le tournoi en direct</p>
+    </div>
+  </footer>
 
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
