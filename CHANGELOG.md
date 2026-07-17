@@ -5,6 +5,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : bouton de réinitialisation du tournoi — 2026-07-17
+- Nouvelle **zone de danger** sur la page admin avec un bouton **« 🧹 Réinitialiser le tournoi »**
+  (double confirmation). Il remet le tournoi à zéro pour repartir d'une base vierge : supprime
+  toutes les **catégories**, toutes les **équipes**, toutes les **poules** et tous les **matchs**
+  (planning + scores), efface les **infos du tournoi** (nom, date, lieu, description, affiche —
+  affiche Drive mise à la corbeille), et repasse le tournoi en **masqué** s'il était public.
+- **Conservés** : les réglages « Horaires de la journée » (heure début/fin, pauses…) et le
+  **journal de saison** (onglet Historique, utilisé par la page Perfs).
+- Nouvelle action backend `reinitialiserTournoi` (protégée par la clé ADMIN) + helpers
+  `supprimerToutesCategories` et `effacerParamGlobal`.
+- ⚠️ Nécessite de **recopier `Code.gs` + redéployer** (nouvelle action backend).
+
 ### Audit complet (code + sécurité + doc), nettoyage et documentation — 2026-07-14
 - **Audit** du backend, du frontend, de la sécurité et de la documentation (4 passes).
 - **Correctifs code** (sans changement fonctionnel) : `LockService` autour de `doPost` (écritures

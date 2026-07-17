@@ -97,6 +97,9 @@ async function initAdmin() {
   // Bouton publier / masquer le tournoi.
   document.getElementById('bouton-publier').addEventListener('click', onPublier);
 
+  // Bouton de réinitialisation complète du tournoi (zone de danger).
+  document.getElementById('bouton-reinitialiser').addEventListener('click', onReinitialiser);
+
   // Les infos du tournoi ne se sauvegardent PAS via un bouton dédié : c'est
   // « Générer le tournoi » qui les enregistre (voir onPublier). On empêche juste
   // la soumission du formulaire (touche Entrée) qui rechargerait la page.
@@ -254,6 +257,62 @@ async function onPublier() {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
     bouton.disabled = false;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   RÉINITIALISATION (remise à zéro complète du tournoi)
+   -------------------------------------------------------------------------- */
+
+/**
+ * Réinitialise entièrement le tournoi (catégories, équipes, poules, matchs, infos)
+ * après une double confirmation. Conserve les réglages « Horaires de la journée » et
+ * l'historique de saison. Recharge toute la page ensuite.
+ */
+async function onReinitialiser() {
+  const message = document.getElementById('message-reinitialisation');
+  const bouton = document.getElementById('bouton-reinitialiser');
+
+  // Double confirmation : l'action est irréversible.
+  if (!confirm('Réinitialiser le tournoi ?\n\n' +
+               'Cela supprime définitivement les catégories, les équipes, les poules, ' +
+               'les matchs (planning + scores) et les infos du tournoi.\n' +
+               'Les réglages horaires et l\'historique de saison sont conservés.')) return;
+  if (!confirm('Confirmer la remise à zéro ? Cette action est IRRÉVERSIBLE.')) return;
+
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Réinitialisation…';
+  afficherMessage(message, 'Réinitialisation en cours…', 'ok');
+
+  try {
+    const res = await ecrireAdmin('reinitialiserTournoi', {});
+
+    // On recharge tout l'état depuis le backend et on ré-affiche la page.
+    const data = await apiGet('getAll');
+    configCourante = data.config;
+    equipesCourantes = data.equipes;
+    document.getElementById('reglages').innerHTML =
+      afficherHoraires(data.config.global) + afficherCategories(data.config.categories);
+    remplirSelectCategories(data.config.categories);
+    afficherEquipes(data.equipes);
+    afficherPlanning(data.poules, data.matchs);
+    document.getElementById('arbitrages').innerHTML = '';
+    majInfosTournoi();
+    majPublication();
+
+    const nbC = (res && res.nb_categories != null) ? res.nb_categories : '?';
+    const nbE = (res && res.nb_equipes != null) ? res.nb_equipes : '?';
+    const nbP = (res && res.nb_poules != null) ? res.nb_poules : '?';
+    const nbM = (res && res.nb_matchs != null) ? res.nb_matchs : '?';
+    afficherMessage(message,
+      '✅ Tournoi réinitialisé. Supprimés : ' + nbC + ' catégorie(s), ' + nbE +
+      ' équipe(s), ' + nbP + ' poule(s), ' + nbM + ' match(s). Tournoi masqué.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
   }
 }
 

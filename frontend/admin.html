@@ -120,6 +120,29 @@
         <div id="message-publication" class="message-form"></div>
       </section>
 
+      <!-- 7) Réinitialisation : remet le tournoi à zéro (zone de danger) -->
+      <section class="carte carte-danger" id="bloc-reinitialisation">
+        <h2>Réinitialiser le tournoi</h2>
+        <p class="note-generation">
+          Remet le tournoi <strong>à zéro</strong> pour repartir d'une base vierge. Cela
+          <strong>supprime définitivement</strong> :
+        </p>
+        <ul class="liste-danger">
+          <li>toutes les <strong>catégories</strong> ;</li>
+          <li>toutes les <strong>équipes</strong> ;</li>
+          <li>toutes les <strong>poules</strong> et tous les <strong>matchs</strong> (planning + scores) ;</li>
+          <li>les <strong>infos du tournoi</strong> (nom, date, lieu, description, affiche).</li>
+        </ul>
+        <p class="note-generation">
+          Le tournoi repasse en <strong>masqué</strong> s'il était public.<br>
+          ✅ Sont <strong>conservés</strong> : les réglages « Horaires de la journée » et
+          l'historique des saisons (page Perfs).<br>
+          ⚠️ Cette action est <strong>irréversible</strong>.
+        </p>
+        <button id="bouton-reinitialiser" class="bouton bouton-danger">🧹 Réinitialiser le tournoi</button>
+        <div id="message-reinitialisation" class="message-form"></div>
+      </section>
+
     </main>
 
   </div>
