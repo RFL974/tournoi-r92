@@ -5,6 +5,23 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : audit UX — 3 correctifs de flux — 2026-07-18
+Suite à un audit UX de la page administration, trois pièges du parcours sont corrigés
+(frontend uniquement, **aucun changement backend — pas de redéploiement nécessaire**) :
+- **Infos du tournoi enregistrables à tout moment** : ajout d'un bouton **« Enregistrer les
+  infos »** dédié. Avant, les infos n'étaient sauvegardées qu'au clic sur « Générer le tournoi »
+  et devenaient **non modifiables une fois publié** (il fallait dépublier). Elles sont désormais
+  modifiables à tout moment, même après publication (et toujours enregistrées aussi à la
+  publication, par sécurité).
+- **Fin de l'ambiguïté « Générer »** : le bloc de publication s'appelle maintenant **« Publier le
+  tournoi »** (bouton **« 🚀 Publier le tournoi »**) pour ne plus être confondu avec « Générer
+  poules et planning ».
+- **Phase après-midi : état de préparation** : une ligne indique l'avancement des scores du matin
+  (ex. « ✅ 12/12 saisis — prêt » / « ⏳ 8/12 saisis ») et le bouton **« 🏉 Générer l'après-midi »**
+  reste **désactivé tant que tous les scores du matin ne sont pas saisis**, au lieu d'échouer sur
+  une erreur serveur au clic.
+- Mise à jour du mode d'emploi ([`docs/guide-utilisateur.md`](docs/guide-utilisateur.md), §1.5–1.7).
+
 ### Admin : bouton de réinitialisation du tournoi — 2026-07-17
 - Nouvelle **zone de danger** sur la page admin avec un bouton **« 🧹 Réinitialiser le tournoi »**
   (double confirmation). Il remet le tournoi à zéro pour repartir d'une base vierge : supprime

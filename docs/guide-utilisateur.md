@@ -125,16 +125,20 @@ un **✅** marque celles qui **tiennent le créneau**. Un clic **applique** le r
 Le bouton **🏉 Générer l'après-midi**. Principe : les équipes de **même rang de poule** jouent
 ensemble l'après-midi (les 1ᵉʳ de poule entre eux → **Niveau 1**, les 2ᵉ → **Niveau 2**, etc.).
 
-- **Nécessite que tous les scores du matin soient saisis** (le classement du matin détermine les
-  niveaux).
+- Une **ligne d'état** au-dessus du bouton indique l'avancement des scores du matin
+  (ex. « ✅ 12/12 saisis — prêt à générer » ou « ⏳ 8/12 saisis »). Le **bouton reste désactivé**
+  tant que **tous les scores du matin ne sont pas saisis** (le classement du matin détermine les
+  niveaux) : plus besoin de cliquer pour découvrir qu'il manque des scores.
 - **N'efface pas** les matchs du matin.
 
 ### 1.6 Infos du tournoi + affiche
 Alimentent la **carte d'actualité** et la **page d'article** du site vitrine (boutique-r92) : nom,
 date, lieu, description, et une **affiche** (image, redimensionnée puis stockée dans Google Drive).
-Ces infos sont enregistrées automatiquement au clic sur **Générer le tournoi** (bloc suivant).
+On les sauvegarde avec le bouton **Enregistrer les infos**. Elles sont **modifiables à tout moment,
+même après publication** (pour corriger une faute de frappe sans dépublier). Par sécurité, elles
+sont aussi enregistrées lors de la publication.
 
-### 1.7 Générer le tournoi (publication)
+### 1.7 Publier le tournoi
 Rend le tournoi **visible du public**. Tant qu'il n'est pas publié, les visiteurs voient un écran
 « à venir ». Indépendant de la génération des poules : on prépare tout, on publie quand c'est prêt.
 Le même bouton permet de **masquer** à nouveau.
