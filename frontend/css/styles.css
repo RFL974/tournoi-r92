@@ -636,6 +636,9 @@ select.r-input { cursor: pointer; }
 /* État de publication dans l'admin */
 .publication-etat { color: var(--bleu-ciel); margin: 4px 0 10px; }
 
+/* État de préparation de la phase après-midi (scores du matin saisis) */
+.apresmidi-etat { color: var(--bleu-ciel); margin: 4px 0 10px; }
+
 /* Aperçu de l'affiche du tournoi dans l'admin */
 .apercu-affiche { margin: 4px 0 12px; }
 .apercu-affiche img {

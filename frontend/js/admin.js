@@ -21,9 +21,10 @@ const CHAMPS_CATEGORIE = [
   { cle: 'recup_entre_matchs_min', label: 'Récup. entre matchs (min)', type: 'number' }
 ];
 
-/* On garde en mémoire la config et les équipes chargées (pour l'affichage). */
+/* On garde en mémoire la config, les équipes et les matchs chargés (pour l'affichage). */
 let configCourante = { global: {}, categories: [] };
 let equipesCourantes = [];
+let matchsCourants = [];
 /* Affiche du tournoi choisie mais pas encore enregistrée (Data URI redimensionné). */
 let afficheDataURI = '';
 
@@ -50,6 +51,7 @@ async function initAdmin() {
     const data = await apiGet('getAll'); // { config, equipes, poules, matchs }
     configCourante = data.config;
     equipesCourantes = data.equipes;
+    matchsCourants = data.matchs || [];
 
     // 1) Réglages (horaires + catégories)
     zoneReglages.innerHTML =
@@ -61,6 +63,7 @@ async function initAdmin() {
 
     // 3) Poules & planning déjà générés (s'il y en a)
     afficherPlanning(data.poules, data.matchs);
+    majApresMidi(); // état de préparation de la phase après-midi
 
     // 4) Infos du tournoi (nom / date / lieu / description) + état de publication
     majInfosTournoi();
@@ -100,10 +103,13 @@ async function initAdmin() {
   // Bouton de réinitialisation complète du tournoi (zone de danger).
   document.getElementById('bouton-reinitialiser').addEventListener('click', onReinitialiser);
 
-  // Les infos du tournoi ne se sauvegardent PAS via un bouton dédié : c'est
-  // « Générer le tournoi » qui les enregistre (voir onPublier). On empêche juste
-  // la soumission du formulaire (touche Entrée) qui rechargerait la page.
+  // Les infos du tournoi se sauvegardent via leur bouton « Enregistrer les infos »
+  // (onEnregistrerInfos) — et aussi lors de la publication (onPublier), par sécurité.
+  // On empêche juste la soumission du formulaire (touche Entrée) qui rechargerait la page.
   document.getElementById('form-infos-tournoi').addEventListener('submit', function (e) { e.preventDefault(); });
+  // Bouton dédié : enregistre les infos (nom/date/lieu/description + affiche) à tout moment,
+  // indépendamment de la publication.
+  document.getElementById('bouton-enregistrer-infos').addEventListener('click', onEnregistrerInfos);
   // Choix d'un fichier d'affiche → aperçu immédiat.
   document.querySelector('#form-infos-tournoi [name="tournoi_affiche"]')
     .addEventListener('change', onChoisirAffiche);
@@ -195,6 +201,37 @@ function lireInfosTournoi() {
   };
 }
 
+/**
+ * Enregistre les infos du tournoi (nom/date/lieu/description + affiche éventuelle),
+ * indépendamment de la publication. Utilisable à tout moment, même après publication
+ * (pour corriger une faute de frappe sans avoir à dépublier).
+ */
+async function onEnregistrerInfos() {
+  const message = document.getElementById('message-infos-tournoi');
+  const bouton = document.getElementById('bouton-enregistrer-infos');
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Enregistrement…';
+  try {
+    afficherMessage(message, 'Enregistrement des infos…', 'ok');
+    await ecrireAdmin('enregistrerInfosTournoi', lireInfosTournoi());
+    if (afficheDataURI) {
+      afficherMessage(message, "Envoi de l'affiche…", 'ok');
+      await ecrireAdmin('enregistrerAffiche', { affiche: afficheDataURI });
+    }
+    // On recharge la config pour refléter ce qui est réellement enregistré (dont l'affiche).
+    configCourante = await apiGet('getConfig');
+    majInfosTournoi();
+    document.getElementById('form-infos-tournoi').tournoi_affiche.value = ''; // vide le champ fichier
+    afficherMessage(message, '✅ Infos enregistrées.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
+}
+
 /* --------------------------------------------------------------------------
    PUBLICATION (rendre le tournoi visible ou non sur la page publique)
    -------------------------------------------------------------------------- */
@@ -214,12 +251,12 @@ function majPublication() {
     bouton.textContent = '🙈 Masquer le tournoi';
   } else {
     etat.textContent = '⚪️ Non publié (les visiteurs voient « à venir »)';
-    bouton.textContent = '🚀 Générer le tournoi (publier)';
+    bouton.textContent = '🚀 Publier le tournoi';
   }
 }
 
 /**
- * « Générer le tournoi » (publier) OU « Masquer ». À la génération, on enregistre d'abord
+ * « Publier le tournoi » OU « Masquer ». À la publication, on enregistre d'abord
  * les infos saisies (nom/date/lieu/description) + l'affiche éventuelle, PUIS on publie.
  * Le masquage, lui, ne fait que dépublier.
  */
@@ -228,7 +265,7 @@ async function onPublier() {
   const bouton = document.getElementById('bouton-publier');
   const publier = !estPublie(); // on bascule vers l'état inverse
   const question = publier
-    ? 'Générer et publier le tournoi ?\n\nLes infos saisies (nom, date, lieu, description, affiche) seront enregistrées, et le tournoi deviendra visible du public.'
+    ? 'Publier le tournoi ?\n\nLe tournoi deviendra visible du public. Les infos saisies (nom, date, lieu, description, affiche) seront aussi enregistrées.'
     : 'Masquer le tournoi ? Les visiteurs reverront l\'écran « à venir ».';
   if (!confirm(question)) return;
 
@@ -252,7 +289,7 @@ async function onPublier() {
     majInfosTournoi();
     document.getElementById('form-infos-tournoi').tournoi_affiche.value = ''; // vide le champ fichier
     majPublication();
-    afficherMessage(message, publier ? '✅ Tournoi généré et publié.' : '✅ Tournoi masqué.', 'ok');
+    afficherMessage(message, publier ? '✅ Tournoi publié.' : '✅ Tournoi masqué.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
@@ -292,12 +329,14 @@ async function onReinitialiser() {
     const data = await apiGet('getAll');
     configCourante = data.config;
     equipesCourantes = data.equipes;
+    matchsCourants = data.matchs || [];
     document.getElementById('reglages').innerHTML =
       afficherHoraires(data.config.global) + afficherCategories(data.config.categories);
     remplirSelectCategories(data.config.categories);
     afficherEquipes(data.equipes);
     afficherPlanning(data.poules, data.matchs);
     document.getElementById('arbitrages').innerHTML = '';
+    majApresMidi();
     majInfosTournoi();
     majPublication();
 
@@ -915,15 +954,45 @@ async function genererMaintenant() {
     const data = await apiGet('getAll');
     configCourante = data.config;
     equipesCourantes = data.equipes;
+    matchsCourants = data.matchs || [];
     document.getElementById('reglages').innerHTML =
       afficherHoraires(data.config.global) + afficherCategories(data.config.categories);
     remplirSelectCategories(data.config.categories);
     afficherPlanning(data.poules, data.matchs);
+    majApresMidi(); // le matin vient de changer → recalcul de l'état
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
     bouton.disabled = false;
     bouton.textContent = texteBouton;
+  }
+}
+
+/**
+ * Met à jour l'état de préparation de la phase après-midi et l'activation du bouton.
+ * Le bouton n'est actif que si TOUS les scores du matin sont saisis (sinon la
+ * génération échouerait côté serveur : on l'indique à l'avance plutôt qu'en erreur).
+ */
+function majApresMidi() {
+  const etat = document.getElementById('etat-scores-matin');
+  const bouton = document.getElementById('bouton-apresmidi');
+  if (!etat || !bouton) return;
+
+  // Matchs du matin = tout ce qui n'est pas la phase de classement (après-midi).
+  const matin = (matchsCourants || []).filter(function (m) { return String(m.phase) !== 'classement'; });
+  const total = matin.length;
+  const saisis = matin.filter(function (m) { return estTermine(m.statut); }).length;
+
+  if (total === 0) {
+    etat.textContent = '⚪️ Génère d\'abord les poules et le planning du matin.';
+    bouton.disabled = true;
+  } else if (saisis === total) {
+    etat.textContent = '✅ ' + saisis + '/' + total + ' saisis — prêt à générer.';
+    bouton.disabled = false;
+  } else {
+    etat.textContent = '⏳ ' + saisis + '/' + total +
+      ' saisis — complète tous les scores du matin (page Saisie) avant de générer.';
+    bouton.disabled = true;
   }
 }
 
@@ -951,7 +1020,9 @@ async function onGenererApresMidi() {
     // On recharge le planning (matin + après-midi).
     const data = await apiGet('getAll');
     equipesCourantes = data.equipes;
+    matchsCourants = data.matchs || [];
     afficherPlanning(data.poules, data.matchs);
+    majApresMidi();
   } catch (erreur) {
     // Les garde-fous backend (scores du matin incomplets…) arrivent ici.
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
@@ -1124,6 +1195,12 @@ function afficherPlanning(poules, matchs) {
 function afficherMessage(element, texte, type) {
   element.textContent = texte;
   element.className = 'message-form ' + (type === 'ok' ? 'ok' : 'ko');
+}
+
+/** Vrai si le statut d'un match vaut « terminé » (score saisi), quelle que soit la forme
+ *  du « é » (NFC/NFD) : le Sheet renvoie parfois un « é » décomposé, on teste « termin ». */
+function estTermine(statut) {
+  return /^\s*termin/i.test(String(statut));
 }
 
 /** Neutralise les caractères spéciaux HTML (sécurité d'affichage). */
