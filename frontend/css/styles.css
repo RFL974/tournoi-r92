@@ -270,6 +270,22 @@ select.r-input { cursor: pointer; }
 .bouton:hover { background: #2477bd; }
 .bouton:disabled { opacity: 0.6; cursor: default; }
 
+/* Bouton d'action destructive (réinitialisation) : rouge pour attirer l'attention. */
+.bouton-danger { background: #c0392b; }
+.bouton-danger:hover { background: #a93226; }
+
+/* Carte « zone de danger » : liseré rouge pour la distinguer des cartes normales. */
+.carte-danger {
+  border: 1px solid rgba(255, 120, 120, 0.4);
+  border-left: 4px solid #c0392b;
+}
+.carte-danger h2 { color: #ff9b8f; }
+.liste-danger {
+  margin: 4px 0 12px 20px;
+  color: var(--bleu-ciel);
+}
+.liste-danger li { margin-bottom: 4px; }
+
 /* Message sous le formulaire */
 .message-form { min-height: 1.3em; font-family: 'Barlow Condensed', sans-serif; }
 .message-form.ok { color: #9fe0a0; }

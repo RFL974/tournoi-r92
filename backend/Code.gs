@@ -299,6 +299,7 @@ function doPost(e) {
       case 'publierTournoi':       resultat = publierTournoi(classeur, requete.publie); break;
       case 'enregistrerInfosTournoi': resultat = enregistrerInfosTournoi(classeur, requete); break;
       case 'enregistrerAffiche':   resultat = enregistrerAffiche(classeur, requete); break;
+      case 'reinitialiserTournoi': resultat = reinitialiserTournoi(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     // Écriture réussie → cache serveur rafraîchi (+ relais CDN si configuré). Sans effet
@@ -1172,6 +1173,92 @@ function publierTournoi(classeur, publie) {
                 || String(publie).toLowerCase() === 'true') ? 'oui' : 'non';
   ecrireParamGlobal(classeur.getSheetByName('Config'), 'tournoi_publie', valeur);
   return { ok: true, tournoi_publie: valeur };
+}
+
+/* ===================== RÉINITIALISATION DU TOURNOI ===================== */
+/**
+ * Réinitialise le tournoi pour repartir d'une base vierge (bouton « zone de danger »
+ * de l'admin). Action IRRÉVERSIBLE. Concrètement :
+ *   • vide les onglets Equipes, Poules et Matchs (planning + scores du tournoi en cours) ;
+ *   • supprime TOUTES les catégories de l'onglet Config ;
+ *   • efface les infos publiques du tournoi (nom, date, lieu, description) et met l'affiche
+ *     Drive à la corbeille ;
+ *   • repasse le tournoi en « masqué » (tournoi_publie = 'non').
+ * On CONSERVE les réglages « Horaires de la journée » (heure début/fin, pauses…) et le
+ * journal de saison (onglet Historique), qui accumule les résultats de toute la saison.
+ */
+function reinitialiserTournoi(classeur) {
+  // 1) On compte avant de vider (pour le message de retour) puis on vide les 3 onglets.
+  var nbEquipes = lireOngletSimple(classeur, 'Equipes').length;
+  var nbPoules  = lireOngletSimple(classeur, 'Poules').length;
+  var nbMatchs  = lireOngletSimple(classeur, 'Matchs').length;
+
+  var oEquipes = classeur.getSheetByName('Equipes');
+  var oPoules  = classeur.getSheetByName('Poules');
+  var oMatchs  = classeur.getSheetByName('Matchs');
+  if (oEquipes) viderDonnees(oEquipes);
+  if (oPoules)  viderDonnees(oPoules);
+  if (oMatchs)  viderDonnees(oMatchs);
+
+  // 2) Suppression de toutes les catégories (zone B de l'onglet Config).
+  var nbCategories = supprimerToutesCategories(classeur);
+
+  // 3) Effacement des infos publiques + mise à la corbeille de l'affiche Drive.
+  var ongletConfig = classeur.getSheetByName('Config');
+  var ancienId = (lireConfig(classeur).global || {}).tournoi_affiche_id;
+  if (ancienId) { try { DriveApp.getFileById(ancienId).setTrashed(true); } catch (e) {} }
+  ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_description', 'tournoi_affiche_id']
+    .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
+
+  // 4) Le tournoi redevient masqué pour le public.
+  ecrireParamGlobal(ongletConfig, 'tournoi_publie', 'non');
+
+  return {
+    ok: true,
+    nb_equipes: nbEquipes,
+    nb_poules: nbPoules,
+    nb_matchs: nbMatchs,
+    nb_categories: nbCategories
+  };
+}
+
+/**
+ * Supprime toutes les lignes de catégories de la zone B de Config (sous l'en-tête
+ * « categorie », jusqu'à la première ligne vide). Suppression du bas vers le haut pour
+ * ne pas décaler les indices. Renvoie le nombre de catégories supprimées.
+ */
+function supprimerToutesCategories(classeur) {
+  var onglet = classeur.getSheetByName('Config');
+  if (!onglet) return 0;
+  var donnees = onglet.getDataRange().getValues();
+  var hdr = -1;
+  for (var i = 0; i < donnees.length; i++) { if (donnees[i][0] === 'categorie') { hdr = i; break; } }
+  if (hdr === -1) return 0;
+  var lignes = [];
+  for (var l = hdr + 1; l < donnees.length; l++) {
+    if (donnees[l][0] === '' || donnees[l][0] === null) break;
+    lignes.push(l + 1); // numéro de ligne 1-based
+  }
+  for (var k = lignes.length - 1; k >= 0; k--) { onglet.deleteRow(lignes[k]); }
+  return lignes.length;
+}
+
+/**
+ * Efface la VALEUR d'un paramètre global de Config s'il existe (met la cellule à vide).
+ * Contrairement à ecrireParamGlobal, n'insère PAS de ligne si le paramètre est absent.
+ */
+function effacerParamGlobal(onglet, nom) {
+  var dernier = onglet.getLastRow();
+  if (dernier < 1) return;
+  var donnees = onglet.getRange(1, 1, dernier, 1).getValues();
+  for (var i = 0; i < donnees.length; i++) {
+    if (donnees[i][0] === nom) {
+      var cellule = onglet.getRange(i + 1, 2);
+      cellule.setNumberFormat('@');
+      cellule.setValue('');
+      return;
+    }
+  }
 }
 
 function genererPoulesEtPlanning(classeur) {
