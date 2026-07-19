@@ -1266,13 +1266,16 @@ async function onGenererApresMidi() {
     const avert = res && res.avertissements && res.avertissements.length;
     let texte = '✅ ' + nbM + " match(s) d'après-midi générés." +
                 (res.heure_fin_aprem ? ' Fin : ' + res.heure_fin_aprem + '.' : '');
+    if (res.heure_fin_journee) texte += '\n🏁 Fin de la journée : ' + res.heure_fin_journee + '.';
     if (avert) texte += '\n⚠️ ' + res.avertissements.join('\n⚠️ ');
     afficherMessage(message, texte, avert ? 'ko' : 'ok');
 
-    // On recharge le planning (matin + après-midi).
+    // On recharge le planning (matin + après-midi) ET les réglages (l'heure de fin auto a changé).
     const data = await apiGet('getAll');
+    configCourante = data.config;
     equipesCourantes = data.equipes;
     matchsCourants = data.matchs || [];
+    injecterReglages(data.config.global, data.config.categories);
     afficherPlanning(data.poules, data.matchs);
     majApresMidi();
     majTableauBord();
@@ -1641,13 +1644,15 @@ async function onEnregistrerPoules() {
     configCourante = data.config;
     equipesCourantes = data.equipes;
     matchsCourants = data.matchs || [];
+    injecterReglages(data.config.global, data.config.categories); // l'heure de fin auto a changé
     afficherPlanning(data.poules, data.matchs);
     majApresMidi();
     majTableauBord();
     const nbP = (res && res.nb_poules != null) ? res.nb_poules : '?';
     const nbM = (res && res.nb_matchs != null) ? res.nb_matchs : '?';
+    const finTxt = (res && res.heure_fin_journee) ? ' Fin de la journée : ' + res.heure_fin_journee + '.' : '';
     afficherMessage(document.getElementById('message-generation'),
-      '✅ Poules mises à jour : ' + nbP + ' poule(s), ' + nbM + ' match(s) recalculés.', 'ok');
+      '✅ Poules mises à jour : ' + nbP + ' poule(s), ' + nbM + ' match(s) recalculés.' + finTxt, 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
     if (bouton) { bouton.disabled = false; bouton.textContent = '💾 Enregistrer et recalculer'; }

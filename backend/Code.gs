@@ -868,10 +868,21 @@ function genererApresMidi(classeur) {
   var lignesMatin = matin.map(matchObjToRow);
   ecrireMatchs(classeur, lignesMatin.concat(lignesAprem));
 
+  // Heure de fin AUTO = vraie fin du dernier match de la JOURNÉE (matin + après-midi).
+  // Sans ça, le champ resterait figé sur la fin du matin (projetée à la génération des poules).
+  var finMatin = 0;
+  matin.forEach(function (m) { finMatin = Math.max(finMatin, hmVersMin(m.heure_fin)); });
+  var finJournee = Math.max(finMatin, plan.maxFin);
+  var autoFin = String((config.global.heure_fin_auto || 'oui')).toLowerCase() !== 'non';
+  if (autoFin && finJournee > 0) {
+    ecrireParamGlobal(classeur.getSheetByName('Config'), 'heure_fin', minVersHm(finJournee));
+  }
+
   return {
     ok: true,
     nb_matchs_aprem: plan.matchs.length,
     heure_fin_aprem: plan.maxFin > 0 ? minVersHm(plan.maxFin) : '',
+    heure_fin_journee: (autoFin && finJournee > 0) ? minVersHm(finJournee) : '',
     avertissements: avert
   };
 }
@@ -1069,10 +1080,19 @@ function reorganiserPoulesMatin(classeur, data) {
   var r = calculerPlanning(config, equipes, false, affectation);
   ecrireGeneration(classeur, r.poules, r.affectationPoule, r.matchsFinaux);
 
+  // Heure de fin AUTO = fin projetée de la journée (matin recalculé + après-midi projeté),
+  // comme à la génération des poules — sinon le champ resterait figé sur l'ancien planning.
+  var autoFin = String((config.global.heure_fin_auto || 'oui')).toLowerCase() !== 'non';
+  var finJournee = Math.max(r.maxFin, projeterFinApresMidi(config, r.poules, r.matchsFinaux));
+  if (autoFin && finJournee > 0) {
+    ecrireParamGlobal(classeur.getSheetByName('Config'), 'heure_fin', minVersHm(finJournee));
+  }
+
   return {
     ok: true,
     nb_poules: r.poules.length,
     nb_matchs: r.matchsFinaux.length,
+    heure_fin_journee: (autoFin && finJournee > 0) ? minVersHm(finJournee) : '',
     avertissements: r.avert
   };
 }
