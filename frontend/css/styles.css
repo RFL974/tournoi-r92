@@ -578,6 +578,40 @@ select.r-input { cursor: pointer; }
 }
 
 /* ==========================================================================
+   GRAND ÉCRAN (≥1024px) — la page admin devient un vrai TABLEAU DE BORD :
+   conteneur plus large + <main> en grille 2 colonnes. Les formulaires étroits se
+   placent côte à côte ; les blocs larges (récap, catégories, équipes, planning)
+   occupent toute la largeur. Le mobile (une colonne) reste inchangé.
+   La page admin est la seule à avoir une grille dans <main> (id="reglages" présent).
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .conteneur:has(#reglages) { max-width: 1320px; }
+
+  main:has(#reglages) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--espace);
+    align-items: start;
+  }
+  /* #reglages est un conteneur logique : ses deux zones deviennent des cellules. */
+  #reglages { display: contents; }
+
+  /* Blocs pleine largeur (contenu large ou récapitulatif). */
+  #barre-connexion,
+  #tableau-bord,
+  #zone-categories,
+  #bloc-equipes,
+  #bloc-generation,
+  #bloc-reinitialisation { grid-column: 1 / -1; }
+
+  /* Espacement géré par `gap` : on retire la marge basse des cellules directes. */
+  main:has(#reglages) > .carte,
+  main:has(#reglages) > #barre-connexion,
+  main:has(#reglages) > #tableau-bord,
+  #zone-horaires > .carte { margin-bottom: 0; }
+}
+
+/* ==========================================================================
    Saisie des scores (page saisie.html)
    ========================================================================== */
 .match {

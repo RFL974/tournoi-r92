@@ -56,8 +56,7 @@ async function initAdmin() {
     matchsCourants = data.matchs || [];
 
     // 1) Réglages (horaires + catégories)
-    zoneReglages.innerHTML =
-      afficherHoraires(data.config.global) + afficherCategories(data.config.categories);
+    injecterReglages(data.config.global, data.config.categories);
 
     // 2) Équipes : on remplit la liste déroulante des catégories et la liste des équipes
     remplirSelectCategories(data.config.categories);
@@ -512,8 +511,7 @@ async function onReinitialiser() {
     configCourante = data.config;
     equipesCourantes = data.equipes;
     matchsCourants = data.matchs || [];
-    document.getElementById('reglages').innerHTML =
-      afficherHoraires(data.config.global) + afficherCategories(data.config.categories);
+    injecterReglages(data.config.global, data.config.categories);
     remplirSelectCategories(data.config.categories);
     afficherEquipes(data.equipes);
     afficherPlanning(data.poules, data.matchs);
@@ -573,8 +571,7 @@ function onReglagesClick(evenement) {
 async function rechargerReglages() {
   const cfg = await apiGet('getConfig');
   configCourante = cfg;
-  document.getElementById('reglages').innerHTML =
-    afficherHoraires(cfg.global) + afficherCategories(cfg.categories);
+  injecterReglages(cfg.global, cfg.categories);
   remplirSelectCategories(cfg.categories); // le menu des équipes suit les catégories présentes
   majTableauBord(); // le nombre de catégories a pu changer
 }
@@ -582,6 +579,16 @@ async function rechargerReglages() {
 /* --------------------------------------------------------------------------
    AFFICHAGE DES RÉGLAGES
    -------------------------------------------------------------------------- */
+
+/**
+ * Injecte les réglages dans leurs deux zones distinctes (horaires / catégories),
+ * pour permettre une mise en page côte à côte sur grand écran. Les écouteurs délégués
+ * restent posés sur le conteneur parent #reglages (les événements y remontent).
+ */
+function injecterReglages(global, categories) {
+  document.getElementById('zone-horaires').innerHTML = afficherHoraires(global);
+  document.getElementById('zone-categories').innerHTML = afficherCategories(categories);
+}
 
 /**
  * Carte "Horaires de la journée" sous forme de FORMULAIRE modifiable.
@@ -1200,8 +1207,7 @@ async function genererMaintenant() {
     configCourante = data.config;
     equipesCourantes = data.equipes;
     matchsCourants = data.matchs || [];
-    document.getElementById('reglages').innerHTML =
-      afficherHoraires(data.config.global) + afficherCategories(data.config.categories);
+    injecterReglages(data.config.global, data.config.categories);
     remplirSelectCategories(data.config.categories);
     afficherPlanning(data.poules, data.matchs);
     majApresMidi(); // le matin vient de changer → recalcul de l'état

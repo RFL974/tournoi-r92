@@ -5,6 +5,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : vrai tableau de bord sur grand écran (grille 2 colonnes) — 2026-07-19
+La page admin gaspillait la largeur sur ordinateur (colonne de 900px centrée, grandes marges vides).
+Sur **grand écran (≥1024px)**, `<main>` devient une **grille 2 colonnes** (frontend seul, **pas de
+redéploiement**) : conteneur élargi à **1320px**, formulaires étroits **côte à côte** (Infos |
+Horaires, puis Après-midi | Publier), et blocs larges (récap, Catégories, Équipes, Poules & planning,
+Réinitialiser) en **pleine largeur**. Le **mobile reste inchangé** (une colonne). Mise en œuvre :
+zone réglages scindée en `#zone-horaires` / `#zone-categories` (helper `injecterReglages`) ; grille
+scopée à la page admin via `:has(#reglages)`. Au passage, le bloc **« Infos du tournoi »** est
+remonté **au-dessus de « Horaires »** (à remplir en premier). Vérifié au navigateur (desktop 1440 :
+conteneur 1320, 2×652px, paires côte à côte, blocs larges pleine largeur ; mobile 375 : une colonne ;
+0 erreur console).
+
 ### Admin : modification manuelle des poules du matin — 2026-07-19
 Nouvelle fonctionnalité : rééquilibrer les niveaux des poules du matin à la main (une équipe
 dominante peut sinon tomber dans une poule faible). ⚠️ **Nécessite de recopier `Code.gs` +
