@@ -32,8 +32,9 @@ const FORMATS_APRESMIDI = [
   },
   {
     cle: 'LIBRE', titre: 'Matchs libres',
-    desc: "Pas de classement l'après-midi : les équipes jouent simplement plusieurs matchs amicaux "
-        + "supplémentaires, sans enjeu ni hiérarchie. Recommandé pour les plus jeunes (M6–M8)."
+    desc: "Les équipes jouent plusieurs matchs amicaux supplémentaires, sans élimination. "
+        + "Un podium est établi en fin d'après-midi (aux points). Simple et détendu — "
+        + "recommandé pour les plus jeunes (M6–M8)."
   },
   {
     cle: 'COUPE_PLATEAU', titre: 'Coupe + Plateau',
@@ -823,7 +824,7 @@ function blocFormatApresMidi(cat) {
   // Récaps : un par format, révélé selon data-format (texte concret pour confirmer le choix).
   const recaps =
     '<span class="format-recap r-CROISE">Après-midi : <b>classement croisé</b> — matchs équilibrés par niveau ; le vainqueur du Niveau 1 remporte le tournoi (classement général + podium).</span>' +
-    '<span class="format-recap r-LIBRE">Après-midi : <b>matchs libres</b> — amicaux, sans classement (idéal pour les plus jeunes).</span>' +
+    '<span class="format-recap r-LIBRE">Après-midi : <b>matchs libres</b> — amicaux (sans élimination) ; un podium est établi en fin d\'après-midi.</span>' +
     '<span class="format-recap r-COUPE_PLATEAU">Après-midi : <b>Coupe + Plateau</b> — les premiers de chaque poule en élimination directe (finale + petite finale), les autres en plateau.</span>';
 
   return (

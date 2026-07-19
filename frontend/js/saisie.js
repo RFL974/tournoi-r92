@@ -288,7 +288,7 @@ function carteMatch(m) {
 
   // Bandeau contextuel : amical (LIBRE) ou avertissement élimination directe (COUPE).
   let bandeau = '';
-  if (libre) bandeau = '<div class="bandeau-amical">🎈 Match amical — sans classement (juste du temps de jeu)</div>';
+  if (libre) bandeau = '<div class="bandeau-amical">🎈 Match amical (sans élimination) — un podium est établi en fin d\'après-midi</div>';
   else if (coupe) bandeau = '<div class="bandeau-coupe">⚔️ Élimination directe : un vainqueur est obligatoire.</div>';
 
   // Départage (COUPE) : radios pour désigner le vainqueur en cas d'égalité au score.

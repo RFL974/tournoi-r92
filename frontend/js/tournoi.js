@@ -640,27 +640,66 @@ function garantiDevant(X, Y) {
  */
 function podiumCertain(categorie) {
   if (!categorie) return null;
-  // Pas d'après-midi généré → le classement final n'est pas encore défini.
+  // Pas d'après-midi généré → pas encore de podium.
   const aApresMidi = matchs.some(function (m) {
     return m.categorie === categorie && String(m.phase) === 'classement';
   });
   if (!aApresMidi) return null;
-  // Le podium « certain » repose sur le classement croisé (niveaux). Pour LIBRE (pas de
-  // classement) et COUPE_PLATEAU (vainqueur affiché dans l'arbre), on n'affiche pas de podium.
-  if (formatApresMidiCat(categorie) !== 'CROISE') return null;
+  // Un podium pour CHAQUE format (il ne s'affiche que lorsqu'il est réellement DÉCIDÉ).
+  const fmt = formatApresMidiCat(categorie);
+  if (fmt === 'COUPE_PLATEAU') return podiumCoupe(categorie);
+  if (fmt === 'LIBRE') return podiumLibre(categorie);
+  return podiumCroise(categorie);
+}
 
+/** Podium du classement croisé : top 3 du classement général, UNIQUEMENT quand il est verrouillé. */
+function podiumCroise(categorie) {
   const G = classementGeneral(categorie);
   if (G.length < 3) return null;                 // pas de podium à 3 sans au moins 3 équipes
   const top = G.slice(0, 3);
-
-  // Ordre interne du podium (1er devant 2e, 2e devant 3e).
+  // Ordre interne garanti (1er devant 2e, 2e devant 3e) + frontière (3e devant tous les suivants).
   if (!garantiDevant(top[0], top[1])) return null;
   if (!garantiDevant(top[1], top[2])) return null;
-  // Frontière : le 3e doit être garanti devant chaque équipe classée après.
   for (let k = 3; k < G.length; k++) {
     if (!garantiDevant(top[2], G[k])) return null;
   }
+  return top.map(function (t) { return { nom: t.nom }; });
+}
+
+/** Podium Coupe : 🥇 vainqueur de la finale, 🥈 finaliste, 🥉 vainqueur de la petite finale. */
+function podiumCoupe(categorie) {
+  const coupe = matchs.filter(function (m) {
+    return m.categorie === categorie && String(m.sous_tableau).toUpperCase() === 'COUPE';
+  });
+  const finale = coupe.find(function (m) { return String(m.tour) === 'FINALE'; });
+  if (!finale || !estTermine(finale.statut)) return null; // podium pas encore décidé
+  const vF = vainqueurAff(finale);
+  if (vF !== 'A' && vF !== 'B') return null;               // finale à égalité non départagée
+  const orId = (vF === 'A') ? finale.equipe_A : finale.equipe_B;
+  const arId = (vF === 'A') ? finale.equipe_B : finale.equipe_A;
+  const top = [{ nom: nomEquipe(orId) }, { nom: nomEquipe(arId) }];
+  const petite = coupe.find(function (m) { return String(m.tour) === 'PETITE_FINALE'; });
+  if (petite && estTermine(petite.statut)) {
+    const vP = vainqueurAff(petite);
+    if (vP === 'A' || vP === 'B') {
+      top.push({ nom: nomEquipe((vP === 'A') ? petite.equipe_A : petite.equipe_B) });
+    }
+  }
   return top;
+}
+
+/** Podium Libre : top 3 des matchs amicaux (barème V=3/N=2/D=1), une fois TOUT joué. */
+function podiumLibre(categorie) {
+  const ms = matchs.filter(function (m) { return m.categorie === categorie && String(m.phase) === 'classement'; });
+  if (!ms.length || ms.some(function (m) { return !estTermine(m.statut); })) return null; // pas fini → provisoire
+  const stats = {};
+  ms.forEach(function (m) {
+    [m.equipe_A, m.equipe_B].forEach(function (id) { if (id && !stats[id]) stats[id] = nouveauStats(id); });
+  });
+  ms.forEach(function (m) { compterMatch(stats, m); });
+  const liste = Object.keys(stats).map(function (k) { return stats[k]; }).sort(comparer);
+  if (!liste.length) return null;
+  return liste.slice(0, 3).map(function (t) { return { nom: t.nom_equipe }; });
 }
 
 /** Tableau compact d'un classement de groupe (poule ou niveau). idSel = équipe surlignée. */
@@ -761,7 +800,7 @@ function sectionApresMidiClassements(categorie) {
   }
   if (fmt === 'LIBRE') {
     return '<div class="planning-phase">🏉 Après-midi — matchs amicaux</div>' +
-      '<p class="note-amical">🎈 Matchs amicaux supplémentaires — sans classement ni enjeu.</p>' +
+      '<p class="note-amical">🎈 Matchs amicaux (sans élimination) — un podium est établi en fin d\'après-midi.</p>' +
       listeResultats(apremMs);
   }
   // CROISE (défaut) : tableaux par niveau, PUIS le classement général (vainqueur en tête).
