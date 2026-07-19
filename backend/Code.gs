@@ -311,6 +311,7 @@ function doPost(e) {
       case 'genererApresMidi':     resultat = genererApresMidi(classeur); break;
       case 'publierTournoi':       resultat = publierTournoi(classeur, requete.publie); break;
       case 'enregistrerInfosTournoi': resultat = enregistrerInfosTournoi(classeur, requete); break;
+      case 'enregistrerPlanTerrains': resultat = enregistrerPlanTerrains(classeur, requete); break;
       case 'enregistrerAffiche':   resultat = enregistrerAffiche(classeur, requete); break;
       case 'supprimerAffiche':     resultat = supprimerAffiche(classeur); break;
       case 'reinitialiserTournoi': resultat = reinitialiserTournoi(classeur); break;
@@ -477,6 +478,23 @@ function enregistrerHoraires(classeur, data) {
 function enregistrerInfosTournoi(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
   var champs = ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_description'];
+  champs.forEach(function (champ) {
+    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
+  });
+  return { ok: true };
+}
+
+/**
+ * Enregistre le PLAN DES TERRAINS physiques utilisé par la répartition automatique.
+ * Trois paramètres GLOBAUX (stockés dans l'onglet Config, relus par getConfig/getAll) :
+ *   - terrains_physiques    : JSON [{nom,type,L,W}, …] — les grands terrains réels (rugby/foot).
+ *   - couloir_terrain_m     : largeur du couloir de circulation entre mini-terrains (m).
+ *   - dimensions_categories : JSON {"U8":{"l":30,"w":20}, "U14":{"plein":true}, …} — taille
+ *                             de terrain par catégorie (plein:true = un match occupe un grand terrain entier).
+ */
+function enregistrerPlanTerrains(classeur, data) {
+  var onglet = classeur.getSheetByName('Config');
+  var champs = ['terrains_physiques', 'couloir_terrain_m', 'dimensions_categories'];
   champs.forEach(function (champ) {
     if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
   });

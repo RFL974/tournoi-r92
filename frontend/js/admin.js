@@ -95,6 +95,9 @@ async function initAdmin() {
     // 1) Réglages (horaires + catégories)
     injecterReglages(data.config.global, data.config.categories);
 
+    // 1 bis) Terrains physiques & répartition (dépend des catégories présentes)
+    injecterTerrains();
+
     // 2) Équipes : on remplit la liste déroulante des catégories et la liste des équipes
     remplirSelectCategories(data.config.categories);
     afficherEquipes(data.equipes);
@@ -136,6 +139,12 @@ async function initAdmin() {
   zoneReglages.addEventListener('submit', onReglagesSubmit);
   zoneReglages.addEventListener('click', onReglagesClick);
   zoneReglages.addEventListener('change', onReglagesChange);
+
+  // Zone terrains : écouteurs délégués (recalcul de capacité en direct + boutons).
+  const zoneTerrains = document.getElementById('zone-terrains');
+  zoneTerrains.addEventListener('input', onZoneTerrainsInput);
+  zoneTerrains.addEventListener('change', onZoneTerrainsChange);
+  zoneTerrains.addEventListener('click', onZoneTerrainsClick);
 
   // Bouton de génération des poules et du planning.
   document.getElementById('bouton-generer').addEventListener('click', onGenerer);
@@ -549,6 +558,7 @@ async function onReinitialiser() {
     equipesCourantes = data.equipes;
     matchsCourants = data.matchs || [];
     injecterReglages(data.config.global, data.config.categories);
+    injecterTerrains();
     remplirSelectCategories(data.config.categories);
     afficherEquipes(data.equipes);
     afficherPlanning(data.poules, data.matchs);
@@ -620,6 +630,7 @@ async function rechargerReglages() {
   const cfg = await apiGet('getConfig');
   configCourante = cfg;
   injecterReglages(cfg.global, cfg.categories);
+  injecterTerrains();                        // les catégories présentes ont pu changer
   remplirSelectCategories(cfg.categories); // le menu des équipes suit les catégories présentes
   majTableauBord(); // le nombre de catégories a pu changer
 }
@@ -1759,6 +1770,272 @@ async function onEnregistrerPoules() {
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
     if (bouton) { bouton.disabled = false; bouton.textContent = '💾 Enregistrer et recalculer'; }
+  }
+}
+
+/* ==========================================================================
+   TERRAINS PHYSIQUES & RÉPARTITION — étape 1 : déclaration + capacité
+   --------------------------------------------------------------------------
+   On déclare les GRANDS terrains réels (2 rugby + 2 foot) et la TAILLE de terrain
+   de chaque catégorie, puis on calcule combien de mini-terrains y tiennent (avec
+   un couloir de circulation entre eux). Tout est mémorisé dans Config (globaux).
+   L'étape 2 (bouton « Répartir ») utilisera ces mêmes données.
+   ========================================================================== */
+
+/* Grands terrains réels par défaut (mesurés sur la vue satellite — modifiables). */
+const TERRAINS_PHYSIQUES_DEFAUT = [
+  { nom: 'Rugby 1', type: 'rugby', L: 115, W: 70 },
+  { nom: 'Rugby 2', type: 'rugby', L: 110, W: 68 },
+  { nom: 'Foot 1',  type: 'foot',  L: 105, W: 68 },
+  { nom: 'Foot 2',  type: 'foot',  L: 100, W: 65 }
+];
+
+/* Taille de terrain par défaut selon la catégorie (m).
+   plein:true = un match occupe un GRAND terrain entier (cas U14). */
+const DIMENSIONS_CATEGORIE_DEFAUT = {
+  U8:  { l: 30, w: 20 },
+  U10: { l: 40, w: 30 },
+  U12: { l: 56, w: 45 },
+  U14: { plein: true }
+};
+
+const COULOIR_DEFAUT = 5; // couloir de circulation entre mini-terrains (m)
+
+/** Nombre de mini-terrains (l×w) qui tiennent dans un rectangle L×W avec un couloir
+ *  de m mètres ENTRE eux (pas de marge sur les bords). */
+function nbTuiles(L, W, l, w, m) {
+  if (l <= 0 || w <= 0) return 0;
+  const cols = Math.floor((L + m) / (l + m));
+  const rows = Math.floor((W + m) / (w + m));
+  return Math.max(0, cols) * Math.max(0, rows);
+}
+
+/** Capacité d'un grand terrain pour une catégorie : on teste les 2 orientations de
+ *  la tuile (posée dans un sens ou dans l'autre) et on garde la meilleure. */
+function capaciteTerrain(field, tile, m) {
+  if (!tile) return 0;
+  if (tile.plein) return 1;                              // un match = tout le grand terrain
+  const droit  = nbTuiles(field.L, field.W, tile.l, tile.w, m);
+  const tourne = nbTuiles(field.L, field.W, tile.w, tile.l, m);
+  return Math.max(droit, tourne);
+}
+
+/** Plan des terrains actuellement enregistré (repli sur les valeurs par défaut). */
+function planTerrainsActuel() {
+  const g = configCourante.global || {};
+  let terrains = TERRAINS_PHYSIQUES_DEFAUT;
+  try { if (g.terrains_physiques) terrains = JSON.parse(g.terrains_physiques); } catch (e) {}
+  let dims = {};
+  try { if (g.dimensions_categories) dims = JSON.parse(g.dimensions_categories); } catch (e) {}
+  const couloir = (g.couloir_terrain_m != null && g.couloir_terrain_m !== '')
+    ? (parseFloat(g.couloir_terrain_m) || 0) : COULOIR_DEFAUT;
+  return { terrains: terrains, dims: dims, couloir: couloir };
+}
+
+/** Noms des catégories présentes (celles qu'on dimensionne). */
+function categoriesPresentes() {
+  return (configCourante.categories || []).filter(estPresente)
+    .map(function (c) { return String(c.categorie); });
+}
+
+/** Taille retenue pour une catégorie : enregistrée, sinon défaut connu, sinon vide. */
+function dimensionCategorie(dims, nom) {
+  if (dims && dims[nom]) return dims[nom];
+  if (DIMENSIONS_CATEGORIE_DEFAUT[nom]) return DIMENSIONS_CATEGORIE_DEFAUT[nom];
+  return { l: '', w: '' };
+}
+
+/** Injecte la carte « Terrains & répartition » dans #zone-terrains. */
+function injecterTerrains() {
+  const zone = document.getElementById('zone-terrains');
+  if (!zone) return;
+  const plan = planTerrainsActuel();
+  const cats = categoriesPresentes();
+
+  let h = '<h2>🗺️ Terrains &amp; répartition</h2>';
+  h += '<p class="note-generation">Déclare tes <strong>grands terrains</strong> réels et la ' +
+       '<strong>taille de chaque catégorie</strong>. L\'appli calcule combien de mini-terrains ' +
+       'y tiennent (couloirs de circulation compris).</p>';
+
+  h += '<h3 class="terr-titre">Grands terrains disponibles</h3>';
+  h += '<div id="liste-terrains-physiques">';
+  plan.terrains.forEach(function (t, i) { h += ligneTerrainPhysique(t, i); });
+  h += '</div>';
+  h += '<button type="button" class="bouton-lien" id="bouton-ajouter-terrain">+ Ajouter un grand terrain</button>';
+
+  h += '<div class="champ-reglage" style="margin-top:14px">' +
+         '<label for="couloir-terrain">Couloir de circulation entre les terrains (m)</label>' +
+         '<input type="number" id="couloir-terrain" min="0" step="1" value="' + echapper(String(plan.couloir)) + '">' +
+       '</div>';
+
+  h += '<h3 class="terr-titre">Taille de terrain par catégorie</h3>';
+  if (cats.length === 0) {
+    h += '<p class="vide">Aucune catégorie présente : ajoute des catégories plus haut.</p>';
+  } else {
+    h += '<div id="liste-dimensions-categories">';
+    cats.forEach(function (nom) { h += ligneDimensionCategorie(nom, dimensionCategorie(plan.dims, nom)); });
+    h += '</div>';
+  }
+
+  h += '<h3 class="terr-titre">Capacité : mini-terrains par grand terrain</h3>';
+  h += '<div id="tableau-capacite">' + tableauCapaciteHTML(plan.terrains, plan.dims, plan.couloir, cats) + '</div>';
+
+  h += '<div class="ligne-action" style="margin-top:14px">' +
+         '<button type="button" class="bouton" id="bouton-enregistrer-terrains">Enregistrer les terrains</button>' +
+         '<span id="message-terrains" class="message-form"></span>' +
+       '</div>';
+
+  zone.innerHTML = h;
+}
+
+/** Une ligne « grand terrain » (nom, type, longueur × largeur, supprimer). */
+function ligneTerrainPhysique(t, i) {
+  const type = (t.type === 'foot') ? 'foot' : 'rugby';
+  const opt = function (v, lib, sel) { return '<option value="' + v + '"' + (sel ? ' selected' : '') + '>' + lib + '</option>'; };
+  return '<div class="terrain-ligne" data-i="' + i + '">' +
+    '<input class="tp-nom" type="text" value="' + echapper(String(t.nom || '')) + '" placeholder="Nom" aria-label="Nom du terrain">' +
+    '<select class="tp-type" aria-label="Type de terrain">' +
+      opt('rugby', '🏉 Rugby', type === 'rugby') + opt('foot', '⚽ Foot', type === 'foot') +
+    '</select>' +
+    '<input class="tp-l" type="number" min="0" step="1" value="' + echapper(String(t.L || '')) + '" aria-label="Longueur (m)">' +
+    '<span class="terr-x">×</span>' +
+    '<input class="tp-w" type="number" min="0" step="1" value="' + echapper(String(t.W || '')) + '" aria-label="Largeur (m)">' +
+    '<span class="terr-unite">m</span>' +
+    '<button type="button" class="terr-suppr" aria-label="Supprimer ce terrain">✕</button>' +
+    '</div>';
+}
+
+/** Une ligne « taille de catégorie » (nom, terrain entier ?, longueur × largeur). */
+function ligneDimensionCategorie(nom, d) {
+  const plein = !!d.plein;
+  return '<div class="dim-ligne" data-cat="' + echapper(nom) + '">' +
+    '<span class="dim-nom">' + echapper(nom) + '</span>' +
+    '<label class="mini-toggle"><input type="checkbox" class="dim-plein"' + (plein ? ' checked' : '') + '> terrain entier</label>' +
+    '<span class="dim-taille"' + (plein ? ' hidden' : '') + '>' +
+      '<input class="dim-l" type="number" min="0" step="1" value="' + echapper(String(plein ? '' : (d.l || ''))) + '" aria-label="Longueur (m)">' +
+      '<span class="terr-x">×</span>' +
+      '<input class="dim-w" type="number" min="0" step="1" value="' + echapper(String(plein ? '' : (d.w || ''))) + '" aria-label="Largeur (m)">' +
+      '<span class="terr-unite">m</span>' +
+    '</span>' +
+    '</div>';
+}
+
+/** Tableau de capacité : une ligne par grand terrain, une colonne par catégorie. */
+function tableauCapaciteHTML(terrains, dims, couloir, cats) {
+  if (!cats || cats.length === 0) return '<p class="vide">Ajoute des catégories pour voir la capacité.</p>';
+  let head = '<tr><th>Grand terrain</th>';
+  cats.forEach(function (c) { head += '<th>' + echapper(c) + '</th>'; });
+  head += '</tr>';
+  let body = '';
+  terrains.forEach(function (t) {
+    body += '<tr><td class="cap-nom">' + echapper(String(t.nom || '?')) +
+            ' <span class="cap-dim">' + (t.L || '?') + '×' + (t.W || '?') + '</span></td>';
+    cats.forEach(function (c) {
+      const d = dimensionCategorie(dims, c);
+      const dimOk = d && (d.plein || (d.l > 0 && d.w > 0));
+      const cap = dimOk ? capaciteTerrain({ L: +t.L, W: +t.W }, d, couloir) : '—';
+      body += '<td>' + cap + (d && d.plein ? ' <span class="cap-plein">(entier)</span>' : '') + '</td>';
+    });
+    body += '</tr>';
+  });
+  return '<div class="tab-capacite-wrap"><table class="tab-capacite">' +
+         '<thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>';
+}
+
+/* --- Lecture des saisies en cours (depuis le formulaire affiché) --- */
+function lireTerrainsDuFormulaire() {
+  const out = [];
+  document.querySelectorAll('#liste-terrains-physiques .terrain-ligne').forEach(function (row) {
+    out.push({
+      nom:  row.querySelector('.tp-nom').value.trim(),
+      type: row.querySelector('.tp-type').value,
+      L:    parseFloat(row.querySelector('.tp-l').value) || 0,
+      W:    parseFloat(row.querySelector('.tp-w').value) || 0
+    });
+  });
+  return out;
+}
+function lireDimensionsDuFormulaire() {
+  const out = {};
+  document.querySelectorAll('#liste-dimensions-categories .dim-ligne').forEach(function (row) {
+    const cat = row.getAttribute('data-cat');
+    if (row.querySelector('.dim-plein').checked) { out[cat] = { plein: true }; }
+    else {
+      out[cat] = {
+        l: parseFloat(row.querySelector('.dim-l').value) || 0,
+        w: parseFloat(row.querySelector('.dim-w').value) || 0
+      };
+    }
+  });
+  return out;
+}
+function lireCouloir() {
+  const el = document.getElementById('couloir-terrain');
+  return el ? (parseFloat(el.value) || 0) : COULOIR_DEFAUT;
+}
+
+/** Recalcule et réaffiche le tableau de capacité à partir des saisies en cours. */
+function recalculerCapacite() {
+  const cible = document.getElementById('tableau-capacite');
+  if (!cible) return;
+  cible.innerHTML = tableauCapaciteHTML(
+    lireTerrainsDuFormulaire(), lireDimensionsDuFormulaire(), lireCouloir(), categoriesPresentes());
+}
+
+/* --- Écouteurs délégués posés sur #zone-terrains (voir initAdmin) --- */
+function onZoneTerrainsInput() { recalculerCapacite(); }
+
+function onZoneTerrainsChange(evenement) {
+  if (evenement.target.classList.contains('dim-plein')) {
+    const taille = evenement.target.closest('.dim-ligne').querySelector('.dim-taille');
+    if (taille) taille.hidden = evenement.target.checked; // masque L×W si « terrain entier »
+  }
+  recalculerCapacite();
+}
+
+function onZoneTerrainsClick(evenement) {
+  if (evenement.target.id === 'bouton-ajouter-terrain') { ajouterTerrainPhysique(); return; }
+  const suppr = evenement.target.closest('.terr-suppr');
+  if (suppr) { suppr.closest('.terrain-ligne').remove(); recalculerCapacite(); return; }
+  if (evenement.target.id === 'bouton-enregistrer-terrains') { onEnregistrerPlanTerrains(); return; }
+}
+
+function ajouterTerrainPhysique() {
+  const liste = document.getElementById('liste-terrains-physiques');
+  if (!liste) return;
+  const i = liste.querySelectorAll('.terrain-ligne').length;
+  liste.insertAdjacentHTML('beforeend',
+    ligneTerrainPhysique({ nom: 'Terrain ' + (i + 1), type: 'rugby', L: 100, W: 68 }, i));
+  recalculerCapacite();
+}
+
+/** Enregistre le plan des terrains (grands terrains + couloir + tailles de catégorie). */
+async function onEnregistrerPlanTerrains() {
+  const message = document.getElementById('message-terrains');
+  const bouton = document.getElementById('bouton-enregistrer-terrains');
+  const terrains = lireTerrainsDuFormulaire();
+  const dims = lireDimensionsDuFormulaire();
+  const couloir = lireCouloir();
+
+  if (terrains.length === 0) { afficherMessage(message, 'Ajoute au moins un grand terrain.', 'ko'); return; }
+  const invalide = terrains.some(function (t) { return !(t.L > 0 && t.W > 0); });
+  if (invalide) { afficherMessage(message, 'Chaque grand terrain doit avoir une longueur et une largeur.', 'ko'); return; }
+
+  const data = {
+    terrains_physiques:     JSON.stringify(terrains),
+    couloir_terrain_m:      String(couloir),
+    dimensions_categories:  JSON.stringify(dims)
+  };
+  const texte = bouton.textContent;
+  bouton.disabled = true; bouton.textContent = 'Enregistrement…';
+  try {
+    await ecrireAdmin('enregistrerPlanTerrains', data);
+    configCourante.global = Object.assign({}, configCourante.global, data);
+    afficherMessage(message, '✅ Terrains enregistrés.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false; bouton.textContent = texte;
   }
 }
 

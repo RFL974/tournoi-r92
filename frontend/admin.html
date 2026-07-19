@@ -118,6 +118,13 @@
         <div id="liste-equipes"></div>
       </section>
 
+      <!-- 2 bis) Terrains physiques & répartition automatique des mini-terrains.
+           Placé APRÈS les équipes (la répartition dépend du nombre d'équipes) et AVANT la
+           génération (qui utilise le champ `terrains` de chaque catégorie). Rempli par admin.js. -->
+      <section class="carte" id="bloc-terrains">
+        <div id="zone-terrains"><div class="message">Chargement des terrains…</div></div>
+      </section>
+
       <!-- 3) Génération des poules et du planning -->
       <section class="carte" id="bloc-generation">
         <h2>Poules &amp; planning</h2>

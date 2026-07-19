@@ -1293,3 +1293,59 @@ body.theme-clair {
   margin: 0 auto 10px;
 }
 @media (min-width: 700px) { .entete .logo { max-width: 320px; } }
+
+/* ==========================================================================
+   TERRAINS PHYSIQUES & RÉPARTITION (carte admin #bloc-terrains)
+   ========================================================================== */
+.terr-titre { margin: 18px 0 8px; font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.05rem; letter-spacing: .3px; }
+
+/* Une ligne = un grand terrain (nom, type, L × W, supprimer). */
+.terrain-ligne, .dim-ligne {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
+}
+.terrain-ligne .tp-nom { flex: 1 1 120px; min-width: 90px; }
+.terrain-ligne .tp-type { flex: 0 0 auto; }
+.terrain-ligne .tp-l, .terrain-ligne .tp-w,
+.dim-ligne .dim-l, .dim-ligne .dim-w { width: 68px; flex: 0 0 auto; text-align: center; }
+.terr-x { opacity: .6; }
+.terr-unite { opacity: .6; margin-left: 2px; }
+.dim-ligne .dim-nom { flex: 0 0 56px; font-weight: 600; }
+.dim-taille[hidden] { display: none; }
+
+/* Petit bouton « ✕ » de suppression d'un grand terrain. */
+.terr-suppr {
+  flex: 0 0 auto; border: 1px solid transparent; background: transparent; cursor: pointer;
+  font-size: 1rem; line-height: 1; padding: 4px 8px; border-radius: var(--rayon); opacity: .7;
+}
+.terr-suppr:hover { opacity: 1; }
+
+/* Champs de saisie dans cette carte (harmonisés avec les inputs de réglages). */
+#bloc-terrains input[type="text"], #bloc-terrains input[type="number"], #bloc-terrains select {
+  padding: 8px 10px; border-radius: var(--rayon); font: inherit;
+  border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: inherit;
+}
+
+/* Tableau de capacité (défile horizontalement sur mobile). */
+.tab-capacite-wrap { overflow-x: auto; margin-top: 6px; }
+.tab-capacite { border-collapse: collapse; width: 100%; font-family: 'Barlow Condensed', sans-serif; }
+.tab-capacite th, .tab-capacite td {
+  border: 1px solid rgba(255,255,255,.14); padding: 7px 10px; text-align: center; white-space: nowrap;
+}
+.tab-capacite thead th { font-weight: 600; }
+.tab-capacite .cap-nom { text-align: left; }
+.tab-capacite .cap-dim { opacity: .6; font-size: .85em; }
+.tab-capacite .cap-plein { opacity: .55; font-size: .78em; }
+
+/* ---- Thème clair (page admin) ---- */
+.theme-clair #bloc-terrains input[type="text"],
+.theme-clair #bloc-terrains input[type="number"],
+.theme-clair #bloc-terrains select {
+  border-color: #d6e0ec; background: #ffffff; color: #0C1C2E;
+}
+.theme-clair .terr-titre { color: #0C1C2E; }
+.theme-clair .terr-suppr { color: #c0392b; }
+.theme-clair .terr-suppr:hover { background: rgba(192,57,43,.1); }
+.theme-clair .tab-capacite th, .theme-clair .tab-capacite td { border-color: #e6edf5; }
+.theme-clair .tab-capacite thead th { color: var(--accent); background: #F5F9FD; }
+.theme-clair .tab-capacite .cap-nom { color: #0C1C2E; }
