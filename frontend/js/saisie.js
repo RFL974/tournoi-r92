@@ -288,6 +288,18 @@ document.addEventListener('click', async function (evenement) {
     verrouiller(carte);
     afficherMessage(msg, 'Score enregistré ✓', 'ok');
     majAccordeonPhase(carte); // compteur à jour + repli auto dès le dernier score de la phase
+
+    // Cohérence après-midi : corriger un score du MATIN alors que l'après-midi est déjà généré
+    // peut fausser les niveaux (calculés sur le classement du matin). On alerte pour que
+    // l'organisateur régénère l'après-midi.
+    const estMatin = m && String(m.phase) !== 'classement';
+    const apremGenere = matchs.some(function (x) { return String(x.phase) === 'classement'; });
+    if (enEdition && estMatin && apremGenere) {
+      await dialogAlerter(
+        '⚠️ Tu viens de CORRIGER un score du matin, mais l\'après-midi est déjà généré.\n\n' +
+        'Le classement du matin a peut-être changé → les niveaux de l\'après-midi risquent d\'être faussés.\n\n' +
+        'Préviens l\'organisateur : il doit RÉGÉNÉRER l\'après-midi (page admin) pour rétablir les bons niveaux.');
+    }
   } catch (err) {
     afficherMessage(msg, err.message, 'ko');
   } finally {

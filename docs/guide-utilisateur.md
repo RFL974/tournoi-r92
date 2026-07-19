@@ -206,6 +206,9 @@ Pensée pour le **téléphone**, un marqueur par terrain. À l'ouverture, elle d
 - **Corriger** un score déjà validé : bouton **Corriger** → l'outil **redemande la clé scores**
   (confirmation forte, car un score validé est « définitif »), déverrouille les champs, puis
   **Valider la correction**. Fonctionne aussi bien pour le matin (dans son accordéon) que l'après-midi.
+  - ⚠️ **Correction d'un score du matin après génération de l'après-midi** : une alerte prévient que
+    les **niveaux de l'après-midi** (calculés sur le classement du matin) peuvent être faussés. Il
+    faut alors **régénérer l'après-midi** depuis l'admin (§1.5) pour rétablir les bons niveaux.
 
 ---
 
