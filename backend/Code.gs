@@ -295,6 +295,7 @@ function doPost(e) {
       case 'supprimerCategorie':   resultat = supprimerCategorie(classeur, requete.categorie); break;
       case 'enregistrerScore':     resultat = enregistrerScore(classeur, requete); break;
       case 'genererPoulesEtPlanning': resultat = genererPoulesEtPlanning(classeur); break;
+      case 'reorganiserPoulesMatin':  resultat = reorganiserPoulesMatin(classeur, requete); break;
       case 'genererApresMidi':     resultat = genererApresMidi(classeur); break;
       case 'publierTournoi':       resultat = publierTournoi(classeur, requete.publie); break;
       case 'enregistrerInfosTournoi': resultat = enregistrerInfosTournoi(classeur, requete); break;
@@ -1032,7 +1033,55 @@ function assurerColonneCategorie(classeur, nom) {
   return true;
 }
 
-function calculerPlanning(config, equipes, melange) {
+/**
+ * Réorganise MANUELLEMENT les poules du matin selon une répartition fournie
+ * (map { id_equipe: nom_poule }), puis RECALCULE les matchs + horaires du matin.
+ * Garde-fou : refuse si un score du matin est déjà saisi (les matchs ne peuvent plus changer).
+ * Ne touche pas aux réglages. Renvoie le nombre de poules / matchs recalculés.
+ */
+function reorganiserPoulesMatin(classeur, data) {
+  var assignation = data && data.assignation;
+  if (typeof assignation === 'string') {
+    try { assignation = JSON.parse(assignation); } catch (e) { return { error: 'Répartition illisible.' }; }
+  }
+  if (!assignation || typeof assignation !== 'object') return { error: 'Répartition manquante.' };
+
+  var config = lireConfig(classeur);
+  var equipes = lireOngletSimple(classeur, 'Equipes');
+  var matchs = lireOngletSimple(classeur, 'Matchs');
+
+  // Garde-fou : aucun score du matin ne doit être saisi (sinon on casserait des matchs joués).
+  var scoresMatin = matchs.filter(function (m) {
+    return String(m.phase) !== 'classement' && estTermineServeur(m.statut);
+  });
+  if (scoresMatin.length > 0) {
+    return { error: scoresMatin.length + ' match(s) du matin ont déjà un score. '
+      + "Impossible de réorganiser les poules une fois les matchs commencés." };
+  }
+
+  // Affectation finale : la poule fournie, sinon la poule actuelle de l'équipe (repli).
+  var affectation = {};
+  equipes.forEach(function (e) {
+    var nom = assignation[e.id_equipe];
+    affectation[e.id_equipe] = (nom != null && nom !== '') ? String(nom) : e.poule;
+  });
+
+  var r = calculerPlanning(config, equipes, false, affectation);
+  ecrireGeneration(classeur, r.poules, r.affectationPoule, r.matchsFinaux);
+
+  return {
+    ok: true,
+    nb_poules: r.poules.length,
+    nb_matchs: r.matchsFinaux.length,
+    avertissements: r.avert
+  };
+}
+
+/**
+ * @param affectationImposee (optionnel) map { id_equipe: nom_poule } : si fournie, on N'effectue
+ *   PAS le tirage auto — on regroupe les équipes selon cette répartition manuelle (matin).
+ */
+function calculerPlanning(config, equipes, melange, affectationImposee) {
   var global = config.global;
   var avert = [];
   var tDebut = hmVersMin(global.heure_debut || '09:00');
@@ -1052,6 +1101,26 @@ function calculerPlanning(config, equipes, melange) {
     var eqCat = equipes.filter(function (e) { return e.categorie === cat.categorie; });
     if (eqCat.length === 0) { avert.push('Catégorie ' + cat.categorie + ' : aucune équipe.'); return; }
     eqCat = eqCat.slice();
+
+    // Répartition IMPOSÉE (modification manuelle des poules) : on regroupe simplement les
+    // équipes selon la poule fournie, sans tirage ni séparation par club.
+    if (affectationImposee) {
+      var groupes = {};
+      eqCat.forEach(function (e) {
+        var nom = affectationImposee[e.id_equipe];
+        if (nom == null || nom === '') return; // équipe sans poule → ignorée
+        (groupes[String(nom)] = groupes[String(nom)] || []).push(e);
+      });
+      Object.keys(groupes).sort().forEach(function (nom) {
+        compteurPoule++;
+        var poule = { id_poule: 'P' + (compteurPoule < 10 ? '0' + compteurPoule : compteurPoule),
+                      categorie: cat.categorie, nom_poule: nom, equipes: groupes[nom] };
+        poules.push(poule);
+        groupes[nom].forEach(function (e) { affectationPoule[e.id_equipe] = nom; });
+      });
+      return; // catégorie suivante
+    }
+
     if (melange) eqCat = melanger(eqCat);
     var nbPoules = nombrePoules(cat, eqCat.length);
     var poulesCat = [];

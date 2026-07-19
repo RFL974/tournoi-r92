@@ -5,6 +5,23 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : modification manuelle des poules du matin — 2026-07-19
+Nouvelle fonctionnalité : rééquilibrer les niveaux des poules du matin à la main (une équipe
+dominante peut sinon tomber dans une poule faible). ⚠️ **Nécessite de recopier `Code.gs` +
+redéployer** (nouvelle action backend).
+- **Frontend** : bouton **✏️ Modifier les poules du matin** (visible quand des poules existent) →
+  éditeur avec, par poule, une **✕** pour sortir une équipe (« à replacer »), puis **→ Poule X**
+  pour la réaffecter ; indicateur d'**équilibre des tailles** (⚠️ si écart > 1) ; boutons
+  **Enregistrer et recalculer** / **Annuler**. Garde-fous : refus si un **score du matin** est déjà
+  saisi, et si des équipes restent « à replacer ».
+- **Backend** : `calculerPlanning` accepte une **répartition imposée** (4ᵉ paramètre) au lieu du
+  tirage auto ; nouvelle action `reorganiserPoulesMatin(assignation)` qui applique la répartition
+  et **recalcule les matchs + horaires du matin** (même garde-fou scores côté serveur). L'après-midi
+  n'est pas concerné (il reflète le niveau réel du matin).
+- Vérifié au navigateur (planning fictif) : éditeur, ✕/réaffectation, équilibre ✅/⚠️, garde-fous
+  entrée (scores) et sauvegarde (équipes à replacer) ; 0 erreur console. Guide utilisateur §1.4 à jour.
+- ⚠️ **Recopier `Code.gs` + redéployer** pour activer la fonction (l'action `reorganiserPoulesMatin`).
+
 ### Admin : guidage quand aucune catégorie n'existe — 2026-07-19
 Guidage (frontend seul, **pas de redéploiement**). Sans catégorie, le menu déroulant d'ajout
 d'équipe était vide **sans explication** (utilisateur bloqué). Désormais `remplirSelectCategories`
