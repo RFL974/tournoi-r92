@@ -400,9 +400,17 @@ function majBarreConnexion(connecte) {
 
 /** Clic dans la barre : « Se connecter » (si déconnecté) ou « Changer de clé ». */
 async function onClicConnexion(evenement) {
-  // Changer de clé : on redemande une clé VALIDE ; si annulé, on garde l'actuelle.
+  // Changer de clé : par sécurité (page laissée ouverte), on exige d'abord la clé
+  // ACTUELLE, PUIS on demande la nouvelle (validée côté serveur).
   if (evenement.target.closest('#bouton-changer-cle')) {
-    await demanderCleValide('admin', 'Changer la clé admin\n\nEntre la nouvelle clé :');
+    const actuelle = await dialogDemander(
+      'Sécurité : entre d\'abord la clé ACTUELLE pour pouvoir la changer :', '', { ok: 'Continuer' });
+    if (actuelle == null) return; // annulé
+    if (actuelle.trim() !== lireCleLocale('admin')) {
+      await dialogAlerter('Clé actuelle incorrecte. Changement refusé.');
+      return;
+    }
+    await demanderCleValide('admin', 'Clé actuelle confirmée.\n\nEntre la NOUVELLE clé :');
     majBarreConnexion(true); // on n'arrive ici que si on était déjà connecté
     return;
   }

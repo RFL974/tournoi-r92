@@ -50,6 +50,8 @@ joué rapporte toujours au moins 1 point). **Départage** en cas d'égalité de 
 Une **barre de connexion** indique si ta **clé admin** est active : 🔓 **Connecté** (bouton
 *Changer de clé*) ou 🔒 **Non connecté — les enregistrements seront refusés** (bouton *Se
 connecter*). Pratique pour savoir d'un coup d'œil pourquoi un enregistrement pourrait être refusé.
+Par sécurité (page laissée ouverte), *Changer de clé* **exige d'abord la clé actuelle** avant de
+pouvoir en saisir une nouvelle.
 
 Juste en dessous, un bandeau **tableau de bord** récapitule l'**état du tournoi en un coup d'œil** :
 **Catégories** (nombre), **Équipes** (nombre), **Planning** (⚪️ à générer · 🌅 matin · 🌅🏉 complet)

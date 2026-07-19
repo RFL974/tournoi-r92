@@ -5,6 +5,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : « Changer de clé » exige la clé actuelle — 2026-07-19
+Sécurité (frontend seul, **pas de redéploiement**) : sur une page admin laissée ouverte, le bouton
+**« Changer de clé »** demande désormais **la clé actuelle en premier** (comparée à la clé mémorisée)
+avant d'autoriser la saisie d'une nouvelle clé. Clé actuelle erronée → « Changement refusé ».
+Vérifié au navigateur (mauvaise clé refusée, bonne clé → étape suivante ; 0 erreur console).
+
 ### Admin : audit UX — points de confort (dialogues, connexion, affiche, « Présente ») — 2026-07-19
 Troisième vague de l'audit UX (les « petits plus »). ⚠️ **Contient une nouvelle action backend
 (`supprimerAffiche`) → il faut recopier `Code.gs` + redéployer** (les autres changements sont
