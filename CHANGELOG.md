@@ -5,6 +5,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : avancement « X/Y saisis » dans le planning — 2026-07-19
+Pour piloter la journée sans quitter la page admin (frontend seul, **pas de redéploiement**) :
+`afficherPlanning` ajoute un badge **« X/Y saisis »** à côté de chaque **catégorie** et de chaque
+**phase** (Matin / Après-midi) — **bleu** tant qu'il reste des scores à entrer, **vert + ✅** quand
+tout est saisi (helper `badgeAvancement`, statut `terminé`). Se met à jour avec le bouton
+🔄 Rafraîchir. Vérifié au navigateur (état partiel bleu 2/3 · 0/1 ; état complet vert 3/3 ✅ ;
+0 erreur console). Guide utilisateur §1.4 à jour.
+
 ### Admin : garde-fou contre l'effacement des scores à la régénération — 2026-07-19
 Sécurité de données (frontend seul, **pas de redéploiement**). « Générer poules et planning » efface
 tous les scores. Avant, un seul clic + confirmation simple suffisait à tout perdre en plein tournoi.

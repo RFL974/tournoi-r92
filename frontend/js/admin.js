@@ -1364,7 +1364,18 @@ function afficherPlanning(poules, matchs) {
 
   let html = '';
   cats.forEach(function (cat) {
-    html += '<h3 style="color:var(--bleu-ciel);margin:20px 0 8px;">' + echapper(cat) + '</h3>';
+    // Matchs de la catégorie, séparés matin (poules) / après-midi (classement croisé).
+    const ms = matchs.filter(function (m) { return m.categorie === cat; });
+    const matin = ms.filter(function (m) { return String(m.phase) !== 'classement'; });
+    const aprem = ms.filter(function (m) { return String(m.phase) === 'classement'; });
+
+    // Avancement : nombre de matchs dont le score est saisi (statut « terminé »).
+    const saisisTotal = ms.filter(function (m) { return estTermine(m.statut); }).length;
+    const saisisMatin = matin.filter(function (m) { return estTermine(m.statut); }).length;
+    const saisisAprem = aprem.filter(function (m) { return estTermine(m.statut); }).length;
+
+    html += '<h3 style="color:var(--bleu-ciel);margin:20px 0 8px;">' + echapper(cat) +
+            badgeAvancement(saisisTotal, ms.length) + '</h3>';
 
     // Composition des poules de la catégorie.
     poules.filter(function (p) { return p.categorie === cat; }).forEach(function (p) {
@@ -1375,22 +1386,25 @@ function afficherPlanning(poules, matchs) {
               (membres.join(', ') || '—') + '</div>';
     });
 
-    // Matchs de la catégorie, séparés matin (poules) / après-midi (classement croisé).
-    const ms = matchs.filter(function (m) { return m.categorie === cat; });
-    const matin = ms.filter(function (m) { return String(m.phase) !== 'classement'; });
-    const aprem = ms.filter(function (m) { return String(m.phase) === 'classement'; });
-
     if (matin.length) {
-      html += '<div class="planning-phase">🌅 Matin — poules</div>';
+      html += '<div class="planning-phase">🌅 Matin — poules' + badgeAvancement(saisisMatin, matin.length) + '</div>';
       html += tableMatchs(matin, 'Poule');
     }
     if (aprem.length) {
-      html += '<div class="planning-phase">🏉 Après-midi — classement croisé</div>';
+      html += '<div class="planning-phase">🏉 Après-midi — classement croisé' + badgeAvancement(saisisAprem, aprem.length) + '</div>';
       html += tableMatchs(aprem, 'Niveau');
     }
   });
 
   zone.innerHTML = html;
+}
+
+/** Petit badge « X/Y saisis » (vert si complet) pour le suivi de l'avancement des scores. */
+function badgeAvancement(saisis, total) {
+  if (!total) return '';
+  const complet = saisis === total;
+  return ' <span class="avancement ' + (complet ? 'avc-complet' : 'avc-partiel') + '">' +
+         saisis + '/' + total + ' saisis' + (complet ? ' ✅' : '') + '</span>';
 }
 
 /* --------------------------------------------------------------------------
