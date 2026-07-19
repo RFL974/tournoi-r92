@@ -945,6 +945,16 @@ async function onAjouterEquipe(evenement) {
     return;
   }
 
+  // Refuse un doublon : même nom dans la même catégorie (les noms sont en MAJUSCULES).
+  const doublon = equipesCourantes.some(function (e) {
+    return (e.categorie || '') === categorie &&
+           String(e.nom_equipe).trim().toUpperCase() === nom;
+  });
+  if (doublon) {
+    afficherMessage(message, '⚠️ « ' + nom + ' » existe déjà dans ' + categorie + '.', 'ko');
+    return;
+  }
+
   // On désactive le bouton le temps de l'envoi (évite les doubles clics).
   bouton.disabled = true;
   bouton.textContent = 'Ajout…';
@@ -1071,6 +1081,18 @@ async function onEnregistrerNom(bouton) {
   const nouveauNom = champ.value.trim().toUpperCase();
   if (!nouveauNom) {
     afficherMessage(message, "Le nom de l'équipe ne peut pas être vide.", 'ko');
+    return;
+  }
+
+  // Refuse un doublon dans la même catégorie (hors l'équipe qu'on renomme elle-même).
+  const equipe = equipesCourantes.find(function (e) { return e.id_equipe === id; });
+  const cat = equipe ? (equipe.categorie || '') : '';
+  const doublon = equipesCourantes.some(function (e) {
+    return e.id_equipe !== id && (e.categorie || '') === cat &&
+           String(e.nom_equipe).trim().toUpperCase() === nouveauNom;
+  });
+  if (doublon) {
+    afficherMessage(message, '⚠️ « ' + nouveauNom + ' » existe déjà dans ' + cat + '.', 'ko');
     return;
   }
 

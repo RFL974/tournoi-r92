@@ -5,6 +5,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : anti-doublon à l'ajout / au renommage d'une équipe — 2026-07-19
+Qualité des données (frontend seul, **pas de redéploiement**). Ajouter deux équipes du **même nom
+dans la même catégorie** créait de la confusion (planning, classements). Désormais `onAjouterEquipe`
+et `onEnregistrerNom` **refusent un doublon** (comparaison en MAJUSCULES, insensible à la casse ;
+le renommage s'exclut lui-même) avec un message clair, **avant** tout appel backend. Vérifié au
+navigateur (« racing 1 » refusé quand « RACING 1 » existe, sans appel serveur ; nom différent
+accepté). Guide utilisateur §1.3 à jour.
+
 ### Saisie : alerte cohérence après-midi si correction d'un score du matin — 2026-07-19
 Cohérence des données (frontend seul, **pas de redéploiement**). L'après-midi (classement croisé)
 est calculé une fois sur le classement du matin ; corriger un score du matin **après** génération de
