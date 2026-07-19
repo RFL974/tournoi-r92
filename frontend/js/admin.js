@@ -2137,6 +2137,10 @@ function allouerTerrains(fields, cats, m) {
 
   const prefixes = construirePrefixes(fields);
   const F = fields.length;
+  let numero = 0;                                          // compteur GLOBAL : les mini-terrains
+                                                           // sont numérotés 1, 2, 3… en continu sur
+                                                           // tout le tournoi (numéro unique = pas de
+                                                           // confusion à la table des marques).
   const totalTeams = cats.reduce(function (s, c) { return s + Math.max(1, c.teams); }, 0);
   const plein = cats.filter(function (c) { return c.tile.plein; });
   const normaux = cats.filter(function (c) { return !c.tile.plein; });
@@ -2215,11 +2219,11 @@ function allouerTerrains(fields, cats, m) {
 
   function poserSolo(f, prefix, cat, estPlein) {
     if (estPlein) {                                       // U14 : le match occupe tout le terrain
-      const id = prefix + '-1';
+      numero++; const id = String(numero);
       parCategorie[cat.name].push(id);
       const tW = Math.max(8, Math.min(14, f.L * 0.14));
       return { field: f, prefix: prefix, mode: 'plein', zones: [{ cat: cat.name, color: couleur[cat.name],
-        tiles: [{ id: id, x: 0, y: 0, w: f.L, h: f.W, label: cat.name }],
+        tiles: [{ id: id, x: 0, y: 0, w: f.L, h: f.W, label: cat.name + ' · ' + id }],
         table: { x: f.L / 2 - tW / 2, y: f.W - 5, w: tW, h: 4, split: false } }] };
     }
     const g = grille(f.L, f.W, cat.tile, m);
@@ -2227,11 +2231,11 @@ function allouerTerrains(fields, cats, m) {
     if (cells.length === 0) avert.push(f.nom + ' : trop petit pour un terrain ' + cat.name + '.');
     const tableCell = (cells.length > 1)
       ? cells[Math.floor((g.rows - 1) / 2) * g.cols + Math.floor((g.cols - 1) / 2)] : null; // 1 tuile centrale = table
-    const tiles = []; let n = 0;
+    const tiles = [];
     cells.forEach(function (cell) {
       if (tableCell && cell === tableCell) return;
-      n++; const id = prefix + '-' + n;
-      tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: cat.name + ' ' + n });
+      numero++; const id = String(numero);
+      tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: id });
       parCategorie[cat.name].push(id);
     });
     return { field: f, prefix: prefix, mode: 'solo', zones: [{ cat: cat.name, color: couleur[cat.name],
@@ -2252,11 +2256,11 @@ function allouerTerrains(fields, cats, m) {
         else            { cj = (cote === 'haut')   ? g.rows - 1 : 0; ci = Math.floor((g.cols - 1) / 2); }
         ti = cells[cj * g.cols + ci];
       }
-      const tiles = []; let n = 0;
+      const tiles = [];
       cells.forEach(function (cell) {
         if (ti && cell === ti) return;
-        n++; const id = prefix + suff + '-' + n;
-        tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: cat.name + ' ' + n });
+        numero++; const id = String(numero);
+        tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: id });
         parCategorie[cat.name].push(id);
       });
       zones.push({ cat: cat.name, color: couleur[cat.name], tiles: tiles,
@@ -2346,8 +2350,9 @@ function dessinerCarte(res) {
   res.fieldsPlan.forEach(function (fp) {
     const fw = fp.field.L * ppm, fh = fp.field.W * ppm;
     let g = '<g transform="translate(' + pad + ',' + (y0 + 22) + ')">';
-    g += '<text x="0" y="-8" class="carte-titre">' + echapper(fp.field.nom) + ' — ' + fp.field.L + '×' + fp.field.W + ' m' +
-         (fp.mode === 'split' ? ' · partagé' : '') + '</text>';
+    const catsF = fp.zones.map(function (z) { return z.cat; }).join(' / ');
+    g += '<text x="0" y="-8" class="carte-titre">' + echapper(fp.field.nom) + ' — ' + echapper(catsF) +
+         ' (' + fp.field.L + '×' + fp.field.W + ' m)</text>';
     g += '<rect x="0" y="0" width="' + fw.toFixed(1) + '" height="' + fh.toFixed(1) + '" class="carte-terrain"/>';
     fp.zones.forEach(function (z) {
       z.tiles.forEach(function (t) {

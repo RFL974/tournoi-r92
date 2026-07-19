@@ -1363,6 +1363,6 @@ body.theme-clair {
 .carte-svg { width: 100%; max-width: 520px; display: block; height: auto; }
 .carte-terrain { fill: #eef4ec; stroke: #9bb3a6; stroke-width: 1.5; }
 .carte-titre { font: 600 12px 'Barlow Condensed', sans-serif; fill: #0C1C2E; }
-.carte-tuile { font: 600 9px 'Barlow Condensed', sans-serif; text-anchor: middle; }
+.carte-tuile { font: 700 12px 'Barlow Condensed', sans-serif; text-anchor: middle; }
 .carte-table { fill: #b0b8c2; stroke: #7a8794; stroke-width: 1; }
 .carte-tm { font: 700 8px 'Barlow Condensed', sans-serif; fill: #2b3440; text-anchor: middle; }
