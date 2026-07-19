@@ -1025,43 +1025,132 @@ details.carte-danger > summary { color: #ff9b8f; }
 .frise-lien { flex: 0 0 auto; width: 14px; height: 2px; background: rgba(184, 216, 248, 0.25); }
 
 /* ==========================================================================
-   THÈME CLAIR — page admin (fond blanc, cartes navy translucides)
-   Activé par la classe `theme-clair` sur <body>. Les pages sans cette classe
-   (saisie, perfs) conservent le thème sombre d'origine.
-   Principe : hors carte le texte devient sombre (lisible sur blanc) ; les
-   "panneaux" (cartes, tableau de bord, barre de connexion) restent navy avec
-   du texte clair, comme avant.
+   THÈME CLAIR — page admin, aligné sur la PAGE PUBLIQUE du tournoi.
+   Fond blanc, cartes BLANCHES (liseré fin + ombre douce), en-tête NAVY
+   (le logo bleu ciel y ressort), accents bleu vif, textes navy/gris.
+   Activé par la classe `theme-clair` sur <body> (scopé à admin.html) ;
+   saisie/perfs gardent le thème sombre ; la page publique a sa propre CSS.
    ========================================================================== */
 body.theme-clair {
-  background: #ffffff;                 /* fond global blanc (était un dégradé navy) */
-  color: #0B2138;                      /* texte par défaut (hors carte) : navy sombre */
+  background: #ffffff;
+  color: #3B4A63;                 /* texte courant : gris-bleu (comme la page publique) */
+  /* On remappe deux variables : les couleurs posées via var(...) — y compris en style
+     inline (titres du planning) — deviennent alors lisibles sur fond clair. */
+  --texte: #0C1C2E;               /* texte fort (valeurs, champs) → navy */
+  --bleu-ciel: #33608f;           /* labels / sous-titres → bleu foncé lisible */
 }
-/* Titre principal + éventuels titres hors carte : navy sombre sur blanc. */
-.theme-clair .entete h1 { color: #0B2138; }
 
-/* Panneaux : fond navy translucide (on garde le look "carte navy"). */
-.theme-clair .carte,
-.theme-clair .tableau-bord,
-.theme-clair .barre-connexion.connecte,
+/* ---- En-tête : bandeau navy dégradé + fine barre bleue (comme le bandeau public) ---- */
+.theme-clair .entete {
+  position: relative;
+  background: linear-gradient(135deg, #16304a, #0C1C2E);
+  border-radius: var(--rayon);
+  padding: 20px 16px 24px;
+  margin-bottom: var(--espace);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(12, 28, 46, 0.15);
+}
+.theme-clair .entete::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: var(--accent);
+}
+.theme-clair .entete h1 { color: #ffffff; }
+
+/* ---- Cartes : blanches, liseré fin, ombre douce ---- */
+.theme-clair .carte {
+  background: #ffffff;
+  border: 1px solid #e6edf5;
+  box-shadow: 0 1px 3px rgba(12, 28, 46, 0.06);
+}
+.theme-clair .carte h2 { color: #0C1C2E; border-bottom-color: #e6edf5; }
+.theme-clair #zone-categories > h2 { color: #0C1C2E; }
+.theme-clair .categorie { border-left-color: var(--accent); }
+
+/* ---- Champs de saisie : blancs, texte navy, bord clair, focus bleu ---- */
+.theme-clair .r-input,
+.theme-clair .champ-reglage input,
+.theme-clair .form-equipe input[type="text"],
+.theme-clair .form-equipe select,
+.theme-clair .champ-edit-nom {
+  background: #ffffff;
+  color: #0C1C2E;
+  border: 1px solid #e6edf5;
+}
+.theme-clair .r-input:focus,
+.theme-clair .champ-reglage input:focus,
+.theme-clair .form-equipe input:focus,
+.theme-clair .form-equipe select:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(46, 143, 224, 0.15);
+}
+.theme-clair .form-equipe input::placeholder { color: #9aa7b5; }
+.theme-clair .champ-reglage input[type="time"]::-webkit-calendar-picker-indicator { filter: none; }
+
+/* ---- Petits panneaux internes → surface claire ---- */
+.theme-clair .reglage,
+.theme-clair .equipe-item,
+.theme-clair .poule-compo { background: #F5F9FD; border: 1px solid #e6edf5; }
+.theme-clair .champ-reglage { border-bottom-color: #e6edf5; }
+
+/* ---- Tableau de bord : panneau clair ---- */
+.theme-clair .tableau-bord { background: #F5F9FD; border-color: #e6edf5; }
+.theme-clair .tb-stat { background: #ffffff; }
+.theme-clair .tb-lib,
+.theme-clair .live-maj,
+.theme-clair .cat-mini { color: #8a97a6; }
+
+/* ---- Boutons secondaires (contour) contrastés sur blanc ---- */
+.theme-clair .bouton-suppr,
+.theme-clair .edit-x { color: #c0392b; border-color: rgba(192, 57, 43, 0.35); }
+.theme-clair .bouton-suppr:hover,
+.theme-clair .edit-x:hover { background: rgba(192, 57, 43, 0.08); }
+.theme-clair .bouton-modif,
+.theme-clair .edit-vers { color: var(--accent); border-color: rgba(46, 143, 224, 0.4); }
+.theme-clair .bouton-modif:hover,
+.theme-clair .edit-vers:hover { background: rgba(46, 143, 224, 0.08); }
+.theme-clair .bouton-lien { color: #0C1C2E; border-color: #d4dee9; }
+.theme-clair .bouton-lien:hover { background: rgba(12, 28, 46, 0.05); }
+
+/* ---- Barre de connexion : panneaux clairs, texte contrasté ---- */
+.theme-clair .barre-connexion.connecte {
+  background: rgba(26, 138, 74, 0.10); border-color: rgba(26, 138, 74, 0.35); color: #1a8a4a;
+}
 .theme-clair .barre-connexion.deconnecte {
-  background: rgba(11, 33, 56, 0.92);
+  background: rgba(214, 141, 20, 0.12); border-color: rgba(214, 141, 20, 0.4); color: #b26a00;
 }
-/* Le texte à l'intérieur des panneaux reste clair. */
-.theme-clair .carte,
-.theme-clair .tableau-bord { color: var(--texte); }
 
-/* Messages de chargement / info désormais sur fond blanc → gris-bleu lisible. */
-.theme-clair .message { color: #56708c; }
-.theme-clair .message.erreur { color: #b3261e; background: rgba(179, 38, 30, 0.08); }
+/* ---- Planning : titres + tableaux clairs ---- */
+.theme-clair .planning-phase { color: #0C1C2E; border-bottom-color: #e6edf5; }
+.theme-clair .table-planning th { color: var(--accent); }
+.theme-clair .table-planning td { border-bottom-color: #e6edf5; }
+.theme-clair .table-planning .vs { color: #8a97a6; }
 
-/* Logo Génération R92 dans l'en-tête. */
+/* ---- Éditeur manuel des poules : clair ---- */
+.theme-clair .edit-poules { background: #F5F9FD; border-color: rgba(46, 143, 224, 0.3); }
+.theme-clair .edit-poule { background: #ffffff; border-color: #e6edf5; }
+.theme-clair .edit-equipe { background: #F5F9FD; }
+
+/* ---- Assistant d'arbitrage : pistes claires ---- */
+.theme-clair .arb-item { background: #ffffff; color: #0C1C2E; border-color: #e6edf5; }
+.theme-clair .arb-item .arb-fin { color: #8a97a6; }
+
+/* ---- Zone de danger : carte blanche à liseré rouge ---- */
+.theme-clair details.carte-danger { border-color: rgba(192, 57, 43, 0.4); border-left-color: #c0392b; }
+.theme-clair details.carte-danger > summary { color: #c0392b; }
+.theme-clair .liste-danger { color: #3B4A63; }
+
+/* ---- Messages / états vides ---- */
+.theme-clair .message { color: #8a97a6; }
+.theme-clair .message.erreur { color: #b3261e; background: rgba(179, 38, 30, 0.08); border-radius: var(--rayon); }
+.theme-clair .vide { color: #8a97a6; }
+.theme-clair .apercu-affiche img { border-color: #e6edf5; }
+
+/* ---- Logo dans l'en-tête navy ---- */
 .entete .logo {
   display: block;
   width: 100%;
-  max-width: 300px;
+  max-width: 260px;
   height: auto;
-  margin: 0 auto 6px;
+  margin: 0 auto 10px;
 }
-@media (min-width: 700px) {
-  .entete .logo { max-width: 380px; }
-}
+@media (min-width: 700px) { .entete .logo { max-width: 320px; } }
