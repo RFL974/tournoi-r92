@@ -645,10 +645,11 @@ function podiumCertain(categorie) {
     return m.categorie === categorie && String(m.phase) === 'classement';
   });
   if (!aApresMidi) return null;
-  // Un podium pour CHAQUE format (il ne s'affiche que lorsqu'il est réellement DÉCIDÉ).
+  // Podium en croisé et en coupe (il ne s'affiche que lorsqu'il est réellement DÉCIDÉ).
+  // LIBRE = pas de podium (format amical, sans classement, pour les plus jeunes).
   const fmt = formatApresMidiCat(categorie);
+  if (fmt === 'LIBRE') return null;
   if (fmt === 'COUPE_PLATEAU') return podiumCoupe(categorie);
-  if (fmt === 'LIBRE') return podiumLibre(categorie);
   return podiumCroise(categorie);
 }
 
@@ -686,20 +687,6 @@ function podiumCoupe(categorie) {
     }
   }
   return top;
-}
-
-/** Podium Libre : top 3 des matchs amicaux (barème V=3/N=2/D=1), une fois TOUT joué. */
-function podiumLibre(categorie) {
-  const ms = matchs.filter(function (m) { return m.categorie === categorie && String(m.phase) === 'classement'; });
-  if (!ms.length || ms.some(function (m) { return !estTermine(m.statut); })) return null; // pas fini → provisoire
-  const stats = {};
-  ms.forEach(function (m) {
-    [m.equipe_A, m.equipe_B].forEach(function (id) { if (id && !stats[id]) stats[id] = nouveauStats(id); });
-  });
-  ms.forEach(function (m) { compterMatch(stats, m); });
-  const liste = Object.keys(stats).map(function (k) { return stats[k]; }).sort(comparer);
-  if (!liste.length) return null;
-  return liste.slice(0, 3).map(function (t) { return { nom: t.nom_equipe }; });
 }
 
 /** Tableau compact d'un classement de groupe (poule ou niveau). idSel = équipe surlignée. */
@@ -800,7 +787,7 @@ function sectionApresMidiClassements(categorie) {
   }
   if (fmt === 'LIBRE') {
     return '<div class="planning-phase">🏉 Après-midi — matchs amicaux</div>' +
-      '<p class="note-amical">🎈 Matchs amicaux (sans élimination) — un podium est établi en fin d\'après-midi.</p>' +
+      '<p class="note-amical">🎈 Matchs amicaux supplémentaires — sans classement ni enjeu.</p>' +
       listeResultats(apremMs);
   }
   // CROISE (défaut) : tableaux par niveau, PUIS le classement général (vainqueur en tête).
