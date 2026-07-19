@@ -640,6 +640,46 @@ select.r-input { cursor: pointer; }
 .apresmidi-etat { color: var(--bleu-ciel); margin: 4px 0 10px; }
 
 /* ==========================================================================
+   Barre de connexion admin : indique si la clé admin est active
+   ========================================================================== */
+.barre-connexion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-radius: var(--rayon);
+  padding: 8px 14px;
+  margin-bottom: var(--espace);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.95rem;
+}
+.barre-connexion.connecte {
+  border: 1px solid rgba(159, 224, 160, 0.4);
+  background: rgba(159, 224, 160, 0.08);
+  color: #9fe0a0;
+}
+.barre-connexion.deconnecte {
+  border: 1px solid rgba(255, 180, 100, 0.45);
+  background: rgba(255, 170, 80, 0.1);
+  color: #ffd9a8;
+}
+/* Bouton discret « Changer de clé » (contour de la couleur du texte ambiant) */
+.bouton-lien {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  border-radius: 8px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.85rem;
+}
+.bouton-lien:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* ==========================================================================
    Tableau de bord admin : l'état du tournoi en un coup d'œil (haut de page)
    ========================================================================== */
 .tableau-bord {
