@@ -1366,3 +1366,7 @@ body.theme-clair {
 .carte-tuile { font: 700 12px 'Barlow Condensed', sans-serif; text-anchor: middle; }
 .carte-table { fill: #b0b8c2; stroke: #7a8794; stroke-width: 1; }
 .carte-tm { font: 700 8px 'Barlow Condensed', sans-serif; fill: #2b3440; text-anchor: middle; }
+
+/* Nom du grand terrain sur la carte (bien visible) + menu emplacement */
+.carte-nomterrain { font-weight: 700; font-size: 13px; fill: #0C1C2E; }
+.terrain-ligne .tp-pos { flex: 0 0 auto; max-width: 150px; }
