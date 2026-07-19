@@ -5,15 +5,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
-### Podium pour TOUTES les catégories, quel que soit le format — 2026-07-19
-Le **podium 🥇🥈🥉** s'affiche désormais pour **chaque catégorie**, quel que soit le format
-d'après-midi (avant : uniquement en croisé). Il apparaît dès qu'il est **décidé**. **Frontend seul,
-pas de redéploiement backend.**
+### Podium aussi en Coupe + Plateau — 2026-07-19
+Le **podium 🥇🥈🥉** s'affiche désormais aussi pour le format **Coupe + Plateau** (avant : croisé
+uniquement). Il apparaît dès qu'il est **décidé**. **Frontend seul, pas de redéploiement backend.**
 - **Croisé** → top 3 du classement général (quand il est mathématiquement verrouillé — inchangé).
 - **Coupe + Plateau** → 🥇 vainqueur de la finale, 🥈 finaliste, 🥉 vainqueur de la petite finale.
-- **Libre** → top 3 aux points, une fois tous les matchs amicaux joués.
-- LIBRE gagne donc un classement final : les libellés « sans classement » deviennent « sans
-  élimination » (admin, saisie, page publique, doc). *(Réversible si on veut LIBRE sans podium.)*
+- **Libre** → **pas de podium** (choix assumé : format amical sans classement, pour ne pas classer
+  les plus jeunes).
 
 ### Classement croisé : le vainqueur du tournoi est mis en avant — 2026-07-19
 Précision : le classement croisé **désigne bien un vainqueur** — l'équipe qui finit **1ʳᵉ du
