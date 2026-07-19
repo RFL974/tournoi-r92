@@ -1349,3 +1349,20 @@ body.theme-clair {
 .theme-clair .tab-capacite th, .theme-clair .tab-capacite td { border-color: #e6edf5; }
 .theme-clair .tab-capacite thead th { color: var(--accent); background: #F5F9FD; }
 .theme-clair .tab-capacite .cap-nom { color: #0C1C2E; }
+
+/* ---- Répartition automatique : résumé + carte SVG ---- */
+.repart-resume { list-style: none; padding: 0; margin: 10px 0; }
+.repart-resume li { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.repart-puce { width: 12px; height: 12px; border-radius: 3px; flex: 0 0 auto; }
+.repart-detail { opacity: .65; font-size: .9em; }
+.repart-avert {
+  margin: 10px 0; padding: 8px 10px; border-radius: var(--rayon);
+  background: rgba(214, 141, 20, .14); color: #b26a00; line-height: 1.5;
+}
+.repart-carte-wrap { overflow-x: auto; margin: 10px 0; }
+.carte-svg { width: 100%; max-width: 520px; display: block; height: auto; }
+.carte-terrain { fill: #eef4ec; stroke: #9bb3a6; stroke-width: 1.5; }
+.carte-titre { font: 600 12px 'Barlow Condensed', sans-serif; fill: #0C1C2E; }
+.carte-tuile { font: 600 9px 'Barlow Condensed', sans-serif; text-anchor: middle; }
+.carte-table { fill: #b0b8c2; stroke: #7a8794; stroke-width: 1; }
+.carte-tm { font: 700 8px 'Barlow Condensed', sans-serif; fill: #2b3440; text-anchor: middle; }

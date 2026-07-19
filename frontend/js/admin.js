@@ -1885,6 +1885,14 @@ function injecterTerrains() {
          '<span id="message-terrains" class="message-form"></span>' +
        '</div>';
 
+  // Répartition automatique (étape 2)
+  h += '<h3 class="terr-titre">Répartition automatique</h3>';
+  h += '<p class="note-generation">Répartit les mini-terrains entre catégories <strong>selon le nombre ' +
+       'd\'équipes</strong>, en gardant chaque catégorie groupée et en réservant la table des marques. ' +
+       'Prévisualise la carte, puis applique.</p>';
+  h += '<button type="button" class="bouton" id="bouton-repartir">🧩 Répartir les terrains</button>';
+  h += '<div id="repartition-resultat"></div>';
+
   zone.innerHTML = h;
 }
 
@@ -1998,6 +2006,8 @@ function onZoneTerrainsClick(evenement) {
   const suppr = evenement.target.closest('.terr-suppr');
   if (suppr) { suppr.closest('.terrain-ligne').remove(); recalculerCapacite(); return; }
   if (evenement.target.id === 'bouton-enregistrer-terrains') { onEnregistrerPlanTerrains(); return; }
+  if (evenement.target.id === 'bouton-repartir') { onRepartir(); return; }
+  if (evenement.target.id === 'bouton-appliquer-repartition') { onAppliquerRepartition(); return; }
 }
 
 function ajouterTerrainPhysique() {
@@ -2036,6 +2046,366 @@ async function onEnregistrerPlanTerrains() {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
     bouton.disabled = false; bouton.textContent = texte;
+  }
+}
+
+/* ==========================================================================
+   TERRAINS — étape 2 : répartition automatique + carte visuelle
+   --------------------------------------------------------------------------
+   Répartit les mini-terrains entre catégories selon le NOMBRE D'ÉQUIPES, en
+   gardant chaque catégorie groupée. Deux catégories peuvent partager un grand
+   terrain (scindé en deux). Sur chaque grand terrain (ou demi-terrain), 1
+   mini-terrain central est réservé à la TABLE DES MARQUES (« TM »). U14 (plein)
+   occupe un grand terrain entier. Prévisualisation (carte) avant application.
+   ========================================================================== */
+
+/* Palette de couleurs par catégorie (pour la carte + les puces du résumé). */
+const PALETTE_CAT = ['#2E8FE0', '#27ae60', '#e67e22', '#8e44ad', '#16a085', '#c0392b', '#2c3e50'];
+
+/* Répartition calculée en attente d'application (null = rien de calculé). */
+let repartitionCalculee = null;
+
+/** Nombre d'équipes par catégorie (d'après les équipes saisies). */
+function equipesParCategorie() {
+  const map = {};
+  (equipesCourantes || []).forEach(function (e) {
+    const c = String(e.categorie);
+    map[c] = (map[c] || 0) + 1;
+  });
+  return map;
+}
+
+/** Préfixe court et unique pour nommer les mini-terrains (« Rugby 1 » → « R1 »). */
+function prefixeTerrain(nom, i) {
+  const s = String(nom || '').trim();
+  const lettre = (s.toUpperCase().match(/[A-Z]/) || ['T'])[0];
+  const num = (s.match(/(\d+)\s*$/) || [])[1] || String(i + 1);
+  return lettre + num;
+}
+function construirePrefixes(fields) {
+  const vus = {};
+  return fields.map(function (f, i) {
+    let p = prefixeTerrain(f.nom, i);
+    if (vus[p]) { let k = 2; while (vus[p + k]) k++; p = p + k; }
+    vus[p] = true; return p;
+  });
+}
+
+/** Meilleure grille de tuiles (l×w) dans un rectangle L×W (2 orientations testées). */
+function grille(L, W, tile, m) {
+  let best = { cols: 0, rows: 0, a: tile.l, b: tile.w, n: 0 };
+  [[tile.l, tile.w], [tile.w, tile.l]].forEach(function (o) {
+    const a = o[0], b = o[1];
+    const cols = Math.max(0, Math.floor((L + m) / (a + m)));
+    const rows = Math.max(0, Math.floor((W + m) / (b + m)));
+    const n = cols * rows;
+    if (n > best.n) best = { cols: cols, rows: rows, a: a, b: b, n: n };
+  });
+  return best;
+}
+/** Positions (en mètres) de toutes les cellules d'une grille, depuis une origine. */
+function cellulesGrille(ox, oy, g, m) {
+  const arr = [];
+  for (let j = 0; j < g.rows; j++)
+    for (let i = 0; i < g.cols; i++)
+      arr.push({ x: ox + i * (g.a + m), y: oy + j * (g.b + m), w: g.a, h: g.b });
+  return arr;
+}
+
+/** Répartition entière proportionnelle aux poids (méthode du plus fort reste). */
+function repartitionProportionnelle(total, poids) {
+  const somme = poids.reduce(function (a, b) { return a + b; }, 0) || 1;
+  const brut = poids.map(function (w) { return total * w / somme; });
+  const base = brut.map(Math.floor);
+  let reste = total - base.reduce(function (a, b) { return a + b; }, 0);
+  const ordre = brut.map(function (r, i) { return { i: i, frac: r - Math.floor(r) }; })
+                    .sort(function (a, b) { return b.frac - a.frac; });
+  for (let k = 0; k < ordre.length && reste > 0; k++) { base[ordre[k].i]++; reste--; }
+  return base;
+}
+
+/**
+ * Calcule la répartition complète : quelle catégorie sur quel grand terrain, avec
+ * la position de chaque mini-terrain (pour la carte) et la table des marques.
+ * @return { fieldsPlan, parCategorie:{cat:[ids]}, couleur:{cat:hex}, avert:[] }
+ */
+function allouerTerrains(fields, cats, m) {
+  const avert = [];
+  const parCategorie = {};
+  const couleur = {};
+  cats.forEach(function (c, i) { parCategorie[c.name] = []; couleur[c.name] = PALETTE_CAT[i % PALETTE_CAT.length]; });
+
+  const prefixes = construirePrefixes(fields);
+  const F = fields.length;
+  const totalTeams = cats.reduce(function (s, c) { return s + Math.max(1, c.teams); }, 0);
+  const plein = cats.filter(function (c) { return c.tile.plein; });
+  const normaux = cats.filter(function (c) { return !c.tile.plein; });
+
+  // 1) Grands terrains ENTIERS pour les catégories « plein » (U14), proportionnel aux équipes.
+  let pleinFields = 0;
+  if (plein.length) {
+    const capP = F - (normaux.length ? 1 : 0);            // laisser au moins 1 grand terrain aux autres
+    const teamsPlein = plein.reduce(function (s, c) { return s + Math.max(1, c.teams); }, 0);
+    let cible = Math.round(F * teamsPlein / totalTeams);
+    cible = Math.max(plein.length, Math.min(cible, Math.max(0, capP)));
+    const per = repartitionProportionnelle(cible, plein.map(function (c) { return Math.max(1, c.teams); }));
+    plein.forEach(function (c, i) { c._fields = Math.max(1, per[i]); });
+    let somme = plein.reduce(function (s, c) { return s + c._fields; }, 0);
+    while (somme > Math.max(0, capP)) {                   // rogner si dépassement
+      const gros = plein.reduce(function (a, b) { return b._fields > a._fields ? b : a; });
+      if (gros._fields <= 1) break;
+      gros._fields--; somme--;
+    }
+    plein.forEach(function (c) { pleinFields += c._fields; });
+  }
+
+  // 2) Le reste des grands terrains pour les catégories « normales ».
+  //    On raisonne en DEMI-terrains (une catégorie peut prendre une moitié) et on
+  //    ÉQUILIBRE LA CHARGE : à chaque demi-terrain libre, on sert la catégorie qui a
+  //    le plus d'équipes PAR terrain déjà reçu. Comme un terrain U10 (grand) contient
+  //    moins de mini-terrains qu'un U8 (petit), une catégorie à grands terrains reçoit
+  //    naturellement plus de moitiés → le nombre de terrains suit vraiment les équipes.
+  const fieldsRestants = F - pleinFields;
+  if (normaux.length && fieldsRestants > 0) {
+    const creneaux = 2 * fieldsRestants;                  // nb de demi-terrains à distribuer
+    const fieldsNormaux = fields.slice(pleinFields);
+    // Estimation du nb de mini-terrains qu'une catégorie tient sur une MOITIÉ de grand terrain
+    // (moyenne sur les grands terrains restants, table des marques déduite).
+    function estimDemi(cat) {
+      let s = 0;
+      fieldsNormaux.forEach(function (f) {
+        const horiz = f.L >= f.W;
+        const g = grille(horiz ? (f.L - m) / 2 : f.L, horiz ? f.W : (f.W - m) / 2, cat.tile, m);
+        s += Math.max(0, g.n - (g.n > 1 ? 1 : 0));
+      });
+      return Math.max(0.1, s / fieldsNormaux.length);
+    }
+    const est = {}, tiles = {};
+    normaux.forEach(function (c) { c._halves = 0; tiles[c.name] = 0; est[c.name] = estimDemi(c); });
+    let used = 0;
+    normaux.forEach(function (c) {                          // 1 demi garanti à chaque catégorie
+      if (used < creneaux) { c._halves = 1; tiles[c.name] = est[c.name]; used++; }
+      else avert.push('Espace insuffisant : ' + c.name + ' n’a pas reçu de terrain (ajoute un grand terrain).');
+    });
+    while (used < creneaux) {                               // le reste va à la plus « sous pression »
+      let best = null, bestP = -1;
+      normaux.forEach(function (c) {
+        const p = Math.max(1, c.teams) / (tiles[c.name] + 1);
+        if (p > bestP) { bestP = p; best = c; }
+      });
+      best._halves++; tiles[best.name] += est[best.name]; used++;
+    }
+  } else if (normaux.length) {
+    normaux.forEach(function (c) { avert.push(c.name + ' : aucun grand terrain disponible.'); });
+  }
+
+  // 3) Files : terrains SOLO (entiers) et paires à SCINDER (une moitié chacune).
+  const soloQueue = [];
+  plein.forEach(function (c) { for (let k = 0; k < (c._fields || 0); k++) soloQueue.push({ cat: c, plein: true }); });
+  normaux.forEach(function (c) { const wf = Math.floor((c._halves || 0) / 2); for (let k = 0; k < wf; k++) soloQueue.push({ cat: c, plein: false }); });
+  const demiFile = [];
+  normaux.forEach(function (c) { if ((c._halves || 0) % 2 === 1) demiFile.push(c); });
+  const paires = [];
+  for (let k = 0; k + 1 < demiFile.length; k += 2) paires.push([demiFile[k], demiFile[k + 1]]);
+  if (demiFile.length % 2 === 1) soloQueue.push({ cat: demiFile[demiFile.length - 1], plein: false }); // moitié orpheline → terrain entier
+
+  // 4) Attribution aux grands terrains physiques (SOLO d'abord, puis SCINDÉS).
+  const fieldsPlan = [];
+  let fi = 0;
+
+  function poserSolo(f, prefix, cat, estPlein) {
+    if (estPlein) {                                       // U14 : le match occupe tout le terrain
+      const id = prefix + '-1';
+      parCategorie[cat.name].push(id);
+      const tW = Math.max(8, Math.min(14, f.L * 0.14));
+      return { field: f, prefix: prefix, mode: 'plein', zones: [{ cat: cat.name, color: couleur[cat.name],
+        tiles: [{ id: id, x: 0, y: 0, w: f.L, h: f.W, label: cat.name }],
+        table: { x: f.L / 2 - tW / 2, y: f.W - 5, w: tW, h: 4, split: false } }] };
+    }
+    const g = grille(f.L, f.W, cat.tile, m);
+    const cells = cellulesGrille(0, 0, g, m);
+    if (cells.length === 0) avert.push(f.nom + ' : trop petit pour un terrain ' + cat.name + '.');
+    const tableCell = (cells.length > 1)
+      ? cells[Math.floor((g.rows - 1) / 2) * g.cols + Math.floor((g.cols - 1) / 2)] : null; // 1 tuile centrale = table
+    const tiles = []; let n = 0;
+    cells.forEach(function (cell) {
+      if (tableCell && cell === tableCell) return;
+      n++; const id = prefix + '-' + n;
+      tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: cat.name + ' ' + n });
+      parCategorie[cat.name].push(id);
+    });
+    return { field: f, prefix: prefix, mode: 'solo', zones: [{ cat: cat.name, color: couleur[cat.name],
+      tiles: tiles, table: tableCell ? { x: tableCell.x, y: tableCell.y, w: tableCell.w, h: tableCell.h, split: false } : null }] };
+  }
+
+  function poserSplit(f, prefix, cA, cB) {
+    const horizontal = f.L >= f.W;                        // terrain large → coupe gauche/droite
+    const zones = [];
+    function demi(cat, ox, oy, zL, zW, suff, cote) {
+      const g = grille(zL, zW, cat.tile, m);
+      const cells = cellulesGrille(ox, oy, g, m);
+      if (cells.length === 0) avert.push(f.nom + ' (demi) : trop petit pour ' + cat.name + '.');
+      let ti = null;
+      if (cells.length > 1) {                             // table près de la séparation centrale
+        let ci, cj;
+        if (horizontal) { ci = (cote === 'gauche') ? g.cols - 1 : 0; cj = Math.floor((g.rows - 1) / 2); }
+        else            { cj = (cote === 'haut')   ? g.rows - 1 : 0; ci = Math.floor((g.cols - 1) / 2); }
+        ti = cells[cj * g.cols + ci];
+      }
+      const tiles = []; let n = 0;
+      cells.forEach(function (cell) {
+        if (ti && cell === ti) return;
+        n++; const id = prefix + suff + '-' + n;
+        tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: cat.name + ' ' + n });
+        parCategorie[cat.name].push(id);
+      });
+      zones.push({ cat: cat.name, color: couleur[cat.name], tiles: tiles,
+        table: ti ? { x: ti.x, y: ti.y, w: ti.w, h: ti.h, split: true } : null });
+    }
+    if (horizontal) {
+      const hL = (f.L - m) / 2;
+      demi(cA, 0, 0, hL, f.W, 'G', 'gauche');
+      demi(cB, hL + m, 0, hL, f.W, 'D', 'droite');
+    } else {
+      const hW = (f.W - m) / 2;
+      demi(cA, 0, 0, f.L, hW, 'H', 'haut');
+      demi(cB, 0, hW + m, f.L, hW, 'B', 'bas');
+    }
+    return { field: f, prefix: prefix, mode: 'split', zones: zones };
+  }
+
+  soloQueue.forEach(function (item) {
+    if (fi >= F) return;
+    fieldsPlan.push(poserSolo(fields[fi], prefixes[fi], item.cat, item.plein)); fi++;
+  });
+  paires.forEach(function (p) {
+    if (fi >= F) return;
+    fieldsPlan.push(poserSplit(fields[fi], prefixes[fi], p[0], p[1])); fi++;
+  });
+  if (soloQueue.length + paires.length > F) {
+    avert.push('Pas assez de grands terrains : certaines catégories n’ont pas pu être placées.');
+  }
+
+  return { fieldsPlan: fieldsPlan, parCategorie: parCategorie, couleur: couleur, avert: avert };
+}
+
+/** Bouton « Répartir » : calcule la répartition à partir des saisies en cours, l'affiche. */
+function onRepartir() {
+  const cont = document.getElementById('repartition-resultat');
+  const fields = lireTerrainsDuFormulaire().filter(function (t) { return t.L > 0 && t.W > 0; });
+  const dims = lireDimensionsDuFormulaire();
+  const m = lireCouloir();
+  const teams = equipesParCategorie();
+  const cats = categoriesPresentes().map(function (n) { return { name: n, teams: teams[n] || 0, tile: dims[n] }; })
+    .filter(function (c) { return c.tile && (c.tile.plein || (c.tile.l > 0 && c.tile.w > 0)); });
+
+  if (fields.length === 0) { cont.innerHTML = '<div class="repart-avert">⚠️ Déclare au moins un grand terrain valide.</div>'; return; }
+  if (cats.length === 0) { cont.innerHTML = '<div class="repart-avert">⚠️ Aucune catégorie avec une taille de terrain valide.</div>'; return; }
+
+  repartitionCalculee = allouerTerrains(fields, cats, m);
+  afficherRepartition(repartitionCalculee, cats);
+}
+
+/** Affiche le résumé + la carte + le bouton « Appliquer ». */
+function afficherRepartition(res, cats) {
+  const teams = equipesParCategorie();
+  let h = '<h3 class="terr-titre">Résultat de la répartition</h3>';
+
+  h += '<ul class="repart-resume">';
+  cats.forEach(function (c) {
+    const ids = res.parCategorie[c.name] || [];
+    const noms = [];
+    res.fieldsPlan.forEach(function (fp) {
+      if (fp.zones.some(function (z) { return z.cat === c.name && z.tiles.length; }))
+        noms.push(fp.field.nom + (fp.mode === 'split' ? ' (½)' : ''));
+    });
+    h += '<li><span class="repart-puce" style="background:' + res.couleur[c.name] + '"></span>' +
+         '<strong>' + echapper(c.name) + '</strong> — ' + ids.length + ' terrain' + (ids.length > 1 ? 's' : '') +
+         ' <span class="repart-detail">(' + (teams[c.name] || 0) + ' équipes · ' + (echapper(noms.join(', ')) || '—') + ')</span></li>';
+  });
+  h += '</ul>';
+
+  if (res.avert.length) {
+    h += '<div class="repart-avert">' + res.avert.map(function (a) { return '⚠️ ' + echapper(a); }).join('<br>') + '</div>';
+  }
+
+  h += '<div class="repart-carte-wrap">' + dessinerCarte(res) + '</div>';
+  h += '<p class="note-generation">La zone grise <strong>« TM »</strong> = table des marques, réservée au centre de chaque terrain (scindée en deux quand deux catégories partagent un grand terrain).</p>';
+  h += '<div class="ligne-action"><button type="button" class="bouton" id="bouton-appliquer-repartition">✅ Appliquer aux catégories</button>' +
+       '<span id="message-repartition" class="message-form"></span></div>';
+
+  document.getElementById('repartition-resultat').innerHTML = h;
+}
+
+/** Dessine la carte SVG (un grand terrain par ligne, à l'échelle). */
+function dessinerCarte(res) {
+  const maxL = Math.max.apply(null, res.fieldsPlan.map(function (fp) { return fp.field.L; }).concat([1]));
+  const ppm = 460 / maxL;                                  // pixels par mètre
+  const pad = 8, gapY = 34;
+  let y0 = 0; const parts = [];
+  res.fieldsPlan.forEach(function (fp) {
+    const fw = fp.field.L * ppm, fh = fp.field.W * ppm;
+    let g = '<g transform="translate(' + pad + ',' + (y0 + 22) + ')">';
+    g += '<text x="0" y="-8" class="carte-titre">' + echapper(fp.field.nom) + ' — ' + fp.field.L + '×' + fp.field.W + ' m' +
+         (fp.mode === 'split' ? ' · partagé' : '') + '</text>';
+    g += '<rect x="0" y="0" width="' + fw.toFixed(1) + '" height="' + fh.toFixed(1) + '" class="carte-terrain"/>';
+    fp.zones.forEach(function (z) {
+      z.tiles.forEach(function (t) {
+        const x = t.x * ppm, yy = t.y * ppm, w = t.w * ppm, hh = t.h * ppm;
+        g += '<rect x="' + x.toFixed(1) + '" y="' + yy.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + hh.toFixed(1) +
+             '" rx="2" fill="' + z.color + '" fill-opacity="0.20" stroke="' + z.color + '" stroke-width="1"/>';
+        if (w > 26 && hh > 14)
+          g += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (yy + hh / 2 + 3).toFixed(1) + '" class="carte-tuile" fill="' + z.color + '">' + echapper(t.label) + '</text>';
+      });
+      if (z.table) {
+        const tx = z.table.x * ppm, ty = z.table.y * ppm, tw = z.table.w * ppm, th = z.table.h * ppm;
+        g += '<rect x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" width="' + tw.toFixed(1) + '" height="' + th.toFixed(1) + '" class="carte-table"/>';
+        if (tw > 20 && th > 12) g += '<text x="' + (tx + tw / 2).toFixed(1) + '" y="' + (ty + th / 2 + 3).toFixed(1) + '" class="carte-tm">TM</text>';
+      }
+    });
+    g += '</g>';
+    parts.push(g);
+    y0 += fh + gapY;
+  });
+  const width = 460 + 2 * pad;
+  return '<svg viewBox="0 0 ' + width + ' ' + (y0 + 6).toFixed(0) + '" width="100%" class="carte-svg" ' +
+         'role="img" aria-label="Carte de répartition des terrains">' + parts.join('') + '</svg>';
+}
+
+/** Applique la répartition : écrit le champ « Terrains » de chaque catégorie. */
+async function onAppliquerRepartition() {
+  if (!repartitionCalculee) return;
+  const message = document.getElementById('message-repartition');
+  const par = repartitionCalculee.parCategorie;
+  const noms = Object.keys(par).filter(function (n) { return par[n] && par[n].length; });
+  if (noms.length === 0) { afficherMessage(message, 'Rien à appliquer.', 'ko'); return; }
+
+  const ok = await dialogConfirmer(
+    'Écrire ces terrains dans les catégories ?\n\n' +
+    noms.map(function (n) { return n + ' → ' + par[n].join(', '); }).join('\n') +
+    '\n\nCela remplace le champ « Terrains » de chaque catégorie (pris en compte à la prochaine génération du planning).',
+    { ok: 'Appliquer' });
+  if (!ok) return;
+
+  const bouton = document.getElementById('bouton-appliquer-repartition');
+  if (bouton) { bouton.disabled = true; bouton.textContent = 'Application…'; }
+  try {
+    for (let k = 0; k < noms.length; k++) {
+      const nom = noms[k];
+      const catObj = (configCourante.categories || []).find(function (c) { return String(c.categorie) === nom; });
+      if (!catObj) continue;
+      const data = Object.assign({}, catObj, { terrains: par[nom].join(',') });
+      await ecrireAdmin('enregistrerCategorie', data);
+      const idx = configCourante.categories.findIndex(function (c) { return String(c.categorie) === nom; });
+      if (idx >= 0) configCourante.categories[idx] = data;
+    }
+    injecterReglages(configCourante.global, configCourante.categories); // les cartes catégories montrent les nouveaux terrains
+    repartitionCalculee = null;
+    document.getElementById('repartition-resultat').innerHTML = '';
+    await dialogAlerter('✅ Terrains appliqués aux catégories. Ils seront utilisés à la prochaine génération du planning.');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    if (bouton) { bouton.disabled = false; bouton.textContent = '✅ Appliquer aux catégories'; }
   }
 }
 
