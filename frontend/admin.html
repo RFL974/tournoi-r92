@@ -54,6 +54,12 @@
       <section class="carte" id="bloc-equipes">
         <h2>Équipes</h2>
 
+        <!-- Guidage affiché quand aucune catégorie n'existe (formulaire désactivé) -->
+        <p class="note-generation" id="aide-categories" hidden>
+          ➕ Ajoute d'abord une <strong>catégorie</strong> (section « Catégories » ci-dessus)
+          pour pouvoir saisir des équipes.
+        </p>
+
         <!-- Formulaire d'ajout : nom + catégorie -->
         <form id="form-equipe" class="form-equipe">
           <input id="champ-nom" type="text" placeholder="Nom de l'équipe" autocomplete="off" required>
