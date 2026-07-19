@@ -109,6 +109,42 @@ function nomEquipe(id) {
   return e ? e.nom_equipe : id;
 }
 
+/** Libellé français d'un tour de bracket (Coupe). */
+function libelleTourFr(tour) {
+  switch (String(tour)) {
+    case 'FINALE': return 'Finale';
+    case 'DEMI_FINALE': return 'Demi-finale';
+    case 'PETITE_FINALE': return 'Petite finale';
+    case 'QUART_DE_FINALE': return 'Quart de finale';
+    case 'HUITIEME_DE_FINALE': return 'Huitième de finale';
+    case 'SEIZIEME_DE_FINALE': return 'Seizième de finale';
+    default: return String(tour || '');
+  }
+}
+
+/** Vrai si le match est un match de Coupe (élimination directe). */
+function estMatchCoupe(m) {
+  return String(m.sous_tableau || '').toUpperCase() === 'COUPE';
+}
+
+/** Vrai si un match de Coupe est « en attente » : une des deux équipes n'est pas encore connue. */
+function estEnAttente(m) {
+  return estMatchCoupe(m) && (!m.equipe_A || !m.equipe_B);
+}
+
+/**
+ * Titre lisible d'un match, affiché au bénévole pour qu'il comprenne l'enjeu :
+ *  Coupe → « 🏆 Demi-finale — Coupe U12 » ; Plateau → « Plateau — U12 » ;
+ *  Libre → « Match amical » ; Croisé → « Niveau 3 » ; Matin → « Poule A ».
+ */
+function contexteMatch(m) {
+  if (estMatchCoupe(m)) return '🏆 ' + (libelleTourFr(m.tour) || 'Coupe') + ' — Coupe ' + m.categorie;
+  if (String(m.sous_tableau || '').toUpperCase() === 'PLATEAU') return 'Plateau — ' + m.categorie;
+  if (String(m.format || '').toUpperCase() === 'LIBRE') return 'Match amical';
+  if (String(m.phase) === 'classement') return 'Niveau ' + String(m.poule);
+  return 'Poule ' + String(m.poule);
+}
+
 /** Rend les cartes d'une liste de matchs, triées par heure. */
 function cartesMatchs(liste) {
   return liste.slice()
@@ -209,7 +245,7 @@ function afficherMatchs() {
   if (aprem.length) {
     // L'après-midi se replie quand tous ses matchs sont terminés (journée bouclée).
     const replie = (restantsAprem === 0);
-    html += phaseAccordeon('🏉 Après-midi — classement croisé', aprem, replie,
+    html += phaseAccordeon(titreApresMidi(aprem), aprem, replie,
       resumePhase(restantsAprem, aprem.length));
   }
 
@@ -220,17 +256,65 @@ function afficherMatchs() {
   zone.innerHTML = html;
 }
 
-/** HTML d'une carte de match (méta + saisie des 2 scores + bouton). */
+/** Titre de l'accordéon après-midi, selon le format des matchs de la catégorie affichée. */
+function titreApresMidi(aprem) {
+  const formats = {};
+  aprem.forEach(function (m) { formats[String(m.format || '').toUpperCase()] = true; });
+  if (formats.COUPE_PLATEAU) return '🏉 Après-midi — Coupe & Plateau';
+  if (formats.LIBRE) return '🏉 Après-midi — matchs amicaux';
+  return '🏉 Après-midi — classement croisé';
+}
+
+/** HTML d'une carte de match (contexte + saisie des 2 scores + départage + bouton). */
 function carteMatch(m) {
+  const contexte = contexteMatch(m);
+  const coupe = estMatchCoupe(m);
+  const libre = String(m.format || '').toUpperCase() === 'LIBRE';
+
+  // Match de Coupe « en attente » : les 2 équipes ne sont pas encore connues → non saisissable.
+  if (estEnAttente(m)) {
+    return '' +
+      '<div class="match match-attente" data-id="' + echapper(m.id_match) + '">' +
+        '<div class="match-meta">' + echapper(m.heure_debut) + ' · Terrain ' + echapper(String(m.terrain)) +
+          ' · ' + echapper(contexte) + '</div>' +
+        '<div class="bandeau-attente">⏳ <strong>En attente</strong> : les deux équipes ne sont pas encore ' +
+          'connues. Ce match se débloquera dès que les matchs précédents seront saisis.</div>' +
+      '</div>';
+  }
+
   const termine = estTermine(m.statut);
   const sa = (m.score_A === '' || m.score_A == null) ? '' : m.score_A;
   const sb = (m.score_B === '' || m.score_B == null) ? '' : m.score_B;
-  const libellePoule = (String(m.phase) === 'classement' ? 'Niveau ' : 'Poule ') + String(m.poule);
+
+  // Bandeau contextuel : amical (LIBRE) ou avertissement élimination directe (COUPE).
+  let bandeau = '';
+  if (libre) bandeau = '<div class="bandeau-amical">🎈 Match amical — sans classement (juste du temps de jeu)</div>';
+  else if (coupe) bandeau = '<div class="bandeau-coupe">⚔️ Élimination directe : un vainqueur est obligatoire.</div>';
+
+  // Départage (COUPE) : radios pour désigner le vainqueur en cas d'égalité au score.
+  let departage = '';
+  if (coupe) {
+    const grp = 'vainqueur-' + echapper(m.id_match);
+    const vA = (String(m.vainqueur) === String(m.equipe_A)) ? ' checked' : '';
+    const vB = (String(m.vainqueur) === String(m.equipe_B)) ? ' checked' : '';
+    const dis = termine ? ' disabled' : '';
+    departage =
+      '<div class="departage">' +
+        '<span class="departage-lib">En cas d\'égalité, vainqueur :</span>' +
+        '<label class="departage-opt"><input type="radio" name="' + grp + '" value="A"' + vA + dis + '> ' +
+          echapper(nomEquipe(m.equipe_A)) + '</label>' +
+        '<label class="departage-opt"><input type="radio" name="' + grp + '" value="B"' + vB + dis + '> ' +
+          echapper(nomEquipe(m.equipe_B)) + '</label>' +
+      '</div>';
+  }
+
   return '' +
-    '<div class="match' + (termine ? ' match-termine' : '') + '" data-id="' + echapper(m.id_match) + '">' +
+    '<div class="match' + (termine ? ' match-termine' : '') + (coupe ? ' match-coupe' : '') +
+        '" data-id="' + echapper(m.id_match) + '">' +
       '<div class="match-meta">' + echapper(m.heure_debut) + ' · Terrain ' + echapper(String(m.terrain)) +
-        ' · ' + echapper(libellePoule) +
+        ' · ' + echapper(contexte) +
         (termine ? ' · <span class="badge-ok">✓ terminé</span>' : '') + '</div>' +
+      bandeau +
       '<div class="match-saisie">' +
         '<div class="eq-ligne">' +
           '<span class="eq">' + echapper(nomEquipe(m.equipe_A)) + '</span>' +
@@ -240,6 +324,7 @@ function carteMatch(m) {
           '<span class="eq">' + echapper(nomEquipe(m.equipe_B)) + '</span>' +
           '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sb)) + '"' + (termine ? ' disabled' : '') + '>' +
         '</div>' +
+        departage +
         '<button class="bouton bouton-valider" type="button">' + (termine ? 'Corriger' : 'Valider') + '</button>' +
       '</div>' +
       '<div class="message-form"></div>' +
@@ -276,15 +361,53 @@ document.addEventListener('click', async function (evenement) {
     return;
   }
 
+  const m = matchs.find(function (x) { return x.id_match === id; });
+  const coupe = carte.classList.contains('match-coupe');
+
+  // Départage (COUPE) : traduit le radio A/B coché en identifiant d'équipe désignée vainqueur.
+  let vainqueur = '';
+  if (coupe && m) {
+    const r = carte.querySelector('input[name^="vainqueur-"]:checked');
+    if (r) vainqueur = (r.value === 'B') ? m.equipe_B : m.equipe_A;
+  }
+
+  // Envoi (facteur commun) : une correction porte modification:true ; une cascade forcerCascade:true.
+  async function envoyer(forcerCascade) {
+    const data = { id_match: id, score_A: scoreA, score_B: scoreB, modification: enEdition };
+    if (coupe && vainqueur) data.vainqueur = vainqueur;
+    if (forcerCascade) data.forcerCascade = true;
+    return apiPostProtege('enregistrerScore', data, 'scores', 'de saisie des scores');
+  }
+
   bouton.disabled = true;
   try {
-    // Une correction (mode édition) porte modification:true → autorisée à écraser le définitif.
-    const res = await apiPostProtege('enregistrerScore',
-      { id_match: id, score_A: scoreA, score_B: scoreB, modification: enEdition },
-      'scores', 'de saisie des scores');
-    // Mise à jour de la copie locale pour rester cohérent sans recharger la page.
-    const m = matchs.find(function (x) { return x.id_match === id; });
+    let res;
+    try {
+      res = await envoyer(false);
+    } catch (err) {
+      const info = err.reponse || {};
+      // Correction en cascade : le résultat était déjà propagé vers un match lui-même joué.
+      if (info.cascade_requise) {
+        const ok = await dialogConfirmer(
+          '⚠️ ' + err.message + '\n\nConfirmer la modification en cascade ?',
+          { ok: 'Modifier quand même', annuler: 'Annuler', danger: true });
+        if (!ok) { afficherMessage(msg, 'Correction annulée.', 'ko'); bouton.disabled = false; return; }
+        res = await envoyer(true); // on réapplique en forçant la cascade
+      } else {
+        throw err; // départage requis, clé, etc. → message affiché plus bas
+      }
+    }
+
+    // Score enregistré. En COUPE, la propagation a modifié d'autres matchs → on recharge la
+    // liste pour que l'équipe gagnante apparaisse tout de suite dans le match suivant.
     if (m) { m.score_A = res.match.score_A; m.score_B = res.match.score_B; m.statut = 'terminé'; }
+    if (coupe) {
+      verrouiller(carte);
+      afficherMessage(msg, 'Score enregistré ✓ — vainqueur propagé.', 'ok');
+      await rafraichirSaisie(); // met à jour les matchs suivants (finale, petite finale…)
+      return;
+    }
+
     verrouiller(carte);
     afficherMessage(msg, 'Score enregistré ✓', 'ok');
     majAccordeonPhase(carte); // compteur à jour + repli auto dès le dernier score de la phase

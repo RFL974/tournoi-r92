@@ -82,7 +82,11 @@ async function apiPost(action, data) {
 
   const donnees = await reponse.json();
   if (donnees && donnees.error) {
-    throw new Error(donnees.error);
+    // On attache la réponse complète à l'erreur : certaines actions renvoient des
+    // drapeaux utiles avec le message (ex : departage_requis, cascade_requise, match_suivant).
+    const e = new Error(donnees.error);
+    e.reponse = donnees;
+    throw e;
   }
 
   return donnees;

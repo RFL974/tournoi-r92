@@ -3,6 +3,11 @@
 > 🧭 Note de conception. Le **format** de l'après-midi est désormais **décidé** (voir ci-dessous) ;
 > l'implémentation se fait par étapes (prérequis d'abord).
 
+> 🆕 **Mise à jour (2026-07-19)** — l'après-midi est maintenant **configurable par catégorie** :
+> `CROISE` (décrit ici), `LIBRE` (matchs amicaux) ou `COUPE_PLATEAU` (élimination directe + plateau).
+> Le classement croisé ci-dessous reste le **format par défaut**. Détails et mode d'emploi complet :
+> [`formats-apres-midi.md`](formats-apres-midi.md).
+
 ## ✅ Décisions prises (2026-07-13)
 - **Format = classement croisé** : les équipes de **même rang de poule** jouent ensemble (tous les
   1ers ensemble, tous les 2es, etc.). Chaque groupe de rang = **round-robin**. Ex. U8 réel = 3 poules

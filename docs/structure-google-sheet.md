@@ -65,6 +65,12 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `duree_mi_temps_min` | `10` | Durée d'une mi-temps, en minutes |
 | `pause_mi_temps_min` | `2` | Pause entre les deux mi-temps, en minutes (0 si `format_mi_temps = 1`) |
 | `recup_entre_matchs_min` | `15` | Temps de récupération minimum d'une équipe entre 2 de ses matchs |
+| `format_apresmidi` | `CROISE` | Format de l'après-midi : `CROISE` / `LIBRE` / `COUPE_PLATEAU`. **Vide = `CROISE`** (comportement historique) |
+| `param_format` | `{"nbQualifiesCoupe":2}` | Réglages JSON du format. Pour `COUPE_PLATEAU` : nb de qualifiés en Coupe par poule. Vide pour `CROISE`/`LIBRE` |
+
+> ℹ️ **Migration automatique** : `format_apresmidi` et `param_format` sont **ajoutées automatiquement**
+> à droite de la Zone B dès la première génération d'après-midi (ou enregistrement de catégorie) sur
+> un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement croisé** comme avant.
 
 > **Durée totale d'un match** (calculée par le backend) :
 > `format_mi_temps × duree_mi_temps_min + pause_mi_temps_min` (si 2 mi-temps).
@@ -115,14 +121,25 @@ Une ligne par match. En-têtes :
 | `score_A` | `15` | **Page de saisie des scores** |
 | `score_B` | `10` | **Page de saisie des scores** |
 | `statut` | `à venir` | `à venir` / `en cours` / `terminé` |
-| `phase` | `poule` | Auto — `poule` (matin) ou `classement` (après-midi) |
+| `phase` | `poule` | Auto — `poule` (matin) ou `classement` (après-midi, **tous formats**) |
+| `format` | `COUPE_PLATEAU` | Auto — format de l'après-midi de la ligne (`CROISE`/`LIBRE`/`COUPE_PLATEAU` ; vide pour le matin) |
+| `sous_tableau` | `COUPE` | Auto — `COUPE` ou `PLATEAU` (uniquement en `COUPE_PLATEAU` ; vide sinon) |
+| `tour` | `DEMI_FINALE` | Auto — tour de bracket (`FINALE`, `DEMI_FINALE`, `PETITE_FINALE`, `QUART_DE_FINALE`…) ; vide hors Coupe |
+| `match_suivant` | `M042` | Auto — `id_match` qui reçoit le **vainqueur** de ce match (vide si terminal) |
+| `place_suivant` | `A` | Auto — emplacement (`A`/`B`) du match suivant où placer le vainqueur |
+| `vainqueur` | `E07` | En cas d'**égalité** en Coupe, `id_equipe` désignée vainqueur (départage manuel par le bénévole) |
 
-> ℹ️ **Migration automatique** : la colonne `phase` est en **dernière colonne (L)**. Sur un Sheet
-> déjà créé avant la session 13, l'en-tête `phase` est **ajouté automatiquement** dès la première
-> génération (matin ou après-midi) — aucune manip manuelle. Les `setupSheet()` neufs la créent déjà.
+> ℹ️ **Migration automatique** : les colonnes `phase` puis `format`, `sous_tableau`, `tour`,
+> `match_suivant`, `place_suivant`, `vainqueur` sont **ajoutées automatiquement** à droite dès la
+> première génération sur un Sheet déjà en service — aucune manip manuelle. Les `setupSheet()`
+> neufs les créent déjà.
 
-Pour les matchs de l'**après-midi** (`phase = classement`), la colonne `poule` contient le **niveau**
-du classement croisé (`N1` = groupe des 1ers de poule, `N2` = les 2es, etc.).
+Pour les matchs de l'**après-midi** (`phase = classement`), la lecture de la ligne dépend du `format` :
+- **CROISE** — la colonne `poule` contient le **niveau** (`N1` = 1ers de poule, `N2` = les 2es, etc.).
+- **LIBRE** — `poule` vaut `Libre` (matchs amicaux, sans classement ni qualification).
+- **COUPE_PLATEAU** — `poule` vaut `Coupe` ou `Plateau` ; en Coupe, `sous_tableau=COUPE` + `tour` +
+  `match_suivant`/`place_suivant` décrivent le **bracket à élimination directe** (avec petite finale).
+  Un score de Coupe validé **propage automatiquement** le vainqueur dans `match_suivant`.
 
 ---
 

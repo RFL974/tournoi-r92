@@ -16,7 +16,7 @@ puis de suivre les scores et classements en direct — et de garder un **histori
 | 1 | **Page admin** : équipes, réglages par catégorie et horaires globaux, **nombre de poules Auto ou forcé**, génération automatique des poules et du planning | ✅ Fait, déployé |
 | 2 | **Génération poules + planning** sans conflit, avec **assistant d'arbitrage** (pistes si l'heure de fin est dépassée ou si un forçage rallonge la journée) | ✅ Fait, déployé |
 | 3 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider), scores définitifs verrouillés | ✅ Fait, déployé |
-| 4 | **Phase après-midi** : classement croisé (niveaux N1-N4) depuis les résultats du matin, planifié après le déjeuner | ✅ Fait, déployé |
+| 4 | **Phase après-midi (format par catégorie)** : classement **croisé** (niveaux), **matchs libres**, ou **Coupe + Plateau** (élimination directe + petite finale, propagation auto du vainqueur). Voir [`docs/formats-apres-midi.md`](docs/formats-apres-midi.md) | ✅ Fait *(à déployer)* |
 | 5 | **Page publique** `tournoi.html` (thème clair, charte du site vitrine) : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, **podium certain**, bandeau de don vers la page « Faire un don » du site | ✅ Fait, **en ligne** (GitHub Pages) |
 | 6 | **Publication du tournoi** : bouton admin « Générer le tournoi » (publier / masquer) — la page publique reste un écran « à venir » tant que le tournoi n'est pas publié | ✅ Fait, déployé |
 | 7 | **Infos du tournoi + affiche** : nom, date, lieu, description + **chargeur d'affiche** (stockée dans Google Drive). Enregistrés + publiés d'un clic (« Générer le tournoi ») | ✅ Fait, déployé |
@@ -62,7 +62,8 @@ tournoi-r92/
 │   ├── structure-google-sheet.md→ colonnes de chaque onglet du Sheet
 │   ├── deploiement.md           → déploiement backend + mise en ligne frontend
 │   ├── relais-cdn.md            → montée en charge (cache serveur + relais CDN Cloudflare)
-│   └── phases-tournoi.md        → note de conception (après-midi : classement croisé)
+│   ├── phases-tournoi.md        → note de conception (matin / après-midi)
+│   └── formats-apres-midi.md    → 🆕 formats d'après-midi par catégorie (croisé / libre / coupe+plateau)
 │
 ├── backend/                 → code Google Apps Script
 │   └── Code.gs

@@ -32,13 +32,20 @@ joué rapporte toujours au moins 1 point). **Départage** en cas d'égalité de 
 1) la **différence** (points marqués − encaissés), puis 2) les **points marqués**.
 
 **Déroulé type d'une journée** :
-1. (Avant) L'organisateur règle les horaires, les catégories, saisit les équipes.
+1. (Avant) L'organisateur règle les horaires, les catégories (**dont le format d'après-midi** de
+   chacune : croisé / libre / coupe + plateau), et saisit les équipes.
 2. L'organisateur **génère les poules et le planning du matin**.
 3. Il **publie** le tournoi (il devient visible du public).
 4. Le matin, les marqueurs **saisissent les scores** des matchs de poule.
-5. Une fois le matin terminé, l'organisateur **génère la phase après-midi** (classement croisé).
-6. Les marqueurs saisissent les scores de l'après-midi.
-7. Le **classement général** et le **podium** se mettent à jour en direct sur la page publique.
+5. Une fois le matin terminé, l'organisateur **génère la phase après-midi** : chaque catégorie est
+   générée **selon son format** (classement croisé par défaut).
+6. Les marqueurs saisissent les scores de l'après-midi (en Coupe : propagation + départage auto).
+7. Le **classement général** / **podium** (croisé) ou l'**arbre de Coupe** se mettent à jour en
+   direct sur la page publique.
+
+> 🆕 **Formats d'après-midi par catégorie.** L'après-midi peut prendre 3 formes selon la catégorie
+> (classement croisé, matchs libres, ou Coupe + Plateau à élimination directe). Le choix se fait au
+> **paramétrage**. Tout est expliqué dans le guide dédié : [`formats-apres-midi.md`](formats-apres-midi.md).
 
 ---
 

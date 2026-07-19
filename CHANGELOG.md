@@ -5,6 +5,44 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Formats d'après-midi par catégorie (Croisé / Libre / Coupe + Plateau) — 2026-07-19
+Chaque catégorie choisit désormais **son propre format d'après-midi**, dans le même tournoi (ex.
+M8 en « Matchs libres » pendant que M12 joue en « Coupe + Plateau »). Le choix se fait **au
+paramétrage** (avant le jour J), pour l'annoncer aux équipes à l'avance. Voir le guide dédié
+[`docs/formats-apres-midi.md`](docs/formats-apres-midi.md). ⚠️ **backend à redéployer** + frontend à
+publier (déployer d'un seul tenant).
+
+**Formats** : `CROISE` (historique, défaut), `LIBRE` (matchs amicaux, sans classement),
+`COUPE_PLATEAU` (les *X* premiers de chaque poule en élimination directe + petite finale ; les
+autres en plateau). Le bracket crée **automatiquement** 8èmes / quarts / demies / finale selon le
+nombre de qualifiés (`poules × nbQualifiesCoupe`), avec **byes** si ce n'est pas une puissance de 2.
+*(Non encore implémentés : « repoules », « repêchage ».)*
+
+- **Modèle de données** (migrations **automatiques**, aucune manip) :
+  - Config, par catégorie : `format_apresmidi` + `param_format` (JSON, ex. `{"nbQualifiesCoupe":2}`),
+    créées dès le 1ᵉʳ enregistrement d'une catégorie.
+  - Matchs : `format`, `sous_tableau` (COUPE/PLATEAU), `tour`, `match_suivant`, `place_suivant`,
+    `vainqueur`. Toutes les lignes sont écrites sur 18 colonnes.
+- **Backend** : `genererApresMidi` devient un **répartiteur** (→ `fixturesApresMidiCroise` / `…Libre`
+  / `…CoupePlateau`) ; bracket par doublement de têtes de série (`construireBracketCoupe`, byes,
+  petite finale) ; planification enrichie (équipes de bracket encore inconnues + barrière de tour).
+  Erreurs **explicites** si le matin est incomplet.
+- **Propagation Coupe** : `enregistrerScore` refuse un match « en attente », **exige un vainqueur**
+  en cas d'égalité (pas de nul en élimination), **propage** le gagnant dans le match suivant
+  (`propagerVainqueurBracket`), remplit la **petite finale** (perdants des demies), et **bloque** une
+  correction déjà propagée sauf confirmation (**cascade**).
+- **Admin** (`admin.js`) : choix du format en **cartes explicatives** (pas un simple menu) + champ
+  « qualifiés en Coupe » conditionnel + récap ; disponible **dès la configuration**.
+- **Saisie** (`saisie.js`) : contexte lisible (« 🏆 Demi-finale — Coupe U12 »…), matchs **en attente**
+  verrouillés, **départage** (radio vainqueur), bandeau « Match amical » (LIBRE), confirmation de
+  **correction en cascade**, rafraîchissement auto après une saisie de Coupe. `api.js` expose la
+  réponse serveur sur l'erreur (drapeaux `departage_requis` / `cascade_requise`).
+- **Page publique** (`tournoi.js`) : affichage **adapté au format** — **arbre** pour la Coupe
+  (colonnes par tour + petite finale, gagnant mis en avant), liste pour le Plateau, liste amicale
+  pour LIBRE, croisé inchangé. `perfs.js` inchangé (déjà format-agnostique).
+- **Vérifs** : 45 tests backend (bracket, propagation, planification) + rendus vérifiés au navigateur
+  (admin, saisie, page publique).
+
 ### Fix : « heure de fin » (auto) reflète enfin la fin de la JOURNÉE — 2026-07-19
 Bug : en mode auto, « heure de fin des matchs » restait figée sur la fin du **matin** (ex. 11:36)
 alors que le dernier match de l'après-midi finissait bien plus tard (ex. 14:49). Cause : `heure_fin`

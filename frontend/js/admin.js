@@ -21,6 +21,42 @@ const CHAMPS_CATEGORIE = [
   { cle: 'recup_entre_matchs_min', label: 'Récup. entre matchs (min)', type: 'number' }
 ];
 
+/* Formats d'après-midi proposés (choisis AU PARAMÉTRAGE, avant le jour J), avec une
+   explication concrète visible au moment du choix — jamais un simple menu déroulant. */
+const FORMATS_APRESMIDI = [
+  {
+    cle: 'CROISE', titre: 'Classement croisé',
+    desc: "Les équipes sont reclassées par niveau après les poules du matin, puis s'affrontent "
+        + "entre équipes de niveau équivalent. Pas de vainqueur final, mais des matchs équilibrés toute la journée."
+  },
+  {
+    cle: 'LIBRE', titre: 'Matchs libres',
+    desc: "Pas de classement l'après-midi : les équipes jouent simplement plusieurs matchs amicaux "
+        + "supplémentaires, sans enjeu ni hiérarchie. Recommandé pour les plus jeunes (M6–M8)."
+  },
+  {
+    cle: 'COUPE_PLATEAU', titre: 'Coupe + Plateau',
+    desc: "Les premiers de chaque poule s'affrontent en élimination directe jusqu'à une finale "
+        + "(un vainqueur du tournoi est désigné). Les autres équipes jouent un plateau, sans élimination. "
+        + "⚠️ Ce format demande une saisie de score plus rigoureuse côté bénévoles."
+  }
+];
+
+/** Format d'après-midi retenu pour une catégorie (défaut = CROISE, comportement historique). */
+function formatApresMidiDe(cat) {
+  const f = (cat && cat.format_apresmidi != null) ? String(cat.format_apresmidi).trim().toUpperCase() : '';
+  return (f === 'LIBRE' || f === 'COUPE_PLATEAU') ? f : 'CROISE';
+}
+
+/** Nombre de qualifiés en Coupe lu dans param_format (JSON), défaut 2. */
+function nbQualifiesCoupeDe(cat) {
+  try {
+    const o = JSON.parse((cat && cat.param_format) ? String(cat.param_format) : '{}');
+    const n = parseInt(o && o.nbQualifiesCoupe, 10);
+    return (isFinite(n) && n >= 1) ? n : 2;
+  } catch (e) { return 2; }
+}
+
 /* On garde en mémoire la config, les équipes et les matchs chargés (pour l'affichage). */
 let configCourante = { global: {}, categories: [] };
 let equipesCourantes = [];
@@ -544,6 +580,17 @@ function onReglagesChange(evenement) {
     const champFin = document.getElementById('h-heure_fin');
     if (champFin) champFin.disabled = evenement.target.checked; // grisé quand auto
   }
+  // Choix d'un format d'après-midi : on pilote l'affichage conditionnel via data-format
+  // (carte sélectionnée mise en avant, champ « qualifiés » et bon récap révélés en CSS).
+  if (evenement.target.name === 'format_apresmidi') {
+    const bloc = evenement.target.closest('.bloc-format');
+    if (bloc) {
+      bloc.setAttribute('data-format', evenement.target.value); // révèle champ Coupe + bon récap (CSS)
+      bloc.querySelectorAll('.format-carte').forEach(function (c) { c.classList.remove('est-choisi'); });
+      const carteChoisie = evenement.target.closest('.format-carte');
+      if (carteChoisie) carteChoisie.classList.add('est-choisi'); // met en avant la carte sélectionnée
+    }
+  }
 }
 
 /**
@@ -739,12 +786,56 @@ function formulaireCategorie(cat) {
         '<span class="badge">' + echapper(nom) + '</span>' +
       '</div>' +
       '<div class="grille-reglages">' + champs + '</div>' +
+      blocFormatApresMidi(cat) +
       '<div class="ligne-action">' +
         '<button type="submit" class="bouton">Enregistrer</button>' +
         '<button type="button" class="bouton-suppr bouton-suppr-cat" data-cat="' + echapper(nom) + '">Supprimer</button>' +
         '<span class="message-form message-cat"></span>' +
       '</div>' +
     '</form>'
+  );
+}
+
+/**
+ * Bloc « Format de l'après-midi » d'une catégorie : cartes cliquables (radio) avec explication
+ * visible, champ « qualifiés en Coupe » (affiché seulement pour COUPE_PLATEAU) et récapitulatif.
+ * L'affichage conditionnel est piloté par l'attribut data-format du bloc (voir onReglagesChange) :
+ * pas besoin de :has(), ça marche sur tous les téléphones.
+ */
+function blocFormatApresMidi(cat) {
+  const fmt = formatApresMidiDe(cat);
+  const nbQ = nbQualifiesCoupeDe(cat);
+
+  const cartes = FORMATS_APRESMIDI.map(function (f) {
+    const choisi = (f.cle === fmt);
+    return (
+      '<label class="format-carte f-' + f.cle + (choisi ? ' est-choisi' : '') + '">' +
+        '<input type="radio" name="format_apresmidi" value="' + f.cle + '"' + (choisi ? ' checked' : '') + '>' +
+        '<span class="f-corps">' +
+          '<span class="f-titre">' + echapper(f.titre) + '</span>' +
+          '<span class="f-desc">' + echapper(f.desc) + '</span>' +
+        '</span>' +
+      '</label>'
+    );
+  }).join('');
+
+  // Récaps : un par format, révélé selon data-format (texte concret pour confirmer le choix).
+  const recaps =
+    '<span class="format-recap r-CROISE">Après-midi : <b>classement croisé</b> — des matchs équilibrés par niveau, sans vainqueur final.</span>' +
+    '<span class="format-recap r-LIBRE">Après-midi : <b>matchs libres</b> — amicaux, sans classement (idéal pour les plus jeunes).</span>' +
+    '<span class="format-recap r-COUPE_PLATEAU">Après-midi : <b>Coupe + Plateau</b> — les premiers de chaque poule en élimination directe (finale + petite finale), les autres en plateau.</span>';
+
+  return (
+    '<div class="bloc-format" data-format="' + fmt + '">' +
+      '<span class="format-libelle">Format de l\'après-midi</span>' +
+      '<div class="format-cartes">' + cartes + '</div>' +
+      '<label class="format-coupe-param reglage">' +
+        '<span class="r-libelle">Qualifiés en Coupe (par poule)</span>' +
+        '<input class="r-input" type="number" min="1" name="nbQualifiesCoupe" value="' + echapper(String(nbQ)) + '">' +
+        '<span class="f-aide">Les premiers de chaque poule partent en Coupe ; les autres vont automatiquement en Plateau.</span>' +
+      '</label>' +
+      '<div class="format-recap-zone">' + recaps + '</div>' +
+    '</div>'
   );
 }
 
@@ -785,6 +876,17 @@ async function onEnregistrerCategorie(evenement) {
     data[champ.cle] = form[champ.cle].value;
   });
   if (typeof data.terrains === 'string') data.terrains = data.terrains.trim();
+
+  // Format d'après-midi + son paramètre JSON (nbQualifiesCoupe seulement pour COUPE_PLATEAU).
+  const fmt = (form.format_apresmidi && form.format_apresmidi.value) ? form.format_apresmidi.value : 'CROISE';
+  data.format_apresmidi = fmt;
+  if (fmt === 'COUPE_PLATEAU') {
+    let nbQ = parseInt(form.nbQualifiesCoupe && form.nbQualifiesCoupe.value, 10);
+    if (!isFinite(nbQ) || nbQ < 1) nbQ = 2;
+    data.param_format = JSON.stringify({ nbQualifiesCoupe: nbQ });
+  } else {
+    data.param_format = '';
+  }
 
   const bouton = form.querySelector('button[type="submit"]');
   const texteBouton = bouton.textContent;
@@ -828,7 +930,7 @@ async function onAjouterCategorie(evenement) {
   const data = {
     categorie: nom, presente: 'oui', terrains: '', nb_poules: '',
     format_mi_temps: '2', duree_mi_temps_min: '10', pause_mi_temps_min: '2',
-    recup_entre_matchs_min: '15'
+    recup_entre_matchs_min: '15', format_apresmidi: 'CROISE', param_format: ''
   };
 
   const bouton = form.querySelector('button');
