@@ -5,6 +5,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : audit UX — tableau de bord + sections repliables — 2026-07-19
+Deuxième vague de l'audit UX (« priorité moyenne »), **frontend uniquement — aucun changement
+backend, pas de redéploiement `Code.gs`** :
+- **Tableau de bord en haut de page** : bandeau récapitulant l'état du tournoi en un coup d'œil
+  (**Catégories** présentes/total · **Équipes** · **Planning** ⚪️/🌅/🌅🏉 · **Publication** ⚪️/🟢),
+  mis à jour automatiquement à chaque action (`majTableauBord()` dans admin.js).
+- **Sections repliables** (`<details>`/`<summary>`) : « Horaires de la journée » (dépliée par
+  défaut, pliable une fois réglée) et « Réinitialiser le tournoi » (repliée par défaut — moins de
+  scroll, et on évite de l'ouvrir par erreur).
+- Vérifié au navigateur (serveur local + backend en ligne, lecture publique sans clé) : rendu du
+  bandeau (2 colonnes mobile / 4 colonnes desktop), pliage/dépliage OK, aucune erreur console.
+- Mise à jour du mode d'emploi ([`docs/guide-utilisateur.md`](docs/guide-utilisateur.md), §1.0).
+
 ### Admin : audit UX — 3 correctifs de flux — 2026-07-18
 Suite à un audit UX de la page administration, trois pièges du parcours sont corrigés
 (frontend uniquement, **aucun changement backend — pas de redéploiement nécessaire**) :

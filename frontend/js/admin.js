@@ -69,6 +69,9 @@ async function initAdmin() {
     majInfosTournoi();
     majPublication();
 
+    // 5) Tableau de bord (récap en haut de page)
+    majTableauBord();
+
   } catch (erreur) {
     zoneReglages.innerHTML =
       '<div class="message erreur">Impossible de charger les réglages.<br>' +
@@ -289,12 +292,47 @@ async function onPublier() {
     majInfosTournoi();
     document.getElementById('form-infos-tournoi').tournoi_affiche.value = ''; // vide le champ fichier
     majPublication();
+    majTableauBord();
     afficherMessage(message, publier ? '✅ Tournoi publié.' : '✅ Tournoi masqué.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
     bouton.disabled = false;
   }
+}
+
+/* --------------------------------------------------------------------------
+   TABLEAU DE BORD (récap de l'état du tournoi, en haut de page)
+   -------------------------------------------------------------------------- */
+
+/**
+ * Met à jour le tableau de bord : catégories, équipes, planning, publication.
+ * Lit l'état gardé en mémoire (configCourante / equipesCourantes / matchsCourants).
+ */
+function majTableauBord() {
+  const elCat = document.getElementById('tb-categories');
+  const elEq  = document.getElementById('tb-equipes');
+  const elPl  = document.getElementById('tb-planning');
+  const elPub = document.getElementById('tb-publication');
+  if (!elCat || !elEq || !elPl || !elPub) return;
+
+  // Catégories : présentes / total.
+  const cats = configCourante.categories || [];
+  const nbPresentes = cats.filter(estPresente).length;
+  elCat.textContent = cats.length ? (nbPresentes + '/' + cats.length) : '0';
+
+  // Équipes.
+  elEq.textContent = (equipesCourantes || []).length;
+
+  // Planning : matin généré ? après-midi généré ?
+  const matin = (matchsCourants || []).filter(function (m) { return String(m.phase) !== 'classement'; });
+  const aprem = (matchsCourants || []).filter(function (m) { return String(m.phase) === 'classement'; });
+  if (matin.length === 0)      elPl.textContent = '⚪️ à générer';
+  else if (aprem.length > 0)   elPl.textContent = '🌅🏉 complet';
+  else                         elPl.textContent = '🌅 matin';
+
+  // Publication.
+  elPub.textContent = estPublie() ? '🟢 publié' : '⚪️ non';
 }
 
 /* --------------------------------------------------------------------------
@@ -339,6 +377,7 @@ async function onReinitialiser() {
     majApresMidi();
     majInfosTournoi();
     majPublication();
+    majTableauBord();
 
     const nbC = (res && res.nb_categories != null) ? res.nb_categories : '?';
     const nbE = (res && res.nb_equipes != null) ? res.nb_equipes : '?';
@@ -393,6 +432,7 @@ async function rechargerReglages() {
   document.getElementById('reglages').innerHTML =
     afficherHoraires(cfg.global) + afficherCategories(cfg.categories);
   remplirSelectCategories(cfg.categories); // le menu des équipes suit les catégories présentes
+  majTableauBord(); // le nombre de catégories a pu changer
 }
 
 /* --------------------------------------------------------------------------
@@ -411,9 +451,11 @@ function afficherHoraires(global) {
   // Heure de fin automatique par défaut (sauf si explicitement 'non').
   var auto = String((global && global.heure_fin_auto) || 'oui').toLowerCase() !== 'non';
 
+  // Carte repliable, OUVERTE par défaut : réglée une fois en début de journée,
+  // on peut ensuite la plier pour raccourcir la page.
   return (
-    '<section class="carte">' +
-      '<h2>Horaires de la journée</h2>' +
+    '<details class="carte" open>' +
+      '<summary>Horaires de la journée</summary>' +
       '<form id="form-horaires" class="form-reglages">' +
         champHeure('heure_debut', 'Heure de début des matchs', val('heure_debut')) +
         // Heure de fin + case "auto"
@@ -434,7 +476,7 @@ function afficherHoraires(global) {
           '<span id="message-horaires" class="message-form"></span>' +
         '</div>' +
       '</form>' +
-    '</section>'
+    '</details>'
   );
 }
 
@@ -606,6 +648,7 @@ async function onEnregistrerCategorie(evenement) {
     const idx = configCourante.categories.findIndex(function (c) { return c.categorie === nom; });
     if (idx >= 0) configCourante.categories[idx] = Object.assign({}, configCourante.categories[idx], data);
     remplirSelectCategories(configCourante.categories);
+    majTableauBord(); // le nombre de catégories « présentes » a pu changer
     afficherMessage(message, '✅ Enregistré.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
@@ -913,6 +956,7 @@ async function rechargerEquipes() {
   const equipes = await apiGet('getEquipes');
   equipesCourantes = equipes;
   afficherEquipes(equipes);
+  majTableauBord(); // le nombre d'équipes a changé
 }
 
 /* --------------------------------------------------------------------------
@@ -960,6 +1004,7 @@ async function genererMaintenant() {
     remplirSelectCategories(data.config.categories);
     afficherPlanning(data.poules, data.matchs);
     majApresMidi(); // le matin vient de changer → recalcul de l'état
+    majTableauBord();
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
@@ -1023,6 +1068,7 @@ async function onGenererApresMidi() {
     matchsCourants = data.matchs || [];
     afficherPlanning(data.poules, data.matchs);
     majApresMidi();
+    majTableauBord();
   } catch (erreur) {
     // Les garde-fous backend (scores du matin incomplets…) arrivent ici.
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
