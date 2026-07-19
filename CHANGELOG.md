@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : thème clair (fond blanc, cartes navy) + logo — 2026-07-19
+Nouveau look de la page admin (frontend seul, **pas de redéploiement**). Fond global **blanc**,
+**cartes navy translucides** (`rgba(11,33,56,.92)`), texte adapté : sombre (navy) hors carte,
+clair dans les cartes. Activé par la classe **`theme-clair`** sur `<body>` de admin.html →
+**scopé à la page admin** ; Saisie et Perfs gardent le thème sombre (la page publique a sa propre
+CSS, inchangée). Panneaux concernés : cartes, tableau de bord, barre de connexion. **Logo Génération
+R92** ajouté dans l'en-tête (`frontend/img/logo-r92.png`, à déposer par l'utilisateur ; l'image se
+masque toute seule tant que le fichier est absent, pas d'icône cassée). Vérifié au navigateur
+(desktop 1280 + mobile 375 : fond blanc, cartes navy lisibles, titres sombres OK ; 0 erreur console).
+
 ### Admin : vrai tableau de bord sur grand écran (grille 2 colonnes) — 2026-07-19
 La page admin gaspillait la largeur sur ordinateur (colonne de 900px centrée, grandes marges vides).
 Sur **grand écran (≥1024px)**, `<main>` devient une **grille 2 colonnes** (frontend seul, **pas de

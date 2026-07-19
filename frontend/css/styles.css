@@ -1023,3 +1023,45 @@ details.carte-danger > summary { color: #ff9b8f; }
 .frise-puce.perd  .frise-issue { color: #ffb4b4; }
 .frise-puce.nul   .frise-issue { color: var(--bleu-ciel); }
 .frise-lien { flex: 0 0 auto; width: 14px; height: 2px; background: rgba(184, 216, 248, 0.25); }
+
+/* ==========================================================================
+   THÈME CLAIR — page admin (fond blanc, cartes navy translucides)
+   Activé par la classe `theme-clair` sur <body>. Les pages sans cette classe
+   (saisie, perfs) conservent le thème sombre d'origine.
+   Principe : hors carte le texte devient sombre (lisible sur blanc) ; les
+   "panneaux" (cartes, tableau de bord, barre de connexion) restent navy avec
+   du texte clair, comme avant.
+   ========================================================================== */
+body.theme-clair {
+  background: #ffffff;                 /* fond global blanc (était un dégradé navy) */
+  color: #0B2138;                      /* texte par défaut (hors carte) : navy sombre */
+}
+/* Titre principal + éventuels titres hors carte : navy sombre sur blanc. */
+.theme-clair .entete h1 { color: #0B2138; }
+
+/* Panneaux : fond navy translucide (on garde le look "carte navy"). */
+.theme-clair .carte,
+.theme-clair .tableau-bord,
+.theme-clair .barre-connexion.connecte,
+.theme-clair .barre-connexion.deconnecte {
+  background: rgba(11, 33, 56, 0.92);
+}
+/* Le texte à l'intérieur des panneaux reste clair. */
+.theme-clair .carte,
+.theme-clair .tableau-bord { color: var(--texte); }
+
+/* Messages de chargement / info désormais sur fond blanc → gris-bleu lisible. */
+.theme-clair .message { color: #56708c; }
+.theme-clair .message.erreur { color: #b3261e; background: rgba(179, 38, 30, 0.08); }
+
+/* Logo Génération R92 dans l'en-tête. */
+.entete .logo {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  margin: 0 auto 6px;
+}
+@media (min-width: 700px) {
+  .entete .logo { max-width: 380px; }
+}
