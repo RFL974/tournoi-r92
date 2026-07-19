@@ -389,7 +389,10 @@ function majBarreConnexion(connecte) {
     barre.className = 'barre-connexion connecte';
     barre.innerHTML =
       '<span>🔓 Connecté à l\'administration</span>' +
-      '<button type="button" class="bouton-lien" id="bouton-changer-cle">Changer de clé</button>';
+      '<span class="barre-actions">' +
+        '<button type="button" class="bouton-lien" id="bouton-changer-cle">Changer de clé</button>' +
+        '<button type="button" class="bouton-lien" id="bouton-verrouiller">🔒 Verrouiller</button>' +
+      '</span>';
   } else {
     barre.className = 'barre-connexion deconnecte';
     barre.innerHTML =
@@ -412,6 +415,13 @@ async function onClicConnexion(evenement) {
     }
     await demanderCleValide('admin', 'Clé actuelle confirmée.\n\nEntre la NOUVELLE clé :');
     majBarreConnexion(true); // on n'arrive ici que si on était déjà connecté
+    return;
+  }
+  // Verrouiller : efface la clé mémorisée → la page repasse en « Non connecté »
+  // et toute écriture redemandera la clé (utile si l'ordinateur est laissé ouvert).
+  if (evenement.target.closest('#bouton-verrouiller')) {
+    definirCleLocale('admin', '');
+    majBarreConnexion(false);
     return;
   }
   // Se connecter : demande la clé en boucle jusqu'à la bonne (ou annulation).

@@ -664,7 +664,10 @@ select.r-input { cursor: pointer; }
   background: rgba(255, 170, 80, 0.1);
   color: #ffd9a8;
 }
-/* Bouton discret « Changer de clé » (contour de la couleur du texte ambiant) */
+/* Regroupe les boutons de la barre (Changer de clé + Verrouiller) */
+.barre-actions { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+
+/* Bouton discret « Changer de clé » / « Verrouiller » (contour de la couleur ambiante) */
 .bouton-lien {
   background: transparent;
   border: 1px solid currentColor;

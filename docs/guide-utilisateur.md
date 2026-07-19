@@ -51,7 +51,9 @@ Une **barre de connexion** indique si ta **clé admin** est active : 🔓 **Conn
 *Changer de clé*) ou 🔒 **Non connecté — les enregistrements seront refusés** (bouton *Se
 connecter*). Pratique pour savoir d'un coup d'œil pourquoi un enregistrement pourrait être refusé.
 Par sécurité (page laissée ouverte), *Changer de clé* **exige d'abord la clé actuelle** avant de
-pouvoir en saisir une nouvelle.
+pouvoir en saisir une nouvelle. Le bouton **🔒 Verrouiller** efface la clé mémorisée : la page
+repasse en « Non connecté » et toute action redemandera la clé — utile si tu laisses l'ordinateur
+sans surveillance.
 
 Juste en dessous, un bandeau **tableau de bord** récapitule l'**état du tournoi en un coup d'œil** :
 **Catégories** (nombre), **Équipes** (nombre), **Planning** (⚪️ à générer · 🌅 matin · 🌅🏉 complet)

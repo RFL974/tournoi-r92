@@ -5,11 +5,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
-### Admin : « Changer de clé » exige la clé actuelle — 2026-07-19
-Sécurité (frontend seul, **pas de redéploiement**) : sur une page admin laissée ouverte, le bouton
-**« Changer de clé »** demande désormais **la clé actuelle en premier** (comparée à la clé mémorisée)
-avant d'autoriser la saisie d'une nouvelle clé. Clé actuelle erronée → « Changement refusé ».
-Vérifié au navigateur (mauvaise clé refusée, bonne clé → étape suivante ; 0 erreur console).
+### Admin : sécurité de la connexion (verrouiller + changer de clé) — 2026-07-19
+Sécurité (frontend seul, **pas de redéploiement**) pour le cas « ordinateur laissé ouvert » :
+- **Bouton 🔒 Verrouiller** dans la barre de connexion : efface la clé admin mémorisée → la page
+  repasse en « Non connecté » et toute écriture redemande la clé.
+- **« Changer de clé »** demande désormais **la clé actuelle en premier** (comparée à la clé
+  mémorisée) avant d'autoriser la saisie d'une nouvelle clé. Clé actuelle erronée → refus.
+- Vérifié au navigateur (verrouillage efface la clé et bascule la barre ; mauvaise clé actuelle
+  refusée ; 0 erreur console).
 
 ### Admin : audit UX — points de confort (dialogues, connexion, affiche, « Présente ») — 2026-07-19
 Troisième vague de l'audit UX (les « petits plus »). ⚠️ **Contient une nouvelle action backend
