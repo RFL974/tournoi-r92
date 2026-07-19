@@ -81,9 +81,11 @@
         </form>
       </section>
 
-      <!-- 1) Les réglages (horaires + catégories), injectés par admin.js -->
+      <!-- 1) Les réglages (horaires + catégories), injectés par admin.js dans deux zones
+           distinctes (pour les placer côte à côte / indépendamment sur grand écran). -->
       <section id="reglages">
-        <div class="message">Chargement des réglages…</div>
+        <div id="zone-horaires"><div class="message">Chargement des réglages…</div></div>
+        <div id="zone-categories"></div>
       </section>
 
       <!-- 2) La saisie des équipes -->
