@@ -609,6 +609,13 @@ select.r-input { cursor: pointer; }
   main:has(#reglages) > #barre-connexion,
   main:has(#reglages) > #tableau-bord,
   #zone-horaires > .carte { margin-bottom: 0; }
+
+  /* Sur desktop uniquement : « Publier » à GAUCHE et « Phase après-midi » à DROITE.
+     `order` n'agit qu'en grille → l'ordre HTML (Après-midi puis Publier, logique sur
+     mobile) est préservé sur petit écran. On garde la Réinitialisation en dernier. */
+  #bloc-publication      { order: 1; }
+  #bloc-apresmidi        { order: 2; }
+  #bloc-reinitialisation { order: 3; }
 }
 
 /* ==========================================================================
