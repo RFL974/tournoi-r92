@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Saisie : alerte cohérence après-midi si correction d'un score du matin — 2026-07-19
+Cohérence des données (frontend seul, **pas de redéploiement**). L'après-midi (classement croisé)
+est calculé une fois sur le classement du matin ; corriger un score du matin **après** génération de
+l'après-midi peut fausser les niveaux. Désormais, sur la page Saisie, **corriger un score du matin
+alors que l'après-midi est déjà généré** déclenche une **alerte** invitant à faire régénérer
+l'après-midi (rien si aucun après-midi, ou si la correction porte sur un match d'après-midi). Note
+passive ajoutée aussi côté admin (§ Phase après-midi). Le backend `genererApresMidi` **remplace**
+proprement l'après-midi à la régénération (aucun changement backend nécessaire). Vérifié au
+navigateur (correction matin + après-midi présent → alerte ; correction matin sans après-midi →
+pas d'alerte ; 0 erreur console). Guide utilisateur §2 à jour.
+
 ### Admin : avancement « X/Y saisis » dans le planning — 2026-07-19
 Pour piloter la journée sans quitter la page admin (frontend seul, **pas de redéploiement**) :
 `afficherPlanning` ajoute un badge **« X/Y saisis »** à côté de chaque **catégorie** et de chaque
