@@ -69,8 +69,9 @@ async function initAdmin() {
     majInfosTournoi();
     majPublication();
 
-    // 5) Tableau de bord (récap en haut de page)
+    // 5) Tableau de bord (récap en haut de page) + horodatage
     majTableauBord();
+    majHeureAdmin();
 
   } catch (erreur) {
     zoneReglages.innerHTML =
@@ -84,6 +85,9 @@ async function initAdmin() {
 
   // Barre de connexion : boutons « Se connecter » / « Changer de clé » (délégué).
   document.getElementById('barre-connexion').addEventListener('click', onClicConnexion);
+
+  // Bouton « Rafraîchir » : recharge scores/planning depuis le backend (utile le jour J).
+  document.getElementById('bouton-rafraichir-admin').addEventListener('click', rafraichirAdmin);
 
   // On branche le formulaire d'ajout et les boutons de suppression (équipes).
   document.getElementById('form-equipe').addEventListener('submit', onAjouterEquipe);
@@ -374,6 +378,42 @@ function majTableauBord() {
 
   // Publication.
   elPub.textContent = estPublie() ? '🟢 publié' : '⚪️ non';
+}
+
+/**
+ * Rafraîchit les données du tournoi (scores saisis sur les téléphones, etc.) et met à jour
+ * les vues « live » : tableau de bord, planning, équipes, état de préparation de l'après-midi.
+ * On NE re-rend PAS les formulaires de réglages ni le formulaire d'infos, pour ne pas écraser
+ * une saisie en cours (ces réglages ne changent pas depuis un autre appareil pendant la journée).
+ */
+async function rafraichirAdmin() {
+  const bouton = document.getElementById('bouton-rafraichir-admin');
+  const texte = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = '⏳ …';
+  try {
+    const data = await apiGet('getAll');
+    configCourante = data.config;
+    equipesCourantes = data.equipes;
+    matchsCourants = data.matchs || [];
+    afficherEquipes(data.equipes);
+    afficherPlanning(data.poules, data.matchs);
+    majApresMidi();
+    majPublication();
+    majTableauBord();
+    majHeureAdmin();
+  } catch (err) {
+    // On garde l'affichage actuel en cas d'erreur réseau.
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texte;
+  }
+}
+
+/** Affiche l'heure de la dernière mise à jour des données. */
+function majHeureAdmin() {
+  const el = document.getElementById('maj-admin');
+  if (el) el.textContent = 'Mis à jour à ' + new Date().toLocaleTimeString('fr-FR');
 }
 
 /* --------------------------------------------------------------------------

@@ -30,6 +30,12 @@
           Le match passe alors en <em>terminé</em> et compte dans le classement.
         </p>
 
+        <!-- Barre de rafraîchissement : recharge les saisies faites sur les autres appareils. -->
+        <div class="live-barre">
+          <button type="button" class="bouton" id="bouton-rafraichir-saisie">🔄 Rafraîchir</button>
+          <span class="live-maj" id="maj-saisie"></span>
+        </div>
+
         <!-- Filtre catégorie : une table de marque par catégorie. Masqué s'il n'y en a qu'une. -->
         <div id="filtre-cat-saisie" class="mp-filtre" hidden>
           <label class="mp-label" for="select-cat-saisie">Catégorie à saisir :</label>

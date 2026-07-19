@@ -58,7 +58,10 @@ sans surveillance.
 Juste en dessous, un bandeau **tableau de bord** récapitule l'**état du tournoi en un coup d'œil** :
 **Catégories** (nombre), **Équipes** (nombre), **Planning** (⚪️ à générer · 🌅 matin · 🌅🏉 complet)
 et **Publication** (⚪️ non · 🟢 publié). Il se met à jour automatiquement à chaque action (ajout
-d'équipe, génération, publication…).
+d'équipe, génération, publication…). Un bouton **🔄 Rafraîchir** (avec l'heure de dernière mise à
+jour) recharge les **scores saisis sur les téléphones** : à utiliser **avant de générer
+l'après-midi** pour que l'état « scores du matin complets » soit à jour. Il ne touche pas aux
+formulaires en cours d'édition.
 
 > Toutes les confirmations et demandes de clé passent désormais par des **fenêtres aux couleurs du
 > site** (au lieu des popups gris du navigateur). *Entrée* valide, *Échap* annule.
@@ -176,6 +179,9 @@ Le même bouton permet de **masquer** à nouveau.
 Pensée pour le **téléphone**, un marqueur par terrain. À l'ouverture, elle demande **une fois** la
 **clé scores** (mémorisée le temps de la session).
 
+- **🔄 Rafraîchir** (en haut, avec l'heure de dernière mise à jour) : recharge les scores saisis sur
+  les **autres appareils**. La page ne se met **pas** à jour toute seule (pour ne pas effacer un
+  score en cours de frappe) → clique Rafraîchir quand tu veux voir l'avancement des autres tables.
 - **Catégorie à saisir** : un menu déroulant en haut → une **table de marque par catégorie** (on ne
   voit que les matchs de la catégorie choisie, pour éviter les erreurs). Masqué s'il n'y a qu'une
   catégorie ; le choix est mémorisé.

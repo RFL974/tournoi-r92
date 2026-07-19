@@ -692,6 +692,23 @@ select.r-input { cursor: pointer; }
   padding: 12px 14px;
   margin-bottom: var(--espace);
 }
+/* En-tête du tableau de bord : titre à gauche, horodatage + bouton Rafraîchir à droite */
+.tb-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.tb-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+  color: var(--bleu-ciel);
+}
+.tb-refresh { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .tb-grille {
   display: grid;
   grid-template-columns: repeat(2, 1fr);   /* 2 colonnes sur mobile */
