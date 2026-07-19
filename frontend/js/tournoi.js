@@ -407,7 +407,7 @@ function sectionClassementsEquipe(eq) {
   }
 
   html += '<div class="planning-phase">🏆 Classement général du tournoi</div>';
-  html += tableGeneral(classementGeneral(eq.categorie), eq.id_equipe);
+  html += tableGeneral(classementGeneral(eq.categorie), eq.id_equipe, !!podiumCertain(eq.categorie));
   return html;
 }
 
@@ -677,14 +677,20 @@ function tableCompacte(titre, liste, idSel) {
   return h + '</tbody></table></div>';
 }
 
-/** Tableau du classement général (place, équipe, niveau, points/diff de l'après-midi). */
-function tableGeneral(liste, idSel) {
+/**
+ * Tableau du classement général (place, équipe, niveau, points/diff de l'après-midi).
+ * @param idSel équipe à surligner (vue « Mon équipe »), '' sinon.
+ * @param marquerVainqueur si vrai, la 1ʳᵉ place reçoit un 🏆 (vainqueur certain).
+ */
+function tableGeneral(liste, idSel, marquerVainqueur) {
   let h = '<div class="table-scroll"><table class="table-planning table-classement">' +
     '<thead><tr><th>#</th><th>Équipe</th><th>Niveau</th><th>Pts</th><th>Diff</th></tr></thead><tbody>';
   liste.forEach(function (t, i) {
     const diff = (t.a.diff > 0 ? '+' : '') + t.a.diff;
-    h += '<tr' + (t.id === idSel ? ' class="fav-ligne"' : '') + '>' +
-      '<td>' + (i + 1) + '</td><td class="col-equipe">' + echapper(t.nom) + '</td>' +
+    const vainqueur = marquerVainqueur && i === 0;
+    const classes = (t.id === idSel ? 'fav-ligne ' : '') + (vainqueur ? 'cl-vainqueur' : '');
+    h += '<tr' + (classes.trim() ? ' class="' + classes.trim() + '"' : '') + '>' +
+      '<td>' + (vainqueur ? '🏆' : (i + 1)) + '</td><td class="col-equipe">' + echapper(t.nom) + '</td>' +
       '<td>' + echapper(t.niveau || '—') + '</td><td class="col-pts">' + t.a.pts + '</td><td>' + echapper(diff) + '</td></tr>';
   });
   return h + '</tbody></table></div>';
@@ -758,11 +764,21 @@ function sectionApresMidiClassements(categorie) {
       '<p class="note-amical">🎈 Matchs amicaux supplémentaires — sans classement ni enjeu.</p>' +
       listeResultats(apremMs);
   }
-  // CROISE (défaut) : tableaux par niveau, comme avant.
+  // CROISE (défaut) : tableaux par niveau, PUIS le classement général (vainqueur en tête).
   let html = '<div class="planning-phase">🏉 Après-midi — classement croisé par niveau</div>';
   classementParGroupe('aprem').forEach(function (cat) {
     cat.groupes.forEach(function (g) { html += tableComplete(g.titre, g.classement); });
   });
+
+  const gen = classementGeneral(categorie);
+  if (gen.length) {
+    const vainqueurCertain = !!podiumCertain(categorie); // top verrouillé (aucun match ne peut le changer)
+    html += '<div class="planning-phase">🏆 Classement général du tournoi</div>';
+    html += vainqueurCertain
+      ? '<p class="note-vainqueur">🏆 Vainqueur du tournoi : <b>' + echapper(gen[0].nom) + '</b></p>'
+      : '<p class="note-vainqueur note-provisoire">En tête pour l\'instant : <b>' + echapper(gen[0].nom) + '</b> (provisoire — l\'après-midi n\'est pas fini)</p>';
+    html += tableGeneral(gen, '', vainqueurCertain);
+  }
   return html;
 }
 

@@ -26,8 +26,9 @@ const CHAMPS_CATEGORIE = [
 const FORMATS_APRESMIDI = [
   {
     cle: 'CROISE', titre: 'Classement croisé',
-    desc: "Les équipes sont reclassées par niveau après les poules du matin, puis s'affrontent "
-        + "entre équipes de niveau équivalent. Pas de vainqueur final, mais des matchs équilibrés toute la journée."
+    desc: "Les équipes sont reclassées par niveau après les poules du matin (les 1ᵉʳˢ de chaque "
+        + "poule ensemble = Niveau 1, etc.), puis s'affrontent en round-robin dans leur niveau. "
+        + "Un classement général et un podium sont désignés : le vainqueur du Niveau 1 remporte le tournoi."
   },
   {
     cle: 'LIBRE', titre: 'Matchs libres',
@@ -821,7 +822,7 @@ function blocFormatApresMidi(cat) {
 
   // Récaps : un par format, révélé selon data-format (texte concret pour confirmer le choix).
   const recaps =
-    '<span class="format-recap r-CROISE">Après-midi : <b>classement croisé</b> — des matchs équilibrés par niveau, sans vainqueur final.</span>' +
+    '<span class="format-recap r-CROISE">Après-midi : <b>classement croisé</b> — matchs équilibrés par niveau ; le vainqueur du Niveau 1 remporte le tournoi (classement général + podium).</span>' +
     '<span class="format-recap r-LIBRE">Après-midi : <b>matchs libres</b> — amicaux, sans classement (idéal pour les plus jeunes).</span>' +
     '<span class="format-recap r-COUPE_PLATEAU">Après-midi : <b>Coupe + Plateau</b> — les premiers de chaque poule en élimination directe (finale + petite finale), les autres en plateau.</span>';
 
