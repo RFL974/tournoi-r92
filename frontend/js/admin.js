@@ -854,17 +854,30 @@ async function onSupprimerCategorie(bouton) {
 
 /**
  * Remplit la liste déroulante avec les catégories PRÉSENTES.
+ * Guidage : s'il n'y a AUCUNE catégorie, on ne peut pas saisir d'équipe → on affiche une aide
+ * et on désactive le formulaire d'ajout (sinon l'utilisateur reste bloqué sans explication).
  */
 function remplirSelectCategories(categories) {
   const select = document.getElementById('champ-categorie');
   // On garde la 1re option "Catégorie…" et on ajoute les catégories présentes.
   select.innerHTML = '<option value="">Catégorie…</option>';
-  categories.filter(estPresente).forEach(function (cat) {
+  const presentes = (categories || []).filter(estPresente);
+  presentes.forEach(function (cat) {
     const opt = document.createElement('option');
     opt.value = cat.categorie;
     opt.textContent = cat.categorie;
     select.appendChild(opt);
   });
+
+  // Aide + activation/désactivation du formulaire selon qu'il existe au moins une catégorie.
+  const aucune = presentes.length === 0;
+  const aide = document.getElementById('aide-categories');
+  const champNom = document.getElementById('champ-nom');
+  const boutonAj = document.getElementById('bouton-ajouter');
+  if (aide) aide.hidden = !aucune;
+  if (select) select.disabled = aucune;
+  if (champNom) champNom.disabled = aucune;
+  if (boutonAj) boutonAj.disabled = aucune;
 }
 
 /**

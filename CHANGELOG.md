@@ -5,6 +5,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : guidage quand aucune catégorie n'existe — 2026-07-19
+Guidage (frontend seul, **pas de redéploiement**). Sans catégorie, le menu déroulant d'ajout
+d'équipe était vide **sans explication** (utilisateur bloqué). Désormais `remplirSelectCategories`
+affiche une **aide** (« ➕ Ajoute d'abord une catégorie… ») et **désactive le formulaire d'ajout**
+(nom, menu, bouton) tant qu'aucune catégorie n'existe ; tout se réactive dès la première catégorie.
+Vérifié au navigateur (0 catégorie → aide visible + formulaire désactivé ; 1 catégorie → aide masquée
++ formulaire actif ; 0 erreur console). Guide utilisateur §1.3 à jour.
+
 ### Admin : anti-doublon à l'ajout / au renommage d'une équipe — 2026-07-19
 Qualité des données (frontend seul, **pas de redéploiement**). Ajouter deux équipes du **même nom
 dans la même catégorie** créait de la confusion (planning, classements). Désormais `onAjouterEquipe`

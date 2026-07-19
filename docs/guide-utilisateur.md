@@ -112,6 +112,8 @@ Boutons : **Enregistrer** (par catégorie), **Supprimer** (la catégorie), et un
 ### 1.3 Équipes
 - **Ajouter** : nom (mis automatiquement en MAJUSCULES) + catégorie → **Ajouter**. Un **même nom
   ne peut pas être ajouté deux fois dans la même catégorie** (doublon refusé ; idem au renommage).
+  - S'il n'existe **aucune catégorie**, le formulaire est **désactivé** et un message invite à
+    **ajouter d'abord une catégorie** (on ne peut pas rattacher une équipe à rien).
 - La liste s'affiche **groupée par catégorie**. Pour chaque équipe : **✏️ (crayon)** pour
   **renommer** en ligne (Entrée = valider, Échap = annuler) et **🗑️ (corbeille)** pour
   **supprimer**.
