@@ -160,6 +160,14 @@ un **✅** marque celles qui **tiennent le créneau**. Un clic **applique** le r
 entrer, **vert avec ✅** quand tout est saisi. Combiné au bouton **🔄 Rafraîchir**, tu vois d'un
 coup d'œil où en est la journée sans quitter la page admin.
 
+**Modifier les poules du matin à la main** : après la génération auto (et **avant de jouer**), le
+bouton **✏️ Modifier les poules du matin** ouvre un éditeur pour **rééquilibrer les niveaux** (ex.
+éviter qu'une équipe dominante se retrouve dans une poule faible). Clique la **✕** d'une équipe pour
+la mettre **« à replacer »**, puis **→ Poule X** pour la réaffecter. L'**équilibre des tailles** est
+affiché (⚠️ si écart > 1). En cliquant **Enregistrer et recalculer**, les **matchs du matin sont
+recalculés** d'après ta répartition. ⚠️ Impossible **une fois qu'un score du matin est saisi** (les
+matchs ne peuvent plus changer). Ne touche pas à l'après-midi (qui, lui, reflète le niveau réel).
+
 ### 1.5 Phase après-midi (classement croisé)
 Le bouton **🏉 Générer l'après-midi**. Principe : les équipes de **même rang de poule** jouent
 ensemble l'après-midi (les 1ᵉʳ de poule entre eux → **Niveau 1**, les 2ᵉ → **Niveau 2**, etc.).

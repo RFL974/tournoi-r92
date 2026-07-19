@@ -25,6 +25,8 @@ const CHAMPS_CATEGORIE = [
 let configCourante = { global: {}, categories: [] };
 let equipesCourantes = [];
 let matchsCourants = [];
+/* Modèle de travail pendant la modification manuelle des poules (null = pas en édition). */
+let editionPoules = null;
 /* Affiche du tournoi choisie mais pas encore enregistrée (Data URI redimensionné). */
 let afficheDataURI = '';
 
@@ -101,6 +103,10 @@ async function initAdmin() {
 
   // Bouton de génération des poules et du planning.
   document.getElementById('bouton-generer').addEventListener('click', onGenerer);
+
+  // Modification manuelle des poules du matin : bouton d'entrée + clics dans l'éditeur (délégués).
+  document.getElementById('bouton-modifier-poules').addEventListener('click', onModifierPoules);
+  document.getElementById('edition-poules').addEventListener('click', onClicEditionPoules);
 
   // Clic sur une piste d'arbitrage (délégué, car le contenu est régénéré).
   document.getElementById('arbitrages').addEventListener('click', onClicArbitrage);
@@ -1361,6 +1367,10 @@ function afficherPlanning(poules, matchs) {
   poules = poules || [];
   matchs = matchs || [];
 
+  // Bouton « Modifier les poules » : visible dès qu'il y a des poules du matin (sauf en édition).
+  const btnMod = document.getElementById('bouton-modifier-poules');
+  if (btnMod && !editionPoules) btnMod.hidden = poules.length === 0;
+
   if (poules.length === 0 && matchs.length === 0) {
     zone.innerHTML = '<p class="vide">Pas encore de planning. Clique sur « Générer ».</p>';
     return;
@@ -1440,6 +1450,202 @@ function badgeAvancement(saisis, total) {
   const complet = saisis === total;
   return ' <span class="avancement ' + (complet ? 'avc-complet' : 'avc-partiel') + '">' +
          saisis + '/' + total + ' saisis' + (complet ? ' ✅' : '') + '</span>';
+}
+
+/* --------------------------------------------------------------------------
+   MODIFICATION MANUELLE DES POULES DU MATIN
+   (rééquilibrer les niveaux avant de jouer ; recalcule les matchs côté backend)
+   -------------------------------------------------------------------------- */
+
+/** Tri des catégories par nombre (U8 < U10 < U12), sinon alphabétique. */
+function comparerCat(a, b) {
+  const ma = String(a).match(/\d+/), mb = String(b).match(/\d+/);
+  if (ma && mb && parseInt(ma[0], 10) !== parseInt(mb[0], 10)) return parseInt(ma[0], 10) - parseInt(mb[0], 10);
+  return String(a).localeCompare(String(b));
+}
+
+/** Nom lisible d'une équipe (pour l'éditeur de poules). */
+function nomEquipeAdmin(id) {
+  const e = equipesCourantes.find(function (x) { return x.id_equipe === id; });
+  return e ? e.nom_equipe : id;
+}
+
+/** Construit le modèle d'édition à partir des poules actuelles (équipes groupées par cat./poule). */
+function construireModelePoules() {
+  const parCat = {};
+  equipesCourantes.forEach(function (e) {
+    if (!e.poule) return; // équipe non affectée (pas de planning) → ignorée
+    const cat = e.categorie || '?';
+    if (!parCat[cat]) parCat[cat] = { pools: {}, bench: [] };
+    if (!parCat[cat].pools[e.poule]) parCat[cat].pools[e.poule] = [];
+    parCat[cat].pools[e.poule].push(e.id_equipe);
+  });
+  return parCat;
+}
+
+/** Reconstruit la liste des poules (pour l'affichage) à partir des équipes en mémoire. */
+function poulesDepuisEquipes() {
+  const vues = {}, liste = [];
+  equipesCourantes.forEach(function (e) {
+    if (!e.poule) return;
+    const cle = (e.categorie || '?') + '|' + e.poule;
+    if (!vues[cle]) { vues[cle] = true; liste.push({ categorie: e.categorie, nom_poule: e.poule }); }
+  });
+  return liste;
+}
+
+/** Entre en mode « modifier les poules » (refusé si des scores du matin sont saisis). */
+function onModifierPoules() {
+  const message = document.getElementById('message-generation');
+  const scoresMatin = (matchsCourants || []).filter(function (m) {
+    return String(m.phase) !== 'classement' && estTermine(m.statut);
+  }).length;
+  if (scoresMatin > 0) {
+    afficherMessage(message, '⚠️ Impossible : ' + scoresMatin + ' score(s) du matin déjà saisis. ' +
+      'On ne peut plus réorganiser les poules une fois les matchs commencés.', 'ko');
+    return;
+  }
+  editionPoules = construireModelePoules();
+  document.getElementById('bouton-modifier-poules').hidden = true;
+  document.getElementById('affichage-planning').innerHTML = ''; // remplacé par l'éditeur
+  afficherEditionPoules();
+}
+
+/** Affiche l'éditeur de poules (cartes de poules + zone « à replacer » + équilibre). */
+function afficherEditionPoules() {
+  const zone = document.getElementById('edition-poules');
+  let html = '<div class="edit-poules"><h3 class="edit-titre">✏️ Modifier les poules du matin</h3>' +
+    '<p class="note-generation">Clique sur ✕ pour sortir une équipe, puis réaffecte-la à une poule. ' +
+    'L\'équilibre du nombre d\'équipes par poule est indiqué. En validant, les matchs du matin sont recalculés.</p>';
+
+  Object.keys(editionPoules).sort(comparerCat).forEach(function (cat) {
+    const modele = editionPoules[cat];
+    const noms = Object.keys(modele.pools).sort();
+    const tailles = noms.map(function (n) { return modele.pools[n].length; });
+    const min = tailles.length ? Math.min.apply(null, tailles) : 0;
+    const max = tailles.length ? Math.max.apply(null, tailles) : 0;
+    const desequilibre = (max - min) > 1;
+
+    html += '<div class="edit-cat"><h4 class="edit-cat-titre">' + echapper(cat) +
+      ' <span class="edit-equilibre ' + (desequilibre ? 'ko' : 'ok') + '">tailles : ' +
+      tailles.join(' · ') + (desequilibre ? ' ⚠️ déséquilibré' : ' ✅') + '</span></h4>';
+
+    html += '<div class="edit-poules-grille">';
+    noms.forEach(function (nom) {
+      html += '<div class="edit-poule"><div class="edit-poule-titre">Poule ' + echapper(nom) +
+        ' (' + modele.pools[nom].length + ')</div>';
+      modele.pools[nom].forEach(function (id) {
+        html += '<div class="edit-equipe"><span>' + echapper(nomEquipeAdmin(id)) + '</span>' +
+          '<button type="button" class="edit-x" data-action="retirer" data-cat="' + echapper(cat) +
+          '" data-pool="' + echapper(nom) + '" data-id="' + echapper(id) + '" title="Sortir">✕</button></div>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+
+    if (modele.bench.length) {
+      html += '<div class="edit-bench"><div class="edit-bench-titre">À replacer</div>';
+      modele.bench.forEach(function (id) {
+        html += '<div class="edit-equipe edit-equipe-bench"><span>' + echapper(nomEquipeAdmin(id)) +
+          '</span><span class="edit-cibles">';
+        noms.forEach(function (nom) {
+          html += '<button type="button" class="edit-vers" data-action="affecter" data-cat="' + echapper(cat) +
+            '" data-pool="' + echapper(nom) + '" data-id="' + echapper(id) + '">→ ' + echapper(nom) + '</button>';
+        });
+        html += '</span></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>'; // .edit-cat
+  });
+
+  html += '<div class="ligne-action">' +
+    '<button type="button" class="bouton" data-action="enregistrer">💾 Enregistrer et recalculer</button>' +
+    '<button type="button" class="bouton-suppr" data-action="annuler">Annuler</button>' +
+    '<span class="message-form" id="message-edition-poules"></span>' +
+    '</div></div>';
+
+  zone.innerHTML = html;
+}
+
+/** Clics dans l'éditeur (délégués) : retirer / affecter / enregistrer / annuler. */
+function onClicEditionPoules(evenement) {
+  const bouton = evenement.target.closest('[data-action]');
+  if (!bouton || !editionPoules) return;
+  const action = bouton.getAttribute('data-action');
+  if (action === 'annuler')     return onAnnulerEditionPoules();
+  if (action === 'enregistrer') return onEnregistrerPoules();
+
+  const cat = bouton.getAttribute('data-cat');
+  const id  = bouton.getAttribute('data-id');
+  const pool = bouton.getAttribute('data-pool');
+  const modele = editionPoules[cat];
+  if (!modele) return;
+
+  if (action === 'retirer') {
+    modele.pools[pool] = modele.pools[pool].filter(function (x) { return x !== id; });
+    if (modele.bench.indexOf(id) < 0) modele.bench.push(id);
+  } else if (action === 'affecter') {
+    modele.bench = modele.bench.filter(function (x) { return x !== id; });
+    if (modele.pools[pool].indexOf(id) < 0) modele.pools[pool].push(id);
+  }
+  afficherEditionPoules();
+}
+
+/** Annule l'édition et réaffiche le planning normal (matchs inchangés). */
+function onAnnulerEditionPoules() {
+  editionPoules = null;
+  document.getElementById('edition-poules').innerHTML = '';
+  afficherPlanning(poulesDepuisEquipes(), matchsCourants);
+}
+
+/** Valide la nouvelle répartition et demande au backend de recalculer les matchs du matin. */
+async function onEnregistrerPoules() {
+  const message = document.getElementById('message-edition-poules');
+
+  // Toutes les équipes doivent être réaffectées (aucune « à replacer »).
+  const restantes = Object.keys(editionPoules).reduce(function (n, cat) {
+    return n + editionPoules[cat].bench.length;
+  }, 0);
+  if (restantes > 0) {
+    afficherMessage(message, 'Réaffecte d\'abord les ' + restantes + ' équipe(s) « à replacer ».', 'ko');
+    return;
+  }
+
+  // Construit l'assignation { id_equipe: nom_poule }.
+  const assignation = {};
+  Object.keys(editionPoules).forEach(function (cat) {
+    const pools = editionPoules[cat].pools;
+    Object.keys(pools).forEach(function (nom) {
+      pools[nom].forEach(function (id) { assignation[id] = nom; });
+    });
+  });
+
+  if (!await dialogConfirmer('Enregistrer cette répartition et recalculer les matchs du matin ?',
+      { ok: 'Enregistrer' })) return;
+
+  const bouton = document.querySelector('#edition-poules [data-action="enregistrer"]');
+  if (bouton) { bouton.disabled = true; bouton.textContent = 'Recalcul…'; }
+  afficherMessage(message, 'Recalcul des matchs…', 'ok');
+  try {
+    const res = await ecrireAdmin('reorganiserPoulesMatin', { assignation: JSON.stringify(assignation) });
+    editionPoules = null;
+    document.getElementById('edition-poules').innerHTML = '';
+    const data = await apiGet('getAll');
+    configCourante = data.config;
+    equipesCourantes = data.equipes;
+    matchsCourants = data.matchs || [];
+    afficherPlanning(data.poules, data.matchs);
+    majApresMidi();
+    majTableauBord();
+    const nbP = (res && res.nb_poules != null) ? res.nb_poules : '?';
+    const nbM = (res && res.nb_matchs != null) ? res.nb_matchs : '?';
+    afficherMessage(document.getElementById('message-generation'),
+      '✅ Poules mises à jour : ' + nbP + ' poule(s), ' + nbM + ' match(s) recalculés.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    if (bouton) { bouton.disabled = false; bouton.textContent = '💾 Enregistrer et recalculer'; }
+  }
 }
 
 /* --------------------------------------------------------------------------
