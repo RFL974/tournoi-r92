@@ -133,6 +133,11 @@ Le bouton **🎲 Générer poules et planning** :
    battement, la récup et la **pause déjeuner**.
 
 > ⚠️ Générer **efface** les poules, matchs et scores précédents (nouveau tournoi).
+>
+> **Garde-fou** : si des scores sont **déjà saisis** (ex. en plein tournoi), un avertissement
+> **rouge** indique **combien** vont être effacés, puis l'outil **redemande la clé admin** avant
+> d'effacer. Impossible de tout perdre par un clic malheureux. Sans aucun score saisi (préparation),
+> la confirmation reste simple.
 
 **Après la génération**, l'outil affiche : le nombre de poules/matchs, l'**heure de fin du matin**,
 l'**heure de fin projetée** du tournoi (après-midi inclus), et d'éventuels **avertissements**.

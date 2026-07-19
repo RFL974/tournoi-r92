@@ -1103,10 +1103,32 @@ async function rechargerEquipes() {
 
 /**
  * Lance la génération des poules et du planning, puis affiche le résultat.
+ * GARDE-FOU : si des scores sont DÉJÀ saisis (matin ou après-midi), régénérer les effacerait
+ * TOUS. On vérifie sur des données FRAÎCHES (les scores viennent des téléphones), on prévient
+ * du nombre exact, et on exige une confirmation forte par la clé admin. Sans score saisi, on
+ * garde la confirmation simple (phase de préparation).
  */
 async function onGenerer() {
-  if (!await dialogConfirmer('Générer les poules et le planning ?\n\n' +
-               'Cela EFFACE les poules, matchs et scores déjà saisis.', { ok: 'Générer' })) return;
+  // Compte les scores déjà saisis, sur des données à jour (pas la copie en mémoire).
+  let matchsFrais = matchsCourants || [];
+  try { matchsFrais = (await apiGet('getMatchs')) || matchsFrais; } catch (e) { /* repli mémoire */ }
+  const nbScores = matchsFrais.filter(function (m) { return estTermine(m.statut); }).length;
+
+  if (nbScores > 0) {
+    // Des scores existent → avertissement renforcé + double verrou (clé admin).
+    if (!await dialogConfirmer(
+        '⚠️ ATTENTION : ' + nbScores + ' match(s) ont déjà un score saisi.\n\n' +
+        'Régénérer va EFFACER DÉFINITIVEMENT toutes les poules, tous les matchs et TOUS ces scores.\n\n' +
+        'Veux-tu vraiment tout regénérer ?',
+        { ok: 'Continuer', danger: true })) return;
+    const cle = await demanderCleValide('admin',
+        'Confirmation forte : ' + nbScores + ' score(s) seront effacés.\n\nEntre la clé admin pour confirmer :');
+    if (cle == null) return; // annulé → rien n'est effacé
+  } else {
+    // Aucun score saisi (préparation) : confirmation simple.
+    if (!await dialogConfirmer('Générer les poules et le planning ?\n\n' +
+               'Cela efface les poules et le planning précédents.', { ok: 'Générer' })) return;
+  }
   await genererMaintenant();
 }
 
