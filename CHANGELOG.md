@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : garde-fou contre l'effacement des scores à la régénération — 2026-07-19
+Sécurité de données (frontend seul, **pas de redéploiement**). « Générer poules et planning » efface
+tous les scores. Avant, un seul clic + confirmation simple suffisait à tout perdre en plein tournoi.
+Désormais, `onGenerer` **compte les scores déjà saisis sur des données fraîches** (`getMatchs`) :
+- **Aucun score** (préparation) → confirmation simple, comme avant.
+- **Des scores existent** → avertissement **rouge** indiquant le **nombre** de matchs concernés,
+  **puis** demande de la **clé admin** (double verrou) avant d'effacer. Annuler à n'importe quelle
+  étape n'efface rien.
+Vérifié au navigateur (chemin renforcé avec 3 scores simulés : avertissement rouge + demande de clé ;
+chemin normal sans score : confirmation simple ; 0 erreur console). Guide utilisateur §1.4 à jour.
+
 ### Saisie + Admin : bouton « Rafraîchir » (données à jour le jour J) — 2026-07-19
 Les pages **Saisie** et **Admin** ne rechargeaient les données qu'à l'ouverture (`getAll` une seule
 fois). Problème le jour du tournoi : l'indicateur « scores du matin complets » (qui débloque la
