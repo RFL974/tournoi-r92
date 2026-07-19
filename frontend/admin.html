@@ -45,6 +45,42 @@
         </div>
       </section>
 
+      <!-- Infos du tournoi : placées en haut (à remplir en premier). Alimentent la carte + la
+           page d'article du site vitrine. Enregistrées via « Enregistrer les infos ». -->
+      <section class="carte" id="bloc-infos-tournoi">
+        <h2>Infos du tournoi (pour l'actualité)</h2>
+        <p class="note-generation">
+          Ces informations alimentent la <strong>carte</strong> et la <strong>page d'article</strong>
+          du tournoi. Clique sur <strong>« Enregistrer les infos »</strong> pour les sauvegarder —
+          tu peux les modifier à tout moment, <strong>même après publication</strong>.
+        </p>
+        <form id="form-infos-tournoi">
+          <label class="reglage"><span class="r-libelle">Nom du tournoi</span>
+            <input class="r-input" type="text" name="tournoi_nom" placeholder="Ex : Tournoi de Noël U8–U12">
+          </label>
+          <label class="reglage"><span class="r-libelle">Date</span>
+            <input class="r-input" type="date" name="tournoi_date">
+          </label>
+          <label class="reglage"><span class="r-libelle">Lieu</span>
+            <input class="r-input" type="text" name="tournoi_lieu" placeholder="Ex : Stade X, 11 av. Y, 92350 Ville">
+          </label>
+          <label class="reglage"><span class="r-libelle">Description</span>
+            <textarea class="r-input" name="tournoi_description" rows="4" placeholder="Quelques phrases de présentation du tournoi…"></textarea>
+          </label>
+          <label class="reglage"><span class="r-libelle">Affiche du tournoi (image)</span>
+            <input class="r-input" type="file" name="tournoi_affiche" accept="image/*">
+          </label>
+          <div id="apercu-affiche" class="apercu-affiche" hidden>
+            <img id="apercu-affiche-img" alt="Aperçu de l'affiche du tournoi">
+            <button type="button" class="bouton-suppr" id="bouton-retirer-affiche">Retirer l'affiche</button>
+          </div>
+          <div class="ligne-action">
+            <button type="button" class="bouton" id="bouton-enregistrer-infos">Enregistrer les infos</button>
+            <span class="message-form" id="message-infos-tournoi"></span>
+          </div>
+        </form>
+      </section>
+
       <!-- 1) Les réglages (horaires + catégories), injectés par admin.js -->
       <section id="reglages">
         <div class="message">Chargement des réglages…</div>
@@ -108,41 +144,6 @@
         <p class="apresmidi-etat">Scores du matin : <strong id="etat-scores-matin">…</strong></p>
         <button id="bouton-apresmidi" class="bouton">🏉 Générer l'après-midi</button>
         <div id="message-apresmidi" class="message-form"></div>
-      </section>
-
-      <!-- 5) Infos du tournoi : alimentent la carte + la page d'article sur le site vitrine -->
-      <section class="carte" id="bloc-infos-tournoi">
-        <h2>Infos du tournoi (pour l'actualité)</h2>
-        <p class="note-generation">
-          Ces informations alimentent la <strong>carte</strong> et la <strong>page d'article</strong>
-          du tournoi. Clique sur <strong>« Enregistrer les infos »</strong> pour les sauvegarder —
-          tu peux les modifier à tout moment, <strong>même après publication</strong>.
-        </p>
-        <form id="form-infos-tournoi">
-          <label class="reglage"><span class="r-libelle">Nom du tournoi</span>
-            <input class="r-input" type="text" name="tournoi_nom" placeholder="Ex : Tournoi de Noël U8–U12">
-          </label>
-          <label class="reglage"><span class="r-libelle">Date</span>
-            <input class="r-input" type="date" name="tournoi_date">
-          </label>
-          <label class="reglage"><span class="r-libelle">Lieu</span>
-            <input class="r-input" type="text" name="tournoi_lieu" placeholder="Ex : Stade X, 11 av. Y, 92350 Ville">
-          </label>
-          <label class="reglage"><span class="r-libelle">Description</span>
-            <textarea class="r-input" name="tournoi_description" rows="4" placeholder="Quelques phrases de présentation du tournoi…"></textarea>
-          </label>
-          <label class="reglage"><span class="r-libelle">Affiche du tournoi (image)</span>
-            <input class="r-input" type="file" name="tournoi_affiche" accept="image/*">
-          </label>
-          <div id="apercu-affiche" class="apercu-affiche" hidden>
-            <img id="apercu-affiche-img" alt="Aperçu de l'affiche du tournoi">
-            <button type="button" class="bouton-suppr" id="bouton-retirer-affiche">Retirer l'affiche</button>
-          </div>
-          <div class="ligne-action">
-            <button type="button" class="bouton" id="bouton-enregistrer-infos">Enregistrer les infos</button>
-            <span class="message-form" id="message-infos-tournoi"></span>
-          </div>
-        </form>
       </section>
 
       <!-- 6) Publication : rend le tournoi visible (ou non) sur la page publique -->
