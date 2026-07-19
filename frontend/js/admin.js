@@ -1782,12 +1782,21 @@ async function onEnregistrerPoules() {
    L'étape 2 (bouton « Répartir ») utilisera ces mêmes données.
    ========================================================================== */
 
-/* Grands terrains réels par défaut (mesurés sur la vue satellite — modifiables). */
+/* Grands terrains réels par défaut (mesurés sur la vue satellite — modifiables).
+   pos = emplacement sur le plan du site (grille 3×3), pour dessiner la carte « comme sur le site ». */
 const TERRAINS_PHYSIQUES_DEFAUT = [
-  { nom: 'Rugby 1', type: 'rugby', L: 115, W: 70 },
-  { nom: 'Rugby 2', type: 'rugby', L: 110, W: 68 },
-  { nom: 'Foot 1',  type: 'foot',  L: 105, W: 68 },
-  { nom: 'Foot 2',  type: 'foot',  L: 100, W: 65 }
+  { nom: 'Rugby 1', type: 'rugby', L: 115, W: 70, pos: 'CG' },
+  { nom: 'Rugby 2', type: 'rugby', L: 110, W: 68, pos: 'BG' },
+  { nom: 'Foot 1',  type: 'foot',  L: 105, W: 68, pos: 'HC' },
+  { nom: 'Foot 2',  type: 'foot',  L: 100, W: 65, pos: 'CD' }
+];
+
+/* Emplacements possibles sur le plan du site (grille 3×3). */
+const EMPLACEMENTS = [
+  { v: '',   l: 'Auto' },
+  { v: 'HG', l: '↖ Haut-gauche' },   { v: 'HC', l: '↑ Haut-centre' },  { v: 'HD', l: '↗ Haut-droite' },
+  { v: 'CG', l: '← Centre-gauche' },  { v: 'CC', l: '• Centre' },       { v: 'CD', l: '→ Centre-droite' },
+  { v: 'BG', l: '↙ Bas-gauche' },     { v: 'BC', l: '↓ Bas-centre' },   { v: 'BD', l: '↘ Bas-droite' }
 ];
 
 /* Taille de terrain par défaut selon la catégorie (m).
@@ -1825,6 +1834,13 @@ function planTerrainsActuel() {
   const g = configCourante.global || {};
   let terrains = TERRAINS_PHYSIQUES_DEFAUT;
   try { if (g.terrains_physiques) terrains = JSON.parse(g.terrains_physiques); } catch (e) {}
+  // Complète l'emplacement (pos) manquant depuis les valeurs par défaut connues (par nom) :
+  // les terrains enregistrés avant l'ajout des emplacements retrouvent ainsi leur position.
+  terrains = terrains.map(function (t) {
+    if (t.pos) return t;
+    const d = TERRAINS_PHYSIQUES_DEFAUT.find(function (x) { return x.nom.toLowerCase() === String(t.nom || '').toLowerCase(); });
+    return d ? Object.assign({}, t, { pos: d.pos }) : t;
+  });
   let dims = {};
   try { if (g.dimensions_categories) dims = JSON.parse(g.dimensions_categories); } catch (e) {}
   const couloir = (g.couloir_terrain_m != null && g.couloir_terrain_m !== '')
@@ -1909,6 +1925,11 @@ function ligneTerrainPhysique(t, i) {
     '<span class="terr-x">×</span>' +
     '<input class="tp-w" type="number" min="0" step="1" value="' + echapper(String(t.W || '')) + '" aria-label="Largeur (m)">' +
     '<span class="terr-unite">m</span>' +
+    '<select class="tp-pos" aria-label="Emplacement sur le plan">' +
+      EMPLACEMENTS.map(function (e) {
+        return '<option value="' + e.v + '"' + ((t.pos || '') === e.v ? ' selected' : '') + '>' + e.l + '</option>';
+      }).join('') +
+    '</select>' +
     '<button type="button" class="terr-suppr" aria-label="Supprimer ce terrain">✕</button>' +
     '</div>';
 }
@@ -1958,7 +1979,8 @@ function lireTerrainsDuFormulaire() {
       nom:  row.querySelector('.tp-nom').value.trim(),
       type: row.querySelector('.tp-type').value,
       L:    parseFloat(row.querySelector('.tp-l').value) || 0,
-      W:    parseFloat(row.querySelector('.tp-w').value) || 0
+      W:    parseFloat(row.querySelector('.tp-w').value) || 0,
+      pos:  (row.querySelector('.tp-pos') || {}).value || ''
     });
   });
   return out;
@@ -2015,7 +2037,7 @@ function ajouterTerrainPhysique() {
   if (!liste) return;
   const i = liste.querySelectorAll('.terrain-ligne').length;
   liste.insertAdjacentHTML('beforeend',
-    ligneTerrainPhysique({ nom: 'Terrain ' + (i + 1), type: 'rugby', L: 100, W: 68 }, i));
+    ligneTerrainPhysique({ nom: 'Terrain ' + (i + 1), type: 'rugby', L: 100, W: 68, pos: '' }, i));
   recalculerCapacite();
 }
 
@@ -2137,6 +2159,10 @@ function allouerTerrains(fields, cats, m) {
 
   const prefixes = construirePrefixes(fields);
   const F = fields.length;
+  let numero = 0;                                          // compteur GLOBAL : les mini-terrains
+                                                           // sont numérotés 1, 2, 3… en continu sur
+                                                           // tout le tournoi (numéro unique = pas de
+                                                           // confusion à la table des marques).
   const totalTeams = cats.reduce(function (s, c) { return s + Math.max(1, c.teams); }, 0);
   const plein = cats.filter(function (c) { return c.tile.plein; });
   const normaux = cats.filter(function (c) { return !c.tile.plein; });
@@ -2215,11 +2241,11 @@ function allouerTerrains(fields, cats, m) {
 
   function poserSolo(f, prefix, cat, estPlein) {
     if (estPlein) {                                       // U14 : le match occupe tout le terrain
-      const id = prefix + '-1';
+      numero++; const id = String(numero);
       parCategorie[cat.name].push(id);
       const tW = Math.max(8, Math.min(14, f.L * 0.14));
       return { field: f, prefix: prefix, mode: 'plein', zones: [{ cat: cat.name, color: couleur[cat.name],
-        tiles: [{ id: id, x: 0, y: 0, w: f.L, h: f.W, label: cat.name }],
+        tiles: [{ id: id, x: 0, y: 0, w: f.L, h: f.W, label: cat.name + ' · ' + id }],
         table: { x: f.L / 2 - tW / 2, y: f.W - 5, w: tW, h: 4, split: false } }] };
     }
     const g = grille(f.L, f.W, cat.tile, m);
@@ -2227,11 +2253,11 @@ function allouerTerrains(fields, cats, m) {
     if (cells.length === 0) avert.push(f.nom + ' : trop petit pour un terrain ' + cat.name + '.');
     const tableCell = (cells.length > 1)
       ? cells[Math.floor((g.rows - 1) / 2) * g.cols + Math.floor((g.cols - 1) / 2)] : null; // 1 tuile centrale = table
-    const tiles = []; let n = 0;
+    const tiles = [];
     cells.forEach(function (cell) {
       if (tableCell && cell === tableCell) return;
-      n++; const id = prefix + '-' + n;
-      tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: cat.name + ' ' + n });
+      numero++; const id = String(numero);
+      tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: id });
       parCategorie[cat.name].push(id);
     });
     return { field: f, prefix: prefix, mode: 'solo', zones: [{ cat: cat.name, color: couleur[cat.name],
@@ -2252,11 +2278,11 @@ function allouerTerrains(fields, cats, m) {
         else            { cj = (cote === 'haut')   ? g.rows - 1 : 0; ci = Math.floor((g.cols - 1) / 2); }
         ti = cells[cj * g.cols + ci];
       }
-      const tiles = []; let n = 0;
+      const tiles = [];
       cells.forEach(function (cell) {
         if (ti && cell === ti) return;
-        n++; const id = prefix + suff + '-' + n;
-        tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: cat.name + ' ' + n });
+        numero++; const id = String(numero);
+        tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: id });
         parCategorie[cat.name].push(id);
       });
       zones.push({ cat: cat.name, color: couleur[cat.name], tiles: tiles,
@@ -2337,38 +2363,73 @@ function afficherRepartition(res, cats) {
   document.getElementById('repartition-resultat').innerHTML = h;
 }
 
-/** Dessine la carte SVG (un grand terrain par ligne, à l'échelle). */
-function dessinerCarte(res) {
-  const maxL = Math.max.apply(null, res.fieldsPlan.map(function (fp) { return fp.field.L; }).concat([1]));
-  const ppm = 460 / maxL;                                  // pixels par mètre
-  const pad = 8, gapY = 34;
-  let y0 = 0; const parts = [];
-  res.fieldsPlan.forEach(function (fp) {
-    const fw = fp.field.L * ppm, fh = fp.field.W * ppm;
-    let g = '<g transform="translate(' + pad + ',' + (y0 + 22) + ')">';
-    g += '<text x="0" y="-8" class="carte-titre">' + echapper(fp.field.nom) + ' — ' + fp.field.L + '×' + fp.field.W + ' m' +
-         (fp.mode === 'split' ? ' · partagé' : '') + '</text>';
-    g += '<rect x="0" y="0" width="' + fw.toFixed(1) + '" height="' + fh.toFixed(1) + '" class="carte-terrain"/>';
-    fp.zones.forEach(function (z) {
-      z.tiles.forEach(function (t) {
-        const x = t.x * ppm, yy = t.y * ppm, w = t.w * ppm, hh = t.h * ppm;
-        g += '<rect x="' + x.toFixed(1) + '" y="' + yy.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + hh.toFixed(1) +
-             '" rx="2" fill="' + z.color + '" fill-opacity="0.20" stroke="' + z.color + '" stroke-width="1"/>';
-        if (w > 26 && hh > 14)
-          g += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (yy + hh / 2 + 3).toFixed(1) + '" class="carte-tuile" fill="' + z.color + '">' + echapper(t.label) + '</text>';
-      });
-      if (z.table) {
-        const tx = z.table.x * ppm, ty = z.table.y * ppm, tw = z.table.w * ppm, th = z.table.h * ppm;
-        g += '<rect x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" width="' + tw.toFixed(1) + '" height="' + th.toFixed(1) + '" class="carte-table"/>';
-        if (tw > 20 && th > 12) g += '<text x="' + (tx + tw / 2).toFixed(1) + '" y="' + (ty + th / 2 + 3).toFixed(1) + '" class="carte-tm">TM</text>';
-      }
+/* Cellule (colonne, ligne) de chaque emplacement sur la grille 3×3 du plan. */
+const POS_GRILLE = { HG: [0, 0], HC: [1, 0], HD: [2, 0], CG: [0, 1], CC: [1, 1], CD: [2, 1], BG: [0, 2], BC: [1, 2], BD: [2, 2] };
+
+/** Dessine UN grand terrain (cadre + mini-terrains numérotés + table des marques) à (ox,oy). */
+function groupeTerrain(fp, ox, oy, ppm) {
+  const fw = fp.field.L * ppm, fh = fp.field.W * ppm;
+  const catsF = fp.zones.map(function (z) { return z.cat; }).join(' / ');
+  let g = '<g transform="translate(' + ox.toFixed(1) + ',' + oy.toFixed(1) + ')">';
+  g += '<text x="0" y="-7" class="carte-titre"><tspan class="carte-nomterrain">' + echapper(fp.field.nom) +
+       '</tspan> · ' + echapper(catsF) + '</text>';
+  g += '<rect x="0" y="0" width="' + fw.toFixed(1) + '" height="' + fh.toFixed(1) + '" class="carte-terrain"/>';
+  fp.zones.forEach(function (z) {
+    z.tiles.forEach(function (t) {
+      const x = t.x * ppm, yy = t.y * ppm, w = t.w * ppm, hh = t.h * ppm;
+      g += '<rect x="' + x.toFixed(1) + '" y="' + yy.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + hh.toFixed(1) +
+           '" rx="2" fill="' + z.color + '" fill-opacity="0.22" stroke="' + z.color + '" stroke-width="1"/>';
+      if (w > 18 && hh > 12)
+        g += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (yy + hh / 2 + 3).toFixed(1) + '" class="carte-tuile" fill="' + z.color + '">' + echapper(t.label) + '</text>';
     });
-    g += '</g>';
-    parts.push(g);
-    y0 += fh + gapY;
+    if (z.table) {
+      const tx = z.table.x * ppm, ty = z.table.y * ppm, tw = z.table.w * ppm, th = z.table.h * ppm;
+      g += '<rect x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" width="' + tw.toFixed(1) + '" height="' + th.toFixed(1) + '" class="carte-table"/>';
+      if (tw > 18 && th > 11) g += '<text x="' + (tx + tw / 2).toFixed(1) + '" y="' + (ty + th / 2 + 3).toFixed(1) + '" class="carte-tm">TM</text>';
+    }
   });
-  const width = 460 + 2 * pad;
-  return '<svg viewBox="0 0 ' + width + ' ' + (y0 + 6).toFixed(0) + '" width="100%" class="carte-svg" ' +
+  g += '</g>';
+  return { g: g, w: fw, h: fh };
+}
+
+/** Dessine la carte SVG. Si des emplacements sont définis → plan « comme sur le site »
+ *  (grille 3×3) ; sinon → pile verticale simple. */
+function dessinerCarte(res) {
+  const fps = res.fieldsPlan;
+  const pad = 10, titreH = 20;
+  const aPos = fps.some(function (fp) { return fp.field.pos && POS_GRILLE[fp.field.pos]; });
+
+  if (aPos) {
+    const maxDim = Math.max.apply(null, fps.map(function (fp) { return Math.max(fp.field.L, fp.field.W); }).concat([1]));
+    const cell = 165, gap = 14, ppm = (cell - 4) / maxDim;
+    const occ = {}; let maxCol = 0, maxRow = 0; const parts = [];
+    fps.forEach(function (fp) {
+      const p = POS_GRILLE[fp.field.pos] || [1, 1];
+      let col = p[0]; const row = p[1];
+      let key = col + ',' + row;
+      while (occ[key]) { col++; key = col + ',' + row; }    // décale à droite si la cellule est prise
+      occ[key] = true;
+      maxCol = Math.max(maxCol, col); maxRow = Math.max(maxRow, row);
+      const ox = pad + col * (cell + gap);
+      const oy = pad + titreH + row * (cell + titreH + gap);
+      parts.push(groupeTerrain(fp, ox, oy, ppm).g);
+    });
+    const width = pad * 2 + (maxCol + 1) * (cell + gap);
+    const height = pad * 2 + (maxRow + 1) * (cell + titreH + gap);
+    return '<svg viewBox="0 0 ' + width.toFixed(0) + ' ' + height.toFixed(0) + '" width="100%" class="carte-svg" ' +
+           'role="img" aria-label="Plan de répartition des terrains">' + parts.join('') + '</svg>';
+  }
+
+  // Repli : pile verticale (aucun emplacement défini).
+  const maxL = Math.max.apply(null, fps.map(function (fp) { return fp.field.L; }).concat([1]));
+  const ppm = 460 / maxL;
+  let y0 = 0; const parts = [];
+  fps.forEach(function (fp) {
+    const t = groupeTerrain(fp, pad, y0 + titreH, ppm);
+    parts.push(t.g);
+    y0 += titreH + t.h + 16;
+  });
+  return '<svg viewBox="0 0 ' + (460 + 2 * pad) + ' ' + (y0 + 6).toFixed(0) + '" width="100%" class="carte-svg" ' +
          'role="img" aria-label="Carte de répartition des terrains">' + parts.join('') + '</svg>';
 }
 
