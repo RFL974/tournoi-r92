@@ -25,6 +25,9 @@
 
     <main>
 
+      <!-- Repère de connexion : indique si la clé admin est active (rempli par admin.js) -->
+      <div id="barre-connexion" class="barre-connexion" hidden></div>
+
       <!-- 0) Tableau de bord : l'état du tournoi en un coup d'œil (rempli par admin.js) -->
       <section class="tableau-bord" id="tableau-bord" aria-label="État du tournoi">
         <div class="tb-grille">
@@ -115,6 +118,7 @@
           </label>
           <div id="apercu-affiche" class="apercu-affiche" hidden>
             <img id="apercu-affiche-img" alt="Aperçu de l'affiche du tournoi">
+            <button type="button" class="bouton-suppr" id="bouton-retirer-affiche">Retirer l'affiche</button>
           </div>
           <div class="ligne-action">
             <button type="button" class="bouton" id="bouton-enregistrer-infos">Enregistrer les infos</button>
@@ -166,9 +170,11 @@
 
   <!-- On charge les scripts DANS CET ORDRE :
        1) config.js  → définit l'URL du backend
-       2) api.js     → fournit apiGet()
-       3) admin.js   → utilise les deux pour afficher la page -->
+       2) dialog.js  → fenêtres de dialogue maison (utilisées par api.js et admin.js)
+       3) api.js     → fournit apiGet()
+       4) admin.js   → utilise le tout pour afficher la page -->
   <script src="js/config.js"></script>
+  <script src="js/dialog.js"></script>
   <script src="js/api.js"></script>
   <script src="js/admin.js"></script>
 

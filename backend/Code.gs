@@ -299,6 +299,7 @@ function doPost(e) {
       case 'publierTournoi':       resultat = publierTournoi(classeur, requete.publie); break;
       case 'enregistrerInfosTournoi': resultat = enregistrerInfosTournoi(classeur, requete); break;
       case 'enregistrerAffiche':   resultat = enregistrerAffiche(classeur, requete); break;
+      case 'supprimerAffiche':     resultat = supprimerAffiche(classeur); break;
       case 'reinitialiserTournoi': resultat = reinitialiserTournoi(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
@@ -492,6 +493,18 @@ function enregistrerAffiche(classeur, data) {
   try { fichier.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
   ecrireParamGlobal(onglet, 'tournoi_affiche_id', fichier.getId());
   return { ok: true, id: fichier.getId() };
+}
+
+/**
+ * Retire l'AFFICHE du tournoi : met le fichier Drive à la corbeille et efface
+ * `tournoi_affiche_id` dans Config. Sans effet (mais sans erreur) s'il n'y a pas d'affiche.
+ */
+function supprimerAffiche(classeur) {
+  var onglet = classeur.getSheetByName('Config');
+  var id = (lireConfig(classeur).global || {}).tournoi_affiche_id;
+  if (id) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {} }
+  effacerParamGlobal(onglet, 'tournoi_affiche_id');
+  return { ok: true };
 }
 
 /**

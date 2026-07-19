@@ -5,6 +5,27 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : audit UX — points de confort (dialogues, connexion, affiche, « Présente ») — 2026-07-19
+Troisième vague de l'audit UX (les « petits plus »). ⚠️ **Contient une nouvelle action backend
+(`supprimerAffiche`) → il faut recopier `Code.gs` + redéployer** (les autres changements sont
+frontend). Détail :
+- **Fenêtres de dialogue maison** (nouveau `frontend/js/dialog.js`, chargé sur les 4 pages) :
+  remplacent tous les `confirm` / `prompt` / `alert` natifs par des fenêtres aux couleurs du site
+  (`dialogConfirmer` / `dialogAlerter` / `dialogDemander`, basées sur des Promesses ; Entrée =
+  valider, Échap = annuler). `api.js` (clé) et `admin.js` (confirmations) adaptés. Actions
+  destructives = bouton rouge.
+- **Barre de connexion** (admin) : indique si la clé admin est active (🔓 Connecté / 🔒 Non
+  connecté) avec bouton *Se connecter* / *Changer de clé*.
+- **Retirer l'affiche** (point 8) : bouton sous l'aperçu qui annule un choix non enregistré, ou
+  supprime l'affiche enregistrée (fichier Drive à la corbeille + `tournoi_affiche_id` effacé).
+  **Nouvelle action backend `supprimerAffiche`.**
+- **Suppression du réglage « Présente »** : toute catégorie existante est active (le toggle est
+  retiré ; l'ajout et l'enregistrement envoient toujours `presente:'oui'`). Simplifie le modèle :
+  une catégorie qui existe joue et apparaît dans le menu des équipes. (Frontend seul ; la colonne
+  `presente` du Sheet reste, toujours à `oui`.)
+- Vérifié au navigateur (dialogues, barre de connexion 2 états, carte catégorie sans toggle,
+  bouton affiche) : 0 erreur console. Guide utilisateur §1.0, §1.2, §1.6 à jour.
+
 ### Admin : audit UX — tableau de bord + sections repliables — 2026-07-19
 Deuxième vague de l'audit UX (« priorité moyenne »), **frontend uniquement — aucun changement
 backend, pas de redéploiement `Code.gs`** :

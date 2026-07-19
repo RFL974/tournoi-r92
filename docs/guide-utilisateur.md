@@ -46,11 +46,18 @@ joué rapporte toujours au moins 1 point). **Départage** en cas d'égalité de 
 
 À l'ouverture, la page charge tous les réglages et affiche plusieurs blocs, de haut en bas.
 
-### 1.0 Tableau de bord (en haut)
-Un bandeau récapitule l'**état du tournoi en un coup d'œil**, sans avoir à faire défiler la page :
-**Catégories** (présentes / total), **Équipes** (nombre), **Planning** (⚪️ à générer · 🌅 matin ·
-🌅🏉 complet) et **Publication** (⚪️ non · 🟢 publié). Il se met à jour automatiquement à chaque
-action (ajout d'équipe, génération, publication…).
+### 1.0 Connexion + tableau de bord (en haut)
+Une **barre de connexion** indique si ta **clé admin** est active : 🔓 **Connecté** (bouton
+*Changer de clé*) ou 🔒 **Non connecté — les enregistrements seront refusés** (bouton *Se
+connecter*). Pratique pour savoir d'un coup d'œil pourquoi un enregistrement pourrait être refusé.
+
+Juste en dessous, un bandeau **tableau de bord** récapitule l'**état du tournoi en un coup d'œil** :
+**Catégories** (nombre), **Équipes** (nombre), **Planning** (⚪️ à générer · 🌅 matin · 🌅🏉 complet)
+et **Publication** (⚪️ non · 🟢 publié). Il se met à jour automatiquement à chaque action (ajout
+d'équipe, génération, publication…).
+
+> Toutes les confirmations et demandes de clé passent désormais par des **fenêtres aux couleurs du
+> site** (au lieu des popups gris du navigateur). *Entrée* valide, *Échap* annule.
 
 > **Sections repliables** : certaines cartes ont un **chevron ▸** dans leur titre et peuvent se
 > **plier/déplier** d'un clic. « Horaires de la journée » est **dépliée** par défaut (pliable une
@@ -79,9 +86,10 @@ Réglages globaux qui pilotent le calcul du planning :
 > dans les créneaux réels (terrains disponibles, pause repas, heure de fin de location).
 
 ### 1.2 Catégories
-Chaque catégorie (U8, U10, U12…) a ses propres réglages :
+Chaque catégorie (U8, U10, U12…) a ses propres réglages. **Toute catégorie que tu ajoutes est
+active** : elle apparaît dans le menu déroulant d'ajout d'équipe et entre dans la génération. (Pour
+retirer une catégorie, on la **supprime** — il n'y a plus de réglage « Présente ».)
 
-- **Présente** (oui/non) : une catégorie non présente est ignorée par la génération.
 - **Terrains** : liste des terrains attribués à la catégorie, séparés par des virgules
   (ex. `1,2,3`). Plus de terrains = plus de matchs en parallèle = journée plus courte.
 - **Nombre de poules** : **vide = automatique** (l'outil vise ~4 équipes par poule). Tu peux
@@ -148,6 +156,9 @@ date, lieu, description, et une **affiche** (image, redimensionnée puis stocké
 On les sauvegarde avec le bouton **Enregistrer les infos**. Elles sont **modifiables à tout moment,
 même après publication** (pour corriger une faute de frappe sans dépublier). Par sécurité, elles
 sont aussi enregistrées lors de la publication.
+
+Un bouton **Retirer l'affiche** (sous l'aperçu) permet d'**annuler un choix pas encore enregistré**,
+ou de **supprimer l'affiche déjà enregistrée** (le fichier Drive est mis à la corbeille).
 
 ### 1.7 Publier le tournoi
 Rend le tournoi **visible du public**. Tant qu'il n'est pas publié, les visiteurs voient un écran

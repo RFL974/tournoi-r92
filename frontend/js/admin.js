@@ -79,7 +79,11 @@ async function initAdmin() {
   }
 
   // « Connexion » : on demande la clé admin une fois à l'ouverture (puis mémorisée).
-  await connexion('admin', "à l'administration");
+  const connecte = await connexion('admin', "à l'administration");
+  majBarreConnexion(connecte);
+
+  // Barre de connexion : boutons « Se connecter » / « Changer de clé » (délégué).
+  document.getElementById('barre-connexion').addEventListener('click', onClicConnexion);
 
   // On branche le formulaire d'ajout et les boutons de suppression (équipes).
   document.getElementById('form-equipe').addEventListener('submit', onAjouterEquipe);
@@ -116,6 +120,8 @@ async function initAdmin() {
   // Choix d'un fichier d'affiche → aperçu immédiat.
   document.querySelector('#form-infos-tournoi [name="tournoi_affiche"]')
     .addEventListener('change', onChoisirAffiche);
+  // Bouton « Retirer l'affiche » (annule un choix non enregistré, ou supprime l'affiche enregistrée).
+  document.getElementById('bouton-retirer-affiche').addEventListener('click', onRetirerAffiche);
 }
 
 /* --------------------------------------------------------------------------
@@ -164,6 +170,42 @@ async function onChoisirAffiche(evenement) {
   } catch (e) {
     afficheDataURI = '';
     afficherMessage(message, "⚠️ Image illisible. Choisis un fichier image (JPG, PNG…).", 'ko');
+  }
+}
+
+/**
+ * Retire l'affiche. Deux cas :
+ *   1) une image vient d'être choisie mais pas encore enregistrée → on annule le choix (local) ;
+ *   2) une affiche est déjà enregistrée → suppression backend (fichier Drive + Config).
+ */
+async function onRetirerAffiche() {
+  const message = document.getElementById('message-infos-tournoi');
+  const form = document.getElementById('form-infos-tournoi');
+
+  // Cas 1 : choix non enregistré → on annule simplement la sélection.
+  if (afficheDataURI) {
+    afficheDataURI = '';
+    form.tournoi_affiche.value = '';
+    majInfosTournoi(); // ré-affiche l'affiche enregistrée, ou masque l'aperçu si aucune
+    afficherMessage(message, "Choix d'affiche annulé.", 'ok');
+    return;
+  }
+
+  // Cas 2 : affiche enregistrée → confirmation puis suppression backend.
+  if (!(configCourante.global && configCourante.global.tournoi_affiche_id)) return;
+  if (!await dialogConfirmer("Retirer l'affiche du tournoi ?", { ok: 'Retirer', danger: true })) return;
+
+  const bouton = document.getElementById('bouton-retirer-affiche');
+  bouton.disabled = true;
+  try {
+    await ecrireAdmin('supprimerAffiche', {});
+    configCourante = await apiGet('getConfig');
+    majInfosTournoi();
+    afficherMessage(message, '🗑️ Affiche retirée.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
   }
 }
 
@@ -270,7 +312,7 @@ async function onPublier() {
   const question = publier
     ? 'Publier le tournoi ?\n\nLe tournoi deviendra visible du public. Les infos saisies (nom, date, lieu, description, affiche) seront aussi enregistrées.'
     : 'Masquer le tournoi ? Les visiteurs reverront l\'écran « à venir ».';
-  if (!confirm(question)) return;
+  if (!await dialogConfirmer(question, { ok: publier ? 'Publier' : 'Masquer' })) return;
 
   bouton.disabled = true;
   try {
@@ -316,10 +358,9 @@ function majTableauBord() {
   const elPub = document.getElementById('tb-publication');
   if (!elCat || !elEq || !elPl || !elPub) return;
 
-  // Catégories : présentes / total.
+  // Catégories (toute catégorie existante est active).
   const cats = configCourante.categories || [];
-  const nbPresentes = cats.filter(estPresente).length;
-  elCat.textContent = cats.length ? (nbPresentes + '/' + cats.length) : '0';
+  elCat.textContent = String(cats.length);
 
   // Équipes.
   elEq.textContent = (equipesCourantes || []).length;
@@ -336,6 +377,43 @@ function majTableauBord() {
 }
 
 /* --------------------------------------------------------------------------
+   BARRE DE CONNEXION (repère visuel de la clé admin)
+   -------------------------------------------------------------------------- */
+
+/** Affiche l'état de connexion (clé admin active ou non) + le bon bouton. */
+function majBarreConnexion(connecte) {
+  const barre = document.getElementById('barre-connexion');
+  if (!barre) return;
+  barre.hidden = false;
+  if (connecte) {
+    barre.className = 'barre-connexion connecte';
+    barre.innerHTML =
+      '<span>🔓 Connecté à l\'administration</span>' +
+      '<button type="button" class="bouton-lien" id="bouton-changer-cle">Changer de clé</button>';
+  } else {
+    barre.className = 'barre-connexion deconnecte';
+    barre.innerHTML =
+      '<span>🔒 Non connecté — les enregistrements seront refusés</span>' +
+      '<button type="button" class="bouton" id="bouton-se-connecter">Se connecter</button>';
+  }
+}
+
+/** Clic dans la barre : « Se connecter » (si déconnecté) ou « Changer de clé ». */
+async function onClicConnexion(evenement) {
+  // Changer de clé : on redemande une clé VALIDE ; si annulé, on garde l'actuelle.
+  if (evenement.target.closest('#bouton-changer-cle')) {
+    await demanderCleValide('admin', 'Changer la clé admin\n\nEntre la nouvelle clé :');
+    majBarreConnexion(true); // on n'arrive ici que si on était déjà connecté
+    return;
+  }
+  // Se connecter : demande la clé en boucle jusqu'à la bonne (ou annulation).
+  if (evenement.target.closest('#bouton-se-connecter')) {
+    const ok = await connexion('admin', "à l'administration");
+    majBarreConnexion(ok);
+  }
+}
+
+/* --------------------------------------------------------------------------
    RÉINITIALISATION (remise à zéro complète du tournoi)
    -------------------------------------------------------------------------- */
 
@@ -349,11 +427,13 @@ async function onReinitialiser() {
   const bouton = document.getElementById('bouton-reinitialiser');
 
   // Double confirmation : l'action est irréversible.
-  if (!confirm('Réinitialiser le tournoi ?\n\n' +
+  if (!await dialogConfirmer('Réinitialiser le tournoi ?\n\n' +
                'Cela supprime définitivement les catégories, les équipes, les poules, ' +
                'les matchs (planning + scores) et les infos du tournoi.\n' +
-               'Les réglages horaires et l\'historique de saison sont conservés.')) return;
-  if (!confirm('Confirmer la remise à zéro ? Cette action est IRRÉVERSIBLE.')) return;
+               'Les réglages horaires et l\'historique de saison sont conservés.',
+               { ok: 'Continuer', danger: true })) return;
+  if (!await dialogConfirmer('Confirmer la remise à zéro ? Cette action est IRRÉVERSIBLE.',
+               { ok: 'Oui, tout effacer', danger: true })) return;
 
   const texteBouton = bouton.textContent;
   bouton.disabled = true;
@@ -575,7 +655,6 @@ function afficherCategories(categories) {
  */
 function formulaireCategorie(cat) {
   const nom = cat.categorie || '?';
-  const coche = estPresente(cat) ? ' checked' : '';
 
   let champs = '';
   CHAMPS_CATEGORIE.forEach(function (champ) {
@@ -587,7 +666,6 @@ function formulaireCategorie(cat) {
     '<form class="carte categorie form-categorie" data-cat="' + echapper(nom) + '">' +
       '<div class="ligne-info">' +
         '<span class="badge">' + echapper(nom) + '</span>' +
-        '<label class="toggle"><input type="checkbox" name="presente"' + coche + '> Présente</label>' +
       '</div>' +
       '<div class="grille-reglages">' + champs + '</div>' +
       '<div class="ligne-action">' +
@@ -629,8 +707,9 @@ async function onEnregistrerCategorie(evenement) {
   const message = form.querySelector('.message-cat');
   const nom = form.getAttribute('data-cat');
 
-  // On rassemble les valeurs du formulaire.
-  const data = { categorie: nom, presente: form.presente.checked ? 'oui' : 'non' };
+  // On rassemble les valeurs du formulaire. Toute catégorie existante est active
+  // (le réglage « Présente » a été retiré) → on envoie toujours 'oui'.
+  const data = { categorie: nom, presente: 'oui' };
   CHAMPS_CATEGORIE.forEach(function (champ) {
     data[champ.cle] = form[champ.cle].value;
   });
@@ -697,15 +776,16 @@ async function onAjouterCategorie(evenement) {
  */
 async function onSupprimerCategorie(bouton) {
   const nom = bouton.getAttribute('data-cat');
-  if (!confirm('Supprimer la catégorie « ' + nom + ' » ?\n' +
-               '(Les équipes de cette catégorie ne sont pas supprimées.)')) return;
+  if (!await dialogConfirmer('Supprimer la catégorie « ' + nom + ' » ?\n' +
+               '(Les équipes de cette catégorie ne sont pas supprimées.)',
+               { ok: 'Supprimer', danger: true })) return;
 
   bouton.disabled = true;
   try {
     await ecrireAdmin('supprimerCategorie', { categorie: nom });
     await rechargerReglages();
   } catch (erreur) {
-    alert('Erreur : ' + erreur.message);
+    await dialogAlerter('Erreur : ' + erreur.message);
     bouton.disabled = false;
   }
 }
@@ -852,7 +932,7 @@ async function onSupprimerEquipe(bouton) {
   const nom = bouton.getAttribute('data-nom');
   const message = document.getElementById('message-equipe');
 
-  if (!confirm('Supprimer l\'équipe « ' + nom + ' » ?')) return;
+  if (!await dialogConfirmer('Supprimer l\'équipe « ' + nom + ' » ?', { ok: 'Supprimer', danger: true })) return;
 
   bouton.disabled = true;
   try {
@@ -875,8 +955,8 @@ async function onSupprimerCategorieEquipes(bouton) {
     return (eq.categorie || '(sans catégorie)') === cat;
   }).length;
 
-  if (!confirm('Supprimer TOUTES les ' + combien + ' équipe(s) de la catégorie « ' + cat + ' » ?\n\n' +
-               'Cette action est irréversible.')) return;
+  if (!await dialogConfirmer('Supprimer TOUTES les ' + combien + ' équipe(s) de la catégorie « ' + cat + ' » ?\n\n' +
+               'Cette action est irréversible.', { ok: 'Tout supprimer', danger: true })) return;
 
   bouton.disabled = true;
   bouton.textContent = 'Suppression…';
@@ -967,8 +1047,8 @@ async function rechargerEquipes() {
  * Lance la génération des poules et du planning, puis affiche le résultat.
  */
 async function onGenerer() {
-  if (!confirm('Générer les poules et le planning ?\n\n' +
-               'Cela EFFACE les poules, matchs et scores déjà saisis.')) return;
+  if (!await dialogConfirmer('Générer les poules et le planning ?\n\n' +
+               'Cela EFFACE les poules, matchs et scores déjà saisis.', { ok: 'Générer' })) return;
   await genererMaintenant();
 }
 
@@ -1043,8 +1123,8 @@ function majApresMidi() {
 
 /** Génère la phase après-midi (classement croisé) à partir du classement du matin. */
 async function onGenererApresMidi() {
-  if (!confirm("Générer les matchs de l'après-midi (classement croisé) ?\n\n" +
-               "Basé sur le classement du matin. N'efface PAS les matchs du matin.")) return;
+  if (!await dialogConfirmer("Générer les matchs de l'après-midi (classement croisé) ?\n\n" +
+               "Basé sur le classement du matin. N'efface PAS les matchs du matin.", { ok: 'Générer' })) return;
 
   const bouton  = document.getElementById('bouton-apresmidi');
   const message = document.getElementById('message-apresmidi');
@@ -1137,7 +1217,7 @@ async function onClicArbitrage(evenement) {
   const categorie = bouton.getAttribute('data-categorie');
   const message = document.getElementById('message-generation');
 
-  if (!confirm('Appliquer cet ajustement puis régénérer le planning ?')) return;
+  if (!await dialogConfirmer('Appliquer cet ajustement puis régénérer le planning ?', { ok: 'Appliquer' })) return;
 
   bouton.disabled = true;
   try {

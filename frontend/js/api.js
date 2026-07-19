@@ -108,8 +108,8 @@ function definirCleLocale(role, cle) {
 }
 
 /** Demande la clé à l'utilisateur (pré-remplie avec la mémorisée). Renvoie null si annulé. */
-function demanderCle(role, message) {
-  const saisie = prompt(message, lireCleLocale(role));
+async function demanderCle(role, message) {
+  const saisie = await dialogDemander(message, lireCleLocale(role), { ok: 'Valider' });
   if (saisie == null) return null;
   const propre = saisie.trim();
   definirCleLocale(role, propre);
@@ -124,14 +124,15 @@ function demanderCle(role, message) {
  * @param {string} libelle  texte affiché à l'utilisateur (ex : "admin", "de saisie des scores")
  */
 async function apiPostProtege(action, data, role, libelle) {
-  let cle = lireCleLocale(role) || demanderCle(role, 'Entre la clé ' + libelle + ' :');
+  let cle = lireCleLocale(role);
+  if (!cle) cle = await demanderCle(role, 'Entre la clé ' + libelle + ' :');
   if (cle == null) throw new Error('Action annulée.');
   try {
     return await apiPost(action, Object.assign({}, data, { cle: cle }));
   } catch (err) {
     // Clé absente/incorrecte côté serveur → on la redemande une fois.
     if (estRefusCle(err.message)) {
-      const nouvelle = demanderCle(role, 'Clé ' + libelle + ' incorrecte. Réessaie :');
+      const nouvelle = await demanderCle(role, 'Clé ' + libelle + ' incorrecte. Réessaie :');
       if (nouvelle == null) throw new Error('Action annulée.');
       return await apiPost(action, Object.assign({}, data, { cle: nouvelle }));
     }
@@ -173,11 +174,11 @@ async function connexion(role, libelle) {
   const memo = lireCleLocale(role);
   if (memo && await cleValide(role, memo)) return true;
   while (true) {
-    const saisie = prompt('🔒 Accès ' + libelle + '\n\nEntre la clé :', '');
+    const saisie = await dialogDemander('🔒 Accès ' + libelle + '\n\nEntre la clé :', '', { ok: 'Se connecter' });
     if (saisie == null) return false; // annulé
     const cle = saisie.trim();
     if (cle && await cleValide(role, cle)) { definirCleLocale(role, cle); return true; }
-    alert('Clé incorrecte. Réessaie.');
+    await dialogAlerter('Clé incorrecte. Réessaie.');
   }
 }
 
@@ -188,10 +189,10 @@ async function connexion(role, libelle) {
  */
 async function demanderCleValide(role, message) {
   while (true) {
-    const saisie = prompt(message, '');
+    const saisie = await dialogDemander(message, '', { ok: 'Valider' });
     if (saisie == null) return null; // annulé
     const cle = saisie.trim();
     if (cle && await cleValide(role, cle)) { definirCleLocale(role, cle); return cle; }
-    alert('Clé incorrecte.');
+    await dialogAlerter('Clé incorrecte.');
   }
 }
