@@ -28,16 +28,51 @@ async function initSaisie() {
     afficherMatchs();
   });
 
+  // Bouton « Rafraîchir » : recharge les saisies faites sur les autres appareils.
+  const btnMaj = document.getElementById('bouton-rafraichir-saisie');
+  if (btnMaj) btnMaj.addEventListener('click', rafraichirSaisie);
+
   try {
     const data = await apiGet('getAll');
     equipes = data.equipes || [];
     matchs = data.matchs || [];
     afficherMatchs();
+    majHeureSaisie();
   } catch (err) {
     zone.innerHTML = '<p class="vide">Erreur de chargement : ' + echapper(err.message) + '</p>';
   }
   // « Connexion » : on demande la clé scores une fois à l'ouverture (puis mémorisée).
   await connexion('scores', 'de saisie des scores');
+}
+
+/**
+ * Recharge les matchs depuis le backend et réaffiche la table de marque.
+ * ⚠️ Réaffiche la liste : un score en cours de frappe (non validé) serait perdu — c'est
+ * pourquoi c'est un bouton manuel (on rafraîchit quand on ne saisit rien).
+ */
+async function rafraichirSaisie() {
+  const bouton = document.getElementById('bouton-rafraichir-saisie');
+  const texte = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = '⏳ …';
+  try {
+    const data = await apiGet('getAll');
+    equipes = data.equipes || [];
+    matchs = data.matchs || [];
+    afficherMatchs();
+    majHeureSaisie();
+  } catch (err) {
+    // On garde l'affichage actuel en cas d'erreur réseau.
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texte;
+  }
+}
+
+/** Affiche l'heure de la dernière mise à jour des données. */
+function majHeureSaisie() {
+  const el = document.getElementById('maj-saisie');
+  if (el) el.textContent = 'Mis à jour à ' + new Date().toLocaleTimeString('fr-FR');
 }
 
 /** Ordre des catégories : par le nombre qu'elles contiennent (U8 < U10 < U12), sinon alphabétique. */

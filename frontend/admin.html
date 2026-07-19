@@ -30,6 +30,13 @@
 
       <!-- 0) Tableau de bord : l'état du tournoi en un coup d'œil (rempli par admin.js) -->
       <section class="tableau-bord" id="tableau-bord" aria-label="État du tournoi">
+        <div class="tb-entete">
+          <span class="tb-titre">État du tournoi</span>
+          <span class="tb-refresh">
+            <span class="live-maj" id="maj-admin"></span>
+            <button type="button" class="bouton-lien" id="bouton-rafraichir-admin">🔄 Rafraîchir</button>
+          </span>
+        </div>
         <div class="tb-grille">
           <div class="tb-stat"><span class="tb-val" id="tb-categories">…</span><span class="tb-lib">Catégories</span></div>
           <div class="tb-stat"><span class="tb-val" id="tb-equipes">…</span><span class="tb-lib">Équipes</span></div>

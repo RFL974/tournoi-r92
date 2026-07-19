@@ -69,8 +69,9 @@ async function initAdmin() {
     majInfosTournoi();
     majPublication();
 
-    // 5) Tableau de bord (récap en haut de page)
+    // 5) Tableau de bord (récap en haut de page) + horodatage
     majTableauBord();
+    majHeureAdmin();
 
   } catch (erreur) {
     zoneReglages.innerHTML =
@@ -84,6 +85,9 @@ async function initAdmin() {
 
   // Barre de connexion : boutons « Se connecter » / « Changer de clé » (délégué).
   document.getElementById('barre-connexion').addEventListener('click', onClicConnexion);
+
+  // Bouton « Rafraîchir » : recharge scores/planning depuis le backend (utile le jour J).
+  document.getElementById('bouton-rafraichir-admin').addEventListener('click', rafraichirAdmin);
 
   // On branche le formulaire d'ajout et les boutons de suppression (équipes).
   document.getElementById('form-equipe').addEventListener('submit', onAjouterEquipe);
@@ -376,6 +380,42 @@ function majTableauBord() {
   elPub.textContent = estPublie() ? '🟢 publié' : '⚪️ non';
 }
 
+/**
+ * Rafraîchit les données du tournoi (scores saisis sur les téléphones, etc.) et met à jour
+ * les vues « live » : tableau de bord, planning, équipes, état de préparation de l'après-midi.
+ * On NE re-rend PAS les formulaires de réglages ni le formulaire d'infos, pour ne pas écraser
+ * une saisie en cours (ces réglages ne changent pas depuis un autre appareil pendant la journée).
+ */
+async function rafraichirAdmin() {
+  const bouton = document.getElementById('bouton-rafraichir-admin');
+  const texte = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = '⏳ …';
+  try {
+    const data = await apiGet('getAll');
+    configCourante = data.config;
+    equipesCourantes = data.equipes;
+    matchsCourants = data.matchs || [];
+    afficherEquipes(data.equipes);
+    afficherPlanning(data.poules, data.matchs);
+    majApresMidi();
+    majPublication();
+    majTableauBord();
+    majHeureAdmin();
+  } catch (err) {
+    // On garde l'affichage actuel en cas d'erreur réseau.
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texte;
+  }
+}
+
+/** Affiche l'heure de la dernière mise à jour des données. */
+function majHeureAdmin() {
+  const el = document.getElementById('maj-admin');
+  if (el) el.textContent = 'Mis à jour à ' + new Date().toLocaleTimeString('fr-FR');
+}
+
 /* --------------------------------------------------------------------------
    BARRE DE CONNEXION (repère visuel de la clé admin)
    -------------------------------------------------------------------------- */
@@ -389,7 +429,10 @@ function majBarreConnexion(connecte) {
     barre.className = 'barre-connexion connecte';
     barre.innerHTML =
       '<span>🔓 Connecté à l\'administration</span>' +
-      '<button type="button" class="bouton-lien" id="bouton-changer-cle">Changer de clé</button>';
+      '<span class="barre-actions">' +
+        '<button type="button" class="bouton-lien" id="bouton-changer-cle">Changer de clé</button>' +
+        '<button type="button" class="bouton-lien" id="bouton-verrouiller">🔒 Verrouiller</button>' +
+      '</span>';
   } else {
     barre.className = 'barre-connexion deconnecte';
     barre.innerHTML =
@@ -400,10 +443,25 @@ function majBarreConnexion(connecte) {
 
 /** Clic dans la barre : « Se connecter » (si déconnecté) ou « Changer de clé ». */
 async function onClicConnexion(evenement) {
-  // Changer de clé : on redemande une clé VALIDE ; si annulé, on garde l'actuelle.
+  // Changer de clé : par sécurité (page laissée ouverte), on exige d'abord la clé
+  // ACTUELLE, PUIS on demande la nouvelle (validée côté serveur).
   if (evenement.target.closest('#bouton-changer-cle')) {
-    await demanderCleValide('admin', 'Changer la clé admin\n\nEntre la nouvelle clé :');
+    const actuelle = await dialogDemander(
+      'Sécurité : entre d\'abord la clé ACTUELLE pour pouvoir la changer :', '', { ok: 'Continuer' });
+    if (actuelle == null) return; // annulé
+    if (actuelle.trim() !== lireCleLocale('admin')) {
+      await dialogAlerter('Clé actuelle incorrecte. Changement refusé.');
+      return;
+    }
+    await demanderCleValide('admin', 'Clé actuelle confirmée.\n\nEntre la NOUVELLE clé :');
     majBarreConnexion(true); // on n'arrive ici que si on était déjà connecté
+    return;
+  }
+  // Verrouiller : efface la clé mémorisée → la page repasse en « Non connecté »
+  // et toute écriture redemandera la clé (utile si l'ordinateur est laissé ouvert).
+  if (evenement.target.closest('#bouton-verrouiller')) {
+    definirCleLocale('admin', '');
+    majBarreConnexion(false);
     return;
   }
   // Se connecter : demande la clé en boucle jusqu'à la bonne (ou annulation).

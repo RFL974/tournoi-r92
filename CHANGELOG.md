@@ -5,6 +5,27 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Saisie + Admin : bouton « Rafraîchir » (données à jour le jour J) — 2026-07-19
+Les pages **Saisie** et **Admin** ne rechargeaient les données qu'à l'ouverture (`getAll` une seule
+fois). Problème le jour du tournoi : l'indicateur « scores du matin complets » (qui débloque la
+génération de l'après-midi) restait figé, et une table de marque ne voyait pas les saisies des
+autres appareils. Correctif (frontend seul, **pas de redéploiement**) :
+- **Saisie** : bouton **🔄 Rafraîchir** + heure de dernière mise à jour (recharge manuelle, pour ne
+  pas effacer un score en cours de frappe).
+- **Admin** : bouton **🔄 Rafraîchir** dans le tableau de bord (recharge scores/planning/état
+  après-midi **sans** re-rendre les formulaires de réglages en cours d'édition — vérifié au
+  navigateur : une valeur tapée dans « Terrains » est conservée après rafraîchissement).
+- Guide utilisateur §1.0 et §2 à jour.
+
+### Admin : sécurité de la connexion (verrouiller + changer de clé) — 2026-07-19
+Sécurité (frontend seul, **pas de redéploiement**) pour le cas « ordinateur laissé ouvert » :
+- **Bouton 🔒 Verrouiller** dans la barre de connexion : efface la clé admin mémorisée → la page
+  repasse en « Non connecté » et toute écriture redemande la clé.
+- **« Changer de clé »** demande désormais **la clé actuelle en premier** (comparée à la clé
+  mémorisée) avant d'autoriser la saisie d'une nouvelle clé. Clé actuelle erronée → refus.
+- Vérifié au navigateur (verrouillage efface la clé et bascule la barre ; mauvaise clé actuelle
+  refusée ; 0 erreur console).
+
 ### Admin : audit UX — points de confort (dialogues, connexion, affiche, « Présente ») — 2026-07-19
 Troisième vague de l'audit UX (les « petits plus »). ⚠️ **Contient une nouvelle action backend
 (`supprimerAffiche`) → il faut recopier `Code.gs` + redéployer** (les autres changements sont
