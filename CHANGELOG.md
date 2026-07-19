@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Classement croisé : le vainqueur du tournoi est mis en avant — 2026-07-19
+Précision : le classement croisé **désigne bien un vainqueur** — l'équipe qui finit **1ʳᵉ du
+Niveau 1** (le groupe des premiers de poule) **remporte le tournoi**. Correctifs (**frontend seul,
+pas de redéploiement backend**) :
+- **Description** corrigée dans l'admin et la doc (fini le trompeur « pas de vainqueur final »).
+- **Page publique** : l'onglet **Classements** affiche désormais le **classement général du
+  tournoi** (en plus des niveaux), avec le **vainqueur mis en avant** (🏆 + ligne dorée) quand il
+  est **mathématiquement certain** ; sinon l'équipe **en tête** (provisoire) est indiquée. Même
+  mise en avant dans la vue « Mon équipe ».
+
 ### Formats d'après-midi par catégorie (Croisé / Libre / Coupe + Plateau) — 2026-07-19
 Chaque catégorie choisit désormais **son propre format d'après-midi**, dans le même tournoi (ex.
 M8 en « Matchs libres » pendant que M12 joue en « Coupe + Plateau »). Le choix se fait **au

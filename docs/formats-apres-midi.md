@@ -15,11 +15,14 @@ pour pouvoir l'expliquer aux équipes à l'avance.
 ### 1. Classement croisé (`CROISE`) — *format historique, par défaut*
 Les équipes sont **reclassées par niveau** après les poules du matin (tous les 1ᵉʳˢ de poule
 ensemble = Niveau 1, tous les 2ᵉˢ = Niveau 2, etc.), puis chaque niveau joue en **round-robin**.
-Pas de vainqueur unique, mais des matchs équilibrés toute la journée. C'est le comportement décrit
-dans [`phases-tournoi.md`](phases-tournoi.md).
+Un **classement général** et un **podium** sont désignés : le **vainqueur du Niveau 1** (le groupe
+des premiers de poule) **remporte le tournoi**. C'est le comportement décrit dans
+[`phases-tournoi.md`](phases-tournoi.md).
 
 - **Paramètre** : aucun.
-- **Affichage public** : tableaux de classement par niveau + classement général + podium.
+- **Affichage public** : tableaux par niveau **+ classement général (vainqueur en tête) + podium**.
+  Le podium 🥇🥈🥉 s'affiche dès qu'il est **mathématiquement certain** ; avant, le classement
+  général montre l'équipe **en tête** (provisoire).
 
 ### 2. Matchs libres (`LIBRE`)
 Des **matchs amicaux tournants**, **sans classement ni qualification** — juste du temps de jeu.

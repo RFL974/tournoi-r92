@@ -491,6 +491,24 @@ a:hover { text-decoration: underline; }
 .bracket-attente { font-style: italic; color: #8a97a6; }
 .bracket-petite { margin-top: 14px; max-width: 230px; }
 
+/* Vainqueur / tête du classement général (croisé) */
+.note-vainqueur {
+  background: linear-gradient(90deg, rgba(233, 181, 62, 0.20), rgba(233, 181, 62, 0.04));
+  border: 1px solid rgba(233, 181, 62, 0.5);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 6px 0 8px;
+  color: var(--navy);
+}
+.note-vainqueur.note-provisoire {
+  background: var(--surface-clair);
+  border-color: var(--bordure);
+  color: var(--gris-texte);
+  font-style: italic;
+}
+tr.cl-vainqueur { background: rgba(233, 181, 62, 0.16); }
+tr.cl-vainqueur .col-equipe { font-weight: 700; color: var(--navy); }
+
 /* ---------------------------------------------------------
    14. TABLEAUX DE CLASSEMENT
    --------------------------------------------------------- */
