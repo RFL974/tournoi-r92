@@ -152,6 +152,11 @@ Chaque piste (ex. « ajouter un terrain », « réduire le battement », « mi-t
 « commencer plus tôt », « une poule de plus ») indique l'heure de fin simulée et le temps gagné ;
 un **✅** marque celles qui **tiennent le créneau**. Un clic **applique** le réglage et **régénère**.
 
+**Suivi de l'avancement** : dans le planning affiché, chaque **catégorie** et chaque **phase**
+(Matin / Après-midi) portent un badge **« X/Y saisis »** — bleu tant qu'il reste des scores à
+entrer, **vert avec ✅** quand tout est saisi. Combiné au bouton **🔄 Rafraîchir**, tu vois d'un
+coup d'œil où en est la journée sans quitter la page admin.
+
 ### 1.5 Phase après-midi (classement croisé)
 Le bouton **🏉 Générer l'après-midi**. Principe : les équipes de **même rang de poule** jouent
 ensemble l'après-midi (les 1ᵉʳ de poule entre eux → **Niveau 1**, les 2ᵉ → **Niveau 2**, etc.).

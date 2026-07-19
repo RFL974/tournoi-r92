@@ -382,6 +382,29 @@ select.r-input { cursor: pointer; }
 }
 #bloc-generation .message-form { white-space: pre-line; margin-top: 8px; }
 
+/* Badge d'avancement « X/Y saisis » à côté d'une catégorie / phase du planning admin. */
+.avancement {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.avc-complet {
+  background: rgba(159, 224, 160, 0.16);
+  color: #9fe0a0;
+  border: 1px solid rgba(159, 224, 160, 0.5);
+}
+.avc-partiel {
+  background: rgba(184, 216, 248, 0.12);
+  color: var(--bleu-ciel);
+  border: 1px solid rgba(184, 216, 248, 0.35);
+}
+
 .poule-compo {
   background: rgba(3, 16, 36, 0.4);
   border-radius: 8px;
