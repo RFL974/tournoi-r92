@@ -5,6 +5,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Fix : « heure de fin » (auto) reflète enfin la fin de la JOURNÉE — 2026-07-19
+Bug : en mode auto, « heure de fin des matchs » restait figée sur la fin du **matin** (ex. 11:36)
+alors que le dernier match de l'après-midi finissait bien plus tard (ex. 14:49). Cause : `heure_fin`
+n'était (re)calculée qu'à la **génération des poules du matin** (comme projection) ; ni
+`genererApresMidi` ni `reorganiserPoulesMatin` ne la mettaient à jour. Correctif (⚠️ **backend, à
+redéployer**) :
+- **`genererApresMidi`** : en auto, écrit `heure_fin` = **vraie fin du dernier match** de la journée
+  (matin + après-midi réels). Renvoie aussi `heure_fin_journee`.
+- **`reorganiserPoulesMatin`** : en auto, recalcule `heure_fin` = fin **projetée** de la journée.
+- Frontend : après génération de l'après-midi / réorganisation des poules, le formulaire
+  « Horaires » est re-rendu (l'heure de fin à l'écran suit) et le message affiche « 🏁 Fin de la
+  journée ». Pour corriger la valeur actuellement figée : redéployer puis **regénérer l'après-midi**.
+
 ### Admin : thème clair aligné sur la page publique + logo — 2026-07-19
 Nouveau look de la page admin (frontend seul, **pas de redéploiement**), **calqué sur la page
 publique du tournoi** : **fond blanc**, **cartes blanches** (liseré fin + ombre douce), **en-tête
