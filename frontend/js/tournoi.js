@@ -233,7 +233,7 @@ function sectionDerniersScores() {
 
 function ligneScore(m) {
   const a = Number(m.score_A), b = Number(m.score_B);
-  const libelle = (String(m.phase) === 'classement' ? 'Niveau ' : 'Poule ') + String(m.poule);
+  const libelle = libelleMatch(m);
   return '<div class="score-ligne">' +
     '<span class="score-meta">' + echapper(m.categorie) + ' · ' + echapper(libelle) + ' · ' + echapper(m.heure_fin) + '</span>' +
     '<div class="score-corps">' +
@@ -318,7 +318,13 @@ function afficherEquipe() {
 
   let html = '';
   if (matin.length) html += '<div class="planning-phase">🌅 Matin — poules</div>' + cartes(matin, id);
-  if (aprem.length) html += '<div class="planning-phase">🏉 Après-midi — classement croisé</div>' + cartes(aprem, id);
+  if (aprem.length) {
+    const fmt = formatApresMidiCat(matchs.find(function (m) { return m.equipe_A === id || m.equipe_B === id; }).categorie);
+    const titreAprem = (fmt === 'COUPE_PLATEAU') ? '🏉 Après-midi — Coupe &amp; Plateau'
+      : (fmt === 'LIBRE') ? '🏉 Après-midi — matchs amicaux'
+      : '🏉 Après-midi — classement croisé';
+    html += '<div class="planning-phase">' + titreAprem + '</div>' + cartes(aprem, id);
+  }
 
   const eq = equipes.find(function (x) { return x.id_equipe === id; });
   if (eq) html += sectionClassementsEquipe(eq);
@@ -338,7 +344,7 @@ function carteMatch(m, id) {
   const monScore = estA ? m.score_A : m.score_B;
   const scoreAdv = estA ? m.score_B : m.score_A;
   const termine = estTermine(m.statut);
-  const libelle = (String(m.phase) === 'classement' ? 'Niveau ' : 'Poule ') + String(m.poule);
+  const libelle = libelleMatch(m);
 
   let resultat;
   if (termine && String(monScore) !== '' && String(scoreAdv) !== '') {
@@ -367,7 +373,24 @@ function sectionClassementsEquipe(eq) {
   html += '<div class="planning-phase">📊 Classement de ta poule (matin)</div>';
   html += tableCompacte('Poule ' + echapper(String(eq.poule)), classementGroupe(matchsMatin, membresPoule), eq.id_equipe);
 
-  // 2) Son niveau d'après-midi (si un match de classement existe pour elle).
+  // 2) & 3) Après-midi : dépend du format de la catégorie.
+  const aApresMidi = matchs.some(function (m) {
+    return m.categorie === eq.categorie && String(m.phase) === 'classement';
+  });
+  if (!aApresMidi) return html;
+  const fmt = formatApresMidiCat(eq.categorie);
+
+  if (fmt === 'COUPE_PLATEAU') {
+    // Arbre de la Coupe + liste du Plateau (le classement croisé n'a pas de sens ici).
+    html += sectionBracket(eq.categorie) + sectionPlateau(eq.categorie);
+    return html;
+  }
+  if (fmt === 'LIBRE') {
+    // Matchs amicaux : pas de classement l'après-midi.
+    return html;
+  }
+
+  // CROISE : niveau d'après-midi + classement général du tournoi (comportement historique).
   const matchNiv = matchs.find(function (m) {
     return String(m.phase) === 'classement' && (m.equipe_A === eq.id_equipe || m.equipe_B === eq.id_equipe);
   });
@@ -383,7 +406,6 @@ function sectionClassementsEquipe(eq) {
     html += tableCompacte('Niveau ' + echapper(String(niv)), classementGroupe(matchsNiv, membresNiv), eq.id_equipe);
   }
 
-  // 3) Général du tournoi (croisé final).
   html += '<div class="planning-phase">🏆 Classement général du tournoi</div>';
   html += tableGeneral(classementGeneral(eq.categorie), eq.id_equipe);
   return html;
@@ -411,15 +433,7 @@ function afficherClassements() {
     cat.groupes.forEach(function (g) { html += tableComplete(g.titre, g.classement); });
   });
 
-  const aprem = classementParGroupe('aprem');
-  if (aprem.some(function (c) { return c.groupes.length; })) {
-    html += '<div class="planning-phase">🏉 Après-midi — classement croisé par niveau</div>';
-    aprem.forEach(function (cat) {
-      if (!cat.groupes.length) return;
-      html += '<h3 class="live-cat">' + echapper(cat.categorie) + '</h3>';
-      cat.groupes.forEach(function (g) { html += tableComplete(g.titre, g.classement); });
-    });
-  }
+  html += sectionApresMidiClassements(categorieActive);
   zone.innerHTML = html;
 }
 
@@ -631,6 +645,9 @@ function podiumCertain(categorie) {
     return m.categorie === categorie && String(m.phase) === 'classement';
   });
   if (!aApresMidi) return null;
+  // Le podium « certain » repose sur le classement croisé (niveaux). Pour LIBRE (pas de
+  // classement) et COUPE_PLATEAU (vainqueur affiché dans l'arbre), on n'affiche pas de podium.
+  if (formatApresMidiCat(categorie) !== 'CROISE') return null;
 
   const G = classementGeneral(categorie);
   if (G.length < 3) return null;                 // pas de podium à 3 sans au moins 3 équipes
@@ -671,6 +688,154 @@ function tableGeneral(liste, idSel) {
       '<td>' + echapper(t.niveau || '—') + '</td><td class="col-pts">' + t.a.pts + '</td><td>' + echapper(diff) + '</td></tr>';
   });
   return h + '</tbody></table></div>';
+}
+
+/* ==========================================================================
+   APRÈS-MIDI MULTI-FORMATS (Coupe & Plateau / Libre / Croisé)
+   ========================================================================== */
+
+/** Libellé français d'un tour de bracket (Coupe). */
+function libelleTourFr(tour) {
+  switch (String(tour)) {
+    case 'FINALE': return 'Finale';
+    case 'DEMI_FINALE': return 'Demi-finale';
+    case 'PETITE_FINALE': return 'Petite finale';
+    case 'QUART_DE_FINALE': return 'Quart de finale';
+    case 'HUITIEME_DE_FINALE': return 'Huitième de finale';
+    case 'SEIZIEME_DE_FINALE': return 'Seizième de finale';
+    default: return String(tour || '');
+  }
+}
+
+/** Libellé court d'un match (utilisé dans « Mon équipe » et « Derniers scores »). */
+function libelleMatch(m) {
+  const st = String(m.sous_tableau || '').toUpperCase();
+  if (st === 'COUPE') return libelleTourFr(m.tour) + ' · Coupe';
+  if (st === 'PLATEAU') return 'Plateau';
+  if (String(m.format || '').toUpperCase() === 'LIBRE') return 'Match amical';
+  if (String(m.phase) === 'classement') return 'Niveau ' + String(m.poule);
+  return 'Poule ' + String(m.poule);
+}
+
+/** Format d'après-midi d'une catégorie, déduit des matchs (défaut CROISE). */
+function formatApresMidiCat(categorie) {
+  const ms = matchs.filter(function (m) { return m.categorie === categorie && String(m.phase) === 'classement'; });
+  for (let i = 0; i < ms.length; i++) {
+    const f = String(ms[i].format || '').toUpperCase();
+    if (f === 'COUPE_PLATEAU' || f === 'LIBRE' || f === 'CROISE') return f;
+  }
+  return 'CROISE';
+}
+
+/** Vainqueur d'un match de Coupe terminé, pour l'affichage : 'A' / 'B' / '' (indéterminé). */
+function vainqueurAff(m) {
+  if (!estTermine(m.statut)) return '';
+  const a = Number(m.score_A), b = Number(m.score_B);
+  if (isFinite(a) && isFinite(b)) { if (a > b) return 'A'; if (b > a) return 'B'; }
+  if (m.vainqueur) {
+    if (String(m.vainqueur) === String(m.equipe_A)) return 'A';
+    if (String(m.vainqueur) === String(m.equipe_B)) return 'B';
+  }
+  return '';
+}
+
+/**
+ * Section après-midi de la vue Classements, adaptée au format de la catégorie :
+ *  COUPE_PLATEAU → arbre de la Coupe + liste du Plateau ; LIBRE → liste de matchs amicaux ;
+ *  CROISE → tableaux de niveaux (comportement historique).
+ */
+function sectionApresMidiClassements(categorie) {
+  const apremMs = matchs.filter(function (m) { return m.categorie === categorie && String(m.phase) === 'classement'; });
+  if (!apremMs.length) return '';
+  const fmt = formatApresMidiCat(categorie);
+
+  if (fmt === 'COUPE_PLATEAU') {
+    return '<div class="planning-phase">🏉 Après-midi — Coupe &amp; Plateau</div>' +
+      sectionBracket(categorie) + sectionPlateau(categorie);
+  }
+  if (fmt === 'LIBRE') {
+    return '<div class="planning-phase">🏉 Après-midi — matchs amicaux</div>' +
+      '<p class="note-amical">🎈 Matchs amicaux supplémentaires — sans classement ni enjeu.</p>' +
+      listeResultats(apremMs);
+  }
+  // CROISE (défaut) : tableaux par niveau, comme avant.
+  let html = '<div class="planning-phase">🏉 Après-midi — classement croisé par niveau</div>';
+  classementParGroupe('aprem').forEach(function (cat) {
+    cat.groupes.forEach(function (g) { html += tableComplete(g.titre, g.classement); });
+  });
+  return html;
+}
+
+/** Arbre d'élimination de la Coupe (colonnes par tour + petite finale à part). */
+function sectionBracket(categorie) {
+  const coupe = matchs.filter(function (m) {
+    return m.categorie === categorie && String(m.sous_tableau).toUpperCase() === 'COUPE';
+  });
+  if (!coupe.length) return '';
+  const petite = coupe.filter(function (m) { return String(m.tour) === 'PETITE_FINALE'; });
+  const principaux = coupe.filter(function (m) { return String(m.tour) !== 'PETITE_FINALE'; });
+  const ordreTours = ['SEIZIEME_DE_FINALE', 'HUITIEME_DE_FINALE', 'QUART_DE_FINALE', 'DEMI_FINALE', 'FINALE'];
+
+  let html = '<div class="bracket-titre">🏆 Tableau Coupe</div><div class="bracket-scroll"><div class="bracket">';
+  ordreTours.forEach(function (tour) {
+    const ms = principaux.filter(function (m) { return String(m.tour) === tour; })
+      .sort(function (a, b) { return String(a.id_match).localeCompare(String(b.id_match)); });
+    if (!ms.length) return;
+    html += '<div class="bracket-col"><div class="bracket-col-titre">' + libelleTourFr(tour) + '</div>';
+    ms.forEach(function (m) { html += carteBracket(m); });
+    html += '</div>';
+  });
+  html += '</div></div>';
+
+  if (petite.length) {
+    html += '<div class="bracket-petite"><div class="bracket-col-titre">Petite finale (3ᵉ place)</div>';
+    petite.forEach(function (m) { html += carteBracket(m); });
+    html += '</div>';
+  }
+  return html;
+}
+
+/** Carte d'un match de bracket (2 équipes + scores ; gagnant mis en avant). */
+function carteBracket(m) {
+  const v = vainqueurAff(m);
+  const enAttente = (!m.equipe_A || !m.equipe_B);
+  const sa = (String(m.score_A) !== '' && m.score_A != null) ? echapper(String(m.score_A)) : '';
+  const sb = (String(m.score_B) !== '' && m.score_B != null) ? echapper(String(m.score_B)) : '';
+  const nomA = m.equipe_A ? echapper(nomEquipe(m.equipe_A)) : '<span class="bracket-attente">en attente</span>';
+  const nomB = m.equipe_B ? echapper(nomEquipe(m.equipe_B)) : '<span class="bracket-attente">en attente</span>';
+  const clsA = (v === 'A') ? ' bracket-gagnant' : (v === 'B' ? ' bracket-perdant' : '');
+  const clsB = (v === 'B') ? ' bracket-gagnant' : (v === 'A' ? ' bracket-perdant' : '');
+  return '<div class="bracket-match' + (enAttente ? ' bracket-match-attente' : '') + '">' +
+      '<div class="bracket-eq' + clsA + '"><span class="bracket-nom">' + nomA + '</span><span class="bracket-score">' + sa + '</span></div>' +
+      '<div class="bracket-eq' + clsB + '"><span class="bracket-nom">' + nomB + '</span><span class="bracket-score">' + sb + '</span></div>' +
+    '</div>';
+}
+
+/** Liste des matchs du Plateau (résultats simples, sans classement). */
+function sectionPlateau(categorie) {
+  const plateau = matchs.filter(function (m) {
+    return m.categorie === categorie && String(m.sous_tableau).toUpperCase() === 'PLATEAU';
+  });
+  if (!plateau.length) return '';
+  return '<div class="bracket-titre">🛡️ Tableau Plateau</div>' + listeResultats(plateau);
+}
+
+/** Liste de résultats simples (score ou « à venir »), triée par heure. Sert Plateau et Libre. */
+function listeResultats(liste) {
+  return liste.slice()
+    .sort(function (a, b) { return String(a.heure_debut).localeCompare(String(b.heure_debut)); })
+    .map(function (m) {
+      const fini = estTermine(m.statut) && String(m.score_A) !== '' && String(m.score_B) !== '';
+      const a = Number(m.score_A), b = Number(m.score_B);
+      const score = fini ? (a + ' - ' + b) : 'à venir';
+      return '<div class="score-ligne">' +
+        '<span class="score-meta">' + echapper(m.heure_debut) + ' · Terrain ' + echapper(String(m.terrain)) + '</span>' +
+        '<div class="score-corps">' +
+          '<span class="' + (fini && a > b ? 'gagnant' : '') + '">' + echapper(nomEquipe(m.equipe_A)) + '</span>' +
+          '<span class="score-chiffres">' + echapper(score) + '</span>' +
+          '<span class="' + (fini && b > a ? 'gagnant' : '') + '">' + echapper(nomEquipe(m.equipe_B)) + '</span>' +
+        '</div></div>';
+    }).join('');
 }
 
 /* ==========================================================================

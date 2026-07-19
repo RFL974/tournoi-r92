@@ -431,6 +431,67 @@ a:hover { text-decoration: underline; }
 }
 
 /* ---------------------------------------------------------
+   13bis. ARBRE DE COUPE (bracket) + Plateau / Libre
+   --------------------------------------------------------- */
+.bracket-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--navy);
+  margin: 16px 0 8px;
+}
+.note-amical { color: var(--gris-texte); font-style: italic; margin: 4px 0 10px; }
+
+.bracket-scroll { overflow-x: auto; padding-bottom: 6px; }
+.bracket {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  min-width: min-content;   /* laisse les colonnes déborder → défilement horizontal sur mobile */
+}
+.bracket-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;  /* espace les matchs pour évoquer l'arbre */
+  gap: 12px;
+  min-width: 190px;
+}
+.bracket-col-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.8rem;
+  color: var(--bleu-vif);
+  font-weight: 700;
+  text-align: center;
+}
+.bracket-match {
+  background: var(--surface-clair);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--ombre);
+}
+.bracket-match-attente { border-style: dashed; opacity: 0.75; }
+.bracket-eq {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  font-size: 0.95rem;
+  color: var(--navy);
+}
+.bracket-eq + .bracket-eq { border-top: 1px solid var(--bordure); }
+.bracket-nom { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bracket-score { font-weight: 700; flex: none; font-variant-numeric: tabular-nums; }
+.bracket-gagnant { color: var(--vert); }
+.bracket-gagnant .bracket-nom { font-weight: 700; }
+.bracket-perdant { color: #8a97a6; }
+.bracket-attente { font-style: italic; color: #8a97a6; }
+.bracket-petite { margin-top: 14px; max-width: 230px; }
+
+/* ---------------------------------------------------------
    14. TABLEAUX DE CLASSEMENT
    --------------------------------------------------------- */
 .table-scroll { overflow-x: auto; margin-top: 8px; }

@@ -13,8 +13,17 @@ var SHEET_ID = '17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U';
 var ENTETES = {
   Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule'],
   Poules: ['id_poule', 'categorie', 'nom_poule'],
+  // Colonnes 1-12 : historiques (matin + après-midi CROISE/LIBRE).
+  // Colonnes 13-18 : format d'après-midi + tableau à élimination (COUPE_PLATEAU).
+  //   format        : CROISE / LIBRE / COUPE_PLATEAU (recopié depuis la catégorie ; vide pour le matin)
+  //   sous_tableau  : COUPE / PLATEAU (uniquement en COUPE_PLATEAU)
+  //   tour          : libellé lisible du tour de bracket (FINALE, DEMI_FINALE, PETITE_FINALE…)
+  //   match_suivant : id_match qui reçoit le VAINQUEUR de ce match (vide si terminal)
+  //   place_suivant : A ou B — sur quel emplacement du match suivant placer le vainqueur
+  //   vainqueur     : id_equipe DÉSIGNÉE vainqueur en cas d'égalité (départage manuel, COUPE)
   Matchs: ['id_match', 'categorie', 'poule', 'terrain', 'heure_debut', 'heure_fin',
-           'equipe_A', 'equipe_B', 'score_A', 'score_B', 'statut', 'phase'],
+           'equipe_A', 'equipe_B', 'score_A', 'score_B', 'statut', 'phase',
+           'format', 'sous_tableau', 'tour', 'match_suivant', 'place_suivant', 'vainqueur'],
   // Journal de saison : un match terminé = une ligne, JAMAIS effacée par une génération.
   // On stocke les NOMS d'équipe (stables d'un tournoi à l'autre, contrairement aux id).
   Historique: ['date', 'tournoi_id', 'id_match', 'categorie', 'phase',
@@ -61,15 +70,18 @@ function creerOngletConfig(classeur) {
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
   // nb_poules : vide = Auto (calculé selon le nombre d'équipes) ; un nombre = forcé.
+  // format_apresmidi : CROISE / LIBRE / COUPE_PLATEAU (vide = CROISE, comportement historique).
+  // param_format : JSON court des réglages du format (ex COUPE_PLATEAU : {"nbQualifiesCoupe":2}).
   var entetesCategorie = ['categorie', 'presente', 'terrains', 'nb_poules',
-    'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min'];
+    'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min',
+    'format_apresmidi', 'param_format'];
   var exemplesCategorie = [
-    ['U8',  'oui', '1,2', '', '2', '8',  '2', '15'],
-    ['U10', 'oui', '3,4', '', '2', '10', '2', '15'],
-    ['U12', 'oui', '5,6', '', '2', '12', '3', '15'],
-    ['U14', 'oui', '7,8', '', '2', '15', '3', '20']
+    ['U8',  'oui', '1,2', '', '2', '8',  '2', '15', 'LIBRE',         ''],
+    ['U10', 'oui', '3,4', '', '2', '10', '2', '15', 'CROISE',        ''],
+    ['U12', 'oui', '5,6', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}'],
+    ['U14', 'oui', '7,8', '', '2', '15', '3', '20', 'CROISE',        '']
   ];
-  onglet.getRange(1, 1, 50, 10).setNumberFormat('@');
+  onglet.getRange(1, 1, 50, 12).setNumberFormat('@');
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
   stylerEntete(onglet.getRange(1, 1, 1, 2));
   onglet.getRange(titreZoneB, 1).setValue('— Réglages par catégorie —').setFontWeight('bold');
@@ -558,8 +570,11 @@ function enregistrerCategorie(classeur, data) {
   var nom = (data.categorie || '').toString().trim();
   if (!nom) return { error: 'Nom de catégorie vide.' };
   var onglet = classeur.getSheetByName('Config');
-  // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution).
+  // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution)
+  // + les colonnes de format d'après-midi, pour qu'elles existent DÈS le paramétrage
+  // (choix du format possible avant même de générer l'après-midi).
   assurerColonneCategorie(classeur, 'nb_poules');
+  assurerColonnesConfig(classeur);
   var donnees = onglet.getDataRange().getValues();
   var hdr = -1;
   for (var i = 0; i < donnees.length; i++) { if (donnees[i][0] === 'categorie') { hdr = i; break; } }
@@ -596,7 +611,15 @@ function supprimerCategorie(classeur, nom) {
 /* ===================== SAISIE DES SCORES ===================== */
 /**
  * Enregistre le score d'un match et le passe en "terminé".
- * Attend { id_match, score_A, score_B }. Les scores doivent être des entiers >= 0.
+ * Attend { id_match, score_A, score_B } et, pour les matchs de Coupe : éventuellement
+ * { vainqueur } (départage en cas d'égalité) et { forcerCascade } (correction en cascade).
+ * Les scores doivent être des entiers >= 0.
+ *
+ * En COUPE_PLATEAU (sous_tableau = COUPE) :
+ *  - un match dont une équipe n'est pas encore connue est REFUSÉ (« en attente ») ;
+ *  - une ÉGALITÉ exige un vainqueur désigné (élimination directe : pas de match nul) ;
+ *  - après enregistrement, le vainqueur est PROPAGÉ immédiatement dans le match suivant ;
+ *  - corriger un score déjà propagé vers un match lui-même joué est bloqué sauf forcerCascade.
  */
 function enregistrerScore(classeur, data) {
   var id = (data.id_match || '').toString().trim();
@@ -608,37 +631,242 @@ function enregistrerScore(classeur, data) {
   if (sb === null) return { error: 'Score B invalide (entier ≥ 0 attendu).' };
 
   var onglet = classeur.getSheetByName('Matchs');
-  var dernier = onglet.getLastRow();
-  if (dernier < 2) return { error: 'Aucun match enregistré.' };
+  assurerColonnesMatchs(onglet); // sécurité : colonnes bracket présentes même sans régénération
+  var info = lireMatchParId(onglet, id);
+  if (!info) return { error: 'Match introuvable : ' + id };
+  var ligne = info.ligne, m = info.obj;
+  var estCoupe = String(m.sous_tableau).toUpperCase() === 'COUPE';
+  var dejaTermine = estTermineServeur(m.statut);
 
-  // On cherche la ligne du match par son identifiant (colonne 1).
-  var ids = onglet.getRange(2, 1, dernier - 1, 1).getValues();
-  for (var i = 0; i < ids.length; i++) {
-    if (String(ids[i][0]) === id) {
-      var ligne = i + 2;
-      // Un score déjà validé est DÉFINITIF : on refuse de l'écraser sauf correction explicite.
-      var statutActuel = onglet.getRange(ligne, 11).getValue();
-      if (estTermineServeur(statutActuel) && data.modification !== true) {
-        return { error: 'Ce score est déjà validé (définitif). Utilise « Corriger » pour le modifier.',
-                 deja_valide: true };
+  // 1) Match de Coupe « en attente » (les deux équipes ne sont pas encore connues) → non saisissable.
+  if (estCoupe && (!estEquipeConnue(m.equipe_A) || !estEquipeConnue(m.equipe_B))) {
+    return { error: 'Ce match de Coupe est en attente : les deux équipes ne sont pas encore connues '
+             + '(résultats précédents manquants).', en_attente: true };
+  }
+
+  // 2) Score déjà validé (définitif) → refus sauf correction explicite.
+  if (dejaTermine && data.modification !== true) {
+    return { error: 'Ce score est déjà validé (définitif). Utilise « Corriger » pour le modifier.',
+             deja_valide: true };
+  }
+
+  // 3) Départage obligatoire en Coupe : un vainqueur est requis (pas de match nul en élimination).
+  var vainqueur = (data.vainqueur || '').toString().trim();
+  if (estCoupe) {
+    if (sa === sb) {
+      if (!vainqueur) {
+        return { error: 'Égalité au score en élimination directe : désigne le vainqueur du match.',
+                 departage_requis: true, equipe_A: m.equipe_A, equipe_B: m.equipe_B };
       }
-      // Colonnes de l'onglet Matchs : 9 = score_A, 10 = score_B, 11 = statut.
-      onglet.getRange(ligne, 9, 1, 3).setValues([[sa, sb, 'terminé']]);
-
-      // Journal de saison : on archive (ou actualise) ce résultat dans l'onglet Historique.
-      // Enveloppé dans un try/catch : l'archivage ne doit JAMAIS empêcher l'enregistrement du score.
-      try {
-        var v = onglet.getRange(ligne, 1, 1, 12).getValues()[0]; // toute la ligne du match
-        archiverResultat(classeur, {
-          id_match: v[0], categorie: v[1], phase: v[11],
-          equipe_A: v[6], equipe_B: v[7], score_A: sa, score_B: sb
-        });
-      } catch (errArchive) { Logger.log('Archivage historique ignoré : ' + errArchive); }
-
-      return { ok: true, match: { id_match: id, score_A: sa, score_B: sb, statut: 'terminé' } };
+      if (vainqueur !== String(m.equipe_A) && vainqueur !== String(m.equipe_B)) {
+        return { error: 'Le vainqueur désigné ne correspond à aucune des deux équipes.' };
+      }
+    } else {
+      vainqueur = (sa > sb) ? String(m.equipe_A) : String(m.equipe_B); // vainqueur imposé par le score
     }
   }
-  return { error: 'Match introuvable : ' + id };
+
+  // 4) Correction en cascade : modifier un match de Coupe déjà propagé, dont le match suivant a
+  //    lui-même un score, est bloqué sauf confirmation (forcerCascade).
+  if (estCoupe && dejaTermine && data.modification === true && m.match_suivant) {
+    var suivInfo = lireMatchParId(onglet, m.match_suivant);
+    if (suivInfo && estTermineServeur(suivInfo.obj.statut) && data.forcerCascade !== true) {
+      return { error: 'Ce résultat a déjà été propagé vers ' + libelleMatchCourt(suivInfo.obj)
+               + ', qui a lui-même un score enregistré. Modifier ce score va réinitialiser la suite du tableau.',
+               cascade_requise: true, match_suivant: m.match_suivant };
+    }
+  }
+
+  // 5) Écriture du score (colonnes 9=score_A, 10=score_B, 11=statut) + vainqueur (Coupe).
+  onglet.getRange(ligne, colMatchs('score_A'), 1, 3).setValues([[sa, sb, 'terminé']]);
+  if (estCoupe) onglet.getRange(ligne, colMatchs('vainqueur')).setValue(vainqueur);
+
+  // 6) Journal de saison : archive (ou actualise) ce résultat. Ne doit JAMAIS bloquer la saisie.
+  try {
+    archiverResultat(classeur, {
+      id_match: m.id_match, categorie: m.categorie, phase: m.phase,
+      equipe_A: m.equipe_A, equipe_B: m.equipe_B, score_A: sa, score_B: sb
+    });
+  } catch (errArchive) { Logger.log('Archivage historique ignoré : ' + errArchive); }
+
+  // 7) Propagation du vainqueur dans le tableau (immédiate, dans la même action).
+  var propagation = null;
+  if (estCoupe) {
+    try { propagation = propagerVainqueurBracket(classeur, onglet, ligne); }
+    catch (errProp) { Logger.log('Propagation bracket ignorée : ' + errProp); }
+  }
+
+  return { ok: true, propagation: propagation,
+           match: { id_match: id, score_A: sa, score_B: sb, statut: 'terminé', vainqueur: vainqueur } };
+}
+
+/* ===================== PROPAGATION EN BRACKET (COUPE) ===================== */
+/** Vrai si un identifiant d'équipe est renseigné (un slot de bracket à pourvoir est vide). */
+function estEquipeConnue(id) { return id !== '' && id != null; }
+
+/** Reconstruit un objet match { colonne: valeur } à partir d'une ligne lue (ordre ENTETES.Matchs). */
+function objetDepuisLigneMatch(v) {
+  var o = {};
+  for (var i = 0; i < ENTETES.Matchs.length; i++) { o[ENTETES.Matchs[i]] = (v[i] == null ? '' : v[i]); }
+  return o;
+}
+
+/** Retrouve un match par son id : { ligne, obj } ou null. */
+function lireMatchParId(onglet, id) {
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return null;
+  var nc = onglet.getLastColumn();
+  var vals = onglet.getRange(2, 1, dernier - 1, nc).getValues();
+  for (var i = 0; i < vals.length; i++) {
+    if (String(vals[i][0]) === String(id)) return { ligne: i + 2, obj: objetDepuisLigneMatch(vals[i]) };
+  }
+  return null;
+}
+
+/** Tous les matchs { ligne, obj } vérifiant un prédicat sur l'objet. */
+function trouverMatchs(onglet, predicat) {
+  var dernier = onglet.getLastRow(), out = [];
+  if (dernier < 2) return out;
+  var nc = onglet.getLastColumn();
+  var vals = onglet.getRange(2, 1, dernier - 1, nc).getValues();
+  for (var i = 0; i < vals.length; i++) {
+    var o = objetDepuisLigneMatch(vals[i]);
+    if (predicat(o)) out.push({ ligne: i + 2, obj: o });
+  }
+  return out;
+}
+
+/** Libellé français d'un tour de bracket (pour les messages / l'affichage). */
+function libelleTourFr(tour) {
+  switch (String(tour)) {
+    case 'FINALE': return 'Finale';
+    case 'DEMI_FINALE': return 'Demi-finale';
+    case 'PETITE_FINALE': return 'Petite finale';
+    case 'QUART_DE_FINALE': return 'Quart de finale';
+    case 'HUITIEME_DE_FINALE': return 'Huitième de finale';
+    case 'SEIZIEME_DE_FINALE': return 'Seizième de finale';
+    default: return String(tour || '');
+  }
+}
+
+/** Libellé court et lisible d'un match (ex : « Finale — Coupe U12 », « Plateau U10 »). */
+function libelleMatchCourt(o) {
+  var st = String(o.sous_tableau).toUpperCase();
+  if (st === 'COUPE') return (libelleTourFr(o.tour) || 'Coupe') + ' — Coupe ' + o.categorie;
+  if (st === 'PLATEAU') return 'Plateau ' + o.categorie;
+  return 'match ' + o.id_match;
+}
+
+/**
+ * Détermine le vainqueur et le perdant d'un match de Coupe terminé.
+ * Score départageant, sinon vainqueur DÉSIGNÉ (colonne vainqueur). Renvoie null si indéterminable.
+ */
+function vainqueurPerdantCoupe(o) {
+  var sa = Number(o.score_A), sb = Number(o.score_B);
+  if (!isFinite(sa) || !isFinite(sb)) return null;
+  if (sa > sb) return { vainqueur: String(o.equipe_A), perdant: String(o.equipe_B) };
+  if (sb > sa) return { vainqueur: String(o.equipe_B), perdant: String(o.equipe_A) };
+  var d = String(o.vainqueur || '');
+  if (!d) return null; // égalité sans départage : indéterminable
+  return { vainqueur: d, perdant: (d === String(o.equipe_A)) ? String(o.equipe_B) : String(o.equipe_A) };
+}
+
+/**
+ * Propage le résultat d'un match de Coupe :
+ *  - place le VAINQUEUR dans le match suivant (emplacement place_suivant) ;
+ *  - si le match suivant était déjà joué et change d'équipe, RÉINITIALISE la chaîne aval ;
+ *  - pour une DEMI_FINALE, recalcule la petite finale (perdants des deux demi-finales).
+ * @return { actions:[…] } liste lisible de ce qui a été fait (ou null si rien).
+ */
+function propagerVainqueurBracket(classeur, onglet, ligne) {
+  var nc = onglet.getLastColumn();
+  var m = objetDepuisLigneMatch(onglet.getRange(ligne, 1, 1, nc).getValues()[0]);
+  if (String(m.sous_tableau).toUpperCase() !== 'COUPE') return null;
+  var vp = vainqueurPerdantCoupe(m);
+  if (!vp) return null;
+  var actions = [];
+
+  // 1) Vainqueur -> match suivant.
+  if (m.match_suivant) {
+    var suiv = lireMatchParId(onglet, m.match_suivant);
+    if (suiv) {
+      var placeB = String(m.place_suivant).toUpperCase() === 'B';
+      var col = placeB ? colMatchs('equipe_B') : colMatchs('equipe_A');
+      var ancien = placeB ? suiv.obj.equipe_B : suiv.obj.equipe_A;
+      if (String(ancien) !== String(vp.vainqueur)) {
+        onglet.getRange(suiv.ligne, col).setValue(vp.vainqueur);
+        actions.push('vainqueur placé en ' + libelleMatchCourt(suiv.obj));
+        // Le match suivant était déjà joué avec une autre équipe → sa suite n'est plus valable.
+        if (estTermineServeur(suiv.obj.statut)) {
+          invaliderMatchAval(onglet, m.match_suivant);
+          actions.push('résultats en aval réinitialisés');
+        }
+      }
+    }
+  }
+
+  // 2) Petite finale : perdants des deux demi-finales (recalcul déterministe, robuste aux corrections).
+  if (String(m.tour) === 'DEMI_FINALE') {
+    if (majPetiteFinale(onglet, m.categorie)) actions.push('petite finale mise à jour');
+  }
+
+  return { actions: actions };
+}
+
+/**
+ * Recalcule les deux équipes de la petite finale d'une catégorie = perdants des demi-finales
+ * TERMINÉES (dans l'ordre des demi-finales). Si les participants changent alors que la petite
+ * finale avait déjà un score, on la réinitialise. Renvoie true si quelque chose a changé.
+ */
+function majPetiteFinale(onglet, categorie) {
+  var pf = trouverMatchs(onglet, function (o) {
+    return String(o.sous_tableau).toUpperCase() === 'COUPE' && String(o.tour) === 'PETITE_FINALE'
+      && String(o.categorie) === String(categorie);
+  })[0];
+  if (!pf) return false;
+
+  var demis = trouverMatchs(onglet, function (o) {
+    return String(o.sous_tableau).toUpperCase() === 'COUPE' && String(o.tour) === 'DEMI_FINALE'
+      && String(o.categorie) === String(categorie);
+  }).sort(function (a, b) { return String(a.obj.id_match).localeCompare(String(b.obj.id_match)); });
+
+  var perdants = [];
+  demis.forEach(function (d) {
+    if (!estTermineServeur(d.obj.statut)) return;
+    var vp = vainqueurPerdantCoupe(d.obj);
+    if (vp) perdants.push(vp.perdant);
+  });
+  var nA = perdants[0] || '', nB = perdants[1] || '';
+
+  if (String(pf.obj.equipe_A) === String(nA) && String(pf.obj.equipe_B) === String(nB)) return false;
+  onglet.getRange(pf.ligne, colMatchs('equipe_A'), 1, 2).setValues([[nA, nB]]);
+  if (estTermineServeur(pf.obj.statut)) {
+    onglet.getRange(pf.ligne, colMatchs('score_A'), 1, 3).setValues([['', '', 'à venir']]);
+    onglet.getRange(pf.ligne, colMatchs('vainqueur')).setValue('');
+  }
+  return true;
+}
+
+/**
+ * Réinitialise un match de bracket devenu incohérent (une équipe amont a changé) : efface son
+ * score/statut/vainqueur, retire le vainqueur qu'il avait propagé plus loin, et RÉCURSE sur la
+ * chaîne aval. Recalcule aussi la petite finale si c'était une demi-finale.
+ */
+function invaliderMatchAval(onglet, id) {
+  var info = lireMatchParId(onglet, id);
+  if (!info) return;
+  var o = info.obj;
+  onglet.getRange(info.ligne, colMatchs('score_A'), 1, 3).setValues([['', '', 'à venir']]);
+  onglet.getRange(info.ligne, colMatchs('vainqueur')).setValue('');
+  if (o.match_suivant) {
+    var suiv = lireMatchParId(onglet, o.match_suivant);
+    if (suiv) {
+      var col = (String(o.place_suivant).toUpperCase() === 'B') ? colMatchs('equipe_B') : colMatchs('equipe_A');
+      onglet.getRange(suiv.ligne, col).setValue('');
+      invaliderMatchAval(onglet, o.match_suivant);
+    }
+  }
+  if (String(o.tour) === 'DEMI_FINALE') majPetiteFinale(onglet, o.categorie);
 }
 
 /* ===================== JOURNAL DE SAISON (Historique) ===================== */
@@ -797,79 +1025,108 @@ function comparerClassement(a, b) {
   return b.bp - a.bp;
 }
 
-/* ===================== PHASE APRÈS-MIDI (classement croisé) ===================== */
+/* ===================== PHASE APRÈS-MIDI (répartiteur multi-formats) ===================== */
 /**
- * Génère la phase après-midi : matchs de "classement croisé" (les équipes de même rang
- * de poule jouent ensemble, en round-robin), puis les planifie (terrains + horaires)
- * après la pause déjeuner. AJOUTE ces matchs SANS effacer ceux du matin (qui portent les
- * scores). Re-générer remplace uniquement les matchs de la phase "classement".
+ * Format d'après-midi RETENU pour une catégorie (défaut historique = CROISE).
+ * Valeurs : CROISE / LIBRE / COUPE_PLATEAU.
+ */
+function formatApresMidi(cat) {
+  var f = (cat && cat.format_apresmidi != null) ? String(cat.format_apresmidi).trim().toUpperCase() : '';
+  return (f === 'LIBRE' || f === 'COUPE_PLATEAU') ? f : 'CROISE';
+}
+
+/** Lit et parse le JSON `param_format` d'une catégorie (renvoie {} si vide ou illisible). */
+function lireParamFormat(cat) {
+  var brut = (cat && cat.param_format != null) ? String(cat.param_format).trim() : '';
+  if (!brut) return {};
+  try { var o = JSON.parse(brut); return (o && typeof o === 'object') ? o : {}; }
+  catch (e) { return {}; }
+}
+
+/**
+ * RÉPARTITEUR de la phase après-midi : lit le format de CHAQUE catégorie et appelle la bonne
+ * sous-fonction de fabrication de fixtures (CROISE / LIBRE / COUPE_PLATEAU), puis planifie le tout
+ * (terrains + horaires) après la pause déjeuner. AJOUTE ces matchs SANS effacer ceux du matin
+ * (qui portent les scores). Re-générer remplace uniquement les matchs de la phase "classement".
+ * Chaque format différent peut coexister dans le même tournoi (M8 en LIBRE, M12 en COUPE…).
  */
 function genererApresMidi(classeur) {
+  assurerColonnesConfig(classeur); // migration douce : colonnes format_apresmidi / param_format
   var config = lireConfig(classeur);
   var matchs = lireOngletSimple(classeur, 'Matchs');
-  var avert = [];
+  var avert = [], erreurs = [];
 
   // Matchs du matin = tout ce qui n'est pas déjà de la phase "classement".
   var matin = matchs.filter(function (m) { return String(m.phase) !== 'classement'; });
   if (matin.length === 0) {
     return { ok: false, error: "Aucun match du matin. Génère d'abord les poules et le planning." };
   }
-  // Garde-fou : le classement croisé n'a de sens que si le matin est terminé.
-  // Test robuste au NFD (voir estTermineServeur) : sinon des matchs bel et bien
-  // joués passeraient pour « non terminés » et bloqueraient à tort la génération.
-  var nonTermines = matin.filter(function (m) {
-    return !estTermineServeur(m.statut);
-  });
+  // Garde-fou commun à tous les formats : l'après-midi n'a de sens que si le matin est terminé.
+  // Test robuste au NFD (voir estTermineServeur) : sinon des matchs bel et bien joués
+  // passeraient pour « non terminés » et bloqueraient à tort la génération.
+  var nonTermines = matin.filter(function (m) { return !estTermineServeur(m.statut); });
   if (nonTermines.length > 0) {
     return { ok: false, error: nonTermines.length + " match(s) du matin ne sont pas encore terminés. "
              + "Saisis tous les scores du matin avant de générer l'après-midi." };
   }
 
   var classement = calculerClassement(classeur);
+  var classParCat = {};
+  classement.forEach(function (c) { classParCat[c.categorie] = c; });
 
-  // 1) Fixtures de l'après-midi par catégorie (classement croisé, round-robin par rang).
+  // 1) Fixtures par catégorie, selon le format choisi pour chacune.
+  var categories = config.categories.filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; });
   var fixturesParCat = {};
-  classement.forEach(function (cat) {
-    if (cat.poules.length < 2) {
-      avert.push('Catégorie ' + cat.categorie + ' : une seule poule, pas de classement croisé possible.');
-      return;
-    }
-    var rangMax = 0;
-    cat.poules.forEach(function (p) { if (p.classement.length > rangMax) rangMax = p.classement.length; });
-    var fixtures = [];
-    for (var r = 0; r < rangMax; r++) {
-      var groupe = [];
-      cat.poules.forEach(function (p) { if (p.classement[r]) groupe.push(p.classement[r].id_equipe); });
-      if (groupe.length < 2) continue; // rang incomplet -> pas de match
-      var label = 'N' + (r + 1);
-      tourneeToutesRondes(groupe).forEach(function (pr) {
-        fixtures.push({ poule: label, equipe_A: pr.a, equipe_B: pr.b, round: pr.round });
-      });
-    }
-    if (fixtures.length) fixturesParCat[cat.categorie] = fixtures;
+  categories.forEach(function (cat) {
+    var fmt = formatApresMidi(cat);
+    var cl = classParCat[cat.categorie];
+    var res;
+    if (fmt === 'LIBRE')              res = fixturesApresMidiLibre(cat, cl);
+    else if (fmt === 'COUPE_PLATEAU') res = fixturesApresMidiCoupePlateau(cat, cl, lireParamFormat(cat));
+    else                              res = fixturesApresMidiCroise(cat, cl);
+
+    if (res.error) { erreurs.push('Catégorie ' + cat.categorie + ' (' + fmt + ') : ' + res.error); }
+    if (res.avert) { res.avert.forEach(function (a) { avert.push('Catégorie ' + cat.categorie + ' : ' + a); }); }
+    if (res.fixtures && res.fixtures.length) fixturesParCat[cat.categorie] = res.fixtures;
   });
+
+  // Si AUCUNE catégorie n'a produit de fixtures et qu'il y a des erreurs, on remonte l'erreur.
+  if (Object.keys(fixturesParCat).length === 0) {
+    return { ok: false, error: erreurs.length ? erreurs.join('\n') : "Aucun match d'après-midi à générer." };
+  }
 
   // 2) Planifier (terrains + horaires) après la pause déjeuner.
   var plan = planifierApresMidi(config, fixturesParCat, matin);
   avert = avert.concat(plan.avert);
 
-  // 3) Réécrire Matchs = matin (inchangé) + nouveaux matchs d'après-midi.
-  // Les identifiants d'après-midi repartent après le dernier id du MATIN (les anciens
-  // matchs d'après-midi sont remplacés), pour rester stables d'une régénération à l'autre.
+  // 3) Attribuer les identifiants d'après-midi (après le dernier id du MATIN) puis résoudre
+  //    les liens de bracket (clés locales -> id de match réel).
   var maxNum = 0;
   matin.forEach(function (m) {
     var mm = String(m.id_match).match(/^M(\d+)$/);
     if (mm) { var n = parseInt(mm[1], 10); if (n > maxNum) maxNum = n; }
   });
-  var lignesAprem = plan.matchs.map(function (m, i) {
-    return [ idMatch(maxNum + 1 + i), m.categorie, m.poule, m.terrain, m.heure_debut, m.heure_fin,
-             m.equipe_A, m.equipe_B, '', '', 'à venir', 'classement' ];
+  var idParCle = {};
+  plan.matchs.forEach(function (m, i) {
+    m.id_match = idMatch(maxNum + 1 + i);
+    if (m.cle) idParCle[m.cle] = m.id_match;
+  });
+
+  // 4) Réécrire Matchs = matin (inchangé) + nouveaux matchs d'après-midi.
+  var lignesAprem = plan.matchs.map(function (m) {
+    var suivant = m.suivant_cle ? (idParCle[m.suivant_cle] || '') : '';
+    return matchObjToRow({
+      id_match: m.id_match, categorie: m.categorie, poule: m.poule, terrain: m.terrain,
+      heure_debut: m.heure_debut, heure_fin: m.heure_fin, equipe_A: m.equipe_A, equipe_B: m.equipe_B,
+      score_A: '', score_B: '', statut: 'à venir', phase: 'classement',
+      format: m.format || '', sous_tableau: m.sous_tableau || '', tour: m.tour || '',
+      match_suivant: suivant, place_suivant: (suivant ? (m.suivant_place || '') : ''), vainqueur: ''
+    });
   });
   var lignesMatin = matin.map(matchObjToRow);
   ecrireMatchs(classeur, lignesMatin.concat(lignesAprem));
 
   // Heure de fin AUTO = vraie fin du dernier match de la JOURNÉE (matin + après-midi).
-  // Sans ça, le champ resterait figé sur la fin du matin (projetée à la génération des poules).
   var finMatin = 0;
   matin.forEach(function (m) { finMatin = Math.max(finMatin, hmVersMin(m.heure_fin)); });
   var finJournee = Math.max(finMatin, plan.maxFin);
@@ -877,6 +1134,10 @@ function genererApresMidi(classeur) {
   if (autoFin && finJournee > 0) {
     ecrireParamGlobal(classeur.getSheetByName('Config'), 'heure_fin', minVersHm(finJournee));
   }
+
+  // Les erreurs par catégorie (ex : Coupe impossible) sont remontées comme avertissements
+  // quand d'autres catégories ont malgré tout été générées.
+  avert = avert.concat(erreurs);
 
   return {
     ok: true,
@@ -887,10 +1148,195 @@ function genererApresMidi(classeur) {
   };
 }
 
+/* ---------- Sous-générateur : CROISE (existant, inchangé dans son principe) ---------- */
+/**
+ * Classement croisé : les équipes de même rang de poule (les 1ers ensemble, les 2es ensemble…)
+ * s'affrontent en round-robin. Renvoie { fixtures } ou { fixtures:[], avert:[…] } si impossible.
+ */
+function fixturesApresMidiCroise(cat, cl) {
+  if (!cl || !cl.poules || cl.poules.length < 2) {
+    return { fixtures: [], avert: ['une seule poule (ou pas de données) : classement croisé impossible.'] };
+  }
+  var rangMax = 0;
+  cl.poules.forEach(function (p) { if (p.classement.length > rangMax) rangMax = p.classement.length; });
+  var fixtures = [];
+  for (var r = 0; r < rangMax; r++) {
+    var groupe = [];
+    cl.poules.forEach(function (p) { if (p.classement[r]) groupe.push(p.classement[r].id_equipe); });
+    if (groupe.length < 2) continue; // rang incomplet -> pas de match
+    var label = 'N' + (r + 1);
+    tourneeToutesRondes(groupe).forEach(function (pr) {
+      fixtures.push({ poule: label, equipe_A: pr.a, equipe_B: pr.b, round: pr.round, format: 'CROISE' });
+    });
+  }
+  return { fixtures: fixtures };
+}
+
+/* ---------- Sous-générateur : LIBRE ---------- */
+/**
+ * Matchs amicaux tournants, SANS classement ni qualification : un simple round-robin
+ * (chacun rencontre chacun une fois) sur toutes les équipes de la catégorie. Aucun enjeu.
+ */
+function fixturesApresMidiLibre(cat, cl) {
+  if (!cl || !cl.poules) return { error: "pas de données du matin (poules non terminées ?)." };
+  var ids = [];
+  cl.poules.forEach(function (p) { p.classement.forEach(function (e) { ids.push(e.id_equipe); }); });
+  if (ids.length < 2) return { fixtures: [], avert: ['moins de 2 équipes : rien à générer en LIBRE.'] };
+  var fixtures = [];
+  tourneeToutesRondes(ids).forEach(function (pr) {
+    fixtures.push({ poule: 'Libre', equipe_A: pr.a, equipe_B: pr.b, round: pr.round, format: 'LIBRE' });
+  });
+  return { fixtures: fixtures };
+}
+
+/* ---------- Sous-générateur : COUPE_PLATEAU ---------- */
+/**
+ * Les `nbQualifiesCoupe` premiers de CHAQUE poule partent en Coupe (bracket à élimination
+ * directe + petite finale) ; les autres jouent un Plateau (round-robin, sans élimination).
+ * Renvoie une erreur explicite si les données du matin sont insuffisantes.
+ * @param param  { nbQualifiesCoupe:number }
+ */
+function fixturesApresMidiCoupePlateau(cat, cl, param) {
+  if (!cl || !cl.poules || cl.poules.length < 1) {
+    return { error: "pas de données du matin (poules non terminées ?)." };
+  }
+  var nbQ = parseInt(param && param.nbQualifiesCoupe, 10);
+  if (!isFinite(nbQ) || nbQ < 1) nbQ = 2;
+
+  // Qualifiés (rang < nbQ) rang par rang, poule par poule : 1ers de chaque poule (les têtes de
+  // série), puis 2es, etc. Les autres (rang >= nbQ) forment le Plateau.
+  var seeds = [], reste = [], avert = [];
+  var rangMax = 0;
+  cl.poules.forEach(function (p) { if (p.classement.length > rangMax) rangMax = p.classement.length; });
+  for (var r = 0; r < rangMax; r++) {
+    cl.poules.forEach(function (p) {
+      var e = p.classement[r];
+      if (!e) return;
+      if (r < nbQ) seeds.push(e.id_equipe); else reste.push(e.id_equipe);
+    });
+  }
+
+  if (seeds.length < 2) {
+    return { error: "pas assez de qualifiés pour une Coupe (il en faut au moins 2, ici " + seeds.length +
+             "). Baisse le nombre de poules ou augmente nbQualifiesCoupe." };
+  }
+
+  // Bracket de la Coupe (avec liens de propagation vers le match suivant).
+  var fixtures = construireBracketCoupe(seeds);
+
+  // Plateau : round-robin des non-qualifiés.
+  if (reste.length >= 2) {
+    tourneeToutesRondes(reste).forEach(function (pr) {
+      fixtures.push({ poule: 'Plateau', sous_tableau: 'PLATEAU', tour: '', format: 'COUPE_PLATEAU',
+                      equipe_A: pr.a, equipe_B: pr.b, round: pr.round });
+    });
+  } else if (reste.length === 1) {
+    avert.push("1 seule équipe hors Coupe : pas de Plateau possible (elle ne joue pas l'après-midi).");
+  }
+
+  return { fixtures: fixtures, avert: avert };
+}
+
+/**
+ * Ordre de placement des têtes de série dans un bracket de `taille` (puissance de 2), par
+ * doublement : [1] -> [1,2] -> [1,4,2,3] -> [1,8,4,5,2,7,3,6]… La lecture donne, slot par slot,
+ * le rang de la tête de série qui l'occupe (1 = meilleure). Assure que les meilleurs ne se
+ * croisent que le plus tard possible.
+ */
+function ordreSeeds(taille) {
+  var ordre = [1];
+  while (ordre.length < taille) {
+    var m = ordre.length, somme = 2 * m + 1, suivant = [];
+    for (var i = 0; i < m; i++) { suivant.push(ordre[i]); suivant.push(somme - ordre[i]); }
+    ordre = suivant;
+  }
+  return ordre;
+}
+
+/** Libellé lisible d'un tour à partir du nombre de tours RESTANTS (1 = finale). */
+function libelleTour(restants) {
+  if (restants === 1) return 'FINALE';
+  if (restants === 2) return 'DEMI_FINALE';
+  if (restants === 3) return 'QUART_DE_FINALE';
+  if (restants === 4) return 'HUITIEME_DE_FINALE';
+  if (restants === 5) return 'SEIZIEME_DE_FINALE';
+  return 'TOUR_' + restants;
+}
+
+/**
+ * Construit les matchs du bracket de la Coupe à partir des têtes de série (ordre : plus forte
+ * d'abord). Gère les byes (effectif non puissance de 2 : les meilleures têtes passent le 1er
+ * tour). Chaque match reçoit une clé locale (`cle`) ; le producteur d'un vainqueur pointe vers
+ * le match suivant via (`suivant_cle`, `suivant_place`). Une petite finale est ajoutée entre les
+ * perdants des deux demi-finales (remplie par propagation, sans colonne dédiée).
+ * @return {Array} fixtures de la Coupe (à planifier ensuite).
+ */
+function construireBracketCoupe(seeds) {
+  var n = seeds.length;
+  var taille = 1; while (taille < n) taille *= 2;
+  var ordre = ordreSeeds(taille);
+
+  // Occupants du 1er tour : équipe (rang <= n) ou bye (rang > n).
+  var occ = [];
+  for (var s = 0; s < taille; s++) {
+    var rang = ordre[s];
+    occ.push(rang <= n ? { type: 'team', id: seeds[rang - 1] } : { type: 'bye' });
+  }
+
+  var nbTours = 0; for (var t = taille; t > 1; t /= 2) nbTours++;
+  var fixtures = [], compteur = 0, round = 0, clesDemi = [];
+
+  function lierProducteur(cle, cleSuivant, place) {
+    for (var i = 0; i < fixtures.length; i++) {
+      if (fixtures[i].cle === cle) { fixtures[i].suivant_cle = cleSuivant; fixtures[i].suivant_place = place; return; }
+    }
+  }
+
+  while (occ.length > 1) {
+    var restants = nbTours - round;   // 1 = finale
+    var tour = libelleTour(restants);
+    var suivant = [];
+    for (var k = 0; k < occ.length; k += 2) {
+      var A = occ[k], B = occ[k + 1];
+      // Byes (uniquement au 1er tour) : l'équipe présente avance sans jouer.
+      if (A.type === 'bye' && B.type === 'bye') { suivant.push({ type: 'bye' }); continue; }
+      if (A.type === 'bye') { suivant.push(B); continue; }
+      if (B.type === 'bye') { suivant.push(A); continue; }
+      // Match réel.
+      var cle = 'C' + (++compteur);
+      fixtures.push({ poule: 'Coupe', sous_tableau: 'COUPE', tour: tour, format: 'COUPE_PLATEAU',
+                      equipe_A: (A.type === 'team' ? A.id : ''), equipe_B: (B.type === 'team' ? B.id : ''),
+                      round: round, cle: cle });
+      if (A.type === 'winner') lierProducteur(A.cle, cle, 'A');
+      if (B.type === 'winner') lierProducteur(B.cle, cle, 'B');
+      if (tour === 'DEMI_FINALE') clesDemi.push(cle);
+      suivant.push({ type: 'winner', cle: cle });
+    }
+    occ = suivant; round++;
+  }
+
+  // Petite finale (3e place) : perdants des DEUX demi-finales. La propagation y place les
+  // perdants (1er emplacement libre) — pas de colonne de lien « perdant » nécessaire.
+  if (clesDemi.length === 2) {
+    fixtures.push({ poule: 'Coupe', sous_tableau: 'COUPE', tour: 'PETITE_FINALE', format: 'COUPE_PLATEAU',
+                    equipe_A: '', equipe_B: '', round: nbTours - 1, cle: 'CPF' });
+  }
+
+  return fixtures;
+}
+
 /**
  * Planifie les matchs de l'après-midi (terrains + horaires) à partir de la reprise
  * (fin de la pause déjeuner), en tenant compte des fins de matchs du matin pour ne pas
  * empiéter (terrain encore occupé, équipe pas encore récupérée).
+ *
+ * Gère aussi les matchs de bracket dont les équipes ne sont pas encore connues (tours > 1) :
+ *  - on ignore la disponibilité des équipes inconnues (equipe_A/equipe_B vides) ;
+ *  - une BARRIÈRE DE TOUR garantit qu'un match de Coupe d'un tour donné démarre après la fin
+ *    de tous les matchs de Coupe du tour précédent (même catégorie), pour que les équipes
+ *    qualifiées soient bien déterminées avant de jouer.
+ * Les champs de format (format, sous_tableau, tour) et les clés de lien (cle, suivant_cle,
+ * suivant_place) sont recopiés tels quels dans le résultat pour être écrits ensuite.
  */
 function planifierApresMidi(config, fixturesParCat, matin) {
   var global = config.global;
@@ -912,6 +1358,9 @@ function planifierApresMidi(config, fixturesParCat, matin) {
   var categories = config.categories.filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; });
   var terrainLibre = {}, equipeLibre = {}, resultat = [];
 
+  // Équipe « connue » = identifiant non vide (les slots de bracket à pourvoir sont vides).
+  function connue(id) { return id !== '' && id != null; }
+
   categories.forEach(function (cat) {
     var liste = (fixturesParCat[cat.categorie] || []).slice();
     if (!liste.length) return;
@@ -928,25 +1377,65 @@ function planifierApresMidi(config, fixturesParCat, matin) {
     });
 
     liste.forEach(function (m) {
-      // Équipe disponible après sa récup post-dernier match du matin (au plus tôt à la reprise).
-      if (equipeLibre[m.equipe_A] == null) equipeLibre[m.equipe_A] = Math.max(tReprise, (finEquipe[m.equipe_A] || 0) + recup);
-      if (equipeLibre[m.equipe_B] == null) equipeLibre[m.equipe_B] = Math.max(tReprise, (finEquipe[m.equipe_B] || 0) + recup);
-      var dispoEquipes = Math.max(equipeLibre[m.equipe_A], equipeLibre[m.equipe_B]);
+      // Barrière de tour pour la Coupe : ce match ne peut pas démarrer avant la fin de tous
+      // les matchs de Coupe (même catégorie) d'un tour STRICTEMENT antérieur.
+      var barriere = tReprise;
+      if (m.sous_tableau === 'COUPE') {
+        resultat.forEach(function (x) {
+          if (x.categorie === cat.categorie && x.sous_tableau === 'COUPE' && x._round < m.round) {
+            barriere = Math.max(barriere, hmVersMin(x.heure_fin));
+          }
+        });
+      }
+
+      // Disponibilité des équipes CONNUES seulement (les inconnues n'imposent pas de contrainte).
+      var dispoEquipes = barriere;
+      if (connue(m.equipe_A)) {
+        if (equipeLibre[m.equipe_A] == null) equipeLibre[m.equipe_A] = Math.max(tReprise, (finEquipe[m.equipe_A] || 0) + recup);
+        dispoEquipes = Math.max(dispoEquipes, equipeLibre[m.equipe_A]);
+      }
+      if (connue(m.equipe_B)) {
+        if (equipeLibre[m.equipe_B] == null) equipeLibre[m.equipe_B] = Math.max(tReprise, (finEquipe[m.equipe_B] || 0) + recup);
+        dispoEquipes = Math.max(dispoEquipes, equipeLibre[m.equipe_B]);
+      }
+
       var terrainChoisi = null, plusTot = Infinity;
       terrains.forEach(function (t) { if (terrainLibre[t] < plusTot) { plusTot = terrainLibre[t]; terrainChoisi = t; } });
       var debut = Math.max(dispoEquipes, terrainLibre[terrainChoisi]);
       var fin = debut + duree;
       if (fin > maxFin) maxFin = fin;
       terrainLibre[terrainChoisi] = fin + battement;
-      equipeLibre[m.equipe_A] = fin + recup;
-      equipeLibre[m.equipe_B] = fin + recup;
+      if (connue(m.equipe_A)) equipeLibre[m.equipe_A] = fin + recup;
+      if (connue(m.equipe_B)) equipeLibre[m.equipe_B] = fin + recup;
+
       resultat.push({ categorie: cat.categorie, poule: m.poule, terrain: terrainChoisi,
                       heure_debut: minVersHm(debut), heure_fin: minVersHm(fin),
-                      equipe_A: m.equipe_A, equipe_B: m.equipe_B });
+                      equipe_A: m.equipe_A, equipe_B: m.equipe_B,
+                      format: m.format || '', sous_tableau: m.sous_tableau || '', tour: m.tour || '',
+                      cle: m.cle || '', suivant_cle: m.suivant_cle || '', suivant_place: m.suivant_place || '',
+                      _round: m.round });
     });
   });
 
   return { matchs: resultat, maxFin: maxFin, avert: avert };
+}
+
+/** Nombre de colonnes de l'onglet Matchs (source unique : ENTETES.Matchs). */
+var LARGEUR_MATCHS = ENTETES.Matchs.length;
+
+/** Position 1-based d'une colonne de Matchs par son nom (ex : colMatchs('vainqueur') = 18). */
+function colMatchs(nom) { return ENTETES.Matchs.indexOf(nom) + 1; }
+
+/**
+ * Ajuste une ligne de match à EXACTEMENT LARGEUR_MATCHS colonnes : complète avec des cellules
+ * vides si elle est plus courte (matin / CROISE / LIBRE ne remplissent pas les colonnes bracket),
+ * tronque si elle est plus longue. Toutes les lignes écrites en une fois doivent avoir la même
+ * largeur (contrainte de setValues) — ce helper est le point de passage unique qui le garantit.
+ */
+function ajusterLargeurMatch(ligne) {
+  var l = ligne.slice();
+  while (l.length < LARGEUR_MATCHS) l.push('');
+  return l.slice(0, LARGEUR_MATCHS);
 }
 
 /** Transforme un match (objet lu depuis l'onglet) en ligne dans l'ordre des colonnes. */
@@ -955,31 +1444,49 @@ function matchObjToRow(m) {
            m.equipe_A, m.equipe_B,
            (m.score_A == null ? '' : m.score_A),
            (m.score_B == null ? '' : m.score_B),
-           m.statut, (m.phase ? m.phase : 'poule') ];
+           m.statut, (m.phase ? m.phase : 'poule'),
+           (m.format || ''), (m.sous_tableau || ''), (m.tour || ''),
+           (m.match_suivant || ''), (m.place_suivant || ''), (m.vainqueur || '') ];
 }
 
 /** Réécrit entièrement les lignes de l'onglet Matchs (toutes en texte pour préserver "09:30"). */
 function ecrireMatchs(classeur, lignes) {
   var oM = classeur.getSheetByName('Matchs');
-  assurerColonnePhase(oM);
+  assurerColonnesMatchs(oM);
   viderDonnees(oM);
   if (lignes.length) {
-    var plage = oM.getRange(2, 1, lignes.length, lignes[0].length);
+    var ajustees = lignes.map(ajusterLargeurMatch);
+    var plage = oM.getRange(2, 1, ajustees.length, LARGEUR_MATCHS);
     plage.setNumberFormat('@');
-    plage.setValues(lignes);
+    plage.setValues(ajustees);
   }
 }
 
 /**
- * S'assure que l'onglet Matchs possède l'en-tête `phase` (migration auto).
- * Sur un Sheet créé avant la session 13, ajoute l'en-tête sans intervention manuelle.
+ * S'assure que l'onglet Matchs possède TOUTES les colonnes attendues (migration auto).
+ * Ajoute à droite, dans l'ordre de ENTETES.Matchs, les en-têtes manquants (`phase` sur un
+ * Sheet créé avant la session 13 ; `format`, `sous_tableau`, `tour`, `match_suivant`,
+ * `place_suivant`, `vainqueur` sur un Sheet créé avant les formats d'après-midi).
+ * Sans intervention manuelle. Remplace l'ancienne assurerColonnePhase().
  */
-function assurerColonnePhase(oM) {
+function assurerColonnesMatchs(oM) {
   var lastCol = Math.max(oM.getLastColumn(), 1);
   var entetes = oM.getRange(1, 1, 1, lastCol).getValues()[0];
-  if (entetes.indexOf('phase') === -1) {
-    oM.getRange(1, entetes.length + 1).setValue('phase');
-  }
+  ENTETES.Matchs.forEach(function (nom) {
+    if (entetes.indexOf(nom) === -1) {
+      oM.getRange(1, entetes.length + 1).setValue(nom);
+      entetes.push(nom);
+    }
+  });
+}
+
+/**
+ * S'assure que la Zone B de Config possède les colonnes de format d'après-midi
+ * (`format_apresmidi`, `param_format`). Migration douce d'un Sheet déjà en service.
+ */
+function assurerColonnesConfig(classeur) {
+  assurerColonneCategorie(classeur, 'format_apresmidi');
+  assurerColonneCategorie(classeur, 'param_format');
 }
 
 /* ===================== GÉNÉRATION POULES + PLANNING ===================== */
@@ -1678,12 +2185,13 @@ function ecrireGeneration(classeur, poules, affectationPoule, matchsFinaux) {
     oE.getRange(2, 4, col.length, 1).setValues(col);
   }
   var oM = classeur.getSheetByName('Matchs');
-  assurerColonnePhase(oM);
+  assurerColonnesMatchs(oM);
   viderDonnees(oM);
   if (matchsFinaux.length) {
-    var plageM = oM.getRange(2, 1, matchsFinaux.length, matchsFinaux[0].length);
+    var ajustees = matchsFinaux.map(ajusterLargeurMatch);
+    var plageM = oM.getRange(2, 1, ajustees.length, LARGEUR_MATCHS);
     plageM.setNumberFormat('@');
-    plageM.setValues(matchsFinaux);
+    plageM.setValues(ajustees);
   }
 }
 
