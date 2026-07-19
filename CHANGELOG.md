@@ -5,15 +5,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
-### Admin : thème clair (fond blanc, cartes navy) + logo — 2026-07-19
-Nouveau look de la page admin (frontend seul, **pas de redéploiement**). Fond global **blanc**,
-**cartes navy translucides** (`rgba(11,33,56,.92)`), texte adapté : sombre (navy) hors carte,
-clair dans les cartes. Activé par la classe **`theme-clair`** sur `<body>` de admin.html →
-**scopé à la page admin** ; Saisie et Perfs gardent le thème sombre (la page publique a sa propre
-CSS, inchangée). Panneaux concernés : cartes, tableau de bord, barre de connexion. **Logo Génération
-R92** ajouté dans l'en-tête (`frontend/img/logo-r92.png`, à déposer par l'utilisateur ; l'image se
-masque toute seule tant que le fichier est absent, pas d'icône cassée). Vérifié au navigateur
-(desktop 1280 + mobile 375 : fond blanc, cartes navy lisibles, titres sombres OK ; 0 erreur console).
+### Admin : thème clair aligné sur la page publique + logo — 2026-07-19
+Nouveau look de la page admin (frontend seul, **pas de redéploiement**), **calqué sur la page
+publique du tournoi** : **fond blanc**, **cartes blanches** (liseré fin + ombre douce), **en-tête
+navy** dégradé avec fine barre bleue (le **logo bleu ciel y ressort**), accents **bleu vif**, textes
+navy/gris — mêmes couleurs que `tournoi-public.css`. Activé par la classe **`theme-clair`** sur
+`<body>` d'admin.html → **scopé à la page admin** (Saisie/Perfs gardent le thème sombre ; la page
+publique a sa propre CSS). Technique : remappage de `--texte`/`--bleu-ciel` sous `.theme-clair`
+(pour rattraper les couleurs posées en `var(...)`, y compris inline) + overrides explicites des
+fonds/champs/panneaux (cartes, tableau de bord, barre de connexion, planning, éditeur de poules,
+zone de danger). **Logo Génération R92** dans l'en-tête (`frontend/img/logo-r92.png`, PNG source
+1,6 Mo redimensionné à 800×533 / 164 Ko ; se masque tout seul si absent). Vérifié au navigateur
+(desktop 1280 + mobile 375 : cartes blanches lisibles, en-tête navy + logo, planning/danger OK ;
+0 erreur console).
 
 ### Admin : vrai tableau de bord sur grand écran (grille 2 colonnes) — 2026-07-19
 La page admin gaspillait la largeur sur ordinateur (colonne de 900px centrée, grandes marges vides).
