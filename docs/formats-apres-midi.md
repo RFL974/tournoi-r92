@@ -25,14 +25,20 @@ des premiers de poule) **remporte le tournoi**. C'est le comportement décrit da
   général montre l'équipe **en tête** (provisoire).
 
 ### 2. Matchs libres (`LIBRE`)
-Des **matchs amicaux tournants**, **sans classement ni qualification** — juste du temps de jeu.
-On génère un round-robin (chacun rencontre chacun une fois) sur toutes les équipes de la catégorie.
-Recommandé pour les plus jeunes (M6–M8), où l'enjeu n'a pas d'intérêt.
+Des **matchs amicaux tournants**, **sans élimination** — du temps de jeu détendu. On génère un
+round-robin (chacun rencontre chacun une fois) sur toutes les équipes de la catégorie. Recommandé
+pour les plus jeunes (M6–M8). Un **podium** (aux points) est établi en fin d'après-midi, comme pour
+les autres formats.
 
 - **Paramètre** : aucun.
-- **Affichage public** : simple liste de matchs, avec la mention « sans classement ».
-- **Saisie** : un bandeau « 🎈 Match amical — sans classement » rappelle au bénévole que rien ne
-  bouge dans un classement après validation (c'est normal).
+- **Affichage public** : liste de matchs + **podium** (une fois tous les matchs joués).
+- **Saisie** : un bandeau « 🎈 Match amical (sans élimination) » rappelle au bénévole qu'il n'y a pas
+  d'enjeu d'élimination.
+
+> ℹ️ Historiquement, LIBRE était pensé « sans aucun classement » (pour ne pas mettre de pression aux
+> plus petits). Un **podium** y a été ajouté ensuite pour que **toutes** les catégories aient un
+> podium. Si tu préfères LIBRE **sans** podium pour une catégorie, dis-le — c'est un réglage facile
+> à ajuster.
 
 ### 3. Coupe + Plateau (`COUPE_PLATEAU`)
 Les **X premiers de chaque poule** partent en **Coupe** : un **tableau à élimination directe**
@@ -117,8 +123,13 @@ l'indique au lieu d'un plantage silencieux.
 - **Coupe** → un **arbre** (une colonne par tour : 8èmes / quarts / demies / finale) + une **petite
   finale** ; le **gagnant** de chaque match est mis en avant.
 - **Plateau** → une liste de matchs sous « 🛡️ Tableau Plateau ».
-- **Libre** → une liste de matchs amicaux (sans classement).
-- **Croisé** → tableaux par niveau + podium, comme avant.
+- **Libre** → une liste de matchs amicaux.
+- **Croisé** → tableaux par niveau + classement général, comme avant.
+
+**Un podium 🥇🥈🥉 pour CHAQUE format**, affiché en haut de page dès qu'il est **décidé** :
+- **Croisé** → top 3 du classement général (quand il est mathématiquement verrouillé).
+- **Coupe** → 🥇 vainqueur de la finale, 🥈 finaliste, 🥉 vainqueur de la petite finale.
+- **Libre** → top 3 aux points, une fois tous les matchs amicaux joués.
 
 ---
 
