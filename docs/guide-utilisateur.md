@@ -46,6 +46,17 @@ joué rapporte toujours au moins 1 point). **Départage** en cas d'égalité de 
 
 À l'ouverture, la page charge tous les réglages et affiche plusieurs blocs, de haut en bas.
 
+### 1.0 Tableau de bord (en haut)
+Un bandeau récapitule l'**état du tournoi en un coup d'œil**, sans avoir à faire défiler la page :
+**Catégories** (présentes / total), **Équipes** (nombre), **Planning** (⚪️ à générer · 🌅 matin ·
+🌅🏉 complet) et **Publication** (⚪️ non · 🟢 publié). Il se met à jour automatiquement à chaque
+action (ajout d'équipe, génération, publication…).
+
+> **Sections repliables** : certaines cartes ont un **chevron ▸** dans leur titre et peuvent se
+> **plier/déplier** d'un clic. « Horaires de la journée » est **dépliée** par défaut (pliable une
+> fois réglée) ; « Réinitialiser le tournoi » est **repliée** par défaut (rarement utilisée, et on
+> évite de l'ouvrir par erreur).
+
 ### 1.1 Horaires de la journée
 Réglages globaux qui pilotent le calcul du planning :
 

@@ -25,6 +25,16 @@
 
     <main>
 
+      <!-- 0) Tableau de bord : l'état du tournoi en un coup d'œil (rempli par admin.js) -->
+      <section class="tableau-bord" id="tableau-bord" aria-label="État du tournoi">
+        <div class="tb-grille">
+          <div class="tb-stat"><span class="tb-val" id="tb-categories">…</span><span class="tb-lib">Catégories</span></div>
+          <div class="tb-stat"><span class="tb-val" id="tb-equipes">…</span><span class="tb-lib">Équipes</span></div>
+          <div class="tb-stat"><span class="tb-val" id="tb-planning">…</span><span class="tb-lib">Planning</span></div>
+          <div class="tb-stat"><span class="tb-val" id="tb-publication">…</span><span class="tb-lib">Publication</span></div>
+        </div>
+      </section>
+
       <!-- 1) Les réglages (horaires + catégories), injectés par admin.js -->
       <section id="reglages">
         <div class="message">Chargement des réglages…</div>
@@ -126,9 +136,10 @@
         <div id="message-publication" class="message-form"></div>
       </section>
 
-      <!-- 7) Réinitialisation : remet le tournoi à zéro (zone de danger) -->
-      <section class="carte carte-danger" id="bloc-reinitialisation">
-        <h2>Réinitialiser le tournoi</h2>
+      <!-- 7) Réinitialisation : remet le tournoi à zéro (zone de danger).
+           Carte repliable, REPLIÉE par défaut : rarement utilisée + on évite de l'ouvrir par erreur. -->
+      <details class="carte carte-danger" id="bloc-reinitialisation">
+        <summary>Réinitialiser le tournoi</summary>
         <p class="note-generation">
           Remet le tournoi <strong>à zéro</strong> pour repartir d'une base vierge. Cela
           <strong>supprime définitivement</strong> :
@@ -147,7 +158,7 @@
         </p>
         <button id="bouton-reinitialiser" class="bouton bouton-danger">🧹 Réinitialiser le tournoi</button>
         <div id="message-reinitialisation" class="message-form"></div>
-      </section>
+      </details>
 
     </main>
 

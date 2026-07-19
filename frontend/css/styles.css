@@ -639,6 +639,80 @@ select.r-input { cursor: pointer; }
 /* État de préparation de la phase après-midi (scores du matin saisis) */
 .apresmidi-etat { color: var(--bleu-ciel); margin: 4px 0 10px; }
 
+/* ==========================================================================
+   Tableau de bord admin : l'état du tournoi en un coup d'œil (haut de page)
+   ========================================================================== */
+.tableau-bord {
+  border: 1px solid rgba(46, 143, 224, 0.35);
+  background: rgba(46, 143, 224, 0.08);
+  border-radius: var(--rayon);
+  padding: 12px 14px;
+  margin-bottom: var(--espace);
+}
+.tb-grille {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);   /* 2 colonnes sur mobile */
+  gap: 10px;
+}
+.tb-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(3, 16, 36, 0.35);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.tb-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  color: var(--texte);
+}
+.tb-lib {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+  color: var(--bleu-ciel);
+}
+/* Sur écran large, les 4 stats tiennent sur une seule ligne.
+   ⚠️ Cette media query DOIT rester APRÈS la règle de base `.tb-grille` ci-dessus :
+   à spécificité égale, c'est la dernière déclaration du fichier qui gagne. */
+@media (min-width: 700px) {
+  .tb-grille { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ==========================================================================
+   Cartes repliables (<details class="carte">) : le <summary> reprend le look
+   d'un <h2> de carte, avec un chevron. On NE met PAS display:flex sur le
+   <summary> (casse le pliage natif sur Safari iOS) — on garde list-item.
+   ========================================================================== */
+details.carte > summary {
+  cursor: pointer;
+  list-style: none;                /* enlève le marqueur natif (Firefox) */
+  user-select: none;
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.5px;
+  font-size: 1.5rem;
+  color: var(--bleu-ciel);
+  border-bottom: 1px solid rgba(184, 216, 248, 0.15);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+details.carte > summary::-webkit-details-marker { display: none; } /* WebKit */
+details.carte > summary::before {
+  content: '▸';
+  display: inline-block;
+  font-size: 0.9rem;
+  margin-right: 8px;
+  color: var(--bleu-ciel);
+  transition: transform 0.15s ease;
+}
+details.carte[open] > summary::before { transform: rotate(90deg); }
+details.carte > summary:hover { color: var(--accent); }
+/* Zone de danger repliable : titre en rouge, comme le <h2> équivalent. */
+details.carte-danger > summary { color: #ff9b8f; }
+
 /* Aperçu de l'affiche du tournoi dans l'admin */
 .apercu-affiche { margin: 4px 0 12px; }
 .apercu-affiche img {
