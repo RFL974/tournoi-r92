@@ -130,6 +130,12 @@ async function initAdmin() {
   // Bouton « Rafraîchir » : recharge scores/planning depuis le backend (utile le jour J).
   document.getElementById('bouton-rafraichir-admin').addEventListener('click', rafraichirAdmin);
 
+  // Fil d'avancement « Où en suis-je ? » : clic/clavier sur une étape → défile jusqu'à sa section
+  // (délégué sur le conteneur, valable même après re-rendu du fil).
+  const zoneEtat = document.getElementById('etat-avancement');
+  zoneEtat.addEventListener('click', onClicEtatAvancement);
+  zoneEtat.addEventListener('keydown', onClicEtatAvancement);
+
   // On branche le formulaire d'ajout et les boutons de suppression (équipes).
   document.getElementById('form-equipe').addEventListener('submit', onAjouterEquipe);
   document.getElementById('liste-equipes').addEventListener('click', onClicListe);
@@ -429,6 +435,181 @@ function majTableauBord() {
 
   // Publication.
   elPub.textContent = estPublie() ? '🟢 publié' : '⚪️ non';
+
+  // Fil d'avancement « Où en suis-je ? » (recalculé à chaque mise à jour du tableau de bord).
+  majEtatAvancement();
+}
+
+/* --------------------------------------------------------------------------
+   « OÙ EN SUIS-JE ? » — fil d'avancement + thermomètre de la journée
+   --------------------------------------------------------------------------
+   ÉTAPE 1 du « cerveau des dépendances » : purement AFFICHAGE. On ne modifie
+   AUCUNE logique existante — on lit l'état déjà présent dans les données
+   (configCourante / equipesCourantes / matchsCourants) et on le montre d'un
+   coup d'œil, avec une pastille par étape :
+     ✅ fait · ⚪️ à faire · 🟠 à refaire (incohérence détectée) · ⏳ en attente.
+   La détection fine « à recalculer » quand on change un horaire/réglage
+   viendra à l'ÉTAPE 2 (signatures de génération).
+   -------------------------------------------------------------------------- */
+
+/** Nombre d'équipes par catégorie (clé = nom de catégorie). */
+function nbEquipesParCategorie() {
+  const compte = {};
+  (equipesCourantes || []).forEach(function (e) {
+    const c = String(e.categorie || '');
+    if (c) compte[c] = (compte[c] || 0) + 1;
+  });
+  return compte;
+}
+
+/**
+ * Calcule l'état de chaque étape de préparation, dans l'ordre logique de la journée.
+ * Renvoie un tableau d'objets { cle, titre, ancre, statut, detail }.
+ * statut ∈ 'fait' | 'afaire' | 'arefaire' | 'attente'.
+ */
+function calculerEtatsEtapes() {
+  const g = configCourante.global || {};
+  const catsPresentes = (configCourante.categories || []).filter(estPresente);
+  const equipes = equipesCourantes || [];
+  const nbParCat = nbEquipesParCategorie();
+  const matchs = matchsCourants || [];
+  const matin = matchs.filter(function (m) { return String(m.phase) !== 'classement'; });
+  const aprem = matchs.filter(function (m) { return String(m.phase) === 'classement'; });
+
+  const etapes = [];
+
+  // 1) Horaires de la journée
+  if (!g.heure_debut) {
+    etapes.push({ cle: 'horaires', titre: 'Horaires', ancre: 'zone-horaires', statut: 'afaire', detail: 'À renseigner' });
+  } else {
+    etapes.push({ cle: 'horaires', titre: 'Horaires', ancre: 'zone-horaires', statut: 'fait', detail: 'Début ' + g.heure_debut });
+  }
+
+  // 2) Catégories
+  if (catsPresentes.length === 0) {
+    etapes.push({ cle: 'categories', titre: 'Catégories', ancre: 'zone-categories', statut: 'afaire', detail: 'Aucune' });
+  } else {
+    etapes.push({ cle: 'categories', titre: 'Catégories', ancre: 'zone-categories', statut: 'fait', detail: catsPresentes.length + ' catégorie(s)' });
+  }
+
+  // 3) Équipes (à refaire si une catégorie présente n'a aucune équipe)
+  if (equipes.length === 0) {
+    etapes.push({ cle: 'equipes', titre: 'Équipes', ancre: 'bloc-equipes', statut: 'afaire', detail: 'Aucune' });
+  } else {
+    const vides = catsPresentes
+      .filter(function (c) { return !nbParCat[String(c.categorie)]; })
+      .map(function (c) { return String(c.categorie); });
+    if (vides.length) {
+      etapes.push({ cle: 'equipes', titre: 'Équipes', ancre: 'bloc-equipes', statut: 'arefaire', detail: 'Sans équipe : ' + vides.join(', ') });
+    } else {
+      etapes.push({ cle: 'equipes', titre: 'Équipes', ancre: 'bloc-equipes', statut: 'fait', detail: equipes.length + ' équipe(s)' });
+    }
+  }
+
+  // 4) Répartition des terrains (à refaire si une catégorie avec équipes n'a pas de terrain)
+  if (catsPresentes.length === 0 || equipes.length === 0) {
+    etapes.push({ cle: 'terrains', titre: 'Terrains', ancre: 'bloc-terrains', statut: 'afaire', detail: 'En attente des catégories / équipes' });
+  } else {
+    const sansTerrain = catsPresentes
+      .filter(function (c) { return nbParCat[String(c.categorie)] && !String(c.terrains || '').trim(); })
+      .map(function (c) { return String(c.categorie); });
+    if (sansTerrain.length) {
+      etapes.push({ cle: 'terrains', titre: 'Terrains', ancre: 'bloc-terrains', statut: 'arefaire', detail: 'Sans terrain : ' + sansTerrain.join(', ') });
+    } else {
+      etapes.push({ cle: 'terrains', titre: 'Terrains', ancre: 'bloc-terrains', statut: 'fait', detail: 'Répartis' });
+    }
+  }
+
+  // 5) Poules & planning (à refaire si une catégorie « jouable » est absente du planning)
+  if (matin.length === 0) {
+    etapes.push({ cle: 'poules', titre: 'Poules & planning', ancre: 'bloc-generation', statut: 'afaire', detail: 'À générer' });
+  } else {
+    const catsDansPlanning = {};
+    matin.forEach(function (m) { catsDansPlanning[String(m.categorie)] = true; });
+    const manquantes = catsPresentes
+      .filter(function (c) { return nbParCat[String(c.categorie)] >= 2 && !catsDansPlanning[String(c.categorie)]; })
+      .map(function (c) { return String(c.categorie); });
+    if (manquantes.length) {
+      etapes.push({ cle: 'poules', titre: 'Poules & planning', ancre: 'bloc-generation', statut: 'arefaire', detail: 'Absentes du planning : ' + manquantes.join(', ') });
+    } else {
+      etapes.push({ cle: 'poules', titre: 'Poules & planning', ancre: 'bloc-generation', statut: 'fait', detail: matin.length + ' match(s) le matin' });
+    }
+  }
+
+  // 6) Phase après-midi
+  if (matin.length === 0) {
+    etapes.push({ cle: 'apresmidi', titre: 'Après-midi', ancre: 'bloc-apresmidi', statut: 'afaire', detail: 'En attente du matin' });
+  } else if (aprem.length > 0) {
+    etapes.push({ cle: 'apresmidi', titre: 'Après-midi', ancre: 'bloc-apresmidi', statut: 'fait', detail: 'Générée' });
+  } else {
+    const saisis = matin.filter(function (m) { return estTermine(m.statut); }).length;
+    if (saisis === matin.length) {
+      etapes.push({ cle: 'apresmidi', titre: 'Après-midi', ancre: 'bloc-apresmidi', statut: 'afaire', detail: 'Prêt à générer' });
+    } else {
+      etapes.push({ cle: 'apresmidi', titre: 'Après-midi', ancre: 'bloc-apresmidi', statut: 'attente', detail: saisis + '/' + matin.length + ' scores du matin' });
+    }
+  }
+
+  return etapes;
+}
+
+/** Affiche le fil d'avancement + le thermomètre de la journée dans #etat-avancement. */
+function majEtatAvancement() {
+  const zone = document.getElementById('etat-avancement');
+  if (!zone) return;
+
+  const etapes = calculerEtatsEtapes();
+  const ICONES = { fait: '✅', afaire: '⚪️', arefaire: '🟠', attente: '⏳' };
+
+  let h = '<div class="ea-entete"><span class="ea-titre">Où en suis-je&nbsp;?</span>' +
+          '<span class="ea-legende">Clique une étape pour t\'y rendre</span></div>';
+
+  h += '<ol class="ea-fil">';
+  etapes.forEach(function (e) {
+    h += '<li class="ea-etape ea-' + e.statut + '" role="button" tabindex="0" ' +
+           'data-ancre="' + echapper(e.ancre) + '" title="' + echapper(e.detail) + '">' +
+           '<span class="ea-pastille">' + ICONES[e.statut] + '</span>' +
+           '<span class="ea-nom">' + echapper(e.titre) + '</span>' +
+           '<span class="ea-detail">' + echapper(e.detail) + '</span>' +
+         '</li>';
+  });
+  h += '</ol>';
+
+  // Thermomètre de la journée : début → pause → heure de fin prévue.
+  const g = configCourante.global || {};
+  const poules = etapes.find(function (e) { return e.cle === 'poules'; });
+  const debut = g.heure_debut ? echapper(g.heure_debut) : '—';
+  const pauseTxt = g.pause_dejeuner_debut
+    ? echapper(g.pause_dejeuner_debut) +
+      (g.pause_dejeuner_duree_min ? ' (' + echapper(String(g.pause_dejeuner_duree_min)) + ' min)' : '')
+    : '—';
+  const finVal = g.heure_fin_projetee || g.heure_fin_matin || g.heure_fin || '';
+  let finTxt;
+  if (!poules || poules.statut === 'afaire') {
+    finTxt = '<span class="ea-therm-warn">à générer</span>';
+  } else if (poules.statut !== 'fait') {
+    finTxt = (finVal ? echapper(finVal) + ' ' : '') + '<span class="ea-therm-warn">⚠️ à recalculer</span>';
+  } else {
+    finTxt = echapper(finVal || '—');
+  }
+
+  h += '<div class="ea-thermo">' +
+         '<span class="ea-t"><b>🕘 Début</b> ' + debut + '</span>' +
+         '<span class="ea-t"><b>🍽️ Pause déj.</b> ' + pauseTxt + '</span>' +
+         '<span class="ea-t"><b>🏁 Fin prévue</b> ' + finTxt + '</span>' +
+       '</div>';
+
+  zone.innerHTML = h;
+}
+
+/** Clic (ou touche Entrée/Espace) sur une étape du fil : défile jusqu'à sa section. */
+function onClicEtatAvancement(evenement) {
+  if (evenement.type === 'keydown' && evenement.key !== 'Enter' && evenement.key !== ' ') return;
+  const li = evenement.target.closest('.ea-etape');
+  if (!li) return;
+  evenement.preventDefault();
+  const cible = document.getElementById(li.getAttribute('data-ancre'));
+  if (cible && cible.scrollIntoView) cible.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /**
@@ -742,6 +923,7 @@ async function onEnregistrerHoraires(evenement) {
     await ecrireAdmin('enregistrerHoraires', data);
     // On met à jour la config gardée en mémoire.
     configCourante.global = Object.assign({}, configCourante.global, data);
+    majEtatAvancement(); // le fil « Où en suis-je ? » suit les horaires
     afficherMessage(message, '✅ Horaires enregistrés.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
@@ -2156,6 +2338,7 @@ async function onEnregistrerPlanTerrains() {
   try {
     await ecrireAdmin('enregistrerPlanTerrains', data);
     configCourante.global = Object.assign({}, configCourante.global, data);
+    majEtatAvancement(); // le fil « Où en suis-je ? » suit le plan des terrains
     afficherMessage(message, '✅ Terrains enregistrés.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
@@ -2637,6 +2820,7 @@ async function onAppliquerRepartition() {
       if (idx >= 0) configCourante.categories[idx] = data;
     }
     injecterReglages(configCourante.global, configCourante.categories); // les cartes catégories montrent les nouveaux terrains
+    majEtatAvancement(); // le fil « Où en suis-je ? » suit les terrains appliqués aux catégories
     repartitionCalculee = null;
     document.getElementById('repartition-resultat').innerHTML = '';
     await dialogAlerter('✅ Terrains appliqués aux catégories. Ils seront utilisés à la prochaine génération du planning.');
