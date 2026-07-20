@@ -155,6 +155,9 @@ async function initAdmin() {
   // Bouton de génération des poules et du planning.
   document.getElementById('bouton-generer').addEventListener('click', onGenerer);
 
+  // Bouton « Recalculer les horaires » (régénération non destructive, garde les scores).
+  document.getElementById('bouton-recalculer-horaires').addEventListener('click', onRecalculerHoraires);
+
   // Modification manuelle des poules du matin : bouton d'entrée + clics dans l'éditeur (délégués).
   document.getElementById('bouton-modifier-poules').addEventListener('click', onModifierPoules);
   document.getElementById('edition-poules').addEventListener('click', onClicEditionPoules);
@@ -438,6 +441,8 @@ function majTableauBord() {
 
   // Fil d'avancement « Où en suis-je ? » (recalculé à chaque mise à jour du tableau de bord).
   majEtatAvancement();
+  // Bouton « Recalculer les horaires » : visible seulement quand c'est utile ET légitime.
+  majBoutonRecalculer();
 }
 
 /* --------------------------------------------------------------------------
@@ -510,6 +515,32 @@ function signatureGeneration(global, categories, equipes) {
       + '|n=' + (nbCat[String(c.categorie)] || 0));
   });
 
+  return hachageChaine(parts.join(';'));
+}
+
+/**
+ * SIGNATURE DE STRUCTURE (étape 3). ⚠️ Identique à signatureStructure() du backend.
+ * Résume la COMPOSITION des poules (nb de poules + ids d'équipes par catégorie) : si elle
+ * est INCHANGÉE, un simple recalcul des horaires (scores gardés) suffit ; sinon il faut un
+ * vrai tirage.
+ */
+function signatureStructure(categories, equipes) {
+  const parCat = {};
+  (equipes || []).forEach(function (e) {
+    const c = String(e.categorie || '');
+    if (c) (parCat[c] = parCat[c] || []).push(String(e.id_equipe));
+  });
+  const cats = (categories || []).filter(function (c) {
+    return String(c.presente).toLowerCase() === 'oui';
+  }).slice().sort(function (a, b) {
+    const x = String(a.categorie), y = String(b.categorie);
+    return x < y ? -1 : (x > y ? 1 : 0);
+  });
+  const parts = [];
+  cats.forEach(function (c) {
+    const ids = (parCat[String(c.categorie)] || []).slice().sort();
+    parts.push('cat=' + c.categorie + '|np=' + (c.nb_poules || '') + '|ids=' + ids.join(','));
+  });
   return hachageChaine(parts.join(';'));
 }
 
@@ -1574,6 +1605,98 @@ async function genererMaintenant() {
   } finally {
     bouton.disabled = false;
     bouton.textContent = texteBouton;
+  }
+}
+
+/**
+ * ÉTAPE 3 — bouton « Recalculer les horaires » (régénération NON destructive).
+ * Recalcule seulement les heures en gardant poules ET scores. On ne l'affiche QUE quand
+ * c'est à la fois utile (des réglages ont changé depuis la génération) et légitime :
+ * un planning existe, l'après-midi n'est pas encore généré, et la COMPOSITION n'a pas
+ * bougé (sinon un vrai tirage est nécessaire → on l'affiche désactivé avec l'explication).
+ */
+function majBoutonRecalculer() {
+  const btn = document.getElementById('bouton-recalculer-horaires');
+  const aide = document.getElementById('aide-recalculer');
+  if (!btn || !aide) return;
+
+  const g = configCourante.global || {};
+  const matin = (matchsCourants || []).filter(function (m) { return String(m.phase) !== 'classement'; });
+  const aprem = (matchsCourants || []).filter(function (m) { return String(m.phase) === 'classement'; });
+
+  function cacher() { btn.hidden = true; aide.hidden = true; }
+
+  // Pas de planning, ou après-midi déjà générée → option non applicable.
+  if (matin.length === 0 || aprem.length > 0) { cacher(); return; }
+
+  // Y a-t-il quelque chose à recalculer ? (réglages modifiés depuis la génération)
+  const sigStockee = g.signature_generation || '';
+  const reglagesModifies = sigStockee &&
+    signatureGeneration(g, configCourante.categories, equipesCourantes) !== sigStockee;
+  if (!reglagesModifies) { cacher(); return; }
+
+  // La composition a-t-elle changé ? (nouveau tirage nécessaire dans ce cas)
+  const catsPresentes = (configCourante.categories || []).filter(estPresente)
+    .map(function (c) { return String(c.categorie); });
+  const nonPlacee = (equipesCourantes || []).some(function (e) {
+    return catsPresentes.indexOf(String(e.categorie)) >= 0 && !String(e.poule || '').trim();
+  });
+  const sigStructStockee = g.signature_structure || '';
+  const structureChangee = nonPlacee ||
+    (sigStructStockee && signatureStructure(configCourante.categories, equipesCourantes) !== sigStructStockee);
+
+  btn.hidden = false;
+  aide.hidden = false;
+  if (structureChangee) {
+    btn.disabled = true;
+    aide.innerHTML = '⚠️ La <strong>composition a changé</strong> (équipe ajoutée/retirée ou nombre de poules) : ' +
+      'un nouveau tirage est nécessaire → utilise <strong>🎲 Générer</strong> (⚠️ efface les scores).';
+  } else {
+    btn.disabled = false;
+    aide.innerHTML = '💡 Recalcule seulement les <strong>heures</strong> avec tes réglages actuels, ' +
+      'en gardant les poules <strong>et les scores</strong> déjà saisis.';
+  }
+}
+
+/** Recalcule les horaires sans nouveau tirage (garde poules + scores). */
+async function onRecalculerHoraires() {
+  if (!await dialogConfirmer(
+      "Recalculer les horaires du matin ?\n\nMêmes poules, mêmes affrontements : seules les heures " +
+      "(et terrains) changent. Les scores déjà saisis sont conservés.", { ok: 'Recalculer' })) return;
+
+  const bouton = document.getElementById('bouton-recalculer-horaires');
+  const message = document.getElementById('message-generation');
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Recalcul…';
+  afficherMessage(message, 'Recalcul des horaires…', 'ok');
+
+  try {
+    const res = await ecrireAdmin('recalculerHoraires', {});
+    const avert = res && res.avertissements && res.avertissements.length;
+    let texte = '✅ Horaires recalculés (' + (res.nb_matchs != null ? res.nb_matchs : '?') + ' match(s)).';
+    if (res.scores_conserves) texte += '\n💾 ' + res.scores_conserves + ' score(s) conservé(s).';
+    if (res.heure_fin_matin) texte += '\n🌅 Fin du matin : ' + res.heure_fin_matin + '.';
+    if (res.heure_fin_journee) texte += '\n🏁 Fin de la journée : ' + res.heure_fin_journee + '.';
+    if (avert) texte += '\n⚠️ ' + res.avertissements.join('\n⚠️ ');
+    afficherMessage(message, texte, avert ? 'ko' : 'ok');
+
+    // On recharge tout (comme après une génération), sans toucher aux formulaires en cours.
+    const data = await apiGet('getAll');
+    configCourante = data.config;
+    equipesCourantes = data.equipes;
+    matchsCourants = data.matchs || [];
+    injecterReglages(data.config.global, data.config.categories);
+    remplirSelectCategories(data.config.categories);
+    afficherPlanning(data.poules, data.matchs);
+    majApresMidi();
+    majTableauBord();
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+    majBoutonRecalculer();
   }
 }
 

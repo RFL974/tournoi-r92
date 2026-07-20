@@ -308,6 +308,7 @@ function doPost(e) {
       case 'enregistrerScore':     resultat = enregistrerScore(classeur, requete); break;
       case 'genererPoulesEtPlanning': resultat = genererPoulesEtPlanning(classeur); break;
       case 'reorganiserPoulesMatin':  resultat = reorganiserPoulesMatin(classeur, requete); break;
+      case 'recalculerHoraires':      resultat = recalculerHoraires(classeur); break;
       case 'genererApresMidi':     resultat = genererApresMidi(classeur); break;
       case 'publierTournoi':       resultat = publierTournoi(classeur, requete.publie); break;
       case 'enregistrerInfosTournoi': resultat = enregistrerInfosTournoi(classeur, requete); break;
@@ -1625,6 +1626,96 @@ function reorganiserPoulesMatin(classeur, data) {
 }
 
 /**
+ * RECALCULER LES HORAIRES (étape 3) — régénération NON destructive.
+ * Recalcule les heures/terrains des matchs du matin avec les réglages actuels, en gardant
+ * la MÊME composition de poules (pas de tirage) et en RÉINJECTANT les scores déjà saisis
+ * sur les affrontements identiques. Ne change pas tournoi_id (même tournoi).
+ * Garde-fous : refuse s'il n'y a pas de planning, si l'après-midi est déjà généré, ou si la
+ * composition a changé (équipe ajoutée/retirée, nombre de poules modifié) → il faut alors
+ * un vrai tirage via genererPoulesEtPlanning.
+ */
+function recalculerHoraires(classeur) {
+  var config = lireConfig(classeur);
+  var equipes = lireOngletSimple(classeur, 'Equipes');
+  var matchs = lireOngletSimple(classeur, 'Matchs');
+
+  var matin = matchs.filter(function (m) { return String(m.phase) !== 'classement'; });
+  var aprem = matchs.filter(function (m) { return String(m.phase) === 'classement'; });
+
+  if (matin.length === 0) {
+    return { error: "Aucun planning à recalculer. Utilise « Générer poules et planning »." };
+  }
+  if (aprem.length > 0) {
+    return { error: "L'après-midi est déjà généré : recalculer le matin le décalerait. Régénère l'ensemble via « Générer » (⚠️ efface les scores)." };
+  }
+
+  // La composition ne doit pas avoir changé (sinon un vrai tirage est nécessaire).
+  var sigStructStockee = config.global.signature_structure || '';
+  if (sigStructStockee && signatureStructure(config.categories, equipes) !== sigStructStockee) {
+    return { error: "La composition a changé (équipe ajoutée/retirée ou nombre de poules modifié) : un nouveau tirage est nécessaire. Utilise « Générer » (⚠️ efface les scores)." };
+  }
+  // Sécurité : toute équipe d'une catégorie présente doit déjà être placée dans une poule.
+  var catsPresentes = {};
+  config.categories.filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; })
+    .forEach(function (c) { catsPresentes[c.categorie] = true; });
+  var nonPlacee = equipes.some(function (e) {
+    return catsPresentes[e.categorie] && (e.poule == null || String(e.poule) === '');
+  });
+  if (nonPlacee) {
+    return { error: "Certaines équipes ne sont pas encore réparties en poules. Utilise « Générer »." };
+  }
+
+  // Composition inchangée = poule actuelle de chaque équipe (aucun tirage).
+  var affectation = {};
+  equipes.forEach(function (e) { affectation[e.id_equipe] = e.poule; });
+
+  var r = calculerPlanning(config, equipes, false, affectation);
+
+  // Réinjecte les scores existants sur les affrontements identiques (paire non ordonnée :
+  // si A/B sont inversés dans le nouveau round-robin, on échange aussi les scores).
+  var scoreParPaire = {};
+  matin.forEach(function (m) {
+    scoreParPaire[m.categorie + '|' + m.poule + '|' + m.equipe_A + '|' + m.equipe_B] =
+      { sA: m.score_A, sB: m.score_B, statut: m.statut, inv: false };
+    scoreParPaire[m.categorie + '|' + m.poule + '|' + m.equipe_B + '|' + m.equipe_A] =
+      { sA: m.score_A, sB: m.score_B, statut: m.statut, inv: true };
+  });
+  var scoresConserves = 0;
+  r.matchsFinaux.forEach(function (row) {
+    // row = [id, cat, poule, terrain, hd, hf, A, B, score_A, score_B, statut, phase]
+    var info = scoreParPaire[row[1] + '|' + row[2] + '|' + row[6] + '|' + row[7]];
+    if (!info) return;
+    row[8] = info.inv ? info.sB : info.sA;
+    row[9] = info.inv ? info.sA : info.sB;
+    if (info.statut) row[10] = info.statut;
+    if (estTermineServeur(info.statut)) scoresConserves++;
+  });
+
+  ecrireGeneration(classeur, r.poules, r.affectationPoule, r.matchsFinaux);
+
+  // Heure de fin auto (comme à la génération) — mais SANS toucher tournoi_id.
+  var autoFin = String((config.global.heure_fin_auto || 'oui')).toLowerCase() !== 'non';
+  var finJournee = Math.max(r.maxFin, projeterFinApresMidi(config, r.poules, r.matchsFinaux));
+  if (autoFin && finJournee > 0) {
+    ecrireParamGlobal(classeur.getSheetByName('Config'), 'heure_fin', minVersHm(finJournee));
+  }
+  // Réglages désormais « à jour » → on rafraîchit les deux empreintes.
+  ecrireParamGlobal(classeur.getSheetByName('Config'), 'signature_generation',
+    signatureGeneration(config.global, config.categories, equipes));
+  ecrireParamGlobal(classeur.getSheetByName('Config'), 'signature_structure',
+    signatureStructure(config.categories, equipes));
+
+  return {
+    ok: true,
+    nb_matchs: r.matchsFinaux.length,
+    scores_conserves: scoresConserves,
+    heure_fin_matin: (r.maxFin > 0) ? minVersHm(r.maxFin) : '',
+    heure_fin_journee: (autoFin && finJournee > 0) ? minVersHm(finJournee) : '',
+    avertissements: r.avert
+  };
+}
+
+/**
  * @param affectationImposee (optionnel) map { id_equipe: nom_poule } : si fournie, on N'effectue
  *   PAS le tirage auto — on regroupe les équipes selon cette répartition manuelle (matin).
  */
@@ -1948,6 +2039,32 @@ function signatureGeneration(global, categories, equipes) {
   return hachageChaine(parts.join(';'));
 }
 
+/**
+ * SIGNATURE DE STRUCTURE (étape 3). Résume UNIQUEMENT ce qui définit la COMPOSITION des
+ * poules : nombre de poules et liste des équipes (ids) par catégorie. Sert à savoir si un
+ * simple recalcul des horaires (sans nouveau tirage, scores gardés) est légitime, ou s'il
+ * faut au contraire un vrai tirage. DOIT rester identique côté frontend (admin.js).
+ */
+function signatureStructure(categories, equipes) {
+  var parCat = {};
+  (equipes || []).forEach(function (e) {
+    var c = String(e.categorie || '');
+    if (c) (parCat[c] = parCat[c] || []).push(String(e.id_equipe));
+  });
+  var cats = (categories || []).filter(function (c) {
+    return String(c.presente).toLowerCase() === 'oui';
+  }).slice().sort(function (a, b) {
+    var x = String(a.categorie), y = String(b.categorie);
+    return x < y ? -1 : (x > y ? 1 : 0);
+  });
+  var parts = [];
+  cats.forEach(function (c) {
+    var ids = (parCat[String(c.categorie)] || []).slice().sort();
+    parts.push('cat=' + c.categorie + '|np=' + (c.nb_poules || '') + '|ids=' + ids.join(','));
+  });
+  return hachageChaine(parts.join(';'));
+}
+
 function genererPoulesEtPlanning(classeur) {
   var config = lireConfig(classeur);
   var equipes = lireOngletSimple(classeur, 'Equipes');
@@ -2034,6 +2151,9 @@ function genererPoulesEtPlanning(classeur) {
   // changé depuis cette génération (pastille « à recalculer »). Voir signatureGeneration().
   ecrireParamGlobal(classeur.getSheetByName('Config'), 'signature_generation',
     signatureGeneration(global, config.categories, equipes));
+  // Empreinte de composition : sert au « Recalculer les horaires » (étape 3).
+  ecrireParamGlobal(classeur.getSheetByName('Config'), 'signature_structure',
+    signatureStructure(config.categories, equipes));
 
   return {
     ok: true,
