@@ -15,13 +15,15 @@
  */
 
 /**
- * Échappe un texte pour l'insérer sans danger dans du HTML (anti-injection).
- * Transforme les caractères spéciaux (& < > ") en entités HTML.
+ * Échappe un texte pour l'insérer sans danger dans du HTML (anti-injection XSS).
+ * Transforme les caractères spéciaux (& < > " ' `) en entités HTML. On échappe aussi
+ * l'apostrophe et l'accent grave : ainsi le texte reste sûr même dans un attribut délimité
+ * par des apostrophes ou des accents graves (défense en profondeur, tous contextes couverts).
  */
 function echapper(texte) {
   return String(texte)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/`/g, '&#96;');
 }
 
 /**

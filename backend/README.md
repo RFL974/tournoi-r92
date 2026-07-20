@@ -9,7 +9,13 @@ Il contient tout le backend :
   verrou (`LockService`) : équipes, catégories, horaires, scores, génération des poules/planning,
   phase après-midi (classement croisé), publication, infos + affiche.
 - **Sécurité** : deux clés (`CLE_ADMIN` / `CLE_SCORES`) stockées dans les **Propriétés du script**
-  (jamais dans le code), réglées par `configurerCles(...)`.
+  (jamais dans le code), réglées par `configurerCles(...)` — qui **exige au moins 12 caractères**.
+  Les écritures sont **anti-force-brute** : au-delà de ~30 essais de clé ratés en 5 min, les
+  nouvelles tentatives à mauvaise clé sont refusées un moment (une **bonne** clé passe toujours).
+  L'affiche (upload Drive, fichier rendu public) est **limitée aux vraies images** (PNG/JPEG/WebP/GIF)
+  et à **5 Mo**. Les erreurs inattendues renvoient un message **générique** (détail journalisé côté serveur).
+  → Choisir des clés **longues et aléatoires** (gestionnaire de mots de passe) et **garder le Sheet privé**
+  (ne jamais le partager « toute personne disposant du lien » : le `SHEET_ID` est visible dans le dépôt public).
 - **Montée en charge** : cache serveur + **relais CDN** optionnel (`pousserSnapshot` /
   `configurerRelais`, voir [`../docs/relais-cdn.md`](../docs/relais-cdn.md)).
 - **Utilitaires à lancer une fois** depuis l'éditeur : `setupSheet()` (crée les **5 onglets**

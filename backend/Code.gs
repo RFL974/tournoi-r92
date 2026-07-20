@@ -127,7 +127,12 @@ function doGet(e) {
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
-  } catch (erreur) { return repondreJson({ error: String(erreur) }); }
+  } catch (erreur) {
+    // On journalise le détail côté serveur (Logger) mais on ne renvoie qu'un message
+    // générique : les messages d'exception bruts peuvent trahir la structure interne.
+    Logger.log('doGet erreur : ' + erreur);
+    return repondreJson({ error: 'Erreur serveur pendant la lecture.' });
+  }
 }
 
 function repondreJson(objet) {
@@ -363,7 +368,11 @@ function doPost(e) {
     if (resultat && !resultat.error) apresEcriture(classeur);
     return repondreJson(resultat);
   } catch (erreur) {
-    return repondreJson({ error: String(erreur) });
+    // Détail journalisé côté serveur, message générique côté client (anti-fuite d'infos).
+    // Les erreurs « métier » (validation) sont renvoyées normalement via resultat.error ;
+    // ce catch ne concerne que les exceptions inattendues.
+    Logger.log('doPost erreur : ' + erreur);
+    return repondreJson({ error: 'Erreur serveur pendant l\'écriture.' });
   } finally {
     if (lock) lock.releaseLock(); // toujours relâcher le verrou (sans erreur s'il n'était pas pris)
   }
@@ -388,17 +397,34 @@ function onOpen() {
  * Alternative sans code : Paramètres du projet → Propriétés du script → CLE_ADMIN / CLE_SCORES.
  * Les clés sont rangées dans les Propriétés du script (jamais dans le code / GitHub).
  */
+/** Longueur MINIMALE exigée pour une clé (garde-fou anti-clé-faible / anti-force-brute). */
+var LONGUEUR_CLE_MIN = 12;
+
 function configurerCles() {
   var ui = SpreadsheetApp.getUi();
   var props = PropertiesService.getScriptProperties();
   var r1 = ui.prompt('Clé ADMIN',
-    'Clé pour la page admin (génération, équipes, réglages) :', ui.ButtonSet.OK_CANCEL);
+    'Clé pour la page admin (génération, équipes, réglages) — au moins ' + LONGUEUR_CLE_MIN + ' caractères :',
+    ui.ButtonSet.OK_CANCEL);
   if (r1.getSelectedButton() !== ui.Button.OK) return;
-  props.setProperty('CLE_ADMIN', String(r1.getResponseText()).trim());
+  var cleAdmin = String(r1.getResponseText()).trim();
+  if (cleAdmin.length < LONGUEUR_CLE_MIN) {
+    ui.alert('Clé trop courte', 'La clé ADMIN doit faire au moins ' + LONGUEUR_CLE_MIN +
+      ' caractères (idéalement générée par un gestionnaire de mots de passe). Recommence.', ui.ButtonSet.OK);
+    return;
+  }
   var r2 = ui.prompt('Clé SCORES',
-    'Clé pour la page de saisie des scores :', ui.ButtonSet.OK_CANCEL);
+    'Clé pour la page de saisie des scores — au moins ' + LONGUEUR_CLE_MIN + ' caractères :',
+    ui.ButtonSet.OK_CANCEL);
   if (r2.getSelectedButton() !== ui.Button.OK) return;
-  props.setProperty('CLE_SCORES', String(r2.getResponseText()).trim());
+  var cleScores = String(r2.getResponseText()).trim();
+  if (cleScores.length < LONGUEUR_CLE_MIN) {
+    ui.alert('Clé trop courte', 'La clé SCORES doit faire au moins ' + LONGUEUR_CLE_MIN + ' caractères. Recommence.',
+      ui.ButtonSet.OK);
+    return;
+  }
+  props.setProperty('CLE_ADMIN', cleAdmin);
+  props.setProperty('CLE_SCORES', cleScores);
   ui.alert('✅ Clés enregistrées',
     'Les clés ADMIN et SCORES sont définies dans les propriétés du script.', ui.ButtonSet.OK);
 }
@@ -408,12 +434,53 @@ function lireCle(nom) {
   return PropertiesService.getScriptProperties().getProperty(nom) || '';
 }
 
-/** Vérifie que la requête porte la bonne clé. Renvoie { ok, msg }. */
+/* ---------- Anti-force-brute (throttling des tentatives de clé) ----------
+ * Les écritures ne sont protégées QUE par une clé partagée, et l'API est joignable par
+ * n'importe qui (CORS ouvert, nécessaire pour la lecture publique). Sans garde-fou, un
+ * attaquant pourrait tester des millions de clés. On compte donc les ÉCHECS récents dans
+ * un cache serveur : au-delà d'un seuil, on refuse les nouvelles tentatives à MAUVAISE clé
+ * pendant la fenêtre. Une BONNE clé passe TOUJOURS (et remet le compteur à zéro) : les
+ * marqueurs et l'organisation ne sont donc jamais bloqués — seules les tentatives ratées
+ * le sont. Compteur best-effort (CacheService non transactionnel), suffisant pour plafonner
+ * fortement le débit de devinette ; la vraie protection reste une clé longue et aléatoire. */
+var MAX_ECHECS_CLE = 30;         // tentatives ratées tolérées avant blocage temporaire
+var FENETRE_ECHECS_CLE_S = 300;  // fenêtre (s) — repoussée à chaque nouvel échec (≈ 5 min de calme requis)
+
+/** Nombre d'échecs de clé récents (0 si cache indisponible). */
+function nbEchecsCleRecents() {
+  try {
+    var v = CacheService.getScriptCache().get('auth_echecs');
+    return v ? (parseInt(v, 10) || 0) : 0;
+  } catch (e) { return 0; }
+}
+
+/** Incrémente le compteur d'échecs de clé (prolonge la fenêtre). */
+function incrementerEchecsCle() {
+  try {
+    CacheService.getScriptCache().put('auth_echecs', String(nbEchecsCleRecents() + 1), FENETRE_ECHECS_CLE_S);
+  } catch (e) { /* cache indisponible : on n'échoue pas la requête pour autant */ }
+}
+
+/** Remet le compteur d'échecs à zéro (appelé après une clé valide). */
+function reinitEchecsCle() {
+  try { CacheService.getScriptCache().remove('auth_echecs'); } catch (e) {}
+}
+
+/** Vérifie que la requête porte la bonne clé, avec anti-force-brute. Renvoie { ok, msg }. */
 function verifierCle(requete, nomCle) {
   var attendue = lireCle(nomCle);
   if (!attendue) return { ok: false, msg: 'Clé non configurée sur le serveur — lance configurerCles() dans l\'éditeur.' };
-  if (String(requete.cle || '') !== attendue) return { ok: false, msg: 'Clé incorrecte.' };
-  return { ok: true };
+
+  // Bonne clé : accès accordé, compteur d'échecs remis à zéro (jamais de blocage des légitimes).
+  if (String(requete.cle || '') === attendue) { reinitEchecsCle(); return { ok: true }; }
+
+  // Mauvaise clé : au-delà du seuil d'échecs récents, on refuse tout net (throttle) sans révéler
+  // le type de clé. Le mot « incorrecte » est conservé pour que le frontend redemande la clé.
+  if (nbEchecsCleRecents() >= MAX_ECHECS_CLE) {
+    return { ok: false, msg: 'Trop de tentatives incorrectes. Réessaie dans quelques minutes.', throttled: true };
+  }
+  incrementerEchecsCle();
+  return { ok: false, msg: 'Clé incorrecte.' };
 }
 
 /** Statut « terminé » robuste au « é » décomposé (NFD) renvoyé par le Sheet. */
@@ -461,7 +528,11 @@ function modifierEquipe(classeur, id, nouveauNom) {
   var ids = onglet.getRange(2, 1, dernier - 1, 1).getValues();
   for (var i = 0; i < ids.length; i++) {
     if (String(ids[i][0]) === String(id)) {
-      onglet.getRange(i + 2, 2).setValue(nouveauNom); // colonne 2 = nom_equipe
+      // Format TEXTE (@) forcé AVANT d'écrire : un nom commençant par « = + - @ » n'est pas
+      // interprété comme une formule Google Sheets (anti-injection de formule, comme ajouterEquipe).
+      var cellule = onglet.getRange(i + 2, 2); // colonne 2 = nom_equipe
+      cellule.setNumberFormat('@');
+      cellule.setValue(nouveauNom);
       return { ok: true, equipe: { id_equipe: id, nom_equipe: nouveauNom } };
     }
   }
@@ -551,13 +622,33 @@ function enregistrerPlanTerrains(classeur, data) {
  * ⚠️ Nécessite l'autorisation d'accès à Google Drive (à accorder une fois au redéploiement).
  * @param data.affiche  chaîne "data:image/...;base64,...."
  */
+/** Types d'image acceptés pour l'affiche (liste blanche stricte). */
+var TYPES_AFFICHE_OK = { 'image/png': true, 'image/jpeg': true, 'image/webp': true, 'image/gif': true };
+/** Taille maximale de l'affiche décodée (5 Mo) — garde-fou anti-saturation du Drive. */
+var AFFICHE_MAX_OCTETS = 5 * 1024 * 1024;
+
 function enregistrerAffiche(classeur, data) {
   var uri = String(data.affiche || '');
   var m = uri.match(/^data:([^;]+);base64,(.*)$/);
   if (!m) return { error: 'Image invalide (Data URI base64 attendu).' };
 
-  var octets = Utilities.base64Decode(m[2]);
-  var blob = Utilities.newBlob(octets, m[1], 'affiche-tournoi');
+  // Sécurité : n'accepter que de VRAIES images (le fichier Drive sera public en lecture),
+  // et borner la taille pour éviter qu'un envoi massif ne sature le Drive / le quota.
+  var type = String(m[1]).toLowerCase();
+  if (!TYPES_AFFICHE_OK[type]) {
+    return { error: 'Format d\'affiche non autorisé (PNG, JPEG, WebP ou GIF uniquement).' };
+  }
+  var base64 = m[2] || '';
+  // La taille décodée vaut ≈ 3/4 de la longueur base64 : filtre rapide avant de décoder.
+  if (base64.length * 0.75 > AFFICHE_MAX_OCTETS) {
+    return { error: 'Affiche trop lourde (5 Mo maximum). Réduis l\'image avant de l\'envoyer.' };
+  }
+
+  var octets = Utilities.base64Decode(base64);
+  if (octets.length > AFFICHE_MAX_OCTETS) {
+    return { error: 'Affiche trop lourde (5 Mo maximum). Réduis l\'image avant de l\'envoyer.' };
+  }
+  var blob = Utilities.newBlob(octets, type, 'affiche-tournoi');
 
   var onglet = classeur.getSheetByName('Config');
   var ancienId = (lireConfig(classeur).global || {}).tournoi_affiche_id;
