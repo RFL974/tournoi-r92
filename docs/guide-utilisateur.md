@@ -47,6 +47,11 @@ joué rapporte toujours au moins 1 point). **Départage** en cas d'égalité de 
 > (classement croisé, matchs libres, ou Coupe + Plateau à élimination directe). Le choix se fait au
 > **paramétrage**. Tout est expliqué dans le guide dédié : [`formats-apres-midi.md`](formats-apres-midi.md).
 
+> 🆕 **Répartition automatique des terrains.** À partir de tes grands terrains réels (foot / rugby),
+> l'appli calcule combien de petits terrains y tiennent et les **attribue automatiquement** aux
+> catégories, avec une **carte visuelle** du placement. À faire avant de générer le planning
+> (voir §1.4).
+
 ---
 
 ## 1. Page Administration (`admin.html`)
@@ -86,7 +91,7 @@ Réglages globaux qui pilotent le calcul du planning :
   - **auto coché** (par défaut) : l'heure de fin n'est **pas** une contrainte ; le planning se
     déroule et l'outil t'**affiche** simplement l'heure de fin projetée. *Aucune alerte.*
   - **auto décoché** + une heure : devient une **cible**. Si le tournoi dépasse cette heure, tu
-    reçois un **avertissement** et l'**assistant d'arbitrage** (§1.4).
+    reçois un **avertissement** et l'**assistant d'arbitrage** (§1.5).
 - **Battement terrain entre les matchs (min)** : temps tampon laissé sur un terrain entre deux
   matchs (rangement, transition).
 - **Pause déjeuner — début** et **durée (min)** : créneau réservé. **Contrainte dure** :
@@ -94,7 +99,7 @@ Réglages globaux qui pilotent le calcul du planning :
     repoussés après la pause) ;
   - l'**après-midi ne peut pas commencer avant la fin de la pause** (début + durée).
   - Si le matin ne rentre pas avant le début de la pause, la génération **alerte** et propose un
-    **arbitrage** (§1.4).
+    **arbitrage** (§1.5).
 
 > **Raisonnement** : ces paramètres sont les « boutons » qui permettent de faire tenir la journée
 > dans les créneaux réels (terrains disponibles, pause repas, heure de fin de location).
@@ -108,7 +113,7 @@ retirer une catégorie, on la **supprime** — il n'y a plus de réglage « Pré
   (ex. `1,2,3`). Plus de terrains = plus de matchs en parallèle = journée plus courte.
 - **Nombre de poules** : **vide = automatique** (l'outil vise ~4 équipes par poule). Tu peux
   **forcer** un nombre ; si ce forçage rallonge la journée par rapport à l'auto, l'assistant
-  d'arbitrage te le signale (§1.4).
+  d'arbitrage te le signale (§1.5).
 - **Nb mi-temps**, **durée mi-temps (min)**, **pause mi-temps (min)** : définissent la **durée
   d'un match** = (nb mi-temps × durée) + (pause si ≥ 2 mi-temps).
 - **Récup. entre matchs (min)** : repos minimal garanti à une équipe entre deux de ses matchs.
@@ -130,7 +135,51 @@ Boutons : **Enregistrer** (par catégorie), **Supprimer** (la catégorie), et un
   seront placées dans des **poules différentes** au tirage. *(Un chiffre collé au nom, « RACING 92 »,
   fait partie du nom ; utiliser le tiret pour distinguer les équipes.)*
 
-### 1.4 Poules & planning (génération du matin)
+### 1.4 Terrains & répartition automatique
+Cette carte part de tes **grands terrains réels** (les terrains de foot / rugby que tu occupes) et
+les **découpe automatiquement** en petits terrains à la bonne taille selon les catégories. Elle
+remplit ensuite le champ **Terrains** de chaque catégorie à ta place (fini le « au hasard »).
+
+**a) Déclarer les grands terrains.** Pour chaque grand terrain : un **nom** (Rugby 1, Foot 2…), un
+**type** (🏉 rugby / ⚽ foot), sa **longueur × largeur** en mètres, et son **emplacement** sur le
+site (grille 3×3 : haut-centre, centre-gauche…). Boutons **+ Ajouter un grand terrain** et **✕**
+pour en retirer un. Règle aussi le **couloir de circulation** entre les petits terrains (5 m par
+défaut).
+
+**b) Taille de chaque catégorie.** Une ligne par catégorie présente : sa **longueur × largeur** de
+terrain (ex. U8 30×20, U10 40×30). Coche **« terrain entier »** si un match occupe un grand terrain
+complet (cas U14).
+
+**c) Tableau de capacité.** Il se met à jour **en direct** : pour chaque grand terrain, il indique
+**combien de mini-terrains** de chaque catégorie y tiennent (couloirs compris). Le bouton
+**Enregistrer les terrains** mémorise tout ça.
+
+**d) Répartir.** Le bouton **🧩 Répartir les terrains** calcule la répartition et affiche :
+- un **résumé** par catégorie (nombre de terrains attribués + sur quels grands terrains) ;
+- une **carte visuelle** dessinée **comme sur le site** (chaque grand terrain à sa vraie position).
+
+Principes de la répartition :
+- **Selon le nombre d'équipes** : plus une catégorie a d'équipes, plus elle reçoit de terrains, en
+  gardant chaque catégorie **groupée** (déplacements courts). *(La charge est équilibrée : à taille
+  de terrain égale, le nombre de terrains suit le nombre d'équipes.)*
+- **Partage d'un grand terrain** : s'il y a plus de catégories que de grands terrains, un grand
+  terrain peut être **scindé en deux** (une catégorie de chaque côté).
+- **Table des marques** : sur chaque grand terrain, **1 mini-terrain central est réservé** à la
+  table des marques (zone grise **« TM »**) ; elle est **dessinée en deux** quand deux catégories
+  partagent un grand terrain, pour éviter la confusion.
+- **Numérotation continue** : les mini-terrains sont numérotés **1, 2, 3… en continu** sur tout le
+  tournoi (chaque numéro est **unique** → aucune confusion à la table des marques).
+- Sur la carte, **la couleur indique la catégorie** (pas le terrain) ; le **nom du terrain** (Rugby 1,
+  Rugby 2…) indique l'emplacement.
+
+**e) Appliquer.** Le bouton **✅ Appliquer aux catégories** écrit les numéros de terrain dans le champ
+**Terrains** de chaque catégorie. Ils seront utilisés **à la prochaine génération du planning**
+(§1.5). Tu peux toujours **ajuster à la main** le champ Terrains d'une catégorie après coup.
+
+> 💡 À faire **avant** de générer les poules et le planning : c'est le champ **Terrains** rempli ici
+> qui sert à répartir les matchs sur les terrains dans le temps.
+
+### 1.5 Poules & planning (génération du matin)
 Le bouton **🎲 Générer poules et planning** :
 
 1. **Répartit les équipes en poules** (par catégorie). Règle : deux équipes d'un **même club** ne
@@ -175,7 +224,7 @@ affiché (⚠️ si écart > 1). En cliquant **Enregistrer et recalculer**, les 
 recalculés** d'après ta répartition. ⚠️ Impossible **une fois qu'un score du matin est saisi** (les
 matchs ne peuvent plus changer). Ne touche pas à l'après-midi (qui, lui, reflète le niveau réel).
 
-### 1.5 Phase après-midi (classement croisé)
+### 1.6 Phase après-midi (classement croisé)
 Le bouton **🏉 Générer l'après-midi**. Principe : les équipes de **même rang de poule** jouent
 ensemble l'après-midi (les 1ᵉʳ de poule entre eux → **Niveau 1**, les 2ᵉ → **Niveau 2**, etc.).
 
@@ -185,7 +234,7 @@ ensemble l'après-midi (les 1ᵉʳ de poule entre eux → **Niveau 1**, les 2ᵉ
   niveaux) : plus besoin de cliquer pour découvrir qu'il manque des scores.
 - **N'efface pas** les matchs du matin.
 
-### 1.6 Infos du tournoi + affiche
+### 1.7 Infos du tournoi + affiche
 Alimentent la **carte d'actualité** et la **page d'article** du site vitrine (boutique-r92) : nom,
 date, lieu, description, et une **affiche** (image, redimensionnée puis stockée dans Google Drive).
 On les sauvegarde avec le bouton **Enregistrer les infos**. Elles sont **modifiables à tout moment,
@@ -195,7 +244,7 @@ sont aussi enregistrées lors de la publication.
 Un bouton **Retirer l'affiche** (sous l'aperçu) permet d'**annuler un choix pas encore enregistré**,
 ou de **supprimer l'affiche déjà enregistrée** (le fichier Drive est mis à la corbeille).
 
-### 1.7 Publier le tournoi
+### 1.8 Publier le tournoi
 Rend le tournoi **visible du public**. Tant qu'il n'est pas publié, les visiteurs voient un écran
 « à venir ». Indépendant de la génération des poules : on prépare tout, on publie quand c'est prêt.
 Le même bouton permet de **masquer** à nouveau.
@@ -226,7 +275,7 @@ Pensée pour le **téléphone**, un marqueur par terrain. À l'ouverture, elle d
   **Valider la correction**. Fonctionne aussi bien pour le matin (dans son accordéon) que l'après-midi.
   - ⚠️ **Correction d'un score du matin après génération de l'après-midi** : une alerte prévient que
     les **niveaux de l'après-midi** (calculés sur le classement du matin) peuvent être faussés. Il
-    faut alors **régénérer l'après-midi** depuis l'admin (§1.5) pour rétablir les bons niveaux.
+    faut alors **régénérer l'après-midi** depuis l'admin (§1.6) pour rétablir les bons niveaux.
 
 ---
 
