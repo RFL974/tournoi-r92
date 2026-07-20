@@ -60,6 +60,7 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `categorie` | `U8` | Nom de la catégorie |
 | `presente` | `oui` | La catégorie participe-t-elle à cette édition ? (`oui`/`non`) |
 | `terrains` | `1,2` | Terrains dédiés à cette catégorie (numéros séparés par des virgules) |
+| `terrains_auto` | `oui` | Source des terrains : `oui` (défaut) = attribués par l'onglet **Terrains & répartition** ; `non` = **saisis à la main** dans les réglages (avec vérification en direct). **Vide = `oui`** |
 | `nb_poules` | *(vide)* | Nombre de poules. **Vide = Auto** (calculé pour viser ~4 équipes/poule) ; un entier = **forcé** |
 | `format_mi_temps` | `2` | Nombre de mi-temps par match (`1` ou `2`) |
 | `duree_mi_temps_min` | `10` | Durée d'une mi-temps, en minutes |
@@ -68,9 +69,10 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `format_apresmidi` | `CROISE` | Format de l'après-midi : `CROISE` / `CROISE_DIAGONAL` / `LIBRE` / `COUPE_PLATEAU`. **Vide = `CROISE`** (comportement historique) |
 | `param_format` | `{"nbQualifiesCoupe":2}` | Réglages JSON du format. Pour `COUPE_PLATEAU` : nb de qualifiés en Coupe par poule. Vide pour `CROISE`/`CROISE_DIAGONAL`/`LIBRE` |
 
-> ℹ️ **Migration automatique** : `format_apresmidi` et `param_format` sont **ajoutées automatiquement**
-> à droite de la Zone B dès la première génération d'après-midi (ou enregistrement de catégorie) sur
-> un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement croisé** comme avant.
+> ℹ️ **Migration automatique** : `format_apresmidi`, `param_format` et `terrains_auto` sont **ajoutées
+> automatiquement** à droite de la Zone B dès la première génération d'après-midi (ou enregistrement de
+> catégorie) sur un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement croisé**,
+> et sans `terrains_auto` = **mode Auto**, comme avant.
 
 > **Durée totale d'un match** (calculée par le backend) :
 > `format_mi_temps × duree_mi_temps_min + pause_mi_temps_min` (si 2 mi-temps).

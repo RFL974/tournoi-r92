@@ -70,16 +70,17 @@ function creerOngletConfig(classeur) {
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
   // nb_poules : vide = Auto (calculé selon le nombre d'équipes) ; un nombre = forcé.
-  // format_apresmidi : CROISE / LIBRE / COUPE_PLATEAU (vide = CROISE, comportement historique).
+  // format_apresmidi : CROISE / CROISE_DIAGONAL / LIBRE / COUPE_PLATEAU (vide = CROISE, historique).
   // param_format : JSON court des réglages du format (ex COUPE_PLATEAU : {"nbQualifiesCoupe":2}).
-  var entetesCategorie = ['categorie', 'presente', 'terrains', 'nb_poules',
+  // terrains_auto : oui = terrains attribués via l'onglet Terrains (défaut) ; non = saisie manuelle.
+  var entetesCategorie = ['categorie', 'presente', 'terrains', 'terrains_auto', 'nb_poules',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min',
     'format_apresmidi', 'param_format'];
   var exemplesCategorie = [
-    ['U8',  'oui', '1,2', '', '2', '8',  '2', '15', 'LIBRE',         ''],
-    ['U10', 'oui', '3,4', '', '2', '10', '2', '15', 'CROISE',        ''],
-    ['U12', 'oui', '5,6', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}'],
-    ['U14', 'oui', '7,8', '', '2', '15', '3', '20', 'CROISE',        '']
+    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         ''],
+    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        ''],
+    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}'],
+    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '']
   ];
   onglet.getRange(1, 1, 50, 12).setNumberFormat('@');
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
@@ -1595,12 +1596,14 @@ function assurerColonnesMatchs(oM) {
 }
 
 /**
- * S'assure que la Zone B de Config possède les colonnes de format d'après-midi
- * (`format_apresmidi`, `param_format`). Migration douce d'un Sheet déjà en service.
+ * S'assure que la Zone B de Config possède les colonnes ajoutées après coup
+ * (`format_apresmidi`, `param_format`, `terrains_auto`). Migration douce d'un Sheet
+ * déjà en service : la colonne manquante est ajoutée (vide = valeur par défaut à la lecture).
  */
 function assurerColonnesConfig(classeur) {
   assurerColonneCategorie(classeur, 'format_apresmidi');
   assurerColonneCategorie(classeur, 'param_format');
+  assurerColonneCategorie(classeur, 'terrains_auto');
 }
 
 /* ===================== GÉNÉRATION POULES + PLANNING ===================== */

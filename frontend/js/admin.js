@@ -11,9 +11,9 @@
  * ============================================================================
  */
 
-/* Champs modifiables d'une catégorie : clé (dans le Sheet), libellé, type de champ. */
+/* Champs modifiables d'une catégorie : clé (dans le Sheet), libellé, type de champ.
+   NB : `terrains` n'est plus ici — il a son propre bloc (Auto / Manuel), voir blocTerrains(). */
 const CHAMPS_CATEGORIE = [
-  { cle: 'terrains',               label: 'Terrains',                  type: 'text' },
   { cle: 'nb_poules',              label: 'Nombre de poules',          type: 'text', placeholder: 'Auto' },
   { cle: 'format_mi_temps',        label: 'Nb mi-temps',               type: 'select', options: ['1', '2'] },
   { cle: 'duree_mi_temps_min',     label: 'Durée mi-temps (min)',      type: 'number' },
@@ -53,6 +53,13 @@ const FORMATS_APRESMIDI = [
 function formatApresMidiDe(cat) {
   const f = (cat && cat.format_apresmidi != null) ? String(cat.format_apresmidi).trim().toUpperCase() : '';
   return (f === 'LIBRE' || f === 'COUPE_PLATEAU' || f === 'CROISE_DIAGONAL') ? f : 'CROISE';
+}
+
+/** Mode d'attribution des terrains d'une catégorie : true = Auto (onglet Terrains), false = Manuel.
+ *  Défaut = Auto (colonne vide ou absente → auto). Seul 'non' bascule en manuel. */
+function terrainsAutoDe(cat) {
+  const v = (cat && cat.terrains_auto != null) ? String(cat.terrains_auto).trim().toLowerCase() : '';
+  return v !== 'non';
 }
 
 /** Nombre de qualifiés en Coupe lu dans param_format (JSON), défaut 2. */
@@ -147,6 +154,7 @@ async function initAdmin() {
   zoneReglages.addEventListener('submit', onReglagesSubmit);
   zoneReglages.addEventListener('click', onReglagesClick);
   zoneReglages.addEventListener('change', onReglagesChange);
+  zoneReglages.addEventListener('input', onReglagesInput); // vérif. terrains manuels en direct
 
   // Zone terrains : écouteurs délégués (recalcul de capacité en direct + boutons).
   const zoneTerrains = document.getElementById('zone-terrains');
@@ -908,6 +916,24 @@ function onReglagesChange(evenement) {
       if (carteChoisie) carteChoisie.classList.add('est-choisi'); // met en avant la carte sélectionnée
     }
   }
+  // Bascule Auto / Manuel des terrains : on révèle le champ de saisie (Manuel) ou l'info (Auto),
+  // et on (re)lance la vérification des conseils en mode Manuel.
+  if (evenement.target.name === 'terrains_auto') {
+    const bloc = evenement.target.closest('.bloc-terrains');
+    if (bloc) {
+      bloc.setAttribute('data-terrains', evenement.target.value === 'non' ? 'manuel' : 'auto');
+      verifierTerrainsBloc(bloc);
+    }
+  }
+}
+
+/**
+ * Vérifie les terrains saisis à la volée (mode Manuel), au fil de la frappe.
+ */
+function onReglagesInput(evenement) {
+  if (evenement.target.name === 'terrains') {
+    verifierTerrainsBloc(evenement.target.closest('.bloc-terrains'));
+  }
 }
 
 /**
@@ -953,6 +979,8 @@ async function rechargerReglages() {
 function injecterReglages(global, categories) {
   document.getElementById('zone-horaires').innerHTML = afficherHoraires(global);
   document.getElementById('zone-categories').innerHTML = afficherCategories(categories);
+  // Affiche d'emblée les conseils des catégories déjà en mode Manuel (sans attendre une frappe).
+  document.querySelectorAll('.bloc-terrains[data-terrains="manuel"]').forEach(verifierTerrainsBloc);
 }
 
 /**
@@ -1104,6 +1132,7 @@ function formulaireCategorie(cat) {
       '<div class="ligne-info">' +
         '<span class="badge">' + echapper(nom) + '</span>' +
       '</div>' +
+      blocTerrains(cat) +
       '<div class="grille-reglages">' + champs + '</div>' +
       blocFormatApresMidi(cat) +
       '<div class="ligne-action">' +
@@ -1113,6 +1142,152 @@ function formulaireCategorie(cat) {
       '</div>' +
     '</form>'
   );
+}
+
+/**
+ * Bloc « Terrains » d'une catégorie : choix Auto / Manuel.
+ *  - Auto (défaut) : les terrains sont attribués par l'onglet « Terrains & répartition ».
+ *    Le champ de saisie est masqué ; on affiche juste les terrains actuels à titre indicatif.
+ *  - Manuel : l'organisateur saisit lui-même les numéros, et une vérification en direct
+ *    (doublons entre catégories, terrain inexistant, catégorie sans terrain) le conseille.
+ * L'affichage conditionnel est piloté par l'attribut data-terrains (voir onReglagesChange),
+ * comme pour le format d'après-midi : pas de :has(), compatible tous téléphones.
+ */
+function blocTerrains(cat) {
+  const auto = terrainsAutoDe(cat);
+  const val = (cat && cat.terrains != null) ? String(cat.terrains) : '';
+  const infoActuel = val.trim()
+    ? '. Actuellement : <strong>' + echapper(val) + '</strong>'
+    : ' (pas encore répartis).';
+  return (
+    '<div class="bloc-terrains" data-terrains="' + (auto ? 'auto' : 'manuel') + '">' +
+      '<span class="format-libelle">Terrains</span>' +
+      '<div class="terr-mode">' +
+        '<label class="terr-choix"><input type="radio" name="terrains_auto" value="oui"' + (auto ? ' checked' : '') + '> Auto</label>' +
+        '<label class="terr-choix"><input type="radio" name="terrains_auto" value="non"' + (!auto ? ' checked' : '') + '> Manuel</label>' +
+      '</div>' +
+      // Champ manuel (toujours présent dans le DOM pour conserver la valeur ; masqué en mode Auto).
+      '<label class="terr-manuel reglage">' +
+        '<input class="r-input" type="text" name="terrains" value="' + echapper(val) + '" placeholder="ex : 1, 2">' +
+        '<span class="f-aide">Numéros des terrains dédiés à cette catégorie, séparés par des virgules.</span>' +
+      '</label>' +
+      // Info mode Auto.
+      '<p class="terr-auto-info">✅ Attribués automatiquement via l\'onglet « Terrains &amp; répartition »' + infoActuel + '</p>' +
+      // Zone de conseils (mode Manuel), remplie par verifierTerrainsBloc().
+      '<div class="terr-conseils" data-role="terr-conseils"></div>' +
+    '</div>'
+  );
+}
+
+/** Ensemble des numéros de mini-terrains QUI EXISTENT (pour la vérification d'existence).
+ *  Source : la répartition calculée dans cette session si dispo, sinon les terrains déjà
+ *  attribués aux catégories (dernière répartition appliquée). Vide = on ne peut pas vérifier. */
+function ensembleTerrainsExistants() {
+  const set = new Set();
+  if (repartitionCalculee && repartitionCalculee.parCategorie) {
+    Object.keys(repartitionCalculee.parCategorie).forEach(function (k) {
+      (repartitionCalculee.parCategorie[k] || []).forEach(function (id) {
+        const n = Number(id); if (!isNaN(n)) set.add(n);
+      });
+    });
+  }
+  (configCourante.categories || []).forEach(function (c) {
+    String(c.terrains || '').split(',').map(function (s) { return s.trim(); })
+      .forEach(function (t) { if (/^\d+$/.test(t)) set.add(Number(t)); });
+  });
+  return set;
+}
+
+/** Numéros de terrains utilisés par les AUTRES catégories → { numéro: [noms de catégories] }. */
+function terrainsParAutreCategorie(nom) {
+  const map = {};
+  (configCourante.categories || []).forEach(function (c) {
+    if (String(c.categorie) === String(nom) || !estPresente(c)) return;
+    String(c.terrains || '').split(',').map(function (s) { return s.trim(); })
+      .forEach(function (t) {
+        if (!/^\d+$/.test(t)) return;
+        const n = Number(t);
+        (map[n] = map[n] || []).push(String(c.categorie));
+      });
+  });
+  return map;
+}
+
+/**
+ * Analyse une saisie manuelle de terrains et renvoie la liste des conseils.
+ * @return {Array<{niveau:'ko'|'warn', texte:string}>}
+ */
+function analyserTerrainsManuels(nom, brut) {
+  const conseils = [];
+  const tokens = String(brut || '').split(',').map(function (s) { return s.trim(); })
+    .filter(function (s) { return s !== ''; });
+
+  // 1) Jetons non numériques.
+  tokens.filter(function (t) { return !/^\d+$/.test(t); }).forEach(function (t) {
+    conseils.push({ niveau: 'ko', texte: '« ' + t + ' » n\'est pas un numéro de terrain.' });
+  });
+
+  const nums = tokens.filter(function (t) { return /^\d+$/.test(t); }).map(Number);
+
+  // 2) Aucun terrain alors qu'il y a des équipes.
+  if (nums.length === 0) {
+    const nbEq = (equipesParCategorie()[nom] || 0);
+    if (nbEq > 0) conseils.push({ niveau: 'ko', texte: 'Cette catégorie a ' + nbEq + ' équipe(s) mais aucun terrain.' });
+    return conseils;
+  }
+
+  // 3) Doublons dans la saisie elle-même.
+  const vus = {};
+  nums.forEach(function (n) {
+    if (vus[n]) conseils.push({ niveau: 'warn', texte: 'Le terrain ' + n + ' est indiqué deux fois.' });
+    vus[n] = true;
+  });
+  const uniques = Object.keys(vus).map(Number);
+
+  // 4) Terrain aussi utilisé par une autre catégorie.
+  const parAutre = terrainsParAutreCategorie(nom);
+  uniques.forEach(function (n) {
+    if (parAutre[n] && parAutre[n].length) {
+      conseils.push({ niveau: 'warn', texte: 'Le terrain ' + n + ' est aussi utilisé par ' + parAutre[n].join(', ') + '.' });
+    }
+  });
+
+  // 5) Terrain inexistant dans la répartition (si on connaît la liste des terrains existants).
+  const existants = ensembleTerrainsExistants();
+  if (existants.size) {
+    const max = Math.max.apply(null, Array.from(existants));
+    uniques.forEach(function (n) {
+      if (!existants.has(n)) {
+        conseils.push({ niveau: 'ko', texte: 'Le terrain ' + n + ' n\'existe pas dans ta répartition (les terrains vont de 1 à ' + max + ').' });
+      }
+    });
+  }
+
+  return conseils;
+}
+
+/** (Re)calcule et affiche les conseils d'un bloc Terrains (uniquement en mode Manuel). */
+function verifierTerrainsBloc(bloc) {
+  if (!bloc) return;
+  const zone = bloc.querySelector('[data-role="terr-conseils"]');
+  if (!zone) return;
+  if (bloc.getAttribute('data-terrains') !== 'manuel') { zone.innerHTML = ''; return; }
+
+  const form = bloc.closest('form.form-categorie');
+  const nom = form ? form.getAttribute('data-cat') : '';
+  const input = bloc.querySelector('input[name="terrains"]');
+  const brut = input ? input.value : '';
+
+  const conseils = analyserTerrainsManuels(nom, brut);
+  if (!conseils.length) {
+    zone.innerHTML = brut.trim()
+      ? '<p class="terr-conseil ok">✅ Terrains valides.</p>'
+      : '';
+    return;
+  }
+  zone.innerHTML = conseils.map(function (c) {
+    return '<p class="terr-conseil ' + c.niveau + '">⚠️ ' + echapper(c.texte) + '</p>';
+  }).join('');
 }
 
 /**
@@ -1195,7 +1370,9 @@ async function onEnregistrerCategorie(evenement) {
   CHAMPS_CATEGORIE.forEach(function (champ) {
     data[champ.cle] = form[champ.cle].value;
   });
-  if (typeof data.terrains === 'string') data.terrains = data.terrains.trim();
+  // Terrains : bloc dédié (Auto / Manuel). Le champ texte garde sa valeur même masqué en Auto.
+  data.terrains = form.terrains ? String(form.terrains.value).trim() : '';
+  data.terrains_auto = (form.terrains_auto && form.terrains_auto.value === 'non') ? 'non' : 'oui';
 
   // Format d'après-midi + son paramètre JSON (nbQualifiesCoupe seulement pour COUPE_PLATEAU).
   const fmt = (form.format_apresmidi && form.format_apresmidi.value) ? form.format_apresmidi.value : 'CROISE';
@@ -1248,7 +1425,7 @@ async function onAjouterCategorie(evenement) {
   if (existe) { afficherMessage(message, 'Cette catégorie existe déjà.', 'ko'); return; }
 
   const data = {
-    categorie: nom, presente: 'oui', terrains: '', nb_poules: '',
+    categorie: nom, presente: 'oui', terrains: '', terrains_auto: 'oui', nb_poules: '',
     format_mi_temps: '2', duree_mi_temps_min: '10', pause_mi_temps_min: '2',
     recup_entre_matchs_min: '15', format_apresmidi: 'CROISE', param_format: ''
   };
@@ -3015,13 +3192,28 @@ async function onAppliquerRepartition() {
   if (!repartitionCalculee) return;
   const message = document.getElementById('message-repartition');
   const par = repartitionCalculee.parCategorie;
-  const noms = Object.keys(par).filter(function (n) { return par[n] && par[n].length; });
-  if (noms.length === 0) { afficherMessage(message, 'Rien à appliquer.', 'ko'); return; }
+  const avecTerrains = Object.keys(par).filter(function (n) { return par[n] && par[n].length; });
+
+  // On ne touche QUE les catégories en mode Auto : celles en Manuel gardent les terrains saisis.
+  const catAuto = function (n) {
+    const c = (configCourante.categories || []).find(function (x) { return String(x.categorie) === n; });
+    return c && terrainsAutoDe(c);
+  };
+  const noms = avecTerrains.filter(catAuto);
+  const ignorees = avecTerrains.filter(function (n) { return !catAuto(n); });
+
+  if (noms.length === 0) {
+    afficherMessage(message, ignorees.length
+      ? 'Aucune catégorie en mode Auto : ' + ignorees.join(', ') + ' sont en Manuel (laissées telles quelles).'
+      : 'Rien à appliquer.', 'ko');
+    return;
+  }
 
   const ok = await dialogConfirmer(
-    'Écrire ces terrains dans les catégories ?\n\n' +
+    'Écrire ces terrains dans les catégories en mode Auto ?\n\n' +
     noms.map(function (n) { return n + ' → ' + par[n].join(', '); }).join('\n') +
-    '\n\nCela remplace le champ « Terrains » de chaque catégorie (pris en compte à la prochaine génération du planning).',
+    (ignorees.length ? '\n\nLaissées telles quelles (mode Manuel) : ' + ignorees.join(', ') + '.' : '') +
+    '\n\nCela remplace le champ « Terrains » de ces catégories (pris en compte à la prochaine génération du planning).',
     { ok: 'Appliquer' });
   if (!ok) return;
 
@@ -3041,7 +3233,9 @@ async function onAppliquerRepartition() {
     majEtatAvancement(); // le fil « Où en suis-je ? » suit les terrains appliqués aux catégories
     repartitionCalculee = null;
     document.getElementById('repartition-resultat').innerHTML = '';
-    await dialogAlerter('✅ Terrains appliqués aux catégories. Ils seront utilisés à la prochaine génération du planning.');
+    await dialogAlerter('✅ Terrains appliqués aux catégories en mode Auto (' + noms.join(', ') + ').' +
+      (ignorees.length ? '\nLaissées en Manuel : ' + ignorees.join(', ') + '.' : '') +
+      '\nIls seront utilisés à la prochaine génération du planning.');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
     if (bouton) { bouton.disabled = false; bouton.textContent = '✅ Appliquer aux catégories'; }

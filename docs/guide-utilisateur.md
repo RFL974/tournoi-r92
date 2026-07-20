@@ -109,8 +109,16 @@ Chaque catégorie (U8, U10, U12…) a ses propres réglages. **Toute catégorie 
 active** : elle apparaît dans le menu déroulant d'ajout d'équipe et entre dans la génération. (Pour
 retirer une catégorie, on la **supprime** — il n'y a plus de réglage « Présente ».)
 
-- **Terrains** : liste des terrains attribués à la catégorie, séparés par des virgules
-  (ex. `1,2,3`). Plus de terrains = plus de matchs en parallèle = journée plus courte.
+- **Terrains** : deux modes.
+  - **Auto** *(par défaut)* : tu ne saisis rien — les terrains sont **attribués par l'onglet
+    Terrains & répartition** (§1.4). La carte affiche juste les terrains actuels à titre indicatif.
+  - **Manuel** : tu saisis toi-même les numéros séparés par des virgules (ex. `1,2,3`). Une
+    **vérification en direct** te conseille au fil de la frappe : terrain déjà utilisé par une autre
+    catégorie, numéro qui n'existe pas dans ta répartition, catégorie sans terrain, saisie invalide.
+    *(Plus de terrains = plus de matchs en parallèle = journée plus courte.)*
+
+  > 💡 Le bouton **« Répartir / Appliquer »** de l'onglet Terrains **ne touche pas** les catégories en
+  > mode Manuel : elles gardent tes numéros.
 - **Nombre de poules** : **vide = automatique** (l'outil vise ~4 équipes par poule). Tu peux
   **forcer** un nombre ; si ce forçage rallonge la journée par rapport à l'auto, l'assistant
   d'arbitrage te le signale (§1.5).
@@ -173,8 +181,9 @@ Principes de la répartition :
   Rugby 2…) indique l'emplacement.
 
 **e) Appliquer.** Le bouton **✅ Appliquer aux catégories** écrit les numéros de terrain dans le champ
-**Terrains** de chaque catégorie. Ils seront utilisés **à la prochaine génération du planning**
-(§1.5). Tu peux toujours **ajuster à la main** le champ Terrains d'une catégorie après coup.
+**Terrains** des catégories **en mode Auto** (celles en **Manuel** sont laissées telles quelles). Ils
+seront utilisés **à la prochaine génération du planning** (§1.5). Pour fixer toi-même les terrains
+d'une catégorie, passe-la en **Manuel** dans ses réglages (§1.2).
 
 > 💡 À faire **avant** de générer les poules et le planning : c'est le champ **Terrains** rempli ici
 > qui sert à répartir les matchs sur les terrains dans le temps.
