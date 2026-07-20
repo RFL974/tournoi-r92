@@ -102,20 +102,26 @@ function doGet(e) {
   var params = (e && e.parameter) ? e.parameter : {};
   var action = params.action || 'ping';
   try {
+    // ⚡ PERFORMANCE : `ping` et `getAll` (servi par le cache) répondent SANS ouvrir le
+    // classeur — SpreadsheetApp.openById() coûte à lui seul ~0,5 s. Or getAll est l'appel
+    // MASSIF (page publique, milliers de spectateurs) : servi du cache, il doit répondre en
+    // quelques millisecondes. Plus chaque requête est courte, plus le plafond Apps Script
+    // (~30 exécutions simultanées) se libère vite → la même Web App encaisse bien plus de monde.
+    if (action === 'ping') return repondreJson({ ok: true, message: 'API Tournoi R92 en ligne' });
+    // getAll : copie mise en cache ~10 s. Un seul lecteur relit le Sheet par tranche, les
+    // autres reçoivent la copie instantanément. Le cache est rafraîchi à chaque écriture.
+    if (action === 'getAll') {
+      return ContentService.createTextOutput(snapshotJsonCache())
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     var classeur = SpreadsheetApp.openById(SHEET_ID);
     var resultat;
     switch (action) {
-      case 'ping':       resultat = { ok: true, message: 'API Tournoi R92 en ligne' }; break;
       case 'getConfig':  resultat = lireConfig(classeur); break;
       case 'getEquipes': resultat = lireOngletSimple(classeur, 'Equipes'); break;
       case 'getPoules':  resultat = lireOngletSimple(classeur, 'Poules'); break;
       case 'getMatchs':  resultat = lireOngletSimple(classeur, 'Matchs'); break;
-      // getAll est l'appel MASSIF (page publique, milliers de spectateurs). On sert une
-      // copie mise en cache ~10 s : un seul lecteur relit le Sheet par tranche, les autres
-      // reçoivent la copie instantanément. Le cache est rafraîchi à chaque écriture.
-      case 'getAll':
-        return ContentService.createTextOutput(snapshotJsonCache(classeur))
-          .setMimeType(ContentService.MimeType.JSON);
       case 'getClassement': resultat = calculerClassement(classeur); break;
       case 'getHistorique': resultat = lireHistorique(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
@@ -143,25 +149,46 @@ function construireSnapshot(classeur) {
  * getAll mis en CACHE (~10 s) : gros gain de capacité pour la page publique. Un seul
  * appel par tranche de 10 s relit le Sheet ; les autres reçoivent la copie en mémoire.
  * Renvoie directement la CHAÎNE JSON (pas de re-sérialisation).
+ *
+ * Le classeur n'est ouvert (openById ≈ 0,5 s) QUE si le cache est vide : le cas courant
+ * (cache chaud) répond en quelques millisecondes sans toucher au Sheet.
+ *
+ * ANTI-POINTE (« cache stampede ») : à l'expiration du cache, des DIZAINES de spectateurs
+ * pourraient relire le Sheet en même temps et saturer d'un coup le plafond d'exécutions
+ * simultanées. On élit donc UN « reconstructeur » via un jeton court (`snapshot_regen`) ;
+ * pendant qu'il relit le Sheet, les autres reçoivent la copie de SECOURS (les mêmes
+ * données, gardées plus longtemps — au pire ~10 s de retard, invisible pour du live).
  */
-function snapshotJsonCache(classeur) {
+function snapshotJsonCache() {
   var cache = CacheService.getScriptCache();
   var s = cache.get('snapshot_json');
   if (s) return s;
-  s = JSON.stringify(construireSnapshot(classeur));
+
+  // Cache expiré. Quelqu'un reconstruit déjà ? → on sert la copie de secours sans attendre.
+  var secours = cache.get('snapshot_json_secours');
+  if (secours && cache.get('snapshot_regen')) return secours;
+
+  // On devient LE reconstructeur : jeton posé ~15 s (filet si la reconstruction échoue).
+  try { cache.put('snapshot_regen', '1', 15); } catch (e) {}
+  s = JSON.stringify(construireSnapshot(SpreadsheetApp.openById(SHEET_ID)));
   mettreEnCacheSnapshot(cache, s);
+  try { cache.remove('snapshot_regen'); } catch (e) {}
   return s;
 }
 
 /**
- * Met le JSON en cache serveur, SAUF s'il dépasse la limite de CacheService (100 Ko) :
- * au-delà, put() échouerait et le cache resterait vide (chaque appel relirait le Sheet).
- * Dans ce cas rare (très gros tournoi), mieux vaut ne pas cacher et compter sur le relais CDN.
+ * Met le JSON en cache serveur (copie fraîche ~10 s + copie de secours longue durée,
+ * servie pendant les reconstructions), SAUF s'il dépasse la limite de CacheService
+ * (100 Ko) : au-delà, put() échouerait et le cache resterait vide (chaque appel relirait
+ * le Sheet). Dans ce cas rare (très gros tournoi), mieux vaut compter sur le relais CDN.
  */
 function mettreEnCacheSnapshot(cache, json) {
   try {
     // Marge sous 100 Ko (100 000 octets) ; longueur JS ≈ octets pour de l'ASCII/JSON.
-    if (json.length < 95000) cache.put('snapshot_json', json, 10);
+    if (json.length < 95000) {
+      cache.put('snapshot_json', json, 10);             // copie fraîche (10 s)
+      cache.put('snapshot_json_secours', json, 21600);  // copie de secours (6 h, le max)
+    }
   } catch (e) { /* cache indisponible : on ignore, getAll relira le Sheet */ }
 }
 
@@ -760,9 +787,13 @@ function enregistrerScore(classeur, data) {
   } catch (errArchive) { Logger.log('Archivage historique ignoré : ' + errArchive); }
 
   // 7) Propagation du vainqueur dans le tableau (immédiate, dans la même action).
+  //    ⚡ On met à jour l'objet DÉJÀ EN MÉMOIRE (mêmes valeurs que celles écrites à
+  //    l'étape 5) au lieu de relire la ligne dans le Sheet : un aller-retour de moins
+  //    pendant que le verrou d'écriture est tenu.
   var propagation = null;
   if (estCoupe) {
-    try { propagation = propagerVainqueurBracket(classeur, onglet, ligne); }
+    m.score_A = sa; m.score_B = sb; m.statut = 'terminé'; m.vainqueur = vainqueur;
+    try { propagation = propagerVainqueurBracket(onglet, m); }
     catch (errProp) { Logger.log('Propagation bracket ignorée : ' + errProp); }
   }
 
@@ -846,11 +877,11 @@ function vainqueurPerdantCoupe(o) {
  *  - place le VAINQUEUR dans le match suivant (emplacement place_suivant) ;
  *  - si le match suivant était déjà joué et change d'équipe, RÉINITIALISE la chaîne aval ;
  *  - pour une DEMI_FINALE, recalcule la petite finale (perdants des deux demi-finales).
+ * @param m  l'objet match À JOUR (déjà en mémoire chez l'appelant : évite de relire la
+ *           ligne dans le Sheet — un aller-retour de moins sous le verrou d'écriture).
  * @return { actions:[…] } liste lisible de ce qui a été fait (ou null si rien).
  */
-function propagerVainqueurBracket(classeur, onglet, ligne) {
-  var nc = onglet.getLastColumn();
-  var m = objetDepuisLigneMatch(onglet.getRange(ligne, 1, 1, nc).getValues()[0]);
+function propagerVainqueurBracket(onglet, m) {
   if (String(m.sous_tableau).toUpperCase() !== 'COUPE') return null;
   var vp = vainqueurPerdantCoupe(m);
   if (!vp) return null;
@@ -889,16 +920,16 @@ function propagerVainqueurBracket(classeur, onglet, ligne) {
  * finale avait déjà un score, on la réinitialise. Renvoie true si quelque chose a changé.
  */
 function majPetiteFinale(onglet, categorie) {
-  var pf = trouverMatchs(onglet, function (o) {
-    return String(o.sous_tableau).toUpperCase() === 'COUPE' && String(o.tour) === 'PETITE_FINALE'
-      && String(o.categorie) === String(categorie);
-  })[0];
+  // ⚡ UN SEUL balayage de l'onglet pour trouver petite finale ET demi-finales
+  // (avant : deux lectures complètes → deux fois plus de temps sous le verrou).
+  var coupeCat = trouverMatchs(onglet, function (o) {
+    return String(o.sous_tableau).toUpperCase() === 'COUPE' && String(o.categorie) === String(categorie);
+  });
+  var pf = coupeCat.filter(function (x) { return String(x.obj.tour) === 'PETITE_FINALE'; })[0];
   if (!pf) return false;
 
-  var demis = trouverMatchs(onglet, function (o) {
-    return String(o.sous_tableau).toUpperCase() === 'COUPE' && String(o.tour) === 'DEMI_FINALE'
-      && String(o.categorie) === String(categorie);
-  }).sort(function (a, b) { return String(a.obj.id_match).localeCompare(String(b.obj.id_match)); });
+  var demis = coupeCat.filter(function (x) { return String(x.obj.tour) === 'DEMI_FINALE'; })
+    .sort(function (a, b) { return String(a.obj.id_match).localeCompare(String(b.obj.id_match)); });
 
   var perdants = [];
   demis.forEach(function (d) {

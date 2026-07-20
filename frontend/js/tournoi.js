@@ -18,12 +18,15 @@
 let equipes = [];
 let matchs = [];
 let config = { global: {} };
+let nomParEquipe = {};       // index id_equipe → nom (reconstruit à chaque chargement)
 let derniereSignature = '';
 let categorieActive = '';
+let minuteurRafraichissement = null; // minuteur du prochain rafraîchissement (null = en pause)
 const CLE_EQUIPE = 'r92_mon_equipe';
 const CLE_CATEGORIE = 'r92_ma_categorie';
 const INTERVALLE_MS = 15000; // rafraîchissement auto ~15 s (marge sous le plafond Apps Script)
 const JITTER_MS = 4000;      // étalement aléatoire : évite que tous les spectateurs appellent en même temps
+const DELAI_REQUETE_MS = 12000; // délai max d'une requête : au-delà on abandonne (réseau mobile qui « pend »)
 
 /* ==========================================================================
    DÉMARRAGE / NAVIGATION
@@ -49,6 +52,15 @@ async function initTournoi() {
     afficherTout();
   });
 
+  // ⚡ Onglet remis au premier plan (téléphone déverrouillé, retour depuis une autre
+  // appli) : on recharge TOUT DE SUITE (données fraîches sans attendre jusqu'à ~19 s)
+  // et on relance le rafraîchissement automatique s'il s'était mis en pause.
+  // Le garde-fou « minuteur déjà en place » empêche de lancer deux boucles en parallèle.
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden || minuteurRafraichissement != null) return;
+    planifierProchainChargement(0); // recharge immédiate + boucle relancée
+  });
+
   await charger(true);
   planifierProchainChargement();
 }
@@ -58,11 +70,21 @@ async function initTournoi() {
  * chaque spectateur poll à un instant légèrement différent, ce qui évite les pics où les
  * 1300 appellent le serveur à la même seconde. On enchaîne APRÈS la fin du chargement
  * précédent (pas de setInterval) pour ne jamais empiler les requêtes.
+ *
+ * ⚡ PAUSE EN ARRIÈRE-PLAN : si l'onglet est caché au moment de recharger (téléphone
+ * verrouillé, autre appli ouverte), on NE recharge PAS et on arrête la boucle — personne
+ * ne regarde, autant épargner le serveur (des centaines de téléphones « en poche » qui
+ * appelleraient pour rien) et la batterie. Le retour au premier plan relance immédiatement
+ * (écouteur visibilitychange posé dans initTournoi).
+ *
+ * @param {number} [delaiMs] délai imposé (ex : 0 pour une reprise immédiate) ;
+ *                           sans argument → intervalle normal + étalement aléatoire.
  */
-function planifierProchainChargement() {
-  const delai = INTERVALLE_MS + Math.floor(Math.random() * JITTER_MS);
-  setTimeout(function () {
-    Promise.resolve(charger(false)).finally(planifierProchainChargement);
+function planifierProchainChargement(delaiMs) {
+  const delai = (delaiMs != null) ? delaiMs : INTERVALLE_MS + Math.floor(Math.random() * JITTER_MS);
+  minuteurRafraichissement = setTimeout(function () {
+    if (document.hidden) { minuteurRafraichissement = null; return; } // pause (reprise au retour)
+    Promise.resolve(charger(false)).finally(function () { planifierProchainChargement(); });
   }, delai);
 }
 
@@ -82,18 +104,26 @@ function basculer(cible) {
  * une grosse audience ; repli automatique sur Apps Script si le relais est vide ou en panne.
  * On NE met PAS de paramètre anti-cache ici : on veut au contraire profiter du cache du CDN
  * (partagé entre tous les spectateurs). Le Worker fixe une fraîcheur courte (~8 s).
+ *
+ * ⚡ Chaque requête a un DÉLAI MAXIMUM (DELAI_REQUETE_MS) : au-delà, elle est abandonnée.
+ * Sans ça, une connexion mobile qui « pend » indéfiniment gèlerait la boucle de
+ * rafraîchissement (elle n'enchaîne qu'après la fin de la requête précédente).
  */
 async function lireDonnees() {
   if (typeof SNAPSHOT_URL === 'string' && SNAPSHOT_URL) {
     try {
-      const r = await fetch(SNAPSHOT_URL);
-      if (r.ok) {
-        const d = await r.json();
-        if (d && !d.error && d.matchs) return d; // snapshot valide
-      }
-    } catch (e) { /* relais indisponible → on bascule sur Apps Script */ }
+      const controleur = new AbortController();
+      const minuteur = setTimeout(function () { controleur.abort(); }, DELAI_REQUETE_MS);
+      try {
+        const r = await fetch(SNAPSHOT_URL, { signal: controleur.signal });
+        if (r.ok) {
+          const d = await r.json();
+          if (d && !d.error && d.matchs) return d; // snapshot valide
+        }
+      } finally { clearTimeout(minuteur); }
+    } catch (e) { /* relais indisponible ou trop lent → on bascule sur Apps Script */ }
   }
-  return apiGet('getAll'); // repli (ou mode sans relais)
+  return apiGet('getAll', null, { delaiMs: DELAI_REQUETE_MS }); // repli (ou mode sans relais)
 }
 
 /** (Re)charge les données. Ne ré-affiche que si elles ont changé (évite le clignotement). */
@@ -104,6 +134,11 @@ async function charger(premier) {
     equipes = data.equipes || [];
     matchs = data.matchs || [];
     config = data.config || { global: {} };
+    // ⚡ Index id → nom : nomEquipe() est appelé des centaines de fois par affichage
+    // (cartes, classements, bracket…). Une recherche directe dans cet index évite de
+    // reparcourir toute la liste des équipes à chaque appel.
+    nomParEquipe = {};
+    equipes.forEach(function (e) { nomParEquipe[e.id_equipe] = e.nom_equipe; });
     majHeure();
     majTitre(); // le bandeau prend le nom de l'événement s'il est renseigné
 
@@ -873,9 +908,9 @@ function listeResultats(liste) {
    OUTILS
    ========================================================================== */
 
+/** Nom lisible d'une équipe (lecture directe dans l'index construit à chaque chargement). */
 function nomEquipe(id) {
-  const e = equipes.find(function (x) { return x.id_equipe === id; });
-  return e ? e.nom_equipe : id;
+  return Object.prototype.hasOwnProperty.call(nomParEquipe, id) ? nomParEquipe[id] : id;
 }
 
 /* estTermine() et echapper() sont désormais dans commun.js. */

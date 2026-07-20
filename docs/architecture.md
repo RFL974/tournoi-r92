@@ -119,9 +119,20 @@ consulter le live depuis leur téléphone). Deux charges à distinguer :
 
 **Solution en place (gratuite, sans nouvel outil) :**
 - **Cache serveur** (`CacheService`) sur `getAll` (~10 s) : un seul appel relit le Sheet par
-  tranche, les autres reçoivent la copie en mémoire (~200 ms). Rafraîchi à chaque écriture.
+  tranche, les autres reçoivent la copie en mémoire. Rafraîchi à chaque écriture.
+- **Réponse sans ouvrir le Sheet** : quand le cache est chaud (le cas ~99 % du temps), `getAll`
+  répond **sans** `SpreadsheetApp.openById()` (~0,5 s économisé par requête). Des requêtes
+  courtes libèrent vite le plafond d'exécutions simultanées → capacité démultipliée.
+- **Anti-pointe à l'expiration du cache** : un seul « reconstructeur » relit le Sheet (jeton
+  court) pendant que les autres reçoivent une **copie de secours** (~10 s de retard max) —
+  jamais de vague de relectures simultanées.
 - **Étalement (jitter)** côté navigateur : rafraîchissement auto **~15 s** avec décalage aléatoire,
   pour éviter que tous les spectateurs appellent à la même seconde.
+- **Pause en arrière-plan** : un téléphone verrouillé (ou un onglet caché) **cesse d'appeler** le
+  serveur ; le retour au premier plan recharge immédiatement. Des centaines de téléphones « en
+  poche » ne pèsent plus rien.
+- **Délai maximum par requête** (~12 s) : une connexion mobile qui « pend » est abandonnée au
+  lieu de geler la boucle de rafraîchissement.
 
 **Solution de secours (dormante) :** un **relais CDN Cloudflare** (`cloudflare/worker-tournoi.js`)
 vers lequel Apps Script pousse un instantané à chaque écriture ; la page publique peut le lire au

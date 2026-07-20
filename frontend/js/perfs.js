@@ -27,6 +27,7 @@ let matchs = [];
 let historique = [];
 const INTERVALLE_MS = 60000;
 let derniereSignature = '';
+let minuteurPerfs = null; // minuteur du prochain rafraîchissement (null = en pause)
 
 /** Point d'entrée : onglets + chargement initial + rafraîchissement automatique. */
 async function initPerfs() {
@@ -36,8 +37,29 @@ async function initPerfs() {
   const btn = document.getElementById('btn-refresh-perfs');
   if (btn) btn.addEventListener('click', function () { charger(false); });
 
+  // ⚡ Retour au premier plan : recharge immédiate + boucle relancée si elle était en pause
+  // (même principe que la page publique — voir tournoi.js).
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden || minuteurPerfs != null) return;
+    planifierProchainChargementPerfs(0);
+  });
+
   await charger(true);
-  setInterval(function () { charger(false); }, INTERVALLE_MS);
+  planifierProchainChargementPerfs();
+}
+
+/**
+ * ⚡ Planifie le prochain rafraîchissement automatique. On enchaîne APRÈS la fin du
+ * chargement précédent (et non avec setInterval) : une requête lente ne peut plus
+ * s'empiler sur la suivante. Onglet caché → pause (reprise via visibilitychange).
+ * @param {number} [delaiMs] délai imposé (0 = reprise immédiate) ; sinon intervalle normal.
+ */
+function planifierProchainChargementPerfs(delaiMs) {
+  const delai = (delaiMs != null) ? delaiMs : INTERVALLE_MS;
+  minuteurPerfs = setTimeout(function () {
+    if (document.hidden) { minuteurPerfs = null; return; } // pause (personne ne regarde)
+    Promise.resolve(charger(false)).finally(function () { planifierProchainChargementPerfs(); });
+  }, delai);
 }
 
 /** Bascule d'onglet (affiche/masque les deux vues). */
@@ -51,11 +73,14 @@ function basculer(cible) {
 /** (Re)charge tournoi en cours (getAll) + saison (getHistorique). Ne réaffiche que si ça change. */
 async function charger(premier) {
   try {
-    const data = await apiGet('getAll');
+    // ⚡ Les DEUX lectures partent EN MÊME TEMPS (Promise.all) au lieu de l'une après
+    // l'autre : la page se charge en ~1 temps de requête au lieu de ~2.
     // L'historique peut ne pas être dispo (backend pas encore redéployé) : on tolère
     // l'échec pour que « Ce tournoi » fonctionne toujours ; « Saison » sera juste vide.
-    let hist = [];
-    try { hist = await apiGet('getHistorique'); } catch (e) { hist = []; }
+    const [data, hist] = await Promise.all([
+      apiGet('getAll'),
+      apiGet('getHistorique').catch(function () { return []; })
+    ]);
 
     const signature = JSON.stringify(data.matchs) + '|' + JSON.stringify(data.equipes) + '|' + JSON.stringify(hist);
     equipes = data.equipes || [];
