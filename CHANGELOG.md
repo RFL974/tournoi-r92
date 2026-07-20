@@ -5,6 +5,70 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Qualité du code : mutualisation des utilitaires + nettoyage (audit) — 2026-07-20
+Refonte **sans aucun changement de fonctionnalité** (qualité/maintenabilité uniquement).
+⚠️ **frontend à publier** ET (pour les points backend) **backend à redéployer** (comportement
+identique, aucune migration de données).
+
+**Frontend :**
+- Nouveau fichier **`frontend/js/commun.js`** : `echapper`, `estTermine`, `afficherMessage`,
+  `libelleTourFr`, `comparerCategorie` écrits **une seule fois** au lieu d'être recopiés dans les
+  4 pages. Chargé en premier dans chaque page HTML (après `config.js`). Copies retirées de
+  `admin.js` / `tournoi.js` / `saisie.js` / `perfs.js`.
+- **`admin.js`** : nouveau helper `rechargerEtRendre(options)` qui remplace le bloc
+  « recharger `getAll` + re-rendre » recopié dans 6 handlers (rafraîchir / générer / recalculer /
+  après-midi / réinitialiser / éditer les poules). Suppression de la fonction morte `nbTuiles`.
+
+**Backend (`Code.gs`) :**
+- `indexEnteteCategories(donnees)` : la recherche de la ligne d'en-tête « categorie » (recopiée
+  **5 fois**) est factorisée en un seul helper.
+- `ecrireParamsGlobaux(onglet, paires)` : écriture de plusieurs paramètres globaux en **une passe**
+  (moins d'allers-retours avec le Sheet) à la génération et au recalcul. **Prouvé strictement
+  équivalent** à des écritures successives (test d'équivalence : cas tout-existant / tout-nouveau /
+  mixtes).
+
+**Répartition des terrains (`admin.js`) :**
+- `allouerTerrains` (~224 lignes, la fonction la plus complexe du frontend) découpée en
+  **7 fonctions nommées** : `attribuerTerrainsEntiers` (étape 1), `attribuerDemisTerrains` (étape 2),
+  `construireFilesAttribution` (étape 3), `poserTerrainSolo` / `poserTerrainScinde` (poseurs),
+  `attribuerGrandsTerrains` (étape 4), `mixerEnSecours` (étape 5) + un court orchestrateur.
+  L'état de travail (compteur de numérotation, avertissements, couleurs…) passe par un **contexte
+  explicite `ctx`** au lieu de variables de closure dispersées. **Prouvé strictement équivalent** :
+  batterie de **429 scénarios** déterministes (cas limites + générés) comparant l'ancien et le
+  nouveau code — 0 écart sur les résultats ET l'état muté.
+- Suppression de `cellulesGrille` (code mort, 0 appelant — comme `nbTuiles`).
+
+- Vérifié : syntaxe OK sur tous les JS + `Code.gs` ; zéro erreur console sur les 4 pages ; tests
+  d'équivalence au vert (batch Config 6/6 — dont clé dupliquée —, allouerTerrains 429/429) ;
+  parcours réel « Répartir les terrains » exercé dans le navigateur avec la config en ligne
+  (carte SVG conforme, numérotation continue).
+- **Revue croisée multi-relecteurs** (équivalence / intégration / régression, chaque finding
+  contre-vérifié) : aucun bug fonctionnel ; 5 points mineurs relevés et **tous corrigés** —
+  ordre du vidage des arbitrages restauré dans la réinitialisation (chemin d'erreur réseau),
+  `ecrireParamsGlobaux` aligné sur « première occurrence gagnante » comme l'ancien code,
+  commentaires d'ordre des scripts (admin.html, saisie.html), commentaire orphelin (tournoi.js),
+  `frontend/README.md` complété avec `js/commun.js`.
+
+**Planification (`Code.gs`, étape finale de l'audit) :**
+- `analyserArbitrages` / `analyserArbitragesMatin` (jumelles à 95 %) → noyau commun
+  `analyserArbitragesSelon(config, equipes, cible, projeter)` + deux enrobages d'une ligne.
+- Nouveaux helpers `listeTerrainsCategorie(cat)` (parsing « 1, 2 » recopié 3×) et
+  `terrainPlusTot(terrains, terrainLibre)` (sélection du terrain libre recopiée 2×).
+- Les deux boucles de planning (matin / après-midi) restent **volontairement séparées** :
+  leurs contraintes diffèrent réellement (amorçage des disponibilités, saut de pause déjeuner
+  vs barrière de tour de Coupe, équipes inconnues des brackets, forme du résultat) — les
+  fusionner aurait produit une fonction à options illisible. Un commentaire l'explique dans
+  le code.
+- **Prouvé strictement équivalent** : banc de **842 comparaisons** (planning déterministe,
+  tirage aléatoire seedé, affectation manuelle imposée, projections matin/journée, arbitrages,
+  après-midi direct avec barrière de Coupe, équipes inconnues, `CROISE_DIAGONAL`) — 0 écart.
+- **Seconde revue adversariale** (2 lentilles + contre-vérification) : aucun bug de
+  comportement ; 3 trous de couverture relevés dans les bancs de test eux-mêmes, **tous
+  comblés** — les bancs comparent désormais les fonctions chargées depuis les **vrais
+  fichiers** (référence = git HEAD d'avant le chantier, pas des copies collées), la partie
+  « params Config » et les sites d'`indexEnteteCategories` sont exercés (23 vérifications),
+  et les formats d'après-midi non couverts ont leur cas direct.
+
 ### Terrains par catégorie : mode Auto / Manuel + vérification — 2026-07-20
 Le champ **Terrains** d'une catégorie devient un choix **Auto / Manuel** (défaut **Auto**).
 ⚠️ **backend à redéployer** (nouvelle colonne `terrains_auto`, migration douce) + frontend à publier.

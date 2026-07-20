@@ -75,12 +75,7 @@ function majHeureSaisie() {
   if (el) el.textContent = 'Mis à jour à ' + new Date().toLocaleTimeString('fr-FR');
 }
 
-/** Ordre des catégories : par le nombre qu'elles contiennent (U8 < U10 < U12), sinon alphabétique. */
-function comparerCategorie(a, b) {
-  const ma = String(a).match(/\d+/), mb = String(b).match(/\d+/);
-  if (ma && mb && parseInt(ma[0], 10) !== parseInt(mb[0], 10)) return parseInt(ma[0], 10) - parseInt(mb[0], 10);
-  return String(a).localeCompare(String(b));
-}
+/* comparerCategorie() est désormais dans commun.js (partagé avec tournoi.js). */
 
 /**
  * Remplit le menu déroulant des catégories et fixe la catégorie active (mémorisée si
@@ -109,18 +104,7 @@ function nomEquipe(id) {
   return e ? e.nom_equipe : id;
 }
 
-/** Libellé français d'un tour de bracket (Coupe). */
-function libelleTourFr(tour) {
-  switch (String(tour)) {
-    case 'FINALE': return 'Finale';
-    case 'DEMI_FINALE': return 'Demi-finale';
-    case 'PETITE_FINALE': return 'Petite finale';
-    case 'QUART_DE_FINALE': return 'Quart de finale';
-    case 'HUITIEME_DE_FINALE': return 'Huitième de finale';
-    case 'SEIZIEME_DE_FINALE': return 'Seizième de finale';
-    default: return String(tour || '');
-  }
-}
+/* libelleTourFr() est désormais dans commun.js (partagé avec tournoi.js). */
 
 /** Vrai si le match est un match de Coupe (élimination directe). */
 function estMatchCoupe(m) {
@@ -451,30 +435,7 @@ function verrouiller(carte) {
   }
 }
 
-/* --------------------------------------------------------------------------
-   PETITES AIDES (identiques à admin.js pour rester cohérent)
-   -------------------------------------------------------------------------- */
-
-/** Affiche un message de retour (succès/erreur) sous le match. */
-function afficherMessage(element, texte, type) {
-  element.textContent = texte;
-  element.className = 'message-form ' + (type === 'ok' ? 'ok' : 'ko');
-}
-
-/**
- * Vrai si le statut vaut « terminé », quelle que soit la forme du « é » (NFC/NFD).
- * Le Sheet peut renvoyer un « é » décomposé ; on teste le préfixe ASCII « termin ».
- */
-function estTermine(statut) {
-  return /^\s*termin/i.test(String(statut));
-}
-
-/** Neutralise les caractères spéciaux HTML (sécurité d'affichage). */
-function echapper(texte) {
-  return String(texte)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+/* afficherMessage(), estTermine() et echapper() sont désormais dans commun.js. */
 
 /* On lance tout une fois la page prête. */
 document.addEventListener('DOMContentLoaded', initSaisie);

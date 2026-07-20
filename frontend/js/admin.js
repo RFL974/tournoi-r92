@@ -746,6 +746,45 @@ function onClicEtatAvancement(evenement) {
 }
 
 /**
+ * Recharge tout l'état du tournoi depuis le backend (getAll) et ré-affiche les vues « live »
+ * TOUJOURS communes : planning, préparation de l'après-midi, tableau de bord. Selon les options,
+ * ré-affiche AUSSI les zones qui ont pu changer selon l'action déclencheuse.
+ *
+ * Point de passage UNIQUE : avant, ce bloc « recharger getAll + réassigner l'état + re-rendre »
+ * était recopié à l'identique dans chaque handler (rafraîchir / générer / recalculer / après-midi
+ * / réinitialiser / éditer les poules). Un seul endroit à faire évoluer désormais.
+ *
+ * @param {Object} [opt]
+ * @param {boolean} [opt.reglages]    ré-injecter les formulaires de réglages (horaires + catégories)
+ * @param {boolean} [opt.selectCats]  re-remplir la liste déroulante des catégories (ajout d'équipe)
+ * @param {boolean} [opt.terrains]    ré-injecter la zone terrains physiques / répartition
+ * @param {boolean} [opt.equipes]     ré-afficher la liste des équipes
+ * @param {boolean} [opt.infos]       ré-afficher les infos du tournoi (nom/date/affiche)
+ * @param {boolean} [opt.publication] ré-afficher l'état de publication
+ * @param {boolean} [opt.heure]       mettre à jour l'horodatage « Mis à jour à … »
+ */
+async function rechargerEtRendre(opt) {
+  opt = opt || {};
+  const data = await apiGet('getAll'); // { config, equipes, poules, matchs }
+  configCourante = data.config;
+  equipesCourantes = data.equipes;
+  matchsCourants = data.matchs || [];
+
+  if (opt.reglages)   injecterReglages(data.config.global, data.config.categories);
+  if (opt.terrains)   injecterTerrains();
+  if (opt.selectCats) remplirSelectCategories(data.config.categories);
+  if (opt.equipes)    afficherEquipes(data.equipes);
+
+  afficherPlanning(data.poules, data.matchs);
+  majApresMidi();
+
+  if (opt.infos)       majInfosTournoi();
+  if (opt.publication) majPublication();
+  majTableauBord();
+  if (opt.heure)       majHeureAdmin();
+}
+
+/**
  * Rafraîchit les données du tournoi (scores saisis sur les téléphones, etc.) et met à jour
  * les vues « live » : tableau de bord, planning, équipes, état de préparation de l'après-midi.
  * On NE re-rend PAS les formulaires de réglages ni le formulaire d'infos, pour ne pas écraser
@@ -757,16 +796,7 @@ async function rafraichirAdmin() {
   bouton.disabled = true;
   bouton.textContent = '⏳ …';
   try {
-    const data = await apiGet('getAll');
-    configCourante = data.config;
-    equipesCourantes = data.equipes;
-    matchsCourants = data.matchs || [];
-    afficherEquipes(data.equipes);
-    afficherPlanning(data.poules, data.matchs);
-    majApresMidi();
-    majPublication();
-    majTableauBord();
-    majHeureAdmin();
+    await rechargerEtRendre({ equipes: true, publication: true, heure: true });
   } catch (err) {
     // On garde l'affichage actuel en cas d'erreur réseau.
   } finally {
@@ -867,20 +897,11 @@ async function onReinitialiser() {
     const res = await ecrireAdmin('reinitialiserTournoi', {});
 
     // On recharge tout l'état depuis le backend et on ré-affiche la page.
-    const data = await apiGet('getAll');
-    configCourante = data.config;
-    equipesCourantes = data.equipes;
-    matchsCourants = data.matchs || [];
-    injecterReglages(data.config.global, data.config.categories);
-    injecterTerrains();
-    remplirSelectCategories(data.config.categories);
-    afficherEquipes(data.equipes);
-    afficherPlanning(data.poules, data.matchs);
+    await rechargerEtRendre({ reglages: true, terrains: true, selectCats: true,
+                              equipes: true, infos: true, publication: true });
+    // Après le rechargement (comme avant le refactor) : en cas d'erreur réseau,
+    // l'affichage — pistes d'arbitrage comprises — reste intact.
     document.getElementById('arbitrages').innerHTML = '';
-    majApresMidi();
-    majInfosTournoi();
-    majPublication();
-    majTableauBord();
 
     const nbC = (res && res.nb_categories != null) ? res.nb_categories : '?';
     const nbE = (res && res.nb_equipes != null) ? res.nb_equipes : '?';
@@ -1802,15 +1823,7 @@ async function genererMaintenant() {
     afficherArbitrages(res); // pistes d'ajustement si dépassement (heure de fin manuelle)
 
     // On recharge tout : planning + réglages (l'heure de fin auto a pu changer).
-    const data = await apiGet('getAll');
-    configCourante = data.config;
-    equipesCourantes = data.equipes;
-    matchsCourants = data.matchs || [];
-    injecterReglages(data.config.global, data.config.categories);
-    remplirSelectCategories(data.config.categories);
-    afficherPlanning(data.poules, data.matchs);
-    majApresMidi(); // le matin vient de changer → recalcul de l'état
-    majTableauBord();
+    await rechargerEtRendre({ reglages: true, selectCats: true });
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
@@ -1893,15 +1906,7 @@ async function onRecalculerHoraires() {
     afficherMessage(message, texte, avert ? 'ko' : 'ok');
 
     // On recharge tout (comme après une génération), sans toucher aux formulaires en cours.
-    const data = await apiGet('getAll');
-    configCourante = data.config;
-    equipesCourantes = data.equipes;
-    matchsCourants = data.matchs || [];
-    injecterReglages(data.config.global, data.config.categories);
-    remplirSelectCategories(data.config.categories);
-    afficherPlanning(data.poules, data.matchs);
-    majApresMidi();
-    majTableauBord();
+    await rechargerEtRendre({ reglages: true, selectCats: true });
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
@@ -1962,14 +1967,7 @@ async function onGenererApresMidi() {
     afficherMessage(message, texte, avert ? 'ko' : 'ok');
 
     // On recharge le planning (matin + après-midi) ET les réglages (l'heure de fin auto a changé).
-    const data = await apiGet('getAll');
-    configCourante = data.config;
-    equipesCourantes = data.equipes;
-    matchsCourants = data.matchs || [];
-    injecterReglages(data.config.global, data.config.categories);
-    afficherPlanning(data.poules, data.matchs);
-    majApresMidi();
-    majTableauBord();
+    await rechargerEtRendre({ reglages: true });
   } catch (erreur) {
     // Les garde-fous backend (scores du matin incomplets…) arrivent ici.
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
@@ -2158,11 +2156,7 @@ function badgeAvancement(saisis, total) {
    -------------------------------------------------------------------------- */
 
 /** Tri des catégories par nombre (U8 < U10 < U12), sinon alphabétique. */
-function comparerCat(a, b) {
-  const ma = String(a).match(/\d+/), mb = String(b).match(/\d+/);
-  if (ma && mb && parseInt(ma[0], 10) !== parseInt(mb[0], 10)) return parseInt(ma[0], 10) - parseInt(mb[0], 10);
-  return String(a).localeCompare(String(b));
-}
+/* comparerCat() est désormais comparerCategorie() dans commun.js. */
 
 /** Nom lisible d'une équipe (pour l'éditeur de poules). */
 function nomEquipeAdmin(id) {
@@ -2218,7 +2212,7 @@ function afficherEditionPoules() {
     '<p class="note-generation">Clique sur ✕ pour sortir une équipe, puis réaffecte-la à une poule. ' +
     'L\'équilibre du nombre d\'équipes par poule est indiqué. En validant, les matchs du matin sont recalculés.</p>';
 
-  Object.keys(editionPoules).sort(comparerCat).forEach(function (cat) {
+  Object.keys(editionPoules).sort(comparerCategorie).forEach(function (cat) {
     const modele = editionPoules[cat];
     const noms = Object.keys(modele.pools).sort();
     const tailles = noms.map(function (n) { return modele.pools[n].length; });
@@ -2331,14 +2325,7 @@ async function onEnregistrerPoules() {
     const res = await ecrireAdmin('reorganiserPoulesMatin', { assignation: JSON.stringify(assignation) });
     editionPoules = null;
     document.getElementById('edition-poules').innerHTML = '';
-    const data = await apiGet('getAll');
-    configCourante = data.config;
-    equipesCourantes = data.equipes;
-    matchsCourants = data.matchs || [];
-    injecterReglages(data.config.global, data.config.categories); // l'heure de fin auto a changé
-    afficherPlanning(data.poules, data.matchs);
-    majApresMidi();
-    majTableauBord();
+    await rechargerEtRendre({ reglages: true }); // l'heure de fin auto a changé
     const nbP = (res && res.nb_poules != null) ? res.nb_poules : '?';
     const nbM = (res && res.nb_matchs != null) ? res.nb_matchs : '?';
     const finTxt = (res && res.heure_fin_journee) ? ' Fin de la journée : ' + res.heure_fin_journee + '.' : '';
@@ -2388,15 +2375,6 @@ const DIMENSIONS_CATEGORIE_DEFAUT = {
 const COULOIR_DEFAUT = 5;   // couloir de circulation entre mini-terrains (m)
 const TM_L_DEFAUT = 4;      // table des marques : longueur par défaut (m)
 const TM_W_DEFAUT = 4;      // table des marques : largeur par défaut (m)
-
-/** Nombre de mini-terrains (l×w) qui tiennent dans un rectangle L×W avec un couloir
- *  de m mètres ENTRE eux (pas de marge sur les bords). */
-function nbTuiles(L, W, l, w, m) {
-  if (l <= 0 || w <= 0) return 0;
-  const cols = Math.floor((L + m) / (l + m));
-  const rows = Math.floor((W + m) / (w + m));
-  return Math.max(0, cols) * Math.max(0, rows);
-}
 
 /**
  * Packing GUILLOTINE à orientations MIXTES : place le maximum de mini-terrains (l×w)
@@ -2796,15 +2774,6 @@ function grille(L, W, tile, m) {
   });
   return best;
 }
-/** Positions (en mètres) de toutes les cellules d'une grille, depuis une origine. */
-function cellulesGrille(ox, oy, g, m) {
-  const arr = [];
-  for (let j = 0; j < g.rows; j++)
-    for (let i = 0; i < g.cols; i++)
-      arr.push({ x: ox + i * (g.a + m), y: oy + j * (g.b + m), w: g.a, h: g.b });
-  return arr;
-}
-
 /** Répartition entière proportionnelle aux poids (méthode du plus fort reste). */
 function repartitionProportionnelle(total, poids) {
   const somme = poids.reduce(function (a, b) { return a + b; }, 0) || 1;
@@ -2835,30 +2804,21 @@ function positionTableMarques(g, m, zoneL, zoneW, tmL, tmW, ox, oy, tX, tY, spli
   return { x: ox + x, y: oy + y, w: tmL, h: tmW, split: !!split };
 }
 
+/* --------------------------------------------------------------------------
+   Sous-étapes du calcul de répartition (voir l'orchestrateur allouerTerrains).
+   Chaque étape est une fonction NOMMÉE ; celles qui posent des mini-terrains
+   partagent un CONTEXTE explicite `ctx` = { m, tmL, tmW, numero, avert,
+   parCategorie, couleur } — avant, tout vivait en variables de closure au fond
+   d'une seule fonction de ~220 lignes, dur à suivre et à tester.
+   -------------------------------------------------------------------------- */
+
 /**
- * Calcule la répartition complète : quelle catégorie sur quel grand terrain, avec
- * la position de chaque mini-terrain (pour la carte) et la table des marques.
- * @return { fieldsPlan, parCategorie:{cat:[ids]}, couleur:{cat:hex}, avert:[] }
+ * Étape 1 — Grands terrains ENTIERS pour les catégories « plein » (U14),
+ * proportionnellement aux équipes (en laissant au moins 1 grand terrain aux autres,
+ * et en rognant la catégorie la plus servie en cas de dépassement).
+ * Pose `c._fields` sur chaque catégorie « plein » ; renvoie le nombre de terrains pris.
  */
-function allouerTerrains(fields, cats, m, tmL, tmW) {
-  tmL = tmL > 0 ? tmL : TM_L_DEFAUT;
-  tmW = tmW > 0 ? tmW : TM_W_DEFAUT;
-  const avert = [];
-  const parCategorie = {};
-  const couleur = {};
-  cats.forEach(function (c, i) { parCategorie[c.name] = []; couleur[c.name] = PALETTE_CAT[i % PALETTE_CAT.length]; });
-
-  const prefixes = construirePrefixes(fields);
-  const F = fields.length;
-  let numero = 0;                                          // compteur GLOBAL : les mini-terrains
-                                                           // sont numérotés 1, 2, 3… en continu sur
-                                                           // tout le tournoi (numéro unique = pas de
-                                                           // confusion à la table des marques).
-  const totalTeams = cats.reduce(function (s, c) { return s + Math.max(1, c.teams); }, 0);
-  const plein = cats.filter(function (c) { return c.tile.plein; });
-  const normaux = cats.filter(function (c) { return !c.tile.plein; });
-
-  // 1) Grands terrains ENTIERS pour les catégories « plein » (U14), proportionnel aux équipes.
+function attribuerTerrainsEntiers(plein, normaux, F, totalTeams) {
   let pleinFields = 0;
   if (plein.length) {
     const capP = F - (normaux.length ? 1 : 0);            // laisser au moins 1 grand terrain aux autres
@@ -2875,17 +2835,21 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
     }
     plein.forEach(function (c) { pleinFields += c._fields; });
   }
+  return pleinFields;
+}
 
-  // 2) Le reste des grands terrains pour les catégories « normales ».
-  //    On raisonne en DEMI-terrains (une catégorie peut prendre une moitié) et on
-  //    ÉQUILIBRE LA CHARGE : à chaque demi-terrain libre, on sert la catégorie qui a
-  //    le plus d'équipes PAR terrain déjà reçu. Comme un terrain U10 (grand) contient
-  //    moins de mini-terrains qu'un U8 (petit), une catégorie à grands terrains reçoit
-  //    naturellement plus de moitiés → le nombre de terrains suit vraiment les équipes.
-  const fieldsRestants = F - pleinFields;
+/**
+ * Étape 2 — Distribue les grands terrains restants aux catégories « normales »,
+ * en raisonnant en DEMI-terrains (une catégorie peut prendre une moitié) et en
+ * ÉQUILIBRANT LA CHARGE : à chaque demi-terrain libre, on sert la catégorie qui a
+ * le plus d'équipes PAR terrain déjà reçu. Comme un terrain U10 (grand) contient
+ * moins de mini-terrains qu'un U8 (petit), une catégorie à grands terrains reçoit
+ * naturellement plus de moitiés → le nombre de terrains suit vraiment les équipes.
+ * Pose `c._halves` sur chaque catégorie « normale ».
+ */
+function attribuerDemisTerrains(normaux, fieldsNormaux, fieldsRestants, m, avert) {
   if (normaux.length && fieldsRestants > 0) {
     const creneaux = 2 * fieldsRestants;                  // nb de demi-terrains à distribuer
-    const fieldsNormaux = fields.slice(pleinFields);
     // Estimation du nb de mini-terrains qu'une catégorie tient sur une MOITIÉ de grand terrain
     // (moyenne sur les grands terrains restants, table des marques déduite).
     function estimDemi(cat) {
@@ -2914,8 +2878,15 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
   } else if (normaux.length) {
     normaux.forEach(function (c) { avert.push(c.name + ' : aucun grand terrain disponible.'); });
   }
+}
 
-  // 3) Files : terrains SOLO (entiers) et paires à SCINDER (une moitié chacune).
+/**
+ * Étape 3 — Files d'attribution à partir de `_fields` / `_halves` : terrains SOLO
+ * (entiers) et paires de catégories à SCINDER (une moitié chacune). Une moitié
+ * orpheline (nombre impair de demi-catégories) devient un terrain entier.
+ * @return { soloQueue:[{cat,plein}], paires:[[catA,catB]] }
+ */
+function construireFilesAttribution(plein, normaux) {
   const soloQueue = [];
   plein.forEach(function (c) { for (let k = 0; k < (c._fields || 0); k++) soloQueue.push({ cat: c, plein: true }); });
   normaux.forEach(function (c) { const wf = Math.floor((c._halves || 0) / 2); for (let k = 0; k < wf; k++) soloQueue.push({ cat: c, plein: false }); });
@@ -2924,74 +2895,84 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
   const paires = [];
   for (let k = 0; k + 1 < demiFile.length; k += 2) paires.push([demiFile[k], demiFile[k + 1]]);
   if (demiFile.length % 2 === 1) soloQueue.push({ cat: demiFile[demiFile.length - 1], plein: false }); // moitié orpheline → terrain entier
+  return { soloQueue: soloQueue, paires: paires };
+}
 
-  // 4) Attribution aux grands terrains physiques (SOLO d'abord, puis SCINDÉS).
-  const fieldsPlan = [];
+/** Pose une catégorie SEULE sur un grand terrain : packing des mini-terrains
+ *  (numérotés via ctx.numero) + table des marques dans le couloir central. */
+function poserTerrainSolo(ctx, f, prefix, cat, estPlein) {
+  if (estPlein) {                                       // U14 : le match occupe tout le terrain
+    ctx.numero++; const id = String(ctx.numero);
+    ctx.parCategorie[cat.name].push(id);
+    return { field: f, prefix: prefix, mode: 'plein', zones: [{ cat: cat.name, color: ctx.couleur[cat.name],
+      tiles: [{ id: id, x: 0, y: 0, w: f.L, h: f.W, label: cat.name + ' · ' + id }],
+      table: { x: Math.max(0, f.L / 2 - ctx.tmL / 2), y: Math.max(0, f.W - ctx.tmW), w: ctx.tmL, h: ctx.tmW, split: false } }] };
+  }
+  const rects = packerZone(0, 0, f.L, f.W, cat.tile, ctx.m); // packing à orientations mixtes
+  if (rects.length === 0) ctx.avert.push(f.nom + ' : trop petit pour un terrain ' + cat.name + '.');
+  const tiles = [];                                        // tous les mini-terrains sont jouables
+  rects.forEach(function (r) {
+    ctx.numero++; const id = String(ctx.numero);
+    tiles.push({ id: id, x: r.x, y: r.y, w: r.w, h: r.h, label: id });
+    ctx.parCategorie[cat.name].push(id);
+  });
+  // Table des marques : petite zone posée dans le couloir central (grille de référence).
+  const gRef = grille(f.L, f.W, cat.tile, ctx.m);
+  const table = rects.length ? positionTableMarques(gRef, ctx.m, f.L, f.W, ctx.tmL, ctx.tmW, 0, 0, f.L / 2, f.W / 2, false) : null;
+  return { field: f, prefix: prefix, mode: 'solo', zones: [{ cat: cat.name, color: ctx.couleur[cat.name],
+    tiles: tiles, table: table }] };
+}
 
-  function poserSolo(f, prefix, cat, estPlein) {
-    if (estPlein) {                                       // U14 : le match occupe tout le terrain
-      numero++; const id = String(numero);
-      parCategorie[cat.name].push(id);
-      return { field: f, prefix: prefix, mode: 'plein', zones: [{ cat: cat.name, color: couleur[cat.name],
-        tiles: [{ id: id, x: 0, y: 0, w: f.L, h: f.W, label: cat.name + ' · ' + id }],
-        table: { x: Math.max(0, f.L / 2 - tmL / 2), y: Math.max(0, f.W - tmW), w: tmL, h: tmW, split: false } }] };
-    }
-    const rects = packerZone(0, 0, f.L, f.W, cat.tile, m); // packing à orientations mixtes
-    if (rects.length === 0) avert.push(f.nom + ' : trop petit pour un terrain ' + cat.name + '.');
-    const tiles = [];                                        // tous les mini-terrains sont jouables
+/** Pose DEUX catégories sur un grand terrain SCINDÉ en deux moitiés (coupe
+ *  gauche/droite si le terrain est large, haut/bas sinon) : packing par moitié
+ *  + une table des marques par moitié, côté séparation centrale. */
+function poserTerrainScinde(ctx, f, prefix, cA, cB) {
+  const horizontal = f.L >= f.W;                        // terrain large → coupe gauche/droite
+  const zones = [];
+  function demi(cat, ox, oy, zL, zW, suff, cote) {
+    const rects = packerZone(ox, oy, zL, zW, cat.tile, ctx.m); // packing à orientations mixtes
+    if (rects.length === 0) ctx.avert.push(f.nom + ' (demi) : trop petit pour ' + cat.name + '.');
+    const tiles = [];                                    // tous les mini-terrains sont jouables
     rects.forEach(function (r) {
-      numero++; const id = String(numero);
+      ctx.numero++; const id = String(ctx.numero);
       tiles.push({ id: id, x: r.x, y: r.y, w: r.w, h: r.h, label: id });
-      parCategorie[cat.name].push(id);
+      ctx.parCategorie[cat.name].push(id);
     });
-    // Table des marques : petite zone posée dans le couloir central (grille de référence).
-    const gRef = grille(f.L, f.W, cat.tile, m);
-    const table = rects.length ? positionTableMarques(gRef, m, f.L, f.W, tmL, tmW, 0, 0, f.L / 2, f.W / 2, false) : null;
-    return { field: f, prefix: prefix, mode: 'solo', zones: [{ cat: cat.name, color: couleur[cat.name],
-      tiles: tiles, table: table }] };
+    // Table des marques : petite zone posée côté séparation centrale (→ deux tables face à face).
+    const gRef = grille(zL, zW, cat.tile, ctx.m);
+    const tX = horizontal ? (cote === 'gauche' ? zL : 0) : zL / 2;
+    const tY = horizontal ? zW / 2 : (cote === 'haut' ? zW : 0);
+    const table = rects.length ? positionTableMarques(gRef, ctx.m, zL, zW, ctx.tmL, ctx.tmW, ox, oy, tX, tY, true) : null;
+    zones.push({ cat: cat.name, color: ctx.couleur[cat.name], tiles: tiles, table: table });
   }
-
-  function poserSplit(f, prefix, cA, cB) {
-    const horizontal = f.L >= f.W;                        // terrain large → coupe gauche/droite
-    const zones = [];
-    function demi(cat, ox, oy, zL, zW, suff, cote) {
-      const rects = packerZone(ox, oy, zL, zW, cat.tile, m); // packing à orientations mixtes
-      if (rects.length === 0) avert.push(f.nom + ' (demi) : trop petit pour ' + cat.name + '.');
-      const tiles = [];                                    // tous les mini-terrains sont jouables
-      rects.forEach(function (r) {
-        numero++; const id = String(numero);
-        tiles.push({ id: id, x: r.x, y: r.y, w: r.w, h: r.h, label: id });
-        parCategorie[cat.name].push(id);
-      });
-      // Table des marques : petite zone posée côté séparation centrale (→ deux tables face à face).
-      const gRef = grille(zL, zW, cat.tile, m);
-      const tX = horizontal ? (cote === 'gauche' ? zL : 0) : zL / 2;
-      const tY = horizontal ? zW / 2 : (cote === 'haut' ? zW : 0);
-      const table = rects.length ? positionTableMarques(gRef, m, zL, zW, tmL, tmW, ox, oy, tX, tY, true) : null;
-      zones.push({ cat: cat.name, color: couleur[cat.name], tiles: tiles, table: table });
-    }
-    if (horizontal) {
-      const hL = (f.L - m) / 2;
-      demi(cA, 0, 0, hL, f.W, 'G', 'gauche');
-      demi(cB, hL + m, 0, hL, f.W, 'D', 'droite');
-    } else {
-      const hW = (f.W - m) / 2;
-      demi(cA, 0, 0, f.L, hW, 'H', 'haut');
-      demi(cB, 0, hW + m, f.L, hW, 'B', 'bas');
-    }
-    return { field: f, prefix: prefix, mode: 'split', zones: zones };
+  if (horizontal) {
+    const hL = (f.L - ctx.m) / 2;
+    demi(cA, 0, 0, hL, f.W, 'G', 'gauche');
+    demi(cB, hL + ctx.m, 0, hL, f.W, 'D', 'droite');
+  } else {
+    const hW = (f.W - ctx.m) / 2;
+    demi(cA, 0, 0, f.L, hW, 'H', 'haut');
+    demi(cB, 0, hW + ctx.m, f.L, hW, 'B', 'bas');
   }
+  return { field: f, prefix: prefix, mode: 'split', zones: zones };
+}
 
-  // 4b) Quel grand terrain pour quelle catégorie ? On ATTRIBUE les terrains solo de façon
-  //     à maximiser le nombre de mini-terrains : chaque catégorie reçoit les grands terrains
-  //     où elle « rentre » le mieux (une catégorie à petits terrains profite d'un grand terrain).
+/**
+ * Étape 4 — Attribution des files aux grands terrains PHYSIQUES (solo d'abord,
+ * puis scindés). Les terrains solo sont attribués de façon à MAXIMISER le nombre
+ * de mini-terrains : chaque catégorie reçoit les grands terrains où elle « rentre »
+ * le mieux (une catégorie à petits terrains profite d'un grand terrain).
+ * @return fieldsPlan  la liste des grands terrains posés (pour la carte)
+ */
+function attribuerGrandsTerrains(ctx, fields, prefixes, soloQueue, paires, F) {
+  const fieldsPlan = [];
   const dispo = fields.map(function (f, i) { return i; }); // indices de grands terrains libres
 
   // Catégories « plein » (U14) : un terrain entier = 1 match quel que soit sa taille → n'importe quel terrain.
   soloQueue.filter(function (s) { return s.plein; }).forEach(function (s) {
     if (!dispo.length) return;
     const i = dispo.shift();
-    fieldsPlan.push(poserSolo(fields[i], prefixes[i], s.cat, true));
+    fieldsPlan.push(poserTerrainSolo(ctx, fields[i], prefixes[i], s.cat, true));
   });
 
   // Catégories normales : combien de terrains solo chacune (besoin), puis attribution GLOUTONNE
@@ -3002,14 +2983,14 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
   });
   const couples = [];
   Object.keys(besoin).forEach(function (nom) {
-    dispo.forEach(function (i) { couples.push({ nom: nom, i: i, n: capaciteTerrain(fields[i], catParNom[nom].tile, m) }); });
+    dispo.forEach(function (i) { couples.push({ nom: nom, i: i, n: capaciteTerrain(fields[i], catParNom[nom].tile, ctx.m) }); });
   });
   couples.sort(function (a, b) { return b.n - a.n; });        // meilleurs remplissages d'abord
   const prise = {};
   couples.forEach(function (c) {
     if (besoin[c.nom] > 0 && !prise[c.i]) {
       prise[c.i] = true; besoin[c.nom]--;
-      fieldsPlan.push(poserSolo(fields[c.i], prefixes[c.i], catParNom[c.nom], false));
+      fieldsPlan.push(poserTerrainSolo(ctx, fields[c.i], prefixes[c.i], catParNom[c.nom], false));
     }
   });
   const restants = dispo.filter(function (i) { return !prise[i]; });
@@ -3019,16 +3000,22 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
   paires.forEach(function (p) {
     if (r >= restants.length) return;
     const i = restants[r++];
-    fieldsPlan.push(poserSplit(fields[i], prefixes[i], p[0], p[1]));
+    fieldsPlan.push(poserTerrainScinde(ctx, fields[i], prefixes[i], p[0], p[1]));
   });
   if (soloQueue.length + paires.length > F) {
-    avert.push('Pas assez de grands terrains : certaines catégories n’ont pas pu être placées.');
+    ctx.avert.push('Pas assez de grands terrains : certaines catégories n’ont pas pu être placées.');
   }
+  return fieldsPlan;
+}
 
-  // 5) MIXAGE EN SECOURS (seulement si l'espace manque) : tant qu'une catégorie « normale »
-  //    est nettement plus chargée que les autres (ou n'a aucun terrain), on lui ajoute un
-  //    mini-terrain dans l'ESPACE LIBRE d'un autre grand terrain. Reste inactif si équilibré.
-  function ratioCat(c) { const n = parCategorie[c.name].length; return n > 0 ? c.teams / n : Infinity; }
+/**
+ * Étape 5 — MIXAGE EN SECOURS (seulement si l'espace manque) : tant qu'une catégorie
+ * « normale » est nettement plus chargée que les autres (ou n'a aucun terrain), on lui
+ * ajoute un mini-terrain dans l'ESPACE LIBRE d'un autre grand terrain. Reste inactif
+ * si équilibré. Modifie `fieldsPlan` en place et signale le mixage dans ctx.avert.
+ */
+function mixerEnSecours(ctx, fieldsPlan, normaux) {
+  function ratioCat(c) { const n = ctx.parCategorie[c.name].length; return n > 0 ? c.teams / n : Infinity; }
   let mixage = 0, aMixe = false;
   while (mixage++ < 60 && normaux.length > 1) {
     let pire = null, prMax = -1, prMin = Infinity;
@@ -3042,27 +3029,70 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
       if (fp.zones.length === 1 && fp.zones[0].cat === pire.name) continue; // déjà rempli pour elle
       const occ = [];
       fp.zones.forEach(function (z) { z.tiles.forEach(function (t) { occ.push(t); }); if (z.table) occ.push(z.table); });
-      const nouv = placerDansLibre(fp.field.L, fp.field.W, occ, pire.tile.l, pire.tile.w, m, 1);
+      const nouv = placerDansLibre(fp.field.L, fp.field.W, occ, pire.tile.l, pire.tile.w, ctx.m, 1);
       if (!nouv.length) continue;
-      const r = nouv[0]; numero++; const id = String(numero);
+      const r = nouv[0]; ctx.numero++; const id = String(ctx.numero);
       const tuile = { id: id, x: r.x, y: r.y, w: r.w, h: r.h, label: id };
-      parCategorie[pire.name].push(id);
+      ctx.parCategorie[pire.name].push(id);
       let zone = fp.zones.find(function (z) { return z.cat === pire.name; });
       if (zone) { zone.tiles.push(tuile); }
       else {                                              // 2ᵉ catégorie sur ce terrain → sa propre table
-        const tm = placerDansLibre(fp.field.L, fp.field.W, occ.concat([r]), tmL, tmW, m, 1);
+        const tm = placerDansLibre(fp.field.L, fp.field.W, occ.concat([r]), ctx.tmL, ctx.tmW, ctx.m, 1);
         fp.zones.forEach(function (z) { if (z.table) z.table.split = true; });
-        fp.zones.push({ cat: pire.name, color: couleur[pire.name], tiles: [tuile],
-          table: tm.length ? { x: tm[0].x, y: tm[0].y, w: tmL, h: tmW, split: true } : null });
+        fp.zones.push({ cat: pire.name, color: ctx.couleur[pire.name], tiles: [tuile],
+          table: tm.length ? { x: tm[0].x, y: tm[0].y, w: ctx.tmL, h: ctx.tmW, split: true } : null });
         fp.mode = 'split';
       }
       posee = true; aMixe = true;
     }
     if (!posee) break;                                     // plus aucune place → on arrête
   }
-  if (aMixe) avert.push('Espace serré : quelques terrains ont été ajoutés en partageant un grand terrain (mixage de catégories).');
+  if (aMixe) ctx.avert.push('Espace serré : quelques terrains ont été ajoutés en partageant un grand terrain (mixage de catégories).');
+}
 
-  return { fieldsPlan: fieldsPlan, parCategorie: parCategorie, couleur: couleur, avert: avert };
+/**
+ * Calcule la répartition complète : quelle catégorie sur quel grand terrain, avec
+ * la position de chaque mini-terrain (pour la carte) et la table des marques.
+ * ORCHESTRATEUR : enchaîne les 5 étapes ci-dessus autour d'un contexte partagé `ctx`.
+ * @return { fieldsPlan, parCategorie:{cat:[ids]}, couleur:{cat:hex}, avert:[] }
+ */
+function allouerTerrains(fields, cats, m, tmL, tmW) {
+  // Contexte partagé par les sous-étapes. `numero` = compteur GLOBAL : les mini-terrains
+  // sont numérotés 1, 2, 3… en continu sur tout le tournoi (numéro unique = pas de
+  // confusion à la table des marques).
+  const ctx = {
+    m: m,
+    tmL: tmL > 0 ? tmL : TM_L_DEFAUT,
+    tmW: tmW > 0 ? tmW : TM_W_DEFAUT,
+    numero: 0,
+    avert: [],
+    parCategorie: {},
+    couleur: {}
+  };
+  cats.forEach(function (c, i) { ctx.parCategorie[c.name] = []; ctx.couleur[c.name] = PALETTE_CAT[i % PALETTE_CAT.length]; });
+
+  const prefixes = construirePrefixes(fields);
+  const F = fields.length;
+  const totalTeams = cats.reduce(function (s, c) { return s + Math.max(1, c.teams); }, 0);
+  const plein = cats.filter(function (c) { return c.tile.plein; });
+  const normaux = cats.filter(function (c) { return !c.tile.plein; });
+
+  // 1) Grands terrains ENTIERS pour les catégories « plein » (U14), proportionnel aux équipes.
+  const pleinFields = attribuerTerrainsEntiers(plein, normaux, F, totalTeams);
+
+  // 2) Le reste des grands terrains pour les catégories « normales » (en demi-terrains).
+  attribuerDemisTerrains(normaux, fields.slice(pleinFields), F - pleinFields, ctx.m, ctx.avert);
+
+  // 3) Files : terrains SOLO (entiers) et paires à SCINDER (une moitié chacune).
+  const files = construireFilesAttribution(plein, normaux);
+
+  // 4) Attribution aux grands terrains physiques (SOLO d'abord, puis SCINDÉS).
+  const fieldsPlan = attribuerGrandsTerrains(ctx, fields, prefixes, files.soloQueue, files.paires, F);
+
+  // 5) Mixage en secours si une catégorie reste nettement plus chargée que les autres.
+  mixerEnSecours(ctx, fieldsPlan, normaux);
+
+  return { fieldsPlan: fieldsPlan, parCategorie: ctx.parCategorie, couleur: ctx.couleur, avert: ctx.avert };
 }
 
 /** Bouton « Répartir » : calcule la répartition à partir des saisies en cours, l'affiche. */
@@ -3242,28 +3272,7 @@ async function onAppliquerRepartition() {
   }
 }
 
-/* --------------------------------------------------------------------------
-   PETITES AIDES
-   -------------------------------------------------------------------------- */
-
-/** Affiche un message de retour (succès/erreur) sous le formulaire. */
-function afficherMessage(element, texte, type) {
-  element.textContent = texte;
-  element.className = 'message-form ' + (type === 'ok' ? 'ok' : 'ko');
-}
-
-/** Vrai si le statut d'un match vaut « terminé » (score saisi), quelle que soit la forme
- *  du « é » (NFC/NFD) : le Sheet renvoie parfois un « é » décomposé, on teste « termin ». */
-function estTermine(statut) {
-  return /^\s*termin/i.test(String(statut));
-}
-
-/** Neutralise les caractères spéciaux HTML (sécurité d'affichage). */
-function echapper(texte) {
-  return String(texte)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+/* afficherMessage(), estTermine() et echapper() sont désormais dans commun.js. */
 
 /* On lance tout une fois la page prête. */
 document.addEventListener('DOMContentLoaded', initAdmin);

@@ -239,12 +239,24 @@ function lireOngletSimple(classeur, nomOnglet) {
   return lignes;
 }
 
+/**
+ * Position (0-based) de la ligne d'en-tête de la zone catégories dans un tableau de valeurs de
+ * l'onglet Config (la ligne dont la 1re cellule vaut « categorie »), ou -1 si absente.
+ * Point de passage UNIQUE : cette recherche était recopiée à l'identique dans plusieurs fonctions
+ * (lireConfig, enregistrerCategorie, supprimerCategorie, assurerColonneCategorie…).
+ */
+function indexEnteteCategories(donnees) {
+  for (var i = 0; i < donnees.length; i++) {
+    if (donnees[i][0] === 'categorie') return i;
+  }
+  return -1;
+}
+
 function lireConfig(classeur) {
   var onglet = classeur.getSheetByName('Config');
   if (!onglet) return { global: {}, categories: [] };
   var donnees = onglet.getDataRange().getValues();
-  var hdr = -1;
-  for (var i = 0; i < donnees.length; i++) { if (donnees[i][0] === 'categorie') { hdr = i; break; } }
+  var hdr = indexEnteteCategories(donnees);
   var global = {};
   var finZoneA = (hdr === -1) ? donnees.length : hdr;
   for (var r = 1; r < finZoneA; r++) {
@@ -588,6 +600,44 @@ function ecrireParamGlobal(onglet, nom, valeur) {
   plage.setValues([[nom, String(valeur)]]);
 }
 
+/**
+ * Écrit PLUSIEURS paramètres globaux en une passe (moins d'allers-retours avec le Sheet que N
+ * appels séparés à ecrireParamGlobal, appelé en rafale à la génération / au recalcul).
+ * @param {Sheet} onglet  l'onglet Config
+ * @param {Array<Array>} paires  liste ORDONNÉE de [nom, valeur]
+ *
+ * Résultat STRICTEMENT identique à des ecrireParamGlobal successifs :
+ *   1) les paramètres DÉJÀ présents sont mis à jour SUR PLACE (aucun décalage de lignes) — on ne
+ *      relit l'onglet qu'UNE fois pour tous ;
+ *   2) les paramètres encore ABSENTS (ex. 1re génération) sont insérés via ecrireParamGlobal, la
+ *      fonction éprouvée qui les place au bon endroit (au-dessus de la zone catégories), dans
+ *      l'ordre fourni. Faire les mises à jour sur place AVANT les insertions garantit que les
+ *      lignes mémorisées restent valides (une insertion peut décaler les lignes en-dessous).
+ */
+function ecrireParamsGlobaux(onglet, paires) {
+  var dernier = onglet.getLastRow();
+  var donnees = onglet.getRange(1, 1, dernier, 1).getValues();
+  var ligneDe = {};
+  for (var i = 0; i < donnees.length; i++) {
+    var nom = donnees[i][0];
+    // PREMIÈRE occurrence gagnante, comme ecrireParamGlobal : sur un Sheet abîmé où un nom
+    // apparaîtrait deux fois en colonne A, on met à jour la même ligne que l'ancien code.
+    if (nom !== '' && nom != null && ligneDe[nom] === undefined) ligneDe[nom] = i + 1;
+  }
+  var absents = [];
+  paires.forEach(function (p) {
+    var ligne = ligneDe[p[0]];
+    if (ligne) {
+      var cellule = onglet.getRange(ligne, 2);
+      cellule.setNumberFormat('@');
+      cellule.setValue(String(p[1]));
+    } else {
+      absents.push(p);
+    }
+  });
+  absents.forEach(function (p) { ecrireParamGlobal(onglet, p[0], p[1]); });
+}
+
 function enregistrerCategorie(classeur, data) {
   var nom = (data.categorie || '').toString().trim();
   if (!nom) return { error: 'Nom de catégorie vide.' };
@@ -598,8 +648,7 @@ function enregistrerCategorie(classeur, data) {
   assurerColonneCategorie(classeur, 'nb_poules');
   assurerColonnesConfig(classeur);
   var donnees = onglet.getDataRange().getValues();
-  var hdr = -1;
-  for (var i = 0; i < donnees.length; i++) { if (donnees[i][0] === 'categorie') { hdr = i; break; } }
+  var hdr = indexEnteteCategories(donnees);
   if (hdr === -1) return { error: 'Zone catégories introuvable.' };
   var colonnes = donnees[hdr];
   var ligneValeurs = colonnes.map(function (c) { return (c && data[c] != null) ? String(data[c]) : ''; });
@@ -620,8 +669,7 @@ function supprimerCategorie(classeur, nom) {
   nom = (nom || '').toString().trim();
   var onglet = classeur.getSheetByName('Config');
   var donnees = onglet.getDataRange().getValues();
-  var hdr = -1;
-  for (var i = 0; i < donnees.length; i++) { if (donnees[i][0] === 'categorie') { hdr = i; break; } }
+  var hdr = indexEnteteCategories(donnees);
   if (hdr === -1) return { error: 'Zone catégories introuvable.' };
   for (var l = hdr + 1; l < donnees.length; l++) {
     if (donnees[l][0] === '' || donnees[l][0] === null) break;
@@ -1440,6 +1488,27 @@ function construireBracketCoupe(seeds) {
   return fixtures;
 }
 
+/* ---------- Petites briques COMMUNES aux deux planificateurs (matin / après-midi) ----------
+ * Les deux boucles de planning restent volontairement SÉPARÉES : leurs contraintes diffèrent
+ * (amorçage des disponibilités, saut de la pause déjeuner vs barrière de tour de Coupe,
+ * équipes encore inconnues dans les brackets, forme du résultat). Les fusionner exigerait
+ * une fonction à options/callbacks bien plus dure à lire que deux boucles commentées.
+ * On mutualise en revanche les briques réellement identiques ci-dessous. */
+
+/** Terrains d'une catégorie : "1, 2,3" → ['1','2','3'] (espaces nettoyés, vides ignorés). */
+function listeTerrainsCategorie(cat) {
+  return String(cat.terrains || '').split(',')
+    .map(function (s) { return s.trim(); })
+    .filter(function (s) { return s !== ''; });
+}
+
+/** Terrain qui se libère LE PLUS TÔT selon la table des disponibilités (null si aucun). */
+function terrainPlusTot(terrains, terrainLibre) {
+  var choisi = null, plusTot = Infinity;
+  terrains.forEach(function (t) { if (terrainLibre[t] < plusTot) { plusTot = terrainLibre[t]; choisi = t; } });
+  return choisi;
+}
+
 /**
  * Planifie les matchs de l'après-midi (terrains + horaires) à partir de la reprise
  * (fin de la pause déjeuner), en tenant compte des fins de matchs du matin pour ne pas
@@ -1480,8 +1549,7 @@ function planifierApresMidi(config, fixturesParCat, matin) {
     var liste = (fixturesParCat[cat.categorie] || []).slice();
     if (!liste.length) return;
     liste.sort(function (x, y) { return x.round - y.round; });
-    var terrains = String(cat.terrains || '').split(',')
-                     .map(function (s) { return s.trim(); }).filter(function (s) { return s !== ''; });
+    var terrains = listeTerrainsCategorie(cat);
     if (terrains.length === 0) { avert.push('Catégorie ' + cat.categorie + ' : aucun terrain défini (après-midi non planifié).'); return; }
     var duree = dureeMatch(cat);
     var recup = parseInt(cat.recup_entre_matchs_min || '0', 10) || 0;
@@ -1514,8 +1582,7 @@ function planifierApresMidi(config, fixturesParCat, matin) {
         dispoEquipes = Math.max(dispoEquipes, equipeLibre[m.equipe_B]);
       }
 
-      var terrainChoisi = null, plusTot = Infinity;
-      terrains.forEach(function (t) { if (terrainLibre[t] < plusTot) { plusTot = terrainLibre[t]; terrainChoisi = t; } });
+      var terrainChoisi = terrainPlusTot(terrains, terrainLibre);
       var debut = Math.max(dispoEquipes, terrainLibre[terrainChoisi]);
       var fin = debut + duree;
       if (fin > maxFin) maxFin = fin;
@@ -1654,8 +1721,7 @@ function assurerColonneCategorie(classeur, nom) {
   var onglet = classeur.getSheetByName('Config');
   if (!onglet) return false;
   var donnees = onglet.getDataRange().getValues();
-  var hdr = -1;
-  for (var i = 0; i < donnees.length; i++) { if (donnees[i][0] === 'categorie') { hdr = i; break; } }
+  var hdr = indexEnteteCategories(donnees);
   if (hdr === -1) return false;
   var entetes = donnees[hdr];
   var largeur = 0;
@@ -1792,14 +1858,12 @@ function recalculerHoraires(classeur) {
   // Heure de fin auto (comme à la génération) — mais SANS toucher tournoi_id.
   var autoFin = String((config.global.heure_fin_auto || 'oui')).toLowerCase() !== 'non';
   var finJournee = Math.max(r.maxFin, projeterFinApresMidi(config, r.poules, r.matchsFinaux));
-  if (autoFin && finJournee > 0) {
-    ecrireParamGlobal(classeur.getSheetByName('Config'), 'heure_fin', minVersHm(finJournee));
-  }
-  // Réglages désormais « à jour » → on rafraîchit les deux empreintes.
-  ecrireParamGlobal(classeur.getSheetByName('Config'), 'signature_generation',
-    signatureGeneration(config.global, config.categories, equipes));
-  ecrireParamGlobal(classeur.getSheetByName('Config'), 'signature_structure',
-    signatureStructure(config.categories, equipes));
+  // Réglages désormais « à jour » → heure de fin (si auto) + les deux empreintes, en une passe.
+  var params = [];
+  if (autoFin && finJournee > 0) params.push(['heure_fin', minVersHm(finJournee)]);
+  params.push(['signature_generation', signatureGeneration(config.global, config.categories, equipes)]);
+  params.push(['signature_structure', signatureStructure(config.categories, equipes)]);
+  ecrireParamsGlobaux(classeur.getSheetByName('Config'), params);
 
   return {
     ok: true,
@@ -1910,9 +1974,7 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
   categories.forEach(function (cat) {
     var liste = (matchsParCat[cat.categorie] || []).slice();
     liste.sort(function (x, y) { return x.round - y.round; });
-    var terrains = String(cat.terrains || '').split(',')
-                     .map(function (s) { return s.trim(); })
-                     .filter(function (s) { return s !== ''; });
+    var terrains = listeTerrainsCategorie(cat);
     if (terrains.length === 0 && liste.length > 0) avert.push('Catégorie ' + cat.categorie + ' : aucun terrain défini.');
     var duree = dureeMatch(cat);
     var recup = parseInt(cat.recup_entre_matchs_min || '0', 10) || 0;
@@ -1921,8 +1983,7 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
       if (equipeLibre[m.equipe_A] == null) equipeLibre[m.equipe_A] = tDebut;
       if (equipeLibre[m.equipe_B] == null) equipeLibre[m.equipe_B] = tDebut;
       var dispoEquipes = Math.max(equipeLibre[m.equipe_A], equipeLibre[m.equipe_B]);
-      var terrainChoisi = null, plusTot = Infinity;
-      terrains.forEach(function (t) { if (terrainLibre[t] < plusTot) { plusTot = terrainLibre[t]; terrainChoisi = t; } });
+      var terrainChoisi = terrainPlusTot(terrains, terrainLibre);
       var debut = (terrainChoisi == null) ? dispoEquipes : Math.max(dispoEquipes, terrainLibre[terrainChoisi]);
       if (dejDur > 0 && debut < dejFin && (debut + duree) > dejDeb) debut = dejFin;
       var fin = debut + duree;
@@ -2047,8 +2108,7 @@ function supprimerToutesCategories(classeur) {
   var onglet = classeur.getSheetByName('Config');
   if (!onglet) return 0;
   var donnees = onglet.getDataRange().getValues();
-  var hdr = -1;
-  for (var i = 0; i < donnees.length; i++) { if (donnees[i][0] === 'categorie') { hdr = i; break; } }
+  var hdr = indexEnteteCategories(donnees);
   if (hdr === -1) return 0;
   var lignes = [];
   for (var l = hdr + 1; l < donnees.length; l++) {
@@ -2238,18 +2298,15 @@ function genererPoulesEtPlanning(classeur) {
 
   ecrireGeneration(classeur, r.poules, r.affectationPoule, r.matchsFinaux);
 
-  // Nouveau tournoi = nouvel identifiant de saison. Les résultats déjà archivés du
-  // tournoi précédent restent dans l'onglet Historique, tagués avec l'ancien identifiant.
-  ecrireParamGlobal(classeur.getSheetByName('Config'), 'tournoi_id',
-    Utilities.formatDate(new Date(), classeur.getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm:ss'));
-
-  // Empreinte des réglages utilisés : permet à la page admin de détecter qu'un réglage a
-  // changé depuis cette génération (pastille « à recalculer »). Voir signatureGeneration().
-  ecrireParamGlobal(classeur.getSheetByName('Config'), 'signature_generation',
-    signatureGeneration(global, config.categories, equipes));
-  // Empreinte de composition : sert au « Recalculer les horaires » (étape 3).
-  ecrireParamGlobal(classeur.getSheetByName('Config'), 'signature_structure',
-    signatureStructure(config.categories, equipes));
+  // En une passe : nouvel identifiant de saison + les deux empreintes de réglages.
+  //  - tournoi_id : nouveau tournoi (les résultats déjà archivés dans Historique gardent l'ancien).
+  //  - signature_generation : permet à l'admin de détecter qu'un réglage a changé (« à recalculer »).
+  //  - signature_structure  : sert au « Recalculer les horaires » (étape 3).
+  ecrireParamsGlobaux(classeur.getSheetByName('Config'), [
+    ['tournoi_id', Utilities.formatDate(new Date(), classeur.getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm:ss')],
+    ['signature_generation', signatureGeneration(global, config.categories, equipes)],
+    ['signature_structure', signatureStructure(config.categories, equipes)]
+  ]);
 
   return {
     ok: true,
@@ -2268,20 +2325,22 @@ function genererPoulesEtPlanning(classeur) {
 }
 
 /**
- * Teste une série d'ajustements possibles et renvoie ceux qui font gagner du temps,
- * avec l'heure de fin simulée et s'ils permettent de tenir le créneau.
+ * NOYAU COMMUN des deux analyses d'arbitrages (journée / matin) : simule chaque ajustement
+ * candidat avec la fonction de PROJECTION fournie et garde les pistes qui font gagner du temps,
+ * triées de la plus efficace à la moins efficace (6 max).
+ * Simulation en DÉTERMINISTE (melange=false) pour comparer les pistes à isopérimètre :
+ * la vraie génération mélange les poules, donc les heures réelles peuvent légèrement
+ * différer, mais l'ordre de grandeur des gains reste représentatif.
+ * @param projeter  function(config, equipes) → heure de fin projetée (en minutes)
  */
-function analyserArbitrages(config, equipes, cibleMin) {
-  // Simulation en DÉTERMINISTE (melange=false) pour comparer les pistes à isopérimètre :
-  // la vraie génération mélange les poules, donc les heures réelles peuvent légèrement
-  // différer, mais l'ordre de grandeur des gains reste représentatif.
-  var base = finJourneeProjetee(config, equipes, false);
+function analyserArbitragesSelon(config, equipes, cibleMin, projeter) {
+  var base = projeter(config, equipes);
   var candidats = construireCandidats(config, equipes);
   var res = [];
   candidats.forEach(function (cand) {
     var cfg = clonerConfig(config);
     appliquerModif(cfg, cand.modif);
-    var fin = finJourneeProjetee(cfg, equipes, false);
+    var fin = projeter(cfg, equipes);
     var gain = base - fin;
     if (gain > 0) {
       res.push({ piste: cand.label, heure_fin: minVersHm(fin), gain_min: gain,
@@ -2290,6 +2349,17 @@ function analyserArbitrages(config, equipes, cibleMin) {
   });
   res.sort(function (a, b) { return hmVersMin(a.heure_fin) - hmVersMin(b.heure_fin); });
   return res.slice(0, 6);
+}
+
+/**
+ * Teste une série d'ajustements possibles et renvoie ceux qui font gagner du temps sur la
+ * fin de JOURNÉE (après-midi projeté inclus), avec l'heure de fin simulée et s'ils
+ * permettent de tenir le créneau.
+ */
+function analyserArbitrages(config, equipes, cibleMin) {
+  return analyserArbitragesSelon(config, equipes, cibleMin, function (cfg, eq) {
+    return finJourneeProjetee(cfg, eq, false);
+  });
 }
 
 /** Fin projetée du MATIN (dernier match de poule) en DÉTERMINISTE, pour simuler les arbitrages. */
@@ -2303,21 +2373,7 @@ function finMatinProjetee(config, equipes) {
  * (ex. « réduire la pause ») ont un gain nul et sont automatiquement écartées.
  */
 function analyserArbitragesMatin(config, equipes, cibleMin) {
-  var base = finMatinProjetee(config, equipes);
-  var candidats = construireCandidats(config, equipes);
-  var res = [];
-  candidats.forEach(function (cand) {
-    var cfg = clonerConfig(config);
-    appliquerModif(cfg, cand.modif);
-    var fin = finMatinProjetee(cfg, equipes);
-    var gain = base - fin;
-    if (gain > 0) {
-      res.push({ piste: cand.label, heure_fin: minVersHm(fin), gain_min: gain,
-                 tient: (fin <= cibleMin), modif: cand.modif });
-    }
-  });
-  res.sort(function (a, b) { return hmVersMin(a.heure_fin) - hmVersMin(b.heure_fin); });
-  return res.slice(0, 6);
+  return analyserArbitragesSelon(config, equipes, cibleMin, finMatinProjetee);
 }
 
 /** Applique un ajustement (modif) sur une config (utilisé pour la simulation ET l'application réelle). */
@@ -2358,7 +2414,7 @@ function construireCandidats(config, equipes) {
   config.categories.filter(function (cat) { return String(cat.presente).toLowerCase() === 'oui'; })
     .forEach(function (cat) {
       var nom = cat.categorie;
-      var terrains = String(cat.terrains || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+      var terrains = listeTerrainsCategorie(cat);
       var nums = terrains.map(Number).filter(function (n) { return !isNaN(n); });
       var nouveau = (nums.length ? Math.max.apply(null, nums) : 0) + 1;
       cands.push({ label: nom + ' : ajouter un terrain (' + (terrains.length + 1) + ' au total)',

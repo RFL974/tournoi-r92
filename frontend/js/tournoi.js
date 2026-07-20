@@ -276,12 +276,7 @@ function categoriesPresentes() {
   return cats.sort(comparerCategorie);
 }
 
-/** Ordre des catégories : par le nombre qu'elles contiennent (U8 < U10 < U12), sinon alphabétique. */
-function comparerCategorie(a, b) {
-  const ma = String(a).match(/\d+/), mb = String(b).match(/\d+/);
-  if (ma && mb && parseInt(ma[0], 10) !== parseInt(mb[0], 10)) return parseInt(ma[0], 10) - parseInt(mb[0], 10);
-  return String(a).localeCompare(String(b));
-}
+/* comparerCategorie() est désormais dans commun.js (partagé avec saisie.js). */
 
 /** Remplit le menu déroulant des équipes DE LA CATÉGORIE ACTIVE, en préservant le choix. */
 function peuplerSelect() {
@@ -726,18 +721,7 @@ function tableGeneral(liste, idSel, marquerVainqueur) {
    APRÈS-MIDI MULTI-FORMATS (Coupe & Plateau / Libre / Croisé)
    ========================================================================== */
 
-/** Libellé français d'un tour de bracket (Coupe). */
-function libelleTourFr(tour) {
-  switch (String(tour)) {
-    case 'FINALE': return 'Finale';
-    case 'DEMI_FINALE': return 'Demi-finale';
-    case 'PETITE_FINALE': return 'Petite finale';
-    case 'QUART_DE_FINALE': return 'Quart de finale';
-    case 'HUITIEME_DE_FINALE': return 'Huitième de finale';
-    case 'SEIZIEME_DE_FINALE': return 'Seizième de finale';
-    default: return String(tour || '');
-  }
-}
+/* libelleTourFr() est désormais dans commun.js (partagé avec saisie.js). */
 
 /** Libellé court d'un match (utilisé dans « Mon équipe » et « Derniers scores »). */
 function libelleMatch(m) {
@@ -894,13 +878,6 @@ function nomEquipe(id) {
   return e ? e.nom_equipe : id;
 }
 
-/** Vrai si le statut vaut « terminé », robuste au « é » décomposé (NFD) renvoyé par le Sheet. */
-function estTermine(statut) { return /^\s*termin/i.test(String(statut)); }
-
-function echapper(texte) {
-  return String(texte)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+/* estTermine() et echapper() sont désormais dans commun.js. */
 
 document.addEventListener('DOMContentLoaded', initTournoi);

@@ -376,20 +376,7 @@ function formaterDate(iso) {
   return m ? (m[3] + '/' + m[2]) : String(iso);
 }
 
-/**
- * Vrai si le statut vaut « terminé », quelle que soit la forme du « é » (NFC/NFD).
- * (Même garde-fou que sur les autres pages, cf. reference-r92-statut-nfd.)
- */
-function estTermine(statut) {
-  return /^\s*termin/i.test(String(statut));
-}
-
-/** Neutralise les caractères spéciaux HTML (sécurité d'affichage). */
-function echapper(texte) {
-  return String(texte)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+/* estTermine() et echapper() sont désormais dans commun.js. */
 
 /* On lance tout une fois la page prête. */
 document.addEventListener('DOMContentLoaded', initPerfs);
