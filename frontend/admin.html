@@ -138,6 +138,10 @@
           ⚠️ Cela <strong>efface</strong> les poules, matchs et scores précédents.
         </p>
         <button id="bouton-generer" class="bouton">🎲 Générer poules et planning</button>
+        <!-- Régénération NON destructive : recalcule seulement les heures, garde les poules
+             ET les scores. Activé/masqué par admin.js (majBoutonRecalculer) selon l'état. -->
+        <button id="bouton-recalculer-horaires" class="bouton bouton-doux" hidden>🕐 Recalculer les horaires (garde les scores)</button>
+        <p class="note-generation aide-recalculer" id="aide-recalculer" hidden></p>
         <div id="message-generation" class="message-form"></div>
         <div id="arbitrages"></div>
         <!-- Modification manuelle des poules du matin (rééquilibrer les niveaux avant de jouer) -->

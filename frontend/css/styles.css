@@ -347,6 +347,12 @@ select.r-input { cursor: pointer; }
 .bouton-danger { background: #c0392b; }
 .bouton-danger:hover { background: #a93226; }
 
+/* Bouton d'action SÛRE (recalcul non destructif, garde les scores) : vert rassurant,
+   visuellement distinct du tirage complet. Placé juste sous « Générer ». */
+.bouton-doux { background: #2f9e5f; margin-top: 8px; }
+.bouton-doux:hover { background: #27824e; }
+.aide-recalculer { margin-top: 8px; }
+
 /* Carte « zone de danger » : liseré rouge pour la distinguer des cartes normales. */
 .carte-danger {
   border: 1px solid rgba(255, 120, 120, 0.4);
