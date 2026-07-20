@@ -5,6 +5,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Terrains par catégorie : mode Auto / Manuel + vérification — 2026-07-20
+Le champ **Terrains** d'une catégorie devient un choix **Auto / Manuel** (défaut **Auto**).
+⚠️ **backend à redéployer** (nouvelle colonne `terrains_auto`, migration douce) + frontend à publier.
+- **Auto** *(défaut)* : plus rien à saisir — les terrains viennent de l'onglet **Terrains &
+  répartition**. La carte affiche les terrains actuels à titre indicatif.
+- **Manuel** : saisie des numéros à la main, avec **vérification en direct** (« arbitrage ») au fil de
+  la frappe : terrain **déjà utilisé** par une autre catégorie, numéro qui **n'existe pas** dans la
+  répartition, catégorie **sans terrain**, saisie **non numérique**.
+- **« Répartir / Appliquer »** ne touche plus **que les catégories en mode Auto** ; celles en Manuel
+  gardent leurs numéros (indiqué dans la confirmation et le message de fin).
+- Migration : colonne `terrains_auto` (`oui`/`non`, vide = `oui`) ajoutée automatiquement. Doc :
+  guide-utilisateur §1.2/§1.4, structure-google-sheet.md.
+
 ### Nouveau format d'après-midi : classement croisé **diagonal** — 2026-07-20
 4ᵉ format d'après-midi (aux côtés de Croisé / Libre / Coupe + Plateau), choisi par catégorie.
 ⚠️ **backend à redéployer** (nouvelle sous-fonction `fixturesApresMidiCroiseDiagonal`) + frontend à

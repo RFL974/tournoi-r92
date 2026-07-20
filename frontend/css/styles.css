@@ -224,6 +224,46 @@ select.r-input { cursor: pointer; }
 .theme-clair .f-aide { color: #8a97a6; }
 .theme-clair .format-recap { color: #0C1C2E; }
 
+/* --- Terrains (choix Auto / Manuel par catégorie) --- */
+.bloc-terrains {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(184, 216, 248, 0.25);
+}
+.terr-mode { display: inline-flex; gap: 6px; margin-bottom: 8px; }
+.terr-choix {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(3, 16, 36, 0.4);
+  border: 1px solid rgba(184, 216, 248, 0.25);
+  border-radius: 8px; padding: 6px 12px; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; color: var(--texte);
+}
+.terr-choix input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+/* Révélation selon le mode (data-terrains sur le bloc). */
+.terr-manuel, .terr-conseils { display: none; }
+.bloc-terrains[data-terrains="manuel"] .terr-manuel { display: flex; }
+.bloc-terrains[data-terrains="manuel"] .terr-conseils { display: block; }
+.terr-auto-info {
+  display: none;
+  font-size: 0.9rem; line-height: 1.4; color: var(--bleu-ciel);
+  background: rgba(46, 143, 224, 0.10); border-radius: 8px; padding: 8px 10px;
+}
+.bloc-terrains[data-terrains="auto"] .terr-auto-info { display: block; }
+.terr-conseils { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.terr-conseil {
+  font-size: 0.9rem; line-height: 1.35; border-radius: 8px; padding: 7px 10px;
+}
+.terr-conseil.ko   { color: #ffd7d0; background: rgba(224, 76, 46, 0.16); }
+.terr-conseil.warn { color: #ffe6b0; background: rgba(224, 158, 46, 0.16); }
+.terr-conseil.ok   { color: #c7f0d2; background: rgba(46, 200, 120, 0.14); }
+
+.theme-clair .bloc-terrains { border-bottom-color: #e6edf5; }
+.theme-clair .terr-choix { background: #F5F9FD; border-color: #e6edf5; color: #0C1C2E; }
+.theme-clair .terr-auto-info { color: #55636f; }
+.theme-clair .terr-conseil.ko   { color: #8a1c0c; background: #fdece9; }
+.theme-clair .terr-conseil.warn { color: #8a5a0c; background: #fdf4e3; }
+.theme-clair .terr-conseil.ok   { color: #14683a; background: #e6f7ee; }
+
 /* Interrupteur "Présente" */
 .toggle {
   display: inline-flex;
