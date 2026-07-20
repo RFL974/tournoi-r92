@@ -749,12 +749,17 @@ function libelleMatch(m) {
   return 'Poule ' + String(m.poule);
 }
 
-/** Format d'après-midi d'une catégorie, déduit des matchs (défaut CROISE). */
+/**
+ * Format d'après-midi d'une catégorie, déduit des matchs (défaut CROISE).
+ * CROISE_DIAGONAL s'affiche EXACTEMENT comme CROISE (mêmes niveaux, même classement général,
+ * même podium) : on le mappe donc sur 'CROISE' pour réutiliser toute la logique d'affichage.
+ */
 function formatApresMidiCat(categorie) {
   const ms = matchs.filter(function (m) { return m.categorie === categorie && String(m.phase) === 'classement'; });
   for (let i = 0; i < ms.length; i++) {
     const f = String(ms[i].format || '').toUpperCase();
     if (f === 'COUPE_PLATEAU' || f === 'LIBRE' || f === 'CROISE') return f;
+    if (f === 'CROISE_DIAGONAL') return 'CROISE';
   }
   return 'CROISE';
 }

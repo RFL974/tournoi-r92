@@ -1049,11 +1049,11 @@ function comparerClassement(a, b) {
 /* ===================== PHASE APRÈS-MIDI (répartiteur multi-formats) ===================== */
 /**
  * Format d'après-midi RETENU pour une catégorie (défaut historique = CROISE).
- * Valeurs : CROISE / LIBRE / COUPE_PLATEAU.
+ * Valeurs : CROISE / CROISE_DIAGONAL / LIBRE / COUPE_PLATEAU.
  */
 function formatApresMidi(cat) {
   var f = (cat && cat.format_apresmidi != null) ? String(cat.format_apresmidi).trim().toUpperCase() : '';
-  return (f === 'LIBRE' || f === 'COUPE_PLATEAU') ? f : 'CROISE';
+  return (f === 'LIBRE' || f === 'COUPE_PLATEAU' || f === 'CROISE_DIAGONAL') ? f : 'CROISE';
 }
 
 /** Lit et parse le JSON `param_format` d'une catégorie (renvoie {} si vide ou illisible). */
@@ -1104,6 +1104,7 @@ function genererApresMidi(classeur) {
     var res;
     if (fmt === 'LIBRE')              res = fixturesApresMidiLibre(cat, cl);
     else if (fmt === 'COUPE_PLATEAU') res = fixturesApresMidiCoupePlateau(cat, cl, lireParamFormat(cat));
+    else if (fmt === 'CROISE_DIAGONAL') res = fixturesApresMidiCroiseDiagonal(cat, cl);
     else                              res = fixturesApresMidiCroise(cat, cl);
 
     if (res.error) { erreurs.push('Catégorie ' + cat.categorie + ' (' + fmt + ') : ' + res.error); }
@@ -1191,6 +1192,98 @@ function fixturesApresMidiCroise(cat, cl) {
     });
   }
   return { fixtures: fixtures };
+}
+
+/* ---------- Sous-générateur : CROISE_DIAGONAL ---------- */
+/**
+ * Classement croisé DIAGONAL. À NE PAS CONFONDRE avec le croisé classique ci-dessus :
+ *   - CROISE           : les équipes de MÊME rang s'affrontent (1er vs 1er, 2e vs 2e…).
+ *   - CROISE_DIAGONAL  : les rangs sont décalés (le 1er d'une poule affronte le 2e d'une AUTRE poule).
+ *
+ * Comme le croisé classique, l'après-midi reste organisé par NIVEAUX, mais ici chaque niveau
+ * regroupe DEUX rangs consécutifs (1ers+2es = Niveau 1, 3es+4es = Niveau 2…) croisés en diagonale.
+ * Ce sont de simples matchs isolés (aucune élimination ni propagation) dont les résultats alimentent
+ * le classement général cumulé, EXACTEMENT comme CROISE : on réutilise l'étiquetage de niveau
+ * (champ `poule` = N1, N2…), si bien que classementGeneral / podium fonctionnent sans adaptation.
+ *
+ * Règles de pairage (validées avec l'organisateur) :
+ *   - 2 poules : 1erA vs 2eB, 1erB vs 2eA, 3eA vs 4eB, 3eB vs 4eA…
+ *   - > 2 poules : ROTATION CYCLIQUE — haut de la poule i × bas de la poule (i+1) (1erA×2eB,
+ *     1erB×2eC, 1erC×2eA…), chaque équipe joue une fois.
+ *   - rang orphelin (effectif impair : un rang-haut sans rang-bas partenaire) : REPLI en croisé
+ *     classique — round-robin des équipes de MÊME rang. Une équipe seule est mise au repos (avert).
+ */
+function fixturesApresMidiCroiseDiagonal(cat, cl) {
+  if (!cl || !cl.poules || cl.poules.length < 2) {
+    return { fixtures: [], avert: ['une seule poule (ou pas de données) : classement croisé diagonal impossible.'] };
+  }
+  var poules = cl.poules;
+  var P = poules.length;
+  var rangMax = 0;
+  poules.forEach(function (p) { if (p.classement.length > rangMax) rangMax = p.classement.length; });
+
+  var idAt = function (i, r) { // id de l'équipe de rang r (0-indexé) dans la poule i, ou null
+    var eq = poules[i].classement[r];
+    return eq ? eq.id_equipe : null;
+  };
+
+  var fixtures = [];
+  var avert = [];
+  var niveau = 0; // 0-indexé ; libellé = 'N' + (niveau + 1)
+
+  // Un niveau = une paire de rangs consécutifs (rHaut, rBas).
+  for (var r = 0; r < rangMax; r += 2) {
+    niveau++;
+    var label = 'N' + niveau;
+    var rHaut = r, rBas = r + 1;
+
+    // Rang orphelin (aucun rang-bas dans ce niveau) -> repli croisé classique sur le rang-haut.
+    var basExiste = false;
+    for (var i = 0; i < P; i++) { if (idAt(i, rBas) != null) { basExiste = true; break; } }
+    if (!basExiste) {
+      var seuls = [];
+      for (var i = 0; i < P; i++) { var idS = idAt(i, rHaut); if (idS != null) seuls.push(idS); }
+      if (seuls.length >= 2) {
+        tourneeToutesRondes(seuls).forEach(function (pr) {
+          fixtures.push({ poule: label, equipe_A: pr.a, equipe_B: pr.b, round: pr.round, format: 'CROISE_DIAGONAL' });
+        });
+      } else if (seuls.length === 1) {
+        avert.push('niveau ' + label + ' : une seule équipe (rang ' + (rHaut + 1) + '), mise au repos.');
+      }
+      continue;
+    }
+
+    // Diagonale par rotation cyclique : haut de la poule i × bas de la poule (i+1) % P.
+    var joue = {}; // id -> true : équipes déjà appariées dans ce niveau
+    for (var i = 0; i < P; i++) {
+      var a = idAt(i, rHaut);
+      var b = idAt((i + 1) % P, rBas);
+      if (a != null && b != null) {
+        fixtures.push({ poule: label, equipe_A: a, equipe_B: b, round: 0, format: 'CROISE_DIAGONAL' });
+        joue[a] = true; joue[b] = true;
+      }
+    }
+
+    // Repli pour les équipes du niveau restées sans adversaire (poules de tailles inégales).
+    var restes = [];
+    for (var i = 0; i < P; i++) {
+      [rHaut, rBas].forEach(function (rr) {
+        var idR = idAt(i, rr);
+        if (idR != null && !joue[idR]) restes.push(idR);
+      });
+    }
+    if (restes.length >= 2) {
+      tourneeToutesRondes(restes).forEach(function (pr) {
+        fixtures.push({ poule: label, equipe_A: pr.a, equipe_B: pr.b, round: 1, format: 'CROISE_DIAGONAL' });
+      });
+    } else if (restes.length === 1) {
+      avert.push('niveau ' + label + ' : une équipe sans adversaire en diagonale, mise au repos.');
+    }
+  }
+
+  var out = { fixtures: fixtures };
+  if (avert.length) out.avert = avert;
+  return out;
 }
 
 /* ---------- Sous-générateur : LIBRE ---------- */

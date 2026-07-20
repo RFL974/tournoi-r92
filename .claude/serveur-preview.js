@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const RACINE = path.join(__dirname, '..', 'frontend');
-const PORT = 8123;
+const PORT = process.env.PORT || 8123;
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',

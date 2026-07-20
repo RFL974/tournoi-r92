@@ -5,6 +5,24 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Nouveau format d'après-midi : classement croisé **diagonal** — 2026-07-20
+4ᵉ format d'après-midi (aux côtés de Croisé / Libre / Coupe + Plateau), choisi par catégorie.
+⚠️ **backend à redéployer** (nouvelle sous-fonction `fixturesApresMidiCroiseDiagonal`) + frontend à
+publier.
+- **Principe** : comme le croisé, mais les rangs sont **décalés** — le **1ᵉʳ d'une poule affronte le
+  2ᵉ d'une AUTRE poule** (au lieu du 1ᵉʳ contre le 1ᵉʳ). Des affiches plus imprévisibles, **sans
+  aucune élimination** : de simples matchs isolés qui alimentent le **même classement général +
+  podium** que le croisé.
+- **Pairage** : 2 poules → `1ᵉʳA vs 2ᵉB`, `1ᵉʳB vs 2ᵉA`, `3ᵉA vs 4ᵉB`… ; ≥ 3 poules → **rotation
+  cyclique** (`1ᵉʳA vs 2ᵉB`, `1ᵉʳB vs 2ᵉC`, `1ᵉʳC vs 2ᵉA`…) ; **effectif impair** → repli en croisé
+  classique pour le rang orphelin (équipe seule mise au repos, avertissement).
+- **Distinction voulue** dans l'UI : titre « croisé **diagonal** », explication qui répète
+  « 1ᵉʳ contre 2ᵉ » vs « 1ᵉʳ contre 1ᵉʳ », et récap de confirmation en capitales **DIAGONAL** pour
+  ne pas le confondre avec le croisé simple au moment du choix.
+- **Réutilisation** : niveaux étiquetés `N1`, `N2`… comme le croisé → classement, podium et
+  affichage spectateur/saisie **partagés sans code dédié**.
+- Doc : formats-apres-midi.md §2.
+
 ### Répartition automatique des terrains + carte visuelle — 2026-07-20
 Nouvelle carte admin **« 🗺️ Terrains & répartition »** (entre Équipes et Poules & planning) qui
 part des **grands terrains réels** et les **découpe automatiquement** en mini-terrains attribués aux
