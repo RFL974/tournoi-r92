@@ -5,6 +5,27 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Répartition automatique des terrains + carte visuelle — 2026-07-20
+Nouvelle carte admin **« 🗺️ Terrains & répartition »** (entre Équipes et Poules & planning) qui
+part des **grands terrains réels** et les **découpe automatiquement** en mini-terrains attribués aux
+catégories. Fini l'attribution « au hasard » du champ Terrains. ⚠️ **backend à redéployer** (nouvelle
+action `enregistrerPlanTerrains` qui mémorise le plan) + frontend à publier.
+- **Déclaration** : grands terrains (nom, type 🏉/⚽, longueur × largeur, **emplacement** sur une
+  grille 3×3), **couloir** de circulation (5 m), et **taille de terrain par catégorie** (ou « terrain
+  entier » pour U14). **Tableau de capacité** recalculé en direct (combien de mini-terrains tiennent
+  par grand terrain, couloirs compris, 2 orientations testées).
+- **Répartir** : distribue les mini-terrains **selon le nombre d'équipes** (charge équilibrée),
+  chaque catégorie **groupée** ; **partage** d'un grand terrain (scindé en deux) s'il y a plus de
+  catégories que de terrains ; **table des marques** = 1 mini-terrain central réservé (« TM »),
+  scindée en deux en cas de partage ; **U14** occupe un grand terrain entier.
+- **Numérotation continue** : mini-terrains numérotés **1…N**, chaque numéro **unique** (évite la
+  confusion à la table des marques, ex. plus de `R1-1`/`R2-1`).
+- **Carte visuelle** dessinée **« comme sur le site »** (terrains à leur vraie position via
+  l'emplacement 3×3) : couleur = catégorie, numéro = terrain, zone grise = table des marques.
+- **Appliquer** écrit les numéros dans le champ **Terrains** de chaque catégorie (action existante
+  `enregistrerCategorie`) → utilisés à la génération du planning. Ajustement manuel toujours possible.
+- Doc : guide-utilisateur §1.4.
+
 ### Podium aussi en Coupe + Plateau — 2026-07-19
 Le **podium 🥇🥈🥉** s'affiche désormais aussi pour le format **Coupe + Plateau** (avant : croisé
 uniquement). Il apparaît dès qu'il est **décidé**. **Frontend seul, pas de redéploiement backend.**
