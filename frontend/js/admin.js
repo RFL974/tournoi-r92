@@ -1821,14 +1821,48 @@ function nbTuiles(L, W, l, w, m) {
   return Math.max(0, cols) * Math.max(0, rows);
 }
 
-/** Capacité d'un grand terrain pour une catégorie : on teste les 2 orientations de
- *  la tuile (posée dans un sens ou dans l'autre) et on garde la meilleure. */
+/**
+ * Packing GUILLOTINE à orientations MIXTES : place le maximum de mini-terrains (l×w)
+ * dans un rectangle, en autorisant des terrains dans un sens ET dans l'autre pour
+ * remplir les bandes restantes. Renvoie la liste des mini-terrains {x,y,w,h}.
+ * Heuristique : on remplit un bloc régulier (dans la meilleure orientation), puis on
+ * remplit récursivement la bande de DROITE (pleine hauteur) et la bande du BAS (sous le
+ * bloc) ; on teste les 2 orientations du bloc et on garde le total le plus élevé.
+ */
+function packerRect(x0, y0, L, W, tl, tw, m) {
+  if (L <= 0 || W <= 0 || tl <= 0 || tw <= 0) return [];
+  let best = [];
+  [[tl, tw], [tw, tl]].forEach(function (o) {
+    const a = o[0], b = o[1];
+    const cols = Math.floor((L + m) / (a + m));
+    const rows = Math.floor((W + m) / (b + m));
+    if (cols < 1 || rows < 1) return;
+    let tuiles = [];
+    for (let j = 0; j < rows; j++)
+      for (let i = 0; i < cols; i++)
+        tuiles.push({ x: x0 + i * (a + m), y: y0 + j * (b + m), w: a, h: b });
+    const usedW = cols * (a + m) - m, usedH = rows * (b + m) - m;
+    const bandeDroite = L - usedW - m;                    // bande à droite du bloc (pleine hauteur)
+    const bandeBas    = W - usedH - m;                    // bande sous le bloc (largeur du bloc)
+    if (bandeDroite > 0) tuiles = tuiles.concat(packerRect(x0 + usedW + m, y0, bandeDroite, W, tl, tw, m));
+    if (bandeBas > 0)    tuiles = tuiles.concat(packerRect(x0, y0 + usedH + m, usedW, bandeBas, tl, tw, m));
+    if (tuiles.length > best.length) best = tuiles;
+  });
+  return best;
+}
+
+/** Liste des mini-terrains d'une catégorie sur une zone (origine ox,oy). plein = zone entière. */
+function packerZone(ox, oy, L, W, tile, m) {
+  if (!tile) return [];
+  if (tile.plein) return [{ x: ox, y: oy, w: L, h: W }];
+  return packerRect(ox, oy, L, W, tile.l, tile.w, m);
+}
+
+/** Capacité d'un grand terrain pour une catégorie (packing à orientations mixtes). */
 function capaciteTerrain(field, tile, m) {
   if (!tile) return 0;
   if (tile.plein) return 1;                              // un match = tout le grand terrain
-  const droit  = nbTuiles(field.L, field.W, tile.l, tile.w, m);
-  const tourne = nbTuiles(field.L, field.W, tile.w, tile.l, m);
-  return Math.max(droit, tourne);
+  return packerZone(0, 0, field.L, field.W, tile, m).length;
 }
 
 /** Plan des terrains actuellement enregistré (repli sur les valeurs par défaut). */
@@ -2243,8 +2277,7 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
       let s = 0;
       fieldsNormaux.forEach(function (f) {
         const horiz = f.L >= f.W;
-        const g = grille(horiz ? (f.L - m) / 2 : f.L, horiz ? f.W : (f.W - m) / 2, cat.tile, m);
-        s += g.n;                                            // la table des marques ne coûte plus un terrain
+        s += packerZone(0, 0, horiz ? (f.L - m) / 2 : f.L, horiz ? f.W : (f.W - m) / 2, cat.tile, m).length;
       });
       return Math.max(0.1, s / fieldsNormaux.length);
     }
@@ -2279,7 +2312,6 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
 
   // 4) Attribution aux grands terrains physiques (SOLO d'abord, puis SCINDÉS).
   const fieldsPlan = [];
-  let fi = 0;
 
   function poserSolo(f, prefix, cat, estPlein) {
     if (estPlein) {                                       // U14 : le match occupe tout le terrain
@@ -2289,17 +2321,17 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
         tiles: [{ id: id, x: 0, y: 0, w: f.L, h: f.W, label: cat.name + ' · ' + id }],
         table: { x: Math.max(0, f.L / 2 - tmL / 2), y: Math.max(0, f.W - tmW), w: tmL, h: tmW, split: false } }] };
     }
-    const g = grille(f.L, f.W, cat.tile, m);
-    const cells = cellulesGrille(0, 0, g, m);
-    if (cells.length === 0) avert.push(f.nom + ' : trop petit pour un terrain ' + cat.name + '.');
+    const rects = packerZone(0, 0, f.L, f.W, cat.tile, m); // packing à orientations mixtes
+    if (rects.length === 0) avert.push(f.nom + ' : trop petit pour un terrain ' + cat.name + '.');
     const tiles = [];                                        // tous les mini-terrains sont jouables
-    cells.forEach(function (cell) {
+    rects.forEach(function (r) {
       numero++; const id = String(numero);
-      tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: id });
+      tiles.push({ id: id, x: r.x, y: r.y, w: r.w, h: r.h, label: id });
       parCategorie[cat.name].push(id);
     });
-    // Table des marques : petite zone (tmL×tmW) posée dans le couloir le plus central (aucun terrain perdu).
-    const table = cells.length ? positionTableMarques(g, m, f.L, f.W, tmL, tmW, 0, 0, f.L / 2, f.W / 2, false) : null;
+    // Table des marques : petite zone posée dans le couloir central (grille de référence).
+    const gRef = grille(f.L, f.W, cat.tile, m);
+    const table = rects.length ? positionTableMarques(gRef, m, f.L, f.W, tmL, tmW, 0, 0, f.L / 2, f.W / 2, false) : null;
     return { field: f, prefix: prefix, mode: 'solo', zones: [{ cat: cat.name, color: couleur[cat.name],
       tiles: tiles, table: table }] };
   }
@@ -2308,19 +2340,19 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
     const horizontal = f.L >= f.W;                        // terrain large → coupe gauche/droite
     const zones = [];
     function demi(cat, ox, oy, zL, zW, suff, cote) {
-      const g = grille(zL, zW, cat.tile, m);
-      const cells = cellulesGrille(ox, oy, g, m);
-      if (cells.length === 0) avert.push(f.nom + ' (demi) : trop petit pour ' + cat.name + '.');
+      const rects = packerZone(ox, oy, zL, zW, cat.tile, m); // packing à orientations mixtes
+      if (rects.length === 0) avert.push(f.nom + ' (demi) : trop petit pour ' + cat.name + '.');
       const tiles = [];                                    // tous les mini-terrains sont jouables
-      cells.forEach(function (cell) {
+      rects.forEach(function (r) {
         numero++; const id = String(numero);
-        tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: id });
+        tiles.push({ id: id, x: r.x, y: r.y, w: r.w, h: r.h, label: id });
         parCategorie[cat.name].push(id);
       });
       // Table des marques : petite zone posée côté séparation centrale (→ deux tables face à face).
+      const gRef = grille(zL, zW, cat.tile, m);
       const tX = horizontal ? (cote === 'gauche' ? zL : 0) : zL / 2;
       const tY = horizontal ? zW / 2 : (cote === 'haut' ? zW : 0);
-      const table = cells.length ? positionTableMarques(g, m, zL, zW, tmL, tmW, ox, oy, tX, tY, true) : null;
+      const table = rects.length ? positionTableMarques(gRef, m, zL, zW, tmL, tmW, ox, oy, tX, tY, true) : null;
       zones.push({ cat: cat.name, color: couleur[cat.name], tiles: tiles, table: table });
     }
     if (horizontal) {
@@ -2335,13 +2367,44 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
     return { field: f, prefix: prefix, mode: 'split', zones: zones };
   }
 
-  soloQueue.forEach(function (item) {
-    if (fi >= F) return;
-    fieldsPlan.push(poserSolo(fields[fi], prefixes[fi], item.cat, item.plein)); fi++;
+  // 4b) Quel grand terrain pour quelle catégorie ? On ATTRIBUE les terrains solo de façon
+  //     à maximiser le nombre de mini-terrains : chaque catégorie reçoit les grands terrains
+  //     où elle « rentre » le mieux (une catégorie à petits terrains profite d'un grand terrain).
+  const dispo = fields.map(function (f, i) { return i; }); // indices de grands terrains libres
+
+  // Catégories « plein » (U14) : un terrain entier = 1 match quel que soit sa taille → n'importe quel terrain.
+  soloQueue.filter(function (s) { return s.plein; }).forEach(function (s) {
+    if (!dispo.length) return;
+    const i = dispo.shift();
+    fieldsPlan.push(poserSolo(fields[i], prefixes[i], s.cat, true));
   });
+
+  // Catégories normales : combien de terrains solo chacune (besoin), puis attribution GLOUTONNE
+  // du meilleur couple (catégorie, grand terrain) au sens du nombre de mini-terrains.
+  const besoin = {}, catParNom = {};
+  soloQueue.filter(function (s) { return !s.plein; }).forEach(function (s) {
+    besoin[s.cat.name] = (besoin[s.cat.name] || 0) + 1; catParNom[s.cat.name] = s.cat;
+  });
+  const couples = [];
+  Object.keys(besoin).forEach(function (nom) {
+    dispo.forEach(function (i) { couples.push({ nom: nom, i: i, n: capaciteTerrain(fields[i], catParNom[nom].tile, m) }); });
+  });
+  couples.sort(function (a, b) { return b.n - a.n; });        // meilleurs remplissages d'abord
+  const prise = {};
+  couples.forEach(function (c) {
+    if (besoin[c.nom] > 0 && !prise[c.i]) {
+      prise[c.i] = true; besoin[c.nom]--;
+      fieldsPlan.push(poserSolo(fields[c.i], prefixes[c.i], catParNom[c.nom], false));
+    }
+  });
+  const restants = dispo.filter(function (i) { return !prise[i]; });
+
+  // Terrains à SCINDER (deux catégories) : sur les grands terrains restants.
+  let r = 0;
   paires.forEach(function (p) {
-    if (fi >= F) return;
-    fieldsPlan.push(poserSplit(fields[fi], prefixes[fi], p[0], p[1])); fi++;
+    if (r >= restants.length) return;
+    const i = restants[r++];
+    fieldsPlan.push(poserSplit(fields[i], prefixes[i], p[0], p[1]));
   });
   if (soloQueue.length + paires.length > F) {
     avert.push('Pas assez de grands terrains : certaines catégories n’ont pas pu être placées.');
