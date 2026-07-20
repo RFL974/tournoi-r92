@@ -1808,7 +1808,9 @@ const DIMENSIONS_CATEGORIE_DEFAUT = {
   U14: { plein: true }
 };
 
-const COULOIR_DEFAUT = 5; // couloir de circulation entre mini-terrains (m)
+const COULOIR_DEFAUT = 5;   // couloir de circulation entre mini-terrains (m)
+const TM_L_DEFAUT = 4;      // table des marques : longueur par défaut (m)
+const TM_W_DEFAUT = 4;      // table des marques : largeur par défaut (m)
 
 /** Nombre de mini-terrains (l×w) qui tiennent dans un rectangle L×W avec un couloir
  *  de m mètres ENTRE eux (pas de marge sur les bords). */
@@ -1845,7 +1847,9 @@ function planTerrainsActuel() {
   try { if (g.dimensions_categories) dims = JSON.parse(g.dimensions_categories); } catch (e) {}
   const couloir = (g.couloir_terrain_m != null && g.couloir_terrain_m !== '')
     ? (parseFloat(g.couloir_terrain_m) || 0) : COULOIR_DEFAUT;
-  return { terrains: terrains, dims: dims, couloir: couloir };
+  const tmL = (g.tm_longueur_m != null && g.tm_longueur_m !== '') ? (parseFloat(g.tm_longueur_m) || 0) : TM_L_DEFAUT;
+  const tmW = (g.tm_largeur_m  != null && g.tm_largeur_m  !== '') ? (parseFloat(g.tm_largeur_m)  || 0) : TM_W_DEFAUT;
+  return { terrains: terrains, dims: dims, couloir: couloir, tmL: tmL, tmW: tmW };
 }
 
 /** Noms des catégories présentes (celles qu'on dimensionne). */
@@ -1882,6 +1886,16 @@ function injecterTerrains() {
   h += '<div class="champ-reglage" style="margin-top:14px">' +
          '<label for="couloir-terrain">Couloir de circulation entre les terrains (m)</label>' +
          '<input type="number" id="couloir-terrain" min="0" step="1" value="' + echapper(String(plan.couloir)) + '">' +
+       '</div>';
+
+  h += '<div class="champ-reglage">' +
+         '<label for="tm-l">Table des marques (m)</label>' +
+         '<span class="tm-taille">' +
+           '<input type="number" id="tm-l" min="0" step="1" value="' + echapper(String(plan.tmL)) + '" aria-label="Longueur table des marques (m)">' +
+           '<span class="terr-x">×</span>' +
+           '<input type="number" id="tm-w" min="0" step="1" value="' + echapper(String(plan.tmW)) + '" aria-label="Largeur table des marques (m)">' +
+           '<span class="terr-unite">m</span>' +
+         '</span>' +
        '</div>';
 
   h += '<h3 class="terr-titre">Taille de terrain par catégorie</h3>';
@@ -2003,6 +2017,11 @@ function lireCouloir() {
   const el = document.getElementById('couloir-terrain');
   return el ? (parseFloat(el.value) || 0) : COULOIR_DEFAUT;
 }
+function lireTailleTM() {
+  const l = parseFloat((document.getElementById('tm-l') || {}).value);
+  const w = parseFloat((document.getElementById('tm-w') || {}).value);
+  return { l: (l > 0 ? l : TM_L_DEFAUT), w: (w > 0 ? w : TM_W_DEFAUT) };
+}
 
 /** Recalcule et réaffiche le tableau de capacité à partir des saisies en cours. */
 function recalculerCapacite() {
@@ -2048,6 +2067,7 @@ async function onEnregistrerPlanTerrains() {
   const terrains = lireTerrainsDuFormulaire();
   const dims = lireDimensionsDuFormulaire();
   const couloir = lireCouloir();
+  const tm = lireTailleTM();
 
   if (terrains.length === 0) { afficherMessage(message, 'Ajoute au moins un grand terrain.', 'ko'); return; }
   const invalide = terrains.some(function (t) { return !(t.L > 0 && t.W > 0); });
@@ -2056,7 +2076,9 @@ async function onEnregistrerPlanTerrains() {
   const data = {
     terrains_physiques:     JSON.stringify(terrains),
     couloir_terrain_m:      String(couloir),
-    dimensions_categories:  JSON.stringify(dims)
+    dimensions_categories:  JSON.stringify(dims),
+    tm_longueur_m:          String(tm.l),
+    tm_largeur_m:           String(tm.w)
   };
   const texte = bouton.textContent;
   bouton.disabled = true; bouton.textContent = 'Enregistrement…';
@@ -2147,11 +2169,31 @@ function repartitionProportionnelle(total, poids) {
 }
 
 /**
+ * Position de la table des marques : petite zone (tmL×tmW) placée dans le COULOIR le plus
+ * proche du point cible (tX,tY) — donc entre les mini-terrains, sans en supprimer aucun.
+ * (ox,oy) = origine de la zone ; renvoie des coordonnées absolues. split = deux tables (partage).
+ */
+function positionTableMarques(g, m, zoneL, zoneW, tmL, tmW, ox, oy, tX, tY, split) {
+  const cxs = []; for (let i = 0; i < g.cols - 1; i++) cxs.push(i * (g.a + m) + g.a + m / 2); // couloirs verticaux
+  const cys = []; for (let j = 0; j < g.rows - 1; j++) cys.push(j * (g.b + m) + g.b + m / 2); // couloirs horizontaux
+  const proche = function (arr, cible, defaut) {
+    return arr.length ? arr.reduce(function (p, c) { return Math.abs(c - cible) < Math.abs(p - cible) ? c : p; }) : defaut;
+  };
+  const cx = proche(cxs, tX, zoneL / 2);
+  const cy = proche(cys, tY, zoneW / 2);
+  const x = Math.max(0, Math.min(cx - tmL / 2, zoneL - tmL)); // reste dans la zone
+  const y = Math.max(0, Math.min(cy - tmW / 2, zoneW - tmW));
+  return { x: ox + x, y: oy + y, w: tmL, h: tmW, split: !!split };
+}
+
+/**
  * Calcule la répartition complète : quelle catégorie sur quel grand terrain, avec
  * la position de chaque mini-terrain (pour la carte) et la table des marques.
  * @return { fieldsPlan, parCategorie:{cat:[ids]}, couleur:{cat:hex}, avert:[] }
  */
-function allouerTerrains(fields, cats, m) {
+function allouerTerrains(fields, cats, m, tmL, tmW) {
+  tmL = tmL > 0 ? tmL : TM_L_DEFAUT;
+  tmW = tmW > 0 ? tmW : TM_W_DEFAUT;
   const avert = [];
   const parCategorie = {};
   const couleur = {};
@@ -2202,7 +2244,7 @@ function allouerTerrains(fields, cats, m) {
       fieldsNormaux.forEach(function (f) {
         const horiz = f.L >= f.W;
         const g = grille(horiz ? (f.L - m) / 2 : f.L, horiz ? f.W : (f.W - m) / 2, cat.tile, m);
-        s += Math.max(0, g.n - (g.n > 1 ? 1 : 0));
+        s += g.n;                                            // la table des marques ne coûte plus un terrain
       });
       return Math.max(0.1, s / fieldsNormaux.length);
     }
@@ -2243,25 +2285,23 @@ function allouerTerrains(fields, cats, m) {
     if (estPlein) {                                       // U14 : le match occupe tout le terrain
       numero++; const id = String(numero);
       parCategorie[cat.name].push(id);
-      const tW = Math.max(8, Math.min(14, f.L * 0.14));
       return { field: f, prefix: prefix, mode: 'plein', zones: [{ cat: cat.name, color: couleur[cat.name],
         tiles: [{ id: id, x: 0, y: 0, w: f.L, h: f.W, label: cat.name + ' · ' + id }],
-        table: { x: f.L / 2 - tW / 2, y: f.W - 5, w: tW, h: 4, split: false } }] };
+        table: { x: Math.max(0, f.L / 2 - tmL / 2), y: Math.max(0, f.W - tmW), w: tmL, h: tmW, split: false } }] };
     }
     const g = grille(f.L, f.W, cat.tile, m);
     const cells = cellulesGrille(0, 0, g, m);
     if (cells.length === 0) avert.push(f.nom + ' : trop petit pour un terrain ' + cat.name + '.');
-    const tableCell = (cells.length > 1)
-      ? cells[Math.floor((g.rows - 1) / 2) * g.cols + Math.floor((g.cols - 1) / 2)] : null; // 1 tuile centrale = table
-    const tiles = [];
+    const tiles = [];                                        // tous les mini-terrains sont jouables
     cells.forEach(function (cell) {
-      if (tableCell && cell === tableCell) return;
       numero++; const id = String(numero);
       tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: id });
       parCategorie[cat.name].push(id);
     });
+    // Table des marques : petite zone (tmL×tmW) posée dans le couloir le plus central (aucun terrain perdu).
+    const table = cells.length ? positionTableMarques(g, m, f.L, f.W, tmL, tmW, 0, 0, f.L / 2, f.W / 2, false) : null;
     return { field: f, prefix: prefix, mode: 'solo', zones: [{ cat: cat.name, color: couleur[cat.name],
-      tiles: tiles, table: tableCell ? { x: tableCell.x, y: tableCell.y, w: tableCell.w, h: tableCell.h, split: false } : null }] };
+      tiles: tiles, table: table }] };
   }
 
   function poserSplit(f, prefix, cA, cB) {
@@ -2271,22 +2311,17 @@ function allouerTerrains(fields, cats, m) {
       const g = grille(zL, zW, cat.tile, m);
       const cells = cellulesGrille(ox, oy, g, m);
       if (cells.length === 0) avert.push(f.nom + ' (demi) : trop petit pour ' + cat.name + '.');
-      let ti = null;
-      if (cells.length > 1) {                             // table près de la séparation centrale
-        let ci, cj;
-        if (horizontal) { ci = (cote === 'gauche') ? g.cols - 1 : 0; cj = Math.floor((g.rows - 1) / 2); }
-        else            { cj = (cote === 'haut')   ? g.rows - 1 : 0; ci = Math.floor((g.cols - 1) / 2); }
-        ti = cells[cj * g.cols + ci];
-      }
-      const tiles = [];
+      const tiles = [];                                    // tous les mini-terrains sont jouables
       cells.forEach(function (cell) {
-        if (ti && cell === ti) return;
         numero++; const id = String(numero);
         tiles.push({ id: id, x: cell.x, y: cell.y, w: cell.w, h: cell.h, label: id });
         parCategorie[cat.name].push(id);
       });
-      zones.push({ cat: cat.name, color: couleur[cat.name], tiles: tiles,
-        table: ti ? { x: ti.x, y: ti.y, w: ti.w, h: ti.h, split: true } : null });
+      // Table des marques : petite zone posée côté séparation centrale (→ deux tables face à face).
+      const tX = horizontal ? (cote === 'gauche' ? zL : 0) : zL / 2;
+      const tY = horizontal ? zW / 2 : (cote === 'haut' ? zW : 0);
+      const table = cells.length ? positionTableMarques(g, m, zL, zW, tmL, tmW, ox, oy, tX, tY, true) : null;
+      zones.push({ cat: cat.name, color: couleur[cat.name], tiles: tiles, table: table });
     }
     if (horizontal) {
       const hL = (f.L - m) / 2;
@@ -2328,7 +2363,8 @@ function onRepartir() {
   if (fields.length === 0) { cont.innerHTML = '<div class="repart-avert">⚠️ Déclare au moins un grand terrain valide.</div>'; return; }
   if (cats.length === 0) { cont.innerHTML = '<div class="repart-avert">⚠️ Aucune catégorie avec une taille de terrain valide.</div>'; return; }
 
-  repartitionCalculee = allouerTerrains(fields, cats, m);
+  const tm = lireTailleTM();
+  repartitionCalculee = allouerTerrains(fields, cats, m, tm.l, tm.w);
   afficherRepartition(repartitionCalculee, cats);
 }
 
@@ -2383,9 +2419,12 @@ function groupeTerrain(fp, ox, oy, ppm) {
         g += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (yy + hh / 2 + 3).toFixed(1) + '" class="carte-tuile" fill="' + z.color + '">' + echapper(t.label) + '</text>';
     });
     if (z.table) {
-      const tx = z.table.x * ppm, ty = z.table.y * ppm, tw = z.table.w * ppm, th = z.table.h * ppm;
-      g += '<rect x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" width="' + tw.toFixed(1) + '" height="' + th.toFixed(1) + '" class="carte-table"/>';
-      if (tw > 18 && th > 11) g += '<text x="' + (tx + tw / 2).toFixed(1) + '" y="' + (ty + th / 2 + 3).toFixed(1) + '" class="carte-tm">TM</text>';
+      // taille minimale d'affichage (une TM de 4 m ≈ 6 px, sinon invisible) — centrée sur sa vraie position
+      const cxT = (z.table.x + z.table.w / 2) * ppm, cyT = (z.table.y + z.table.h / 2) * ppm;
+      const tw = Math.max(z.table.w * ppm, 9), th = Math.max(z.table.h * ppm, 9);
+      const tx = cxT - tw / 2, ty = cyT - th / 2;
+      g += '<rect x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" width="' + tw.toFixed(1) + '" height="' + th.toFixed(1) + '" class="carte-table"><title>Table des marques</title></rect>';
+      if (tw > 18 && th > 11) g += '<text x="' + cxT.toFixed(1) + '" y="' + (cyT + 3).toFixed(1) + '" class="carte-tm">TM</text>';
     }
   });
   g += '</g>';
