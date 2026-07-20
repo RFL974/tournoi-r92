@@ -463,6 +463,57 @@ function nbEquipesParCategorie() {
 }
 
 /**
+ * SIGNATURE DE GÉNÉRATION (« cerveau des dépendances », étape 2).
+ * ⚠️ DOIT rester STRICTEMENT identique à signatureGeneration() du backend (Code.gs) :
+ * même champs, même tri, même hachage — sinon la comparaison est faussée. On résume les
+ * réglages qui décalent réellement les horaires des matchs ; on EXCLUT heure_fin /
+ * heure_fin_auto (simple cible d'arrivée, réécrite par la génération en mode auto).
+ */
+function hachageChaine(s) {
+  let h = 5381;
+  s = String(s);
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 33 + s.charCodeAt(i)) % 2147483647;
+  }
+  return h.toString(36);
+}
+
+function signatureGeneration(global, categories, equipes) {
+  global = global || {};
+  const parts = [];
+  parts.push('hd=' + (global.heure_debut || ''));
+  parts.push('bt=' + (global.battement_terrain_min || ''));
+  parts.push('pd=' + (global.pause_dejeuner_debut || ''));
+  parts.push('pdd=' + (global.pause_dejeuner_duree_min || ''));
+
+  const nbCat = {};
+  (equipes || []).forEach(function (e) {
+    const c = String(e.categorie || '');
+    if (c) nbCat[c] = (nbCat[c] || 0) + 1;
+  });
+
+  const cats = (categories || []).filter(function (c) {
+    return String(c.presente).toLowerCase() === 'oui';
+  }).slice().sort(function (a, b) {
+    const x = String(a.categorie), y = String(b.categorie);
+    return x < y ? -1 : (x > y ? 1 : 0);
+  });
+
+  cats.forEach(function (c) {
+    parts.push('cat=' + c.categorie
+      + '|t=' + (c.terrains || '')
+      + '|np=' + (c.nb_poules || '')
+      + '|fmt=' + (c.format_mi_temps || '')
+      + '|dm=' + (c.duree_mi_temps_min || '')
+      + '|pm=' + (c.pause_mi_temps_min || '')
+      + '|rc=' + (c.recup_entre_matchs_min || '')
+      + '|n=' + (nbCat[String(c.categorie)] || 0));
+  });
+
+  return hachageChaine(parts.join(';'));
+}
+
+/**
  * Calcule l'état de chaque étape de préparation, dans l'ordre logique de la journée.
  * Renvoie un tableau d'objets { cle, titre, ancre, statut, detail }.
  * statut ∈ 'fait' | 'afaire' | 'arefaire' | 'attente'.
@@ -520,7 +571,9 @@ function calculerEtatsEtapes() {
     }
   }
 
-  // 5) Poules & planning (à refaire si une catégorie « jouable » est absente du planning)
+  // 5) Poules & planning
+  //    À refaire si : une catégorie « jouable » est absente du planning (cas structurel),
+  //    OU si un réglage a changé depuis la dernière génération (signature ≠ celle stockée).
   if (matin.length === 0) {
     etapes.push({ cle: 'poules', titre: 'Poules & planning', ancre: 'bloc-generation', statut: 'afaire', detail: 'À générer' });
   } else {
@@ -529,8 +582,16 @@ function calculerEtatsEtapes() {
     const manquantes = catsPresentes
       .filter(function (c) { return nbParCat[String(c.categorie)] >= 2 && !catsDansPlanning[String(c.categorie)]; })
       .map(function (c) { return String(c.categorie); });
+
+    // Signature enregistrée à la dernière génération vs signature des réglages actuels.
+    const sigStockee = g.signature_generation || '';
+    const sigActuelle = signatureGeneration(g, configCourante.categories, equipesCourantes);
+    const reglagesModifies = sigStockee && sigActuelle !== sigStockee;
+
     if (manquantes.length) {
       etapes.push({ cle: 'poules', titre: 'Poules & planning', ancre: 'bloc-generation', statut: 'arefaire', detail: 'Absentes du planning : ' + manquantes.join(', ') });
+    } else if (reglagesModifies) {
+      etapes.push({ cle: 'poules', titre: 'Poules & planning', ancre: 'bloc-generation', statut: 'arefaire', detail: 'Réglages modifiés depuis la génération' });
     } else {
       etapes.push({ cle: 'poules', titre: 'Poules & planning', ancre: 'bloc-generation', statut: 'fait', detail: matin.length + ' match(s) le matin' });
     }

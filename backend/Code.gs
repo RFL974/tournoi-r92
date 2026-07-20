@@ -1890,6 +1890,64 @@ function effacerParamGlobal(onglet, nom) {
   }
 }
 
+/**
+ * SIGNATURE DE GÉNÉRATION (« cerveau des dépendances », étape 2).
+ * Résume, en une courte empreinte, tous les réglages qui influent RÉELLEMENT sur les
+ * horaires des matchs. Enregistrée dans Config à chaque génération ; la page admin
+ * recalcule la même empreinte à partir des réglages courants et, si elle diffère,
+ * affiche « à recalculer » (les poules ne sont plus à jour).
+ *
+ * IMPORTANT : cette fonction DOIT rester identique à celle de frontend/js/admin.js
+ * (même liste de champs, même tri, même hachage) — sinon la comparaison est faussée.
+ * On EXCLUT volontairement heure_fin / heure_fin_auto : ce ne sont qu'une cible d'arrivée,
+ * ils ne décalent aucun match (et heure_fin est réécrite par la génération en mode auto).
+ */
+function hachageChaine(s) {
+  var h = 5381;
+  s = String(s);
+  for (var i = 0; i < s.length; i++) {
+    h = (h * 33 + s.charCodeAt(i)) % 2147483647;
+  }
+  return h.toString(36);
+}
+
+function signatureGeneration(global, categories, equipes) {
+  global = global || {};
+  var parts = [];
+  parts.push('hd=' + (global.heure_debut || ''));
+  parts.push('bt=' + (global.battement_terrain_min || ''));
+  parts.push('pd=' + (global.pause_dejeuner_debut || ''));
+  parts.push('pdd=' + (global.pause_dejeuner_duree_min || ''));
+
+  // Nombre d'équipes par catégorie.
+  var nbCat = {};
+  (equipes || []).forEach(function (e) {
+    var c = String(e.categorie || '');
+    if (c) nbCat[c] = (nbCat[c] || 0) + 1;
+  });
+
+  // Catégories présentes, triées par nom (comparaison brute → même ordre partout).
+  var cats = (categories || []).filter(function (c) {
+    return String(c.presente).toLowerCase() === 'oui';
+  }).slice().sort(function (a, b) {
+    var x = String(a.categorie), y = String(b.categorie);
+    return x < y ? -1 : (x > y ? 1 : 0);
+  });
+
+  cats.forEach(function (c) {
+    parts.push('cat=' + c.categorie
+      + '|t=' + (c.terrains || '')
+      + '|np=' + (c.nb_poules || '')
+      + '|fmt=' + (c.format_mi_temps || '')
+      + '|dm=' + (c.duree_mi_temps_min || '')
+      + '|pm=' + (c.pause_mi_temps_min || '')
+      + '|rc=' + (c.recup_entre_matchs_min || '')
+      + '|n=' + (nbCat[String(c.categorie)] || 0));
+  });
+
+  return hachageChaine(parts.join(';'));
+}
+
 function genererPoulesEtPlanning(classeur) {
   var config = lireConfig(classeur);
   var equipes = lireOngletSimple(classeur, 'Equipes');
@@ -1971,6 +2029,11 @@ function genererPoulesEtPlanning(classeur) {
   // tournoi précédent restent dans l'onglet Historique, tagués avec l'ancien identifiant.
   ecrireParamGlobal(classeur.getSheetByName('Config'), 'tournoi_id',
     Utilities.formatDate(new Date(), classeur.getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm:ss'));
+
+  // Empreinte des réglages utilisés : permet à la page admin de détecter qu'un réglage a
+  // changé depuis cette génération (pastille « à recalculer »). Voir signatureGeneration().
+  ecrireParamGlobal(classeur.getSheetByName('Config'), 'signature_generation',
+    signatureGeneration(global, config.categories, equipes));
 
   return {
     ok: true,
