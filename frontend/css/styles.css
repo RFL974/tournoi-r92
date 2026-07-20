@@ -1374,3 +1374,66 @@ body.theme-clair {
 /* Champ « Table des marques » (longueur × largeur) dans la carte terrains */
 .tm-taille { display: inline-flex; align-items: center; gap: 6px; }
 .tm-taille input { width: 64px; text-align: center; }
+
+/* ==========================================================================
+   « OÙ EN SUIS-JE ? » — fil d'avancement + thermomètre de la journée (admin)
+   Bandeau clair placé sous le tableau de bord. Chaque étape est une pastille
+   cliquable (liseré coloré selon l'état). ÉTAPE 1 : affichage seul.
+   ========================================================================== */
+.etat-avancement {
+  border: 1px solid #e6edf5;
+  background: #F5F9FD;
+  border-radius: var(--rayon);
+  padding: 12px 14px;
+  margin-bottom: var(--espace);
+}
+.ea-entete {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.ea-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 0.95rem; color: #0C1C2E;
+}
+.ea-legende { font-size: 0.78rem; color: #6b7c93; }
+
+.ea-fil {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.ea-etape {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #ffffff; border: 1px solid #e6edf5;
+  border-left: 4px solid #cbd6e4;
+  border-radius: 10px; padding: 7px 11px;
+  cursor: pointer; transition: box-shadow 0.15s ease, transform 0.05s ease;
+}
+.ea-etape:hover { box-shadow: 0 2px 8px rgba(12, 28, 46, 0.10); }
+.ea-etape:active { transform: translateY(1px); }
+.ea-etape:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ea-pastille { font-size: 1rem; line-height: 1; }
+.ea-nom { font-weight: 600; color: #0C1C2E; font-size: 0.9rem; }
+.ea-detail { font-size: 0.78rem; color: #6b7c93; }
+
+/* Liseré (et léger fond) selon l'état de l'étape */
+.ea-fait     { border-left-color: #2f9e5f; }
+.ea-arefaire { border-left-color: #e08a2e; background: #fff8ef; }
+.ea-attente  { border-left-color: #2E8FE0; }
+.ea-afaire   { border-left-color: #cbd6e4; }
+
+/* Thermomètre de la journée : début → pause → heure de fin prévue */
+.ea-thermo {
+  display: flex; flex-wrap: wrap; gap: 8px 18px;
+  margin-top: 12px; padding-top: 10px;
+  border-top: 1px dashed #dbe4f0;
+  font-size: 0.9rem;
+}
+.ea-t b { color: #33608f; font-weight: 600; margin-right: 4px; }
+.ea-therm-warn { color: #e08a2e; font-weight: 600; }
+
+/* Petit écran : on masque le détail pour garder des pastilles compactes
+   (l'info reste dans l'infobulle « title » et la couleur du liseré). */
+@media (max-width: 520px) {
+  .ea-detail { display: none; }
+}
