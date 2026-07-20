@@ -93,6 +93,9 @@ Pages statiques (HTML/CSS/JS), **mobile-first**. Chaque page a un rôle :
 Fichiers JS partagés :
 - **`config.js`** — contient l'URL de la Web App et les constantes communes (couleurs, etc.).
   C'est le **seul** endroit à modifier si l'URL du backend change.
+- **`commun.js`** — petites fonctions utilitaires **communes à toutes les pages** (`echapper`,
+  `estTermine`, `afficherMessage`, `libelleTourFr`, `comparerCategorie`). Écrites **une seule fois**
+  ici au lieu d'être recopiées dans chaque page. Chargé en premier (juste après `config.js`).
 - **`api.js`** — petites fonctions `fetch()` qui appellent le backend et renvoient le JSON.
 
 ## Pourquoi ce choix d'architecture ?

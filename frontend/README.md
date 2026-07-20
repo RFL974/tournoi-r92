@@ -14,6 +14,8 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
 **Fichiers partagés** :
 - `css/styles.css` (thème sombre admin/saisie/perfs) · `css/tournoi-public.css` (thème clair public).
 - `js/config.js` — `API_URL` (backend) + `SNAPSHOT_URL` (relais CDN, vide par défaut).
+- `js/commun.js` — petites fonctions utilitaires communes aux 4 pages (`echapper`, `estTermine`,
+  `afficherMessage`, `libelleTourFr`, `comparerCategorie`) ; chargé juste après `config.js`.
 - `js/api.js` — `apiGet` / `apiPost` / `apiPostProtege` + gestion des clés (session).
 - `js/admin.js`, `js/saisie.js`, `js/tournoi.js`, `js/perfs.js` — logique de chaque page.
 

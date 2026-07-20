@@ -211,10 +211,12 @@
 
   <!-- On charge les scripts DANS CET ORDRE :
        1) config.js  → définit l'URL du backend
-       2) dialog.js  → fenêtres de dialogue maison (utilisées par api.js et admin.js)
-       3) api.js     → fournit apiGet()
-       4) admin.js   → utilise le tout pour afficher la page -->
+       2) commun.js  → petites fonctions partagées par toutes les pages (echapper, estTermine…)
+       3) dialog.js  → fenêtres de dialogue maison (utilisées par api.js et admin.js)
+       4) api.js     → fournit apiGet()
+       5) admin.js   → utilise le tout pour afficher la page -->
   <script src="js/config.js"></script>
+  <script src="js/commun.js"></script>
   <script src="js/dialog.js"></script>
   <script src="js/api.js"></script>
   <script src="js/admin.js"></script>
