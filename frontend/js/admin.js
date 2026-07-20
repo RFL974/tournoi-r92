@@ -120,10 +120,6 @@ async function initAdmin() {
       'Détail : ' + erreur.message + '</div>';
   }
 
-  // « Connexion » : on demande la clé admin une fois à l'ouverture (puis mémorisée).
-  const connecte = await connexion('admin', "à l'administration");
-  majBarreConnexion(connecte);
-
   // Barre de connexion : boutons « Se connecter » / « Changer de clé » (délégué).
   document.getElementById('barre-connexion').addEventListener('click', onClicConnexion);
 
@@ -186,6 +182,15 @@ async function initAdmin() {
     .addEventListener('change', onChoisirAffiche);
   // Bouton « Retirer l'affiche » (annule un choix non enregistré, ou supprime l'affiche enregistrée).
   document.getElementById('bouton-retirer-affiche').addEventListener('click', onRetirerAffiche);
+
+  // Assistant à cartes (surcouche de présentation) : une fois tout rendu et branché, on
+  // laisse assistant.js réorganiser la page en cartes (ou non, selon la préférence mémorisée).
+  if (typeof initAssistant === 'function') initAssistant();
+
+  // « Connexion » : on demande la clé admin en DERNIER (une fois la page prête), puis mémorisée.
+  // Ainsi l'assistant s'affiche tout de suite, sans attendre la saisie de la clé.
+  const connecte = await connexion('admin', "à l'administration");
+  majBarreConnexion(connecte);
 }
 
 /* --------------------------------------------------------------------------

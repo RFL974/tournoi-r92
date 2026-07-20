@@ -1443,3 +1443,86 @@ body.theme-clair {
 @media (max-width: 520px) {
   .ea-detail { display: none; }
 }
+
+/* ==========================================================================
+   ASSISTANT À CARTES (étape 4a) — carrousel guidé de la page admin.
+   Les blocs existants sont déplacés dans .asst-slide ; on n'anime que le
+   décalage horizontal de la piste (.asst-track) + la hauteur du viewport.
+   ========================================================================== */
+/* <main> est une grille (2 colonnes sur grand écran) : l'assistant doit s'étendre sur
+   TOUTE la largeur (grid-column) et pouvoir rétrécir sous la taille de son contenu
+   (min-width:0) — sinon le carrousel « explose » la largeur de la page. */
+#assistant {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin-bottom: var(--espace);
+}
+
+/* En-tête : fil d'étapes + lien « vue classique » */
+.asst-tete {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.asst-stepper {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto;
+  -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+}
+.asst-step {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 999px; cursor: pointer;
+  background: #eef4fb; border: 1px solid #e0e9f4; color: #33608f;
+  white-space: nowrap; transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.asst-step:hover { background: #e3edf8; }
+.asst-step:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.asst-step-num { font-size: 0.95rem; line-height: 1; }
+.asst-step-nom {
+  font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase;
+  letter-spacing: 0.4px; font-size: 0.82rem; font-weight: 600;
+}
+.asst-step.est-faite { color: #2f9e5f; border-color: #bfe6cf; background: #f1faf4; }
+.asst-step.est-active {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+  box-shadow: 0 2px 8px rgba(46, 143, 224, 0.30);
+}
+.asst-classique { flex: 0 0 auto; }
+
+/* Fenêtre + piste : on masque ce qui déborde, la piste glisse horizontalement */
+.asst-viewport { overflow: hidden; transition: height 0.35s ease; }
+.asst-track {
+  display: flex; align-items: flex-start;
+  transition: transform 0.35s ease;
+}
+.asst-slide {
+  flex: 0 0 100%; width: 100%; min-width: 0;
+  padding-bottom: 4px; /* contient la marge basse du bloc (mesure de hauteur juste) */
+}
+/* Dans une carte, les blocs déplacés gardent leur style ; on enlève juste la
+   marge basse superflue du dernier pour un rendu net. */
+.asst-slide > :last-child { margin-bottom: 0; }
+
+/* Pied : Précédent / compteur / Suivant */
+.asst-pied {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-top: 14px;
+}
+.asst-nav { min-width: 130px; }
+.asst-compteur {
+  font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase;
+  letter-spacing: 0.4px; font-size: 0.9rem; color: #33608f; text-align: center; flex: 1;
+}
+
+/* Bouton flottant pour revenir à l'assistant depuis la vue classique */
+.asst-reprise { display: block; margin: 0 0 var(--espace); }
+
+/* Accessibilité : respecte « animations réduites » */
+@media (prefers-reduced-motion: reduce) {
+  .asst-viewport, .asst-track { transition: none; }
+}
+
+/* Petit écran : le pied reste lisible, le compteur passe sous les boutons si besoin */
+@media (max-width: 520px) {
+  .asst-nav { min-width: 0; padding: 10px 12px; }
+  .asst-compteur { font-size: 0.8rem; }
+}
