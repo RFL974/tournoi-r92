@@ -1370,3 +1370,7 @@ body.theme-clair {
 /* Nom du grand terrain sur la carte (bien visible) + menu emplacement */
 .carte-nomterrain { font-weight: 700; font-size: 13px; fill: #0C1C2E; }
 .terrain-ligne .tp-pos { flex: 0 0 auto; max-width: 150px; }
+
+/* Champ « Table des marques » (longueur × largeur) dans la carte terrains */
+.tm-taille { display: inline-flex; align-items: center; gap: 6px; }
+.tm-taille input { width: 64px; text-align: center; }

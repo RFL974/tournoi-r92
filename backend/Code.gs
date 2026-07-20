@@ -491,10 +491,12 @@ function enregistrerInfosTournoi(classeur, data) {
  *   - couloir_terrain_m     : largeur du couloir de circulation entre mini-terrains (m).
  *   - dimensions_categories : JSON {"U8":{"l":30,"w":20}, "U14":{"plein":true}, …} — taille
  *                             de terrain par catégorie (plein:true = un match occupe un grand terrain entier).
+ *   - tm_longueur_m / tm_largeur_m : taille de la table des marques (m), petite zone placée dans le couloir.
  */
 function enregistrerPlanTerrains(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
-  var champs = ['terrains_physiques', 'couloir_terrain_m', 'dimensions_categories'];
+  var champs = ['terrains_physiques', 'couloir_terrain_m', 'dimensions_categories',
+                'tm_longueur_m', 'tm_largeur_m'];
   champs.forEach(function (champ) {
     if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
   });
