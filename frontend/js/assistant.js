@@ -57,6 +57,7 @@ function construireAssistant() {
       '<ol class="asst-stepper" id="asst-stepper"></ol>' +
       '<button type="button" class="bouton-lien asst-classique" id="asst-vue-classique">Vue classique ✕</button>' +
     '</header>' +
+    '<div class="asst-barre"><span class="asst-barre-jauge" id="asst-barre-jauge"></span></div>' +
     '<div class="asst-viewport"><div class="asst-track" id="asst-track"></div></div>' +
     '<footer class="asst-pied">' +
       '<button type="button" class="bouton asst-nav asst-prec" id="asst-prec">◀ Précédent</button>' +
@@ -97,6 +98,10 @@ function construireAssistant() {
   asst.querySelector('#asst-suiv').addEventListener('click', function () { allerA(assistantIndex + 1, 1); });
   asst.querySelector('#asst-vue-classique').addEventListener('click', quitterAssistant);
 
+  // Navigation au clavier (flèches ← →), sauf quand on saisit dans un champ.
+  document.removeEventListener('keydown', onClavierAssistant);
+  document.addEventListener('keydown', onClavierAssistant);
+
   // Recalage de hauteur quand le contenu d'une carte change (ajout de catégorie, etc.).
   if (window.ResizeObserver) {
     assistantObserver = new ResizeObserver(function () { ajusterHauteur(); });
@@ -132,6 +137,20 @@ function allerA(i, direction) {
   if (prec) prec.style.visibility = (i === 0) ? 'hidden' : 'visible';
   if (suiv) suiv.style.visibility = (i === ASSISTANT_ETAPES.length - 1) ? 'hidden' : 'visible';
 
+  // Barre de progression.
+  const jauge = document.getElementById('asst-barre-jauge');
+  if (jauge) jauge.style.width = ((i + 1) / ASSISTANT_ETAPES.length * 100) + '%';
+
+  // Centre l'étape active dans le fil (surtout utile sur mobile, où il défile).
+  // Calcul manuel de scrollLeft : plus fiable que scrollIntoView sur un conteneur overflow-x.
+  const stepper = document.getElementById('asst-stepper');
+  const chip = steps[i];
+  if (stepper && chip) {
+    const decalage = chip.getBoundingClientRect().left - stepper.getBoundingClientRect().left;
+    const cible = stepper.scrollLeft + decalage - (stepper.clientWidth - chip.offsetWidth) / 2;
+    stepper.scrollLeft = Math.max(0, cible);
+  }
+
   ajusterHauteur();
   // Remonte en haut de la carte (confort mobile).
   const asst = document.getElementById('assistant');
@@ -144,6 +163,15 @@ function ajusterHauteur() {
   const slides = document.querySelectorAll('.asst-slide');
   if (!vp || !slides[assistantIndex]) return;
   vp.style.height = slides[assistantIndex].offsetHeight + 'px';
+}
+
+/** Flèches ← → pour naviguer entre les cartes (ignorées si on saisit dans un champ). */
+function onClavierAssistant(evenement) {
+  if (!assistantEstActif()) return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+  if (evenement.key === 'ArrowRight') { evenement.preventDefault(); allerA(assistantIndex + 1, 1); }
+  else if (evenement.key === 'ArrowLeft') { evenement.preventDefault(); allerA(assistantIndex - 1, -1); }
 }
 
 function onStepperClic(evenement) {
