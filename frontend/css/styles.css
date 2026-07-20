@@ -210,6 +210,7 @@ select.r-input { cursor: pointer; }
   border-radius: 8px; padding: 8px 10px;
 }
 .bloc-format[data-format="CROISE"] .r-CROISE,
+.bloc-format[data-format="CROISE_DIAGONAL"] .r-CROISE_DIAGONAL,
 .bloc-format[data-format="LIBRE"] .r-LIBRE,
 .bloc-format[data-format="COUPE_PLATEAU"] .r-COUPE_PLATEAU { display: block; }
 

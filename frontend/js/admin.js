@@ -31,6 +31,12 @@ const FORMATS_APRESMIDI = [
         + "Un classement général et un podium sont désignés : le vainqueur du Niveau 1 remporte le tournoi."
   },
   {
+    cle: 'CROISE_DIAGONAL', titre: 'Classement croisé diagonal',
+    desc: "Les équipes s'affrontent entre poules par rangs CROISÉS : le 1ᵉʳ d'une poule affronte le "
+        + "2ᵉ d'une AUTRE poule (au lieu du 1ᵉʳ contre le 1ᵉʳ du croisé classique). Des matchs plus "
+        + "imprévisibles. Pas de vainqueur désigné par élimination : résultats cumulés au classement général."
+  },
+  {
     cle: 'LIBRE', titre: 'Matchs libres',
     desc: "Pas de classement l'après-midi : les équipes jouent simplement plusieurs matchs amicaux "
         + "supplémentaires, sans enjeu ni hiérarchie (pas de podium). Recommandé pour les plus jeunes (M6–M8)."
@@ -46,7 +52,7 @@ const FORMATS_APRESMIDI = [
 /** Format d'après-midi retenu pour une catégorie (défaut = CROISE, comportement historique). */
 function formatApresMidiDe(cat) {
   const f = (cat && cat.format_apresmidi != null) ? String(cat.format_apresmidi).trim().toUpperCase() : '';
-  return (f === 'LIBRE' || f === 'COUPE_PLATEAU') ? f : 'CROISE';
+  return (f === 'LIBRE' || f === 'COUPE_PLATEAU' || f === 'CROISE_DIAGONAL') ? f : 'CROISE';
 }
 
 /** Nombre de qualifiés en Coupe lu dans param_format (JSON), défaut 2. */
@@ -1135,6 +1141,7 @@ function blocFormatApresMidi(cat) {
   // Récaps : un par format, révélé selon data-format (texte concret pour confirmer le choix).
   const recaps =
     '<span class="format-recap r-CROISE">Après-midi : <b>classement croisé</b> — matchs équilibrés par niveau ; le vainqueur du Niveau 1 remporte le tournoi (classement général + podium).</span>' +
+    '<span class="format-recap r-CROISE_DIAGONAL">Après-midi : <b>classement croisé DIAGONAL</b> — le 1ᵉʳ d\'une poule affronte le 2ᵉ d\'une AUTRE poule (croisement en diagonale, à ne pas confondre avec le croisé simple 1ᵉʳ-contre-1ᵉʳ). Résultats cumulés au classement général + podium.</span>' +
     '<span class="format-recap r-LIBRE">Après-midi : <b>matchs libres</b> — amicaux, sans classement ni podium (idéal pour les plus jeunes).</span>' +
     '<span class="format-recap r-COUPE_PLATEAU">Après-midi : <b>Coupe + Plateau</b> — les premiers de chaque poule en élimination directe (finale + petite finale), les autres en plateau.</span>';
 

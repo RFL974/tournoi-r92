@@ -33,7 +33,7 @@ joué rapporte toujours au moins 1 point). **Départage** en cas d'égalité de 
 
 **Déroulé type d'une journée** :
 1. (Avant) L'organisateur règle les horaires, les catégories (**dont le format d'après-midi** de
-   chacune : croisé / libre / coupe + plateau), et saisit les équipes.
+   chacune : croisé / croisé diagonal / libre / coupe + plateau), et saisit les équipes.
 2. L'organisateur **génère les poules et le planning du matin**.
 3. Il **publie** le tournoi (il devient visible du public).
 4. Le matin, les marqueurs **saisissent les scores** des matchs de poule.

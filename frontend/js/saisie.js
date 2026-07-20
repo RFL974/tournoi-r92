@@ -262,6 +262,7 @@ function titreApresMidi(aprem) {
   aprem.forEach(function (m) { formats[String(m.format || '').toUpperCase()] = true; });
   if (formats.COUPE_PLATEAU) return '🏉 Après-midi — Coupe & Plateau';
   if (formats.LIBRE) return '🏉 Après-midi — matchs amicaux';
+  if (formats.CROISE_DIAGONAL) return '🏉 Après-midi — classement croisé diagonal';
   return '🏉 Après-midi — classement croisé';
 }
 

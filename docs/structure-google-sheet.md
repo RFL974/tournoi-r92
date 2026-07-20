@@ -65,8 +65,8 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `duree_mi_temps_min` | `10` | Durée d'une mi-temps, en minutes |
 | `pause_mi_temps_min` | `2` | Pause entre les deux mi-temps, en minutes (0 si `format_mi_temps = 1`) |
 | `recup_entre_matchs_min` | `15` | Temps de récupération minimum d'une équipe entre 2 de ses matchs |
-| `format_apresmidi` | `CROISE` | Format de l'après-midi : `CROISE` / `LIBRE` / `COUPE_PLATEAU`. **Vide = `CROISE`** (comportement historique) |
-| `param_format` | `{"nbQualifiesCoupe":2}` | Réglages JSON du format. Pour `COUPE_PLATEAU` : nb de qualifiés en Coupe par poule. Vide pour `CROISE`/`LIBRE` |
+| `format_apresmidi` | `CROISE` | Format de l'après-midi : `CROISE` / `CROISE_DIAGONAL` / `LIBRE` / `COUPE_PLATEAU`. **Vide = `CROISE`** (comportement historique) |
+| `param_format` | `{"nbQualifiesCoupe":2}` | Réglages JSON du format. Pour `COUPE_PLATEAU` : nb de qualifiés en Coupe par poule. Vide pour `CROISE`/`CROISE_DIAGONAL`/`LIBRE` |
 
 > ℹ️ **Migration automatique** : `format_apresmidi` et `param_format` sont **ajoutées automatiquement**
 > à droite de la Zone B dès la première génération d'après-midi (ou enregistrement de catégorie) sur
@@ -122,7 +122,7 @@ Une ligne par match. En-têtes :
 | `score_B` | `10` | **Page de saisie des scores** |
 | `statut` | `à venir` | `à venir` / `en cours` / `terminé` |
 | `phase` | `poule` | Auto — `poule` (matin) ou `classement` (après-midi, **tous formats**) |
-| `format` | `COUPE_PLATEAU` | Auto — format de l'après-midi de la ligne (`CROISE`/`LIBRE`/`COUPE_PLATEAU` ; vide pour le matin) |
+| `format` | `COUPE_PLATEAU` | Auto — format de l'après-midi de la ligne (`CROISE`/`CROISE_DIAGONAL`/`LIBRE`/`COUPE_PLATEAU` ; vide pour le matin) |
 | `sous_tableau` | `COUPE` | Auto — `COUPE` ou `PLATEAU` (uniquement en `COUPE_PLATEAU` ; vide sinon) |
 | `tour` | `DEMI_FINALE` | Auto — tour de bracket (`FINALE`, `DEMI_FINALE`, `PETITE_FINALE`, `QUART_DE_FINALE`…) ; vide hors Coupe |
 | `match_suivant` | `M042` | Auto — `id_match` qui reçoit le **vainqueur** de ce match (vide si terminal) |
@@ -136,6 +136,9 @@ Une ligne par match. En-têtes :
 
 Pour les matchs de l'**après-midi** (`phase = classement`), la lecture de la ligne dépend du `format` :
 - **CROISE** — la colonne `poule` contient le **niveau** (`N1` = 1ers de poule, `N2` = les 2es, etc.).
+- **CROISE_DIAGONAL** — même étiquetage de **niveau** (`N1`, `N2`…) que `CROISE`, mais chaque niveau
+  regroupe **deux rangs consécutifs** croisés en diagonale (1ᵉʳ d'une poule vs 2ᵉ d'une autre). Lu et
+  classé **exactement comme `CROISE`**.
 - **LIBRE** — `poule` vaut `Libre` (matchs amicaux, sans classement ni qualification).
 - **COUPE_PLATEAU** — `poule` vaut `Coupe` ou `Plateau` ; en Coupe, `sous_tableau=COUPE` + `tour` +
   `match_suivant`/`place_suivant` décrivent le **bracket à élimination directe** (avec petite finale).

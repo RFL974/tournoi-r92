@@ -10,7 +10,7 @@ pour pouvoir l'expliquer aux équipes à l'avance.
 
 ---
 
-## Les 3 formats disponibles
+## Les 4 formats disponibles
 
 ### 1. Classement croisé (`CROISE`) — *format historique, par défaut*
 Les équipes sont **reclassées par niveau** après les poules du matin (tous les 1ᵉʳˢ de poule
@@ -24,7 +24,31 @@ des premiers de poule) **remporte le tournoi**. C'est le comportement décrit da
   Le podium 🥇🥈🥉 s'affiche dès qu'il est **mathématiquement certain** ; avant, le classement
   général montre l'équipe **en tête** (provisoire).
 
-### 2. Matchs libres (`LIBRE`)
+### 2. Classement croisé **diagonal** (`CROISE_DIAGONAL`)
+
+> ⚠️ **À ne pas confondre avec le croisé classique ci-dessus.** La différence tient en une phrase :
+> - **Croisé** (`CROISE`) : les équipes de **même rang** s'affrontent — **1ᵉʳ contre 1ᵉʳ**, 2ᵉ contre 2ᵉ…
+> - **Croisé diagonal** (`CROISE_DIAGONAL`) : les rangs sont **décalés** — **le 1ᵉʳ d'une poule
+>   affronte le 2ᵉ d'une AUTRE poule**. Des affiches plus imprévisibles.
+
+Comme le croisé classique, l'après-midi reste organisé **par niveaux** et alimente **le même
+classement général + podium** (aucune élimination, ce sont de simples matchs isolés). Mais ici
+**chaque niveau regroupe deux rangs consécutifs** croisés en diagonale : Niveau 1 = 1ᵉʳˢ + 2ᵉˢ,
+Niveau 2 = 3ᵉˢ + 4ᵉˢ, etc.
+
+**Règles de pairage :**
+- **2 poules** : `1ᵉʳA vs 2ᵉB`, `1ᵉʳB vs 2ᵉA`, `3ᵉA vs 4ᵉB`, `3ᵉB vs 4ᵉA`…
+- **3 poules ou plus** : **rotation cyclique** — `1ᵉʳA vs 2ᵉB`, `1ᵉʳB vs 2ᵉC`, `1ᵉʳC vs 2ᵉA`…
+  Chaque équipe joue **une fois**, contre une équipe de rang voisin d'une autre poule.
+- **Effectif impair** (un rang « haut » sans rang « bas » partenaire) : **repli en croisé classique**
+  pour ce rang (round-robin des équipes de même rang) ; une équipe restée **seule** est mise **au
+  repos**, signalée par un avertissement à la génération.
+
+- **Paramètre** : aucun.
+- **Affichage public** : **identique au croisé** (tableaux par niveau + classement général + podium).
+  Techniquement, ce format réutilise exactement l'affichage et le calcul de classement du croisé.
+
+### 3. Matchs libres (`LIBRE`)
 Des **matchs amicaux tournants**, **sans classement ni podium** — juste du temps de jeu. On génère un
 round-robin (chacun rencontre chacun une fois) sur toutes les équipes de la catégorie. Recommandé
 pour les plus jeunes (M6–M8), où l'on ne veut **aucune hiérarchie ni pression**.
@@ -34,7 +58,7 @@ pour les plus jeunes (M6–M8), où l'on ne veut **aucune hiérarchie ni pressio
 - **Saisie** : un bandeau « 🎈 Match amical — sans classement » rappelle au bénévole que rien ne bouge
   dans un classement après validation (c'est normal).
 
-### 3. Coupe + Plateau (`COUPE_PLATEAU`)
+### 4. Coupe + Plateau (`COUPE_PLATEAU`)
 Les **X premiers de chaque poule** partent en **Coupe** : un **tableau à élimination directe**
 jusqu'à une **finale** (un vainqueur du tournoi est désigné), avec une **petite finale** pour la
 3ᵉ place. Toutes les **autres équipes** jouent un **Plateau** : des matchs supplémentaires **sans
@@ -91,8 +115,8 @@ un score validé déclenche des **actions automatiques** :
 
 ### Côté organisateur (Administration) — choisir le format
 1. Dans la fiche d'une **catégorie**, sous les réglages habituels, une zone **« Format de
-   l'après-midi »** propose **3 cartes** (Classement croisé / Matchs libres / Coupe + Plateau),
-   chacune avec une explication.
+   l'après-midi »** propose **4 cartes** (Classement croisé / Classement croisé diagonal /
+   Matchs libres / Coupe + Plateau), chacune avec une explication.
 2. Si tu choisis **Coupe + Plateau**, un champ **« Qualifiés en Coupe (par poule) »** apparaît :
    indique combien d'équipes de chaque poule partent en Coupe.
 3. Un **récapitulatif** confirme le choix (« Après-midi : Coupe + Plateau — … »).
@@ -118,7 +142,7 @@ l'indique au lieu d'un plantage silencieux.
   finale** ; le **gagnant** de chaque match est mis en avant.
 - **Plateau** → une liste de matchs sous « 🛡️ Tableau Plateau ».
 - **Libre** → une liste de matchs amicaux (sans classement).
-- **Croisé** → tableaux par niveau + classement général, comme avant.
+- **Croisé** *(classique ou diagonal)* → tableaux par niveau + classement général, comme avant.
 
 **Un podium 🥇🥈🥉** est affiché en haut de page dès qu'il est **décidé** — **sauf en Libre**
 (volontairement, pour ne pas classer les plus jeunes) :
@@ -132,13 +156,15 @@ l'indique au lieu d'un plantage silencieux.
 
 Voir [`structure-google-sheet.md`](structure-google-sheet.md) pour le détail des colonnes.
 
-- **Config (par catégorie)** : `format_apresmidi` (`CROISE`/`LIBRE`/`COUPE_PLATEAU`, vide = CROISE) et
-  `param_format` (JSON, ex. `{"nbQualifiesCoupe":2}`).
+- **Config (par catégorie)** : `format_apresmidi` (`CROISE`/`CROISE_DIAGONAL`/`LIBRE`/`COUPE_PLATEAU`,
+  vide = CROISE) et `param_format` (JSON, ex. `{"nbQualifiesCoupe":2}` ; inutile pour le diagonal).
 - **Matchs** : `format`, `sous_tableau` (`COUPE`/`PLATEAU`), `tour` (`FINALE`, `DEMI_FINALE`,
   `PETITE_FINALE`, `QUART_DE_FINALE`, `HUITIEME_DE_FINALE`…), `match_suivant` + `place_suivant`
   (où placer le vainqueur), `vainqueur` (équipe désignée en cas d'égalité).
 
 Côté backend ([`../backend/Code.gs`](../backend/Code.gs)) : un **répartiteur** `genererApresMidi`
-lit le format de chaque catégorie et appelle `fixturesApresMidiCroise` / `…Libre` /
-`…CoupePlateau` ; la propagation est gérée par `propagerVainqueurBracket` (appelée directement
-depuis `enregistrerScore`).
+lit le format de chaque catégorie et appelle `fixturesApresMidiCroise` / `…CroiseDiagonal` /
+`…Libre` / `…CoupePlateau` ; la propagation (Coupe uniquement) est gérée par
+`propagerVainqueurBracket` (appelée directement depuis `enregistrerScore`). Le croisé diagonal
+étiquette ses matchs par niveau (`N1`, `N2`…) exactement comme le croisé, si bien que le calcul
+du classement général et du podium est **partagé, sans code d'affichage dédié**.
