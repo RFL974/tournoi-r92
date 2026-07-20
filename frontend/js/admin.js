@@ -1865,6 +1865,43 @@ function capaciteTerrain(field, tile, m) {
   return packerZone(0, 0, field.L, field.W, tile, m).length;
 }
 
+/**
+ * Pose jusqu'à `maxN` mini-terrains d'une taille donnée dans l'ESPACE LIBRE d'un grand
+ * terrain (fL×fW), en évitant les zones déjà occupées `occupees` avec un couloir de m.
+ * Heuristique bas-gauche : à chaque tuile, on prend le 1er emplacement libre (y puis x le
+ * plus petit), en testant les 2 orientations. Sert au « mixage » de catégories en secours.
+ */
+function placerDansLibre(fL, fW, occupees, tl, tw, m, maxN) {
+  if (tl <= 0 || tw <= 0) return [];
+  const obst = occupees.slice();
+  const place = [];
+  function libre(x, y, w, h) {
+    if (x < -0.001 || y < -0.001 || x + w > fL + 0.001 || y + h > fW + 0.001) return false;
+    for (let k = 0; k < obst.length; k++) {
+      const o = obst[k];
+      if (x < o.x + o.w + m - 0.001 && x + w + m - 0.001 > o.x &&
+          y < o.y + o.h + m - 0.001 && y + h + m - 0.001 > o.y) return false; // trop près (< couloir)
+    }
+    return true;
+  }
+  let garde = 0;
+  while (place.length < maxN && garde++ < 300) {
+    const xs = [0], ys = [0];
+    obst.forEach(function (o) { xs.push(o.x + o.w + m); ys.push(o.y + o.h + m); });
+    xs.sort(function (a, b) { return a - b; }); ys.sort(function (a, b) { return a - b; });
+    let trouve = null;
+    for (let yi = 0; yi < ys.length && !trouve; yi++) {
+      for (let xi = 0; xi < xs.length && !trouve; xi++) {
+        if (libre(xs[xi], ys[yi], tl, tw)) trouve = { x: xs[xi], y: ys[yi], w: tl, h: tw };
+        else if (libre(xs[xi], ys[yi], tw, tl)) trouve = { x: xs[xi], y: ys[yi], w: tw, h: tl };
+      }
+    }
+    if (!trouve) break;
+    place.push(trouve); obst.push(trouve);
+  }
+  return place;
+}
+
 /** Plan des terrains actuellement enregistré (repli sur les valeurs par défaut). */
 function planTerrainsActuel() {
   const g = configCourante.global || {};
@@ -2409,6 +2446,43 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
   if (soloQueue.length + paires.length > F) {
     avert.push('Pas assez de grands terrains : certaines catégories n’ont pas pu être placées.');
   }
+
+  // 5) MIXAGE EN SECOURS (seulement si l'espace manque) : tant qu'une catégorie « normale »
+  //    est nettement plus chargée que les autres (ou n'a aucun terrain), on lui ajoute un
+  //    mini-terrain dans l'ESPACE LIBRE d'un autre grand terrain. Reste inactif si équilibré.
+  function ratioCat(c) { const n = parCategorie[c.name].length; return n > 0 ? c.teams / n : Infinity; }
+  let mixage = 0, aMixe = false;
+  while (mixage++ < 60 && normaux.length > 1) {
+    let pire = null, prMax = -1, prMin = Infinity;
+    normaux.forEach(function (c) { const rr = ratioCat(c); if (rr > prMax) { prMax = rr; pire = c; } if (rr < prMin) prMin = rr; });
+    const declenche = pire && (prMax === Infinity || prMax > 1.5 * prMin); // net déséquilibre / catégorie à 0
+    if (!declenche) break;
+    let posee = false;
+    for (let fpi = 0; fpi < fieldsPlan.length && !posee; fpi++) {
+      const fp = fieldsPlan[fpi];
+      if (fp.mode === 'plein') continue;
+      if (fp.zones.length === 1 && fp.zones[0].cat === pire.name) continue; // déjà rempli pour elle
+      const occ = [];
+      fp.zones.forEach(function (z) { z.tiles.forEach(function (t) { occ.push(t); }); if (z.table) occ.push(z.table); });
+      const nouv = placerDansLibre(fp.field.L, fp.field.W, occ, pire.tile.l, pire.tile.w, m, 1);
+      if (!nouv.length) continue;
+      const r = nouv[0]; numero++; const id = String(numero);
+      const tuile = { id: id, x: r.x, y: r.y, w: r.w, h: r.h, label: id };
+      parCategorie[pire.name].push(id);
+      let zone = fp.zones.find(function (z) { return z.cat === pire.name; });
+      if (zone) { zone.tiles.push(tuile); }
+      else {                                              // 2ᵉ catégorie sur ce terrain → sa propre table
+        const tm = placerDansLibre(fp.field.L, fp.field.W, occ.concat([r]), tmL, tmW, m, 1);
+        fp.zones.forEach(function (z) { if (z.table) z.table.split = true; });
+        fp.zones.push({ cat: pire.name, color: couleur[pire.name], tiles: [tuile],
+          table: tm.length ? { x: tm[0].x, y: tm[0].y, w: tmL, h: tmW, split: true } : null });
+        fp.mode = 'split';
+      }
+      posee = true; aMixe = true;
+    }
+    if (!posee) break;                                     // plus aucune place → on arrête
+  }
+  if (aMixe) avert.push('Espace serré : quelques terrains ont été ajoutés en partageant un grand terrain (mixage de catégories).');
 
   return { fieldsPlan: fieldsPlan, parCategorie: parCategorie, couleur: couleur, avert: avert };
 }
