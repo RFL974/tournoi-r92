@@ -661,6 +661,19 @@ function majEtatAvancement() {
   let h = '<div class="ea-entete"><span class="ea-titre">Où en suis-je&nbsp;?</span>' +
           '<span class="ea-legende">Clique une étape pour t\'y rendre</span></div>';
 
+  // Verdict « prêt à publier ? » : synthèse de ce qui bloque encore (hors après-midi, qui
+  // peut se générer plus tard). Chaque item restant est cliquable → mène à son étape.
+  const bloquants = etapes.filter(function (e) { return e.cle !== 'apresmidi' && e.statut !== 'fait'; });
+  if (bloquants.length === 0) {
+    h += '<div class="ea-verdict ea-verdict-ok">✅ <strong>Tout est prêt</strong> — tu peux publier le tournoi.</div>';
+  } else {
+    h += '<div class="ea-verdict ea-verdict-ko">⚠️ <strong>Avant de publier, il reste&nbsp;:</strong> ' +
+      bloquants.map(function (e) {
+        return '<button type="button" class="ea-lien-etape" data-ancre="' + echapper(e.ancre) + '">' +
+               echapper(e.titre) + '</button>';
+      }).join(' ') + '</div>';
+  }
+
   h += '<ol class="ea-fil">';
   etapes.forEach(function (e) {
     h += '<li class="ea-etape ea-' + e.statut + '" role="button" tabindex="0" ' +
@@ -699,14 +712,23 @@ function majEtatAvancement() {
   zone.innerHTML = h;
 }
 
-/** Clic (ou touche Entrée/Espace) sur une étape du fil : défile jusqu'à sa section. */
+/**
+ * Clic (ou touche Entrée/Espace) sur une étape du fil OU un lien du verdict.
+ * En mode assistant, on va à l'ÉTAPE correspondante (sinon la cible serait masquée) ;
+ * en vue classique, on défile jusqu'à la section.
+ */
 function onClicEtatAvancement(evenement) {
   if (evenement.type === 'keydown' && evenement.key !== 'Enter' && evenement.key !== ' ') return;
-  const li = evenement.target.closest('.ea-etape');
+  const li = evenement.target.closest('[data-ancre]');
   if (!li) return;
   evenement.preventDefault();
-  const cible = document.getElementById(li.getAttribute('data-ancre'));
-  if (cible && cible.scrollIntoView) cible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const ancre = li.getAttribute('data-ancre');
+  if (typeof assistantEstActif === 'function' && assistantEstActif()) {
+    assistantAllerVersBloc(ancre);
+  } else {
+    const cible = document.getElementById(ancre);
+    if (cible && cible.scrollIntoView) cible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 /**

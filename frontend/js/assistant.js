@@ -199,6 +199,20 @@ function retirerBoutonReprise() {
   if (b) b.remove();
 }
 
+/** Vrai si l'assistant est actuellement affiché (utilisé par admin.js). */
+function assistantEstActif() {
+  return !!document.getElementById('assistant');
+}
+
+/** Va à l'étape (carte) qui contient le bloc d'id donné. Utilisé par le cerveau. */
+function assistantAllerVersBloc(blocId) {
+  const el = document.getElementById(blocId);
+  const slide = el && el.closest('.asst-slide');
+  if (!slide) return;
+  const i = parseInt(slide.getAttribute('data-index'), 10);
+  if (!isNaN(i)) allerA(i, i < assistantIndex ? -1 : 1);
+}
+
 /** Échappe le HTML (réutilise echapper() d'admin.js si dispo). */
 function echapperAsst(t) {
   return (typeof echapper === 'function') ? echapper(t) : String(t);

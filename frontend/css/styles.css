@@ -1404,6 +1404,22 @@ body.theme-clair {
 }
 .ea-legende { font-size: 0.78rem; color: #6b7c93; }
 
+/* Verdict « prêt à publier ? » (en tête du cerveau, surtout utile sur la carte Résumé) */
+.ea-verdict {
+  margin-bottom: 10px; padding: 9px 12px; border-radius: 10px;
+  font-size: 0.92rem; line-height: 1.45;
+}
+.ea-verdict-ok { background: #f1faf4; border: 1px solid #bfe6cf; color: #1f7a47; }
+.ea-verdict-ko { background: #fff8ef; border: 1px solid #f0d9b8; color: #8a5a1a; }
+.ea-lien-etape {
+  border: 1px solid currentColor; background: #fff; color: #8a5a1a;
+  border-radius: 999px; padding: 2px 9px; margin: 2px 2px 0 0; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase;
+  letter-spacing: 0.3px; font-size: 0.8rem; font-weight: 600;
+}
+.ea-lien-etape:hover { background: #fdeede; }
+.ea-lien-etape:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 .ea-fil {
   list-style: none; margin: 0; padding: 0;
   display: flex; flex-wrap: wrap; gap: 8px;
