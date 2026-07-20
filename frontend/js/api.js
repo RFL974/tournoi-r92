@@ -15,12 +15,17 @@
  * Va chercher une donnée auprès du backend (requête de LECTURE).
  * @param {string} action  ex : 'getConfig', 'getEquipes', 'getAll'
  * @param {Object} [params] paramètres supplémentaires éventuels (optionnel)
+ * @param {Object} [options] { delaiMs } : délai maximum en millisecondes — au-delà,
+ *   la requête est ABANDONNÉE et une erreur est levée. Utilisé par le rafraîchissement
+ *   automatique de la page publique : sans ça, une connexion mobile qui « pend »
+ *   indéfiniment gèlerait la boucle (elle n'enchaîne qu'après la fin de la requête).
  * @return {Promise<Object>} la réponse du backend, déjà transformée en objet
  *
  * Exemple d'utilisation :
  *   const config = await apiGet('getConfig');
+ *   const tout   = await apiGet('getAll', null, { delaiMs: 12000 });
  */
-async function apiGet(action, params) {
+async function apiGet(action, params, options) {
   // On construit l'URL complète : .../exec?action=getConfig&...
   const url = new URL(API_URL);
   url.searchParams.set('action', action);
@@ -37,22 +42,33 @@ async function apiGet(action, params) {
   // ne rien faire (scores non mis à jour). Un paramètre unique force une vraie requête.
   url.searchParams.set('_', String(Date.now()));
 
-  // fetch() envoie la requête et attend la réponse. `cache: 'no-store'` désactive
-  // en plus le cache HTTP du navigateur pour cette lecture.
-  const reponse = await fetch(url.toString(), { cache: 'no-store' });
-  if (!reponse.ok) {
-    throw new Error('Le serveur a répondu avec une erreur (' + reponse.status + ').');
+  // Délai maximum optionnel : un minuteur "abandonne" la requête s'il expire.
+  const delaiMs = options && options.delaiMs;
+  const controleur = delaiMs ? new AbortController() : null;
+  const minuteur = controleur ? setTimeout(function () { controleur.abort(); }, delaiMs) : null;
+
+  try {
+    // fetch() envoie la requête et attend la réponse. `cache: 'no-store'` désactive
+    // en plus le cache HTTP du navigateur pour cette lecture.
+    const reglages = { cache: 'no-store' };
+    if (controleur) reglages.signal = controleur.signal;
+    const reponse = await fetch(url.toString(), reglages);
+    if (!reponse.ok) {
+      throw new Error('Le serveur a répondu avec une erreur (' + reponse.status + ').');
+    }
+
+    // On transforme la réponse (du texte JSON) en objet JavaScript utilisable.
+    const donnees = await reponse.json();
+
+    // Si le backend a renvoyé un champ "error", on le signale.
+    if (donnees && donnees.error) {
+      throw new Error(donnees.error);
+    }
+
+    return donnees;
+  } finally {
+    if (minuteur) clearTimeout(minuteur); // toujours nettoyer le minuteur
   }
-
-  // On transforme la réponse (du texte JSON) en objet JavaScript utilisable.
-  const donnees = await reponse.json();
-
-  // Si le backend a renvoyé un champ "error", on le signale.
-  if (donnees && donnees.error) {
-    throw new Error(donnees.error);
-  }
-
-  return donnees;
 }
 
 /**

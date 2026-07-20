@@ -50,7 +50,10 @@ export default {
           'Content-Type': 'application/json; charset=utf-8',
           // Cache court au bord du réseau : la grande majorité des lectures est
           // servie par le CDN sans rappeler le Worker → tient n'importe quelle foule.
-          'Cache-Control': 'public, max-age=8',
+          // stale-while-revalidate : à l'expiration des 8 s, le CDN ressert l'ancienne
+          // copie (jusqu'à 30 s) PENDANT qu'il va en chercher une fraîche en arrière-plan
+          // → aucune vague de requêtes simultanées vers le Worker, réponse toujours immédiate.
+          'Cache-Control': 'public, max-age=8, stale-while-revalidate=30',
         },
       });
     }

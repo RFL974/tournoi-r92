@@ -5,6 +5,39 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Performance : capacité démultipliée pour la page publique (audit perf) — 2026-07-20
+Optimisations **sans aucun changement de fonctionnalité ni d'API** — objectif : tenir la foule
+du jour J (~1300 spectateurs) avec de la marge. ⚠️ **Backend à redéployer** (recoller `Code.gs`,
+nouvelle version) ET **frontend à publier**.
+
+**Backend (`Code.gs`) :**
+- `doGet` : `ping` et `getAll` (cache chaud) répondent **sans ouvrir le classeur**
+  (`SpreadsheetApp.openById()` ≈ 0,5 s à lui seul). `getAll` servi du cache passe de ~0,7 s à
+  quelques ms → le plafond Apps Script (~30 exécutions simultanées) se libère d'autant plus
+  vite, la même Web App encaisse **beaucoup plus de spectateurs**.
+- **Anti-pointe** (« cache stampede ») : à l'expiration du cache (10 s), UN seul
+  « reconstructeur » relit le Sheet (jeton `snapshot_regen`) ; les autres reçoivent une **copie
+  de secours** (clé longue durée, ~10 s de retard max). Avant : des dizaines de relectures
+  simultanées possibles à chaque expiration.
+- Saisie d'un score de Coupe : l'objet du match est **réutilisé en mémoire** au lieu d'être relu
+  dans le Sheet avant propagation, et `majPetiteFinale` balaie l'onglet **une fois au lieu de
+  deux** → moins de temps sous le verrou d'écriture (les autres marqueurs attendent moins).
+
+**Frontend :**
+- **`tournoi.js`** (page publique) : rafraîchissement **en pause quand l'onglet est caché**
+  (téléphone verrouillé, autre appli) + **recharge immédiate au retour** au premier plan ;
+  **délai max de 12 s** par requête (une connexion qui « pend » n'immobilise plus la boucle) ;
+  index `id → nom` des équipes (fini le parcours de la liste à chaque `nomEquipe()`).
+- **`api.js`** : `apiGet(action, params, { delaiMs })` — délai maximum optionnel (abandon de la
+  requête au-delà). Rétro-compatible : sans option, comportement inchangé.
+- **`perfs.js`** : `getAll` + `getHistorique` chargés **en parallèle** (page ~2× plus rapide) ;
+  boucle chaînée (fini `setInterval` qui pouvait empiler des requêtes) + pause en arrière-plan.
+
+**Relais CDN (`cloudflare/worker-tournoi.js`, dormant) :**
+- `stale-while-revalidate=30` : à l'expiration du cache de bord, le CDN ressert l'ancienne copie
+  pendant qu'il en cherche une fraîche → réponse toujours immédiate, zéro vague sur le Worker.
+  (À recoller dans Cloudflare seulement si le relais est activé un jour.)
+
 ### Qualité du code : mutualisation des utilitaires + nettoyage (audit) — 2026-07-20
 Refonte **sans aucun changement de fonctionnalité** (qualité/maintenabilité uniquement).
 ⚠️ **frontend à publier** ET (pour les points backend) **backend à redéployer** (comportement
