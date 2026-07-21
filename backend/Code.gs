@@ -604,11 +604,14 @@ function enregistrerInfosTournoi(classeur, data) {
  *   - dimensions_categories : JSON {"U8":{"l":30,"w":20}, "U14":{"plein":true}, …} — taille
  *                             de terrain par catégorie (plein:true = un match occupe un grand terrain entier).
  *   - tm_longueur_m / tm_largeur_m : taille de la table des marques (m), petite zone placée dans le couloir.
+ *   - repartition_grands_terrains : JSON {"Rugby 1":["1","2","3"], …} — composition de chaque
+ *                             GRAND terrain (numéros de mini-terrains), écrite quand la répartition
+ *                             est appliquée ; la page Saisie s'en sert pour filtrer par grand terrain.
  */
 function enregistrerPlanTerrains(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
   var champs = ['terrains_physiques', 'couloir_terrain_m', 'dimensions_categories',
-                'tm_longueur_m', 'tm_largeur_m'];
+                'tm_longueur_m', 'tm_largeur_m', 'repartition_grands_terrains'];
   champs.forEach(function (champ) {
     if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
   });

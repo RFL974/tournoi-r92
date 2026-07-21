@@ -197,6 +197,14 @@ async function initAdmin() {
   // Bouton « Retirer l'affiche » (annule un choix non enregistré, ou supprime l'affiche enregistrée).
   document.getElementById('bouton-retirer-affiche').addEventListener('click', onRetirerAffiche);
 
+  // Champ date : ouvre le calendrier dès qu'on clique n'importe où sur la barre
+  // (par défaut, seul le clic sur la petite icône l'ouvre). showPicker() peut ne pas
+  // exister sur de vieux navigateurs → on ignore l'erreur, l'icône reste utilisable.
+  document.querySelector('#form-infos-tournoi [name="tournoi_date"]')
+    .addEventListener('click', function () {
+      try { this.showPicker(); } catch (e) { /* navigateur non compatible : comportement normal */ }
+    });
+
   // Assistant à cartes (surcouche de présentation) : une fois tout rendu et branché, on
   // laisse assistant.js réorganiser la page en cartes (ou non, selon la préférence mémorisée).
   if (typeof initAssistant === 'function') initAssistant();
@@ -3247,6 +3255,15 @@ async function onAppliquerRepartition() {
     { ok: 'Appliquer' });
   if (!ok) return;
 
+  // Composition des GRANDS terrains (nom → numéros de mini-terrains), mémorisée en Config :
+  // la page Saisie des scores s'en sert pour filtrer les matchs par grand terrain (table de marque).
+  const composition = {};
+  repartitionCalculee.fieldsPlan.forEach(function (fp) {
+    const ids = [];
+    (fp.zones || []).forEach(function (z) { (z.tiles || []).forEach(function (t) { ids.push(t.id); }); });
+    if (ids.length) composition[String(fp.field.nom)] = ids;
+  });
+
   const bouton = document.getElementById('bouton-appliquer-repartition');
   if (bouton) { bouton.disabled = true; bouton.textContent = 'Application…'; }
   try {
@@ -3259,6 +3276,11 @@ async function onAppliquerRepartition() {
       const idx = configCourante.categories.findIndex(function (c) { return String(c.categorie) === nom; });
       if (idx >= 0) configCourante.categories[idx] = data;
     }
+    // Mémorise la composition des grands terrains (pour le filtre de la page Saisie).
+    const compositionJson = JSON.stringify(composition);
+    await ecrireAdmin('enregistrerPlanTerrains', { repartition_grands_terrains: compositionJson });
+    configCourante.global = Object.assign({}, configCourante.global,
+      { repartition_grands_terrains: compositionJson });
     injecterReglages(configCourante.global, configCourante.categories); // les cartes catégories montrent les nouveaux terrains
     majEtatAvancement(); // le fil « Où en suis-je ? » suit les terrains appliqués aux catégories
     repartitionCalculee = null;
