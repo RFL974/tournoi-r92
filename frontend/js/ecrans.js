@@ -32,15 +32,35 @@
    zone-horaires / zone-categories vivent dans la section #reglages : on les
    déplace individuellement (et on les y remettra en « Vue classique »). */
 const ECRANS_DEF = [
-  { id: 'infos',       titre: 'Infos du tournoi',  icone: '📝', blocs: ['bloc-infos-tournoi'],                       cles: [] },
-  { id: 'horaires',    titre: 'Horaires',          icone: '⏱️', blocs: ['zone-horaires'],                            cles: ['horaires'] },
-  { id: 'categories',  titre: 'Catégories',        icone: '🏷️', blocs: ['zone-categories'],                          cles: ['categories'] },
-  { id: 'equipes',     titre: 'Équipes',           icone: '👥', blocs: ['bloc-equipes'],                             cles: ['equipes'] },
-  { id: 'terrains',    titre: 'Terrains',          icone: '🗺️', blocs: ['bloc-terrains'],                            cles: ['terrains'] },
-  { id: 'poules',      titre: 'Poules & planning', icone: '🎲', blocs: ['bloc-generation'],                          cles: ['poules'] },
-  { id: 'apresmidi',   titre: 'Après-midi',        icone: '🏉', blocs: ['bloc-apresmidi'],                           cles: ['apresmidi'] },
-  { id: 'publication', titre: 'Publication',       icone: '📣', blocs: ['bloc-publication', 'bloc-reinitialisation'], cles: [] }
+  { id: 'infos',       titre: 'Infos du tournoi',  icone: 'info',     blocs: ['bloc-infos-tournoi'],                       cles: [] },
+  { id: 'horaires',    titre: 'Horaires',          icone: 'horloge',  blocs: ['zone-horaires'],                            cles: ['horaires'] },
+  { id: 'categories',  titre: 'Catégories',        icone: 'etiquette', blocs: ['zone-categories'],                         cles: ['categories'] },
+  { id: 'equipes',     titre: 'Équipes',           icone: 'equipe',   blocs: ['bloc-equipes'],                             cles: ['equipes'] },
+  { id: 'terrains',    titre: 'Terrains',          icone: 'terrain',  blocs: ['bloc-terrains'],                            cles: ['terrains'] },
+  { id: 'poules',      titre: 'Poules & planning', icone: 'poules',   blocs: ['bloc-generation'],                          cles: ['poules'] },
+  { id: 'apresmidi',   titre: 'Après-midi',        icone: 'ballon',   blocs: ['bloc-apresmidi'],                           cles: ['apresmidi'] },
+  { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication', 'bloc-reinitialisation'], cles: [] }
 ];
+
+/* Icônes filaires (SVG, trait fin arrondi, couleur = celle du texte de l'onglet).
+   Dessinées dans un carré 24×24 ; chaque entrée = l'INTÉRIEUR du <svg>. */
+const ECRANS_ICONES = {
+  info:      '<rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M4 9h16M9 9v11"></path>',
+  horloge:   '<circle cx="12" cy="12" r="8"></circle><path d="M12 7.5V12l3 2"></path>',
+  etiquette: '<path d="M4 4h7.6L20 12.4a2 2 0 0 1 0 2.8l-4.8 4.8a2 2 0 0 1-2.8 0L4 11.6V4z"></path><circle cx="8.3" cy="8.3" r="1.7" fill="currentColor" stroke="none"></circle>',
+  equipe:    '<circle cx="9" cy="8" r="3"></circle><circle cx="17" cy="10" r="2.3"></circle><path d="M4 19c0-2.8 2.2-5 5-5s5 2.2 5 5M15.5 15c2 .3 3.5 1.9 3.5 4"></path>',
+  terrain:   '<rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M12 6v12M3 12h4M17 12h4"></path>',
+  poules:    '<path d="M4 6h16M4 12h16M4 18h10"></path><circle cx="18" cy="18" r="2.4"></circle>',
+  ballon:    '<ellipse cx="12" cy="12" rx="5" ry="8" transform="rotate(45 12 12)"></ellipse><path d="M9 9l6 6M10.5 7.5l6 6M7.5 10.5l6 6"></path>',
+  monde:     '<circle cx="12" cy="12" r="8"></circle><path d="M4 12h16M12 4c2.5 2.5 2.5 13 0 16M12 4c-2.5 2.5-2.5 13 0 16"></path>'
+};
+
+/** Fabrique le <svg> d'une icône de la barre latérale. */
+function svgEcr(nom) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+         'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+         (ECRANS_ICONES[nom] || '') + '</svg>';
+}
 
 /* Ordre d'origine des blocs dans <main>, pour restaurer la page longue
    (« Vue classique »). #reglages reste dans <main> : on y remet ses 2 zones. */
@@ -82,7 +102,7 @@ function construireEcrans() {
           '<ul class="ecr-liste">';
   ECRANS_DEF.forEach(function (e) {
     h += '<li><button type="button" class="ecr-onglet" data-ecran="' + e.id + '">' +
-           '<span class="ecr-icone">' + e.icone + '</span>' +
+           '<span class="ecr-icone">' + svgEcr(e.icone) + '</span>' +
            '<span class="ecr-libelle">' + echapperEcr(e.titre) + '</span>' +
            '<span class="ecr-pastille" id="ecr-pastille-' + e.id + '" hidden></span>' +
          '</button></li>';
