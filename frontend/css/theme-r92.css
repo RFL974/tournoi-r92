@@ -513,8 +513,11 @@ body.theme-clair {
 }
 .theme-clair .tb-ic.est-valide { color: var(--r92-navy); }
 .theme-clair .tb-ic.est-attente { color: var(--r92-txt-doux); }
-/* Icône et texte de la tuile parfaitement alignés (centrage vertical). */
-.theme-clair .tb-val { display: flex; align-items: center; }
+/* Icône et texte de la tuile parfaitement alignés (centrage vertical), et la
+   valeur n'empiète jamais sur la demi-sphère navy du coin (texte navy sur fond
+   navy = illisible) : on réserve la zone, le texte passe à la ligne au besoin. */
+.theme-clair .tb-val { display: flex; align-items: center; padding-right: 44px; }
+.theme-clair .tb-val .tb-val-texte { flex: 1; min-width: 0; }
 /* Les libellés (CATÉGORIES, ÉQUIPES, PLANNING MATIN…) se calent tous EN BAS de
    leur tuile : ils restent alignés même quand la valeur est moins haute
    (« ✓ Validé » vs les grands chiffres). Les tuiles d'une même rangée ont la

@@ -78,10 +78,8 @@ formulaires en cours d'édition.
 > Toutes les confirmations et demandes de clé passent désormais par des **fenêtres aux couleurs du
 > site** (au lieu des popups gris du navigateur). *Entrée* valide, *Échap* annule.
 
-> **Sections repliables** : certaines cartes ont un **chevron ▸** dans leur titre et peuvent se
-> **plier/déplier** d'un clic. « Horaires de la journée » est **dépliée** par défaut (pliable une
-> fois réglée) ; « Réinitialiser le tournoi » est **repliée** par défaut (rarement utilisée, et on
-> évite de l'ouvrir par erreur).
+> **Section repliable** : la carte « Réinitialiser le tournoi » a un **chevron ▸** dans son titre
+> et est **repliée** par défaut (rarement utilisée, et on évite de l'ouvrir par erreur).
 
 > 🧭 **Navigation par étapes.** Sur **ordinateur (grand écran)**, la page s'organise en **écrans**
 > avec une **barre latérale** qui reprend les **étapes de la préparation** : Infos · Horaires ·
@@ -281,6 +279,14 @@ légende rappelle si le tournoi est **publié** ou non.
 Rend le tournoi **visible du public**. Tant qu'il n'est pas publié, les visiteurs voient un écran
 « à venir ». Indépendant de la génération des poules : on prépare tout, on publie quand c'est prêt.
 Le même bouton permet de **masquer** à nouveau.
+
+### 1.9 Réinitialiser le tournoi (zone de danger)
+Remet le tournoi **à zéro** pour repartir d'une base vierge (double confirmation, action
+**irréversible**). Sont supprimés : les **catégories**, les **équipes**, les **poules** et
+**matchs** (planning + scores), les **infos du tournoi** (nom, date, lieu, description,
+**affiche** — le fichier Drive part à la corbeille) et les **horaires de la journée** (remis à
+zéro, l'étape « Horaires » repasse « à faire »). Le tournoi repasse en **masqué**.
+✅ Seul l'**historique des saisons** (page Perfs) est conservé.
 
 ---
 
