@@ -562,17 +562,21 @@ body.theme-clair {
    VERDICT « TOUT EST PRÊT » — coche bleu ciel sur pastille circulaire navy
    (remplace l'émoji ✅ ; dessinée par majEtatAvancement dans admin.js).
    -------------------------------------------------------------------------- */
+.theme-clair .ea-verdict-ok {
+  display: flex;                      /* pastille et texte parfaitement centrés */
+  align-items: center;
+  gap: 9px;
+}
 .theme-clair .ea-coche {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 22px;
   height: 22px;
+  flex: 0 0 auto;
   border-radius: 50%;
-  background: var(--r92-navy);
-  color: #7CC0EC;                     /* la coche, bleu ciel */
-  margin-right: 9px;
-  vertical-align: -0.35em;
+  background: #7CC0EC;                /* la pastille, bleu ciel */
+  color: var(--r92-navy);             /* la coche, navy */
 }
 .theme-clair .ea-coche svg { width: 13px; height: 13px; }
 
@@ -596,5 +600,5 @@ body.theme-clair {
    RESPIRATIONS — de l'air entre la barre de connexion et « État du tournoi »,
    et entre les tuiles du tableau de bord et le bandeau « Tout est prêt ».
    -------------------------------------------------------------------------- */
-.theme-clair .barre-connexion { margin-bottom: 22px; padding: 12px 16px; }
+.theme-clair .barre-connexion { margin-bottom: 38px; padding: 12px 16px; }
 .theme-clair .etat-avancement { margin-top: 26px; }
