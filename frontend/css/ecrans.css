@@ -38,6 +38,11 @@ body.avec-ecrans .ecran[hidden] { display: none !important; }
   /* Le grand bandeau-titre fait doublon avec la marque de la barre latérale. */
   body.avec-ecrans .entete { display: none; }
 
+  /* En mode écrans, <main> n'est plus une grille (pas de gap) : on rétablit la
+     respiration sous la barre de connexion, que la règle de grille de
+     styles.css (main:has(#reglages) > #barre-connexion) remettait à zéro. */
+  body.avec-ecrans main:has(#reglages) > #barre-connexion { margin-bottom: 38px; }
+
   /* Écran « Infos du tournoi » : le formulaire à GAUCHE, l'aperçu de la carte
      du site à DROITE (côte à côte sur grand écran uniquement). */
   body.avec-ecrans #ecran-infos:not([hidden]) {
