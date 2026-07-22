@@ -198,6 +198,15 @@ async function initAdmin() {
   // Choix d'un fichier d'affiche → aperçu immédiat.
   document.querySelector('#form-infos-tournoi [name="tournoi_affiche"]')
     .addEventListener('change', onChoisirAffiche);
+  // Zone de glisser-déposer de l'affiche : survol (style) + dépôt du fichier.
+  // Le CLIC, lui, est natif : la zone vit dans un <label> qui ouvre le sélecteur.
+  const zoneDepot = document.getElementById('zone-depot-affiche');
+  zoneDepot.addEventListener('dragover', function (e) {
+    e.preventDefault(); // sinon le navigateur OUVRE le fichier au lieu de le déposer
+    zoneDepot.classList.add('est-survolee');
+  });
+  zoneDepot.addEventListener('dragleave', function () { zoneDepot.classList.remove('est-survolee'); });
+  zoneDepot.addEventListener('drop', onDeposerAffiche);
   // Bouton « Retirer l'affiche » (annule un choix non enregistré, ou supprime l'affiche enregistrée).
   document.getElementById('bouton-retirer-affiche').addEventListener('click', onRetirerAffiche);
 
@@ -281,9 +290,10 @@ function extraitCourt(texte, max) {
   return coupe.slice(0, coupe.lastIndexOf(' ') > 0 ? coupe.lastIndexOf(' ') : max).trim() + '…';
 }
 
-/** (Re)dessine la carte d'actualité dans #apercu-site à partir des valeurs
- *  ACTUELLES du formulaire (même pas encore enregistrées) et de l'affiche
- *  (choisie à l'instant, ou déjà enregistrée sur Drive). */
+/** (Re)dessine les DEUX aperçus — la carte d'actualité (#apercu-site) et la
+ *  page de l'événement (#apercu-page, celle qui s'ouvre au clic sur la carte) —
+ *  à partir des valeurs ACTUELLES du formulaire (même pas encore enregistrées)
+ *  et de l'affiche (choisie à l'instant, ou déjà enregistrée sur Drive). */
 function majApercuTournoi() {
   const zone = document.getElementById('apercu-site');
   const form = document.getElementById('form-infos-tournoi');
@@ -310,17 +320,53 @@ function majApercuTournoi() {
       '</div>' +
     '</article>';
 
+  // — La page de l'événement (réplique de tournoi.html du site vitrine :
+  //   bandeau navy, Présentation + affiche, section sombre « Infos pratiques »).
+  //   Mêmes textes de repli que chargerArticleTournoi (main.js du site).
+  const pageZone = document.getElementById('apercu-page');
+  if (pageZone) {
+    const description = form.tournoi_description.value.trim() ||
+      'Suivez notre tournoi et encouragez nos équipes !';
+    const quand = form.tournoi_date.value ? formaterDateFr(form.tournoi_date.value) : 'À venir';
+    const ou = form.tournoi_lieu.value.trim() || 'À préciser';
+    pageZone.innerHTML =
+      '<div class="vitrine-page">' +
+        '<div class="vp-bandeau">' +
+          '<p class="vp-sous-titre">Actualité · Tournoi</p>' +
+          '<h3 class="vp-titre">' + echapper(nom) + '</h3>' +
+        '</div>' +
+        '<div class="vp-section">' +
+          '<p class="vp-sous-titre">Le tournoi</p>' +
+          '<h4 class="vp-titre-section">Présentation</h4>' +
+          '<p class="vp-texte">' + echapper(description) + '</p>' +
+          (imgSrc ? '<img class="vp-affiche" src="' + echapper(imgSrc) + '" alt="Affiche — ' + echapper(nom) + '">' : '') +
+        '</div>' +
+        '<div class="vp-sombre">' +
+          '<p class="vp-sous-titre">Pratique</p>' +
+          '<h4 class="vp-titre-section est-blanc">Infos pratiques</h4>' +
+          '<ul class="vp-points">' +
+            '<li><strong>Quand :</strong> ' + echapper(quand) + '.</li>' +
+            '<li><strong>Où :</strong> ' + echapper(ou) + '.</li>' +
+          '</ul>' +
+          '<div class="vp-boutons">' +
+            '<span class="vitrine-btn">Voir le tournoi en direct</span>' +
+            '<span class="vitrine-btn">Ajouter à mon agenda</span>' +
+            '<span class="vitrine-btn">On y va !</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
   const legende = document.getElementById('apercu-site-legende');
   if (legende) {
     legende.textContent = estPublie()
-      ? '🟢 Tournoi publié : cette carte est visible sur le site, en tête des actualités.'
-      : '⚪️ Tournoi non publié : la carte apparaîtra sur le site après la publication.';
+      ? '🟢 Tournoi publié : cette carte et cette page sont visibles sur le site.'
+      : '⚪️ Tournoi non publié : la carte et la page apparaîtront après la publication.';
   }
 }
 
-/** Quand on choisit un fichier : on le redimensionne et on affiche un aperçu immédiat. */
-async function onChoisirAffiche(evenement) {
-  const fichier = evenement.target.files && evenement.target.files[0];
+/** Traite un fichier d'affiche (choisi OU déposé) : redimensionne, aperçu immédiat. */
+async function traiterFichierAffiche(fichier) {
   const message = document.getElementById('message-infos-tournoi');
   if (!fichier) { afficheDataURI = ''; return; }
   try {
@@ -328,11 +374,25 @@ async function onChoisirAffiche(evenement) {
     const bloc = document.getElementById('apercu-affiche');
     document.getElementById('apercu-affiche-img').src = afficheDataURI;
     bloc.hidden = false;
-    majApercuTournoi(); // la carte du site montre la nouvelle affiche
+    majApercuTournoi(); // la carte + la page du site montrent la nouvelle affiche
   } catch (e) {
     afficheDataURI = '';
     afficherMessage(message, "⚠️ Image illisible. Choisis un fichier image (JPG, PNG…).", 'ko');
   }
+}
+
+/** Quand on choisit un fichier via le sélecteur (clic sur la zone de dépôt). */
+function onChoisirAffiche(evenement) {
+  traiterFichierAffiche(evenement.target.files && evenement.target.files[0]);
+}
+
+/** Quand on DÉPOSE un fichier sur la zone (glisser-déposer depuis l'ordinateur). */
+function onDeposerAffiche(evenement) {
+  evenement.preventDefault(); // sinon le navigateur ouvre l'image dans l'onglet
+  const zone = document.getElementById('zone-depot-affiche');
+  if (zone) zone.classList.remove('est-survolee');
+  const fichier = evenement.dataTransfer && evenement.dataTransfer.files && evenement.dataTransfer.files[0];
+  traiterFichierAffiche(fichier);
 }
 
 /**

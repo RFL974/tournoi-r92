@@ -272,6 +272,7 @@ body.theme-clair {
   width: 100%;
   height: 200px;
   object-fit: cover;
+  object-position: center top;             /* affiche = visuel portrait : on garde le HAUT (titre) */
   background: #B8D8F8;                     /* --ciel du site vitrine */
   border: none;
   border-radius: 0;
@@ -322,3 +323,173 @@ body.theme-clair {
   color: var(--r92-txt-doux);
   text-align: center;
 }
+
+/* --------------------------------------------------------------------------
+   APERÇU — sous-titres des deux aperçus (« La carte » / « La page »)
+   -------------------------------------------------------------------------- */
+.theme-clair .apercu-sous-titre {
+  font-family: 'Familjen Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--r92-txt-doux);
+  margin: 18px 0 10px;
+}
+
+/* ==========================================================================
+   APERÇU DE LA PAGE DE L'ÉVÉNEMENT — réplique (réduite) de tournoi.html du
+   site vitrine : bandeau navy, section Présentation + affiche, section sombre
+   « Infos pratiques » à bords biseautés. Mêmes couleurs et typos que le site.
+   ========================================================================== */
+.theme-clair .vitrine-page {
+  max-width: 420px;
+  margin: 0 auto;
+  border: 1px solid #e6edf5;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(12, 28, 46, 0.06);
+  font-family: 'Barlow', 'Segoe UI', system-ui, sans-serif;
+  color: #3B4A63;
+}
+/* Sous-titre bleu vif en Barlow Condensed capitales — comme .sous-titre du site */
+.theme-clair .vp-sous-titre {
+  font-family: 'Barlow Condensed', 'Segoe UI', sans-serif;
+  color: #2E8FE0;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  margin: 0 0 8px;
+}
+/* Bandeau-titre navy dégradé avec liseré bleu vif en haut */
+.theme-clair .vp-bandeau {
+  background: linear-gradient(135deg, #16304a, #0C1C2E);
+  border-top: 4px solid #2E8FE0;
+  color: #FFFFFF;
+  padding: 20px 18px;
+}
+.theme-clair .vp-titre {
+  font-family: 'Barlow Condensed', 'Segoe UI', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 1.45rem;
+  color: #FFFFFF;
+  margin: 0;
+}
+/* Titre de section avec le petit trait bleu vif dessous — comme .titre-section */
+.theme-clair .vp-titre-section {
+  font-family: 'Barlow Condensed', 'Segoe UI', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 1.15rem;
+  color: #0C1C2E;
+  margin: 0 0 6px;
+  display: inline-block;
+}
+.theme-clair .vp-titre-section::after {
+  content: "";
+  display: block;
+  width: 44px;
+  height: 3px;
+  margin-top: 4px;
+  background: #2E8FE0;
+  border-radius: 2px;
+}
+.theme-clair .vp-titre-section.est-blanc { color: #FFFFFF; }
+.theme-clair .vp-section { padding: 18px; }
+.theme-clair .vp-texte { margin: 8px 0 0; font-size: 0.9rem; line-height: 1.55; }
+.theme-clair .vp-affiche {
+  width: 100%;
+  margin-top: 14px;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 6px 20px rgba(12, 28, 46, 0.15);
+}
+/* Section sombre « Infos pratiques » : navy, bords biseautés (clip-path du site) */
+.theme-clair .vp-sombre {
+  background: #0C1C2E;
+  color: #FFFFFF;
+  padding: 26px 18px 22px;
+  clip-path: polygon(0 12px, 100% 0, 100% 100%, 0 100%);
+}
+.theme-clair .vp-points {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+.theme-clair .vp-points li { position: relative; padding: 5px 0 5px 24px; }
+.theme-clair .vp-points li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  color: #2E8FE0;
+  font-weight: 700;
+}
+.theme-clair .vp-boutons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.theme-clair .vp-boutons .vitrine-btn { padding: 9px 14px; font-size: 0.8rem; border-radius: 8px; }
+
+/* ==========================================================================
+   ZONE DE DÉPÔT DE L'AFFICHE — glisser-déposer (ou clic : le <label> parent
+   ouvre le sélecteur de fichier). Sur le fond navy de la ligne .reglage.
+   ========================================================================== */
+.theme-clair .zone-depot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.theme-clair .zone-depot:hover,
+.theme-clair .zone-depot.est-survolee {
+  border-color: #7CC0EC;
+  background: rgba(124, 192, 236, 0.12);
+}
+.theme-clair .zd-icone { font-size: 1.6rem; line-height: 1; }
+.theme-clair .zd-texte { font-size: 0.9rem; line-height: 1.45; color: #C7D5E8; }
+.theme-clair .zd-texte strong { color: #FFFFFF; }
+
+/* ==========================================================================
+   FONDS NAVY — les sous-blocs des cartes qui étaient bleu ciel très clair
+   (#F5F9FD) passent NAVY, avec polices claires adaptées. Les champs restent
+   BLANCS (contraste fort sur le navy).
+   ========================================================================== */
+.theme-clair .reglage,
+.theme-clair .equipe-item,
+.theme-clair .poule-compo {
+  background: var(--r92-navy);
+  border-color: var(--r92-navy);
+  color: #E7EEF7;
+}
+.theme-clair .reglage { border-radius: 14px; }
+/* Libellés clairs sur navy (les .champ-reglage de la carte Horaires, eux,
+   restent sur fond blanc → leur libellé garde sa couleur ardoise). */
+.theme-clair .reglage .r-libelle { color: #B9C9DE; }
+/* Équipes : nom blanc, catégorie estompée, boutons ✏️/🗑 recolorés pour le navy */
+.theme-clair .equipe-item .nom { color: #FFFFFF; }
+.theme-clair .equipe-item .cat-mini { color: #9FB6D0; }
+.theme-clair .equipe-item .bouton-suppr { color: #F3B0A8; border-color: rgba(243, 176, 168, 0.45); }
+.theme-clair .equipe-item .bouton-suppr:hover { background: rgba(224, 120, 120, 0.18); }
+.theme-clair .equipe-item .bouton-modif { color: #9CC9F0; border-color: rgba(156, 201, 240, 0.45); }
+.theme-clair .equipe-item .bouton-modif:hover { background: rgba(124, 192, 236, 0.15); }
+/* Cartes de format d'après-midi */
+.theme-clair .format-carte { background: var(--r92-navy); border-color: var(--r92-navy); }
+.theme-clair .format-carte .f-titre { color: #FFFFFF; }
+.theme-clair .format-carte .f-desc { color: #AFC3DC; }
+.theme-clair .format-carte.est-choisi {
+  background: var(--r92-navy-2);
+  border-color: var(--r92-accent);
+  box-shadow: 0 0 0 2px rgba(62, 143, 214, 0.35);
+}
+/* Choix Auto / Manuel des terrains (chips radio) */
+.theme-clair .terr-choix { background: var(--r92-navy); border-color: var(--r92-navy); color: #E7EEF7; }
+/* Éditeur de poules du matin : conteneur navy, poules blanches, équipes navy clair */
+.theme-clair .edit-poules { background: var(--r92-navy); border-color: var(--r92-navy-2); }
+.theme-clair .edit-equipe { background: var(--r92-navy-2); color: #E7EEF7; }
+/* Tableau de capacité des terrains : en-tête navy */
+.theme-clair .tab-capacite thead th { background: var(--r92-navy); color: #FFFFFF; }
