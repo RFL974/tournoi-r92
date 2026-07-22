@@ -260,7 +260,8 @@ ensemble l'après-midi (les 1ᵉʳ de poule entre eux → **Niveau 1**, les 2ᵉ
 
 ### 1.7 Infos du tournoi + affiche
 Alimentent la **carte d'actualité** et la **page d'article** du site vitrine (boutique-r92) : nom,
-date, lieu, description, et une **affiche** (image, redimensionnée puis stockée dans Google Drive).
+date, lieu, description, et une **affiche** — dépose l'image dans la **zone de glisser-déposer**
+(ou clique dessus pour choisir un fichier) ; elle est redimensionnée puis stockée dans Google Drive.
 On les sauvegarde avec le bouton **Enregistrer les infos**. Elles sont **modifiables à tout moment,
 même après publication** (pour corriger une faute de frappe sans dépublier). Par sécurité, elles
 sont aussi enregistrées lors de la publication.
@@ -269,10 +270,12 @@ Un bouton **Retirer l'affiche** (sous l'aperçu) permet d'**annuler un choix pas
 ou de **supprimer l'affiche déjà enregistrée** (le fichier Drive est mis à la corbeille).
 
 **🪟 Aperçu sur le site.** À côté du formulaire (à droite sur ordinateur), une carte **« Aperçu sur
-le site »** montre la **carte d'actualité exactement comme elle apparaîtra** sur le site de
-l'association (mêmes styles, même extrait limité à 160 caractères, même format de date, mêmes
-textes par défaut si un champ est vide). Elle se met à jour **pendant que tu tapes**, avant même
-d'enregistrer, et sa légende rappelle si le tournoi est **publié** ou non.
+le site »** montre **exactement ce qui apparaîtra** sur le site de l'association : la **carte
+d'actualité** (mêmes styles, extrait limité à 160 caractères, format de date, textes par défaut si
+un champ est vide, affiche recadrée par le haut) puis, dessous, la **page de l'événement** (celle
+qui s'ouvre au clic sur la carte : bandeau navy, Présentation + affiche, Infos pratiques Quand/Où,
+boutons). Les deux se mettent à jour **pendant que tu tapes**, avant même d'enregistrer, et la
+légende rappelle si le tournoi est **publié** ou non.
 
 ### 1.8 Publier le tournoi
 Rend le tournoi **visible du public**. Tant qu'il n'est pas publié, les visiteurs voient un écran

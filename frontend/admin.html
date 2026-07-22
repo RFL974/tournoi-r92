@@ -80,8 +80,14 @@
           <label class="reglage"><span class="r-libelle">Description</span>
             <textarea class="r-input" name="tournoi_description" rows="4" placeholder="Quelques phrases de présentation du tournoi…"></textarea>
           </label>
+          <!-- Affiche : zone de glisser-déposer (le clic ouvre aussi le sélecteur de
+               fichier grâce au <label> ; le glisser-déposer est géré par admin.js). -->
           <label class="reglage"><span class="r-libelle">Affiche du tournoi (image)</span>
-            <input class="r-input" type="file" name="tournoi_affiche" accept="image/*">
+            <span class="zone-depot" id="zone-depot-affiche">
+              <input type="file" name="tournoi_affiche" accept="image/*" hidden>
+              <span class="zd-icone" aria-hidden="true">🖼️</span>
+              <span class="zd-texte"><strong>Glisse ton affiche ici</strong><br>ou clique pour choisir une image</span>
+            </span>
           </label>
           <div id="apercu-affiche" class="apercu-affiche" hidden>
             <img id="apercu-affiche-img" alt="Aperçu de l'affiche du tournoi">
@@ -102,11 +108,15 @@
       <section class="carte" id="bloc-apercu-tournoi" aria-label="Aperçu de la publication sur le site">
         <h2>Aperçu sur le site</h2>
         <p class="note-generation">
-          Voici la <strong>carte d'actualité</strong> telle qu'elle apparaîtra sur le
-          <strong>site de l'association</strong> (page Actualités) une fois le tournoi
-          <strong>publié</strong>. Elle se met à jour pendant que tu tapes.
+          Voici, tels qu'ils apparaîtront sur le <strong>site de l'association</strong> une fois
+          le tournoi <strong>publié</strong> : la <strong>carte d'actualité</strong>, puis la
+          <strong>page de l'événement</strong> (celle qui s'ouvre quand on clique la carte).
+          Les deux se mettent à jour pendant que tu tapes.
         </p>
+        <h3 class="apercu-sous-titre">La carte (page Actualités)</h3>
         <div id="apercu-site"></div>
+        <h3 class="apercu-sous-titre">La page de l'événement</h3>
+        <div id="apercu-page"></div>
         <p class="vitrine-legende" id="apercu-site-legende"></p>
       </section>
 
