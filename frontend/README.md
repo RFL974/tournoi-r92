@@ -20,6 +20,12 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
 - `js/api.js` — `apiGet` / `apiPost` / `apiPostProtege` + gestion des clés (session).
 - `js/admin.js`, `js/saisie.js`, `js/tournoi.js`, `js/perfs.js` — logique de chaque page.
 
+**Présentation de la page admin** (surcouches, la logique reste dans `admin.js`) :
+- `css/theme-r92.css` — habillage navy/blanc/ciel, chargé après `styles.css`, scopé `.theme-clair`.
+- `js/ecrans.js` + `css/ecrans.css` — mode « écrans » : barre latérale + 4 onglets sur grand écran.
+- `js/assistant.js` — assistant à cartes (mobile) avec verrou « Suivant », et **aiguillage** au
+  chargement : grand écran → mode écrans, mobile → assistant, « Vue classique » → page longue.
+
 ## Voir les pages en local
 Ouvrir un fichier directement (double-clic) suffit pour un aperçu. Pour un vrai serveur local :
 
