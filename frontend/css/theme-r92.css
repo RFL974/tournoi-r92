@@ -447,7 +447,8 @@ body.theme-clair {
   border-color: #7CC0EC;
   background: rgba(124, 192, 236, 0.12);
 }
-.theme-clair .zd-icone { font-size: 1.6rem; line-height: 1; }
+.theme-clair .zd-icone { display: inline-flex; color: #7CC0EC; }
+.theme-clair .zd-icone svg { width: 26px; height: 26px; }
 .theme-clair .zd-texte { font-size: 0.9rem; line-height: 1.45; color: #C7D5E8; }
 .theme-clair .zd-texte strong { color: #FFFFFF; }
 
@@ -510,8 +511,10 @@ body.theme-clair {
   font-size: 1.5rem;
   line-height: 1.2;
 }
-.theme-clair .tb-ic.est-valide { color: #2E8B57; }
+.theme-clair .tb-ic.est-valide { color: var(--r92-navy); }
 .theme-clair .tb-ic.est-attente { color: var(--r92-txt-doux); }
+/* Icône et texte de la tuile parfaitement alignés (centrage vertical). */
+.theme-clair .tb-val { display: flex; align-items: center; }
 
 /* --------------------------------------------------------------------------
    FORMULAIRE DES INFOS — les lignes navy fusionnent en UN SEUL panneau
@@ -554,3 +557,44 @@ body.theme-clair {
 .theme-clair .ea-thermo { border-top-color: rgba(255, 255, 255, 0.18); color: #DCE8F5; }
 .theme-clair .ea-t b { color: #9CC9F0; }
 .theme-clair .ea-therm-warn { color: #FFC98A; }
+
+/* --------------------------------------------------------------------------
+   VERDICT « TOUT EST PRÊT » — coche bleu ciel sur pastille circulaire navy
+   (remplace l'émoji ✅ ; dessinée par majEtatAvancement dans admin.js).
+   -------------------------------------------------------------------------- */
+.theme-clair .ea-coche {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--r92-navy);
+  color: #7CC0EC;                     /* la coche, bleu ciel */
+  margin-right: 9px;
+  vertical-align: -0.35em;
+}
+.theme-clair .ea-coche svg { width: 13px; height: 13px; }
+
+/* --------------------------------------------------------------------------
+   BARRE DE CONNEXION (état connecté) — fond navy, texte clair, boutons
+   contour blanc, pour matcher le reste de la page.
+   -------------------------------------------------------------------------- */
+.theme-clair .barre-connexion.connecte {
+  background: var(--r92-navy);
+  border-color: var(--r92-navy);
+  color: #DCE8F5;
+}
+.theme-clair .barre-connexion.connecte .bouton-lien {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+  background: transparent;
+}
+.theme-clair .barre-connexion.connecte .bouton-lien:hover { background: rgba(255, 255, 255, 0.10); }
+
+/* --------------------------------------------------------------------------
+   RESPIRATIONS — de l'air entre la barre de connexion et « État du tournoi »,
+   et entre les tuiles du tableau de bord et le bandeau « Tout est prêt ».
+   -------------------------------------------------------------------------- */
+.theme-clair .barre-connexion { margin-bottom: 22px; padding: 12px 16px; }
+.theme-clair .etat-avancement { margin-top: 26px; }
