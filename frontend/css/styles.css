@@ -1581,12 +1581,31 @@ body.theme-clair {
   letter-spacing: 0.4px; font-size: 0.9rem; color: #33608f; text-align: center; flex: 1;
 }
 
+/* Verrou « Suivant » : bouton grisé + explication de ce qui reste à faire
+   (étape incomplète ou modifications non enregistrées) */
+.asst-nav:disabled { opacity: 0.45; cursor: not-allowed; }
+.asst-verrou {
+  margin-top: 12px; padding: 9px 12px; border-radius: 8px;
+  background: #fff7ea; border: 1px solid #f4cf8e; color: #8a5a17;
+  font-size: 0.92rem; line-height: 1.45;
+}
+.asst-verrou.est-secoue { animation: asst-secousse 0.3s ease; }
+@keyframes asst-secousse {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(-5px); }
+  70% { transform: translateX(5px); }
+}
+/* Étapes du fil hors de portée (au-delà de la 1re étape bloquée) : estompées */
+.asst-step.est-verrouillee { opacity: 0.45; }
+.asst-step.est-verrouillee:hover { background: #eef4fb; }
+
 /* Bouton flottant pour revenir à l'assistant depuis la vue classique */
 .asst-reprise { display: block; margin: 0 0 var(--espace); }
 
 /* Accessibilité : respecte « animations réduites » */
 @media (prefers-reduced-motion: reduce) {
   .asst-viewport, .asst-track, .asst-barre-jauge { transition: none; }
+  .asst-verrou.est-secoue { animation: none; }
 }
 
 /* Petit écran : le pied reste lisible, le compteur passe sous les boutons si besoin */

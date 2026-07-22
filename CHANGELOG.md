@@ -5,6 +5,30 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : verrou du bouton « Suivant » dans l'assistant — 2026-07-22
+Pendant la préparation du tournoi, l'assistant à cartes **empêche de passer à l'étape
+suivante tant que l'étape en cours n'est pas complète** : « Suivant » est **grisé** avec
+une **explication** de ce qui reste à faire (enregistrer, générer, répartir…). Et si on
+**modifie après avoir enregistré**, le verrou **se referme** : il faut ré-enregistrer /
+régénérer / ré-appliquer la partie modifiée. **100 % frontend** (aucun redéploiement backend).
+
+- `assistant.js` : le verrou combine **deux détections** —
+  1. le « cerveau » (`calculerEtatsEtapes`) : étapes ⚪️ à faire / 🟠 à refaire de la carte
+     (ex. « Réglages modifiés depuis la génération » sur la carte Poules) ;
+  2. les **modifications non enregistrées** : chaque formulaire est comparé à sa « photo »
+     prise à son dernier état enregistré (+ cas dédiés : équipe saisie mais pas ajoutée,
+     renommage en cours, affiche choisie, répartition calculée mais pas appliquée,
+     édition de poules ouverte).
+- Le **fil d'étapes** grise les étapes hors de portée (au-delà de la 1re étape bloquée) ;
+  sauter en avant par le fil ou les flèches ← → est **borné à l'étape à corriger** ;
+  revenir en arrière reste toujours possible. L'après-midi ne bloque pas (elle se génère
+  plus tard, comme pour le verdict « prêt à publier »).
+- `admin.js` : après chaque **enregistrement réussi** (infos, horaires, catégorie, plan des
+  terrains) ou re-rendu depuis l'état enregistré, la « photo » de référence est reprise
+  (`assistantMarquerPropre`) → le verrou se rouvre aussitôt.
+- `styles.css` : bouton grisé, encart d'explication (petit tremblement si on insiste),
+  étapes estompées ; respecte « animations réduites ».
+
 ### Saisie des scores : filtre « Grand terrain » — 2026-07-22
 À la table de marque, on peut désormais **filtrer les matchs par grand terrain** (ex. « Rugby 1
 (terrains 1, 2, 3, 4) ») en plus du filtre catégorie : on ne voit que les matchs des mini-terrains
