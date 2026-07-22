@@ -240,6 +240,10 @@ function majInfosTournoi() {
     img.removeAttribute('src');
     bloc.hidden = true;
   }
+
+  // Formulaire (re)rempli avec l'état ENREGISTRÉ → nouvelle référence pour le
+  // détecteur de « modifications non enregistrées » de l'assistant.
+  if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
 }
 
 /** URL d'affichage d'une affiche stockée dans Drive (CDN lh3, largeur maxi w).
@@ -732,6 +736,10 @@ function majEtatAvancement() {
        '</div>';
 
   zone.innerHTML = h;
+
+  // Assistant à cartes : l'état des étapes vient (peut-être) de changer → le verrou
+  // du bouton « Suivant » doit suivre (grisé tant que l'étape n'est pas complète).
+  if (typeof assistantMajVerrou === 'function') assistantMajVerrou();
 }
 
 /**
@@ -1105,6 +1113,8 @@ async function onEnregistrerHoraires(evenement) {
     await ecrireAdmin('enregistrerHoraires', data);
     // On met à jour la config gardée en mémoire.
     configCourante.global = Object.assign({}, configCourante.global, data);
+    // Valeurs désormais ENREGISTRÉES → l'assistant reprend sa photo de référence.
+    if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
     majEtatAvancement(); // le fil « Où en suis-je ? » suit les horaires
     afficherMessage(message, '✅ Horaires enregistrés.', 'ok');
   } catch (erreur) {
@@ -1425,6 +1435,8 @@ async function onEnregistrerCategorie(evenement) {
     // (pour garder le message et l'endroit où on est).
     const idx = configCourante.categories.findIndex(function (c) { return c.categorie === nom; });
     if (idx >= 0) configCourante.categories[idx] = Object.assign({}, configCourante.categories[idx], data);
+    // Catégorie ENREGISTRÉE → l'assistant reprend sa photo de référence.
+    if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
     remplirSelectCategories(configCourante.categories);
     majTableauBord(); // le nombre de catégories « présentes » a pu changer
     afficherMessage(message, '✅ Enregistré.', 'ok');
@@ -2558,6 +2570,10 @@ function injecterTerrains() {
   h += '<div id="repartition-resultat"></div>';
 
   zone.innerHTML = h;
+
+  // Zone (re)construite depuis l'état ENREGISTRÉ → nouvelle référence pour le
+  // détecteur de « modifications non enregistrées » de l'assistant.
+  if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(zone);
 }
 
 /** Une ligne « grand terrain » (nom, type, longueur × largeur, supprimer). */
@@ -2719,6 +2735,10 @@ async function onEnregistrerPlanTerrains() {
   try {
     await ecrireAdmin('enregistrerPlanTerrains', data);
     configCourante.global = Object.assign({}, configCourante.global, data);
+    // Plan ENREGISTRÉ → l'assistant reprend sa photo de référence de la zone terrains.
+    if (typeof assistantMarquerPropre === 'function') {
+      assistantMarquerPropre(document.getElementById('zone-terrains'));
+    }
     majEtatAvancement(); // le fil « Où en suis-je ? » suit le plan des terrains
     afficherMessage(message, '✅ Terrains enregistrés.', 'ok');
   } catch (erreur) {
