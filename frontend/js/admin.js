@@ -1030,7 +1030,7 @@ async function onClicConnexion(evenement) {
 
 /**
  * Réinitialise entièrement le tournoi (catégories, équipes, poules, matchs, infos)
- * après une double confirmation. Conserve les réglages « Horaires de la journée » et
+ * après une double confirmation. Remet aussi les horaires de la journée à zéro ; conserve
  * l'historique de saison. Recharge toute la page ensuite.
  */
 async function onReinitialiser() {
@@ -1040,8 +1040,9 @@ async function onReinitialiser() {
   // Double confirmation : l'action est irréversible.
   if (!await dialogConfirmer('Réinitialiser le tournoi ?\n\n' +
                'Cela supprime définitivement les catégories, les équipes, les poules, ' +
-               'les matchs (planning + scores) et les infos du tournoi.\n' +
-               'Les réglages horaires et l\'historique de saison sont conservés.',
+               'les matchs (planning + scores), les infos du tournoi (affiche comprise) ' +
+               'et remet les horaires de la journée à zéro.\n' +
+               'Seul l\'historique de saison (page Perfs) est conservé.',
                { ok: 'Continuer', danger: true })) return;
   if (!await dialogConfirmer('Confirmer la remise à zéro ? Cette action est IRRÉVERSIBLE.',
                { ok: 'Oui, tout effacer', danger: true })) return;
@@ -1175,11 +1176,11 @@ function afficherHoraires(global) {
   // Heure de fin automatique par défaut (sauf si explicitement 'non').
   var auto = String((global && global.heure_fin_auto) || 'oui').toLowerCase() !== 'non';
 
-  // Carte repliable, OUVERTE par défaut : réglée une fois en début de journée,
-  // on peut ensuite la plier pour raccourcir la page.
+  // Carte simple (non repliable : chaque étape a désormais son propre écran,
+  // plier n'avait plus de raison d'être).
   return (
-    '<details class="carte" open>' +
-      '<summary>Horaires de la journée</summary>' +
+    '<section class="carte">' +
+      '<h2>Horaires de la journée</h2>' +
       '<form id="form-horaires" class="form-reglages">' +
         champHeure('heure_debut', 'Heure de début des matchs', val('heure_debut')) +
         // Heure de fin + case "auto"
@@ -1200,7 +1201,7 @@ function afficherHoraires(global) {
           '<span id="message-horaires" class="message-form"></span>' +
         '</div>' +
       '</form>' +
-    '</details>'
+    '</section>'
   );
 }
 

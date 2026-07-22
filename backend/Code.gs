@@ -2212,6 +2212,13 @@ function reinitialiserTournoi(classeur) {
   ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_description', 'tournoi_affiche_id']
     .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
 
+  // 3 bis) Remise à ZÉRO des horaires de la journée : on repart vraiment de zéro
+  //         (le fil « Où en suis-je ? » repasse l'étape Horaires « à faire »).
+  //         signature_generation est effacée aussi (elle n'a plus de sens sans planning).
+  ['heure_debut', 'heure_fin', 'heure_fin_auto', 'battement_terrain_min',
+   'pause_dejeuner_debut', 'pause_dejeuner_duree_min', 'signature_generation']
+    .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
+
   // 4) Le tournoi redevient masqué pour le public.
   ecrireParamGlobal(ongletConfig, 'tournoi_publie', 'non');
 
