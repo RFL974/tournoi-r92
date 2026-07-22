@@ -227,3 +227,25 @@ body.theme-clair {
    AFFICHE / APERÇU — arrondi cohérent
    -------------------------------------------------------------------------- */
 .theme-clair .apercu-affiche img { border-radius: 14px; border-color: var(--r92-ligne); }
+
+/* --------------------------------------------------------------------------
+   BOUTONS DISCRETS (.bouton-lien : « 🔄 Rafraîchir », « Changer de clé »…)
+   Le style d'origine (padding 4×12, MAJUSCULES condensées) les serrait trop
+   dans le nouveau look → plus d'air, casse normale, jamais coupés en deux.
+   -------------------------------------------------------------------------- */
+.theme-clair .bouton-lien {
+  font-family: 'Familjen Grotesk', sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+.theme-clair .tb-refresh .bouton-lien {
+  color: var(--r92-accent-ink);
+  border-color: var(--r92-champ-bd);
+  background: #ffffff;
+}
+.theme-clair .tb-refresh .bouton-lien:hover { background: var(--r92-ciel-soft); }
