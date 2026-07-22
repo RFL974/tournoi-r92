@@ -23,7 +23,7 @@
 /* Ordre des cartes = ordre logique de préparation (le même que le « cerveau »).
    Chaque carte réutilise un ou plusieurs blocs EXISTANTS (par leur id). */
 const ASSISTANT_ETAPES = [
-  { id: 'infos',     titre: 'Infos',        icone: '📝', blocs: ['bloc-infos-tournoi'] },
+  { id: 'infos',     titre: 'Infos',        icone: '📝', blocs: ['bloc-infos-tournoi', 'bloc-apercu-tournoi'] },
   { id: 'reglages',  titre: 'Réglages',     icone: '⏱️', blocs: ['reglages'] },
   { id: 'equipes',   titre: 'Équipes',      icone: '👥', blocs: ['bloc-equipes'] },
   { id: 'terrains',  titre: 'Terrains',     icone: '🗺️', blocs: ['bloc-terrains'] },
