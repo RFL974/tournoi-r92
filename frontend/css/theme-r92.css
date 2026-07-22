@@ -173,12 +173,9 @@ body.theme-clair {
   content: "";
   position: absolute; top: -26px; right: -26px;
   width: 92px; height: 92px; border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #46618A, var(--r92-navy));
-  opacity: 0.30;
+  background: linear-gradient(145deg, var(--r92-navy-2), var(--r92-navy));
+  opacity: 1;
 }
-.theme-clair .tb-grille .tb-stat:nth-child(2)::before { background: radial-gradient(circle at 30% 30%, #52709B, #16335C); opacity: .30; }
-.theme-clair .tb-grille .tb-stat:nth-child(3)::before { background: radial-gradient(circle at 30% 30%, #5F7DA8, #234978); opacity: .30; }
-.theme-clair .tb-grille .tb-stat:nth-child(4)::before { background: radial-gradient(circle at 30% 30%, #44536A, #0E2340); opacity: .30; }
 .theme-clair .tb-val {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 500;
@@ -493,3 +490,67 @@ body.theme-clair {
 .theme-clair .edit-equipe { background: var(--r92-navy-2); color: #E7EEF7; }
 /* Tableau de capacité des terrains : en-tête navy */
 .theme-clair .tab-capacite thead th { background: var(--r92-navy); color: #FFFFFF; }
+
+/* --------------------------------------------------------------------------
+   TABLEAU DE BORD — icône d'état de la tuile « Planning matin » (SVG filaire,
+   injectée par majTableauBord dans admin.js) : ✓ vert validé, horloge en attente.
+   -------------------------------------------------------------------------- */
+.theme-clair .tb-ic {
+  display: inline-block;
+  width: 0.72em;
+  height: 0.72em;
+  margin-right: 10px;
+  vertical-align: -0.04em;
+}
+/* La demi-sphère (désormais opaque) reste DERRIÈRE le contenu de la tuile. */
+.theme-clair .tb-stat > * { position: relative; z-index: 1; }
+/* Valeurs en toutes lettres (« Validé », « En attente ») : un cran plus petites
+   que les grands nombres, pour tenir dans la tuile. */
+.theme-clair .tb-val .tb-val-texte {
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+.theme-clair .tb-ic.est-valide { color: #2E8B57; }
+.theme-clair .tb-ic.est-attente { color: var(--r92-txt-doux); }
+
+/* --------------------------------------------------------------------------
+   FORMULAIRE DES INFOS — les lignes navy fusionnent en UN SEUL panneau
+   (fini l'effet « blocs superposés ») : angles arrondis seulement en haut et
+   en bas, fines séparations entre les lignes.
+   -------------------------------------------------------------------------- */
+.theme-clair #form-infos-tournoi { display: flex; flex-direction: column; }
+.theme-clair #form-infos-tournoi .reglage {
+  margin: 0;
+  border-radius: 0;
+  padding: 14px 16px;
+}
+.theme-clair #form-infos-tournoi .reglage:first-of-type { border-radius: 16px 16px 0 0; padding-top: 18px; }
+.theme-clair #form-infos-tournoi .reglage:last-of-type  { border-radius: 0 0 16px 16px; padding-bottom: 18px; }
+.theme-clair #form-infos-tournoi .reglage:not(:last-of-type) { border-bottom: 1px solid rgba(255, 255, 255, 0.10); }
+.theme-clair #form-infos-tournoi .apercu-affiche,
+.theme-clair #form-infos-tournoi .ligne-action { margin-top: 14px; }
+
+/* --------------------------------------------------------------------------
+   « OÙ EN SUIS-JE ? » (verdict + thermomètre) — fond NAVY, polices claires.
+   Le verdict « Tout est prêt » reprend le style de l'ITEM CHOISI de la barre
+   latérale : fond blanc, texte navy.
+   -------------------------------------------------------------------------- */
+.theme-clair .etat-avancement {
+  background: var(--r92-navy);
+  border-color: var(--r92-navy);
+  border-radius: 18px;
+  padding: 16px 18px;
+}
+.theme-clair .ea-titre { color: #ffffff; }
+.theme-clair .ea-legende { color: #9FB6D0; }
+.theme-clair .ea-verdict-ok,
+.theme-clair .ea-verdict-ko {
+  background: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 8px 18px -10px rgba(3, 12, 26, 0.6);
+}
+.theme-clair .ea-verdict-ok { color: var(--r92-navy); }
+.theme-clair .ea-verdict-ko { color: #8a5a1a; }
+.theme-clair .ea-thermo { border-top-color: rgba(255, 255, 255, 0.18); color: #DCE8F5; }
+.theme-clair .ea-t b { color: #9CC9F0; }
+.theme-clair .ea-therm-warn { color: #FFC98A; }

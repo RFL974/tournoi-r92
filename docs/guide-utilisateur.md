@@ -68,7 +68,7 @@ repasse en « Non connecté » et toute action redemandera la clé — utile si 
 sans surveillance.
 
 Juste en dessous, un bandeau **tableau de bord** récapitule l'**état du tournoi en un coup d'œil** :
-**Catégories** (nombre), **Équipes** (nombre), **Planning** (⚪️ à générer · 🌅 matin · 🌅🏉 complet)
+**Catégories** (nombre), **Équipes** (nombre), **Planning matin** (✓ Validé · ⏱ En attente)
 et **Publication** (⚪️ non · 🟢 publié). Il se met à jour automatiquement à chaque action (ajout
 d'équipe, génération, publication…). Un bouton **🔄 Rafraîchir** (avec l'heure de dernière mise à
 jour) recharge les **scores saisis sur les téléphones** : à utiliser **avant de générer
