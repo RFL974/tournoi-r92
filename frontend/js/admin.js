@@ -570,6 +570,17 @@ async function onPublier() {
    TABLEAU DE BORD (récap de l'état du tournoi, en haut de page)
    -------------------------------------------------------------------------- */
 
+/** Icône SVG filaire pour la tuile « Planning matin » du tableau de bord :
+ *  ✓ (vert) quand le planning est généré, horloge (grise) en attente. */
+function svgEtatTuile(etat) {
+  const dessin = etat === 'valide'
+    ? '<circle cx="12" cy="12" r="9"></circle><path d="M8.3 12.6l2.5 2.5 4.9-5.6"></path>'
+    : '<circle cx="12" cy="12" r="9"></circle><path d="M12 7.5V12l3 2"></path>';
+  return '<svg class="tb-ic ' + (etat === 'valide' ? 'est-valide' : 'est-attente') + '" viewBox="0 0 24 24" ' +
+         'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ' +
+         'aria-hidden="true">' + dessin + '</svg>';
+}
+
 /**
  * Met à jour le tableau de bord : catégories, équipes, planning, publication.
  * Lit l'état gardé en mémoire (configCourante / equipesCourantes / matchsCourants).
@@ -588,12 +599,12 @@ function majTableauBord() {
   // Équipes.
   elEq.textContent = (equipesCourantes || []).length;
 
-  // Planning : matin généré ? après-midi généré ?
+  // Planning matin : « Validé » dès qu'il est généré, sinon « En attente »
+  // (icône SVG filaire : ✓ vert ou horloge — l'après-midi a sa propre étape
+  // dans la barre latérale, la tuile reste donc simple et lisible).
   const matin = (matchsCourants || []).filter(function (m) { return String(m.phase) !== 'classement'; });
-  const aprem = (matchsCourants || []).filter(function (m) { return String(m.phase) === 'classement'; });
-  if (matin.length === 0)      elPl.textContent = '⚪️ à générer';
-  else if (aprem.length > 0)   elPl.textContent = '🌅🏉 complet';
-  else                         elPl.textContent = '🌅 matin';
+  if (matin.length === 0) elPl.innerHTML = svgEtatTuile('attente') + '<span class="tb-val-texte">En attente</span>';
+  else                    elPl.innerHTML = svgEtatTuile('valide') + '<span class="tb-val-texte">Validé</span>';
 
   // Publication.
   elPub.textContent = estPublie() ? '🟢 publié' : '⚪️ non';
