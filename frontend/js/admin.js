@@ -149,12 +149,14 @@ async function initAdmin() {
   document.getElementById('form-equipe').addEventListener('submit', onAjouterEquipe);
   document.getElementById('liste-equipes').addEventListener('click', onClicListe);
 
-  // Zone réglages : écouteurs "délégués" (valables même après re-rendu de la zone).
-  // (zoneReglages est déjà déclaré en haut de initAdmin.)
-  zoneReglages.addEventListener('submit', onReglagesSubmit);
-  zoneReglages.addEventListener('click', onReglagesClick);
-  zoneReglages.addEventListener('change', onReglagesChange);
-  zoneReglages.addEventListener('input', onReglagesInput); // vérif. terrains manuels en direct
+  // Réglages (horaires + catégories) : écouteurs "délégués" posés sur le DOCUMENT
+  // (et non sur #reglages) : le mode écrans DÉPLACE zone-horaires/zone-categories
+  // hors de #reglages, et les événements doivent continuer à être captés. Chaque
+  // gestionnaire filtre par id/classe/nom → aucun risque pour les autres formulaires.
+  document.addEventListener('submit', onReglagesSubmit);
+  document.addEventListener('click', onReglagesClick);
+  document.addEventListener('change', onReglagesChange);
+  document.addEventListener('input', onReglagesInput); // vérif. terrains manuels en direct
 
   // Zone terrains : écouteurs délégués (recalcul de capacité en direct + boutons).
   const zoneTerrains = document.getElementById('zone-terrains');
@@ -188,6 +190,8 @@ async function initAdmin() {
   // (onEnregistrerInfos) — et aussi lors de la publication (onPublier), par sécurité.
   // On empêche juste la soumission du formulaire (touche Entrée) qui rechargerait la page.
   document.getElementById('form-infos-tournoi').addEventListener('submit', function (e) { e.preventDefault(); });
+  // Aperçu « carte du site » : se redessine À CHAQUE frappe dans les infos.
+  document.getElementById('form-infos-tournoi').addEventListener('input', majApercuTournoi);
   // Bouton dédié : enregistre les infos (nom/date/lieu/description + affiche) à tout moment,
   // indépendamment de la publication.
   document.getElementById('bouton-enregistrer-infos').addEventListener('click', onEnregistrerInfos);
@@ -244,12 +248,74 @@ function majInfosTournoi() {
   // Formulaire (re)rempli avec l'état ENREGISTRÉ → nouvelle référence pour le
   // détecteur de « modifications non enregistrées » de l'assistant.
   if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
+
+  majApercuTournoi(); // l'aperçu « carte du site » suit les infos affichées
 }
 
 /** URL d'affichage d'une affiche stockée dans Drive (CDN lh3, largeur maxi w).
  *  lh3.googleusercontent.com (et non drive.google.com/thumbnail, qui bloque le hotlinking). */
 function urlAffiche(id, largeur) {
   return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (largeur || 1000);
+}
+
+/* --------------------------------------------------------------------------
+   APERÇU DE PUBLICATION — réplique EXACTE de la carte d'actualité du site
+   vitrine (BoutiqueR92, main.js → actuTournoi/rendreActus) : mêmes textes de
+   repli, même extrait à 160 caractères, même format de date. Mise à jour en
+   direct pendant la saisie (écouteur input posé dans initAdmin).
+   -------------------------------------------------------------------------- */
+
+/** Date « 22 juillet 2026 » — même formatage que le site vitrine (formaterDate). */
+function formaterDateFr(dateISO) {
+  const d = new Date(dateISO);
+  if (isNaN(d)) return dateISO;
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/** Coupe un texte au dernier mot entier avant `max` caractères — même règle
+ *  que le site vitrine (extraitCourt), pour un aperçu au caractère près. */
+function extraitCourt(texte, max) {
+  const t = String(texte || '').trim();
+  if (t.length <= max) return t;
+  const coupe = t.slice(0, max);
+  return coupe.slice(0, coupe.lastIndexOf(' ') > 0 ? coupe.lastIndexOf(' ') : max).trim() + '…';
+}
+
+/** (Re)dessine la carte d'actualité dans #apercu-site à partir des valeurs
+ *  ACTUELLES du formulaire (même pas encore enregistrées) et de l'affiche
+ *  (choisie à l'instant, ou déjà enregistrée sur Drive). */
+function majApercuTournoi() {
+  const zone = document.getElementById('apercu-site');
+  const form = document.getElementById('form-infos-tournoi');
+  if (!zone || !form) return;
+  const g = configCourante.global || {};
+
+  // Mêmes valeurs de repli que le site vitrine (actuTournoi, main.js).
+  const nom = form.tournoi_nom.value.trim() || 'Tournoi Génération R92';
+  const dateISO = form.tournoi_date.value || new Date().toISOString().slice(0, 10);
+  const extrait = extraitCourt(form.tournoi_description.value, 160) ||
+    'Le tournoi est ouvert ! Poules, planning et scores en direct.';
+  const imgSrc = afficheDataURI || (g.tournoi_affiche_id ? urlAffiche(g.tournoi_affiche_id, 800) : '');
+
+  zone.innerHTML =
+    '<article class="vitrine-carte">' +
+      (imgSrc
+        ? '<img src="' + echapper(imgSrc) + '" alt="' + echapper(nom) + '">'
+        : '<div class="vitrine-img-vide">Sans affiche : image par défaut du site</div>') +
+      '<div class="vitrine-carte-corps">' +
+        '<span class="vitrine-carte-date">' + echapper(formaterDateFr(dateISO)) + '</span>' +
+        '<h3>' + echapper(nom) + '</h3>' +
+        '<p>' + echapper(extrait) + '</p>' +
+        '<span class="vitrine-btn">Découvrir le tournoi</span>' +
+      '</div>' +
+    '</article>';
+
+  const legende = document.getElementById('apercu-site-legende');
+  if (legende) {
+    legende.textContent = estPublie()
+      ? '🟢 Tournoi publié : cette carte est visible sur le site, en tête des actualités.'
+      : '⚪️ Tournoi non publié : la carte apparaîtra sur le site après la publication.';
+  }
 }
 
 /** Quand on choisit un fichier : on le redimensionne et on affiche un aperçu immédiat. */
@@ -262,6 +328,7 @@ async function onChoisirAffiche(evenement) {
     const bloc = document.getElementById('apercu-affiche');
     document.getElementById('apercu-affiche-img').src = afficheDataURI;
     bloc.hidden = false;
+    majApercuTournoi(); // la carte du site montre la nouvelle affiche
   } catch (e) {
     afficheDataURI = '';
     afficherMessage(message, "⚠️ Image illisible. Choisis un fichier image (JPG, PNG…).", 'ko');
@@ -393,6 +460,7 @@ function majPublication() {
     etat.textContent = '⚪️ Non publié (les visiteurs voient « à venir »)';
     bouton.textContent = '🚀 Publier le tournoi';
   }
+  majApercuTournoi(); // la légende de l'aperçu (publié / non publié) suit
 }
 
 /**
@@ -1011,7 +1079,8 @@ async function rechargerReglages() {
 /**
  * Injecte les réglages dans leurs deux zones distinctes (horaires / catégories),
  * pour permettre une mise en page côte à côte sur grand écran. Les écouteurs délégués
- * restent posés sur le conteneur parent #reglages (les événements y remontent).
+ * sont posés sur le DOCUMENT (voir initAdmin) : ils continuent de fonctionner même
+ * quand le mode écrans déplace les deux zones hors de #reglages.
  */
 function injecterReglages(global, categories) {
   document.getElementById('zone-horaires').innerHTML = afficherHoraires(global);
@@ -1130,26 +1199,26 @@ async function onEnregistrerHoraires(evenement) {
  * suivies d'un formulaire pour ajouter une nouvelle catégorie.
  */
 function afficherCategories(categories) {
-  let html = '<h2 style="margin:24px 0 12px;">Catégories</h2>';
-
-  if (categories && categories.length > 0) {
-    categories.forEach(function (cat) {
-      html += formulaireCategorie(cat);
-    });
-  } else {
-    html += '<p class="vide">Aucune catégorie. Ajoute-en une ci-dessous.</p>';
-  }
-
-  // Formulaire d'ajout d'une catégorie.
-  html +=
+  // Formulaire d'ajout EN PREMIER (au-dessus de la liste) : c'est par lui qu'on
+  // commence, et il reste visible sans avoir à défiler sous toutes les cartes.
+  let html =
     '<form id="form-ajout-categorie" class="carte">' +
-      '<h3 style="color:var(--bleu-ciel);margin-bottom:10px;">Ajouter une catégorie</h3>' +
+      '<h3 style="margin-bottom:10px;">Ajouter une catégorie</h3>' +
       '<div class="form-equipe">' +
         '<input type="text" name="categorie" placeholder="Nom (ex : U16)" autocomplete="off" required>' +
         '<button type="submit" class="bouton">Ajouter</button>' +
       '</div>' +
       '<div class="message-form" data-role="msg-ajout-cat"></div>' +
     '</form>';
+
+  html += '<h2 style="margin:24px 0 12px;">Catégories</h2>';
+  if (categories && categories.length > 0) {
+    categories.forEach(function (cat) {
+      html += formulaireCategorie(cat);
+    });
+  } else {
+    html += '<p class="vide">Aucune catégorie. Ajoute-en une ci-dessus.</p>';
+  }
 
   return html;
 }
@@ -1451,6 +1520,16 @@ async function onEnregistrerCategorie(evenement) {
 /**
  * Ajoute une nouvelle catégorie (avec des valeurs de départ modifiables ensuite).
  */
+/** Nom de catégorie « normalisé » pour comparer sans piège : minuscules, sans
+ *  accents (é → e), espaces réduits. Détecte les doublons du type «  u10 » / « U10 ». */
+function normaliserNomCategorie(nom) {
+  return String(nom || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // enlève les accents (é → e + accent séparé)
+    .replace(/\s+/g, ' ')                             // espaces multiples → un seul
+    .trim()
+    .toLowerCase();
+}
+
 async function onAjouterCategorie(evenement) {
   evenement.preventDefault();
   const form = evenement.target;
@@ -1460,10 +1539,14 @@ async function onAjouterCategorie(evenement) {
   if (!nom) { afficherMessage(message, 'Indique un nom.', 'ko'); return; }
 
   // On refuse un doublon (sinon on écraserait la catégorie existante).
-  const existe = configCourante.categories.some(function (c) {
-    return String(c.categorie).toLowerCase() === nom.toLowerCase();
+  // Comparaison SOUPLE : casse, accents et espaces ignorés («  u10 » = « U10 »).
+  const doublon = (configCourante.categories || []).find(function (c) {
+    return normaliserNomCategorie(c.categorie) === normaliserNomCategorie(nom);
   });
-  if (existe) { afficherMessage(message, 'Cette catégorie existe déjà.', 'ko'); return; }
+  if (doublon) {
+    afficherMessage(message, '⚠️ La catégorie « ' + doublon.categorie + ' » existe déjà.', 'ko');
+    return;
+  }
 
   const data = {
     categorie: nom, presente: 'oui', terrains: '', terrains_auto: 'oui', nb_poules: '',

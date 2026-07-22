@@ -139,7 +139,8 @@ retirer une catégorie, on la **supprime** — il n'y a plus de réglage « Pré
 - **Récup. entre matchs (min)** : repos minimal garanti à une équipe entre deux de ses matchs.
 
 Boutons : **Enregistrer** (par catégorie), **Supprimer** (la catégorie), et un formulaire
-**Ajouter une catégorie**.
+**Ajouter une catégorie**, placé **au-dessus de la liste**. Un **doublon est refusé** avec une
+comparaison souple : casse, accents et espaces ignorés («  u10 » = « U10 »).
 
 ### 1.3 Équipes
 - **Ajouter** : nom (mis automatiquement en MAJUSCULES) + catégorie → **Ajouter**. Un **même nom
@@ -266,6 +267,12 @@ sont aussi enregistrées lors de la publication.
 
 Un bouton **Retirer l'affiche** (sous l'aperçu) permet d'**annuler un choix pas encore enregistré**,
 ou de **supprimer l'affiche déjà enregistrée** (le fichier Drive est mis à la corbeille).
+
+**🪟 Aperçu sur le site.** À côté du formulaire (à droite sur ordinateur), une carte **« Aperçu sur
+le site »** montre la **carte d'actualité exactement comme elle apparaîtra** sur le site de
+l'association (mêmes styles, même extrait limité à 160 caractères, même format de date, mêmes
+textes par défaut si un champ est vide). Elle se met à jour **pendant que tu tapes**, avant même
+d'enregistrer, et sa légende rappelle si le tournoi est **publié** ou non.
 
 ### 1.8 Publier le tournoi
 Rend le tournoi **visible du public**. Tant qu'il n'est pas publié, les visiteurs voient un écran

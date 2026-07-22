@@ -38,6 +38,15 @@ body.avec-ecrans .ecran[hidden] { display: none !important; }
   /* Le grand bandeau-titre fait doublon avec la marque de la barre latérale. */
   body.avec-ecrans .entete { display: none; }
 
+  /* Écran « Infos du tournoi » : le formulaire à GAUCHE, l'aperçu de la carte
+     du site à DROITE (côte à côte sur grand écran uniquement). */
+  body.avec-ecrans #ecran-infos:not([hidden]) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 24px;
+    align-items: start;
+  }
+
   #ecr-nav {
     position: sticky;
     top: 20px;

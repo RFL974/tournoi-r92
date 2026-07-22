@@ -21,9 +21,9 @@
   --r92-accent-ink:#2C6FB0;
   --r92-ciel-soft: #E6F1FB;
   --r92-ligne:     #E2EAF2;
-  --r92-champ-bg:  #F8FBFE;
+  --r92-champ-bg:  #ffffff;   /* champs de texte : fond BLANC */
   --r92-champ-bd:  #D3E1F0;
-  --r92-txt-doux:  #5A6B80;
+  --r92-txt-doux:  #44536A;   /* libellés : ardoise plus soutenue (lisibilité sur blanc) */
 
   /* On réaligne les variables globales du site sur la maquette */
   --accent:    #3E8FD6;
@@ -85,7 +85,7 @@ body.theme-clair {
 .theme-clair .note-generation { color: var(--r92-txt-doux); }
 
 /* --------------------------------------------------------------------------
-   BOUTONS — pilules. Primaire = navy ; « Ajouter » (submit équipe) = accent ciel
+   BOUTONS — pilules, tous NAVY (la couleur de la barre latérale)
    -------------------------------------------------------------------------- */
 .theme-clair .bouton {
   background: var(--r92-navy);
@@ -100,10 +100,10 @@ body.theme-clair {
 }
 .theme-clair .bouton:hover { background: var(--r92-navy-2); transform: translateY(-1px); }
 .theme-clair .form-equipe .bouton {
-  background: var(--r92-accent);
+  background: var(--r92-navy);
   border-radius: 13px;
 }
-.theme-clair .form-equipe .bouton:hover { background: var(--r92-accent-ink); }
+.theme-clair .form-equipe .bouton:hover { background: var(--r92-navy-2); }
 .theme-clair .bouton-doux  { background: #2E8B57; border-radius: 999px; }
 .theme-clair .bouton-doux:hover { background: #26744a; }
 .theme-clair .bouton-danger { background: #C0483C; border-radius: 999px; }
@@ -114,7 +114,7 @@ body.theme-clair {
 .theme-clair .bouton-modif { border-radius: 999px; }
 
 /* --------------------------------------------------------------------------
-   CHAMPS — arrondis, fond très clair, focus bleu ciel
+   CHAMPS — arrondis, fond blanc, focus navy
    -------------------------------------------------------------------------- */
 .theme-clair .r-input,
 .theme-clair .champ-reglage input,
@@ -138,8 +138,8 @@ body.theme-clair {
 .theme-clair #bloc-terrains input:focus,
 .theme-clair #bloc-terrains select:focus {
   outline: none;
-  border-color: var(--r92-accent);
-  box-shadow: 0 0 0 3px rgba(62, 143, 214, 0.16);
+  border-color: var(--r92-navy-2);
+  box-shadow: 0 0 0 3px rgba(14, 35, 64, 0.14);
 }
 /* Libellés de champs : gris-bleu, discrets */
 .theme-clair .r-libelle,
@@ -173,12 +173,12 @@ body.theme-clair {
   content: "";
   position: absolute; top: -26px; right: -26px;
   width: 92px; height: 92px; border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #BFDCF5, var(--r92-accent));
-  opacity: 0.28;
+  background: radial-gradient(circle at 30% 30%, #46618A, var(--r92-navy));
+  opacity: 0.30;
 }
-.theme-clair .tb-grille .tb-stat:nth-child(2)::before { background: radial-gradient(circle at 30% 30%, #CDE7FA, #7CC0EC); opacity: .32; }
-.theme-clair .tb-grille .tb-stat:nth-child(3)::before { background: radial-gradient(circle at 30% 30%, #D6E8F7, #A9C9E6); opacity: .34; }
-.theme-clair .tb-grille .tb-stat:nth-child(4)::before { background: radial-gradient(circle at 30% 30%, #C9D6E6, #6E88A6); opacity: .30; }
+.theme-clair .tb-grille .tb-stat:nth-child(2)::before { background: radial-gradient(circle at 30% 30%, #52709B, #16335C); opacity: .30; }
+.theme-clair .tb-grille .tb-stat:nth-child(3)::before { background: radial-gradient(circle at 30% 30%, #5F7DA8, #234978); opacity: .30; }
+.theme-clair .tb-grille .tb-stat:nth-child(4)::before { background: radial-gradient(circle at 30% 30%, #44536A, #0E2340); opacity: .30; }
 .theme-clair .tb-val {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 500;
@@ -188,15 +188,15 @@ body.theme-clair {
 }
 
 /* --------------------------------------------------------------------------
-   CATÉGORIES, TABLEAUX, ÉDITEURS — arrondis + badges ciel
+   CATÉGORIES, TABLEAUX, ÉDITEURS — arrondis + badges NAVY (couleur sidebar)
    -------------------------------------------------------------------------- */
-.theme-clair .categorie { border-left: 4px solid var(--r92-accent); }
+.theme-clair .categorie { border-left: 4px solid var(--r92-navy); }
 .theme-clair .categorie .badge {
   font-family: 'Familjen Grotesk', sans-serif;
   font-weight: 700;
   letter-spacing: 0.02em;
-  background: var(--r92-ciel-soft);
-  color: var(--r92-accent-ink);
+  background: var(--r92-navy);
+  color: #ffffff;
   border-radius: 999px;
   font-size: 1rem;
   padding: 4px 14px;
@@ -208,17 +208,17 @@ body.theme-clair {
 .theme-clair .edit-equipe,
 .theme-clair .format-carte,
 .theme-clair .terr-choix { border-radius: 12px; }
-.theme-clair .table-planning th { color: var(--r92-accent-ink); }
+.theme-clair .table-planning th { color: var(--r92-navy); }
 .theme-clair .table-planning th,
 .theme-clair .table-planning td { border-bottom-color: #EDF3F9; }
 
 /* --------------------------------------------------------------------------
-   BADGES D'AVANCEMENT / ÉTATS — teintes ciel cohérentes
+   BADGES D'AVANCEMENT / ÉTATS — navy sur blanc, cohérents avec la sidebar
    -------------------------------------------------------------------------- */
 .theme-clair .avc-partiel {
-  background: var(--r92-ciel-soft);
-  color: var(--r92-accent-ink);
-  border: 1px solid #C9DCEF;
+  background: var(--r92-navy);
+  color: #ffffff;
+  border: 1px solid var(--r92-navy);
 }
 .theme-clair .publication-etat,
 .theme-clair .apresmidi-etat { color: var(--r92-txt-doux); }
@@ -244,8 +244,81 @@ body.theme-clair {
   border-radius: 999px;
 }
 .theme-clair .tb-refresh .bouton-lien {
-  color: var(--r92-accent-ink);
+  color: var(--r92-navy);
   border-color: var(--r92-champ-bd);
   background: #ffffff;
 }
-.theme-clair .tb-refresh .bouton-lien:hover { background: var(--r92-ciel-soft); }
+.theme-clair .tb-refresh .bouton-lien:hover { background: rgba(14, 35, 64, 0.06); }
+
+/* ==========================================================================
+   APERÇU DE PUBLICATION — réplique fidèle de la carte d'actualité du SITE
+   VITRINE (BoutiqueR92 : .carte/.carte-corps/.carte-date/.btn-primaire de
+   son style.css). Classes préfixées vitrine- pour ne rien écraser ici.
+   Rendu par majApercuTournoi() (admin.js) dans #apercu-site.
+   ========================================================================== */
+.theme-clair .vitrine-carte {
+  max-width: 420px;
+  margin: 0 auto;
+  background: #FFFFFF;
+  color: #3B4A63;                          /* --gris-texte du site vitrine */
+  border: 1px solid #e6edf5;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(12, 28, 46, 0.06);
+  font-family: 'Barlow', 'Segoe UI', system-ui, sans-serif;
+}
+.theme-clair .vitrine-carte img {
+  display: block;
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: #B8D8F8;                     /* --ciel du site vitrine */
+  border: none;
+  border-radius: 0;
+}
+.theme-clair .vitrine-img-vide {
+  height: 200px;
+  display: grid;
+  place-items: center;
+  background: #B8D8F8;
+  color: #0C1C2E;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.theme-clair .vitrine-carte-corps { padding: 20px; }
+.theme-clair .vitrine-carte-date {
+  display: block;
+  color: #2E8FE0;                          /* --bleu-vif du site vitrine */
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.theme-clair .vitrine-carte h3 {
+  font-family: 'Barlow', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #0C1C2E;                          /* --navy du site vitrine */
+  font-size: 1.2rem;
+  margin: 0 0 10px;
+}
+.theme-clair .vitrine-carte p {
+  margin: 0 0 16px;
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+.theme-clair .vitrine-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  background: #2E8FE0;
+  color: #FFFFFF;
+}
+/* Légende sous l'aperçu (état publié / non publié) */
+.theme-clair .vitrine-legende {
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: var(--r92-txt-doux);
+  text-align: center;
+}

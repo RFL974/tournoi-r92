@@ -94,6 +94,22 @@
         </form>
       </section>
 
+      <!-- Aperçu RÉEL de la publication : la carte d'actualité telle qu'elle apparaîtra
+           sur le site de l'association (page Actualités) quand le tournoi sera publié.
+           Réplique fidèle des styles du site vitrine ; rendue par majApercuTournoi
+           (admin.js) et mise à jour EN DIRECT pendant la saisie des infos ci-dessus.
+           En mode écrans (ordinateur), cette carte s'affiche À DROITE des infos. -->
+      <section class="carte" id="bloc-apercu-tournoi" aria-label="Aperçu de la publication sur le site">
+        <h2>Aperçu sur le site</h2>
+        <p class="note-generation">
+          Voici la <strong>carte d'actualité</strong> telle qu'elle apparaîtra sur le
+          <strong>site de l'association</strong> (page Actualités) une fois le tournoi
+          <strong>publié</strong>. Elle se met à jour pendant que tu tapes.
+        </p>
+        <div id="apercu-site"></div>
+        <p class="vitrine-legende" id="apercu-site-legende"></p>
+      </section>
+
       <!-- 1) Les réglages (horaires + catégories), injectés par admin.js dans deux zones
            distinctes (pour les placer côte à côte / indépendamment sur grand écran). -->
       <section id="reglages">

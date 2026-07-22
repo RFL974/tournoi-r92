@@ -32,7 +32,7 @@
    zone-horaires / zone-categories vivent dans la section #reglages : on les
    déplace individuellement (et on les y remettra en « Vue classique »). */
 const ECRANS_DEF = [
-  { id: 'infos',       titre: 'Infos du tournoi',  icone: 'info',     blocs: ['bloc-infos-tournoi'],      cles: [] },
+  { id: 'infos',       titre: 'Infos du tournoi',  icone: 'info',     blocs: ['bloc-infos-tournoi', 'bloc-apercu-tournoi'], cles: [] },
   { id: 'horaires',    titre: 'Horaires',          icone: 'horloge',  blocs: ['zone-horaires'],           cles: ['horaires'] },
   { id: 'categories',  titre: 'Catégories',        icone: 'etiquette', blocs: ['zone-categories'],        cles: ['categories'] },
   { id: 'equipes',     titre: 'Équipes',           icone: 'equipe',   blocs: ['bloc-equipes'],            cles: ['equipes'] },
@@ -71,7 +71,7 @@ function svgEcr(nom) {
 /* Ordre d'origine des blocs dans <main>, pour restaurer la page longue
    (« Vue classique »). #reglages reste dans <main> : on y remet ses 2 zones. */
 const ECRANS_ORDRE_ORIGINE = [
-  'bloc-infos-tournoi', 'reglages', 'bloc-equipes', 'bloc-terrains',
+  'bloc-infos-tournoi', 'bloc-apercu-tournoi', 'reglages', 'bloc-equipes', 'bloc-terrains',
   'bloc-generation', 'bloc-apresmidi', 'bloc-publication', 'bloc-reinitialisation'
 ];
 
