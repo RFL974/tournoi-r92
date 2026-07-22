@@ -32,14 +32,19 @@
    zone-horaires / zone-categories vivent dans la section #reglages : on les
    déplace individuellement (et on les y remettra en « Vue classique »). */
 const ECRANS_DEF = [
-  { id: 'infos',       titre: 'Infos du tournoi',  icone: 'info',     blocs: ['bloc-infos-tournoi'],                       cles: [] },
-  { id: 'horaires',    titre: 'Horaires',          icone: 'horloge',  blocs: ['zone-horaires'],                            cles: ['horaires'] },
-  { id: 'categories',  titre: 'Catégories',        icone: 'etiquette', blocs: ['zone-categories'],                         cles: ['categories'] },
-  { id: 'equipes',     titre: 'Équipes',           icone: 'equipe',   blocs: ['bloc-equipes'],                             cles: ['equipes'] },
-  { id: 'terrains',    titre: 'Terrains',          icone: 'terrain',  blocs: ['bloc-terrains'],                            cles: ['terrains'] },
-  { id: 'poules',      titre: 'Poules & planning', icone: 'poules',   blocs: ['bloc-generation'],                          cles: ['poules'] },
-  { id: 'apresmidi',   titre: 'Après-midi',        icone: 'ballon',   blocs: ['bloc-apresmidi'],                           cles: ['apresmidi'] },
-  { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication', 'bloc-reinitialisation'], cles: [] }
+  { id: 'infos',       titre: 'Infos du tournoi',  icone: 'info',     blocs: ['bloc-infos-tournoi'],      cles: [] },
+  { id: 'horaires',    titre: 'Horaires',          icone: 'horloge',  blocs: ['zone-horaires'],           cles: ['horaires'] },
+  { id: 'categories',  titre: 'Catégories',        icone: 'etiquette', blocs: ['zone-categories'],        cles: ['categories'] },
+  { id: 'equipes',     titre: 'Équipes',           icone: 'equipe',   blocs: ['bloc-equipes'],            cles: ['equipes'] },
+  { id: 'terrains',    titre: 'Terrains',          icone: 'terrain',  blocs: ['bloc-terrains'],           cles: ['terrains'] },
+  { id: 'poules',      titre: 'Poules & planning', icone: 'poules',   blocs: ['bloc-generation'],         cles: ['poules'] },
+  /* La Publication vient AVANT l'après-midi : elle n'en dépend pas (on publie
+     le matin ; l'après-midi se génère plus tard, une fois les scores saisis). */
+  { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [] },
+  { id: 'apresmidi',   titre: 'Après-midi',        icone: 'ballon',   blocs: ['bloc-apresmidi'],          cles: ['apresmidi'] },
+  /* Zone de danger, toujours accessible (libre) : on doit pouvoir remettre à
+     zéro un tournoi même à moitié préparé — le verrou ne s'applique pas. */
+  { id: 'reinitialisation', titre: 'Réinitialiser', icone: 'balai',   blocs: ['bloc-reinitialisation'],   cles: [], danger: true, libre: true }
 ];
 
 /* Icônes filaires (SVG, trait fin arrondi, couleur = celle du texte de l'onglet).
@@ -52,7 +57,8 @@ const ECRANS_ICONES = {
   terrain:   '<rect x="3" y="6" width="18" height="12" rx="2"></rect><path d="M12 6v12M3 12h4M17 12h4"></path>',
   poules:    '<path d="M4 6h16M4 12h16M4 18h10"></path><circle cx="18" cy="18" r="2.4"></circle>',
   ballon:    '<ellipse cx="12" cy="12" rx="5" ry="8" transform="rotate(45 12 12)"></ellipse><path d="M9 9l6 6M10.5 7.5l6 6M7.5 10.5l6 6"></path>',
-  monde:     '<circle cx="12" cy="12" r="8"></circle><path d="M4 12h16M12 4c2.5 2.5 2.5 13 0 16M12 4c-2.5 2.5-2.5 13 0 16"></path>'
+  monde:     '<circle cx="12" cy="12" r="8"></circle><path d="M4 12h16M12 4c2.5 2.5 2.5 13 0 16M12 4c-2.5 2.5-2.5 13 0 16"></path>',
+  balai:     '<path d="M14 4l6 6M13 5l-7 7 5 5 7-7M6 12l-2 6 6-2"></path>'
 };
 
 /** Fabrique le <svg> d'une icône de la barre latérale. */
@@ -101,7 +107,8 @@ function construireEcrans() {
           '</div>' +
           '<ul class="ecr-liste">';
   ECRANS_DEF.forEach(function (e) {
-    h += '<li><button type="button" class="ecr-onglet" data-ecran="' + e.id + '">' +
+    h += '<li><button type="button" class="ecr-onglet' + (e.danger ? ' est-danger' : '') +
+         '" data-ecran="' + e.id + '">' +
            '<span class="ecr-icone">' + svgEcr(e.icone) + '</span>' +
            '<span class="ecr-libelle">' + echapperEcr(e.titre) + '</span>' +
            '<span class="ecr-pastille" id="ecr-pastille-' + e.id + '" hidden></span>' +
@@ -173,14 +180,15 @@ function ecransEtats() {
  * Un écran est verrouillé si, sur un écran PRÉCÉDENT :
  *   1) une étape du cerveau n'est pas ✅ « fait » (à faire / à refaire) ; ou
  *   2) des modifications ne sont pas enregistrées (même règle que l'assistant).
- * Exception : l'étape « après-midi » ne verrouille jamais la suite (elle se
- * génère plus tard, une fois les scores du matin saisis).
+ * Exceptions : l'étape « après-midi » ne verrouille jamais la suite (elle se
+ * génère plus tard, une fois les scores du matin saisis), et un écran marqué
+ * `libre` (Réinitialiser) n'est JAMAIS verrouillé.
  */
 function ecransCalculerVerrous(etats) {
   const verrous = [];
   let blocage = null; // première raison rencontrée en remontant les écrans
   ECRANS_DEF.forEach(function (def) {
-    verrous.push(blocage);
+    verrous.push(def.libre ? null : blocage);
     if (blocage) return; // déjà bloqué en amont : inutile de chercher plus loin
     (def.cles || []).forEach(function (cle) {
       if (cle === 'apresmidi') return; // ne bloque jamais la suite

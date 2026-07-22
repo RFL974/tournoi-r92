@@ -116,6 +116,12 @@ body.avec-ecrans .ecran[hidden] { display: none !important; }
   .ecr-onglet.est-actif .ecr-icone svg { color: var(--r92-accent, #3E8FD6); }
   .ecr-libelle { flex: 1; }
 
+  /* Zone de danger « Réinitialiser » : rosé, un peu à l'écart, rouge en actif. */
+  .ecr-onglet.est-danger { color: #E7A2A2; margin-top: 10px; }
+  .ecr-onglet.est-danger:hover { background: rgba(224, 120, 120, 0.14); color: #F3C0C0; }
+  .ecr-onglet.est-danger.est-actif { background: #ffffff; color: #C0483C; }
+  .ecr-onglet.est-danger.est-actif .ecr-icone svg { color: #C0483C; }
+
   .ecr-pied {
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
@@ -180,6 +186,10 @@ body.avec-ecrans .ecran[hidden] { display: none !important; }
     color: #ffffff;
   }
   .ecr-onglet:focus-visible { outline: 2px solid var(--r92-accent, #3E8FD6); outline-offset: 2px; }
+
+  /* Zone de danger « Réinitialiser » dans la barre d'onglets horizontale. */
+  .ecr-onglet.est-danger { color: #C0483C; border-color: #EBC7C2; }
+  .ecr-onglet.est-danger.est-actif { background: #C0483C; border-color: #C0483C; color: #ffffff; }
 
   .ecr-pied { flex: 0 0 auto; }
   .ecr-classique { font-size: 0.8rem; padding: 6px 10px; }
