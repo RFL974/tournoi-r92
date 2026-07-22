@@ -830,7 +830,10 @@ function majEtatAvancement() {
   // peut se générer plus tard). Chaque item restant est cliquable → mène à son étape.
   const bloquants = etapes.filter(function (e) { return e.cle !== 'apresmidi' && e.statut !== 'fait'; });
   if (bloquants.length === 0) {
-    h += '<div class="ea-verdict ea-verdict-ok">✅ <strong>Tout est prêt</strong> — tu peux publier le tournoi.</div>';
+    h += '<div class="ea-verdict ea-verdict-ok"><span class="ea-coche" aria-hidden="true">' +
+         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
+         'stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 12.6l3.4 3.4 7.6-8.4"></path></svg>' +
+         '</span><strong>Tout est prêt</strong> — tu peux publier le tournoi.</div>';
   } else {
     h += '<div class="ea-verdict ea-verdict-ko">⚠️ <strong>Avant de publier, il reste&nbsp;:</strong> ' +
       bloquants.map(function (e) {
