@@ -13,8 +13,11 @@
 
 let equipes = [];
 let matchs = [];
+let grandsTerrains = {};        // composition des grands terrains { nom: [numéros de mini-terrains] }
 let categorieActiveSaisie = '';
+let terrainActifSaisie = '';    // nom du grand terrain filtré ('' = tous les terrains)
 const CLE_CAT_SAISIE = 'r92_saisie_cat';
+const CLE_TERRAIN_SAISIE = 'r92_saisie_terrain';
 
 /** Point d'entrée : on va chercher les données puis on affiche. */
 async function initSaisie() {
@@ -28,6 +31,14 @@ async function initSaisie() {
     afficherMatchs();
   });
 
+  // Changement de grand terrain (même principe que le filtre catégorie).
+  const selTerrain = document.getElementById('select-terrain-saisie');
+  if (selTerrain) selTerrain.addEventListener('change', function (e) {
+    terrainActifSaisie = e.target.value;
+    localStorage.setItem(CLE_TERRAIN_SAISIE, terrainActifSaisie);
+    afficherMatchs();
+  });
+
   // Bouton « Rafraîchir » : recharge les saisies faites sur les autres appareils.
   const btnMaj = document.getElementById('bouton-rafraichir-saisie');
   if (btnMaj) btnMaj.addEventListener('click', rafraichirSaisie);
@@ -36,6 +47,7 @@ async function initSaisie() {
     const data = await apiGet('getAll');
     equipes = data.equipes || [];
     matchs = data.matchs || [];
+    grandsTerrains = lireGrandsTerrains(data.config);
     afficherMatchs();
     majHeureSaisie();
   } catch (err) {
@@ -59,6 +71,7 @@ async function rafraichirSaisie() {
     const data = await apiGet('getAll');
     equipes = data.equipes || [];
     matchs = data.matchs || [];
+    grandsTerrains = lireGrandsTerrains(data.config);
     afficherMatchs();
     majHeureSaisie();
   } catch (err) {
@@ -96,6 +109,56 @@ function peuplerFiltreCat() {
       echapper(c) + '</option>';
   }).join('');
   bloc.hidden = (cats.length <= 1);
+}
+
+/**
+ * Composition des grands terrains depuis la Config : { "Rugby 1": ["1","2","3"], … }.
+ * Écrite par l'admin quand la répartition automatique est APPLIQUÉE aux catégories.
+ * Absente (ancienne config, ou terrains saisis à la main) → {} : le filtre reste masqué.
+ */
+function lireGrandsTerrains(config) {
+  try {
+    const brut = config && config.global && config.global.repartition_grands_terrains;
+    const map = brut ? JSON.parse(brut) : {};
+    return (map && typeof map === 'object') ? map : {};
+  } catch (e) { return {}; }
+}
+
+/**
+ * Remplit le menu déroulant des grands terrains (option « Tous » + un par grand terrain,
+ * avec ses numéros de mini-terrains en rappel). Ne propose que les grands terrains dont au
+ * moins un mini-terrain a des matchs. Masqué s'il y a moins de deux grands terrains à choisir.
+ */
+function peuplerFiltreTerrain() {
+  const bloc = document.getElementById('filtre-terrain-saisie');
+  const sel = document.getElementById('select-terrain-saisie');
+  if (!bloc || !sel) return;
+
+  const utilises = {};
+  matchs.forEach(function (m) { utilises[String(m.terrain)] = true; });
+  const noms = Object.keys(grandsTerrains).filter(function (n) {
+    return (grandsTerrains[n] || []).some(function (t) { return utilises[String(t)]; });
+  });
+
+  bloc.hidden = (noms.length < 2);
+  if (bloc.hidden) { terrainActifSaisie = ''; return; }
+
+  const memo = localStorage.getItem(CLE_TERRAIN_SAISIE) || '';
+  terrainActifSaisie = (noms.indexOf(memo) >= 0) ? memo : '';
+
+  sel.innerHTML = '<option value="">Tous les terrains</option>' + noms.map(function (n) {
+    const minis = (grandsTerrains[n] || []).join(', ');
+    return '<option value="' + echapper(n) + '"' + (n === terrainActifSaisie ? ' selected' : '') + '>' +
+      echapper(n) + ' (terrains ' + echapper(minis) + ')</option>';
+  }).join('');
+}
+
+/** Applique le filtre « grand terrain » à une liste de matchs (liste inchangée si « Tous »). */
+function filtrerParTerrain(liste) {
+  if (!terrainActifSaisie || !grandsTerrains[terrainActifSaisie]) return liste;
+  const ok = {};
+  grandsTerrains[terrainActifSaisie].forEach(function (t) { ok[String(t)] = true; });
+  return liste.filter(function (m) { return ok[String(m.terrain)]; });
 }
 
 /** Nom lisible d'une équipe à partir de son identifiant. */
@@ -166,9 +229,10 @@ function majAccordeonPhase(carte) {
   if (!m) return;
 
   const estClassement = String(m.phase) === 'classement';
-  const memePhase = matchs.filter(function (x) {
+  // Même périmètre que l'affichage : catégorie active + filtre grand terrain éventuel.
+  const memePhase = filtrerParTerrain(matchs.filter(function (x) {
     return x.categorie === categorieActiveSaisie && (String(x.phase) === 'classement') === estClassement;
-  });
+  }));
   const restants = memePhase.filter(function (x) { return !estTermine(x.statut); }).length;
   const apremGenere = matchs.some(function (x) {
     return x.categorie === categorieActiveSaisie && String(x.phase) === 'classement';
@@ -205,9 +269,11 @@ function afficherMatchs() {
     return;
   }
 
-  peuplerFiltreCat(); // remplit le menu + fixe categorieActiveSaisie
+  peuplerFiltreCat();     // remplit le menu + fixe categorieActiveSaisie
+  peuplerFiltreTerrain(); // remplit le menu + fixe terrainActifSaisie
 
-  const ms = matchs.filter(function (m) { return m.categorie === categorieActiveSaisie; });
+  const ms = filtrerParTerrain(
+    matchs.filter(function (m) { return m.categorie === categorieActiveSaisie; }));
   const matin = ms.filter(function (m) { return String(m.phase) !== 'classement'; });
   const aprem = ms.filter(function (m) { return String(m.phase) === 'classement'; });
 
@@ -234,7 +300,10 @@ function afficherMatchs() {
   }
 
   if (!matin.length && !aprem.length) {
-    html = '<p class="vide">Aucun match pour cette catégorie.</p>';
+    html = terrainActifSaisie
+      ? '<p class="vide">Aucun match pour cette catégorie sur « ' + echapper(terrainActifSaisie) +
+        ' ». Choisis « Tous les terrains » ou une autre catégorie.</p>'
+      : '<p class="vide">Aucun match pour cette catégorie.</p>';
   }
 
   zone.innerHTML = html;

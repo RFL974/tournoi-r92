@@ -7,7 +7,8 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
 - **`tournoi.html`** — page publique unique, **2 onglets** *Mon équipe* / *Classements* + filtre
   catégorie + podium ; thème clair (`css/tournoi-public.css`, charte du site vitrine).
 - **`admin.html`** — organisateur (réglages, équipes, génération, publication) ; clé admin.
-- **`saisie.html`** — saisie des scores (table de marque, filtre catégorie, accordéons) ; clé scores.
+- **`saisie.html`** — saisie des scores (table de marque, filtres catégorie + grand terrain,
+  accordéons) ; clé scores.
 - **`perfs.html`** — « Perfs Racing », page interne (non liée), lecture seule.
 - **`index.html`** — redirige la racine vers `tournoi.html`.
 

@@ -42,6 +42,14 @@
           <select id="select-cat-saisie" class="r-input"></select>
         </div>
 
+        <!-- Filtre grand terrain : ne montre que les matchs des mini-terrains qui composent le
+             grand terrain choisi (évite les erreurs à la table de marque). Masqué si la
+             répartition automatique n'a pas été appliquée ou s'il n'y a qu'un grand terrain. -->
+        <div id="filtre-terrain-saisie" class="mp-filtre" hidden>
+          <label class="mp-label" for="select-terrain-saisie">Grand terrain :</label>
+          <select id="select-terrain-saisie" class="r-input"></select>
+        </div>
+
         <!-- La liste des matchs de la catégorie choisie, injectée par saisie.js -->
         <div id="liste-matchs">
           <div class="message">Chargement des matchs…</div>

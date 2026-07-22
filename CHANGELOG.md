@@ -5,6 +5,21 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Saisie des scores : filtre « Grand terrain » — 2026-07-22
+À la table de marque, on peut désormais **filtrer les matchs par grand terrain** (ex. « Rugby 1
+(terrains 1, 2, 3, 4) ») en plus du filtre catégorie : on ne voit que les matchs des mini-terrains
+qui composent le grand terrain où l'on se trouve → **pas d'erreur de saisie**. ⚠️ **Backend à
+redéployer** (recoller `Code.gs`) et **répartition à ré-appliquer** une fois dans l'admin.
+
+- `admin.js` : **✅ Appliquer aux catégories** mémorise aussi la **composition des grands terrains**
+  (nouveau paramètre Config `repartition_grands_terrains`, JSON `{"Rugby 1":["1","2"],…}`).
+- `Code.gs` : `enregistrerPlanTerrains` accepte ce nouveau paramètre.
+- `saisie.html` / `saisie.js` : menu **« Grand terrain »** (mémorisé, masqué si moins de deux
+  grands terrains ou répartition jamais appliquée) ; compteurs « X à saisir » et accordéons
+  calculés sur la liste filtrée.
+- Petit plus admin : le **calendrier** du champ Date (Infos du tournoi) s'ouvre au clic **n'importe
+  où sur la barre** (plus seulement sur l'icône).
+
 ### Performance : capacité démultipliée pour la page publique (audit perf) — 2026-07-20
 Optimisations **sans aucun changement de fonctionnalité ni d'API** — objectif : tenir la foule
 du jour J (~1300 spectateurs) avec de la marge. ⚠️ **Backend à redéployer** (recoller `Code.gs`,

@@ -184,6 +184,8 @@ Principes de la répartition :
 **Terrains** des catégories **en mode Auto** (celles en **Manuel** sont laissées telles quelles). Ils
 seront utilisés **à la prochaine génération du planning** (§1.5). Pour fixer toi-même les terrains
 d'une catégorie, passe-la en **Manuel** dans ses réglages (§1.2).
+Il mémorise aussi la **composition de chaque grand terrain** (quels numéros de mini-terrains le
+composent) : c'est elle qui alimente le filtre **« Grand terrain »** de la page Saisie des scores (§2).
 
 > 💡 À faire **avant** de générer les poules et le planning : c'est le champ **Terrains** rempli ici
 > qui sert à répartir les matchs sur les terrains dans le temps.
@@ -271,6 +273,11 @@ Pensée pour le **téléphone**, un marqueur par terrain. À l'ouverture, elle d
 - **Catégorie à saisir** : un menu déroulant en haut → une **table de marque par catégorie** (on ne
   voit que les matchs de la catégorie choisie, pour éviter les erreurs). Masqué s'il n'y a qu'une
   catégorie ; le choix est mémorisé.
+- **Grand terrain** : un second menu déroulant → ne montre que les matchs des **mini-terrains qui
+  composent le grand terrain choisi** (ex. « Rugby 1 (terrains 1, 2, 3, 4) »). À la table de marque
+  du terrain Rugby 1, on ne voit ainsi **que ses matchs** → pas d'erreur de saisie. « Tous les
+  terrains » par défaut ; le choix est mémorisé. Le menu n'apparaît que si la **répartition
+  automatique** a été **appliquée** dans l'admin (§1.4 e) et qu'il y a au moins deux grands terrains.
 - **Accordéons Matin / Après-midi** :
   - Le **matin** se **replie** automatiquement quand **tous ses matchs sont saisis ET que
     l'après-midi est généré** (on le range pour se concentrer sur l'après-midi). Sinon il reste

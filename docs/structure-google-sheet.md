@@ -50,6 +50,11 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 | `tournoi_lieu` | `11 av. Paul Langevin, 92350…` | Lieu (article + itinéraire + agenda .ics) |
 | `tournoi_description` | `Le Challenge…` | Description (carte + article) |
 | `tournoi_affiche_id` | `1-3DZBDd…` | Identifiant du fichier **Google Drive** de l'affiche (affichée via `lh3.googleusercontent.com/d/{id}`) |
+| `terrains_physiques` | `[{"nom":"Rugby 1",…}]` | JSON — les **grands terrains** réels déclarés (onglet admin « Terrains & répartition ») |
+| `dimensions_categories` | `{"U8":{"l":30,"w":20},…}` | JSON — taille de mini-terrain par catégorie (`plein:true` = grand terrain entier) |
+| `couloir_terrain_m` | `5` | Couloir de circulation entre mini-terrains (m) |
+| `tm_longueur_m` / `tm_largeur_m` | `4` | Taille de la table des marques (m) |
+| `repartition_grands_terrains` | `{"Rugby 1":["1","2"],…}` | JSON — **composition de chaque grand terrain** (numéros de mini-terrains), écrite quand la répartition est **appliquée** ; alimente le filtre « Grand terrain » de la page Saisie |
 
 ### Zone B — Réglages par catégorie
 
