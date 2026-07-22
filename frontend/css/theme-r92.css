@@ -515,6 +515,11 @@ body.theme-clair {
 .theme-clair .tb-ic.est-attente { color: var(--r92-txt-doux); }
 /* Icône et texte de la tuile parfaitement alignés (centrage vertical). */
 .theme-clair .tb-val { display: flex; align-items: center; }
+/* Les libellés (CATÉGORIES, ÉQUIPES, PLANNING MATIN…) se calent tous EN BAS de
+   leur tuile : ils restent alignés même quand la valeur est moins haute
+   (« ✓ Validé » vs les grands chiffres). Les tuiles d'une même rangée ont la
+   même hauteur (grille), le libellé est donc sur une seule et même ligne. */
+.theme-clair .tb-lib { margin-top: auto; }
 
 /* --------------------------------------------------------------------------
    FORMULAIRE DES INFOS — les lignes navy fusionnent en UN SEUL panneau
