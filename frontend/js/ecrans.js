@@ -3,30 +3,43 @@
  *  MODE « ÉCRANS » — barre latérale + onglets pour la page admin (grand écran)
  * ============================================================================
  *  Sur ordinateur (≥ 1024px), la longue page qui déroule devient une interface
- *  à BARRE LATÉRALE : 4 écrans (Infos · Équipes & catégories · Poules & planning
- *  · Publication). Sur mobile, l'assistant à cartes reste le mode guidé (avec
- *  son verrou « Suivant ») — c'est assistant.js qui choisit au chargement.
+ *  à BARRE LATÉRALE : un écran PAR ÉTAPE de la préparation (les mêmes étapes
+ *  que le fil « Où en suis-je ? », qui vit désormais dans la barre latérale).
+ *  Sur mobile, l'assistant à cartes reste le mode guidé (avec son verrou
+ *  « Suivant ») — c'est assistant.js qui choisit au chargement.
+ *
+ *  VERROU (même logique que l'assistant) : un item de la barre latérale reste
+ *  🔒 verrouillé tant qu'une étape PRÉCÉDENTE n'est pas ✅ complète (enregistrée /
+ *  générée / répartie, d'après le « cerveau » calculerEtatsEtapes d'admin.js)
+ *  ou qu'elle a des modifications non enregistrées. Une étape complète reçoit
+ *  une coche ✓ bleu ciel sur fond blanc. L'après-midi ne bloque pas la
+ *  Publication (elle se génère plus tard, une fois les scores du matin saisis
+ *  — même règle que le verdict « prêt à publier » du cerveau).
  *
  *  Même technique éprouvée que l'assistant : on DÉPLACE les blocs existants
  *  (déplacer un nœud DOM conserve ses écouteurs) → admin.js continue de
- *  fonctionner SANS AUCUNE modification. Le tableau de bord et le fil
- *  « Où en suis-je ? » restent visibles au-dessus des écrans, et cliquer sur
- *  une étape du fil ouvre l'écran correspondant.
+ *  fonctionner SANS AUCUNE modification.
  *
  *  Réversible : « Vue classique » (bas de la barre latérale) remet la page
  *  longue ; sans JavaScript, la page longue s'affiche telle quelle.
  * ============================================================================
  */
 
-/* Les 4 écrans : quels blocs EXISTANTS chacun regroupe (par leur id), et quelles
-   étapes du « cerveau » (calculerEtatsEtapes, admin.js) nourrissent sa pastille
-   d'état dans la barre latérale. zone-horaires / zone-categories vivent dans la
-   section #reglages : on les déplace individuellement (et on les y remettra). */
+/* Les écrans : un par étape du fil « Où en suis-je ? » (mêmes clés que le
+   « cerveau » calculerEtatsEtapes d'admin.js), plus les Infos en tête et la
+   Publication en queue. `blocs` = quels blocs EXISTANTS l'écran regroupe
+   (par leur id) ; `cles` = quelles étapes du cerveau disent s'il est ✅ fait.
+   zone-horaires / zone-categories vivent dans la section #reglages : on les
+   déplace individuellement (et on les y remettra en « Vue classique »). */
 const ECRANS_DEF = [
-  { id: 'infos',       titre: 'Infos du tournoi',     icone: '📝', blocs: ['bloc-infos-tournoi', 'zone-horaires'],                  cles: ['horaires'] },
-  { id: 'equipes',     titre: 'Équipes & catégories', icone: '👥', blocs: ['zone-categories', 'bloc-equipes'],                      cles: ['categories', 'equipes'] },
-  { id: 'poules',      titre: 'Poules & planning',    icone: '🎲', blocs: ['bloc-terrains', 'bloc-generation', 'bloc-apresmidi'],   cles: ['terrains', 'poules', 'apresmidi'] },
-  { id: 'publication', titre: 'Publication',          icone: '📣', blocs: ['bloc-publication', 'bloc-reinitialisation'],            cles: [] }
+  { id: 'infos',       titre: 'Infos du tournoi',  icone: '📝', blocs: ['bloc-infos-tournoi'],                       cles: [] },
+  { id: 'horaires',    titre: 'Horaires',          icone: '⏱️', blocs: ['zone-horaires'],                            cles: ['horaires'] },
+  { id: 'categories',  titre: 'Catégories',        icone: '🏷️', blocs: ['zone-categories'],                          cles: ['categories'] },
+  { id: 'equipes',     titre: 'Équipes',           icone: '👥', blocs: ['bloc-equipes'],                             cles: ['equipes'] },
+  { id: 'terrains',    titre: 'Terrains',          icone: '🗺️', blocs: ['bloc-terrains'],                            cles: ['terrains'] },
+  { id: 'poules',      titre: 'Poules & planning', icone: '🎲', blocs: ['bloc-generation'],                          cles: ['poules'] },
+  { id: 'apresmidi',   titre: 'Après-midi',        icone: '🏉', blocs: ['bloc-apresmidi'],                           cles: ['apresmidi'] },
+  { id: 'publication', titre: 'Publication',       icone: '📣', blocs: ['bloc-publication', 'bloc-reinitialisation'], cles: [] }
 ];
 
 /* Ordre d'origine des blocs dans <main>, pour restaurer la page longue
@@ -48,7 +61,7 @@ function ecransEstActif() {
   return !!document.getElementById('ecrans');
 }
 
-/** Construit la barre latérale + les 4 écrans et y déplace les blocs existants. */
+/** Construit la barre latérale + les écrans et y déplace les blocs existants. */
 function construireEcrans() {
   const main = document.querySelector('main');
   const conteneur = document.querySelector('.conteneur');
@@ -57,10 +70,10 @@ function construireEcrans() {
 
   document.body.classList.add('avec-ecrans');
 
-  // --- La barre latérale (navigation) -------------------------------------
+  // --- La barre latérale (navigation = les étapes de la préparation) -------
   const nav = document.createElement('nav');
   nav.id = 'ecr-nav';
-  nav.setAttribute('aria-label', "Sections de l'administration");
+  nav.setAttribute('aria-label', "Étapes de l'administration");
   let h = '<div class="ecr-marque">' +
             '<img class="ecr-logo" src="img/logo-r92.png" alt="" onerror="this.style.display=\'none\'">' +
             '<span class="ecr-marque-titre">Administration</span>' +
@@ -104,21 +117,119 @@ function construireEcrans() {
   });
   nav.querySelector('#ecr-vue-classique').addEventListener('click', quitterEcrans);
 
-  // Dernier écran ouvert (ou le premier), puis pastilles d'état.
+  // Verrou : toute saisie ou clic dans un écran peut changer l'état (champ
+  // modifié, répartition calculée, enregistrement réussi…) → on réévalue les
+  // pastilles/verrous juste après (les écouteurs métier d'admin.js d'abord).
+  if (typeof assistantMajVerrouDiffere === 'function') {
+    zone.addEventListener('input', assistantMajVerrouDiffere);
+    zone.addEventListener('change', assistantMajVerrouDiffere);
+    zone.addEventListener('click', assistantMajVerrouDiffere);
+  }
+  // Photo d'un formulaire jamais vu AVANT la première frappe (référence = état enregistré).
+  if (typeof assistantNoterZoneInconnue === 'function') {
+    zone.addEventListener('focusin', assistantNoterZoneInconnue);
+  }
+
+  // Écran de départ : le dernier ouvert s'il est accessible, sinon l'écran
+  // « du moment » (la première étape pas encore ✅ faite).
+  const etats = ecransEtats();
+  const verrous = ecransCalculerVerrous(etats);
   let depart = null;
   try { depart = localStorage.getItem(ECRANS_CLE_ACTIF); } catch (e) { /* stockage indisponible */ }
-  if (!ECRANS_DEF.some(function (e) { return e.id === depart; })) depart = ECRANS_DEF[0].id;
+  const iDepart = ECRANS_DEF.findIndex(function (e) { return e.id === depart; });
+  if (iDepart === -1 || verrous[iDepart]) depart = ecransEcranCourant(etats);
   ecransActiver(depart, { sansScroll: true });
 }
 
+/** Les états des étapes calculés par le « cerveau » (null si pas encore prêts). */
+function ecransEtats() {
+  if (typeof calculerEtatsEtapes !== 'function') return null;
+  try { return calculerEtatsEtapes(); } catch (e) { return null; }
+}
+
 /**
- * Affiche l'écran demandé (et masque les autres).
- * @param {string}  id                 id logique ('infos', 'equipes', …)
+ * Verrous de la barre latérale : renvoie un tableau aligné sur ECRANS_DEF —
+ * null si l'écran est accessible, sinon la RAISON humaine du blocage.
+ * Un écran est verrouillé si, sur un écran PRÉCÉDENT :
+ *   1) une étape du cerveau n'est pas ✅ « fait » (à faire / à refaire) ; ou
+ *   2) des modifications ne sont pas enregistrées (même règle que l'assistant).
+ * Exception : l'étape « après-midi » ne verrouille jamais la suite (elle se
+ * génère plus tard, une fois les scores du matin saisis).
+ */
+function ecransCalculerVerrous(etats) {
+  const verrous = [];
+  let blocage = null; // première raison rencontrée en remontant les écrans
+  ECRANS_DEF.forEach(function (def) {
+    verrous.push(blocage);
+    if (blocage) return; // déjà bloqué en amont : inutile de chercher plus loin
+    (def.cles || []).forEach(function (cle) {
+      if (cle === 'apresmidi') return; // ne bloque jamais la suite
+      const e = (etats || []).find(function (x) { return x.cle === cle; });
+      if (!blocage && e && e.statut !== 'fait') blocage = e.titre + ' — ' + e.detail;
+    });
+    if (!blocage) {
+      const modifs = ecransRaisonsModifs(def);
+      if (modifs.length) blocage = modifs[0];
+    }
+  });
+  return verrous;
+}
+
+/** Modifications non enregistrées sur un écran (réutilise la détection de
+ *  l'assistant : formulaires ≠ dernière « photo » enregistrée + états en attente). */
+function ecransRaisonsModifs(def) {
+  const ecran = document.getElementById('ecran-' + def.id);
+  if (!ecran || typeof raisonsModifsDans !== 'function') return [];
+  return raisonsModifsDans(def.id, ecran, ecransZonesSurveillees());
+}
+
+/** Zones surveillées : les formulaires des écrans + la zone terrains (champs
+ *  sans <form>). #form-equipe est exclu : il a sa règle dédiée (ajout immédiat). */
+function ecransZonesSurveillees() {
+  const zone = document.getElementById('ecrans');
+  if (!zone) return [];
+  const zones = [];
+  zone.querySelectorAll('form').forEach(function (f) {
+    if (f.id === 'form-equipe') return;
+    zones.push(f);
+  });
+  const zt = document.getElementById('zone-terrains');
+  if (zt && zone.contains(zt)) zones.push(zt);
+  return zones;
+}
+
+/** L'écran « du moment » : le premier dont une étape n'est pas encore ✅ faite
+ *  (c'est là que le travail continue). Tout est fait → Publication. */
+function ecransEcranCourant(etats) {
+  for (let i = 0; i < ECRANS_DEF.length; i++) {
+    const def = ECRANS_DEF[i];
+    for (let k = 0; k < def.cles.length; k++) {
+      const e = (etats || []).find(function (x) { return x.cle === def.cles[k]; });
+      if (e && e.statut !== 'fait') return def.id;
+    }
+  }
+  return 'publication';
+}
+
+/**
+ * Affiche l'écran demandé (et masque les autres). Refuse si l'écran est
+ * 🔒 verrouillé (une étape précédente n'est pas complète) : l'onglet tremble
+ * et son infobulle explique quoi terminer d'abord.
+ * @param {string}  id                 id logique ('infos', 'horaires', …)
  * @param {Object}  [opt]
  * @param {boolean} [opt.sansScroll]   ne pas remonter en haut (1er affichage, fil d'étapes)
  */
 function ecransActiver(id, opt) {
   opt = opt || {};
+  const idx = ECRANS_DEF.findIndex(function (e) { return e.id === id; });
+  if (idx === -1) return;
+
+  // VERROU : impossible d'ouvrir un écran tant qu'une étape précédente n'est
+  // pas complète. (Revenir en arrière reste toujours possible : les écrans
+  // déjà faits ne sont jamais verrouillés.)
+  const verrous = ecransCalculerVerrous(ecransEtats());
+  if (verrous[idx]) { ecransSecouerOnglet(id); return; }
+
   ECRANS_DEF.forEach(function (e) {
     const ecran = document.getElementById('ecran-' + e.id);
     if (ecran) ecran.hidden = (e.id !== id);
@@ -139,43 +250,85 @@ function ecransActiver(id, opt) {
   if (!opt.sansScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+/** Petit tremblement de l'onglet quand on clique un écran verrouillé. */
+function ecransSecouerOnglet(id) {
+  const btn = document.querySelector('.ecr-onglet[data-ecran="' + id + '"]');
+  if (!btn) return;
+  btn.classList.remove('est-secoue');
+  void btn.offsetWidth; // relance l'animation CSS
+  btn.classList.add('est-secoue');
+}
+
 /** Ouvre l'écran qui contient le bloc demandé, puis défile jusqu'à lui.
- *  Appelé (via assistant.js) quand on clique une étape du fil « Où en suis-je ? ». */
+ *  Appelé (via assistant.js) quand on clique un lien du verdict « prêt à
+ *  publier ». Si l'écran visé est verrouillé, on ouvre l'écran « du moment ». */
 function ecransAllerVersBloc(blocId) {
   const bloc = document.getElementById(blocId);
   const ecran = bloc && bloc.closest('.ecran');
   if (!ecran) return;
   const def = ECRANS_DEF.find(function (e) { return 'ecran-' + e.id === ecran.id; });
   if (!def) return;
+  const etats = ecransEtats();
+  const idx = ECRANS_DEF.indexOf(def);
+  if (ecransCalculerVerrous(etats)[idx]) {
+    ecransActiver(ecransEcranCourant(etats), { sansScroll: true });
+    return;
+  }
   ecransActiver(def.id, { sansScroll: true });
   if (bloc.scrollIntoView) bloc.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /**
- * Pastilles d'état de la barre latérale, nourries par le « cerveau » d'admin.js :
- *   🟠 à refaire (quelque chose a changé depuis) > ⚪️ à faire > ✓ fait.
- *  Les étapes « attente » (ex. après-midi avant les scores) ne comptent pas.
+ * Pastilles + verrous de la barre latérale, nourris par le « cerveau » :
+ *   ✓ fait (coche ciel sur fond blanc) · ⚪️ à faire · 🟠 « ! » à refaire ·
+ *   🔒 verrouillé (une étape précédente n'est pas complète).
  *  Appelée après chaque majEtatAvancement() via assistantMajVerrou (assistant.js).
+ *  Si l'écran AFFICHÉ vient d'être verrouillé (ex. réinitialisation), on
+ *  bascule automatiquement sur l'écran « du moment ».
  */
 function ecransMajPastilles() {
-  if (!ecransEstActif() || typeof calculerEtatsEtapes !== 'function') return;
-  let etats;
-  try { etats = calculerEtatsEtapes(); } catch (e) { return; } // données pas encore chargées
-  ECRANS_DEF.forEach(function (def) {
+  if (!ecransEstActif()) return;
+  const etats = ecransEtats();
+  if (!etats) return; // données pas encore chargées
+  const verrous = ecransCalculerVerrous(etats);
+
+  ECRANS_DEF.forEach(function (def, i) {
+    const btn = document.querySelector('.ecr-onglet[data-ecran="' + def.id + '"]');
     const pastille = document.getElementById('ecr-pastille-' + def.id);
-    if (!pastille) return;
+    if (!btn || !pastille) return;
+
+    const verrou = verrous[i];
+    btn.classList.toggle('est-verrouille', !!verrou);
+    btn.setAttribute('aria-disabled', verrou ? 'true' : 'false');
+
+    pastille.classList.remove('est-fait', 'est-afaire', 'est-arefaire', 'est-verrou');
     const concernes = etats.filter(function (e) { return def.cles.indexOf(e.cle) !== -1; });
-    const arefaire = concernes.filter(function (e) { return e.statut === 'arefaire'; });
-    const afaire   = concernes.filter(function (e) { return e.statut === 'afaire'; });
-    pastille.classList.remove('est-fait', 'est-afaire', 'est-arefaire');
+
+    if (verrou) {
+      // Écran hors de portée : cadenas + explication en infobulle.
+      pastille.hidden = false;
+      pastille.classList.add('est-verrou');
+      pastille.textContent = '🔒';
+      btn.title = '🔒 Termine d\'abord : ' + verrou;
+      return;
+    }
+    btn.title = concernes.map(function (e) { return e.titre + ' : ' + e.detail; }).join(' · ');
     if (!concernes.length) { pastille.hidden = true; return; }
     pastille.hidden = false;
-    if (arefaire.length)    { pastille.classList.add('est-arefaire'); pastille.textContent = '!'; }
-    else if (afaire.length) { pastille.classList.add('est-afaire');   pastille.textContent = '';  }
-    else                    { pastille.classList.add('est-fait');     pastille.textContent = '✓'; }
-    // Le détail (ex. « Réglages modifiés depuis la génération ») en infobulle.
-    pastille.title = concernes.map(function (e) { return e.titre + ' : ' + e.detail; }).join(' · ');
+    const arefaire = concernes.some(function (e) { return e.statut === 'arefaire'; });
+    const pasFait  = concernes.some(function (e) { return e.statut !== 'fait'; });
+    if (arefaire)     { pastille.classList.add('est-arefaire'); pastille.textContent = '!'; }
+    else if (pasFait) { pastille.classList.add('est-afaire');   pastille.textContent = '';  }
+    else              { pastille.classList.add('est-fait');     pastille.textContent = '✓'; }
   });
+
+  // L'écran affiché vient d'être verrouillé (ex. tournoi réinitialisé depuis
+  // la Publication) → on ramène l'utilisateur là où le travail reprend.
+  const actif = document.querySelector('.ecr-onglet.est-actif');
+  const idxActif = actif ? ECRANS_DEF.findIndex(function (e) { return e.id === actif.getAttribute('data-ecran'); }) : -1;
+  if (idxActif !== -1 && verrous[idxActif]) {
+    ecransActiver(ecransEcranCourant(etats), { sansScroll: true });
+  }
 }
 
 /** Quitte le mode écrans : remet les blocs à leur place d'origine (page longue),

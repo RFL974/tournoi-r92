@@ -185,7 +185,8 @@ body.avec-ecrans .ecran[hidden] { display: none !important; }
 
 /* --------------------------------------------------------------------------
    PASTILLES D'ÉTAT des onglets (nourries par le « cerveau » d'admin.js) :
-   ✓ fait · ⚪️ à faire (point creux) · 🟠 « ! » à refaire.
+   ✓ fait (coche ciel sur fond blanc) · ⚪️ à faire (point creux) ·
+   🟠 « ! » à refaire · 🔒 verrouillé (une étape précédente n'est pas complète).
    -------------------------------------------------------------------------- */
 .ecr-pastille {
   flex: 0 0 auto;
@@ -199,8 +200,41 @@ body.avec-ecrans .ecran[hidden] { display: none !important; }
   font-weight: 700;
   line-height: 1;
 }
-.ecr-pastille.est-fait     { background: #7ADFA0; color: #0E3320; }
+/* Étape complète : coche bleu ciel sur fond blanc (le liseré la garde lisible
+   sur l'onglet actif, lui aussi blanc, en desktop). */
+.ecr-pastille.est-fait {
+  background: #ffffff;
+  color: var(--r92-accent, #3E8FD6);
+  box-shadow: 0 0 0 1px rgba(62, 143, 214, 0.4);
+}
 .ecr-pastille.est-afaire   { background: transparent; border: 2px dashed rgba(140, 165, 195, 0.9); }
 .ecr-pastille.est-arefaire { background: #FFB570; color: #5C2E00; }
 /* Sur l'onglet actif (fond clair, desktop), le point « à faire » reste visible. */
 .ecr-onglet.est-actif .ecr-pastille.est-afaire { border-color: rgba(90, 107, 128, 0.6); }
+/* Écran verrouillé : petit cadenas à la place de la pastille. */
+.ecr-pastille.est-verrou { background: transparent; font-size: 0.75rem; }
+
+/* --------------------------------------------------------------------------
+   VERROU DES ONGLETS — un écran hors de portée est grisé et ne réagit pas ;
+   cliquer dessus le fait trembler (l'infobulle dit quoi terminer d'abord).
+   -------------------------------------------------------------------------- */
+.ecr-onglet.est-verrouille { opacity: 0.45; cursor: not-allowed; }
+.ecr-onglet.est-verrouille:hover { background: transparent; }
+@media (min-width: 1024px) {
+  .ecr-onglet.est-verrouille:hover { color: rgba(255, 255, 255, 0.78); }
+}
+.ecr-onglet.est-secoue { animation: ecr-secousse 0.35s ease; }
+@keyframes ecr-secousse {
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+/* --------------------------------------------------------------------------
+   En mode écrans, les étapes de « Où en suis-je ? » vivent dans la barre
+   latérale → on masque le fil (doublon), mais on GARDE le verdict « prêt à
+   publier » et le thermomètre de la journée (début / pause / fin prévue).
+   -------------------------------------------------------------------------- */
+body.avec-ecrans #etat-avancement .ea-entete,
+body.avec-ecrans #etat-avancement .ea-fil { display: none; }

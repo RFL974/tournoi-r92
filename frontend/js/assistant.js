@@ -294,42 +294,54 @@ function assistantNomZone(zone) {
   return 'modifications non enregistrées';
 }
 
-/** Modifications « en attente » sur la carte i (raisons humaines, ou liste vide). */
-function assistantRaisonsModifs(i) {
-  const et = ASSISTANT_ETAPES[i];
-  const slide = document.querySelector('.asst-slide[data-index="' + i + '"]');
-  if (!et || !slide) return [];
+/**
+ * Modifications « en attente » dans un CONTENEUR d'étape (raisons humaines, ou
+ * liste vide). PARTAGÉE entre l'assistant à cartes (le conteneur est une
+ * .asst-slide) et le mode écrans (le conteneur est un .ecran, via ecrans.js).
+ * @param {string}    etapeId    id logique de l'étape ('infos', 'equipes', 'terrains', 'poules', …)
+ * @param {Element}   conteneur  le bloc DOM qui contient l'étape
+ * @param {Element[]} zones      les zones surveillées (formulaires + zone terrains)
+ */
+function raisonsModifsDans(etapeId, conteneur, zones) {
   const raisons = [];
 
   // 1) Formulaires dont les valeurs diffèrent de leur photo « enregistrée ».
-  assistantZonesSurveillees().forEach(function (zone) {
-    if (!slide.contains(zone)) return;
+  zones.forEach(function (zone) {
+    if (!conteneur.contains(zone)) return;
     const photo = assistantPhotos.get(zone);
     if (photo == null) { assistantPhotos.set(zone, assistantSerialiser(zone)); return; }
     if (photo !== assistantSerialiser(zone)) raisons.push(assistantNomZone(zone));
   });
 
   // 2) États « en attente » hors formulaires (variables d'admin.js).
-  if (et.id === 'infos' && typeof afficheDataURI !== 'undefined' && afficheDataURI) {
+  if (etapeId === 'infos' && typeof afficheDataURI !== 'undefined' && afficheDataURI) {
     raisons.push('affiche choisie → « 💾 Enregistrer les infos » (ou « Retirer l\'affiche »)');
   }
-  if (et.id === 'equipes') {
+  if (etapeId === 'equipes') {
     const nom = document.getElementById('champ-nom');
     if (nom && nom.value.trim()) raisons.push('équipe saisie → « Ajouter » (ou vide le champ)');
     if (document.querySelector('#liste-equipes .champ-edit-nom')) {
       raisons.push('renommage en cours → « Enregistrer » ou « Annuler »');
     }
   }
-  if (et.id === 'terrains' && typeof repartitionCalculee !== 'undefined' && repartitionCalculee) {
+  if (etapeId === 'terrains' && typeof repartitionCalculee !== 'undefined' && repartitionCalculee) {
     const resu = document.getElementById('repartition-resultat');
     if (resu && resu.innerHTML.trim()) {
       raisons.push('répartition calculée → « ✅ Appliquer aux catégories » (ou recalcule-la)');
     }
   }
-  if (et.id === 'poules' && typeof editionPoules !== 'undefined' && editionPoules) {
+  if (etapeId === 'poules' && typeof editionPoules !== 'undefined' && editionPoules) {
     raisons.push('édition des poules en cours → « 💾 Enregistrer et recalculer » ou « Annuler »');
   }
   return raisons;
+}
+
+/** Modifications « en attente » sur la carte i de l'assistant. */
+function assistantRaisonsModifs(i) {
+  const et = ASSISTANT_ETAPES[i];
+  const slide = document.querySelector('.asst-slide[data-index="' + i + '"]');
+  if (!et || !slide) return [];
+  return raisonsModifsDans(et.id, slide, assistantZonesSurveillees());
 }
 
 /** Tout ce qui empêche de QUITTER la carte i vers la suivante (liste vide = libre). */

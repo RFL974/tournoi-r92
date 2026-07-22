@@ -83,6 +83,16 @@ formulaires en cours d'édition.
 > fois réglée) ; « Réinitialiser le tournoi » est **repliée** par défaut (rarement utilisée, et on
 > évite de l'ouvrir par erreur).
 
+> 🧭 **Navigation par étapes.** Sur **ordinateur (grand écran)**, la page s'organise en **écrans**
+> avec une **barre latérale** qui reprend les **étapes de la préparation** : Infos · Horaires ·
+> Catégories · Équipes · Terrains · Poules & planning · Après-midi · Publication. Chaque item ouvre
+> sa carte ; une étape **complète** reçoit une **coche ✓** (bleu ciel sur fond blanc) et une étape
+> reste **🔒 verrouillée** tant qu'une étape précédente n'est pas **enregistrée / générée /
+> répartie** (survole le cadenas : l'infobulle dit quoi terminer d'abord). Exception : l'Après-midi
+> ne bloque pas la Publication (elle se génère plus tard, une fois les scores du matin saisis).
+> Sur **mobile**, c'est l'**assistant en étapes** (cartes + verrou « Suivant ») qui guide, avec la
+> même logique. Le bouton **« Vue classique ✕ »** remet à tout moment la page longue qui déroule.
+
 ### 1.1 Horaires de la journée
 Réglages globaux qui pilotent le calcul du planning :
 
