@@ -5,6 +5,35 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Admin : nouveau look navy/blanc/ciel + navigation par écrans — 2026-07-22
+La page admin fait peau neuve, **sans toucher à sa logique** (admin.js inchangé). **100 % frontend.**
+
+- **`css/theme-r92.css`** (nouveau) : surcouche visuelle chargée après `styles.css`, scopée sous
+  `.theme-clair` → aucun effet sur saisie/perfs/tournoi. Typo **Fraunces** (titres, gros chiffres)
+  + **Familjen Grotesk** (corps), cartes arrondies à ombre douce, boutons pilule, tableau de bord
+  en 4 cartes-stats à pastille dégradée, champs clairs à focus bleu ciel. Réversible en retirant
+  la ligne `<link>` d'`admin.html`. Au passage : le bouton « 🔄 Rafraîchir » respire (padding,
+  casse normale, jamais coupé).
+- **Mode « écrans »** (nouveaux `js/ecrans.js` + `css/ecrans.css`) : sur **grand écran** (≥ 1024px),
+  fini la longue page qui déroule — une **barre latérale** navy fixe ouvre 4 écrans : **Infos du
+  tournoi** (infos + horaires) · **Équipes & catégories** · **Poules & planning** (terrains,
+  génération, après-midi) · **Publication** (+ réinitialisation). Le tableau de bord et le fil
+  « Où en suis-je ? » restent visibles partout, et **cliquer une étape du fil ouvre le bon écran**.
+  Chaque onglet porte une **pastille d'état** nourrie par le cerveau (✓ fait · à faire · « ! » à
+  refaire). Le dernier écran ouvert est mémorisé ; fenêtre rétrécie → la barre devient des
+  onglets horizontaux.
+- **Cohabitation avec l'assistant à cartes** (décision explicite) : le choix se fait **au
+  chargement** — grand écran → mode écrans ; **mobile → assistant à cartes inchangé**, avec son
+  verrou « Suivant ». « Vue classique » reste l'échappatoire commune (même préférence mémorisée),
+  avec un bouton de retour « Mode écrans » ou « Mode assistant » selon la taille.
+- Technique : même recette éprouvée que l'assistant — on **déplace** les blocs existants (les
+  écouteurs suivent), tous les `id`/classes sont conservés ; `assistant.js` aiguille entre les
+  deux modes (4 petits branchements), `admin.js` **inchangé**. Sans JavaScript, la page longue
+  s'affiche telle quelle.
+- Vérifié en navigateur sur données réelles : 4 écrans, navigation par le fil, pastilles,
+  aller-retour « Vue classique », verrou mobile (fermeture à la frappe, réouverture à
+  l'annulation), pages saisie/tournoi/perfs intactes, aucune erreur console.
+
 ### Admin : verrou du bouton « Suivant » dans l'assistant — 2026-07-22
 Pendant la préparation du tournoi, l'assistant à cartes **empêche de passer à l'étape
 suivante tant que l'étape en cours n'est pas complète** : « Suivant » est **grisé** avec

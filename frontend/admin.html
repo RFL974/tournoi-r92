@@ -13,6 +13,10 @@
 
   <!-- Notre feuille de style commune -->
   <link rel="stylesheet" href="css/styles.css">
+  <!-- Surcouche moderne navy/blanc/ciel (re-skin admin — retirer cette ligne pour revenir en arrière) -->
+  <link rel="stylesheet" href="css/theme-r92.css">
+  <!-- Mode « écrans » : barre latérale + onglets sur grand écran (structure construite par js/ecrans.js) -->
+  <link rel="stylesheet" href="css/ecrans.css">
 </head>
 <!-- theme-clair : fond blanc + cartes navy translucides (thème propre à la page admin). -->
 <body class="theme-clair">
@@ -220,8 +224,11 @@
   <script src="js/dialog.js"></script>
   <script src="js/api.js"></script>
   <script src="js/admin.js"></script>
-  <!-- Assistant à cartes : surcouche de présentation (déplace les blocs ci-dessus dans un
-       carrousel). Chargé APRÈS admin.js pour réutiliser ses fonctions/écouteurs. -->
+  <!-- Surcouches de présentation (déplacent les blocs ci-dessus SANS toucher à admin.js) :
+       6) ecrans.js    → barre latérale + onglets sur GRAND écran
+       7) assistant.js → assistant à cartes sur mobile (verrou « Suivant »),
+                         et aiguillage entre les deux modes au chargement. -->
+  <script src="js/ecrans.js"></script>
   <script src="js/assistant.js"></script>
 
 </body>

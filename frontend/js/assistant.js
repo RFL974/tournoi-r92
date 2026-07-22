@@ -48,6 +48,9 @@ function initAssistant() {
   }
   const pref = (function () { try { return localStorage.getItem(ASSISTANT_CLE_PREF); } catch (e) { return null; } })();
   if (pref === 'classique') afficherBoutonReprise();
+  // Mode guidé : sur GRAND écran, barre latérale + onglets (ecrans.js) ;
+  // sur mobile, l'assistant à cartes (avec son verrou « Suivant »).
+  else if (typeof ecransSontAdaptes === 'function' && ecransSontAdaptes()) construireEcrans();
   else construireAssistant();
 }
 
@@ -345,8 +348,13 @@ function assistantRaisonsEtape(i, etatsCerveau) {
   return raisons.concat(assistantRaisonsModifs(i));
 }
 
-/** Grise/active « Suivant », affiche l'explication, grise le fil hors de portée. */
+/** Grise/active « Suivant », affiche l'explication, grise le fil hors de portée.
+ *  En mode écrans (barre latérale), ce sont les pastilles d'état qui suivent. */
 function assistantMajVerrou() {
+  if (typeof ecransEstActif === 'function' && ecransEstActif()) {
+    ecransMajPastilles();
+    return;
+  }
   const suiv = document.getElementById('asst-suiv');
   const zone = document.getElementById('asst-verrou');
   if (!suiv || !zone) return; // assistant non affiché (vue classique)
@@ -412,19 +420,23 @@ function quitterAssistant() {
   afficherBoutonReprise();
 }
 
-/** En vue classique : petit bouton flottant pour revenir à l'assistant. */
+/** En vue classique : petit bouton flottant pour revenir au mode guidé
+ *  (écrans à barre latérale sur grand écran, assistant à cartes sur mobile). */
 function afficherBoutonReprise() {
   if (document.getElementById('asst-reprise')) return;
   const main = document.querySelector('main');
   if (!main) return;
+  const surEcrans = (typeof ecransSontAdaptes === 'function' && ecransSontAdaptes());
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.id = 'asst-reprise';
   btn.className = 'bouton asst-reprise';
-  btn.textContent = '🎴 Mode assistant';
+  btn.textContent = surEcrans ? '🗂️ Mode écrans' : '🎴 Mode assistant';
   btn.addEventListener('click', function () {
     try { localStorage.setItem(ASSISTANT_CLE_PREF, 'assistant'); } catch (e) {}
-    construireAssistant();
+    // On re-teste la largeur AU CLIC (la fenêtre a pu être redimensionnée entre-temps).
+    if (typeof ecransSontAdaptes === 'function' && ecransSontAdaptes()) construireEcrans();
+    else construireAssistant();
   });
   // Placé juste après la barre de connexion (en haut).
   const ref = document.getElementById('barre-connexion');
@@ -437,13 +449,20 @@ function retirerBoutonReprise() {
   if (b) b.remove();
 }
 
-/** Vrai si l'assistant est actuellement affiché (utilisé par admin.js). */
+/** Vrai si un mode guidé est affiché : assistant à cartes OU écrans à barre
+ *  latérale (utilisé par admin.js pour la navigation du fil « Où en suis-je ? »). */
 function assistantEstActif() {
-  return !!document.getElementById('assistant');
+  return !!document.getElementById('assistant') ||
+         (typeof ecransEstActif === 'function' && ecransEstActif());
 }
 
-/** Va à l'étape (carte) qui contient le bloc d'id donné. Utilisé par le cerveau. */
+/** Va à l'étape (carte) — ou à l'écran (mode écrans) — qui contient le bloc
+ *  d'id donné. Utilisé par le cerveau. */
 function assistantAllerVersBloc(blocId) {
+  if (typeof ecransEstActif === 'function' && ecransEstActif()) {
+    ecransAllerVersBloc(blocId);
+    return;
+  }
   const el = document.getElementById(blocId);
   const slide = el && el.closest('.asst-slide');
   if (!slide) return;
