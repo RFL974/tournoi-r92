@@ -112,6 +112,8 @@ body.avec-ecrans .ecran[hidden] { display: none !important; }
   .ecr-onglet:focus-visible { outline: 2px solid #7CC0EC; outline-offset: 2px; }
 
   .ecr-icone { font-size: 1.05rem; line-height: 1; }
+  /* Icône filaire de l'onglet actif : bleu ciel (le reste suit la couleur du texte). */
+  .ecr-onglet.est-actif .ecr-icone svg { color: var(--r92-accent, #3E8FD6); }
   .ecr-libelle { flex: 1; }
 
   .ecr-pied {
@@ -182,6 +184,13 @@ body.avec-ecrans .ecran[hidden] { display: none !important; }
   .ecr-pied { flex: 0 0 auto; }
   .ecr-classique { font-size: 0.8rem; padding: 6px 10px; }
 }
+
+/* --------------------------------------------------------------------------
+   ICÔNES FILAIRES des onglets (SVG construits par svgEcr, ecrans.js) —
+   dimension commune aux deux mises en page (barre latérale et barre d'onglets).
+   -------------------------------------------------------------------------- */
+.ecr-icone { display: inline-flex; align-items: center; }
+.ecr-icone svg { width: 19px; height: 19px; flex-shrink: 0; }
 
 /* --------------------------------------------------------------------------
    PASTILLES D'ÉTAT des onglets (nourries par le « cerveau » d'admin.js) :
