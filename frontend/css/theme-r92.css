@@ -1,0 +1,229 @@
+/* ==========================================================================
+   TOURNOI R92 — SURCOUCHE « MODERNE NAVY / BLANC / CIEL »
+   --------------------------------------------------------------------------
+   Re-skin (option A) à charger APRÈS css/styles.css, UNIQUEMENT sur admin.html :
+
+       <link rel="stylesheet" href="css/styles.css">
+       <link rel="stylesheet" href="css/theme-r92.css">   <!-- cette ligne -->
+
+   Ne touche NI au HTML NI au JS : cible les classes existantes de la page admin
+   (toutes scopées sous .theme-clair, donc aucun effet sur saisie/perfs/tournoi).
+   Pour revenir en arrière : retirer la ligne <link> ci-dessus.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400..600;9..144,1,400..500&family=Familjen+Grotesk:wght@400;500;600;700&display=swap');
+
+/* Palette de la maquette (variables locales à la surcouche) */
+.theme-clair {
+  --r92-navy:      #0E2340;
+  --r92-navy-2:    #16335C;
+  --r92-accent:    #3E8FD6;
+  --r92-accent-ink:#2C6FB0;
+  --r92-ciel-soft: #E6F1FB;
+  --r92-ligne:     #E2EAF2;
+  --r92-champ-bg:  #F8FBFE;
+  --r92-champ-bd:  #D3E1F0;
+  --r92-txt-doux:  #5A6B80;
+
+  /* On réaligne les variables globales du site sur la maquette */
+  --accent:    #3E8FD6;
+  --texte:     #0E2340;
+  --bleu-ciel: #5A6B80;
+}
+
+/* --------------------------------------------------------------------------
+   TYPOGRAPHIE — corps en Familjen Grotesk, titres/nombres en Fraunces (serif)
+   -------------------------------------------------------------------------- */
+body.theme-clair {
+  font-family: 'Familjen Grotesk', ui-sans-serif, system-ui, sans-serif;
+  color: #3B4A63;
+  -webkit-font-smoothing: antialiased;
+}
+.theme-clair h1,
+.theme-clair h2,
+.theme-clair h3,
+.theme-clair details.carte > summary {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   EN-TÊTE — bandeau navy dégradé plus doux, logo mis en valeur
+   -------------------------------------------------------------------------- */
+.theme-clair .entete {
+  background: linear-gradient(135deg, #0E2340 0%, #16335C 70%, #234978 100%);
+  border-radius: 24px;
+  padding: 26px 20px 28px;
+  box-shadow: 0 18px 40px -24px rgba(14, 35, 64, 0.55);
+}
+.theme-clair .entete::before {
+  height: 4px;
+  background: linear-gradient(90deg, var(--r92-accent), #7CC0EC);
+}
+.theme-clair .entete h1 { font-size: 2.6rem; }
+@media (min-width: 700px) { .theme-clair .entete h1 { font-size: 3.2rem; } }
+
+/* --------------------------------------------------------------------------
+   CARTES — plus arrondies, liseré fin, ombre douce, plus d'air
+   -------------------------------------------------------------------------- */
+.theme-clair .carte {
+  background: #ffffff;
+  border: 1px solid var(--r92-ligne);
+  border-radius: 22px;
+  box-shadow: 0 1px 2px rgba(14, 35, 64, 0.04), 0 18px 40px -30px rgba(14, 35, 64, 0.25);
+  padding: 26px 28px;
+}
+.theme-clair .carte h2 {
+  font-size: 1.7rem;
+  color: var(--r92-navy);
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 6px;
+}
+.theme-clair .note-generation { color: var(--r92-txt-doux); }
+
+/* --------------------------------------------------------------------------
+   BOUTONS — pilules. Primaire = navy ; « Ajouter » (submit équipe) = accent ciel
+   -------------------------------------------------------------------------- */
+.theme-clair .bouton {
+  background: var(--r92-navy);
+  border-radius: 999px;
+  font-family: 'Familjen Grotesk', sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 12px 22px;
+  transition: background .15s, transform .1s, box-shadow .15s;
+}
+.theme-clair .bouton:hover { background: var(--r92-navy-2); transform: translateY(-1px); }
+.theme-clair .form-equipe .bouton {
+  background: var(--r92-accent);
+  border-radius: 13px;
+}
+.theme-clair .form-equipe .bouton:hover { background: var(--r92-accent-ink); }
+.theme-clair .bouton-doux  { background: #2E8B57; border-radius: 999px; }
+.theme-clair .bouton-doux:hover { background: #26744a; }
+.theme-clair .bouton-danger { background: #C0483C; border-radius: 999px; }
+.theme-clair .bouton-danger:hover { background: #a53c31; }
+/* Boutons contour (secondaires) → pilule */
+.theme-clair .bouton-lien,
+.theme-clair .bouton-suppr,
+.theme-clair .bouton-modif { border-radius: 999px; }
+
+/* --------------------------------------------------------------------------
+   CHAMPS — arrondis, fond très clair, focus bleu ciel
+   -------------------------------------------------------------------------- */
+.theme-clair .r-input,
+.theme-clair .champ-reglage input,
+.theme-clair .form-equipe input[type="text"],
+.theme-clair .form-equipe select,
+.theme-clair .champ-edit-nom,
+.theme-clair #bloc-terrains input[type="text"],
+.theme-clair #bloc-terrains input[type="number"],
+.theme-clair #bloc-terrains select {
+  background: var(--r92-champ-bg);
+  color: var(--r92-navy);
+  border: 1px solid var(--r92-champ-bd);
+  border-radius: 12px;
+  font-family: 'Familjen Grotesk', sans-serif;
+  padding: 10px 13px;
+}
+.theme-clair .r-input:focus,
+.theme-clair .champ-reglage input:focus,
+.theme-clair .form-equipe input:focus,
+.theme-clair .form-equipe select:focus,
+.theme-clair #bloc-terrains input:focus,
+.theme-clair #bloc-terrains select:focus {
+  outline: none;
+  border-color: var(--r92-accent);
+  box-shadow: 0 0 0 3px rgba(62, 143, 214, 0.16);
+}
+/* Libellés de champs : gris-bleu, discrets */
+.theme-clair .r-libelle,
+.theme-clair .format-libelle,
+.theme-clair .champ-reglage label,
+.theme-clair .tb-lib,
+.theme-clair .terr-choix,
+.theme-clair .toggle { color: var(--r92-txt-doux); }
+
+/* --------------------------------------------------------------------------
+   TABLEAU DE BORD — 4 cartes-stats blanches avec pastille dégradée en coin
+   -------------------------------------------------------------------------- */
+.theme-clair .tableau-bord {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-bottom: calc(var(--espace) * 1.4);
+}
+.theme-clair .tb-titre { color: var(--r92-txt-doux); }
+.theme-clair .tb-grille { gap: 16px; }
+.theme-clair .tb-stat {
+  background: #ffffff;
+  border: 1px solid var(--r92-ligne);
+  border-radius: 18px;
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  gap: 8px;
+}
+.theme-clair .tb-stat::before {
+  content: "";
+  position: absolute; top: -26px; right: -26px;
+  width: 92px; height: 92px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #BFDCF5, var(--r92-accent));
+  opacity: 0.28;
+}
+.theme-clair .tb-grille .tb-stat:nth-child(2)::before { background: radial-gradient(circle at 30% 30%, #CDE7FA, #7CC0EC); opacity: .32; }
+.theme-clair .tb-grille .tb-stat:nth-child(3)::before { background: radial-gradient(circle at 30% 30%, #D6E8F7, #A9C9E6); opacity: .34; }
+.theme-clair .tb-grille .tb-stat:nth-child(4)::before { background: radial-gradient(circle at 30% 30%, #C9D6E6, #6E88A6); opacity: .30; }
+.theme-clair .tb-val {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  font-size: 2.6rem;
+  letter-spacing: -0.03em;
+  color: var(--r92-navy);
+}
+
+/* --------------------------------------------------------------------------
+   CATÉGORIES, TABLEAUX, ÉDITEURS — arrondis + badges ciel
+   -------------------------------------------------------------------------- */
+.theme-clair .categorie { border-left: 4px solid var(--r92-accent); }
+.theme-clair .categorie .badge {
+  font-family: 'Familjen Grotesk', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--r92-ciel-soft);
+  color: var(--r92-accent-ink);
+  border-radius: 999px;
+  font-size: 1rem;
+  padding: 4px 14px;
+}
+.theme-clair .reglage,
+.theme-clair .equipe-item,
+.theme-clair .poule-compo,
+.theme-clair .edit-poule,
+.theme-clair .edit-equipe,
+.theme-clair .format-carte,
+.theme-clair .terr-choix { border-radius: 12px; }
+.theme-clair .table-planning th { color: var(--r92-accent-ink); }
+.theme-clair .table-planning th,
+.theme-clair .table-planning td { border-bottom-color: #EDF3F9; }
+
+/* --------------------------------------------------------------------------
+   BADGES D'AVANCEMENT / ÉTATS — teintes ciel cohérentes
+   -------------------------------------------------------------------------- */
+.theme-clair .avc-partiel {
+  background: var(--r92-ciel-soft);
+  color: var(--r92-accent-ink);
+  border: 1px solid #C9DCEF;
+}
+.theme-clair .publication-etat,
+.theme-clair .apresmidi-etat { color: var(--r92-txt-doux); }
+
+/* --------------------------------------------------------------------------
+   AFFICHE / APERÇU — arrondi cohérent
+   -------------------------------------------------------------------------- */
+.theme-clair .apercu-affiche img { border-radius: 14px; border-color: var(--r92-ligne); }
