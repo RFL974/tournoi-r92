@@ -69,7 +69,7 @@ sans surveillance.
 
 Juste en dessous, un bandeau **tableau de bord** récapitule l'**état du tournoi en un coup d'œil** :
 **Catégories** (nombre), **Équipes** (nombre), **Planning matin** (✓ Validé · ⏱ En attente)
-et **Publication** (⚪️ non · 🟢 publié). Il se met à jour automatiquement à chaque action (ajout
+et **Publication** (✓ Publié · ⏱ En attente). Il se met à jour automatiquement à chaque action (ajout
 d'équipe, génération, publication…). Un bouton **🔄 Rafraîchir** (avec l'heure de dernière mise à
 jour) recharge les **scores saisis sur les téléphones** : à utiliser **avant de générer
 l'après-midi** pour que l'état « scores du matin complets » soit à jour. Il ne touche pas aux

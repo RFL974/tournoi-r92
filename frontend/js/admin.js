@@ -606,8 +606,9 @@ function majTableauBord() {
   if (matin.length === 0) elPl.innerHTML = svgEtatTuile('attente') + '<span class="tb-val-texte">En attente</span>';
   else                    elPl.innerHTML = svgEtatTuile('valide') + '<span class="tb-val-texte">Validé</span>';
 
-  // Publication.
-  elPub.textContent = estPublie() ? '🟢 publié' : '⚪️ non';
+  // Publication : même système que « Planning matin » (icône SVG + texte).
+  if (estPublie()) elPub.innerHTML = svgEtatTuile('valide') + '<span class="tb-val-texte">Publié</span>';
+  else             elPub.innerHTML = svgEtatTuile('attente') + '<span class="tb-val-texte">En attente</span>';
 
   // Fil d'avancement « Où en suis-je ? » (recalculé à chaque mise à jour du tableau de bord).
   majEtatAvancement();
@@ -3460,9 +3461,12 @@ async function onAppliquerRepartition() {
     configCourante.global = Object.assign({}, configCourante.global,
       { repartition_grands_terrains: compositionJson });
     injecterReglages(configCourante.global, configCourante.categories); // les cartes catégories montrent les nouveaux terrains
-    majEtatAvancement(); // le fil « Où en suis-je ? » suit les terrains appliqués aux catégories
+    // IMPORTANT : on efface l'état « répartition en attente » AVANT de rafraîchir
+    // le fil — sinon le verrou de la barre latérale voit encore « répartition
+    // calculée → Appliquer » et l'étape suivante reste fermée jusqu'au clic suivant.
     repartitionCalculee = null;
     document.getElementById('repartition-resultat').innerHTML = '';
+    majEtatAvancement(); // le fil ET le verrou suivent immédiatement
     await dialogAlerter('✅ Terrains appliqués aux catégories en mode Auto (' + noms.join(', ') + ').' +
       (ignorees.length ? '\nLaissées en Manuel : ' + ignorees.join(', ') + '.' : '') +
       '\nIls seront utilisés à la prochaine génération du planning.');
