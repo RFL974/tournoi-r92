@@ -258,6 +258,27 @@
         <div id="message-publication" class="message-form"></div>
       </section>
 
+      <!-- 6 bis) Dossier club : ouvre le générateur de dossier (page dédiée
+           dossier-club.html). L'état des sections est rempli par admin.js (majDossier). -->
+      <section class="carte" id="bloc-dossier">
+        <h2>Dossier club</h2>
+        <p class="note-generation">
+          Assemble automatiquement le <strong>dossier récapitulatif</strong> à envoyer aux clubs
+          invités : infos pratiques, programme de la journée, format sportif par catégorie,
+          suivi des scores (QR code), sécurité et contact. Un seul dossier par tournoi.<br>
+          💡 Toute section <strong>sans donnée</strong> est simplement <strong>masquée</strong> —
+          tu peux générer le dossier à tout moment et le regénérer quand tu complètes les infos.
+        </p>
+        <div id="etat-dossier"></div>
+        <div class="ligne-action">
+          <a class="bouton" id="bouton-ouvrir-dossier" href="dossier-club.html" target="_blank" rel="noopener">📄 Générer le dossier</a>
+        </div>
+        <p class="note-generation">
+          Le dossier s'ouvre dans un nouvel onglet : vérifie-le, puis
+          <strong>« Exporter en PDF »</strong> pour l'envoyer aux clubs.
+        </p>
+      </section>
+
       <!-- 7) Réinitialisation : remet le tournoi à zéro (zone de danger).
            Carte repliable, REPLIÉE par défaut : rarement utilisée + on évite de l'ouvrir par erreur. -->
       <details class="carte carte-danger" id="bloc-reinitialisation">

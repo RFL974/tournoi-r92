@@ -1613,3 +1613,20 @@ body.theme-clair {
   .asst-nav { min-width: 0; padding: 10px 12px; }
   .asst-compteur { font-size: 0.8rem; }
 }
+
+/* ==========================================================================
+   Carte « Dossier club » (admin) : état des sections du dossier + bouton-lien
+   ========================================================================== */
+/* Le bouton d'ouverture est un <a> : mêmes styles que .bouton + pas de soulignement. */
+a.bouton { display: inline-block; text-decoration: none; }
+
+.dossier-etat {
+  list-style: none;
+  margin: 10px 0;
+  padding: 10px 12px;
+  background: rgba(3, 16, 36, 0.4);
+  border-radius: 8px;
+}
+.dossier-etat li { padding: 2px 0; }
+.dossier-etat li.est-vide { opacity: 0.65; }
+.dossier-etat-note { font-size: 0.8em; color: var(--bleu-ciel); }

@@ -72,6 +72,21 @@ admin — destinés au futur **générateur de dossier club**, tous **optionnels
 | `securite_referent_nom` | `Dominique Martin` | Nom du référent sécurité distinct (si `securite_referent_identique = non`) |
 | `securite_referent_tel` | `0698765432` | Téléphone du référent sécurité distinct (10 chiffres, normalisé) |
 
+Paramètres **optionnels lus par le dossier club** (`frontend/dossier-club.html`). Aucun
+formulaire admin ne les écrit encore : pour les utiliser, **ajouter la ligne à la main** dans la
+Zone A (colonne A = nom, colonne B = valeur). Absents ou vides = la ligne/le bouton correspondant
+est simplement masqué dans le dossier :
+
+| parametre | valeur (exemple) | Utilisation dans le dossier |
+|---|---|---|
+| `logistique_parking` | `Parking gratuit rue des Sports` | Ligne « Parking » des Infos pratiques |
+| `logistique_buvette` | `Buvette et restauration sur place` | Ligne « Buvette / restauration » |
+| `logistique_vestiaires` | `4 vestiaires, bâtiment B` | Ligne « Vestiaires » |
+| `table_marque_organisation` | `Tenue par les bénévoles R92` | Ligne « Table de marque » (Suivi & organisation) |
+| `url_tournoi_public` | `https://rfl974.github.io/tournoi-r92/tournoi.html` | Lien + QR code « Scores en direct » (défaut : la page `tournoi.html` publiée à côté du dossier) |
+| `url_site_association` | `https://…` | Bouton « Site de l'association » |
+| `url_instagram` | `https://instagram.com/…` | Bouton « Instagram » |
+
 ### Zone B — Réglages par catégorie
 
 Un tableau, **une ligne par catégorie**. En-têtes :

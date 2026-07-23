@@ -5,6 +5,36 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sprint 2 dossier club : générateur automatique de dossier — 2026-07-23
+Nouvelle page **`dossier-club.html`** : le dossier récapitulatif envoyé aux clubs invités,
+assemblé automatiquement depuis les données du tournoi (Config Zone A + Zone B). **Un seul
+dossier par tournoi**, générique (pas de filtrage par club/catégorie). **100 % frontend** —
+aucune modification backend (lecture via le `getAll` existant).
+
+- **Contenu (A4, 1-2 pages)** : en-tête (affiche, nom, date, « Généré le … »), présentation
+  (description tronquée à 400 caractères), Infos pratiques (lieu, adresse + parking/buvette/
+  vestiaires si renseignés), Programme de la journée (RDV, coup d'envoi, pause déjeuner, fin
+  communiquée + mention « horaires indicatifs »), Format sportif (**tableau** si plusieurs
+  catégories, **puces** si une seule — colonnes vides retirées), Suivi & organisation (lien
+  live + **QR code**, table de marque, **phrase de synthèse des terrains** calculée depuis les
+  JSON), Sécurité (poste de secours + référent résolu via `securite_referent_identique`),
+  bloc contact (référent tournoi), bandeau d'actions (**.ics**, **Google Maps**, **Waze**,
+  site association, Instagram), pied de page logo R92 + mention Racing 92.
+- **Règle d'or** : toute section dont tous les champs sont vides est **masquée entièrement**
+  (titre compris) — jamais de « non communiqué ».
+- **Technique** : `.ics` généré côté client (1 seul VEVENT, `DTSTART` = heure de RDV,
+  `DTEND` = fin communiquée, replis début/fin de matchs) ; itinéraires construits depuis
+  `tournoi_adresse` (repli `tournoi_lieu`) ; QR code généré **en local** par
+  `js/vendor/qrcode.js` (lib MIT embarquée, aucun appel externe) ; **export PDF = impression
+  navigateur** (CSS print `css/dossier.css`, charte navy `#0C1C2E` / bleu `#2E8FE0`).
+- **Admin** : nouvel item **« Générer le dossier »** dans la barre latérale (et carte
+  « Dossier » dans l'assistant mobile) — jamais verrouillé ; la carte affiche l'**état des
+  sections** (celles qui apparaîtront / seront masquées) et ouvre le dossier dans un onglet.
+- Le dossier lit aussi 7 paramètres **optionnels** de la Zone A s'ils sont ajoutés à la main
+  (`logistique_parking`/`_buvette`/`_vestiaires`, `table_marque_organisation`,
+  `url_tournoi_public`, `url_site_association`, `url_instagram`) — documentés dans
+  `docs/structure-google-sheet.md`.
+
 ### Sprint 1 dossier club : nouveaux champs (adresse, RDV, contacts, sécurité, cadre sportif) — 2026-07-23
 Premiers champs du futur **générateur de dossier club**. Tous **optionnels** : un tournoi
 existant sans ces données continue de fonctionner à l'identique (rétrocompatible).

@@ -131,6 +131,7 @@ async function initAdmin() {
     majInfosTournoi();
     majContactsSecurite();
     majPublication();
+    majDossier(); // état des sections du dossier club (suit toutes les infos ci-dessus)
 
     // 5) Tableau de bord (récap en haut de page) + horodatage
     majTableauBord();
@@ -506,6 +507,7 @@ async function onEnregistrerInfos() {
     // On recharge la config pour refléter ce qui est réellement enregistré (dont l'affiche).
     configCourante = await apiGet('getConfig');
     majInfosTournoi();
+    majDossier(); // le dossier club reflète les nouvelles infos
     document.getElementById('form-infos-tournoi').tournoi_affiche.value = ''; // vide le champ fichier
     afficherMessage(message, '✅ Infos enregistrées.', 'ok');
   } catch (erreur) {
@@ -605,6 +607,7 @@ async function onEnregistrerContacts() {
     await ecrireAdmin('enregistrerContactsSecurite', data);
     configCourante.global = Object.assign({}, configCourante.global, data);
     majContactsSecurite(); // ré-affiche les numéros normalisés + reprend la photo « propre »
+    majDossier();          // les sections Sécurité / Contact du dossier suivent
     afficherMessage(message, '✅ Contacts & sécurité enregistrés.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
@@ -612,6 +615,39 @@ async function onEnregistrerContacts() {
     bouton.disabled = false;
     bouton.textContent = texteBouton;
   }
+}
+
+/* --------------------------------------------------------------------------
+   DOSSIER CLUB — état des sections du dossier (page dossier-club.html)
+   -------------------------------------------------------------------------- */
+
+/**
+ * Affiche, dans la carte « Dossier club », quelles sections du dossier apparaîtront
+ * avec les données actuelles (les sections vides sont masquées à la génération).
+ * Pur affichage informatif : rien n'est bloquant, le dossier se génère toujours.
+ */
+function majDossier() {
+  const zone = document.getElementById('etat-dossier');
+  if (!zone) return;
+  const g = configCourante.global || {};
+  const cats = (configCourante.categories || []).filter(estPresente);
+  const oui = function (v) { return String(v || '').toLowerCase() === 'oui'; };
+
+  const sections = [
+    ['Présentation', !!(g.tournoi_nom || g.tournoi_description)],
+    ['Infos pratiques (lieu, adresse)', !!(g.tournoi_lieu || g.tournoi_adresse)],
+    ['Programme (RDV, coup d\'envoi, pause, fin)', !!(g.heure_rdv || g.heure_debut || g.pause_dejeuner_debut || g.heure_fin_communiquee)],
+    ['Format sportif (' + cats.length + ' catégorie' + (cats.length > 1 ? 's' : '') + ')', cats.length > 0],
+    ['Sécurité (poste de secours, référent)', oui(g.securite_secours_oui) || !!(g.referent_nom || g.securite_referent_nom)],
+    ['Contact (référent tournoi)', !!(g.referent_nom || g.referent_tel)],
+    ['Agenda .ics / itinéraire', !!(g.tournoi_date && (g.tournoi_adresse || g.tournoi_lieu))]
+  ];
+
+  zone.innerHTML = '<ul class="dossier-etat">' + sections.map(function (s) {
+    return '<li class="' + (s[1] ? 'est-ok' : 'est-vide') + '">' +
+      (s[1] ? '✅ ' : '⚪️ ') + echapper(s[0]) +
+      (s[1] ? '' : ' <span class="dossier-etat-note">(sera masqué)</span>') + '</li>';
+  }).join('') + '</ul>';
 }
 
 /* --------------------------------------------------------------------------
@@ -1054,6 +1090,7 @@ async function rechargerEtRendre(opt) {
 
   if (opt.infos)       { majInfosTournoi(); majContactsSecurite(); }
   if (opt.publication) majPublication();
+  majDossier(); // la config vient d'être rechargée : l'état du dossier suit
   majTableauBord();
   if (opt.heure)       majHeureAdmin();
 }
@@ -1406,6 +1443,7 @@ async function onEnregistrerHoraires(evenement) {
     // Valeurs désormais ENREGISTRÉES → l'assistant reprend sa photo de référence.
     if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
     majEtatAvancement(); // le fil « Où en suis-je ? » suit les horaires
+    majDossier();        // la section Programme du dossier club suit
     afficherMessage(message, '✅ Horaires enregistrés.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
@@ -1737,6 +1775,7 @@ async function onEnregistrerCategorie(evenement) {
     if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
     remplirSelectCategories(configCourante.categories);
     majTableauBord(); // le nombre de catégories « présentes » a pu changer
+    majDossier();     // le cadre sportif du dossier club suit
     afficherMessage(message, '✅ Enregistré.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
