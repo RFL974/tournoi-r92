@@ -40,9 +40,10 @@ const ECRANS_DEF = [
   { id: 'poules',      titre: 'Poules & planning', icone: 'poules',   blocs: ['bloc-generation'],         cles: ['poules'] },
   /* La Publication vient AVANT l'après-midi : elle n'en dépend pas (on publie
      le matin ; l'après-midi se génère plus tard, une fois les scores saisis). */
-  { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [] },
-  /* Le dossier club se génère à tout moment (sections vides masquées) : jamais verrouillé. */
+  /* Le dossier club se génère à tout moment (sections vides masquées) : jamais verrouillé.
+     Placé AVANT la Publication : on envoie le dossier aux clubs, puis on publie. */
   { id: 'dossier',     titre: 'Générer le dossier', icone: 'dossier', blocs: ['bloc-dossier'],            cles: [], libre: true },
+  { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [] },
   { id: 'apresmidi',   titre: 'Après-midi',        icone: 'ballon',   blocs: ['bloc-apresmidi'],          cles: ['apresmidi'] },
   /* Zone de danger, toujours accessible (libre) : on doit pouvoir remettre à
      zéro un tournoi même à moitié préparé — le verrou ne s'applique pas. */
@@ -75,8 +76,8 @@ function svgEcr(nom) {
    (« Vue classique »). #reglages reste dans <main> : on y remet ses 2 zones. */
 const ECRANS_ORDRE_ORIGINE = [
   'bloc-infos-tournoi', 'bloc-apercu-tournoi', 'bloc-contacts-securite', 'reglages',
-  'bloc-equipes', 'bloc-terrains', 'bloc-generation', 'bloc-apresmidi', 'bloc-publication',
-  'bloc-dossier', 'bloc-reinitialisation'
+  'bloc-equipes', 'bloc-terrains', 'bloc-generation', 'bloc-apresmidi', 'bloc-dossier',
+  'bloc-publication', 'bloc-reinitialisation'
 ];
 
 const ECRANS_CLE_ACTIF = 'r92_ecran_admin'; // dernier écran ouvert (mémorisé)

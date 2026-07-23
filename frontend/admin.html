@@ -245,21 +245,9 @@
         <div id="message-apresmidi" class="message-form"></div>
       </section>
 
-      <!-- 6) Publication : rend le tournoi visible (ou non) sur la page publique -->
-      <section class="carte" id="bloc-publication">
-        <h2>Publier le tournoi</h2>
-        <p class="note-generation">
-          Rend le tournoi <strong>visible du public</strong> sur la page publique. Tant qu'il n'est
-          pas publié, les visiteurs voient un écran « à venir ».<br>
-          Indépendant de la génération des poules : prépare d'abord tout, publie quand c'est prêt.
-        </p>
-        <p class="publication-etat">État : <strong id="etat-publication">…</strong></p>
-        <button id="bouton-publier" class="bouton">…</button>
-        <div id="message-publication" class="message-form"></div>
-      </section>
-
-      <!-- 6 bis) Dossier club : ouvre le générateur de dossier (page dédiée
-           dossier-club.html). L'état des sections est rempli par admin.js (majDossier). -->
+      <!-- 5 bis) Dossier club : ouvre le générateur de dossier (page dédiée
+           dossier-club.html). L'état des sections est rempli par admin.js (majDossier).
+           Placé AVANT la publication : on envoie le dossier aux clubs, puis on publie. -->
       <section class="carte" id="bloc-dossier">
         <h2>Dossier club</h2>
         <p class="note-generation">
@@ -277,6 +265,19 @@
           Le dossier s'ouvre dans un nouvel onglet : vérifie-le, puis
           <strong>« Exporter en PDF »</strong> pour l'envoyer aux clubs.
         </p>
+      </section>
+
+      <!-- 6) Publication : rend le tournoi visible (ou non) sur la page publique -->
+      <section class="carte" id="bloc-publication">
+        <h2>Publier le tournoi</h2>
+        <p class="note-generation">
+          Rend le tournoi <strong>visible du public</strong> sur la page publique. Tant qu'il n'est
+          pas publié, les visiteurs voient un écran « à venir ».<br>
+          Indépendant de la génération des poules : prépare d'abord tout, publie quand c'est prêt.
+        </p>
+        <p class="publication-etat">État : <strong id="etat-publication">…</strong></p>
+        <button id="bouton-publier" class="bouton">…</button>
+        <div id="message-publication" class="message-form"></div>
       </section>
 
       <!-- 7) Réinitialisation : remet le tournoi à zéro (zone de danger).
