@@ -2,7 +2,7 @@
  * ============================================================================
  *  TOURNOI R92 — Backend Google Apps Script
  * ============================================================================
- *  - setupSheet()  : crée les 5 onglets (à lancer UNE SEULE FOIS au tout début).
+ *  - setupSheet()  : crée les 6 onglets (à lancer UNE SEULE FOIS au tout début).
  *  - doGet(e)      : LECTURE (renvoie du JSON).
  *  - doPost(e)     : ÉCRITURE (équipes, réglages, génération des poules/planning).
  * ============================================================================
@@ -13,6 +13,10 @@ var SHEET_ID = '17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U';
 var ENTETES = {
   Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule'],
   Poules: ['id_poule', 'categorie', 'nom_poule'],
+  // Clubs INVITÉS au tournoi (dossier d'invitation envoyé AVANT confirmation).
+  // ⚠️ Contient des emails de contact : cet onglet n'est JAMAIS inclus dans le
+  // snapshot public (getAll) — il se lit via l'action listerClubsInvites (clé admin).
+  ClubsInvites: ['club_nom', 'club_contact_nom', 'club_contact_email', 'statut', 'date_ajout'],
   // Colonnes 1-12 : historiques (matin + après-midi CROISE/LIBRE).
   // Colonnes 13-18 : format d'après-midi + tableau à élimination (COUPE_PLATEAU).
   //   format        : CROISE / LIBRE / COUPE_PLATEAU (recopié depuis la catégorie ; vide pour le matin)
@@ -39,9 +43,10 @@ function setupSheet() {
   creerOngletAvecEntetes(classeur, 'Poules', ENTETES.Poules);
   creerOngletAvecEntetes(classeur, 'Matchs', ENTETES.Matchs);
   creerOngletAvecEntetes(classeur, 'Historique', ENTETES.Historique);
+  creerOngletAvecEntetes(classeur, 'ClubsInvites', ENTETES.ClubsInvites);
   creerOngletConfig(classeur);
   try {
-    SpreadsheetApp.getUi().alert('✅ Base prête !', 'Les 5 onglets ont été créés.',
+    SpreadsheetApp.getUi().alert('✅ Base prête !', 'Les 6 onglets ont été créés.',
       SpreadsheetApp.getUi().ButtonSet.OK);
   } catch (e) { Logger.log('Base prête !'); }
 }
@@ -79,15 +84,16 @@ function creerOngletConfig(classeur) {
   // reglement : texte libre OU URL (une valeur commençant par « http » sera affichée en lien).
   // effectif_min / effectif_max : nombre de joueurs par équipe (dossier club) — optionnels.
   // arbitrage_organisation : qui arbitre (« arbitrage » seul est déjà pris par l'assistant horaires).
+  // nb_equipes_attendues : nb d'équipes attendues dans la catégorie (dossier d'invitation) — optionnel.
   var entetesCategorie = ['categorie', 'presente', 'terrains', 'terrains_auto', 'nb_poules',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min',
     'format_apresmidi', 'param_format',
-    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation'];
+    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation', 'nb_equipes_attendues'];
   var exemplesCategorie = [
-    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', ''],
-    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', ''],
-    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}', '', '', '', ''],
-    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '']
+    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', '', ''],
+    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', '', ''],
+    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}', '', '', '', '', ''],
+    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '', '']
   ];
   onglet.getRange(1, 1, 60, entetesCategorie.length + 1).setNumberFormat('@');
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
@@ -368,12 +374,21 @@ function doPost(e) {
       case 'enregistrerPlanTerrains': resultat = enregistrerPlanTerrains(classeur, requete); break;
       case 'enregistrerAffiche':   resultat = enregistrerAffiche(classeur, requete); break;
       case 'supprimerAffiche':     resultat = supprimerAffiche(classeur); break;
+      case 'enregistrerInvitation': resultat = enregistrerInvitation(classeur, requete); break;
+      case 'enregistrerPhotoParking': resultat = enregistrerPhotoParking(classeur, requete); break;
+      case 'supprimerPhotoParking':   resultat = supprimerPhotoParking(classeur); break;
+      case 'listerClubsInvites':   resultat = listerClubsInvites(classeur); break;
+      case 'ajouterClubInvite':    resultat = ajouterClubInvite(classeur, requete); break;
+      case 'modifierStatutClubInvite': resultat = modifierStatutClubInvite(classeur, requete); break;
+      case 'supprimerClubInvite':  resultat = supprimerClubInvite(classeur, requete); break;
       case 'reinitialiserTournoi': resultat = reinitialiserTournoi(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     // Écriture réussie → cache serveur rafraîchi (+ relais CDN si configuré). Sans effet
     // secondaire bloquant : n'échoue jamais l'action même si le rafraîchissement rate.
-    if (resultat && !resultat.error) apresEcriture(classeur);
+    // listerClubsInvites est une LECTURE (protégée par la clé admin, car l'onglet contient
+    // des emails) : rien n'a changé, inutile de reconstruire le cache public.
+    if (resultat && !resultat.error && action !== 'listerClubsInvites') apresEcriture(classeur);
     return repondreJson(resultat);
   } catch (erreur) {
     // Détail journalisé côté serveur, message générique côté client (anti-fuite d'infos).
@@ -690,59 +705,214 @@ function enregistrerPlanTerrains(classeur, data) {
 }
 
 /**
- * Enregistre l'AFFICHE du tournoi. Reçoit une image encodée en Data URI (base64),
- * la stocke dans Google Drive (fichier public en lecture) et mémorise son identifiant
- * dans Config (`tournoi_affiche_id`). L'affiche précédente est mise à la corbeille.
+ * IMAGES DE CONFIG (affiche du tournoi, photo du parking…). Mécanisme COMMUN :
+ * l'image arrive en Data URI (base64), est stockée dans Google Drive (fichier public
+ * en lecture), et son identifiant est mémorisé comme paramètre global de Config.
+ * L'image précédente du même paramètre est mise à la corbeille.
  * ⚠️ Nécessite l'autorisation d'accès à Google Drive (à accorder une fois au redéploiement).
- * @param data.affiche  chaîne "data:image/...;base64,...."
  */
-/** Types d'image acceptés pour l'affiche (liste blanche stricte). */
+/** Types d'image acceptés (liste blanche stricte). */
 var TYPES_AFFICHE_OK = { 'image/png': true, 'image/jpeg': true, 'image/webp': true, 'image/gif': true };
-/** Taille maximale de l'affiche décodée (5 Mo) — garde-fou anti-saturation du Drive. */
+/** Taille maximale d'une image décodée (5 Mo) — garde-fou anti-saturation du Drive. */
 var AFFICHE_MAX_OCTETS = 5 * 1024 * 1024;
 
-function enregistrerAffiche(classeur, data) {
-  var uri = String(data.affiche || '');
-  var m = uri.match(/^data:([^;]+);base64,(.*)$/);
+/**
+ * Enregistre une image dans Drive et son id dans Config.
+ * @param {string} uri        chaîne "data:image/...;base64,...."
+ * @param {string} champCle   paramètre global qui reçoit l'id (ex 'tournoi_affiche_id')
+ * @param {string} nomFichier nom du fichier créé dans Drive
+ */
+function enregistrerImageConfig(classeur, uri, champCle, nomFichier) {
+  var m = String(uri || '').match(/^data:([^;]+);base64,(.*)$/);
   if (!m) return { error: 'Image invalide (Data URI base64 attendu).' };
 
   // Sécurité : n'accepter que de VRAIES images (le fichier Drive sera public en lecture),
   // et borner la taille pour éviter qu'un envoi massif ne sature le Drive / le quota.
   var type = String(m[1]).toLowerCase();
   if (!TYPES_AFFICHE_OK[type]) {
-    return { error: 'Format d\'affiche non autorisé (PNG, JPEG, WebP ou GIF uniquement).' };
+    return { error: 'Format d\'image non autorisé (PNG, JPEG, WebP ou GIF uniquement).' };
   }
   var base64 = m[2] || '';
   // La taille décodée vaut ≈ 3/4 de la longueur base64 : filtre rapide avant de décoder.
   if (base64.length * 0.75 > AFFICHE_MAX_OCTETS) {
-    return { error: 'Affiche trop lourde (5 Mo maximum). Réduis l\'image avant de l\'envoyer.' };
+    return { error: 'Image trop lourde (5 Mo maximum). Réduis l\'image avant de l\'envoyer.' };
   }
 
   var octets = Utilities.base64Decode(base64);
   if (octets.length > AFFICHE_MAX_OCTETS) {
-    return { error: 'Affiche trop lourde (5 Mo maximum). Réduis l\'image avant de l\'envoyer.' };
+    return { error: 'Image trop lourde (5 Mo maximum). Réduis l\'image avant de l\'envoyer.' };
   }
-  var blob = Utilities.newBlob(octets, type, 'affiche-tournoi');
+  var blob = Utilities.newBlob(octets, type, nomFichier);
 
   var onglet = classeur.getSheetByName('Config');
-  var ancienId = (lireConfig(classeur).global || {}).tournoi_affiche_id;
+  var ancienId = (lireConfig(classeur).global || {})[champCle];
   if (ancienId) { try { DriveApp.getFileById(ancienId).setTrashed(true); } catch (e) {} }
 
   var fichier = DriveApp.createFile(blob);
   try { fichier.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
-  ecrireParamGlobal(onglet, 'tournoi_affiche_id', fichier.getId());
+  ecrireParamGlobal(onglet, champCle, fichier.getId());
   return { ok: true, id: fichier.getId() };
 }
 
 /**
- * Retire l'AFFICHE du tournoi : met le fichier Drive à la corbeille et efface
- * `tournoi_affiche_id` dans Config. Sans effet (mais sans erreur) s'il n'y a pas d'affiche.
+ * Retire une image de Config : met le fichier Drive à la corbeille et efface le
+ * paramètre. Sans effet (mais sans erreur) s'il n'y a pas d'image.
  */
-function supprimerAffiche(classeur) {
+function supprimerImageConfig(classeur, champCle) {
   var onglet = classeur.getSheetByName('Config');
-  var id = (lireConfig(classeur).global || {}).tournoi_affiche_id;
+  var id = (lireConfig(classeur).global || {})[champCle];
   if (id) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {} }
-  effacerParamGlobal(onglet, 'tournoi_affiche_id');
+  effacerParamGlobal(onglet, champCle);
+  return { ok: true };
+}
+
+/** Affiche du tournoi (carte + page d'article + dossier). @param data.affiche Data URI */
+function enregistrerAffiche(classeur, data) {
+  return enregistrerImageConfig(classeur, data.affiche, 'tournoi_affiche_id', 'affiche-tournoi');
+}
+function supprimerAffiche(classeur) {
+  return supprimerImageConfig(classeur, 'tournoi_affiche_id');
+}
+
+/** Photo du parking (section « Parking & accès » du dossier). @param data.photo Data URI */
+function enregistrerPhotoParking(classeur, data) {
+  return enregistrerImageConfig(classeur, data.photo, 'parking_photo_id', 'parking-tournoi');
+}
+function supprimerPhotoParking(classeur) {
+  return supprimerImageConfig(classeur, 'parking_photo_id');
+}
+
+/* ===================== DOSSIER D'INVITATION (modalités, parking, encadrement) ===================== */
+
+/* Paramètres globaux du dossier d'INVITATION (Sprint 3). Tous optionnels — chaque carte
+   admin (Modalités d'inscription / Parking & accès / Encadrement & assurance) n'envoie
+   que SES champs : seuls les champs présents dans la requête sont écrits. */
+var CHAMPS_INVITATION = ['date_limite_confirmation',
+  'tarif_engagement_oui', 'tarif_engagement_montant', 'tarif_engagement_modalites',
+  'parking_texte', 'encadrement_ratio', 'encadrement_diplomes', 'assurance_attestation_requise'];
+
+/**
+ * Enregistre les champs du dossier d'invitation (paramètres globaux de Config).
+ *  - tarif_engagement_oui / assurance_attestation_requise : booléens rangés en 'oui'/'non'
+ *    (défaut 'non' : seul 'oui' active) ;
+ *  - date_limite_confirmation : date AAAA-MM-JJ (champ <input type="date">) ou vide ;
+ *  - le reste : texte libre.
+ */
+function enregistrerInvitation(classeur, data) {
+  var onglet = classeur.getSheetByName('Config');
+  var d = String(data.date_limite_confirmation == null ? '' : data.date_limite_confirmation).trim();
+  if (d !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    return { error: 'Date limite de confirmation invalide : format AAAA-MM-JJ attendu.' };
+  }
+  ['tarif_engagement_oui', 'assurance_attestation_requise'].forEach(function (champ) {
+    if (data[champ] != null) {
+      data[champ] = String(data[champ]).toLowerCase() === 'oui' ? 'oui' : 'non';
+    }
+  });
+  CHAMPS_INVITATION.forEach(function (champ) {
+    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
+  });
+  return { ok: true };
+}
+
+/* ===================== CLUBS INVITÉS ===================== */
+
+/* Statuts admis d'un club invité (formes canoniques, avec accents). */
+var STATUTS_CLUB_INVITE = ['Invité', 'Confirmé', 'Décliné'];
+
+/** Comparaison de textes SANS accents ni casse (piège NFC/NFD du Sheet : « Invité »
+ *  peut revenir avec un é décomposé — même précaution que estTermine). */
+function memeTexteSouple(a, b) {
+  function plat(s) {
+    return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  }
+  return plat(a) === plat(b);
+}
+
+/** Statut canonique ('Invité'/'Confirmé'/'Décliné') depuis une saisie, ou '' si inconnu. */
+function statutClubCanonique(valeur) {
+  for (var i = 0; i < STATUTS_CLUB_INVITE.length; i++) {
+    if (memeTexteSouple(valeur, STATUTS_CLUB_INVITE[i])) return STATUTS_CLUB_INVITE[i];
+  }
+  return '';
+}
+
+/** Crée l'onglet ClubsInvites s'il manque (migration douce d'un Sheet déjà en service). */
+function assurerOngletClubsInvites(classeur) {
+  var onglet = classeur.getSheetByName('ClubsInvites');
+  if (!onglet) creerOngletAvecEntetes(classeur, 'ClubsInvites', ENTETES.ClubsInvites);
+  return classeur.getSheetByName('ClubsInvites');
+}
+
+/**
+ * LISTE des clubs invités. Passe par doPost + clé ADMIN (et non doGet, ouvert à tous) :
+ * l'onglet contient des emails de contact, qui ne doivent JAMAIS apparaître dans le
+ * snapshot public (getAll) ni sur le relais CDN.
+ */
+function listerClubsInvites(classeur) {
+  assurerOngletClubsInvites(classeur);
+  return { ok: true, clubs: lireOngletSimple(classeur, 'ClubsInvites') };
+}
+
+/**
+ * Ajoute un club invité. Nom requis (clé d'identification : doublons refusés, comparaison
+ * souple sans accents ni casse), email vérifié s'il est fourni, statut par défaut « Invité »,
+ * date d'ajout posée automatiquement (AAAA-MM-JJ).
+ */
+function ajouterClubInvite(classeur, data) {
+  var nom = String(data.club_nom || '').trim();
+  if (!nom) return { error: 'Nom du club vide.' };
+  var contactNom = String(data.club_contact_nom || '').trim();
+  var email = String(data.club_contact_email || '').trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: 'Email du contact invalide : « ' + email + ' ».' };
+  }
+  var statut = statutClubCanonique(data.statut) || 'Invité';
+
+  var onglet = assurerOngletClubsInvites(classeur);
+  var existants = lireOngletSimple(classeur, 'ClubsInvites');
+  for (var i = 0; i < existants.length; i++) {
+    if (memeTexteSouple(existants[i].club_nom, nom)) {
+      return { error: 'Le club « ' + existants[i].club_nom + ' » est déjà dans la liste.' };
+    }
+  }
+
+  var dateAjout = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  var ligne = onglet.getLastRow() + 1;
+  var plage = onglet.getRange(ligne, 1, 1, ENTETES.ClubsInvites.length);
+  plage.setNumberFormat('@');
+  plage.setValues([[nom, contactNom, email, statut, dateAjout]]);
+  return { ok: true };
+}
+
+/** Ligne (1-based) d'un club dans l'onglet, ou -1. Clé = club_nom (comparaison souple). */
+function ligneClubInvite(onglet, nom) {
+  var donnees = onglet.getDataRange().getValues();
+  for (var i = 1; i < donnees.length; i++) {
+    if (memeTexteSouple(donnees[i][0], nom)) return i + 1;
+  }
+  return -1;
+}
+
+/** Change le STATUT d'un club invité (menu déroulant de la liste admin). */
+function modifierStatutClubInvite(classeur, data) {
+  var statut = statutClubCanonique(data.statut);
+  if (!statut) return { error: 'Statut inconnu (attendu : Invité, Confirmé ou Décliné).' };
+  var onglet = assurerOngletClubsInvites(classeur);
+  var ligne = ligneClubInvite(onglet, data.club_nom);
+  if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
+  var cellule = onglet.getRange(ligne, 4); // colonne `statut`
+  cellule.setNumberFormat('@');
+  cellule.setValue(statut);
+  return { ok: true };
+}
+
+/** Retire un club de la liste des invités. */
+function supprimerClubInvite(classeur, data) {
+  var onglet = assurerOngletClubsInvites(classeur);
+  var ligne = ligneClubInvite(onglet, data.club_nom);
+  if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
+  onglet.deleteRow(ligne);
   return { ok: true };
 }
 
@@ -838,6 +1008,11 @@ function enregistrerCategorie(classeur, data) {
   var effMax = parseInt(data.effectif_max, 10);
   if (isFinite(effMin) && isFinite(effMax) && effMin > effMax) {
     return { error: 'Effectif min (' + effMin + ') supérieur à l\'effectif max (' + effMax + ').' };
+  }
+  // Équipes attendues (dossier d'invitation) : optionnel, mais si saisi, entier ≥ 0.
+  var attendu = String(data.nb_equipes_attendues == null ? '' : data.nb_equipes_attendues).trim();
+  if (attendu !== '' && !/^\d+$/.test(attendu)) {
+    return { error: 'Nombre d\'équipes attendues invalide : entier ≥ 0 attendu.' };
   }
   var onglet = classeur.getSheetByName('Config');
   // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution)
@@ -1878,6 +2053,7 @@ function assurerColonnesConfig(classeur) {
   assurerColonneCategorie(classeur, 'effectif_min');
   assurerColonneCategorie(classeur, 'effectif_max');
   assurerColonneCategorie(classeur, 'arbitrage_organisation');
+  assurerColonneCategorie(classeur, 'nb_equipes_attendues');
 }
 
 /* ===================== GÉNÉRATION POULES + PLANNING ===================== */
@@ -2306,6 +2482,14 @@ function reinitialiserTournoi(classeur) {
   // 3 ter) Contacts & sécurité : effacés aussi (référent et poste de secours peuvent
   //         changer d'une édition à l'autre).
   CHAMPS_CONTACTS_SECURITE.forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
+
+  // 3 quater) Dossier d'invitation : champs effacés + photo du parking mise à la corbeille.
+  //           ✅ La LISTE des clubs invités (onglet ClubsInvites) est CONSERVÉE, comme
+  //           l'historique : c'est un carnet d'adresses réutilisable d'une édition à l'autre.
+  var idParking = (lireConfig(classeur).global || {}).parking_photo_id;
+  if (idParking) { try { DriveApp.getFileById(idParking).setTrashed(true); } catch (e) {} }
+  CHAMPS_INVITATION.concat(['parking_photo_id'])
+    .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
 
   // 4) Le tournoi redevient masqué pour le public.
   ecrireParamGlobal(ongletConfig, 'tournoi_publie', 'non');

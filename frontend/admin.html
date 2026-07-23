@@ -245,6 +245,115 @@
         <div id="message-apresmidi" class="message-form"></div>
       </section>
 
+      <!-- 4 bis) Clubs invités : la liste des clubs à qui on envoie le dossier d'INVITATION
+           (avant leur confirmation). Nom + contact + statut (Invité / Confirmé / Décliné).
+           ⚠️ Les contacts (emails) ne sont JAMAIS publics : la liste se charge avec la clé
+           admin (action listerClubsInvites) et n'apparaît pas dans les données publiques. -->
+      <section class="carte" id="bloc-clubs-invites">
+        <h2>Clubs invités</h2>
+        <p class="note-generation">
+          La liste des clubs à qui tu envoies le <strong>dossier d'invitation</strong>.
+          Ajoute un club avec son contact, puis fais évoluer son <strong>statut</strong>
+          (Invité → Confirmé ou Décliné) au fil des réponses.
+        </p>
+        <form id="form-club-invite" class="form-equipe">
+          <input id="champ-club-nom" type="text" placeholder="Nom du club" autocomplete="off" required>
+          <input id="champ-club-contact" type="text" placeholder="Contact (nom)" autocomplete="off">
+          <input id="champ-club-email" type="email" placeholder="Email du contact" autocomplete="off">
+          <button type="submit" class="bouton" id="bouton-ajouter-club">Ajouter</button>
+        </form>
+        <div id="message-club-invite" class="message-form"></div>
+        <div id="liste-clubs-invites"><p class="vide">Connecte-toi pour voir la liste des clubs invités.</p></div>
+      </section>
+
+      <!-- 5) Cartes du DOSSIER D'INVITATION : modalités d'inscription, parking & accès,
+           encadrement & assurance. Tous les champs sont facultatifs — chaque carte
+           s'enregistre indépendamment (action backend commune enregistrerInvitation).
+           Les champs conditionnels (tarif) sont révélés par admin.js selon la case. -->
+      <section class="carte" id="bloc-modalites">
+        <h2>Modalités d'inscription</h2>
+        <p class="note-generation">
+          Ces informations apparaissent dans la section <strong>« Modalités d'inscription »</strong>
+          du dossier d'invitation. Tous les champs sont <strong>facultatifs</strong>.
+        </p>
+        <form id="form-modalites">
+          <label class="reglage"><span class="r-libelle">Date limite de confirmation</span>
+            <input class="r-input" type="date" name="date_limite_confirmation">
+          </label>
+          <label class="reglage">
+            <span class="r-libelle">Tarif d'engagement</span>
+            <span class="mini-toggle"><input type="checkbox" name="tarif_engagement_oui"> Un tarif d'engagement est demandé</span>
+          </label>
+          <div id="lignes-tarif-engagement" hidden>
+            <label class="reglage"><span class="r-libelle">Tarif — montant</span>
+              <input class="r-input" type="text" name="tarif_engagement_montant" placeholder="Ex : 50 € par équipe">
+            </label>
+            <label class="reglage"><span class="r-libelle">Tarif — modalités de paiement</span>
+              <textarea class="r-input" name="tarif_engagement_modalites" rows="3" placeholder="Ex : chèque à l'ordre de… , virement avant le…"></textarea>
+            </label>
+          </div>
+          <div class="ligne-action">
+            <button type="button" class="bouton" id="bouton-enregistrer-modalites">Enregistrer les modalités</button>
+            <span class="message-form" id="message-modalites"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="carte" id="bloc-parking">
+        <h2>Parking &amp; accès</h2>
+        <p class="note-generation">
+          Explique aux clubs <strong>où se garer</strong> et comment accéder au site. La photo
+          (plan du parking, vue aérienne…) apparaîtra en pleine largeur dans le dossier.
+        </p>
+        <form id="form-parking">
+          <label class="reglage"><span class="r-libelle">Parking &amp; accès (texte)</span>
+            <input class="r-input" type="text" name="parking_texte" placeholder="Ex : parking gratuit rue des Sports, accès par l'entrée B">
+          </label>
+          <!-- Photo du parking : même mécanisme que l'affiche du tournoi (glisser-déposer
+               OU clic pour choisir ; upload Drive à l'enregistrement). -->
+          <label class="reglage"><span class="r-libelle">Photo du parking (image)</span>
+            <span class="zone-depot" id="zone-depot-parking">
+              <input type="file" name="parking_photo" accept="image/*" hidden>
+              <span class="zd-icone" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7.5 9.5 12 5l4.5 4.5M4.5 19h15"></path></svg></span>
+              <span class="zd-texte"><strong>Glisse ta photo ici</strong><br>ou clique pour choisir une image</span>
+            </span>
+          </label>
+          <div id="apercu-parking" class="apercu-affiche" hidden>
+            <img id="apercu-parking-img" alt="Aperçu de la photo du parking">
+            <button type="button" class="bouton-suppr" id="bouton-retirer-parking">Retirer la photo</button>
+          </div>
+          <div class="ligne-action">
+            <button type="button" class="bouton" id="bouton-enregistrer-parking">Enregistrer parking &amp; accès</button>
+            <span class="message-form" id="message-parking"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="carte" id="bloc-encadrement">
+        <h2>Encadrement &amp; assurance</h2>
+        <p class="note-generation">
+          Rappelle aux clubs le <strong>taux d'encadrement</strong> attendu, les
+          <strong>diplômes</strong> exigés et si une <strong>attestation d'assurance</strong>
+          est à fournir. Tous les champs sont <strong>facultatifs</strong>.
+        </p>
+        <form id="form-encadrement">
+          <label class="reglage"><span class="r-libelle">Ratio éducateurs / joueurs</span>
+            <input class="r-input" type="text" name="encadrement_ratio" placeholder="Ex : 1 éducateur pour 8 joueurs">
+          </label>
+          <label class="reglage"><span class="r-libelle">Diplômes exigés</span>
+            <input class="r-input" type="text" name="encadrement_diplomes" placeholder="Ex : Brevet fédéral EDR minimum">
+          </label>
+          <label class="reglage">
+            <span class="r-libelle">Attestation d'assurance</span>
+            <span class="mini-toggle"><input type="checkbox" name="assurance_attestation_requise"> Attestation d'assurance requise</span>
+          </label>
+          <div class="ligne-action">
+            <button type="button" class="bouton" id="bouton-enregistrer-encadrement">Enregistrer encadrement &amp; assurance</button>
+            <span class="message-form" id="message-encadrement"></span>
+          </div>
+        </form>
+      </section>
+
       <!-- 5 bis) Dossier club : ouvre le générateur de dossier (page dédiée
            dossier-club.html). L'état des sections est rempli par admin.js (majDossier).
            Placé AVANT la publication : on envoie le dossier aux clubs, puis on publie. -->
@@ -294,11 +403,13 @@
           <li>toutes les <strong>poules</strong> et tous les <strong>matchs</strong> (planning + scores) ;</li>
           <li>les <strong>infos du tournoi</strong> (nom, date, lieu, adresse, description, affiche) ;</li>
           <li>les <strong>contacts &amp; sécurité</strong> (référent tournoi, poste de secours, référent sécurité) ;</li>
+          <li>le <strong>dossier d'invitation</strong> (modalités d'inscription, parking &amp; accès — photo comprise —, encadrement &amp; assurance) ;</li>
           <li>les <strong>horaires de la journée</strong> (remis à zéro, à re-renseigner).</li>
         </ul>
         <p class="note-generation">
           Le tournoi repasse en <strong>masqué</strong> s'il était public.<br>
-          ✅ Est <strong>conservé</strong> : l'historique des saisons (page Perfs).<br>
+          ✅ Est <strong>conservé</strong> : l'historique des saisons (page Perfs) et la
+          <strong>liste des clubs invités</strong> (pense à remettre leurs statuts à jour).<br>
           ⚠️ Cette action est <strong>irréversible</strong>.
         </p>
         <button id="bouton-reinitialiser" class="bouton bouton-danger">🧹 Réinitialiser le tournoi</button>

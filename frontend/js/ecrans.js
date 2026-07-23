@@ -40,9 +40,14 @@ const ECRANS_DEF = [
   { id: 'poules',      titre: 'Poules & planning', icone: 'poules',   blocs: ['bloc-generation'],         cles: ['poules'] },
   /* La Publication vient AVANT l'après-midi : elle n'en dépend pas (on publie
      le matin ; l'après-midi se génère plus tard, une fois les scores saisis). */
+  /* Les clubs invités (destinataires du dossier d'invitation) : accessibles à tout
+     moment (libre), on peut préparer la liste très tôt. */
+  { id: 'clubs',       titre: 'Clubs invités',     icone: 'courrier', blocs: ['bloc-clubs-invites'],      cles: [], libre: true },
   /* Le dossier club se génère à tout moment (sections vides masquées) : jamais verrouillé.
-     Placé AVANT la Publication : on envoie le dossier aux clubs, puis on publie. */
-  { id: 'dossier',     titre: 'Générer le dossier', icone: 'dossier', blocs: ['bloc-dossier'],            cles: [], libre: true },
+     Placé AVANT la Publication : on envoie le dossier aux clubs, puis on publie.
+     L'écran regroupe aussi les cartes du dossier d'INVITATION (modalités, parking,
+     encadrement) : on complète les infos, puis on génère. */
+  { id: 'dossier',     titre: 'Générer le dossier', icone: 'dossier', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier'], cles: [], libre: true },
   { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [] },
   { id: 'apresmidi',   titre: 'Après-midi',        icone: 'ballon',   blocs: ['bloc-apresmidi'],          cles: ['apresmidi'] },
   /* Zone de danger, toujours accessible (libre) : on doit pouvoir remettre à
@@ -62,6 +67,7 @@ const ECRANS_ICONES = {
   ballon:    '<ellipse cx="12" cy="12" rx="5" ry="8" transform="rotate(45 12 12)"></ellipse><path d="M9 9l6 6M10.5 7.5l6 6M7.5 10.5l6 6"></path>',
   monde:     '<circle cx="12" cy="12" r="8"></circle><path d="M4 12h16M12 4c2.5 2.5 2.5 13 0 16M12 4c-2.5 2.5-2.5 13 0 16"></path>',
   dossier:   '<path d="M6 3h8l4 4v14H6z"></path><path d="M14 3v4h4M9 12h6M9 16h4"></path>',
+  courrier:  '<rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3.5 7l8.5 6 8.5-6"></path>',
   balai:     '<path d="M14 4l6 6M13 5l-7 7 5 5 7-7M6 12l-2 6 6-2"></path>'
 };
 
@@ -76,7 +82,8 @@ function svgEcr(nom) {
    (« Vue classique »). #reglages reste dans <main> : on y remet ses 2 zones. */
 const ECRANS_ORDRE_ORIGINE = [
   'bloc-infos-tournoi', 'bloc-apercu-tournoi', 'bloc-contacts-securite', 'reglages',
-  'bloc-equipes', 'bloc-terrains', 'bloc-generation', 'bloc-apresmidi', 'bloc-dossier',
+  'bloc-equipes', 'bloc-terrains', 'bloc-generation', 'bloc-apresmidi',
+  'bloc-clubs-invites', 'bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier',
   'bloc-publication', 'bloc-reinitialisation'
 ];
 
@@ -217,13 +224,14 @@ function ecransRaisonsModifs(def) {
 }
 
 /** Zones surveillées : les formulaires des écrans + la zone terrains (champs
- *  sans <form>). #form-equipe est exclu : il a sa règle dédiée (ajout immédiat). */
+ *  sans <form>). #form-equipe et #form-club-invite sont exclus : règle dédiée
+ *  (formulaires d'ajout immédiat, pas d'état « enregistré » à comparer). */
 function ecransZonesSurveillees() {
   const zone = document.getElementById('ecrans');
   if (!zone) return [];
   const zones = [];
   zone.querySelectorAll('form').forEach(function (f) {
-    if (f.id === 'form-equipe') return;
+    if (f.id === 'form-equipe' || f.id === 'form-club-invite') return;
     zones.push(f);
   });
   const zt = document.getElementById('zone-terrains');

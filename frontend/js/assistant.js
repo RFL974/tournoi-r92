@@ -29,9 +29,10 @@ const ASSISTANT_ETAPES = [
   { id: 'terrains',  titre: 'Terrains',     icone: '🗺️', blocs: ['bloc-terrains'] },
   { id: 'poules',    titre: 'Poules',       icone: '🎲', blocs: ['bloc-generation'] },
   { id: 'apresmidi', titre: 'Après-midi',   icone: '🏉', blocs: ['bloc-apresmidi'] },
-  /* Le Dossier vient AVANT le Résumé (qui contient la Publication) : on envoie
-     le dossier aux clubs, puis on publie. */
-  { id: 'dossier',   titre: 'Dossier',      icone: '📄', blocs: ['bloc-dossier'] },
+  /* Les clubs invités puis le Dossier viennent AVANT le Résumé (qui contient la
+     Publication) : on invite les clubs, on leur envoie le dossier, puis on publie. */
+  { id: 'clubs',     titre: 'Clubs',        icone: '✉️', blocs: ['bloc-clubs-invites'] },
+  { id: 'dossier',   titre: 'Dossier',      icone: '📄', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier'] },
   { id: 'resume',    titre: 'Résumé',       icone: '📋', blocs: ['tableau-bord', 'etat-avancement', 'bloc-publication', 'bloc-reinitialisation'] }
 ];
 
@@ -272,13 +273,14 @@ function assistantNoterZoneInconnue(evenement) {
 }
 
 /** Zones surveillées : les formulaires des cartes + la zone terrains (champs sans <form>).
- *  #form-equipe est exclu : il a sa règle dédiée (ajout immédiat, la catégorie choisie reste). */
+ *  #form-equipe et #form-club-invite sont exclus : règle dédiée (formulaires d'ajout
+ *  immédiat, pas d'état « enregistré » à comparer). */
 function assistantZonesSurveillees() {
   const track = document.getElementById('asst-track');
   if (!track) return [];
   const zones = [];
   track.querySelectorAll('form').forEach(function (f) {
-    if (f.id === 'form-equipe') return;
+    if (f.id === 'form-equipe' || f.id === 'form-club-invite') return;
     zones.push(f);
   });
   const zt = document.getElementById('zone-terrains');
@@ -292,6 +294,9 @@ function assistantNomZone(zone) {
   if (zone.id === 'form-contacts-securite') return 'contacts & sécurité modifiés → « Enregistrer contacts & sécurité »';
   if (zone.id === 'form-horaires')        return 'horaires modifiés → « Enregistrer les horaires »';
   if (zone.id === 'form-ajout-categorie') return 'nouvelle catégorie saisie → « Ajouter » (ou vide le champ)';
+  if (zone.id === 'form-modalites')       return 'modalités d\'inscription modifiées → « Enregistrer les modalités »';
+  if (zone.id === 'form-parking')         return 'parking & accès modifiés → « Enregistrer parking & accès »';
+  if (zone.id === 'form-encadrement')     return 'encadrement & assurance modifiés → « Enregistrer encadrement & assurance »';
   if (zone.id === 'zone-terrains')        return 'plan des terrains modifié → « Enregistrer les terrains »';
   const cat = zone.getAttribute && zone.getAttribute('data-cat');
   if (cat) return 'catégorie « ' + cat + ' » modifiée → « Enregistrer »';
@@ -320,6 +325,9 @@ function raisonsModifsDans(etapeId, conteneur, zones) {
   // 2) États « en attente » hors formulaires (variables d'admin.js).
   if (etapeId === 'infos' && typeof afficheDataURI !== 'undefined' && afficheDataURI) {
     raisons.push('affiche choisie → « 💾 Enregistrer les infos » (ou « Retirer l\'affiche »)');
+  }
+  if (etapeId === 'dossier' && typeof parkingDataURI !== 'undefined' && parkingDataURI) {
+    raisons.push('photo du parking choisie → « Enregistrer parking & accès » (ou « Retirer la photo »)');
   }
   if (etapeId === 'equipes') {
     const nom = document.getElementById('champ-nom');

@@ -10,11 +10,15 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
 - **`saisie.html`** — saisie des scores (table de marque, filtres catégorie + grand terrain,
   accordéons) ; clé scores.
 - **`perfs.html`** — « Perfs Racing », page interne (non liée), lecture seule.
-- **`dossier-club.html`** — **dossier club** : document A4 (1-2 pages) assemblé automatiquement
-  pour les clubs invités (infos pratiques, programme, format sportif, QR code du suivi live,
-  sécurité, contact) ; export PDF via l'impression du navigateur (`css/dossier.css`,
-  `js/dossier.js`, QR généré en local par `js/vendor/qrcode.js`). Ouverte depuis l'admin
-  (« Générer le dossier »).
+- **`dossier-club.html`** — **dossier d'invitation** : document A4 (1-2 pages) assemblé
+  automatiquement pour les clubs invités (infos pratiques, programme, format sportif, modalités
+  d'inscription, parking & accès, encadrement & assurance, QR code du suivi live, sécurité,
+  contact) ; export PDF via l'impression du navigateur (`css/dossier.css`, `js/dossier.js`,
+  QR généré en local par `js/vendor/qrcode.js`). Le bouton « **Autorisation droit à l'image** »
+  génère un `.docx` **côté client** depuis le modèle `assets/autorisation-droit-image-template.docx`
+  (balises `{nom_tournoi}` / `{date_tournoi}` / `{lieu_tournoi}` remplacées par
+  `js/vendor/pizzip.min.js` + `js/vendor/docxtemplater.min.js` — aucun appel externe).
+  Ouverte depuis l'admin (« Générer le dossier »).
 - **`index.html`** — redirige la racine vers `tournoi.html`.
 
 **Fichiers partagés** :

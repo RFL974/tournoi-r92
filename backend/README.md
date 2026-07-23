@@ -18,9 +18,13 @@ Il contient tout le backend :
   (ne jamais le partager « toute personne disposant du lien » : le `SHEET_ID` est visible dans le dépôt public).
 - **Montée en charge** : cache serveur + **relais CDN** optionnel (`pousserSnapshot` /
   `configurerRelais`, voir [`../docs/relais-cdn.md`](../docs/relais-cdn.md)).
-- **Utilitaires à lancer une fois** depuis l'éditeur : `setupSheet()` (crée les **5 onglets**
-  `Equipes`, `Poules`, `Matchs`, `Config`, `Historique`), `configurerCles(...)`, `autoriserDrive()`
-  (autorisation Drive pour l'affiche), `configurerRelais(...)`.
+- **Clubs invités** : l'onglet `ClubsInvites` contient des **emails de contact** → il n'est
+  **jamais** dans les données publiques (`getAll` / relais CDN) ; sa lecture (`listerClubsInvites`)
+  passe par `doPost` et exige la **clé admin**, comme les écritures (`ajouterClubInvite`,
+  `modifierStatutClubInvite`, `supprimerClubInvite`).
+- **Utilitaires à lancer une fois** depuis l'éditeur : `setupSheet()` (crée les **6 onglets**
+  `Equipes`, `Poules`, `Matchs`, `Config`, `Historique`, `ClubsInvites`), `configurerCles(...)`,
+  `autoriserDrive()` (autorisation Drive pour l'affiche **et la photo du parking**), `configurerRelais(...)`.
 
 Voir [`../docs/architecture.md`](../docs/architecture.md), [`../docs/deploiement.md`](../docs/deploiement.md)
 et [`../docs/structure-google-sheet.md`](../docs/structure-google-sheet.md).
