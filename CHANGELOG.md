@@ -40,6 +40,11 @@ Le dossier club devient un vrai **dossier d'invitation**, envoyé AVANT la confi
   (« contactez [référent] »), jamais d'échec silencieux.
 - **Réseaux sociaux** : le bouton du bandeau devient « 📣 Relayer sur les réseaux » et pointe
   directement vers `url_instagram` (compte Génération R92).
+- **Format sportif (dossier) — légende explicative** : sous le tableau, une légende **décrit**
+  désormais le format retenu (au lieu de seulement le nommer) — le déroulé du matin (poules
+  round-robin) + une description concise de **chaque** format d'après-midi présent (dédupliqué).
+  Elle ajoute aussi une ligne **« Temps de jeu »** par catégorie : temps de jeu par match
+  (mi-temps × durée) et récupération entre deux matchs.
 - ⚠️ **Redéploiement de la Web App nécessaire** (nouvelles actions backend). Rétrocompatible :
   tous les nouveaux champs sont optionnels, colonnes/onglet créés automatiquement (migration douce).
 

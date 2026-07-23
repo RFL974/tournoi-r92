@@ -152,6 +152,21 @@ body {
 .d-table tr:nth-child(even) td { background: #f5f8fc; }
 .d-table a { color: var(--d-bleu); }
 
+/* Légende sous le tableau : décrit le format retenu + le temps de jeu par catégorie.
+   Filet bleu à gauche, texte discret — reste lisible à l'impression. */
+.d-legende {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #f5f8fc;
+  border-left: 3px solid var(--d-bleu);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.82rem;
+  color: var(--d-texte);
+}
+.d-legende-ligne { margin: 0; }
+.d-legende-ligne + .d-legende-ligne { margin-top: 5px; }
+.d-legende em { color: var(--d-navy); font-style: normal; font-weight: 600; }
+
 /* ----- Parking & accès (texte + photo pleine largeur) -------------------------- */
 .d-parking-texte { margin: 0 0 4px; }
 .d-parking-photo {
@@ -254,6 +269,7 @@ body {
   .d-section { break-inside: avoid; }
   .d-actions { break-inside: avoid; background: var(--d-navy); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .d-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .d-legende { break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .d-contact { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   a { color: var(--d-bleu); text-decoration: none; }
 }
