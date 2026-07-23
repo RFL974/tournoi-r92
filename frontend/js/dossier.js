@@ -64,6 +64,25 @@ function tronquer(texte, max) {
   return coupe.slice(0, coupe.lastIndexOf(' ') > 0 ? coupe.lastIndexOf(' ') : max).trim() + '…';
 }
 
+/** Ajoute `minutes` à une heure « HH:MM » (bornée à 23:59). '' si l'heure est illisible. */
+function heurePlusMinutes(hhmm, minutes) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(txt(hhmm));
+  if (!m) return '';
+  const total = Math.min(23 * 60 + 59, parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + minutes);
+  return ('0' + Math.floor(total / 60)).slice(-2) + ':' + ('0' + (total % 60)).slice(-2);
+}
+
+/**
+ * Heure de fin ANNONCÉE aux clubs :
+ *  - `heure_fin_communiquee` renseignée → elle fait foi (choix manuel) ;
+ *  - vide → AUTOMATIQUE : fin du dernier match (`heure_fin`, recalculée à chaque
+ *    génération) + 1 h 15 de marge (rangements, goûter, remise des récompenses…).
+ */
+const MARGE_FIN_COMMUNIQUEE_MIN = 75;
+function heureFinCommuniquee(g) {
+  return txt(g.heure_fin_communiquee) || heurePlusMinutes(g.heure_fin, MARGE_FIN_COMMUNIQUEE_MIN);
+}
+
 /** « 0612345678 » → « 06 12 34 56 78 » (affichage ; la valeur stockée reste normalisée). */
 function telephoneLisible(v) {
   const c = txt(v).replace(/\D/g, '');
@@ -162,12 +181,18 @@ function resumeEffectif(cat) {
   return '';
 }
 
-/** Règlement : lien cliquable si la valeur commence par http, sinon texte. */
+/**
+ * Règlement : lien cliquable si la valeur CONTIENT une URL http(s), sinon texte.
+ * On extrait l'URL même noyée dans un préfixe — cas réel : lien copié depuis la
+ * visionneuse PDF de Chrome (« chrome-extension://…/https://api.www.ffr.fr/….pdf »).
+ * Un libellé court remplace l'URL brute : plus de chaîne interminable qui déborde.
+ */
 function resumeReglement(cat) {
   const v = txt(cat.reglement);
   if (!v) return '';
-  if (/^https?:\/\//i.test(v)) {
-    return '<a href="' + echapper(v) + '" target="_blank" rel="noopener">Consulter le règlement</a>';
+  const m = v.match(/https?:\/\/\S+/i);
+  if (m) {
+    return '<a href="' + echapper(m[0]) + '" target="_blank" rel="noopener">Consulter le règlement</a>';
   }
   return echapper(v);
 }
@@ -219,20 +244,17 @@ function icsDateHeure(dateISO, hhmm) {
 
 /**
  * Construit le contenu du fichier .ics : UN SEUL événement, de l'heure de RDV à
- * l'heure de fin communiquée (replis : heure_debut / heure_fin ; à défaut de toute
- * heure de fin, RDV + 8 h). Renvoie null si la date ou l'heure de départ manquent.
+ * l'heure de fin annoncée aux clubs (manuelle, sinon fin du dernier match + 1 h 15 ;
+ * replis : heure_debut au départ, RDV + 8 h à l'arrivée). Renvoie null si la date
+ * ou l'heure de départ manquent.
  */
 function construireICS(g) {
   const date = txt(g.tournoi_date);
   const debut = txt(g.heure_rdv) || txt(g.heure_debut);
   if (!date || !debut) return null;
 
-  let fin = txt(g.heure_fin_communiquee) || txt(g.heure_fin);
-  if (!fin) {
-    const m = /^(\d{1,2}):(\d{2})$/.exec(debut);
-    const total = Math.min(23 * 60 + 59, parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + 8 * 60);
-    fin = ('0' + Math.floor(total / 60)).slice(-2) + ':' + ('0' + (total % 60)).slice(-2);
-  }
+  let fin = heureFinCommuniquee(g);
+  if (!fin) fin = heurePlusMinutes(debut, 8 * 60);
   const dtStart = icsDateHeure(date, debut);
   const dtEnd = icsDateHeure(date, fin);
   if (!dtStart || !dtEnd) return null;
@@ -245,7 +267,7 @@ function construireICS(g) {
     prog.push('Pause déjeuner : ' + txt(g.pause_dejeuner_debut)
       + (txt(g.pause_dejeuner_duree_min) ? ' (' + txt(g.pause_dejeuner_duree_min) + ' min)' : ''));
   }
-  if (txt(g.heure_fin_communiquee)) prog.push('Fin prévue : ' + txt(g.heure_fin_communiquee));
+  if (heureFinCommuniquee(g)) prog.push('Fin prévue : ' + heureFinCommuniquee(g));
 
   const horodatage = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   return ['BEGIN:VCALENDAR',
@@ -323,7 +345,7 @@ function construireDossier(g, categories) {
     ligne('Accueil des équipes (RDV)', echapper(txt(g.heure_rdv))),
     ligne('Premier coup d\'envoi', echapper(txt(g.heure_debut))),
     ligne('Pause déjeuner', pause),
-    ligne('Fin de la journée', echapper(txt(g.heure_fin_communiquee)))
+    ligne('Fin de la journée', echapper(heureFinCommuniquee(g)))
   ]);
   html += section('Programme de la journée',
     lignesProgramme && (lignesProgramme + '<p class="d-note">Horaires indicatifs — le planning détaillé fera foi le jour du tournoi.</p>'));

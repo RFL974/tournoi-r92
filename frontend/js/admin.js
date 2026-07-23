@@ -1362,9 +1362,11 @@ function afficherHoraires(global) {
               (auto ? ' disabled' : '') + '>' +
           '</span>' +
         '</div>' +
-        // Heure de fin COMMUNIQUÉE (dossier club) : saisie libre, jamais recalculée —
-        // contrairement à heure_fin qui bouge à chaque génération en mode auto.
-        champHeure('heure_fin_communiquee', 'Heure de fin communiquée aux clubs', val('heure_fin_communiquee')) +
+        // Heure de fin COMMUNIQUÉE (dossier club). VIDE = automatique : le dossier
+        // affiche « fin du dernier match + 1h15 » et suit chaque régénération du
+        // planning. Une valeur saisie ici prime et ne bouge plus.
+        champHeure('heure_fin_communiquee', 'Heure de fin communiquée aux clubs', val('heure_fin_communiquee'),
+                   'Vide = auto : fin du dernier match + 1h15 (suit le planning).') +
         champNombre('battement_terrain_min', 'Battement terrain entre les matchs (min)', val('battement_terrain_min', '5')) +
         champHeure('pause_dejeuner_debut', 'Pause déjeuner — début', val('pause_dejeuner_debut')) +
         champNombre('pause_dejeuner_duree_min', 'Pause déjeuner — durée (min)', val('pause_dejeuner_duree_min')) +
@@ -1386,11 +1388,12 @@ function heureMoinsMinutes(hhmm, minutes) {
   return ('0' + Math.floor(total / 60)).slice(-2) + ':' + ('0' + (total % 60)).slice(-2);
 }
 
-/* Un champ "heure" (rouleau natif sur mobile). */
-function champHeure(nom, label, valeur) {
+/* Un champ "heure" (rouleau natif sur mobile), avec une ligne d'aide optionnelle. */
+function champHeure(nom, label, valeur, aide) {
   return '<div class="champ-reglage">' +
            '<label for="h-' + nom + '">' + label + '</label>' +
            '<input type="time" id="h-' + nom + '" name="' + nom + '" value="' + valeur + '">' +
+           (aide ? '<span class="f-aide">' + aide + '</span>' : '') +
          '</div>';
 }
 

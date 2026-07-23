@@ -118,7 +118,7 @@ body {
 .d-liste { list-style: none; margin: 0; padding: 0; }
 .d-liste li { display: flex; gap: 10px; padding: 3px 0; }
 .d-libelle { flex: 0 0 190px; color: var(--d-gris); }
-.d-valeur { flex: 1; font-weight: 600; }
+.d-valeur { flex: 1; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 .d-valeur a { color: var(--d-bleu); word-break: break-all; }
 
 .d-note { margin: 8px 0 0; font-size: 0.8rem; color: var(--d-gris); font-style: italic; }
@@ -129,6 +129,8 @@ body {
   border-collapse: collapse;
   font-size: 0.86rem;
 }
+/* Une valeur insécable (URL, texte collé) se COUPE au lieu de faire déborder le tableau. */
+.d-table th, .d-table td { overflow-wrap: anywhere; word-break: break-word; }
 .d-table th {
   text-align: left;
   background: var(--d-navy);
