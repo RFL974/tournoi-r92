@@ -29,6 +29,8 @@ const ASSISTANT_ETAPES = [
   { id: 'terrains',  titre: 'Terrains',     icone: '🗺️', blocs: ['bloc-terrains'] },
   { id: 'poules',    titre: 'Poules',       icone: '🎲', blocs: ['bloc-generation'] },
   { id: 'apresmidi', titre: 'Après-midi',   icone: '🏉', blocs: ['bloc-apresmidi'] },
+  /* Le Dossier vient AVANT le Résumé (qui contient la Publication) : on envoie
+     le dossier aux clubs, puis on publie. */
   { id: 'dossier',   titre: 'Dossier',      icone: '📄', blocs: ['bloc-dossier'] },
   { id: 'resume',    titre: 'Résumé',       icone: '📋', blocs: ['tableau-bord', 'etat-avancement', 'bloc-publication', 'bloc-reinitialisation'] }
 ];
