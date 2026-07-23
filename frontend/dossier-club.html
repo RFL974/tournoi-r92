@@ -36,11 +36,15 @@
   <!-- Ordre de chargement identique aux autres pages :
        1) config.js (URL du backend) · 2) commun.js (helpers purs) · 3) api.js (apiGet)
        4) vendor/qrcode.js (générateur de QR code local, MIT — aucun appel externe)
-       5) dossier.js (construit la page) -->
+       5) vendor/pizzip + vendor/docxtemplater (MIT — génération LOCALE du docx
+          « Autorisation droit à l'image » depuis assets/autorisation-droit-image-template.docx)
+       6) dossier.js (construit la page) -->
   <script src="js/config.js"></script>
   <script src="js/commun.js"></script>
   <script src="js/api.js"></script>
   <script src="js/vendor/qrcode.js"></script>
+  <script src="js/vendor/pizzip.min.js"></script>
+  <script src="js/vendor/docxtemplater.min.js"></script>
   <script src="js/dossier.js"></script>
 
 </body>

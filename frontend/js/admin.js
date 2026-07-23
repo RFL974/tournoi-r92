@@ -25,7 +25,10 @@ const CHAMPS_CATEGORIE = [
   { cle: 'reglement',              label: 'Règlement (texte ou lien)', type: 'text', placeholder: 'Ex : règles FFR M10 ou https://…' },
   { cle: 'effectif_min',           label: 'Effectif min (joueurs)',    type: 'number' },
   { cle: 'effectif_max',           label: 'Effectif max (joueurs)',    type: 'number' },
-  { cle: 'arbitrage_organisation', label: 'Arbitrage (qui arbitre ?)', type: 'text', placeholder: 'Ex : éducateurs des clubs' }
+  { cle: 'arbitrage_organisation', label: 'Arbitrage (qui arbitre ?)', type: 'text', placeholder: 'Ex : éducateurs des clubs' },
+  // Dossier d'INVITATION : nombre d'équipes attendues dans la catégorie (colonne
+  // « Équipes attendues » du tableau Format sportif du dossier). Optionnel.
+  { cle: 'nb_equipes_attendues',   label: 'Équipes attendues (nb)',    type: 'number' }
 ];
 
 /* Formats d'après-midi proposés (choisis AU PARAMÉTRAGE, avant le jour J), avec une
@@ -86,6 +89,10 @@ let matchsCourants = [];
 let editionPoules = null;
 /* Affiche du tournoi choisie mais pas encore enregistrée (Data URI redimensionné). */
 let afficheDataURI = '';
+/* Photo du parking choisie mais pas encore enregistrée (même mécanisme que l'affiche). */
+let parkingDataURI = '';
+/* Liste des clubs invités (chargée avec la clé admin — jamais dans les données publiques). */
+let clubsInvitesCourants = [];
 
 /* Toute écriture depuis l'admin passe par ici : exige la clé ADMIN (voir api.js). */
 function ecrireAdmin(action, data) {
@@ -127,9 +134,10 @@ async function initAdmin() {
     majApresMidi(); // état de préparation de la phase après-midi
 
     // 4) Infos du tournoi (nom / date / lieu / adresse / description) + contacts & sécurité
-    //    + état de publication
+    //    + dossier d'invitation (modalités / parking / encadrement) + état de publication
     majInfosTournoi();
     majContactsSecurite();
+    majInvitation();
     majPublication();
     majDossier(); // état des sections du dossier club (suit toutes les infos ci-dessus)
 
@@ -226,6 +234,36 @@ async function initAdmin() {
   document.getElementById('form-contacts-securite').addEventListener('change', onContactsChange);
   document.getElementById('bouton-enregistrer-contacts').addEventListener('click', onEnregistrerContacts);
 
+  // Dossier d'invitation — carte « Modalités d'inscription » : bouton dédié + champs
+  // du tarif révélés par la case à cocher.
+  document.getElementById('form-modalites').addEventListener('submit', function (e) { e.preventDefault(); });
+  document.getElementById('form-modalites').addEventListener('change', onModalitesChange);
+  document.getElementById('bouton-enregistrer-modalites').addEventListener('click', onEnregistrerModalites);
+
+  // Carte « Parking & accès » : texte + photo (même mécanisme que l'affiche du tournoi :
+  // clic OU glisser-déposer, aperçu immédiat, upload Drive à l'enregistrement).
+  document.getElementById('form-parking').addEventListener('submit', function (e) { e.preventDefault(); });
+  document.getElementById('bouton-enregistrer-parking').addEventListener('click', onEnregistrerParking);
+  document.querySelector('#form-parking [name="parking_photo"]')
+    .addEventListener('change', onChoisirPhotoParking);
+  const zoneDepotParking = document.getElementById('zone-depot-parking');
+  zoneDepotParking.addEventListener('dragover', function (e) {
+    e.preventDefault(); // sinon le navigateur OUVRE le fichier au lieu de le déposer
+    zoneDepotParking.classList.add('est-survolee');
+  });
+  zoneDepotParking.addEventListener('dragleave', function () { zoneDepotParking.classList.remove('est-survolee'); });
+  zoneDepotParking.addEventListener('drop', onDeposerPhotoParking);
+  document.getElementById('bouton-retirer-parking').addEventListener('click', onRetirerPhotoParking);
+
+  // Carte « Encadrement & assurance » : bouton dédié.
+  document.getElementById('form-encadrement').addEventListener('submit', function (e) { e.preventDefault(); });
+  document.getElementById('bouton-enregistrer-encadrement').addEventListener('click', onEnregistrerEncadrement);
+
+  // Clubs invités : ajout via le formulaire, statut/suppression délégués sur la liste.
+  document.getElementById('form-club-invite').addEventListener('submit', onAjouterClubInvite);
+  document.getElementById('liste-clubs-invites').addEventListener('change', onChangerStatutClub);
+  document.getElementById('liste-clubs-invites').addEventListener('click', onClicClubsInvites);
+
   // Champ date : ouvre le calendrier dès qu'on clique n'importe où sur la barre
   // (par défaut, seul le clic sur la petite icône l'ouvre). showPicker() peut ne pas
   // exister sur de vieux navigateurs → on ignore l'erreur, l'icône reste utilisable.
@@ -242,6 +280,10 @@ async function initAdmin() {
   // Ainsi l'assistant s'affiche tout de suite, sans attendre la saisie de la clé.
   const connecte = await connexion('admin', "à l'administration");
   majBarreConnexion(connecte);
+
+  // Clubs invités : la liste contient des emails → elle ne se charge qu'avec la clé
+  // admin (action protégée), donc APRÈS la connexion. Sans clé : message d'invite.
+  if (connecte) chargerClubsInvites();
 }
 
 /* --------------------------------------------------------------------------
@@ -618,6 +660,367 @@ async function onEnregistrerContacts() {
 }
 
 /* --------------------------------------------------------------------------
+   DOSSIER D'INVITATION — modalités d'inscription, parking & accès,
+   encadrement & assurance (paramètres globaux de Config, tous optionnels).
+   Chaque carte s'enregistre indépendamment via l'action enregistrerInvitation
+   (le backend n'écrit que les champs présents dans la requête).
+   -------------------------------------------------------------------------- */
+
+/** Vrai si un paramètre 'oui'/'non' de Config vaut 'oui'. */
+function estOui(valeur) {
+  return String(valeur || '').toLowerCase() === 'oui';
+}
+
+/** Pré-remplit les TROIS cartes du dossier d'invitation avec l'état enregistré. */
+function majInvitation() {
+  const g = configCourante.global || {};
+
+  // 1) Modalités d'inscription.
+  const fm = document.getElementById('form-modalites');
+  if (fm) {
+    fm.date_limite_confirmation.value = g.date_limite_confirmation || '';
+    fm.tarif_engagement_oui.checked = estOui(g.tarif_engagement_oui);
+    fm.tarif_engagement_montant.value = g.tarif_engagement_montant || '';
+    fm.tarif_engagement_modalites.value = g.tarif_engagement_modalites || '';
+    majAffichageTarif(fm);
+    if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(fm);
+  }
+
+  // 2) Parking & accès (texte + aperçu de la photo déjà enregistrée sur Drive).
+  const fp = document.getElementById('form-parking');
+  if (fp) {
+    fp.parking_texte.value = g.parking_texte || '';
+    parkingDataURI = '';
+    const bloc = document.getElementById('apercu-parking');
+    const img = document.getElementById('apercu-parking-img');
+    if (g.parking_photo_id) {
+      img.src = urlAffiche(g.parking_photo_id, 600);
+      bloc.hidden = false;
+    } else {
+      img.removeAttribute('src');
+      bloc.hidden = true;
+    }
+    if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(fp);
+  }
+
+  // 3) Encadrement & assurance.
+  const fe = document.getElementById('form-encadrement');
+  if (fe) {
+    fe.encadrement_ratio.value = g.encadrement_ratio || '';
+    fe.encadrement_diplomes.value = g.encadrement_diplomes || '';
+    fe.assurance_attestation_requise.checked = estOui(g.assurance_attestation_requise);
+    if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(fe);
+  }
+}
+
+/** Révèle / masque les champs du tarif selon la case « Tarif d'engagement ». */
+function majAffichageTarif(form) {
+  document.getElementById('lignes-tarif-engagement').hidden = !form.tarif_engagement_oui.checked;
+}
+
+/** Case à cocher de la carte Modalités : met à jour l'affichage conditionnel. */
+function onModalitesChange(evenement) {
+  if (evenement.target.name === 'tarif_engagement_oui') {
+    majAffichageTarif(document.getElementById('form-modalites'));
+  }
+}
+
+/**
+ * Enregistrement générique d'une carte du dossier d'invitation : envoie `data`
+ * à enregistrerInvitation, met à jour la config en mémoire, reprend la photo
+ * « propre » du formulaire et rafraîchit l'état du dossier.
+ */
+async function enregistrerCarteInvitation(data, form, bouton, message, texteOk) {
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Enregistrement…';
+  try {
+    await ecrireAdmin('enregistrerInvitation', data);
+    configCourante.global = Object.assign({}, configCourante.global, data);
+    if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
+    majDossier(); // les sections du dossier suivent
+    afficherMessage(message, texteOk, 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
+}
+
+/** Enregistre la carte « Modalités d'inscription ». */
+function onEnregistrerModalites() {
+  const form = document.getElementById('form-modalites');
+  const data = {
+    date_limite_confirmation:   form.date_limite_confirmation.value,
+    tarif_engagement_oui:       form.tarif_engagement_oui.checked ? 'oui' : 'non',
+    tarif_engagement_montant:   form.tarif_engagement_montant.value.trim(),
+    tarif_engagement_modalites: form.tarif_engagement_modalites.value.trim()
+  };
+  return enregistrerCarteInvitation(data, form,
+    document.getElementById('bouton-enregistrer-modalites'),
+    document.getElementById('message-modalites'),
+    '✅ Modalités enregistrées.');
+}
+
+/** Enregistre la carte « Encadrement & assurance ». */
+function onEnregistrerEncadrement() {
+  const form = document.getElementById('form-encadrement');
+  const data = {
+    encadrement_ratio:             form.encadrement_ratio.value.trim(),
+    encadrement_diplomes:          form.encadrement_diplomes.value.trim(),
+    assurance_attestation_requise: form.assurance_attestation_requise.checked ? 'oui' : 'non'
+  };
+  return enregistrerCarteInvitation(data, form,
+    document.getElementById('bouton-enregistrer-encadrement'),
+    document.getElementById('message-encadrement'),
+    '✅ Encadrement & assurance enregistrés.');
+}
+
+/** Enregistre la carte « Parking & accès » : le texte, puis la photo si une nouvelle
+ *  a été choisie (même enchaînement que les infos du tournoi + l'affiche). */
+async function onEnregistrerParking() {
+  const form = document.getElementById('form-parking');
+  const bouton = document.getElementById('bouton-enregistrer-parking');
+  const message = document.getElementById('message-parking');
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Enregistrement…';
+  try {
+    await ecrireAdmin('enregistrerInvitation', { parking_texte: form.parking_texte.value.trim() });
+    if (parkingDataURI) {
+      afficherMessage(message, 'Envoi de la photo…', 'ok');
+      await ecrireAdmin('enregistrerPhotoParking', { photo: parkingDataURI });
+    }
+    // On recharge la config pour refléter ce qui est réellement enregistré (dont la photo).
+    configCourante = await apiGet('getConfig');
+    majInvitation();
+    majDossier();
+    form.parking_photo.value = ''; // vide le champ fichier
+    afficherMessage(message, '✅ Parking & accès enregistrés.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
+}
+
+/** Traite une photo de parking (choisie OU déposée) : redimensionne, aperçu immédiat. */
+async function traiterFichierParking(fichier) {
+  const message = document.getElementById('message-parking');
+  if (!fichier) { parkingDataURI = ''; return; }
+  try {
+    parkingDataURI = await redimensionnerImage(fichier, 1000, 0.82);
+    document.getElementById('apercu-parking-img').src = parkingDataURI;
+    document.getElementById('apercu-parking').hidden = false;
+  } catch (e) {
+    parkingDataURI = '';
+    afficherMessage(message, "⚠️ Image illisible. Choisis un fichier image (JPG, PNG…).", 'ko');
+  }
+}
+
+/** Quand on choisit un fichier via le sélecteur (clic sur la zone de dépôt). */
+function onChoisirPhotoParking(evenement) {
+  traiterFichierParking(evenement.target.files && evenement.target.files[0]);
+}
+
+/** Quand on DÉPOSE un fichier sur la zone (glisser-déposer depuis l'ordinateur). */
+function onDeposerPhotoParking(evenement) {
+  evenement.preventDefault(); // sinon le navigateur ouvre l'image dans l'onglet
+  const zone = document.getElementById('zone-depot-parking');
+  if (zone) zone.classList.remove('est-survolee');
+  const fichier = evenement.dataTransfer && evenement.dataTransfer.files && evenement.dataTransfer.files[0];
+  traiterFichierParking(fichier);
+}
+
+/**
+ * Retire la photo du parking. Deux cas (mêmes règles que l'affiche) :
+ *   1) une image vient d'être choisie mais pas encore enregistrée → on annule le choix ;
+ *   2) une photo est déjà enregistrée → suppression backend (fichier Drive + Config).
+ */
+async function onRetirerPhotoParking() {
+  const message = document.getElementById('message-parking');
+  const form = document.getElementById('form-parking');
+
+  // Cas 1 : choix non enregistré → on annule simplement la sélection.
+  if (parkingDataURI) {
+    parkingDataURI = '';
+    form.parking_photo.value = '';
+    majInvitation(); // ré-affiche la photo enregistrée, ou masque l'aperçu si aucune
+    afficherMessage(message, 'Choix de photo annulé.', 'ok');
+    return;
+  }
+
+  // Cas 2 : photo enregistrée → confirmation puis suppression backend.
+  if (!(configCourante.global && configCourante.global.parking_photo_id)) return;
+  if (!await dialogConfirmer('Retirer la photo du parking ?', { ok: 'Retirer', danger: true })) return;
+
+  const bouton = document.getElementById('bouton-retirer-parking');
+  bouton.disabled = true;
+  try {
+    await ecrireAdmin('supprimerPhotoParking', {});
+    configCourante = await apiGet('getConfig');
+    majInvitation();
+    majDossier();
+    afficherMessage(message, '🗑️ Photo du parking retirée.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   CLUBS INVITÉS — liste des clubs à qui on envoie le dossier d'invitation.
+   ⚠️ L'onglet contient des EMAILS : il se lit via l'action listerClubsInvites,
+   protégée par la clé admin (jamais dans le snapshot public getAll / CDN).
+   -------------------------------------------------------------------------- */
+
+/* Statuts admis (mêmes formes canoniques que le backend). */
+const STATUTS_CLUB_INVITE = ['Invité', 'Confirmé', 'Décliné'];
+
+/** Compare deux textes sans accents ni casse (piège NFC/NFD du Sheet : « Invité »
+ *  peut revenir avec un é décomposé — même précaution que estTermine). */
+function memeTexteSouple(a, b) {
+  function plat(s) {
+    return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  }
+  return plat(a) === plat(b);
+}
+
+/** Charge la liste des clubs invités depuis le backend (clé admin) et l'affiche. */
+async function chargerClubsInvites() {
+  const zone = document.getElementById('liste-clubs-invites');
+  if (!zone) return;
+  try {
+    const res = await ecrireAdmin('listerClubsInvites', {});
+    clubsInvitesCourants = (res && res.clubs) || [];
+    afficherClubsInvites();
+  } catch (erreur) {
+    zone.innerHTML = '<p class="vide">⚠️ Impossible de charger les clubs invités : '
+      + echapper(erreur.message) + '</p>';
+  }
+}
+
+/** Pastille d'état d'un statut (couleur portée par une classe CSS). */
+function classeStatutClub(statut) {
+  if (memeTexteSouple(statut, 'Confirmé')) return 'est-confirme';
+  if (memeTexteSouple(statut, 'Décliné'))  return 'est-decline';
+  return 'est-invite';
+}
+
+/** Affiche la liste des clubs invités (nom, contact, statut modifiable, suppression). */
+function afficherClubsInvites() {
+  const zone = document.getElementById('liste-clubs-invites');
+  if (!zone) return;
+
+  if (!clubsInvitesCourants.length) {
+    zone.innerHTML = '<p class="vide">Aucun club invité pour le moment. Ajoute le premier ci-dessus.</p>';
+    return;
+  }
+
+  let html = '';
+  clubsInvitesCourants.forEach(function (club) {
+    const nom = String(club.club_nom || '');
+    const contact = [club.club_contact_nom, club.club_contact_email].filter(Boolean).join(' · ');
+    const options = STATUTS_CLUB_INVITE.map(function (s) {
+      return '<option value="' + echapper(s) + '"' +
+        (memeTexteSouple(club.statut, s) ? ' selected' : '') + '>' + echapper(s) + '</option>';
+    }).join('');
+    html +=
+      '<div class="equipe-item club-invite-item ' + classeStatutClub(club.statut) + '" data-club="' + echapper(nom) + '">' +
+        '<span class="nom">' + echapper(nom) +
+          (contact ? '<span class="club-contact">' + echapper(contact) + '</span>' : '') +
+        '</span>' +
+        '<div class="equipe-actions">' +
+          '<select class="statut-club" data-club="' + echapper(nom) + '" ' +
+                  'aria-label="Statut de ' + echapper(nom) + '">' + options + '</select>' +
+          '<button class="bouton-suppr bouton-icone bouton-suppr-club" title="Retirer" aria-label="Retirer" ' +
+                  'data-club="' + echapper(nom) + '">🗑️</button>' +
+        '</div>' +
+      '</div>';
+  });
+  zone.innerHTML = html;
+}
+
+/** Ajoute un club invité (statut initial « Invité », date d'ajout posée par le backend). */
+async function onAjouterClubInvite(evenement) {
+  evenement.preventDefault();
+  const champNom = document.getElementById('champ-club-nom');
+  const champContact = document.getElementById('champ-club-contact');
+  const champEmail = document.getElementById('champ-club-email');
+  const bouton = document.getElementById('bouton-ajouter-club');
+  const message = document.getElementById('message-club-invite');
+
+  const nom = champNom.value.trim().toUpperCase(); // comme les équipes : noms en MAJUSCULES
+  if (!nom) { afficherMessage(message, 'Indique le nom du club.', 'ko'); return; }
+
+  const doublon = clubsInvitesCourants.some(function (c) { return memeTexteSouple(c.club_nom, nom); });
+  if (doublon) {
+    afficherMessage(message, '⚠️ « ' + nom + ' » est déjà dans la liste.', 'ko');
+    return;
+  }
+
+  bouton.disabled = true;
+  bouton.textContent = 'Ajout…';
+  try {
+    await ecrireAdmin('ajouterClubInvite', {
+      club_nom: nom,
+      club_contact_nom: champContact.value.trim(),
+      club_contact_email: champEmail.value.trim()
+    });
+    champNom.value = ''; champContact.value = ''; champEmail.value = '';
+    champNom.focus();
+    afficherMessage(message, '✅ « ' + nom + ' » ajouté (statut : Invité).', 'ok');
+    await chargerClubsInvites();
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = 'Ajouter';
+  }
+}
+
+/** Changement de statut via le menu déroulant d'un club (enregistrement immédiat). */
+async function onChangerStatutClub(evenement) {
+  const select = evenement.target.closest('.statut-club');
+  if (!select) return;
+  const nom = select.getAttribute('data-club');
+  const message = document.getElementById('message-club-invite');
+  select.disabled = true;
+  try {
+    await ecrireAdmin('modifierStatutClubInvite', { club_nom: nom, statut: select.value });
+    const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
+    if (club) club.statut = select.value;
+    afficherClubsInvites(); // la pastille de couleur suit le nouveau statut
+    afficherMessage(message, '✅ « ' + nom + ' » → ' + select.value + '.', 'ok');
+  } catch (erreur) {
+    afficherClubsInvites(); // revient à l'état connu si l'enregistrement a échoué
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  }
+}
+
+/** Clic dans la liste des clubs : bouton de suppression. */
+async function onClicClubsInvites(evenement) {
+  const bouton = evenement.target.closest('.bouton-suppr-club');
+  if (!bouton) return;
+  const nom = bouton.getAttribute('data-club');
+  const message = document.getElementById('message-club-invite');
+  if (!await dialogConfirmer('Retirer le club « ' + nom + ' » de la liste des invités ?',
+               { ok: 'Retirer', danger: true })) return;
+  bouton.disabled = true;
+  try {
+    await ecrireAdmin('supprimerClubInvite', { club_nom: nom });
+    afficherMessage(message, '🗑️ « ' + nom + ' » retiré.', 'ok');
+    await chargerClubsInvites();
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    bouton.disabled = false;
+  }
+}
+
+/* --------------------------------------------------------------------------
    DOSSIER CLUB — état des sections du dossier (page dossier-club.html)
    -------------------------------------------------------------------------- */
 
@@ -638,6 +1041,9 @@ function majDossier() {
     ['Infos pratiques (lieu, adresse)', !!(g.tournoi_lieu || g.tournoi_adresse)],
     ['Programme (RDV, coup d\'envoi, pause, fin)', !!(g.heure_rdv || g.heure_debut || g.pause_dejeuner_debut || g.heure_fin_communiquee)],
     ['Format sportif (' + cats.length + ' catégorie' + (cats.length > 1 ? 's' : '') + ')', cats.length > 0],
+    ['Modalités d\'inscription (date limite, tarif)', !!(g.date_limite_confirmation || oui(g.tarif_engagement_oui))],
+    ['Parking & accès (texte, photo)', !!(g.parking_texte || g.parking_photo_id)],
+    ['Encadrement & assurance', !!(g.encadrement_ratio || g.encadrement_diplomes || oui(g.assurance_attestation_requise))],
     ['Sécurité (poste de secours, référent)', oui(g.securite_secours_oui) || !!(g.referent_nom || g.securite_referent_nom)],
     ['Contact (référent tournoi)', !!(g.referent_nom || g.referent_tel)],
     ['Agenda .ics / itinéraire', !!(g.tournoi_date && (g.tournoi_adresse || g.tournoi_lieu))]
@@ -1088,7 +1494,7 @@ async function rechargerEtRendre(opt) {
   afficherPlanning(data.poules, data.matchs);
   majApresMidi();
 
-  if (opt.infos)       { majInfosTournoi(); majContactsSecurite(); }
+  if (opt.infos)       { majInfosTournoi(); majContactsSecurite(); majInvitation(); }
   if (opt.publication) majPublication();
   majDossier(); // la config vient d'être rechargée : l'état du dossier suit
   majTableauBord();
@@ -1831,7 +2237,8 @@ async function onAjouterCategorie(evenement) {
     categorie: nom, presente: 'oui', terrains: '', terrains_auto: 'oui', nb_poules: '',
     format_mi_temps: '2', duree_mi_temps_min: '10', pause_mi_temps_min: '2',
     recup_entre_matchs_min: '15', format_apresmidi: 'CROISE', param_format: '',
-    reglement: '', effectif_min: '', effectif_max: '', arbitrage_organisation: ''
+    reglement: '', effectif_min: '', effectif_max: '', arbitrage_organisation: '',
+    nb_equipes_attendues: ''
   };
 
   const bouton = form.querySelector('button');

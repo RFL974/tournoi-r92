@@ -5,6 +5,44 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sprint 3 — Dossier d'INVITATION + clubs invités + autorisation droit à l'image — 2026-07-23
+Le dossier club devient un vrai **dossier d'invitation**, envoyé AVANT la confirmation des clubs.
+
+- **Bug corrigé (dossier)** : dans le tableau Format sportif, « Poules » (et tout mot d'une
+  colonne serrée) ne se coupe plus en plein mot — valeurs courtes en `nowrap` (classe
+  `.col-courte`), coupure générale `break-word` (entre les mots) au lieu de `anywhere`.
+- **Nouvelles cartes admin** (écran « Générer le dossier ») : **Modalités d'inscription**
+  (date limite de confirmation, case « Tarif d'engagement » — décochée par défaut — révélant
+  montant + modalités), **Parking & accès** (texte + photo en glisser-déposer, même mécanisme
+  Drive que l'affiche, aperçu miniature), **Encadrement & assurance** (ratio éducateurs/joueurs,
+  diplômes exigés, case « attestation d'assurance requise »). Backend : action commune
+  `enregistrerInvitation` + `enregistrerPhotoParking`/`supprimerPhotoParking` (mécanisme
+  d'image factorisé avec l'affiche) — 9 nouveaux paramètres Zone A, tous optionnels.
+- **Clubs invités** : nouvel onglet Sheets `ClubsInvites` (`club_nom`, `club_contact_nom`,
+  `club_contact_email`, `statut` Invité/Confirmé/Décliné, `date_ajout` auto) + nouvel écran
+  « Clubs invités » dans la barre latérale (liste avec statut modifiable en menu déroulant,
+  formulaire d'ajout sur le modèle des Équipes). 🔒 Les emails ne sont **jamais publics** :
+  lecture via `listerClubsInvites` (clé admin), hors snapshot `getAll` / relais CDN. La
+  réinitialisation du tournoi **conserve** cette liste (carnet d'adresses).
+- **Catégories** : nouveau champ « Équipes attendues (nb) » (`nb_equipes_attendues`, Zone B),
+  affiché dans une nouvelle colonne « Équipes attendues » du tableau Format sportif du dossier
+  (après Effectif).
+- **Dossier** : trois nouvelles sections entre « Format sportif » et « Suivi & organisation » —
+  **Modalités d'inscription** (date limite en date longue ; tarif seulement si demandé),
+  **Parking & accès** (texte + photo pleine largeur, bordure arrondie), **Encadrement &
+  assurance** (ratio, diplômes, mention attestation). Règle habituelle : section vide = masquée.
+- **Autorisation droit à l'image** : nouveau bouton du bandeau d'actions — le `.docx` est
+  généré **côté client** (PizZip + docxtemplater, vendorés dans `js/vendor/` comme le QR code :
+  aucun appel externe) depuis `assets/autorisation-droit-image-template.docx`, avec remplacement
+  des balises `{nom_tournoi}` / `{date_tournoi}` (date longue) / `{lieu_tournoi}` et un nom de
+  fichier parlant (`Autorisation-droit-image-<nom-slugifié>-<date>.docx`). Le nom du club reste
+  manuscrit (document générique). En cas de modèle introuvable : message clair sous le bandeau
+  (« contactez [référent] »), jamais d'échec silencieux.
+- **Réseaux sociaux** : le bouton du bandeau devient « 📣 Relayer sur les réseaux » et pointe
+  directement vers `url_instagram` (compte Génération R92).
+- ⚠️ **Redéploiement de la Web App nécessaire** (nouvelles actions backend). Rétrocompatible :
+  tous les nouveaux champs sont optionnels, colonnes/onglet créés automatiquement (migration douce).
+
 ### Dossier club : la fin de l'événement expliquée (vestiaires + trophées) — 2026-07-23
 La marge après le dernier match est désormais **explicitée partout** : elle couvre le
 **retour aux vestiaires** puis la **cérémonie de remise des trophées**, et l'événement se

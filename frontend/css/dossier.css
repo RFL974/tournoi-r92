@@ -129,8 +129,15 @@ body {
   border-collapse: collapse;
   font-size: 0.86rem;
 }
-/* Une valeur insécable (URL, texte collé) se COUPE au lieu de faire déborder le tableau. */
-.d-table th, .d-table td { overflow-wrap: anywhere; word-break: break-word; }
+/* Une valeur insécable (URL, texte collé) se COUPE au lieu de faire déborder le tableau.
+   `break-word` (et non `anywhere`) : la coupe se fait d'abord ENTRE les mots — une colonne
+   ne peut plus se serrer au point de casser un mot en deux (« Classeme / nt »). */
+.d-table th, .d-table td { overflow-wrap: break-word; }
+/* Les colonnes courtes (Matin, Mi-temps, Effectif…) : leurs VALEURS brèves restent
+   sur UNE ligne — sinon la coupure de secours cassait un mot (« Poule / s »).
+   Seules les cellules td : un TITRE de colonne (« Équipes attendues ») peut, lui,
+   passer sur deux lignes sans faire déborder le tableau de la feuille. */
+.d-table td.col-courte { white-space: nowrap; overflow-wrap: normal; }
 .d-table th {
   text-align: left;
   background: var(--d-navy);
@@ -144,6 +151,16 @@ body {
 .d-table td { padding: 6px 8px; border-bottom: 1px solid var(--d-filet); vertical-align: top; }
 .d-table tr:nth-child(even) td { background: #f5f8fc; }
 .d-table a { color: var(--d-bleu); }
+
+/* ----- Parking & accès (texte + photo pleine largeur) -------------------------- */
+.d-parking-texte { margin: 0 0 4px; }
+.d-parking-photo {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid var(--d-filet);   /* légère bordure arrondie, cohérente avec la charte */
+  border-radius: 8px;
+}
 
 /* ----- Suivi live + QR -------------------------------------------------------- */
 .d-suivi { display: flex; gap: 18px; align-items: flex-start; }
@@ -189,6 +206,9 @@ body {
   cursor: pointer;
 }
 .d-action:hover { background: #227ac4; }
+.d-action:disabled { opacity: 0.6; cursor: wait; }
+/* Message d'erreur du bandeau (ex : modèle d'autorisation introuvable). */
+.d-action-erreur { margin: 6px 0 0; font-size: 0.85rem; color: #b3261e; }
 
 /* ----- Pied de page ------------------------------------------------------------- */
 .d-pied {

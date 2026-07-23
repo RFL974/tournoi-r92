@@ -1630,3 +1630,28 @@ a.bouton { display: inline-block; text-decoration: none; }
 .dossier-etat li { padding: 2px 0; }
 .dossier-etat li.est-vide { opacity: 0.65; }
 .dossier-etat-note { font-size: 0.8em; color: var(--bleu-ciel); }
+
+/* ==========================================================================
+   Carte « Clubs invités » (admin) : liste des clubs (réutilise .equipe-item)
+   avec le contact sous le nom, un menu déroulant de statut et un liseré de
+   couleur selon le statut (Invité / Confirmé / Décliné).
+   ========================================================================== */
+.club-invite-item { border-left: 4px solid rgba(120, 180, 255, 0.5); }
+.club-invite-item.est-confirme { border-left-color: #35c06a; }
+.club-invite-item.est-decline  { border-left-color: #e07878; }
+.club-invite-item .nom { display: flex; flex-direction: column; min-width: 0; }
+.club-contact {
+  font-weight: 400;
+  font-size: 0.82rem;
+  opacity: 0.75;
+  overflow-wrap: anywhere;
+}
+.statut-club {
+  background: rgba(3, 16, 36, 0.6);
+  border: 1px solid rgba(120, 180, 255, 0.4);
+  color: #eaf2ff;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 0.85rem;
+}

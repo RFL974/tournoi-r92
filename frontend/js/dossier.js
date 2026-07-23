@@ -364,6 +364,32 @@ function construireDossier(g, categories) {
   // 5) FORMAT SPORTIF : tableau si plusieurs catégories, puces si une seule.
   html += section('Format sportif', cadreSportif(cats));
 
+  // 5 bis) MODALITÉS D'INSCRIPTION (dossier d'INVITATION) : date limite de confirmation,
+  //        tarif d'engagement (montant + modalités) SEULEMENT si un tarif est demandé.
+  const tarifOui = String(txt(g.tarif_engagement_oui)).toLowerCase() === 'oui';
+  html += section('Modalités d\'inscription', listeOuVide([
+    ligne('Confirmation attendue avant le',
+      txt(g.date_limite_confirmation) ? echapper(dateLongueFr(g.date_limite_confirmation)) : ''),
+    ligne('Tarif d\'engagement', tarifOui ? echapper(txt(g.tarif_engagement_montant)) : ''),
+    ligne('Modalités de paiement', tarifOui ? echapper(txt(g.tarif_engagement_modalites)) : '')
+  ]));
+
+  // 5 ter) PARKING & ACCÈS : texte + photo (plan du parking) en pleine largeur.
+  html += section('Parking & accès',
+    (txt(g.parking_texte) ? '<p class="d-parking-texte">' + echapper(txt(g.parking_texte)) + '</p>' : '') +
+    (txt(g.parking_photo_id)
+      ? '<img class="d-parking-photo" src="' + echapper(urlAfficheDossier(g.parking_photo_id, 1000)) + '" ' +
+        'alt="Plan du parking et des accès">'
+      : ''));
+
+  // 5 quater) ENCADREMENT & ASSURANCE : ratio, diplômes, attestation si requise.
+  const attestation = String(txt(g.assurance_attestation_requise)).toLowerCase() === 'oui';
+  html += section('Encadrement & assurance', listeOuVide([
+    ligne('Encadrement', echapper(txt(g.encadrement_ratio))),
+    ligne('Diplômes exigés', echapper(txt(g.encadrement_diplomes))),
+    ligne('Assurance', attestation ? 'Attestation d\'assurance du club à fournir' : '')
+  ]));
+
   // 6) SUIVI & ORGANISATION : lien live + QR, table de marque, résumé des terrains.
   const urlLive = urlSuiviPublic(g);
   const terrains = resumeTerrains(g, cats);
@@ -439,18 +465,23 @@ function cadreSportif(cats) {
       ligne('Après-midi', echapper(resumeApresMidi(c))),
       ligne('Mi-temps', echapper(resumeMiTemps(c))),
       ligne('Effectif par équipe', echapper(resumeEffectif(c))),
+      ligne('Équipes attendues', echapper(txt(c.nb_equipes_attendues))),
       ligne('Règlement', resumeReglement(c)),
       ligne('Arbitrage', echapper(txt(c.arbitrage_organisation)))
     ]);
   }
 
   // Colonnes candidates : celles dont AU MOINS une catégorie a une valeur sont gardées.
+  // `courte: true` = valeurs brèves (« Poules », « 2 × 10 min ») affichées SANS retour à la
+  // ligne (classe .col-courte) — sinon la coupure de secours du tableau peut casser un mot
+  // (« Poule / s ») quand les colonnes se serrent.
   const colonnes = [
-    { titre: 'Catégorie',  v: function (c) { return echapper(txt(c.categorie)); } },
-    { titre: 'Matin',      v: function ()  { return 'Poules'; } },
+    { titre: 'Catégorie',  courte: true, v: function (c) { return echapper(txt(c.categorie)); } },
+    { titre: 'Matin',      courte: true, v: function ()  { return 'Poules'; } },
     { titre: 'Après-midi', v: function (c) { return echapper(resumeApresMidi(c)); } },
-    { titre: 'Mi-temps',   v: function (c) { return echapper(resumeMiTemps(c)); } },
-    { titre: 'Effectif',   v: function (c) { return echapper(resumeEffectif(c)); } },
+    { titre: 'Mi-temps',   courte: true, v: function (c) { return echapper(resumeMiTemps(c)); } },
+    { titre: 'Effectif',   courte: true, v: function (c) { return echapper(resumeEffectif(c)); } },
+    { titre: 'Équipes attendues', courte: true, v: function (c) { return echapper(txt(c.nb_equipes_attendues)); } },
     { titre: 'Règlement',  v: function (c) { return resumeReglement(c); } },
     { titre: 'Arbitrage',  v: function (c) { return echapper(txt(c.arbitrage_organisation)); } }
   ].filter(function (col) {
@@ -458,11 +489,15 @@ function cadreSportif(cats) {
   });
 
   let html = '<table class="d-table"><thead><tr>';
-  colonnes.forEach(function (col) { html += '<th>' + col.titre + '</th>'; });
+  colonnes.forEach(function (col) {
+    html += '<th' + (col.courte ? ' class="col-courte"' : '') + '>' + col.titre + '</th>';
+  });
   html += '</tr></thead><tbody>';
   tries.forEach(function (c) {
     html += '<tr>';
-    colonnes.forEach(function (col) { html += '<td>' + (col.v(c) || '—') + '</td>'; });
+    colonnes.forEach(function (col) {
+      html += '<td' + (col.courte ? ' class="col-courte"' : '') + '>' + (col.v(c) || '—') + '</td>';
+    });
     html += '</tr>';
   });
   html += '</tbody></table>';
@@ -482,20 +517,98 @@ function bandeauActions(g) {
     boutons.push('<a class="d-action" href="https://www.google.com/maps/search/?api=1&query=' + q + '" target="_blank" rel="noopener">🗺️ Itinéraire (Google Maps)</a>');
     boutons.push('<a class="d-action" href="https://waze.com/ul?q=' + q + '&navigate=yes" target="_blank" rel="noopener">🚗 Itinéraire (Waze)</a>');
   }
+  // Autorisation de droit à l'image : docx généré EN LOCAL depuis le modèle du site
+  // (les balises nom/date/lieu sont remplacées ; le nom du club reste manuscrit).
+  boutons.push('<button type="button" class="d-action" id="bouton-droit-image">🖼️ Autorisation droit à l\'image</button>');
   if (txt(g.url_site_association)) {
     boutons.push('<a class="d-action" href="' + echapper(txt(g.url_site_association)) + '" target="_blank" rel="noopener">🌐 Site de l\'association</a>');
   }
+  // « Relayer sur les réseaux » pointe directement vers le compte Instagram Génération R92.
   if (txt(g.url_instagram)) {
-    boutons.push('<a class="d-action" href="' + echapper(txt(g.url_instagram)) + '" target="_blank" rel="noopener">📸 Instagram</a>');
+    boutons.push('<a class="d-action" href="' + echapper(txt(g.url_instagram)) + '" target="_blank" rel="noopener">📣 Relayer sur les réseaux</a>');
   }
   if (!boutons.length) return '';
 
-  // Le bouton .ics a besoin des données : on le branche après le rendu (délégué).
-  document.addEventListener('click', function brancherICS(e) {
+  // Les boutons .ics et droit à l'image ont besoin des données : branchés après le rendu (délégué).
+  document.addEventListener('click', function brancherActions(e) {
     if (e.target && e.target.id === 'bouton-ics') telechargerICS(g);
+    if (e.target && e.target.id === 'bouton-droit-image') telechargerAutorisationImage(g);
   });
 
-  return '<div class="d-actions">' + boutons.join('') + '</div>';
+  return '<div class="d-actions">' + boutons.join('') + '</div>' +
+         '<p class="d-action-erreur" id="d-action-erreur" hidden></p>';
+}
+
+/* --------------------------------------------------------------------------
+   AUTORISATION DE DROIT À L'IMAGE — docx généré CÔTÉ CLIENT
+   --------------------------------------------------------------------------
+   Le modèle assets/autorisation-droit-image-template.docx contient les balises
+   {nom_tournoi}, {date_tournoi} et {lieu_tournoi}, remplacées à la volée par
+   PizZip + docxtemplater (js/vendor/, chargés par dossier-club.html — aucun
+   appel externe, comme le QR code). Le document reste GÉNÉRIQUE : le nom du
+   club est écrit à la main par chaque famille.
+   -------------------------------------------------------------------------- */
+
+/** « Challenge Marc Chevalier » → « challenge-marc-chevalier » (nom de fichier sûr). */
+function slugifier(texte) {
+  return String(texte || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // é → e (accents retirés)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Génère et télécharge l'autorisation de droit à l'image du tournoi affiché.
+ * En cas de problème (modèle manquant/renommé, librairie absente), un message
+ * clair s'affiche sous le bandeau — jamais d'échec silencieux.
+ */
+async function telechargerAutorisationImage(g) {
+  const erreurZone = document.getElementById('d-action-erreur');
+  const bouton = document.getElementById('bouton-droit-image');
+  if (erreurZone) { erreurZone.hidden = true; erreurZone.textContent = ''; }
+  if (bouton) bouton.disabled = true;
+
+  try {
+    if (typeof PizZip === 'undefined' || typeof docxtemplater === 'undefined') {
+      throw new Error('librairies de génération non chargées');
+    }
+    // 1) Le modèle .docx, récupéré à côté de la page (binaire → ArrayBuffer).
+    const reponse = await fetch('assets/autorisation-droit-image-template.docx');
+    if (!reponse.ok) throw new Error('modèle introuvable (' + reponse.status + ')');
+    const contenu = await reponse.arrayBuffer();
+
+    // 2-3) Chargement PizZip + docxtemplater, puis remplacement des 3 balises.
+    const doc = new docxtemplater(new PizZip(contenu), { paragraphLoop: true, linebreaks: true });
+    doc.render({
+      nom_tournoi:  txt(g.tournoi_nom) || 'Tournoi Génération R92',
+      date_tournoi: txt(g.tournoi_date) ? dateLongueFr(g.tournoi_date) : '',
+      lieu_tournoi: txt(g.tournoi_lieu) || txt(g.tournoi_adresse)
+    });
+
+    // 4-5) Docx de sortie (blob) → téléchargement avec un nom de fichier parlant.
+    const blob = doc.getZip().generate({
+      type: 'blob',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Autorisation-droit-image-'
+      + (slugifier(txt(g.tournoi_nom)) || 'tournoi-generation-r92')
+      + (txt(g.tournoi_date) ? '-' + txt(g.tournoi_date) : '') + '.docx';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  } catch (e) {
+    const referent = txt(g.referent_nom) || 'l\'organisateur du tournoi';
+    if (erreurZone) {
+      erreurZone.textContent = '⚠️ Impossible de charger le modèle d\'autorisation, contactez '
+        + referent + '.';
+      erreurZone.hidden = false;
+    }
+  } finally {
+    if (bouton) bouton.disabled = false;
+  }
 }
 
 /* --------------------------------------------------------------------------

@@ -1,7 +1,8 @@
 # Structure du Google Sheet
 
-Le Google Sheet sert de **base de données** du tournoi. Il contient **5 onglets**
-(le 5e, `Historique`, est le journal de saison décrit tout en bas).
+Le Google Sheet sert de **base de données** du tournoi. Il contient **6 onglets**
+(`Config`, `Equipes`, `Poules`, `Matchs`, `Historique` — le journal de saison — et
+`ClubsInvites` — la liste des clubs invités, décrite tout en bas).
 
 > URL du Sheet :
 > https://docs.google.com/spreadsheets/d/17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U/edit
@@ -73,6 +74,22 @@ admin — destinés au futur **générateur de dossier club**, tous **optionnels
 | `securite_referent_nom` | `Dominique Martin` | Nom du référent sécurité distinct (si `securite_referent_identique = non`) |
 | `securite_referent_tel` | `0698765432` | Téléphone du référent sécurité distinct (10 chiffres, normalisé) |
 
+Paramètres du **dossier d'INVITATION** (écrits par les cartes « Modalités d'inscription »,
+« Parking &amp; accès » et « Encadrement &amp; assurance » de la page admin, action backend
+`enregistrerInvitation` — tous **optionnels**, lus par `frontend/dossier-club.html`) :
+
+| parametre | valeur (exemple) | Signification |
+|---|---|---|
+| `date_limite_confirmation` | `2026-10-15` | Date limite de confirmation demandée aux clubs (section « Modalités d'inscription » du dossier, affichée en date longue) |
+| `tarif_engagement_oui` | `non` | `oui` = un tarif d'engagement est demandé (défaut `non`). À `non`, le dossier n'affiche **rien** sur le tarif |
+| `tarif_engagement_montant` | `50 € par équipe` | Montant du tarif (affiché seulement si `tarif_engagement_oui = oui`) |
+| `tarif_engagement_modalites` | `Chèque à l'ordre de…` | Modalités de paiement (affichées seulement si `tarif_engagement_oui = oui`) |
+| `parking_texte` | `Parking gratuit rue des Sports` | Texte de la section « Parking & accès » |
+| `parking_photo_id` | `1-3DZBDd…` | Identifiant du fichier **Google Drive** de la photo du parking (même mécanisme que `tournoi_affiche_id`, action `enregistrerPhotoParking`) |
+| `encadrement_ratio` | `1 éducateur pour 8 joueurs` | Ratio éducateurs/joueurs demandé (section « Encadrement & assurance ») |
+| `encadrement_diplomes` | `Brevet fédéral EDR minimum` | Diplômes exigés des éducateurs |
+| `assurance_attestation_requise` | `non` | `oui` = le dossier affiche « Attestation d'assurance du club à fournir » |
+
 Paramètres **optionnels lus par le dossier club** (`frontend/dossier-club.html`). Aucun
 formulaire admin ne les écrit encore : pour les utiliser, **ajouter la ligne à la main** dans la
 Zone A (colonne A = nom, colonne B = valeur). Absents ou vides = la ligne/le bouton correspondant
@@ -86,7 +103,7 @@ est simplement masqué dans le dossier :
 | `table_marque_organisation` | `Tenue par les bénévoles R92` | Ligne « Table de marque » (Suivi & organisation) |
 | `url_tournoi_public` | `https://rfl974.github.io/tournoi-r92/tournoi.html` | Lien + QR code « Scores en direct » (défaut : la page `tournoi.html` publiée à côté du dossier) |
 | `url_site_association` | `https://…` | Bouton « Site de l'association » |
-| `url_instagram` | `https://instagram.com/…` | Bouton « Instagram » |
+| `url_instagram` | `https://instagram.com/…` | Bouton « 📣 Relayer sur les réseaux » (pointe directement vers le compte Instagram Génération R92) |
 
 ### Zone B — Réglages par catégorie
 
@@ -109,13 +126,14 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `effectif_min` | `8` | **Optionnel** (dossier club). Effectif minimum par équipe (nb de joueurs). Si `effectif_min` et `effectif_max` sont saisis, min ≤ max (vérifié à l'enregistrement) |
 | `effectif_max` | `12` | **Optionnel** (dossier club). Effectif maximum par équipe (nb de joueurs) |
 | `arbitrage_organisation` | `Éducateurs des clubs` | **Optionnel** (dossier club). Qui arbitre les matchs. ⚠️ Nom volontairement distinct de l'« arbitrage » du code (assistant d'optimisation des horaires) |
+| `nb_equipes_attendues` | `12` | **Optionnel** (dossier d'invitation). Nombre d'équipes **attendues** dans la catégorie — colonne « Équipes attendues » du tableau Format sportif du dossier. Entier ≥ 0 |
 
 > ℹ️ **Migration automatique** : `format_apresmidi`, `param_format`, `terrains_auto`, puis
-> `reglement`, `effectif_min`, `effectif_max` et `arbitrage_organisation` sont **ajoutées
-> automatiquement** à droite de la Zone B dès la première génération d'après-midi (ou enregistrement de
-> catégorie) sur un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement croisé**,
-> et sans `terrains_auto` = **mode Auto**, comme avant. Les colonnes « dossier club » vides = champ
-> non renseigné (aucun blocage).
+> `reglement`, `effectif_min`, `effectif_max`, `arbitrage_organisation` et `nb_equipes_attendues`
+> sont **ajoutées automatiquement** à droite de la Zone B dès la première génération d'après-midi
+> (ou enregistrement de catégorie) sur un Sheet déjà en service. Une catégorie sans
+> `format_apresmidi` = **classement croisé**, et sans `terrains_auto` = **mode Auto**, comme avant.
+> Les colonnes « dossier club » vides = champ non renseigné (aucun blocage).
 
 > **Durée totale d'un match** (calculée par le backend) :
 > `format_mi_temps × duree_mi_temps_min + pause_mi_temps_min` (si 2 mi-temps).
@@ -218,6 +236,30 @@ ici par le backend (`archiverResultat` dans [`../backend/Code.gs`](../backend/Co
 > validation de score (fonction `assurerOngletHistorique`) — inutile de les saisir. Les
 > `setupSheet()` neufs le créent déjà. Le paramètre `tournoi_id` apparaît aussi dans la
 > **Zone A** de l'onglet `Config`.
+
+---
+
+## Onglet `ClubsInvites` (clubs invités)
+
+La liste des clubs à qui on envoie le **dossier d'invitation** (avant leur confirmation),
+gérée par la carte « **Clubs invités** » de la page admin.
+
+> 🔒 **Confidentialité.** Cet onglet contient des **emails de contact** : il n'est **jamais**
+> inclus dans les données publiques (`getAll`, cache serveur, relais CDN). Il se lit via
+> l'action **`listerClubsInvites`**, qui passe par `doPost` et exige la **clé admin**.
+
+| Colonne | Exemple | Signification |
+|---|---|---|
+| `club_nom` | `MASSY` | Nom du club (sert de **clé** : pas de doublon, comparaison sans accents ni casse) |
+| `club_contact_nom` | `Camille Dupont` | Nom du contact au club (optionnel) |
+| `club_contact_email` | `contact@club.fr` | Email du contact (optionnel, format vérifié) |
+| `statut` | `Invité` | `Invité` (défaut) / `Confirmé` / `Décliné` — modifiable via le menu déroulant de l'admin |
+| `date_ajout` | `2026-07-23` | Posée automatiquement à l'ajout (AAAA-MM-JJ) |
+
+> 🛠️ **Création automatique.** L'onglet et son en-tête sont créés tout seuls au premier accès
+> (`assurerOngletClubsInvites`) — les `setupSheet()` neufs le créent déjà.
+> ✅ La **réinitialisation du tournoi** CONSERVE cette liste (carnet d'adresses réutilisable
+> d'une édition à l'autre) — seuls les statuts sont à remettre à jour à la main.
 
 ---
 
