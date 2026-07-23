@@ -5,6 +5,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Dossier club : marge de fin réglable dans les Horaires — 2026-07-23
+La marge du mode automatique (« fin du dernier match + X min ») devient **réglable** :
+nouveau champ **« Marge après le dernier match (min) »** dans le formulaire « Horaires de la
+journée » de l'admin (défaut **75** = 1 h 15), stocké dans Config (`marge_fin_communiquee_min`).
+Le dossier club l'utilise pour l'heure de fin annoncée (Programme + agenda `.ics`) quand
+« Heure de fin communiquée » est vide. ⚠️ Nécessite un redéploiement de la Web App
+(liste blanche d'`enregistrerHoraires` étendue).
+
 ### Dossier club : fin communiquée automatique + tableau sans débordement — 2026-07-23
 - **Heure de fin annoncée aux clubs** : si `heure_fin_communiquee` est **vide**, le dossier
   affiche désormais automatiquement **fin du dernier match + 1 h 15** (`heure_fin`, recalculée

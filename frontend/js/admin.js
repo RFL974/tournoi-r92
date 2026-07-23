@@ -1363,10 +1363,14 @@ function afficherHoraires(global) {
           '</span>' +
         '</div>' +
         // Heure de fin COMMUNIQUÉE (dossier club). VIDE = automatique : le dossier
-        // affiche « fin du dernier match + 1h15 » et suit chaque régénération du
+        // affiche « fin du dernier match + marge » et suit chaque régénération du
         // planning. Une valeur saisie ici prime et ne bouge plus.
         champHeure('heure_fin_communiquee', 'Heure de fin communiquée aux clubs', val('heure_fin_communiquee'),
-                   'Vide = auto : fin du dernier match + 1h15 (suit le planning).') +
+                   'Vide = auto : fin du dernier match + la marge ci-dessous (suit le planning).') +
+        // Marge réglable du mode automatique (défaut 75 min = 1h15) : rangements,
+        // goûter, remise des récompenses… La main reste totale à l'organisateur.
+        champNombre('marge_fin_communiquee_min', 'Marge après le dernier match (min)', val('marge_fin_communiquee_min', '75'),
+                    'Utilisée quand l\'heure ci-dessus est vide : fin annoncée = dernier match + cette marge.') +
         champNombre('battement_terrain_min', 'Battement terrain entre les matchs (min)', val('battement_terrain_min', '5')) +
         champHeure('pause_dejeuner_debut', 'Pause déjeuner — début', val('pause_dejeuner_debut')) +
         champNombre('pause_dejeuner_duree_min', 'Pause déjeuner — durée (min)', val('pause_dejeuner_duree_min')) +
@@ -1397,11 +1401,12 @@ function champHeure(nom, label, valeur, aide) {
          '</div>';
 }
 
-/* Un champ "nombre" (ex : durée en minutes). */
-function champNombre(nom, label, valeur) {
+/* Un champ "nombre" (ex : durée en minutes), avec une ligne d'aide optionnelle. */
+function champNombre(nom, label, valeur, aide) {
   return '<div class="champ-reglage">' +
            '<label for="h-' + nom + '">' + label + '</label>' +
            '<input type="number" id="h-' + nom + '" name="' + nom + '" min="0" step="5" value="' + valeur + '">' +
+           (aide ? '<span class="f-aide">' + aide + '</span>' : '') +
          '</div>';
 }
 
@@ -1420,6 +1425,7 @@ async function onEnregistrerHoraires(evenement) {
     heure_fin:                form.heure_fin.value,
     heure_fin_auto:           auto ? 'oui' : 'non',
     heure_fin_communiquee:    form.heure_fin_communiquee.value,
+    marge_fin_communiquee_min: form.marge_fin_communiquee_min.value,
     battement_terrain_min:    form.battement_terrain_min.value,
     pause_dejeuner_debut:     form.pause_dejeuner_debut.value,
     pause_dejeuner_duree_min: form.pause_dejeuner_duree_min.value

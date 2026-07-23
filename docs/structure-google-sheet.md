@@ -39,7 +39,8 @@ Deux colonnes : `parametre` et `valeur`.
 | `pause_dejeuner_debut` | `12:30` | Début de la pause déjeuner |
 | `pause_dejeuner_duree_min` | `60` | Durée de la pause déjeuner, en minutes |
 | `heure_rdv` | `07:45` | Heure de RDV / accueil des équipes (dossier club). **Optionnel.** Pré-remplie côté admin à `heure_debut − 1h15`, modifiable |
-| `heure_fin_communiquee` | `17:30` | Heure de fin **communiquée aux clubs** (dossier club). **Optionnel.** **Vide = automatique** : le dossier affiche `heure_fin` (fin du dernier match) **+ 1 h 15** et suit chaque régénération ; une valeur saisie prime et ne bouge plus |
+| `heure_fin_communiquee` | `17:30` | Heure de fin **communiquée aux clubs** (dossier club). **Optionnel.** **Vide = automatique** : le dossier affiche `heure_fin` (fin du dernier match) **+ la marge** ci-dessous et suit chaque régénération ; une valeur saisie prime et ne bouge plus |
+| `marge_fin_communiquee_min` | `75` | Marge (min) ajoutée à la fin du dernier match pour l'heure de fin **automatique** annoncée aux clubs. Réglable dans le formulaire « Horaires » de l'admin. **Vide = 75** (1 h 15) |
 
 Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 

@@ -67,7 +67,8 @@ function creerOngletConfig(classeur) {
     ['pause_dejeuner_debut', '12:30'],
     ['pause_dejeuner_duree_min', '60'],
     ['heure_rdv', '07:45'],
-    ['heure_fin_communiquee', '']
+    ['heure_fin_communiquee', ''],
+    ['marge_fin_communiquee_min', '75']
   ];
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
@@ -605,7 +606,7 @@ function enregistrerHoraires(classeur, data) {
   if (err) return { error: err };
   var champs = ['heure_debut', 'heure_fin', 'heure_fin_auto',
                 'battement_terrain_min', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
-                'heure_rdv', 'heure_fin_communiquee'];
+                'heure_rdv', 'heure_fin_communiquee', 'marge_fin_communiquee_min'];
   champs.forEach(function (champ) {
     if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
   });
@@ -2299,7 +2300,7 @@ function reinitialiserTournoi(classeur) {
   //         signature_generation est effacée aussi (elle n'a plus de sens sans planning).
   ['heure_debut', 'heure_fin', 'heure_fin_auto', 'battement_terrain_min',
    'pause_dejeuner_debut', 'pause_dejeuner_duree_min', 'heure_rdv', 'heure_fin_communiquee',
-   'signature_generation']
+   'marge_fin_communiquee_min', 'signature_generation']
     .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
 
   // 3 ter) Contacts & sécurité : effacés aussi (référent et poste de secours peuvent
