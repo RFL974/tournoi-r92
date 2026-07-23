@@ -65,7 +65,9 @@ function creerOngletConfig(classeur) {
     ['heure_fin_auto', 'oui'],
     ['battement_terrain_min', '5'],
     ['pause_dejeuner_debut', '12:30'],
-    ['pause_dejeuner_duree_min', '60']
+    ['pause_dejeuner_duree_min', '60'],
+    ['heure_rdv', '07:45'],
+    ['heure_fin_communiquee', '']
   ];
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
@@ -73,16 +75,20 @@ function creerOngletConfig(classeur) {
   // format_apresmidi : CROISE / CROISE_DIAGONAL / LIBRE / COUPE_PLATEAU (vide = CROISE, historique).
   // param_format : JSON court des réglages du format (ex COUPE_PLATEAU : {"nbQualifiesCoupe":2}).
   // terrains_auto : oui = terrains attribués via l'onglet Terrains (défaut) ; non = saisie manuelle.
+  // reglement : texte libre OU URL (une valeur commençant par « http » sera affichée en lien).
+  // effectif_min / effectif_max : nombre de joueurs par équipe (dossier club) — optionnels.
+  // arbitrage_organisation : qui arbitre (« arbitrage » seul est déjà pris par l'assistant horaires).
   var entetesCategorie = ['categorie', 'presente', 'terrains', 'terrains_auto', 'nb_poules',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min',
-    'format_apresmidi', 'param_format'];
+    'format_apresmidi', 'param_format',
+    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation'];
   var exemplesCategorie = [
-    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         ''],
-    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        ''],
-    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}'],
-    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '']
+    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', ''],
+    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', ''],
+    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}', '', '', '', ''],
+    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '']
   ];
-  onglet.getRange(1, 1, 50, 12).setNumberFormat('@');
+  onglet.getRange(1, 1, 60, entetesCategorie.length + 1).setNumberFormat('@');
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
   stylerEntete(onglet.getRange(1, 1, 1, 2));
   onglet.getRange(titreZoneB, 1).setValue('— Réglages par catégorie —').setFontWeight('bold');
@@ -357,6 +363,7 @@ function doPost(e) {
       case 'genererApresMidi':     resultat = genererApresMidi(classeur); break;
       case 'publierTournoi':       resultat = publierTournoi(classeur, requete.publie); break;
       case 'enregistrerInfosTournoi': resultat = enregistrerInfosTournoi(classeur, requete); break;
+      case 'enregistrerContactsSecurite': resultat = enregistrerContactsSecurite(classeur, requete); break;
       case 'enregistrerPlanTerrains': resultat = enregistrerPlanTerrains(classeur, requete); break;
       case 'enregistrerAffiche':   resultat = enregistrerAffiche(classeur, requete); break;
       case 'supprimerAffiche':     resultat = supprimerAffiche(classeur); break;
@@ -573,10 +580,32 @@ function genererIdEquipe(onglet) {
 }
 
 /* ===================== ÉCRITURE DES RÉGLAGES (Config) ===================== */
+
+/** Vide accepté (champ optionnel), sinon HH:MM strict. Renvoie un message d'erreur, ou null si OK. */
+function validerHeureOptionnelle(valeur, libelle) {
+  if (valeur == null || String(valeur).trim() === '') return null;
+  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(String(valeur).trim())) return null;
+  return libelle + ' invalide : format HH:MM attendu (ex : 08:15).';
+}
+
+/**
+ * Normalise un numéro de téléphone : espaces, points et tirets retirés.
+ * Renvoie les 10 chiffres, ou '' si le résultat n'est pas un numéro à 10 chiffres.
+ */
+function normaliserTelephone(valeur) {
+  var chiffres = String(valeur || '').replace(/[\s.\-]/g, '');
+  return /^\d{10}$/.test(chiffres) ? chiffres : '';
+}
+
 function enregistrerHoraires(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
+  // Heures « dossier club » optionnelles : vides acceptées, sinon HH:MM strict.
+  var err = validerHeureOptionnelle(data.heure_rdv, 'Heure de RDV')
+         || validerHeureOptionnelle(data.heure_fin_communiquee, 'Heure de fin communiquée');
+  if (err) return { error: err };
   var champs = ['heure_debut', 'heure_fin', 'heure_fin_auto',
-                'battement_terrain_min', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min'];
+                'battement_terrain_min', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
+                'heure_rdv', 'heure_fin_communiquee'];
   champs.forEach(function (champ) {
     if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
   });
@@ -585,12 +614,53 @@ function enregistrerHoraires(classeur, data) {
 
 /**
  * Enregistre les INFOS du tournoi affichées côté public (carte d'actualité + page d'article) :
- * nom, date, lieu, description. Stockées comme paramètres globaux de l'onglet Config.
+ * nom, date, lieu, adresse, description. Stockées comme paramètres globaux de l'onglet Config.
  */
 function enregistrerInfosTournoi(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
-  var champs = ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_description'];
+  var champs = ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_adresse', 'tournoi_description'];
   champs.forEach(function (champ) {
+    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
+  });
+  return { ok: true };
+}
+
+/* Paramètres globaux « Contacts & sécurité » (dossier club). Tous optionnels. */
+var CHAMPS_CONTACTS_SECURITE = ['referent_nom', 'referent_tel',
+  'securite_secours_oui', 'securite_secours_precisions',
+  'securite_referent_identique', 'securite_referent_nom', 'securite_referent_tel'];
+
+/**
+ * Enregistre les CONTACTS & SÉCURITÉ du tournoi (référent, poste de secours, référent
+ * sécurité), paramètres globaux de l'onglet Config destinés au futur dossier club.
+ *  - referent_tel / securite_referent_tel : 10 chiffres, normalisés (espaces/points/tirets retirés) ;
+ *  - securite_secours_oui : 'oui'/'non' — les précisions ne valent que si 'oui' ;
+ *  - securite_referent_identique : 'oui' (défaut) = même personne que le référent tournoi ;
+ *    'non' = securite_referent_nom / securite_referent_tel désignent une personne distincte.
+ */
+function enregistrerContactsSecurite(classeur, data) {
+  var onglet = classeur.getSheetByName('Config');
+  var tels = [['referent_tel', 'référent tournoi'], ['securite_referent_tel', 'référent sécurité']];
+  for (var i = 0; i < tels.length; i++) {
+    var cle = tels[i][0];
+    if (data[cle] != null && String(data[cle]).trim() !== '') {
+      var norme = normaliserTelephone(data[cle]);
+      if (!norme) {
+        return { error: 'Téléphone du ' + tels[i][1] + ' invalide : 10 chiffres attendus '
+                 + '(espaces, points ou tirets acceptés).' };
+      }
+      data[cle] = norme;
+    }
+  }
+  // Booléens rangés comme partout dans Config : 'oui' / 'non'.
+  if (data.securite_secours_oui != null) {
+    data.securite_secours_oui = String(data.securite_secours_oui).toLowerCase() === 'oui' ? 'oui' : 'non';
+  }
+  if (data.securite_referent_identique != null) {
+    data.securite_referent_identique =
+      String(data.securite_referent_identique).toLowerCase() === 'non' ? 'non' : 'oui';
+  }
+  CHAMPS_CONTACTS_SECURITE.forEach(function (champ) {
     if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
   });
   return { ok: true };
@@ -762,6 +832,12 @@ function ecrireParamsGlobaux(onglet, paires) {
 function enregistrerCategorie(classeur, data) {
   var nom = (data.categorie || '').toString().trim();
   if (!nom) return { error: 'Nom de catégorie vide.' };
+  // Effectifs par équipe (dossier club) : optionnels, mais si les deux sont saisis, min ≤ max.
+  var effMin = parseInt(data.effectif_min, 10);
+  var effMax = parseInt(data.effectif_max, 10);
+  if (isFinite(effMin) && isFinite(effMax) && effMin > effMax) {
+    return { error: 'Effectif min (' + effMin + ') supérieur à l\'effectif max (' + effMax + ').' };
+  }
   var onglet = classeur.getSheetByName('Config');
   // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution)
   // + les colonnes de format d'après-midi, pour qu'elles existent DÈS le paramétrage
@@ -1789,13 +1865,18 @@ function assurerColonnesMatchs(oM) {
 
 /**
  * S'assure que la Zone B de Config possède les colonnes ajoutées après coup
- * (`format_apresmidi`, `param_format`, `terrains_auto`). Migration douce d'un Sheet
- * déjà en service : la colonne manquante est ajoutée (vide = valeur par défaut à la lecture).
+ * (`format_apresmidi`, `param_format`, `terrains_auto`, puis les colonnes « dossier club » :
+ * `reglement`, `effectif_min`, `effectif_max`, `arbitrage_organisation`). Migration douce d'un
+ * Sheet déjà en service : la colonne manquante est ajoutée (vide = valeur par défaut à la lecture).
  */
 function assurerColonnesConfig(classeur) {
   assurerColonneCategorie(classeur, 'format_apresmidi');
   assurerColonneCategorie(classeur, 'param_format');
   assurerColonneCategorie(classeur, 'terrains_auto');
+  assurerColonneCategorie(classeur, 'reglement');
+  assurerColonneCategorie(classeur, 'effectif_min');
+  assurerColonneCategorie(classeur, 'effectif_max');
+  assurerColonneCategorie(classeur, 'arbitrage_organisation');
 }
 
 /* ===================== GÉNÉRATION POULES + PLANNING ===================== */
@@ -2183,8 +2264,8 @@ function publierTournoi(classeur, publie) {
  * de l'admin). Action IRRÉVERSIBLE. Concrètement :
  *   • vide les onglets Equipes, Poules et Matchs (planning + scores du tournoi en cours) ;
  *   • supprime TOUTES les catégories de l'onglet Config ;
- *   • efface les infos publiques du tournoi (nom, date, lieu, description) et met l'affiche
- *     Drive à la corbeille ;
+ *   • efface les infos publiques du tournoi (nom, date, lieu, adresse, description), les
+ *     contacts & sécurité (référent, poste de secours) et met l'affiche Drive à la corbeille ;
  *   • repasse le tournoi en « masqué » (tournoi_publie = 'non').
  * On CONSERVE les réglages « Horaires de la journée » (heure début/fin, pauses…) et le
  * journal de saison (onglet Historique), qui accumule les résultats de toute la saison.
@@ -2209,15 +2290,21 @@ function reinitialiserTournoi(classeur) {
   var ongletConfig = classeur.getSheetByName('Config');
   var ancienId = (lireConfig(classeur).global || {}).tournoi_affiche_id;
   if (ancienId) { try { DriveApp.getFileById(ancienId).setTrashed(true); } catch (e) {} }
-  ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_description', 'tournoi_affiche_id']
+  ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_adresse', 'tournoi_description',
+   'tournoi_affiche_id']
     .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
 
   // 3 bis) Remise à ZÉRO des horaires de la journée : on repart vraiment de zéro
   //         (le fil « Où en suis-je ? » repasse l'étape Horaires « à faire »).
   //         signature_generation est effacée aussi (elle n'a plus de sens sans planning).
   ['heure_debut', 'heure_fin', 'heure_fin_auto', 'battement_terrain_min',
-   'pause_dejeuner_debut', 'pause_dejeuner_duree_min', 'signature_generation']
+   'pause_dejeuner_debut', 'pause_dejeuner_duree_min', 'heure_rdv', 'heure_fin_communiquee',
+   'signature_generation']
     .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
+
+  // 3 ter) Contacts & sécurité : effacés aussi (référent et poste de secours peuvent
+  //         changer d'une édition à l'autre).
+  CHAMPS_CONTACTS_SECURITE.forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
 
   // 4) Le tournoi redevient masqué pour le public.
   ecrireParamGlobal(ongletConfig, 'tournoi_publie', 'non');

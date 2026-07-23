@@ -5,6 +5,36 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sprint 1 dossier club : nouveaux champs (adresse, RDV, contacts, sécurité, cadre sportif) — 2026-07-23
+Premiers champs du futur **générateur de dossier club**. Tous **optionnels** : un tournoi
+existant sans ces données continue de fonctionner à l'identique (rétrocompatible).
+
+- **Zone A de `Config`** (paramètres globaux) : `tournoi_adresse` (adresse postale, séparée du
+  lieu), `heure_rdv` (accueil des équipes), `heure_fin_communiquee` (fin annoncée aux clubs,
+  jamais recalculée), `referent_nom` / `referent_tel`, `securite_secours_oui` /
+  `securite_secours_precisions`, `securite_referent_identique` (défaut `oui`) /
+  `securite_referent_nom` / `securite_referent_tel`.
+- **Zone B de `Config`** (colonnes par catégorie, ajoutées à droite par la **migration douce**
+  habituelle) : `reglement` (texte ou URL — à afficher en lien si `http…`), `effectif_min` /
+  `effectif_max` (joueurs par équipe, min ≤ max vérifié), `arbitrage_organisation` (qui arbitre —
+  nom distinct de l'« arbitrage » de l'assistant horaires).
+- **Admin — Infos du tournoi** : nouveau champ **Adresse complète** sous le Lieu (enregistré avec
+  les infos, effacé à la réinitialisation).
+- **Admin — Horaires** : **Heure de RDV des équipes** (pré-remplie à `heure_debut − 1h15` à la
+  saisie de l'heure de début, sans jamais écraser une valeur personnalisée) et **Heure de fin
+  communiquée aux clubs** (saisie libre).
+- **Admin — nouvelle carte « Contacts & sécurité »** (écran/carte Infos) : référent tournoi
+  (nom + téléphone), case **Poste de secours** (révèle un champ Précisions), case **Référent
+  sécurité identique au référent tournoi** (cochée par défaut ; décochée → nom + téléphone
+  distincts). Nouvelle action backend `enregistrerContactsSecurite`.
+- **Admin — Catégories** : 4 nouveaux réglages par catégorie (Règlement, Effectif min/max,
+  Arbitrage), enregistrés avec la carte de la catégorie.
+- **Validations** (frontend + backend) : téléphones à **10 chiffres** (espaces/points/tirets
+  acceptés à la saisie, retirés à l'enregistrement), heures `HH:MM`, `effectif_min ≤ effectif_max`.
+- Réinitialisation du tournoi : efface aussi l'adresse, les heures RDV/fin communiquée et les
+  contacts & sécurité. `setupSheet()` crée les nouveaux en-têtes ; documentation
+  (`docs/structure-google-sheet.md`) à jour.
+
 ### Admin : nouveau look navy/blanc/ciel + navigation par écrans — 2026-07-22
 La page admin fait peau neuve, **sans toucher à sa logique** (admin.js inchangé). **100 % frontend.**
 

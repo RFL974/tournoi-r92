@@ -38,6 +38,8 @@ Deux colonnes : `parametre` et `valeur`.
 | `battement_terrain_min` | `5` | Temps (min) pour libérer un terrain entre 2 matchs |
 | `pause_dejeuner_debut` | `12:30` | Début de la pause déjeuner |
 | `pause_dejeuner_duree_min` | `60` | Durée de la pause déjeuner, en minutes |
+| `heure_rdv` | `07:45` | Heure de RDV / accueil des équipes (dossier club). **Optionnel.** Pré-remplie côté admin à `heure_debut − 1h15`, modifiable |
+| `heure_fin_communiquee` | `17:30` | Heure de fin **communiquée aux clubs** (dossier club). **Optionnel.** Jamais recalculée, contrairement à `heure_fin` |
 
 Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 
@@ -47,7 +49,8 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 | `tournoi_publie` | `oui` | `oui` = la page publique est visible ; sinon écran « à venir ». Piloté par « Générer le tournoi » |
 | `tournoi_nom` | `Challenge Marc Chevalier` | Nom affiché sur la carte + la page d'article du site vitrine |
 | `tournoi_date` | `2026-11-11` | Date du tournoi (carte, article, agenda .ics) |
-| `tournoi_lieu` | `11 av. Paul Langevin, 92350…` | Lieu (article + itinéraire + agenda .ics) |
+| `tournoi_lieu` | `Stade Paul Langevin` | Lieu (article + itinéraire + agenda .ics) |
+| `tournoi_adresse` | `11 av. Paul Langevin, 92350…` | Adresse postale complète du lieu (dossier club) — carte « Infos du tournoi » de l'admin |
 | `tournoi_description` | `Le Challenge…` | Description (carte + article) |
 | `tournoi_affiche_id` | `1-3DZBDd…` | Identifiant du fichier **Google Drive** de l'affiche (affichée via `lh3.googleusercontent.com/d/{id}`) |
 | `terrains_physiques` | `[{"nom":"Rugby 1",…}]` | JSON — les **grands terrains** réels déclarés (onglet admin « Terrains & répartition ») |
@@ -55,6 +58,19 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 | `couloir_terrain_m` | `5` | Couloir de circulation entre mini-terrains (m) |
 | `tm_longueur_m` / `tm_largeur_m` | `4` | Taille de la table des marques (m) |
 | `repartition_grands_terrains` | `{"Rugby 1":["1","2"],…}` | JSON — **composition de chaque grand terrain** (numéros de mini-terrains), écrite quand la répartition est **appliquée** ; alimente le filtre « Grand terrain » de la page Saisie |
+
+Paramètres **Contacts & sécurité** (écrits par la carte « Contacts &amp; sécurité » de la page
+admin — destinés au futur **générateur de dossier club**, tous **optionnels**) :
+
+| parametre | valeur (exemple) | Signification |
+|---|---|---|
+| `referent_nom` | `Camille Dupont` | Nom du référent tournoi |
+| `referent_tel` | `0612345678` | Téléphone du référent (10 chiffres, normalisé : espaces/points/tirets retirés) |
+| `securite_secours_oui` | `oui` | `oui` = un poste de secours est présent sur place |
+| `securite_secours_precisions` | `Local à côté du club-house` | Précisions sur le poste de secours (utile seulement si `securite_secours_oui = oui`) |
+| `securite_referent_identique` | `oui` | `oui` (défaut, y compris si vide) = le référent sécurité est le référent tournoi |
+| `securite_referent_nom` | `Dominique Martin` | Nom du référent sécurité distinct (si `securite_referent_identique = non`) |
+| `securite_referent_tel` | `0698765432` | Téléphone du référent sécurité distinct (10 chiffres, normalisé) |
 
 ### Zone B — Réglages par catégorie
 
@@ -73,11 +89,17 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `recup_entre_matchs_min` | `15` | Temps de récupération minimum d'une équipe entre 2 de ses matchs |
 | `format_apresmidi` | `CROISE` | Format de l'après-midi : `CROISE` / `CROISE_DIAGONAL` / `LIBRE` / `COUPE_PLATEAU`. **Vide = `CROISE`** (comportement historique) |
 | `param_format` | `{"nbQualifiesCoupe":2}` | Réglages JSON du format. Pour `COUPE_PLATEAU` : nb de qualifiés en Coupe par poule. Vide pour `CROISE`/`CROISE_DIAGONAL`/`LIBRE` |
+| `reglement` | `Règles FFR M10` ou `https://…` | **Optionnel** (dossier club). Règlement appliqué à la catégorie : texte libre **ou** URL — une valeur commençant par `http` doit être affichée en **lien cliquable** par les pages qui la consomment |
+| `effectif_min` | `8` | **Optionnel** (dossier club). Effectif minimum par équipe (nb de joueurs). Si `effectif_min` et `effectif_max` sont saisis, min ≤ max (vérifié à l'enregistrement) |
+| `effectif_max` | `12` | **Optionnel** (dossier club). Effectif maximum par équipe (nb de joueurs) |
+| `arbitrage_organisation` | `Éducateurs des clubs` | **Optionnel** (dossier club). Qui arbitre les matchs. ⚠️ Nom volontairement distinct de l'« arbitrage » du code (assistant d'optimisation des horaires) |
 
-> ℹ️ **Migration automatique** : `format_apresmidi`, `param_format` et `terrains_auto` sont **ajoutées
+> ℹ️ **Migration automatique** : `format_apresmidi`, `param_format`, `terrains_auto`, puis
+> `reglement`, `effectif_min`, `effectif_max` et `arbitrage_organisation` sont **ajoutées
 > automatiquement** à droite de la Zone B dès la première génération d'après-midi (ou enregistrement de
 > catégorie) sur un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement croisé**,
-> et sans `terrains_auto` = **mode Auto**, comme avant.
+> et sans `terrains_auto` = **mode Auto**, comme avant. Les colonnes « dossier club » vides = champ
+> non renseigné (aucun blocage).
 
 > **Durée totale d'un match** (calculée par le backend) :
 > `format_mi_temps × duree_mi_temps_min + pause_mi_temps_min` (si 2 mi-temps).
