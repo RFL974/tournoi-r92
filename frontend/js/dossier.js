@@ -77,7 +77,9 @@ function heurePlusMinutes(hhmm, minutes) {
  *  - `heure_fin_communiquee` renseignée → elle fait foi (choix manuel) ;
  *  - vide → AUTOMATIQUE : fin du dernier match (`heure_fin`, recalculée à chaque
  *    génération) + la marge réglée dans le formulaire Horaires de l'admin
- *    (`marge_fin_communiquee_min`, défaut 1 h 15) — rangements, goûter, récompenses…
+ *    (`marge_fin_communiquee_min`, défaut 1 h 15). Cette marge couvre le retour aux
+ *    vestiaires puis la cérémonie de remise des trophées — l'événement se termine
+ *    à l'issue de la remise.
  */
 const MARGE_FIN_COMMUNIQUEE_DEFAUT_MIN = 75;
 function heureFinCommuniquee(g) {
@@ -271,7 +273,9 @@ function construireICS(g) {
     prog.push('Pause déjeuner : ' + txt(g.pause_dejeuner_debut)
       + (txt(g.pause_dejeuner_duree_min) ? ' (' + txt(g.pause_dejeuner_duree_min) + ' min)' : ''));
   }
-  if (heureFinCommuniquee(g)) prog.push('Fin prévue : ' + heureFinCommuniquee(g));
+  if (heureFinCommuniquee(g)) {
+    prog.push('Fin de l\'événement (après la remise des trophées) : ' + heureFinCommuniquee(g));
+  }
 
   const horodatage = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   return ['BEGIN:VCALENDAR',
@@ -349,10 +353,13 @@ function construireDossier(g, categories) {
     ligne('Accueil des équipes (RDV)', echapper(txt(g.heure_rdv))),
     ligne('Premier coup d\'envoi', echapper(txt(g.heure_debut))),
     ligne('Pause déjeuner', pause),
-    ligne('Fin de la journée', echapper(heureFinCommuniquee(g)))
+    ligne('Fin de l\'événement', echapper(heureFinCommuniquee(g)))
   ]);
   html += section('Programme de la journée',
-    lignesProgramme && (lignesProgramme + '<p class="d-note">Horaires indicatifs — le planning détaillé fera foi le jour du tournoi.</p>'));
+    lignesProgramme && (lignesProgramme +
+      '<p class="d-note">Après le dernier match : retour aux vestiaires puis cérémonie de remise des trophées — '
+      + 'l\'événement se termine à l\'issue de la remise. '
+      + 'Horaires indicatifs — le planning détaillé fera foi le jour du tournoi.</p>'));
 
   // 5) FORMAT SPORTIF : tableau si plusieurs catégories, puces si une seule.
   html += section('Format sportif', cadreSportif(cats));

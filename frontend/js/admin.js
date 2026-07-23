@@ -1367,10 +1367,12 @@ function afficherHoraires(global) {
         // planning. Une valeur saisie ici prime et ne bouge plus.
         champHeure('heure_fin_communiquee', 'Heure de fin communiquée aux clubs', val('heure_fin_communiquee'),
                    'Vide = auto : fin du dernier match + la marge ci-dessous (suit le planning).') +
-        // Marge réglable du mode automatique (défaut 75 min = 1h15) : rangements,
-        // goûter, remise des récompenses… La main reste totale à l'organisateur.
+        // Marge réglable du mode automatique (défaut 75 min = 1h15) : couvre le retour
+        // aux vestiaires puis la cérémonie de remise des trophées — l'événement se
+        // termine à l'issue de la remise. La main reste totale à l'organisateur.
         champNombre('marge_fin_communiquee_min', 'Marge après le dernier match (min)', val('marge_fin_communiquee_min', '75'),
-                    'Utilisée quand l\'heure ci-dessus est vide : fin annoncée = dernier match + cette marge.') +
+                    'Retour aux vestiaires + remise des trophées : l\'événement se termine à la fin de la remise. '
+                    + 'Fin annoncée = dernier match + cette marge (si l\'heure ci-dessus est vide).') +
         champNombre('battement_terrain_min', 'Battement terrain entre les matchs (min)', val('battement_terrain_min', '5')) +
         champHeure('pause_dejeuner_debut', 'Pause déjeuner — début', val('pause_dejeuner_debut')) +
         champNombre('pause_dejeuner_duree_min', 'Pause déjeuner — durée (min)', val('pause_dejeuner_duree_min')) +

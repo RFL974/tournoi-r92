@@ -5,6 +5,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Dossier club : la fin de l'événement expliquée (vestiaires + trophées) — 2026-07-23
+La marge après le dernier match est désormais **explicitée partout** : elle couvre le
+**retour aux vestiaires** puis la **cérémonie de remise des trophées**, et l'événement se
+termine **à l'issue de la remise**. Le dossier affiche « **Fin de l'événement** » (au lieu de
+« Fin de la journée ») avec une note explicative dans le Programme, l'agenda `.ics` reprend la
+mention, et l'aide du champ « Marge » du formulaire Horaires détaille ce déroulé.
+
 ### Dossier club : marge de fin réglable dans les Horaires — 2026-07-23
 La marge du mode automatique (« fin du dernier match + X min ») devient **réglable** :
 nouveau champ **« Marge après le dernier match (min) »** dans le formulaire « Horaires de la
