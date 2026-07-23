@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Dossier club : fin communiquée automatique + tableau sans débordement — 2026-07-23
+- **Heure de fin annoncée aux clubs** : si `heure_fin_communiquee` est **vide**, le dossier
+  affiche désormais automatiquement **fin du dernier match + 1 h 15** (`heure_fin`, recalculée
+  à chaque génération du planning) — dans le Programme comme dans l'agenda `.ics`. Une valeur
+  saisie à la main prime toujours. Le formulaire Horaires de l'admin l'explique sous le champ.
+- **Règlement d'une catégorie** : l'URL est détectée même **noyée dans un préfixe** (cas réel :
+  lien copié depuis la visionneuse PDF de Chrome, `chrome-extension://…/https://…pdf`) et
+  remplacée par un lien court « Consulter le règlement » — fini l'URL brute interminable.
+- **Anti-débordement** : les cellules du tableau Format sportif et les valeurs des listes
+  coupent les chaînes insécables (`overflow-wrap: anywhere`) au lieu de faire déborder la page.
+
 ### Sprint 2 dossier club : générateur automatique de dossier — 2026-07-23
 Nouvelle page **`dossier-club.html`** : le dossier récapitulatif envoyé aux clubs invités,
 assemblé automatiquement depuis les données du tournoi (Config Zone A + Zone B). **Un seul
