@@ -491,7 +491,6 @@ function cadreSportif(cats) {
       ligne('Après-midi', echapper(resumeApresMidi(c))),
       ligne('Mi-temps', echapper(resumeMiTemps(c))),
       ligne('Effectif par équipe', echapper(resumeEffectif(c))),
-      ligne('Équipes attendues', echapper(txt(c.nb_equipes_attendues))),
       ligne('Règlement', resumeReglement(c)),
       ligne('Arbitrage', echapper(txt(c.arbitrage_organisation)))
     ]);
@@ -508,7 +507,6 @@ function cadreSportif(cats) {
     { titre: 'Après-midi', v: function (c) { return echapper(resumeApresMidi(c)); } },
     { titre: 'Mi-temps',   courte: true, v: function (c) { return echapper(resumeMiTemps(c)); } },
     { titre: 'Effectif',   courte: true, v: function (c) { return echapper(resumeEffectif(c)); } },
-    { titre: 'Équipes attendues', courte: true, v: function (c) { return echapper(txt(c.nb_equipes_attendues)); } },
     { titre: 'Règlement',  v: function (c) { return resumeReglement(c); } },
     { titre: 'Arbitrage',  v: function (c) { return echapper(txt(c.arbitrage_organisation)); } }
   ].filter(function (col) {

@@ -84,16 +84,15 @@ function creerOngletConfig(classeur) {
   // reglement : texte libre OU URL (une valeur commençant par « http » sera affichée en lien).
   // effectif_min / effectif_max : nombre de joueurs par équipe (dossier club) — optionnels.
   // arbitrage_organisation : qui arbitre (« arbitrage » seul est déjà pris par l'assistant horaires).
-  // nb_equipes_attendues : nb d'équipes attendues dans la catégorie (dossier d'invitation) — optionnel.
   var entetesCategorie = ['categorie', 'presente', 'terrains', 'terrains_auto', 'nb_poules',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min',
     'format_apresmidi', 'param_format',
-    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation', 'nb_equipes_attendues'];
+    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation'];
   var exemplesCategorie = [
-    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', '', ''],
-    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', '', ''],
-    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}', '', '', '', '', ''],
-    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '', '']
+    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', ''],
+    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', ''],
+    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}', '', '', '', ''],
+    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '']
   ];
   onglet.getRange(1, 1, 60, entetesCategorie.length + 1).setNumberFormat('@');
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
@@ -1008,11 +1007,6 @@ function enregistrerCategorie(classeur, data) {
   var effMax = parseInt(data.effectif_max, 10);
   if (isFinite(effMin) && isFinite(effMax) && effMin > effMax) {
     return { error: 'Effectif min (' + effMin + ') supérieur à l\'effectif max (' + effMax + ').' };
-  }
-  // Équipes attendues (dossier d'invitation) : optionnel, mais si saisi, entier ≥ 0.
-  var attendu = String(data.nb_equipes_attendues == null ? '' : data.nb_equipes_attendues).trim();
-  if (attendu !== '' && !/^\d+$/.test(attendu)) {
-    return { error: 'Nombre d\'équipes attendues invalide : entier ≥ 0 attendu.' };
   }
   var onglet = classeur.getSheetByName('Config');
   // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution)
@@ -2053,7 +2047,6 @@ function assurerColonnesConfig(classeur) {
   assurerColonneCategorie(classeur, 'effectif_min');
   assurerColonneCategorie(classeur, 'effectif_max');
   assurerColonneCategorie(classeur, 'arbitrage_organisation');
-  assurerColonneCategorie(classeur, 'nb_equipes_attendues');
 }
 
 /* ===================== GÉNÉRATION POULES + PLANNING ===================== */

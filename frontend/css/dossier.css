@@ -135,8 +135,8 @@ body {
 .d-table th, .d-table td { overflow-wrap: break-word; }
 /* Les colonnes courtes (Matin, Mi-temps, Effectif…) : leurs VALEURS brèves restent
    sur UNE ligne — sinon la coupure de secours cassait un mot (« Poule / s »).
-   Seules les cellules td : un TITRE de colonne (« Équipes attendues ») peut, lui,
-   passer sur deux lignes sans faire déborder le tableau de la feuille. */
+   Seules les cellules td : un TITRE de colonne peut, lui, passer sur deux lignes
+   sans faire déborder le tableau de la feuille. */
 .d-table td.col-courte { white-space: nowrap; overflow-wrap: normal; }
 .d-table th {
   text-align: left;
