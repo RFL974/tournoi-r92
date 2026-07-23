@@ -24,6 +24,25 @@ const DOSSIER_FORMATS = {
   COUPE_PLATEAU: 'Coupe + Plateau'
 };
 
+/* Description CONCISE de chaque format (destinée aux clubs) : le dossier ne se
+   contente pas de nommer le format retenu, il l'explique dans une légende sous
+   le tableau « Format sportif ». Version courte des textes de la page admin. */
+const DOSSIER_FORMATS_DESC = {
+  CROISE: 'les équipes sont regroupées par niveau d\'après leur classement du matin, '
+    + 'puis s\'affrontent au sein de leur niveau (classement général et podium).',
+  CROISE_DIAGONAL: 'brassage par rangs croisés entre poules — le 1ᵉʳ d\'une poule affronte '
+    + 'le 2ᵉ d\'une autre — les résultats étant cumulés au classement général.',
+  LIBRE: 'des matchs amicaux supplémentaires, sans classement ni podium (idéal pour les plus jeunes).',
+  COUPE_PLATEAU: 'les premiers de chaque poule disputent une coupe à élimination directe '
+    + '(jusqu\'à la finale), les autres un plateau sans élimination.'
+};
+
+/** Clé de format normalisée d'une catégorie (repli CROISE, comme partout ailleurs). */
+function cleFormatApresMidi(cat) {
+  const f = txt(cat.format_apresmidi).toUpperCase();
+  return DOSSIER_FORMATS_DESC[f] ? f : 'CROISE';
+}
+
 document.addEventListener('DOMContentLoaded', initDossier);
 document.addEventListener('click', function (e) {
   if (e.target && e.target.id === 'bouton-imprimer') window.print();
@@ -207,6 +226,13 @@ function resumeReglement(cat) {
 function resumeApresMidi(cat) {
   const f = txt(cat.format_apresmidi).toUpperCase();
   return DOSSIER_FORMATS[f] || DOSSIER_FORMATS.CROISE;
+}
+
+/** Temps de JEU d'un match (mi-temps × durée, pause exclue), en minutes — null si inconnu. */
+function tempsDeJeuDe(cat) {
+  const nb = parseInt(txt(cat.format_mi_temps), 10) || 2;
+  const duree = parseInt(txt(cat.duree_mi_temps_min), 10);
+  return (isFinite(duree) && duree > 0) ? nb * duree : null;
 }
 
 /**
@@ -459,7 +485,7 @@ function cadreSportif(cats) {
 
   if (tries.length === 1) {
     const c = tries[0];
-    return listeOuVide([
+    const liste = listeOuVide([
       ligne('Catégorie', echapper(txt(c.categorie))),
       ligne('Matin', 'Poules (round-robin)'),
       ligne('Après-midi', echapper(resumeApresMidi(c))),
@@ -469,6 +495,7 @@ function cadreSportif(cats) {
       ligne('Règlement', resumeReglement(c)),
       ligne('Arbitrage', echapper(txt(c.arbitrage_organisation)))
     ]);
+    return liste + legendeFormatSportif(tries);
   }
 
   // Colonnes candidates : celles dont AU MOINS une catégorie a une valeur sont gardées.
@@ -501,7 +528,55 @@ function cadreSportif(cats) {
     html += '</tr>';
   });
   html += '</tbody></table>';
-  return html;
+  return html + legendeFormatSportif(tries);
+}
+
+/**
+ * Légende SOUS le tableau du cadre sportif : le dossier ne se contente pas de
+ * nommer le format, il l'explique. Deux lignes :
+ *  - « Déroulé » : le matin (poules round-robin) + la description de CHAQUE format
+ *    d'après-midi présent (dédupliqué : une seule description par format utilisé) ;
+ *  - « Temps de jeu » : par catégorie, le temps de jeu par match (mi-temps × durée)
+ *    et la récupération entre deux matchs. Complète la colonne « Mi-temps » du tableau
+ *    (qui donne le découpage) avec le total joué et le repos — les infos que réclament
+ *    les clubs pour organiser leurs rotations.
+ * Chaque bout d'info manquant est simplement omis (jamais de « non communiqué »).
+ */
+function legendeFormatSportif(cats) {
+  const parts = [];
+
+  // 1) Déroulé + description des formats présents (dédupliqués, dans l'ordre des catégories).
+  const formatsPresents = [];
+  cats.forEach(function (c) {
+    const cle = cleFormatApresMidi(c);
+    if (formatsPresents.indexOf(cle) === -1) formatsPresents.push(cle);
+  });
+  let deroule = '<strong>Déroulé</strong> — <em>Matin :</em> poules en round-robin '
+    + '(chaque équipe rencontre toutes celles de sa poule).';
+  formatsPresents.forEach(function (cle) {
+    deroule += ' <em>Après-midi, ' + echapper(DOSSIER_FORMATS[cle]) + ' :</em> '
+      + echapper(DOSSIER_FORMATS_DESC[cle]);
+  });
+  parts.push('<p class="d-legende-ligne">' + deroule + '</p>');
+
+  // 2) Temps de jeu par catégorie : temps de jeu par match + récupération entre matchs.
+  const lignesTemps = [];
+  cats.forEach(function (c) {
+    const seg = [];
+    const jeu = tempsDeJeuDe(c);
+    if (jeu) seg.push(jeu + ' min de jeu par match');
+    const recup = txt(c.recup_entre_matchs_min);
+    if (recup) seg.push('récupération ' + echapper(recup) + ' min entre deux matchs');
+    if (seg.length) {
+      lignesTemps.push('<strong>' + echapper(txt(c.categorie)) + '</strong> : ' + seg.join(', '));
+    }
+  });
+  if (lignesTemps.length) {
+    parts.push('<p class="d-legende-ligne"><strong>Temps de jeu</strong> — '
+      + lignesTemps.join(' · ') + '.</p>');
+  }
+
+  return '<div class="d-legende">' + parts.join('') + '</div>';
 }
 
 /** Bandeau d'actions : chaque bouton n'apparaît que si son lien est constructible. */
