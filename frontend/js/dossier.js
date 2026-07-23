@@ -76,11 +76,15 @@ function heurePlusMinutes(hhmm, minutes) {
  * Heure de fin ANNONCÉE aux clubs :
  *  - `heure_fin_communiquee` renseignée → elle fait foi (choix manuel) ;
  *  - vide → AUTOMATIQUE : fin du dernier match (`heure_fin`, recalculée à chaque
- *    génération) + 1 h 15 de marge (rangements, goûter, remise des récompenses…).
+ *    génération) + la marge réglée dans le formulaire Horaires de l'admin
+ *    (`marge_fin_communiquee_min`, défaut 1 h 15) — rangements, goûter, récompenses…
  */
-const MARGE_FIN_COMMUNIQUEE_MIN = 75;
+const MARGE_FIN_COMMUNIQUEE_DEFAUT_MIN = 75;
 function heureFinCommuniquee(g) {
-  return txt(g.heure_fin_communiquee) || heurePlusMinutes(g.heure_fin, MARGE_FIN_COMMUNIQUEE_MIN);
+  const manuelle = txt(g.heure_fin_communiquee);
+  if (manuelle) return manuelle;
+  const marge = parseInt(txt(g.marge_fin_communiquee_min), 10);
+  return heurePlusMinutes(g.heure_fin, (isFinite(marge) && marge >= 0) ? marge : MARGE_FIN_COMMUNIQUEE_DEFAUT_MIN);
 }
 
 /** « 0612345678 » → « 06 12 34 56 78 » (affichage ; la valeur stockée reste normalisée). */
