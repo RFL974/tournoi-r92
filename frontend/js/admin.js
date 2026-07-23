@@ -18,7 +18,14 @@ const CHAMPS_CATEGORIE = [
   { cle: 'format_mi_temps',        label: 'Nb mi-temps',               type: 'select', options: ['1', '2'] },
   { cle: 'duree_mi_temps_min',     label: 'Durée mi-temps (min)',      type: 'number' },
   { cle: 'pause_mi_temps_min',     label: 'Pause mi-temps (min)',      type: 'number' },
-  { cle: 'recup_entre_matchs_min', label: 'Récup. entre matchs (min)', type: 'number' }
+  { cle: 'recup_entre_matchs_min', label: 'Récup. entre matchs (min)', type: 'number' },
+  // Champs « dossier club » (facultatifs). `reglement` : texte libre OU URL (affichée en lien
+  // par les pages qui la consomment). `arbitrage_organisation` : qui arbitre — nom volontairement
+  // distinct de l'« arbitrage » de l'assistant horaires (deux concepts différents).
+  { cle: 'reglement',              label: 'Règlement (texte ou lien)', type: 'text', placeholder: 'Ex : règles FFR M10 ou https://…' },
+  { cle: 'effectif_min',           label: 'Effectif min (joueurs)',    type: 'number' },
+  { cle: 'effectif_max',           label: 'Effectif max (joueurs)',    type: 'number' },
+  { cle: 'arbitrage_organisation', label: 'Arbitrage (qui arbitre ?)', type: 'text', placeholder: 'Ex : éducateurs des clubs' }
 ];
 
 /* Formats d'après-midi proposés (choisis AU PARAMÉTRAGE, avant le jour J), avec une
@@ -119,8 +126,10 @@ async function initAdmin() {
     afficherPlanning(data.poules, data.matchs);
     majApresMidi(); // état de préparation de la phase après-midi
 
-    // 4) Infos du tournoi (nom / date / lieu / description) + état de publication
+    // 4) Infos du tournoi (nom / date / lieu / adresse / description) + contacts & sécurité
+    //    + état de publication
     majInfosTournoi();
+    majContactsSecurite();
     majPublication();
 
     // 5) Tableau de bord (récap en haut de page) + horodatage
@@ -210,6 +219,12 @@ async function initAdmin() {
   // Bouton « Retirer l'affiche » (annule un choix non enregistré, ou supprime l'affiche enregistrée).
   document.getElementById('bouton-retirer-affiche').addEventListener('click', onRetirerAffiche);
 
+  // Contacts & sécurité : enregistrement via son bouton dédié + champs conditionnels
+  // (précisions du poste de secours, référent sécurité distinct) pilotés par les cases.
+  document.getElementById('form-contacts-securite').addEventListener('submit', function (e) { e.preventDefault(); });
+  document.getElementById('form-contacts-securite').addEventListener('change', onContactsChange);
+  document.getElementById('bouton-enregistrer-contacts').addEventListener('click', onEnregistrerContacts);
+
   // Champ date : ouvre le calendrier dès qu'on clique n'importe où sur la barre
   // (par défaut, seul le clic sur la petite icône l'ouvre). showPicker() peut ne pas
   // exister sur de vieux navigateurs → on ignore l'erreur, l'icône reste utilisable.
@@ -240,6 +255,7 @@ function majInfosTournoi() {
   form.tournoi_nom.value = g.tournoi_nom || '';
   form.tournoi_date.value = g.tournoi_date || '';
   form.tournoi_lieu.value = g.tournoi_lieu || '';
+  form.tournoi_adresse.value = g.tournoi_adresse || '';
   form.tournoi_description.value = g.tournoi_description || '';
 
   // Aperçu de l'affiche déjà enregistrée (image Drive publique).
@@ -464,6 +480,7 @@ function lireInfosTournoi() {
     tournoi_nom: form.tournoi_nom.value.trim(),
     tournoi_date: form.tournoi_date.value,
     tournoi_lieu: form.tournoi_lieu.value.trim(),
+    tournoi_adresse: form.tournoi_adresse.value.trim(),
     tournoi_description: form.tournoi_description.value.trim()
   };
 }
@@ -491,6 +508,104 @@ async function onEnregistrerInfos() {
     majInfosTournoi();
     document.getElementById('form-infos-tournoi').tournoi_affiche.value = ''; // vide le champ fichier
     afficherMessage(message, '✅ Infos enregistrées.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   CONTACTS & SÉCURITÉ (référent tournoi, poste de secours, référent sécurité)
+   — paramètres globaux de Config destinés au futur dossier club.
+   -------------------------------------------------------------------------- */
+
+/**
+ * Normalise un numéro de téléphone : espaces, points et tirets retirés.
+ * Renvoie les 10 chiffres, ou '' si le résultat n'est pas un numéro à 10 chiffres.
+ * (Même règle que le backend, pour refuser AVANT l'envoi et guider la correction.)
+ */
+function normaliserTelephone(valeur) {
+  const chiffres = String(valeur || '').replace(/[\s.\-]/g, '');
+  return /^\d{10}$/.test(chiffres) ? chiffres : '';
+}
+
+/** Pré-remplit le formulaire Contacts & sécurité avec ce qui est déjà enregistré. */
+function majContactsSecurite() {
+  const form = document.getElementById('form-contacts-securite');
+  if (!form) return;
+  const g = configCourante.global || {};
+  form.referent_nom.value = g.referent_nom || '';
+  form.referent_tel.value = g.referent_tel || '';
+  form.securite_secours_oui.checked = String(g.securite_secours_oui).toLowerCase() === 'oui';
+  form.securite_secours_precisions.value = g.securite_secours_precisions || '';
+  // Référent sécurité identique au référent tournoi PAR DÉFAUT : seul 'non' décoche.
+  form.securite_referent_identique.checked =
+    String(g.securite_referent_identique || 'oui').toLowerCase() !== 'non';
+  form.securite_referent_nom.value = g.securite_referent_nom || '';
+  form.securite_referent_tel.value = g.securite_referent_tel || '';
+  majAffichageContacts(form);
+  // Formulaire (re)rempli avec l'état ENREGISTRÉ → référence pour le détecteur
+  // de « modifications non enregistrées » de l'assistant.
+  if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
+}
+
+/** Révèle / masque les champs conditionnels selon les cases à cocher. */
+function majAffichageContacts(form) {
+  document.getElementById('ligne-secours-precisions').hidden = !form.securite_secours_oui.checked;
+  document.getElementById('lignes-referent-securite').hidden = form.securite_referent_identique.checked;
+}
+
+/** Cases à cocher du formulaire Contacts & sécurité : met à jour l'affichage conditionnel. */
+function onContactsChange(evenement) {
+  const nom = evenement.target.name;
+  if (nom === 'securite_secours_oui' || nom === 'securite_referent_identique') {
+    majAffichageContacts(document.getElementById('form-contacts-securite'));
+  }
+}
+
+/** Lit les valeurs du formulaire Contacts & sécurité (booléens rangés en 'oui'/'non'). */
+function lireContactsSecurite() {
+  const form = document.getElementById('form-contacts-securite');
+  return {
+    referent_nom:                form.referent_nom.value.trim(),
+    referent_tel:                form.referent_tel.value.trim(),
+    securite_secours_oui:        form.securite_secours_oui.checked ? 'oui' : 'non',
+    securite_secours_precisions: form.securite_secours_precisions.value.trim(),
+    securite_referent_identique: form.securite_referent_identique.checked ? 'oui' : 'non',
+    securite_referent_nom:       form.securite_referent_nom.value.trim(),
+    securite_referent_tel:       form.securite_referent_tel.value.trim()
+  };
+}
+
+/** Enregistre les contacts & sécurité (avec validation des téléphones : 10 chiffres). */
+async function onEnregistrerContacts() {
+  const message = document.getElementById('message-contacts-securite');
+  const bouton = document.getElementById('bouton-enregistrer-contacts');
+  const data = lireContactsSecurite();
+
+  // Téléphones : espaces, points et tirets acceptés à la saisie, retirés à l'enregistrement.
+  const tels = [['referent_tel', 'Référent tournoi'], ['securite_referent_tel', 'Référent sécurité']];
+  for (let i = 0; i < tels.length; i++) {
+    const cle = tels[i][0];
+    if (!data[cle]) continue; // champ vide = optionnel, accepté
+    const norme = normaliserTelephone(data[cle]);
+    if (!norme) {
+      afficherMessage(message, '⚠️ Téléphone « ' + tels[i][1] + ' » invalide : 10 chiffres attendus.', 'ko');
+      return;
+    }
+    data[cle] = norme;
+  }
+
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Enregistrement…';
+  try {
+    await ecrireAdmin('enregistrerContactsSecurite', data);
+    configCourante.global = Object.assign({}, configCourante.global, data);
+    majContactsSecurite(); // ré-affiche les numéros normalisés + reprend la photo « propre »
+    afficherMessage(message, '✅ Contacts & sécurité enregistrés.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
@@ -937,7 +1052,7 @@ async function rechargerEtRendre(opt) {
   afficherPlanning(data.poules, data.matchs);
   majApresMidi();
 
-  if (opt.infos)       majInfosTournoi();
+  if (opt.infos)       { majInfosTournoi(); majContactsSecurite(); }
   if (opt.publication) majPublication();
   majTableauBord();
   if (opt.heure)       majHeureAdmin();
@@ -1086,6 +1201,19 @@ function onReglagesChange(evenement) {
     const champFin = document.getElementById('h-heure_fin');
     if (champFin) champFin.disabled = evenement.target.checked; // grisé quand auto
   }
+  // Heure de début saisie/modifiée → pré-remplit l'heure de RDV à début − 1h15. On n'écrase
+  // JAMAIS une valeur personnalisée : seul un champ vide, ou déjà rempli par ce pré-remplissage
+  // (marqueur data-auto-rdv), suit l'heure de début. Une saisie manuelle retire le marqueur.
+  if (evenement.target.id === 'h-heure_debut') {
+    const champRdv = document.getElementById('h-heure_rdv');
+    if (champRdv && (champRdv.value === '' || champRdv.dataset.autoRdv === '1')) {
+      const rdv = heureMoinsMinutes(evenement.target.value, 75);
+      if (rdv) { champRdv.value = rdv; champRdv.dataset.autoRdv = '1'; }
+    }
+  }
+  if (evenement.target.id === 'h-heure_rdv') {
+    delete evenement.target.dataset.autoRdv; // valeur choisie à la main → on ne l'écrase plus
+  }
   // Choix d'un format d'après-midi : on pilote l'affichage conditionnel via data-format
   // (carte sélectionnée mise en avant, champ « qualifiés » et bon récap révélés en CSS).
   if (evenement.target.name === 'format_apresmidi') {
@@ -1184,6 +1312,9 @@ function afficherHoraires(global) {
       '<h2>Horaires de la journée</h2>' +
       '<form id="form-horaires" class="form-reglages">' +
         champHeure('heure_debut', 'Heure de début des matchs', val('heure_debut')) +
+        // Heure de RDV (accueil des équipes) : pré-remplie à début − 1h15 quand on saisit
+        // l'heure de début (voir onReglagesChange), mais toujours modifiable à la main.
+        champHeure('heure_rdv', 'Heure de RDV des équipes', val('heure_rdv')) +
         // Heure de fin + case "auto"
         '<div class="champ-reglage">' +
           '<label for="h-heure_fin">Heure de fin des matchs</label>' +
@@ -1194,6 +1325,9 @@ function afficherHoraires(global) {
               (auto ? ' disabled' : '') + '>' +
           '</span>' +
         '</div>' +
+        // Heure de fin COMMUNIQUÉE (dossier club) : saisie libre, jamais recalculée —
+        // contrairement à heure_fin qui bouge à chaque génération en mode auto.
+        champHeure('heure_fin_communiquee', 'Heure de fin communiquée aux clubs', val('heure_fin_communiquee')) +
         champNombre('battement_terrain_min', 'Battement terrain entre les matchs (min)', val('battement_terrain_min', '5')) +
         champHeure('pause_dejeuner_debut', 'Pause déjeuner — début', val('pause_dejeuner_debut')) +
         champNombre('pause_dejeuner_duree_min', 'Pause déjeuner — durée (min)', val('pause_dejeuner_duree_min')) +
@@ -1204,6 +1338,15 @@ function afficherHoraires(global) {
       '</form>' +
     '</section>'
   );
+}
+
+/** Retire `minutes` à une heure « HH:MM ». Renvoie « HH:MM », ou '' si l'heure est illisible. */
+function heureMoinsMinutes(hhmm, minutes) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || ''));
+  if (!m) return '';
+  let total = parseInt(m[1], 10) * 60 + parseInt(m[2], 10) - minutes;
+  while (total < 0) total += 24 * 60; // reste sur la même journée (pas d'heure négative)
+  return ('0' + Math.floor(total / 60)).slice(-2) + ':' + ('0' + (total % 60)).slice(-2);
 }
 
 /* Un champ "heure" (rouleau natif sur mobile). */
@@ -1233,8 +1376,10 @@ async function onEnregistrerHoraires(evenement) {
   const auto = form.heure_fin_auto.checked;
   const data = {
     heure_debut:              form.heure_debut.value,
+    heure_rdv:                form.heure_rdv.value,
     heure_fin:                form.heure_fin.value,
     heure_fin_auto:           auto ? 'oui' : 'non',
+    heure_fin_communiquee:    form.heure_fin_communiquee.value,
     battement_terrain_min:    form.battement_terrain_min.value,
     pause_dejeuner_debut:     form.pause_dejeuner_debut.value,
     pause_dejeuner_duree_min: form.pause_dejeuner_duree_min.value
@@ -1554,6 +1699,14 @@ async function onEnregistrerCategorie(evenement) {
   CHAMPS_CATEGORIE.forEach(function (champ) {
     data[champ.cle] = form[champ.cle].value;
   });
+
+  // Effectifs par équipe (dossier club) : optionnels, mais si les deux sont saisis, min ≤ max.
+  const effMin = parseInt(data.effectif_min, 10);
+  const effMax = parseInt(data.effectif_max, 10);
+  if (isFinite(effMin) && isFinite(effMax) && effMin > effMax) {
+    afficherMessage(message, "⚠️ Effectif min (" + effMin + ") supérieur à l'effectif max (" + effMax + ").", 'ko');
+    return;
+  }
   // Terrains : bloc dédié (Auto / Manuel). Le champ texte garde sa valeur même masqué en Auto.
   data.terrains = form.terrains ? String(form.terrains.value).trim() : '';
   data.terrains_auto = (form.terrains_auto && form.terrains_auto.value === 'non') ? 'non' : 'oui';
@@ -1627,7 +1780,8 @@ async function onAjouterCategorie(evenement) {
   const data = {
     categorie: nom, presente: 'oui', terrains: '', terrains_auto: 'oui', nb_poules: '',
     format_mi_temps: '2', duree_mi_temps_min: '10', pause_mi_temps_min: '2',
-    recup_entre_matchs_min: '15', format_apresmidi: 'CROISE', param_format: ''
+    recup_entre_matchs_min: '15', format_apresmidi: 'CROISE', param_format: '',
+    reglement: '', effectif_min: '', effectif_max: '', arbitrage_organisation: ''
   };
 
   const bouton = form.querySelector('button');

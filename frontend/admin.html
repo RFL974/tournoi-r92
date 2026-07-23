@@ -75,7 +75,10 @@
             <input class="r-input" type="date" name="tournoi_date">
           </label>
           <label class="reglage"><span class="r-libelle">Lieu</span>
-            <input class="r-input" type="text" name="tournoi_lieu" placeholder="Ex : Stade X, 11 av. Y, 92350 Ville">
+            <input class="r-input" type="text" name="tournoi_lieu" placeholder="Ex : Stade Paul Langevin">
+          </label>
+          <label class="reglage"><span class="r-libelle">Adresse complète</span>
+            <input class="r-input" type="text" name="tournoi_adresse" placeholder="Ex : 11 av. Paul Langevin, 92350 Le Plessis-Robinson">
           </label>
           <label class="reglage"><span class="r-libelle">Description</span>
             <textarea class="r-input" name="tournoi_description" rows="4" placeholder="Quelques phrases de présentation du tournoi…"></textarea>
@@ -118,6 +121,50 @@
         <h3 class="apercu-sous-titre">La page de l'événement</h3>
         <div id="apercu-page"></div>
         <p class="vitrine-legende" id="apercu-site-legende"></p>
+      </section>
+
+      <!-- Contacts & sécurité : référent tournoi, poste de secours, référent sécurité.
+           Alimente le futur générateur de dossier club. Tous les champs sont facultatifs.
+           Les champs conditionnels (précisions secours, référent sécurité distinct) sont
+           révélés/masqués par admin.js selon les cases à cocher. -->
+      <section class="carte" id="bloc-contacts-securite">
+        <h2>Contacts &amp; sécurité</h2>
+        <p class="note-generation">
+          Ces informations alimenteront le <strong>dossier club</strong> envoyé aux équipes.
+          Tous les champs sont <strong>facultatifs</strong> — enregistre ce que tu connais déjà.
+        </p>
+        <form id="form-contacts-securite">
+          <label class="reglage"><span class="r-libelle">Référent tournoi — nom</span>
+            <input class="r-input" type="text" name="referent_nom" placeholder="Ex : Camille Dupont" autocomplete="off">
+          </label>
+          <label class="reglage"><span class="r-libelle">Référent tournoi — téléphone</span>
+            <input class="r-input" type="tel" name="referent_tel" placeholder="Ex : 06 12 34 56 78" autocomplete="off">
+          </label>
+          <label class="reglage">
+            <span class="r-libelle">Poste de secours</span>
+            <span class="mini-toggle"><input type="checkbox" name="securite_secours_oui"> Poste de secours sur place</span>
+          </label>
+          <label class="reglage" id="ligne-secours-precisions" hidden>
+            <span class="r-libelle">Poste de secours — précisions</span>
+            <input class="r-input" type="text" name="securite_secours_precisions" placeholder="Ex : local à côté du club-house">
+          </label>
+          <label class="reglage">
+            <span class="r-libelle">Référent sécurité</span>
+            <span class="mini-toggle"><input type="checkbox" name="securite_referent_identique" checked> Identique au référent tournoi</span>
+          </label>
+          <div id="lignes-referent-securite" hidden>
+            <label class="reglage"><span class="r-libelle">Référent sécurité — nom</span>
+              <input class="r-input" type="text" name="securite_referent_nom" autocomplete="off">
+            </label>
+            <label class="reglage"><span class="r-libelle">Référent sécurité — téléphone</span>
+              <input class="r-input" type="tel" name="securite_referent_tel" placeholder="Ex : 06 12 34 56 78" autocomplete="off">
+            </label>
+          </div>
+          <div class="ligne-action">
+            <button type="button" class="bouton" id="bouton-enregistrer-contacts">Enregistrer contacts &amp; sécurité</button>
+            <span class="message-form" id="message-contacts-securite"></span>
+          </div>
+        </form>
       </section>
 
       <!-- 1) Les réglages (horaires + catégories), injectés par admin.js dans deux zones
@@ -223,7 +270,8 @@
           <li>toutes les <strong>catégories</strong> ;</li>
           <li>toutes les <strong>équipes</strong> ;</li>
           <li>toutes les <strong>poules</strong> et tous les <strong>matchs</strong> (planning + scores) ;</li>
-          <li>les <strong>infos du tournoi</strong> (nom, date, lieu, description, affiche) ;</li>
+          <li>les <strong>infos du tournoi</strong> (nom, date, lieu, adresse, description, affiche) ;</li>
+          <li>les <strong>contacts &amp; sécurité</strong> (référent tournoi, poste de secours, référent sécurité) ;</li>
           <li>les <strong>horaires de la journée</strong> (remis à zéro, à re-renseigner).</li>
         </ul>
         <p class="note-generation">

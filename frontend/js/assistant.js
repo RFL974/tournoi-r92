@@ -23,7 +23,7 @@
 /* Ordre des cartes = ordre logique de préparation (le même que le « cerveau »).
    Chaque carte réutilise un ou plusieurs blocs EXISTANTS (par leur id). */
 const ASSISTANT_ETAPES = [
-  { id: 'infos',     titre: 'Infos',        icone: '📝', blocs: ['bloc-infos-tournoi', 'bloc-apercu-tournoi'] },
+  { id: 'infos',     titre: 'Infos',        icone: '📝', blocs: ['bloc-infos-tournoi', 'bloc-apercu-tournoi', 'bloc-contacts-securite'] },
   { id: 'reglages',  titre: 'Réglages',     icone: '⏱️', blocs: ['reglages'] },
   { id: 'equipes',   titre: 'Équipes',      icone: '👥', blocs: ['bloc-equipes'] },
   { id: 'terrains',  titre: 'Terrains',     icone: '🗺️', blocs: ['bloc-terrains'] },
@@ -286,6 +286,7 @@ function assistantZonesSurveillees() {
 /** Libellé humain d'une zone modifiée : dit QUOI enregistrer pour rouvrir le verrou. */
 function assistantNomZone(zone) {
   if (zone.id === 'form-infos-tournoi')   return 'infos modifiées → « 💾 Enregistrer les infos »';
+  if (zone.id === 'form-contacts-securite') return 'contacts & sécurité modifiés → « Enregistrer contacts & sécurité »';
   if (zone.id === 'form-horaires')        return 'horaires modifiés → « Enregistrer les horaires »';
   if (zone.id === 'form-ajout-categorie') return 'nouvelle catégorie saisie → « Ajouter » (ou vide le champ)';
   if (zone.id === 'zone-terrains')        return 'plan des terrains modifié → « Enregistrer les terrains »';
