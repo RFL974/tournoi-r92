@@ -126,14 +126,13 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `effectif_min` | `8` | **Optionnel** (dossier club). Effectif minimum par équipe (nb de joueurs). Si `effectif_min` et `effectif_max` sont saisis, min ≤ max (vérifié à l'enregistrement) |
 | `effectif_max` | `12` | **Optionnel** (dossier club). Effectif maximum par équipe (nb de joueurs) |
 | `arbitrage_organisation` | `Éducateurs des clubs` | **Optionnel** (dossier club). Qui arbitre les matchs. ⚠️ Nom volontairement distinct de l'« arbitrage » du code (assistant d'optimisation des horaires) |
-| `nb_equipes_attendues` | `12` | **Optionnel** (dossier d'invitation). Nombre d'équipes **attendues** dans la catégorie — colonne « Équipes attendues » du tableau Format sportif du dossier. Entier ≥ 0 |
 
 > ℹ️ **Migration automatique** : `format_apresmidi`, `param_format`, `terrains_auto`, puis
-> `reglement`, `effectif_min`, `effectif_max`, `arbitrage_organisation` et `nb_equipes_attendues`
-> sont **ajoutées automatiquement** à droite de la Zone B dès la première génération d'après-midi
-> (ou enregistrement de catégorie) sur un Sheet déjà en service. Une catégorie sans
-> `format_apresmidi` = **classement croisé**, et sans `terrains_auto` = **mode Auto**, comme avant.
-> Les colonnes « dossier club » vides = champ non renseigné (aucun blocage).
+> `reglement`, `effectif_min`, `effectif_max` et `arbitrage_organisation` sont **ajoutées
+> automatiquement** à droite de la Zone B dès la première génération d'après-midi (ou enregistrement
+> de catégorie) sur un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement
+> croisé**, et sans `terrains_auto` = **mode Auto**, comme avant. Les colonnes « dossier club »
+> vides = champ non renseigné (aucun blocage).
 
 > **Durée totale d'un match** (calculée par le backend) :
 > `format_mi_temps × duree_mi_temps_min + pause_mi_temps_min` (si 2 mi-temps).

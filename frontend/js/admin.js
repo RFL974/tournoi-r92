@@ -25,10 +25,7 @@ const CHAMPS_CATEGORIE = [
   { cle: 'reglement',              label: 'Règlement (texte ou lien)', type: 'text', placeholder: 'Ex : règles FFR M10 ou https://…' },
   { cle: 'effectif_min',           label: 'Effectif min (joueurs)',    type: 'number' },
   { cle: 'effectif_max',           label: 'Effectif max (joueurs)',    type: 'number' },
-  { cle: 'arbitrage_organisation', label: 'Arbitrage (qui arbitre ?)', type: 'text', placeholder: 'Ex : éducateurs des clubs' },
-  // Dossier d'INVITATION : nombre d'équipes attendues dans la catégorie (colonne
-  // « Équipes attendues » du tableau Format sportif du dossier). Optionnel.
-  { cle: 'nb_equipes_attendues',   label: 'Équipes attendues (nb)',    type: 'number' }
+  { cle: 'arbitrage_organisation', label: 'Arbitrage (qui arbitre ?)', type: 'text', placeholder: 'Ex : éducateurs des clubs' }
 ];
 
 /* Formats d'après-midi proposés (choisis AU PARAMÉTRAGE, avant le jour J), avec une
@@ -2237,8 +2234,7 @@ async function onAjouterCategorie(evenement) {
     categorie: nom, presente: 'oui', terrains: '', terrains_auto: 'oui', nb_poules: '',
     format_mi_temps: '2', duree_mi_temps_min: '10', pause_mi_temps_min: '2',
     recup_entre_matchs_min: '15', format_apresmidi: 'CROISE', param_format: '',
-    reglement: '', effectif_min: '', effectif_max: '', arbitrage_organisation: '',
-    nb_equipes_attendues: ''
+    reglement: '', effectif_min: '', effectif_max: '', arbitrage_organisation: ''
   };
 
   const bouton = form.querySelector('button');

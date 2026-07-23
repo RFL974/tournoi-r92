@@ -5,6 +5,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Dossier : retrait du champ « Équipes attendues » — 2026-07-23
+Le champ **« Équipes attendues (nb) »** par catégorie (`nb_equipes_attendues`), ajouté au
+Sprint 3, est **retiré** de l'application : plus de champ dans le formulaire de catégorie, plus
+de colonne « Équipes attendues » dans le tableau Format sportif du dossier, et plus de validation
+côté backend. ⚠️ Nécessite un redéploiement de la Web App. La colonne éventuellement présente
+dans l'onglet Config d'un Sheet déjà en service devient **inutilisée** (aucun impact — on peut la
+laisser ou la supprimer à la main).
+
 ### Sprint 3 — Dossier d'INVITATION + clubs invités + autorisation droit à l'image — 2026-07-23
 Le dossier club devient un vrai **dossier d'invitation**, envoyé AVANT la confirmation des clubs.
 
@@ -24,9 +32,6 @@ Le dossier club devient un vrai **dossier d'invitation**, envoyé AVANT la confi
   formulaire d'ajout sur le modèle des Équipes). 🔒 Les emails ne sont **jamais publics** :
   lecture via `listerClubsInvites` (clé admin), hors snapshot `getAll` / relais CDN. La
   réinitialisation du tournoi **conserve** cette liste (carnet d'adresses).
-- **Catégories** : nouveau champ « Équipes attendues (nb) » (`nb_equipes_attendues`, Zone B),
-  affiché dans une nouvelle colonne « Équipes attendues » du tableau Format sportif du dossier
-  (après Effectif).
 - **Dossier** : trois nouvelles sections entre « Format sportif » et « Suivi & organisation » —
   **Modalités d'inscription** (date limite en date longue ; tarif seulement si demandé),
   **Parking & accès** (texte + photo pleine largeur, bordure arrondie), **Encadrement &
