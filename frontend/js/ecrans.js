@@ -41,6 +41,8 @@ const ECRANS_DEF = [
   /* La Publication vient AVANT l'après-midi : elle n'en dépend pas (on publie
      le matin ; l'après-midi se génère plus tard, une fois les scores saisis). */
   { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [] },
+  /* Le dossier club se génère à tout moment (sections vides masquées) : jamais verrouillé. */
+  { id: 'dossier',     titre: 'Générer le dossier', icone: 'dossier', blocs: ['bloc-dossier'],            cles: [], libre: true },
   { id: 'apresmidi',   titre: 'Après-midi',        icone: 'ballon',   blocs: ['bloc-apresmidi'],          cles: ['apresmidi'] },
   /* Zone de danger, toujours accessible (libre) : on doit pouvoir remettre à
      zéro un tournoi même à moitié préparé — le verrou ne s'applique pas. */
@@ -58,6 +60,7 @@ const ECRANS_ICONES = {
   poules:    '<path d="M4 6h16M4 12h16M4 18h10"></path><circle cx="18" cy="18" r="2.4"></circle>',
   ballon:    '<ellipse cx="12" cy="12" rx="5" ry="8" transform="rotate(45 12 12)"></ellipse><path d="M9 9l6 6M10.5 7.5l6 6M7.5 10.5l6 6"></path>',
   monde:     '<circle cx="12" cy="12" r="8"></circle><path d="M4 12h16M12 4c2.5 2.5 2.5 13 0 16M12 4c-2.5 2.5-2.5 13 0 16"></path>',
+  dossier:   '<path d="M6 3h8l4 4v14H6z"></path><path d="M14 3v4h4M9 12h6M9 16h4"></path>',
   balai:     '<path d="M14 4l6 6M13 5l-7 7 5 5 7-7M6 12l-2 6 6-2"></path>'
 };
 
@@ -73,7 +76,7 @@ function svgEcr(nom) {
 const ECRANS_ORDRE_ORIGINE = [
   'bloc-infos-tournoi', 'bloc-apercu-tournoi', 'bloc-contacts-securite', 'reglages',
   'bloc-equipes', 'bloc-terrains', 'bloc-generation', 'bloc-apresmidi', 'bloc-publication',
-  'bloc-reinitialisation'
+  'bloc-dossier', 'bloc-reinitialisation'
 ];
 
 const ECRANS_CLE_ACTIF = 'r92_ecran_admin'; // dernier écran ouvert (mémorisé)

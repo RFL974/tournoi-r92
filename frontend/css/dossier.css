@@ -1,0 +1,237 @@
+/* ============================================================================
+   DOSSIER CLUB — style « document » : fond blanc, texte sombre, format A4.
+   Charte : navy #0C1C2E (titres, entête) + bleu vif #2E8FE0 (accents),
+   corps noir/gris sur blanc pour rester lisible à l'impression.
+   ========================================================================== */
+
+:root {
+  --d-navy: #0C1C2E;
+  --d-bleu: #2E8FE0;
+  --d-texte: #1a1f26;
+  --d-gris: #5b6570;
+  --d-filet: #dbe3ec;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #eef2f7;               /* gris doux autour de la « feuille » à l'écran */
+  color: var(--d-texte);
+  font-family: 'Barlow', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ----- Barre d'outils (écran uniquement) ---------------------------------- */
+.barre-outils {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--d-navy);
+  color: #fff;
+}
+.barre-outils-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-size: 0.9rem;
+  color: #b8d8f8;
+}
+.btn-outil {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: #fff;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font: 600 0.9rem 'Barlow', sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn-outil:hover { background: rgba(255, 255, 255, 0.12); }
+.btn-principal { background: var(--d-bleu); border-color: var(--d-bleu); }
+.btn-principal:hover { background: #227ac4; }
+
+/* ----- La « feuille » A4 --------------------------------------------------- */
+.feuille {
+  max-width: 210mm;                  /* largeur A4 : l'écran prévisualise l'impression */
+  margin: 24px auto 48px;
+  background: #fff;
+  padding: 14mm 16mm;
+  box-shadow: 0 10px 34px -14px rgba(12, 28, 46, 0.35);
+}
+
+.message-chargement { color: var(--d-gris); text-align: center; padding: 40px 0; }
+.message-chargement.erreur { color: #b3261e; }
+
+/* ----- En-tête -------------------------------------------------------------- */
+.d-entete {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  border-bottom: 3px solid var(--d-navy);
+  padding-bottom: 14px;
+}
+.d-affiche {
+  width: 120px;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex: none;
+}
+.d-surtitre {
+  margin: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-size: 0.85rem;
+  color: var(--d-bleu);
+}
+.d-entete h1 {
+  margin: 2px 0 4px;
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 2.1rem;
+  letter-spacing: 0.5px;
+  color: var(--d-navy);
+}
+.d-date { margin: 0; font-weight: 600; text-transform: capitalize; }
+.d-genere { margin: 6px 0 0; font-size: 0.78rem; color: var(--d-gris); }
+
+/* ----- Présentation + sections ---------------------------------------------- */
+.d-presentation { margin: 14px 0 4px; }
+
+.d-section { margin-top: 18px; }
+.d-section h2 {
+  margin: 0 0 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-size: 1.05rem;
+  color: var(--d-bleu);
+  border-bottom: 1px solid var(--d-filet);
+  padding-bottom: 4px;
+}
+
+.d-liste { list-style: none; margin: 0; padding: 0; }
+.d-liste li { display: flex; gap: 10px; padding: 3px 0; }
+.d-libelle { flex: 0 0 190px; color: var(--d-gris); }
+.d-valeur { flex: 1; font-weight: 600; }
+.d-valeur a { color: var(--d-bleu); word-break: break-all; }
+
+.d-note { margin: 8px 0 0; font-size: 0.8rem; color: var(--d-gris); font-style: italic; }
+
+/* ----- Tableau du cadre sportif ---------------------------------------------- */
+.d-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+.d-table th {
+  text-align: left;
+  background: var(--d-navy);
+  color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 6px 8px;
+}
+.d-table td { padding: 6px 8px; border-bottom: 1px solid var(--d-filet); vertical-align: top; }
+.d-table tr:nth-child(even) td { background: #f5f8fc; }
+.d-table a { color: var(--d-bleu); }
+
+/* ----- Suivi live + QR -------------------------------------------------------- */
+.d-suivi { display: flex; gap: 18px; align-items: flex-start; }
+.d-suivi-texte { flex: 1; min-width: 0; }
+.d-qr { flex: none; text-align: center; }
+.d-qr svg { width: 110px; height: 110px; display: block; }
+.d-qr-legende {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--d-gris);
+  margin-top: 2px;
+}
+
+/* ----- Contact ------------------------------------------------------------------ */
+.d-contact {
+  background: #f2f7fd;
+  border-left: 4px solid var(--d-bleu);
+  padding: 10px 14px;
+}
+.d-contact h2 { border: none; margin-bottom: 2px; padding-bottom: 0; }
+.d-contact-ligne { margin: 0; font-size: 1.05rem; }
+.d-contact-ligne a { color: var(--d-navy); text-decoration: none; font-weight: 700; }
+
+/* ----- Bandeau d'actions --------------------------------------------------------- */
+.d-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 12px;
+  background: var(--d-navy);
+  border-radius: 10px;
+}
+.d-action {
+  appearance: none;
+  border: none;
+  background: var(--d-bleu);
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: 600 0.85rem 'Barlow', sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+}
+.d-action:hover { background: #227ac4; }
+
+/* ----- Pied de page ------------------------------------------------------------- */
+.d-pied {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 10px;
+  border-top: 1px solid var(--d-filet);
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.6px;
+  color: var(--d-navy);
+}
+.d-pied-logo { height: 34px; width: auto; }
+.d-pied-mention { color: var(--d-gris); font-size: 0.85em; }
+
+/* ----- Petits écrans (aperçu mobile) ---------------------------------------------- */
+@media (max-width: 640px) {
+  .feuille { margin: 0; padding: 18px 14px; box-shadow: none; }
+  .d-entete { flex-direction: column; align-items: flex-start; }
+  .d-liste li { flex-direction: column; gap: 0; }
+  .d-libelle { flex: none; font-size: 0.8rem; }
+  .d-suivi { flex-direction: column; }
+  .d-table { display: block; overflow-x: auto; }
+}
+
+/* ============================================================================
+   IMPRESSION — l'« export PDF » du navigateur. Une feuille A4 propre :
+   pas de barre d'outils, pas d'ombres, liens en couleur charte, le bandeau
+   d'actions reste (les liens/QR restent utiles sur papier via le QR code).
+   ========================================================================== */
+@page { size: A4; margin: 12mm; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; font-size: 11pt; }
+  .feuille {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+  .d-section { break-inside: avoid; }
+  .d-actions { break-inside: avoid; background: var(--d-navy); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .d-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .d-contact { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  a { color: var(--d-bleu); text-decoration: none; }
+}
