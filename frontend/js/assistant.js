@@ -29,9 +29,10 @@ const ASSISTANT_ETAPES = [
   { id: 'terrains',  titre: 'Terrains',     icone: '🗺️', blocs: ['bloc-terrains'] },
   { id: 'poules',    titre: 'Poules',       icone: '🎲', blocs: ['bloc-generation'] },
   { id: 'apresmidi', titre: 'Après-midi',   icone: '🏉', blocs: ['bloc-apresmidi'] },
-  /* Les clubs invités puis le Dossier viennent AVANT le Résumé (qui contient la
-     Publication) : on invite les clubs, on leur envoie le dossier, puis on publie. */
-  { id: 'clubs',     titre: 'Clubs',        icone: '✉️', blocs: ['bloc-clubs-invites'] },
+  /* L'invitation (Phase 1), les clubs invités puis le Dossier complet (Phase 2) viennent
+     AVANT le Résumé (Publication) : on invite, on gère les réponses, on envoie, on publie. */
+  { id: 'invitation', titre: 'Inviter',     icone: '✉️', blocs: ['bloc-inviter', 'bloc-surplace', 'bloc-reponse'] },
+  { id: 'clubs',     titre: 'Clubs',        icone: '📇', blocs: ['bloc-clubs-invites'] },
   { id: 'dossier',   titre: 'Dossier',      icone: '📄', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier'] },
   { id: 'resume',    titre: 'Résumé',       icone: '📋', blocs: ['tableau-bord', 'etat-avancement', 'bloc-publication', 'bloc-reinitialisation'] }
 ];

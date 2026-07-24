@@ -5,6 +5,52 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sprint 4 — Deux phases : invitation légère (Phase 1) + dossier complet personnalisé (Phase 2) — 2026-07-24
+Le dossier unique devient un parcours **en deux temps** : une **invitation courte** envoyée à
+tous les clubs invités *avant* leur réponse (Phase 1), puis le **dossier complet personnalisé**
+(l'existant des Sprints 1‑3) envoyé **par email**, *automatiquement*, uniquement aux clubs qui
+**acceptent** (Phase 2). Rien de l'existant n'est supprimé. ⚠️ Nécessite un redéploiement de la
+Web App (nouvelles actions backend + colonnes Sheets migrées automatiquement).
+
+- **Zone A (config générale)** — nouveaux paramètres : `buvette_disponible`,
+  `espace_sandwich_disponible`, `boutique_r92_disponible` (booléens), `date_limite_reponse`
+  (distincte de `date_limite_confirmation`, propre à la Phase 2), `contact_reponse_nom/tel/email`,
+  et `email_expediteur` (alias « Envoyer en tant que », vide par défaut). Validation croisée :
+  **au moins un** de `contact_reponse_tel` / `contact_reponse_email` est requis. Cartes admin
+  « **Sur place** » (3 cases) et « **Réponse à l'invitation** » (actions `enregistrerSurPlace` /
+  `enregistrerReponseInvitation`).
+- **Zone B (par catégorie)** — nouveau champ `max_equipes_par_club` (entier, vide = illimité).
+  Affiché « Jusqu'à X équipes par club » ou « Plusieurs équipes possibles par catégorie ».
+- **Onglet `ClubsInvites`** — enrichi : `club_contact_prenom` (politesse du dossier),
+  `categories_engagees` (« U8,U10 », vide tant que pas de réponse), `dossier_envoye` (date posée
+  **automatiquement au succès** de l'envoi email). Statut **« Confirmé » renommé « Accepté »**
+  (ancien libellé encore reconnu). Migration douce : les 3 colonnes s'ajoutent à droite sans
+  toucher aux 5 existantes.
+- **Nouvelle page `invitation-club.html` (Phase 1)** — invitation générique 1 page (même contenu
+  pour tous) : en-tête + accroche courte, « Vous êtes invités » (catégories + max équipes +
+  effectif mini), « Le jour J, en bref », « Sur place » (pastilles si cochées + tarif si demandé),
+  « Réponse attendue », pied de page (logo + Instagram + site). Pas de bandeau ICS/Maps/QR
+  (réservé à la Phase 2). Réutilise `css/dossier.css`.
+- **`dossier-club.html` (Phase 2)** — accessible via `?tournoi=…&club=…`. Si `club` est présent :
+  paragraphe d'**accueil personnalisé** (« Bonjour {prénom}, … {club} … ») et **filtrage** du
+  tableau « Format sportif » sur les `categories_engagees` du club (une seule catégorie → puces).
+  Sans paramètre `club` ou sans catégories engagées : comportement **inchangé** (rétrocompatible
+  avec les liens déjà envoyés). Lecture publique via `getClubDossier` qui n'expose **jamais**
+  l'email (nom, prénom, catégories seulement).
+- **Envoi automatique par email avec aperçu (Point 7)** — sur la ligne d'un club **Accepté** avec
+  catégories engagées : bouton « **Générer le dossier final** » → fenêtre d'**aperçu** (destinataire
+  en lecture seule, objet et corps pré-remplis et modifiables) → « Envoyer » déclenche l'envoi réel
+  (`envoyerDossierEmail` : `MailApp`, ou `GmailApp` avec `from` si `email_expediteur` est un alias)
+  et pose `dossier_envoye` **uniquement en cas de succès**. Si le club n'a pas d'email : bascule en
+  mode « **Copier le lien** ». Gestion d'erreur : message clair, `dossier_envoye` non posé, envoi
+  relançable.
+- **Sidebar admin** — nouvel item « **Inviter un club** » (Phase 1, ouvre `invitation-club.html`) ;
+  l'écran du dossier existant devient « **Dossier complet (accepté)** » (Phase 2).
+- **Documentation** — `docs/passation.md` §11 : bascule de l'adresse d'envoi (test
+  `romain.rifleu@gmail.com` → cible `generationr92@gmail.com`), les **deux options** (re-déploiement
+  sous le compte cible, ou alias Gmail + `email_expediteur`) et le champ `email_expediteur`.
+  `docs/structure-google-sheet.md` mis à jour (nouvelles colonnes/paramètres).
+
 ### Dossier : retrait du champ « Équipes attendues » — 2026-07-23
 Le champ **« Équipes attendues (nb) »** par catégorie (`nb_equipes_attendues`), ajouté au
 Sprint 3, est **retiré** de l'application : plus de champ dans le formulaire de catégorie, plus

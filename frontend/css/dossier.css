@@ -103,6 +103,17 @@ body {
 /* ----- Présentation + sections ---------------------------------------------- */
 .d-presentation { margin: 14px 0 4px; }
 
+/* Accueil personnalisé (Phase 2, dossier envoyé à un club précis). */
+.d-accueil {
+  margin: 14px 0 4px;
+  padding: 10px 14px;
+  background: #f2f7fd;
+  border-left: 4px solid var(--d-bleu);
+  border-radius: 0 6px 6px 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
 .d-section { margin-top: 18px; }
 .d-section h2 {
   margin: 0 0 8px;
@@ -239,6 +250,52 @@ body {
 }
 .d-pied-logo { height: 34px; width: auto; }
 .d-pied-mention { color: var(--d-gris); font-size: 0.85em; }
+
+/* ============================================================================
+   INVITATION (Phase 1) — éléments propres à invitation-club.html
+   (réutilise le reste de dossier.css : entête, sections, listes, pied de page).
+   ========================================================================== */
+/* Liste « Vous êtes invités » : une carte par catégorie (nom + détails). */
+.inv-liste-cats { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+.inv-liste-cats li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 7px 12px;
+  background: #f5f8fc;
+  border-left: 3px solid var(--d-bleu);
+  border-radius: 0 6px 6px 0;
+}
+.inv-cat-nom {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--d-navy);
+  min-width: 54px;
+}
+.inv-cat-detail { color: var(--d-gris); font-size: 0.9rem; }
+
+/* « Sur place » : pastilles (affichées seulement si le service est coché). */
+.inv-pastilles { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 4px; }
+.inv-pastille {
+  display: inline-block;
+  padding: 6px 14px;
+  background: var(--d-navy);
+  color: #fff;
+  border-radius: 999px;
+  font: 600 0.85rem 'Barlow', sans-serif;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Pied de page de l'invitation : logo + nom + liens de l'association. */
+.inv-pied { flex-wrap: wrap; gap: 10px 14px; }
+.inv-pied-nom { flex: 1 1 auto; }
+.inv-pied-liens { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.inv-lien { color: var(--d-bleu); text-decoration: none; font-family: 'Barlow', sans-serif; letter-spacing: 0; }
+.inv-lien:hover { text-decoration: underline; }
 
 /* ----- Petits écrans (aperçu mobile) ---------------------------------------------- */
 @media (max-width: 640px) {

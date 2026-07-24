@@ -245,20 +245,96 @@
         <div id="message-apresmidi" class="message-form"></div>
       </section>
 
+      <!-- 4 bis-0) INVITER UN CLUB (Phase 1) : ouvre l'invitation légère (page dédiée
+           invitation-club.html), générique pour tous les clubs. Distincte du dossier
+           complet (Phase 2), envoyé uniquement aux clubs qui acceptent. -->
+      <section class="carte" id="bloc-inviter">
+        <h2>Inviter un club (Phase 1)</h2>
+        <p class="note-generation">
+          Ouvre l'<strong>invitation légère</strong> à envoyer aux clubs <strong>avant leur réponse</strong> :
+          catégories concernées, déroulé de la journée en bref, réponse attendue. Même contenu pour
+          tous les clubs. Le <strong>dossier complet personnalisé</strong> (Phase 2) n'est envoyé
+          qu'aux clubs qui <strong>acceptent</strong>.
+        </p>
+        <div class="ligne-action">
+          <a class="bouton" id="bouton-ouvrir-invitation" href="invitation-club.html" target="_blank" rel="noopener">✉️ Ouvrir l'invitation (Phase 1)</a>
+        </div>
+      </section>
+
+      <!-- 4 bis-1) SUR PLACE (Phase 1) : services affichés en pastilles sur l'invitation,
+           uniquement s'ils sont cochés. -->
+      <section class="carte" id="bloc-surplace">
+        <h2>Sur place</h2>
+        <p class="note-generation">
+          Ces services apparaissent en <strong>pastilles</strong> sur l'invitation (Phase 1),
+          uniquement s'ils sont <strong>cochés</strong> (aucune ligne « non disponible » sinon).
+        </p>
+        <form id="form-surplace">
+          <label class="reglage"><span class="r-libelle">Buvette</span>
+            <span class="mini-toggle"><input type="checkbox" name="buvette_disponible"> Buvette sur place</span>
+          </label>
+          <label class="reglage"><span class="r-libelle">Espace sandwich</span>
+            <span class="mini-toggle"><input type="checkbox" name="espace_sandwich_disponible"> Espace sandwich sur place</span>
+          </label>
+          <label class="reglage"><span class="r-libelle">Boutique R92</span>
+            <span class="mini-toggle"><input type="checkbox" name="boutique_r92_disponible"> Boutique R92 sur place</span>
+          </label>
+          <div class="ligne-action">
+            <button type="button" class="bouton" id="bouton-enregistrer-surplace">Enregistrer « Sur place »</button>
+            <span class="message-form" id="message-surplace"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- 4 bis-2) RÉPONSE À L'INVITATION (Phase 1) : date limite de réponse (distincte de la
+           date de confirmation des effectifs, Phase 2) + contact référent. Validation « au
+           moins un des deux » (tél / email) au blur/submit. -->
+      <section class="carte" id="bloc-reponse">
+        <h2>Réponse à l'invitation</h2>
+        <p class="note-generation">
+          Date limite de <strong>réponse</strong> à l'invitation (distincte de la date de
+          <em>confirmation des effectifs</em>, propre au dossier Phase 2) et <strong>contact
+          référent</strong>. Renseigne <strong>au moins</strong> un téléphone <strong>ou</strong> un email.
+        </p>
+        <form id="form-reponse">
+          <label class="reglage"><span class="r-libelle">Date limite de réponse</span>
+            <input class="r-input" type="date" name="date_limite_reponse">
+          </label>
+          <label class="reglage"><span class="r-libelle">Contact — nom</span>
+            <input class="r-input" type="text" name="contact_reponse_nom" placeholder="Ex : Camille Dupont" autocomplete="off">
+          </label>
+          <label class="reglage"><span class="r-libelle">Contact — téléphone</span>
+            <input class="r-input" type="tel" name="contact_reponse_tel" placeholder="Ex : 06 12 34 56 78" autocomplete="off">
+          </label>
+          <label class="reglage"><span class="r-libelle">Contact — email</span>
+            <input class="r-input" type="email" name="contact_reponse_email" placeholder="Ex : contact@club.fr" autocomplete="off">
+          </label>
+          <label class="reglage"><span class="r-libelle">Email expéditeur (alias Gmail, optionnel)</span>
+            <input class="r-input" type="email" name="email_expediteur" placeholder="Vide = adresse du compte exécutant le script" autocomplete="off">
+          </label>
+          <div class="ligne-action">
+            <button type="button" class="bouton" id="bouton-enregistrer-reponse">Enregistrer « Réponse »</button>
+            <span class="message-form" id="message-reponse"></span>
+          </div>
+        </form>
+      </section>
+
       <!-- 4 bis) Clubs invités : la liste des clubs à qui on envoie le dossier d'INVITATION
-           (avant leur confirmation). Nom + contact + statut (Invité / Confirmé / Décliné).
+           (avant leur confirmation). Nom + contact + statut (Invité / Accepté / Décliné).
            ⚠️ Les contacts (emails) ne sont JAMAIS publics : la liste se charge avec la clé
            admin (action listerClubsInvites) et n'apparaît pas dans les données publiques. -->
       <section class="carte" id="bloc-clubs-invites">
         <h2>Clubs invités</h2>
         <p class="note-generation">
-          La liste des clubs à qui tu envoies le <strong>dossier d'invitation</strong>.
-          Ajoute un club avec son contact, puis fais évoluer son <strong>statut</strong>
-          (Invité → Confirmé ou Décliné) au fil des réponses.
+          La liste des clubs invités. Ajoute un club avec son contact, puis fais évoluer son
+          <strong>statut</strong> (Invité → <strong>Accepté</strong> ou Décliné) au fil des réponses.
+          Quand un club passe <strong>Accepté</strong>, choisis ses <strong>catégories engagées</strong>,
+          puis <strong>« Générer le dossier final »</strong> pour lui envoyer son dossier complet personnalisé.
         </p>
         <form id="form-club-invite" class="form-equipe">
           <input id="champ-club-nom" type="text" placeholder="Nom du club" autocomplete="off" required>
           <input id="champ-club-contact" type="text" placeholder="Contact (nom)" autocomplete="off">
+          <input id="champ-club-prenom" type="text" placeholder="Prénom du contact" autocomplete="off">
           <input id="champ-club-email" type="email" placeholder="Email du contact" autocomplete="off">
           <button type="submit" class="bouton" id="bouton-ajouter-club">Ajouter</button>
         </form>
@@ -358,21 +434,24 @@
            dossier-club.html). L'état des sections est rempli par admin.js (majDossier).
            Placé AVANT la publication : on envoie le dossier aux clubs, puis on publie. -->
       <section class="carte" id="bloc-dossier">
-        <h2>Dossier club</h2>
+        <h2>Dossier complet (accepté) — Phase 2</h2>
         <p class="note-generation">
-          Assemble automatiquement le <strong>dossier récapitulatif</strong> à envoyer aux clubs
-          invités : infos pratiques, programme de la journée, format sportif par catégorie,
-          suivi des scores (QR code), sécurité et contact. Un seul dossier par tournoi.<br>
+          Assemble automatiquement le <strong>dossier récapitulatif complet</strong> envoyé aux clubs
+          qui ont <strong>accepté</strong> : infos pratiques, programme de la journée, format sportif
+          par catégorie, suivi des scores (QR code), sécurité et contact. Un seul dossier par tournoi.<br>
           💡 Toute section <strong>sans donnée</strong> est simplement <strong>masquée</strong> —
-          tu peux générer le dossier à tout moment et le regénérer quand tu complètes les infos.
+          tu peux générer le dossier à tout moment et le regénérer quand tu complètes les infos.<br>
+          👉 Pour l'<strong>envoi personnalisé</strong> à un club précis (accueil + filtrage des
+          catégories engagées + email automatique), utilise <strong>« Générer le dossier final »</strong>
+          sur la ligne du club dans <strong>« Clubs invités »</strong>.
         </p>
         <div id="etat-dossier"></div>
         <div class="ligne-action">
-          <a class="bouton" id="bouton-ouvrir-dossier" href="dossier-club.html" target="_blank" rel="noopener">📄 Générer le dossier</a>
+          <a class="bouton" id="bouton-ouvrir-dossier" href="dossier-club.html" target="_blank" rel="noopener">📄 Aperçu du dossier (générique)</a>
         </div>
         <p class="note-generation">
           Le dossier s'ouvre dans un nouvel onglet : vérifie-le, puis
-          <strong>« Exporter en PDF »</strong> pour l'envoyer aux clubs.
+          <strong>« Exporter en PDF »</strong> si tu préfères l'envoyer manuellement.
         </p>
       </section>
 
@@ -404,12 +483,15 @@
           <li>les <strong>infos du tournoi</strong> (nom, date, lieu, adresse, description, affiche) ;</li>
           <li>les <strong>contacts &amp; sécurité</strong> (référent tournoi, poste de secours, référent sécurité) ;</li>
           <li>le <strong>dossier d'invitation</strong> (modalités d'inscription, parking &amp; accès — photo comprise —, encadrement &amp; assurance) ;</li>
+          <li>la config <strong>Phase 1</strong> (« Sur place » et « Réponse à l'invitation » — l'email expéditeur est conservé) ;</li>
+          <li>les <strong>catégories engagées</strong> et la date d'<strong>envoi du dossier</strong> de chaque club (données propres à l'édition) ;</li>
           <li>les <strong>horaires de la journée</strong> (remis à zéro, à re-renseigner).</li>
         </ul>
         <p class="note-generation">
           Le tournoi repasse en <strong>masqué</strong> s'il était public.<br>
-          ✅ Est <strong>conservé</strong> : l'historique des saisons (page Perfs) et la
-          <strong>liste des clubs invités</strong> (pense à remettre leurs statuts à jour).<br>
+          ✅ Est <strong>conservé</strong> : l'historique des saisons (page Perfs) et le
+          <strong>carnet des clubs invités</strong> (noms, contacts, prénoms, statuts — pense à
+          les remettre à jour ; les catégories engagées et l'envoi du dossier sont remis à zéro).<br>
           ⚠️ Cette action est <strong>irréversible</strong>.
         </p>
         <button id="bouton-reinitialiser" class="bouton bouton-danger">🧹 Réinitialiser le tournoi</button>

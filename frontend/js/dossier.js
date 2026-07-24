@@ -53,12 +53,59 @@ async function initDossier() {
   try {
     const data = await apiGet('getAll'); // { config, equipes, poules, matchs }
     const config = (data && data.config) || { global: {}, categories: [] };
-    zone.innerHTML = construireDossier(config.global || {}, config.categories || []);
+
+    // PHASE 2 — personnalisation par club (rétrocompatible) : si l'URL porte ?club=…,
+    // on va chercher les infos NON sensibles du club (nom, prénom, catégories engagées —
+    // jamais l'email) pour l'accueil personnalisé et le filtrage du format sportif.
+    // Sans paramètre club (liens déjà envoyés), le dossier reste générique.
+    let club = null;
+    const params = new URLSearchParams(window.location.search);
+    const clubParam = txt(params.get('club'));
+    if (clubParam) {
+      try {
+        const r = await apiGet('getClubDossier', { club: clubParam });
+        club = (r && r.club) || null;
+      } catch (e) { club = null; } // club introuvable / lecture ratée → mode générique
+    }
+
+    zone.innerHTML = construireDossier(config.global || {}, config.categories || [], club);
     dessinerQR(); // le QR se dessine après coup (il vise un conteneur du HTML rendu)
   } catch (erreur) {
     zone.innerHTML = '<div class="message-chargement erreur">Impossible de charger les données du tournoi.<br>'
       + 'Détail : ' + echapper(erreur.message) + '</div>';
   }
+}
+
+/**
+ * Catégories engagées d'un club → tableau de noms normalisés (MAJUSCULES sans espaces
+ * superflus). Accepte le format texte « U8,U10 » ou un tableau JSON ["U8","U10"].
+ * Renvoie [] si rien n'est renseigné (le dossier reste alors non filtré).
+ */
+function categoriesEngageesListe(club) {
+  const brut = club ? txt(club.categories_engagees) : '';
+  if (!brut) return [];
+  let liste = null;
+  try { const o = JSON.parse(brut); if (Array.isArray(o)) liste = o; } catch (e) { /* pas du JSON */ }
+  if (!liste) liste = brut.split(',');
+  return liste.map(function (s) { return String(s).trim().toUpperCase(); }).filter(Boolean);
+}
+
+/**
+ * Paragraphe d'accueil personnalisé (inséré avant la Présentation) quand le club est connu.
+ * « Bonjour {prénom}, … {nom du tournoi} … les joueuses et joueurs de {nom du club} … ».
+ * Si le prénom manque, on garde « Bonjour, » (jamais de « Bonjour undefined »).
+ */
+function accueilPersonnalise(g, club) {
+  if (!club) return '';
+  const prenom = txt(club.club_contact_prenom);
+  const nomClub = txt(club.club_nom);
+  const nomTournoi = txt(g.tournoi_nom) || 'Tournoi Génération R92';
+  const bonjour = prenom ? 'Bonjour ' + echapper(prenom) + ',' : 'Bonjour,';
+  return '<p class="d-accueil">' + bonjour +
+    ' nous avons bien reçu votre retour concernant votre souhait de participer au '
+    + echapper(nomTournoi) + '. Nous sommes heureux de compter parmi nous les joueuses et joueurs'
+    + (nomClub ? ' de ' + echapper(nomClub) : '')
+    + '. Voici les informations détaillées de cette journée.</p>';
 }
 
 /* --------------------------------------------------------------------------
@@ -336,8 +383,22 @@ function telechargerICS(g) {
    CONSTRUCTION DU DOSSIER (le HTML complet, section par section)
    -------------------------------------------------------------------------- */
 
-function construireDossier(g, categories) {
+function construireDossier(g, categories, club) {
   const cats = (categories || []).filter(catPresente);
+
+  // Filtrage Phase 2 : si le club a des catégories engagées, le FORMAT SPORTIF ne montre
+  // que ces catégories (les autres sections restent inchangées). Repli sur toutes les
+  // catégories si la sélection ne correspond à aucune (donnée incohérente) — jamais de
+  // section vide. Sans club / sans sélection : `catsFormat` = toutes les catégories.
+  const engagees = categoriesEngageesListe(club);
+  let catsFormat = cats;
+  if (engagees.length) {
+    const filtre = cats.filter(function (c) {
+      return engagees.indexOf(txt(c.categorie).toUpperCase()) !== -1;
+    });
+    if (filtre.length) catsFormat = filtre;
+  }
+
   let html = '';
 
   // 1) EN-TÊTE : affiche, nom, date, horodatage de génération.
@@ -355,6 +416,10 @@ function construireDossier(g, categories) {
       '<p class="d-genere">Généré le ' + echapper(genereLe) + '</p>' +
     '</div>' +
   '</header>';
+
+  // 1 bis) ACCUEIL PERSONNALISÉ (Phase 2) : inséré AVANT la Présentation, seulement si le
+  //        club est connu (paramètre ?club= présent et trouvé). Sinon rien (mode générique).
+  html += accueilPersonnalise(g, club);
 
   // 2) PRÉSENTATION (2-3 phrases, tronquée à 400 caractères).
   if (txt(g.tournoi_description)) {
@@ -388,7 +453,9 @@ function construireDossier(g, categories) {
       + 'Horaires indicatifs — le planning détaillé fera foi le jour du tournoi.</p>'));
 
   // 5) FORMAT SPORTIF : tableau si plusieurs catégories, puces si une seule.
-  html += section('Format sportif', cadreSportif(cats));
+  //    Filtré sur les catégories ENGAGÉES du club en Phase 2 (catsFormat) — une seule
+  //    catégorie engagée bascule automatiquement en affichage puces (cf. cadreSportif).
+  html += section('Format sportif', cadreSportif(catsFormat));
 
   // 5 bis) MODALITÉS D'INSCRIPTION (dossier d'INVITATION) : date limite de confirmation,
   //        tarif d'engagement (montant + modalités) SEULEMENT si un tarif est demandé.

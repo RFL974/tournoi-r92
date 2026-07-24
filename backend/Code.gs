@@ -13,10 +13,20 @@ var SHEET_ID = '17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U';
 var ENTETES = {
   Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule'],
   Poules: ['id_poule', 'categorie', 'nom_poule'],
-  // Clubs INVITÉS au tournoi (dossier d'invitation envoyé AVANT confirmation).
-  // ⚠️ Contient des emails de contact : cet onglet n'est JAMAIS inclus dans le
-  // snapshot public (getAll) — il se lit via l'action listerClubsInvites (clé admin).
-  ClubsInvites: ['club_nom', 'club_contact_nom', 'club_contact_email', 'statut', 'date_ajout'],
+  // Clubs INVITÉS au tournoi (Phase 1 = invitation légère ; Phase 2 = dossier complet
+  // envoyé aux clubs qui ont ACCEPTÉ). ⚠️ Contient des emails de contact : cet onglet
+  // n'est JAMAIS inclus dans le snapshot public (getAll) — il se lit via l'action
+  // listerClubsInvites (clé admin). Seuls des champs NON sensibles (nom, prénom,
+  // catégories engagées — jamais l'email) sont exposés publiquement via getClubDossier.
+  //   club_contact_prenom : utilisé dans la formule de politesse du dossier Phase 2.
+  //   statut              : Invité / Accepté / Décliné (« Confirmé » = ancien libellé d'« Accepté »).
+  //   categories_engagees : catégories réellement engagées par le club (« U8,U10 »), vides
+  //                         tant qu'il n'a pas répondu — filtrent le dossier Phase 2.
+  //   dossier_envoye      : date (AAAA-MM-JJ) posée automatiquement quand l'envoi email réussit.
+  // Les 5 premières colonnes gardent leur position (rétrocompatibilité des Sheets déjà en service) ;
+  // les 3 nouvelles sont ajoutées à droite (migration douce : assurerColonnesClubsInvites).
+  ClubsInvites: ['club_nom', 'club_contact_nom', 'club_contact_email', 'statut', 'date_ajout',
+                 'club_contact_prenom', 'categories_engagees', 'dossier_envoye'],
   // Colonnes 1-12 : historiques (matin + après-midi CROISE/LIBRE).
   // Colonnes 13-18 : format d'après-midi + tableau à élimination (COUPE_PLATEAU).
   //   format        : CROISE / LIBRE / COUPE_PLATEAU (recopié depuis la catégorie ; vide pour le matin)
@@ -73,7 +83,20 @@ function creerOngletConfig(classeur) {
     ['pause_dejeuner_duree_min', '60'],
     ['heure_rdv', '07:45'],
     ['heure_fin_communiquee', ''],
-    ['marge_fin_communiquee_min', '75']
+    ['marge_fin_communiquee_min', '75'],
+    // Phase 1 (invitation légère) — « Sur place » : pastilles affichées seulement si 'oui'.
+    ['buvette_disponible', 'non'],
+    ['espace_sandwich_disponible', 'non'],
+    ['boutique_r92_disponible', 'non'],
+    // Phase 1 — « Réponse à l'invitation » : date limite de RÉPONSE (distincte de
+    // date_limite_confirmation, propre aux effectifs de la Phase 2) + contact référent.
+    ['date_limite_reponse', ''],
+    ['contact_reponse_nom', ''],
+    ['contact_reponse_tel', ''],
+    ['contact_reponse_email', ''],
+    // Adresse « Envoyer en tant que » (alias Gmail du compte exécutant). Vide = l'email
+    // part de l'adresse du compte qui exécute le script (romain.rifleu@gmail.com en test).
+    ['email_expediteur', '']
   ];
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
@@ -84,15 +107,17 @@ function creerOngletConfig(classeur) {
   // reglement : texte libre OU URL (une valeur commençant par « http » sera affichée en lien).
   // effectif_min / effectif_max : nombre de joueurs par équipe (dossier club) — optionnels.
   // arbitrage_organisation : qui arbitre (« arbitrage » seul est déjà pris par l'assistant horaires).
+  // max_equipes_par_club : nombre max d'équipes qu'un club peut engager dans cette catégorie
+  //   (Phase 1). Vide = illimité (« Plusieurs équipes possibles par catégorie »).
   var entetesCategorie = ['categorie', 'presente', 'terrains', 'terrains_auto', 'nb_poules',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min',
     'format_apresmidi', 'param_format',
-    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation'];
+    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation', 'max_equipes_par_club'];
   var exemplesCategorie = [
-    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', ''],
-    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', ''],
-    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}', '', '', '', ''],
-    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '']
+    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', '', ''],
+    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', '', ''],
+    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}', '', '', '', '', ''],
+    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '', '']
   ];
   onglet.getRange(1, 1, 60, entetesCategorie.length + 1).setNumberFormat('@');
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
@@ -136,6 +161,9 @@ function doGet(e) {
       case 'getMatchs':  resultat = lireOngletSimple(classeur, 'Matchs'); break;
       case 'getClassement': resultat = calculerClassement(classeur); break;
       case 'getHistorique': resultat = lireHistorique(classeur); break;
+      // Lecture PUBLIQUE réservée au dossier Phase 2 (dossier-club.html?club=…) : ne renvoie
+      // QUE des champs non sensibles (nom, prénom, catégories engagées) — JAMAIS l'email.
+      case 'getClubDossier': resultat = getClubDossier(classeur, params.club); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -374,11 +402,15 @@ function doPost(e) {
       case 'enregistrerAffiche':   resultat = enregistrerAffiche(classeur, requete); break;
       case 'supprimerAffiche':     resultat = supprimerAffiche(classeur); break;
       case 'enregistrerInvitation': resultat = enregistrerInvitation(classeur, requete); break;
+      case 'enregistrerSurPlace':  resultat = enregistrerSurPlace(classeur, requete); break;
+      case 'enregistrerReponseInvitation': resultat = enregistrerReponseInvitation(classeur, requete); break;
       case 'enregistrerPhotoParking': resultat = enregistrerPhotoParking(classeur, requete); break;
       case 'supprimerPhotoParking':   resultat = supprimerPhotoParking(classeur); break;
       case 'listerClubsInvites':   resultat = listerClubsInvites(classeur); break;
       case 'ajouterClubInvite':    resultat = ajouterClubInvite(classeur, requete); break;
       case 'modifierStatutClubInvite': resultat = modifierStatutClubInvite(classeur, requete); break;
+      case 'enregistrerCategoriesEngagees': resultat = enregistrerCategoriesEngagees(classeur, requete); break;
+      case 'envoyerDossierEmail':  resultat = envoyerDossierEmail(classeur, requete); break;
       case 'supprimerClubInvite':  resultat = supprimerClubInvite(classeur, requete); break;
       case 'reinitialiserTournoi': resultat = reinitialiserTournoi(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
@@ -814,10 +846,87 @@ function enregistrerInvitation(classeur, data) {
   return { ok: true };
 }
 
+/* ===================== PHASE 1 — INVITATION LÉGÈRE ===================== */
+
+/* « Sur place » (Phase 1) : pastilles affichées sur invitation-club.html seulement si 'oui'. */
+var CHAMPS_SURPLACE = ['buvette_disponible', 'espace_sandwich_disponible', 'boutique_r92_disponible'];
+
+/* « Réponse à l'invitation » (Phase 1). email_expediteur = alias « Envoyer en tant que »
+   (config d'infrastructure) : NON effacé par une réinitialisation, contrairement aux autres. */
+var CHAMPS_REPONSE = ['date_limite_reponse', 'contact_reponse_nom', 'contact_reponse_tel',
+  'contact_reponse_email', 'email_expediteur'];
+
+/**
+ * Enregistre la carte « Sur place » (Phase 1) : 3 booléens rangés en 'oui'/'non'
+ * (défaut 'non' : seul 'oui' affiche la pastille).
+ */
+function enregistrerSurPlace(classeur, data) {
+  var onglet = classeur.getSheetByName('Config');
+  CHAMPS_SURPLACE.forEach(function (champ) {
+    if (data[champ] != null) {
+      ecrireParamGlobal(onglet, champ, String(data[champ]).toLowerCase() === 'oui' ? 'oui' : 'non');
+    }
+  });
+  return { ok: true };
+}
+
+/**
+ * Enregistre la carte « Réponse à l'invitation » (Phase 1).
+ *  - date_limite_reponse : AAAA-MM-JJ ou vide ;
+ *  - contact_reponse_tel : 10 chiffres, normalisé (espaces/points/tirets retirés) ;
+ *  - contact_reponse_email / email_expediteur : format email si renseignés ;
+ *  - VALIDATION CROISÉE : au moins un des deux contacts (tél OU email) doit être renseigné
+ *    (sinon l'enregistrement est bloqué avec un message clair).
+ */
+function enregistrerReponseInvitation(classeur, data) {
+  var onglet = classeur.getSheetByName('Config');
+
+  var d = String(data.date_limite_reponse == null ? '' : data.date_limite_reponse).trim();
+  if (d !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    return { error: 'Date limite de réponse invalide : format AAAA-MM-JJ attendu.' };
+  }
+
+  var tel = String(data.contact_reponse_tel == null ? '' : data.contact_reponse_tel).trim();
+  if (tel !== '') {
+    var norme = normaliserTelephone(tel);
+    if (!norme) {
+      return { error: 'Téléphone du contact réponse invalide : 10 chiffres attendus '
+               + '(espaces, points ou tirets acceptés).' };
+    }
+    data.contact_reponse_tel = norme;
+    tel = norme;
+  }
+
+  var email = String(data.contact_reponse_email == null ? '' : data.contact_reponse_email).trim();
+  if (email !== '' && !estEmailValide(email)) {
+    return { error: 'Email du contact réponse invalide : « ' + email + ' ».' };
+  }
+  var exp = String(data.email_expediteur == null ? '' : data.email_expediteur).trim();
+  if (exp !== '' && !estEmailValide(exp)) {
+    return { error: 'Email expéditeur invalide : « ' + exp + ' ».' };
+  }
+
+  // Au moins un des deux contacts (tél OU email) doit être renseigné.
+  if (tel === '' && email === '') {
+    return { error: 'Renseigne au moins un contact de réponse : téléphone OU email.' };
+  }
+
+  CHAMPS_REPONSE.forEach(function (champ) {
+    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
+  });
+  return { ok: true };
+}
+
+/** Vrai si `v` a la forme d'une adresse email (contrôle volontairement simple/robuste). */
+function estEmailValide(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
+}
+
 /* ===================== CLUBS INVITÉS ===================== */
 
-/* Statuts admis d'un club invité (formes canoniques, avec accents). */
-var STATUTS_CLUB_INVITE = ['Invité', 'Confirmé', 'Décliné'];
+/* Statuts admis d'un club invité (formes canoniques, avec accents).
+   « Confirmé » (ancien libellé) est reconnu comme un alias d'« Accepté » à la lecture. */
+var STATUTS_CLUB_INVITE = ['Invité', 'Accepté', 'Décliné'];
 
 /** Comparaison de textes SANS accents ni casse (piège NFC/NFD du Sheet : « Invité »
  *  peut revenir avec un é décomposé — même précaution que estTermine). */
@@ -828,19 +937,79 @@ function memeTexteSouple(a, b) {
   return plat(a) === plat(b);
 }
 
-/** Statut canonique ('Invité'/'Confirmé'/'Décliné') depuis une saisie, ou '' si inconnu. */
+/** Statut canonique ('Invité'/'Accepté'/'Décliné') depuis une saisie, ou '' si inconnu.
+ *  « Confirmé » (ancien libellé, encore présent dans des Sheets en service) est mappé
+ *  sur « Accepté » pour que les données existantes restent lisibles. */
 function statutClubCanonique(valeur) {
+  if (memeTexteSouple(valeur, 'Confirmé')) return 'Accepté';
   for (var i = 0; i < STATUTS_CLUB_INVITE.length; i++) {
     if (memeTexteSouple(valeur, STATUTS_CLUB_INVITE[i])) return STATUTS_CLUB_INVITE[i];
   }
   return '';
 }
 
-/** Crée l'onglet ClubsInvites s'il manque (migration douce d'un Sheet déjà en service). */
+/** Crée l'onglet ClubsInvites s'il manque, puis garantit ses colonnes (migration douce). */
 function assurerOngletClubsInvites(classeur) {
   var onglet = classeur.getSheetByName('ClubsInvites');
   if (!onglet) creerOngletAvecEntetes(classeur, 'ClubsInvites', ENTETES.ClubsInvites);
-  return classeur.getSheetByName('ClubsInvites');
+  return assurerColonnesClubsInvites(classeur);
+}
+
+/**
+ * Migration douce : garantit que l'onglet ClubsInvites possède TOUTES les colonnes de
+ * ENTETES.ClubsInvites. Les colonnes manquantes (Sheet créé avant l'évolution en deux
+ * phases) sont ajoutées À DROITE des en-têtes existantes, sans toucher aux données déjà
+ * présentes ni à l'ordre des colonnes d'origine.
+ */
+function assurerColonnesClubsInvites(classeur) {
+  var onglet = classeur.getSheetByName('ClubsInvites');
+  if (!onglet) { creerOngletAvecEntetes(classeur, 'ClubsInvites', ENTETES.ClubsInvites); return classeur.getSheetByName('ClubsInvites'); }
+  var largeur = Math.max(onglet.getLastColumn(), 1);
+  var entetes = onglet.getRange(1, 1, 1, largeur).getValues()[0];
+  var presents = {};
+  var derniere = 0;
+  for (var i = 0; i < entetes.length; i++) {
+    if (entetes[i] !== '' && entetes[i] !== null) { presents[entetes[i]] = true; derniere = i + 1; }
+  }
+  var manquants = ENTETES.ClubsInvites.filter(function (h) { return !presents[h]; });
+  if (manquants.length) {
+    var zone = onglet.getRange(1, derniere + 1, 1, manquants.length);
+    zone.setNumberFormat('@');
+    zone.setValues([manquants]);
+    stylerEntete(zone);
+    onglet.setFrozenRows(1);
+  }
+  return onglet;
+}
+
+/** Colonne (1-based) d'un en-tête dans l'onglet ClubsInvites, ou -1 si absent. */
+function colClubInvite(onglet, nomEntete) {
+  var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
+  for (var i = 0; i < entetes.length; i++) { if (entetes[i] === nomEntete) return i + 1; }
+  return -1;
+}
+
+/**
+ * Lecture PUBLIQUE d'un club pour le dossier Phase 2 (dossier-club.html?club=…).
+ * Ne renvoie QUE des champs non sensibles — JAMAIS l'email de contact. Comparaison souple
+ * sur le nom (clé). { ok:true, club:null } si le club est absent / non renseigné.
+ */
+function getClubDossier(classeur, nom) {
+  nom = String(nom || '').trim();
+  if (!nom) return { ok: true, club: null };
+  var onglet = classeur.getSheetByName('ClubsInvites');
+  if (!onglet) return { ok: true, club: null };
+  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  for (var i = 0; i < clubs.length; i++) {
+    if (memeTexteSouple(clubs[i].club_nom, nom)) {
+      return { ok: true, club: {
+        club_nom:            String(clubs[i].club_nom || ''),
+        club_contact_prenom: String(clubs[i].club_contact_prenom || ''),
+        categories_engagees: String(clubs[i].categories_engagees || '')
+      } };
+    }
+  }
+  return { ok: true, club: null };
 }
 
 /**
@@ -862,8 +1031,9 @@ function ajouterClubInvite(classeur, data) {
   var nom = String(data.club_nom || '').trim();
   if (!nom) return { error: 'Nom du club vide.' };
   var contactNom = String(data.club_contact_nom || '').trim();
+  var prenom = String(data.club_contact_prenom || '').trim();
   var email = String(data.club_contact_email || '').trim();
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (email && !estEmailValide(email)) {
     return { error: 'Email du contact invalide : « ' + email + ' ».' };
   }
   var statut = statutClubCanonique(data.statut) || 'Invité';
@@ -877,10 +1047,18 @@ function ajouterClubInvite(classeur, data) {
   }
 
   var dateAjout = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  // Écriture header-aware : la valeur suit le NOM de colonne (robuste à l'ordre réel du Sheet).
+  var valeurs = {
+    club_nom: nom, club_contact_nom: contactNom, club_contact_prenom: prenom,
+    club_contact_email: email, statut: statut, date_ajout: dateAjout,
+    categories_engagees: '', dossier_envoye: ''
+  };
+  var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
   var ligne = onglet.getLastRow() + 1;
-  var plage = onglet.getRange(ligne, 1, 1, ENTETES.ClubsInvites.length);
+  var row = entetes.map(function (h) { return (valeurs[h] != null) ? valeurs[h] : ''; });
+  var plage = onglet.getRange(ligne, 1, 1, entetes.length);
   plage.setNumberFormat('@');
-  plage.setValues([[nom, contactNom, email, statut, dateAjout]]);
+  plage.setValues([row]);
   return { ok: true };
 }
 
@@ -896,14 +1074,92 @@ function ligneClubInvite(onglet, nom) {
 /** Change le STATUT d'un club invité (menu déroulant de la liste admin). */
 function modifierStatutClubInvite(classeur, data) {
   var statut = statutClubCanonique(data.statut);
-  if (!statut) return { error: 'Statut inconnu (attendu : Invité, Confirmé ou Décliné).' };
+  if (!statut) return { error: 'Statut inconnu (attendu : Invité, Accepté ou Décliné).' };
   var onglet = assurerOngletClubsInvites(classeur);
   var ligne = ligneClubInvite(onglet, data.club_nom);
   if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
-  var cellule = onglet.getRange(ligne, 4); // colonne `statut`
+  var col = colClubInvite(onglet, 'statut');
+  if (col === -1) return { error: 'Colonne « statut » introuvable.' };
+  var cellule = onglet.getRange(ligne, col);
   cellule.setNumberFormat('@');
   cellule.setValue(statut);
   return { ok: true };
+}
+
+/**
+ * Enregistre les CATÉGORIES ENGAGÉES d'un club (Phase 2) — sélection cochée au moment où le
+ * club passe « Accepté ». Optionnellement met aussi à jour le prénom du contact (édité sur la
+ * même fiche). categories_engagees est stocké en texte « U8,U10 » (vide = toutes les catégories).
+ */
+function enregistrerCategoriesEngagees(classeur, data) {
+  var onglet = assurerOngletClubsInvites(classeur);
+  var ligne = ligneClubInvite(onglet, data.club_nom);
+  if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
+
+  var colCat = colClubInvite(onglet, 'categories_engagees');
+  if (colCat === -1) return { error: 'Colonne « categories_engagees » introuvable.' };
+  var cats = String(data.categories_engagees == null ? '' : data.categories_engagees).trim();
+  var cellCat = onglet.getRange(ligne, colCat);
+  cellCat.setNumberFormat('@');
+  cellCat.setValue(cats);
+
+  if (data.club_contact_prenom != null) {
+    var colP = colClubInvite(onglet, 'club_contact_prenom');
+    if (colP !== -1) {
+      var cellP = onglet.getRange(ligne, colP);
+      cellP.setNumberFormat('@');
+      cellP.setValue(String(data.club_contact_prenom).trim());
+    }
+  }
+  return { ok: true, categories_engagees: cats };
+}
+
+/**
+ * ENVOI AUTOMATIQUE du dossier Phase 2 par email (Point 7 du sprint).
+ * Le destinataire (email de contact) est TOUJOURS relu dans le Sheet — jamais pris du client —
+ * pour éviter tout détournement. L'objet et le corps sont fournis par l'aperçu admin (modifiables).
+ * Envoi via MailApp par défaut ; via GmailApp avec « from » si email_expediteur (alias Gmail)
+ * est configuré. dossier_envoye n'est posé (date du jour) qu'en cas de SUCCÈS de l'envoi.
+ */
+function envoyerDossierEmail(classeur, data) {
+  var nom = String(data.club_nom || '').trim();
+  if (!nom) return { error: 'Club manquant.' };
+  var onglet = assurerOngletClubsInvites(classeur);
+  var ligne = ligneClubInvite(onglet, nom);
+  if (ligne === -1) return { error: 'Club introuvable : ' + nom };
+
+  var colEmail = colClubInvite(onglet, 'club_contact_email');
+  var email = (colEmail === -1) ? '' : String(onglet.getRange(ligne, colEmail).getValue() || '').trim();
+  if (!email) return { error: 'Ce club n\'a pas d\'email de contact : utilise « Copier le lien ».' };
+  if (!estEmailValide(email)) return { error: 'Email du club invalide : « ' + email + ' ».' };
+
+  var sujet = String(data.sujet == null ? '' : data.sujet).trim();
+  if (!sujet) return { error: 'L\'objet du message est vide.' };
+  var corps = String(data.corps == null ? '' : data.corps);
+  if (!corps.trim()) return { error: 'Le corps du message est vide.' };
+
+  var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
+  try {
+    if (expediteur) {
+      // Nécessite que `expediteur` soit un alias « Envoyer en tant que » du compte exécutant
+      // (sinon Gmail lève une exception → on n'écrit PAS dossier_envoye, l'envoi est à relancer).
+      GmailApp.sendEmail(email, sujet, corps, { name: 'Génération R92', from: expediteur });
+    } else {
+      MailApp.sendEmail({ to: email, subject: sujet, body: corps, name: 'Génération R92' });
+    }
+  } catch (e) {
+    return { error: 'Échec de l\'envoi de l\'email : ' + (e && e.message ? e.message : e) };
+  }
+
+  // Succès → on pose la date d'envoi (et seulement là).
+  var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  var colEnvoye = colClubInvite(onglet, 'dossier_envoye');
+  if (colEnvoye !== -1) {
+    var cell = onglet.getRange(ligne, colEnvoye);
+    cell.setNumberFormat('@');
+    cell.setValue(today);
+  }
+  return { ok: true, dossier_envoye: today, destinataire: email };
 }
 
 /** Retire un club de la liste des invités. */
@@ -913,6 +1169,28 @@ function supprimerClubInvite(classeur, data) {
   if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
   onglet.deleteRow(ligne);
   return { ok: true };
+}
+
+/**
+ * Réinitialisation d'une édition : vide les colonnes PAR ÉDITION de l'onglet ClubsInvites
+ * (categories_engagees + dossier_envoye) pour TOUS les clubs, en conservant le carnet
+ * d'adresses (noms, contacts, prénoms, statuts). Sans effet s'il n'y a aucun club.
+ */
+function reinitialiserPhase2Clubs(classeur) {
+  var onglet = classeur.getSheetByName('ClubsInvites');
+  if (!onglet) return;
+  assurerColonnesClubsInvites(classeur);
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return; // en-tête seul : rien à vider
+  var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
+  ['categories_engagees', 'dossier_envoye'].forEach(function (h) {
+    var c = entetes.indexOf(h);
+    if (c !== -1) {
+      var zone = onglet.getRange(2, c + 1, dernier - 1, 1);
+      zone.setNumberFormat('@');
+      zone.clearContent();
+    }
+  });
 }
 
 /**
@@ -2047,6 +2325,7 @@ function assurerColonnesConfig(classeur) {
   assurerColonneCategorie(classeur, 'effectif_min');
   assurerColonneCategorie(classeur, 'effectif_max');
   assurerColonneCategorie(classeur, 'arbitrage_organisation');
+  assurerColonneCategorie(classeur, 'max_equipes_par_club');
 }
 
 /* ===================== GÉNÉRATION POULES + PLANNING ===================== */
@@ -2483,6 +2762,14 @@ function reinitialiserTournoi(classeur) {
   if (idParking) { try { DriveApp.getFileById(idParking).setTrashed(true); } catch (e) {} }
   CHAMPS_INVITATION.concat(['parking_photo_id'])
     .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
+
+  // 3 quinquies) Phase 1 : « Sur place » + « Réponse à l'invitation » (contact référent) sont
+  //   propres à l'édition → effacés. email_expediteur (alias Gmail, config d'infrastructure) est
+  //   CONSERVÉ, comme les clés. Côté clubs invités, on remet à zéro les colonnes PAR ÉDITION
+  //   (categories_engagees + dossier_envoye) sans toucher au carnet d'adresses (noms/contacts/statuts).
+  CHAMPS_SURPLACE.concat(['date_limite_reponse', 'contact_reponse_nom', 'contact_reponse_tel', 'contact_reponse_email'])
+    .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
+  reinitialiserPhase2Clubs(classeur);
 
   // 4) Le tournoi redevient masqué pour le public.
   ecrireParamGlobal(ongletConfig, 'tournoi_publie', 'non');
