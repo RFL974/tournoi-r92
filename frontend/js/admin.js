@@ -277,6 +277,7 @@ async function initAdmin() {
   document.getElementById('form-surplace').addEventListener('change', majApercuInvitation);
   document.getElementById('form-reponse').addEventListener('input', majApercuInvitation);
   document.getElementById('form-reponse').addEventListener('change', majApercuInvitation);
+  document.getElementById('apercu-invitation-intro').addEventListener('input', majApercuInvitation);
   document.getElementById('bouton-regenerer-invitation').addEventListener('click', onRegenererInvitation);
   document.getElementById('bouton-envoyer-invitations').addEventListener('click', onEnvoyerInvitationsGroupe);
 
@@ -841,24 +842,10 @@ function sujetInvitation(g) {
   return 'Invitation — ' + (String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
 }
 
-/** Corps APRÈS la salutation (identique pour tous ; le backend préfixe « Bonjour {prénom}, »).
- *  Réactif aux cartes Sur place (ligne « Sur place ») et Réponse (date limite). */
-function corpsApresInvitation(g) {
+/** Phrase d'INTRODUCTION courte (après la salutation), éditable. Réactive au nom du tournoi. */
+function introInvitationDefaut(g) {
   const nom = String(g.tournoi_nom || '').trim() || 'notre tournoi';
-  let s = 'Nous avons le plaisir de vous inviter au ' + nom + '.\n'
-    + 'Vous trouverez toutes les informations (catégories concernées, déroulé de la journée, '
-    + 'réponse attendue) sur la page d\'invitation ci-dessous :\n\n'
-    + lienInvitationPublique() + '\n';
-  const services = [];
-  if (estOui(g.buvette_disponible)) services.push('buvette');
-  if (estOui(g.espace_sandwich_disponible)) services.push('espace sandwich');
-  if (estOui(g.boutique_r92_disponible)) services.push('boutique R92');
-  if (services.length) s += '\nSur place le jour J : ' + services.join(', ') + '.\n';
-  if (String(g.date_limite_reponse || '').trim()) {
-    s += '\nMerci de nous faire part de votre réponse avant le ' + formaterDateFr(g.date_limite_reponse) + '.\n';
-  }
-  s += '\nAu plaisir de vous accueillir,\nGénération R92';
-  return s;
+  return 'Nous avons le plaisir de vous inviter au ' + nom + '. Voici l\'essentiel de la journée.';
 }
 
 /** Prénom d'exemple pour l'aperçu : premier club avec un prénom, sinon « Prénom ». */
@@ -867,59 +854,253 @@ function exemplePrenomInvitation() {
   return c ? String(c.club_contact_prenom).trim() : 'Prénom';
 }
 
-/* Dernières valeurs AUTO-générées de l'aperçu : servent à savoir si Romain a modifié le
-   texte à la main (dans ce cas on ARRÊTE de l'écraser à chaque changement de config). */
-let invApercuGenere = { sujet: null, corps: null };
+/** Catégories présentes du tournoi, triées (ordre naturel U8 < U10 < …). */
+function catsInvitationTriees() {
+  return (configCourante.categories || []).filter(estPresente)
+    .slice().sort(function (a, b) { return comparerCategorie(a.categorie, b.categorie); });
+}
 
-/** Met à jour l'exemple de salutation affiché au-dessus du message (« Bonjour {prénom}, »). */
-function majSalutationExemple() {
-  const salut = document.getElementById('apercu-invitation-salut');
-  if (salut) salut.textContent = 'Bonjour ' + exemplePrenomInvitation() + ',';
+/* Charte R92 pour l'email (styles EN LIGNE uniquement — pas de CSS externe/flex/grid,
+   pour la compatibilité des clients mail). */
+const EMAIL_NAVY = '#0C1C2E', EMAIL_BLEU = '#2E8FE0', EMAIL_TXT = '#1a1f26', EMAIL_GRIS = '#5b6570', EMAIL_FILET = '#dbe3ec';
+
+/** Titre de section de l'email (barre bleue de la charte). */
+function emailTitreSection(t) {
+  return '<h2 style="margin:20px 0 8px;font-family:Arial,Helvetica,sans-serif;text-transform:uppercase;'
+    + 'letter-spacing:.5px;font-size:15px;color:' + EMAIL_BLEU + ';border-bottom:1px solid ' + EMAIL_FILET + ';padding-bottom:4px;">'
+    + echapper(t) + '</h2>';
 }
 
 /**
- * (Re)dessine l'aperçu de l'email d'invitation. L'objet et le message sont ÉDITABLES : on ne
- * les met à jour automatiquement (au fil des cartes Sur place / Réponse) QUE tant que Romain
- * ne les a pas modifiés à la main (comparaison à la dernière valeur générée). « Régénérer »
- * force le retour au texte automatique.
+ * Corps HTML de l'email d'invitation (compatible clients mail : tableaux + styles en ligne).
+ * Reprend les sections de invitation-club.html dans le même ordre. `salutationHtml` est inséré
+ * TEL QUEL (jeton « {{SALUTATION}} » pour l'envoi, ou « Bonjour {exemple}, » pour l'aperçu) ;
+ * `imgSrc` = l'affiche (URL Drive en aperçu, « cid:affiche » pour l'envoi ; vide = pas d'image).
+ */
+function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro) {
+  const A = 'font-family:Arial,Helvetica,sans-serif;';
+  const nom = echapper(String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
+  const date = String(g.tournoi_date || '').trim() ? echapper(formaterDateFr(g.tournoi_date)) : '';
+  const lien = echapper(lienInvitationPublique());
+
+  // En-tête : affiche (optionnelle) + surtitre + nom + date.
+  let entete = '';
+  if (imgSrc) {
+    entete += '<img src="' + echapper(imgSrc) + '" alt="Affiche — ' + nom + '" '
+      + 'style="display:block;max-width:180px;width:100%;height:auto;border-radius:6px;margin:0 0 10px;">';
+  }
+  entete += '<p style="margin:0;' + A + 'text-transform:uppercase;letter-spacing:1px;font-size:12px;color:' + EMAIL_BLEU + ';">Invitation — Génération R92</p>'
+    + '<h1 style="margin:4px 0 2px;' + A + 'font-size:24px;color:' + EMAIL_NAVY + ';">' + nom + '</h1>'
+    + (date ? '<p style="margin:0;' + A + 'font-weight:bold;color:' + EMAIL_TXT + ';">' + date + '</p>' : '');
+
+  // Salutation + intro.
+  const bloc_salut = '<p style="margin:18px 0 4px;' + A + 'font-size:15px;color:' + EMAIL_TXT + ';">' + salutationHtml + '</p>'
+    + (String(intro || '').trim() ? '<p style="margin:0;' + A + 'font-size:14px;color:' + EMAIL_TXT + ';">' + echapper(intro) + '</p>' : '');
+
+  // « Vous êtes invités » : tableau catégorie / équipes par club / effectif mini.
+  let tblInvites = '';
+  if (cats.length) {
+    const th = 'style="text-align:left;background:' + EMAIL_NAVY + ';color:#fff;' + A + 'font-size:13px;padding:6px 8px;"';
+    const td = 'style="' + A + 'font-size:13px;padding:6px 8px;border-bottom:1px solid ' + EMAIL_FILET + ';color:' + EMAIL_TXT + ';"';
+    let rows = '';
+    cats.forEach(function (c) {
+      const max = parseInt(String(c.max_equipes_par_club || '').trim(), 10);
+      const eq = (isFinite(max) && max >= 1) ? ('Jusqu\'à ' + max + ' équipe' + (max > 1 ? 's' : '')) : 'Plusieurs possibles';
+      const effMin = parseInt(String(c.effectif_min || '').trim(), 10);
+      const eff = (isFinite(effMin) && effMin >= 1) ? (effMin + ' joueur' + (effMin > 1 ? 's' : '') + ' mini') : '—';
+      rows += '<tr><td ' + td + '><strong>' + echapper(String(c.categorie || '')) + '</strong></td>'
+        + '<td ' + td + '>' + echapper(eq) + '</td><td ' + td + '>' + echapper(eff) + '</td></tr>';
+    });
+    tblInvites = emailTitreSection('Vous êtes invités')
+      + '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;width:100%;">'
+      + '<tr><th ' + th + '>Catégorie</th><th ' + th + '>Équipes par club</th><th ' + th + '>Effectif</th></tr>'
+      + rows + '</table>';
+  }
+
+  // « Le jour J, en bref ».
+  const ligneJ = function (lib, val) {
+    if (!val) return '';
+    return '<tr><td style="' + A + 'font-size:13px;color:' + EMAIL_GRIS + ';padding:3px 10px 3px 0;">' + echapper(lib) + '</td>'
+      + '<td style="' + A + 'font-size:13px;color:' + EMAIL_TXT + ';font-weight:bold;padding:3px 0;">' + echapper(val) + '</td></tr>';
+  };
+  const arbitrages = [];
+  cats.forEach(function (c) { const v = String(c.arbitrage_organisation || '').trim(); if (v && arbitrages.indexOf(v) === -1) arbitrages.push(v); });
+  const formatPhrase = cats.length ? 'Poules le matin, puis une phase l\'après-midi (temps de jeu adapté par catégorie).' : '';
+  const jourJ = ligneJ('Accueil des équipes', String(g.heure_rdv || '').trim())
+    + ligneJ('Fin envisagée', heureFinCommuniqueeAdmin(g))
+    + ligneJ('Format des matchs', formatPhrase)
+    + ligneJ('Arbitrage', arbitrages.join(' · '));
+  const blocJourJ = jourJ ? (emailTitreSection('Le jour J, en bref')
+    + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + jourJ + '</table>') : '';
+
+  // « Sur place » : pastilles (seulement si cochées) + tarif si demandé.
+  const pastilles = [];
+  if (estOui(g.buvette_disponible)) pastilles.push('🥤 Buvette');
+  if (estOui(g.espace_sandwich_disponible)) pastilles.push('🥪 Espace sandwich');
+  if (estOui(g.boutique_r92_disponible)) pastilles.push('🛍️ Boutique R92');
+  let surPlace = '';
+  if (pastilles.length || (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim())) {
+    surPlace = emailTitreSection('Sur place');
+    if (pastilles.length) {
+      surPlace += '<p style="margin:0 0 6px;">' + pastilles.map(function (p) {
+        return '<span style="display:inline-block;background:' + EMAIL_NAVY + ';color:#fff;border-radius:14px;'
+          + 'padding:5px 12px;' + A + 'font-size:13px;margin:0 6px 6px 0;">' + echapper(p) + '</span>';
+      }).join('') + '</p>';
+    }
+    if (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim()) {
+      surPlace += '<p style="margin:0;' + A + 'font-size:13px;color:' + EMAIL_TXT + ';"><strong>Tarif d\'engagement :</strong> '
+        + echapper(String(g.tarif_engagement_montant).trim()) + '</p>';
+    }
+  }
+
+  // « Réponse attendue » : date limite + contact.
+  const contact = [];
+  if (String(g.contact_reponse_nom || '').trim()) contact.push(echapper(String(g.contact_reponse_nom).trim()));
+  if (String(g.contact_reponse_tel || '').trim()) contact.push(echapper(telephoneLisibleAdmin(g.contact_reponse_tel)));
+  if (String(g.contact_reponse_email || '').trim()) contact.push(echapper(String(g.contact_reponse_email).trim()));
+  const reponse = ligneJ('Réponse souhaitée avant le', String(g.date_limite_reponse || '').trim() ? formaterDateFr(g.date_limite_reponse) : '')
+    + ligneJ('Votre contact', contact.join(' · '));
+  const blocReponse = reponse ? (emailTitreSection('Réponse attendue')
+    + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + reponse + '</table>') : '';
+
+  // Pied : mention + lien de secours vers la page complète.
+  const pied = '<p style="margin:20px 0 0;padding-top:12px;border-top:1px solid ' + EMAIL_FILET + ';' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
+    + 'Génération R92 · École de rugby du Racing 92<br>'
+    + '<a href="' + lien + '" style="color:' + EMAIL_BLEU + ';">Voir la version complète en ligne</a></p>';
+
+  return '<div style="background:#eef2f7;padding:16px;' + A + '">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;margin:0 auto;background:#ffffff;border-collapse:collapse;">'
+    + '<tr><td style="padding:22px 24px;">'
+    + '<div style="border-bottom:3px solid ' + EMAIL_NAVY + ';padding-bottom:12px;">' + entete + '</div>'
+    + bloc_salut + tblInvites + blocJourJ + surPlace + blocReponse + pied
+    + '</td></tr></table></div>';
+}
+
+/** Version TEXTE brut (fallback anti-spam / clients sans HTML). `salutationTexte` = jeton ou exemple. */
+function emailTexteInvitation(g, cats, salutationTexte, intro) {
+  const nom = String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92';
+  const L = [];
+  L.push(salutationTexte);
+  L.push('');
+  if (String(intro || '').trim()) { L.push(String(intro).trim()); L.push(''); }
+  if (cats.length) {
+    L.push('VOUS ÊTES INVITÉS');
+    cats.forEach(function (c) {
+      const max = parseInt(String(c.max_equipes_par_club || '').trim(), 10);
+      const eq = (isFinite(max) && max >= 1) ? ('jusqu\'à ' + max + ' équipe(s)/club') : 'plusieurs équipes possibles';
+      const effMin = parseInt(String(c.effectif_min || '').trim(), 10);
+      const eff = (isFinite(effMin) && effMin >= 1) ? (' · ' + effMin + ' joueur(s) mini') : '';
+      L.push('- ' + String(c.categorie || '') + ' : ' + eq + eff);
+    });
+    L.push('');
+  }
+  const jour = [];
+  if (String(g.heure_rdv || '').trim()) jour.push('Accueil : ' + String(g.heure_rdv).trim());
+  if (heureFinCommuniqueeAdmin(g)) jour.push('Fin envisagée : ' + heureFinCommuniqueeAdmin(g));
+  const arb = [];
+  cats.forEach(function (c) { const v = String(c.arbitrage_organisation || '').trim(); if (v && arb.indexOf(v) === -1) arb.push(v); });
+  if (arb.length) jour.push('Arbitrage : ' + arb.join(' · '));
+  if (jour.length) { L.push('LE JOUR J : ' + jour.join(' · ')); L.push(''); }
+  const services = [];
+  if (estOui(g.buvette_disponible)) services.push('buvette');
+  if (estOui(g.espace_sandwich_disponible)) services.push('espace sandwich');
+  if (estOui(g.boutique_r92_disponible)) services.push('boutique R92');
+  if (services.length) L.push('Sur place : ' + services.join(', ') + '.');
+  if (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim()) {
+    L.push('Tarif d\'engagement : ' + String(g.tarif_engagement_montant).trim());
+  }
+  if (services.length || (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim())) L.push('');
+  if (String(g.date_limite_reponse || '').trim()) L.push('Réponse souhaitée avant le ' + formaterDateFr(g.date_limite_reponse) + '.');
+  const c2 = [];
+  if (String(g.contact_reponse_nom || '').trim()) c2.push(String(g.contact_reponse_nom).trim());
+  if (String(g.contact_reponse_tel || '').trim()) c2.push(telephoneLisibleAdmin(g.contact_reponse_tel));
+  if (String(g.contact_reponse_email || '').trim()) c2.push(String(g.contact_reponse_email).trim());
+  if (c2.length) L.push('Contact : ' + c2.join(' · '));
+  L.push('');
+  L.push('Voir la version complète en ligne : ' + lienInvitationPublique());
+  L.push('');
+  L.push('Au plaisir de vous accueillir,');
+  L.push('Génération R92');
+  return L.join('\n');
+}
+
+/** Heure de fin communiquée aux clubs (manuelle si saisie, sinon fin du dernier match + marge). */
+function heureFinCommuniqueeAdmin(g) {
+  const manuelle = String(g.heure_fin_communiquee || '').trim();
+  if (manuelle) return manuelle;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(g.heure_fin || '').trim());
+  if (!m) return '';
+  const marge = parseInt(String(g.marge_fin_communiquee_min || '').trim(), 10);
+  const total = Math.min(23 * 60 + 59, parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + (isFinite(marge) && marge >= 0 ? marge : 75));
+  return ('0' + Math.floor(total / 60)).slice(-2) + ':' + ('0' + (total % 60)).slice(-2);
+}
+
+/** « 0612345678 » → « 06 12 34 56 78 » (affichage). */
+function telephoneLisibleAdmin(v) {
+  const c = String(v || '').replace(/\D/g, '');
+  return /^\d{10}$/.test(c) ? c.replace(/(\d{2})(?=\d)/g, '$1 ').trim() : String(v || '');
+}
+
+/* Dernières valeurs AUTO-générées (objet + intro) : savoir si Romain a édité à la main. */
+let invApercuGenere = { sujet: null, intro: null };
+
+/**
+ * (Re)dessine l'aperçu HTML de l'email d'invitation dans l'iframe. L'objet et la phrase d'intro
+ * sont ÉDITABLES : mis à jour automatiquement (au fil des cartes Sur place / Réponse) tant que
+ * Romain ne les a pas modifiés à la main. Le rendu utilise l'affiche via son URL Drive et une
+ * salutation d'exemple (le premier prénom de la liste).
  */
 function majApercuInvitation() {
   const objet = document.getElementById('apercu-invitation-objet');
-  const corps = document.getElementById('apercu-invitation-corps');
-  if (!objet || !corps) return;
+  const intro = document.getElementById('apercu-invitation-intro');
+  const rendu = document.getElementById('apercu-invitation-rendu');
+  if (!objet || !intro || !rendu) return;
   const g = globalInvitation();
-  const gen = { sujet: sujetInvitation(g), corps: corpsApresInvitation(g) };
-  // Champ non modifié à la main (vide ou identique au dernier auto-généré) → on rafraîchit.
+  const gen = { sujet: sujetInvitation(g), intro: introInvitationDefaut(g) };
   if (objet.value === '' || objet.value === invApercuGenere.sujet) objet.value = gen.sujet;
-  if (corps.value === '' || corps.value === invApercuGenere.corps) corps.value = gen.corps;
+  if (intro.value === '' || intro.value === invApercuGenere.intro) intro.value = gen.intro;
   invApercuGenere = gen;
-  majSalutationExemple();
+  const cats = catsInvitationTriees();
+  const imgSrc = String(g.tournoi_affiche_id || '').trim() ? urlAffiche(g.tournoi_affiche_id, 800) : '';
+  const salut = 'Bonjour ' + echapper(exemplePrenomInvitation()) + ',';
+  rendu.srcdoc = emailHtmlInvitation(g, cats, imgSrc, salut, intro.value);
 }
 
-/** « Régénérer » : réécrit objet + message depuis les infos du tournoi (écrase les retouches). */
+/** « Régénérer » : réécrit objet + intro depuis les infos du tournoi (écrase les retouches). */
 function onRegenererInvitation() {
   const objet = document.getElementById('apercu-invitation-objet');
-  const corps = document.getElementById('apercu-invitation-corps');
-  if (!objet || !corps) return;
+  const intro = document.getElementById('apercu-invitation-intro');
+  if (!objet || !intro) return;
   const g = globalInvitation();
-  const gen = { sujet: sujetInvitation(g), corps: corpsApresInvitation(g) };
-  objet.value = gen.sujet;
-  corps.value = gen.corps;
-  invApercuGenere = gen;
-  majSalutationExemple();
+  objet.value = sujetInvitation(g);
+  intro.value = introInvitationDefaut(g);
+  invApercuGenere = { sujet: objet.value, intro: intro.value };
+  majApercuInvitation();
 }
 
-/** Objet COURANT de l'aperçu (tel que modifié par Romain), ou le défaut si le champ manque. */
+/** Objet COURANT de l'aperçu (éventuellement édité), ou le défaut. */
 function sujetInvitationCourant() {
   const el = document.getElementById('apercu-invitation-objet');
   const v = el ? el.value.trim() : '';
   return v || sujetInvitation(globalInvitation());
 }
 
-/** Message COURANT (après salutation) de l'aperçu, ou le défaut si le champ manque. */
-function corpsApresInvitationCourant() {
-  const el = document.getElementById('apercu-invitation-corps');
-  return el ? el.value : corpsApresInvitation(globalInvitation());
+/** Phrase d'intro COURANTE (éventuellement éditée), ou le défaut. */
+function introInvitationCourant() {
+  const el = document.getElementById('apercu-invitation-intro');
+  return el ? el.value : introInvitationDefaut(globalInvitation());
+}
+
+/** Modèle HTML envoyé au backend : jeton {{SALUTATION}} + affiche en cid:affiche (si présente). */
+function htmlModeleInvitation() {
+  const g = globalInvitation();
+  const imgSrc = String(g.tournoi_affiche_id || '').trim() ? 'cid:affiche' : '';
+  return emailHtmlInvitation(g, catsInvitationTriees(), imgSrc, '{{SALUTATION}}', introInvitationCourant());
+}
+
+/** Modèle TEXTE envoyé au backend (fallback), avec le jeton {{SALUTATION}}. */
+function texteModeleInvitation() {
+  return emailTexteInvitation(globalInvitation(), catsInvitationTriees(), '{{SALUTATION}}', introInvitationCourant());
 }
 
 /** Vrai si un club est ENCORE invitable (ni Accepté, ni Décliné). */
@@ -935,12 +1116,11 @@ async function envoyerInvitationClubUI(nom) {
   const email = String(club.club_contact_email || '').trim();
   if (!email) { await dialogAlerter('« ' + nom + ' » n\'a pas d\'email de contact : à inviter manuellement.'); return; }
   const sujet = sujetInvitationCourant();
-  const corps = corpsApresInvitationCourant();
-  if (!sujet || !corps.trim()) { afficherMessage(message, '⚠️ L\'objet et le message de l\'aperçu ne peuvent pas être vides.', 'ko'); return; }
+  if (!sujet) { afficherMessage(message, '⚠️ L\'objet de l\'aperçu ne peut pas être vide.', 'ko'); return; }
   if (!await dialogConfirmer('Envoyer l\'invitation à « ' + nom + ' » (' + email + ') ?', { ok: 'Envoyer' })) return;
   try {
     const res = await ecrireAdmin('envoyerInvitationClub', {
-      club_nom: nom, sujet: sujet, corps_apres: corps
+      club_nom: nom, sujet: sujet, html_modele: htmlModeleInvitation(), texte_modele: texteModeleInvitation()
     });
     if (res && res.invitation_envoyee) club.invitation_envoyee = res.invitation_envoyee;
     afficherClubsInvites();
@@ -960,8 +1140,7 @@ async function onEnvoyerInvitationsGroupe() {
   const bouton = document.getElementById('bouton-envoyer-invitations');
   const renvoyer = document.getElementById('inv-renvoyer').checked;
   const sujet = sujetInvitationCourant();
-  const corps = corpsApresInvitationCourant();
-  if (!sujet || !corps.trim()) { afficherMessage(message, '⚠️ L\'objet et le message de l\'aperçu ne peuvent pas être vides.', 'ko'); return; }
+  if (!sujet) { afficherMessage(message, '⚠️ L\'objet de l\'aperçu ne peut pas être vide.', 'ko'); return; }
 
   // Résumé calculé depuis la liste en mémoire (mêmes règles que le backend).
   const invitables = clubsInvitesCourants.filter(function (c) { return estInvitable(c.statut); });
@@ -989,7 +1168,7 @@ async function onEnvoyerInvitationsGroupe() {
   afficherMessage(message, 'Envoi en cours…', 'ok');
   try {
     const res = await ecrireAdmin('envoyerInvitationsGroupe', {
-      sujet: sujet, corps_apres: corps, renvoyer: renvoyer ? 'oui' : 'non'
+      sujet: sujet, html_modele: htmlModeleInvitation(), texte_modele: texteModeleInvitation(), renvoyer: renvoyer ? 'oui' : 'non'
     });
     await chargerClubsInvites(); // rafraîchit invitation_envoyee + l'aperçu (exemple prénom)
     const nbOk = (res.envoyes || []).length;

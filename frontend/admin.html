@@ -285,13 +285,15 @@
           <label class="ae-champ"><span class="ae-label">Objet</span>
             <input type="text" class="r-input" id="apercu-invitation-objet" autocomplete="off">
           </label>
-          <p class="ae-salutation">
-            Chaque club reçoit d'abord <strong id="apercu-invitation-salut">Bonjour Prénom,</strong>
-            (personnalisé automatiquement), puis le message ci-dessous :
-          </p>
-          <label class="ae-champ"><span class="ae-label">Message</span>
-            <textarea class="r-input" id="apercu-invitation-corps" rows="10"></textarea>
+          <label class="ae-champ"><span class="ae-label">Phrase d'introduction</span>
+            <textarea class="r-input" id="apercu-invitation-intro" rows="2"></textarea>
           </label>
+          <p class="ae-salutation">
+            La salutation <strong>« Bonjour {prénom}, »</strong> et les sections ci-dessous
+            (catégories, jour J, sur place, réponse) sont générées automatiquement à partir des
+            infos du tournoi. Aperçu du <strong>rendu réel</strong> de l'email :
+          </p>
+          <iframe id="apercu-invitation-rendu" class="ae-iframe" title="Aperçu du rendu de l'email"></iframe>
           <div class="ligne-action">
             <button type="button" class="bouton bouton-doux" id="bouton-regenerer-invitation">↻ Régénérer depuis les infos du tournoi</button>
           </div>
