@@ -1809,6 +1809,17 @@ a.bouton { display: inline-block; text-decoration: none; }
 }
 .eml-champ input[readonly] { opacity: 0.75; cursor: default; }
 .eml-champ textarea { min-height: 150px; resize: vertical; }
+/* Aperçu HTML du dossier final : phrase d'intro courte + rendu réel dans une iframe. */
+.eml-carte-large { max-width: 680px; }
+.eml-carte-large textarea#eml-intro { min-height: 60px; }
+.eml-apercu-label { font-size: 0.85rem; color: #cfe0f4; margin: 8px 0 6px; }
+.eml-apercu-label strong { color: #eaf2ff; }
+.eml-iframe {
+  width: 100%; height: 420px;
+  border: 1px solid rgba(120, 180, 255, 0.28);
+  border-radius: 8px; background: #ffffff;
+  margin-bottom: 12px;
+}
 .eml-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 4px; }
 .eml-msg { font-size: 0.85rem; margin: 0 0 10px; min-height: 1.2em; }
 .eml-msg.ko { color: #ffb3ab; }
