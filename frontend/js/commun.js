@@ -46,6 +46,35 @@ function afficherMessage(element, texte, type) {
   element.className = 'message-form ' + (type === 'ok' ? 'ok' : 'ko');
 }
 
+/**
+ * Exécute une action asynchrone en gérant l'état « occupé » d'un bouton : le désactive et
+ * affiche un libellé d'attente pendant l'action, restaure son libellé d'origine ensuite (même
+ * en cas d'erreur), et signale toute exception via afficherMessage(message, '⚠️ …', 'ko').
+ *
+ * Remplace le bloc `texteBouton = … ; disabled = true ; try {…} catch {afficherMessage…}
+ * finally {disabled = false ; textContent = texteBouton}` qui était recopié dans une dizaine
+ * de handlers d'enregistrement de l'admin. La VALIDATION préalable (avec `return` anticipé)
+ * reste à faire AVANT l'appel, comme avant.
+ *
+ * @param {HTMLElement} bouton       le bouton à occuper
+ * @param {HTMLElement} message      la zone de message (pour afficher l'erreur éventuelle)
+ * @param {Function} action          fonction async : le corps métier à exécuter
+ * @param {string} [texteOccupe]     libellé pendant l'action (défaut « Enregistrement… »)
+ */
+async function avecBoutonOccupe(bouton, message, action, texteOccupe) {
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = texteOccupe || 'Enregistrement…';
+  try {
+    await action();
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
+}
+
 /** Libellé français lisible d'un tour de bracket (Coupe). */
 function libelleTourFr(tour) {
   switch (String(tour)) {

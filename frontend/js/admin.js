@@ -559,10 +559,7 @@ function lireInfosTournoi() {
 async function onEnregistrerInfos() {
   const message = document.getElementById('message-infos-tournoi');
   const bouton = document.getElementById('bouton-enregistrer-infos');
-  const texteBouton = bouton.textContent;
-  bouton.disabled = true;
-  bouton.textContent = 'Enregistrement…';
-  try {
+  await avecBoutonOccupe(bouton, message, async function () {
     afficherMessage(message, 'Enregistrement des infos…', 'ok');
     await ecrireAdmin('enregistrerInfosTournoi', lireInfosTournoi());
     if (afficheDataURI) {
@@ -575,12 +572,7 @@ async function onEnregistrerInfos() {
     majDossier(); // le dossier club reflète les nouvelles infos
     document.getElementById('form-infos-tournoi').tournoi_affiche.value = ''; // vide le champ fichier
     afficherMessage(message, '✅ Infos enregistrées.', 'ok');
-  } catch (erreur) {
-    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
-  } finally {
-    bouton.disabled = false;
-    bouton.textContent = texteBouton;
-  }
+  });
 }
 
 /* --------------------------------------------------------------------------
@@ -665,21 +657,13 @@ async function onEnregistrerContacts() {
     data[cle] = norme;
   }
 
-  const texteBouton = bouton.textContent;
-  bouton.disabled = true;
-  bouton.textContent = 'Enregistrement…';
-  try {
+  await avecBoutonOccupe(bouton, message, async function () {
     await ecrireAdmin('enregistrerContactsSecurite', data);
     configCourante.global = Object.assign({}, configCourante.global, data);
     majContactsSecurite(); // ré-affiche les numéros normalisés + reprend la photo « propre »
     majDossier();          // les sections Sécurité / Contact du dossier suivent
     afficherMessage(message, '✅ Contacts & sécurité enregistrés.', 'ok');
-  } catch (erreur) {
-    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
-  } finally {
-    bouton.disabled = false;
-    bouton.textContent = texteBouton;
-  }
+  });
 }
 
 /* --------------------------------------------------------------------------
@@ -708,21 +692,13 @@ async function onEnregistrerSurPlace() {
     espace_sandwich_disponible: form.espace_sandwich_disponible.checked ? 'oui' : 'non',
     boutique_r92_disponible:    form.boutique_r92_disponible.checked ? 'oui' : 'non'
   };
-  const texteBouton = bouton.textContent;
-  bouton.disabled = true;
-  bouton.textContent = 'Enregistrement…';
-  try {
+  await avecBoutonOccupe(bouton, message, async function () {
     await ecrireAdmin('enregistrerSurPlace', data);
     configCourante.global = Object.assign({}, configCourante.global, data);
     if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
     majApercuInvitation(); // l'aperçu de l'email suit (ligne « Sur place »)
     afficherMessage(message, '✅ « Sur place » enregistré.', 'ok');
-  } catch (erreur) {
-    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
-  } finally {
-    bouton.disabled = false;
-    bouton.textContent = texteBouton;
-  }
+  });
 }
 
 /** Pré-remplit la carte « Réponse à l'invitation » avec l'état enregistré. */
@@ -792,21 +768,13 @@ async function onEnregistrerReponse() {
     return;
   }
 
-  const texteBouton = bouton.textContent;
-  bouton.disabled = true;
-  bouton.textContent = 'Enregistrement…';
-  try {
+  await avecBoutonOccupe(bouton, message, async function () {
     await ecrireAdmin('enregistrerReponseInvitation', data);
     configCourante.global = Object.assign({}, configCourante.global, data);
     majReponse(); // ré-affiche le numéro normalisé
     majApercuInvitation(); // l'aperçu de l'email suit (date limite de réponse)
     afficherMessage(message, '✅ « Réponse à l\'invitation » enregistrée.', 'ok');
-  } catch (erreur) {
-    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
-  } finally {
-    bouton.disabled = false;
-    bouton.textContent = texteBouton;
-  }
+  });
 }
 
 /* --------------------------------------------------------------------------
@@ -1298,21 +1266,13 @@ function onModalitesChange(evenement) {
  * « propre » du formulaire et rafraîchit l'état du dossier.
  */
 async function enregistrerCarteInvitation(data, form, bouton, message, texteOk) {
-  const texteBouton = bouton.textContent;
-  bouton.disabled = true;
-  bouton.textContent = 'Enregistrement…';
-  try {
+  await avecBoutonOccupe(bouton, message, async function () {
     await ecrireAdmin('enregistrerInvitation', data);
     configCourante.global = Object.assign({}, configCourante.global, data);
     if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
     majDossier(); // les sections du dossier suivent
     afficherMessage(message, texteOk, 'ok');
-  } catch (erreur) {
-    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
-  } finally {
-    bouton.disabled = false;
-    bouton.textContent = texteBouton;
-  }
+  });
 }
 
 /** Enregistre la carte « Modalités d'inscription ». */
@@ -2795,11 +2755,7 @@ async function onEnregistrerHoraires(evenement) {
   }
 
   const bouton = form.querySelector('button');
-  const texteBouton = bouton.textContent;
-  bouton.disabled = true;
-  bouton.textContent = 'Enregistrement…';
-
-  try {
+  await avecBoutonOccupe(bouton, message, async function () {
     await ecrireAdmin('enregistrerHoraires', data);
     // On met à jour la config gardée en mémoire.
     configCourante.global = Object.assign({}, configCourante.global, data);
@@ -2808,12 +2764,7 @@ async function onEnregistrerHoraires(evenement) {
     majEtatAvancement(); // le fil « Où en suis-je ? » suit les horaires
     majDossier();        // la section Programme du dossier club suit
     afficherMessage(message, '✅ Horaires enregistrés.', 'ok');
-  } catch (erreur) {
-    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
-  } finally {
-    bouton.disabled = false;
-    bouton.textContent = texteBouton;
-  }
+  });
 }
 
 /**
@@ -3124,11 +3075,7 @@ async function onEnregistrerCategorie(evenement) {
   }
 
   const bouton = form.querySelector('button[type="submit"]');
-  const texteBouton = bouton.textContent;
-  bouton.disabled = true;
-  bouton.textContent = 'Enregistrement…';
-
-  try {
+  await avecBoutonOccupe(bouton, message, async function () {
     await ecrireAdmin('enregistrerCategorie', data);
     // On met à jour la config en mémoire + le menu des équipes, sans tout re-rendre
     // (pour garder le message et l'endroit où on est).
@@ -3140,12 +3087,7 @@ async function onEnregistrerCategorie(evenement) {
     majTableauBord(); // le nombre de catégories « présentes » a pu changer
     majDossier();     // le cadre sportif du dossier club suit
     afficherMessage(message, '✅ Enregistré.', 'ok');
-  } catch (erreur) {
-    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
-  } finally {
-    bouton.disabled = false;
-    bouton.textContent = texteBouton;
-  }
+  });
 }
 
 /**

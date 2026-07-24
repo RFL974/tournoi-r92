@@ -124,7 +124,7 @@ function construireEcrans() {
     h += '<li><button type="button" class="ecr-onglet' + (e.danger ? ' est-danger' : '') +
          '" data-ecran="' + e.id + '">' +
            '<span class="ecr-icone">' + svgEcr(e.icone) + '</span>' +
-           '<span class="ecr-libelle">' + echapperEcr(e.titre) + '</span>' +
+           '<span class="ecr-libelle">' + echapper(e.titre) + '</span>' +
            '<span class="ecr-pastille" id="ecr-pastille-' + e.id + '" hidden></span>' +
          '</button></li>';
   });
@@ -402,7 +402,3 @@ function quitterEcrans() {
   if (typeof afficherBoutonReprise === 'function') afficherBoutonReprise();
 }
 
-/** Échappe le HTML (réutilise echapper() de commun.js si dispo). */
-function echapperEcr(t) {
-  return (typeof echapper === 'function') ? echapper(t) : String(t);
-}

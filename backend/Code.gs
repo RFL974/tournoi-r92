@@ -1534,9 +1534,11 @@ function clubEstInvitable(statut) {
 
 /** Échappe un texte pour l'insérer sans danger dans du HTML (salutation personnalisée). */
 function echapperHtmlServeur(s) {
+  // Mêmes caractères que echapper() de commun.js (accent grave inclus) : défense en
+  // profondeur homogène côté serveur (emails / dossiers), sûre dans tous les contextes d'attribut.
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/`/g, '&#96;');
 }
 
 /**

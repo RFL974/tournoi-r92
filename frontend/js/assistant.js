@@ -103,7 +103,7 @@ function construireAssistant() {
     li.setAttribute('role', 'button');
     li.setAttribute('tabindex', '0');
     li.innerHTML = '<span class="asst-step-num">' + et.icone + '</span>' +
-                   '<span class="asst-step-nom">' + echapperAsst(et.titre) + '</span>';
+                   '<span class="asst-step-nom">' + echapper(et.titre) + '</span>';
     stepper.appendChild(li);
   });
 
@@ -392,7 +392,7 @@ function assistantMajVerrou() {
   if (raisons.length) {
     zone.hidden = false;
     zone.innerHTML = '🔒 <strong>Pour continuer&nbsp;:</strong> ' +
-      raisons.map(echapperAsst).join('<span class="asst-verrou-sep"> · </span>');
+      raisons.map(echapper).join('<span class="asst-verrou-sep"> · </span>');
   } else {
     zone.hidden = true;
     zone.innerHTML = '';
@@ -495,7 +495,3 @@ function assistantAllerVersBloc(blocId) {
   if (!isNaN(i)) allerA(i, i < assistantIndex ? -1 : 1);
 }
 
-/** Échappe le HTML (réutilise echapper() d'admin.js si dispo). */
-function echapperAsst(t) {
-  return (typeof echapper === 'function') ? echapper(t) : String(t);
-}

@@ -367,7 +367,9 @@ function momentPuce(libelle, bloc) {
 function categoriesTriees(liste) {
   const cats = [];
   liste.forEach(function (c) { if (cats.indexOf(c) < 0) cats.push(c); });
-  return cats.sort(function (a, b) { return String(a).localeCompare(String(b)); });
+  // Ordre naturel U8 < U10 < U12 (comparerCategorie de commun.js) : un localeCompare brut
+  // classerait « U10 » avant « U8 » (tri alphabétique). Cohérent avec tournoi.js / admin.js.
+  return cats.sort(comparerCategorie);
 }
 
 function matchsDe(id) {
