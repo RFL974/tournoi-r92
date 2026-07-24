@@ -121,10 +121,10 @@ h1, h2, h3 {
   margin-top: 12px;
 }
 
+/* Champ « libellé au-dessus + saisie » : mise en page à plat (pas de cartouche sombre
+   individuel, qui donnait un effet de « bourrelets empilés » quand les champs se suivent). */
 .reglage {
-  background: rgba(3, 16, 36, 0.4);
-  border-radius: 8px;
-  padding: 8px 10px;
+  padding: 4px 0;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -1280,7 +1280,6 @@ body.theme-clair {
 .theme-clair .champ-reglage input[type="time"]::-webkit-calendar-picker-indicator { filter: none; }
 
 /* ---- Petits panneaux internes → surface claire ---- */
-.theme-clair .reglage,
 .theme-clair .equipe-item,
 .theme-clair .poule-compo { background: #F5F9FD; border: 1px solid #e6edf5; }
 .theme-clair .champ-reglage { border-bottom-color: #e6edf5; }

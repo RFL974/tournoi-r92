@@ -39,11 +39,11 @@ const ECRANS_DEF = [
      statut, envoi individuel), l'aperçu de l'email d'invitation (+ envoi groupé), puis sa config
      (Sur place + Réponse à l'invitation). Libre : préparable très tôt. Placé AVANT les Équipes :
      les clubs qui acceptent génèrent leurs équipes automatiquement à l'envoi du dossier final. */
-  { id: 'invitation',  titre: 'Inviter un club',   icone: 'courrier', blocs: ['bloc-clubs-invites', 'bloc-apercu-invitation', 'bloc-surplace', 'bloc-reponse'], cles: [], libre: true },
+  { id: 'invitation',  titre: 'Inviter un club',   icone: 'courrier', blocs: ['bloc-modalites', 'bloc-clubs-invites', 'bloc-apercu-invitation', 'bloc-surplace', 'bloc-reponse'], cles: [], libre: true },
   /* Le dossier COMPLET (Phase 2), envoyé aux clubs qui ont accepté : se génère à tout moment
      (sections vides masquées), jamais verrouillé. L'écran regroupe aussi les cartes du dossier
      (modalités, parking, encadrement) : on complète, puis on génère. */
-  { id: 'dossier',     titre: 'Dossier complet (accepté)', icone: 'dossier', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-contacts-securite', 'bloc-dossier'], cles: [], libre: true },
+  { id: 'dossier',     titre: 'Dossier complet (accepté)', icone: 'dossier', blocs: ['bloc-parking', 'bloc-encadrement', 'bloc-contacts-securite', 'bloc-dossier'], cles: [], libre: true },
   { id: 'equipes',     titre: 'Équipes',           icone: 'equipe',   blocs: ['bloc-equipes'],            cles: ['equipes'] },
   { id: 'terrains',    titre: 'Terrains',          icone: 'terrain',  blocs: ['bloc-terrains'],           cles: ['terrains'] },
   { id: 'poules',      titre: 'Poules & planning', icone: 'poules',   blocs: ['bloc-generation'],         cles: ['poules'] },

@@ -198,7 +198,6 @@ body.theme-clair {
   font-size: 1rem;
   padding: 4px 14px;
 }
-.theme-clair .reglage,
 .theme-clair .equipe-item,
 .theme-clair .poule-compo,
 .theme-clair .edit-poule,
@@ -457,17 +456,16 @@ body.theme-clair {
    (#F5F9FD) passent NAVY, avec polices claires adaptées. Les champs restent
    BLANCS (contraste fort sur le navy).
    ========================================================================== */
-.theme-clair .reglage,
 .theme-clair .equipe-item,
 .theme-clair .poule-compo {
   background: var(--r92-navy);
   border-color: var(--r92-navy);
   color: #E7EEF7;
 }
-.theme-clair .reglage { border-radius: 14px; }
-/* Libellés clairs sur navy (les .champ-reglage de la carte Horaires, eux,
-   restent sur fond blanc → leur libellé garde sa couleur ardoise). */
-.theme-clair .reglage .r-libelle { color: #B9C9DE; }
+/* Champs « libellé + saisie » À PLAT sur la carte blanche (plus de cartouche navy
+   individuel → fini l'effet « bourrelets empilés »). Libellé bleu lisible sur blanc. */
+.theme-clair .reglage { background: transparent; border: none; }
+.theme-clair .reglage .r-libelle { color: var(--r92-accent); }
 /* Équipes : nom blanc, catégorie estompée, boutons ✏️/🗑 recolorés pour le navy */
 .theme-clair .equipe-item .nom { color: #FFFFFF; }
 .theme-clair .equipe-item .cat-mini { color: #9FB6D0; }
@@ -525,19 +523,10 @@ body.theme-clair {
 .theme-clair .tb-lib { margin-top: auto; }
 
 /* --------------------------------------------------------------------------
-   FORMULAIRE DES INFOS — les lignes navy fusionnent en UN SEUL panneau
-   (fini l'effet « blocs superposés ») : angles arrondis seulement en haut et
-   en bas, fines séparations entre les lignes.
+   FORMULAIRE DES INFOS — champs à plat (comme partout ailleurs) + espace avant
+   l'aperçu de l'affiche et la ligne d'action.
    -------------------------------------------------------------------------- */
 .theme-clair #form-infos-tournoi { display: flex; flex-direction: column; }
-.theme-clair #form-infos-tournoi .reglage {
-  margin: 0;
-  border-radius: 0;
-  padding: 14px 16px;
-}
-.theme-clair #form-infos-tournoi .reglage:first-of-type { border-radius: 16px 16px 0 0; padding-top: 18px; }
-.theme-clair #form-infos-tournoi .reglage:last-of-type  { border-radius: 0 0 16px 16px; padding-bottom: 18px; }
-.theme-clair #form-infos-tournoi .reglage:not(:last-of-type) { border-bottom: 1px solid rgba(255, 255, 255, 0.10); }
 .theme-clair #form-infos-tournoi .apercu-affiche,
 .theme-clair #form-infos-tournoi .ligne-action { margin-top: 14px; }
 
