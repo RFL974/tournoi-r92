@@ -17,24 +17,11 @@ let repParams = null;    // { tournoi, club, token } de l'URL
 
 document.addEventListener('DOMContentLoaded', initReponse);
 
-/** Valeur texte propre. */
-function txtR(v) { return (v == null) ? '' : String(v).trim(); }
-
-/** Date longue « mercredi 11 novembre 2026 ». */
-function dateLongueR(iso) {
-  const d = new Date(iso);
-  if (isNaN(d)) return txtR(iso);
-  return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-/** URL d'affichage de l'affiche Drive. */
-function urlAfficheR(id, largeur) {
-  return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (largeur || 600);
-}
+// txt, dateLongueFr, urlAffiche, jsonSur, parseCategoriesEngagees : voir commun-dossier.js.
 
 async function initReponse() {
   const params = new URLSearchParams(window.location.search);
-  repParams = { tournoi: txtR(params.get('tournoi')), club: txtR(params.get('club')), token: txtR(params.get('token')) };
+  repParams = { tournoi: txt(params.get('tournoi')), club: txt(params.get('club')), token: txt(params.get('token')) };
   const zone = document.getElementById('reponse');
 
   if (!repParams.token) { zone.innerHTML = messageErreur('Lien invalide ou expiré.'); return; }
@@ -66,22 +53,22 @@ function messageErreur(texte) {
 function construirePage(data) {
   const t = data.tournoi || {};
   const club = data.club || {};
-  const nom = txtR(t.nom) || 'Tournoi Génération R92';
-  const prenom = txtR(club.club_contact_prenom);
-  const dejaRepondu = !!txtR(club.date_reponse);
+  const nom = txt(t.nom) || 'Tournoi Génération R92';
+  const prenom = txt(club.club_contact_prenom);
+  const dejaRepondu = !!txt(club.date_reponse);
 
   let html = '';
 
   // a) Rappel synthétique du tournoi.
   html += '<header class="d-entete">' +
-    (txtR(t.affiche_id)
-      ? '<img class="d-affiche" src="' + echapper(urlAfficheR(t.affiche_id, 600)) + '" alt="Affiche — ' + echapper(nom) + '">'
+    (txt(t.affiche_id)
+      ? '<img class="d-affiche" src="' + echapper(urlAffiche(t.affiche_id, 600)) + '" alt="Affiche — ' + echapper(nom) + '">'
       : '') +
     '<div class="d-entete-textes">' +
       '<p class="d-surtitre">Invitation — Génération R92</p>' +
       '<h1>' + echapper(nom) + '</h1>' +
-      (txtR(t.date) ? '<p class="d-date">' + echapper(dateLongueR(t.date)) + '</p>' : '') +
-      (txtR(t.lieu) ? '<p class="d-genere">' + echapper(txtR(t.lieu)) + '</p>' : '') +
+      (txt(t.date) ? '<p class="d-date">' + echapper(dateLongueFr(t.date)) + '</p>' : '') +
+      (txt(t.lieu) ? '<p class="d-genere">' + echapper(txt(t.lieu)) + '</p>' : '') +
     '</div>' +
   '</header>';
 
@@ -90,8 +77,8 @@ function construirePage(data) {
 
   // Rappel si le club a déjà répondu (il peut modifier sa réponse).
   if (dejaRepondu) {
-    const statut = txtR(club.statut);
-    html += '<p class="rep-deja">✅ Vous avez déjà répondu le ' + echapper(dateLongueR(club.date_reponse))
+    const statut = txt(club.statut);
+    html += '<p class="rep-deja">✅ Vous avez déjà répondu le ' + echapper(dateLongueFr(club.date_reponse))
       + (statut ? ' (' + echapper(statut) + ')' : '') + '. Vous pouvez modifier votre réponse ci-dessous.</p>';
   }
 
@@ -120,17 +107,17 @@ function construirePage(data) {
 /** Formulaire « Nous serons présents » : catégories + nb d'équipes + nb joueurs total. */
 function formulairePresence(data) {
   const cats = (data.categories || []);
-  const engagees = parseCatsEngageesR(data.club.categories_engagees);
-  const nbParCat = jsonSurR(data.club.nb_equipes_par_categorie, {});
+  const engagees = parseCategoriesEngagees(data.club.categories_engagees);
+  const nbParCat = jsonSur(data.club.nb_equipes_par_categorie, {});
 
   let lignes = '';
   cats.forEach(function (c) {
-    const nomCat = txtR(c.categorie);
-    const max = parseInt(txtR(c.max_equipes_par_club), 10);
+    const nomCat = txt(c.categorie);
+    const max = parseInt(txt(c.max_equipes_par_club), 10);
     const aMax = isFinite(max) && max >= 1;
     const coche = engagees.indexOf(nomCat.toUpperCase()) !== -1;
     const nbVal = (nbParCat && nbParCat[nomCat] != null) ? String(nbParCat[nomCat]) : '';
-    const effMin = parseInt(txtR(c.effectif_min), 10);
+    const effMin = parseInt(txt(c.effectif_min), 10);
     const infoEff = (isFinite(effMin) && effMin >= 1) ? (' · ' + effMin + ' joueurs mini/équipe') : '';
     lignes +=
       '<div class="rep-cat" data-cat="' + echapper(nomCat) + '"' + (aMax ? ' data-max="' + max + '"' : '') + '>' +
@@ -153,7 +140,7 @@ function formulairePresence(data) {
     '<p class="rep-aide">Cochez les catégories concernées et indiquez le nombre d\'équipes pour chacune.</p>' +
     '<div class="rep-cats">' + (lignes || '<p class="rep-aide">Aucune catégorie ouverte pour le moment.</p>') + '</div>' +
     '<label class="rep-champ-joueurs">Nombre total de joueurs attendus (toutes équipes)' +
-      '<input type="number" id="rep-joueurs" min="1" inputmode="numeric" value="' + echapper(txtR(data.club.nb_joueurs_total)) + '"></label>' +
+      '<input type="number" id="rep-joueurs" min="1" inputmode="numeric" value="' + echapper(txt(data.club.nb_joueurs_total)) + '"></label>' +
     '<div class="rep-actions">' +
       '<button type="submit" class="rep-btn rep-btn-oui" id="btn-confirmer">Confirmer notre participation</button>' +
       '<span class="rep-form-msg" id="rep-form-msg"></span>' +
@@ -199,7 +186,7 @@ function onChangeReponse(e) {
   const champ = ligne.querySelector('.rep-cat-equipes');
   if (boite.checked) {
     nb.hidden = false;
-    if (champ && !txtR(champ.value)) champ.value = '1';
+    if (champ && !txt(champ.value)) champ.value = '1';
     validerLigneCat(ligne);
   } else {
     nb.hidden = true;
@@ -301,22 +288,5 @@ function afficherConfirmation(titre, texte) {
   zone.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-/* --------------------------------------------------------------------------
-   PETITS HELPERS
-   -------------------------------------------------------------------------- */
-
-/** Catégories engagées (« U8,U10 » ou JSON) → tableau de noms MAJ. */
-function parseCatsEngageesR(brut) {
-  const t = txtR(brut);
-  if (!t) return [];
-  let liste = null;
-  try { const o = JSON.parse(t); if (Array.isArray(o)) liste = o; } catch (e) { /* pas JSON */ }
-  if (!liste) liste = t.split(',');
-  return liste.map(function (s) { return String(s).trim().toUpperCase(); }).filter(Boolean);
-}
-
-/** JSON parsé sans casser (valeur de repli sinon). */
-function jsonSurR(v, repli) {
-  try { const o = JSON.parse(txtR(v) || 'null'); return (o == null) ? repli : o; }
-  catch (e) { return repli; }
-}
+/* Les petits helpers (txt, dateLongueFr, urlAffiche, jsonSur, parseCategoriesEngagees)
+   sont désormais dans commun-dossier.js (partagés avec dossier/invitation). */
