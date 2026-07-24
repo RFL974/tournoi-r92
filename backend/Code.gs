@@ -256,16 +256,19 @@ function mettreEnCacheSnapshot(cache, json) {
 }
 
 /**
- * Après une écriture réussie : on rafraîchit le cache serveur (les spectateurs voient le
- * changement dès leur prochain appel) ET on pousse vers le relais CDN s'il est configuré.
+ * Après une écriture réussie : rafraîchit le cache serveur (les spectateurs voient le
+ * changement dès leur prochain appel) et RENVOIE le snapshot JSON. Le push vers le relais CDN
+ * est fait ENSUITE par doPost, APRÈS avoir relâché le verrou : la latence réseau du relais ne
+ * doit pas prolonger la détention du verrou (sinon elle sérialise les écritures concurrentes).
  * On ne construit le snapshot QU'UNE fois (partagé entre le cache et le relais).
+ * @return {string|null} le snapshot JSON (à passer à pousserSnapshot), ou null si échec.
  */
 function apresEcriture(classeur) {
   try {
     var json = JSON.stringify(construireSnapshot(classeur));
     mettreEnCacheSnapshot(CacheService.getScriptCache(), json);
-    pousserSnapshot(classeur, json); // sans effet si le relais n'est pas configuré
-  } catch (err) { /* jamais bloquer l'écriture */ }
+    return json; // le push CDN est fait ENSUITE par doPost, hors du verrou
+  } catch (err) { return null; } // jamais bloquer l'écriture
 }
 
 /* ===================== RELAIS CDN (montée en charge spectateurs) =====================
@@ -383,7 +386,7 @@ var ACTIONS_SCORES = { enregistrerScore: true };
 var ACTIONS_TOKEN = { repondreInvitation: true };
 
 function doPost(e) {
-  var lock;
+  var lock, classeur, snapshotJson = null;
   try {
     var requete = JSON.parse(e.postData.contents);
     var action = requete.action;
@@ -406,7 +409,7 @@ function doPost(e) {
       return repondreJson({ error: 'Serveur momentanément occupé, réessaie dans un instant.' });
     }
 
-    var classeur = SpreadsheetApp.openById(SHEET_ID);
+    classeur = SpreadsheetApp.openById(SHEET_ID);
     var resultat;
     switch (action) {
       case 'ajouterEquipe':        resultat = ajouterEquipe(classeur, requete.nom_equipe, requete.categorie); break;
@@ -450,7 +453,10 @@ function doPost(e) {
     // secondaire bloquant : n'échoue jamais l'action même si le rafraîchissement rate.
     // listerClubsInvites est une LECTURE (protégée par la clé admin, car l'onglet contient
     // des emails) : rien n'a changé, inutile de reconstruire le cache public.
-    if (resultat && !resultat.error && action !== 'listerClubsInvites') apresEcriture(classeur);
+    // Écriture réussie → cache serveur rafraîchi SOUS verrou (retourne le snapshot pour le CDN).
+    if (resultat && !resultat.error && action !== 'listerClubsInvites') {
+      snapshotJson = apresEcriture(classeur);
+    }
     return repondreJson(resultat);
   } catch (erreur) {
     // Détail journalisé côté serveur, message générique côté client (anti-fuite d'infos).
@@ -460,6 +466,9 @@ function doPost(e) {
     return repondreJson({ error: 'Erreur serveur pendant l\'écriture.' });
   } finally {
     if (lock) lock.releaseLock(); // toujours relâcher le verrou (sans erreur s'il n'était pas pris)
+    // Push CDN APRÈS le verrou : la latence réseau du relais (UrlFetchApp) ne prolonge plus la
+    // détention du verrou → aucune contention pour les écritures concurrentes (marqueurs).
+    if (snapshotJson) { try { pousserSnapshot(classeur, snapshotJson); } catch (e) {} }
   }
 }
 
@@ -703,9 +712,7 @@ function enregistrerHoraires(classeur, data) {
   var champs = ['heure_debut', 'heure_fin', 'heure_fin_auto',
                 'battement_terrain_min', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
                 'heure_rdv', 'heure_fin_communiquee', 'marge_fin_communiquee_min'];
-  champs.forEach(function (champ) {
-    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
-  });
+  ecrireChampsConfig(onglet, data, champs);
   return { ok: true };
 }
 
@@ -716,9 +723,7 @@ function enregistrerHoraires(classeur, data) {
 function enregistrerInfosTournoi(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
   var champs = ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_adresse', 'tournoi_description'];
-  champs.forEach(function (champ) {
-    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
-  });
+  ecrireChampsConfig(onglet, data, champs);
   return { ok: true };
 }
 
@@ -757,9 +762,7 @@ function enregistrerContactsSecurite(classeur, data) {
     data.securite_referent_identique =
       String(data.securite_referent_identique).toLowerCase() === 'non' ? 'non' : 'oui';
   }
-  CHAMPS_CONTACTS_SECURITE.forEach(function (champ) {
-    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
-  });
+  ecrireChampsConfig(onglet, data, CHAMPS_CONTACTS_SECURITE);
   return { ok: true };
 }
 
@@ -779,9 +782,7 @@ function enregistrerPlanTerrains(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
   var champs = ['terrains_physiques', 'couloir_terrain_m', 'dimensions_categories',
                 'tm_longueur_m', 'tm_largeur_m', 'repartition_grands_terrains'];
-  champs.forEach(function (champ) {
-    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
-  });
+  ecrireChampsConfig(onglet, data, champs);
   return { ok: true };
 }
 
@@ -890,9 +891,7 @@ function enregistrerInvitation(classeur, data) {
       data[champ] = String(data[champ]).toLowerCase() === 'oui' ? 'oui' : 'non';
     }
   });
-  CHAMPS_INVITATION.forEach(function (champ) {
-    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
-  });
+  ecrireChampsConfig(onglet, data, CHAMPS_INVITATION);
   return { ok: true };
 }
 
@@ -912,11 +911,11 @@ var CHAMPS_REPONSE = ['date_limite_reponse', 'contact_reponse_nom', 'contact_rep
  */
 function enregistrerSurPlace(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
+  // Normalise les booléens en 'oui'/'non' sur data AVANT l'écriture groupée.
   CHAMPS_SURPLACE.forEach(function (champ) {
-    if (data[champ] != null) {
-      ecrireParamGlobal(onglet, champ, String(data[champ]).toLowerCase() === 'oui' ? 'oui' : 'non');
-    }
+    if (data[champ] != null) data[champ] = String(data[champ]).toLowerCase() === 'oui' ? 'oui' : 'non';
   });
+  ecrireChampsConfig(onglet, data, CHAMPS_SURPLACE);
   return { ok: true };
 }
 
@@ -961,9 +960,7 @@ function enregistrerReponseInvitation(classeur, data) {
     return { error: 'Renseigne au moins un contact de réponse : téléphone OU email.' };
   }
 
-  CHAMPS_REPONSE.forEach(function (champ) {
-    if (data[champ] != null) ecrireParamGlobal(onglet, champ, data[champ]);
-  });
+  ecrireChampsConfig(onglet, data, CHAMPS_REPONSE);
   return { ok: true };
 }
 
@@ -1856,6 +1853,20 @@ function ecrireParamsGlobaux(onglet, paires) {
     }
   });
   absents.forEach(function (p) { ecrireParamGlobal(onglet, p[0], p[1]); });
+}
+
+/**
+ * Écrit dans Config tous les `champs` de `data` qui sont RENSEIGNÉS (non null), en UNE passe
+ * (via ecrireParamsGlobaux) au lieu d'un ecrireParamGlobal par champ (qui relisait la plage à
+ * chaque fois). Ordre = ordre de `champs`. Résultat strictement identique. Les éventuelles
+ * transformations de valeurs (oui/non, normalisation) doivent être faites AVANT sur `data`.
+ */
+function ecrireChampsConfig(onglet, data, champs) {
+  var paires = [];
+  champs.forEach(function (champ) {
+    if (data[champ] != null) paires.push([champ, data[champ]]);
+  });
+  ecrireParamsGlobaux(onglet, paires);
 }
 
 function enregistrerCategorie(classeur, data) {
