@@ -1824,10 +1824,32 @@ async function enregistrerCatsClub(bouton) {
     });
     const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
     if (club) { club.categories_engagees = cats; club.club_contact_prenom = prenom; }
-    afficherClubsInvites(); // fait apparaître « Générer le dossier final »
-    afficherMessage(message, cochees.length
-      ? '✅ « ' + nom +' » — catégories engagées : ' + cats + '.'
-      : '✅ « ' + nom + ' » — sélection enregistrée (aucune catégorie cochée).', 'ok');
+
+    // CRÉATION DES ÉQUIPES engagées (idempotente) — déclenchée ICI, à l'enregistrement de la
+    // sélection. Les équipes « {club} » / « {club}-N » sont créées dans l'onglet Équipes
+    // (source=auto) ; un 2e enregistrement ne crée pas de doublon ; un engagement réduit
+    // remonte une alerte (sans rien supprimer).
+    let txtEquipes = '';
+    try {
+      const res = await ecrireAdmin('creerEquipesClub', { club_nom: nom });
+      const creees = (res && res.equipes_creees) || [];
+      if (creees.length) txtEquipes = ' ' + creees.length + ' équipe(s) créée(s) : '
+        + creees.map(function (e) { return e.nom; }).join(', ') + '.';
+      if (res && res.alerte) txtEquipes += ' ⚠️ ' + res.alerte;
+      if (club) club.alerte_ecart = (res && res.alerte) || '';
+      // Recharge la liste des équipes + le tableau de bord (l'étape « Équipes » de la barre
+      // latérale se met à jour tout de suite, sans rafraîchir la page).
+      if (creees.length && typeof rechargerEquipes === 'function') {
+        try { await rechargerEquipes(); } catch (e) { /* best-effort */ }
+      }
+    } catch (e2) {
+      txtEquipes = ' ⚠️ (équipes non créées : ' + e2.message + ')';
+    }
+
+    afficherClubsInvites(); // fait apparaître « Générer le dossier final » + badge d'alerte éventuel
+    afficherMessage(message, (cochees.length
+      ? '✅ « ' + nom + ' » — catégories engagées : ' + cats + '.'
+      : '✅ « ' + nom + ' » — sélection enregistrée (aucune catégorie cochée).') + txtEquipes, 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
     bouton.disabled = false;
@@ -1848,38 +1870,14 @@ function lienDossierClub(nom) {
  * « Générer le dossier final » : construit le lien personnalisé, puis
  *  - si le club a un email → ouvre l'aperçu email avant tout envoi ;
  *  - sinon → bascule en mode « Copier le lien » (pas d'aperçu, pas d'envoi auto).
+ * ⚠️ La création des ÉQUIPES ne se fait PAS ici : elle a lieu au clic sur « Enregistrer la
+ *    sélection » (voir enregistrerCatsClub).
  */
 async function genererDossierFinal(nom) {
   const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
   if (!club) return;
-  const message = document.getElementById('message-club-invite');
 
-  // 1) CRÉATION DES ÉQUIPES engagées (idempotente) — AVANT l'aperçu email (Sprint 6, point 5).
-  //    Les équipes « {club} » / « {club}-N » sont créées dans l'onglet Équipes (source=auto) ;
-  //    un 2e clic ne crée pas de doublon ; un engagement réduit remonte une alerte (sans rien
-  //    supprimer). Si la création échoue, on n'ouvre pas l'aperçu.
-  try {
-    const res = await ecrireAdmin('creerEquipesClub', { club_nom: nom });
-    const creees = (res && res.equipes_creees) || [];
-    let txt = creees.length
-      ? '✅ ' + creees.length + ' équipe(s) créée(s) : ' + creees.map(function (e) { return e.nom; }).join(', ') + '.'
-      : 'ℹ️ Équipes déjà à jour (aucune nouvelle création).';
-    if (res && res.alerte) txt += ' ⚠️ ' + res.alerte;
-    afficherMessage(message, txt, 'ok');
-    // Reflète l'alerte éventuelle sur la fiche (badge) sans perdre le reste de l'état.
-    const c = clubsInvitesCourants.find(function (x) { return memeTexteSouple(x.club_nom, nom); });
-    if (c) { c.alerte_ecart = (res && res.alerte) || ''; afficherClubsInvites(); }
-    // Les équipes viennent d'être créées côté serveur : on recharge la liste + le tableau de bord
-    // (l'étape « Équipes » de la barre latérale se met à jour tout de suite, sans rafraîchir la page).
-    if ((res && res.equipes_creees && res.equipes_creees.length) && typeof rechargerEquipes === 'function') {
-      try { await rechargerEquipes(); } catch (e) { /* rechargement best-effort : ne bloque pas l'aperçu email */ }
-    }
-  } catch (erreur) {
-    afficherMessage(message, '⚠️ Création des équipes impossible : ' + erreur.message, 'ko');
-    return;
-  }
-
-  // 2) APERÇU / ENVOI du dossier (comportement existant, inchangé).
+  // APERÇU / ENVOI du dossier.
   const email = String(club.club_contact_email || '').trim();
   const lien = lienDossierClub(String(club.club_nom || ''));
   if (email) { ouvrirApercuEmail(club, lien); return; }

@@ -5,6 +5,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Clubs invités : création des équipes déplacée sur « Enregistrer la sélection » — 2026-07-24
+La **création automatique des équipes** engagées d'un club (source=auto) se déclenche désormais
+au clic sur **« Enregistrer la sélection »** (catégories engagées) plutôt que sur « Générer le
+dossier final ». « Générer le dossier final » ne fait plus **que** préparer/ouvrir l'email du
+dossier. Le mécanisme reste **idempotent** (pas de doublon si on ré-enregistre) et remonte
+toujours l'alerte d'écart en cas de réduction d'engagement. Frontend seul (l'action backend
+`creerEquipesClub` est inchangée) — aucun redéploiement nécessaire.
+
 ### Sprint 6 (complément) — Création auto des équipes à l'envoi du dossier + édition des fiches — 2026-07-24
 Deux points du cahier des charges Sprint 6 qui manquaient : la **création automatique des équipes**
 au moment d'envoyer le dossier final, et l'**édition inline** des coordonnées d'un club. ⚠️
