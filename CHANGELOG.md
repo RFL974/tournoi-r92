@@ -5,6 +5,22 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sprint 5 (addendum) — Email HTML : sauts de ligne + justification du texte — 2026-07-24
+Deux corrections de rendu sur le template HTML de l'email d'invitation (Phase 1) :
+- **Sauts de ligne préservés** : les retours à la ligne saisis dans les zones de texte libre
+  (phrase d'introduction éditable de l'aperçu, montant du tarif d'engagement) sont convertis en
+  `<br>` via une fonction utilitaire réutilisable `nl2brEmail()` (échappe le texte PUIS convertit
+  les `\n`). Même traitement dans l'aperçu inline et dans l'email envoyé (une seule fonction de
+  rendu partagée → aperçu fidèle).
+- **Texte justifié** : `text-align:justify` en style en ligne sur le paragraphe de texte courant
+  (phrase d'introduction). Les titres de section, pastilles, tableaux et blocs de contact ne sont
+  pas justifiés.
+- **Champs concernés** : la phrase d'introduction éditable (« corps du message ») et
+  `tarif_engagement_montant`. `tournoi_description` et `tarif_engagement_modalites` ne figurent PAS
+  dans l'email d'invitation (contenus du dossier Phase 2, envoyé en **texte brut** → sauts de ligne
+  déjà préservés nativement, pas de justification applicable). `nl2brEmail()` reste réutilisable si
+  ces champs sont un jour ajoutés à un template HTML.
+
 ### Sprint 5 (addendum) — Email d'invitation en HTML (charte R92) + affiche inline — 2026-07-24
 Le corps de l'email d'invitation (Phase 1) passe du texte brut à un **template HTML** reprenant
 la mise en forme de `invitation-club.html`, pour un rendu plus engageant, avec l'**affiche du
