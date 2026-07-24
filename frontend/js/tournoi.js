@@ -134,11 +134,7 @@ async function charger(premier) {
     equipes = data.equipes || [];
     matchs = data.matchs || [];
     config = data.config || { global: {} };
-    // ⚡ Index id → nom : nomEquipe() est appelé des centaines de fois par affichage
-    // (cartes, classements, bracket…). Une recherche directe dans cet index évite de
-    // reparcourir toute la liste des équipes à chaque appel.
-    nomParEquipe = {};
-    equipes.forEach(function (e) { nomParEquipe[e.id_equipe] = e.nom_equipe; });
+    nomParEquipe = indexerNoms(equipes); // index id → nom (O(1)), reconstruit à chaque chargement
     majHeure();
     majTitre(); // le bandeau prend le nom de l'événement s'il est renseigné
 

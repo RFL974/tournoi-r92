@@ -75,6 +75,18 @@ async function avecBoutonOccupe(bouton, message, action, texteOccupe) {
   }
 }
 
+/**
+ * Construit un index { id_equipe → nom_equipe } pour retrouver un nom d'équipe en O(1).
+ * `nomEquipe()` est appelé des centaines de fois par affichage (cartes, classements, bracket…) :
+ * un index évite de reparcourir toute la liste des équipes (`.find()`, O(n)) à chaque appel.
+ * À reconstruire à chaque rechargement des équipes.
+ */
+function indexerNoms(equipes) {
+  const index = {};
+  (equipes || []).forEach(function (e) { index[e.id_equipe] = e.nom_equipe; });
+  return index;
+}
+
 /** Libellé français lisible d'un tour de bracket (Coupe). */
 function libelleTourFr(tour) {
   switch (String(tour)) {

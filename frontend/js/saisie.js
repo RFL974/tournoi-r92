@@ -12,6 +12,7 @@
  */
 
 let equipes = [];
+let nomParEquipe = {};          // index id_equipe → nom (reconstruit à chaque chargement)
 let matchs = [];
 let grandsTerrains = {};        // composition des grands terrains { nom: [numéros de mini-terrains] }
 let categorieActiveSaisie = '';
@@ -46,6 +47,7 @@ async function initSaisie() {
   try {
     const data = await apiGet('getAll');
     equipes = data.equipes || [];
+    nomParEquipe = indexerNoms(equipes); // index id → nom (O(1))
     matchs = data.matchs || [];
     grandsTerrains = lireGrandsTerrains(data.config);
     afficherMatchs();
@@ -70,6 +72,7 @@ async function rafraichirSaisie() {
   try {
     const data = await apiGet('getAll');
     equipes = data.equipes || [];
+    nomParEquipe = indexerNoms(equipes); // index id → nom (O(1))
     matchs = data.matchs || [];
     grandsTerrains = lireGrandsTerrains(data.config);
     afficherMatchs();
@@ -161,10 +164,9 @@ function filtrerParTerrain(liste) {
   return liste.filter(function (m) { return ok[String(m.terrain)]; });
 }
 
-/** Nom lisible d'une équipe à partir de son identifiant. */
+/** Nom lisible d'une équipe à partir de son identifiant (lecture O(1) dans l'index). */
 function nomEquipe(id) {
-  const e = equipes.find(function (x) { return x.id_equipe === id; });
-  return e ? e.nom_equipe : id;
+  return Object.prototype.hasOwnProperty.call(nomParEquipe, id) ? nomParEquipe[id] : id;
 }
 
 /* libelleTourFr() est désormais dans commun.js (partagé avec tournoi.js). */

@@ -217,18 +217,12 @@ async function initAdmin() {
   // Bouton dédié : enregistre les infos (nom/date/lieu/description + affiche) à tout moment,
   // indépendamment de la publication.
   document.getElementById('bouton-enregistrer-infos').addEventListener('click', onEnregistrerInfos);
-  // Choix d'un fichier d'affiche → aperçu immédiat.
-  document.querySelector('#form-infos-tournoi [name="tournoi_affiche"]')
-    .addEventListener('change', onChoisirAffiche);
-  // Zone de glisser-déposer de l'affiche : survol (style) + dépôt du fichier.
-  // Le CLIC, lui, est natif : la zone vit dans un <label> qui ouvre le sélecteur.
-  const zoneDepot = document.getElementById('zone-depot-affiche');
-  zoneDepot.addEventListener('dragover', function (e) {
-    e.preventDefault(); // sinon le navigateur OUVRE le fichier au lieu de le déposer
-    zoneDepot.classList.add('est-survolee');
+  // Zone d'affiche : sélecteur de fichier + glisser-déposer, aperçu immédiat (helper commun).
+  brancherZoneImage({
+    champFichier: '#form-infos-tournoi [name="tournoi_affiche"]',
+    zoneDepot: 'zone-depot-affiche',
+    traiter: traiterFichierAffiche
   });
-  zoneDepot.addEventListener('dragleave', function () { zoneDepot.classList.remove('est-survolee'); });
-  zoneDepot.addEventListener('drop', onDeposerAffiche);
   // Bouton « Retirer l'affiche » (annule un choix non enregistré, ou supprime l'affiche enregistrée).
   document.getElementById('bouton-retirer-affiche').addEventListener('click', onRetirerAffiche);
 
@@ -248,15 +242,12 @@ async function initAdmin() {
   // clic OU glisser-déposer, aperçu immédiat, upload Drive à l'enregistrement).
   document.getElementById('form-parking').addEventListener('submit', function (e) { e.preventDefault(); });
   document.getElementById('bouton-enregistrer-parking').addEventListener('click', onEnregistrerParking);
-  document.querySelector('#form-parking [name="parking_photo"]')
-    .addEventListener('change', onChoisirPhotoParking);
-  const zoneDepotParking = document.getElementById('zone-depot-parking');
-  zoneDepotParking.addEventListener('dragover', function (e) {
-    e.preventDefault(); // sinon le navigateur OUVRE le fichier au lieu de le déposer
-    zoneDepotParking.classList.add('est-survolee');
+  // Zone photo parking : même mécanique que l'affiche (helper commun).
+  brancherZoneImage({
+    champFichier: '#form-parking [name="parking_photo"]',
+    zoneDepot: 'zone-depot-parking',
+    traiter: traiterFichierParking
   });
-  zoneDepotParking.addEventListener('dragleave', function () { zoneDepotParking.classList.remove('est-survolee'); });
-  zoneDepotParking.addEventListener('drop', onDeposerPhotoParking);
   document.getElementById('bouton-retirer-parking').addEventListener('click', onRetirerPhotoParking);
 
   // Carte « Encadrement & assurance » : bouton dédié.
@@ -463,18 +454,32 @@ async function traiterFichierAffiche(fichier) {
   }
 }
 
-/** Quand on choisit un fichier via le sélecteur (clic sur la zone de dépôt). */
-function onChoisirAffiche(evenement) {
-  traiterFichierAffiche(evenement.target.files && evenement.target.files[0]);
-}
-
-/** Quand on DÉPOSE un fichier sur la zone (glisser-déposer depuis l'ordinateur). */
-function onDeposerAffiche(evenement) {
-  evenement.preventDefault(); // sinon le navigateur ouvre l'image dans l'onglet
-  const zone = document.getElementById('zone-depot-affiche');
-  if (zone) zone.classList.remove('est-survolee');
-  const fichier = evenement.dataTransfer && evenement.dataTransfer.files && evenement.dataTransfer.files[0];
-  traiterFichierAffiche(fichier);
+/**
+ * Câble une zone d'image (affiche du tournoi / photo de parking) : sélecteur de fichier
+ * (change) + glisser-déposer (dragover/dragleave/drop), avec aperçu immédiat via `traiter`.
+ * Avant, ce câblage + les handlers onChoisir/onDeposer existaient en DOUBLE (affiche/parking) ;
+ * seuls diffèrent les ids et la fonction `traiter` (qui, elle, garde sa logique propre :
+ * variable d'aperçu, message, callbacks). Le CLIC d'ouverture reste natif (zone dans un <label>).
+ * @param {Object} cfg { champFichier: sélecteur CSS de l'<input file>, zoneDepot: id de la zone,
+ *                        traiter: fonction(fichier) }
+ */
+function brancherZoneImage(cfg) {
+  const input = document.querySelector(cfg.champFichier);
+  if (input) input.addEventListener('change', function (e) {
+    cfg.traiter(e.target.files && e.target.files[0]);
+  });
+  const zone = document.getElementById(cfg.zoneDepot);
+  if (!zone) return;
+  zone.addEventListener('dragover', function (e) {
+    e.preventDefault(); // sinon le navigateur OUVRE le fichier au lieu de le déposer
+    zone.classList.add('est-survolee');
+  });
+  zone.addEventListener('dragleave', function () { zone.classList.remove('est-survolee'); });
+  zone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    zone.classList.remove('est-survolee');
+    cfg.traiter(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+  });
 }
 
 /**
@@ -1345,20 +1350,6 @@ async function traiterFichierParking(fichier) {
     parkingDataURI = '';
     afficherMessage(message, "⚠️ Image illisible. Choisis un fichier image (JPG, PNG…).", 'ko');
   }
-}
-
-/** Quand on choisit un fichier via le sélecteur (clic sur la zone de dépôt). */
-function onChoisirPhotoParking(evenement) {
-  traiterFichierParking(evenement.target.files && evenement.target.files[0]);
-}
-
-/** Quand on DÉPOSE un fichier sur la zone (glisser-déposer depuis l'ordinateur). */
-function onDeposerPhotoParking(evenement) {
-  evenement.preventDefault(); // sinon le navigateur ouvre l'image dans l'onglet
-  const zone = document.getElementById('zone-depot-parking');
-  if (zone) zone.classList.remove('est-survolee');
-  const fichier = evenement.dataTransfer && evenement.dataTransfer.files && evenement.dataTransfer.files[0];
-  traiterFichierParking(fichier);
 }
 
 /**

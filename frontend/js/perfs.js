@@ -23,6 +23,7 @@
 const MOT_CLE_CLUB = 'racing';
 
 let equipes = [];
+let nomParEquipe = {};          // index id_equipe → nom (reconstruit à chaque chargement)
 let matchs = [];
 let historique = [];
 const INTERVALLE_MS = 60000;
@@ -84,6 +85,7 @@ async function charger(premier) {
 
     const signature = JSON.stringify(data.matchs) + '|' + JSON.stringify(data.equipes) + '|' + JSON.stringify(hist);
     equipes = data.equipes || [];
+    nomParEquipe = indexerNoms(equipes); // index id → nom (O(1))
     matchs = data.matchs || [];
     historique = Array.isArray(hist) ? hist : [];
     majHeure();
@@ -116,10 +118,9 @@ function estDuClub(nom) {
   return String(nom).toLowerCase().indexOf(MOT_CLE_CLUB) >= 0;
 }
 
-/** Nom d'une équipe à partir de son identifiant (pour le tournoi en cours). */
+/** Nom d'une équipe à partir de son identifiant (lecture O(1) dans l'index). */
 function nomEquipe(id) {
-  const e = equipes.find(function (x) { return x.id_equipe === id; });
-  return e ? e.nom_equipe : id;
+  return Object.prototype.hasOwnProperty.call(nomParEquipe, id) ? nomParEquipe[id] : id;
 }
 
 /* ==========================================================================
