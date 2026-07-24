@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Répartition des terrains plafonnée au nombre d'équipes — 2026-07-24
+La répartition automatique remplissait chaque grand terrain de **tous** les mini-terrains qui y
+tenaient géométriquement, sans tenir compte du nombre d'équipes : avec peu d'équipes, elle
+proposait donc des terrains qui resteraient **vides** (une équipe ne joue jamais deux matchs à la
+fois → au plus **floor(équipes / 2)** matchs en même temps). Désormais chaque catégorie est
+**plafonnée à floor(équipes / 2) terrains** (ex. 10 équipes → 5 terrains max ; 4 → 2). Sans
+équipes saisies (0), aucun plafond (repli sur le remplissage géométrique d'avant). Les grands
+terrains devenus inutiles ne sont plus dessinés. **Frontend seul** (`admin-terrains.js`) — aucun
+redéploiement nécessaire.
+
 ### Dossier final envoyé en email HTML (même charte que l'invitation) — 2026-07-24
 Le bouton **« Générer le dossier final »** ouvre désormais un **aperçu HTML live** de l'email
 (comme l'invitation Phase 1) au lieu d'un simple message texte : bandeau navy avec l'affiche,

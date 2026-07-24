@@ -507,7 +507,7 @@ function positionTableMarques(g, m, zoneL, zoneW, tmL, tmW, ox, oy, tX, tY, spli
  * et en rognant la catégorie la plus servie en cas de dépassement).
  * Pose `c._fields` sur chaque catégorie « plein » ; renvoie le nombre de terrains pris.
  */
-function attribuerTerrainsEntiers(plein, normaux, F, totalTeams) {
+function attribuerTerrainsEntiers(plein, normaux, F, totalTeams, budget) {
   let pleinFields = 0;
   if (plein.length) {
     const capP = F - (normaux.length ? 1 : 0);            // laisser au moins 1 grand terrain aux autres
@@ -515,7 +515,8 @@ function attribuerTerrainsEntiers(plein, normaux, F, totalTeams) {
     let cible = Math.round(F * teamsPlein / totalTeams);
     cible = Math.max(plein.length, Math.min(cible, Math.max(0, capP)));
     const per = repartitionProportionnelle(cible, plein.map(function (c) { return Math.max(1, c.teams); }));
-    plein.forEach(function (c, i) { c._fields = Math.max(1, per[i]); });
+    // Chaque terrain « plein » = 1 match → plafonné à floor(équipes / 2) (matchs simultanés max).
+    plein.forEach(function (c, i) { c._fields = Math.min(Math.max(1, per[i]), budget[c.name]); });
     let somme = plein.reduce(function (s, c) { return s + c._fields; }, 0);
     while (somme > Math.max(0, capP)) {                   // rogner si dépassement
       const gros = plein.reduce(function (a, b) { return b._fields > a._fields ? b : a; });
@@ -536,7 +537,7 @@ function attribuerTerrainsEntiers(plein, normaux, F, totalTeams) {
  * naturellement plus de moitiés → le nombre de terrains suit vraiment les équipes.
  * Pose `c._halves` sur chaque catégorie « normale ».
  */
-function attribuerDemisTerrains(normaux, fieldsNormaux, fieldsRestants, m, avert) {
+function attribuerDemisTerrains(normaux, fieldsNormaux, fieldsRestants, m, avert, budget) {
   if (normaux.length && fieldsRestants > 0) {
     const creneaux = 2 * fieldsRestants;                  // nb de demi-terrains à distribuer
     // Estimation du nb de mini-terrains qu'une catégorie tient sur une MOITIÉ de grand terrain
@@ -559,9 +560,11 @@ function attribuerDemisTerrains(normaux, fieldsNormaux, fieldsRestants, m, avert
     while (used < creneaux) {                               // le reste va à la plus « sous pression »
       let best = null, bestP = -1;
       normaux.forEach(function (c) {
+        if (tiles[c.name] >= budget[c.name]) return;        // plafond équipes atteint → on n'ajoute plus
         const p = Math.max(1, c.teams) / (tiles[c.name] + 1);
         if (p > bestP) { bestP = p; best = c; }
       });
+      if (!best) break;                                     // toutes plafonnées → terrains restants inutiles
       best._halves++; tiles[best.name] += est[best.name]; used++;
     }
   } else if (normaux.length) {
@@ -601,6 +604,7 @@ function poserTerrainSolo(ctx, f, prefix, cat, estPlein) {
   if (rects.length === 0) ctx.avert.push(f.nom + ' : trop petit pour un terrain ' + cat.name + '.');
   const tiles = [];                                        // tous les mini-terrains sont jouables
   rects.forEach(function (r) {
+    if (ctx.parCategorie[cat.name].length >= ctx.budget[cat.name]) return; // plafond équipes atteint
     ctx.numero++; const id = String(ctx.numero);
     tiles.push({ id: id, x: r.x, y: r.y, w: r.w, h: r.h, label: id });
     ctx.parCategorie[cat.name].push(id);
@@ -623,6 +627,7 @@ function poserTerrainScinde(ctx, f, prefix, cA, cB) {
     if (rects.length === 0) ctx.avert.push(f.nom + ' (demi) : trop petit pour ' + cat.name + '.');
     const tiles = [];                                    // tous les mini-terrains sont jouables
     rects.forEach(function (r) {
+      if (ctx.parCategorie[cat.name].length >= ctx.budget[cat.name]) return; // plafond équipes atteint
       ctx.numero++; const id = String(ctx.numero);
       tiles.push({ id: id, x: r.x, y: r.y, w: r.w, h: r.h, label: id });
       ctx.parCategorie[cat.name].push(id);
@@ -704,7 +709,11 @@ function attribuerGrandsTerrains(ctx, fields, prefixes, soloQueue, paires, F) {
  * si équilibré. Modifie `fieldsPlan` en place et signale le mixage dans ctx.avert.
  */
 function mixerEnSecours(ctx, fieldsPlan, normaux) {
-  function ratioCat(c) { const n = ctx.parCategorie[c.name].length; return n > 0 ? c.teams / n : Infinity; }
+  function ratioCat(c) {
+    const n = ctx.parCategorie[c.name].length;
+    if (n >= ctx.budget[c.name]) return 0;                 // plafond équipes atteint → plus « sous pression »
+    return n > 0 ? c.teams / n : Infinity;
+  }
   let mixage = 0, aMixe = false;
   while (mixage++ < 60 && normaux.length > 1) {
     let pire = null, prMax = -1, prMin = Infinity;
@@ -760,6 +769,15 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
   };
   cats.forEach(function (c, i) { ctx.parCategorie[c.name] = []; ctx.couleur[c.name] = PALETTE_CAT[i % PALETTE_CAT.length]; });
 
+  // Plafond de terrains par catégorie : on ne propose JAMAIS plus de terrains que de matchs
+  // pouvant tourner EN MÊME TEMPS = floor(équipes / 2) (une équipe ne joue pas deux matchs à la
+  // fois → au-delà de ce nombre, les terrains resteraient vides). Sans équipes connues (0), pas
+  // de plafond : on retombe sur le remplissage géométrique d'avant.
+  ctx.budget = {};
+  cats.forEach(function (c) {
+    ctx.budget[c.name] = c.teams > 0 ? Math.max(1, Math.floor(c.teams / 2)) : Infinity;
+  });
+
   const prefixes = construirePrefixes(fields);
   const F = fields.length;
   const totalTeams = cats.reduce(function (s, c) { return s + Math.max(1, c.teams); }, 0);
@@ -767,10 +785,10 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
   const normaux = cats.filter(function (c) { return !c.tile.plein; });
 
   // 1) Grands terrains ENTIERS pour les catégories « plein » (U14), proportionnel aux équipes.
-  const pleinFields = attribuerTerrainsEntiers(plein, normaux, F, totalTeams);
+  const pleinFields = attribuerTerrainsEntiers(plein, normaux, F, totalTeams, ctx.budget);
 
   // 2) Le reste des grands terrains pour les catégories « normales » (en demi-terrains).
-  attribuerDemisTerrains(normaux, fields.slice(pleinFields), F - pleinFields, ctx.m, ctx.avert);
+  attribuerDemisTerrains(normaux, fields.slice(pleinFields), F - pleinFields, ctx.m, ctx.avert, ctx.budget);
 
   // 3) Files : terrains SOLO (entiers) et paires à SCINDER (une moitié chacune).
   const files = construireFilesAttribution(plein, normaux);
@@ -781,7 +799,17 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
   // 5) Mixage en secours si une catégorie reste nettement plus chargée que les autres.
   mixerEnSecours(ctx, fieldsPlan, normaux);
 
-  return { fieldsPlan: fieldsPlan, parCategorie: ctx.parCategorie, couleur: ctx.couleur, avert: ctx.avert };
+  // 6) Nettoyage : le plafond « équipes » peut laisser une zone SANS mini-terrain (un grand terrain
+  //    attribué à une catégorie qui avait déjà atteint son plafond ailleurs). On retire ces zones
+  //    vides ; un grand terrain devenu entièrement vide n'est plus dessiné (terrain non utilisé).
+  const fieldsPropres = [];
+  fieldsPlan.forEach(function (fp) {
+    fp.zones = fp.zones.filter(function (z) { return z.tiles.length; });
+    if (fp.zones.length === 1 && fp.mode === 'split') { fp.mode = 'solo'; fp.zones[0].table && (fp.zones[0].table.split = false); }
+    if (fp.zones.length) fieldsPropres.push(fp);
+  });
+
+  return { fieldsPlan: fieldsPropres, parCategorie: ctx.parCategorie, couleur: ctx.couleur, avert: ctx.avert };
 }
 
 /** Bouton « Répartir » : calcule la répartition à partir des saisies en cours, l'affiche. */
