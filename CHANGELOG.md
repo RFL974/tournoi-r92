@@ -5,6 +5,44 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sprint 6 — Réponse en libre-service du club + création auto des équipes + édition des fiches — 2026-07-24
+Le club **répond lui-même** à l'invitation via un lien personnalisé sécurisé ; ses équipes ne
+sont créées qu'au moment où l'organisateur **envoie le dossier final**. ⚠️ Nécessite un
+redéploiement de la Web App (nouvelles actions backend).
+
+- **Nouvelle page publique `reponse-invitation.html`** (+ `js/reponse.js`) : accessible via
+  `?tournoi=…&club=…&token=…`. Rappel du tournoi (affiche, nom, date), puis **« Nous serons
+  présents »** (cases par catégorie + nombre d'équipes **borné par `max_equipes_par_club`** +
+  nombre total de joueurs) ou **« Nous ne pourrons pas venir »**. Un lien invalide affiche un
+  message **générique** (« Lien invalide ou expiré »), sans rien révéler.
+- **Écriture publique autorisée par TOKEN** : nouvelle action `repondreInvitation` (doPost) qui
+  **ne passe pas par la clé admin** mais valide le triplet `tournoi_ref`/`club_id`/`club_token`.
+  Lecture publique associée `infosReponseInvitation` (doGet) — ne renvoie **jamais** email ni token.
+  Enregistre `statut`, `categories_engagees`, `nb_equipes_par_categorie`, `nb_joueurs_total`,
+  `date_reponse`. **Ne crée aucune équipe.**
+- **Création automatique des équipes à l'envoi du dossier final** : sur un club **Accepté**, le
+  bouton **« Générer le dossier final »** (action `genererDossierFinal`) crée les équipes
+  manquantes dans `Equipes` — nom `{club}` (1 équipe) ou `{club}-1`, `{club}-2`… (plusieurs),
+  **casse exacte** du nom conservée, `source = auto`. **Idempotent** (2ᵉ clic = pas de doublon) ;
+  un engagement **réduit** ne supprime rien et note `alerte_ecart`. Puis ouverture d'un **brouillon
+  d'email** (mailto) — envoi toujours **manuel**.
+- **Carte « Clubs invités »** : liste **triée** (Accepté à traiter en haut → Invité → Décliné →
+  Accepté déjà traité en bas), affichage de l'engagement (catégories × équipes — joueurs), badge
+  **⚠️ écart** et **✅ dossier envoyé**, bouton **✉️** (brouillon d'invitation avec lien de réponse),
+  **édition inline** des coordonnées (crayon ✏️, avec avertissement si le club a déjà répondu),
+  champ **prénom** du contact. Le nom de club **n'est plus forcé en majuscules**.
+- **Nouvelles colonnes Sheets** (migration douce automatique) :
+  `ClubsInvites` → `club_id`, `club_contact_prenom`, `club_token`, `date_reponse`,
+  `categories_engagees`, `nb_equipes_par_categorie`, `nb_joueurs_total`, `dossier_envoye`,
+  `alerte_ecart` · `Equipes` → `source` (vide = `manuel`) · `Config` Zone B → `max_equipes_par_club`
+  · `Config` Zone A → `tournoi_ref` (identifiant d'édition des liens de réponse).
+- **Statut `Accepté`** remplace `Confirmé` (les fiches `Confirmé` sont relues comme `Accepté`).
+- **Rétrocompatibilité** : `club_id` + `club_token` posés automatiquement sur les fiches
+  existantes à la 1ʳᵉ ouverture de l'admin ; équipes déjà présentes = `manuel`.
+- **Réinitialisation du tournoi** : conserve l'identité et les coordonnées des clubs, mais **remet
+  les réponses à zéro** (statut → Invité, dossier envoyé effacé…) et **régénère `tournoi_ref`**
+  (les liens de l'édition précédente cessent de fonctionner).
+
 ### Dossier : retrait du champ « Équipes attendues » — 2026-07-23
 Le champ **« Équipes attendues (nb) »** par catégorie (`nb_equipes_attendues`), ajouté au
 Sprint 3, est **retiré** de l'application : plus de champ dans le formulaire de catégorie, plus

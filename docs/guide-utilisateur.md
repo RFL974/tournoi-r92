@@ -135,6 +135,8 @@ retirer une catégorie, on la **supprime** — il n'y a plus de réglage « Pré
 - **Nb mi-temps**, **durée mi-temps (min)**, **pause mi-temps (min)** : définissent la **durée
   d'un match** = (nb mi-temps × durée) + (pause si ≥ 2 mi-temps).
 - **Récup. entre matchs (min)** : repos minimal garanti à une équipe entre deux de ses matchs.
+- **Max équipes / club** *(optionnel)* : plafond d'équipes qu'un même club peut engager dans la
+  catégorie. **Vide = illimité.** Sert à **brider la saisie du club** sur sa page de réponse (§1.7bis).
 
 Boutons : **Enregistrer** (par catégorie), **Supprimer** (la catégorie), et un formulaire
 **Ajouter une catégorie**, placé **au-dessus de la liste**. Un **doublon est refusé** avec une
@@ -275,6 +277,36 @@ qui s'ouvre au clic sur la carte : bandeau navy, Présentation + affiche, Infos 
 boutons). Les deux se mettent à jour **pendant que tu tapes**, avant même d'enregistrer, et la
 légende rappelle si le tournoi est **publié** ou non.
 
+### 1.7bis Clubs invités & réponses des clubs
+La carte **« Clubs invités »** gère les clubs que tu invites, **de l'invitation à la création des
+équipes**. Elle se charge après connexion (elle contient des emails : jamais publics).
+
+**1. Ajouter un club.** Renseigne le **nom du club** (sa casse est conservée telle quelle — elle
+servira à nommer les équipes), éventuellement **prénom / nom / email** du contact, puis **Ajouter**.
+Chaque club reçoit en coulisse un identifiant stable et un **jeton secret** pour son lien de réponse.
+
+**2. Envoyer l'invitation.** Sur la ligne d'un club (avec email), le bouton **✉️** ouvre un
+**brouillon d'email** prérempli, contenant son **lien de réponse personnel**
+(`reponse-invitation.html?…`) et le lien du dossier d'invitation. Tu l'envoies toi-même depuis ta
+messagerie (rien n'est envoyé automatiquement).
+
+**3. Le club répond lui-même.** Via son lien, le club indique **« Nous serons présents »** (en
+cochant ses catégories, le **nombre d'équipes** par catégorie — plafonné si tu as renseigné un
+*Max équipes / club* dans la catégorie — et le **nombre total de joueurs**) ou **« Nous ne pourrons
+pas venir »**. Sa fiche passe alors à **Accepté** ou **Décliné**, **remonte en haut de la liste**,
+et affiche son engagement. *(Si un club répond par téléphone, tu peux régler son statut à la main.)*
+
+**4. Générer le dossier final.** Sur un club **Accepté**, le bouton **« Générer le dossier final »**
+**crée ses équipes** dans l'onglet Équipes (`Massy` si 1 équipe, `Massy-1`, `Massy-2`… si plusieurs)
+puis ouvre un **brouillon d'email** de dossier. ⚠️ **C'est le seul moment où les équipes sont
+créées** — jamais à la simple réponse du club. Recliquer ne crée **pas de doublon**. Si un club a
+**réduit** son engagement après coup, rien n'est supprimé : un badge **⚠️ écart** te prévient de
+vérifier l'onglet Équipes à la main.
+
+**Tri de la liste :** clubs **Accepté à traiter** en haut, puis **Invité (sans réponse)**, puis
+**Décliné**, puis **Accepté déjà traités** (badge **✅ dossier envoyé**) en bas. Le crayon **✏️**
+permet de **corriger les coordonnées** d'un club sans toucher à sa réponse.
+
 ### 1.8 Publier le tournoi
 Rend le tournoi **visible du public**. Tant qu'il n'est pas publié, les visiteurs voient un écran
 « à venir ». Indépendant de la génération des poules : on prépare tout, on publie quand c'est prêt.
@@ -286,7 +318,9 @@ Remet le tournoi **à zéro** pour repartir d'une base vierge (double confirmati
 **matchs** (planning + scores), les **infos du tournoi** (nom, date, lieu, description,
 **affiche** — le fichier Drive part à la corbeille) et les **horaires de la journée** (remis à
 zéro, l'étape « Horaires » repasse « à faire »). Le tournoi repasse en **masqué**.
-✅ Seul l'**historique des saisons** (page Perfs) est conservé.
+✅ L'**historique des saisons** (page Perfs) est conservé. La **liste des clubs invités** l'est aussi
+(carnet d'adresses), mais leurs **réponses repartent à zéro** (tous « Invité », dossiers non envoyés)
+et leurs **anciens liens de réponse cessent de fonctionner** — tu peux réinviter pour la nouvelle édition.
 
 ---
 

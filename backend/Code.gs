@@ -11,12 +11,26 @@
 var SHEET_ID = '17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U';
 
 var ENTETES = {
-  Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule'],
+  // source : 'auto' (équipe créée à l'envoi du dossier final d'un club) ou 'manuel'
+  // (ajoutée à la main). Une cellule vide vaut 'manuel' (rétrocompatibilité).
+  Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule', 'source'],
   Poules: ['id_poule', 'categorie', 'nom_poule'],
   // Clubs INVITÉS au tournoi (dossier d'invitation envoyé AVANT confirmation).
   // ⚠️ Contient des emails de contact : cet onglet n'est JAMAIS inclus dans le
   // snapshot public (getAll) — il se lit via l'action listerClubsInvites (clé admin).
-  ClubsInvites: ['club_nom', 'club_contact_nom', 'club_contact_email', 'statut', 'date_ajout'],
+  //   club_id       : identifiant STABLE (C01, C02…) — clé de toutes les opérations,
+  //                   car le nom du club peut être modifié (édition inline admin).
+  //   club_token    : jeton secret unique — sécurise la page publique de réponse.
+  //   date_reponse  : posée à la soumission du formulaire (Accepté OU Décliné).
+  //   categories_engagees      : liste « U8,U10 » cochée par le club.
+  //   nb_equipes_par_categorie : JSON { "U8":2, "U10":1 } saisi par le club.
+  //   nb_joueurs_total         : total de joueurs attendus (informatif, saisi par le club).
+  //   dossier_envoye           : date où « Générer le dossier final » a créé les équipes.
+  //   alerte_ecart             : message si l'engagement a été réduit (à vérifier à la main).
+  ClubsInvites: ['club_id', 'club_nom', 'club_contact_prenom', 'club_contact_nom',
+    'club_contact_email', 'statut', 'date_ajout', 'club_token', 'date_reponse',
+    'categories_engagees', 'nb_equipes_par_categorie', 'nb_joueurs_total',
+    'dossier_envoye', 'alerte_ecart'],
   // Colonnes 1-12 : historiques (matin + après-midi CROISE/LIBRE).
   // Colonnes 13-18 : format d'après-midi + tableau à élimination (COUPE_PLATEAU).
   //   format        : CROISE / LIBRE / COUPE_PLATEAU (recopié depuis la catégorie ; vide pour le matin)
@@ -84,15 +98,17 @@ function creerOngletConfig(classeur) {
   // reglement : texte libre OU URL (une valeur commençant par « http » sera affichée en lien).
   // effectif_min / effectif_max : nombre de joueurs par équipe (dossier club) — optionnels.
   // arbitrage_organisation : qui arbitre (« arbitrage » seul est déjà pris par l'assistant horaires).
+  // max_equipes_par_club : plafond d'équipes qu'un même club peut engager dans la catégorie
+  //   (vide = pas de limite) — utilisé par la page publique de réponse (Sprint 6).
   var entetesCategorie = ['categorie', 'presente', 'terrains', 'terrains_auto', 'nb_poules',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min',
     'format_apresmidi', 'param_format',
-    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation'];
+    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation', 'max_equipes_par_club'];
   var exemplesCategorie = [
-    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', ''],
-    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', ''],
-    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}', '', '', '', ''],
-    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '']
+    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', '', ''],
+    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', '', ''],
+    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}', '', '', '', '', ''],
+    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '', '']
   ];
   onglet.getRange(1, 1, 60, entetesCategorie.length + 1).setNumberFormat('@');
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
@@ -136,6 +152,8 @@ function doGet(e) {
       case 'getMatchs':  resultat = lireOngletSimple(classeur, 'Matchs'); break;
       case 'getClassement': resultat = calculerClassement(classeur); break;
       case 'getHistorique': resultat = lireHistorique(classeur); break;
+      // Lecture PUBLIQUE de la page de réponse : validée par token, ne renvoie ni email ni token.
+      case 'infosReponseInvitation': resultat = infosReponseInvitation(classeur, params); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -331,6 +349,11 @@ function lireConfig(classeur) {
 /* Actions protégées par la clé SCORES (les autres écritures exigent la clé ADMIN). */
 var ACTIONS_SCORES = { enregistrerScore: true };
 
+/* Actions PUBLIQUES autorisées par TOKEN (et non par clé admin/scores) : la page publique de
+   réponse du club écrit sans clé, mais chaque écriture valide en interne le triplet
+   tournoi/club_id/token (voir validerAccesClub). Aucune autre écriture n'est ouverte. */
+var ACTIONS_PUBLIQUES_TOKEN = { repondreInvitation: true };
+
 function doPost(e) {
   var lock;
   try {
@@ -338,10 +361,13 @@ function doPost(e) {
     var action = requete.action;
 
     // Contrôle d'accès : chaque écriture exige la bonne clé (scores selon l'action, sinon admin).
-    // Les lectures (doGet) restent ouvertes à tous.
-    var nomCle = ACTIONS_SCORES[action] ? 'CLE_SCORES' : 'CLE_ADMIN';
-    var acces = verifierCle(requete, nomCle);
-    if (!acces.ok) return repondreJson({ error: acces.msg, acces_refuse: true });
+    // EXCEPTION : les actions publiques par token ne passent PAS par la clé — elles valident
+    // elles-mêmes le token du club. Les lectures (doGet) restent ouvertes à tous.
+    if (!ACTIONS_PUBLIQUES_TOKEN[action]) {
+      var nomCle = ACTIONS_SCORES[action] ? 'CLE_SCORES' : 'CLE_ADMIN';
+      var acces = verifierCle(requete, nomCle);
+      if (!acces.ok) return repondreJson({ error: acces.msg, acces_refuse: true });
+    }
 
     // Verrou d'écriture : sérialise les écritures concurrentes (deux marqueurs qui valident
     // au même instant) pour éviter les collisions d'identifiant et l'écrasement de lignes
@@ -379,7 +405,10 @@ function doPost(e) {
       case 'listerClubsInvites':   resultat = listerClubsInvites(classeur); break;
       case 'ajouterClubInvite':    resultat = ajouterClubInvite(classeur, requete); break;
       case 'modifierStatutClubInvite': resultat = modifierStatutClubInvite(classeur, requete); break;
+      case 'modifierClubInvite':   resultat = modifierClubInvite(classeur, requete); break;
       case 'supprimerClubInvite':  resultat = supprimerClubInvite(classeur, requete); break;
+      case 'repondreInvitation':   resultat = repondreInvitation(classeur, requete); break;
+      case 'genererDossierFinal':  resultat = genererDossierFinal(classeur, requete); break;
       case 'reinitialiserTournoi': resultat = reinitialiserTournoi(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
@@ -510,22 +539,29 @@ function estTermineServeur(statut) {
   return /^\s*termin/i.test(String(statut));
 }
 
+/**
+ * Écrit une NOUVELLE équipe (id auto + nom + catégorie + poule vide + source). Point de
+ * passage unique de l'ajout d'équipe : format TEXTE (@) forcé AVANT écriture pour qu'un nom
+ * commençant par « = + - @ » ne soit pas interprété comme une formule (anti-injection).
+ * @param {string} source 'manuel' (ajout à la main) ou 'auto' (dossier final d'un club).
+ */
+function ecrireNouvelleEquipe(onglet, nom, categorie, source) {
+  var id = genererIdEquipe(onglet);
+  var ligne = onglet.getLastRow() + 1;
+  var plage = onglet.getRange(ligne, 1, 1, ENTETES.Equipes.length);
+  plage.setNumberFormat('@');
+  plage.setValues([[id, nom, categorie, '', source || 'manuel']]);
+  return { id_equipe: id, nom_equipe: nom, categorie: categorie, poule: '', source: source || 'manuel' };
+}
+
 function ajouterEquipe(classeur, nom, categorie) {
   nom = (nom || '').toString().trim();
   categorie = (categorie || '').toString().trim();
   if (!nom)       return { error: "Le nom de l'équipe est vide." };
   if (!categorie) return { error: 'La catégorie est vide.' };
-  var onglet = classeur.getSheetByName('Equipes');
-  var id = genererIdEquipe(onglet);
-  // On écrit en forçant le format TEXTE (@) de la ligne : un nom commençant par
-  // « = + - @ » n'est PAS interprété comme une formule Google Sheets (anti-injection de
-  // formule). getLastRow()+1 vise la même ligne que appendRow, mais permet de fixer le
-  // format AVANT d'écrire la valeur.
-  var ligne = onglet.getLastRow() + 1;
-  var plage = onglet.getRange(ligne, 1, 1, 4);
-  plage.setNumberFormat('@');
-  plage.setValues([[id, nom, categorie, '']]);
-  return { ok: true, equipe: { id_equipe: id, nom_equipe: nom, categorie: categorie, poule: '' } };
+  var onglet = assurerOngletEquipes(classeur); // garantit la colonne `source`
+  var equipe = ecrireNouvelleEquipe(onglet, nom, categorie, 'manuel');
+  return { ok: true, equipe: equipe };
 }
 
 function supprimerEquipe(classeur, id) {
@@ -816,8 +852,10 @@ function enregistrerInvitation(classeur, data) {
 
 /* ===================== CLUBS INVITÉS ===================== */
 
-/* Statuts admis d'un club invité (formes canoniques, avec accents). */
-var STATUTS_CLUB_INVITE = ['Invité', 'Confirmé', 'Décliné'];
+/* Statuts admis d'un club invité (formes canoniques, avec accents).
+   ⚠️ « Accepté » remplace l'ancien « Confirmé » (les fiches déjà marquées « Confirmé »
+   sont relues comme « Accepté » — voir statutClubCanonique). */
+var STATUTS_CLUB_INVITE = ['Invité', 'Accepté', 'Décliné'];
 
 /** Comparaison de textes SANS accents ni casse (piège NFC/NFD du Sheet : « Invité »
  *  peut revenir avec un é décomposé — même précaution que estTermine). */
@@ -828,39 +866,176 @@ function memeTexteSouple(a, b) {
   return plat(a) === plat(b);
 }
 
-/** Statut canonique ('Invité'/'Confirmé'/'Décliné') depuis une saisie, ou '' si inconnu. */
+/** Statut canonique ('Invité'/'Accepté'/'Décliné') depuis une saisie, ou '' si inconnu.
+ *  Rétrocompat : l'ancien libellé « Confirmé » est relu comme « Accepté ». */
 function statutClubCanonique(valeur) {
+  if (memeTexteSouple(valeur, 'Confirmé')) return 'Accepté';
   for (var i = 0; i < STATUTS_CLUB_INVITE.length; i++) {
     if (memeTexteSouple(valeur, STATUTS_CLUB_INVITE[i])) return STATUTS_CLUB_INVITE[i];
   }
   return '';
 }
 
-/** Crée l'onglet ClubsInvites s'il manque (migration douce d'un Sheet déjà en service). */
+/* -------- Helpers génériques (migration douce d'onglets simples : en-tête ligne 1) -------- */
+
+/** Ajoute à la fin de la ligne d'en-tête toute colonne `entetesVoulues` absente, sans
+ *  toucher aux données (migration douce d'un onglet déjà en service). Renvoie true si ajout. */
+function assurerColonnesOnglet(onglet, entetesVoulues) {
+  if (!onglet) return false;
+  var largeur = Math.max(1, onglet.getLastColumn());
+  var entetes = onglet.getRange(1, 1, 1, largeur).getValues()[0];
+  var presents = {};
+  entetes.forEach(function (h) { if (h !== '' && h !== null) presents[String(h)] = true; });
+  var ajout = false;
+  entetesVoulues.forEach(function (nom) {
+    if (!presents[nom]) {
+      largeur += 1;
+      var cellule = onglet.getRange(1, largeur);
+      cellule.setNumberFormat('@');
+      cellule.setValue(nom);
+      stylerEntete(cellule);
+      presents[nom] = true;
+      ajout = true;
+    }
+  });
+  return ajout;
+}
+
+/** Table { nom_entete: colonne 1-based } d'un onglet à en-tête en ligne 1. */
+function indexColonnes(onglet) {
+  var entetes = onglet.getRange(1, 1, 1, Math.max(1, onglet.getLastColumn())).getValues()[0];
+  var idx = {};
+  for (var i = 0; i < entetes.length; i++) {
+    if (entetes[i] !== '' && entetes[i] !== null) idx[String(entetes[i])] = i + 1;
+  }
+  return idx;
+}
+
+/** Écrit un lot de champs { nom_entete: valeur } sur une ligne, chacun dans SA colonne
+ *  (format texte @ forcé : anti-injection de formule). Les entêtes inconnus sont ignorés. */
+function ecrireChampsClub(onglet, ligne, champs) {
+  var idx = indexColonnes(onglet);
+  for (var nom in champs) {
+    if (!idx[nom]) continue;
+    var cel = onglet.getRange(ligne, idx[nom]);
+    cel.setNumberFormat('@');
+    cel.setValue(champs[nom] == null ? '' : String(champs[nom]));
+  }
+}
+
+/** Jeton secret unique d'un club (sécurise la page publique de réponse). */
+function genererTokenClub() {
+  return Utilities.getUuid().replace(/-/g, '');
+}
+
+/** Identifiant STABLE suivant (C01, C02…) en balayant la colonne club_id. */
+function genererIdClub(onglet) {
+  var idx = indexColonnes(onglet);
+  var colId = idx['club_id'];
+  var dernier = onglet.getLastRow();
+  var max = 0;
+  if (colId && dernier >= 2) {
+    var vals = onglet.getRange(2, colId, dernier - 1, 1).getValues();
+    vals.forEach(function (l) {
+      var m = String(l[0]).match(/^C(\d+)$/);
+      if (m) { var n = parseInt(m[1], 10); if (n > max) max = n; }
+    });
+  }
+  var suivant = max + 1;
+  return 'C' + (suivant < 10 ? '0' + suivant : suivant);
+}
+
+/**
+ * Identifiant URL-safe du tournoi pour les liens de réponse (paramètre `tournoi`).
+ * Généré une fois, RÉGÉNÉRÉ à la remise à zéro (un vieux lien d'une édition passée
+ * devient alors « Lien invalide ou expiré »).
+ */
+function assurerTournoiRef(classeur) {
+  var g = lireConfig(classeur).global || {};
+  var ref = g.tournoi_ref ? String(g.tournoi_ref).trim() : '';
+  if (!ref) {
+    ref = 'T' + Utilities.getUuid().replace(/-/g, '').substring(0, 12);
+    ecrireParamGlobal(classeur.getSheetByName('Config'), 'tournoi_ref', ref);
+  }
+  return ref;
+}
+
+/** Crée l'onglet ClubsInvites s'il manque + garantit toutes ses colonnes (migration douce). */
 function assurerOngletClubsInvites(classeur) {
   var onglet = classeur.getSheetByName('ClubsInvites');
   if (!onglet) creerOngletAvecEntetes(classeur, 'ClubsInvites', ENTETES.ClubsInvites);
-  return classeur.getSheetByName('ClubsInvites');
+  onglet = classeur.getSheetByName('ClubsInvites');
+  assurerColonnesOnglet(onglet, ENTETES.ClubsInvites);
+  return onglet;
+}
+
+/** Garantit l'onglet Equipes + sa colonne `source` (migration douce). */
+function assurerOngletEquipes(classeur) {
+  var onglet = classeur.getSheetByName('Equipes');
+  if (!onglet) creerOngletAvecEntetes(classeur, 'Equipes', ENTETES.Equipes);
+  onglet = classeur.getSheetByName('Equipes');
+  assurerColonnesOnglet(onglet, ENTETES.Equipes);
+  return onglet;
+}
+
+/**
+ * RÉTROCOMPAT (point 7 du sprint) : donne un club_id + club_token aux fiches qui n'en ont
+ * pas encore (clubs ajoutés avant ce sprint), à la 1re ouverture de l'admin. Ne touche à
+ * rien d'autre. Appelé sous le verrou d'écriture (listerClubsInvites passe par doPost).
+ */
+function backfillClubsInvites(onglet) {
+  var idx = indexColonnes(onglet);
+  var colId = idx['club_id'], colTok = idx['club_token'];
+  if (!colId || !colTok) return;
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return;
+  var largeur = onglet.getLastColumn();
+  var vals = onglet.getRange(2, 1, dernier - 1, largeur).getValues();
+  var max = 0;
+  vals.forEach(function (l) {
+    var m = String(l[colId - 1]).match(/^C(\d+)$/);
+    if (m) { var n = parseInt(m[1], 10); if (n > max) max = n; }
+  });
+  for (var i = 0; i < vals.length; i++) {
+    var ligne = i + 2;
+    if (vals[i].every(function (c) { return c === '' || c === null; })) continue; // ligne vide
+    if (!String(vals[i][colId - 1]).trim()) {
+      max += 1;
+      var cId = onglet.getRange(ligne, colId);
+      cId.setNumberFormat('@'); cId.setValue('C' + (max < 10 ? '0' + max : max));
+    }
+    if (!String(vals[i][colTok - 1]).trim()) {
+      var cT = onglet.getRange(ligne, colTok);
+      cT.setNumberFormat('@'); cT.setValue(genererTokenClub());
+    }
+  }
 }
 
 /**
  * LISTE des clubs invités. Passe par doPost + clé ADMIN (et non doGet, ouvert à tous) :
  * l'onglet contient des emails de contact, qui ne doivent JAMAIS apparaître dans le
  * snapshot public (getAll) ni sur le relais CDN.
+ * Renvoie aussi `tournoi_ref` (pour construire les liens de réponse côté admin).
  */
 function listerClubsInvites(classeur) {
-  assurerOngletClubsInvites(classeur);
-  return { ok: true, clubs: lireOngletSimple(classeur, 'ClubsInvites') };
+  var onglet = assurerOngletClubsInvites(classeur);
+  backfillClubsInvites(onglet); // donne id + token aux fiches héritées
+  return {
+    ok: true,
+    clubs: lireOngletSimple(classeur, 'ClubsInvites'),
+    tournoi_ref: assurerTournoiRef(classeur)
+  };
 }
 
 /**
- * Ajoute un club invité. Nom requis (clé d'identification : doublons refusés, comparaison
- * souple sans accents ni casse), email vérifié s'il est fourni, statut par défaut « Invité »,
- * date d'ajout posée automatiquement (AAAA-MM-JJ).
+ * Ajoute un club invité. Nom requis (doublon refusé, comparaison souple), email vérifié
+ * s'il est fourni, statut par défaut « Invité », date d'ajout automatique. Un club_id
+ * stable et un club_token secret sont générés à l'ajout.
  */
 function ajouterClubInvite(classeur, data) {
   var nom = String(data.club_nom || '').trim();
   if (!nom) return { error: 'Nom du club vide.' };
+  var prenom = String(data.club_contact_prenom || '').trim();
   var contactNom = String(data.club_contact_nom || '').trim();
   var email = String(data.club_contact_email || '').trim();
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -876,43 +1051,324 @@ function ajouterClubInvite(classeur, data) {
     }
   }
 
-  var dateAjout = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   var ligne = onglet.getLastRow() + 1;
-  var plage = onglet.getRange(ligne, 1, 1, ENTETES.ClubsInvites.length);
-  plage.setNumberFormat('@');
-  plage.setValues([[nom, contactNom, email, statut, dateAjout]]);
+  ecrireChampsClub(onglet, ligne, {
+    club_id: genererIdClub(onglet),
+    club_nom: nom,
+    club_contact_prenom: prenom,
+    club_contact_nom: contactNom,
+    club_contact_email: email,
+    statut: statut,
+    date_ajout: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    club_token: genererTokenClub()
+  });
   return { ok: true };
 }
 
-/** Ligne (1-based) d'un club dans l'onglet, ou -1. Clé = club_nom (comparaison souple). */
-function ligneClubInvite(onglet, nom) {
-  var donnees = onglet.getDataRange().getValues();
-  for (var i = 1; i < donnees.length; i++) {
-    if (memeTexteSouple(donnees[i][0], nom)) return i + 1;
+/** Ligne (1-based) d'un club par son id STABLE, ou -1. */
+function ligneClubParId(onglet, clubId) {
+  var idx = indexColonnes(onglet);
+  var colId = idx['club_id'];
+  if (!colId) return -1;
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return -1;
+  var vals = onglet.getRange(2, colId, dernier - 1, 1).getValues();
+  var cible = String(clubId || '').trim();
+  if (!cible) return -1;
+  for (var i = 0; i < vals.length; i++) {
+    if (String(vals[i][0]).trim() === cible) return i + 2;
   }
   return -1;
 }
 
-/** Change le STATUT d'un club invité (menu déroulant de la liste admin). */
+/** Objet club (lireOngletSimple) par id, ou null. */
+function clubParId(classeur, clubId) {
+  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var cible = String(clubId || '').trim();
+  for (var i = 0; i < clubs.length; i++) {
+    if (String(clubs[i].club_id).trim() === cible) return clubs[i];
+  }
+  return null;
+}
+
+/** Change le STATUT d'un club (menu déroulant admin, repli manuel Sprint 4). Clé = club_id. */
 function modifierStatutClubInvite(classeur, data) {
   var statut = statutClubCanonique(data.statut);
-  if (!statut) return { error: 'Statut inconnu (attendu : Invité, Confirmé ou Décliné).' };
+  if (!statut) return { error: 'Statut inconnu (attendu : Invité, Accepté ou Décliné).' };
   var onglet = assurerOngletClubsInvites(classeur);
-  var ligne = ligneClubInvite(onglet, data.club_nom);
-  if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
-  var cellule = onglet.getRange(ligne, 4); // colonne `statut`
-  cellule.setNumberFormat('@');
-  cellule.setValue(statut);
+  var ligne = ligneClubParId(onglet, data.club_id);
+  if (ligne === -1) return { error: 'Club introuvable.' };
+  ecrireChampsClub(onglet, ligne, { statut: statut });
   return { ok: true };
 }
 
-/** Retire un club de la liste des invités. */
+/**
+ * Édite les COORDONNÉES d'un club (nom + contact) — édition inline admin (point 6e).
+ * Ne touche PAS au statut, à la réponse déjà donnée, ni au token. Clé = club_id.
+ */
+function modifierClubInvite(classeur, data) {
+  var onglet = assurerOngletClubsInvites(classeur);
+  var ligne = ligneClubParId(onglet, data.club_id);
+  if (ligne === -1) return { error: 'Club introuvable.' };
+  var nom = String(data.club_nom || '').trim();
+  if (!nom) return { error: 'Le nom du club ne peut pas être vide.' };
+  var email = String(data.club_contact_email || '').trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: 'Email du contact invalide : « ' + email + ' ».' };
+  }
+  // Doublon de nom avec un AUTRE club ?
+  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var cible = String(data.club_id || '').trim();
+  for (var i = 0; i < clubs.length; i++) {
+    if (String(clubs[i].club_id).trim() !== cible && memeTexteSouple(clubs[i].club_nom, nom)) {
+      return { error: 'Un autre club porte déjà le nom « ' + clubs[i].club_nom + ' ».' };
+    }
+  }
+  ecrireChampsClub(onglet, ligne, {
+    club_nom: nom,
+    club_contact_prenom: String(data.club_contact_prenom || '').trim(),
+    club_contact_nom: String(data.club_contact_nom || '').trim(),
+    club_contact_email: email
+  });
+  return { ok: true };
+}
+
+/** Retire un club de la liste des invités. Clé = club_id. */
 function supprimerClubInvite(classeur, data) {
   var onglet = assurerOngletClubsInvites(classeur);
-  var ligne = ligneClubInvite(onglet, data.club_nom);
-  if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
+  var ligne = ligneClubParId(onglet, data.club_id);
+  if (ligne === -1) return { error: 'Club introuvable.' };
   onglet.deleteRow(ligne);
   return { ok: true };
+}
+
+/* -------- Réponse publique du club (page reponse-invitation.html) -------- */
+
+/**
+ * Valide l'accès public d'un club : le triplet (tournoi, club_id, token) doit correspondre.
+ * En cas de moindre écart → message GÉNÉRIQUE « Lien invalide ou expiré » (anti-fuite : on ne
+ * révèle pas si c'est le club, le token ou le tournoi qui cloche). Renvoie { club, ligne, onglet }
+ * en cas de succès, sinon { error }.
+ */
+function validerAccesClub(classeur, tournoi, clubId, token) {
+  var ERR = { error: 'Lien invalide ou expiré.' };
+  var refAttendu = assurerTournoiRef(classeur);
+  if (String(tournoi || '').trim() !== refAttendu) return ERR;
+  var onglet = assurerOngletClubsInvites(classeur);
+  var club = clubParId(classeur, clubId);
+  if (!club) return ERR;
+  var tokAttendu = String(club.club_token || '').trim();
+  if (!tokAttendu || tokAttendu !== String(token || '').trim()) return ERR;
+  return { club: club, ligne: ligneClubParId(onglet, clubId), onglet: onglet };
+}
+
+/** Catégories PRÉSENTES du tournoi (avec leur max d'équipes par club), pour la page de réponse. */
+function categoriesReponse(classeur) {
+  var cfg = lireConfig(classeur);
+  return (cfg.categories || [])
+    .filter(function (c) { return /^oui$/i.test(String(c.presente).trim()); })
+    .map(function (c) {
+      return {
+        categorie: String(c.categorie || '').trim(),
+        max_equipes_par_club: c.max_equipes_par_club != null ? String(c.max_equipes_par_club).trim() : ''
+      };
+    });
+}
+
+/**
+ * LECTURE publique (doGet) pour la page de réponse : valide le lien puis renvoie le RAPPEL du
+ * tournoi + les catégories + un minimum sur le club (nom, statut, réponse déjà donnée).
+ * ⚠️ Ne renvoie JAMAIS l'email, le contact ni le token.
+ */
+function infosReponseInvitation(classeur, params) {
+  var acces = validerAccesClub(classeur, params.tournoi, params.club, params.token);
+  if (acces.error) return { error: acces.error };
+  var club = acces.club;
+  var g = lireConfig(classeur).global || {};
+  return {
+    ok: true,
+    tournoi: {
+      nom: String(g.tournoi_nom || ''),
+      date: String(g.tournoi_date || ''),
+      lieu: String(g.tournoi_lieu || ''),
+      affiche_id: String(g.tournoi_affiche_id || ''),
+      date_limite_confirmation: String(g.date_limite_confirmation || '')
+    },
+    categories: categoriesReponse(classeur),
+    club: {
+      club_nom: String(club.club_nom || ''),
+      statut: statutClubCanonique(club.statut) || 'Invité',
+      date_reponse: String(club.date_reponse || ''),
+      categories_engagees: String(club.categories_engagees || ''),
+      nb_equipes_par_categorie: String(club.nb_equipes_par_categorie || ''),
+      nb_joueurs_total: String(club.nb_joueurs_total || '')
+    }
+  };
+}
+
+/**
+ * ÉCRITURE publique (doPost, autorisée par TOKEN et non par clé admin) : enregistre la réponse
+ * du club. NE CRÉE AUCUNE ÉQUIPE (la création n'a lieu qu'à « Générer le dossier final »).
+ *   data.presence : 'accepte' / 'present' / 'oui'  OU  'decline' / 'non'
+ *   data.nb_equipes_par_categorie : JSON { "U8":2, "U10":1 } (si accepté)
+ *   data.nb_joueurs_total         : entier > 0 (si accepté)
+ */
+function repondreInvitation(classeur, data) {
+  var acces = validerAccesClub(classeur, data.tournoi, data.club, data.token);
+  if (acces.error) return { error: acces.error };
+  var onglet = acces.onglet, ligne = acces.ligne;
+  if (ligne === -1) return { error: 'Lien invalide ou expiré.' };
+  var dateRep = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  var presence = String(data.presence || '').toLowerCase();
+
+  // --- DÉCLINÉ : on enregistre et on efface toute réponse « Accepté » antérieure. ---
+  if (presence === 'decline' || presence === 'non' || presence === 'absent') {
+    ecrireChampsClub(onglet, ligne, {
+      statut: 'Décliné', date_reponse: dateRep,
+      categories_engagees: '', nb_equipes_par_categorie: '', nb_joueurs_total: ''
+    });
+    return { ok: true, statut: 'Décliné' };
+  }
+  if (presence !== 'accepte' && presence !== 'present' && presence !== 'oui') {
+    return { error: 'Réponse non reconnue.' };
+  }
+
+  // --- ACCEPTÉ : validation stricte des catégories / nombres. ---
+  var catsConfig = {};
+  categoriesReponse(classeur).forEach(function (c) { catsConfig[c.categorie] = c; });
+
+  var nbMap;
+  try { nbMap = JSON.parse(String(data.nb_equipes_par_categorie || data.nb_equipes || '{}')); }
+  catch (e) { return { error: 'Données du formulaire illisibles.' }; }
+  if (!nbMap || typeof nbMap !== 'object') return { error: 'Données du formulaire illisibles.' };
+
+  var mapPropre = {}, categories = [];
+  for (var cat in nbMap) {
+    var nomCat = String(cat).trim();
+    var n = parseInt(nbMap[cat], 10);
+    if (!catsConfig[nomCat]) return { error: 'Catégorie inconnue : ' + nomCat + '.' };
+    if (!isFinite(n) || n < 1) return { error: 'Nombre d\'équipes invalide pour ' + nomCat + '.' };
+    var max = parseInt(catsConfig[nomCat].max_equipes_par_club, 10);
+    if (isFinite(max) && max > 0 && n > max) {
+      return { error: 'Maximum ' + max + ' équipe(s) par club pour ' + nomCat + '.' };
+    }
+    mapPropre[nomCat] = n;
+    categories.push(nomCat);
+  }
+  if (!categories.length) return { error: 'Sélectionne au moins une catégorie.' };
+
+  var nbJoueurs = parseInt(data.nb_joueurs_total, 10);
+  if (!isFinite(nbJoueurs) || nbJoueurs <= 0) return { error: 'Indique un nombre de joueurs valide.' };
+
+  ecrireChampsClub(onglet, ligne, {
+    statut: 'Accepté', date_reponse: dateRep,
+    categories_engagees: categories.join(','),
+    nb_equipes_par_categorie: JSON.stringify(mapPropre),
+    nb_joueurs_total: nbJoueurs
+  });
+  return { ok: true, statut: 'Accepté' };
+}
+
+/* -------- Création des équipes à l'envoi du dossier final (point 5) -------- */
+
+/** Une équipe appartient-elle à ce club ? Nom = « {club} » ou « {club}-N » (N entier). */
+function estEquipeDuClub(nomEquipe, nomClub) {
+  var ne = String(nomEquipe || '').trim(), nc = String(nomClub || '').trim();
+  if (!nc) return false;
+  if (ne === nc) return true;
+  return ne.indexOf(nc + '-') === 0 && /^\d+$/.test(ne.substring(nc.length + 1));
+}
+
+/**
+ * « Générer le dossier final » d'un club Accepté : crée dans l'onglet Equipes les équipes
+ * MANQUANTES (source = 'auto'), en respectant la CASSE EXACTE du nom du club.
+ *   - nb=1 pour une catégorie → « {club} »
+ *   - nb>1                    → « {club}-1 », « {club}-2 », …
+ * Idempotent (2e clic = aucun doublon). Si l'engagement a été RÉDUIT (plus d'équipes déjà
+ * présentes que demandé), ne supprime rien et note alerte_ecart. Pose dossier_envoye.
+ */
+function genererDossierFinal(classeur, data) {
+  var onglet = assurerOngletClubsInvites(classeur);
+  var ligne = ligneClubParId(onglet, data.club_id);
+  if (ligne === -1) return { error: 'Club introuvable.' };
+  var club = clubParId(classeur, data.club_id);
+  if (!club) return { error: 'Club introuvable.' };
+  if (statutClubCanonique(club.statut) !== 'Accepté') {
+    return { error: 'Le dossier final ne se génère que pour un club au statut « Accepté ».' };
+  }
+  var nomClub = String(club.club_nom || '').trim();
+  if (!nomClub) return { error: 'Nom du club vide.' };
+
+  var nbMap;
+  try { nbMap = JSON.parse(String(club.nb_equipes_par_categorie || '{}')); }
+  catch (e) { nbMap = {}; }
+
+  var oEquipes = assurerOngletEquipes(classeur);
+  var equipes = lireOngletSimple(classeur, 'Equipes');
+  var creees = [], alertes = [];
+
+  for (var cat in nbMap) {
+    var desired = parseInt(nbMap[cat], 10);
+    if (!isFinite(desired) || desired < 1) continue;
+
+    var existantes = equipes.filter(function (e) {
+      return memeTexteSouple(e.categorie, cat) && estEquipeDuClub(e.nom_equipe, nomClub);
+    });
+    var nomsPresents = {};
+    existantes.forEach(function (e) { nomsPresents[String(e.nom_equipe).trim()] = true; });
+    var nbExist = existantes.length;
+
+    if (nbExist > desired) {
+      alertes.push('Club ' + nomClub + ' a réduit son engagement ' + cat + ' de ' + nbExist +
+        ' à ' + desired + ' équipe — vérifier manuellement l\'onglet Équipes');
+      continue; // NE RIEN SUPPRIMER
+    }
+    if (nbExist === desired) continue; // déjà à jour (idempotent)
+
+    var cibles = [];
+    if (desired === 1) cibles = [nomClub];
+    else for (var k = 1; k <= desired; k++) cibles.push(nomClub + '-' + k);
+
+    var aCreer = desired - nbExist;
+    for (var c = 0; c < cibles.length && aCreer > 0; c++) {
+      if (nomsPresents[cibles[c]]) continue;
+      ecrireNouvelleEquipe(oEquipes, cibles[c], cat, 'auto');
+      creees.push({ nom: cibles[c], categorie: cat });
+      nomsPresents[cibles[c]] = true;
+      aCreer--;
+    }
+  }
+
+  var champs = {
+    dossier_envoye: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    alerte_ecart: alertes.length ? alertes.join(' | ') : ''
+  };
+  ecrireChampsClub(onglet, ligne, champs);
+  return { ok: true, equipes_creees: creees, alerte: alertes.join(' | ') };
+}
+
+/**
+ * Remet à zéro les RÉPONSES de tous les clubs pour une nouvelle édition (appelé par
+ * reinitialiserTournoi) : statut → Invité, et vidage de date_reponse / categories_engagees /
+ * nb_equipes_par_categorie / nb_joueurs_total / dossier_envoye / alerte_ecart.
+ * CONSERVE club_id, club_token, coordonnées (carnet d'adresses réutilisable).
+ */
+function reinitReponsesClubs(classeur) {
+  var onglet = assurerOngletClubsInvites(classeur);
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return;
+  var idx = indexColonnes(onglet);
+  var colId = idx['club_id'];
+  var vals = onglet.getRange(2, 1, dernier - 1, onglet.getLastColumn()).getValues();
+  for (var i = 0; i < vals.length; i++) {
+    if (vals[i].every(function (c) { return c === '' || c === null; })) continue;
+    // On ne touche qu'aux lignes ayant un id (fiches réelles).
+    if (colId && !String(vals[i][colId - 1]).trim()) continue;
+    ecrireChampsClub(onglet, i + 2, {
+      statut: 'Invité', date_reponse: '', categories_engagees: '',
+      nb_equipes_par_categorie: '', nb_joueurs_total: '', dossier_envoye: '', alerte_ecart: ''
+    });
+  }
 }
 
 /**
@@ -1008,11 +1464,19 @@ function enregistrerCategorie(classeur, data) {
   if (isFinite(effMin) && isFinite(effMax) && effMin > effMax) {
     return { error: 'Effectif min (' + effMin + ') supérieur à l\'effectif max (' + effMax + ').' };
   }
+  // Plafond d'équipes par club (Sprint 6) : optionnel, mais si saisi, entier ≥ 1.
+  if (data.max_equipes_par_club != null && String(data.max_equipes_par_club).trim() !== '') {
+    var maxEq = parseInt(data.max_equipes_par_club, 10);
+    if (!isFinite(maxEq) || maxEq < 1) {
+      return { error: 'Le maximum d\'équipes par club doit être un entier ≥ 1 (ou vide).' };
+    }
+  }
   var onglet = classeur.getSheetByName('Config');
   // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution)
   // + les colonnes de format d'après-midi, pour qu'elles existent DÈS le paramétrage
   // (choix du format possible avant même de générer l'après-midi).
   assurerColonneCategorie(classeur, 'nb_poules');
+  assurerColonneCategorie(classeur, 'max_equipes_par_club'); // plafond d'équipes par club (Sprint 6)
   assurerColonnesConfig(classeur);
   var donnees = onglet.getDataRange().getValues();
   var hdr = indexEnteteCategories(donnees);
@@ -2479,10 +2943,17 @@ function reinitialiserTournoi(classeur) {
   // 3 quater) Dossier d'invitation : champs effacés + photo du parking mise à la corbeille.
   //           ✅ La LISTE des clubs invités (onglet ClubsInvites) est CONSERVÉE, comme
   //           l'historique : c'est un carnet d'adresses réutilisable d'une édition à l'autre.
+  //           En revanche les RÉPONSES (statut, catégories engagées, dossier envoyé…) sont
+  //           propres à CETTE édition : on les remet à zéro (identité + coordonnées gardées).
   var idParking = (lireConfig(classeur).global || {}).parking_photo_id;
   if (idParking) { try { DriveApp.getFileById(idParking).setTrashed(true); } catch (e) {} }
   CHAMPS_INVITATION.concat(['parking_photo_id'])
     .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
+  reinitReponsesClubs(classeur);
+  // 3 quinquies) Nouveau lien de réponse : régénérer tournoi_ref invalide les anciens liens
+  //              (un club qui ré-ouvre un lien de l'édition passée voit « Lien invalide »).
+  effacerParamGlobal(ongletConfig, 'tournoi_ref');
+  assurerTournoiRef(classeur);
 
   // 4) Le tournoi redevient masqué pour le public.
   ecrireParamGlobal(ongletConfig, 'tournoi_publie', 'non');

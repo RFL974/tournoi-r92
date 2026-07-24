@@ -252,13 +252,19 @@
       <section class="carte" id="bloc-clubs-invites">
         <h2>Clubs invités</h2>
         <p class="note-generation">
-          La liste des clubs à qui tu envoies le <strong>dossier d'invitation</strong>.
-          Ajoute un club avec son contact, puis fais évoluer son <strong>statut</strong>
-          (Invité → Confirmé ou Décliné) au fil des réponses.
+          La liste des clubs invités. Ajoute un club avec son contact, puis clique sur
+          <strong>✉️</strong> pour préparer l'email d'invitation (avec son <strong>lien de
+          réponse personnel</strong>). Le club répond lui-même : sa fiche passe alors à
+          <strong>Accepté</strong> ou <strong>Décliné</strong> et remonte en tête de liste.
+          Sur un club Accepté, <strong>« Générer le dossier final »</strong> crée ses équipes
+          dans l'onglet Équipes puis ouvre le brouillon d'email. Le crayon <strong>✏️</strong>
+          modifie les coordonnées. (Tu peux aussi changer le statut à la main si un club
+          répond par téléphone.)
         </p>
         <form id="form-club-invite" class="form-equipe">
           <input id="champ-club-nom" type="text" placeholder="Nom du club" autocomplete="off" required>
-          <input id="champ-club-contact" type="text" placeholder="Contact (nom)" autocomplete="off">
+          <input id="champ-club-prenom" type="text" placeholder="Prénom du contact" autocomplete="off">
+          <input id="champ-club-contact" type="text" placeholder="Nom du contact" autocomplete="off">
           <input id="champ-club-email" type="email" placeholder="Email du contact" autocomplete="off">
           <button type="submit" class="bouton" id="bouton-ajouter-club">Ajouter</button>
         </form>

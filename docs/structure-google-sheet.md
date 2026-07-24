@@ -126,11 +126,12 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `effectif_min` | `8` | **Optionnel** (dossier club). Effectif minimum par équipe (nb de joueurs). Si `effectif_min` et `effectif_max` sont saisis, min ≤ max (vérifié à l'enregistrement) |
 | `effectif_max` | `12` | **Optionnel** (dossier club). Effectif maximum par équipe (nb de joueurs) |
 | `arbitrage_organisation` | `Éducateurs des clubs` | **Optionnel** (dossier club). Qui arbitre les matchs. ⚠️ Nom volontairement distinct de l'« arbitrage » du code (assistant d'optimisation des horaires) |
+| `max_equipes_par_club` | `2` | **Optionnel** (Sprint 6). Nombre **maximum d'équipes** qu'un même club peut engager dans la catégorie. **Vide = illimité.** Sert à brider la saisie du club sur la page publique de réponse |
 
 > ℹ️ **Migration automatique** : `format_apresmidi`, `param_format`, `terrains_auto`, puis
-> `reglement`, `effectif_min`, `effectif_max` et `arbitrage_organisation` sont **ajoutées
-> automatiquement** à droite de la Zone B dès la première génération d'après-midi (ou enregistrement
-> de catégorie) sur un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement
+> `reglement`, `effectif_min`, `effectif_max`, `arbitrage_organisation` et `max_equipes_par_club`
+> sont **ajoutées automatiquement** à droite de la Zone B dès la première génération d'après-midi
+> (ou enregistrement de catégorie) sur un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement
 > croisé**, et sans `terrains_auto` = **mode Auto**, comme avant. Les colonnes « dossier club »
 > vides = champ non renseigné (aucun blocage).
 
@@ -150,6 +151,11 @@ Une ligne par équipe. En-têtes :
 | `nom_equipe` | `Suresnes 1` | Saisi par l'admin |
 | `categorie` | `U8` | Saisi par l'admin |
 | `poule` | `A` | **Auto** — rempli par « Générer poules et planning » |
+| `source` | `manuel` | **Auto** (Sprint 6). `manuel` = équipe ajoutée à la main ; `auto` = équipe **créée à l'envoi du dossier final** d'un club invité. **Vide = `manuel`** (rétrocompatibilité) |
+
+> ℹ️ **Migration automatique** : la colonne `source` est **ajoutée automatiquement** à droite dès
+> le premier ajout d'équipe (ou envoi de dossier final) sur un Sheet déjà en service. Les lignes
+> déjà présentes (sans `source`) comptent comme **`manuel`**.
 
 ---
 
@@ -249,16 +255,31 @@ gérée par la carte « **Clubs invités** » de la page admin.
 
 | Colonne | Exemple | Signification |
 |---|---|---|
-| `club_nom` | `MASSY` | Nom du club (sert de **clé** : pas de doublon, comparaison sans accents ni casse) |
-| `club_contact_nom` | `Camille Dupont` | Nom du contact au club (optionnel) |
+| `club_id` | `C01` | **Identifiant STABLE** (`C01`, `C02`…). Clé de toutes les opérations : le nom du club, lui, peut être modifié. Généré à l'ajout ; posé rétroactivement aux fiches héritées |
+| `club_nom` | `Massy` | Nom du club (casse **exacte** conservée — sert au nommage des équipes auto). Doublon refusé (comparaison sans accents ni casse) |
+| `club_contact_prenom` | `Camille` | Prénom du contact (optionnel) |
+| `club_contact_nom` | `Dupont` | Nom du contact (optionnel) |
 | `club_contact_email` | `contact@club.fr` | Email du contact (optionnel, format vérifié) |
-| `statut` | `Invité` | `Invité` (défaut) / `Confirmé` / `Décliné` — modifiable via le menu déroulant de l'admin |
+| `statut` | `Invité` | `Invité` (défaut) / `Accepté` / `Décliné`. Rempli **par la réponse du club** ou à la main. (L'ancien libellé `Confirmé` est relu comme `Accepté`.) |
 | `date_ajout` | `2026-07-23` | Posée automatiquement à l'ajout (AAAA-MM-JJ) |
+| `club_token` | `a1b2c3…` | **Jeton secret** unique — sécurise le lien de réponse public. Généré à l'ajout ; posé rétroactivement aux fiches héritées. ⚠️ Jamais renvoyé à la page publique |
+| `date_reponse` | `2026-08-11` | Posée à la **soumission du formulaire** (Accepté **ou** Décliné) |
+| `categories_engagees` | `U8,U10` | Catégories cochées par le club (liste séparée par des virgules) |
+| `nb_equipes_par_categorie` | `{"U8":2,"U10":1}` | **JSON** : nombre d'équipes engagées par catégorie |
+| `nb_joueurs_total` | `24` | Total de joueurs attendus, saisi par le club (informatif) |
+| `dossier_envoye` | `2026-08-12` | Posée quand **« Générer le dossier final »** a créé les équipes. Vide = pas encore traité |
+| `alerte_ecart` | `Club … a réduit …` | Message si un club a **réduit** son engagement après création des équipes (rien n'est supprimé automatiquement — vérification manuelle) |
 
-> 🛠️ **Création automatique.** L'onglet et son en-tête sont créés tout seuls au premier accès
-> (`assurerOngletClubsInvites`) — les `setupSheet()` neufs le créent déjà.
-> ✅ La **réinitialisation du tournoi** CONSERVE cette liste (carnet d'adresses réutilisable
-> d'une édition à l'autre) — seuls les statuts sont à remettre à jour à la main.
+> 🛠️ **Création automatique.** L'onglet et ses colonnes sont créés / complétés tout seuls au
+> premier accès (`assurerOngletClubsInvites`) — les `setupSheet()` neufs les créent déjà. Les
+> fiches héritées reçoivent un `club_id` et un `club_token` à la première ouverture de l'admin.
+> ✅ La **réinitialisation du tournoi** CONSERVE l'identité et les coordonnées (carnet d'adresses),
+> mais **remet à zéro les réponses** (statut, catégories, dossier envoyé…) : une nouvelle édition
+> repart d'une liste « Invité » propre, et les anciens liens de réponse deviennent invalides.
+
+> 🔗 **Lien de réponse.** Un paramètre global `tournoi_ref` (Zone A de `Config`) identifie
+> l'édition dans les liens `reponse-invitation.html?tournoi=…&club=…&token=…`. Il est régénéré à
+> chaque réinitialisation (les liens de l'édition précédente cessent alors de fonctionner).
 
 ---
 

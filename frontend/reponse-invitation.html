@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Répondre à l'invitation — Tournoi R92</title>
+  <meta name="description" content="Répondez à l'invitation du tournoi Génération R92 : confirmez votre participation et le nombre d'équipes engagées, ou déclinez.">
+  <!-- Page privée destinée aux clubs invités (lien personnalisé) : pas d'indexation. -->
+  <meta name="robots" content="noindex">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* Charte R92 (navy / ciel), page autonome pensée mobile d'abord. */
+    :root {
+      --navy: #0B2138;
+      --navy-2: #12314f;
+      --ciel: #38a7e0;
+      --ciel-clair: #d9eefb;
+      --ok: #1f8a4c;
+      --erreur: #c0392b;
+      --texte: #12314f;
+      --gris: #5b6b7d;
+      --fond: #f2f6fb;
+      --blanc: #ffffff;
+      --radius: 14px;
+      --ombre: 0 8px 30px rgba(11, 33, 56, .12);
+    }
+    * { box-sizing: border-box; }
+    /* Garantit que l'attribut [hidden] l'emporte, même sur un display:flex d'auteur. */
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      font-family: 'Barlow', system-ui, -apple-system, sans-serif;
+      color: var(--texte);
+      background: var(--fond);
+      line-height: 1.5;
+    }
+    .r-page { max-width: 640px; margin: 0 auto; padding: 20px 16px 48px; }
+    .r-carte { background: var(--blanc); border-radius: var(--radius); box-shadow: var(--ombre); overflow: hidden; }
+
+    /* En-tête */
+    .r-entete { background: linear-gradient(160deg, var(--navy), var(--navy-2)); color: #fff; text-align: center; padding: 24px 20px; }
+    .r-affiche { max-width: 200px; width: 60%; border-radius: 10px; margin: 0 auto 14px; display: block; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+    .r-entete h1 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; letter-spacing: .5px; font-size: 2rem; margin: 0 0 6px; line-height: 1.05; }
+    .r-date { margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 1.15rem; text-transform: capitalize; color: var(--ciel-clair); }
+    .r-lieu { margin: 4px 0 0; color: var(--ciel-clair); opacity: .9; }
+
+    /* Blocs de contenu */
+    .r-choix, .r-form { padding: 22px 20px; }
+    .r-bonjour { font-weight: 600; font-size: 1.1rem; margin: 0 0 6px; }
+    .r-limite { background: var(--ciel-clair); color: var(--navy); border-radius: 10px; padding: 8px 12px; margin: 12px 0; }
+    .r-deja { background: #fff7e6; border: 1px solid #f0d089; color: #7a5b12; border-radius: 10px; padding: 8px 12px; margin: 12px 0; font-size: .95rem; }
+    h2 { font-family: 'Barlow Condensed', sans-serif; color: var(--navy); font-size: 1.5rem; margin: 0 0 10px; }
+    .r-aide { color: var(--gris); margin: 0 0 16px; }
+
+    /* Boutons */
+    .r-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 1.15rem; font-weight: 600; border: none; border-radius: 12px; padding: 14px 18px; cursor: pointer; transition: transform .05s ease, box-shadow .15s ease, background .15s ease; }
+    .r-btn:active { transform: translateY(1px); }
+    .r-choix-boutons { display: grid; gap: 12px; margin-top: 16px; }
+    .r-btn-oui { background: var(--ciel); color: #fff; }
+    .r-btn-oui:hover { background: #2b93c9; }
+    .r-btn-non { background: #eef2f7; color: var(--navy); border: 1.5px solid #d3dced; }
+    .r-btn-non:hover { background: #e4eaf3; }
+    .r-btn-principal { background: var(--ok); color: #fff; }
+    .r-btn-principal:hover { background: #196e3d; }
+    .r-btn-principal:disabled { background: #9bbfa8; cursor: default; }
+    .r-btn-lien { background: none; color: var(--gris); padding: 10px; text-decoration: underline; }
+    .r-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+
+    /* Catégories */
+    .r-cat { border: 1.5px solid #e1e8f1; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; transition: border-color .15s ease, background .15s ease; }
+    .r-cat-active { border-color: var(--ciel); background: #f6fbfe; }
+    .r-cat-tete { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; }
+    .r-cat-check { width: 20px; height: 20px; accent-color: var(--ciel); }
+    .r-cat-nom { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; color: var(--navy); }
+    .r-cat-nb { margin-top: 10px; padding-left: 30px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+    .r-cat-nb label { display: flex; align-items: center; gap: 8px; color: var(--gris); }
+    .r-cat-nb input, #nb-joueurs { width: 90px; font-size: 1.05rem; padding: 8px 10px; border: 1.5px solid #cdd8e6; border-radius: 8px; font-family: inherit; }
+    .r-cat-nb input:focus, #nb-joueurs:focus { outline: none; border-color: var(--ciel); }
+    .r-cat-max { color: var(--gris); font-size: .85rem; }
+    .r-cat-alerte { color: var(--erreur); font-size: .85rem; width: 100%; }
+    .r-vide { color: var(--gris); }
+
+    .r-joueurs { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0 4px; font-weight: 600; color: var(--navy); }
+
+    .r-erreur-form { color: var(--erreur); font-weight: 600; margin: 12px 0 0; min-height: 1.2em; }
+
+    /* Messages pleine carte (erreur lien / merci) */
+    .bloc-msg { padding: 28px 22px; text-align: center; }
+    .bloc-msg h1, .bloc-msg h2 { font-family: 'Barlow Condensed', sans-serif; }
+    .bloc-erreur h1 { color: var(--erreur); }
+    .bloc-ok h2 { color: var(--ok); }
+    .bloc-msg p { color: var(--gris); font-size: 1.05rem; }
+
+    .r-pied { text-align: center; color: var(--gris); font-size: .8rem; margin-top: 18px; }
+
+    @media (max-width: 420px) {
+      .r-entete h1 { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="r-page">
+    <div class="r-carte" id="contenu">
+      <div class="bloc-msg"><p>Chargement…</p></div>
+    </div>
+    <p class="r-pied">Tournoi Génération R92 — réponse à l'invitation</p>
+  </main>
+
+  <!-- Même ordre que les autres pages : config → commun (echapper) → api → logique de page. -->
+  <script src="js/config.js"></script>
+  <script src="js/commun.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/reponse.js"></script>
+</body>
+</html>

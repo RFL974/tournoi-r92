@@ -25,7 +25,10 @@ const CHAMPS_CATEGORIE = [
   { cle: 'reglement',              label: 'Règlement (texte ou lien)', type: 'text', placeholder: 'Ex : règles FFR M10 ou https://…' },
   { cle: 'effectif_min',           label: 'Effectif min (joueurs)',    type: 'number' },
   { cle: 'effectif_max',           label: 'Effectif max (joueurs)',    type: 'number' },
-  { cle: 'arbitrage_organisation', label: 'Arbitrage (qui arbitre ?)', type: 'text', placeholder: 'Ex : éducateurs des clubs' }
+  { cle: 'arbitrage_organisation', label: 'Arbitrage (qui arbitre ?)', type: 'text', placeholder: 'Ex : éducateurs des clubs' },
+  // Plafond d'équipes qu'un même club peut engager dans la catégorie (Sprint 6). Vide = illimité.
+  // Utilisé pour brider la saisie du club sur la page publique de réponse.
+  { cle: 'max_equipes_par_club',   label: 'Max équipes / club',        type: 'number', placeholder: 'Illimité' }
 ];
 
 /* Formats d'après-midi proposés (choisis AU PARAMÉTRAGE, avant le jour J), avec une
@@ -874,8 +877,22 @@ async function onRetirerPhotoParking() {
    protégée par la clé admin (jamais dans le snapshot public getAll / CDN).
    -------------------------------------------------------------------------- */
 
-/* Statuts admis (mêmes formes canoniques que le backend). */
-const STATUTS_CLUB_INVITE = ['Invité', 'Confirmé', 'Décliné'];
+/* Statuts admis (mêmes formes canoniques que le backend). « Accepté » remplace « Confirmé ». */
+const STATUTS_CLUB_INVITE = ['Invité', 'Accepté', 'Décliné'];
+
+/* Identifiant de tournoi (tournoi_ref) renvoyé par listerClubsInvites — sert à construire
+   les liens de réponse personnalisés. Rempli à chaque chargement de la liste. */
+let tournoiRefCourant = '';
+/* club_id en cours d'édition inline (coordonnées), ou null. */
+let clubEnEdition = null;
+
+/** Statut canonique côté admin (rétrocompat : « Confirmé » → « Accepté »). */
+function statutClubCanon(statut) {
+  if (memeTexteSouple(statut, 'Confirmé')) return 'Accepté';
+  if (memeTexteSouple(statut, 'Accepté')) return 'Accepté';
+  if (memeTexteSouple(statut, 'Décliné')) return 'Décliné';
+  return 'Invité';
+}
 
 /** Compare deux textes sans accents ni casse (piège NFC/NFD du Sheet : « Invité »
  *  peut revenir avec un é décomposé — même précaution que estTermine). */
@@ -893,6 +910,7 @@ async function chargerClubsInvites() {
   try {
     const res = await ecrireAdmin('listerClubsInvites', {});
     clubsInvitesCourants = (res && res.clubs) || [];
+    tournoiRefCourant = (res && res.tournoi_ref) || '';
     afficherClubsInvites();
   } catch (erreur) {
     zone.innerHTML = '<p class="vide">⚠️ Impossible de charger les clubs invités : '
@@ -902,12 +920,121 @@ async function chargerClubsInvites() {
 
 /** Pastille d'état d'un statut (couleur portée par une classe CSS). */
 function classeStatutClub(statut) {
-  if (memeTexteSouple(statut, 'Confirmé')) return 'est-confirme';
-  if (memeTexteSouple(statut, 'Décliné'))  return 'est-decline';
+  const st = statutClubCanon(statut);
+  if (st === 'Accepté') return 'est-confirme';
+  if (st === 'Décliné') return 'est-decline';
   return 'est-invite';
 }
 
-/** Affiche la liste des clubs invités (nom, contact, statut modifiable, suppression). */
+/** Club courant par son id stable. */
+function clubCourantParId(id) {
+  return clubsInvitesCourants.find(function (c) { return String(c.club_id || '') === String(id); });
+}
+
+/**
+ * Rang de tri d'un club (point 6a) :
+ *   0 = Accepté sans dossier envoyé (ACTION REQUISE, en haut)
+ *   1 = Invité / sans réponse
+ *   2 = Décliné
+ *   3 = Accepté avec dossier envoyé (déjà traité, en bas)
+ */
+function rangClub(club) {
+  const st = statutClubCanon(club.statut);
+  const envoye = String(club.dossier_envoye || '').trim() !== '';
+  if (st === 'Accepté') return envoye ? 3 : 0;
+  if (st === 'Décliné') return 2;
+  return 1;
+}
+
+/** Résumé de l'engagement d'un club Accepté : « U8 × 2, U10 × 1 — 24 joueurs » (ou ''). */
+function resumeEngagement(club) {
+  const cats = String(club.categories_engagees || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  let nbMap = {};
+  try { nbMap = JSON.parse(club.nb_equipes_par_categorie || '{}') || {}; } catch (e) { nbMap = {}; }
+  const listeCats = cats.length ? cats : Object.keys(nbMap);
+  if (!listeCats.length) return '';
+  const morceaux = listeCats.map(function (c) {
+    const n = parseInt(nbMap[c], 10);
+    return echapper(c) + (isFinite(n) ? ' × ' + n : '');
+  }).join(', ');
+  const joueurs = parseInt(club.nb_joueurs_total, 10);
+  const jTxt = isFinite(joueurs) ? ' — ' + joueurs + ' joueur' + (joueurs > 1 ? 's' : '') : '';
+  return morceaux + jTxt;
+}
+
+/** Ligne d'un club en mode LECTURE. */
+function htmlClubLecture(club) {
+  const id = String(club.club_id || '');
+  const nom = String(club.club_nom || '');
+  const st = statutClubCanon(club.statut);
+  const contactTxt = [club.club_contact_prenom, club.club_contact_nom, club.club_contact_email]
+    .map(function (v) { return String(v || '').trim(); }).filter(Boolean).join(' · ');
+
+  const options = STATUTS_CLUB_INVITE.map(function (s) {
+    return '<option value="' + echapper(s) + '"' + (st === s ? ' selected' : '') + '>' + echapper(s) + '</option>';
+  }).join('');
+
+  // Détails de la réponse (Accepté) : catégories engagées + équipes + joueurs.
+  let detail = '';
+  if (st === 'Accepté') {
+    const resume = resumeEngagement(club);
+    if (resume) detail += '<span class="club-engagement">' + resume + '</span>';
+  }
+  // Badges : alerte d'écart + dossier déjà envoyé.
+  let badges = '';
+  if (String(club.alerte_ecart || '').trim()) {
+    badges += '<span class="club-badge badge-alerte" tabindex="0" role="button" ' +
+      'title="' + echapper(club.alerte_ecart) + '" data-id="' + echapper(id) + '">⚠️ Écart d\'engagement</span>';
+  }
+  if (String(club.dossier_envoye || '').trim()) {
+    badges += '<span class="club-badge badge-envoye">✅ Dossier envoyé le ' + echapper(club.dossier_envoye) + '</span>';
+  }
+
+  // Actions.
+  let actions = '<select class="statut-club" data-id="' + echapper(id) + '" aria-label="Statut de ' + echapper(nom) + '">' + options + '</select>';
+  if (st === 'Accepté' && !String(club.dossier_envoye || '').trim()) {
+    actions += '<button class="bouton btn-dossier-final" data-id="' + echapper(id) + '">📄 Générer le dossier final</button>';
+  } else if (st === 'Accepté') {
+    actions += '<button class="bouton bouton-discret btn-dossier-final" data-id="' + echapper(id) + '" title="Renvoyer / recréer les équipes manquantes">📄 Dossier</button>';
+  }
+  if (club.club_contact_email) {
+    actions += '<button class="bouton-icone btn-inviter-club" data-id="' + echapper(id) + '" title="Préparer l\'email d\'invitation" aria-label="Inviter">✉️</button>';
+  }
+  actions += '<button class="bouton-icone btn-editer-club" data-id="' + echapper(id) + '" title="Modifier les coordonnées" aria-label="Modifier">✏️</button>';
+  actions += '<button class="bouton-suppr bouton-icone bouton-suppr-club" data-id="' + echapper(id) + '" title="Retirer" aria-label="Retirer">🗑️</button>';
+
+  return '<div class="equipe-item club-invite-item ' + classeStatutClub(club.statut) + '" data-id="' + echapper(id) + '">' +
+      '<span class="nom">' + echapper(nom) +
+        (contactTxt ? '<span class="club-contact">' + echapper(contactTxt) + '</span>' : '') +
+        detail + (badges ? '<span class="club-badges">' + badges + '</span>' : '') +
+      '</span>' +
+      '<div class="equipe-actions">' + actions + '</div>' +
+    '</div>';
+}
+
+/** Ligne d'un club en mode ÉDITION inline (coordonnées uniquement). */
+function htmlClubEdition(club) {
+  const id = String(club.club_id || '');
+  const dejaRepondu = String(club.date_reponse || '').trim() !== '';
+  const avert = dejaRepondu
+    ? '<p class="club-edit-avert">Ce club a déjà répondu à cette adresse : la modifier n\'affecte pas sa réponse déjà enregistrée.</p>'
+    : '';
+  return '<div class="equipe-item club-invite-item club-en-edition" data-id="' + echapper(id) + '">' +
+      '<div class="club-edit-champs">' +
+        '<input class="club-edit-nom" type="text" value="' + echapper(club.club_nom || '') + '" placeholder="Nom du club" aria-label="Nom du club">' +
+        '<input class="club-edit-prenom" type="text" value="' + echapper(club.club_contact_prenom || '') + '" placeholder="Prénom du contact" aria-label="Prénom du contact">' +
+        '<input class="club-edit-contact" type="text" value="' + echapper(club.club_contact_nom || '') + '" placeholder="Nom du contact" aria-label="Nom du contact">' +
+        '<input class="club-edit-email" type="email" value="' + echapper(club.club_contact_email || '') + '" placeholder="Email du contact" aria-label="Email du contact">' +
+        avert +
+      '</div>' +
+      '<div class="equipe-actions">' +
+        '<button class="bouton btn-enregistrer-edition" data-id="' + echapper(id) + '">Enregistrer</button>' +
+        '<button class="bouton bouton-discret btn-annuler-edition" data-id="' + echapper(id) + '">Annuler</button>' +
+      '</div>' +
+    '</div>';
+}
+
+/** Affiche la liste des clubs invités, triée (action requise en haut, traités en bas). */
 function afficherClubsInvites() {
   const zone = document.getElementById('liste-clubs-invites');
   if (!zone) return;
@@ -917,40 +1044,29 @@ function afficherClubsInvites() {
     return;
   }
 
-  let html = '';
-  clubsInvitesCourants.forEach(function (club) {
-    const nom = String(club.club_nom || '');
-    const contact = [club.club_contact_nom, club.club_contact_email].filter(Boolean).join(' · ');
-    const options = STATUTS_CLUB_INVITE.map(function (s) {
-      return '<option value="' + echapper(s) + '"' +
-        (memeTexteSouple(club.statut, s) ? ' selected' : '') + '>' + echapper(s) + '</option>';
-    }).join('');
-    html +=
-      '<div class="equipe-item club-invite-item ' + classeStatutClub(club.statut) + '" data-club="' + echapper(nom) + '">' +
-        '<span class="nom">' + echapper(nom) +
-          (contact ? '<span class="club-contact">' + echapper(contact) + '</span>' : '') +
-        '</span>' +
-        '<div class="equipe-actions">' +
-          '<select class="statut-club" data-club="' + echapper(nom) + '" ' +
-                  'aria-label="Statut de ' + echapper(nom) + '">' + options + '</select>' +
-          '<button class="bouton-suppr bouton-icone bouton-suppr-club" title="Retirer" aria-label="Retirer" ' +
-                  'data-club="' + echapper(nom) + '">🗑️</button>' +
-        '</div>' +
-      '</div>';
+  const tries = clubsInvitesCourants.slice().sort(function (a, b) {
+    const ra = rangClub(a), rb = rangClub(b);
+    if (ra !== rb) return ra - rb;
+    return String(a.club_nom || '').localeCompare(String(b.club_nom || ''), 'fr');
   });
-  zone.innerHTML = html;
+
+  zone.innerHTML = tries.map(function (club) {
+    return (String(club.club_id || '') === String(clubEnEdition))
+      ? htmlClubEdition(club) : htmlClubLecture(club);
+  }).join('');
 }
 
-/** Ajoute un club invité (statut initial « Invité », date d'ajout posée par le backend). */
+/** Ajoute un club invité (statut initial « Invité »). Le nom garde sa casse exacte (Sprint 6). */
 async function onAjouterClubInvite(evenement) {
   evenement.preventDefault();
   const champNom = document.getElementById('champ-club-nom');
+  const champPrenom = document.getElementById('champ-club-prenom');
   const champContact = document.getElementById('champ-club-contact');
   const champEmail = document.getElementById('champ-club-email');
   const bouton = document.getElementById('bouton-ajouter-club');
   const message = document.getElementById('message-club-invite');
 
-  const nom = champNom.value.trim().toUpperCase(); // comme les équipes : noms en MAJUSCULES
+  const nom = champNom.value.trim(); // casse EXACTE conservée (sert au nommage des équipes)
   if (!nom) { afficherMessage(message, 'Indique le nom du club.', 'ko'); return; }
 
   const doublon = clubsInvitesCourants.some(function (c) { return memeTexteSouple(c.club_nom, nom); });
@@ -964,10 +1080,12 @@ async function onAjouterClubInvite(evenement) {
   try {
     await ecrireAdmin('ajouterClubInvite', {
       club_nom: nom,
+      club_contact_prenom: champPrenom ? champPrenom.value.trim() : '',
       club_contact_nom: champContact.value.trim(),
       club_contact_email: champEmail.value.trim()
     });
-    champNom.value = ''; champContact.value = ''; champEmail.value = '';
+    champNom.value = ''; if (champPrenom) champPrenom.value = '';
+    champContact.value = ''; champEmail.value = '';
     champNom.focus();
     afficherMessage(message, '✅ « ' + nom + ' » ajouté (statut : Invité).', 'ok');
     await chargerClubsInvites();
@@ -979,41 +1097,195 @@ async function onAjouterClubInvite(evenement) {
   }
 }
 
-/** Changement de statut via le menu déroulant d'un club (enregistrement immédiat). */
+/** Changement de statut via le menu déroulant d'un club (enregistrement immédiat). Clé = club_id.
+ *  ⚠️ Passer manuellement à « Accepté » NE CRÉE PAS d'équipes : elles ne sont créées qu'au clic
+ *  sur « Générer le dossier final » (point 6d). */
 async function onChangerStatutClub(evenement) {
   const select = evenement.target.closest('.statut-club');
   if (!select) return;
-  const nom = select.getAttribute('data-club');
+  const id = select.getAttribute('data-id');
   const message = document.getElementById('message-club-invite');
   select.disabled = true;
   try {
-    await ecrireAdmin('modifierStatutClubInvite', { club_nom: nom, statut: select.value });
-    const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
+    await ecrireAdmin('modifierStatutClubInvite', { club_id: id, statut: select.value });
+    const club = clubCourantParId(id);
     if (club) club.statut = select.value;
-    afficherClubsInvites(); // la pastille de couleur suit le nouveau statut
-    afficherMessage(message, '✅ « ' + nom + ' » → ' + select.value + '.', 'ok');
+    afficherClubsInvites(); // couleur + tri + actions suivent le nouveau statut
+    afficherMessage(message, '✅ Statut mis à jour → ' + select.value + '.', 'ok');
   } catch (erreur) {
     afficherClubsInvites(); // revient à l'état connu si l'enregistrement a échoué
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   }
 }
 
-/** Clic dans la liste des clubs : bouton de suppression. */
+/* -------- Liens & emails (aperçu manuel, aucun envoi automatique) -------- */
+
+/** Lien de réponse personnalisé d'un club (page publique + jeton). */
+function lienReponseClub(club) {
+  const url = new URL('reponse-invitation.html', window.location.href);
+  url.searchParams.set('tournoi', tournoiRefCourant || '');
+  url.searchParams.set('club', String(club.club_id || ''));
+  url.searchParams.set('token', String(club.club_token || ''));
+  return url.toString();
+}
+
+/** Lien vers le dossier d'invitation (page « lecture seule », commune à tous les clubs). */
+function lienDossierClub() {
+  return new URL('dossier-club.html', window.location.href).toString();
+}
+
+/** Ouvre le client mail de l'organisateur avec un brouillon prérempli (envoi MANUEL). */
+function ouvrirBrouillonEmail(email, sujet, corps) {
+  const href = 'mailto:' + encodeURIComponent(email || '') +
+    '?subject=' + encodeURIComponent(sujet) + '&body=' + encodeURIComponent(corps);
+  const a = document.createElement('a');
+  a.href = href;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+/** Prépare (aperçu) l'email d'INVITATION d'un club, avec le lien de réponse personnalisé. */
+function preparerEmailInvitation(club) {
+  const g = (configCourante && configCourante.global) || {};
+  const nomTournoi = String(g.tournoi_nom || 'Tournoi Génération R92');
+  const dateTxt = g.tournoi_date ? (' le ' + g.tournoi_date) : '';
+  const bonjour = club.club_contact_prenom ? ('Bonjour ' + club.club_contact_prenom) : 'Bonjour';
+  const corps = bonjour + ',\n\n' +
+    'Le club ' + (club.club_nom || '') + ' est invité au ' + nomTournoi + dateTxt + '.\n\n' +
+    'Pour nous indiquer si vous serez présents et le nombre d\'équipes engagées, cliquez sur votre lien personnel :\n' +
+    lienReponseClub(club) + '\n\n' +
+    'Le dossier d\'invitation (infos pratiques, format, accès) est consultable ici :\n' +
+    lienDossierClub() + '\n\n' +
+    'Sportivement,\nL\'organisation du ' + nomTournoi;
+  ouvrirBrouillonEmail(club.club_contact_email, 'Invitation — ' + nomTournoi, corps);
+}
+
+/** Prépare (aperçu) l'email de DOSSIER FINAL d'un club (après création des équipes). */
+function preparerEmailDossierFinal(club) {
+  const g = (configCourante && configCourante.global) || {};
+  const nomTournoi = String(g.tournoi_nom || 'Tournoi Génération R92');
+  const bonjour = club.club_contact_prenom ? ('Bonjour ' + club.club_contact_prenom) : 'Bonjour';
+  const corps = bonjour + ',\n\n' +
+    'Merci pour votre engagement au ' + nomTournoi + ' — votre participation est confirmée.\n\n' +
+    'Voici votre dossier complet (programme, horaires, format sportif, accès) :\n' +
+    lienDossierClub() + '\n\n' +
+    'À très bientôt,\nL\'organisation du ' + nomTournoi;
+  ouvrirBrouillonEmail(club.club_contact_email, 'Dossier — ' + nomTournoi, corps);
+}
+
+/* -------- Actions au clic dans la liste (délégation) -------- */
+
+/** Clic dans la liste : suppression, édition (crayon), enregistrer/annuler, dossier final, inviter. */
 async function onClicClubsInvites(evenement) {
-  const bouton = evenement.target.closest('.bouton-suppr-club');
-  if (!bouton) return;
-  const nom = bouton.getAttribute('data-club');
+  const cible = evenement.target;
   const message = document.getElementById('message-club-invite');
-  if (!await dialogConfirmer('Retirer le club « ' + nom + ' » de la liste des invités ?',
-               { ok: 'Retirer', danger: true })) return;
-  bouton.disabled = true;
+
+  // Édition inline : basculer en édition.
+  const btnEdit = cible.closest('.btn-editer-club');
+  if (btnEdit) { clubEnEdition = btnEdit.getAttribute('data-id'); afficherClubsInvites(); return; }
+
+  // Annuler l'édition.
+  const btnAnnul = cible.closest('.btn-annuler-edition');
+  if (btnAnnul) { clubEnEdition = null; afficherClubsInvites(); return; }
+
+  // Enregistrer l'édition (coordonnées).
+  const btnSave = cible.closest('.btn-enregistrer-edition');
+  if (btnSave) { await enregistrerEditionClub(btnSave.getAttribute('data-id')); return; }
+
+  // Aperçu email d'invitation.
+  const btnInvite = cible.closest('.btn-inviter-club');
+  if (btnInvite) {
+    const club = clubCourantParId(btnInvite.getAttribute('data-id'));
+    if (club) preparerEmailInvitation(club);
+    return;
+  }
+
+  // Badge d'alerte : afficher le détail.
+  const badge = cible.closest('.badge-alerte');
+  if (badge) {
+    const club = clubCourantParId(badge.getAttribute('data-id'));
+    if (club) await dialogAlerter(String(club.alerte_ecart || ''));
+    return;
+  }
+
+  // Générer le dossier final (crée les équipes puis ouvre l'aperçu email).
+  const btnDossier = cible.closest('.btn-dossier-final');
+  if (btnDossier) { await onGenererDossierFinal(btnDossier); return; }
+
+  // Suppression.
+  const btnSuppr = cible.closest('.bouton-suppr-club');
+  if (btnSuppr) {
+    const id = btnSuppr.getAttribute('data-id');
+    const club = clubCourantParId(id);
+    const nom = club ? club.club_nom : '';
+    if (!await dialogConfirmer('Retirer le club « ' + nom + ' » de la liste des invités ?',
+                 { ok: 'Retirer', danger: true })) return;
+    btnSuppr.disabled = true;
+    try {
+      await ecrireAdmin('supprimerClubInvite', { club_id: id });
+      afficherMessage(message, '🗑️ « ' + nom + ' » retiré.', 'ok');
+      await chargerClubsInvites();
+    } catch (erreur) {
+      afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+      btnSuppr.disabled = false;
+    }
+  }
+}
+
+/** Enregistre les coordonnées éditées d'un club (validation email + nom non vide). */
+async function enregistrerEditionClub(id) {
+  const message = document.getElementById('message-club-invite');
+  const ligne = document.querySelector('.club-en-edition[data-id="' + id + '"]');
+  if (!ligne) return;
+  const nom = ligne.querySelector('.club-edit-nom').value.trim();
+  const prenom = ligne.querySelector('.club-edit-prenom').value.trim();
+  const contact = ligne.querySelector('.club-edit-contact').value.trim();
+  const email = ligne.querySelector('.club-edit-email').value.trim();
+  if (!nom) { afficherMessage(message, 'Le nom du club ne peut pas être vide.', 'ko'); return; }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    afficherMessage(message, 'Email du contact invalide.', 'ko'); return;
+  }
+  const btn = ligne.querySelector('.btn-enregistrer-edition');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
   try {
-    await ecrireAdmin('supprimerClubInvite', { club_nom: nom });
-    afficherMessage(message, '🗑️ « ' + nom + ' » retiré.', 'ok');
+    await ecrireAdmin('modifierClubInvite', {
+      club_id: id, club_nom: nom, club_contact_prenom: prenom,
+      club_contact_nom: contact, club_contact_email: email
+    });
+    clubEnEdition = null;
+    afficherMessage(message, '✅ Coordonnées mises à jour.', 'ok');
     await chargerClubsInvites();
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
-    bouton.disabled = false;
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
+}
+
+/** « Générer le dossier final » : crée les équipes (backend) PUIS ouvre l'aperçu email. */
+async function onGenererDossierFinal(bouton) {
+  const id = bouton.getAttribute('data-id');
+  const club = clubCourantParId(id);
+  const message = document.getElementById('message-club-invite');
+  if (!club) return;
+  if (!await dialogConfirmer(
+      'Générer le dossier final pour « ' + club.club_nom + ' » ?\n\n' +
+      'Les équipes engagées seront créées dans l\'onglet Équipes, puis un brouillon d\'email s\'ouvrira.',
+      { ok: 'Générer' })) return;
+  bouton.disabled = true; const libelle = bouton.textContent; bouton.textContent = 'Création…';
+  try {
+    const res = await ecrireAdmin('genererDossierFinal', { club_id: id });
+    const creees = (res && res.equipes_creees) || [];
+    let txt = creees.length
+      ? '✅ ' + creees.length + ' équipe(s) créée(s) : ' + creees.map(function (e) { return e.nom; }).join(', ') + '.'
+      : '✅ Aucune nouvelle équipe à créer (déjà à jour).';
+    if (res && res.alerte) txt += ' ⚠️ ' + res.alerte;
+    afficherMessage(message, txt, 'ok');
+    preparerEmailDossierFinal(club);   // aperçu email (envoi manuel)
+    await chargerClubsInvites();       // le club passe en « déjà traité », badge dossier envoyé
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    bouton.disabled = false; bouton.textContent = libelle;
   }
 }
 
