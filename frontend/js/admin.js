@@ -106,6 +106,70 @@ function estPresente(cat) {
   return String(cat.presente).toLowerCase() === 'oui';
 }
 
+/* --------------------------------------------------------------------------
+   HELPERS PARTAGÉS entre plusieurs modules admin (image / affiche). Placés dans le
+   NOYAU (chargé en premier) car appelés par admin-infos-publication.js (affiche),
+   admin-invitations.js (parking) et initAdmin (câblage des zones de dépôt).
+   -------------------------------------------------------------------------- */
+
+/** URL d'affichage d'une affiche stockée dans Drive (CDN lh3, largeur maxi w).
+ *  lh3.googleusercontent.com (et non drive.google.com/thumbnail, qui bloque le hotlinking). */
+function urlAffiche(id, largeur) {
+  return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (largeur || 1000);
+}
+
+/**
+ * Câble une zone d'image (affiche du tournoi / photo de parking) : sélecteur de fichier
+ * (change) + glisser-déposer (dragover/dragleave/drop), avec aperçu immédiat via `traiter`.
+ * Le CLIC d'ouverture reste natif (zone dans un <label>).
+ * @param {Object} cfg { champFichier: sélecteur CSS de l'<input file>, zoneDepot: id de la zone,
+ *                        traiter: fonction(fichier) }
+ */
+function brancherZoneImage(cfg) {
+  const input = document.querySelector(cfg.champFichier);
+  if (input) input.addEventListener('change', function (e) {
+    cfg.traiter(e.target.files && e.target.files[0]);
+  });
+  const zone = document.getElementById(cfg.zoneDepot);
+  if (!zone) return;
+  zone.addEventListener('dragover', function (e) {
+    e.preventDefault(); // sinon le navigateur OUVRE le fichier au lieu de le déposer
+    zone.classList.add('est-survolee');
+  });
+  zone.addEventListener('dragleave', function () { zone.classList.remove('est-survolee'); });
+  zone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    zone.classList.remove('est-survolee');
+    cfg.traiter(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+  });
+}
+
+/**
+ * Redimensionne une image (fichier) à `maxDim` px max sur le plus grand côté et renvoie
+ * un Data URI JPEG (qualité 0..1). Allège fortement le poids avant l'envoi au backend.
+ */
+function redimensionnerImage(fichier, maxDim, qualite) {
+  return new Promise(function (resoudre, rejeter) {
+    const img = new Image();
+    img.onload = function () {
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resoudre(canvas.toDataURL('image/jpeg', qualite));
+    };
+    img.onerror = rejeter;
+    const lecteur = new FileReader();
+    lecteur.onload = function (e) { img.src = e.target.result; };
+    lecteur.onerror = rejeter;
+    lecteur.readAsDataURL(fichier);
+  });
+}
+
 /**
  * Au chargement de la page : on récupère tout (config + équipes) en un appel,
  * puis on remplit la page.

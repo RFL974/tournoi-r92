@@ -53,11 +53,8 @@ function majInfosTournoi() {
   majApercuTournoi(); // l'aperçu « carte du site » suit les infos affichées
 }
 
-/** URL d'affichage d'une affiche stockée dans Drive (CDN lh3, largeur maxi w).
- *  lh3.googleusercontent.com (et non drive.google.com/thumbnail, qui bloque le hotlinking). */
-function urlAffiche(id, largeur) {
-  return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (largeur || 1000);
-}
+/* urlAffiche(), brancherZoneImage() et redimensionnerImage() — helpers partagés — sont
+   désormais dans admin.js (noyau), utilisés aussi par admin-invitations.js (parking). */
 
 /* --------------------------------------------------------------------------
    APERÇU DE PUBLICATION — réplique EXACTE de la carte d'actualité du site
@@ -174,34 +171,6 @@ async function traiterFichierAffiche(fichier) {
 }
 
 /**
- * Câble une zone d'image (affiche du tournoi / photo de parking) : sélecteur de fichier
- * (change) + glisser-déposer (dragover/dragleave/drop), avec aperçu immédiat via `traiter`.
- * Avant, ce câblage + les handlers onChoisir/onDeposer existaient en DOUBLE (affiche/parking) ;
- * seuls diffèrent les ids et la fonction `traiter` (qui, elle, garde sa logique propre :
- * variable d'aperçu, message, callbacks). Le CLIC d'ouverture reste natif (zone dans un <label>).
- * @param {Object} cfg { champFichier: sélecteur CSS de l'<input file>, zoneDepot: id de la zone,
- *                        traiter: fonction(fichier) }
- */
-function brancherZoneImage(cfg) {
-  const input = document.querySelector(cfg.champFichier);
-  if (input) input.addEventListener('change', function (e) {
-    cfg.traiter(e.target.files && e.target.files[0]);
-  });
-  const zone = document.getElementById(cfg.zoneDepot);
-  if (!zone) return;
-  zone.addEventListener('dragover', function (e) {
-    e.preventDefault(); // sinon le navigateur OUVRE le fichier au lieu de le déposer
-    zone.classList.add('est-survolee');
-  });
-  zone.addEventListener('dragleave', function () { zone.classList.remove('est-survolee'); });
-  zone.addEventListener('drop', function (e) {
-    e.preventDefault();
-    zone.classList.remove('est-survolee');
-    cfg.traiter(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
-  });
-}
-
-/**
  * Retire l'affiche. Deux cas :
  *   1) une image vient d'être choisie mais pas encore enregistrée → on annule le choix (local) ;
  *   2) une affiche est déjà enregistrée → suppression backend (fichier Drive + Config).
@@ -235,32 +204,6 @@ async function onRetirerAffiche() {
   } finally {
     bouton.disabled = false;
   }
-}
-
-/**
- * Redimensionne une image (fichier) à `maxDim` px max sur le plus grand côté et renvoie
- * un Data URI JPEG (qualité 0..1). Allège fortement le poids avant l'envoi au backend.
- */
-function redimensionnerImage(fichier, maxDim, qualite) {
-  return new Promise(function (resoudre, rejeter) {
-    const img = new Image();
-    img.onload = function () {
-      let w = img.width, h = img.height;
-      if (w > maxDim || h > maxDim) {
-        if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
-        else { w = Math.round(w * maxDim / h); h = maxDim; }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resoudre(canvas.toDataURL('image/jpeg', qualite));
-    };
-    img.onerror = rejeter;
-    const lecteur = new FileReader();
-    lecteur.onload = function (e) { img.src = e.target.result; };
-    lecteur.onerror = rejeter;
-    lecteur.readAsDataURL(fichier);
-  });
 }
 
 /** Lit les infos saisies dans le formulaire (nom / date / lieu / description). */
