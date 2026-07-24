@@ -8,7 +8,19 @@
  * ============================================================================
  */
 
-var SHEET_ID = '17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U';
+/* Identifiant du Google Sheet source. La constante ci-dessous est le DÉFAUT ; si la propriété
+   de script `SHEET_ID` est renseignée (Paramètres du projet → Propriétés du script), elle a la
+   PRIORITÉ — pratique pour la PASSATION (migrer vers un autre Sheet sans toucher au code) et
+   cohérent avec la config du relais CDN, déjà dans les propriétés. */
+var SHEET_ID_DEFAUT = '17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U';
+
+/** Renvoie l'ID du Sheet : propriété de script `SHEET_ID` si définie, sinon la constante. */
+function sheetId() {
+  try {
+    var v = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+    return (v && String(v).trim()) ? String(v).trim() : SHEET_ID_DEFAUT;
+  } catch (e) { return SHEET_ID_DEFAUT; }
+}
 
 var ENTETES = {
   // source : 'manuel' (équipe ajoutée à la main) ou 'auto' (créée à l'envoi du dossier final
@@ -60,7 +72,7 @@ var COULEUR_TEXTE_ENTETE = '#F2F6FB';
 
 /* ⚠️ À ne lancer qu'une fois. Relancer réécrirait l'onglet Config avec les exemples. */
 function setupSheet() {
-  var classeur = SpreadsheetApp.openById(SHEET_ID);
+  var classeur = SpreadsheetApp.openById(sheetId());
   creerOngletAvecEntetes(classeur, 'Equipes', ENTETES.Equipes);
   creerOngletAvecEntetes(classeur, 'Poules', ENTETES.Poules);
   creerOngletAvecEntetes(classeur, 'Matchs', ENTETES.Matchs);
@@ -164,7 +176,7 @@ function doGet(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    var classeur = SpreadsheetApp.openById(SHEET_ID);
+    var classeur = SpreadsheetApp.openById(sheetId());
     var resultat;
     switch (action) {
       case 'getConfig':  resultat = lireConfig(classeur); break;
@@ -229,7 +241,7 @@ function snapshotJsonCache() {
 
   // On devient LE reconstructeur : jeton posé ~15 s (filet si la reconstruction échoue).
   try { cache.put('snapshot_regen', '1', 15); } catch (e) {}
-  s = JSON.stringify(construireSnapshot(SpreadsheetApp.openById(SHEET_ID)));
+  s = JSON.stringify(construireSnapshot(SpreadsheetApp.openById(sheetId())));
   mettreEnCacheSnapshot(cache, s);
   try { cache.remove('snapshot_regen'); } catch (e) {}
   return s;
@@ -409,7 +421,7 @@ function doPost(e) {
       return repondreJson({ error: 'Serveur momentanément occupé, réessaie dans un instant.' });
     }
 
-    classeur = SpreadsheetApp.openById(SHEET_ID);
+    classeur = SpreadsheetApp.openById(sheetId());
     var resultat;
     switch (action) {
       case 'ajouterEquipe':        resultat = ajouterEquipe(classeur, requete.nom_equipe, requete.categorie); break;
