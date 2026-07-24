@@ -864,6 +864,12 @@ function catsInvitationTriees() {
    pour la compatibilité des clients mail). */
 const EMAIL_NAVY = '#0C1C2E', EMAIL_BLEU = '#2E8FE0', EMAIL_TXT = '#1a1f26', EMAIL_GRIS = '#5b6570', EMAIL_FILET = '#dbe3ec';
 
+/** Échappe un texte libre PUIS convertit ses sauts de ligne en <br> (pour l'insérer dans le
+ *  HTML de l'email en préservant les retours à la ligne saisis par l'admin). */
+function nl2brEmail(s) {
+  return echapper(String(s == null ? '' : s)).replace(/\r?\n/g, '<br>');
+}
+
 /** Titre de section de l'email (barre bleue de la charte). */
 function emailTitreSection(t) {
   return '<h2 style="margin:20px 0 8px;font-family:Arial,Helvetica,sans-serif;text-transform:uppercase;'
@@ -894,8 +900,9 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro) {
     + (date ? '<p style="margin:0;' + A + 'font-weight:bold;color:' + EMAIL_TXT + ';">' + date + '</p>' : '');
 
   // Salutation + intro.
+  // La phrase d'intro est du texte LIBRE (multi-lignes) : sauts de ligne → <br> + texte justifié.
   const bloc_salut = '<p style="margin:18px 0 4px;' + A + 'font-size:15px;color:' + EMAIL_TXT + ';">' + salutationHtml + '</p>'
-    + (String(intro || '').trim() ? '<p style="margin:0;' + A + 'font-size:14px;color:' + EMAIL_TXT + ';">' + echapper(intro) + '</p>' : '');
+    + (String(intro || '').trim() ? '<p style="margin:0;' + A + 'font-size:14px;color:' + EMAIL_TXT + ';text-align:justify;">' + nl2brEmail(intro) + '</p>' : '');
 
   // « Vous êtes invités » : tableau catégorie / équipes par club / effectif mini.
   let tblInvites = '';
@@ -949,7 +956,7 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro) {
     }
     if (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim()) {
       surPlace += '<p style="margin:0;' + A + 'font-size:13px;color:' + EMAIL_TXT + ';"><strong>Tarif d\'engagement :</strong> '
-        + echapper(String(g.tarif_engagement_montant).trim()) + '</p>';
+        + nl2brEmail(String(g.tarif_engagement_montant).trim()) + '</p>';
     }
   }
 
