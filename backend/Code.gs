@@ -619,15 +619,26 @@ function ajouterEquipe(classeur, nom, categorie) {
   return { ok: true, equipe: equipe };
 }
 
+/** Première ligne (1-indexée) où la colonne `colonne` vaut strictement `valeur`, ou -1 si absente.
+ *  Recherche linéaire à partir de la ligne 2 (sous l'en-tête), comparaison String === String.
+ *  Point de passage unique des scans « chercher une ligne par id » recopiés dans plusieurs fonctions. */
+function trouverLigneParValeur(onglet, colonne, valeur) {
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return -1;
+  var vals = onglet.getRange(2, colonne, dernier - 1, 1).getValues();
+  for (var i = 0; i < vals.length; i++) {
+    if (String(vals[i][0]) === String(valeur)) return i + 2;
+  }
+  return -1;
+}
+
 function supprimerEquipe(classeur, id) {
   var onglet = classeur.getSheetByName('Equipes');
-  var dernier = onglet.getLastRow();
-  if (dernier < 2) return { error: 'Aucune équipe à supprimer.' };
-  var ids = onglet.getRange(2, 1, dernier - 1, 1).getValues();
-  for (var i = 0; i < ids.length; i++) {
-    if (String(ids[i][0]) === String(id)) { onglet.deleteRow(i + 2); return { ok: true }; }
-  }
-  return { error: 'Équipe introuvable : ' + id };
+  if (onglet.getLastRow() < 2) return { error: 'Aucune équipe à supprimer.' };
+  var ligne = trouverLigneParValeur(onglet, colDe(ENTETES.Equipes, 'id_equipe'), id);
+  if (ligne === -1) return { error: 'Équipe introuvable : ' + id };
+  onglet.deleteRow(ligne);
+  return { ok: true };
 }
 
 /** Renomme une équipe existante (colonne nom_equipe = 2e colonne). */
@@ -636,20 +647,15 @@ function modifierEquipe(classeur, id, nouveauNom) {
   if (!id)         return { error: "Identifiant d'équipe manquant." };
   if (!nouveauNom) return { error: "Le nom de l'équipe est vide." };
   var onglet = classeur.getSheetByName('Equipes');
-  var dernier = onglet.getLastRow();
-  if (dernier < 2) return { error: 'Aucune équipe à modifier.' };
-  var ids = onglet.getRange(2, 1, dernier - 1, 1).getValues();
-  for (var i = 0; i < ids.length; i++) {
-    if (String(ids[i][0]) === String(id)) {
-      // Format TEXTE (@) forcé AVANT d'écrire : un nom commençant par « = + - @ » n'est pas
-      // interprété comme une formule Google Sheets (anti-injection de formule, comme ajouterEquipe).
-      var cellule = onglet.getRange(i + 2, 2); // colonne 2 = nom_equipe
-      cellule.setNumberFormat('@');
-      cellule.setValue(nouveauNom);
-      return { ok: true, equipe: { id_equipe: id, nom_equipe: nouveauNom } };
-    }
-  }
-  return { error: 'Équipe introuvable : ' + id };
+  if (onglet.getLastRow() < 2) return { error: 'Aucune équipe à modifier.' };
+  var ligne = trouverLigneParValeur(onglet, colDe(ENTETES.Equipes, 'id_equipe'), id);
+  if (ligne === -1) return { error: 'Équipe introuvable : ' + id };
+  // Format TEXTE (@) forcé AVANT d'écrire : un nom commençant par « = + - @ » n'est pas
+  // interprété comme une formule Google Sheets (anti-injection de formule, comme ajouterEquipe).
+  var cellule = onglet.getRange(ligne, colDe(ENTETES.Equipes, 'nom_equipe'));
+  cellule.setNumberFormat('@');
+  cellule.setValue(nouveauNom);
+  return { ok: true, equipe: { id_equipe: id, nom_equipe: nouveauNom } };
 }
 
 /** Supprime toutes les équipes d'une catégorie en une seule opération. */
@@ -659,8 +665,8 @@ function supprimerEquipesCategorie(classeur, categorie) {
   var onglet = classeur.getSheetByName('Equipes');
   var dernier = onglet.getLastRow();
   if (dernier < 2) return { error: 'Aucune équipe à supprimer.' };
-  // Colonne 3 = catégorie. On supprime du bas vers le haut pour ne pas décaler les indices.
-  var cats = onglet.getRange(2, 3, dernier - 1, 1).getValues();
+  // On supprime du bas vers le haut pour ne pas décaler les indices.
+  var cats = onglet.getRange(2, colDe(ENTETES.Equipes, 'categorie'), dernier - 1, 1).getValues();
   var nbSupprimees = 0;
   for (var i = cats.length - 1; i >= 0; i--) {
     if (String(cats[i][0]).trim() === categorie) {
@@ -2847,7 +2853,11 @@ function planifierApresMidi(config, fixturesParCat, matin) {
 var LARGEUR_MATCHS = ENTETES.Matchs.length;
 
 /** Position 1-based d'une colonne de Matchs par son nom (ex : colMatchs('vainqueur') = 18). */
-function colMatchs(nom) { return ENTETES.Matchs.indexOf(nom) + 1; }
+/** Numéro de colonne (1-indexé) d'un en-tête dans une liste ENTETES.X, ou 0 si absent.
+ *  Évite les numéros de colonne « magiques » (2, 3…) dispersés dans le code. */
+function colDe(entetes, nom) { return entetes.indexOf(nom) + 1; }
+
+function colMatchs(nom) { return colDe(ENTETES.Matchs, nom); }
 
 /**
  * Ajuste une ligne de match à EXACTEMENT LARGEUR_MATCHS colonnes : complète avec des cellules
