@@ -1857,6 +1857,11 @@ async function genererDossierFinal(nom) {
     // Reflète l'alerte éventuelle sur la fiche (badge) sans perdre le reste de l'état.
     const c = clubsInvitesCourants.find(function (x) { return memeTexteSouple(x.club_nom, nom); });
     if (c) { c.alerte_ecart = (res && res.alerte) || ''; afficherClubsInvites(); }
+    // Les équipes viennent d'être créées côté serveur : on recharge la liste + le tableau de bord
+    // (l'étape « Équipes » de la barre latérale se met à jour tout de suite, sans rafraîchir la page).
+    if ((res && res.equipes_creees && res.equipes_creees.length) && typeof rechargerEquipes === 'function') {
+      try { await rechargerEquipes(); } catch (e) { /* rechargement best-effort : ne bloque pas l'aperçu email */ }
+    }
   } catch (erreur) {
     afficherMessage(message, '⚠️ Création des équipes impossible : ' + erreur.message, 'ko');
     return;
