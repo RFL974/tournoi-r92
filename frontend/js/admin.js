@@ -1668,7 +1668,9 @@ async function onAjouterClubInvite(evenement) {
   const bouton = document.getElementById('bouton-ajouter-club');
   const message = document.getElementById('message-club-invite');
 
-  const nom = champNom.value.trim(); // casse EXACTE conservée (sert au nommage des équipes auto)
+  // Casse normalisée : MAJUSCULES pour le club + le contact, minuscules pour l'email.
+  // (Le nom du club sert à nommer les équipes auto : elles reprennent cette casse exacte.)
+  const nom = champNom.value.trim().toUpperCase();
   if (!nom) { afficherMessage(message, 'Indique le nom du club.', 'ko'); return; }
 
   const doublon = clubsInvitesCourants.some(function (c) { return memeTexteSouple(c.club_nom, nom); });
@@ -1682,9 +1684,9 @@ async function onAjouterClubInvite(evenement) {
   try {
     await ecrireAdmin('ajouterClubInvite', {
       club_nom: nom,
-      club_contact_nom: champContact.value.trim(),
-      club_contact_prenom: champPrenom.value.trim(),
-      club_contact_email: champEmail.value.trim()
+      club_contact_nom: champContact.value.trim().toUpperCase(),
+      club_contact_prenom: champPrenom.value.trim().toUpperCase(),
+      club_contact_email: champEmail.value.trim().toLowerCase()
     });
     champNom.value = ''; champContact.value = ''; champPrenom.value = ''; champEmail.value = '';
     champNom.focus();
@@ -1750,10 +1752,11 @@ async function enregistrerEditionClub(nomActuel) {
   const message = document.getElementById('message-club-invite');
   const ligne = document.querySelector('.club-en-edition[data-club="' + (window.CSS && CSS.escape ? CSS.escape(nomActuel) : nomActuel) + '"]');
   if (!ligne) return;
-  const nom = ligne.querySelector('.club-edit-nom').value.trim();
-  const prenom = ligne.querySelector('.club-edit-prenom').value.trim();
-  const contact = ligne.querySelector('.club-edit-contact').value.trim();
-  const email = ligne.querySelector('.club-edit-email').value.trim();
+  // Même casse qu'à l'ajout : MAJUSCULES pour le club + le contact, minuscules pour l'email.
+  const nom = ligne.querySelector('.club-edit-nom').value.trim().toUpperCase();
+  const prenom = ligne.querySelector('.club-edit-prenom').value.trim().toUpperCase();
+  const contact = ligne.querySelector('.club-edit-contact').value.trim().toUpperCase();
+  const email = ligne.querySelector('.club-edit-email').value.trim().toLowerCase();
   if (!nom) { afficherMessage(message, 'Le nom du club ne peut pas être vide.', 'ko'); return; }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     afficherMessage(message, 'Email du contact invalide.', 'ko'); return;
