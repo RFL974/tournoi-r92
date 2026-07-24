@@ -32,7 +32,7 @@
    zone-horaires / zone-categories vivent dans la section #reglages : on les
    déplace individuellement (et on les y remettra en « Vue classique »). */
 const ECRANS_DEF = [
-  { id: 'infos',       titre: 'Infos du tournoi',  icone: 'info',     blocs: ['bloc-infos-tournoi', 'bloc-apercu-tournoi', 'bloc-contacts-securite'], cles: [] },
+  { id: 'infos',       titre: 'Infos du tournoi',  icone: 'info',     blocs: ['bloc-infos-tournoi', 'bloc-apercu-tournoi'], cles: [] },
   { id: 'horaires',    titre: 'Horaires',          icone: 'horloge',  blocs: ['zone-horaires'],           cles: ['horaires'] },
   { id: 'categories',  titre: 'Catégories',        icone: 'etiquette', blocs: ['zone-categories'],        cles: ['categories'] },
   /* Phase 1 — « Inviter un club » : page unique regroupant la LISTE des clubs invités (+ ajout,
@@ -43,7 +43,7 @@ const ECRANS_DEF = [
   /* Le dossier COMPLET (Phase 2), envoyé aux clubs qui ont accepté : se génère à tout moment
      (sections vides masquées), jamais verrouillé. L'écran regroupe aussi les cartes du dossier
      (modalités, parking, encadrement) : on complète, puis on génère. */
-  { id: 'dossier',     titre: 'Dossier complet (accepté)', icone: 'dossier', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier'], cles: [], libre: true },
+  { id: 'dossier',     titre: 'Dossier complet (accepté)', icone: 'dossier', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-contacts-securite', 'bloc-dossier'], cles: [], libre: true },
   { id: 'equipes',     titre: 'Équipes',           icone: 'equipe',   blocs: ['bloc-equipes'],            cles: ['equipes'] },
   { id: 'terrains',    titre: 'Terrains',          icone: 'terrain',  blocs: ['bloc-terrains'],           cles: ['terrains'] },
   { id: 'poules',      titre: 'Poules & planning', icone: 'poules',   blocs: ['bloc-generation'],         cles: ['poules'] },
