@@ -35,19 +35,20 @@ const ECRANS_DEF = [
   { id: 'infos',       titre: 'Infos du tournoi',  icone: 'info',     blocs: ['bloc-infos-tournoi', 'bloc-apercu-tournoi', 'bloc-contacts-securite'], cles: [] },
   { id: 'horaires',    titre: 'Horaires',          icone: 'horloge',  blocs: ['zone-horaires'],           cles: ['horaires'] },
   { id: 'categories',  titre: 'Catégories',        icone: 'etiquette', blocs: ['zone-categories'],        cles: ['categories'] },
+  /* Phase 1 — « Inviter un club » : page unique regroupant la LISTE des clubs invités (+ ajout,
+     statut, envoi individuel), l'aperçu de l'email d'invitation (+ envoi groupé), puis sa config
+     (Sur place + Réponse à l'invitation). Libre : préparable très tôt. Placé AVANT les Équipes :
+     les clubs qui acceptent génèrent leurs équipes automatiquement à l'envoi du dossier final. */
+  { id: 'invitation',  titre: 'Inviter un club',   icone: 'courrier', blocs: ['bloc-clubs-invites', 'bloc-apercu-invitation', 'bloc-surplace', 'bloc-reponse'], cles: [], libre: true },
+  /* Le dossier COMPLET (Phase 2), envoyé aux clubs qui ont accepté : se génère à tout moment
+     (sections vides masquées), jamais verrouillé. L'écran regroupe aussi les cartes du dossier
+     (modalités, parking, encadrement) : on complète, puis on génère. */
+  { id: 'dossier',     titre: 'Dossier complet (accepté)', icone: 'dossier', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier'], cles: [], libre: true },
   { id: 'equipes',     titre: 'Équipes',           icone: 'equipe',   blocs: ['bloc-equipes'],            cles: ['equipes'] },
   { id: 'terrains',    titre: 'Terrains',          icone: 'terrain',  blocs: ['bloc-terrains'],           cles: ['terrains'] },
   { id: 'poules',      titre: 'Poules & planning', icone: 'poules',   blocs: ['bloc-generation'],         cles: ['poules'] },
   /* La Publication vient AVANT l'après-midi : elle n'en dépend pas (on publie
      le matin ; l'après-midi se génère plus tard, une fois les scores saisis). */
-  /* Phase 1 — « Inviter un club » : page unique regroupant la LISTE des clubs invités (+ ajout,
-     statut, envoi individuel), l'aperçu de l'email d'invitation (+ envoi groupé), puis sa config
-     (Sur place + Réponse à l'invitation). Libre : préparable très tôt. */
-  { id: 'invitation',  titre: 'Inviter un club',   icone: 'courrier', blocs: ['bloc-clubs-invites', 'bloc-apercu-invitation', 'bloc-surplace', 'bloc-reponse'], cles: [], libre: true },
-  /* Le dossier COMPLET (Phase 2), envoyé aux clubs qui ont accepté : se génère à tout moment
-     (sections vides masquées), jamais verrouillé. Placé AVANT la Publication. L'écran regroupe
-     aussi les cartes du dossier (modalités, parking, encadrement) : on complète, puis on génère. */
-  { id: 'dossier',     titre: 'Dossier complet (accepté)', icone: 'dossier', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier'], cles: [], libre: true },
   { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [] },
   { id: 'apresmidi',   titre: 'Après-midi',        icone: 'ballon',   blocs: ['bloc-apresmidi'],          cles: ['apresmidi'] },
   /* Zone de danger, toujours accessible (libre) : on doit pouvoir remettre à
