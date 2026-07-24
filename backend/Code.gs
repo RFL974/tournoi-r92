@@ -24,10 +24,16 @@ var ENTETES = {
   //                         tant qu'il n'a pas répondu — filtrent le dossier Phase 2.
   //   dossier_envoye      : date (AAAA-MM-JJ) posée automatiquement quand l'envoi du DOSSIER (Phase 2) réussit.
   //   invitation_envoyee  : date (AAAA-MM-JJ) posée automatiquement quand l'envoi de l'INVITATION (Phase 1) réussit.
+  //   club_token          : jeton aléatoire unique (UUID) généré à l'ajout — sécurise l'accès à la
+  //                         page publique de réponse (reponse-invitation.html?…&token=…).
+  //   date_reponse        : date (AAAA-MM-JJ) de la réponse du club en libre-service (Accepté ou Décliné).
+  //   nb_equipes_par_categorie : JSON du nb d'équipes engagées par catégorie ({"U8":2,"U10":1}).
+  //   nb_joueurs_total    : total de joueurs attendus (entier, saisi par le club, informatif).
   // Les 5 premières colonnes gardent leur position (rétrocompatibilité des Sheets déjà en service) ;
   // les nouvelles sont ajoutées à droite (migration douce : assurerColonnesClubsInvites).
   ClubsInvites: ['club_nom', 'club_contact_nom', 'club_contact_email', 'statut', 'date_ajout',
-                 'club_contact_prenom', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee'],
+                 'club_contact_prenom', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee',
+                 'club_token', 'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total'],
   // Colonnes 1-12 : historiques (matin + après-midi CROISE/LIBRE).
   // Colonnes 13-18 : format d'après-midi + tableau à élimination (COUPE_PLATEAU).
   //   format        : CROISE / LIBRE / COUPE_PLATEAU (recopié depuis la catégorie ; vide pour le matin)
@@ -165,6 +171,8 @@ function doGet(e) {
       // Lecture PUBLIQUE réservée au dossier Phase 2 (dossier-club.html?club=…) : ne renvoie
       // QUE des champs non sensibles (nom, prénom, catégories engagées) — JAMAIS l'email.
       case 'getClubDossier': resultat = getClubDossier(classeur, params.club); break;
+      // Lecture PUBLIQUE de la page de réponse : validée par le JETON du club (pas de clé admin).
+      case 'getReponseInvitation': resultat = getReponseInvitation(classeur, params); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -360,6 +368,11 @@ function lireConfig(classeur) {
 /* Actions protégées par la clé SCORES (les autres écritures exigent la clé ADMIN). */
 var ACTIONS_SCORES = { enregistrerScore: true };
 
+/* Actions PUBLIQUES sécurisées par un JETON (club_token) plutôt qu'une clé admin : la réponse
+   en libre-service d'un club à son invitation. La sécurité est vérifiée DANS la fonction
+   (le jeton doit correspondre au club) — jamais par la clé admin. */
+var ACTIONS_TOKEN = { repondreInvitation: true };
+
 function doPost(e) {
   var lock;
   try {
@@ -367,10 +380,13 @@ function doPost(e) {
     var action = requete.action;
 
     // Contrôle d'accès : chaque écriture exige la bonne clé (scores selon l'action, sinon admin).
-    // Les lectures (doGet) restent ouvertes à tous.
-    var nomCle = ACTIONS_SCORES[action] ? 'CLE_SCORES' : 'CLE_ADMIN';
-    var acces = verifierCle(requete, nomCle);
-    if (!acces.ok) return repondreJson({ error: acces.msg, acces_refuse: true });
+    // Les actions à JETON (réponse publique d'un club) contournent la clé ici et valident le
+    // jeton en interne. Les lectures (doGet) restent ouvertes à tous.
+    if (!ACTIONS_TOKEN[action]) {
+      var nomCle = ACTIONS_SCORES[action] ? 'CLE_SCORES' : 'CLE_ADMIN';
+      var acces = verifierCle(requete, nomCle);
+      if (!acces.ok) return repondreJson({ error: acces.msg, acces_refuse: true });
+    }
 
     // Verrou d'écriture : sérialise les écritures concurrentes (deux marqueurs qui valident
     // au même instant) pour éviter les collisions d'identifiant et l'écrasement de lignes
@@ -414,6 +430,7 @@ function doPost(e) {
       case 'envoyerDossierEmail':  resultat = envoyerDossierEmail(classeur, requete); break;
       case 'envoyerInvitationClub': resultat = envoyerInvitationClub(classeur, requete); break;
       case 'envoyerInvitationsGroupe': resultat = envoyerInvitationsGroupe(classeur, requete); break;
+      case 'repondreInvitation':   resultat = repondreInvitation(classeur, requete); break;
       case 'supprimerClubInvite':  resultat = supprimerClubInvite(classeur, requete); break;
       case 'reinitialiserTournoi': resultat = reinitialiserTournoi(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
@@ -1015,6 +1032,159 @@ function getClubDossier(classeur, nom) {
   return { ok: true, club: null };
 }
 
+/* ===================== RÉPONSE EN LIBRE-SERVICE DU CLUB (Sprint 6) ===================== */
+
+/**
+ * Retrouve un club par son JETON (le secret). Le jeton doit être non vide et correspondre
+ * EXACTEMENT à un club ; le nom fourni (le cas échéant) doit en plus correspondre (souple).
+ * Renvoie l'objet club (issu de lireOngletSimple) ou null. C'est le SEUL point de vérification
+ * d'accès des actions publiques de réponse : sans jeton valide, aucune donnée n'est renvoyée.
+ */
+function trouverClubParToken(classeur, nom, token) {
+  token = String(token || '').trim();
+  if (!token) return null;
+  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  for (var i = 0; i < clubs.length; i++) {
+    if (String(clubs[i].club_token || '').trim() === token) {
+      // Jeton trouvé : si un nom est fourni, il doit correspondre (défense supplémentaire).
+      if (nom && !memeTexteSouple(clubs[i].club_nom, nom)) return null;
+      return clubs[i];
+    }
+  }
+  return null;
+}
+
+/**
+ * Lecture PUBLIQUE pour la page de réponse (reponse-invitation.html). Validée par le JETON :
+ * si le jeton ne correspond pas au club, renvoie une erreur GÉNÉRIQUE (aucune info révélée).
+ * Renvoie le rappel du tournoi (nom/date/affiche), la liste des catégories (avec leur
+ * max_equipes_par_club) et l'état de réponse actuel du club (pour ré-afficher un choix déjà fait).
+ */
+function getReponseInvitation(classeur, params) {
+  var club = trouverClubParToken(classeur, params.club, params.token);
+  if (!club) return { error: 'Lien invalide ou expiré.' };
+
+  var config = lireConfig(classeur);
+  var g = config.global || {};
+  var categories = (config.categories || [])
+    .filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; })
+    .map(function (c) {
+      return {
+        categorie: String(c.categorie || ''),
+        max_equipes_par_club: String(c.max_equipes_par_club || '').trim(),
+        effectif_min: String(c.effectif_min || '').trim()
+      };
+    });
+
+  return { ok: true,
+    club: {
+      club_nom:            String(club.club_nom || ''),
+      club_contact_prenom: String(club.club_contact_prenom || ''),
+      statut:              String(club.statut || ''),
+      date_reponse:        String(club.date_reponse || ''),
+      categories_engagees: String(club.categories_engagees || ''),
+      nb_equipes_par_categorie: String(club.nb_equipes_par_categorie || ''),
+      nb_joueurs_total:    String(club.nb_joueurs_total || '')
+    },
+    tournoi: {
+      nom:        String(g.tournoi_nom || ''),
+      date:       String(g.tournoi_date || ''),
+      affiche_id: String(g.tournoi_affiche_id || ''),
+      lieu:       String(g.tournoi_lieu || '')
+    },
+    categories: categories
+  };
+}
+
+/**
+ * ÉCRITURE PUBLIQUE : réponse du club à son invitation (libre-service). Sécurisée par le JETON.
+ *  - reponse = 'decline' → statut Décliné + date_reponse.
+ *  - reponse = 'accepte' → valide les catégories (existent en Zone B), le nb d'équipes par
+ *    catégorie (≥ 1 et ≤ max_equipes_par_club si renseigné) et le nb de joueurs (> 0), puis écrit
+ *    statut Accepté, categories_engagees, nb_equipes_par_categorie (JSON), nb_joueurs_total, date_reponse.
+ * N'écrit JAMAIS un autre club que celui identifié par le jeton. NE déclenche AUCUN envoi de
+ * dossier (l'envoi reste manuel côté admin).
+ */
+function repondreInvitation(classeur, data) {
+  var club = trouverClubParToken(classeur, data.club, data.token);
+  if (!club) return { error: 'Lien invalide ou expiré.' };
+
+  var reponse = String(data.reponse || '').trim().toLowerCase();
+  var onglet = assurerOngletClubsInvites(classeur);
+  var ligne = ligneClubInvite(onglet, club.club_nom);
+  if (ligne === -1) return { error: 'Lien invalide ou expiré.' };
+  var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
+  if (reponse === 'decline') {
+    ecrireCellulesClub(onglet, ligne, { statut: 'Décliné', date_reponse: today });
+    return { ok: true, statut: 'Décliné' };
+  }
+
+  if (reponse !== 'accepte') return { error: 'Réponse invalide.' };
+
+  // Catégories réellement proposées cette édition (Zone B, présentes).
+  var config = lireConfig(classeur);
+  var maxParCat = {}; // nom catégorie → max (ou null)
+  (config.categories || []).forEach(function (c) {
+    if (String(c.presente).toLowerCase() !== 'oui') return;
+    var m = parseInt(String(c.max_equipes_par_club || '').trim(), 10);
+    maxParCat[String(c.categorie || '')] = (isFinite(m) && m >= 1) ? m : null;
+  });
+
+  // nb_equipes_par_categorie attendu : objet { "U8": 2, … } (ou JSON string).
+  var parCat = data.nb_equipes_par_categorie;
+  if (typeof parCat === 'string') { try { parCat = JSON.parse(parCat || '{}'); } catch (e) { return { error: 'Données de réponse illisibles.' }; } }
+  if (!parCat || typeof parCat !== 'object') return { error: 'Sélectionne au moins une catégorie.' };
+
+  var noms = Object.keys(parCat);
+  if (!noms.length) return { error: 'Sélectionne au moins une catégorie.' };
+
+  var propres = {};
+  for (var i = 0; i < noms.length; i++) {
+    var cat = noms[i];
+    if (!maxParCat.hasOwnProperty(cat)) return { error: 'Catégorie inconnue : « ' + cat +' ».' };
+    var nb = parseInt(parCat[cat], 10);
+    if (!isFinite(nb) || nb < 1) return { error: 'Indique un nombre d\'équipes valide pour « ' + cat + ' ».' };
+    if (maxParCat[cat] != null && nb > maxParCat[cat]) {
+      return { error: 'Maximum ' + maxParCat[cat] + ' équipe(s) par club pour « ' + cat + ' ».' };
+    }
+    propres[cat] = nb;
+  }
+
+  var nbJoueurs = parseInt(data.nb_joueurs_total, 10);
+  if (!isFinite(nbJoueurs) || nbJoueurs < 1) return { error: 'Indique le nombre total de joueurs attendus.' };
+
+  // categories_engagees dérivé des catégories saisies (ordre naturel U8 < U10 < …).
+  var catsTriees = Object.keys(propres).sort(function (a, b) { return comparerCategorieServeur(a, b); });
+
+  ecrireCellulesClub(onglet, ligne, {
+    statut: 'Accepté',
+    categories_engagees: catsTriees.join(','),
+    nb_equipes_par_categorie: JSON.stringify(propres),
+    nb_joueurs_total: String(nbJoueurs),
+    date_reponse: today
+  });
+  return { ok: true, statut: 'Accepté', categories_engagees: catsTriees.join(',') };
+}
+
+/** Écrit plusieurs cellules d'un club (par nom de colonne) en une passe. */
+function ecrireCellulesClub(onglet, ligne, valeurs) {
+  Object.keys(valeurs).forEach(function (h) {
+    var col = colClubInvite(onglet, h);
+    if (col === -1) return;
+    var cell = onglet.getRange(ligne, col);
+    cell.setNumberFormat('@');
+    cell.setValue(valeurs[h]);
+  });
+}
+
+/** Tri naturel de catégories côté serveur (U8 < U10 < U12…) — même règle que le front. */
+function comparerCategorieServeur(a, b) {
+  var ma = String(a).match(/\d+/), mb = String(b).match(/\d+/);
+  if (ma && mb && parseInt(ma[0], 10) !== parseInt(mb[0], 10)) return parseInt(ma[0], 10) - parseInt(mb[0], 10);
+  return String(a) < String(b) ? -1 : (String(a) > String(b) ? 1 : 0);
+}
+
 /**
  * LISTE des clubs invités. Passe par doPost + clé ADMIN (et non doGet, ouvert à tous) :
  * l'onglet contient des emails de contact, qui ne doivent JAMAIS apparaître dans le
@@ -1022,7 +1192,33 @@ function getClubDossier(classeur, nom) {
  */
 function listerClubsInvites(classeur) {
   assurerOngletClubsInvites(classeur);
+  assurerTokensClubs(classeur); // rétrocompat : donne un jeton aux clubs qui n'en ont pas encore
   return { ok: true, clubs: lireOngletSimple(classeur, 'ClubsInvites') };
+}
+
+/** Génère un jeton unique (UUID) — sécurise l'accès à la page de réponse d'un club. */
+function genererTokenClub() {
+  return Utilities.getUuid();
+}
+
+/**
+ * Rétrocompatibilité (Point 6) : attribue un club_token à TOUS les clubs qui n'en ont pas encore
+ * (fiches créées avant le Sprint 6). Appelé à l'ouverture de l'admin (listerClubsInvites) et avant
+ * chaque envoi d'invitation. Sans effet si tous les clubs ont déjà un jeton.
+ */
+function assurerTokensClubs(classeur) {
+  var onglet = assurerColonnesClubsInvites(classeur);
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return;
+  var col = colClubInvite(onglet, 'club_token');
+  if (col === -1) return;
+  var plage = onglet.getRange(2, col, dernier - 1, 1);
+  var vals = plage.getValues();
+  var modifie = false;
+  for (var i = 0; i < vals.length; i++) {
+    if (String(vals[i][0] || '').trim() === '') { vals[i][0] = genererTokenClub(); modifie = true; }
+  }
+  if (modifie) { plage.setNumberFormat('@'); plage.setValues(vals); }
 }
 
 /**
@@ -1054,7 +1250,8 @@ function ajouterClubInvite(classeur, data) {
   var valeurs = {
     club_nom: nom, club_contact_nom: contactNom, club_contact_prenom: prenom,
     club_contact_email: email, statut: statut, date_ajout: dateAjout,
-    categories_engagees: '', dossier_envoye: ''
+    categories_engagees: '', dossier_envoye: '',
+    club_token: genererTokenClub() // jeton unique dès l'ajout (sécurise la page de réponse)
   };
   var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
   var ligne = onglet.getLastRow() + 1;
@@ -1195,15 +1392,28 @@ function echapperHtmlServeur(s) {
 }
 
 /**
- * Remplace le jeton `{{SALUTATION}}` d'un modèle (HTML ou texte) par la salutation
- * personnalisée du club (« Bonjour {prénom}, », ou « Bonjour, » sans prénom). En mode HTML,
- * le prénom est échappé. Le reste du modèle (construit par l'admin) est inséré tel quel.
+ * Remplace les jetons d'un modèle (HTML ou texte) par les valeurs PERSONNALISÉES du club :
+ *  - `{{SALUTATION}}` → « Bonjour {prénom}, » (ou « Bonjour, » sans prénom) ;
+ *  - `{{LIEN_REPONSE}}` → le lien PERSONNEL de réponse du club (avec son jeton).
+ * En mode HTML, salutation et lien sont échappés. Le reste du modèle est inséré tel quel.
  */
-function personnaliserInvitation(modele, prenom, estHtml) {
+function personnaliserInvitation(modele, prenom, lienReponse, estHtml) {
   var p = String(prenom || '').trim();
   var salut = p ? ('Bonjour ' + p + ',') : 'Bonjour,';
-  if (estHtml) salut = echapperHtmlServeur(salut);
-  return String(modele == null ? '' : modele).split('{{SALUTATION}}').join(salut);
+  var lien = String(lienReponse || '');
+  if (estHtml) { salut = echapperHtmlServeur(salut); lien = echapperHtmlServeur(lien); }
+  return String(modele == null ? '' : modele)
+    .split('{{SALUTATION}}').join(salut)
+    .split('{{LIEN_REPONSE}}').join(lien);
+}
+
+/** Construit le lien PERSONNEL de réponse d'un club (base + club + jeton). '' si base/jeton absent. */
+function lienReponseClub(baseReponse, nom, token) {
+  var base = String(baseReponse || '').trim();
+  var tok = String(token || '').trim();
+  if (!base || !tok) return '';
+  var sep = base.indexOf('?') === -1 ? '?' : '&';
+  return base + sep + 'club=' + encodeURIComponent(nom) + '&token=' + encodeURIComponent(tok);
 }
 
 /**
@@ -1224,9 +1434,9 @@ function afficheBlobPourEmail(classeur) {
  * MailApp par défaut (scope léger script.send_mail) ; GmailApp avec « from » si alias configuré.
  * LÈVE une exception en cas d'échec (l'appelant ne marque alors pas la date d'envoi).
  */
-function envoyerInvitationEmail(dest, sujet, htmlModele, texteModele, prenom, afficheBlob, expediteur) {
-  var html = personnaliserInvitation(htmlModele, prenom, true);
-  var texte = personnaliserInvitation(texteModele, prenom, false);
+function envoyerInvitationEmail(dest, sujet, htmlModele, texteModele, prenom, lienReponse, afficheBlob, expediteur) {
+  var html = personnaliserInvitation(htmlModele, prenom, lienReponse, true);
+  var texte = personnaliserInvitation(texteModele, prenom, lienReponse, false);
   if (expediteur) {
     var opt = { htmlBody: html, name: 'Génération R92', from: expediteur };
     if (afficheBlob) opt.inlineImages = { affiche: afficheBlob };
@@ -1260,6 +1470,7 @@ function envoyerInvitationClub(classeur, data) {
   if (errMod) return { error: errMod };
 
   var onglet = assurerOngletClubsInvites(classeur);
+  assurerTokensClubs(classeur); // garantit un jeton (lien de réponse personnel)
   var ligne = ligneClubInvite(onglet, nom);
   if (ligne === -1) return { error: 'Club introuvable : ' + nom };
   var colEmail = colClubInvite(onglet, 'club_contact_email');
@@ -1270,11 +1481,12 @@ function envoyerInvitationClub(classeur, data) {
   var club = null, clubs = lireOngletSimple(classeur, 'ClubsInvites');
   for (var i = 0; i < clubs.length; i++) { if (memeTexteSouple(clubs[i].club_nom, nom)) { club = clubs[i]; break; } }
   var prenom = club ? club.club_contact_prenom : '';
+  var lienReponse = lienReponseClub(data.base_reponse, nom, club ? club.club_token : '');
 
   var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
   var afficheBlob = afficheBlobPourEmail(classeur);
   try {
-    envoyerInvitationEmail(email, sujet, htmlModele, texteModele, prenom, afficheBlob, expediteur);
+    envoyerInvitationEmail(email, sujet, htmlModele, texteModele, prenom, lienReponse, afficheBlob, expediteur);
   } catch (e) {
     return { error: 'Échec de l\'envoi de l\'email : ' + (e && e.message ? e.message : e) };
   }
@@ -1302,6 +1514,7 @@ function envoyerInvitationsGroupe(classeur, data) {
   var renvoyer = (String(data.renvoyer).toLowerCase() === 'oui' || data.renvoyer === true);
 
   var onglet = assurerOngletClubsInvites(classeur);
+  assurerTokensClubs(classeur); // garantit un jeton à tous (lien de réponse personnel)
   var clubs = lireOngletSimple(classeur, 'ClubsInvites');
   var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
   var afficheBlob = afficheBlobPourEmail(classeur);
@@ -1316,7 +1529,8 @@ function envoyerInvitationsGroupe(classeur, data) {
     var dejaInvite = String(c.invitation_envoyee || '').trim() !== '';
     if (dejaInvite && !renvoyer) { dejaInvites.push(String(c.club_nom || '')); return; }
     try {
-      envoyerInvitationEmail(email, sujet, htmlModele, texteModele, c.club_contact_prenom, afficheBlob, expediteur);
+      var lienReponse = lienReponseClub(data.base_reponse, c.club_nom, c.club_token);
+      envoyerInvitationEmail(email, sujet, htmlModele, texteModele, c.club_contact_prenom, lienReponse, afficheBlob, expediteur);
       var ligne = ligneClubInvite(onglet, c.club_nom);
       if (ligne !== -1 && colEnvoye !== -1) {
         var cell = onglet.getRange(ligne, colEnvoye);
@@ -1354,7 +1568,9 @@ function reinitialiserPhase2Clubs(classeur) {
   var dernier = onglet.getLastRow();
   if (dernier < 2) return; // en-tête seul : rien à vider
   var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
-  ['categories_engagees', 'dossier_envoye', 'invitation_envoyee'].forEach(function (h) {
+  // club_token est CONSERVÉ (identité stable du club d'une édition à l'autre).
+  ['categories_engagees', 'dossier_envoye', 'invitation_envoyee',
+   'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total'].forEach(function (h) {
     var c = entetes.indexOf(h);
     if (c !== -1) {
       var zone = onglet.getRange(2, c + 1, dernier - 1, 1);

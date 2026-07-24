@@ -883,7 +883,7 @@ function emailTitreSection(t) {
  * TEL QUEL (jeton « {{SALUTATION}} » pour l'envoi, ou « Bonjour {exemple}, » pour l'aperçu) ;
  * `imgSrc` = l'affiche (URL Drive en aperçu, « cid:affiche » pour l'envoi ; vide = pas d'image).
  */
-function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro) {
+function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse) {
   const A = 'font-family:Arial,Helvetica,sans-serif;';
   const nom = echapper(String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
   const date = String(g.tournoi_date || '').trim() ? echapper(formaterDateFr(g.tournoi_date)) : '';
@@ -903,6 +903,15 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro) {
   // La phrase d'intro est du texte LIBRE (multi-lignes) : sauts de ligne → <br> + texte justifié.
   const bloc_salut = '<p style="margin:18px 0 4px;' + A + 'font-size:15px;color:' + EMAIL_TXT + ';">' + salutationHtml + '</p>'
     + (String(intro || '').trim() ? '<p style="margin:0;' + A + 'font-size:14px;color:' + EMAIL_TXT + ';text-align:justify;">' + nl2brEmail(intro) + '</p>' : '');
+
+  // Bouton d'ACTION principal : « Répondre à l'invitation » (lien personnel avec jeton).
+  const boutonReponse = lienReponse
+    ? '<p style="margin:18px 0 4px;text-align:center;"><a href="' + echapper(lienReponse) + '" '
+      + 'style="display:inline-block;background:' + EMAIL_BLEU + ';color:#ffffff;text-decoration:none;'
+      + 'border-radius:999px;padding:13px 28px;' + A + 'font-size:15px;font-weight:bold;">Répondre à l\'invitation</a></p>'
+      + '<p style="margin:0 0 4px;text-align:center;' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
+      + '(présence, catégories engagées et nombre d\'équipes)</p>'
+    : '';
 
   // « Vous êtes invités » : tableau catégorie / équipes par club / effectif mini.
   let tblInvites = '';
@@ -979,17 +988,18 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro) {
     + '<table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;margin:0 auto;background:#ffffff;border-collapse:collapse;">'
     + '<tr><td style="padding:22px 24px;">'
     + '<div style="border-bottom:3px solid ' + EMAIL_NAVY + ';padding-bottom:12px;">' + entete + '</div>'
-    + bloc_salut + tblInvites + blocJourJ + surPlace + blocReponse + pied
+    + bloc_salut + boutonReponse + tblInvites + blocJourJ + surPlace + blocReponse + pied
     + '</td></tr></table></div>';
 }
 
 /** Version TEXTE brut (fallback anti-spam / clients sans HTML). `salutationTexte` = jeton ou exemple. */
-function emailTexteInvitation(g, cats, salutationTexte, intro) {
+function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse) {
   const nom = String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92';
   const L = [];
   L.push(salutationTexte);
   L.push('');
   if (String(intro || '').trim()) { L.push(String(intro).trim()); L.push(''); }
+  if (lienReponse) { L.push('▶ Répondre à l\'invitation : ' + lienReponse); L.push(''); }
   if (cats.length) {
     L.push('VOUS ÊTES INVITÉS');
     cats.forEach(function (c) {
@@ -1070,7 +1080,21 @@ function majApercuInvitation() {
   const cats = catsInvitationTriees();
   const imgSrc = String(g.tournoi_affiche_id || '').trim() ? urlAffiche(g.tournoi_affiche_id, 800) : '';
   const salut = 'Bonjour ' + echapper(exemplePrenomInvitation()) + ',';
-  rendu.srcdoc = emailHtmlInvitation(g, cats, imgSrc, salut, intro.value);
+  // Aperçu : lien de réponse d'EXEMPLE (le vrai lien, avec jeton, est construit par club à l'envoi).
+  rendu.srcdoc = emailHtmlInvitation(g, cats, imgSrc, salut, intro.value, lienReponseApercu());
+}
+
+/** URL absolue de la page de réponse (base, sans club/token — le backend les ajoute par club). */
+function baseReponseInvitation() {
+  const url = new URL('reponse-invitation.html', window.location.href);
+  const tn = (configCourante.global && configCourante.global.tournoi_nom) || '';
+  if (tn) url.searchParams.set('tournoi', tn);
+  return url.toString();
+}
+
+/** Lien de réponse d'EXEMPLE pour l'aperçu (jeton fictif, juste pour montrer le bouton). */
+function lienReponseApercu() {
+  return baseReponseInvitation() + '&club=EXEMPLE&token=EXEMPLE';
 }
 
 /** « Régénérer » : réécrit objet + intro depuis les infos du tournoi (écrase les retouches). */
@@ -1102,12 +1126,12 @@ function introInvitationCourant() {
 function htmlModeleInvitation() {
   const g = globalInvitation();
   const imgSrc = String(g.tournoi_affiche_id || '').trim() ? 'cid:affiche' : '';
-  return emailHtmlInvitation(g, catsInvitationTriees(), imgSrc, '{{SALUTATION}}', introInvitationCourant());
+  return emailHtmlInvitation(g, catsInvitationTriees(), imgSrc, '{{SALUTATION}}', introInvitationCourant(), '{{LIEN_REPONSE}}');
 }
 
-/** Modèle TEXTE envoyé au backend (fallback), avec le jeton {{SALUTATION}}. */
+/** Modèle TEXTE envoyé au backend (fallback), avec les jetons {{SALUTATION}} et {{LIEN_REPONSE}}. */
 function texteModeleInvitation() {
-  return emailTexteInvitation(globalInvitation(), catsInvitationTriees(), '{{SALUTATION}}', introInvitationCourant());
+  return emailTexteInvitation(globalInvitation(), catsInvitationTriees(), '{{SALUTATION}}', introInvitationCourant(), '{{LIEN_REPONSE}}');
 }
 
 /** Vrai si un club est ENCORE invitable (ni Accepté, ni Décliné). */
@@ -1127,7 +1151,8 @@ async function envoyerInvitationClubUI(nom) {
   if (!await dialogConfirmer('Envoyer l\'invitation à « ' + nom + ' » (' + email + ') ?', { ok: 'Envoyer' })) return;
   try {
     const res = await ecrireAdmin('envoyerInvitationClub', {
-      club_nom: nom, sujet: sujet, html_modele: htmlModeleInvitation(), texte_modele: texteModeleInvitation()
+      club_nom: nom, sujet: sujet, html_modele: htmlModeleInvitation(), texte_modele: texteModeleInvitation(),
+      base_reponse: baseReponseInvitation()
     });
     if (res && res.invitation_envoyee) club.invitation_envoyee = res.invitation_envoyee;
     afficherClubsInvites();
@@ -1175,7 +1200,8 @@ async function onEnvoyerInvitationsGroupe() {
   afficherMessage(message, 'Envoi en cours…', 'ok');
   try {
     const res = await ecrireAdmin('envoyerInvitationsGroupe', {
-      sujet: sujet, html_modele: htmlModeleInvitation(), texte_modele: texteModeleInvitation(), renvoyer: renvoyer ? 'oui' : 'non'
+      sujet: sujet, html_modele: htmlModeleInvitation(), texte_modele: texteModeleInvitation(),
+      base_reponse: baseReponseInvitation(), renvoyer: renvoyer ? 'oui' : 'non'
     });
     await chargerClubsInvites(); // rafraîchit invitation_envoyee + l'aperçu (exemple prénom)
     const nbOk = (res.envoyes || []).length;
@@ -1482,6 +1508,7 @@ function panneauAccepteClub(club, nom) {
     : '';
 
   return '<div class="club-panneau" data-club="' + echapper(nom) + '">' +
+    resumeReponseClub(club) +
     '<p class="club-panneau-titre">Catégories engagées par le club</p>' +
     (cats.length
       ? '<div class="club-cats">' + cases + '</div>'
@@ -1496,7 +1523,52 @@ function panneauAccepteClub(club, nom) {
   '</div>';
 }
 
-/** Affiche la liste des clubs invités (nom, contact, statut, panneau Accepté, envoi). */
+/**
+ * Résumé (lecture seule) de la RÉPONSE remontée par le club en libre-service : catégories +
+ * nombre d'équipes par catégorie, nombre de joueurs total, date de réponse. '' si rien.
+ */
+function resumeReponseClub(club) {
+  const nbCat = parseCatsEnginesNb(club.nb_equipes_par_categorie);
+  const cles = Object.keys(nbCat);
+  const joueurs = String(club.nb_joueurs_total || '').trim();
+  const dateRep = String(club.date_reponse || '').trim();
+  if (!cles.length && !joueurs && !dateRep) return '';
+
+  let lignes = '';
+  if (cles.length) {
+    const detail = cles.map(function (c) {
+      const n = parseInt(nbCat[c], 10);
+      return echapper(c) + ' : ' + (isFinite(n) ? n : nbCat[c]) + ' équipe' + (n > 1 ? 's' : '');
+    }).join(' · ');
+    lignes += '<div class="club-rep-ligne">🏉 ' + detail + '</div>';
+  }
+  if (joueurs) lignes += '<div class="club-rep-ligne">👥 ' + echapper(joueurs) + ' joueurs attendus au total</div>';
+  return '<div class="club-reponse">' +
+    '<p class="club-reponse-titre">Réponse du club' + (dateRep ? ' (le ' + echapper(dateRep) + ')' : '') + '</p>' +
+    lignes + '</div>';
+}
+
+/** JSON {"U8":2,…} → objet ; {} si illisible. */
+function parseCatsEnginesNb(brut) {
+  try { const o = JSON.parse(String(brut || '').trim() || '{}'); return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {}; }
+  catch (e) { return {}; }
+}
+
+/**
+ * Ordre de tri de la liste (Point 5a) :
+ *   0 = Accepté ET dossier non envoyé (action requise, en haut)
+ *   1 = Invité / sans réponse
+ *   2 = Décliné
+ *   3 = Accepté ET dossier envoyé (déjà traité, en bas)
+ */
+function bucketClub(club) {
+  const envoye = !!String(club.dossier_envoye || '').trim();
+  if (estAccepte(club.statut)) return envoye ? 3 : 0;
+  if (memeTexteSouple(club.statut, 'Décliné')) return 2;
+  return 1;
+}
+
+/** Affiche la liste des clubs invités (triée), avec statut, réponse remontée, panneau, envoi. */
 function afficherClubsInvites() {
   const zone = document.getElementById('liste-clubs-invites');
   if (!zone) return;
@@ -1506,8 +1578,15 @@ function afficherClubsInvites() {
     return;
   }
 
+  // Tri : action requise en haut, déjà traités en bas ; à bucket égal, ordre alphabétique.
+  const tries = clubsInvitesCourants.slice().sort(function (a, b) {
+    const ba = bucketClub(a), bb = bucketClub(b);
+    if (ba !== bb) return ba - bb;
+    return String(a.club_nom || '').localeCompare(String(b.club_nom || ''), 'fr');
+  });
+
   let html = '';
-  clubsInvitesCourants.forEach(function (club) {
+  tries.forEach(function (club) {
     const nom = String(club.club_nom || '');
     // Contact : « Prénom Nom · email » (les bouts vides sont omis).
     const identite = [club.club_contact_prenom, club.club_contact_nom].filter(Boolean).join(' ');
