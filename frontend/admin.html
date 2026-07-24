@@ -42,7 +42,7 @@
           <span class="tb-titre">État du tournoi</span>
           <span class="tb-refresh">
             <span class="live-maj" id="maj-admin"></span>
-            <button type="button" class="bouton-lien" id="bouton-rafraichir-admin">🔄 Rafraîchir</button>
+            <button type="button" class="bouton-lien" id="bouton-rafraichir-admin" data-ic="rafraichir">Rafraîchir</button>
           </span>
         </div>
         <div class="tb-grille">
@@ -214,15 +214,15 @@
           Répartit les équipes en poules et calcule tous les horaires sans conflit.<br>
           ⚠️ Cela <strong>efface</strong> les poules, matchs et scores précédents.
         </p>
-        <button id="bouton-generer" class="bouton">🎲 Générer poules et planning</button>
+        <button id="bouton-generer" class="bouton" data-ic="poules">Générer poules et planning</button>
         <!-- Régénération NON destructive : recalcule seulement les heures, garde les poules
              ET les scores. Activé/masqué par admin.js (majBoutonRecalculer) selon l'état. -->
-        <button id="bouton-recalculer-horaires" class="bouton bouton-doux" hidden>🕐 Recalculer les horaires (garde les scores)</button>
+        <button id="bouton-recalculer-horaires" class="bouton bouton-doux" hidden data-ic="horloge">Recalculer les horaires (garde les scores)</button>
         <p class="note-generation aide-recalculer" id="aide-recalculer" hidden></p>
         <div id="message-generation" class="message-form"></div>
         <div id="arbitrages"></div>
         <!-- Modification manuelle des poules du matin (rééquilibrer les niveaux avant de jouer) -->
-        <button id="bouton-modifier-poules" class="bouton" hidden>✏️ Modifier les poules du matin</button>
+        <button id="bouton-modifier-poules" class="bouton" hidden data-ic="crayon">Modifier les poules du matin</button>
         <div id="edition-poules"></div>
         <div id="affichage-planning"></div>
       </section>
@@ -241,7 +241,7 @@
         <!-- État de préparation : indique si les scores du matin sont complets.
              Le bouton reste désactivé tant que ce n'est pas le cas. -->
         <p class="apresmidi-etat">Scores du matin : <strong id="etat-scores-matin">…</strong></p>
-        <button id="bouton-apresmidi" class="bouton">🏉 Générer l'après-midi</button>
+        <button id="bouton-apresmidi" class="bouton" data-ic="ballon">Générer l'après-midi</button>
         <div id="message-apresmidi" class="message-form"></div>
       </section>
 
@@ -304,7 +304,7 @@
         </p>
         <label class="mini-toggle ae-toggle"><input type="checkbox" id="inv-renvoyer"> Renvoyer aussi aux clubs déjà invités</label>
         <div class="ligne-action">
-          <button type="button" class="bouton" id="bouton-envoyer-invitations">✉️ Envoyer les invitations à tous les clubs</button>
+          <button type="button" class="bouton" id="bouton-envoyer-invitations" data-ic="email">Envoyer les invitations à tous les clubs</button>
           <span class="message-form" id="message-invitations"></span>
         </div>
       </section>
@@ -472,7 +472,7 @@
         </p>
         <div id="etat-dossier"></div>
         <div class="ligne-action">
-          <a class="bouton" id="bouton-ouvrir-dossier" href="dossier-club.html?admin=1" target="_blank" rel="noopener">📄 Aperçu du dossier (générique)</a>
+          <a class="bouton" id="bouton-ouvrir-dossier" href="dossier-club.html?admin=1" target="_blank" rel="noopener" data-ic="dossier">Aperçu du dossier (générique)</a>
         </div>
         <p class="note-generation">
           Le dossier s'ouvre dans un nouvel onglet : vérifie-le, puis
@@ -519,7 +519,7 @@
           les remettre à jour ; les catégories engagées et l'envoi du dossier sont remis à zéro).<br>
           ⚠️ Cette action est <strong>irréversible</strong>.
         </p>
-        <button id="bouton-reinitialiser" class="bouton bouton-danger">🧹 Réinitialiser le tournoi</button>
+        <button id="bouton-reinitialiser" class="bouton bouton-danger" data-ic="balai">Réinitialiser le tournoi</button>
         <div id="message-reinitialisation" class="message-form"></div>
       </details>
 

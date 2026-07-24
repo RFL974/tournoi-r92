@@ -351,8 +351,8 @@ function ecransMajPastilles() {
       // Écran hors de portée : cadenas + explication en infobulle.
       pastille.hidden = false;
       pastille.classList.add('est-verrou');
-      pastille.textContent = '🔒';
-      btn.title = '🔒 Termine d\'abord : ' + verrou;
+      pastille.innerHTML = (typeof svgIcone === 'function') ? svgIcone('verrou') : '🔒';
+      btn.title = 'Termine d\'abord : ' + verrou;
       return;
     }
     btn.title = concernes.map(function (e) { return e.titre + ' : ' + e.detail; }).join(' · ');
