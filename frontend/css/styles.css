@@ -489,12 +489,19 @@ select.r-input { cursor: pointer; }
 .bouton-modif:hover { background: rgba(80, 150, 255, 0.15); }
 .bouton-suppr:disabled,
 .bouton-modif:disabled { opacity: 0.5; cursor: default; }
-/* Boutons réduits à une icône (crayon / corbeille) : carrés et centrés. */
+/* Boutons réduits à une icône (crayon / corbeille / email) : icône BLANCHE, sans fond
+   ni contour (juste un léger fond au survol pour le retour visuel). */
 .bouton-icone {
-  padding: 4px 8px;
+  padding: 4px 6px;
   font-size: 1rem;
   line-height: 1;
+  background: none;
+  border: none;
+  color: #ffffff;
+  box-shadow: none;
 }
+.bouton-icone:hover { background: rgba(255, 255, 255, 0.14); }
+.bouton-icone:disabled { opacity: 0.4; }
 
 /* Icônes SVG d'interface (svgIcone) — alignées avec le texte des boutons. */
 .ic {
