@@ -140,6 +140,7 @@ async function initAdmin() {
     majInvitation();
     majSurPlace();   // Phase 1 — carte « Sur place »
     majReponse();    // Phase 1 — carte « Réponse à l'invitation »
+    majApercuInvitation(); // Phase 1 — aperçu de l'email d'invitation
     majPublication();
     majDossier(); // état des sections du dossier club (suit toutes les infos ci-dessus)
 
@@ -270,6 +271,13 @@ async function initAdmin() {
   document.getElementById('form-reponse').addEventListener('submit', function (e) { e.preventDefault(); });
   document.getElementById('bouton-enregistrer-reponse').addEventListener('click', onEnregistrerReponse);
   document.getElementById('form-reponse').addEventListener('blur', onReponseBlur, true);
+
+  // Phase 1 — aperçu de l'email d'invitation : mise à jour EN DIRECT quand on modifie les
+  // cartes « Sur place » / « Réponse » (comme l'aperçu des Infos), + bouton d'envoi groupé.
+  document.getElementById('form-surplace').addEventListener('change', majApercuInvitation);
+  document.getElementById('form-reponse').addEventListener('input', majApercuInvitation);
+  document.getElementById('form-reponse').addEventListener('change', majApercuInvitation);
+  document.getElementById('bouton-envoyer-invitations').addEventListener('click', onEnvoyerInvitationsGroupe);
 
   // Clubs invités : ajout via le formulaire, statut/suppression/actions délégués sur la liste.
   document.getElementById('form-club-invite').addEventListener('submit', onAjouterClubInvite);
@@ -704,6 +712,7 @@ async function onEnregistrerSurPlace() {
     await ecrireAdmin('enregistrerSurPlace', data);
     configCourante.global = Object.assign({}, configCourante.global, data);
     if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
+    majApercuInvitation(); // l'aperçu de l'email suit (ligne « Sur place »)
     afficherMessage(message, '✅ « Sur place » enregistré.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
@@ -787,12 +796,167 @@ async function onEnregistrerReponse() {
     await ecrireAdmin('enregistrerReponseInvitation', data);
     configCourante.global = Object.assign({}, configCourante.global, data);
     majReponse(); // ré-affiche le numéro normalisé
+    majApercuInvitation(); // l'aperçu de l'email suit (date limite de réponse)
     afficherMessage(message, '✅ « Réponse à l\'invitation » enregistrée.', 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
     bouton.disabled = false;
     bouton.textContent = texteBouton;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   INVITATION PHASE 1 — aperçu de l'email (live) + envoi individuel / groupé.
+   L'aperçu suit le MÊME principe que celui de la carte « Infos du tournoi » :
+   mise à jour EN DIRECT à partir des données du tournoi et des valeurs LIVE des
+   cartes « Sur place » / « Réponse à l'invitation ». Le contenu ENVOYÉ (objet +
+   corps après salutation) est construit par les mêmes fonctions → l'email reçu
+   correspond exactement à l'aperçu, seule la salutation variant par club.
+   -------------------------------------------------------------------------- */
+
+/** URL absolue de la page d'invitation publique (Phase 1), pour le lien de l'email. */
+function lienInvitationPublique() {
+  return new URL('invitation-club.html', window.location.href).toString();
+}
+
+/** État « global » pour l'invitation : config enregistrée + valeurs LIVE des cartes
+ *  Sur place / Réponse (pour un aperçu qui suit la frappe, comme l'aperçu des Infos). */
+function globalInvitation() {
+  const g = Object.assign({}, configCourante.global || {});
+  const fs = document.getElementById('form-surplace');
+  if (fs) {
+    g.buvette_disponible = fs.buvette_disponible.checked ? 'oui' : 'non';
+    g.espace_sandwich_disponible = fs.espace_sandwich_disponible.checked ? 'oui' : 'non';
+    g.boutique_r92_disponible = fs.boutique_r92_disponible.checked ? 'oui' : 'non';
+  }
+  const fr = document.getElementById('form-reponse');
+  if (fr) g.date_limite_reponse = fr.date_limite_reponse.value;
+  return g;
+}
+
+/** Objet de l'email d'invitation. */
+function sujetInvitation(g) {
+  return 'Invitation — ' + (String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
+}
+
+/** Corps APRÈS la salutation (identique pour tous ; le backend préfixe « Bonjour {prénom}, »).
+ *  Réactif aux cartes Sur place (ligne « Sur place ») et Réponse (date limite). */
+function corpsApresInvitation(g) {
+  const nom = String(g.tournoi_nom || '').trim() || 'notre tournoi';
+  let s = 'Nous avons le plaisir de vous inviter au ' + nom + '.\n'
+    + 'Vous trouverez toutes les informations (catégories concernées, déroulé de la journée, '
+    + 'réponse attendue) sur la page d\'invitation ci-dessous :\n\n'
+    + lienInvitationPublique() + '\n';
+  const services = [];
+  if (estOui(g.buvette_disponible)) services.push('buvette');
+  if (estOui(g.espace_sandwich_disponible)) services.push('espace sandwich');
+  if (estOui(g.boutique_r92_disponible)) services.push('boutique R92');
+  if (services.length) s += '\nSur place le jour J : ' + services.join(', ') + '.\n';
+  if (String(g.date_limite_reponse || '').trim()) {
+    s += '\nMerci de nous faire part de votre réponse avant le ' + formaterDateFr(g.date_limite_reponse) + '.\n';
+  }
+  s += '\nAu plaisir de vous accueillir,\nGénération R92';
+  return s;
+}
+
+/** Prénom d'exemple pour l'aperçu : premier club avec un prénom, sinon « Prénom ». */
+function exemplePrenomInvitation() {
+  const c = (clubsInvitesCourants || []).find(function (x) { return String(x.club_contact_prenom || '').trim(); });
+  return c ? String(c.club_contact_prenom).trim() : 'Prénom';
+}
+
+/** Corps COMPLET affiché dans l'aperçu (salutation d'exemple + corps commun). */
+function corpsApercuInvitation(g) {
+  return 'Bonjour ' + exemplePrenomInvitation() + ',\n\n' + corpsApresInvitation(g);
+}
+
+/** (Re)dessine l'aperçu de l'email d'invitation à partir de l'état courant. */
+function majApercuInvitation() {
+  const objet = document.getElementById('apercu-invitation-objet');
+  const corps = document.getElementById('apercu-invitation-corps');
+  if (!objet || !corps) return;
+  const g = globalInvitation();
+  objet.textContent = sujetInvitation(g);
+  corps.textContent = corpsApercuInvitation(g); // retours ligne conservés via CSS (pre-wrap)
+}
+
+/** Vrai si un club est ENCORE invitable (ni Accepté, ni Décliné). */
+function estInvitable(statut) {
+  return !estAccepte(statut) && !memeTexteSouple(statut, 'Décliné');
+}
+
+/** Envoi INDIVIDUEL de l'invitation à un club (même contenu que l'aperçu). */
+async function envoyerInvitationClubUI(nom) {
+  const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
+  if (!club) return;
+  const message = document.getElementById('message-club-invite');
+  const email = String(club.club_contact_email || '').trim();
+  if (!email) { await dialogAlerter('« ' + nom + ' » n\'a pas d\'email de contact : à inviter manuellement.'); return; }
+  if (!await dialogConfirmer('Envoyer l\'invitation à « ' + nom + ' » (' + email + ') ?', { ok: 'Envoyer' })) return;
+  const g = globalInvitation();
+  try {
+    const res = await ecrireAdmin('envoyerInvitationClub', {
+      club_nom: nom, sujet: sujetInvitation(g), corps_apres: corpsApresInvitation(g)
+    });
+    if (res && res.invitation_envoyee) club.invitation_envoyee = res.invitation_envoyee;
+    afficherClubsInvites();
+    afficherMessage(message, '✅ Invitation envoyée à ' + email + '.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  }
+}
+
+/**
+ * Envoi GROUPÉ des invitations : résumé AVANT confirmation (éligibles / sans email / déjà
+ * invités), case « Renvoyer aussi » optionnelle, puis envoi tolérant aux pannes côté backend
+ * et résumé final (« N envoyées, M échecs : … »).
+ */
+async function onEnvoyerInvitationsGroupe() {
+  const message = document.getElementById('message-invitations');
+  const bouton = document.getElementById('bouton-envoyer-invitations');
+  const renvoyer = document.getElementById('inv-renvoyer').checked;
+  const g = globalInvitation();
+
+  // Résumé calculé depuis la liste en mémoire (mêmes règles que le backend).
+  const invitables = clubsInvitesCourants.filter(function (c) { return estInvitable(c.statut); });
+  const avecEmail = invitables.filter(function (c) { return String(c.club_contact_email || '').trim(); });
+  const sansEmail = invitables.filter(function (c) { return !String(c.club_contact_email || '').trim(); });
+  const deja = avecEmail.filter(function (c) { return String(c.invitation_envoyee || '').trim(); });
+  const eligibles = avecEmail.filter(function (c) { return renvoyer || !String(c.invitation_envoyee || '').trim(); });
+
+  if (!eligibles.length) {
+    await dialogAlerter('Aucun club à inviter pour le moment.\n\n'
+      + sansEmail.length + ' club(s) sans email (à inviter manuellement).\n'
+      + deja.length + ' club(s) déjà invité(s)'
+      + (renvoyer ? '.' : ' — coche « Renvoyer aussi » pour les relancer.'));
+    return;
+  }
+  const resume = 'Envoyer l\'invitation à ' + eligibles.length + ' club(s) ?\n\n'
+    + '• ' + eligibles.length + ' recevront l\'invitation\n'
+    + '• ' + sansEmail.length + ' sans email (à inviter manuellement)\n'
+    + '• ' + deja.length + ' déjà invité(s) ' + (renvoyer ? '(seront renvoyés)' : '(exclus)');
+  if (!await dialogConfirmer(resume, { ok: 'Confirmer l\'envoi' })) return;
+
+  bouton.disabled = true;
+  const texte = bouton.textContent;
+  bouton.textContent = 'Envoi…';
+  afficherMessage(message, 'Envoi en cours…', 'ok');
+  try {
+    const res = await ecrireAdmin('envoyerInvitationsGroupe', {
+      sujet: sujetInvitation(g), corps_apres: corpsApresInvitation(g), renvoyer: renvoyer ? 'oui' : 'non'
+    });
+    await chargerClubsInvites(); // rafraîchit invitation_envoyee + l'aperçu (exemple prénom)
+    const nbOk = (res.envoyes || []).length;
+    const ech = res.echecs || [];
+    let msg = '✅ ' + nbOk + ' invitation(s) envoyée(s).';
+    if (ech.length) msg += ' ⚠️ ' + ech.length + ' échec(s) : ' + ech.map(function (e) { return e.club; }).join(', ') + '.';
+    afficherMessage(message, msg, ech.length ? 'ko' : 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texte;
   }
 }
 
@@ -1122,10 +1286,17 @@ function afficherClubsInvites() {
         (memeTexteSouple(club.statut, s) || (estAccepte(club.statut) && s === 'Accepté') ? ' selected' : '') +
         '>' + echapper(s) + '</option>';
     }).join('');
+    const aEmail = !!String(club.club_contact_email || '').trim();
+    const invite = String(club.invitation_envoyee || '').trim();
     const envoye = String(club.dossier_envoye || '').trim();
-    const badgeEnvoye = envoye
-      ? '<span class="club-envoye" title="Dossier envoyé">📧 Envoyé le ' + echapper(envoye) + '</span>'
-      : '';
+    // Deux badges distincts : invitation (Phase 1) et dossier (Phase 2).
+    const badges =
+      (invite ? '<span class="club-envoye club-badge-invite" title="Invitation envoyée">✉️ Invité le ' + echapper(invite) + '</span>' : '') +
+      (envoye ? '<span class="club-envoye" title="Dossier envoyé">📧 Dossier le ' + echapper(envoye) + '</span>' : '');
+    // Bouton d'envoi INDIVIDUEL de l'invitation (désactivé si le club n'a pas d'email).
+    const boutonInviter = aEmail
+      ? '<button class="bouton-icone bouton-inviter-club" title="Envoyer l\'invitation" aria-label="Envoyer l\'invitation à ' + echapper(nom) + '" data-club="' + echapper(nom) + '">✉️</button>'
+      : '<button class="bouton-icone bouton-inviter-club" title="Pas d\'email : à inviter manuellement" aria-label="Pas d\'email" disabled>✉️</button>';
 
     html +=
       '<div class="equipe-item club-invite-item ' + classeStatutClub(club.statut) + '" data-club="' + echapper(nom) + '">' +
@@ -1133,7 +1304,8 @@ function afficherClubsInvites() {
           (contact ? '<span class="club-contact">' + echapper(contact) + '</span>' : '') +
         '</span>' +
         '<div class="equipe-actions">' +
-          badgeEnvoye +
+          badges +
+          boutonInviter +
           '<select class="statut-club" data-club="' + echapper(nom) + '" ' +
                   'aria-label="Statut de ' + echapper(nom) + '">' + options + '</select>' +
           '<button class="bouton-suppr bouton-icone bouton-suppr-club" title="Retirer" aria-label="Retirer" ' +
@@ -1144,6 +1316,7 @@ function afficherClubsInvites() {
       '</div>';
   });
   zone.innerHTML = html;
+  majApercuInvitation(); // l'exemple de prénom de l'aperçu suit la liste
 }
 
 /** Ajoute un club invité (statut initial « Invité », date d'ajout posée par le backend). */
@@ -1207,10 +1380,12 @@ async function onChangerStatutClub(evenement) {
   }
 }
 
-/** Clic dans la liste des clubs : suppression, enregistrement des catégories, ou génération. */
+/** Clic dans la liste des clubs : suppression, envoi d'invitation, catégories, ou génération. */
 async function onClicClubsInvites(evenement) {
   const btnSuppr = evenement.target.closest('.bouton-suppr-club');
   if (btnSuppr) return supprimerClubInviteUI(btnSuppr);
+  const btnInviter = evenement.target.closest('.bouton-inviter-club');
+  if (btnInviter && !btnInviter.disabled) return envoyerInvitationClubUI(btnInviter.getAttribute('data-club'));
   const btnCats = evenement.target.closest('.bouton-cats-club');
   if (btnCats) return enregistrerCatsClub(btnCats);
   const btnGen = evenement.target.closest('.bouton-generer-dossier');

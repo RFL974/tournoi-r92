@@ -22,11 +22,12 @@ var ENTETES = {
   //   statut              : Invité / Accepté / Décliné (« Confirmé » = ancien libellé d'« Accepté »).
   //   categories_engagees : catégories réellement engagées par le club (« U8,U10 »), vides
   //                         tant qu'il n'a pas répondu — filtrent le dossier Phase 2.
-  //   dossier_envoye      : date (AAAA-MM-JJ) posée automatiquement quand l'envoi email réussit.
+  //   dossier_envoye      : date (AAAA-MM-JJ) posée automatiquement quand l'envoi du DOSSIER (Phase 2) réussit.
+  //   invitation_envoyee  : date (AAAA-MM-JJ) posée automatiquement quand l'envoi de l'INVITATION (Phase 1) réussit.
   // Les 5 premières colonnes gardent leur position (rétrocompatibilité des Sheets déjà en service) ;
-  // les 3 nouvelles sont ajoutées à droite (migration douce : assurerColonnesClubsInvites).
+  // les nouvelles sont ajoutées à droite (migration douce : assurerColonnesClubsInvites).
   ClubsInvites: ['club_nom', 'club_contact_nom', 'club_contact_email', 'statut', 'date_ajout',
-                 'club_contact_prenom', 'categories_engagees', 'dossier_envoye'],
+                 'club_contact_prenom', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee'],
   // Colonnes 1-12 : historiques (matin + après-midi CROISE/LIBRE).
   // Colonnes 13-18 : format d'après-midi + tableau à élimination (COUPE_PLATEAU).
   //   format        : CROISE / LIBRE / COUPE_PLATEAU (recopié depuis la catégorie ; vide pour le matin)
@@ -411,6 +412,8 @@ function doPost(e) {
       case 'modifierStatutClubInvite': resultat = modifierStatutClubInvite(classeur, requete); break;
       case 'enregistrerCategoriesEngagees': resultat = enregistrerCategoriesEngagees(classeur, requete); break;
       case 'envoyerDossierEmail':  resultat = envoyerDossierEmail(classeur, requete); break;
+      case 'envoyerInvitationClub': resultat = envoyerInvitationClub(classeur, requete); break;
+      case 'envoyerInvitationsGroupe': resultat = envoyerInvitationsGroupe(classeur, requete); break;
       case 'supprimerClubInvite':  resultat = supprimerClubInvite(classeur, requete); break;
       case 'reinitialiserTournoi': resultat = reinitialiserTournoi(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
@@ -1140,13 +1143,7 @@ function envoyerDossierEmail(classeur, data) {
 
   var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
   try {
-    if (expediteur) {
-      // Nécessite que `expediteur` soit un alias « Envoyer en tant que » du compte exécutant
-      // (sinon Gmail lève une exception → on n'écrit PAS dossier_envoye, l'envoi est à relancer).
-      GmailApp.sendEmail(email, sujet, corps, { name: 'Génération R92', from: expediteur });
-    } else {
-      MailApp.sendEmail({ to: email, subject: sujet, body: corps, name: 'Génération R92' });
-    }
+    envoyerEmailAvec(email, sujet, corps, expediteur);
   } catch (e) {
     return { error: 'Échec de l\'envoi de l\'email : ' + (e && e.message ? e.message : e) };
   }
@@ -1160,6 +1157,121 @@ function envoyerDossierEmail(classeur, data) {
     cell.setValue(today);
   }
   return { ok: true, dossier_envoye: today, destinataire: email };
+}
+
+/* ===================== INVITATIONS PHASE 1 (envoi par email) ===================== */
+
+/**
+ * Envoi bas niveau d'un email, partagé par les envois Phase 1 et Phase 2. LÈVE une exception
+ * en cas d'échec (l'appelant décide alors de ne pas marquer la date d'envoi).
+ *  - `expediteur` renseigné → GmailApp avec « from » (suppose un alias « Envoyer en tant que ») ;
+ *  - sinon → MailApp (part de l'adresse du compte exécutant le script).
+ */
+function envoyerEmailAvec(destinataire, sujet, corps, expediteur) {
+  if (expediteur) {
+    GmailApp.sendEmail(destinataire, sujet, corps, { name: 'Génération R92', from: expediteur });
+  } else {
+    MailApp.sendEmail({ to: destinataire, subject: sujet, body: corps, name: 'Génération R92' });
+  }
+}
+
+/**
+ * Compose le corps FINAL d'une invitation Phase 1 : salutation personnalisée par club
+ * (« Bonjour {prénom}, » — ou « Bonjour, » si le prénom manque) + le corps commun `corpsApres`
+ * (texte d'intro + lien) fourni par l'admin (identique à l'aperçu affiché). Le contenu envoyé
+ * est ainsi EXACTEMENT celui de l'aperçu, seule la salutation variant d'un club à l'autre.
+ */
+function composerCorpsInvitation(club, corpsApres) {
+  var prenom = String((club && club.club_contact_prenom) || '').trim();
+  var salut = prenom ? ('Bonjour ' + prenom + ',') : 'Bonjour,';
+  return salut + '\n\n' + String(corpsApres == null ? '' : corpsApres);
+}
+
+/** Vrai si un club est ENCORE invitable (ni Accepté, ni Décliné : Invité, vide ou inconnu). */
+function clubEstInvitable(statut) {
+  var canon = statutClubCanonique(statut);
+  return canon !== 'Accepté' && canon !== 'Décliné';
+}
+
+/**
+ * Envoi INDIVIDUEL de l'invitation Phase 1 à UN club. Destinataire relu du Sheet (jamais du
+ * client). `invitation_envoyee` posée (date du jour) uniquement en cas de SUCCÈS.
+ */
+function envoyerInvitationClub(classeur, data) {
+  var nom = String(data.club_nom || '').trim();
+  if (!nom) return { error: 'Club manquant.' };
+  var sujet = String(data.sujet == null ? '' : data.sujet).trim();
+  if (!sujet) return { error: 'L\'objet du message est vide.' };
+  var corpsApres = String(data.corps_apres == null ? '' : data.corps_apres);
+  if (!corpsApres.trim()) return { error: 'Le corps du message est vide.' };
+
+  var onglet = assurerOngletClubsInvites(classeur);
+  var ligne = ligneClubInvite(onglet, nom);
+  if (ligne === -1) return { error: 'Club introuvable : ' + nom };
+  var colEmail = colClubInvite(onglet, 'club_contact_email');
+  var email = (colEmail === -1) ? '' : String(onglet.getRange(ligne, colEmail).getValue() || '').trim();
+  if (!email) return { error: 'Ce club n\'a pas d\'email de contact : à inviter manuellement.' };
+  if (!estEmailValide(email)) return { error: 'Email du club invalide : « ' + email + ' ».' };
+
+  var club = null, clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  for (var i = 0; i < clubs.length; i++) { if (memeTexteSouple(clubs[i].club_nom, nom)) { club = clubs[i]; break; } }
+
+  var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
+  try {
+    envoyerEmailAvec(email, sujet, composerCorpsInvitation(club || {}, corpsApres), expediteur);
+  } catch (e) {
+    return { error: 'Échec de l\'envoi de l\'email : ' + (e && e.message ? e.message : e) };
+  }
+
+  var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  var col = colClubInvite(onglet, 'invitation_envoyee');
+  if (col !== -1) { var cell = onglet.getRange(ligne, col); cell.setNumberFormat('@'); cell.setValue(today); }
+  return { ok: true, invitation_envoyee: today, destinataire: email };
+}
+
+/**
+ * Envoi GROUPÉ des invitations Phase 1. Filtre côté serveur (source de vérité) :
+ *  - clubs ENCORE invitables (ni Accepté ni Décliné) ET avec un email valide ;
+ *  - `invitation_envoyee` vide, SAUF si `renvoyer` = oui (renvoi forcé).
+ * Boucle d'envoi TOLÉRANTE AUX PANNES : un échec sur un club n'arrête pas les suivants ; on
+ * pose `invitation_envoyee` (date du jour) pour chaque SUCCÈS et on renvoie un résumé complet.
+ */
+function envoyerInvitationsGroupe(classeur, data) {
+  var sujet = String(data.sujet == null ? '' : data.sujet).trim();
+  if (!sujet) return { error: 'L\'objet du message est vide.' };
+  var corpsApres = String(data.corps_apres == null ? '' : data.corps_apres);
+  if (!corpsApres.trim()) return { error: 'Le corps du message est vide.' };
+  var renvoyer = (String(data.renvoyer).toLowerCase() === 'oui' || data.renvoyer === true);
+
+  var onglet = assurerOngletClubsInvites(classeur);
+  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
+  var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  var colEnvoye = colClubInvite(onglet, 'invitation_envoyee');
+
+  var envoyes = [], echecs = [], sansEmail = [], dejaInvites = [];
+  clubs.forEach(function (c) {
+    if (!clubEstInvitable(c.statut)) return; // Accepté / Décliné : hors invitation
+    var email = String(c.club_contact_email || '').trim();
+    if (!email || !estEmailValide(email)) { sansEmail.push(String(c.club_nom || '')); return; }
+    var dejaInvite = String(c.invitation_envoyee || '').trim() !== '';
+    if (dejaInvite && !renvoyer) { dejaInvites.push(String(c.club_nom || '')); return; }
+    try {
+      envoyerEmailAvec(email, sujet, composerCorpsInvitation(c, corpsApres), expediteur);
+      var ligne = ligneClubInvite(onglet, c.club_nom);
+      if (ligne !== -1 && colEnvoye !== -1) {
+        var cell = onglet.getRange(ligne, colEnvoye);
+        cell.setNumberFormat('@');
+        cell.setValue(today);
+      }
+      envoyes.push(String(c.club_nom || ''));
+    } catch (e) {
+      echecs.push({ club: String(c.club_nom || ''), erreur: (e && e.message ? e.message : String(e)) });
+    }
+  });
+
+  return { ok: true, date: today, envoyes: envoyes, echecs: echecs,
+           sans_email: sansEmail, deja_invites: dejaInvites };
 }
 
 /** Retire un club de la liste des invités. */
@@ -1183,7 +1295,7 @@ function reinitialiserPhase2Clubs(classeur) {
   var dernier = onglet.getLastRow();
   if (dernier < 2) return; // en-tête seul : rien à vider
   var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
-  ['categories_engagees', 'dossier_envoye'].forEach(function (h) {
+  ['categories_engagees', 'dossier_envoye', 'invitation_envoyee'].forEach(function (h) {
     var c = entetes.indexOf(h);
     if (c !== -1) {
       var zone = onglet.getRange(2, c + 1, dernier - 1, 1);
