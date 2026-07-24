@@ -496,6 +496,19 @@ select.r-input { cursor: pointer; }
   line-height: 1;
 }
 
+/* Icônes SVG d'interface (svgIcone) — alignées avec le texte des boutons. */
+.ic {
+  width: 1.05em;
+  height: 1.05em;
+  vertical-align: -0.15em;
+  flex: none;
+}
+.bouton .ic,
+button .ic { margin-right: 0.45em; }
+/* Boutons à icône SEULE (crayon, corbeille, email…) : icône centrée, sans marge. */
+.bouton-icone { display: inline-flex; align-items: center; justify-content: center; }
+.bouton-icone .ic { margin: 0; width: 1.2em; height: 1.2em; }
+
 .vide { color: #7f92a8; font-style: italic; }
 
 /* ==========================================================================

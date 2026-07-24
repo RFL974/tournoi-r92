@@ -112,6 +112,7 @@ function estPresente(cat) {
  */
 async function initAdmin() {
   const zoneReglages = document.getElementById('reglages');
+  if (typeof injecterIcones === 'function') injecterIcones(); // icônes SVG des boutons statiques
 
   try {
     const data = await apiGet('getAll'); // { config, equipes, poules, matchs }
@@ -974,7 +975,13 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
   if (String(g.contact_reponse_nom || '').trim()) contact.push(echapper(String(g.contact_reponse_nom).trim()));
   if (String(g.contact_reponse_tel || '').trim()) contact.push(echapper(telephoneLisibleAdmin(g.contact_reponse_tel)));
   if (String(g.contact_reponse_email || '').trim()) contact.push(echapper(String(g.contact_reponse_email).trim()));
-  const reponse = ligneJ('Réponse souhaitée avant le', String(g.date_limite_reponse || '').trim() ? formaterDateFr(g.date_limite_reponse) : '')
+  // Date limite de CONFIRMATION (carte Modalités) : ajoutée seulement si renseignée ET
+  // différente de la date de réponse (pas de doublon de date dans l'email).
+  const dateConfirm = String(g.date_limite_confirmation || '').trim();
+  const dateRep = String(g.date_limite_reponse || '').trim();
+  const confirmDiff = dateConfirm && dateConfirm !== dateRep;
+  const reponse = ligneJ('Réponse souhaitée avant le', dateRep ? formaterDateFr(dateRep) : '')
+    + ligneJ('Confirmation des effectifs avant le', confirmDiff ? formaterDateFr(dateConfirm) : '')
     + ligneJ('Votre contact', contact.join(' · '));
   const blocReponse = reponse ? (emailTitreSection('Réponse attendue')
     + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + reponse + '</table>') : '';
@@ -1028,6 +1035,8 @@ function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse) {
   }
   if (services.length || (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim())) L.push('');
   if (String(g.date_limite_reponse || '').trim()) L.push('Réponse souhaitée avant le ' + formaterDateFr(g.date_limite_reponse) + '.');
+  const dConf = String(g.date_limite_confirmation || '').trim();
+  if (dConf && dConf !== String(g.date_limite_reponse || '').trim()) L.push('Confirmation des effectifs avant le ' + formaterDateFr(dConf) + '.');
   const c2 = [];
   if (String(g.contact_reponse_nom || '').trim()) c2.push(String(g.contact_reponse_nom).trim());
   if (String(g.contact_reponse_tel || '').trim()) c2.push(telephoneLisibleAdmin(g.contact_reponse_tel));
@@ -1507,7 +1516,7 @@ function panneauAccepteClub(club, nom) {
   }).join('');
 
   const boutonGenerer = engBrut
-    ? '<button class="bouton bouton-generer-dossier" data-club="' + echapper(nom) + '">📄 Générer le dossier final</button>'
+    ? '<button class="bouton bouton-generer-dossier" data-club="' + echapper(nom) + '">' + svgIcone('dossier') + 'Générer le dossier final</button>'
     : '';
 
   return '<div class="club-panneau" data-club="' + echapper(nom) + '">' +
@@ -1520,7 +1529,7 @@ function panneauAccepteClub(club, nom) {
       '<input type="text" class="club-prenom-input" value="' + echapper(String(club.club_contact_prenom || '')) + '" ' +
              'placeholder="Ex : Camille" autocomplete="off"></label>' +
     '<div class="club-panneau-actions">' +
-      '<button class="bouton bouton-cats-club" data-club="' + echapper(nom) + '">💾 Enregistrer la sélection</button>' +
+      '<button class="bouton bouton-cats-club" data-club="' + echapper(nom) + '">' + svgIcone('enregistrer') + 'Enregistrer la sélection</button>' +
       boutonGenerer +
     '</div>' +
   '</div>';
@@ -1612,8 +1621,8 @@ function afficherClubsInvites() {
       (alerte ? '<span class="club-alerte-ecart" tabindex="0" role="button" title="' + echapper(alerte) + '" data-club="' + echapper(nom) + '">⚠️ Écart</span>' : '');
     // Bouton d'envoi INDIVIDUEL de l'invitation (désactivé si le club n'a pas d'email).
     const boutonInviter = aEmail
-      ? '<button class="bouton-icone bouton-inviter-club" title="Envoyer l\'invitation" aria-label="Envoyer l\'invitation à ' + echapper(nom) + '" data-club="' + echapper(nom) + '">✉️</button>'
-      : '<button class="bouton-icone bouton-inviter-club" title="Pas d\'email : à inviter manuellement" aria-label="Pas d\'email" disabled>✉️</button>';
+      ? '<button class="bouton-icone bouton-inviter-club" title="Envoyer l\'invitation" aria-label="Envoyer l\'invitation à ' + echapper(nom) + '" data-club="' + echapper(nom) + '">' + svgIcone('email') + '</button>'
+      : '<button class="bouton-icone bouton-inviter-club" title="Pas d\'email : à inviter manuellement" aria-label="Pas d\'email" disabled>' + svgIcone('email') + '</button>';
 
     html +=
       '<div class="equipe-item club-invite-item ' + classeStatutClub(club.statut) + '" data-club="' + echapper(nom) + '">' +
@@ -1623,11 +1632,11 @@ function afficherClubsInvites() {
         '<div class="equipe-actions">' +
           badges +
           boutonInviter +
-          '<button class="bouton-icone bouton-editer-club" title="Modifier les coordonnées" aria-label="Modifier les coordonnées de ' + echapper(nom) + '" data-club="' + echapper(nom) + '">✏️</button>' +
+          '<button class="bouton-icone bouton-editer-club" title="Modifier les coordonnées" aria-label="Modifier les coordonnées de ' + echapper(nom) + '" data-club="' + echapper(nom) + '">' + svgIcone('crayon') + '</button>' +
           '<select class="statut-club" data-club="' + echapper(nom) + '" ' +
                   'aria-label="Statut de ' + echapper(nom) + '">' + options + '</select>' +
           '<button class="bouton-suppr bouton-icone bouton-suppr-club" title="Retirer" aria-label="Retirer" ' +
-                  'data-club="' + echapper(nom) + '">🗑️</button>' +
+                  'data-club="' + echapper(nom) + '">' + svgIcone('corbeille') + '</button>' +
         '</div>' +
         // Panneau de sélection des catégories + génération, visible seulement si Accepté.
         (estAccepte(club.statut) ? panneauAccepteClub(club, nom) : '') +
@@ -1917,7 +1926,7 @@ function ouvrirApercuEmail(club, lien) {
         '<textarea id="eml-corps">' + echapper(corpsDefaut) + '</textarea></label>' +
       '<div class="eml-actions">' +
         '<button type="button" class="bouton bouton-doux" id="eml-annuler">Annuler</button>' +
-        '<button type="button" class="bouton" id="eml-envoyer">📧 Envoyer</button>' +
+        '<button type="button" class="bouton" id="eml-envoyer">' + svgIcone('email') + 'Envoyer</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
@@ -2011,10 +2020,10 @@ function majPublication() {
   if (!etat || !bouton) return;
   if (estPublie()) {
     etat.textContent = '🟢 Publié (visible du public)';
-    bouton.textContent = '🙈 Masquer le tournoi';
+    bouton.innerHTML = svgIcone('monde') + 'Masquer le tournoi';
   } else {
     etat.textContent = '⚪️ Non publié (les visiteurs voient « à venir »)';
-    bouton.textContent = '🚀 Publier le tournoi';
+    bouton.innerHTML = svgIcone('monde') + 'Publier le tournoi';
   }
   majApercuTournoi(); // la légende de l'aperçu (publié / non publié) suit
 }
@@ -2479,15 +2488,15 @@ function majBarreConnexion(connecte) {
   if (connecte) {
     barre.className = 'barre-connexion connecte';
     barre.innerHTML =
-      '<span>🔓 Connecté à l\'administration</span>' +
+      '<span>' + svgIcone('verrou_ouvert') + 'Connecté à l\'administration</span>' +
       '<span class="barre-actions">' +
         '<button type="button" class="bouton-lien" id="bouton-changer-cle">Changer de clé</button>' +
-        '<button type="button" class="bouton-lien" id="bouton-verrouiller">🔒 Verrouiller</button>' +
+        '<button type="button" class="bouton-lien" id="bouton-verrouiller">' + svgIcone('verrou') + 'Verrouiller</button>' +
       '</span>';
   } else {
     barre.className = 'barre-connexion deconnecte';
     barre.innerHTML =
-      '<span>🔒 Non connecté — les enregistrements seront refusés</span>' +
+      '<span>' + svgIcone('verrou') + 'Non connecté — les enregistrements seront refusés</span>' +
       '<button type="button" class="bouton" id="bouton-se-connecter">Se connecter</button>';
   }
 }
@@ -3279,9 +3288,9 @@ function afficherEquipes(equipes) {
           '<span class="nom">' + echapper(eq.nom_equipe) + '</span>' +
           '<div class="equipe-actions">' +
             '<button class="bouton-modif bouton-icone" title="Modifier" aria-label="Modifier" ' +
-                    'data-id="' + eq.id_equipe + '" data-nom="' + echapper(eq.nom_equipe) + '">✏️</button>' +
+                    'data-id="' + eq.id_equipe + '" data-nom="' + echapper(eq.nom_equipe) + '">' + svgIcone('crayon') + '</button>' +
             '<button class="bouton-suppr bouton-icone" title="Supprimer" aria-label="Supprimer" ' +
-                    'data-id="' + eq.id_equipe + '" data-nom="' + echapper(eq.nom_equipe) + '">🗑️</button>' +
+                    'data-id="' + eq.id_equipe + '" data-nom="' + echapper(eq.nom_equipe) + '">' + svgIcone('corbeille') + '</button>' +
           '</div>' +
         '</div>';
     });
@@ -3982,7 +3991,7 @@ function afficherEditionPoules() {
   });
 
   html += '<div class="ligne-action">' +
-    '<button type="button" class="bouton" data-action="enregistrer">💾 Enregistrer et recalculer</button>' +
+    '<button type="button" class="bouton" data-action="enregistrer">' + svgIcone('enregistrer') + 'Enregistrer et recalculer</button>' +
     '<button type="button" class="bouton-suppr" data-action="annuler">Annuler</button>' +
     '<span class="message-form" id="message-edition-poules"></span>' +
     '</div></div>';
@@ -4061,7 +4070,7 @@ async function onEnregistrerPoules() {
       '✅ Poules mises à jour : ' + nbP + ' poule(s), ' + nbM + ' match(s) recalculés.' + finTxt, 'ok');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
-    if (bouton) { bouton.disabled = false; bouton.textContent = '💾 Enregistrer et recalculer'; }
+    if (bouton) { bouton.disabled = false; bouton.innerHTML = svgIcone('enregistrer') + 'Enregistrer et recalculer'; }
   }
 }
 
@@ -4274,7 +4283,7 @@ function injecterTerrains() {
   h += '<p class="note-generation">Répartit les mini-terrains entre catégories <strong>selon le nombre ' +
        'd\'équipes</strong>, en gardant chaque catégorie groupée et en réservant la table des marques. ' +
        'Prévisualise la carte, puis applique.</p>';
-  h += '<button type="button" class="bouton" id="bouton-repartir">🧩 Répartir les terrains</button>';
+  h += '<button type="button" class="bouton" id="bouton-repartir">' + svgIcone('terrain') + 'Répartir les terrains</button>';
   h += '<div id="repartition-resultat"></div>';
 
   zone.innerHTML = h;
