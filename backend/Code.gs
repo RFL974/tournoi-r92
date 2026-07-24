@@ -243,8 +243,12 @@ function snapshotJsonCache() {
  */
 function mettreEnCacheSnapshot(cache, json) {
   try {
-    // Marge sous 100 Ko (100 000 octets) ; longueur JS ≈ octets pour de l'ASCII/JSON.
-    if (json.length < 95000) {
+    // Marge sous 100 Ko. On mesure les OCTETS UTF-8 réels (Utilities.newBlob), pas json.length :
+    // un « é » compte 1 en .length mais 2 octets. Avec des noms d'équipes/clubs accentués, le
+    // snapshot pouvait dépasser 100 Ko réels alors que .length < 95000 → put() échouait en
+    // silence → cache jamais rempli → chaque getAll relisait le Sheet (saturation).
+    var octets = Utilities.newBlob(json).getBytes().length;
+    if (octets < 95000) {
       cache.put('snapshot_json', json, 10);             // copie fraîche (10 s)
       cache.put('snapshot_json_secours', json, 21600);  // copie de secours (6 h, le max)
     }
@@ -976,11 +980,15 @@ var STATUTS_CLUB_INVITE = ['Invité', 'Accepté', 'Décliné'];
 
 /** Comparaison de textes SANS accents ni casse (piège NFC/NFD du Sheet : « Invité »
  *  peut revenir avec un é décomposé — même précaution que estTermine). */
+/** Forme \u00ab plate \u00bb d'un texte pour comparaison souple : sans accents (NFD), sans casse ni
+ *  espaces de bord. Point de passage UNIQUE (pi\u00e8ge NFC/NFD du Sheet : \u00ab Invit\u00e9 \u00bb peut revenir
+ *  avec un \u00e9 d\u00e9compos\u00e9). Utilis\u00e9 par memeTexteSouple() ET l'index nom\u2192ligne des envois group\u00e9s. */
+function normaliserTexteSouple(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+}
+
 function memeTexteSouple(a, b) {
-  function plat(s) {
-    return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
-  }
-  return plat(a) === plat(b);
+  return normaliserTexteSouple(a) === normaliserTexteSouple(b);
 }
 
 /** Statut canonique ('Invité'/'Accepté'/'Décliné') depuis une saisie, ou '' si inconnu.
@@ -1295,6 +1303,21 @@ function ligneClubInvite(onglet, nom) {
     if (memeTexteSouple(donnees[i][0], nom)) return i + 1;
   }
   return -1;
+}
+
+/**
+ * Index { nom normalisé → numéro de ligne } de l'onglet ClubsInvites, en UNE seule lecture.
+ * Même normalisation et même règle « 1re occurrence » que ligneClubInvite(). Sert aux
+ * traitements en LOT (envoi groupé) pour éviter de relire tout l'onglet à chaque club (O(n²)).
+ */
+function indexerLignesClubs(onglet) {
+  var donnees = onglet.getDataRange().getValues();
+  var index = {};
+  for (var i = 1; i < donnees.length; i++) {
+    var cle = normaliserTexteSouple(donnees[i][0]);
+    if (cle && !(cle in index)) index[cle] = i + 1;
+  }
+  return index;
 }
 
 /** Change le STATUT d'un club invité (menu déroulant de la liste admin). */
@@ -1670,6 +1693,10 @@ function envoyerInvitationsGroupe(classeur, data) {
   var afficheBlob = afficheBlobPourEmail(classeur);
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   var colEnvoye = colClubInvite(onglet, 'invitation_envoyee');
+  // Index nom→ligne construit UNE fois (la boucle ne fait qu'écrire, aucune ligne insérée/
+  // supprimée → les numéros restent valides). Avant : ligneClubInvite() relisait tout l'onglet
+  // à chaque club invité → O(n²) sur le carnet d'adresses.
+  var ligneParNom = indexerLignesClubs(onglet);
 
   var envoyes = [], echecs = [], sansEmail = [], dejaInvites = [];
   clubs.forEach(function (c) {
@@ -1681,7 +1708,7 @@ function envoyerInvitationsGroupe(classeur, data) {
     try {
       var lienReponse = lienReponseClub(data.base_reponse, c.club_nom, c.club_token);
       envoyerInvitationEmail(email, sujet, htmlModele, texteModele, c.club_contact_prenom, lienReponse, afficheBlob, expediteur);
-      var ligne = ligneClubInvite(onglet, c.club_nom);
+      var ligne = ligneParNom[normaliserTexteSouple(c.club_nom)] || -1;
       if (ligne !== -1 && colEnvoye !== -1) {
         var cell = onglet.getRange(ligne, colEnvoye);
         cell.setNumberFormat('@');
