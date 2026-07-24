@@ -26,7 +26,6 @@ image **inline** (`cid:affiche`). ⚠️ **Redéploiement de la Web App nécessa
 `envoyerDossierEmail` accepte maintenant `html_modele` + `texte_modele` (repli sur l'ancien envoi
 texte `corps` si seul celui-ci est fourni). Nouveau helper partagé `envoyerEmailHtml` (mutualisé
 avec l'envoi d'invitation).
->>>>>>> origin/main
 
 ### Clubs invités : création des équipes déplacée sur « Enregistrer la sélection » — 2026-07-24
 La **création automatique des équipes** engagées d'un club (source=auto) se déclenche désormais
