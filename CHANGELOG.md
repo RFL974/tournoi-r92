@@ -5,6 +5,31 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sprint 6 — Réponse en libre-service du club + tri dynamique de la liste — 2026-07-24
+Le contact du club répond lui-même à l'invitation via un **lien personnel sécurisé par jeton**
+reçu dans l'email : il accepte (catégories engagées + nombre d'équipes par catégorie + joueurs)
+ou décline. La réponse remplit automatiquement la fiche du club dans l'admin. **L'envoi du dossier
+complet reste toujours déclenché manuellement** par l'organisateur. ⚠️ Redéploiement de la Web App.
+
+- **Onglet `ClubsInvites`** — 4 nouvelles colonnes : `club_token` (UUID généré à l'ajout, sécurise
+  la page de réponse ; rétro-attribué aux clubs existants via `assurerTokensClubs`), `date_reponse`,
+  `nb_equipes_par_categorie` (JSON `{"U8":2,…}`), `nb_joueurs_total`. Migration douce.
+- **Email d'invitation** — nouveau bouton **« Répondre à l'invitation »** (lien personnel avec jeton,
+  `{{LIEN_REPONSE}}` remplacé par club au moment de l'envoi), en plus du lien « version complète »
+  vers `invitation-club.html`.
+- **Nouvelle page publique `reponse-invitation.html`** — accessible uniquement avec `tournoi`, `club`
+  et `token` valides (sinon « Lien invalide ou expiré »). Rappel du tournoi, deux boutons
+  présent/absent, formulaire de participation (cases catégories + nombre d'équipes avec **validation
+  en direct du maximum** `max_equipes_par_club` + nombre total de joueurs), messages de confirmation.
+- **Backend** — `getReponseInvitation` (lecture doGet validée par le jeton, n'expose jamais l'email)
+  et `repondreInvitation` (écriture doPost **sécurisée par le jeton, pas la clé admin** : valide les
+  catégories, les maxima et le nombre de joueurs ; écrit statut/categories_engagees/
+  nb_equipes_par_categorie/nb_joueurs_total/date_reponse). Un jeton invalide n'écrit jamais rien.
+- **Liste admin des clubs triée** (action requise en haut) : 1. Accepté sans dossier envoyé →
+  2. Invité sans réponse → 3. Décliné → 4. Accepté déjà envoyé. Les lignes « Accepté » affichent la
+  **réponse remontée** (catégories, équipes/catégorie, joueurs) + « Générer le dossier final ». La
+  mise à Accepté **manuelle** (fallback téléphone, Sprint 4) reste disponible.
+
 ### Sprint 5 (addendum) — Email HTML : sauts de ligne + justification du texte — 2026-07-24
 Deux corrections de rendu sur le template HTML de l'email d'invitation (Phase 1) :
 - **Sauts de ligne préservés** : les retours à la ligne saisis dans les zones de texte libre

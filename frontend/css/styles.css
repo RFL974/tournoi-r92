@@ -1665,6 +1665,24 @@ a.bouton { display: inline-block; text-decoration: none; }
   white-space: nowrap;
   margin-left: 4px;
 }
+/* Résumé (lecture seule) de la réponse remontée par le club en libre-service. */
+.club-reponse {
+  background: rgba(53, 192, 106, 0.12);
+  border: 1px solid rgba(53, 192, 106, 0.4);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+}
+.club-reponse-titre {
+  margin: 0 0 4px;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 0.8rem;
+  color: #8fe0a8;
+}
+.club-rep-ligne { font-size: 0.9rem; color: #eaf2ff; }
+
 /* Panneau « Accepté » : sélection des catégories engagées + prénom + génération. */
 .club-panneau {
   flex: 1 1 100%;

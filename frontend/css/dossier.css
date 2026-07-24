@@ -297,6 +297,84 @@ body {
 .inv-lien { color: var(--d-bleu); text-decoration: none; font-family: 'Barlow', sans-serif; letter-spacing: 0; }
 .inv-lien:hover { text-decoration: underline; }
 
+/* ============================================================================
+   RÉPONSE À L'INVITATION (Phase 1, libre-service) — reponse-invitation.html
+   ========================================================================== */
+.rep-deja {
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: #eef7ee;
+  border-left: 4px solid #35c06a;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.9rem;
+}
+.rep-choix { display: flex; flex-wrap: wrap; gap: 12px; margin: 18px 0; }
+.rep-btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font: 600 1rem 'Barlow', sans-serif;
+  cursor: pointer;
+}
+.rep-btn-oui { background: var(--d-bleu); color: #fff; }
+.rep-btn-oui:hover { background: #227ac4; }
+.rep-btn-non { background: #f2f7fd; color: var(--d-navy); border: 1px solid var(--d-filet); }
+.rep-btn-non:hover { background: #e6eef8; }
+.rep-btn-neutre { background: transparent; color: var(--d-gris); border: 1px solid var(--d-filet); }
+.rep-btn:disabled { opacity: 0.6; cursor: wait; }
+
+.rep-question { font-weight: 600; margin: 10px 0; }
+
+/* Formulaire « présents » */
+.rep-form { margin-top: 8px; }
+.rep-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-size: 1.05rem;
+  color: var(--d-bleu);
+  border-bottom: 1px solid var(--d-filet);
+  padding-bottom: 4px;
+  margin: 6px 0 8px;
+}
+.rep-aide { color: var(--d-gris); font-size: 0.9rem; margin: 0 0 10px; }
+.rep-cats { display: grid; gap: 8px; }
+.rep-cat {
+  padding: 10px 12px;
+  background: #f5f8fc;
+  border-left: 3px solid var(--d-bleu);
+  border-radius: 0 6px 6px 0;
+}
+.rep-cat-titre { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; cursor: pointer; }
+.rep-cat-nom { font-weight: 700; color: var(--d-navy); }
+.rep-cat-info { color: var(--d-gris); font-size: 0.85rem; }
+.rep-cat-nb { display: inline-block; margin: 8px 0 0 26px; font-size: 0.9rem; color: var(--d-texte); }
+.rep-cat-equipes, #rep-joueurs {
+  width: 74px;
+  padding: 6px 8px;
+  border: 1px solid var(--d-filet);
+  border-radius: 6px;
+  font: inherit;
+}
+#rep-joueurs { width: 96px; }
+.rep-cat-err { display: block; margin: 4px 0 0 26px; color: #b3261e; font-size: 0.82rem; }
+.rep-champ-joueurs { display: block; margin: 16px 0 0; font-weight: 600; }
+.rep-champ-joueurs input { display: block; margin-top: 6px; }
+.rep-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 18px; }
+.rep-form-msg { font-size: 0.9rem; }
+.rep-form-msg.ko { color: #b3261e; }
+
+.rep-merci {
+  margin-top: 8px;
+  padding: 18px 20px;
+  background: #f2f7fd;
+  border-left: 4px solid var(--d-bleu);
+  border-radius: 0 8px 8px 0;
+}
+.rep-merci h2 { margin: 0 0 6px; color: var(--d-navy); font-family: 'Barlow Condensed', sans-serif; }
+.rep-merci p { margin: 0; }
+
 /* ----- Petits écrans (aperçu mobile) ---------------------------------------------- */
 @media (max-width: 640px) {
   .feuille { margin: 0; padding: 18px 14px; box-shadow: none; }
