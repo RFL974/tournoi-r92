@@ -166,6 +166,11 @@ Une ligne par équipe. En-têtes :
 | `nom_equipe` | `Suresnes 1` | Saisi par l'admin |
 | `categorie` | `U8` | Saisi par l'admin |
 | `poule` | `A` | **Auto** — rempli par « Générer poules et planning » |
+| `source` | `manuel` | **Nouveau (Sprint 6).** `manuel` = équipe ajoutée à la main ; `auto` = équipe **créée à l'envoi du dossier final** d'un club invité. **Vide = `manuel`** (rétrocompatibilité) |
+
+> 🛠️ **Migration douce.** La colonne `source` est **ajoutée automatiquement** à droite dès le
+> premier ajout d'équipe (ou envoi de dossier final) sur un Sheet déjà en service. Les lignes déjà
+> présentes (sans `source`) comptent comme **`manuel`**.
 
 ---
 
@@ -281,11 +286,12 @@ clubs qui **acceptent** (Phase 2).
 | `date_reponse` | `2026-09-10` | **Nouveau (Sprint 6).** Date de la réponse du club en libre-service (Accepté **ou** Décliné). Vide par défaut |
 | `nb_equipes_par_categorie` | `{"U8":2,"U10":1}` | **Nouveau (Sprint 6).** JSON du nombre d'équipes engagées par catégorie (saisi par le club). Validé ≤ `max_equipes_par_club` côté backend |
 | `nb_joueurs_total` | `24` | **Nouveau (Sprint 6).** Total de joueurs attendus pour toutes les équipes du club (entier, saisi par le club, informatif) |
+| `alerte_ecart` | `Club Massy a réduit son engagement U8 de 2 à 1…` | **Nouveau (Sprint 6).** Message posé si, à l'envoi du dossier final, le club a **réduit** son nombre d'équipes par rapport à ce qui existe déjà dans l'onglet Équipes : **rien n'est supprimé automatiquement**, un badge ⚠️ invite à vérifier à la main. Vide sinon |
 
 > 🛠️ **Création + migration automatiques.** L'onglet et son en-tête sont créés tout seuls au
 > premier accès (`assurerOngletClubsInvites`). Les **colonnes nouvelles** (`club_contact_prenom`,
 > `categories_engagees`, `dossier_envoye`, `invitation_envoyee`, puis `club_token`, `date_reponse`,
-> `nb_equipes_par_categorie`, `nb_joueurs_total`) sont ajoutées **à droite** des colonnes existantes
+> `nb_equipes_par_categorie`, `nb_joueurs_total`, `alerte_ecart`) sont ajoutées **à droite** des colonnes existantes
 > sur un Sheet déjà en service (`assurerColonnesClubsInvites`) — les 5 premières gardent leur
 > position. Les clubs **sans jeton** (fiches d'avant le Sprint 6) en reçoivent un automatiquement à
 > l'ouverture de l'admin ou au prochain envoi (`assurerTokensClubs`).

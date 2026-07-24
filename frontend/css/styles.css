@@ -1665,6 +1665,40 @@ a.bouton { display: inline-block; text-decoration: none; }
   white-space: nowrap;
   margin-left: 4px;
 }
+/* Badge « écart d'engagement » (Sprint 6) : un club a réduit son nombre d'équipes. */
+.club-alerte-ecart {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #ffd777;
+  background: rgba(240, 180, 40, 0.18);
+  border: 1px solid rgba(240, 180, 40, 0.5);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  cursor: help;
+}
+.club-alerte-ecart:focus { outline: 2px solid #ffd777; outline-offset: 1px; }
+/* Bouton secondaire discret (Annuler l'édition d'un club…). */
+.bouton-discret {
+  background: rgba(120, 180, 255, 0.12);
+  color: #cfe4ff;
+  border: 1px solid rgba(120, 180, 255, 0.3);
+}
+/* Édition inline des coordonnées d'un club (Sprint 6, point 6e). */
+.club-en-edition { flex-wrap: wrap; align-items: flex-start; }
+.club-en-edition .equipe-actions { align-items: flex-start; }
+.club-edit-champs { display: flex; flex-direction: column; gap: 6px; flex: 1 1 220px; min-width: 0; }
+.club-edit-champs input {
+  background: rgba(3, 16, 36, 0.6);
+  border: 1px solid rgba(120, 180, 255, 0.4);
+  color: #eaf2ff;
+  border-radius: 6px;
+  padding: 7px 9px;
+  font: inherit;
+  font-size: 0.9rem;
+}
+.club-edit-champs input:focus { outline: none; border-color: #78b4ff; }
+.club-edit-avert { margin: 2px 0 0; font-size: 0.78rem; color: #ffd777; line-height: 1.35; }
 /* Résumé (lecture seule) de la réponse remontée par le club en libre-service. */
 .club-reponse {
   background: rgba(53, 192, 106, 0.12);

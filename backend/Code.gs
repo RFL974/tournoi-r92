@@ -11,7 +11,9 @@
 var SHEET_ID = '17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U';
 
 var ENTETES = {
-  Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule'],
+  // source : 'manuel' (équipe ajoutée à la main) ou 'auto' (créée à l'envoi du dossier final
+  // d'un club invité). Colonne ajoutée à droite (migration douce) ; vide = 'manuel'.
+  Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule', 'source'],
   Poules: ['id_poule', 'categorie', 'nom_poule'],
   // Clubs INVITÉS au tournoi (Phase 1 = invitation légère ; Phase 2 = dossier complet
   // envoyé aux clubs qui ont ACCEPTÉ). ⚠️ Contient des emails de contact : cet onglet
@@ -31,9 +33,12 @@ var ENTETES = {
   //   nb_joueurs_total    : total de joueurs attendus (entier, saisi par le club, informatif).
   // Les 5 premières colonnes gardent leur position (rétrocompatibilité des Sheets déjà en service) ;
   // les nouvelles sont ajoutées à droite (migration douce : assurerColonnesClubsInvites).
+  //   alerte_ecart        : message posé si un club a RÉDUIT son engagement après création des
+  //                         équipes (rien n'est supprimé automatiquement — vérification manuelle).
   ClubsInvites: ['club_nom', 'club_contact_nom', 'club_contact_email', 'statut', 'date_ajout',
                  'club_contact_prenom', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee',
-                 'club_token', 'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total'],
+                 'club_token', 'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total',
+                 'alerte_ecart'],
   // Colonnes 1-12 : historiques (matin + après-midi CROISE/LIBRE).
   // Colonnes 13-18 : format d'après-midi + tableau à élimination (COUPE_PLATEAU).
   //   format        : CROISE / LIBRE / COUPE_PLATEAU (recopié depuis la catégorie ; vide pour le matin)
@@ -428,6 +433,8 @@ function doPost(e) {
       case 'modifierStatutClubInvite': resultat = modifierStatutClubInvite(classeur, requete); break;
       case 'enregistrerCategoriesEngagees': resultat = enregistrerCategoriesEngagees(classeur, requete); break;
       case 'envoyerDossierEmail':  resultat = envoyerDossierEmail(classeur, requete); break;
+      case 'creerEquipesClub':     resultat = creerEquipesClub(classeur, requete); break;
+      case 'modifierClubInvite':   resultat = modifierClubInvite(classeur, requete); break;
       case 'envoyerInvitationClub': resultat = envoyerInvitationClub(classeur, requete); break;
       case 'envoyerInvitationsGroupe': resultat = envoyerInvitationsGroupe(classeur, requete); break;
       case 'repondreInvitation':   resultat = repondreInvitation(classeur, requete); break;
@@ -562,22 +569,41 @@ function estTermineServeur(statut) {
   return /^\s*termin/i.test(String(statut));
 }
 
+/** Garantit la colonne `source` de l'onglet Equipes (migration douce d'un Sheet en service). */
+function assurerColonneSourceEquipes(classeur) {
+  var onglet = classeur.getSheetByName('Equipes');
+  if (!onglet) { creerOngletAvecEntetes(classeur, 'Equipes', ENTETES.Equipes); return classeur.getSheetByName('Equipes'); }
+  if (colClubInvite(onglet, 'source') === -1) { // colClubInvite = simple recherche d'en-tête (réutilisée)
+    var col = Math.max(onglet.getLastColumn(), 1) + 1;
+    var cell = onglet.getRange(1, col);
+    cell.setNumberFormat('@'); cell.setValue('source');
+    stylerEntete(cell); onglet.setFrozenRows(1);
+  }
+  return onglet;
+}
+
+/**
+ * Écrit une NOUVELLE équipe (id auto + nom + catégorie + poule vide + source). Point de passage
+ * unique : format TEXTE (@) forcé AVANT écriture (anti-injection de formule, comme avant).
+ * @param {string} source 'manuel' (ajout à la main) ou 'auto' (dossier final d'un club).
+ */
+function ecrireNouvelleEquipe(onglet, nom, categorie, source) {
+  var id = genererIdEquipe(onglet);
+  var ligne = onglet.getLastRow() + 1;
+  var plage = onglet.getRange(ligne, 1, 1, ENTETES.Equipes.length);
+  plage.setNumberFormat('@');
+  plage.setValues([[id, nom, categorie, '', source || 'manuel']]);
+  return { id_equipe: id, nom_equipe: nom, categorie: categorie, poule: '', source: source || 'manuel' };
+}
+
 function ajouterEquipe(classeur, nom, categorie) {
   nom = (nom || '').toString().trim();
   categorie = (categorie || '').toString().trim();
   if (!nom)       return { error: "Le nom de l'équipe est vide." };
   if (!categorie) return { error: 'La catégorie est vide.' };
-  var onglet = classeur.getSheetByName('Equipes');
-  var id = genererIdEquipe(onglet);
-  // On écrit en forçant le format TEXTE (@) de la ligne : un nom commençant par
-  // « = + - @ » n'est PAS interprété comme une formule Google Sheets (anti-injection de
-  // formule). getLastRow()+1 vise la même ligne que appendRow, mais permet de fixer le
-  // format AVANT d'écrire la valeur.
-  var ligne = onglet.getLastRow() + 1;
-  var plage = onglet.getRange(ligne, 1, 1, 4);
-  plage.setNumberFormat('@');
-  plage.setValues([[id, nom, categorie, '']]);
-  return { ok: true, equipe: { id_equipe: id, nom_equipe: nom, categorie: categorie, poule: '' } };
+  var onglet = assurerColonneSourceEquipes(classeur); // garantit la colonne `source`
+  var equipe = ecrireNouvelleEquipe(onglet, nom, categorie, 'manuel');
+  return { ok: true, equipe: equipe };
 }
 
 function supprimerEquipe(classeur, id) {
@@ -1354,6 +1380,128 @@ function envoyerDossierEmail(classeur, data) {
     cell.setValue(today);
   }
   return { ok: true, dossier_envoye: today, destinataire: email };
+}
+
+/* -------- Création des équipes à l'envoi du dossier final (Sprint 6, point 5) -------- */
+
+/** Une équipe appartient-elle à ce club ? Nom = « {club} » ou « {club}-N » (N entier). */
+function estEquipeDuClub(nomEquipe, nomClub) {
+  var ne = String(nomEquipe || '').trim(), nc = String(nomClub || '').trim();
+  if (!nc) return false;
+  if (ne === nc) return true;
+  return ne.indexOf(nc + '-') === 0 && /^\d+$/.test(ne.substring(nc.length + 1));
+}
+
+/**
+ * Crée les ÉQUIPES d'un club au clic sur « Générer le dossier final » (juste avant l'aperçu email).
+ *   - nb=1 pour une catégorie → « {club} » ; nb>1 → « {club}-1 », « {club}-2 »…
+ *   - CASSE EXACTE du nom du club conservée ; source = 'auto'.
+ *   - IDEMPOTENT : ne recrée jamais une équipe déjà présente (correspondance de nom).
+ *   - Engagement RÉDUIT (plus d'équipes présentes que demandé) → ne supprime rien, pose alerte_ecart.
+ * Le nombre d'équipes par catégorie vient de nb_equipes_par_categorie (réponse du club) ; à défaut
+ * d'une valeur pour une catégorie engagée, on crée 1 équipe.
+ */
+function creerEquipesClub(classeur, data) {
+  var onglet = assurerOngletClubsInvites(classeur);
+  var nomClub = String(data.club_nom || '').trim();
+  if (!nomClub) return { error: 'Club manquant.' };
+  var ligne = ligneClubInvite(onglet, nomClub);
+  if (ligne === -1) return { error: 'Club introuvable : ' + nomClub };
+
+  var club = null, clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  for (var i = 0; i < clubs.length; i++) {
+    if (memeTexteSouple(clubs[i].club_nom, nomClub)) { club = clubs[i]; break; }
+  }
+  if (!club) return { error: 'Club introuvable : ' + nomClub };
+  if (statutClubCanonique(club.statut) !== 'Accepté') {
+    return { error: 'La création des équipes ne concerne qu\'un club « Accepté ».' };
+  }
+  var nomExact = String(club.club_nom || '').trim(); // casse exacte du Sheet
+
+  var categories = String(club.categories_engagees || '').split(',')
+    .map(function (s) { return s.trim(); }).filter(Boolean);
+  var nbMap = {};
+  try { nbMap = JSON.parse(String(club.nb_equipes_par_categorie || '{}')) || {}; } catch (e) { nbMap = {}; }
+  if (!categories.length) categories = Object.keys(nbMap);
+  if (!categories.length) return { ok: true, equipes_creees: [], alerte: '' };
+
+  var oEquipes = assurerColonneSourceEquipes(classeur);
+  var equipes = lireOngletSimple(classeur, 'Equipes');
+  var creees = [], alertes = [];
+
+  categories.forEach(function (cat) {
+    var desired = parseInt(nbMap[cat], 10);
+    if (!isFinite(desired) || desired < 1) desired = 1;
+    var existantes = equipes.filter(function (e) {
+      return memeTexteSouple(e.categorie, cat) && estEquipeDuClub(e.nom_equipe, nomExact);
+    });
+    var presents = {};
+    existantes.forEach(function (e) { presents[String(e.nom_equipe).trim()] = true; });
+    var nbExist = existantes.length;
+
+    if (nbExist > desired) {
+      alertes.push('Club ' + nomExact + ' a réduit son engagement ' + cat + ' de ' + nbExist +
+        ' à ' + desired + ' équipe — vérifier manuellement l\'onglet Équipes');
+      return; // NE RIEN SUPPRIMER
+    }
+    if (nbExist === desired) return; // déjà à jour (idempotent)
+
+    var cibles = [];
+    if (desired === 1) cibles = [nomExact];
+    else for (var k = 1; k <= desired; k++) cibles.push(nomExact + '-' + k);
+
+    var aCreer = desired - nbExist;
+    for (var c = 0; c < cibles.length && aCreer > 0; c++) {
+      if (presents[cibles[c]]) continue;
+      var eq = ecrireNouvelleEquipe(oEquipes, cibles[c], cat, 'auto');
+      equipes.push({ id_equipe: eq.id_equipe, nom_equipe: cibles[c], categorie: cat, poule: '', source: 'auto' });
+      creees.push({ nom: cibles[c], categorie: cat });
+      presents[cibles[c]] = true;
+      aCreer--;
+    }
+  });
+
+  var colAlerte = colClubInvite(onglet, 'alerte_ecart');
+  if (colAlerte !== -1) {
+    var cell = onglet.getRange(ligne, colAlerte);
+    cell.setNumberFormat('@');
+    cell.setValue(alertes.length ? alertes.join(' | ') : '');
+  }
+  return { ok: true, equipes_creees: creees, alerte: alertes.join(' | ') };
+}
+
+/**
+ * Édite les COORDONNÉES d'un club (nom + contact) — édition inline admin (Sprint 6, point 6e).
+ * Ne touche PAS au statut, à la réponse déjà donnée, ni au token. Clé = ancien nom (club_nom_actuel).
+ */
+function modifierClubInvite(classeur, data) {
+  var onglet = assurerOngletClubsInvites(classeur);
+  var ancien = String(data.club_nom_actuel || '').trim();
+  var ligne = ligneClubInvite(onglet, ancien);
+  if (ligne === -1) return { error: 'Club introuvable : ' + ancien };
+  var nouveauNom = String(data.club_nom || '').trim();
+  if (!nouveauNom) return { error: 'Le nom du club ne peut pas être vide.' };
+  var email = String(data.club_contact_email || '').trim();
+  if (email && !estEmailValide(email)) return { error: 'Email du contact invalide : « ' + email + ' ».' };
+
+  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  for (var i = 0; i < clubs.length; i++) {
+    if (!memeTexteSouple(clubs[i].club_nom, ancien) && memeTexteSouple(clubs[i].club_nom, nouveauNom)) {
+      return { error: 'Un autre club porte déjà le nom « ' + clubs[i].club_nom + ' ».' };
+    }
+  }
+  function ecrire(entete, valeur) {
+    var col = colClubInvite(onglet, entete);
+    if (col === -1) return;
+    var cell = onglet.getRange(ligne, col);
+    cell.setNumberFormat('@');
+    cell.setValue(valeur == null ? '' : String(valeur));
+  }
+  ecrire('club_nom', nouveauNom);
+  ecrire('club_contact_prenom', String(data.club_contact_prenom || '').trim());
+  ecrire('club_contact_nom', String(data.club_contact_nom || '').trim());
+  ecrire('club_contact_email', email);
+  return { ok: true };
 }
 
 /* ===================== INVITATIONS PHASE 1 (envoi par email) ===================== */

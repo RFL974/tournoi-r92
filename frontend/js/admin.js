@@ -1439,6 +1439,9 @@ async function onRetirerPhotoParking() {
    d'« Accepté » (reconnu par memeTexteSouple pour les données déjà en Sheet). */
 const STATUTS_CLUB_INVITE = ['Invité', 'Accepté', 'Décliné'];
 
+/* Nom du club actuellement en ÉDITION inline des coordonnées (Sprint 6, point 6e), ou null. */
+let clubEnEdition = null;
+
 /** Vrai si le statut d'un club vaut « Accepté » (ou l'ancien « Confirmé »). */
 function estAccepte(statut) {
   return memeTexteSouple(statut, 'Accepté') || memeTexteSouple(statut, 'Confirmé');
@@ -1588,6 +1591,8 @@ function afficherClubsInvites() {
   let html = '';
   tries.forEach(function (club) {
     const nom = String(club.club_nom || '');
+    // Ligne en mode ÉDITION inline des coordonnées (Sprint 6, point 6e).
+    if (clubEnEdition && memeTexteSouple(nom, clubEnEdition)) { html += htmlClubEdition(club, nom); return; }
     // Contact : « Prénom Nom · email » (les bouts vides sont omis).
     const identite = [club.club_contact_prenom, club.club_contact_nom].filter(Boolean).join(' ');
     const contact = [identite, club.club_contact_email].filter(Boolean).join(' · ');
@@ -1599,10 +1604,12 @@ function afficherClubsInvites() {
     const aEmail = !!String(club.club_contact_email || '').trim();
     const invite = String(club.invitation_envoyee || '').trim();
     const envoye = String(club.dossier_envoye || '').trim();
-    // Deux badges distincts : invitation (Phase 1) et dossier (Phase 2).
+    const alerte = String(club.alerte_ecart || '').trim();
+    // Badges : invitation (Phase 1), dossier (Phase 2), et alerte d'écart d'engagement.
     const badges =
       (invite ? '<span class="club-envoye club-badge-invite" title="Invitation envoyée">✉️ Invité le ' + echapper(invite) + '</span>' : '') +
-      (envoye ? '<span class="club-envoye" title="Dossier envoyé">📧 Dossier le ' + echapper(envoye) + '</span>' : '');
+      (envoye ? '<span class="club-envoye" title="Dossier envoyé">📧 Dossier le ' + echapper(envoye) + '</span>' : '') +
+      (alerte ? '<span class="club-alerte-ecart" tabindex="0" role="button" title="' + echapper(alerte) + '" data-club="' + echapper(nom) + '">⚠️ Écart</span>' : '');
     // Bouton d'envoi INDIVIDUEL de l'invitation (désactivé si le club n'a pas d'email).
     const boutonInviter = aEmail
       ? '<button class="bouton-icone bouton-inviter-club" title="Envoyer l\'invitation" aria-label="Envoyer l\'invitation à ' + echapper(nom) + '" data-club="' + echapper(nom) + '">✉️</button>'
@@ -1616,6 +1623,7 @@ function afficherClubsInvites() {
         '<div class="equipe-actions">' +
           badges +
           boutonInviter +
+          '<button class="bouton-icone bouton-editer-club" title="Modifier les coordonnées" aria-label="Modifier les coordonnées de ' + echapper(nom) + '" data-club="' + echapper(nom) + '">✏️</button>' +
           '<select class="statut-club" data-club="' + echapper(nom) + '" ' +
                   'aria-label="Statut de ' + echapper(nom) + '">' + options + '</select>' +
           '<button class="bouton-suppr bouton-icone bouton-suppr-club" title="Retirer" aria-label="Retirer" ' +
@@ -1629,6 +1637,27 @@ function afficherClubsInvites() {
   majApercuInvitation(); // l'exemple de prénom de l'aperçu suit la liste
 }
 
+/** Ligne d'un club en mode ÉDITION inline des coordonnées (nom + contact). */
+function htmlClubEdition(club, nom) {
+  const dejaRepondu = String(club.date_reponse || '').trim() !== '';
+  const avert = dejaRepondu
+    ? '<p class="club-edit-avert">Ce club a déjà répondu à cette adresse : la modifier n\'affecte pas sa réponse déjà enregistrée.</p>'
+    : '';
+  return '<div class="equipe-item club-invite-item club-en-edition" data-club="' + echapper(nom) + '">' +
+      '<div class="club-edit-champs">' +
+        '<input class="club-edit-nom" type="text" value="' + echapper(club.club_nom || '') + '" placeholder="Nom du club" aria-label="Nom du club">' +
+        '<input class="club-edit-prenom" type="text" value="' + echapper(club.club_contact_prenom || '') + '" placeholder="Prénom du contact" aria-label="Prénom du contact">' +
+        '<input class="club-edit-contact" type="text" value="' + echapper(club.club_contact_nom || '') + '" placeholder="Nom du contact" aria-label="Nom du contact">' +
+        '<input class="club-edit-email" type="email" value="' + echapper(club.club_contact_email || '') + '" placeholder="Email du contact" aria-label="Email du contact">' +
+        avert +
+      '</div>' +
+      '<div class="equipe-actions">' +
+        '<button class="bouton btn-enregistrer-edition" data-club="' + echapper(nom) + '">Enregistrer</button>' +
+        '<button class="bouton bouton-discret btn-annuler-edition" data-club="' + echapper(nom) + '">Annuler</button>' +
+      '</div>' +
+    '</div>';
+}
+
 /** Ajoute un club invité (statut initial « Invité », date d'ajout posée par le backend). */
 async function onAjouterClubInvite(evenement) {
   evenement.preventDefault();
@@ -1639,7 +1668,7 @@ async function onAjouterClubInvite(evenement) {
   const bouton = document.getElementById('bouton-ajouter-club');
   const message = document.getElementById('message-club-invite');
 
-  const nom = champNom.value.trim().toUpperCase(); // comme les équipes : noms en MAJUSCULES
+  const nom = champNom.value.trim(); // casse EXACTE conservée (sert au nommage des équipes auto)
   if (!nom) { afficherMessage(message, 'Indique le nom du club.', 'ko'); return; }
 
   const doublon = clubsInvitesCourants.some(function (c) { return memeTexteSouple(c.club_nom, nom); });
@@ -1700,6 +1729,49 @@ async function onClicClubsInvites(evenement) {
   if (btnCats) return enregistrerCatsClub(btnCats);
   const btnGen = evenement.target.closest('.bouton-generer-dossier');
   if (btnGen) return genererDossierFinal(btnGen.getAttribute('data-club'));
+  // Édition inline des coordonnées (Sprint 6, point 6e).
+  const btnEdit = evenement.target.closest('.bouton-editer-club');
+  if (btnEdit) { clubEnEdition = btnEdit.getAttribute('data-club'); afficherClubsInvites(); return; }
+  const btnAnnul = evenement.target.closest('.btn-annuler-edition');
+  if (btnAnnul) { clubEnEdition = null; afficherClubsInvites(); return; }
+  const btnSave = evenement.target.closest('.btn-enregistrer-edition');
+  if (btnSave) return enregistrerEditionClub(btnSave.getAttribute('data-club'));
+  // Badge d'alerte : afficher le détail complet.
+  const badgeAlerte = evenement.target.closest('.club-alerte-ecart');
+  if (badgeAlerte) {
+    const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, badgeAlerte.getAttribute('data-club')); });
+    if (club) await dialogAlerter(String(club.alerte_ecart || ''));
+    return;
+  }
+}
+
+/** Enregistre les coordonnées éditées d'un club (nom non vide + email valide). Clé = ancien nom. */
+async function enregistrerEditionClub(nomActuel) {
+  const message = document.getElementById('message-club-invite');
+  const ligne = document.querySelector('.club-en-edition[data-club="' + (window.CSS && CSS.escape ? CSS.escape(nomActuel) : nomActuel) + '"]');
+  if (!ligne) return;
+  const nom = ligne.querySelector('.club-edit-nom').value.trim();
+  const prenom = ligne.querySelector('.club-edit-prenom').value.trim();
+  const contact = ligne.querySelector('.club-edit-contact').value.trim();
+  const email = ligne.querySelector('.club-edit-email').value.trim();
+  if (!nom) { afficherMessage(message, 'Le nom du club ne peut pas être vide.', 'ko'); return; }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    afficherMessage(message, 'Email du contact invalide.', 'ko'); return;
+  }
+  const btn = ligne.querySelector('.btn-enregistrer-edition');
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  try {
+    await ecrireAdmin('modifierClubInvite', {
+      club_nom_actuel: nomActuel, club_nom: nom,
+      club_contact_prenom: prenom, club_contact_nom: contact, club_contact_email: email
+    });
+    clubEnEdition = null;
+    afficherMessage(message, '✅ Coordonnées mises à jour.', 'ok');
+    await chargerClubsInvites();
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
 }
 
 /** Retire un club de la liste (confirmation). */
@@ -1768,9 +1840,31 @@ function lienDossierClub(nom) {
 async function genererDossierFinal(nom) {
   const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
   if (!club) return;
+  const message = document.getElementById('message-club-invite');
+
+  // 1) CRÉATION DES ÉQUIPES engagées (idempotente) — AVANT l'aperçu email (Sprint 6, point 5).
+  //    Les équipes « {club} » / « {club}-N » sont créées dans l'onglet Équipes (source=auto) ;
+  //    un 2e clic ne crée pas de doublon ; un engagement réduit remonte une alerte (sans rien
+  //    supprimer). Si la création échoue, on n'ouvre pas l'aperçu.
+  try {
+    const res = await ecrireAdmin('creerEquipesClub', { club_nom: nom });
+    const creees = (res && res.equipes_creees) || [];
+    let txt = creees.length
+      ? '✅ ' + creees.length + ' équipe(s) créée(s) : ' + creees.map(function (e) { return e.nom; }).join(', ') + '.'
+      : 'ℹ️ Équipes déjà à jour (aucune nouvelle création).';
+    if (res && res.alerte) txt += ' ⚠️ ' + res.alerte;
+    afficherMessage(message, txt, 'ok');
+    // Reflète l'alerte éventuelle sur la fiche (badge) sans perdre le reste de l'état.
+    const c = clubsInvitesCourants.find(function (x) { return memeTexteSouple(x.club_nom, nom); });
+    if (c) { c.alerte_ecart = (res && res.alerte) || ''; afficherClubsInvites(); }
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ Création des équipes impossible : ' + erreur.message, 'ko');
+    return;
+  }
+
+  // 2) APERÇU / ENVOI du dossier (comportement existant, inchangé).
   const email = String(club.club_contact_email || '').trim();
   const lien = lienDossierClub(String(club.club_nom || ''));
-
   if (email) { ouvrirApercuEmail(club, lien); return; }
 
   // Pas d'email : mode manuel. On copie le lien (best-effort) et on l'affiche pour copie.
