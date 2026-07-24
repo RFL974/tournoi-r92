@@ -194,3 +194,59 @@ rafraîchissement étalé, voir [`relais-cdn.md`](relais-cdn.md)). S'il a été 
 4. Liens croisés : remplacer les URLs → pousser.
 5. (Option) Relais Cloudflare.
 6. Checklist §9 de bout en bout, avec un score et une affiche de test.
+
+---
+
+## 11. Bascule de l'adresse d'envoi des dossiers (email) — À PRÉVOIR
+
+Depuis le Sprint 4, l'admin peut **envoyer automatiquement le dossier complet (Phase 2)** par
+email à un club qui a accepté (bouton « Générer le dossier final » → aperçu → « Envoyer »).
+L'envoi part de l'**adresse du compte Google qui exécute le script Apps Script**.
+
+### 11.1 État actuel (phase de test)
+Le script tourne aujourd'hui sous le **compte Gmail personnel de Romain**
+(`romain.rifleu@gmail.com`). Les emails de dossier partent **donc de cette adresse**, et c'est
+aussi vers elle que sont envoyés les emails de **test** de validation.
+
+> Techniquement : sans `email_expediteur` configuré, le backend utilise `MailApp.sendEmail(...)`,
+> qui envoie **au nom du compte exécutant**. Rien à régler pour que ça marche en test.
+
+### 11.2 Cible : `generationr92@gmail.com` (compte géré par Jérémy)
+À terme, l'envoi doit basculer vers **`generationr92@gmail.com`**. Deux options, **à choisir
+le moment venu** (non mises en œuvre dans ce sprint) :
+
+**Option A — Exécuter le script sous `generationr92@gmail.com`.**
+Le projet Apps Script est **redéployé/exécuté** sous ce compte (transfert du Sheet + re-déploiement
+« Exécuter en tant que : moi », cf. §3.1–3.2). Les emails partent alors **nativement** de
+`generationr92@gmail.com`. *Nécessite l'accès de Jérémy* au compte pour le déploiement.
+→ Laisser `email_expediteur` **vide** dans ce cas (l'adresse d'exécution suffit).
+
+**Option B — Alias « Envoyer un message en tant que » sur le compte de Romain.**
+Sans repasser par Jérémy pour le déploiement :
+1. Gmail de `romain.rifleu@gmail.com` → **Paramètres → Comptes et importation → « Envoyer des
+   emails en tant que » → Ajouter une autre adresse email** → saisir `generationr92@gmail.com`
+   et **valider** (Gmail envoie un code de confirmation à `generationr92@gmail.com` — une action
+   de Jérémy est requise **une seule fois** pour valider l'alias, mais pas de re-déploiement).
+2. Dans l'admin, carte **« Réponse à l'invitation »**, renseigner le champ **Email expéditeur**
+   avec `generationr92@gmail.com` (paramètre Zone A `email_expediteur`).
+3. Le backend utilise alors `GmailApp.sendEmail(..., { from: email_expediteur })`. **La première
+   fois**, relancer une fonction depuis l'éditeur Apps Script pour **autoriser le scope Gmail**
+   (envoi), puis vérifier avec un email de test.
+
+> ⚠️ Si `email_expediteur` est renseigné mais **n'est pas** un alias valide du compte exécutant,
+> Gmail lève une exception : l'admin affiche une **erreur claire** et **`dossier_envoye` n'est pas
+> posé** (l'envoi est simplement à relancer). Aucune donnée n'est corrompue.
+
+### 11.3 Le champ `email_expediteur`
+- **Où** : Zone A de l'onglet `Config` (carte admin « Réponse à l'invitation »).
+- **Rôle** : purement informatif/config ; **ne bloque rien s'il est vide**.
+- **Vide** → l'email part de l'adresse du compte exécutant (test : `romain.rifleu@gmail.com`).
+- **Renseigné** → utilisé comme adresse « from » (Option B ; suppose l'alias configuré).
+- **Conservé** par une réinitialisation de tournoi (config d'infrastructure, comme les clés).
+
+### 11.4 Checklist bascule email (le moment venu)
+- [ ] Option choisie (A : re-déploiement sous `generationr92@gmail.com` — ou — B : alias Gmail).
+- [ ] (Option B) Alias `generationr92@gmail.com` ajouté et **validé** dans Gmail de Romain.
+- [ ] (Option B) `email_expediteur` renseigné dans la carte « Réponse à l'invitation ».
+- [ ] (Option B) Scope Gmail **autorisé** une fois dans l'éditeur Apps Script.
+- [ ] Email de **test** envoyé et reçu depuis la bonne adresse.

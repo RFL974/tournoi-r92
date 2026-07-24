@@ -40,14 +40,16 @@ const ECRANS_DEF = [
   { id: 'poules',      titre: 'Poules & planning', icone: 'poules',   blocs: ['bloc-generation'],         cles: ['poules'] },
   /* La Publication vient AVANT l'après-midi : elle n'en dépend pas (on publie
      le matin ; l'après-midi se génère plus tard, une fois les scores saisis). */
-  /* Les clubs invités (destinataires du dossier d'invitation) : accessibles à tout
-     moment (libre), on peut préparer la liste très tôt. */
+  /* Phase 1 — « Inviter un club » : ouvre l'invitation légère (invitation-club.html) et
+     regroupe sa config (Sur place + Réponse à l'invitation). Libre : préparable très tôt. */
+  { id: 'invitation',  titre: 'Inviter un club',   icone: 'courrier', blocs: ['bloc-inviter', 'bloc-surplace', 'bloc-reponse'], cles: [], libre: true },
+  /* Les clubs invités (destinataires du dossier) : accessibles à tout moment (libre),
+     on peut préparer la liste très tôt, puis y gérer les réponses et l'envoi du dossier. */
   { id: 'clubs',       titre: 'Clubs invités',     icone: 'courrier', blocs: ['bloc-clubs-invites'],      cles: [], libre: true },
-  /* Le dossier club se génère à tout moment (sections vides masquées) : jamais verrouillé.
-     Placé AVANT la Publication : on envoie le dossier aux clubs, puis on publie.
-     L'écran regroupe aussi les cartes du dossier d'INVITATION (modalités, parking,
-     encadrement) : on complète les infos, puis on génère. */
-  { id: 'dossier',     titre: 'Générer le dossier', icone: 'dossier', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier'], cles: [], libre: true },
+  /* Le dossier COMPLET (Phase 2), envoyé aux clubs qui ont accepté : se génère à tout moment
+     (sections vides masquées), jamais verrouillé. Placé AVANT la Publication. L'écran regroupe
+     aussi les cartes du dossier (modalités, parking, encadrement) : on complète, puis on génère. */
+  { id: 'dossier',     titre: 'Dossier complet (accepté)', icone: 'dossier', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier'], cles: [], libre: true },
   { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [] },
   { id: 'apresmidi',   titre: 'Après-midi',        icone: 'ballon',   blocs: ['bloc-apresmidi'],          cles: ['apresmidi'] },
   /* Zone de danger, toujours accessible (libre) : on doit pouvoir remettre à
@@ -83,6 +85,7 @@ function svgEcr(nom) {
 const ECRANS_ORDRE_ORIGINE = [
   'bloc-infos-tournoi', 'bloc-apercu-tournoi', 'bloc-contacts-securite', 'reglages',
   'bloc-equipes', 'bloc-terrains', 'bloc-generation', 'bloc-apresmidi',
+  'bloc-inviter', 'bloc-surplace', 'bloc-reponse',
   'bloc-clubs-invites', 'bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier',
   'bloc-publication', 'bloc-reinitialisation'
 ];

@@ -90,6 +90,21 @@ Paramètres du **dossier d'INVITATION** (écrits par les cartes « Modalités d'
 | `encadrement_diplomes` | `Brevet fédéral EDR minimum` | Diplômes exigés des éducateurs |
 | `assurance_attestation_requise` | `non` | `oui` = le dossier affiche « Attestation d'assurance du club à fournir » |
 
+Paramètres **Phase 1** (invitation légère `frontend/invitation-club.html`). Cartes admin
+« Sur place » (action `enregistrerSurPlace`) et « Réponse à l'invitation » (action
+`enregistrerReponseInvitation`) :
+
+| parametre | valeur (exemple) | Signification |
+|---|---|---|
+| `buvette_disponible` | `non` | `oui` = pastille « 🥤 Buvette » sur l'invitation (défaut `non` : aucune ligne si décoché) |
+| `espace_sandwich_disponible` | `non` | `oui` = pastille « 🥪 Espace sandwich » |
+| `boutique_r92_disponible` | `non` | `oui` = pastille « 🛍️ Boutique R92 » |
+| `date_limite_reponse` | `2026-09-15` | Date limite de **réponse** à l'invitation (Phase 1). **Distincte** de `date_limite_confirmation` (effectifs, Phase 2) |
+| `contact_reponse_nom` | `Camille Dupont` | Nom du contact référent (section « Réponse attendue » de l'invitation) |
+| `contact_reponse_tel` | `0612345678` | Téléphone du contact (10 chiffres, normalisé). **Au moins un** de `contact_reponse_tel` / `contact_reponse_email` est **obligatoire** (validation croisée à l'enregistrement) |
+| `contact_reponse_email` | `contact@r92.fr` | Email du contact (format vérifié). Voir validation croisée ci-dessus |
+| `email_expediteur` | *(vide)* | Adresse « Envoyer en tant que » (alias Gmail du compte exécutant). **Vide = l'email part de l'adresse du compte exécutant le script** (`romain.rifleu@gmail.com` en phase de test). Purement informatif : ne bloque rien si vide. **Conservé** par une réinitialisation (config d'infrastructure). Voir `docs/passation.md` §11 |
+
 Paramètres **optionnels lus par le dossier club** (`frontend/dossier-club.html`). Aucun
 formulaire admin ne les écrit encore : pour les utiliser, **ajouter la ligne à la main** dans la
 Zone A (colonne A = nom, colonne B = valeur). Absents ou vides = la ligne/le bouton correspondant
@@ -126,10 +141,11 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `effectif_min` | `8` | **Optionnel** (dossier club). Effectif minimum par équipe (nb de joueurs). Si `effectif_min` et `effectif_max` sont saisis, min ≤ max (vérifié à l'enregistrement) |
 | `effectif_max` | `12` | **Optionnel** (dossier club). Effectif maximum par équipe (nb de joueurs) |
 | `arbitrage_organisation` | `Éducateurs des clubs` | **Optionnel** (dossier club). Qui arbitre les matchs. ⚠️ Nom volontairement distinct de l'« arbitrage » du code (assistant d'optimisation des horaires) |
+| `max_equipes_par_club` | `2` | **Optionnel** (Phase 1). Nombre max d'équipes qu'un club peut engager dans cette catégorie. **Vide = illimité** (affiché « Plusieurs équipes possibles par catégorie » sur l'invitation ; jamais « 0 » ni « illimité ») |
 
 > ℹ️ **Migration automatique** : `format_apresmidi`, `param_format`, `terrains_auto`, puis
-> `reglement`, `effectif_min`, `effectif_max` et `arbitrage_organisation` sont **ajoutées
-> automatiquement** à droite de la Zone B dès la première génération d'après-midi (ou enregistrement
+> `reglement`, `effectif_min`, `effectif_max`, `arbitrage_organisation` et `max_equipes_par_club`
+> sont **ajoutées automatiquement** à droite de la Zone B dès la première génération d'après-midi (ou enregistrement
 > de catégorie) sur un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement
 > croisé**, et sans `terrains_auto` = **mode Auto**, comme avant. Les colonnes « dossier club »
 > vides = champ non renseigné (aucun blocage).
@@ -240,25 +256,34 @@ ici par le backend (`archiverResultat` dans [`../backend/Code.gs`](../backend/Co
 
 ## Onglet `ClubsInvites` (clubs invités)
 
-La liste des clubs à qui on envoie le **dossier d'invitation** (avant leur confirmation),
-gérée par la carte « **Clubs invités** » de la page admin.
+La liste des clubs invités, gérée par la carte « **Clubs invités** » de la page admin. Sert
+aux **deux phases** : invitation légère (Phase 1) puis dossier complet personnalisé envoyé aux
+clubs qui **acceptent** (Phase 2).
 
 > 🔒 **Confidentialité.** Cet onglet contient des **emails de contact** : il n'est **jamais**
-> inclus dans les données publiques (`getAll`, cache serveur, relais CDN). Il se lit via
-> l'action **`listerClubsInvites`**, qui passe par `doPost` et exige la **clé admin**.
+> inclus dans les données publiques (`getAll`, cache serveur, relais CDN). Il se lit intégralement
+> via l'action **`listerClubsInvites`** (`doPost` + **clé admin**). Le dossier Phase 2 public
+> (`getClubDossier`, `doGet`) n'expose **que** `club_nom`, `club_contact_prenom` et
+> `categories_engagees` — **jamais l'email**.
 
 | Colonne | Exemple | Signification |
 |---|---|---|
 | `club_nom` | `MASSY` | Nom du club (sert de **clé** : pas de doublon, comparaison sans accents ni casse) |
 | `club_contact_nom` | `Camille Dupont` | Nom du contact au club (optionnel) |
-| `club_contact_email` | `contact@club.fr` | Email du contact (optionnel, format vérifié) |
-| `statut` | `Invité` | `Invité` (défaut) / `Confirmé` / `Décliné` — modifiable via le menu déroulant de l'admin |
+| `club_contact_email` | `contact@club.fr` | Email du contact (optionnel, format vérifié). Destinataire de l'envoi automatique Phase 2 |
+| `statut` | `Invité` | `Invité` (défaut) / `Accepté` / `Décliné` — modifiable via le menu déroulant de l'admin. ⚠️ **Renommé** : « Confirmé » → « Accepté » (l'ancien libellé reste reconnu à la lecture) |
 | `date_ajout` | `2026-07-23` | Posée automatiquement à l'ajout (AAAA-MM-JJ) |
+| `club_contact_prenom` | `Camille` | **Nouveau.** Prénom du contact, utilisé dans la politesse du dossier Phase 2 (« Bonjour {prénom}, ») |
+| `categories_engagees` | `U8,U10` | **Nouveau.** Catégories réellement engagées par le club (texte séparé par virgules, ou JSON). **Vide** tant que le club n'a pas répondu. Filtre le tableau « Format sportif » du dossier Phase 2 |
+| `dossier_envoye` | `2026-07-24` | **Nouveau.** Date (AAAA-MM-JJ) posée **automatiquement** au moment où l'envoi email **réussit** (jamais en cas d'échec). Vide par défaut |
 
-> 🛠️ **Création automatique.** L'onglet et son en-tête sont créés tout seuls au premier accès
-> (`assurerOngletClubsInvites`) — les `setupSheet()` neufs le créent déjà.
-> ✅ La **réinitialisation du tournoi** CONSERVE cette liste (carnet d'adresses réutilisable
-> d'une édition à l'autre) — seuls les statuts sont à remettre à jour à la main.
+> 🛠️ **Création + migration automatiques.** L'onglet et son en-tête sont créés tout seuls au
+> premier accès (`assurerOngletClubsInvites`). Les **3 nouvelles colonnes** (`club_contact_prenom`,
+> `categories_engagees`, `dossier_envoye`) sont ajoutées **à droite** des colonnes existantes sur
+> un Sheet déjà en service (`assurerColonnesClubsInvites`) — les 5 premières gardent leur position.
+> ✅ La **réinitialisation du tournoi** CONSERVE le carnet d'adresses (noms, contacts, prénoms,
+> statuts) mais **remet à zéro** les colonnes propres à l'édition : `categories_engagees` et
+> `dossier_envoye`.
 
 ---
 

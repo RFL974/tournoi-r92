@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invitation club — Tournoi R92</title>
+  <meta name="description" content="Invitation au tournoi Génération R92 : catégories concernées, déroulé de la journée et réponse attendue. Le dossier complet est envoyé aux clubs qui acceptent.">
+  <!-- Pas d'indexation : document destiné aux clubs invités, pas au grand public. -->
+  <meta name="robots" content="noindex">
+
+  <!-- Polices de la charte (mêmes familles que le reste du site) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Même feuille de style « document » que le dossier Phase 2 (fond blanc, format A4,
+       pensée pour l'impression). L'invitation Phase 1 tient sur 1 page. -->
+  <link rel="stylesheet" href="css/dossier.css">
+</head>
+<body>
+
+  <!-- Bandeau d'outils (jamais imprimé) : retour admin + export PDF -->
+  <div class="barre-outils no-print">
+    <a class="btn-outil" href="admin.html">← Retour à l'administration</a>
+    <span class="barre-outils-titre">Invitation club — Phase 1</span>
+    <button type="button" class="btn-outil btn-principal" id="bouton-imprimer">🖨️ Exporter en PDF</button>
+  </div>
+
+  <!-- L'invitation, entièrement construite par js/invitation.js à partir des données du
+       tournoi (Config Zone A + Zone B). Générique : même contenu pour tous les clubs
+       invités (aucune personnalisation à ce stade — réservée à la Phase 2). Toute section
+       sans donnée est masquée — pas de « non communiqué ». -->
+  <main class="feuille" id="invitation">
+    <div class="message-chargement" id="message-invitation">Chargement de l'invitation…</div>
+  </main>
+
+  <!-- Ordre de chargement : config.js (URL du backend) · commun.js (helpers) · api.js (apiGet)
+       · invitation.js (construit la page). Pas de QR / docx / itinéraire ici : réservés à la Phase 2. -->
+  <script src="js/config.js"></script>
+  <script src="js/commun.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/invitation.js"></script>
+
+</body>
+</html>

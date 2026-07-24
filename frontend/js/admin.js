@@ -25,7 +25,10 @@ const CHAMPS_CATEGORIE = [
   { cle: 'reglement',              label: 'Règlement (texte ou lien)', type: 'text', placeholder: 'Ex : règles FFR M10 ou https://…' },
   { cle: 'effectif_min',           label: 'Effectif min (joueurs)',    type: 'number' },
   { cle: 'effectif_max',           label: 'Effectif max (joueurs)',    type: 'number' },
-  { cle: 'arbitrage_organisation', label: 'Arbitrage (qui arbitre ?)', type: 'text', placeholder: 'Ex : éducateurs des clubs' }
+  { cle: 'arbitrage_organisation', label: 'Arbitrage (qui arbitre ?)', type: 'text', placeholder: 'Ex : éducateurs des clubs' },
+  // Phase 1 (invitation) : nombre max d'équipes par club dans cette catégorie. Vide = illimité
+  // (affiché « Plusieurs équipes possibles par catégorie » sur l'invitation, jamais « 0 »).
+  { cle: 'max_equipes_par_club',   label: 'Max équipes par club',      type: 'number', placeholder: 'Vide = illimité' }
 ];
 
 /* Formats d'après-midi proposés (choisis AU PARAMÉTRAGE, avant le jour J), avec une
@@ -135,6 +138,8 @@ async function initAdmin() {
     majInfosTournoi();
     majContactsSecurite();
     majInvitation();
+    majSurPlace();   // Phase 1 — carte « Sur place »
+    majReponse();    // Phase 1 — carte « Réponse à l'invitation »
     majPublication();
     majDossier(); // état des sections du dossier club (suit toutes les infos ci-dessus)
 
@@ -256,7 +261,17 @@ async function initAdmin() {
   document.getElementById('form-encadrement').addEventListener('submit', function (e) { e.preventDefault(); });
   document.getElementById('bouton-enregistrer-encadrement').addEventListener('click', onEnregistrerEncadrement);
 
-  // Clubs invités : ajout via le formulaire, statut/suppression délégués sur la liste.
+  // Phase 1 — carte « Sur place » (3 cases à cocher) : bouton dédié.
+  document.getElementById('form-surplace').addEventListener('submit', function (e) { e.preventDefault(); });
+  document.getElementById('bouton-enregistrer-surplace').addEventListener('click', onEnregistrerSurPlace);
+
+  // Phase 1 — carte « Réponse à l'invitation » : bouton dédié + validation « au moins un
+  // des deux » (tél / email) au blur des champs de contact.
+  document.getElementById('form-reponse').addEventListener('submit', function (e) { e.preventDefault(); });
+  document.getElementById('bouton-enregistrer-reponse').addEventListener('click', onEnregistrerReponse);
+  document.getElementById('form-reponse').addEventListener('blur', onReponseBlur, true);
+
+  // Clubs invités : ajout via le formulaire, statut/suppression/actions délégués sur la liste.
   document.getElementById('form-club-invite').addEventListener('submit', onAjouterClubInvite);
   document.getElementById('liste-clubs-invites').addEventListener('change', onChangerStatutClub);
   document.getElementById('liste-clubs-invites').addEventListener('click', onClicClubsInvites);
@@ -657,6 +672,131 @@ async function onEnregistrerContacts() {
 }
 
 /* --------------------------------------------------------------------------
+   PHASE 1 — carte « Sur place » (buvette / sandwich / boutique R92)
+   et carte « Réponse à l'invitation » (date limite + contact référent).
+   -------------------------------------------------------------------------- */
+
+/** Pré-remplit la carte « Sur place » avec l'état enregistré. */
+function majSurPlace() {
+  const form = document.getElementById('form-surplace');
+  if (!form) return;
+  const g = configCourante.global || {};
+  form.buvette_disponible.checked = estOui(g.buvette_disponible);
+  form.espace_sandwich_disponible.checked = estOui(g.espace_sandwich_disponible);
+  form.boutique_r92_disponible.checked = estOui(g.boutique_r92_disponible);
+  if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
+}
+
+/** Enregistre la carte « Sur place » (3 booléens rangés en 'oui'/'non'). */
+async function onEnregistrerSurPlace() {
+  const message = document.getElementById('message-surplace');
+  const bouton = document.getElementById('bouton-enregistrer-surplace');
+  const form = document.getElementById('form-surplace');
+  const data = {
+    buvette_disponible:         form.buvette_disponible.checked ? 'oui' : 'non',
+    espace_sandwich_disponible: form.espace_sandwich_disponible.checked ? 'oui' : 'non',
+    boutique_r92_disponible:    form.boutique_r92_disponible.checked ? 'oui' : 'non'
+  };
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Enregistrement…';
+  try {
+    await ecrireAdmin('enregistrerSurPlace', data);
+    configCourante.global = Object.assign({}, configCourante.global, data);
+    if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
+    afficherMessage(message, '✅ « Sur place » enregistré.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
+}
+
+/** Pré-remplit la carte « Réponse à l'invitation » avec l'état enregistré. */
+function majReponse() {
+  const form = document.getElementById('form-reponse');
+  if (!form) return;
+  const g = configCourante.global || {};
+  form.date_limite_reponse.value = g.date_limite_reponse || '';
+  form.contact_reponse_nom.value = g.contact_reponse_nom || '';
+  form.contact_reponse_tel.value = g.contact_reponse_tel || '';
+  form.contact_reponse_email.value = g.contact_reponse_email || '';
+  form.email_expediteur.value = g.email_expediteur || '';
+  if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
+}
+
+/** Rappel visuel « au moins un des deux » (tél / email) au blur des champs de contact. */
+function onReponseBlur(evenement) {
+  const nom = evenement.target && evenement.target.name;
+  if (nom !== 'contact_reponse_tel' && nom !== 'contact_reponse_email') return;
+  const form = document.getElementById('form-reponse');
+  const message = document.getElementById('message-reponse');
+  const tel = form.contact_reponse_tel.value.trim();
+  const email = form.contact_reponse_email.value.trim();
+  if (!tel && !email) {
+    afficherMessage(message, 'ℹ️ Renseigne au moins un contact : téléphone ou email.', 'ko');
+  } else if (message.textContent.indexOf('au moins un contact') !== -1) {
+    afficherMessage(message, '', 'ok'); // efface le rappel une fois un contact saisi
+  }
+}
+
+/**
+ * Enregistre la carte « Réponse à l'invitation ». Validation côté client (miroir du backend) :
+ * date AAAA-MM-JJ, téléphone 10 chiffres, emails valides, et AU MOINS un contact (tél OU email).
+ */
+async function onEnregistrerReponse() {
+  const message = document.getElementById('message-reponse');
+  const bouton = document.getElementById('bouton-enregistrer-reponse');
+  const form = document.getElementById('form-reponse');
+  const data = {
+    date_limite_reponse:   form.date_limite_reponse.value,
+    contact_reponse_nom:   form.contact_reponse_nom.value.trim(),
+    contact_reponse_tel:   form.contact_reponse_tel.value.trim(),
+    contact_reponse_email: form.contact_reponse_email.value.trim(),
+    email_expediteur:      form.email_expediteur.value.trim()
+  };
+
+  // Validation « au moins un des deux » AVANT l'envoi (message immédiat, pas d'aller-retour).
+  if (!data.contact_reponse_tel && !data.contact_reponse_email) {
+    afficherMessage(message, '⚠️ Renseigne au moins un contact de réponse : téléphone OU email.', 'ko');
+    return;
+  }
+  if (data.contact_reponse_tel) {
+    const norme = normaliserTelephone(data.contact_reponse_tel);
+    if (!norme) {
+      afficherMessage(message, '⚠️ Téléphone du contact invalide : 10 chiffres attendus.', 'ko');
+      return;
+    }
+    data.contact_reponse_tel = norme;
+  }
+  const emailInvalide = function (v) { return v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); };
+  if (emailInvalide(data.contact_reponse_email)) {
+    afficherMessage(message, '⚠️ Email du contact invalide.', 'ko');
+    return;
+  }
+  if (emailInvalide(data.email_expediteur)) {
+    afficherMessage(message, '⚠️ Email expéditeur invalide.', 'ko');
+    return;
+  }
+
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Enregistrement…';
+  try {
+    await ecrireAdmin('enregistrerReponseInvitation', data);
+    configCourante.global = Object.assign({}, configCourante.global, data);
+    majReponse(); // ré-affiche le numéro normalisé
+    afficherMessage(message, '✅ « Réponse à l\'invitation » enregistrée.', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
+}
+
+/* --------------------------------------------------------------------------
    DOSSIER D'INVITATION — modalités d'inscription, parking & accès,
    encadrement & assurance (paramètres globaux de Config, tous optionnels).
    Chaque carte s'enregistre indépendamment via l'action enregistrerInvitation
@@ -874,8 +1014,14 @@ async function onRetirerPhotoParking() {
    protégée par la clé admin (jamais dans le snapshot public getAll / CDN).
    -------------------------------------------------------------------------- */
 
-/* Statuts admis (mêmes formes canoniques que le backend). */
-const STATUTS_CLUB_INVITE = ['Invité', 'Confirmé', 'Décliné'];
+/* Statuts admis (mêmes formes canoniques que le backend). « Confirmé » = ancien libellé
+   d'« Accepté » (reconnu par memeTexteSouple pour les données déjà en Sheet). */
+const STATUTS_CLUB_INVITE = ['Invité', 'Accepté', 'Décliné'];
+
+/** Vrai si le statut d'un club vaut « Accepté » (ou l'ancien « Confirmé »). */
+function estAccepte(statut) {
+  return memeTexteSouple(statut, 'Accepté') || memeTexteSouple(statut, 'Confirmé');
+}
 
 /** Compare deux textes sans accents ni casse (piège NFC/NFD du Sheet : « Invité »
  *  peut revenir avec un é décomposé — même précaution que estTermine). */
@@ -902,12 +1048,60 @@ async function chargerClubsInvites() {
 
 /** Pastille d'état d'un statut (couleur portée par une classe CSS). */
 function classeStatutClub(statut) {
-  if (memeTexteSouple(statut, 'Confirmé')) return 'est-confirme';
+  if (estAccepte(statut))                  return 'est-accepte';
   if (memeTexteSouple(statut, 'Décliné'))  return 'est-decline';
   return 'est-invite';
 }
 
-/** Affiche la liste des clubs invités (nom, contact, statut modifiable, suppression). */
+/** Catégories engagées (texte « U8,U10 » ou JSON) → tableau de noms normalisés (MAJ). */
+function parseCatsEngagees(brut) {
+  const t = String(brut || '').trim();
+  if (!t) return [];
+  let liste = null;
+  try { const o = JSON.parse(t); if (Array.isArray(o)) liste = o; } catch (e) { /* pas du JSON */ }
+  if (!liste) liste = t.split(',');
+  return liste.map(function (s) { return String(s).trim().toUpperCase(); }).filter(Boolean);
+}
+
+/**
+ * Panneau « Accepté » d'un club : cases à cocher des catégories du tournoi (pré-cochées sur
+ * toutes par défaut, ou sur categories_engagees si déjà renseigné), champ prénom du contact,
+ * bouton d'enregistrement de la sélection, puis — une fois categories_engagees renseigné —
+ * bouton « Générer le dossier final ».
+ */
+function panneauAccepteClub(club, nom) {
+  const cats = (configCourante.categories || []).filter(estPresente)
+    .slice().sort(function (a, b) { return comparerCategorie(a.categorie, b.categorie); });
+  const engBrut = String(club.categories_engagees || '').trim();
+  const eng = parseCatsEngagees(engBrut);
+  const toutParDefaut = eng.length === 0; // rien encore enregistré → tout coché
+  const cases = cats.map(function (c) {
+    const val = String(c.categorie || '');
+    const coche = toutParDefaut || eng.indexOf(val.toUpperCase()) !== -1;
+    return '<label><input type="checkbox" class="club-cat-case" value="' + echapper(val) + '"' +
+      (coche ? ' checked' : '') + '> ' + echapper(val) + '</label>';
+  }).join('');
+
+  const boutonGenerer = engBrut
+    ? '<button class="bouton bouton-generer-dossier" data-club="' + echapper(nom) + '">📄 Générer le dossier final</button>'
+    : '';
+
+  return '<div class="club-panneau" data-club="' + echapper(nom) + '">' +
+    '<p class="club-panneau-titre">Catégories engagées par le club</p>' +
+    (cats.length
+      ? '<div class="club-cats">' + cases + '</div>'
+      : '<p class="vide">Ajoute d\'abord des catégories au tournoi.</p>') +
+    '<label class="club-prenom-champ">Prénom du contact (pour la politesse du dossier)' +
+      '<input type="text" class="club-prenom-input" value="' + echapper(String(club.club_contact_prenom || '')) + '" ' +
+             'placeholder="Ex : Camille" autocomplete="off"></label>' +
+    '<div class="club-panneau-actions">' +
+      '<button class="bouton bouton-cats-club" data-club="' + echapper(nom) + '">💾 Enregistrer la sélection</button>' +
+      boutonGenerer +
+    '</div>' +
+  '</div>';
+}
+
+/** Affiche la liste des clubs invités (nom, contact, statut, panneau Accepté, envoi). */
 function afficherClubsInvites() {
   const zone = document.getElementById('liste-clubs-invites');
   if (!zone) return;
@@ -920,22 +1114,33 @@ function afficherClubsInvites() {
   let html = '';
   clubsInvitesCourants.forEach(function (club) {
     const nom = String(club.club_nom || '');
-    const contact = [club.club_contact_nom, club.club_contact_email].filter(Boolean).join(' · ');
+    // Contact : « Prénom Nom · email » (les bouts vides sont omis).
+    const identite = [club.club_contact_prenom, club.club_contact_nom].filter(Boolean).join(' ');
+    const contact = [identite, club.club_contact_email].filter(Boolean).join(' · ');
     const options = STATUTS_CLUB_INVITE.map(function (s) {
       return '<option value="' + echapper(s) + '"' +
-        (memeTexteSouple(club.statut, s) ? ' selected' : '') + '>' + echapper(s) + '</option>';
+        (memeTexteSouple(club.statut, s) || (estAccepte(club.statut) && s === 'Accepté') ? ' selected' : '') +
+        '>' + echapper(s) + '</option>';
     }).join('');
+    const envoye = String(club.dossier_envoye || '').trim();
+    const badgeEnvoye = envoye
+      ? '<span class="club-envoye" title="Dossier envoyé">📧 Envoyé le ' + echapper(envoye) + '</span>'
+      : '';
+
     html +=
       '<div class="equipe-item club-invite-item ' + classeStatutClub(club.statut) + '" data-club="' + echapper(nom) + '">' +
         '<span class="nom">' + echapper(nom) +
           (contact ? '<span class="club-contact">' + echapper(contact) + '</span>' : '') +
         '</span>' +
         '<div class="equipe-actions">' +
+          badgeEnvoye +
           '<select class="statut-club" data-club="' + echapper(nom) + '" ' +
                   'aria-label="Statut de ' + echapper(nom) + '">' + options + '</select>' +
           '<button class="bouton-suppr bouton-icone bouton-suppr-club" title="Retirer" aria-label="Retirer" ' +
                   'data-club="' + echapper(nom) + '">🗑️</button>' +
         '</div>' +
+        // Panneau de sélection des catégories + génération, visible seulement si Accepté.
+        (estAccepte(club.statut) ? panneauAccepteClub(club, nom) : '') +
       '</div>';
   });
   zone.innerHTML = html;
@@ -946,6 +1151,7 @@ async function onAjouterClubInvite(evenement) {
   evenement.preventDefault();
   const champNom = document.getElementById('champ-club-nom');
   const champContact = document.getElementById('champ-club-contact');
+  const champPrenom = document.getElementById('champ-club-prenom');
   const champEmail = document.getElementById('champ-club-email');
   const bouton = document.getElementById('bouton-ajouter-club');
   const message = document.getElementById('message-club-invite');
@@ -965,9 +1171,10 @@ async function onAjouterClubInvite(evenement) {
     await ecrireAdmin('ajouterClubInvite', {
       club_nom: nom,
       club_contact_nom: champContact.value.trim(),
+      club_contact_prenom: champPrenom.value.trim(),
       club_contact_email: champEmail.value.trim()
     });
-    champNom.value = ''; champContact.value = ''; champEmail.value = '';
+    champNom.value = ''; champContact.value = ''; champPrenom.value = ''; champEmail.value = '';
     champNom.focus();
     afficherMessage(message, '✅ « ' + nom + ' » ajouté (statut : Invité).', 'ok');
     await chargerClubsInvites();
@@ -979,7 +1186,9 @@ async function onAjouterClubInvite(evenement) {
   }
 }
 
-/** Changement de statut via le menu déroulant d'un club (enregistrement immédiat). */
+/** Changement de statut via le menu déroulant d'un club (enregistrement immédiat).
+ *  Passer à « Accepté » fait apparaître le panneau de sélection des catégories (pré-cochées
+ *  sur toutes par défaut). Revenir à « Invité »/« Décliné » CONSERVE categories_engagees. */
 async function onChangerStatutClub(evenement) {
   const select = evenement.target.closest('.statut-club');
   if (!select) return;
@@ -990,7 +1199,7 @@ async function onChangerStatutClub(evenement) {
     await ecrireAdmin('modifierStatutClubInvite', { club_nom: nom, statut: select.value });
     const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
     if (club) club.statut = select.value;
-    afficherClubsInvites(); // la pastille de couleur suit le nouveau statut
+    afficherClubsInvites(); // pastille + panneau « Accepté » suivent le nouveau statut
     afficherMessage(message, '✅ « ' + nom + ' » → ' + select.value + '.', 'ok');
   } catch (erreur) {
     afficherClubsInvites(); // revient à l'état connu si l'enregistrement a échoué
@@ -998,10 +1207,18 @@ async function onChangerStatutClub(evenement) {
   }
 }
 
-/** Clic dans la liste des clubs : bouton de suppression. */
+/** Clic dans la liste des clubs : suppression, enregistrement des catégories, ou génération. */
 async function onClicClubsInvites(evenement) {
-  const bouton = evenement.target.closest('.bouton-suppr-club');
-  if (!bouton) return;
+  const btnSuppr = evenement.target.closest('.bouton-suppr-club');
+  if (btnSuppr) return supprimerClubInviteUI(btnSuppr);
+  const btnCats = evenement.target.closest('.bouton-cats-club');
+  if (btnCats) return enregistrerCatsClub(btnCats);
+  const btnGen = evenement.target.closest('.bouton-generer-dossier');
+  if (btnGen) return genererDossierFinal(btnGen.getAttribute('data-club'));
+}
+
+/** Retire un club de la liste (confirmation). */
+async function supprimerClubInviteUI(bouton) {
   const nom = bouton.getAttribute('data-club');
   const message = document.getElementById('message-club-invite');
   if (!await dialogConfirmer('Retirer le club « ' + nom + ' » de la liste des invités ?',
@@ -1015,6 +1232,144 @@ async function onClicClubsInvites(evenement) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
     bouton.disabled = false;
   }
+}
+
+/** Enregistre les catégories engagées cochées (+ le prénom du contact) d'un club Accepté. */
+async function enregistrerCatsClub(bouton) {
+  const nom = bouton.getAttribute('data-club');
+  const message = document.getElementById('message-club-invite');
+  const panneau = bouton.closest('.club-panneau');
+  if (!panneau) return;
+  const cochees = Array.prototype.slice.call(panneau.querySelectorAll('.club-cat-case:checked'))
+    .map(function (c) { return c.value; });
+  const prenomInput = panneau.querySelector('.club-prenom-input');
+  const prenom = prenomInput ? prenomInput.value.trim() : '';
+  const cats = cochees.join(',');
+
+  bouton.disabled = true;
+  const texte = bouton.textContent;
+  bouton.textContent = 'Enregistrement…';
+  try {
+    await ecrireAdmin('enregistrerCategoriesEngagees', {
+      club_nom: nom, categories_engagees: cats, club_contact_prenom: prenom
+    });
+    const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
+    if (club) { club.categories_engagees = cats; club.club_contact_prenom = prenom; }
+    afficherClubsInvites(); // fait apparaître « Générer le dossier final »
+    afficherMessage(message, cochees.length
+      ? '✅ « ' + nom +' » — catégories engagées : ' + cats + '.'
+      : '✅ « ' + nom + ' » — sélection enregistrée (aucune catégorie cochée).', 'ok');
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    bouton.disabled = false;
+    bouton.textContent = texte;
+  }
+}
+
+/** Lien ABSOLU du dossier Phase 2 personnalisé d'un club (dossier-club.html?tournoi=…&club=…). */
+function lienDossierClub(nom) {
+  const url = new URL('dossier-club.html', window.location.href);
+  const tn = (configCourante.global && configCourante.global.tournoi_nom) || '';
+  if (tn) url.searchParams.set('tournoi', tn);
+  url.searchParams.set('club', nom);
+  return url.toString();
+}
+
+/**
+ * « Générer le dossier final » : construit le lien personnalisé, puis
+ *  - si le club a un email → ouvre l'aperçu email avant tout envoi ;
+ *  - sinon → bascule en mode « Copier le lien » (pas d'aperçu, pas d'envoi auto).
+ */
+async function genererDossierFinal(nom) {
+  const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
+  if (!club) return;
+  const email = String(club.club_contact_email || '').trim();
+  const lien = lienDossierClub(String(club.club_nom || ''));
+
+  if (email) { ouvrirApercuEmail(club, lien); return; }
+
+  // Pas d'email : mode manuel. On copie le lien (best-effort) et on l'affiche pour copie.
+  try { if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(lien); } catch (e) { /* copie indispo */ }
+  await dialogDemander(
+    'Ce club n\'a pas d\'email de contact.\nCopie le lien du dossier ci-dessous et envoie-le manuellement :',
+    lien, { ok: 'Fermer' });
+}
+
+/**
+ * Fenêtre d'APERÇU de l'email (Phase 2), AVANT tout envoi :
+ *  - Destinataire (lecture seule) = email de contact du club ;
+ *  - Objet pré-rempli, modifiable ;
+ *  - Corps pré-rempli (politesse personnalisée + lien), modifiable en texte libre.
+ * « Envoyer » déclenche l'envoi réel (envoyerDossierEmail) ; dossier_envoye n'est posé
+ * qu'en cas de succès. « Annuler » ferme sans rien envoyer.
+ */
+function ouvrirApercuEmail(club, lien) {
+  const nom = String(club.club_nom || '');
+  const email = String(club.club_contact_email || '');
+  const prenom = String(club.club_contact_prenom || '').trim();
+  const nomTournoi = (configCourante.global && configCourante.global.tournoi_nom) || 'Tournoi Génération R92';
+  const bonjour = prenom ? 'Bonjour ' + prenom + ',' : 'Bonjour,';
+  const sujetDefaut = 'Votre dossier complet — ' + nomTournoi;
+  const corpsDefaut = bonjour + '\n\n'
+    + 'Nous avons bien reçu votre retour concernant votre souhait de participer au ' + nomTournoi + '.\n'
+    + 'Vous trouverez le dossier complet de la journée (infos pratiques, programme, format sportif, '
+    + 'sécurité et contact) en suivant ce lien :\n' + lien + '\n\n'
+    + 'À très bientôt,\nGénération R92';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'eml-overlay';
+  overlay.innerHTML =
+    '<div class="eml-carte" role="dialog" aria-modal="true">' +
+      '<h2 class="eml-titre">Aperçu de l\'email — ' + echapper(nom) + '</h2>' +
+      '<p class="eml-msg" id="eml-msg"></p>' +
+      '<label class="eml-champ">Destinataire' +
+        '<input type="email" id="eml-dest" value="' + echapper(email) + '" readonly></label>' +
+      '<label class="eml-champ">Objet' +
+        '<input type="text" id="eml-sujet" value="' + echapper(sujetDefaut) + '"></label>' +
+      '<label class="eml-champ">Message' +
+        '<textarea id="eml-corps">' + echapper(corpsDefaut) + '</textarea></label>' +
+      '<div class="eml-actions">' +
+        '<button type="button" class="bouton bouton-doux" id="eml-annuler">Annuler</button>' +
+        '<button type="button" class="bouton" id="eml-envoyer">📧 Envoyer</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+
+  const fermer = function () { overlay.remove(); };
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) fermer(); });
+  overlay.querySelector('#eml-annuler').addEventListener('click', fermer);
+
+  overlay.querySelector('#eml-envoyer').addEventListener('click', async function () {
+    const boutonEnvoi = overlay.querySelector('#eml-envoyer');
+    const msg = overlay.querySelector('#eml-msg');
+    const sujet = overlay.querySelector('#eml-sujet').value.trim();
+    const corps = overlay.querySelector('#eml-corps').value;
+    msg.className = 'eml-msg';
+    if (!sujet) { msg.className = 'eml-msg ko'; msg.textContent = '⚠️ L\'objet est vide.'; return; }
+    if (!corps.trim()) { msg.className = 'eml-msg ko'; msg.textContent = '⚠️ Le message est vide.'; return; }
+
+    boutonEnvoi.disabled = true;
+    const texte = boutonEnvoi.textContent;
+    boutonEnvoi.textContent = 'Envoi…';
+    msg.className = 'eml-msg';
+    msg.textContent = 'Envoi en cours…';
+    try {
+      const res = await ecrireAdmin('envoyerDossierEmail', { club_nom: nom, sujet: sujet, corps: corps });
+      // Succès : dossier_envoye posé côté serveur (uniquement en cas de succès).
+      const c = clubsInvitesCourants.find(function (x) { return memeTexteSouple(x.club_nom, nom); });
+      if (c && res && res.dossier_envoye) c.dossier_envoye = res.dossier_envoye;
+      afficherClubsInvites();
+      afficherMessage(document.getElementById('message-club-invite'),
+        '✅ Dossier envoyé à ' + email + '.', 'ok');
+      fermer();
+    } catch (erreur) {
+      // Échec : dossier_envoye NON posé → on garde la fenêtre pour relancer.
+      msg.className = 'eml-msg ko';
+      msg.textContent = '⚠️ ' + erreur.message;
+      boutonEnvoi.disabled = false;
+      boutonEnvoi.textContent = texte;
+    }
+  });
 }
 
 /* --------------------------------------------------------------------------

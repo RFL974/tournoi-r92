@@ -1634,11 +1634,14 @@ a.bouton { display: inline-block; text-decoration: none; }
 /* ==========================================================================
    Carte « Clubs invités » (admin) : liste des clubs (réutilise .equipe-item)
    avec le contact sous le nom, un menu déroulant de statut et un liseré de
-   couleur selon le statut (Invité / Confirmé / Décliné).
+   couleur selon le statut (Invité / Accepté / Décliné). Quand un club est
+   Accepté, un panneau replié laisse choisir les catégories engagées et
+   générer/envoyer le dossier complet (Phase 2).
    ========================================================================== */
 .club-invite-item { border-left: 4px solid rgba(120, 180, 255, 0.5); }
-.club-invite-item.est-confirme { border-left-color: #35c06a; }
+.club-invite-item.est-accepte { border-left-color: #35c06a; }
 .club-invite-item.est-decline  { border-left-color: #e07878; }
+.club-invite-item { flex-wrap: wrap; }
 .club-invite-item .nom { display: flex; flex-direction: column; min-width: 0; }
 .club-contact {
   font-weight: 400;
@@ -1655,3 +1658,80 @@ a.bouton { display: inline-block; text-decoration: none; }
   font: inherit;
   font-size: 0.85rem;
 }
+/* Indicateur « dossier envoyé le … » (icône + date) sur la ligne du club. */
+.club-envoye {
+  font-size: 0.78rem;
+  color: #8fe0a8;
+  white-space: nowrap;
+  margin-left: 4px;
+}
+/* Panneau « Accepté » : sélection des catégories engagées + prénom + génération. */
+.club-panneau {
+  flex: 1 1 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(3, 16, 36, 0.45);
+  border: 1px solid rgba(120, 180, 255, 0.25);
+  border-radius: 8px;
+}
+.club-panneau-titre {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.85rem;
+  color: var(--bleu-ciel, #b8d8f8);
+  margin: 0 0 6px;
+}
+.club-cats { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 8px; }
+.club-cats label { display: inline-flex; align-items: center; gap: 5px; font-size: 0.9rem; }
+.club-prenom-champ {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+}
+.club-prenom-champ input {
+  background: rgba(3, 16, 36, 0.6);
+  border: 1px solid rgba(120, 180, 255, 0.4);
+  color: #eaf2ff;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font: inherit;
+}
+.club-panneau-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* Aperçu email (Phase 2) — fenêtre modale d'envoi du dossier complet. */
+.eml-overlay {
+  position: fixed; inset: 0; z-index: 9998;
+  background: rgba(3, 16, 36, 0.72);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.eml-carte {
+  background: linear-gradient(160deg, #0B2138, #031024);
+  color: #F2F6FB;
+  border: 1px solid rgba(184, 216, 248, 0.25);
+  border-radius: 12px;
+  padding: 18px;
+  max-width: 560px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  font-family: 'Barlow', system-ui, sans-serif;
+}
+.eml-titre { margin: 0 0 12px; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 0.6px; color: #b8d8f8; }
+.eml-champ { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; font-size: 0.85rem; }
+.eml-champ input, .eml-champ textarea {
+  background: rgba(11, 33, 56, 0.8);
+  color: #F2F6FB;
+  border: 1px solid rgba(184, 216, 248, 0.35);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font: 1rem 'Barlow', sans-serif;
+  box-sizing: border-box;
+}
+.eml-champ input[readonly] { opacity: 0.75; cursor: default; }
+.eml-champ textarea { min-height: 150px; resize: vertical; }
+.eml-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 4px; }
+.eml-msg { font-size: 0.85rem; margin: 0 0 10px; min-height: 1.2em; }
+.eml-msg.ko { color: #ffb3ab; }
+.eml-msg.ok { color: #8fe0a8; }
