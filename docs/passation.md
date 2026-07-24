@@ -209,7 +209,21 @@ Le script tourne aujourd'hui sous le **compte Gmail personnel de Romain**
 aussi vers elle que sont envoyés les emails de **test** de validation.
 
 > Techniquement : sans `email_expediteur` configuré, le backend utilise `MailApp.sendEmail(...)`,
-> qui envoie **au nom du compte exécutant**. Rien à régler pour que ça marche en test.
+> qui envoie **au nom du compte exécutant**.
+
+> ⚠️ **Autorisation à accorder UNE FOIS.** Le tout premier envoi échoue tant que le scope
+> d'envoi d'emails n'est pas autorisé (message : *« Vous n'êtes pas autorisé à appeler
+> MailApp.sendEmail »*). Pour l'accorder :
+> 1. Ouvrir le Sheet → **Extensions → Apps Script**.
+> 2. Dans la liste des fonctions (en haut), choisir **`autoriserEnvoiEmail`** → **Exécuter**.
+> 3. Accepter les autorisations demandées. Comme le projet référence aussi **GmailApp** (pour
+>    l'alias, option B ci-dessous), Google peut afficher **« Cette application n'est pas
+>    validée »** → **Paramètres avancés → « Accéder au projet (non sécurisé) »** → autoriser.
+> 4. Refaire un envoi de test depuis l'admin : il part alors de `romain.rifleu@gmail.com`.
+>
+> Aucune re-publication (nouveau déploiement) n'est nécessaire : l'autorisation est liée au
+> compte, pas au déploiement. Si l'envoi échoue encore après ça, redéployer une **nouvelle
+> version** de la Web App (Déployer → Gérer les déploiements → crayon → Version « Nouvelle version »).
 
 ### 11.2 Cible : `generationr92@gmail.com` (compte géré par Jérémy)
 À terme, l'envoi doit basculer vers **`generationr92@gmail.com`**. Deux options, **à choisir

@@ -1316,6 +1316,23 @@ function autoriserDrive() {
 }
 
 /**
+ * À LANCER UNE FOIS depuis l'éditeur Apps Script (menu « Exécuter ») après avoir collé cette
+ * version : déclenche la demande d'AUTORISATION d'envoi d'emails, nécessaire aux envois
+ * d'invitations (Phase 1) et de dossiers (Phase 2). Sans ça, MailApp.sendEmail échoue avec
+ * « Vous n'êtes pas autorisé à appeler MailApp.sendEmail » (scope script.send_mail manquant).
+ * Ne modifie rien et n'envoie aucun email : lit seulement le quota restant.
+ *
+ * ⚠️ Le projet référence AUSSI GmailApp (pour l'alias « Envoyer en tant que », option B de la
+ * passation) : la fenêtre de consentement demandera donc l'accès Gmail et pourra afficher
+ * « Cette application n'est pas validée » → Paramètres avancés → « Accéder au projet (non sécurisé) ».
+ * En phase de TEST (email_expediteur vide), seul MailApp est utilisé (envoi depuis le compte exécutant).
+ */
+function autoriserEnvoiEmail() {
+  var reste = MailApp.getRemainingDailyQuota();
+  Logger.log('Autorisation d\'envoi d\'emails OK — quota restant aujourd\'hui : ' + reste);
+}
+
+/**
  * Écrit un paramètre GLOBAL (clé/valeur) dans la zone A de l'onglet Config. L'onglet Config
  * contient deux zones : en haut les paramètres globaux (une ligne = nom/valeur), puis un
  * séparateur (ligne « — … ») et le tableau des catégories (dont l'entête « categorie »).
