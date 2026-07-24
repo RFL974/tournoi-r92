@@ -29,10 +29,9 @@ const ASSISTANT_ETAPES = [
   { id: 'terrains',  titre: 'Terrains',     icone: '🗺️', blocs: ['bloc-terrains'] },
   { id: 'poules',    titre: 'Poules',       icone: '🎲', blocs: ['bloc-generation'] },
   { id: 'apresmidi', titre: 'Après-midi',   icone: '🏉', blocs: ['bloc-apresmidi'] },
-  /* L'invitation (Phase 1), les clubs invités puis le Dossier complet (Phase 2) viennent
-     AVANT le Résumé (Publication) : on invite, on gère les réponses, on envoie, on publie. */
-  { id: 'invitation', titre: 'Inviter',     icone: '✉️', blocs: ['bloc-inviter', 'bloc-surplace', 'bloc-reponse'] },
-  { id: 'clubs',     titre: 'Clubs',        icone: '📇', blocs: ['bloc-clubs-invites'] },
+  /* « Inviter un club » (Phase 1 : liste + aperçu + config) puis le Dossier complet (Phase 2)
+     viennent AVANT le Résumé (Publication) : on invite, on gère les réponses, on envoie, on publie. */
+  { id: 'invitation', titre: 'Inviter',     icone: '✉️', blocs: ['bloc-clubs-invites', 'bloc-apercu-invitation', 'bloc-surplace', 'bloc-reponse'] },
   { id: 'dossier',   titre: 'Dossier',      icone: '📄', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier'] },
   { id: 'resume',    titre: 'Résumé',       icone: '📋', blocs: ['tableau-bord', 'etat-avancement', 'bloc-publication', 'bloc-reinitialisation'] }
 ];

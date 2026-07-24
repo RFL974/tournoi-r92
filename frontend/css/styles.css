@@ -1735,3 +1735,44 @@ a.bouton { display: inline-block; text-decoration: none; }
 .eml-msg { font-size: 0.85rem; margin: 0 0 10px; min-height: 1.2em; }
 .eml-msg.ko { color: #ffb3ab; }
 .eml-msg.ok { color: #8fe0a8; }
+
+/* Bouton d'envoi INDIVIDUEL de l'invitation (icône, sur la ligne du club). */
+.bouton-inviter-club {
+  background: rgba(46, 143, 224, 0.18);
+  border: 1px solid rgba(120, 180, 255, 0.45);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 1rem;
+  line-height: 1;
+}
+.bouton-inviter-club:hover:not([disabled]) { background: rgba(46, 143, 224, 0.32); }
+.bouton-inviter-club[disabled] { opacity: 0.4; cursor: not-allowed; }
+.club-badge-invite { color: #b8d8f8; }
+
+/* Aperçu de l'email d'invitation (Phase 1) — même esprit que l'aperçu des Infos. */
+.apercu-email {
+  background: rgba(3, 16, 36, 0.55);
+  border: 1px solid rgba(120, 180, 255, 0.28);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.ae-ligne { display: flex; gap: 10px; align-items: baseline; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid rgba(120, 180, 255, 0.18); }
+.ae-label {
+  flex: 0 0 auto;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.8rem;
+  color: var(--bleu-ciel, #b8d8f8);
+}
+.ae-objet { font-weight: 600; overflow-wrap: anywhere; }
+.ae-corps {
+  white-space: pre-wrap;       /* conserve retours ligne et espaces de l'aperçu */
+  word-break: break-word;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #eaf2ff;
+}
+.ae-toggle { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 0.9rem; }

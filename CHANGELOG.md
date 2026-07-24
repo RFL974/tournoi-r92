@@ -5,6 +5,40 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sprint 5 — Page « Inviter un club » fusionnée + envoi des invitations (aperçu inline) — 2026-07-24
+Réorganisation du workflow Phase 1 : **une seule page** pour ajouter les clubs et **envoyer les
+invitations**, avec un **panneau d'aperçu de l'email** en direct (comme l'aperçu de la carte
+« Infos du tournoi ») au lieu d'un simple lien vers la page publique. ⚠️ Nécessite un redéploiement
+de la Web App (2 nouvelles actions backend + colonne Sheets migrée automatiquement).
+
+- **Onglet `ClubsInvites`** — nouvelle colonne `invitation_envoyee` (date, vide par défaut) : posée
+  automatiquement à l'envoi **réussi** de l'invitation Phase 1 (distincte de `dossier_envoye`,
+  Phase 2). Migration douce ; remise à zéro par la réinitialisation du tournoi.
+- **Page « Inviter un club »** réorganisée : la carte **« Clubs invités »** (liste + ajout) passe
+  **tout en haut** ; l'ancienne carte « Inviter un club (Ouvrir l'invitation) » est **supprimée**
+  (remplacée par l'aperçu) ; « Sur place » et « Réponse à l'invitation » restent en dessous.
+  L'item de sidebar **« Clubs invités » est supprimé** — son contenu vit désormais uniquement
+  sur « Inviter un club ».
+- **Aperçu inline de l'email** (`bloc-apercu-invitation`) : objet + corps (salutation
+  « Bonjour {prénom}, » illustrée avec un exemple — 1er club, ou « Prénom » si la liste est vide —,
+  texte d'intro fixe et lien vers `invitation-club.html`). **Mise à jour en direct** quand on
+  modifie « Sur place » (ligne des services) ou « Réponse à l'invitation » (date limite), sans
+  rechargement.
+- **Envoi des invitations** :
+  - Bouton global **« Envoyer les invitations à tous les clubs »** : **résumé avant confirmation**
+    (nombre d'éligibles = statut Invité + email + `invitation_envoyee` vide ; nombre sans email ;
+    nombre déjà invités, exclus par défaut), case **« Renvoyer aussi aux clubs déjà invités »**
+    (décochée par défaut), envoi en boucle **tolérant aux pannes** (un échec n'arrête pas les
+    suivants) + **résumé final** (« N envoyées, M échecs : […] »). `invitation_envoyee` posée à
+    chaque succès.
+  - Bouton **individuel** « ✉️ » sur chaque ligne de club (désactivé si pas d'email) : envoie
+    l'invitation à ce club, même contenu que l'aperçu. Badge « ✉️ Invité le … » sur la ligne.
+  - Backend : actions `envoyerInvitationClub` / `envoyerInvitationsGroupe` (destinataire relu du
+    Sheet, salutation personnalisée par club, envoi partagé `MailApp`/`GmailApp` factorisé avec
+    la Phase 2).
+- **Rétrocompatibilité** : `invitation_envoyee` optionnel ; `invitation-club.html` (Phase 1)
+  inchangée — seul le point d'accès pour l'envoyer change.
+
 ### Sprint 4 — Deux phases : invitation légère (Phase 1) + dossier complet personnalisé (Phase 2) — 2026-07-24
 Le dossier unique devient un parcours **en deux temps** : une **invitation courte** envoyée à
 tous les clubs invités *avant* leur réponse (Phase 1), puis le **dossier complet personnalisé**

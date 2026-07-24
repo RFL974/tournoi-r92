@@ -245,23 +245,52 @@
         <div id="message-apresmidi" class="message-form"></div>
       </section>
 
-      <!-- 4 bis-0) INVITER UN CLUB (Phase 1) : ouvre l'invitation légère (page dédiée
-           invitation-club.html), générique pour tous les clubs. Distincte du dossier
-           complet (Phase 2), envoyé uniquement aux clubs qui acceptent. -->
-      <section class="carte" id="bloc-inviter">
-        <h2>Inviter un club (Phase 1)</h2>
+      <!-- 4 bis) CLUBS INVITÉS (Phase 1) — en TÊTE de la page « Inviter un club » : liste + ajout,
+           statut, envoi individuel de l'invitation, et (une fois Accepté) génération du dossier
+           Phase 2. ⚠️ Les emails ne sont JAMAIS publics : la liste se charge avec la clé admin
+           (action listerClubsInvites) et n'apparaît pas dans les données publiques. -->
+      <section class="carte" id="bloc-clubs-invites">
+        <h2>Clubs invités</h2>
         <p class="note-generation">
-          Ouvre l'<strong>invitation légère</strong> à envoyer aux clubs <strong>avant leur réponse</strong> :
-          catégories concernées, déroulé de la journée en bref, réponse attendue. Même contenu pour
-          tous les clubs. Le <strong>dossier complet personnalisé</strong> (Phase 2) n'est envoyé
-          qu'aux clubs qui <strong>acceptent</strong>.
+          Ajoute chaque club avec son contact, puis <strong>envoie l'invitation</strong> (Phase 1) —
+          au club, ou à tous d'un coup via l'aperçu ci-dessous. Fais ensuite évoluer le
+          <strong>statut</strong> (Invité → <strong>Accepté</strong> ou Décliné). Quand un club passe
+          <strong>Accepté</strong>, choisis ses <strong>catégories engagées</strong> puis
+          <strong>« Générer le dossier final »</strong> (Phase 2).
         </p>
+        <form id="form-club-invite" class="form-equipe">
+          <input id="champ-club-nom" type="text" placeholder="Nom du club" autocomplete="off" required>
+          <input id="champ-club-contact" type="text" placeholder="Contact (nom)" autocomplete="off">
+          <input id="champ-club-prenom" type="text" placeholder="Prénom du contact" autocomplete="off">
+          <input id="champ-club-email" type="email" placeholder="Email du contact" autocomplete="off">
+          <button type="submit" class="bouton" id="bouton-ajouter-club">Ajouter</button>
+        </form>
+        <div id="message-club-invite" class="message-form"></div>
+        <div id="liste-clubs-invites"><p class="vide">Connecte-toi pour voir la liste des clubs invités.</p></div>
+      </section>
+
+      <!-- 4 bis-2) APERÇU DE L'EMAIL D'INVITATION (Phase 1) : même principe que l'aperçu de la
+           carte « Infos du tournoi » — mise à jour EN DIRECT à partir des données du tournoi
+           (et des cartes « Sur place » / « Réponse » ci-dessous). Porte le bouton d'envoi GROUPÉ. -->
+      <section class="carte" id="bloc-apercu-invitation">
+        <h2>Aperçu de l'email d'invitation</h2>
+        <p class="note-generation">
+          L'email envoyé aux clubs (Phase 1). La salutation est <strong>personnalisée par club</strong>
+          (« Bonjour {prénom}, ») ; l'aperçu montre un exemple. Il se met à jour tout seul quand tu
+          modifies les cartes <strong>« Sur place »</strong> ou <strong>« Réponse à l'invitation »</strong> ci-dessous.
+        </p>
+        <div class="apercu-email" id="apercu-invitation">
+          <div class="ae-ligne"><span class="ae-label">Objet</span><span class="ae-objet" id="apercu-invitation-objet"></span></div>
+          <div class="ae-corps" id="apercu-invitation-corps"></div>
+        </div>
+        <label class="mini-toggle ae-toggle"><input type="checkbox" id="inv-renvoyer"> Renvoyer aussi aux clubs déjà invités</label>
         <div class="ligne-action">
-          <a class="bouton" id="bouton-ouvrir-invitation" href="invitation-club.html" target="_blank" rel="noopener">✉️ Ouvrir l'invitation (Phase 1)</a>
+          <button type="button" class="bouton" id="bouton-envoyer-invitations">✉️ Envoyer les invitations à tous les clubs</button>
+          <span class="message-form" id="message-invitations"></span>
         </div>
       </section>
 
-      <!-- 4 bis-1) SUR PLACE (Phase 1) : services affichés en pastilles sur l'invitation,
+      <!-- 4 bis-3) SUR PLACE (Phase 1) : services affichés en pastilles sur l'invitation,
            uniquement s'ils sont cochés. -->
       <section class="carte" id="bloc-surplace">
         <h2>Sur place</h2>
@@ -317,29 +346,6 @@
             <span class="message-form" id="message-reponse"></span>
           </div>
         </form>
-      </section>
-
-      <!-- 4 bis) Clubs invités : la liste des clubs à qui on envoie le dossier d'INVITATION
-           (avant leur confirmation). Nom + contact + statut (Invité / Accepté / Décliné).
-           ⚠️ Les contacts (emails) ne sont JAMAIS publics : la liste se charge avec la clé
-           admin (action listerClubsInvites) et n'apparaît pas dans les données publiques. -->
-      <section class="carte" id="bloc-clubs-invites">
-        <h2>Clubs invités</h2>
-        <p class="note-generation">
-          La liste des clubs invités. Ajoute un club avec son contact, puis fais évoluer son
-          <strong>statut</strong> (Invité → <strong>Accepté</strong> ou Décliné) au fil des réponses.
-          Quand un club passe <strong>Accepté</strong>, choisis ses <strong>catégories engagées</strong>,
-          puis <strong>« Générer le dossier final »</strong> pour lui envoyer son dossier complet personnalisé.
-        </p>
-        <form id="form-club-invite" class="form-equipe">
-          <input id="champ-club-nom" type="text" placeholder="Nom du club" autocomplete="off" required>
-          <input id="champ-club-contact" type="text" placeholder="Contact (nom)" autocomplete="off">
-          <input id="champ-club-prenom" type="text" placeholder="Prénom du contact" autocomplete="off">
-          <input id="champ-club-email" type="email" placeholder="Email du contact" autocomplete="off">
-          <button type="submit" class="bouton" id="bouton-ajouter-club">Ajouter</button>
-        </form>
-        <div id="message-club-invite" class="message-form"></div>
-        <div id="liste-clubs-invites"><p class="vide">Connecte-toi pour voir la liste des clubs invités.</p></div>
       </section>
 
       <!-- 5) Cartes du DOSSIER D'INVITATION : modalités d'inscription, parking & accès,

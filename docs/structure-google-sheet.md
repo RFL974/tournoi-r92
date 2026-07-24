@@ -275,15 +275,17 @@ clubs qui **acceptent** (Phase 2).
 | `date_ajout` | `2026-07-23` | Posée automatiquement à l'ajout (AAAA-MM-JJ) |
 | `club_contact_prenom` | `Camille` | **Nouveau.** Prénom du contact, utilisé dans la politesse du dossier Phase 2 (« Bonjour {prénom}, ») |
 | `categories_engagees` | `U8,U10` | **Nouveau.** Catégories réellement engagées par le club (texte séparé par virgules, ou JSON). **Vide** tant que le club n'a pas répondu. Filtre le tableau « Format sportif » du dossier Phase 2 |
-| `dossier_envoye` | `2026-07-24` | **Nouveau.** Date (AAAA-MM-JJ) posée **automatiquement** au moment où l'envoi email **réussit** (jamais en cas d'échec). Vide par défaut |
+| `dossier_envoye` | `2026-07-24` | **Nouveau.** Date (AAAA-MM-JJ) posée **automatiquement** quand l'envoi du **dossier Phase 2** **réussit** (jamais en cas d'échec). Vide par défaut |
+| `invitation_envoyee` | `2026-07-24` | **Nouveau (Sprint 5).** Date (AAAA-MM-JJ) posée **automatiquement** quand l'envoi de l'**invitation Phase 1** **réussit** (individuel ou groupé). Sert à exclure un club du prochain envoi groupé (sauf « Renvoyer aussi »). Vide par défaut |
 
 > 🛠️ **Création + migration automatiques.** L'onglet et son en-tête sont créés tout seuls au
-> premier accès (`assurerOngletClubsInvites`). Les **3 nouvelles colonnes** (`club_contact_prenom`,
-> `categories_engagees`, `dossier_envoye`) sont ajoutées **à droite** des colonnes existantes sur
-> un Sheet déjà en service (`assurerColonnesClubsInvites`) — les 5 premières gardent leur position.
+> premier accès (`assurerOngletClubsInvites`). Les **colonnes nouvelles** (`club_contact_prenom`,
+> `categories_engagees`, `dossier_envoye`, `invitation_envoyee`) sont ajoutées **à droite** des
+> colonnes existantes sur un Sheet déjà en service (`assurerColonnesClubsInvites`) — les 5
+> premières gardent leur position.
 > ✅ La **réinitialisation du tournoi** CONSERVE le carnet d'adresses (noms, contacts, prénoms,
-> statuts) mais **remet à zéro** les colonnes propres à l'édition : `categories_engagees` et
-> `dossier_envoye`.
+> statuts) mais **remet à zéro** les colonnes propres à l'édition : `categories_engagees`,
+> `dossier_envoye` et `invitation_envoyee`.
 
 ---
 
