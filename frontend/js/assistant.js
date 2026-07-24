@@ -23,13 +23,13 @@
 /* Ordre des cartes = ordre logique de préparation (le même que le « cerveau »).
    Chaque carte réutilise un ou plusieurs blocs EXISTANTS (par leur id). */
 const ASSISTANT_ETAPES = [
-  { id: 'infos',     titre: 'Infos',        icone: '📝', blocs: ['bloc-infos-tournoi', 'bloc-apercu-tournoi', 'bloc-contacts-securite'] },
+  { id: 'infos',     titre: 'Infos',        icone: '📝', blocs: ['bloc-infos-tournoi', 'bloc-apercu-tournoi'] },
   { id: 'reglages',  titre: 'Réglages',     icone: '⏱️', blocs: ['reglages'] },
   /* « Inviter un club » (Phase 1) puis le Dossier complet (Phase 2) viennent AVANT les Équipes :
      les clubs qui acceptent génèrent leurs équipes automatiquement à l'envoi du dossier final
      (même ordre que la barre latérale desktop). Cartes libres : jamais verrouillées. */
   { id: 'invitation', titre: 'Inviter',     icone: '✉️', blocs: ['bloc-clubs-invites', 'bloc-apercu-invitation', 'bloc-surplace', 'bloc-reponse'] },
-  { id: 'dossier',   titre: 'Dossier',      icone: '📄', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier'] },
+  { id: 'dossier',   titre: 'Dossier',      icone: '📄', blocs: ['bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-contacts-securite', 'bloc-dossier'] },
   { id: 'equipes',   titre: 'Équipes',      icone: '👥', blocs: ['bloc-equipes'] },
   { id: 'terrains',  titre: 'Terrains',     icone: '🗺️', blocs: ['bloc-terrains'] },
   { id: 'poules',    titre: 'Poules',       icone: '🎲', blocs: ['bloc-generation'] },
