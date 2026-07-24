@@ -153,6 +153,12 @@ comparaison souple : casse, accents et espaces ignorés («  u10 » = « U10 »)
 - **Plusieurs équipes d'un même club** : les nommer `CLUB-1`, `CLUB-2` (tiret + numéro). Elles
   seront placées dans des **poules différentes** au tirage. *(Un chiffre collé au nom, « RACING 92 »,
   fait partie du nom ; utiliser le tiret pour distinguer les équipes.)*
+- **Équipes créées automatiquement (clubs invités).** Quand tu cliques sur **« Générer le dossier
+  final »** d'un club Accepté (carte *Clubs invités*), ses équipes engagées sont **créées ici
+  automatiquement** : `{Club}` pour 1 équipe, `{Club}-1`, `{Club}-2`… pour plusieurs — en respectant
+  la **casse exacte** du nom du club. Recliquer ne crée **pas de doublon**. Si le club a **réduit**
+  son engagement entre-temps, aucune équipe n'est supprimée : un **badge ⚠️** te prévient de vérifier
+  cette liste à la main.
 
 ### 1.4 Terrains & répartition automatique
 Cette carte part de tes **grands terrains réels** (les terrains de foot / rugby que tu occupes) et

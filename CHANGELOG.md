@@ -5,6 +5,31 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sprint 6 (complément) — Création auto des équipes à l'envoi du dossier + édition des fiches — 2026-07-24
+Deux points du cahier des charges Sprint 6 qui manquaient : la **création automatique des équipes**
+au moment d'envoyer le dossier final, et l'**édition inline** des coordonnées d'un club. ⚠️
+Redéploiement de la Web App nécessaire.
+
+- **Création automatique des équipes** (point 5) : au clic sur **« Générer le dossier final »**
+  (juste **avant** l'aperçu email), les équipes engagées par le club sont créées dans l'onglet
+  `Equipes` — `{club}` si 1 équipe, `{club}-1`, `{club}-2`… si plusieurs — en respectant la **casse
+  exacte** du nom du club. Nouvelle colonne `Equipes.source` (`auto` / `manuel`, vide = `manuel`).
+  Backend : action `creerEquipesClub`, **idempotente** (un 2ᵉ clic ne crée aucun doublon,
+  correspondance de nom `{club}`/`{club}-N`). Le nombre d'équipes par catégorie vient de la réponse
+  du club (`nb_equipes_par_categorie`), 1 par défaut. Si l'engagement a été **réduit** depuis
+  (moins d'équipes demandées que présentes), **rien n'est supprimé** : un message est posé dans la
+  nouvelle colonne `ClubsInvites.alerte_ecart` et un **badge ⚠️ Écart** apparaît sur la fiche
+  (détail au clic). La création n'a **jamais** lieu à la simple réponse du club.
+- **Édition inline des fiches** (point 6e) : un bouton **crayon ✏️** sur chaque ligne bascule les
+  champs **nom du club / prénom / nom / email du contact** en édition directe (boutons
+  **Enregistrer** / **Annuler**). Backend : action `modifierClubInvite` (validation email + nom non
+  vide, refus de doublon de nom). Le **statut**, la **réponse déjà donnée** et le **jeton** ne sont
+  pas touchés ; si le club a déjà répondu, un **avertissement discret** le rappelle avant modification.
+- **Nom de club en casse exacte** : le formulaire d'ajout ne force **plus** le nom en MAJUSCULES
+  (il sert désormais à nommer les équipes créées automatiquement).
+- **Migration douce** : `Equipes.source` et `ClubsInvites.alerte_ecart` sont ajoutées automatiquement
+  à droite sur un Sheet déjà en service. Les équipes déjà présentes = `manuel`.
+
 ### Sprint 6 — Réponse en libre-service du club + tri dynamique de la liste — 2026-07-24
 Le contact du club répond lui-même à l'invitation via un **lien personnel sécurisé par jeton**
 reçu dans l'email : il accepte (catégories engagées + nombre d'équipes par catégorie + joueurs)
