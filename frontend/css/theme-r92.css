@@ -469,10 +469,19 @@ body.theme-clair {
 /* Équipes : nom blanc, catégorie estompée, boutons ✏️/🗑 recolorés pour le navy */
 .theme-clair .equipe-item .nom { color: #FFFFFF; }
 .theme-clair .equipe-item .cat-mini { color: #9FB6D0; }
-.theme-clair .equipe-item .bouton-suppr { color: #F3B0A8; border-color: rgba(243, 176, 168, 0.45); }
-.theme-clair .equipe-item .bouton-suppr:hover { background: rgba(224, 120, 120, 0.18); }
-.theme-clair .equipe-item .bouton-modif { color: #9CC9F0; border-color: rgba(156, 201, 240, 0.45); }
-.theme-clair .equipe-item .bouton-modif:hover { background: rgba(124, 192, 236, 0.15); }
+/* Boutons à icône seule (email / crayon / corbeille des listes clubs & équipes) :
+   icône BLANCHE, sans fond ni contour — juste un léger fond translucide au survol. */
+.theme-clair .bouton-icone,
+.theme-clair .equipe-item .bouton-icone,
+.theme-clair .club-invite-item .bouton-icone {
+  background: none;
+  border: none;
+  color: #ffffff;
+  box-shadow: none;
+}
+.theme-clair .bouton-icone:hover,
+.theme-clair .equipe-item .bouton-icone:hover,
+.theme-clair .club-invite-item .bouton-icone:hover { background: rgba(255, 255, 255, 0.16); }
 /* Cartes de format d'après-midi */
 .theme-clair .format-carte { background: var(--r92-navy); border-color: var(--r92-navy); }
 .theme-clair .format-carte .f-titre { color: #FFFFFF; }
