@@ -2327,12 +2327,20 @@ function calculerClassement(classeur) {
   return resultat;
 }
 
+/* ⚠️ BARÈME DE CLASSEMENT — CONTRAT PARTAGÉ AVEC LE FRONTEND ⚠️
+   Réimplémenté à l'identique côté navigateur (frontend/js/tournoi.js : appliquer + comparer),
+   car Apps Script et le navigateur ne peuvent pas partager un même .js. TOUTE modification ici
+   DOIT être répercutée là-bas (et inversement). Spécification unique : docs/regles-classement.md */
+var POINTS_VICTOIRE = 3;
+var POINTS_NUL = 2;
+var POINTS_DEFAITE = 1;
+
 /** Applique un résultat (points marqués "pour" / encaissés "contre") aux stats d'une équipe. */
 function enregistrerResultat(s, pour, contre) {
   s.j++; s.bp += pour; s.bc += contre; s.diff = s.bp - s.bc;
-  if (pour > contre) { s.v++; s.pts += 3; }
-  else if (pour === contre) { s.n++; s.pts += 2; }
-  else { s.d++; s.pts += 1; }
+  if (pour > contre) { s.v++; s.pts += POINTS_VICTOIRE; }
+  else if (pour === contre) { s.n++; s.pts += POINTS_NUL; }
+  else { s.d++; s.pts += POINTS_DEFAITE; }
 }
 
 /** Ordre du classement : points, puis différence, puis points marqués (tous décroissants). */

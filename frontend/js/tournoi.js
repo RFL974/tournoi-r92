@@ -535,15 +535,27 @@ function tableComplete(titre, liste) {
    CALCULS DE CLASSEMENT (barème commun) + tableaux compacts
    ========================================================================== */
 
+/* ⚠️ BARÈME DE CLASSEMENT — CONTRAT PARTAGÉ AVEC LE BACKEND ⚠️
+   Ce barème (points + départage) est RÉIMPLÉMENTÉ à l'identique côté serveur
+   (backend/Code.gs : enregistrerResultat + comparerClassement), car Apps Script et le
+   navigateur ne peuvent pas partager un même fichier .js. TOUTE modification ici DOIT être
+   répercutée là-bas (et inversement) : sinon le classement affiché au public divergerait de
+   celui qui sert à générer la phase après-midi (tirage croisé). Spécification unique et
+   règles de départage : docs/regles-classement.md */
+const POINTS_VICTOIRE = 3;
+const POINTS_NUL = 2;
+const POINTS_DEFAITE = 1;
+
 function nouveauStats(id, nom) {
   return { id_equipe: id, nom_equipe: nom || nomEquipe(id), j: 0, v: 0, n: 0, d: 0, bp: 0, bc: 0, diff: 0, pts: 0 };
 }
 function appliquer(s, pour, contre) {
   s.j++; s.bp += pour; s.bc += contre; s.diff = s.bp - s.bc;
-  if (pour > contre) { s.v++; s.pts += 3; }
-  else if (pour === contre) { s.n++; s.pts += 2; }
-  else { s.d++; s.pts += 1; }
+  if (pour > contre) { s.v++; s.pts += POINTS_VICTOIRE; }
+  else if (pour === contre) { s.n++; s.pts += POINTS_NUL; }
+  else { s.d++; s.pts += POINTS_DEFAITE; }
 }
+// Départage : points, puis différence de points (BP−BC), puis points marqués (BP) — décroissant.
 function comparer(a, b) {
   if (b.pts !== a.pts) return b.pts - a.pts;
   if (b.diff !== a.diff) return b.diff - a.diff;
