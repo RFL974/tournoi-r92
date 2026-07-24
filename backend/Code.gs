@@ -1181,29 +1181,83 @@ function envoyerEmailAvec(destinataire, sujet, corps, expediteur) {
  * (texte d'intro + lien) fourni par l'admin (identique à l'aperçu affiché). Le contenu envoyé
  * est ainsi EXACTEMENT celui de l'aperçu, seule la salutation variant d'un club à l'autre.
  */
-function composerCorpsInvitation(club, corpsApres) {
-  var prenom = String((club && club.club_contact_prenom) || '').trim();
-  var salut = prenom ? ('Bonjour ' + prenom + ',') : 'Bonjour,';
-  return salut + '\n\n' + String(corpsApres == null ? '' : corpsApres);
-}
-
 /** Vrai si un club est ENCORE invitable (ni Accepté, ni Décliné : Invité, vide ou inconnu). */
 function clubEstInvitable(statut) {
   var canon = statutClubCanonique(statut);
   return canon !== 'Accepté' && canon !== 'Décliné';
 }
 
+/** Échappe un texte pour l'insérer sans danger dans du HTML (salutation personnalisée). */
+function echapperHtmlServeur(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 /**
- * Envoi INDIVIDUEL de l'invitation Phase 1 à UN club. Destinataire relu du Sheet (jamais du
- * client). `invitation_envoyee` posée (date du jour) uniquement en cas de SUCCÈS.
+ * Remplace le jeton `{{SALUTATION}}` d'un modèle (HTML ou texte) par la salutation
+ * personnalisée du club (« Bonjour {prénom}, », ou « Bonjour, » sans prénom). En mode HTML,
+ * le prénom est échappé. Le reste du modèle (construit par l'admin) est inséré tel quel.
+ */
+function personnaliserInvitation(modele, prenom, estHtml) {
+  var p = String(prenom || '').trim();
+  var salut = p ? ('Bonjour ' + p + ',') : 'Bonjour,';
+  if (estHtml) salut = echapperHtmlServeur(salut);
+  return String(modele == null ? '' : modele).split('{{SALUTATION}}').join(salut);
+}
+
+/**
+ * Blob de l'affiche du tournoi (fichier Drive `tournoi_affiche_id`) pour l'attacher en image
+ * INLINE (cid:affiche) dans l'email. null si aucune affiche ou si le fichier est inaccessible
+ * (rétrocompatibilité : l'email part alors sans image d'en-tête). Nommé « affiche » = le cid.
+ */
+function afficheBlobPourEmail(classeur) {
+  var id = String((lireConfig(classeur).global || {}).tournoi_affiche_id || '').trim();
+  if (!id) return null;
+  try { var b = DriveApp.getFileById(id).getBlob(); b.setName('affiche'); return b; }
+  catch (e) { return null; }
+}
+
+/**
+ * Envoi d'UNE invitation HTML : personnalise la salutation, joint l'affiche inline (cid:affiche)
+ * si fournie, et envoie htmlBody + version texte (fallback anti-spam / clients sans HTML).
+ * MailApp par défaut (scope léger script.send_mail) ; GmailApp avec « from » si alias configuré.
+ * LÈVE une exception en cas d'échec (l'appelant ne marque alors pas la date d'envoi).
+ */
+function envoyerInvitationEmail(dest, sujet, htmlModele, texteModele, prenom, afficheBlob, expediteur) {
+  var html = personnaliserInvitation(htmlModele, prenom, true);
+  var texte = personnaliserInvitation(texteModele, prenom, false);
+  if (expediteur) {
+    var opt = { htmlBody: html, name: 'Génération R92', from: expediteur };
+    if (afficheBlob) opt.inlineImages = { affiche: afficheBlob };
+    GmailApp.sendEmail(dest, sujet, texte, opt);
+  } else {
+    var msg = { to: dest, subject: sujet, body: texte, htmlBody: html, name: 'Génération R92' };
+    if (afficheBlob) msg.inlineImages = { affiche: afficheBlob };
+    MailApp.sendEmail(msg);
+  }
+}
+
+/** Valide les champs communs d'un envoi d'invitation. Renvoie un message d'erreur ou ''. */
+function erreurModeleInvitation(sujet, htmlModele, texteModele) {
+  if (!sujet) return 'L\'objet du message est vide.';
+  if (!String(htmlModele || '').trim()) return 'Le contenu HTML de l\'email est vide.';
+  if (!String(texteModele || '').trim()) return 'La version texte de l\'email est vide.';
+  return '';
+}
+
+/**
+ * Envoi INDIVIDUEL de l'invitation Phase 1 (HTML) à UN club. Destinataire relu du Sheet (jamais
+ * du client). `invitation_envoyee` posée (date du jour) uniquement en cas de SUCCÈS.
  */
 function envoyerInvitationClub(classeur, data) {
   var nom = String(data.club_nom || '').trim();
   if (!nom) return { error: 'Club manquant.' };
   var sujet = String(data.sujet == null ? '' : data.sujet).trim();
-  if (!sujet) return { error: 'L\'objet du message est vide.' };
-  var corpsApres = String(data.corps_apres == null ? '' : data.corps_apres);
-  if (!corpsApres.trim()) return { error: 'Le corps du message est vide.' };
+  var htmlModele = String(data.html_modele == null ? '' : data.html_modele);
+  var texteModele = String(data.texte_modele == null ? '' : data.texte_modele);
+  var errMod = erreurModeleInvitation(sujet, htmlModele, texteModele);
+  if (errMod) return { error: errMod };
 
   var onglet = assurerOngletClubsInvites(classeur);
   var ligne = ligneClubInvite(onglet, nom);
@@ -1215,10 +1269,12 @@ function envoyerInvitationClub(classeur, data) {
 
   var club = null, clubs = lireOngletSimple(classeur, 'ClubsInvites');
   for (var i = 0; i < clubs.length; i++) { if (memeTexteSouple(clubs[i].club_nom, nom)) { club = clubs[i]; break; } }
+  var prenom = club ? club.club_contact_prenom : '';
 
   var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
+  var afficheBlob = afficheBlobPourEmail(classeur);
   try {
-    envoyerEmailAvec(email, sujet, composerCorpsInvitation(club || {}, corpsApres), expediteur);
+    envoyerInvitationEmail(email, sujet, htmlModele, texteModele, prenom, afficheBlob, expediteur);
   } catch (e) {
     return { error: 'Échec de l\'envoi de l\'email : ' + (e && e.message ? e.message : e) };
   }
@@ -1230,22 +1286,25 @@ function envoyerInvitationClub(classeur, data) {
 }
 
 /**
- * Envoi GROUPÉ des invitations Phase 1. Filtre côté serveur (source de vérité) :
+ * Envoi GROUPÉ des invitations Phase 1 (HTML). Filtre côté serveur (source de vérité) :
  *  - clubs ENCORE invitables (ni Accepté ni Décliné) ET avec un email valide ;
  *  - `invitation_envoyee` vide, SAUF si `renvoyer` = oui (renvoi forcé).
  * Boucle d'envoi TOLÉRANTE AUX PANNES : un échec sur un club n'arrête pas les suivants ; on
  * pose `invitation_envoyee` (date du jour) pour chaque SUCCÈS et on renvoie un résumé complet.
+ * L'affiche (blob Drive) n'est récupérée qu'UNE fois et réutilisée pour tous les envois.
  */
 function envoyerInvitationsGroupe(classeur, data) {
   var sujet = String(data.sujet == null ? '' : data.sujet).trim();
-  if (!sujet) return { error: 'L\'objet du message est vide.' };
-  var corpsApres = String(data.corps_apres == null ? '' : data.corps_apres);
-  if (!corpsApres.trim()) return { error: 'Le corps du message est vide.' };
+  var htmlModele = String(data.html_modele == null ? '' : data.html_modele);
+  var texteModele = String(data.texte_modele == null ? '' : data.texte_modele);
+  var errMod = erreurModeleInvitation(sujet, htmlModele, texteModele);
+  if (errMod) return { error: errMod };
   var renvoyer = (String(data.renvoyer).toLowerCase() === 'oui' || data.renvoyer === true);
 
   var onglet = assurerOngletClubsInvites(classeur);
   var clubs = lireOngletSimple(classeur, 'ClubsInvites');
   var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
+  var afficheBlob = afficheBlobPourEmail(classeur);
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   var colEnvoye = colClubInvite(onglet, 'invitation_envoyee');
 
@@ -1257,7 +1316,7 @@ function envoyerInvitationsGroupe(classeur, data) {
     var dejaInvite = String(c.invitation_envoyee || '').trim() !== '';
     if (dejaInvite && !renvoyer) { dejaInvites.push(String(c.club_nom || '')); return; }
     try {
-      envoyerEmailAvec(email, sujet, composerCorpsInvitation(c, corpsApres), expediteur);
+      envoyerInvitationEmail(email, sujet, htmlModele, texteModele, c.club_contact_prenom, afficheBlob, expediteur);
       var ligne = ligneClubInvite(onglet, c.club_nom);
       if (ligne !== -1 && colEnvoye !== -1) {
         var cell = onglet.getRange(ligne, colEnvoye);

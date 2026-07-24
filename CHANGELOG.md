@@ -5,6 +5,30 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sprint 5 (addendum) — Email d'invitation en HTML (charte R92) + affiche inline — 2026-07-24
+Le corps de l'email d'invitation (Phase 1) passe du texte brut à un **template HTML** reprenant
+la mise en forme de `invitation-club.html`, pour un rendu plus engageant, avec l'**affiche du
+tournoi en image inline** et un lien de secours vers la page complète. ⚠️ Redéploiement de la
+Web App nécessaire.
+
+- **Template HTML compatible email** (tableaux + styles EN LIGNE, pas de flex/grid) aux couleurs
+  de la charte (navy `#0C1C2E`, bleu `#2E8FE0`), mêmes sections que la page Phase 1 et dans le
+  même ordre : en-tête (affiche + nom + date), salutation personnalisée « Bonjour {prénom}, » +
+  intro courte, « Vous êtes invités » (tableau catégorie / équipes par club / effectif mini),
+  « Le jour J, en bref », « Sur place » (pastilles stylées, seulement si cochées, + tarif),
+  « Réponse attendue » (date + contact), pied avec lien « Voir la version complète en ligne ».
+- **Affiche en image inline** : le fichier Drive (`tournoi_affiche_id`) est joint via
+  `inlineImages` et référencé en `cid:affiche` dans le HTML. Si aucune affiche n'est renseignée,
+  l'email part sans image d'en-tête (le reste s'affiche normalement).
+- **Envoi** : `htmlBody` (template) + `body` texte brut simplifié (fallback clients sans HTML /
+  anti-spam, avec le lien complet en clair) + `inlineImages`. **MailApp** par défaut (scope léger
+  `script.send_mail`), **GmailApp** avec `from` si `email_expediteur` (alias) est configuré.
+  S'applique à l'envoi **individuel** ET **groupé** (même template ; la salutation seule varie par
+  club — jeton `{{SALUTATION}}` remplacé côté serveur).
+- **Aperçu admin** : le panneau « Inviter un club » affiche désormais le **rendu HTML réel** de
+  l'email dans une iframe isolée (mêmes structure et couleurs), mis à jour en direct. L'**objet**
+  et la **phrase d'introduction** restent éditables ; « Régénérer » repart des infos du tournoi.
+
 ### Sprint 5 — Page « Inviter un club » fusionnée + envoi des invitations (aperçu inline) — 2026-07-24
 Réorganisation du workflow Phase 1 : **une seule page** pour ajouter les clubs et **envoyer les
 invitations**, avec un **panneau d'aperçu de l'email** en direct (comme l'aperçu de la carte
