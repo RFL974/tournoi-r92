@@ -277,6 +277,7 @@ async function initAdmin() {
   document.getElementById('form-surplace').addEventListener('change', majApercuInvitation);
   document.getElementById('form-reponse').addEventListener('input', majApercuInvitation);
   document.getElementById('form-reponse').addEventListener('change', majApercuInvitation);
+  document.getElementById('bouton-regenerer-invitation').addEventListener('click', onRegenererInvitation);
   document.getElementById('bouton-envoyer-invitations').addEventListener('click', onEnvoyerInvitationsGroupe);
 
   // Clubs invités : ajout via le formulaire, statut/suppression/actions délégués sur la liste.
@@ -866,19 +867,59 @@ function exemplePrenomInvitation() {
   return c ? String(c.club_contact_prenom).trim() : 'Prénom';
 }
 
-/** Corps COMPLET affiché dans l'aperçu (salutation d'exemple + corps commun). */
-function corpsApercuInvitation(g) {
-  return 'Bonjour ' + exemplePrenomInvitation() + ',\n\n' + corpsApresInvitation(g);
+/* Dernières valeurs AUTO-générées de l'aperçu : servent à savoir si Romain a modifié le
+   texte à la main (dans ce cas on ARRÊTE de l'écraser à chaque changement de config). */
+let invApercuGenere = { sujet: null, corps: null };
+
+/** Met à jour l'exemple de salutation affiché au-dessus du message (« Bonjour {prénom}, »). */
+function majSalutationExemple() {
+  const salut = document.getElementById('apercu-invitation-salut');
+  if (salut) salut.textContent = 'Bonjour ' + exemplePrenomInvitation() + ',';
 }
 
-/** (Re)dessine l'aperçu de l'email d'invitation à partir de l'état courant. */
+/**
+ * (Re)dessine l'aperçu de l'email d'invitation. L'objet et le message sont ÉDITABLES : on ne
+ * les met à jour automatiquement (au fil des cartes Sur place / Réponse) QUE tant que Romain
+ * ne les a pas modifiés à la main (comparaison à la dernière valeur générée). « Régénérer »
+ * force le retour au texte automatique.
+ */
 function majApercuInvitation() {
   const objet = document.getElementById('apercu-invitation-objet');
   const corps = document.getElementById('apercu-invitation-corps');
   if (!objet || !corps) return;
   const g = globalInvitation();
-  objet.textContent = sujetInvitation(g);
-  corps.textContent = corpsApercuInvitation(g); // retours ligne conservés via CSS (pre-wrap)
+  const gen = { sujet: sujetInvitation(g), corps: corpsApresInvitation(g) };
+  // Champ non modifié à la main (vide ou identique au dernier auto-généré) → on rafraîchit.
+  if (objet.value === '' || objet.value === invApercuGenere.sujet) objet.value = gen.sujet;
+  if (corps.value === '' || corps.value === invApercuGenere.corps) corps.value = gen.corps;
+  invApercuGenere = gen;
+  majSalutationExemple();
+}
+
+/** « Régénérer » : réécrit objet + message depuis les infos du tournoi (écrase les retouches). */
+function onRegenererInvitation() {
+  const objet = document.getElementById('apercu-invitation-objet');
+  const corps = document.getElementById('apercu-invitation-corps');
+  if (!objet || !corps) return;
+  const g = globalInvitation();
+  const gen = { sujet: sujetInvitation(g), corps: corpsApresInvitation(g) };
+  objet.value = gen.sujet;
+  corps.value = gen.corps;
+  invApercuGenere = gen;
+  majSalutationExemple();
+}
+
+/** Objet COURANT de l'aperçu (tel que modifié par Romain), ou le défaut si le champ manque. */
+function sujetInvitationCourant() {
+  const el = document.getElementById('apercu-invitation-objet');
+  const v = el ? el.value.trim() : '';
+  return v || sujetInvitation(globalInvitation());
+}
+
+/** Message COURANT (après salutation) de l'aperçu, ou le défaut si le champ manque. */
+function corpsApresInvitationCourant() {
+  const el = document.getElementById('apercu-invitation-corps');
+  return el ? el.value : corpsApresInvitation(globalInvitation());
 }
 
 /** Vrai si un club est ENCORE invitable (ni Accepté, ni Décliné). */
@@ -893,11 +934,13 @@ async function envoyerInvitationClubUI(nom) {
   const message = document.getElementById('message-club-invite');
   const email = String(club.club_contact_email || '').trim();
   if (!email) { await dialogAlerter('« ' + nom + ' » n\'a pas d\'email de contact : à inviter manuellement.'); return; }
+  const sujet = sujetInvitationCourant();
+  const corps = corpsApresInvitationCourant();
+  if (!sujet || !corps.trim()) { afficherMessage(message, '⚠️ L\'objet et le message de l\'aperçu ne peuvent pas être vides.', 'ko'); return; }
   if (!await dialogConfirmer('Envoyer l\'invitation à « ' + nom + ' » (' + email + ') ?', { ok: 'Envoyer' })) return;
-  const g = globalInvitation();
   try {
     const res = await ecrireAdmin('envoyerInvitationClub', {
-      club_nom: nom, sujet: sujetInvitation(g), corps_apres: corpsApresInvitation(g)
+      club_nom: nom, sujet: sujet, corps_apres: corps
     });
     if (res && res.invitation_envoyee) club.invitation_envoyee = res.invitation_envoyee;
     afficherClubsInvites();
@@ -916,7 +959,9 @@ async function onEnvoyerInvitationsGroupe() {
   const message = document.getElementById('message-invitations');
   const bouton = document.getElementById('bouton-envoyer-invitations');
   const renvoyer = document.getElementById('inv-renvoyer').checked;
-  const g = globalInvitation();
+  const sujet = sujetInvitationCourant();
+  const corps = corpsApresInvitationCourant();
+  if (!sujet || !corps.trim()) { afficherMessage(message, '⚠️ L\'objet et le message de l\'aperçu ne peuvent pas être vides.', 'ko'); return; }
 
   // Résumé calculé depuis la liste en mémoire (mêmes règles que le backend).
   const invitables = clubsInvitesCourants.filter(function (c) { return estInvitable(c.statut); });
@@ -944,7 +989,7 @@ async function onEnvoyerInvitationsGroupe() {
   afficherMessage(message, 'Envoi en cours…', 'ok');
   try {
     const res = await ecrireAdmin('envoyerInvitationsGroupe', {
-      sujet: sujetInvitation(g), corps_apres: corpsApresInvitation(g), renvoyer: renvoyer ? 'oui' : 'non'
+      sujet: sujet, corps_apres: corps, renvoyer: renvoyer ? 'oui' : 'non'
     });
     await chargerClubsInvites(); // rafraîchit invitation_envoyee + l'aperçu (exemple prénom)
     const nbOk = (res.envoyes || []).length;
