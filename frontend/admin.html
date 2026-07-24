@@ -276,13 +276,30 @@
         <h2>Aperçu de l'email d'invitation</h2>
         <p class="note-generation">
           L'email envoyé aux clubs (Phase 1). La salutation est <strong>personnalisée par club</strong>
-          (« Bonjour {prénom}, ») ; l'aperçu montre un exemple. Il se met à jour tout seul quand tu
-          modifies les cartes <strong>« Sur place »</strong> ou <strong>« Réponse à l'invitation »</strong> ci-dessous.
+          (« Bonjour {prénom}, ») ; l'aperçu montre un exemple. <strong>Tu peux modifier l'objet et le
+          message</strong> ci-dessous. Tant que tu n'y touches pas, ils se mettent à jour tout seuls
+          quand tu changes les cartes <strong>« Sur place »</strong> ou <strong>« Réponse à l'invitation »</strong>
+          ci-dessous ; utilise <strong>« Régénérer »</strong> pour repartir du texte automatique.
         </p>
         <div class="apercu-email" id="apercu-invitation">
-          <div class="ae-ligne"><span class="ae-label">Objet</span><span class="ae-objet" id="apercu-invitation-objet"></span></div>
-          <div class="ae-corps" id="apercu-invitation-corps"></div>
+          <label class="ae-champ"><span class="ae-label">Objet</span>
+            <input type="text" class="r-input" id="apercu-invitation-objet" autocomplete="off">
+          </label>
+          <p class="ae-salutation">
+            Chaque club reçoit d'abord <strong id="apercu-invitation-salut">Bonjour Prénom,</strong>
+            (personnalisé automatiquement), puis le message ci-dessous :
+          </p>
+          <label class="ae-champ"><span class="ae-label">Message</span>
+            <textarea class="r-input" id="apercu-invitation-corps" rows="10"></textarea>
+          </label>
+          <div class="ligne-action">
+            <button type="button" class="bouton bouton-doux" id="bouton-regenerer-invitation">↻ Régénérer depuis les infos du tournoi</button>
+          </div>
         </div>
+        <p class="note-generation ae-confidentiel">
+          🔒 Chaque club reçoit un <strong>email individuel</strong> : les adresses ne sont
+          <strong>jamais partagées</strong> entre les clubs.
+        </p>
         <label class="mini-toggle ae-toggle"><input type="checkbox" id="inv-renvoyer"> Renvoyer aussi aux clubs déjà invités</label>
         <div class="ligne-action">
           <button type="button" class="bouton" id="bouton-envoyer-invitations">✉️ Envoyer les invitations à tous les clubs</button>
@@ -453,7 +470,7 @@
         </p>
         <div id="etat-dossier"></div>
         <div class="ligne-action">
-          <a class="bouton" id="bouton-ouvrir-dossier" href="dossier-club.html" target="_blank" rel="noopener">📄 Aperçu du dossier (générique)</a>
+          <a class="bouton" id="bouton-ouvrir-dossier" href="dossier-club.html?admin=1" target="_blank" rel="noopener">📄 Aperçu du dossier (générique)</a>
         </div>
         <p class="note-generation">
           Le dossier s'ouvre dans un nouvel onglet : vérifie-le, puis

@@ -38,6 +38,19 @@ de la Web App (2 nouvelles actions backend + colonne Sheets migrée automatiquem
     la Phase 2).
 - **Rétrocompatibilité** : `invitation_envoyee` optionnel ; `invitation-club.html` (Phase 1)
   inchangée — seul le point d'accès pour l'envoyer change.
+- **Confidentialité & aperçu (ajustements)** :
+  - Le lien **« Retour à l'administration »** (et le titre « aperçu avant envoi ») ne s'affiche
+    plus sur les pages `invitation-club.html` / `dossier-club.html` **que** si elles sont ouvertes
+    depuis l'admin (paramètre `?admin=1`). Les liens reçus par email par les clubs ne l'exposent
+    plus. Le bouton « Exporter en PDF » reste visible pour tous.
+  - L'aperçu de l'email d'invitation devient **modifiable** (objet + message éditables). Tant
+    qu'on n'y touche pas, il suit en direct les cartes « Sur place » / « Réponse » ; un bouton
+    **« Régénérer depuis les infos du tournoi »** restaure le texte automatique. Le contenu
+    **édité** est celui réellement envoyé (individuel comme groupé) ; la salutation
+    « Bonjour {prénom}, » reste ajoutée automatiquement par club.
+  - Rappel explicite dans l'interface : l'envoi groupé envoie **un email individuel par club**
+    (les adresses ne sont jamais partagées) — plus sûr qu'une copie cachée, et compatible avec
+    la salutation personnalisée.
 
 ### Sprint 4 — Deux phases : invitation légère (Phase 1) + dossier complet personnalisé (Phase 2) — 2026-07-24
 Le dossier unique devient un parcours **en deux temps** : une **invitation courte** envoyée à

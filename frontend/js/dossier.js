@@ -48,8 +48,20 @@ document.addEventListener('click', function (e) {
   if (e.target && e.target.id === 'bouton-imprimer') window.print();
 });
 
+/** Révèle les éléments réservés à l'admin (lien « Retour à l'administration », titre)
+ *  UNIQUEMENT si la page est ouverte depuis l'administration (?admin=1). Sans ce
+ *  paramètre — cas des liens reçus par email par les clubs — ils restent masqués. */
+function revelerOutilsAdmin() {
+  try {
+    if (new URLSearchParams(window.location.search).get('admin') === '1') {
+      document.querySelectorAll('.admin-seul').forEach(function (el) { el.hidden = false; });
+    }
+  } catch (e) { /* environnement sans URLSearchParams : on laisse masqué */ }
+}
+
 async function initDossier() {
   const zone = document.getElementById('dossier');
+  revelerOutilsAdmin();
   try {
     const data = await apiGet('getAll'); // { config, equipes, poules, matchs }
     const config = (data && data.config) || { global: {}, categories: [] };
