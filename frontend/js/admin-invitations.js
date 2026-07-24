@@ -1076,45 +1076,217 @@ async function genererDossierFinal(nom) {
     lien, { ok: 'Fermer' });
 }
 
+/* --------------------------------------------------------------------------
+   DOSSIER FINAL (Phase 2) — email HTML (MÊME charte que l'invitation).
+   Envoyé à UN club « Accepté » au clic sur « Générer le dossier final ». Recense,
+   en condensé, l'essentiel du dossier (catégories engagées, modalités, jour J,
+   parking, encadrement, contact) et met en avant le LIEN vers le dossier complet
+   personnalisé du club. Comme l'invitation : aperçu HTML live (objet + phrase
+   d'introduction éditables) puis envoi HTML + version texte de repli.
+   -------------------------------------------------------------------------- */
+
+/** Objet par défaut de l'email de dossier final. */
+function sujetDossier(g) {
+  return 'Votre dossier complet — ' + (String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
+}
+
+/** Phrase d'introduction par défaut (après la salutation), éditable. */
+function introDossierDefaut(g, club) {
+  const nom = String(g.tournoi_nom || '').trim() || 'notre tournoi';
+  const nomClub = String((club && club.club_nom) || '').trim();
+  return 'Nous avons bien reçu votre engagement pour le ' + nom + '. '
+    + 'Voici le dossier complet de la journée' + (nomClub ? ' pour ' + nomClub : '')
+    + ' : infos pratiques, programme, format sportif, sécurité et contact.';
+}
+
 /**
- * Fenêtre d'APERÇU de l'email (Phase 2), AVANT tout envoi :
+ * Corps HTML de l'email de dossier final (compatible clients mail : tableaux + styles en ligne).
+ * Reprend en condensé les sections du dossier club et met en avant le LIEN vers le dossier
+ * complet. `salutationHtml` est inséré TEL QUEL ; `imgSrc` = l'affiche (URL Drive en aperçu,
+ * « cid:affiche » à l'envoi ; vide = pas d'image). Le dossier étant envoyé à UN club connu, la
+ * salutation est déjà personnalisée (pas de jeton, contrairement à l'invitation groupée).
+ */
+function emailHtmlDossier(g, club, imgSrc, salutationHtml, intro, lienDossier) {
+  const A = 'font-family:Arial,Helvetica,sans-serif;';
+  const nom = echapper(String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
+  const date = String(g.tournoi_date || '').trim() ? echapper(formaterDateFr(g.tournoi_date)) : '';
+
+  // En-tête : affiche (optionnelle) + surtitre + nom + date.
+  let entete = '';
+  if (imgSrc) {
+    entete += '<img src="' + echapper(imgSrc) + '" alt="Affiche — ' + nom + '" '
+      + 'style="display:block;max-width:180px;width:100%;height:auto;border-radius:6px;margin:0 0 10px;">';
+  }
+  entete += '<p style="margin:0;' + A + 'text-transform:uppercase;letter-spacing:1px;font-size:12px;color:' + EMAIL_BLEU + ';">Dossier club — Génération R92</p>'
+    + '<h1 style="margin:4px 0 2px;' + A + 'font-size:24px;color:' + EMAIL_NAVY + ';">' + nom + '</h1>'
+    + (date ? '<p style="margin:0;' + A + 'font-weight:bold;color:' + EMAIL_TXT + ';">' + date + '</p>' : '');
+
+  // Salutation + intro (texte libre multi-lignes : sauts de ligne → <br>).
+  const bloc_salut = '<p style="margin:18px 0 4px;' + A + 'font-size:15px;color:' + EMAIL_TXT + ';">' + salutationHtml + '</p>'
+    + (String(intro || '').trim() ? '<p style="margin:0;' + A + 'font-size:14px;color:' + EMAIL_TXT + ';text-align:justify;">' + nl2brEmail(intro) + '</p>' : '');
+
+  // Bouton d'ACTION principal : « Voir le dossier complet » (lien personnalisé du club).
+  const bouton = lienDossier
+    ? '<p style="margin:18px 0 4px;text-align:center;"><a href="' + echapper(lienDossier) + '" '
+      + 'style="display:inline-block;background:' + EMAIL_BLEU + ';color:#ffffff;text-decoration:none;'
+      + 'border-radius:999px;padding:13px 28px;' + A + 'font-size:15px;font-weight:bold;">Voir le dossier complet</a></p>'
+      + '<p style="margin:0 0 4px;text-align:center;' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
+      + '(infos pratiques, programme, format sportif, sécurité et contact)</p>'
+    : '';
+
+  // Ligne « libellé / valeur » (omise si la valeur est vide) + section-tableau.
+  const ligne = function (lib, val) {
+    if (!val) return '';
+    return '<tr><td style="' + A + 'font-size:13px;color:' + EMAIL_GRIS + ';padding:3px 10px 3px 0;vertical-align:top;">' + echapper(lib) + '</td>'
+      + '<td style="' + A + 'font-size:13px;color:' + EMAIL_TXT + ';font-weight:bold;padding:3px 0;">' + echapper(val) + '</td></tr>';
+  };
+  const bloc = function (titre, lignesHtml) {
+    return lignesHtml ? (emailTitreSection(titre)
+      + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + lignesHtml + '</table>') : '';
+  };
+
+  // Modalités d'inscription : catégories engagées + confirmation + tarif (si demandé).
+  const engagees = parseCatsEngagees(club && club.categories_engagees).join(' · ');
+  const tarifOui = estOui(g.tarif_engagement_oui);
+  const modalites = ligne('Catégories engagées', engagees)
+    + ligne('Confirmation attendue avant le', String(g.date_limite_confirmation || '').trim() ? formaterDateFr(g.date_limite_confirmation) : '')
+    + ligne('Tarif d\'engagement', tarifOui ? String(g.tarif_engagement_montant || '').trim() : '')
+    + ligne('Modalités de paiement', tarifOui ? String(g.tarif_engagement_modalites || '').trim() : '');
+
+  // Le jour J, en bref : accueil + fin envisagée.
+  const jourJ = ligne('Accueil des équipes', String(g.heure_rdv || '').trim())
+    + ligne('Fin envisagée', heureFinCommuniqueeAdmin(g));
+
+  // Parking & accès : texte libre (la photo reste sur le dossier complet).
+  const parkingTxt = String(g.parking_texte || '').trim();
+  const parking = parkingTxt
+    ? emailTitreSection('Parking & accès')
+      + '<p style="margin:0;' + A + 'font-size:13px;color:' + EMAIL_TXT + ';text-align:justify;">' + nl2brEmail(parkingTxt) + '</p>'
+    : '';
+
+  // Encadrement & assurance.
+  const encadrement = ligne('Encadrement', String(g.encadrement_ratio || '').trim())
+    + ligne('Diplômes exigés', String(g.encadrement_diplomes || '').trim())
+    + ligne('Assurance', estOui(g.assurance_attestation_requise) ? 'Attestation d\'assurance du club à fournir' : '');
+
+  // Votre contact : référent du tournoi.
+  const contactParts = [];
+  if (String(g.referent_nom || '').trim()) contactParts.push(String(g.referent_nom).trim());
+  if (String(g.referent_tel || '').trim()) contactParts.push(telephoneLisibleAdmin(g.referent_tel));
+  const contact = ligne('Votre contact', contactParts.join(' · '));
+
+  // Pied : mention + lien de secours vers le dossier complet.
+  const pied = '<p style="margin:20px 0 0;padding-top:12px;border-top:1px solid ' + EMAIL_FILET + ';' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
+    + 'Génération R92 · École de rugby du Racing 92'
+    + (lienDossier ? '<br><a href="' + echapper(lienDossier) + '" style="color:' + EMAIL_BLEU + ';">Voir le dossier complet en ligne</a>' : '')
+    + '</p>';
+
+  return '<div style="background:#eef2f7;padding:16px;' + A + '">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;margin:0 auto;background:#ffffff;border-collapse:collapse;">'
+    + '<tr><td style="padding:22px 24px;">'
+    + '<div style="border-bottom:3px solid ' + EMAIL_NAVY + ';padding-bottom:12px;">' + entete + '</div>'
+    + bloc_salut + bouton
+    + bloc('Modalités d\'inscription', modalites)
+    + bloc('Le jour J, en bref', jourJ)
+    + parking
+    + bloc('Encadrement & assurance', encadrement)
+    + bloc('Votre contact', contact)
+    + pied
+    + '</td></tr></table></div>';
+}
+
+/** Version TEXTE brut de l'email de dossier final (repli anti-spam / clients sans HTML). */
+function emailTexteDossier(g, club, salutationTexte, intro, lienDossier) {
+  const L = [];
+  L.push(salutationTexte);
+  L.push('');
+  if (String(intro || '').trim()) { L.push(String(intro).trim()); L.push(''); }
+  if (lienDossier) { L.push('▶ Voir le dossier complet : ' + lienDossier); L.push(''); }
+
+  const engagees = parseCatsEngagees(club && club.categories_engagees).join(', ');
+  const mod = [];
+  if (engagees) mod.push('Catégories engagées : ' + engagees);
+  if (String(g.date_limite_confirmation || '').trim()) mod.push('Confirmation attendue avant le ' + formaterDateFr(g.date_limite_confirmation));
+  if (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim()) mod.push('Tarif d\'engagement : ' + String(g.tarif_engagement_montant).trim());
+  if (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_modalites || '').trim()) mod.push('Modalités de paiement : ' + String(g.tarif_engagement_modalites).trim());
+  if (mod.length) { L.push('MODALITÉS D\'INSCRIPTION'); mod.forEach(function (m) { L.push('- ' + m); }); L.push(''); }
+
+  const jour = [];
+  if (String(g.heure_rdv || '').trim()) jour.push('Accueil : ' + String(g.heure_rdv).trim());
+  if (heureFinCommuniqueeAdmin(g)) jour.push('Fin envisagée : ' + heureFinCommuniqueeAdmin(g));
+  if (jour.length) { L.push('LE JOUR J : ' + jour.join(' · ')); L.push(''); }
+
+  if (String(g.parking_texte || '').trim()) { L.push('Parking & accès : ' + String(g.parking_texte).trim()); L.push(''); }
+
+  const enc = [];
+  if (String(g.encadrement_ratio || '').trim()) enc.push('Encadrement : ' + String(g.encadrement_ratio).trim());
+  if (String(g.encadrement_diplomes || '').trim()) enc.push('Diplômes exigés : ' + String(g.encadrement_diplomes).trim());
+  if (estOui(g.assurance_attestation_requise)) enc.push('Attestation d\'assurance du club à fournir');
+  if (enc.length) { enc.forEach(function (e) { L.push(e); }); L.push(''); }
+
+  const c2 = [];
+  if (String(g.referent_nom || '').trim()) c2.push(String(g.referent_nom).trim());
+  if (String(g.referent_tel || '').trim()) c2.push(telephoneLisibleAdmin(g.referent_tel));
+  if (c2.length) L.push('Contact : ' + c2.join(' · '));
+  L.push('');
+  L.push('À très bientôt,');
+  L.push('Génération R92');
+  return L.join('\n');
+}
+
+/**
+ * Fenêtre d'APERÇU de l'email de dossier final (Phase 2), AVANT tout envoi — MÊME principe que
+ * l'aperçu de l'invitation (rendu HTML réel dans une iframe) :
  *  - Destinataire (lecture seule) = email de contact du club ;
  *  - Objet pré-rempli, modifiable ;
- *  - Corps pré-rempli (politesse personnalisée + lien), modifiable en texte libre.
- * « Envoyer » déclenche l'envoi réel (envoyerDossierEmail) ; dossier_envoye n'est posé
- * qu'en cas de succès. « Annuler » ferme sans rien envoyer.
+ *  - Phrase d'introduction pré-remplie, modifiable (le reste des sections est généré des infos) ;
+ *  - Aperçu HTML LIVE qui suit la frappe.
+ * « Envoyer » déclenche l'envoi réel HTML (envoyerDossierEmail avec html_modele + texte_modele) ;
+ * dossier_envoye n'est posé qu'en cas de succès. « Annuler » ferme sans rien envoyer.
  */
 function ouvrirApercuEmail(club, lien) {
   const nom = String(club.club_nom || '');
   const email = String(club.club_contact_email || '');
   const prenom = String(club.club_contact_prenom || '').trim();
-  const nomTournoi = (configCourante.global && configCourante.global.tournoi_nom) || 'Tournoi Génération R92';
-  const bonjour = prenom ? 'Bonjour ' + prenom + ',' : 'Bonjour,';
-  const sujetDefaut = 'Votre dossier complet — ' + nomTournoi;
-  const corpsDefaut = bonjour + '\n\n'
-    + 'Nous avons bien reçu votre retour concernant votre souhait de participer au ' + nomTournoi + '.\n'
-    + 'Vous trouverez le dossier complet de la journée (infos pratiques, programme, format sportif, '
-    + 'sécurité et contact) en suivant ce lien :\n' + lien + '\n\n'
-    + 'À très bientôt,\nGénération R92';
+  const g = configCourante.global || {};
+  const salutHtml = prenom ? 'Bonjour ' + echapper(prenom) + ',' : 'Bonjour,';
+  const salutTexte = prenom ? 'Bonjour ' + prenom + ',' : 'Bonjour,';
+  const sujetDefaut = sujetDossier(g);
+  const introDefaut = introDossierDefaut(g, club);
+  // Affiche : URL Drive pour l'aperçu, « cid:affiche » (image inline) pour l'envoi.
+  const imgApercu = String(g.tournoi_affiche_id || '').trim() ? urlAffiche(g.tournoi_affiche_id, 800) : '';
+  const imgModele = String(g.tournoi_affiche_id || '').trim() ? 'cid:affiche' : '';
 
   const overlay = document.createElement('div');
   overlay.className = 'eml-overlay';
   overlay.innerHTML =
-    '<div class="eml-carte" role="dialog" aria-modal="true">' +
+    '<div class="eml-carte eml-carte-large" role="dialog" aria-modal="true">' +
       '<h2 class="eml-titre">Aperçu de l\'email — ' + echapper(nom) + '</h2>' +
       '<p class="eml-msg" id="eml-msg"></p>' +
       '<label class="eml-champ">Destinataire' +
         '<input type="email" id="eml-dest" value="' + echapper(email) + '" readonly></label>' +
       '<label class="eml-champ">Objet' +
         '<input type="text" id="eml-sujet" value="' + echapper(sujetDefaut) + '"></label>' +
-      '<label class="eml-champ">Message' +
-        '<textarea id="eml-corps">' + echapper(corpsDefaut) + '</textarea></label>' +
+      '<label class="eml-champ">Phrase d\'introduction' +
+        '<textarea id="eml-intro" rows="3">' + echapper(introDefaut) + '</textarea></label>' +
+      '<p class="eml-apercu-label">Les sections ci-dessous (modalités, jour J, encadrement, contact) ' +
+        'sont générées à partir des infos du tournoi. Aperçu du <strong>rendu réel</strong> :</p>' +
+      '<iframe id="eml-apercu" class="eml-iframe" title="Aperçu du rendu de l\'email"></iframe>' +
       '<div class="eml-actions">' +
         '<button type="button" class="bouton bouton-doux" id="eml-annuler">Annuler</button>' +
         '<button type="button" class="bouton" id="eml-envoyer">' + svgIcone('email') + 'Envoyer</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
+
+  const iframe = overlay.querySelector('#eml-apercu');
+  const champSujet = overlay.querySelector('#eml-sujet');
+  const champIntro = overlay.querySelector('#eml-intro');
+  const rafraichir = function () {
+    iframe.srcdoc = emailHtmlDossier(g, club, imgApercu, salutHtml, champIntro.value, lien);
+  };
+  rafraichir();
+  champIntro.addEventListener('input', rafraichir);
 
   const fermer = function () { overlay.remove(); };
   overlay.addEventListener('click', function (e) { if (e.target === overlay) fermer(); });
@@ -1123,11 +1295,10 @@ function ouvrirApercuEmail(club, lien) {
   overlay.querySelector('#eml-envoyer').addEventListener('click', async function () {
     const boutonEnvoi = overlay.querySelector('#eml-envoyer');
     const msg = overlay.querySelector('#eml-msg');
-    const sujet = overlay.querySelector('#eml-sujet').value.trim();
-    const corps = overlay.querySelector('#eml-corps').value;
+    const sujet = champSujet.value.trim();
+    const intro = champIntro.value;
     msg.className = 'eml-msg';
     if (!sujet) { msg.className = 'eml-msg ko'; msg.textContent = '⚠️ L\'objet est vide.'; return; }
-    if (!corps.trim()) { msg.className = 'eml-msg ko'; msg.textContent = '⚠️ Le message est vide.'; return; }
 
     boutonEnvoi.disabled = true;
     const texte = boutonEnvoi.textContent;
@@ -1135,7 +1306,11 @@ function ouvrirApercuEmail(club, lien) {
     msg.className = 'eml-msg';
     msg.textContent = 'Envoi en cours…';
     try {
-      const res = await ecrireAdmin('envoyerDossierEmail', { club_nom: nom, sujet: sujet, corps: corps });
+      const res = await ecrireAdmin('envoyerDossierEmail', {
+        club_nom: nom, sujet: sujet,
+        html_modele: emailHtmlDossier(g, club, imgModele, salutHtml, intro, lien),
+        texte_modele: emailTexteDossier(g, club, salutTexte, intro, lien)
+      });
       // Succès : dossier_envoye posé côté serveur (uniquement en cas de succès).
       const c = clubsInvitesCourants.find(function (x) { return memeTexteSouple(x.club_nom, nom); });
       if (c && res && res.dossier_envoye) c.dossier_envoye = res.dossier_envoye;

@@ -1381,9 +1381,12 @@ function enregistrerCategoriesEngagees(classeur, data) {
 /**
  * ENVOI AUTOMATIQUE du dossier Phase 2 par email (Point 7 du sprint).
  * Le destinataire (email de contact) est TOUJOURS relu dans le Sheet — jamais pris du client —
- * pour éviter tout détournement. L'objet et le corps sont fournis par l'aperçu admin (modifiables).
- * Envoi via MailApp par défaut ; via GmailApp avec « from » si email_expediteur (alias Gmail)
- * est configuré. dossier_envoye n'est posé (date du jour) qu'en cas de SUCCÈS de l'envoi.
+ * pour éviter tout détournement. L'objet et le contenu sont fournis par l'aperçu admin (modifiables).
+ * L'email est envoyé en HTML (même charte que l'invitation : `html_modele` + `texte_modele` de
+ * repli + affiche inline cid:affiche). Rétrocompatibilité : si seul `corps` (texte) est fourni,
+ * l'ancien envoi texte est utilisé. Envoi via MailApp par défaut ; via GmailApp avec « from » si
+ * email_expediteur (alias Gmail) est configuré. dossier_envoye n'est posé (date du jour) qu'en
+ * cas de SUCCÈS de l'envoi.
  */
 function envoyerDossierEmail(classeur, data) {
   var nom = String(data.club_nom || '').trim();
@@ -1399,12 +1402,20 @@ function envoyerDossierEmail(classeur, data) {
 
   var sujet = String(data.sujet == null ? '' : data.sujet).trim();
   if (!sujet) return { error: 'L\'objet du message est vide.' };
-  var corps = String(data.corps == null ? '' : data.corps);
-  if (!corps.trim()) return { error: 'Le corps du message est vide.' };
+  var htmlModele = String(data.html_modele == null ? '' : data.html_modele);
+  var texteModele = String(data.texte_modele == null ? '' : data.texte_modele);
+  var corps = String(data.corps == null ? '' : data.corps); // repli : ancien envoi texte brut
+  if (!htmlModele.trim() && !corps.trim()) return { error: 'Le contenu du message est vide.' };
 
   var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
   try {
-    envoyerEmailAvec(email, sujet, corps, expediteur);
+    if (htmlModele.trim()) {
+      // Version texte de repli : le modèle texte fourni, ou à défaut le HTML dépouillé de ses balises.
+      var texte = texteModele.trim() ? texteModele : htmlModele.replace(/<[^>]+>/g, ' ');
+      envoyerEmailHtml(email, sujet, htmlModele, texte, afficheBlobPourEmail(classeur), expediteur);
+    } else {
+      envoyerEmailAvec(email, sujet, corps, expediteur);
+    }
   } catch (e) {
     return { error: 'Échec de l\'envoi de l\'email : ' + (e && e.message ? e.message : e) };
   }
@@ -1559,6 +1570,25 @@ function envoyerEmailAvec(destinataire, sujet, corps, expediteur) {
 }
 
 /**
+ * Envoi bas niveau d'un email HTML (htmlBody + version texte de repli + affiche inline
+ * cid:affiche si fournie), partagé par les invitations (Phase 1) et les dossiers (Phase 2).
+ *  - `expediteur` renseigné → GmailApp avec « from » (alias « Envoyer en tant que ») ;
+ *  - sinon → MailApp (part de l'adresse du compte exécutant le script).
+ * LÈVE une exception en cas d'échec (l'appelant décide alors de ne pas marquer la date d'envoi).
+ */
+function envoyerEmailHtml(destinataire, sujet, html, texte, afficheBlob, expediteur) {
+  if (expediteur) {
+    var opt = { htmlBody: html, name: 'Génération R92', from: expediteur };
+    if (afficheBlob) opt.inlineImages = { affiche: afficheBlob };
+    GmailApp.sendEmail(destinataire, sujet, texte, opt);
+  } else {
+    var msg = { to: destinataire, subject: sujet, body: texte, htmlBody: html, name: 'Génération R92' };
+    if (afficheBlob) msg.inlineImages = { affiche: afficheBlob };
+    MailApp.sendEmail(msg);
+  }
+}
+
+/**
  * Compose le corps FINAL d'une invitation Phase 1 : salutation personnalisée par club
  * (« Bonjour {prénom}, » — ou « Bonjour, » si le prénom manque) + le corps commun `corpsApres`
  * (texte d'intro + lien) fourni par l'admin (identique à l'aperçu affiché). Le contenu envoyé
@@ -1625,15 +1655,7 @@ function afficheBlobPourEmail(classeur) {
 function envoyerInvitationEmail(dest, sujet, htmlModele, texteModele, prenom, lienReponse, afficheBlob, expediteur) {
   var html = personnaliserInvitation(htmlModele, prenom, lienReponse, true);
   var texte = personnaliserInvitation(texteModele, prenom, lienReponse, false);
-  if (expediteur) {
-    var opt = { htmlBody: html, name: 'Génération R92', from: expediteur };
-    if (afficheBlob) opt.inlineImages = { affiche: afficheBlob };
-    GmailApp.sendEmail(dest, sujet, texte, opt);
-  } else {
-    var msg = { to: dest, subject: sujet, body: texte, htmlBody: html, name: 'Génération R92' };
-    if (afficheBlob) msg.inlineImages = { affiche: afficheBlob };
-    MailApp.sendEmail(msg);
-  }
+  envoyerEmailHtml(dest, sujet, html, texte, afficheBlob, expediteur);
 }
 
 /** Valide les champs communs d'un envoi d'invitation. Renvoie un message d'erreur ou ''. */

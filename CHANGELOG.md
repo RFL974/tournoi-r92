@@ -15,6 +15,19 @@ fois → au plus **floor(équipes / 2)** matchs en même temps). Désormais chaq
 terrains devenus inutiles ne sont plus dessinés. **Frontend seul** (`admin-terrains.js`) — aucun
 redéploiement nécessaire.
 
+### Dossier final envoyé en email HTML (même charte que l'invitation) — 2026-07-24
+Le bouton **« Générer le dossier final »** ouvre désormais un **aperçu HTML live** de l'email
+(comme l'invitation Phase 1) au lieu d'un simple message texte : bandeau navy avec l'affiche,
+titres de sections bleus, bouton **« Voir le dossier complet »**, et un récapitulatif condensé
+(catégories engagées, modalités d'inscription, jour J, parking, encadrement & assurance, contact).
+**L'objet et la phrase d'introduction restent modifiables** ; le reste des sections est généré à
+partir des infos du tournoi. L'email part en **HTML + version texte de repli**, avec l'affiche en
+image **inline** (`cid:affiche`). ⚠️ **Redéploiement de la Web App nécessaire** : l'action backend
+`envoyerDossierEmail` accepte maintenant `html_modele` + `texte_modele` (repli sur l'ancien envoi
+texte `corps` si seul celui-ci est fourni). Nouveau helper partagé `envoyerEmailHtml` (mutualisé
+avec l'envoi d'invitation).
+>>>>>>> origin/main
+
 ### Clubs invités : création des équipes déplacée sur « Enregistrer la sélection » — 2026-07-24
 La **création automatique des équipes** engagées d'un club (source=auto) se déclenche désormais
 au clic sur **« Enregistrer la sélection »** (catégories engagées) plutôt que sur « Générer le
