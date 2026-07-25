@@ -398,7 +398,10 @@ function construireDossier(g, categories, club) {
   html += section('Encadrement & assurance', listeOuVide([
     ligne('Encadrement', echapper(txt(g.encadrement_ratio))),
     ligne('Diplômes exigés', echapper(txt(g.encadrement_diplomes))),
-    ligne('Assurance', attestation ? 'Attestation d\'assurance du club à fournir' : '')
+    ligne('Assurance', attestation ? 'Attestation d\'assurance du club à fournir' : ''),
+    // Mentions réglementaires FFR (toujours affichées) : licence obligatoire + FDM EDR.
+    ligne('Licences', 'Tous les joueurs participant au tournoi doivent être titulaires d\'une licence FFR validée.'),
+    ligne('Feuille de match', 'La feuille de match dématérialisée des Écoles de Rugby (FDM EDR) est utilisée pour l\'ensemble des rencontres du tournoi. Elle remplace la composition d\'équipe, la feuille de régulation et la feuille de score papier.')
   ]));
 
   // 6) SUIVI & ORGANISATION : lien live + QR, table de marque, résumé des terrains.
