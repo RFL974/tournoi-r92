@@ -473,8 +473,16 @@ function normaliserDateISO(valeur) {
   return '';
 }
 
-/** Mois 'AAAA-MM' d'une date (chaîne OU objet Date). '' si non interprétable. */
+/**
+ * Mois 'AAAA-MM'. Accepte un mois déjà au format 'AAAA-MM' (colonne `mois` de RefFFR_Formes),
+ * une date complète (chaîne ISO ou 'JJ/MM/AAAA') OU un objet Date. '' si non interprétable.
+ */
 function normaliserMois(valeur) {
+  if (valeur == null || valeur === '') return '';
+  if (!(valeur instanceof Date)) {
+    var mo = String(valeur).trim().match(/^(\d{4})-(\d{2})$/);
+    if (mo) return mo[1] + '-' + mo[2];
+  }
   var isoDate = normaliserDateISO(valeur);
   return isoDate ? isoDate.slice(0, 7) : '';
 }
