@@ -182,7 +182,8 @@ acquis du pré-audit et des questions ouvertes.
 
 - L'app couvre U8/M8 à U12/M12 → **100 % du périmètre EDR**
 - **Phases finales interdites** (quarts, demies, finale) → `COUPE_PLATEAU` à **masquer** en admin,
-  pas à supprimer (45 tests backend derrière). `CROISE`, `CROISE_DIAGONAL`, `LIBRE` conformes
+  pas à supprimer (aucun harnais de test n'existe dans le dépôt ; le chiffre 45 renvoie aux
+  45 actions backend). `CROISE`, `CROISE_DIAGONAL`, `LIBRE` conformes
 - **Formes de jeu variables selon le mois** → à stocker dans un onglet `RefFFR`, jamais en dur
 - **FDM EDR** remplace composition d'équipe / feuille de régulation / feuille de score dès
   2026-2027. **Aucune API publique FFR.** Zéro recouvrement fonctionnel avec Tournoi R92
