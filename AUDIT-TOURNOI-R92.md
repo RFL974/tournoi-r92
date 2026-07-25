@@ -8,11 +8,12 @@ document FFR du jour.
 
 1. Romain envoie : ce fichier + le document FFR du jour
 2. Analyse du document (millésime vérifié) confronté à la Partie 1
-3. Verdict en trois colonnes : ce qui **existe déjà** / ce qui **doit être créé** / ce qui **doit être corrigé**
-4. Discussion, Romain tranche
-5. Rédaction du **prompt Claude Code** — toujours avec une **phase d'inspection avant modification**
-6. Romain colle le **résumé d'exécution de Claude Code** (pas le prompt de départ)
-7. Mise à jour du fichier : Partie 1 **réécrite**, Partie 2 **complétée**, Partie 3 **ajustée**
+3. Confrontation du document du jour à TOUTES les questions ouvertes de la Partie 3 — un document ultérieur répond souvent à une question posée plus tôt
+4. Verdict en trois colonnes : ce qui **existe déjà** / ce qui **doit être créé** / ce qui **doit être corrigé**
+5. Discussion, Romain tranche
+6. Rédaction du **prompt Claude Code** — toujours avec une **phase d'inspection avant modification**
+7. Romain colle le **résumé d'exécution de Claude Code** (pas le prompt de départ)
+8. Mise à jour du fichier : Partie 1 **réécrite**, Partie 2 **complétée**, Partie 3 **ajustée**
 
 **Règle transverse** — Toute règle inscrite dans l'app est **sourcée** : quel document, quel
 millésime. Voir le *Registre des sources* en tête de Partie 2.
@@ -188,6 +189,9 @@ Point d'entrée `lancerTestsFFR()`. **32/32 OK** en production le 2026-07-25.
 - **`admin-reglages.js` / `formulaireCategorie()`** → masquage de `COUPE_PLATEAU` (ce sont des
   **cartes**, pas un tableau)
 - **`invitation-club.html`** → années de naissance éligibles par catégorie
+- **Tournoi du 92** — le comité organise son propre tournoi départemental des écoles de rugby
+  (M8 à M14, historiquement en juin). C'est une date bloquante absente du calendrier national, à
+  ajouter à `RefFFR_Dates` avec `source = CD92`.
 - Un **écran « Amont / conformité »** dans l'admin reste à créer : seul vrai manque structurel
 
 **Dette identifiée** : `normaliserCategorie` (backend) a un miroir `normaliserCategorieFFR`
@@ -209,7 +213,7 @@ surveiller. Même situation que le barème de classement, déjà dupliqué et do
 | S2 | Formulaire de demande d'autorisation de tournoi EDR | à confirmer | 2026-07 | pré-audit |
 | S3 | Cahier des charges École de Rugby | 2025-2026 | 2026-07 | pré-audit |
 | **S4** | **Calendrier Fédéral Écoles de Rugby (FFR-CNEDR) + Note d'accompagnement** | **2026-2027**, note du **03/06/2026** | **2026-07-25** | **session 1** |
-| S5 | Règlements Généraux FFR, **art. 230-2** (72 h) — *cité par S4, texte non consulté directement* | à confirmer | 2026-07-25 | session 1 |
+| S5 | Règlements Généraux FFR, **art. 230-2** (72 h) — *cité par S4, texte vérifié le 2026-07-25 — l'article précise que le délai de 72 h s'apprécie entre le coup d'envoi de la première rencontre et celui de la seconde, et que la participation est définie comme l'entrée effective sur le terrain. Millésime en vigueur restant à confirmer (versions consultées : 2023-2024 et reprise Ligue Nouvelle-Aquitaine 2024).* | à confirmer | 2026-07-25 | session 1 |
 
 ---
 
@@ -316,12 +320,14 @@ calendrier. Sans effet pour Tournoi R92 (M14 hors périmètre actuel), mais cons
 - **Libres** : mai à partir du 15, et **tout juin** — cohérent avec la recommandation FFR
   (*les week-ends de mai et juin sont principalement laissés libres pour les tournois clubs*).
 
-### ⚠️ Conflit détecté sur le tournoi réel
+### ⚠️ Conflit détecté en conditions réelles
 
-Le **Challenge Marc Chevallier, daté du 11/11/2026**, est signalé en conflit : plateau
-départemental le **samedi 14/11**, soit 3 jours après → fenêtre des 72 h. Cas frontière (l'app
-compte en jours entiers ; en heures réelles on est probablement juste sous les 72 h, donc dans
-l'interdit). → **Q8**, à trancher par le Comité 92.
+Le contrôle a signalé un conflit sur la date **11/11/2026** (« Challenge Marc Chevallier ») :
+plateau départemental le **samedi 14/11**, soit 3 jours après → fenêtre des 72 h. **Précision
+importante** : cette date est une **date de TEST** reprise de l'édition précédente, **pas un
+tournoi programmé**. Le contrôle a donc été **validé sur une configuration réelle** (il détecte
+bien le cas frontière des 72 h), mais **aucune décision d'organisation n'en découle**. → **Q8**
+perd son caractère urgent : elle reste ouverte sur le principe, sans échéance.
 
 ### Décidé
 
@@ -362,6 +368,8 @@ Backend redéployé et vérifié en production le soir même.
 
 # PARTIE 3 — Questions ouvertes
 
+**Règles de clôture** — Une question se ferme soit *par document* (source et passage cités), soit *par le comité / la ligue*. Une réponse partielle ne ferme rien : la question reste ouverte, assortie d'une note sur ce qui manque. La liste finale des points sans réponse textuelle n'est établie qu'une fois tous les documents FFR traités.
+
 | # | Question | Destinataire | Statut |
 |---|---|---|---|
 | Q1 | Le formulaire d'autorisation ne demande que des **nombres** de clubs et d'équipes, alors que l'art. 411-2 des RG exige le **nom** des clubs participants et leur **accord de participation**. Faut-il joindre la liste nominative et les accords écrits en annexe ? | Ligue IDF / Comité 92 | ⏳ ouverte |
@@ -373,5 +381,5 @@ Backend redéployé et vérifié en production le soir même.
 | **Q7** | Les dates **« REPLI »** (repli plateau départemental, repli SCF/CF) bloquent-elles un tournoi club ? Le texte interdit les tournois « sur les dates de plateaux départementaux » ; un repli est une date de réserve. *Traité en `AVERTISSEMENT` dans le référentiel en attendant.* | Comité 92 | ⏳ ouverte |
 | **Q8** | **Cas concret** : le Challenge Marc Chevallier du **mercredi 11/11/2026** est-il compatible avec le plateau départemental du **samedi 14/11** ? Écart de 3 jours = limite exacte des 72 h. | Comité 92 | ⏳ ouverte |
 | **Q9** | Le **calendrier des plateaux du Comité 92** — celui qui bloque en pratique — n'est pas dans le calendrier national. Où le récupérer, et sous quelle forme ? *(à intégrer dans `RefFFR_Dates` avec `source = CD92`)* | Comité 92 | ⏳ ouverte |
-| **Q10** | La lecture des mentions **(A) / (B) / (C)** du calendrier comme **zones de vacances scolaires** (IDF = C) est-elle la bonne ? Elle conditionne 4 dates. | Comité 92 | ⏳ ouverte |
+| **Q10** | Les mentions **(A)/(B)/(C)** désignent bien les zones de vacances scolaires — la légende du calendrier (page 1) l'indique explicitement : « A,B ou C = zone si vacances scolaires ». L'Île-de-France est en zone C. Le référentiel et le paramètre `zone_vacances` sont corrects. Source : S4, légende page 1. | Comité 92 | ✅ résolue (document) |
 | **Q11** | **Source des dimensions de terrain** (M8 30×20, M10 30×25, M12 56×45) : reportée du pré-audit sans document identifié. Quel texte ? | vérification Romain | ⏳ ouverte |
