@@ -33,6 +33,8 @@ function majInfosTournoi() {
   form.tournoi_lieu.value = g.tournoi_lieu || '';
   form.tournoi_adresse.value = g.tournoi_adresse || '';
   form.tournoi_description.value = g.tournoi_description || '';
+  // Zone de vacances (contrôle FFR) : défaut 'C' si absent (migration douce).
+  if (form.zone_vacances) form.zone_vacances.value = g.zone_vacances || 'C';
 
   // Aperçu de l'affiche déjà enregistrée (image Drive publique).
   afficheDataURI = '';
@@ -51,6 +53,8 @@ function majInfosTournoi() {
   if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
 
   majApercuTournoi(); // l'aperçu « carte du site » suit les infos affichées
+  // Conformité FFR : (re)vérifie dès que les infos (dont la date) sont (re)chargées.
+  if (typeof majConformiteFFR === 'function') majConformiteFFR();
 }
 
 /* urlAffiche(), brancherZoneImage() et redimensionnerImage() — helpers partagés — sont
@@ -214,7 +218,8 @@ function lireInfosTournoi() {
     tournoi_date: form.tournoi_date.value,
     tournoi_lieu: form.tournoi_lieu.value.trim(),
     tournoi_adresse: form.tournoi_adresse.value.trim(),
-    tournoi_description: form.tournoi_description.value.trim()
+    tournoi_description: form.tournoi_description.value.trim(),
+    zone_vacances: (form.zone_vacances && form.zone_vacances.value) ? form.zone_vacances.value : 'C'
   };
 }
 
