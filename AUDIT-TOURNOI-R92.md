@@ -171,6 +171,7 @@ Quatre formats implémentés, sélectionnés par catégorie via `format_apresmid
 | Mention **FDM EDR** | ✅ dossier Phase 2 |
 | Traçabilité des sources | ✅ colonnes `source` + `millesime` dans les deux onglets |
 | Migration douce (référentiel absent) | ✅ prouvée en conditions réelles : bandeau gris, zéro erreur, app inchangée |
+| Garde-fou « saison non couverte » | ❌ **défaut connu** — si la date du tournoi appartient à une saison absente de `RefFFR_Dates`, aucune ligne ne correspond, donc aucun bloquant, donc **bandeau vert**. L'app annonce « aucun conflit » alors qu'elle n'a rien à comparer. À corriger : détecter l'absence de couverture et afficher un avertissement explicite, jamais du vert. Voir aussi `millesimeRefFFR`, qui renvoie le premier millésime trouvé et non celui de la date examinée. |
 | Masquage de `COUPE_PLATEAU` en EDR | ❌ à faire |
 | Demande d'autorisation (art. 411-2 RG) — dates, n° d'autorisation, dépôt | ❌ aucun champ, aucune checklist |
 | Jalons amont (J-90 / J-60 / J-45) | ❌ deux dates limites existent, non reliées à un rétroplanning |
@@ -198,6 +199,25 @@ Point d'entrée `lancerTestsFFR()`. **32/32 OK** en production le 2026-07-25.
 (frontend). Deux implémentations d'une même règle, susceptibles de diverger. Acceptable
 aujourd'hui — la logique est triviale et la source de vérité reste le backend testé — mais à
 surveiller. Même situation que le barème de classement, déjà dupliqué et documenté.
+
+## 1.10 — Cycle annuel du référentiel
+
+La FFR publie le calendrier EDR **début juin** (celui de 2026-2027 est daté du 03/06/2026). La
+fenêtre de mise à jour est donc **juin – août**, avant l'envoi des invitations.
+
+**Procédure retenue : remplacement, pas empilement.** Les deux onglets RefFFR sont vidés et
+rechargés avec la nouvelle saison. Deux raisons : `millesimeRefFFR` renvoie le premier millésime
+trouvé et deviendrait faux avec deux saisons cohabitant ; et la traçabilité historique est portée
+par **ce fichier d'audit** — registre des sources et journal de session — non par le classeur.
+
+Étapes :
+1. Récupérer le calendrier EDR de la nouvelle saison et sa note d'accompagnement
+2. Régénérer les deux CSV (extraction de la grille par coordonnées, la lecture du texte brut
+   entremêle les mois d'une même page)
+3. Vider `RefFFR_Formes` et `RefFFR_Dates`, coller les nouvelles lignes
+4. **Session d'audit dédiée** : les règles elles-mêmes peuvent changer, pas seulement les dates.
+   Une bascule de forme de jeu avancée d'un mois est une règle. Des questions closes peuvent
+   rouvrir.
 
 ---
 
