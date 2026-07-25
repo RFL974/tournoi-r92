@@ -120,7 +120,10 @@ function creerOngletConfig(classeur) {
     ['contact_reponse_email', ''],
     // Adresse « Envoyer en tant que » (alias Gmail du compte exécutant). Vide = l'email
     // part de l'adresse du compte qui exécute le script (romain.rifleu@gmail.com en test).
-    ['email_expediteur', '']
+    ['email_expediteur', ''],
+    // Zone de vacances scolaires (contrôle de conformité FFR). Défaut 'C' (Île-de-France).
+    // Migration douce : si le paramètre est absent d'un Sheet en service, il est traité comme 'C'.
+    ['zone_vacances', 'C']
   ];
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
@@ -976,7 +979,8 @@ function enregistrerHoraires(classeur, data) {
  */
 function enregistrerInfosTournoi(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
-  var champs = ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_adresse', 'tournoi_description'];
+  var champs = ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_adresse', 'tournoi_description',
+    'zone_vacances'];
   ecrireChampsConfig(onglet, data, champs);
   return { ok: true };
 }
@@ -3785,10 +3789,44 @@ function signatureStructure(categories, equipes) {
   return hachageChaine(parts.join(';'));
 }
 
+/**
+ * Catégories PRÉSENTES comptant moins de `mini` équipes engagées. Renvoie [{categorie, nb}].
+ * Le comptage se fait sur l'onglet Equipes (colonne `categorie`). Aucune donnée externe requise.
+ */
+function categoriesSousMinimum(config, equipes, mini) {
+  var comptes = {};
+  (equipes || []).forEach(function (e) {
+    var cat = String(e.categorie == null ? '' : e.categorie).trim();
+    if (cat) comptes[cat] = (comptes[cat] || 0) + 1;
+  });
+  var sous = [];
+  (config.categories || []).forEach(function (c) {
+    if (String(c.presente).toLowerCase() !== 'oui') return;
+    var cat = String(c.categorie == null ? '' : c.categorie).trim();
+    if (!cat) return;
+    var n = comptes[cat] || 0;
+    if (n < mini) sous.push({ categorie: cat, nb: n });
+  });
+  return sous;
+}
+
 function genererPoulesEtPlanning(classeur) {
   var config = lireConfig(classeur);
   var equipes = lireOngletSimple(classeur, 'Equipes');
   var global = config.global;
+
+  // BLOCAGE DUR — minimum 3 équipes par catégorie présente (note d'accompagnement FFR du
+  // 03/06/2026 : « à l'école de rugby les matchs secs ne sont pas autorisés, les seuls formats
+  // autorisés sont les tournois avec minimum 3 équipes »). Contrôle INDÉPENDANT du référentiel
+  // RefFFR (règle générale, aucune donnée externe) : on refuse AVANT toute écriture.
+  var sousMini = categoriesSousMinimum(config, equipes, 3);
+  if (sousMini.length) {
+    var details = sousMini.map(function (m) { return m.categorie + ' (' + m.nb + ' équipe(s))'; }).join(', ');
+    return { error: 'Génération impossible : il faut au minimum 3 équipes par catégorie ' +
+      '(règle FFR École de Rugby — les matchs secs ne sont pas autorisés). ' +
+      'Catégorie(s) concernée(s) : ' + details + '.' };
+  }
+
   // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution).
   assurerColonneCategorie(classeur, 'nb_poules');
 
