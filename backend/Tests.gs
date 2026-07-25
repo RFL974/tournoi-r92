@@ -26,6 +26,8 @@ function lancerTestsFFR() {
   testFFR_filtrageCategorie(etat);
   testFFR_referentielAbsent(etat);
   testFFR_formesNonEtLimite(etat);
+  testFFR_appariementCategorie(etat);
+  testFFR_minEquipes(etat);
   testFFR_normaliserDateISO(etat);
   testFFR_normaliserMois(etat);
 
@@ -67,14 +69,18 @@ function _ffrAAvertDate(res, dateISO) {
 /*  Référentiel factice partagé par les tests                                 */
 /* -------------------------------------------------------------------------- */
 
-/** Construit un référentiel injectable { formes, dates, millesime }. */
+/**
+ * Construit un référentiel injectable { formes, dates, millesime }. Le référentiel reste
+ * FIDÈLE À LA SOURCE FFR (notation M8/M10/M12/M14) : les tests vérifient donc aussi que
+ * l'appariement M↔U fonctionne face aux catégories de l'app (U8/U10…).
+ */
 function _ffrRefFactice() {
   return {
     millesime: '2026-2027',
     formes: [
-      { categorie: 'U10', mois: '2027-01', forme_jeu: 'RE',  effectif: '7x7',   tournoi_autorise: 'OUI',    note: '',                     millesime: '2026-2027' },
-      { categorie: 'U8',  mois: '2027-01', forme_jeu: 'BABY', effectif: '',      tournoi_autorise: 'NON',    note: '',                     millesime: '2026-2027' },
-      { categorie: 'U12', mois: '2027-05', forme_jeu: 'T+2',  effectif: '10x10', tournoi_autorise: 'LIMITE', note: 'Format limité en mai', millesime: '2026-2027' }
+      { categorie: 'M10', mois: '2027-01', forme_jeu: 'RE',  effectif: '7x7',   tournoi_autorise: 'OUI',    note: '',                     millesime: '2026-2027' },
+      { categorie: 'M8',  mois: '2027-01', forme_jeu: 'BABY', effectif: '',      tournoi_autorise: 'NON',    note: '',                     millesime: '2026-2027' },
+      { categorie: 'M12', mois: '2027-05', forme_jeu: 'T+2',  effectif: '10x10', tournoi_autorise: 'LIMITE', note: 'Format limité en mai', millesime: '2026-2027' }
     ],
     dates: [
       // Date fédérale directe (toutes zones, toutes catégories).
@@ -85,8 +91,8 @@ function _ffrRefFactice() {
       { date: '2027-05-01', type: 'DIVERS', libelle: 'Journée lointaine', zone: '', categories: '', bloque_tournoi_club: 'OUI', millesime: '2026-2027' },
       // Date filtrée par ZONE (uniquement A et B).
       { date: '2027-02-20', type: 'CF_P2', libelle: 'Zone A/B seulement', zone: 'A,B', categories: '', bloque_tournoi_club: 'OUI', millesime: '2026-2027' },
-      // Date filtrée par CATÉGORIE (U14 seulement).
-      { date: '2027-03-14', type: 'SCF_P3', libelle: 'U14 seulement', zone: '', categories: 'U14', bloque_tournoi_club: 'OUI', millesime: '2026-2027' }
+      // Date filtrée par CATÉGORIE (M14 dans la source FFR → doit s'apparier à U14 de l'app).
+      { date: '2027-03-14', type: 'SCF_P3', libelle: 'M14 seulement', zone: '', categories: 'M14', bloque_tournoi_club: 'OUI', millesime: '2026-2027' }
     ]
   };
 }
@@ -150,6 +156,40 @@ function testFFR_formesNonEtLimite(etat) {
   var aNoteLimite = mai.avertissements.some(function (a) { return a.motif === 'Format limité en mai'; });
   _ffrAssert(etat, aNoteLimite, 'formes : U12 mai (LIMITE) => avertissement avec la note');
   _ffrAssert(etat, mai.formes.U12 && mai.formes.U12.forme_jeu === 'T+2', 'formes : formes.U12.forme_jeu=T+2');
+}
+
+/** Appariement M↔U : une forme M10 (source FFR) doit s'apparier à U10 (catégorie de l'app). */
+function testFFR_appariementCategorie(etat) {
+  // 23 janvier 2027 : aucune date fédérale ce jour-là → on isole la règle des formes.
+  const res = evaluerConformiteFFR(_ffrRefFactice(), '2027-01-23', ['U10'], 'C');
+  _ffrAssert(etat, !!res.formes.U10, 'appariement : M10 (référentiel) s\'apparie à U10 (app)');
+  _ffrAssert(etat, res.formes.U10 && res.formes.U10.forme_jeu === 'RE', 'appariement : forme M10 → RE remontée pour U10');
+  // Catégorie inconnue du référentiel : aucune forme trouvée, aucune exception levée.
+  const inconnu = evaluerConformiteFFR(_ffrRefFactice(), '2027-01-23', ['U18'], 'C');
+  _ffrAssert(etat, !inconnu.formes.U18, 'appariement : catégorie inconnue → pas de forme');
+  _ffrAssert(etat, inconnu.bloquants.length === 0, 'appariement : catégorie inconnue → aucun bloquant');
+}
+
+/** Minimum 3 équipes : 0 équipe → avertissement (ignorée) ; 1 ou 2 équipes → blocage. */
+function testFFR_minEquipes(etat) {
+  const config = { categories: [
+    { categorie: 'U8',  presente: 'oui' }, // 0 équipe  → vides
+    { categorie: 'U10', presente: 'oui' }, // 2 équipes → bloque
+    { categorie: 'U12', presente: 'oui' }, // 3 équipes → OK
+    { categorie: 'U14', presente: 'non' }  // absente   → ignorée
+  ] };
+  const equipes = [
+    { categorie: 'U10' }, { categorie: 'U10' },
+    { categorie: 'U12' }, { categorie: 'U12' }, { categorie: 'U12' },
+    { categorie: 'U14' } // présente à l'onglet mais catégorie non présente → ignorée
+  ];
+  const r = analyserEffectifsCategories(config, equipes);
+  const estVide = r.vides.indexOf('U8') !== -1;
+  const bloqueU10 = r.bloque.some(function (m) { return m.categorie === 'U10' && m.nb === 2; });
+  const u12OK = !r.bloque.some(function (m) { return m.categorie === 'U12'; }) && r.vides.indexOf('U12') === -1;
+  _ffrAssert(etat, estVide, 'minEquipes : U8 (0 équipe) → avertissement (vides), pas de blocage');
+  _ffrAssert(etat, r.bloque.length === 1 && bloqueU10, 'minEquipes : U10 (2 équipes) → blocage dur');
+  _ffrAssert(etat, u12OK, 'minEquipes : U12 (3 équipes) → ni bloquée ni vide');
 }
 
 /** normaliserDateISO : chaîne ISO, chaîne datetime, objet Date, entrées invalides. */

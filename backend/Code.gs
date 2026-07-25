@@ -495,6 +495,20 @@ function ecartJoursISO(isoA, isoB) {
   return Math.round((uA - uB) / 86400000);
 }
 
+/**
+ * Clé de catégorie CANONIQUE, indépendante du préfixe d'âge (M = « moins de », U = « under »).
+ * Le référentiel FFR reste fidèle à la source (M8/M10/M12/M15F) tandis que l'app utilise la
+ * notation U (U8/U10…) : on apparie donc TOUJOURS via cette clé, jamais par égalité exacte.
+ *   M8/U8/m8/u8 → '8' · M10/U10 → '10' · M12 → '12' · M14 → '14' · M15F/U15F → '15F'.
+ * Une valeur sans préfixe M/U (ou inconnue) est renvoyée telle quelle (en majuscules) : elle
+ * ne s'appariera simplement à rien, sans erreur.
+ */
+function normaliserCategorie(valeur) {
+  var s = String(valeur == null ? '' : valeur).trim().toUpperCase();
+  if (s === '') return '';
+  return s.replace(/^[MU](?=\d)/, ''); // retire M/U seulement s'il précède un chiffre
+}
+
 /* ---------------------- Moteur de vérification de conformité ---------------------- */
 
 /**
@@ -525,6 +539,10 @@ function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacance
   var cats = (categoriesPresentes || [])
     .map(function (c) { return String(c).trim(); })
     .filter(function (c) { return c !== ''; });
+  // Clés canoniques des catégories présentes (appariement M↔U), en gardant le lien vers le nom
+  // d'origine (celui de l'app) pour la restitution.
+  var clesPresentes = {}; // cléCanonique -> nom d'origine (app)
+  cats.forEach(function (c) { clesPresentes[normaliserCategorie(c)] = c; });
   var zone = String(zoneVacances || '').trim().toUpperCase();
 
   var bloquants = [], avertissements = [];
@@ -541,12 +559,13 @@ function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacance
   }
 
   // Une ligne de RefFFR_Dates concerne-t-elle nos catégories ? (colonne vide = toutes catégories)
+  // Appariement par clé canonique (M↔U), jamais par égalité exacte.
   function recoupeCategories(ligne) {
     var lc = String(ligne.categories == null ? '' : ligne.categories).trim();
     if (lc === '') return true;
-    var liste = lc.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+    var liste = lc.split(',').map(function (x) { return normaliserCategorie(x); }).filter(Boolean);
     if (!liste.length) return true;
-    for (var i = 0; i < cats.length; i++) { if (liste.indexOf(cats[i]) !== -1) return true; }
+    for (var k in clesPresentes) { if (liste.indexOf(k) !== -1) return true; }
     return false;
   }
   // ... et notre zone de vacances ? (colonne vide = toutes zones ; sinon liste séparée par virgules)
@@ -591,9 +610,10 @@ function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacance
   var formesMap = {};
   for (var c = 0; c < cats.length; c++) {
     var cat = cats[c];
+    var cleCat = normaliserCategorie(cat);
     var ligneForme = null;
     for (var f = 0; f < formes.length; f++) {
-      if (String(formes[f].categorie == null ? '' : formes[f].categorie).trim() === cat &&
+      if (normaliserCategorie(formes[f].categorie) === cleCat &&
           normaliserMois(formes[f].mois) === moisTournoi) { ligneForme = formes[f]; break; }
     }
     if (!ligneForme) continue;
@@ -3798,24 +3818,28 @@ function signatureStructure(categories, equipes) {
 }
 
 /**
- * Catégories PRÉSENTES comptant moins de `mini` équipes engagées. Renvoie [{categorie, nb}].
- * Le comptage se fait sur l'onglet Equipes (colonne `categorie`). Aucune donnée externe requise.
+ * Analyse les effectifs des catégories PRÉSENTES (comptage sur l'onglet Equipes, colonne
+ * `categorie`). Distingue deux cas, selon la règle FFR (minimum 3 équipes, matchs secs interdits) :
+ *   - `vides`  : catégorie présente avec 0 équipe → simple AVERTISSEMENT, la génération continue.
+ *   - `bloque` : catégorie présente avec 1 ou 2 équipes → BLOCAGE dur ([{categorie, nb}]).
+ * Aucune donnée externe requise (indépendant du référentiel RefFFR).
  */
-function categoriesSousMinimum(config, equipes, mini) {
+function analyserEffectifsCategories(config, equipes) {
   var comptes = {};
   (equipes || []).forEach(function (e) {
     var cat = String(e.categorie == null ? '' : e.categorie).trim();
     if (cat) comptes[cat] = (comptes[cat] || 0) + 1;
   });
-  var sous = [];
+  var bloque = [], vides = [];
   (config.categories || []).forEach(function (c) {
     if (String(c.presente).toLowerCase() !== 'oui') return;
     var cat = String(c.categorie == null ? '' : c.categorie).trim();
     if (!cat) return;
     var n = comptes[cat] || 0;
-    if (n < mini) sous.push({ categorie: cat, nb: n });
+    if (n === 0) vides.push(cat);
+    else if (n < 3) bloque.push({ categorie: cat, nb: n });
   });
-  return sous;
+  return { bloque: bloque, vides: vides };
 }
 
 function genererPoulesEtPlanning(classeur) {
@@ -3823,13 +3847,14 @@ function genererPoulesEtPlanning(classeur) {
   var equipes = lireOngletSimple(classeur, 'Equipes');
   var global = config.global;
 
-  // BLOCAGE DUR — minimum 3 équipes par catégorie présente (note d'accompagnement FFR du
-  // 03/06/2026 : « à l'école de rugby les matchs secs ne sont pas autorisés, les seuls formats
-  // autorisés sont les tournois avec minimum 3 équipes »). Contrôle INDÉPENDANT du référentiel
-  // RefFFR (règle générale, aucune donnée externe) : on refuse AVANT toute écriture.
-  var sousMini = categoriesSousMinimum(config, equipes, 3);
-  if (sousMini.length) {
-    var details = sousMini.map(function (m) { return m.categorie + ' (' + m.nb + ' équipe(s))'; }).join(', ');
+  // RÈGLE FFR — minimum 3 équipes par catégorie présente (note d'accompagnement du 03/06/2026 :
+  // « à l'école de rugby les matchs secs ne sont pas autorisés, les seuls formats autorisés sont
+  // les tournois avec minimum 3 équipes »). Contrôle INDÉPENDANT du référentiel RefFFR.
+  //   - 1 ou 2 équipes  → BLOCAGE dur, AVANT toute écriture ;
+  //   - 0 équipe        → simple avertissement (catégorie ignorée), la génération continue.
+  var effectifs = analyserEffectifsCategories(config, equipes);
+  if (effectifs.bloque.length) {
+    var details = effectifs.bloque.map(function (m) { return m.categorie + ' (' + m.nb + ' équipe(s))'; }).join(', ');
     return { error: 'Génération impossible : il faut au minimum 3 équipes par catégorie ' +
       '(règle FFR École de Rugby — les matchs secs ne sont pas autorisés). ' +
       'Catégorie(s) concernée(s) : ' + details + '.' };
@@ -3843,6 +3868,10 @@ function genererPoulesEtPlanning(classeur) {
   var finApremProj = projeterFinApresMidi(config, r.poules, r.matchsFinaux);
   var finJournee = Math.max(r.maxFin, finApremProj);
   var avert = r.avert.slice();
+  // Catégories présentes sans aucune équipe : ignorées, mais on prévient l'organisateur.
+  effectifs.vides.forEach(function (cat) {
+    avert.push('Catégorie ' + cat + ' : présente mais sans équipe engagée — ignorée pour la génération.');
+  });
   var autoFin = String(global.heure_fin_auto || 'oui').toLowerCase() !== 'non';
   var cible = hmVersMin(global.heure_fin || '18:00');
   var heureFin;

@@ -78,7 +78,10 @@
             <select class="r-input" name="zone_vacances">
               <option value="A">Zone A</option>
               <option value="B">Zone B</option>
-              <option value="C">Zone C (Île-de-France)</option>
+              <!-- Zone C (Île-de-France) présélectionnée par défaut : c'est la valeur par défaut
+                   de zone_vacances côté backend. Sans ce `selected`, un <select> sans valeur JS
+                   retomberait sur la 1re option (Zone A). -->
+              <option value="C" selected>Zone C (Île-de-France)</option>
             </select>
           </label>
           <!-- Conformité FFR : résultat de verifierConformiteFFR (backend), rempli par

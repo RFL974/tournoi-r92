@@ -150,16 +150,28 @@ function dateCourteFrFFR(iso) {
    « FORME FFR ATTENDUE » dans les cartes de réglage par catégorie
    -------------------------------------------------------------------------- */
 
+/**
+ * Clé de catégorie canonique (miroir du backend normaliserCategorie) : apparie M↔U.
+ *   M8/U8 → '8' · M10/U10 → '10' · M15F/U15F → '15F'. Le référentiel FFR reste en M…,
+ *   l'app en U… : on n'apparie jamais par égalité exacte.
+ */
+function normaliserCategorieFFR(valeur) {
+  const s = String(valeur == null ? '' : valeur).trim().toUpperCase();
+  if (s === '') return '';
+  return s.replace(/^[MU](?=\d)/, '');
+}
+
 /** Ligne de forme FFR pour une catégorie au mois de la date du tournoi, ou null. */
 function formeAttendueFFR(categorie, dateISO) {
   if (!refFFRCache || !dateISO) return null;
   const mois = String(dateISO).slice(0, 7);
+  const cle = normaliserCategorieFFR(categorie);
   const formes = refFFRCache.formes || [];
   for (let i = 0; i < formes.length; i++) {
     const f = formes[i];
     let fmois = String(f.mois || '').trim();
     if (fmois.length > 7) fmois = fmois.slice(0, 7); // tolère une date complète
-    if (String(f.categorie || '').trim() === categorie && fmois === mois) return f;
+    if (normaliserCategorieFFR(f.categorie) === cle && fmois === mois) return f;
   }
   return null;
 }
