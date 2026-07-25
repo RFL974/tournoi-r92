@@ -120,7 +120,10 @@ function creerOngletConfig(classeur) {
     ['contact_reponse_email', ''],
     // Adresse « Envoyer en tant que » (alias Gmail du compte exécutant). Vide = l'email
     // part de l'adresse du compte qui exécute le script (romain.rifleu@gmail.com en test).
-    ['email_expediteur', '']
+    ['email_expediteur', ''],
+    // Zone de vacances scolaires (contrôle de conformité FFR). Défaut 'C' (Île-de-France).
+    // Migration douce : si le paramètre est absent d'un Sheet en service, il est traité comme 'C'.
+    ['zone_vacances', 'C']
   ];
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
@@ -175,6 +178,12 @@ function doGet(e) {
       return ContentService.createTextOutput(snapshotJsonCache())
         .setMimeType(ContentService.MimeType.JSON);
     }
+    // getRefFFR : référentiel FFR public (aucune donnée personnelle), servi par SON PROPRE
+    // cache (clé `refffr_json`, ~10 s) — sans jamais toucher à getAll ni à son cache.
+    if (action === 'getRefFFR') {
+      return ContentService.createTextOutput(refFFRJsonCache())
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
     var classeur = SpreadsheetApp.openById(sheetId());
     var resultat;
@@ -190,6 +199,8 @@ function doGet(e) {
       case 'getClubDossier': resultat = getClubDossier(classeur, params.club); break;
       // Lecture PUBLIQUE de la page de réponse : validée par le JETON du club (pas de clé admin).
       case 'getReponseInvitation': resultat = getReponseInvitation(classeur, params); break;
+      // Conformité FFR pour une date + catégories + zone (informatif, aucune donnée personnelle).
+      case 'getConformiteFFR': resultat = getConformiteFFR(classeur, params); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -385,6 +396,262 @@ function lireConfig(classeur) {
     }
   }
   return { global: global, categories: categories };
+}
+
+/* ===================== RÉFÉRENTIEL FFR (RefFFR_Formes / RefFFR_Dates) =====================
+ * Deux onglets de RÉFÉRENCE (calendrier FFR École de Rugby 2026-2027) lus en PUBLIC :
+ * ils ne contiennent AUCUNE donnée personnelle. Lecture par NOM d'en-tête (lireOngletSimple),
+ * jamais par index de colonne.
+ *
+ * MIGRATION DOUCE TOTALE (non négociable) : si un onglet est absent, vide ou illisible, la
+ * lecture renvoie [] (jamais d'exception) et toute la chaîne de conformité se met en repli
+ * (refDisponible:false, listes vides). L'app continue de fonctionner exactement comme avant.
+ * ======================================================================================== */
+
+/** Premier millésime non vide trouvé dans un tableau de lignes de référence (ou null). */
+function millesimeRefFFR(lignes) {
+  for (var i = 0; i < lignes.length; i++) {
+    var m = lignes[i] && lignes[i].millesime;
+    if (m != null && String(m).trim() !== '') return String(m).trim();
+  }
+  return null;
+}
+
+/** Lecture de l'onglet RefFFR_Formes → tableau d'objets ; [] si l'onglet est absent/illisible. */
+function lireRefFFRFormes(classeur) {
+  try { return lireOngletSimple(classeur, 'RefFFR_Formes'); } catch (e) { return []; }
+}
+
+/** Lecture de l'onglet RefFFR_Dates → tableau d'objets ; [] si l'onglet est absent/illisible. */
+function lireRefFFRDates(classeur) {
+  try { return lireOngletSimple(classeur, 'RefFFR_Dates'); } catch (e) { return []; }
+}
+
+/** Référentiel FFR public complet : { formes, dates, millesime }. Migration douce ⇒ listes vides. */
+function getRefFFR(classeur) {
+  var formes = lireRefFFRFormes(classeur);
+  var dates  = lireRefFFRDates(classeur);
+  var millesime = millesimeRefFFR(dates) || millesimeRefFFR(formes);
+  return { formes: formes, dates: dates, millesime: millesime };
+}
+
+/**
+ * getRefFFR mis en CACHE serveur (~10 s), avec une clé DISTINCTE de getAll (`refffr_json`) :
+ * on ne touche NI à getAll NI à son cache. Le classeur n'est ouvert que si le cache est froid.
+ * Renvoie la CHAÎNE JSON (pas de re-sérialisation).
+ */
+function refFFRJsonCache() {
+  var cache = CacheService.getScriptCache();
+  var s = cache.get('refffr_json');
+  if (s) return s;
+  s = JSON.stringify(getRefFFR(SpreadsheetApp.openById(sheetId())));
+  try { cache.put('refffr_json', s, 10); } catch (e) { /* cache indisponible : tant pis */ }
+  return s;
+}
+
+/* ---------------------- Helpers de date (chaîne OU objet Date) ---------------------- */
+
+/**
+ * Normalise une date en chaîne ISO 'AAAA-MM-JJ'.
+ * Accepte une CHAÎNE ('2027-01-16', '2027-01-16T09:00:00…', ou 'JJ/MM/AAAA') OU un objet Date.
+ * Renvoie '' si non interprétable. Pour un objet Date on lit les composantes LOCALES (pas UTC)
+ * afin d'éviter un décalage de jour.
+ */
+function normaliserDateISO(valeur) {
+  if (valeur == null || valeur === '') return '';
+  if (valeur instanceof Date) {
+    if (isNaN(valeur.getTime())) return '';
+    var mm = ('0' + (valeur.getMonth() + 1)).slice(-2);
+    var jj = ('0' + valeur.getDate()).slice(-2);
+    return valeur.getFullYear() + '-' + mm + '-' + jj;
+  }
+  var s = String(valeur).trim();
+  var iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return iso[1] + '-' + iso[2] + '-' + iso[3];
+  var fr = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (fr) return fr[3] + '-' + fr[2] + '-' + fr[1];
+  return '';
+}
+
+/**
+ * Mois 'AAAA-MM'. Accepte un mois déjà au format 'AAAA-MM' (colonne `mois` de RefFFR_Formes),
+ * une date complète (chaîne ISO ou 'JJ/MM/AAAA') OU un objet Date. '' si non interprétable.
+ */
+function normaliserMois(valeur) {
+  if (valeur == null || valeur === '') return '';
+  if (!(valeur instanceof Date)) {
+    var mo = String(valeur).trim().match(/^(\d{4})-(\d{2})$/);
+    if (mo) return mo[1] + '-' + mo[2];
+  }
+  var isoDate = normaliserDateISO(valeur);
+  return isoDate ? isoDate.slice(0, 7) : '';
+}
+
+/** Écart en jours entiers isoA − isoB (deux dates ISO 'AAAA-MM-JJ'). Calcul en UTC (pas de DST). */
+function ecartJoursISO(isoA, isoB) {
+  var a = isoA.split('-'), b = isoB.split('-');
+  var uA = Date.UTC(+a[0], +a[1] - 1, +a[2]);
+  var uB = Date.UTC(+b[0], +b[1] - 1, +b[2]);
+  return Math.round((uA - uB) / 86400000);
+}
+
+/**
+ * Clé de catégorie CANONIQUE, indépendante du préfixe d'âge (M = « moins de », U = « under »).
+ * Le référentiel FFR reste fidèle à la source (M8/M10/M12/M15F) tandis que l'app utilise la
+ * notation U (U8/U10…) : on apparie donc TOUJOURS via cette clé, jamais par égalité exacte.
+ *   M8/U8/m8/u8 → '8' · M10/U10 → '10' · M12 → '12' · M14 → '14' · M15F/U15F → '15F'.
+ * Une valeur sans préfixe M/U (ou inconnue) est renvoyée telle quelle (en majuscules) : elle
+ * ne s'appariera simplement à rien, sans erreur.
+ */
+function normaliserCategorie(valeur) {
+  var s = String(valeur == null ? '' : valeur).trim().toUpperCase();
+  if (s === '') return '';
+  return s.replace(/^[MU](?=\d)/, ''); // retire M/U seulement s'il précède un chiffre
+}
+
+/* ---------------------- Moteur de vérification de conformité ---------------------- */
+
+/**
+ * Cœur PUR et testable de la vérification de conformité FFR : ne lit AUCUN classeur, tout
+ * vient des arguments (le référentiel est INJECTÉ). Testé par backend/Tests.gs.
+ *
+ * @param {{formes:Object[], dates:Object[], millesime:?string}} ref  référentiel injecté
+ * @param {(string|Date)} dateTournoi     date du tournoi (chaîne ISO ou objet Date)
+ * @param {string[]} categoriesPresentes  ex. ['U8','U10']
+ * @param {string} zoneVacances           ex. 'C' (vide ⇒ traité comme 'C' par l'appelant)
+ * @return {{bloquants:Object[], avertissements:Object[], formes:Object, refDisponible:boolean}}
+ */
+function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacances) {
+  ref = ref || {};
+  var formes = ref.formes || [];
+  var dates  = ref.dates  || [];
+
+  // MIGRATION DOUCE : référentiel absent ⇒ aucun contrôle.
+  if (!formes.length && !dates.length) {
+    return { bloquants: [], avertissements: [], formes: {}, refDisponible: false };
+  }
+
+  var dateISO = normaliserDateISO(dateTournoi);
+  if (!dateISO) {
+    return { bloquants: [], avertissements: [], formes: {}, refDisponible: true };
+  }
+  var moisTournoi = dateISO.slice(0, 7);
+  var cats = (categoriesPresentes || [])
+    .map(function (c) { return String(c).trim(); })
+    .filter(function (c) { return c !== ''; });
+  // Clés canoniques des catégories présentes (appariement M↔U), en gardant le lien vers le nom
+  // d'origine (celui de l'app) pour la restitution.
+  var clesPresentes = {}; // cléCanonique -> nom d'origine (app)
+  cats.forEach(function (c) { clesPresentes[normaliserCategorie(c)] = c; });
+  var zone = String(zoneVacances || '').trim().toUpperCase();
+
+  var bloquants = [], avertissements = [];
+  var vusBloc = {}, vusAvert = {};
+  function pousser(niveau, date, libelle, motif) {
+    var cle = date + '|' + libelle + '|' + motif;
+    if (niveau === 'bloc') {
+      if (vusBloc[cle]) return; vusBloc[cle] = true;
+      bloquants.push({ date: date, libelle: libelle, motif: motif });
+    } else {
+      if (vusAvert[cle]) return; vusAvert[cle] = true;
+      avertissements.push({ date: date, libelle: libelle, motif: motif });
+    }
+  }
+
+  // Une ligne de RefFFR_Dates concerne-t-elle nos catégories ? (colonne vide = toutes catégories)
+  // Appariement par clé canonique (M↔U), jamais par égalité exacte.
+  function recoupeCategories(ligne) {
+    var lc = String(ligne.categories == null ? '' : ligne.categories).trim();
+    if (lc === '') return true;
+    var liste = lc.split(',').map(function (x) { return normaliserCategorie(x); }).filter(Boolean);
+    if (!liste.length) return true;
+    for (var k in clesPresentes) { if (liste.indexOf(k) !== -1) return true; }
+    return false;
+  }
+  // ... et notre zone de vacances ? (colonne vide = toutes zones ; sinon liste séparée par virgules)
+  function concerneZone(ligne) {
+    var z = String(ligne.zone == null ? '' : ligne.zone).trim().toUpperCase();
+    if (z === '') return true;
+    var liste = z.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+    if (!liste.length) return true;
+    return liste.indexOf(zone) !== -1;
+  }
+
+  // RÈGLES 1 & 2 — dates fédérales (directe le jour même, puis fenêtre des 72 h).
+  for (var d = 0; d < dates.length; d++) {
+    var L = dates[d];
+    var dIso = normaliserDateISO(L.date);
+    if (!dIso) continue;
+    if (!concerneZone(L)) continue;
+    if (!recoupeCategories(L)) continue;
+    var flag = String(L.bloque_tournoi_club == null ? '' : L.bloque_tournoi_club).trim().toUpperCase();
+    if (flag === '' || flag === 'NON') continue; // NON ⇒ ignoré
+    var lib = String(L.libelle == null ? '' : L.libelle).trim() ||
+              String(L.type == null ? '' : L.type).trim();
+    var ecart = ecartJoursISO(dIso, dateISO);
+    var absJours = Math.abs(ecart);
+    if (ecart === 0) {
+      // Règle 1 — date fédérale exactement le jour du tournoi.
+      var motif1 = 'Date fédérale le jour même du tournoi.';
+      if (flag === 'OUI') pousser('bloc', dIso, lib, motif1);
+      else if (flag === 'AVERTISSEMENT') pousser('avert', dIso, lib, motif1);
+    } else if (absJours <= 3) {
+      // Règle 2 — règle des 72 h (art. 230-2 RG) : |écart| ≤ 3 jours, avant OU après.
+      var quand = (ecart < 0 ? absJours + ' jour(s) avant' : absJours + ' jour(s) après');
+      if (flag === 'OUI') {
+        pousser('bloc', dIso, lib, 'Date fédérale ' + quand + ' le tournoi (règle des 72 h, art. 230-2 RG).');
+      } else if (flag === 'AVERTISSEMENT') {
+        pousser('avert', dIso, lib, 'Date fédérale ' + quand + ' le tournoi (fenêtre de 72 h).');
+      }
+    }
+  }
+
+  // RÈGLE 3 — formes de jeu pour chaque catégorie PRÉSENTE (ligne categorie + mois du tournoi).
+  var formesMap = {};
+  for (var c = 0; c < cats.length; c++) {
+    var cat = cats[c];
+    var cleCat = normaliserCategorie(cat);
+    var ligneForme = null;
+    for (var f = 0; f < formes.length; f++) {
+      if (normaliserCategorie(formes[f].categorie) === cleCat &&
+          normaliserMois(formes[f].mois) === moisTournoi) { ligneForme = formes[f]; break; }
+    }
+    if (!ligneForme) continue;
+    var autor = String(ligneForme.tournoi_autorise == null ? '' : ligneForme.tournoi_autorise).trim().toUpperCase();
+    var note  = String(ligneForme.note == null ? '' : ligneForme.note).trim();
+    formesMap[cat] = {
+      forme_jeu:        String(ligneForme.forme_jeu == null ? '' : ligneForme.forme_jeu).trim(),
+      effectif:         String(ligneForme.effectif == null ? '' : ligneForme.effectif).trim(),
+      tournoi_autorise: autor,
+      note:             note
+    };
+    if (autor === 'NON') {
+      pousser('bloc', dateISO, cat, 'Catégorie ' + cat + ' non éligible à un tournoi ce mois-ci (' + moisTournoi + ').');
+    } else if (autor === 'LIMITE') {
+      pousser('avert', dateISO, cat, note || ('Catégorie ' + cat + ' : tournoi à format limité ce mois-ci.'));
+    }
+  }
+
+  return { bloquants: bloquants, avertissements: avertissements, formes: formesMap, refDisponible: true };
+}
+
+/**
+ * Vérification de conformité FFR « prête à l'emploi » : lit le référentiel du classeur actif
+ * (migration douce en cas d'absence) puis délègue au cœur pur evaluerConformiteFFR.
+ */
+function verifierConformiteFFR(dateTournoiISO, categoriesPresentes, zoneVacances) {
+  var ref;
+  try { ref = getRefFFR(SpreadsheetApp.openById(sheetId())); }
+  catch (e) { ref = { formes: [], dates: [], millesime: null }; }
+  return evaluerConformiteFFR(ref, dateTournoiISO, categoriesPresentes, zoneVacances);
+}
+
+/** Action doGet publique : conformité FFR pour une date + catégories + zone données. */
+function getConformiteFFR(classeur, params) {
+  var cats = String(params.categories == null ? '' : params.categories)
+    .split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  var zone = String(params.zone == null ? '' : params.zone).trim() || 'C';
+  return evaluerConformiteFFR(getRefFFR(classeur), params.date, cats, zone);
 }
 
 /* ===================== ÉCRITURE (doPost) ===================== */
@@ -740,7 +1007,8 @@ function enregistrerHoraires(classeur, data) {
  */
 function enregistrerInfosTournoi(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
-  var champs = ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_adresse', 'tournoi_description'];
+  var champs = ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_adresse', 'tournoi_description',
+    'zone_vacances'];
   ecrireChampsConfig(onglet, data, champs);
   return { ok: true };
 }
@@ -3549,10 +3817,49 @@ function signatureStructure(categories, equipes) {
   return hachageChaine(parts.join(';'));
 }
 
+/**
+ * Analyse les effectifs des catégories PRÉSENTES (comptage sur l'onglet Equipes, colonne
+ * `categorie`). Distingue deux cas, selon la règle FFR (minimum 3 équipes, matchs secs interdits) :
+ *   - `vides`  : catégorie présente avec 0 équipe → simple AVERTISSEMENT, la génération continue.
+ *   - `bloque` : catégorie présente avec 1 ou 2 équipes → BLOCAGE dur ([{categorie, nb}]).
+ * Aucune donnée externe requise (indépendant du référentiel RefFFR).
+ */
+function analyserEffectifsCategories(config, equipes) {
+  var comptes = {};
+  (equipes || []).forEach(function (e) {
+    var cat = String(e.categorie == null ? '' : e.categorie).trim();
+    if (cat) comptes[cat] = (comptes[cat] || 0) + 1;
+  });
+  var bloque = [], vides = [];
+  (config.categories || []).forEach(function (c) {
+    if (String(c.presente).toLowerCase() !== 'oui') return;
+    var cat = String(c.categorie == null ? '' : c.categorie).trim();
+    if (!cat) return;
+    var n = comptes[cat] || 0;
+    if (n === 0) vides.push(cat);
+    else if (n < 3) bloque.push({ categorie: cat, nb: n });
+  });
+  return { bloque: bloque, vides: vides };
+}
+
 function genererPoulesEtPlanning(classeur) {
   var config = lireConfig(classeur);
   var equipes = lireOngletSimple(classeur, 'Equipes');
   var global = config.global;
+
+  // RÈGLE FFR — minimum 3 équipes par catégorie présente (note d'accompagnement du 03/06/2026 :
+  // « à l'école de rugby les matchs secs ne sont pas autorisés, les seuls formats autorisés sont
+  // les tournois avec minimum 3 équipes »). Contrôle INDÉPENDANT du référentiel RefFFR.
+  //   - 1 ou 2 équipes  → BLOCAGE dur, AVANT toute écriture ;
+  //   - 0 équipe        → simple avertissement (catégorie ignorée), la génération continue.
+  var effectifs = analyserEffectifsCategories(config, equipes);
+  if (effectifs.bloque.length) {
+    var details = effectifs.bloque.map(function (m) { return m.categorie + ' (' + m.nb + ' équipe(s))'; }).join(', ');
+    return { error: 'Génération impossible : il faut au minimum 3 équipes par catégorie ' +
+      '(règle FFR École de Rugby — les matchs secs ne sont pas autorisés). ' +
+      'Catégorie(s) concernée(s) : ' + details + '.' };
+  }
+
   // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution).
   assurerColonneCategorie(classeur, 'nb_poules');
 
@@ -3561,6 +3868,10 @@ function genererPoulesEtPlanning(classeur) {
   var finApremProj = projeterFinApresMidi(config, r.poules, r.matchsFinaux);
   var finJournee = Math.max(r.maxFin, finApremProj);
   var avert = r.avert.slice();
+  // Catégories présentes sans aucune équipe : ignorées, mais on prévient l'organisateur.
+  effectifs.vides.forEach(function (cat) {
+    avert.push('Catégorie ' + cat + ' : présente mais sans équipe engagée — ignorée pour la génération.');
+  });
   var autoFin = String(global.heure_fin_auto || 'oui').toLowerCase() !== 'non';
   var cible = hmVersMin(global.heure_fin || '18:00');
   var heureFin;

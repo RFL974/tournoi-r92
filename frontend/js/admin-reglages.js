@@ -31,6 +31,9 @@ function injecterReglages(global, categories) {
   document.getElementById('zone-categories').innerHTML = afficherCategories(categories);
   // Affiche d'emblée les conseils des catégories déjà en mode Manuel (sans attendre une frappe).
   document.querySelectorAll('.bloc-terrains[data-terrains="manuel"]').forEach(verifierTerrainsBloc);
+  // Remplit la « Forme FFR attendue » des cartes si le référentiel est déjà chargé (sinon
+  // c'est majConformiteFFR qui déclenchera le remplissage une fois le référentiel disponible).
+  if (typeof majFormesCategories === 'function') majFormesCategories();
 }
 
 /**
@@ -206,6 +209,10 @@ function formulaireCategorie(cat) {
       '</div>' +
       blocTerrains(cat) +
       '<div class="grille-reglages">' + champs + '</div>' +
+      // Forme de jeu FFR attendue pour le mois du tournoi (lecture seule, rempli par
+      // admin-conformite-ffr.js : majFormesCategories). Masqué tant que le référentiel FFR
+      // n'est pas chargé ou qu'aucune ligne ne correspond à la catégorie + mois.
+      '<div class="ffr-forme" data-cat="' + echapper(nom) + '" hidden></div>' +
       blocFormatApresMidi(cat) +
       '<div class="ligne-action">' +
         '<button type="submit" class="bouton">Enregistrer</button>' +

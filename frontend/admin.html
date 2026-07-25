@@ -74,6 +74,19 @@
           <label class="reglage"><span class="r-libelle">Date</span>
             <input class="r-input" type="date" name="tournoi_date">
           </label>
+          <label class="reglage"><span class="r-libelle">Zone de vacances (contrôle FFR)</span>
+            <select class="r-input" name="zone_vacances">
+              <option value="A">Zone A</option>
+              <option value="B">Zone B</option>
+              <!-- Zone C (Île-de-France) présélectionnée par défaut : c'est la valeur par défaut
+                   de zone_vacances côté backend. Sans ce `selected`, un <select> sans valeur JS
+                   retomberait sur la 1re option (Zone A). -->
+              <option value="C" selected>Zone C (Île-de-France)</option>
+            </select>
+          </label>
+          <!-- Conformité FFR : résultat de verifierConformiteFFR (backend), rempli par
+               admin-conformite-ffr.js. Bloc INFORMATIF — n'empêche pas d'enregistrer la date. -->
+          <div id="bloc-conformite-ffr" class="ffr-zone"></div>
           <label class="reglage"><span class="r-libelle">Lieu</span>
             <input class="r-input" type="text" name="tournoi_lieu" placeholder="Ex : Stade Paul Langevin">
           </label>
@@ -541,6 +554,7 @@
   <script src="js/admin-infos-publication.js"></script>
   <script src="js/admin-invitations.js"></script>
   <script src="js/admin-reglages.js"></script>
+  <script src="js/admin-conformite-ffr.js"></script>
   <script src="js/admin-equipes.js"></script>
   <script src="js/admin-tableau-bord.js"></script>
   <script src="js/admin-generation.js"></script>

@@ -1870,3 +1870,57 @@ a.bouton { display: inline-block; text-decoration: none; }
 }
 .ae-confidentiel { margin: 0 0 10px; font-size: 0.82rem; }
 .ae-toggle { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 0.9rem; }
+
+/* ============================================================================
+   CONFORMITÉ FFR (bloc sous la date du tournoi + « Forme FFR attendue » des cartes)
+   Mêmes conventions de couleur que .terr-conseil : thème sombre par défaut,
+   surcharge .theme-clair pour le mode clair.
+   ============================================================================ */
+.ffr-zone { margin: 10px 0 4px; }
+.ffr-bloc {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+.ffr-bloc ul { margin: 6px 0 0; padding-left: 18px; }
+.ffr-bloc li { margin: 3px 0; }
+.ffr-motif { opacity: 0.85; }
+.ffr-note { margin: 4px 0 0; font-size: 0.8rem; opacity: 0.8; }
+
+/* Thème sombre (défaut) */
+.ffr-neutre { color: var(--bleu-ciel); background: rgba(184, 216, 248, 0.10); }
+.ffr-vert   { color: #c7f0d2; background: rgba(46, 200, 120, 0.14); }
+.ffr-orange { color: #ffe6b0; background: rgba(224, 158, 46, 0.16); }
+.ffr-rouge  { color: #ffd7d0; background: rgba(224, 76, 46, 0.16); }
+
+/* Forme FFR attendue (dans une carte catégorie) */
+.ffr-forme {
+  margin: 4px 0 10px;
+  font-size: 0.85rem;
+  color: var(--bleu-ciel);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.ffr-forme-libelle strong { color: inherit; }
+.ffr-tag {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.ffr-tag-rouge  { color: #ffd7d0; background: rgba(224, 76, 46, 0.22); }
+.ffr-tag-orange { color: #ffe6b0; background: rgba(224, 158, 46, 0.22); }
+.ffr-alerte-eff { color: #ffe6b0; font-size: 0.78rem; }
+
+/* Thème clair */
+.theme-clair .ffr-neutre { color: #33608f; background: #eef4fb; }
+.theme-clair .ffr-vert   { color: #14683a; background: #e6f7ee; }
+.theme-clair .ffr-orange { color: #8a5a0c; background: #fdf4e3; }
+.theme-clair .ffr-rouge  { color: #8a1c0c; background: #fdece9; }
+.theme-clair .ffr-forme  { color: #33608f; }
+.theme-clair .ffr-tag-rouge  { color: #8a1c0c; background: #fbe0da; }
+.theme-clair .ffr-tag-orange { color: #8a5a0c; background: #fbeecd; }
+.theme-clair .ffr-alerte-eff { color: #8a5a0c; }

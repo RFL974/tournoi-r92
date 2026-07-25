@@ -350,6 +350,21 @@ async function initAdmin() {
       try { this.showPicker(); } catch (e) { /* navigateur non compatible : comportement normal */ }
     });
 
+  // Conformité FFR : re-vérifie dès que la date OU la zone de vacances change.
+  document.getElementById('form-infos-tournoi').addEventListener('change', function (e) {
+    const n = e.target && e.target.name;
+    if ((n === 'tournoi_date' || n === 'zone_vacances') && typeof majConformiteFFR === 'function') {
+      majConformiteFFR();
+    }
+  });
+  // « Forme FFR attendue » des cartes : rafraîchit l'avertissement d'effectif à la saisie.
+  document.getElementById('zone-categories').addEventListener('input', function (e) {
+    const n = e.target && e.target.name;
+    if ((n === 'effectif_min' || n === 'effectif_max') && typeof majFormesCategories === 'function') {
+      majFormesCategories();
+    }
+  });
+
   // Assistant à cartes (surcouche de présentation) : une fois tout rendu et branché, on
   // laisse assistant.js réorganiser la page en cartes (ou non, selon la préférence mémorisée).
   if (typeof initAssistant === 'function') initAssistant();
