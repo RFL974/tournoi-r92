@@ -200,7 +200,7 @@ async function onRetirerAffiche() {
   bouton.disabled = true;
   try {
     await ecrireAdmin('supprimerAffiche', {});
-    configCourante = await apiGet('getConfig');
+    configCourante = await lireConfigAdmin();
     majInfosTournoi();
     afficherMessage(message, '🗑️ Affiche retirée.', 'ok');
   } catch (erreur) {
@@ -239,7 +239,7 @@ async function onEnregistrerInfos() {
       await ecrireAdmin('enregistrerAffiche', { affiche: afficheDataURI });
     }
     // On recharge la config pour refléter ce qui est réellement enregistré (dont l'affiche).
-    configCourante = await apiGet('getConfig');
+    configCourante = await lireConfigAdmin();
     majInfosTournoi();
     majDossier(); // le dossier club reflète les nouvelles infos
     document.getElementById('form-infos-tournoi').tournoi_affiche.value = ''; // vide le champ fichier
@@ -543,7 +543,7 @@ async function onPublier() {
       await ecrireAdmin('publierTournoi', { publie: 'non' });
     }
     // On recharge la config pour refléter le nouvel état.
-    configCourante = await apiGet('getConfig');
+    configCourante = await lireConfigAdmin();
     majInfosTournoi();
     document.getElementById('form-infos-tournoi').tournoi_affiche.value = ''; // vide le champ fichier
     majPublication();
