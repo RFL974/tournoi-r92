@@ -123,7 +123,11 @@ function creerOngletConfig(classeur) {
     ['email_expediteur', ''],
     // Zone de vacances scolaires (contrôle de conformité FFR). Défaut 'C' (Île-de-France).
     // Migration douce : si le paramètre est absent d'un Sheet en service, il est traité comme 'C'.
-    ['zone_vacances', 'C']
+    ['zone_vacances', 'C'],
+    // Nombre de demi-journées du tournoi (grille de temps FFR). Défaut 1 = lecture la PLUS PRUDENTE
+    // (le plafond de temps de jeu est un maximum : partir de la valeur basse fait alerter plus tôt).
+    // Migration douce : absent ⇒ traité comme 1. Question posée au directeur EDR (audit Q23).
+    ['nb_demi_journees', '1']
   ];
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
@@ -520,12 +524,28 @@ function lireRefFFRDates(classeur) {
   try { return lireOngletSimple(classeur, 'RefFFR_Dates'); } catch (e) { return []; }
 }
 
-/** Référentiel FFR public complet : { formes, dates, millesime }. Migration douce ⇒ listes vides. */
+/** Lecture de l'onglet RefFFR_Regles → tableau d'objets ; [] si l'onglet est absent/illisible.
+ *  Une ligne = un couple catégorie × forme × effectif : terrain, effectifs, ballon, carton. */
+function lireRefFFRRegles(classeur) {
+  try { return lireOngletSimple(classeur, 'RefFFR_Regles'); } catch (e) { return []; }
+}
+
+/** Lecture de l'onglet RefFFR_Temps → tableau d'objets ; [] si l'onglet est absent/illisible.
+ *  Grilles de temps clées par catégorie × effectif × nb_demi_journees × nb_equipes (SANS forme). */
+function lireRefFFRTemps(classeur) {
+  try { return lireOngletSimple(classeur, 'RefFFR_Temps'); } catch (e) { return []; }
+}
+
+/** Référentiel FFR public complet : { formes, dates, regles, temps, millesime }.
+ *  Migration douce ⇒ un onglet absent renvoie [] et n'empêche rien. */
 function getRefFFR(classeur) {
   var formes = lireRefFFRFormes(classeur);
   var dates  = lireRefFFRDates(classeur);
-  var millesime = millesimeRefFFR(dates) || millesimeRefFFR(formes);
-  return { formes: formes, dates: dates, millesime: millesime };
+  var regles = lireRefFFRRegles(classeur);
+  var temps  = lireRefFFRTemps(classeur);
+  var millesime = millesimeRefFFR(dates) || millesimeRefFFR(formes) ||
+                  millesimeRefFFR(regles) || millesimeRefFFR(temps);
+  return { formes: formes, dates: dates, regles: regles, temps: temps, millesime: millesime };
 }
 
 /**
@@ -534,11 +554,13 @@ function getRefFFR(classeur) {
  * Renvoie la CHAÎNE JSON (pas de re-sérialisation).
  */
 function refFFRJsonCache() {
+  // Clé VERSIONNÉE (`_v2`) : la charge utile a changé de forme (ajout de `regles` et `temps`).
+  // Sans nouvelle clé, un cache tiède servirait un objet incomplet (sans ces deux tableaux).
   var cache = CacheService.getScriptCache();
-  var s = cache.get('refffr_json');
+  var s = cache.get('refffr_json_v2');
   if (s) return s;
   s = JSON.stringify(getRefFFR(SpreadsheetApp.openById(sheetId())));
-  try { cache.put('refffr_json', s, 10); } catch (e) { /* cache indisponible : tant pis */ }
+  try { cache.put('refffr_json_v2', s, 10); } catch (e) { /* cache indisponible : tant pis */ }
   return s;
 }
 
@@ -669,26 +691,143 @@ function jourFrFFR(iso) {
   return m ? (m[3] + '/' + m[2] + '/' + m[1]) : String(iso);
 }
 
+/* ------------- Jointure RefFFR_Formes ↔ RefFFR_Regles / RefFFR_Temps (pur) ------------- */
+
+/**
+ * Éclate une ligne de RefFFR_Formes en produit cartésien de ses valeurs multiples. Les colonnes
+ * `forme_jeu` et `effectif` peuvent porter plusieurs valeurs séparées par « | »
+ * (ex. forme_jeu 'T+2|JCO' en septembre ; effectif '10x10|15x15' en M14). Renvoie un tableau de
+ * combinaisons { categorie, forme_jeu, effectif }. Pur, testable.
+ *   { categorie:'M14', forme_jeu:'RE', effectif:'10x10|15x15' } → [ {M14,RE,10x10}, {M14,RE,15x15} ]
+ * Sans le 3ᵉ terme (effectif), M14+7x7 désignerait à la fois Toucher+2, Jouer au contact ET Sevens.
+ */
+function eclaterFormesFFR(ligne) {
+  ligne = ligne || {};
+  var cat = String(ligne.categorie == null ? '' : ligne.categorie).trim();
+  function valeurs(v) {
+    return String(v == null ? '' : v).split('|')
+      .map(function (x) { return x.trim(); })
+      .filter(function (x) { return x !== ''; });
+  }
+  var formes = valeurs(ligne.forme_jeu); if (!formes.length) formes = [''];
+  var effs   = valeurs(ligne.effectif);  if (!effs.length)   effs = [''];
+  var out = [];
+  for (var i = 0; i < formes.length; i++) {
+    for (var j = 0; j < effs.length; j++) {
+      out.push({ categorie: cat, forme_jeu: formes[i], effectif: effs[j] });
+    }
+  }
+  return out;
+}
+
+/**
+ * Règles FFR (terrain / effectif / ballon / carton) joignant une catégorie pour les combinaisons
+ * forme × effectif du mois. Jointure sur categorie(canonique) + forme_jeu + effectif, filtrée par
+ * `joint_refffr_formes === 'OUI'` AVANT toute jointure (écarte le Sevens M14 et la ligne M15F, qui
+ * ne doivent jamais être proposés). Dédoublonne les lignes structurellement identiques (T+2 et JCO
+ * partagent leurs valeurs). Pur.
+ */
+function reglesPourCombosFFR(reglesRef, cleCat, combos) {
+  var out = [], vues = {};
+  (combos || []).forEach(function (co) {
+    for (var i = 0; i < (reglesRef || []).length; i++) {
+      var r = reglesRef[i];
+      if (String(r.joint_refffr_formes == null ? '' : r.joint_refffr_formes).trim().toUpperCase() !== 'OUI') continue;
+      if (normaliserCategorie(r.categorie) !== cleCat) continue;
+      if (String(r.forme_jeu == null ? '' : r.forme_jeu).trim() !== co.forme_jeu) continue;
+      if (String(r.effectif == null ? '' : r.effectif).trim() !== co.effectif) continue;
+      var regle = {
+        forme_jeu:            String(r.forme_jeu || '').trim(),
+        effectif:             String(r.effectif || '').trim(),
+        effectif_terrain:     String(r.effectif_terrain || '').trim(),
+        effectif_max_feuille: String(r.effectif_max_feuille || '').trim(),
+        terrain_longueur_m:   String(r.terrain_longueur_m || '').trim(),
+        terrain_largeur_m:    String(r.terrain_largeur_m || '').trim(),
+        terrain_libelle:      String(r.terrain_libelle || '').trim(),
+        ballon:               String(r.ballon || '').trim(),
+        carton_jaune_min:     String(r.carton_jaune_min || '').trim()
+      };
+      // Dédoublonnage sur les valeurs STRUCTURANTES (forme_jeu exclu : T+2/JCO diffèrent de nom,
+      // pas de contenu). Une combinaison ne joint qu'une ligne (break).
+      var cle = [regle.effectif_terrain, regle.effectif_max_feuille, regle.terrain_longueur_m,
+                 regle.terrain_largeur_m, regle.terrain_libelle, regle.ballon, regle.carton_jaune_min].join('¤');
+      if (!vues[cle]) { vues[cle] = true; out.push(regle); }
+      break;
+    }
+  });
+  return out;
+}
+
+/**
+ * Grilles + plafond de temps FFR pour une catégorie. Clé : categorie(canonique) + effectif +
+ * nb_demi_journees + nb_equipes — SANS forme_jeu (T+2 et JCO partagent l'effectif et la grille).
+ * IGNORE toute ligne dont `nb_demi_journees` est VIDE : c'est le piège du Sevens
+ * (M14/7x7/plafond 42), qui partagerait sinon categorie+effectif avec le Toucher+2 légitime. Les
+ * lignes à `nb_equipes` vide sont des « plafonds seuls » (3 demi-journées), pas des grilles.
+ * Muet (null) si rien ne correspond : ne fabrique aucune valeur. Pur.
+ */
+function tempsPourCategorieFFR(tempsRef, cleCat, effs, nbDJ, nbEq) {
+  nbDJ = String(nbDJ == null ? '' : nbDJ).trim();
+  nbEq = String(nbEq == null ? '' : nbEq).trim();
+  if (!nbDJ) return null;
+  var grilles = [], plafond = '';
+  for (var i = 0; i < (tempsRef || []).length; i++) {
+    var t = tempsRef[i];
+    var tdj = String(t.nb_demi_journees == null ? '' : t.nb_demi_journees).trim();
+    if (tdj === '') continue;               // piège Sevens : nb_demi_journees vide ⇒ ignorée
+    if (tdj !== nbDJ) continue;
+    if (normaliserCategorie(t.categorie) !== cleCat) continue;
+    var teff = String(t.effectif == null ? '' : t.effectif).trim();
+    if ((effs || []).indexOf(teff) === -1) continue;
+    var teq = String(t.nb_equipes == null ? '' : t.nb_equipes).trim();
+    if (teq !== '' && teq !== nbEq) continue; // grille d'un autre nombre d'équipes
+    var plaf = String(t.plafond_joueur_min == null ? '' : t.plafond_joueur_min).trim();
+    if (plaf && !plafond) plafond = plaf;
+    if (teq !== '') { // teq vide = plafond seul (pas de grille) ; teq === nbEq = grille de ce tournoi
+      grilles.push({
+        variante:               String(t.variante || '').trim(),
+        nb_periodes:            String(t.nb_periodes || '').trim(),
+        duree_periode_min:      String(t.duree_periode_min || '').trim(),
+        pause_periodes_min:     String(t.pause_periodes_min || '').trim(),
+        arret_entre_matchs_min: String(t.arret_entre_matchs_min || '').trim(),
+        rencontres_par_equipe:  String(t.rencontres_par_equipe || '').trim(),
+        nb_rencontres_total:    String(t.nb_rencontres_total || '').trim(),
+        organisation_poules:    String(t.organisation_poules || '').trim(),
+        plafond_joueur_min:     plaf
+      });
+    }
+  }
+  if (!grilles.length && !plafond) return null; // rien ne correspond ⇒ muet
+  return { grilles: grilles, plafond_joueur_min: plafond, nb_equipes: nbEq, nb_demi_journees: nbDJ };
+}
+
 /* ---------------------- Moteur de vérification de conformité ---------------------- */
 
 /**
  * Cœur PUR et testable de la vérification de conformité FFR : ne lit AUCUN classeur, tout
  * vient des arguments (le référentiel est INJECTÉ). Testé par backend/Tests.gs.
  *
- * @param {{formes:Object[], dates:Object[], millesime:?string}} ref  référentiel injecté
+ * @param {{formes:Object[], dates:Object[], regles:Object[], temps:Object[], millesime:?string}} ref
  * @param {(string|Date)} dateTournoi     date du tournoi (chaîne ISO ou objet Date)
  * @param {string[]} categoriesPresentes  ex. ['U8','U10']
  * @param {string} zoneVacances           ex. 'C' (vide ⇒ traité comme 'C' par l'appelant)
- * @return {{bloquants:Object[], avertissements:Object[], formes:Object, refDisponible:boolean}}
+ * @param {{equipesParCategorie:Object, nbDemiJournees:(string|number)}} [options]  requis pour la
+ *        section `temps` seulement ; ABSENT ⇒ section temps omise (migration douce, cœur inchangé).
+ * @return {{bloquants:Object[], avertissements:Object[], formes:Object, regles:Object, temps:Object,
+ *          refDisponible:boolean, couverture:Object}}
  */
-function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacances) {
+function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacances, options) {
   ref = ref || {};
   var formes = ref.formes || [];
   var dates  = ref.dates  || [];
 
+  var regles = ref.regles || [];
+  var temps  = ref.temps  || [];
+  var opts   = options || null;
+
   // MIGRATION DOUCE : référentiel absent ⇒ aucun contrôle, et aucune couverture connue.
   if (!formes.length && !dates.length) {
-    return { bloquants: [], avertissements: [], formes: {}, refDisponible: false,
+    return { bloquants: [], avertissements: [], formes: {}, regles: {}, temps: {}, refDisponible: false,
              couverture: { debut: null, fin: null, couverte: false } };
   }
 
@@ -698,7 +837,7 @@ function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacance
   var dateISO = normaliserDateISO(dateTournoi);
   if (!dateISO) {
     // Pas de date lisible : rien à comparer, couverture non vérifiable.
-    return { bloquants: [], avertissements: [], formes: {}, refDisponible: true,
+    return { bloquants: [], avertissements: [], formes: {}, regles: {}, temps: {}, refDisponible: true,
              couverture: { debut: bornes.debut, fin: bornes.fin, couverte: false } };
   }
   var moisTournoi = dateISO.slice(0, 7);
@@ -773,7 +912,10 @@ function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacance
   }
 
   // RÈGLE 3 — formes de jeu pour chaque catégorie PRÉSENTE (ligne categorie + mois du tournoi).
-  var formesMap = {};
+  // RÈGLES 4 & 5 — règles de jeu (terrain/effectif/ballon/carton) et grille de temps, jointes à
+  // la forme du mois. Purement INFORMATIVES : elles ne poussent aucun bloquant ni avertissement
+  // (la doctrine « proposer, laisser la main, alerter » se joue côté front sur les divergences).
+  var formesMap = {}, reglesMap = {}, tempsMap = {};
   for (var c = 0; c < cats.length; c++) {
     var cat = cats[c];
     var cleCat = normaliserCategorie(cat);
@@ -796,6 +938,20 @@ function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacance
     } else if (autor === 'LIMITE') {
       pousser('avert', dateISO, cat, note || ('Catégorie ' + cat + ' : tournoi à format limité ce mois-ci.'));
     }
+
+    // RÈGLE 4 — règles de jeu jointes (jointure à 3 termes, Sevens/M15F écartés par joint=OUI).
+    var combos = eclaterFormesFFR(ligneForme);
+    var reglesCat = reglesPourCombosFFR(regles, cleCat, combos);
+    if (reglesCat.length) reglesMap[cat] = reglesCat;
+
+    // RÈGLE 5 — grille de temps (seulement si nb d'équipes + nb de demi-journées fournis).
+    if (opts) {
+      var effsCat = combos.map(function (co) { return co.effectif; })
+        .filter(function (e, i, a) { return e && a.indexOf(e) === i; });
+      var nbEq = opts.equipesParCategorie && opts.equipesParCategorie[cat];
+      var grille = tempsPourCategorieFFR(temps, cleCat, effsCat, opts.nbDemiJournees, nbEq);
+      if (grille) tempsMap[cat] = grille;
+    }
   }
 
   // COUVERTURE DE SAISON — la date du tournoi tombe-t-elle dans la période couverte par le
@@ -817,6 +973,7 @@ function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacance
   }
 
   return { bloquants: bloquants, avertissements: avertissements, formes: formesMap,
+           regles: reglesMap, temps: tempsMap,
            refDisponible: true, couverture: { debut: bornes.debut, fin: bornes.fin, couverte: couverte } };
 }
 
@@ -831,12 +988,26 @@ function verifierConformiteFFR(dateTournoiISO, categoriesPresentes, zoneVacances
   return evaluerConformiteFFR(ref, dateTournoiISO, categoriesPresentes, zoneVacances);
 }
 
-/** Action doGet publique : conformité FFR pour une date + catégories + zone données. */
+/** Action doGet publique : conformité FFR pour une date + catégories + zone données.
+ *  Calcule côté serveur (on a le classeur) le nombre d'équipes par catégorie et lit
+ *  `nb_demi_journees` de Config (défaut 1) : ce sont les clés de la grille de temps FFR. */
 function getConformiteFFR(classeur, params) {
   var cats = String(params.categories == null ? '' : params.categories)
     .split(',').map(function (s) { return s.trim(); }).filter(Boolean);
   var zone = String(params.zone == null ? '' : params.zone).trim() || 'C';
-  return evaluerConformiteFFR(getRefFFR(classeur), params.date, cats, zone);
+
+  // Options pour la grille de temps : nb d'équipes par catégorie (comptées dans Equipes) et
+  // nombre de demi-journées (zone A de Config). Migration douce : lecture protégée, défaut 1.
+  var options = null;
+  try {
+    var config = lireConfig(classeur);
+    var equipes = lireOngletSimple(classeur, 'Equipes');
+    var comptes = analyserEffectifsCategories(config, equipes).comptes || {};
+    var ndj = String((config.global || {}).nb_demi_journees || '').trim() || '1';
+    options = { equipesParCategorie: comptes, nbDemiJournees: ndj };
+  } catch (e) { options = null; } // toute erreur ⇒ section temps simplement omise
+
+  return evaluerConformiteFFR(getRefFFR(classeur), params.date, cats, zone, options);
 }
 
 /* ===================== ÉCRITURE (doPost) ===================== */
@@ -4051,7 +4222,9 @@ function analyserEffectifsCategories(config, equipes) {
     if (n === 0) vides.push(cat);
     else if (n < 3) bloque.push({ categorie: cat, nb: n });
   });
-  return { bloque: bloque, vides: vides };
+  // `comptes` (nb d'équipes par catégorie) exposé en plus de bloque/vides — ajout NON cassant :
+  // les appelants existants n'utilisent que .bloque / .vides. Sert de clé à la grille de temps FFR.
+  return { bloque: bloque, vides: vides, comptes: comptes };
 }
 
 function genererPoulesEtPlanning(classeur) {
