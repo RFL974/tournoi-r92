@@ -36,7 +36,15 @@ function lancerTestsFFR() {
   testFFR_normaliserDateISO(etat);
   testFFR_normaliserMois(etat);
 
-  var bilan = 'FFR — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
+  // Config publique (listes blanches opt-in) + jetons du dossier club.
+  testCfg_vueLiveMinimale(etat);
+  testCfg_champInconnuNeSortPas(etat);
+  testCfg_vueInconnueEstRestrictive(etat);
+  testCfg_vueClubContientLesContacts(etat);
+  testCfg_categoriesFiltrees(etat);
+  testCfg_jetonDossier(etat);
+
+  var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
   if (etat.fail) { Logger.log('Échecs : ' + etat.echecs.join(' | ')); }
@@ -260,4 +268,137 @@ function testFFR_normaliserMois(etat) {
   _ffrAssert(etat, normaliserMois('2027-05-08') === '2027-05', 'normaliserMois : chaîne');
   _ffrAssert(etat, normaliserMois(new Date(2027, 4, 8)) === '2027-05', 'normaliserMois : objet Date');
   _ffrAssert(etat, normaliserMois('') === '', 'normaliserMois : vide => vide');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Config publique (listes blanches opt-in) + jetons du dossier club         */
+/*  filtrerConfigPublique est PURE (config injecté) ; les jetons passent par   */
+/*  un FAUX classeur (aucun Sheet réel, aucun effet de bord).                  */
+/* -------------------------------------------------------------------------- */
+
+/** Les huit champs personnels de la zone A — aucun ne doit sortir en vue live/invitation. */
+var _CFG_CHAMPS_PERSO = ['referent_nom', 'referent_tel', 'securite_referent_nom',
+  'securite_referent_tel', 'contact_reponse_nom', 'contact_reponse_tel',
+  'contact_reponse_email', 'email_expediteur'];
+
+/** Config factice complète (tous les champs personnels + un champ inventé + des non sensibles). */
+function _cfgFactice() {
+  return {
+    global: {
+      referent_nom: 'Jean Dupont', referent_tel: '0612345678',
+      securite_referent_nom: 'Paul Martin', securite_referent_tel: '0623456789',
+      contact_reponse_nom: 'Anne', contact_reponse_tel: '0634567890',
+      contact_reponse_email: 'contact@club.fr', email_expediteur: 'envoi@club.fr',
+      tournoi_nom: 'Tournoi Test', tournoi_date: '2027-06-13',
+      url_instagram: 'https://insta', repartition_grands_terrains: '{}',
+      champ_invente_futur: 'DONNEE A VENIR'
+    },
+    categories: [
+      { categorie: 'U10', presente: 'oui', format_apresmidi: 'CROISE',
+        effectif_min: '5', max_equipes_par_club: '2', colonne_secrete: 'X' }
+    ]
+  };
+}
+
+/** Vue live : AUCUN des huit champs personnels ; les champs non sensibles attendus présents. */
+function testCfg_vueLiveMinimale(etat) {
+  var live = filtrerConfigPublique(_cfgFactice(), 'live');
+  var fuite = _CFG_CHAMPS_PERSO.some(function (k) { return live.global.hasOwnProperty(k); });
+  _ffrAssert(etat, !fuite, 'vueLive : aucun des 8 champs personnels');
+  _ffrAssert(etat, live.global.tournoi_nom === 'Tournoi Test', 'vueLive : tournoi_nom présent');
+  _ffrAssert(etat, live.global.repartition_grands_terrains === '{}', 'vueLive : repartition_grands_terrains présent');
+}
+
+/** LE test clé : un champ INVENTÉ, absent de toutes les listes, ne sort dans AUCUNE vue. */
+function testCfg_champInconnuNeSortPas(etat) {
+  ['live', 'invitation', 'club'].forEach(function (vue) {
+    var r = filtrerConfigPublique(_cfgFactice(), vue);
+    _ffrAssert(etat, !r.global.hasOwnProperty('champ_invente_futur'),
+      'champInconnu : absent en vue ' + vue + ' (protège les données à venir)');
+  });
+}
+
+/** Vue inconnue ⇒ vue la plus fermée (live) : un champ propre à invitation n'apparaît pas. */
+function testCfg_vueInconnueEstRestrictive(etat) {
+  var inconnue = filtrerConfigPublique(_cfgFactice(), 'vue_qui_nexiste_pas');
+  _ffrAssert(etat, !inconnue.global.hasOwnProperty('url_instagram'),
+    'vueInconnue : url_instagram (invitation) absent → repli live');
+  _ffrAssert(etat, inconnue.global.tournoi_nom === 'Tournoi Test',
+    'vueInconnue : sert bien la vue live (tournoi_nom présent)');
+  var fuite = _CFG_CHAMPS_PERSO.some(function (k) { return inconnue.global.hasOwnProperty(k); });
+  _ffrAssert(etat, !fuite, 'vueInconnue : aucun champ personnel');
+}
+
+/** Vue club : contient bien les contacts jour J dont le dossier a besoin ; pas le champ inventé. */
+function testCfg_vueClubContientLesContacts(etat) {
+  var club = filtrerConfigPublique(_cfgFactice(), 'club');
+  _ffrAssert(etat, club.global.referent_nom === 'Jean Dupont', 'vueClub : referent_nom présent');
+  _ffrAssert(etat, club.global.referent_tel === '0612345678', 'vueClub : referent_tel présent (lien tel:)');
+  _ffrAssert(etat, club.global.securite_referent_tel === '0623456789', 'vueClub : securite_referent_tel présent');
+  // contact_reponse_email n'est PAS dans la vue club (il vit dans la vue invitation).
+  _ffrAssert(etat, !club.global.hasOwnProperty('email_expediteur'), 'vueClub : email_expediteur jamais exposé');
+}
+
+/** Catégories : une colonne non listée ne sort pas ; les colonnes attendues sortent. */
+function testCfg_categoriesFiltrees(etat) {
+  var inv = filtrerConfigPublique(_cfgFactice(), 'invitation');
+  var c = inv.categories[0] || {};
+  _ffrAssert(etat, !c.hasOwnProperty('colonne_secrete'), 'categoriesFiltrees : colonne non listée absente');
+  _ffrAssert(etat, c.categorie === 'U10', 'categoriesFiltrees : categorie présente');
+  _ffrAssert(etat, c.max_equipes_par_club === '2', 'categoriesFiltrees : max_equipes_par_club présent (invitation)');
+  // La vue live ne garde que categorie/presente : format_apresmidi ne sort pas.
+  var live = filtrerConfigPublique(_cfgFactice(), 'live');
+  _ffrAssert(etat, !(live.categories[0] || {}).hasOwnProperty('format_apresmidi'),
+    'categoriesFiltrees : format_apresmidi absent en vue live');
+}
+
+/* --- Jetons : faux classeur (getSheetByName → getDataRange → getValues), sans Sheet réel --- */
+
+function _cfgFakeSheet(rows) {
+  return { getDataRange: function () { return { getValues: function () { return rows; } }; } };
+}
+function _cfgFakeClasseur() {
+  // Onglet Config : ligne 0 ignorée par lireConfig (boucle r=1) ; puis paramètres ; puis en-tête
+  // « categorie » de la zone B ; puis une catégorie.
+  var config = [
+    ['— Réglages —', ''],
+    ['referent_nom', 'Jean Dupont'],
+    ['referent_tel', '0612345678'],
+    ['contact_reponse_email', 'contact@club.fr'],
+    ['tournoi_nom', 'Tournoi Test'],
+    ['categorie', 'presente', 'format_apresmidi'],
+    ['U10', 'oui', 'CROISE']
+  ];
+  var clubs = [
+    ['club_nom', 'club_contact_prenom', 'categories_engagees', 'club_token'],
+    ['Suresnes', 'Marie', 'U10,U12', 'TOKEN-VALIDE-123']
+  ];
+  return { getSheetByName: function (nom) {
+    if (nom === 'Config') return _cfgFakeSheet(config);
+    if (nom === 'ClubsInvites') return _cfgFakeSheet(clubs);
+    return null;
+  } };
+}
+
+/** getClubDossier / getConfigClub : jeton absent, invalide, valide. */
+function testCfg_jetonDossier(etat) {
+  var cl = _cfgFakeClasseur();
+  // Jeton ABSENT → erreur générique, aucune donnée.
+  var d0 = getClubDossier(cl, { club: 'Suresnes', token: '' });
+  _ffrAssert(etat, !!d0.error && !d0.club, 'jeton : getClubDossier sans jeton → erreur');
+  var c0 = getConfigClub(cl, { club: 'Suresnes', token: '' });
+  _ffrAssert(etat, !!c0.error && !c0.config, 'jeton : getConfigClub sans jeton → erreur');
+  // Jeton INVALIDE → erreur.
+  var d1 = getClubDossier(cl, { club: 'Suresnes', token: 'MAUVAIS' });
+  _ffrAssert(etat, !!d1.error, 'jeton : getClubDossier jeton invalide → erreur');
+  var c1 = getConfigClub(cl, { club: 'Suresnes', token: 'MAUVAIS' });
+  _ffrAssert(etat, !!c1.error, 'jeton : getConfigClub jeton invalide → erreur');
+  // Jeton VALIDE → données servies, vue club filtrée.
+  var d2 = getClubDossier(cl, { club: 'Suresnes', token: 'TOKEN-VALIDE-123' });
+  _ffrAssert(etat, d2.ok && d2.club && d2.club.club_nom === 'Suresnes', 'jeton : getClubDossier jeton valide → club');
+  var c2 = getConfigClub(cl, { club: 'Suresnes', token: 'TOKEN-VALIDE-123' });
+  _ffrAssert(etat, c2.ok && c2.config && c2.config.global.referent_nom === 'Jean Dupont',
+    'jeton : getConfigClub jeton valide → config club (referent_nom)');
+  _ffrAssert(etat, c2.config && !c2.config.global.hasOwnProperty('email_expediteur'),
+    'jeton : getConfigClub ne fuit jamais email_expediteur');
 }

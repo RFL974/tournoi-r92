@@ -188,7 +188,8 @@ function doGet(e) {
     var classeur = SpreadsheetApp.openById(sheetId());
     var resultat;
     switch (action) {
-      case 'getConfig':  resultat = lireConfig(classeur); break;
+      // getConfig est PUBLIC (page vitrine) → vue INVITATION filtrée, jamais lireConfig brut.
+      case 'getConfig':  resultat = lireConfigPublique(classeur, 'invitation'); break;
       case 'getEquipes': resultat = lireOngletSimple(classeur, 'Equipes'); break;
       case 'getPoules':  resultat = lireOngletSimple(classeur, 'Poules'); break;
       case 'getMatchs':  resultat = lireOngletSimple(classeur, 'Matchs'); break;
@@ -196,7 +197,10 @@ function doGet(e) {
       case 'getHistorique': resultat = lireHistorique(classeur); break;
       // Lecture PUBLIQUE réservée au dossier Phase 2 (dossier-club.html?club=…) : ne renvoie
       // QUE des champs non sensibles (nom, prénom, catégories engagées) — JAMAIS l'email.
-      case 'getClubDossier': resultat = getClubDossier(classeur, params.club); break;
+      // Dossier club : désormais PROTÉGÉ PAR JETON (comme getReponseInvitation) — exige club + token.
+      case 'getClubDossier': resultat = getClubDossier(classeur, params); break;
+      // Config du dossier club (contacts jour J, logistique, secours, tarifs) : PROTÉGÉE PAR JETON.
+      case 'getConfigClub': resultat = getConfigClub(classeur, params); break;
       // Lecture PUBLIQUE de la page de réponse : validée par le JETON du club (pas de clé admin).
       case 'getReponseInvitation': resultat = getReponseInvitation(classeur, params); break;
       // Conformité FFR pour une date + catégories + zone (informatif, aucune donnée personnelle).
@@ -217,10 +221,12 @@ function repondreJson(objet) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-/** Instantané complet des données publiques (même forme que l'action getAll). */
+/** Instantané des données publiques (action getAll). Config filtrée par la vue LIVE (liste
+ *  blanche opt-in) : la page des scores, à forte charge, ne reçoit que le strict nécessaire —
+ *  jamais de contact ni de donnée personnelle. */
 function construireSnapshot(classeur) {
   return {
-    config:  lireConfig(classeur),
+    config:  lireConfigPublique(classeur, 'live'),
     equipes: lireOngletSimple(classeur, 'Equipes'),
     poules:  lireOngletSimple(classeur, 'Poules'),
     matchs:  lireOngletSimple(classeur, 'Matchs')
@@ -242,12 +248,16 @@ function construireSnapshot(classeur) {
  * données, gardées plus longtemps — au pire ~10 s de retard, invisible pour du live).
  */
 function snapshotJsonCache() {
+  // Clés VERSIONNÉES (`_v2`) : le contenu de getAll a changé (config désormais filtrée en vue
+  // LIVE). Sans nouvelle clé, la copie de SECOURS gardée 6 h aurait continué à servir l'ancien
+  // snapshot (config complète, contacts inclus) jusqu'à 6 h APRÈS le déploiement. Le versionnement
+  // rend l'ancien cache inaccessible : dès le déploiement, seule la nouvelle vue est servie.
   var cache = CacheService.getScriptCache();
-  var s = cache.get('snapshot_json');
+  var s = cache.get('snapshot_json_v2');
   if (s) return s;
 
   // Cache expiré. Quelqu'un reconstruit déjà ? → on sert la copie de secours sans attendre.
-  var secours = cache.get('snapshot_json_secours');
+  var secours = cache.get('snapshot_json_secours_v2');
   if (secours && cache.get('snapshot_regen')) return secours;
 
   // On devient LE reconstructeur : jeton posé ~15 s (filet si la reconstruction échoue).
@@ -272,8 +282,8 @@ function mettreEnCacheSnapshot(cache, json) {
     // silence → cache jamais rempli → chaque getAll relisait le Sheet (saturation).
     var octets = Utilities.newBlob(json).getBytes().length;
     if (octets < 95000) {
-      cache.put('snapshot_json', json, 10);             // copie fraîche (10 s)
-      cache.put('snapshot_json_secours', json, 21600);  // copie de secours (6 h, le max)
+      cache.put('snapshot_json_v2', json, 10);             // copie fraîche (10 s)
+      cache.put('snapshot_json_secours_v2', json, 21600);  // copie de secours (6 h, le max)
     }
   } catch (e) { /* cache indisponible : on ignore, getAll relira le Sheet */ }
 }
@@ -368,6 +378,12 @@ function indexEnteteCategories(donnees) {
   return -1;
 }
 
+/**
+ * ⚠️ USAGE INTERNE UNIQUEMENT (actions protégées par la clé admin). NE JAMAIS renvoyer ce
+ * résultat à un appelant NON AUTHENTIFIÉ : la zone A de Config contient des données personnelles
+ * (referent_nom/tel, securite_referent_*, contact_reponse_*, email_expediteur). Pour toute
+ * lecture PUBLIQUE, passer OBLIGATOIREMENT par `lireConfigPublique` (liste blanche opt-in).
+ */
 function lireConfig(classeur) {
   var onglet = classeur.getSheetByName('Config');
   if (!onglet) return { global: {}, categories: [] };
@@ -396,6 +412,83 @@ function lireConfig(classeur) {
     }
   }
   return { global: global, categories: categories };
+}
+
+/* ===================== CONFIG PUBLIQUE (listes blanches OPT-IN) =====================
+ * PRINCIPE NON NÉGOCIABLE : « rien ne sort sauf ce qui est nommément autorisé » (opt-in), et
+ * non « tout sort sauf ce qu'on pense à retirer » (opt-out). Un paramètre ajouté dans Config
+ * plus tard est donc PRIVÉ PAR DÉFAUT — personne n'a à y penser. `lireConfig` (ci-dessus) reste
+ * réservée à l'usage interne authentifié ; toute lecture publique passe par `lireConfigPublique`.
+ *
+ * Trois vues, déclarées CÔTE À CÔTE pour se lire d'un coup d'œil :
+ *   - live       : servie par getAll (page des scores, forte charge) — la plus MINIMALE ;
+ *   - invitation : servie par getConfig (page vitrine publique) — sans téléphone (décision S3) ;
+ *   - club       : servie par getConfigClub (dossier, PROTÉGÉ PAR JETON) — contacts jour J inclus.
+ * Une vue inconnue retombe sur `live` (la plus fermée) : le défaut est FERMÉ.
+ * ================================================================================== */
+var CONFIG_PUBLIQUE_VUES = {
+  // Page des scores : le strict nécessaire. Aucune donnée personnelle, aucun réglage d'édition.
+  live: {
+    global: ['tournoi_publie', 'tournoi_nom', 'repartition_grands_terrains'],
+    categories: ['categorie', 'presente']
+  },
+  // Page d'invitation (vitrine publique). contact_reponse_email/nom OUI ; contact_reponse_tel NON
+  // (le portable d'un bénévole n'a rien à faire sur une page mise en avant — décision 1.3, S3).
+  invitation: {
+    global: ['tournoi_nom', 'tournoi_description', 'tournoi_affiche_id', 'tournoi_date', 'heure_rdv',
+             'buvette_disponible', 'espace_sandwich_disponible', 'boutique_r92_disponible',
+             'tarif_engagement_oui', 'tarif_engagement_montant', 'date_limite_reponse',
+             'url_instagram', 'url_site_association',
+             'contact_reponse_nom', 'contact_reponse_email'],
+    categories: ['categorie', 'presente', 'effectif_min', 'max_equipes_par_club', 'arbitrage_organisation']
+  },
+  // Dossier club (PROTÉGÉ PAR JETON) : le club invité voit les contacts jour J (referent_tel en
+  // lien cliquable tel:), la logistique, les secours, les tarifs. Légitime car derrière le jeton.
+  club: {
+    global: ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_adresse', 'tournoi_description',
+             'tournoi_affiche_id', 'url_tournoi_public', 'repartition_grands_terrains',
+             'heure_debut', 'heure_rdv', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
+             'heure_fin', 'heure_fin_communiquee', 'marge_fin_communiquee_min',
+             'logistique_parking', 'logistique_buvette', 'logistique_vestiaires',
+             'parking_texte', 'parking_photo_id',
+             'tarif_engagement_oui', 'tarif_engagement_montant', 'tarif_engagement_modalites',
+             'date_limite_confirmation', 'assurance_attestation_requise',
+             'encadrement_ratio', 'encadrement_diplomes', 'table_marque_organisation',
+             'securite_secours_oui', 'securite_secours_precisions',
+             'securite_referent_identique', 'securite_referent_nom', 'securite_referent_tel',
+             'referent_nom', 'referent_tel'],
+    categories: ['categorie', 'presente', 'format_apresmidi', 'format_mi_temps', 'duree_mi_temps_min',
+                 'pause_mi_temps_min', 'recup_entre_matchs_min', 'effectif_min', 'effectif_max',
+                 'reglement', 'arbitrage_organisation', 'terrains']
+  }
+};
+
+/**
+ * Cœur PUR et testable : filtre un objet config { global, categories } selon la vue demandée.
+ * N'accède à AUCUN classeur (le config est injecté) — testé par backend/Tests.gs. Un champ
+ * absent de la liste de la vue NE SORT PAS, quelle qu'en soit la raison. Vue inconnue ⇒ `live`.
+ */
+function filtrerConfigPublique(config, vue) {
+  var v = CONFIG_PUBLIQUE_VUES[vue] || CONFIG_PUBLIQUE_VUES.live; // défaut FERMÉ (le plus restrictif)
+  config = config || {};
+  var gIn = config.global || {};
+  var gOut = {};
+  v.global.forEach(function (k) {
+    if (Object.prototype.hasOwnProperty.call(gIn, k)) gOut[k] = gIn[k];
+  });
+  var catsOut = (config.categories || []).map(function (c) {
+    var o = {};
+    v.categories.forEach(function (k) {
+      if (c && Object.prototype.hasOwnProperty.call(c, k)) o[k] = c[k];
+    });
+    return o;
+  });
+  return { global: gOut, categories: catsOut };
+}
+
+/** SEUL point de sortie de la config vers l'extérieur : lit le classeur puis applique la vue. */
+function lireConfigPublique(classeur, vue) {
+  return filtrerConfigPublique(lireConfig(classeur), vue);
 }
 
 /* ===================== RÉFÉRENTIEL FFR (RefFFR_Formes / RefFFR_Dates) =====================
@@ -756,6 +849,12 @@ var ACTIONS_SCORES = { enregistrerScore: true };
    (le jeton doit correspondre au club) — jamais par la clé admin. */
 var ACTIONS_TOKEN = { repondreInvitation: true };
 
+/* Actions de LECTURE passant par doPost (pour exiger la clé admin, qu'une URL doGet ne doit pas
+ * porter) mais qui NE MODIFIENT RIEN : elles NE prennent PAS le verrou d'écriture. L'admin
+ * recharge la config à de nombreux endroits ; un jour de tournoi, prendre le verrou d'écriture
+ * la mettrait en concurrence avec la saisie des scores. Ces actions le court-circuitent. */
+var ACTIONS_LECTURE = { getConfigAdmin: true };
+
 function doPost(e) {
   var lock, classeur, snapshotJson = null;
   try {
@@ -769,6 +868,19 @@ function doPost(e) {
       var nomCle = ACTIONS_SCORES[action] ? 'CLE_SCORES' : 'CLE_ADMIN';
       var acces = verifierCle(requete, nomCle);
       if (!acces.ok) return repondreJson({ error: acces.msg, acces_refuse: true });
+    }
+
+    // LECTURES authentifiées (clé admin déjà vérifiée ci-dessus) : elles ne modifient rien →
+    // on répond AVANT la prise du verrou d'écriture, pour ne jamais entrer en concurrence avec
+    // la saisie des scores le jour du tournoi. Aucun rafraîchissement de cache (rien n'a changé).
+    if (ACTIONS_LECTURE[action]) {
+      classeur = SpreadsheetApp.openById(sheetId());
+      var lecture;
+      switch (action) {
+        case 'getConfigAdmin': lecture = { ok: true, config: lireConfig(classeur) }; break;
+        default: lecture = { error: 'Action inconnue : ' + action };
+      }
+      return repondreJson(lecture);
     }
 
     // Verrou d'écriture : sérialise les écritures concurrentes (deux marqueurs qui valident
@@ -1423,22 +1535,30 @@ function colClubInvite(onglet, nomEntete) {
  * Ne renvoie QUE des champs non sensibles — JAMAIS l'email de contact. Comparaison souple
  * sur le nom (clé). { ok:true, club:null } si le club est absent / non renseigné.
  */
-function getClubDossier(classeur, nom) {
-  nom = String(nom || '').trim();
-  if (!nom) return { ok: true, club: null };
-  var onglet = classeur.getSheetByName('ClubsInvites');
-  if (!onglet) return { ok: true, club: null };
-  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
-  for (var i = 0; i < clubs.length; i++) {
-    if (memeTexteSouple(clubs[i].club_nom, nom)) {
-      return { ok: true, club: {
-        club_nom:            String(clubs[i].club_nom || ''),
-        club_contact_prenom: String(clubs[i].club_contact_prenom || ''),
-        categories_engagees: String(clubs[i].categories_engagees || '')
-      } };
-    }
-  }
-  return { ok: true, club: null };
+/**
+ * Infos NON sensibles d'un club pour son dossier (accueil personnalisé + filtrage du format
+ * sportif) — PROTÉGÉ PAR JETON (mêmes garanties que getReponseInvitation). Sans jeton valide,
+ * erreur générique : aucune donnée révélée, aucun email jamais renvoyé.
+ */
+function getClubDossier(classeur, params) {
+  var club = trouverClubParToken(classeur, params.club, params.token);
+  if (!club) return { error: 'Lien invalide ou expiré.' };
+  return { ok: true, club: {
+    club_nom:            String(club.club_nom || ''),
+    club_contact_prenom: String(club.club_contact_prenom || ''),
+    categories_engagees: String(club.categories_engagees || '')
+  } };
+}
+
+/**
+ * Config du DOSSIER club (vue `club` : contacts jour J, logistique, secours, tarifs) —
+ * PROTÉGÉE PAR JETON. Alimente les sections personnalisées de dossier-club.html. Sans jeton
+ * valide : erreur générique. Mutualise `trouverClubParToken` avec getClubDossier / getReponseInvitation.
+ */
+function getConfigClub(classeur, params) {
+  var club = trouverClubParToken(classeur, params.club, params.token);
+  if (!club) return { error: 'Lien invalide ou expiré.' };
+  return { ok: true, config: lireConfigPublique(classeur, 'club') };
 }
 
 /* ===================== RÉPONSE EN LIBRE-SERVICE DU CLUB (Sprint 6) ===================== */
