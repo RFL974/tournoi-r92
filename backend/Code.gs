@@ -801,6 +801,136 @@ function tempsPourCategorieFFR(tempsRef, cleCat, effs, nbDJ, nbEq) {
   return { grilles: grilles, plafond_joueur_min: plafond, nb_equipes: nbEq, nb_demi_journees: nbDJ };
 }
 
+/* ------------- Application des valeurs FFR à une catégorie (pur, session 6) ------------- */
+
+/**
+ * Choisit LA grille de temps à appliquer. Réutilise `tempsPourCategorieFFR` (clé complète
+ * catégorie + effectif + nb_demi_journees + nb_equipes), puis lève l'ambiguïté des variantes :
+ *  - une seule grille ⇒ elle ;
+ *  - plusieurs grilles (variantes A/B du jeu à 10) ⇒ celle dont `variante` correspond, sinon null
+ *    (on n'écrit alors AUCUNE durée : le choix appartient à l'organisateur).
+ * Renvoie null si aucune grille (nb d'équipes / demi-journées hors des lignes publiées).
+ */
+function choisirGrilleTempsFFR(tempsRef, cleCat, effectif, nbDJ, nbEq, variante) {
+  var t = tempsPourCategorieFFR(tempsRef, cleCat, [effectif], nbDJ, nbEq);
+  if (!t || !t.grilles || !t.grilles.length) return null;
+  if (t.grilles.length === 1) return t.grilles[0];
+  var v = String(variante == null ? '' : variante).trim().toUpperCase();
+  if (!v) return null; // variantes présentes mais aucune choisie ⇒ pas d'écriture de temps
+  for (var i = 0; i < t.grilles.length; i++) {
+    if (String(t.grilles[i].variante || '').trim().toUpperCase() === v) return t.grilles[i];
+  }
+  return null;
+}
+
+/**
+ * Fusionne les champs FFR (zone B) DANS la ligne de catégorie existante et renvoie l'objet COMPLET
+ * à réécrire. Indispensable : `enregistrerCategorie` réécrit la LIGNE ENTIÈRE — un objet partiel
+ * effacerait terrains / format_apresmidi / reglement / effectif_min… (leçon session 3). Pur.
+ */
+function fusionnerCategorieFFR(categorieExistante, champsZoneB) {
+  var out = {};
+  var src = categorieExistante || {};
+  for (var k in src) { if (Object.prototype.hasOwnProperty.call(src, k)) out[k] = src[k]; }
+  for (var c in (champsZoneB || {})) {
+    if (Object.prototype.hasOwnProperty.call(champsZoneB, c)) out[c] = champsZoneB[c];
+  }
+  return out;
+}
+
+/**
+ * Cœur PUR de l'application des valeurs FFR à UNE catégorie, pour la date du tournoi. Ne lit AUCUN
+ * classeur : tout est injecté. Réutilise `eclaterFormesFFR` / `reglesPourCombosFFR` /
+ * `tempsPourCategorieFFR` (session 5) — aucune seconde recherche, aucune valeur fabriquée.
+ *
+ * @param {{formes,dates,regles,temps,millesime}} ref  référentiel injecté
+ * @param {string} categorieApp        ex 'U12' (réconcilié via normaliserCategorie)
+ * @param {string} dateISO             'AAAA-MM-JJ'
+ * @param {(string|number)} nbDemiJournees  clé de la grille de temps (défaut 1 côté appelant)
+ * @param {(string|number)} nbEquipes       clé de la grille de temps (nb d'équipes de la catégorie)
+ * @param {?string} variante           'A' | 'B' | null (jeu à 10 seulement)
+ * @param {Object} dimensionsActuelles l'objet dimensions_categories courant (fusion, jamais remplacement)
+ * @return {{champsZoneB:Object, dimensions:Object|null, ignores:Array, forme:Object|null,
+ *          ambigu:boolean, formesDisponibles:Array}}
+ */
+function calculerApplicationFFR(ref, categorieApp, dateISO, nbDemiJournees, nbEquipes, variante, dimensionsActuelles) {
+  var vide = { champsZoneB: {}, dimensions: null, ignores: [], forme: null, ambigu: false, formesDisponibles: [] };
+  ref = ref || {};
+  var cleCat = normaliserCategorie(categorieApp);
+  var iso = normaliserDateISO(dateISO);
+  if (!cleCat || !iso) return vide;
+  var formes = ref.formes || [];
+  if (!formes.length) return vide; // MIGRATION DOUCE : référentiel absent ⇒ rien à appliquer
+  var mois = iso.slice(0, 7);
+
+  // Ligne de forme du mois pour la catégorie.
+  var ligneForme = null;
+  for (var f = 0; f < formes.length; f++) {
+    if (normaliserCategorie(formes[f].categorie) === cleCat &&
+        normaliserMois(formes[f].mois) === mois) { ligneForme = formes[f]; break; }
+  }
+  if (!ligneForme) return vide;
+
+  var combos = eclaterFormesFFR(ligneForme);
+  var regles = reglesPourCombosFFR(ref.regles || [], cleCat, combos); // Sevens/M15F déjà filtrés (piège 5)
+  if (!regles.length) return vide; // aucune règle joignable ⇒ rien à appliquer
+  if (regles.length > 1) {
+    // AMBIGUÏTÉ réglementaire (ex. U14 10x10|15x15) : on N'APPLIQUE RIEN, on expose les formes.
+    // Doctrine §1.12 : devant une ambiguïté, l'app attend, elle ne tranche jamais par défaut.
+    return { champsZoneB: {}, dimensions: null, ignores: [], forme: null, ambigu: true,
+             formesDisponibles: regles.map(function (r) { return { forme_jeu: r.forme_jeu, effectif: r.effectif }; }) };
+  }
+
+  var r = regles[0];
+  var champsZoneB = {}, ignores = [], dimensions = null;
+
+  // Effectif maximum sur la feuille (RefFFR_Regles ; indépendant du nombre d'équipes).
+  if (String(r.effectif_max_feuille == null ? '' : r.effectif_max_feuille).trim() !== '') {
+    champsZoneB.effectif_max = String(r.effectif_max_feuille).trim();
+  }
+
+  // Terrain / dimensions.
+  var entreeCourante = dimensionsActuelles && dimensionsActuelles[categorieApp];
+  var dejaPlein = !!(entreeCourante && entreeCourante.plein === true);
+  var lg = String(r.terrain_longueur_m == null ? '' : r.terrain_longueur_m).trim();
+  var la = String(r.terrain_largeur_m == null ? '' : r.terrain_largeur_m).trim();
+  if (dejaPlein) {
+    // Piège 1 : plein terrain (réglage sourcé) — on ne l'écrase JAMAIS.
+    ignores.push({ champ: 'dimensions_categories', raison: 'Catégorie en plein terrain (plein:true) — réglage conservé.' });
+  } else if (lg !== '' && la !== '') {
+    // Piège 4 : fusion — on clone l'existant et on ne touche QUE cette catégorie.
+    dimensions = {};
+    for (var k in (dimensionsActuelles || {})) {
+      if (Object.prototype.hasOwnProperty.call(dimensionsActuelles, k)) dimensions[k] = dimensionsActuelles[k];
+    }
+    var nl = parseFloat(lg), nw = parseFloat(la);
+    dimensions[categorieApp] = { l: isFinite(nl) ? nl : lg, w: isFinite(nw) ? nw : la };
+  } else {
+    // Piège 2 : « terrain normal » — pas de dimension chiffrée, c'EST la donnée FFR.
+    ignores.push({ champ: 'dimensions_categories', raison: r.terrain_libelle
+      ? ('Terrain non chiffré : « ' + String(r.terrain_libelle).trim() + ' ».')
+      : 'Terrain non chiffré par la FFR.' });
+  }
+
+  // Temps (RefFFR_Temps, clé complète cat+effectif+nb_demi_journees+nb_equipes, variante levée).
+  var grille = choisirGrilleTempsFFR(ref.temps || [], cleCat, r.effectif, nbDemiJournees, nbEquipes, variante);
+  if (grille) {
+    if (String(grille.nb_periodes || '').trim() !== '')            champsZoneB.format_mi_temps = String(grille.nb_periodes).trim();
+    if (String(grille.duree_periode_min || '').trim() !== '')      champsZoneB.duree_mi_temps_min = String(grille.duree_periode_min).trim();
+    if (String(grille.pause_periodes_min || '').trim() !== '')     champsZoneB.pause_mi_temps_min = String(grille.pause_periodes_min).trim();
+    if (String(grille.arret_entre_matchs_min || '').trim() !== '') champsZoneB.recup_entre_matchs_min = String(grille.arret_entre_matchs_min).trim();
+  } else {
+    // Aucune grille pour ce nb d'équipes / demi-journées : on n'écrit AUCUNE durée (jamais
+    // d'interpolation). effectif_max et dimensions, issus de RefFFR_Regles, restent appliqués.
+    ignores.push({ champ: 'temps', raison: 'Aucune grille de temps FFR pour ' +
+      String(nbEquipes == null ? '?' : nbEquipes) + ' équipe(s) / ' +
+      String(nbDemiJournees == null ? '?' : nbDemiJournees) + ' demi-journée(s).' });
+  }
+
+  return { champsZoneB: champsZoneB, dimensions: dimensions, ignores: ignores,
+           forme: { forme_jeu: r.forme_jeu, effectif: r.effectif }, ambigu: false, formesDisponibles: [] };
+}
+
 /* ---------------------- Moteur de vérification de conformité ---------------------- */
 
 /**
@@ -1010,6 +1140,71 @@ function getConformiteFFR(classeur, params) {
   return evaluerConformiteFFR(getRefFFR(classeur), params.date, cats, zone, options);
 }
 
+/**
+ * ÉCRITURE (clé admin) : applique les valeurs FFR d'UNE catégorie à `Config`, pour la date du
+ * tournoi. Le frontend n'envoie QUE `{ categorie, date, variante }` — le serveur relit le
+ * référentiel et dérive lui-même les valeurs via `calculerApplicationFFR` (sinon la page pourrait
+ * écrire n'importe quoi en se réclamant de la FFR). `nb_equipes` (comptes) et `nb_demi_journees`
+ * (Config, défaut 1) sont calculés ici, comme dans getConformiteFFR.
+ *
+ * Écrit : zone B par RELECTURE + FUSION + ligne complète (jamais partielle) ; `dimensions_categories`
+ * par fusion de l'objet global. Renvoie le détail de ce qui a été écrit ET ignoré (avec raisons).
+ */
+function appliquerValeursFFR(classeur, data) {
+  var categorie = String(data.categorie == null ? '' : data.categorie).trim();
+  if (!categorie) return { error: 'Catégorie manquante.' };
+  var dateISO = normaliserDateISO(data.date);
+  if (!dateISO) return { error: 'Date du tournoi manquante ou illisible.' };
+  var variante = (data.variante == null || data.variante === '') ? null : String(data.variante).trim();
+
+  var config = lireConfig(classeur);
+  var equipes = lireOngletSimple(classeur, 'Equipes');
+  var comptes = analyserEffectifsCategories(config, equipes).comptes || {};
+  var nbEquipes = comptes[categorie];
+  var nbDemiJournees = String((config.global || {}).nb_demi_journees || '').trim() || '1';
+  var dims = {};
+  try { if ((config.global || {}).dimensions_categories) dims = JSON.parse(config.global.dimensions_categories) || {}; }
+  catch (e) { dims = {}; }
+
+  var res = calculerApplicationFFR(getRefFFR(classeur), categorie, dateISO,
+    nbDemiJournees, nbEquipes, variante, dims);
+
+  // Ambiguïté (plusieurs formes ce mois-ci) : on n'écrit RIEN, on renvoie les formes à choisir.
+  if (res.ambigu) {
+    return { ok: true, applique: false, ambigu: true, categorie: categorie,
+             formesDisponibles: res.formesDisponibles };
+  }
+
+  var aEcrire = Object.keys(res.champsZoneB).length > 0 || res.dimensions;
+  if (!aEcrire) {
+    return { ok: true, applique: false, categorie: categorie, forme: res.forme, ignores: res.ignores };
+  }
+
+  // Zone B : relecture de la ligne EXISTANTE + fusion + écriture de la ligne COMPLÈTE.
+  if (Object.keys(res.champsZoneB).length > 0) {
+    var catExistante = null;
+    (config.categories || []).forEach(function (c) {
+      if (String(c.categorie == null ? '' : c.categorie).trim() === categorie) catExistante = c;
+    });
+    if (!catExistante) return { error: 'Catégorie « ' + categorie + ' » absente des réglages.' };
+    var fusion = fusionnerCategorieFFR(catExistante, res.champsZoneB);
+    fusion.categorie = categorie; // clé, jamais modifiée
+    var rZoneB = enregistrerCategorie(classeur, fusion);
+    if (rZoneB && rZoneB.error) return { error: rZoneB.error };
+  }
+
+  // dimensions_categories : objet global fusionné (déjà fusionné par calculerApplicationFFR).
+  if (res.dimensions) {
+    ecrireChampsConfig(classeur.getSheetByName('Config'),
+      { dimensions_categories: JSON.stringify(res.dimensions) }, ['dimensions_categories']);
+  }
+
+  return { ok: true, applique: true, categorie: categorie, forme: res.forme,
+           champsZoneB: res.champsZoneB,
+           dimensions: res.dimensions ? res.dimensions[categorie] : null,
+           ignores: res.ignores };
+}
+
 /* ===================== ÉCRITURE (doPost) ===================== */
 
 /* Actions protégées par la clé SCORES (les autres écritures exigent la clé ADMIN). */
@@ -1072,6 +1267,7 @@ function doPost(e) {
       case 'supprimerEquipesCategorie': resultat = supprimerEquipesCategorie(classeur, requete.categorie); break;
       case 'enregistrerHoraires':  resultat = enregistrerHoraires(classeur, requete); break;
       case 'enregistrerCategorie': resultat = enregistrerCategorie(classeur, requete); break;
+      case 'appliquerValeursFFR':  resultat = appliquerValeursFFR(classeur, requete); break;
       case 'supprimerCategorie':   resultat = supprimerCategorie(classeur, requete.categorie); break;
       case 'enregistrerScore':     resultat = enregistrerScore(classeur, requete); break;
       case 'genererPoulesEtPlanning': resultat = genererPoulesEtPlanning(classeur); break;

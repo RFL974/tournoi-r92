@@ -112,15 +112,17 @@ par défaut, sur la catégorie la plus concernée. Corrigé en `CROISE`, `param_
 Toutes les colonnes récentes bénéficient d'une **migration douce** (ajout automatique à droite,
 vide = comportement historique).
 
-## 1.4 — Actions backend (49)
+## 1.4 — Actions backend (50)
 
 **Lecture (`doGet`, 13, publiques)** — `ping`, `getConfig` *(vue `invitation`)*, `getEquipes`,
 `getPoules`, `getMatchs`, `getAll` *(vue `live`)*, `getClassement`, `getHistorique`,
 `getClubDossier` *(jeton)*, **`getConfigClub`** ⭐ *(jeton, vue `club`)*, `getReponseInvitation`
 *(jeton)*, `getRefFFR`, `getConformiteFFR`
 
-**Écriture (`doPost`, 35, clé admin sauf mention)** — `ajouterEquipe`, `modifierEquipe`,
+**Écriture (`doPost`, 36, clé admin sauf mention)** — `ajouterEquipe`, `modifierEquipe`,
 `supprimerEquipe`, `supprimerEquipesCategorie`, `enregistrerHoraires`, `enregistrerCategorie`,
+**`appliquerValeursFFR`** ⭐ *(applique les valeurs FFR d'une catégorie ; le front n'envoie que
+`{categorie, date, variante}`, le serveur redérive les valeurs)*,
 `supprimerCategorie`, `genererPoulesEtPlanning`, `reorganiserPoulesMatin`, `recalculerHoraires`,
 `genererApresMidi`, `enregistrerScore` *(clé scores)*, `publierTournoi`, `reinitialiserTournoi`,
 `enregistrerInfosTournoi`, `enregistrerAffiche`, `supprimerAffiche`, `enregistrerContactsSecurite`,
@@ -154,6 +156,9 @@ doit jamais entrer en concurrence avec la saisie des scores un jour de tournoi.
 | **`eclaterFormesFFR`** ⭐ | **cœur pur** : produit cartésien des valeurs multiples (`\|`) de `forme_jeu` × `effectif` — clé de jointure à **trois termes** (anti-collision Sevens) |
 | **`reglesPourCombosFFR`** ⭐ | **cœur pur** : joint `RefFFR_Regles` sur catégorie + forme + effectif, filtre `joint_refffr_formes = OUI` (écarte Sevens M14 et M15F), dédoublonne T+2/JCO |
 | **`tempsPourCategorieFFR`** ⭐ | **cœur pur** : clé catégorie + effectif + `nb_demi_journees` + `nb_equipes` (sans forme) ; **ignore `nb_demi_journees` vide** (piège Sevens/plafond 42) ; variantes A/B ; muet si rien |
+| **`calculerApplicationFFR`** ⭐ | **cœur pur** (session 6) : dérive les champs de `Config` à appliquer pour une catégorie et une date. Réutilise les trois helpers ci-dessus. Ambiguïté (plusieurs formes) ⇒ **aucune application**, formes exposées. Cinq pièges traités (plein:true, terrain non chiffré, variantes, fusion, Sevens/M15F) |
+| **`choisirGrilleTempsFFR`** ⭐ | **cœur pur** : sélectionne la grille de temps selon la variante ; null si variantes présentes sans choix |
+| **`fusionnerCategorieFFR`** ⭐ | **cœur pur** : fusionne les champs FFR DANS la ligne de catégorie existante (objet complet, jamais partiel — `enregistrerCategorie` réécrit la ligne entière) |
 | `normaliserDateISO` | accepte chaîne ISO, `JJ/MM/AAAA` **ou** objet `Date` → `AAAA-MM-JJ`, composantes **locales** |
 | `normaliserMois` | idem → `AAAA-MM` |
 | `ecartJoursISO` | écart en jours entiers, calculé en UTC (pas de piège d'heure d'été) |
@@ -251,7 +256,7 @@ rétrocompatibilité d'affichage. **Actuellement référencé nulle part** — c
 | **Briefing d'avant-tournoi** | ❌ obligatoire et contrôlé ; la trame minutée existe (S10) et l'app sait déjà produire la feuille de déroulement à remettre aux éducateurs |
 | Demande d'autorisation (art. 411-2 RG) — dates, n° d'autorisation, dépôt | ❌ aucun champ, aucune checklist |
 | Jalons amont (J-90 / J-60 / J-45) | ❌ deux dates limites existent, non reliées à un rétroplanning |
-| **Dimensions de terrain réglementaires** | ⚠️ **sourcées et affichées en session 5** (`RefFFR_Regles`) dans le bloc Conformité, mais **non contraintes** : l'app PROPOSE la valeur FFR et signale l'écart, sans jamais réécrire `dimensions_categories`. ⚠️ **La « correction » annoncée en session 4 était fausse** : `U12 = 56×45` dans le code n'est **pas** la valeur M14 — c'est la dimension du **jeu à 10** (RE 10x10, joué **décembre→juin**, fiche `c09`). Le code n'était pas faux, il était **incomplet** : une seule valeur là où il en faut deux selon le mois (56×30 en T+2 sept.→nov.). La corriger en 56×30 aurait **introduit** l'erreur |
+| **Dimensions de terrain réglementaires** | ✅ **sourcées, affichées ET applicables en un clic** — session 5 les affiche avec signalement d'écart ; **session 6 ajoute le bouton « Appliquer les valeurs FFR »** par catégorie, qui écrit la bonne dimension du mois dans `dimensions_categories`. **Jamais automatique** (doctrine §1.12) : une catégorie à la fois, avec confirmation. ⚠️ **La « correction » annoncée en session 4 était fausse** : `U12 = 56×45` n'est **pas** la valeur M14, c'est le **jeu à 10** (RE 10x10, déc.→juin, `c09`) ; le code était **incomplet**, pas faux (56×30 en T+2 sept.→nov.), et le bouton pose désormais la bonne valeur selon le mois |
 | **Le terrain dépend de la FORME, pas de la catégorie** | ⚠️ **affiché en session 5** — le terrain suit la forme du mois via `RefFFR_Regles`. Mais la **répartition** des terrains (`dimensions_categories`, hors périmètre session 5) reste clée par catégorie seule : elle demeure inexacte sur la moitié de saison où la forme change (M10 : 30×25 en 5x5 → 40×30 en jeu à 7) |
 | **Plafond de temps de jeu par joueur et par jour** | ✅ **affiché en session 5** (`RefFFR_Temps`) : contrainte de **sécurité** restituée par catégorie (M8 50/75/90 ; M10 65/85/100 ; M12 et M14 65/90/110), avec les variantes de découpage. Informatif, jamais bloquant |
 | Blocage **dur** sur date fédérale | ⚠️ volontairement informatif à ce stade |
@@ -294,16 +299,13 @@ la conformité). **90/90 OK** : 32 asserts d'origine, +10 sur la couverture de s
 - **Cloudflare Worker** → son activation est désormais liée au **succès** du modèle de trafic,
   pas à une hypothétique montée en charge. À allumer **avant** la première mise en avant, pas après
 
-- **`RefFFR_Regles`** (à créer) → clé **catégorie × forme de jeu** : effectif sur le terrain,
-  effectif maximum sur la feuille, longueur et largeur de terrain, taille de ballon, arbitrage,
-  durée de carton, écart maximal d'essais, plateaux maximum par trimestre, `source`, `millesime`
-- **`RefFFR_Temps`** (à créer) → clé **catégorie × nombre de demi-journées × nombre d'équipes** :
-  rencontres totales, rencontres par équipe, périodes, durée de période, pause entre périodes,
-  arrêt entre matchs, temps total, plafond de la catégorie.
-  ⚠️ **La forme de jeu n'entre PAS dans cette clé** — vérifié sur les trois fiches M10 et les deux
-  fiches M8, qui partagent exactement le même tableau de temps
-- **`DIMENSIONS_CATEGORIE_DEFAUT`** → deux valeurs à corriger, et la clé à faire évoluer vers
-  catégorie × forme (voir §1.8)
+- ~~`RefFFR_Regles` / `RefFFR_Temps` (à créer)~~ **faits en session 5** (créés, lus, joints) et
+  **exploités en session 6** (bouton d'application). Rien à créer.
+- **Répartition des terrains — limite conservée** : `dimensions_categories` est clé **par catégorie
+  seule**. Le bouton de session 6 corrige la **valeur** (il pose la bonne dimension du mois), **pas
+  la clé** : sur la demi-saison où la forme change (M10 : 30×25 en 5x5 → 40×30 en jeu à 7), une
+  valeur appliquée un mois redevient un écart le mois suivant. C'est **voulu** (auto-rattrapage,
+  voir Session 6) tant que la répartition n'est pas re-clée sur catégorie × forme — chantier distinct.
 - **Règle des 5 essais d'écart** → présente sur **toutes** les fiches, M6 comprise : *score acquis
   définitivement et rééquilibrage obligatoire*. Utile à la table de marque, qui ne la connaît pas.
   Suppose de trancher Q21 (essais ou points ?)
@@ -449,6 +451,7 @@ acquis du pré-audit et des questions ouvertes.
 - **Formes de jeu variables selon le mois** → à stocker dans un onglet `RefFFR`, jamais en dur
 - **FDM EDR** remplace composition d'équipe / feuille de régulation / feuille de score dès
   2026-2027. **Aucune API publique FFR.** Zéro recouvrement fonctionnel avec Tournoi R92
+  ⚠️ Affirmation non revérifiée — voir Q22.
 - **Demande d'autorisation** : minimum **15 jours** avant (art. 411-2 RG), cible pratique **J-45**.
   Invitations **J-90**, réponse des clubs **J-60**
 - **Circuit** : club → comité départemental → ligue régionale
@@ -1183,6 +1186,77 @@ et `getConformiteFFR` — à faire après mise à jour du déploiement Apps Scri
 
 ---
 
+## Session 6 — 2026-07-27 — Application en un clic des valeurs FFR par catégorie
+
+**Origine** : la session 5 *affichait* les prescriptions FFR et signalait les écarts en orange,
+mais l'organisateur devait reporter les valeurs à la main. Session 6 ajoute un bouton
+**« Appliquer les valeurs FFR »**, par catégorie, dans ce bloc.
+
+**Aucun document du jour** : session technique, référentiel inchangé (`RefFFR_Regles` /
+`RefFFR_Temps` en lecture seule pour le code).
+
+### L'action `appliquerValeursFFR` et sa règle de sécurité
+
+Nouvelle action `doPost` (clé admin, verrou d'écriture normal). **Le frontend n'envoie JAMAIS les
+valeurs** — seulement `{ categorie, date, variante }`. Le serveur relit le référentiel, compte les
+équipes de la catégorie, lit `nb_demi_journees` de `Config`, et **dérive lui-même** les valeurs via
+le cœur pur `calculerApplicationFFR`. Sans cette règle, la page pourrait écrire n'importe quoi dans
+`Config` en se réclamant de la FFR.
+
+### La réserve tranchée en (b) : le découpage dépend du nombre d'équipes
+
+L'inspection avait relevé que la signature proposée omettait `nb_equipes` et `nb_demi_journees`.
+Vérification faite sur les 80 lignes réelles : le découpage en dépend bien (M12 en 5x5, 1 demi-journée :
+3 équipes → 3×10 min, 6 équipes → 2×8 min). La signature a donc été **étendue**. La **variante A/B**
+n'est pas le découpage : c'est une alternative qui n'existe que sur deux lignes, en jeu à 10
+(1 demi-journée/3 équipes et 2 demi-journées/4 équipes : A = 2×15, B = 3×10). Deux boutons distincts,
+jamais de choix par défaut.
+
+### Les cinq pièges
+
+1. **`plein:true`** (U14, un match par grand terrain) : réglage sourcé, jamais écrasé — la catégorie
+   passe dans `ignores`.
+2. **« Terrain normal »** (jeu à X et au-delà) : `terrain_longueur_m`/`largeur_m` vides, seul
+   `terrain_libelle`. Ce n'est pas une donnée manquante, c'est la donnée : aucune dimension écrite,
+   mais les champs de zone B (effectif, temps) le sont.
+3. **Variantes A/B** : deux boutons libellés par leur découpage réel ; le code ne choisit jamais.
+4. **Fusion** : `dimensions_categories` porte toutes les catégories ; écrire U12 n'efface pas U8/U10/U14.
+   Idem zone B — `enregistrerCategorie` réécrit la ligne ENTIÈRE, donc on relit + fusionne + réécrit
+   la ligne complète (leçon session 3, étendue à la zone B).
+5. **Sevens / M15F** : lignes `joint_refffr_formes = NON` jamais appliquées ; lignes `RefFFR_Temps`
+   à `nb_demi_journees` vide (plafond Sevens 42) ignorées. **Filtres réutilisés de la session 5**,
+   aucun nouveau.
+
+**Ambiguïté** (U14 en janvier : `10x10|15x15`, jeu à 10 OU jeu à 15) : plusieurs formes distinctes
+le même mois ⇒ **aucune application**, l'app expose les formes et attend. Doctrine §1.12 : devant une
+ambiguïté réglementaire, l'app ne tranche pas.
+
+### La propriété d'auto-rattrapage
+
+Aucun horodatage, aucun champ « appliqué le ». Une valeur posée pour un mois **redevient signalée en
+orange** si la date du tournoi change vers un mois de forme différente : le contrôle recompare la
+config à la prescription du **nouveau** mois. Le mécanisme rattrape ainsi ses propres applications
+périmées, gratuitement. C'est aussi la limite conservée au §1.9 : le bouton corrige la **valeur**,
+pas la **clé** (la répartition des terrains reste clée par catégorie seule).
+
+### Périmètre tenu
+
+Une catégorie à la fois (pas de « tout appliquer »), jamais automatique, confirmation champ par
+champ avant écriture. Aucune modification de la génération des poules, du planning, des horaires, des
+onglets `RefFFR_*` (lecture seule), aucune nouvelle page.
+
+**Résumé d'exécution** : branche `feat/appliquer-valeurs-ffr`, PR **#85**, 5 commits, tests
+**123/123 OK** (90 inchangés + 33 nouveaux).
+
+**Écarts déclarés** : cœur pur et action backend regroupés (un commit `Code.gs`, logique couplée)
+au lieu de deux ; le test « `{plein:true}` » porte sur U14 en **septembre** (janvier étant ambigu par
+conception) ; une classe CSS `.ffr-appliquer` créée (palette orange existante).
+
+**Vérification** : 123/123 sous Node (cœur pur + rendu du bouton de bout en bout). ⚠️ **Vérification
+navigateur impossible avant redéploiement** (la prod n'a pas encore l'action `appliquerValeursFFR`).
+
+---
+
 # PARTIE 3 — Questions ouvertes
 
 **Règles de clôture** — Une question se ferme soit *par document* (source et passage cités), soit *par le comité / la ligue*. Une réponse partielle ne ferme rien : la question reste ouverte, assortie d'une note sur ce qui manque. La liste finale des points sans réponse textuelle n'est établie qu'une fois tous les documents FFR traités.
@@ -1210,4 +1284,5 @@ et `getConformiteFFR` — à faire après mise à jour du déploiement Apps Scri
 | **Q19** | **Documents manquants — la collection lue est incomplète.** ✅ **Résolue (document)** : le corpus est **complet** (15 fiches, `a01` + `b02`→`b06` + `c07`→`c15`). Les six fiches manquantes ont été obtenues en session 5 (S25–S31) ; **`c15`** est identifié comme *Challenge M15F Jeu à X* (la déduction « la collection s'arrête à c14 » était fausse). | vérification Romain | ✅ **résolue (document)** |
 | **Q20** | **U14 : jeu à X ou jeu à XV ?** ✅ **Résolue (document)** : `RefFFR_Formes` porte `10x10\|15x15` sur le même mois — **les deux sont autorisées**. Ce n'est donc pas une décision d'architecture mais un **paramètre par tournoi** (l'organisateur choisit). L'éclatement du `|` gère déjà les deux formes. | décision Romain | ✅ **résolue (document)** |
 | **Q21** | **La table de marque saisit-elle des essais ou des points ?** Le backend stocke `score_A` / `score_B` sans unité. Toutes les fiches posent la règle des **5 essais d'écart** (score acquis, rééquilibrage obligatoire) : elle n'est implémentable que si l'unité est l'essai, sinon il faut convertir (essai = 5 points). | vérification Romain | ⏳ ouverte |
+| **Q22** | **Quel est le recouvrement réel entre Tournoi R92 et la FDM EDR ?** L'audit affirmait « zéro recouvrement » depuis la session 0, sans jamais revérifier. La FFR décrit pourtant la FDM comme couvrant *la gestion des rencontres et des plateaux*, et indique qu'elle s'applique aux **tournois privés de club** dès lors qu'ils sont **déclarés dans Oval-e**. Le recouvrement porterait donc sur l'**amont déclaratif** et la **liste des clubs** — pas sur les poules, les terrains, le planning horaire ni la diffusion publique des scores. **À trancher sur pièce** : visionner le webinaire FFR du **03/02/2026** et déterminer si la FDM produit un **planning** ou une **vue publique**. Structurant pour le partenariat avec le Racing 92. | vérification Romain | ⏳ **ouverte — priorité haute** |
 | **Q23** | **Un tournoi « matin + après-midi » compte-t-il pour 1 ou 2 demi-journées** au sens des grilles de temps FFR ? Détermine le plafond de temps de jeu par joueur — 65 min contre 90 en M12, soit un écart du simple au double sur une contrainte de **sécurité**. Paramètre `nb_demi_journees` créé dans `Config`, **défaut 1** (lecture la plus prudente, même principe qu'en session 2 pour la règle des 72 h), modifiable par l'organisateur. **Question posée au directeur de l'EDR du Racing 92**, réponse en attente. | Directeur EDR Racing 92 | ⏳ ouverte |

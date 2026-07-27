@@ -58,6 +58,23 @@ function lancerTestsFFR() {
   testS5_nbEquipesSansLigneMuet(etat);
   testS5_comptesExposes(etat);
 
+  // Application des valeurs FFR par catégorie (session 6).
+  testS6_u12JuinDimensions(etat);
+  testS6_u12OctobreDimensions(etat);
+  testS6_u14PleinInchange(etat);
+  testS6_terrainNormal(etat);
+  testS6_fusionPreserveVoisines(etat);
+  testS6_variantesDuree(etat);
+  testS6_dureeDependNbEquipes(etat);
+  testS6_sevensJamaisApplique(etat);
+  testS6_m15fJamaisApplique(etat);
+  testS6_nbEquipesSansGrilleMuet(etat);
+  testS6_referentielVide(etat);
+  testS6_m12u12MemeResultat(etat);
+  testS6_u14AmbiguAucuneApplication(etat);
+  testS6_idempotence(etat);
+  testS6_fusionZoneBpreserve(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -430,8 +447,15 @@ function _ffrRefS5() {
     formes: [
       // M14 septembre : T+2 et JCO en 7x7 (deux formes, un effectif).
       { categorie: 'M14', mois: '2026-09', forme_jeu: 'T+2|JCO', effectif: '7x7', tournoi_autorise: 'OUI', note: '', millesime: '2026-2027' },
-      // M12 décembre : Rugby Éducatif 10x10.
-      { categorie: 'M12', mois: '2026-12', forme_jeu: 'RE', effectif: '10x10', tournoi_autorise: 'OUI', note: '', millesime: '2026-2027' }
+      // M12 décembre / juin : Rugby Éducatif 10x10 (56×45).
+      { categorie: 'M12', mois: '2026-12', forme_jeu: 'RE', effectif: '10x10', tournoi_autorise: 'OUI', note: '', millesime: '2026-2027' },
+      { categorie: 'M12', mois: '2027-06', forme_jeu: 'RE', effectif: '10x10', tournoi_autorise: 'OUI', note: '', millesime: '2026-2027' },
+      // M12 octobre : Toucher+2 en 5x5 (56×30).
+      { categorie: 'M12', mois: '2026-10', forme_jeu: 'T+2', effectif: '5x5', tournoi_autorise: 'OUI', note: '', millesime: '2026-2027' },
+      // M14 janvier : deux effectifs le même mois (jeu à 10 OU jeu à 15) → AMBIGU.
+      { categorie: 'M14', mois: '2027-01', forme_jeu: 'RE', effectif: '10x10|15x15', tournoi_autorise: 'OUI', note: '', millesime: '2026-2027' },
+      // M14 avril : jeu à 15 seul → « terrain normal » (dimensions non chiffrées).
+      { categorie: 'M14', mois: '2027-04', forme_jeu: 'RE', effectif: '15x15', tournoi_autorise: 'OUI', note: '', millesime: '2026-2027' }
     ],
     regles: [
       // M14 / 7x7 : Toucher+2 et Jouer au contact, JOINTS (valeurs structurantes identiques).
@@ -439,19 +463,26 @@ function _ffrRefS5() {
       { categorie: 'M14', forme_jeu: 'JCO', effectif: '7x7', effectif_terrain: '7', effectif_max_feuille: '13', terrain_longueur_m: '56', terrain_largeur_m: '45', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', contexte: 'TOURNOI', joint_refffr_formes: 'OUI', millesime: '2026-2027' },
       // M14 / SEVENS / 7x7 : compétition, NON joignable — ne doit JAMAIS être proposé.
       { categorie: 'M14', forme_jeu: 'SEVENS', effectif: '7x7', effectif_terrain: '7', effectif_max_feuille: '12', terrain_longueur_m: '100', terrain_largeur_m: '70', terrain_libelle: '', ballon: 'T5', carton_jaune_min: '5', contexte: 'COMPETITION', joint_refffr_formes: 'NON', millesime: '2026-2027' },
+      // M14 / RE / 10x10 et 15x15 : jouables (jeu à 10 chiffré ; jeu à 15 « terrain normal »).
+      { categorie: 'M14', forme_jeu: 'RE', effectif: '10x10', effectif_terrain: '10', effectif_max_feuille: '13', terrain_longueur_m: '56', terrain_largeur_m: '45', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', contexte: 'TOURNOI', joint_refffr_formes: 'OUI', millesime: '2026-2027' },
+      { categorie: 'M14', forme_jeu: 'RE', effectif: '15x15', effectif_terrain: '15', effectif_max_feuille: '13', terrain_longueur_m: '', terrain_largeur_m: '', terrain_libelle: 'Terrain normal', ballon: 'T5', carton_jaune_min: '2', contexte: 'TOURNOI', joint_refffr_formes: 'OUI', millesime: '2026-2027' },
       // M15F / RE / 10x10 : catégorie absente de RefFFR_Formes, NON joignable.
       { categorie: 'M15F', forme_jeu: 'RE', effectif: '10x10', effectif_terrain: '10', effectif_max_feuille: '13', terrain_longueur_m: '56', terrain_largeur_m: '45', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', contexte: 'CHALLENGE', joint_refffr_formes: 'NON', millesime: '2026-2027' },
-      // M12 / RE / 10x10 : joignable (sert aussi au test M12/U12).
-      { categorie: 'M12', forme_jeu: 'RE', effectif: '10x10', effectif_terrain: '10', effectif_max_feuille: '13', terrain_longueur_m: '56', terrain_largeur_m: '45', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', contexte: 'TOURNOI', joint_refffr_formes: 'OUI', millesime: '2026-2027' }
+      // M12 / RE / 10x10 (56×45) et T+2 / 5x5 (56×30).
+      { categorie: 'M12', forme_jeu: 'RE', effectif: '10x10', effectif_terrain: '10', effectif_max_feuille: '13', terrain_longueur_m: '56', terrain_largeur_m: '45', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', contexte: 'TOURNOI', joint_refffr_formes: 'OUI', millesime: '2026-2027' },
+      { categorie: 'M12', forme_jeu: 'T+2', effectif: '5x5', effectif_terrain: '5', effectif_max_feuille: '9', terrain_longueur_m: '56', terrain_largeur_m: '30', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', contexte: 'TOURNOI', joint_refffr_formes: 'OUI', millesime: '2026-2027' }
     ],
     temps: [
       // PIÈGE Sevens M14/7x7 : nb_demi_journees VIDE, plafond 42 → doit être ignoré.
       { categorie: 'M14', effectif: '7x7', nb_demi_journees: '', nb_equipes: '', nb_periodes: '', duree_periode_min: '', pause_periodes_min: '', arret_entre_matchs_min: '', plafond_joueur_min: '42', variante: '', millesime: '2026-2027' },
       // Grille légitime M14/7x7, 1 demi-journée, 6 équipes : plafond 65.
       { categorie: 'M14', effectif: '7x7', nb_demi_journees: '1', nb_equipes: '6', nb_periodes: '2', duree_periode_min: '10', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: '', rencontres_par_equipe: '5', nb_rencontres_total: '15', organisation_poules: '', millesime: '2026-2027' },
-      // M12/10x10, 1 demi-journée, 3 équipes : DEUX variantes (A et B), même plafond 65.
-      { categorie: 'M12', effectif: '10x10', nb_demi_journees: '1', nb_equipes: '3', nb_periodes: '3', duree_periode_min: '10', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: 'A', rencontres_par_equipe: '2', nb_rencontres_total: '3', organisation_poules: '1 poule de 3', millesime: '2026-2027' },
-      { categorie: 'M12', effectif: '10x10', nb_demi_journees: '1', nb_equipes: '3', nb_periodes: '2', duree_periode_min: '15', pause_periodes_min: '2', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: 'B', rencontres_par_equipe: '2', nb_rencontres_total: '3', organisation_poules: '1 poule de 3', millesime: '2026-2027' }
+      // M12/10x10, 1 demi-journée, 3 équipes : DEUX variantes — A = 2×15, B = 3×10 (réel FFR).
+      { categorie: 'M12', effectif: '10x10', nb_demi_journees: '1', nb_equipes: '3', nb_periodes: '2', duree_periode_min: '15', pause_periodes_min: '2', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: 'A', rencontres_par_equipe: '2', nb_rencontres_total: '3', organisation_poules: '1 poule de 3', millesime: '2026-2027' },
+      { categorie: 'M12', effectif: '10x10', nb_demi_journees: '1', nb_equipes: '3', nb_periodes: '3', duree_periode_min: '10', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: 'B', rencontres_par_equipe: '2', nb_rencontres_total: '3', organisation_poules: '1 poule de 3', millesime: '2026-2027' },
+      // M12/5x5, 1 demi-journée : le découpage dépend du NB D'ÉQUIPES (3 → 3×10, 6 → 2×8).
+      { categorie: 'M12', effectif: '5x5', nb_demi_journees: '1', nb_equipes: '3', nb_periodes: '3', duree_periode_min: '10', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: '', rencontres_par_equipe: '2', nb_rencontres_total: '3', organisation_poules: '1 poule de 3', millesime: '2026-2027' },
+      { categorie: 'M12', effectif: '5x5', nb_demi_journees: '1', nb_equipes: '6', nb_periodes: '2', duree_periode_min: '8', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: '', rencontres_par_equipe: '5', nb_rencontres_total: '15', organisation_poules: '2 poules de 3', millesime: '2026-2027' }
     ]
   };
 }
@@ -558,4 +589,137 @@ function testS5_comptesExposes(etat) {
   var r = analyserEffectifsCategories(config, equipes);
   _ffrAssert(etat, r.comptes && r.comptes.U12 === 3, 'comptes : U12 → 3 équipes');
   _ffrAssert(etat, Array.isArray(r.bloque) && Array.isArray(r.vides), 'comptes : bloque/vides toujours présents');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Application des valeurs FFR par catégorie (session 6)                      */
+/*  calculerApplicationFFR est PURE (référentiel + dimensions injectés).       */
+/* -------------------------------------------------------------------------- */
+
+/** U12 en juin ⇒ jeu à 10 ⇒ dimensions 56 × 45. */
+function testS6_u12JuinDimensions(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U12', '2027-06-13', '1', '3', null, {});
+  _ffrAssert(etat, r.dimensions && r.dimensions.U12 && r.dimensions.U12.l === 56 && r.dimensions.U12.w === 45,
+    'u12Juin : dimensions U12 = 56 × 45');
+}
+
+/** U12 en octobre ⇒ T+2 5x5 ⇒ dimensions 56 × 30. */
+function testS6_u12OctobreDimensions(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U12', '2026-10-10', '1', '3', null, {});
+  _ffrAssert(etat, r.dimensions && r.dimensions.U12 && r.dimensions.U12.l === 56 && r.dimensions.U12.w === 30,
+    'u12Octobre : dimensions U12 = 56 × 30');
+}
+
+/** U14 avec {plein:true} ⇒ dimensions INCHANGÉES, entrée dans ignores. */
+function testS6_u14PleinInchange(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U14', '2026-09-19', '1', '6', null, { U14: { plein: true } });
+  _ffrAssert(etat, r.dimensions === null, 'u14Plein : aucune dimension écrite (plein:true préservé)');
+  var raison = r.ignores.some(function (i) { return i.champ === 'dimensions_categories' && /plein/.test(i.raison); });
+  _ffrAssert(etat, raison, 'u14Plein : ignoré avec la raison plein:true');
+}
+
+/** Forme « terrain normal » ⇒ aucune dimension écrite, zone B (effectif_max) appliquée quand même. */
+function testS6_terrainNormal(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U14', '2027-04-10', '1', '6', null, {});
+  _ffrAssert(etat, r.dimensions === null, 'terrainNormal : aucune dimension écrite');
+  _ffrAssert(etat, r.champsZoneB.effectif_max === '13', 'terrainNormal : effectif_max (zone B) appliqué malgré tout');
+  var raison = r.ignores.some(function (i) { return i.champ === 'dimensions_categories' && /normal/i.test(i.raison); });
+  _ffrAssert(etat, raison, 'terrainNormal : ignoré avec le libellé FFR comme raison');
+}
+
+/** Fusion : appliquer U12 laisse U8, U10 et U14 INTACTS dans dimensions_categories. */
+function testS6_fusionPreserveVoisines(etat) {
+  var dims = { U8: { l: 30, w: 20 }, U10: { l: 30, w: 25 }, U14: { plein: true } };
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U12', '2027-06-13', '1', '3', null, dims);
+  _ffrAssert(etat, r.dimensions.U8 && r.dimensions.U8.l === 30 && r.dimensions.U8.w === 20, 'fusion : U8 intact');
+  _ffrAssert(etat, r.dimensions.U10 && r.dimensions.U10.w === 25, 'fusion : U10 intact');
+  _ffrAssert(etat, r.dimensions.U14 && r.dimensions.U14.plein === true, 'fusion : U14 (plein) intact');
+  _ffrAssert(etat, r.dimensions.U12 && r.dimensions.U12.l === 56, 'fusion : U12 ajouté');
+}
+
+/** Variante A vs B (jeu à 10) ⇒ duree_mi_temps_min différent (15 vs 10). */
+function testS6_variantesDuree(etat) {
+  var a = calculerApplicationFFR(_ffrRefS5(), 'U12', '2026-12-05', '1', '3', 'A', {});
+  var b = calculerApplicationFFR(_ffrRefS5(), 'U12', '2026-12-05', '1', '3', 'B', {});
+  _ffrAssert(etat, a.champsZoneB.duree_mi_temps_min === '15', 'variantes : A → 15 min');
+  _ffrAssert(etat, b.champsZoneB.duree_mi_temps_min === '10', 'variantes : B → 10 min');
+  _ffrAssert(etat, a.champsZoneB.duree_mi_temps_min !== b.champsZoneB.duree_mi_temps_min, 'variantes : durées différentes');
+}
+
+/** Le découpage dépend du NB D'ÉQUIPES : M12/5x5/1dj, 3 équipes (10 min) vs 6 équipes (8 min). */
+function testS6_dureeDependNbEquipes(etat) {
+  var trois = calculerApplicationFFR(_ffrRefS5(), 'U12', '2026-10-10', '1', '3', null, {});
+  var six   = calculerApplicationFFR(_ffrRefS5(), 'U12', '2026-10-10', '1', '6', null, {});
+  _ffrAssert(etat, trois.champsZoneB.duree_mi_temps_min === '10', 'nbEq : 3 équipes → 10 min');
+  _ffrAssert(etat, six.champsZoneB.duree_mi_temps_min === '8', 'nbEq : 6 équipes → 8 min');
+}
+
+/** M14/SEVENS n'est jamais appliqué : U14 septembre remonte le Toucher+2 (feuille 13, pas 12). */
+function testS6_sevensJamaisApplique(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U14', '2026-09-19', '1', '6', null, {});
+  _ffrAssert(etat, r.champsZoneB.effectif_max === '13', 'sevens : effectif_max 13 (T+2), jamais 12 (Sevens)');
+  _ffrAssert(etat, !(r.dimensions && r.dimensions.U14 && r.dimensions.U14.l === 100), 'sevens : terrain jamais 100×70');
+}
+
+/** M15F n'est jamais appliqué (catégorie absente de RefFFR_Formes). */
+function testS6_m15fJamaisApplique(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U15F', '2026-12-05', '1', '3', null, {});
+  _ffrAssert(etat, Object.keys(r.champsZoneB).length === 0 && r.dimensions === null, 'm15f : aucune application');
+}
+
+/** Aucune grille pour ce nb d'équipes ⇒ pas de champ de temps, mais dimensions + effectif appliqués. */
+function testS6_nbEquipesSansGrilleMuet(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U12', '2027-06-13', '1', '7', null, {});
+  _ffrAssert(etat, !r.champsZoneB.duree_mi_temps_min && !r.champsZoneB.format_mi_temps, 'sansGrille : aucun champ de temps');
+  _ffrAssert(etat, r.champsZoneB.effectif_max === '13', 'sansGrille : effectif_max appliqué (RefFFR_Regles)');
+  _ffrAssert(etat, r.dimensions && r.dimensions.U12, 'sansGrille : dimensions appliquées');
+  _ffrAssert(etat, r.ignores.some(function (i) { return i.champ === 'temps'; }), 'sansGrille : temps dans ignores');
+}
+
+/** Référentiel vide ⇒ résultat vide, aucune erreur. */
+function testS6_referentielVide(etat) {
+  var r = calculerApplicationFFR({ formes: [], dates: [] }, 'U12', '2027-06-13', '1', '3', null, {});
+  _ffrAssert(etat, Object.keys(r.champsZoneB).length === 0 && r.dimensions === null && !r.ambigu,
+    'refVide : résultat vide sans erreur');
+}
+
+/** M12 et U12 donnent le même résultat (réconciliation normaliserCategorie). */
+function testS6_m12u12MemeResultat(etat) {
+  var u = calculerApplicationFFR(_ffrRefS5(), 'U12', '2027-06-13', '1', '3', null, {});
+  var m = calculerApplicationFFR(_ffrRefS5(), 'M12', '2027-06-13', '1', '3', null, {});
+  _ffrAssert(etat, u.forme && m.forme && u.forme.effectif === m.forme.effectif, 'm12u12 : même forme jointe');
+  _ffrAssert(etat, u.dimensions.U12.l === m.dimensions.M12.l && u.dimensions.U12.w === m.dimensions.M12.w,
+    'm12u12 : mêmes dimensions (56×45)');
+}
+
+/** U14 en janvier (10x10|15x15) ⇒ AMBIGU : aucune application automatique, formes exposées. */
+function testS6_u14AmbiguAucuneApplication(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U14', '2027-01-16', '1', '4', null, {});
+  _ffrAssert(etat, r.ambigu === true, 'u14Ambigu : marqué ambigu');
+  _ffrAssert(etat, Object.keys(r.champsZoneB).length === 0 && r.dimensions === null, 'u14Ambigu : rien appliqué');
+  _ffrAssert(etat, r.formesDisponibles.length === 2, 'u14Ambigu : deux formes exposées (10x10 et 15x15)');
+}
+
+/** Idempotence : réappliquer avec le résultat précédent produit le même Config. */
+function testS6_idempotence(etat) {
+  var r1 = calculerApplicationFFR(_ffrRefS5(), 'U12', '2027-06-13', '1', '3', null, {});
+  var r2 = calculerApplicationFFR(_ffrRefS5(), 'U12', '2027-06-13', '1', '3', null, r1.dimensions);
+  _ffrAssert(etat, JSON.stringify(r1.dimensions) === JSON.stringify(r2.dimensions), 'idempotence : dimensions stables');
+  _ffrAssert(etat, JSON.stringify(r1.champsZoneB) === JSON.stringify(r2.champsZoneB), 'idempotence : champs zone B stables');
+}
+
+/** Fusion zone B : les colonnes non FFR (terrains, format_apresmidi, reglement…) sont préservées. */
+function testS6_fusionZoneBpreserve(etat) {
+  var existante = { categorie: 'U12', presente: 'oui', terrains: '5,6', terrains_auto: 'oui',
+    nb_poules: '2', format_mi_temps: '2', duree_mi_temps_min: '12', format_apresmidi: 'CROISE',
+    param_format: '', reglement: 'https://exemple', effectif_min: '7', effectif_max: '10',
+    arbitrage_organisation: 'éducateurs', max_equipes_par_club: '2' };
+  var champsZoneB = { format_mi_temps: '3', duree_mi_temps_min: '10', effectif_max: '13' };
+  var fusion = fusionnerCategorieFFR(existante, champsZoneB);
+  _ffrAssert(etat, fusion.format_mi_temps === '3' && fusion.duree_mi_temps_min === '10' && fusion.effectif_max === '13',
+    'fusionZoneB : champs FFR appliqués');
+  _ffrAssert(etat, fusion.terrains === '5,6' && fusion.format_apresmidi === 'CROISE' &&
+    fusion.param_format === '' && fusion.reglement === 'https://exemple' && fusion.effectif_min === '7' &&
+    fusion.arbitrage_organisation === 'éducateurs' && fusion.max_equipes_par_club === '2',
+    'fusionZoneB : colonnes voisines intactes');
 }

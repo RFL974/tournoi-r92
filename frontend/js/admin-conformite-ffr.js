@@ -23,6 +23,10 @@
 /* Référentiel FFR mémorisé (une seule requête par session, réutilisée par les cartes). */
 var refFFRCache = null;
 
+/* Dernier verdict de conformité (regles/temps) — mémorisé pour construire l'aperçu du bouton
+   « Appliquer les valeurs FFR » au clic, sans nouvel appel réseau. */
+var dernierResConformite = null;
+
 /** Charge (et mémorise) le référentiel FFR. Migration douce : listes vides si indisponible. */
 async function chargerRefFFR() {
   if (refFFRCache) return refFFRCache;
@@ -69,6 +73,9 @@ function categoriesPresentesNoms() {
 async function majConformiteFFR() {
   const zone = document.getElementById('bloc-conformite-ffr');
   if (!zone) return;
+  // Écouteur délégué posé UNE fois sur le conteneur (son innerHTML est remplacé à chaque calcul,
+  // mais l'élément persiste) : gère les clics sur les boutons « Appliquer les valeurs FFR ».
+  if (!zone._ffrAppliquerWired) { zone.addEventListener('click', onClicAppliquerFFR); zone._ffrAppliquerWired = true; }
 
   await chargerRefFFR(); // dispo du référentiel + formes pour les cartes
 
@@ -101,6 +108,7 @@ async function majConformiteFFR() {
     zone.innerHTML = '<div class="ffr-bloc ffr-neutre">Contrôle FFR indisponible pour le moment.</div>';
     return;
   }
+  dernierResConformite = res; // mémorisé pour l'aperçu du bouton d'application
   zone.innerHTML = rendreConformiteFFR(res);
   majFormesCategories();
 }
@@ -206,6 +214,7 @@ function rendreDetailFFR(res) {
     html += '<div class="ffr-detail-cat"><span class="ffr-detail-titre">' + echapper(cat) + '</span>' +
       detailReglesFFR(regles[cat] || [], cfg, dims[cat]) +
       detailTempsFFR(temps[cat], cfg) +
+      boutonsAppliquerFFR(cat, regles[cat] || [], temps[cat], cfg, dims[cat]) +
       '</div>';
   });
   return html + '</div>';
@@ -383,4 +392,127 @@ function alerteEffectifFFR(cat, effFFR) {
   if (!incoherent) return '';
   return ' <span class="ffr-alerte-eff">⚠️ Effectif FFR attendu : ' + n +
     ' joueurs (' + echapper(String(effFFR)) + ')</span>';
+}
+
+/* --------------------------------------------------------------------------
+   BOUTON « APPLIQUER LES VALEURS FFR » (session 6)
+   Une catégorie à la fois, jamais automatique, jamais un choix par défaut
+   devant une ambiguïté (doctrine §1.12). Le clic passe par une confirmation
+   champ par champ, puis l'action backend appliquerValeursFFR (qui redérive
+   les valeurs elle-même — le front n'envoie que catégorie + date + variante).
+   -------------------------------------------------------------------------- */
+
+/** Vrai si au moins un champ (dimensions, effectif feuille, ou temps) diverge de la valeur FFR. */
+function categorieAUnEcartFFR(r, temps, cfg, dim) {
+  if (r) {
+    if (r.terrain_longueur_m && r.terrain_largeur_m && dim && !(dim.plein === true) &&
+        (ecartFFR(dim.l, r.terrain_longueur_m) || ecartFFR(dim.w, r.terrain_largeur_m))) return true;
+    if (ecartFFR(cfg.effectif_max, r.effectif_max_feuille)) return true;
+  }
+  const grilles = (temps && temps.grilles) || [];
+  if (grilles.length) {
+    if (ecartTempsFFR('', cfg.format_mi_temps, grilles, 'nb_periodes')) return true;
+    if (ecartTempsFFR('', cfg.duree_mi_temps_min, grilles, 'duree_periode_min')) return true;
+    if (ecartTempsFFR('', cfg.pause_mi_temps_min, grilles, 'pause_periodes_min')) return true;
+    if (ecartTempsFFR('', cfg.recup_entre_matchs_min, grilles, 'arret_entre_matchs_min')) return true;
+  }
+  return false;
+}
+
+/** Bouton(s) « Appliquer les valeurs FFR » pour une catégorie — seulement s'il y a un écart. */
+function boutonsAppliquerFFR(cat, regles, temps, cfg, dim) {
+  if (!regles.length && !temps) return '';
+  // Ambiguïté réglementaire (plusieurs formes distinctes ce mois, ex. U14 10x10|15x15) : on n'applique pas.
+  if (regles.length > 1) {
+    return '<p class="ffr-attendu">Plusieurs formes de jeu ce mois-ci — précise la forme avant d\'appliquer.</p>';
+  }
+  const r = regles[0] || null;
+  if (!categorieAUnEcartFFR(r, temps, cfg, dim)) return ''; // aucun écart ⇒ rien à appliquer
+  const grilles = (temps && temps.grilles) || [];
+  const catAttr = echapper(cat);
+  if (grilles.length > 1) {
+    // Variantes A/B : un bouton par découpage, jamais de choix par défaut (piège 3).
+    return grilles.map(function (g) {
+      const lib = (g.nb_periodes && g.duree_periode_min)
+        ? (g.nb_periodes + ' × ' + g.duree_periode_min + ' min') : ('variante ' + g.variante);
+      return '<button type="button" class="ffr-appliquer" data-cat="' + catAttr + '" data-variante="' +
+        echapper(g.variante || '') + '">Appliquer les valeurs FFR — ' + echapper(lib) + '</button>';
+    }).join('');
+  }
+  const v = grilles.length ? (grilles[0].variante || '') : '';
+  return '<button type="button" class="ffr-appliquer" data-cat="' + catAttr + '" data-variante="' +
+    echapper(v) + '">Appliquer les valeurs FFR</button>';
+}
+
+/** Aperçu « valeur actuelle → valeur FFR », champ par champ, pour la confirmation. */
+function apercuAppliquerFFR(cat, variante) {
+  const res = dernierResConformite;
+  if (!res) return '';
+  const r = ((res.regles || {})[cat] || [])[0] || null;
+  const temps = (res.temps || {})[cat] || null;
+  const cfg = categorieConfigFFR(cat);
+  const dim = dimensionsCategoriesFFR()[cat];
+  const lignes = [];
+  if (r) {
+    if (dim && dim.plein === true) {
+      lignes.push('Terrain : conservé (plein terrain)');
+    } else if (r.terrain_longueur_m && r.terrain_largeur_m) {
+      const actuel = dim ? ((dim.l != null ? dim.l : '?') + ' × ' + (dim.w != null ? dim.w : '?') + ' m') : '(non défini)';
+      lignes.push('Terrain : ' + actuel + ' → ' + r.terrain_longueur_m + ' × ' + r.terrain_largeur_m + ' m');
+    } else if (r.terrain_libelle) {
+      lignes.push('Terrain : non modifié (' + r.terrain_libelle + ')');
+    }
+    if (r.effectif_max_feuille) {
+      lignes.push('Effectif max (feuille) : ' + (cfg.effectif_max || '(vide)') + ' → ' + r.effectif_max_feuille);
+    }
+  }
+  const grilles = (temps && temps.grilles) || [];
+  let g = null;
+  if (grilles.length === 1) g = grilles[0];
+  else if (grilles.length > 1) {
+    g = grilles.filter(function (x) {
+      return String(x.variante || '').toUpperCase() === String(variante || '').toUpperCase();
+    })[0] || null;
+  }
+  if (g) {
+    if (g.nb_periodes) lignes.push('Nb de périodes : ' + (cfg.format_mi_temps || '(vide)') + ' → ' + g.nb_periodes);
+    if (g.duree_periode_min) lignes.push('Durée de période : ' + (cfg.duree_mi_temps_min || '(vide)') + ' → ' + g.duree_periode_min + ' min');
+    if (g.pause_periodes_min) lignes.push('Pause : ' + (cfg.pause_mi_temps_min || '(vide)') + ' → ' + g.pause_periodes_min + ' min');
+    if (g.arret_entre_matchs_min) lignes.push('Arrêt entre matchs : ' + (cfg.recup_entre_matchs_min || '(vide)') + ' → ' + g.arret_entre_matchs_min + ' min');
+  }
+  const tete = 'Appliquer les valeurs FFR à ' + cat + ' ?';
+  if (!lignes.length) return tete;
+  return tete + '\n\n' + lignes.join('\n') +
+    '\n\nCes valeurs seront écrites dans les réglages. Tu pourras les remodifier ensuite.';
+}
+
+/** Clic sur « Appliquer les valeurs FFR » : confirmation, écriture backend, rechargement + recalcul. */
+async function onClicAppliquerFFR(e) {
+  const btn = e.target.closest('.ffr-appliquer');
+  if (!btn) return;
+  const cat = btn.getAttribute('data-cat');
+  const variante = btn.getAttribute('data-variante') || '';
+  const dateISO = dateTournoiCourante();
+  if (!cat || !dateISO) return;
+
+  const ok = await dialogConfirmer(apercuAppliquerFFR(cat, variante), { ok: 'Appliquer', annuler: 'Annuler' });
+  if (!ok) return;
+
+  btn.disabled = true;
+  try {
+    const res = await ecrireAdmin('appliquerValeursFFR', { categorie: cat, date: dateISO, variante: variante });
+    // Les champs de Config ont changé : on recharge les réglages puis on recalcule la conformité
+    // (les badges orange des champs appliqués disparaissent ; ceux des champs ignorés restent).
+    if (typeof rechargerReglages === 'function') await rechargerReglages();
+    await majConformiteFFR();
+    let msg = '✅ Valeurs FFR appliquées à ' + cat + '.';
+    if (res && res.ignores && res.ignores.length) {
+      msg += '\n\nNon appliqué :\n' + res.ignores.map(function (i) { return '• ' + i.raison; }).join('\n');
+    }
+    await dialogAlerter(msg);
+  } catch (err) {
+    await dialogAlerter('⚠️ ' + (err && err.message ? err.message : 'Échec de l\'application des valeurs FFR.'));
+  } finally {
+    btn.disabled = false;
+  }
 }
