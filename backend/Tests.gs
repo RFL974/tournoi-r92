@@ -44,6 +44,20 @@ function lancerTestsFFR() {
   testCfg_categoriesFiltrees(etat);
   testCfg_jetonDossier(etat);
 
+  // Référentiel FFR — règles de jeu et grilles de temps (session 5).
+  testS5_eclaterForme(etat);
+  testS5_eclaterEffectif(etat);
+  testS5_eclaterProduit(etat);
+  testS5_antiCollisionSevens(etat);
+  testS5_plafondJamais42(etat);
+  testS5_jointNonJamaisPropose(etat);
+  testS5_m15fJamaisPropose(etat);
+  testS5_m12u12MemeLigne(etat);
+  testS5_referentielReglesAbsent(etat);
+  testS5_grilleDeuxVariantes(etat);
+  testS5_nbEquipesSansLigneMuet(etat);
+  testS5_comptesExposes(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -401,4 +415,147 @@ function testCfg_jetonDossier(etat) {
     'jeton : getConfigClub jeton valide → config club (referent_nom)');
   _ffrAssert(etat, c2.config && !c2.config.global.hasOwnProperty('email_expediteur'),
     'jeton : getConfigClub ne fuit jamais email_expediteur');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Référentiel FFR — règles de jeu (RefFFR_Regles) et temps (RefFFR_Temps)   */
+/*  Fixture dédiée, valeurs TEXTE (comme le classeur réel). Le piège Sevens    */
+/*  (M14/7x7, nb_demi_journees vide, plafond 42) est inclus exprès.            */
+/* -------------------------------------------------------------------------- */
+
+function _ffrRefS5() {
+  return {
+    millesime: '2026-2027',
+    dates: [],
+    formes: [
+      // M14 septembre : T+2 et JCO en 7x7 (deux formes, un effectif).
+      { categorie: 'M14', mois: '2026-09', forme_jeu: 'T+2|JCO', effectif: '7x7', tournoi_autorise: 'OUI', note: '', millesime: '2026-2027' },
+      // M12 décembre : Rugby Éducatif 10x10.
+      { categorie: 'M12', mois: '2026-12', forme_jeu: 'RE', effectif: '10x10', tournoi_autorise: 'OUI', note: '', millesime: '2026-2027' }
+    ],
+    regles: [
+      // M14 / 7x7 : Toucher+2 et Jouer au contact, JOINTS (valeurs structurantes identiques).
+      { categorie: 'M14', forme_jeu: 'T+2', effectif: '7x7', effectif_terrain: '7', effectif_max_feuille: '13', terrain_longueur_m: '56', terrain_largeur_m: '45', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', contexte: 'TOURNOI', joint_refffr_formes: 'OUI', millesime: '2026-2027' },
+      { categorie: 'M14', forme_jeu: 'JCO', effectif: '7x7', effectif_terrain: '7', effectif_max_feuille: '13', terrain_longueur_m: '56', terrain_largeur_m: '45', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', contexte: 'TOURNOI', joint_refffr_formes: 'OUI', millesime: '2026-2027' },
+      // M14 / SEVENS / 7x7 : compétition, NON joignable — ne doit JAMAIS être proposé.
+      { categorie: 'M14', forme_jeu: 'SEVENS', effectif: '7x7', effectif_terrain: '7', effectif_max_feuille: '12', terrain_longueur_m: '100', terrain_largeur_m: '70', terrain_libelle: '', ballon: 'T5', carton_jaune_min: '5', contexte: 'COMPETITION', joint_refffr_formes: 'NON', millesime: '2026-2027' },
+      // M15F / RE / 10x10 : catégorie absente de RefFFR_Formes, NON joignable.
+      { categorie: 'M15F', forme_jeu: 'RE', effectif: '10x10', effectif_terrain: '10', effectif_max_feuille: '13', terrain_longueur_m: '56', terrain_largeur_m: '45', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', contexte: 'CHALLENGE', joint_refffr_formes: 'NON', millesime: '2026-2027' },
+      // M12 / RE / 10x10 : joignable (sert aussi au test M12/U12).
+      { categorie: 'M12', forme_jeu: 'RE', effectif: '10x10', effectif_terrain: '10', effectif_max_feuille: '13', terrain_longueur_m: '56', terrain_largeur_m: '45', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', contexte: 'TOURNOI', joint_refffr_formes: 'OUI', millesime: '2026-2027' }
+    ],
+    temps: [
+      // PIÈGE Sevens M14/7x7 : nb_demi_journees VIDE, plafond 42 → doit être ignoré.
+      { categorie: 'M14', effectif: '7x7', nb_demi_journees: '', nb_equipes: '', nb_periodes: '', duree_periode_min: '', pause_periodes_min: '', arret_entre_matchs_min: '', plafond_joueur_min: '42', variante: '', millesime: '2026-2027' },
+      // Grille légitime M14/7x7, 1 demi-journée, 6 équipes : plafond 65.
+      { categorie: 'M14', effectif: '7x7', nb_demi_journees: '1', nb_equipes: '6', nb_periodes: '2', duree_periode_min: '10', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: '', rencontres_par_equipe: '5', nb_rencontres_total: '15', organisation_poules: '', millesime: '2026-2027' },
+      // M12/10x10, 1 demi-journée, 3 équipes : DEUX variantes (A et B), même plafond 65.
+      { categorie: 'M12', effectif: '10x10', nb_demi_journees: '1', nb_equipes: '3', nb_periodes: '3', duree_periode_min: '10', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: 'A', rencontres_par_equipe: '2', nb_rencontres_total: '3', organisation_poules: '1 poule de 3', millesime: '2026-2027' },
+      { categorie: 'M12', effectif: '10x10', nb_demi_journees: '1', nb_equipes: '3', nb_periodes: '2', duree_periode_min: '15', pause_periodes_min: '2', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: 'B', rencontres_par_equipe: '2', nb_rencontres_total: '3', organisation_poules: '1 poule de 3', millesime: '2026-2027' }
+    ]
+  };
+}
+
+/** eclaterFormesFFR : forme_jeu 'T+2|JCO' + effectif simple → 2 entrées. */
+function testS5_eclaterForme(etat) {
+  var r = eclaterFormesFFR({ categorie: 'M10', forme_jeu: 'T+2|JCO', effectif: '5x5' });
+  _ffrAssert(etat, r.length === 2, 'eclater : T+2|JCO / 5x5 → 2 entrées');
+  _ffrAssert(etat, r[0].forme_jeu === 'T+2' && r[1].forme_jeu === 'JCO' && r[0].effectif === '5x5',
+    'eclater : formes séparées, effectif porté');
+}
+
+/** eclaterFormesFFR : effectif '10x10|15x15' + forme simple → 2 entrées. */
+function testS5_eclaterEffectif(etat) {
+  var r = eclaterFormesFFR({ categorie: 'M14', forme_jeu: 'RE', effectif: '10x10|15x15' });
+  _ffrAssert(etat, r.length === 2, 'eclater : RE / 10x10|15x15 → 2 entrées');
+  _ffrAssert(etat, r[0].effectif === '10x10' && r[1].effectif === '15x15',
+    'eclater : effectifs séparés');
+}
+
+/** eclaterFormesFFR : les deux multiples → produit cartésien (4 entrées). */
+function testS5_eclaterProduit(etat) {
+  var r = eclaterFormesFFR({ categorie: 'M14', forme_jeu: 'T+2|JCO', effectif: '10x10|15x15' });
+  _ffrAssert(etat, r.length === 4, 'eclater : produit cartésien 2×2 → 4 entrées');
+}
+
+/** Anti-collision : M14 + 7x7 en septembre ne remonte JAMAIS la règle Sevens (joint=NON). */
+function testS5_antiCollisionSevens(etat) {
+  var res = evaluerConformiteFFR(_ffrRefS5(), '2026-09-19', ['U14'], 'C',
+    { equipesParCategorie: { U14: '6' }, nbDemiJournees: '1' });
+  var regles = res.regles.U14 || [];
+  _ffrAssert(etat, regles.length >= 1, 'antiCollision : une règle M14/7x7 remontée');
+  var sevens = regles.some(function (r) { return r.carton_jaune_min === '5' || r.effectif_max_feuille === '12'; });
+  _ffrAssert(etat, !sevens, 'antiCollision : la règle Sevens (carton 5, feuille 12) n\'est jamais proposée');
+  // T+2 et JCO ont des valeurs identiques → dédoublonnées en UNE entrée.
+  _ffrAssert(etat, regles.length === 1, 'antiCollision : T+2 et JCO dédoublonnés (valeurs identiques)');
+}
+
+/** Le plafond de temps M14/7x7 ne doit JAMAIS être 42 (ligne Sevres à nb_demi_journees vide). */
+function testS5_plafondJamais42(etat) {
+  var t = tempsPourCategorieFFR(_ffrRefS5().temps, '14', ['7x7'], '1', '6');
+  _ffrAssert(etat, t && t.plafond_joueur_min === '65', 'plafond : M14/7x7/1dj/6eq → 65 (pas la grille Sevens)');
+  _ffrAssert(etat, t && t.plafond_joueur_min !== '42', 'plafond : jamais 42 (ligne Sevens ignorée)');
+  _ffrAssert(etat, t && t.grilles.length === 1, 'plafond : une grille légitime (Sevens exclu)');
+}
+
+/** Une ligne joint_refffr_formes=NON n'est jamais rendue par la jointure. */
+function testS5_jointNonJamaisPropose(etat) {
+  var combos = [{ categorie: 'M14', forme_jeu: 'SEVENS', effectif: '7x7' }];
+  var r = reglesPourCombosFFR(_ffrRefS5().regles, '14', combos);
+  _ffrAssert(etat, r.length === 0, 'jointNON : la ligne Sevens (joint=NON) n\'est jamais proposée');
+}
+
+/** M15F (joint=NON, absente de RefFFR_Formes) n'est jamais proposée. */
+function testS5_m15fJamaisPropose(etat) {
+  var combos = [{ categorie: 'M15F', forme_jeu: 'RE', effectif: '10x10' }];
+  var r = reglesPourCombosFFR(_ffrRefS5().regles, '15F', combos);
+  _ffrAssert(etat, r.length === 0, 'm15f : ligne M15F (joint=NON) jamais proposée');
+}
+
+/** M12 et U12 joignent la MÊME ligne (via normaliserCategorie). */
+function testS5_m12u12MemeLigne(etat) {
+  var combos = [{ categorie: 'U12', forme_jeu: 'RE', effectif: '10x10' }];
+  var r = reglesPourCombosFFR(_ffrRefS5().regles, normaliserCategorie('U12'), combos);
+  _ffrAssert(etat, normaliserCategorie('M12') === normaliserCategorie('U12'), 'm12u12 : clés canoniques égales');
+  _ffrAssert(etat, r.length === 1 && r[0].terrain_longueur_m === '56', 'm12u12 : U12 joint la ligne M12');
+}
+
+/** Référentiel règles/temps absent ([]) ⇒ aucune erreur, sections muettes. */
+function testS5_referentielReglesAbsent(etat) {
+  // Fixture SANS regles ni temps (formes/dates présents) : les sections doivent rester vides.
+  var res = evaluerConformiteFFR(_ffrRefFactice(), '2027-01-23', ['U10'], 'C',
+    { equipesParCategorie: { U10: '3' }, nbDemiJournees: '1' });
+  _ffrAssert(etat, res.regles && Object.keys(res.regles).length === 0, 'refAbsent : regles muet ({})');
+  _ffrAssert(etat, res.temps && Object.keys(res.temps).length === 0, 'refAbsent : temps muet ({})');
+  // Référentiel TOTALEMENT vide : migration douce, refDisponible=false, aucune exception.
+  var vide = evaluerConformiteFFR({ formes: [], dates: [] }, '2027-01-23', ['U10'], 'C', null);
+  _ffrAssert(etat, vide.refDisponible === false && Object.keys(vide.regles).length === 0,
+    'refAbsent : référentiel vide → refDisponible=false, regles {}');
+}
+
+/** Grille de temps : M12/10x10/1 demi-journée/3 équipes rend DEUX variantes. */
+function testS5_grilleDeuxVariantes(etat) {
+  var res = evaluerConformiteFFR(_ffrRefS5(), '2026-12-05', ['U12'], 'C',
+    { equipesParCategorie: { U12: '3' }, nbDemiJournees: '1' });
+  var t = res.temps.U12;
+  _ffrAssert(etat, t && t.grilles.length === 2, 'variantes : M12/10x10/1dj/3eq → 2 variantes');
+  var vs = (t ? t.grilles : []).map(function (g) { return g.variante; });
+  _ffrAssert(etat, vs.indexOf('A') !== -1 && vs.indexOf('B') !== -1, 'variantes : A et B présentes');
+  _ffrAssert(etat, t && t.plafond_joueur_min === '65', 'variantes : plafond 65 remonté');
+}
+
+/** Nombre d'équipes sans ligne correspondante ⇒ muet, aucune valeur fabriquée. */
+function testS5_nbEquipesSansLigneMuet(etat) {
+  var res = evaluerConformiteFFR(_ffrRefS5(), '2026-12-05', ['U12'], 'C',
+    { equipesParCategorie: { U12: '99' }, nbDemiJournees: '1' });
+  _ffrAssert(etat, !res.temps.U12, 'muet : 99 équipes (aucune ligne) → pas de grille fabriquée');
+}
+
+/** analyserEffectifsCategories expose désormais `comptes` (ajout non cassant). */
+function testS5_comptesExposes(etat) {
+  var config = { categories: [{ categorie: 'U12', presente: 'oui' }] };
+  var equipes = [{ categorie: 'U12' }, { categorie: 'U12' }, { categorie: 'U12' }];
+  var r = analyserEffectifsCategories(config, equipes);
+  _ffrAssert(etat, r.comptes && r.comptes.U12 === 3, 'comptes : U12 → 3 équipes');
+  _ffrAssert(etat, Array.isArray(r.bloque) && Array.isArray(r.vides), 'comptes : bloque/vides toujours présents');
 }
