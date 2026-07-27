@@ -222,6 +222,7 @@ rétrocompatibilité d'affichage. **Actuellement référencé nulle part** — c
 | Dimensions de terrain réglementaires | ⚠️ `dimensions_categories` existe (JSON manuel), non contraint — **source à confirmer, piste identifiée** (fiches « Les règles du jeu » par forme de jeu, citées par S6) |
 | Blocage **dur** sur date fédérale | ⚠️ volontairement informatif à ce stade |
 | Dates de plateaux du **Comité 92** | ❌ absentes du référentiel (le calendrier FFR est national) |
+| **Exposition de la zone A de `Config` en lecture publique** | ❌ **découvert en session 2 bis** — `construireSnapshot` renvoie `lireConfig()` **sans filtre**, donc `getAll` (public, sans clé) sert `referent_nom`, `referent_tel`, `securite_referent_nom`, `securite_referent_tel` : noms et numéros de portable de bénévoles. L'adresse du backend est en clair dans `frontend/js/config.js` (dépôt public). Sans gravité tant que la page reste confidentielle ; **bloquant avant toute mise en avant** de la page des scores. Correction : liste blanche des paramètres publics dans `construireSnapshot`, sur le modèle de l'exclusion déjà en place pour `ClubsInvites` |
 | Cartons / discipline | ⛔ **hors périmètre, décidé en session 2** — la FDM EDR est la feuille de match officielle ; l'app n'introduira pas de données joueur |
 
 **Tests** — `backend/Tests.gs`. Harnais autonome, sans Sheet ni effet de bord. Point d'entrée
@@ -247,6 +248,14 @@ rétrocompatibilité d'affichage. **Actuellement référencé nulle part** — c
   RDEDR : *Éducateurs* / *Joueurs + Éducateurs* / *Joueurs* / *Arbitre Référent*
 - **Libellé du contrôle des 72 h** → préciser en admin que c'est un garde-fou sur la **date**,
   pas une vérification joueur par joueur (la règle fédérale est individuelle)
+- **`construireSnapshot`** → liste blanche des paramètres publics de la zone A. Priorité :
+  **devant** l'écran « Amont / conformité », car conditionne la mise en avant de la page des scores
+- **Jalons d'autorisation** → `demande_envoyee_le`, `autorisation_recue_le`, `autorisation_reference`,
+  pièce jointe, statut. C'est ce qui débloque le **contrôle dur** repoussé depuis la session 1 :
+  pas d'autorisation enregistrée ⇒ avertissement, puis blocage de la publication le jour où on
+  le décide
+- **Cloudflare Worker** → son activation est désormais liée au **succès** du modèle de trafic,
+  pas à une hypothétique montée en charge. À allumer **avant** la première mise en avant, pas après
 
 **Dette identifiée** :
 1. `normaliserCategorie` (backend) a un miroir `normaliserCategorieFFR` (frontend). Deux
@@ -281,6 +290,39 @@ par **ce fichier d'audit** — registre des sources et journal de session — no
 5. **Session d'audit dédiée** : les règles elles-mêmes peuvent changer, pas seulement les dates.
    Une bascule de forme de jeu avancée d'un mois est une règle. Des questions closes peuvent
    rouvrir.
+
+## 1.11 — Positionnement : deux entités distinctes
+
+Tranché le 2026-07-27. L'app modélisait **un** organisateur ; il en faut **deux**, aux rôles
+disjoints.
+
+| Entité | Rôle | Présence dans les documents FFR |
+|---|---|---|
+| **Racing 92** | **Organisateur au sens FFR.** Club affilié, labellisé EDR. C'est son code club, son président, son directeur de tournoi et son n° de licence qui figurent sur la demande d'autorisation et sur le rapport du représentant départemental. Il signe et il est responsable devant la ligue | ✅ partout |
+| **Génération R92** | **Éditeur de l'outil.** Association, non affiliée FFR. Propriétaire de la page publique des scores et de son audience | ❌ nulle part |
+
+**Conséquence sur l'écran « Amont / conformité »** : ce n'est pas un formulaire que l'association
+remplit pour elle-même. C'est un **livrable remis au Racing, prêt à signer**. Ce qui était perçu
+comme de l'hygiène de conformité est en réalité **le produit** — la contrepartie du partenariat.
+
+**Modèle de partenariat** : l'association fournit l'outil (création de tournoi, centralisation,
+gain de temps) ; en échange, les scores sont diffusés sur le site de l'association, ce qui génère
+du trafic, et la page des scores accueille les sponsors de l'association. Aucun flux financier
+entre les deux structures.
+
+**Atout à faire valoir** : l'app **ne contient aucune donnée de joueur** — ni nom, ni licence, ni
+date de naissance. La page publique n'affiche que des noms d'équipes et des scores. Conséquence
+directe de la décision « cartons hors périmètre » (session 2). Pour un club qui expose des enfants
+de 6 à 12 ans, c'est un argument de premier plan.
+
+**Séparation technique, déjà en place** : `admin.html` est protégée par clé et **ne sera jamais
+publique** ; `tournoi.html` est la seule surface exposée. La faiblesse ne vient pas de la
+séparation, mais de ce que la lecture publique transporte (voir §1.8).
+
+**Diffusion sur le site de l'association** : commencer par une **iframe** de `tournoi.html` dans
+une page du site — aucune duplication de code, page maintenue à un seul endroit, emplacements
+sponsors disposés autour de l'iframe donc sur la page de l'association. L'hébergement natif
+(deuxième copie du JavaScript) n'est pas recommandé à ce stade.
 
 ---
 
@@ -625,6 +667,72 @@ deux **conformes**.
 
 ---
 
+## Session 2 bis — 2026-07-27 — Positionnement, partenariat et exposition publique
+
+**Document du jour** : aucun. Session de décision, faisant suite aux questions Q12 et Q13
+ouvertes en session 2.
+
+### Tranché
+
+- **Q12 close** — c'est le **Racing 92** qui dépose la demande d'autorisation. Club affilié,
+  code club, sous couvert de son président. Génération R92 n'apparaît pas dans le circuit fédéral.
+- **Q13 à moitié** — le label EDR du Racing est **confirmé**. La **date du dernier label**, champ
+  obligatoire du formulaire, reste à obtenir. Réponse partielle ⇒ la question reste ouverte.
+- **Positionnement à deux entités** formalisé (voir §1.11).
+- **Modèle de partenariat** : outil contre diffusion des scores et emplacement sponsors.
+
+### Flux d'autorisation — arbitrage
+
+Deux approches ont été mises en regard :
+
+- **Pré-remplissage** du formulaire d'autorisation par l'app ;
+- **Enregistrement** de l'autorisation : l'EDR envoie le document comme d'habitude, le document
+  signé revient, le Racing l'alimente dans l'admin.
+
+**Retenu : l'enregistrement d'abord.** Trois raisons. Le circuit fédéral est **papier, à trois
+signatures successives** (club → comité → ligue) : aucun logiciel ne le remplacera. La moitié du
+formulaire est de la donnée **club** que l'app n'a pas (code club, président, date du label,
+assurance, restauration). Et surtout, un document pré-rempli mais **non autorisé n'empêche rien** :
+c'est l'enregistrement de l'autorisation qui débloque le contrôle dur repoussé depuis la session 1.
+
+**Si le pré-remplissage est repris plus tard, ne pas reproduire le formulaire FFR** : produire une
+**fiche de préparation** listant, dans l'ordre du formulaire, les seules valeurs que l'app sait
+calculer (matchs par équipe, durée de match, 1 ou 2 phases, nombre d'équipes et de clubs, terrains,
+horaires). 90 % du gain de temps, 10 % du risque, et rien à refaire quand la FFR republie son PDF.
+
+### Découvert — exposition de la zone A de `Config`
+
+`construireSnapshot` renvoie `lireConfig()` **sans aucun filtre**. L'action `getAll`, publique et
+sans clé, appelée toutes les ~15 s par la page des scores, transporte donc **toute la zone A** :
+`referent_nom`, `referent_tel`, `securite_referent_nom`, `securite_referent_tel`. L'adresse du
+backend est en clair dans `frontend/js/config.js` (dépôt public) et dans le code source de la page.
+
+La page **n'affiche** pas ces valeurs — mais elles **arrivent** dans le navigateur de chaque
+visiteur. Vérifiable en ouvrant l'URL du backend suivie de `?action=getAll`.
+
+Rien n'a changé techniquement ; ce qui change, c'est le **nombre de gens qui passent devant**. Le
+modèle de partenariat consiste précisément à amener du trafic sur cette page. **À corriger avant
+la mise en avant, pas après.** Voir §1.8 et §1.9.
+
+### Conséquence sur le relais CDN
+
+Le Cloudflare Worker, codé et dormant depuis l'origine, change de statut : son activation n'est
+plus une hypothèse de montée en charge mais la **conséquence attendue du succès** du modèle. Apps
+Script a des quotas journaliers de durée d'exécution ; plusieurs centaines de parents rafraîchissant
+la même page pendant trois heures, c'est le scénario pour lequel le relais a été écrit.
+
+### Tension à surveiller
+
+Le briefing officiel FFR (S10) insiste : les matchs sont des moments d'apprentissage, *« ce n'est
+pas la coupe du monde »*. Le modèle repose sur une page de résultats attractive. Ce n'est pas
+contradictoire, mais ce n'est pas neutre. Si la ligue ou le club regarde un jour cette page, mieux
+vaut qu'elle valorise l'ensemble des participants qu'un classement agressif — l'app sait déjà le
+faire, avec le format `LIBRE` sans classement, recommandé pour les plus jeunes.
+
+**Prompt Claude Code produit** : `PATCH-AUDIT-S2BIS.md` (documentation seule).
+
+---
+
 # PARTIE 3 — Questions ouvertes
 
 **Règles de clôture** — Une question se ferme soit *par document* (source et passage cités), soit *par le comité / la ligue*. Une réponse partielle ne ferme rien : la question reste ouverte, assortie d'une note sur ce qui manque. La liste finale des points sans réponse textuelle n'est établie qu'une fois tous les documents FFR traités.
@@ -642,6 +750,9 @@ deux **conformes**.
 | Q9 | Le **calendrier des plateaux du Comité 92** — celui qui bloque en pratique — n'est pas dans le calendrier national. Où le récupérer, et sous quelle forme ? *(à intégrer dans `RefFFR_Dates` avec `source = CD92`)* | Comité 92 | ⏳ ouverte |
 | Q10 | Les mentions **(A)/(B)/(C)** désignent bien les zones de vacances scolaires — la légende du calendrier (page 1) l'indique explicitement : « A,B ou C = zone si vacances scolaires ». L'Île-de-France est en zone C. Le référentiel et le paramètre `zone_vacances` sont corrects. Source : S4, légende page 1. | Comité 92 | ✅ résolue (document) |
 | Q11 | **Source des dimensions de terrain** (M8 30×20, M10 30×25, M12 56×45) : reportée du pré-audit sans document identifié. *Piste ouverte en session 2 : S6 renvoie aux fiches « Les règles du jeu », une par forme de jeu, téléchargeables sur ffr.fr. C'est là qu'il faut chercher.* | vérification Romain | ⏳ ouverte |
-| **Q12** | **Qui dépose la demande d'autorisation ?** S7 exige un **code club** et la signature « sous couvert de son Président ». **Génération R92 est une association, pas un club affilié à la FFR.** La demande doit-elle partir du **Racing 92** ? Question structurante pour tout le parcours amont. | Comité 92 / Racing 92 | ⏳ ouverte |
-| **Q13** | **L'école de rugby du Racing 92 est-elle labellisée FFR**, et à quelle date remonte le **dernier label** ? S7 en fait un champ obligatoire et précise qu'une association non labellisée **ne peut pas organiser** de tournoi EDR à son initiative. | vérification Romain | ⏳ ouverte |
+| **Q12** | **Qui dépose la demande d'autorisation ?** → C'est le **Racing 92**, club affilié et labellisé EDR, sous couvert de son président. Génération R92 est éditeur de l'outil, pas organisateur au sens FFR. Voir §1.11. | Comité 92 / Racing 92 | ✅ **résolue (club)** |
+| **Q13** | **Date du dernier label EDR du Racing 92.** Le label est **confirmé** ; seule la **date**, champ obligatoire du formulaire d'autorisation, reste à obtenir. *Réponse partielle : la question reste ouverte conformément aux règles de clôture.* | vérification Romain | ⏳ ouverte |
 | **Q14** | **Symétrie de la règle des 72 h.** Les feuilles de présence (S9, S11, S12) n'engagent que le **passé** (« 3 jours francs précédents »), alors que l'app contrôle **avant et après**. L'art. 230-2 est-il bien symétrique ? *L'implémentation actuelle est la plus prudente des lectures relevées — on ne change rien tant que ce n'est pas tranché.* | vérification Romain / Comité 92 | ⏳ ouverte |
+| **Q15** | **Convention écrite Racing 92 ↔ Génération R92.** L'association diffuse les scores d'une manifestation dont le Racing est responsable, et monétise l'audience de cette page. Accord écrit du club nécessaire sur les **deux** volets : publication des scores, et présence de sponsors sur la page. Protège autant l'association que le club, et survit à un changement de dirigeant. | Racing 92 | ⏳ ouverte |
+| **Q16** | **Catégories de sponsors admissibles.** L'audience est composée de parents d'enfants de 6 à 12 ans, dans un cadre sportif fédéral. Au moins trois régimes à vérifier : loi Évin (alcool exclu du parrainage sportif), publicité des jeux d'argent visant les mineurs, messages sanitaires obligatoires sur la publicité alimentaire. **À faire regarder une fois par une personne qualifiée, avant tout engagement avec un sponsor.** | conseil juridique | ⏳ ouverte |
+| **Q17** | **Usage des marques.** L'écusson « École de Rugby », le logo #BienJoué et les marques du Racing 92 n'appartiennent pas à l'association. Leur affichage sur une page comportant des sponsors est une question distincte de la convention avec le club. | Ligue IDF / Racing 92 | ⏳ ouverte |
