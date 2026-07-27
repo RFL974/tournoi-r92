@@ -195,6 +195,17 @@ select.r-input { cursor: pointer; }
   background: rgba(46, 143, 224, 0.12);
 }
 
+/* Encart « format interdit EDR » : affiché seulement pour une catégorie déjà en COUPE_PLATEAU
+   (format retiré des choix, conservé pour la rétrocompatibilité). */
+.format-interdit-edr {
+  margin: 0 0 10px;
+  font-size: 0.9rem; line-height: 1.4;
+  color: #ffe6b0;
+  background: rgba(224, 158, 46, 0.16);
+  border-radius: 8px; padding: 8px 10px;
+}
+.theme-clair .format-interdit-edr { color: #8a5a0c; background: #fdf4e3; }
+
 /* Champ « qualifiés en Coupe » : masqué, révélé seulement si COUPE_PLATEAU est choisi */
 .format-coupe-param { margin-top: 10px; display: none; }
 .bloc-format[data-format="COUPE_PLATEAU"] .format-coupe-param { display: flex; }

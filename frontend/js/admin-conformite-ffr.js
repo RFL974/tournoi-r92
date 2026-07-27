@@ -113,23 +113,54 @@ function rendreConformiteFFR(res) {
   }
   const mill = (refFFRCache && refFFRCache.millesime) ? refFFRCache.millesime : '2026-2027';
   let html = '';
+
+  // COUVERTURE — si la date du tournoi est hors de la saison couverte par le référentiel, on
+  // affiche un bandeau ORANGE explicite AVANT tout le reste. Rien n'a pu être comparé : le vert
+  // « aucun conflit » est alors formellement interdit (voir la garde plus bas).
+  const horsCouverture = !!(res.couverture && res.couverture.couverte === false);
+  if (horsCouverture) {
+    html += '<div class="ffr-bloc ffr-orange"><strong>⚠️ ' +
+      echapper(messageCouvertureFFR(res)) + '</strong></div>';
+  }
+
   if (res.bloquants && res.bloquants.length) {
     html += '<div class="ffr-bloc ffr-rouge"><strong>⛔ ' + res.bloquants.length +
       ' conflit(s) avec le calendrier FFR ' + echapper(mill) + '</strong><ul>' +
       res.bloquants.map(ligneConflitFFR).join('') + '</ul></div>';
   }
-  if (res.avertissements && res.avertissements.length) {
-    html += '<div class="ffr-bloc ffr-orange"><strong>⚠️ ' + res.avertissements.length +
+  // Points de vigilance métier — on EXCLUT l'avertissement de couverture (déjà affiché en bandeau
+  // ci-dessus) pour ne pas le montrer deux fois.
+  const averts = (res.avertissements || []).filter(function (a) { return !(a && a.couverture); });
+  if (averts.length) {
+    html += '<div class="ffr-bloc ffr-orange"><strong>⚠️ ' + averts.length +
       ' point(s) de vigilance</strong><ul>' +
-      res.avertissements.map(ligneConflitFFR).join('') + '</ul></div>';
+      averts.map(ligneConflitFFR).join('') + '</ul></div>';
   }
-  if (!html) {
+  // GARDE : le bandeau vert ne peut apparaître QUE si la couverture est confirmée. On ne se
+  // repose pas sur « la liste d'avertissements est vide » : on teste explicitement horsCouverture.
+  if (!html && !horsCouverture) {
     html = '<div class="ffr-bloc ffr-vert">✅ Aucun conflit détecté avec le calendrier FFR ' +
       echapper(mill) + '.</div>';
   }
   html += '<p class="ffr-note">Contrôle informatif : l\'organisateur reste décideur — ' +
     'la date peut être enregistrée malgré une alerte.</p>';
   return html;
+}
+
+/**
+ * Message du bandeau de couverture. On réutilise en priorité le libellé de l'avertissement
+ * poussé par le backend (source unique, déjà formaté) ; à défaut on le reconstruit à partir des
+ * bornes de `res.couverture` et de la date du tournoi courante.
+ */
+function messageCouvertureFFR(res) {
+  const a = (res.avertissements || []).filter(function (x) { return x && x.couverture; })[0];
+  if (a && a.libelle) return a.libelle;
+  const c = res.couverture || {};
+  const d = c.debut ? dateCourteFrFFR(c.debut) : '?';
+  const f = c.fin ? dateCourteFrFFR(c.fin) : '?';
+  const dj = dateCourteFrFFR(dateTournoiCourante());
+  return 'La date du tournoi (' + dj + ') est en dehors de la période couverte par le ' +
+    'référentiel FFR chargé (du ' + d + ' au ' + f + '). Aucun contrôle de date n\'a pu être effectué.';
 }
 
 /** Une ligne de conflit (date + libellé + motif). */
