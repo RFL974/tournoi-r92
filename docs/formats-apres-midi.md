@@ -1,5 +1,16 @@
 # Formats d'après-midi (par catégorie)
 
+> ⚠️ **`COUPE_PLATEAU` est interdit en École de Rugby.** Les phases finales (quart, demi, finale)
+> sont interdites sur les tournois ou plateaux Écoles de Rugby.
+> Source : *Formulaire de demande d'autorisation — organisation de tournoi École de Rugby*, FFR,
+> grille 2026-2027, « Rappel des principes généraux » : « Les phases finales (1/4, demi finale et
+> finale) sont interdites sur les tournois ou plateaux Ecoles de Rugby. »
+>
+> Ce format **n'est donc plus proposé** dans l'administration. Il n'est **conservé que pour la
+> rétrocompatibilité** : un classeur déjà configuré ainsi continue d'être généré, affiché et saisi
+> sans erreur, et l'admin affiche alors un encart invitant à choisir un format conforme
+> (`CROISE`, `CROISE_DIAGONAL` ou `LIBRE`).
+
 Depuis cette évolution, **chaque catégorie choisit son propre format d'après-midi** — dans le
 même tournoi, les M8 peuvent jouer en « Matchs libres » pendant que les M12 jouent en
 « Coupe + Plateau ». Le choix se fait **au paramétrage** (page Administration), avant le jour J,
