@@ -50,30 +50,51 @@ document.addEventListener('DOMContentLoaded', initDossier);
 async function initDossier() {
   const zone = document.getElementById('dossier');
   revelerOutilsAdmin();
+
+  // Le dossier (contacts jour J, logistique, secours, tarifs) est PROTÉGÉ PAR JETON : chaque club
+  // reçoit un lien personnel (?club=…&token=…). Toute la config du dossier vient de getConfigClub
+  // (vue `club`, filtrée + jeton) ; getClubDossier fournit le prénom pour l'accueil personnalisé.
+  const params = new URLSearchParams(window.location.search);
+  const clubParam = txt(params.get('club'));
+  const token = txt(params.get('token'));
+
+  // Lien incomplet (ancien lien sans jeton, ou accès direct) → message courtois, aucune donnée.
+  if (!clubParam || !token) { await afficherLienDossierExpire(zone); return; }
+
   try {
-    const data = await apiGet('getAll'); // { config, equipes, poules, matchs }
-    const config = (data && data.config) || { global: {}, categories: [] };
-
-    // PHASE 2 — personnalisation par club (rétrocompatible) : si l'URL porte ?club=…,
-    // on va chercher les infos NON sensibles du club (nom, prénom, catégories engagées —
-    // jamais l'email) pour l'accueil personnalisé et le filtrage du format sportif.
-    // Sans paramètre club (liens déjà envoyés), le dossier reste générique.
-    let club = null;
-    const params = new URLSearchParams(window.location.search);
-    const clubParam = txt(params.get('club'));
-    if (clubParam) {
-      try {
-        const r = await apiGet('getClubDossier', { club: clubParam });
-        club = (r && r.club) || null;
-      } catch (e) { club = null; } // club introuvable / lecture ratée → mode générique
-    }
-
+    const [cfgClub, r] = await Promise.all([
+      apiGet('getConfigClub', { club: clubParam, token: token }),
+      apiGet('getClubDossier', { club: clubParam, token: token })
+    ]);
+    const config = (cfgClub && cfgClub.config) || { global: {}, categories: [] };
+    const club = (r && r.club) || null;
     zone.innerHTML = construireDossier(config.global || {}, config.categories || [], club);
     dessinerQR(); // le QR se dessine après coup (il vise un conteneur du HTML rendu)
   } catch (erreur) {
-    zone.innerHTML = '<div class="message-chargement erreur">Impossible de charger les données du tournoi.<br>'
-      + 'Détail : ' + echapper(erreur.message) + '</div>';
+    // Jeton invalide/expiré (le backend renvoie « Lien invalide ou expiré. ») → message courtois.
+    await afficherLienDossierExpire(zone);
   }
+}
+
+/**
+ * Message affiché quand le lien du dossier est absent, incomplet ou expiré. Donne une porte de
+ * sortie par EMAIL (contact_reponse_email, lu dans la vue invitation PUBLIQUE) : un club bloqué
+ * le samedi matin doit pouvoir joindre l'organisateur. JAMAIS de téléphone — cette page s'affiche
+ * sans jeton, donc elle est publique.
+ */
+async function afficherLienDossierExpire(zone) {
+  let email = '';
+  try {
+    const cfg = await apiGet('getConfig'); // vue invitation (publique) : contient contact_reponse_email
+    email = txt(cfg && cfg.global && cfg.global.contact_reponse_email);
+  } catch (e) { /* contact indisponible : on reste sur un message générique */ }
+  const sortie = email
+    ? 'Pour recevoir votre lien personnel, écrivez à <a href="mailto:' + echapper(email) + '">'
+      + echapper(email) + '</a>.'
+    : 'Contactez l\'organisateur du tournoi pour recevoir votre lien personnel.';
+  zone.innerHTML =
+    '<div class="message-chargement">Ce lien de dossier n\'est plus valide ou incomplet.<br>'
+    + 'Chaque club reçoit un lien personnel unique.<br>' + sortie + '</div>';
 }
 
 /**

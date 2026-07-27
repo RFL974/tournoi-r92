@@ -561,7 +561,7 @@ async function onEnregistrerParking() {
       await ecrireAdmin('enregistrerPhotoParking', { photo: parkingDataURI });
     }
     // On recharge la config pour refléter ce qui est réellement enregistré (dont la photo).
-    configCourante = await apiGet('getConfig');
+    configCourante = await lireConfigAdmin();
     majInvitation();
     majDossier();
     form.parking_photo.value = ''; // vide le champ fichier
@@ -614,7 +614,7 @@ async function onRetirerPhotoParking() {
   bouton.disabled = true;
   try {
     await ecrireAdmin('supprimerPhotoParking', {});
-    configCourante = await apiGet('getConfig');
+    configCourante = await lireConfigAdmin();
     majInvitation();
     majDossier();
     afficherMessage(message, '🗑️ Photo du parking retirée.', 'ok');
@@ -1044,12 +1044,15 @@ async function enregistrerCatsClub(bouton) {
   }
 }
 
-/** Lien ABSOLU du dossier Phase 2 personnalisé d'un club (dossier-club.html?tournoi=…&club=…). */
-function lienDossierClub(nom) {
+/** Lien ABSOLU du dossier Phase 2 personnalisé d'un club (dossier-club.html?tournoi=…&club=…&token=…).
+ *  Le JETON (club_token) est désormais OBLIGATOIRE : sans lui, le dossier n'affiche plus les
+ *  contacts/logistique (protégés côté backend). On le transmet comme le lien de réponse Phase 1. */
+function lienDossierClub(nom, token) {
   const url = new URL('dossier-club.html', window.location.href);
   const tn = (configCourante.global && configCourante.global.tournoi_nom) || '';
   if (tn) url.searchParams.set('tournoi', tn);
   url.searchParams.set('club', nom);
+  if (token) url.searchParams.set('token', token);
   return url.toString();
 }
 
@@ -1064,9 +1067,10 @@ async function genererDossierFinal(nom) {
   const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
   if (!club) return;
 
-  // APERÇU / ENVOI du dossier.
+  // APERÇU / ENVOI du dossier. Le lien porte le jeton personnel du club (accès aux sections
+  // contacts/logistique du dossier, protégées par jeton côté backend).
   const email = String(club.club_contact_email || '').trim();
-  const lien = lienDossierClub(String(club.club_nom || ''));
+  const lien = lienDossierClub(String(club.club_nom || ''), String(club.club_token || ''));
   if (email) { ouvrirApercuEmail(club, lien); return; }
 
   // Pas d'email : mode manuel. On copie le lien (best-effort) et on l'affiche pour copie.

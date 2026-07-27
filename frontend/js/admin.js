@@ -107,6 +107,18 @@ function ecrireAdmin(action, data) {
 }
 
 /**
+ * Lit la config COMPLÈTE (zone A + zone B, champs personnels inclus) via l'action doPost
+ * `getConfigAdmin`, protégée par la clé admin. À utiliser PARTOUT où l'admin a besoin de la
+ * config pour l'affichage/édition : getAll et getConfig sont désormais filtrés par liste blanche
+ * (vues live / invitation) et ne renvoient plus les contacts. Lecture seule côté serveur : ne
+ * prend pas le verrou d'écriture.
+ */
+async function lireConfigAdmin() {
+  const r = await apiPostProtege('getConfigAdmin', {}, 'admin', 'admin');
+  return (r && r.config) || { global: {}, categories: [] };
+}
+
+/**
  * Vrai si une catégorie est marquée présente ("oui", quelle que soit la casse).
  */
 function estPresente(cat) {
@@ -185,45 +197,53 @@ async function initAdmin() {
   const zoneReglages = document.getElementById('reglages');
   if (typeof injecterIcones === 'function') injecterIcones(); // icônes SVG des boutons statiques
 
-  try {
-    const data = await apiGet('getAll'); // { config, equipes, poules, matchs }
-    configCourante = data.config;
-    equipesCourantes = data.equipes;
-    matchsCourants = data.matchs || [];
+  // La page d'administration édite des données PERSONNELLES (contacts, sécurité, réponse). Elle
+  // exige donc la clé admin AVANT de charger la config : sans clé, aucune donnée sensible n'est
+  // servie. La config COMPLÈTE se lit via getConfigAdmin (clé admin) ; getAll ne fournit plus que
+  // les données live (équipes/planning + config filtrée), sans les contacts.
+  const connecte = await connexion('admin', "à l'administration");
+  majBarreConnexion(connecte);
 
-    // 1) Réglages (horaires + catégories)
-    injecterReglages(data.config.global, data.config.categories);
+  if (connecte) {
+    try {
+      // getAll : équipes / poules / matchs (sa config est la vue LIVE, on ne s'en sert pas pour
+      // l'édition). getConfigAdmin : la config complète. Les deux en parallèle.
+      const [data, cfg] = await Promise.all([apiGet('getAll'), lireConfigAdmin()]);
+      configCourante = cfg;
+      equipesCourantes = data.equipes;
+      matchsCourants = data.matchs || [];
 
-    // 1 bis) Terrains physiques & répartition (dépend des catégories présentes)
-    injecterTerrains();
+      // 1) Réglages (horaires + catégories) — depuis la config complète.
+      injecterReglages(cfg.global, cfg.categories);
+      injecterTerrains();
+      remplirSelectCategories(cfg.categories);
 
-    // 2) Équipes : on remplit la liste déroulante des catégories et la liste des équipes
-    remplirSelectCategories(data.config.categories);
-    afficherEquipes(data.equipes);
+      // 2) Équipes + 3) poules & planning déjà générés.
+      afficherEquipes(data.equipes);
+      afficherPlanning(data.poules, data.matchs);
+      majApresMidi();
 
-    // 3) Poules & planning déjà générés (s'il y en a)
-    afficherPlanning(data.poules, data.matchs);
-    majApresMidi(); // état de préparation de la phase après-midi
+      // 4) Infos du tournoi + contacts & sécurité + dossier + publication.
+      majInfosTournoi();
+      majContactsSecurite();
+      majInvitation();
+      majSurPlace();
+      majReponse();
+      majApercuInvitation();
+      majPublication();
+      majDossier();
 
-    // 4) Infos du tournoi (nom / date / lieu / adresse / description) + contacts & sécurité
-    //    + dossier d'invitation (modalités / parking / encadrement) + état de publication
-    majInfosTournoi();
-    majContactsSecurite();
-    majInvitation();
-    majSurPlace();   // Phase 1 — carte « Sur place »
-    majReponse();    // Phase 1 — carte « Réponse à l'invitation »
-    majApercuInvitation(); // Phase 1 — aperçu de l'email d'invitation
-    majPublication();
-    majDossier(); // état des sections du dossier club (suit toutes les infos ci-dessus)
-
-    // 5) Tableau de bord (récap en haut de page) + horodatage
-    majTableauBord();
-    majHeureAdmin();
-
-  } catch (erreur) {
+      // 5) Tableau de bord + horodatage.
+      majTableauBord();
+      majHeureAdmin();
+    } catch (erreur) {
+      zoneReglages.innerHTML =
+        '<div class="message erreur">Impossible de charger les réglages.<br>' +
+        'Détail : ' + erreur.message + '</div>';
+    }
+  } else {
     zoneReglages.innerHTML =
-      '<div class="message erreur">Impossible de charger les réglages.<br>' +
-      'Détail : ' + erreur.message + '</div>';
+      '<div class="message">🔒 Connecte-toi avec la clé admin pour accéder aux réglages du tournoi.</div>';
   }
 
   // Barre de connexion : boutons « Se connecter » / « Changer de clé » (délégué).
@@ -376,13 +396,8 @@ async function initAdmin() {
   // laisse assistant.js réorganiser la page en cartes (ou non, selon la préférence mémorisée).
   if (typeof initAssistant === 'function') initAssistant();
 
-  // « Connexion » : on demande la clé admin en DERNIER (une fois la page prête), puis mémorisée.
-  // Ainsi l'assistant s'affiche tout de suite, sans attendre la saisie de la clé.
-  const connecte = await connexion('admin', "à l'administration");
-  majBarreConnexion(connecte);
-
-  // Clubs invités : la liste contient des emails → elle ne se charge qu'avec la clé
-  // admin (action protégée), donc APRÈS la connexion. Sans clé : message d'invite.
+  // Clubs invités : la liste contient des emails → elle ne se charge qu'une fois connecté
+  // (clé admin déjà obtenue en tête de fonction). Sans clé : rien à charger.
   if (connecte) chargerClubsInvites();
 }
 
@@ -414,14 +429,20 @@ async function initAdmin() {
  */
 async function rechargerEtRendre(opt) {
   opt = opt || {};
-  const data = await apiGet('getAll'); // { config, equipes, poules, matchs }
-  configCourante = data.config;
+  const data = await apiGet('getAll'); // équipes / poules / matchs (config = vue live, ignorée ici)
   equipesCourantes = data.equipes;
   matchsCourants = data.matchs || [];
 
-  if (opt.reglages)   injecterReglages(data.config.global, data.config.categories);
+  // La config COMPLÈTE vient de getConfigAdmin (clé admin), JAMAIS de la vue live de getAll (qui
+  // écraserait les contacts). On ne la recharge que si un rendu qui en dépend est demandé — sinon
+  // on garde la configCourante déjà chargée (ex. rafraîchissement des seuls scores).
+  if (opt.reglages || opt.selectCats || opt.terrains || opt.infos || opt.publication) {
+    configCourante = await lireConfigAdmin();
+  }
+
+  if (opt.reglages)   injecterReglages(configCourante.global, configCourante.categories);
   if (opt.terrains)   injecterTerrains();
-  if (opt.selectCats) remplirSelectCategories(data.config.categories);
+  if (opt.selectCats) remplirSelectCategories(configCourante.categories);
   if (opt.equipes)    afficherEquipes(data.equipes);
 
   afficherPlanning(data.poules, data.matchs);
@@ -513,6 +534,9 @@ async function onClicConnexion(evenement) {
   if (evenement.target.closest('#bouton-se-connecter')) {
     const ok = await connexion('admin', "à l'administration");
     majBarreConnexion(ok);
+    // Connexion réussie depuis l'état verrouillé (aucune config chargée) : on recharge la page
+    // pour charger la config admin et rendre les réglages. initAdmin retrouvera la clé en session.
+    if (ok) location.reload();
   }
 }
 
@@ -644,7 +668,7 @@ function onReglagesClick(evenement) {
  * (utilisé après ajout/suppression de catégorie).
  */
 async function rechargerReglages() {
-  const cfg = await apiGet('getConfig');
+  const cfg = await lireConfigAdmin(); // config complète (clé admin), pas la vue publique getConfig
   configCourante = cfg;
   injecterReglages(cfg.global, cfg.categories);
   injecterTerrains();                        // les catégories présentes ont pu changer

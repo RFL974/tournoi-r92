@@ -150,14 +150,14 @@ function blocSurPlace(g) {
   return html;
 }
 
-/** e) « Réponse attendue » : date limite de réponse + contact référent (tél et/ou email). */
+/** e) « Réponse attendue » : date limite de réponse + contact référent (nom + email).
+ *  Le TÉLÉPHONE n'est volontairement PAS affiché : cette page vitrine est publique et mise en
+ *  avant ; le portable d'un bénévole n'y figure pas (décision S3). La vue `invitation` du backend
+ *  ne renvoie d'ailleurs plus `contact_reponse_tel`. Le numéro du jour J reste dans le dossier
+ *  club, derrière le jeton. */
 function blocReponse(g) {
   const contact = [];
   if (txt(g.contact_reponse_nom)) contact.push('<strong>' + echapper(txt(g.contact_reponse_nom)) + '</strong>');
-  if (txt(g.contact_reponse_tel)) {
-    contact.push('<a href="tel:' + echapper(txt(g.contact_reponse_tel)) + '">'
-      + echapper(telephoneLisible(g.contact_reponse_tel)) + '</a>');
-  }
   if (txt(g.contact_reponse_email)) {
     contact.push('<a href="mailto:' + echapper(txt(g.contact_reponse_email)) + '">'
       + echapper(txt(g.contact_reponse_email)) + '</a>');
