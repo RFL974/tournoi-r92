@@ -1934,9 +1934,19 @@ a.bouton { display: inline-block; text-decoration: none; }
 .ffr-ligne-label { opacity: 0.8; }
 .ffr-ligne-val strong { color: inherit; }
 .ffr-attendu { color: #ffe6b0; font-size: 0.8rem; }
+/* Bouton « Appliquer les valeurs FFR » (session 6) : discret, une catégorie à la fois. */
+.ffr-appliquer {
+  display: inline-block; margin: 6px 6px 2px 0; padding: 5px 12px;
+  font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  color: #ffe6b0; background: rgba(224, 158, 46, 0.16);
+  border: 1px solid rgba(224, 158, 46, 0.5); border-radius: 8px;
+}
+.ffr-appliquer:hover { background: rgba(224, 158, 46, 0.28); }
+.ffr-appliquer:disabled { opacity: 0.5; cursor: default; }
 
 /* Thème clair */
 .theme-clair .ffr-detail-cat { border-top-color: #e6edf5; }
+.theme-clair .ffr-appliquer { color: #8a5a0c; background: #fdf4e3; border-color: #e6c98a; }
 .theme-clair .ffr-detail-titre { color: #33608f; }
 .theme-clair .ffr-attendu { color: #8a5a0c; }
 .theme-clair .ffr-neutre { color: #33608f; background: #eef4fb; }
