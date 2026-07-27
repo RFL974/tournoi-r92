@@ -28,10 +28,10 @@ millésime. Voir le *Registre des sources* en tête de Partie 2.
 # PARTIE 1 — État de l'app
 
 > ⚠️ Cette partie est **réécrite intégralement à chaque session**.
-> **Version de référence lue** : commit de merge `cfe7a7f` du 2026-07-27 (branche `main`,
-> `RFL974/tournoi-r92`, PR #82). Backend Apps Script **redéployé en production** le même jour,
-> **42/42 tests OK** dans l'éditeur, garde-fou de couverture **vérifié en conditions réelles**
-> sur la page admin.
+> **Version de référence lue** : commit de merge `6306d27` du 2026-07-27 (branche `main`,
+> `RFL974/tournoi-r92`, PR #83). Backend Apps Script **redéployé en production** le même jour,
+> **66/66 tests OK**, et fermeture de la lecture publique **vérifiée en conditions réelles**
+> (`?action=getConfig` et `?action=getAll` : `tournoi_nom` présent, `referent_tel` introuvable).
 
 ## 1.1 — Architecture
 
@@ -44,9 +44,15 @@ Trois briques qui communiquent en JSON, aucun framework, aucun serveur à gérer
 | Frontend | HTML/CSS/JS statiques, **GitHub Pages** | 7 pages, mobile-first |
 | Relais CDN | **Cloudflare Worker** | Codé, **dormant** — activable pour la montée en charge |
 
-Sécurité : lectures publiques ; écritures protégées par **2 clés** (admin / scores). Exception —
-la page de réponse du club est sécurisée **par jeton**, pas par clé. Toutes les écritures sont
-sérialisées par `LockService`. Cache serveur ~10 s sur `getAll`, **cache distinct ~10 s sur
+Sécurité — **les lectures publiques sont filtrées depuis la session 3** : toute sortie de
+configuration passe par `lireConfigPublique`, avec une **liste blanche opt-in** (rien ne sort
+sauf ce qui est nommément autorisé). Trois vues : `live` (page des scores), `invitation`
+(vitrine publique), `club` (dossier, **protégé par jeton**). Une vue inconnue retombe sur `live`,
+la plus fermée : le défaut est fermé. Écritures protégées par **2 clés** (admin / scores). Deux
+pages club sont sécurisées **par jeton**, pas par clé : la réponse à l'invitation et le dossier.
+Toutes les écritures sont sérialisées par `LockService` ; les **lectures authentifiées** en sont
+exemptées (voir 1.4). Cache serveur ~10 s sur `getAll` (clés `snapshot_json_v2` et
+`snapshot_json_secours_v2`, cette dernière conservée **6 h**), **cache distinct ~10 s sur
 `getRefFFR`** (clé `refffr_json`, sans interaction avec `getAll`).
 
 ⚠️ **Déploiement backend manuel** : le merge sur `main` ne met pas à jour l'Apps Script. Il faut
@@ -98,11 +104,12 @@ par défaut, sur la catégorie la plus concernée. Corrigé en `CROISE`, `param_
 Toutes les colonnes récentes bénéficient d'une **migration douce** (ajout automatique à droite,
 vide = comportement historique).
 
-## 1.4 — Actions backend (47)
+## 1.4 — Actions backend (49)
 
-**Lecture (`doGet`, 12)** — `ping`, `getConfig`, `getEquipes`, `getPoules`, `getMatchs`, `getAll`,
-`getClassement`, `getHistorique`, `getClubDossier`, `getReponseInvitation`, `getRefFFR`,
-`getConformiteFFR`
+**Lecture (`doGet`, 13, publiques)** — `ping`, `getConfig` *(vue `invitation`)*, `getEquipes`,
+`getPoules`, `getMatchs`, `getAll` *(vue `live`)*, `getClassement`, `getHistorique`,
+`getClubDossier` *(jeton)*, **`getConfigClub`** ⭐ *(jeton, vue `club`)*, `getReponseInvitation`
+*(jeton)*, `getRefFFR`, `getConformiteFFR`
 
 **Écriture (`doPost`, 35, clé admin sauf mention)** — `ajouterEquipe`, `modifierEquipe`,
 `supprimerEquipe`, `supprimerEquipesCategorie`, `enregistrerHoraires`, `enregistrerCategorie`,
@@ -114,6 +121,20 @@ vide = comportement historique).
 `ajouterClubInvite`, `modifierClubInvite`, `supprimerClubInvite`, `modifierStatutClubInvite`,
 `listerClubsInvites`, `enregistrerCategoriesEngagees`, `creerEquipesClub`, `envoyerInvitationClub`,
 `envoyerInvitationsGroupe`, `envoyerDossierEmail`, `repondreInvitation` *(jeton)*
+
+**Lecture authentifiée (`doPost`, 1)** — **`getConfigAdmin`** ⭐ *(clé admin)* : renvoie la
+configuration **complète** à l'administration. Regroupée dans `ACTIONS_LECTURE` et traitée
+**après** la vérification de clé mais **avant** la prise du verrou d'écriture — une lecture ne
+doit jamais entrer en concurrence avec la saisie des scores un jour de tournoi.
+
+**Fonctions internes de filtrage public** :
+
+| Fonction | Rôle |
+|---|---|
+| `CONFIG_PUBLIQUE_VUES` | Les trois listes blanches, déclarées **côte à côte** : `live`, `invitation`, `club` |
+| `filtrerConfigPublique` | **Cœur pur et testable**, config injectée, ne lit aucun classeur. Vue inconnue ⇒ `live` |
+| `lireConfigPublique` | **Seul point de sortie** de la config vers l'extérieur : lit le classeur puis applique la vue |
+| `lireConfig` | **Usage interne authentifié uniquement** — ne jamais renvoyer son résultat à un appelant non authentifié |
 
 **Fonctions internes de conformité** (non exposées comme actions) :
 
@@ -138,7 +159,7 @@ vide = comportement historique).
 | Page | Public | Rôle |
 |---|---|---|
 | `tournoi.html` | public | Page live : onglets *Mon équipe* / *Classements*, filtre catégorie, podium, refresh ~15 s |
-| `admin.html` | organisateur (clé admin) | Équipes, réglages, horaires, terrains & répartition, clubs invités, infos tournoi, **bloc Conformité FFR**, génération, publication |
+| `admin.html` | organisateur (clé admin) | Équipes, réglages, horaires, terrains & répartition, clubs invités, infos tournoi, **bloc Conformité FFR**, génération, publication. ⚠️ **Depuis la session 3, la clé est demandée au CHARGEMENT**, avant le rendu des réglages (auparavant : rendu d'abord, clé ensuite). Conséquence directe du filtrage : les contacts ne peuvent plus être servis sans authentification. Sans clé, état verrouillé courtois |
 | `saisie.html` | table de marque (clé scores) | Saisie des scores, filtre catégorie + grand terrain, verrouillage |
 | `perfs.html` | interne | Bilan tournoi + cumul de saison par adversaire |
 | `invitation-club.html` | public | Invitation Phase 1 (version web complète) |
@@ -222,12 +243,14 @@ rétrocompatibilité d'affichage. **Actuellement référencé nulle part** — c
 | Dimensions de terrain réglementaires | ⚠️ `dimensions_categories` existe (JSON manuel), non contraint — **source à confirmer, piste identifiée** (fiches « Les règles du jeu » par forme de jeu, citées par S6) |
 | Blocage **dur** sur date fédérale | ⚠️ volontairement informatif à ce stade |
 | Dates de plateaux du **Comité 92** | ❌ absentes du référentiel (le calendrier FFR est national) |
-| **Exposition de la zone A de `Config` en lecture publique** | ❌ **découvert en session 2 bis** — `construireSnapshot` renvoie `lireConfig()` **sans filtre**, donc `getAll` (public, sans clé) sert `referent_nom`, `referent_tel`, `securite_referent_nom`, `securite_referent_tel` : noms et numéros de portable de bénévoles. L'adresse du backend est en clair dans `frontend/js/config.js` (dépôt public). Sans gravité tant que la page reste confidentielle ; **bloquant avant toute mise en avant** de la page des scores. Correction **non triviale** : `dossier-club.html` consomme lui aussi `getAll` et affiche légitimement `referent_nom` / `referent_tel` en lien `tel:`. Une liste blanche brutale le casserait. Décision de conception préalable requise : **`dossier-club.html` doit-il passer au jeton**, comme `reponse-invitation.html` ? Si oui, la liste blanche sur `getAll` redevient simple. → session 3 |
+| **Exposition de la zone A de `Config` en lecture publique** | ✅ **fermée en session 3** — `lireConfigPublique` + liste blanche **opt-in**, trois vues, défaut fermé. Les huit champs personnels ne sortent plus d'aucune lecture publique. Vérifié en production : `?action=getConfig` et `?action=getAll` ne contiennent plus `referent_tel` |
+| **Protection des données à venir** | ✅ le filtrage étant **opt-in**, tout paramètre ajouté dans `Config` est privé **par défaut**. Garanti par le test `testCfg_champInconnuNeSortPas` : si quelqu'un remplaçait un jour la liste blanche par une liste noire, ce test casserait |
 | Cartons / discipline | ⛔ **hors périmètre, décidé en session 2** — la FDM EDR est la feuille de match officielle ; l'app n'introduira pas de données joueur |
 
 **Tests** — `backend/Tests.gs`. Harnais autonome, sans Sheet ni effet de bord. Point d'entrée
-`lancerTestsFFR()`. **42/42 OK** en production le 2026-07-27 (32 asserts d'origine inchangés
-+ 10 nouveaux sur la couverture).
+`lancerTestsFFR()` (le bilan affiche désormais `R92 — n/n`, la suite ne couvrant plus seulement
+la conformité). **66/66 OK** en production le 2026-07-27 : 32 asserts d'origine, +10 sur la
+couverture de saison (session 2), +24 sur le filtrage et les jetons (session 3).
 
 ## 1.9 — Points d'ancrage pour la suite
 
@@ -248,8 +271,9 @@ rétrocompatibilité d'affichage. **Actuellement référencé nulle part** — c
   RDEDR : *Éducateurs* / *Joueurs + Éducateurs* / *Joueurs* / *Arbitre Référent*
 - **Libellé du contrôle des 72 h** → préciser en admin que c'est un garde-fou sur la **date**,
   pas une vérification joueur par joueur (la règle fédérale est individuelle)
-- **`construireSnapshot`** → liste blanche des paramètres publics de la zone A. Priorité :
-  **devant** l'écran « Amont / conformité », car conditionne la mise en avant de la page des scores
+- ~~`construireSnapshot` → liste blanche~~ **fait en session 3.** Reste à surveiller : toute
+  nouvelle page publique devra passer par `lireConfigPublique` avec une vue explicite, jamais par
+  `lireConfig`
 - **Jalons d'autorisation** → `demande_envoyee_le`, `autorisation_recue_le`, `autorisation_reference`,
   pièce jointe, statut. C'est ce qui débloque le **contrôle dur** repoussé depuis la session 1 :
   pas d'autorisation enregistrée ⇒ avertissement, puis blocage de la publication le jour où on
@@ -315,9 +339,11 @@ date de naissance. La page publique n'affiche que des noms d'équipes et des sco
 directe de la décision « cartons hors périmètre » (session 2). Pour un club qui expose des enfants
 de 6 à 12 ans, c'est un argument de premier plan.
 
-**Séparation technique, déjà en place** : `admin.html` est protégée par clé et **ne sera jamais
-publique** ; `tournoi.html` est la seule surface exposée. La faiblesse ne vient pas de la
-séparation, mais de ce que la lecture publique transporte (voir §1.8).
+**Séparation technique** : `admin.html` est protégée par clé et **ne sera jamais publique** ;
+`tournoi.html` est la seule surface exposée. La faiblesse ne venait pas de la séparation mais de
+ce que la lecture publique transportait — **corrigé en session 3**. La page des scores ne reçoit
+plus que trois paramètres, aucun personnel. **Le verrou technique à la mise en avant est levé** ;
+restent les verrous contractuels (Q15, Q16, Q17).
 
 **Diffusion sur le site de l'association** : commencer par une **iframe** de `tournoi.html` dans
 une page du site — aucune duplication de code, page maintenue à un seul endroit, emplacements
@@ -733,6 +759,122 @@ faire, avec le format `LIBRE` sans classement, recommandé pour les plus jeunes.
 
 ---
 
+## Session 3 — 2026-07-27 — Fermeture de la lecture publique
+
+**Document du jour** : aucun. Session technique, suite directe de la découverte de la session 2 bis.
+
+### L'inventaire d'abord, le mécanisme ensuite
+
+Trois options de protection avaient été mises sur la table (jeton sur le dossier / séparer les
+alimentations / retirer le téléphone). **Romain a refusé de choisir avant l'inventaire**, avec
+deux exigences : savoir s'il n'y avait pas d'autres données sensibles, et protéger aussi **les
+données à venir**.
+
+Bien lui en a pris. L'inventaire a montré que la description initiale était **fausse sur deux
+points** :
+
+- **8 champs personnels**, pas 4 : `referent_nom/_tel`, `securite_referent_nom/_tel`,
+  `contact_reponse_nom/_tel/_email`, `email_expediteur` ;
+- **trois portes sans clé**, pas une : `getAll` → `construireSnapshot` → `lireConfig()`,
+  **`getConfig` → `lireConfig()` en direct**, et `getClubDossier?club=NOM` qui renvoie un prénom.
+
+La correction prescrite en session 2 bis (liste blanche dans `construireSnapshot`) aurait donc
+laissé `getConfig` grande ouverte, tout en donnant le sentiment que le problème était réglé.
+
+Et la seconde exigence a dicté l'architecture : filtrage **opt-in** (« rien ne sort sauf ce qui
+est autorisé ») plutôt qu'opt-out, dans **une seule fonction** que toutes les portes appellent.
+
+### Décision — option A, le jeton
+
+`dossier-club.html` passe au **jeton**. Motif : filtrer le backend ne protège pas une valeur
+qu'une page publique affiche de toute façon. Le dossier expose aussi le poste de secours, le
+parking et les tarifs — une page destinée à dix clubs invités, pas au web ouvert. Le `club_token`
+existait déjà (UUID persistant, attribué à tous les clubs, avec reprise automatique) et protégeait
+déjà `reponse-invitation.html` : aucune tuyauterie à inventer.
+
+### Décision 1.3 — deux contacts, pas un
+
+`invitation-club.html` est **générique par conception** : aucun jeton possible sans la dénaturer.
+La question posée était : garde-t-on le téléphone sur cette vitrine ?
+
+Romain a d'abord objecté qu'un appel vaut mieux qu'un mail sur un tournoi. L'objection a révélé
+une confusion qu'il fallait lever, et qui mérite d'être consignée : **ce sont deux contacts
+distincts**.
+
+| Champ | Usage | Où | Quand |
+|---|---|---|---|
+| `contact_reponse_tel` | question d'inscription | vitrine **publique** | J-90 → J-60 |
+| `referent_tel` | contact **jour J** | dossier, **derrière le jeton** | le samedi matin |
+
+**Retenu** : `contact_reponse_tel` retiré de la vue `invitation` (nom + email conservés) ;
+`referent_tel` **inchangé** dans la vue `club`, avec son lien cliquable `tel:`. Le numéro du jour J
+n'a jamais été menacé — il change de porte, pas de disponibilité.
+
+**Note d'organisation** (hors code) : mettre le numéro du jour J sur **l'affiche** et le **plan des
+terrains**. Sur un tournoi, le contact d'urgence ne doit pas dépendre d'une page web qui charge.
+
+### Objection majeure de Claude Code — acceptée
+
+`apiGet` **n'envoie aucune clé** : toutes les lectures `doGet` sont publiques, sans exception. Or
+l'administration peuplait ses formulaires depuis `getAll` et `getConfig` **en huit endroits**.
+Filtrer sans rien d'autre aurait affiché des formulaires **vides**, et un ré-enregistrement aurait
+écrit du vide sur les contacts via `ecrireChampsConfig` — **perte de données silencieuse**, pire
+que le problème corrigé.
+
+→ Quatrième voie créée : **`getConfigAdmin`**, en `doPost` avec clé admin. La clé n'a rien à faire
+dans une URL, où elle finirait dans l'historique du navigateur et les journaux serveur.
+
+**Ajout de l'audit** : `doPost` prend le verrou d'écriture **avant** le `switch`. Une lecture par
+cette voie l'aurait pris huit fois par chargement, en concurrence avec la saisie des scores.
+`ACTIONS_LECTURE` répond donc **après** la vérification de clé et **avant** la prise du verrou.
+
+### Résultat — test adversarial
+
+Config piégée (huit champs personnels + un champ inventé `parametre_invente_de_2027`) :
+
+| Vue | Champs sortis | Sensibles |
+|---|---|---|
+| `live` | 2 | aucun |
+| `invitation` | 3 | `contact_reponse_nom`, `contact_reponse_email` |
+| `club` *(jeton)* | 5 | `referent_nom/_tel`, `securite_referent_nom/_tel` |
+| vue inconnue | 2 | aucun — retombe sur `live` |
+
+Le champ inventé **ne sort d'aucune vue**. `email_expediteur` non plus : il n'est lu par aucune
+page, il ne figure dans aucune liste.
+
+**Résumé d'exécution** : branche `fix/lecture-publique-liste-blanche`, PR **#83**, 2 commits,
+7 fichiers, **+417 / −107**, tests **66/66 OK**. Mergée en `6306d27`.
+
+**Écarts déclarés**, tous acceptés : périmètre admin plus large que prévu (6 points de chargement
+re-routés via un helper `lireConfigAdmin`) ; changement de comportement de la page admin (clé au
+chargement) ; `dossier.js` entièrement basculé sur `getConfigClub`, ne dépendant plus du tout de
+`getAll` ; les deux clés de cache versionnées `_v2`, dont celle de **6 h** — le prompt annonçait
+10 s, c'était faux.
+
+**Vérification en production** : redéploiement, `66/66` dans l'éditeur, page admin qui demande la
+clé puis charge les infos, puis le test qui avait servi à démontrer le problème — `?action=getConfig`
+et `?action=getAll`, avec un **contrôle positif** (`tournoi_nom` doit être trouvé) avant le test
+négatif (`referent_tel` doit être introuvable). Conforme sur les quatre combinaisons.
+
+### Conséquence opérationnelle
+
+Les **liens de dossier envoyés avant le 2026-07-27 ne fonctionnent plus** : ils affichent un
+message courtois renvoyant vers l'email de l'organisateur. Tout dossier Phase 2 déjà transmis doit
+être renvoyé.
+
+### Leçon de méthode
+
+**L'inventaire avant le mécanisme.** Le choix du dispositif de protection était sur le point d'être
+tranché sur une description fausse — quatre champs au lieu de huit, une porte au lieu de trois.
+C'est le refus de choisir avant d'avoir la liste complète qui a évité une correction cosmétique.
+À rejouer systématiquement : *avant de décider comment protéger, établir ce qu'il y a à protéger,
+et vérifier que le dispositif couvre ce qui n'existe pas encore.*
+
+**Prompt Claude Code produit** : `PROMPT-CLAUDE-CODE-S3.md`, deux phases, avec la décision 1.3 et
+la validation de l'objection majeure envoyées entre les deux.
+
+---
+
 # PARTIE 3 — Questions ouvertes
 
 **Règles de clôture** — Une question se ferme soit *par document* (source et passage cités), soit *par le comité / la ligue*. Une réponse partielle ne ferme rien : la question reste ouverte, assortie d'une note sur ce qui manque. La liste finale des points sans réponse textuelle n'est établie qu'une fois tous les documents FFR traités.
@@ -756,3 +898,4 @@ faire, avec le format `LIBRE` sans classement, recommandé pour les plus jeunes.
 | **Q15** | **Convention écrite Racing 92 ↔ Génération R92.** L'association diffuse les scores d'une manifestation dont le Racing est responsable, et monétise l'audience de cette page. Accord écrit du club nécessaire sur les **deux** volets : publication des scores, et présence de sponsors sur la page. Protège autant l'association que le club, et survit à un changement de dirigeant. | Racing 92 | ⏳ ouverte |
 | **Q16** | **Catégories de sponsors admissibles.** L'audience est composée de parents d'enfants de 6 à 12 ans, dans un cadre sportif fédéral. Au moins trois régimes à vérifier : loi Évin (alcool exclu du parrainage sportif), publicité des jeux d'argent visant les mineurs, messages sanitaires obligatoires sur la publicité alimentaire. **À faire regarder une fois par une personne qualifiée, avant tout engagement avec un sponsor.** | conseil juridique | ⏳ ouverte |
 | **Q17** | **Usage des marques.** L'écusson « École de Rugby », le logo #BienJoué et les marques du Racing 92 n'appartiennent pas à l'association. Leur affichage sur une page comportant des sponsors est une question distincte de la convention avec le club. | Ligue IDF / Racing 92 | ⏳ ouverte |
+| **Q18** | **Adresse de rôle pour `contact_reponse_email`.** Cette adresse reste publique sur la vitrine (décision 1.3, S3). Est-ce aujourd'hui une adresse **personnelle** ou une adresse de **rôle** (type `tournoi@…`) ? Une adresse de rôle survit aux changements de bénévole et n'expose personne. *Réglage de donnée dans `Config`, pas de code.* | vérification Romain | ⏳ ouverte |
