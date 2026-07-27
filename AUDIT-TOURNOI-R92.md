@@ -240,7 +240,9 @@ rétrocompatibilité d'affichage. **Actuellement référencé nulle part** — c
 | **Briefing d'avant-tournoi** | ❌ obligatoire et contrôlé ; la trame minutée existe (S10) et l'app sait déjà produire la feuille de déroulement à remettre aux éducateurs |
 | Demande d'autorisation (art. 411-2 RG) — dates, n° d'autorisation, dépôt | ❌ aucun champ, aucune checklist |
 | Jalons amont (J-90 / J-60 / J-45) | ❌ deux dates limites existent, non reliées à un rétroplanning |
-| Dimensions de terrain réglementaires | ⚠️ `dimensions_categories` existe (JSON manuel), non contraint — **source à confirmer, piste identifiée** (fiches « Les règles du jeu » par forme de jeu, citées par S6) |
+| **Dimensions de terrain réglementaires** | ❌ **deux valeurs fausses identifiées en session 4** dans `DIMENSIONS_CATEGORIE_DEFAUT` (`frontend/js/admin-terrains.js`) : `U12 = 56×45` est **la dimension de M14**, la bonne est **56×30** (M12 T+2, S21) ; `U10 = 40×30` n'est valable **qu'en jeu à 7**, en 5x5 c'est **30×25** (S18/S19). Seul `U8 = 30×20` est correct |
+| **Le terrain dépend de la FORME, pas de la catégorie** | ❌ **découvert en session 4** — M10 joue sur 30×25 en 5x5 (sept–déc) puis sur 40×30 en jeu à 7 (janv–juin) : **la surface change de 60 % en cours de saison**. `dimensions_categories` est clé par catégorie seule ⇒ la répartition des terrains est fausse sur une moitié de saison |
+| **Plafond de temps de jeu par joueur et par jour** | ❌ inconnu de l'app — M8 : 50 / 75 / 90 min ; M10 : 65 / 85 / 100 ; M12 et M14 : 65 / 90 / 110 (sur 1, 2 ou 3 demi-journées). Contrainte de **sécurité**, source S16–S22 |
 | Blocage **dur** sur date fédérale | ⚠️ volontairement informatif à ce stade |
 | Dates de plateaux du **Comité 92** | ❌ absentes du référentiel (le calendrier FFR est national) |
 | **Exposition de la zone A de `Config` en lecture publique** | ✅ **fermée en session 3** — `lireConfigPublique` + liste blanche **opt-in**, trois vues, défaut fermé. Les huit champs personnels ne sortent plus d'aucune lecture publique. Vérifié en production : `?action=getConfig` et `?action=getAll` ne contiennent plus `referent_tel` |
@@ -280,6 +282,20 @@ couverture de saison (session 2), +24 sur le filtrage et les jetons (session 3).
   le décide
 - **Cloudflare Worker** → son activation est désormais liée au **succès** du modèle de trafic,
   pas à une hypothétique montée en charge. À allumer **avant** la première mise en avant, pas après
+
+- **`RefFFR_Regles`** (à créer) → clé **catégorie × forme de jeu** : effectif sur le terrain,
+  effectif maximum sur la feuille, longueur et largeur de terrain, taille de ballon, arbitrage,
+  durée de carton, écart maximal d'essais, plateaux maximum par trimestre, `source`, `millesime`
+- **`RefFFR_Temps`** (à créer) → clé **catégorie × nombre de demi-journées × nombre d'équipes** :
+  rencontres totales, rencontres par équipe, périodes, durée de période, pause entre périodes,
+  arrêt entre matchs, temps total, plafond de la catégorie.
+  ⚠️ **La forme de jeu n'entre PAS dans cette clé** — vérifié sur les trois fiches M10 et les deux
+  fiches M8, qui partagent exactement le même tableau de temps
+- **`DIMENSIONS_CATEGORIE_DEFAUT`** → deux valeurs à corriger, et la clé à faire évoluer vers
+  catégorie × forme (voir §1.8)
+- **Règle des 5 essais d'écart** → présente sur **toutes** les fiches, M6 comprise : *score acquis
+  définitivement et rééquilibrage obligatoire*. Utile à la table de marque, qui ne la connaît pas.
+  Suppose de trancher Q21 (essais ou points ?)
 
 **Dette identifiée** :
 1. `normaliserCategorie` (backend) a un miroir `normaliserCategorieFFR` (frontend). Deux
@@ -374,6 +390,16 @@ sponsors disposés autour de l'iframe donc sur la page de l'association. L'hébe
 | S12 | Feuille de présence M14-M15F jeu à XV | non daté | 2026-07-27 | session 2 — *hors périmètre* |
 | S13 | Feuille de régulation jeu à X | non daté | 2026-07-27 | session 2 — *hors périmètre* |
 | S14 | Feuille de régulation jeu à XV | non daté | 2026-07-27 | session 2 — *hors périmètre* |
+| **S15** | **Règlement Moins de 6 ans — Premiers pas à l'École de Rugby** (`a01`) | Rugby éducatif **2026-2027**, MAJ du **17/06/2026** | 2026-07-27 | **session 4** |
+| **S16** | **Règlement Moins de 8 ans — Toucher + 2 secondes** (`b02`) | idem | 2026-07-27 | session 4 |
+| **S17** | **Règlement Moins de 8 ans — Jouer au contact** (`b03`) | idem | 2026-07-27 | session 4 |
+| **S18** | **Règlement Moins de 10 ans — Toucher + 2 secondes** (`b04`) | idem | 2026-07-27 | session 4 |
+| **S19** | **Règlement Moins de 10 ans — Jouer au contact** (`b05`) | idem | 2026-07-27 | session 4 |
+| **S20** | **Règlement Moins de 10 ans — Jeu à 7** (`b06`) | idem | 2026-07-27 | session 4 |
+| **S21** | **Règlement Moins de 12 ans — Toucher + 2 secondes** (`c07`) | idem | 2026-07-27 | session 4 |
+| **S22** | **Règlement Moins de 14 ans — Toucher + 2 secondes** (`c10`) | idem | 2026-07-27 | session 4 |
+| S23 | Règlement Super Challenge de France — **Jeu à XV** M14/M15F | 2026-2027 | 2026-07-27 | session 4 — *hors périmètre tournoi club* |
+| S24 | Règlement Super Challenge de France — **Sevens** M14/M15F | 2026-2027 | 2026-07-27 | session 4 — *hors périmètre tournoi club* |
 
 ---
 
@@ -875,6 +901,185 @@ la validation de l'objection majeure envoyées entre les deux.
 
 ---
 
+## Session 4 — 2026-07-27 — Fiches « règles du jeu » et extension à U6 / U14
+
+> ⚠️ **SESSION SUSPENDUE, PAS TERMINÉE.** Rien n'a été codé, aucune PR ouverte. Cette entrée
+> enregistre l'état d'avancement.
+
+**Origine** : demande de Romain d'étendre le périmètre de l'app à **U6** et **U14**.
+
+**Documents du jour** : **8 fiches « règles du jeu »** (S15–S22), toutes datées de la
+**MAJ du 17/06/2026**, plus **2 règlements Super Challenge de France** (S23, S24).
+
+**Méthode retenue, sur proposition de Romain** : ne pas auditer les fiches une par une, mais
+traiter **la famille**. Les fiches partagent un gabarit ; on conçoit la structure contre le cas
+le plus simple (M6) **et** le cas le plus dur (M14) en même temps, pour ne pas la refaire.
+
+### Ce qui existait déjà, et qu'on ignorait
+
+- **`RefFFR_Formes` couvre déjà M5, M6, M8, M10, M12 et M14/M15F** — 60 lignes = 6 catégories ×
+  10 mois. La session 1 avait tout chargé, pas seulement le périmètre d'alors. Le moteur de
+  conformité sait donc déjà lire M6 et M14 ; il ne les regardait pas, faute de catégorie présente.
+- **U14 est déjà à moitié implémentée** : présente dans le seed `Config`, et traitée
+  spécifiquement par la répartition des terrains (`U14: { plein: true }` — un match occupe un
+  grand terrain entier).
+- **U6 n'existe nulle part** dans le code.
+
+### ⚠️ Erreur d'analyse corrigée par le document
+
+Sur la seule foi de la ligne « ateliers rugby » de la grille du calendrier, il avait été affirmé
+que **la FFR ne prévoyait pas de matchs en M6**, qu'il n'y avait « ni score, ni classement, ni
+podium », et un choix avait été proposé entre *matchs sans score* et *rotation d'ateliers*.
+
+Le règlement M6 (S15) dit l'inverse :
+
+> « Les plateaux ou tournois sont **obligatoirement organisés sous la forme de poules (brassage
+> et de niveaux)**. »
+
+Il y a des essais, un score, et une règle d'écart. **Le modèle de l'app est exactement le modèle
+FFR** — poules de brassage le matin, poules de niveau l'après-midi. Le choix proposé n'avait pas
+lieu d'être, et U6 est bien moins coûteux à intégrer qu'annoncé.
+
+**Leçon** : une grille de calendrier n'est pas un règlement. Ne pas conclure d'une synthèse ce
+qu'un texte dédié peut contredire.
+
+### Le gabarit tient
+
+Rubriques **structurantes** (donnée exploitable), constantes sur les huit fiches : nombre de
+joueurs, remplacements et effectif maximum, terrain, ballon, arbitrage, jeu déloyal (2 minutes),
+marque (essai = 5 points), 5 essais d'écart, tableau des temps, rappel poules / phases finales
+interdites.
+
+Rubriques **pédagogiques**, variables : utilisateurs, opposants, consignes d'arbitrage, remises
+en jeu. **Hors périmètre de l'app** — c'est l'affaire des éducateurs.
+
+**M6 est l'exception** : pas de grille de matchs, un seul tableau de temps (pas de distinction
+1 / 2 demi-journées), et la seule fiche portant *« 1 ou 2 plateaux maximum par trimestre »*.
+
+### Trois découvertes
+
+**1. Le temps dépend de la catégorie, pas de la forme de jeu.** Les trois fiches M10 (T+2, JCO,
+jeu à 7) partagent **exactement** le même tableau ; idem pour les deux fiches M8. `RefFFR_Temps`
+se clé donc sans la forme.
+
+Plafonds de temps de jeu par joueur et par jour :
+
+| | 1 demi-journée | 2 demi-journées | 3 demi-journées |
+|---|---|---|---|
+| M8 | 50 min | 75 min | 90 min |
+| M10 | 65 min | 85 min | 100 min |
+| M12 | 65 min | 90 min | 110 min |
+| M14 | 65 min | 90 min | 110 min |
+
+**2. Le terrain dépend de la forme — donc il change en cours de saison.** M10 joue sur 30×25 en
+5x5 puis sur 40×30 en jeu à 7 : **+60 % de surface**, au changement de forme de janvier. L'app a
+une valeur fixe par catégorie.
+
+**3. La FFR prescrit littéralement l'architecture de l'app.** La ligne « 6 équipes » de chaque
+tableau dit : *poules de brassage = 2 poules de 3, puis poules de niveau = 2 poules de 3*. C'est
+`reorganiserPoulesMatin` suivi de `genererApresMidi` en `CROISE`. Ce n'est plus une convergence
+heureuse, c'est une **conformité démontrable**.
+
+### Dimensions relevées (en-but non compris, sauf M6)
+
+| Catégorie | Forme | Terrain | Ballon | Effectif max / feuille |
+|---|---|---|---|---|
+| M6 | Premiers pas (4 ou 5) | **22 × 15** *(plus en-buts)* | T3 | non précisé |
+| M8 | T+2 et JCO (5x5) | **30 × 20** | T3 | 9 |
+| M10 | T+2 et JCO (5x5) | **30 × 25** | T3 | 9 |
+| M10 | Jeu à 7 | **40 × 30** | T3 | 13 |
+| M12 | T+2 (5x5) | **56 × 30** | T4 | 9 |
+| M14 | T+2 (7x7) | **56 × 45** | T4 | 13 |
+
+### Confirmation
+
+Le barème de l'app — **Victoire 3, Nul 2, Défaite 1** — est **exactement** celui du règlement SCF
+(S23). Ce n'est plus une convention maison : c'est le barème fédéral, désormais sourcé.
+
+### Structure proposée (hypothèse, non validée)
+
+Deux nouveaux onglets, sur le modèle des deux `RefFFR_*` existants — voir §1.9.
+
+### Écarts et coquilles consignés
+
+1. **M6, ligne « 7 équipes »** : 6 rencontres × 2 périodes × 5' = 60 minutes, alors que le tableau
+   annonce 30. Les trois autres lignes sont cohérentes. Sans conséquence pratique.
+2. **M6, lignes à 1 période** : une « pause entre 2 périodes » est indiquée, sans objet.
+3. **Pieds de page** : les fiches M8 JCO, M10 JCO et M10 jeu à 7 portent « saison 2025-2026 » sur
+   leur seconde page, alors que le document est 2026-2027. Coquille éditoriale — **la MAJ du
+   17/06/2026 fait foi**.
+4. **Grilles de matchs à 3 équipes** (M8 JCO, M10 JCO) : « A—AC / B—BC » au lieu de AB/AC/BC.
+   Coquille ; le total annoncé (3 matchs) est juste.
+
+### Les deux règlements SCF
+
+D'une autre nature : ce sont des règlements de **compétition**, applicables aux phases 2, 3 et
+journées de clôture du Super Challenge — **pas à un tournoi de club**. Enregistrés comme sources,
+sans effet direct.
+
+Deux points à retenir tout de même : le barème confirmé ci-dessus, et un **modèle d'organisation
+triangulaire où l'équipe qui ne joue pas arbitre** (Match 1 : Équipe 1 vs Équipe 3, arbitrage
+Équipe 2). Transposable si l'on veut un jour le proposer en option.
+
+### ⚠️ Transmission incomplète — la liste des sources est partielle par accident
+
+**Cause** : l'analyse a demandé l'envoi de **tous** les documents en une fois (« envoie-les tous
+d'un coup, sans les trier »), alors que Romain avait proposé à deux reprises de procéder par
+étapes — d'abord U6, puis la question du gabarit. Un message de dépassement de limite est survenu
+pendant le chargement, et un tour de conversation est resté sans réponse.
+
+**S15 à S24 enregistrent ce qui a été réellement lu et analysé** — pas ce qui a été envoyé.
+
+Conséquence à connaître pour un lecteur futur : les documents absents ont produit des **trous**
+identifiés, jamais des valeurs fausses. Le tableau des dimensions ci-dessus compte six lignes
+parce que six couples catégorie × forme ont été lus, pas parce que les autres seraient inconnus
+de la FFR.
+
+**Leçon de méthode** : « l'inventaire avant le mécanisme » (session 3) ne veut pas dire « tout
+charger d'un coup ». Un corpus se transmet **par lots vérifiables** — deux ou trois documents par
+tour, avec accusé de ce qui est arrivé. Quand l'utilisateur propose une progression, elle vaut
+mieux que le volume : elle rend la perte détectable.
+
+### ⚠️ Erreur de déduction, corrigée par Romain
+
+Il avait été déduit, à partir du nommage des fichiers et du fait que les règlements SCF citent
+nommément « C13 » et « C14 », que la collection **s'arrêtait à `c14`** et qu'il manquait
+exactement six fiches.
+
+**Faux** : il existe au moins un `c15`, et deux règlements Super Challenge supplémentaires.
+Une borne citée dans un document n'est pas la fin d'une collection.
+
+### Documents manquants
+
+| Manquant | Contenu | Criticité |
+|---|---|---|
+| `c08` | M12 — Jouer au contact | moyenne |
+| **`c09`** | **M12 — Jeu à 10** | **haute** — U12 joue en RE 10x10 de **décembre à juin** |
+| `c11` · `c12` | M14 — JCO · Jeu à 10 *(contenu déduit, à confirmer)* | selon décision U14 |
+| `c13` | M14 — Jeu à 15 | *cité nommément par S23* |
+| `c14` | M14 — Jeu à 7 | *cité nommément par S24* |
+| **`c15`** | **contenu inconnu** — signalé par Romain, non déduit | à identifier |
+| **2 règlements SCF** | **contenu inconnu** — en plus de S23 et S24 déjà reçus | à identifier |
+
+Source : ffr.fr, rubrique *Jouer au rugby → École de rugby → Rugby éducatif*.
+
+### Décisions
+
+- **U6 — tranché par document** : le modèle de l'app convient tel quel (poules de brassage puis
+  poules de niveau, matchs, essais). Aucune refonte nécessaire.
+- **U14 — OUVERT** : jeu à X ou jeu à XV ? Voir **Q20**.
+- **Mesure empirique non faite** : ajouter U6 et U14 comme catégories présentes en admin, saisir
+  une date réaliste et relever les dates devenues bloquantes. Le contrôle filtre par catégorie
+  présente ; les journées Challenge Fédéral et Super Challenge sont marquées M14 dans
+  `RefFFR_Dates` et vont s'activer. **À faire avant tout engagement de date auprès des clubs.**
+
+### État à la suspension
+
+Rien codé. Aucune PR. Aucun prompt Claude Code produit. La structure des deux onglets reste une
+hypothèse à valider une fois les six fiches manquantes obtenues.
+
+---
+
 # PARTIE 3 — Questions ouvertes
 
 **Règles de clôture** — Une question se ferme soit *par document* (source et passage cités), soit *par le comité / la ligue*. Une réponse partielle ne ferme rien : la question reste ouverte, assortie d'une note sur ce qui manque. La liste finale des points sans réponse textuelle n'est établie qu'une fois tous les documents FFR traités.
@@ -891,7 +1096,7 @@ la validation de l'objection majeure envoyées entre les deux.
 | Q8 | **Cas concret** : le Challenge Marc Chevallier du **mercredi 11/11/2026** est-il compatible avec le plateau départemental du **samedi 14/11** ? Écart de 3 jours = limite exacte des 72 h. *Sans échéance : la date est une date de test, pas un tournoi programmé.* | Comité 92 | ⏳ ouverte |
 | Q9 | Le **calendrier des plateaux du Comité 92** — celui qui bloque en pratique — n'est pas dans le calendrier national. Où le récupérer, et sous quelle forme ? *(à intégrer dans `RefFFR_Dates` avec `source = CD92`)* | Comité 92 | ⏳ ouverte |
 | Q10 | Les mentions **(A)/(B)/(C)** désignent bien les zones de vacances scolaires — la légende du calendrier (page 1) l'indique explicitement : « A,B ou C = zone si vacances scolaires ». L'Île-de-France est en zone C. Le référentiel et le paramètre `zone_vacances` sont corrects. Source : S4, légende page 1. | Comité 92 | ✅ résolue (document) |
-| Q11 | **Source des dimensions de terrain** (M8 30×20, M10 30×25, M12 56×45) : reportée du pré-audit sans document identifié. *Piste ouverte en session 2 : S6 renvoie aux fiches « Les règles du jeu », une par forme de jeu, téléchargeables sur ffr.fr. C'est là qu'il faut chercher.* | vérification Romain | ⏳ ouverte |
+| **Q11** | **Source des dimensions de terrain.** ✅ **Résolue pour six couples catégorie × forme** par les fiches S15–S22 (voir session 4) : M6 22×15, M8 30×20, M10 5x5 30×25, M10 jeu à 7 40×30, M12 T+2 56×30, M14 T+2 56×45. ⚠️ **Le chiffre du pré-audit pour M12 (56×45) était faux** — c'est la valeur M14, et elle est passée dans le code. **Reste ouverte** pour les formes en Rugby Éducatif (M12 jeu à 10, M14 jeu à 10 / 15 / 7), faute des fiches `c09`, `c12`, `c13`, `c14`. | vérification Romain | ⏳ **partiellement résolue** |
 | **Q12** | **Qui dépose la demande d'autorisation ?** → C'est le **Racing 92**, club affilié et labellisé EDR, sous couvert de son président. Génération R92 est éditeur de l'outil, pas organisateur au sens FFR. Voir §1.11. | Comité 92 / Racing 92 | ✅ **résolue (club)** |
 | **Q13** | **Date du dernier label EDR du Racing 92.** Le label est **confirmé** ; seule la **date**, champ obligatoire du formulaire d'autorisation, reste à obtenir. *Réponse partielle : la question reste ouverte conformément aux règles de clôture.* | vérification Romain | ⏳ ouverte |
 | **Q14** | **Symétrie de la règle des 72 h.** Les feuilles de présence (S9, S11, S12) n'engagent que le **passé** (« 3 jours francs précédents »), alors que l'app contrôle **avant et après**. L'art. 230-2 est-il bien symétrique ? *L'implémentation actuelle est la plus prudente des lectures relevées — on ne change rien tant que ce n'est pas tranché.* | vérification Romain / Comité 92 | ⏳ ouverte |
@@ -899,3 +1104,6 @@ la validation de l'objection majeure envoyées entre les deux.
 | **Q16** | **Catégories de sponsors admissibles.** L'audience est composée de parents d'enfants de 6 à 12 ans, dans un cadre sportif fédéral. Au moins trois régimes à vérifier : loi Évin (alcool exclu du parrainage sportif), publicité des jeux d'argent visant les mineurs, messages sanitaires obligatoires sur la publicité alimentaire. **À faire regarder une fois par une personne qualifiée, avant tout engagement avec un sponsor.** | conseil juridique | ⏳ ouverte |
 | **Q17** | **Usage des marques.** L'écusson « École de Rugby », le logo #BienJoué et les marques du Racing 92 n'appartiennent pas à l'association. Leur affichage sur une page comportant des sponsors est une question distincte de la convention avec le club. | Ligue IDF / Racing 92 | ⏳ ouverte |
 | **Q18** | **Adresse de rôle pour `contact_reponse_email`.** Cette adresse reste publique sur la vitrine (décision 1.3, S3). Est-ce aujourd'hui une adresse **personnelle** ou une adresse de **rôle** (type `tournoi@…`) ? Une adresse de rôle survit aux changements de bénévole et n'expose personne. *Réglage de donnée dans `Config`, pas de code.* | vérification Romain | ⏳ ouverte |
+| **Q19** | **Documents manquants — la collection lue est incomplète.** Fiches « règles du jeu » : `c08`, `c09`, `c11`, `c12`, `c13`, `c14` et **`c15`** (contenu inconnu, la déduction « la collection s'arrête à c14 » était fausse). Plus **deux règlements Super Challenge de France** en sus de S23 et S24. **`c09` est la plus urgente** : U12 joue en Rugby Éducatif 10x10 de décembre à juin, et c'est précisément la dimension de terrain aujourd'hui fausse dans le code. Récupérer la **liste exhaustive des fichiers** de la rubrique avant de conclure quoi que ce soit sur le périmètre. Source : ffr.fr, *Jouer au rugby → École de rugby → Rugby éducatif*. | vérification Romain | ⏳ ouverte |
+| **Q20** | **U14 : jeu à X ou jeu à XV ?** Les deux pratiques sont autorisées au même mois, avec des effectifs, des passeports et des terrains différents. La FFR demande même que les clubs puissent basculer de l'une à l'autre en cours de saison. Détermine quelles fiches sont nécessaires et quels contrôles ajouter. | décision Romain | ⏳ ouverte |
+| **Q21** | **La table de marque saisit-elle des essais ou des points ?** Le backend stocke `score_A` / `score_B` sans unité. Toutes les fiches posent la règle des **5 essais d'écart** (score acquis, rééquilibrage obligatoire) : elle n'est implémentable que si l'unité est l'essai, sinon il faut convertir (essai = 5 points). | vérification Romain | ⏳ ouverte |
