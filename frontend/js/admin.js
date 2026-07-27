@@ -50,14 +50,21 @@ const FORMATS_APRESMIDI = [
     cle: 'LIBRE', titre: 'Matchs libres',
     desc: "Pas de classement l'après-midi : les équipes jouent simplement plusieurs matchs amicaux "
         + "supplémentaires, sans enjeu ni hiérarchie (pas de podium). Recommandé pour les plus jeunes (M6–M8)."
-  },
-  {
-    cle: 'COUPE_PLATEAU', titre: 'Coupe + Plateau',
-    desc: "Les premiers de chaque poule s'affrontent en élimination directe jusqu'à une finale "
-        + "(un vainqueur du tournoi est désigné). Les autres équipes jouent un plateau, sans élimination. "
-        + "⚠️ Ce format demande une saisie de score plus rigoureuse côté bénévoles."
   }
 ];
+
+/* Format INTERDIT en École de Rugby — conservé pour la rétrocompatibilité de l'AFFICHAGE.
+ * Les phases finales (1/4, demi, finale) sont interdites sur les tournois/plateaux EDR
+ * (Formulaire de demande d'autorisation FFR, grille 2026-2027, « Rappel des principes généraux »).
+ * Il ne figure PLUS dans FORMATS_APRESMIDI : on ne le propose donc jamais comme CHOIX. Mais la
+ * CAPACITÉ reste entière (génération, affichage, saisie) : un classeur déjà configuré ainsi doit
+ * continuer de fonctionner. On garde donc son titre « Coupe + Plateau » disponible ici. */
+const FORMAT_COUPE_PLATEAU_LEGACY = {
+  cle: 'COUPE_PLATEAU', titre: 'Coupe + Plateau',
+  desc: "Les premiers de chaque poule s'affrontent en élimination directe jusqu'à une finale "
+      + "(un vainqueur du tournoi est désigné). Les autres équipes jouent un plateau, sans élimination. "
+      + "⚠️ Ce format demande une saisie de score plus rigoureuse côté bénévoles."
+};
 
 /** Format d'après-midi retenu pour une catégorie (défaut = CROISE, comportement historique). */
 function formatApresMidiDe(cat) {

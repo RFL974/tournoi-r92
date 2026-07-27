@@ -378,6 +378,16 @@ function verifierTerrainsBloc(bloc) {
 function blocFormatApresMidi(cat) {
   const fmt = formatApresMidiDe(cat);
   const nbQ = nbQualifiesCoupeDe(cat);
+  // COUPE_PLATEAU est INTERDIT en EDR : il n'est plus proposé dans les cartes. Une catégorie
+  // déjà configurée ainsi (classeur existant) reste fonctionnelle ; on affiche un encart qui
+  // invite à choisir un format conforme, SANS réécrire la valeur stockée tant qu'aucun nouveau
+  // choix n'est validé (voir onEnregistrerCategorie).
+  const dejaCoupe = (fmt === 'COUPE_PLATEAU');
+  const encartInterdit = dejaCoupe
+    ? '<p class="format-interdit-edr">⚠️ <b>Format non conforme École de Rugby</b> — les phases ' +
+      'finales (quart, demi, finale) sont interdites en tournoi EDR. Choisissez un autre format ' +
+      'd\'après-midi.</p>'
+    : '';
 
   const cartes = FORMATS_APRESMIDI.map(function (f) {
     const choisi = (f.cle === fmt);
@@ -402,6 +412,7 @@ function blocFormatApresMidi(cat) {
   return (
     '<div class="bloc-format" data-format="' + fmt + '">' +
       '<span class="format-libelle">Format de l\'après-midi</span>' +
+      encartInterdit +
       '<div class="format-cartes">' + cartes + '</div>' +
       '<label class="format-coupe-param reglage">' +
         '<span class="r-libelle">Qualifiés en Coupe (par poule)</span>' +
@@ -462,7 +473,15 @@ async function onEnregistrerCategorie(evenement) {
   data.terrains_auto = (form.terrains_auto && form.terrains_auto.value === 'non') ? 'non' : 'oui';
 
   // Format d'après-midi + son paramètre JSON (nbQualifiesCoupe seulement pour COUPE_PLATEAU).
-  const fmt = (form.format_apresmidi && form.format_apresmidi.value) ? form.format_apresmidi.value : 'CROISE';
+  // COUPE_PLATEAU n'est plus proposé dans les cartes (interdit EDR) : le groupe de radios ne
+  // contient donc que des formats conformes. Si AUCUN n'est coché ET que la catégorie était
+  // déjà en COUPE_PLATEAU (classeur existant), on PRÉSERVE la valeur stockée — on ne réécrit
+  // jamais silencieusement la donnée d'un tournoi déjà configuré. La valeur ne change que si
+  // l'organisateur choisit explicitement un format conforme.
+  const choisi = (form.format_apresmidi && form.format_apresmidi.value) ? form.format_apresmidi.value : '';
+  const catStockee = configCourante.categories.find(function (c) { return c.categorie === nom; });
+  const fmtStocke = catStockee ? formatApresMidiDe(catStockee) : 'CROISE';
+  const fmt = (!choisi && fmtStocke === 'COUPE_PLATEAU') ? 'COUPE_PLATEAU' : (choisi || 'CROISE');
   data.format_apresmidi = fmt;
   if (fmt === 'COUPE_PLATEAU') {
     let nbQ = parseInt(form.nbQualifiesCoupe && form.nbQualifiesCoupe.value, 10);
