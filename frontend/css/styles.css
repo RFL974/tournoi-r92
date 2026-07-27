@@ -1926,7 +1926,19 @@ a.bouton { display: inline-block; text-decoration: none; }
 .ffr-tag-orange { color: #ffe6b0; background: rgba(224, 158, 46, 0.22); }
 .ffr-alerte-eff { color: #ffe6b0; font-size: 0.78rem; }
 
+/* Prescriptions FFR par catégorie (session 5) : détail sous le verdict. */
+.ffr-detail { font-size: 0.85rem; }
+.ffr-detail-cat { margin-top: 8px; padding-top: 6px; border-top: 1px dashed rgba(184, 216, 248, 0.20); }
+.ffr-detail-titre { display: inline-block; font-weight: 600; margin-bottom: 2px; color: var(--bleu-ciel); }
+.ffr-ligne { margin: 2px 0; line-height: 1.35; }
+.ffr-ligne-label { opacity: 0.8; }
+.ffr-ligne-val strong { color: inherit; }
+.ffr-attendu { color: #ffe6b0; font-size: 0.8rem; }
+
 /* Thème clair */
+.theme-clair .ffr-detail-cat { border-top-color: #e6edf5; }
+.theme-clair .ffr-detail-titre { color: #33608f; }
+.theme-clair .ffr-attendu { color: #8a5a0c; }
 .theme-clair .ffr-neutre { color: #33608f; background: #eef4fb; }
 .theme-clair .ffr-vert   { color: #14683a; background: #e6f7ee; }
 .theme-clair .ffr-orange { color: #8a5a0c; background: #fdf4e3; }

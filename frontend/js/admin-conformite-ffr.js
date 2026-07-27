@@ -27,7 +27,7 @@ var refFFRCache = null;
 async function chargerRefFFR() {
   if (refFFRCache) return refFFRCache;
   try { refFFRCache = await apiGet('getRefFFR'); }
-  catch (e) { refFFRCache = { formes: [], dates: [], millesime: null }; }
+  catch (e) { refFFRCache = { formes: [], dates: [], regles: [], temps: [], millesime: null }; }
   return refFFRCache;
 }
 
@@ -142,9 +142,146 @@ function rendreConformiteFFR(res) {
     html = '<div class="ffr-bloc ffr-vert">✅ Aucun conflit détecté avec le calendrier FFR ' +
       echapper(mill) + '.</div>';
   }
+  // Prescriptions FFR par catégorie (terrain / effectif / temps / ballon / carton), sous le verdict.
+  html += rendreDetailFFR(res);
+
   html += '<p class="ffr-note">Contrôle informatif : l\'organisateur reste décideur — ' +
-    'la date peut être enregistrée malgré une alerte.</p>';
+    'la date peut être enregistrée malgré une alerte. Les valeurs FFR sont PROPOSÉES ; un ' +
+    'signalement orange marque un réglage hors du cadre, il ne l\'interdit pas.</p>';
   return html;
+}
+
+/* --------------------------------------------------------------------------
+   PRESCRIPTIONS FFR PAR CATÉGORIE (terrain / effectif / temps / ballon / carton)
+   Doctrine « proposer, laisser la main, alerter » : on affiche la valeur FFR ;
+   si le réglage de Config diverge, un badge orange le signale — jamais bloquant.
+   -------------------------------------------------------------------------- */
+
+/** dimensions_categories (zone A, JSON clé par catégorie de l'app) → objet, {} si absent/illisible. */
+function dimensionsCategoriesFFR() {
+  const g = (typeof configCourante !== 'undefined' && configCourante && configCourante.global) || {};
+  try { return g.dimensions_categories ? JSON.parse(g.dimensions_categories) : {}; }
+  catch (e) { return {}; }
+}
+
+/** Objet catégorie de Config par nom (ex. 'U10'), ou {} si absent. */
+function categorieConfigFFR(cat) {
+  const cats = (typeof configCourante !== 'undefined' && configCourante && configCourante.categories) || [];
+  return cats.filter(function (c) { return String(c.categorie || '').trim() === cat; })[0] || {};
+}
+
+/** Vrai si le réglage Config (non vide) diffère de la valeur FFR (comparaison numérique si possible). */
+function ecartFFR(cfgVal, ffrVal) {
+  const a = String(cfgVal == null ? '' : cfgVal).trim();
+  const b = String(ffrVal == null ? '' : ffrVal).trim();
+  if (a === '' || b === '') return false; // rien de saisi côté Config ⇒ pas de divergence signalée
+  const na = parseInt(a, 10), nb = parseInt(b, 10);
+  if (isFinite(na) && isFinite(nb)) return na !== nb;
+  return a !== b;
+}
+
+/** Badge orange « réglage actuel hors cadre » (valeur Config + rappel FFR). */
+function badgeEcartFFR(cfgVal) {
+  return ' <span class="ffr-attendu">⚠️ réglage actuel : ' + echapper(String(cfgVal)) + ' — hors cadre FFR</span>';
+}
+
+/** Une ligne « Label : valeur FFR » + badge d'écart éventuel. */
+function ligneDetailFFR(label, valeurFFR, cfgVal, diverge) {
+  if (valeurFFR === '' || valeurFFR == null) return '';
+  return '<div class="ffr-ligne"><span class="ffr-ligne-label">' + echapper(label) + '</span> ' +
+    '<span class="ffr-ligne-val">' + echapper(String(valeurFFR)) + '</span>' +
+    (diverge ? badgeEcartFFR(cfgVal) : '') + '</div>';
+}
+
+/** Restitution complète : une carte par catégorie présente ayant des prescriptions. */
+function rendreDetailFFR(res) {
+  const regles = (res && res.regles) || {};
+  const temps = (res && res.temps) || {};
+  const cats = categoriesPresentesNoms().filter(function (c) { return regles[c] || temps[c]; });
+  if (!cats.length) return '';
+  const dims = dimensionsCategoriesFFR();
+  let html = '<div class="ffr-bloc ffr-neutre ffr-detail"><strong>📋 Prescriptions FFR par catégorie</strong>';
+  cats.forEach(function (cat) {
+    const cfg = categorieConfigFFR(cat);
+    html += '<div class="ffr-detail-cat"><span class="ffr-detail-titre">' + echapper(cat) + '</span>' +
+      detailReglesFFR(regles[cat] || [], cfg, dims[cat]) +
+      detailTempsFFR(temps[cat], cfg) +
+      '</div>';
+  });
+  return html + '</div>';
+}
+
+/** Terrain / effectif / ballon / carton, à partir des règles jointes (souvent une seule). */
+function detailReglesFFR(regles, cfg, dim) {
+  if (!regles.length) return '';
+  let html = '';
+  regles.forEach(function (r) {
+    // Terrain : dimensions chiffrées, sinon libellé (« terrain normal » EST la donnée FFR).
+    if (r.terrain_longueur_m && r.terrain_largeur_m) {
+      const ffrDim = r.terrain_longueur_m + ' × ' + r.terrain_largeur_m + ' m';
+      const diverge = dim && (ecartFFR(dim.l, r.terrain_longueur_m) || ecartFFR(dim.w, r.terrain_largeur_m));
+      const cfgDim = dim ? ((dim.l || '?') + ' × ' + (dim.w || '?') + ' m') : '';
+      html += ligneDetailFFR('Terrain', ffrDim, cfgDim, diverge);
+    } else if (r.terrain_libelle) {
+      html += ligneDetailFFR('Terrain', r.terrain_libelle, '', false);
+    }
+    // Effectifs : sur le terrain + maximum sur la feuille (comparé à effectif_max de Config).
+    const eff = [r.effectif_terrain ? r.effectif_terrain + ' sur le terrain' : '',
+                 r.effectif_max_feuille ? r.effectif_max_feuille + ' max sur la feuille' : '']
+                .filter(Boolean).join(' · ');
+    html += ligneDetailFFR('Effectif', eff, cfg.effectif_max, ecartFFR(cfg.effectif_max, r.effectif_max_feuille));
+    html += ligneDetailFFR('Ballon', r.ballon, '', false);
+    html += ligneDetailFFR('Carton jaune', r.carton_jaune_min ? r.carton_jaune_min + ' min' : '', '', false);
+  });
+  return html;
+}
+
+/** Temps : plafond (sécurité) + variantes de découpage, avec écarts vs Config sur l'union des valeurs. */
+function detailTempsFFR(t, cfg) {
+  if (!t) return '';
+  let html = '';
+  // Plafond de temps de jeu par joueur — contrainte de SÉCURITÉ, toujours en tête.
+  if (t.plafond_joueur_min) {
+    html += '<div class="ffr-ligne"><span class="ffr-ligne-label">⏱ Plafond de temps de jeu / joueur</span> ' +
+      '<span class="ffr-ligne-val"><strong>' + echapper(t.plafond_joueur_min) + ' min</strong> (sécurité)</span></div>';
+  }
+  const grilles = t.grilles || [];
+  if (!grilles.length) {
+    html += '<div class="ffr-ligne"><span class="ffr-ligne-val">Grille de temps non publiée pour ce nombre ' +
+      'd\'équipes (plafond seul).</span></div>';
+    return html;
+  }
+  // Chaque variante (A/B) : découpage également valide — on affiche les deux, on ne choisit pas.
+  grilles.forEach(function (g) {
+    const v = g.variante ? 'Variante ' + g.variante + ' : ' : '';
+    const bits = [];
+    if (g.nb_periodes && g.duree_periode_min) bits.push(g.nb_periodes + ' × ' + g.duree_periode_min + ' min');
+    if (g.pause_periodes_min) bits.push('pause ' + g.pause_periodes_min + ' min');
+    if (g.arret_entre_matchs_min) bits.push('arrêt ' + g.arret_entre_matchs_min + ' min entre matchs');
+    if (g.rencontres_par_equipe) bits.push(g.rencontres_par_equipe + ' rencontres/équipe');
+    html += '<div class="ffr-ligne"><span class="ffr-ligne-label">Temps</span> ' +
+      '<span class="ffr-ligne-val">' + echapper(v + bits.join(' · ')) + '</span></div>';
+  });
+  // Écarts Config vs UNION des valeurs FFR (le réglage doit correspondre à AU MOINS une variante).
+  html += ecartTempsFFR('Nb de périodes', cfg.format_mi_temps, grilles, 'nb_periodes');
+  html += ecartTempsFFR('Durée de période', cfg.duree_mi_temps_min, grilles, 'duree_periode_min');
+  html += ecartTempsFFR('Pause entre périodes', cfg.pause_mi_temps_min, grilles, 'pause_periodes_min');
+  html += ecartTempsFFR('Arrêt entre matchs', cfg.recup_entre_matchs_min, grilles, 'arret_entre_matchs_min');
+  return html;
+}
+
+/** Signale un écart si le réglage Config ne correspond à AUCUNE des variantes FFR pour ce champ. */
+function ecartTempsFFR(label, cfgVal, grilles, champ) {
+  const cfg = String(cfgVal == null ? '' : cfgVal).trim();
+  if (cfg === '') return '';
+  const valeurs = grilles.map(function (g) { return String(g[champ] || '').trim(); })
+                         .filter(Boolean)
+                         .filter(function (v, i, a) { return a.indexOf(v) === i; });
+  if (!valeurs.length) return '';
+  const dansLeCadre = valeurs.some(function (v) { return !ecartFFR(cfg, v); });
+  if (dansLeCadre) return '';
+  return '<div class="ffr-ligne"><span class="ffr-attendu">⚠️ ' + echapper(label) + ' : réglage ' +
+    echapper(cfg) + ' hors cadre FFR (attendu ' + echapper(valeurs.join(' ou ')) + ')</span></div>';
 }
 
 /**
