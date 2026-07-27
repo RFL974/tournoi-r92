@@ -28,6 +28,11 @@ function lancerTestsFFR() {
   testFFR_formesNonEtLimite(etat);
   testFFR_appariementCategorie(etat);
   testFFR_minEquipes(etat);
+  testFFR_couvertureDateAvant(etat);
+  testFFR_couvertureDateApres(etat);
+  testFFR_couvertureDateDansPlage(etat);
+  testFFR_couvertureBornes(etat);
+  testFFR_couvertureRefAbsent(etat);
   testFFR_normaliserDateISO(etat);
   testFFR_normaliserMois(etat);
 
@@ -190,6 +195,53 @@ function testFFR_minEquipes(etat) {
   _ffrAssert(etat, estVide, 'minEquipes : U8 (0 équipe) → avertissement (vides), pas de blocage');
   _ffrAssert(etat, r.bloque.length === 1 && bloqueU10, 'minEquipes : U10 (2 équipes) → blocage dur');
   _ffrAssert(etat, u12OK, 'minEquipes : U12 (3 équipes) → ni bloquée ni vide');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Couverture de saison du référentiel                                       */
+/*  Le référentiel factice porte le millésime '2026-2027' → saison couverte   */
+/*  du 2026-07-01 au 2027-06-30 inclus, indépendamment des lignes datées.     */
+/* -------------------------------------------------------------------------- */
+
+/** Vrai si un avertissement de COUVERTURE (hors saison) a été poussé. */
+function _ffrAAvertCouverture(res) {
+  return (res.avertissements || []).some(function (a) { return a && a.couverture === true; });
+}
+
+/** Date AVANT la saison (30/06/2026, veille du 01/07) ⇒ hors couverture + avertissement. */
+function testFFR_couvertureDateAvant(etat) {
+  var res = evaluerConformiteFFR(_ffrRefFactice(), '2026-06-30', ['U10'], 'C');
+  _ffrAssert(etat, res.couverture && res.couverture.couverte === false, 'couvAvant : couverte=false');
+  _ffrAssert(etat, _ffrAAvertCouverture(res), 'couvAvant : avertissement de couverture poussé');
+}
+
+/** Date APRÈS la saison (01/07/2027, lendemain du 30/06) ⇒ hors couverture + avertissement. */
+function testFFR_couvertureDateApres(etat) {
+  var res = evaluerConformiteFFR(_ffrRefFactice(), '2027-07-01', ['U10'], 'C');
+  _ffrAssert(etat, res.couverture && res.couverture.couverte === false, 'couvApres : couverte=false');
+  _ffrAssert(etat, _ffrAAvertCouverture(res), 'couvApres : avertissement de couverture poussé');
+}
+
+/** Date DANS la saison (01/03/2027) ⇒ couverte=true et aucun avertissement de couverture. */
+function testFFR_couvertureDateDansPlage(etat) {
+  var res = evaluerConformiteFFR(_ffrRefFactice(), '2027-03-01', ['U10'], 'C');
+  _ffrAssert(etat, res.couverture && res.couverture.couverte === true, 'couvDans : couverte=true');
+  _ffrAssert(etat, !_ffrAAvertCouverture(res), 'couvDans : aucun avertissement de couverture');
+}
+
+/** Bornes INCLUSES : 01/07/2026 (début) puis 30/06/2027 (fin) ⇒ couverte=true dans les deux cas. */
+function testFFR_couvertureBornes(etat) {
+  var debut = evaluerConformiteFFR(_ffrRefFactice(), '2026-07-01', ['U10'], 'C');
+  _ffrAssert(etat, debut.couverture && debut.couverture.couverte === true, 'couvBornes : début (01/07/2026) inclus');
+  var fin = evaluerConformiteFFR(_ffrRefFactice(), '2027-06-30', ['U10'], 'C');
+  _ffrAssert(etat, fin.couverture && fin.couverture.couverte === true, 'couvBornes : fin (30/06/2027) incluse');
+}
+
+/** Référentiel absent : refDisponible=false, couverture.couverte=false, aucune exception. */
+function testFFR_couvertureRefAbsent(etat) {
+  var res = evaluerConformiteFFR({ formes: [], dates: [] }, '2027-03-01', ['U10'], 'C');
+  _ffrAssert(etat, res.refDisponible === false, 'couvRefAbsent : refDisponible=false');
+  _ffrAssert(etat, res.couverture && res.couverture.couverte === false, 'couvRefAbsent : couverte=false');
 }
 
 /** normaliserDateISO : chaîne ISO, chaîne datetime, objet Date, entrées invalides. */

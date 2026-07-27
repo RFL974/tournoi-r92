@@ -143,7 +143,7 @@ function creerOngletConfig(classeur) {
   var exemplesCategorie = [
     ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', '', ''],
     ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', '', ''],
-    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'COUPE_PLATEAU', '{"nbQualifiesCoupe":2}', '', '', '', '', ''],
+    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'CROISE',        '', '', '', '', '', ''],
     ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '', '']
   ];
   onglet.getRange(1, 1, 60, entetesCategorie.length + 1).setNumberFormat('@');
@@ -509,6 +509,73 @@ function normaliserCategorie(valeur) {
   return s.replace(/^[MU](?=\d)/, ''); // retire M/U seulement s'il précède un chiffre
 }
 
+/* ---------------------- Couverture de saison du référentiel ---------------------- */
+
+/**
+ * Fenêtre de couverture d'un millésime de saison 'AAAA-AAAA' → { debut, fin } en ISO.
+ * Une saison FFR va du 1ᵉʳ juillet de la 1ʳᵉ année au 30 juin de la 2ᵈᵉ (inclus). Renvoie null
+ * si le millésime n'est pas au format attendu.
+ * Ex. '2026-2027' → { debut: '2026-07-01', fin: '2027-06-30' }.
+ */
+function fenetreMillesimeFFR(millesime) {
+  var m = String(millesime == null ? '' : millesime).trim().match(/^(\d{4})-(\d{4})$/);
+  if (!m) return null;
+  return { debut: m[1] + '-07-01', fin: m[2] + '-06-30' };
+}
+
+/**
+ * Période couverte par le référentiel, indépendante des lignes datées présentes.
+ * Une SAISON est couverte en entier (la FFR laisse mai à partir du 15 et tout juin LIBRES : une
+ * saison finit donc sans dates bloquantes — le min/max des dates donnerait un faux « hors
+ * couverture » en juin, le cas le plus courant).
+ *
+ * Méthode : on lit les millésimes distincts de `ref.dates` (repli sur `ref.formes`), on convertit
+ * chacun en fenêtre de saison, puis on prend l'UNION (plus petit début, plus grande fin).
+ * Repli DÉGRADÉ et conservateur si aucun millésime exploitable : min/max des dates normalisées.
+ *
+ * @return {{debut:?string, fin:?string}} bornes ISO, ou null si rien d'exploitable.
+ */
+function couvertureSaisonFFR(ref) {
+  var dates = (ref && ref.dates)  || [];
+  var formes = (ref && ref.formes) || [];
+
+  function fenetresDepuisMillesimes(lignes) {
+    var out = [];
+    for (var i = 0; i < lignes.length; i++) {
+      var f = fenetreMillesimeFFR(lignes[i] && lignes[i].millesime);
+      if (f) out.push(f);
+    }
+    return out;
+  }
+
+  var fenetres = fenetresDepuisMillesimes(dates);
+  if (!fenetres.length) fenetres = fenetresDepuisMillesimes(formes);
+
+  var debut = null, fin = null;
+  if (fenetres.length) {
+    for (var j = 0; j < fenetres.length; j++) {
+      if (debut === null || fenetres[j].debut < debut) debut = fenetres[j].debut;
+      if (fin === null || fenetres[j].fin > fin) fin = fenetres[j].fin;
+    }
+  } else {
+    // Repli dégradé : aucun millésime lisible → min/max des dates normalisées (ignore les illisibles).
+    for (var k = 0; k < dates.length; k++) {
+      var di = normaliserDateISO(dates[k].date);
+      if (!di) continue;
+      if (debut === null || di < debut) debut = di;
+      if (fin === null || di > fin) fin = di;
+    }
+  }
+  return { debut: debut, fin: fin };
+}
+
+/** 'AAAA-MM-JJ' → 'JJ/MM/AAAA' (backend, sans dépendre du fuseau). '?' si borne absente. */
+function jourFrFFR(iso) {
+  if (!iso) return '?';
+  var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? (m[3] + '/' + m[2] + '/' + m[1]) : String(iso);
+}
+
 /* ---------------------- Moteur de vérification de conformité ---------------------- */
 
 /**
@@ -526,14 +593,20 @@ function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacance
   var formes = ref.formes || [];
   var dates  = ref.dates  || [];
 
-  // MIGRATION DOUCE : référentiel absent ⇒ aucun contrôle.
+  // MIGRATION DOUCE : référentiel absent ⇒ aucun contrôle, et aucune couverture connue.
   if (!formes.length && !dates.length) {
-    return { bloquants: [], avertissements: [], formes: {}, refDisponible: false };
+    return { bloquants: [], avertissements: [], formes: {}, refDisponible: false,
+             couverture: { debut: null, fin: null, couverte: false } };
   }
+
+  // Bornes de couverture (saison), indépendantes de la date du tournoi.
+  var bornes = couvertureSaisonFFR(ref);
 
   var dateISO = normaliserDateISO(dateTournoi);
   if (!dateISO) {
-    return { bloquants: [], avertissements: [], formes: {}, refDisponible: true };
+    // Pas de date lisible : rien à comparer, couverture non vérifiable.
+    return { bloquants: [], avertissements: [], formes: {}, refDisponible: true,
+             couverture: { debut: bornes.debut, fin: bornes.fin, couverte: false } };
   }
   var moisTournoi = dateISO.slice(0, 7);
   var cats = (categoriesPresentes || [])
@@ -632,7 +705,26 @@ function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacance
     }
   }
 
-  return { bloquants: bloquants, avertissements: avertissements, formes: formesMap, refDisponible: true };
+  // COUVERTURE DE SAISON — la date du tournoi tombe-t-elle dans la période couverte par le
+  // référentiel chargé ? Comparaison LEXICOGRAPHIQUE sur des chaînes ISO 'AAAA-MM-JJ' (largeur
+  // fixe → sûre), bornes INCLUSES. Hors couverture ⇒ on pousse un avertissement EXPLICITE :
+  // ainsi un appelant qui ignorerait le champ `couverture` ne peut jamais afficher « aucun conflit »
+  // alors que rien n'a pu être comparé. L'avertissement est marqué `couverture:true` pour que le
+  // front le distingue (bandeau dédié) sans le confondre avec un point de vigilance métier.
+  var couverte = !!(bornes.debut && bornes.fin && dateISO >= bornes.debut && dateISO <= bornes.fin);
+  if (!couverte) {
+    avertissements.push({
+      date: dateISO,
+      libelle: 'La date du tournoi (' + jourFrFFR(dateISO) + ') est en dehors de la période ' +
+        'couverte par le référentiel FFR chargé (du ' + jourFrFFR(bornes.debut) + ' au ' +
+        jourFrFFR(bornes.fin) + '). Aucun contrôle de date n\'a pu être effectué.',
+      motif: '',
+      couverture: true
+    });
+  }
+
+  return { bloquants: bloquants, avertissements: avertissements, formes: formesMap,
+           refDisponible: true, couverture: { debut: bornes.debut, fin: bornes.fin, couverte: couverte } };
 }
 
 /**
