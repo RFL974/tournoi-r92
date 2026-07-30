@@ -263,7 +263,7 @@ rétrocompatibilité d'affichage. **Actuellement référencé nulle part** — c
 | **Dimensions de terrain réglementaires** | ✅ **sourcées, affichées ET applicables en un clic** — session 5 les affiche avec signalement d'écart ; **session 6 ajoute le bouton « Appliquer les valeurs FFR »** par catégorie, qui écrit la bonne dimension du mois dans `dimensions_categories`. **Jamais automatique** (doctrine §1.12) : une catégorie à la fois, avec confirmation. ⚠️ **La « correction » annoncée en session 4 était fausse** : `U12 = 56×45` n'est **pas** la valeur M14, c'est le **jeu à 10** (RE 10x10, déc.→juin, `c09`) ; le code était **incomplet**, pas faux (56×30 en T+2 sept.→nov.), et le bouton pose désormais la bonne valeur selon le mois |
 | **Le terrain dépend de la FORME, pas de la catégorie** | ⚠️ **affiché en session 5** — le terrain suit la forme du mois via `RefFFR_Regles`. Mais la **répartition** des terrains (`dimensions_categories`, hors périmètre session 5) reste clée par catégorie seule : elle demeure inexacte sur la moitié de saison où la forme change (M10 : 30×25 en 5x5 → 40×30 en jeu à 7) |
 | **Plafond de temps de jeu par joueur et par jour** | ✅ **affiché en session 5** (`RefFFR_Temps`) : contrainte de **sécurité** restituée par catégorie (M8 50/75/90 ; M10 65/85/100 ; M12 et M14 65/90/110), avec les variantes de découpage. Informatif, jamais bloquant. **Session 8 : le plafond est désormais récupérable INDÉPENDAMMENT des grilles** (recherche sur catégorie + effectif + nb_demi_journees, sans nb_equipes) — il s'affiche même au-delà de 6 équipes, là où la FFR ne publie plus de grille. Q23 close : les grilles sont des **préconisations**, le plafond est la **règle** |
-| **Temps de jeu prévisionnel vs plafond** | ✅ **ajouté en session 8** : `matchs/équipe (toutes phases) × format_mi_temps × durée`, comparé au plafond. **Borne haute** explicitement libellée (« si un joueur joue l'intégralité des matchs ») — l'app connaît les matchs par équipe, pas par joueur. Dépassement signalé en orange ; informatif, jamais bloquant. Muet tant que le planning n'est pas généré |
+| **Temps de jeu prévisionnel vs plafond** | ✅ **ajouté en session 8, corrigé en session 9 pour porter sur la JOURNÉE ENTIÈRE.** `matchs/équipe × format_mi_temps × durée` vs plafond, **borne haute** (« si un joueur joue l'intégralité des matchs »). **S8 ne comptait que les matchs existants (le matin)** → concluait « sous le plafond » à tort sur un tournoi 2 phases avant génération de l'après-midi. **S9 prédit la phase 2 par arithmétique de la structure des poules** (`planifierApresMidi` ne tronque jamais par le temps) : CROISE → `nbPoules − 1` (exact) ; CROISE_DIAGONAL poules égales → 1 (exact) ; **poules inégales → borne basse, chemin 4.B** (ne conclut pas « sous le plafond », conclut seulement un dépassement déjà atteint). Distingue **constaté / prévu / minimum** ; marge ≤ 10 min signalée. LIBRE inchangé. Informatif, jamais bloquant |
 | Blocage **dur** sur date fédérale | ⚠️ volontairement informatif à ce stade |
 | Dates de plateaux du **Comité 92** | ❌ absentes du référentiel (le calendrier FFR est national) |
 | **Exposition de la zone A de `Config` en lecture publique** | ✅ **fermée en session 3** — `lireConfigPublique` + liste blanche **opt-in**, trois vues, défaut fermé. Les huit champs personnels ne sortent plus d'aucune lecture publique. Vérifié en production : `?action=getConfig` et `?action=getAll` ne contiennent plus `referent_tel` |
@@ -1437,6 +1437,64 @@ existant** (jamais en créer un nouveau, l'URL changerait).
 
 ---
 
+## Session 9 — 2026-07-30 — Temps de jeu prévisionnel sur la journée entière
+
+**Le défaut.** Le temps de jeu prévisionnel de la session 8 ne comptait que **les matchs qui
+existaient déjà, c'est-à-dire le matin**. Sur un tournoi en deux phases dont l'après-midi n'est pas
+encore généré — le cas **normal avant le jour J** — l'app affichait « 60 min, sous le plafond de 85,
+marge 25 », alors que la journée complète en produit nettement plus. **Un contrôle de sécurité qui
+rassure à tort est pire que pas de contrôle.**
+
+**La cause.** C'est exactement le défaut « prévu vs exécuté » que la session 8 a corrigé pour le
+format sportif et pour les clubs. Il avait été **laissé au seul endroit où il fait le plus de dégâts :
+le calcul que cette même session venait de créer.**
+
+**Ce qui rend la correction possible.** `planifierApresMidi` ne **tronque jamais** les fixtures par le
+temps disponible — il les planifie toutes et repousse l'heure de fin. Le nombre de matchs de
+l'après-midi est donc une **conséquence arithmétique de la structure des poules du matin**, pas une
+estimation. Chemin retenu : **4.A (prédiction par formule)**.
+
+### La règle de prédiction (phase 2, max de matchs/équipe)
+- **CROISE** : round-robin par rang. Le rang 1 est présent dans **toutes** les poules ⇒ `nbPoules − 1`.
+  **Exact même en poules inégales** (le rang 1 est toujours complet). Une seule poule ⇒ 0 (croisé
+  impossible).
+- **CROISE_DIAGONAL** : chaque équipe = un seul appariement diagonal ⇒ **1** en poules **égales**
+  (exact). CROISE et CROISE_DIAGONAL **diffèrent** dès 3 poules (2 contre 1).
+- **CROISE_DIAGONAL poules inégales** : le repli des « restes » donne >1 à certaines équipes → non
+  déductible par une formule simple. On retient la **borne basse** (1) et on bascule sur **4.B**.
+
+### Constaté / prévu / minimum, et la règle d'asymétrie
+`matchs_journée = matchs_matin (constaté) + matchs_phase2 (prédit)`. L'affichage ne présente **jamais
+une prédiction comme une observation** : « journée entière (**prévu**) : 6 matchs/équipe (3 constatés
+le matin + 3 prévus l'après-midi) ». **Asymétrie** (contrainte de sécurité) : un total **complet**
+(constaté, ou prédit par formule exacte) conclut dans les deux sens ; un total **partiel / borne basse**
+ne conclut **jamais** « sous le plafond » — mais **toujours** un dépassement déjà atteint (ajouter les
+matchs manquants ne peut que l'aggraver). **Marge ≤ 10 min** ⇒ « marge faible — tout match
+supplémentaire fait dépasser » (la prédiction dépend du nombre de poules ; une marge fine sur une
+règle de sécurité mérite d'être signalée). **LIBRE inchangé** (session 8). Informatif, jamais bloquant.
+
+**Résumé d'exécution** : branche `fix/previsionnel-journee-entiere`, PR **#89** (à ouvrir),
+3 commits, tests **191/191 OK** en simulation Node (168 inchangés + 23). Fonctions pures :
+`structureMatinFFR`, `matchsPhase2PreditsFFR`, `assemblerPrevisionnelJourneeFFR`,
+`previsionnelCategorieFFR` ; `tempsPrevisionnelJoueurFFR` (session 8) conservée telle quelle.
+
+**Écarts déclarés** : (1) je n'ai PAS simulé le vrai générateur (option écartée avec Romain au profit
+de la formule, plus transparente et testable) — conséquence : CROISE_DIAGONAL inégal reste en 4.B
+plutôt que prédit exactement. (2) La note « marge faible » n'est ajoutée que sur un total à **deux
+phases** ; LIBRE reste strictement identique à la session 8.
+
+**Incohérence repérée, non corrigée (hors périmètre)** : **LIBRE porte le même défaut latent** — son
+après-midi (amicaux, round-robin de toute la catégorie) n'est pas non plus généré avant le jour J, et
+le prévisionnel LIBRE ne compte alors que le matin. Le prompt demande explicitement de **ne pas
+toucher à LIBRE** ; je le signale sans le corriger.
+
+**Vérification** : 191/191 sous Node. ⚠️ Vérification navigateur impossible avant redéploiement (le
+bloc conformité dépend de `getConformiteFFR` et du nouvel objet `previsionnel`). ⚠️ **Redéploiement
+requis** — `backend/Code.gs` + `backend/Tests.gs` à recopier dans l'éditeur Apps Script, puis
+**mettre à jour le déploiement existant** (jamais en créer un nouveau, l'URL changerait).
+
+---
+
 # PARTIE 3 — Questions ouvertes
 
 **Règles de clôture** — Une question se ferme soit *par document* (source et passage cités), soit *par le comité / la ligue*. Une réponse partielle ne ferme rien : la question reste ouverte, assortie d'une note sur ce qui manque. La liste finale des points sans réponse textuelle n'est établie qu'une fois tous les documents FFR traités.
@@ -1467,3 +1525,4 @@ existant** (jamais en créer un nouveau, l'URL changerait).
 | **Q22** | **Quel est le recouvrement réel entre Tournoi R92 et la FDM EDR ?** L'audit affirmait « zéro recouvrement » depuis la session 0, sans jamais revérifier. La FFR décrit pourtant la FDM comme couvrant *la gestion des rencontres et des plateaux*, et indique qu'elle s'applique aux **tournois privés de club** dès lors qu'ils sont **déclarés dans Oval-e**. Le recouvrement porterait donc sur l'**amont déclaratif** et la **liste des clubs** — pas sur les poules, les terrains, le planning horaire ni la diffusion publique des scores. **À trancher sur pièce** : visionner le webinaire FFR du **03/02/2026** et déterminer si la FDM produit un **planning** ou une **vue publique**. Structurant pour le partenariat avec le Racing 92. | vérification Romain | ⏳ **ouverte — priorité haute** |
 | **Q23** | **Un tournoi « matin + après-midi » compte-t-il pour 1 ou 2 demi-journées** au sens des grilles de temps FFR ? ✅ **Résolue (club).** Le directeur de l'EDR du Racing a répondu (**27/07/2026**) : « *la FFR choisit du nombre de minutes maximum à jouer pour chaque catégorie par journée, et après les organisateurs de tournois doivent organiser leur journée de tournée en respectant ce temps de jeu maximum* ». **Corroboré** par le pied des fiches FFR (« *Si 3 demi-journées, temps de jeu = 100 minutes* » — trois demi-journées ne peuvent pas être trois journées) et par le **titre** des tableaux (« Préconisation… »). **Double conséquence doctrinale** : (1) les **grilles de temps sont des préconisations, le plafond est la règle qui engage** — d'où sa récupération indépendante des grilles (session 8, §1.8) ; (2) un tournoi matin + après-midi = **2 demi-journées**, `nb_demi_journees` **défaut porté de 1 à 2** (migration douce : absent ⇒ 2 ; aucune valeur saisie modifiée). | Directeur EDR Racing 92 | ✅ **résolue (club, 27/07/2026)** |
 | **Q24** | **Quel est le code club FFR du `Racing Club de France Rugby` ?** Champ obligatoire du formulaire d'autorisation (`org_code_club`). Ne figure sur aucune source publique consultée. Se lit sur la carte de qualification d'un licencié du club ou dans Oval-e. ⚠️ **Un code obtenu par un modèle de langage sans source vérifiable a été écarté** — un code erroné sur un dossier officiel engage le club signataire. | Racing / Oval-e | ⏳ ouverte |
+| **Q25** | **Le nombre de matchs/équipe de la phase 2 est-il connu avant génération pour `CROISE_DIAGONAL` en poules INÉGALES ?** La session 9 prédit exactement CROISE (`nbPoules − 1`) et CROISE_DIAGONAL en poules égales (`1`). En poules inégales, le repli des « restes » ([Code.gs](../backend/Code.gs) `fixturesApresMidiCroiseDiagonal`) donne >1 match à certaines équipes ; le prévisionnel retient alors la **borne basse** et ne conclut pas « sous le plafond » (chemin 4.B). La formule exacte est dérivable (le repli est structurel, indépendant des scores) mais n'a pas été écrite ; à défaut, **simuler** le générateur sur une structure synthétique donnerait le compte exact. À trancher si le format diagonal est réellement utilisé en poules inégales. | chantier interne | ⏳ ouverte |
