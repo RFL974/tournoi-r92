@@ -138,8 +138,11 @@ function creerOngletConfig(classeur) {
     ['org_representant_nom', ''], ['org_representant_tel', ''], ['org_representant_mail', ''],
     ['org_president_nom', ''], ['org_president_tel', ''], ['org_president_mail', ''],
     ['org_label_edr', 'oui'], ['org_label_date', ''],
-    // A.2 Niveau du tournoi (liste fermée) · A.4 équipes étrangères
+    // A.2 Niveau du tournoi (liste fermée) · A.4 équipes étrangères + nombre de participants.
+    // org_nb_participants : saisi, utilisé UNIQUEMENT en repli quand aucun club n'a déclaré ses
+    // effectifs (équipes saisies à la main, hors circuit d'invitation). Jamais estimé (§4.2).
     ['org_niveau_tournoi', ''], ['org_equipes_etrangeres', 'non'], ['org_equipes_etrangeres_liste', ''],
+    ['org_nb_participants', ''],
     // B.1 Installations
     ['org_type_terrain', ''], ['org_nb_vestiaires', ''],
     // B.3 Arbitrage (compteurs GLOBAUX ; distincts d'arbitrage_organisation, texte par catégorie)
@@ -1241,6 +1244,7 @@ function appliquerValeursFFR(classeur, data) {
 var CHAMPS_AUTORISATION = ['org_club_nom', 'org_code_club', 'org_representant_nom', 'org_representant_tel',
   'org_representant_mail', 'org_president_nom', 'org_president_tel', 'org_president_mail', 'org_label_edr',
   'org_label_date', 'org_niveau_tournoi', 'org_equipes_etrangeres', 'org_equipes_etrangeres_liste',
+  'org_nb_participants',
   'org_type_terrain', 'org_nb_vestiaires', 'org_nb_arbitres', 'org_nb_educateurs', 'org_nb_doublettes',
   'org_medecin_oui', 'org_medecin_nom', 'org_medecin_tel', 'org_secours_nom', 'org_secours_tel',
   'org_ambulance', 'org_droits_oui', 'org_droits_montant', 'org_hebergement_oui', 'org_hebergement_structure',
@@ -1451,18 +1455,53 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   }
   sections.push({ titre: 'A.3 — Catégories et formes de jeu', champs: champsFormes });
 
-  // A.4 PARTICIPANTS (calculé) + équipes étrangères (saisi)
+  // A.4 PARTICIPANTS — chaque compteur suit une CASCADE de sources (modèle des terrains, session 7).
+  // Un tournoi dont les équipes sont saisies à la main (sans circuit d'invitation) a ClubsInvites vide :
+  // le zéro « clubs » y est exact mais faux en pratique. On retombe alors sur les données saisies.
   var nbEquipes = participants.nbEquipes;
-  var champsPart = [
-    calcule('Nombre de clubs', participants.nbClubs != null ? String(participants.nbClubs) : ''),
-    calcule('Nombre d\'équipes (minimum 3)', nbEquipes != null ? String(nbEquipes) : ''),
-    calcule('Nombre de participants', participants.nbParticipants != null ? String(participants.nbParticipants) : ''),
-    saisi('Équipes étrangères', 'org_equipes_etrangeres')
-  ];
-  if (nbEquipes != null && Number(nbEquipes) < 3) {
-    champsPart[1].etat = 'manquant';
-    champsPart[1].origine = 'calculé — ⚠️ le formulaire exige un minimum de 3 équipes';
+
+  // Clubs : clubs acceptés (invitations) ; sinon clubs distincts déduits des équipes ; sinon manquant.
+  var champClubs;
+  if (participants.nbClubsInvites != null && participants.nbClubsInvites > 0) {
+    champClubs = { libelle: 'Nombre de clubs', valeur: String(participants.nbClubsInvites),
+      etat: 'calcule', origine: 'calculé — clubs acceptés (invitations)' };
+  } else if (participants.nbClubsEquipes != null && participants.nbClubsEquipes > 0) {
+    champClubs = { libelle: 'Nombre de clubs', valeur: String(participants.nbClubsEquipes),
+      etat: 'calcule', origine: 'calculé — clubs distincts identifiés dans les équipes' };
+  } else {
+    champClubs = { libelle: 'Nombre de clubs', valeur: '', etat: 'manquant', origine: 'aucun club identifié' };
   }
+
+  // Participants : somme des joueurs déclarés (invitations) ; sinon org_nb_participants (saisi) ; sinon
+  // manquant. N'est déductible de RIEN (ni équipes ni noms) : jamais estimé par un ratio (§4.2).
+  var champParticipants;
+  if (participants.nbParticipants != null && participants.nbParticipants > 0) {
+    champParticipants = { libelle: 'Nombre de participants', valeur: String(participants.nbParticipants),
+      etat: 'calcule', origine: 'calculé — somme des joueurs déclarés (invitations)' };
+  } else {
+    champParticipants = champ('Nombre de participants', champSaisiAutorisation(config, 'org_nb_participants'));
+    if (champParticipants.etat === 'saisi') champParticipants.origine = 'saisi (nombre de participants)';
+  }
+
+  var champEquipes = calcule('Nombre d\'équipes (minimum 3)', nbEquipes != null ? String(nbEquipes) : '');
+  if (nbEquipes != null && Number(nbEquipes) < 3) {
+    champEquipes.etat = 'manquant';
+    champEquipes.origine = 'calculé — ⚠️ le formulaire exige un minimum de 3 équipes';
+  }
+
+  var champsPart = [champClubs, champEquipes, champParticipants, saisi('Équipes étrangères', 'org_equipes_etrangeres')];
+
+  // Contrôles de cohérence (§4.3) — INFORMATIFS (état 'avert', ffr-orange), JAMAIS comptés en manquants.
+  var ne = (nbEquipes != null) ? Number(nbEquipes) : null;
+  if (ne != null && ne > 0 && champClubs.etat === 'manquant') {
+    champsPart.push({ libelle: '⚠️ Cohérence clubs', valeur: ne + ' équipe(s) déclarée(s) mais aucun club identifié.',
+      etat: 'avert', origine: 'contrôle de cohérence' });
+  }
+  if (ne != null && ne > 0 && champParticipants.etat === 'manquant') {
+    champsPart.push({ libelle: '⚠️ Cohérence participants', valeur: ne + ' équipe(s) déclarée(s) mais aucun participant.',
+      etat: 'avert', origine: 'contrôle de cohérence' });
+  }
+
   if (String(g.org_equipes_etrangeres || '').trim().toLowerCase() === 'oui') {
     champsPart.push(saisi('Liste des équipes étrangères (noms, prénoms, dates de naissance)', 'org_equipes_etrangeres_liste'));
     champsPart.push({ libelle: 'Rappel équipes étrangères', valeur: 'Joindre à la ligue : autorisation des fédérations étrangères, liste nominative, dates de naissance.',
@@ -1584,15 +1623,24 @@ function getDossierAutorisation(classeur) {
     .filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; })
     .map(function (c) { return String(c.categorie || '').trim(); }).filter(Boolean);
 
-  // Participants : clubs ayant ACCEPTÉ, équipes, somme des joueurs déclarés.
-  var nbClubs = 0, nbParticipants = 0;
+  // Participants — CASCADE (§4.2). Source 1 : circuit d'invitation (clubs acceptés + somme des joueurs
+  // déclarés). Source 2 : clubs distincts déduits des noms d'équipes via clubDe (convention « {club} »
+  // / « {club}-N », déjà utilisée en production pour la répartition des poules). La somme des joueurs
+  // n'a PAS de source 2 : elle ne se déduit d'aucun nom ⇒ retombera sur org_nb_participants (saisi).
+  var nbClubsInvites = 0, nbParticipants = 0;
   clubs.forEach(function (c) {
     if (statutClubCanonique(c.statut) === 'Accepté') {
-      nbClubs++;
+      nbClubsInvites++;
       var n = parseInt(c.nb_joueurs_total, 10);
       if (isFinite(n)) nbParticipants += n;
     }
   });
+  var setClubsEquipes = {};
+  equipes.forEach(function (e) {
+    var c = clubDe(e.nom_equipe);
+    if (c) setClubsEquipes[c] = true;
+  });
+  var nbClubsEquipes = Object.keys(setClubsEquipes).length;
 
   // Matchs par catégorie (pour dériver le format sportif).
   var mpc = {};
@@ -1626,7 +1674,8 @@ function getDossierAutorisation(classeur) {
       heure_debut: g.heure_debut,
       heure_fin: g.heure_fin_projetee || g.heure_fin_matin || g.heure_fin || ''
     },
-    participants: { nbClubs: nbClubs, nbEquipes: equipes.length, nbParticipants: nbParticipants },
+    participants: { nbClubsInvites: nbClubsInvites, nbClubsEquipes: nbClubsEquipes,
+                    nbEquipes: equipes.length, nbParticipants: nbParticipants },
     catsPresentes: catsPresentes,
     matchsParCategorie: mpc,
     terrains: terrains

@@ -34,6 +34,8 @@ var AUTORISATION_SAISIE = [
     { p: 'org_niveau_tournoi', l: 'Niveau du tournoi', t: 'select', o: ['International', 'National', 'Territorial', 'Départemental'] }
   ] },
   { titre: 'A.4 — Participants', champs: [
+    { p: 'org_nb_participants', l: 'Nombre de participants (si les équipes sont saisies à la main)', t: 'number',
+      ph: 'ex. 240 — laisser vide si les clubs ont déclaré leurs effectifs' },
     { p: 'org_equipes_etrangeres', l: 'Équipes étrangères', t: 'select', o: ['non', 'oui'] },
     { p: 'org_equipes_etrangeres_liste', l: 'Liste des équipes étrangères', t: 'textarea' }
   ] },
