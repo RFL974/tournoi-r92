@@ -124,10 +124,11 @@ function creerOngletConfig(classeur) {
     // Zone de vacances scolaires (contrôle de conformité FFR). Défaut 'C' (Île-de-France).
     // Migration douce : si le paramètre est absent d'un Sheet en service, il est traité comme 'C'.
     ['zone_vacances', 'C'],
-    // Nombre de demi-journées du tournoi (grille de temps FFR). Défaut 1 = lecture la PLUS PRUDENTE
-    // (le plafond de temps de jeu est un maximum : partir de la valeur basse fait alerter plus tôt).
-    // Migration douce : absent ⇒ traité comme 1. Question posée au directeur EDR (audit Q23).
-    ['nb_demi_journees', '1'],
+    // Nombre de demi-journées du tournoi (grille de temps FFR). Défaut 2 : un tournoi matin +
+    // après-midi occupe DEUX demi-journées (Q23 close par le directeur EDR du Racing, 27/07/2026 ;
+    // corroboré par le pied des fiches FFR « Si 3 demi-journées, temps de jeu = 100 minutes »).
+    // Migration douce : absent ⇒ traité comme 2 (§4.6). Ne modifie AUCUNE valeur déjà saisie.
+    ['nb_demi_journees', '2'],
     // ── Demande d'autorisation de tournoi EDR (session 7) — feuille de report du formulaire FFR.
     // Données PERSONNELLES (noms/tels/mails du représentant et du président) : PRIVÉES par défaut
     // (jamais dans CONFIG_PUBLIQUE_VUES). N'inventer AUCUNE valeur : un champ vide reste « manquant ».
@@ -807,10 +808,15 @@ function tempsPourCategorieFFR(tempsRef, cleCat, effs, nbDJ, nbEq) {
     if (normaliserCategorie(t.categorie) !== cleCat) continue;
     var teff = String(t.effectif == null ? '' : t.effectif).trim();
     if ((effs || []).indexOf(teff) === -1) continue;
-    var teq = String(t.nb_equipes == null ? '' : t.nb_equipes).trim();
-    if (teq !== '' && teq !== nbEq) continue; // grille d'un autre nombre d'équipes
+    // PLAFOND (contrainte de SÉCURITÉ) : porté par CHAQUE ligne du triplet catégorie + effectif +
+    // nb_demi_journees. On le capture AVANT le filtre nb_equipes (session 8, §4.4) : les grilles FFR
+    // ne couvrent que 3–6 équipes, mais un tournoi de club en compte le double ; sans cela le plafond
+    // — la seule règle qui ENGAGE — disparaissait avec la grille. Toutes les lignes d'un même triplet
+    // portent la MÊME valeur (vérifié) ⇒ le premier non vide fait foi.
     var plaf = String(t.plafond_joueur_min == null ? '' : t.plafond_joueur_min).trim();
     if (plaf && !plafond) plafond = plaf;
+    var teq = String(t.nb_equipes == null ? '' : t.nb_equipes).trim();
+    if (teq !== '' && teq !== nbEq) continue; // grille d'un autre nombre d'équipes (plafond déjà pris)
     if (teq !== '') { // teq vide = plafond seul (pas de grille) ; teq === nbEq = grille de ce tournoi
       grilles.push({
         variante:               String(t.variante || '').trim(),
@@ -827,6 +833,34 @@ function tempsPourCategorieFFR(tempsRef, cleCat, effs, nbDJ, nbEq) {
   }
   if (!grilles.length && !plafond) return null; // rien ne correspond ⇒ muet
   return { grilles: grilles, plafond_joueur_min: plafond, nb_equipes: nbEq, nb_demi_journees: nbDJ };
+}
+
+/**
+ * Temps de jeu MAXIMUM par joueur, en minutes (session 8, §4.5). BORNE HAUTE : l'app connaît les
+ * matchs par ÉQUIPE, pas par JOUEUR — elle ignore qui entre et qui sort. C'est donc le temps
+ * qu'aurait un enfant qui jouerait CHAQUE minute de CHAQUE match. La bonne quantité pour un contrôle
+ * de SÉCURITÉ, à condition de le nommer ainsi (« si un joueur joue l'intégralité des matchs »).
+ *
+ *   minutes = matchs_par_equipe (toutes phases) × format_mi_temps × duree_mi_temps_min
+ *
+ * Renvoie null si l'un des trois facteurs est inconnu (planning non généré) : aucun calcul, aucune
+ * alerte. Compare au plafond FFR quand il est publié ; sinon expose seulement les minutes. Pur.
+ */
+function tempsPrevisionnelJoueurFFR(matchsParEquipe, formatMiTemps, dureeMiTempsMin, plafond) {
+  var n  = parseInt(matchsParEquipe, 10);
+  var mt = parseInt(formatMiTemps, 10);
+  var dm = parseInt(dureeMiTempsMin, 10);
+  if (!isFinite(n) || n <= 0 || !isFinite(mt) || mt <= 0 || !isFinite(dm) || dm <= 0) return null;
+  var minutes = n * mt * dm;
+  var plaf = parseInt(plafond, 10);
+  var aPlafond = isFinite(plaf) && plaf > 0;
+  return {
+    minutes:     minutes,
+    plafond:     aPlafond ? plaf : null,
+    depasse:     aPlafond ? (minutes > plaf) : false,
+    depassement: aPlafond ? Math.max(0, minutes - plaf) : null,
+    marge:       aPlafond ? Math.max(0, plaf - minutes) : null
+  };
 }
 
 /* ------------- Application des valeurs FFR à une catégorie (pur, session 6) ------------- */
@@ -874,7 +908,7 @@ function fusionnerCategorieFFR(categorieExistante, champsZoneB) {
  * @param {{formes,dates,regles,temps,millesime}} ref  référentiel injecté
  * @param {string} categorieApp        ex 'U12' (réconcilié via normaliserCategorie)
  * @param {string} dateISO             'AAAA-MM-JJ'
- * @param {(string|number)} nbDemiJournees  clé de la grille de temps (défaut 1 côté appelant)
+ * @param {(string|number)} nbDemiJournees  clé de la grille de temps (défaut 2 côté appelant)
  * @param {(string|number)} nbEquipes       clé de la grille de temps (nb d'équipes de la catégorie)
  * @param {?string} variante           'A' | 'B' | null (jeu à 10 seulement)
  * @param {Object} dimensionsActuelles l'objet dimensions_categories courant (fusion, jamais remplacement)
@@ -1146,26 +1180,55 @@ function verifierConformiteFFR(dateTournoiISO, categoriesPresentes, zoneVacances
   return evaluerConformiteFFR(ref, dateTournoiISO, categoriesPresentes, zoneVacances);
 }
 
+/** Nombre de demi-journées lu dans Config, avec le défaut de la migration douce : absent ⇒ 2
+ *  (tournoi matin + après-midi = 2 demi-journées, Q23 close — §4.6). Pur, testable sans classeur. */
+function nbDemiJourneesConfig(config) {
+  return String(((config && config.global) || {}).nb_demi_journees || '').trim() || '2';
+}
+
 /** Action doGet publique : conformité FFR pour une date + catégories + zone données.
  *  Calcule côté serveur (on a le classeur) le nombre d'équipes par catégorie et lit
- *  `nb_demi_journees` de Config (défaut 1) : ce sont les clés de la grille de temps FFR. */
+ *  `nb_demi_journees` de Config (défaut 2) : ce sont les clés de la grille de temps FFR. */
 function getConformiteFFR(classeur, params) {
   var cats = String(params.categories == null ? '' : params.categories)
     .split(',').map(function (s) { return s.trim(); }).filter(Boolean);
   var zone = String(params.zone == null ? '' : params.zone).trim() || 'C';
 
   // Options pour la grille de temps : nb d'équipes par catégorie (comptées dans Equipes) et
-  // nombre de demi-journées (zone A de Config). Migration douce : lecture protégée, défaut 1.
-  var options = null;
+  // nombre de demi-journées (zone A de Config). Migration douce : lecture protégée, défaut 2 (§4.6).
+  var options = null, config = null;
   try {
-    var config = lireConfig(classeur);
+    config = lireConfig(classeur);
     var equipes = lireOngletSimple(classeur, 'Equipes');
     var comptes = analyserEffectifsCategories(config, equipes).comptes || {};
-    var ndj = String((config.global || {}).nb_demi_journees || '').trim() || '1';
-    options = { equipesParCategorie: comptes, nbDemiJournees: ndj };
+    options = { equipesParCategorie: comptes, nbDemiJournees: nbDemiJourneesConfig(config) };
   } catch (e) { options = null; } // toute erreur ⇒ section temps simplement omise
 
-  return evaluerConformiteFFR(getRefFFR(classeur), params.date, cats, zone, options);
+  var res = evaluerConformiteFFR(getRefFFR(classeur), params.date, cats, zone, options);
+
+  // §4.5 — temps de jeu PRÉVISIONNEL par catégorie (borne haute), attaché aux prescriptions temps.
+  // Ne s'ajoute que là où un plafond/grille existe déjà (res.temps[cat]) et où le planning fournit un
+  // nombre de matchs/équipe. Migration douce : toute erreur ⇒ pas de prévisionnel, jamais d'exception.
+  try {
+    if (config) {
+      var matchsParCat = {};
+      lireOngletSimple(classeur, 'Matchs').forEach(function (m) {
+        var c = String(m.categorie || '').trim();
+        if (c) (matchsParCat[c] = matchsParCat[c] || []).push(m);
+      });
+      (config.categories || []).forEach(function (cat) {
+        var nom = String(cat.categorie || '').trim();
+        if (!nom || !res.temps[nom]) return; // pas de prescriptions temps ⇒ rien à comparer
+        var liste = matchsParCat[nom] || [];
+        var mpe = liste.length ? maxMatchsParEquipe(liste) : null; // toutes phases (journée entière)
+        var prev = tempsPrevisionnelJoueurFFR(mpe, cat.format_mi_temps, cat.duree_mi_temps_min,
+          res.temps[nom].plafond_joueur_min);
+        if (prev) res.temps[nom].previsionnel = prev;
+      });
+    }
+  } catch (e) { /* migration douce : pas de prévisionnel */ }
+
+  return res;
 }
 
 /**
@@ -1173,7 +1236,7 @@ function getConformiteFFR(classeur, params) {
  * tournoi. Le frontend n'envoie QUE `{ categorie, date, variante }` — le serveur relit le
  * référentiel et dérive lui-même les valeurs via `calculerApplicationFFR` (sinon la page pourrait
  * écrire n'importe quoi en se réclamant de la FFR). `nb_equipes` (comptes) et `nb_demi_journees`
- * (Config, défaut 1) sont calculés ici, comme dans getConformiteFFR.
+ * (Config, défaut 2) sont calculés ici, comme dans getConformiteFFR.
  *
  * Écrit : zone B par RELECTURE + FUSION + ligne complète (jamais partielle) ; `dimensions_categories`
  * par fusion de l'objet global. Renvoie le détail de ce qui a été écrit ET ignoré (avec raisons).
@@ -1189,7 +1252,7 @@ function appliquerValeursFFR(classeur, data) {
   var equipes = lireOngletSimple(classeur, 'Equipes');
   var comptes = analyserEffectifsCategories(config, equipes).comptes || {};
   var nbEquipes = comptes[categorie];
-  var nbDemiJournees = String((config.global || {}).nb_demi_journees || '').trim() || '1';
+  var nbDemiJournees = nbDemiJourneesConfig(config); // défaut 2 (§4.6)
   var dims = {};
   try { if ((config.global || {}).dimensions_categories) dims = JSON.parse(config.global.dimensions_categories) || {}; }
   catch (e) { dims = {}; }

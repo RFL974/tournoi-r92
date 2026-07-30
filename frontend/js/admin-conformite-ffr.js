@@ -245,6 +245,28 @@ function detailReglesFFR(regles, cfg, dim) {
   return html;
 }
 
+/**
+ * Temps de jeu MAXIMUM par joueur (borne haute : si un joueur joue l'intégralité des matchs).
+ * Le libellé DOIT le dire : l'app connaît les matchs par équipe, pas par joueur (session 8, §4.5).
+ * Sous le plafond → neutre + marge ; au-dessus → orange + dépassement ; matchs inconnus → muet.
+ */
+function lignePrevisionnelFFR(p) {
+  if (!p) return ''; // planning non généré : aucun calcul, aucune alerte
+  const label = '🧒 Temps de jeu max / joueur <span class="ffr-note-inline">(si un joueur joue l\'intégralité des matchs)</span>';
+  if (p.plafond != null && p.depasse) {
+    return '<div class="ffr-ligne ffr-orange"><span class="ffr-ligne-label">' + label + '</span> ' +
+      '<span class="ffr-ligne-val"><strong>' + p.minutes + ' min</strong> — dépasse le plafond de ' +
+      p.plafond + ' min de <strong>' + p.depassement + ' min</strong> ⚠️</span></div>';
+  }
+  if (p.plafond != null) {
+    return '<div class="ffr-ligne"><span class="ffr-ligne-label">' + label + '</span> ' +
+      '<span class="ffr-ligne-val"><strong>' + p.minutes + ' min</strong> — sous le plafond de ' +
+      p.plafond + ' min (marge ' + p.marge + ' min)</span></div>';
+  }
+  return '<div class="ffr-ligne"><span class="ffr-ligne-label">' + label + '</span> ' +
+    '<span class="ffr-ligne-val"><strong>' + p.minutes + ' min</strong> (aucun plafond FFR publié)</span></div>';
+}
+
 /** Temps : plafond (sécurité) + variantes de découpage, avec écarts vs Config sur l'union des valeurs. */
 function detailTempsFFR(t, cfg) {
   if (!t) return '';
@@ -254,10 +276,13 @@ function detailTempsFFR(t, cfg) {
     html += '<div class="ffr-ligne"><span class="ffr-ligne-label">⏱ Plafond de temps de jeu / joueur</span> ' +
       '<span class="ffr-ligne-val"><strong>' + echapper(t.plafond_joueur_min) + ' min</strong> (sécurité)</span></div>';
   }
+  // Temps de jeu PRÉVISIONNEL — borne haute (si un joueur joue TOUT). Contrôle de sécurité AVANT le
+  // tournoi (session 8). Muet si le planning n'est pas généré (matchs/équipe inconnus).
+  html += lignePrevisionnelFFR(t.previsionnel);
   const grilles = t.grilles || [];
   if (!grilles.length) {
-    html += '<div class="ffr-ligne"><span class="ffr-ligne-val">Grille de temps non publiée pour ce nombre ' +
-      'd\'équipes (plafond seul).</span></div>';
+    html += '<div class="ffr-ligne"><span class="ffr-ligne-val">La FFR ne publie pas de grille de temps ' +
+      'au-delà de 6 équipes — seul le plafond de sécurité s\'applique.</span></div>';
     return html;
   }
   // Chaque variante (A/B) : découpage également valide — on affiche les deux, on ne choisit pas.

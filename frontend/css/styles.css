@@ -1932,6 +1932,7 @@ a.bouton { display: inline-block; text-decoration: none; }
 .ffr-detail-titre { display: inline-block; font-weight: 600; margin-bottom: 2px; color: var(--bleu-ciel); }
 .ffr-ligne { margin: 2px 0; line-height: 1.35; }
 .ffr-ligne-label { opacity: 0.8; }
+.ffr-note-inline { font-size: 0.78rem; opacity: 0.7; font-weight: 400; } /* précision « borne haute » (session 8) */
 .ffr-ligne-val strong { color: inherit; }
 .ffr-attendu { color: #ffe6b0; font-size: 0.8rem; }
 /* Bouton « Appliquer les valeurs FFR » (session 6) : discret, une catégorie à la fois. */
