@@ -253,18 +253,44 @@ function detailReglesFFR(regles, cfg, dim) {
 function lignePrevisionnelFFR(p) {
   if (!p) return ''; // planning non généré : aucun calcul, aucune alerte
   const label = '🧒 Temps de jeu max / joueur <span class="ffr-note-inline">(si un joueur joue l\'intégralité des matchs)</span>';
+
+  // Portée du total (formats à deux phases seulement) : NE JAMAIS présenter un prédit comme un constaté.
+  let portee = '';
+  if (p.nature === 'predit') {
+    portee = '<span class="ffr-note-inline"> — journée entière (prévu) : ' + (p.matinMatchs + p.apremMatchs) +
+      ' matchs/équipe (' + p.matinMatchs + ' constatés le matin + ' + p.apremMatchs + ' prévus l\'après-midi)</span>';
+  } else if (p.nature === 'constate') {
+    portee = '<span class="ffr-note-inline"> — journée entière (constaté)</span>';
+  } else if (p.nature === 'minimum') {
+    portee = '<span class="ffr-note-inline"> — minimum connu : ' + p.matinMatchs + ' le matin + au moins ' +
+      p.apremMatchs + ' l\'après-midi (non encore planifié)</span>';
+  }
+
+  const ouvre = function (cls) { return '<div class="ffr-ligne' + (cls ? ' ' + cls : '') +
+    '"><span class="ffr-ligne-label">' + label + '</span> <span class="ffr-ligne-val">'; };
+  const ferme = '</span></div>';
+
+  // Dépassement : concluable dans TOUS les cas (un total partiel qui dépasse déjà le restera).
   if (p.plafond != null && p.depasse) {
-    return '<div class="ffr-ligne ffr-orange"><span class="ffr-ligne-label">' + label + '</span> ' +
-      '<span class="ffr-ligne-val"><strong>' + p.minutes + ' min</strong> — dépasse le plafond de ' +
-      p.plafond + ' min de <strong>' + p.depassement + ' min</strong> ⚠️</span></div>';
+    const q = p.complet ? (p.nature === 'predit' ? 'total prévu' : 'total constaté') : 'minimum déjà atteint';
+    return ouvre('ffr-orange') + '<strong>' + p.minutes + ' min</strong> — dépasse le plafond de ' +
+      p.plafond + ' min de <strong>' + p.depassement + ' min</strong> ⚠️ (' + q + ')' + portee + ferme;
   }
+
+  // Total PARTIEL / borne basse sous le plafond : ne conclut PAS (mieux vaut ne rien conclure).
+  if (!p.complet) {
+    return ouvre('') + '<strong>' + p.minutes + ' min</strong> sur la phase connue — l\'après-midi n\'est pas ' +
+      'encore planifié, le total de la journée sera supérieur.' +
+      (p.plafond != null ? ' Plafond de sécurité : ' + p.plafond + ' min.' : '') + portee + ferme;
+  }
+
+  // Total COMPLET (constaté ou prédit par formule exacte) sous le plafond : conclusion + marge.
   if (p.plafond != null) {
-    return '<div class="ffr-ligne"><span class="ffr-ligne-label">' + label + '</span> ' +
-      '<span class="ffr-ligne-val"><strong>' + p.minutes + ' min</strong> — sous le plafond de ' +
-      p.plafond + ' min (marge ' + p.marge + ' min)</span></div>';
+    let s = '<strong>' + p.minutes + ' min</strong> — sous le plafond de ' + p.plafond + ' min (marge ' + p.marge + ' min)';
+    if (p.margeFaible) s += ' ⚠️ marge faible — tout match supplémentaire fait dépasser';
+    return ouvre('') + s + portee + ferme;
   }
-  return '<div class="ffr-ligne"><span class="ffr-ligne-label">' + label + '</span> ' +
-    '<span class="ffr-ligne-val"><strong>' + p.minutes + ' min</strong> (aucun plafond FFR publié)</span></div>';
+  return ouvre('') + '<strong>' + p.minutes + ' min</strong> (aucun plafond FFR publié)' + portee + ferme;
 }
 
 /** Temps : plafond (sécurité) + variantes de découpage, avec écarts vs Config sur l'union des valeurs. */
