@@ -160,7 +160,10 @@ function rendreFeuilleAutorisation(dossier) {
     if (s.note) html += '<p class="autorisation-section-note">' + echapper(s.note) + '</p>';
     html += '<table class="autorisation-table"><tbody>';
     s.champs.forEach(function (c) {
-      const etatCls = c.etat === 'manquant' ? 'ffr-orange' : (c.etat === 'saisi' ? 'autorisation-saisi' : 'autorisation-calcule');
+      // 'avert' = signalement INFORMATIF (incohérence, format hors périmètre) : orange, message affiché,
+      // JAMAIS compté dans les manquants (session 8). 'manquant' = trou réel. 'saisi'/'calcule' = renseignés.
+      const etatCls = (c.etat === 'manquant' || c.etat === 'avert') ? 'ffr-orange'
+        : (c.etat === 'saisi' ? 'autorisation-saisi' : 'autorisation-calcule');
       const valeur = c.etat === 'manquant' ? '<em>manquant</em>' : echapper(String(c.valeur));
       html += '<tr class="' + etatCls + '"><th>' + echapper(c.libelle) + '</th><td>' + valeur +
         '</td><td class="autorisation-etat">' + echapper(c.etat) + '</td></tr>';

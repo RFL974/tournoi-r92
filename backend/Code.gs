@@ -1312,27 +1312,47 @@ function dureeMatchLibelleAutorisation(cfgCat) {
 }
 
 /**
- * Format sportif d'UNE catégorie, dérivé des matchs GÉNÉRÉS (pur). null si aucun match (planning
- * non généré pour la catégorie). Deux phases = format d'après-midi CROISE/CROISE_DIAGONAL AVEC des
- * matchs de classement. LIBRE ⇒ une seule phase, mais le nombre de matchs/équipe compte TOUTE la
- * journée (les amicaux de l'après-midi comptent : le formulaire demande combien joue un enfant).
+ * Format sportif d'UNE catégorie. Le nombre de PHASES se déduit de l'INTENTION — le format
+ * d'après-midi DÉCLARÉ (zone B) — JAMAIS de l'existence de matchs (session 8, §4.1). La demande
+ * d'autorisation se dépose des semaines avant le tournoi : l'après-midi n'est généré que le jour J,
+ * une fois les scores du matin saisis. Déduire les phases des matchs générés déclarait « 1 phase »
+ * pour un CROISE tant que l'après-midi n'existait pas — le bug corrigé ici.
+ *
+ *   - CROISE / CROISE_DIAGONAL → 2 phases (poules de qualification puis poules de niveau)
+ *   - LIBRE                    → 1 phase, matchs/équipe comptant TOUTE la journée (amicaux compris)
+ *   - COUPE_PLATEAU            → statut « manquant » : phases finales HORS PÉRIMÈTRE École de Rugby
+ *   - vide / inconnu           → statut « manquant », motif « format d'après-midi non configuré »
+ *
+ * Le nombre de matchs/équipe se remplit ensuite INDÉPENDAMMENT, phase par phase : compté si les
+ * matchs existent, sinon `null` (⇒ « manquant » côté feuille) SANS faire basculer le nb de phases. Pur.
  */
 function formatSportifCategorie(matchsCat, cfgCat) {
   var liste = matchsCat || [];
-  if (!liste.length) return null;
   var matin = liste.filter(function (m) { return String(m.phase) !== 'classement'; });
   var aprem = liste.filter(function (m) { return String(m.phase) === 'classement'; });
   var fmt = String((cfgCat && cfgCat.format_apresmidi) || '').trim().toUpperCase();
-  var deuxPhases = (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL') && aprem.length > 0;
   var duree = dureeMatchLibelleAutorisation(cfgCat);
-  if (deuxPhases) {
-    return { deuxPhases: true, duree: duree,
-             phase1: { matchsParEquipe: maxMatchsParEquipe(matin), duree: duree },
-             phase2: { matchsParEquipe: maxMatchsParEquipe(aprem), duree: duree } };
+  function compter(sousListe) { return sousListe.length ? maxMatchsParEquipe(sousListe) : null; }
+
+  if (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL') {
+    return { statut: 'ok', deuxPhases: true, duree: duree,
+             phase1: { matchsParEquipe: compter(matin), duree: duree },
+             phase2: { matchsParEquipe: compter(aprem), duree: duree } };
   }
-  // Une phase : compte TOUS les matchs de la journée (matin + amicaux d'après-midi éventuels).
-  return { deuxPhases: false, duree: duree,
-           unePhase: { matchsParEquipe: maxMatchsParEquipe(liste), duree: duree } };
+  if (fmt === 'LIBRE') {
+    // Une phase : matchs/équipe compte TOUS les matchs de la journée (matin + amicaux d'après-midi).
+    return { statut: 'ok', deuxPhases: false, duree: duree,
+             unePhase: { matchsParEquipe: compter(liste), duree: duree } };
+  }
+  if (fmt === 'COUPE_PLATEAU') {
+    // Format à élimination : les phases finales (quarts, demies, finale) sont INTERDITES en tournoi/
+    // plateau École de Rugby — raison pour laquelle COUPE_PLATEAU est masqué dans l'UI (session 2).
+    return { statut: 'manquant', deuxPhases: false, coupePlateau: true,
+             motif: 'format COUPE_PLATEAU — hors périmètre École de Rugby' };
+  }
+  // Vide ou inconnu : on n'invente RIEN (doctrine §1.12). Le format historique « vide = CROISE » ne
+  // s'applique qu'à la génération, pas à la déclaration d'intention de la demande d'autorisation.
+  return { statut: 'manquant', deuxPhases: false, motif: 'format d\'après-midi non configuré' };
 }
 
 /**
@@ -1462,24 +1482,38 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
     saisi('Nombre de vestiaires utilisés', 'org_nb_vestiaires')
   ] });
 
-  // B.2 FORMAT SPORTIF (calculé, par catégorie présente ; manquant si planning absent)
+  // B.2 FORMAT SPORTIF — le nombre de PHASES vient du format DÉCLARÉ (intention) ; les matchs/équipe
+  // se remplissent phase par phase, « manquant » tant que le planning n'est pas généré (session 8).
   var champsFormat = [];
+  var incoherencesFormat = [];
   var mpc = donneesApp.matchsParCategorie || {};
+  // Matchs/équipe d'une phase : chiffre si connu, sinon « manquant » (planning non généré) — SANS
+  // remettre en cause le nombre de phases (déjà connu par le format déclaré).
+  function ligneMatchsPhase(libelle, mpe) {
+    return (mpe == null)
+      ? { libelle: libelle, valeur: '', etat: 'manquant', origine: 'générer le planning d\'abord' }
+      : calcule(libelle, String(mpe));
+  }
   (donneesApp.catsPresentes || []).forEach(function (catApp) {
     var cfgCat = (config.categories || []).filter(function (c) { return String(c.categorie).trim() === catApp; })[0] || {};
     var fs = formatSportifCategorie(mpc[catApp] || [], cfgCat);
-    if (!fs) {
-      champsFormat.push({ libelle: catApp + ' — format sportif', valeur: '', etat: 'manquant',
-        origine: 'générer le planning d\'abord' });
+    if (fs.statut === 'manquant') {
+      champsFormat.push({ libelle: catApp + ' — format sportif', valeur: '', etat: 'manquant', origine: fs.motif });
+      if (fs.coupePlateau) {
+        incoherencesFormat.push({ libelle: catApp + ' — ⚠️ phases finales interdites',
+          valeur: 'Le format à élimination (quarts, demies, finale) est INTERDIT sur les tournois et ' +
+            'plateaux École de Rugby. Retire ce format ou choisis CROISE / LIBRE.', etat: 'avert',
+          origine: 'formulaire FFR — interdiction des phases finales EDR' });
+      }
       return;
     }
     if (fs.deuxPhases) {
-      champsFormat.push(calcule(catApp + ' — Phase 1 (poules de qualification) : matchs/équipe', String(fs.phase1.matchsParEquipe)));
+      champsFormat.push(ligneMatchsPhase(catApp + ' — Phase 1 (poules de qualification) : matchs/équipe', fs.phase1.matchsParEquipe));
       champsFormat.push(calcule(catApp + ' — Phase 1 : durée de match', fs.phase1.duree));
-      champsFormat.push(calcule(catApp + ' — Phase 2 (poules de niveau) : matchs/équipe', String(fs.phase2.matchsParEquipe)));
+      champsFormat.push(ligneMatchsPhase(catApp + ' — Phase 2 (poules de niveau) : matchs/équipe', fs.phase2.matchsParEquipe));
       champsFormat.push(calcule(catApp + ' — Phase 2 : durée de match', fs.phase2.duree));
     } else {
-      champsFormat.push(calcule(catApp + ' — 1 phase : matchs/équipe (journée entière)', String(fs.unePhase.matchsParEquipe)));
+      champsFormat.push(ligneMatchsPhase(catApp + ' — 1 phase : matchs/équipe (journée entière)', fs.unePhase.matchsParEquipe));
       champsFormat.push(calcule(catApp + ' — 1 phase : durée de match', fs.unePhase.duree));
     }
     if (normaliserCategorie(catApp) === '6') {
@@ -1487,10 +1521,11 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
     }
     champsFormat.push(saisi(catApp + ' — Récompenses', 'org_recompenses_' + catApp));
   });
-  if (!champsFormat.length) {
-    champsFormat.push({ libelle: 'Format sportif', valeur: '', etat: 'manquant', origine: 'générer le planning d\'abord' });
+  if (!champsFormat.length && !incoherencesFormat.length) {
+    champsFormat.push({ libelle: 'Format sportif', valeur: '', etat: 'manquant', origine: 'aucune catégorie présente' });
   }
-  sections.push({ titre: 'B.2 — Format sportif', champs: champsFormat, note: 'Même durée de match aux deux phases (réglage par catégorie, zone B).' });
+  sections.push({ titre: 'B.2 — Format sportif', champs: champsFormat.concat(incoherencesFormat),
+    note: 'Nombre de phases = format d\'après-midi déclaré (zone B) ; matchs/équipe remplis à la génération du planning. Même durée aux deux phases.' });
 
   // B.3 ARBITRAGE (saisi ; arbitrage_organisation est affiché à part côté écran, hors feuille)
   sections.push({ titre: 'B.3 — Arbitrage', champs: [
