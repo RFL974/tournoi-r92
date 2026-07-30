@@ -125,6 +125,8 @@ function lancerTestsFFR() {
   testS10_formatVideChemin4B(etat);
   testS10_formatInconnuDepasseSignale(etat);
   testS10_generationInchangeeFormatVide(etat);
+  testS10_feuilleFormatVide(etat);
+  testS10_feuilleFormatVideSignalement(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -1237,4 +1239,23 @@ function testS10_generationInchangeeFormatVide(etat) {
   _ffrAssert(etat, formatApresMidi({ format_apresmidi: '' }) === 'CROISE', 'genInchangee : format vide → CROISE (génération)');
   _ffrAssert(etat, formatApresMidi({ format_apresmidi: 'LIBRE' }) === 'LIBRE', 'genInchangee : LIBRE reste LIBRE');
   _ffrAssert(etat, formatApresMidi({}) === 'CROISE', 'genInchangee : format absent → CROISE (défaut historique)');
+}
+
+/** §4.4 #8 — feuille d'autorisation : format vide ⇒ « non configuré — CROISE serait appliqué », champ manquant. */
+function testS10_feuilleFormatVide(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: {} },
+    _cfgAutorisation([{ categorie: 'U12' }]), _refAutorisation());
+  var fmt = _autoChamp(d, 'U12 — format sportif');
+  _ffrAssert(etat, fmt && fmt.etat === 'manquant', 'feuilleVide : champ toujours compté manquant (personne ne l\'a choisi)');
+  _ffrAssert(etat, fmt && /CROISE serait appliqué/.test(fmt.origine),
+    'feuilleVide : motif « non configuré — CROISE serait appliqué par défaut »');
+}
+
+/** §4.4 #9 — feuille d'autorisation : format vide ⇒ un signalement de cohérence (avert) apparaît, hors manquants. */
+function testS10_feuilleFormatVideSignalement(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: {} },
+    _cfgAutorisation([{ categorie: 'U12' }]), _refAutorisation());
+  var av = _autoChamp(d, 'Format d\'après-midi non configuré');
+  _ffrAssert(etat, av && av.etat === 'avert' && /CROISE serait appliqué/.test(av.valeur),
+    'feuilleVideSig : signalement de cohérence présent (avert, hors compteur de manquants)');
 }

@@ -1548,9 +1548,16 @@ function formatSportifCategorie(matchsCat, cfgCat) {
     return { statut: 'manquant', deuxPhases: false, coupePlateau: true,
              motif: 'format COUPE_PLATEAU — hors périmètre École de Rugby' };
   }
-  // Vide ou inconnu : on n'invente RIEN (doctrine §1.12). Le format historique « vide = CROISE » ne
-  // s'applique qu'à la génération, pas à la déclaration d'intention de la demande d'autorisation.
-  return { statut: 'manquant', deuxPhases: false, motif: 'format d\'après-midi non configuré' };
+  if (fmt === '') {
+    // Vide : la GÉNÉRATION appliquerait CROISE (défaut historique). Session 10 — on le DIT au lieu de
+    // le taire, tout en gardant le champ « manquant » (personne ne l'a choisi). Le comportement de
+    // génération n'est PAS modifié (voir formatApresMidi) ; seule la décision devient visible.
+    return { statut: 'manquant', deuxPhases: false, formatVide: true,
+             motif: 'non configuré — CROISE serait appliqué par défaut' };
+  }
+  // Valeur inattendue (typo…) : la génération retomberait aussi sur CROISE. On n'invente RIEN (§1.12).
+  return { statut: 'manquant', deuxPhases: false,
+           motif: 'format « ' + fmt + ' » non reconnu — CROISE serait appliqué par défaut' };
 }
 
 /**
@@ -1719,6 +1726,7 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   // se remplissent phase par phase, « manquant » tant que le planning n'est pas généré (session 8).
   var champsFormat = [];
   var incoherencesFormat = [];
+  var categoriesFormatVide = [];
   var mpc = donneesApp.matchsParCategorie || {};
   // Matchs/équipe d'une phase : chiffre si connu, sinon « manquant » (planning non généré) — SANS
   // remettre en cause le nombre de phases (déjà connu par le format déclaré).
@@ -1738,6 +1746,7 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
             'plateaux École de Rugby. Retire ce format ou choisis CROISE / LIBRE.', etat: 'avert',
           origine: 'formulaire FFR — interdiction des phases finales EDR' });
       }
+      if (fs.formatVide) categoriesFormatVide.push(catApp);
       return;
     }
     if (fs.deuxPhases) {
@@ -1754,6 +1763,14 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
     }
     champsFormat.push(saisi(catApp + ' — Récompenses', 'org_recompenses_' + catApp));
   });
+  // Signalement de cohérence (§4.3) : au moins une catégorie sans format d'après-midi choisi. INFORMATIF
+  // (état 'avert', hors compteur de manquants) — la génération appliquerait CROISE sans le dire.
+  if (categoriesFormatVide.length) {
+    incoherencesFormat.push({ libelle: '⚠️ Format d\'après-midi non configuré',
+      valeur: categoriesFormatVide.length + ' catégorie(s) sans format choisi (' + categoriesFormatVide.join(', ') +
+        ') — CROISE serait appliqué par défaut à la génération. Choisis explicitement le format dans les réglages.',
+      etat: 'avert', origine: 'décision implicite rendue visible (session 10)' });
+  }
   if (!champsFormat.length && !incoherencesFormat.length) {
     champsFormat.push({ libelle: 'Format sportif', valeur: '', etat: 'manquant', origine: 'aucune catégorie présente' });
   }

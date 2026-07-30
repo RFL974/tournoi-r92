@@ -389,6 +389,16 @@ function blocFormatApresMidi(cat) {
       'd\'après-midi.</p>'
     : '';
 
+  // Session 10 : format_apresmidi VIDE. La génération applique CROISE par défaut (historique) — on le
+  // DIT au lieu de le taire. Enregistrer la catégorie rend la valeur explicite (onEnregistrerCategorie
+  // écrit CROISE). Le comportement de génération n'est PAS modifié.
+  const formatVide = String((cat && cat.format_apresmidi) || '').trim() === '';
+  const encartDefaut = formatVide
+    ? '<p class="format-defaut-histo ffr-orange">⚠️ <b>CROISE (défaut historique — à confirmer)</b> — ' +
+      'aucun format d\'après-midi n\'a été choisi pour cette catégorie ; CROISE serait appliqué à la ' +
+      'génération. Sélectionne un format ci-dessous puis enregistre pour rendre ce choix explicite.</p>'
+    : '';
+
   const cartes = FORMATS_APRESMIDI.map(function (f) {
     const choisi = (f.cle === fmt);
     return (
@@ -413,6 +423,7 @@ function blocFormatApresMidi(cat) {
     '<div class="bloc-format" data-format="' + fmt + '">' +
       '<span class="format-libelle">Format de l\'après-midi</span>' +
       encartInterdit +
+      encartDefaut +
       '<div class="format-cartes">' + cartes + '</div>' +
       '<label class="format-coupe-param reglage">' +
         '<span class="r-libelle">Qualifiés en Coupe (par poule)</span>' +

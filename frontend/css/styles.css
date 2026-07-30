@@ -205,6 +205,8 @@ select.r-input { cursor: pointer; }
   border-radius: 8px; padding: 8px 10px;
 }
 .theme-clair .format-interdit-edr { color: #8a5a0c; background: #fdf4e3; }
+/* Encart « format d'après-midi non configuré » (session 10) : couleur via .ffr-orange, mise en page ici. */
+.format-defaut-histo { margin: 0 0 10px; font-size: 0.9rem; line-height: 1.4; border-radius: 8px; padding: 8px 10px; }
 
 /* Champ « qualifiés en Coupe » : masqué, révélé seulement si COUPE_PLATEAU est choisi */
 .format-coupe-param { margin-top: 10px; display: none; }
