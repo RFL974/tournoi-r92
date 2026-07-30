@@ -1947,6 +1947,39 @@ a.bouton { display: inline-block; text-decoration: none; }
 /* Thème clair */
 .theme-clair .ffr-detail-cat { border-top-color: #e6edf5; }
 .theme-clair .ffr-appliquer { color: #8a5a0c; background: #fdf4e3; border-color: #e6c98a; }
+
+/* ── Demande d'autorisation de tournoi (session 7) ── */
+.autorisation-groupe { border: 1px solid rgba(184, 216, 248, 0.22); border-radius: 10px; padding: 8px 12px 12px; margin: 10px 0; }
+.autorisation-groupe legend { padding: 0 6px; font-weight: 600; color: var(--bleu-ciel); font-size: 0.9rem; }
+.autorisation-rappel { font-size: 0.85rem; background: rgba(184, 216, 248, 0.10); border-radius: 8px; padding: 8px 10px; }
+.autorisation-memo { margin: 10px 0; font-size: 0.85rem; border-left: 3px solid rgba(184, 216, 248, 0.4); padding: 4px 0 4px 12px; }
+.autorisation-memo ul { margin: 4px 0; padding-left: 18px; }
+.autorisation-memo-note { opacity: 0.8; font-size: 0.8rem; }
+.autorisation-feuille-report h3 { font-size: 1.05rem; margin: 14px 0 8px; }
+.autorisation-section { margin-top: 12px; }
+.autorisation-section h4 { margin: 6px 0; font-size: 0.95rem; color: var(--bleu-ciel); }
+.autorisation-section-note { font-size: 0.8rem; opacity: 0.85; margin: 2px 0 6px; }
+.autorisation-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.autorisation-table th { text-align: left; font-weight: 500; padding: 4px 8px; width: 55%; vertical-align: top; }
+.autorisation-table td { padding: 4px 8px; vertical-align: top; }
+.autorisation-table tr { border-bottom: 1px solid rgba(184, 216, 248, 0.12); }
+.autorisation-table .autorisation-etat { text-align: right; font-size: 0.72rem; text-transform: uppercase; opacity: 0.7; white-space: nowrap; }
+.autorisation-table tr.ffr-orange th, .autorisation-table tr.ffr-orange td { color: #ffe6b0; }
+.autorisation-table tr.ffr-orange em { color: #ffe6b0; font-style: italic; }
+.autorisation-pied { font-size: 0.8rem; opacity: 0.85; margin-top: 12px; }
+.theme-clair .autorisation-table tr.ffr-orange th, .theme-clair .autorisation-table tr.ffr-orange td { color: #8a5a0c; }
+
+/* Impression : ne garder QUE la feuille de report (nav, saisie et reste masqués). */
+@media print {
+  body * { visibility: hidden; }
+  #feuille-report, #feuille-report * { visibility: visible; }
+  #feuille-report { position: absolute; left: 0; top: 0; width: 100%; color: #000; }
+  #feuille-report .ffr-bloc, #feuille-report h3, #feuille-report h4 { color: #000; }
+  #feuille-report .autorisation-table tr.ffr-orange th,
+  #feuille-report .autorisation-table tr.ffr-orange td,
+  #feuille-report .autorisation-table tr.ffr-orange em { color: #000; }
+  #feuille-report .autorisation-table th, #feuille-report .autorisation-table td { border-bottom: 1px solid #999; }
+}
 .theme-clair .ffr-detail-titre { color: #33608f; }
 .theme-clair .ffr-attendu { color: #8a5a0c; }
 .theme-clair .ffr-neutre { color: #33608f; background: #eef4fb; }

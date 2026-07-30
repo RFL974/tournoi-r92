@@ -75,6 +75,22 @@ function lancerTestsFFR() {
   testS6_idempotence(etat);
   testS6_fusionZoneBpreserve(etat);
 
+  // Demande d'autorisation de tournoi — feuille de report (session 7).
+  testS7_aucuneDonneeSansErreur(etat);
+  testS7_champVideJamaisDevine(etat);
+  testS7_formesM12Juin(etat);
+  testS7_formesM12Octobre(etat);
+  testS7_sevensJamaisCoche(etat);
+  testS7_m15fAbsentPasDeBloc(etat);
+  testS7_planningNonGenereFormatManquant(etat);
+  testS7_deuxPhases(etat);
+  testS7_unePhase(etat);
+  testS7_libreCompteTouteLaJournee(etat);
+  testS7_moinsDe3Equipes(etat);
+  testS7_nbManquantsDecroit(etat);
+  testS7_orgNonPublic(etat);
+  testS7_defautNomClub(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -722,4 +738,168 @@ function testS6_fusionZoneBpreserve(etat) {
     fusion.param_format === '' && fusion.reglement === 'https://exemple' && fusion.effectif_min === '7' &&
     fusion.arbitrage_organisation === 'éducateurs' && fusion.max_equipes_par_club === '2',
     'fusionZoneB : colonnes voisines intactes');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Demande d'autorisation de tournoi — feuille de report (session 7)          */
+/*  assemblerDossierAutorisation est PURE (donneesApp + config + ref injectés).*/
+/* -------------------------------------------------------------------------- */
+
+/** Référentiel des formes pour les tests d'autorisation (M12 juin/octobre, M14 septembre). */
+function _refAutorisation() {
+  return { formes: [
+    { categorie: 'M12', mois: '2027-06', forme_jeu: 'RE',      effectif: '10x10', tournoi_autorise: 'OUI' },
+    { categorie: 'M12', mois: '2026-10', forme_jeu: 'T+2|JCO', effectif: '5x5',   tournoi_autorise: 'OUI' },
+    { categorie: 'M14', mois: '2026-09', forme_jeu: 'T+2|JCO', effectif: '7x7',   tournoi_autorise: 'OUI' }
+  ] };
+}
+
+/** Config minimale avec une liste de catégories présentes (+ global éventuel). */
+function _cfgAutorisation(cats, global) {
+  return { global: global || {}, categories: (cats || []).map(function (c) {
+    return { categorie: c.categorie, presente: 'oui', format_apresmidi: c.format_apresmidi || '',
+             format_mi_temps: c.format_mi_temps || '', duree_mi_temps_min: c.duree_mi_temps_min || '' };
+  }) };
+}
+
+/** Retrouve le premier champ dont le libellé contient la sous-chaîne. */
+function _autoChamp(dossier, sousChaine) {
+  var f = null;
+  dossier.sections.forEach(function (s) { s.champs.forEach(function (c) {
+    if (!f && c.libelle.indexOf(sousChaine) !== -1) f = c;
+  }); });
+  return f;
+}
+
+/** Aucune donnée saisie ⇒ dossier assemblé, beaucoup de manquants, aucune exception. */
+function testS7_aucuneDonneeSansErreur(etat) {
+  var d = assemblerDossierAutorisation({}, { global: {}, categories: [] }, { formes: [] });
+  _ffrAssert(etat, d && d.sections.length >= 8, 'auto : dossier assemblé (toutes les sections)');
+  _ffrAssert(etat, d.nbManquants >= 10 && d.complet === false, 'auto : nbManquants élevé, non complet');
+}
+
+/** Un champ vide n'est jamais rempli par une valeur devinée. */
+function testS7_champVideJamaisDevine(etat) {
+  var d = assemblerDossierAutorisation({}, { global: {}, categories: [] }, { formes: [] });
+  var code = _autoChamp(d, 'Code club');
+  _ffrAssert(etat, code && code.valeur === '' && code.etat === 'manquant', 'auto : code club vide et manquant, jamais deviné');
+}
+
+/** M12 en juin ⇒ 10x10 (RE) cochée, 5x5 non. */
+function testS7_formesM12Juin(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'] },
+    _cfgAutorisation([{ categorie: 'U12' }]), _refAutorisation());
+  var re = _autoChamp(d, 'U12 — 10x10 (RE)');
+  var t2 = _autoChamp(d, 'U12 — 5x5 (T+2)');
+  _ffrAssert(etat, re && re.valeur.indexOf('☑') !== -1, 'formesJuin : 10x10 (RE) cochée');
+  _ffrAssert(etat, t2 && t2.valeur.indexOf('☑') === -1, 'formesJuin : 5x5 (T+2) non cochée');
+}
+
+/** M12 en octobre ⇒ 5x5 (J CO) cochée, 10x10 non. */
+function testS7_formesM12Octobre(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2026-10-10' }, catsPresentes: ['U12'] },
+    _cfgAutorisation([{ categorie: 'U12' }]), _refAutorisation());
+  var jco = _autoChamp(d, 'U12 — 5x5 (J CO)');
+  var re = _autoChamp(d, 'U12 — 10x10 (RE)');
+  _ffrAssert(etat, jco && jco.valeur.indexOf('☑') !== -1, 'formesOct : 5x5 (J CO) cochée');
+  _ffrAssert(etat, re && re.valeur.indexOf('☑') === -1, 'formesOct : 10x10 (RE) non cochée');
+}
+
+/** SEVENS n'est jamais coché automatiquement. */
+function testS7_sevensJamaisCoche(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2026-09-19' }, catsPresentes: ['U14'] },
+    _cfgAutorisation([{ categorie: 'U14' }]), _refAutorisation());
+  var sevens = _autoChamp(d, 'U14 — 7x7 (SEVENS)');
+  _ffrAssert(etat, sevens && sevens.valeur.indexOf('☑') === -1, 'sevens : jamais coché automatiquement');
+}
+
+/** M15F absente de l'app ⇒ aucun champ M15F. */
+function testS7_m15fAbsentPasDeBloc(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2026-09-19' }, catsPresentes: ['U14'] },
+    _cfgAutorisation([{ categorie: 'U14' }]), _refAutorisation());
+  var m15 = _autoChamp(d, 'U15F');
+  _ffrAssert(etat, !m15, 'm15f : aucun bloc M15F si absente de l\'app');
+}
+
+/** Planning non généré ⇒ B.2 marquée manquant avec le bon motif, rien de dérivé. */
+function testS7_planningNonGenereFormatManquant(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'],
+    matchsParCategorie: {} }, _cfgAutorisation([{ categorie: 'U12' }]), _refAutorisation());
+  var fmt = _autoChamp(d, 'U12 — format sportif');
+  _ffrAssert(etat, fmt && fmt.etat === 'manquant' && /planning/.test(fmt.origine),
+    'planningNonGenere : B.2 manquant, motif « générer le planning »');
+}
+
+/** Planning à deux phases (CROISE + après-midi) ⇒ phase 1 et phase 2 séparées. */
+function testS7_deuxPhases(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', equipe_A: 'T1', equipe_B: 'T2' }, { phase: 'poule', equipe_A: 'T1', equipe_B: 'T3' },
+    { phase: 'classement', equipe_A: 'T1', equipe_B: 'T4' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgAutorisation([{ categorie: 'U12', format_apresmidi: 'CROISE', format_mi_temps: '2', duree_mi_temps_min: '10' }]),
+    _refAutorisation());
+  var p1 = _autoChamp(d, 'Phase 1 (poules de qualification) : matchs/équipe');
+  var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
+  _ffrAssert(etat, p1 && p1.valeur === '2', 'deuxPhases : phase 1 = 2 matchs/équipe');
+  _ffrAssert(etat, p2 && p2.valeur === '1', 'deuxPhases : phase 2 = 1 match/équipe');
+}
+
+/** Planning à une phase (CROISE sans après-midi) ⇒ seule la ligne « 1 phase ». */
+function testS7_unePhase(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', equipe_A: 'T1', equipe_B: 'T2' }, { phase: 'poule', equipe_A: 'T1', equipe_B: 'T3' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgAutorisation([{ categorie: 'U12', format_apresmidi: 'CROISE', format_mi_temps: '2', duree_mi_temps_min: '10' }]),
+    _refAutorisation());
+  _ffrAssert(etat, !!_autoChamp(d, '1 phase : matchs/équipe'), 'unePhase : ligne « 1 phase » présente');
+  _ffrAssert(etat, !_autoChamp(d, 'Phase 2'), 'unePhase : pas de phase 2');
+}
+
+/** LIBRE avec matin ET après-midi ⇒ 1 phase, matchs/équipe compte les deux. */
+function testS7_libreCompteTouteLaJournee(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', equipe_A: 'T1', equipe_B: 'T2' }, { phase: 'poule', equipe_A: 'T1', equipe_B: 'T3' },
+    { phase: 'classement', equipe_A: 'T1', equipe_B: 'T4' } // amical d'après-midi
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgAutorisation([{ categorie: 'U12', format_apresmidi: 'LIBRE', format_mi_temps: '2', duree_mi_temps_min: '10' }]),
+    _refAutorisation());
+  var une = _autoChamp(d, '1 phase : matchs/équipe');
+  _ffrAssert(etat, une && une.valeur === '3', 'libre : 1 phase, 3 matchs/équipe (matin + après-midi)');
+  _ffrAssert(etat, !_autoChamp(d, 'Phase 2'), 'libre : pas de phase 2 (amicaux ≠ poules de niveau)');
+}
+
+/** Moins de 3 équipes ⇒ signalement (le formulaire exige un minimum de 3). */
+function testS7_moinsDe3Equipes(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'],
+    participants: { nbEquipes: 2 } }, _cfgAutorisation([{ categorie: 'U12' }]), _refAutorisation());
+  var eq = _autoChamp(d, 'Nombre d\'équipes');
+  _ffrAssert(etat, eq && eq.etat === 'manquant' && /minimum de 3/.test(eq.origine), 'min3 : 2 équipes → signalement');
+}
+
+/** nbManquants décroît quand un champ est saisi. */
+function testS7_nbManquantsDecroit(etat) {
+  var n0 = assemblerDossierAutorisation({}, { global: {}, categories: [] }, { formes: [] }).nbManquants;
+  var n1 = assemblerDossierAutorisation({}, { global: { org_code_club: 'C12345' }, categories: [] }, { formes: [] }).nbManquants;
+  _ffrAssert(etat, n1 === n0 - 1, 'nbManquants : décroît de 1 quand un champ est saisi');
+}
+
+/** Aucun champ org_* ne sort par une lecture publique (filtre opt-in de la session 3). */
+function testS7_orgNonPublic(etat) {
+  var config = { global: { org_president_nom: 'X', org_president_tel: '0600000000', org_code_club: 'C1',
+    org_representant_mail: 'a@b.c', tournoi_nom: 'T' }, categories: [] };
+  var fuite = ['live', 'invitation', 'club'].some(function (vue) {
+    var v = filtrerConfigPublique(config, vue).global;
+    return Object.keys(v).some(function (k) { return k.indexOf('org_') === 0; });
+  });
+  _ffrAssert(etat, !fuite, 'orgNonPublic : aucun org_* dans live/invitation/club');
+}
+
+/** Le défaut du nom de club est « Racing Club de France Rugby ». */
+function testS7_defautNomClub(etat) {
+  var d = assemblerDossierAutorisation({}, { global: {}, categories: [] }, { formes: [] });
+  var nom = _autoChamp(d, 'Nom du club');
+  _ffrAssert(etat, nom && nom.valeur === 'Racing Club de France Rugby', 'defautClub : Racing Club de France Rugby');
 }

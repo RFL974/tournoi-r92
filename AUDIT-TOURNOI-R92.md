@@ -112,14 +112,15 @@ par défaut, sur la catégorie la plus concernée. Corrigé en `CROISE`, `param_
 Toutes les colonnes récentes bénéficient d'une **migration douce** (ajout automatique à droite,
 vide = comportement historique).
 
-## 1.4 — Actions backend (50)
+## 1.4 — Actions backend (52)
 
 **Lecture (`doGet`, 13, publiques)** — `ping`, `getConfig` *(vue `invitation`)*, `getEquipes`,
 `getPoules`, `getMatchs`, `getAll` *(vue `live`)*, `getClassement`, `getHistorique`,
 `getClubDossier` *(jeton)*, **`getConfigClub`** ⭐ *(jeton, vue `club`)*, `getReponseInvitation`
 *(jeton)*, `getRefFFR`, `getConformiteFFR`
 
-**Écriture (`doPost`, 36, clé admin sauf mention)** — `ajouterEquipe`, `modifierEquipe`,
+**Écriture (`doPost`, 37, clé admin sauf mention)** — `ajouterEquipe`, `modifierEquipe`,
+**`enregistrerDossierAutorisation`** ⭐ *(champs saisis du dossier d'autorisation, zone A)*,
 `supprimerEquipe`, `supprimerEquipesCategorie`, `enregistrerHoraires`, `enregistrerCategorie`,
 **`appliquerValeursFFR`** ⭐ *(applique les valeurs FFR d'une catégorie ; le front n'envoie que
 `{categorie, date, variante}`, le serveur redérive les valeurs)*,
@@ -132,10 +133,12 @@ vide = comportement historique).
 `listerClubsInvites`, `enregistrerCategoriesEngagees`, `creerEquipesClub`, `envoyerInvitationClub`,
 `envoyerInvitationsGroupe`, `envoyerDossierEmail`, `repondreInvitation` *(jeton)*
 
-**Lecture authentifiée (`doPost`, 1)** — **`getConfigAdmin`** ⭐ *(clé admin)* : renvoie la
-configuration **complète** à l'administration. Regroupée dans `ACTIONS_LECTURE` et traitée
-**après** la vérification de clé mais **avant** la prise du verrou d'écriture — une lecture ne
-doit jamais entrer en concurrence avec la saisie des scores un jour de tournoi.
+**Lecture authentifiée (`doPost`, 2)** — **`getConfigAdmin`** ⭐ *(clé admin)* : renvoie la
+configuration **complète** à l'administration. **`getDossierAutorisation`** ⭐ *(clé admin)* :
+assemble la feuille de report du formulaire d'autorisation (données personnelles → jamais en
+public). Toutes deux regroupées dans `ACTIONS_LECTURE` et traitées **après** la vérification de clé
+mais **avant** la prise du verrou d'écriture — une lecture ne doit jamais entrer en concurrence
+avec la saisie des scores un jour de tournoi.
 
 **Fonctions internes de filtrage public** :
 
@@ -272,13 +275,14 @@ la conformité). **90/90 OK** : 32 asserts d'origine, +10 sur la couverture de s
 
 ## 1.9 — Points d'ancrage pour la suite
 
-- Un **écran « Amont / conformité »** dans l'admin reste **le seul vrai manque structurel**. Il
-  est désormais entièrement spécifiable : le formulaire d'autorisation (S7) en donne le plan
-  exact, section par section, et le rapport RDEDR (S8) la grille du jour J.
-- **L'app sait déjà calculer ce que le formulaire demande** : nombre de matchs par équipe, durée
-  de match, organisation en 1 ou 2 phases — et le vocabulaire fédéral (« poules de qualification
-  puis poules de niveau ») décrit exactement `reorganiserPoulesMatin` + `genererApresMidi`. Le
-  pré-remplissage de la demande d'autorisation est la fonctionnalité la plus rentable à venir.
+- ~~Un **écran « Amont / conformité »** reste le seul vrai manque structurel~~ **fait en session 7** :
+  la section « Demande d'autorisation » produit la **feuille de report** du formulaire (S7), section
+  par section. Reste, du même chantier amont, **non traité** :
+  - **Rétroplanning J-90 / J-60 / J-45** (invitations / réponses clubs / dépôt de la demande) —
+    deux dates limites existent déjà (`date_limite_reponse`, `date_limite_confirmation`) mais ne
+    sont reliées à aucun jalon.
+  - **Checklist RDEDR du jour J** (rapport S8) : téléphone à moins de 50 m, brancard, coordonnées
+    médecin/pompiers, accès secours, état et traçage des terrains, rubalise, chasubles #BienJoué.
 - **`RefFFR_Dates`** → accueillera les dates du **Comité 92** via la colonne `source`
 - **Zone A de `Config`** → paramètres de rétroplanning et d'autorisation
 - **`invitation-club.html`** → années de naissance éligibles par catégorie
@@ -349,9 +353,19 @@ par **ce fichier d'audit** — registre des sources et journal de session — no
 Tranché le 2026-07-27. L'app modélisait **un** organisateur ; il en faut **deux**, aux rôles
 disjoints.
 
+> ⚠️ **Correction d'entité (session 7, 2026-07-27).** Cette table désignait « **Racing 92** » comme
+> organisateur au sens FFR. **C'est inexact et corrigé ci-dessous, sans effacer la formulation
+> d'origine** (le journal s'ajoute). Le club **affilié détenteur du label EDR** est **`Racing Club
+> de France Rugby`** (11 avenue Paul Langevin, 92350 Le Plessis-Robinson), référencé ainsi dans
+> l'annuaire officiel du Comité des Hauts-de-Seine. Le **Racing 92** en est la **branche
+> professionnelle** et n'est **pas** le détenteur du label. L'École de rugby du Plessis-Robinson est
+> l'une des trois de l'association (avec Colombes et Nanterre). C'est donc `Racing Club de France
+> Rugby` — son code club, son président — qui figure sur la demande d'autorisation. Le défaut de
+> `org_club_nom` est fixé à cette valeur.
+
 | Entité | Rôle | Présence dans les documents FFR |
 |---|---|---|
-| **Racing 92** | **Organisateur au sens FFR.** Club affilié, labellisé EDR. C'est son code club, son président, son directeur de tournoi et son n° de licence qui figurent sur la demande d'autorisation et sur le rapport du représentant départemental. Il signe et il est responsable devant la ligue | ✅ partout |
+| ~~**Racing 92**~~ → **`Racing Club de France Rugby`** *(corrigé session 7)* | **Organisateur au sens FFR.** Club affilié, labellisé EDR. C'est son code club, son président, son directeur de tournoi et son n° de licence qui figurent sur la demande d'autorisation et sur le rapport du représentant départemental. Il signe et il est responsable devant la ligue. Le **Racing 92** est sa branche professionnelle, pas le détenteur du label | ✅ partout |
 | **Génération R92** | **Éditeur de l'outil.** Association, non affiliée FFR. Propriétaire de la page publique des scores et de son audience | ❌ nulle part |
 
 **Conséquence sur l'écran « Amont / conformité »** : ce n'est pas un formulaire que l'association
@@ -409,7 +423,7 @@ signalement orange marque un écart ; il n'empêche jamais d'enregistrer.
 | S4 | Calendrier Fédéral Écoles de Rugby (FFR-CNEDR) + Note d'accompagnement | **2026-2027**, note du **03/06/2026** | 2026-07-25 | session 1 |
 | S5 | Règlements Généraux FFR, **art. 230-2** (72 h) — *délai apprécié entre le coup d'envoi de la première rencontre et celui de la seconde ; participation = entrée effective sur le terrain* | à confirmer | 2026-07-25 | session 1 |
 | **S6** | **Organisation de la pratique École de Rugby** — document pivot du pack | **2026-2027**, explicite | **2026-07-27** | **session 2** |
-| **S7** | **Formulaire – demande d'autorisation, organisation de tournoi EDR** (lecture intégrale) | grille **2026-2027** | 2026-07-27 | session 2 |
+| **S7** | **Formulaire – demande d'autorisation, organisation de tournoi EDR** (lecture intégrale) | grille **2026-2027** | 2026-07-27 | sessions 2 et **7** — *relu intégralement en session 7 pour en extraire la carte des champs, section par section* |
 | **S8** | **Fiche mission + Rapport + Rapport complémentaire du Représentant Départemental EDR** | **mise à jour juillet 2026** | 2026-07-27 | session 2 |
 | **S9** | **Feuille de présence – Tournoi ou plateau EDR** (M8 / M10 / M12) | non daté | 2026-07-27 | session 2 |
 | **S10** | **Briefing Tournoi École de Rugby** (visuel, 5 étapes minutées) | non daté | 2026-07-27 | session 2 |
@@ -1257,6 +1271,91 @@ navigateur impossible avant redéploiement** (la prod n'a pas encore l'action `a
 
 ---
 
+## Session 7 — 2026-07-27 — Écran amont : demande d'autorisation de tournoi
+
+**Origine** : l'audit désignait l'**écran « Amont / conformité »** comme le seul vrai manque
+structurel, et le **pré-remplissage de la demande d'autorisation** comme la fonctionnalité la plus
+rentable. Ce n'est pas de l'hygiène administrative : ce dossier est **le produit** remis au Racing,
+prêt à signer, contrepartie du partenariat.
+
+**Document du jour** : le formulaire d'autorisation (**S7**), **relu intégralement** pour en extraire
+la carte des champs, section par section.
+
+### Ce qu'on a fait : une feuille de report, pas un faux formulaire
+
+Une section « Demande d'autorisation » dans `admin.html` produit une **feuille de report** : tous les
+champs du formulaire officiel, **dans l'ordre du document**, chacun avec un état — **calculé**
+(l'app le sait), **saisi** (l'organisateur l'a renseigné) ou **manquant** — et un compteur *« il
+manque N champs avant de pouvoir déposer »*. Imprimable seule (`@media print`). On **ne réplique
+jamais** le PDF officiel (fourni par la Ligue), on n'envoie rien, on ne génère aucun PDF serveur.
+
+### Doctrine : vide et signalé, jamais deviné
+
+Ce document part à une Ligue et engage un club. **Règle absolue : aucun champ n'est deviné.** Un
+champ inconnu s'affiche **vide et marqué « manquant »**, jamais interpolé. Illustration : le
+téléphone du président ne se déduit pas de celui du référent jour J — ce sont **trois rôles
+distincts** (référent jour J, représentant de la structure, président du club), et l'app ne
+réutilise `referent_nom` pour aucun des deux. De même, `securite_secours_precisions` (champ libre du
+dossier club) est affiché **en rappel** à côté des champs structurés `org_secours_nom` /
+`org_secours_tel`, mais **jamais parsé** : c'est l'organisateur qui recopie une fois. Un parsing
+heuristique sur une donnée de sécurité serait exactement l'invention que la règle interdit.
+
+### Ce que l'app calcule déjà
+
+Nom/date/lieu/adresse/**heure de fin** du tournoi ; nombre de clubs ayant accepté, d'équipes, de
+participants ; nombre de terrains (distinct `terrain` des matchs, sinon terrains déclarés) ; **formes
+de jeu cochées** depuis `RefFFR_Formes` (via `eclaterFormesFFR`) ; **format sportif** dérivé des
+matchs générés — 1 ou 2 phases, matchs par équipe, durée de match. Le vocabulaire fédéral (« poules
+de qualification puis poules de niveau ») **est** `reorganiserPoulesMatin` + `genererApresMidi`.
+
+### Trois décisions de dérivation
+
+- **Durée de match** : vérifiée dans le code — matin et après-midi utilisent tous deux `dureeMatch(cat)`
+  = `format_mi_temps × duree_mi_temps_min` (zone B). **Même durée aux deux phases**, noté sur la feuille.
+- **Format `LIBRE`** : une seule phase (des amicaux ne sont pas des poules de niveau), mais le nombre
+  de matchs/équipe compte **toute la journée** — le formulaire demande combien joue un enfant.
+- **Planning non généré** : la section format sportif est marquée **`manquant`** (motif *« générer le
+  planning d'abord »*) ; rien n'est dérivé d'un planning absent. Le nombre de terrains, lui, se lit
+  aussi des terrains déclarés — l'organisateur les connaît avant de générer.
+
+### Deux observations sur le formulaire, signalées sans les résoudre
+
+1. **Case `7x7 (SEVENS)`** (M14/M15F) : le formulaire permet de la demander, alors que la session 5
+   avait conclu que le Sevens n'est autorisé sur **aucun** mois en tournoi de club (absent de
+   `RefFFR_Formes`). **Jamais cochée automatiquement** — case laissée vide + note.
+2. **Catégorie `M15F`** : figure au formulaire comme catégorie à part, mais est absente de
+   `RefFFR_Formes` (la ligne M14 couvre M14G et M15F). Bloc **affiché seulement si** une catégorie
+   M15F est présente dans l'app.
+
+### Correction d'entité — la plus importante de la session
+
+L'audit portait « Racing 92 » comme organisateur au sens FFR depuis la session 2 bis. **Inexact** :
+le club affilié détenteur du label EDR est **`Racing Club de France Rugby`** (Le Plessis-Robinson),
+le Racing 92 en est la branche professionnelle. Corrigé au §1.11 (sans effacer l'original), défaut de
+`org_club_nom` fixé en conséquence. Conséquences : **Q13** (date du dernier label) devient
+**bloquante pour le dépôt** ; nouvelle **Q24** (code club FFR — écarté un code proposé par un modèle
+sans source vérifiable, car un code erroné engagerait le club signataire).
+
+### Confidentialité
+
+Les ~35 paramètres `org_*` contiennent des données personnelles (noms/tels/mails du président et du
+représentant). Ils sont **privés par défaut** (filtrage opt-in de la session 3, absents de
+`CONFIG_PUBLIQUE_VUES`) et lus/écrits par des actions `doPost` à clé admin. Un test le prouve.
+
+**Résumé d'exécution** : branche `feat/ecran-amont-autorisation`, PR **#86**, 4 commits, tests
+**143/143 OK** (123 inchangés + 20 nouveaux).
+
+**Écarts déclarés** : cœur pur et action backend regroupés (un commit `Code.gs`) ; classes CSS
+`autorisation-*` créées (palette existante) + un bloc `@media print` (aucun n'existait). `securite_secours_precisions`
+réutilisé en rappel mais **non réintitulé** ; `org_secours_nom/_tel` neufs comme demandé.
+
+**Vérification** : 143/143 sous Node (cœur pur + rendu de la feuille de bout en bout). ⚠️
+**Vérification navigateur impossible avant redéploiement** (la prod n'a pas encore
+`getDossierAutorisation` / `enregistrerDossierAutorisation` ; migration douce : la saisie s'affiche,
+la feuille reste neutre).
+
+---
+
 # PARTIE 3 — Questions ouvertes
 
 **Règles de clôture** — Une question se ferme soit *par document* (source et passage cités), soit *par le comité / la ligue*. Une réponse partielle ne ferme rien : la question reste ouverte, assortie d'une note sur ce qui manque. La liste finale des points sans réponse textuelle n'est établie qu'une fois tous les documents FFR traités.
@@ -1275,7 +1374,7 @@ navigateur impossible avant redéploiement** (la prod n'a pas encore l'action `a
 | Q10 | Les mentions **(A)/(B)/(C)** désignent bien les zones de vacances scolaires — la légende du calendrier (page 1) l'indique explicitement : « A,B ou C = zone si vacances scolaires ». L'Île-de-France est en zone C. Le référentiel et le paramètre `zone_vacances` sont corrects. Source : S4, légende page 1. | Comité 92 | ✅ résolue (document) |
 | **Q11** | **Source des dimensions de terrain.** ✅ **Résolue (document)** par le corpus complet (S15–S22, S25–S31). La FFR chiffre les terrains jusqu'au 10x10 de M12 (jeu à 10 : **56×45**, fiche `c09`) et écrit délibérément « **terrain normal** » à partir du jeu à X : **l'absence de chiffre EST la réponse**, pas une donnée manquante. Correction : le `56×45` du code pour M12 n'était pas faux (c'est le jeu à 10), il était incomplet — voir session 5 et §1.8. | vérification Romain | ✅ **résolue (document)** |
 | **Q12** | **Qui dépose la demande d'autorisation ?** → C'est le **Racing 92**, club affilié et labellisé EDR, sous couvert de son président. Génération R92 est éditeur de l'outil, pas organisateur au sens FFR. Voir §1.11. | Comité 92 / Racing 92 | ✅ **résolue (club)** |
-| **Q13** | **Date du dernier label EDR du Racing 92.** Le label est **confirmé** ; seule la **date**, champ obligatoire du formulaire d'autorisation, reste à obtenir. *Réponse partielle : la question reste ouverte conformément aux règles de clôture.* | vérification Romain | ⏳ ouverte |
+| **Q13** | **Date du dernier label EDR du `Racing Club de France Rugby`.** Le label est **confirmé** ; seule la **date** reste à obtenir. **Devenue BLOQUANTE pour le dépôt en session 7** : c'est un champ **obligatoire** du formulaire d'autorisation (`org_label_date`), la feuille de report la marque « manquant » tant qu'elle n'est pas saisie. | vérification Romain | ⏳ **ouverte — bloquante dépôt** |
 | **Q14** | **Symétrie de la règle des 72 h.** Les feuilles de présence (S9, S11, S12) n'engagent que le **passé** (« 3 jours francs précédents »), alors que l'app contrôle **avant et après**. L'art. 230-2 est-il bien symétrique ? *L'implémentation actuelle est la plus prudente des lectures relevées — on ne change rien tant que ce n'est pas tranché.* | vérification Romain / Comité 92 | ⏳ ouverte |
 | **Q15** | **Convention écrite Racing 92 ↔ Génération R92.** L'association diffuse les scores d'une manifestation dont le Racing est responsable, et monétise l'audience de cette page. Accord écrit du club nécessaire sur les **deux** volets : publication des scores, et présence de sponsors sur la page. Protège autant l'association que le club, et survit à un changement de dirigeant. | Racing 92 | ⏳ ouverte |
 | **Q16** | **Catégories de sponsors admissibles.** L'audience est composée de parents d'enfants de 6 à 12 ans, dans un cadre sportif fédéral. Au moins trois régimes à vérifier : loi Évin (alcool exclu du parrainage sportif), publicité des jeux d'argent visant les mineurs, messages sanitaires obligatoires sur la publicité alimentaire. **À faire regarder une fois par une personne qualifiée, avant tout engagement avec un sponsor.** | conseil juridique | ⏳ ouverte |
@@ -1286,3 +1385,4 @@ navigateur impossible avant redéploiement** (la prod n'a pas encore l'action `a
 | **Q21** | **La table de marque saisit-elle des essais ou des points ?** Le backend stocke `score_A` / `score_B` sans unité. Toutes les fiches posent la règle des **5 essais d'écart** (score acquis, rééquilibrage obligatoire) : elle n'est implémentable que si l'unité est l'essai, sinon il faut convertir (essai = 5 points). | vérification Romain | ⏳ ouverte |
 | **Q22** | **Quel est le recouvrement réel entre Tournoi R92 et la FDM EDR ?** L'audit affirmait « zéro recouvrement » depuis la session 0, sans jamais revérifier. La FFR décrit pourtant la FDM comme couvrant *la gestion des rencontres et des plateaux*, et indique qu'elle s'applique aux **tournois privés de club** dès lors qu'ils sont **déclarés dans Oval-e**. Le recouvrement porterait donc sur l'**amont déclaratif** et la **liste des clubs** — pas sur les poules, les terrains, le planning horaire ni la diffusion publique des scores. **À trancher sur pièce** : visionner le webinaire FFR du **03/02/2026** et déterminer si la FDM produit un **planning** ou une **vue publique**. Structurant pour le partenariat avec le Racing 92. | vérification Romain | ⏳ **ouverte — priorité haute** |
 | **Q23** | **Un tournoi « matin + après-midi » compte-t-il pour 1 ou 2 demi-journées** au sens des grilles de temps FFR ? Détermine le plafond de temps de jeu par joueur — 65 min contre 90 en M12, soit un écart du simple au double sur une contrainte de **sécurité**. Paramètre `nb_demi_journees` créé dans `Config`, **défaut 1** (lecture la plus prudente, même principe qu'en session 2 pour la règle des 72 h), modifiable par l'organisateur. **Question posée au directeur de l'EDR du Racing 92**, réponse en attente. | Directeur EDR Racing 92 | ⏳ ouverte |
+| **Q24** | **Quel est le code club FFR du `Racing Club de France Rugby` ?** Champ obligatoire du formulaire d'autorisation (`org_code_club`). Ne figure sur aucune source publique consultée. Se lit sur la carte de qualification d'un licencié du club ou dans Oval-e. ⚠️ **Un code obtenu par un modèle de langage sans source vérifiable a été écarté** — un code erroné sur un dossier officiel engage le club signataire. | Racing / Oval-e | ⏳ ouverte |

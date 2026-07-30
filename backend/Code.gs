@@ -127,7 +127,32 @@ function creerOngletConfig(classeur) {
     // Nombre de demi-journées du tournoi (grille de temps FFR). Défaut 1 = lecture la PLUS PRUDENTE
     // (le plafond de temps de jeu est un maximum : partir de la valeur basse fait alerter plus tôt).
     // Migration douce : absent ⇒ traité comme 1. Question posée au directeur EDR (audit Q23).
-    ['nb_demi_journees', '1']
+    ['nb_demi_journees', '1'],
+    // ── Demande d'autorisation de tournoi EDR (session 7) — feuille de report du formulaire FFR.
+    // Données PERSONNELLES (noms/tels/mails du représentant et du président) : PRIVÉES par défaut
+    // (jamais dans CONFIG_PUBLIQUE_VUES). N'inventer AUCUNE valeur : un champ vide reste « manquant ».
+    // A.1 Organisateur — le club affilié détenteur du label EDR est « Racing Club de France Rugby »
+    // (branche pro = Racing 92 ; voir audit Session 7). Représentant, président et référent jour J
+    // sont TROIS rôles distincts : ne pas réutiliser referent_nom ici.
+    ['org_club_nom', 'Racing Club de France Rugby'], ['org_code_club', ''],
+    ['org_representant_nom', ''], ['org_representant_tel', ''], ['org_representant_mail', ''],
+    ['org_president_nom', ''], ['org_president_tel', ''], ['org_president_mail', ''],
+    ['org_label_edr', 'oui'], ['org_label_date', ''],
+    // A.2 Niveau du tournoi (liste fermée) · A.4 équipes étrangères
+    ['org_niveau_tournoi', ''], ['org_equipes_etrangeres', 'non'], ['org_equipes_etrangeres_liste', ''],
+    // B.1 Installations
+    ['org_type_terrain', ''], ['org_nb_vestiaires', ''],
+    // B.3 Arbitrage (compteurs GLOBAUX ; distincts d'arbitrage_organisation, texte par catégorie)
+    ['org_nb_arbitres', ''], ['org_nb_educateurs', ''], ['org_nb_doublettes', ''],
+    // B.4 Sécurité — médecin / antenne de secours (nom+tel STRUCTURÉS, jamais parsés) / ambulance.
+    // securite_referent_* et securite_secours_oui sont RÉUTILISÉS ; org_secours_nom/_tel sont neufs.
+    ['org_medecin_oui', ''], ['org_medecin_nom', ''], ['org_medecin_tel', ''],
+    ['org_secours_nom', ''], ['org_secours_tel', ''], ['org_ambulance', ''],
+    // B.5 Logistique
+    ['org_droits_oui', ''], ['org_droits_montant', ''],
+    ['org_hebergement_oui', ''], ['org_hebergement_structure', ''],
+    ['org_repas_oui', ''], ['org_repas_fournisseur', ''], ['org_repas_prix', ''],
+    ['org_gouters_oui', ''], ['org_gouters_fournisseur', ''], ['org_gouters_prix', '']
   ];
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
@@ -1205,6 +1230,391 @@ function appliquerValeursFFR(classeur, data) {
            ignores: res.ignores };
 }
 
+/* ===================== DEMANDE D'AUTORISATION DE TOURNOI EDR (session 7) =====================
+ * Feuille de REPORT du formulaire officiel FFR : chaque champ, dans l'ordre du document, avec un
+ * état (calcule / saisi / manquant). On ne réplique JAMAIS le PDF officiel et on n'invente AUCUNE
+ * valeur — un champ inconnu reste vide et « manquant ». Le cœur est PUR (testé sans classeur).
+ * ======================================================================================== */
+
+/* Paramètres `org_*` de la zone A (écriture via ecrireChampsConfig, préservation champ par champ).
+ * Les récompenses par catégorie (`org_recompenses_<CAT>`) sont ajoutées dynamiquement à l'écriture. */
+var CHAMPS_AUTORISATION = ['org_club_nom', 'org_code_club', 'org_representant_nom', 'org_representant_tel',
+  'org_representant_mail', 'org_president_nom', 'org_president_tel', 'org_president_mail', 'org_label_edr',
+  'org_label_date', 'org_niveau_tournoi', 'org_equipes_etrangeres', 'org_equipes_etrangeres_liste',
+  'org_type_terrain', 'org_nb_vestiaires', 'org_nb_arbitres', 'org_nb_educateurs', 'org_nb_doublettes',
+  'org_medecin_oui', 'org_medecin_nom', 'org_medecin_tel', 'org_secours_nom', 'org_secours_tel',
+  'org_ambulance', 'org_droits_oui', 'org_droits_montant', 'org_hebergement_oui', 'org_hebergement_structure',
+  'org_repas_oui', 'org_repas_fournisseur', 'org_repas_prix', 'org_gouters_oui', 'org_gouters_fournisseur',
+  'org_gouters_prix'];
+
+/* Défauts DOCUMENTÉS (pas des devinettes) : nom du club affilié, hypothèse de label EDR, absence
+ * d'équipes étrangères. Tout le reste est vide (⇒ « manquant ») tant que l'organisateur n'a rien saisi. */
+var DEFAUTS_AUTORISATION = {
+  org_club_nom: 'Racing Club de France Rugby', org_label_edr: 'oui', org_equipes_etrangeres: 'non'
+};
+
+/* Cases « catégories et formes de jeu » du formulaire, par catégorie canonique. L'ordre et les
+ * libellés suivent le document officiel. SEVENS y figure mais n'est JAMAIS coché automatiquement
+ * (absent de RefFFR_Formes — voir Session 5). M15F reprend les cinq cases de M14. */
+var CASES_FORMULAIRE_AUTORISATION = {
+  '6':  [{ eff: '', forme: '', libelle: 'Plateau M6 premiers pas à l\'EDR', special: true }],
+  '8':  [{ eff: '5x5', forme: 'T+2' }, { eff: '5x5', forme: 'JCO' }],
+  '10': [{ eff: '5x5', forme: 'T+2' }, { eff: '5x5', forme: 'JCO' }, { eff: '7x7', forme: 'RE' }],
+  '12': [{ eff: '5x5', forme: 'T+2' }, { eff: '5x5', forme: 'JCO' }, { eff: '10x10', forme: 'RE' }],
+  '14': [{ eff: '7x7', forme: 'T+2' }, { eff: '7x7', forme: 'JCO' }, { eff: '10x10', forme: 'RE' },
+         { eff: '15x15', forme: 'RE' }, { eff: '7x7', forme: 'SEVENS' }],
+  '15F':[{ eff: '7x7', forme: 'T+2' }, { eff: '7x7', forme: 'JCO' }, { eff: '10x10', forme: 'RE' },
+         { eff: '15x15', forme: 'RE' }, { eff: '7x7', forme: 'SEVENS' }]
+};
+
+/** Libellé d'affichage d'une forme de jeu (JCO → « J CO » comme le formulaire). */
+function libelleFormeAutorisation(eff, forme) {
+  var f = (forme === 'JCO') ? 'J CO' : forme;
+  return eff + ' (' + f + ')';
+}
+
+/** Un champ « saisi » (zone A) : valeur de Config, sinon défaut documenté, sinon manquant. */
+function champSaisiAutorisation(config, param) {
+  var v = String(((config && config.global) || {})[param] == null ? '' : config.global[param]).trim();
+  if (v !== '') return { valeur: v, etat: 'saisi', origine: 'Config:' + param };
+  var def = DEFAUTS_AUTORISATION[param];
+  if (def != null && def !== '') return { valeur: def, etat: 'calcule', origine: 'défaut app' };
+  return { valeur: '', etat: 'manquant', origine: 'Config:' + param };
+}
+
+/** Un champ « calculé » : présent ⇒ calcule, absent ⇒ manquant. Jamais deviné. */
+function champCalculeAutorisation(valeur) {
+  var v = String(valeur == null ? '' : valeur).trim();
+  return v !== '' ? { valeur: v, etat: 'calcule', origine: 'calculé' }
+                  : { valeur: '', etat: 'manquant', origine: 'calculé' };
+}
+
+/** Nombre MAX de matchs joués par une même équipe dans une liste de matchs (équipes vides ignorées). */
+function maxMatchsParEquipe(matchs) {
+  var comptes = {};
+  (matchs || []).forEach(function (m) {
+    [m.equipe_A, m.equipe_B].forEach(function (e) {
+      var id = String(e == null ? '' : e).trim();
+      if (id) comptes[id] = (comptes[id] || 0) + 1;
+    });
+  });
+  var max = 0;
+  for (var k in comptes) { if (comptes[k] > max) max = comptes[k]; }
+  return max;
+}
+
+/** Libellé de durée de match d'une catégorie (mêmes deux phases : dureeMatch utilise la zone B). */
+function dureeMatchLibelleAutorisation(cfgCat) {
+  var fmt = String((cfgCat && cfgCat.format_mi_temps) || '').trim();
+  var dm = String((cfgCat && cfgCat.duree_mi_temps_min) || '').trim();
+  if (!fmt || !dm) return '';
+  return fmt + ' × ' + dm + ' min';
+}
+
+/**
+ * Format sportif d'UNE catégorie, dérivé des matchs GÉNÉRÉS (pur). null si aucun match (planning
+ * non généré pour la catégorie). Deux phases = format d'après-midi CROISE/CROISE_DIAGONAL AVEC des
+ * matchs de classement. LIBRE ⇒ une seule phase, mais le nombre de matchs/équipe compte TOUTE la
+ * journée (les amicaux de l'après-midi comptent : le formulaire demande combien joue un enfant).
+ */
+function formatSportifCategorie(matchsCat, cfgCat) {
+  var liste = matchsCat || [];
+  if (!liste.length) return null;
+  var matin = liste.filter(function (m) { return String(m.phase) !== 'classement'; });
+  var aprem = liste.filter(function (m) { return String(m.phase) === 'classement'; });
+  var fmt = String((cfgCat && cfgCat.format_apresmidi) || '').trim().toUpperCase();
+  var deuxPhases = (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL') && aprem.length > 0;
+  var duree = dureeMatchLibelleAutorisation(cfgCat);
+  if (deuxPhases) {
+    return { deuxPhases: true, duree: duree,
+             phase1: { matchsParEquipe: maxMatchsParEquipe(matin), duree: duree },
+             phase2: { matchsParEquipe: maxMatchsParEquipe(aprem), duree: duree } };
+  }
+  // Une phase : compte TOUS les matchs de la journée (matin + amicaux d'après-midi éventuels).
+  return { deuxPhases: false, duree: duree,
+           unePhase: { matchsParEquipe: maxMatchsParEquipe(liste), duree: duree } };
+}
+
+/**
+ * Cases « catégories et formes de jeu » cochées d'après RefFFR_Formes, pour le mois et les
+ * catégories présentes. Réutilise eclaterFormesFFR (session 5, sépare les valeurs sur « | »).
+ * SEVENS jamais coché (+ note). M15F affiché seulement si présent dans l'app.
+ */
+function formesCocheesAutorisation(ref, catsPresentes, moisTournoi) {
+  var formes = (ref && ref.formes) || [];
+  var out = [];
+  (catsPresentes || []).forEach(function (catApp) {
+    var cle = normaliserCategorie(catApp);
+    var cases = CASES_FORMULAIRE_AUTORISATION[cle];
+    if (!cases) return; // catégorie sans bloc au formulaire
+    // Ensemble « forme|effectif » autorisé ce mois-ci (éclaté).
+    var autorises = {};
+    for (var i = 0; i < formes.length; i++) {
+      if (normaliserCategorie(formes[i].categorie) !== cle) continue;
+      if (normaliserMois(formes[i].mois) !== moisTournoi) continue;
+      eclaterFormesFFR(formes[i]).forEach(function (c) {
+        autorises[String(c.forme_jeu).toUpperCase() + '|' + String(c.effectif)] = true;
+      });
+    }
+    var lignes = cases.map(function (c) {
+      if (c.special) {
+        // M6 : coché si une ligne M6 existe ce mois (une seule case au formulaire).
+        var presenceM6 = Object.keys(autorises).length > 0;
+        return { libelle: c.libelle, coche: presenceM6, note: '' };
+      }
+      var estSevens = (c.forme === 'SEVENS');
+      var coche = !estSevens && !!autorises[c.forme.toUpperCase() + '|' + c.eff];
+      return { libelle: libelleFormeAutorisation(c.eff, c.forme), coche: coche,
+        note: estSevens ? 'Le Sevens n\'est autorisé sur aucun mois en tournoi de club (absent du calendrier FFR) — jamais coché automatiquement.' : '' };
+    });
+    out.push({ categorie: catApp, cle: cle, cases: lignes });
+  });
+  return out;
+}
+
+/**
+ * Cœur PUR : assemble la feuille de report du formulaire d'autorisation. Aucun accès classeur —
+ * tout vient de `donneesApp` (dérivé du classeur par l'appelant), `config` (lireConfig) et `ref`.
+ * @return {{sections:Object[], nbManquants:number, complet:boolean}}
+ */
+function assemblerDossierAutorisation(donneesApp, config, ref) {
+  donneesApp = donneesApp || {};
+  config = config || { global: {}, categories: [] };
+  var g = config.global || {};
+  var sections = [];
+  function champ(libelle, o) { return { libelle: libelle, valeur: o.valeur, etat: o.etat, origine: o.origine }; }
+  function saisi(libelle, param) { return champ(libelle, champSaisiAutorisation(config, param)); }
+  function calcule(libelle, valeur) { return champ(libelle, champCalculeAutorisation(valeur)); }
+
+  var tournoi = donneesApp.tournoi || {};
+  var participants = donneesApp.participants || {};
+
+  // A.1 ORGANISATEUR
+  sections.push({ titre: 'A.1 — Organisateur', champs: [
+    saisi('Nom du club ou de la structure organisatrice', 'org_club_nom'),
+    saisi('Code club', 'org_code_club'),
+    saisi('Représenté par (M./Mme)', 'org_representant_nom'),
+    saisi('Téléphone du représentant', 'org_representant_tel'),
+    saisi('Mail du représentant', 'org_representant_mail'),
+    saisi('Sous couvert de son Président (M.)', 'org_president_nom'),
+    saisi('Téléphone du président', 'org_president_tel'),
+    saisi('Mail du président', 'org_president_mail'),
+    saisi('École de rugby labellisée', 'org_label_edr'),
+    saisi('Date du dernier label', 'org_label_date')
+  ] });
+
+  // A.2 INFORMATIONS DU TOURNOI
+  sections.push({ titre: 'A.2 — Informations du tournoi', champs: [
+    calcule('Nom du tournoi', tournoi.nom),
+    calcule('Lieu (stade)', tournoi.lieu),
+    calcule('Adresse (ville, code postal)', tournoi.adresse),
+    calcule('Date', tournoi.date),
+    calcule('Heure de début', tournoi.heure_debut),
+    calcule('Heure de fin', tournoi.heure_fin),
+    saisi('Niveau du tournoi', 'org_niveau_tournoi')
+  ] });
+
+  // A.3 CATÉGORIES ET FORMES DE JEU (calculé)
+  var mois = normaliserMois(tournoi.date);
+  var formesBlocs = mois ? formesCocheesAutorisation(ref, donneesApp.catsPresentes || [], mois) : [];
+  var champsFormes = [];
+  formesBlocs.forEach(function (bloc) {
+    bloc.cases.forEach(function (c) {
+      champsFormes.push({ libelle: bloc.categorie + ' — ' + c.libelle,
+        valeur: c.coche ? '☑ autorisé' : '☐', etat: 'calcule',
+        origine: 'RefFFR_Formes' + (c.note ? ' — ' + c.note : '') });
+    });
+  });
+  if (!champsFormes.length) {
+    champsFormes.push({ libelle: 'Catégories et formes de jeu', valeur: '',
+      etat: 'manquant', origine: mois ? 'Aucune catégorie au formulaire' : 'Date du tournoi manquante' });
+  }
+  sections.push({ titre: 'A.3 — Catégories et formes de jeu', champs: champsFormes });
+
+  // A.4 PARTICIPANTS (calculé) + équipes étrangères (saisi)
+  var nbEquipes = participants.nbEquipes;
+  var champsPart = [
+    calcule('Nombre de clubs', participants.nbClubs != null ? String(participants.nbClubs) : ''),
+    calcule('Nombre d\'équipes (minimum 3)', nbEquipes != null ? String(nbEquipes) : ''),
+    calcule('Nombre de participants', participants.nbParticipants != null ? String(participants.nbParticipants) : ''),
+    saisi('Équipes étrangères', 'org_equipes_etrangeres')
+  ];
+  if (nbEquipes != null && Number(nbEquipes) < 3) {
+    champsPart[1].etat = 'manquant';
+    champsPart[1].origine = 'calculé — ⚠️ le formulaire exige un minimum de 3 équipes';
+  }
+  if (String(g.org_equipes_etrangeres || '').trim().toLowerCase() === 'oui') {
+    champsPart.push(saisi('Liste des équipes étrangères (noms, prénoms, dates de naissance)', 'org_equipes_etrangeres_liste'));
+    champsPart.push({ libelle: 'Rappel équipes étrangères', valeur: 'Joindre à la ligue : autorisation des fédérations étrangères, liste nominative, dates de naissance.',
+      etat: 'calcule', origine: 'formulaire FFR' });
+  }
+  sections.push({ titre: 'A.4 — Participants', champs: champsPart });
+
+  // B.1 INSTALLATIONS SPORTIVES
+  var terrains = donneesApp.terrains || null;
+  var champTerrains = terrains && terrains.nombre != null
+    ? { libelle: 'Nombre de terrains utilisés', valeur: String(terrains.nombre), etat: terrains.origine === 'calcule' ? 'calcule' : 'saisi',
+        origine: terrains.origine === 'calcule' ? 'calculé (planning)' : 'saisi (terrains déclarés)' }
+    : { libelle: 'Nombre de terrains utilisés', valeur: '', etat: 'manquant', origine: 'planning ou terrains déclarés' };
+  sections.push({ titre: 'B.1 — Installations sportives', champs: [
+    champTerrains,
+    saisi('Type de terrain', 'org_type_terrain'),
+    saisi('Nombre de vestiaires utilisés', 'org_nb_vestiaires')
+  ] });
+
+  // B.2 FORMAT SPORTIF (calculé, par catégorie présente ; manquant si planning absent)
+  var champsFormat = [];
+  var mpc = donneesApp.matchsParCategorie || {};
+  (donneesApp.catsPresentes || []).forEach(function (catApp) {
+    var cfgCat = (config.categories || []).filter(function (c) { return String(c.categorie).trim() === catApp; })[0] || {};
+    var fs = formatSportifCategorie(mpc[catApp] || [], cfgCat);
+    if (!fs) {
+      champsFormat.push({ libelle: catApp + ' — format sportif', valeur: '', etat: 'manquant',
+        origine: 'générer le planning d\'abord' });
+      return;
+    }
+    if (fs.deuxPhases) {
+      champsFormat.push(calcule(catApp + ' — Phase 1 (poules de qualification) : matchs/équipe', String(fs.phase1.matchsParEquipe)));
+      champsFormat.push(calcule(catApp + ' — Phase 1 : durée de match', fs.phase1.duree));
+      champsFormat.push(calcule(catApp + ' — Phase 2 (poules de niveau) : matchs/équipe', String(fs.phase2.matchsParEquipe)));
+      champsFormat.push(calcule(catApp + ' — Phase 2 : durée de match', fs.phase2.duree));
+    } else {
+      champsFormat.push(calcule(catApp + ' — 1 phase : matchs/équipe (journée entière)', String(fs.unePhase.matchsParEquipe)));
+      champsFormat.push(calcule(catApp + ' — 1 phase : durée de match', fs.unePhase.duree));
+    }
+    if (normaliserCategorie(catApp) === '6') {
+      champsFormat.push({ libelle: catApp + ' — mention', valeur: 'Uniquement le Toucher + 2 secondes', etat: 'calcule', origine: 'formulaire FFR' });
+    }
+    champsFormat.push(saisi(catApp + ' — Récompenses', 'org_recompenses_' + catApp));
+  });
+  if (!champsFormat.length) {
+    champsFormat.push({ libelle: 'Format sportif', valeur: '', etat: 'manquant', origine: 'générer le planning d\'abord' });
+  }
+  sections.push({ titre: 'B.2 — Format sportif', champs: champsFormat, note: 'Même durée de match aux deux phases (réglage par catégorie, zone B).' });
+
+  // B.3 ARBITRAGE (saisi ; arbitrage_organisation est affiché à part côté écran, hors feuille)
+  sections.push({ titre: 'B.3 — Arbitrage', champs: [
+    saisi('Nombre d\'arbitres', 'org_nb_arbitres'),
+    saisi('Nombre d\'éducateurs', 'org_nb_educateurs'),
+    saisi('Nombre de doublettes', 'org_nb_doublettes')
+  ] });
+
+  // B.4 SÉCURITÉ (réutilise securite_referent_* et securite_secours_oui ; nom/tel secours structurés)
+  sections.push({ titre: 'B.4 — Sécurité', champs: [
+    calcule('Responsable sécurité — nom', g.securite_referent_nom),
+    calcule('Responsable sécurité — téléphone', g.securite_referent_tel),
+    saisi('Médecin présent', 'org_medecin_oui'),
+    saisi('Médecin — nom', 'org_medecin_nom'),
+    saisi('Médecin — téléphone', 'org_medecin_tel'),
+    { libelle: 'Antenne de secours présente', valeur: String(g.securite_secours_oui || '').trim() || '',
+      etat: String(g.securite_secours_oui || '').trim() ? 'saisi' : 'manquant', origine: 'Config:securite_secours_oui' },
+    saisi('Antenne de secours — nom', 'org_secours_nom'),
+    saisi('Antenne de secours — téléphone', 'org_secours_tel'),
+    saisi('Ambulance', 'org_ambulance')
+  ] });
+
+  // B.5 LOGISTIQUE (saisi)
+  sections.push({ titre: 'B.5 — Logistique', champs: [
+    saisi('Droits d\'inscription', 'org_droits_oui'),
+    saisi('Droits — montant par équipe', 'org_droits_montant'),
+    saisi('Hébergement proposé', 'org_hebergement_oui'),
+    saisi('Hébergement — structure', 'org_hebergement_structure'),
+    saisi('Repas proposés', 'org_repas_oui'),
+    saisi('Repas — fournisseur', 'org_repas_fournisseur'),
+    saisi('Repas — prix par personne', 'org_repas_prix'),
+    saisi('Goûters proposés', 'org_gouters_oui'),
+    saisi('Goûters — fournisseur', 'org_gouters_fournisseur'),
+    saisi('Goûters — prix par personne', 'org_gouters_prix')
+  ] });
+
+  var nbManquants = 0;
+  sections.forEach(function (s) { s.champs.forEach(function (c) { if (c.etat === 'manquant') nbManquants++; }); });
+  return { sections: sections, nbManquants: nbManquants, complet: nbManquants === 0 };
+}
+
+/**
+ * LECTURE authentifiée (clé admin — les champs sont personnels) : dérive `donneesApp` du classeur
+ * puis délègue au cœur pur. Nombre de terrains : distinct `terrain` de Matchs (calculé) ; sinon
+ * terrains déclarés dans repartition_grands_terrains (saisi) ; sinon manquant.
+ */
+function getDossierAutorisation(classeur) {
+  var config  = lireConfig(classeur);
+  var g = config.global || {};
+  var equipes = lireOngletSimple(classeur, 'Equipes');
+  var clubs   = lireOngletSimple(classeur, 'ClubsInvites');
+  var matchs  = lireOngletSimple(classeur, 'Matchs');
+  var ref     = getRefFFR(classeur);
+
+  var catsPresentes = (config.categories || [])
+    .filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; })
+    .map(function (c) { return String(c.categorie || '').trim(); }).filter(Boolean);
+
+  // Participants : clubs ayant ACCEPTÉ, équipes, somme des joueurs déclarés.
+  var nbClubs = 0, nbParticipants = 0;
+  clubs.forEach(function (c) {
+    if (statutClubCanonique(c.statut) === 'Accepté') {
+      nbClubs++;
+      var n = parseInt(c.nb_joueurs_total, 10);
+      if (isFinite(n)) nbParticipants += n;
+    }
+  });
+
+  // Matchs par catégorie (pour dériver le format sportif).
+  var mpc = {};
+  matchs.forEach(function (m) {
+    var cat = String(m.categorie || '').trim();
+    if (!cat) return;
+    (mpc[cat] = mpc[cat] || []).push(m);
+  });
+
+  // Nombre de terrains : d'abord depuis les matchs (planning), sinon depuis les terrains déclarés.
+  var terrains = null;
+  var setTerrains = {};
+  matchs.forEach(function (m) { var t = String(m.terrain == null ? '' : m.terrain).trim(); if (t) setTerrains[t] = true; });
+  var nbT = Object.keys(setTerrains).length;
+  if (nbT > 0) {
+    terrains = { nombre: nbT, origine: 'calcule' };
+  } else {
+    try {
+      var rep = g.repartition_grands_terrains ? JSON.parse(g.repartition_grands_terrains) : null;
+      if (rep) {
+        var total = 0;
+        for (var k in rep) { if (Array.isArray(rep[k])) total += rep[k].length; }
+        if (total > 0) terrains = { nombre: total, origine: 'saisi' };
+      }
+    } catch (e) { /* JSON illisible : terrains restent manquants */ }
+  }
+
+  var donneesApp = {
+    tournoi: {
+      nom: g.tournoi_nom, date: g.tournoi_date, lieu: g.tournoi_lieu, adresse: g.tournoi_adresse,
+      heure_debut: g.heure_debut,
+      heure_fin: g.heure_fin_projetee || g.heure_fin_matin || g.heure_fin || ''
+    },
+    participants: { nbClubs: nbClubs, nbEquipes: equipes.length, nbParticipants: nbParticipants },
+    catsPresentes: catsPresentes,
+    matchsParCategorie: mpc,
+    terrains: terrains
+  };
+
+  return { ok: true, dossier: assemblerDossierAutorisation(donneesApp, config, ref) };
+}
+
+/**
+ * ÉCRITURE (clé admin) des champs saisis du dossier d'autorisation. Zone A, champ par champ via
+ * ecrireChampsConfig (PRÉSERVATION — jamais enregistrerCategorie, qui réécrit la ligne entière).
+ * Accepte aussi les récompenses par catégorie `org_recompenses_<CAT>`.
+ */
+function enregistrerDossierAutorisation(classeur, data) {
+  var onglet = classeur.getSheetByName('Config');
+  var champs = CHAMPS_AUTORISATION.slice();
+  Object.keys(data || {}).forEach(function (k) {
+    if (k.indexOf('org_recompenses_') === 0 && champs.indexOf(k) === -1) champs.push(k);
+  });
+  ecrireChampsConfig(onglet, data, champs);
+  return { ok: true };
+}
+
 /* ===================== ÉCRITURE (doPost) ===================== */
 
 /* Actions protégées par la clé SCORES (les autres écritures exigent la clé ADMIN). */
@@ -1219,7 +1629,7 @@ var ACTIONS_TOKEN = { repondreInvitation: true };
  * porter) mais qui NE MODIFIENT RIEN : elles NE prennent PAS le verrou d'écriture. L'admin
  * recharge la config à de nombreux endroits ; un jour de tournoi, prendre le verrou d'écriture
  * la mettrait en concurrence avec la saisie des scores. Ces actions le court-circuitent. */
-var ACTIONS_LECTURE = { getConfigAdmin: true };
+var ACTIONS_LECTURE = { getConfigAdmin: true, getDossierAutorisation: true };
 
 function doPost(e) {
   var lock, classeur, snapshotJson = null;
@@ -1244,6 +1654,7 @@ function doPost(e) {
       var lecture;
       switch (action) {
         case 'getConfigAdmin': lecture = { ok: true, config: lireConfig(classeur) }; break;
+        case 'getDossierAutorisation': lecture = getDossierAutorisation(classeur); break;
         default: lecture = { error: 'Action inconnue : ' + action };
       }
       return repondreJson(lecture);
@@ -1268,6 +1679,7 @@ function doPost(e) {
       case 'enregistrerHoraires':  resultat = enregistrerHoraires(classeur, requete); break;
       case 'enregistrerCategorie': resultat = enregistrerCategorie(classeur, requete); break;
       case 'appliquerValeursFFR':  resultat = appliquerValeursFFR(classeur, requete); break;
+      case 'enregistrerDossierAutorisation': resultat = enregistrerDossierAutorisation(classeur, requete); break;
       case 'supprimerCategorie':   resultat = supprimerCategorie(classeur, requete.categorie); break;
       case 'enregistrerScore':     resultat = enregistrerScore(classeur, requete); break;
       case 'genererPoulesEtPlanning': resultat = genererPoulesEtPlanning(classeur); break;
