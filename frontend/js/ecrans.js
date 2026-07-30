@@ -44,6 +44,9 @@ const ECRANS_DEF = [
      (sections vides masquées), jamais verrouillé. L'écran regroupe aussi les cartes du dossier
      (modalités, parking, encadrement) : on complète, puis on génère. */
   { id: 'dossier',     titre: 'Dossier complet (accepté)', icone: 'dossier', blocs: ['bloc-parking', 'bloc-encadrement', 'bloc-contacts-securite', 'bloc-dossier'], cles: [], libre: true },
+  /* Demande d'autorisation (feuille de report du formulaire FFR) : préparable à tout moment,
+     jamais verrouillée (libre). */
+  { id: 'autorisation', titre: 'Demande d\'autorisation', icone: 'dossier', blocs: ['bloc-autorisation'], cles: [], libre: true },
   { id: 'equipes',     titre: 'Équipes',           icone: 'equipe',   blocs: ['bloc-equipes'],            cles: ['equipes'] },
   { id: 'terrains',    titre: 'Terrains',          icone: 'terrain',  blocs: ['bloc-terrains'],           cles: ['terrains'] },
   { id: 'poules',      titre: 'Poules & planning', icone: 'poules',   blocs: ['bloc-generation'],         cles: ['poules'] },
@@ -86,7 +89,7 @@ const ECRANS_ORDRE_ORIGINE = [
   'bloc-equipes', 'bloc-terrains', 'bloc-generation', 'bloc-apresmidi',
   'bloc-clubs-invites', 'bloc-apercu-invitation', 'bloc-surplace', 'bloc-reponse',
   'bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier',
-  'bloc-publication', 'bloc-reinitialisation'
+  'bloc-autorisation', 'bloc-publication', 'bloc-reinitialisation'
 ];
 
 const ECRANS_CLE_ACTIF = 'r92_ecran_admin'; // dernier écran ouvert (mémorisé)
