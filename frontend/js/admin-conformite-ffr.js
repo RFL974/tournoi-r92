@@ -254,7 +254,7 @@ function lignePrevisionnelFFR(p) {
   if (!p) return ''; // planning non généré : aucun calcul, aucune alerte
   const label = '🧒 Temps de jeu max / joueur <span class="ffr-note-inline">(si un joueur joue l\'intégralité des matchs)</span>';
 
-  // Portée du total (formats à deux phases seulement) : NE JAMAIS présenter un prédit comme un constaté.
+  // Portée du total : NE JAMAIS présenter un prédit comme un constaté.
   let portee = '';
   if (p.nature === 'predit') {
     portee = '<span class="ffr-note-inline"> — journée entière (prévu) : ' + (p.matinMatchs + p.apremMatchs) +
@@ -264,6 +264,10 @@ function lignePrevisionnelFFR(p) {
   } else if (p.nature === 'minimum') {
     portee = '<span class="ffr-note-inline"> — minimum connu : ' + p.matinMatchs + ' le matin + au moins ' +
       p.apremMatchs + ' l\'après-midi (non encore planifié)</span>';
+  } else if (p.nature === 'partiel') {
+    // Format sans formule déclarée (inconnu, vide, COUPE_PLATEAU) : après-midi non prédit — chemin prudent.
+    portee = '<span class="ffr-note-inline"> — matin seul : ' + p.matinMatchs +
+      ' matchs/équipe ; après-midi non prédit (format sans formule)</span>';
   }
 
   const ouvre = function (cls) { return '<div class="ffr-ligne' + (cls ? ' ' + cls : '') +

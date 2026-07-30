@@ -113,11 +113,20 @@ function lancerTestsFFR() {
   testS9_croiseMatinSeulJournee(etat);
   testS9_croiseApremConstate(etat);
   testS9_diagonalInegalReplie4B(etat);
-  testS9_libreInchange(etat);
   testS9_matinAbsentMuet(etat);
   testS9_depassementTotalPredit(etat);
   testS9_partielDepasseSignale(etat);
   testS9_margeFaible(etat);
+
+  // Session 10 — défaut PRUDENT par construction (table de formules) + LIBRE prédit.
+  testS10_librePredit(etat);
+  testS10_libreMoinsDeDeuxEquipes(etat);
+  testS10_formatInventeChemin4B(etat);
+  testS10_formatVideChemin4B(etat);
+  testS10_formatInconnuDepasseSignale(etat);
+  testS10_generationInchangeeFormatVide(etat);
+  testS10_feuilleFormatVide(etat);
+  testS10_feuilleFormatVideSignalement(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -1072,32 +1081,33 @@ function _matinPoules(poules) {
   return out;
 }
 
-/** structureMatinFFR : nombre de poules, égalité, max de matchs/équipe. */
+/** structureMatinFFR : nombre de poules, égalité, total d'équipes, max de matchs/équipe. */
 function testS9_structureMatin(etat) {
   var matin = _matinPoules([['A1', 'A2', 'A3'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3']]);
   var st = structureMatinFFR(matin);
   _ffrAssert(etat, st.nbPoules === 3 && st.poulesEgales === true, 'structMatin : 3 poules égales');
   _ffrAssert(etat, st.matinMax === 2, 'structMatin : 2 matchs/équipe (poule de 3)');
+  _ffrAssert(etat, st.totalEquipes === 9, 'structMatin : 9 équipes au total (pour la formule LIBRE)');
   var ineg = structureMatinFFR(_matinPoules([['A1', 'A2', 'A3'], ['B1', 'B2']]));
   _ffrAssert(etat, ineg.nbPoules === 2 && ineg.poulesEgales === false, 'structMatin : poules inégales détectées');
 }
 
-/** §4.D — CROISE : matchs de phase 2 prédits = nbPoules − 1 (exact). */
+/** §4.D — CROISE : formule de table = nbPoules − 1 (exact). Adapté S10 : la table remplace l'énumération. */
 function testS9_phase2CroisePredit(etat) {
-  var p = matchsPhase2PreditsFFR(3, true, 'CROISE');
+  var p = FORMULES_PHASE2.CROISE({ nbPoules: 3, poulesEgales: true });
   _ffrAssert(etat, p && p.valeur === 2 && p.nature === 'predit', 'phase2Croise : 3 poules → 2 matchs, prédit');
-  _ffrAssert(etat, matchsPhase2PreditsFFR(1, true, 'CROISE').valeur === 0, 'phase2Croise : 1 poule → 0 (croisé impossible)');
+  _ffrAssert(etat, FORMULES_PHASE2.CROISE({ nbPoules: 1 }).valeur === 0, 'phase2Croise : 1 poule → 0 (croisé impossible)');
 }
 
 /** §4.D — CROISE_DIAGONAL en poules ÉGALES : 1 match/équipe (exact, prédit). */
 function testS9_phase2DiagonalEgalUn(etat) {
-  var p = matchsPhase2PreditsFFR(3, true, 'CROISE_DIAGONAL');
+  var p = FORMULES_PHASE2.CROISE_DIAGONAL({ nbPoules: 3, poulesEgales: true });
   _ffrAssert(etat, p && p.valeur === 1 && p.nature === 'predit', 'phase2Diag : poules égales → 1, prédit');
 }
 
 /** §4.D #7 — CROISE_DIAGONAL en poules INÉGALES : borne basse (1, nature 'minimum'). */
 function testS9_phase2DiagonalInegalMinimum(etat) {
-  var p = matchsPhase2PreditsFFR(3, false, 'CROISE_DIAGONAL');
+  var p = FORMULES_PHASE2.CROISE_DIAGONAL({ nbPoules: 3, poulesEgales: false });
   _ffrAssert(etat, p && p.valeur === 1 && p.nature === 'minimum', 'phase2Diag : poules inégales → minimum 1 (repli 4.B)');
 }
 
@@ -1128,12 +1138,26 @@ function testS9_diagonalInegalReplie4B(etat) {
   _ffrAssert(etat, p && p.depasse === false, 'diag4B : sous le plafond ⇒ aucune conclusion (marge non affichée côté front)');
 }
 
-/** §4.D #4 — LIBRE : comportement session 8 inchangé (max sur les matchs existants, nature journee). */
-function testS9_libreInchange(etat) {
-  var matin = _matinPoules([['A1', 'A2', 'A3']]); // 2 matchs/équipe
+/**
+ * §4.D #7 (session 10) — LIBRE est désormais PRÉDIT par formule exacte (`totalEquipes − 1`), et non
+ * plus laissé au seul matin. Ce test remplace l'ancien `testS9_libreInchange`, dont le nom affirmait
+ * un « inchangé » devenu faux : LIBRE couvre maintenant la journée entière (matin + après-midi prédit).
+ */
+function testS10_librePredit(etat) {
+  // 1 poule de 3 équipes : matin 2 matchs/équipe ; après-midi LIBRE = round-robin des 3 → 2 matchs.
+  var matin = _matinPoules([['A1', 'A2', 'A3']]);
   var p = previsionnelCategorieFFR(matin, [], 'LIBRE', '2', '10', '130');
-  _ffrAssert(etat, p && p.nature === 'journee' && p.matinMatchs === null, 'libre : nature journee, pas de découpage');
-  _ffrAssert(etat, p && p.minutes === 40, 'libre : 2 × 2 × 10 = 40 min (inchangé)');
+  _ffrAssert(etat, p && p.nature === 'predit' && p.complet === true, 'librePredit : prédit par formule, complet');
+  _ffrAssert(etat, p && p.matinMatchs === 2 && p.apremMatchs === 2, 'librePredit : 2 matin + (3−1)=2 après-midi prévus');
+  _ffrAssert(etat, p && p.minutes === 80, 'librePredit : (2+2)×2×10 = 80 min sur la journée (plus le matin seul)');
+}
+
+/** §4.D #7 (cas limite §3.2) — LIBRE à moins de 2 équipes : 0 match l'après-midi, pas de prédiction fantôme. */
+function testS10_libreMoinsDeDeuxEquipes(etat) {
+  _ffrAssert(etat, FORMULES_PHASE2.LIBRE({ totalEquipes: 1 }).valeur === 0, 'libreLimite : 1 équipe → 0 match après-midi');
+  // Une seule équipe au matin (aucun match) : previsionnelCategorieFFR reste muet (pas de matin).
+  var p = previsionnelCategorieFFR(_matinPoules([['A1', 'A2']]), [], 'LIBRE', '2', '10', '130');
+  _ffrAssert(etat, p && p.apremMatchs === 1, 'libreLimite : 2 équipes → 1 match l\'après-midi (borne de la formule)');
 }
 
 /** §4.D #5 — matin absent : muet. */
@@ -1168,4 +1192,70 @@ function testS9_margeFaible(etat) {
   _ffrAssert(etat, faible && faible.marge === 10 && faible.margeFaible === true, 'margeFaible : marge 10 → signalée');
   var large = assemblerPrevisionnelJourneeFFR(5, { nature: 'predit', complet: true, matinMatchs: 2, apremMatchs: 3 }, '2', '10', '130');
   _ffrAssert(etat, large && large.marge === 30 && large.margeFaible === false, 'margeFaible : marge 30 → non signalée');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 10 — défaut PRUDENT par construction (table de formules)          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * §4.2 — LE test qui protège la FORME de la règle. Un format qui n'a JAMAIS été déclaré doit tomber
+ * sur le chemin prudent (4.B), sans erreur et sans conclusion rassurante. Il n'existe pas pour couvrir
+ * un cas réel : il existe pour que quiconque ajoutera un format demain SANS écrire sa formule obtienne
+ * le comportement prudent, et non un silence dangereux. Maintenant que CROISE/DIAGONAL/LIBRE sont tous
+ * dans la table, c'est le seul test qui vérifie que le défaut reste prudent PAR CONSTRUCTION.
+ */
+function testS10_formatInventeChemin4B(etat) {
+  var matin = _matinPoules([['A1', 'A2', 'A3'], ['B1', 'B2', 'B3']]); // matinMax 2
+  var p = previsionnelCategorieFFR(matin, [], 'FORMAT_IMAGINAIRE_2027', '2', '10', '130');
+  _ffrAssert(etat, p !== null, 'formatInvente : pas d\'erreur, un objet est produit');
+  _ffrAssert(etat, p.nature === 'partiel' && p.complet === false, 'formatInvente : chemin prudent (partiel, non complet)');
+  _ffrAssert(etat, p.minutes === 40 && p.depasse === false && p.margeFaible === false,
+    'formatInvente : 40 min < 130 mais complet=false ⇒ le front ne conclut JAMAIS « sous le plafond »');
+}
+
+/** §4.4 #2 — format d'après-midi VIDE : même chemin prudent qu'un format inconnu. */
+function testS10_formatVideChemin4B(etat) {
+  var matin = _matinPoules([['A1', 'A2', 'A3'], ['B1', 'B2', 'B3']]);
+  var p = previsionnelCategorieFFR(matin, [], '', '2', '10', '130');
+  _ffrAssert(etat, p && p.nature === 'partiel' && p.complet === false, 'formatVide : chemin prudent, jamais complet');
+}
+
+/** §4.4 #3 — format inconnu dont la borne basse (le matin) dépasse DÉJÀ ⇒ dépassement signalé (asymétrie). */
+function testS10_formatInconnuDepasseSignale(etat) {
+  var matin = _matinPoules([['A1', 'A2', 'A3', 'A4']]); // poule de 4 → matinMax 3 → 3×2×10 = 60
+  var p = previsionnelCategorieFFR(matin, [], 'FORMAT_IMAGINAIRE_2027', '2', '10', '40');
+  _ffrAssert(etat, p && p.complet === false, 'formatInconnuDep : total partiel');
+  _ffrAssert(etat, p && p.depasse === true && p.depassement === 20,
+    'formatInconnuDep : le matin seul (60) dépasse déjà 40 ⇒ signalé malgré l\'incomplétude');
+}
+
+/**
+ * §4.4 #10 — NON-RÉGRESSION de la génération : `formatApresMidi()` traite toujours un format vide
+ * comme CROISE (comportement historique INCHANGÉ). Cette session rend la décision VISIBLE ailleurs,
+ * elle ne change AUCUN match généré.
+ */
+function testS10_generationInchangeeFormatVide(etat) {
+  _ffrAssert(etat, formatApresMidi({ format_apresmidi: '' }) === 'CROISE', 'genInchangee : format vide → CROISE (génération)');
+  _ffrAssert(etat, formatApresMidi({ format_apresmidi: 'LIBRE' }) === 'LIBRE', 'genInchangee : LIBRE reste LIBRE');
+  _ffrAssert(etat, formatApresMidi({}) === 'CROISE', 'genInchangee : format absent → CROISE (défaut historique)');
+}
+
+/** §4.4 #8 — feuille d'autorisation : format vide ⇒ « non configuré — CROISE serait appliqué », champ manquant. */
+function testS10_feuilleFormatVide(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: {} },
+    _cfgAutorisation([{ categorie: 'U12' }]), _refAutorisation());
+  var fmt = _autoChamp(d, 'U12 — format sportif');
+  _ffrAssert(etat, fmt && fmt.etat === 'manquant', 'feuilleVide : champ toujours compté manquant (personne ne l\'a choisi)');
+  _ffrAssert(etat, fmt && /CROISE serait appliqué/.test(fmt.origine),
+    'feuilleVide : motif « non configuré — CROISE serait appliqué par défaut »');
+}
+
+/** §4.4 #9 — feuille d'autorisation : format vide ⇒ un signalement de cohérence (avert) apparaît, hors manquants. */
+function testS10_feuilleFormatVideSignalement(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: {} },
+    _cfgAutorisation([{ categorie: 'U12' }]), _refAutorisation());
+  var av = _autoChamp(d, 'Format d\'après-midi non configuré');
+  _ffrAssert(etat, av && av.etat === 'avert' && /CROISE serait appliqué/.test(av.valeur),
+    'feuilleVideSig : signalement de cohérence présent (avert, hors compteur de manquants)');
 }

@@ -872,44 +872,56 @@ function tempsPrevisionnelJoueurFFR(matchsParEquipe, formatMiTemps, dureeMiTemps
 
 /**
  * Structure des poules du matin, dérivée des matchs (pur). Le nombre de matchs/équipe de l'après-midi
- * en dépend directement.
- * @return {{nbPoules:number, poulesEgales:boolean, matinMax:number}}
+ * en dépend directement (nbPoules pour CROISE, totalEquipes pour LIBRE).
+ * @return {{nbPoules:number, poulesEgales:boolean, totalEquipes:number, matinMax:number}}
  */
 function structureMatinFFR(matin) {
-  var equipesParPoule = {};
+  var equipesParPoule = {}, toutesEquipes = {};
   (matin || []).forEach(function (m) {
     var p = String(m.poule == null ? '' : m.poule).trim();
     if (!p) return;
     var set = equipesParPoule[p] || (equipesParPoule[p] = {});
     [m.equipe_A, m.equipe_B].forEach(function (e) {
       var id = String(e == null ? '' : e).trim();
-      if (id) set[id] = true;
+      if (id) { set[id] = true; toutesEquipes[id] = true; }
     });
   });
   var labels = Object.keys(equipesParPoule);
   var tailles = labels.map(function (p) { return Object.keys(equipesParPoule[p]).length; });
   var egales = tailles.length > 0 && tailles.every(function (t) { return t === tailles[0]; });
-  return { nbPoules: labels.length, poulesEgales: egales, matinMax: maxMatchsParEquipe(matin) };
+  return { nbPoules: labels.length, poulesEgales: egales,
+           totalEquipes: Object.keys(toutesEquipes).length, matinMax: maxMatchsParEquipe(matin) };
 }
 
 /**
- * Nombre de matchs/équipe (MAX) que produira la phase 2, prédit depuis la structure du matin (pur).
- *  - CROISE : round-robin par rang → le rang 1 est dans TOUTES les poules ⇒ `nbPoules − 1` (exact,
- *    même poules inégales ; 0 si une seule poule car le croisé est alors impossible). Nature 'predit'.
- *  - CROISE_DIAGONAL : chaque équipe = UN appariement diagonal ⇒ `1` en poules ÉGALES (exact, 'predit').
- *    Poules INÉGALES : le repli des « restes » donne >1 à certaines équipes → non déductible par une
- *    formule simple ; on renvoie le MINIMUM connu (1) avec nature 'minimum' (borne basse, cf §3.1).
- * @return {?{valeur:number, nature:('predit'|'minimum')}} null si le format n'a pas de phase 2 prévisible.
+ * TABLE DÉCLARÉE des formules de phase 2 (session 10). Le cœur de l'inversion du défaut : un format
+ * n'accède à la prédiction que si sa formule est ICI, explicitement établie et testée. Tout format
+ * ABSENT de la table tombe sur le chemin PRUDENT par CONSTRUCTION (aucun `else`, aucun format traité
+ * par défaut comme un autre) — voir `previsionnelCategorieFFR`. Ainsi LIBRE se corrige, et le prochain
+ * format ajouté sans formule obtient le comportement prudent, jamais un silence rassurant.
+ *
+ * Chaque formule : `structure → {valeur, nature:('predit'|'minimum')}`. Toutes STRUCTURELLES et exactes
+ * (planifierApresMidi ne tronque jamais par le temps) :
+ *  - CROISE : round-robin par rang → le rang 1 est dans TOUTES les poules ⇒ `nbPoules − 1` (exact, même
+ *    poules inégales ; 0 si une seule poule car le croisé est alors impossible).
+ *  - CROISE_DIAGONAL : chaque équipe = UN appariement diagonal ⇒ `1` en poules ÉGALES (exact). Poules
+ *    INÉGALES : le repli des « restes » donne >1 à certaines équipes → non déductible ; on renvoie la
+ *    BORNE BASSE (1, nature 'minimum'). Seul cas non exactement prédit (audit Q25).
+ *  - LIBRE : round-robin de TOUTES les équipes de la catégorie ⇒ `totalEquipes − 1` (exact ; 0 si moins
+ *    de 2 équipes, aucun match l'après-midi).
  */
-function matchsPhase2PreditsFFR(nbPoules, poulesEgales, fmt) {
-  var f = String(fmt || '').trim().toUpperCase();
-  if (f === 'CROISE') return { valeur: nbPoules >= 2 ? nbPoules - 1 : 0, nature: 'predit' };
-  if (f === 'CROISE_DIAGONAL') {
-    if (nbPoules < 2) return { valeur: 0, nature: 'predit' };
-    return poulesEgales ? { valeur: 1, nature: 'predit' } : { valeur: 1, nature: 'minimum' };
+var FORMULES_PHASE2 = {
+  CROISE: function (s) {
+    return { valeur: s.nbPoules >= 2 ? s.nbPoules - 1 : 0, nature: 'predit' };
+  },
+  CROISE_DIAGONAL: function (s) {
+    if (s.nbPoules < 2) return { valeur: 0, nature: 'predit' };
+    return s.poulesEgales ? { valeur: 1, nature: 'predit' } : { valeur: 1, nature: 'minimum' };
+  },
+  LIBRE: function (s) {
+    return { valeur: s.totalEquipes >= 2 ? s.totalEquipes - 1 : 0, nature: 'predit' };
   }
-  return null; // LIBRE / COUPE_PLATEAU / inconnu : pas de prédiction de phase 2 (cf previsionnelCategorieFFR)
-}
+};
 
 /**
  * Assemble l'objet prévisionnel affiché, à partir d'un total de matchs/équipe et de sa NATURE (pur).
@@ -923,8 +935,8 @@ function matchsPhase2PreditsFFR(nbPoules, poulesEgales, fmt) {
 function assemblerPrevisionnelJourneeFFR(total, meta, formatMiTemps, dureeMiTempsMin, plafond) {
   var base = tempsPrevisionnelJoueurFFR(total, formatMiTemps, dureeMiTempsMin, plafond);
   if (!base) return null;
-  var deuxPhases = meta.nature !== 'journee';
-  var margeFaible = deuxPhases && base.plafond != null && !base.depasse &&
+  // « Marge faible » : n'a de sens que sur un total COMPLET (le seul qui conclut « sous le plafond »).
+  var margeFaible = !!meta.complet && base.plafond != null && !base.depasse &&
                     base.marge != null && base.marge <= 10;
   return {
     minutes: base.minutes, plafond: base.plafond, depasse: base.depasse,
@@ -938,42 +950,45 @@ function assemblerPrevisionnelJourneeFFR(total, meta, formatMiTemps, dureeMiTemp
 
 /**
  * Prévisionnel d'UNE catégorie sur la JOURNÉE ENTIÈRE (pur). Point d'entrée unique câblé par
- * getConformiteFFR. Distingue le CONSTATÉ du PRÉDIT :
- *  - matin absent ⇒ null (muet, comme la session 8) ;
- *  - format hors deux phases (LIBRE / COUPE_PLATEAU / inconnu) ⇒ comportement session 8 INCHANGÉ
- *    (max sur tous les matchs existants, nature 'journee') ;
- *  - après-midi DÉJÀ généré ⇒ tout est constaté (nature 'constate'), aucune prédiction ;
- *  - après-midi non généré ⇒ total = matin (constaté) + phase 2 (prédite), nature 'predit' si la
- *    prédiction est exacte, 'minimum' si ce n'est qu'une borne basse (DIAGONAL inégal).
+ * getConformiteFFR. Défaut PRUDENT par construction (session 10) : on ne conclut « sous le plafond »
+ * QUE sur un total complet ; tout format sans formule déclarée tombe sur le chemin prudent.
+ *  - matin absent ⇒ null (muet) ;
+ *  - après-midi DÉJÀ généré ⇒ tout est CONSTATÉ (nature 'constate'), aucune prédiction ;
+ *  - après-midi non généré, format DANS `FORMULES_PHASE2` ⇒ total = matin + phase 2 prédite ('predit'
+ *    exact, ou 'minimum' pour la borne basse du DIAGONAL inégal) ;
+ *  - après-midi non généré, format ABSENT de la table (inconnu, vide, COUPE_PLATEAU, futur) ⇒ chemin
+ *    PRUDENT : borne basse = le matin seul (l'après-midi ajoutera ≥ 0 match), nature 'partiel',
+ *    NON complet ⇒ jamais « sous le plafond », mais un dépassement déjà atteint reste signalé.
  */
 function previsionnelCategorieFFR(matin, aprem, fmt, formatMiTemps, dureeMiTempsMin, plafond) {
   matin = matin || []; aprem = aprem || [];
   if (!matin.length) return null; // muet : pas de matin
   var f = String(fmt || '').trim().toUpperCase();
 
-  // Formats à UNE phase (ou non prévisibles) : session 8 inchangée — max sur les matchs existants.
-  if (f !== 'CROISE' && f !== 'CROISE_DIAGONAL') {
-    var mpeJournee = maxMatchsParEquipe(matin.concat(aprem));
-    return assemblerPrevisionnelJourneeFFR(mpeJournee,
-      { nature: 'journee', complet: true, matinMatchs: null, apremMatchs: null },
-      formatMiTemps, dureeMiTempsMin, plafond);
-  }
-
-  // Deux phases, après-midi DÉJÀ généré : constaté, journée entière, aucune prédiction.
+  // Après-midi DÉJÀ généré : tout est constaté (observation, pas prédiction) — vrai pour TOUS les formats.
   if (aprem.length) {
     return assemblerPrevisionnelJourneeFFR(maxMatchsParEquipe(matin.concat(aprem)),
       { nature: 'constate', complet: true, matinMatchs: null, apremMatchs: null },
       formatMiTemps, dureeMiTempsMin, plafond);
   }
 
-  // Deux phases, après-midi NON généré : on prédit la phase 2 depuis la structure du matin.
+  // Après-midi NON généré : la prédiction n'existe QUE si une formule est déclarée pour ce format.
   var st = structureMatinFFR(matin);
-  var p2 = matchsPhase2PreditsFFR(st.nbPoules, st.poulesEgales, f);
-  if (!p2) return null; // sécurité (ne devrait pas arriver pour CROISE/CROISE_DIAGONAL)
-  var total = st.matinMax + p2.valeur;
-  var complet = (p2.nature === 'predit'); // 'minimum' = borne basse ⇒ total NON complet
-  return assemblerPrevisionnelJourneeFFR(total,
-    { nature: p2.nature, complet: complet, matinMatchs: st.matinMax, apremMatchs: p2.valeur },
+  var formule = Object.prototype.hasOwnProperty.call(FORMULES_PHASE2, f) ? FORMULES_PHASE2[f] : null;
+  if (formule) {
+    var p2 = formule(st);
+    var total = st.matinMax + p2.valeur;
+    var complet = (p2.nature === 'predit'); // 'minimum' = borne basse ⇒ total NON complet
+    return assemblerPrevisionnelJourneeFFR(total,
+      { nature: p2.nature, complet: complet, matinMatchs: st.matinMax, apremMatchs: p2.valeur },
+      formatMiTemps, dureeMiTempsMin, plafond);
+  }
+
+  // CHEMIN PRUDENT par CONSTRUCTION : format absent de la table. On ne prédit RIEN de l'après-midi ;
+  // la borne basse connue est le matin seul. Aucune conclusion « sous le plafond » (total partiel),
+  // mais un dépassement déjà atteint au matin reste signalé (asymétrie session 9).
+  return assemblerPrevisionnelJourneeFFR(st.matinMax,
+    { nature: 'partiel', complet: false, matinMatchs: st.matinMax, apremMatchs: null },
     formatMiTemps, dureeMiTempsMin, plafond);
 }
 
@@ -1533,9 +1548,16 @@ function formatSportifCategorie(matchsCat, cfgCat) {
     return { statut: 'manquant', deuxPhases: false, coupePlateau: true,
              motif: 'format COUPE_PLATEAU — hors périmètre École de Rugby' };
   }
-  // Vide ou inconnu : on n'invente RIEN (doctrine §1.12). Le format historique « vide = CROISE » ne
-  // s'applique qu'à la génération, pas à la déclaration d'intention de la demande d'autorisation.
-  return { statut: 'manquant', deuxPhases: false, motif: 'format d\'après-midi non configuré' };
+  if (fmt === '') {
+    // Vide : la GÉNÉRATION appliquerait CROISE (défaut historique). Session 10 — on le DIT au lieu de
+    // le taire, tout en gardant le champ « manquant » (personne ne l'a choisi). Le comportement de
+    // génération n'est PAS modifié (voir formatApresMidi) ; seule la décision devient visible.
+    return { statut: 'manquant', deuxPhases: false, formatVide: true,
+             motif: 'non configuré — CROISE serait appliqué par défaut' };
+  }
+  // Valeur inattendue (typo…) : la génération retomberait aussi sur CROISE. On n'invente RIEN (§1.12).
+  return { statut: 'manquant', deuxPhases: false,
+           motif: 'format « ' + fmt + ' » non reconnu — CROISE serait appliqué par défaut' };
 }
 
 /**
@@ -1704,6 +1726,7 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   // se remplissent phase par phase, « manquant » tant que le planning n'est pas généré (session 8).
   var champsFormat = [];
   var incoherencesFormat = [];
+  var categoriesFormatVide = [];
   var mpc = donneesApp.matchsParCategorie || {};
   // Matchs/équipe d'une phase : chiffre si connu, sinon « manquant » (planning non généré) — SANS
   // remettre en cause le nombre de phases (déjà connu par le format déclaré).
@@ -1723,6 +1746,7 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
             'plateaux École de Rugby. Retire ce format ou choisis CROISE / LIBRE.', etat: 'avert',
           origine: 'formulaire FFR — interdiction des phases finales EDR' });
       }
+      if (fs.formatVide) categoriesFormatVide.push(catApp);
       return;
     }
     if (fs.deuxPhases) {
@@ -1739,6 +1763,14 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
     }
     champsFormat.push(saisi(catApp + ' — Récompenses', 'org_recompenses_' + catApp));
   });
+  // Signalement de cohérence (§4.3) : au moins une catégorie sans format d'après-midi choisi. INFORMATIF
+  // (état 'avert', hors compteur de manquants) — la génération appliquerait CROISE sans le dire.
+  if (categoriesFormatVide.length) {
+    incoherencesFormat.push({ libelle: '⚠️ Format d\'après-midi non configuré',
+      valeur: categoriesFormatVide.length + ' catégorie(s) sans format choisi (' + categoriesFormatVide.join(', ') +
+        ') — CROISE serait appliqué par défaut à la génération. Choisis explicitement le format dans les réglages.',
+      etat: 'avert', origine: 'décision implicite rendue visible (session 10)' });
+  }
   if (!champsFormat.length && !incoherencesFormat.length) {
     champsFormat.push({ libelle: 'Format sportif', valeur: '', etat: 'manquant', origine: 'aucune catégorie présente' });
   }
