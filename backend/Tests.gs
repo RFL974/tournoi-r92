@@ -105,6 +105,20 @@ function lancerTestsFFR() {
   testS8_previsionnelMatchsInconnus(etat);
   testS8_nbDemiJourneesDefaut2(etat);
 
+  // Session 9 — temps de jeu prévisionnel sur la JOURNÉE ENTIÈRE (prédiction de la phase 2).
+  testS9_structureMatin(etat);
+  testS9_phase2CroisePredit(etat);
+  testS9_phase2DiagonalEgalUn(etat);
+  testS9_phase2DiagonalInegalMinimum(etat);
+  testS9_croiseMatinSeulJournee(etat);
+  testS9_croiseApremConstate(etat);
+  testS9_diagonalInegalReplie4B(etat);
+  testS9_libreInchange(etat);
+  testS9_matinAbsentMuet(etat);
+  testS9_depassementTotalPredit(etat);
+  testS9_partielDepasseSignale(etat);
+  testS9_margeFaible(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -1037,4 +1051,121 @@ function testS8_previsionnelMatchsInconnus(etat) {
 function testS8_nbDemiJourneesDefaut2(etat) {
   _ffrAssert(etat, nbDemiJourneesConfig({ global: {} }) === '2', 'ndjDefaut : absent → 2');
   _ffrAssert(etat, nbDemiJourneesConfig({ global: { nb_demi_journees: '1' } }) === '1', 'ndjDefaut : valeur saisie respectée');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 9 — temps de jeu prévisionnel sur la JOURNÉE ENTIÈRE              */
+/*  (prédiction de la phase 2 depuis la structure du matin, pur)             */
+/* -------------------------------------------------------------------------- */
+
+/** Fabrique un round-robin de matchs du matin : `poules` = tableau de tableaux d'ids d'équipe. */
+function _matinPoules(poules) {
+  var out = [];
+  (poules || []).forEach(function (ids, i) {
+    var label = String.fromCharCode(65 + i); // 'A', 'B', 'C'…
+    for (var a = 0; a < ids.length; a++) {
+      for (var b = a + 1; b < ids.length; b++) {
+        out.push({ poule: label, equipe_A: ids[a], equipe_B: ids[b], phase: 'poule' });
+      }
+    }
+  });
+  return out;
+}
+
+/** structureMatinFFR : nombre de poules, égalité, max de matchs/équipe. */
+function testS9_structureMatin(etat) {
+  var matin = _matinPoules([['A1', 'A2', 'A3'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3']]);
+  var st = structureMatinFFR(matin);
+  _ffrAssert(etat, st.nbPoules === 3 && st.poulesEgales === true, 'structMatin : 3 poules égales');
+  _ffrAssert(etat, st.matinMax === 2, 'structMatin : 2 matchs/équipe (poule de 3)');
+  var ineg = structureMatinFFR(_matinPoules([['A1', 'A2', 'A3'], ['B1', 'B2']]));
+  _ffrAssert(etat, ineg.nbPoules === 2 && ineg.poulesEgales === false, 'structMatin : poules inégales détectées');
+}
+
+/** §4.D — CROISE : matchs de phase 2 prédits = nbPoules − 1 (exact). */
+function testS9_phase2CroisePredit(etat) {
+  var p = matchsPhase2PreditsFFR(3, true, 'CROISE');
+  _ffrAssert(etat, p && p.valeur === 2 && p.nature === 'predit', 'phase2Croise : 3 poules → 2 matchs, prédit');
+  _ffrAssert(etat, matchsPhase2PreditsFFR(1, true, 'CROISE').valeur === 0, 'phase2Croise : 1 poule → 0 (croisé impossible)');
+}
+
+/** §4.D — CROISE_DIAGONAL en poules ÉGALES : 1 match/équipe (exact, prédit). */
+function testS9_phase2DiagonalEgalUn(etat) {
+  var p = matchsPhase2PreditsFFR(3, true, 'CROISE_DIAGONAL');
+  _ffrAssert(etat, p && p.valeur === 1 && p.nature === 'predit', 'phase2Diag : poules égales → 1, prédit');
+}
+
+/** §4.D #7 — CROISE_DIAGONAL en poules INÉGALES : borne basse (1, nature 'minimum'). */
+function testS9_phase2DiagonalInegalMinimum(etat) {
+  var p = matchsPhase2PreditsFFR(3, false, 'CROISE_DIAGONAL');
+  _ffrAssert(etat, p && p.valeur === 1 && p.nature === 'minimum', 'phase2Diag : poules inégales → minimum 1 (repli 4.B)');
+}
+
+/** §4.D #1 — CROISE, matin seul : le prévisionnel couvre la JOURNÉE, constaté + prédit distingués. */
+function testS9_croiseMatinSeulJournee(etat) {
+  var matin = _matinPoules([['A1', 'A2', 'A3'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3']]); // 3 poules → aprem 2
+  var p = previsionnelCategorieFFR(matin, [], 'CROISE', '2', '10', '130');
+  _ffrAssert(etat, p && p.nature === 'predit' && p.complet === true, 'croiseJournee : total prédit complet');
+  _ffrAssert(etat, p && p.matinMatchs === 2 && p.apremMatchs === 2, 'croiseJournee : 2 constatés matin + 2 prévus après-midi');
+  _ffrAssert(etat, p && p.minutes === 80, 'croiseJournee : (2+2)×2×10 = 80 min sur la journée');
+}
+
+/** §4.D #2 — CROISE, après-midi déjà généré : tout constaté, aucune prédiction. */
+function testS9_croiseApremConstate(etat) {
+  var matin = _matinPoules([['A1', 'A2', 'A3'], ['B1', 'B2', 'B3']]); // matin : 2 matchs/équipe
+  var aprem = [ { poule: 'N1', equipe_A: 'A1', equipe_B: 'B1', phase: 'classement' },
+                { poule: 'N2', equipe_A: 'A2', equipe_B: 'B2', phase: 'classement' } ];
+  var p = previsionnelCategorieFFR(matin, aprem, 'CROISE', '2', '10', '130');
+  _ffrAssert(etat, p && p.nature === 'constate' && p.matinMatchs === null, 'croiseConstate : constaté, aucun détail prédit');
+  _ffrAssert(etat, p && p.minutes === 60, 'croiseConstate : 3 matchs/équipe constatés × 2 × 10 = 60 min');
+}
+
+/** §4.D #3 / #7 — CROISE_DIAGONAL inégal, sous le plafond : chemin 4.B, ne conclut PAS. */
+function testS9_diagonalInegalReplie4B(etat) {
+  var matin = _matinPoules([['A1', 'A2', 'A3'], ['B1', 'B2']]); // inégal ; matinMax = 2
+  var p = previsionnelCategorieFFR(matin, [], 'CROISE_DIAGONAL', '2', '10', '130');
+  _ffrAssert(etat, p && p.nature === 'minimum' && p.complet === false, 'diag4B : borne basse, non complet');
+  _ffrAssert(etat, p && p.depasse === false, 'diag4B : sous le plafond ⇒ aucune conclusion (marge non affichée côté front)');
+}
+
+/** §4.D #4 — LIBRE : comportement session 8 inchangé (max sur les matchs existants, nature journee). */
+function testS9_libreInchange(etat) {
+  var matin = _matinPoules([['A1', 'A2', 'A3']]); // 2 matchs/équipe
+  var p = previsionnelCategorieFFR(matin, [], 'LIBRE', '2', '10', '130');
+  _ffrAssert(etat, p && p.nature === 'journee' && p.matinMatchs === null, 'libre : nature journee, pas de découpage');
+  _ffrAssert(etat, p && p.minutes === 40, 'libre : 2 × 2 × 10 = 40 min (inchangé)');
+}
+
+/** §4.D #5 — matin absent : muet. */
+function testS9_matinAbsentMuet(etat) {
+  _ffrAssert(etat, previsionnelCategorieFFR([], [], 'CROISE', '2', '10', '130') === null, 'muet : aucun match du matin');
+}
+
+/** §4.D #6 — dépassement d'un total PRÉDIT : 6 matchs × 2 × 10 = 120 contre 85 ⇒ +35 signalé. */
+function testS9_depassementTotalPredit(etat) {
+  // 4 poules de 4 → matin 3 matchs/équipe, phase 2 prédite = 3 → total 6.
+  var matin = _matinPoules([['A1','A2','A3','A4'], ['B1','B2','B3','B4'], ['C1','C2','C3','C4'], ['D1','D2','D3','D4']]);
+  var p = previsionnelCategorieFFR(matin, [], 'CROISE', '2', '10', '85');
+  _ffrAssert(etat, p && p.matinMatchs === 3 && p.apremMatchs === 3, 'depPredit : 3 matin + 3 après-midi prévus');
+  _ffrAssert(etat, p && p.minutes === 120 && p.depasse === true && p.depassement === 35,
+    'depPredit : 120 min, dépassement de 35 min signalé');
+}
+
+/** Asymétrie (Ajout 1) — total PARTIEL qui dépasse DÉJÀ : le dépassement EST signalé malgré l'incomplétude. */
+function testS9_partielDepasseSignale(etat) {
+  // DIAGONAL inégal (borne basse) : matinMax 2 + minimum 1 = 3 ; plafond 40 ⇒ 60 min > 40.
+  var matin = _matinPoules([['A1', 'A2', 'A3'], ['B1', 'B2']]);
+  var p = previsionnelCategorieFFR(matin, [], 'CROISE_DIAGONAL', '2', '10', '40');
+  _ffrAssert(etat, p && p.complet === false && p.nature === 'minimum', 'partielDep : total non complet (borne basse)');
+  _ffrAssert(etat, p && p.depasse === true && p.depassement === 20,
+    'partielDep : dépassement (60 > 40) signalé malgré le total partiel');
+}
+
+/** Marge faible (Ajout 2) — marge ≤ 10 min sur un total à deux phases ⇒ signalée. */
+function testS9_margeFaible(etat) {
+  // total 6 matchs × 2 × 10 = 120 ; plafond 130 ⇒ marge 10 (≤ 10) → faible.
+  var faible = assemblerPrevisionnelJourneeFFR(6, { nature: 'predit', complet: true, matinMatchs: 3, apremMatchs: 3 }, '2', '10', '130');
+  _ffrAssert(etat, faible && faible.marge === 10 && faible.margeFaible === true, 'margeFaible : marge 10 → signalée');
+  var large = assemblerPrevisionnelJourneeFFR(5, { nature: 'predit', complet: true, matinMatchs: 2, apremMatchs: 3 }, '2', '10', '130');
+  _ffrAssert(etat, large && large.marge === 30 && large.margeFaible === false, 'margeFaible : marge 30 → non signalée');
 }
