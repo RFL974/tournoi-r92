@@ -101,8 +101,9 @@ Sheets à l'import CSV. Ce n'est pas un problème : le backend normalise à la l
 `max_equipes_par_club`.
 
 **Zone A** : `zone_vacances` (défaut `C`, Île-de-France ; absent = traité comme `C`) ;
-`nb_demi_journees` (session 5, défaut `1` = lecture la plus prudente pour le plafond de temps de
-jeu ; absent = traité comme `1` ; question ouverte Q23).
+`nb_demi_journees` (session 5, **défaut porté à `2` en session 8** — un tournoi matin + après-midi =
+2 demi-journées, Q23 close ; absent = traité comme `2`) ; `org_nb_participants` (session 8, saisi,
+repli quand aucun club n'a déclaré ses effectifs).
 
 ⚠️ **Seed corrigé en session 2** — le modèle livré à la création d'un classeur neuf attribuait
 `COUPE_PLATEAU` + `{"nbQualifiesCoupe":2}` à **U12**, c'est-à-dire un format **interdit en EDR**
@@ -261,7 +262,8 @@ rétrocompatibilité d'affichage. **Actuellement référencé nulle part** — c
 | Jalons amont (J-90 / J-60 / J-45) | ❌ deux dates limites existent, non reliées à un rétroplanning |
 | **Dimensions de terrain réglementaires** | ✅ **sourcées, affichées ET applicables en un clic** — session 5 les affiche avec signalement d'écart ; **session 6 ajoute le bouton « Appliquer les valeurs FFR »** par catégorie, qui écrit la bonne dimension du mois dans `dimensions_categories`. **Jamais automatique** (doctrine §1.12) : une catégorie à la fois, avec confirmation. ⚠️ **La « correction » annoncée en session 4 était fausse** : `U12 = 56×45` n'est **pas** la valeur M14, c'est le **jeu à 10** (RE 10x10, déc.→juin, `c09`) ; le code était **incomplet**, pas faux (56×30 en T+2 sept.→nov.), et le bouton pose désormais la bonne valeur selon le mois |
 | **Le terrain dépend de la FORME, pas de la catégorie** | ⚠️ **affiché en session 5** — le terrain suit la forme du mois via `RefFFR_Regles`. Mais la **répartition** des terrains (`dimensions_categories`, hors périmètre session 5) reste clée par catégorie seule : elle demeure inexacte sur la moitié de saison où la forme change (M10 : 30×25 en 5x5 → 40×30 en jeu à 7) |
-| **Plafond de temps de jeu par joueur et par jour** | ✅ **affiché en session 5** (`RefFFR_Temps`) : contrainte de **sécurité** restituée par catégorie (M8 50/75/90 ; M10 65/85/100 ; M12 et M14 65/90/110), avec les variantes de découpage. Informatif, jamais bloquant |
+| **Plafond de temps de jeu par joueur et par jour** | ✅ **affiché en session 5** (`RefFFR_Temps`) : contrainte de **sécurité** restituée par catégorie (M8 50/75/90 ; M10 65/85/100 ; M12 et M14 65/90/110), avec les variantes de découpage. Informatif, jamais bloquant. **Session 8 : le plafond est désormais récupérable INDÉPENDAMMENT des grilles** (recherche sur catégorie + effectif + nb_demi_journees, sans nb_equipes) — il s'affiche même au-delà de 6 équipes, là où la FFR ne publie plus de grille. Q23 close : les grilles sont des **préconisations**, le plafond est la **règle** |
+| **Temps de jeu prévisionnel vs plafond** | ✅ **ajouté en session 8** : `matchs/équipe (toutes phases) × format_mi_temps × durée`, comparé au plafond. **Borne haute** explicitement libellée (« si un joueur joue l'intégralité des matchs ») — l'app connaît les matchs par équipe, pas par joueur. Dépassement signalé en orange ; informatif, jamais bloquant. Muet tant que le planning n'est pas généré |
 | Blocage **dur** sur date fédérale | ⚠️ volontairement informatif à ce stade |
 | Dates de plateaux du **Comité 92** | ❌ absentes du référentiel (le calendrier FFR est national) |
 | **Exposition de la zone A de `Config` en lecture publique** | ✅ **fermée en session 3** — `lireConfigPublique` + liste blanche **opt-in**, trois vues, défaut fermé. Les huit champs personnels ne sortent plus d'aucune lecture publique. Vérifié en production : `?action=getConfig` et `?action=getAll` ne contiennent plus `referent_tel` |
@@ -313,6 +315,11 @@ la conformité). **90/90 OK** : 32 asserts d'origine, +10 sur la couverture de s
 - **Règle des 5 essais d'écart** → présente sur **toutes** les fiches, M6 comprise : *score acquis
   définitivement et rééquilibrage obligatoire*. Utile à la table de marque, qui ne la connaît pas.
   Suppose de trancher Q21 (essais ou points ?)
+- **Contrainte de vestiaires — non contrôlée** : `org_nb_vestiaires` est **collecté** (saisi, session 7)
+  et **reporté** sur la feuille d'autorisation, mais l'app ne vérifie **aucun** ratio
+  vestiaires/équipes ni exigence FFR. Report, pas contrôle — à instruire quand la règle sera sourcée.
+- **Décalage d'un jour entre le champ date et l'aperçu public** : défaut connu et **non traité**
+  (fuseau/parse de date à l'affichage). Volontairement hors périmètre de la session 8, à corriger à part.
 
 **Dette identifiée** :
 1. `normaliserCategorie` (backend) a un miroir `normaliserCategorieFFR` (frontend). Deux
@@ -1356,6 +1363,80 @@ la feuille reste neutre).
 
 ---
 
+## Session 8 — 2026-07-30 — Distinguer le PRÉVU de l'EXÉCUTÉ + plafond de temps de jeu
+
+**Un seul défaut de conception, trois manifestations.** L'app **confondait ce qui est PRÉVU et ce
+qui a EU LIEU**. La demande d'autorisation se dépose des semaines **avant** le tournoi : elle décrit
+une **intention**. Or l'écran de la session 7 dérivait plusieurs champs de traces d'**exécution** —
+matchs générés, réponses de clubs enregistrées — et déclarait « manquant », ou pire une **valeur
+fausse**, quand ces traces n'existaient pas encore.
+
+**Le défaut vient d'une spécification, pas du code.** La session 7 avait fidèlement implémenté une
+consigne défectueuse. Et ce n'est pas la première fois : la **session 6** avait corrigé le même
+travers sur les **dimensions de terrain** (valeur figée qui redevient fausse quand la forme change),
+la **session 7** sur le **nombre de terrains** (lu du planning, sinon des terrains déclarés) — sans
+jamais **généraliser** le principe. La session 8 le nomme et l'applique partout.
+
+### Manifestation 1 — Format sportif : l'intention, pas l'exécution
+Un `CROISE` était annoncé « 1 phase » tant qu'aucun match de `classement` n'existait — or l'après-midi
+ne se génère que **le jour J**. Corrigé : le **nombre de phases se déduit du format déclaré**
+(`CROISE`/`CROISE_DIAGONAL` → 2 phases ; `LIBRE` → 1 phase ; absent/inconnu → *manquant*). Le
+**nombre de matchs/équipe** se remplit ensuite **indépendamment**, phase par phase, *manquant* tant
+que le planning n'existe pas — **sans** faire basculer le nombre de phases. `COUPE_PLATEAU` →
+*manquant* + signalement : les **phases finales sont interdites** en tournoi/plateau EDR (raison de
+son masquage depuis la session 2).
+
+### Manifestation 2 — Clubs et participants : cascade de sources
+La feuille affichait *0 club, 29 équipes, 0 participant* en marquant ces zéros « calculé » :
+`ClubsInvites` était vide parce que les équipes avaient été **saisies à la main** (usage légitime et
+fréquent). Corrigé, sur le modèle de la cascade des terrains : **clubs** = clubs acceptés
+(invitations) → clubs distincts déduits des noms d'équipes (via `clubDe`, convention déjà en
+production) → *manquant* ; **participants** = somme des joueurs déclarés → `org_nb_participants`
+(nouveau champ saisi) → *manquant*, **jamais estimé par un ratio**. Des **contrôles de cohérence**
+informatifs (état `avert`, orange, hors compteur de manquants) signalent « N équipes mais aucun
+club / aucun participant ».
+
+### Manifestation 3 — Le plafond de temps de jeu, récupérable seul
+**Le plus grave.** Le plafond (`plafond_joueur_min`) — la seule règle qui **engage** — était porté
+par chaque **ligne de grille**, or les grilles FFR ne couvrent que **3 à 6 équipes**. Au-delà, la
+grille est muette **et le plafond disparaissait avec elle**, ne laissant que des préconisations. Les
+fiches FFR intitulent d'ailleurs leurs tableaux « **Préconisation** pour l'organisation et les temps
+de Jeu », tandis que le plafond est une contrainte de **sécurité**. Corrigé : le plafond se recherche
+sur `catégorie + effectif + nb_demi_journees`, **sans** `nb_equipes`, et s'affiche **même quand la
+grille est muette**. Piège Sevens conservé (ligne `nb_demi_journees` vide toujours ignorée).
+
+### Ajout rendu possible — Temps de jeu prévisionnel
+`matchs/équipe (toutes phases) × format_mi_temps × durée`, comparé au plafond. C'est une **borne
+haute** — l'app connaît les matchs par **équipe**, pas par **joueur** — et le **libellé le dit** :
+*« temps de jeu max par joueur (si un joueur joue l'intégralité des matchs) »*. Sous le plafond →
+neutre + marge ; au-dessus → orange + dépassement ; matchs inconnus → muet. **Informatif, jamais
+bloquant** (doctrine §1.12).
+
+### Q23 close → `nb_demi_journees` passe à 2
+Le directeur de l'EDR du Racing ayant confirmé (voir Q23), un tournoi matin + après-midi occupe
+**2 demi-journées** : défaut changé de `1` à `2` (seed + les deux replis runtime). Migration douce :
+absent ⇒ traité comme 2 ; **aucune valeur déjà saisie n'est modifiée**.
+
+**Résumé d'exécution** : branche `fix/prevu-vs-execute-plafond-temps`, PR **#88**,
+5 commits, tests **168/168 OK** en simulation locale (Node, cœur pur de bout en bout).
+
+**Écarts déclarés** : (1) le format historique « vide = CROISE » ne vaut que pour la **génération** ;
+la demande d'autorisation traite un format vide en *manquant* (doctrine « n'invente rien »), ce qui
+peut surprendre sur un Sheet ancien aux formats non renseignés. (2) Défaut `nb_demi_journees`
+appliqué aux **trois** emplacements (seed + deux replis runtime), pas au seul seed, pour une
+migration douce cohérente. (3) Comptage des clubs distincts par réutilisation de `clubDe` (convention
+`{club}` / `{club}-N` **déjà en production** pour la répartition) — aucun découpage de chaîne neuf.
+
+**Incohérence repérée, non corrigée (hors périmètre)** : la répartition des terrains reste clée par
+catégorie seule (dette connue, §1.9) ; le décalage d'un jour entre le champ date et l'aperçu public
+subsiste (§1.9).
+
+**Vérification** : 168/168 sous Node. ⚠️ **Redéploiement requis** — `backend/Code.gs` et
+`backend/Tests.gs` à recopier dans l'éditeur Apps Script, puis **mettre à jour le déploiement
+existant** (jamais en créer un nouveau, l'URL changerait).
+
+---
+
 # PARTIE 3 — Questions ouvertes
 
 **Règles de clôture** — Une question se ferme soit *par document* (source et passage cités), soit *par le comité / la ligue*. Une réponse partielle ne ferme rien : la question reste ouverte, assortie d'une note sur ce qui manque. La liste finale des points sans réponse textuelle n'est établie qu'une fois tous les documents FFR traités.
@@ -1384,5 +1465,5 @@ la feuille reste neutre).
 | **Q20** | **U14 : jeu à X ou jeu à XV ?** ✅ **Résolue (document)** : `RefFFR_Formes` porte `10x10\|15x15` sur le même mois — **les deux sont autorisées**. Ce n'est donc pas une décision d'architecture mais un **paramètre par tournoi** (l'organisateur choisit). L'éclatement du `|` gère déjà les deux formes. | décision Romain | ✅ **résolue (document)** |
 | **Q21** | **La table de marque saisit-elle des essais ou des points ?** Le backend stocke `score_A` / `score_B` sans unité. Toutes les fiches posent la règle des **5 essais d'écart** (score acquis, rééquilibrage obligatoire) : elle n'est implémentable que si l'unité est l'essai, sinon il faut convertir (essai = 5 points). | vérification Romain | ⏳ ouverte |
 | **Q22** | **Quel est le recouvrement réel entre Tournoi R92 et la FDM EDR ?** L'audit affirmait « zéro recouvrement » depuis la session 0, sans jamais revérifier. La FFR décrit pourtant la FDM comme couvrant *la gestion des rencontres et des plateaux*, et indique qu'elle s'applique aux **tournois privés de club** dès lors qu'ils sont **déclarés dans Oval-e**. Le recouvrement porterait donc sur l'**amont déclaratif** et la **liste des clubs** — pas sur les poules, les terrains, le planning horaire ni la diffusion publique des scores. **À trancher sur pièce** : visionner le webinaire FFR du **03/02/2026** et déterminer si la FDM produit un **planning** ou une **vue publique**. Structurant pour le partenariat avec le Racing 92. | vérification Romain | ⏳ **ouverte — priorité haute** |
-| **Q23** | **Un tournoi « matin + après-midi » compte-t-il pour 1 ou 2 demi-journées** au sens des grilles de temps FFR ? Détermine le plafond de temps de jeu par joueur — 65 min contre 90 en M12, soit un écart du simple au double sur une contrainte de **sécurité**. Paramètre `nb_demi_journees` créé dans `Config`, **défaut 1** (lecture la plus prudente, même principe qu'en session 2 pour la règle des 72 h), modifiable par l'organisateur. **Question posée au directeur de l'EDR du Racing 92**, réponse en attente. | Directeur EDR Racing 92 | ⏳ ouverte |
+| **Q23** | **Un tournoi « matin + après-midi » compte-t-il pour 1 ou 2 demi-journées** au sens des grilles de temps FFR ? ✅ **Résolue (club).** Le directeur de l'EDR du Racing a répondu (**27/07/2026**) : « *la FFR choisit du nombre de minutes maximum à jouer pour chaque catégorie par journée, et après les organisateurs de tournois doivent organiser leur journée de tournée en respectant ce temps de jeu maximum* ». **Corroboré** par le pied des fiches FFR (« *Si 3 demi-journées, temps de jeu = 100 minutes* » — trois demi-journées ne peuvent pas être trois journées) et par le **titre** des tableaux (« Préconisation… »). **Double conséquence doctrinale** : (1) les **grilles de temps sont des préconisations, le plafond est la règle qui engage** — d'où sa récupération indépendante des grilles (session 8, §1.8) ; (2) un tournoi matin + après-midi = **2 demi-journées**, `nb_demi_journees` **défaut porté de 1 à 2** (migration douce : absent ⇒ 2 ; aucune valeur saisie modifiée). | Directeur EDR Racing 92 | ✅ **résolue (club, 27/07/2026)** |
 | **Q24** | **Quel est le code club FFR du `Racing Club de France Rugby` ?** Champ obligatoire du formulaire d'autorisation (`org_code_club`). Ne figure sur aucune source publique consultée. Se lit sur la carte de qualification d'un licencié du club ou dans Oval-e. ⚠️ **Un code obtenu par un modèle de langage sans source vérifiable a été écarté** — un code erroné sur un dossier officiel engage le club signataire. | Racing / Oval-e | ⏳ ouverte |

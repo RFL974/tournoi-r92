@@ -34,6 +34,8 @@ var AUTORISATION_SAISIE = [
     { p: 'org_niveau_tournoi', l: 'Niveau du tournoi', t: 'select', o: ['International', 'National', 'Territorial', 'Départemental'] }
   ] },
   { titre: 'A.4 — Participants', champs: [
+    { p: 'org_nb_participants', l: 'Nombre de participants (si les équipes sont saisies à la main)', t: 'number',
+      ph: 'ex. 240 — laisser vide si les clubs ont déclaré leurs effectifs' },
     { p: 'org_equipes_etrangeres', l: 'Équipes étrangères', t: 'select', o: ['non', 'oui'] },
     { p: 'org_equipes_etrangeres_liste', l: 'Liste des équipes étrangères', t: 'textarea' }
   ] },
@@ -160,7 +162,10 @@ function rendreFeuilleAutorisation(dossier) {
     if (s.note) html += '<p class="autorisation-section-note">' + echapper(s.note) + '</p>';
     html += '<table class="autorisation-table"><tbody>';
     s.champs.forEach(function (c) {
-      const etatCls = c.etat === 'manquant' ? 'ffr-orange' : (c.etat === 'saisi' ? 'autorisation-saisi' : 'autorisation-calcule');
+      // 'avert' = signalement INFORMATIF (incohérence, format hors périmètre) : orange, message affiché,
+      // JAMAIS compté dans les manquants (session 8). 'manquant' = trou réel. 'saisi'/'calcule' = renseignés.
+      const etatCls = (c.etat === 'manquant' || c.etat === 'avert') ? 'ffr-orange'
+        : (c.etat === 'saisi' ? 'autorisation-saisi' : 'autorisation-calcule');
       const valeur = c.etat === 'manquant' ? '<em>manquant</em>' : echapper(String(c.valeur));
       html += '<tr class="' + etatCls + '"><th>' + echapper(c.libelle) + '</th><td>' + valeur +
         '</td><td class="autorisation-etat">' + echapper(c.etat) + '</td></tr>';

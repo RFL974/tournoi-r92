@@ -55,7 +55,6 @@ function lancerTestsFFR() {
   testS5_m12u12MemeLigne(etat);
   testS5_referentielReglesAbsent(etat);
   testS5_grilleDeuxVariantes(etat);
-  testS5_nbEquipesSansLigneMuet(etat);
   testS5_comptesExposes(etat);
 
   // Application des valeurs FFR par catégorie (session 6).
@@ -82,14 +81,29 @@ function lancerTestsFFR() {
   testS7_formesM12Octobre(etat);
   testS7_sevensJamaisCoche(etat);
   testS7_m15fAbsentPasDeBloc(etat);
-  testS7_planningNonGenereFormatManquant(etat);
   testS7_deuxPhases(etat);
-  testS7_unePhase(etat);
   testS7_libreCompteTouteLaJournee(etat);
   testS7_moinsDe3Equipes(etat);
   testS7_nbManquantsDecroit(etat);
   testS7_orgNonPublic(etat);
   testS7_defautNomClub(etat);
+
+  // Session 8 — distinguer le PRÉVU de l'EXÉCUTÉ + plafond de temps récupérable seul.
+  testS8_croiseSansApremDeuxPhases(etat);
+  testS8_croisePhase2Manquante(etat);
+  testS8_formatAbsentManquant(etat);
+  testS8_coupePlateauSignalement(etat);
+  testS8_clubsDepuisEquipes(etat);
+  testS8_clubsInvitesPrime(etat);
+  testS8_participantsManquantJamaisEstime(etat);
+  testS8_incoherenceEquipesSansClub(etat);
+  testS8_plafond12EquipesPresent(etat);
+  testS8_plafondElargiJamaisSevens(etat);
+  testS8_plafondM10DeuxDemiJournees(etat);
+  testS8_previsionnelSousPlafond(etat);
+  testS8_previsionnelDepassement(etat);
+  testS8_previsionnelMatchsInconnus(etat);
+  testS8_nbDemiJourneesDefaut2(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -498,7 +512,11 @@ function _ffrRefS5() {
       { categorie: 'M12', effectif: '10x10', nb_demi_journees: '1', nb_equipes: '3', nb_periodes: '3', duree_periode_min: '10', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: 'B', rencontres_par_equipe: '2', nb_rencontres_total: '3', organisation_poules: '1 poule de 3', millesime: '2026-2027' },
       // M12/5x5, 1 demi-journée : le découpage dépend du NB D'ÉQUIPES (3 → 3×10, 6 → 2×8).
       { categorie: 'M12', effectif: '5x5', nb_demi_journees: '1', nb_equipes: '3', nb_periodes: '3', duree_periode_min: '10', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: '', rencontres_par_equipe: '2', nb_rencontres_total: '3', organisation_poules: '1 poule de 3', millesime: '2026-2027' },
-      { categorie: 'M12', effectif: '5x5', nb_demi_journees: '1', nb_equipes: '6', nb_periodes: '2', duree_periode_min: '8', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: '', rencontres_par_equipe: '5', nb_rencontres_total: '15', organisation_poules: '2 poules de 3', millesime: '2026-2027' }
+      { categorie: 'M12', effectif: '5x5', nb_demi_journees: '1', nb_equipes: '6', nb_periodes: '2', duree_periode_min: '8', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '65', variante: '', rencontres_par_equipe: '5', nb_rencontres_total: '15', organisation_poules: '2 poules de 3', millesime: '2026-2027' },
+      // M10 / 5x5, 2 demi-journées, plafond 85 : grilles publiées SEULEMENT pour 3 à 6 équipes (session 8).
+      // Un tournoi de club à 12 équipes n'a donc AUCUNE grille — mais le plafond 85 doit rester récupérable.
+      { categorie: 'M10', effectif: '5x5', nb_demi_journees: '2', nb_equipes: '3', nb_periodes: '2', duree_periode_min: '10', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '85', variante: '', rencontres_par_equipe: '2', nb_rencontres_total: '3', organisation_poules: '1 poule de 3', millesime: '2026-2027' },
+      { categorie: 'M10', effectif: '5x5', nb_demi_journees: '2', nb_equipes: '6', nb_periodes: '2', duree_periode_min: '10', pause_periodes_min: '1', arret_entre_matchs_min: '2', plafond_joueur_min: '85', variante: '', rencontres_par_equipe: '5', nb_rencontres_total: '15', organisation_poules: '2 poules de 3', millesime: '2026-2027' }
     ]
   };
 }
@@ -589,13 +607,6 @@ function testS5_grilleDeuxVariantes(etat) {
   var vs = (t ? t.grilles : []).map(function (g) { return g.variante; });
   _ffrAssert(etat, vs.indexOf('A') !== -1 && vs.indexOf('B') !== -1, 'variantes : A et B présentes');
   _ffrAssert(etat, t && t.plafond_joueur_min === '65', 'variantes : plafond 65 remonté');
-}
-
-/** Nombre d'équipes sans ligne correspondante ⇒ muet, aucune valeur fabriquée. */
-function testS5_nbEquipesSansLigneMuet(etat) {
-  var res = evaluerConformiteFFR(_ffrRefS5(), '2026-12-05', ['U12'], 'C',
-    { equipesParCategorie: { U12: '99' }, nbDemiJournees: '1' });
-  _ffrAssert(etat, !res.temps.U12, 'muet : 99 équipes (aucune ligne) → pas de grille fabriquée');
 }
 
 /** analyserEffectifsCategories expose désormais `comptes` (ajout non cassant). */
@@ -821,15 +832,6 @@ function testS7_m15fAbsentPasDeBloc(etat) {
   _ffrAssert(etat, !m15, 'm15f : aucun bloc M15F si absente de l\'app');
 }
 
-/** Planning non généré ⇒ B.2 marquée manquant avec le bon motif, rien de dérivé. */
-function testS7_planningNonGenereFormatManquant(etat) {
-  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'],
-    matchsParCategorie: {} }, _cfgAutorisation([{ categorie: 'U12' }]), _refAutorisation());
-  var fmt = _autoChamp(d, 'U12 — format sportif');
-  _ffrAssert(etat, fmt && fmt.etat === 'manquant' && /planning/.test(fmt.origine),
-    'planningNonGenere : B.2 manquant, motif « générer le planning »');
-}
-
 /** Planning à deux phases (CROISE + après-midi) ⇒ phase 1 et phase 2 séparées. */
 function testS7_deuxPhases(etat) {
   var mpc = { U12: [
@@ -843,18 +845,6 @@ function testS7_deuxPhases(etat) {
   var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
   _ffrAssert(etat, p1 && p1.valeur === '2', 'deuxPhases : phase 1 = 2 matchs/équipe');
   _ffrAssert(etat, p2 && p2.valeur === '1', 'deuxPhases : phase 2 = 1 match/équipe');
-}
-
-/** Planning à une phase (CROISE sans après-midi) ⇒ seule la ligne « 1 phase ». */
-function testS7_unePhase(etat) {
-  var mpc = { U12: [
-    { phase: 'poule', equipe_A: 'T1', equipe_B: 'T2' }, { phase: 'poule', equipe_A: 'T1', equipe_B: 'T3' }
-  ] };
-  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
-    _cfgAutorisation([{ categorie: 'U12', format_apresmidi: 'CROISE', format_mi_temps: '2', duree_mi_temps_min: '10' }]),
-    _refAutorisation());
-  _ffrAssert(etat, !!_autoChamp(d, '1 phase : matchs/équipe'), 'unePhase : ligne « 1 phase » présente');
-  _ffrAssert(etat, !_autoChamp(d, 'Phase 2'), 'unePhase : pas de phase 2');
 }
 
 /** LIBRE avec matin ET après-midi ⇒ 1 phase, matchs/équipe compte les deux. */
@@ -902,4 +892,149 @@ function testS7_defautNomClub(etat) {
   var d = assemblerDossierAutorisation({}, { global: {}, categories: [] }, { formes: [] });
   var nom = _autoChamp(d, 'Nom du club');
   _ffrAssert(etat, nom && nom.valeur === 'Racing Club de France Rugby', 'defautClub : Racing Club de France Rugby');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 8 — le PRÉVU vs l'EXÉCUTÉ + plafond de temps de jeu récupérable    */
+/* -------------------------------------------------------------------------- */
+
+/** Config d'une catégorie CROISE avec durée de match (zone B) pour les tests de format. */
+function _cfgCroise() {
+  return _cfgAutorisation([{ categorie: 'U12', format_apresmidi: 'CROISE', format_mi_temps: '2', duree_mi_temps_min: '10' }]);
+}
+
+/** §4.7 #1 — CROISE SANS aucun match de classement ⇒ 2 phases DÉCLARÉES (l'intention, pas l'exécution). */
+function testS8_croiseSansApremDeuxPhases(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', equipe_A: 'T1', equipe_B: 'T2' }, { phase: 'poule', equipe_A: 'T1', equipe_B: 'T3' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgCroise(), _refAutorisation());
+  _ffrAssert(etat, !!_autoChamp(d, 'Phase 1 (poules de qualification)'), 'croise2ph : Phase 1 déclarée');
+  _ffrAssert(etat, !!_autoChamp(d, 'Phase 2 (poules de niveau)'), 'croise2ph : Phase 2 déclarée malgré l\'absence de matchs d\'après-midi');
+  _ffrAssert(etat, !_autoChamp(d, '1 phase : matchs/équipe'), 'croise2ph : jamais « 1 phase » pour un CROISE');
+}
+
+/** §4.7 #2 — même cas : Phase 2 matchs/équipe MANQUANT, Phase 1 renseignée (informations séparées). */
+function testS8_croisePhase2Manquante(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', equipe_A: 'T1', equipe_B: 'T2' }, { phase: 'poule', equipe_A: 'T1', equipe_B: 'T3' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgCroise(), _refAutorisation());
+  var p1 = _autoChamp(d, 'Phase 1 (poules de qualification) : matchs/équipe');
+  var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
+  _ffrAssert(etat, p1 && p1.valeur === '2' && p1.etat === 'calcule', 'phase2manq : Phase 1 = 2 matchs/équipe (renseignée)');
+  _ffrAssert(etat, p2 && p2.etat === 'manquant', 'phase2manq : Phase 2 matchs/équipe manquant (planning après-midi non généré)');
+}
+
+/** §4.7 #4 — format d'après-midi ABSENT ⇒ manquant, AUCUNE phase déclarée. */
+function testS8_formatAbsentManquant(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: {} },
+    _cfgAutorisation([{ categorie: 'U12' }]), _refAutorisation());
+  var fmt = _autoChamp(d, 'U12 — format sportif');
+  _ffrAssert(etat, fmt && fmt.etat === 'manquant' && /non configuré/.test(fmt.origine),
+    'formatAbsent : manquant, motif « format d\'après-midi non configuré »');
+  _ffrAssert(etat, !_autoChamp(d, 'Phase 1') && !_autoChamp(d, 'Phase 2') && !_autoChamp(d, '1 phase'),
+    'formatAbsent : aucune phase déclarée');
+}
+
+/** COUPE_PLATEAU (réponse utilisateur) ⇒ manquant + signalement des PHASES FINALES INTERDITES en EDR. */
+function testS8_coupePlateauSignalement(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: {} },
+    _cfgAutorisation([{ categorie: 'U12', format_apresmidi: 'COUPE_PLATEAU' }]), _refAutorisation());
+  var fmt = _autoChamp(d, 'U12 — format sportif');
+  var avert = _autoChamp(d, 'phases finales interdites');
+  _ffrAssert(etat, fmt && fmt.etat === 'manquant' && /COUPE_PLATEAU/.test(fmt.origine),
+    'coupePlateau : manquant, motif hors périmètre EDR');
+  _ffrAssert(etat, avert && avert.etat === 'avert' && /interdit/i.test(avert.valeur),
+    'coupePlateau : signalement des phases finales interdites (informatif, ffr-orange)');
+}
+
+/** §4.7 #5 — ClubsInvites vide + équipes présentes ⇒ nombre de clubs depuis les équipes, origine indiquée. */
+function testS8_clubsDepuisEquipes(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' },
+    participants: { nbClubsInvites: 0, nbClubsEquipes: 5, nbEquipes: 12, nbParticipants: 0 } },
+    { global: {}, categories: [] }, { formes: [] });
+  var c = _autoChamp(d, 'Nombre de clubs');
+  _ffrAssert(etat, c && c.valeur === '5' && c.etat === 'calcule', 'clubsEquipes : 5 clubs depuis les équipes');
+  _ffrAssert(etat, c && /distincts/.test(c.origine), 'clubsEquipes : origine « clubs distincts (équipes) » indiquée');
+}
+
+/** §4.7 #6 — ClubsInvites renseigné ⇒ il PRIME sur le comptage depuis les équipes. */
+function testS8_clubsInvitesPrime(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' },
+    participants: { nbClubsInvites: 8, nbClubsEquipes: 5, nbEquipes: 12, nbParticipants: 0 } },
+    { global: {}, categories: [] }, { formes: [] });
+  var c = _autoChamp(d, 'Nombre de clubs');
+  _ffrAssert(etat, c && c.valeur === '8', 'clubsPrime : 8 clubs acceptés priment sur les 5 déduits');
+  _ffrAssert(etat, c && /invitation/.test(c.origine), 'clubsPrime : origine « clubs acceptés (invitations) »');
+}
+
+/** §4.7 #7 — participants : aucune source ⇒ manquant, JAMAIS une estimation. */
+function testS8_participantsManquantJamaisEstime(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' },
+    participants: { nbClubsInvites: 0, nbClubsEquipes: 5, nbEquipes: 12, nbParticipants: 0 } },
+    { global: {}, categories: [] }, { formes: [] });
+  var p = _autoChamp(d, 'Nombre de participants');
+  _ffrAssert(etat, p && p.etat === 'manquant' && p.valeur === '',
+    'participantsManq : aucune source → manquant, valeur vide (aucun ratio appliqué)');
+}
+
+/** §4.7 #8 — 29 équipes / 0 club ⇒ incohérence signalée, SANS incrémenter le compteur de manquants. */
+function testS8_incoherenceEquipesSansClub(etat) {
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' },
+    participants: { nbClubsInvites: 0, nbClubsEquipes: 0, nbEquipes: 29, nbParticipants: 0 } },
+    { global: {}, categories: [] }, { formes: [] });
+  var av = _autoChamp(d, 'Cohérence clubs');
+  _ffrAssert(etat, av && av.etat === 'avert' && /29/.test(av.valeur) && /aucun club/.test(av.valeur),
+    'incoherence : « 29 équipes mais aucun club » signalé');
+  _ffrAssert(etat, av && av.etat !== 'manquant', 'incoherence : état « avert » ⇒ hors compteur de manquants');
+}
+
+/** §4.7 #9 — 12 équipes en M10 : grille FFR muette (3–6 seulement) MAIS plafond présent (85). */
+function testS8_plafond12EquipesPresent(etat) {
+  var t = tempsPourCategorieFFR(_ffrRefS5().temps, '10', ['5x5'], '2', '12');
+  _ffrAssert(etat, !!t && t.plafond_joueur_min === '85', 'plafond12 : plafond 85 présent malgré 12 équipes');
+  _ffrAssert(etat, t && t.grilles.length === 0, 'plafond12 : grille muette au-delà de 6 équipes');
+}
+
+/** §4.7 #10 — recherche de plafond ÉLARGIE : la ligne Sevens (nb_demi_journees vide) n'est jamais retenue. */
+function testS8_plafondElargiJamaisSevens(etat) {
+  // M14/7x7 avec un nombre d'équipes SANS grille (99) : le plafond élargi ne doit jamais remonter le 42.
+  var t = tempsPourCategorieFFR(_ffrRefS5().temps, '14', ['7x7'], '1', '99');
+  _ffrAssert(etat, !t || t.plafond_joueur_min !== '42', 'sevensElargi : jamais 42 même en recherche élargie');
+  _ffrAssert(etat, t && t.plafond_joueur_min === '65', 'sevensElargi : plafond légitime 65 remonté');
+}
+
+/** §4.7 #11 — M10, 2 demi-journées ⇒ plafond 85 min. */
+function testS8_plafondM10DeuxDemiJournees(etat) {
+  var t = tempsPourCategorieFFR(_ffrRefS5().temps, '10', ['5x5'], '2', '6');
+  _ffrAssert(etat, !!t && t.plafond_joueur_min === '85', 'plafondM10 : M10 / 2 demi-journées → 85 min');
+}
+
+/** §4.7 #12 — prévisionnel : 3 matchs × 2 × 10 = 60 min, plafond 85 ⇒ sous le plafond, marge 25. */
+function testS8_previsionnelSousPlafond(etat) {
+  var p = tempsPrevisionnelJoueurFFR('3', '2', '10', '85');
+  _ffrAssert(etat, p && p.minutes === 60 && p.depasse === false, 'prevSous : 60 min, sous le plafond');
+  _ffrAssert(etat, p && p.marge === 25, 'prevSous : marge 25 min');
+}
+
+/** §4.7 #13 — prévisionnel : 5 matchs × 2 × 10 = 100 min, plafond 85 ⇒ dépassement de 15 min. */
+function testS8_previsionnelDepassement(etat) {
+  var p = tempsPrevisionnelJoueurFFR('5', '2', '10', '85');
+  _ffrAssert(etat, p && p.minutes === 100 && p.depasse === true, 'prevDep : 100 min, dépasse le plafond');
+  _ffrAssert(etat, p && p.depassement === 15, 'prevDep : dépassement de 15 min');
+}
+
+/** §4.7 #14 — matchs par équipe inconnus ⇒ aucun calcul, aucune alerte (null). */
+function testS8_previsionnelMatchsInconnus(etat) {
+  _ffrAssert(etat, tempsPrevisionnelJoueurFFR(null, '2', '10', '85') === null, 'prevInconnu : matchs null → aucun calcul');
+  _ffrAssert(etat, tempsPrevisionnelJoueurFFR('', '2', '10', '85') === null, 'prevInconnu : matchs vide → aucun calcul');
+}
+
+/** §4.7 #15 — nb_demi_journees absent ⇒ traité comme 2 ; une valeur saisie est respectée. */
+function testS8_nbDemiJourneesDefaut2(etat) {
+  _ffrAssert(etat, nbDemiJourneesConfig({ global: {} }) === '2', 'ndjDefaut : absent → 2');
+  _ffrAssert(etat, nbDemiJourneesConfig({ global: { nb_demi_journees: '1' } }) === '1', 'ndjDefaut : valeur saisie respectée');
 }

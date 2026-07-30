@@ -124,10 +124,11 @@ function creerOngletConfig(classeur) {
     // Zone de vacances scolaires (contrôle de conformité FFR). Défaut 'C' (Île-de-France).
     // Migration douce : si le paramètre est absent d'un Sheet en service, il est traité comme 'C'.
     ['zone_vacances', 'C'],
-    // Nombre de demi-journées du tournoi (grille de temps FFR). Défaut 1 = lecture la PLUS PRUDENTE
-    // (le plafond de temps de jeu est un maximum : partir de la valeur basse fait alerter plus tôt).
-    // Migration douce : absent ⇒ traité comme 1. Question posée au directeur EDR (audit Q23).
-    ['nb_demi_journees', '1'],
+    // Nombre de demi-journées du tournoi (grille de temps FFR). Défaut 2 : un tournoi matin +
+    // après-midi occupe DEUX demi-journées (Q23 close par le directeur EDR du Racing, 27/07/2026 ;
+    // corroboré par le pied des fiches FFR « Si 3 demi-journées, temps de jeu = 100 minutes »).
+    // Migration douce : absent ⇒ traité comme 2 (§4.6). Ne modifie AUCUNE valeur déjà saisie.
+    ['nb_demi_journees', '2'],
     // ── Demande d'autorisation de tournoi EDR (session 7) — feuille de report du formulaire FFR.
     // Données PERSONNELLES (noms/tels/mails du représentant et du président) : PRIVÉES par défaut
     // (jamais dans CONFIG_PUBLIQUE_VUES). N'inventer AUCUNE valeur : un champ vide reste « manquant ».
@@ -138,8 +139,11 @@ function creerOngletConfig(classeur) {
     ['org_representant_nom', ''], ['org_representant_tel', ''], ['org_representant_mail', ''],
     ['org_president_nom', ''], ['org_president_tel', ''], ['org_president_mail', ''],
     ['org_label_edr', 'oui'], ['org_label_date', ''],
-    // A.2 Niveau du tournoi (liste fermée) · A.4 équipes étrangères
+    // A.2 Niveau du tournoi (liste fermée) · A.4 équipes étrangères + nombre de participants.
+    // org_nb_participants : saisi, utilisé UNIQUEMENT en repli quand aucun club n'a déclaré ses
+    // effectifs (équipes saisies à la main, hors circuit d'invitation). Jamais estimé (§4.2).
     ['org_niveau_tournoi', ''], ['org_equipes_etrangeres', 'non'], ['org_equipes_etrangeres_liste', ''],
+    ['org_nb_participants', ''],
     // B.1 Installations
     ['org_type_terrain', ''], ['org_nb_vestiaires', ''],
     // B.3 Arbitrage (compteurs GLOBAUX ; distincts d'arbitrage_organisation, texte par catégorie)
@@ -804,10 +808,15 @@ function tempsPourCategorieFFR(tempsRef, cleCat, effs, nbDJ, nbEq) {
     if (normaliserCategorie(t.categorie) !== cleCat) continue;
     var teff = String(t.effectif == null ? '' : t.effectif).trim();
     if ((effs || []).indexOf(teff) === -1) continue;
-    var teq = String(t.nb_equipes == null ? '' : t.nb_equipes).trim();
-    if (teq !== '' && teq !== nbEq) continue; // grille d'un autre nombre d'équipes
+    // PLAFOND (contrainte de SÉCURITÉ) : porté par CHAQUE ligne du triplet catégorie + effectif +
+    // nb_demi_journees. On le capture AVANT le filtre nb_equipes (session 8, §4.4) : les grilles FFR
+    // ne couvrent que 3–6 équipes, mais un tournoi de club en compte le double ; sans cela le plafond
+    // — la seule règle qui ENGAGE — disparaissait avec la grille. Toutes les lignes d'un même triplet
+    // portent la MÊME valeur (vérifié) ⇒ le premier non vide fait foi.
     var plaf = String(t.plafond_joueur_min == null ? '' : t.plafond_joueur_min).trim();
     if (plaf && !plafond) plafond = plaf;
+    var teq = String(t.nb_equipes == null ? '' : t.nb_equipes).trim();
+    if (teq !== '' && teq !== nbEq) continue; // grille d'un autre nombre d'équipes (plafond déjà pris)
     if (teq !== '') { // teq vide = plafond seul (pas de grille) ; teq === nbEq = grille de ce tournoi
       grilles.push({
         variante:               String(t.variante || '').trim(),
@@ -824,6 +833,34 @@ function tempsPourCategorieFFR(tempsRef, cleCat, effs, nbDJ, nbEq) {
   }
   if (!grilles.length && !plafond) return null; // rien ne correspond ⇒ muet
   return { grilles: grilles, plafond_joueur_min: plafond, nb_equipes: nbEq, nb_demi_journees: nbDJ };
+}
+
+/**
+ * Temps de jeu MAXIMUM par joueur, en minutes (session 8, §4.5). BORNE HAUTE : l'app connaît les
+ * matchs par ÉQUIPE, pas par JOUEUR — elle ignore qui entre et qui sort. C'est donc le temps
+ * qu'aurait un enfant qui jouerait CHAQUE minute de CHAQUE match. La bonne quantité pour un contrôle
+ * de SÉCURITÉ, à condition de le nommer ainsi (« si un joueur joue l'intégralité des matchs »).
+ *
+ *   minutes = matchs_par_equipe (toutes phases) × format_mi_temps × duree_mi_temps_min
+ *
+ * Renvoie null si l'un des trois facteurs est inconnu (planning non généré) : aucun calcul, aucune
+ * alerte. Compare au plafond FFR quand il est publié ; sinon expose seulement les minutes. Pur.
+ */
+function tempsPrevisionnelJoueurFFR(matchsParEquipe, formatMiTemps, dureeMiTempsMin, plafond) {
+  var n  = parseInt(matchsParEquipe, 10);
+  var mt = parseInt(formatMiTemps, 10);
+  var dm = parseInt(dureeMiTempsMin, 10);
+  if (!isFinite(n) || n <= 0 || !isFinite(mt) || mt <= 0 || !isFinite(dm) || dm <= 0) return null;
+  var minutes = n * mt * dm;
+  var plaf = parseInt(plafond, 10);
+  var aPlafond = isFinite(plaf) && plaf > 0;
+  return {
+    minutes:     minutes,
+    plafond:     aPlafond ? plaf : null,
+    depasse:     aPlafond ? (minutes > plaf) : false,
+    depassement: aPlafond ? Math.max(0, minutes - plaf) : null,
+    marge:       aPlafond ? Math.max(0, plaf - minutes) : null
+  };
 }
 
 /* ------------- Application des valeurs FFR à une catégorie (pur, session 6) ------------- */
@@ -871,7 +908,7 @@ function fusionnerCategorieFFR(categorieExistante, champsZoneB) {
  * @param {{formes,dates,regles,temps,millesime}} ref  référentiel injecté
  * @param {string} categorieApp        ex 'U12' (réconcilié via normaliserCategorie)
  * @param {string} dateISO             'AAAA-MM-JJ'
- * @param {(string|number)} nbDemiJournees  clé de la grille de temps (défaut 1 côté appelant)
+ * @param {(string|number)} nbDemiJournees  clé de la grille de temps (défaut 2 côté appelant)
  * @param {(string|number)} nbEquipes       clé de la grille de temps (nb d'équipes de la catégorie)
  * @param {?string} variante           'A' | 'B' | null (jeu à 10 seulement)
  * @param {Object} dimensionsActuelles l'objet dimensions_categories courant (fusion, jamais remplacement)
@@ -1143,26 +1180,55 @@ function verifierConformiteFFR(dateTournoiISO, categoriesPresentes, zoneVacances
   return evaluerConformiteFFR(ref, dateTournoiISO, categoriesPresentes, zoneVacances);
 }
 
+/** Nombre de demi-journées lu dans Config, avec le défaut de la migration douce : absent ⇒ 2
+ *  (tournoi matin + après-midi = 2 demi-journées, Q23 close — §4.6). Pur, testable sans classeur. */
+function nbDemiJourneesConfig(config) {
+  return String(((config && config.global) || {}).nb_demi_journees || '').trim() || '2';
+}
+
 /** Action doGet publique : conformité FFR pour une date + catégories + zone données.
  *  Calcule côté serveur (on a le classeur) le nombre d'équipes par catégorie et lit
- *  `nb_demi_journees` de Config (défaut 1) : ce sont les clés de la grille de temps FFR. */
+ *  `nb_demi_journees` de Config (défaut 2) : ce sont les clés de la grille de temps FFR. */
 function getConformiteFFR(classeur, params) {
   var cats = String(params.categories == null ? '' : params.categories)
     .split(',').map(function (s) { return s.trim(); }).filter(Boolean);
   var zone = String(params.zone == null ? '' : params.zone).trim() || 'C';
 
   // Options pour la grille de temps : nb d'équipes par catégorie (comptées dans Equipes) et
-  // nombre de demi-journées (zone A de Config). Migration douce : lecture protégée, défaut 1.
-  var options = null;
+  // nombre de demi-journées (zone A de Config). Migration douce : lecture protégée, défaut 2 (§4.6).
+  var options = null, config = null;
   try {
-    var config = lireConfig(classeur);
+    config = lireConfig(classeur);
     var equipes = lireOngletSimple(classeur, 'Equipes');
     var comptes = analyserEffectifsCategories(config, equipes).comptes || {};
-    var ndj = String((config.global || {}).nb_demi_journees || '').trim() || '1';
-    options = { equipesParCategorie: comptes, nbDemiJournees: ndj };
+    options = { equipesParCategorie: comptes, nbDemiJournees: nbDemiJourneesConfig(config) };
   } catch (e) { options = null; } // toute erreur ⇒ section temps simplement omise
 
-  return evaluerConformiteFFR(getRefFFR(classeur), params.date, cats, zone, options);
+  var res = evaluerConformiteFFR(getRefFFR(classeur), params.date, cats, zone, options);
+
+  // §4.5 — temps de jeu PRÉVISIONNEL par catégorie (borne haute), attaché aux prescriptions temps.
+  // Ne s'ajoute que là où un plafond/grille existe déjà (res.temps[cat]) et où le planning fournit un
+  // nombre de matchs/équipe. Migration douce : toute erreur ⇒ pas de prévisionnel, jamais d'exception.
+  try {
+    if (config) {
+      var matchsParCat = {};
+      lireOngletSimple(classeur, 'Matchs').forEach(function (m) {
+        var c = String(m.categorie || '').trim();
+        if (c) (matchsParCat[c] = matchsParCat[c] || []).push(m);
+      });
+      (config.categories || []).forEach(function (cat) {
+        var nom = String(cat.categorie || '').trim();
+        if (!nom || !res.temps[nom]) return; // pas de prescriptions temps ⇒ rien à comparer
+        var liste = matchsParCat[nom] || [];
+        var mpe = liste.length ? maxMatchsParEquipe(liste) : null; // toutes phases (journée entière)
+        var prev = tempsPrevisionnelJoueurFFR(mpe, cat.format_mi_temps, cat.duree_mi_temps_min,
+          res.temps[nom].plafond_joueur_min);
+        if (prev) res.temps[nom].previsionnel = prev;
+      });
+    }
+  } catch (e) { /* migration douce : pas de prévisionnel */ }
+
+  return res;
 }
 
 /**
@@ -1170,7 +1236,7 @@ function getConformiteFFR(classeur, params) {
  * tournoi. Le frontend n'envoie QUE `{ categorie, date, variante }` — le serveur relit le
  * référentiel et dérive lui-même les valeurs via `calculerApplicationFFR` (sinon la page pourrait
  * écrire n'importe quoi en se réclamant de la FFR). `nb_equipes` (comptes) et `nb_demi_journees`
- * (Config, défaut 1) sont calculés ici, comme dans getConformiteFFR.
+ * (Config, défaut 2) sont calculés ici, comme dans getConformiteFFR.
  *
  * Écrit : zone B par RELECTURE + FUSION + ligne complète (jamais partielle) ; `dimensions_categories`
  * par fusion de l'objet global. Renvoie le détail de ce qui a été écrit ET ignoré (avec raisons).
@@ -1186,7 +1252,7 @@ function appliquerValeursFFR(classeur, data) {
   var equipes = lireOngletSimple(classeur, 'Equipes');
   var comptes = analyserEffectifsCategories(config, equipes).comptes || {};
   var nbEquipes = comptes[categorie];
-  var nbDemiJournees = String((config.global || {}).nb_demi_journees || '').trim() || '1';
+  var nbDemiJournees = nbDemiJourneesConfig(config); // défaut 2 (§4.6)
   var dims = {};
   try { if ((config.global || {}).dimensions_categories) dims = JSON.parse(config.global.dimensions_categories) || {}; }
   catch (e) { dims = {}; }
@@ -1241,6 +1307,7 @@ function appliquerValeursFFR(classeur, data) {
 var CHAMPS_AUTORISATION = ['org_club_nom', 'org_code_club', 'org_representant_nom', 'org_representant_tel',
   'org_representant_mail', 'org_president_nom', 'org_president_tel', 'org_president_mail', 'org_label_edr',
   'org_label_date', 'org_niveau_tournoi', 'org_equipes_etrangeres', 'org_equipes_etrangeres_liste',
+  'org_nb_participants',
   'org_type_terrain', 'org_nb_vestiaires', 'org_nb_arbitres', 'org_nb_educateurs', 'org_nb_doublettes',
   'org_medecin_oui', 'org_medecin_nom', 'org_medecin_tel', 'org_secours_nom', 'org_secours_tel',
   'org_ambulance', 'org_droits_oui', 'org_droits_montant', 'org_hebergement_oui', 'org_hebergement_structure',
@@ -1312,27 +1379,47 @@ function dureeMatchLibelleAutorisation(cfgCat) {
 }
 
 /**
- * Format sportif d'UNE catégorie, dérivé des matchs GÉNÉRÉS (pur). null si aucun match (planning
- * non généré pour la catégorie). Deux phases = format d'après-midi CROISE/CROISE_DIAGONAL AVEC des
- * matchs de classement. LIBRE ⇒ une seule phase, mais le nombre de matchs/équipe compte TOUTE la
- * journée (les amicaux de l'après-midi comptent : le formulaire demande combien joue un enfant).
+ * Format sportif d'UNE catégorie. Le nombre de PHASES se déduit de l'INTENTION — le format
+ * d'après-midi DÉCLARÉ (zone B) — JAMAIS de l'existence de matchs (session 8, §4.1). La demande
+ * d'autorisation se dépose des semaines avant le tournoi : l'après-midi n'est généré que le jour J,
+ * une fois les scores du matin saisis. Déduire les phases des matchs générés déclarait « 1 phase »
+ * pour un CROISE tant que l'après-midi n'existait pas — le bug corrigé ici.
+ *
+ *   - CROISE / CROISE_DIAGONAL → 2 phases (poules de qualification puis poules de niveau)
+ *   - LIBRE                    → 1 phase, matchs/équipe comptant TOUTE la journée (amicaux compris)
+ *   - COUPE_PLATEAU            → statut « manquant » : phases finales HORS PÉRIMÈTRE École de Rugby
+ *   - vide / inconnu           → statut « manquant », motif « format d'après-midi non configuré »
+ *
+ * Le nombre de matchs/équipe se remplit ensuite INDÉPENDAMMENT, phase par phase : compté si les
+ * matchs existent, sinon `null` (⇒ « manquant » côté feuille) SANS faire basculer le nb de phases. Pur.
  */
 function formatSportifCategorie(matchsCat, cfgCat) {
   var liste = matchsCat || [];
-  if (!liste.length) return null;
   var matin = liste.filter(function (m) { return String(m.phase) !== 'classement'; });
   var aprem = liste.filter(function (m) { return String(m.phase) === 'classement'; });
   var fmt = String((cfgCat && cfgCat.format_apresmidi) || '').trim().toUpperCase();
-  var deuxPhases = (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL') && aprem.length > 0;
   var duree = dureeMatchLibelleAutorisation(cfgCat);
-  if (deuxPhases) {
-    return { deuxPhases: true, duree: duree,
-             phase1: { matchsParEquipe: maxMatchsParEquipe(matin), duree: duree },
-             phase2: { matchsParEquipe: maxMatchsParEquipe(aprem), duree: duree } };
+  function compter(sousListe) { return sousListe.length ? maxMatchsParEquipe(sousListe) : null; }
+
+  if (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL') {
+    return { statut: 'ok', deuxPhases: true, duree: duree,
+             phase1: { matchsParEquipe: compter(matin), duree: duree },
+             phase2: { matchsParEquipe: compter(aprem), duree: duree } };
   }
-  // Une phase : compte TOUS les matchs de la journée (matin + amicaux d'après-midi éventuels).
-  return { deuxPhases: false, duree: duree,
-           unePhase: { matchsParEquipe: maxMatchsParEquipe(liste), duree: duree } };
+  if (fmt === 'LIBRE') {
+    // Une phase : matchs/équipe compte TOUS les matchs de la journée (matin + amicaux d'après-midi).
+    return { statut: 'ok', deuxPhases: false, duree: duree,
+             unePhase: { matchsParEquipe: compter(liste), duree: duree } };
+  }
+  if (fmt === 'COUPE_PLATEAU') {
+    // Format à élimination : les phases finales (quarts, demies, finale) sont INTERDITES en tournoi/
+    // plateau École de Rugby — raison pour laquelle COUPE_PLATEAU est masqué dans l'UI (session 2).
+    return { statut: 'manquant', deuxPhases: false, coupePlateau: true,
+             motif: 'format COUPE_PLATEAU — hors périmètre École de Rugby' };
+  }
+  // Vide ou inconnu : on n'invente RIEN (doctrine §1.12). Le format historique « vide = CROISE » ne
+  // s'applique qu'à la génération, pas à la déclaration d'intention de la demande d'autorisation.
+  return { statut: 'manquant', deuxPhases: false, motif: 'format d\'après-midi non configuré' };
 }
 
 /**
@@ -1431,18 +1518,53 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   }
   sections.push({ titre: 'A.3 — Catégories et formes de jeu', champs: champsFormes });
 
-  // A.4 PARTICIPANTS (calculé) + équipes étrangères (saisi)
+  // A.4 PARTICIPANTS — chaque compteur suit une CASCADE de sources (modèle des terrains, session 7).
+  // Un tournoi dont les équipes sont saisies à la main (sans circuit d'invitation) a ClubsInvites vide :
+  // le zéro « clubs » y est exact mais faux en pratique. On retombe alors sur les données saisies.
   var nbEquipes = participants.nbEquipes;
-  var champsPart = [
-    calcule('Nombre de clubs', participants.nbClubs != null ? String(participants.nbClubs) : ''),
-    calcule('Nombre d\'équipes (minimum 3)', nbEquipes != null ? String(nbEquipes) : ''),
-    calcule('Nombre de participants', participants.nbParticipants != null ? String(participants.nbParticipants) : ''),
-    saisi('Équipes étrangères', 'org_equipes_etrangeres')
-  ];
-  if (nbEquipes != null && Number(nbEquipes) < 3) {
-    champsPart[1].etat = 'manquant';
-    champsPart[1].origine = 'calculé — ⚠️ le formulaire exige un minimum de 3 équipes';
+
+  // Clubs : clubs acceptés (invitations) ; sinon clubs distincts déduits des équipes ; sinon manquant.
+  var champClubs;
+  if (participants.nbClubsInvites != null && participants.nbClubsInvites > 0) {
+    champClubs = { libelle: 'Nombre de clubs', valeur: String(participants.nbClubsInvites),
+      etat: 'calcule', origine: 'calculé — clubs acceptés (invitations)' };
+  } else if (participants.nbClubsEquipes != null && participants.nbClubsEquipes > 0) {
+    champClubs = { libelle: 'Nombre de clubs', valeur: String(participants.nbClubsEquipes),
+      etat: 'calcule', origine: 'calculé — clubs distincts identifiés dans les équipes' };
+  } else {
+    champClubs = { libelle: 'Nombre de clubs', valeur: '', etat: 'manquant', origine: 'aucun club identifié' };
   }
+
+  // Participants : somme des joueurs déclarés (invitations) ; sinon org_nb_participants (saisi) ; sinon
+  // manquant. N'est déductible de RIEN (ni équipes ni noms) : jamais estimé par un ratio (§4.2).
+  var champParticipants;
+  if (participants.nbParticipants != null && participants.nbParticipants > 0) {
+    champParticipants = { libelle: 'Nombre de participants', valeur: String(participants.nbParticipants),
+      etat: 'calcule', origine: 'calculé — somme des joueurs déclarés (invitations)' };
+  } else {
+    champParticipants = champ('Nombre de participants', champSaisiAutorisation(config, 'org_nb_participants'));
+    if (champParticipants.etat === 'saisi') champParticipants.origine = 'saisi (nombre de participants)';
+  }
+
+  var champEquipes = calcule('Nombre d\'équipes (minimum 3)', nbEquipes != null ? String(nbEquipes) : '');
+  if (nbEquipes != null && Number(nbEquipes) < 3) {
+    champEquipes.etat = 'manquant';
+    champEquipes.origine = 'calculé — ⚠️ le formulaire exige un minimum de 3 équipes';
+  }
+
+  var champsPart = [champClubs, champEquipes, champParticipants, saisi('Équipes étrangères', 'org_equipes_etrangeres')];
+
+  // Contrôles de cohérence (§4.3) — INFORMATIFS (état 'avert', ffr-orange), JAMAIS comptés en manquants.
+  var ne = (nbEquipes != null) ? Number(nbEquipes) : null;
+  if (ne != null && ne > 0 && champClubs.etat === 'manquant') {
+    champsPart.push({ libelle: '⚠️ Cohérence clubs', valeur: ne + ' équipe(s) déclarée(s) mais aucun club identifié.',
+      etat: 'avert', origine: 'contrôle de cohérence' });
+  }
+  if (ne != null && ne > 0 && champParticipants.etat === 'manquant') {
+    champsPart.push({ libelle: '⚠️ Cohérence participants', valeur: ne + ' équipe(s) déclarée(s) mais aucun participant.',
+      etat: 'avert', origine: 'contrôle de cohérence' });
+  }
+
   if (String(g.org_equipes_etrangeres || '').trim().toLowerCase() === 'oui') {
     champsPart.push(saisi('Liste des équipes étrangères (noms, prénoms, dates de naissance)', 'org_equipes_etrangeres_liste'));
     champsPart.push({ libelle: 'Rappel équipes étrangères', valeur: 'Joindre à la ligue : autorisation des fédérations étrangères, liste nominative, dates de naissance.',
@@ -1462,24 +1584,38 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
     saisi('Nombre de vestiaires utilisés', 'org_nb_vestiaires')
   ] });
 
-  // B.2 FORMAT SPORTIF (calculé, par catégorie présente ; manquant si planning absent)
+  // B.2 FORMAT SPORTIF — le nombre de PHASES vient du format DÉCLARÉ (intention) ; les matchs/équipe
+  // se remplissent phase par phase, « manquant » tant que le planning n'est pas généré (session 8).
   var champsFormat = [];
+  var incoherencesFormat = [];
   var mpc = donneesApp.matchsParCategorie || {};
+  // Matchs/équipe d'une phase : chiffre si connu, sinon « manquant » (planning non généré) — SANS
+  // remettre en cause le nombre de phases (déjà connu par le format déclaré).
+  function ligneMatchsPhase(libelle, mpe) {
+    return (mpe == null)
+      ? { libelle: libelle, valeur: '', etat: 'manquant', origine: 'générer le planning d\'abord' }
+      : calcule(libelle, String(mpe));
+  }
   (donneesApp.catsPresentes || []).forEach(function (catApp) {
     var cfgCat = (config.categories || []).filter(function (c) { return String(c.categorie).trim() === catApp; })[0] || {};
     var fs = formatSportifCategorie(mpc[catApp] || [], cfgCat);
-    if (!fs) {
-      champsFormat.push({ libelle: catApp + ' — format sportif', valeur: '', etat: 'manquant',
-        origine: 'générer le planning d\'abord' });
+    if (fs.statut === 'manquant') {
+      champsFormat.push({ libelle: catApp + ' — format sportif', valeur: '', etat: 'manquant', origine: fs.motif });
+      if (fs.coupePlateau) {
+        incoherencesFormat.push({ libelle: catApp + ' — ⚠️ phases finales interdites',
+          valeur: 'Le format à élimination (quarts, demies, finale) est INTERDIT sur les tournois et ' +
+            'plateaux École de Rugby. Retire ce format ou choisis CROISE / LIBRE.', etat: 'avert',
+          origine: 'formulaire FFR — interdiction des phases finales EDR' });
+      }
       return;
     }
     if (fs.deuxPhases) {
-      champsFormat.push(calcule(catApp + ' — Phase 1 (poules de qualification) : matchs/équipe', String(fs.phase1.matchsParEquipe)));
+      champsFormat.push(ligneMatchsPhase(catApp + ' — Phase 1 (poules de qualification) : matchs/équipe', fs.phase1.matchsParEquipe));
       champsFormat.push(calcule(catApp + ' — Phase 1 : durée de match', fs.phase1.duree));
-      champsFormat.push(calcule(catApp + ' — Phase 2 (poules de niveau) : matchs/équipe', String(fs.phase2.matchsParEquipe)));
+      champsFormat.push(ligneMatchsPhase(catApp + ' — Phase 2 (poules de niveau) : matchs/équipe', fs.phase2.matchsParEquipe));
       champsFormat.push(calcule(catApp + ' — Phase 2 : durée de match', fs.phase2.duree));
     } else {
-      champsFormat.push(calcule(catApp + ' — 1 phase : matchs/équipe (journée entière)', String(fs.unePhase.matchsParEquipe)));
+      champsFormat.push(ligneMatchsPhase(catApp + ' — 1 phase : matchs/équipe (journée entière)', fs.unePhase.matchsParEquipe));
       champsFormat.push(calcule(catApp + ' — 1 phase : durée de match', fs.unePhase.duree));
     }
     if (normaliserCategorie(catApp) === '6') {
@@ -1487,10 +1623,11 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
     }
     champsFormat.push(saisi(catApp + ' — Récompenses', 'org_recompenses_' + catApp));
   });
-  if (!champsFormat.length) {
-    champsFormat.push({ libelle: 'Format sportif', valeur: '', etat: 'manquant', origine: 'générer le planning d\'abord' });
+  if (!champsFormat.length && !incoherencesFormat.length) {
+    champsFormat.push({ libelle: 'Format sportif', valeur: '', etat: 'manquant', origine: 'aucune catégorie présente' });
   }
-  sections.push({ titre: 'B.2 — Format sportif', champs: champsFormat, note: 'Même durée de match aux deux phases (réglage par catégorie, zone B).' });
+  sections.push({ titre: 'B.2 — Format sportif', champs: champsFormat.concat(incoherencesFormat),
+    note: 'Nombre de phases = format d\'après-midi déclaré (zone B) ; matchs/équipe remplis à la génération du planning. Même durée aux deux phases.' });
 
   // B.3 ARBITRAGE (saisi ; arbitrage_organisation est affiché à part côté écran, hors feuille)
   sections.push({ titre: 'B.3 — Arbitrage', champs: [
@@ -1549,15 +1686,24 @@ function getDossierAutorisation(classeur) {
     .filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; })
     .map(function (c) { return String(c.categorie || '').trim(); }).filter(Boolean);
 
-  // Participants : clubs ayant ACCEPTÉ, équipes, somme des joueurs déclarés.
-  var nbClubs = 0, nbParticipants = 0;
+  // Participants — CASCADE (§4.2). Source 1 : circuit d'invitation (clubs acceptés + somme des joueurs
+  // déclarés). Source 2 : clubs distincts déduits des noms d'équipes via clubDe (convention « {club} »
+  // / « {club}-N », déjà utilisée en production pour la répartition des poules). La somme des joueurs
+  // n'a PAS de source 2 : elle ne se déduit d'aucun nom ⇒ retombera sur org_nb_participants (saisi).
+  var nbClubsInvites = 0, nbParticipants = 0;
   clubs.forEach(function (c) {
     if (statutClubCanonique(c.statut) === 'Accepté') {
-      nbClubs++;
+      nbClubsInvites++;
       var n = parseInt(c.nb_joueurs_total, 10);
       if (isFinite(n)) nbParticipants += n;
     }
   });
+  var setClubsEquipes = {};
+  equipes.forEach(function (e) {
+    var c = clubDe(e.nom_equipe);
+    if (c) setClubsEquipes[c] = true;
+  });
+  var nbClubsEquipes = Object.keys(setClubsEquipes).length;
 
   // Matchs par catégorie (pour dériver le format sportif).
   var mpc = {};
@@ -1591,7 +1737,8 @@ function getDossierAutorisation(classeur) {
       heure_debut: g.heure_debut,
       heure_fin: g.heure_fin_projetee || g.heure_fin_matin || g.heure_fin || ''
     },
-    participants: { nbClubs: nbClubs, nbEquipes: equipes.length, nbParticipants: nbParticipants },
+    participants: { nbClubsInvites: nbClubsInvites, nbClubsEquipes: nbClubsEquipes,
+                    nbEquipes: equipes.length, nbParticipants: nbParticipants },
     catsPresentes: catsPresentes,
     matchsParCategorie: mpc,
     terrains: terrains
