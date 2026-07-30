@@ -863,6 +863,120 @@ function tempsPrevisionnelJoueurFFR(matchsParEquipe, formatMiTemps, dureeMiTemps
   };
 }
 
+/* ---- Prévisionnel sur la JOURNÉE ENTIÈRE (session 9) : prédire la phase 2, pas seulement le matin ----
+ * Défaut corrigé : la session 8 ne comptait que les matchs EXISTANTS (le matin). Sur un tournoi en
+ * deux phases dont l'après-midi n'est pas encore généré (le cas normal AVANT le jour J), le contrôle
+ * concluait « sous le plafond » sur un total partiel — un contrôle de sécurité qui rassure à tort.
+ * L'après-midi est PRÉVISIBLE par ARITHMÉTIQUE de la structure des poules (planifierApresMidi ne
+ * tronque JAMAIS par le temps) : c'est une conséquence de la structure, pas une estimation. */
+
+/**
+ * Structure des poules du matin, dérivée des matchs (pur). Le nombre de matchs/équipe de l'après-midi
+ * en dépend directement.
+ * @return {{nbPoules:number, poulesEgales:boolean, matinMax:number}}
+ */
+function structureMatinFFR(matin) {
+  var equipesParPoule = {};
+  (matin || []).forEach(function (m) {
+    var p = String(m.poule == null ? '' : m.poule).trim();
+    if (!p) return;
+    var set = equipesParPoule[p] || (equipesParPoule[p] = {});
+    [m.equipe_A, m.equipe_B].forEach(function (e) {
+      var id = String(e == null ? '' : e).trim();
+      if (id) set[id] = true;
+    });
+  });
+  var labels = Object.keys(equipesParPoule);
+  var tailles = labels.map(function (p) { return Object.keys(equipesParPoule[p]).length; });
+  var egales = tailles.length > 0 && tailles.every(function (t) { return t === tailles[0]; });
+  return { nbPoules: labels.length, poulesEgales: egales, matinMax: maxMatchsParEquipe(matin) };
+}
+
+/**
+ * Nombre de matchs/équipe (MAX) que produira la phase 2, prédit depuis la structure du matin (pur).
+ *  - CROISE : round-robin par rang → le rang 1 est dans TOUTES les poules ⇒ `nbPoules − 1` (exact,
+ *    même poules inégales ; 0 si une seule poule car le croisé est alors impossible). Nature 'predit'.
+ *  - CROISE_DIAGONAL : chaque équipe = UN appariement diagonal ⇒ `1` en poules ÉGALES (exact, 'predit').
+ *    Poules INÉGALES : le repli des « restes » donne >1 à certaines équipes → non déductible par une
+ *    formule simple ; on renvoie le MINIMUM connu (1) avec nature 'minimum' (borne basse, cf §3.1).
+ * @return {?{valeur:number, nature:('predit'|'minimum')}} null si le format n'a pas de phase 2 prévisible.
+ */
+function matchsPhase2PreditsFFR(nbPoules, poulesEgales, fmt) {
+  var f = String(fmt || '').trim().toUpperCase();
+  if (f === 'CROISE') return { valeur: nbPoules >= 2 ? nbPoules - 1 : 0, nature: 'predit' };
+  if (f === 'CROISE_DIAGONAL') {
+    if (nbPoules < 2) return { valeur: 0, nature: 'predit' };
+    return poulesEgales ? { valeur: 1, nature: 'predit' } : { valeur: 1, nature: 'minimum' };
+  }
+  return null; // LIBRE / COUPE_PLATEAU / inconnu : pas de prédiction de phase 2 (cf previsionnelCategorieFFR)
+}
+
+/**
+ * Assemble l'objet prévisionnel affiché, à partir d'un total de matchs/équipe et de sa NATURE (pur).
+ * Règle d'ASYMÉTRIE (session 9) : un total COMPLET (constaté ou prédit par formule exacte) conclut
+ * dans les deux sens ; un total PARTIEL / BORNE BASSE ('minimum') ne conclut JAMAIS « sous le plafond »
+ * (ajouter les matchs manquants ne peut que l'augmenter) mais conclut TOUJOURS un dépassement déjà
+ * atteint. `margeFaible` (marge ≤ 10 min) n'est signalé que sur un total à deux phases.
+ * @param {{nature:string, complet:boolean, matinMatchs:?number, apremMatchs:?number}} meta
+ * @return {?Object} null si les facteurs de temps sont inconnus (aucun calcul, aucune alerte).
+ */
+function assemblerPrevisionnelJourneeFFR(total, meta, formatMiTemps, dureeMiTempsMin, plafond) {
+  var base = tempsPrevisionnelJoueurFFR(total, formatMiTemps, dureeMiTempsMin, plafond);
+  if (!base) return null;
+  var deuxPhases = meta.nature !== 'journee';
+  var margeFaible = deuxPhases && base.plafond != null && !base.depasse &&
+                    base.marge != null && base.marge <= 10;
+  return {
+    minutes: base.minutes, plafond: base.plafond, depasse: base.depasse,
+    depassement: base.depassement, marge: base.marge,
+    nature: meta.nature, complet: !!meta.complet,
+    matinMatchs: (meta.matinMatchs == null ? null : meta.matinMatchs),
+    apremMatchs: (meta.apremMatchs == null ? null : meta.apremMatchs),
+    margeFaible: margeFaible
+  };
+}
+
+/**
+ * Prévisionnel d'UNE catégorie sur la JOURNÉE ENTIÈRE (pur). Point d'entrée unique câblé par
+ * getConformiteFFR. Distingue le CONSTATÉ du PRÉDIT :
+ *  - matin absent ⇒ null (muet, comme la session 8) ;
+ *  - format hors deux phases (LIBRE / COUPE_PLATEAU / inconnu) ⇒ comportement session 8 INCHANGÉ
+ *    (max sur tous les matchs existants, nature 'journee') ;
+ *  - après-midi DÉJÀ généré ⇒ tout est constaté (nature 'constate'), aucune prédiction ;
+ *  - après-midi non généré ⇒ total = matin (constaté) + phase 2 (prédite), nature 'predit' si la
+ *    prédiction est exacte, 'minimum' si ce n'est qu'une borne basse (DIAGONAL inégal).
+ */
+function previsionnelCategorieFFR(matin, aprem, fmt, formatMiTemps, dureeMiTempsMin, plafond) {
+  matin = matin || []; aprem = aprem || [];
+  if (!matin.length) return null; // muet : pas de matin
+  var f = String(fmt || '').trim().toUpperCase();
+
+  // Formats à UNE phase (ou non prévisibles) : session 8 inchangée — max sur les matchs existants.
+  if (f !== 'CROISE' && f !== 'CROISE_DIAGONAL') {
+    var mpeJournee = maxMatchsParEquipe(matin.concat(aprem));
+    return assemblerPrevisionnelJourneeFFR(mpeJournee,
+      { nature: 'journee', complet: true, matinMatchs: null, apremMatchs: null },
+      formatMiTemps, dureeMiTempsMin, plafond);
+  }
+
+  // Deux phases, après-midi DÉJÀ généré : constaté, journée entière, aucune prédiction.
+  if (aprem.length) {
+    return assemblerPrevisionnelJourneeFFR(maxMatchsParEquipe(matin.concat(aprem)),
+      { nature: 'constate', complet: true, matinMatchs: null, apremMatchs: null },
+      formatMiTemps, dureeMiTempsMin, plafond);
+  }
+
+  // Deux phases, après-midi NON généré : on prédit la phase 2 depuis la structure du matin.
+  var st = structureMatinFFR(matin);
+  var p2 = matchsPhase2PreditsFFR(st.nbPoules, st.poulesEgales, f);
+  if (!p2) return null; // sécurité (ne devrait pas arriver pour CROISE/CROISE_DIAGONAL)
+  var total = st.matinMax + p2.valeur;
+  var complet = (p2.nature === 'predit'); // 'minimum' = borne basse ⇒ total NON complet
+  return assemblerPrevisionnelJourneeFFR(total,
+    { nature: p2.nature, complet: complet, matinMatchs: st.matinMax, apremMatchs: p2.valeur },
+    formatMiTemps, dureeMiTempsMin, plafond);
+}
+
 /* ------------- Application des valeurs FFR à une catégorie (pur, session 6) ------------- */
 
 /**
@@ -1206,9 +1320,10 @@ function getConformiteFFR(classeur, params) {
 
   var res = evaluerConformiteFFR(getRefFFR(classeur), params.date, cats, zone, options);
 
-  // §4.5 — temps de jeu PRÉVISIONNEL par catégorie (borne haute), attaché aux prescriptions temps.
-  // Ne s'ajoute que là où un plafond/grille existe déjà (res.temps[cat]) et où le planning fournit un
-  // nombre de matchs/équipe. Migration douce : toute erreur ⇒ pas de prévisionnel, jamais d'exception.
+  // §4.5 (session 8) + JOURNÉE ENTIÈRE (session 9) — temps de jeu prévisionnel par catégorie, attaché
+  // aux prescriptions temps. Sur un format à deux phases dont l'après-midi n'est pas encore généré, on
+  // PRÉDIT la phase 2 depuis la structure du matin plutôt que de conclure sur le seul matin. Ne s'ajoute
+  // que là où un plafond/grille existe déjà. Migration douce : toute erreur ⇒ pas de prévisionnel.
   try {
     if (config) {
       var matchsParCat = {};
@@ -1220,9 +1335,10 @@ function getConformiteFFR(classeur, params) {
         var nom = String(cat.categorie || '').trim();
         if (!nom || !res.temps[nom]) return; // pas de prescriptions temps ⇒ rien à comparer
         var liste = matchsParCat[nom] || [];
-        var mpe = liste.length ? maxMatchsParEquipe(liste) : null; // toutes phases (journée entière)
-        var prev = tempsPrevisionnelJoueurFFR(mpe, cat.format_mi_temps, cat.duree_mi_temps_min,
-          res.temps[nom].plafond_joueur_min);
+        var matin = liste.filter(function (m) { return String(m.phase) !== 'classement'; });
+        var aprem = liste.filter(function (m) { return String(m.phase) === 'classement'; });
+        var prev = previsionnelCategorieFFR(matin, aprem, formatApresMidi(cat),
+          cat.format_mi_temps, cat.duree_mi_temps_min, res.temps[nom].plafond_joueur_min);
         if (prev) res.temps[nom].previsionnel = prev;
       });
     }
