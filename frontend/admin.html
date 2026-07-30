@@ -493,6 +493,24 @@
         </p>
       </section>
 
+      <!-- Amont : demande d'autorisation de tournoi EDR (feuille de report du formulaire FFR) -->
+      <section class="carte" id="bloc-autorisation">
+        <h2>Demande d'autorisation de tournoi</h2>
+        <p class="note-generation">
+          <strong>Feuille de report</strong> du formulaire officiel FFR : l'app remplit ce qu'elle
+          sait, tu complètes le reste. Ce n'est <strong>pas</strong> le formulaire officiel (fourni
+          par la Ligue) — c'est un pense-bête à imprimer pour n'avoir plus qu'à recopier.<br>
+          Aucun champ n'est deviné : un champ inconnu reste <strong>vide et marqué « manquant »</strong>.
+        </p>
+        <div id="autorisation-saisie"></div>
+        <div class="ligne-action">
+          <button type="button" class="bouton" id="bouton-enregistrer-autorisation" data-ic="enregistrer">Enregistrer les champs saisis</button>
+          <button type="button" class="bouton bouton-secondaire" id="bouton-imprimer-autorisation" data-ic="imprimer">Imprimer la feuille</button>
+        </div>
+        <div id="autorisation-message" class="message-form" role="status" aria-live="polite"></div>
+        <div id="autorisation-feuille"></div>
+      </section>
+
       <!-- 6) Publication : rend le tournoi visible (ou non) sur la page publique -->
       <section class="carte" id="bloc-publication">
         <h2>Publier le tournoi</h2>
@@ -559,6 +577,7 @@
   <script src="js/admin-tableau-bord.js"></script>
   <script src="js/admin-generation.js"></script>
   <script src="js/admin-terrains.js"></script>
+  <script src="js/admin-autorisation.js"></script>
   <!-- Surcouches de présentation (déplacent les blocs ci-dessus SANS toucher à admin.js) :
        6) ecrans.js    → barre latérale + onglets sur GRAND écran
        7) assistant.js → assistant à cartes sur mobile (verrou « Suivant »),

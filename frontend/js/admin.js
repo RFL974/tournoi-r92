@@ -232,6 +232,7 @@ async function initAdmin() {
       majApercuInvitation();
       majPublication();
       majDossier();
+      if (typeof majAutorisation === 'function') majAutorisation(); // feuille de report FFR (session 7)
 
       // 5) Tableau de bord + horodatage.
       majTableauBord();
