@@ -256,6 +256,22 @@
         <p class="apresmidi-etat">Scores du matin : <strong id="etat-scores-matin">…</strong></p>
         <button id="bouton-apresmidi" class="bouton" data-ic="ballon">Générer l'après-midi</button>
         <div id="message-apresmidi" class="message-form"></div>
+
+        <!-- Super Challenge — Phase 3, 2ᵉ journée (dimanche). Bloc masqué : révélé par majDimancheScf()
+             uniquement si une catégorie U14 est en contexte Super Challenge Phase 3. Le brassage
+             (poules E/F/G par niveau) réutilise le classement croisé, généré APRÈS les scores du samedi. -->
+        <div id="bloc-dimanche-scf" hidden>
+          <hr>
+          <p class="note-generation">
+            <strong>Super Challenge — Phase 3 (2ᵉ journée) :</strong> une fois <strong>tous les scores
+            du samedi</strong> saisis, génère le <strong>brassage du dimanche</strong> — les 1ᵉʳˢ de
+            chaque poule ensemble, les 2ᵉˢ ensemble, les 3ᵉˢ ensemble (poules par niveau), en 2×11.
+            Régénérable si tu corriges un score du samedi.
+          </p>
+          <p class="apresmidi-etat">Scores du samedi : <strong id="etat-samedi-scf">…</strong></p>
+          <button id="bouton-dimanche-scf" class="bouton" data-ic="ballon">Générer le dimanche (brassage)</button>
+          <div id="message-dimanche-scf" class="message-form"></div>
+        </div>
       </section>
 
       <!-- 4 bis) CLUBS INVITÉS (Phase 1) — en TÊTE de la page « Inviter un club » : liste + ajout,

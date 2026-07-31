@@ -5,6 +5,20 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Super Challenge U14 — Phase 3 : brassage du dimanche (2ᵉ journée) — 2026-07-31
+Complète la Phase 3 : après les triangulaires du **samedi** (générées comme la Phase 2, en 2×11),
+un nouveau bouton **« Générer le dimanche (brassage) »** (page Poules & planning, révélé seulement si
+une catégorie U14 est en Phase 3) crée la **2ᵉ journée par niveau** — les 1ᵉʳˢ de chaque poule
+ensemble, les 2ᵉˢ ensemble, les 3ᵉˢ ensemble (poules E/F/G), chacun en round-robin, en **2×11**.
+Action backend `genererDimancheScf` : garde-fous (catégorie Phase 3 présente, scores du samedi tous
+saisis), **réutilise `fixturesApresMidiCroise`** (donc classement général + podium sans code dédié),
+planifie au **début de la 2ᵉ journée** (`planifierApresMidi` gagne un paramètre de départ forcé +
+applique le temps SCF), écrit en `phase = classement`, **idempotent** (régénérable si un score du
+samedi change). Nouveau `matchObjToRowComplet` (préserve le score détaillé lors de la réécriture).
+Le samedi = `phase = poule`, le dimanche = `phase = classement` (pas de colonne « jour » : dérivé de
+la phase). Bouton piloté par `majDimancheScf` (visible/actif selon les scores du samedi). Tests
+290/290 (+7). ⚠️ **Redéploiement backend nécessaire.** *(Arbitrage désigné : PR suivante.)*
+
 ### Super Challenge U14 — génération Phase 2 (triangulaire/quadrangulaire, 2×15) — 2026-07-31
 Suite du contexte SCF (déclaratif) : « Générer les poules » **produit désormais le plateau** pour
 une catégorie U14 en Super Challenge. Chaque groupe de **3 → triangulaire** (réutilise le

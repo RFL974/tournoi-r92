@@ -47,10 +47,20 @@ mondes, la fiche d'une catégorie **U14** (et elle seule) affiche un choix de **
   il n'y a **pas de phase après-midi** séparée. Le regroupement réutilise le mécanisme de poules
   habituel (nombre de poules Auto/forcé + séparation des clubs) ; une taille de groupe autre que 3
   ou 4 déclenche un **avertissement** à la génération.
-- **Phase 3 — partielle pour l'instant.** La génération produit la **journée de triangulaires** en
-  **2×11 min**, mais la structure officielle sur **2 journées** (samedi 4 poules → dimanche brassage
-  E/F/G avec report du classement) **n'est pas encore automatisée** : un **avertissement** le
-  rappelle à la génération. C'est le prochain chantier.
+- **Phase 3 — sur 2 journées, en deux étapes.**
+  - **Samedi** : « Générer les poules » produit les **triangulaires** en **2×11 min** (comme la
+    Phase 2, mais avec le temps de la Phase 3).
+  - **Dimanche** : une fois **tous les scores du samedi saisis**, le bouton **« Générer le dimanche
+    (brassage) »** (page *Poules & planning*, révélé uniquement s'il existe une catégorie U14 en
+    Phase 3) crée la 2ᵉ journée **par niveau** : les 1ᵉʳˢ de chaque poule ensemble, les 2ᵉˢ ensemble,
+    les 3ᵉˢ ensemble (poules E/F/G du règlement), chacun en round-robin, en **2×11**. C'est
+    exactement le **classement croisé** réutilisé : le classement général et le podium fonctionnent
+    donc sans code d'affichage dédié. Régénérable si un score du samedi est corrigé (idempotent).
+
+  > Techniquement : le samedi = matchs `phase = poule` ; le dimanche = matchs `phase = classement`
+  > (2ᵉ journée), générés par l'action `genererDimancheScf` qui réutilise `fixturesApresMidiCroise`
+  > et planifie au **début de journée** (départ forcé, sans lien avec le samedi). L'**arbitrage
+  > désigné** (l'équipe qui arbitre chaque match) reste à venir.
 
 > Colonnes `contexte_tournoi` / `scf_phase` de l'onglet Config — voir
 > [`structure-google-sheet.md`](structure-google-sheet.md). Tant que rien n'est choisi, ou hors U14,

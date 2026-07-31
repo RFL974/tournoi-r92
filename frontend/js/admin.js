@@ -317,6 +317,8 @@ async function initAdmin() {
 
   // Bouton de génération de la phase après-midi (classement croisé).
   document.getElementById('bouton-apresmidi').addEventListener('click', onGenererApresMidi);
+  // Bouton du brassage du dimanche (Super Challenge Phase 3) — bloc révélé par majDimancheScf().
+  document.getElementById('bouton-dimanche-scf').addEventListener('click', onGenererDimancheScf);
 
   // Bouton publier / masquer le tournoi.
   document.getElementById('bouton-publier').addEventListener('click', onPublier);
