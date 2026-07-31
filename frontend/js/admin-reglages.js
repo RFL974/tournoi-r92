@@ -658,6 +658,11 @@ async function onEnregistrerCategorie(evenement) {
     ? String(form.scf_phase.value || '')
     : ((catStockee && catStockee.scf_phase != null) ? String(catStockee.scf_phase) : '');
 
+  // Règlement : champ RETIRÉ de la carte (plus d'input) → on PRÉSERVE la valeur stockée. Sans ça,
+  // enregistrerCategorie réécrivant la ligne entière l'effacerait (leçon session 3). Le dossier club
+  // continue d'afficher un règlement déjà saisi ; il n'est simplement plus éditable ici.
+  data.reglement = (catStockee && catStockee.reglement != null) ? String(catStockee.reglement) : '';
+
   const bouton = form.querySelector('button[type="submit"]');
   await avecBoutonOccupe(bouton, message, async function () {
     await ecrireAdmin('enregistrerCategorie', data);
