@@ -174,6 +174,13 @@ function lancerTestsFFR() {
   testS14_planningTempsForce(etat);
   testS14_planningLambdaInchange(etat);
 
+  // Session 14 (PR B) — Super Challenge Phase 3 : brassage du dimanche + planif 2ᵉ journée.
+  testS14b_brassageTroisNiveaux(etat);
+  testS14b_brassageRoundRobinParNiveau(etat);
+  testS14b_dimancheDepartJour2(etat);
+  testS14b_dimancheTemps2x11(etat);
+  testS14b_apresMidiLambdaInchange(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -1667,4 +1674,83 @@ function testS14_planningLambdaInchange(etat) {
   _ffrAssert(etat, r.matchsFinaux.length === 6, 'S14 : hors SCF, 4 équipes ⇒ 6 matchs (round-robin inchangé)');
   var m = r.matchsFinaux[0];
   _ffrAssert(etat, (hmVersMin(m[5]) - hmVersMin(m[4])) === 22, 'S14 : hors SCF, durée = 22 min (réglages catégorie)');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 14 (PR B) — Super Challenge Phase 3 : brassage du dimanche         */
+/*  Le brassage réutilise fixturesApresMidiCroise (1ers ensemble, 2es…) et la  */
+/*  planif de 2e journée (planifierApresMidi avec départ forcé + temps 2×11).  */
+/* -------------------------------------------------------------------------- */
+
+/** Classement factice : nbPoules poules de taillePoule équipes, rangs déjà triés. */
+function _scfClassement(cat, nbPoules, taillePoule) {
+  var poules = [];
+  for (var p = 0; p < nbPoules; p++) {
+    var lettre = String.fromCharCode(65 + p);
+    var classement = [];
+    for (var r = 0; r < taillePoule; r++) classement.push({ id_equipe: lettre + (r + 1), nom_equipe: lettre + (r + 1) });
+    poules.push({ nom_poule: lettre, classement: classement });
+  }
+  return { categorie: cat, poules: poules };
+}
+
+/** 4 poules de 3 (samedi) ⇒ brassage sur 3 niveaux (N1/N2/N3 = poules E/F/G du règlement). */
+function testS14b_brassageTroisNiveaux(etat) {
+  var res = fixturesApresMidiCroise({ categorie: 'U14' }, _scfClassement('U14', 4, 3));
+  var niveaux = {};
+  res.fixtures.forEach(function (f) { niveaux[f.poule] = true; });
+  _ffrAssert(etat, Object.keys(niveaux).length === 3, 'S14b : 4 poules de 3 ⇒ 3 niveaux de brassage');
+}
+
+/** Chaque niveau regroupe les 4 équipes de même rang ⇒ round-robin de 4 = 6 matchs (3 niveaux = 18). */
+function testS14b_brassageRoundRobinParNiveau(etat) {
+  var res = fixturesApresMidiCroise({ categorie: 'U14' }, _scfClassement('U14', 4, 3));
+  var n1 = res.fixtures.filter(function (f) { return f.poule === 'N1'; });
+  _ffrAssert(etat, n1.length === 6, 'S14b : niveau N1 = round-robin de 4 = 6 matchs');
+  _ffrAssert(etat, res.fixtures.length === 18, 'S14b : 3 niveaux × 6 = 18 matchs de dimanche');
+  // Le niveau N1 réunit bien les 1ers de chaque poule (A1,B1,C1,D1).
+  var equipesN1 = {};
+  n1.forEach(function (f) { equipesN1[f.equipe_A] = true; equipesN1[f.equipe_B] = true; });
+  _ffrAssert(etat, equipesN1.A1 && equipesN1.B1 && equipesN1.C1 && equipesN1.D1 && !equipesN1.A2,
+    'S14b : N1 = les 1ers de chaque poule (A1,B1,C1,D1)');
+}
+
+/** Config + fixtures minimales pour tester planifierApresMidi en 2e journée. */
+function _scfConfigDimanche(scf) {
+  var cat = {
+    categorie: 'U14', presente: 'oui', terrains: '1,2,3,4',
+    format_mi_temps: '2', duree_mi_temps_min: '10', pause_mi_temps_min: '2',
+    recup_entre_matchs_min: '5', contexte_tournoi: scf ? 'SCF' : '', scf_phase: scf ? 'P3' : ''
+  };
+  var fixtures = { U14: [{ poule: 'N1', equipe_A: 'A1', equipe_B: 'B1', round: 0, format: 'CROISE' }] };
+  return { config: { global: { heure_debut: '09:00', battement_terrain_min: '5',
+                     pause_dejeuner_debut: '12:30', pause_dejeuner_duree_min: '0' }, categories: [cat] },
+           fixtures: fixtures };
+}
+
+/** Le dimanche démarre au DÉBUT de journée (départ forcé), pas « après le déjeuner ». */
+function testS14b_dimancheDepartJour2(etat) {
+  var d = _scfConfigDimanche(true);
+  var plan = planifierApresMidi(d.config, d.fixtures, [], hmVersMin('09:00'));
+  _ffrAssert(etat, plan.matchs.length === 1 && plan.matchs[0].heure_debut === '09:00',
+    'S14b : brassage dimanche démarre à 09:00 (départ 2ᵉ journée forcé)');
+}
+
+/** Le dimanche applique le temps SCF Phase 3 = 2×11 (+ pause 2) = 24 min. */
+function testS14b_dimancheTemps2x11(etat) {
+  var d = _scfConfigDimanche(true);
+  var plan = planifierApresMidi(d.config, d.fixtures, [], hmVersMin('09:00'));
+  var m = plan.matchs[0];
+  _ffrAssert(etat, (hmVersMin(m.heure_fin) - hmVersMin(m.heure_debut)) === 24,
+    'S14b : match du dimanche = 24 min (2×11+2), pas 22 (réglages)');
+}
+
+/** Non-régression : un après-midi ORDINAIRE (hors SCF) garde sa durée de réglages (2×10+2=22). */
+function testS14b_apresMidiLambdaInchange(etat) {
+  var d = _scfConfigDimanche(false);
+  // Après-midi classique : pas de départ forcé (reprise après déjeuner), durée = réglages.
+  var plan = planifierApresMidi(d.config, d.fixtures, []);
+  var m = plan.matchs[0];
+  _ffrAssert(etat, (hmVersMin(m.heure_fin) - hmVersMin(m.heure_debut)) === 22,
+    'S14b : après-midi hors SCF = 22 min (réglages catégorie inchangés)');
 }

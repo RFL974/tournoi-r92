@@ -192,6 +192,76 @@ function majApresMidi() {
       ' saisis — complète tous les scores du matin (page Saisie) avant de générer.';
     bouton.disabled = true;
   }
+  majDimancheScf(); // le bouton « dimanche » (Super Challenge Phase 3) suit le même cycle de vie
+}
+
+/**
+ * Super Challenge Phase 3 — révèle et pilote le bouton « Générer le dimanche (brassage) ».
+ * Le bloc reste MASQUÉ tant qu'aucune catégorie U14 n'est en contexte Super Challenge Phase 3
+ * (il n'a de sens que là). Quand il l'est, le bouton n'est actif que si TOUS les scores du samedi
+ * (matchs de poule de ces catégories) sont saisis — sinon la génération échouerait côté serveur.
+ */
+function majDimancheScf() {
+  const bloc = document.getElementById('bloc-dimanche-scf');
+  const bouton = document.getElementById('bouton-dimanche-scf');
+  const etat = document.getElementById('etat-samedi-scf');
+  if (!bloc || !bouton) return;
+
+  // Catégories U14 en Super Challenge Phase 3 (helpers définis dans admin.js).
+  const cats = (configCourante.categories || []).filter(function (c) {
+    return contexteTournoiDe(c) === 'SCF' && scfPhaseDe(c) === 'P3';
+  }).map(function (c) { return c.categorie; });
+
+  if (!cats.length) { bloc.hidden = true; return; } // pas de Phase 3 → bloc caché
+  bloc.hidden = false;
+
+  // Samedi = matchs de poule (triangulaires) de ces catégories.
+  const samedi = (matchsCourants || []).filter(function (m) {
+    return cats.indexOf(m.categorie) >= 0 && String(m.phase) !== 'classement';
+  });
+  const total = samedi.length;
+  const saisis = samedi.filter(function (m) { return estTermine(m.statut); }).length;
+
+  if (total === 0) {
+    if (etat) etat.textContent = '⚪️ Génère d\'abord les poules (samedi) via « Générer les poules ».';
+    bouton.disabled = true;
+  } else if (saisis === total) {
+    if (etat) etat.textContent = '✅ ' + saisis + '/' + total + ' saisis — prêt à générer le dimanche.';
+    bouton.disabled = false;
+  } else {
+    if (etat) etat.textContent = '⏳ ' + saisis + '/' + total +
+      ' saisis — complète tous les scores du samedi (page Saisie) avant de générer.';
+    bouton.disabled = true;
+  }
+}
+
+/** Génère le brassage du dimanche (Super Challenge Phase 3) à partir du classement du samedi. */
+async function onGenererDimancheScf() {
+  if (!await dialogConfirmer('Générer le brassage du dimanche (Super Challenge Phase 3) ?\n\n' +
+               'Basé sur le classement du samedi. N\'efface PAS les triangulaires du samedi.', { ok: 'Générer' })) return;
+
+  const bouton  = document.getElementById('bouton-dimanche-scf');
+  const message = document.getElementById('message-dimanche-scf');
+  const texteBouton = bouton.textContent;
+  bouton.disabled = true;
+  bouton.textContent = 'Génération…';
+  afficherMessage(message, 'Génération du dimanche…', 'ok');
+
+  try {
+    const res = await ecrireAdmin('genererDimancheScf', {});
+    const nbM = (res && res.nb_matchs_dimanche != null) ? res.nb_matchs_dimanche : '?';
+    const avert = res && res.avertissements && res.avertissements.length;
+    let texte = '✅ ' + nbM + ' match(s) du dimanche générés.' +
+                (res.heure_fin_dimanche ? ' Fin : ' + res.heure_fin_dimanche + '.' : '');
+    if (avert) texte += '\n⚠️ ' + res.avertissements.join('\n⚠️ ');
+    afficherMessage(message, texte, avert ? 'ko' : 'ok');
+    await rechargerEtRendre({ reglages: true });
+  } catch (erreur) {
+    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+  } finally {
+    bouton.disabled = false;
+    bouton.textContent = texteBouton;
+  }
 }
 
 /** Génère la phase après-midi (classement croisé) à partir du classement du matin. */

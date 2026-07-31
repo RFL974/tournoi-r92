@@ -2148,6 +2148,7 @@ function doPost(e) {
       case 'reorganiserPoulesMatin':  resultat = reorganiserPoulesMatin(classeur, requete); break;
       case 'recalculerHoraires':      resultat = recalculerHoraires(classeur); break;
       case 'genererApresMidi':     resultat = genererApresMidi(classeur); break;
+      case 'genererDimancheScf':   resultat = genererDimancheScf(classeur); break;
       case 'publierTournoi':       resultat = publierTournoi(classeur, requete.publie); break;
       case 'enregistrerInfosTournoi': resultat = enregistrerInfosTournoi(classeur, requete); break;
       case 'enregistrerContactsSecurite': resultat = enregistrerContactsSecurite(classeur, requete); break;
@@ -4600,11 +4601,14 @@ function terrainPlusTot(terrains, terrainLibre) {
  * Les champs de format (format, sous_tableau, tour) et les clés de lien (cle, suivant_cle,
  * suivant_place) sont recopiés tels quels dans le résultat pour être écrits ensuite.
  */
-function planifierApresMidi(config, fixturesParCat, matin) {
+function planifierApresMidi(config, fixturesParCat, matin, debutMin) {
   var global = config.global;
   var dejDeb = hmVersMin(global.pause_dejeuner_debut || '12:30');
   var dejDur = parseInt(global.pause_dejeuner_duree_min || '0', 10) || 0;
-  var tReprise = dejDeb + dejDur;
+  // Départ de la planification : normalement la reprise après le déjeuner (après-midi du MÊME jour).
+  // Un `debutMin` explicite prime et ignore le déjeuner — utilisé pour le brassage du DIMANCHE
+  // (2ᵉ journée du Super Challenge Phase 3), qui démarre à l'heure de début, sans lien avec le samedi.
+  var tReprise = (debutMin != null) ? debutMin : (dejDeb + dejDur);
   var battement = parseInt(global.battement_terrain_min || '0', 10) || 0;
   var avert = [], maxFin = 0;
 
@@ -4629,7 +4633,9 @@ function planifierApresMidi(config, fixturesParCat, matin) {
     liste.sort(function (x, y) { return x.round - y.round; });
     var terrains = listeTerrainsCategorie(cat);
     if (terrains.length === 0) { avert.push('Catégorie ' + cat.categorie + ' : aucun terrain défini (après-midi non planifié).'); return; }
-    var duree = dureeMatch(cat);
+    // Temps de jeu imposé par le règlement en contexte Super Challenge (dimanche = 2×11), sinon réglages.
+    var sctx = contexteScfCategorie(cat);
+    var duree = sctx.estScf ? dureeMatchScf(cat, sctx.phase) : dureeMatch(cat);
     var recup = parseInt(cat.recup_entre_matchs_min || '0', 10) || 0;
 
     // Terrain libre après sa dernière fin du matin + battement (au plus tôt à la reprise).
@@ -5084,9 +5090,9 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
   // branché (prévu PR B/C). En attendant, on génère la journée de triangulaires en 2×11 et on le DIT.
   Object.keys(scfParCat).forEach(function (c) {
     if (scfParCat[c] === 'P3') {
-      avert.push('Catégorie ' + c + ' (Super Challenge — Phase 3) : seule la journée de triangulaires ' +
-        'est générée pour l\'instant (temps 2×11). La structure sur 2 journées (brassage samedi→dimanche) ' +
-        'arrivera dans une prochaine évolution.');
+      avert.push('Catégorie ' + c + ' (Super Challenge — Phase 3) : ceci génère le SAMEDI (triangulaires, ' +
+        '2×11). Une fois tous les scores du samedi saisis, utilise « Générer le dimanche (brassage) » ' +
+        'pour la 2ᵉ journée (poules E/F/G par niveau).');
     }
   });
 
@@ -5760,6 +5766,92 @@ function fixtureScfGroupe(ids, categorie, avertir) {
             ' équipe(s) — le règlement prévoit 3 (triangulaire) ou 4 (quadrangulaire).');
   }
   return tourneeToutesRondes(ids || []);
+}
+
+/** Ligne de match COMPLÈTE (toutes les colonnes de ENTETES.Matchs, dans l'ordre), lue par NOM depuis
+ *  l'objet — préserve les colonnes de score détaillé (essais/transfo…) qu'un match déjà saisi porte,
+ *  contrairement à matchObjToRow qui s'arrête à `vainqueur`. Sert à réécrire des matchs SANS perte. */
+function matchObjToRowComplet(m) {
+  return ENTETES.Matchs.map(function (col) { return (m[col] == null) ? '' : m[col]; });
+}
+
+/**
+ * SUPER CHALLENGE — PR B : brassage du DIMANCHE (Phase 3, 2ᵉ journée). Après les scores du samedi
+ * (triangulaires = phase 'poule'), on forme les groupes de niveau — les 1ᵉʳˢ de chaque poule
+ * ensemble, les 2ᵉˢ ensemble, les 3ᵉˢ ensemble (poules E/F/G du règlement) — chacun en round-robin.
+ * C'est EXACTEMENT le « classement croisé » du moteur : on réutilise fixturesApresMidiCroise tel
+ * quel (étiquetage par niveau N1/N2/N3, classement général + podium déjà gérés à l'affichage). Les
+ * matchs sont planifiés au DÉBUT de la 2ᵉ journée (sans lien avec le samedi) en 2×11 (via le contexte
+ * SCF de planifierApresMidi), écrits en phase 'classement'. Idempotent : régénérer recalcule à partir
+ * des scores du samedi. Ne concerne QUE les catégories U14 en Super Challenge Phase 3.
+ */
+function genererDimancheScf(classeur) {
+  assurerColonnesConfig(classeur);
+  var config = lireConfig(classeur);
+  var matchs = lireOngletSimple(classeur, 'Matchs');
+  var avert = [], erreurs = [];
+
+  var catsP3 = config.categories.filter(function (c) {
+    if (String(c.presente).toLowerCase() !== 'oui') return false;
+    var s = contexteScfCategorie(c);
+    return s.estScf && s.phase === 'P3';
+  });
+  if (!catsP3.length) {
+    return { ok: false, error: 'Aucune catégorie U14 en Super Challenge Phase 3 : le brassage du dimanche ne concerne que ce contexte.' };
+  }
+  var estP3 = {}; catsP3.forEach(function (c) { estP3[c.categorie] = true; });
+
+  // Samedi = les triangulaires (phase 'poule') de ces catégories ; toutes doivent être terminées.
+  var samedi = matchs.filter(function (m) { return estP3[m.categorie] && String(m.phase) !== 'classement'; });
+  if (!samedi.length) {
+    return { ok: false, error: 'Aucune triangulaire du samedi. Génère d\'abord les poules (bouton « Générer les poules »).' };
+  }
+  var nonTermines = samedi.filter(function (m) { return !estTermineServeur(m.statut); });
+  if (nonTermines.length) {
+    return { ok: false, error: nonTermines.length + ' match(s) du samedi ne sont pas terminés. ' +
+      'Saisis tous les scores du samedi avant de générer le dimanche.' };
+  }
+
+  // Classement de chaque poule du samedi (calculerClassement ignore déjà la phase 'classement').
+  var classement = calculerClassement(classeur);
+  var classParCat = {}; classement.forEach(function (c) { classParCat[c.categorie] = c; });
+
+  var fixturesParCat = {};
+  catsP3.forEach(function (cat) {
+    var res = fixturesApresMidiCroise(cat, classParCat[cat.categorie]);
+    if (res.error) erreurs.push('Catégorie ' + cat.categorie + ' : ' + res.error);
+    if (res.avert) res.avert.forEach(function (a) { avert.push('Catégorie ' + cat.categorie + ' : ' + a); });
+    if (res.fixtures && res.fixtures.length) fixturesParCat[cat.categorie] = res.fixtures;
+  });
+  if (!Object.keys(fixturesParCat).length) {
+    return { ok: false, error: erreurs.length ? erreurs.join('\n')
+             : 'Aucun match de dimanche à générer (il faut au moins 2 poules le samedi pour un brassage).' };
+  }
+
+  // Planifie au DÉBUT de la 2ᵉ journée (matin=[] → aucun lien avec le samedi), temps 2×11 (SCF).
+  var debutJour2 = hmVersMin(config.global.heure_debut || '09:00');
+  var plan = planifierApresMidi(config, fixturesParCat, [], debutJour2);
+  avert = avert.concat(plan.avert);
+
+  // On CONSERVE tous les matchs sauf l'ancien dimanche (classement) de ces catégories (regénération),
+  // en préservant les colonnes (score détaillé du samedi inclus), puis on ajoute le nouveau dimanche.
+  var garder = matchs.filter(function (m) { return !(estP3[m.categorie] && String(m.phase) === 'classement'); });
+  var maxNum = 0;
+  garder.forEach(function (m) { var mm = String(m.id_match).match(/^M(\d+)$/); if (mm) { var n = parseInt(mm[1], 10); if (n > maxNum) maxNum = n; } });
+
+  var lignesDimanche = plan.matchs.map(function (m, i) {
+    return matchObjToRow({
+      id_match: idMatch(maxNum + 1 + i), categorie: m.categorie, poule: m.poule, terrain: m.terrain,
+      heure_debut: m.heure_debut, heure_fin: m.heure_fin, equipe_A: m.equipe_A, equipe_B: m.equipe_B,
+      score_A: '', score_B: '', statut: 'à venir', phase: 'classement',
+      format: m.format || 'CROISE', sous_tableau: '', tour: '', match_suivant: '', place_suivant: '', vainqueur: ''
+    });
+  });
+  ecrireMatchs(classeur, garder.map(matchObjToRowComplet).concat(lignesDimanche));
+
+  return { ok: true, nb_matchs_dimanche: plan.matchs.length,
+           heure_fin_dimanche: plan.maxFin > 0 ? minVersHm(plan.maxFin) : '',
+           avertissements: avert.concat(erreurs) };
 }
 
 function hmVersMin(hm) {
