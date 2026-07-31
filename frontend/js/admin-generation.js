@@ -66,6 +66,7 @@ async function genererMaintenant() {
     const enRetard = res && res.avertissements && res.avertissements.length;
     let texte = '✅ ' + nbP + ' poule(s) et ' + nbM + ' match(s) du matin générés.';
     if (res.heure_fin_matin) texte += '\n🌅 Fin du matin : ' + res.heure_fin_matin + '.';
+    if (res.pause_echelonnee_fin) texte += '\n🍽️ Pause échelonnée : la dernière équipe finit sa pause à ' + res.pause_echelonnee_fin + '.';
     if (res.heure_fin_projetee) texte += '\n🏁 Fin estimée du tournoi (après-midi inclus) : ' + res.heure_fin_projetee + '.';
     if (enRetard) texte += '\n⚠️ ' + res.avertissements.join('\n⚠️ ');
     afficherMessage(message, texte, enRetard ? 'ko' : 'ok');

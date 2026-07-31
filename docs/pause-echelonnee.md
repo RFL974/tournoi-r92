@@ -1,4 +1,4 @@
-# Pause méridienne échelonnée (option par catégorie)
+# Pause méridienne échelonnée (réglage global des horaires)
 
 > **Le problème.** Avec **peu de terrains** (typiquement 2 pour l'U14), une **pause déjeuner unique**
 > laisse **tous les terrains à l'arrêt** pendant sa durée. La matinée « ne rentre » alors plus dans
@@ -32,14 +32,26 @@ journée qui, autrement, ne tenait pas.
   4 équipes, l'app **retombe automatiquement** sur la **pause classique** avec un **avertissement**
   clair — la génération n'échoue jamais.
 - **Terrains dédiés** à la catégorie recommandés (le planning des deux vagues occupe ses terrains en continu).
-- Cette option **remplace**, pour la catégorie concernée, la **pause déjeuner globale** **et** le
-  **format d'après-midi** (la catégorie est un seul round-robin, il n'y a donc pas de phase de
-  classement croisé). Les autres catégories ne sont pas affectées.
+- Cette option **remplace** la **pause déjeuner unique** **et** le **format d'après-midi** des
+  catégories concernées (chacune devient un seul round-robin, donc pas de phase de classement croisé).
+
+## Réglage global + pause déjeuner « à partir de »
+
+C'est un **réglage GLOBAL** (carte **Horaires de la journée**, case au-dessus de la pause déjeuner),
+pas par catégorie : quand il est coché, il s'applique à **toutes les catégories présentes** (≥ 4
+équipes ; les autres restent en pause classique). Quand il est actif :
+
+- la **« Pause déjeuner — début »** devient **« Pause déjeuner à partir de »** : l'heure à laquelle
+  la pause échelonnée commence (les équipes ne partent pas en pause avant). Le **champ « durée »**
+  disparaît (chaque équipe a 60 min garanti) ;
+- après **« Générer les poules »**, l'app affiche **l'heure à laquelle la dernière équipe finit sa
+  pause** (les deux vagues se relaient : la 2ᵉ vague déjeune après la 1ʳᵉ, donc en début d'après-midi).
 
 ## Où c'est réglé / stocké
 
-- **Administration** → fiche d'une catégorie → bloc **« Pause méridienne »** (case à cocher).
-- **Config** : colonne `pause_echelonnee` (`oui` / vide) — voir [`structure-google-sheet.md`](structure-google-sheet.md).
+- **Administration** → carte **Horaires de la journée** → case **« Pause méridienne échelonnée »**.
+- **Config (global)** : `pause_echelonnee` (`oui` / vide) et `pause_echelonnee_fin` (heure calculée à
+  la génération) — voir [`structure-google-sheet.md`](structure-google-sheet.md).
 
 ## Côté technique (rappel)
 

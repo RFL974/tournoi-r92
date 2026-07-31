@@ -112,11 +112,6 @@ function scfPhaseDe(cat) {
   return (v === 'P3') ? 'P3' : 'P2';
 }
 
-/** Vrai si la catégorie a la pause méridienne échelonnée activée (miroir backend pauseEchelonneeDe). */
-function pauseEchelonneeCat(cat) {
-  return String((cat && cat.pause_echelonnee) == null ? '' : cat.pause_echelonnee).trim().toLowerCase() === 'oui';
-}
-
 /* On garde en mémoire la config, les équipes et les matchs chargés (pour l'affichage). */
 let configCourante = { global: {}, categories: [] };
 let equipesCourantes = [];
@@ -632,6 +627,11 @@ function onReglagesChange(evenement) {
   if (evenement.target.id === 'h-heure_fin_auto') {
     const champFin = document.getElementById('h-heure_fin');
     if (champFin) champFin.disabled = evenement.target.checked; // grisé quand auto
+  }
+  // Pause méridienne échelonnée (global) : révèle « à partir de » + fin de pause, masque la durée.
+  if (evenement.target.id === 'h-pause_echelonnee') {
+    const bloc = evenement.target.closest('.bloc-pause-dej');
+    if (bloc) bloc.setAttribute('data-ech', evenement.target.checked ? 'oui' : 'non');
   }
   // Heure de début saisie/modifiée → pré-remplit l'heure de RDV à début − 1h15. On n'écrase
   // JAMAIS une valeur personnalisée : seul un champ vide, ou déjà rempli par ce pré-remplissage

@@ -209,6 +209,8 @@ function lancerTestsFFR() {
   testS15_planningReposGaranti(etat);
   testS15_planningImpairEchelonne(etat);
   testS15_effectifTropPetitRepli(etat);
+  testS15_reglageGlobalPasParCategorie(etat);
+  testS15_finPauseDerniereEquipe(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -1847,11 +1849,11 @@ function testS15_equiteReposeVsFatigue(etat){
 /** Fabrique config + équipes pour tester calculerPlanning en pause échelonnée. */
 function _echConfig(n){
   var cat = { categorie:'U14', presente:'oui', terrains:'1,2',
-    format_mi_temps:'2', duree_mi_temps_min:'10', pause_mi_temps_min:'2', recup_entre_matchs_min:'5',
-    pause_echelonnee:'oui' };
+    format_mi_temps:'2', duree_mi_temps_min:'10', pause_mi_temps_min:'2', recup_entre_matchs_min:'5' };
   var equipes=[]; for(var i=1;i<=n;i++) equipes.push({ id_equipe:'E'+i, nom_equipe:'Eq'+i, categorie:'U14' });
-  return { config:{ global:{ heure_debut:'09:00', battement_terrain_min:'5',
-           pause_dejeuner_debut:'12:30', pause_dejeuner_duree_min:'60' }, categories:[cat] }, equipes:equipes };
+  // Réglage GLOBAL désormais (carte Horaires). pause_dejeuner_debut proche du matin pour rester réaliste.
+  return { config:{ global:{ heure_debut:'09:00', battement_terrain_min:'5', pause_echelonnee:'oui',
+           pause_dejeuner_debut:'11:00', pause_dejeuner_duree_min:'60' }, categories:[cat] }, equipes:equipes };
 }
 
 /** Intégration : une catégorie échelonnée à 6 équipes → une seule poule, round-robin complet (15). */
@@ -2059,4 +2061,25 @@ function testS14d_planningEcritArbitre(etat) {
     return arb && arb !== row[6] && arb !== row[7]; // renseigné et ne joue pas (col 6/7 = A/B)
   });
   _ffrAssert(etat, r.matchsFinaux.length === 6 && tous, 'S14d : chaque match SCF a un arbitre désigné qui ne joue pas');
+}
+
+/** Le réglage est GLOBAL (carte Horaires), pas par catégorie : une valeur par catégorie n'active rien. */
+function testS15_reglageGlobalPasParCategorie(etat){
+  var d=_echConfig(6);
+  // On force la pause échelonnée UNIQUEMENT sur la catégorie (et pas en global) → ne doit PAS s'activer.
+  var cfg = { global: { heure_debut:'09:00', battement_terrain_min:'5' },
+              categories:[ Object.assign({}, d.config.categories[0], { pause_echelonnee:'oui' }) ] };
+  var r=calculerPlanning(cfg, d.equipes, false);
+  var poules=r.poules.filter(function(p){return p.categorie==='U14';});
+  // 6 équipes sans réglage global : poules classiques (nombrePoules auto = 2), pas 1 poule échelonnée.
+  _ffrAssert(etat, poules.length===2, 'S15 : réglage par catégorie seul → PAS d\'échelonnement (global requis)');
+}
+
+/** Fin de la pause de la dernière équipe : renseignée, ≥ « à partir de », cohérente avec la fin de journée. */
+function testS15_finPauseDerniereEquipe(etat){
+  var d=_echConfig(6); // pause_echelonnee global oui, pause_dejeuner_debut 11:00
+  var r=calculerPlanning(d.config, d.equipes, false);
+  _ffrAssert(etat, r.finReposEchelonne > 0, 'S15 : fin de pause de la dernière équipe renseignée');
+  _ffrAssert(etat, r.finReposEchelonne >= hmVersMin('11:00'), 'S15 : fin de pause ≥ heure « à partir de » (11:00)');
+  _ffrAssert(etat, r.finReposEchelonne <= r.maxFin, 'S15 : fin de pause ≤ fin de journée');
 }

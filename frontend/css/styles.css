@@ -293,12 +293,18 @@ select.r-input { cursor: pointer; }
 .arbitre-tag { font-size: 0.85em; color: var(--bleu-ciel); white-space: nowrap; }
 .theme-clair .arbitre-tag { color: #55636f; }
 
-/* -------- Pause méridienne échelonnée (option par catégorie) -------- */
-.bloc-echelonne { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(184, 216, 248, 0.25); }
+/* -------- Pause méridienne échelonnée (réglage global, carte Horaires) -------- */
 .ech-toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: var(--texte); font-weight: 600; }
 .ech-toggle input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex: none; }
-.theme-clair .bloc-echelonne { border-top-color: #e6edf5; }
 .theme-clair .ech-toggle { color: #0C1C2E; }
+/* Label « — début » (pause classique) vs « à partir de » (échelonnée) ; durée et fin selon data-ech. */
+.bloc-pause-dej .lbl-pause-dej-ech { display: none; }
+.bloc-pause-dej[data-ech="oui"] .lbl-pause-dej-fixe { display: none; }
+.bloc-pause-dej[data-ech="oui"] .lbl-pause-dej-ech { display: inline; }
+.bloc-pause-dej[data-ech="oui"] .champ-pause-duree { display: none; }
+.bloc-pause-dej .champ-pause-fin { display: none; }
+.bloc-pause-dej[data-ech="oui"] .champ-pause-fin { display: block; }
+.f-aide-mini { font-size: 0.82em; opacity: 0.8; }
 
 /* --- Terrains (choix Auto / Manuel par catégorie) --- */
 .bloc-terrains {
