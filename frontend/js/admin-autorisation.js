@@ -355,7 +355,9 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories) {
   setT('Texte11', v('tournoi_nom'));
   setT('Texte12', v('tournoi_adresse') || v('tournoi_lieu'));
   setT('Date64_es_:signer:date', dateFrPdfAut(v('tournoi_date')));
-  setT('Texte13', v('heure_debut'));
+  // « Heure de début » (Texte13) N'EST PAS remplie : dans le formulaire officiel, sa case est
+  // dessinée PAR-DESSUS le libellé « Niveau du tournoi » → toute valeur le chevauche. On laisse
+  // l'organisateur l'écrire à la main. « Heure de fin » (Texte14), elle, ne chevauche rien.
   setT('Texte14', v('heure_fin_communiquee') || v('heure_fin'));
   choix(v('org_niveau_tournoi'), { 'International': 'Case à cocher65', 'National': 'Case à cocher66',
     'Territorial': 'Case à cocher67', 'Départemental': 'Case à cocher68' });
