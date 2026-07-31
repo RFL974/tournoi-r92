@@ -187,9 +187,13 @@ function lancerTestsFFR() {
   testS15_repos60SixEquipes(etat);
   testS15_repos60HuitEquipes(etat);
   testS15_equiteReposeVsFatigue(etat);
+  testS15_impairRoundRobinComplet(etat);
+  testS15_impairRepos60(etat);
+  testS15_impairEquite(etat);
   testS15_planningUnePoule(etat);
   testS15_planningReposGaranti(etat);
-  testS15_effectifImpairRepli(etat);
+  testS15_planningImpairEchelonne(etat);
+  testS15_effectifTropPetitRepli(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -1860,13 +1864,71 @@ function testS15_planningReposGaranti(etat){
   _ffrAssert(etat, mini>=60, 'S15 : intégration → repos minimum ≥ 60 sur les horaires réels (obtenu ' + mini + ')');
 }
 
-/** Effectif IMPAIR : pas d'échelonnement (repli classique) + avertissement. */
-function testS15_effectifImpairRepli(etat){
+/** Nombre de violations d'équité (match reposé-vs-fatigué) dans un planning échelonné. */
+function _echViolationsEquite(r, ids){
+  var reprise={};
+  ids.forEach(function(id){
+    var mine=r.matchs.filter(function(x){return x.equipe_A===id||x.equipe_B===id;})
+                     .sort(function(a,b){return a.heure_debut_min-b.heure_debut_min;});
+    reprise[id]=Infinity;
+    for(var i=1;i<mine.length;i++){ if(mine[i].heure_debut_min-mine[i-1].heure_fin_min>=60){ reprise[id]=mine[i].heure_debut_min; break; } }
+  });
+  var v=0;
+  r.matchs.forEach(function(m){
+    if((m.heure_debut_min>=reprise[m.equipe_A]) !== (m.heure_debut_min>=reprise[m.equipe_B])) v++;
+  });
+  return v;
+}
+
+/** Effectif IMPAIR (7) : round-robin complet grâce aux tournées avec bye. */
+function testS15_impairRoundRobinComplet(etat){
+  var r = planifierCategorieEchelonnee(_echIds(7), [1,2], {duree:24, battement:3, recup:5, repos:60, debut:540});
+  var vus={}, dup=false;
+  r.matchs.forEach(function(m){ var k=[m.equipe_A,m.equipe_B].sort().join('¤'); if(vus[k]) dup=true; vus[k]=true; });
+  _ffrAssert(etat, r.matchs.length===21 && !dup && Object.keys(vus).length===21,
+    'S15 : 7 équipes (impair) → 21 matchs, round-robin complet sans doublon');
+}
+
+/** Effectif IMPAIR (7) : repos minimum ≥ 60 pour toutes. */
+function testS15_impairRepos60(etat){
+  var r = planifierCategorieEchelonnee(_echIds(7), [1,2], {duree:24, battement:3, recup:5, repos:60, debut:540});
+  var mini = Math.min.apply(null, _echIds(7).map(function(id){ return r.repos[id]; }));
+  _ffrAssert(etat, mini>=60, 'S15 : 7 équipes (impair) → repos minimum ≥ 60 (obtenu ' + mini + ')');
+}
+
+/** Effectif IMPAIR (7) : équité préservée (0 match reposé-vs-fatigué). */
+function testS15_impairEquite(etat){
+  var ids=_echIds(7);
+  var r = planifierCategorieEchelonnee(ids, [1,2], {duree:24, battement:3, recup:5, repos:60, debut:540});
+  _ffrAssert(etat, _echViolationsEquite(r, ids)===0, 'S15 : 7 équipes (impair) → équité 0 violation');
+}
+
+/** Intégration : catégorie échelonnée à 5 équipes (impair) → une poule de 5, round-robin (10), repos ≥ 60. */
+function testS15_planningImpairEchelonne(etat){
   var d=_echConfig(5);
   var r=calculerPlanning(d.config, d.equipes, false);
   var poulesU14=r.poules.filter(function(p){return p.categorie==='U14';});
-  // Repli classique : nombrePoules(5) auto = 2 poules (pas une seule poule « A » d'échelonnement).
-  _ffrAssert(etat, poulesU14.length>=2, 'S15 : effectif impair (5) → repli poules classiques (≥ 2)');
-  var aWarn=r.avert.some(function(a){ return a.indexOf('pause échelonnée demandée')>=0; });
-  _ffrAssert(etat, aWarn, 'S15 : effectif impair → avertissement « pause classique conservée »');
+  _ffrAssert(etat, poulesU14.length===1 && poulesU14[0].equipes.length===5, 'S15 : impair (5) échelonné → 1 poule de 5');
+  _ffrAssert(etat, r.matchsFinaux.length===10, 'S15 : impair (5) → 10 matchs (round-robin complet)');
+  var ids=_echIds(5), mini=Infinity;
+  ids.forEach(function(id){
+    var mine=r.matchsFinaux.filter(function(x){return x[6]===id||x[7]===id;})
+                           .map(function(x){return {d:hmVersMin(x[4]), f:hmVersMin(x[5])};})
+                           .sort(function(a,b){return a.d-b.d;});
+    var g=0; for(var i=1;i<mine.length;i++) g=Math.max(g, mine[i].d-mine[i-1].f);
+    mini=Math.min(mini,g);
+  });
+  _ffrAssert(etat, mini>=60, 'S15 : impair (5) → repos minimum ≥ 60 sur horaires réels (obtenu ' + mini + ')');
+}
+
+/** Effectif TROP PETIT (< 4) : pas d'échelonnement (repli classique) + avertissement. */
+function testS15_effectifTropPetitRepli(etat){
+  var d=_echConfig(3);
+  var r=calculerPlanning(d.config, d.equipes, false);
+  var poulesU14=r.poules.filter(function(p){return p.categorie==='U14';});
+  // 3 équipes : nombrePoules auto = 1 poule, mais PAS marquée échelonnée → matchsFinaux = round-robin
+  // classique (3 matchs) et un avertissement de repli est présent.
+  var aWarn=r.avert.some(function(a){ return a.indexOf('au moins 4')>=0; });
+  _ffrAssert(etat, aWarn, 'S15 : effectif < 4 → avertissement « pause classique conservée »');
+  _ffrAssert(etat, r.matchsFinaux.length===3, 'S15 : effectif 3 → repli round-robin classique (3 matchs)');
 }

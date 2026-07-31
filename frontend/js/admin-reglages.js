@@ -530,7 +530,8 @@ function blocContexteU14(cat) {
  * elle est active, la catégorie joue en UN round-robin (tout le monde se rencontre) planifié en
  * deux vagues avec ≥ 60 min de repos garanti et l'équité (jamais reposé contre épuisé) ; cela
  * remplace la pause déjeuner globale ET le format d'après-midi pour cette catégorie. Effectif pair
- * ≥ 4 requis (sinon l'app retombe automatiquement sur la pause classique, avec un avertissement).
+ * ≥ 4 requis — pair ou impair, les vagues inégales sont gérées par un « bye » (sinon, en dessous de
+ * 4 équipes, l'app retombe automatiquement sur la pause classique avec un avertissement).
  */
 function blocPauseEchelonnee(cat) {
   const on = pauseEchelonneeCat(cat);
@@ -543,7 +544,7 @@ function blocPauseEchelonnee(cat) {
         '« rentre » pas. La catégorie joue alors en <b>un seul round-robin</b> (chaque équipe rencontre ' +
         'les autres) planifié en <b>deux vagues</b> : pendant qu\'une moitié se repose (≥ 60 min), ' +
         'l\'autre joue — et jamais une équipe reposée contre une équipe épuisée. Remplace la pause ' +
-        'déjeuner globale et le format d\'après-midi ci-dessus. <b>Effectif pair ≥ 4</b> (sinon pause classique).</p>' +
+        'déjeuner globale et le format d\'après-midi ci-dessus. <b>Effectif ≥ 4</b> (pair ou impair ; sinon pause classique).</p>' +
     '</div>'
   );
 }
