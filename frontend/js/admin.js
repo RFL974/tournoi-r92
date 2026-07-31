@@ -112,6 +112,11 @@ function scfPhaseDe(cat) {
   return (v === 'P3') ? 'P3' : 'P2';
 }
 
+/** Vrai si la catégorie a la pause méridienne échelonnée activée (miroir backend pauseEchelonneeDe). */
+function pauseEchelonneeCat(cat) {
+  return String((cat && cat.pause_echelonnee) == null ? '' : cat.pause_echelonnee).trim().toLowerCase() === 'oui';
+}
+
 /* On garde en mémoire la config, les équipes et les matchs chargés (pour l'affichage). */
 let configCourante = { global: {}, categories: [] };
 let equipesCourantes = [];

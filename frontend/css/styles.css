@@ -289,6 +289,13 @@ select.r-input { cursor: pointer; }
 .theme-clair .scf-note.n-P2 { color: #0C1C2E; background: rgba(46, 143, 224, 0.10); }
 .theme-clair .scf-note.n-P3 { color: #8a5a0c; background: #fdf4e3; }
 
+/* -------- Pause méridienne échelonnée (option par catégorie) -------- */
+.bloc-echelonne { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(184, 216, 248, 0.25); }
+.ech-toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: var(--texte); font-weight: 600; }
+.ech-toggle input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex: none; }
+.theme-clair .bloc-echelonne { border-top-color: #e6edf5; }
+.theme-clair .ech-toggle { color: #0C1C2E; }
+
 /* --- Terrains (choix Auto / Manuel par catégorie) --- */
 .bloc-terrains {
   margin-bottom: 14px;

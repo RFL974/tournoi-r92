@@ -5,6 +5,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Pause méridienne échelonnée (option par catégorie) — 2026-07-31
+Répond au cas « peu de terrains, la matinée ne rentre pas » : une **pause déjeuner unique** laisse
+tous les terrains à l'arrêt. Nouvelle option **par catégorie** (case « Pause échelonnée ») : la
+catégorie joue en **un round-robin planifié en deux vagues** — pendant qu'une moitié se repose
+(**≥ 60 min garanti**), l'autre joue ses matchs internes, puis l'inverse ; les matchs inter-vagues
+ne tombent jamais pendant une pause → **équité** garantie (jamais reposé contre épuisé). Éligible si
+effectif **pair ≥ 4** (sinon repli automatique sur la pause classique + avertissement ; jamais de
+blocage). Remplace, pour la catégorie, la pause globale et le format d'après-midi. Backend :
+`planifierCategorieEchelonnee` (pure) + intégration `calculerPlanning` (une poule « A ») ; nouvelle
+colonne Config `pause_echelonnee`. Front : bloc « Pause méridienne » dans la fiche catégorie. Doc :
+[`docs/pause-echelonnee.md`](docs/pause-echelonnee.md). Tests 303/303 (+13, dont équité 0 violation et
+intégration `calculerPlanning`). ⚠️ **Redéploiement backend nécessaire.**
+
 ### Super Challenge U14 — Phase 3 : brassage du dimanche (2ᵉ journée) — 2026-07-31
 Complète la Phase 3 : après les triangulaires du **samedi** (générées comme la Phase 2, en 2×11),
 un nouveau bouton **« Générer le dimanche (brassage) »** (page Poules & planning, révélé seulement si

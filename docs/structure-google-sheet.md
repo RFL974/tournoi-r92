@@ -144,11 +144,12 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `max_equipes_par_club` | `2` | **Optionnel** (Phase 1). Nombre max d'équipes qu'un club peut engager dans cette catégorie. **Vide = illimité** (affiché « Plusieurs équipes possibles par catégorie » sur l'invitation ; jamais « 0 » ni « illimité ») |
 | `forme_jeu` | `RE — 15x15` | **Optionnel** (conformité FFR). Forme de jeu FFR **retenue** par l'organisateur pour cette catégorie ce mois-là. **Vide = non précisée** (historique). Sert à lever l'ambiguïté quand une catégorie a plusieurs formes le même mois |
 | `contexte_tournoi` | `SCF` | **Optionnel — U14 uniquement** (session 13). Contexte de jeu : **`SCF`** = Super Challenge de France ; **vide ou `LAMBDA`** = tournoi ordinaire (comportement historique). Ignoré pour toute catégorie autre que l'U14 (au sens FFR M14) : une valeur `SCF` posée ailleurs est sans effet |
-| `scf_phase` | `P2` | **Optionnel — U14 en contexte SCF** (session 13). Phase du Super Challenge : **`P2`** (phase 2 : 1 journée, triangulaire/quadrangulaire, 2×15) ou **`P3`** (phase 3 & clôture : 2 journées, triangulaire, 2×11). **Vide = `P2`** (défaut prudent). ⚠️ Colonnes **purement déclaratives** pour l'instant : la génération du planning et l'application des temps ne les consomment pas encore (prévu session 14) |
+| `scf_phase` | `P2` | **Optionnel — U14 en contexte SCF** (session 13). Phase du Super Challenge : **`P2`** (phase 2 : 1 journée, triangulaire/quadrangulaire, 2×15) ou **`P3`** (phase 3 & clôture : 2 journées, triangulaire, 2×11). **Vide = `P2`** (défaut prudent) |
+| `pause_echelonnee` | `oui` | **Optionnel** (session 15). **`oui`** = la catégorie joue en **un round-robin planifié en deux vagues** avec un **repos ≥ 60 min garanti** par équipe et l'équité (jamais reposé contre épuisé), au lieu d'une pause déjeuner globale. Utile quand les terrains sont rares. **Vide/`non`** = mode classique. Éligible si effectif **pair ≥ 4** (sinon repli automatique sur la pause classique + avertissement) |
 
 > ℹ️ **Migration automatique** : `format_apresmidi`, `param_format`, `terrains_auto`, puis
 > `reglement`, `effectif_min`, `effectif_max`, `arbitrage_organisation`, `max_equipes_par_club`,
-> `forme_jeu` et enfin `contexte_tournoi` / `scf_phase`
+> `forme_jeu`, `contexte_tournoi` / `scf_phase` et enfin `pause_echelonnee`
 > sont **ajoutées automatiquement** à droite de la Zone B dès la première génération d'après-midi (ou enregistrement
 > de catégorie) sur un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement
 > croisé**, sans `terrains_auto` = **mode Auto**, et sans `contexte_tournoi` = **tournoi ordinaire**,
