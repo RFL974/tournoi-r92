@@ -128,6 +128,17 @@ function lancerTestsFFR() {
   testS10_feuilleFormatVide(etat);
   testS10_feuilleFormatVideSignalement(etat);
 
+  // Session 11 — forme de jeu retenue (déclarative) + tir au but PRUDENT par construction.
+  testS11_libelleForme(etat);
+  testS11_tirAuButColonneAbsente(etat);
+  testS11_tirAuButOui(etat);
+  testS11_tirAuButValeurInattendue(etat);
+  testS11_formeJeuVideInchange(etat);
+  testS11_formeJeuMonoInchange(etat);
+  testS11_formeJeuLeveAmbiguite15x15(etat);
+  testS11_formeJeuLeveAmbiguite10x10(etat);
+  testS11_formeJeuHorsMoisPasDApplication(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -1258,4 +1269,92 @@ function testS10_feuilleFormatVideSignalement(etat) {
   var av = _autoChamp(d, 'Format d\'après-midi non configuré');
   _ffrAssert(etat, av && av.etat === 'avert' && /CROISE serait appliqué/.test(av.valeur),
     'feuilleVideSig : signalement de cohérence présent (avert, hors compteur de manquants)');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 11 — forme de jeu retenue (déclarative) + tir au but PRUDENT.       */
+/*  Deux fonctions PURES : libelleFormeFFR / reglesPourCombosFFR (tir_au_but)   */
+/*  et la levée d'ambiguïté de calculerApplicationFFR par la forme retenue.     */
+/* -------------------------------------------------------------------------- */
+
+/** Une ligne RefFFR_Regles M14/RE/15x15 joignable, avec la valeur `tir_au_but` demandée. */
+function _ffrRegleTir(tirAuBut) {
+  return [{ categorie: 'M14', forme_jeu: 'RE', effectif: '15x15', effectif_terrain: '15',
+    effectif_max_feuille: '13', terrain_longueur_m: '', terrain_largeur_m: '', terrain_libelle: 'Terrain normal',
+    ballon: 'T5', carton_jaune_min: '2', contexte: 'TOURNOI', joint_refffr_formes: 'OUI',
+    tir_au_but: tirAuBut, millesime: '2026-2027' }];
+}
+function _ffrCombo15() { return [{ categorie: 'M14', forme_jeu: 'RE', effectif: '15x15' }]; }
+
+/** libelleFormeFFR : identité canonique « forme — effectif », tolère les valeurs vides. */
+function testS11_libelleForme(etat) {
+  _ffrAssert(etat, libelleFormeFFR('RE', '15x15') === 'RE — 15x15', 'libelle : RE + 15x15 → « RE — 15x15 »');
+  _ffrAssert(etat, libelleFormeFFR('RE', '') === 'RE', 'libelle : effectif vide → forme seule');
+  _ffrAssert(etat, libelleFormeFFR('', '') === '', 'libelle : tout vide → chaîne vide');
+  _ffrAssert(etat, libelleFormeFFR(' RE ', ' 15x15 ') === 'RE — 15x15', 'libelle : espaces normalisés');
+}
+
+/** Colonne tir_au_but ABSENTE (regles S5) ⇒ PAS de tir au but (false), jamais d'erreur. */
+function testS11_tirAuButColonneAbsente(etat) {
+  var r = reglesPourCombosFFR(_ffrRefS5().regles, '12', [{ categorie: 'M12', forme_jeu: 'RE', effectif: '10x10' }]);
+  _ffrAssert(etat, r.length === 1, 'tirAbsent : une règle M12/RE/10x10 remontée');
+  _ffrAssert(etat, r[0].tir_au_but === false, 'tirAbsent : colonne absente ⇒ tir_au_but = false (prudent)');
+}
+
+/** tir_au_but = « OUI » (casse/espaces ignorés) ⇒ tir au but autorisé (true). */
+function testS11_tirAuButOui(etat) {
+  var r = reglesPourCombosFFR(_ffrRegleTir('OUI'), '14', _ffrCombo15());
+  _ffrAssert(etat, r.length === 1 && r[0].tir_au_but === true, 'tirOui : « OUI » ⇒ true');
+  var r2 = reglesPourCombosFFR(_ffrRegleTir('  oui '), '14', _ffrCombo15());
+  _ffrAssert(etat, r2.length === 1 && r2[0].tir_au_but === true, 'tirOui : «  oui  » (casse/espaces) ⇒ true');
+}
+
+/** Toute valeur AUTRE que « OUI » ⇒ PAS de tir au but (false). Aucun défaut « comme une autre ». */
+function testS11_tirAuButValeurInattendue(etat) {
+  ['NON', '1', 'vrai', 'O', 'yes', 'X', ''].forEach(function (v) {
+    var r = reglesPourCombosFFR(_ffrRegleTir(v), '14', _ffrCombo15());
+    _ffrAssert(etat, r.length === 1 && r[0].tir_au_but === false,
+      'tirInattendu : « ' + v + ' » ⇒ false (seul « OUI » autorise)');
+  });
+}
+
+/** forme_jeu VIDE (ou non fournie) ⇒ comportement STRICTEMENT identique à aujourd'hui (U14 janvier = ambigu). */
+function testS11_formeJeuVideInchange(etat) {
+  var sans = calculerApplicationFFR(_ffrRefS5(), 'U14', '2027-01-16', '1', '4', null, {});
+  var vide = calculerApplicationFFR(_ffrRefS5(), 'U14', '2027-01-16', '1', '4', null, {}, '');
+  _ffrAssert(etat, sans.ambigu === true && vide.ambigu === true, 'formeVide : ambigu dans les deux cas');
+  _ffrAssert(etat, JSON.stringify(sans) === JSON.stringify(vide), 'formeVide : résultat identique (aucun effet de bord)');
+}
+
+/** Mois à UNE seule forme (U12 juin) : préciser la forme ne change rien (déjà appliqué). */
+function testS11_formeJeuMonoInchange(etat) {
+  var sans = calculerApplicationFFR(_ffrRefS5(), 'U12', '2027-06-13', '1', '3', null, {});
+  var avec = calculerApplicationFFR(_ffrRefS5(), 'U12', '2027-06-13', '1', '3', null, {}, 'RE — 10x10');
+  _ffrAssert(etat, JSON.stringify(sans.dimensions) === JSON.stringify(avec.dimensions) &&
+    JSON.stringify(sans.champsZoneB) === JSON.stringify(avec.champsZoneB),
+    'formeMono : forme précisée sur mois mono-forme ⇒ résultat inchangé');
+}
+
+/** forme_jeu = « RE — 15x15 » (jeu à XV) ⇒ ambiguïté LEVÉE, on applique le jeu à 15 (terrain normal). */
+function testS11_formeJeuLeveAmbiguite15x15(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U14', '2027-01-16', '1', '4', null, {}, 'RE — 15x15');
+  _ffrAssert(etat, r.ambigu === false, 'leve15 : ambiguïté levée par la forme retenue');
+  _ffrAssert(etat, r.forme && r.forme.effectif === '15x15', 'leve15 : forme appliquée = 15x15');
+  _ffrAssert(etat, r.dimensions === null && r.champsZoneB.effectif_max === '13',
+    'leve15 : « terrain normal » (aucune dimension) + effectif_max appliqué');
+}
+
+/** forme_jeu = « RE — 10x10 » ⇒ ambiguïté levée sur l'AUTRE forme (jeu à 10 chiffré 56×45). */
+function testS11_formeJeuLeveAmbiguite10x10(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U14', '2027-01-16', '1', '4', null, {}, 'RE — 10x10');
+  _ffrAssert(etat, r.ambigu === false && r.forme && r.forme.effectif === '10x10', 'leve10 : forme appliquée = 10x10');
+  _ffrAssert(etat, r.dimensions && r.dimensions.U14 && r.dimensions.U14.l === 56 && r.dimensions.U14.w === 45,
+    'leve10 : dimensions U14 = 56 × 45');
+}
+
+/** forme_jeu HORS du mois (« RE — 7x7 » absent en janvier) ⇒ PAS d'application (comportement inchangé, ambigu). */
+function testS11_formeJeuHorsMoisPasDApplication(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U14', '2027-01-16', '1', '4', null, {}, 'RE — 7x7');
+  _ffrAssert(etat, r.ambigu === true, 'horsMois : forme inconnue ⇒ ambiguïté NON levée (comportement inchangé)');
+  _ffrAssert(etat, r.formesDisponibles.length === 2, 'horsMois : les deux formes du mois restent exposées');
 }

@@ -169,15 +169,19 @@ function creerOngletConfig(classeur) {
   // arbitrage_organisation : qui arbitre (« arbitrage » seul est déjà pris par l'assistant horaires).
   // max_equipes_par_club : nombre max d'équipes qu'un club peut engager dans cette catégorie
   //   (Phase 1). Vide = illimité (« Plusieurs équipes possibles par catégorie »).
+  // forme_jeu : forme de jeu FFR RETENUE par l'organisateur pour cette catégorie (ex. « RE — 15x15 »).
+  //   Migration douce : ajoutée À DROITE, VIDE = comportement historique inchangé (« non précisée »).
+  //   Sert à LEVER l'ambiguïté quand la catégorie a plusieurs formes le même mois (ex. U14 10x10|15x15).
   var entetesCategorie = ['categorie', 'presente', 'terrains', 'terrains_auto', 'nb_poules',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min',
     'format_apresmidi', 'param_format',
-    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation', 'max_equipes_par_club'];
+    'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation', 'max_equipes_par_club',
+    'forme_jeu'];
   var exemplesCategorie = [
-    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', '', ''],
-    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', '', ''],
-    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'CROISE',        '', '', '', '', '', ''],
-    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '', '']
+    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', '', '', ''],
+    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', '', '', ''],
+    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'CROISE',        '', '', '', '', '', '', ''],
+    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '', '', '']
   ];
   onglet.getRange(1, 1, 60, entetesCategorie.length + 1).setNumberFormat('@');
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
@@ -554,7 +558,8 @@ function lireRefFFRDates(classeur) {
 }
 
 /** Lecture de l'onglet RefFFR_Regles → tableau d'objets ; [] si l'onglet est absent/illisible.
- *  Une ligne = un couple catégorie × forme × effectif : terrain, effectifs, ballon, carton. */
+ *  Une ligne = un couple catégorie × forme × effectif : terrain, effectifs, ballon, carton,
+ *  tir_au_but ("OUI" = tir au but autorisé ; tout le reste = pas de tir au but, cf. reglesPourCombosFFR). */
 function lireRefFFRRegles(classeur) {
   try { return lireOngletSimple(classeur, 'RefFFR_Regles'); } catch (e) { return []; }
 }
@@ -750,6 +755,17 @@ function eclaterFormesFFR(ligne) {
 }
 
 /**
+ * Libellé canonique d'une forme du mois : « forme_jeu — effectif » (ex. « RE — 15x15 »). Source
+ * UNIQUE de l'identité d'une forme, partagée par le select admin (options + valeur stockée dans
+ * Config.forme_jeu) et par la levée d'ambiguïté de calculerApplicationFFR. Deux formes qui ne
+ * diffèrent QUE par l'effectif (U14 10x10 vs 15x15) restent ainsi distinctes. Pur.
+ */
+function libelleFormeFFR(forme, effectif) {
+  return [String(forme == null ? '' : forme).trim(), String(effectif == null ? '' : effectif).trim()]
+    .filter(function (x) { return x !== ''; }).join(' — ');
+}
+
+/**
  * Règles FFR (terrain / effectif / ballon / carton) joignant une catégorie pour les combinaisons
  * forme × effectif du mois. Jointure sur categorie(canonique) + forme_jeu + effectif, filtrée par
  * `joint_refffr_formes === 'OUI'` AVANT toute jointure (écarte le Sevens M14 et la ligne M15F, qui
@@ -774,12 +790,17 @@ function reglesPourCombosFFR(reglesRef, cleCat, combos) {
         terrain_largeur_m:    String(r.terrain_largeur_m || '').trim(),
         terrain_libelle:      String(r.terrain_libelle || '').trim(),
         ballon:               String(r.ballon || '').trim(),
-        carton_jaune_min:     String(r.carton_jaune_min || '').trim()
+        carton_jaune_min:     String(r.carton_jaune_min || '').trim(),
+        // PRUDENT PAR CONSTRUCTION (doctrine session 10) : SEUL le mot « OUI » (casse ignorée)
+        // autorise le tir au but. Colonne vide, absente ou toute autre valeur ⇒ false, SANS `else`
+        // ni catégorie traitée par défaut comme une autre. Le booléen naît directement du test.
+        tir_au_but:           (String(r.tir_au_but == null ? '' : r.tir_au_but).trim().toUpperCase() === 'OUI')
       };
       // Dédoublonnage sur les valeurs STRUCTURANTES (forme_jeu exclu : T+2/JCO diffèrent de nom,
       // pas de contenu). Une combinaison ne joint qu'une ligne (break).
       var cle = [regle.effectif_terrain, regle.effectif_max_feuille, regle.terrain_longueur_m,
-                 regle.terrain_largeur_m, regle.terrain_libelle, regle.ballon, regle.carton_jaune_min].join('¤');
+                 regle.terrain_largeur_m, regle.terrain_libelle, regle.ballon, regle.carton_jaune_min,
+                 regle.tir_au_but ? '1' : '0'].join('¤');
       if (!vues[cle]) { vues[cle] = true; out.push(regle); }
       break;
     }
@@ -1041,10 +1062,13 @@ function fusionnerCategorieFFR(categorieExistante, champsZoneB) {
  * @param {(string|number)} nbEquipes       clé de la grille de temps (nb d'équipes de la catégorie)
  * @param {?string} variante           'A' | 'B' | null (jeu à 10 seulement)
  * @param {Object} dimensionsActuelles l'objet dimensions_categories courant (fusion, jamais remplacement)
+ * @param {?string} formeJeu           forme RETENUE par l'organisateur (Config.forme_jeu, libellé
+ *          « forme_jeu — effectif »). Si elle correspond à UNE des formes du mois, l'ambiguïté est
+ *          levée et on applique cette forme. Sinon (vide, ou hors du mois) : comportement inchangé.
  * @return {{champsZoneB:Object, dimensions:Object|null, ignores:Array, forme:Object|null,
  *          ambigu:boolean, formesDisponibles:Array}}
  */
-function calculerApplicationFFR(ref, categorieApp, dateISO, nbDemiJournees, nbEquipes, variante, dimensionsActuelles) {
+function calculerApplicationFFR(ref, categorieApp, dateISO, nbDemiJournees, nbEquipes, variante, dimensionsActuelles, formeJeu) {
   var vide = { champsZoneB: {}, dimensions: null, ignores: [], forme: null, ambigu: false, formesDisponibles: [] };
   ref = ref || {};
   var cleCat = normaliserCategorie(categorieApp);
@@ -1063,6 +1087,20 @@ function calculerApplicationFFR(ref, categorieApp, dateISO, nbDemiJournees, nbEq
   if (!ligneForme) return vide;
 
   var combos = eclaterFormesFFR(ligneForme);
+
+  // LEVÉE D'AMBIGUÏTÉ PAR CHOIX EXPLICITE (session 11) : si l'organisateur a retenu une forme
+  // (Config.forme_jeu) ET qu'elle correspond à l'UNE des formes de ce mois, on ne garde QUE
+  // cette forme — l'application redevient possible. Si la forme retenue ne correspond à AUCUNE
+  // forme du mois (hors du mois), on NE filtre PAS : le comportement reste STRICTEMENT celui
+  // d'aujourd'hui (le signalement « hors du mois » est porté par le front, jamais bloquant).
+  var choisie = String(formeJeu == null ? '' : formeJeu).trim();
+  if (choisie) {
+    var combosChoisis = combos.filter(function (c) {
+      return libelleFormeFFR(c.forme_jeu, c.effectif) === choisie;
+    });
+    if (combosChoisis.length) combos = combosChoisis;
+  }
+
   var regles = reglesPourCombosFFR(ref.regles || [], cleCat, combos); // Sevens/M15F déjà filtrés (piège 5)
   if (!regles.length) return vide; // aucune règle joignable ⇒ rien à appliquer
   if (regles.length > 1) {
@@ -1388,8 +1426,17 @@ function appliquerValeursFFR(classeur, data) {
   try { if ((config.global || {}).dimensions_categories) dims = JSON.parse(config.global.dimensions_categories) || {}; }
   catch (e) { dims = {}; }
 
+  // Forme retenue par l'organisateur pour CETTE catégorie (Config.forme_jeu) — lève l'ambiguïté
+  // « plusieurs formes ce mois » quand elle correspond à l'une d'elles. Vide = comportement inchangé.
+  var formeJeu = '';
+  (config.categories || []).forEach(function (c) {
+    if (String(c.categorie == null ? '' : c.categorie).trim() === categorie) {
+      formeJeu = String(c.forme_jeu == null ? '' : c.forme_jeu).trim();
+    }
+  });
+
   var res = calculerApplicationFFR(getRefFFR(classeur), categorie, dateISO,
-    nbDemiJournees, nbEquipes, variante, dims);
+    nbDemiJournees, nbEquipes, variante, dims, formeJeu);
 
   // Ambiguïté (plusieurs formes ce mois-ci) : on n'écrit RIEN, on renvoie les formes à choisir.
   if (res.ambigu) {
@@ -4524,6 +4571,7 @@ function assurerColonnesConfig(classeur) {
   assurerColonneCategorie(classeur, 'effectif_max');
   assurerColonneCategorie(classeur, 'arbitrage_organisation');
   assurerColonneCategorie(classeur, 'max_equipes_par_club');
+  assurerColonneCategorie(classeur, 'forme_jeu');
 }
 
 /* ===================== GÉNÉRATION POULES + PLANNING ===================== */

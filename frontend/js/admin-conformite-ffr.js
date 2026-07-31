@@ -430,6 +430,70 @@ function majFormesCategories() {
       '<span class="ffr-forme-libelle">Forme FFR attendue : <strong>' + echapper(libelle) + '</strong></span>' +
       badge + alerteEffectifFFR(cat, eff);
   });
+  majFormeChoixCategories(dateISO);
+}
+
+/**
+ * Éclate la ligne de forme du mois (RefFFR_Formes) en formes distinctes { forme_jeu, effectif,
+ * libelle }. Miroir front de eclaterFormesFFR (backend) : `forme_jeu` et `effectif` peuvent porter
+ * plusieurs valeurs séparées par « | » (produit cartésien). Le libellé « forme_jeu — effectif » est
+ * la clé partagée avec le backend (libelleFormeFFR) — même identité des deux côtés.
+ */
+function formesDuMoisFFR(f) {
+  if (!f) return [];
+  function valeurs(v) {
+    return String(v == null ? '' : v).split('|').map(function (x) { return x.trim(); })
+      .filter(function (x) { return x !== ''; });
+  }
+  let formes = valeurs(f.forme_jeu); if (!formes.length) formes = [''];
+  let effs = valeurs(f.effectif); if (!effs.length) effs = [''];
+  const out = [], vus = {};
+  formes.forEach(function (fo) {
+    effs.forEach(function (ef) {
+      const libelle = [fo, ef].filter(Boolean).join(' — ');
+      if (libelle && !vus[libelle]) { vus[libelle] = true; out.push({ forme_jeu: fo, effectif: ef, libelle: libelle }); }
+    });
+  });
+  return out;
+}
+
+/**
+ * Remplit le select « Forme de jeu retenue » de chaque carte catégorie (placeholder
+ * .ffr-forme-choix[data-cat], data-value = valeur stockée). Options = formes du mois pour la
+ * catégorie + option vide « non précisée ». Doctrine §1.12 : JAMAIS bloquant — si la valeur stockée
+ * ne correspond à aucune forme du mois, elle est conservée comme option et SIGNALÉE en orange.
+ */
+function majFormeChoixCategories(dateISO) {
+  document.querySelectorAll('.ffr-forme-choix[data-cat]').forEach(function (el) {
+    const cat = el.getAttribute('data-cat');
+    const stocke = String(el.getAttribute('data-value') || '').trim();
+    const formes = formesDuMoisFFR(formeAttendueFFR(cat, dateISO));
+    if (!formes.length) { el.innerHTML = ''; el.hidden = true; return; } // migration douce : rien à proposer
+    el.hidden = false;
+
+    const connues = formes.map(function (x) { return x.libelle; });
+    const horsMois = stocke !== '' && connues.indexOf(stocke) === -1;
+
+    let options = '<option value="">— non précisée —</option>';
+    formes.forEach(function (x) {
+      options += '<option value="' + echapper(x.libelle) + '"' +
+        (x.libelle === stocke ? ' selected' : '') + '>' + echapper(x.libelle) + '</option>';
+    });
+    // Valeur stockée hors du mois : on la GARDE en option (sélectionnée) pour ne jamais l'effacer
+    // silencieusement à l'enregistrement — le signalement orange suffit (jamais un blocage).
+    if (horsMois) {
+      options += '<option value="' + echapper(stocke) + '" selected>' + echapper(stocke) + ' (hors du mois)</option>';
+    }
+
+    el.innerHTML =
+      '<label class="reglage"><span class="r-libelle">Forme de jeu retenue (FFR)</span>' +
+        '<select class="r-input" name="forme_jeu">' + options + '</select>' +
+      '</label>' +
+      (horsMois
+        ? '<span class="ffr-attendu">⚠️ La forme retenue « ' + echapper(stocke) + ' » ne correspond à ' +
+          'aucune forme FFR de ce mois pour ' + echapper(cat) + '. Vérifie (choix conservé, non bloquant).</span>'
+        : '');
+  });
 }
 
 /** Avertissement inline si l'effectif min/max saisi ne couvre pas l'effectif FFR (ex. 7 pour '7x7'). */

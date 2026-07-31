@@ -272,8 +272,9 @@ rétrocompatibilité d'affichage. **Actuellement référencé nulle part** — c
 
 **Tests** — `backend/Tests.gs`. Harnais autonome, sans Sheet ni effet de bord. Point d'entrée
 `lancerTestsFFR()` (le bilan affiche désormais `R92 — n/n`, la suite ne couvrant plus seulement
-la conformité). **90/90 OK** : 32 asserts d'origine, +10 sur la couverture de saison (session 2),
-+24 sur le filtrage et les jetons (session 3), +24 sur les règles et grilles de temps (session 5).
+la conformité). **232/232 OK** (compteur courant) : 32 asserts d'origine, puis +10 (session 2),
++24 (session 3), +24 (session 5), et les vagues suivantes (sessions 6→11), dont **+25 en session 11**
+(forme de jeu retenue déclarative + `tir_au_but` prudent par construction).
 
 ## 1.9 — Points d'ancrage pour la suite
 
@@ -980,7 +981,12 @@ le plus simple (M6) **et** le cas le plus dur (M14) en même temps, pour ne pas 
 - **U14 est déjà à moitié implémentée** : présente dans le seed `Config`, et traitée
   spécifiquement par la répartition des terrains (`U14: { plein: true }` — un match occupe un
   grand terrain entier).
-- **U6 n'existe nulle part** dans le code.
+- ~~**U6 n'existe nulle part** dans le code.~~ ⚠️ **Constat périmé** (relecture session 11) : il n'y a
+  **aucune catégorie codée en dur** — les catégories sont des lignes de la zone B de `Config`, créées,
+  renommées et supprimées librement en admin (`enregistrerCategorie` / `supprimerCategorie`). **U6 se
+  crée donc normalement en admin**, comme n'importe quelle autre catégorie ; rien dans le code ne lui
+  fait obstacle. Le seul traitement spécifique à une catégorie est cosmétique (`U14: { plein: true }`
+  côté répartition des terrains), jamais une liste fermée de catégories autorisées.
 
 ### ⚠️ Erreur d'analyse corrigée par le document
 
@@ -1473,8 +1479,8 @@ matchs manquants ne peut que l'aggraver). **Marge ≤ 10 min** ⇒ « marge faib
 supplémentaire fait dépasser » (la prédiction dépend du nombre de poules ; une marge fine sur une
 règle de sécurité mérite d'être signalée). **LIBRE inchangé** (session 8). Informatif, jamais bloquant.
 
-**Résumé d'exécution** : branche `fix/previsionnel-journee-entiere`, PR **#89** (à ouvrir),
-3 commits, tests **191/191 OK** en simulation Node (168 inchangés + 23). Fonctions pures :
+**Résumé d'exécution** : branche `fix/previsionnel-journee-entiere`, PR **#89** (ouverte, **mergée
+et déployée**), 3 commits, tests **191/191 OK** en simulation Node (168 inchangés + 23). Fonctions pures :
 `structureMatinFFR`, `matchsPhase2PreditsFFR`, `assemblerPrevisionnelJourneeFFR`,
 `previsionnelCategorieFFR` ; `tempsPrevisionnelJoueurFFR` (session 8) conservée telle quelle.
 
@@ -1488,10 +1494,8 @@ après-midi (amicaux, round-robin de toute la catégorie) n'est pas non plus gé
 le prévisionnel LIBRE ne compte alors que le matin. Le prompt demande explicitement de **ne pas
 toucher à LIBRE** ; je le signale sans le corriger.
 
-**Vérification** : 191/191 sous Node. ⚠️ Vérification navigateur impossible avant redéploiement (le
-bloc conformité dépend de `getConformiteFFR` et du nouvel objet `previsionnel`). ⚠️ **Redéploiement
-requis** — `backend/Code.gs` + `backend/Tests.gs` à recopier dans l'éditeur Apps Script, puis
-**mettre à jour le déploiement existant** (jamais en créer un nouveau, l'URL changerait).
+**Vérification** : 191/191 sous Node. ✅ **PR #89 mergée et backend redéployé** (déploiement existant
+mis à jour, URL inchangée) — le bloc conformité (`getConformiteFFR` + objet `previsionnel`) est en ligne.
 
 ---
 
@@ -1529,8 +1533,8 @@ exactement les mêmes matchs — vérifié par `testS10_generationInchangeeForma
 motif explicite sur la feuille (« non configuré — CROISE serait appliqué par défaut », champ toujours
 compté manquant), et un signalement de cohérence agrégé. **Seul le silence disparaît.**
 
-**Résumé d'exécution** : branche `fix/defaut-prudent-previsionnel`, PR **#90** (à ouvrir), 3 commits,
-tests **207/207 OK** en simulation Node (191 → +16). `FORMULES_PHASE2` (table) remplace l'énumération
+**Résumé d'exécution** : branche `fix/defaut-prudent-previsionnel`, PR **#90** (ouverte, **mergée et
+déployée**), 3 commits, tests **207/207 OK** en simulation Node (191 → +16). `FORMULES_PHASE2` (table) remplace l'énumération
 `matchsPhase2PreditsFFR` ; `structureMatinFFR` expose `totalEquipes` ; nature `'partiel'` pour le
 chemin prudent. `testS9_libreInchange` **renommé `testS10_librePredit`** (son nom affirmait un
 « inchangé » devenu faux) ; 3 tests `testS9_phase2*` adaptés à la table (mêmes valeurs).
@@ -1544,10 +1548,54 @@ avec le comportement réel.
 (Q25) ; et la génération applique toujours `CROISE` pour un format vide — c'est **voulu** (ne pas
 paralyser l'organisateur le jour J), désormais **dit** au lieu d'être tu.
 
-**Vérification** : 207/207 sous Node. ⚠️ Vérification navigateur impossible avant redéploiement (le
-bloc conformité et l'encart admin dépendent du backend). ⚠️ **Redéploiement requis** — `backend/Code.gs`
-+ `backend/Tests.gs` à recopier dans l'éditeur Apps Script, puis **mettre à jour le déploiement
-existant** (jamais en créer un nouveau, l'URL changerait).
+**Vérification** : 207/207 sous Node. ✅ **PR #90 mergée et backend redéployé** (déploiement existant
+mis à jour, URL inchangée) — le bloc conformité et l'encart admin sont en ligne.
+
+---
+
+## Session 11 — 2026-07-31 — Rendre déclaratives la forme de jeu et le tir au but
+
+**Origine** : préalable à la saisie détaillée du score U14 à XV (Q21, clôturée club). Avant de coder
+la saisie, deux choses aujourd'hui implicites devaient devenir **déclaratives** : (1) la **forme de
+jeu retenue** par l'organisateur (l'app savait lister les formes du mois mais pas laquelle est
+choisie — d'où l'ambiguïté U14 `10x10\|15x15` jamais tranchée) ; (2) la **capacité de tirer au but**,
+absente du référentiel.
+
+**Ce qui a été fait** (sans toucher à `saisie.html` / `saisie.js` / `enregistrerScore` — session
+suivante) :
+- **`RefFFR_Regles` — colonne `tir_au_but`** : lue par `lireRefFFRRegles` (lecture générique par
+  en-tête) et **exposée par `reglesPourCombosFFR`** en booléen. **PRUDENT PAR CONSTRUCTION** (doctrine
+  session 10) : le booléen naît directement de `=== 'OUI'` (casse/espaces ignorés) — **colonne vide,
+  absente ou toute autre valeur ⇒ `false`, sans aucun `else`**, aucune catégorie traitée par défaut
+  comme une autre. Ajouté aussi à la clé de dédoublonnage.
+- **`Config` zone B — champ `forme_jeu`** : migration douce (ajout à droite via `assurerColonnesConfig`,
+  seed `creerOngletConfig`) ; **vide = comportement historique strictement inchangé**.
+- **Admin, carte catégorie** : select `forme_jeu` peuplé depuis les formes du mois pour la catégorie
+  (`majFormeChoixCategories`, miroir front de `eclaterFormesFFR`) ; option vide « non précisée » ;
+  valeur **hors du mois conservée et signalée en orange, jamais bloquante** (doctrine §1.12). La valeur
+  stockée est **préservée à l'enregistrement** même quand le select n'est pas rendu (leçon session 3 :
+  `enregistrerCategorie` réécrit la ligne entière).
+- **`calculerApplicationFFR`** : nouveau paramètre `formeJeu`. Si la forme retenue **correspond à l'une
+  des formes du mois** (identité canonique `libelleFormeFFR` = « forme — effectif »), les combos sont
+  filtrés à cette seule forme : **l'ambiguïté est levée et on applique**. Sinon (vide, ou hors du mois),
+  **comportement strictement inchangé**. Câblé dans `appliquerValeursFFR` (lit `Config.forme_jeu`).
+
+**Écart déclaré** : la vignette « Appliquer les valeurs FFR » reste gardée par le front sur
+`res.regles.length > 1` (`evaluerConformiteFFR` non modifié) — la levée d'ambiguïté vit dans
+`calculerApplicationFFR`/`appliquerValeursFFR`. **Rendre le bouton atteignable quand une forme est
+retenue est un suivi UI** (hors périmètre de cette PR, qui vise le socle déclaratif).
+
+**Résumé d'exécution** : branche `feat/forme-jeu-tir-au-but`, tests **232/232 OK** en simulation Node
+(207 → +25). Fonctions pures nouvelles : `libelleFormeFFR` ; `reglesPourCombosFFR` (champ `tir_au_but`)
+et `calculerApplicationFFR` (paramètre `formeJeu`) étendues sans casser leurs appelants.
+
+**Source** : fiches FFR **c10 à c13**, millésime **2026-2027**, mise à jour **17/06/26** (décisions
+club Q20/Q21 : U14 en `15x15`, catégories basses 1 essai = 1 point, U14 à XV en points réels 5/2/3/3).
+
+**Vérification** : 232/232 sous Node. ⚠️ **Redéploiement requis** — `backend/Code.gs` +
+`backend/Tests.gs` à recopier dans l'éditeur Apps Script, puis **mettre à jour le déploiement existant**
+(jamais en créer un nouveau, l'URL changerait). La colonne `RefFFR_Regles!tir_au_but` et le remplissage
+des cellules sont à faire **à la main** dans le Sheet (le code ne les écrit pas).
 
 ---
 
@@ -1576,8 +1624,8 @@ existant** (jamais en créer un nouveau, l'URL changerait).
 | **Q17** | **Usage des marques.** L'écusson « École de Rugby », le logo #BienJoué et les marques du Racing 92 n'appartiennent pas à l'association. Leur affichage sur une page comportant des sponsors est une question distincte de la convention avec le club. | Ligue IDF / Racing 92 | ⏳ ouverte |
 | **Q18** | **Adresse de rôle pour `contact_reponse_email`.** Cette adresse reste publique sur la vitrine (décision 1.3, S3). Est-ce aujourd'hui une adresse **personnelle** ou une adresse de **rôle** (type `tournoi@…`) ? Une adresse de rôle survit aux changements de bénévole et n'expose personne. *Réglage de donnée dans `Config`, pas de code.* | vérification Romain | ⏳ ouverte |
 | **Q19** | **Documents manquants — la collection lue est incomplète.** ✅ **Résolue (document)** : le corpus est **complet** (15 fiches, `a01` + `b02`→`b06` + `c07`→`c15`). Les six fiches manquantes ont été obtenues en session 5 (S25–S31) ; **`c15`** est identifié comme *Challenge M15F Jeu à X* (la déduction « la collection s'arrête à c14 » était fausse). | vérification Romain | ✅ **résolue (document)** |
-| **Q20** | **U14 : jeu à X ou jeu à XV ?** ✅ **Résolue (document)** : `RefFFR_Formes` porte `10x10\|15x15` sur le même mois — **les deux sont autorisées**. Ce n'est donc pas une décision d'architecture mais un **paramètre par tournoi** (l'organisateur choisit). L'éclatement du `|` gère déjà les deux formes. | décision Romain | ✅ **résolue (document)** |
-| **Q21** | **La table de marque saisit-elle des essais ou des points ?** Le backend stocke `score_A` / `score_B` sans unité. Toutes les fiches posent la règle des **5 essais d'écart** (score acquis, rééquilibrage obligatoire) : elle n'est implémentable que si l'unité est l'essai, sinon il faut convertir (essai = 5 points). | vérification Romain | ⏳ ouverte |
+| **Q20** | **U14 : jeu à X ou jeu à XV ?** ✅ **Résolue (club)** : `RefFFR_Formes` porte `10x10\|15x15` le même mois — **les deux sont autorisées** ; c'est un **paramètre par tournoi**. **Décision du club : U14 est joué en `15x15` (jeu à XV).** L'éclatement du `|` gère déjà les deux formes ; **session 11** ajoute la déclaration explicite de ce choix (`Config.forme_jeu`) qui lève l'ambiguïté d'application. | décision club | ✅ **résolue (club)** |
+| **Q21** | **La table de marque saisit-elle des essais ou des points ?** Le backend stocke `score_A` / `score_B` sans unité. ✅ **Résolue (club)** : dans les **catégories basses, 1 essai = 1 point** (le score EST le nombre d'essais) ; **U14 à XV se compte en points réels** (essai **5**, transformation **2**, pénalité **3**, drop **3**). Conséquence : la saisie détaillée (essais/transfos/pénalités/drops) ne concerne que **U14 à XV** ; les autres catégories restent au comptage d'essais actuel. La règle des **5 essais d'écart** s'exprime donc en essais dans les catégories basses. **Implémentation en cours (session suivante)** ; session 11 pose le préalable déclaratif (`forme_jeu`) et la capacité `tir_au_but`. | décision club | ✅ **résolue (club)** |
 | **Q22** | **Quel est le recouvrement réel entre Tournoi R92 et la FDM EDR ?** L'audit affirmait « zéro recouvrement » depuis la session 0, sans jamais revérifier. La FFR décrit pourtant la FDM comme couvrant *la gestion des rencontres et des plateaux*, et indique qu'elle s'applique aux **tournois privés de club** dès lors qu'ils sont **déclarés dans Oval-e**. Le recouvrement porterait donc sur l'**amont déclaratif** et la **liste des clubs** — pas sur les poules, les terrains, le planning horaire ni la diffusion publique des scores. **À trancher sur pièce** : visionner le webinaire FFR du **03/02/2026** et déterminer si la FDM produit un **planning** ou une **vue publique**. Structurant pour le partenariat avec le Racing 92. | vérification Romain | ⏳ **ouverte — priorité haute** |
 | **Q23** | **Un tournoi « matin + après-midi » compte-t-il pour 1 ou 2 demi-journées** au sens des grilles de temps FFR ? ✅ **Résolue (club).** Le directeur de l'EDR du Racing a répondu (**27/07/2026**) : « *la FFR choisit du nombre de minutes maximum à jouer pour chaque catégorie par journée, et après les organisateurs de tournois doivent organiser leur journée de tournée en respectant ce temps de jeu maximum* ». **Corroboré** par le pied des fiches FFR (« *Si 3 demi-journées, temps de jeu = 100 minutes* » — trois demi-journées ne peuvent pas être trois journées) et par le **titre** des tableaux (« Préconisation… »). **Double conséquence doctrinale** : (1) les **grilles de temps sont des préconisations, le plafond est la règle qui engage** — d'où sa récupération indépendante des grilles (session 8, §1.8) ; (2) un tournoi matin + après-midi = **2 demi-journées**, `nb_demi_journees` **défaut porté de 1 à 2** (migration douce : absent ⇒ 2 ; aucune valeur saisie modifiée). | Directeur EDR Racing 92 | ✅ **résolue (club, 27/07/2026)** |
 | **Q24** | **Quel est le code club FFR du `Racing Club de France Rugby` ?** Champ obligatoire du formulaire d'autorisation (`org_code_club`). Ne figure sur aucune source publique consultée. Se lit sur la carte de qualification d'un licencié du club ou dans Oval-e. ⚠️ **Un code obtenu par un modèle de langage sans source vérifiable a été écarté** — un code erroné sur un dossier officiel engage le club signataire. | Racing / Oval-e | ⏳ ouverte |
