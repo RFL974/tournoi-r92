@@ -88,6 +88,14 @@ function groupeLabelScf(cat, nomPoule, taille, estClassement) {
   return (taille === 4 ? 'Quadrangulaire ' : 'Triangulaire ') + String(nomPoule == null ? '' : nomPoule);
 }
 
+/** Texte de l'arbitre DÉSIGNÉ d'un match (l'équipe qui ne joue pas, Super Challenge), ou '' si aucun.
+ *  `nomFn` = fonction id_equipe → nom lisible. Renvoie du TEXTE BRUT (l'appelant échappe pour le HTML). */
+function libelleArbitreScf(m, nomFn) {
+  var a = (m && m.arbitre != null) ? String(m.arbitre).trim() : '';
+  if (!a) return '';
+  return 'Arbitre : ' + ((typeof nomFn === 'function') ? nomFn(a) : a);
+}
+
 /**
  * Affiche un petit message sous un formulaire (vert = ok, rouge = erreur).
  * @param {HTMLElement} element  la zone de message

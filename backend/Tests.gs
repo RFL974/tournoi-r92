@@ -189,6 +189,13 @@ function lancerTestsFFR() {
   testS14c_planning6EquipesDeuxTriangulaires(etat);
   testS14c_phase3QuadAvertit(etat);
 
+  // Session 14 (PR D) — arbitrage désigné (l'équipe qui ne joue pas).
+  testS14d_triangulaireArbitre3eEquipe(etat);
+  testS14d_quadrangulaireArbitreReglement(etat);
+  testS14d_arbitreNeJouePas(etat);
+  testS14d_matchObjToRowPreserveArbitre(etat);
+  testS14d_planningEcritArbitre(etat);
+
   // Session 15 — pause méridienne échelonnée (2 vagues, repos ≥ 60, équité).
   testS15_vaguesPartition(etat);
   testS15_roundRobinComplet(etat);
@@ -1999,4 +2006,57 @@ function testS14c_phase3QuadAvertit(etat){
   var r=calculerPlanning(d.config, d.equipes, false);
   var aWarn=r.avert.some(function(a){ return a.indexOf('TRIANGULAIRES')>=0; });
   _ffrAssert(etat, aWarn, 'S14c : Phase 3 à 4 équipes (quad) → avertissement « triangulaires »');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 14 (PR D) — arbitrage désigné (l'équipe qui ne joue pas)           */
+/* -------------------------------------------------------------------------- */
+
+/** Triangulaire : à chaque match, la 3ᵉ équipe (celle qui ne joue pas) arbitre. */
+function testS14d_triangulaireArbitre3eEquipe(etat) {
+  var f = fixtureScfGroupe(['A', 'B', 'C'], 'U14');
+  var ok = f.every(function (m) {
+    var attendu = ['A', 'B', 'C'].filter(function (x) { return x !== m.a && x !== m.b; })[0];
+    return m.arbitre === attendu;
+  });
+  _ffrAssert(etat, f.length === 3 && ok, 'S14d : triangulaire → 3ᵉ équipe arbitre chaque match');
+}
+
+/** Quadrangulaire : arbitre selon la table du règlement (M1→E1, M2→E2, M3→E3, M4→E4). */
+function testS14d_quadrangulaireArbitreReglement(etat) {
+  var f = fixtureQuadrangulaireScf(['E1', 'E2', 'E3', 'E4']);
+  _ffrAssert(etat, f[0].arbitre === 'E1' && f[1].arbitre === 'E2' && f[2].arbitre === 'E3' && f[3].arbitre === 'E4',
+    'S14d : quadrangulaire → arbitres E1,E2,E3,E4 (table du règlement)');
+  // Chaque équipe arbitre exactement une fois.
+  var c = {}; f.forEach(function (m) { c[m.arbitre] = (c[m.arbitre] || 0) + 1; });
+  _ffrAssert(etat, c.E1 === 1 && c.E2 === 1 && c.E3 === 1 && c.E4 === 1, 'S14d : chaque équipe arbitre 1 fois');
+}
+
+/** L'arbitre ne fait jamais partie des deux équipes qui jouent le match. */
+function testS14d_arbitreNeJouePas(etat) {
+  var tri = fixtureScfGroupe(['A', 'B', 'C'], 'U14');
+  var quad = fixtureQuadrangulaireScf(['E1', 'E2', 'E3', 'E4']);
+  var ok = tri.concat(quad).every(function (m) { return m.arbitre !== m.a && m.arbitre !== m.b; });
+  _ffrAssert(etat, ok, 'S14d : l\'arbitre ne joue jamais le match qu\'il arbitre');
+}
+
+/** matchObjToRow préserve la colonne arbitre (réécriture sans perte). */
+function testS14d_matchObjToRowPreserveArbitre(etat) {
+  var col = ENTETES.Matchs.indexOf('arbitre');
+  _ffrAssert(etat, col >= 0, 'S14d : colonne arbitre présente dans ENTETES.Matchs');
+  var row = matchObjToRow({ id_match: 'M001', categorie: 'U14', poule: 'A', equipe_A: 'E1', equipe_B: 'E3',
+    statut: 'à venir', phase: 'poule', arbitre: 'E2' });
+  _ffrAssert(etat, row[col] === 'E2', 'S14d : matchObjToRow écrit l\'arbitre dans sa colonne');
+}
+
+/** Intégration : le planning SCF écrit un arbitre (non-joueur) sur chaque match du samedi. */
+function testS14d_planningEcritArbitre(etat) {
+  var d = _scfGrpConfig(6, 'P3'); // 6 équipes → 2 triangulaires
+  var r = calculerPlanning(d.config, d.equipes, false);
+  var col = ENTETES.Matchs.indexOf('arbitre');
+  var tous = r.matchsFinaux.every(function (row) {
+    var arb = row[col];
+    return arb && arb !== row[6] && arb !== row[7]; // renseigné et ne joue pas (col 6/7 = A/B)
+  });
+  _ffrAssert(etat, r.matchsFinaux.length === 6 && tous, 'S14d : chaque match SCF a un arbitre désigné qui ne joue pas');
 }

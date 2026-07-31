@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Super Challenge — arbitrage désigné (l'équipe qui ne joue pas) — 2026-07-31
+Sur chaque triangulaire/quadrangulaire, l'app **désigne l'équipe qui arbitre** le match (celle qui ne
+joue pas) : triangulaire → la 3ᵉ équipe ; quadrangulaire → la table du règlement (M1→E1 … M4→E4,
+chaque équipe arbitre une fois). Stocké dans la nouvelle colonne **`arbitre`** de l'onglet Matchs
+(migration douce, col 27) et **affiché** sur les 3 écrans (admin, saisie, page publique) : « 🧑‍⚖️
+Arbitre : … ». `matchObjToRow` délègue désormais à `matchObjToRowComplet` → les réécritures
+préservent l'arbitre **et** le score détaillé (corrige au passage une perte latente du détail).
+*(En Phase 3 officielle l'arbitrage est FFR ; la 3ᵉ équipe reste un repère pratique.)* Tests 325/325
+(+7). ⚠️ **Redéploiement backend nécessaire.**
+
 ### Super Challenge — vocabulaire à l'affichage (Samedi/Dimanche, Triangulaire, Poule E/F/G) — 2026-07-31
 Pour une catégorie en Super Challenge, les 3 écrans (admin, saisie, page publique) affichent désormais
 le **bon vocabulaire** au lieu du générique « Matin — poules / Poule A » : en-têtes **📅 Samedi —
