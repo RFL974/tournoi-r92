@@ -142,13 +142,17 @@ Un tableau, **une ligne par catégorie**. En-têtes :
 | `effectif_max` | `12` | **Optionnel** (dossier club). Effectif maximum par équipe (nb de joueurs) |
 | `arbitrage_organisation` | `Éducateurs des clubs` | **Optionnel** (dossier club). Qui arbitre les matchs. ⚠️ Nom volontairement distinct de l'« arbitrage » du code (assistant d'optimisation des horaires) |
 | `max_equipes_par_club` | `2` | **Optionnel** (Phase 1). Nombre max d'équipes qu'un club peut engager dans cette catégorie. **Vide = illimité** (affiché « Plusieurs équipes possibles par catégorie » sur l'invitation ; jamais « 0 » ni « illimité ») |
+| `forme_jeu` | `RE — 15x15` | **Optionnel** (conformité FFR). Forme de jeu FFR **retenue** par l'organisateur pour cette catégorie ce mois-là. **Vide = non précisée** (historique). Sert à lever l'ambiguïté quand une catégorie a plusieurs formes le même mois |
+| `contexte_tournoi` | `SCF` | **Optionnel — U14 uniquement** (session 13). Contexte de jeu : **`SCF`** = Super Challenge de France ; **vide ou `LAMBDA`** = tournoi ordinaire (comportement historique). Ignoré pour toute catégorie autre que l'U14 (au sens FFR M14) : une valeur `SCF` posée ailleurs est sans effet |
+| `scf_phase` | `P2` | **Optionnel — U14 en contexte SCF** (session 13). Phase du Super Challenge : **`P2`** (phase 2 : 1 journée, triangulaire/quadrangulaire, 2×15) ou **`P3`** (phase 3 & clôture : 2 journées, triangulaire, 2×11). **Vide = `P2`** (défaut prudent). ⚠️ Colonnes **purement déclaratives** pour l'instant : la génération du planning et l'application des temps ne les consomment pas encore (prévu session 14) |
 
 > ℹ️ **Migration automatique** : `format_apresmidi`, `param_format`, `terrains_auto`, puis
-> `reglement`, `effectif_min`, `effectif_max`, `arbitrage_organisation` et `max_equipes_par_club`
+> `reglement`, `effectif_min`, `effectif_max`, `arbitrage_organisation`, `max_equipes_par_club`,
+> `forme_jeu` et enfin `contexte_tournoi` / `scf_phase`
 > sont **ajoutées automatiquement** à droite de la Zone B dès la première génération d'après-midi (ou enregistrement
 > de catégorie) sur un Sheet déjà en service. Une catégorie sans `format_apresmidi` = **classement
-> croisé**, et sans `terrains_auto` = **mode Auto**, comme avant. Les colonnes « dossier club »
-> vides = champ non renseigné (aucun blocage).
+> croisé**, sans `terrains_auto` = **mode Auto**, et sans `contexte_tournoi` = **tournoi ordinaire**,
+> comme avant. Les colonnes « dossier club » vides = champ non renseigné (aucun blocage).
 
 > **Durée totale d'un match** (calculée par le backend) :
 > `format_mi_temps × duree_mi_temps_min + pause_mi_temps_min` (si 2 mi-temps).

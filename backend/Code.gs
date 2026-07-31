@@ -178,16 +178,23 @@ function creerOngletConfig(classeur) {
   // forme_jeu : forme de jeu FFR RETENUE par l'organisateur pour cette catégorie (ex. « RE — 15x15 »).
   //   Migration douce : ajoutée À DROITE, VIDE = comportement historique inchangé (« non précisée »).
   //   Sert à LEVER l'ambiguïté quand la catégorie a plusieurs formes le même mois (ex. U14 10x10|15x15).
+  // contexte_tournoi : contexte de jeu retenu pour une catégorie U14 — VIDE ou 'LAMBDA' = tournoi
+  //   ordinaire (comportement historique inchangé) ; 'SCF' = Super Challenge de France. Migration
+  //   douce, à DROITE. Ne concerne QUE l'U14 (catégorie FFR M14) ; ignoré pour les autres.
+  // scf_phase : phase du Super Challenge quand contexte_tournoi = 'SCF' — 'P2' (phase 2 : 1 journée,
+  //   triangulaire/quadrangulaire, 2×15) ou 'P3' (phase 3 & clôture : 2 journées, triangulaire, 2×11).
+  //   VIDE = 'P2' (défaut prudent). PUREMENT DÉCLARATIF (session 13) : la génération réelle du
+  //   planning et l'application des temps ne consomment pas encore ces colonnes (prévu session 14).
   var entetesCategorie = ['categorie', 'presente', 'terrains', 'terrains_auto', 'nb_poules',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min',
     'format_apresmidi', 'param_format',
     'reglement', 'effectif_min', 'effectif_max', 'arbitrage_organisation', 'max_equipes_par_club',
-    'forme_jeu'];
+    'forme_jeu', 'contexte_tournoi', 'scf_phase'];
   var exemplesCategorie = [
-    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', '', '', ''],
-    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', '', '', ''],
-    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'CROISE',        '', '', '', '', '', '', ''],
-    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '', '', '']
+    ['U8',  'oui', '1,2', 'oui', '', '2', '8',  '2', '15', 'LIBRE',         '', '', '', '', '', '', '', '', ''],
+    ['U10', 'oui', '3,4', 'oui', '', '2', '10', '2', '15', 'CROISE',        '', '', '', '', '', '', '', '', ''],
+    ['U12', 'oui', '5,6', 'oui', '', '2', '12', '3', '15', 'CROISE',        '', '', '', '', '', '', '', '', ''],
+    ['U14', 'oui', '7,8', 'oui', '', '2', '15', '3', '20', 'CROISE',        '', '', '', '', '', '', '', '', '']
   ];
   onglet.getRange(1, 1, 60, entetesCategorie.length + 1).setNumberFormat('@');
   onglet.getRange(1, 1, zoneA.length, 2).setValues(zoneA);
@@ -4750,6 +4757,9 @@ function assurerColonnesConfig(classeur) {
   assurerColonneCategorie(classeur, 'arbitrage_organisation');
   assurerColonneCategorie(classeur, 'max_equipes_par_club');
   assurerColonneCategorie(classeur, 'forme_jeu');
+  // Contexte U14 (session 13, déclaratif) : Super Challenge de France vs tournoi ordinaire.
+  assurerColonneCategorie(classeur, 'contexte_tournoi');
+  assurerColonneCategorie(classeur, 'scf_phase');
 }
 
 /* ===================== GÉNÉRATION POULES + PLANNING ===================== */
@@ -4789,6 +4799,28 @@ function nombrePoules(cat, nbEquipes) {
 function poulesForcees(cat) {
   var force = parseInt(cat && cat.nb_poules, 10);
   return isFinite(force) && force >= 1;
+}
+
+/**
+ * Contexte de jeu retenu pour une catégorie U14 (session 13, PUREMENT DÉCLARATIF).
+ * Source unique et PRUDENTE PAR CONSTRUCTION du couple (contexte, phase) que consommera la
+ * génération Super Challenge de France (session 14). Ne s'applique QU'À la catégorie FFR M14
+ * (= U14 dans l'app) : pour toute autre catégorie on renvoie TOUJOURS le contexte ordinaire, quel
+ * que soit le contenu des colonnes — une valeur 'SCF' déposée par erreur sur une U12 est ignorée,
+ * jamais « devinée ». Symétrie côté écran : contexteTournoiDe / scfPhaseDe (admin.js).
+ *   - contexte : 'SCF' seulement si la catégorie est U14 ET contexte_tournoi vaut exactement 'SCF' ;
+ *                tout le reste (vide, 'LAMBDA', inconnu, catégorie ≠ U14) → 'LAMBDA' (historique).
+ *   - phase    : 'P3' seulement si scf_phase vaut exactement 'P3' ; tout le reste → 'P2' (défaut).
+ *   - estScf   : raccourci booléen (contexte === 'SCF').
+ * Pur, testable, sans accès classeur.
+ */
+function contexteScfCategorie(cat) {
+  var estU14 = normaliserCategorie(cat && cat.categorie) === '14';
+  var ctxBrut = String((cat && cat.contexte_tournoi) == null ? '' : cat.contexte_tournoi).trim().toUpperCase();
+  var contexte = (estU14 && ctxBrut === 'SCF') ? 'SCF' : 'LAMBDA';
+  var phaseBrut = String((cat && cat.scf_phase) == null ? '' : cat.scf_phase).trim().toUpperCase();
+  var phase = (phaseBrut === 'P3') ? 'P3' : 'P2';
+  return { contexte: contexte, phase: phase, estScf: (contexte === 'SCF') };
 }
 
 /**

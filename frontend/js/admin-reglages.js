@@ -203,7 +203,10 @@ function formulaireCategorie(cat) {
   });
 
   return (
-    '<form class="carte categorie form-categorie" data-cat="' + echapper(nom) + '">' +
+    // data-contexte pilote l'affichage U14 (Lambda ↔ Super Challenge) : voir blocContexteU14 et le
+    // gestionnaire onReglagesChange. Pour les catégories non-U14, il vaut toujours 'LAMBDA' (sans effet).
+    '<form class="carte categorie form-categorie" data-cat="' + echapper(nom) + '"' +
+        ' data-contexte="' + contexteTournoiDe(cat) + '">' +
       '<div class="ligne-info">' +
         '<span class="badge">' + echapper(nom) + '</span>' +
       '</div>' +
@@ -218,6 +221,9 @@ function formulaireCategorie(cat) {
       // et le signalement orange « hors du mois ». Masqué tant qu'aucune forme n'est disponible.
       '<div class="ffr-forme-choix" data-cat="' + echapper(nom) + '" data-value="' +
         echapper(String(cat.forme_jeu == null ? '' : cat.forme_jeu)) + '" hidden></div>' +
+      // Contexte U14 (Super Challenge de France) : rendu SEULEMENT pour l'U14 ; chaîne vide sinon.
+      // En SCF, le CSS (form[data-contexte="SCF"]) masque le bloc format d'après-midi ci-dessous.
+      blocContexteU14(cat) +
       blocFormatApresMidi(cat) +
       '<div class="ligne-action">' +
         '<button type="submit" class="bouton">Enregistrer</button>' +
@@ -441,6 +447,80 @@ function blocFormatApresMidi(cat) {
 }
 
 /**
+ * Bloc « Contexte du tournoi (U14) » — session 13 (DÉCLARATIF). Rendu UNIQUEMENT pour la catégorie
+ * U14 (au sens FFR M14) ; chaîne vide pour toutes les autres, qui restent strictement inchangées.
+ *
+ * Deux cartes-radio : « Tournoi ordinaire » (LAMBDA, défaut historique) ou « Super Challenge de
+ * France » (SCF). En SCF, un panneau révèle la forme (Jeu à XV 15×15, figée) et le choix de la
+ * phase (2 ou 3) avec un récapitulatif des temps ; le CSS masque alors les cartes « format
+ * d'après-midi » (sans objet dans ce contexte). L'affichage conditionnel est piloté par
+ * data-contexte (sur le formulaire) et data-phase (sur le panneau) — voir onReglagesChange —,
+ * sans :has(), pour rester compatible tous téléphones.
+ *
+ * IMPORTANT (honnêteté) : ce bloc ne fait que DÉCLARER le cadre. La génération du planning et
+ * l'application des temps du Super Challenge ne le consomment pas encore (prévu session 14) : le
+ * récapitulatif est informatif. Prudent par construction : vide/Lambda ⇒ comportement d'aujourd'hui.
+ */
+function blocContexteU14(cat) {
+  const nom = (cat && cat.categorie != null) ? cat.categorie : '';
+  if (!categorieSuperChallenge(nom)) return ''; // le contexte SCF ne concerne que l'U14 (M14)
+  const ctx = contexteTournoiDe(cat);   // 'LAMBDA' | 'SCF'
+  const phase = scfPhaseDe(cat);        // 'P2' | 'P3'
+
+  // Une carte-radio de contexte (mise en avant si choisie, comme les cartes de format d'après-midi).
+  function carte(val, titre, desc) {
+    return '<label class="ctx-carte c-' + val + (ctx === val ? ' est-choisi' : '') + '">' +
+             '<input type="radio" name="contexte_tournoi" value="' + val + '"' + (ctx === val ? ' checked' : '') + '>' +
+             '<span class="f-corps">' +
+               '<span class="f-titre">' + echapper(titre) + '</span>' +
+               '<span class="f-desc">' + echapper(desc) + '</span>' +
+             '</span>' +
+           '</label>';
+  }
+
+  // Un choix de phase (radio simple).
+  function phaseRadio(val, lib) {
+    return '<label class="scf-phase-choix">' +
+             '<input type="radio" name="scf_phase" value="' + val + '"' + (phase === val ? ' checked' : '') + '> ' +
+             echapper(lib) +
+           '</label>';
+  }
+
+  const cartes =
+    carte('LAMBDA', 'Tournoi ordinaire',
+          'Tournoi club habituel : matin en poules, après-midi selon le format choisi ci-dessous (croisé, diagonal ou libre).') +
+    carte('SCF', 'Super Challenge de France',
+          'Plateau officiel U14 en Jeu à XV (15×15). Les formats d\'après-midi ci-dessous ne s\'appliquent pas : la structure suit le règlement du Super Challenge.');
+
+  // Panneau SCF, révélé par le CSS quand le formulaire porte data-contexte="SCF".
+  const panneau =
+    '<div class="bloc-scf" data-phase="' + phase + '">' +
+      '<p class="scf-forme">Forme de jeu : <b>Jeu à XV (15×15)</b> — effectif 23 joueurs, minimum 19 · ' +
+        'barème Victoire 3 / Nul 2 / Défaite 1.</p>' +
+      '<div class="scf-phases">' +
+        '<span class="format-libelle">Phase du Super Challenge</span>' +
+        phaseRadio('P2', 'Phase 2 (janv.–févr.)') +
+        phaseRadio('P3', 'Phase 3 & clôture (avr.–juin)') +
+      '</div>' +
+      '<span class="scf-recap r-P2">Phase 2 — <b>1 journée</b> · triangulaire ou quadrangulaire · ' +
+        '2 rencontres · temps de jeu <b>2 × 15 min</b>.</span>' +
+      '<span class="scf-recap r-P3">Phase 3 &amp; clôture — <b>2 journées</b> · triangulaire · ' +
+        'samedi 2 matchs / dimanche 3 · temps de jeu <b>2 × 11 min</b>.</span>' +
+      '<p class="scf-note">ℹ️ Ce choix pose le <b>cadre</b> du plateau. La génération automatique du ' +
+        'planning et l\'application des temps du Super Challenge ne sont pas encore branchées (prévu ' +
+        'prochainement) : pour l\'instant, ce réglage est <b>informatif</b>.</p>' +
+    '</div>';
+
+  return (
+    '<div class="bloc-contexte">' +
+      '<span class="format-libelle">Contexte du tournoi (U14)</span>' +
+      '<div class="ctx-cartes">' + cartes + '</div>' +
+      panneau +
+    '</div>'
+  );
+}
+
+/**
  * Un champ modifiable d'une catégorie (input texte/nombre ou menu déroulant).
  * On enveloppe le champ dans un <label> (pas d'id, pour éviter les doublons).
  */
@@ -513,6 +593,17 @@ async function onEnregistrerCategorie(evenement) {
   data.forme_jeu = form.forme_jeu
     ? String(form.forme_jeu.value || '')
     : ((catStockee && catStockee.forme_jeu != null) ? String(catStockee.forme_jeu) : '');
+
+  // Contexte U14 (Super Challenge) : les contrôles n'existent QUE pour l'U14 (blocContexteU14).
+  // Absents (autre catégorie) ⇒ on PRÉSERVE la valeur stockée — enregistrerCategorie réécrit la
+  // LIGNE ENTIÈRE, un champ omis serait effacé (leçon session 3). form.contexte_tournoi est une
+  // RadioNodeList : .value renvoie l'option cochée.
+  data.contexte_tournoi = form.contexte_tournoi
+    ? String(form.contexte_tournoi.value || '')
+    : ((catStockee && catStockee.contexte_tournoi != null) ? String(catStockee.contexte_tournoi) : '');
+  data.scf_phase = form.scf_phase
+    ? String(form.scf_phase.value || '')
+    : ((catStockee && catStockee.scf_phase != null) ? String(catStockee.scf_phase) : '');
 
   const bouton = form.querySelector('button[type="submit"]');
   await avecBoutonOccupe(bouton, message, async function () {

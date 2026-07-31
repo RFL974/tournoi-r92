@@ -21,6 +21,32 @@ pour pouvoir l'expliquer aux équipes à l'avance.
 
 ---
 
+## Cas particulier des U14 : contexte « Super Challenge de France » (session 13)
+
+Un tournoi **U14** n'est pas toujours un tournoi club ordinaire : il peut être un plateau du
+**Super Challenge de France** (compétition officielle FFR de la catégorie M14), dont la structure
+n'a **rien** d'un « matin en poules + après-midi configurable ». Pour ne pas mélanger les deux
+mondes, la fiche d'une catégorie **U14** (et elle seule) affiche un choix de **contexte** :
+
+- **Tournoi ordinaire** *(défaut)* — comportement inchangé : matin en poules, après-midi selon le
+  format choisi (Croisé / Diagonal / Libre). Les 4 cartes de format restent visibles.
+- **Super Challenge de France** — le plateau suit le **règlement du Super Challenge** en
+  **Jeu à XV (15×15)**. Les cartes « format d'après-midi » sont alors **masquées** (sans objet) et
+  un panneau récapitule la structure selon la **phase** retenue :
+  - **Phase 2** (janv.–févr.) : **1 journée**, triangulaire ou quadrangulaire, 2 rencontres, **2 × 15 min** ;
+  - **Phase 3 & clôture** (avr.–juin) : **2 journées**, triangulaire, samedi 2 matchs / dimanche 3, **2 × 11 min**.
+
+  Barème identique à celui de l'app : **Victoire 3 / Nul 2 / Défaite 1**.
+
+> ⚠️ **Purement déclaratif pour l'instant.** Ce choix **pose le cadre** (colonnes `contexte_tournoi`
+> et `scf_phase` de l'onglet Config — voir [`structure-google-sheet.md`](structure-google-sheet.md)),
+> mais la **génération automatique** du planning triangulaire/quadrangulaire et l'**application des
+> temps** (2×15 / 2×11) **ne sont pas encore branchées** — c'est prévu dans une évolution ultérieure.
+> Tant que rien n'est choisi, ou hors U14, **rien ne change** : le comportement reste celui décrit
+> plus bas (prudent par construction). *(Le Jeu à 7 / Sevens U14 n'est volontairement pas couvert ici.)*
+
+---
+
 ## Les 4 formats disponibles
 
 ### 1. Classement croisé (`CROISE`) — *format historique, par défaut*

@@ -148,6 +148,18 @@ function lancerTestsFFR() {
   testS12_essaisHelper(etat);
   testS12_conformiteFormeReduitRegles(etat);
 
+  // Session 13 — contexte U14 (Super Challenge de France) déclaratif : normaliseur PRUDENT.
+  testS13_defautLambdaSansColonne(etat);
+  testS13_lambdaExplicite(etat);
+  testS13_scfSurU14(etat);
+  testS13_scfIgnoreHorsU14(etat);
+  testS13_scfApparieM14(etat);
+  testS13_phaseDefautP2(etat);
+  testS13_phaseP3(etat);
+  testS13_phaseInconnueRetombeP2(etat);
+  testS13_valeurContexteInconnueLambda(etat);
+  testS13_casseEtEspaces(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -1457,4 +1469,73 @@ function testS12_conformiteFormeReduitRegles(etat) {
     { equipesParCategorie: { U14: '4' }, nbDemiJournees: '1', formesRetenues: { U14: 'RE — 15x15' } });
   _ffrAssert(etat, (avec.regles.U14 || []).length === 1, 'conformite : forme retenue ⇒ 1 règle (ambiguïté levée)');
   _ffrAssert(etat, avec.regles.U14[0].effectif === '15x15', 'conformite : la règle retenue est bien le 15x15');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 13 — contexte U14 (Super Challenge de France), normaliseur PRUDENT */
+/*  contexteScfCategorie(cat) → { contexte:'LAMBDA'|'SCF', phase:'P2'|'P3',    */
+/*  estScf:boolean }. Ne s'applique QU'À l'U14 (M14) ; défaut = comportement   */
+/*  historique (LAMBDA / P2). Pur, sans classeur.                              */
+/* -------------------------------------------------------------------------- */
+
+/** Colonne absente sur une U14 ⇒ LAMBDA (comportement historique inchangé). */
+function testS13_defautLambdaSansColonne(etat) {
+  var r = contexteScfCategorie({ categorie: 'U14' });
+  _ffrAssert(etat, r.contexte === 'LAMBDA' && r.estScf === false, 'S13 : U14 sans colonne ⇒ LAMBDA (historique)');
+  _ffrAssert(etat, r.phase === 'P2', 'S13 : phase par défaut ⇒ P2');
+}
+
+/** 'LAMBDA' explicite ⇒ LAMBDA. */
+function testS13_lambdaExplicite(etat) {
+  var r = contexteScfCategorie({ categorie: 'U14', contexte_tournoi: 'LAMBDA' });
+  _ffrAssert(etat, r.contexte === 'LAMBDA' && r.estScf === false, 'S13 : LAMBDA explicite ⇒ LAMBDA');
+}
+
+/** 'SCF' sur une U14 ⇒ SCF. */
+function testS13_scfSurU14(etat) {
+  var r = contexteScfCategorie({ categorie: 'U14', contexte_tournoi: 'SCF' });
+  _ffrAssert(etat, r.contexte === 'SCF' && r.estScf === true, 'S13 : SCF sur U14 ⇒ SCF');
+}
+
+/** 'SCF' déposé par erreur sur une autre catégorie (U12) ⇒ IGNORÉ (LAMBDA), jamais deviné. */
+function testS13_scfIgnoreHorsU14(etat) {
+  var r = contexteScfCategorie({ categorie: 'U12', contexte_tournoi: 'SCF' });
+  _ffrAssert(etat, r.contexte === 'LAMBDA' && r.estScf === false, 'S13 : SCF hors U14 ⇒ ignoré (LAMBDA)');
+}
+
+/** La source FFR note « M14 » : l'appariement M↔U doit reconnaître la catégorie. */
+function testS13_scfApparieM14(etat) {
+  var r = contexteScfCategorie({ categorie: 'M14', contexte_tournoi: 'SCF' });
+  _ffrAssert(etat, r.estScf === true, 'S13 : M14 (notation FFR) reconnu comme U14 ⇒ SCF');
+}
+
+/** Phase vide sous SCF ⇒ P2 (défaut prudent). */
+function testS13_phaseDefautP2(etat) {
+  var r = contexteScfCategorie({ categorie: 'U14', contexte_tournoi: 'SCF', scf_phase: '' });
+  _ffrAssert(etat, r.phase === 'P2', 'S13 : phase vide ⇒ P2');
+}
+
+/** 'P3' ⇒ P3. */
+function testS13_phaseP3(etat) {
+  var r = contexteScfCategorie({ categorie: 'U14', contexte_tournoi: 'SCF', scf_phase: 'P3' });
+  _ffrAssert(etat, r.phase === 'P3', 'S13 : scf_phase P3 ⇒ P3');
+}
+
+/** Phase inconnue ⇒ retombe sur P2 (jamais une valeur inventée). */
+function testS13_phaseInconnueRetombeP2(etat) {
+  var r = contexteScfCategorie({ categorie: 'U14', contexte_tournoi: 'SCF', scf_phase: 'P9' });
+  _ffrAssert(etat, r.phase === 'P2', 'S13 : phase inconnue ⇒ P2 (prudent)');
+}
+
+/** Contexte inconnu ⇒ LAMBDA (on n'active jamais SCF sur une valeur douteuse). */
+function testS13_valeurContexteInconnueLambda(etat) {
+  var r = contexteScfCategorie({ categorie: 'U14', contexte_tournoi: 'BIDON' });
+  _ffrAssert(etat, r.contexte === 'LAMBDA', 'S13 : contexte inconnu ⇒ LAMBDA');
+}
+
+/** Casse et espaces tolérés (le classeur peut renvoyer « scf » / «  p3  »). */
+function testS13_casseEtEspaces(etat) {
+  var r = contexteScfCategorie({ categorie: 'u14', contexte_tournoi: '  scf  ', scf_phase: ' p3 ' });
+  _ffrAssert(etat, r.estScf === true, 'S13 : « scf » minuscule + espaces ⇒ SCF');
+  _ffrAssert(etat, r.phase === 'P3', 'S13 : « p3 » minuscule + espaces ⇒ P3');
 }
