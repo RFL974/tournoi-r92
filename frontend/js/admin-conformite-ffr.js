@@ -39,19 +39,20 @@ async function chargerRefFFR() {
    VALEURS COURANTES (formulaire d'abord, sinon état enregistré)
    -------------------------------------------------------------------------- */
 
-/** Date du tournoi actuellement saisie (ISO 'AAAA-MM-JJ'), sinon celle enregistrée, sinon ''. */
+/** Date du tournoi actuellement saisie (ISO 'AAAA-MM-JJ'), sinon celle enregistrée, sinon ''.
+ *  Lu par NOM (le champ vit dans la carte « Date & conformité FFR », #form-cadre-tournoi). */
 function dateTournoiCourante() {
-  const form = document.getElementById('form-infos-tournoi');
-  const v = (form && form.tournoi_date) ? form.tournoi_date.value : '';
+  const champ = document.querySelector('[name="tournoi_date"]');
+  const v = champ ? champ.value : '';
   if (v) return v;
   const g = (typeof configCourante !== 'undefined' && configCourante && configCourante.global) || {};
   return g.tournoi_date || '';
 }
 
-/** Zone de vacances courante (select du formulaire, sinon Config, défaut 'C'). */
+/** Zone de vacances courante (select de la carte cadre, sinon Config, défaut 'C'). Lu par NOM. */
 function zoneVacancesCourante() {
-  const form = document.getElementById('form-infos-tournoi');
-  const v = (form && form.zone_vacances) ? form.zone_vacances.value : '';
+  const champ = document.querySelector('[name="zone_vacances"]');
+  const v = champ ? champ.value : '';
   if (v) return v;
   const g = (typeof configCourante !== 'undefined' && configCourante && configCourante.global) || {};
   return g.zone_vacances || 'C';

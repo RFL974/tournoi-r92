@@ -29,12 +29,18 @@ function majInfosTournoi() {
   if (!form) return;
   const g = configCourante.global || {};
   form.tournoi_nom.value = g.tournoi_nom || '';
-  form.tournoi_date.value = g.tournoi_date || '';
   form.tournoi_lieu.value = g.tournoi_lieu || '';
   form.tournoi_adresse.value = g.tournoi_adresse || '';
   form.tournoi_description.value = g.tournoi_description || '';
-  // Zone de vacances (contrôle FFR) : défaut 'C' si absent (migration douce).
-  if (form.zone_vacances) form.zone_vacances.value = g.zone_vacances || 'C';
+
+  // Date + zone de vacances : elles vivent dans la carte « Date & conformité FFR »
+  // (#form-cadre-tournoi), pas ici. On les (re)remplit là-bas et on marque ce formulaire propre.
+  const cadre = document.getElementById('form-cadre-tournoi');
+  if (cadre) {
+    if (cadre.tournoi_date)  cadre.tournoi_date.value = g.tournoi_date || '';
+    if (cadre.zone_vacances) cadre.zone_vacances.value = g.zone_vacances || 'C'; // défaut 'C' (migration douce)
+    if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(cadre);
+  }
 
   // Aperçu de l'affiche déjà enregistrée (image Drive publique).
   afficheDataURI = '';
@@ -92,10 +98,13 @@ function majApercuTournoi() {
   const form = document.getElementById('form-infos-tournoi');
   if (!zone || !form) return;
   const g = configCourante.global || {};
+  // La date vit dans la carte « Date & conformité FFR » (#form-cadre-tournoi) : on la lit par NOM.
+  const champDate = document.querySelector('[name="tournoi_date"]');
+  const dateSaisie = champDate ? champDate.value : '';
 
   // Mêmes valeurs de repli que le site vitrine (actuTournoi, main.js).
   const nom = form.tournoi_nom.value.trim() || 'Tournoi Génération R92';
-  const dateISO = form.tournoi_date.value || new Date().toISOString().slice(0, 10);
+  const dateISO = dateSaisie || new Date().toISOString().slice(0, 10);
   const extrait = extraitCourt(form.tournoi_description.value, 160) ||
     'Le tournoi est ouvert ! Poules, planning et scores en direct.';
   const imgSrc = afficheDataURI || (g.tournoi_affiche_id ? urlAffiche(g.tournoi_affiche_id, 800) : '');
@@ -120,7 +129,7 @@ function majApercuTournoi() {
   if (pageZone) {
     const description = form.tournoi_description.value.trim() ||
       'Suivez notre tournoi et encouragez nos équipes !';
-    const quand = form.tournoi_date.value ? formaterDateFr(form.tournoi_date.value) : 'À venir';
+    const quand = dateSaisie ? formaterDateFr(dateSaisie) : 'À venir';
     const ou = form.tournoi_lieu.value.trim() || 'À préciser';
     pageZone.innerHTML =
       '<div class="vitrine-page">' +
@@ -210,17 +219,45 @@ async function onRetirerAffiche() {
   }
 }
 
-/** Lit les infos saisies dans le formulaire (nom / date / lieu / description). */
+/** Lit les infos SITE saisies (nom / lieu / adresse / description).
+ *  La date et la zone (contrôle FFR) ont leur propre carte et leur propre enregistrement
+ *  (lireCadreTournoi / onEnregistrerCadre) — enregistrement partiel, elles ne sont PAS ici. */
 function lireInfosTournoi() {
   const form = document.getElementById('form-infos-tournoi');
   return {
     tournoi_nom: form.tournoi_nom.value.trim(),
-    tournoi_date: form.tournoi_date.value,
     tournoi_lieu: form.tournoi_lieu.value.trim(),
     tournoi_adresse: form.tournoi_adresse.value.trim(),
-    tournoi_description: form.tournoi_description.value.trim(),
-    zone_vacances: (form.zone_vacances && form.zone_vacances.value) ? form.zone_vacances.value : 'C'
+    tournoi_description: form.tournoi_description.value.trim()
   };
+}
+
+/** Lit la date + la zone de vacances de la carte « Date & conformité FFR ». */
+function lireCadreTournoi() {
+  const form = document.getElementById('form-cadre-tournoi');
+  return {
+    tournoi_date: (form && form.tournoi_date) ? form.tournoi_date.value : '',
+    zone_vacances: (form && form.zone_vacances && form.zone_vacances.value) ? form.zone_vacances.value : 'C'
+  };
+}
+
+/**
+ * Enregistre UNIQUEMENT la date prévue + la zone de vacances (carte « Date & conformité FFR »).
+ * Sauvegarde PARTIELLE : le backend n'écrit que les champs envoyés (ecrireChampsConfig), donc les
+ * infos du site (nom/lieu/…) ne sont pas touchées.
+ */
+async function onEnregistrerCadre() {
+  const message = document.getElementById('message-cadre-tournoi');
+  const bouton = document.getElementById('bouton-enregistrer-cadre');
+  await avecBoutonOccupe(bouton, message, async function () {
+    afficherMessage(message, 'Enregistrement de la date…', 'ok');
+    await ecrireAdmin('enregistrerInfosTournoi', lireCadreTournoi());
+    // On recharge la config pour refléter l'état réel, puis on rafraîchit ce qui dépend de la date.
+    configCourante = await lireConfigAdmin();
+    majInfosTournoi(); // remet date/zone à l'état enregistré (+ marque les formulaires propres)
+    majDossier();      // le dossier club montre la date
+    afficherMessage(message, '✅ Date & zone enregistrées.', 'ok');
+  });
 }
 
 /**
@@ -531,7 +568,9 @@ async function onPublier() {
   try {
     if (publier) {
       afficherMessage(message, 'Enregistrement des infos…', 'ok');
-      await ecrireAdmin('enregistrerInfosTournoi', lireInfosTournoi());
+      // Filet « par sécurité » à la publication : on enregistre les infos SITE + la date/zone de la
+      // carte cadre (payload fusionné ; le backend n'écrit que les champs présents).
+      await ecrireAdmin('enregistrerInfosTournoi', Object.assign({}, lireInfosTournoi(), lireCadreTournoi()));
       if (afficheDataURI) {
         afficherMessage(message, 'Envoi de l\'affiche…', 'ok');
         await ecrireAdmin('enregistrerAffiche', { affiche: afficheDataURI });

@@ -5,6 +5,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Nouvelle carte « Date & conformité FFR » — dissociée des infos du site — 2026-07-31
+La **date prévue**, la **zone de vacances** et le bloc **conformité FFR** (conflits, points de
+vigilance, prescriptions) quittent la carte « Infos du tournoi » pour une **carte dédiée placée tout en
+haut** (`#bloc-cadre-tournoi`). But : séparer nettement la **planification/conformité** des **infos qui
+alimentent le site** (nom, lieu, adresse, description, affiche). La nouvelle carte a son **propre bouton
+« Enregistrer la date »** (sauvegarde partielle date + zone via `enregistrerInfosTournoi` — le backend
+n'écrit que les champs envoyés, donc les infos du site ne sont pas touchées). `lireInfosTournoi` ne
+renvoie plus que nom/lieu/adresse/description ; `dateTournoiCourante`/`zoneVacancesCourante`/
+`majApercuTournoi` lisent la date/zone **par nom** (peu importe le formulaire). La publication continue
+d'enregistrer date + infos « par sécurité » (payload fusionné). Nouvelle section enregistrée dans
+`ecrans.js` + `assistant.js` (piège des sections admin). **Front seul, aucun redéploiement backend.**
+Vérifié au navigateur (structure DOM, séparation des données, aperçu du site suivant la date).
+
 ### Fix — bouton « Appliquer la norme FFR » absent sur une catégorie fraîchement ajoutée — 2026-07-31
 Après ajout (ou suppression) d'une catégorie, `rechargerReglages` re-rendait les cartes mais **ne
 recalculait pas la conformité FFR** : `dernierResConformite` ne couvrait donc que les catégories
