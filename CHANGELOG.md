@@ -5,6 +5,21 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Contexte U14 « Super Challenge de France » (déclaratif) — 2026-07-31
+La fiche d'une catégorie **U14** (et elle seule, au sens FFR M14) propose désormais un choix de
+**contexte de tournoi** : **Tournoi ordinaire** (défaut, comportement inchangé) ou **Super Challenge
+de France**. En contexte SCF, les cartes « format d'après-midi » sont **masquées** (sans objet) et un
+panneau récapitule la structure **Jeu à XV (15×15)** selon la **phase** retenue — Phase 2 (1 journée,
+triangulaire/quadrangulaire, **2×15**) ou Phase 3 & clôture (2 journées, triangulaire, **2×11**) —,
+barème Victoire 3 / Nul 2 / Défaite 1. Deux nouvelles colonnes Config **`contexte_tournoi`** et
+**`scf_phase`** (migration douce, vides = tournoi ordinaire = historique). Normaliseur **prudent par
+construction** `contexteScfCategorie` (backend, miroir front `contexteTournoiDe`/`scfPhaseDe`) : `SCF`
+seulement si la catégorie est U14 **et** la valeur vaut exactement `SCF` ; une valeur `SCF` posée sur
+une autre catégorie est **ignorée**, jamais devinée. ⚠️ **Purement déclaratif** : la génération du
+planning et l'application des temps du Super Challenge **ne consomment pas encore** ces colonnes
+(prévu session 14). *(Le Jeu à 7 / Sevens U14 n'est volontairement pas couvert.)* Tests 267/267
+(+12). ⚠️ **Redéploiement backend nécessaire** (nouvelles colonnes assurées par `assurerColonnesConfig`).
+
 ### Répartition des terrains plafonnée au nombre d'équipes — 2026-07-24
 La répartition automatique remplissait chaque grand terrain de **tous** les mini-terrains qui y
 tenaient géométriquement, sans tenir compte du nombre d'équipes : avec peu d'équipes, elle

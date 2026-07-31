@@ -88,6 +88,30 @@ function nbQualifiesCoupeDe(cat) {
   } catch (e) { return 2; }
 }
 
+/* Contexte Super Challenge de France — session 13 (déclaratif). Ces trois helpers sont le MIROIR
+   exact de contexteScfCategorie() (backend Code.gs) : même règle prudente par construction. */
+
+/** Vrai si la catégorie relève du Super Challenge = catégorie FFR M14 (U14 dans l'app).
+ *  Mirror de normaliserCategorie (backend) restreint à '14' : « U14 »/« M14 » → true, sinon false. */
+function categorieSuperChallenge(nom) {
+  return String(nom == null ? '' : nom).trim().toUpperCase().replace(/^[MU](?=\d)/, '') === '14';
+}
+
+/** Contexte de jeu d'une catégorie : 'SCF' (Super Challenge) ou 'LAMBDA' (défaut historique).
+ *  Prudent : 'SCF' seulement si la catégorie est U14 ET contexte_tournoi vaut exactement 'SCF' ;
+ *  tout le reste (vide, 'LAMBDA', inconnu, catégorie ≠ U14) → 'LAMBDA' (comportement inchangé). */
+function contexteTournoiDe(cat) {
+  const u14 = cat && categorieSuperChallenge(cat.categorie);
+  const v = (cat && cat.contexte_tournoi != null) ? String(cat.contexte_tournoi).trim().toUpperCase() : '';
+  return (u14 && v === 'SCF') ? 'SCF' : 'LAMBDA';
+}
+
+/** Phase Super Challenge retenue : 'P3' seulement si scf_phase vaut exactement 'P3', sinon 'P2'. */
+function scfPhaseDe(cat) {
+  const v = (cat && cat.scf_phase != null) ? String(cat.scf_phase).trim().toUpperCase() : '';
+  return (v === 'P3') ? 'P3' : 'P2';
+}
+
 /* On garde en mémoire la config, les équipes et les matchs chargés (pour l'affichage). */
 let configCourante = { global: {}, categories: [] };
 let equipesCourantes = [];
@@ -634,6 +658,18 @@ function onReglagesChange(evenement) {
       bloc.setAttribute('data-terrains', evenement.target.value === 'non' ? 'manuel' : 'auto');
       verifierTerrainsBloc(bloc);
     }
+  }
+  // Contexte U14 (Lambda / Super Challenge) : on pilote l'affichage via data-contexte posé sur le
+  // FORMULAIRE de la catégorie. En SCF, le CSS masque les cartes « format d'après-midi » (sans objet)
+  // et révèle le panneau SCF ; en Lambda, l'inverse. Aucune donnée n'est réécrite ici (juste l'UI).
+  if (evenement.target.name === 'contexte_tournoi') {
+    const form = evenement.target.closest('form.form-categorie');
+    if (form) form.setAttribute('data-contexte', evenement.target.value);
+  }
+  // Choix de la phase Super Challenge : révèle le bon récapitulatif (data-phase sur le panneau SCF).
+  if (evenement.target.name === 'scf_phase') {
+    const panneau = evenement.target.closest('.bloc-scf');
+    if (panneau) panneau.setAttribute('data-phase', evenement.target.value);
   }
 }
 
