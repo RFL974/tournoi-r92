@@ -2156,6 +2156,10 @@ a.bouton { display: inline-block; text-decoration: none; }
    porte aussi `disabled`, qui bloque la saisie ; l'opacité grise le libellé et le contrôle). */
 .autorisation-saisie .reglage.est-grise { opacity: 0.45; }
 .autorisation-saisie .reglage.est-grise .r-input { cursor: not-allowed; }
+/* Champ pré-rempli depuis les modalités d'inscription : liseré + petite note explicative. */
+.autorisation-saisie .reglage.est-prefill .r-input { border-color: rgba(94, 160, 232, 0.6); }
+.autorisation-prefill-note { display: block; margin-top: 3px; font-size: 0.74rem; color: var(--bleu-ciel); opacity: 0.85; }
+.theme-clair .autorisation-prefill-note { color: #1c4e80; }
 .autorisation-groupe legend { padding: 0 6px; font-weight: 600; color: var(--bleu-ciel); font-size: 0.9rem; }
 .autorisation-rappel { font-size: 0.85rem; background: rgba(184, 216, 248, 0.10); border-radius: 8px; padding: 8px 10px; }
 .autorisation-memo { margin: 10px 0; font-size: 0.85rem; border-left: 3px solid rgba(184, 216, 248, 0.4); padding: 4px 0 4px 12px; }

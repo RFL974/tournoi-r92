@@ -58,8 +58,10 @@ var AUTORISATION_SAISIE = [
     { p: 'org_ambulance', l: 'Ambulance', t: 'select', o: ['non', 'oui'] }
   ] },
   { titre: 'B.5 — Logistique', champs: [
-    { p: 'org_droits_oui', l: 'Droits d\'inscription', t: 'select', o: ['non', 'oui'] },
-    { p: 'org_droits_montant', l: 'Montant / équipe', t: 'number', dep: 'org_droits_oui' },
+    // `prefill` : si VIDE, ces champs reprennent le tarif d'engagement saisi dans « Modalités
+    // d'inscription » (jamais d'écrasement d'une valeur déjà saisie) — voir prefillAutorisation.
+    { p: 'org_droits_oui', l: 'Droits d\'inscription', t: 'select', o: ['non', 'oui'], prefill: true },
+    { p: 'org_droits_montant', l: 'Montant / équipe', t: 'number', dep: 'org_droits_oui', prefill: true },
     { p: 'org_hebergement_oui', l: 'Hébergement', t: 'select', o: ['non', 'oui'] },
     { p: 'org_hebergement_structure', l: 'Hébergement — structure', t: 'text', dep: 'org_hebergement_oui' },
     { p: 'org_repas_oui', l: 'Repas', t: 'select', o: ['non', 'oui'] },
@@ -77,6 +79,31 @@ function valAutorisation(param) {
   return g[param] != null ? String(g[param]) : '';
 }
 
+/** Valeur de PRÉ-REMPLISSAGE d'un champ (repris d'une info déjà saisie ailleurs), ou '' si aucune.
+ *  Aujourd'hui : les « Droits d'inscription » (B.5) reprennent le TARIF D'ENGAGEMENT des modalités
+ *  d'inscription. Le montant côté modalités est du texte libre → on n'en garde que le 1er nombre
+ *  (le champ autorisation est numérique). N'écrase JAMAIS : n'est utilisé que si le champ est vide. */
+function prefillAutorisation(param) {
+  const g = (typeof configCourante !== 'undefined' && configCourante && configCourante.global) || {};
+  if (param === 'org_droits_oui') {
+    const t = String(g.tarif_engagement_oui == null ? '' : g.tarif_engagement_oui).trim().toLowerCase();
+    return (t === 'oui' || t === 'non') ? t : '';
+  }
+  if (param === 'org_droits_montant') {
+    const m = String(g.tarif_engagement_montant == null ? '' : g.tarif_engagement_montant).match(/\d+(?:[.,]\d+)?/);
+    return m ? m[0].replace(',', '.') : '';
+  }
+  return '';
+}
+
+/** Valeur EFFECTIVE d'une question contrôleur (grisage) : la valeur stockée, ou à défaut son
+ *  pré-remplissage. Ainsi un champ lié est grisé de façon cohérente même quand la question qui le
+ *  pilote est encore vide mais pré-remplie à « non ». */
+function valControleurEffectiveAutorisation(param) {
+  const stored = valAutorisation(param);
+  return stored !== '' ? stored : prefillAutorisation(param);
+}
+
 /** Catégories présentes (pour les récompenses par catégorie + le mémo arbitrage). */
 function catsPresentesAutorisation() {
   const cats = (typeof configCourante !== 'undefined' && configCourante && configCourante.categories) || [];
@@ -88,8 +115,13 @@ function catsPresentesAutorisation() {
  *  « non » : le champ ouvert lié n'a alors pas de sens. La valeur stockée est conservée (juste
  *  non modifiable) ; l'état est rebasculé en direct par onChangeAutorisation. */
 function champSaisieAutorisation(c) {
-  const v = valAutorisation(c.p);
-  const grise = !!(c.dep && valAutorisation(c.dep) === 'non');
+  const stored = valAutorisation(c.p);
+  // Pré-remplissage : SEULEMENT si le champ est vide (jamais d'écrasement d'une saisie).
+  const prefill = (stored === '' && c.prefill) ? prefillAutorisation(c.p) : '';
+  const estPrefill = (stored === '' && prefill !== '');
+  const v = stored !== '' ? stored : prefill;
+  // Grisage : sur la valeur EFFECTIVE de la question contrôleur (stockée ou pré-remplie).
+  const grise = !!(c.dep && valControleurEffectiveAutorisation(c.dep) === 'non');
   const dis = grise ? ' disabled' : '';
   let controle;
   if (c.t === 'select') {
@@ -105,8 +137,11 @@ function champSaisieAutorisation(c) {
   }
   // data-dep porte la question CONTRÔLEUR : onChangeAutorisation retrouve les champs à (dé)griser.
   const attrDep = c.dep ? ' data-dep="' + echapper(c.dep) + '"' : '';
-  return '<label class="reglage' + (grise ? ' est-grise' : '') + '"' + attrDep + '>' +
-    '<span class="r-libelle">' + echapper(c.l) + '</span>' + controle + '</label>';
+  const note = estPrefill
+    ? '<span class="autorisation-prefill-note">↩ repris des modalités d\'inscription — vérifie puis enregistre</span>'
+    : '';
+  return '<label class="reglage' + (grise ? ' est-grise' : '') + (estPrefill ? ' est-prefill' : '') + '"' + attrDep + '>' +
+    '<span class="r-libelle">' + echapper(c.l) + '</span>' + controle + note + '</label>';
 }
 
 /** Rend la partie SAISIE (formulaire) + le mémo arbitrage + le rappel « antenne de secours ». */
