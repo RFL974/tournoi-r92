@@ -257,6 +257,173 @@ async function onEnregistrerAutorisation() {
   });
 }
 
+/* ==========================================================================
+   PDF PRÉ-REMPLI — le formulaire officiel FFR (AcroForm) rempli avec nos données.
+   Le remplissage est 100 % CÔTÉ NAVIGATEUR (pdf-lib), aucun backend. Les valeurs
+   sont posées dans le PDF qui RESTE un formulaire à remplir : l'organisateur ouvre
+   le PDF téléchargé et complète le reste (format sportif par catégorie, signatures).
+   La correspondance champ PDF ↔ donnée a été vérifiée par la position de chaque
+   champ face à son libellé dans le PDF officiel (millésime 2026-2027).
+   ========================================================================== */
+
+/* Récompenses par catégorie : numéro FFR → [caseOui, caseNon]. */
+var PDF_RECOMPENSES_AUT = {
+  '6':  ['Case à cocher95', 'Case à cocher96'],
+  '8':  ['Case à cocher97', 'Case à cocher98'],
+  '10': ['Case à cocher64', 'Case à cocher99'],
+  '12': ['Case à cocher100', 'Case à cocher119'],
+  '14': ['Case à cocher101', 'Case à cocher102']
+};
+
+/** 'AAAA-MM-JJ' → 'JJ/MM/AAAA' (sans dépendre du fuseau) ; renvoie tel quel sinon. */
+function dateFrPdfAut(iso) {
+  var m = String(iso == null ? '' : iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? (m[3] + '/' + m[2] + '/' + m[1]) : String(iso == null ? '' : iso);
+}
+
+/**
+ * Construit le PLAN de remplissage (résolu) : { textes:{champPDF:valeur}, cases:[champPDF] }.
+ * PUR : ne lit ni DOM ni classeur. `g` = paramètres globaux (Config) ; nbClubs/nbEquipes = comptes.
+ * Applique les MÊMES défauts que la feuille de report backend (club affilié, label, étrangères).
+ */
+function planRemplissageAutorisation(g, nbClubs, nbEquipes) {
+  g = g || {};
+  function v(k) { return String(g[k] == null ? '' : g[k]).trim(); }
+  var textes = {}, cases = [];
+  function setT(champ, val) { val = String(val == null ? '' : val).trim(); if (val !== '') textes[champ] = val; }
+  function ouinon(val, champOui, champNon) {
+    var s = String(val == null ? '' : val).trim().toLowerCase();
+    if (s === 'oui') cases.push(champOui); else if (s === 'non') cases.push(champNon);
+  }
+  function choix(val, map) { if (map[val]) cases.push(map[val]); }
+
+  // A.1 Organisateur (défauts alignés sur la feuille de report backend).
+  setT('Texte1', v('org_club_nom') || 'Racing Club de France Rugby');
+  setT('Texte2', v('org_code_club'));
+  setT('Texte3', v('org_representant_nom'));
+  setT('Texte5', v('org_representant_tel'));
+  setT('Texte6', v('org_representant_mail'));
+  setT('Texte10', v('org_president_nom'));
+  setT('Texte9', v('org_president_tel'));
+  setT('Texte7', v('org_president_mail'));
+  ouinon(v('org_label_edr') || 'oui', 'Case à cocher62', 'Case à cocher63');
+  setT('Texte8', v('org_label_date'));
+
+  // A.2 Tournoi.
+  setT('Texte11', v('tournoi_nom'));
+  setT('Texte12', v('tournoi_adresse') || v('tournoi_lieu'));
+  setT('Date64_es_:signer:date', dateFrPdfAut(v('tournoi_date')));
+  setT('Texte13', v('heure_debut'));
+  setT('Texte14', v('heure_fin_communiquee') || v('heure_fin'));
+  choix(v('org_niveau_tournoi'), { 'International': 'Case à cocher65', 'National': 'Case à cocher66',
+    'Territorial': 'Case à cocher67', 'Départemental': 'Case à cocher68' });
+
+  // A.4 Participants.
+  if (nbClubs) setT('Texte15', String(nbClubs));
+  if (nbEquipes) setT('Texte16', String(nbEquipes));
+  setT('Texte17', v('org_nb_participants'));
+  setT('Texte18', v('org_equipes_etrangeres_liste'));
+
+  // B.1 Installations.
+  choix(v('org_type_terrain'), { 'Gazon': 'Case à cocher91', 'Synthétique': 'Case à cocher92',
+    'Neige': 'Case à cocher93', 'Argile': 'Case à cocher94', 'Sable': 'Case à cocher1' });
+  setT('Texte20', v('org_nb_vestiaires'));
+
+  // B.3 Arbitrage.
+  setT('Texte46', v('org_nb_arbitres'));
+  setT('Texte47', v('org_nb_educateurs'));
+  setT('Texte48', v('org_nb_doublettes'));
+
+  // B.4 Sécurité — responsable = référent sécurité (si distinct), sinon référent tournoi (dossier club).
+  var secDistinct = v('securite_referent_identique').toLowerCase() === 'non';
+  setT('Texte50', secDistinct ? v('securite_referent_nom') : v('referent_nom'));
+  setT('Texte51', secDistinct ? v('securite_referent_tel') : v('referent_tel'));
+  ouinon(v('org_medecin_oui'), 'Case à cocher123', 'Case à cocher124');
+  setT('Texte52', v('org_medecin_nom'));
+  setT('Texte53', v('org_medecin_tel'));
+  if (v('org_secours_nom') || v('org_secours_tel')) cases.push('Case à cocher125'); // antenne secours = oui
+  setT('Texte54', v('org_secours_nom'));
+  setT('Texte55', v('org_secours_tel'));
+  ouinon(v('org_ambulance'), 'Case à cocher103', 'Case à cocher104');
+
+  // B.5 Logistique.
+  ouinon(v('org_droits_oui'), 'Case à cocher105', 'Case à cocher106');
+  setT('Texte56', v('org_droits_montant'));
+  ouinon(v('org_hebergement_oui'), 'Case à cocher107', 'Case à cocher108');
+  setT('Texte57', v('org_hebergement_structure'));
+  ouinon(v('org_repas_oui'), 'Case à cocher109', 'Case à cocher110');
+  setT('Texte58', v('org_repas_fournisseur'));
+  setT('Texte59', v('org_repas_prix'));
+  ouinon(v('org_gouters_oui'), 'Case à cocher111', 'Case à cocher112');
+  setT('Texte60', v('org_gouters_fournisseur'));
+  setT('Texte61', v('org_gouters_prix'));
+
+  // B.2 Récompenses par catégorie (org_recompenses_<cat> ; U10→'10', M8→'8', U15F→'15' ignoré).
+  Object.keys(g).forEach(function (k) {
+    var mm = k.match(/^org_recompenses_(.+)$/);
+    if (!mm) return;
+    var num = String(mm[1]).toUpperCase().replace(/^[MU]/, '').replace(/\D.*$/, '');
+    var pair = PDF_RECOMPENSES_AUT[num];
+    if (!pair) return;
+    ouinon(g[k], pair[0], pair[1]);
+  });
+
+  // Page signatures — club demandeur.
+  setT('Club demandeurRow1', v('org_club_nom') || 'Racing Club de France Rugby');
+  return { textes: textes, cases: cases };
+}
+
+/** Applique un plan de remplissage à un PDF (bytes) via pdf-lib ; renvoie les octets du PDF rempli. */
+async function appliquerPlanPdfAutorisation(PDFLib, bytes, plan) {
+  const doc = await PDFLib.PDFDocument.load(bytes);
+  const form = doc.getForm();
+  Object.keys(plan.textes).forEach(function (champ) {
+    try { form.getTextField(champ).setText(plan.textes[champ]); } catch (e) { /* champ absent : ignoré */ }
+  });
+  plan.cases.forEach(function (champ) {
+    try { form.getCheckBox(champ).check(); } catch (e) { /* champ absent : ignoré */ }
+  });
+  try { form.updateFieldAppearances(); } catch (e) { /* apparences régénérées par le lecteur au besoin */ }
+  return doc.save();
+}
+
+/** Télécharge des octets comme fichier. */
+function telechargerFichierAutorisation(bytes, nom, type) {
+  const blob = new Blob([bytes], { type: type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nom;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+}
+
+/** Génère et télécharge le PDF officiel FFR pré-rempli avec les données du tournoi. */
+async function onTelechargerPdfAutorisation() {
+  const message = document.getElementById('autorisation-message');
+  const bouton = document.getElementById('bouton-pdf-autorisation');
+  if (typeof PDFLib === 'undefined') {
+    if (message) afficherMessage(message, '⚠️ Bibliothèque PDF non chargée — recharge la page.', 'ko');
+    return;
+  }
+  await avecBoutonOccupe(bouton, message, async function () {
+    afficherMessage(message, 'Génération du PDF pré-rempli…', 'ok');
+    const resp = await fetch('modeles/demande-autorisation-ffr.pdf');
+    if (!resp.ok) throw new Error('Modèle PDF introuvable (modeles/demande-autorisation-ffr.pdf).');
+    const bytes = await resp.arrayBuffer();
+    const g = (typeof configCourante !== 'undefined' && configCourante && configCourante.global) || {};
+    // Comptes : nb d'équipes = équipes chargées ; nb de clubs = clubs invités (si dispo).
+    const eqs = (typeof equipesCourantes !== 'undefined' && equipesCourantes) ? equipesCourantes : [];
+    const nbEquipes = eqs.length;
+    const nbClubs = (typeof clubsInvitesCourants !== 'undefined' && clubsInvitesCourants)
+      ? clubsInvitesCourants.length : 0;
+    const plan = planRemplissageAutorisation(g, nbClubs, nbEquipes);
+    const out = await appliquerPlanPdfAutorisation(PDFLib, bytes, plan);
+    telechargerFichierAutorisation(out, 'demande-autorisation-' + (g.tournoi_date || 'tournoi') + '.pdf', 'application/pdf');
+    afficherMessage(message, '✅ PDF pré-rempli téléchargé. Ouvre-le et complète le format sportif ' +
+      'par catégorie + les signatures.', 'ok');
+  });
+}
+
 /** (Dé)grise les champs liés à une question Oui/Non `param` selon sa valeur (« non » ⇒ grisé). */
 function majGrisageAutorisation(param, valeur) {
   const grise = String(valeur) === 'non';
@@ -285,6 +452,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!section) return;
   section.addEventListener('click', function (e) {
     if (e.target.closest('#bouton-enregistrer-autorisation')) { e.preventDefault(); onEnregistrerAutorisation(); }
+    else if (e.target.closest('#bouton-pdf-autorisation')) { e.preventDefault(); onTelechargerPdfAutorisation(); }
     else if (e.target.closest('#bouton-imprimer-autorisation')) { e.preventDefault(); window.print(); }
   });
   section.addEventListener('change', onChangeAutorisation);

@@ -5,6 +5,20 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Demande d'autorisation : télécharger le formulaire officiel FFR pré-rempli (PDF) — 2026-07-31
+Nouveau bouton **« Télécharger le formulaire pré-rempli (PDF) »** dans l'item Demande d'autorisation :
+il génère le **formulaire officiel FFR** (AcroForm) **pré-rempli** avec ce que l'app connaît, et qui
+**reste modifiable** (l'organisateur l'ouvre et complète le format sportif par catégorie + les
+signatures). Remplissage **100 % côté navigateur** (lib `pdf-lib` vendorisée, sans build) — **aucun
+backend**. ~24 champs texte + cases pré-remplis : organisateur (club, code, représentant, président,
+tél/mail), label EDR, tournoi (nom, adresse, date, heures), niveau, participants (nb équipes),
+installations (type de terrain, vestiaires), arbitrage, sécurité (responsable, médecin, antenne de
+secours, ambulance), logistique (droits/hébergement/repas/goûters + montants), **récompenses par
+catégorie**. Le **format sportif détaillé par catégorie** (nb matchs/durée par phase) et les
+**signatures** restent à compléter à la main. Correspondance champ PDF ↔ donnée **vérifiée par la
+position de chaque champ face à son libellé** dans le PDF officiel + test end-to-end (24 textes /
+10 cases relus). Modèle : `frontend/modeles/demande-autorisation-ffr.pdf`.
+
 ### Demande d'autorisation : grisage conditionnel + pré-remplissage du tarif — 2026-07-31
 Deux améliorations de la demande d'autorisation :
 1. **Grisage conditionnel** — un champ ouvert lié à une question Oui/Non (Médecin → nom/tél, Repas →
