@@ -420,23 +420,84 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories) {
   return { textes: textes, cases: cases };
 }
 
-/** Applique un plan de remplissage à un PDF (bytes) via pdf-lib ; renvoie les octets du PDF rempli. */
+/** Applique un plan de remplissage à un PDF (bytes) via pdf-lib — MODE HYBRIDE :
+ *  les champs qu'on remplit sont GRAVÉS en texte/coche statique (sur la page) puis RETIRÉS du
+ *  formulaire (plus de case bleue, plus de surbrillance, plus de chevauchement) ; les champs qu'on
+ *  ne remplit pas restent des champs de formulaire ÉDITABLES. Renvoie les octets du PDF. */
 async function appliquerPlanPdfAutorisation(PDFLib, bytes, plan) {
   const doc = await PDFLib.PDFDocument.load(bytes);
   const form = doc.getForm();
-  Object.keys(plan.textes).forEach(function (champ) {
-    try {
-      const tf = form.getTextField(champ);
-      tf.setText(plan.textes[champ]);
-      // Taille de police FIXE : sans ça, les champs sont en « auto » (0) et pdf-lib agrandit le
-      // texte à la hauteur de la case (15–22 pt) → il déborde sur les libellés voisins (chevauchements).
-      tf.setFontSize(9);
-    } catch (e) { /* champ absent : ignoré */ }
+  const context = doc.context;
+  const PDFName = PDFLib.PDFName;
+  const helv = await doc.embedFont(PDFLib.StandardFonts.Helvetica);
+  const helvB = await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  const noir = PDFLib.rgb(0.08, 0.08, 0.10);
+  const casesSet = {};
+  (plan.cases || []).forEach(function (n) { casesSet[n] = true; });
+  const nomsGraves = {}; // noms des champs gravés (à retirer aussi du formulaire)
+
+  // Nom du champ porté par une annotation (sur elle-même, sinon sur son /Parent).
+  function nomDeAnnot(dict) {
+    var t = dict.get(PDFName.of('T'));
+    if (t && t.decodeText) return t.decodeText();
+    var par = dict.get(PDFName.of('Parent'));
+    if (par) { try { var pd = context.lookup(par); var pt = pd.get(PDFName.of('T')); if (pt && pt.decodeText) return pt.decodeText(); } catch (e) {} }
+    return null;
+  }
+  function rectDe(dict) {
+    var r = dict.get(PDFName.of('Rect'));
+    if (!r || !r.get) return null;
+    var a = r.get(0).asNumber(), b = r.get(1).asNumber(), c = r.get(2).asNumber(), d = r.get(3).asNumber();
+    return { x: Math.min(a, c), y: Math.min(b, d), w: Math.abs(c - a), h: Math.abs(d - b) };
+  }
+
+  // Parcours des annotations de CHAQUE page : on grave (texte/coche) puis on retire celles remplies.
+  doc.getPages().forEach(function (page) {
+    var an = page.node.Annots && page.node.Annots();
+    if (!an || !an.asArray) return;
+    var gardes = [];
+    an.asArray().forEach(function (ref) {
+      var dict;
+      try { dict = context.lookup(ref); } catch (e) { gardes.push(ref); return; }
+      if (!dict || !dict.get) { gardes.push(ref); return; }
+      var nom = nomDeAnnot(dict);
+      var r = nom ? rectDe(dict) : null;
+      if (nom && r && plan.textes[nom] !== undefined) {
+        var val = String(plan.textes[nom]).replace(/\s*\n\s*/g, ' / ');
+        var y = (r.h > 24) ? (r.y + r.h - 12) : (r.y + (r.h - 9) / 2 + 1.5);
+        try { page.drawText(val, { x: r.x + 2, y: y, size: 9, font: helv, color: noir, maxWidth: r.w - 4, lineHeight: 11 }); } catch (e) {}
+        nomsGraves[nom] = true; return; // retirée (pas dans gardes)
+      }
+      if (nom && r && casesSet[nom]) {
+        // Case cochée gravée : contour carré + coche (deux traits), pour un rendu identique à une
+        // vraie case cochée (le champ étant retiré, on redessine la case nous-mêmes).
+        var bs = Math.min(r.w, r.h);
+        var bx = r.x + (r.w - bs) / 2, by = r.y + (r.h - bs) / 2;
+        try {
+          page.drawRectangle({ x: bx, y: by, width: bs, height: bs, borderColor: noir, borderWidth: 1 });
+          var xs = bs * 0.78;
+          page.drawText('X', { x: bx + (bs - helvB.widthOfTextAtSize('X', xs)) / 2, y: by + (bs - xs) / 2 + xs * 0.16, size: xs, font: helvB, color: noir });
+        } catch (e) {}
+        nomsGraves[nom] = true; return;
+      }
+      gardes.push(ref);
+    });
+    page.node.set(PDFName.of('Annots'), context.obj(gardes));
   });
-  plan.cases.forEach(function (champ) {
-    try { form.getCheckBox(champ).check(); } catch (e) { /* champ absent : ignoré */ }
-  });
-  try { form.updateFieldAppearances(); } catch (e) { /* apparences régénérées par le lecteur au besoin */ }
+
+  // Retire aussi les champs gravés de l'AcroForm (/Fields), par nom, pour qu'ils ne restent pas
+  // « fantômes » dans le formulaire.
+  try {
+    var fieldsArr = form.acroForm.dict.get(PDFName.of('Fields'));
+    if (fieldsArr && fieldsArr.asArray) {
+      var gardesF = fieldsArr.asArray().filter(function (ref) {
+        try { var fd = context.lookup(ref); var t = fd.get(PDFName.of('T')); var nom = t && t.decodeText ? t.decodeText() : null; return !(nom && nomsGraves[nom]); }
+        catch (e) { return true; }
+      });
+      form.acroForm.dict.set(PDFName.of('Fields'), context.obj(gardesF));
+    }
+  } catch (e) {}
+
   return doc.save();
 }
 
