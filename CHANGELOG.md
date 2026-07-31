@@ -5,6 +5,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Demande d'autorisation : grisage conditionnel + pré-remplissage du tarif — 2026-07-31
+Deux améliorations de la demande d'autorisation :
+1. **Grisage conditionnel** — un champ ouvert lié à une question Oui/Non (Médecin → nom/tél, Repas →
+   fournisseur/prix, Hébergement → structure, Goûters → fournisseur/prix, École labellisée → date,
+   Équipes étrangères → liste, Droits → montant) est **grisé et non éditable** quand la réponse est
+   « non ». Bascule en direct au changement de réponse ; valeur stockée conservée. Déclaré par `dep`.
+2. **Pré-remplissage du tarif** — les champs « Droits d'inscription » (oui/non + montant) reprennent,
+   **s'ils sont vides**, le **tarif d'engagement** saisi dans « Modalités d'inscription » (le montant,
+   texte libre, est réduit à son 1ᵉʳ nombre car le champ autorisation est numérique). Jamais
+   d'écrasement d'une valeur déjà saisie ; une note « ↩ repris des modalités » le signale, et le
+   grisage reste cohérent avec la valeur effective. **Front seul, aucun redéploiement backend.**
+
 ### Réorganisation de la carte « Horaires » — 2026-07-31
 Réordonnancement des champs de la carte Horaires pour placer **« Heure de fin communiquée aux clubs »
 en dernier** (elle résume les réglages du dessus). Nouvel ordre : heure de début → RDV → heure de fin →

@@ -28,7 +28,8 @@ var AUTORISATION_SAISIE = [
     { p: 'org_president_tel', l: 'Tél. président', t: 'tel' },
     { p: 'org_president_mail', l: 'Mail président', t: 'email' },
     { p: 'org_label_edr', l: 'École de rugby labellisée', t: 'select', o: ['oui', 'non'] },
-    { p: 'org_label_date', l: 'Date du dernier label', t: 'text', ph: 'JJ/MM/AAAA' }
+    // `dep` : ce champ est GRISÉ (désactivé) tant que la question Oui/Non `dep` vaut « non ».
+    { p: 'org_label_date', l: 'Date du dernier label', t: 'text', ph: 'JJ/MM/AAAA', dep: 'org_label_edr' }
   ] },
   { titre: 'A.2 — Tournoi', champs: [
     { p: 'org_niveau_tournoi', l: 'Niveau du tournoi', t: 'select', o: ['International', 'National', 'Territorial', 'Départemental'] }
@@ -37,7 +38,7 @@ var AUTORISATION_SAISIE = [
     { p: 'org_nb_participants', l: 'Nombre de participants (si les équipes sont saisies à la main)', t: 'number',
       ph: 'ex. 240 — laisser vide si les clubs ont déclaré leurs effectifs' },
     { p: 'org_equipes_etrangeres', l: 'Équipes étrangères', t: 'select', o: ['non', 'oui'] },
-    { p: 'org_equipes_etrangeres_liste', l: 'Liste des équipes étrangères', t: 'textarea' }
+    { p: 'org_equipes_etrangeres_liste', l: 'Liste des équipes étrangères', t: 'textarea', dep: 'org_equipes_etrangeres' }
   ] },
   { titre: 'B.1 — Installations', champs: [
     { p: 'org_type_terrain', l: 'Type de terrain', t: 'select', o: ['Gazon', 'Synthétique', 'Sable', 'Neige', 'Argile'] },
@@ -50,23 +51,25 @@ var AUTORISATION_SAISIE = [
   ] },
   { titre: 'B.4 — Sécurité', champs: [
     { p: 'org_medecin_oui', l: 'Médecin présent', t: 'select', o: ['non', 'oui'] },
-    { p: 'org_medecin_nom', l: 'Médecin — nom', t: 'text' },
-    { p: 'org_medecin_tel', l: 'Médecin — tél.', t: 'tel' },
+    { p: 'org_medecin_nom', l: 'Médecin — nom', t: 'text', dep: 'org_medecin_oui' },
+    { p: 'org_medecin_tel', l: 'Médecin — tél.', t: 'tel', dep: 'org_medecin_oui' },
     { p: 'org_secours_nom', l: 'Antenne de secours — nom', t: 'text' },
     { p: 'org_secours_tel', l: 'Antenne de secours — tél.', t: 'tel' },
     { p: 'org_ambulance', l: 'Ambulance', t: 'select', o: ['non', 'oui'] }
   ] },
   { titre: 'B.5 — Logistique', champs: [
-    { p: 'org_droits_oui', l: 'Droits d\'inscription', t: 'select', o: ['non', 'oui'] },
-    { p: 'org_droits_montant', l: 'Montant / équipe', t: 'number' },
+    // `prefill` : si VIDE, ces champs reprennent le tarif d'engagement saisi dans « Modalités
+    // d'inscription » (jamais d'écrasement d'une valeur déjà saisie) — voir prefillAutorisation.
+    { p: 'org_droits_oui', l: 'Droits d\'inscription', t: 'select', o: ['non', 'oui'], prefill: true },
+    { p: 'org_droits_montant', l: 'Montant / équipe', t: 'number', dep: 'org_droits_oui', prefill: true },
     { p: 'org_hebergement_oui', l: 'Hébergement', t: 'select', o: ['non', 'oui'] },
-    { p: 'org_hebergement_structure', l: 'Hébergement — structure', t: 'text' },
+    { p: 'org_hebergement_structure', l: 'Hébergement — structure', t: 'text', dep: 'org_hebergement_oui' },
     { p: 'org_repas_oui', l: 'Repas', t: 'select', o: ['non', 'oui'] },
-    { p: 'org_repas_fournisseur', l: 'Repas — fournisseur', t: 'text' },
-    { p: 'org_repas_prix', l: 'Repas — prix / pers.', t: 'number' },
+    { p: 'org_repas_fournisseur', l: 'Repas — fournisseur', t: 'text', dep: 'org_repas_oui' },
+    { p: 'org_repas_prix', l: 'Repas — prix / pers.', t: 'number', dep: 'org_repas_oui' },
     { p: 'org_gouters_oui', l: 'Goûters', t: 'select', o: ['non', 'oui'] },
-    { p: 'org_gouters_fournisseur', l: 'Goûters — fournisseur', t: 'text' },
-    { p: 'org_gouters_prix', l: 'Goûters — prix / pers.', t: 'number' }
+    { p: 'org_gouters_fournisseur', l: 'Goûters — fournisseur', t: 'text', dep: 'org_gouters_oui' },
+    { p: 'org_gouters_prix', l: 'Goûters — prix / pers.', t: 'number', dep: 'org_gouters_oui' }
   ] }
 ];
 
@@ -76,28 +79,69 @@ function valAutorisation(param) {
   return g[param] != null ? String(g[param]) : '';
 }
 
+/** Valeur de PRÉ-REMPLISSAGE d'un champ (repris d'une info déjà saisie ailleurs), ou '' si aucune.
+ *  Aujourd'hui : les « Droits d'inscription » (B.5) reprennent le TARIF D'ENGAGEMENT des modalités
+ *  d'inscription. Le montant côté modalités est du texte libre → on n'en garde que le 1er nombre
+ *  (le champ autorisation est numérique). N'écrase JAMAIS : n'est utilisé que si le champ est vide. */
+function prefillAutorisation(param) {
+  const g = (typeof configCourante !== 'undefined' && configCourante && configCourante.global) || {};
+  if (param === 'org_droits_oui') {
+    const t = String(g.tarif_engagement_oui == null ? '' : g.tarif_engagement_oui).trim().toLowerCase();
+    return (t === 'oui' || t === 'non') ? t : '';
+  }
+  if (param === 'org_droits_montant') {
+    const m = String(g.tarif_engagement_montant == null ? '' : g.tarif_engagement_montant).match(/\d+(?:[.,]\d+)?/);
+    return m ? m[0].replace(',', '.') : '';
+  }
+  return '';
+}
+
+/** Valeur EFFECTIVE d'une question contrôleur (grisage) : la valeur stockée, ou à défaut son
+ *  pré-remplissage. Ainsi un champ lié est grisé de façon cohérente même quand la question qui le
+ *  pilote est encore vide mais pré-remplie à « non ». */
+function valControleurEffectiveAutorisation(param) {
+  const stored = valAutorisation(param);
+  return stored !== '' ? stored : prefillAutorisation(param);
+}
+
 /** Catégories présentes (pour les récompenses par catégorie + le mémo arbitrage). */
 function catsPresentesAutorisation() {
   const cats = (typeof configCourante !== 'undefined' && configCourante && configCourante.categories) || [];
   return cats.filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; });
 }
 
-/** Un champ de saisie (input / select / textarea). */
+/** Un champ de saisie (input / select / textarea).
+ *  Si `c.dep` est défini, le champ est GRISÉ (désactivé) quand la question Oui/Non `c.dep` vaut
+ *  « non » : le champ ouvert lié n'a alors pas de sens. La valeur stockée est conservée (juste
+ *  non modifiable) ; l'état est rebasculé en direct par onChangeAutorisation. */
 function champSaisieAutorisation(c) {
-  const v = valAutorisation(c.p);
+  const stored = valAutorisation(c.p);
+  // Pré-remplissage : SEULEMENT si le champ est vide (jamais d'écrasement d'une saisie).
+  const prefill = (stored === '' && c.prefill) ? prefillAutorisation(c.p) : '';
+  const estPrefill = (stored === '' && prefill !== '');
+  const v = stored !== '' ? stored : prefill;
+  // Grisage : sur la valeur EFFECTIVE de la question contrôleur (stockée ou pré-remplie).
+  const grise = !!(c.dep && valControleurEffectiveAutorisation(c.dep) === 'non');
+  const dis = grise ? ' disabled' : '';
   let controle;
   if (c.t === 'select') {
-    controle = '<select class="r-input" name="' + c.p + '"><option value="">—</option>' +
+    controle = '<select class="r-input" name="' + c.p + '"' + dis + '><option value="">—</option>' +
       c.o.map(function (opt) {
         return '<option value="' + echapper(opt) + '"' + (v === opt ? ' selected' : '') + '>' + echapper(opt) + '</option>';
       }).join('') + '</select>';
   } else if (c.t === 'textarea') {
-    controle = '<textarea class="r-input" name="' + c.p + '" rows="2">' + echapper(v) + '</textarea>';
+    controle = '<textarea class="r-input" name="' + c.p + '" rows="2"' + dis + '>' + echapper(v) + '</textarea>';
   } else {
     const ph = c.ph ? ' placeholder="' + echapper(c.ph) + '"' : '';
-    controle = '<input class="r-input" type="' + c.t + '" name="' + c.p + '" value="' + echapper(v) + '"' + ph + '>';
+    controle = '<input class="r-input" type="' + c.t + '" name="' + c.p + '" value="' + echapper(v) + '"' + ph + dis + '>';
   }
-  return '<label class="reglage"><span class="r-libelle">' + echapper(c.l) + '</span>' + controle + '</label>';
+  // data-dep porte la question CONTRÔLEUR : onChangeAutorisation retrouve les champs à (dé)griser.
+  const attrDep = c.dep ? ' data-dep="' + echapper(c.dep) + '"' : '';
+  const note = estPrefill
+    ? '<span class="autorisation-prefill-note">↩ repris des modalités d\'inscription — vérifie puis enregistre</span>'
+    : '';
+  return '<label class="reglage' + (grise ? ' est-grise' : '') + (estPrefill ? ' est-prefill' : '') + '"' + attrDep + '>' +
+    '<span class="r-libelle">' + echapper(c.l) + '</span>' + controle + note + '</label>';
 }
 
 /** Rend la partie SAISIE (formulaire) + le mémo arbitrage + le rappel « antenne de secours ». */
@@ -213,7 +257,29 @@ async function onEnregistrerAutorisation() {
   });
 }
 
-/* Câblage : boutons Enregistrer / Imprimer. Posé une fois, en délégation sur la section. */
+/** (Dé)grise les champs liés à une question Oui/Non `param` selon sa valeur (« non » ⇒ grisé). */
+function majGrisageAutorisation(param, valeur) {
+  const grise = String(valeur) === 'non';
+  const sel = (window.CSS && CSS.escape) ? CSS.escape(param) : param;
+  document.querySelectorAll('#form-autorisation label[data-dep="' + sel + '"]').forEach(function (lab) {
+    lab.classList.toggle('est-grise', grise);
+    const ctrl = lab.querySelector('.r-input');
+    if (ctrl) ctrl.disabled = grise;
+  });
+}
+
+/** Changement d'une question Oui/Non contrôleur ⇒ (dé)grise ses champs liés en direct. */
+function onChangeAutorisation(e) {
+  const el = e.target;
+  if (!el || !el.name || el.name.indexOf('org_') !== 0) return;
+  // On n'agit que si ce champ pilote au moins un champ lié (data-dep).
+  const sel = (window.CSS && CSS.escape) ? CSS.escape(el.name) : el.name;
+  if (document.querySelector('#form-autorisation label[data-dep="' + sel + '"]')) {
+    majGrisageAutorisation(el.name, el.value);
+  }
+}
+
+/* Câblage : boutons Enregistrer / Imprimer + grisage conditionnel. Posé une fois, en délégation. */
 document.addEventListener('DOMContentLoaded', function () {
   const section = document.getElementById('bloc-autorisation');
   if (!section) return;
@@ -221,4 +287,5 @@ document.addEventListener('DOMContentLoaded', function () {
     if (e.target.closest('#bouton-enregistrer-autorisation')) { e.preventDefault(); onEnregistrerAutorisation(); }
     else if (e.target.closest('#bouton-imprimer-autorisation')) { e.preventDefault(); window.print(); }
   });
+  section.addEventListener('change', onChangeAutorisation);
 });
