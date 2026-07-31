@@ -18,6 +18,10 @@ catégorie**. Le **format sportif détaillé par catégorie** (nb matchs/durée 
 **signatures** restent à compléter à la main. Correspondance champ PDF ↔ donnée **vérifiée par la
 position de chaque champ face à son libellé** dans le PDF officiel + test end-to-end (24 textes /
 10 cases relus). Modèle : `frontend/modeles/demande-autorisation-ffr.pdf`.
+Ajouts après 1er retour : **taille de police fixée à 9 pt** (les champs étaient en « auto » → texte
+surdimensionné qui débordait sur les libellés voisins = chevauchements) ; **tableau « Catégories et
+formes de jeu » (page 2) coché automatiquement** d'après la forme de jeu retenue de chaque catégorie
+présente (`Config.forme_jeu`) — mapping des cases vérifié par le libellé à droite de chacune.
 
 ### Demande d'autorisation : grisage conditionnel + pré-remplissage du tarif — 2026-07-31
 Deux améliorations de la demande d'autorisation :

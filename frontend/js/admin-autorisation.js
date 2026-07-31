@@ -266,6 +266,48 @@ async function onEnregistrerAutorisation() {
    champ face à son libellé dans le PDF officiel (millésime 2026-2027).
    ========================================================================== */
 
+/* Tableau « Catégories et formes de jeu » (page 2) : par numéro de catégorie FFR, la liste des
+   formes possibles avec leur case. `f` = code forme (T+2 / JCO / RE / SEVENS), `e` = effectif.
+   Mapping VÉRIFIÉ par le libellé à droite de chaque case dans le PDF officiel. */
+var PDF_FORMES_TABLE = {
+  '6':  [{ plateau: true, c: 'Case à cocher69' }],
+  '8':  [{ f: 'T+2', e: '5X5', c: 'Case à cocher70' }, { f: 'JCO', e: '5X5', c: 'Case à cocher71' }],
+  '10': [{ f: 'T+2', e: '5X5', c: 'Case à cocher72' }, { f: 'JCO', e: '5X5', c: 'Case à cocher73' }, { f: 'RE', e: '7X7', c: 'Case à cocher74' }],
+  '12': [{ f: 'T+2', e: '5X5', c: 'Case à cocher75' }, { f: 'JCO', e: '5X5', c: 'Case à cocher76' }, { f: 'RE', e: '10X10', c: 'Case à cocher77' }],
+  '14': [{ f: 'T+2', e: '7X7', c: 'Case à cocher78' }, { f: 'JCO', e: '7X7', c: 'Case à cocher79' }, { f: 'RE', e: '10X10', c: 'Case à cocher80' }, { f: 'RE', e: '15X15', c: 'Case à cocher81' }, { f: 'SEVENS', e: '7X7', c: 'Case à cocher82' }],
+  '15F':[{ f: 'T+2', e: '7X7', c: 'Case à cocher83' }, { f: 'JCO', e: '7X7', c: 'Case à cocher84' }, { f: 'RE', e: '10X10', c: 'Case à cocher85' }, { f: 'RE', e: '15X15', c: 'Case à cocher86' }, { f: 'SEVENS', e: '7X7', c: 'Case à cocher87' }]
+};
+
+/** Numéro de catégorie FFR à partir du nom d'app : U10→'10', U15F→'15F', M8→'8'. */
+function numCategorieAut(nom) {
+  return String(nom == null ? '' : nom).trim().toUpperCase().replace(/^[MU](?=\d)/, '');
+}
+
+/** Coche, dans le tableau des formes (page 2), la forme de jeu retenue de chaque catégorie présente
+ *  (Config.forme_jeu, ex. « JCO — 5x5 »). Ajoute les cases à `cases`. Rien si forme non renseignée. */
+function cocherFormesCategories(categories, cases) {
+  (categories || []).forEach(function (cat) {
+    if (String(cat.presente).toLowerCase() !== 'oui') return;
+    var num = numCategorieAut(cat.categorie);
+    var table = PDF_FORMES_TABLE[num];
+    if (!table) return;
+    var fj = String(cat.forme_jeu == null ? '' : cat.forme_jeu).trim();
+    // M6 : une seule case (plateau) — cochée dès que la catégorie est présente.
+    if (num === '6') { cases.push(table[0].c); return; }
+    if (!fj) return; // pas de forme retenue ⇒ on ne devine pas
+    var parts = fj.split(/[—–-]/);
+    var forme = String(parts[0] || '').trim().toUpperCase().replace(/\s+/g, '');   // « J CO » → « JCO »
+    var eff = String(parts[1] || '').trim().toUpperCase().replace(/\s+/g, '');       // « 5x5 » → « 5X5 »
+    for (var i = 0; i < table.length; i++) {
+      var opt = table[i];
+      if (opt.plateau) continue;
+      if (String(opt.f).toUpperCase().replace(/\s+/g, '') === forme && String(opt.e).toUpperCase() === eff) {
+        cases.push(opt.c); return;
+      }
+    }
+  });
+}
+
 /* Récompenses par catégorie : numéro FFR → [caseOui, caseNon]. */
 var PDF_RECOMPENSES_AUT = {
   '6':  ['Case à cocher95', 'Case à cocher96'],
@@ -286,7 +328,7 @@ function dateFrPdfAut(iso) {
  * PUR : ne lit ni DOM ni classeur. `g` = paramètres globaux (Config) ; nbClubs/nbEquipes = comptes.
  * Applique les MÊMES défauts que la feuille de report backend (club affilié, label, étrangères).
  */
-function planRemplissageAutorisation(g, nbClubs, nbEquipes) {
+function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories) {
   g = g || {};
   function v(k) { return String(g[k] == null ? '' : g[k]).trim(); }
   var textes = {}, cases = [];
@@ -368,6 +410,9 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes) {
     ouinon(g[k], pair[0], pair[1]);
   });
 
+  // Page 2 — tableau « Catégories et formes de jeu » : coche la forme retenue de chaque catégorie.
+  cocherFormesCategories(categories, cases);
+
   // Page signatures — club demandeur.
   setT('Club demandeurRow1', v('org_club_nom') || 'Racing Club de France Rugby');
   return { textes: textes, cases: cases };
@@ -378,7 +423,13 @@ async function appliquerPlanPdfAutorisation(PDFLib, bytes, plan) {
   const doc = await PDFLib.PDFDocument.load(bytes);
   const form = doc.getForm();
   Object.keys(plan.textes).forEach(function (champ) {
-    try { form.getTextField(champ).setText(plan.textes[champ]); } catch (e) { /* champ absent : ignoré */ }
+    try {
+      const tf = form.getTextField(champ);
+      tf.setText(plan.textes[champ]);
+      // Taille de police FIXE : sans ça, les champs sont en « auto » (0) et pdf-lib agrandit le
+      // texte à la hauteur de la case (15–22 pt) → il déborde sur les libellés voisins (chevauchements).
+      tf.setFontSize(9);
+    } catch (e) { /* champ absent : ignoré */ }
   });
   plan.cases.forEach(function (champ) {
     try { form.getCheckBox(champ).check(); } catch (e) { /* champ absent : ignoré */ }
@@ -416,7 +467,8 @@ async function onTelechargerPdfAutorisation() {
     const nbEquipes = eqs.length;
     const nbClubs = (typeof clubsInvitesCourants !== 'undefined' && clubsInvitesCourants)
       ? clubsInvitesCourants.length : 0;
-    const plan = planRemplissageAutorisation(g, nbClubs, nbEquipes);
+    const cats = (typeof configCourante !== 'undefined' && configCourante && configCourante.categories) || [];
+    const plan = planRemplissageAutorisation(g, nbClubs, nbEquipes, cats);
     const out = await appliquerPlanPdfAutorisation(PDFLib, bytes, plan);
     telechargerFichierAutorisation(out, 'demande-autorisation-' + (g.tournoi_date || 'tournoi') + '.pdf', 'application/pdf');
     afficherMessage(message, '✅ PDF pré-rempli téléchargé. Ouvre-le et complète le format sportif ' +
