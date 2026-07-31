@@ -283,6 +283,41 @@ function numCategorieAut(nom) {
   return String(nom == null ? '' : nom).trim().toUpperCase().replace(/^[MU](?=\d)/, '');
 }
 
+/* Cases du tableau « Catégories et formes de jeu » (page 2). Ces cellules-là ont un CADRE de case
+ * DÉJÀ IMPRIMÉ sur la page (glyphe ❑ du gabarit) : y regraver notre propre carré donnait un
+ * double encadrement (case dans la case). Pour elles on ne grave QUE la croix, sans cadre. Les
+ * autres cases (Niveau, récompenses, installations…) n'ont aucun cadre imprimé : on continue d'y
+ * dessiner le carré + la croix. Ensemble dérivé de PDF_FORMES_TABLE (source unique). */
+var CASES_CADRE_IMPRIME = (function () {
+  var s = {};
+  Object.keys(PDF_FORMES_TABLE).forEach(function (num) {
+    PDF_FORMES_TABLE[num].forEach(function (opt) { s[opt.c] = true; });
+  });
+  return s;
+})();
+
+/* Géométrie du cadre ❑ imprimé des cellules du tableau des formes, MESURÉE sur le rendu du gabarit
+ * (raster 300 dpi) : le glyphe ❑ fait ~7,7 pt de côté et son centre est décalé du centre du widget
+ * de +4,2 pt en x et −0,9 pt en y (constant en points ⇒ indépendant de la résolution ; identique sur
+ * toutes les cellules, même glyphe/même corps). La croix gravée est calée dessus. */
+var CADRE_IMPRIME_DX = 4.2;
+var CADRE_IMPRIME_DY = -0.9;
+var CADRE_IMPRIME_TAILLE = 7.7;
+
+/* Retouches STATIQUES du gabarit — défaut structurel du PDF officiel : le libellé imprimé
+ * « Niveau du tournoi : » est posé PAR-DESSUS la zone de saisie « Heure de début » (Texte13,
+ * x 115..265 · y 415..437), d'où le chevauchement et le surlignage gris sur le libellé. On MASQUE
+ * le libellé à son ancienne place (rectangle blanc calé sur sa boîte MESURÉE au raster 300 dpi :
+ * x 119,3..203,8 · y 422,2..429,4) et on le REDESSINE aligné sous « Heure de début » (même bord
+ * gauche, x 38,4), sur la ligne des cases International/National/… (texte de la ligne : y 400..409).
+ * « Heure de début » récupère ainsi sa zone → remplie avec Config.heure_debut. `page` : index dans
+ * doc.getPages() (0 = consignes, 1 = « A. Informations générales »). */
+var RETOUCHES_GABARIT = [
+  { page: 1,
+    caches: [{ x: 117, y: 419.5, w: 89.5, h: 13 }],
+    textes: [{ x: 38.4, y: 400.1, taille: 10, texte: 'Niveau du tournoi :' }] }
+];
+
 /** Coche, dans le tableau des formes (page 2), la forme de jeu retenue de chaque catégorie présente
  *  (Config.forme_jeu, ex. « JCO — 5x5 »). Ajoute les cases à `cases`. Rien si forme non renseignée. */
 function cocherFormesCategories(categories, cases) {
@@ -323,12 +358,163 @@ function dateFrPdfAut(iso) {
   return m ? (m[3] + '/' + m[2] + '/' + m[1]) : String(iso == null ? '' : iso);
 }
 
+/* ── Section « 2. FORMAT SPORTIF » (pages 2-3 du formulaire). Par numéro de catégorie FFR, les
+   champs texte de son bloc « Organisation sportive catégorie MX » :
+     p1n/p1d : « Si en 1 phase »  → nombre de matchs/équipe · durée match
+     f1n/f1d : « Phase 1 qualificative » → nombre de matchs/équipe · durée match
+     f2n/f2d : « Phase 2 de niveau »     → nombre de matchs/équipes · durée match
+   Mapping VÉRIFIÉ par la position de chaque champ face à son libellé (millésime 2026-2027). Le
+   formulaire n'a de bloc que pour M6/M8/M10/M12/M14 (pas de M15F). */
+var PDF_FORMAT_SPORTIF = {
+  '6':  { p1n: 'Texte22',  p1d: 'Texte29',  f1n: 'Texte30',  f1d: 'Texte31',  f2n: 'Texte32',  f2d: 'Texte33' },
+  '8':  { p1n: 'Texte23',  p1d: 'Texte24',  f1n: 'Texte25',  f1d: 'Texte26',  f2n: 'Texte27',  f2d: 'Texte28' },
+  '10': { p1n: 'Texte21',  p1d: 'Texte36',  f1n: 'Texte39',  f1d: 'Texte37',  f2n: 'Texte62',  f2d: 'Texte38' },
+  '12': { p1n: 'Texte121', p1d: 'Texte125', f1n: 'Texte123', f1d: 'Texte126', f2n: 'Texte124', f2d: 'Texte127' },
+  '14': { p1n: 'Texte40',  p1d: 'Texte41',  f1n: 'Texte42',  f1d: 'Texte43',  f2n: 'Texte44',  f2d: 'Texte45' }
+};
+
+/** Nom de club déduit d'un nom d'équipe : « RCF-2 » → « RCF ». Miroir de clubDe (backend) — même
+ *  convention « {club} » / « {club}-N » que la répartition des poules. Sert au comptage des clubs. */
+function clubDeAut(nom) {
+  return String(nom == null ? '' : nom).replace(/\s*[-–—/]\s*\d{1,3}\s*$/, '').trim().toUpperCase();
+}
+
+/** Nombre MAX de matchs joués par une même équipe (équipes vides ignorées). Miroir backend. */
+function maxMatchsParEquipeAut(matchs) {
+  var comptes = {};
+  (matchs || []).forEach(function (m) {
+    [m.equipe_A, m.equipe_B].forEach(function (e) {
+      var id = String(e == null ? '' : e).trim();
+      if (id) comptes[id] = (comptes[id] || 0) + 1;
+    });
+  });
+  var max = 0;
+  for (var k in comptes) { if (comptes[k] > max) max = comptes[k]; }
+  return max;
+}
+
+/** Libellé de durée de match d'une catégorie (« format_mi_temps × durée min »). Miroir backend
+ *  (dureeMatchLibelleAutorisation) : connu dès la config, AVANT toute génération. '' si incomplet. */
+function dureeMatchLibelleAut(cfgCat) {
+  var fmt = String((cfgCat && cfgCat.format_mi_temps) || '').trim();
+  var dm = String((cfgCat && cfgCat.duree_mi_temps_min) || '').trim();
+  if (!fmt || !dm) return '';
+  return fmt + ' × ' + dm + ' min';
+}
+
+/** Structure des poules du matin, dérivée des matchs — miroir de structureMatinFFR (backend).
+ *  → { nbPoules, poulesEgales, totalEquipes, matinMax }. Pur. */
+function structureMatinAut(matin) {
+  var equipesParPoule = {}, toutesEquipes = {};
+  (matin || []).forEach(function (m) {
+    var p = String(m.poule == null ? '' : m.poule).trim();
+    if (!p) return;
+    var set = equipesParPoule[p] || (equipesParPoule[p] = {});
+    [m.equipe_A, m.equipe_B].forEach(function (e) {
+      var id = String(e == null ? '' : e).trim();
+      if (id) { set[id] = true; toutesEquipes[id] = true; }
+    });
+  });
+  var labels = Object.keys(equipesParPoule);
+  var tailles = labels.map(function (p) { return Object.keys(equipesParPoule[p]).length; });
+  var egales = tailles.length > 0 && tailles.every(function (t) { return t === tailles[0]; });
+  return { nbPoules: labels.length, poulesEgales: egales,
+           totalEquipes: Object.keys(toutesEquipes).length, matinMax: maxMatchsParEquipeAut(matin) };
+}
+
+/* Formules de phase 2 — miroir de FORMULES_PHASE2 (backend, session 10) : un format n'accède à la
+ * prédiction que si sa formule est ICI ; tout format absent tombe sur le chemin PRUDENT (rien
+ * d'écrit). Sur le formulaire OFFICIEL on ne grave que les prédictions EXACTES (nature 'predit') —
+ * jamais une borne basse ('minimum', cas du CROISE_DIAGONAL en poules inégales). */
+var FORMULES_PHASE2_AUT = {
+  CROISE: function (s) {
+    return { valeur: s.nbPoules >= 2 ? s.nbPoules - 1 : 0, nature: 'predit' };
+  },
+  CROISE_DIAGONAL: function (s) {
+    if (s.nbPoules < 2) return { valeur: 0, nature: 'predit' };
+    return s.poulesEgales ? { valeur: 1, nature: 'predit' } : { valeur: 1, nature: 'minimum' };
+  },
+  LIBRE: function (s) {
+    return { valeur: s.totalEquipes >= 2 ? s.totalEquipes - 1 : 0, nature: 'predit' };
+  }
+};
+
+/** Phase 2 PRÉDITE depuis la structure du matin, ou null si non prédictible exactement. */
+function predirePhase2Aut(matin, fmt) {
+  if (!matin || !matin.length) return null; // pas de matin ⇒ pas de structure ⇒ muet
+  var formule = Object.prototype.hasOwnProperty.call(FORMULES_PHASE2_AUT, fmt) ? FORMULES_PHASE2_AUT[fmt] : null;
+  if (!formule) return null;
+  var p2 = formule(structureMatinAut(matin));
+  return p2.nature === 'predit' ? p2.valeur : null;
+}
+
+/**
+ * Format sportif d'UNE catégorie — miroir FIDÈLE de formatSportifCategorie (backend), même doctrine :
+ * le nombre de PHASES vient du format d'après-midi DÉCLARÉ (jamais de l'existence de matchs), et le
+ * nombre de matchs/équipe se remplit phase par phase. Quand l'après-midi n'est PAS généré (cas normal
+ * avant le jour J), la phase 2 est PRÉDITE par arithmétique de la structure des poules (sessions
+ * 9-10 : planifierApresMidi ne tronque jamais par le temps — c'est une conséquence de la structure,
+ * pas une estimation) ; seule une prédiction EXACTE est écrite.
+ *   CROISE / CROISE_DIAGONAL → 2 phases · LIBRE → 1 phase (toute la journée, prédite si besoin) ·
+ *   COUPE_PLATEAU / vide → pas de nombre écrit · SCF (U14 Super Challenge) → rien : structure et
+ *   durées propres (triangulaires/quadrangulaires, 2×15 ou 2×11), l'organisateur complète à la main.
+ */
+function formatSportifCategorieAut(matchsCat, cfgCat) {
+  // Garde SCF : hors doctrine standard (pas de « classement », durée forcée) — on n'écrit RIEN.
+  if (typeof ctxScf === 'function' && ctxScf(cfgCat).estScf) {
+    return { deuxPhases: false, duree: '', unePhase: null };
+  }
+  var liste = matchsCat || [];
+  var matin = liste.filter(function (m) { return String(m.phase) !== 'classement'; });
+  var aprem = liste.filter(function (m) { return String(m.phase) === 'classement'; });
+  var fmt = String((cfgCat && cfgCat.format_apresmidi) || '').trim().toUpperCase();
+  var duree = dureeMatchLibelleAut(cfgCat);
+  function compter(sous) { return sous.length ? maxMatchsParEquipeAut(sous) : null; }
+  if (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL') {
+    // Phase 2 : constatée si générée, sinon prédite exactement depuis la structure du matin.
+    var p2 = aprem.length ? compter(aprem) : predirePhase2Aut(matin, fmt);
+    return { deuxPhases: true, duree: duree, phase1: compter(matin), phase2: p2 };
+  }
+  if (fmt === 'LIBRE') {
+    // Une phase, toute la journée : constatée si l'après-midi existe, sinon matin + phase 2 prédite.
+    var total = aprem.length ? compter(liste) : null;
+    if (total == null && matin.length) {
+      var pl = predirePhase2Aut(matin, 'LIBRE');
+      if (pl != null) total = maxMatchsParEquipeAut(matin) + pl;
+    }
+    return { deuxPhases: false, duree: duree, unePhase: total };
+  }
+  // COUPE_PLATEAU / vide / inconnu : on n'écrit aucun nombre de matchs (comme la feuille de report),
+  // mais la durée reste connue et remplissable.
+  return { deuxPhases: false, duree: duree, unePhase: null };
+}
+
+/** Remplit les champs texte de la section « Format sportif » pour chaque catégorie présente.
+ *  `matchsParCat` : matchs groupés par nom de catégorie d'app. `setT` : poseur de texte du plan. */
+function remplirFormatSportifAut(categories, matchsParCat, setT) {
+  (categories || []).forEach(function (cat) {
+    if (String(cat.presente).toLowerCase() !== 'oui') return;
+    var map = PDF_FORMAT_SPORTIF[numCategorieAut(cat.categorie)];
+    if (!map) return; // catégorie sans bloc au formulaire (ex. M15F)
+    var fs = formatSportifCategorieAut((matchsParCat && matchsParCat[cat.categorie]) || [], cat);
+    if (fs.deuxPhases) {
+      if (fs.phase1 != null) setT(map.f1n, String(fs.phase1));
+      if (fs.phase2 != null) setT(map.f2n, String(fs.phase2));
+      if (fs.duree) { setT(map.f1d, fs.duree); setT(map.f2d, fs.duree); }
+    } else {
+      if (fs.unePhase != null) setT(map.p1n, String(fs.unePhase));
+      if (fs.duree) setT(map.p1d, fs.duree);
+    }
+  });
+}
+
 /**
  * Construit le PLAN de remplissage (résolu) : { textes:{champPDF:valeur}, cases:[champPDF] }.
- * PUR : ne lit ni DOM ni classeur. `g` = paramètres globaux (Config) ; nbClubs/nbEquipes = comptes.
- * Applique les MÊMES défauts que la feuille de report backend (club affilié, label, étrangères).
+ * PUR : ne lit ni DOM ni classeur. `g` = paramètres globaux (Config) ; nbClubs/nbEquipes = comptes ;
+ * `matchsParCat` = matchs groupés par catégorie (pour le format sportif). Applique les MÊMES défauts
+ * et la MÊME doctrine que la feuille de report backend (club affilié, label, étrangères, phases).
  */
-function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories) {
+function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsParCat) {
   g = g || {};
   function v(k) { return String(g[k] == null ? '' : g[k]).trim(); }
   var textes = {}, cases = [];
@@ -355,9 +541,10 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories) {
   setT('Texte11', v('tournoi_nom'));
   setT('Texte12', v('tournoi_adresse') || v('tournoi_lieu'));
   setT('Date64_es_:signer:date', dateFrPdfAut(v('tournoi_date')));
-  // « Heure de début » (Texte13) N'EST PAS remplie : dans le formulaire officiel, sa case est
-  // dessinée PAR-DESSUS le libellé « Niveau du tournoi » → toute valeur le chevauche. On laisse
-  // l'organisateur l'écrire à la main. « Heure de fin » (Texte14), elle, ne chevauche rien.
+  // « Heure de début » (Texte13) : sa zone chevauchait le libellé imprimé « Niveau du tournoi » —
+  // libellé désormais MASQUÉ et redessiné plus bas (RETOUCHES_GABARIT) ⇒ la zone est libre, on la
+  // remplit avec l'heure de début du tournoi. « Heure de fin » (Texte14) ne chevauche rien.
+  setT('Texte13', v('heure_debut'));
   setT('Texte14', v('heure_fin_communiquee') || v('heure_fin'));
   choix(v('org_niveau_tournoi'), { 'International': 'Case à cocher65', 'National': 'Case à cocher66',
     'Territorial': 'Case à cocher67', 'Départemental': 'Case à cocher68' });
@@ -412,6 +599,11 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories) {
     ouinon(g[k], pair[0], pair[1]);
   });
 
+  // Section « 2. Format sportif » : nombre de matchs/équipe (par phase) + durée de match, par
+  // catégorie. La durée vient de la config (connue avant génération) ; les nombres de matchs sont
+  // comptés sur les matchs générés (null ⇒ champ laissé vide, jamais deviné).
+  remplirFormatSportifAut(categories, matchsParCat, setT);
+
   // Page 2 — tableau « Catégories et formes de jeu » : coche la forme retenue de chaque catégorie.
   cocherFormesCategories(categories, cases);
 
@@ -432,6 +624,20 @@ async function appliquerPlanPdfAutorisation(PDFLib, bytes, plan) {
   const helv = await doc.embedFont(PDFLib.StandardFonts.Helvetica);
   const helvB = await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
   const noir = PDFLib.rgb(0.08, 0.08, 0.10);
+  const blanc = PDFLib.rgb(1, 1, 1);
+
+  // Retouches statiques du gabarit (déplacement du libellé « Niveau du tournoi : ») — dessinées
+  // AVANT la gravure des champs, pour que les valeurs gravées passent PAR-DESSUS les caches blancs.
+  RETOUCHES_GABARIT.forEach(function (ret) {
+    var page = doc.getPages()[ret.page];
+    if (!page) return;
+    (ret.caches || []).forEach(function (c) {
+      try { page.drawRectangle({ x: c.x, y: c.y, width: c.w, height: c.h, color: blanc }); } catch (e) {}
+    });
+    (ret.textes || []).forEach(function (t) {
+      try { page.drawText(t.texte, { x: t.x, y: t.y, size: t.taille, font: helv, color: noir }); } catch (e) {}
+    });
+  });
   const casesSet = {};
   (plan.cases || []).forEach(function (n) { casesSet[n] = true; });
   const nomsGraves = {}; // noms des champs gravés (à retirer aussi du formulaire)
@@ -469,14 +675,23 @@ async function appliquerPlanPdfAutorisation(PDFLib, bytes, plan) {
         nomsGraves[nom] = true; return; // retirée (pas dans gardes)
       }
       if (nom && r && casesSet[nom]) {
-        // Case cochée gravée : contour carré + coche (deux traits), pour un rendu identique à une
-        // vraie case cochée (le champ étant retiré, on redessine la case nous-mêmes).
-        var bs = Math.min(r.w, r.h);
-        var bx = r.x + (r.w - bs) / 2, by = r.y + (r.h - bs) / 2;
         try {
-          page.drawRectangle({ x: bx, y: by, width: bs, height: bs, borderColor: noir, borderWidth: 1 });
-          var xs = bs * 0.78;
-          page.drawText('X', { x: bx + (bs - helvB.widthOfTextAtSize('X', xs)) / 2, y: by + (bs - xs) / 2 + xs * 0.16, size: xs, font: helvB, color: noir });
+          if (CASES_CADRE_IMPRIME[nom]) {
+            // Cellule du tableau des formes : le cadre ❑ (≈ 7,7 pt) est DÉJÀ imprimé par le gabarit,
+            // décalé du centre du widget (mesuré : +4,2 pt à droite, −0,9 pt en bas). On ne grave QUE
+            // la croix, calée sur ce cadre imprimé — plus de double encadrement ni de croix hors case.
+            var cx = r.x + r.w / 2 + CADRE_IMPRIME_DX;
+            var cy = r.y + r.h / 2 + CADRE_IMPRIME_DY;
+            var xt = CADRE_IMPRIME_TAILLE * 1.05;
+            page.drawText('X', { x: cx - helvB.widthOfTextAtSize('X', xt) / 2, y: cy - xt * 0.35, size: xt, font: helvB, color: noir });
+          } else {
+            // Case sans cadre imprimé (Niveau, récompenses…) : on redessine le carré + la croix.
+            var bs = Math.min(r.w, r.h);
+            var bx = r.x + (r.w - bs) / 2, by = r.y + (r.h - bs) / 2;
+            page.drawRectangle({ x: bx, y: by, width: bs, height: bs, borderColor: noir, borderWidth: 1 });
+            var xs = bs * 0.78;
+            page.drawText('X', { x: bx + (bs - helvB.widthOfTextAtSize('X', xs)) / 2, y: by + (bs - xs) / 2 + xs * 0.16, size: xs, font: helvB, color: noir });
+          }
         } catch (e) {}
         nomsGraves[nom] = true; return;
       }
@@ -525,13 +740,27 @@ async function onTelechargerPdfAutorisation() {
     if (!resp.ok) throw new Error('Modèle PDF introuvable (modeles/demande-autorisation-ffr.pdf).');
     const bytes = await resp.arrayBuffer();
     const g = (typeof configCourante !== 'undefined' && configCourante && configCourante.global) || {};
-    // Comptes : nb d'équipes = équipes chargées ; nb de clubs = clubs invités (si dispo).
+    // Comptes (miroir de la feuille de report backend) :
+    //   nb d'équipes = équipes chargées ;
+    //   nb de clubs   = clubs DISTINCTS déduits des noms d'équipes (clubDeAut), source robuste qui ne
+    //     dépend pas du circuit d'invitation ; à défaut d'équipes, on retombe sur les clubs invités.
     const eqs = (typeof equipesCourantes !== 'undefined' && equipesCourantes) ? equipesCourantes : [];
     const nbEquipes = eqs.length;
-    const nbClubs = (typeof clubsInvitesCourants !== 'undefined' && clubsInvitesCourants)
-      ? clubsInvitesCourants.length : 0;
+    const setClubs = {};
+    eqs.forEach(function (e) { const c = clubDeAut(e.nom_equipe); if (c) setClubs[c] = true; });
+    let nbClubs = Object.keys(setClubs).length;
+    if (!nbClubs && typeof clubsInvitesCourants !== 'undefined' && clubsInvitesCourants) {
+      nbClubs = clubsInvitesCourants.length;
+    }
     const cats = (typeof configCourante !== 'undefined' && configCourante && configCourante.categories) || [];
-    const plan = planRemplissageAutorisation(g, nbClubs, nbEquipes, cats);
+    // Matchs groupés par catégorie (pour le format sportif) — depuis le planning déjà chargé.
+    const matchs = (typeof matchsCourants !== 'undefined' && matchsCourants) ? matchsCourants : [];
+    const matchsParCat = {};
+    matchs.forEach(function (m) {
+      const cat = String(m.categorie == null ? '' : m.categorie).trim();
+      if (cat) (matchsParCat[cat] = matchsParCat[cat] || []).push(m);
+    });
+    const plan = planRemplissageAutorisation(g, nbClubs, nbEquipes, cats, matchsParCat);
     const out = await appliquerPlanPdfAutorisation(PDFLib, bytes, plan);
     telechargerFichierAutorisation(out, 'demande-autorisation-' + (g.tournoi_date || 'tournoi') + '.pdf', 'application/pdf');
     afficherMessage(message, '✅ PDF pré-rempli téléchargé. Ouvre-le et complète le format sportif ' +
