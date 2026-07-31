@@ -5,6 +5,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Super Challenge U14 — génération Phase 2 (triangulaire/quadrangulaire, 2×15) — 2026-07-31
+Suite du contexte SCF (déclaratif) : « Générer les poules » **produit désormais le plateau** pour
+une catégorie U14 en Super Challenge. Chaque groupe de **3 → triangulaire** (réutilise le
+round-robin de 3 existant), chaque groupe de **4 → quadrangulaire** (fixture dédié `fixtureQuadrangulaireScf` :
+4 matchs, 2 par équipe, réparti en 2 tournées — ≠ round-robin de 6). Le **temps de jeu est forcé**
+par le règlement (`dureeMatchScf` : 2×15 en P2, 2×11 en P3) sans toucher aux réglages de mi-temps,
+et les catégories SCF **n'ont pas d'après-midi** (sautées dans `genererApresMidi` et
+`projeterFinApresMidi`). Regroupement = mécanisme de poules habituel ; taille ≠ 3/4 → avertissement.
+**Phase 3 partielle** : la journée de triangulaires est générée en 2×11, mais la structure 2 journées
+(brassage samedi→dimanche) n'est pas encore automatisée — un avertissement le signale (prochain
+chantier). Note admin dépendante de la phase (P2 = « générée », P3 = « partielle »). Tests 283/283
+(+16, dont intégration `calculerPlanning`). ⚠️ **Redéploiement backend nécessaire.**
+
 ### Contexte U14 « Super Challenge de France » (déclaratif) — 2026-07-31
 La fiche d'une catégorie **U14** (et elle seule, au sens FFR M14) propose désormais un choix de
 **contexte de tournoi** : **Tournoi ordinaire** (défaut, comportement inchangé) ou **Super Challenge
