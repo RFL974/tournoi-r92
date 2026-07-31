@@ -261,6 +261,9 @@ function doGet(e) {
       case 'getReponseInvitation': resultat = getReponseInvitation(classeur, params); break;
       // Conformité FFR pour une date + catégories + zone (informatif, aucune donnée personnelle).
       case 'getConformiteFFR': resultat = getConformiteFFR(classeur, params); break;
+      // Jours compatibles FFR d'un mois donné (week-ends + mercredis) : pour chaque jour, statut
+      // compatible / vigilance / conflit / hors-couverture. Informatif, aucune donnée personnelle.
+      case 'datesCompatiblesFFR': resultat = datesCompatiblesFFR(classeur, params); break;
       // Capacités de saisie par catégorie (tir au but oui/non) : lu du référentiel FFR pour la date
       // et la forme retenue du tournoi. PUBLIC (aucune donnée personnelle) — sert saisie.html.
       case 'getCapacitesCategories': resultat = getCapacitesCategories(classeur); break;
@@ -1514,6 +1517,85 @@ function getConformiteFFR(classeur, params) {
   } catch (e) { /* migration douce : pas de prévisionnel */ }
 
   return res;
+}
+
+/* Jour de la semaine (0=dimanche … 6=samedi) d'une date grégorienne, SANS objet Date (pur,
+   testable, insensible au fuseau). Algorithme de Sakamoto. */
+function jourSemaineFFR(annee, mois, jour) {
+  var t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
+  var y = annee;
+  if (mois < 3) y -= 1;
+  return (y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) + t[mois - 1] + jour) % 7;
+}
+
+/* Nombre de jours d'un mois (gère les années bissextiles). Pur. */
+function nbJoursDansMoisFFR(annee, mois) {
+  var jours = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (mois === 2 && (annee % 4 === 0 && (annee % 100 !== 0 || annee % 400 === 0))) return 29;
+  return jours[mois - 1];
+}
+
+/**
+ * Cœur PUR : pour chaque jour « jouable » (dimanches, mercredis, samedis) d'un mois, évalue la
+ * conformité FFR et attribue un statut. Référentiel injecté ⇒ testable sans classeur.
+ *   - compatible      : couvert, 0 conflit, 0 vigilance ;
+ *   - vigilance       : couvert, 0 conflit, ≥ 1 point de vigilance (applicable, signalé orange) ;
+ *   - conflit         : ≥ 1 conflit dur (non applicable) ;
+ *   - hors_couverture : date hors saison couverte par le référentiel (non applicable) ;
+ *   - inconnu         : référentiel indisponible.
+ * Seuls les statuts `compatible` et `vigilance` sont `applicable:true`.
+ * @return {{ ok, mois, refDisponible, jours:Array }} ou { error } si le mois est illisible.
+ */
+function calculerDatesCompatiblesFFR(ref, mois, categories, zone) {
+  var m = String(mois == null ? '' : mois).trim().match(/^(\d{4})-(\d{2})$/);
+  if (!m) return { error: 'Mois invalide (attendu AAAA-MM).' };
+  var annee = parseInt(m[1], 10), moisNum = parseInt(m[2], 10);
+  if (moisNum < 1 || moisNum > 12) return { error: 'Mois invalide.' };
+  var refDispo = !!(ref && ((ref.formes || []).length || (ref.dates || []).length));
+  var jours = [], n = nbJoursDansMoisFFR(annee, moisNum);
+  for (var d = 1; d <= n; d++) {
+    var dow = jourSemaineFFR(annee, moisNum, d);        // 0=dim … 6=sam
+    if (dow !== 0 && dow !== 3 && dow !== 6) continue;   // dimanches, mercredis, samedis
+    var iso = m[1] + '-' + m[2] + '-' + (d < 10 ? '0' + d : '' + d);
+    var res = evaluerConformiteFFR(ref, iso, categories, zone, null);
+    var couverte = !(res.couverture && res.couverture.couverte === false);
+    var nbBloq = (res.bloquants || []).length;
+    // On EXCLUT l'avertissement de couverture (déjà traité par `couverte`) des points de vigilance.
+    var averts = (res.avertissements || []).filter(function (a) { return !(a && a.couverture); });
+    var statut;
+    if (res.refDisponible === false) statut = 'inconnu';
+    else if (!couverte) statut = 'hors_couverture';
+    else if (nbBloq) statut = 'conflit';
+    else if (averts.length) statut = 'vigilance';
+    else statut = 'compatible';
+    var raisons = [];
+    (res.bloquants || []).forEach(function (b) { if (b && b.libelle) raisons.push(b.libelle); });
+    averts.forEach(function (a) { if (a && a.libelle) raisons.push(a.libelle); });
+    jours.push({ date: iso, jour: d, dow: dow, statut: statut,
+                 nbBloquants: nbBloq, nbAvertissements: averts.length,
+                 applicable: (statut === 'compatible' || statut === 'vigilance'),
+                 raisons: raisons.slice(0, 3) });
+  }
+  return { ok: true, mois: m[1] + '-' + m[2], refDisponible: refDispo, jours: jours };
+}
+
+/**
+ * Action doGet PUBLIQUE : jours compatibles FFR d'un mois donné. Aucune donnée personnelle.
+ * `categories` par défaut = catégories présentes du tournoi ; `zone` défaut 'C'.
+ */
+function datesCompatiblesFFR(classeur, params) {
+  var cats = String(params.categories == null ? '' : params.categories)
+    .split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  if (!cats.length) {
+    try {
+      var config = lireConfig(classeur);
+      cats = (config.categories || [])
+        .filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; })
+        .map(function (c) { return String(c.categorie || '').trim(); }).filter(Boolean);
+    } catch (e) { cats = []; }
+  }
+  var zone = String(params.zone == null ? '' : params.zone).trim() || 'C';
+  return calculerDatesCompatiblesFFR(getRefFFR(classeur), params.mois, cats, zone);
 }
 
 /**

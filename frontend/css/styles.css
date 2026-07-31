@@ -2111,6 +2111,41 @@ a.bouton { display: inline-block; text-decoration: none; }
 .ffr-appliquer-carte { margin: 2px 0 8px; }
 .ffr-appliquer-aide { margin: 2px 0 4px; font-size: 0.78rem; color: var(--bleu-ciel); opacity: 0.85; }
 
+/* « Trouver une date compatible » (carte Date & conformité FFR, session 17) */
+.date-finder { margin: 6px 0 12px; }
+.date-finder-panneau {
+  margin-top: 8px; padding: 12px 14px; border-radius: 12px;
+  border: 1px solid rgba(184, 216, 248, 0.20); background: rgba(184, 216, 248, 0.05);
+}
+.date-finder-aide { margin: 0 0 10px; font-size: 0.82rem; color: var(--bleu-ciel); opacity: 0.9; }
+.date-finder-controles { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.date-finder-controles .reglage { margin: 0; flex: 1 1 180px; }
+.date-finder-vide { margin: 12px 0 0; font-size: 0.85rem; opacity: 0.75; }
+.date-finder-liste { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.df-jour {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+  padding: 8px 12px; border-radius: 10px;
+  border: 1px solid rgba(184, 216, 248, 0.18); background: rgba(184, 216, 248, 0.04);
+}
+.df-jour.df-compatible { border-left: 4px solid #4bbf7b; }
+.df-jour.df-vigilance  { border-left: 4px solid #e09e2e; }
+.df-date { font-weight: 600; text-transform: capitalize; }
+.df-tag { font-size: 0.78rem; opacity: 0.9; }
+.df-vigilance .df-tag { color: #ffe6b0; }
+.df-raison { flex-basis: 100%; font-size: 0.76rem; color: #ffe6b0; opacity: 0.9; }
+.df-appliquer {
+  margin-left: auto; padding: 4px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  color: #dff3ff; background: rgba(94, 160, 232, 0.22);
+  border: 1px solid rgba(94, 160, 232, 0.5); border-radius: 8px;
+}
+.df-appliquer:hover { background: rgba(94, 160, 232, 0.34); }
+.date-finder-conflits { margin: 10px 0 0; font-size: 0.78rem; opacity: 0.65; }
+.theme-clair .date-finder-panneau { border-color: #e6edf5; background: #f6f9fc; }
+.theme-clair .date-finder-aide { color: #33608f; }
+.theme-clair .df-jour { border-color: #e6edf5; background: #ffffff; }
+.theme-clair .df-tag, .theme-clair .df-raison, .theme-clair .df-vigilance .df-tag { color: #8a5a0c; }
+.theme-clair .df-appliquer { color: #1c4e80; background: #eaf3fc; border-color: #bcd6f0; }
+
 /* Thème clair */
 .theme-clair .ffr-detail-cat { border-top-color: #e6edf5; }
 .theme-clair .ffr-appliquer { color: #8a5a0c; background: #fdf4e3; border-color: #e6c98a; }

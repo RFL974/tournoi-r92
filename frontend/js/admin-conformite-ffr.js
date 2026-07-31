@@ -772,3 +772,112 @@ async function onClicAppliquerFFR(e) {
     btn.disabled = false;
   }
 }
+
+/* --------------------------------------------------------------------------
+   « TROUVER UNE DATE COMPATIBLE » (session 17)
+   On choisit un mois → le backend (datesCompatiblesFFR) renvoie les jours
+   jouables (dim/mer/sam) avec leur statut FFR. Un clic applique la date au
+   tournoi (pose la date dans la carte + enregistre + recalcule la conformité).
+   -------------------------------------------------------------------------- */
+
+/** Nom du jour de semaine à partir du code dow (0=dim … 6=sam) ; '' hors dim/mer/sam. */
+function nomJourFinder(dow) {
+  return { 0: 'dimanche', 3: 'mercredi', 6: 'samedi' }[dow] || '';
+}
+
+/** Ouvre/ferme le panneau ; à l'ouverture, préremplit le mois depuis la date du tournoi. */
+function onToggleTrouverDate() {
+  const bouton = document.getElementById('bouton-trouver-date');
+  const panneau = document.getElementById('panneau-trouver-date');
+  if (!panneau) return;
+  const ouvrir = panneau.hidden;
+  panneau.hidden = !ouvrir;
+  if (bouton) bouton.setAttribute('aria-expanded', ouvrir ? 'true' : 'false');
+  if (ouvrir) {
+    const champMois = document.getElementById('finder-mois');
+    if (champMois && !champMois.value) {
+      const d = dateTournoiCourante();
+      champMois.value = d ? String(d).slice(0, 7) : '';
+    }
+    if (champMois) champMois.focus();
+  }
+}
+
+/** Lance la recherche des jours compatibles pour le mois choisi (via le backend). */
+async function onChercherDatesCompatibles() {
+  const champMois = document.getElementById('finder-mois');
+  const zone = document.getElementById('finder-resultats');
+  if (!champMois || !zone) return;
+  const mois = champMois.value;
+  if (!mois) { zone.innerHTML = '<p class="date-finder-vide">Choisis d\'abord un mois.</p>'; return; }
+  const bouton = document.getElementById('bouton-chercher-dates');
+  if (bouton) bouton.disabled = true;
+  zone.innerHTML = '<p class="date-finder-vide">Recherche des jours compatibles…</p>';
+  try {
+    const res = await apiGet('datesCompatiblesFFR', {
+      mois: mois,
+      categories: categoriesPresentesNoms().join(','),
+      zone: zoneVacancesCourante()
+    });
+    zone.innerHTML = rendreDatesCompatibles(res);
+  } catch (e) {
+    zone.innerHTML = '<p class="date-finder-vide">Recherche indisponible pour le moment.</p>';
+  } finally {
+    if (bouton) bouton.disabled = false;
+  }
+}
+
+/** Construit la liste des jours applicables (chips) + le rappel des jours écartés. */
+function rendreDatesCompatibles(res) {
+  if (!res || res.error) {
+    return '<p class="date-finder-vide">' + echapper((res && res.error) || 'Recherche impossible.') + '</p>';
+  }
+  if (res.refDisponible === false) {
+    return '<p class="date-finder-vide">Référentiel FFR non chargé — impossible de vérifier les dates.</p>';
+  }
+  const jours = res.jours || [];
+  const applicables = jours.filter(function (j) { return j.applicable; });
+  if (!applicables.length) {
+    return '<p class="date-finder-vide">Aucun jour compatible ce mois-ci (samedis, dimanches et ' +
+      'mercredis testés). Essaie un autre mois.</p>';
+  }
+  const libStatut = { compatible: '✅ compatible', vigilance: '⚠️ vigilance' };
+  let html = '<ul class="date-finder-liste">';
+  applicables.forEach(function (j) {
+    const jour = nomJourFinder(j.dow);
+    const libelle = (jour ? jour + ' ' : '') +
+      (typeof formaterDateFr === 'function' ? formaterDateFr(j.date) : dateCourteFrFFR(j.date));
+    const raison = (j.statut === 'vigilance' && j.raisons && j.raisons.length)
+      ? '<span class="df-raison">' + echapper(j.raisons[0]) + '</span>' : '';
+    html += '<li class="df-jour df-' + j.statut + '">' +
+      '<span class="df-date">' + echapper(libelle) + '</span>' +
+      '<span class="df-tag">' + (libStatut[j.statut] || '') + '</span>' +
+      raison +
+      '<button type="button" class="df-appliquer" data-date="' + echapper(j.date) + '">Appliquer</button>' +
+      '</li>';
+  });
+  html += '</ul>';
+  const conflits = jours.filter(function (j) { return j.statut === 'conflit'; });
+  if (conflits.length) {
+    html += '<p class="date-finder-conflits">Écartés (conflit FFR) : ' +
+      conflits.map(function (j) { return echapper(dateCourteFrFFR(j.date)); }).join(', ') + '.</p>';
+  }
+  return html;
+}
+
+/** Clic « Appliquer » d'un jour : pose la date dans la carte, enregistre, ferme le panneau. */
+async function onClicResultatDate(e) {
+  const btn = e.target.closest('.df-appliquer');
+  if (!btn) return;
+  const date = btn.getAttribute('data-date');
+  if (!date) return;
+  const champ = document.querySelector('[name="tournoi_date"]');
+  if (champ) champ.value = date;
+  // Enregistre la date (+ zone) via le flux de la carte, qui recharge la conformité FFR.
+  if (typeof onEnregistrerCadre === 'function') await onEnregistrerCadre();
+  else if (typeof majConformiteFFR === 'function') await majConformiteFFR();
+  const panneau = document.getElementById('panneau-trouver-date');
+  if (panneau) panneau.hidden = true;
+  const bouton = document.getElementById('bouton-trouver-date');
+  if (bouton) bouton.setAttribute('aria-expanded', 'false');
+}
