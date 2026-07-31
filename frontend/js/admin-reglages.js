@@ -213,6 +213,11 @@ function formulaireCategorie(cat) {
       // admin-conformite-ffr.js : majFormesCategories). Masqué tant que le référentiel FFR
       // n'est pas chargé ou qu'aucune ligne ne correspond à la catégorie + mois.
       '<div class="ffr-forme" data-cat="' + echapper(nom) + '" hidden></div>' +
+      // Forme de jeu RETENUE par l'organisateur : select rempli dynamiquement (majFormesCategories)
+      // avec les formes du mois. data-value = valeur stockée (Config.forme_jeu), pour la présélection
+      // et le signalement orange « hors du mois ». Masqué tant qu'aucune forme n'est disponible.
+      '<div class="ffr-forme-choix" data-cat="' + echapper(nom) + '" data-value="' +
+        echapper(String(cat.forme_jeu == null ? '' : cat.forme_jeu)) + '" hidden></div>' +
       blocFormatApresMidi(cat) +
       '<div class="ligne-action">' +
         '<button type="submit" class="bouton">Enregistrer</button>' +
@@ -501,6 +506,13 @@ async function onEnregistrerCategorie(evenement) {
   } else {
     data.param_format = '';
   }
+
+  // Forme de jeu FFR retenue : le select n'est rendu que si le référentiel FFR expose des formes
+  // pour cette catégorie ce mois-ci. S'il est ABSENT, on PRÉSERVE la valeur déjà stockée —
+  // enregistrerCategorie réécrit la LIGNE ENTIÈRE, un champ omis serait effacé (leçon session 3).
+  data.forme_jeu = form.forme_jeu
+    ? String(form.forme_jeu.value || '')
+    : ((catStockee && catStockee.forme_jeu != null) ? String(catStockee.forme_jeu) : '');
 
   const bouton = form.querySelector('button[type="submit"]');
   await avecBoutonOccupe(bouton, message, async function () {
