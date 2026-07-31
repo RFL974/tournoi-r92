@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Pause échelonnée — support des effectifs impairs — 2026-07-31
+La pause méridienne échelonnée exigeait un **effectif pair** (vagues égales) ; un effectif impair
+retombait sur la pause classique. Désormais les **effectifs impairs sont pris en charge** : la
+répartition V1×V2 passe par `tourneesBipartites`, qui gère les **vagues inégales via un « bye »** (une
+équipe se repose la tournée où elle tombe en face du vide). Éligibilité assouplie à **≥ 4 équipes**
+(pair ou impair) ; en dessous de 4, repli classique + avertissement inchangé. Les deux garanties
+tiennent (vérifié 5→11 équipes) : **round-robin complet**, **repos ≥ 60 min**, **équité 0 violation**.
+Tests 309/309 (+6, tests impairs). ⚠️ **Redéploiement backend nécessaire.**
+
 ### Pause méridienne échelonnée (option par catégorie) — 2026-07-31
 Répond au cas « peu de terrains, la matinée ne rentre pas » : une **pause déjeuner unique** laisse
 tous les terrains à l'arrêt. Nouvelle option **par catégorie** (case « Pause échelonnée ») : la

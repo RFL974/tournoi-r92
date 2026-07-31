@@ -27,9 +27,10 @@ journée qui, autrement, ne tenait pas.
 
 ## Conditions et repli
 
-- **Effectif pair et ≥ 4** requis (pour deux vagues égales). Sinon, l'app **retombe automatiquement**
-  sur la **pause classique** (poules + éventuel après-midi) avec un **avertissement** clair — la
-  génération n'échoue jamais.
+- **Effectif ≥ 4** requis (**pair ou impair** : les vagues inégales d'un effectif impair sont gérées
+  par un **« bye »** — une équipe se repose la tournée où elle tombe en face du vide). En dessous de
+  4 équipes, l'app **retombe automatiquement** sur la **pause classique** avec un **avertissement**
+  clair — la génération n'échoue jamais.
 - **Terrains dédiés** à la catégorie recommandés (le planning des deux vagues occupe ses terrains en continu).
 - Cette option **remplace**, pour la catégorie concernée, la **pause déjeuner globale** **et** le
   **format d'après-midi** (la catégorie est un seul round-robin, il n'y a donc pas de phase de
@@ -45,5 +46,6 @@ journée qui, autrement, ne tenait pas.
 Backend ([`../backend/Code.gs`](../backend/Code.gs)) : `planifierCategorieEchelonnee` (fonction pure)
 construit et date les matchs des deux vagues ; `calculerPlanning` l'appelle pour les catégories
 `pause_echelonnee = oui` (une seule poule « A », pas de pause globale). Ne consomme aucune donnée
-externe : entièrement testé (partition en vagues, round-robin complet, repos ≥ 60, équité,
-intégration, repli sur effectif impair).
+externe : entièrement testé (partition en vagues, round-robin complet **pair et impair**, repos ≥ 60,
+équité 0 violation, intégration, repli si moins de 4 équipes). Les vagues inégales (effectif impair)
+sont gérées par `tourneesBipartites` (tournées avec bye).

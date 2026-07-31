@@ -5049,10 +5049,10 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
     }
 
     // Pause méridienne échelonnée : la catégorie joue en UN round-robin (une seule poule « A »),
-    // planifié en deux vagues à l'étape 3. Éligible si effectif PAIR et ≥ 4 ; sinon repli propre
-    // sur le mode classique (poules + éventuel après-midi) avec un avertissement.
+    // planifié en deux vagues à l'étape 3. Éligible dès 4 équipes (les vagues inégales d'un effectif
+    // impair sont gérées par un bye). En dessous, repli propre sur le mode classique + avertissement.
     if (pauseEchelonneeDe(cat)) {
-      if (eqCat.length >= 4 && eqCat.length % 2 === 0) {
+      if (eqCat.length >= 4) {
         var eqE = melange ? melanger(eqCat.slice()) : eqCat.slice();
         compteurPoule++;
         var pouleE = { id_poule: 'P' + (compteurPoule < 10 ? '0' + compteurPoule : compteurPoule),
@@ -5062,8 +5062,8 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
         echelonneParCat[cat.categorie] = true;
         return; // catégorie suivante (matchs générés à l'étape 3 par le planificateur échelonné)
       }
-      avert.push('Catégorie ' + cat.categorie + ' : pause échelonnée demandée mais effectif ' +
-        eqCat.length + ' (il faut un nombre PAIR ≥ 4) — pause classique conservée pour cette catégorie.');
+      avert.push('Catégorie ' + cat.categorie + ' : pause échelonnée demandée mais seulement ' +
+        eqCat.length + ' équipe(s) (il en faut au moins 4) — pause classique conservée pour cette catégorie.');
       // on n'active pas l'échelonnement : la catégorie retombe sur le mode classique ci-dessous.
     }
 
@@ -5927,10 +5927,30 @@ function pairesInternesEq(arr) {
 }
 
 /** Coupe les identifiants (dans l'ordre) en deux vagues : Vague 1 = première moitié (jouent/partent
- *  en pause en premier), Vague 2 = seconde moitié. Pur. */
+ *  en pause en premier), Vague 2 = seconde moitié. Vagues INÉGALES d'au plus 1 si effectif impair. Pur. */
 function vaguesRepos(ids) {
   var k = Math.ceil(ids.length / 2);
   return { v1: ids.slice(0, k), v2: ids.slice(k) };
+}
+
+/** Tournées bipartites V1×V2 (chaque équipe de V1 rencontre chaque équipe de V2 une fois), réparties
+ *  en tournées où une équipe joue au plus une fois. Gère les vagues INÉGALES via un « bye » : on
+ *  complète la plus courte par des cases vides, et une équipe se repose la tournée où elle tombe en
+ *  face du vide. Chaque paire V1×V2 apparaît exactement une fois. Pur, testable. */
+function tourneesBipartites(v1, v2) {
+  var a = v1.slice(), b = v2.slice();
+  while (a.length < b.length) a.push(null);
+  while (b.length < a.length) b.push(null);
+  var k = a.length, rounds = [];
+  for (var r = 0; r < k; r++) {
+    var rd = [];
+    for (var i = 0; i < k; i++) {
+      var x = a[i], y = b[(i + r) % k];
+      if (x != null && y != null) rd.push({ a: x, b: y });
+    }
+    if (rd.length) rounds.push(rd);
+  }
+  return rounds;
 }
 
 /** Planifie un BLOC de matchs en glouton (à chaque étape, le match jouable le plus tôt), en
@@ -5968,13 +5988,8 @@ function planifierCategorieEchelonnee(ids, terrains, opts) {
   var repos = opts.repos || 60, t0 = opts.debut || 540;
   var avert = [];
   var p = vaguesRepos(ids), v1 = p.v1, v2 = p.v2;
-  // Tournées bipartites : chaque tournée fait jouer TOUTES les équipes une fois (V1 contre V2).
-  var rounds = [];
-  for (var r = 0; r < v2.length; r++) {
-    var rd = [];
-    for (var i = 0; i < v1.length; i++) rd.push({ a: v1[i], b: v2[(i + r) % v2.length] });
-    rounds.push(rd);
-  }
+  // Tournées bipartites (gèrent les vagues INÉGALES via un bye) : chaque équipe joue le matin.
+  var rounds = tourneesBipartites(v1, v2);
   var mR = Math.max(1, Math.round(rounds.length / 2));
   var interMatin = [].concat.apply([], rounds.slice(0, mR));
   var interAprem = [].concat.apply([], rounds.slice(mR));
