@@ -84,6 +84,25 @@
               <option value="C" selected>Zone C (Île-de-France)</option>
             </select>
           </label>
+          <!-- « Trouver une date compatible » : on choisit un mois, le backend renvoie les jours
+               jouables (dim/mer/sam) avec leur statut FFR ; un clic applique une date au tournoi.
+               Rempli/piloté par admin-conformite-ffr.js (le panneau est masqué par défaut). -->
+          <div class="date-finder">
+            <button type="button" class="bouton-lien" id="bouton-trouver-date" aria-expanded="false">
+              🔎 Trouver une date compatible…
+            </button>
+            <div id="panneau-trouver-date" class="date-finder-panneau" hidden>
+              <p class="date-finder-aide">Choisis un mois : je te propose les samedis, dimanches et
+                mercredis <strong>sans conflit FFR</strong> (les alertes douces sont signalées en orange).</p>
+              <div class="date-finder-controles">
+                <label class="reglage"><span class="r-libelle">Mois à explorer</span>
+                  <input class="r-input" type="month" id="finder-mois">
+                </label>
+                <button type="button" class="bouton" id="bouton-chercher-dates">Chercher les jours compatibles</button>
+              </div>
+              <div id="finder-resultats" class="date-finder-resultats" aria-live="polite"></div>
+            </div>
+          </div>
           <!-- Conformité FFR : résultat de verifierConformiteFFR (backend), rempli par
                admin-conformite-ffr.js. Bloc INFORMATIF — n'empêche pas d'enregistrer la date. -->
           <div id="bloc-conformite-ffr" class="ffr-zone"></div>

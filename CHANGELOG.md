@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### « Trouver une date compatible » — proposer les jours sans conflit FFR — 2026-07-31
+Dans la carte **« Date & conformité FFR »**, un bouton **« 🔎 Trouver une date compatible… »** ouvre un
+panneau : on choisit un **mois**, et l'app propose les **samedis, dimanches et mercredis** de ce mois
+avec leur statut FFR — **compatible** (vert), **vigilance** (orange, alerte douce, applicable) ou
+**conflit** (écarté). Un clic **« Appliquer »** pose la date sur le tournoi, l'enregistre et recalcule la
+conformité. Backend : nouvelle action publique `datesCompatiblesFFR(mois, categories, zone)` qui réutilise
+le moteur `evaluerConformiteFFR` jour par jour (helpers **purs** `jourSemaineFFR` — Sakamoto, sans objet
+Date — et `nbJoursDansMoisFFR`). La règle 72 h est bien prise en compte (autour d'une date fédérale, les
+jours à ± 3 j tombent en conflit). Tests **352/352** (+14 `testS17_*`). Vérifié au navigateur (panneau,
+recherche, chips colorées, application d'une date). ⚠️ **Redéploiement backend nécessaire.**
+
 ### Nouvelle carte « Date & conformité FFR » — dissociée des infos du site — 2026-07-31
 La **date prévue**, la **zone de vacances** et le bloc **conformité FFR** (conflits, points de
 vigilance, prescriptions) quittent la carte « Infos du tournoi » pour une **carte dédiée placée tout en

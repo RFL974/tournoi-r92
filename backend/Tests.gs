@@ -219,6 +219,14 @@ function lancerTestsFFR() {
   testS16_gardeGenerationDureeRenseignee(etat);
   testS16_gardeGenerationIgnoreVidesEtAbsentes(etat);
 
+  // Session 17 — « Trouver une date compatible » : jours compatibles FFR d'un mois.
+  testS17_helpersDate(etat);
+  testS17_moisInvalide(etat);
+  testS17_uniquementDimMerSam(etat);
+  testS17_conflitEtCompatible(etat);
+  testS17_vigilanceApplicable(etat);
+  testS17_refAbsentInconnu(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -2138,4 +2146,64 @@ function testS16_gardeGenerationIgnoreVidesEtAbsentes(etat) {
   ] };
   var out = categoriesSansDureeMiTemps(config, { U8: 0 });
   _ffrAssert(etat, out.length === 0, 'S16 : 0 équipe et catégorie absente jamais signalées');
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SESSION 17 — « Trouver une date compatible »
+   Pour un mois, calculerDatesCompatiblesFFR liste les jours jouables (dim/mer/sam)
+   avec leur statut FFR (compatible / vigilance / conflit / hors-couverture).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/** Helpers de date PURS : jour de semaine (Sakamoto) et nb de jours du mois (bissextile). */
+function testS17_helpersDate(etat) {
+  _ffrAssert(etat, jourSemaineFFR(2027, 1, 16) === 6, 'S17 : 16/01/2027 = samedi (6)');
+  _ffrAssert(etat, jourSemaineFFR(2027, 5, 1) === 6,  'S17 : 01/05/2027 = samedi (6)');
+  _ffrAssert(etat, jourSemaineFFR(2027, 1, 1) === 5,  'S17 : 01/01/2027 = vendredi (5)');
+  _ffrAssert(etat, nbJoursDansMoisFFR(2027, 2) === 28, 'S17 : février 2027 = 28 jours');
+  _ffrAssert(etat, nbJoursDansMoisFFR(2028, 2) === 29, 'S17 : février 2028 = 29 jours (bissextile)');
+  _ffrAssert(etat, nbJoursDansMoisFFR(2027, 4) === 30, 'S17 : avril = 30 jours');
+}
+
+/** Mois illisible → erreur explicite (aucune date fabriquée). */
+function testS17_moisInvalide(etat) {
+  var r = calculerDatesCompatiblesFFR(_ffrRefFactice(), 'pas-un-mois', ['U10'], 'C');
+  _ffrAssert(etat, !!r.error, 'S17 : mois illisible → erreur');
+}
+
+/** On ne propose QUE les dimanches (0), mercredis (3) et samedis (6). */
+function testS17_uniquementDimMerSam(etat) {
+  var r = calculerDatesCompatiblesFFR(_ffrRefFactice(), '2027-01', ['U10'], 'C');
+  var mauvais = (r.jours || []).filter(function (j) { return j.dow !== 0 && j.dow !== 3 && j.dow !== 6; });
+  _ffrAssert(etat, r.ok === true && mauvais.length === 0, 'S17 : uniquement dim/mer/sam');
+}
+
+/** 16/01/2027 (samedi) = Plateau départemental ⇒ conflit non applicable ; 09/01 (samedi) = compatible. */
+function testS17_conflitEtCompatible(etat) {
+  var r = calculerDatesCompatiblesFFR(_ffrRefFactice(), '2027-01', ['U10'], 'C');
+  var seize = (r.jours || []).filter(function (j) { return j.date === '2027-01-16'; })[0];
+  _ffrAssert(etat, seize && seize.statut === 'conflit' && seize.applicable === false,
+    'S17 : 16/01 conflit, non applicable');
+  var neuf = (r.jours || []).filter(function (j) { return j.date === '2027-01-09'; })[0];
+  _ffrAssert(etat, neuf && neuf.statut === 'compatible' && neuf.applicable === true,
+    'S17 : 09/01 compatible, applicable');
+}
+
+/** U12 en mai : 15/05 (samedi, forme LIMITE) = vigilance APPLICABLE ; 08/05 (72 h) = conflit. */
+function testS17_vigilanceApplicable(etat) {
+  var r = calculerDatesCompatiblesFFR(_ffrRefFactice(), '2027-05', ['U12'], 'C');
+  var quinze = (r.jours || []).filter(function (j) { return j.date === '2027-05-15'; })[0];
+  _ffrAssert(etat, quinze && quinze.statut === 'vigilance' && quinze.applicable === true,
+    'S17 : 15/05 vigilance, applicable (orange)');
+  var huit = (r.jours || []).filter(function (j) { return j.date === '2027-05-08'; })[0];
+  _ffrAssert(etat, huit && huit.statut === 'conflit' && huit.applicable === false,
+    'S17 : 08/05 conflit 72 h, non applicable');
+}
+
+/** Référentiel absent ⇒ statut « inconnu », refDisponible false, aucun jour applicable. */
+function testS17_refAbsentInconnu(etat) {
+  var r = calculerDatesCompatiblesFFR({ formes: [], dates: [] }, '2027-01', ['U10'], 'C');
+  _ffrAssert(etat, r.ok === true && r.refDisponible === false, 'S17 : référentiel absent → refDisponible false');
+  var applicables = (r.jours || []).filter(function (j) { return j.applicable; });
+  _ffrAssert(etat, applicables.length === 0 && (r.jours || []).every(function (j) { return j.statut === 'inconnu'; }),
+    'S17 : référentiel absent → tous « inconnu », aucun applicable');
 }

@@ -333,6 +333,10 @@ async function initAdmin() {
   document.getElementById('bouton-enregistrer-cadre').addEventListener('click', onEnregistrerCadre);
   // La date apparaît sur l'aperçu du site → on le redessine quand elle change (frappe/sélection).
   document.getElementById('form-cadre-tournoi').addEventListener('input', majApercuTournoi);
+  // « Trouver une date compatible » : ouvre le panneau, lance la recherche, applique un jour cliqué.
+  document.getElementById('bouton-trouver-date').addEventListener('click', onToggleTrouverDate);
+  document.getElementById('bouton-chercher-dates').addEventListener('click', onChercherDatesCompatibles);
+  document.getElementById('finder-resultats').addEventListener('click', onClicResultatDate);
 
   // Les infos du tournoi se sauvegardent via leur bouton « Enregistrer les infos »
   // (onEnregistrerInfos) — et aussi lors de la publication (onPublier), par sécurité.
