@@ -225,6 +225,7 @@ function formulaireCategorie(cat) {
       // En SCF, le CSS (form[data-contexte="SCF"]) masque le bloc format d'après-midi ci-dessous.
       blocContexteU14(cat) +
       blocFormatApresMidi(cat) +
+      blocPauseEchelonnee(cat) +
       '<div class="ligne-action">' +
         '<button type="submit" class="bouton">Enregistrer</button>' +
         '<button type="button" class="bouton-suppr bouton-suppr-cat" data-cat="' + echapper(nom) + '">Supprimer</button>' +
@@ -525,6 +526,29 @@ function blocContexteU14(cat) {
 }
 
 /**
+ * Bloc « Pause méridienne échelonnée » d'une catégorie : une case à cocher + explication. Quand
+ * elle est active, la catégorie joue en UN round-robin (tout le monde se rencontre) planifié en
+ * deux vagues avec ≥ 60 min de repos garanti et l'équité (jamais reposé contre épuisé) ; cela
+ * remplace la pause déjeuner globale ET le format d'après-midi pour cette catégorie. Effectif pair
+ * ≥ 4 requis (sinon l'app retombe automatiquement sur la pause classique, avec un avertissement).
+ */
+function blocPauseEchelonnee(cat) {
+  const on = pauseEchelonneeCat(cat);
+  return (
+    '<div class="bloc-echelonne">' +
+      '<span class="format-libelle">Pause méridienne</span>' +
+      '<label class="ech-toggle"><input type="checkbox" name="pause_echelonnee"' + (on ? ' checked' : '') + '> ' +
+        'Pause échelonnée (repos ≥ 60 min garanti)</label>' +
+      '<p class="f-aide">À activer quand les <b>terrains sont peu nombreux</b> et que la journée ne ' +
+        '« rentre » pas. La catégorie joue alors en <b>un seul round-robin</b> (chaque équipe rencontre ' +
+        'les autres) planifié en <b>deux vagues</b> : pendant qu\'une moitié se repose (≥ 60 min), ' +
+        'l\'autre joue — et jamais une équipe reposée contre une équipe épuisée. Remplace la pause ' +
+        'déjeuner globale et le format d\'après-midi ci-dessus. <b>Effectif pair ≥ 4</b> (sinon pause classique).</p>' +
+    '</div>'
+  );
+}
+
+/**
  * Un champ modifiable d'une catégorie (input texte/nombre ou menu déroulant).
  * On enveloppe le champ dans un <label> (pas d'id, pour éviter les doublons).
  */
@@ -608,6 +632,11 @@ async function onEnregistrerCategorie(evenement) {
   data.scf_phase = form.scf_phase
     ? String(form.scf_phase.value || '')
     : ((catStockee && catStockee.scf_phase != null) ? String(catStockee.scf_phase) : '');
+
+  // Pause méridienne échelonnée : case à cocher (toujours rendue). Absente ⇒ on préserve la valeur.
+  data.pause_echelonnee = form.pause_echelonnee
+    ? (form.pause_echelonnee.checked ? 'oui' : 'non')
+    : ((catStockee && catStockee.pause_echelonnee != null) ? String(catStockee.pause_echelonnee) : '');
 
   const bouton = form.querySelector('button[type="submit"]');
   await avecBoutonOccupe(bouton, message, async function () {

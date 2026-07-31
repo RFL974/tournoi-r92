@@ -181,6 +181,16 @@ function lancerTestsFFR() {
   testS14b_dimancheTemps2x11(etat);
   testS14b_apresMidiLambdaInchange(etat);
 
+  // Session 15 — pause méridienne échelonnée (2 vagues, repos ≥ 60, équité).
+  testS15_vaguesPartition(etat);
+  testS15_roundRobinComplet(etat);
+  testS15_repos60SixEquipes(etat);
+  testS15_repos60HuitEquipes(etat);
+  testS15_equiteReposeVsFatigue(etat);
+  testS15_planningUnePoule(etat);
+  testS15_planningReposGaranti(etat);
+  testS15_effectifImpairRepli(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -1753,4 +1763,110 @@ function testS14b_apresMidiLambdaInchange(etat) {
   var m = plan.matchs[0];
   _ffrAssert(etat, (hmVersMin(m.heure_fin) - hmVersMin(m.heure_debut)) === 22,
     'S14b : après-midi hors SCF = 22 min (réglages catégorie inchangés)');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 15 — pause méridienne échelonnée (2 vagues, repos ≥ 60, équité)    */
+/* -------------------------------------------------------------------------- */
+
+/** N identifiants d'équipe factices. */
+function _echIds(n){ var a=[]; for(var i=1;i<=n;i++) a.push('E'+i); return a; }
+
+/** Répartition en deux vagues : première moitié / seconde moitié. */
+function testS15_vaguesPartition(etat){
+  var p = vaguesRepos(_echIds(6));
+  _ffrAssert(etat, p.v1.length===3 && p.v2.length===3, 'S15 : 6 équipes → vagues 3+3');
+  _ffrAssert(etat, p.v1[0]==='E1' && p.v2[0]==='E4', 'S15 : Vague 1 = premières équipes (E1…), Vague 2 = E4…');
+}
+
+/** Le planning échelonné produit le round-robin COMPLET (chaque paire une fois). */
+function testS15_roundRobinComplet(etat){
+  var r = planifierCategorieEchelonnee(_echIds(6), [1,2], {duree:24, battement:3, recup:5, repos:60, debut:540});
+  _ffrAssert(etat, r.matchs.length===15, 'S15 : 6 équipes → 15 matchs (round-robin complet)');
+  var vus={}, dup=false;
+  r.matchs.forEach(function(m){ var k=[m.equipe_A,m.equipe_B].sort().join('¤'); if(vus[k]) dup=true; vus[k]=true; });
+  _ffrAssert(etat, !dup && Object.keys(vus).length===15, 'S15 : chaque paire exactement une fois (aucun doublon)');
+}
+
+/** 6 équipes : repos minimum ≥ 60 min pour TOUTES. */
+function testS15_repos60SixEquipes(etat){
+  var r = planifierCategorieEchelonnee(_echIds(6), [1,2], {duree:24, battement:3, recup:5, repos:60, debut:540});
+  var mini = Math.min.apply(null, _echIds(6).map(function(id){ return r.repos[id]; }));
+  _ffrAssert(etat, mini>=60, 'S15 : 6 équipes → repos minimum ≥ 60 (obtenu ' + mini + ')');
+  _ffrAssert(etat, r.avert.length===0, 'S15 : 6 équipes → aucun avertissement de repos');
+}
+
+/** 8 équipes : repos minimum ≥ 60 min pour TOUTES. */
+function testS15_repos60HuitEquipes(etat){
+  var r = planifierCategorieEchelonnee(_echIds(8), [1,2], {duree:24, battement:3, recup:5, repos:60, debut:540});
+  var mini = Math.min.apply(null, _echIds(8).map(function(id){ return r.repos[id]; }));
+  _ffrAssert(etat, mini>=60, 'S15 : 8 équipes → repos minimum ≥ 60 (obtenu ' + mini + ')');
+}
+
+/** ÉQUITÉ : jamais une équipe reposée contre une équipe pas encore reposée. */
+function testS15_equiteReposeVsFatigue(etat){
+  var ids=_echIds(8);
+  var r = planifierCategorieEchelonnee(ids, [1,2], {duree:24, battement:3, recup:5, repos:60, debut:540});
+  // Heure de « reprise » de chaque équipe = début du match qui suit son trou de repos.
+  var reprise={};
+  ids.forEach(function(id){
+    var mine=r.matchs.filter(function(x){return x.equipe_A===id||x.equipe_B===id;})
+                     .sort(function(a,b){return a.heure_debut_min-b.heure_debut_min;});
+    reprise[id]=Infinity;
+    for(var i=1;i<mine.length;i++){ if(mine[i].heure_debut_min-mine[i-1].heure_fin_min>=60){ reprise[id]=mine[i].heure_debut_min; break; } }
+  });
+  // Une équipe est « reposée » pour un match qui démarre à/au-delà de sa reprise.
+  var violations=0;
+  r.matchs.forEach(function(m){
+    var aRep = m.heure_debut_min >= reprise[m.equipe_A];
+    var bRep = m.heure_debut_min >= reprise[m.equipe_B];
+    if(aRep!==bRep) violations++;
+  });
+  _ffrAssert(etat, violations===0, 'S15 : équité — 0 match reposé-vs-fatigué (obtenu ' + violations + ')');
+}
+
+/** Fabrique config + équipes pour tester calculerPlanning en pause échelonnée. */
+function _echConfig(n){
+  var cat = { categorie:'U14', presente:'oui', terrains:'1,2',
+    format_mi_temps:'2', duree_mi_temps_min:'10', pause_mi_temps_min:'2', recup_entre_matchs_min:'5',
+    pause_echelonnee:'oui' };
+  var equipes=[]; for(var i=1;i<=n;i++) equipes.push({ id_equipe:'E'+i, nom_equipe:'Eq'+i, categorie:'U14' });
+  return { config:{ global:{ heure_debut:'09:00', battement_terrain_min:'5',
+           pause_dejeuner_debut:'12:30', pause_dejeuner_duree_min:'60' }, categories:[cat] }, equipes:equipes };
+}
+
+/** Intégration : une catégorie échelonnée à 6 équipes → une seule poule, round-robin complet (15). */
+function testS15_planningUnePoule(etat){
+  var d=_echConfig(6);
+  var r=calculerPlanning(d.config, d.equipes, false);
+  var poulesU14=r.poules.filter(function(p){return p.categorie==='U14';});
+  _ffrAssert(etat, poulesU14.length===1 && poulesU14[0].equipes.length===6, 'S15 : échelonné → 1 poule de 6');
+  _ffrAssert(etat, r.matchsFinaux.length===15, 'S15 : échelonné 6 équipes → 15 matchs planifiés');
+}
+
+/** Intégration : repos ≥ 60 vérifiable directement sur les horaires écrits (matchsFinaux). */
+function testS15_planningReposGaranti(etat){
+  var d=_echConfig(6);
+  var r=calculerPlanning(d.config, d.equipes, false);
+  // matchsFinaux : [id, cat, poule, terrain, debut(hm), fin(hm), A, B, ...]
+  var ids=_echIds(6), mini=Infinity;
+  ids.forEach(function(id){
+    var mine=r.matchsFinaux.filter(function(x){return x[6]===id||x[7]===id;})
+                           .map(function(x){return {d:hmVersMin(x[4]), f:hmVersMin(x[5])};})
+                           .sort(function(a,b){return a.d-b.d;});
+    var g=0; for(var i=1;i<mine.length;i++) g=Math.max(g, mine[i].d-mine[i-1].f);
+    mini=Math.min(mini,g);
+  });
+  _ffrAssert(etat, mini>=60, 'S15 : intégration → repos minimum ≥ 60 sur les horaires réels (obtenu ' + mini + ')');
+}
+
+/** Effectif IMPAIR : pas d'échelonnement (repli classique) + avertissement. */
+function testS15_effectifImpairRepli(etat){
+  var d=_echConfig(5);
+  var r=calculerPlanning(d.config, d.equipes, false);
+  var poulesU14=r.poules.filter(function(p){return p.categorie==='U14';});
+  // Repli classique : nombrePoules(5) auto = 2 poules (pas une seule poule « A » d'échelonnement).
+  _ffrAssert(etat, poulesU14.length>=2, 'S15 : effectif impair (5) → repli poules classiques (≥ 2)');
+  var aWarn=r.avert.some(function(a){ return a.indexOf('pause échelonnée demandée')>=0; });
+  _ffrAssert(etat, aWarn, 'S15 : effectif impair → avertissement « pause classique conservée »');
 }
