@@ -283,23 +283,31 @@ function numCategorieAut(nom) {
   return String(nom == null ? '' : nom).trim().toUpperCase().replace(/^[MU](?=\d)/, '');
 }
 
-/* Cases du tableau « Catégories et formes de jeu » (page 2). Ces cellules-là ont un CADRE de case
- * DÉJÀ IMPRIMÉ sur la page (glyphe ❑ du gabarit) : y regraver notre propre carré donnait un
- * double encadrement (case dans la case). Pour elles on ne grave QUE la croix, sans cadre. Les
- * autres cases (Niveau, récompenses, installations…) n'ont aucun cadre imprimé : on continue d'y
- * dessiner le carré + la croix. Ensemble dérivé de PDF_FORMES_TABLE (source unique). */
+/* Fond des lignes du tableau « Catégories et formes de jeu » (deux bleus alternés), MESURÉ sur le
+ * rendu du gabarit (pixel de fond de cellule, x 550 pt). Sert à MASQUER proprement le petit cadre
+ * ❑ imprimé des cellules cochées : un cache blanc ferait une tache sur le fond bleu. */
+var COULEURS_FOND_FORMES = {
+  '6': [180, 198, 231], '8': [217, 226, 243], '10': [180, 198, 231],
+  '12': [217, 226, 243], '14': [180, 198, 231], '15F': [217, 226, 243]
+};
+
+/* Cases du tableau « Catégories et formes de jeu » (page 2) → couleur de fond de leur ligne.
+ * Ces cellules-là ont un CADRE de case DÉJÀ IMPRIMÉ sur la page (glyphe ❑ du gabarit, petit et
+ * décalé) : cocher dessus donnait soit un double encadrement, soit une minuscule case cochée à
+ * côté des grands carrés vides. On MASQUE donc ce glyphe (cache aux couleurs de la ligne) et on
+ * grave la GRANDE case standard + croix au rect du widget — même aspect que « Départemental ».
+ * Dérivé de PDF_FORMES_TABLE (source unique). */
 var CASES_CADRE_IMPRIME = (function () {
   var s = {};
   Object.keys(PDF_FORMES_TABLE).forEach(function (num) {
-    PDF_FORMES_TABLE[num].forEach(function (opt) { s[opt.c] = true; });
+    PDF_FORMES_TABLE[num].forEach(function (opt) { s[opt.c] = COULEURS_FOND_FORMES[num] || [255, 255, 255]; });
   });
   return s;
 })();
 
-/* Géométrie du cadre ❑ imprimé des cellules du tableau des formes, MESURÉE sur le rendu du gabarit
- * (raster 300 dpi) : le glyphe ❑ fait ~7,7 pt de côté et son centre est décalé du centre du widget
- * de +4,2 pt en x et −0,9 pt en y (constant en points ⇒ indépendant de la résolution ; identique sur
- * toutes les cellules, même glyphe/même corps). La croix gravée est calée dessus. */
+/* Géométrie du cadre ❑ imprimé, MESURÉE sur le rendu du gabarit (raster 300 dpi) : glyphe de
+ * ~7,7 pt de côté, centre décalé du centre du widget de +4,2 pt en x et −0,9 pt en y (constant en
+ * points ⇒ indépendant de la résolution ; identique sur toutes les cellules). */
 var CADRE_IMPRIME_DX = 4.2;
 var CADRE_IMPRIME_DY = -0.9;
 var CADRE_IMPRIME_TAILLE = 7.7;
@@ -676,22 +684,25 @@ async function appliquerPlanPdfAutorisation(PDFLib, bytes, plan) {
       }
       if (nom && r && casesSet[nom]) {
         try {
-          if (CASES_CADRE_IMPRIME[nom]) {
-            // Cellule du tableau des formes : le cadre ❑ (≈ 7,7 pt) est DÉJÀ imprimé par le gabarit,
-            // décalé du centre du widget (mesuré : +4,2 pt à droite, −0,9 pt en bas). On ne grave QUE
-            // la croix, calée sur ce cadre imprimé — plus de double encadrement ni de croix hors case.
+          var fond = CASES_CADRE_IMPRIME[nom];
+          if (fond) {
+            // Cellule du tableau des formes : le petit cadre ❑ (≈ 7,7 pt) est DÉJÀ imprimé par le
+            // gabarit, décalé du centre du widget. Cocher DESSUS donnait une minuscule case cochée à
+            // côté des grands carrés vides (aspect incohérent). On le MASQUE d'abord (cache aux
+            // couleurs de fond de la ligne), puis on grave la grande case standard ci-dessous.
             var cx = r.x + r.w / 2 + CADRE_IMPRIME_DX;
             var cy = r.y + r.h / 2 + CADRE_IMPRIME_DY;
-            var xt = CADRE_IMPRIME_TAILLE * 1.05;
-            page.drawText('X', { x: cx - helvB.widthOfTextAtSize('X', xt) / 2, y: cy - xt * 0.35, size: xt, font: helvB, color: noir });
-          } else {
-            // Case sans cadre imprimé (Niveau, récompenses…) : on redessine le carré + la croix.
-            var bs = Math.min(r.w, r.h);
-            var bx = r.x + (r.w - bs) / 2, by = r.y + (r.h - bs) / 2;
-            page.drawRectangle({ x: bx, y: by, width: bs, height: bs, borderColor: noir, borderWidth: 1 });
-            var xs = bs * 0.78;
-            page.drawText('X', { x: bx + (bs - helvB.widthOfTextAtSize('X', xs)) / 2, y: by + (bs - xs) / 2 + xs * 0.16, size: xs, font: helvB, color: noir });
+            var demi = CADRE_IMPRIME_TAILLE / 2 + 2;
+            page.drawRectangle({ x: cx - demi, y: cy - demi, width: demi * 2, height: demi * 2,
+              color: PDFLib.rgb(fond[0] / 255, fond[1] / 255, fond[2] / 255) });
           }
+          // Case cochée gravée : carré standard + croix au rect du widget — même aspect partout
+          // (tableau des formes compris), identique aux cases Niveau/récompenses/….
+          var bs = Math.min(r.w, r.h);
+          var bx = r.x + (r.w - bs) / 2, by = r.y + (r.h - bs) / 2;
+          page.drawRectangle({ x: bx, y: by, width: bs, height: bs, borderColor: noir, borderWidth: 1 });
+          var xs = bs * 0.78;
+          page.drawText('X', { x: bx + (bs - helvB.widthOfTextAtSize('X', xs)) / 2, y: by + (bs - xs) / 2 + xs * 0.16, size: xs, font: helvB, color: noir });
         } catch (e) {}
         nomsGraves[nom] = true; return;
       }
