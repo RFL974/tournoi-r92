@@ -5,6 +5,27 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Norme FFR dans la carte catégorie — « Appliquer la norme FFR » + champs vierges — 2026-07-31
+Une catégorie neuve est désormais créée **VIERGE** (nb mi-temps, durée, pause, récup entre matchs :
+aucune valeur devinée ; le menu « Nb mi-temps » propose une option **« — »**). Chaque carte de
+catégorie affiche, quand le référentiel FFR expose des valeurs pour le mois et qu'un champ est **vide
+ou divergent**, un bouton **« Appliquer la norme FFR »** qui remplit d'un coup **nb mi-temps, durée,
+pause, récup, effectif min et max** (réutilise le flux backend testé `appliquerValeursFFR` — source
+unique, jamais de recalcul dupliqué). Nouveauté : l'**effectif min** est désormais rempli =
+**joueurs sur le terrain** (`RefFFR_Regles.effectif_terrain`, ex. 5 pour du 5×5) et l'effectif max =
+max feuille de match. Les champs restent **modifiables**, avec une **alerte inline « hors cadre FFR »**
+en direct sur les 4 champs de temps (miroir de l'alerte effectif existante), non bloquante. Garde-fou :
+la **génération se bloque** (avant toute écriture) si une catégorie à générer (≥ 3 équipes) a une
+**durée de mi-temps vide/0**, avec un message qui renvoie vers le bouton — pour ne jamais produire de
+matchs de 0 min. Doctrine §1.12 respectée : devant plusieurs formes non tranchées, le bouton renvoie
+au choix de la **forme retenue** au lieu de deviner. **Nuance FFR importante** : les 4 durées de jeu
+dépendent du **nombre d'équipes** (la norme FFR ne les fixe que pour **3 à 6 équipes engagées**) — sur
+une catégorie encore vide ou de plus de 6 équipes, le bouton remplit les **effectifs** et signale par un
+message actionnable que les **durées** se rempliront une fois 3–6 équipes engagées (ou à saisir à la
+main). Comportement conforme à la règle (aucune interpolation), inchangé vs le bouton session 6 — seul
+l'**effectif min** est nouveau. Tests **338/338** (+9) ; vérifié au navigateur (carte vierge, bouton,
+application, alerte réactive, garde-fou). ⚠️ **Redéploiement backend nécessaire.**
+
 ### Pause échelonnée : réglage global + pause déjeuner « à partir de » — 2026-07-31
 La pause méridienne échelonnée passe d'une option **par catégorie** à un **réglage GLOBAL** dans la
 carte **Horaires de la journée** (case au-dessus de la pause déjeuner). Quand elle est cochée : la

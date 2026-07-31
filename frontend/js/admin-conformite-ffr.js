@@ -431,6 +431,132 @@ function majFormesCategories() {
       badge + alerteEffectifFFR(cat, eff);
   });
   majFormeChoixCategories(dateISO);
+  majBoutonNormeCategories();
+}
+
+/* --------------------------------------------------------------------------
+   BOUTON « APPLIQUER LA NORME FFR » dans la carte de réglage (session 16)
+   Même flux backend que l'écran Conformité (appliquerValeursFFR — source unique),
+   mais AMENÉ DANS LA CARTE et affiché dès qu'un champ est VIDE ou divergent (pas
+   seulement divergent), pour couvrir une catégorie neuve créée vierge.
+   -------------------------------------------------------------------------- */
+
+/** Vrai si le champ doit être (re)rempli : valeur FFR connue ET réglage vide OU divergent. */
+function champVideOuEcartFFR(cfgVal, ffrVal) {
+  const b = String(ffrVal == null ? '' : ffrVal).trim();
+  if (b === '') return false;                 // pas de valeur FFR pour ce champ ⇒ rien à proposer
+  const a = String(cfgVal == null ? '' : cfgVal).trim();
+  if (a === '') return true;                  // champ vide + valeur FFR dispo ⇒ à remplir
+  return ecartFFR(a, b);                      // sinon : signalé seulement s'il diverge
+}
+
+/** Variante « temps » : les grilles peuvent offrir plusieurs valeurs acceptables (variantes A/B). */
+function champTempsVideOuEcartFFR(cfgVal, grilles, champ) {
+  const valeurs = (grilles || []).map(function (g) { return String(g[champ] || '').trim(); })
+    .filter(Boolean).filter(function (v, i, a) { return a.indexOf(v) === i; });
+  if (!valeurs.length) return false;
+  const cfg = String(cfgVal == null ? '' : cfgVal).trim();
+  if (cfg === '') return true;                 // vide + grille dispo ⇒ à remplir
+  return !valeurs.some(function (v) { return !ecartFFR(cfg, v); }); // dans aucune valeur ⇒ hors cadre
+}
+
+/** Y a-t-il au moins un champ temps/effectif à remplir ou à corriger pour cette catégorie ? */
+function categorieAAppliquerFFR(r, temps, cfg, dim) {
+  if (r) {
+    const effTerrain = String(r.effectif_terrain == null ? '' : r.effectif_terrain).match(/^\d+/);
+    if (effTerrain && champVideOuEcartFFR(cfg.effectif_min, effTerrain[0])) return true;
+    if (champVideOuEcartFFR(cfg.effectif_max, r.effectif_max_feuille)) return true;
+    if (!(dim && dim.plein === true) && r.terrain_longueur_m && r.terrain_largeur_m &&
+        (champVideOuEcartFFR(dim && dim.l, r.terrain_longueur_m) ||
+         champVideOuEcartFFR(dim && dim.w, r.terrain_largeur_m))) return true;
+  }
+  const grilles = (temps && temps.grilles) || [];
+  if (grilles.length) {
+    if (champTempsVideOuEcartFFR(cfg.format_mi_temps, grilles, 'nb_periodes')) return true;
+    if (champTempsVideOuEcartFFR(cfg.duree_mi_temps_min, grilles, 'duree_periode_min')) return true;
+    if (champTempsVideOuEcartFFR(cfg.pause_mi_temps_min, grilles, 'pause_periodes_min')) return true;
+    if (champTempsVideOuEcartFFR(cfg.recup_entre_matchs_min, grilles, 'arret_entre_matchs_min')) return true;
+  }
+  return false;
+}
+
+/** Bouton(s) « Appliquer la norme FFR » d'une carte, ou '' si rien à proposer. */
+function boutonNormeFFRCarte(cat) {
+  const res = dernierResConformite;
+  if (!res) return '';                         // conformité pas encore calculée ⇒ pas de bouton
+  const regles = (res.regles || {})[cat] || [];
+  const temps = (res.temps || {})[cat] || null;
+  if (!regles.length && !temps) return '';     // rien de FFR pour cette catégorie ce mois-ci
+  // Ambiguïté réglementaire non levée (ex. U14 10x10|15x15, aucune forme retenue) : on ne tranche
+  // jamais par défaut (doctrine §1.12) — on renvoie vers le choix de la forme retenue.
+  if (regles.length > 1) {
+    return '<p class="ffr-attendu">Plusieurs formes de jeu ce mois-ci — choisis la <strong>forme de jeu ' +
+      'retenue</strong> ci-dessus puis enregistre pour appliquer la norme FFR.</p>';
+  }
+  const r = regles[0] || null;
+  const cfg = categorieConfigFFR(cat);
+  const dim = dimensionsCategoriesFFR()[cat];
+  if (!categorieAAppliquerFFR(r, temps, cfg, dim)) return ''; // déjà aligné ⇒ rien à faire
+  const grilles = (temps && temps.grilles) || [];
+  const catAttr = echapper(cat);
+  const aide = '<p class="ffr-appliquer-aide">Remplit les effectifs (et, si 3 à 6 équipes sont ' +
+    'engagées, les durées de jeu) avec la norme FFR du mois. Modifiable ensuite.</p>';
+  if (grilles.length > 1) {
+    // Variantes A/B : un bouton par découpage, jamais de choix par défaut.
+    return aide + grilles.map(function (g) {
+      const lib = (g.nb_periodes && g.duree_periode_min)
+        ? (g.nb_periodes + ' × ' + g.duree_periode_min + ' min') : ('variante ' + g.variante);
+      return '<button type="button" class="ffr-appliquer" data-cat="' + catAttr + '" data-variante="' +
+        echapper(g.variante || '') + '">Appliquer la norme FFR — ' + echapper(lib) + '</button>';
+    }).join('');
+  }
+  const v = grilles.length ? (grilles[0].variante || '') : '';
+  return aide + '<button type="button" class="ffr-appliquer" data-cat="' + catAttr + '" data-variante="' +
+    echapper(v) + '">Appliquer la norme FFR</button>';
+}
+
+/** Remplit le placeholder .ffr-appliquer-carte de chaque carte catégorie. */
+function majBoutonNormeCategories() {
+  document.querySelectorAll('.ffr-appliquer-carte[data-cat]').forEach(function (el) {
+    const html = boutonNormeFFRCarte(el.getAttribute('data-cat'));
+    el.innerHTML = html;
+    el.hidden = !html;
+  });
+  majAlertesTempsCategories();
+}
+
+/* --------------------------------------------------------------------------
+   ALERTE « HORS CADRE FFR » EN DIRECT sur les champs de temps d'une carte.
+   Non bloquante : purement informative, à la frappe. Lit la valeur SAISIE dans
+   le formulaire (pas le réglage enregistré), pour signaler dès qu'on sort du cadre.
+   -------------------------------------------------------------------------- */
+
+/** Sélecteur CSS échappé pour un nom de catégorie (ex. « U15F »). */
+function selCategorieFFR(cat) { return (window.CSS && CSS.escape) ? CSS.escape(cat) : cat; }
+
+/** Recalcule l'alerte temps d'UNE carte à partir des valeurs actuellement saisies. */
+function majAlerteTempsCategorie(cat) {
+  const el = document.querySelector('.ffr-alerte-temps[data-cat="' + selCategorieFFR(cat) + '"]');
+  if (!el) return;
+  const temps = dernierResConformite && (dernierResConformite.temps || {})[cat];
+  const grilles = (temps && temps.grilles) || [];
+  const form = document.querySelector('form.form-categorie[data-cat="' + selCategorieFFR(cat) + '"]');
+  if (!grilles.length || !form) { el.innerHTML = ''; el.hidden = true; return; }
+  function val(name) { const c = form.querySelector('[name="' + name + '"]'); return c ? c.value : ''; }
+  const html =
+    ecartTempsFFR('Nb mi-temps', val('format_mi_temps'), grilles, 'nb_periodes') +
+    ecartTempsFFR('Durée mi-temps', val('duree_mi_temps_min'), grilles, 'duree_periode_min') +
+    ecartTempsFFR('Pause mi-temps', val('pause_mi_temps_min'), grilles, 'pause_periodes_min') +
+    ecartTempsFFR('Récup. entre matchs', val('recup_entre_matchs_min'), grilles, 'arret_entre_matchs_min');
+  el.innerHTML = html;
+  el.hidden = !html;
+}
+
+/** Recalcule l'alerte temps de TOUTES les cartes (après (re)rendu ou calcul de conformité). */
+function majAlertesTempsCategories() {
+  document.querySelectorAll('.ffr-alerte-temps[data-cat]').forEach(function (el) {
+    majAlerteTempsCategorie(el.getAttribute('data-cat'));
+  });
 }
 
 /**
@@ -526,6 +652,8 @@ function categorieAUnEcartFFR(r, temps, cfg, dim) {
   if (r) {
     if (r.terrain_longueur_m && r.terrain_largeur_m && dim && !(dim.plein === true) &&
         (ecartFFR(dim.l, r.terrain_longueur_m) || ecartFFR(dim.w, r.terrain_largeur_m))) return true;
+    const effTerrain = String(r.effectif_terrain == null ? '' : r.effectif_terrain).match(/^\d+/);
+    if (effTerrain && ecartFFR(cfg.effectif_min, effTerrain[0])) return true;
     if (ecartFFR(cfg.effectif_max, r.effectif_max_feuille)) return true;
   }
   const grilles = (temps && temps.grilles) || [];
@@ -583,6 +711,10 @@ function apercuAppliquerFFR(cat, variante) {
       lignes.push('Terrain : ' + actuel + ' → ' + r.terrain_longueur_m + ' × ' + r.terrain_largeur_m + ' m');
     } else if (r.terrain_libelle) {
       lignes.push('Terrain : non modifié (' + r.terrain_libelle + ')');
+    }
+    const effTerrain = String(r.effectif_terrain == null ? '' : r.effectif_terrain).match(/^\d+/);
+    if (effTerrain) {
+      lignes.push('Effectif min (sur le terrain) : ' + (cfg.effectif_min || '(vide)') + ' → ' + effTerrain[0]);
     }
     if (r.effectif_max_feuille) {
       lignes.push('Effectif max (feuille) : ' + (cfg.effectif_max || '(vide)') + ' → ' + r.effectif_max_feuille);

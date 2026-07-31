@@ -212,6 +212,13 @@ function lancerTestsFFR() {
   testS15_reglageGlobalPasParCategorie(etat);
   testS15_finPauseDerniereEquipe(etat);
 
+  // Session 16 — norme FFR dans la carte : effectif min appliqué + garde-fou durée à la génération.
+  testS16_effectifMinTerrain(etat);
+  testS16_effectifMinTerrainAutreForme(etat);
+  testS16_gardeGenerationDureeVide(etat);
+  testS16_gardeGenerationDureeRenseignee(etat);
+  testS16_gardeGenerationIgnoreVidesEtAbsentes(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -2082,4 +2089,53 @@ function testS15_finPauseDerniereEquipe(etat){
   _ffrAssert(etat, r.finReposEchelonne > 0, 'S15 : fin de pause de la dernière équipe renseignée');
   _ffrAssert(etat, r.finReposEchelonne >= hmVersMin('11:00'), 'S15 : fin de pause ≥ heure « à partir de » (11:00)');
   _ffrAssert(etat, r.finReposEchelonne <= r.maxFin, 'S15 : fin de pause ≤ fin de journée');
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SESSION 16 — Norme FFR dans la carte catégorie
+   · effectif_min appliqué = joueurs sur le terrain (RefFFR_Regles.effectif_terrain).
+   · garde-fou à la génération : durée de mi-temps manquante ⇒ blocage AVANT écriture.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/** U12 octobre (T+2 5x5) ⇒ effectif_min 5 (terrain) et effectif_max 9 (feuille). */
+function testS16_effectifMinTerrain(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U12', '2026-10-10', '1', '3', null, {});
+  _ffrAssert(etat, r.champsZoneB.effectif_min === '5', 'S16 : U12 octobre (5x5) → effectif_min 5 (terrain)');
+  _ffrAssert(etat, r.champsZoneB.effectif_max === '9', 'S16 : U12 octobre (5x5) → effectif_max 9 (feuille)');
+}
+
+/** U12 juin (10x10) ⇒ effectif_min 10 (terrain) et effectif_max 13 (feuille) — dépend de la forme. */
+function testS16_effectifMinTerrainAutreForme(etat) {
+  var r = calculerApplicationFFR(_ffrRefS5(), 'U12', '2027-06-13', '1', '3', null, {});
+  _ffrAssert(etat, r.champsZoneB.effectif_min === '10', 'S16 : U12 juin (10x10) → effectif_min 10 (terrain)');
+  _ffrAssert(etat, r.champsZoneB.effectif_max === '13', 'S16 : U12 juin (10x10) → effectif_max 13 (feuille)');
+}
+
+/** Garde-fou : catégorie générée (≥ 3 équipes) sans durée de mi-temps ⇒ signalée. */
+function testS16_gardeGenerationDureeVide(etat) {
+  var config = { categories: [
+    { categorie: 'U10', presente: 'oui', duree_mi_temps_min: '' },   // 3 équipes, vide → signalée
+    { categorie: 'U14', presente: 'oui', duree_mi_temps_min: '0' }    // 6 équipes, 0 → signalée
+  ] };
+  var out = categoriesSansDureeMiTemps(config, { U10: 3, U14: 6 });
+  _ffrAssert(etat, out.indexOf('U10') !== -1, 'S16 : U10 (durée vide) signalée');
+  _ffrAssert(etat, out.indexOf('U14') !== -1, 'S16 : U14 (durée 0) signalée');
+  _ffrAssert(etat, out.length === 2, 'S16 : exactement 2 catégories signalées');
+}
+
+/** Garde-fou : durée renseignée ⇒ non signalée. */
+function testS16_gardeGenerationDureeRenseignee(etat) {
+  var config = { categories: [ { categorie: 'U12', presente: 'oui', duree_mi_temps_min: '10' } ] };
+  var out = categoriesSansDureeMiTemps(config, { U12: 4 });
+  _ffrAssert(etat, out.length === 0, 'S16 : U12 (durée 10) non signalée');
+}
+
+/** Garde-fou : catégorie à 0 équipe (ignorée) et catégorie absente ne sont jamais signalées. */
+function testS16_gardeGenerationIgnoreVidesEtAbsentes(etat) {
+  var config = { categories: [
+    { categorie: 'U8',  presente: 'oui', duree_mi_temps_min: '' },  // 0 équipe → ignorée
+    { categorie: 'U16', presente: 'non', duree_mi_temps_min: '' }   // absente → ignorée
+  ] };
+  var out = categoriesSansDureeMiTemps(config, { U8: 0 });
+  _ffrAssert(etat, out.length === 0, 'S16 : 0 équipe et catégorie absente jamais signalées');
 }
