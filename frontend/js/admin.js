@@ -740,6 +740,10 @@ async function rechargerReglages() {
   injecterTerrains();                        // les catégories présentes ont pu changer
   remplirSelectCategories(cfg.categories); // le menu des équipes suit les catégories présentes
   majTableauBord(); // le nombre de catégories a pu changer
+  // Conformité FFR : la liste des catégories a pu changer (ajout/suppression) → on RECALCULE pour
+  // que dernierResConformite couvre les NOUVELLES catégories. Sans ça, une catégorie fraîchement
+  // ajoutée n'a pas de données FFR mémorisées et son bouton « Appliquer la norme FFR » reste caché.
+  if (typeof majConformiteFFR === 'function') await majConformiteFFR();
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
