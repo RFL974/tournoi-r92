@@ -139,6 +139,15 @@ function lancerTestsFFR() {
   testS11_formeJeuLeveAmbiguite10x10(etat);
   testS11_formeJeuHorsMoisPasDApplication(etat);
 
+  // Session 12 — saisie détaillée du score (tir au but) + alerte 5 essais + levée d'ambiguïté conformité.
+  testS12_detailAbsentModeSimple(etat);
+  testS12_detailScoreRecalcule(etat);
+  testS12_detailInvalide(etat);
+  testS12_tirAbsentPageSimple(etat);
+  testS12_tirOuiFormeRetenue(etat);
+  testS12_essaisHelper(etat);
+  testS12_conformiteFormeReduitRegles(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -1357,4 +1366,92 @@ function testS11_formeJeuHorsMoisPasDApplication(etat) {
   var r = calculerApplicationFFR(_ffrRefS5(), 'U14', '2027-01-16', '1', '4', null, {}, 'RE — 7x7');
   _ffrAssert(etat, r.ambigu === true, 'horsMois : forme inconnue ⇒ ambiguïté NON levée (comportement inchangé)');
   _ffrAssert(etat, r.formesDisponibles.length === 2, 'horsMois : les deux formes du mois restent exposées');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 12 — saisie détaillée du score (tir au but).                       */
+/*  Fonctions PURES : litDetailEquipe, tirAuButCategorieFFR, essaisConnusEquipe */
+/*  + levée d'ambiguïté des règles servies à l'admin (evaluerConformiteFFR).    */
+/* -------------------------------------------------------------------------- */
+
+/** Référentiel : M14 janvier 10x10|15x15 ; seul le 15x15 (jeu à XV) tire au but. */
+function _ffrRefS12() {
+  return {
+    millesime: '2026-2027', dates: [],
+    formes: [
+      { categorie: 'M14', mois: '2027-01', forme_jeu: 'RE', effectif: '10x10|15x15', tournoi_autorise: 'OUI', millesime: '2026-2027' }
+    ],
+    regles: [
+      { categorie: 'M14', forme_jeu: 'RE', effectif: '10x10', effectif_terrain: '10', effectif_max_feuille: '13', terrain_longueur_m: '56', terrain_largeur_m: '45', terrain_libelle: '', ballon: 'T4', carton_jaune_min: '2', joint_refffr_formes: 'OUI', tir_au_but: 'NON', millesime: '2026-2027' },
+      { categorie: 'M14', forme_jeu: 'RE', effectif: '15x15', effectif_terrain: '15', effectif_max_feuille: '13', terrain_longueur_m: '', terrain_largeur_m: '', terrain_libelle: 'Terrain normal', ballon: 'T5', carton_jaune_min: '2', joint_refffr_formes: 'OUI', tir_au_but: 'OUI', millesime: '2026-2027' }
+    ],
+    temps: []
+  };
+}
+
+/** litDetailEquipe : AUCUN champ détail ⇒ null ⇒ mode simple (score inchangé, comportement historique). */
+function testS12_detailAbsentModeSimple(etat) {
+  _ffrAssert(etat, litDetailEquipe({ score_A: '5' }, 'A') === null, 'detailAbsent : aucun champ détail ⇒ null (score inchangé)');
+  _ffrAssert(etat, litDetailEquipe({}, 'B') === null, 'detailAbsent : data vide ⇒ null');
+}
+
+/** litDetailEquipe : détail saisi ⇒ score recalculé (essai 5, transfo 2, pénalité 3, drop 3). */
+function testS12_detailScoreRecalcule(etat) {
+  var d = litDetailEquipe({ essais_A: '3', transfo_A: '2', pen_A: '1', drop_A: '1' }, 'A');
+  _ffrAssert(etat, d && d.error === undefined, 'detailScore : objet détail sans erreur');
+  _ffrAssert(etat, d.points === (3 * 5 + 2 * 2 + 1 * 3 + 1 * 3), 'detailScore : 3E+2T+1P+1D = 25 pts');
+  var e = litDetailEquipe({ essais_B: '4' }, 'B');
+  _ffrAssert(etat, e && e.points === 20 && e.transfo === 0 && e.pen === 0 && e.drop === 0,
+    'detailScore : 4 essais seuls = 20 pts (autres = 0)');
+  var z = litDetailEquipe({ essais_A: '0', transfo_A: '0', pen_A: '0', drop_A: '0' }, 'A');
+  _ffrAssert(etat, z && z.points === 0, 'detailScore : 0 partout ⇒ 0 pt (score détaillé valide)');
+}
+
+/** litDetailEquipe : champ non entier ⇒ erreur explicite (jamais un score fabriqué). */
+function testS12_detailInvalide(etat) {
+  var d = litDetailEquipe({ essais_A: '2', transfo_A: 'x' }, 'A');
+  _ffrAssert(etat, d && typeof d.error === 'string', 'detailInvalide : transfo « x » ⇒ erreur');
+  var n = litDetailEquipe({ essais_A: '-1' }, 'A');
+  _ffrAssert(etat, n && typeof n.error === 'string', 'detailInvalide : essais négatif ⇒ erreur');
+}
+
+/** tirAuButCategorieFFR : colonne tir_au_but ABSENTE (regles S5) ⇒ false ⇒ page de saisie inchangée. */
+function testS12_tirAbsentPageSimple(etat) {
+  _ffrAssert(etat, tirAuButCategorieFFR(_ffrRefS5(), 'U12', '2027-06-13', '') === false,
+    'tirAbsent : pas de colonne tir_au_but ⇒ false (page simple)');
+  _ffrAssert(etat, tirAuButCategorieFFR({ formes: [], regles: [] }, 'U14', '2027-01-16', 'RE — 15x15') === false,
+    'tirAbsent : référentiel vide ⇒ false (migration douce)');
+}
+
+/** tirAuButCategorieFFR : U14 à XV (15x15, tir_au_but OUI) selon la forme retenue — prudent sinon. */
+function testS12_tirOuiFormeRetenue(etat) {
+  var ref = _ffrRefS12();
+  _ffrAssert(etat, tirAuButCategorieFFR(ref, 'U14', '2027-01-16', 'RE — 15x15') === true,
+    'tirOui : U14 15x15 (tir_au_but OUI) + forme retenue ⇒ true');
+  _ffrAssert(etat, tirAuButCategorieFFR(ref, 'U14', '2027-01-16', '') === false,
+    'tirOui : ambiguïté 10x10|15x15 non levée ⇒ prudent false');
+  _ffrAssert(etat, tirAuButCategorieFFR(ref, 'U14', '2027-01-16', 'RE — 10x10') === false,
+    'tirOui : forme 10x10 (tir_au_but NON) ⇒ false');
+}
+
+/** essaisConnusEquipe : détail ⇒ essais ; non-tir ⇒ score (1 essai = 1 pt) ; tir sans détail ⇒ null. */
+function testS12_essaisHelper(etat) {
+  _ffrAssert(etat, essaisConnusEquipe('4', '20', true) === 4, 'essais : colonne remplie ⇒ 4 (même en tir au but)');
+  _ffrAssert(etat, essaisConnusEquipe('', '3', false) === 3, 'essais : non-tir + score ⇒ 3 (1 essai = 1 pt)');
+  _ffrAssert(etat, essaisConnusEquipe('', '22', true) === null, 'essais : tir au but sans détail ⇒ null (jamais déduit)');
+  _ffrAssert(etat, essaisConnusEquipe('', '', false) === null, 'essais : rien de connu ⇒ null (alerte muette)');
+  _ffrAssert(etat, essaisConnusEquipe('0', '', true) === 0, 'essais : détail 0 ⇒ 0 (connu, pas null)');
+}
+
+/** evaluerConformiteFFR : la forme retenue réduit les règles servies à UNE (bouton « Appliquer » atteignable). */
+function testS12_conformiteFormeReduitRegles(etat) {
+  var ref = _ffrRefS5();
+  // Sans forme retenue : U14 janvier ⇒ 2 règles (10x10 et 15x15) = ambigu.
+  var sans = evaluerConformiteFFR(ref, '2027-01-16', ['U14'], 'C', { equipesParCategorie: { U14: '4' }, nbDemiJournees: '1' });
+  _ffrAssert(etat, (sans.regles.U14 || []).length === 2, 'conformite : sans forme retenue ⇒ 2 règles (ambigu)');
+  // Avec forme retenue « RE — 15x15 » : une seule règle.
+  var avec = evaluerConformiteFFR(ref, '2027-01-16', ['U14'], 'C',
+    { equipesParCategorie: { U14: '4' }, nbDemiJournees: '1', formesRetenues: { U14: 'RE — 15x15' } });
+  _ffrAssert(etat, (avec.regles.U14 || []).length === 1, 'conformite : forme retenue ⇒ 1 règle (ambiguïté levée)');
+  _ffrAssert(etat, avec.regles.U14[0].effectif === '15x15', 'conformite : la règle retenue est bien le 15x15');
 }

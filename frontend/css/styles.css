@@ -901,6 +901,98 @@ button .ic { margin-right: 0.45em; }
 .departage-opt input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
 
 /* ==========================================================================
+   Saisie DÉTAILLÉE du score (tir au but, jeu à XV) — steppers gros doigts,
+   pensée pour un bénévole debout au bord du terrain, téléphone en main.
+   ========================================================================== */
+/* Deux blocs équipe côte à côte dès qu'il y a de la place, empilés sur petit écran. */
+.det-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.det-equipe {
+  border: 1px solid rgba(184, 216, 248, 0.18);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.det-equipe-tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.det-equipe-tete .eq { font-weight: 700; }
+/* Le total en points : affiché EN GRAND, calculé, jamais saisi. */
+.det-total {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.det-champ { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.det-lib {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.det-pas-groupe { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+/* Boutons − / + : grande cible tactile (44px), lisibles sous la pluie. */
+.det-pas {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(184, 216, 248, 0.35);
+  background: rgba(184, 216, 248, 0.08);
+  color: var(--texte, #eaf2fb);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.det-pas:active { background: rgba(184, 216, 248, 0.2); }
+.det-pas:disabled { opacity: 0.4; cursor: not-allowed; }
+.det-input {
+  width: 48px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.det-input:disabled { opacity: 0.55; cursor: not-allowed; }
+/* Pénalités / drops : repliés derrière « Autres » pour ne pas encombrer l'essentiel. */
+.det-autres { margin-top: 2px; }
+.det-autres > summary {
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  color: var(--bleu-ciel);
+  padding: 4px 0;
+}
+.det-autres-corps { display: flex; flex-direction: column; gap: 12px; padding-top: 6px; }
+.det-autres-eq { display: flex; flex-direction: column; gap: 6px; }
+.det-autres-nom {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--bleu-ciel);
+}
+/* Alerte « 5 essais d'écart » : informative, jamais bloquante. */
+.ecart-essais {
+  background: rgba(242, 193, 78, 0.12);
+  border: 1px solid rgba(242, 193, 78, 0.35);
+  color: #f2c14e;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+/* ==========================================================================
    Classement des poules (onglet « Classements » de tournoi.html)
    ========================================================================== */
 .table-classement th,

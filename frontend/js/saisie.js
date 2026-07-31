@@ -15,10 +15,22 @@ let equipes = [];
 let nomParEquipe = {};          // index id_equipe → nom (reconstruit à chaque chargement)
 let matchs = [];
 let grandsTerrains = {};        // composition des grands terrains { nom: [numéros de mini-terrains] }
+let capacitesCat = {};          // { catégorie: { tir_au_but: bool } } — servi par getCapacitesCategories
 let categorieActiveSaisie = '';
 let terrainActifSaisie = '';    // nom du grand terrain filtré ('' = tous les terrains)
 const CLE_CAT_SAISIE = 'r92_saisie_cat';
 const CLE_TERRAIN_SAISIE = 'r92_saisie_terrain';
+
+/* Points FFR du score détaillé (jeu à XV) — MIROIR de backend/Code.gs (POINTS_*), à garder synchrone :
+   essai 5, transformation 2, pénalité 3, drop 3. Le backend reste la source de vérité (il recalcule). */
+const PTS_ESSAI = 5, PTS_TRANSFO = 2, PTS_PENALITE = 3, PTS_DROP = 3;
+
+/** La catégorie tire-t-elle au but ? Réponse DONNÉE (getCapacitesCategories, issue de RefFFR_Regles.tir_au_but),
+ *  jamais déduite du nom. Défaut prudent : inconnue ⇒ false ⇒ saisie simple (comportement historique). */
+function tireAuBut(cat) {
+  const c = capacitesCat && capacitesCat[cat];
+  return !!(c && c.tir_au_but === true);
+}
 
 /** Point d'entrée : on va chercher les données puis on affiche. */
 async function initSaisie() {
@@ -45,11 +57,17 @@ async function initSaisie() {
   if (btnMaj) btnMaj.addEventListener('click', rafraichirSaisie);
 
   try {
-    const data = await apiGet('getAll');
+    // ⚡ getAll (matchs) et getCapacitesCategories (tir au but) partent EN MÊME TEMPS. Les capacités
+    // sont tolérantes à l'échec (backend pas encore redéployé) : la saisie reste alors en mode simple.
+    const [data, caps] = await Promise.all([
+      apiGet('getAll'),
+      apiGet('getCapacitesCategories').catch(function () { return { categories: {} }; })
+    ]);
     equipes = data.equipes || [];
     nomParEquipe = indexerNoms(equipes); // index id → nom (O(1))
     matchs = data.matchs || [];
     grandsTerrains = lireGrandsTerrains(data.config);
+    capacitesCat = (caps && caps.categories) || {};
     afficherMatchs();
     majHeureSaisie();
   } catch (err) {
@@ -70,11 +88,15 @@ async function rafraichirSaisie() {
   bouton.disabled = true;
   bouton.textContent = '⏳ …';
   try {
-    const data = await apiGet('getAll');
+    const [data, caps] = await Promise.all([
+      apiGet('getAll'),
+      apiGet('getCapacitesCategories').catch(function () { return { categories: capacitesCat }; })
+    ]);
     equipes = data.equipes || [];
     nomParEquipe = indexerNoms(equipes); // index id → nom (O(1))
     matchs = data.matchs || [];
     grandsTerrains = lireGrandsTerrains(data.config);
+    capacitesCat = (caps && caps.categories) || {};
     afficherMatchs();
     majHeureSaisie();
   } catch (err) {
@@ -309,6 +331,7 @@ function afficherMatchs() {
   }
 
   zone.innerHTML = html;
+  initialiserDetailEtEcarts(); // totaux en points + alertes « 5 essais d'écart » des cartes rendues
 }
 
 /** Titre de l'accordéon après-midi, selon le format des matchs de la catégorie affichée. */
@@ -339,8 +362,7 @@ function carteMatch(m) {
   }
 
   const termine = estTermine(m.statut);
-  const sa = (m.score_A === '' || m.score_A == null) ? '' : m.score_A;
-  const sb = (m.score_B === '' || m.score_B == null) ? '' : m.score_B;
+  const detail = tireAuBut(m.categorie); // saisie détaillée pilotée par la DONNÉE (tir au but), jamais le nom
 
   // Bandeau contextuel : amical (LIBRE) ou avertissement élimination directe (COUPE).
   let bandeau = '';
@@ -364,28 +386,188 @@ function carteMatch(m) {
       '</div>';
   }
 
+  const saisie = detail ? blocSaisieDetail(m, termine) : blocSaisieSimple(m, termine);
+
   return '' +
     '<div class="match' + (termine ? ' match-termine' : '') + (coupe ? ' match-coupe' : '') +
-        '" data-id="' + echapper(m.id_match) + '">' +
+        (detail ? ' match-detail' : '') + '" data-id="' + echapper(m.id_match) + '">' +
       '<div class="match-meta">' + echapper(m.heure_debut) + ' · Terrain ' + echapper(String(m.terrain)) +
         ' · ' + echapper(contexte) +
         (termine ? ' · <span class="badge-ok">✓ terminé</span>' : '') + '</div>' +
       bandeau +
       '<div class="match-saisie">' +
-        '<div class="eq-ligne">' +
-          '<span class="eq">' + echapper(nomEquipe(m.equipe_A)) + '</span>' +
-          '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sa)) + '"' + (termine ? ' disabled' : '') + '>' +
-        '</div>' +
-        '<div class="eq-ligne">' +
-          '<span class="eq">' + echapper(nomEquipe(m.equipe_B)) + '</span>' +
-          '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' + echapper(String(sb)) + '"' + (termine ? ' disabled' : '') + '>' +
-        '</div>' +
+        saisie +
         departage +
+        '<div class="ecart-essais" hidden></div>' +
         '<button class="bouton bouton-valider" type="button">' + (termine ? 'Corriger' : 'Valider') + '</button>' +
       '</div>' +
       '<div class="message-form"></div>' +
     '</div>';
 }
+
+/** Saisie SIMPLE (historique) : un champ de score par équipe. Inchangée. */
+function blocSaisieSimple(m, termine) {
+  const sa = (m.score_A === '' || m.score_A == null) ? '' : m.score_A;
+  const sb = (m.score_B === '' || m.score_B == null) ? '' : m.score_B;
+  const champ = function (eqId, valeur) {
+    return '<div class="eq-ligne">' +
+      '<span class="eq">' + echapper(nomEquipe(eqId)) + '</span>' +
+      '<input class="r-input score" type="number" min="0" inputmode="numeric" value="' +
+        echapper(String(valeur)) + '"' + (termine ? ' disabled' : '') + '></div>';
+  };
+  return champ(m.equipe_A, sa) + champ(m.equipe_B, sb);
+}
+
+/** Un compteur « − valeur + » (gros boutons, usage debout au bord du terrain). */
+function stepperDetail(nom, valeur, libelle, termine) {
+  const dis = termine ? ' disabled' : '';
+  return '<div class="det-champ">' +
+    '<span class="det-lib">' + libelle + '</span>' +
+    '<div class="det-pas-groupe">' +
+      '<button type="button" class="det-pas" data-op="-1" data-cible="' + nom + '" aria-label="moins"' + dis + '>−</button>' +
+      '<input class="det-input" name="' + nom + '" type="number" min="0" inputmode="numeric" value="' +
+        echapper(String(valeur)) + '"' + dis + '>' +
+      '<button type="button" class="det-pas" data-op="1" data-cible="' + nom + '" aria-label="plus"' + dis + '>+</button>' +
+    '</div>' +
+  '</div>';
+}
+
+/**
+ * Saisie DÉTAILLÉE (tir au but) : par équipe, essais + transformations bien visibles (steppers),
+ * pénalités et drops repliés derrière « Autres », et le TOTAL en points affiché en grand (calculé,
+ * jamais saisi). Le backend recalcule score_A/score_B depuis ce détail (source de vérité).
+ */
+function blocSaisieDetail(m, termine) {
+  const v = function (cle) { const x = m[cle]; return (x === '' || x == null) ? 0 : x; };
+  const tete = function (suf, eqId) {
+    return '<div class="det-equipe" data-eq="' + suf + '">' +
+      '<div class="det-equipe-tete">' +
+        '<span class="eq">' + echapper(nomEquipe(eqId)) + '</span>' +
+        '<span class="det-total" data-eq="' + suf + '">0 pts</span>' +
+      '</div>' +
+      stepperDetail('essais_' + suf, v('essais_' + suf), '🏉 Essais', termine) +
+      stepperDetail('transfo_' + suf, v('transfo_' + suf), '➕ Transf.', termine) +
+    '</div>';
+  };
+  const autresEquipe = function (suf, eqId) {
+    return '<div class="det-autres-eq">' +
+      '<span class="det-autres-nom">' + echapper(nomEquipe(eqId)) + '</span>' +
+      stepperDetail('pen_' + suf, v('pen_' + suf), '🎯 Pénalités', termine) +
+      stepperDetail('drop_' + suf, v('drop_' + suf), '🦶 Drops', termine) +
+    '</div>';
+  };
+  return '<div class="det-grille">' + tete('A', m.equipe_A) + tete('B', m.equipe_B) + '</div>' +
+    '<details class="det-autres">' +
+      '<summary>Autres (pénalités, drops)</summary>' +
+      '<div class="det-autres-corps">' + autresEquipe('A', m.equipe_A) + autresEquipe('B', m.equipe_B) + '</div>' +
+    '</details>';
+}
+
+/* ==========================================================================
+   SCORE DÉTAILLÉ — calcul du total, alerte « 5 essais d'écart », steppers
+   ========================================================================== */
+
+/** Entier ≥ 0 d'une valeur, sinon null (vide / non entier / négatif). */
+function entierPos(v) {
+  if (v === null || v === undefined) return null;
+  const s = String(v).trim();
+  if (s === '') return null;
+  const n = Number(s);
+  return (isFinite(n) && n >= 0 && Math.floor(n) === n) ? n : null;
+}
+
+/** Valeur courante d'un compteur détail nommé dans une carte (0 si absent/vide). */
+function valDetail(carte, nom) {
+  const el = carte.querySelector('.det-input[name="' + nom + '"]');
+  const n = el ? entierPos(el.value) : null;
+  return (n == null) ? 0 : n;
+}
+
+/** Total EN POINTS d'une équipe (suffixe A/B) d'une carte détail — miroir du calcul backend. */
+function totalDetailEquipe(carte, suf) {
+  return valDetail(carte, 'essais_' + suf) * PTS_ESSAI +
+         valDetail(carte, 'transfo_' + suf) * PTS_TRANSFO +
+         valDetail(carte, 'pen_' + suf) * PTS_PENALITE +
+         valDetail(carte, 'drop_' + suf) * PTS_DROP;
+}
+
+/** Rafraîchit les deux totaux en points (affichés en grand) d'une carte détail. */
+function majTotauxDetail(carte) {
+  ['A', 'B'].forEach(function (suf) {
+    const el = carte.querySelector('.det-total[data-eq="' + suf + '"]');
+    if (el) el.textContent = totalDetailEquipe(carte, suf) + ' pts';
+  });
+}
+
+/**
+ * Nombre d'ESSAIS connu d'une équipe pour l'alerte « 5 essais d'écart », ou null (alerte muette).
+ * MIROIR de backend/Code.gs `essaisConnusEquipe` (garder synchrone). Jamais de faux positif :
+ *  détail rempli ⇒ essais ; sinon score si la catégorie NE tire PAS au but ; sinon rien.
+ */
+function essaisConnus(essaisVal, scoreVal, tirAuBut) {
+  const e = entierPos(essaisVal);
+  if (e !== null) return e;
+  if (tirAuBut !== true) { const s = entierPos(scoreVal); if (s !== null) return s; }
+  return null;
+}
+
+/** (Re)calcule l'alerte « ≥ 5 essais d'écart » d'une carte. Informative, JAMAIS bloquante (§1.12). */
+function majAlerteEcart(carte) {
+  const zone = carte.querySelector('.ecart-essais');
+  if (!zone) return;
+  const id = carte.getAttribute('data-id');
+  const m = matchs.find(function (x) { return x.id_match === id; });
+  if (!m) { zone.hidden = true; zone.innerHTML = ''; return; }
+  const tir = tireAuBut(m.categorie);
+  let ea, eb;
+  if (carte.classList.contains('match-detail')) {
+    ea = essaisConnus(valDetail(carte, 'essais_A'), null, true);
+    eb = essaisConnus(valDetail(carte, 'essais_B'), null, true);
+  } else {
+    const sc = carte.querySelectorAll('.score');
+    ea = essaisConnus(null, sc[0] ? sc[0].value : '', tir);
+    eb = essaisConnus(null, sc[1] ? sc[1].value : '', tir);
+  }
+  if (ea == null || eb == null) { zone.hidden = true; zone.innerHTML = ''; return; }
+  const ecart = Math.abs(ea - eb);
+  if (ecart >= 5) {
+    zone.hidden = false;
+    zone.innerHTML = '⚠️ <strong>' + ecart + ' essais d\'écart</strong> — pense au rééquilibrage (règle des 5 essais).';
+  } else {
+    zone.hidden = true; zone.innerHTML = '';
+  }
+}
+
+/** Initialise totaux détail + alertes d'écart après un (ré)affichage de la liste. */
+function initialiserDetailEtEcarts() {
+  document.querySelectorAll('#liste-matchs .match').forEach(function (carte) {
+    if (carte.classList.contains('match-detail')) majTotauxDetail(carte);
+    majAlerteEcart(carte);
+  });
+}
+
+/* Steppers − / + : borne à 0, recalcule total & alerte (délégation). */
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('.det-pas');
+  if (!btn || btn.disabled) return;
+  const carte = btn.closest('.match');
+  const input = carte.querySelector('.det-input[name="' + btn.getAttribute('data-cible') + '"]');
+  if (!input || input.disabled) return;
+  const cur = entierPos(input.value);
+  let val = (cur == null ? 0 : cur) + (parseInt(btn.getAttribute('data-op'), 10) || 0);
+  if (val < 0) val = 0;
+  input.value = String(val);
+  majTotauxDetail(carte);
+  majAlerteEcart(carte);
+});
+
+/* Frappe directe (compteur détail OU score simple) : recalcule ce qui doit l'être. */
+document.addEventListener('input', function (e) {
+  const carte = e.target.closest('.match');
+  if (!carte) return;
+  if (e.target.classList.contains('det-input')) { majTotauxDetail(carte); majAlerteEcart(carte); }
+  else if (e.target.classList.contains('score')) { majAlerteEcart(carte); }
+});
 
 /** Un seul écouteur pour tous les boutons « Valider / Corriger » (délégation d'événement). */
 document.addEventListener('click', async function (evenement) {
@@ -408,13 +590,28 @@ document.addEventListener('click', async function (evenement) {
   }
 
   // 2) Validation d'un nouveau score OU d'une correction.
-  const inputs = carte.querySelectorAll('.score');
   const id = carte.getAttribute('data-id');
-  const scoreA = inputs[0].value.trim();
-  const scoreB = inputs[1].value.trim();
-  if (scoreA === '' || scoreB === '') {
-    afficherMessage(msg, 'Entre les deux scores.', 'ko');
-    return;
+  const detail = carte.classList.contains('match-detail');
+
+  // Champs de score envoyés au backend : détail (8 compteurs, le backend calcule le score) OU
+  // score simple (2 champs). Le backend est PILOTÉ PAR LA DONNÉE (présence du détail).
+  let champsScore;
+  if (detail) {
+    champsScore = {
+      essais_A: String(valDetail(carte, 'essais_A')),   essais_B: String(valDetail(carte, 'essais_B')),
+      transfo_A: String(valDetail(carte, 'transfo_A')), transfo_B: String(valDetail(carte, 'transfo_B')),
+      pen_A: String(valDetail(carte, 'pen_A')),         pen_B: String(valDetail(carte, 'pen_B')),
+      drop_A: String(valDetail(carte, 'drop_A')),       drop_B: String(valDetail(carte, 'drop_B'))
+    };
+  } else {
+    const inputs = carte.querySelectorAll('.score');
+    const scoreA = inputs[0].value.trim();
+    const scoreB = inputs[1].value.trim();
+    if (scoreA === '' || scoreB === '') {
+      afficherMessage(msg, 'Entre les deux scores.', 'ko');
+      return;
+    }
+    champsScore = { score_A: scoreA, score_B: scoreB };
   }
 
   const m = matchs.find(function (x) { return x.id_match === id; });
@@ -429,7 +626,7 @@ document.addEventListener('click', async function (evenement) {
 
   // Envoi (facteur commun) : une correction porte modification:true ; une cascade forcerCascade:true.
   async function envoyer(forcerCascade) {
-    const data = { id_match: id, score_A: scoreA, score_B: scoreB, modification: enEdition };
+    const data = Object.assign({ id_match: id, modification: enEdition }, champsScore);
     if (coupe && vainqueur) data.vainqueur = vainqueur;
     if (forcerCascade) data.forcerCascade = true;
     return apiPostProtege('enregistrerScore', data, 'scores', 'de saisie des scores');
@@ -456,7 +653,14 @@ document.addEventListener('click', async function (evenement) {
 
     // Score enregistré. En COUPE, la propagation a modifié d'autres matchs → on recharge la
     // liste pour que l'équipe gagnante apparaisse tout de suite dans le match suivant.
-    if (m) { m.score_A = res.match.score_A; m.score_B = res.match.score_B; m.statut = 'terminé'; }
+    if (m) {
+      m.score_A = res.match.score_A; m.score_B = res.match.score_B; m.statut = 'terminé';
+      // Détail éventuel (mode tir au but) : mémorise les compteurs recalculés côté serveur.
+      if (res.detail) {
+        ['essais_A', 'essais_B', 'transfo_A', 'transfo_B', 'pen_A', 'pen_B', 'drop_A', 'drop_B']
+          .forEach(function (k) { if (res.match[k] != null) m[k] = res.match[k]; });
+      }
+    }
     if (coupe) {
       verrouiller(carte);
       afficherMessage(msg, 'Score enregistré ✓ — vainqueur propagé.', 'ok');
@@ -489,7 +693,7 @@ document.addEventListener('click', async function (evenement) {
 /** Passe une carte en mode correction : champs déverrouillés, bouton « Valider la correction ». */
 function deverrouiller(carte) {
   carte.classList.add('match-edition');
-  carte.querySelectorAll('.score').forEach(function (i) { i.disabled = false; });
+  carte.querySelectorAll('.score, .det-input, .det-pas').forEach(function (i) { i.disabled = false; });
   carte.querySelector('.bouton-valider').textContent = 'Valider la correction';
 }
 
@@ -497,7 +701,7 @@ function deverrouiller(carte) {
 function verrouiller(carte) {
   carte.classList.remove('match-edition');
   carte.classList.add('match-termine');
-  carte.querySelectorAll('.score').forEach(function (i) { i.disabled = true; });
+  carte.querySelectorAll('.score, .det-input, .det-pas').forEach(function (i) { i.disabled = true; });
   carte.querySelector('.bouton-valider').textContent = 'Corriger';
   // Ajoute le badge « ✓ terminé » s'il n'y est pas encore.
   const meta = carte.querySelector('.match-meta');
