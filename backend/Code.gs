@@ -2450,7 +2450,8 @@ function enregistrerHoraires(classeur, data) {
   if (err) return { error: err };
   var champs = ['heure_debut', 'heure_fin', 'heure_fin_auto',
                 'battement_terrain_min', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
-                'heure_rdv', 'heure_fin_communiquee', 'marge_fin_communiquee_min'];
+                'heure_rdv', 'heure_fin_communiquee', 'marge_fin_communiquee_min',
+                'pause_echelonnee'];
   ecrireChampsConfig(onglet, data, champs);
   return { ok: true };
 }
@@ -5036,9 +5037,13 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
     return String(c.presente).toLowerCase() === 'oui';
   });
 
-  // Catégories en « pause méridienne échelonnée » : elles jouent en UN round-robin planifié en
-  // deux vagues (voir planifierCategorieEchelonnee), sans pause déjeuner globale. Rempli à l'étape 1.
+  // Pause méridienne échelonnée : réglage GLOBAL (carte Horaires). Quand il est actif, chaque
+  // catégorie éligible (≥ 4 équipes) joue en UN round-robin planifié en deux vagues, sans pause
+  // déjeuner globale. echelonneParCat est rempli à l'étape 1 ; finReposEchelonne = heure à laquelle
+  // la DERNIÈRE équipe finit sa pause (max sur les catégories).
+  var echGlobal = String(global.pause_echelonnee == null ? '' : global.pause_echelonnee).trim().toLowerCase() === 'oui';
   var echelonneParCat = {};
+  var finReposEchelonne = 0;
 
   // 1) Poules + affectation
   var poules = [], affectationPoule = {}, compteurPoule = 0;
@@ -5066,10 +5071,10 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
       return; // catégorie suivante
     }
 
-    // Pause méridienne échelonnée : la catégorie joue en UN round-robin (une seule poule « A »),
-    // planifié en deux vagues à l'étape 3. Éligible dès 4 équipes (les vagues inégales d'un effectif
-    // impair sont gérées par un bye). En dessous, repli propre sur le mode classique + avertissement.
-    if (pauseEchelonneeDe(cat)) {
+    // Pause méridienne échelonnée (réglage GLOBAL) : la catégorie joue en UN round-robin (une seule
+    // poule « A »), planifié en deux vagues à l'étape 3. Éligible dès 4 équipes (les vagues inégales
+    // d'un effectif impair sont gérées par un bye). En dessous, repli propre + avertissement.
+    if (echGlobal) {
       if (eqCat.length >= 4) {
         var eqE = melange ? melanger(eqCat.slice()) : eqCat.slice();
         compteurPoule++;
@@ -5180,8 +5185,10 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
       if (!terrainsEch.length) { avert.push('Catégorie ' + cat.categorie + ' : aucun terrain défini.'); return; }
       var planEch = planifierCategorieEchelonnee(idsEch, terrainsEch, {
         duree: dureeMatch(cat), battement: battement,
-        recup: parseInt(cat.recup_entre_matchs_min || '0', 10) || 0, repos: 60, debut: tDebut
+        recup: parseInt(cat.recup_entre_matchs_min || '0', 10) || 0, repos: 60,
+        debut: tDebut, dejDebut: dejDeb
       });
+      if (planEch.finRepos > finReposEchelonne) finReposEchelonne = planEch.finRepos;
       planEch.matchs.forEach(function (m) {
         compteurMatch++;
         if (m.heure_fin_min > maxFin) maxFin = m.heure_fin_min;
@@ -5226,7 +5233,8 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
     });
   });
 
-  return { poules: poules, affectationPoule: affectationPoule, matchsFinaux: matchsFinaux, maxFin: maxFin, avert: avert };
+  return { poules: poules, affectationPoule: affectationPoule, matchsFinaux: matchsFinaux, maxFin: maxFin,
+           finReposEchelonne: finReposEchelonne, avert: avert };
 }
 
 /**
@@ -5607,10 +5615,13 @@ function genererPoulesEtPlanning(classeur) {
   //  - tournoi_id : nouveau tournoi (les résultats déjà archivés dans Historique gardent l'ancien).
   //  - signature_generation : permet à l'admin de détecter qu'un réglage a changé (« à recalculer »).
   //  - signature_structure  : sert au « Recalculer les horaires » (étape 3).
+  // Heure de fin de la pause déjeuner échelonnée de la DERNIÈRE équipe (vide si pause classique).
+  var finPauseEch = (r.finReposEchelonne > 0) ? minVersHm(r.finReposEchelonne) : '';
   ecrireParamsGlobaux(classeur.getSheetByName('Config'), [
     ['tournoi_id', Utilities.formatDate(new Date(), classeur.getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm:ss')],
     ['signature_generation', signatureGeneration(global, config.categories, equipes)],
-    ['signature_structure', signatureStructure(config.categories, equipes)]
+    ['signature_structure', signatureStructure(config.categories, equipes)],
+    ['pause_echelonnee_fin', finPauseEch]
   ]);
 
   return {
@@ -5623,6 +5634,7 @@ function genererPoulesEtPlanning(classeur) {
     heure_fin_apresmidi: (finApremProj > 0) ? minVersHm(finApremProj) : '',
     heure_fin_projetee: (finJournee > 0) ? minVersHm(finJournee) : '',
     pause_debut: minVersHm(dejDeb),
+    pause_echelonnee_fin: finPauseEch,
     arbitrage_cause: causeArb,
     avertissements: avert,
     suggestions: suggestions
@@ -6032,6 +6044,10 @@ function planifierBlocRepos(matchs, terrains, duree, battement, recup, terrainLi
 function planifierCategorieEchelonnee(ids, terrains, opts) {
   var duree = opts.duree, battement = opts.battement || 0, recup = opts.recup || 0;
   var repos = opts.repos || 60, t0 = opts.debut || 540;
+  // dejDebut = « pause déjeuner à partir de » : heure au plus tôt à laquelle la 1re vague part en
+  // pause. Sert d'ANCRE (la pause échelonnée démarre là) ; absent → juste après le matin (t0).
+  var dejDebut = (opts.dejDebut != null) ? opts.dejDebut : null;
+  var tLunch = (dejDebut != null) ? Math.max(dejDebut, t0) : t0;
   var avert = [];
   var p = vaguesRepos(ids), v1 = p.v1, v2 = p.v2;
   // Tournées bipartites (gèrent les vagues INÉGALES via un bye) : chaque équipe joue le matin.
@@ -6042,29 +6058,47 @@ function planifierCategorieEchelonnee(ids, terrains, opts) {
   var intra1 = pairesInternesEq(v1), intra2 = pairesInternesEq(v2);
 
   var terrainLibre = {}, equipeLibre = {}, equipeFin = {}, sortie = [];
+  // 1) MATIN : matchs inter-vagues (tous à égalité de fatigue).
   planifierBlocRepos(interMatin, terrains, duree, battement, recup, terrainLibre, equipeLibre, equipeFin, t0, sortie);
-  // Repos Vague 1 : sa prochaine dispo est repoussée de `repos` après sa dernière fin du matin.
-  v1.forEach(function (id) { if (equipeFin[id] != null) equipeLibre[id] = equipeFin[id] + repos; });
-  // Vague 2 joue ses matchs internes (Vague 1 se repose) ; puis Vague 1 joue les siens (Vague 2 repose).
-  planifierBlocRepos(intra2, terrains, duree, battement, recup, terrainLibre, equipeLibre, equipeFin, t0, sortie);
-  planifierBlocRepos(intra1, terrains, duree, battement, recup, terrainLibre, equipeLibre, equipeFin, t0, sortie);
-  v2.forEach(function (id) { if (equipeFin[id] != null) equipeLibre[id] = Math.max(equipeLibre[id], equipeFin[id] + repos); });
+
+  // La pause échelonnée démarre à tL = max(fin du matin, « à partir de »). Vague 1 se repose d'abord
+  // pendant que la Vague 2 joue ses matchs internes, puis l'inverse. Repos ≥ repos GARANTI par
+  // construction (on repousse la dispo d'une vague de `repos` min) ; chaque vague joue pendant la
+  // pause de l'autre (terrains occupés + jamais reposé contre épuisé).
+  var morningEnd = 0;
+  sortie.forEach(function (x) { if (x.heure_fin_min > morningEnd) morningEnd = x.heure_fin_min; });
+  var tL = Math.max(morningEnd, tLunch);
+
+  // 2) Vague 1 en pause à partir de tL (≥ repos) ; la Vague 2 joue ses matchs internes.
+  v1.forEach(function (id) { equipeLibre[id] = tL + repos; });
+  planifierBlocRepos(intra2, terrains, duree, battement, recup, terrainLibre, equipeLibre, equipeFin, tL, sortie);
+  // 3) Vague 2 en pause à son tour (≥ repos après ses derniers matchs) ; la Vague 1 joue les siens.
+  v2.forEach(function (id) { if (equipeFin[id] != null) equipeLibre[id] = equipeFin[id] + repos; });
+  planifierBlocRepos(intra1, terrains, duree, battement, recup, terrainLibre, equipeLibre, equipeFin, tL + repos, sortie);
+  // 4) APRÈS-MIDI : le reste des inter-vagues, tout le monde ayant déjeuné.
   planifierBlocRepos(interAprem, terrains, duree, battement, recup, terrainLibre, equipeLibre, equipeFin, t0, sortie);
 
   sortie.sort(function (a, b) { return a.heure_debut_min - b.heure_debut_min; });
-  var repM = {}, maxFin = 0;
+  var repM = {}, maxFin = 0, finRepos = 0;
   ids.forEach(function (id) {
     var mine = sortie.filter(function (x) { return x.equipe_A === id || x.equipe_B === id; })
                      .sort(function (a, b) { return a.heure_debut_min - b.heure_debut_min; });
-    var g = 0;
-    for (var i = 1; i < mine.length; i++) g = Math.max(g, mine[i].heure_debut_min - mine[i - 1].heure_fin_min);
+    var g = 0, finPause = null;
+    for (var i = 1; i < mine.length; i++) {
+      var trou = mine[i].heure_debut_min - mine[i - 1].heure_fin_min;
+      if (trou > g) g = trou;
+      // Fin de la PAUSE = reprise après le PREMIER trou ≥ repos (le trou de midi, pas un creux d'après-midi).
+      if (finPause === null && trou >= repos) finPause = mine[i].heure_debut_min;
+    }
     repM[id] = g;
+    if (finPause != null && finPause > finRepos) finRepos = finPause;
   });
   sortie.forEach(function (x) { if (x.heure_fin_min > maxFin) maxFin = x.heure_fin_min; });
   ids.forEach(function (id) {
     if (repM[id] < repos) avert.push('l\'équipe ' + id + ' n\'a que ' + repM[id] + ' min de repos (moins de ' + repos + ').');
   });
-  return { matchs: sortie, repos: repM, maxFin: maxFin, avert: avert };
+  // finRepos = heure (min) à laquelle la DERNIÈRE équipe finit sa pause déjeuner échelonnée.
+  return { matchs: sortie, repos: repM, maxFin: maxFin, finRepos: finRepos, avert: avert };
 }
 
 function hmVersMin(hm) {

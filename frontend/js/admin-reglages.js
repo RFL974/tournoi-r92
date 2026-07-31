@@ -80,14 +80,54 @@ function afficherHoraires(global) {
                     'Retour aux vestiaires + remise des trophées : l\'événement se termine à la fin de la remise. '
                     + 'Fin annoncée = dernier match + cette marge (si l\'heure ci-dessus est vide).') +
         champNombre('battement_terrain_min', 'Battement terrain entre les matchs (min)', val('battement_terrain_min', '5')) +
-        champHeure('pause_dejeuner_debut', 'Pause déjeuner — début', val('pause_dejeuner_debut')) +
-        champNombre('pause_dejeuner_duree_min', 'Pause déjeuner — durée (min)', val('pause_dejeuner_duree_min')) +
+        blocPauseDejeuner(global, val) +
         '<div class="ligne-action">' +
           '<button type="submit" class="bouton">Enregistrer les horaires</button>' +
           '<span id="message-horaires" class="message-form"></span>' +
         '</div>' +
       '</form>' +
     '</section>'
+  );
+}
+
+/**
+ * Bloc « Pause déjeuner » de la carte Horaires, avec l'option GLOBALE « Pause méridienne échelonnée »
+ * juste au-dessus. Quand elle est cochée : la pause déjeuner devient « à partir de » (heure de départ
+ * de la pause échelonnée), le champ « durée » est masqué (chaque équipe a 60 min garanti), et l'heure
+ * de fin de pause de la DERNIÈRE équipe est mentionnée (calculée à la génération, Config.pause_echelonnee_fin).
+ * L'affichage conditionnel est piloté par data-ech (voir onReglagesChange) — pas de :has(), tous téléphones.
+ */
+function blocPauseDejeuner(global, val) {
+  var ech = String((global && global.pause_echelonnee) == null ? '' : global.pause_echelonnee).trim().toLowerCase() === 'oui';
+  var finEch = val('pause_echelonnee_fin');
+  return (
+    '<div class="bloc-pause-dej" data-ech="' + (ech ? 'oui' : 'non') + '">' +
+      '<div class="champ-reglage">' +
+        '<label class="ech-toggle"><input type="checkbox" id="h-pause_echelonnee" name="pause_echelonnee"' +
+          (ech ? ' checked' : '') + '> Pause méridienne échelonnée (repos ≥ 60 min garanti)</label>' +
+        '<span class="f-aide">Quand les <b>terrains sont peu nombreux</b> : chaque catégorie (≥ 4 équipes) ' +
+          'joue en un round-robin et les équipes se <b>relaient</b> pour la pause déjeuner (jamais une équipe ' +
+          'reposée contre une équipe épuisée). Remplace la pause déjeuner unique et le format d\'après-midi.</span>' +
+      '</div>' +
+      // Pause déjeuner début (label dynamique « — début » / « à partir de »).
+      '<div class="champ-reglage">' +
+        '<label for="h-pause_dejeuner_debut"><span class="lbl-pause-dej-fixe">Pause déjeuner — début</span>' +
+          '<span class="lbl-pause-dej-ech">Pause déjeuner à partir de</span></label>' +
+        '<input type="time" id="h-pause_dejeuner_debut" name="pause_dejeuner_debut" value="' + val('pause_dejeuner_debut') + '">' +
+      '</div>' +
+      // Durée : masquée en échelonné (60 min garanti par équipe).
+      '<div class="champ-reglage champ-pause-duree">' +
+        '<label for="h-pause_dejeuner_duree_min">Pause déjeuner — durée (min)</label>' +
+        '<input type="number" id="h-pause_dejeuner_duree_min" name="pause_dejeuner_duree_min" min="0" step="5" value="' +
+          val('pause_dejeuner_duree_min') + '">' +
+      '</div>' +
+      // Fin de pause de la dernière équipe (échelonné) : calculée à la génération.
+      '<div class="champ-reglage champ-pause-fin">' +
+        '<span class="f-aide">🍽️ <b>Pause échelonnée</b> : la dernière équipe finit sa pause à ' +
+          '<strong id="val-pause-fin">' + (finEch ? echapper(finEch) : '—') + '</strong> ' +
+          '<span class="f-aide-mini">(calculé à la génération des poules)</span>.</span>' +
+      '</div>' +
+    '</div>'
   );
 }
 
@@ -136,7 +176,8 @@ async function onEnregistrerHoraires(evenement) {
     marge_fin_communiquee_min: form.marge_fin_communiquee_min.value,
     battement_terrain_min:    form.battement_terrain_min.value,
     pause_dejeuner_debut:     form.pause_dejeuner_debut.value,
-    pause_dejeuner_duree_min: form.pause_dejeuner_duree_min.value
+    pause_dejeuner_duree_min: form.pause_dejeuner_duree_min.value,
+    pause_echelonnee:         (form.pause_echelonnee && form.pause_echelonnee.checked) ? 'oui' : 'non'
   };
 
   if (!data.heure_debut) {
@@ -225,7 +266,6 @@ function formulaireCategorie(cat) {
       // En SCF, le CSS (form[data-contexte="SCF"]) masque le bloc format d'après-midi ci-dessous.
       blocContexteU14(cat) +
       blocFormatApresMidi(cat) +
-      blocPauseEchelonnee(cat) +
       '<div class="ligne-action">' +
         '<button type="submit" class="bouton">Enregistrer</button>' +
         '<button type="button" class="bouton-suppr bouton-suppr-cat" data-cat="' + echapper(nom) + '">Supprimer</button>' +
@@ -526,30 +566,6 @@ function blocContexteU14(cat) {
 }
 
 /**
- * Bloc « Pause méridienne échelonnée » d'une catégorie : une case à cocher + explication. Quand
- * elle est active, la catégorie joue en UN round-robin (tout le monde se rencontre) planifié en
- * deux vagues avec ≥ 60 min de repos garanti et l'équité (jamais reposé contre épuisé) ; cela
- * remplace la pause déjeuner globale ET le format d'après-midi pour cette catégorie. Effectif pair
- * ≥ 4 requis — pair ou impair, les vagues inégales sont gérées par un « bye » (sinon, en dessous de
- * 4 équipes, l'app retombe automatiquement sur la pause classique avec un avertissement).
- */
-function blocPauseEchelonnee(cat) {
-  const on = pauseEchelonneeCat(cat);
-  return (
-    '<div class="bloc-echelonne">' +
-      '<span class="format-libelle">Pause méridienne</span>' +
-      '<label class="ech-toggle"><input type="checkbox" name="pause_echelonnee"' + (on ? ' checked' : '') + '> ' +
-        'Pause échelonnée (repos ≥ 60 min garanti)</label>' +
-      '<p class="f-aide">À activer quand les <b>terrains sont peu nombreux</b> et que la journée ne ' +
-        '« rentre » pas. La catégorie joue alors en <b>un seul round-robin</b> (chaque équipe rencontre ' +
-        'les autres) planifié en <b>deux vagues</b> : pendant qu\'une moitié se repose (≥ 60 min), ' +
-        'l\'autre joue — et jamais une équipe reposée contre une équipe épuisée. Remplace la pause ' +
-        'déjeuner globale et le format d\'après-midi ci-dessus. <b>Effectif ≥ 4</b> (pair ou impair ; sinon pause classique).</p>' +
-    '</div>'
-  );
-}
-
-/**
  * Un champ modifiable d'une catégorie (input texte/nombre ou menu déroulant).
  * On enveloppe le champ dans un <label> (pas d'id, pour éviter les doublons).
  */
@@ -633,11 +649,6 @@ async function onEnregistrerCategorie(evenement) {
   data.scf_phase = form.scf_phase
     ? String(form.scf_phase.value || '')
     : ((catStockee && catStockee.scf_phase != null) ? String(catStockee.scf_phase) : '');
-
-  // Pause méridienne échelonnée : case à cocher (toujours rendue). Absente ⇒ on préserve la valeur.
-  data.pause_echelonnee = form.pause_echelonnee
-    ? (form.pause_echelonnee.checked ? 'oui' : 'non')
-    : ((catStockee && catStockee.pause_echelonnee != null) ? String(catStockee.pause_echelonnee) : '');
 
   const bouton = form.querySelector('button[type="submit"]');
   await avecBoutonOccupe(bouton, message, async function () {

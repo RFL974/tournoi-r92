@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Pause échelonnée : réglage global + pause déjeuner « à partir de » — 2026-07-31
+La pause méridienne échelonnée passe d'une option **par catégorie** à un **réglage GLOBAL** dans la
+carte **Horaires de la journée** (case au-dessus de la pause déjeuner). Quand elle est cochée : la
+**« Pause déjeuner — début »** devient **« Pause déjeuner à partir de »** (heure de départ de la pause
+échelonnée, qui sert d'**ancre** : aucune équipe ne part en pause avant), le champ **durée** est masqué
+(60 min garanti par équipe), et après « Générer les poules » l'app **affiche l'heure de fin de pause de
+la dernière équipe** (les deux vagues se relaient — 2ᵉ vague en début d'après-midi). Backend :
+`pause_echelonnee` devient un paramètre global lu par `calculerPlanning` ; `planifierCategorieEchelonnee`
+prend `dejDebut` (l'ancre) et renvoie `finRepos` ; `genererPoulesEtPlanning` écrit `pause_echelonnee_fin`
+dans Config. Le bloc par catégorie est retiré. Tests 329/329 (+4). ⚠️ **Redéploiement backend nécessaire.**
+
 ### Super Challenge — arbitrage désigné (l'équipe qui ne joue pas) — 2026-07-31
 Sur chaque triangulaire/quadrangulaire, l'app **désigne l'équipe qui arbitre** le match (celle qui ne
 joue pas) : triangulaire → la 3ᵉ équipe ; quadrangulaire → la table du règlement (M1→E1 … M4→E4,
