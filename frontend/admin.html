@@ -58,20 +58,20 @@
            Chaque étape est cliquable et fait défiler jusqu'à la section correspondante. -->
       <section class="etat-avancement" id="etat-avancement" aria-label="Avancement de la préparation"></section>
 
-      <!-- Infos du tournoi : placées en haut (à remplir en premier). Alimentent la carte + la
-           page d'article du site vitrine. Enregistrées via « Enregistrer les infos ». -->
-      <section class="carte" id="bloc-infos-tournoi">
-        <h2>Infos du tournoi (pour l'actualité)</h2>
+      <!-- Cadre du tournoi : date prévue + zone de vacances + contrôle FFR (conflits, points de
+           vigilance et prescriptions). VOLONTAIREMENT séparé des « Infos du tournoi » ci-dessous :
+           ici, c'est la PLANIFICATION et la CONFORMITÉ (rien n'alimente le site vitrine). Enregistré
+           via son propre bouton (onEnregistrerCadre) — sauvegarde partielle : date + zone seulement. -->
+      <section class="carte" id="bloc-cadre-tournoi">
+        <h2>Date &amp; conformité FFR</h2>
         <p class="note-generation">
-          Ces informations alimentent la <strong>carte</strong> et la <strong>page d'article</strong>
-          du tournoi. Clique sur <strong>« Enregistrer les infos »</strong> pour les sauvegarder —
-          tu peux les modifier à tout moment, <strong>même après publication</strong>.
+          La <strong>date prévue</strong> et la <strong>zone de vacances</strong> servent au
+          <strong>contrôle de conformité FFR</strong> (conflits de calendrier, points de vigilance et
+          prescriptions par catégorie). Elles ne s'affichent pas sur le site — clique
+          <strong>« Enregistrer la date »</strong> pour les sauvegarder.
         </p>
-        <form id="form-infos-tournoi">
-          <label class="reglage"><span class="r-libelle">Nom du tournoi</span>
-            <input class="r-input" type="text" name="tournoi_nom" placeholder="Ex : Tournoi de Noël U8–U12">
-          </label>
-          <label class="reglage"><span class="r-libelle">Date</span>
+        <form id="form-cadre-tournoi">
+          <label class="reglage"><span class="r-libelle">Date prévue du tournoi</span>
             <input class="r-input" type="date" name="tournoi_date">
           </label>
           <label class="reglage"><span class="r-libelle">Zone de vacances (contrôle FFR)</span>
@@ -87,6 +87,26 @@
           <!-- Conformité FFR : résultat de verifierConformiteFFR (backend), rempli par
                admin-conformite-ffr.js. Bloc INFORMATIF — n'empêche pas d'enregistrer la date. -->
           <div id="bloc-conformite-ffr" class="ffr-zone"></div>
+          <div class="ligne-action">
+            <button type="button" class="bouton" id="bouton-enregistrer-cadre">Enregistrer la date</button>
+            <span class="message-form" id="message-cadre-tournoi"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Infos du tournoi : alimentent la carte + la page d'article du site vitrine.
+           Enregistrées via « Enregistrer les infos ». (Date & zone → carte « Date & conformité FFR ».) -->
+      <section class="carte" id="bloc-infos-tournoi">
+        <h2>Infos du tournoi (pour l'actualité)</h2>
+        <p class="note-generation">
+          Ces informations alimentent la <strong>carte</strong> et la <strong>page d'article</strong>
+          du tournoi. Clique sur <strong>« Enregistrer les infos »</strong> pour les sauvegarder —
+          tu peux les modifier à tout moment, <strong>même après publication</strong>.
+        </p>
+        <form id="form-infos-tournoi">
+          <label class="reglage"><span class="r-libelle">Nom du tournoi</span>
+            <input class="r-input" type="text" name="tournoi_nom" placeholder="Ex : Tournoi de Noël U8–U12">
+          </label>
           <label class="reglage"><span class="r-libelle">Lieu</span>
             <input class="r-input" type="text" name="tournoi_lieu" placeholder="Ex : Stade Paul Langevin">
           </label>

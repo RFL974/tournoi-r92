@@ -328,6 +328,12 @@ async function initAdmin() {
   // Bouton de réinitialisation complète du tournoi (zone de danger).
   document.getElementById('bouton-reinitialiser').addEventListener('click', onReinitialiser);
 
+  // Carte « Date & conformité FFR » (date + zone + contrôle FFR) : formulaire dédié, bouton dédié.
+  document.getElementById('form-cadre-tournoi').addEventListener('submit', function (e) { e.preventDefault(); });
+  document.getElementById('bouton-enregistrer-cadre').addEventListener('click', onEnregistrerCadre);
+  // La date apparaît sur l'aperçu du site → on le redessine quand elle change (frappe/sélection).
+  document.getElementById('form-cadre-tournoi').addEventListener('input', majApercuTournoi);
+
   // Les infos du tournoi se sauvegardent via leur bouton « Enregistrer les infos »
   // (onEnregistrerInfos) — et aussi lors de la publication (onPublier), par sécurité.
   // On empêche juste la soumission du formulaire (touche Entrée) qui rechargerait la page.
@@ -401,13 +407,13 @@ async function initAdmin() {
   // Champ date : ouvre le calendrier dès qu'on clique n'importe où sur la barre
   // (par défaut, seul le clic sur la petite icône l'ouvre). showPicker() peut ne pas
   // exister sur de vieux navigateurs → on ignore l'erreur, l'icône reste utilisable.
-  document.querySelector('#form-infos-tournoi [name="tournoi_date"]')
+  document.querySelector('#form-cadre-tournoi [name="tournoi_date"]')
     .addEventListener('click', function () {
       try { this.showPicker(); } catch (e) { /* navigateur non compatible : comportement normal */ }
     });
 
-  // Conformité FFR : re-vérifie dès que la date OU la zone de vacances change.
-  document.getElementById('form-infos-tournoi').addEventListener('change', function (e) {
+  // Conformité FFR : re-vérifie dès que la date OU la zone de vacances change (carte cadre).
+  document.getElementById('form-cadre-tournoi').addEventListener('change', function (e) {
     const n = e.target && e.target.name;
     if ((n === 'tournoi_date' || n === 'zone_vacances') && typeof majConformiteFFR === 'function') {
       majConformiteFFR();
