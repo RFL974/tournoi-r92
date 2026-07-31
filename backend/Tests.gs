@@ -181,6 +181,14 @@ function lancerTestsFFR() {
   testS14b_dimancheTemps2x11(etat);
   testS14b_apresMidiLambdaInchange(etat);
 
+  // Session 14 (PR grouping) — Super Challenge : regroupement en TRIANGULAIRES.
+  testS14c_nbGroupesMultipleDe3(etat);
+  testS14c_nbGroupesReste1Quad(etat);
+  testS14c_nbGroupesReste2(etat);
+  testS14c_planning12EquipesTriangulaires(etat);
+  testS14c_planning6EquipesDeuxTriangulaires(etat);
+  testS14c_phase3QuadAvertit(etat);
+
   // Session 15 — pause méridienne échelonnée (2 vagues, repos ≥ 60, équité).
   testS15_vaguesPartition(etat);
   testS15_roundRobinComplet(etat);
@@ -1931,4 +1939,64 @@ function testS15_effectifTropPetitRepli(etat){
   var aWarn=r.avert.some(function(a){ return a.indexOf('au moins 4')>=0; });
   _ffrAssert(etat, aWarn, 'S15 : effectif < 4 → avertissement « pause classique conservée »');
   _ffrAssert(etat, r.matchsFinaux.length===3, 'S15 : effectif 3 → repli round-robin classique (3 matchs)');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 14 (grouping) — Super Challenge : regroupement en triangulaires    */
+/* -------------------------------------------------------------------------- */
+
+/** Multiples de 3 → que des triangulaires (autant de groupes que n/3). */
+function testS14c_nbGroupesMultipleDe3(etat){
+  _ffrAssert(etat, nbGroupesScf(6)===2 && nbGroupesScf(9)===3 && nbGroupesScf(12)===4,
+    'S14c : effectif ×3 → n/3 groupes (6→2, 9→3, 12→4 triangulaires)');
+}
+
+/** Reste 1 → une quadrangulaire d'appoint. */
+function testS14c_nbGroupesReste1Quad(etat){
+  _ffrAssert(etat, nbGroupesScf(4)===1 && nbGroupesScf(7)===2 && nbGroupesScf(10)===3,
+    'S14c : n≡1 → une quadrangulaire (4→1, 7→2=4+3, 10→3=4+3+3)');
+}
+
+/** Reste 2 (≥8) → deux quadrangulaires ; n=5 dégénéré → au mieux. */
+function testS14c_nbGroupesReste2(etat){
+  _ffrAssert(etat, nbGroupesScf(8)===2 && nbGroupesScf(11)===3, 'S14c : n≡2 (≥8) → deux quadrangulaires (8→2=4+4)');
+  _ffrAssert(etat, nbGroupesScf(5)===2, 'S14c : n=5 (dégénéré) → 2 groupes (3+2, signalé ailleurs)');
+}
+
+/** Config SCF (contexte + phase) pour tester le regroupement. */
+function _scfGrpConfig(n, phase){
+  var cat = { categorie:'U14', presente:'oui', terrains:'1,2', format_mi_temps:'2',
+    duree_mi_temps_min:'11', pause_mi_temps_min:'2', recup_entre_matchs_min:'5',
+    contexte_tournoi:'SCF', scf_phase:phase };
+  var equipes=[]; for(var i=1;i<=n;i++) equipes.push({ id_equipe:'E'+i, nom_equipe:'Club'+i+' Ville', categorie:'U14' });
+  return { config:{ global:{ heure_debut:'09:00', battement_terrain_min:'5' }, categories:[cat] }, equipes:equipes };
+}
+
+/** Intégration : 12 équipes SCF Phase 3 → 4 poules de 3 (que des triangulaires). */
+function testS14c_planning12EquipesTriangulaires(etat){
+  var d=_scfGrpConfig(12, 'P3');
+  var r=calculerPlanning(d.config, d.equipes, false);
+  var poulesU14=r.poules.filter(function(p){return p.categorie==='U14';});
+  _ffrAssert(etat, poulesU14.length===4, 'S14c : 12 équipes SCF → 4 poules (pas 3 quadrangulaires)');
+  var toutes3=poulesU14.every(function(p){ return p.equipes.length===3; });
+  _ffrAssert(etat, toutes3, 'S14c : 12 équipes SCF → chaque poule = 3 équipes (triangulaire)');
+}
+
+/** Intégration : 6 équipes SCF → 2 triangulaires. */
+function testS14c_planning6EquipesDeuxTriangulaires(etat){
+  var d=_scfGrpConfig(6, 'P2');
+  var r=calculerPlanning(d.config, d.equipes, false);
+  var poulesU14=r.poules.filter(function(p){return p.categorie==='U14';});
+  _ffrAssert(etat, poulesU14.length===2 && poulesU14.every(function(p){return p.equipes.length===3;}),
+    'S14c : 6 équipes SCF → 2 triangulaires de 3');
+  // Triangulaire = 3 matchs par groupe → 6 matchs au total.
+  _ffrAssert(etat, r.matchsFinaux.length===6, 'S14c : 2 triangulaires → 6 matchs');
+}
+
+/** Phase 3 avec un effectif non multiple de 3 (4 équipes → quadrangulaire) : avertissement. */
+function testS14c_phase3QuadAvertit(etat){
+  var d=_scfGrpConfig(4, 'P3');
+  var r=calculerPlanning(d.config, d.equipes, false);
+  var aWarn=r.avert.some(function(a){ return a.indexOf('TRIANGULAIRES')>=0; });
+  _ffrAssert(etat, aWarn, 'S14c : Phase 3 à 4 équipes (quad) → avertissement « triangulaires »');
 }

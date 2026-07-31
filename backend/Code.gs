@@ -4809,6 +4809,22 @@ function nombrePoules(cat, nbEquipes) {
   return Math.max(1, Math.ceil(nbEquipes / TAILLE_IDEALE_POULE));
 }
 
+/**
+ * Nombre de groupes visé pour le SUPER CHALLENGE, en privilégiant les TRIANGULAIRES (3 équipes) :
+ *   • effectif multiple de 3 → que des triangulaires (6→2, 9→3, 12→4) ;
+ *   • +1 (n≡1) → une quadrangulaire d'appoint (4→1, 7→2 = 4+3, 10→3 = 4+3+3) ;
+ *   • +2 (n≡2, n≥8) → deux quadrangulaires (8→2 = 4+4, 11→3 = 4+4+3) ;
+ *   • cas dégénéré (n=5 : 3+2) → au mieux (≈ n/3), signalé ailleurs par fixtureScfGroupe.
+ * La répartition club-par-club de calculerPlanning égalise ensuite les tailles (ceil/floor). Pur. */
+function nbGroupesScf(n) {
+  if (n < 3) return 1;
+  var r = n % 3;
+  if (r === 0) return n / 3;
+  if (r === 1) return (n - 1) / 3;
+  if (n >= 8)  return (n - 2) / 3;
+  return Math.max(1, Math.round(n / 3));
+}
+
 /** Vrai si la catégorie a un nombre de poules FORCÉ (override manuel actif). */
 function poulesForcees(cat) {
   var force = parseInt(cat && cat.nb_poules, 10);
@@ -5068,7 +5084,12 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
     }
 
     if (melange) eqCat = melanger(eqCat);
-    var nbPoules = nombrePoules(cat, eqCat.length);
+    // Super Challenge : on regroupe en TRIANGULAIRES (3 équipes) plutôt qu'en ~4/poule, sauf si le
+    // nombre de poules est explicitement forcé par l'organisateur.
+    var sctxCat = contexteScfCategorie(cat);
+    var nbPoules = (sctxCat.estScf && !poulesForcees(cat))
+      ? nbGroupesScf(eqCat.length)
+      : nombrePoules(cat, eqCat.length);
     var poulesCat = [];
     for (var p = 0; p < nbPoules; p++) {
       compteurPoule++;
@@ -5118,9 +5139,9 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
   // branché (prévu PR B/C). En attendant, on génère la journée de triangulaires en 2×11 et on le DIT.
   Object.keys(scfParCat).forEach(function (c) {
     if (scfParCat[c] === 'P3') {
-      avert.push('Catégorie ' + c + ' (Super Challenge — Phase 3) : ceci génère le SAMEDI (triangulaires, ' +
-        '2×11). Une fois tous les scores du samedi saisis, utilise « Générer le dimanche (brassage) » ' +
-        'pour la 2ᵉ journée (poules E/F/G par niveau).');
+      avert.push('Catégorie ' + c + ' (Super Challenge — Phase 3) : ceci génère les rencontres du ' +
+        'SAMEDI (2×11). Une fois tous les scores du samedi saisis, utilise « Générer le dimanche ' +
+        '(brassage) » pour la 2ᵉ journée (poules E/F/G par niveau).');
     }
   });
 
@@ -5130,6 +5151,13 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
     if (echelonneParCat[poule.categorie]) return; // planifié à l'étape 3 (round-robin échelonné)
     var ids = poule.equipes.map(function (e) { return e.id_equipe; });
     if (!matchsParCat[poule.categorie]) matchsParCat[poule.categorie] = [];
+    // Phase 3 = TRIANGULAIRES uniquement (règlement). Un groupe d'une autre taille (ex. 4 → quad)
+    // est signalé : l'effectif ne tombe pas juste (il faut un multiple de 3).
+    if (scfParCat[poule.categorie] === 'P3' && ids.length !== 3) {
+      avert.push('Catégorie ' + poule.categorie + ' (Super Challenge Phase 3) : un groupe de ' +
+        ids.length + ' équipe(s) — la Phase 3 se joue en TRIANGULAIRES (3 équipes par groupe). ' +
+        'Prévois un effectif multiple de 3.');
+    }
     var fixtures = scfParCat[poule.categorie]
       ? fixtureScfGroupe(ids, poule.categorie, function (msg) { avert.push(msg); })
       : tourneeToutesRondes(ids);

@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Super Challenge — regroupement en triangulaires (correctif) — 2026-07-31
+Le Super Challenge regroupait les équipes comme un tournoi ordinaire (≈ 4 par poule) → à 12 équipes,
+on obtenait **3 quadrangulaires** au lieu des **4 triangulaires** attendues. Désormais le regroupement
+**privilégie les triangulaires** (nouveau `nbGroupesScf` : multiple de 3 → que des triangulaires ;
+reste 1/2 → une/deux quadrangulaire(s) d'appoint). La **Phase 3 se joue en triangulaires uniquement**
+(règlement) : un groupe d'une autre taille (effectif non multiple de 3) déclenche un **avertissement**
+clair. Le nombre de poules forcé à la main reste prioritaire. Message de génération corrigé (ne dit
+plus « triangulaires » en dur). Tests 318/318 (+9). ⚠️ **Redéploiement backend nécessaire.**
+
 ### Pause échelonnée — support des effectifs impairs — 2026-07-31
 La pause méridienne échelonnée exigeait un **effectif pair** (vagues égales) ; un effectif impair
 retombait sur la pause classique. Désormais les **effectifs impairs sont pris en charge** : la
