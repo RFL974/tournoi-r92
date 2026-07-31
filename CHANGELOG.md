@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Vocabulaire « période » + retrait du champ Règlement (carte catégorie) — 2026-07-31
+Renommage des libellés de la carte catégorie pour coller au vocabulaire FFR (les clés Sheet
+`format_mi_temps` / `duree_mi_temps_min` / `pause_mi_temps_min` restent **inchangées**) :
+« Nb mi-temps » → **« Nombre de période »**, « Durée mi-temps » → **« Durée de la période »**,
+« Pause mi-temps » → **« Pause entre deux périodes »** (alertes « hors cadre FFR » alignées aussi).
+Le champ **« Règlement (texte ou lien) »** est **retiré de la carte** ; sa valeur stockée est
+**PRÉSERVÉE** à l'enregistrement (sinon la réécriture de la ligne entière l'effacerait — leçon
+session 3) et reste affichée dans le dossier club si elle était renseignée. **Front seul, aucun
+redéploiement backend.**
+
 ### « Trouver une date compatible » — proposer les jours sans conflit FFR — 2026-07-31
 Dans la carte **« Date & conformité FFR »**, un bouton **« 🔎 Trouver une date compatible… »** ouvre un
 panneau : on choisit un **mois**, et l'app propose les **samedis, dimanches et mercredis** de ce mois

@@ -17,14 +17,14 @@ const CHAMPS_CATEGORIE = [
   { cle: 'nb_poules',              label: 'Nombre de poules',          type: 'text', placeholder: 'Auto' },
   // Option vide « — » en tête : une catégorie neuve est VIERGE (aucune valeur devinée). Sans elle,
   // un select vide retomberait sur « 1 ». champCategorie affiche l'option vide comme « — ».
-  { cle: 'format_mi_temps',        label: 'Nb mi-temps',               type: 'select', options: ['', '1', '2'] },
-  { cle: 'duree_mi_temps_min',     label: 'Durée mi-temps (min)',      type: 'number' },
-  { cle: 'pause_mi_temps_min',     label: 'Pause mi-temps (min)',      type: 'number' },
+  // Vocabulaire FFR « période » (ex-« mi-temps ») : la clé Sheet reste `*_mi_temps*` (inchangée).
+  { cle: 'format_mi_temps',        label: 'Nombre de période',         type: 'select', options: ['', '1', '2'] },
+  { cle: 'duree_mi_temps_min',     label: 'Durée de la période (min)', type: 'number' },
+  { cle: 'pause_mi_temps_min',     label: 'Pause entre deux périodes (min)', type: 'number' },
   { cle: 'recup_entre_matchs_min', label: 'Récup. entre matchs (min)', type: 'number' },
-  // Champs « dossier club » (facultatifs). `reglement` : texte libre OU URL (affichée en lien
-  // par les pages qui la consomment). `arbitrage_organisation` : qui arbitre — nom volontairement
-  // distinct de l'« arbitrage » de l'assistant horaires (deux concepts différents).
-  { cle: 'reglement',              label: 'Règlement (texte ou lien)', type: 'text', placeholder: 'Ex : règles FFR M10 ou https://…' },
+  // Champs « dossier club » (facultatifs). `arbitrage_organisation` : qui arbitre — nom volontairement
+  // distinct de l'« arbitrage » de l'assistant horaires (deux concepts différents). Le champ
+  // `reglement` a été retiré de la carte (sa valeur stockée est PRÉSERVÉE à l'enregistrement).
   { cle: 'effectif_min',           label: 'Effectif min (joueurs)',    type: 'number' },
   { cle: 'effectif_max',           label: 'Effectif max (joueurs)',    type: 'number' },
   { cle: 'arbitrage_organisation', label: 'Arbitrage (qui arbitre ?)', type: 'text', placeholder: 'Ex : éducateurs des clubs' },

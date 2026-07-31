@@ -545,9 +545,9 @@ function majAlerteTempsCategorie(cat) {
   if (!grilles.length || !form) { el.innerHTML = ''; el.hidden = true; return; }
   function val(name) { const c = form.querySelector('[name="' + name + '"]'); return c ? c.value : ''; }
   const html =
-    ecartTempsFFR('Nb mi-temps', val('format_mi_temps'), grilles, 'nb_periodes') +
-    ecartTempsFFR('Durée mi-temps', val('duree_mi_temps_min'), grilles, 'duree_periode_min') +
-    ecartTempsFFR('Pause mi-temps', val('pause_mi_temps_min'), grilles, 'pause_periodes_min') +
+    ecartTempsFFR('Nombre de période', val('format_mi_temps'), grilles, 'nb_periodes') +
+    ecartTempsFFR('Durée de la période', val('duree_mi_temps_min'), grilles, 'duree_periode_min') +
+    ecartTempsFFR('Pause entre deux périodes', val('pause_mi_temps_min'), grilles, 'pause_periodes_min') +
     ecartTempsFFR('Récup. entre matchs', val('recup_entre_matchs_min'), grilles, 'arret_entre_matchs_min');
   el.innerHTML = html;
   el.hidden = !html;
