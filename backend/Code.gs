@@ -59,9 +59,15 @@ var ENTETES = {
   //   match_suivant : id_match qui reçoit le VAINQUEUR de ce match (vide si terminal)
   //   place_suivant : A ou B — sur quel emplacement du match suivant placer le vainqueur
   //   vainqueur     : id_equipe DÉSIGNÉE vainqueur en cas d'égalité (départage manuel, COUPE)
+  // Colonnes 19-26 : détail du score (session 12), UNIQUEMENT quand la catégorie tire au but
+  //   (RefFFR_Regles.tir_au_but = OUI, ex. U14 à XV). Migration douce : ajoutées à droite, VIDES par
+  //   défaut = comportement historique strictement inchangé (score_A/score_B saisis directement).
+  //   Quand elles sont remplies, le backend CALCULE score_A/score_B (essai 5, transfo 2, pén. 3, drop 3) ;
+  //   score_A/score_B restent la valeur unique qui sert au classement (barème V/N/D inchangé).
   Matchs: ['id_match', 'categorie', 'poule', 'terrain', 'heure_debut', 'heure_fin',
            'equipe_A', 'equipe_B', 'score_A', 'score_B', 'statut', 'phase',
-           'format', 'sous_tableau', 'tour', 'match_suivant', 'place_suivant', 'vainqueur'],
+           'format', 'sous_tableau', 'tour', 'match_suivant', 'place_suivant', 'vainqueur',
+           'essais_A', 'essais_B', 'transfo_A', 'transfo_B', 'pen_A', 'pen_B', 'drop_A', 'drop_B'],
   // Journal de saison : un match terminé = une ligne, JAMAIS effacée par une génération.
   // On stocke les NOMS d'équipe (stables d'un tournoi à l'autre, contrairement aux id).
   Historique: ['date', 'tournoi_id', 'id_match', 'categorie', 'phase',
@@ -242,6 +248,9 @@ function doGet(e) {
       case 'getReponseInvitation': resultat = getReponseInvitation(classeur, params); break;
       // Conformité FFR pour une date + catégories + zone (informatif, aucune donnée personnelle).
       case 'getConformiteFFR': resultat = getConformiteFFR(classeur, params); break;
+      // Capacités de saisie par catégorie (tir au but oui/non) : lu du référentiel FFR pour la date
+      // et la forme retenue du tournoi. PUBLIC (aucune donnée personnelle) — sert saisie.html.
+      case 'getCapacitesCategories': resultat = getCapacitesCategories(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
     return repondreJson(resultat);
@@ -1160,6 +1169,62 @@ function calculerApplicationFFR(ref, categorieApp, dateISO, nbDemiJournees, nbEq
            forme: { forme_jeu: r.forme_jeu, effectif: r.effectif }, ambigu: false, formesDisponibles: [] };
 }
 
+/**
+ * La catégorie TIRE-T-ELLE AU BUT pour ce mois (et cette forme retenue) ? Cœur PUR (référentiel
+ * injecté), réponse issue de `RefFFR_Regles.tir_au_but` via `reglesPourCombosFFR` — JAMAIS d'une
+ * condition sur le nom de la catégorie. PRUDENT PAR CONSTRUCTION : renvoie `true` UNIQUEMENT si
+ * TOUTES les règles jointes du mois (après filtrage éventuel par la forme retenue) portent
+ * `tir_au_but === true`. Référentiel absent, pas de forme du mois, ambiguïté non levée, ou une seule
+ * règle qui ne tire pas ⇒ `false` (la saisie reste en mode simple). Testable sans classeur.
+ */
+function tirAuButCategorieFFR(ref, categorieApp, dateISO, formeJeu) {
+  ref = ref || {};
+  var cleCat = normaliserCategorie(categorieApp);
+  var iso = normaliserDateISO(dateISO);
+  if (!cleCat || !iso) return false;
+  var formes = ref.formes || [];
+  if (!formes.length) return false;
+  var mois = iso.slice(0, 7);
+  var ligneForme = null;
+  for (var f = 0; f < formes.length; f++) {
+    if (normaliserCategorie(formes[f].categorie) === cleCat &&
+        normaliserMois(formes[f].mois) === mois) { ligneForme = formes[f]; break; }
+  }
+  if (!ligneForme) return false;
+
+  var combos = eclaterFormesFFR(ligneForme);
+  var choisie = String(formeJeu == null ? '' : formeJeu).trim();
+  if (choisie) {
+    var combosChoisis = combos.filter(function (c) {
+      return libelleFormeFFR(c.forme_jeu, c.effectif) === choisie;
+    });
+    if (combosChoisis.length) combos = combosChoisis; // hors du mois ⇒ non filtré (restera ambigu ⇒ false)
+  }
+  var regles = reglesPourCombosFFR(ref.regles || [], cleCat, combos);
+  if (!regles.length) return false;
+  return regles.every(function (r) { return r.tir_au_but === true; });
+}
+
+/**
+ * Nombre d'ESSAIS d'une équipe pour l'alerte « 5 essais d'écart », ou `null` si inconnu (l'alerte se
+ * tait — JAMAIS de faux positif). Helper unique (miroir front dans saisie.js) :
+ *  - la colonne détail `essais_X` est remplie ⇒ ce nombre (source la plus fiable) ;
+ *  - sinon, SEULEMENT si la catégorie est CONNUE pour NE PAS tirer au but (`tirAuBut === false`),
+ *    `score_X` EST le nombre d'essais (1 essai = 1 point) ;
+ *  - sinon — tir au but SANS détail, OU capacité INCONNUE (`tirAuBut` ni true ni false, p.ex. backend
+ *    pas encore redéployé) ⇒ `null` : on ne DÉDUIT jamais des essais d'un total qui pourrait être en points.
+ * Pur, testable sans classeur.
+ */
+function essaisConnusEquipe(essaisBrut, scoreBrut, tirAuBut) {
+  var e = validerScore(essaisBrut);
+  if (e !== null) return e;
+  if (tirAuBut === false) {
+    var s = validerScore(scoreBrut);
+    if (s !== null) return s;
+  }
+  return null;
+}
+
 /* ---------------------- Moteur de vérification de conformité ---------------------- */
 
 /**
@@ -1300,6 +1365,20 @@ function evaluerConformiteFFR(ref, dateTournoi, categoriesPresentes, zoneVacance
 
     // RÈGLE 4 — règles de jeu jointes (jointure à 3 termes, Sevens/M15F écartés par joint=OUI).
     var combos = eclaterFormesFFR(ligneForme);
+
+    // LEVÉE D'AMBIGUÏTÉ PAR LA FORME RETENUE (session 12) : si l'organisateur a choisi une forme
+    // (Config.forme_jeu, transmise via opts.formesRetenues) ET qu'elle correspond à l'UNE des formes
+    // du mois, on ne garde QUE cette forme — règles ET grille de temps deviennent alors univoques
+    // (le bouton « Appliquer les valeurs FFR » redevient atteignable côté admin). Si la forme retenue
+    // ne correspond à aucune forme du mois : on NE filtre PAS (comportement inchangé, ambiguïté visible).
+    var formeRetenue = opts && opts.formesRetenues && opts.formesRetenues[cat];
+    if (formeRetenue) {
+      var combosRetenus = combos.filter(function (co) {
+        return libelleFormeFFR(co.forme_jeu, co.effectif) === String(formeRetenue).trim();
+      });
+      if (combosRetenus.length) combos = combosRetenus;
+    }
+
     var reglesCat = reglesPourCombosFFR(regles, cleCat, combos);
     if (reglesCat.length) reglesMap[cat] = reglesCat;
 
@@ -1368,7 +1447,16 @@ function getConformiteFFR(classeur, params) {
     config = lireConfig(classeur);
     var equipes = lireOngletSimple(classeur, 'Equipes');
     var comptes = analyserEffectifsCategories(config, equipes).comptes || {};
-    options = { equipesParCategorie: comptes, nbDemiJournees: nbDemiJourneesConfig(config) };
+    // Formes RETENUES par l'organisateur (Config.forme_jeu) : lèvent l'ambiguïté « plusieurs formes
+    // ce mois » pour les règles/temps servis à l'admin (le bouton « Appliquer » redevient atteignable).
+    var formesRetenues = {};
+    (config.categories || []).forEach(function (c) {
+      var nom = String(c.categorie == null ? '' : c.categorie).trim();
+      var fj = String(c.forme_jeu == null ? '' : c.forme_jeu).trim();
+      if (nom && fj) formesRetenues[nom] = fj;
+    });
+    options = { equipesParCategorie: comptes, nbDemiJournees: nbDemiJourneesConfig(config),
+                formesRetenues: formesRetenues };
   } catch (e) { options = null; } // toute erreur ⇒ section temps simplement omise
 
   var res = evaluerConformiteFFR(getRefFFR(classeur), params.date, cats, zone, options);
@@ -1398,6 +1486,31 @@ function getConformiteFFR(classeur, params) {
   } catch (e) { /* migration douce : pas de prévisionnel */ }
 
   return res;
+}
+
+/**
+ * Capacités de SAISIE par catégorie pour le tournoi courant : aujourd'hui, uniquement `tir_au_but`
+ * (oui/non). Lu du référentiel FFR pour la DATE du tournoi (Config) et la FORME retenue de chaque
+ * catégorie (`Config.forme_jeu`) — via `tirAuButCategorieFFR`, JAMAIS d'après le nom de la catégorie.
+ * PUBLIC : ne renvoie aucune donnée personnelle. MIGRATION DOUCE : toute erreur / référentiel absent
+ * ⇒ carte vide ⇒ la saisie reste en mode simple (un champ par équipe), comportement historique.
+ * @return {{ date:string, categories:{ [nom]:{ tir_au_but:boolean } } }}
+ */
+function getCapacitesCategories(classeur) {
+  var out = { date: '', categories: {} };
+  try {
+    var config = lireConfig(classeur);
+    var dateISO = normaliserDateISO(((config.global || {}).tournoi_date)) || '';
+    out.date = dateISO;
+    var ref = getRefFFR(classeur);
+    (config.categories || []).forEach(function (c) {
+      var nom = String(c.categorie == null ? '' : c.categorie).trim();
+      if (!nom) return;
+      var forme = String(c.forme_jeu == null ? '' : c.forme_jeu).trim();
+      out.categories[nom] = { tir_au_but: tirAuButCategorieFFR(ref, nom, dateISO, forme) };
+    });
+  } catch (e) { /* migration douce : map vide ⇒ mode simple partout */ }
+  return out;
 }
 
 /**
@@ -3573,10 +3686,26 @@ function enregistrerScore(classeur, data) {
   var id = (data.id_match || '').toString().trim();
   if (!id) return { error: 'Identifiant de match manquant.' };
 
-  var sa = validerScore(data.score_A);
-  var sb = validerScore(data.score_B);
-  if (sa === null) return { error: 'Score A invalide (entier ≥ 0 attendu).' };
-  if (sb === null) return { error: 'Score B invalide (entier ≥ 0 attendu).' };
+  // Détail du score (session 12, tir au but) : PILOTÉ PAR LA DONNÉE. Si le détail est fourni, le
+  // score qui sert au classement est CALCULÉ (essai 5, transfo 2, pénalité 3, drop 3) ; sinon,
+  // comportement historique strictement inchangé (score_A/score_B saisi directement fait foi).
+  var detA = litDetailEquipe(data, 'A');
+  var detB = litDetailEquipe(data, 'B');
+  if (detA && detA.error) return { error: detA.error };
+  if (detB && detB.error) return { error: detB.error };
+  var modeDetail = !!(detA || detB);
+
+  var sa, sb;
+  if (modeDetail) {
+    detA = detA || { essais: 0, transfo: 0, pen: 0, drop: 0, points: 0 };
+    detB = detB || { essais: 0, transfo: 0, pen: 0, drop: 0, points: 0 };
+    sa = detA.points; sb = detB.points;
+  } else {
+    sa = validerScore(data.score_A);
+    sb = validerScore(data.score_B);
+    if (sa === null) return { error: 'Score A invalide (entier ≥ 0 attendu).' };
+    if (sb === null) return { error: 'Score B invalide (entier ≥ 0 attendu).' };
+  }
 
   var onglet = classeur.getSheetByName('Matchs');
   assurerColonnesMatchs(onglet); // sécurité : colonnes bracket présentes même sans régénération
@@ -3628,6 +3757,13 @@ function enregistrerScore(classeur, data) {
   // 5) Écriture du score (colonnes 9=score_A, 10=score_B, 11=statut) + vainqueur (Coupe).
   onglet.getRange(ligne, colMatchs('score_A'), 1, 3).setValues([[sa, sb, 'terminé']]);
   if (estCoupe) onglet.getRange(ligne, colMatchs('vainqueur')).setValue(vainqueur);
+  // 5 bis) Détail du score : écrit SEULEMENT en mode détail (8 colonnes contiguës essais_A…drop_B),
+  //        dans l'ordre exact de ENTETES.Matchs. En mode simple, on n'y touche pas (migration douce).
+  if (modeDetail) {
+    onglet.getRange(ligne, colMatchs('essais_A'), 1, 8).setValues([[
+      detA.essais, detB.essais, detA.transfo, detB.transfo, detA.pen, detB.pen, detA.drop, detB.drop
+    ]]);
+  }
 
   // 6) Journal de saison : archive (ou actualise) ce résultat. Ne doit JAMAIS bloquer la saisie.
   try {
@@ -3648,8 +3784,14 @@ function enregistrerScore(classeur, data) {
     catch (errProp) { Logger.log('Propagation bracket ignorée : ' + errProp); }
   }
 
-  return { ok: true, propagation: propagation,
-           match: { id_match: id, score_A: sa, score_B: sb, statut: 'terminé', vainqueur: vainqueur } };
+  var matchOut = { id_match: id, score_A: sa, score_B: sb, statut: 'terminé', vainqueur: vainqueur };
+  if (modeDetail) {
+    matchOut.essais_A = detA.essais; matchOut.essais_B = detB.essais;
+    matchOut.transfo_A = detA.transfo; matchOut.transfo_B = detB.transfo;
+    matchOut.pen_A = detA.pen; matchOut.pen_B = detB.pen;
+    matchOut.drop_A = detA.drop; matchOut.drop_B = detB.drop;
+  }
+  return { ok: true, propagation: propagation, detail: modeDetail, match: matchOut };
 }
 
 /* ===================== PROPAGATION EN BRACKET (COUPE) ===================== */
@@ -3901,6 +4043,42 @@ function validerScore(v) {
   var n = Number(v);
   if (!isFinite(n) || n < 0 || Math.floor(n) !== n) return null;
   return n;
+}
+
+/* ===================== SCORE DÉTAILLÉ (tir au but, session 12) ===================== */
+/** Valeur EN POINTS de chaque action (jeu à XV) : essai 5, transformation 2, pénalité 3, drop 3. */
+var POINTS_ESSAI = 5, POINTS_TRANSFORMATION = 2, POINTS_PENALITE = 3, POINTS_DROP = 3;
+
+/** Un compteur du détail : absent / vide ⇒ 0 ; entier ≥ 0 ⇒ sa valeur ; sinon null (invalide). */
+function validerCompteur(v) {
+  if (v === null || v === undefined || (typeof v === 'string' && v.trim() === '')) return 0;
+  return validerScore(v);
+}
+
+/**
+ * Lit le détail du score d'UNE équipe (suffixe 'A' ou 'B') dans `data`. PILOTÉ PAR LA DONNÉE :
+ *  - renvoie `null` si AUCUN champ détail n'est fourni (mode simple, comportement historique) ;
+ *  - renvoie `{ essais, transfo, pen, drop, points }` si au moins un champ est fourni (les autres = 0) ;
+ *  - renvoie `{ error }` si un champ fourni n'est pas un entier ≥ 0.
+ * `points` = essais·5 + transfo·2 + pen·3 + drop·3. Pur, testable.
+ */
+function litDetailEquipe(data, suf) {
+  data = data || {};
+  var noms = ['essais_' + suf, 'transfo_' + suf, 'pen_' + suf, 'drop_' + suf];
+  var present = noms.some(function (c) {
+    return data[c] !== undefined && data[c] !== null && String(data[c]).trim() !== '';
+  });
+  if (!present) return null;
+  var essais  = validerCompteur(data['essais_' + suf]);
+  var transfo = validerCompteur(data['transfo_' + suf]);
+  var pen     = validerCompteur(data['pen_' + suf]);
+  var drop    = validerCompteur(data['drop_' + suf]);
+  if (essais === null || transfo === null || pen === null || drop === null) {
+    return { error: 'Détail du score invalide (entiers ≥ 0 attendus) pour l\'équipe ' + suf + '.' };
+  }
+  return { essais: essais, transfo: transfo, pen: pen, drop: drop,
+           points: essais * POINTS_ESSAI + transfo * POINTS_TRANSFORMATION +
+                   pen * POINTS_PENALITE + drop * POINTS_DROP };
 }
 
 /* ===================== CLASSEMENT DES POULES ===================== */

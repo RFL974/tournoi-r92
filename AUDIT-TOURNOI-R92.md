@@ -272,9 +272,10 @@ rétrocompatibilité d'affichage. **Actuellement référencé nulle part** — c
 
 **Tests** — `backend/Tests.gs`. Harnais autonome, sans Sheet ni effet de bord. Point d'entrée
 `lancerTestsFFR()` (le bilan affiche désormais `R92 — n/n`, la suite ne couvrant plus seulement
-la conformité). **232/232 OK** (compteur courant) : 32 asserts d'origine, puis +10 (session 2),
-+24 (session 3), +24 (session 5), et les vagues suivantes (sessions 6→11), dont **+25 en session 11**
-(forme de jeu retenue déclarative + `tir_au_but` prudent par construction).
+la conformité). **253/253 OK** (compteur courant) : 32 asserts d'origine, puis +10 (session 2),
++24 (session 3), +24 (session 5), et les vagues suivantes (sessions 6→12), dont **+25 en session 11**
+(forme de jeu retenue déclarative + `tir_au_but` prudent) et **+21 en session 12** (saisie détaillée du
+score : `litDetailEquipe`, `tirAuButCategorieFFR`, `essaisConnusEquipe`, levée d'ambiguïté conformité).
 
 ## 1.9 — Points d'ancrage pour la suite
 
@@ -1592,10 +1593,63 @@ et `calculerApplicationFFR` (paramètre `formeJeu`) étendues sans casser leurs 
 **Source** : fiches FFR **c10 à c13**, millésime **2026-2027**, mise à jour **17/06/26** (décisions
 club Q20/Q21 : U14 en `15x15`, catégories basses 1 essai = 1 point, U14 à XV en points réels 5/2/3/3).
 
-**Vérification** : 232/232 sous Node. ⚠️ **Redéploiement requis** — `backend/Code.gs` +
+**Vérification** : 232/232 sous Node. ✅ **PR #91 mergée et backend redéployé.** La colonne
+`RefFFR_Regles!tir_au_but` et le remplissage des cellules sont à faire **à la main** dans le Sheet
+(le code ne les écrit pas).
+
+---
+
+## Session 12 — 2026-07-31 — Saisie détaillée du score (tir au but), pilotée par la donnée
+
+**Origine** : Q21 close (club) — dans les catégories basses **1 essai = 1 point** ; **U14 à XV se compte
+en points réels** (essai 5, transformation 2, pénalité 3, drop 3). Objectif : permettre au bénévole de
+saisir le détail (essais/transfos/pénalités/drops) **là où la catégorie tire au but**, sans jamais
+introduire de condition sur le nom de la catégorie.
+
+**A — écart de la session 11 corrigé.** Le bouton « Appliquer les valeurs FFR » restait bloqué côté
+front sur `regles.length > 1`. `evaluerConformiteFFR` reçoit désormais `options.formesRetenues`
+(depuis `Config.forme_jeu`, câblé dans `getConformiteFFR`) et **filtre les combos par la forme retenue** :
+règles ET grille de temps deviennent univoques → le bouton redevient atteignable, le message « Plusieurs
+formes de jeu » disparaît dès qu'une forme est retenue.
+
+**B — saisie détaillée, pilotée par la DONNÉE :**
+- **Onglet `Matchs`** : 8 colonnes `essais_A/B`, `transfo_A/B`, `pen_A/B`, `drop_A/B` (migration douce via
+  `assurerColonnesMatchs` : ajout à droite, VIDES = comportement historique inchangé).
+- **`enregistrerScore`** : si le détail est fourni, `score_A/score_B` sont **CALCULÉS** (`litDetailEquipe`,
+  essai 5 / transfo 2 / pén. 3 / drop 3) et le détail écrit ; sinon comportement inchangé. `score_A/score_B`
+  restent l'unique valeur qui sert au classement (**barème V/N/D non touché**, il ne lit que le signe).
+- **`saisie.html`** : demande au backend `getCapacitesCategories` (nouvelle action publique) →
+  `tir_au_but` par catégorie, dérivé de `RefFFR_Regles.tir_au_but` via `tirAuButCategorieFFR`
+  (`reglesPourCombosFFR`), pour la date et la forme retenue. **AUCUNE condition sur le nom de catégorie.**
+  Tir au but = non ⇒ page identique à aujourd'hui (un champ par équipe). Tir au but = oui ⇒ essais &
+  transformations en steppers `+`/`−` (grosses cibles), pénalités/drops repliés sous « Autres », **total
+  en points affiché en grand, calculé, jamais saisi**. Migration douce : action indisponible ⇒ mode simple.
+
+**C — alerte « 5 essais d'écart »** : helper unique `essaisConnusEquipe` (miroir front `essaisConnus`) —
+essais si le détail est rempli, sinon `score_A` **seulement si la catégorie est CONNUE non-tir-au-but**
+(1 essai = 1 point), sinon **rien** (l'alerte se tait, jamais de faux positif). Affichage informatif sur
+`saisie.html`, jamais bloquant (§1.12).
+> **Correctif (même PR)** : la capacité `tir_au_but` est désormais un TROIS-états (true / false / **inconnu**).
+> Bug repéré au test : avant redéploiement backend, `getCapacitesCategories` échoue ⇒ capacités vides ⇒
+> une catégorie en POINTS (U14 à XV) tombait en carte simple avec `tir_au_but` traité comme « false » ⇒
+> un score de 17 **points** s'affichait « 17 essais d'écart ». Corrigé : le score ne vaut des essais que si
+> la catégorie est **connue** non-tir-au-but ; capacité **inconnue** ⇒ alerte muette (vrai « jamais de faux positif »).
+
+**Résumé d'exécution** : branche `feat/saisie-score-detaille`, tests **253/253 OK** (232 → +21). Fonctions
+pures nouvelles : `litDetailEquipe`, `validerCompteur`, `tirAuButCategorieFFR`, `essaisConnusEquipe`,
+`getCapacitesCategories`. **Vérification navigateur RÉELLE** : cartes détail rendues (steppers, totaux
+calculés 38/5 pts, « Autres » dépliable, alerte 5 essais), incrément unique par clic, plancher à 0,
+migration douce (capacités vides ⇒ mode simple) — 0 erreur console. E2E `enregistrerScore` (fake classeur) :
+score recalculé 22/20 en mode détail, inchangé en mode simple.
+
+**Écart déclaré** : `saisie.js` porte un MIROIR du calcul de points et du helper essais (backend = source
+de vérité, recalcule toujours) — même pattern accepté que le barème de classement, commenté « garder synchrone ».
+
+**Vérification** : 253/253 sous Node + navigateur. ⚠️ **Redéploiement requis** — `backend/Code.gs` +
 `backend/Tests.gs` à recopier dans l'éditeur Apps Script, puis **mettre à jour le déploiement existant**
-(jamais en créer un nouveau, l'URL changerait). La colonne `RefFFR_Regles!tir_au_but` et le remplissage
-des cellules sont à faire **à la main** dans le Sheet (le code ne les écrit pas).
+(jamais en créer un nouveau, l'URL changerait). Colonnes `Matchs` (essais…drop) et `RefFFR_Regles.tir_au_but`
+créées/remplies à la main dans le Sheet. **La saisie détaillée n'apparaît que pour les catégories dont
+`tir_au_but = OUI` avec une forme retenue** (ex. U14 à XV).
 
 ---
 
@@ -1625,7 +1679,7 @@ des cellules sont à faire **à la main** dans le Sheet (le code ne les écrit p
 | **Q18** | **Adresse de rôle pour `contact_reponse_email`.** Cette adresse reste publique sur la vitrine (décision 1.3, S3). Est-ce aujourd'hui une adresse **personnelle** ou une adresse de **rôle** (type `tournoi@…`) ? Une adresse de rôle survit aux changements de bénévole et n'expose personne. *Réglage de donnée dans `Config`, pas de code.* | vérification Romain | ⏳ ouverte |
 | **Q19** | **Documents manquants — la collection lue est incomplète.** ✅ **Résolue (document)** : le corpus est **complet** (15 fiches, `a01` + `b02`→`b06` + `c07`→`c15`). Les six fiches manquantes ont été obtenues en session 5 (S25–S31) ; **`c15`** est identifié comme *Challenge M15F Jeu à X* (la déduction « la collection s'arrête à c14 » était fausse). | vérification Romain | ✅ **résolue (document)** |
 | **Q20** | **U14 : jeu à X ou jeu à XV ?** ✅ **Résolue (club)** : `RefFFR_Formes` porte `10x10\|15x15` le même mois — **les deux sont autorisées** ; c'est un **paramètre par tournoi**. **Décision du club : U14 est joué en `15x15` (jeu à XV).** L'éclatement du `|` gère déjà les deux formes ; **session 11** ajoute la déclaration explicite de ce choix (`Config.forme_jeu`) qui lève l'ambiguïté d'application. | décision club | ✅ **résolue (club)** |
-| **Q21** | **La table de marque saisit-elle des essais ou des points ?** Le backend stocke `score_A` / `score_B` sans unité. ✅ **Résolue (club)** : dans les **catégories basses, 1 essai = 1 point** (le score EST le nombre d'essais) ; **U14 à XV se compte en points réels** (essai **5**, transformation **2**, pénalité **3**, drop **3**). Conséquence : la saisie détaillée (essais/transfos/pénalités/drops) ne concerne que **U14 à XV** ; les autres catégories restent au comptage d'essais actuel. La règle des **5 essais d'écart** s'exprime donc en essais dans les catégories basses. **Implémentation en cours (session suivante)** ; session 11 pose le préalable déclaratif (`forme_jeu`) et la capacité `tir_au_but`. | décision club | ✅ **résolue (club)** |
+| **Q21** | **La table de marque saisit-elle des essais ou des points ?** Le backend stocke `score_A` / `score_B` sans unité. ✅ **Résolue (club)** : dans les **catégories basses, 1 essai = 1 point** (le score EST le nombre d'essais) ; **U14 à XV se compte en points réels** (essai **5**, transformation **2**, pénalité **3**, drop **3**). Conséquence : la saisie détaillée (essais/transfos/pénalités/drops) ne concerne que **U14 à XV** ; les autres catégories restent au comptage d'essais actuel. La règle des **5 essais d'écart** s'exprime donc en essais dans les catégories basses. **Implémentée en session 12** : colonnes détail sur `Matchs`, `score_A/B` calculés par le backend, saisie détaillée sur `saisie.html` pilotée par `tir_au_but` (jamais par le nom de catégorie), alerte 5 essais informative. Session 11 posait le préalable déclaratif (`forme_jeu`, `tir_au_but`). | décision club | ✅ **résolue (club) + implémentée (S12)** |
 | **Q22** | **Quel est le recouvrement réel entre Tournoi R92 et la FDM EDR ?** L'audit affirmait « zéro recouvrement » depuis la session 0, sans jamais revérifier. La FFR décrit pourtant la FDM comme couvrant *la gestion des rencontres et des plateaux*, et indique qu'elle s'applique aux **tournois privés de club** dès lors qu'ils sont **déclarés dans Oval-e**. Le recouvrement porterait donc sur l'**amont déclaratif** et la **liste des clubs** — pas sur les poules, les terrains, le planning horaire ni la diffusion publique des scores. **À trancher sur pièce** : visionner le webinaire FFR du **03/02/2026** et déterminer si la FDM produit un **planning** ou une **vue publique**. Structurant pour le partenariat avec le Racing 92. | vérification Romain | ⏳ **ouverte — priorité haute** |
 | **Q23** | **Un tournoi « matin + après-midi » compte-t-il pour 1 ou 2 demi-journées** au sens des grilles de temps FFR ? ✅ **Résolue (club).** Le directeur de l'EDR du Racing a répondu (**27/07/2026**) : « *la FFR choisit du nombre de minutes maximum à jouer pour chaque catégorie par journée, et après les organisateurs de tournois doivent organiser leur journée de tournée en respectant ce temps de jeu maximum* ». **Corroboré** par le pied des fiches FFR (« *Si 3 demi-journées, temps de jeu = 100 minutes* » — trois demi-journées ne peuvent pas être trois journées) et par le **titre** des tableaux (« Préconisation… »). **Double conséquence doctrinale** : (1) les **grilles de temps sont des préconisations, le plafond est la règle qui engage** — d'où sa récupération indépendante des grilles (session 8, §1.8) ; (2) un tournoi matin + après-midi = **2 demi-journées**, `nb_demi_journees` **défaut porté de 1 à 2** (migration douce : absent ⇒ 2 ; aucune valeur saisie modifiée). | Directeur EDR Racing 92 | ✅ **résolue (club, 27/07/2026)** |
 | **Q24** | **Quel est le code club FFR du `Racing Club de France Rugby` ?** Champ obligatoire du formulaire d'autorisation (`org_code_club`). Ne figure sur aucune source publique consultée. Se lit sur la carte de qualification d'un licencié du club ou dans Oval-e. ⚠️ **Un code obtenu par un modèle de langage sans source vérifiable a été écarté** — un code erroné sur un dossier officiel engage le club signataire. | Racing / Oval-e | ⏳ ouverte |

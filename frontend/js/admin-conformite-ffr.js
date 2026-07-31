@@ -541,9 +541,12 @@ function categorieAUnEcartFFR(r, temps, cfg, dim) {
 /** Bouton(s) « Appliquer les valeurs FFR » pour une catégorie — seulement s'il y a un écart. */
 function boutonsAppliquerFFR(cat, regles, temps, cfg, dim) {
   if (!regles.length && !temps) return '';
-  // Ambiguïté réglementaire (plusieurs formes distinctes ce mois, ex. U14 10x10|15x15) : on n'applique pas.
+  // Ambiguïté réglementaire NON LEVÉE : plusieurs formes distinctes ce mois (ex. U14 10x10|15x15) et
+  // aucune forme retenue. Le backend (session 12) filtre déjà par Config.forme_jeu → ce message ne
+  // s'affiche donc QUE tant que le select « Forme de jeu retenue » n'a pas été renseigné.
   if (regles.length > 1) {
-    return '<p class="ffr-attendu">Plusieurs formes de jeu ce mois-ci — précise la forme avant d\'appliquer.</p>';
+    return '<p class="ffr-attendu">Plusieurs formes de jeu ce mois-ci — choisis la <strong>forme de jeu ' +
+      'retenue</strong> ci-dessus puis enregistre pour pouvoir appliquer les valeurs FFR.</p>';
   }
   const r = regles[0] || null;
   if (!categorieAUnEcartFFR(r, temps, cfg, dim)) return ''; // aucun écart ⇒ rien à appliquer
