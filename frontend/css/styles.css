@@ -262,7 +262,12 @@ select.r-input { cursor: pointer; }
 
 .scf-forme, .scf-note { margin: 0 0 10px; font-size: 0.9rem; line-height: 1.4; }
 .scf-forme { color: var(--texte); background: rgba(46, 143, 224, 0.10); border-radius: 8px; padding: 8px 10px; }
-.scf-note { color: #ffe6b0; background: rgba(224, 158, 46, 0.16); border-radius: 8px; padding: 8px 10px; }
+/* Deux notes phase-dépendantes : une seule visible selon data-phase (comme les récaps). */
+.scf-note { display: none; border-radius: 8px; padding: 8px 10px; }
+.scf-note.n-P2 { color: var(--texte); background: rgba(46, 143, 224, 0.10); }
+.scf-note.n-P3 { color: #ffe6b0; background: rgba(224, 158, 46, 0.16); }
+.bloc-scf[data-phase="P2"] .scf-note.n-P2,
+.bloc-scf[data-phase="P3"] .scf-note.n-P3 { display: block; }
 .scf-phases { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 10px; }
 .scf-phase-choix { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--texte); }
 .scf-phase-choix input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
@@ -281,7 +286,8 @@ select.r-input { cursor: pointer; }
 .theme-clair .ctx-carte.est-choisi { background: rgba(46, 143, 224, 0.10); border-color: var(--accent); }
 .theme-clair .scf-forme, .theme-clair .scf-recap { color: #0C1C2E; }
 .theme-clair .scf-phase-choix { color: #0C1C2E; }
-.theme-clair .scf-note { color: #8a5a0c; background: #fdf4e3; }
+.theme-clair .scf-note.n-P2 { color: #0C1C2E; background: rgba(46, 143, 224, 0.10); }
+.theme-clair .scf-note.n-P3 { color: #8a5a0c; background: #fdf4e3; }
 
 /* --- Terrains (choix Auto / Manuel par catégorie) --- */
 .bloc-terrains {

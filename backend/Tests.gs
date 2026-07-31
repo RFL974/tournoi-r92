@@ -160,6 +160,20 @@ function lancerTestsFFR() {
   testS13_valeurContexteInconnueLambda(etat);
   testS13_casseEtEspaces(etat);
 
+  // Session 14 (PR A) — génération Super Challenge Phase 2 (triangulaire/quadrangulaire, 2×15).
+  testS14_dureeP2(etat);
+  testS14_dureeP3(etat);
+  testS14_dureePhaseDefaut(etat);
+  testS14_quadrangulaireQuatreMatchs(etat);
+  testS14_quadrangulaireChacunDeux(etat);
+  testS14_quadrangulaireDeuxTournees(etat);
+  testS14_quadrangulaireTailleInvalide(etat);
+  testS14_groupeTriangulaire(etat);
+  testS14_groupeTailleInattendueAvertit(etat);
+  testS14_planningQuadrangulaireQuatreMatchs(etat);
+  testS14_planningTempsForce(etat);
+  testS14_planningLambdaInchange(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -1538,4 +1552,119 @@ function testS13_casseEtEspaces(etat) {
   var r = contexteScfCategorie({ categorie: 'u14', contexte_tournoi: '  scf  ', scf_phase: ' p3 ' });
   _ffrAssert(etat, r.estScf === true, 'S13 : « scf » minuscule + espaces ⇒ SCF');
   _ffrAssert(etat, r.phase === 'P3', 'S13 : « p3 » minuscule + espaces ⇒ P3');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session 14 (PR A) — génération Super Challenge Phase 2                     */
+/*  dureeMatchScf / fixtureQuadrangulaireScf / fixtureScfGroupe (purs) +       */
+/*  intégration calculerPlanning (4 équipes SCF → quadrangulaire 4 matchs,     */
+/*  temps forcé 2×15 ; lambda inchangé → round-robin 6 matchs).                */
+/* -------------------------------------------------------------------------- */
+
+/** Compte combien de fois chaque équipe apparaît dans une liste de {a,b}. */
+function _scfCompteApparitions(matchs) {
+  var c = {};
+  matchs.forEach(function (m) { c[m.a] = (c[m.a] || 0) + 1; c[m.b] = (c[m.b] || 0) + 1; });
+  return c;
+}
+
+/** P2 : 2×15 + pause de mi-temps de la catégorie. */
+function testS14_dureeP2(etat) {
+  _ffrAssert(etat, dureeMatchScf({ pause_mi_temps_min: '2' }, 'P2') === 32, 'S14 : durée P2 = 2×15 + 2 = 32');
+  _ffrAssert(etat, dureeMatchScf({ pause_mi_temps_min: '' }, 'P2') === 30, 'S14 : durée P2 sans pause = 30');
+}
+
+/** P3 : 2×11 + pause. */
+function testS14_dureeP3(etat) {
+  _ffrAssert(etat, dureeMatchScf({ pause_mi_temps_min: '2' }, 'P3') === 24, 'S14 : durée P3 = 2×11 + 2 = 24');
+}
+
+/** Phase absente/inconnue ⇒ traitée comme P2 (2×15), défaut prudent. */
+function testS14_dureePhaseDefaut(etat) {
+  _ffrAssert(etat, dureeMatchScf({ pause_mi_temps_min: '0' }, '') === 30, 'S14 : phase vide ⇒ P2 (30)');
+}
+
+/** Quadrangulaire : exactement 4 rencontres. */
+function testS14_quadrangulaireQuatreMatchs(etat) {
+  var f = fixtureQuadrangulaireScf(['A', 'B', 'C', 'D']);
+  _ffrAssert(etat, f && f.length === 4, 'S14 : quadrangulaire = 4 matchs');
+}
+
+/** Quadrangulaire : chaque équipe joue EXACTEMENT 2 matchs (≠ round-robin de 4 = 3 chacun). */
+function testS14_quadrangulaireChacunDeux(etat) {
+  var c = _scfCompteApparitions(fixtureQuadrangulaireScf(['A', 'B', 'C', 'D']));
+  _ffrAssert(etat, c.A === 2 && c.B === 2 && c.C === 2 && c.D === 2, 'S14 : quadrangulaire = 2 matchs par équipe');
+}
+
+/** Quadrangulaire : 2 tournées, chaque équipe joue une fois par tournée (repos entre ses matchs). */
+function testS14_quadrangulaireDeuxTournees(etat) {
+  var f = fixtureQuadrangulaireScf(['A', 'B', 'C', 'D']);
+  var r0 = f.filter(function (m) { return m.round === 0; });
+  var r1 = f.filter(function (m) { return m.round === 1; });
+  var vus0 = _scfCompteApparitions(r0), vus1 = _scfCompteApparitions(r1);
+  var okR0 = ['A', 'B', 'C', 'D'].every(function (e) { return vus0[e] === 1; });
+  var okR1 = ['A', 'B', 'C', 'D'].every(function (e) { return vus1[e] === 1; });
+  _ffrAssert(etat, r0.length === 2 && r1.length === 2 && okR0 && okR1, 'S14 : 2 tournées équilibrées (1 match/équipe/tournée)');
+}
+
+/** Effectif ≠ 4 ⇒ null (le helper de groupe s'en occupe autrement). */
+function testS14_quadrangulaireTailleInvalide(etat) {
+  _ffrAssert(etat, fixtureQuadrangulaireScf(['A', 'B', 'C']) === null, 'S14 : quadrangulaire à 3 ⇒ null');
+  _ffrAssert(etat, fixtureQuadrangulaireScf(['A', 'B', 'C', 'D', 'E']) === null, 'S14 : quadrangulaire à 5 ⇒ null');
+}
+
+/** Groupe de 3 ⇒ triangulaire = round-robin de 3 (3 matchs, 2 par équipe). */
+function testS14_groupeTriangulaire(etat) {
+  var f = fixtureScfGroupe(['A', 'B', 'C'], 'U14');
+  var c = _scfCompteApparitions(f);
+  _ffrAssert(etat, f.length === 3 && c.A === 2 && c.B === 2 && c.C === 2, 'S14 : triangulaire = 3 matchs, 2 par équipe');
+}
+
+/** Taille inattendue (2, 5…) ⇒ avertissement émis + repli round-robin (jamais de blocage). */
+function testS14_groupeTailleInattendueAvertit(etat) {
+  var avs = [];
+  var f = fixtureScfGroupe(['A', 'B'], 'U14', function (m) { avs.push(m); });
+  _ffrAssert(etat, avs.length === 1, 'S14 : groupe de 2 ⇒ un avertissement émis');
+  _ffrAssert(etat, f.length === 1, 'S14 : repli round-robin (ne bloque pas la génération)');
+}
+
+/** Fabrique une config + équipes minimales pour tester calculerPlanning. */
+function _scfConfigPlanning(scf) {
+  var cat = {
+    categorie: 'U14', presente: 'oui', terrains: '1,2', nb_poules: '1',
+    format_mi_temps: '2', duree_mi_temps_min: '10', pause_mi_temps_min: '2',
+    recup_entre_matchs_min: '5', contexte_tournoi: scf ? 'SCF' : '', scf_phase: scf ? 'P2' : ''
+  };
+  var equipes = [
+    { id_equipe: 'E1', nom_equipe: 'Alpha', categorie: 'U14' },
+    { id_equipe: 'E2', nom_equipe: 'Bravo', categorie: 'U14' },
+    { id_equipe: 'E3', nom_equipe: 'Charlie', categorie: 'U14' },
+    { id_equipe: 'E4', nom_equipe: 'Delta', categorie: 'U14' }
+  ];
+  return { config: { global: { heure_debut: '09:00', battement_terrain_min: '5' }, categories: [cat] }, equipes: equipes };
+}
+
+/** Intégration : 4 équipes U14 en SCF, 1 poule ⇒ quadrangulaire = 4 matchs (pas 6). */
+function testS14_planningQuadrangulaireQuatreMatchs(etat) {
+  var d = _scfConfigPlanning(true);
+  var r = calculerPlanning(d.config, d.equipes, false);
+  _ffrAssert(etat, r.matchsFinaux.length === 4, 'S14 : planning SCF 4 équipes ⇒ 4 matchs (quadrangulaire)');
+}
+
+/** Intégration : le temps de jeu est FORCÉ à 2×15 (+ pause 2) = 32 min, pas la durée des réglages (2×10). */
+function testS14_planningTempsForce(etat) {
+  var d = _scfConfigPlanning(true);
+  var r = calculerPlanning(d.config, d.equipes, false);
+  var m = r.matchsFinaux[0]; // ligne = [id, cat, poule, terrain, debut, fin, A, B, ...]
+  var dureeReelle = hmVersMin(m[5]) - hmVersMin(m[4]);
+  _ffrAssert(etat, dureeReelle === 32, 'S14 : durée d\'un match SCF = 32 min (2×15+2), pas 22 (2×10+2)');
+}
+
+/** Non-régression : les MÊMES 4 équipes hors SCF ⇒ round-robin classique = 6 matchs, durée 2×10+2. */
+function testS14_planningLambdaInchange(etat) {
+  var d = _scfConfigPlanning(false);
+  var r = calculerPlanning(d.config, d.equipes, false);
+  _ffrAssert(etat, r.matchsFinaux.length === 6, 'S14 : hors SCF, 4 équipes ⇒ 6 matchs (round-robin inchangé)');
+  var m = r.matchsFinaux[0];
+  _ffrAssert(etat, (hmVersMin(m[5]) - hmVersMin(m[4])) === 22, 'S14 : hors SCF, durée = 22 min (réglages catégorie)');
 }

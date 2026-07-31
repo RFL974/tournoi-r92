@@ -38,12 +38,24 @@ mondes, la fiche d'une catégorie **U14** (et elle seule) affiche un choix de **
 
   Barème identique à celui de l'app : **Victoire 3 / Nul 2 / Défaite 1**.
 
-> ⚠️ **Purement déclaratif pour l'instant.** Ce choix **pose le cadre** (colonnes `contexte_tournoi`
-> et `scf_phase` de l'onglet Config — voir [`structure-google-sheet.md`](structure-google-sheet.md)),
-> mais la **génération automatique** du planning triangulaire/quadrangulaire et l'**application des
-> temps** (2×15 / 2×11) **ne sont pas encore branchées** — c'est prévu dans une évolution ultérieure.
-> Tant que rien n'est choisi, ou hors U14, **rien ne change** : le comportement reste celui décrit
-> plus bas (prudent par construction). *(Le Jeu à 7 / Sevens U14 n'est volontairement pas couvert ici.)*
+### Ce qui est réellement généré
+
+- **Phase 2 — générée automatiquement.** « Générer les poules » produit directement le plateau :
+  chaque groupe de **3** devient une **triangulaire** (3 matchs, 2 par équipe) et chaque groupe de
+  **4** une **quadrangulaire** (4 matchs précis, 2 par équipe — pas un round-robin de 6). Le **temps
+  de jeu est forcé à 2×15 min** (les réglages de mi-temps de la catégorie sont ignorés en SCF), et
+  il n'y a **pas de phase après-midi** séparée. Le regroupement réutilise le mécanisme de poules
+  habituel (nombre de poules Auto/forcé + séparation des clubs) ; une taille de groupe autre que 3
+  ou 4 déclenche un **avertissement** à la génération.
+- **Phase 3 — partielle pour l'instant.** La génération produit la **journée de triangulaires** en
+  **2×11 min**, mais la structure officielle sur **2 journées** (samedi 4 poules → dimanche brassage
+  E/F/G avec report du classement) **n'est pas encore automatisée** : un **avertissement** le
+  rappelle à la génération. C'est le prochain chantier.
+
+> Colonnes `contexte_tournoi` / `scf_phase` de l'onglet Config — voir
+> [`structure-google-sheet.md`](structure-google-sheet.md). Tant que rien n'est choisi, ou hors U14,
+> **rien ne change** (prudent par construction). *(Le Jeu à 7 / Sevens U14 n'est volontairement pas
+> couvert ici.)*
 
 ---
 

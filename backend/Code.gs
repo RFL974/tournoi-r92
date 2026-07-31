@@ -4223,6 +4223,9 @@ function genererApresMidi(classeur) {
   var categories = config.categories.filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; });
   var fixturesParCat = {};
   categories.forEach(function (cat) {
+    // Super Challenge (session 14) : un plateau SCF est d'un seul tenant — PAS d'après-midi. La
+    // catégorie est ignorée ici, ses matchs restent ceux générés par calculerPlanning (phase 2).
+    if (contexteScfCategorie(cat).estScf) return;
     var fmt = formatApresMidi(cat);
     var cl = classParCat[cat.categorie];
     var res;
@@ -5070,12 +5073,32 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
     });
   });
 
-  // 2) Matchs de poule (round-robin)
+  // Contexte Super Challenge par catégorie (session 14) : { categorie -> phase 'P2'|'P3' } pour les
+  // seules catégories U14 en mode SCF. Une catégorie absente de cette table = tournoi ordinaire.
+  var scfParCat = {};
+  categories.forEach(function (c) {
+    var s = contexteScfCategorie(c);
+    if (s.estScf) scfParCat[c.categorie] = s.phase;
+  });
+  // Phase 3 : le socle multi-journées (samedi 4 poules → dimanche brassage E/F/G) n'est pas encore
+  // branché (prévu PR B/C). En attendant, on génère la journée de triangulaires en 2×11 et on le DIT.
+  Object.keys(scfParCat).forEach(function (c) {
+    if (scfParCat[c] === 'P3') {
+      avert.push('Catégorie ' + c + ' (Super Challenge — Phase 3) : seule la journée de triangulaires ' +
+        'est générée pour l\'instant (temps 2×11). La structure sur 2 journées (brassage samedi→dimanche) ' +
+        'arrivera dans une prochaine évolution.');
+    }
+  });
+
+  // 2) Matchs de poule (round-robin) — ou fixture Super Challenge (triangulaire/quadrangulaire).
   var matchsParCat = {};
   poules.forEach(function (poule) {
     var ids = poule.equipes.map(function (e) { return e.id_equipe; });
     if (!matchsParCat[poule.categorie]) matchsParCat[poule.categorie] = [];
-    tourneeToutesRondes(ids).forEach(function (pr) {
+    var fixtures = scfParCat[poule.categorie]
+      ? fixtureScfGroupe(ids, poule.categorie, function (msg) { avert.push(msg); })
+      : tourneeToutesRondes(ids);
+    fixtures.forEach(function (pr) {
       matchsParCat[poule.categorie].push({ poule: poule.nom_poule, equipe_A: pr.a, equipe_B: pr.b, round: pr.round });
     });
   });
@@ -5087,7 +5110,9 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
     liste.sort(function (x, y) { return x.round - y.round; });
     var terrains = listeTerrainsCategorie(cat);
     if (terrains.length === 0 && liste.length > 0) avert.push('Catégorie ' + cat.categorie + ' : aucun terrain défini.');
-    var duree = dureeMatch(cat);
+    // Temps de jeu : imposé par le règlement en contexte Super Challenge (2×15 P2 / 2×11 P3), sinon
+    // calculé depuis les réglages de mi-temps de la catégorie.
+    var duree = scfParCat[cat.categorie] ? dureeMatchScf(cat, scfParCat[cat.categorie]) : dureeMatch(cat);
     var recup = parseInt(cat.recup_entre_matchs_min || '0', 10) || 0;
     liste.forEach(function (m) {
       terrains.forEach(function (t) { if (terrainLibre[t] == null) terrainLibre[t] = tDebut; });
@@ -5125,6 +5150,8 @@ function projeterFinApresMidi(config, poules, matchsMatin) {
   var fixturesParCat = {};
   config.categories.filter(function (c) { return String(c.presente).toLowerCase() === 'oui'; })
     .forEach(function (cat) {
+      // Super Challenge (session 14) : pas d'après-midi → ne contribue pas à la projection de fin.
+      if (contexteScfCategorie(cat).estScf) return;
       var poulesCat = poules.filter(function (p) { return p.categorie === cat.categorie; });
       if (poulesCat.length < 2) return; // une seule poule -> pas de croisé
       var rangMax = 0;
@@ -5680,6 +5707,59 @@ function dureeMatch(cat) {
   var pause  = parseInt(cat.pause_mi_temps_min || '0', 10) || 0;
   var total = format * duree + (format >= 2 ? pause : 0);
   return total > 0 ? total : 10;
+}
+
+/* ===================== SUPER CHALLENGE DE FRANCE — génération (session 14) =====================
+ * PR A : Phase 2 (1 journée, triangulaire/quadrangulaire, 2×15). Le contexte SCF d'une catégorie
+ * U14 (voir contexteScfCategorie) change DEUX choses dans calculerPlanning : (1) le TEMPS de jeu,
+ * imposé par le règlement (dureeMatchScf), et (2) le FIXTURE d'un groupe de 4 (quadrangulaire), qui
+ * n'est pas un round-robin. Un groupe de 3 (triangulaire) est déjà exactement une poule de 3 : on
+ * réutilise tourneeToutesRondes sans le dupliquer. Les catégories SCF n'ont PAS d'après-midi.
+ * ============================================================================================== */
+
+/** Durée d'un créneau de match Super Challenge : 2 périodes de 15 min (Phase 2) ou 11 min (Phase 3
+ *  & clôture), plus la pause de mi-temps de la catégorie. Le règlement IMPOSE le temps de jeu ; on
+ *  ne touche pas aux réglages format_mi_temps / duree_mi_temps de la catégorie. Pur. */
+function dureeMatchScf(cat, phase) {
+  var periode = (phase === 'P3') ? 11 : 15;               // P3 & clôture = 2×11 ; P2 (défaut) = 2×15
+  var pause = parseInt(cat && cat.pause_mi_temps_min, 10) || 0;
+  return 2 * periode + pause;
+}
+
+/**
+ * Fixture d'une QUADRANGULAIRE Super Challenge (groupe de 4) : 4 rencontres où CHAQUE équipe joue
+ * 2 matchs (≠ round-robin de 4, qui en ferait 6). Ordre du règlement (« l'équipe 1 reçoit ») :
+ *   M1 : E2-E4 · M2 : E1-E3 · M3 : E1-E4 · M4 : E2-E3.
+ * Réparti en 2 tournées (round 0 : M1+M2 ; round 1 : M3+M4) : chaque équipe joue une fois par
+ * tournée (repos garanti entre ses deux matchs). `ids` = [E1,E2,E3,E4] dans l'ordre de la poule.
+ * Renvoie null si l'effectif n'est pas exactement 4. Pur, testable.
+ */
+function fixtureQuadrangulaireScf(ids) {
+  if (!ids || ids.length !== 4) return null;
+  var e1 = ids[0], e2 = ids[1], e3 = ids[2], e4 = ids[3];
+  return [
+    { a: e2, b: e4, round: 0 },
+    { a: e1, b: e3, round: 0 },
+    { a: e1, b: e4, round: 1 },
+    { a: e2, b: e3, round: 1 }
+  ];
+}
+
+/**
+ * Fixtures d'un groupe Super Challenge selon sa taille : 3 → triangulaire (round-robin de 3, via
+ * tourneeToutesRondes), 4 → quadrangulaire (fixtureQuadrangulaireScf). Toute autre taille est un
+ * cas non prévu par le règlement (SCF = triangulaire ou quadrangulaire) : on RETOMBE sur un
+ * round-robin pour ne pas bloquer la génération, et on signale via `avertir` (fonction optionnelle).
+ * Renvoie un tableau de { a, b, round }. Pur.
+ */
+function fixtureScfGroupe(ids, categorie, avertir) {
+  if (ids && ids.length === 4) return fixtureQuadrangulaireScf(ids);
+  if (ids && ids.length === 3) return tourneeToutesRondes(ids);
+  if (typeof avertir === 'function') {
+    avertir('Catégorie ' + categorie + ' (Super Challenge) : groupe de ' + (ids ? ids.length : 0) +
+            ' équipe(s) — le règlement prévoit 3 (triangulaire) ou 4 (quadrangulaire).');
+  }
+  return tourneeToutesRondes(ids || []);
 }
 
 function hmVersMin(hm) {

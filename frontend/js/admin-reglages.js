@@ -506,9 +506,12 @@ function blocContexteU14(cat) {
         '2 rencontres · temps de jeu <b>2 × 15 min</b>.</span>' +
       '<span class="scf-recap r-P3">Phase 3 &amp; clôture — <b>2 journées</b> · triangulaire · ' +
         'samedi 2 matchs / dimanche 3 · temps de jeu <b>2 × 11 min</b>.</span>' +
-      '<p class="scf-note">ℹ️ Ce choix pose le <b>cadre</b> du plateau. La génération automatique du ' +
-        'planning et l\'application des temps du Super Challenge ne sont pas encore branchées (prévu ' +
-        'prochainement) : pour l\'instant, ce réglage est <b>informatif</b>.</p>' +
+      // Note phase-dépendante (honnête sur ce qui est réellement généré aujourd'hui).
+      '<p class="scf-note n-P2">✅ La <b>Phase 2</b> est générée automatiquement : « Générer les poules » ' +
+        'produit les triangulaires/quadrangulaires en <b>2 × 15 min</b> (pas d\'après-midi séparé).</p>' +
+      '<p class="scf-note n-P3">ℹ️ Pour la <b>Phase 3</b>, la génération produit pour l\'instant la ' +
+        '<b>journée de triangulaires</b> en <b>2 × 11 min</b> ; la structure sur <b>2 journées</b> ' +
+        '(brassage samedi→dimanche) arrivera dans une prochaine évolution.</p>' +
     '</div>';
 
   return (
