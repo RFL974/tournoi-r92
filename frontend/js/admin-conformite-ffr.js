@@ -756,10 +756,11 @@ async function onClicAppliquerFFR(e) {
   btn.disabled = true;
   try {
     const res = await ecrireAdmin('appliquerValeursFFR', { categorie: cat, date: dateISO, variante: variante });
-    // Les champs de Config ont changé : on recharge les réglages puis on recalcule la conformité
-    // (les badges orange des champs appliqués disparaissent ; ceux des champs ignorés restent).
+    // Les champs de Config ont changé : on recharge les réglages (qui RECALCULE déjà la conformité —
+    // badges orange appliqués effacés, ignorés conservés). En absence de rechargerReglages (écran
+    // Conformité seul), on recalcule directement.
     if (typeof rechargerReglages === 'function') await rechargerReglages();
-    await majConformiteFFR();
+    else await majConformiteFFR();
     let msg = '✅ Valeurs FFR appliquées à ' + cat + '.';
     if (res && res.ignores && res.ignores.length) {
       msg += '\n\nNon appliqué :\n' + res.ignores.map(function (i) { return '• ' + i.raison; }).join('\n');

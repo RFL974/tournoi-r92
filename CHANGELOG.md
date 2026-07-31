@@ -18,6 +18,16 @@ d'enregistrer date + infos « par sécurité » (payload fusionné). Nouvelle se
 `ecrans.js` + `assistant.js` (piège des sections admin). **Front seul, aucun redéploiement backend.**
 Vérifié au navigateur (structure DOM, séparation des données, aperçu du site suivant la date).
 
+### Fix — bouton « Appliquer la norme FFR » absent sur une catégorie fraîchement ajoutée — 2026-07-31
+Après ajout (ou suppression) d'une catégorie, `rechargerReglages` re-rendait les cartes mais **ne
+recalculait pas la conformité FFR** : `dernierResConformite` ne couvrait donc que les catégories
+présentes AVANT l'ajout. Résultat : la nouvelle catégorie (ex. U8 ajoutée alors que U10 existait
+déjà) n'avait aucune donnée FFR mémorisée → son bouton « Appliquer la norme FFR » restait caché.
+Correctif : `rechargerReglages` appelle désormais `majConformiteFFR` en fin de rechargement (la liste
+des catégories a pu changer) ; l'appel redondant dans `onClicAppliquerFFR` est retiré. Vérifié au
+navigateur : bug reproduit puis corrigé (U8 obtient son bouton après recalcul). Front seul, **aucun
+redéploiement backend nécessaire**.
+
 ### Norme FFR dans la carte catégorie — « Appliquer la norme FFR » + champs vierges — 2026-07-31
 Une catégorie neuve est désormais créée **VIERGE** (nb mi-temps, durée, pause, récup entre matchs :
 aucune valeur devinée ; le menu « Nb mi-temps » propose une option **« — »**). Chaque carte de
