@@ -15,7 +15,9 @@
    NB : `terrains` n'est plus ici — il a son propre bloc (Auto / Manuel), voir blocTerrains(). */
 const CHAMPS_CATEGORIE = [
   { cle: 'nb_poules',              label: 'Nombre de poules',          type: 'text', placeholder: 'Auto' },
-  { cle: 'format_mi_temps',        label: 'Nb mi-temps',               type: 'select', options: ['1', '2'] },
+  // Option vide « — » en tête : une catégorie neuve est VIERGE (aucune valeur devinée). Sans elle,
+  // un select vide retomberait sur « 1 ». champCategorie affiche l'option vide comme « — ».
+  { cle: 'format_mi_temps',        label: 'Nb mi-temps',               type: 'select', options: ['', '1', '2'] },
   { cle: 'duree_mi_temps_min',     label: 'Durée mi-temps (min)',      type: 'number' },
   { cle: 'pause_mi_temps_min',     label: 'Pause mi-temps (min)',      type: 'number' },
   { cle: 'recup_entre_matchs_min', label: 'Récup. entre matchs (min)', type: 'number' },
@@ -678,6 +680,15 @@ function onReglagesChange(evenement) {
     const panneau = evenement.target.closest('.bloc-scf');
     if (panneau) panneau.setAttribute('data-phase', evenement.target.value);
   }
+  // Nb mi-temps (select) modifié → alerte « hors cadre FFR » en direct (non bloquante).
+  if (evenement.target.name === 'format_mi_temps') rafraichirAlerteTempsFFR(evenement.target);
+}
+
+/** Rafraîchit l'alerte « hors cadre FFR » des champs de temps de la carte contenant `champ`. */
+function rafraichirAlerteTempsFFR(champ) {
+  const form = champ.closest && champ.closest('form.form-categorie');
+  const cat = form && form.getAttribute('data-cat');
+  if (cat && typeof majAlerteTempsCategorie === 'function') majAlerteTempsCategorie(cat);
 }
 
 /**
@@ -686,6 +697,10 @@ function onReglagesChange(evenement) {
 function onReglagesInput(evenement) {
   if (evenement.target.name === 'terrains') {
     verifierTerrainsBloc(evenement.target.closest('.bloc-terrains'));
+  }
+  // Champs de temps numériques : alerte « hors cadre FFR » en direct (non bloquante).
+  if (['duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min'].indexOf(evenement.target.name) !== -1) {
+    rafraichirAlerteTempsFFR(evenement.target);
   }
 }
 
@@ -704,7 +719,14 @@ function onReglagesSubmit(evenement) {
  */
 function onReglagesClick(evenement) {
   const bouton = evenement.target.closest('.bouton-suppr-cat');
-  if (bouton) onSupprimerCategorie(bouton);
+  if (bouton) { onSupprimerCategorie(bouton); return; }
+  // Bouton « Appliquer la norme FFR » d'une CARTE catégorie : on réutilise le flux backend testé
+  // (onClicAppliquerFFR). Scopé à .form-categorie pour ne pas doubler le bouton identique de l'écran
+  // Conformité, qui a son propre écouteur délégué sur #bloc-conformite-ffr.
+  if (evenement.target.closest('.form-categorie') && evenement.target.closest('.ffr-appliquer') &&
+      typeof onClicAppliquerFFR === 'function') {
+    onClicAppliquerFFR(evenement);
+  }
 }
 
 /**

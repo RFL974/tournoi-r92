@@ -1137,7 +1137,16 @@ function calculerApplicationFFR(ref, categorieApp, dateISO, nbDemiJournees, nbEq
   var r = regles[0];
   var champsZoneB = {}, ignores = [], dimensions = null;
 
-  // Effectif maximum sur la feuille (RefFFR_Regles ; indépendant du nombre d'équipes).
+  // Effectif MINIMUM = nombre de joueurs SUR LE TERRAIN (RefFFR_Regles.effectif_terrain ; ex. 5 pour
+  // du 5x5). C'est le plancher pour qu'une équipe puisse jouer la forme. Appliqué SEULEMENT s'il est
+  // chiffré (jamais deviné). Effectif MAXIMUM = max sur la FEUILLE de match (remplaçants compris).
+  var effTerrain = String(r.effectif_terrain == null ? '' : r.effectif_terrain).trim();
+  if (effTerrain !== '') {
+    // Défensif : si la colonne portait une forme (« 5x5 ») plutôt qu'un nombre, on ne garde que le
+    // nombre de tête (« 5 ») — effectif_min est un champ numérique. Un « 5 » reste « 5 ».
+    var mTerrain = effTerrain.match(/^\d+/);
+    if (mTerrain) champsZoneB.effectif_min = mTerrain[0];
+  }
   if (String(r.effectif_max_feuille == null ? '' : r.effectif_max_feuille).trim() !== '') {
     champsZoneB.effectif_max = String(r.effectif_max_feuille).trim();
   }
@@ -1174,10 +1183,14 @@ function calculerApplicationFFR(ref, categorieApp, dateISO, nbDemiJournees, nbEq
     if (String(grille.arret_entre_matchs_min || '').trim() !== '') champsZoneB.recup_entre_matchs_min = String(grille.arret_entre_matchs_min).trim();
   } else {
     // Aucune grille pour ce nb d'équipes / demi-journées : on n'écrit AUCUNE durée (jamais
-    // d'interpolation). effectif_max et dimensions, issus de RefFFR_Regles, restent appliqués.
-    ignores.push({ champ: 'temps', raison: 'Aucune grille de temps FFR pour ' +
-      String(nbEquipes == null ? '?' : nbEquipes) + ' équipe(s) / ' +
-      String(nbDemiJournees == null ? '?' : nbDemiJournees) + ' demi-journée(s).' });
+    // d'interpolation). effectif_min/max et dimensions, issus de RefFFR_Regles, restent appliqués.
+    // Message ACTIONNABLE : la norme FFR ne fixe les durées que pour 3 à 6 équipes engagées.
+    var nbEqTxt = (nbEquipes == null || String(nbEquipes).trim() === '' || parseInt(nbEquipes, 10) === 0)
+      ? 'aucune équipe engagée'
+      : String(nbEquipes) + ' équipe(s)';
+    ignores.push({ champ: 'temps', raison: 'Durées de jeu non remplies (' + nbEqTxt + ') : la norme ' +
+      'FFR fixe les durées pour 3 à 6 équipes engagées. Engage les équipes puis réapplique, ou ' +
+      'saisis les durées à la main.' });
   }
 
   return { champsZoneB: champsZoneB, dimensions: dimensions, ignores: ignores,
@@ -5516,6 +5529,25 @@ function analyserEffectifsCategories(config, equipes) {
   return { bloque: bloque, vides: vides, comptes: comptes };
 }
 
+/**
+ * Catégories qui SERONT générées (présentes ET ≥ 3 équipes) mais dont la durée de mi-temps est vide
+ * ou ≤ 0 — auquel cas les matchs feraient 0 min. Sert de garde-fou avant génération. Les catégories
+ * à 0 équipe (ignorées) et à 1–2 équipes (déjà bloquées) sont écartées. Pur (aucun classeur lu).
+ */
+function categoriesSansDureeMiTemps(config, comptes) {
+  comptes = comptes || {};
+  var out = [];
+  (config.categories || []).forEach(function (c) {
+    if (String(c.presente).toLowerCase() !== 'oui') return;
+    var cat = String(c.categorie == null ? '' : c.categorie).trim();
+    if (!cat) return;
+    if ((comptes[cat] || 0) < 3) return; // 0 équipe (ignorée) ou 1–2 (déjà bloquée par ailleurs)
+    var duree = parseInt(String(c.duree_mi_temps_min == null ? '' : c.duree_mi_temps_min).trim(), 10);
+    if (!isFinite(duree) || duree <= 0) out.push(cat);
+  });
+  return out;
+}
+
 function genererPoulesEtPlanning(classeur) {
   var config = lireConfig(classeur);
   var equipes = lireOngletSimple(classeur, 'Equipes');
@@ -5532,6 +5564,17 @@ function genererPoulesEtPlanning(classeur) {
     return { error: 'Génération impossible : il faut au minimum 3 équipes par catégorie ' +
       '(règle FFR École de Rugby — les matchs secs ne sont pas autorisés). ' +
       'Catégorie(s) concernée(s) : ' + details + '.' };
+  }
+
+  // DURÉE DE MI-TEMPS RENSEIGNÉE — une catégorie neuve est créée vierge (aucune valeur devinée).
+  // Sans durée, les matchs feraient 0 min : on BLOQUE, AVANT toute écriture, les catégories qui
+  // seront réellement générées (présentes ET ≥ 3 équipes ; les catégories vides sont déjà ignorées).
+  // Remède : cliquer « Appliquer la norme FFR » sur la carte, ou saisir la durée à la main.
+  var sansDuree = categoriesSansDureeMiTemps(config, effectifs.comptes);
+  if (sansDuree.length) {
+    return { error: 'Génération impossible : durée de mi-temps manquante pour ' +
+      sansDuree.join(', ') + '. Sur la carte de la catégorie, clique « Appliquer la norme FFR » ' +
+      'ou saisis la durée de mi-temps, puis relance la génération.' };
   }
 
   // Migration douce : garantit la colonne nb_poules (Sheet créé avant cette évolution).

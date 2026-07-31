@@ -2107,6 +2107,9 @@ a.bouton { display: inline-block; text-decoration: none; }
 }
 .ffr-appliquer:hover { background: rgba(224, 158, 46, 0.28); }
 .ffr-appliquer:disabled { opacity: 0.5; cursor: default; }
+/* Carte catégorie : bloc du bouton « Appliquer la norme FFR » + son aide. */
+.ffr-appliquer-carte { margin: 2px 0 8px; }
+.ffr-appliquer-aide { margin: 2px 0 4px; font-size: 0.78rem; color: var(--bleu-ciel); opacity: 0.85; }
 
 /* Thème clair */
 .theme-clair .ffr-detail-cat { border-top-color: #e6edf5; }

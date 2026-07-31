@@ -262,6 +262,12 @@ function formulaireCategorie(cat) {
       // et le signalement orange « hors du mois ». Masqué tant qu'aucune forme n'est disponible.
       '<div class="ffr-forme-choix" data-cat="' + echapper(nom) + '" data-value="' +
         echapper(String(cat.forme_jeu == null ? '' : cat.forme_jeu)) + '" hidden></div>' +
+      // Bouton « Appliquer la norme FFR » : rempli par admin-conformite-ffr.js (majBoutonNormeCategories)
+      // quand le référentiel expose des valeurs et qu'un champ (temps/effectif) est vide ou divergent.
+      '<div class="ffr-appliquer-carte" data-cat="' + echapper(nom) + '" hidden></div>' +
+      // Alerte « hors cadre FFR » EN DIRECT sur les champs de temps : rafraîchie à la frappe
+      // (majAlerteTempsCategorie), non bloquante. Vide tant que le réglage reste dans le cadre.
+      '<div class="ffr-alerte-temps" data-cat="' + echapper(nom) + '" hidden></div>' +
       // Contexte U14 (Super Challenge de France) : rendu SEULEMENT pour l'U14 ; chaîne vide sinon.
       // En SCF, le CSS (form[data-contexte="SCF"]) masque le bloc format d'après-midi ci-dessous.
       blocContexteU14(cat) +
@@ -574,7 +580,9 @@ function champCategorie(champ, valeur) {
   if (champ.type === 'select') {
     let options = '';
     champ.options.forEach(function (opt) {
-      options += '<option value="' + opt + '"' + (String(valeur) === opt ? ' selected' : '') + '>' + opt + '</option>';
+      // Une option vide s'affiche « — » (non précisé), jamais une ligne blanche muette.
+      const libelle = (opt === '') ? '—' : opt;
+      options += '<option value="' + opt + '"' + (String(valeur) === opt ? ' selected' : '') + '>' + libelle + '</option>';
     });
     controle = '<select class="r-input" name="' + champ.cle + '">' + options + '</select>';
   } else {
@@ -697,10 +705,14 @@ async function onAjouterCategorie(evenement) {
     return;
   }
 
+  // Réglages sportifs (temps + effectifs) VIERGES à la création : on ne devine aucune valeur.
+  // L'organisateur clique « Appliquer la norme FFR » sur la carte (référentiel = source unique) ou
+  // saisit lui-même. Un garde-fou à la génération bloque tant que la durée de mi-temps reste vide,
+  // pour ne jamais produire de matchs de 0 min.
   const data = {
     categorie: nom, presente: 'oui', terrains: '', terrains_auto: 'oui', nb_poules: '',
-    format_mi_temps: '2', duree_mi_temps_min: '10', pause_mi_temps_min: '2',
-    recup_entre_matchs_min: '15', format_apresmidi: 'CROISE', param_format: '',
+    format_mi_temps: '', duree_mi_temps_min: '', pause_mi_temps_min: '',
+    recup_entre_matchs_min: '', format_apresmidi: 'CROISE', param_format: '',
     reglement: '', effectif_min: '', effectif_max: '', arbitrage_organisation: ''
   };
 
