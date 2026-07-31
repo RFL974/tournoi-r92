@@ -401,8 +401,9 @@ function afficherPlanning(poules, matchs) {
   }
 
   // Rend un tableau de matchs (triés par heure). enteteCol = intitulé de la 3e colonne.
+  // mapPoule = fonction optionnelle (m) → texte de la cellule « poule » (défaut : m.poule).
   // Renvoie '' si la liste est vide.
-  function tableMatchs(liste, enteteCol) {
+  function tableMatchs(liste, enteteCol, mapPoule) {
     if (!liste.length) return '';
     liste = liste.slice().sort(function (a, b) {
       return String(a.heure_debut).localeCompare(String(b.heure_debut));
@@ -413,7 +414,7 @@ function afficherPlanning(poules, matchs) {
       h += '<tr>' +
              '<td>' + echapper(m.heure_debut) + '</td>' +
              '<td>' + echapper(String(m.terrain)) + '</td>' +
-             '<td>' + echapper(String(m.poule)) + '</td>' +
+             '<td>' + echapper(mapPoule ? mapPoule(m) : String(m.poule)) + '</td>' +
              '<td>' + echapper(nom(m.equipe_A)) + ' <span class="vs">vs</span> ' + echapper(nom(m.equipe_B)) + '</td>' +
            '</tr>';
     });
@@ -440,22 +441,31 @@ function afficherPlanning(poules, matchs) {
     html += '<h3 style="color:var(--bleu-ciel);margin:20px 0 8px;">' + echapper(cat) +
             badgeAvancement(saisisTotal, ms.length) + '</h3>';
 
-    // Composition des poules de la catégorie.
+    // Objet catégorie (pour le vocabulaire Super Challenge) ; null si introuvable → libellés par défaut.
+    const catObj = (configCourante.categories || []).find(function (c) { return c.categorie === cat; });
+    const estScfCat = ctxScf(catObj).estScf;
+
+    // Composition des poules de la catégorie (« Triangulaire/Quadrangulaire A » en SCF, sinon « Poule A »).
     poules.filter(function (p) { return p.categorie === cat; }).forEach(function (p) {
       const membres = equipesCourantes
         .filter(function (e) { return e.categorie === cat && e.poule === p.nom_poule; })
         .map(function (e) { return echapper(e.nom_equipe); });
-      html += '<div class="poule-compo"><strong>Poule ' + echapper(p.nom_poule) + '</strong> : ' +
+      const gl = groupeLabelScf(catObj, p.nom_poule, membres.length, false);
+      const titrePoule = gl ? echapper(gl) : ('Poule ' + echapper(p.nom_poule));
+      html += '<div class="poule-compo"><strong>' + titrePoule + '</strong> : ' +
               (membres.join(', ') || '—') + '</div>';
     });
 
     if (matin.length) {
-      html += '<div class="planning-phase">🌅 Matin — poules' + badgeAvancement(saisisMatin, matin.length) + '</div>';
-      html += tableMatchs(matin, 'Poule');
+      html += '<div class="planning-phase">' + (phaseLabelScf(catObj, false) || '🌅 Matin — poules') +
+              badgeAvancement(saisisMatin, matin.length) + '</div>';
+      html += tableMatchs(matin, estScfCat ? 'Groupe' : 'Poule');
     }
     if (aprem.length) {
-      html += '<div class="planning-phase">🏉 Après-midi — classement croisé' + badgeAvancement(saisisAprem, aprem.length) + '</div>';
-      html += tableMatchs(aprem, 'Niveau');
+      html += '<div class="planning-phase">' + (phaseLabelScf(catObj, true) || '🏉 Après-midi — classement croisé') +
+              badgeAvancement(saisisAprem, aprem.length) + '</div>';
+      html += tableMatchs(aprem, estScfCat ? 'Poule' : 'Niveau',
+                          estScfCat ? function (m) { return pouleEFG(m.poule); } : null);
     }
   });
 

@@ -5,6 +5,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Super Challenge — vocabulaire à l'affichage (Samedi/Dimanche, Triangulaire, Poule E/F/G) — 2026-07-31
+Pour une catégorie en Super Challenge, les 3 écrans (admin, saisie, page publique) affichent désormais
+le **bon vocabulaire** au lieu du générique « Matin — poules / Poule A » : en-têtes **📅 Samedi —
+triangulaires** / **🏆 Dimanche — brassage** (Phase 3) ou **🏉 Plateau** (Phase 2) ; groupes
+**Triangulaire / Quadrangulaire A** (selon 3 ou 4 équipes) ; brassage du dimanche en **Poule E/F/G**
+(au lieu de Niveau N1/N2/N3). Helpers partagés dans `commun.js` (`ctxScf`, `phaseLabelScf`,
+`groupeLabelScf`, `pouleEFG`, `tailleGroupeScf`) — **null hors SCF** → tournois ordinaires strictement
+inchangés. `contexte_tournoi`/`scf_phase` ajoutés à la config publique `live` (non sensibles) pour que
+saisie et page publique connaissent le contexte. Tests 318/318 (helpers d'affichage validés à part) ;
+vérifié au navigateur sur les vrais fichiers (admin, saisie, public). ⚠️ **Redéploiement backend
+nécessaire** (liste blanche `live`).
+
 ### Super Challenge — regroupement en triangulaires (correctif) — 2026-07-31
 Le Super Challenge regroupait les équipes comme un tournoi ordinaire (≈ 4 par poule) → à 12 équipes,
 on obtenait **3 quadrangulaires** au lieu des **4 triangulaires** attendues. Désormais le regroupement

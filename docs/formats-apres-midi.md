@@ -64,6 +64,13 @@ mondes, la fiche d'une catégorie **U14** (et elle seule) affiche un choix de **
   > et planifie au **début de journée** (départ forcé, sans lien avec le samedi). L'**arbitrage
   > désigné** (l'équipe qui arbitre chaque match) reste à venir.
 
+> 🗣️ **Vocabulaire à l'écran.** Pour une catégorie en Super Challenge, les 3 écrans (admin, saisie,
+> page publique) affichent **📅 Samedi / 🏆 Dimanche** (Phase 3) ou **🏉 Plateau** (Phase 2), les
+> groupes en **Triangulaire / Quadrangulaire A** (selon 3 ou 4 équipes), et le brassage du dimanche
+> en **Poule E/F/G** (au lieu du générique « Matin — poules / Poule A / Niveau N1 »). Ces libellés
+> sont produits par des helpers partagés de `commun.js` qui renvoient `null` hors Super Challenge —
+> les tournois ordinaires sont donc **strictement inchangés**.
+
 > Colonnes `contexte_tournoi` / `scf_phase` de l'onglet Config — voir
 > [`structure-google-sheet.md`](structure-google-sheet.md). Tant que rien n'est choisi, ou hors U14,
 > **rien ne change** (prudent par construction). *(Le Jeu à 7 / Sevens U14 n'est volontairement pas
