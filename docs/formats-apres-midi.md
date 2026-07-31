@@ -44,12 +44,14 @@ mondes, la fiche d'une catégorie **U14** (et elle seule) affiche un choix de **
   chaque groupe de **3** devient une **triangulaire** (3 matchs, 2 par équipe) et chaque groupe de
   **4** une **quadrangulaire** (4 matchs précis, 2 par équipe — pas un round-robin de 6). Le **temps
   de jeu est forcé à 2×15 min** (les réglages de mi-temps de la catégorie sont ignorés en SCF), et
-  il n'y a **pas de phase après-midi** séparée. Le regroupement réutilise le mécanisme de poules
-  habituel (nombre de poules Auto/forcé + séparation des clubs) ; une taille de groupe autre que 3
-  ou 4 déclenche un **avertissement** à la génération.
+  il n'y a **pas de phase après-midi** séparée. Le regroupement **privilégie les triangulaires** :
+  un effectif multiple de 3 donne **uniquement des triangulaires** ; un reste de 1 ou 2 ajoute une
+  (ou deux) quadrangulaire(s) d'appoint. Exemple : 12 équipes → **4 triangulaires** ; 10 → 4+3+3.
+  *(Le nombre de poules forcé à la main prime toujours si tu le renseignes.)*
 - **Phase 3 — sur 2 journées, en deux étapes.**
   - **Samedi** : « Générer les poules » produit les **triangulaires** en **2×11 min** (comme la
-    Phase 2, mais avec le temps de la Phase 3).
+    Phase 2, mais avec le temps de la Phase 3). La Phase 3 se joue **en triangulaires uniquement**
+    (règlement) : si l'effectif n'est pas un multiple de 3, un **avertissement** le signale.
   - **Dimanche** : une fois **tous les scores du samedi saisis**, le bouton **« Générer le dimanche
     (brassage) »** (page *Poules & planning*, révélé uniquement s'il existe une catégorie U14 en
     Phase 3) crée la 2ᵉ journée **par niveau** : les 1ᵉʳˢ de chaque poule ensemble, les 2ᵉˢ ensemble,
