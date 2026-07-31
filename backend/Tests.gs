@@ -1434,11 +1434,14 @@ function testS12_tirOuiFormeRetenue(etat) {
     'tirOui : forme 10x10 (tir_au_but NON) ⇒ false');
 }
 
-/** essaisConnusEquipe : détail ⇒ essais ; non-tir ⇒ score (1 essai = 1 pt) ; tir sans détail ⇒ null. */
+/** essaisConnusEquipe : détail ⇒ essais ; non-tir CONNU ⇒ score ; tir/inconnu ⇒ null (jamais de faux positif). */
 function testS12_essaisHelper(etat) {
   _ffrAssert(etat, essaisConnusEquipe('4', '20', true) === 4, 'essais : colonne remplie ⇒ 4 (même en tir au but)');
-  _ffrAssert(etat, essaisConnusEquipe('', '3', false) === 3, 'essais : non-tir + score ⇒ 3 (1 essai = 1 pt)');
+  _ffrAssert(etat, essaisConnusEquipe('', '3', false) === 3, 'essais : non-tir CONNU + score ⇒ 3 (1 essai = 1 pt)');
   _ffrAssert(etat, essaisConnusEquipe('', '22', true) === null, 'essais : tir au but sans détail ⇒ null (jamais déduit)');
+  // Capacité INCONNUE (backend pas redéployé) : un score en points ne doit PAS être pris pour des essais.
+  _ffrAssert(etat, essaisConnusEquipe('', '17', null) === null, 'essais : capacité inconnue ⇒ null (pas de faux positif)');
+  _ffrAssert(etat, essaisConnusEquipe('', '17') === null, 'essais : tirAuBut absent ⇒ null (prudent)');
   _ffrAssert(etat, essaisConnusEquipe('', '', false) === null, 'essais : rien de connu ⇒ null (alerte muette)');
   _ffrAssert(etat, essaisConnusEquipe('0', '', true) === 0, 'essais : détail 0 ⇒ 0 (connu, pas null)');
 }

@@ -1626,8 +1626,14 @@ formes de jeu » disparaît dès qu'une forme est retenue.
   en points affiché en grand, calculé, jamais saisi**. Migration douce : action indisponible ⇒ mode simple.
 
 **C — alerte « 5 essais d'écart »** : helper unique `essaisConnusEquipe` (miroir front `essaisConnus`) —
-essais si le détail est rempli, sinon `score_A` si la catégorie NE tire PAS au but (1 essai = 1 point),
-sinon **rien** (l'alerte se tait, jamais de faux positif). Affichage informatif sur `saisie.html`, jamais bloquant (§1.12).
+essais si le détail est rempli, sinon `score_A` **seulement si la catégorie est CONNUE non-tir-au-but**
+(1 essai = 1 point), sinon **rien** (l'alerte se tait, jamais de faux positif). Affichage informatif sur
+`saisie.html`, jamais bloquant (§1.12).
+> **Correctif (même PR)** : la capacité `tir_au_but` est désormais un TROIS-états (true / false / **inconnu**).
+> Bug repéré au test : avant redéploiement backend, `getCapacitesCategories` échoue ⇒ capacités vides ⇒
+> une catégorie en POINTS (U14 à XV) tombait en carte simple avec `tir_au_but` traité comme « false » ⇒
+> un score de 17 **points** s'affichait « 17 essais d'écart ». Corrigé : le score ne vaut des essais que si
+> la catégorie est **connue** non-tir-au-but ; capacité **inconnue** ⇒ alerte muette (vrai « jamais de faux positif »).
 
 **Résumé d'exécution** : branche `feat/saisie-score-detaille`, tests **253/253 OK** (232 → +21). Fonctions
 pures nouvelles : `litDetailEquipe`, `validerCompteur`, `tirAuButCategorieFFR`, `essaisConnusEquipe`,

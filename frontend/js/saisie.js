@@ -32,6 +32,14 @@ function tireAuBut(cat) {
   return !!(c && c.tir_au_but === true);
 }
 
+/** Capacité « tir au but » en TROIS états : true / false / null (INCONNUE — catégorie absente des
+ *  capacités, p.ex. backend pas encore redéployé). L'inconnu est distinct du « non » : on ne sait
+ *  alors PAS si un score est en essais ou en points, donc l'alerte 5 essais doit se taire. */
+function capaciteTirAuBut(cat) {
+  const c = capacitesCat && capacitesCat[cat];
+  return (c && typeof c.tir_au_but === 'boolean') ? c.tir_au_but : null;
+}
+
 /** Point d'entrée : on va chercher les données puis on affiche. */
 async function initSaisie() {
   const zone = document.getElementById('liste-matchs');
@@ -501,13 +509,17 @@ function majTotauxDetail(carte) {
 
 /**
  * Nombre d'ESSAIS connu d'une équipe pour l'alerte « 5 essais d'écart », ou null (alerte muette).
- * MIROIR de backend/Code.gs `essaisConnusEquipe` (garder synchrone). Jamais de faux positif :
- *  détail rempli ⇒ essais ; sinon score si la catégorie NE tire PAS au but ; sinon rien.
+ * MIROIR de backend/Code.gs `essaisConnusEquipe` (garder synchrone). JAMAIS de faux positif :
+ *  - détail rempli ⇒ essais ;
+ *  - sinon, SEULEMENT si la catégorie est CONNUE pour NE PAS tirer au but (tirAuBut === false),
+ *    le score EST le nombre d'essais (1 essai = 1 point) ;
+ *  - sinon (tir au but, OU capacité INCONNUE) ⇒ rien : on ne devine jamais des essais depuis un
+ *    total qui pourrait être en points.
  */
 function essaisConnus(essaisVal, scoreVal, tirAuBut) {
   const e = entierPos(essaisVal);
   if (e !== null) return e;
-  if (tirAuBut !== true) { const s = entierPos(scoreVal); if (s !== null) return s; }
+  if (tirAuBut === false) { const s = entierPos(scoreVal); if (s !== null) return s; }
   return null;
 }
 
@@ -518,12 +530,14 @@ function majAlerteEcart(carte) {
   const id = carte.getAttribute('data-id');
   const m = matchs.find(function (x) { return x.id_match === id; });
   if (!m) { zone.hidden = true; zone.innerHTML = ''; return; }
-  const tir = tireAuBut(m.categorie);
   let ea, eb;
   if (carte.classList.contains('match-detail')) {
     ea = essaisConnus(valDetail(carte, 'essais_A'), null, true);
     eb = essaisConnus(valDetail(carte, 'essais_B'), null, true);
   } else {
+    // Carte simple : le score ne vaut des essais QUE si la catégorie est CONNUE non-tir-au-but.
+    // Capacité inconnue (backend pas encore redéployé) ⇒ tir = null ⇒ alerte muette (pas de faux positif).
+    const tir = capaciteTirAuBut(m.categorie);
     const sc = carte.querySelectorAll('.score');
     ea = essaisConnus(null, sc[0] ? sc[0].value : '', tir);
     eb = essaisConnus(null, sc[1] ? sc[1].value : '', tir);

@@ -1209,14 +1209,16 @@ function tirAuButCategorieFFR(ref, categorieApp, dateISO, formeJeu) {
  * Nombre d'ESSAIS d'une équipe pour l'alerte « 5 essais d'écart », ou `null` si inconnu (l'alerte se
  * tait — JAMAIS de faux positif). Helper unique (miroir front dans saisie.js) :
  *  - la colonne détail `essais_X` est remplie ⇒ ce nombre (source la plus fiable) ;
- *  - sinon, si la catégorie NE tire PAS au but ⇒ `score_X` EST le nombre d'essais (1 essai = 1 point) ;
- *  - sinon (tir au but mais pas de détail saisi) ⇒ `null` : on ne DÉDUIT jamais les essais d'un total en points.
+ *  - sinon, SEULEMENT si la catégorie est CONNUE pour NE PAS tirer au but (`tirAuBut === false`),
+ *    `score_X` EST le nombre d'essais (1 essai = 1 point) ;
+ *  - sinon — tir au but SANS détail, OU capacité INCONNUE (`tirAuBut` ni true ni false, p.ex. backend
+ *    pas encore redéployé) ⇒ `null` : on ne DÉDUIT jamais des essais d'un total qui pourrait être en points.
  * Pur, testable sans classeur.
  */
 function essaisConnusEquipe(essaisBrut, scoreBrut, tirAuBut) {
   var e = validerScore(essaisBrut);
   if (e !== null) return e;
-  if (tirAuBut !== true) {
+  if (tirAuBut === false) {
     var s = validerScore(scoreBrut);
     if (s !== null) return s;
   }
