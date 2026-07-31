@@ -5,6 +5,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Réorganisation de la carte « Horaires » — 2026-07-31
+Réordonnancement des champs de la carte Horaires pour placer **« Heure de fin communiquée aux clubs »
+en dernier** (elle résume les réglages du dessus). Nouvel ordre : heure de début → RDV → heure de fin →
+**battement terrain** → **pause déjeuner (échelonnée / début / durée)** → **marge après le dernier
+match** → heure de fin communiquée. Les renvois « ci-dessus / ci-dessous » des aides (marge ↔ heure
+communiquée) sont ajustés à ce nouvel ordre. **Affichage seul — aucun changement de comportement, aucun
+redéploiement backend.**
+
 ### Vocabulaire « période » + retrait du champ Règlement (carte catégorie) — 2026-07-31
 Renommage des libellés de la carte catégorie pour coller au vocabulaire FFR (les clés Sheet
 `format_mi_temps` / `duree_mi_temps_min` / `pause_mi_temps_min` restent **inchangées**) :

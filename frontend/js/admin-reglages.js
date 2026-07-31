@@ -68,19 +68,22 @@ function afficherHoraires(global) {
               (auto ? ' disabled' : '') + '>' +
           '</span>' +
         '</div>' +
-        // Heure de fin COMMUNIQUÉE (dossier club). VIDE = automatique : le dossier
-        // affiche « fin du dernier match + marge » et suit chaque régénération du
-        // planning. Une valeur saisie ici prime et ne bouge plus.
-        champHeure('heure_fin_communiquee', 'Heure de fin communiquée aux clubs', val('heure_fin_communiquee'),
-                   'Vide = auto : fin du dernier match + la marge ci-dessous (suit le planning).') +
+        // Ordre : battement → pause déjeuner → marge → heure de fin COMMUNIQUÉE (placée en DERNIER,
+        // car elle résume les réglages ci-dessus). Les renvois « ci-dessus / ci-dessous » des aides
+        // suivent cet ordre.
+        champNombre('battement_terrain_min', 'Battement terrain entre les matchs (min)', val('battement_terrain_min', '5')) +
+        blocPauseDejeuner(global, val) +
         // Marge réglable du mode automatique (défaut 75 min = 1h15) : couvre le retour
         // aux vestiaires puis la cérémonie de remise des trophées — l'événement se
         // termine à l'issue de la remise. La main reste totale à l'organisateur.
         champNombre('marge_fin_communiquee_min', 'Marge après le dernier match (min)', val('marge_fin_communiquee_min', '75'),
                     'Retour aux vestiaires + remise des trophées : l\'événement se termine à la fin de la remise. '
-                    + 'Fin annoncée = dernier match + cette marge (si l\'heure ci-dessus est vide).') +
-        champNombre('battement_terrain_min', 'Battement terrain entre les matchs (min)', val('battement_terrain_min', '5')) +
-        blocPauseDejeuner(global, val) +
+                    + 'Fin annoncée = dernier match + cette marge (si l\'heure ci-dessous est vide).') +
+        // Heure de fin COMMUNIQUÉE (dossier club), EN DERNIER. VIDE = automatique : le dossier
+        // affiche « fin du dernier match + marge » et suit chaque régénération du planning.
+        // Une valeur saisie ici prime et ne bouge plus.
+        champHeure('heure_fin_communiquee', 'Heure de fin communiquée aux clubs', val('heure_fin_communiquee'),
+                   'Vide = auto : fin du dernier match + la marge ci-dessus (suit le planning).') +
         '<div class="ligne-action">' +
           '<button type="submit" class="bouton">Enregistrer les horaires</button>' +
           '<span id="message-horaires" class="message-form"></span>' +
