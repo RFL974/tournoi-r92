@@ -385,7 +385,8 @@ function carteMatch(m, id) {
   }
   return '<div class="match' + (termine ? ' match-termine' : '') + '">' +
     '<div class="match-meta">' + echapper(m.heure_debut) + ' · Terrain ' + echapper(String(m.terrain)) +
-      ' · ' + echapper(libelle) + '</div>' +
+      ' · ' + echapper(libelle) +
+      (libelleArbitreScf(m, nomEquipe) ? ' · <span class="arbitre-tag">🧑‍⚖️ ' + echapper(libelleArbitreScf(m, nomEquipe)) + '</span>' : '') + '</div>' +
     '<div class="mp-ligne"><span class="mp-adv">vs ' + echapper(adversaire) + '</span>' +
       resultat + '</div>' +
   '</div>';

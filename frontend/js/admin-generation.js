@@ -411,11 +411,13 @@ function afficherPlanning(poules, matchs) {
     let h = '<div class="table-scroll"><table class="table-planning">' +
             '<thead><tr><th>Heure</th><th>Ter.</th><th>' + enteteCol + '</th><th>Match</th></tr></thead><tbody>';
     liste.forEach(function (m) {
+      const arb = libelleArbitreScf(m, nom);
+      const arbHtml = arb ? ' <span class="arbitre-tag">🧑‍⚖️ ' + echapper(arb) + '</span>' : '';
       h += '<tr>' +
              '<td>' + echapper(m.heure_debut) + '</td>' +
              '<td>' + echapper(String(m.terrain)) + '</td>' +
              '<td>' + echapper(mapPoule ? mapPoule(m) : String(m.poule)) + '</td>' +
-             '<td>' + echapper(nom(m.equipe_A)) + ' <span class="vs">vs</span> ' + echapper(nom(m.equipe_B)) + '</td>' +
+             '<td>' + echapper(nom(m.equipe_A)) + ' <span class="vs">vs</span> ' + echapper(nom(m.equipe_B)) + arbHtml + '</td>' +
            '</tr>';
     });
     return h + '</tbody></table></div>';

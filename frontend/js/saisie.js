@@ -411,6 +411,7 @@ function carteMatch(m) {
         (detail ? ' match-detail' : '') + '" data-id="' + echapper(m.id_match) + '">' +
       '<div class="match-meta">' + echapper(m.heure_debut) + ' · Terrain ' + echapper(String(m.terrain)) +
         ' · ' + echapper(contexte) +
+        (libelleArbitreScf(m, nomEquipe) ? ' · <span class="arbitre-tag">🧑‍⚖️ ' + echapper(libelleArbitreScf(m, nomEquipe)) + '</span>' : '') +
         (termine ? ' · <span class="badge-ok">✓ terminé</span>' : '') + '</div>' +
       bandeau +
       '<div class="match-saisie">' +

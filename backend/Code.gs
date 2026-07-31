@@ -64,10 +64,13 @@ var ENTETES = {
   //   défaut = comportement historique strictement inchangé (score_A/score_B saisis directement).
   //   Quand elles sont remplies, le backend CALCULE score_A/score_B (essai 5, transfo 2, pén. 3, drop 3) ;
   //   score_A/score_B restent la valeur unique qui sert au classement (barème V/N/D inchangé).
+  // Colonne 27 : arbitre = id_equipe de l'équipe DÉSIGNÉE pour arbitrer ce match (Super Challenge :
+  //   l'équipe qui ne joue pas la triangulaire/quadrangulaire). Migration douce, à droite. Vide sinon.
   Matchs: ['id_match', 'categorie', 'poule', 'terrain', 'heure_debut', 'heure_fin',
            'equipe_A', 'equipe_B', 'score_A', 'score_B', 'statut', 'phase',
            'format', 'sous_tableau', 'tour', 'match_suivant', 'place_suivant', 'vainqueur',
-           'essais_A', 'essais_B', 'transfo_A', 'transfo_B', 'pen_A', 'pen_B', 'drop_A', 'drop_B'],
+           'essais_A', 'essais_B', 'transfo_A', 'transfo_B', 'pen_A', 'pen_B', 'drop_A', 'drop_B',
+           'arbitre'],
   // Journal de saison : un match terminé = une ligne, JAMAIS effacée par une génération.
   // On stocke les NOMS d'équipe (stables d'un tournoi à l'autre, contrairement aux id).
   Historique: ['date', 'tournoi_id', 'id_match', 'categorie', 'phase',
@@ -4713,15 +4716,12 @@ function ajusterLargeurMatch(ligne) {
   return l.slice(0, LARGEUR_MATCHS);
 }
 
-/** Transforme un match (objet lu depuis l'onglet) en ligne dans l'ordre des colonnes. */
+/** Transforme un match (objet lu depuis l'onglet) en ligne dans l'ordre des colonnes.
+ *  Délègue à matchObjToRowComplet (mappe TOUTES les colonnes par nom) → préserve les colonnes
+ *  récentes (score détaillé, arbitre) lors des réécritures. Conserve le défaut phase='poule'. */
 function matchObjToRow(m) {
-  return [ m.id_match, m.categorie, m.poule, m.terrain, m.heure_debut, m.heure_fin,
-           m.equipe_A, m.equipe_B,
-           (m.score_A == null ? '' : m.score_A),
-           (m.score_B == null ? '' : m.score_B),
-           m.statut, (m.phase ? m.phase : 'poule'),
-           (m.format || ''), (m.sous_tableau || ''), (m.tour || ''),
-           (m.match_suivant || ''), (m.place_suivant || ''), (m.vainqueur || '') ];
+  var mm = (m && (m.phase == null || m.phase === '')) ? Object.assign({}, m, { phase: 'poule' }) : m;
+  return matchObjToRowComplet(mm);
 }
 
 /** Réécrit entièrement les lignes de l'onglet Matchs (toutes en texte pour préserver "09:30"). */
@@ -5164,7 +5164,8 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
       ? fixtureScfGroupe(ids, poule.categorie, function (msg) { avert.push(msg); })
       : tourneeToutesRondes(ids);
     fixtures.forEach(function (pr) {
-      matchsParCat[poule.categorie].push({ poule: poule.nom_poule, equipe_A: pr.a, equipe_B: pr.b, round: pr.round });
+      matchsParCat[poule.categorie].push({ poule: poule.nom_poule, equipe_A: pr.a, equipe_B: pr.b,
+                                           round: pr.round, arbitre: pr.arbitre });
     });
   });
 
@@ -5213,8 +5214,15 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
       equipeLibre[m.equipe_A] = fin + recup;
       equipeLibre[m.equipe_B] = fin + recup;
       compteurMatch++;
-      matchsFinaux.push([ idMatch(compteurMatch), cat.categorie, m.poule, (terrainChoisi || ''),
-                          minVersHm(debut), minVersHm(fin), m.equipe_A, m.equipe_B, '', '', 'à venir', 'poule' ]);
+      // Ligne pleine largeur : identique à avant pour un match ordinaire ; l'arbitre désigné (Super
+      // Challenge, m.arbitre) est écrit dans sa colonne quand il existe.
+      var ligne = [];
+      for (var ci = 0; ci < LARGEUR_MATCHS; ci++) ligne.push('');
+      ligne[0] = idMatch(compteurMatch); ligne[1] = cat.categorie; ligne[2] = m.poule;
+      ligne[3] = (terrainChoisi || ''); ligne[4] = minVersHm(debut); ligne[5] = minVersHm(fin);
+      ligne[6] = m.equipe_A; ligne[7] = m.equipe_B; ligne[10] = 'à venir'; ligne[11] = 'poule';
+      if (m.arbitre) ligne[colMatchs('arbitre') - 1] = m.arbitre;
+      matchsFinaux.push(ligne);
     });
   });
 
@@ -5822,11 +5830,13 @@ function dureeMatchScf(cat, phase) {
 function fixtureQuadrangulaireScf(ids) {
   if (!ids || ids.length !== 4) return null;
   var e1 = ids[0], e2 = ids[1], e3 = ids[2], e4 = ids[3];
+  // arbitre = l'équipe désignée par la table du règlement (M1→E1, M2→E2, M3→E3, M4→E4) : à chaque
+  // match, l'une des deux équipes qui ne jouent pas arbitre (chaque équipe arbitre exactement une fois).
   return [
-    { a: e2, b: e4, round: 0 },
-    { a: e1, b: e3, round: 0 },
-    { a: e1, b: e4, round: 1 },
-    { a: e2, b: e3, round: 1 }
+    { a: e2, b: e4, round: 0, arbitre: e1 },
+    { a: e1, b: e3, round: 0, arbitre: e2 },
+    { a: e1, b: e4, round: 1, arbitre: e3 },
+    { a: e2, b: e3, round: 1, arbitre: e4 }
   ];
 }
 
@@ -5839,7 +5849,13 @@ function fixtureQuadrangulaireScf(ids) {
  */
 function fixtureScfGroupe(ids, categorie, avertir) {
   if (ids && ids.length === 4) return fixtureQuadrangulaireScf(ids);
-  if (ids && ids.length === 3) return tourneeToutesRondes(ids);
+  if (ids && ids.length === 3) {
+    // Triangulaire : à chaque match, la 3ᵉ équipe (celle qui ne joue pas) arbitre.
+    return tourneeToutesRondes(ids).map(function (m) {
+      var arb = ids.filter(function (x) { return x !== m.a && x !== m.b; })[0] || '';
+      return { a: m.a, b: m.b, round: m.round, arbitre: arb };
+    });
+  }
   if (typeof avertir === 'function') {
     avertir('Catégorie ' + categorie + ' (Super Challenge) : groupe de ' + (ids ? ids.length : 0) +
             ' équipe(s) — le règlement prévoit 3 (triangulaire) ou 4 (quadrangulaire).');

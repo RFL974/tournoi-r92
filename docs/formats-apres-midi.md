@@ -61,8 +61,14 @@ mondes, la fiche d'une catégorie **U14** (et elle seule) affiche un choix de **
 
   > Techniquement : le samedi = matchs `phase = poule` ; le dimanche = matchs `phase = classement`
   > (2ᵉ journée), générés par l'action `genererDimancheScf` qui réutilise `fixturesApresMidiCroise`
-  > et planifie au **début de journée** (départ forcé, sans lien avec le samedi). L'**arbitrage
-  > désigné** (l'équipe qui arbitre chaque match) reste à venir.
+  > et planifie au **début de journée** (départ forcé, sans lien avec le samedi).
+
+- **Arbitrage désigné.** Sur chaque triangulaire/quadrangulaire, l'app désigne **l'équipe qui ne
+  joue pas** comme arbitre du match — triangulaire : la 3ᵉ équipe ; quadrangulaire : la table du
+  règlement (M1→E1, M2→E2, M3→E3, M4→E4, chaque équipe arbitre une fois). C'est **affiché** sur les
+  3 écrans (« 🧑‍⚖️ Arbitre : … ») et **stocké** (colonne `arbitre` de l'onglet Matchs).
+  *(En Phase 3 officielle, l'arbitrage est assuré par des arbitres FFR ; la désignation de la 3ᵉ
+  équipe reste un repère pratique.)*
 
 > 🗣️ **Vocabulaire à l'écran.** Pour une catégorie en Super Challenge, les 3 écrans (admin, saisie,
 > page publique) affichent **📅 Samedi / 🏆 Dimanche** (Phase 3) ou **🏉 Plateau** (Phase 2), les
