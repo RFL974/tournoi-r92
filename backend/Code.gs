@@ -486,7 +486,9 @@ var CONFIG_PUBLIQUE_VUES = {
   // Page des scores : le strict nécessaire. Aucune donnée personnelle, aucun réglage d'édition.
   live: {
     global: ['tournoi_publie', 'tournoi_nom', 'repartition_grands_terrains'],
-    categories: ['categorie', 'presente']
+    // contexte_tournoi / scf_phase : NON sensibles (format de jeu) — exposés pour que la saisie et la
+    // page publique affichent le bon vocabulaire Super Challenge (Samedi/Dimanche, Triangulaire, E/F/G).
+    categories: ['categorie', 'presente', 'contexte_tournoi', 'scf_phase']
   },
   // Page d'invitation (vitrine publique). contact_reponse_email/nom OUI ; contact_reponse_tel NON
   // (le portable d'un bénévole n'a rien à faire sur une page mise en avant — décision 1.3, S3).

@@ -16,6 +16,7 @@ let nomParEquipe = {};          // index id_equipe → nom (reconstruit à chaqu
 let matchs = [];
 let grandsTerrains = {};        // composition des grands terrains { nom: [numéros de mini-terrains] }
 let capacitesCat = {};          // { catégorie: { tir_au_but: bool } } — servi par getCapacitesCategories
+let categoriesSaisie = [];      // config.categories (contexte_tournoi/scf_phase) — vocabulaire Super Challenge
 let categorieActiveSaisie = '';
 let terrainActifSaisie = '';    // nom du grand terrain filtré ('' = tous les terrains)
 const CLE_CAT_SAISIE = 'r92_saisie_cat';
@@ -75,6 +76,7 @@ async function initSaisie() {
     nomParEquipe = indexerNoms(equipes); // index id → nom (O(1))
     matchs = data.matchs || [];
     grandsTerrains = lireGrandsTerrains(data.config);
+    categoriesSaisie = (data.config && data.config.categories) || [];
     capacitesCat = (caps && caps.categories) || {};
     afficherMatchs();
     majHeureSaisie();
@@ -104,6 +106,7 @@ async function rafraichirSaisie() {
     nomParEquipe = indexerNoms(equipes); // index id → nom (O(1))
     matchs = data.matchs || [];
     grandsTerrains = lireGrandsTerrains(data.config);
+    categoriesSaisie = (data.config && data.config.categories) || [];
     capacitesCat = (caps && caps.categories) || {};
     afficherMatchs();
     majHeureSaisie();
@@ -220,7 +223,12 @@ function contexteMatch(m) {
   if (estMatchCoupe(m)) return '🏆 ' + (libelleTourFr(m.tour) || 'Coupe') + ' — Coupe ' + m.categorie;
   if (String(m.sous_tableau || '').toUpperCase() === 'PLATEAU') return 'Plateau — ' + m.categorie;
   if (String(m.format || '').toUpperCase() === 'LIBRE') return 'Match amical';
-  if (String(m.phase) === 'classement') return 'Niveau ' + String(m.poule);
+  // Vocabulaire Super Challenge (Triangulaire/Quadrangulaire, Poule E/F/G) si la catégorie est en SCF.
+  const catObj = categoriesSaisie.find(function (c) { return c.categorie === m.categorie; });
+  const estClt = String(m.phase) === 'classement';
+  const gl = groupeLabelScf(catObj, m.poule, tailleGroupeScf(matchs, m.categorie, m.poule), estClt);
+  if (gl) return gl;
+  if (estClt) return 'Niveau ' + String(m.poule);
   return 'Poule ' + String(m.poule);
 }
 
@@ -314,6 +322,8 @@ function afficherMatchs() {
   const apremGenere = aprem.length > 0;
 
   let html = '';
+  // Objet catégorie (vocabulaire Super Challenge : Samedi/Dimanche au lieu de Matin/Après-midi).
+  const catObjSaisie = categoriesSaisie.find(function (c) { return c.categorie === categorieActiveSaisie; });
 
   if (matin.length) {
     // Le matin se replie une fois entièrement saisi ET l'après-midi généré.
@@ -321,13 +331,13 @@ function afficherMatchs() {
     const resume = (restantsMatin === 0)
       ? 'tous saisis ✓' + (apremGenere ? ' — cliquer pour voir / corriger' : '')
       : restantsMatin + ' à saisir sur ' + matin.length;
-    html += phaseAccordeon('🌅 Matin — poules', matin, replie, resume);
+    html += phaseAccordeon(phaseLabelScf(catObjSaisie, false) || '🌅 Matin — poules', matin, replie, resume);
   }
 
   if (aprem.length) {
     // L'après-midi se replie quand tous ses matchs sont terminés (journée bouclée).
     const replie = (restantsAprem === 0);
-    html += phaseAccordeon(titreApresMidi(aprem), aprem, replie,
+    html += phaseAccordeon(phaseLabelScf(catObjSaisie, true) || titreApresMidi(aprem), aprem, replie,
       resumePhase(restantsAprem, aprem.length));
   }
 

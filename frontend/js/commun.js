@@ -35,6 +35,59 @@ function estTermine(statut) {
   return /^\s*termin/i.test(String(statut));
 }
 
+/* ---------------------------------------------------------------------------
+   ÉTIQUETTES SUPER CHALLENGE (affichage partagé admin / saisie / public)
+   Toutes ces fonctions renvoient `null` pour une catégorie NON Super Challenge :
+   l'appelant garde alors son libellé habituel (« Matin — poules », « Poule A »…).
+   Elles ne changent donc RIEN aux tournois ordinaires.
+   --------------------------------------------------------------------------- */
+
+/** Contexte SCF d'une catégorie côté affichage (miroir léger du backend). → { estScf, phase }.
+ *  Prudent : SCF seulement si la catégorie est U14 (M14) ET contexte_tournoi vaut exactement 'SCF'. */
+function ctxScf(cat) {
+  var s = String((cat && cat.contexte_tournoi) == null ? '' : cat.contexte_tournoi).trim().toUpperCase();
+  var u14 = String((cat && cat.categorie) == null ? '' : cat.categorie).trim().toUpperCase().replace(/^[MU](?=\d)/, '') === '14';
+  var ph = String((cat && cat.scf_phase) == null ? '' : cat.scf_phase).trim().toUpperCase() === 'P3' ? 'P3' : 'P2';
+  return { estScf: (u14 && s === 'SCF'), phase: ph };
+}
+
+/** Poule de niveau du brassage du dimanche : N1/N2/N3 → E/F/G. Autre valeur → inchangée. */
+function pouleEFG(nom) {
+  var m = /^N(\d+)$/.exec(String(nom == null ? '' : nom));
+  if (!m) return String(nom == null ? '' : nom);
+  var L = 'EFGHIJ', i = parseInt(m[1], 10) - 1;
+  return (i >= 0 && i < L.length) ? L.charAt(i) : String(nom);
+}
+
+/** Nombre d'équipes d'un groupe (poule) SCF, compté sur les matchs du matin (hors classement). */
+function tailleGroupeScf(matchs, categorie, nomPoule) {
+  var s = {};
+  (matchs || []).forEach(function (m) {
+    if (m.categorie === categorie && String(m.phase) !== 'classement' && String(m.poule) === String(nomPoule)) {
+      s[m.equipe_A] = 1; s[m.equipe_B] = 1;
+    }
+  });
+  return Object.keys(s).length;
+}
+
+/** En-tête de phase pour une catégorie SCF (texte prêt à l'affichage), ou null si non-SCF.
+ *  estClassement = matchs de la phase 'classement' (2ᵉ journée / brassage). */
+function phaseLabelScf(cat, estClassement) {
+  var c = ctxScf(cat);
+  if (!c.estScf) return null;
+  if (c.phase === 'P3') return estClassement ? '🏆 Dimanche — brassage (poules par niveau)' : '📅 Samedi — triangulaires';
+  return estClassement ? '🏆 Brassage' : '🏉 Plateau';
+}
+
+/** Libellé d'un groupe SCF, ou null si non-SCF. `taille` = nb d'équipes du groupe ;
+ *  estClassement → poule de niveau (E/F/G) ; sinon triangulaire (3) ou quadrangulaire (4). */
+function groupeLabelScf(cat, nomPoule, taille, estClassement) {
+  var c = ctxScf(cat);
+  if (!c.estScf) return null;
+  if (estClassement) return 'Poule ' + pouleEFG(nomPoule);
+  return (taille === 4 ? 'Quadrangulaire ' : 'Triangulaire ') + String(nomPoule == null ? '' : nomPoule);
+}
+
 /**
  * Affiche un petit message sous un formulaire (vert = ok, rouge = erreur).
  * @param {HTMLElement} element  la zone de message

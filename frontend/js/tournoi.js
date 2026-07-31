@@ -343,12 +343,14 @@ function afficherEquipe() {
   const aprem = mes.filter(function (m) { return String(m.phase) === 'classement'; });
 
   let html = '';
-  if (matin.length) html += '<div class="planning-phase">🌅 Matin — poules</div>' + cartes(matin, id);
+  // Objet catégorie (vocabulaire Super Challenge : Samedi/Dimanche au lieu de Matin/Après-midi).
+  const catObjP = (config.categories || []).find(function (c) { return c.categorie === (mes[0] && mes[0].categorie); });
+  if (matin.length) html += '<div class="planning-phase">' + (phaseLabelScf(catObjP, false) || '🌅 Matin — poules') + '</div>' + cartes(matin, id);
   if (aprem.length) {
     const fmt = formatApresMidiCat(matchs.find(function (m) { return m.equipe_A === id || m.equipe_B === id; }).categorie);
-    const titreAprem = (fmt === 'COUPE_PLATEAU') ? '🏉 Après-midi — Coupe &amp; Plateau'
+    const titreAprem = phaseLabelScf(catObjP, true) || ((fmt === 'COUPE_PLATEAU') ? '🏉 Après-midi — Coupe &amp; Plateau'
       : (fmt === 'LIBRE') ? '🏉 Après-midi — matchs amicaux'
-      : '🏉 Après-midi — classement croisé';
+      : '🏉 Après-midi — classement croisé');
     html += '<div class="planning-phase">' + titreAprem + '</div>' + cartes(aprem, id);
   }
 
@@ -392,12 +394,16 @@ function carteMatch(m, id) {
 /** Les 3 classements affichés sous les matchs de l'équipe : sa poule, son niveau, le général. */
 function sectionClassementsEquipe(eq) {
   let html = '';
+  // Objet catégorie (vocabulaire Super Challenge : Triangulaire/Quadrangulaire, Poule E/F/G).
+  const catObjE = (config.categories || []).find(function (c) { return c.categorie === eq.categorie; });
 
   // 1) Sa poule du matin.
   const membresPoule = equipes.filter(function (e) { return e.categorie === eq.categorie && e.poule === eq.poule; });
   const matchsMatin = matchs.filter(function (m) { return m.categorie === eq.categorie && String(m.phase) !== 'classement'; });
   html += '<div class="planning-phase">📊 Classement de ta poule (matin)</div>';
-  html += tableCompacte('Poule ' + echapper(String(eq.poule)), classementGroupe(matchsMatin, membresPoule), eq.id_equipe);
+  const glP = groupeLabelScf(catObjE, eq.poule, membresPoule.length, false);
+  html += tableCompacte(glP ? echapper(glP) : ('Poule ' + echapper(String(eq.poule))),
+                        classementGroupe(matchsMatin, membresPoule), eq.id_equipe);
 
   // 2) & 3) Après-midi : dépend du format de la catégorie.
   const aApresMidi = matchs.some(function (m) {
@@ -429,7 +435,9 @@ function sectionClassementsEquipe(eq) {
     matchsNiv.forEach(function (m) { idsNiv[m.equipe_A] = 1; idsNiv[m.equipe_B] = 1; });
     const membresNiv = Object.keys(idsNiv).map(function (x) { return { id_equipe: x, nom_equipe: nomEquipe(x) }; });
     html += '<div class="planning-phase">📊 Classement de ton niveau (après-midi)</div>';
-    html += tableCompacte('Niveau ' + echapper(String(niv)), classementGroupe(matchsNiv, membresNiv), eq.id_equipe);
+    const glN = groupeLabelScf(catObjE, niv, 0, true);
+    html += tableCompacte(glN ? echapper(glN) : ('Niveau ' + echapper(String(niv))),
+                          classementGroupe(matchsNiv, membresNiv), eq.id_equipe);
   }
 
   html += '<div class="planning-phase">🏆 Classement général du tournoi</div>';
@@ -772,7 +780,12 @@ function libelleMatch(m) {
   if (st === 'COUPE') return libelleTourFr(m.tour) + ' · Coupe';
   if (st === 'PLATEAU') return 'Plateau';
   if (String(m.format || '').toUpperCase() === 'LIBRE') return 'Match amical';
-  if (String(m.phase) === 'classement') return 'Niveau ' + String(m.poule);
+  // Vocabulaire Super Challenge (Triangulaire/Quadrangulaire, Poule E/F/G) si la catégorie est en SCF.
+  const catObj = (config.categories || []).find(function (c) { return c.categorie === m.categorie; });
+  const estClt = String(m.phase) === 'classement';
+  const gl = groupeLabelScf(catObj, m.poule, tailleGroupeScf(matchs, m.categorie, m.poule), estClt);
+  if (gl) return gl;
+  if (estClt) return 'Niveau ' + String(m.poule);
   return 'Poule ' + String(m.poule);
 }
 
