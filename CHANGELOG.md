@@ -18,7 +18,7 @@ menu déroulant placé entre le nom du terrain et le menu Rugby/Foot. La nature 
 - **PDF pré-rempli** — les cases « Type de terrain » sont cochées d'après les natures déclarées
   (**plusieurs natures ⇒ plusieurs cases**), repli sur la saisie manuelle.
 Migration douce : les terrains enregistrés sans nature affichent « — Nature — » et ne changent
-rien tant que la nature n'est pas choisie. Tests backend : **428/428** (+6 tests session 23).
+rien tant que la nature n'est pas choisie. Tests backend : **428/428** (+6 tests session 25).
 Nouveau bouton **« Télécharger le formulaire pré-rempli (PDF) »** dans l'item Demande d'autorisation :
 il génère le **formulaire officiel FFR** (AcroForm) **pré-rempli** avec ce que l'app connaît, et qui
 **reste modifiable** (l'organisateur l'ouvre et complète le format sportif par catégorie + les
