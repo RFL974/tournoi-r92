@@ -1553,6 +1553,7 @@ body.theme-clair {
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
 }
 .terrain-ligne .tp-nom { flex: 1 1 120px; min-width: 90px; }
+.terrain-ligne .tp-nature { flex: 0 0 auto; max-width: 140px; }
 .terrain-ligne .tp-type { flex: 0 0 auto; }
 .terrain-ligne .tp-l, .terrain-ligne .tp-w,
 .dim-ligne .dim-l, .dim-ligne .dim-w { width: 68px; flex: 0 0 auto; text-align: center; }

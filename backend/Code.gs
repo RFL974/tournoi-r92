@@ -1798,6 +1798,31 @@ function champCalculeAutorisation(valeur) {
                   : { valeur: '', etat: 'manquant', origine: 'calculé' };
 }
 
+/**
+ * Natures (surfaces de jeu) des grands terrains déclarés — cascade du champ « Type de terrain »
+ * de la demande d'autorisation. Source : Config.terrains_physiques (JSON [{nom,nature,type,L,W},…]),
+ * champ `nature` posé par la carte Terrains. PRUDENT : JSON absent/invalide ou aucune nature
+ * déclarée ⇒ liste vide (l'appelant retombe sur la saisie org_type_terrain, jamais deviné).
+ * @return {{natures:string[], nbSansNature:number}} natures distinctes (ordre de déclaration)
+ *         + nombre de terrains déclarés SANS nature (signalé dans l'origine, informatif).
+ */
+function naturesTerrainsAutorisation(config) {
+  var g = (config && config.global) || {};
+  var brut = String(g.terrains_physiques == null ? '' : g.terrains_physiques).trim();
+  var vide = { natures: [], nbSansNature: 0 };
+  if (!brut) return vide;
+  var terrains;
+  try { terrains = JSON.parse(brut); } catch (e) { return vide; }
+  if (!terrains || !terrains.length) return vide;
+  var vus = {}, natures = [], nbSans = 0;
+  terrains.forEach(function (t) {
+    var n = String((t && t.nature) || '').trim();
+    if (!n) { nbSans++; return; }
+    if (!vus[n]) { vus[n] = true; natures.push(n); }
+  });
+  return { natures: natures, nbSansNature: nbSans };
+}
+
 /** Nombre MAX de matchs joués par une même équipe dans une liste de matchs (équipes vides ignorées). */
 function maxMatchsParEquipe(matchs) {
   var comptes = {};
@@ -2065,9 +2090,22 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
     ? { libelle: 'Nombre de terrains utilisés', valeur: String(terrains.nombre), etat: terrains.origine === 'calcule' ? 'calcule' : 'saisi',
         origine: terrains.origine === 'calcule' ? 'calculé (planning)' : 'saisi (terrains déclarés)' }
     : { libelle: 'Nombre de terrains utilisés', valeur: '', etat: 'manquant', origine: 'planning ou terrains déclarés' };
+  // Type de terrain (surface) : CASCADE depuis la nature des grands terrains déclarés (carte
+  // Terrains) — même doctrine que les participants : le structurel prime, repli sur la saisie
+  // org_type_terrain, sinon manquant. Plusieurs natures ⇒ toutes listées (le formulaire coche
+  // plusieurs cases). Terrains sans nature ⇒ signalés dans l'origine (informatif).
+  var naturesT = naturesTerrainsAutorisation(config);
+  var champNature;
+  if (naturesT.natures.length) {
+    champNature = { libelle: 'Type de terrain', valeur: naturesT.natures.join(', '), etat: 'calcule',
+      origine: 'calculé — nature des grands terrains déclarés' +
+        (naturesT.nbSansNature ? ' (' + naturesT.nbSansNature + ' terrain(s) sans nature déclarée)' : '') };
+  } else {
+    champNature = saisi('Type de terrain', 'org_type_terrain');
+  }
   sections.push({ titre: 'B.1 — Installations sportives', champs: [
     champTerrains,
-    saisi('Type de terrain', 'org_type_terrain'),
+    champNature,
     saisi('Nombre de vestiaires utilisés', 'org_nb_vestiaires')
   ] });
 
@@ -2723,7 +2761,9 @@ function enregistrerContactsSecurite(classeur, data) {
 /**
  * Enregistre le PLAN DES TERRAINS physiques utilisé par la répartition automatique.
  * Trois paramètres GLOBAUX (stockés dans l'onglet Config, relus par getConfig/getAll) :
- *   - terrains_physiques    : JSON [{nom,type,L,W}, …] — les grands terrains réels (rugby/foot).
+ *   - terrains_physiques    : JSON [{nom,nature,type,L,W}, …] — les grands terrains réels
+ *                             (rugby/foot) ; `nature` = surface de jeu (Gazon, Synthétique…),
+ *                             reprise par la demande d'autorisation (naturesTerrainsAutorisation).
  *   - couloir_terrain_m     : largeur du couloir de circulation entre mini-terrains (m).
  *   - dimensions_categories : JSON {"U8":{"l":30,"w":20}, "U14":{"plein":true}, …} — taille
  *                             de terrain par catégorie (plein:true = un match occupe un grand terrain entier).
