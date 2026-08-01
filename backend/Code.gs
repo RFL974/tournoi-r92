@@ -160,7 +160,10 @@ function creerOngletConfig(classeur) {
     // B.1 Installations
     ['org_type_terrain', ''], ['org_nb_vestiaires', ''],
     // B.3 Arbitrage (compteurs GLOBAUX ; distincts d'arbitrage_organisation, texte par catégorie)
-    ['org_nb_arbitres', ''], ['org_nb_educateurs', ''], ['org_nb_doublettes', ''],
+    // org_nb_educateurs_club = encadrants du club ORGANISATEUR (le Racing ne s'invite pas lui-même,
+    // ses éducateurs ne sont donc dans aucune réponse d'invitation) : s'AJOUTE à la somme déclarée.
+    ['org_nb_arbitres', ''], ['org_nb_educateurs', ''], ['org_nb_educateurs_club', ''],
+    ['org_nb_doublettes', ''],
     // B.4 Sécurité — médecin / antenne de secours (nom+tel STRUCTURÉS, jamais parsés) / ambulance.
     // securite_referent_* et securite_secours_oui sont RÉUTILISÉS ; org_secours_nom/_tel sont neufs.
     ['org_medecin_oui', ''], ['org_medecin_nom', ''], ['org_medecin_tel', ''],
@@ -1725,7 +1728,8 @@ var CHAMPS_AUTORISATION = ['org_club_nom', 'org_code_club', 'org_representant_no
   'org_representant_mail', 'org_president_nom', 'org_president_tel', 'org_president_mail', 'org_label_edr',
   'org_label_date', 'org_niveau_tournoi', 'org_equipes_etrangeres', 'org_equipes_etrangeres_liste',
   'org_nb_participants',
-  'org_type_terrain', 'org_nb_vestiaires', 'org_nb_arbitres', 'org_nb_educateurs', 'org_nb_doublettes',
+  'org_type_terrain', 'org_nb_vestiaires', 'org_nb_arbitres', 'org_nb_educateurs',
+  'org_nb_educateurs_club', 'org_nb_doublettes',
   'org_medecin_oui', 'org_medecin_nom', 'org_medecin_tel', 'org_secours_nom', 'org_secours_tel',
   'org_ambulance', 'org_droits_oui', 'org_droits_montant', 'org_hebergement_oui', 'org_hebergement_structure',
   'org_repas_oui', 'org_repas_fournisseur', 'org_repas_prix', 'org_gouters_oui', 'org_gouters_fournisseur',
@@ -1800,6 +1804,45 @@ function champCalculeAutorisation(valeur) {
   var v = String(valeur == null ? '' : valeur).trim();
   return v !== '' ? { valeur: v, etat: 'calcule', origine: 'calculé' }
                   : { valeur: '', etat: 'manquant', origine: 'calculé' };
+}
+
+/**
+ * Nombre d'ÉDUCATEURS (B.3) — cascade ADDITIVE (session 26). Deux sources qui s'AJOUTENT, parce
+ * qu'elles couvrent des personnes différentes et qu'aucune ne connaît l'autre :
+ *   1. les éducateurs DÉCLARÉS par les clubs acceptés (réponse à l'invitation, session 23) ;
+ *   2. `org_nb_educateurs_club` = les encadrants du club ORGANISATEUR — le Racing ne s'invite pas
+ *      lui-même, ses éducateurs ne figurent donc dans AUCUNE réponse (d'où le total faux avant).
+ * Doctrine du projet (participants §4.2, type de terrain) : le STRUCTUREL prime, jamais deviné.
+ *   - au moins une source connue ⇒ 'calcule', total = somme des deux, origine détaillée ;
+ *   - aucune des deux ⇒ repli sur l'ancien total manuel `org_nb_educateurs` ('saisi') ;
+ *   - rien nulle part ⇒ 'manquant'.
+ * L'ancien total manuel n'est JAMAIS soustrait ni redistribué (on n'invente pas la part du club) :
+ * quand il est ignoré, l'appelant le SIGNALE (état 'avert'). PUR.
+ * @param {{global:Object}} config
+ * @param {?number} nbDeclare  somme déclarée par les clubs acceptés (0/null si aucune)
+ * @return {{valeur:string, etat:string, origine:string, declare:number, club:number, totalManuelIgnore:string}}
+ */
+function totalEducateursAutorisation(config, nbDeclare) {
+  var g = (config && config.global) || {};
+  function entier(v) { var n = parseInt(String(v == null ? '' : v).trim(), 10); return isFinite(n) && n >= 0 ? n : null; }
+  var declare = entier(nbDeclare) || 0;
+  var club = entier(g.org_nb_educateurs_club);
+  var manuel = String(g.org_nb_educateurs == null ? '' : g.org_nb_educateurs).trim();
+
+  if (declare > 0 || club != null) {
+    var total = declare + (club || 0);
+    var parts = [];
+    if (declare > 0) parts.push(declare + (declare > 1 ? ' déclarés' : ' déclaré') + ' par les clubs acceptés');
+    if (club != null) parts.push(club + ' du club organisateur');
+    return { valeur: String(total), etat: 'calcule', origine: 'calculé — ' + parts.join(' + '),
+             declare: declare, club: club || 0, totalManuelIgnore: (manuel !== '') ? manuel : '' };
+  }
+  if (manuel !== '') {
+    return { valeur: manuel, etat: 'saisi', origine: 'saisi (total)',
+             declare: 0, club: 0, totalManuelIgnore: '' };
+  }
+  return { valeur: '', etat: 'manquant', origine: 'Config:org_nb_educateurs',
+           declare: 0, club: 0, totalManuelIgnore: '' };
 }
 
 /**
@@ -2171,20 +2214,26 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
     note: 'Nombre de phases = format d\'après-midi déclaré (zone B) ; matchs/équipe remplis à la génération du planning. Même durée aux deux phases.' });
 
   // B.3 ARBITRAGE (saisi ; arbitrage_organisation est affiché à part côté écran, hors feuille)
-  // Éducateurs — CASCADE (session 23) : la somme des éducateurs DÉCLARÉS par les clubs acceptés
-  // (réponse à l'invitation, detail_effectifs) répond à la question ; org_nb_educateurs saisi
-  // reste prioritaire ; rien nulle part ⇒ manquant.
-  var educateurs = champSaisiAutorisation(config, 'org_nb_educateurs');
-  var nbEducCascade = (participants.nbEducateurs != null) ? Number(participants.nbEducateurs) : 0;
-  if (educateurs.etat === 'manquant' && nbEducCascade > 0) {
-    educateurs = { valeur: String(nbEducCascade), etat: 'calcule',
-                   origine: 'déclarés par les clubs acceptés (réponse à l\'invitation)' };
-  }
-  sections.push({ titre: 'B.3 — Arbitrage', champs: [
+  // Éducateurs — cascade ADDITIVE (session 26) : éducateurs déclarés par les clubs acceptés
+  // + encadrants du club organisateur (org_nb_educateurs_club), qui ne figurent dans aucune
+  // réponse d'invitation. Voir totalEducateursAutorisation pour la doctrine complète.
+  var educateurs = totalEducateursAutorisation(config, participants.nbEducateurs);
+  var champsArbitrage = [
     saisi('Nombre d\'arbitres', 'org_nb_arbitres'),
     champ('Nombre d\'éducateurs', educateurs),
     saisi('Nombre de doublettes', 'org_nb_doublettes')
-  ] });
+  ];
+  // Signalement (§4.3) : un ancien total manuel devenu inutile n'est jamais silencieusement écrasé —
+  // INFORMATIF (état 'avert', hors compteur de manquants), pour que l'écart saute aux yeux.
+  if (educateurs.totalManuelIgnore) {
+    champsArbitrage.push({ libelle: '⚠️ Cohérence éducateurs',
+      valeur: 'Ancien total saisi à la main (' + educateurs.totalManuelIgnore + ') désormais IGNORÉ : ' +
+        'le total vient des éducateurs déclarés par les clubs (' + educateurs.declare + ') + ceux du club ' +
+        'organisateur (' + educateurs.club + '). Vide le champ « total » et renseigne « éducateurs du club ' +
+        'organisateur » pour retomber sur ton compte.',
+      etat: 'avert', origine: 'contrôle de cohérence' });
+  }
+  sections.push({ titre: 'B.3 — Arbitrage', champs: champsArbitrage });
 
   // B.4 SÉCURITÉ (réutilise securite_referent_* et securite_secours_oui ; nom/tel secours structurés)
   // Responsable sécurité — CASCADE (session 21, même règle que le PDF pré-rempli) : l'info vit dans

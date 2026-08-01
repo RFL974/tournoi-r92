@@ -46,7 +46,10 @@ var AUTORISATION_SAISIE = [
   ] },
   { titre: 'B.3 — Arbitrage', champs: [
     { p: 'org_nb_arbitres', l: 'Nombre d\'arbitres', t: 'number' },
-    { p: 'org_nb_educateurs', l: 'Nombre d\'éducateurs', t: 'number' },
+    // Les éducateurs du club ORGANISATEUR ne sont dans aucune réponse d'invitation (le club ne
+    // s'invite pas) : ils s'AJOUTENT à la somme déclarée par les clubs pour faire le total B.3.
+    { p: 'org_nb_educateurs_club', l: 'Éducateurs du club organisateur (s\'ajoutent aux éducateurs déclarés par les clubs)', t: 'number' },
+    { p: 'org_nb_educateurs', l: 'Nombre d\'éducateurs (total, si les clubs n\'ont rien déclaré)', t: 'number' },
     { p: 'org_nb_doublettes', l: 'Nombre de doublettes', t: 'number' }
   ] },
   { titre: 'B.4 — Sécurité', champs: [
@@ -457,6 +460,19 @@ var PDF_FORMAT_SPORTIF = {
   '14': { p1n: 'Texte40',  p1d: 'Texte41',  f1n: 'Texte42',  f1d: 'Texte43',  f2n: 'Texte44',  f2d: 'Texte45' }
 };
 
+/** Total des ÉDUCATEURS (B.3) — miroir de totalEducateursAutorisation (backend, session 26) :
+ *  déclarés par les clubs acceptés + encadrants du club organisateur (org_nb_educateurs_club, qui
+ *  ne figurent dans aucune réponse d'invitation) ; repli sur l'ancien total manuel si aucune des
+ *  deux sources n'est connue. Renvoie '' si rien n'est connu (champ PDF laissé vide, jamais deviné). */
+function totalEducateursAut(g, nbDeclare) {
+  function entier(v) { var n = parseInt(String(v == null ? '' : v).trim(), 10); return isFinite(n) && n >= 0 ? n : null; }
+  var declare = entier(nbDeclare) || 0;
+  var club = entier((g || {}).org_nb_educateurs_club);
+  if (declare > 0 || club != null) return String(declare + (club || 0));
+  var manuel = String((g || {}).org_nb_educateurs == null ? '' : g.org_nb_educateurs).trim();
+  return manuel;
+}
+
 /** Natures (surfaces) des grands terrains déclarés — miroir de naturesTerrainsAutorisation
  *  (backend) : natures distinctes lues dans Config.terrains_physiques (champ `nature` posé par la
  *  carte Terrains). PRUDENT : JSON absent/invalide ou aucune nature ⇒ [] (repli org_type_terrain). */
@@ -690,11 +706,11 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsPa
   else choix(v('org_type_terrain'), casesNature);
   setT('Texte20', v('org_nb_vestiaires'));
 
-  // B.3 Arbitrage — éducateurs : CASCADE (miroir feuille de report, session 23) : org saisi
-  // prioritaire, sinon la somme des éducateurs DÉCLARÉS par les clubs acceptés.
+  // B.3 Arbitrage — éducateurs : cascade ADDITIVE (miroir de totalEducateursAutorisation, session
+  // 26) : éducateurs déclarés par les clubs acceptés + encadrants du club organisateur (absents de
+  // toute réponse d'invitation) ; repli sur l'ancien total manuel si aucune des deux sources.
   setT('Texte46', v('org_nb_arbitres'));
-  if (v('org_nb_educateurs')) setT('Texte47', v('org_nb_educateurs'));
-  else if (nbEducateurs) setT('Texte47', String(nbEducateurs));
+  setT('Texte47', totalEducateursAut(g, nbEducateurs));
   setT('Texte48', v('org_nb_doublettes'));
 
   // B.4 Sécurité — responsable = référent sécurité (si distinct), sinon référent tournoi (dossier club).

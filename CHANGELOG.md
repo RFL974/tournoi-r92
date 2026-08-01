@@ -5,6 +5,25 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Demande d'autorisation : total des éducateurs (B.3) = clubs + club organisateur — 2026-08-01
+**Défaut corrigé** : un total d'éducateurs saisi à la main **masquait** les éducateurs déclarés par
+les clubs à la réponse d'invitation (24 saisi cachait 7 déclarés, sans rien signaler) — et cette
+priorité était **l'inverse** de celle des participants et du type de terrain, où le déclaré prime.
+Le total est désormais une **cascade additive**, parce que les deux sources couvrent des personnes
+différentes : **éducateurs déclarés par les clubs acceptés + encadrants du club organisateur**
+(nouveau champ `org_nb_educateurs_club` — le Racing ne s'invite pas lui-même, ses éducateurs ne
+figurent donc dans aucune réponse, d'où le total faux jusqu'ici).
+- **feuille de report** — B.3 affiche le total **calculé** avec le détail de son origine
+  (« 7 déclarés par les clubs acceptés + 17 du club organisateur ») ;
+- **migration douce** — un ancien total manuel devenu inutile n'est **jamais écrasé en silence** :
+  il est **signalé en orange** (état informatif, hors compteur de manquants) avec la marche à
+  suivre. Aucune soustraction, aucune redistribution : la part du club n'est jamais devinée ;
+- **replis** — aucune source structurelle ⇒ l'ancien total manuel reste utilisé ; rien nulle part
+  ⇒ « manquant ». Un `0` au club organisateur est une **réponse**, pas une absence de réponse ;
+- **PDF pré-rempli** — même règle exactement (champ « Nombre d'éducateurs »).
+Tests backend : **450/450** (+9 tests session 26 ; 2 tests de la session 23 réécrits, la règle de
+priorité qu'ils figeaient ayant été volontairement changée).
+
 ### Terrains : nature du terrain (surface de jeu) reprise dans la demande d'autorisation — 2026-08-01
 Chaque **grand terrain** de la carte « Terrains & répartition » porte désormais sa **nature**
 (Synthétique, Gazon, Neige, Argile, Sable — mêmes libellés que le formulaire officiel), via un
