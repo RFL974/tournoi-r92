@@ -450,9 +450,11 @@ var FORMULES_PHASE2_AUT = {
 /** Phase 2 PRÉDITE depuis la structure du matin, ou null si non prédictible exactement. */
 function predirePhase2Aut(matin, fmt) {
   if (!matin || !matin.length) return null; // pas de matin ⇒ pas de structure ⇒ muet
+  var st = structureMatinAut(matin);
+  if (!st.nbPoules) return null; // aucune poule étiquetée ⇒ structure inconnue, on ne grave rien
   var formule = Object.prototype.hasOwnProperty.call(FORMULES_PHASE2_AUT, fmt) ? FORMULES_PHASE2_AUT[fmt] : null;
   if (!formule) return null;
-  var p2 = formule(structureMatinAut(matin));
+  var p2 = formule(st);
   return p2.nature === 'predit' ? p2.valeur : null;
 }
 
