@@ -109,6 +109,7 @@ function formulairePresence(data) {
   const cats = (data.categories || []);
   const engagees = parseCategoriesEngagees(data.club.categories_engagees);
   const nbParCat = jsonSur(data.club.nb_equipes_par_categorie, {});
+  detailInitial = jsonSur(data.club.detail_effectifs, {});
 
   let lignes = '';
   cats.forEach(function (c) {
@@ -118,9 +119,11 @@ function formulairePresence(data) {
     const coche = engagees.indexOf(nomCat.toUpperCase()) !== -1;
     const nbVal = (nbParCat && nbParCat[nomCat] != null) ? String(nbParCat[nomCat]) : '';
     const effMin = parseInt(txt(c.effectif_min), 10);
-    const infoEff = (isFinite(effMin) && effMin >= 1) ? (' · ' + effMin + ' joueurs mini/équipe') : '';
+    const aEffMin = isFinite(effMin) && effMin >= 1;
+    const infoEff = aEffMin ? (' · ' + effMin + ' joueurs mini/équipe') : '';
     lignes +=
-      '<div class="rep-cat" data-cat="' + echapper(nomCat) + '"' + (aMax ? ' data-max="' + max + '"' : '') + '>' +
+      '<div class="rep-cat" data-cat="' + echapper(nomCat) + '"' + (aMax ? ' data-max="' + max + '"' : '') +
+        (aEffMin ? ' data-effmin="' + effMin + '"' : '') + '>' +
         '<label class="rep-cat-titre"><input type="checkbox" class="rep-cat-case"' + (coche ? ' checked' : '') + '> ' +
           '<span class="rep-cat-nom">' + echapper(nomCat) + '</span>' +
           '<span class="rep-cat-info">' + (aMax ? 'jusqu\'à ' + max + ' équipe' + (max > 1 ? 's' : '') : 'plusieurs équipes possibles') + echapper(infoEff) + '</span>' +
@@ -132,6 +135,9 @@ function formulairePresence(data) {
             ' value="' + echapper(nbVal || (coche ? '1' : '')) + '" inputmode="numeric"> équipe(s)' +
         '</span>' +
         '<span class="rep-cat-err" role="alert"></span>' +
+        // Détail PAR ÉQUIPE (session 23) : joueurs + éducateurs de chaque équipe, rendu par
+        // majDetailEquipes selon le nombre d'équipes saisi (valeurs préservées au re-rendu).
+        '<div class="rep-cat-detail"' + (coche ? '' : ' hidden') + '></div>' +
       '</div>';
   });
 
@@ -139,13 +145,97 @@ function formulairePresence(data) {
     '<h2 class="rep-titre">Vos équipes engagées</h2>' +
     '<p class="rep-aide">Cochez les catégories concernées et indiquez le nombre d\'équipes pour chacune.</p>' +
     '<div class="rep-cats">' + (lignes || '<p class="rep-aide">Aucune catégorie ouverte pour le moment.</p>') + '</div>' +
-    '<label class="rep-champ-joueurs">Nombre total de joueurs attendus (toutes équipes)' +
-      '<input type="number" id="rep-joueurs" min="1" inputmode="numeric" value="' + echapper(txt(data.club.nb_joueurs_total)) + '"></label>' +
+    // Totaux VIVANTS (recalculés à chaque saisie) — remplacent l'ancien champ manuel global.
+    '<div class="rep-totaux" id="rep-totaux" hidden>' +
+      '<span>Total joueurs engagés : <strong id="rep-total-joueurs">0</strong></span>' +
+      '<span>Total éducateurs : <strong id="rep-total-educateurs">0</strong></span>' +
+    '</div>' +
     '<div class="rep-actions">' +
       '<button type="submit" class="rep-btn rep-btn-oui" id="btn-confirmer">Confirmer notre participation</button>' +
       '<span class="rep-form-msg" id="rep-form-msg"></span>' +
     '</div>' +
   '</form>';
+}
+
+/* --------------------------------------------------------------------------
+   DÉTAIL PAR ÉQUIPE (session 23) — joueurs + éducateurs de chaque équipe
+   -------------------------------------------------------------------------- */
+
+/** Détail déjà déclaré par le club (ré-ouverture de la page), ou {}. */
+let detailInitial = {};
+
+/** (Re)rend les lignes « Équipe i : joueurs / éducateurs » d'une catégorie, en PRÉSERVANT les
+ *  valeurs déjà saisies quand le nombre d'équipes change. `effMin` posé en min natif : le
+ *  navigateur aide, et la validation JS donne le message clair. */
+function majDetailEquipes(ligne) {
+  const zone = ligne.querySelector('.rep-cat-detail');
+  if (!zone) return;
+  const nomCat = ligne.getAttribute('data-cat');
+  const nb = parseInt(ligne.querySelector('.rep-cat-equipes').value, 10);
+  if (!isFinite(nb) || nb < 1) { zone.innerHTML = ''; return; }
+  // Valeurs actuelles (DOM d'abord, sinon détail initial du club).
+  const actuels = [];
+  zone.querySelectorAll('.rep-equipe').forEach(function (eq, i) {
+    actuels[i] = {
+      j: eq.querySelector('.rep-eq-joueurs').value,
+      e: eq.querySelector('.rep-eq-educateurs').value
+    };
+  });
+  const init = (detailInitial && detailInitial[nomCat]) || [];
+  let html = '';
+  for (let i = 0; i < nb; i++) {
+    const v = actuels[i] || (init[i] ? { j: String(init[i].j), e: String(init[i].e) } : { j: '', e: '1' });
+    html +=
+      '<div class="rep-equipe">' +
+        '<span class="rep-eq-nom">Équipe ' + (i + 1) + '</span>' +
+        '<label>joueurs <input type="number" class="rep-eq-joueurs" min="1" inputmode="numeric" value="' + echapper(v.j) + '"></label>' +
+        '<label>éducateurs <input type="number" class="rep-eq-educateurs" min="0" inputmode="numeric" value="' + echapper(v.e) + '"></label>' +
+        '<span class="rep-eq-note" role="status"></span>' +
+      '</div>';
+  }
+  zone.innerHTML = html;
+  zone.querySelectorAll('.rep-equipe').forEach(function (eq) { majNoteEquipe(ligne, eq); });
+  majTotaux();
+}
+
+/** Note FFR d'UNE équipe : au minimum → recommandation DOUCE (jamais bloquante) ; sous le minimum
+ *  → signal clair (bloquant à l'envoi). La règle : à l'effectif mini, chaque enfant joue la
+ *  quasi-totalité du temps de jeu, or la FFR le plafonne par joueur et par jour. */
+function majNoteEquipe(ligne, eq) {
+  const note = eq.querySelector('.rep-eq-note');
+  const effMin = parseInt(ligne.getAttribute('data-effmin'), 10);
+  const j = parseInt(eq.querySelector('.rep-eq-joueurs').value, 10);
+  note.className = 'rep-eq-note';
+  note.textContent = '';
+  if (!isFinite(effMin) || !isFinite(j)) return;
+  if (j < effMin) {
+    note.classList.add('rep-eq-note-mini');
+    note.textContent = '⚠️ ' + effMin + ' joueurs minimum par équipe (règle FFR).';
+  } else if (j === effMin) {
+    note.classList.add('rep-eq-note-conseil');
+    note.textContent = '💡 À ' + effMin + ' joueurs (le minimum), chaque enfant joue la quasi-totalité ' +
+      'du temps de jeu — la FFR le plafonne par joueur et par jour. Si possible, venez à ' + (effMin + 1) +
+      ' ou plus pour faire tourner.';
+  }
+}
+
+/** Recalcule et affiche les totaux joueurs / éducateurs (catégories cochées uniquement). */
+function majTotaux() {
+  const zone = document.getElementById('rep-totaux');
+  if (!zone) return;
+  let tj = 0, te = 0, unChiffre = false;
+  document.querySelectorAll('.rep-cat').forEach(function (ligne) {
+    if (!ligne.querySelector('.rep-cat-case').checked) return;
+    ligne.querySelectorAll('.rep-equipe').forEach(function (eq) {
+      const j = parseInt(eq.querySelector('.rep-eq-joueurs').value, 10);
+      const e = parseInt(eq.querySelector('.rep-eq-educateurs').value, 10);
+      if (isFinite(j)) { tj += j; unChiffre = true; }
+      if (isFinite(e)) { te += e; unChiffre = true; }
+    });
+  });
+  zone.hidden = !unChiffre;
+  document.getElementById('rep-total-joueurs').textContent = String(tj);
+  document.getElementById('rep-total-educateurs').textContent = String(te);
 }
 
 /* --------------------------------------------------------------------------
@@ -159,6 +249,10 @@ function brancherEvenements() {
   zone.addEventListener('input', onInputReponse);
   const form = document.getElementById('form-presence');
   if (form) form.addEventListener('submit', onConfirmerPresence);
+  // Détail par équipe : rend les lignes des catégories déjà cochées (club qui rouvre sa réponse).
+  document.querySelectorAll('.rep-cat').forEach(function (ligne) {
+    if (ligne.querySelector('.rep-cat-case').checked) majDetailEquipes(ligne);
+  });
 }
 
 function onClicReponse(e) {
@@ -184,20 +278,36 @@ function onChangeReponse(e) {
   const ligne = boite.closest('.rep-cat');
   const nb = ligne.querySelector('.rep-cat-nb');
   const champ = ligne.querySelector('.rep-cat-equipes');
+  const detailZone = ligne.querySelector('.rep-cat-detail');
   if (boite.checked) {
     nb.hidden = false;
     if (champ && !txt(champ.value)) champ.value = '1';
+    if (detailZone) detailZone.hidden = false;
+    majDetailEquipes(ligne);
     validerLigneCat(ligne);
   } else {
     nb.hidden = true;
     ligne.querySelector('.rep-cat-err').textContent = '';
+    if (detailZone) { detailZone.hidden = true; }
   }
+  majTotaux();
 }
 
 /** Validation EN DIRECT du nombre d'équipes vs le maximum de la catégorie. */
 function onInputReponse(e) {
   const champ = e.target.closest('.rep-cat-equipes');
-  if (champ) validerLigneCat(champ.closest('.rep-cat'));
+  if (champ) {
+    const ligne = champ.closest('.rep-cat');
+    validerLigneCat(ligne);
+    majDetailEquipes(ligne);
+    return;
+  }
+  const eqInput = e.target.closest('.rep-eq-joueurs, .rep-eq-educateurs');
+  if (eqInput) {
+    const ligne = eqInput.closest('.rep-cat');
+    majNoteEquipe(ligne, eqInput.closest('.rep-equipe'));
+    majTotaux();
+  }
 }
 
 /** Vérifie une ligne catégorie : nombre ≥ 1 et ≤ max si défini. Renvoie true si valide. */
@@ -235,8 +345,31 @@ async function onConfirmerPresence(e) {
   });
   if (!valide) { msg.textContent = '⚠️ Corrigez les nombres d\'équipes indiqués.'; msg.classList.add('ko'); return; }
 
-  const joueurs = parseInt(document.getElementById('rep-joueurs').value, 10);
-  if (!isFinite(joueurs) || joueurs < 1) { msg.textContent = '⚠️ Indiquez le nombre total de joueurs attendus.'; msg.classList.add('ko'); return; }
+  // Détail par équipe : joueurs (≥ min FFR, bloquant) + éducateurs (≥ 0). Totaux calculés ici
+  // pour l'envoi de compatibilité (nb_joueurs_total) — le serveur recalcule de toute façon.
+  const detail = {};
+  let totalJoueurs = 0;
+  let detailValide = true;
+  cochees.forEach(function (l) {
+    const nomCat = l.getAttribute('data-cat');
+    const effMin = parseInt(l.getAttribute('data-effmin'), 10);
+    const eqs = [];
+    l.querySelectorAll('.rep-equipe').forEach(function (eq) {
+      const j = parseInt(eq.querySelector('.rep-eq-joueurs').value, 10);
+      let ed = parseInt(eq.querySelector('.rep-eq-educateurs').value, 10);
+      if (!isFinite(ed) || ed < 0) ed = 0;
+      if (!isFinite(j) || j < 1 || (isFinite(effMin) && j < effMin)) { detailValide = false; }
+      eqs.push({ j: j, e: ed });
+      if (isFinite(j)) totalJoueurs += j;
+    });
+    if (eqs.length !== parCat[nomCat]) detailValide = false;
+    detail[nomCat] = eqs;
+  });
+  if (!detailValide) {
+    msg.textContent = '⚠️ Indiquez les joueurs de chaque équipe (minimum FFR respecté).';
+    msg.classList.add('ko');
+    return;
+  }
 
   const bouton = document.getElementById('btn-confirmer');
   bouton.disabled = true;
@@ -247,7 +380,8 @@ async function onConfirmerPresence(e) {
       tournoi: repParams.tournoi, club: repParams.club, token: repParams.token,
       reponse: 'accepte',
       nb_equipes_par_categorie: JSON.stringify(parCat),
-      nb_joueurs_total: joueurs
+      detail_effectifs: JSON.stringify(detail),
+      nb_joueurs_total: totalJoueurs
     });
     afficherConfirmation('🎉 Merci, votre participation est enregistrée !',
       'Votre dossier complet vous sera envoyé prochainement par l\'organisation.');

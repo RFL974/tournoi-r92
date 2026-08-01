@@ -270,6 +270,16 @@ function lancerTestsFFR() {
   testS22_tarifNonMontantSansObjet(etat);
   testS22_rienNullePartManquant(etat);
 
+  // Session 23 — détail par équipe (joueurs + éducateurs) déclaré à la réponse d'invitation.
+  testS23_detailValide(etat);
+  testS23_detailLongueurFausse(etat);
+  testS23_detailSousLeMinimum(etat);
+  testS23_detailJoueursManquants(etat);
+  testS23_educateursZeroAccepte(etat);
+  testS23_educateursCascadeB3(etat);
+  testS23_educateursSaisiPrioritaire(etat);
+  testS23_educateursRienManquant(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -2668,4 +2678,68 @@ function testS22_rienNullePartManquant(etat) {
   var montant = _autoChamp(d, 'Droits — montant');
   _ffrAssert(etat, oui && oui.etat === 'manquant' && montant && montant.etat === 'manquant',
     'S22 : rien nulle part → manquants');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SESSION 23 — détail par équipe (réponse d'invitation) + cascade B.3        */
+/*  validerDetailEffectifs est PUR ; totaux TOUJOURS calculés serveur.         */
+/* -------------------------------------------------------------------------- */
+
+/** Détail complet et valide ⇒ totaux serveur corrects. */
+function testS23_detailValide(etat) {
+  var r = validerDetailEffectifs({ U8: 2, U10: 1 },
+    JSON.stringify({ U8: [{ j: 8, e: 2 }, { j: 7, e: 1 }], U10: [{ j: 10, e: 2 }] }),
+    { U8: 5, U10: 7 });
+  _ffrAssert(etat, !r.error && r.totalJoueurs === 25 && r.totalEducateurs === 5,
+    'S23 : détail valide → totaux 25 joueurs / 5 éducateurs (calculés serveur)');
+  _ffrAssert(etat, r.detail.U8.length === 2 && r.detail.U8[0].j === 8, 'S23 : détail normalisé conservé');
+}
+
+/** Moins d'entrées que d'équipes ⇒ erreur claire. */
+function testS23_detailLongueurFausse(etat) {
+  var r = validerDetailEffectifs({ U8: 2 }, JSON.stringify({ U8: [{ j: 8, e: 1 }] }), { U8: 5 });
+  _ffrAssert(etat, r.error && r.error.indexOf('U8') !== -1, 'S23 : détail incomplet → erreur');
+}
+
+/** Joueurs sous l'effectif minimum FFR ⇒ refusé (règle du formulaire, cohérente avec l'UI). */
+function testS23_detailSousLeMinimum(etat) {
+  var r = validerDetailEffectifs({ U8: 1 }, JSON.stringify({ U8: [{ j: 4, e: 1 }] }), { U8: 5 });
+  _ffrAssert(etat, r.error && r.error.indexOf('5 joueurs minimum') !== -1, 'S23 : sous le minimum → refusé');
+}
+
+/** Joueurs absents/invalides ⇒ erreur (jamais deviné). */
+function testS23_detailJoueursManquants(etat) {
+  var r = validerDetailEffectifs({ U8: 1 }, JSON.stringify({ U8: [{ e: 2 }] }), { U8: null });
+  _ffrAssert(etat, !!r.error, 'S23 : joueurs manquants → erreur');
+}
+
+/** Éducateurs absents ou 0 ⇒ acceptés comme 0 (réponse honnête, jamais bloquée). */
+function testS23_educateursZeroAccepte(etat) {
+  var r = validerDetailEffectifs({ U8: 1 }, JSON.stringify({ U8: [{ j: 6 }] }), { U8: 5 });
+  _ffrAssert(etat, !r.error && r.totalEducateurs === 0 && r.detail.U8[0].e === 0,
+    'S23 : éducateurs absents → 0, jamais bloquant');
+}
+
+/** B.3 : la somme des éducateurs déclarés répond à « Nombre d'éducateurs » (calcule + origine). */
+function testS23_educateursCascadeB3(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 9 } },
+    _cfgAutorisation([], {}), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.valeur === '9' && c.etat === 'calcule', 'S23 : B.3 éducateurs = 9 (cascade)');
+  _ffrAssert(etat, c.origine.indexOf('déclarés par les clubs') !== -1, 'S23 : origine dit « déclarés »');
+}
+
+/** org_nb_educateurs SAISI reste prioritaire sur la cascade. */
+function testS23_educateursSaisiPrioritaire(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 9 } },
+    _cfgAutorisation([], { org_nb_educateurs: '24' }), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.valeur === '24' && c.etat === 'saisi', 'S23 : saisi prioritaire sur cascade');
+}
+
+/** Rien déclaré, rien saisi ⇒ manquant (comportement historique). */
+function testS23_educateursRienManquant(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {}), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.etat === 'manquant', 'S23 : rien nulle part → manquant');
 }

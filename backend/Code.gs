@@ -47,10 +47,14 @@ var ENTETES = {
   // les nouvelles sont ajoutées à droite (migration douce : assurerColonnesClubsInvites).
   //   alerte_ecart        : message posé si un club a RÉDUIT son engagement après création des
   //                         équipes (rien n'est supprimé automatiquement — vérification manuelle).
+  //   detail_effectifs    : JSON par catégorie, une entrée PAR ÉQUIPE : {"U8":[{"j":8,"e":2},…]}
+  //                         (j = joueurs, e = éducateurs) — déclaré par le club à la réponse (session 23).
+  //   nb_educateurs_total : somme des éducateurs déclarés (calculée SERVEUR depuis detail_effectifs) ;
+  //                         alimente la cascade B.3 de la demande d'autorisation.
   ClubsInvites: ['club_nom', 'club_contact_nom', 'club_contact_email', 'statut', 'date_ajout',
                  'club_contact_prenom', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee',
                  'club_token', 'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total',
-                 'alerte_ecart'],
+                 'alerte_ecart', 'detail_effectifs', 'nb_educateurs_total'],
   // Colonnes 1-12 : historiques (matin + après-midi CROISE/LIBRE).
   // Colonnes 13-18 : format d'après-midi + tableau à élimination (COUPE_PLATEAU).
   //   format        : CROISE / LIBRE / COUPE_PLATEAU (recopié depuis la catégorie ; vide pour le matin)
@@ -2129,9 +2133,18 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
     note: 'Nombre de phases = format d\'après-midi déclaré (zone B) ; matchs/équipe remplis à la génération du planning. Même durée aux deux phases.' });
 
   // B.3 ARBITRAGE (saisi ; arbitrage_organisation est affiché à part côté écran, hors feuille)
+  // Éducateurs — CASCADE (session 23) : la somme des éducateurs DÉCLARÉS par les clubs acceptés
+  // (réponse à l'invitation, detail_effectifs) répond à la question ; org_nb_educateurs saisi
+  // reste prioritaire ; rien nulle part ⇒ manquant.
+  var educateurs = champSaisiAutorisation(config, 'org_nb_educateurs');
+  var nbEducCascade = (participants.nbEducateurs != null) ? Number(participants.nbEducateurs) : 0;
+  if (educateurs.etat === 'manquant' && nbEducCascade > 0) {
+    educateurs = { valeur: String(nbEducCascade), etat: 'calcule',
+                   origine: 'déclarés par les clubs acceptés (réponse à l\'invitation)' };
+  }
   sections.push({ titre: 'B.3 — Arbitrage', champs: [
     saisi('Nombre d\'arbitres', 'org_nb_arbitres'),
-    saisi('Nombre d\'éducateurs', 'org_nb_educateurs'),
+    champ('Nombre d\'éducateurs', educateurs),
     saisi('Nombre de doublettes', 'org_nb_doublettes')
   ] });
 
@@ -2226,12 +2239,14 @@ function getDossierAutorisation(classeur) {
   // déclarés). Source 2 : clubs distincts déduits des noms d'équipes via clubDe (convention « {club} »
   // / « {club}-N », déjà utilisée en production pour la répartition des poules). La somme des joueurs
   // n'a PAS de source 2 : elle ne se déduit d'aucun nom ⇒ retombera sur org_nb_participants (saisi).
-  var nbClubsInvites = 0, nbParticipants = 0;
+  var nbClubsInvites = 0, nbParticipants = 0, nbEducateurs = 0;
   clubs.forEach(function (c) {
     if (statutClubCanonique(c.statut) === 'Accepté') {
       nbClubsInvites++;
       var n = parseInt(c.nb_joueurs_total, 10);
       if (isFinite(n)) nbParticipants += n;
+      var ed = parseInt(c.nb_educateurs_total, 10);
+      if (isFinite(ed)) nbEducateurs += ed;
     }
   });
   var setClubsEquipes = {};
@@ -2274,7 +2289,8 @@ function getDossierAutorisation(classeur) {
       heure_fin: g.heure_fin_projetee || g.heure_fin_matin || g.heure_fin || ''
     },
     participants: { nbClubsInvites: nbClubsInvites, nbClubsEquipes: nbClubsEquipes,
-                    nbEquipes: equipes.length, nbParticipants: nbParticipants },
+                    nbEquipes: equipes.length, nbParticipants: nbParticipants,
+                    nbEducateurs: nbEducateurs },
     catsPresentes: catsPresentes,
     matchsParCategorie: mpc,
     terrains: terrains
@@ -3077,7 +3093,9 @@ function getReponseInvitation(classeur, params) {
       date_reponse:        String(club.date_reponse || ''),
       categories_engagees: String(club.categories_engagees || ''),
       nb_equipes_par_categorie: String(club.nb_equipes_par_categorie || ''),
-      nb_joueurs_total:    String(club.nb_joueurs_total || '')
+      nb_joueurs_total:    String(club.nb_joueurs_total || ''),
+      detail_effectifs:    String(club.detail_effectifs || ''),
+      nb_educateurs_total: String(club.nb_educateurs_total || '')
     },
     tournoi: {
       nom:        String(g.tournoi_nom || ''),
@@ -3144,20 +3162,76 @@ function repondreInvitation(classeur, data) {
     propres[cat] = nb;
   }
 
-  var nbJoueurs = parseInt(data.nb_joueurs_total, 10);
-  if (!isFinite(nbJoueurs) || nbJoueurs < 1) return { error: 'Indique le nombre total de joueurs attendus.' };
+  // Détail par équipe (session 23) : joueurs + éducateurs de CHAQUE équipe. Optionnel (anciens
+  // clients : champ absent → chemin historique nb_joueurs_total). Totaux calculés SERVEUR.
+  var effMinParCat = {};
+  (config.categories || []).forEach(function (c) {
+    if (String(c.presente).toLowerCase() !== 'oui') return;
+    var em = parseInt(String(c.effectif_min || '').trim(), 10);
+    effMinParCat[String(c.categorie || '')] = (isFinite(em) && em >= 1) ? em : null;
+  });
+  var champs = {
+    statut: 'Accepté',
+    nb_equipes_par_categorie: JSON.stringify(propres),
+    date_reponse: today
+  };
+  if (data.detail_effectifs != null && String(data.detail_effectifs).trim() !== '') {
+    var vd = validerDetailEffectifs(propres, data.detail_effectifs, effMinParCat);
+    if (vd.error) return { error: vd.error };
+    champs.detail_effectifs = JSON.stringify(vd.detail);
+    champs.nb_joueurs_total = String(vd.totalJoueurs);
+    champs.nb_educateurs_total = String(vd.totalEducateurs);
+  } else {
+    var nbJoueurs = parseInt(data.nb_joueurs_total, 10);
+    if (!isFinite(nbJoueurs) || nbJoueurs < 1) return { error: 'Indique le nombre total de joueurs attendus.' };
+    champs.nb_joueurs_total = String(nbJoueurs);
+  }
 
   // categories_engagees dérivé des catégories saisies (ordre naturel U8 < U10 < …).
   var catsTriees = Object.keys(propres).sort(function (a, b) { return comparerCategorieServeur(a, b); });
+  champs.categories_engagees = catsTriees.join(',');
 
-  ecrireCellulesClub(onglet, ligne, {
-    statut: 'Accepté',
-    categories_engagees: catsTriees.join(','),
-    nb_equipes_par_categorie: JSON.stringify(propres),
-    nb_joueurs_total: String(nbJoueurs),
-    date_reponse: today
-  });
+  ecrireCellulesClub(onglet, ligne, champs);
   return { ok: true, statut: 'Accepté', categories_engagees: catsTriees.join(',') };
+}
+
+/**
+ * Valide le DÉTAIL PAR ÉQUIPE d'une réponse d'invitation (pur, testé). `propres` = { cat: nbEquipes }
+ * déjà validé ; `detailBrut` = JSON { cat: [{j,e}, …] } (une entrée par équipe) ; `effMinParCat` =
+ * { cat: effectif minimum ou null }. Règles :
+ *  - mêmes catégories que `propres`, autant d'entrées que d'équipes ;
+ *  - j (joueurs) : entier ≥ 1, et ≥ effectif minimum FFR de la catégorie s'il est connu ;
+ *  - e (éducateurs) : entier ≥ 0 (0 accepté : réponse honnête plutôt que chiffre forcé).
+ * Totaux calculés ICI (jamais confiés au client). @return {{detail,totalJoueurs,totalEducateurs}|{error}}
+ */
+function validerDetailEffectifs(propres, detailBrut, effMinParCat) {
+  var detail = detailBrut;
+  if (typeof detail === 'string') { try { detail = JSON.parse(detail || '{}'); } catch (e) { return { error: 'Détail des effectifs illisible.' }; } }
+  if (!detail || typeof detail !== 'object') return { error: 'Détail des effectifs illisible.' };
+  var propre = {}, tj = 0, te = 0;
+  var cats = Object.keys(propres || {});
+  for (var i = 0; i < cats.length; i++) {
+    var cat = cats[i];
+    var liste = detail[cat];
+    if (!Array.isArray(liste) || liste.length !== propres[cat]) {
+      return { error: 'Détail incomplet pour « ' + cat + ' » : indique joueurs et éducateurs de chaque équipe.' };
+    }
+    var out = [];
+    for (var k = 0; k < liste.length; k++) {
+      var j = parseInt(liste[k] && liste[k].j, 10);
+      var e = parseInt(liste[k] && liste[k].e, 10);
+      if (!isFinite(j) || j < 1) return { error: '« ' + cat + ' » équipe ' + (k + 1) + ' : indique le nombre de joueurs.' };
+      var em = effMinParCat ? effMinParCat[cat] : null;
+      if (em != null && j < em) {
+        return { error: '« ' + cat + ' » équipe ' + (k + 1) + ' : ' + em + ' joueurs minimum par équipe (règle FFR).' };
+      }
+      if (!isFinite(e) || e < 0) e = 0;
+      out.push({ j: j, e: e });
+      tj += j; te += e;
+    }
+    propre[cat] = out;
+  }
+  return { detail: propre, totalJoueurs: tj, totalEducateurs: te };
 }
 
 /** Écrit plusieurs cellules d'un club (par nom de colonne) en une passe. */
