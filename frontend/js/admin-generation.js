@@ -465,10 +465,15 @@ function afficherPlanning(poules, matchs) {
       html += tableMatchs(matin, estScfCat ? 'Groupe' : 'Poule');
     }
     if (aprem.length) {
-      html += '<div class="planning-phase">' + (phaseLabelScf(catObj, true) || '🏉 Après-midi — classement croisé') +
+      // Vocabulaire « Poule haute / basse » si la catégorie est en POULES_NIVEAU (repli : Niveau N1).
+      const estPn = !estScfCat && catObj && formatApresMidiDe(catObj) === 'POULES_NIVEAU';
+      const nbNiv = estPn ? nbPoulesNiveauCat(aprem, cat) : 0;
+      html += '<div class="planning-phase">' + (phaseLabelScf(catObj, true) ||
+              (estPn ? '🏉 Après-midi — poules de niveau' : '🏉 Après-midi — classement croisé')) +
               badgeAvancement(saisisAprem, aprem.length) + '</div>';
-      html += tableMatchs(aprem, estScfCat ? 'Poule' : 'Niveau',
-                          estScfCat ? function (m) { return pouleEFG(m.poule); } : null);
+      html += tableMatchs(aprem, estScfCat ? 'Poule' : (estPn ? 'Poule' : 'Niveau'),
+                          estScfCat ? function (m) { return pouleEFG(m.poule); }
+                          : (estPn ? function (m) { return libellePouleNiveau(catObj, m.poule, nbNiv) || m.poule; } : null));
     }
   });
 

@@ -105,7 +105,21 @@ function catsInvitees(cats) {
     return '<li><span class="inv-cat-nom">' + echapper(txt(c.categorie)) + '</span>' +
       '<span class="inv-cat-detail">' + echapper(details.join(' · ')) + '</span></li>';
   });
-  return '<ul class="inv-liste-cats">' + lignes.join('') + '</ul>';
+  // Rappel sécurité FFR (session 20) : un club qui vient à l'effectif MINIMUM fait jouer chaque
+  // enfant la quasi-totalité du temps de jeu de l'équipe — or la FFR plafonne le temps de jeu par
+  // joueur et par jour (règle de sécurité). Affiché dès qu'au moins une catégorie a un effectif
+  // minimum ; invite à venir avec une feuille de match complète pour faire tourner.
+  const aEffectifMin = cats.some(function (c) {
+    const n = parseInt(txt(c.effectif_min), 10);
+    return isFinite(n) && n >= 1;
+  });
+  const rappel = aEffectifMin
+    ? '<p class="inv-rappel-effectif">⚠️ <strong>Rappel sécurité FFR</strong> — venir à l\'effectif ' +
+      'minimum signifie que chaque enfant joue la quasi-totalité du temps de jeu de l\'équipe, or la ' +
+      'FFR plafonne le temps de jeu par joueur et par jour. Prévoyez une feuille de match complète ' +
+      'pour faire tourner les enfants.</p>'
+    : '';
+  return '<ul class="inv-liste-cats">' + lignes.join('') + '</ul>' + rappel;
 }
 
 /** c) Format des matchs en UNE phrase factuelle simple (pas de détail technique). */

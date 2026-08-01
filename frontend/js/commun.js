@@ -88,6 +88,41 @@ function groupeLabelScf(cat, nomPoule, taille, estClassement) {
   return (taille === 4 ? 'Quadrangulaire ' : 'Triangulaire ') + String(nomPoule == null ? '' : nomPoule);
 }
 
+/* ---------------------------------------------------------------------------
+   Vocabulaire POULES DE NIVEAU (session 20) — mêmes règles que les helpers SCF :
+   renvoient null pour une catégorie qui n'est PAS en POULES_NIVEAU, l'appelant
+   garde alors son libellé habituel (« Niveau N1 »…). Rien ne change ailleurs.
+   --------------------------------------------------------------------------- */
+
+/** Nombre de poules de niveau (étiquettes N1..Nk distinctes) d'une catégorie, compté sur les
+ *  matchs d'après-midi (phase 'classement'). Sert à savoir laquelle est la « Poule basse ». */
+function nbPoulesNiveauCat(matchs, categorie) {
+  var s = {};
+  (matchs || []).forEach(function (m) {
+    if (m.categorie === categorie && String(m.phase) === 'classement' &&
+        /^N\d+$/.test(String(m.poule == null ? '' : m.poule).trim())) {
+      s[String(m.poule).trim()] = 1;
+    }
+  });
+  return Object.keys(s).length;
+}
+
+/** Libellé d'une poule de niveau d'après-midi pour une catégorie en POULES_NIVEAU, ou null sinon.
+ *  N1 → « Poule haute » ; dernière → « Poule basse » ; intermédiaires → « Poule niveau k » ;
+ *  une seule poule → « Poule de classement ». `nbNiveaux` = total de poules de niveau (0 = inconnu). */
+function libellePouleNiveau(cat, nomPoule, nbNiveaux) {
+  var f = (cat && cat.format_apresmidi != null) ? String(cat.format_apresmidi).trim().toUpperCase() : '';
+  if (f !== 'POULES_NIVEAU') return null;
+  var m = /^N(\d+)$/.exec(String(nomPoule == null ? '' : nomPoule).trim());
+  if (!m) return null;
+  var k = parseInt(m[1], 10);
+  var n = parseInt(nbNiveaux, 10) || 0;
+  if (n === 1) return 'Poule de classement';
+  if (k === 1) return 'Poule haute';
+  if (n >= 2 && k === n) return 'Poule basse';
+  return 'Poule niveau ' + k;
+}
+
 /** Texte de l'arbitre DÉSIGNÉ d'un match (l'équipe qui ne joue pas, Super Challenge), ou '' si aucun.
  *  `nomFn` = fonction id_equipe → nom lisible. Renvoie du TEXTE BRUT (l'appelant échappe pour le HTML). */
 function libelleArbitreScf(m, nomFn) {
