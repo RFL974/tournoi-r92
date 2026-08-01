@@ -37,6 +37,13 @@ const CHAMPS_CATEGORIE = [
    explication concrète visible au moment du choix — jamais un simple menu déroulant. */
 const FORMATS_APRESMIDI = [
   {
+    cle: 'POULES_NIVEAU', titre: 'Poules de niveau (haute / basse)',
+    desc: "Le classement de midi est découpé en poules de niveau de 4-5 équipes (poule haute = les "
+        + "meilleurs, puis niveau 2, etc.), chacune jouée en round-robin COMPLET : 3 matchs chacune "
+        + "dans une poule de 4. Le 1ᵉʳ de la poule haute remporte le tournoi — sans finale, conforme "
+        + "EDR. Recommandé à 2-3 poules le matin (le croisé classique n'y donne que 1-2 matchs)."
+  },
+  {
     cle: 'CROISE', titre: 'Classement croisé',
     desc: "Les équipes sont reclassées par niveau après les poules du matin (les 1ᵉʳˢ de chaque "
         + "poule ensemble = Niveau 1, etc.), puis s'affrontent en round-robin dans leur niveau. "
@@ -71,7 +78,7 @@ const FORMAT_COUPE_PLATEAU_LEGACY = {
 /** Format d'après-midi retenu pour une catégorie (défaut = CROISE, comportement historique). */
 function formatApresMidiDe(cat) {
   const f = (cat && cat.format_apresmidi != null) ? String(cat.format_apresmidi).trim().toUpperCase() : '';
-  return (f === 'LIBRE' || f === 'COUPE_PLATEAU' || f === 'CROISE_DIAGONAL') ? f : 'CROISE';
+  return (f === 'LIBRE' || f === 'COUPE_PLATEAU' || f === 'CROISE_DIAGONAL' || f === 'POULES_NIVEAU') ? f : 'CROISE';
 }
 
 /** Mode d'attribution des terrains d'une catégorie : true = Auto (onglet Terrains), false = Manuel.

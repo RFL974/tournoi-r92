@@ -170,7 +170,7 @@ function creerOngletConfig(classeur) {
   var titreZoneB = zoneA.length + 2;
   var ligneDebutZoneB = zoneA.length + 3;
   // nb_poules : vide = Auto (calculé selon le nombre d'équipes) ; un nombre = forcé.
-  // format_apresmidi : CROISE / CROISE_DIAGONAL / LIBRE / COUPE_PLATEAU (vide = CROISE, historique).
+  // format_apresmidi : CROISE / CROISE_DIAGONAL / POULES_NIVEAU / LIBRE / COUPE_PLATEAU (vide = CROISE, historique).
   // param_format : JSON court des réglages du format (ex COUPE_PLATEAU : {"nbQualifiesCoupe":2}).
   // terrains_auto : oui = terrains attribués via l'onglet Terrains (défaut) ; non = saisie manuelle.
   // reglement : texte libre OU URL (une valeur commençant par « http » sera affichée en lien).
@@ -968,6 +968,15 @@ var FORMULES_PHASE2 = {
   },
   LIBRE: function (s) {
     return { valeur: s.totalEquipes >= 2 ? s.totalEquipes - 1 : 0, nature: 'predit' };
+  },
+  // POULES_NIVEAU (session 20) : classement de midi découpé en tranches de 4-5 jouées en
+  // round-robin complet ⇒ matchs/équipe = taille de la PLUS GRANDE tranche − 1 (max exact, même
+  // sémantique que maxMatchsParEquipe ; les tranches ne dépendent que du nombre total d'équipes).
+  POULES_NIVEAU: function (s) {
+    var tailles = taillesPoulesNiveau(s.totalEquipes);
+    var max = 0;
+    for (var i = 0; i < tailles.length; i++) { if (tailles[i] > max) max = tailles[i]; }
+    return { valeur: max >= 2 ? max - 1 : 0, nature: 'predit' };
   }
 };
 
@@ -1837,7 +1846,7 @@ function predictionPhase2FormatSportif(matin, fmt, cfgCat) {
  * une fois les scores du matin saisis. Déduire les phases des matchs générés déclarait « 1 phase »
  * pour un CROISE tant que l'après-midi n'existait pas — le bug corrigé ici.
  *
- *   - CROISE / CROISE_DIAGONAL → 2 phases (poules de qualification puis poules de niveau)
+ *   - CROISE / CROISE_DIAGONAL / POULES_NIVEAU → 2 phases (poules de qualification puis poules de niveau)
  *   - LIBRE                    → 1 phase, matchs/équipe comptant TOUTE la journée (amicaux compris)
  *   - COUPE_PLATEAU            → statut « manquant » : phases finales HORS PÉRIMÈTRE École de Rugby
  *   - vide / inconnu           → statut « manquant », motif « format d'après-midi non configuré »
@@ -1853,7 +1862,7 @@ function formatSportifCategorie(matchsCat, cfgCat) {
   var duree = dureeMatchLibelleAutorisation(cfgCat);
   function compter(sousListe) { return sousListe.length ? maxMatchsParEquipe(sousListe) : null; }
 
-  if (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL') {
+  if (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL' || fmt === 'POULES_NIVEAU') {
     // Phase 2 : CONSTATÉE si l'après-midi est généré, sinon PRÉDITE exactement quand la structure
     // des poules du matin le permet (sessions 9-10 : c'est une conséquence de la structure, pas une
     // estimation) — la demande se dépose des semaines avant le jour J, l'info est déjà connue.
@@ -4347,11 +4356,11 @@ function comparerClassement(a, b) {
 /* ===================== PHASE APRÈS-MIDI (répartiteur multi-formats) ===================== */
 /**
  * Format d'après-midi RETENU pour une catégorie (défaut historique = CROISE).
- * Valeurs : CROISE / CROISE_DIAGONAL / LIBRE / COUPE_PLATEAU.
+ * Valeurs : CROISE / CROISE_DIAGONAL / POULES_NIVEAU / LIBRE / COUPE_PLATEAU.
  */
 function formatApresMidi(cat) {
   var f = (cat && cat.format_apresmidi != null) ? String(cat.format_apresmidi).trim().toUpperCase() : '';
-  return (f === 'LIBRE' || f === 'COUPE_PLATEAU' || f === 'CROISE_DIAGONAL') ? f : 'CROISE';
+  return (f === 'LIBRE' || f === 'COUPE_PLATEAU' || f === 'CROISE_DIAGONAL' || f === 'POULES_NIVEAU') ? f : 'CROISE';
 }
 
 /** Lit et parse le JSON `param_format` d'une catégorie (renvoie {} si vide ou illisible). */
@@ -4406,6 +4415,7 @@ function genererApresMidi(classeur) {
     if (fmt === 'LIBRE')              res = fixturesApresMidiLibre(cat, cl);
     else if (fmt === 'COUPE_PLATEAU') res = fixturesApresMidiCoupePlateau(cat, cl, lireParamFormat(cat));
     else if (fmt === 'CROISE_DIAGONAL') res = fixturesApresMidiCroiseDiagonal(cat, cl);
+    else if (fmt === 'POULES_NIVEAU') res = fixturesApresMidiPoulesNiveau(cat, cl);
     else                              res = fixturesApresMidiCroise(cat, cl);
 
     if (res.error) { erreurs.push('Catégorie ' + cat.categorie + ' (' + fmt + ') : ' + res.error); }
@@ -4490,6 +4500,71 @@ function fixturesApresMidiCroise(cat, cl) {
     var label = 'N' + (r + 1);
     tourneeToutesRondes(groupe).forEach(function (pr) {
       fixtures.push({ poule: label, equipe_A: pr.a, equipe_B: pr.b, round: pr.round, format: 'CROISE' });
+    });
+  }
+  return { fixtures: fixtures };
+}
+
+/* ---------- Sous-générateur : POULES_NIVEAU (session 20) ---------- */
+/**
+ * Tailles des poules de niveau pour n équipes : poules de 4 à 5, « le haut joue plus » (les
+ * équipes en trop vont aux poules du HAUT, qui passent à 5). Même philosophie de découpage que le
+ * matin (nombrePoules), appliquée au classement de midi. Pur, partagé avec FORMULES_PHASE2.
+ *   8→[4,4] · 6→[3,3] · 9→[5,4] · 12→[4,4,4] · 16→[4,4,4,4] · 20→[5,5,5,5] · 7→[4,3]
+ * (nb = ceil(n/5) garde les poules ≤ 5 ; quand les poules du matin font 4-5, les tranches tombent
+ * pile sur les rangs — la poule haute devient « le championnat des 1ᵉʳˢ ».)
+ */
+function taillesPoulesNiveau(n) {
+  if (n < 2) return [];
+  var nb = Math.ceil(n / 5);
+  var base = Math.floor(n / nb), reste = n % nb;
+  var tailles = [];
+  for (var i = 0; i < nb; i++) tailles.push(base + (i < reste ? 1 : 0));
+  return tailles;
+}
+
+/**
+ * Classement de MIDI toutes poules confondues : d'abord tous les 1ᵉʳˢ, puis tous les 2ᵉˢ, etc. ;
+ * à rang égal, départage aux POINTS du matin (comparerClassement : pts, diff, marqués). Renvoie la
+ * liste ordonnée des entrées de classement. Pur.
+ */
+function ordonnerClassementMidi(cl) {
+  var poules = (cl && cl.poules) || [];
+  var rangMax = 0;
+  poules.forEach(function (p) { if (p.classement.length > rangMax) rangMax = p.classement.length; });
+  var liste = [];
+  for (var r = 0; r < rangMax; r++) {
+    var rang = [];
+    poules.forEach(function (p) { if (p.classement[r]) rang.push(p.classement[r]); });
+    rang.sort(comparerClassement);
+    liste = liste.concat(rang);
+  }
+  return liste;
+}
+
+/**
+ * POULES DE NIVEAU : le classement de midi est découpé en tranches de 4-5 (taillesPoulesNiveau) ;
+ * chaque tranche devient une poule de niveau (N1 = haute, N2, …) jouée en ROUND-ROBIN COMPLET.
+ * Le 1ᵉʳ du classement de la poule haute est le vainqueur du tournoi — AUCUNE finale, aucun match
+ * sec : conforme au règlement EDR (phases finales interdites). Contrairement au croisé classique,
+ * ce format donne un vrai volume de jeu même à 2 poules le matin (poule haute de 4 → 3 matchs
+ * chacune, au lieu du niveau à 2 → 1 match). Fonctionne dès 1 poule le matin.
+ */
+function fixturesApresMidiPoulesNiveau(cat, cl) {
+  var liste = ordonnerClassementMidi(cl);
+  if (liste.length < 2) {
+    return { fixtures: [], avert: ['moins de 2 équipes classées : poules de niveau impossibles.'] };
+  }
+  var tailles = taillesPoulesNiveau(liste.length);
+  var fixtures = [];
+  var debut = 0;
+  for (var i = 0; i < tailles.length; i++) {
+    var groupe = liste.slice(debut, debut + tailles[i]).map(function (e) { return e.id_equipe; });
+    debut += tailles[i];
+    if (groupe.length < 2) continue;
+    var label = 'N' + (i + 1);
+    tourneeToutesRondes(groupe).forEach(function (pr) {
+      fixtures.push({ poule: label, equipe_A: pr.a, equipe_B: pr.b, round: pr.round, format: 'POULES_NIVEAU' });
     });
   }
   return { fixtures: fixtures };
@@ -5418,6 +5493,27 @@ function projeterFinApresMidi(config, poules, matchsMatin) {
       // Super Challenge (session 14) : pas d'après-midi → ne contribue pas à la projection de fin.
       if (contexteScfCategorie(cat).estScf) return;
       var poulesCat = poules.filter(function (p) { return p.categorie === cat.categorie; });
+      // POULES_NIVEAU : la projection suit la VRAIE structure (tranches de 4-5 en round-robin
+      // complet), pas l'approximation croisée — sinon la fin de journée serait sous-estimée
+      // (1 match projeté là où 3 seront joués). Placeholders : la composition exacte des tranches
+      // n'a aucune importance pour le TEMPS, seul le nombre de matchs par poule compte.
+      if (formatApresMidi(cat) === 'POULES_NIVEAU') {
+        var total = 0;
+        poulesCat.forEach(function (p) { total += p.equipes.length; });
+        var tailles = taillesPoulesNiveau(total);
+        var fx = [], num = 0;
+        for (var ti = 0; ti < tailles.length; ti++) {
+          var groupe = [];
+          for (var gi = 0; gi < tailles[ti]; gi++) groupe.push('PROJ_' + cat.categorie + '_' + (num++));
+          if (groupe.length < 2) continue;
+          var lab = 'N' + (ti + 1);
+          tourneeToutesRondes(groupe).forEach(function (pr) {
+            fx.push({ poule: lab, equipe_A: pr.a, equipe_B: pr.b, round: pr.round });
+          });
+        }
+        if (fx.length) fixturesParCat[cat.categorie] = fx;
+        return;
+      }
       if (poulesCat.length < 2) return; // une seule poule -> pas de croisé
       var rangMax = 0;
       poulesCat.forEach(function (p) { if (p.equipes.length > rangMax) rangMax = p.equipes.length; });

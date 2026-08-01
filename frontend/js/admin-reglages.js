@@ -475,6 +475,7 @@ function blocFormatApresMidi(cat) {
 
   // Récaps : un par format, révélé selon data-format (texte concret pour confirmer le choix).
   const recaps =
+    '<span class="format-recap r-POULES_NIVEAU">Après-midi : <b>poules de niveau</b> — le classement de midi est découpé en poules de 4-5 (haute, niveau 2…) jouées en round-robin complet ; le 1ᵉʳ de la poule haute remporte le tournoi (aucune finale, conforme EDR).</span>' +
     '<span class="format-recap r-CROISE">Après-midi : <b>classement croisé</b> — matchs équilibrés par niveau ; le vainqueur du Niveau 1 remporte le tournoi (classement général + podium).</span>' +
     '<span class="format-recap r-CROISE_DIAGONAL">Après-midi : <b>classement croisé DIAGONAL</b> — le 1ᵉʳ d\'une poule affronte le 2ᵉ d\'une AUTRE poule (croisement en diagonale, à ne pas confondre avec le croisé simple 1ᵉʳ-contre-1ᵉʳ). Résultats cumulés au classement général + podium.</span>' +
     '<span class="format-recap r-LIBRE">Après-midi : <b>matchs libres</b> — amicaux, sans classement ni podium (idéal pour les plus jeunes).</span>' +

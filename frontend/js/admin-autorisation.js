@@ -444,8 +444,26 @@ var FORMULES_PHASE2_AUT = {
   },
   LIBRE: function (s) {
     return { valeur: s.totalEquipes >= 2 ? s.totalEquipes - 1 : 0, nature: 'predit' };
+  },
+  // POULES_NIVEAU : tranches de 4-5 en round-robin complet ⇒ plus grande tranche − 1 (max exact).
+  POULES_NIVEAU: function (s) {
+    var tailles = taillesPoulesNiveauAut(s.totalEquipes);
+    var max = 0;
+    for (var i = 0; i < tailles.length; i++) { if (tailles[i] > max) max = tailles[i]; }
+    return { valeur: max >= 2 ? max - 1 : 0, nature: 'predit' };
   }
 };
+
+/** Tailles des poules de niveau pour n équipes — miroir de taillesPoulesNiveau (backend) :
+ *  poules de 4-5, « le haut joue plus ». 8→[4,4] · 9→[5,4] · 20→[5,5,5,5]. */
+function taillesPoulesNiveauAut(n) {
+  if (n < 2) return [];
+  var nb = Math.ceil(n / 5);
+  var base = Math.floor(n / nb), reste = n % nb;
+  var tailles = [];
+  for (var i = 0; i < nb; i++) tailles.push(base + (i < reste ? 1 : 0));
+  return tailles;
+}
 
 /** Phase 2 PRÉDITE depuis la structure du matin, ou null si non prédictible exactement. */
 function predirePhase2Aut(matin, fmt) {
@@ -480,7 +498,7 @@ function formatSportifCategorieAut(matchsCat, cfgCat) {
   var fmt = String((cfgCat && cfgCat.format_apresmidi) || '').trim().toUpperCase();
   var duree = dureeMatchLibelleAut(cfgCat);
   function compter(sous) { return sous.length ? maxMatchsParEquipeAut(sous) : null; }
-  if (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL') {
+  if (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL' || fmt === 'POULES_NIVEAU') {
     // Phase 2 : constatée si générée, sinon prédite exactement depuis la structure du matin.
     var p2 = aprem.length ? compter(aprem) : predirePhase2Aut(matin, fmt);
     return { deuxPhases: true, duree: duree, phase1: compter(matin), phase2: p2 };
