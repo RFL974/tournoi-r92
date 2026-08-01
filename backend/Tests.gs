@@ -247,6 +247,17 @@ function lancerTestsFFR() {
   testS19_scfJamaisPredit(etat);
   testS19_apremGenereResteConstate(etat);
 
+  // Session 20 — nouveau format d'après-midi POULES_NIVEAU (round-robin complet par tranche).
+  testS20_taillesPoulesNiveau(etat);
+  testS20_ordonnancementMidi(etat);
+  testS20_fixturesRoundRobinComplet(etat);
+  testS20_fixturesMeilleur2eMonte(etat);
+  testS20_formulePhase2(etat);
+  testS20_reportPhase2Predite(etat);
+  testS20_formatReconnu(etat);
+  testS20_moinsDe2Equipes(etat);
+  testS20_invitationExposeFormat(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -2426,4 +2437,128 @@ function testS19_apremGenereResteConstate(etat) {
   var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
   _ffrAssert(etat, p2 && p2.valeur === '1' && p2.origine.indexOf('prédit') === -1,
     'S19 : après-midi généré → constaté, pas prédit');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SESSION 20 — format POULES_NIVEAU : tranches du classement de midi en      */
+/*  round-robin COMPLET. Le 1er de la poule haute = vainqueur, sans finale.    */
+/* -------------------------------------------------------------------------- */
+
+/** Un classement de test : chaque poule = liste [id, pts] déjà triée. */
+function _clNiveau(poulesSpec) {
+  return { poules: poulesSpec.map(function (p, i) {
+    return { nom_poule: String.fromCharCode(65 + i), classement: p.map(function (e) {
+      return { id_equipe: e[0], nom_equipe: e[0], pts: e[1], diff: 0, bp: 0 };
+    }) };
+  }) };
+}
+
+/** Découpage en tranches de 4-5, le BAS joue plus (esprit EDR, décision Romain). */
+function testS20_taillesPoulesNiveau(etat) {
+  var cas = [ [4, [4]], [6, [3, 3]], [7, [3, 4]], [8, [4, 4]], [9, [4, 5]],
+              [12, [4, 4, 4]], [16, [4, 4, 4, 4]], [20, [5, 5, 5, 5]], [1, []] ];
+  cas.forEach(function (c) {
+    var res = taillesPoulesNiveau(c[0]);
+    _ffrAssert(etat, JSON.stringify(res) === JSON.stringify(c[1]),
+      'S20 : tailles(' + c[0] + ') = [' + c[1] + '] (obtenu [' + res + '])');
+  });
+}
+
+/** Classement de midi : rang par rang, départagé aux points (le meilleur 2e devant l'autre). */
+function testS20_ordonnancementMidi(etat) {
+  var cl = _clNiveau([ [['A1', 9], ['A2', 5]], [['B1', 8], ['B2', 6]] ]);
+  var ids = ordonnerClassementMidi(cl).map(function (e) { return e.id_equipe; });
+  _ffrAssert(etat, JSON.stringify(ids) === JSON.stringify(['A1', 'B1', 'B2', 'A2']),
+    'S20 : ordre midi = 1ers (aux points) puis 2es (aux points), obtenu ' + ids.join(','));
+}
+
+/** 2 poules de 4 ⇒ N1 = les deux 1ers + les deux 2es, round-robin COMPLET : 3 matchs chacune. */
+function testS20_fixturesRoundRobinComplet(etat) {
+  var cl = _clNiveau([
+    [['A1', 9], ['A2', 6], ['A3', 3], ['A4', 1]],
+    [['B1', 8], ['B2', 7], ['B3', 4], ['B4', 2]]
+  ]);
+  var res = fixturesApresMidiPoulesNiveau({ categorie: 'U8' }, cl);
+  var n1 = res.fixtures.filter(function (f) { return f.poule === 'N1'; });
+  var n2 = res.fixtures.filter(function (f) { return f.poule === 'N2'; });
+  _ffrAssert(etat, n1.length === 6 && n2.length === 6, 'S20 : 6 matchs par poule de niveau (round-robin de 4)');
+  var comptes = {};
+  res.fixtures.forEach(function (f) {
+    comptes[f.equipe_A] = (comptes[f.equipe_A] || 0) + 1;
+    comptes[f.equipe_B] = (comptes[f.equipe_B] || 0) + 1;
+  });
+  var tous3 = Object.keys(comptes).every(function (id) { return comptes[id] === 3; });
+  _ffrAssert(etat, tous3, 'S20 : chaque équipe joue exactement 3 matchs l\'après-midi');
+  var idsN1 = {};
+  n1.forEach(function (f) { idsN1[f.equipe_A] = true; idsN1[f.equipe_B] = true; });
+  _ffrAssert(etat, idsN1.A1 && idsN1.B1 && idsN1.A2 && idsN1.B2 && !idsN1.A3 && !idsN1.B3,
+    'S20 : N1 = les deux 1ers + les deux 2es, rien d\'autre');
+}
+
+/** 3 poules de 4 (12 équipes) ⇒ le MEILLEUR 2e monte en poule haute, les autres en niveau 2. */
+function testS20_fixturesMeilleur2eMonte(etat) {
+  var cl = _clNiveau([
+    [['A1', 9], ['A2', 5], ['A3', 3], ['A4', 1]],
+    [['B1', 8], ['B2', 6], ['B3', 4], ['B4', 2]],
+    [['C1', 7], ['C2', 4], ['C3', 3], ['C4', 0]]
+  ]);
+  var res = fixturesApresMidiPoulesNiveau({ categorie: 'U10' }, cl);
+  var idsN1 = {};
+  res.fixtures.filter(function (f) { return f.poule === 'N1'; })
+    .forEach(function (f) { idsN1[f.equipe_A] = true; idsN1[f.equipe_B] = true; });
+  _ffrAssert(etat, idsN1.A1 && idsN1.B1 && idsN1.C1 && idsN1.B2,
+    'S20 : N1 = les trois 1ers + le meilleur 2e (B2, 6 pts)');
+  _ffrAssert(etat, !idsN1.A2 && !idsN1.C2, 'S20 : les autres 2es ne montent pas en N1');
+}
+
+/** Formule de phase 2 : plus grande tranche − 1, nature « predit » (exact). */
+function testS20_formulePhase2(etat) {
+  var f = FORMULES_PHASE2.POULES_NIVEAU;
+  var cas = [ [8, 3], [9, 4], [12, 3], [20, 4], [6, 2], [1, 0] ];
+  cas.forEach(function (c) {
+    var r = f({ totalEquipes: c[0], nbPoules: 2, poulesEgales: true, matinMax: 3 });
+    _ffrAssert(etat, r.valeur === c[1] && r.nature === 'predit',
+      'S20 : formule(' + c[0] + ' équipes) = ' + c[1] + ' predit (obtenu ' + r.valeur + ' ' + r.nature + ')');
+  });
+}
+
+/** Feuille de report : U12 en POULES_NIVEAU, 8 équipes le matin, après-midi non généré ⇒ Phase 2 = 3. */
+function testS20_reportPhase2Predite(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T2' },
+    { phase: 'poule', poule: 'A', equipe_A: 'T3', equipe_B: 'T4' },
+    { phase: 'poule', poule: 'B', equipe_A: 'T5', equipe_B: 'T6' },
+    { phase: 'poule', poule: 'B', equipe_A: 'T7', equipe_B: 'T8' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgAutorisation([{ categorie: 'U12', format_apresmidi: 'POULES_NIVEAU', format_mi_temps: '2', duree_mi_temps_min: '10' }]),
+    _refAutorisation());
+  var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
+  _ffrAssert(etat, p2 && p2.valeur === '3' && p2.etat === 'calcule', 'S20 : report → phase 2 = 3 (prédit)');
+  _ffrAssert(etat, p2 && p2.origine.indexOf('prédit') !== -1, 'S20 : report → origine dit « prédit »');
+}
+
+/** formatApresMidi reconnaît POULES_NIVEAU ; une typo retombe sur CROISE (défaut prudent). */
+function testS20_formatReconnu(etat) {
+  _ffrAssert(etat, formatApresMidi({ format_apresmidi: 'POULES_NIVEAU' }) === 'POULES_NIVEAU',
+    'S20 : POULES_NIVEAU reconnu');
+  _ffrAssert(etat, formatApresMidi({ format_apresmidi: 'POULE_NIVEAU' }) === 'CROISE',
+    'S20 : typo → défaut CROISE (comportement historique)');
+}
+
+/** Moins de 2 équipes classées ⇒ avertissement, aucune fixture, jamais d'exception. */
+function testS20_moinsDe2Equipes(etat) {
+  var res = fixturesApresMidiPoulesNiveau({ categorie: 'U8' }, _clNiveau([ [['A1', 9]] ]));
+  _ffrAssert(etat, res.fixtures.length === 0 && res.avert && res.avert.length === 1,
+    'S20 : 1 équipe → avertissement, 0 fixture');
+}
+
+/** La vue publique « invitation » expose format_apresmidi (note doctrine FFR), rien de plus. */
+function testS20_invitationExposeFormat(etat) {
+  var cfg = { global: {}, categories: [{ categorie: 'U8', presente: 'oui',
+    format_apresmidi: 'POULES_NIVEAU', duree_mi_temps_min: '10' }] };
+  var f = filtrerConfigPublique(cfg, 'invitation');
+  var c = f.categories[0];
+  _ffrAssert(etat, c.format_apresmidi === 'POULES_NIVEAU', 'S20 : invitation expose format_apresmidi');
+  _ffrAssert(etat, !('duree_mi_temps_min' in c), 'S20 : invitation n\'expose pas les champs hors liste');
 }

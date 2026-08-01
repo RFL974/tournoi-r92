@@ -228,6 +228,9 @@ function contexteMatch(m) {
   const estClt = String(m.phase) === 'classement';
   const gl = groupeLabelScf(catObj, m.poule, tailleGroupeScf(matchs, m.categorie, m.poule), estClt);
   if (gl) return gl;
+  // Vocabulaire « Poule haute / basse » si la catégorie est en POULES_NIVEAU (repli : Niveau N1).
+  const pn = estClt ? libellePouleNiveau(catObj, m.poule, nbPoulesNiveauCat(matchs, m.categorie)) : null;
+  if (pn) return pn;
   if (estClt) return 'Niveau ' + String(m.poule);
   return 'Poule ' + String(m.poule);
 }
@@ -358,6 +361,7 @@ function titreApresMidi(aprem) {
   aprem.forEach(function (m) { formats[String(m.format || '').toUpperCase()] = true; });
   if (formats.COUPE_PLATEAU) return '🏉 Après-midi — Coupe & Plateau';
   if (formats.LIBRE) return '🏉 Après-midi — matchs amicaux';
+  if (formats.POULES_NIVEAU) return '🏉 Après-midi — poules de niveau';
   if (formats.CROISE_DIAGONAL) return '🏉 Après-midi — classement croisé diagonal';
   return '🏉 Après-midi — classement croisé';
 }

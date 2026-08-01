@@ -277,6 +277,32 @@ body {
 }
 .inv-cat-detail { color: var(--d-gris); font-size: 0.9rem; }
 
+/* Rappel sécurité FFR sous la liste des catégories : effectif minimum ⇒ temps de jeu par enfant
+   proche du temps d'équipe, or la FFR le plafonne (session 20). Ton orange doux, jamais criard. */
+.inv-rappel-effectif {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  background: #fdf4e3;
+  border-left: 3px solid #e5a33c;
+  border-radius: 0 6px 6px 0;
+  color: #8a5a0c;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+/* Note « pourquoi ce format » (poules de niveau, session 20) : doctrine FFR EDR expliquée aux
+   clubs. Ton bleu informatif (💡), même gabarit que le rappel effectif. */
+.inv-note-format {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  background: #eef5fc;
+  border-left: 3px solid var(--d-bleu);
+  border-radius: 0 6px 6px 0;
+  color: #274a68;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
 /* « Sur place » : pastilles (affichées seulement si le service est coché). */
 .inv-pastilles { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 4px; }
 .inv-pastille {

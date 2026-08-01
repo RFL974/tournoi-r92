@@ -350,6 +350,7 @@ function afficherEquipe() {
     const fmt = formatApresMidiCat(matchs.find(function (m) { return m.equipe_A === id || m.equipe_B === id; }).categorie);
     const titreAprem = phaseLabelScf(catObjP, true) || ((fmt === 'COUPE_PLATEAU') ? '🏉 Après-midi — Coupe &amp; Plateau'
       : (fmt === 'LIBRE') ? '🏉 Après-midi — matchs amicaux'
+      : (fmt === 'POULES_NIVEAU') ? '🏉 Après-midi — poules de niveau'
       : '🏉 Après-midi — classement croisé');
     html += '<div class="planning-phase">' + titreAprem + '</div>' + cartes(aprem, id);
   }
@@ -436,7 +437,8 @@ function sectionClassementsEquipe(eq) {
     matchsNiv.forEach(function (m) { idsNiv[m.equipe_A] = 1; idsNiv[m.equipe_B] = 1; });
     const membresNiv = Object.keys(idsNiv).map(function (x) { return { id_equipe: x, nom_equipe: nomEquipe(x) }; });
     html += '<div class="planning-phase">📊 Classement de ton niveau (après-midi)</div>';
-    const glN = groupeLabelScf(catObjE, niv, 0, true);
+    const glN = groupeLabelScf(catObjE, niv, 0, true)
+      || libellePouleNiveau(catObjE, niv, nbPoulesNiveauCat(matchs, eq.categorie));
     html += tableCompacte(glN ? echapper(glN) : ('Niveau ' + echapper(String(niv))),
                           classementGroupe(matchsNiv, membresNiv), eq.id_equipe);
   }
@@ -499,7 +501,17 @@ function classementParGroupe(phase) {
     });
   });
   ms.forEach(function (m) { compterMatch(stats, m); });
-  return regrouper(stats, infos, 'Niveau ');
+  const res = regrouper(stats, infos, 'Niveau ');
+  // Vocabulaire « Poule haute / basse » quand la catégorie est en POULES_NIVEAU (repli : Niveau N1).
+  const catObjG = (config.categories || []).find(function (c) { return c.categorie === categorieActive; });
+  const nbNiv = nbPoulesNiveauCat(matchs, categorieActive);
+  res.forEach(function (cat) {
+    cat.groupes.forEach(function (g) {
+      const pn = libellePouleNiveau(catObjG, String(g.titre).replace(/^Niveau /, ''), nbNiv);
+      if (pn) g.titre = pn;
+    });
+  });
+  return res;
 }
 
 /** Regroupe les stats par catégorie puis par clé (poule ou niveau), trie chaque groupe. */
@@ -786,6 +798,9 @@ function libelleMatch(m) {
   const estClt = String(m.phase) === 'classement';
   const gl = groupeLabelScf(catObj, m.poule, tailleGroupeScf(matchs, m.categorie, m.poule), estClt);
   if (gl) return gl;
+  // Vocabulaire « Poule haute / basse » si la catégorie est en POULES_NIVEAU (repli : Niveau N1).
+  const pn = estClt ? libellePouleNiveau(catObj, m.poule, nbPoulesNiveauCat(matchs, m.categorie)) : null;
+  if (pn) return pn;
   if (estClt) return 'Niveau ' + String(m.poule);
   return 'Poule ' + String(m.poule);
 }
@@ -799,7 +814,7 @@ function formatApresMidiCat(categorie) {
   const ms = matchs.filter(function (m) { return m.categorie === categorie && String(m.phase) === 'classement'; });
   for (let i = 0; i < ms.length; i++) {
     const f = String(ms[i].format || '').toUpperCase();
-    if (f === 'COUPE_PLATEAU' || f === 'LIBRE' || f === 'CROISE') return f;
+    if (f === 'COUPE_PLATEAU' || f === 'LIBRE' || f === 'CROISE' || f === 'POULES_NIVEAU') return f;
     if (f === 'CROISE_DIAGONAL') return 'CROISE';
   }
   return 'CROISE';
@@ -836,8 +851,9 @@ function sectionApresMidiClassements(categorie) {
       '<p class="note-amical">🎈 Matchs amicaux supplémentaires — sans classement ni enjeu.</p>' +
       listeResultats(apremMs);
   }
-  // CROISE (défaut) : tableaux par niveau, PUIS le classement général (vainqueur en tête).
-  let html = '<div class="planning-phase">🏉 Après-midi — classement croisé par niveau</div>';
+  // CROISE / POULES_NIVEAU (défaut) : tableaux par niveau, PUIS le classement général.
+  let html = '<div class="planning-phase">' + ((fmt === 'POULES_NIVEAU')
+    ? '🏉 Après-midi — poules de niveau' : '🏉 Après-midi — classement croisé par niveau') + '</div>';
   classementParGroupe('aprem').forEach(function (cat) {
     cat.groupes.forEach(function (g) { html += tableComplete(g.titre, g.classement); });
   });

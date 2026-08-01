@@ -224,6 +224,7 @@ select.r-input { cursor: pointer; }
 }
 .bloc-format[data-format="CROISE"] .r-CROISE,
 .bloc-format[data-format="CROISE_DIAGONAL"] .r-CROISE_DIAGONAL,
+.bloc-format[data-format="POULES_NIVEAU"] .r-POULES_NIVEAU,
 .bloc-format[data-format="LIBRE"] .r-LIBRE,
 .bloc-format[data-format="COUPE_PLATEAU"] .r-COUPE_PLATEAU { display: block; }
 
