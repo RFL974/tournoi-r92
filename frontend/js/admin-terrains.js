@@ -36,6 +36,11 @@ const TERRAINS_PHYSIQUES_DEFAUT = [
   { nom: 'Foot 2',  type: 'foot',  L: 100, W: 65, pos: 'CD' }
 ];
 
+/* Natures de terrain (surface de jeu). Mêmes libellés que la case « Type de terrain » du
+   formulaire officiel d'autorisation : la nature déclarée ici est reprise AUTOMATIQUEMENT
+   dans la demande d'autorisation (feuille de report + PDF pré-rempli). */
+const NATURES_TERRAIN = ['Synthétique', 'Gazon', 'Neige', 'Argile', 'Sable'];
+
 /* Emplacements possibles sur le plan du site (grille 3×3). */
 const EMPLACEMENTS = [
   { v: '',   l: 'Auto' },
@@ -241,8 +246,13 @@ function injecterTerrains() {
 function ligneTerrainPhysique(t, i) {
   const type = (t.type === 'foot') ? 'foot' : 'rugby';
   const opt = function (v, lib, sel) { return '<option value="' + v + '"' + (sel ? ' selected' : '') + '>' + lib + '</option>'; };
+  const nature = String(t.nature || '');
   return '<div class="terrain-ligne" data-i="' + i + '">' +
     '<input class="tp-nom" type="text" value="' + echapper(String(t.nom || '')) + '" placeholder="Nom" aria-label="Nom du terrain">' +
+    '<select class="tp-nature" aria-label="Nature du terrain (surface de jeu)">' +
+      opt('', '— Nature —', nature === '') +
+      NATURES_TERRAIN.map(function (n) { return opt(echapper(n), echapper(n), nature === n); }).join('') +
+    '</select>' +
     '<select class="tp-type" aria-label="Type de terrain">' +
       opt('rugby', '🏉 Rugby', type === 'rugby') + opt('foot', '⚽ Foot', type === 'foot') +
     '</select>' +
@@ -302,6 +312,7 @@ function lireTerrainsDuFormulaire() {
   document.querySelectorAll('#liste-terrains-physiques .terrain-ligne').forEach(function (row) {
     out.push({
       nom:  row.querySelector('.tp-nom').value.trim(),
+      nature: (row.querySelector('.tp-nature') || {}).value || '',
       type: row.querySelector('.tp-type').value,
       L:    parseFloat(row.querySelector('.tp-l').value) || 0,
       W:    parseFloat(row.querySelector('.tp-w').value) || 0,

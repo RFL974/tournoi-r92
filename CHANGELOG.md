@@ -22,6 +22,23 @@ Sur la carte de **prévisualisation** de la répartition (avant « Appliquer »)
 - « Appliquer aux catégories » **avertit** si des mini-terrains sont encore mis de côté (ils ne
   seraient pas appliqués) ; « Répartir les terrains » recalcule tout et annule les ajustements.
 Souris **et** tactile (pointer events). 100 % front — **aucun redéploiement backend**.
+
+### Terrains : nature du terrain (surface de jeu) reprise dans la demande d'autorisation — 2026-08-01
+Chaque **grand terrain** de la carte « Terrains & répartition » porte désormais sa **nature**
+(Synthétique, Gazon, Neige, Argile, Sable — mêmes libellés que le formulaire officiel), via un
+menu déroulant placé entre le nom du terrain et le menu Rugby/Foot. La nature déclarée est
+**reprise automatiquement** dans la demande d'autorisation :
+- **feuille de report** — le champ « Type de terrain » (B.1) devient **calculé** à partir des
+  natures déclarées (distinctes, dédupliquées ; les terrains sans nature sont signalés dans
+  l'origine) ; repli sur la saisie manuelle `org_type_terrain`, sinon manquant — jamais deviné ;
+- **carte de saisie** — la question « Type de terrain » n'est **plus posée** quand l'app y répond
+  déjà (même mécanisme que le nombre de participants) ; une valeur déjà saisie reste affichée ;
+- **PDF pré-rempli** — les cases « Type de terrain » sont cochées d'après les natures déclarées
+  (**plusieurs natures ⇒ plusieurs cases**), repli sur la saisie manuelle.
+Migration douce : les terrains enregistrés sans nature affichent « — Nature — » et ne changent
+rien tant que la nature n'est pas choisie. Tests backend : **428/428** (+6 tests session 25).
+
+### Demande d'autorisation : télécharger le formulaire officiel FFR pré-rempli (PDF) — 2026-07-31
 Nouveau bouton **« Télécharger le formulaire pré-rempli (PDF) »** dans l'item Demande d'autorisation :
 il génère le **formulaire officiel FFR** (AcroForm) **pré-rempli** avec ce que l'app connaît, et qui
 **reste modifiable** (l'organisateur l'ouvre et complète le format sportif par catégorie + les

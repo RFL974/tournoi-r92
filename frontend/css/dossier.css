@@ -396,6 +396,26 @@ body {
 .rep-cat-err { display: block; margin: 4px 0 0 26px; color: #b3261e; font-size: 0.82rem; }
 .rep-champ-joueurs { display: block; margin: 16px 0 0; font-weight: 600; }
 .rep-champ-joueurs input { display: block; margin-top: 6px; }
+
+/* Détail PAR ÉQUIPE (session 23) : joueurs + éducateurs de chaque équipe engagée. */
+.rep-cat-detail { margin: 8px 0 0 26px; display: grid; gap: 6px; }
+.rep-equipe {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  padding: 6px 10px; background: #fff; border: 1px solid #e3ebf3; border-radius: 8px;
+}
+.rep-eq-nom { font-weight: 600; min-width: 70px; }
+.rep-equipe label { font-size: 0.9rem; color: var(--d-texte); }
+.rep-equipe input { width: 64px; margin-left: 6px; }
+.rep-eq-note { flex-basis: 100%; font-size: 0.82rem; line-height: 1.4; }
+.rep-eq-note-conseil { color: #8a5a0c; }
+.rep-eq-note-mini { color: #b3261e; font-weight: 600; }
+
+/* Totaux vivants joueurs / éducateurs (sous la liste des catégories). */
+.rep-totaux {
+  margin: 16px 0 0; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px 24px;
+  background: #f5f8fc; border-left: 3px solid var(--d-bleu); border-radius: 0 6px 6px 0;
+  font-size: 0.95rem;
+}
 .rep-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 18px; }
 .rep-form-msg { font-size: 0.9rem; }
 .rep-form-msg.ko { color: #b3261e; }

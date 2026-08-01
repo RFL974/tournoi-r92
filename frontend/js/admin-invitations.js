@@ -741,7 +741,14 @@ function resumeReponseClub(club) {
     }).join(' · ');
     lignes += '<div class="club-rep-ligne">🏉 ' + detail + '</div>';
   }
-  if (joueurs) lignes += '<div class="club-rep-ligne">👥 ' + echapper(joueurs) + ' joueurs attendus au total</div>';
+  // Éducateurs déclarés (détail par équipe, session 23) — affiché seulement si le club a répondu
+  // avec le nouveau formulaire (colonne vide pour les anciennes réponses).
+  const educateurs = String(club.nb_educateurs_total || '').trim();
+  if (joueurs) {
+    lignes += '<div class="club-rep-ligne">👥 ' + echapper(joueurs) + ' joueurs attendus au total' +
+      (educateurs ? ' · 🎓 ' + echapper(educateurs) + ' éducateur' + (parseInt(educateurs, 10) > 1 ? 's' : '') : '') +
+      '</div>';
+  }
   return '<div class="club-reponse">' +
     '<p class="club-reponse-titre">Réponse du club' + (dateRep ? ' (le ' + echapper(dateRep) + ')' : '') + '</p>' +
     lignes + '</div>';
