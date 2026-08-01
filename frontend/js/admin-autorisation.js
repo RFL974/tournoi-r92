@@ -166,6 +166,15 @@ function questionsDejaRepondues(dossier) {
     if (part && part.etat === 'calcule' && valAutorisation('org_nb_participants') === '') masque.org_nb_participants = true;
     if (educ && educ.etat === 'calcule' && valAutorisation('org_nb_educateurs') === '') masque.org_nb_educateurs = true;
   }
+  // Type de terrain (repli manuel) : répondu par la NATURE des grands terrains déclarés (carte
+  // Terrains). L'état 'calcule' de ce champ ne peut venir que de cette cascade (pas de défaut app).
+  if (valAutorisation('org_type_terrain') === '' && dossier && dossier.sections) {
+    let typeT = null;
+    dossier.sections.forEach(function (s) { s.champs.forEach(function (c) {
+      if (!typeT && c.libelle === 'Type de terrain') typeT = c;
+    }); });
+    if (typeT && typeT.etat === 'calcule') masque.org_type_terrain = true;
+  }
   return masque;
 }
 
@@ -448,6 +457,23 @@ var PDF_FORMAT_SPORTIF = {
   '14': { p1n: 'Texte40',  p1d: 'Texte41',  f1n: 'Texte42',  f1d: 'Texte43',  f2n: 'Texte44',  f2d: 'Texte45' }
 };
 
+/** Natures (surfaces) des grands terrains déclarés — miroir de naturesTerrainsAutorisation
+ *  (backend) : natures distinctes lues dans Config.terrains_physiques (champ `nature` posé par la
+ *  carte Terrains). PRUDENT : JSON absent/invalide ou aucune nature ⇒ [] (repli org_type_terrain). */
+function naturesTerrainsAut(g) {
+  var brut = String((g && g.terrains_physiques) == null ? '' : g.terrains_physiques).trim();
+  if (!brut) return [];
+  var terrains;
+  try { terrains = JSON.parse(brut); } catch (e) { return []; }
+  if (!terrains || !terrains.length) return [];
+  var vus = {}, natures = [];
+  terrains.forEach(function (t) {
+    var n = String((t && t.nature) || '').trim();
+    if (n && !vus[n]) { vus[n] = true; natures.push(n); }
+  });
+  return natures;
+}
+
 /** Nom de club déduit d'un nom d'équipe : « RCF-2 » → « RCF ». Miroir de clubDe (backend) — même
  *  convention « {club} » / « {club}-N » que la répartition des poules. Sert au comptage des clubs. */
 function clubDeAut(nom) {
@@ -654,9 +680,14 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsPa
   else setT('Texte17', v('org_nb_participants'));
   setT('Texte18', v('org_equipes_etrangeres_liste'));
 
-  // B.1 Installations.
-  choix(v('org_type_terrain'), { 'Gazon': 'Case à cocher91', 'Synthétique': 'Case à cocher92',
-    'Neige': 'Case à cocher93', 'Argile': 'Case à cocher94', 'Sable': 'Case à cocher1' });
+  // B.1 Installations — type de terrain : CASCADE depuis la nature des grands terrains déclarés
+  // (carte Terrains), miroir de la feuille de report. Plusieurs natures ⇒ plusieurs cases cochées
+  // (le formulaire officiel le permet). Aucune nature déclarée ⇒ repli sur la saisie manuelle.
+  var casesNature = { 'Gazon': 'Case à cocher91', 'Synthétique': 'Case à cocher92',
+    'Neige': 'Case à cocher93', 'Argile': 'Case à cocher94', 'Sable': 'Case à cocher1' };
+  var naturesTPdf = naturesTerrainsAut(g);
+  if (naturesTPdf.length) naturesTPdf.forEach(function (n) { choix(n, casesNature); });
+  else choix(v('org_type_terrain'), casesNature);
   setT('Texte20', v('org_nb_vestiaires'));
 
   // B.3 Arbitrage — éducateurs : CASCADE (miroir feuille de report, session 23) : org saisi

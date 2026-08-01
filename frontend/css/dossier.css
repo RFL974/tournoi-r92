@@ -82,6 +82,15 @@ body {
   border-radius: 6px;
   flex: none;
 }
+/* Blason du club (Racing 92) : à DROITE de l'en-tête, près de la marge — session 24.
+   margin-left:auto le pousse au bord ; align-self:flex-start le cale en haut, à hauteur du nom. */
+.d-entete-blason {
+  width: 86px;
+  flex: none;
+  margin-left: auto;
+  align-self: flex-start;
+}
+
 .d-surtitre {
   margin: 0;
   font-family: 'Barlow Condensed', sans-serif;
@@ -425,6 +434,7 @@ body {
 @media (max-width: 640px) {
   .feuille { margin: 0; padding: 18px 14px; box-shadow: none; }
   .d-entete { flex-direction: column; align-items: flex-start; }
+  .d-entete-blason { order: -1; margin-left: 0; width: 64px; }
   .d-liste li { flex-direction: column; gap: 0; }
   .d-libelle { flex: none; font-size: 0.8rem; }
   .d-suivi { flex-direction: column; }

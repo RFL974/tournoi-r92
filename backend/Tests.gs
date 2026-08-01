@@ -280,6 +280,14 @@ function lancerTestsFFR() {
   testS23_educateursSaisiPrioritaire(etat);
   testS23_educateursRienManquant(etat);
 
+  // Session 25 — type de terrain : cascade depuis la nature des grands terrains déclarés.
+  testS25_natureCalculeeDepuisTerrains(etat);
+  testS25_naturePrimeSurSaisi(etat);
+  testS25_sansNatureRepliSaisi(etat);
+  testS25_rienResteManquant(etat);
+  testS25_jsonInvalidePrudent(etat);
+  testS25_naturePartielleSignalee(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -2742,4 +2750,72 @@ function testS23_educateursRienManquant(etat) {
   var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {}), { formes: [] });
   var c = _autoChamp(d, 'Nombre d\'éducateurs');
   _ffrAssert(etat, c && c.etat === 'manquant', 'S23 : rien nulle part → manquant');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SESSION 25 — B.1 : « Type de terrain » repris de la NATURE des grands      */
+/*  terrains déclarés (carte Terrains, Config.terrains_physiques[].nature).    */
+/*  Le structurel prime ; repli sur org_type_terrain ; jamais deviné.          */
+/* -------------------------------------------------------------------------- */
+
+/** JSON de terrains physiques pour les tests (natures paramétrables). */
+function _terrainsAvecNatures(natures) {
+  return JSON.stringify((natures || []).map(function (n, i) {
+    return { nom: 'Terrain ' + (i + 1), nature: n, type: 'rugby', L: 100, W: 68, pos: '' };
+  }));
+}
+
+/** Natures déclarées ⇒ CALCULÉ, natures distinctes dans l'ordre, dédupliquées. */
+function testS25_natureCalculeeDepuisTerrains(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    terrains_physiques: _terrainsAvecNatures(['Gazon', 'Gazon', 'Synthétique'])
+  }), { formes: [] });
+  var t = _autoChamp(d, 'Type de terrain');
+  _ffrAssert(etat, t && t.etat === 'calcule' && t.valeur === 'Gazon, Synthétique',
+    'S25 : natures déclarées → calculé, distinctes et dédupliquées');
+  _ffrAssert(etat, /grands terrains déclarés/.test(t.origine), 'S25 : origine dit « grands terrains déclarés »');
+}
+
+/** La cascade structurelle PRIME sur une saisie org_type_terrain (modèle participants). */
+function testS25_naturePrimeSurSaisi(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    org_type_terrain: 'Neige', terrains_physiques: _terrainsAvecNatures(['Gazon'])
+  }), { formes: [] });
+  var t = _autoChamp(d, 'Type de terrain');
+  _ffrAssert(etat, t && t.etat === 'calcule' && t.valeur === 'Gazon', 'S25 : le déclaré par terrain prime sur la saisie');
+}
+
+/** Terrains déclarés SANS nature ⇒ repli sur la saisie org_type_terrain (état saisi). */
+function testS25_sansNatureRepliSaisi(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    org_type_terrain: 'Synthétique', terrains_physiques: _terrainsAvecNatures(['', ''])
+  }), { formes: [] });
+  var t = _autoChamp(d, 'Type de terrain');
+  _ffrAssert(etat, t && t.etat === 'saisi' && t.valeur === 'Synthétique', 'S25 : aucune nature → repli saisi');
+}
+
+/** Rien nulle part ⇒ manquant (jamais deviné) — comportement historique conservé. */
+function testS25_rienResteManquant(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {}), { formes: [] });
+  var t = _autoChamp(d, 'Type de terrain');
+  _ffrAssert(etat, t && t.etat === 'manquant', 'S25 : rien nulle part → manquant');
+}
+
+/** JSON invalide ⇒ chemin PRUDENT : aucune exception, repli sur la saisie. */
+function testS25_jsonInvalidePrudent(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    terrains_physiques: '{pas du json', org_type_terrain: 'Gazon'
+  }), { formes: [] });
+  var t = _autoChamp(d, 'Type de terrain');
+  _ffrAssert(etat, t && t.etat === 'saisi' && t.valeur === 'Gazon', 'S25 : JSON invalide → repli saisi, sans erreur');
+}
+
+/** Natures partielles ⇒ calculé quand même, mais les terrains sans nature sont SIGNALÉS. */
+function testS25_naturePartielleSignalee(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    terrains_physiques: _terrainsAvecNatures(['Gazon', '', ''])
+  }), { formes: [] });
+  var t = _autoChamp(d, 'Type de terrain');
+  _ffrAssert(etat, t && t.etat === 'calcule' && t.valeur === 'Gazon', 'S25 : nature partielle → calculé avec le connu');
+  _ffrAssert(etat, /2 terrain\(s\) sans nature/.test(t.origine), 'S25 : origine signale 2 terrains sans nature');
 }
