@@ -354,6 +354,28 @@ var CADRE_IMPRIME_DX = 4.2;
 var CADRE_IMPRIME_DY = -0.9;
 var CADRE_IMPRIME_TAILLE = 7.7;
 
+/* Ligne de base du LIBELLÉ de chaque ligne, MESURÉE sur le gabarit (raster 300 dpi, bloc de texte
+ * le plus proche du centre vertical du champ) et exprimée en points AU-DESSUS du bas du champ
+ * (rect.y + décalage = ligne de base). Le gabarit FFR place ses champs n'importe comment par
+ * rapport à leurs libellés (de +1,1 à +13,6 pt !) : un décalage unique faisait « flotter » ou
+ * « couler » les valeurs selon les lignes — la table par champ pose chaque valeur exactement SUR
+ * la ligne de son libellé. Champ absent de la table → défaut 4,5 (la médiane mesurée). */
+var DECALAGE_LIGNE_AUT = {
+  'Texte1': 2.8, 'Texte2': 3.5, 'Texte3': 6.6, 'Texte5': 8.3, 'Texte6': 7, 'Texte10': 3.7,
+  'Texte9': 3, 'Texte7': 5, 'Texte8': 13.6, 'Texte11': 1.6, 'Texte12': 2.6,
+  'Date64_es_:signer:date': 2.3, 'Texte13': 7.2, 'Texte14': 8.2,
+  'Texte15': 2.2, 'Texte16': 5.1, 'Texte17': 9.9, 'Texte20': 6.8,
+  'Texte22': 2.1, 'Texte29': 4.5, 'Texte30': 3, 'Texte31': 6.4, 'Texte32': 5.4, 'Texte33': 8.3,
+  'Texte23': 1.4, 'Texte24': 3.3, 'Texte25': 1.1, 'Texte26': 2.3, 'Texte27': 3.9, 'Texte28': 7.8,
+  'Texte21': 6, 'Texte36': 5.5, 'Texte39': 1.6, 'Texte37': 7, 'Texte62': 10.5, 'Texte38': 7.8,
+  'Texte121': 5.7, 'Texte125': 6.8, 'Texte123': 9.3, 'Texte126': 2.6, 'Texte124': 6.6, 'Texte127': 6.6,
+  'Texte40': 4.6, 'Texte41': 6.6, 'Texte42': 2.3, 'Texte43': 4.2, 'Texte44': 7.2, 'Texte45': 10.1,
+  'Texte46': 1.1, 'Texte47': 3.9, 'Texte48': 7.8,
+  'Texte50': 9.5, 'Texte51': 13.4, 'Texte52': 7.1, 'Texte53': 11, 'Texte54': 5.5, 'Texte55': 9.3,
+  'Texte56': 7.1, 'Texte57': 7.5, 'Texte58': 8, 'Texte59': 5.1, 'Texte60': 7.8, 'Texte61': 4.9,
+  'Club demandeurRow1': 7
+};
+
 /* Retouches STATIQUES du gabarit — défaut structurel du PDF officiel : le libellé imprimé
  * « Niveau du tournoi : » est posé PAR-DESSUS la zone de saisie « Heure de début » (Texte13,
  * x 115..265 · y 415..437), d'où le chevauchement et le surlignage gris sur le libellé. On MASQUE
@@ -746,8 +768,25 @@ async function appliquerPlanPdfAutorisation(PDFLib, bytes, plan) {
       var r = nom ? rectDe(dict) : null;
       if (nom && r && plan.textes[nom] !== undefined) {
         var val = String(plan.textes[nom]).replace(/\s*\n\s*/g, ' / ');
-        var y = (r.h > 24) ? (r.y + r.h - 12) : (r.y + (r.h - 9) / 2 + 1.5);
-        try { page.drawText(val, { x: r.x + 2, y: y, size: 9, font: helv, color: noir, maxWidth: r.w - 4, lineHeight: 11 }); } catch (e) {}
+        // Taille : Helvetica 10 = l'équivalent VISUEL des libellés du gabarit (Calibri 11, hauteur
+        // de capitale mesurée ≈ 7,2 pt sur le raster 300 dpi) — cohérence libellés imprimés /
+        // valeurs gravées. Champ étroit : la valeur RÉTRÉCIT (jamais sous 7 pt) plutôt que de
+        // déborder ; les champs HAUTS (multi-lignes) gardent l'ancrage haut + retour à la ligne.
+        var taille = 10;
+        var multiligne = r.h > 24;
+        if (!multiligne) {
+          while (taille > 7 && helv.widthOfTextAtSize(val, taille) > r.w - 4) taille -= 0.5;
+        }
+        // Ligne de base : celle du libellé de la ligne, mesurée champ par champ sur le gabarit
+        // (DECALAGE_LIGNE_AUT) — le centrage géométrique d'avant faisait « flotter » ou « couler »
+        // la valeur selon les lignes, car le gabarit place ses champs de façon incohérente.
+        var y = multiligne ? (r.y + r.h - 12)
+                           : (r.y + (DECALAGE_LIGNE_AUT[nom] != null ? DECALAGE_LIGNE_AUT[nom] : 4.5));
+        try {
+          var opts = { x: r.x + 2, y: y, size: taille, font: helv, color: noir };
+          if (multiligne) { opts.maxWidth = r.w - 4; opts.lineHeight = taille + 2; }
+          page.drawText(val, opts);
+        } catch (e) {}
         nomsGraves[nom] = true; return; // retirée (pas dans gardes)
       }
       if (nom && r && casesSet[nom]) {
