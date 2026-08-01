@@ -5,6 +5,24 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Terrains : ajustement manuel de la répartition par glisser-déposer — 2026-08-01
+Sur la carte de **prévisualisation** de la répartition (avant « Appliquer ») :
+- **clic sur un mini-terrain** → il est **mis de côté** (pastille colorée sous la carte) ;
+- **glisser la pastille** sur le grand terrain voulu → le mini-terrain y est posé **au plus près
+  du point lâché**, en respectant les **dimensions de la catégorie** et le **couloir de
+  circulation** (mêmes règles que le calcul automatique, tables des marques comprises) ; s'il
+  n'y a pas la place, le dépôt est **refusé avec un message** explicite (rien n'est perdu, la
+  pastille reste de côté) ;
+- les **numéros sont recalculés** après chaque geste (séquence 1, 2, 3… dans l'ordre des grands
+  terrains) : la numérotation reste cohérente pour la table des marques ;
+- une catégorie « terrain entier » (U14) ne se dépose que sur un grand terrain **vide** ; déposer
+  une catégorie sur le terrain d'une autre **partage** le terrain (table des marques scindée,
+  comme le mixage automatique) ; les grands terrains déclarés non utilisés apparaissent **vides**
+  sur la carte pour servir de cibles ;
+- « Appliquer aux catégories » **avertit** si des mini-terrains sont encore mis de côté (ils ne
+  seraient pas appliqués) ; « Répartir les terrains » recalcule tout et annule les ajustements.
+Souris **et** tactile (pointer events). 100 % front — **aucun redéploiement backend**.
+
 ### Terrains : nature du terrain (surface de jeu) reprise dans la demande d'autorisation — 2026-08-01
 Chaque **grand terrain** de la carte « Terrains & répartition » porte désormais sa **nature**
 (Synthétique, Gazon, Neige, Argile, Sable — mêmes libellés que le formulaire officiel), via un
@@ -19,6 +37,8 @@ menu déroulant placé entre le nom du terrain et le menu Rugby/Foot. La nature 
   (**plusieurs natures ⇒ plusieurs cases**), repli sur la saisie manuelle.
 Migration douce : les terrains enregistrés sans nature affichent « — Nature — » et ne changent
 rien tant que la nature n'est pas choisie. Tests backend : **428/428** (+6 tests session 25).
+
+### Demande d'autorisation : télécharger le formulaire officiel FFR pré-rempli (PDF) — 2026-07-31
 Nouveau bouton **« Télécharger le formulaire pré-rempli (PDF) »** dans l'item Demande d'autorisation :
 il génère le **formulaire officiel FFR** (AcroForm) **pré-rempli** avec ce que l'app connaît, et qui
 **reste modifiable** (l'organisateur l'ouvre et complète le format sportif par catégorie + les
