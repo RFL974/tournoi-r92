@@ -1809,6 +1809,28 @@ function dureeMatchLibelleAutorisation(cfgCat) {
 }
 
 /**
+ * Phase 2 PRÉDITE pour la feuille de report, ou null si non prédictible EXACTEMENT. Réutilise la
+ * table déclarée FORMULES_PHASE2 (session 10) — seule une prédiction de nature 'predit' est rendue,
+ * jamais la borne basse ('minimum', CROISE_DIAGONAL en poules inégales) : on ne dépose pas un
+ * « au moins N » sur un formulaire officiel. Trois gardes prudentes :
+ *  - matin absent ⇒ null (pas de structure) ;
+ *  - aucune poule ÉTIQUETÉE dans le matin ⇒ null (structure inconnue, on ne devine pas) ;
+ *  - catégorie SCF (U14 Super Challenge) ⇒ null (structure propre : triangulaires/quadrangulaires,
+ *    hors doctrine standard — l'organisateur complète à la main). Pur.
+ */
+function predictionPhase2FormatSportif(matin, fmt, cfgCat) {
+  if (!matin || !matin.length) return null;
+  if (contexteScfCategorie(cfgCat).estScf) return null;
+  var st = structureMatinFFR(matin);
+  if (!st.nbPoules) return null;
+  var f = String(fmt || '').trim().toUpperCase();
+  var formule = Object.prototype.hasOwnProperty.call(FORMULES_PHASE2, f) ? FORMULES_PHASE2[f] : null;
+  if (!formule) return null;
+  var p2 = formule(st);
+  return p2.nature === 'predit' ? p2.valeur : null;
+}
+
+/**
  * Format sportif d'UNE catégorie. Le nombre de PHASES se déduit de l'INTENTION — le format
  * d'après-midi DÉCLARÉ (zone B) — JAMAIS de l'existence de matchs (session 8, §4.1). La demande
  * d'autorisation se dépose des semaines avant le tournoi : l'après-midi n'est généré que le jour J,
@@ -1832,14 +1854,30 @@ function formatSportifCategorie(matchsCat, cfgCat) {
   function compter(sousListe) { return sousListe.length ? maxMatchsParEquipe(sousListe) : null; }
 
   if (fmt === 'CROISE' || fmt === 'CROISE_DIAGONAL') {
+    // Phase 2 : CONSTATÉE si l'après-midi est généré, sinon PRÉDITE exactement quand la structure
+    // des poules du matin le permet (sessions 9-10 : c'est une conséquence de la structure, pas une
+    // estimation) — la demande se dépose des semaines avant le jour J, l'info est déjà connue.
+    var p2 = compter(aprem);
+    var p2Predit = false;
+    if (p2 == null) {
+      var pred = predictionPhase2FormatSportif(matin, fmt, cfgCat);
+      if (pred != null) { p2 = pred; p2Predit = true; }
+    }
     return { statut: 'ok', deuxPhases: true, duree: duree,
              phase1: { matchsParEquipe: compter(matin), duree: duree },
-             phase2: { matchsParEquipe: compter(aprem), duree: duree } };
+             phase2: { matchsParEquipe: p2, duree: duree, predit: p2Predit } };
   }
   if (fmt === 'LIBRE') {
     // Une phase : matchs/équipe compte TOUS les matchs de la journée (matin + amicaux d'après-midi).
+    // Après-midi non généré ⇒ total prédit = matin constaté + round-robin de toutes les équipes.
+    var total = aprem.length ? compter(liste) : null;
+    var totalPredit = false;
+    if (total == null && matin.length) {
+      var predL = predictionPhase2FormatSportif(matin, 'LIBRE', cfgCat);
+      if (predL != null) { total = maxMatchsParEquipe(matin) + predL; totalPredit = true; }
+    }
     return { statut: 'ok', deuxPhases: false, duree: duree,
-             unePhase: { matchsParEquipe: compter(liste), duree: duree } };
+             unePhase: { matchsParEquipe: total, duree: duree, predit: totalPredit } };
   }
   if (fmt === 'COUPE_PLATEAU') {
     // Format à élimination : les phases finales (quarts, demies, finale) sont INTERDITES en tournoi/
@@ -2027,12 +2065,14 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   var incoherencesFormat = [];
   var categoriesFormatVide = [];
   var mpc = donneesApp.matchsParCategorie || {};
-  // Matchs/équipe d'une phase : chiffre si connu, sinon « manquant » (planning non généré) — SANS
-  // remettre en cause le nombre de phases (déjà connu par le format déclaré).
-  function ligneMatchsPhase(libelle, mpe) {
-    return (mpe == null)
-      ? { libelle: libelle, valeur: '', etat: 'manquant', origine: 'générer le planning d\'abord' }
-      : calcule(libelle, String(mpe));
+  // Matchs/équipe d'une phase : chiffre si connu (constaté ou PRÉDIT exactement par la structure
+  // des poules), sinon « manquant » — SANS remettre en cause le nombre de phases (déjà connu par le
+  // format déclaré). L'origine distingue le prédit du constaté (même état 'calcule' : c'est exact).
+  function ligneMatchsPhase(libelle, mpe, predit) {
+    if (mpe == null) return { libelle: libelle, valeur: '', etat: 'manquant', origine: 'générer le planning d\'abord' };
+    var c = calcule(libelle, String(mpe));
+    if (predit) c.origine = 'prédit — structure des poules du matin (exact, avant génération)';
+    return c;
   }
   (donneesApp.catsPresentes || []).forEach(function (catApp) {
     var cfgCat = (config.categories || []).filter(function (c) { return String(c.categorie).trim() === catApp; })[0] || {};
@@ -2051,10 +2091,10 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
     if (fs.deuxPhases) {
       champsFormat.push(ligneMatchsPhase(catApp + ' — Phase 1 (poules de qualification) : matchs/équipe', fs.phase1.matchsParEquipe));
       champsFormat.push(calcule(catApp + ' — Phase 1 : durée de match', fs.phase1.duree));
-      champsFormat.push(ligneMatchsPhase(catApp + ' — Phase 2 (poules de niveau) : matchs/équipe', fs.phase2.matchsParEquipe));
+      champsFormat.push(ligneMatchsPhase(catApp + ' — Phase 2 (poules de niveau) : matchs/équipe', fs.phase2.matchsParEquipe, fs.phase2.predit));
       champsFormat.push(calcule(catApp + ' — Phase 2 : durée de match', fs.phase2.duree));
     } else {
-      champsFormat.push(ligneMatchsPhase(catApp + ' — 1 phase : matchs/équipe (journée entière)', fs.unePhase.matchsParEquipe));
+      champsFormat.push(ligneMatchsPhase(catApp + ' — 1 phase : matchs/équipe (journée entière)', fs.unePhase.matchsParEquipe, fs.unePhase.predit));
       champsFormat.push(calcule(catApp + ' — 1 phase : durée de match', fs.unePhase.duree));
     }
     if (normaliserCategorie(catApp) === '6') {

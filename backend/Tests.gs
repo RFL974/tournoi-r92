@@ -237,6 +237,16 @@ function lancerTestsFFR() {
   testS18_valeurSaisieConservee(etat);
   testS18_sansObjetJamaisCompte(etat);
 
+  // Session 19 — feuille de report : phase 2 PRÉDITE (exacte) quand l'après-midi n'est pas généré.
+  testS19_phase2PrediteCroiseDeuxPoules(etat);
+  testS19_phase2PrediteCroiseTroisPoules(etat);
+  testS19_diagonalEgalPredit(etat);
+  testS19_diagonalInegalJamaisPredit(etat);
+  testS19_librePreditJourneeEntiere(etat);
+  testS19_sansPoulesEtiqueteesResteManquant(etat);
+  testS19_scfJamaisPredit(etat);
+  testS19_apremGenereResteConstate(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -2300,4 +2310,120 @@ function testS18_sansObjetJamaisCompte(etat) {
   _ffrAssert(etat, vide.nbManquants - tousNon.nbManquants === 14,
     'S18 : compteur − 14 quand toutes les questions fermées passent à non (obtenu ' +
     (vide.nbManquants - tousNon.nbManquants) + ')');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SESSION 19 — feuille de report : phase 2 PRÉDITE avant génération          */
+/*  La demande se dépose des semaines avant le jour J : la phase 2 est une     */
+/*  conséquence ARITHMÉTIQUE de la structure des poules (FORMULES_PHASE2,      */
+/*  sessions 9-10). Seule une prédiction EXACTE ('predit') est rendue.         */
+/* -------------------------------------------------------------------------- */
+
+/** Matin CROISE à 2 poules étiquetées, après-midi non généré ⇒ phase 2 = 1 (prédit, exact). */
+function testS19_phase2PrediteCroiseDeuxPoules(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T2' },
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T3' },
+    { phase: 'poule', poule: 'B', equipe_A: 'T4', equipe_B: 'T5' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgCroise(), _refAutorisation());
+  var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
+  _ffrAssert(etat, p2 && p2.valeur === '1' && p2.etat === 'calcule', 'S19 : CROISE 2 poules → phase 2 = 1 (prédit)');
+  _ffrAssert(etat, p2 && p2.origine.indexOf('prédit') !== -1, 'S19 : origine dit « prédit »');
+}
+
+/** Matin CROISE à 3 poules ⇒ phase 2 = 2 (round-robin par rang). */
+function testS19_phase2PrediteCroiseTroisPoules(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T2' },
+    { phase: 'poule', poule: 'B', equipe_A: 'T3', equipe_B: 'T4' },
+    { phase: 'poule', poule: 'C', equipe_A: 'T5', equipe_B: 'T6' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgCroise(), _refAutorisation());
+  var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
+  _ffrAssert(etat, p2 && p2.valeur === '2' && p2.etat === 'calcule', 'S19 : CROISE 3 poules → phase 2 = 2 (prédit)');
+}
+
+/** CROISE_DIAGONAL en poules ÉGALES ⇒ phase 2 = 1 (exact). */
+function testS19_diagonalEgalPredit(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T2' },
+    { phase: 'poule', poule: 'B', equipe_A: 'T3', equipe_B: 'T4' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgAutorisation([{ categorie: 'U12', format_apresmidi: 'CROISE_DIAGONAL', format_mi_temps: '2', duree_mi_temps_min: '10' }]),
+    _refAutorisation());
+  var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
+  _ffrAssert(etat, p2 && p2.valeur === '1' && p2.etat === 'calcule', 'S19 : DIAGONAL égal → phase 2 = 1 (prédit)');
+}
+
+/** CROISE_DIAGONAL en poules INÉGALES ⇒ borne basse, JAMAIS rendue : reste manquant. */
+function testS19_diagonalInegalJamaisPredit(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T2' },
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T3' },
+    { phase: 'poule', poule: 'A', equipe_A: 'T2', equipe_B: 'T3' },
+    { phase: 'poule', poule: 'B', equipe_A: 'T4', equipe_B: 'T5' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgAutorisation([{ categorie: 'U12', format_apresmidi: 'CROISE_DIAGONAL', format_mi_temps: '2', duree_mi_temps_min: '10' }]),
+    _refAutorisation());
+  var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
+  _ffrAssert(etat, p2 && p2.etat === 'manquant', 'S19 : DIAGONAL inégal → borne basse jamais rendue (manquant)');
+}
+
+/** LIBRE sans après-midi ⇒ 1 phase = matin constaté + round-robin prédit (3 équipes : 2 + 2 = 4). */
+function testS19_librePreditJourneeEntiere(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T2' },
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T3' },
+    { phase: 'poule', poule: 'A', equipe_A: 'T2', equipe_B: 'T3' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgAutorisation([{ categorie: 'U12', format_apresmidi: 'LIBRE', format_mi_temps: '2', duree_mi_temps_min: '10' }]),
+    _refAutorisation());
+  var une = _autoChamp(d, '1 phase : matchs/équipe');
+  _ffrAssert(etat, une && une.valeur === '4' && une.etat === 'calcule', 'S19 : LIBRE → 2 constatés + 2 prédits = 4');
+  _ffrAssert(etat, une && une.origine.indexOf('prédit') !== -1, 'S19 : LIBRE → origine dit « prédit »');
+}
+
+/** Matin SANS poule étiquetée ⇒ structure inconnue : rien de prédit (comportement S8 préservé). */
+function testS19_sansPoulesEtiqueteesResteManquant(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', equipe_A: 'T1', equipe_B: 'T2' }, { phase: 'poule', equipe_A: 'T1', equipe_B: 'T3' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgCroise(), _refAutorisation());
+  var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
+  _ffrAssert(etat, p2 && p2.etat === 'manquant', 'S19 : sans poules étiquetées → jamais prédit');
+}
+
+/** Catégorie U14 SCF ⇒ structure propre (triangulaires) : jamais prédite par les formules standard. */
+function testS19_scfJamaisPredit(etat) {
+  var cfg = { global: {}, categories: [{ categorie: 'U14', presente: 'oui', format_apresmidi: 'CROISE',
+    format_mi_temps: '2', duree_mi_temps_min: '15', contexte_tournoi: 'SCF', scf_phase: 'P2' }] };
+  var mpc = { U14: [
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T2' },
+    { phase: 'poule', poule: 'B', equipe_A: 'T3', equipe_B: 'T4' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2026-09-19' }, catsPresentes: ['U14'], matchsParCategorie: mpc },
+    cfg, _refAutorisation());
+  var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
+  _ffrAssert(etat, p2 && p2.etat === 'manquant', 'S19 : SCF → jamais prédit par les formules standard');
+}
+
+/** Après-midi DÉJÀ généré ⇒ constaté (prioritaire), l'origine ne dit PAS « prédit ». */
+function testS19_apremGenereResteConstate(etat) {
+  var mpc = { U12: [
+    { phase: 'poule', poule: 'A', equipe_A: 'T1', equipe_B: 'T2' },
+    { phase: 'poule', poule: 'B', equipe_A: 'T3', equipe_B: 'T4' },
+    { phase: 'classement', poule: 'N1', equipe_A: 'T1', equipe_B: 'T3' }
+  ] };
+  var d = assemblerDossierAutorisation({ tournoi: { date: '2027-06-13' }, catsPresentes: ['U12'], matchsParCategorie: mpc },
+    _cfgCroise(), _refAutorisation());
+  var p2 = _autoChamp(d, 'Phase 2 (poules de niveau) : matchs/équipe');
+  _ffrAssert(etat, p2 && p2.valeur === '1' && p2.origine.indexOf('prédit') === -1,
+    'S19 : après-midi généré → constaté, pas prédit');
 }
