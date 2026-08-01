@@ -602,11 +602,12 @@ function remplirFormatSportifAut(categories, matchsParCat, setT) {
 
 /**
  * Construit le PLAN de remplissage (résolu) : { textes:{champPDF:valeur}, cases:[champPDF] }.
- * PUR : ne lit ni DOM ni classeur. `g` = paramètres globaux (Config) ; nbClubs/nbEquipes = comptes ;
- * `matchsParCat` = matchs groupés par catégorie (pour le format sportif). Applique les MÊMES défauts
- * et la MÊME doctrine que la feuille de report backend (club affilié, label, étrangères, phases).
+ * PUR : ne lit ni DOM ni classeur. `g` = paramètres globaux (Config) ; nbClubs/nbEquipes/
+ * nbParticipants = comptes (cascade calculée par l'appelant) ; `matchsParCat` = matchs groupés par
+ * catégorie (pour le format sportif). Applique les MÊMES défauts et la MÊME doctrine que la
+ * feuille de report backend (club affilié, label, étrangères, phases, cascades).
  */
-function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsParCat) {
+function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsParCat, nbParticipants) {
   g = g || {};
   function v(k) { return String(g[k] == null ? '' : g[k]).trim(); }
   var textes = {}, cases = [];
@@ -641,10 +642,13 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsPa
   choix(v('org_niveau_tournoi'), { 'International': 'Case à cocher65', 'National': 'Case à cocher66',
     'Territorial': 'Case à cocher67', 'Départemental': 'Case à cocher68' });
 
-  // A.4 Participants.
+  // A.4 Participants — cascade §4.2, miroir de la feuille de report : la somme des joueurs
+  // DÉCLARÉS par les clubs acceptés (nbParticipants, calculée par l'appelant) prime ; repli sur
+  // org_nb_participants (saisi à la main quand les équipes ne passent pas par l'invitation).
   if (nbClubs) setT('Texte15', String(nbClubs));
   if (nbEquipes) setT('Texte16', String(nbEquipes));
-  setT('Texte17', v('org_nb_participants'));
+  if (nbParticipants) setT('Texte17', String(nbParticipants));
+  else setT('Texte17', v('org_nb_participants'));
   setT('Texte18', v('org_equipes_etrangeres_liste'));
 
   // B.1 Installations.
@@ -858,18 +862,28 @@ async function onTelechargerPdfAutorisation() {
     if (!resp.ok) throw new Error('Modèle PDF introuvable (modeles/demande-autorisation-ffr.pdf).');
     const bytes = await resp.arrayBuffer();
     const g = (typeof configCourante !== 'undefined' && configCourante && configCourante.global) || {};
-    // Comptes (miroir de la feuille de report backend) :
-    //   nb d'équipes = équipes chargées ;
-    //   nb de clubs   = clubs DISTINCTS déduits des noms d'équipes (clubDeAut), source robuste qui ne
-    //     dépend pas du circuit d'invitation ; à défaut d'équipes, on retombe sur les clubs invités.
+    // Comptes — CASCADE §4.2, miroir EXACT de la feuille de report backend :
+    //   nb d'équipes     = équipes chargées ;
+    //   nb de clubs      = clubs invités ACCEPTÉS s'il y en a (source 1, la plus fiable), sinon
+    //     clubs DISTINCTS déduits des noms d'équipes (clubDeAut — équipes saisies à la main) ;
+    //   nb participants  = somme des joueurs DÉCLARÉS par les clubs acceptés (nb_joueurs_total) ;
+    //     0 ⇒ le plan retombe sur org_nb_participants (saisi).
     const eqs = (typeof equipesCourantes !== 'undefined' && equipesCourantes) ? equipesCourantes : [];
     const nbEquipes = eqs.length;
+    const clubs = (typeof clubsInvitesCourants !== 'undefined' && clubsInvitesCourants) ? clubsInvitesCourants : [];
+    let nbClubsAcceptes = 0, nbParticipants = 0;
+    clubs.forEach(function (c) {
+      const accepte = (typeof estAccepte === 'function')
+        ? estAccepte(c.statut)
+        : String(c.statut == null ? '' : c.statut).trim().toLowerCase() === 'accepté';
+      if (!accepte) return;
+      nbClubsAcceptes++;
+      const n = parseInt(c.nb_joueurs_total, 10);
+      if (isFinite(n)) nbParticipants += n;
+    });
     const setClubs = {};
     eqs.forEach(function (e) { const c = clubDeAut(e.nom_equipe); if (c) setClubs[c] = true; });
-    let nbClubs = Object.keys(setClubs).length;
-    if (!nbClubs && typeof clubsInvitesCourants !== 'undefined' && clubsInvitesCourants) {
-      nbClubs = clubsInvitesCourants.length;
-    }
+    const nbClubs = nbClubsAcceptes > 0 ? nbClubsAcceptes : Object.keys(setClubs).length;
     const cats = (typeof configCourante !== 'undefined' && configCourante && configCourante.categories) || [];
     // Matchs groupés par catégorie (pour le format sportif) — depuis le planning déjà chargé.
     const matchs = (typeof matchsCourants !== 'undefined' && matchsCourants) ? matchsCourants : [];
@@ -878,7 +892,7 @@ async function onTelechargerPdfAutorisation() {
       const cat = String(m.categorie == null ? '' : m.categorie).trim();
       if (cat) (matchsParCat[cat] = matchsParCat[cat] || []).push(m);
     });
-    const plan = planRemplissageAutorisation(g, nbClubs, nbEquipes, cats, matchsParCat);
+    const plan = planRemplissageAutorisation(g, nbClubs, nbEquipes, cats, matchsParCat, nbParticipants);
     const out = await appliquerPlanPdfAutorisation(PDFLib, bytes, plan);
     telechargerFichierAutorisation(out, 'demande-autorisation-' + (g.tournoi_date || 'tournoi') + '.pdf', 'application/pdf');
     afficherMessage(message, '✅ PDF pré-rempli téléchargé. Ouvre-le et complète le format sportif ' +
