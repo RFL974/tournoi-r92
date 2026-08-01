@@ -53,11 +53,14 @@ function construireInvitation(g, categories) {
       ? '<img class="d-affiche" src="' + echapper(urlAffiche(g.tournoi_affiche_id, 800)) + '" alt="Affiche — ' + echapper(nom) + '">'
       : '') +
     '<div class="d-entete-textes">' +
-      '<p class="d-surtitre">Invitation — Génération R92</p>' +
+      '<p class="d-surtitre">Invitation — École de Rugby du Racing Club de France</p>' +
       '<h1>' + echapper(nom) + '</h1>' +
       (txt(g.tournoi_date) ? '<p class="d-date">' + echapper(dateLongueFr(g.tournoi_date)) + '</p>' : '') +
       '<p class="d-presentation">' + echapper(accroche) + '</p>' +
     '</div>' +
+    // Blason du club à DROITE du nom, près de la marge — « c'est l'École de Rugby qui invite »
+    // (l'association fournit l'outil, l'EDR signe l'invitation). Session 24.
+    '<img class="d-entete-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
   '</header>';
 
   // b) VOUS ÊTES INVITÉS : liste complète des catégories du tournoi (identique pour tous les
@@ -218,8 +221,8 @@ function piedInvitation(g) {
     liens.push('<a class="inv-lien" href="' + echapper(txt(g.url_site_association)) + '" target="_blank" rel="noopener">🌐 Site de l\'association</a>');
   }
   return '<footer class="d-pied inv-pied">' +
-    '<img class="d-pied-logo" src="img/logo-r92.png" alt="" onerror="this.style.display=\'none\'">' +
-    '<span class="inv-pied-nom">Génération R92 <span class="d-pied-mention">· École de rugby du Racing 92</span></span>' +
+    '<img class="d-pied-logo" src="img/blason-racing92.svg" alt="" onerror="this.style.display=\'none\'">' +
+    '<span class="inv-pied-nom">École de Rugby du Racing Club de France</span>' +
     (liens.length ? '<span class="inv-pied-liens">' + liens.join('') + '</span>' : '') +
   '</footer>';
 }
