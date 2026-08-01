@@ -65,11 +65,12 @@ function construirePage(data) {
       ? '<img class="d-affiche" src="' + echapper(urlAffiche(t.affiche_id, 600)) + '" alt="Affiche — ' + echapper(nom) + '">'
       : '') +
     '<div class="d-entete-textes">' +
-      '<p class="d-surtitre">Invitation — Génération R92</p>' +
+      '<p class="d-surtitre">Invitation — École de Rugby du Racing Club de France</p>' +
       '<h1>' + echapper(nom) + '</h1>' +
       (txt(t.date) ? '<p class="d-date">' + echapper(dateLongueFr(t.date)) + '</p>' : '') +
       (txt(t.lieu) ? '<p class="d-genere">' + echapper(txt(t.lieu)) + '</p>' : '') +
     '</div>' +
+  '<img class="d-entete-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
   '</header>';
 
   html += '<p class="d-presentation">' + (prenom ? 'Bonjour ' + echapper(prenom) + ', ' : '')
@@ -100,7 +101,7 @@ function construirePage(data) {
   html += '<div id="rep-message-final"></div>';
 
   // Pied.
-  html += '<footer class="d-pied"><span>Génération R92 <span class="d-pied-mention">· École de rugby du Racing 92</span></span></footer>';
+  html += '<footer class="d-pied"><span>École de Rugby du Racing Club de France</span></footer>';
   return html;
 }
 

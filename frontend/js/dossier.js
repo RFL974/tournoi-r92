@@ -349,11 +349,12 @@ function construireDossier(g, categories, club) {
       ? '<img class="d-affiche" src="' + echapper(urlAffiche(g.tournoi_affiche_id, 800)) + '" alt="Affiche — ' + echapper(nom) + '">'
       : '') +
     '<div class="d-entete-textes">' +
-      '<p class="d-surtitre">Dossier club — Génération R92</p>' +
+      '<p class="d-surtitre">Dossier club — École de Rugby du Racing Club de France</p>' +
       '<h1>' + echapper(nom) + '</h1>' +
       (txt(g.tournoi_date) ? '<p class="d-date">' + echapper(dateLongueFr(g.tournoi_date)) + '</p>' : '') +
       '<p class="d-genere">Généré le ' + echapper(genereLe) + '</p>' +
     '</div>' +
+  '<img class="d-entete-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
   '</header>';
 
   // 1 bis) ACCUEIL PERSONNALISÉ (Phase 2) : inséré AVANT la Présentation, seulement si le
@@ -468,8 +469,8 @@ function construireDossier(g, categories, club) {
 
   // 10) PIED DE PAGE : logo + mention discrète (document identifiable même découpé).
   html += '<footer class="d-pied">' +
-    '<img class="d-pied-logo" src="img/logo-r92.png" alt="" onerror="this.style.display=\'none\'">' +
-    '<span>Génération R92 <span class="d-pied-mention">· École de rugby du Racing 92</span></span>' +
+    '<img class="d-pied-logo" src="img/blason-racing92.svg" alt="" onerror="this.style.display=\'none\'">' +
+    '<span>École de Rugby du Racing Club de France</span>' +
   '</footer>';
 
   return html;
