@@ -1721,6 +1721,23 @@ var DEFAUTS_AUTORISATION = {
   org_club_nom: 'Racing Club de France Rugby', org_label_edr: 'oui', org_equipes_etrangeres: 'non'
 };
 
+/* Champ ouvert → question fermée Oui/Non qui le pilote. Quand la question vaut « non » (valeur
+ * EFFECTIVE : saisie, sinon défaut documenté), le champ lié est SANS OBJET : état « sans objet »,
+ * JAMAIS compté dans les manquants — le formulaire ne le demande pas dans ce cas. Miroir des `dep`
+ * du front (AUTORISATION_SAISIE, admin-autorisation.js), qui grise ces mêmes champs à la saisie.
+ * (org_equipes_etrangeres_liste est absent : sa ligne n'apparaît sur la feuille que si « oui ».) */
+var DEPENDANCES_AUTORISATION = {
+  org_label_date: 'org_label_edr',
+  org_medecin_nom: 'org_medecin_oui',
+  org_medecin_tel: 'org_medecin_oui',
+  org_droits_montant: 'org_droits_oui',
+  org_hebergement_structure: 'org_hebergement_oui',
+  org_repas_fournisseur: 'org_repas_oui',
+  org_repas_prix: 'org_repas_oui',
+  org_gouters_fournisseur: 'org_gouters_oui',
+  org_gouters_prix: 'org_gouters_oui'
+};
+
 /* Cases « catégories et formes de jeu » du formulaire, par catégorie canonique. L'ordre et les
  * libellés suivent le document officiel. SEVENS y figure mais n'est JAMAIS coché automatiquement
  * (absent de RefFFR_Formes — voir Session 5). M15F reprend les cinq cases de M14. */
@@ -1741,10 +1758,22 @@ function libelleFormeAutorisation(eff, forme) {
   return eff + ' (' + f + ')';
 }
 
-/** Un champ « saisi » (zone A) : valeur de Config, sinon défaut documenté, sinon manquant. */
+/** Un champ « saisi » (zone A) : valeur de Config, sinon défaut documenté, sinon manquant.
+ *  Exception : un champ ouvert dont la question fermée pilote vaut « non » est SANS OBJET (le
+ *  formulaire ne le demande pas) — jamais « manquant ». Une valeur déjà saisie reste affichée
+ *  telle quelle (« saisi »), même question à « non » : cohérent avec le grisage front qui
+ *  conserve la valeur sans la modifier. */
 function champSaisiAutorisation(config, param) {
-  var v = String(((config && config.global) || {})[param] == null ? '' : config.global[param]).trim();
+  var g = (config && config.global) || {};
+  var v = String(g[param] == null ? '' : g[param]).trim();
   if (v !== '') return { valeur: v, etat: 'saisi', origine: 'Config:' + param };
+  var dep = DEPENDANCES_AUTORISATION[param];
+  if (dep) {
+    // Valeur EFFECTIVE de la question pilote : saisie, sinon défaut documenté (jamais devinée).
+    var q = String(g[dep] == null ? '' : g[dep]).trim().toLowerCase();
+    if (q === '') q = String(DEFAUTS_AUTORISATION[dep] == null ? '' : DEFAUTS_AUTORISATION[dep]).toLowerCase();
+    if (q === 'non') return { valeur: '—', etat: 'sans objet', origine: '« ' + dep + ' » = non' };
+  }
   var def = DEFAUTS_AUTORISATION[param];
   if (def != null && def !== '') return { valeur: def, etat: 'calcule', origine: 'défaut app' };
   return { valeur: '', etat: 'manquant', origine: 'Config:' + param };

@@ -227,6 +227,16 @@ function lancerTestsFFR() {
   testS17_vigilanceApplicable(etat);
   testS17_refAbsentInconnu(etat);
 
+  // Session 18 — feuille de report : champ ouvert « sans objet » quand sa question fermée = non.
+  testS18_medecinNonSansObjet(etat);
+  testS18_medecinOuiResteManquant(etat);
+  testS18_questionVideResteManquant(etat);
+  testS18_labelNonDateSansObjet(etat);
+  testS18_labelDefautOuiDateManquante(etat);
+  testS18_logistiqueNonSansObjet(etat);
+  testS18_valeurSaisieConservee(etat);
+  testS18_sansObjetJamaisCompte(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -2206,4 +2216,88 @@ function testS17_refAbsentInconnu(etat) {
   var applicables = (r.jours || []).filter(function (j) { return j.applicable; });
   _ffrAssert(etat, applicables.length === 0 && (r.jours || []).every(function (j) { return j.statut === 'inconnu'; }),
     'S17 : référentiel absent → tous « inconnu », aucun applicable');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SESSION 18 — feuille de report : « sans objet » quand la question = non    */
+/*  Un champ ouvert piloté par une question fermée Oui/Non répondue « non »    */
+/*  n'est PAS un trou : le formulaire ne le demande pas. État « sans objet »,  */
+/*  hors compteur de manquants. Miroir du grisage front (dep, PR #109).        */
+/* -------------------------------------------------------------------------- */
+
+/** Médecin = non ⇒ nom et téléphone « sans objet », jamais manquants. */
+function testS18_medecinNonSansObjet(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], { org_medecin_oui: 'non' }), { formes: [] });
+  var nom = _autoChamp(d, 'Médecin — nom');
+  var tel = _autoChamp(d, 'Médecin — téléphone');
+  _ffrAssert(etat, nom && nom.etat === 'sans objet' && nom.valeur === '—', 'S18 : médecin non → nom sans objet');
+  _ffrAssert(etat, tel && tel.etat === 'sans objet', 'S18 : médecin non → téléphone sans objet');
+}
+
+/** Médecin = oui ⇒ nom et téléphone restent exigés (manquants tant que vides). */
+function testS18_medecinOuiResteManquant(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], { org_medecin_oui: 'oui' }), { formes: [] });
+  var nom = _autoChamp(d, 'Médecin — nom');
+  _ffrAssert(etat, nom && nom.etat === 'manquant', 'S18 : médecin oui → nom toujours manquant');
+}
+
+/** Question SANS réponse (ni défaut) ⇒ le champ lié reste manquant (on ne devine pas « non »). */
+function testS18_questionVideResteManquant(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {}), { formes: [] });
+  var nom = _autoChamp(d, 'Médecin — nom');
+  var montant = _autoChamp(d, 'Droits — montant');
+  _ffrAssert(etat, nom && nom.etat === 'manquant', 'S18 : question vide → médecin nom manquant');
+  _ffrAssert(etat, montant && montant.etat === 'manquant', 'S18 : question vide → montant manquant');
+}
+
+/** Label EDR = non (saisi) ⇒ date du dernier label « sans objet ». */
+function testS18_labelNonDateSansObjet(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], { org_label_edr: 'non' }), { formes: [] });
+  var date = _autoChamp(d, 'Date du dernier label');
+  _ffrAssert(etat, date && date.etat === 'sans objet', 'S18 : label non → date sans objet');
+}
+
+/** Label EDR vide ⇒ défaut documenté « oui » ⇒ la date reste exigée (manquante). */
+function testS18_labelDefautOuiDateManquante(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {}), { formes: [] });
+  var date = _autoChamp(d, 'Date du dernier label');
+  _ffrAssert(etat, date && date.etat === 'manquant', 'S18 : label défaut oui → date manquante');
+}
+
+/** B.5 : chaque question logistique à « non » rend ses champs ouverts « sans objet ». */
+function testS18_logistiqueNonSansObjet(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    org_droits_oui: 'non', org_hebergement_oui: 'non', org_repas_oui: 'non', org_gouters_oui: 'non'
+  }), { formes: [] });
+  ['Droits — montant', 'Hébergement — structure', 'Repas — fournisseur', 'Repas — prix',
+   'Goûters — fournisseur', 'Goûters — prix'].forEach(function (lib) {
+    var c = _autoChamp(d, lib);
+    _ffrAssert(etat, c && c.etat === 'sans objet', 'S18 : « ' + lib + ' » sans objet quand question = non');
+  });
+}
+
+/** Une valeur DÉJÀ saisie reste affichée « saisi », même question à non (miroir du grisage front). */
+function testS18_valeurSaisieConservee(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    org_repas_oui: 'non', org_repas_fournisseur: 'Traiteur du Plessis'
+  }), { formes: [] });
+  var c = _autoChamp(d, 'Repas — fournisseur');
+  _ffrAssert(etat, c && c.etat === 'saisi' && c.valeur === 'Traiteur du Plessis',
+    'S18 : valeur saisie conservée malgré question = non');
+}
+
+/** Les « sans objet » sortent du compteur : répondre « non » aux 5 questions doit le faire baisser
+ *  d'exactement 14 (5 questions saisies + 9 champs liés sans objet) par rapport au dossier vide. */
+function testS18_sansObjetJamaisCompte(etat) {
+  var vide = assemblerDossierAutorisation({}, _cfgAutorisation([], {}), { formes: [] });
+  var tousNon = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    org_label_edr: 'non', org_medecin_oui: 'non', org_droits_oui: 'non',
+    org_hebergement_oui: 'non', org_repas_oui: 'non', org_gouters_oui: 'non'
+  }), { formes: [] });
+  // org_label_edr passe de « calcule » (défaut oui) à « saisi » : n'était pas compté ; sa date le
+  // reste (manquant→sans objet = −1). Les 5 autres questions : manquant→saisi (−5) ; leurs 8 champs
+  // liés : manquant→sans objet (−8). Total attendu : −14.
+  _ffrAssert(etat, vide.nbManquants - tousNon.nbManquants === 14,
+    'S18 : compteur − 14 quand toutes les questions fermées passent à non (obtenu ' +
+    (vide.nbManquants - tousNon.nbManquants) + ')');
 }
