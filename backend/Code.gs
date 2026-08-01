@@ -2165,9 +2165,31 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   ] });
 
   // B.5 LOGISTIQUE (saisi)
+  // Droits d'inscription — CASCADE (session 22) : le logiciel connaît déjà la réponse via les
+  // MODALITÉS D'INSCRIPTION (tarif_engagement_oui / tarif_engagement_montant, texte libre dont on
+  // extrait le 1er nombre). Un champ org_* SAISI reste prioritaire ; sinon on REPREND les
+  // modalités (état 'calcule', origine explicite) ; réponse effective « non » ⇒ montant sans
+  // objet ; rien nulle part ⇒ manquant. Même règle que le PDF pré-rempli. La carte de saisie ne
+  // pose plus ces questions quand les modalités y répondent (rendreSaisieAutorisation).
+  var tarifOuiBrut = String(g.tarif_engagement_oui == null ? '' : g.tarif_engagement_oui).trim().toLowerCase();
+  var tarifOui = (tarifOuiBrut === 'oui' || tarifOuiBrut === 'non') ? tarifOuiBrut : '';
+  var mTarif = String(g.tarif_engagement_montant == null ? '' : g.tarif_engagement_montant).match(/\d+(?:[.,]\d+)?/);
+  var tarifMontant = mTarif ? mTarif[0].replace(',', '.') : '';
+  var origineModalites = 'repris des modalités d\'inscription (tarif d\'engagement)';
+  var droitsOui = champSaisiAutorisation(config, 'org_droits_oui');
+  if (droitsOui.etat === 'manquant' && tarifOui) {
+    droitsOui = { valeur: tarifOui, etat: 'calcule', origine: origineModalites };
+  }
+  var droitsMontant = champSaisiAutorisation(config, 'org_droits_montant');
+  if (droitsMontant.etat === 'manquant' && droitsOui.valeur === 'non') {
+    droitsMontant = { valeur: '—', etat: 'sans objet', origine: '« droits d\'inscription » = non' };
+  }
+  if (droitsMontant.etat === 'manquant' && droitsOui.valeur === 'oui' && tarifMontant) {
+    droitsMontant = { valeur: tarifMontant, etat: 'calcule', origine: origineModalites };
+  }
   sections.push({ titre: 'B.5 — Logistique', champs: [
-    saisi('Droits d\'inscription', 'org_droits_oui'),
-    saisi('Droits — montant par équipe', 'org_droits_montant'),
+    champ('Droits d\'inscription', droitsOui),
+    champ('Droits — montant par équipe', droitsMontant),
     saisi('Hébergement proposé', 'org_hebergement_oui'),
     saisi('Hébergement — structure', 'org_hebergement_structure'),
     saisi('Repas proposés', 'org_repas_oui'),

@@ -144,12 +144,42 @@ function champSaisieAutorisation(c) {
     '<span class="r-libelle">' + echapper(c.l) + '</span>' + controle + note + '</label>';
 }
 
-/** Rend la partie SAISIE (formulaire) + le mémo arbitrage + le rappel « antenne de secours ». */
-function rendreSaisieAutorisation() {
+/** Questions dont le LOGICIEL connaît déjà la réponse (session 22) : on ne les pose plus dans la
+ *  carte, pour ne pas surcharger le document — la feuille de report montre la valeur reprise et
+ *  son origine. Garde-fou : une valeur DÉJÀ SAISIE reste toujours affichée (jamais masquer une
+ *  saisie existante). `dossier` = feuille assemblée par le backend (null si indisponible). */
+function questionsDejaRepondues(dossier) {
+  const masque = {};
+  // Droits d'inscription : répondus par les MODALITÉS D'INSCRIPTION (tarif d'engagement).
+  if (valAutorisation('org_droits_oui') === '' && prefillAutorisation('org_droits_oui') !== '') {
+    masque.org_droits_oui = true;
+    if (valAutorisation('org_droits_montant') === '') masque.org_droits_montant = true;
+  }
+  // Nombre de participants (repli manuel) : répondu par la cascade des clubs (effectifs déclarés).
+  if (valAutorisation('org_nb_participants') === '' && dossier && dossier.sections) {
+    let part = null;
+    dossier.sections.forEach(function (s) { s.champs.forEach(function (c) {
+      if (!part && c.libelle === 'Nombre de participants') part = c;
+    }); });
+    if (part && part.etat === 'calcule') masque.org_nb_participants = true;
+  }
+  return masque;
+}
+
+/** Rend la partie SAISIE (formulaire) + le mémo arbitrage + le rappel « antenne de secours ».
+ *  `masque` (questionsDejaRepondues) : champs à NE PAS afficher, déjà répondus par l'app. */
+function rendreSaisieAutorisation(masque) {
+  masque = masque || {};
+  let nbMasquees = 0;
   let html = '<form id="form-autorisation" class="autorisation-saisie">';
   AUTORISATION_SAISIE.forEach(function (grp) {
+    const champs = grp.champs.filter(function (c) {
+      if (masque[c.p]) { nbMasquees++; return false; }
+      return true;
+    });
+    if (!champs.length) return;
     html += '<fieldset class="autorisation-groupe"><legend>' + echapper(grp.titre) + '</legend>';
-    html += grp.champs.map(champSaisieAutorisation).join('');
+    html += champs.map(champSaisieAutorisation).join('');
     html += '</fieldset>';
   });
 
@@ -168,6 +198,13 @@ function rendreSaisieAutorisation() {
     html += '</fieldset>';
   }
   html += '</form>';
+
+  // Note discrète : des questions ont été retirées car l'app y répond déjà (source unique).
+  if (nbMasquees) {
+    html += '<p class="autorisation-rappel">💡 ' + nbMasquees + ' question(s) ne sont plus posées ici : ' +
+      'le logiciel y répond déjà (effectifs déclarés par les clubs, tarif d\'engagement des ' +
+      'modalités…). La feuille de report ci-dessous montre les valeurs reprises et leur origine.</p>';
+  }
 
   // Rappel « antenne de secours » du dossier club (jamais parsé automatiquement).
   const secours = valAutorisation('securite_secours_precisions');
@@ -223,19 +260,24 @@ function rendreFeuilleAutorisation(dossier) {
   return html + '</div>';
 }
 
-/** (Re)charge et affiche la section « Demande d'autorisation ». Migration douce : silencieux si indisponible. */
+/** (Re)charge et affiche la section « Demande d'autorisation ». Migration douce : silencieux si indisponible.
+ *  La FEUILLE se charge d'abord : la SAISIE se rend ensuite, pour masquer les questions auxquelles
+ *  l'app répond déjà (questionsDejaRepondues a besoin du dossier assemblé). Feuille indisponible
+ *  ⇒ saisie complète (aucun masquage sans certitude). */
 async function majAutorisation() {
   const zoneSaisie = document.getElementById('autorisation-saisie');
   const zoneFeuille = document.getElementById('autorisation-feuille');
   if (!zoneSaisie || !zoneFeuille) return;
-  zoneSaisie.innerHTML = rendreSaisieAutorisation();
+  let dossier = null;
   try {
     const rep = await apiPostProtege('getDossierAutorisation', {}, 'admin', 'admin');
-    zoneFeuille.innerHTML = rendreFeuilleAutorisation(rep && rep.dossier);
+    dossier = (rep && rep.dossier) || null;
+    zoneFeuille.innerHTML = rendreFeuilleAutorisation(dossier);
   } catch (e) {
     zoneFeuille.innerHTML = '<div class="ffr-bloc ffr-neutre">Feuille de report indisponible ' +
       '(connecte-toi avec la clé admin).</div>';
   }
+  zoneSaisie.innerHTML = rendreSaisieAutorisation(questionsDejaRepondues(dossier));
 }
 
 /** Enregistre les champs saisis (org_*), puis recharge la config et la feuille. */
@@ -605,9 +647,15 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsPa
   setT('Texte55', v('org_secours_tel'));
   ouinon(v('org_ambulance'), 'Case à cocher103', 'Case à cocher104');
 
-  // B.5 Logistique.
-  ouinon(v('org_droits_oui'), 'Case à cocher105', 'Case à cocher106');
-  setT('Texte56', v('org_droits_montant'));
+  // B.5 Logistique — droits d'inscription : CASCADE depuis les modalités d'inscription (même
+  // règle que la feuille de report) : org_* saisi prioritaire, sinon tarif d'engagement (dont on
+  // extrait le 1er nombre — le champ des modalités est du texte libre).
+  var tarifOuiP = String(g.tarif_engagement_oui == null ? '' : g.tarif_engagement_oui).trim().toLowerCase();
+  if (tarifOuiP !== 'oui' && tarifOuiP !== 'non') tarifOuiP = '';
+  var mTarifP = String(g.tarif_engagement_montant == null ? '' : g.tarif_engagement_montant).match(/\d+(?:[.,]\d+)?/);
+  var droitsOuiEff = v('org_droits_oui') || tarifOuiP;
+  ouinon(droitsOuiEff, 'Case à cocher105', 'Case à cocher106');
+  setT('Texte56', v('org_droits_montant') || ((droitsOuiEff === 'oui' && mTarifP) ? mTarifP[0].replace(',', '.') : ''));
   ouinon(v('org_hebergement_oui'), 'Case à cocher107', 'Case à cocher108');
   setT('Texte57', v('org_hebergement_structure'));
   ouinon(v('org_repas_oui'), 'Case à cocher109', 'Case à cocher110');
