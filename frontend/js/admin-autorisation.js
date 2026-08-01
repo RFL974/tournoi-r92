@@ -156,12 +156,15 @@ function questionsDejaRepondues(dossier) {
     if (valAutorisation('org_droits_montant') === '') masque.org_droits_montant = true;
   }
   // Nombre de participants (repli manuel) : répondu par la cascade des clubs (effectifs déclarés).
-  if (valAutorisation('org_nb_participants') === '' && dossier && dossier.sections) {
-    let part = null;
+  // Nombre d'éducateurs (B.3) : répondu par les éducateurs DÉCLARÉS à la réponse d'invitation.
+  if (dossier && dossier.sections) {
+    let part = null, educ = null;
     dossier.sections.forEach(function (s) { s.champs.forEach(function (c) {
       if (!part && c.libelle === 'Nombre de participants') part = c;
+      if (!educ && c.libelle === 'Nombre d\'éducateurs') educ = c;
     }); });
-    if (part && part.etat === 'calcule') masque.org_nb_participants = true;
+    if (part && part.etat === 'calcule' && valAutorisation('org_nb_participants') === '') masque.org_nb_participants = true;
+    if (educ && educ.etat === 'calcule' && valAutorisation('org_nb_educateurs') === '') masque.org_nb_educateurs = true;
   }
   // Type de terrain (repli manuel) : répondu par la NATURE des grands terrains déclarés (carte
   // Terrains). L'état 'calcule' de ce champ ne peut venir que de cette cascade (pas de défaut app).
@@ -633,7 +636,7 @@ function remplirFormatSportifAut(categories, matchsParCat, setT) {
  * catégorie (pour le format sportif). Applique les MÊMES défauts et la MÊME doctrine que la
  * feuille de report backend (club affilié, label, étrangères, phases, cascades).
  */
-function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsParCat, nbParticipants) {
+function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsParCat, nbParticipants, nbEducateurs) {
   g = g || {};
   function v(k) { return String(g[k] == null ? '' : g[k]).trim(); }
   var textes = {}, cases = [];
@@ -687,9 +690,11 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsPa
   else choix(v('org_type_terrain'), casesNature);
   setT('Texte20', v('org_nb_vestiaires'));
 
-  // B.3 Arbitrage.
+  // B.3 Arbitrage — éducateurs : CASCADE (miroir feuille de report, session 23) : org saisi
+  // prioritaire, sinon la somme des éducateurs DÉCLARÉS par les clubs acceptés.
   setT('Texte46', v('org_nb_arbitres'));
-  setT('Texte47', v('org_nb_educateurs'));
+  if (v('org_nb_educateurs')) setT('Texte47', v('org_nb_educateurs'));
+  else if (nbEducateurs) setT('Texte47', String(nbEducateurs));
   setT('Texte48', v('org_nb_doublettes'));
 
   // B.4 Sécurité — responsable = référent sécurité (si distinct), sinon référent tournoi (dossier club).
@@ -902,7 +907,7 @@ async function onTelechargerPdfAutorisation() {
     const eqs = (typeof equipesCourantes !== 'undefined' && equipesCourantes) ? equipesCourantes : [];
     const nbEquipes = eqs.length;
     const clubs = (typeof clubsInvitesCourants !== 'undefined' && clubsInvitesCourants) ? clubsInvitesCourants : [];
-    let nbClubsAcceptes = 0, nbParticipants = 0;
+    let nbClubsAcceptes = 0, nbParticipants = 0, nbEducateurs = 0;
     clubs.forEach(function (c) {
       const accepte = (typeof estAccepte === 'function')
         ? estAccepte(c.statut)
@@ -911,6 +916,8 @@ async function onTelechargerPdfAutorisation() {
       nbClubsAcceptes++;
       const n = parseInt(c.nb_joueurs_total, 10);
       if (isFinite(n)) nbParticipants += n;
+      const ed = parseInt(c.nb_educateurs_total, 10);
+      if (isFinite(ed)) nbEducateurs += ed;
     });
     const setClubs = {};
     eqs.forEach(function (e) { const c = clubDeAut(e.nom_equipe); if (c) setClubs[c] = true; });
@@ -923,7 +930,7 @@ async function onTelechargerPdfAutorisation() {
       const cat = String(m.categorie == null ? '' : m.categorie).trim();
       if (cat) (matchsParCat[cat] = matchsParCat[cat] || []).push(m);
     });
-    const plan = planRemplissageAutorisation(g, nbClubs, nbEquipes, cats, matchsParCat, nbParticipants);
+    const plan = planRemplissageAutorisation(g, nbClubs, nbEquipes, cats, matchsParCat, nbParticipants, nbEducateurs);
     const out = await appliquerPlanPdfAutorisation(PDFLib, bytes, plan);
     telechargerFichierAutorisation(out, 'demande-autorisation-' + (g.tournoi_date || 'tournoi') + '.pdf', 'application/pdf');
     afficherMessage(message, '✅ PDF pré-rempli téléchargé. Ouvre-le et complète le format sportif ' +
