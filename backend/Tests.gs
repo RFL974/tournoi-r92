@@ -277,7 +277,7 @@ function lancerTestsFFR() {
   testS23_detailJoueursManquants(etat);
   testS23_educateursZeroAccepte(etat);
   testS23_educateursCascadeB3(etat);
-  testS23_educateursSaisiPrioritaire(etat);
+  testS23_educateursTotalManuelEstUnRepli(etat);
   testS23_educateursRienManquant(etat);
 
   // Session 25 — type de terrain : cascade depuis la nature des grands terrains déclarés.
@@ -287,6 +287,17 @@ function lancerTestsFFR() {
   testS25_rienResteManquant(etat);
   testS25_jsonInvalidePrudent(etat);
   testS25_naturePartielleSignalee(etat);
+
+  // Session 26 — éducateurs B.3 : cascade ADDITIVE (clubs déclarants + club organisateur).
+  testS26_totalAdditionneLesDeuxSources(etat);
+  testS26_declarePrimeSurTotalManuel(etat);
+  testS26_totalManuelIgnoreSignale(etat);
+  testS26_pasDeSignalementSansAncienTotal(etat);
+  testS26_clubSeulSansDeclaration(etat);
+  testS26_zeroClubEstUneReponse(etat);
+  testS26_repliTotalManuel(etat);
+  testS26_rienNullePartManquant(etat);
+  testS26_valeurIllisiblePrudente(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -2737,12 +2748,13 @@ function testS23_educateursCascadeB3(etat) {
   _ffrAssert(etat, c.origine.indexOf('déclarés par les clubs') !== -1, 'S23 : origine dit « déclarés »');
 }
 
-/** org_nb_educateurs SAISI reste prioritaire sur la cascade. */
-function testS23_educateursSaisiPrioritaire(etat) {
-  var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 9 } },
-    _cfgAutorisation([], { org_nb_educateurs: '24' }), { formes: [] });
+/** RÈGLE CHANGÉE EN SESSION 26 : org_nb_educateurs n'est plus prioritaire, c'est un REPLI — le
+ *  total manuel masquait la déclaration des clubs (24 saisi cachait 7 déclarés). Il n'est donc
+ *  utilisé que si AUCUNE source structurelle n'existe. Contrat de priorité : voir testS26_*. */
+function testS23_educateursTotalManuelEstUnRepli(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], { org_nb_educateurs: '24' }), { formes: [] });
   var c = _autoChamp(d, 'Nombre d\'éducateurs');
-  _ffrAssert(etat, c && c.valeur === '24' && c.etat === 'saisi', 'S23 : saisi prioritaire sur cascade');
+  _ffrAssert(etat, c && c.valeur === '24' && c.etat === 'saisi', 'S23 : total manuel seul → utilisé en repli');
 }
 
 /** Rien déclaré, rien saisi ⇒ manquant (comportement historique). */
@@ -2818,4 +2830,84 @@ function testS25_naturePartielleSignalee(etat) {
   var t = _autoChamp(d, 'Type de terrain');
   _ffrAssert(etat, t && t.etat === 'calcule' && t.valeur === 'Gazon', 'S25 : nature partielle → calculé avec le connu');
   _ffrAssert(etat, /2 terrain\(s\) sans nature/.test(t.origine), 'S25 : origine signale 2 terrains sans nature');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SESSION 26 — B.3 : total des ÉDUCATEURS = cascade ADDITIVE                 */
+/*  déclarés par les clubs acceptés + encadrants du club ORGANISATEUR (absents */
+/*  de toute réponse d'invitation). Le structurel prime ; jamais deviné ; un   */
+/*  ancien total manuel ignoré est SIGNALÉ, jamais soustrait ni redistribué.   */
+/* -------------------------------------------------------------------------- */
+
+/** Le total ADDITIONNE les deux sources (7 déclarés + 17 du Racing = 24). */
+function testS26_totalAdditionneLesDeuxSources(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 7 } },
+    _cfgAutorisation([], { org_nb_educateurs_club: '17' }), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.valeur === '24' && c.etat === 'calcule', 'S26 : 7 déclarés + 17 club = 24 (calculé)');
+  _ffrAssert(etat, /7 déclaré/.test(c.origine) && /17 du club/.test(c.origine),
+    'S26 : origine détaille les deux parts');
+}
+
+/** RÉGRESSION session 23 : la déclaration des clubs n'est plus masquée par un total manuel. */
+function testS26_declarePrimeSurTotalManuel(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 7 } },
+    _cfgAutorisation([], { org_nb_educateurs: '24' }), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.valeur === '7' && c.etat === 'calcule', 'S26 : déclaré (7) prime sur l\'ancien total manuel (24)');
+}
+
+/** L'ancien total manuel ignoré est SIGNALÉ (avert), jamais écrasé en silence. */
+function testS26_totalManuelIgnoreSignale(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 7 } },
+    _cfgAutorisation([], { org_nb_educateurs: '24' }), { formes: [] });
+  var a = _autoChamp(d, 'Cohérence éducateurs');
+  _ffrAssert(etat, a && a.etat === 'avert' && a.valeur.indexOf('24') !== -1, 'S26 : ancien total signalé');
+  _ffrAssert(etat, d.nbManquants === assemblerDossierAutorisation({ participants: { nbEducateurs: 7 } },
+    _cfgAutorisation([], {}), { formes: [] }).nbManquants, 'S26 : le signalement n\'est jamais compté en manquant');
+}
+
+/** Aucun signalement quand il n'y a pas d'ancien total manuel. */
+function testS26_pasDeSignalementSansAncienTotal(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 7 } },
+    _cfgAutorisation([], { org_nb_educateurs_club: '17' }), { formes: [] });
+  _ffrAssert(etat, !_autoChamp(d, 'Cohérence éducateurs'), 'S26 : rien à signaler → pas de ligne orange');
+}
+
+/** Club organisateur SEUL (aucun club n'a encore répondu) ⇒ calculé avec sa seule part. */
+function testS26_clubSeulSansDeclaration(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], { org_nb_educateurs_club: '17' }), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.valeur === '17' && c.etat === 'calcule', 'S26 : club organisateur seul → 17 calculé');
+}
+
+/** Zéro éducateur au club organisateur est une RÉPONSE (0), pas une absence de réponse. */
+function testS26_zeroClubEstUneReponse(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 7 } },
+    _cfgAutorisation([], { org_nb_educateurs_club: '0' }), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.valeur === '7' && c.etat === 'calcule', 'S26 : 0 au club → total 7 (jamais bloquant)');
+}
+
+/** Aucune source structurelle ⇒ repli sur l'ancien total manuel (compatibilité). */
+function testS26_repliTotalManuel(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], { org_nb_educateurs: '24' }), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.valeur === '24' && c.etat === 'saisi', 'S26 : rien de structurel → repli sur le total saisi');
+  _ffrAssert(etat, !_autoChamp(d, 'Cohérence éducateurs'), 'S26 : total manuel UTILISÉ → aucun signalement');
+}
+
+/** Rien nulle part ⇒ manquant (jamais deviné) — comportement historique conservé. */
+function testS26_rienNullePartManquant(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {}), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.etat === 'manquant', 'S26 : rien nulle part → manquant');
+}
+
+/** Valeur illisible (texte) au club organisateur ⇒ chemin PRUDENT, jamais d'exception ni de NaN. */
+function testS26_valeurIllisiblePrudente(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 7 } },
+    _cfgAutorisation([], { org_nb_educateurs_club: 'beaucoup' }), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.valeur === '7' && c.etat === 'calcule', 'S26 : valeur illisible ignorée, total reste juste');
 }
