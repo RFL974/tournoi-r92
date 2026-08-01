@@ -264,6 +264,12 @@ function lancerTestsFFR() {
   testS21_securiteDistincteVideResteManquant(etat);
   testS21_securiteToutVideManquant(etat);
 
+  // Session 22 — droits d'inscription : cascade depuis les modalités (tarif d'engagement).
+  testS22_droitsRepresDesModalites(etat);
+  testS22_droitsSaisiPrioritaire(etat);
+  testS22_tarifNonMontantSansObjet(etat);
+  testS22_rienNullePartManquant(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -2614,4 +2620,52 @@ function testS21_securiteToutVideManquant(etat) {
   var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {}), { formes: [] });
   var nom = _autoChamp(d, 'Responsable sécurité — nom');
   _ffrAssert(etat, nom && nom.etat === 'manquant', 'S21 : tout vide → manquant');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SESSION 22 — B.5 : droits d'inscription repris des modalités d'inscription */
+/*  (tarif d'engagement). org_* saisi prioritaire ; montant = 1er nombre du    */
+/*  texte libre ; « non » effectif ⇒ montant sans objet ; rien ⇒ manquant.     */
+/* -------------------------------------------------------------------------- */
+
+/** Modalités renseignées, org_* vides ⇒ oui + montant repris (calcule, origine modalités). */
+function testS22_droitsRepresDesModalites(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    tarif_engagement_oui: 'oui', tarif_engagement_montant: '150 € par équipe'
+  }), { formes: [] });
+  var oui = _autoChamp(d, 'Droits d\'inscription');
+  var montant = _autoChamp(d, 'Droits — montant');
+  _ffrAssert(etat, oui && oui.valeur === 'oui' && oui.etat === 'calcule', 'S22 : droits = oui repris des modalités');
+  _ffrAssert(etat, oui.origine.indexOf('modalités') !== -1, 'S22 : origine dit « modalités »');
+  _ffrAssert(etat, montant && montant.valeur === '150' && montant.etat === 'calcule',
+    'S22 : montant = 150 (1er nombre du texte libre)');
+}
+
+/** Un champ org_* SAISI reste prioritaire sur les modalités (jamais écrasé). */
+function testS22_droitsSaisiPrioritaire(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    org_droits_oui: 'non', tarif_engagement_oui: 'oui', tarif_engagement_montant: '150'
+  }), { formes: [] });
+  var oui = _autoChamp(d, 'Droits d\'inscription');
+  var montant = _autoChamp(d, 'Droits — montant');
+  _ffrAssert(etat, oui && oui.valeur === 'non' && oui.etat === 'saisi', 'S22 : org saisi prioritaire sur modalités');
+  _ffrAssert(etat, montant && montant.etat === 'sans objet', 'S22 : non saisi → montant sans objet');
+}
+
+/** Modalités à « non » ⇒ droits non (repris) et montant sans objet. */
+function testS22_tarifNonMontantSansObjet(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], { tarif_engagement_oui: 'non' }), { formes: [] });
+  var oui = _autoChamp(d, 'Droits d\'inscription');
+  var montant = _autoChamp(d, 'Droits — montant');
+  _ffrAssert(etat, oui && oui.valeur === 'non' && oui.etat === 'calcule', 'S22 : tarif non → droits non (repris)');
+  _ffrAssert(etat, montant && montant.etat === 'sans objet', 'S22 : tarif non → montant sans objet');
+}
+
+/** Rien nulle part ⇒ les deux champs restent manquants (comportement historique). */
+function testS22_rienNullePartManquant(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {}), { formes: [] });
+  var oui = _autoChamp(d, 'Droits d\'inscription');
+  var montant = _autoChamp(d, 'Droits — montant');
+  _ffrAssert(etat, oui && oui.etat === 'manquant' && montant && montant.etat === 'manquant',
+    'S22 : rien nulle part → manquants');
 }
