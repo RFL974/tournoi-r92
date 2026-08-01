@@ -2136,9 +2136,24 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   ] });
 
   // B.4 SÉCURITÉ (réutilise securite_referent_* et securite_secours_oui ; nom/tel secours structurés)
+  // Responsable sécurité — CASCADE (session 21, même règle que le PDF pré-rempli) : l'info vit dans
+  // la carte « Contacts & sécurité » du dossier complet. securite_referent_identique = 'non' ⇒
+  // personne DISTINCTE (securite_referent_nom/tel) ; 'oui' ou vide (défaut) ⇒ le référent du
+  // tournoi (referent_nom/tel). Jamais de double saisie exigée, jamais de repli croisé (une
+  // personne déclarée distincte mais non renseignée reste « manquant »).
+  var secuDistinct = String(g.securite_referent_identique == null ? '' : g.securite_referent_identique)
+    .trim().toLowerCase() === 'non';
+  var secuOrigine = secuDistinct
+    ? 'Contacts & sécurité — référent sécurité (personne distincte)'
+    : 'Contacts & sécurité — référent du tournoi (même personne)';
+  function champSecurite(libelle, valeur) {
+    var c = champ(libelle, champCalculeAutorisation(valeur));
+    if (c.etat === 'calcule') c.origine = secuOrigine;
+    return c;
+  }
   sections.push({ titre: 'B.4 — Sécurité', champs: [
-    calcule('Responsable sécurité — nom', g.securite_referent_nom),
-    calcule('Responsable sécurité — téléphone', g.securite_referent_tel),
+    champSecurite('Responsable sécurité — nom', secuDistinct ? g.securite_referent_nom : g.referent_nom),
+    champSecurite('Responsable sécurité — téléphone', secuDistinct ? g.securite_referent_tel : g.referent_tel),
     saisi('Médecin présent', 'org_medecin_oui'),
     saisi('Médecin — nom', 'org_medecin_nom'),
     saisi('Médecin — téléphone', 'org_medecin_tel'),

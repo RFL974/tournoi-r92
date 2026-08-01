@@ -258,6 +258,12 @@ function lancerTestsFFR() {
   testS20_moinsDe2Equipes(etat);
   testS20_invitationExposeFormat(etat);
 
+  // Session 21 — responsable sécurité : cascade depuis « Contacts & sécurité » (dossier complet).
+  testS21_securiteIdentiqueRefTournoi(etat);
+  testS21_securiteDistincte(etat);
+  testS21_securiteDistincteVideResteManquant(etat);
+  testS21_securiteToutVideManquant(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -2561,4 +2567,51 @@ function testS20_invitationExposeFormat(etat) {
   var c = f.categories[0];
   _ffrAssert(etat, c.format_apresmidi === 'POULES_NIVEAU', 'S20 : invitation expose format_apresmidi');
   _ffrAssert(etat, !('duree_mi_temps_min' in c), 'S20 : invitation n\'expose pas les champs hors liste');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SESSION 21 — B.4 : responsable sécurité repris de « Contacts & sécurité »  */
+/*  Même cascade que le PDF : identique (défaut) → référent tournoi ;          */
+/*  'non' → personne distincte ; jamais de repli croisé.                       */
+/* -------------------------------------------------------------------------- */
+
+/** Défaut (identique, champ vide ou « oui ») ⇒ le référent du tournoi remonte. */
+function testS21_securiteIdentiqueRefTournoi(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    referent_nom: 'Alex Dupont', referent_tel: '0611223344'
+  }), { formes: [] });
+  var nom = _autoChamp(d, 'Responsable sécurité — nom');
+  var tel = _autoChamp(d, 'Responsable sécurité — téléphone');
+  _ffrAssert(etat, nom && nom.valeur === 'Alex Dupont' && nom.etat === 'calcule',
+    'S21 : identique → nom = référent tournoi (calcule)');
+  _ffrAssert(etat, tel && tel.valeur === '0611223344', 'S21 : identique → tél = référent tournoi');
+  _ffrAssert(etat, nom.origine.indexOf('même personne') !== -1, 'S21 : origine dit « même personne »');
+}
+
+/** securite_referent_identique = non ⇒ la personne DISTINCTE remonte (jamais le référent tournoi). */
+function testS21_securiteDistincte(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    referent_nom: 'Alex Dupont', referent_tel: '0611223344',
+    securite_referent_identique: 'non',
+    securite_referent_nom: 'Sam Sécu', securite_referent_tel: '0699887766'
+  }), { formes: [] });
+  var nom = _autoChamp(d, 'Responsable sécurité — nom');
+  _ffrAssert(etat, nom && nom.valeur === 'Sam Sécu', 'S21 : distinct → nom = référent sécurité');
+  _ffrAssert(etat, nom.origine.indexOf('distincte') !== -1, 'S21 : origine dit « personne distincte »');
+}
+
+/** Distinct déclaré mais non renseigné ⇒ manquant (pas de repli croisé sur le référent tournoi). */
+function testS21_securiteDistincteVideResteManquant(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {
+    referent_nom: 'Alex Dupont', securite_referent_identique: 'non'
+  }), { formes: [] });
+  var nom = _autoChamp(d, 'Responsable sécurité — nom');
+  _ffrAssert(etat, nom && nom.etat === 'manquant', 'S21 : distinct non renseigné → manquant, jamais de repli');
+}
+
+/** Rien de saisi nulle part ⇒ manquant (comportement historique conservé). */
+function testS21_securiteToutVideManquant(etat) {
+  var d = assemblerDossierAutorisation({}, _cfgAutorisation([], {}), { formes: [] });
+  var nom = _autoChamp(d, 'Responsable sécurité — nom');
+  _ffrAssert(etat, nom && nom.etat === 'manquant', 'S21 : tout vide → manquant');
 }
