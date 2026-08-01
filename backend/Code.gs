@@ -504,7 +504,10 @@ var CONFIG_PUBLIQUE_VUES = {
              'tarif_engagement_oui', 'tarif_engagement_montant', 'date_limite_reponse',
              'url_instagram', 'url_site_association',
              'contact_reponse_nom', 'contact_reponse_email'],
-    categories: ['categorie', 'presente', 'effectif_min', 'max_equipes_par_club', 'arbitrage_organisation']
+    // format_apresmidi (session 20) : NON sensible (format de jeu, déjà exposé par la vue live) —
+    // sert à la note « pourquoi ce format » de l'invitation (doctrine FFR, poules de niveau).
+    categories: ['categorie', 'presente', 'effectif_min', 'max_equipes_par_club', 'arbitrage_organisation',
+                 'format_apresmidi']
   },
   // Dossier club (PROTÉGÉ PAR JETON) : le club invité voit les contacts jour J (referent_tel en
   // lien cliquable tel:), la logistique, les secours, les tarifs. Légitime car derrière le jeton.
@@ -4507,19 +4510,22 @@ function fixturesApresMidiCroise(cat, cl) {
 
 /* ---------- Sous-générateur : POULES_NIVEAU (session 20) ---------- */
 /**
- * Tailles des poules de niveau pour n équipes : poules de 4 à 5, « le haut joue plus » (les
- * équipes en trop vont aux poules du HAUT, qui passent à 5). Même philosophie de découpage que le
- * matin (nombrePoules), appliquée au classement de midi. Pur, partagé avec FORMULES_PHASE2.
- *   8→[4,4] · 6→[3,3] · 9→[5,4] · 12→[4,4,4] · 16→[4,4,4,4] · 20→[5,5,5,5] · 7→[4,3]
+ * Tailles des poules de niveau pour n équipes : poules de 4 à 5, « le BAS joue plus » (les
+ * équipes en trop vont aux poules du BAS, qui passent à 5) — décision Romain, esprit École de
+ * Rugby : la doctrine FFR à ces âges est développementale, le temps de jeu supplémentaire va aux
+ * enfants qui en ont le plus besoin, et la fatigue ne se concentre pas sur les équipes de tête.
+ * Même philosophie de découpage que le matin (nombrePoules), appliquée au classement de midi.
+ * Pur, partagé avec FORMULES_PHASE2.
+ *   8→[4,4] · 6→[3,3] · 9→[4,5] · 12→[4,4,4] · 16→[4,4,4,4] · 20→[5,5,5,5] · 7→[3,4]
  * (nb = ceil(n/5) garde les poules ≤ 5 ; quand les poules du matin font 4-5, les tranches tombent
- * pile sur les rangs — la poule haute devient « le championnat des 1ᵉʳˢ ».)
+ * pile sur les rangs — la poule haute reste « le championnat des 1ᵉʳˢ ».)
  */
 function taillesPoulesNiveau(n) {
   if (n < 2) return [];
   var nb = Math.ceil(n / 5);
   var base = Math.floor(n / nb), reste = n % nb;
   var tailles = [];
-  for (var i = 0; i < nb; i++) tailles.push(base + (i < reste ? 1 : 0));
+  for (var i = 0; i < nb; i++) tailles.push(base + (i >= nb - reste ? 1 : 0));
   return tailles;
 }
 

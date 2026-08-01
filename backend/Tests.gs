@@ -256,6 +256,7 @@ function lancerTestsFFR() {
   testS20_reportPhase2Predite(etat);
   testS20_formatReconnu(etat);
   testS20_moinsDe2Equipes(etat);
+  testS20_invitationExposeFormat(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -2452,9 +2453,9 @@ function _clNiveau(poulesSpec) {
   }) };
 }
 
-/** Découpage en tranches de 4-5, le haut joue plus. */
+/** Découpage en tranches de 4-5, le BAS joue plus (esprit EDR, décision Romain). */
 function testS20_taillesPoulesNiveau(etat) {
-  var cas = [ [4, [4]], [6, [3, 3]], [7, [4, 3]], [8, [4, 4]], [9, [5, 4]],
+  var cas = [ [4, [4]], [6, [3, 3]], [7, [3, 4]], [8, [4, 4]], [9, [4, 5]],
               [12, [4, 4, 4]], [16, [4, 4, 4, 4]], [20, [5, 5, 5, 5]], [1, []] ];
   cas.forEach(function (c) {
     var res = taillesPoulesNiveau(c[0]);
@@ -2550,4 +2551,14 @@ function testS20_moinsDe2Equipes(etat) {
   var res = fixturesApresMidiPoulesNiveau({ categorie: 'U8' }, _clNiveau([ [['A1', 9]] ]));
   _ffrAssert(etat, res.fixtures.length === 0 && res.avert && res.avert.length === 1,
     'S20 : 1 équipe → avertissement, 0 fixture');
+}
+
+/** La vue publique « invitation » expose format_apresmidi (note doctrine FFR), rien de plus. */
+function testS20_invitationExposeFormat(etat) {
+  var cfg = { global: {}, categories: [{ categorie: 'U8', presente: 'oui',
+    format_apresmidi: 'POULES_NIVEAU', duree_mi_temps_min: '10' }] };
+  var f = filtrerConfigPublique(cfg, 'invitation');
+  var c = f.categories[0];
+  _ffrAssert(etat, c.format_apresmidi === 'POULES_NIVEAU', 'S20 : invitation expose format_apresmidi');
+  _ffrAssert(etat, !('duree_mi_temps_min' in c), 'S20 : invitation n\'expose pas les champs hors liste');
 }

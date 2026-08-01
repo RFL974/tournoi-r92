@@ -455,13 +455,13 @@ var FORMULES_PHASE2_AUT = {
 };
 
 /** Tailles des poules de niveau pour n équipes — miroir de taillesPoulesNiveau (backend) :
- *  poules de 4-5, « le haut joue plus ». 8→[4,4] · 9→[5,4] · 20→[5,5,5,5]. */
+ *  poules de 4-5, « le BAS joue plus » (esprit EDR). 8→[4,4] · 9→[4,5] · 20→[5,5,5,5]. */
 function taillesPoulesNiveauAut(n) {
   if (n < 2) return [];
   var nb = Math.ceil(n / 5);
   var base = Math.floor(n / nb), reste = n % nb;
   var tailles = [];
-  for (var i = 0; i < nb; i++) tailles.push(base + (i < reste ? 1 : 0));
+  for (var i = 0; i < nb; i++) tailles.push(base + (i >= nb - reste ? 1 : 0));
   return tailles;
 }
 

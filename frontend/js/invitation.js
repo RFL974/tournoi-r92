@@ -65,12 +65,13 @@ function construireInvitation(g, categories) {
   html += section('Vous êtes invités', catsInvitees(cats), 'inv-categories');
 
   // c) LE JOUR J, EN BREF : RDV, fin envisagée, format des matchs (phrase simple), arbitrage.
+  //    + note « pourquoi ce format » (doctrine FFR EDR) quand l'après-midi est en poules de niveau.
   html += section('Le jour J, en bref', listeOuVide([
     ligne('Accueil des équipes (RDV)', echapper(txt(g.heure_rdv))),
     ligne('Fin envisagée', echapper(heureFinCommuniquee(g))),
     ligne('Format des matchs', echapper(phraseFormat(cats))),
     ligne('Arbitrage', echapper(phraseArbitrage(cats)))
-  ]));
+  ]) + noteFormat(cats));
 
   // d) SUR PLACE : pastilles seulement si cochées + tarif d'engagement si demandé.
   html += section('Sur place', blocSurPlace(g));
@@ -122,11 +123,35 @@ function catsInvitees(cats) {
   return '<ul class="inv-liste-cats">' + lignes.join('') + '</ul>' + rappel;
 }
 
+/** Vrai si au moins une catégorie joue l'après-midi en « poules de niveau ». */
+function aPoulesNiveau(cats) {
+  return cats.some(function (c) {
+    return String(txt(c.format_apresmidi)).toUpperCase() === 'POULES_NIVEAU';
+  });
+}
+
 /** c) Format des matchs en UNE phrase factuelle simple (pas de détail technique). */
 function phraseFormat(cats) {
   if (!cats.length) return '';
+  if (aPoulesNiveau(cats)) {
+    return 'Poules de brassage le matin, puis poules de niveau l\'après-midi : chaque équipe '
+      + 'rejoue contre des équipes de sa force, en mini-championnat complet.';
+  }
   return 'Des matchs courts en poules le matin, puis une phase l\'après-midi '
     + '(temps de jeu adapté à chaque catégorie).';
+}
+
+/** c) Note « pourquoi ce format » (sous la liste) : la doctrine FFR École de Rugby, expliquée aux
+ *  clubs invités. Affichée seulement quand une catégorie joue en poules de niveau — décisions
+ *  Romain (session 20) : dire le POURQUOI du format et rappeler la doctrine, y compris le choix
+ *  « en cas d'effectif impair, l'équipe supplémentaire va en poule basse ». */
+function noteFormat(cats) {
+  if (!aPoulesNiveau(cats)) return '';
+  return '<p class="inv-note-format">💡 <strong>Pourquoi ce format ?</strong> Il suit la doctrine ' +
+    'FFR de l\'École de Rugby : un maximum de temps de jeu pour chaque enfant, des matchs ' +
+    'équilibrés entre équipes de même niveau, et aucune phase finale à élimination (interdites en ' +
+    'tournoi EDR) — c\'est le classement final qui départage. En cas d\'effectif impair, l\'équipe ' +
+    'supplémentaire rejoint la poule basse : les enfants qui ont le plus besoin de jouer jouent plus.</p>';
 }
 
 /** c) Modalités d'arbitrage en UNE ligne : valeurs distinctes renseignées par catégorie. */
