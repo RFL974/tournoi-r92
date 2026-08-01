@@ -44,6 +44,35 @@ function remplirSelectCategories(categories) {
   if (select) select.disabled = aucune;
   if (champNom) champNom.disabled = aucune;
   if (boutonAj) boutonAj.disabled = aucune;
+  ['champ-joueurs', 'champ-educateurs'].forEach(function (id) {
+    const c = document.getElementById(id);
+    if (c) c.disabled = aucune;
+  });
+}
+
+/** Effectif déclaré lu d'un champ : entier ≥ 0, ou '' si vide/illisible — miroir de
+ *  effectifDeclare (backend). « Vide » et « zéro » sont deux réponses différentes : on ne
+ *  transforme JAMAIS un champ vide en 0 (ce serait déclarer « aucun joueur »). */
+function effectifSaisi(valeur) {
+  const s = String(valeur == null ? '' : valeur).trim();
+  if (s === '') return '';
+  const n = parseInt(s, 10);
+  return (isFinite(n) && n >= 0) ? String(n) : '';
+}
+
+/** Équipe créée par une réponse d'invitation : ses effectifs viennent du club, pas d'ici. */
+function estEquipeAuto(eq) {
+  return String((eq && eq.source) || '').trim().toLowerCase() === 'auto';
+}
+
+/** Petit résumé « 12 joueurs · 2 éducs » d'une équipe, ou '' si rien n'est déclaré. */
+function resumeEffectifs(eq) {
+  const j = effectifSaisi(eq && eq.nb_joueurs);
+  const e = effectifSaisi(eq && eq.nb_educateurs);
+  const bouts = [];
+  if (j !== '') bouts.push(j + ' joueur' + (Number(j) > 1 ? 's' : ''));
+  if (e !== '') bouts.push(e + ' éduc' + (Number(e) > 1 ? 's' : ''));
+  return bouts.join(' · ');
 }
 
 /**
@@ -79,9 +108,16 @@ function afficherEquipes(equipes) {
 
     let items = '';
     liste.forEach(function (eq) {
+      // Effectifs déclarés : affichés à côté du nom. Une équipe créée par une réponse
+      // d'invitation ('auto') tient les siens du club — on le dit plutôt que d'afficher un vide.
+      const resume = resumeEffectifs(eq);
+      let badge = '';
+      if (resume) badge = '<span class="equipe-effectifs">' + echapper(resume) + '</span>';
+      else if (estEquipeAuto(eq)) badge = '<span class="equipe-effectifs est-auto" ' +
+        'title="Effectifs déclarés par le club dans sa réponse à l\'invitation">déclarés par le club</span>';
       items +=
         '<div class="equipe-item" data-id="' + eq.id_equipe + '">' +
-          '<span class="nom">' + echapper(eq.nom_equipe) + '</span>' +
+          '<span class="nom">' + echapper(eq.nom_equipe) + '</span>' + badge +
           '<div class="equipe-actions">' +
             '<button class="bouton-modif bouton-icone" title="Modifier" aria-label="Modifier" ' +
                     'data-id="' + eq.id_equipe + '" data-nom="' + echapper(eq.nom_equipe) + '">' + svgIcone('crayon') + '</button>' +
@@ -112,12 +148,16 @@ async function onAjouterEquipe(evenement) {
 
   const champNom = document.getElementById('champ-nom');
   const champCat = document.getElementById('champ-categorie');
+  const champJ   = document.getElementById('champ-joueurs');
+  const champE   = document.getElementById('champ-educateurs');
   const bouton   = document.getElementById('bouton-ajouter');
   const message  = document.getElementById('message-equipe');
 
   // Nom du club toujours en MAJUSCULES (uniformité d'affichage sur toutes les pages).
   const nom = champNom.value.trim().toUpperCase();
   const categorie = champCat.value;
+  const nbJoueurs = effectifSaisi(champJ ? champJ.value : '');
+  const nbEducateurs = effectifSaisi(champE ? champE.value : '');
 
   if (!nom || !categorie) {
     afficherMessage(message, 'Indique un nom ET une catégorie.', 'ko');
@@ -139,10 +179,13 @@ async function onAjouterEquipe(evenement) {
   bouton.textContent = 'Ajout…';
 
   try {
-    await ecrireAdmin('ajouterEquipe', { nom_equipe: nom, categorie: categorie });
+    await ecrireAdmin('ajouterEquipe', { nom_equipe: nom, categorie: categorie,
+                                        nb_joueurs: nbJoueurs, nb_educateurs: nbEducateurs });
 
-    // Succès : on vide le champ nom, on recharge la liste.
+    // Succès : on vide les champs saisis, on recharge la liste.
     champNom.value = '';
+    if (champJ) champJ.value = '';
+    if (champE) champE.value = '';
     champNom.focus();
     afficherMessage(message, '✅ « ' + nom +' » ajoutée.', 'ok');
     await rechargerEquipes();
@@ -228,21 +271,35 @@ function onModifierEquipe(bouton) {
   const nom = bouton.getAttribute('data-nom');
   const item = document.querySelector('.equipe-item[data-id="' + id + '"]');
   if (!item) return;
+  const eq = (equipesCourantes || []).find(function (e) { return e.id_equipe === id; }) || {};
+  const auto = estEquipeAuto(eq);
 
+  // Édition : nom + effectifs déclarés (joueurs / éducateurs). Vide = « non déclaré », jamais 0.
+  item.classList.add('en-edition');
   item.innerHTML =
-    '<input class="champ-edit-nom" type="text" value="' + echapper(nom) + '" autocomplete="off">' +
+    '<input class="champ-edit-nom" type="text" value="' + echapper(nom) + '" autocomplete="off" ' +
+           'aria-label="Nom de l\'équipe">' +
+    '<input class="champ-edit-joueurs champ-effectif" type="number" min="0" step="1" placeholder="Joueurs" ' +
+           'value="' + echapper(effectifSaisi(eq.nb_joueurs)) + '" aria-label="Nombre de joueurs (facultatif)">' +
+    '<input class="champ-edit-educateurs champ-effectif" type="number" min="0" step="1" placeholder="Éducs" ' +
+           'value="' + echapper(effectifSaisi(eq.nb_educateurs)) + '" aria-label="Nombre d\'éducateurs (facultatif)">' +
     '<div class="equipe-actions">' +
       '<button class="bouton-modif bouton-edit-ok" data-id="' + id + '">Enregistrer</button>' +
       '<button class="bouton-suppr bouton-edit-annuler">Annuler</button>' +
-    '</div>';
+    '</div>' +
+    (auto ? '<span class="equipe-note-edition">⚠️ Équipe créée par la réponse du club : ses effectifs ' +
+            'sont déjà comptés depuis l\'invitation. Ce que tu saisis ici ne sera pas ajouté au total ' +
+            '(pour éviter de compter deux fois).</span>' : '');
 
   const champ = item.querySelector('.champ-edit-nom');
   champ.focus();
   champ.select();
-  // Entrée = enregistrer, Échap = annuler.
-  champ.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter')  { e.preventDefault(); item.querySelector('.bouton-edit-ok').click(); }
-    if (e.key === 'Escape') { e.preventDefault(); afficherEquipes(equipesCourantes); }
+  // Entrée = enregistrer, Échap = annuler — sur les trois champs.
+  item.querySelectorAll('input').forEach(function (input) {
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter')  { e.preventDefault(); item.querySelector('.bouton-edit-ok').click(); }
+      if (e.key === 'Escape') { e.preventDefault(); afficherEquipes(equipesCourantes); }
+    });
   });
 }
 
@@ -275,11 +332,20 @@ async function onEnregistrerNom(bouton) {
     return;
   }
 
+  // Effectifs déclarés : envoyés SYSTÉMATIQUEMENT (même vides) — un champ vidé à l'écran doit
+  // effacer la valeur enregistrée, sinon on ne pourrait jamais revenir à « non déclaré ».
+  const champJ = item.querySelector('.champ-edit-joueurs');
+  const champE = item.querySelector('.champ-edit-educateurs');
+  const nbJoueurs = effectifSaisi(champJ ? champJ.value : '');
+  const nbEducateurs = effectifSaisi(champE ? champE.value : '');
+
   bouton.disabled = true;
   bouton.textContent = 'Enregistrement…';
   try {
-    await ecrireAdmin('modifierEquipe', { id_equipe: id, nom_equipe: nouveauNom });
-    afficherMessage(message, '✏️ Renommée en « ' + nouveauNom + ' ».', 'ok');
+    await ecrireAdmin('modifierEquipe', { id_equipe: id, nom_equipe: nouveauNom,
+                                          nb_joueurs: nbJoueurs, nb_educateurs: nbEducateurs });
+    const resume = resumeEffectifs({ nb_joueurs: nbJoueurs, nb_educateurs: nbEducateurs });
+    afficherMessage(message, '✏️ « ' + nouveauNom + ' » enregistrée' + (resume ? ' — ' + resume : '') + '.', 'ok');
     await rechargerEquipes();
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');

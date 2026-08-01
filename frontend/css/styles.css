@@ -551,6 +551,38 @@ select.r-input { cursor: pointer; }
   font-size: 0.95rem;
   text-transform: uppercase;
 }
+
+/* ---- Effectifs déclarés par équipe (joueurs / éducateurs) ---- */
+/* Champs courts : ils ne doivent pas manger la place du nom d'équipe. */
+.champ-effectif { flex: 0 0 92px !important; width: 92px; text-align: center; text-transform: none; }
+.form-equipe .champ-effectif { flex: 0 0 96px; }
+.champ-edit-joueurs, .champ-edit-educateurs {
+  background: rgba(3, 16, 36, 0.6);
+  border: 1px solid rgba(120, 180, 255, 0.4);
+  color: #eaf2ff;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+/* Badge « 12 joueurs · 2 éducs » à côté du nom. */
+.equipe-effectifs {
+  margin-right: auto;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: .85rem;
+  opacity: .7;
+  white-space: nowrap;
+}
+.equipe-effectifs.est-auto { font-style: italic; opacity: .55; }
+/* En édition, la ligne peut passer sur deux lignes (3 champs + boutons + note). */
+.equipe-item.en-edition { flex-wrap: wrap; }
+.equipe-note-edition {
+  flex: 1 1 100%;
+  font-size: .82rem;
+  line-height: 1.45;
+  color: #d68d14;
+}
+
 .bouton-suppr,
 .bouton-modif {
   background: transparent;
@@ -1459,7 +1491,10 @@ body.theme-clair {
 .theme-clair .form-equipe input[type="text"],
 .theme-clair .form-equipe input[type="email"],
 .theme-clair .form-equipe select,
-.theme-clair .champ-edit-nom {
+.theme-clair .form-equipe input[type="number"],
+.theme-clair .champ-edit-nom,
+.theme-clair .champ-edit-joueurs,
+.theme-clair .champ-edit-educateurs {
   background: #ffffff;
   color: #0C1C2E;
   border: 1px solid #e6edf5;

@@ -299,6 +299,21 @@ function lancerTestsFFR() {
   testS26_rienNullePartManquant(etat);
   testS26_valeurIllisiblePrudente(etat);
 
+  // Session 27 — effectifs déclarés équipe par équipe (ajout / crayon) + anti-double-compte.
+  testS27_sommeEquipesManuelles(etat);
+  testS27_equipeAutoJamaisRecomptee(etat);
+  testS27_sourceAbsenteEstManuelle(etat);
+  testS27_rienDeclareDonneNull(etat);
+  testS27_zeroEstUneReponse(etat);
+  testS27_valeursIllisiblesIgnorees(etat);
+  testS27_listeVideSansErreur(etat);
+  testS27_participantsDepuisEquipes(etat);
+  testS27_origineDetailleLesDeuxSources(etat);
+  testS27_educateursDepuisEquipes(etat);
+  testS27_declarationPartielleSignalee(etat);
+  testS27_declarationCompletePasDeSignalement(etat);
+  testS27_sansEffectifsComportementHistorique(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -2910,4 +2925,125 @@ function testS26_valeurIllisiblePrudente(etat) {
     _cfgAutorisation([], { org_nb_educateurs_club: 'beaucoup' }), { formes: [] });
   var c = _autoChamp(d, 'Nombre d\'éducateurs');
   _ffrAssert(etat, c && c.valeur === '7' && c.etat === 'calcule', 'S26 : valeur illisible ignorée, total reste juste');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SESSION 27 — effectifs déclarés ÉQUIPE PAR ÉQUIPE (ajout / crayon)         */
+/*  effectifsEquipesManuelles est PUR. Enjeu central : ANTI-DOUBLE-COMPTE —    */
+/*  une équipe créée par une réponse d'invitation ('auto') est déjà couverte   */
+/*  par les totaux de son club et ne doit JAMAIS être recomptée ici.           */
+/* -------------------------------------------------------------------------- */
+
+/** Fabrique une équipe pour les tests. */
+function _eq(nom, cat, source, j, e) {
+  return { id_equipe: nom, nom_equipe: nom, categorie: cat, poule: '',
+           source: source, nb_joueurs: j, nb_educateurs: e };
+}
+
+/** Somme des effectifs des équipes manuelles (joueurs et éducateurs). */
+function testS27_sommeEquipesManuelles(etat) {
+  var r = effectifsEquipesManuelles([
+    _eq('A', 'U8', 'manuel', '12', '2'), _eq('B', 'U8', 'manuel', '10', '1')
+  ]);
+  _ffrAssert(etat, r.joueurs === 22 && r.educateurs === 3, 'S27 : somme des équipes manuelles = 22 joueurs / 3 éducs');
+  _ffrAssert(etat, r.nbEquipesDeclarees === 2 && r.nbEquipesManuelles === 2, 'S27 : comptes d\'équipes justes');
+}
+
+/** CŒUR DU SUJET : une équipe 'auto' n'est JAMAIS comptée (déjà dans les totaux de son club). */
+function testS27_equipeAutoJamaisRecomptee(etat) {
+  var r = effectifsEquipesManuelles([
+    _eq('A', 'U8', 'manuel', '12', '2'), _eq('SURESNES', 'U8', 'auto', '15', '3')
+  ]);
+  _ffrAssert(etat, r.joueurs === 12 && r.educateurs === 2, 'S27 : équipe auto écartée → pas de double compte');
+  _ffrAssert(etat, r.nbEquipesManuelles === 1, 'S27 : l\'équipe auto ne compte pas comme manuelle');
+}
+
+/** Équipe sans `source` (Sheet antérieur à la colonne) ⇒ traitée comme MANUELLE (cas prudent). */
+function testS27_sourceAbsenteEstManuelle(etat) {
+  var r = effectifsEquipesManuelles([_eq('A', 'U8', '', '12', '2')]);
+  _ffrAssert(etat, r.joueurs === 12, 'S27 : source absente → comptée (aucun club derrière elle)');
+}
+
+/** Rien de déclaré ⇒ null (distinct de 0, qui est une réponse) : la feuille retombe sur le saisi. */
+function testS27_rienDeclareDonneNull(etat) {
+  var r = effectifsEquipesManuelles([_eq('A', 'U8', 'manuel', '', ''), _eq('B', 'U8', 'manuel', '', '')]);
+  _ffrAssert(etat, r.joueurs === null && r.educateurs === null, 'S27 : rien déclaré → null, jamais 0');
+  _ffrAssert(etat, r.nbEquipesDeclarees === 0 && r.nbEquipesManuelles === 2, 'S27 : 0 déclarée sur 2 manuelles');
+}
+
+/** Zéro éducateur est une RÉPONSE (0), pas une absence de réponse. */
+function testS27_zeroEstUneReponse(etat) {
+  var r = effectifsEquipesManuelles([_eq('A', 'U8', 'manuel', '12', '0')]);
+  _ffrAssert(etat, r.educateurs === 0, 'S27 : 0 éducateur déclaré → 0 (pas null)');
+}
+
+/** Valeurs illisibles ignorées, sans exception ni NaN (chemin prudent). */
+function testS27_valeursIllisiblesIgnorees(etat) {
+  var r = effectifsEquipesManuelles([_eq('A', 'U8', 'manuel', 'douze', '-3'), _eq('B', 'U8', 'manuel', '10', '1')]);
+  _ffrAssert(etat, r.joueurs === 10 && r.educateurs === 1, 'S27 : valeurs illisibles/négatives ignorées');
+}
+
+/** Liste vide / absente ⇒ null, aucune exception. */
+function testS27_listeVideSansErreur(etat) {
+  var r = effectifsEquipesManuelles([]);
+  var r2 = effectifsEquipesManuelles(null);
+  _ffrAssert(etat, r.joueurs === null && r2.joueurs === null, 'S27 : liste vide ou absente → null, sans erreur');
+}
+
+/** A.4 : les joueurs déclarés par équipe alimentent « Nombre de participants » (calculé). */
+function testS27_participantsDepuisEquipes(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbParticipants: 22, nbEquipes: 2,
+    nbJoueursEquipes: 22, nbEquipesDeclarees: 2, nbEquipesManuelles: 2 } },
+    _cfgAutorisation([], {}), { formes: [] });
+  var c = _autoChamp(d, 'Nombre de participants');
+  _ffrAssert(etat, c && c.valeur === '22' && c.etat === 'calcule', 'S27 : participants = 22 (équipes saisies)');
+  _ffrAssert(etat, /équipes saisies à la main/.test(c.origine), 'S27 : origine cite les équipes saisies');
+}
+
+/** Origine DÉTAILLÉE quand les deux sources coexistent (clubs invités + équipes à la main). */
+function testS27_origineDetailleLesDeuxSources(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbParticipants: 50, nbEquipes: 4,
+    nbJoueursEquipes: 20, nbEquipesDeclarees: 2, nbEquipesManuelles: 2 } },
+    _cfgAutorisation([], {}), { formes: [] });
+  var c = _autoChamp(d, 'Nombre de participants');
+  _ffrAssert(etat, c && c.valeur === '50', 'S27 : total des deux sources');
+  _ffrAssert(etat, /30 déclarés par les clubs invités/.test(c.origine) &&
+                   /20 déclarés sur les équipes saisies/.test(c.origine),
+    'S27 : origine détaille 30 (clubs) + 20 (équipes)');
+}
+
+/** B.3 : les éducateurs déclarés par équipe alimentent le total, origine détaillée. */
+function testS27_educateursDepuisEquipes(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 5, nbEducateursEquipes: 5 } },
+    _cfgAutorisation([], {}), { formes: [] });
+  var c = _autoChamp(d, 'Nombre d\'éducateurs');
+  _ffrAssert(etat, c && c.valeur === '5' && c.etat === 'calcule', 'S27 : B.3 = 5 éducateurs (équipes saisies)');
+  _ffrAssert(etat, /équipes saisies à la main/.test(c.origine), 'S27 : origine B.3 cite les équipes saisies');
+}
+
+/** Déclaration PARTIELLE ⇒ signalée (total sous-estimé), jamais complétée au jugé. */
+function testS27_declarationPartielleSignalee(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbParticipants: 12, nbEquipes: 3,
+    nbJoueursEquipes: 12, nbEquipesDeclarees: 1, nbEquipesManuelles: 3 } },
+    _cfgAutorisation([], {}), { formes: [] });
+  var a = _autoChamp(d, 'Cohérence effectifs par équipe');
+  _ffrAssert(etat, a && a.etat === 'avert' && /2 équipe\(s\)/.test(a.valeur),
+    'S27 : déclaration partielle signalée (2 équipes sans effectif)');
+}
+
+/** Déclaration COMPLÈTE ⇒ aucun signalement. */
+function testS27_declarationCompletePasDeSignalement(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbParticipants: 22, nbEquipes: 2,
+    nbJoueursEquipes: 22, nbEquipesDeclarees: 2, nbEquipesManuelles: 2 } },
+    _cfgAutorisation([], {}), { formes: [] });
+  _ffrAssert(etat, !_autoChamp(d, 'Cohérence effectifs par équipe'), 'S27 : tout déclaré → pas de signalement');
+}
+
+/** Aucun effectif d'équipe ⇒ comportement historique intact (repli sur org_nb_participants). */
+function testS27_sansEffectifsComportementHistorique(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbEquipes: 3 } },
+    _cfgAutorisation([], { org_nb_participants: '240' }), { formes: [] });
+  var c = _autoChamp(d, 'Nombre de participants');
+  _ffrAssert(etat, c && c.valeur === '240' && c.etat === 'saisi', 'S27 : sans effectifs → repli saisi inchangé');
+  _ffrAssert(etat, !_autoChamp(d, 'Cohérence effectifs par équipe'), 'S27 : aucune équipe déclarée → pas de signalement');
 }

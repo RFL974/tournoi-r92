@@ -25,7 +25,11 @@ function sheetId() {
 var ENTETES = {
   // source : 'manuel' (équipe ajoutée à la main) ou 'auto' (créée à l'envoi du dossier final
   // d'un club invité). Colonne ajoutée à droite (migration douce) ; vide = 'manuel'.
-  Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule', 'source'],
+  // nb_joueurs / nb_educateurs : effectifs DÉCLARÉS pour cette équipe. Renseignés à la main
+  // (ajout / crayon) sur les équipes saisies manuellement ; les équipes créées par une réponse
+  // d'invitation (source 'auto') sont déjà couvertes par les totaux du club — voir
+  // effectifsEquipesManuelles, qui n'additionne QUE les équipes non-'auto' (pas de double compte).
+  Equipes: ['id_equipe', 'nom_equipe', 'categorie', 'poule', 'source', 'nb_joueurs', 'nb_educateurs'],
   Poules: ['id_poule', 'categorie', 'nom_poule'],
   // Clubs INVITÉS au tournoi (Phase 1 = invitation légère ; Phase 2 = dossier complet
   // envoyé aux clubs qui ont ACCEPTÉ). ⚠️ Contient des emails de contact : cet onglet
@@ -1807,6 +1811,30 @@ function champCalculeAutorisation(valeur) {
 }
 
 /**
+ * Effectifs déclarés sur les équipes SAISIES À LA MAIN (session 27) — joueurs et éducateurs.
+ * ANTI-DOUBLE-COMPTE : on n'additionne QUE les équipes dont `source` n'est pas 'auto'. Une équipe
+ * 'auto' a été créée par la réponse d'invitation d'un club, dont les totaux (nb_joueurs_total /
+ * nb_educateurs_total) sont DÉJÀ comptés par la cascade des clubs — la compter ici la doublerait.
+ * Une équipe sans `source` (Sheet antérieur à la colonne) est traitée comme manuelle : c'est le
+ * cas prudent, ces équipes-là n'ont jamais de club invité derrière elles.
+ * `null` = aucune équipe manuelle n'a rien déclaré (distinct de 0, qui est une réponse). PUR.
+ * @return {{joueurs:?number, educateurs:?number, nbEquipesDeclarees:number, nbEquipesManuelles:number}}
+ */
+function effectifsEquipesManuelles(equipes) {
+  var joueurs = null, educateurs = null, declarees = 0, manuelles = 0;
+  (equipes || []).forEach(function (e) {
+    if (String((e && e.source) || '').trim().toLowerCase() === 'auto') return;
+    manuelles++;
+    var j = effectifDeclare(e && e.nb_joueurs);
+    var ed = effectifDeclare(e && e.nb_educateurs);
+    if (j != null) { joueurs = (joueurs || 0) + j; declarees++; }
+    if (ed != null) educateurs = (educateurs || 0) + ed;
+  });
+  return { joueurs: joueurs, educateurs: educateurs,
+           nbEquipesDeclarees: declarees, nbEquipesManuelles: manuelles };
+}
+
+/**
  * Nombre d'ÉDUCATEURS (B.3) — cascade ADDITIVE (session 26). Deux sources qui s'AJOUTENT, parce
  * qu'elles couvrent des personnes différentes et qu'aucune ne connaît l'autre :
  *   1. les éducateurs DÉCLARÉS par les clubs acceptés (réponse à l'invitation, session 23) ;
@@ -1819,20 +1847,25 @@ function champCalculeAutorisation(valeur) {
  * L'ancien total manuel n'est JAMAIS soustrait ni redistribué (on n'invente pas la part du club) :
  * quand il est ignoré, l'appelant le SIGNALE (état 'avert'). PUR.
  * @param {{global:Object}} config
- * @param {?number} nbDeclare  somme déclarée par les clubs acceptés (0/null si aucune)
+ * @param {?number} nbDeclare    somme déclarée (clubs acceptés + équipes saisies à la main)
+ * @param {?number} partEquipes  part de `nbDeclare` venant des équipes saisies à la main (session 27),
+ *                               pour détailler l'origine ; null/absent ⇒ tout vient des clubs.
  * @return {{valeur:string, etat:string, origine:string, declare:number, club:number, totalManuelIgnore:string}}
  */
-function totalEducateursAutorisation(config, nbDeclare) {
+function totalEducateursAutorisation(config, nbDeclare, partEquipes) {
   var g = (config && config.global) || {};
   function entier(v) { var n = parseInt(String(v == null ? '' : v).trim(), 10); return isFinite(n) && n >= 0 ? n : null; }
   var declare = entier(nbDeclare) || 0;
   var club = entier(g.org_nb_educateurs_club);
   var manuel = String(g.org_nb_educateurs == null ? '' : g.org_nb_educateurs).trim();
+  var equipes = entier(partEquipes);
 
   if (declare > 0 || club != null) {
     var total = declare + (club || 0);
     var parts = [];
-    if (declare > 0) parts.push(declare + (declare > 1 ? ' déclarés' : ' déclaré') + ' par les clubs acceptés');
+    var partClubs = declare - (equipes || 0);
+    if (partClubs > 0) parts.push(partClubs + (partClubs > 1 ? ' déclarés' : ' déclaré') + ' par les clubs acceptés');
+    if (equipes != null) parts.push(equipes + ' déclarés sur les équipes saisies à la main');
     if (club != null) parts.push(club + ' du club organisateur');
     return { valeur: String(total), etat: 'calcule', origine: 'calculé — ' + parts.join(' + '),
              declare: declare, club: club || 0, totalManuelIgnore: (manuel !== '') ? manuel : '' };
@@ -2098,8 +2131,15 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   // manquant. N'est déductible de RIEN (ni équipes ni noms) : jamais estimé par un ratio (§4.2).
   var champParticipants;
   if (participants.nbParticipants != null && participants.nbParticipants > 0) {
+    // Origine détaillée : la somme peut venir des invitations, des équipes saisies à la main
+    // (session 27), ou des deux — l'organisateur doit pouvoir retrouver d'où sort le chiffre.
+    var srcJ = [];
+    var partEquipesJ = participants.nbJoueursEquipes;
+    var partInvitJ = participants.nbParticipants - (partEquipesJ || 0);
+    if (partInvitJ > 0) srcJ.push(partInvitJ + ' déclarés par les clubs invités');
+    if (partEquipesJ != null) srcJ.push(partEquipesJ + ' déclarés sur les équipes saisies à la main');
     champParticipants = { libelle: 'Nombre de participants', valeur: String(participants.nbParticipants),
-      etat: 'calcule', origine: 'calculé — somme des joueurs déclarés (invitations)' };
+      etat: 'calcule', origine: 'calculé — ' + (srcJ.length ? srcJ.join(' + ') : 'somme des joueurs déclarés') };
   } else {
     champParticipants = champ('Nombre de participants', champSaisiAutorisation(config, 'org_nb_participants'));
     if (champParticipants.etat === 'saisi') champParticipants.origine = 'saisi (nombre de participants)';
@@ -2121,6 +2161,16 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   }
   if (ne != null && ne > 0 && champParticipants.etat === 'manquant') {
     champsPart.push({ libelle: '⚠️ Cohérence participants', valeur: ne + ' équipe(s) déclarée(s) mais aucun participant.',
+      etat: 'avert', origine: 'contrôle de cohérence' });
+  }
+  // Déclaration PARTIELLE des équipes saisies à la main (session 27) : certaines portent leur
+  // effectif, d'autres non ⇒ le total est SOUS-ESTIMÉ. On le signale plutôt que de compléter au
+  // jugé (une moyenne serait une estimation, interdite §4.2). Informatif, jamais bloquant.
+  var nbDecl = participants.nbEquipesDeclarees, nbManu = participants.nbEquipesManuelles;
+  if (nbDecl != null && nbManu != null && nbDecl > 0 && nbDecl < nbManu) {
+    champsPart.push({ libelle: '⚠️ Cohérence effectifs par équipe',
+      valeur: (nbManu - nbDecl) + ' équipe(s) saisie(s) à la main sur ' + nbManu + ' n\'ont pas de nombre ' +
+        'de joueurs : le total ci-dessus est incomplet. Renseigne-les (crayon ✏️ dans « Équipes »).',
       etat: 'avert', origine: 'contrôle de cohérence' });
   }
 
@@ -2217,7 +2267,8 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   // Éducateurs — cascade ADDITIVE (session 26) : éducateurs déclarés par les clubs acceptés
   // + encadrants du club organisateur (org_nb_educateurs_club), qui ne figurent dans aucune
   // réponse d'invitation. Voir totalEducateursAutorisation pour la doctrine complète.
-  var educateurs = totalEducateursAutorisation(config, participants.nbEducateurs);
+  var educateurs = totalEducateursAutorisation(config, participants.nbEducateurs,
+                                               participants.nbEducateursEquipes);
   var champsArbitrage = [
     saisi('Nombre d\'arbitres', 'org_nb_arbitres'),
     champ('Nombre d\'éducateurs', educateurs),
@@ -2323,9 +2374,11 @@ function getDossierAutorisation(classeur) {
     .map(function (c) { return String(c.categorie || '').trim(); }).filter(Boolean);
 
   // Participants — CASCADE (§4.2). Source 1 : circuit d'invitation (clubs acceptés + somme des joueurs
-  // déclarés). Source 2 : clubs distincts déduits des noms d'équipes via clubDe (convention « {club} »
-  // / « {club}-N », déjà utilisée en production pour la répartition des poules). La somme des joueurs
-  // n'a PAS de source 2 : elle ne se déduit d'aucun nom ⇒ retombera sur org_nb_participants (saisi).
+  // déclarés). Source 2 (session 27) : effectifs déclarés ÉQUIPE PAR ÉQUIPE sur les équipes saisies
+  // à la main. Les deux s'ADDITIONNENT sans se doubler : effectifsEquipesManuelles écarte les
+  // équipes 'auto', déjà couvertes par les totaux de leur club. Source 3 (clubs seulement) : clubs
+  // distincts déduits des noms d'équipes via clubDe (convention « {club} » / « {club}-N »).
+  // Rien nulle part ⇒ repli sur org_nb_participants (saisi) ; jamais estimé.
   var nbClubsInvites = 0, nbParticipants = 0, nbEducateurs = 0;
   clubs.forEach(function (c) {
     if (statutClubCanonique(c.statut) === 'Accepté') {
@@ -2336,6 +2389,9 @@ function getDossierAutorisation(classeur) {
       if (isFinite(ed)) nbEducateurs += ed;
     }
   });
+  var effManuels = effectifsEquipesManuelles(equipes);
+  if (effManuels.joueurs != null) nbParticipants += effManuels.joueurs;
+  if (effManuels.educateurs != null) nbEducateurs += effManuels.educateurs;
   var setClubsEquipes = {};
   equipes.forEach(function (e) {
     var c = clubDe(e.nom_equipe);
@@ -2377,7 +2433,11 @@ function getDossierAutorisation(classeur) {
     },
     participants: { nbClubsInvites: nbClubsInvites, nbClubsEquipes: nbClubsEquipes,
                     nbEquipes: equipes.length, nbParticipants: nbParticipants,
-                    nbEducateurs: nbEducateurs },
+                    nbEducateurs: nbEducateurs,
+                    // Part venant des équipes saisies à la main (pour détailler l'origine).
+                    nbJoueursEquipes: effManuels.joueurs, nbEducateursEquipes: effManuels.educateurs,
+                    nbEquipesDeclarees: effManuels.nbEquipesDeclarees,
+                    nbEquipesManuelles: effManuels.nbEquipesManuelles },
     catsPresentes: catsPresentes,
     matchsParCategorie: mpc,
     terrains: terrains
@@ -2458,8 +2518,10 @@ function doPost(e) {
     classeur = SpreadsheetApp.openById(sheetId());
     var resultat;
     switch (action) {
-      case 'ajouterEquipe':        resultat = ajouterEquipe(classeur, requete.nom_equipe, requete.categorie); break;
-      case 'modifierEquipe':       resultat = modifierEquipe(classeur, requete.id_equipe, requete.nom_equipe); break;
+      case 'ajouterEquipe':        resultat = ajouterEquipe(classeur, requete.nom_equipe, requete.categorie,
+                                                requete.nb_joueurs, requete.nb_educateurs); break;
+      case 'modifierEquipe':       resultat = modifierEquipe(classeur, requete.id_equipe, requete.nom_equipe,
+                                                requete.nb_joueurs, requete.nb_educateurs); break;
       case 'supprimerEquipe':      resultat = supprimerEquipe(classeur, requete.id_equipe); break;
       case 'supprimerEquipesCategorie': resultat = supprimerEquipesCategorie(classeur, requete.categorie); break;
       case 'enregistrerHoraires':  resultat = enregistrerHoraires(classeur, requete); break;
@@ -2631,17 +2693,34 @@ function estTermineServeur(statut) {
   return /^\s*termin/i.test(String(statut));
 }
 
-/** Garantit la colonne `source` de l'onglet Equipes (migration douce d'un Sheet en service). */
-function assurerColonneSourceEquipes(classeur) {
+/** Garantit les colonnes de l'onglet Equipes (migration douce d'un Sheet en service) : `source`,
+ *  puis `nb_joueurs` / `nb_educateurs` (session 27). Les colonnes manquantes sont AJOUTÉES à la
+ *  suite, dans l'ordre de ENTETES.Equipes — ecrireNouvelleEquipe écrit positionnellement. */
+function assurerColonnesEquipes(classeur) {
   var onglet = classeur.getSheetByName('Equipes');
   if (!onglet) { creerOngletAvecEntetes(classeur, 'Equipes', ENTETES.Equipes); return classeur.getSheetByName('Equipes'); }
-  if (colClubInvite(onglet, 'source') === -1) { // colClubInvite = simple recherche d'en-tête (réutilisée)
+  ['source', 'nb_joueurs', 'nb_educateurs'].forEach(function (nom) {
+    if (colClubInvite(onglet, nom) !== -1) return; // colClubInvite = simple recherche d'en-tête (réutilisée)
     var col = Math.max(onglet.getLastColumn(), 1) + 1;
     var cell = onglet.getRange(1, col);
-    cell.setNumberFormat('@'); cell.setValue('source');
+    cell.setNumberFormat('@'); cell.setValue(nom);
     stylerEntete(cell); onglet.setFrozenRows(1);
-  }
+  });
   return onglet;
+}
+
+/** Ancien nom conservé : d'autres appels historiques passent encore par là. */
+function assurerColonneSourceEquipes(classeur) {
+  return assurerColonnesEquipes(classeur);
+}
+
+/** Effectif déclaré lu d'une saisie : entier ≥ 0, ou null si vide/illisible (jamais deviné, jamais
+ *  0 par défaut — « vide » et « zéro » sont deux réponses différentes). PUR. */
+function effectifDeclare(valeur) {
+  var s = String(valeur == null ? '' : valeur).trim();
+  if (s === '') return null;
+  var n = parseInt(s, 10);
+  return (isFinite(n) && n >= 0) ? n : null;
 }
 
 /**
@@ -2649,22 +2728,25 @@ function assurerColonneSourceEquipes(classeur) {
  * unique : format TEXTE (@) forcé AVANT écriture (anti-injection de formule, comme avant).
  * @param {string} source 'manuel' (ajout à la main) ou 'auto' (dossier final d'un club).
  */
-function ecrireNouvelleEquipe(onglet, nom, categorie, source) {
+function ecrireNouvelleEquipe(onglet, nom, categorie, source, nbJoueurs, nbEducateurs) {
   var id = genererIdEquipe(onglet);
   var ligne = onglet.getLastRow() + 1;
   var plage = onglet.getRange(ligne, 1, 1, ENTETES.Equipes.length);
   plage.setNumberFormat('@');
-  plage.setValues([[id, nom, categorie, '', source || 'manuel']]);
-  return { id_equipe: id, nom_equipe: nom, categorie: categorie, poule: '', source: source || 'manuel' };
+  var j = effectifDeclare(nbJoueurs), e = effectifDeclare(nbEducateurs);
+  plage.setValues([[id, nom, categorie, '', source || 'manuel',
+                    j == null ? '' : String(j), e == null ? '' : String(e)]]);
+  return { id_equipe: id, nom_equipe: nom, categorie: categorie, poule: '', source: source || 'manuel',
+           nb_joueurs: j == null ? '' : String(j), nb_educateurs: e == null ? '' : String(e) };
 }
 
-function ajouterEquipe(classeur, nom, categorie) {
+function ajouterEquipe(classeur, nom, categorie, nbJoueurs, nbEducateurs) {
   nom = (nom || '').toString().trim();
   categorie = (categorie || '').toString().trim();
   if (!nom)       return { error: "Le nom de l'équipe est vide." };
   if (!categorie) return { error: 'La catégorie est vide.' };
-  var onglet = assurerColonneSourceEquipes(classeur); // garantit la colonne `source`
-  var equipe = ecrireNouvelleEquipe(onglet, nom, categorie, 'manuel');
+  var onglet = assurerColonnesEquipes(classeur); // garantit source + nb_joueurs + nb_educateurs
+  var equipe = ecrireNouvelleEquipe(onglet, nom, categorie, 'manuel', nbJoueurs, nbEducateurs);
   return { ok: true, equipe: equipe };
 }
 
@@ -2690,12 +2772,17 @@ function supprimerEquipe(classeur, id) {
   return { ok: true };
 }
 
-/** Renomme une équipe existante (colonne nom_equipe = 2e colonne). */
-function modifierEquipe(classeur, id, nouveauNom) {
+/**
+ * Modifie une équipe existante : son nom, et — session 27 — ses effectifs déclarés
+ * (nb_joueurs / nb_educateurs). Les effectifs ne sont écrits QUE s'ils sont fournis
+ * (`undefined` ⇒ colonne laissée telle quelle) : un ancien client qui n'envoie que le nom ne
+ * doit pas effacer des effectifs déjà saisis. Une chaîne VIDE, elle, efface volontairement.
+ */
+function modifierEquipe(classeur, id, nouveauNom, nbJoueurs, nbEducateurs) {
   nouveauNom = (nouveauNom || '').toString().trim();
   if (!id)         return { error: "Identifiant d'équipe manquant." };
   if (!nouveauNom) return { error: "Le nom de l'équipe est vide." };
-  var onglet = classeur.getSheetByName('Equipes');
+  var onglet = assurerColonnesEquipes(classeur);
   if (onglet.getLastRow() < 2) return { error: 'Aucune équipe à modifier.' };
   var ligne = trouverLigneParValeur(onglet, colDe(ENTETES.Equipes, 'id_equipe'), id);
   if (ligne === -1) return { error: 'Équipe introuvable : ' + id };
@@ -2704,7 +2791,19 @@ function modifierEquipe(classeur, id, nouveauNom) {
   var cellule = onglet.getRange(ligne, colDe(ENTETES.Equipes, 'nom_equipe'));
   cellule.setNumberFormat('@');
   cellule.setValue(nouveauNom);
-  return { ok: true, equipe: { id_equipe: id, nom_equipe: nouveauNom } };
+
+  var maj = { id_equipe: id, nom_equipe: nouveauNom };
+  [['nb_joueurs', nbJoueurs], ['nb_educateurs', nbEducateurs]].forEach(function (paire) {
+    if (paire[1] === undefined || paire[1] === null) return;   // non fourni ⇒ on ne touche pas
+    var col = colClubInvite(onglet, paire[0]);
+    if (col === -1) return;
+    var n = effectifDeclare(paire[1]);                          // '' ou illisible ⇒ efface
+    var c = onglet.getRange(ligne, col);
+    c.setNumberFormat('@');
+    c.setValue(n == null ? '' : String(n));
+    maj[paire[0]] = n == null ? '' : String(n);
+  });
+  return { ok: true, equipe: maj };
 }
 
 /** Supprime toutes les équipes d'une catégorie en une seule opération. */

@@ -172,10 +172,17 @@ Une ligne par équipe. En-têtes :
 | `categorie` | `U8` | Saisi par l'admin |
 | `poule` | `A` | **Auto** — rempli par « Générer poules et planning » |
 | `source` | `manuel` | **Nouveau (Sprint 6).** `manuel` = équipe ajoutée à la main ; `auto` = équipe **créée à l'enregistrement de la sélection des catégories engagées** d'un club invité (bouton « Enregistrer la sélection »). **Vide = `manuel`** (rétrocompatibilité) |
+| `nb_joueurs` | `12` | Saisi par l'admin (ajout d'équipe ou crayon ✏️). **Facultatif** — vide = « non déclaré », ce qui n'est **pas** la même chose que `0` |
+| `nb_educateurs` | `2` | Saisi par l'admin, même règle. Éducateurs accompagnant **cette** équipe |
 
-> 🛠️ **Migration douce.** La colonne `source` est **ajoutée automatiquement** à droite dès le
-> premier ajout d'équipe (ou envoi de dossier final) sur un Sheet déjà en service. Les lignes déjà
-> présentes (sans `source`) comptent comme **`manuel`**.
+> 🛠️ **Migration douce.** Les colonnes `source`, `nb_joueurs` et `nb_educateurs` sont **ajoutées
+> automatiquement** à droite dès le premier ajout/modification d'équipe (ou envoi de dossier final)
+> sur un Sheet déjà en service. Les lignes déjà présentes (sans `source`) comptent comme **`manuel`**.
+
+> ⚠️ **Anti-double-compte.** `nb_joueurs` / `nb_educateurs` n'alimentent la demande d'autorisation
+> (A.4 participants, B.3 éducateurs) que pour les équipes dont `source` **n'est pas** `auto` : une
+> équipe `auto` vient d'une réponse d'invitation dont les totaux (`ClubsInvites.nb_joueurs_total` /
+> `nb_educateurs_total`) sont **déjà** comptés — la recompter ici doublerait les effectifs.
 
 ---
 
