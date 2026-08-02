@@ -5,6 +5,28 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Clubs invités : liserés d'état, pile triée et vraie synchronisation des équipes — 2026-08-02
+La liste des clubs devient une **liste de tâches qui se lit toute seule** (décisions Romain) :
+- **Liseré + badge d'état** sur chaque carte — 🟠 orange « **À enregistrer** » (le club a répondu
+  ou MODIFIÉ sa réponse, action requise), 🟣 violet « En attente de réponse », 🟢 vert
+  « Sélection enregistrée » (à jour), 🔴 rouge « Déclinée ». Le badge texte porte la même
+  information que la couleur (jamais la couleur seule) ;
+- **Pile triée** : orange en haut, violet au milieu, vert en bas, rouge tout en bas ;
+- **Détection des changements** : nouvelle colonne `selection_enregistree` (migration douce),
+  posée au clic « Enregistrer la sélection », **effacée par toute nouvelle réponse du club** —
+  drapeau événementiel, pas de comparaison d'horloges. Colonne absente (vieux Sheet) ⇒ orange :
+  défaut prudent, la carte réclame une relecture plutôt que de se dire à jour ;
+- **La synchronisation des équipes répercute enfin les réductions** : « Enregistrer la
+  sélection » retire les équipes excédentaires **supprimables** (créées par le circuit
+  `source=auto`, hors poule, absentes de tout match généré) — y compris quand une catégorie
+  entière est désengagée. Une équipe créée à la main, déjà placée en poule ou présente dans des
+  matchs n'est JAMAIS supprimée : elle est conservée avec une alerte ⚠️ **actionnable** (« retire-la
+  à la main ou régénère le planning »). Le plan est calculé par un cœur PUR
+  (`planifierSyncEquipesClub`), testé sans classeur ;
+- Le message de confirmation liste les équipes **créées ET retirées**, et l'écran Équipes se
+  rafraîchit aussitôt.
+**Backend à redéployer** ; tests : **499/499** (+11).
+
 ### Email : « La journée en un coup d'œil » en frise horaire visuelle — 2026-08-02
 Préférence de Romain : la frise de la page vitrine (points bleus reliés, heures en grand) est
 plus parlante que des lignes de tableau. L'email l'adopte, en HTML **email-safe** (aucun

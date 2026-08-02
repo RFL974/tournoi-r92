@@ -980,12 +980,31 @@ async function chargerClubsInvites() {
   }
 }
 
-/** Pastille d'état d'un statut (couleur portée par une classe CSS). */
-function classeStatutClub(statut) {
-  if (estAccepte(statut))                  return 'est-accepte';
-  if (memeTexteSouple(statut, 'Décliné'))  return 'est-decline';
-  return 'est-invite';
+/**
+ * ÉTAT d'une carte club — pilote le liseré, le badge et le tri en pile (décisions Romain) :
+ *  - 'a-enregistrer' (orange) : Accepté, sélection PAS (ou PLUS) enregistrée — le club a répondu
+ *    ou modifié sa réponse (repondreInvitation efface la marque), action requise ;
+ *  - 'attente'       (violet) : pas encore de réponse (Invité) ;
+ *  - 'enregistree'   (vert)   : Accepté, sélection enregistrée — à jour ;
+ *  - 'decline'       (rouge)  : invitation déclinée.
+ * Colonne selection_enregistree absente (vieux Sheet) ⇒ orange : défaut PRUDENT, la carte
+ * réclame une relecture plutôt que de se dire à jour.
+ */
+function etatClubInvite(club) {
+  if (memeTexteSouple(club.statut, 'Décliné')) return 'decline';
+  if (estAccepte(club.statut)) {
+    return String(club.selection_enregistree || '').trim() ? 'enregistree' : 'a-enregistrer';
+  }
+  return 'attente';
 }
+
+/** Libellés humains des états (badge de la carte — jamais la couleur seule). */
+const LIBELLES_ETAT_CLUB = {
+  'a-enregistrer': 'À enregistrer',
+  'attente': 'En attente de réponse',
+  'enregistree': 'Sélection enregistrée',
+  'decline': 'Déclinée'
+};
 
 /** Catégories engagées (texte « U8,U10 » ou JSON) → tableau de noms normalisés (MAJ). */
 function parseCatsEngagees(brut) {
@@ -1075,17 +1094,14 @@ function parseCatsEnginesNb(brut) {
 }
 
 /**
- * Ordre de tri de la liste (Point 5a) :
- *   0 = Accepté ET dossier non envoyé (action requise, en haut)
- *   1 = Invité / sans réponse
- *   2 = Décliné
- *   3 = Accepté ET dossier envoyé (déjà traité, en bas)
+ * Ordre de tri de la PILE (décisions Romain, session liserés) — suit l'état de la carte :
+ *   0 = orange « À enregistrer » (action requise, en haut)
+ *   1 = violet « En attente de réponse » (rien à faire, milieu)
+ *   2 = vert « Sélection enregistrée » (à jour, en bas)
+ *   3 = rouge « Déclinée » (cartes mortes, tout en bas)
  */
 function bucketClub(club) {
-  const envoye = !!String(club.dossier_envoye || '').trim();
-  if (estAccepte(club.statut)) return envoye ? 3 : 0;
-  if (memeTexteSouple(club.statut, 'Décliné')) return 2;
-  return 1;
+  return { 'a-enregistrer': 0, 'attente': 1, 'enregistree': 2, 'decline': 3 }[etatClubInvite(club)];
 }
 
 /** Affiche la liste des clubs invités (triée), avec statut, réponse remontée, panneau, envoi. */
@@ -1122,8 +1138,11 @@ function afficherClubsInvites() {
     const invite = String(club.invitation_envoyee || '').trim();
     const envoye = String(club.dossier_envoye || '').trim();
     const alerte = String(club.alerte_ecart || '').trim();
-    // Badges : invitation (Phase 1), dossier (Phase 2), et alerte d'écart d'engagement.
+    const etat = etatClubInvite(club);
+    // Badges : ÉTAT de la carte (même info que le liseré — jamais la couleur seule), puis
+    // invitation (Phase 1), dossier (Phase 2), et alerte d'écart d'engagement.
     const badges =
+      '<span class="club-etat-badge etat-' + etat + '">' + LIBELLES_ETAT_CLUB[etat] + '</span>' +
       (invite ? '<span class="club-envoye club-badge-invite" title="Invitation envoyée">✉️ Invité le ' + echapper(invite) + '</span>' : '') +
       (envoye ? '<span class="club-envoye" title="Dossier envoyé">📧 Dossier le ' + echapper(envoye) + '</span>' : '') +
       (alerte ? '<span class="club-alerte-ecart" tabindex="0" role="button" title="' + echapper(alerte) + '" data-club="' + echapper(nom) + '">⚠️ Écart</span>' : '');
@@ -1133,7 +1152,7 @@ function afficherClubsInvites() {
       : '<button class="bouton-icone bouton-inviter-club" title="Pas d\'email : à inviter manuellement" aria-label="Pas d\'email" disabled>' + svgIcone('email') + '</button>';
 
     html +=
-      '<div class="equipe-item club-invite-item ' + classeStatutClub(club.statut) + '" data-club="' + echapper(nom) + '">' +
+      '<div class="equipe-item club-invite-item club-etat-' + etat + '" data-club="' + echapper(nom) + '">' +
         '<span class="nom">' + echapper(nom) +
           (contact ? '<span class="club-contact">' + echapper(contact) + '</span>' : '') +
         '</span>' +
@@ -1327,34 +1346,43 @@ async function enregistrerCatsClub(bouton) {
   const texte = bouton.textContent;
   bouton.textContent = 'Enregistrement…';
   try {
-    await ecrireAdmin('enregistrerCategoriesEngagees', {
+    const resSel = await ecrireAdmin('enregistrerCategoriesEngagees', {
       club_nom: nom, categories_engagees: cats, club_contact_prenom: prenom
     });
     const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
-    if (club) { club.categories_engagees = cats; club.club_contact_prenom = prenom; }
+    if (club) {
+      club.categories_engagees = cats;
+      club.club_contact_prenom = prenom;
+      // Marque « sélection enregistrée » (posée côté serveur) : le liseré passe au VERT
+      // immédiatement, sans recharger la liste depuis le Sheet.
+      club.selection_enregistree = (resSel && resSel.selection_enregistree) || 'oui';
+    }
 
-    // CRÉATION DES ÉQUIPES engagées (idempotente) — déclenchée ICI, à l'enregistrement de la
-    // sélection. Les équipes « {club} » / « {club}-N » sont créées dans l'onglet Équipes
-    // (source=auto) ; un 2e enregistrement ne crée pas de doublon ; un engagement réduit
-    // remonte une alerte (sans rien supprimer).
+    // SYNCHRONISATION DES ÉQUIPES — déclenchée ICI, à l'enregistrement de la sélection.
+    // Ajouts automatiques (« {club} » / « {club}-N », source=auto, idempotent) ; un engagement
+    // RÉDUIT retire les équipes supprimables (hors poule, hors matchs, jamais une équipe créée
+    // à la main) et remonte une alerte pour les autres.
     let txtEquipes = '';
     try {
       const res = await ecrireAdmin('creerEquipesClub', { club_nom: nom });
       const creees = (res && res.equipes_creees) || [];
-      if (creees.length) txtEquipes = ' ' + creees.length + ' équipe(s) créée(s) : '
+      const supprimees = (res && res.equipes_supprimees) || [];
+      if (creees.length) txtEquipes += ' ' + creees.length + ' équipe(s) créée(s) : '
         + creees.map(function (e) { return e.nom; }).join(', ') + '.';
+      if (supprimees.length) txtEquipes += ' ' + supprimees.length + ' équipe(s) retirée(s) : '
+        + supprimees.map(function (e) { return e.nom; }).join(', ') + '.';
       if (res && res.alerte) txtEquipes += ' ⚠️ ' + res.alerte;
       if (club) club.alerte_ecart = (res && res.alerte) || '';
       // Recharge la liste des équipes + le tableau de bord (l'étape « Équipes » de la barre
       // latérale se met à jour tout de suite, sans rafraîchir la page).
-      if (creees.length && typeof rechargerEquipes === 'function') {
+      if ((creees.length || supprimees.length) && typeof rechargerEquipes === 'function') {
         try { await rechargerEquipes(); } catch (e) { /* best-effort */ }
       }
     } catch (e2) {
-      txtEquipes = ' ⚠️ (équipes non créées : ' + e2.message + ')';
+      txtEquipes = ' ⚠️ (équipes non synchronisées : ' + e2.message + ')';
     }
 
-    afficherClubsInvites(); // fait apparaître « Générer le dossier final » + badge d'alerte éventuel
+    afficherClubsInvites(); // liseré vert + « Générer le dossier final » + badge d'alerte éventuel
     afficherMessage(message, (cochees.length
       ? '✅ « ' + nom + ' » — catégories engagées : ' + cats + '.'
       : '✅ « ' + nom + ' » — sélection enregistrée (aucune catégorie cochée).') + txtEquipes, 'ok');

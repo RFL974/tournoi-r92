@@ -1911,14 +1911,32 @@ a.bouton { display: inline-block; text-decoration: none; }
 
 /* ==========================================================================
    Carte « Clubs invités » (admin) : liste des clubs (réutilise .equipe-item)
-   avec le contact sous le nom, un menu déroulant de statut et un liseré de
-   couleur selon le statut (Invité / Accepté / Décliné). Quand un club est
-   Accepté, un panneau replié laisse choisir les catégories engagées et
+   avec le contact sous le nom, un menu déroulant de statut et un LISERÉ D'ÉTAT
+   (décisions Romain) : orange = « À enregistrer » (le club a répondu ou modifié
+   sa réponse, action requise), violet = « En attente de réponse », vert =
+   « Sélection enregistrée » (à jour), rouge = « Déclinée ». Le badge texte
+   porte la même info que la couleur (jamais la couleur seule). Quand un club
+   est Accepté, un panneau replié laisse choisir les catégories engagées et
    générer/envoyer le dossier complet (Phase 2).
    ========================================================================== */
 .club-invite-item { border-left: 4px solid rgba(120, 180, 255, 0.5); }
-.club-invite-item.est-accepte { border-left-color: #35c06a; }
-.club-invite-item.est-decline  { border-left-color: #e07878; }
+.club-invite-item.club-etat-a-enregistrer { border-left-color: #e5a33c; }
+.club-invite-item.club-etat-attente       { border-left-color: #9b7fd4; }
+.club-invite-item.club-etat-enregistree   { border-left-color: #35c06a; }
+.club-invite-item.club-etat-decline       { border-left-color: #e07878; }
+/* Badge d'état assorti au liseré (pastille discrète, lisible sur fond navy). */
+.club-etat-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.club-etat-badge.etat-a-enregistrer { background: rgba(229, 163, 60, 0.18); color: #f0b95e; }
+.club-etat-badge.etat-attente       { background: rgba(155, 127, 212, 0.18); color: #bda8ea; }
+.club-etat-badge.etat-enregistree   { background: rgba(53, 192, 106, 0.16); color: #6fd898; }
+.club-etat-badge.etat-decline       { background: rgba(224, 120, 120, 0.16); color: #eda3a3; }
 .club-invite-item { flex-wrap: wrap; }
 .club-invite-item .nom { display: flex; flex-direction: column; min-width: 0; }
 .club-contact {
