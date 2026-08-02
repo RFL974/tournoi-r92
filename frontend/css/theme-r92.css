@@ -119,8 +119,11 @@ body.theme-clair {
 .theme-clair .r-input,
 .theme-clair .champ-reglage input,
 .theme-clair .form-equipe input[type="text"],
+.theme-clair .form-equipe input[type="number"],
 .theme-clair .form-equipe select,
 .theme-clair .champ-edit-nom,
+.theme-clair .champ-edit-joueurs,
+.theme-clair .champ-edit-educateurs,
 .theme-clair #bloc-terrains input[type="text"],
 .theme-clair #bloc-terrains input[type="number"],
 .theme-clair #bloc-terrains select {
@@ -135,6 +138,9 @@ body.theme-clair {
 .theme-clair .champ-reglage input:focus,
 .theme-clair .form-equipe input:focus,
 .theme-clair .form-equipe select:focus,
+.theme-clair .champ-edit-nom:focus,
+.theme-clair .champ-edit-joueurs:focus,
+.theme-clair .champ-edit-educateurs:focus,
 .theme-clair #bloc-terrains input:focus,
 .theme-clair #bloc-terrains select:focus {
   outline: none;
