@@ -5,6 +5,27 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Verrou de la barre latérale : les étapes optionnelles ne bloquent plus le parcours — 2026-08-02
+Analyse complète du système de verrouillage, à la suite d'un blocage persistant. **Deux défauts**
+trouvés, indépendants du crayon des équipes (corrigé précédemment) :
+
+**1. Une étape « libre » gelait quand même la suite.** Cinq écrans sont déclarés *libres* —
+« Inviter un club », « Dossier complet », « Demande d'autorisation », « Feuille de journée »,
+« Réinitialiser » — c'est-à-dire préparables à tout moment et **jamais verrouillés**. Mais le calcul
+des verrous les traversait quand même : une simple retouche non enregistrée dans « Inviter un club »
+(date limite, modalités, texte « Sur place »…) **bloquait Équipes, Terrains, Poules & planning,
+Publication et Après-midi**. Le chemin principal était donc gelé par une étape explicitement
+facultative — et le blocage survivait au rechargement, puisque la retouche restait en place. Un
+écran libre ne propage désormais plus aucun blocage. Les écrans **non libres** protègent toujours
+autant : une modification non enregistrée y bloque bien la suite.
+
+**2. L'application ne disait pas ce qui bloquait.** Cliquer un onglet grisé faisait seulement
+**trembler** l'onglet ; la raison n'existait que dans une infobulle au survol, que personne ne
+pense à chercher. Elle s'affiche maintenant **en clair, en haut de la barre latérale** (« Pour
+ouvrir cette étape, termine d'abord : … »), et s'efface d'elle-même. Le verrou devient
+auto-explicatif : plus besoin de deviner quel formulaire enregistrer.
+**100 % front**, aucun redéploiement backend.
+
 ### Feuille de fin de journée : bilan chronologique, PDF et envoi aux clubs — 2026-08-02
 Nouvel item **« Feuille de journée »**, placé **après « Après-midi »** dans la barre latérale :
 - **tous les matchs de la journée dans l'ordre chronologique** (heure de début, puis terrain, puis

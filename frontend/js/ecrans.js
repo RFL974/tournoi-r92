@@ -126,6 +126,10 @@ function construireEcrans() {
             '<span class="ecr-marque-titre">Administration</span>' +
             '<span class="ecr-marque-sous">Tournoi R92</span>' +
           '</div>' +
+          // Pourquoi une étape est inaccessible : affiché NOIR SUR BLANC au clic sur un onglet
+          // grisé, EN HAUT de la barre pour rester visible quelle que soit sa longueur. Avant,
+          // l'onglet se contentait de trembler — on restait bloqué sans savoir quoi enregistrer.
+          '<div id="ecr-verrou-msg" class="ecr-verrou-msg" role="status" hidden></div>' +
           '<ul class="ecr-liste">';
   ECRANS_DEF.forEach(function (e) {
     h += '<li><button type="button" class="ecr-onglet' + (e.danger ? ' est-danger' : '') +
@@ -211,6 +215,12 @@ function ecransCalculerVerrous(etats) {
   ECRANS_DEF.forEach(function (def) {
     verrous.push(def.libre ? null : blocage);
     if (blocage) return; // déjà bloqué en amont : inutile de chercher plus loin
+    // Un écran LIBRE est une voie PARALLÈLE et facultative (inviter un club, dossier, demande
+    // d'autorisation, feuille de journée, réinitialisation) : il n'est jamais verrouillé, et il ne
+    // doit pas davantage verrouiller la SUITE. Sans ce retour, une simple retouche non enregistrée
+    // dans « Inviter un club » gelait Équipes, Terrains, Poules, Publication et Après-midi — le
+    // chemin principal était bloqué par une étape explicitement déclarée optionnelle.
+    if (def.libre) return;
     (def.cles || []).forEach(function (cle) {
       if (cle === 'apresmidi') return; // ne bloque jamais la suite
       const e = (etats || []).find(function (x) { return x.cle === cle; });
@@ -278,7 +288,8 @@ function ecransActiver(id, opt) {
   // pas complète. (Revenir en arrière reste toujours possible : les écrans
   // déjà faits ne sont jamais verrouillés.)
   const verrous = ecransCalculerVerrous(ecransEtats());
-  if (verrous[idx]) { ecransSecouerOnglet(id); return; }
+  if (verrous[idx]) { ecransSecouerOnglet(id); ecransDireVerrou(verrous[idx]); return; }
+  ecransDireVerrou(null); // écran ouvert : plus rien à expliquer
 
   ECRANS_DEF.forEach(function (e) {
     const ecran = document.getElementById('ecran-' + e.id);
@@ -298,6 +309,21 @@ function ecransActiver(id, opt) {
   try { localStorage.setItem(ECRANS_CLE_ACTIF, id); } catch (e) { /* stockage indisponible */ }
   ecransMajPastilles();
   if (!opt.sansScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/** Dit POURQUOI un écran est verrouillé (ou efface le message si `raison` est nulle).
+ *  L'explication s'efface d'elle-même au bout de quelques secondes. */
+let ecransVerrouTimer = null;
+function ecransDireVerrou(raison) {
+  const zone = document.getElementById('ecr-verrou-msg');
+  if (!zone) return;
+  if (ecransVerrouTimer) { clearTimeout(ecransVerrouTimer); ecransVerrouTimer = null; }
+  if (!raison) { zone.hidden = true; zone.textContent = ''; return; }
+  zone.hidden = false;
+  zone.innerHTML = '🔒 <strong>Pour ouvrir cette étape, termine d\'abord&nbsp;:</strong><br>' + echapper(raison);
+  ecransVerrouTimer = setTimeout(function () {
+    zone.hidden = true; zone.textContent = ''; ecransVerrouTimer = null;
+  }, 12000);
 }
 
 /** Petit tremblement de l'onglet quand on clique un écran verrouillé. */
