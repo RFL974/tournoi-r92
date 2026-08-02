@@ -335,8 +335,15 @@ function raisonsModifsDans(etapeId, conteneur, zones) {
   if (etapeId === 'equipes') {
     const nom = document.getElementById('champ-nom');
     if (nom && nom.value.trim()) raisons.push('équipe saisie → « Ajouter » (ou vide le champ)');
-    if (document.querySelector('#liste-equipes .champ-edit-nom')) {
-      raisons.push('renommage en cours → « Enregistrer » ou « Annuler »');
+    // Édition d'une équipe (crayon) : on ne bloque QUE si des valeurs ont réellement changé.
+    // Ouvrir le crayon pour regarder, puis passer à autre chose, ne fait rien perdre — verrouiller
+    // la barre latérale dans ce cas était un faux positif. Repli prudent (fonction absente) : on
+    // conserve l'ancienne détection par présence, pour ne jamais perdre une saisie en cours.
+    const editionModifiee = (typeof equipeEditionModifiee === 'function')
+      ? equipeEditionModifiee()
+      : !!document.querySelector('#liste-equipes .champ-edit-nom');
+    if (editionModifiee) {
+      raisons.push('modification d\'équipe en cours → « Enregistrer » ou « Annuler »');
     }
   }
   if (etapeId === 'terrains' && typeof repartitionCalculee !== 'undefined' && repartitionCalculee) {

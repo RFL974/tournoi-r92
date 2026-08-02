@@ -5,6 +5,26 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Correctif : ouvrir le crayon d'une équipe ne verrouille plus la barre latérale — 2026-08-02
+Cliquer sur le crayon ✏️ d'une équipe **grisait aussitôt les étapes suivantes** de la barre
+latérale (Terrains, Poules & planning, Publication, Après-midi) — **même sans rien modifier**,
+et il fallait « Enregistrer » ou « Annuler » pour y revenir.
+Cause : le détecteur de « modifications non enregistrées » se déclenchait sur la simple
+**présence** du champ d'édition à l'écran, pas sur un changement réel.
+Il compare désormais les **valeurs** (nom, joueurs, éducateurs) à celles enregistrées, comme le
+fait déjà le reste de l'application pour les formulaires :
+- **ouvrir le crayon pour regarder ne verrouille plus rien** ;
+- dès qu'une valeur change **réellement**, le verrou revient (le garde-fou contre la perte de
+  saisie est intact) — et il **repart** si tu remets la valeur d'origine, si tu enregistres ou
+  si tu annules ;
+- retaper le même nom en minuscules ne compte pas comme une modification (il est enregistré en
+  MAJUSCULES), et une équipe d'un Sheet ancien (colonnes d'effectifs absentes) ne déclenche
+  aucun faux positif ;
+- le formulaire d'**ajout** garde sa règle inchangée : un nom saisi bloque toujours, pour ne
+  jamais perdre une équipe en cours de saisie.
+Vérifié sur la vraie barre latérale (mode écrans) : 0 onglet verrouillé crayon ouvert, verrou
+correct après une modification, levé après annulation. **100 % front**, aucun redéploiement backend.
+
 ### Correctif de style : champs « Joueurs » / « Éducs » alignés sur le reste — 2026-08-02
 Les deux champs d'effectifs (carte **Équipes** et édition au crayon ✏️) n'avaient pas la même
 allure que les autres champs : angles moins arrondis, autre police, autre bordure, hauteur
