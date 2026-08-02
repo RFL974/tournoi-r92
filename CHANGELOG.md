@@ -5,6 +5,26 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Terrains : placement manuel au point exact, orientation au choix, tables en dernier — 2026-08-02
+Le placement manuel cherchait « la meilleure place libre » près du point lâché : le mini-terrain
+partait ailleurs que là où on le posait, et certaines configurations pourtant produites
+automatiquement étaient **impossibles à refaire à la main**. Désormais :
+- **position exacte** — le mini-terrain se pose **centré sur le point où tu le lâches**, sans
+  aucune recherche ni recalage (il est seulement ramené dans le grand terrain s'il dépasse) ;
+- **aperçu à l'échelle pendant le glisser** — un rectangle montre l'emplacement réel, **vert**
+  s'il est tenable, **rouge** sinon, avec la raison (hors terrain, ou couloir de circulation non
+  respecté). On voit le résultat **avant** de lâcher ;
+- **orientation au choix** — bouton **⟳** sur la pastille ou touche **R** pendant le glisser pour
+  poser en largeur plutôt qu'en longueur. L'orientation d'un terrain remis de côté est conservée ;
+- **refus explicite, jamais de déplacement** — un emplacement impossible est refusé avec sa
+  raison, et la pastille reste de côté : l'application ne décide plus à ta place ;
+- **tables de marque en dernier** — elles ne sont plus posées pendant les déplacements (elles
+  occupaient de la place et bloquaient des positions valides). Nouveau bouton **« 📍 Valider le
+  placement »** : il les pose d'un coup, au plus près des terrains de chaque catégorie, puis
+  « Appliquer aux catégories » apparaît. Tout déplacement ultérieur les retire à nouveau.
+Les deux seules règles conservées restent physiques : tenir dans le grand terrain et respecter le
+couloir de circulation. **100 % front**, aucun redéploiement backend.
+
 ### Correctif : ouvrir le crayon d'une équipe ne verrouille plus la barre latérale — 2026-08-02
 Cliquer sur le crayon ✏️ d'une équipe **grisait aussitôt les étapes suivantes** de la barre
 latérale (Terrains, Poules & planning, Publication, Après-midi) — **même sans rien modifier**,
