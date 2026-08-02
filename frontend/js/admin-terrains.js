@@ -865,49 +865,61 @@ function onRepartir() {
   afficherRepartition(repartitionCalculee, cats);
 }
 
-/** Retire toutes les tables des marques du plan (elles seront posées à la validation). */
+/** Retire toutes les tables des marques du plan (elles seront posées à la validation).
+ *  `z.table` est nettoyé aussi : le calcul automatique en pose encore, et la table appartient
+ *  désormais au GRAND TERRAIN (`fp.table`), plus à une catégorie. */
 function retirerTablesMarques(res) {
   (res.fieldsPlan || []).forEach(function (fp) {
+    fp.table = null;
     (fp.zones || []).forEach(function (z) { z.table = null; });
   });
   res.tablesPosees = false;
 }
 
+/** Tout ce qui occupe déjà un grand terrain : les mini-terrains et sa table de marque.
+ *  Point de passage unique — le placement manuel et la pose des tables voient la même chose. */
+function obstaclesDuTerrain(fp) {
+  const occ = [];
+  (fp.zones || []).forEach(function (z) {
+    z.tiles.forEach(function (t) { occ.push(t); });
+    if (z.table) occ.push(z.table);   // héritage du calcul automatique
+  });
+  if (fp.table) occ.push(fp.table);
+  return occ;
+}
+
 /**
- * Pose les TABLES DES MARQUES une fois le placement des mini-terrains validé : une par catégorie
- * présente sur un grand terrain, dans l'espace LIBRE le plus proche du barycentre de ses tuiles
- * (couloir respecté vis-à-vis des mini-terrains ET des tables déjà posées). Un terrain « plein »
- * (U14) garde sa table sur la ligne de touche. `split` = deux catégories partagent le terrain.
+ * Pose les TABLES DES MARQUES une fois le placement des mini-terrains validé : **UNE SEULE par
+ * GRAND TERRAIN**, quel que soit le nombre de catégories qui s'y partagent la place. Une table par
+ * catégorie était plus sûre contre les erreurs de saisie, mais demandait trop de bénévoles : un
+ * grand terrain accueillant de l'U8 et de l'U10 mobilisait deux tables.
+ * Elle se pose dans l'espace LIBRE le plus proche du barycentre de TOUS les mini-terrains du grand
+ * terrain (couloir respecté). Un terrain « plein » (U14) garde la sienne sur la ligne de touche.
  */
 function poserTablesMarques(res) {
   const ctx = res.ctxManuel || {};
   const m = ctx.m || 0, tmL = ctx.tmL || TM_L_DEFAUT, tmW = ctx.tmW || TM_W_DEFAUT;
   const manquantes = [];
   (res.fieldsPlan || []).forEach(function (fp) {
-    const zones = (fp.zones || []).filter(function (z) { return z.tiles.length; });
-    if (!zones.length) return;
-    const partage = zones.length > 1;
+    fp.table = null;
+    (fp.zones || []).forEach(function (z) { z.table = null; }); // une seule table, portée par le terrain
+    const tuiles = [];
+    (fp.zones || []).forEach(function (z) { z.tiles.forEach(function (t) { tuiles.push(t); }); });
+    if (!tuiles.length) return;                                 // grand terrain non utilisé
+
     if (fp.mode === 'plein') {
-      zones[0].table = { x: Math.max(0, fp.field.L / 2 - tmL / 2), y: Math.max(0, fp.field.W - tmW),
-                         w: tmL, h: tmW, split: false };
+      fp.table = { x: Math.max(0, fp.field.L / 2 - tmL / 2), y: Math.max(0, fp.field.W - tmW),
+                   w: tmL, h: tmW };
       return;
     }
-    const occupees = [];
-    zones.forEach(function (z) { z.tiles.forEach(function (t) { occupees.push(t); }); });
-    zones.forEach(function (z) {
-      // Barycentre des mini-terrains de la catégorie : la table se pose au plus près des siens.
-      let sx = 0, sy = 0;
-      z.tiles.forEach(function (t) { sx += t.x + t.w / 2; sy += t.y + t.h / 2; });
-      const cx = sx / z.tiles.length, cy = sy / z.tiles.length;
-      const place = placerPresDe(fp.field.L, fp.field.W, occupees, tmL, tmW, m, cx, cy);
-      if (place) {
-        z.table = { x: place.x, y: place.y, w: place.w, h: place.h, split: partage };
-        occupees.push(z.table); // la table suivante garde ses distances avec celle-ci
-      } else {
-        z.table = null;
-        manquantes.push(fp.field.nom + ' (' + z.cat + ')');
-      }
-    });
+    // Barycentre de TOUS les mini-terrains du grand terrain : la table est au centre de gravité
+    // de ce qu'elle doit surveiller, toutes catégories confondues.
+    let sx = 0, sy = 0;
+    tuiles.forEach(function (t) { sx += t.x + t.w / 2; sy += t.y + t.h / 2; });
+    const place = placerPresDe(fp.field.L, fp.field.W, tuiles, tmL, tmW, m,
+                               sx / tuiles.length, sy / tuiles.length);
+    if (place) fp.table = { x: place.x, y: place.y, w: place.w, h: place.h };
+    else manquantes.push(fp.field.nom);
   });
   res.tablesPosees = true;
   res.tablesManquantes = manquantes;
@@ -983,12 +995,14 @@ function afficherRepartition(res, cats) {
 
   if (!res.tablesPosees) {
     h += '<p class="note-generation">Les <strong>tables de marque</strong> ne sont pas encore posées : ' +
-         'place d\'abord tous les mini-terrains comme tu le souhaites, puis valide — elles seront ' +
-         'placées d\'un coup, au plus près des terrains de chaque catégorie.</p>';
+         'place d\'abord tous les mini-terrains comme tu le souhaites, puis valide — il en sera posé ' +
+         '<strong>une seule par grand terrain</strong>, au centre de ce qu\'elle surveille.</p>';
   } else {
-    h += '<p class="note-generation">La zone grise <strong>« TM »</strong> = table des marques, posée ' +
-         'dans l\'espace libre le plus proche des terrains de sa catégorie (une par catégorie quand deux ' +
-         'catégories partagent un grand terrain). Déplace encore un terrain et elles seront recalculées.</p>';
+    h += '<p class="note-generation">La zone grise <strong>« TM »</strong> = table de marque : ' +
+         '<strong>une seule par grand terrain</strong>, même quand deux catégories s\'y partagent la ' +
+         'place (une table par catégorie demandait trop de bénévoles). Elle est posée dans l\'espace ' +
+         'libre le plus proche du centre des mini-terrains qu\'elle couvre. Déplace encore un terrain ' +
+         'et elles seront recalculées.</p>';
     if ((res.tablesManquantes || []).length) {
       h += '<div class="repart-avert">⚠️ Pas de place pour la table de marque : ' +
            echapper(res.tablesManquantes.join(', ')) + '. Libère un peu d\'espace ou réduis sa taille.</div>';
@@ -1135,11 +1149,7 @@ function refusPlacement(fp, spot, m) {
     return 'le mini-terrain (' + Math.round(spot.w) + '×' + Math.round(spot.h) + ' m) ne tient pas sur ' +
            fp.field.nom + ' (' + fp.field.L + '×' + fp.field.W + ' m) — pivote-le ou change de terrain';
   }
-  const occ = [];
-  (fp.zones || []).forEach(function (z) {
-    z.tiles.forEach(function (t) { occ.push(t); });
-    if (z.table) occ.push(z.table);
-  });
+  const occ = obstaclesDuTerrain(fp);
   for (let k = 0; k < occ.length; k++) {
     const o = occ[k];
     if (spot.x < o.x + o.w + m - 0.001 && spot.x + spot.w + m - 0.001 > o.x &&
@@ -1176,6 +1186,8 @@ function poserMiniTerrainSur(iField, iChip, xm, ym) {
       afficherMessage(message, '⚠️ ' + fp.field.nom + ' est occupé en entier par ' + fp.zones[0].cat + ' : mets d\'abord ce match de côté.', 'ko');
       return false;
     }
+    // `refusPlacement` regarde déjà la table du terrain (obstaclesDuTerrain) : un mini-terrain
+    // ne peut pas se poser dessus, même après validation.
     const spot = positionExacte(fp, chip, xm, ym);
     const refus = refusPlacement(fp, spot, ctx.m);
     if (refus) {
@@ -1346,15 +1358,17 @@ function groupeTerrain(fp, ox, oy, ppm, iField) {
         g += '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (yy + hh / 2 + 3).toFixed(1) + '" class="carte-tuile" fill="' + z.color + '">' + echapper(t.label) + '</text>';
       g += '</g>';
     });
-    if (z.table) {
-      // taille minimale d'affichage (une TM de 4 m ≈ 6 px, sinon invisible) — centrée sur sa vraie position
-      const cxT = (z.table.x + z.table.w / 2) * ppm, cyT = (z.table.y + z.table.h / 2) * ppm;
-      const tw = Math.max(z.table.w * ppm, 9), th = Math.max(z.table.h * ppm, 9);
-      const tx = cxT - tw / 2, ty = cyT - th / 2;
-      g += '<rect x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" width="' + tw.toFixed(1) + '" height="' + th.toFixed(1) + '" class="carte-table"><title>Table des marques</title></rect>';
-      if (tw > 18 && th > 11) g += '<text x="' + cxT.toFixed(1) + '" y="' + (cyT + 3).toFixed(1) + '" class="carte-tm">TM</text>';
-    }
   });
+  // UNE SEULE table de marque, portée par le GRAND TERRAIN (plus par catégorie) : elle couvre
+  // tous les mini-terrains posés dessus, U8 et U10 mélangés.
+  if (fp.table) {
+    // taille minimale d'affichage (une TM de 4 m ≈ 6 px, sinon invisible) — centrée sur sa vraie position
+    const cxT = (fp.table.x + fp.table.w / 2) * ppm, cyT = (fp.table.y + fp.table.h / 2) * ppm;
+    const tw = Math.max(fp.table.w * ppm, 9), th = Math.max(fp.table.h * ppm, 9);
+    const tx = cxT - tw / 2, ty = cyT - th / 2;
+    g += '<rect x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" width="' + tw.toFixed(1) + '" height="' + th.toFixed(1) + '" class="carte-table"><title>Table de marque du terrain</title></rect>';
+    if (tw > 18 && th > 11) g += '<text x="' + cxT.toFixed(1) + '" y="' + (cyT + 3).toFixed(1) + '" class="carte-tm">TM</text>';
+  }
   g += '</g>';
   return { g: g, w: fw, h: fh };
 }
