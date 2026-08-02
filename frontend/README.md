@@ -15,7 +15,8 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
   de la journée, une carte détaillée par catégorie (forme de jeu FFR, temps de jeu, pauses,
   récupération, effectifs, arbitrage, règlement), repères FFR ; export PDF via l'impression
   (`css/dossier.css`, `js/invitation.js`). Les données viennent de la vue publique `invitation`
-  du backend (liste blanche sans donnée personnelle).
+  du backend (liste blanche sans donnée personnelle). Ouverte depuis l'email (lien personnel
+  `?club=…&token=…`), elle affiche le bouton « Répondre à l'invitation » du club.
 - **`reponse-invitation.html`** — **réponse à l'invitation** (lien PERSONNEL avec jeton, reçu par
   email) : même en-tête vitrine que l'invitation, puis le formulaire libre-service — présent /
   absent, équipes par catégorie, joueurs + éducateurs par équipe, totaux vivants

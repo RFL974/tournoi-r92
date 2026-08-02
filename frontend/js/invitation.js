@@ -347,28 +347,56 @@ function blocSurPlace(g) {
   return html;
 }
 
+/**
+ * Lien de réponse PERSONNEL du club, si la page a été ouverte depuis l'email d'invitation
+ * (lien {{LIEN_INVITATION}} : invitation-club.html?club=…&token=…). On ne fait que RELAYER
+ * ces paramètres vers reponse-invitation.html — la validation du jeton reste côté backend.
+ * '' pour un visiteur anonyme (la page reste générique).
+ */
+function lienReponsePersonnel(g) {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const club = txt(params.get('club'));
+    const token = txt(params.get('token'));
+    if (!club || !token) return '';
+    const url = new URL('reponse-invitation.html', window.location.href);
+    if (txt(g.tournoi_nom)) url.searchParams.set('tournoi', txt(g.tournoi_nom));
+    url.searchParams.set('club', club);
+    url.searchParams.set('token', token);
+    return url.toString();
+  } catch (e) { return ''; }
+}
+
 /** « Votre réponse » : encart mis en avant — date limite en grand + contact référent.
+ *  Ouvert depuis l'email (club reconnu) → VRAI bouton « Répondre à l'invitation » ;
+ *  visiteur anonyme → mention du lien personnel reçu par email (le bouton de réponse
+ *  vit dans l'email de chaque club, avec son jeton).
  *  Le TÉLÉPHONE n'est volontairement PAS affiché : cette page vitrine est publique et mise en
  *  avant ; le portable d'un bénévole n'y figure pas (décision S3). La vue `invitation` du backend
  *  ne renvoie d'ailleurs plus `contact_reponse_tel`. Le numéro du jour J reste dans le dossier
  *  club, derrière le jeton. */
 function blocReponse(g) {
   const dateLimite = txt(g.date_limite_reponse) ? dateLongueFr(g.date_limite_reponse) : '';
+  const lienReponse = lienReponsePersonnel(g);
   const contact = [];
   if (txt(g.contact_reponse_nom)) contact.push('<strong>' + echapper(txt(g.contact_reponse_nom)) + '</strong>');
   if (txt(g.contact_reponse_email)) {
     contact.push('<a href="mailto:' + echapper(txt(g.contact_reponse_email)) + '">'
       + echapper(txt(g.contact_reponse_email)) + '</a>');
   }
-  if (!dateLimite && !contact.length) return '';
+  if (!dateLimite && !contact.length && !lienReponse) return '';
+
+  const action = lienReponse
+    ? '<p class="inv-cta-action"><a class="inv-cta-bouton" href="' + echapper(lienReponse) + '">✅ Répondre à l\'invitation</a></p>' +
+      '<p class="inv-cta-note">Quelques clics suffisent : présence, équipes engagées, ' +
+      'joueurs et éducateurs par équipe.</p>'
+    : '<p class="inv-cta-note">Répondez en quelques clics depuis votre lien personnel, reçu par email ' +
+      'avec cette invitation : équipes engagées, joueurs et éducateurs par équipe.</p>';
 
   return '<div class="inv-cta">' +
     '<p class="inv-cta-titre">Merci de confirmer votre participation</p>' +
     (dateLimite ? '<p class="inv-cta-date">avant le <strong>' + echapper(dateLimite) + '</strong></p>' : '') +
-    // Le bouton de réponse vit dans l'EMAIL de chaque club (lien personnel avec jeton vers
-    // reponse-invitation.html) : cette page vitrine, générique, guide vers ce lien.
-    '<p class="inv-cta-note">Répondez en quelques clics depuis votre lien personnel, reçu par email ' +
-    'avec cette invitation : équipes engagées, joueurs et éducateurs par équipe.</p>' +
+    action +
     (contact.length ? '<p class="inv-cta-contact">' + contact.join('<span class="inv-cta-sep"> · </span>') + '</p>' : '') +
   '</div>';
 }

@@ -43,6 +43,7 @@ function lancerTestsFFR() {
   testCfg_vueClubContientLesContacts(etat);
   testCfg_categoriesFiltrees(etat);
   testCfg_invitationVitrineCadreSportif(etat);
+  testCfg_liensPersonnalisesEmail(etat);
   testCfg_jetonDossier(etat);
 
   // Référentiel FFR — règles de jeu et grilles de temps (session 5).
@@ -666,6 +667,34 @@ function testCfg_invitationVitrineCadreSportif(etat) {
   var live = filtrerConfigPublique(cfg, 'live');
   _ffrAssert(etat, !('duree_mi_temps_min' in (live.categories[0] || {}))
     && !('heure_debut' in live.global), 'invVitrine : la vue live reste minimale (aucune fuite)');
+}
+
+/** Personnalisation des emails d'invitation : les TROIS jetons ({{SALUTATION}}, {{LIEN_REPONSE}},
+ *  {{LIEN_INVITATION}}) sont remplacés par club — liens échappés en HTML, bruts en texte ; un
+ *  modèle sans jeton reste inchangé ; le lien d'invitation retombe sur la page GÉNÉRIQUE quand le
+ *  jeton du club manque (la page affiche alors sa mention « lien reçu par email »). */
+function testCfg_liensPersonnalisesEmail(etat) {
+  var modele = 'A {{SALUTATION}} B {{LIEN_REPONSE}} C {{LIEN_INVITATION}} D';
+  var rep = 'https://x/reponse-invitation.html?tournoi=T&club=RC&token=t1';
+  var inv = 'https://x/invitation-club.html?club=RC&token=t1';
+  var html = personnaliserInvitation(modele, 'Anne', rep, inv, true);
+  _ffrAssert(etat, html.indexOf('Bonjour Anne,') !== -1, 'liensEmail : salutation avec prénom');
+  _ffrAssert(etat, html.indexOf('tournoi=T&amp;club=RC') !== -1,
+    'liensEmail : lien de réponse échappé en HTML (&amp;)');
+  _ffrAssert(etat, html.indexOf('invitation-club.html?club=RC&amp;token=t1') !== -1,
+    'liensEmail : lien d\'invitation substitué et échappé');
+  var texte = personnaliserInvitation(modele, '', rep, inv, false);
+  _ffrAssert(etat, texte.indexOf('Bonjour,') !== -1, 'liensEmail : salutation sans prénom');
+  _ffrAssert(etat, texte.indexOf(inv) !== -1, 'liensEmail : lien brut (non échappé) en mode texte');
+  _ffrAssert(etat, personnaliserInvitation('sans jeton', 'X', rep, inv, true) === 'sans jeton',
+    'liensEmail : modèle sans jeton inchangé (rétrocompatible)');
+  // Construction des liens personnels : base avec « ? » → « & » ; jeton manquant → repli générique.
+  _ffrAssert(etat, lienReponseClub('https://x/r?tournoi=T', 'RC Ex', 'tk') ===
+    'https://x/r?tournoi=T&club=RC%20Ex&token=tk', 'liensEmail : lien personnel (base avec ?)');
+  _ffrAssert(etat, lienReponseClub('https://x/r', 'RC', 'tk') === 'https://x/r?club=RC&token=tk',
+    'liensEmail : lien personnel (base sans ?)');
+  _ffrAssert(etat, lienInvitationClub('https://x/invitation-club.html', 'RC', '') ===
+    'https://x/invitation-club.html', 'liensEmail : sans jeton → page générique (jamais de lien cassé)');
 }
 
 /* --- Jetons : faux classeur (getSheetByName → getDataRange → getValues), sans Sheet réel --- */
