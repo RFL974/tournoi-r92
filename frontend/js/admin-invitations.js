@@ -138,6 +138,84 @@ function effectifEmailTxt(c) {
   return '';
 }
 
+/** Étapes de la journée (miroir de friseJournee sur la vitrine) : accueil, coup d'envoi,
+ *  pause méridienne, reprise, fin envisagée — chacune seulement si son heure est connue.
+ *  Les notes « matin : poules » / « après-midi » sont omises pour un tournoi 100 % SCF. */
+function etapesJourneeEmail(g, cats) {
+  const tousScf = !!(cats && cats.length) && cats.every(function (c) { return ctxScf(c).estScf; });
+  const etapes = [];
+  if (String(g.heure_rdv || '').trim()) {
+    etapes.push({ h: String(g.heure_rdv).trim(), t: 'Accueil des équipes', n: '' });
+  }
+  if (String(g.heure_debut || '').trim()) {
+    etapes.push({ h: String(g.heure_debut).trim(), t: 'Coup d\'envoi', n: tousScf ? '' : 'Matin : matchs de poules' });
+  }
+  const pauseDebut = String(g.pause_dejeuner_debut || '').trim();
+  const pauseDuree = parseInt(String(g.pause_dejeuner_duree_min || '').trim(), 10);
+  if (pauseDebut) {
+    etapes.push({ h: pauseDebut, t: 'Pause méridienne',
+      n: (isFinite(pauseDuree) && pauseDuree > 0) ? pauseDuree + ' min' : '' });
+    const reprise = (isFinite(pauseDuree) && pauseDuree > 0) ? heurePlusMinutesEmail(pauseDebut, pauseDuree) : '';
+    if (reprise) {
+      etapes.push({ h: reprise, t: 'Reprise', n: tousScf ? '' : 'Après-midi : selon la catégorie' });
+    }
+  }
+  const fin = heureFinCommuniqueeAdmin(g);
+  if (fin) etapes.push({ h: fin, t: 'Fin envisagée', n: '' });
+  return etapes;
+}
+
+/**
+ * FRISE horaire de l'email (miroir visuel de la frise de la vitrine, en HTML email-safe :
+ * pas de flexbox ni de pseudo-éléments — un rail de cellules, des points ronds, puis trois
+ * rangées heures / étapes / notes). Outlook dégrade les points en carrés : acceptable.
+ */
+function friseJourneeEmail(g, cats, A) {
+  const etapes = etapesJourneeEmail(g, cats);
+  if (!etapes.length) return '';
+  const n = etapes.length;
+  const larg = Math.floor(100 / n) + '%';
+
+  // Rangée 1 — le RAIL : pour chaque étape, [segment gauche · point · segment droit] ;
+  // le premier segment gauche et le dernier segment droit sont invisibles (bouts de ligne).
+  const segment = function (visible) {
+    return '<td style="width:50%;padding:0;vertical-align:middle;">'
+      + (visible ? '<div style="height:2px;background:' + EMAIL_FILET + ';font-size:0;line-height:0;">&nbsp;</div>' : '&nbsp;')
+      + '</td>';
+  };
+  const rail = etapes.map(function (e, i) {
+    return '<td width="' + larg + '" style="padding:0;">'
+      + '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">'
+      + '<tr>' + segment(i > 0)
+      + '<td style="width:12px;padding:0;"><div style="width:12px;height:12px;border-radius:6px;background:'
+      + EMAIL_BLEU + ';font-size:0;line-height:0;">&nbsp;</div></td>'
+      + segment(i < n - 1) + '</tr></table></td>';
+  }).join('');
+
+  // Rangées 2-4 : heures en grand, étapes en gras, notes discrètes.
+  const heures = etapes.map(function (e) {
+    return '<td align="center" style="padding:6px 2px 0;' + A + 'font-size:20px;font-weight:bold;color:' + EMAIL_NAVY + ';">'
+      + echapper(e.h) + '</td>';
+  }).join('');
+  const titres = etapes.map(function (e) {
+    return '<td align="center" style="padding:2px 4px 0;' + A + 'font-size:12px;font-weight:bold;color:' + EMAIL_TXT + ';">'
+      + echapper(e.t) + '</td>';
+  }).join('');
+  const notes = etapes.some(function (e) { return e.n; })
+    ? '<tr>' + etapes.map(function (e) {
+        return '<td align="center" style="padding:1px 4px 0;' + A + 'font-size:11px;color:' + EMAIL_GRIS + ';">'
+          + (e.n ? echapper(e.n) : '&nbsp;') + '</td>';
+      }).join('') + '</tr>'
+    : '';
+
+  return '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;width:100%;margin:4px 0 0;">'
+    + '<tr>' + rail + '</tr>'
+    + '<tr>' + heures + '</tr>'
+    + '<tr>' + titres + '</tr>'
+    + notes
+    + '</table>';
+}
+
 /** Phrase d'introduction des cartes (miroir de cartesCategories sur la vitrine) : matin en
  *  poules pour les catégories ordinaires ; le Super Challenge suit sa formule propre. */
 function introCartesEmail(cats) {
@@ -303,7 +381,9 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
       + '<a href="' + lienInv + '" style="color:' + EMAIL_BLEU + ';">📄 Voir l\'invitation complète</a></p>'
     : '';
 
-  // « La journée en un coup d'œil » : mêmes étapes que la frise de la page vitrine.
+  // « La journée en un coup d'œil » : la FRISE horaire (même visuel que la page vitrine —
+  // décision Romain, plus parlant que des lignes de tableau). L'arbitrage, qui n'est pas
+  // une étape horaire, reste en ligne discrète sous la frise.
   const ligneJ = function (lib, val) {
     if (!val) return '';
     return '<tr><td style="' + A + 'font-size:13px;color:' + EMAIL_GRIS + ';padding:3px 10px 3px 0;">' + echapper(lib) + '</td>'
@@ -311,20 +391,12 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
   };
   const arbitrages = [];
   cats.forEach(function (c) { const v = String(c.arbitrage_organisation || '').trim(); if (v && arbitrages.indexOf(v) === -1) arbitrages.push(v); });
-  const pauseDuree = parseInt(String(g.pause_dejeuner_duree_min || '').trim(), 10);
-  const pauseTxt = String(g.pause_dejeuner_debut || '').trim()
-    ? String(g.pause_dejeuner_debut).trim() + ((isFinite(pauseDuree) && pauseDuree > 0) ? ' (' + pauseDuree + ' min)' : '')
+  const frise = friseJourneeEmail(g, cats, A);
+  const ligneArb = arbitrages.length
+    ? '<p style="margin:10px 0 0;text-align:center;' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
+      + '<strong style="color:' + EMAIL_TXT + ';">Arbitrage</strong> — ' + echapper(arbitrages.join(' · ')) + '</p>'
     : '';
-  const reprise = (String(g.pause_dejeuner_debut || '').trim() && isFinite(pauseDuree) && pauseDuree > 0)
-    ? heurePlusMinutesEmail(g.pause_dejeuner_debut, pauseDuree) : '';
-  const jourJ = ligneJ('Accueil des équipes', String(g.heure_rdv || '').trim())
-    + ligneJ('Coup d\'envoi', String(g.heure_debut || '').trim())
-    + ligneJ('Pause méridienne', pauseTxt)
-    + ligneJ('Reprise', reprise)
-    + ligneJ('Fin envisagée', heureFinCommuniqueeAdmin(g))
-    + ligneJ('Arbitrage', arbitrages.join(' · '));
-  const blocJourJ = jourJ ? (emailTitreSection('La journée en un coup d\'œil')
-    + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + jourJ + '</table>') : '';
+  const blocJourJ = frise ? (emailTitreSection('La journée en un coup d\'œil') + frise + ligneArb) : '';
 
   // « Vous êtes invités » : l'invitation COMPLÈTE — une carte détaillée par catégorie
   // (miroir des cartes de la page vitrine, en HTML email-safe : tableaux empilés),
