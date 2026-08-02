@@ -65,6 +65,30 @@ function estEquipeAuto(eq) {
   return String((eq && eq.source) || '').trim().toLowerCase() === 'auto';
 }
 
+/**
+ * Une équipe est-elle en cours d'édition AVEC des valeurs réellement différentes de l'enregistré ?
+ * Utilisée par l'assistant / la barre latérale pour décider s'il y a « une modification en attente ».
+ * OUVRIR le crayon ne doit RIEN verrouiller : tant que rien n'a bougé, il n'y a rien à perdre —
+ * on compare donc les VALEURS, jamais la simple présence des champs d'édition à l'écran.
+ * Le nom est comparé en MAJUSCULES car c'est ainsi qu'il est enregistré (onEnregistrerNom).
+ */
+function equipeEditionModifiee() {
+  const item = document.querySelector('#liste-equipes .equipe-item.en-edition');
+  if (!item) return false;
+  const id = item.getAttribute('data-id');
+  const eq = (typeof equipesCourantes !== 'undefined' && equipesCourantes || [])
+    .find(function (e) { return e.id_equipe === id; }) || {};
+  const champ = function (sel) { return item.querySelector(sel); };
+
+  const cNom = champ('.champ-edit-nom');
+  if (cNom && cNom.value.trim().toUpperCase() !== String(eq.nom_equipe || '').trim().toUpperCase()) return true;
+  const cJ = champ('.champ-edit-joueurs');
+  if (cJ && effectifSaisi(cJ.value) !== effectifSaisi(eq.nb_joueurs)) return true;
+  const cE = champ('.champ-edit-educateurs');
+  if (cE && effectifSaisi(cE.value) !== effectifSaisi(eq.nb_educateurs)) return true;
+  return false;
+}
+
 /** Petit résumé « 12 joueurs · 2 éducs » d'une équipe, ou '' si rien n'est déclaré. */
 function resumeEffectifs(eq) {
   const j = effectifSaisi(eq && eq.nb_joueurs);
