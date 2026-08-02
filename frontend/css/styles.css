@@ -1673,6 +1673,28 @@ body.theme-clair {
   transform: translate(-50%, -50%); opacity: .85; margin: 0;
   background: #ffffff; color: #0C1C2E;
 }
+/* Bouton ⟳ de la pastille : pivote le mini-terrain (longueur ↔ largeur). */
+.repart-chip-pivot {
+  border: 0; background: transparent; cursor: pointer; padding: 0 2px; margin-left: 2px;
+  font-size: 1rem; line-height: 1; color: inherit; opacity: .65;
+}
+.repart-chip-pivot:hover { opacity: 1; }
+
+/* Aperçu à l'échelle pendant le glisser : montre l'emplacement EXACT avant de lâcher.
+   Vert = tenable, rouge = hors terrain ou couloir non respecté. */
+.repart-apercu {
+  position: fixed; z-index: 10000; pointer-events: none;
+  border-radius: 3px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  font: 700 11px 'Barlow Condensed', sans-serif;
+}
+.repart-apercu.est-ok      { border: 2px solid #1e9e5a; background: rgba(30, 158, 90, .28);  color: #0b4d2b; }
+.repart-apercu.est-refuse  { border: 2px solid #c0392b; background: rgba(192, 57, 43, .28);  color: #7d1f16; }
+/* Hors terrain : simple étiquette suiveuse (pas d'emplacement à montrer). */
+.repart-apercu.est-libre {
+  transform: translate(-50%, -50%); padding: 5px 10px; border-radius: 999px;
+  background: #ffffff; color: #0C1C2E; border: 1.5px solid rgba(12, 28, 46, .35);
+}
 
 /* Champ « Table des marques » (longueur × largeur) dans la carte terrains */
 .tm-taille { display: inline-flex; align-items: center; gap: 6px; }

@@ -371,6 +371,10 @@ function onZoneTerrainsClick(evenement) {
     retirerMiniTerrain(parseInt(tuileG.getAttribute('data-field'), 10), tuileG.getAttribute('data-tuile'));
     return;
   }
+  // Carte de répartition : bouton ⟳ d'une pastille = pivoter le mini-terrain mis de côté.
+  const pivot = evenement.target.closest && evenement.target.closest('.repart-chip-pivot');
+  if (pivot) { pivoterChip(parseInt(pivot.getAttribute('data-pivot'), 10)); return; }
+  if (evenement.target.id === 'bouton-valider-placement') { onValiderPlacement(); return; }
   if (evenement.target.id === 'bouton-ajouter-terrain') { ajouterTerrainPhysique(); return; }
   const suppr = evenement.target.closest('.terr-suppr');
   if (suppr) { suppr.closest('.terrain-ligne').remove(); recalculerCapacite(); return; }
@@ -854,7 +858,59 @@ function onRepartir() {
   // Contexte de l'ajustement manuel (mêmes données que le calcul : dimensions, couloir, TM).
   repartitionCalculee.ctxManuel = { cats: cats, m: m, tmL: tm.l, tmW: tm.w };
   repartitionCalculee.misDeCote = [];
+  // Les TABLES DES MARQUES ne sont posées qu'À LA FIN, une fois le placement validé : tant qu'on
+  // déplace des mini-terrains, elles occuperaient de la place et empêcheraient des positions
+  // pourtant légitimes (elles se recalculent de toute façon après chaque changement).
+  retirerTablesMarques(repartitionCalculee);
   afficherRepartition(repartitionCalculee, cats);
+}
+
+/** Retire toutes les tables des marques du plan (elles seront posées à la validation). */
+function retirerTablesMarques(res) {
+  (res.fieldsPlan || []).forEach(function (fp) {
+    (fp.zones || []).forEach(function (z) { z.table = null; });
+  });
+  res.tablesPosees = false;
+}
+
+/**
+ * Pose les TABLES DES MARQUES une fois le placement des mini-terrains validé : une par catégorie
+ * présente sur un grand terrain, dans l'espace LIBRE le plus proche du barycentre de ses tuiles
+ * (couloir respecté vis-à-vis des mini-terrains ET des tables déjà posées). Un terrain « plein »
+ * (U14) garde sa table sur la ligne de touche. `split` = deux catégories partagent le terrain.
+ */
+function poserTablesMarques(res) {
+  const ctx = res.ctxManuel || {};
+  const m = ctx.m || 0, tmL = ctx.tmL || TM_L_DEFAUT, tmW = ctx.tmW || TM_W_DEFAUT;
+  const manquantes = [];
+  (res.fieldsPlan || []).forEach(function (fp) {
+    const zones = (fp.zones || []).filter(function (z) { return z.tiles.length; });
+    if (!zones.length) return;
+    const partage = zones.length > 1;
+    if (fp.mode === 'plein') {
+      zones[0].table = { x: Math.max(0, fp.field.L / 2 - tmL / 2), y: Math.max(0, fp.field.W - tmW),
+                         w: tmL, h: tmW, split: false };
+      return;
+    }
+    const occupees = [];
+    zones.forEach(function (z) { z.tiles.forEach(function (t) { occupees.push(t); }); });
+    zones.forEach(function (z) {
+      // Barycentre des mini-terrains de la catégorie : la table se pose au plus près des siens.
+      let sx = 0, sy = 0;
+      z.tiles.forEach(function (t) { sx += t.x + t.w / 2; sy += t.y + t.h / 2; });
+      const cx = sx / z.tiles.length, cy = sy / z.tiles.length;
+      const place = placerPresDe(fp.field.L, fp.field.W, occupees, tmL, tmW, m, cx, cy);
+      if (place) {
+        z.table = { x: place.x, y: place.y, w: place.w, h: place.h, split: partage };
+        occupees.push(z.table); // la table suivante garde ses distances avec celle-ci
+      } else {
+        z.table = null;
+        manquantes.push(fp.field.nom + ' (' + z.cat + ')');
+      }
+    });
+  });
+  res.tablesPosees = true;
+  res.tablesManquantes = manquantes;
 }
 
 /** Affiche le résumé + la carte + le bouton « Appliquer ». */
@@ -881,27 +937,59 @@ function afficherRepartition(res, cats) {
   }
 
   h += '<div class="repart-carte-wrap">' + dessinerCarte(res) + '</div>';
-  h += '<p class="note-generation">La zone grise <strong>« TM »</strong> = table des marques, réservée au centre de chaque terrain (scindée en deux quand deux catégories partagent un grand terrain).</p>';
 
   // Ajustement MANUEL : mini-terrains mis de côté (cliqués sur la carte), à reposer par
-  // glisser-déposer sur le grand terrain voulu. Dimensions + couloir respectés au dépôt.
-  h += '<p class="note-generation">✋ <strong>Ajustement manuel :</strong> clique un mini-terrain sur la ' +
-       'carte pour le <strong>mettre de côté</strong>, puis fais-le <strong>glisser</strong> sur le grand ' +
-       'terrain voulu. Le dépôt respecte les dimensions de la catégorie et le couloir de circulation' +
-       (res.ctxManuel ? ' (' + res.ctxManuel.m + ' m)' : '') + ' ; les numéros sont recalculés pour rester ' +
-       'dans l\'ordre. « Répartir les terrains » recalcule tout et annule les ajustements.</p>';
+  // glisser-déposer À L'ENDROIT EXACT voulu, dans l'orientation voulue.
+  h += '<p class="note-generation">✋ <strong>Placement manuel :</strong> clique un mini-terrain sur la ' +
+       'carte pour le <strong>mettre de côté</strong>, puis fais-le <strong>glisser</strong> où tu veux sur ' +
+       'un grand terrain. Il se pose <strong>exactement là où tu le lâches</strong> : pendant le glisser, ' +
+       'un aperçu à l\'échelle montre l\'emplacement en <strong>vert</strong> s\'il est tenable, en ' +
+       '<strong>rouge</strong> s\'il sort du terrain ou ne respecte pas le couloir de circulation' +
+       (res.ctxManuel ? ' (' + res.ctxManuel.m + ' m)' : '') + '. Pour le poser en largeur plutôt qu\'en ' +
+       'longueur, utilise le bouton <strong>⟳</strong> de la pastille ou la touche <strong>R</strong> ' +
+       'pendant le glisser. Les numéros se recalculent tout seuls. « Répartir les terrains » recalcule ' +
+       'tout et annule les ajustements.</p>';
   if ((res.misDeCote || []).length) {
     h += '<div id="repart-tray" class="repart-tray" aria-label="Mini-terrains mis de côté">' +
       res.misDeCote.map(function (c, i) {
-        const dimTxt = c.plein ? 'terrain entier' : (c.l + '×' + c.w + ' m');
+        if (c.plein) {
+          return '<span class="repart-chip" data-chip="' + i + '" style="border-color:' + c.color + '">' +
+            '<span class="repart-puce" style="background:' + c.color + '"></span>' +
+            echapper(c.cat) + ' · terrain entier</span>';
+        }
+        const d = dimensionsChip(c);
         return '<span class="repart-chip" data-chip="' + i + '" style="border-color:' + c.color + '">' +
           '<span class="repart-puce" style="background:' + c.color + '"></span>' +
-          echapper(c.cat) + ' · ' + echapper(dimTxt) + '</span>';
+          echapper(c.cat) + ' · ' + Math.round(d.w) + '×' + Math.round(d.h) + ' m' +
+          '<button type="button" class="repart-chip-pivot" data-pivot="' + i + '" ' +
+          'title="Pivoter (longueur ↔ largeur)" aria-label="Pivoter ce mini-terrain">⟳</button></span>';
       }).join('') + '</div>';
   }
 
-  h += '<div class="ligne-action"><button type="button" class="bouton" id="bouton-appliquer-repartition">✅ Appliquer aux catégories</button>' +
-       '<span id="message-repartition" class="message-form"></span></div>';
+  // ÉTAPE DE VALIDATION : les tables des marques ne sont posées qu'une fois le placement figé —
+  // pendant les déplacements elles occuperaient de la place et bloqueraient des positions valides.
+  h += '<div class="ligne-action">';
+  if (!res.tablesPosees) {
+    h += '<button type="button" class="bouton" id="bouton-valider-placement">📍 Valider le placement ' +
+         '(pose les tables de marque)</button>';
+  } else {
+    h += '<button type="button" class="bouton" id="bouton-appliquer-repartition">✅ Appliquer aux catégories</button>';
+  }
+  h += '<span id="message-repartition" class="message-form"></span></div>';
+
+  if (!res.tablesPosees) {
+    h += '<p class="note-generation">Les <strong>tables de marque</strong> ne sont pas encore posées : ' +
+         'place d\'abord tous les mini-terrains comme tu le souhaites, puis valide — elles seront ' +
+         'placées d\'un coup, au plus près des terrains de chaque catégorie.</p>';
+  } else {
+    h += '<p class="note-generation">La zone grise <strong>« TM »</strong> = table des marques, posée ' +
+         'dans l\'espace libre le plus proche des terrains de sa catégorie (une par catégorie quand deux ' +
+         'catégories partagent un grand terrain). Déplace encore un terrain et elles seront recalculées.</p>';
+    if ((res.tablesManquantes || []).length) {
+      h += '<div class="repart-avert">⚠️ Pas de place pour la table de marque : ' +
+           echapper(res.tablesManquantes.join(', ')) + '. Libère un peu d\'espace ou réduis sa taille.</div>';
+    }
+  }
 
   document.getElementById('repartition-resultat').innerHTML = h;
 
@@ -959,15 +1047,19 @@ function retirerMiniTerrain(iField, id) {
     if (ti < 0) continue;
     const tile = tuileCategorieManuel(res, z.cat);
     if (!tile) return; // catégorie inconnue du calcul : on ne touche à rien
+    // L'orientation actuelle de la tuile est CONSERVÉE dans la pastille : on la repose telle
+    // qu'elle était (pivotée ou non), sans avoir à la refaire pivoter à la main.
+    const tuileRetiree = z.tiles[ti];
+    const l = tile.plein ? 0 : (parseFloat(tile.l) || 0);
+    const w = tile.plein ? 0 : (parseFloat(tile.w) || 0);
     z.tiles.splice(ti, 1);
-    res.misDeCote.push({ cat: z.cat, color: z.color, plein: !!tile.plein,
-      l: tile.plein ? 0 : (parseFloat(tile.l) || 0), w: tile.plein ? 0 : (parseFloat(tile.w) || 0) });
+    res.misDeCote.push({ cat: z.cat, color: z.color, plein: !!tile.plein, l: l, w: w,
+      pivote: !tile.plein && Math.abs(tuileRetiree.w - w) < 0.001 && Math.abs(l - w) > 0.001 });
     if (!z.tiles.length) fp.zones.splice(zi, 1);
     if (!fp.zones.length && fp.mode === 'plein') fp.mode = 'solo'; // terrain redevenu libre
-    if (fp.zones.length === 1 && fp.mode === 'split') {           // plus qu'une catégorie dessus
-      fp.mode = 'solo';
-      if (fp.zones[0].table) fp.zones[0].table.split = false;
-    }
+    if (fp.zones.length === 1 && fp.mode === 'split') fp.mode = 'solo'; // plus qu'une catégorie
+    // Le plan a changé : les tables déjà posées ne valent plus rien (recalculées à la validation).
+    if (res.tablesPosees) retirerTablesMarques(res);
     renumeroterRepartition(res);
     afficherRepartition(res, res.ctxManuel.cats);
     return;
@@ -1008,8 +1100,54 @@ function placerPresDe(fL, fW, occupees, tl, tw, m, cx, cy) {
   return best;
 }
 
-/** Dépose la pastille iChip sur le grand terrain iField, au plus près de (xm,ym) (en mètres).
- *  Refuse (message) si les dimensions + couloir ne laissent aucune place. */
+/** Dimensions AU SOL d'une pastille selon son orientation choisie : `pivote` échange
+ *  longueur et largeur. @return {{w:number, h:number}} en mètres (w = axe X, h = axe Y). */
+function dimensionsChip(chip) {
+  if (!chip || chip.plein) return { w: 0, h: 0 };
+  return chip.pivote ? { w: chip.w, h: chip.l } : { w: chip.l, h: chip.w };
+}
+
+/**
+ * Position EXACTE d'un mini-terrain lâché en (xm,ym) : la tuile est CENTRÉE sur le point lâché,
+ * puis simplement ramenée à l'intérieur du grand terrain si elle dépasse. Aucune recherche de
+ * « meilleure place » : c'est l'utilisateur qui décide où poser, pas l'application.
+ */
+function positionExacte(fp, chip, xm, ym) {
+  const d = dimensionsChip(chip);
+  const x = Math.max(0, Math.min(xm - d.w / 2, fp.field.L - d.w));
+  const y = Math.max(0, Math.min(ym - d.h / 2, fp.field.W - d.h));
+  return { x: x, y: y, w: d.w, h: d.h };
+}
+
+/**
+ * Un emplacement est-il TENABLE ? Seules deux règles physiques s'appliquent : tenir dans le grand
+ * terrain, et garder le couloir de circulation avec tout ce qui est déjà posé. Rien d'autre — on
+ * ne déplace ni ne « corrige » le choix de l'utilisateur.
+ * @return {?string} null si l'emplacement est bon, sinon la raison du refus (message humain).
+ */
+function refusPlacement(fp, spot, m) {
+  if (spot.w <= 0 || spot.h <= 0) return 'dimensions de catégorie invalides';
+  if (spot.w > fp.field.L + 0.001 || spot.h > fp.field.W + 0.001) {
+    return 'le mini-terrain (' + Math.round(spot.w) + '×' + Math.round(spot.h) + ' m) ne tient pas sur ' +
+           fp.field.nom + ' (' + fp.field.L + '×' + fp.field.W + ' m) — pivote-le ou change de terrain';
+  }
+  const occ = [];
+  (fp.zones || []).forEach(function (z) {
+    z.tiles.forEach(function (t) { occ.push(t); });
+    if (z.table) occ.push(z.table);
+  });
+  for (let k = 0; k < occ.length; k++) {
+    const o = occ[k];
+    if (spot.x < o.x + o.w + m - 0.001 && spot.x + spot.w + m - 0.001 > o.x &&
+        spot.y < o.y + o.h + m - 0.001 && spot.y + spot.h + m - 0.001 > o.y) {
+      return 'trop près d\'un autre terrain — il faut ' + m + ' m de couloir';
+    }
+  }
+  return null;
+}
+
+/** Dépose la pastille iChip sur le grand terrain iField, EXACTEMENT au point (xm,ym) (mètres).
+ *  Refuse (message) si l'emplacement choisi n'est pas tenable — sans jamais le déplacer ailleurs. */
 function poserMiniTerrainSur(iField, iChip, xm, ym) {
   const res = repartitionCalculee;
   if (!res || !res.ctxManuel) return false;
@@ -1028,56 +1166,83 @@ function poserMiniTerrainSur(iField, iChip, xm, ym) {
     }
     fp.mode = 'plein';
     fp.zones = [{ cat: chip.cat, color: chip.color,
-      tiles: [{ id: '0', x: 0, y: 0, w: fp.field.L, h: fp.field.W, label: '' }],
-      table: { x: Math.max(0, fp.field.L / 2 - ctx.tmL / 2), y: Math.max(0, fp.field.W - ctx.tmW),
-               w: ctx.tmL, h: ctx.tmW, split: false } }];
+      tiles: [{ id: '0', x: 0, y: 0, w: fp.field.L, h: fp.field.W, label: '' }], table: null }];
   } else {
     if (fp.mode === 'plein' && aTuiles) {
       afficherMessage(message, '⚠️ ' + fp.field.nom + ' est occupé en entier par ' + fp.zones[0].cat + ' : mets d\'abord ce match de côté.', 'ko');
       return false;
     }
-    const occ = [];
-    fp.zones.forEach(function (z) {
-      z.tiles.forEach(function (t) { occ.push(t); });
-      if (z.table) occ.push(z.table);
-    });
-    const spot = placerPresDe(fp.field.L, fp.field.W, occ, chip.l, chip.w, ctx.m, xm, ym);
-    if (!spot) {
-      afficherMessage(message, '⚠️ Pas de place pour un terrain ' + chip.cat + ' (' + chip.l + '×' + chip.w +
-        ' m, couloir ' + ctx.m + ' m) sur ' + fp.field.nom + '.', 'ko');
+    const spot = positionExacte(fp, chip, xm, ym);
+    const refus = refusPlacement(fp, spot, ctx.m);
+    if (refus) {
+      afficherMessage(message, '⚠️ ' + chip.cat + ' sur ' + fp.field.nom + ' : ' + refus + '.', 'ko');
       return false;
     }
     const tuile = { id: '0', x: spot.x, y: spot.y, w: spot.w, h: spot.h, label: '' };
-    let zone = fp.zones.find(function (z) { return z.cat === chip.cat; });
-    if (zone) {
-      zone.tiles.push(tuile);
-    } else {
-      // Nouvelle catégorie sur ce terrain : sa propre table des marques si la place le permet
-      // (même logique que le mixage en secours) ; les tables existantes passent en « scindé ».
-      const tm = placerDansLibre(fp.field.L, fp.field.W, occ.concat([spot]), ctx.tmL, ctx.tmW, ctx.m, 1);
-      const partage = fp.zones.length > 0;
-      if (partage) { fp.zones.forEach(function (z) { if (z.table) z.table.split = true; }); fp.mode = 'split'; }
-      fp.zones.push({ cat: chip.cat, color: chip.color, tiles: [tuile],
-        table: tm.length ? { x: tm[0].x, y: tm[0].y, w: ctx.tmL, h: ctx.tmW, split: partage } : null });
+    const zone = fp.zones.find(function (z) { return z.cat === chip.cat; });
+    if (zone) zone.tiles.push(tuile);
+    else {
+      fp.zones.push({ cat: chip.cat, color: chip.color, tiles: [tuile], table: null });
+      if (fp.zones.length > 1) fp.mode = 'split';
     }
   }
   res.misDeCote.splice(iChip, 1);
+  // Le plan a changé : d'éventuelles tables déjà posées ne valent plus rien, on repart d'un
+  // placement à valider (elles seront recalculées d'un coup à la validation).
+  if (res.tablesPosees) retirerTablesMarques(res);
   renumeroterRepartition(res);
   afficherRepartition(res, ctx.cats);
   return true;
 }
 
-/** Début de glisser d'une pastille « mise de côté » : fantôme sous le pointeur, surbrillance du
- *  grand terrain survolé, dépôt au relâchement (pointer events = souris ET tactile). */
+/** « Valider le placement » : fige la disposition et pose les tables de marque d'un seul coup.
+ *  Refuse tant que des mini-terrains sont encore de côté (ils seraient perdus). */
+function onValiderPlacement() {
+  const res = repartitionCalculee;
+  if (!res || !res.ctxManuel) return;
+  const message = document.getElementById('message-repartition');
+  const restants = (res.misDeCote || []).length;
+  if (restants) {
+    afficherMessage(message, '⚠️ ' + restants + ' mini-terrain(s) encore de côté : pose-les (ou ' +
+      'relance « Répartir les terrains ») avant de valider.', 'ko');
+    return;
+  }
+  poserTablesMarques(res);
+  afficherRepartition(res, res.ctxManuel.cats);
+  afficherMessage(document.getElementById('message-repartition'),
+    '✅ Placement validé, tables de marque posées.', 'ok');
+}
+
+/** Pivote une pastille mise de côté (longueur ↔ largeur) et réaffiche. */
+function pivoterChip(iChip) {
+  const res = repartitionCalculee;
+  const chip = res && (res.misDeCote || [])[iChip];
+  if (!chip || chip.plein) return;
+  chip.pivote = !chip.pivote;
+  afficherRepartition(res, res.ctxManuel.cats);
+}
+
+/**
+ * Glisser d'une pastille « mise de côté ». Pendant le déplacement, un APERÇU à l'échelle montre
+ * l'emplacement EXACT qu'occupera le mini-terrain, en vert s'il est tenable, en rouge sinon
+ * (hors terrain ou couloir non respecté) — on voit donc le résultat AVANT de lâcher, au lieu de
+ * subir un placement automatique. La touche R (ou le bouton ⟳ de la pastille) pivote la tuile.
+ */
 function onChipPointerDown(evenement) {
+  if (evenement.target.closest('.repart-chip-pivot')) return; // le bouton ⟳ n'amorce pas un glisser
   const chip = evenement.target.closest('.repart-chip');
   if (!chip) return;
   evenement.preventDefault();
   const iChip = parseInt(chip.getAttribute('data-chip'), 10);
-  const ghost = chip.cloneNode(true);
-  ghost.classList.add('repart-ghost');
-  document.body.appendChild(ghost);
-  function pose(ev) { ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px'; }
+  const res = repartitionCalculee;
+  const donnees = res && (res.misDeCote || [])[iChip];
+  if (!donnees) return;
+
+  const apercu = document.createElement('div');
+  apercu.className = 'repart-apercu';
+  document.body.appendChild(apercu);
+  let dernierEv = evenement;
+
   function terrainSous(ev) {
     const el = document.elementFromPoint(ev.clientX, ev.clientY);
     return (el && el.closest) ? el.closest('g[data-terrain]') : null;
@@ -1085,38 +1250,72 @@ function onChipPointerDown(evenement) {
   function nettoyerCible() {
     document.querySelectorAll('.carte-terrain.est-cible').forEach(function (r) { r.classList.remove('est-cible'); });
   }
-  function bouge(ev) {
-    pose(ev);
-    nettoyerCible();
+  /** Emplacement visé (en mètres) sous le pointeur, ou null si on n'est pas sur un terrain. */
+  function vise(ev) {
     const g = terrainSous(ev);
-    if (g) { const r = g.querySelector('.carte-terrain'); if (r) r.classList.add('est-cible'); }
+    if (!g) return null;
+    const iField = parseInt(g.getAttribute('data-terrain'), 10);
+    const fp = res.fieldsPlan[iField];
+    const rect = g.querySelector('.carte-terrain');
+    if (!fp || !rect) return null;
+    const r = rect.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    const xm = (ev.clientX - r.left) / r.width * fp.field.L;
+    const ym = (ev.clientY - r.top) / r.height * fp.field.W;
+    return { g: g, iField: iField, fp: fp, r: r, xm: xm, ym: ym };
+  }
+  function dessinerApercu(ev) {
+    dernierEv = ev;
+    nettoyerCible();
+    const v = vise(ev);
+    if (!v || donnees.plein) {
+      // Hors terrain (ou catégorie « terrain entier ») : simple étiquette suiveuse.
+      apercu.className = 'repart-apercu est-libre';
+      apercu.style.left = ev.clientX + 'px'; apercu.style.top = ev.clientY + 'px';
+      apercu.style.width = ''; apercu.style.height = '';
+      apercu.textContent = donnees.plein ? donnees.cat + ' · terrain entier' : donnees.cat;
+      if (v && donnees.plein) { const rr = v.g.querySelector('.carte-terrain'); if (rr) rr.classList.add('est-cible'); }
+      return;
+    }
+    const rr = v.g.querySelector('.carte-terrain');
+    if (rr) rr.classList.add('est-cible');
+    const spot = positionExacte(v.fp, donnees, v.xm, v.ym);
+    const refus = refusPlacement(v.fp, spot, res.ctxManuel.m);
+    // Mètres → pixels écran, dans le repère du grand terrain survolé.
+    const px = v.r.width / v.fp.field.L, py = v.r.height / v.fp.field.W;
+    apercu.className = 'repart-apercu ' + (refus ? 'est-refuse' : 'est-ok');
+    apercu.style.left = (v.r.left + spot.x * px) + 'px';
+    apercu.style.top = (v.r.top + spot.y * py) + 'px';
+    apercu.style.width = Math.max(2, spot.w * px) + 'px';
+    apercu.style.height = Math.max(2, spot.h * py) + 'px';
+    apercu.textContent = Math.round(spot.w) + '×' + Math.round(spot.h);
+    apercu.title = refus || '';
+  }
+  function surTouche(ev) {
+    if (ev.key !== 'r' && ev.key !== 'R') return;
+    ev.preventDefault();
+    donnees.pivote = !donnees.pivote;
+    dessinerApercu(dernierEv);
   }
   function nettoyer() {
-    document.removeEventListener('pointermove', bouge);
+    document.removeEventListener('pointermove', dessinerApercu);
     document.removeEventListener('pointerup', lache);
     document.removeEventListener('pointercancel', nettoyer);
-    ghost.remove();
+    document.removeEventListener('keydown', surTouche);
+    apercu.remove();
     nettoyerCible();
   }
   function lache(ev) {
+    const v = vise(ev);
     nettoyer();
-    const g = terrainSous(ev);
-    if (!g || !repartitionCalculee) return; // lâché hors carte : la pastille reste de côté
-    const iField = parseInt(g.getAttribute('data-terrain'), 10);
-    const fp = repartitionCalculee.fieldsPlan[iField];
-    const rect = g.querySelector('.carte-terrain');
-    if (!fp || !rect) return;
-    const r = rect.getBoundingClientRect();
-    if (!r.width || !r.height) return;
-    // Point de dépôt converti en MÈTRES dans le repère du grand terrain.
-    const xm = (ev.clientX - r.left) / r.width * fp.field.L;
-    const ym = (ev.clientY - r.top) / r.height * fp.field.W;
-    poserMiniTerrainSur(iField, iChip, xm, ym);
+    if (!v) return; // lâché hors carte : la pastille reste de côté, rien n'est perdu
+    poserMiniTerrainSur(v.iField, iChip, v.xm, v.ym);
   }
-  pose(evenement);
-  document.addEventListener('pointermove', bouge);
+  dessinerApercu(evenement);
+  document.addEventListener('pointermove', dessinerApercu);
   document.addEventListener('pointerup', lache);
   document.addEventListener('pointercancel', nettoyer);
+  document.addEventListener('keydown', surTouche);
 }
 
 /* Cellule (colonne, ligne) de chaque emplacement sur la grille 3×3 du plan. */
