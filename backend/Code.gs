@@ -3292,7 +3292,14 @@ function getReponseInvitation(classeur, params) {
       };
     });
 
+  // Gel J-16 : la page de réponse s'affiche en LECTURE SEULE (le verrou d'écriture, lui, est
+  // dans repondreInvitation). contact_email = la porte de sortie affichée aux clubs (déjà
+  // public via la vue invitation de getConfig — aucune donnée nouvelle exposée).
+  var aujourdhui = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
   return { ok: true,
+    reponses_gelees: reponsesGelees(g.tournoi_date, aujourdhui),
+    contact_email: String(g.contact_reponse_email || '').trim(),
     club: {
       club_nom:            String(club.club_nom || ''),
       club_contact_prenom: String(club.club_contact_prenom || ''),
@@ -3314,6 +3321,28 @@ function getReponseInvitation(classeur, params) {
   };
 }
 
+/* Gel des réponses (décision Romain) : à J-16 du tournoi, les clubs ne modifient plus leur
+   réponse — la demande d'autorisation doit partir au plus tard à J-15, l'organisateur garde
+   donc la journée J-16 pour consolider les effectifs. L'ADMIN, lui, garde la main : ses
+   actions passent par la clé admin, jamais par ce verrou. */
+var GEL_REPONSES_JOURS = 16;
+
+/**
+ * Vrai si les réponses des clubs sont GELÉES : il reste GEL_REPONSES_JOURS jours ou moins
+ * avant le tournoi (le jour J-16 lui-même est déjà gelé, et tout ce qui suit — jour J et
+ * après compris). Cœur PUR (dates injectées, testé sans classeur ni horloge).
+ * Date du tournoi absente ou illisible ⇒ JAMAIS de gel : on ne bloque pas les clubs sur une
+ * donnée manquante (prudent par construction).
+ */
+function reponsesGelees(dateTournoiISO, aujourdhuiISO) {
+  var t = normaliserDateISO(dateTournoiISO);
+  var a = normaliserDateISO(aujourdhuiISO);
+  if (!t || !a) return false;
+  var msJour = 24 * 60 * 60 * 1000; // diff en UTC : insensible aux changements d'heure
+  var joursRestants = Math.round((new Date(t + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / msJour);
+  return joursRestants <= GEL_REPONSES_JOURS;
+}
+
 /**
  * ÉCRITURE PUBLIQUE : réponse du club à son invitation (libre-service). Sécurisée par le JETON.
  *  - reponse = 'decline' → statut Décliné + date_reponse.
@@ -3333,6 +3362,17 @@ function repondreInvitation(classeur, data) {
   if (ligne === -1) return { error: 'Lien invalide ou expiré.' };
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 
+  // GEL J-16 (décision Romain) : premières réponses COMME modifications sont closes — vérifié
+  // CÔTÉ SERVEUR (un verrou d'écran seul serait contournable). Porte de sortie par email.
+  var config = lireConfig(classeur);
+  var gGel = config.global || {};
+  if (reponsesGelees(gGel.tournoi_date, today)) {
+    var contactGel = String(gGel.contact_reponse_email || '').trim();
+    return { error: 'Les inscriptions sont closes (' + GEL_REPONSES_JOURS + ' jours avant le tournoi, ' +
+      'le temps de préparer les documents officiels). Pour toute modification, contactez ' +
+      'l\'organisateur' + (contactGel ? ' : ' + contactGel : '.') };
+  }
+
   if (reponse === 'decline') {
     // selection_enregistree EFFACÉE : toute réponse du club invalide la marque de l'admin
     // (sa carte repasse « à traiter » — ici elle deviendra rouge « Déclinée »).
@@ -3342,8 +3382,7 @@ function repondreInvitation(classeur, data) {
 
   if (reponse !== 'accepte') return { error: 'Réponse invalide.' };
 
-  // Catégories réellement proposées cette édition (Zone B, présentes).
-  var config = lireConfig(classeur);
+  // Catégories réellement proposées cette édition (Zone B, présentes) — config lue plus haut.
   var maxParCat = {}; // nom catégorie → max (ou null)
   (config.categories || []).forEach(function (c) {
     if (String(c.presente).toLowerCase() !== 'oui') return;
@@ -3735,6 +3774,16 @@ function estEquipeDuClub(nomEquipe, nomClub) {
  * @param {Object} nbMap         { categorie: nb d'équipes }
  * @param {Object} nomsReferences { nomEquipe: true } — équipes présentes dans des matchs générés
  */
+/** '' si une équipe est SUPPRIMABLE par le circuit, sinon le MOTIF de conservation. Partagé
+ *  par la synchro (planifierSyncEquipesClub) et la suppression de club en cascade : une équipe
+ *  créée à la main, placée en poule ou présente dans des matchs générés n'est jamais retirée. */
+function motifConservationEquipe(e, nomsReferences) {
+  if (String(e.source || '').trim() !== 'auto') return 'créée à la main';
+  if (String(e.poule || '').trim() !== '') return 'déjà placée en poule ' + String(e.poule).trim();
+  if ((nomsReferences || {})[String(e.nom_equipe).trim()]) return 'présente dans des matchs générés';
+  return '';
+}
+
 function planifierSyncEquipesClub(equipes, nomClub, categories, nbMap, nomsReferences) {
   nomsReferences = nomsReferences || {};
   var aCreer = [], aSupprimer = [], alertes = [];
@@ -3745,14 +3794,6 @@ function planifierSyncEquipesClub(equipes, nomClub, categories, nbMap, nomsRefer
     if (n === nomClub) return 0;
     var suffixe = parseInt(n.substring(nomClub.length + 1), 10);
     return isFinite(suffixe) ? suffixe : 0;
-  }
-
-  // '' si l'équipe est SUPPRIMABLE, sinon le motif (affiché dans l'alerte).
-  function motifConservation(e) {
-    if (String(e.source || '').trim() !== 'auto') return 'créée à la main';
-    if (String(e.poule || '').trim() !== '') return 'déjà placée en poule ' + String(e.poule).trim();
-    if (nomsReferences[String(e.nom_equipe).trim()]) return 'présente dans des matchs générés';
-    return '';
   }
 
   // Catégories à examiner : les engagées + celles où le club a ENCORE des équipes (une
@@ -3781,7 +3822,7 @@ function planifierSyncEquipesClub(equipes, nomClub, categories, nbMap, nomsRefer
     if (existantes.length > desired) {
       // RÉDUCTION / DÉSENGAGEMENT : on garde les `desired` premières, on examine les suivantes.
       existantes.slice(desired).forEach(function (e) {
-        var motif = motifConservation(e);
+        var motif = motifConservationEquipe(e, nomsReferences);
         if (motif) {
           alertes.push('« ' + String(e.nom_equipe).trim() + ' » (' + cat + ') conservée : ' + motif +
             ' — retire-la à la main (onglet Équipes) ou régénère le planning.');
@@ -4139,12 +4180,69 @@ function envoyerInvitationsGroupe(classeur, data) {
 }
 
 /** Retire un club de la liste des invités. */
+/**
+ * Plan de SUPPRESSION EN CASCADE des équipes d'un club (poubelle admin) — cœur PUR, testé.
+ * TOUTES les équipes du club (toutes catégories) sont classées : supprimables d'un côté,
+ * BLOQUANTES de l'autre (créées à la main, en poule, ou dans des matchs générés — via
+ * motifConservationEquipe). La suppression du club est REFUSÉE tant qu'il reste une
+ * bloquante : jamais de matchs fantômes (décision Romain, cadrage « liserés » PR B).
+ */
+function planifierSuppressionClub(equipes, nomClub, nomsReferences) {
+  var supprimables = [], bloquees = [];
+  (equipes || []).forEach(function (e) {
+    if (!estEquipeDuClub(e.nom_equipe, nomClub)) return;
+    var motif = motifConservationEquipe(e, nomsReferences);
+    if (motif) {
+      bloquees.push({ nom: String(e.nom_equipe).trim(), categorie: String(e.categorie || ''), motif: motif });
+    } else {
+      supprimables.push({ id_equipe: e.id_equipe, nom: String(e.nom_equipe).trim(), categorie: String(e.categorie || '') });
+    }
+  });
+  return { supprimables: supprimables, bloquees: bloquees };
+}
+
+/**
+ * Retire un club de la liste — EN CASCADE avec ses équipes (décision Romain) :
+ *  - `apercu` = 'oui' → ne supprime RIEN : renvoie le plan (équipes supprimables + bloquantes)
+ *    pour la boîte de confirmation de l'admin — le serveur reste la source de vérité ;
+ *  - sinon → REFUSE tant qu'une équipe du club est bloquante (créée à la main / en poule /
+ *    dans des matchs : jamais de matchs fantômes), sinon supprime les équipes PUIS la fiche.
+ * Le plan est recalculé à l'appel réel : un changement entre l'aperçu et la confirmation
+ * (planning généré entre-temps…) re-bloque la suppression.
+ */
 function supprimerClubInvite(classeur, data) {
   var onglet = assurerOngletClubsInvites(classeur);
   var ligne = ligneClubInvite(onglet, data.club_nom);
   if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
+
+  // Casse EXACTE du Sheet (la correspondance des noms d'équipes en dépend).
+  var nomExact = String(data.club_nom || '').trim();
+  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  for (var i = 0; i < clubs.length; i++) {
+    if (memeTexteSouple(clubs[i].club_nom, nomExact)) { nomExact = String(clubs[i].club_nom || '').trim(); break; }
+  }
+
+  var equipes = lireOngletSimple(classeur, 'Equipes');
+  var nomsReferences = {};
+  lireOngletSimple(classeur, 'Matchs').forEach(function (m) {
+    if (m.equipe_A) nomsReferences[String(m.equipe_A).trim()] = true;
+    if (m.equipe_B) nomsReferences[String(m.equipe_B).trim()] = true;
+  });
+  var plan = planifierSuppressionClub(equipes, nomExact, nomsReferences);
+
+  if (String(data.apercu || '') === 'oui') {
+    return { ok: true, apercu: true, equipes_supprimables: plan.supprimables, equipes_bloquees: plan.bloquees };
+  }
+
+  if (plan.bloquees.length) {
+    return { error: 'Impossible de retirer « ' + nomExact + ' » : ' +
+      plan.bloquees.map(function (b) { return '« ' + b.nom + ' » (' + b.categorie + ') ' + b.motif; }).join(' ; ') +
+      '. Retire d\'abord ces équipes (onglet Équipes) ou régénère le planning.' };
+  }
+
+  plan.supprimables.forEach(function (t) { supprimerEquipe(classeur, t.id_equipe); });
   onglet.deleteRow(ligne);
-  return { ok: true };
+  return { ok: true, equipes_supprimees: plan.supprimables };
 }
 
 /**

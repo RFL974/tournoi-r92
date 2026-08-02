@@ -1313,17 +1313,42 @@ async function enregistrerEditionClub(nomActuel) {
   }
 }
 
-/** Retire un club de la liste (confirmation). */
+/** Retire un club de la liste — EN CASCADE avec ses équipes (décision Romain). L'APERÇU
+ *  serveur liste d'abord ce qui sera retiré (la confirmation dit tout) ; une équipe bloquante
+ *  (créée à la main, en poule, dans des matchs) refuse la suppression avec le motif. */
 async function supprimerClubInviteUI(bouton) {
   const nom = bouton.getAttribute('data-club');
   const message = document.getElementById('message-club-invite');
-  if (!await dialogConfirmer('Retirer le club « ' + nom + ' » de la liste des invités ?',
-               { ok: 'Retirer', danger: true })) return;
   bouton.disabled = true;
   try {
-    await ecrireAdmin('supprimerClubInvite', { club_nom: nom });
-    afficherMessage(message, '🗑️ « ' + nom + ' » retiré.', 'ok');
+    // 1) Aperçu (ne supprime rien) : équipes supprimables + bloquantes, calculées par le serveur.
+    const apercu = await ecrireAdmin('supprimerClubInvite', { club_nom: nom, apercu: 'oui' });
+    const bloquees = (apercu && apercu.equipes_bloquees) || [];
+    if (bloquees.length) {
+      await dialogAlerter('Impossible de retirer « ' + nom + ' » :\n\n' +
+        bloquees.map(function (b) { return '• ' + b.nom + ' (' + b.categorie + ') — ' + b.motif; }).join('\n') +
+        '\n\nRetire d\'abord ces équipes (onglet Équipes) ou régénère le planning.');
+      bouton.disabled = false;
+      return;
+    }
+    const supprimables = (apercu && apercu.equipes_supprimables) || [];
+    const detail = supprimables.length
+      ? '\n\nSes ' + supprimables.length + ' équipe(s) seront aussi retirées de l\'onglet Équipes : ' +
+        supprimables.map(function (e) { return e.nom + ' (' + e.categorie + ')'; }).join(', ') + '.'
+      : '';
+    if (!await dialogConfirmer('Retirer le club « ' + nom + ' » de la liste des invités ?' + detail,
+                 { ok: 'Retirer', danger: true })) { bouton.disabled = false; return; }
+
+    // 2) Suppression réelle (le serveur recalcule le plan : un planning généré entre-temps re-bloque).
+    const res = await ecrireAdmin('supprimerClubInvite', { club_nom: nom });
+    const retirees = (res && res.equipes_supprimees) || [];
+    afficherMessage(message, '🗑️ « ' + nom + ' » retiré' +
+      (retirees.length ? ' avec ' + retirees.length + ' équipe(s)' : '') + '.', 'ok');
     await chargerClubsInvites();
+    // L'écran Équipes + le tableau de bord suivent immédiatement (best-effort).
+    if (retirees.length && typeof rechargerEquipes === 'function') {
+      try { await rechargerEquipes(); } catch (e) { /* best-effort */ }
+    }
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
     bouton.disabled = false;

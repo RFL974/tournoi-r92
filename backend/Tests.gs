@@ -46,6 +46,8 @@ function lancerTestsFFR() {
   testCfg_liensPersonnalisesEmail(etat);
   testClubs_planSyncEquipes(etat);
   testClubs_colonneSelectionEnregistree(etat);
+  testClubs_gelReponsesJ16(etat);
+  testClubs_planSuppressionCascade(etat);
   testCfg_jetonDossier(etat);
 
   // Référentiel FFR — règles de jeu et grilles de temps (session 5).
@@ -761,6 +763,44 @@ function testClubs_planSyncEquipes(etat) {
 function testClubs_colonneSelectionEnregistree(etat) {
   _ffrAssert(etat, ENTETES.ClubsInvites.indexOf('selection_enregistree') !== -1,
     'colSelection : selection_enregistree déclarée dans ENTETES.ClubsInvites');
+}
+
+/** Gel des réponses à J-16 : libre à J-17, gelé de J-16 jusqu'après le tournoi ; jamais de gel
+ *  sur une date manquante ou illisible (prudent : on ne bloque pas sur une donnée absente). */
+function testClubs_gelReponsesJ16(etat) {
+  _ffrAssert(etat, GEL_REPONSES_JOURS === 16, 'gelJ16 : seuil = 16 jours (autorisation à J-15)');
+  _ffrAssert(etat, reponsesGelees('2027-06-13', '2027-05-27') === false, 'gelJ16 : J-17 → réponses libres');
+  _ffrAssert(etat, reponsesGelees('2027-06-13', '2027-05-28') === true, 'gelJ16 : J-16 → gelé (l\'organisateur consolide)');
+  _ffrAssert(etat, reponsesGelees('2027-06-13', '2027-05-29') === true, 'gelJ16 : J-15 → gelé');
+  _ffrAssert(etat, reponsesGelees('2027-06-13', '2027-06-13') === true, 'gelJ16 : jour J → gelé');
+  _ffrAssert(etat, reponsesGelees('2027-06-13', '2027-06-20') === true, 'gelJ16 : après le tournoi → gelé');
+  _ffrAssert(etat, reponsesGelees('', '2027-05-28') === false, 'gelJ16 : date de tournoi absente → jamais de gel');
+  _ffrAssert(etat, reponsesGelees('pas-une-date', '2027-05-28') === false, 'gelJ16 : date illisible → jamais de gel');
+}
+
+/** Suppression de club en cascade : toutes les équipes du club sont classées supprimables /
+ *  bloquantes (à la main, en poule, dans des matchs) ; les clubs voisins ne sont jamais touchés. */
+function testClubs_planSuppressionCascade(etat) {
+  var equipes = [
+    _eqFactice('PUC', 'U8'),                    // supprimable
+    _eqFactice('PUC-1', 'U10'),                 // supprimable
+    _eqFactice('PUC-2', 'U10', 'A'),            // bloquante : en poule
+    _eqFactice('PUC-3', 'U10', '', ''),         // bloquante : créée à la main
+    _eqFactice('MASSY', 'U8')                   // autre club : jamais touché
+  ];
+  var plan = planifierSuppressionClub(equipes, 'PUC', { 'PUC-1': false });
+  _ffrAssert(etat, plan.supprimables.length === 2 &&
+    plan.supprimables.map(function (e) { return e.nom; }).join(',') === 'PUC,PUC-1',
+    'cascade : PUC + PUC-1 supprimables');
+  _ffrAssert(etat, plan.bloquees.length === 2, 'cascade : 2 équipes bloquantes');
+  _ffrAssert(etat, /poule A/.test(plan.bloquees[0].motif) && /à la main/.test(plan.bloquees[1].motif),
+    'cascade : motifs « poule » et « à la main » posés');
+  _ffrAssert(etat, !plan.supprimables.concat(plan.bloquees).some(function (e) { return e.nom === 'MASSY'; }),
+    'cascade : MASSY (autre club) jamais touché');
+  // Équipe dans des matchs générés → bloquante.
+  var plan2 = planifierSuppressionClub([_eqFactice('PUC', 'U8')], 'PUC', { 'PUC': true });
+  _ffrAssert(etat, plan2.bloquees.length === 1 && /matchs/.test(plan2.bloquees[0].motif),
+    'cascade : équipe dans des matchs → bloquante');
 }
 
 /* --- Jetons : faux classeur (getSheetByName → getDataRange → getValues), sans Sheet réel --- */
