@@ -49,16 +49,22 @@ var ENTETES = {
   //   nb_joueurs_total    : total de joueurs attendus (entier, saisi par le club, informatif).
   // Les 5 premières colonnes gardent leur position (rétrocompatibilité des Sheets déjà en service) ;
   // les nouvelles sont ajoutées à droite (migration douce : assurerColonnesClubsInvites).
-  //   alerte_ecart        : message posé si un club a RÉDUIT son engagement après création des
-  //                         équipes (rien n'est supprimé automatiquement — vérification manuelle).
+  //   alerte_ecart        : message posé quand la synchronisation n'a PAS pu retirer une équipe
+  //                         excédentaire (créée à la main, en poule, ou dans des matchs générés) —
+  //                         les équipes supprimables, elles, sont retirées automatiquement.
   //   detail_effectifs    : JSON par catégorie, une entrée PAR ÉQUIPE : {"U8":[{"j":8,"e":2},…]}
   //                         (j = joueurs, e = éducateurs) — déclaré par le club à la réponse (session 23).
   //   nb_educateurs_total : somme des éducateurs déclarés (calculée SERVEUR depuis detail_effectifs) ;
   //                         alimente la cascade B.3 de la demande d'autorisation.
+  //   selection_enregistree : date (AAAA-MM-JJ) posée quand l'admin clique « Enregistrer la
+  //                         sélection » ; EFFACÉE par toute nouvelle réponse du club (accepte ou
+  //                         décline). C'est le drapeau ÉVÉNEMENTIEL des liserés d'état de l'admin :
+  //                         réponse présente sans marque ⇒ carte orange « À enregistrer » (colonne
+  //                         absente sur un vieux Sheet ⇒ pas de marque ⇒ orange : défaut prudent).
   ClubsInvites: ['club_nom', 'club_contact_nom', 'club_contact_email', 'statut', 'date_ajout',
                  'club_contact_prenom', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee',
                  'club_token', 'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total',
-                 'alerte_ecart', 'detail_effectifs', 'nb_educateurs_total'],
+                 'alerte_ecart', 'detail_effectifs', 'nb_educateurs_total', 'selection_enregistree'],
   // Colonnes 1-12 : historiques (matin + après-midi CROISE/LIBRE).
   // Colonnes 13-18 : format d'après-midi + tableau à élimination (COUPE_PLATEAU).
   //   format        : CROISE / LIBRE / COUPE_PLATEAU (recopié depuis la catégorie ; vide pour le matin)
@@ -3328,7 +3334,9 @@ function repondreInvitation(classeur, data) {
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 
   if (reponse === 'decline') {
-    ecrireCellulesClub(onglet, ligne, { statut: 'Décliné', date_reponse: today });
+    // selection_enregistree EFFACÉE : toute réponse du club invalide la marque de l'admin
+    // (sa carte repasse « à traiter » — ici elle deviendra rouge « Déclinée »).
+    ecrireCellulesClub(onglet, ligne, { statut: 'Décliné', date_reponse: today, selection_enregistree: '' });
     return { ok: true, statut: 'Décliné' };
   }
 
@@ -3374,7 +3382,10 @@ function repondreInvitation(classeur, data) {
   var champs = {
     statut: 'Accepté',
     nb_equipes_par_categorie: JSON.stringify(propres),
-    date_reponse: today
+    date_reponse: today,
+    // Toute réponse (même identique) EFFACE la marque « sélection enregistrée » de l'admin :
+    // sa carte repasse orange « À enregistrer » — il revalide, les équipes se synchronisent.
+    selection_enregistree: ''
   };
   if (data.detail_effectifs != null && String(data.detail_effectifs).trim() !== '') {
     var vd = validerDetailEffectifs(propres, data.detail_effectifs, effMinParCat);
@@ -3594,7 +3605,14 @@ function enregistrerCategoriesEngagees(classeur, data) {
       cellP.setValue(String(data.club_contact_prenom).trim());
     }
   }
-  return { ok: true, categories_engagees: cats };
+
+  // Marque « sélection enregistrée » (liserés d'état) : posée ICI, effacée par toute nouvelle
+  // réponse du club (repondreInvitation) — la carte admin passe au vert jusqu'au prochain
+  // changement côté club.
+  var marque = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  ecrireCellulesClub(onglet, ligne, { selection_enregistree: marque });
+
+  return { ok: true, categories_engagees: cats, selection_enregistree: marque };
 }
 
 /**
@@ -3699,11 +3717,108 @@ function estEquipeDuClub(nomEquipe, nomClub) {
 }
 
 /**
- * Crée les ÉQUIPES d'un club au clic sur « Générer le dossier final » (juste avant l'aperçu email).
+ * Cœur PUR de la synchronisation des équipes d'un club (testé sans classeur, backend/Tests.gs).
+ * Compare l'engagement déclaré (catégories + nb d'équipes) aux équipes existantes du club et
+ * renvoie un PLAN : { aCreer, aSupprimer, alertes } — l'écriture reste dans creerEquipesClub.
+ *
+ * Règles (décisions Romain, session liserés) :
+ *  - AJOUTS automatiques (logique historique : « {club} » si 1 équipe, sinon « {club}-1 »…) ;
+ *  - RÉDUCTION (ou catégorie DÉSENGAGÉE) : on garde les N premières équipes, on ne retire une
+ *    équipe QUE si elle est SUPPRIMABLE — créée par le circuit (source auto), hors poule, et
+ *    absente de tout match généré. Sinon : conservée + alerte actionnable (jamais de casse
+ *    silencieuse d'un planning).
+ *  - Une équipe créée À LA MAIN n'est jamais supprimée par la synchro (alerte).
+ *
+ * @param {Array} equipes        toutes les équipes [{id_equipe, nom_equipe, categorie, poule, source}]
+ * @param {string} nomClub       casse exacte du Sheet
+ * @param {Array} categories     catégories ENGAGÉES (noms)
+ * @param {Object} nbMap         { categorie: nb d'équipes }
+ * @param {Object} nomsReferences { nomEquipe: true } — équipes présentes dans des matchs générés
+ */
+function planifierSyncEquipesClub(equipes, nomClub, categories, nbMap, nomsReferences) {
+  nomsReferences = nomsReferences || {};
+  var aCreer = [], aSupprimer = [], alertes = [];
+
+  // Ordre stable des équipes d'un club : « CLUB » d'abord, puis CLUB-1 < CLUB-2 < …
+  function rangEquipe(nom) {
+    var n = String(nom).trim();
+    if (n === nomClub) return 0;
+    var suffixe = parseInt(n.substring(nomClub.length + 1), 10);
+    return isFinite(suffixe) ? suffixe : 0;
+  }
+
+  // '' si l'équipe est SUPPRIMABLE, sinon le motif (affiché dans l'alerte).
+  function motifConservation(e) {
+    if (String(e.source || '').trim() !== 'auto') return 'créée à la main';
+    if (String(e.poule || '').trim() !== '') return 'déjà placée en poule ' + String(e.poule).trim();
+    if (nomsReferences[String(e.nom_equipe).trim()]) return 'présente dans des matchs générés';
+    return '';
+  }
+
+  // Catégories à examiner : les engagées + celles où le club a ENCORE des équipes (une
+  // catégorie désengagée doit voir ses équipes retirées — mêmes garde-fous). Comparaison
+  // souple (accents/casse) pour ne jamais traiter deux fois la même catégorie.
+  var catsExamen = categories.slice();
+  equipes.forEach(function (e) {
+    if (!estEquipeDuClub(e.nom_equipe, nomClub)) return;
+    var cat = String(e.categorie || '').trim();
+    if (!cat) return;
+    var deja = catsExamen.some(function (c) { return memeTexteSouple(c, cat); });
+    if (!deja) catsExamen.push(cat);
+  });
+
+  catsExamen.forEach(function (cat) {
+    var engagee = categories.some(function (c) { return memeTexteSouple(c, cat); });
+    var desired = 0;
+    if (engagee) {
+      desired = parseInt(nbMap[cat], 10);
+      if (!isFinite(desired) || desired < 1) desired = 1;
+    }
+    var existantes = equipes.filter(function (e) {
+      return memeTexteSouple(e.categorie, cat) && estEquipeDuClub(e.nom_equipe, nomClub);
+    }).sort(function (a, b) { return rangEquipe(a.nom_equipe) - rangEquipe(b.nom_equipe); });
+
+    if (existantes.length > desired) {
+      // RÉDUCTION / DÉSENGAGEMENT : on garde les `desired` premières, on examine les suivantes.
+      existantes.slice(desired).forEach(function (e) {
+        var motif = motifConservation(e);
+        if (motif) {
+          alertes.push('« ' + String(e.nom_equipe).trim() + ' » (' + cat + ') conservée : ' + motif +
+            ' — retire-la à la main (onglet Équipes) ou régénère le planning.');
+        } else {
+          aSupprimer.push({ id_equipe: e.id_equipe, nom: String(e.nom_equipe).trim(), categorie: cat });
+        }
+      });
+      return;
+    }
+    if (existantes.length === desired) return; // déjà à jour (idempotent)
+
+    // AJOUTS : cibles nommées, on saute celles déjà présentes (logique historique).
+    var presents = {};
+    existantes.forEach(function (e) { presents[String(e.nom_equipe).trim()] = true; });
+    var cibles = [];
+    if (desired === 1) cibles = [nomClub];
+    else for (var k = 1; k <= desired; k++) cibles.push(nomClub + '-' + k);
+    var aFaire = desired - existantes.length;
+    for (var c = 0; c < cibles.length && aFaire > 0; c++) {
+      if (presents[cibles[c]]) continue;
+      aCreer.push({ nom: cibles[c], categorie: cat });
+      presents[cibles[c]] = true;
+      aFaire--;
+    }
+  });
+
+  return { aCreer: aCreer, aSupprimer: aSupprimer, alertes: alertes };
+}
+
+/**
+ * SYNCHRONISE les ÉQUIPES d'un club au clic sur « Enregistrer la sélection » (admin).
  *   - nb=1 pour une catégorie → « {club} » ; nb>1 → « {club}-1 », « {club}-2 »…
  *   - CASSE EXACTE du nom du club conservée ; source = 'auto'.
  *   - IDEMPOTENT : ne recrée jamais une équipe déjà présente (correspondance de nom).
- *   - Engagement RÉDUIT (plus d'équipes présentes que demandé) → ne supprime rien, pose alerte_ecart.
+ *   - Engagement RÉDUIT ou catégorie désengagée → retire les équipes SUPPRIMABLES (source auto,
+ *     hors poule, absentes des matchs) ; les autres sont conservées + alerte_ecart actionnable.
+ *     Le plan complet est calculé par planifierSyncEquipesClub (pur, testé).
  * Le nombre d'équipes par catégorie vient de nb_equipes_par_categorie (réponse du club) ; à défaut
  * d'une valeur pour une catégorie engagée, on crée 1 équipe.
  */
@@ -3728,52 +3843,43 @@ function creerEquipesClub(classeur, data) {
     .map(function (s) { return s.trim(); }).filter(Boolean);
   var nbMap = {};
   try { nbMap = JSON.parse(String(club.nb_equipes_par_categorie || '{}')) || {}; } catch (e) { nbMap = {}; }
-  if (!categories.length) categories = Object.keys(nbMap);
-  if (!categories.length) return { ok: true, equipes_creees: [], alerte: '' };
+  // Repli HISTORIQUE (jamais après un « Enregistrer la sélection ») : sélection jamais
+  // enregistrée ET categories_engagees vide → on suit la réponse du club (clés de nbMap).
+  // Si l'admin a EXPLICITEMENT enregistré une sélection vide (marque posée), le vide fait
+  // foi : les équipes du club sont retirées (celles qui sont supprimables).
+  var dejaEnregistree = String(club.selection_enregistree || '').trim() !== '';
+  if (!categories.length && !dejaEnregistree) categories = Object.keys(nbMap);
+  if (!categories.length && !dejaEnregistree) return { ok: true, equipes_creees: [], equipes_supprimees: [], alerte: '' };
 
   var oEquipes = assurerColonneSourceEquipes(classeur);
   var equipes = lireOngletSimple(classeur, 'Equipes');
-  var creees = [], alertes = [];
+  // Les matchs référencent les équipes par NOM : toute équipe qui y figure est intouchable.
+  var nomsReferences = {};
+  lireOngletSimple(classeur, 'Matchs').forEach(function (m) {
+    if (m.equipe_A) nomsReferences[String(m.equipe_A).trim()] = true;
+    if (m.equipe_B) nomsReferences[String(m.equipe_B).trim()] = true;
+  });
 
-  categories.forEach(function (cat) {
-    var desired = parseInt(nbMap[cat], 10);
-    if (!isFinite(desired) || desired < 1) desired = 1;
-    var existantes = equipes.filter(function (e) {
-      return memeTexteSouple(e.categorie, cat) && estEquipeDuClub(e.nom_equipe, nomExact);
-    });
-    var presents = {};
-    existantes.forEach(function (e) { presents[String(e.nom_equipe).trim()] = true; });
-    var nbExist = existantes.length;
+  var plan = planifierSyncEquipesClub(equipes, nomExact, categories, nbMap, nomsReferences);
 
-    if (nbExist > desired) {
-      alertes.push('Club ' + nomExact + ' a réduit son engagement ' + cat + ' de ' + nbExist +
-        ' à ' + desired + ' équipe — vérifier manuellement l\'onglet Équipes');
-      return; // NE RIEN SUPPRIMER
-    }
-    if (nbExist === desired) return; // déjà à jour (idempotent)
-
-    var cibles = [];
-    if (desired === 1) cibles = [nomExact];
-    else for (var k = 1; k <= desired; k++) cibles.push(nomExact + '-' + k);
-
-    var aCreer = desired - nbExist;
-    for (var c = 0; c < cibles.length && aCreer > 0; c++) {
-      if (presents[cibles[c]]) continue;
-      var eq = ecrireNouvelleEquipe(oEquipes, cibles[c], cat, 'auto');
-      equipes.push({ id_equipe: eq.id_equipe, nom_equipe: cibles[c], categorie: cat, poule: '', source: 'auto' });
-      creees.push({ nom: cibles[c], categorie: cat });
-      presents[cibles[c]] = true;
-      aCreer--;
-    }
+  var creees = [];
+  plan.aCreer.forEach(function (t) {
+    ecrireNouvelleEquipe(oEquipes, t.nom, t.categorie, 'auto');
+    creees.push({ nom: t.nom, categorie: t.categorie });
+  });
+  var supprimees = [];
+  plan.aSupprimer.forEach(function (t) {
+    var r = supprimerEquipe(classeur, t.id_equipe);
+    if (r && r.ok) supprimees.push({ nom: t.nom, categorie: t.categorie });
   });
 
   var colAlerte = colClubInvite(onglet, 'alerte_ecart');
   if (colAlerte !== -1) {
     var cell = onglet.getRange(ligne, colAlerte);
     cell.setNumberFormat('@');
-    cell.setValue(alertes.length ? alertes.join(' | ') : '');
+    cell.setValue(plan.alertes.length ? plan.alertes.join(' | ') : '');
   }
-  return { ok: true, equipes_creees: creees, alerte: alertes.join(' | ') };
+  return { ok: true, equipes_creees: creees, equipes_supprimees: supprimees, alerte: plan.alertes.join(' | ') };
 }
 
 /**
@@ -4055,7 +4161,8 @@ function reinitialiserPhase2Clubs(classeur) {
   var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
   // club_token est CONSERVÉ (identité stable du club d'une édition à l'autre).
   ['categories_engagees', 'dossier_envoye', 'invitation_envoyee',
-   'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total'].forEach(function (h) {
+   'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total',
+   'selection_enregistree'].forEach(function (h) {
     var c = entetes.indexOf(h);
     if (c !== -1) {
       var zone = onglet.getRange(2, c + 1, dernier - 1, 1);

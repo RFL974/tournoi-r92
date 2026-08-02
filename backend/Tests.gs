@@ -44,6 +44,8 @@ function lancerTestsFFR() {
   testCfg_categoriesFiltrees(etat);
   testCfg_invitationVitrineCadreSportif(etat);
   testCfg_liensPersonnalisesEmail(etat);
+  testClubs_planSyncEquipes(etat);
+  testClubs_colonneSelectionEnregistree(etat);
   testCfg_jetonDossier(etat);
 
   // Référentiel FFR — règles de jeu et grilles de temps (session 5).
@@ -695,6 +697,70 @@ function testCfg_liensPersonnalisesEmail(etat) {
     'liensEmail : lien personnel (base sans ?)');
   _ffrAssert(etat, lienInvitationClub('https://x/invitation-club.html', 'RC', '') ===
     'https://x/invitation-club.html', 'liensEmail : sans jeton → page générique (jamais de lien cassé)');
+}
+
+/** Fabrique une équipe factice pour les tests du plan de synchronisation. */
+function _eqFactice(nom, cat, poule, source) {
+  return { id_equipe: 'id-' + nom, nom_equipe: nom, categorie: cat,
+           poule: poule || '', source: (source === undefined) ? 'auto' : source };
+}
+
+/** Synchronisation des équipes d'un club (liserés d'état) : le plan PUR applique les règles —
+ *  ajouts automatiques, réductions prudentes (jamais une équipe manuelle, en poule ou dans des
+ *  matchs), catégories désengagées balayées, autres clubs jamais touchés. */
+function testClubs_planSyncEquipes(etat) {
+  // 1) Création simple : rien d'existant, U8 = 2 équipes → « PUC-1 » et « PUC-2 ».
+  var p = planifierSyncEquipesClub([], 'PUC', ['U8'], { U8: 2 }, {});
+  _ffrAssert(etat, p.aCreer.length === 2 && p.aCreer[0].nom === 'PUC-1' && p.aCreer[1].nom === 'PUC-2',
+    'planSync : création U8=2 → PUC-1 + PUC-2');
+  // 2) Une seule équipe → nom du club sans suffixe.
+  p = planifierSyncEquipesClub([], 'PUC', ['U8'], { U8: 1 }, {});
+  _ffrAssert(etat, p.aCreer.length === 1 && p.aCreer[0].nom === 'PUC', 'planSync : U8=1 → « PUC »');
+  // 3) nbMap sans la catégorie → défaut 1 équipe (jamais 0 deviné).
+  p = planifierSyncEquipesClub([], 'PUC', ['U10'], {}, {});
+  _ffrAssert(etat, p.aCreer.length === 1 && p.aCreer[0].categorie === 'U10', 'planSync : nb inconnu → défaut 1');
+  // 4) Idempotence : déjà à jour → aucun mouvement.
+  var deuxEquipes = [_eqFactice('PUC-1', 'U8'), _eqFactice('PUC-2', 'U8')];
+  p = planifierSyncEquipesClub(deuxEquipes, 'PUC', ['U8'], { U8: 2 }, {});
+  _ffrAssert(etat, !p.aCreer.length && !p.aSupprimer.length && !p.alertes.length,
+    'planSync : déjà à jour → aucun mouvement');
+  // 5) Réduction SUPPRIMABLE : 3 → 2, la 3ᵉ (auto, hors poule, hors matchs) est retirée.
+  var troisEquipes = [_eqFactice('PUC-1', 'U8'), _eqFactice('PUC-2', 'U8'), _eqFactice('PUC-3', 'U8')];
+  p = planifierSyncEquipesClub(troisEquipes, 'PUC', ['U8'], { U8: 2 }, {});
+  _ffrAssert(etat, p.aSupprimer.length === 1 && p.aSupprimer[0].nom === 'PUC-3' && !p.alertes.length,
+    'planSync : réduction 3→2 → PUC-3 retirée (les premières conservées)');
+  // 6) Réduction BLOQUÉE : l'équipe excédentaire est en poule → conservée + alerte, rien supprimé.
+  var enPoule = [_eqFactice('PUC-1', 'U8'), _eqFactice('PUC-2', 'U8', 'A')];
+  p = planifierSyncEquipesClub(enPoule, 'PUC', ['U8'], { U8: 1 }, {});
+  _ffrAssert(etat, !p.aSupprimer.length && p.alertes.length === 1 && /poule A/.test(p.alertes[0]),
+    'planSync : équipe en poule → conservée + alerte (motif poule)');
+  // 7) Réduction BLOQUÉE : l'équipe figure dans des matchs générés.
+  p = planifierSyncEquipesClub(troisEquipes, 'PUC', ['U8'], { U8: 2 }, { 'PUC-3': true });
+  _ffrAssert(etat, !p.aSupprimer.length && p.alertes.length === 1 && /matchs/.test(p.alertes[0]),
+    'planSync : équipe dans des matchs → conservée + alerte');
+  // 8) Une équipe créée À LA MAIN n'est jamais supprimée par la synchro.
+  var manuelle = [_eqFactice('PUC-1', 'U8'), _eqFactice('PUC-2', 'U8', '', '')];
+  p = planifierSyncEquipesClub(manuelle, 'PUC', ['U8'], { U8: 1 }, {});
+  _ffrAssert(etat, !p.aSupprimer.length && p.alertes.length === 1 && /à la main/.test(p.alertes[0]),
+    'planSync : équipe manuelle → conservée + alerte');
+  // 9) Catégorie DÉSENGAGÉE : le club n'engage plus l'U10 → son équipe U10 (supprimable) part.
+  var deuxCats = [_eqFactice('PUC', 'U8'), _eqFactice('PUC', 'U10')];
+  // (mêmes noms dans 2 catégories : cas réel « PUC » engagé 1 équipe dans chaque)
+  deuxCats[1] = _eqFactice('PUC', 'U10'); deuxCats[1].id_equipe = 'id-PUC-U10';
+  p = planifierSyncEquipesClub(deuxCats, 'PUC', ['U8'], { U8: 1 }, {});
+  _ffrAssert(etat, p.aSupprimer.length === 1 && p.aSupprimer[0].categorie === 'U10' && !p.aCreer.length,
+    'planSync : catégorie désengagée → équipe U10 retirée, U8 intacte');
+  // 10) Les équipes des AUTRES clubs ne sont jamais touchées.
+  var autres = [_eqFactice('MASSY', 'U8'), _eqFactice('MASSY-1', 'U8')];
+  p = planifierSyncEquipesClub(autres, 'PUC', ['U8'], { U8: 1 }, {});
+  _ffrAssert(etat, p.aCreer.length === 1 && !p.aSupprimer.length,
+    'planSync : équipes des autres clubs jamais touchées');
+}
+
+/** La colonne du drapeau « sélection enregistrée » fait partie de la migration douce. */
+function testClubs_colonneSelectionEnregistree(etat) {
+  _ffrAssert(etat, ENTETES.ClubsInvites.indexOf('selection_enregistree') !== -1,
+    'colSelection : selection_enregistree déclarée dans ENTETES.ClubsInvites');
 }
 
 /* --- Jetons : faux classeur (getSheetByName → getDataRange → getValues), sans Sheet réel --- */

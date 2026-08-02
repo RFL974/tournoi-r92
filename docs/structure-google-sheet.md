@@ -298,7 +298,8 @@ clubs qui **acceptent** (Phase 2).
 | `date_reponse` | `2026-09-10` | **Nouveau (Sprint 6).** Date de la réponse du club en libre-service (Accepté **ou** Décliné). Vide par défaut |
 | `nb_equipes_par_categorie` | `{"U8":2,"U10":1}` | **Nouveau (Sprint 6).** JSON du nombre d'équipes engagées par catégorie (saisi par le club). Validé ≤ `max_equipes_par_club` côté backend |
 | `nb_joueurs_total` | `24` | **Nouveau (Sprint 6).** Total de joueurs attendus pour toutes les équipes du club (entier, saisi par le club, informatif) |
-| `alerte_ecart` | `Club Massy a réduit son engagement U8 de 2 à 1…` | **Nouveau (Sprint 6).** Message posé si, à l'enregistrement de la sélection, le club a **réduit** son nombre d'équipes par rapport à ce qui existe déjà dans l'onglet Équipes : **rien n'est supprimé automatiquement**, un badge ⚠️ invite à vérifier à la main. Vide sinon |
+| `alerte_ecart` | `« MASSY-2 » (U8) conservée : déjà placée en poule A…` | **Nouveau (Sprint 6, révisé « liserés »).** Message posé quand la synchronisation des équipes n'a **pas pu retirer** une équipe excédentaire (créée à la main, déjà en poule, ou présente dans des matchs générés) : un badge ⚠️ explique quoi faire. Les équipes **supprimables** (source `auto`, hors poule, hors matchs), elles, sont retirées automatiquement. Vide sinon |
+| `selection_enregistree` | `2026-08-02` | **Nouveau (« liserés d'état »).** Date posée quand l'admin clique « **Enregistrer la sélection** » ; **effacée par toute nouvelle réponse du club** (acceptée ou déclinée). Pilote le liseré de la carte admin : réponse présente **sans** cette marque ⇒ carte **orange « À enregistrer »** ; marque présente ⇒ **verte**. Colonne absente (vieux Sheet) ⇒ orange (défaut prudent) |
 
 > 🛠️ **Création + migration automatiques.** L'onglet et son en-tête sont créés tout seuls au
 > premier accès (`assurerOngletClubsInvites`). Les **colonnes nouvelles** (`club_contact_prenom`,
