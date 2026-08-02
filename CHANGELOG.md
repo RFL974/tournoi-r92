@@ -5,6 +5,21 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### L'email d'invitation devient l'invitation COMPLÈTE — 2026-08-02
+Demande de Romain : le destinataire doit recevoir **l'invitation complète**, pas un teaser.
+L'email contient désormais tout ce que montre la page vitrine : le **descriptif entier** du
+tournoi, la journée en un coup d'œil, et surtout **une carte détaillée par catégorie** (bandeau
+navy + badge forme de jeu, temps de jeu, récupération, effectifs, équipes par club, arbitrage,
+lien règlement, format d'après-midi expliqué — formule dédiée Super Challenge), suivie des
+**repères FFR** (rappel sécurité effectif minimum, doctrine du format). Le bouton « Répondre à
+l'invitation » est **répété en bas** : après avoir tout lu, on répond sans remonter. Version
+texte (anti-spam) alignée.
+**Une seule source pour les mots** : le vocabulaire des formats (`DOSSIER_FORMATS`,
+`DOSSIER_FORMATS_DESC`, `cleFormatApresMidi`) et les textes FFR (`FFR_RAPPEL_EFFECTIF`,
+`FFR_POURQUOI_FORMAT`) déménagent de `commun-dossier.js` vers **`commun.js`** (chargé par toutes
+les pages, admin compris) — la vitrine et l'email disent exactement la même chose, pour toujours.
+**100 % front** (le backend de la PR précédente suffit) ; tests : **488/488** (inchangés).
+
 ### Email d'invitation assorti à la vitrine + bouton de réponse sur la page — 2026-08-02
 L'email d'invitation (Phase 1) reprend l'identité de la vitrine refondue : **blason centré**
 (nouveau `img/blason-racing92.png` — les clients mail n'affichent pas le SVG), surtitre « a le

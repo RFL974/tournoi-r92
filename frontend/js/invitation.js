@@ -292,10 +292,9 @@ function rappelEffectifFFR(cats) {
     return isFinite(n) && n >= 1;
   });
   if (!aEffectifMin) return '';
-  return '<p class="inv-rappel-effectif">⚠️ <strong>Rappel sécurité FFR</strong> — venir à l\'effectif ' +
-    'minimum signifie que chaque enfant joue la quasi-totalité du temps de jeu de l\'équipe, or la ' +
-    'FFR plafonne le temps de jeu par joueur et par jour. Prévoyez une feuille de match complète ' +
-    'pour faire tourner les enfants.</p>';
+  // Texte partagé avec l'email d'invitation (FFR_RAPPEL_EFFECTIF, commun.js) : une seule source.
+  return '<p class="inv-rappel-effectif">⚠️ <strong>Rappel sécurité FFR</strong> — ' +
+    echapper(FFR_RAPPEL_EFFECTIF) + '</p>';
 }
 
 /** Vrai si au moins une catégorie joue l'après-midi en « poules de niveau ». */
@@ -311,11 +310,9 @@ function aPoulesNiveau(cats) {
  *  « en cas d'effectif impair, l'équipe supplémentaire va en poule basse ». */
 function noteFormat(cats) {
   if (!aPoulesNiveau(cats)) return '';
-  return '<p class="inv-note-format">💡 <strong>Pourquoi ce format ?</strong> Il suit la doctrine ' +
-    'FFR de l\'École de Rugby : un maximum de temps de jeu pour chaque enfant, des matchs ' +
-    'équilibrés entre équipes de même niveau, et aucune phase finale à élimination (interdites en ' +
-    'tournoi EDR) — c\'est le classement final qui départage. En cas d\'effectif impair, l\'équipe ' +
-    'supplémentaire rejoint la poule basse : les enfants qui ont le plus besoin de jouer jouent plus.</p>';
+  // Texte partagé avec l'email d'invitation (FFR_POURQUOI_FORMAT, commun.js) : une seule source.
+  return '<p class="inv-note-format">💡 <strong>Pourquoi ce format ?</strong> ' +
+    echapper(FFR_POURQUOI_FORMAT) + '</p>';
 }
 
 /* --------------------------------------------------------------------------

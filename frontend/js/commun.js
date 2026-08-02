@@ -249,3 +249,52 @@ function injecterIcones(racine) {
     el.insertAdjacentHTML('afterbegin', svgIcone(el.getAttribute('data-ic')));
   });
 }
+
+/* ---------------------------------------------------------------------------
+   VOCABULAIRE DES FORMATS D'APRÈS-MIDI + REPÈRES FFR (partagés par TOUTES les
+   pages : dossier/invitation via commun-dossier.js, et l'EMAIL d'invitation
+   construit par l'admin — admin.html ne charge pas commun-dossier.js).
+   Écrits UNE fois : la page vitrine et l'email disent exactement la même chose.
+   --------------------------------------------------------------------------- */
+
+/* Libellés humains des formats d'après-midi (mêmes clés que la page admin). */
+const DOSSIER_FORMATS = {
+  CROISE: 'Classement croisé',
+  CROISE_DIAGONAL: 'Croisé diagonal',
+  POULES_NIVEAU: 'Poules de niveau',
+  LIBRE: 'Matchs libres',
+  COUPE_PLATEAU: 'Coupe + Plateau'
+};
+
+/* Description CONCISE de chaque format (destinée aux clubs). */
+const DOSSIER_FORMATS_DESC = {
+  CROISE: 'les équipes sont regroupées par niveau d\'après leur classement du matin, '
+    + 'puis s\'affrontent au sein de leur niveau (classement général et podium).',
+  CROISE_DIAGONAL: 'brassage par rangs croisés entre poules — le 1ᵉʳ d\'une poule affronte '
+    + 'le 2ᵉ d\'une autre — les résultats étant cumulés au classement général.',
+  // Pas de taille de poule promise : la génération peut produire des poules de 3 (6 équipes
+  // classées → [3,3], 7 → [3,4] — voir taillesPoulesNiveau côté backend).
+  POULES_NIVEAU: 'le classement de la mi-journée est découpé en poules de niveau '
+    + '(poule haute, niveau 2…), chacune jouée en mini-championnat complet — aucune élimination, '
+    + 'le 1ᵉʳ de la poule haute remporte le tournoi.',
+  LIBRE: 'des matchs amicaux supplémentaires, sans classement ni podium (idéal pour les plus jeunes).',
+  COUPE_PLATEAU: 'les premiers de chaque poule disputent une coupe à élimination directe '
+    + '(jusqu\'à la finale), les autres un plateau sans élimination.'
+};
+
+/** Clé de format normalisée d'une catégorie (repli CROISE, comme partout ailleurs). */
+function cleFormatApresMidi(cat) {
+  const f = String((cat && cat.format_apresmidi) == null ? '' : cat.format_apresmidi).trim().toUpperCase();
+  return DOSSIER_FORMATS_DESC[f] ? f : 'CROISE';
+}
+
+/* Repères FFR affichés aux clubs (page d'invitation ET email) — texte brut, chaque
+   rendu y ajoute son habillage (⚠️/💡, gras, styles). Décisions Romain, session 20. */
+const FFR_RAPPEL_EFFECTIF = 'venir à l\'effectif minimum signifie que chaque enfant joue la '
+  + 'quasi-totalité du temps de jeu de l\'équipe, or la FFR plafonne le temps de jeu par joueur '
+  + 'et par jour. Prévoyez une feuille de match complète pour faire tourner les enfants.';
+const FFR_POURQUOI_FORMAT = 'Il suit la doctrine FFR de l\'École de Rugby : un maximum de temps '
+  + 'de jeu pour chaque enfant, des matchs équilibrés entre équipes de même niveau, et aucune '
+  + 'phase finale à élimination (interdites en tournoi EDR) — c\'est le classement final qui '
+  + 'départage. En cas d\'effectif impair, l\'équipe supplémentaire rejoint la poule basse : '
+  + 'les enfants qui ont le plus besoin de jouer jouent plus.';
