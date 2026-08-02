@@ -138,14 +138,121 @@ function effectifEmailTxt(c) {
   return '';
 }
 
+/** Phrase d'introduction des cartes (miroir de cartesCategories sur la vitrine) : matin en
+ *  poules pour les catégories ordinaires ; le Super Challenge suit sa formule propre. */
+function introCartesEmail(cats) {
+  const nonScf = cats.filter(function (c) { return !ctxScf(c).estScf; });
+  const aScf = nonScf.length < cats.length;
+  if (!nonScf.length) return 'Le Super Challenge de France suit la formule de son règlement, détaillée ci-dessous.';
+  let intro = 'Le matin, les catégories jouent en poules : chaque équipe rencontre toutes celles '
+    + 'de sa poule. L\'après-midi suit le format propre à chaque catégorie, détaillé ci-dessous.';
+  if (aScf) intro += ' Le Super Challenge de France (U14) suit la formule de son règlement, détaillée sur sa carte.';
+  return intro;
+}
+
+/**
+ * UNE carte de catégorie (miroir email-safe des cartes de la vitrine) : bandeau navy
+ * (catégorie + forme de jeu), lignes libellé/valeur, format d'après-midi expliqué.
+ */
+function carteCategorieEmail(c, A) {
+  const scf = ctxScf(c);
+  const badge = scf.estScf ? 'Super Challenge de France' : String(c.forme_jeu || '').trim();
+
+  const tdLib = 'style="' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';padding:4px 10px 4px 12px;width:110px;vertical-align:top;"';
+  const tdVal = 'style="' + A + 'font-size:13px;color:' + EMAIL_TXT + ';font-weight:bold;padding:4px 12px 4px 0;"';
+  const lignes = [];
+  const L = function (lib, valHtml) {
+    if (!valHtml) return;
+    lignes.push('<tr><td ' + tdLib + '>' + echapper(lib) + '</td><td ' + tdVal + '>' + valHtml + '</td></tr>');
+  };
+
+  if (scf.estScf) {
+    // Temps imposés par le règlement SCF (P2 = 2×15 ; P3 = 2×11) ; la formule dit tout.
+    L('Forme de jeu', echapper('Jeu à XV (15 contre 15)'));
+    L('Temps de jeu', echapper(tempsJeuEmailTxt(c)));
+    L('Formule', echapper(scf.phase === 'P3'
+      ? 'Samedi : triangulaires · Dimanche : brassage par niveau'
+      : 'Plateau en triangulaires / quadrangulaires'));
+  } else {
+    if (String(c.forme_jeu || '').trim()) L('Forme de jeu', echapper(String(c.forme_jeu).trim()));
+    const temps = tempsJeuEmailTxt(c);
+    if (temps) {
+      const nb = parseInt(String(c.format_mi_temps || '').trim(), 10) || 2;
+      const duree = parseInt(String(c.duree_mi_temps_min || '').trim(), 10);
+      const total = (isFinite(duree) && duree > 0) ? ' — ' + (nb * duree) + ' min par match' : '';
+      L('Temps de jeu', echapper(temps + total));
+    }
+  }
+  const recup = String(c.recup_entre_matchs_min || '').trim();
+  if (recup) L('Récupération', echapper(recup + ' min minimum entre deux matchs'));
+  const effectif = effectifEmailTxt(c);
+  if (effectif) L('Effectif', echapper(effectif + ' par équipe'));
+  const max = parseInt(String(c.max_equipes_par_club || '').trim(), 10);
+  L('Équipes par club', echapper((isFinite(max) && max >= 1)
+    ? 'Jusqu\'à ' + max + ' équipe' + (max > 1 ? 's' : '') : 'Plusieurs équipes possibles'));
+  if (String(c.arbitrage_organisation || '').trim()) L('Arbitrage', echapper(String(c.arbitrage_organisation).trim()));
+  const regl = String(c.reglement || '').trim().match(/https?:\/\/\S+/i);
+  if (regl) L('Règlement', '<a href="' + echapper(regl[0]) + '" style="color:' + EMAIL_BLEU + ';">Consulter le règlement</a>');
+
+  // Format d'après-midi expliqué — pas pour le SCF (pas de phase d'après-midi, cf. Formule).
+  let apresMidi = '';
+  if (!scf.estScf) {
+    const cle = cleFormatApresMidi(c);
+    apresMidi = '<tr><td colspan="2" style="' + A + 'font-size:12px;color:#274a68;background:#f5f8fc;'
+      + 'padding:8px 12px;border-top:1px solid ' + EMAIL_FILET + ';line-height:1.5;">'
+      + '<strong>Après-midi — ' + echapper(DOSSIER_FORMATS[cle]) + '</strong> : '
+      + echapper(DOSSIER_FORMATS_DESC[cle]) + '</td></tr>';
+  }
+
+  return '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" '
+    + 'style="border-collapse:separate;width:100%;border:1px solid ' + EMAIL_FILET + ';border-radius:8px;margin:0 0 10px;">'
+    + '<tr><td style="background:' + EMAIL_NAVY + ';padding:7px 12px;border-radius:7px 0 0 0;' + A
+    + 'font-size:16px;font-weight:bold;color:#ffffff;">' + echapper(String(c.categorie || '')) + '</td>'
+    + '<td style="background:' + EMAIL_NAVY + ';padding:7px 12px;border-radius:0 7px 0 0;text-align:right;">'
+    + (badge ? '<span style="display:inline-block;background:' + EMAIL_BLEU + ';color:#ffffff;border-radius:12px;'
+      + 'padding:3px 10px;' + A + 'font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">'
+      + echapper(badge) + '</span>' : '&nbsp;') + '</td></tr>'
+    + '<tr><td colspan="2" style="padding:4px 0;">'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;width:100%;">'
+    + lignes.join('') + '</table></td></tr>'
+    + apresMidi
+    + '</table>';
+}
+
+/** Repères FFR sous les cartes (mêmes textes et mêmes conditions que la vitrine :
+ *  FFR_RAPPEL_EFFECTIF / FFR_POURQUOI_FORMAT, commun.js). */
+function reperesFFREmail(cats, A) {
+  let html = '';
+  const aEffectifMin = cats.some(function (c) {
+    const n = parseInt(String(c.effectif_min || '').trim(), 10);
+    return isFinite(n) && n >= 1;
+  });
+  if (aEffectifMin) {
+    html += '<p style="margin:10px 0 0;padding:8px 12px;background:#fdf4e3;border-left:3px solid #e5a33c;'
+      + A + 'font-size:12px;color:#8a5a0c;line-height:1.5;">⚠️ <strong>Rappel sécurité FFR</strong> — '
+      + echapper(FFR_RAPPEL_EFFECTIF) + '</p>';
+  }
+  const aPoules = cats.some(function (c) {
+    return String(c.format_apresmidi || '').trim().toUpperCase() === 'POULES_NIVEAU';
+  });
+  if (aPoules) {
+    html += '<p style="margin:10px 0 0;padding:8px 12px;background:#eef5fc;border-left:3px solid ' + EMAIL_BLEU + ';'
+      + A + 'font-size:12px;color:#274a68;line-height:1.5;">💡 <strong>Pourquoi ce format ?</strong> '
+      + echapper(FFR_POURQUOI_FORMAT) + '</p>';
+  }
+  return html;
+}
+
 /**
  * Corps HTML de l'email d'invitation (compatible clients mail : tableaux + styles en ligne).
- * MÊME IDENTITÉ que la page vitrine refondue : blason centré, surtitre « a le plaisir de vous
- * inviter », grand titre, date · lieu, affiche centrée, journée en un coup d'œil, tableau des
- * catégories enrichi (forme de jeu, temps de jeu). `salutationHtml` est inséré TEL QUEL (jeton
- * « {{SALUTATION}} » pour l'envoi, ou « Bonjour {exemple}, » pour l'aperçu) ; `imgSrc` = l'affiche
- * (URL Drive en aperçu, « cid:affiche » pour l'envoi ; vide = pas d'image) ; `lienInvitation` =
- * lien vers la page vitrine (jeton « {{LIEN_INVITATION}} » à l'envoi → personnalisé par club).
+ * L'email EST l'invitation COMPLÈTE (décision Romain) : même contenu que la page vitrine —
+ * blason centré, surtitre « a le plaisir de vous inviter », grand titre, date · lieu, affiche
+ * centrée, descriptif complet, journée en un coup d'œil, UNE CARTE DÉTAILLÉE PAR CATÉGORIE
+ * (forme de jeu, temps de jeu, récupération, effectifs, arbitrage, règlement, après-midi
+ * expliqué) et les repères FFR. `salutationHtml` est inséré TEL QUEL (jeton « {{SALUTATION}} »
+ * pour l'envoi, ou « Bonjour {exemple}, » pour l'aperçu) ; `imgSrc` = l'affiche (URL Drive en
+ * aperçu, « cid:affiche » pour l'envoi ; vide = pas d'image) ; `lienInvitation` = lien vers la
+ * page vitrine (jeton « {{LIEN_INVITATION}} » à l'envoi → personnalisé par club).
  */
 function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse, lienInvitation) {
   const A = 'font-family:Arial,Helvetica,sans-serif;';
@@ -170,6 +277,13 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
   const blocAffiche = imgSrc
     ? '<img src="' + echapper(imgSrc) + '" alt="Affiche — ' + nom + '" '
       + 'style="display:block;width:100%;max-width:340px;height:auto;border-radius:8px;margin:16px auto 0;">'
+    : '';
+
+  // Le descriptif COMPLET du tournoi (même contenu que la page vitrine — l'email EST
+  // l'invitation complète, pas un teaser). Un paragraphe par ligne saisie.
+  const blocDescription = String(g.tournoi_description || '').trim()
+    ? '<p style="margin:16px 0 0;' + A + 'font-size:14px;color:' + EMAIL_TXT + ';text-align:justify;line-height:1.55;">'
+      + nl2brEmail(String(g.tournoi_description).trim()) + '</p>'
     : '';
 
   // Salutation + intro.
@@ -212,28 +326,15 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
   const blocJourJ = jourJ ? (emailTitreSection('La journée en un coup d\'œil')
     + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + jourJ + '</table>') : '';
 
-  // « Vous êtes invités » : tableau enrichi — catégorie (+ forme de jeu), temps de jeu,
-  // effectif, équipes par club. Le détail complet vit sur la page vitrine (lien ci-dessus).
+  // « Vous êtes invités » : l'invitation COMPLÈTE — une carte détaillée par catégorie
+  // (miroir des cartes de la page vitrine, en HTML email-safe : tableaux empilés),
+  // précédée de la même phrase d'introduction, suivie des mêmes repères FFR.
   let tblInvites = '';
   if (cats.length) {
-    const th = 'style="text-align:left;background:' + EMAIL_NAVY + ';color:#fff;' + A + 'font-size:12px;padding:6px 8px;"';
-    const td = 'style="' + A + 'font-size:13px;padding:6px 8px;border-bottom:1px solid ' + EMAIL_FILET + ';color:' + EMAIL_TXT + ';vertical-align:top;"';
-    let rows = '';
-    cats.forEach(function (c) {
-      const max = parseInt(String(c.max_equipes_par_club || '').trim(), 10);
-      const eq = (isFinite(max) && max >= 1) ? ('Jusqu\'à ' + max) : 'Plusieurs';
-      const forme = formeJeuEmailTxt(c);
-      rows += '<tr><td ' + td + '><strong>' + echapper(String(c.categorie || '')) + '</strong>'
-        + (forme ? '<br><span style="' + A + 'font-size:11px;color:' + EMAIL_GRIS + ';">' + echapper(forme) + '</span>' : '')
-        + '</td>'
-        + '<td ' + td + '>' + (echapper(tempsJeuEmailTxt(c)) || '—') + '</td>'
-        + '<td ' + td + '>' + (echapper(effectifEmailTxt(c)) || '—') + '</td>'
-        + '<td ' + td + '>' + echapper(eq) + '</td></tr>';
-    });
     tblInvites = emailTitreSection('Vous êtes invités')
-      + '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;width:100%;">'
-      + '<tr><th ' + th + '>Catégorie</th><th ' + th + '>Temps de jeu</th><th ' + th + '>Effectif</th><th ' + th + '>Équipes/club</th></tr>'
-      + rows + '</table>';
+      + '<p style="margin:0 0 10px;' + A + 'font-size:13px;color:' + EMAIL_TXT + ';">' + echapper(introCartesEmail(cats)) + '</p>'
+      + cats.map(function (c) { return carteCategorieEmail(c, A); }).join('')
+      + reperesFFREmail(cats, A);
   }
 
   // « Sur place » : pastilles (seulement si cochées) + tarif si demandé.
@@ -272,17 +373,26 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
   const blocReponse = reponse ? (emailTitreSection('Réponse attendue')
     + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + reponse + '</table>') : '';
 
+  // Bouton RÉPÉTÉ en bas : après avoir tout lu, le club n'a pas à remonter pour répondre.
+  const boutonBas = lienReponse
+    ? '<p style="margin:16px 0 0;text-align:center;"><a href="' + echapper(lienReponse) + '" '
+      + 'style="display:inline-block;background:' + EMAIL_BLEU + ';color:#ffffff;text-decoration:none;'
+      + 'border-radius:999px;padding:13px 28px;' + A + 'font-size:15px;font-weight:bold;">Répondre à l\'invitation</a></p>'
+    : '';
+
   // Pied : mention (même entité que la vitrine) + lien de secours vers la page complète.
   const pied = '<p style="margin:20px 0 0;padding-top:12px;border-top:1px solid ' + EMAIL_FILET + ';' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
     + 'Génération R92 · École de Rugby du Racing Club de France<br>'
-    + '<a href="' + lienInv + '" style="color:' + EMAIL_BLEU + ';">Voir la version complète en ligne</a></p>';
+    + '<a href="' + lienInv + '" style="color:' + EMAIL_BLEU + ';">Voir la version en ligne</a></p>';
 
-  // Ordre VITRINE : en-tête, affiche, salutation, bouton, journée, catégories, sur place, réponse.
+  // Ordre VITRINE : en-tête, affiche, salutation, bouton, descriptif complet, journée,
+  // cartes par catégorie + repères FFR, sur place, réponse (+ bouton répété).
   return '<div style="background:#eef2f7;padding:16px;' + A + '">'
     + '<table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;margin:0 auto;background:#ffffff;border-collapse:collapse;">'
     + '<tr><td style="padding:22px 24px;">'
     + '<div style="border-bottom:3px solid ' + EMAIL_NAVY + ';padding-bottom:14px;">' + entete + '</div>'
-    + blocAffiche + bloc_salut + boutonReponse + blocJourJ + tblInvites + surPlace + blocReponse + pied
+    + blocAffiche + bloc_salut + boutonReponse + blocDescription + blocJourJ + tblInvites + surPlace
+    + blocReponse + boutonBas + pied
     + '</td></tr></table></div>';
 }
 
@@ -296,10 +406,14 @@ function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse, lien
   L.push('');
   if (String(intro || '').trim()) { L.push(String(intro).trim()); L.push(''); }
   if (lienReponse) { L.push('▶ Répondre à l\'invitation : ' + lienReponse); L.push(''); }
-  if (lienInvitation) { L.push('📄 Voir l\'invitation complète : ' + lienInvitation); L.push(''); }
+  if (lienInvitation) { L.push('📄 Voir l\'invitation en ligne : ' + lienInvitation); L.push(''); }
+  // L'email est l'invitation COMPLÈTE : le descriptif du tournoi y figure en entier.
+  if (String(g.tournoi_description || '').trim()) { L.push(String(g.tournoi_description).trim()); L.push(''); }
   if (cats.length) {
     L.push('VOUS ÊTES INVITÉS');
+    L.push(introCartesEmail(cats));
     cats.forEach(function (c) {
+      const scf = ctxScf(c);
       const max = parseInt(String(c.max_equipes_par_club || '').trim(), 10);
       const eq = (isFinite(max) && max >= 1) ? ('jusqu\'à ' + max + ' équipe(s)/club') : 'plusieurs équipes possibles';
       const seg = [eq];
@@ -307,11 +421,29 @@ function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse, lien
       if (forme) seg.unshift(forme);
       const temps = tempsJeuEmailTxt(c);
       if (temps) seg.push(temps);
+      const recup = String(c.recup_entre_matchs_min || '').trim();
+      if (recup) seg.push('récup ' + recup + ' min');
       const eff = effectifEmailTxt(c);
       if (eff) seg.push(eff);
+      if (String(c.arbitrage_organisation || '').trim()) seg.push('arbitrage : ' + String(c.arbitrage_organisation).trim());
+      if (scf.estScf) {
+        seg.push(scf.phase === 'P3' ? 'samedi triangulaires · dimanche brassage par niveau'
+          : 'plateau en triangulaires / quadrangulaires');
+      } else {
+        seg.push('après-midi : ' + DOSSIER_FORMATS[cleFormatApresMidi(c)]);
+      }
       L.push('- ' + String(c.categorie || '') + ' : ' + seg.join(' · '));
     });
     L.push('');
+    // Repères FFR (mêmes conditions que la vitrine et que l'email HTML).
+    if (cats.some(function (c) { const n = parseInt(String(c.effectif_min || '').trim(), 10); return isFinite(n) && n >= 1; })) {
+      L.push('RAPPEL SÉCURITÉ FFR — ' + FFR_RAPPEL_EFFECTIF);
+      L.push('');
+    }
+    if (cats.some(function (c) { return String(c.format_apresmidi || '').trim().toUpperCase() === 'POULES_NIVEAU'; })) {
+      L.push('POURQUOI CE FORMAT ? ' + FFR_POURQUOI_FORMAT);
+      L.push('');
+    }
   }
   const jour = [];
   if (String(g.heure_rdv || '').trim()) jour.push('Accueil : ' + String(g.heure_rdv).trim());

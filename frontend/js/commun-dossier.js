@@ -127,38 +127,10 @@ function section(titre, contenuHtml, classe) {
    RÉSUMÉS SPORTIFS (partagés par dossier.js et invitation.js)
    -------------------------------------------------------------------------- */
 
-/* Libellés humains des formats d'après-midi (mêmes clés que la page admin). */
-const DOSSIER_FORMATS = {
-  CROISE: 'Classement croisé',
-  CROISE_DIAGONAL: 'Croisé diagonal',
-  POULES_NIVEAU: 'Poules de niveau',
-  LIBRE: 'Matchs libres',
-  COUPE_PLATEAU: 'Coupe + Plateau'
-};
-
-/* Description CONCISE de chaque format (destinée aux clubs) : le dossier et
-   l'invitation ne se contentent pas de nommer le format retenu, ils l'expliquent.
-   Version courte des textes de la page admin. */
-const DOSSIER_FORMATS_DESC = {
-  CROISE: 'les équipes sont regroupées par niveau d\'après leur classement du matin, '
-    + 'puis s\'affrontent au sein de leur niveau (classement général et podium).',
-  CROISE_DIAGONAL: 'brassage par rangs croisés entre poules — le 1ᵉʳ d\'une poule affronte '
-    + 'le 2ᵉ d\'une autre — les résultats étant cumulés au classement général.',
-  // Pas de taille de poule promise : la génération peut produire des poules de 3 (6 équipes
-  // classées → [3,3], 7 → [3,4] — voir taillesPoulesNiveau côté backend).
-  POULES_NIVEAU: 'le classement de la mi-journée est découpé en poules de niveau '
-    + '(poule haute, niveau 2…), chacune jouée en mini-championnat complet — aucune élimination, '
-    + 'le 1ᵉʳ de la poule haute remporte le tournoi.',
-  LIBRE: 'des matchs amicaux supplémentaires, sans classement ni podium (idéal pour les plus jeunes).',
-  COUPE_PLATEAU: 'les premiers de chaque poule disputent une coupe à élimination directe '
-    + '(jusqu\'à la finale), les autres un plateau sans élimination.'
-};
-
-/** Clé de format normalisée d'une catégorie (repli CROISE, comme partout ailleurs). */
-function cleFormatApresMidi(cat) {
-  const f = txt(cat.format_apresmidi).toUpperCase();
-  return DOSSIER_FORMATS_DESC[f] ? f : 'CROISE';
-}
+/* DOSSIER_FORMATS, DOSSIER_FORMATS_DESC, cleFormatApresMidi et les repères FFR
+   (FFR_RAPPEL_EFFECTIF, FFR_POURQUOI_FORMAT) vivent désormais dans commun.js :
+   l'EMAIL d'invitation (admin, qui ne charge pas ce fichier) en a aussi besoin —
+   la page vitrine et l'email disent ainsi exactement la même chose. */
 
 /** « 2 × 10 min » (+ «, pause 2 min » si 2 mi-temps avec pause). */
 function resumeMiTemps(cat) {
