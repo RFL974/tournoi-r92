@@ -77,6 +77,28 @@ function construirePage(data) {
     '</figure>';
   }
 
+  // GEL J-16 (décision Romain) : la page devient LECTURE SEULE — rappel de la réponse donnée,
+  // mot d'explication et porte de sortie par email. Le vrai verrou d'écriture est côté serveur
+  // (repondreInvitation) : cet écran informe, il ne protège pas.
+  if (data.reponses_gelees) {
+    html += '<p class="d-presentation">' + (prenom ? 'Bonjour ' + echapper(prenom) + ', ' : '') +
+      'les inscriptions de cette journée sont désormais closes.</p>';
+    if (dejaRepondu) {
+      const st = txt(club.statut);
+      html += '<p class="rep-deja">✅ Votre réponse du ' + echapper(dateLongueFr(club.date_reponse))
+        + (st ? ' (' + echapper(st) + ')' : '') + ' est bien enregistrée.</p>';
+    }
+    const email = txt(data.contact_email);
+    html += '<p class="rep-gel">🔒 Les réponses sont closes depuis J-16 : l\'organisation prépare ' +
+      'les documents officiels de la journée à partir des effectifs déclarés. ' +
+      (email
+        ? 'Pour toute modification de dernière minute, écrivez à <a href="mailto:' + echapper(email) + '">'
+          + echapper(email) + '</a>.'
+        : 'Pour toute modification de dernière minute, contactez l\'organisateur.') + '</p>';
+    html += '<footer class="d-pied"><span>École de Rugby du Racing Club de France</span></footer>';
+    return html;
+  }
+
   html += '<p class="d-presentation">' + (prenom ? 'Bonjour ' + echapper(prenom) + ', ' : '')
     + 'merci de nous indiquer si votre club pourra participer à cette journée.</p>';
 

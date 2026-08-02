@@ -5,6 +5,24 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Clubs invités : gel des réponses à J-16 + suppression de club en cascade — 2026-08-02
+Suite du cadrage « liserés » (PR B, décisions Romain) :
+- **Gel à J-16** : la demande d'autorisation doit partir au plus tard à J-15 — à partir de
+  **16 jours avant le tournoi**, les clubs ne peuvent plus répondre ni modifier leur réponse
+  (premières réponses tardives comprises). Verrou **côté serveur** (`repondreInvitation` — un
+  verrou d'écran seul serait contournable) + page de réponse en **lecture seule** : rappel de la
+  réponse enregistrée, encart 🔒 explicatif et porte de sortie par email. **L'admin garde la
+  main** (ses actions passent par la clé admin, jamais par ce verrou). Date de tournoi absente ⇒
+  jamais de gel (on ne bloque pas sur une donnée manquante). Cœur pur `reponsesGelees`, testé
+  bornes comprises (J-17 libre, J-16 gelé…) ;
+- **La poubelle retire aussi les équipes du club** : la confirmation liste **nommément** ce qui
+  sera retiré (aperçu calculé par le serveur), puis équipes + fiche partent ensemble. Une équipe
+  **bloquante** (créée à la main, en poule, ou dans des matchs générés) refuse la suppression
+  avec son motif — jamais de matchs fantômes. Le plan est recalculé à la confirmation : un
+  planning généré entre-temps re-bloque. Cœur pur `planifierSuppressionClub` (garde-fous
+  partagés avec la synchronisation via `motifConservationEquipe`).
+**Backend à redéployer** ; tests : **512/512** (+13).
+
 ### Clubs invités : liserés d'état, pile triée et vraie synchronisation des équipes — 2026-08-02
 La liste des clubs devient une **liste de tâches qui se lit toute seule** (décisions Romain) :
 - **Liseré + badge d'état** sur chaque carte — 🟠 orange « **À enregistrer** » (le club a répondu
