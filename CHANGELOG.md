@@ -5,6 +5,23 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Email : « La journée en un coup d'œil » en frise horaire visuelle — 2026-08-02
+Préférence de Romain : la frise de la page vitrine (points bleus reliés, heures en grand) est
+plus parlante que des lignes de tableau. L'email l'adopte, en HTML **email-safe** (aucun
+flexbox ni pseudo-élément : un rail de cellules — segment · point · segment —, puis trois
+rangées heures / étapes / notes ; Outlook dégrade les points ronds en carrés, sans rien casser).
+Mêmes étapes que la vitrine (accueil → coup d'envoi → pause méridienne → reprise → fin
+envisagée), mêmes règles (étape sans heure omise, notes tues pour un tournoi 100 % Super
+Challenge).
+**Retouches de relecture (Romain)** : le lien « Voir l'invitation complète » sous le bouton
+disparaît (l'email EST l'invitation complète — seul le pied garde son discret « version en
+ligne ») ; pas de ligne « Arbitrage » sous la frise (déjà sur la carte de chaque catégorie) ;
+le pied gagne une **barre de liens officiels en icônes** (jamais de lien brut) : Instagram du
+Racing Club de France Rugby, Instagram de Génération R92, site du Racing, site de Génération
+R92 — nouvelles icônes `img/icone-instagram.png` / `img/icone-site.png` (PNG transparents,
+les clients mail refusant le SVG), liens déclarés une fois dans `commun.js`
+(`LIENS_ASSOCIATION`). **100 % front** ; tests : **488/488** (inchangés).
+
 ### L'email d'invitation devient l'invitation COMPLÈTE — 2026-08-02
 Demande de Romain : le destinataire doit recevoir **l'invitation complète**, pas un teaser.
 L'email contient désormais tout ce que montre la page vitrine : le **descriptif entier** du

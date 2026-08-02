@@ -39,6 +39,26 @@ function urlBlasonEmail() {
   return new URL('img/blason-racing92.png', window.location.href).toString();
 }
 
+/** URL absolue d'une icône de lien (img/icone-instagram.png, img/icone-site.png). */
+function urlIconeEmail(nom) {
+  return new URL('img/icone-' + nom + '.png', window.location.href).toString();
+}
+
+/** Barre des liens officiels (LIENS_ASSOCIATION, commun.js) : une ICÔNE cliquable + son
+ *  libellé sous chacune — jamais de lien brut (décision Romain). Centrée dans le pied. */
+function barreLiensEmail(A) {
+  const cellules = LIENS_ASSOCIATION.map(function (l) {
+    return '<td align="center" style="padding:0 12px;">'
+      + '<a href="' + echapper(l.url) + '" style="text-decoration:none;">'
+      + '<img src="' + echapper(urlIconeEmail(l.icone)) + '" alt="' + echapper(l.libelle) + '" width="26" height="26" '
+      + 'style="display:block;width:26px;height:26px;margin:0 auto 3px;">'
+      + '<span style="' + A + 'font-size:10px;color:' + EMAIL_GRIS + ';">' + echapper(l.libelle) + '</span>'
+      + '</a></td>';
+  }).join('');
+  return '<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:16px auto 0;">'
+    + '<tr>' + cellules + '</tr></table>';
+}
+
 /** Lien d'invitation d'EXEMPLE pour l'aperçu (le vrai lien, avec jeton, est construit par club). */
 function lienInvitationApercu() {
   return lienInvitationPublique() + '?club=EXEMPLE&token=EXEMPLE';
@@ -136,6 +156,84 @@ function effectifEmailTxt(c) {
   if (min) return min + ' joueurs min';
   if (max) return max + ' joueurs max';
   return '';
+}
+
+/** Étapes de la journée (miroir de friseJournee sur la vitrine) : accueil, coup d'envoi,
+ *  pause méridienne, reprise, fin envisagée — chacune seulement si son heure est connue.
+ *  Les notes « matin : poules » / « après-midi » sont omises pour un tournoi 100 % SCF. */
+function etapesJourneeEmail(g, cats) {
+  const tousScf = !!(cats && cats.length) && cats.every(function (c) { return ctxScf(c).estScf; });
+  const etapes = [];
+  if (String(g.heure_rdv || '').trim()) {
+    etapes.push({ h: String(g.heure_rdv).trim(), t: 'Accueil des équipes', n: '' });
+  }
+  if (String(g.heure_debut || '').trim()) {
+    etapes.push({ h: String(g.heure_debut).trim(), t: 'Coup d\'envoi', n: tousScf ? '' : 'Matin : matchs de poules' });
+  }
+  const pauseDebut = String(g.pause_dejeuner_debut || '').trim();
+  const pauseDuree = parseInt(String(g.pause_dejeuner_duree_min || '').trim(), 10);
+  if (pauseDebut) {
+    etapes.push({ h: pauseDebut, t: 'Pause méridienne',
+      n: (isFinite(pauseDuree) && pauseDuree > 0) ? pauseDuree + ' min' : '' });
+    const reprise = (isFinite(pauseDuree) && pauseDuree > 0) ? heurePlusMinutesEmail(pauseDebut, pauseDuree) : '';
+    if (reprise) {
+      etapes.push({ h: reprise, t: 'Reprise', n: tousScf ? '' : 'Après-midi : selon la catégorie' });
+    }
+  }
+  const fin = heureFinCommuniqueeAdmin(g);
+  if (fin) etapes.push({ h: fin, t: 'Fin envisagée', n: '' });
+  return etapes;
+}
+
+/**
+ * FRISE horaire de l'email (miroir visuel de la frise de la vitrine, en HTML email-safe :
+ * pas de flexbox ni de pseudo-éléments — un rail de cellules, des points ronds, puis trois
+ * rangées heures / étapes / notes). Outlook dégrade les points en carrés : acceptable.
+ */
+function friseJourneeEmail(g, cats, A) {
+  const etapes = etapesJourneeEmail(g, cats);
+  if (!etapes.length) return '';
+  const n = etapes.length;
+  const larg = Math.floor(100 / n) + '%';
+
+  // Rangée 1 — le RAIL : pour chaque étape, [segment gauche · point · segment droit] ;
+  // le premier segment gauche et le dernier segment droit sont invisibles (bouts de ligne).
+  const segment = function (visible) {
+    return '<td style="width:50%;padding:0;vertical-align:middle;">'
+      + (visible ? '<div style="height:2px;background:' + EMAIL_FILET + ';font-size:0;line-height:0;">&nbsp;</div>' : '&nbsp;')
+      + '</td>';
+  };
+  const rail = etapes.map(function (e, i) {
+    return '<td width="' + larg + '" style="padding:0;">'
+      + '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">'
+      + '<tr>' + segment(i > 0)
+      + '<td style="width:12px;padding:0;"><div style="width:12px;height:12px;border-radius:6px;background:'
+      + EMAIL_BLEU + ';font-size:0;line-height:0;">&nbsp;</div></td>'
+      + segment(i < n - 1) + '</tr></table></td>';
+  }).join('');
+
+  // Rangées 2-4 : heures en grand, étapes en gras, notes discrètes.
+  const heures = etapes.map(function (e) {
+    return '<td align="center" style="padding:6px 2px 0;' + A + 'font-size:20px;font-weight:bold;color:' + EMAIL_NAVY + ';">'
+      + echapper(e.h) + '</td>';
+  }).join('');
+  const titres = etapes.map(function (e) {
+    return '<td align="center" style="padding:2px 4px 0;' + A + 'font-size:12px;font-weight:bold;color:' + EMAIL_TXT + ';">'
+      + echapper(e.t) + '</td>';
+  }).join('');
+  const notes = etapes.some(function (e) { return e.n; })
+    ? '<tr>' + etapes.map(function (e) {
+        return '<td align="center" style="padding:1px 4px 0;' + A + 'font-size:11px;color:' + EMAIL_GRIS + ';">'
+          + (e.n ? echapper(e.n) : '&nbsp;') + '</td>';
+      }).join('') + '</tr>'
+    : '';
+
+  return '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;width:100%;margin:4px 0 0;">'
+    + '<tr>' + rail + '</tr>'
+    + '<tr>' + heures + '</tr>'
+    + '<tr>' + titres + '</tr>'
+    + notes
+    + '</table>';
 }
 
 /** Phrase d'introduction des cartes (miroir de cartesCategories sur la vitrine) : matin en
@@ -291,40 +389,27 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
   const bloc_salut = '<p style="margin:18px 0 4px;' + A + 'font-size:15px;color:' + EMAIL_TXT + ';">' + salutationHtml + '</p>'
     + (String(intro || '').trim() ? '<p style="margin:0;' + A + 'font-size:14px;color:' + EMAIL_TXT + ';text-align:justify;">' + nl2brEmail(intro) + '</p>' : '');
 
-  // Bouton d'ACTION principal : « Répondre à l'invitation » (lien personnel avec jeton),
-  // suivi du lien vers l'invitation complète (page vitrine, personnalisée par club à l'envoi).
+  // Bouton d'ACTION principal : « Répondre à l'invitation » (lien personnel avec jeton).
+  // Pas de lien « voir l'invitation complète » : l'email EST l'invitation complète — seul
+  // le pied garde un discret « voir la version en ligne » (lienInv, personnalisé par club).
   const boutonReponse = lienReponse
     ? '<p style="margin:18px 0 4px;text-align:center;"><a href="' + echapper(lienReponse) + '" '
       + 'style="display:inline-block;background:' + EMAIL_BLEU + ';color:#ffffff;text-decoration:none;'
       + 'border-radius:999px;padding:13px 28px;' + A + 'font-size:15px;font-weight:bold;">Répondre à l\'invitation</a></p>'
       + '<p style="margin:0 0 4px;text-align:center;' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
       + '(présence, équipes engagées, joueurs et éducateurs par équipe)</p>'
-      + '<p style="margin:6px 0 4px;text-align:center;' + A + 'font-size:13px;">'
-      + '<a href="' + lienInv + '" style="color:' + EMAIL_BLEU + ';">📄 Voir l\'invitation complète</a></p>'
     : '';
 
-  // « La journée en un coup d'œil » : mêmes étapes que la frise de la page vitrine.
+  // « La journée en un coup d'œil » : la FRISE horaire (même visuel que la page vitrine —
+  // décision Romain, plus parlant que des lignes de tableau). Pas de ligne d'arbitrage ici :
+  // l'information figure déjà sur la carte de chaque catégorie.
   const ligneJ = function (lib, val) {
     if (!val) return '';
     return '<tr><td style="' + A + 'font-size:13px;color:' + EMAIL_GRIS + ';padding:3px 10px 3px 0;">' + echapper(lib) + '</td>'
       + '<td style="' + A + 'font-size:13px;color:' + EMAIL_TXT + ';font-weight:bold;padding:3px 0;">' + echapper(val) + '</td></tr>';
   };
-  const arbitrages = [];
-  cats.forEach(function (c) { const v = String(c.arbitrage_organisation || '').trim(); if (v && arbitrages.indexOf(v) === -1) arbitrages.push(v); });
-  const pauseDuree = parseInt(String(g.pause_dejeuner_duree_min || '').trim(), 10);
-  const pauseTxt = String(g.pause_dejeuner_debut || '').trim()
-    ? String(g.pause_dejeuner_debut).trim() + ((isFinite(pauseDuree) && pauseDuree > 0) ? ' (' + pauseDuree + ' min)' : '')
-    : '';
-  const reprise = (String(g.pause_dejeuner_debut || '').trim() && isFinite(pauseDuree) && pauseDuree > 0)
-    ? heurePlusMinutesEmail(g.pause_dejeuner_debut, pauseDuree) : '';
-  const jourJ = ligneJ('Accueil des équipes', String(g.heure_rdv || '').trim())
-    + ligneJ('Coup d\'envoi', String(g.heure_debut || '').trim())
-    + ligneJ('Pause méridienne', pauseTxt)
-    + ligneJ('Reprise', reprise)
-    + ligneJ('Fin envisagée', heureFinCommuniqueeAdmin(g))
-    + ligneJ('Arbitrage', arbitrages.join(' · '));
-  const blocJourJ = jourJ ? (emailTitreSection('La journée en un coup d\'œil')
-    + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + jourJ + '</table>') : '';
+  const frise = friseJourneeEmail(g, cats, A);
+  const blocJourJ = frise ? (emailTitreSection('La journée en un coup d\'œil') + frise) : '';
 
   // « Vous êtes invités » : l'invitation COMPLÈTE — une carte détaillée par catégorie
   // (miroir des cartes de la page vitrine, en HTML email-safe : tableaux empilés),
@@ -380,8 +465,10 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
       + 'border-radius:999px;padding:13px 28px;' + A + 'font-size:15px;font-weight:bold;">Répondre à l\'invitation</a></p>'
     : '';
 
-  // Pied : mention (même entité que la vitrine) + lien de secours vers la page complète.
-  const pied = '<p style="margin:20px 0 0;padding-top:12px;border-top:1px solid ' + EMAIL_FILET + ';' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
+  // Pied : barre des liens officiels EN ICÔNES (Instagram / sites — décision Romain), puis
+  // mention (même entité que la vitrine) + lien de secours vers la page en ligne.
+  const pied = barreLiensEmail(A)
+    + '<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ' + EMAIL_FILET + ';' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';text-align:center;">'
     + 'Génération R92 · École de Rugby du Racing Club de France<br>'
     + '<a href="' + lienInv + '" style="color:' + EMAIL_BLEU + ';">Voir la version en ligne</a></p>';
 
@@ -406,7 +493,7 @@ function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse, lien
   L.push('');
   if (String(intro || '').trim()) { L.push(String(intro).trim()); L.push(''); }
   if (lienReponse) { L.push('▶ Répondre à l\'invitation : ' + lienReponse); L.push(''); }
-  if (lienInvitation) { L.push('📄 Voir l\'invitation en ligne : ' + lienInvitation); L.push(''); }
+  // Pas de second lien ici : l'email EST l'invitation complète (la version en ligne est en pied).
   // L'email est l'invitation COMPLÈTE : le descriptif du tournoi y figure en entier.
   if (String(g.tournoi_description || '').trim()) { L.push(String(g.tournoi_description).trim()); L.push(''); }
   if (cats.length) {
@@ -472,7 +559,12 @@ function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse, lien
   if (String(g.contact_reponse_email || '').trim()) c2.push(String(g.contact_reponse_email).trim());
   if (c2.length) L.push('Contact : ' + c2.join(' · '));
   L.push('');
-  L.push('Voir la version complète en ligne : ' + (lienInvitation || lienInvitationPublique()));
+  L.push('Voir la version en ligne : ' + (lienInvitation || lienInvitationPublique()));
+  L.push('');
+  // Liens officiels (icônes dans l'email HTML ; en texte, l'URL est le seul véhicule possible).
+  LIENS_ASSOCIATION.forEach(function (l) {
+    L.push((l.icone === 'instagram' ? 'Instagram ' : '') + l.libelle + ' : ' + l.url);
+  });
   L.push('');
   L.push('Au plaisir de vous accueillir,');
   L.push('Génération R92 · École de Rugby du Racing Club de France');
