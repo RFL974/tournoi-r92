@@ -5,6 +5,22 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Verrou : la cause enfin trouvée — le select « forme de jeu » injecté trop tard — 2026-08-02
+Le blocage qui obligeait à **ré-enregistrer les catégories** pour rouvrir les étapes suivantes est
+identifié et corrigé.
+**Ce qui se passait.** La carte de chaque catégorie contient un select « Forme de jeu retenue »,
+qui n'est **rempli qu'une fois le référentiel FFR chargé depuis le serveur** — donc *après* que
+l'assistant a pris sa « photo » de référence du formulaire. Ce champ arrivait ensuite avec sa
+valeur enregistrée : la carte paraissait **modifiée** alors que personne n'y avait touché. Le
+verrou grisait donc Équipes, Terrains, Poules & planning, Publication et Après-midi — et
+ré-enregistrer les catégories reprenait une photo à jour, ce qui débloquait tout. D'où le
+contournement quotidien, et la persistance après rechargement.
+**Le correctif.** Les cartes qui étaient **propres** avant ce rendu différé voient leur photo
+reprise juste après : les champs ajoutés par l'application font désormais partie de l'état
+« enregistré ». Une carte où une **vraie saisie** est en cours n'est pas re-photographiée : son
+avertissement, lui, reste — le garde-fou contre la perte de données est intact.
+**100 % front**, aucun redéploiement backend.
+
 ### Terrains : une seule table de marque par grand terrain — 2026-08-02
 Jusqu'ici, un grand terrain accueillant deux catégories (par exemple de l'U8 **et** de l'U10)
 recevait **deux** tables de marque — une par catégorie. La mesure limitait les erreurs de saisie,
