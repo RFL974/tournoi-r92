@@ -269,6 +269,26 @@ function assistantMarquerPropre(zone) {
   assistantMajVerrou();
 }
 
+/** La zone est-elle CONFORME à sa photo (aucune modification en attente) ?
+ *  Une zone jamais photographiée est considérée propre : rien n'a encore été comparé. */
+function assistantEstPropre(zone) {
+  if (!zone || zone.nodeType !== 1) return true;
+  const photo = assistantPhotos.get(zone);
+  return photo == null || photo === assistantSerialiser(zone);
+}
+
+/**
+ * Reprend la photo d'une zone SANS recalculer le verrou (contrairement à assistantMarquerPropre).
+ * Sert aux rendus DIFFÉRÉS de l'application : quand du code injecte des contrôles dans un
+ * formulaire APRÈS que la photo a été prise (ex. le select « forme de jeu » rempli une fois le
+ * référentiel FFR chargé), la zone paraîtrait « modifiée » alors que l'utilisateur n'a rien
+ * touché — et la barre latérale se verrouillait toute seule. À n'utiliser que sur une zone
+ * PROPRE (voir assistantEstPropre) : une vraie saisie en cours doit garder son avertissement.
+ */
+function assistantRephotographier(zone) {
+  if (zone && zone.nodeType === 1) assistantPhotos.set(zone, assistantSerialiser(zone));
+}
+
 /** Photo d'une zone jamais vue, prise AVANT la première frappe (délégué focusin). */
 function assistantNoterZoneInconnue(evenement) {
   const zone = evenement.target.closest('form') || evenement.target.closest('#zone-terrains');

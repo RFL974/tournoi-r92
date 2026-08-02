@@ -415,6 +415,18 @@ function formeAttendueFFR(categorie, dateISO) {
  */
 function majFormesCategories() {
   const dateISO = dateTournoiCourante();
+  // Ce rendu INJECTE des contrôles dans les cartes catégorie (le select « Forme de jeu retenue »),
+  // et il arrive APRÈS le chargement du référentiel FFR — donc après que l'assistant a pris sa
+  // photo de référence. Sans précaution, la carte paraît « modifiée » alors que personne n'y a
+  // touché : la barre latérale verrouillait Équipes, Terrains, Poules… et il fallait
+  // ré-enregistrer les catégories pour s'en sortir. On note donc quelles cartes étaient PROPRES
+  // AVANT l'injection, pour ne re-photographier que celles-là — une vraie saisie en cours garde
+  // son avertissement.
+  const propresAvant = [];
+  document.querySelectorAll('form.form-categorie').forEach(function (f) {
+    if (typeof assistantEstPropre !== 'function' || assistantEstPropre(f)) propresAvant.push(f);
+  });
+
   document.querySelectorAll('.ffr-forme[data-cat]').forEach(function (el) {
     const cat = el.getAttribute('data-cat');
     const f = formeAttendueFFR(cat, dateISO);
@@ -433,6 +445,16 @@ function majFormesCategories() {
   });
   majFormeChoixCategories(dateISO);
   majBoutonNormeCategories();
+
+  // Les contrôles injectés font désormais partie de l'état ENREGISTRÉ des cartes qui étaient
+  // propres : on reprend leur photo (sans recalculer le verrou à chaque carte), puis on
+  // rafraîchit la barre latérale une seule fois.
+  if (typeof assistantRephotographier === 'function') {
+    propresAvant.forEach(function (f) {
+      if (f.isConnected) assistantRephotographier(f);
+    });
+    if (typeof assistantMajVerrou === 'function') assistantMajVerrou();
+  }
 }
 
 /* --------------------------------------------------------------------------
