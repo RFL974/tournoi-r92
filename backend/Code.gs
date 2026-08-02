@@ -509,16 +509,28 @@ var CONFIG_PUBLIQUE_VUES = {
   },
   // Page d'invitation (vitrine publique). contact_reponse_email/nom OUI ; contact_reponse_tel NON
   // (le portable d'un bénévole n'a rien à faire sur une page mise en avant — décision 1.3, S3).
+  // Refonte vitrine : l'invitation présente désormais le CADRE SPORTIF complet par catégorie
+  // (temps de jeu, pauses, forme FFR, effectifs) et le déroulé horaire de la journée. Tous ces
+  // champs sont des FAITS DE FORMAT ou d'HORAIRE, sans aucune donnée personnelle — le programme
+  // d'un tournoi est public par nature. Restent derrière le jeton (vue club) : adresse précise,
+  // parking, secours, téléphones — tout ce qui relève de la logistique jour J.
   invitation: {
-    global: ['tournoi_nom', 'tournoi_description', 'tournoi_affiche_id', 'tournoi_date', 'heure_rdv',
+    global: ['tournoi_nom', 'tournoi_description', 'tournoi_affiche_id', 'tournoi_date', 'tournoi_lieu',
+             'heure_rdv', 'heure_debut', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
+             'heure_fin', 'heure_fin_communiquee', 'marge_fin_communiquee_min',
              'buvette_disponible', 'espace_sandwich_disponible', 'boutique_r92_disponible',
              'tarif_engagement_oui', 'tarif_engagement_montant', 'date_limite_reponse',
              'url_instagram', 'url_site_association',
              'contact_reponse_nom', 'contact_reponse_email'],
     // format_apresmidi (session 20) : NON sensible (format de jeu, déjà exposé par la vue live) —
     // sert à la note « pourquoi ce format » de l'invitation (doctrine FFR, poules de niveau).
-    categories: ['categorie', 'presente', 'effectif_min', 'max_equipes_par_club', 'arbitrage_organisation',
-                 'format_apresmidi']
+    // forme_jeu / contexte_tournoi / scf_phase : forme FFR retenue et contexte Super Challenge —
+    // déjà publics (vue live pour SCF) ; les temps (mi-temps, pauses, récup) et effectifs viennent
+    // de la vue club, sans donnée personnelle. `terrains` et `pause_echelonnee` restent internes.
+    categories: ['categorie', 'presente', 'effectif_min', 'effectif_max', 'max_equipes_par_club',
+                 'arbitrage_organisation', 'format_apresmidi', 'format_mi_temps', 'duree_mi_temps_min',
+                 'pause_mi_temps_min', 'recup_entre_matchs_min', 'forme_jeu',
+                 'contexte_tournoi', 'scf_phase', 'reglement']
   },
   // Dossier club (PROTÉGÉ PAR JETON) : le club invité voit les contacts jour J (referent_tel en
   // lien cliquable tel:), la logistique, les secours, les tarifs. Légitime car derrière le jeton.
