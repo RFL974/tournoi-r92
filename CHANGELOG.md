@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Terrains : une seule table de marque par grand terrain — 2026-08-02
+Jusqu'ici, un grand terrain accueillant deux catégories (par exemple de l'U8 **et** de l'U10)
+recevait **deux** tables de marque — une par catégorie. La mesure limitait les erreurs de saisie,
+mais demandait **trop de bénévoles** pour être tenable.
+Désormais : **une seule table par grand terrain**, quel que soit le nombre de catégories qui s'y
+partagent la place. Elle appartient au **terrain** (et non plus à une catégorie) et se pose dans
+l'espace libre le plus proche du **centre de gravité de tous les mini-terrains** qu'elle couvre —
+donc au plus près de ce qu'elle surveille. Un terrain occupé en entier (U14) garde la sienne sur
+la ligne de touche. Le placement manuel en tient compte : un mini-terrain ne peut pas se poser sur
+la table. **100 % front**, aucun redéploiement backend.
+
 ### Verrou de la barre latérale : les étapes optionnelles ne bloquent plus le parcours — 2026-08-02
 Analyse complète du système de verrouillage, à la suite d'un blocage persistant. **Deux défauts**
 trouvés, indépendants du crayon des équipes (corrigé précédemment) :
