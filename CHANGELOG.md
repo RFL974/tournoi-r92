@@ -5,6 +5,38 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Invitation vitrine : le carton d'invitation fait enfin honneur au tournoi — 2026-08-02
+La page d'invitation (Phase 1) était sobre au point d'être triste : petit blason dans un coin,
+affiche timbre-poste, descriptif tronqué à 150 caractères, et 2 lignes par catégorie. Refonte
+complète en **carton d'invitation** qui se lit de haut en bas :
+1. **le blason du club en grand, centré** — c'est l'École de Rugby qui invite ;
+2. **l'affiche du tournoi en héros**, puis le **descriptif complet** (un paragraphe par ligne saisie) ;
+3. **la journée en un coup d'œil** : frise horaire accueil → coup d'envoi → pause méridienne →
+   reprise → fin envisagée. La « fin envisagée » **ne s'affichait d'ailleurs jamais** : `heure_fin`
+   ne sortait pas de la liste blanche publique — corrigé ;
+4. **une carte détaillée par catégorie** : forme de jeu FFR retenue, temps de jeu (mi-temps ×
+   durée + pause), récupération entre matchs, effectifs, équipes par club, arbitrage, lien
+   règlement, format d'après-midi expliqué. Une catégorie U14 en **Super Challenge de France**
+   affiche son badge, le jeu à XV et sa formule (P2 : plateau 2×15 ; P3 : samedi triangulaires,
+   dimanche brassage) — miroir exact de la génération ;
+5. les **repères FFR** (rappel sécurité effectif minimum, doctrine du format) conservés tels quels.
+**Backend** : la vue publique `invitation` (liste blanche opt-in) s'ouvre aux **faits de format et
+d'horaire** — jamais de donnée personnelle : le téléphone, l'adresse précise, parking et secours
+restent derrière le jeton du dossier club. Un test dédié verrouille ces frontières.
+**Partagé** : les résumés sportifs du dossier (`resumeMiTemps`, `resumeEffectif`…) déménagent dans
+`commun-dossier.js` (écrits une fois, utilisés par le dossier ET l'invitation) ; au passage le
+format **Poules de niveau** gagne son libellé (le dossier affichait « Classement croisé » à tort).
+**Page de réponse assortie** : `reponse-invitation.html` (lien personnel avec jeton) reprend le
+même en-tête vitrine (blason centré, grand titre, date · lieu, affiche compacte) — le formulaire
+(oui/non, équipes par catégorie, joueurs + éducateurs par équipe, totaux vivants) est inchangé.
+L'encart « Votre réponse » de la vitrine guide vers ce lien personnel reçu par email.
+**Revue multi-agents (4 lentilles + contre-vérification)**, corrections retenues : l'intro et la
+frise ne prêtent plus le déroulé « poules + après-midi » au Super Challenge (formule propre, cartes
+fidèles) ; la description « Poules de niveau » ne promet plus « 4-5 équipes » (la génération peut
+produire des poules de 3) ; les liens Instagram/site n'acceptent que le schéma http(s).
+Vérifié au navigateur (fixture riche + fixture minimale : règle d'or respectée), en mobile et à
+l'export PDF (4 pages équilibrées). **Backend à redéployer** ; tests : **479/479**.
+
 ### Verrou : la cause enfin trouvée — le select « forme de jeu » injecté trop tard — 2026-08-02
 Le blocage qui obligeait à **ré-enregistrer les catégories** pour rouvrir les étapes suivantes est
 identifié et corrigé.

@@ -10,6 +10,16 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
 - **`saisie.html`** — saisie des scores (table de marque, filtres catégorie + grand terrain,
   accordéons) ; clé scores.
 - **`perfs.html`** — « Perfs Racing », page interne (non liée), lecture seule.
+- **`invitation-club.html`** — **invitation vitrine** (Phase 1, générique) : carton d'invitation
+  envoyé aux clubs AVANT leur réponse — blason centré, affiche en héros, descriptif, frise horaire
+  de la journée, une carte détaillée par catégorie (forme de jeu FFR, temps de jeu, pauses,
+  récupération, effectifs, arbitrage, règlement), repères FFR ; export PDF via l'impression
+  (`css/dossier.css`, `js/invitation.js`). Les données viennent de la vue publique `invitation`
+  du backend (liste blanche sans donnée personnelle).
+- **`reponse-invitation.html`** — **réponse à l'invitation** (lien PERSONNEL avec jeton, reçu par
+  email) : même en-tête vitrine que l'invitation, puis le formulaire libre-service — présent /
+  absent, équipes par catégorie, joueurs + éducateurs par équipe, totaux vivants
+  (`js/reponse.js`).
 - **`dossier-club.html`** — **dossier d'invitation** : document A4 (1-2 pages) assemblé
   automatiquement pour les clubs invités (infos pratiques, programme, format sportif, modalités
   d'inscription, parking & accès, encadrement & assurance, QR code du suivi live, sécurité,

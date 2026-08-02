@@ -123,6 +123,92 @@ function section(titre, contenuHtml, classe) {
          '</section>';
 }
 
+/* --------------------------------------------------------------------------
+   RÉSUMÉS SPORTIFS (partagés par dossier.js et invitation.js)
+   -------------------------------------------------------------------------- */
+
+/* Libellés humains des formats d'après-midi (mêmes clés que la page admin). */
+const DOSSIER_FORMATS = {
+  CROISE: 'Classement croisé',
+  CROISE_DIAGONAL: 'Croisé diagonal',
+  POULES_NIVEAU: 'Poules de niveau',
+  LIBRE: 'Matchs libres',
+  COUPE_PLATEAU: 'Coupe + Plateau'
+};
+
+/* Description CONCISE de chaque format (destinée aux clubs) : le dossier et
+   l'invitation ne se contentent pas de nommer le format retenu, ils l'expliquent.
+   Version courte des textes de la page admin. */
+const DOSSIER_FORMATS_DESC = {
+  CROISE: 'les équipes sont regroupées par niveau d\'après leur classement du matin, '
+    + 'puis s\'affrontent au sein de leur niveau (classement général et podium).',
+  CROISE_DIAGONAL: 'brassage par rangs croisés entre poules — le 1ᵉʳ d\'une poule affronte '
+    + 'le 2ᵉ d\'une autre — les résultats étant cumulés au classement général.',
+  // Pas de taille de poule promise : la génération peut produire des poules de 3 (6 équipes
+  // classées → [3,3], 7 → [3,4] — voir taillesPoulesNiveau côté backend).
+  POULES_NIVEAU: 'le classement de la mi-journée est découpé en poules de niveau '
+    + '(poule haute, niveau 2…), chacune jouée en mini-championnat complet — aucune élimination, '
+    + 'le 1ᵉʳ de la poule haute remporte le tournoi.',
+  LIBRE: 'des matchs amicaux supplémentaires, sans classement ni podium (idéal pour les plus jeunes).',
+  COUPE_PLATEAU: 'les premiers de chaque poule disputent une coupe à élimination directe '
+    + '(jusqu\'à la finale), les autres un plateau sans élimination.'
+};
+
+/** Clé de format normalisée d'une catégorie (repli CROISE, comme partout ailleurs). */
+function cleFormatApresMidi(cat) {
+  const f = txt(cat.format_apresmidi).toUpperCase();
+  return DOSSIER_FORMATS_DESC[f] ? f : 'CROISE';
+}
+
+/** « 2 × 10 min » (+ «, pause 2 min » si 2 mi-temps avec pause). */
+function resumeMiTemps(cat) {
+  const nb = txt(cat.format_mi_temps) || '2';
+  const duree = txt(cat.duree_mi_temps_min);
+  if (!duree) return '';
+  let s = nb + ' × ' + duree + ' min';
+  const pause = parseInt(cat.pause_mi_temps_min, 10);
+  if (nb === '2' && isFinite(pause) && pause > 0) s += ' (pause ' + pause + ' min)';
+  return s;
+}
+
+/** « 8 à 12 joueurs » / « 8 joueurs min » / « 12 joueurs max » / ''. */
+function resumeEffectif(cat) {
+  const min = txt(cat.effectif_min), max = txt(cat.effectif_max);
+  if (min && max) return (min === max) ? min + ' joueurs' : min + ' à ' + max + ' joueurs';
+  if (min) return min + ' joueurs min';
+  if (max) return max + ' joueurs max';
+  return '';
+}
+
+/**
+ * Règlement : lien cliquable si la valeur CONTIENT une URL http(s), sinon texte.
+ * On extrait l'URL même noyée dans un préfixe — cas réel : lien copié depuis la
+ * visionneuse PDF de Chrome (« chrome-extension://…/https://api.www.ffr.fr/….pdf »).
+ * Un libellé court remplace l'URL brute : plus de chaîne interminable qui déborde.
+ */
+function resumeReglement(cat) {
+  const v = txt(cat.reglement);
+  if (!v) return '';
+  const m = v.match(/https?:\/\/\S+/i);
+  if (m) {
+    return '<a href="' + echapper(m[0]) + '" target="_blank" rel="noopener">Consulter le règlement</a>';
+  }
+  return echapper(v);
+}
+
+/** Libellé du format d'après-midi (repli = croisé, comme partout ailleurs). */
+function resumeApresMidi(cat) {
+  const f = txt(cat.format_apresmidi).toUpperCase();
+  return DOSSIER_FORMATS[f] || DOSSIER_FORMATS.CROISE;
+}
+
+/** Temps de JEU d'un match (mi-temps × durée, pause exclue), en minutes — null si inconnu. */
+function tempsDeJeuDe(cat) {
+  const nb = parseInt(txt(cat.format_mi_temps), 10) || 2;
+  const duree = parseInt(txt(cat.duree_mi_temps_min), 10);
+  return (isFinite(duree) && duree > 0) ? nb * duree : null;
+}
+
 /**
  * Catégories engagées (« U8,U10 » ou tableau JSON ["U8","U10"]) → tableau de noms
  * normalisés (MAJUSCULES sans espaces superflus). [] si rien n'est renseigné.

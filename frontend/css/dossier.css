@@ -262,29 +262,187 @@ body {
 
 /* ============================================================================
    INVITATION (Phase 1) — éléments propres à invitation-club.html
-   (réutilise le reste de dossier.css : entête, sections, listes, pied de page).
+   (réutilise le reste de dossier.css : sections, listes, pied de page).
+   Refonte VITRINE : la page se lit comme un carton d'invitation — blason centré
+   en grand, affiche en héros, frise horaire, une carte par catégorie.
    ========================================================================== */
-/* Liste « Vous êtes invités » : une carte par catégorie (nom + détails). */
-.inv-liste-cats { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
-.inv-liste-cats li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 12px;
-  padding: 7px 12px;
-  background: #f5f8fc;
-  border-left: 3px solid var(--d-bleu);
-  border-radius: 0 6px 6px 0;
+
+/* ----- 1) En-tête vitrine : blason centré, surtitre, grand titre, date · lieu ----- */
+.inv-hero { text-align: center; padding: 8px 0 0; }
+.inv-blason { display: block; width: 150px; height: auto; margin: 0 auto 12px; }
+.inv-surtitre {
+  margin: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--d-bleu);
 }
-.inv-cat-nom {
+.inv-titre {
+  margin: 8px 0 2px;
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 3.2rem;
+  line-height: 1.05;
+  letter-spacing: 1px;
+  color: var(--d-navy);
+}
+.inv-quand { margin: 4px 0 0; font-weight: 600; font-size: 1.05rem; color: var(--d-navy); }
+/* Typo française : seule la PREMIÈRE lettre de « dimanche 13 juin 2027 » prend la majuscule
+   (::first-letter exige un élément de type bloc, d'où l'inline-block). */
+.inv-quand-date { display: inline-block; }
+.inv-quand-date::first-letter { text-transform: uppercase; }
+.inv-quand-sep { color: var(--d-bleu); }
+/* Filet d'accent sous l'en-tête : signe la charte sans alourdir. */
+.inv-hero::after {
+  content: '';
+  display: block;
+  width: 90px;
+  height: 4px;
+  margin: 16px auto 0;
+  background: var(--d-bleu);
+  border-radius: 2px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ----- 2) Affiche en héros : centrée, en grand ----- */
+.inv-affiche { margin: 18px auto 0; text-align: center; }
+.inv-affiche img {
+  max-width: 86%;
+  max-height: 150mm;                 /* garde l'affiche impressionnante mais imprimable */
+  border: 1px solid var(--d-filet);
+  border-radius: 10px;
+  box-shadow: 0 14px 34px -20px rgba(12, 28, 46, 0.5);
+}
+/* Variante COMPACTE (page de réponse) : rappelle le tournoi sans repousser le formulaire. */
+.inv-affiche-compacte img { max-height: 80mm; max-width: 55%; }
+
+/* ----- 3) Descriptif complet : colonne de lecture centrée ----- */
+.inv-presentation { max-width: 88%; margin: 16px auto 0; font-size: 1.02rem; }
+.inv-presentation p { margin: 0 0 8px; }
+.inv-presentation p:last-child { margin-bottom: 0; }
+
+/* ----- 4) Frise horaire de la journée ----- */
+.inv-frise { list-style: none; display: flex; gap: 8px; margin: 14px 0 0; padding: 0; }
+.inv-frise li { flex: 1 1 0; min-width: 0; text-align: center; position: relative; padding-top: 16px; }
+/* Point bleu de chaque étape + trait qui relie à la suivante. */
+.inv-frise li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--d-bleu);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.inv-frise li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: calc(50% + 10px);
+  right: calc(-50% + 10px);
+  height: 2px;
+  background: var(--d-filet);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.inv-frise-heure {
+  display: block;
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.5rem;
+  color: var(--d-navy);
+}
+.inv-frise-titre { display: block; font-weight: 600; font-size: 0.92rem; }
+.inv-frise-note { display: block; font-size: 0.78rem; color: var(--d-gris); }
+
+/* ----- 5) Cartes par catégorie ----- */
+.inv-cats-intro { margin: 2px 0 10px; color: var(--d-texte); }
+.inv-cartes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.inv-carte {
+  border: 1px solid var(--d-filet);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.inv-carte-tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--d-navy);
+  color: #fff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.inv-carte-cat {
+  font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+}
+.inv-carte-forme {
+  padding: 4px 10px;
+  background: var(--d-bleu);
+  border-radius: 999px;
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--d-navy);
-  min-width: 54px;
+  letter-spacing: 0.8px;
+  font-size: 0.78rem;
+  text-align: center;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
-.inv-cat-detail { color: var(--d-gris); font-size: 0.9rem; }
+.inv-carte-infos { list-style: none; margin: 0; padding: 8px 12px; flex: 1; }
+.inv-carte-infos li { display: flex; gap: 8px; padding: 3px 0; font-size: 0.9rem; border-bottom: 1px dashed #e8eef6; }
+.inv-carte-infos li:last-child { border-bottom: none; }
+.inv-carte-libelle { flex: 0 0 118px; color: var(--d-gris); }
+.inv-carte-valeur { flex: 1; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.inv-carte-valeur a { color: var(--d-bleu); }
+.inv-carte-apm {
+  margin: 0;
+  padding: 8px 12px 10px;
+  background: #f5f8fc;
+  border-top: 1px solid var(--d-filet);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #274a68;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ----- 7) Encart « Votre réponse » ----- */
+.inv-cta {
+  margin-top: 6px;
+  padding: 16px 20px;
+  background: var(--d-navy);
+  color: #fff;
+  border-radius: 12px;
+  text-align: center;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.inv-cta-titre {
+  margin: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-size: 0.95rem;
+  color: #b8d8f8;
+}
+.inv-cta-date { margin: 4px 0 0; font-size: 1.15rem; }
+.inv-cta-date strong { font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif; font-size: 1.5rem; letter-spacing: 0.5px; font-weight: 400; }
+.inv-cta-note { margin: 8px auto 0; max-width: 52ch; font-size: 0.88rem; color: #d7e7f8; line-height: 1.5; }
+.inv-cta-contact { margin: 8px 0 0; font-size: 0.95rem; }
+.inv-cta-contact a { color: #fff; }
+.inv-cta-sep { color: #b8d8f8; }
 
 /* Rappel sécurité FFR sous la liste des catégories : effectif minimum ⇒ temps de jeu par enfant
    proche du temps d'équipe, or la FFR le plafonne (session 20). Ton orange doux, jamais criard. */
@@ -439,6 +597,20 @@ body {
   .d-libelle { flex: none; font-size: 0.8rem; }
   .d-suivi { flex-direction: column; }
   .d-table { display: block; overflow-x: auto; }
+  /* Invitation vitrine : titre réduit, affiche pleine largeur, frise verticale, cartes empilées. */
+  .inv-blason { width: 110px; }
+  .inv-titre { font-size: 2.3rem; }
+  .inv-affiche img { max-width: 100%; }
+  .inv-affiche-compacte img { max-width: 80%; }
+  .inv-presentation { max-width: none; }
+  .inv-frise { flex-direction: column; gap: 10px; }
+  .inv-frise li { text-align: left; padding: 0 0 0 22px; }
+  .inv-frise li::before { top: 6px; left: 0; transform: none; }
+  .inv-frise li:not(:last-child)::after { top: 20px; bottom: -12px; left: 4px; right: auto; width: 2px; height: auto; }
+  .inv-frise-heure { display: inline; margin-right: 8px; }
+  .inv-frise-titre { display: inline; }
+  .inv-cartes { grid-template-columns: 1fr; }
+  .inv-carte-libelle { flex-basis: 104px; }
 }
 
 /* ============================================================================
@@ -458,6 +630,13 @@ body {
     box-shadow: none;
   }
   .d-section { break-inside: avoid; }
+  /* Invitation vitrine : chaque carte reste entière sur sa page ; l'affiche héros est bornée
+     pour laisser l'en-tête + l'affiche + le descriptif tenir sur la première page. La section
+     des catégories, elle, PEUT se couper (sinon elle démarre seule sur une page en laissant
+     la précédente aux trois quarts vide — constaté à l'export PDF). */
+  .d-section.inv-categories { break-inside: auto; }
+  .inv-carte, .inv-cta, .inv-frise { break-inside: avoid; }
+  .inv-affiche img { max-height: 130mm; box-shadow: none; }
   .d-actions { break-inside: avoid; background: var(--d-navy); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .d-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .d-legende { break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }

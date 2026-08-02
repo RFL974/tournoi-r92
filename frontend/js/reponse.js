@@ -59,19 +59,23 @@ function construirePage(data) {
 
   let html = '';
 
-  // a) Rappel synthétique du tournoi.
-  html += '<header class="d-entete">' +
-    (txt(t.affiche_id)
-      ? '<img class="d-affiche" src="' + echapper(urlAffiche(t.affiche_id, 600)) + '" alt="Affiche — ' + echapper(nom) + '">'
-      : '') +
-    '<div class="d-entete-textes">' +
-      '<p class="d-surtitre">Invitation — École de Rugby du Racing Club de France</p>' +
-      '<h1>' + echapper(nom) + '</h1>' +
-      (txt(t.date) ? '<p class="d-date">' + echapper(dateLongueFr(t.date)) + '</p>' : '') +
-      (txt(t.lieu) ? '<p class="d-genere">' + echapper(txt(t.lieu)) + '</p>' : '') +
-    '</div>' +
-  '<img class="d-entete-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
+  // a) En-tête VITRINE (même principe que l'invitation refondue) : blason centré en grand,
+  //    surtitre, grand titre, date · lieu, puis l'affiche en version COMPACTE (la page est un
+  //    formulaire : l'affiche rappelle le tournoi sans repousser la réponse hors de l'écran).
+  const quand = [];
+  if (txt(t.date)) quand.push('<span class="inv-quand-date">' + echapper(dateLongueFr(t.date)) + '</span>');
+  if (txt(t.lieu)) quand.push('<span>' + echapper(txt(t.lieu)) + '</span>');
+  html += '<header class="inv-hero">' +
+    '<img class="inv-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
+    '<p class="inv-surtitre">L\'École de Rugby du Racing Club de France<br>a le plaisir de vous inviter</p>' +
+    '<h1 class="inv-titre">' + echapper(nom) + '</h1>' +
+    (quand.length ? '<p class="inv-quand">' + quand.join('<span class="inv-quand-sep"> · </span>') + '</p>' : '') +
   '</header>';
+  if (txt(t.affiche_id)) {
+    html += '<figure class="inv-affiche inv-affiche-compacte">' +
+      '<img src="' + echapper(urlAffiche(t.affiche_id, 800)) + '" alt="Affiche — ' + echapper(nom) + '">' +
+    '</figure>';
+  }
 
   html += '<p class="d-presentation">' + (prenom ? 'Bonjour ' + echapper(prenom) + ', ' : '')
     + 'merci de nous indiquer si votre club pourra participer à cette journée.</p>';

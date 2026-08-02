@@ -42,6 +42,7 @@ function lancerTestsFFR() {
   testCfg_vueInconnueEstRestrictive(etat);
   testCfg_vueClubContientLesContacts(etat);
   testCfg_categoriesFiltrees(etat);
+  testCfg_invitationVitrineCadreSportif(etat);
   testCfg_jetonDossier(etat);
 
   // Référentiel FFR — règles de jeu et grilles de temps (session 5).
@@ -620,6 +621,51 @@ function testCfg_categoriesFiltrees(etat) {
   var live = filtrerConfigPublique(_cfgFactice(), 'live');
   _ffrAssert(etat, !(live.categories[0] || {}).hasOwnProperty('format_apresmidi'),
     'categoriesFiltrees : format_apresmidi absent en vue live');
+}
+
+/** Refonte vitrine de l'invitation : la vue « invitation » expose le CADRE SPORTIF par catégorie
+ *  (temps de jeu, pauses, récup, effectifs, forme FFR, SCF, règlement) et le déroulé horaire de la
+ *  journée (lieu, coup d'envoi, pause méridienne, fin) — QUE des faits de format/horaire. Les
+ *  frontières tiennent : ni téléphone, ni adresse précise, ni réglages internes, et la vue live
+ *  reste minimale (aucun de ces champs n'y fuit). */
+function testCfg_invitationVitrineCadreSportif(etat) {
+  var cfg = {
+    global: {
+      tournoi_lieu: 'Stade Yves-du-Manoir, Colombes', tournoi_adresse: '12 rue du Stade',
+      heure_debut: '10:00', pause_dejeuner_debut: '12:00', pause_dejeuner_duree_min: '60',
+      heure_fin: '16:30', heure_fin_communiquee: '', marge_fin_communiquee_min: '75',
+      contact_reponse_tel: '0612345678'
+    },
+    categories: [{ categorie: 'U14', presente: 'oui', format_mi_temps: '2', duree_mi_temps_min: '15',
+      pause_mi_temps_min: '2', recup_entre_matchs_min: '15', effectif_max: '19',
+      forme_jeu: 'Jeu à XV — 15x15', contexte_tournoi: 'SCF', scf_phase: 'P2',
+      reglement: 'https://ffr.fr/reglement.pdf', terrains: '1,2', pause_echelonnee: 'oui' }]
+  };
+  var f = filtrerConfigPublique(cfg, 'invitation');
+  var g = f.global, c = f.categories[0];
+  // Le déroulé horaire et le lieu sortent (programme public par nature).
+  _ffrAssert(etat, g.tournoi_lieu === 'Stade Yves-du-Manoir, Colombes', 'invVitrine : tournoi_lieu exposé');
+  _ffrAssert(etat, g.heure_debut === '10:00' && g.pause_dejeuner_debut === '12:00',
+    'invVitrine : coup d\'envoi + pause méridienne exposés');
+  _ffrAssert(etat, g.heure_fin === '16:30' && g.marge_fin_communiquee_min === '75',
+    'invVitrine : heure_fin + marge exposées (la « fin envisagée » peut enfin s\'afficher)');
+  // Le cadre sportif de la catégorie sort en entier.
+  _ffrAssert(etat, c.duree_mi_temps_min === '15' && c.pause_mi_temps_min === '2'
+    && c.recup_entre_matchs_min === '15', 'invVitrine : temps de jeu, pause et récup exposés');
+  _ffrAssert(etat, c.effectif_max === '19' && c.forme_jeu === 'Jeu à XV — 15x15',
+    'invVitrine : effectif_max + forme_jeu exposés');
+  _ffrAssert(etat, c.contexte_tournoi === 'SCF' && c.scf_phase === 'P2'
+    && c.reglement === 'https://ffr.fr/reglement.pdf', 'invVitrine : contexte SCF + règlement exposés');
+  // Les frontières TIENNENT : adresse précise et téléphone jamais en vitrine ; réglages internes
+  // (terrains, pause_echelonnee) jamais publics.
+  _ffrAssert(etat, !('tournoi_adresse' in g) && !('contact_reponse_tel' in g),
+    'invVitrine : adresse précise + téléphone toujours exclus');
+  _ffrAssert(etat, !('terrains' in c) && !('pause_echelonnee' in c),
+    'invVitrine : terrains + pause_echelonnee restent internes');
+  // Et la vue LIVE reste minimale : rien du cadre sportif n'y fuit.
+  var live = filtrerConfigPublique(cfg, 'live');
+  _ffrAssert(etat, !('duree_mi_temps_min' in (live.categories[0] || {}))
+    && !('heure_debut' in live.global), 'invVitrine : la vue live reste minimale (aucune fuite)');
 }
 
 /* --- Jetons : faux classeur (getSheetByName → getDataRange → getValues), sans Sheet réel --- */
@@ -2609,14 +2655,16 @@ function testS20_moinsDe2Equipes(etat) {
     'S20 : 1 équipe → avertissement, 0 fixture');
 }
 
-/** La vue publique « invitation » expose format_apresmidi (note doctrine FFR), rien de plus. */
+/** La vue publique « invitation » expose format_apresmidi (note doctrine FFR) — et toujours
+ *  RIEN hors liste : depuis la refonte vitrine, duree_mi_temps_min est autorisée (cadre sportif),
+ *  le témoin « hors liste » est donc `terrains` (réglage interne, jamais public). */
 function testS20_invitationExposeFormat(etat) {
   var cfg = { global: {}, categories: [{ categorie: 'U8', presente: 'oui',
-    format_apresmidi: 'POULES_NIVEAU', duree_mi_temps_min: '10' }] };
+    format_apresmidi: 'POULES_NIVEAU', duree_mi_temps_min: '10', terrains: '1,2' }] };
   var f = filtrerConfigPublique(cfg, 'invitation');
   var c = f.categories[0];
   _ffrAssert(etat, c.format_apresmidi === 'POULES_NIVEAU', 'S20 : invitation expose format_apresmidi');
-  _ffrAssert(etat, !('duree_mi_temps_min' in c), 'S20 : invitation n\'expose pas les champs hors liste');
+  _ffrAssert(etat, !('terrains' in c), 'S20 : invitation n\'expose pas les champs hors liste (terrains)');
 }
 
 /* -------------------------------------------------------------------------- */
