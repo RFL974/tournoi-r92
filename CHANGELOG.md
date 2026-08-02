@@ -12,8 +12,15 @@ flexbox ni pseudo-élément : un rail de cellules — segment · point · segmen
 rangées heures / étapes / notes ; Outlook dégrade les points ronds en carrés, sans rien casser).
 Mêmes étapes que la vitrine (accueil → coup d'envoi → pause méridienne → reprise → fin
 envisagée), mêmes règles (étape sans heure omise, notes tues pour un tournoi 100 % Super
-Challenge). L'arbitrage, qui n'est pas une étape horaire, passe en ligne discrète sous la frise.
-**100 % front** ; tests : **488/488** (inchangés).
+Challenge).
+**Retouches de relecture (Romain)** : le lien « Voir l'invitation complète » sous le bouton
+disparaît (l'email EST l'invitation complète — seul le pied garde son discret « version en
+ligne ») ; pas de ligne « Arbitrage » sous la frise (déjà sur la carte de chaque catégorie) ;
+le pied gagne une **barre de liens officiels en icônes** (jamais de lien brut) : Instagram du
+Racing Club de France Rugby, Instagram de Génération R92, site du Racing, site de Génération
+R92 — nouvelles icônes `img/icone-instagram.png` / `img/icone-site.png` (PNG transparents,
+les clients mail refusant le SVG), liens déclarés une fois dans `commun.js`
+(`LIENS_ASSOCIATION`). **100 % front** ; tests : **488/488** (inchangés).
 
 ### L'email d'invitation devient l'invitation COMPLÈTE — 2026-08-02
 Demande de Romain : le destinataire doit recevoir **l'invitation complète**, pas un teaser.
