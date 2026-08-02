@@ -5,6 +5,21 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Correctif de style : champs « Joueurs » / « Éducs » alignés sur le reste — 2026-08-02
+Les deux champs d'effectifs (carte **Équipes** et édition au crayon ✏️) n'avaient pas la même
+allure que les autres champs : angles moins arrondis, autre police, autre bordure, hauteur
+différente. Cause : les règles de champs listaient `input[type="text"]`, `input[type="email"]`
+et `select` **mais pas** `input[type="number"]` — dans `styles.css` **et** dans `theme-r92.css`
+(la feuille de thème, chargée après, qui a le dernier mot). Les champs nombre ne recevaient donc
+aucun style de formulaire.
+Corrigé **à la source** plutôt qu'en empilant des exceptions : `input[type="number"]` et les deux
+champs d'édition rejoignent les listes existantes, et la boîte des champs d'édition en ligne
+(nom + effectifs) est désormais définie **une seule fois** au lieu d'être dupliquée. Le `!important`
+introduit avec la fonctionnalité disparaît. Ajout d'un `min-width: 0` sans lequel la largeur
+intrinsèque d'un champ `number` (~187 px) écrasait la largeur courte voulue (96 px).
+Vérifié au pixel en thème clair **et** sombre : mêmes hauteur, marges intérieures, arrondi,
+bordure, fond et police que le champ « Nom de l'équipe ». Aucun changement de comportement.
+
 ### Équipes : joueurs et éducateurs déclarés par équipe → demande d'autorisation — 2026-08-01
 À l'**ajout d'une équipe** comme au **crayon ✏️ de modification**, deux champs facultatifs
 s'ajoutent : **« Joueurs »** et **« Éducs »** (nombre d'éducateurs accompagnant cette équipe).

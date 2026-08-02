@@ -437,6 +437,7 @@ select.r-input { cursor: pointer; }
 }
 .form-equipe input[type="text"],
 .form-equipe input[type="email"],
+.form-equipe input[type="number"],
 .form-equipe select {
   flex: 1 1 150px;
   padding: 10px 12px;
@@ -538,10 +539,11 @@ select.r-input { cursor: pointer; }
   gap: 6px;
   flex-shrink: 0;
 }
-/* Champ de saisie quand on renomme une équipe en ligne. */
-.champ-edit-nom {
-  flex: 1;
-  min-width: 0;
+/* Champs de saisie quand on édite une équipe en ligne — nom ET effectifs : UNE seule
+   définition de boîte pour les trois, pour qu'ils ne puissent pas diverger avec le temps. */
+.champ-edit-nom,
+.champ-edit-joueurs,
+.champ-edit-educateurs {
   background: rgba(3, 16, 36, 0.6);
   border: 1px solid rgba(120, 180, 255, 0.4);
   color: #eaf2ff;
@@ -549,22 +551,18 @@ select.r-input { cursor: pointer; }
   padding: 5px 9px;
   font-family: inherit;
   font-size: 0.95rem;
-  text-transform: uppercase;
 }
+/* Propre au nom : il prend la place restante et s'affiche en MAJUSCULES. */
+.champ-edit-nom { flex: 1; min-width: 0; text-transform: uppercase; }
 
 /* ---- Effectifs déclarés par équipe (joueurs / éducateurs) ---- */
-/* Champs courts : ils ne doivent pas manger la place du nom d'équipe. */
-.champ-effectif { flex: 0 0 92px !important; width: 92px; text-align: center; text-transform: none; }
-.form-equipe .champ-effectif { flex: 0 0 96px; }
-.champ-edit-joueurs, .champ-edit-educateurs {
-  background: rgba(3, 16, 36, 0.6);
-  border: 1px solid rgba(120, 180, 255, 0.4);
-  color: #eaf2ff;
-  border-radius: 6px;
-  padding: 5px 9px;
-  font-family: inherit;
-  font-size: 0.95rem;
-}
+/* Ces champs héritent de la boîte commune (formulaire d'ajout ou ligne en édition) : ici on ne
+   règle QUE ce qui leur est propre — une largeur courte, pour laisser la place au nom. */
+/* `min-width: 0` est INDISPENSABLE : un élément flex a un plancher `min-width: auto` égal à sa
+   largeur intrinsèque, et celle d'un champ `number` (~187 px) écrasait la base de 96 px. */
+.champ-effectif { text-align: center; text-transform: none; min-width: 0; }
+.form-equipe input.champ-effectif { flex: 0 0 96px; }
+.equipe-item .champ-effectif { flex: 0 0 84px; }
 /* Badge « 12 joueurs · 2 éducs » à côté du nom. */
 .equipe-effectifs {
   margin-right: auto;
@@ -1490,8 +1488,8 @@ body.theme-clair {
 .theme-clair .champ-reglage input,
 .theme-clair .form-equipe input[type="text"],
 .theme-clair .form-equipe input[type="email"],
-.theme-clair .form-equipe select,
 .theme-clair .form-equipe input[type="number"],
+.theme-clair .form-equipe select,
 .theme-clair .champ-edit-nom,
 .theme-clair .champ-edit-joueurs,
 .theme-clair .champ-edit-educateurs {
