@@ -5,6 +5,23 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Email d'invitation assorti à la vitrine + bouton de réponse sur la page — 2026-08-02
+L'email d'invitation (Phase 1) reprend l'identité de la vitrine refondue : **blason centré**
+(nouveau `img/blason-racing92.png` — les clients mail n'affichent pas le SVG), surtitre « a le
+plaisir de vous inviter », grand titre, **date · lieu**, affiche centrée plus grande, « **La
+journée en un coup d'œil** » (accueil → coup d'envoi → pause méridienne → reprise → fin envisagée),
+tableau des catégories **enrichi** (forme de jeu, temps de jeu — y compris Super Challenge 2×15 /
+2×11, effectif, équipes par club). Le bouton « **Répondre à l'invitation** » reste l'action
+centrale, suivi d'un lien « Voir l'invitation complète ».
+**Nouveau jeton `{{LIEN_INVITATION}}`** : l'email pointe vers la page vitrine **personnalisée par
+club** (`invitation-club.html?club=…&token=…`). La page reconnaît alors le club et affiche un
+**vrai bouton « ✅ Répondre à l'invitation »** dans l'encart navy (relais des paramètres vers la
+page de réponse — la validation du jeton reste côté backend). Visiteur anonyme : mention « lien
+reçu par email », comme avant. `meta referrer no-referrer` posé sur les deux pages (le jeton de
+l'URL ne fuit jamais vers les liens externes).
+⚠️ **Ordre de mise en service : redéployer le backend AVANT tout nouvel envoi d'invitation**
+(sinon le jeton `{{LIEN_INVITATION}}` partirait tel quel dans l'email). Tests : **488/488**.
+
 ### Invitation vitrine : le carton d'invitation fait enfin honneur au tournoi — 2026-08-02
 La page d'invitation (Phase 1) était sobre au point d'être triste : petit blason dans un coin,
 affiche timbre-poste, descriptif tronqué à 150 caractères, et 2 lignes par catégorie. Refonte

@@ -3869,26 +3869,38 @@ function echapperHtmlServeur(s) {
 /**
  * Remplace les jetons d'un modèle (HTML ou texte) par les valeurs PERSONNALISÉES du club :
  *  - `{{SALUTATION}}` → « Bonjour {prénom}, » (ou « Bonjour, » sans prénom) ;
- *  - `{{LIEN_REPONSE}}` → le lien PERSONNEL de réponse du club (avec son jeton).
- * En mode HTML, salutation et lien sont échappés. Le reste du modèle est inséré tel quel.
+ *  - `{{LIEN_REPONSE}}` → le lien PERSONNEL de réponse du club (avec son jeton) ;
+ *  - `{{LIEN_INVITATION}}` → le lien PERSONNEL vers la page d'invitation vitrine (club + jeton) :
+ *    la page y reconnaît le club et affiche son bouton « Répondre à l'invitation ».
+ * En mode HTML, salutation et liens sont échappés. Le reste du modèle est inséré tel quel.
+ * Un modèle SANS un de ces jetons est inchangé (rétrocompatible avec les anciens gabarits).
  */
-function personnaliserInvitation(modele, prenom, lienReponse, estHtml) {
+function personnaliserInvitation(modele, prenom, lienReponse, lienInvitation, estHtml) {
   var p = String(prenom || '').trim();
   var salut = p ? ('Bonjour ' + p + ',') : 'Bonjour,';
   var lien = String(lienReponse || '');
-  if (estHtml) { salut = echapperHtmlServeur(salut); lien = echapperHtmlServeur(lien); }
+  var lienInv = String(lienInvitation || '');
+  if (estHtml) { salut = echapperHtmlServeur(salut); lien = echapperHtmlServeur(lien); lienInv = echapperHtmlServeur(lienInv); }
   return String(modele == null ? '' : modele)
     .split('{{SALUTATION}}').join(salut)
-    .split('{{LIEN_REPONSE}}').join(lien);
+    .split('{{LIEN_REPONSE}}').join(lien)
+    .split('{{LIEN_INVITATION}}').join(lienInv);
 }
 
-/** Construit le lien PERSONNEL de réponse d'un club (base + club + jeton). '' si base/jeton absent. */
+/** Construit un lien PERSONNEL de club (base + club + jeton) : sert au lien de RÉPONSE comme au
+ *  lien d'INVITATION vitrine (même forme d'URL). '' si base/jeton absent. */
 function lienReponseClub(baseReponse, nom, token) {
   var base = String(baseReponse || '').trim();
   var tok = String(token || '').trim();
   if (!base || !tok) return '';
   var sep = base.indexOf('?') === -1 ? '?' : '&';
   return base + sep + 'club=' + encodeURIComponent(nom) + '&token=' + encodeURIComponent(tok);
+}
+
+/** Lien d'INVITATION d'un club : personnel (club + jeton) si possible, sinon la page GÉNÉRIQUE
+ *  (base sans paramètres — la page affiche alors sa mention « lien reçu par email »). */
+function lienInvitationClub(baseInvitation, nom, token) {
+  return lienReponseClub(baseInvitation, nom, token) || String(baseInvitation || '').trim();
 }
 
 /**
@@ -3909,9 +3921,9 @@ function afficheBlobPourEmail(classeur) {
  * MailApp par défaut (scope léger script.send_mail) ; GmailApp avec « from » si alias configuré.
  * LÈVE une exception en cas d'échec (l'appelant ne marque alors pas la date d'envoi).
  */
-function envoyerInvitationEmail(dest, sujet, htmlModele, texteModele, prenom, lienReponse, afficheBlob, expediteur) {
-  var html = personnaliserInvitation(htmlModele, prenom, lienReponse, true);
-  var texte = personnaliserInvitation(texteModele, prenom, lienReponse, false);
+function envoyerInvitationEmail(dest, sujet, htmlModele, texteModele, prenom, lienReponse, lienInvitation, afficheBlob, expediteur) {
+  var html = personnaliserInvitation(htmlModele, prenom, lienReponse, lienInvitation, true);
+  var texte = personnaliserInvitation(texteModele, prenom, lienReponse, lienInvitation, false);
   envoyerEmailHtml(dest, sujet, html, texte, afficheBlob, expediteur);
 }
 
@@ -3949,11 +3961,12 @@ function envoyerInvitationClub(classeur, data) {
   for (var i = 0; i < clubs.length; i++) { if (memeTexteSouple(clubs[i].club_nom, nom)) { club = clubs[i]; break; } }
   var prenom = club ? club.club_contact_prenom : '';
   var lienReponse = lienReponseClub(data.base_reponse, nom, club ? club.club_token : '');
+  var lienInvitation = lienInvitationClub(data.base_invitation, nom, club ? club.club_token : '');
 
   var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
   var afficheBlob = afficheBlobPourEmail(classeur);
   try {
-    envoyerInvitationEmail(email, sujet, htmlModele, texteModele, prenom, lienReponse, afficheBlob, expediteur);
+    envoyerInvitationEmail(email, sujet, htmlModele, texteModele, prenom, lienReponse, lienInvitation, afficheBlob, expediteur);
   } catch (e) {
     return { error: 'Échec de l\'envoi de l\'email : ' + (e && e.message ? e.message : e) };
   }
@@ -4001,7 +4014,8 @@ function envoyerInvitationsGroupe(classeur, data) {
     if (dejaInvite && !renvoyer) { dejaInvites.push(String(c.club_nom || '')); return; }
     try {
       var lienReponse = lienReponseClub(data.base_reponse, c.club_nom, c.club_token);
-      envoyerInvitationEmail(email, sujet, htmlModele, texteModele, c.club_contact_prenom, lienReponse, afficheBlob, expediteur);
+      var lienInvitation = lienInvitationClub(data.base_invitation, c.club_nom, c.club_token);
+      envoyerInvitationEmail(email, sujet, htmlModele, texteModele, c.club_contact_prenom, lienReponse, lienInvitation, afficheBlob, expediteur);
       var ligne = ligneParNom[normaliserTexteSouple(c.club_nom)] || -1;
       if (ligne !== -1 && colEnvoye !== -1) {
         var cell = onglet.getRange(ligne, colEnvoye);

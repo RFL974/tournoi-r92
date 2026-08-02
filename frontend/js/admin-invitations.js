@@ -27,9 +27,21 @@
    correspond exactement à l'aperçu, seule la salutation variant par club.
    -------------------------------------------------------------------------- */
 
-/** URL absolue de la page d'invitation publique (Phase 1), pour le lien de l'email. */
+/** URL absolue de la page d'invitation publique (Phase 1), pour le lien de l'email.
+ *  C'est la BASE : le backend y ajoute club + jeton par destinataire ({{LIEN_INVITATION}}),
+ *  la page reconnaît alors le club et affiche son bouton « Répondre à l'invitation ». */
 function lienInvitationPublique() {
   return new URL('invitation-club.html', window.location.href).toString();
+}
+
+/** URL absolue du blason en PNG (les clients mail n'affichent pas le SVG). */
+function urlBlasonEmail() {
+  return new URL('img/blason-racing92.png', window.location.href).toString();
+}
+
+/** Lien d'invitation d'EXEMPLE pour l'aperçu (le vrai lien, avec jeton, est construit par club). */
+function lienInvitationApercu() {
+  return lienInvitationPublique() + '?club=EXEMPLE&token=EXEMPLE';
 }
 
 /** État « global » pour l'invitation : config enregistrée + valeurs LIVE des cartes
@@ -87,63 +99,97 @@ function emailTitreSection(t) {
     + echapper(t) + '</h2>';
 }
 
+/* --- Résumés sportifs de l'email (miroirs légers de la vitrine ; suffixe Email comme
+       heureFinCommuniqueeAdmin — admin.html ne charge pas commun-dossier.js) --- */
+
+/** Ajoute `minutes` à une heure « HH:MM » (bornée à 23:59). '' si l'heure est illisible. */
+function heurePlusMinutesEmail(hhmm, minutes) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm || '').trim());
+  if (!m) return '';
+  const total = Math.min(23 * 60 + 59, parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + minutes);
+  return ('0' + Math.floor(total / 60)).slice(-2) + ':' + ('0' + (total % 60)).slice(-2);
+}
+
+/** Forme de jeu d'une catégorie : Super Challenge prioritaire, sinon Config.forme_jeu, sinon ''. */
+function formeJeuEmailTxt(c) {
+  if (ctxScf(c).estScf) return 'Jeu à XV · Super Challenge de France';
+  return String(c.forme_jeu || '').trim();
+}
+
+/** « 2 × 10 min (pause 2 min) » — temps SCF imposés par la phase (P2 = 2×15 ; P3 = 2×11,
+ *  miroir de dureeMatchScf côté backend). '' si la durée est inconnue. */
+function tempsJeuEmailTxt(c) {
+  const scf = ctxScf(c);
+  const nb = scf.estScf ? 2 : (parseInt(String(c.format_mi_temps || '').trim(), 10) || 2);
+  const duree = scf.estScf ? (scf.phase === 'P3' ? 11 : 15) : parseInt(String(c.duree_mi_temps_min || '').trim(), 10);
+  if (!isFinite(duree) || duree <= 0) return '';
+  let s = nb + ' × ' + duree + ' min';
+  const pause = parseInt(String(c.pause_mi_temps_min || '').trim(), 10);
+  if (nb === 2 && isFinite(pause) && pause > 0) s += ' (pause ' + pause + ' min)';
+  return s;
+}
+
+/** « 8 à 12 joueurs » / « 8 joueurs min » / « 12 joueurs max » / ''. */
+function effectifEmailTxt(c) {
+  const min = String(c.effectif_min || '').trim(), max = String(c.effectif_max || '').trim();
+  if (min && max) return (min === max) ? min + ' joueurs' : min + ' à ' + max + ' joueurs';
+  if (min) return min + ' joueurs min';
+  if (max) return max + ' joueurs max';
+  return '';
+}
+
 /**
  * Corps HTML de l'email d'invitation (compatible clients mail : tableaux + styles en ligne).
- * Reprend les sections de invitation-club.html dans le même ordre. `salutationHtml` est inséré
- * TEL QUEL (jeton « {{SALUTATION}} » pour l'envoi, ou « Bonjour {exemple}, » pour l'aperçu) ;
- * `imgSrc` = l'affiche (URL Drive en aperçu, « cid:affiche » pour l'envoi ; vide = pas d'image).
+ * MÊME IDENTITÉ que la page vitrine refondue : blason centré, surtitre « a le plaisir de vous
+ * inviter », grand titre, date · lieu, affiche centrée, journée en un coup d'œil, tableau des
+ * catégories enrichi (forme de jeu, temps de jeu). `salutationHtml` est inséré TEL QUEL (jeton
+ * « {{SALUTATION}} » pour l'envoi, ou « Bonjour {exemple}, » pour l'aperçu) ; `imgSrc` = l'affiche
+ * (URL Drive en aperçu, « cid:affiche » pour l'envoi ; vide = pas d'image) ; `lienInvitation` =
+ * lien vers la page vitrine (jeton « {{LIEN_INVITATION}} » à l'envoi → personnalisé par club).
  */
-function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse) {
+function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse, lienInvitation) {
   const A = 'font-family:Arial,Helvetica,sans-serif;';
   const nom = echapper(String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
   const date = String(g.tournoi_date || '').trim() ? echapper(formaterDateFr(g.tournoi_date)) : '';
-  const lien = echapper(lienInvitationPublique());
+  const lieu = echapper(String(g.tournoi_lieu || '').trim());
+  const lienInv = lienInvitation ? echapper(lienInvitation) : echapper(lienInvitationPublique());
 
-  // En-tête : affiche (optionnelle) + surtitre + nom + date.
-  let entete = '';
-  if (imgSrc) {
-    entete += '<img src="' + echapper(imgSrc) + '" alt="Affiche — ' + nom + '" '
-      + 'style="display:block;max-width:180px;width:100%;height:auto;border-radius:6px;margin:0 0 10px;">';
-  }
-  entete += '<p style="margin:0;' + A + 'text-transform:uppercase;letter-spacing:1px;font-size:12px;color:' + EMAIL_BLEU + ';">Invitation — Génération R92</p>'
-    + '<h1 style="margin:4px 0 2px;' + A + 'font-size:24px;color:' + EMAIL_NAVY + ';">' + nom + '</h1>'
-    + (date ? '<p style="margin:0;' + A + 'font-weight:bold;color:' + EMAIL_TXT + ';">' + date + '</p>' : '');
+  // En-tête VITRINE : blason centré, surtitre, grand titre, date · lieu, filet d'accent.
+  let entete = '<div style="text-align:center;">'
+    + '<img src="' + echapper(urlBlasonEmail()) + '" alt="Racing 92" width="110" '
+    + 'style="display:block;width:110px;height:auto;margin:0 auto 10px;">'
+    + '<p style="margin:0;' + A + 'text-transform:uppercase;letter-spacing:2px;font-size:12px;line-height:1.5;color:' + EMAIL_BLEU + ';">'
+    + 'L\'École de Rugby du Racing Club de France<br>a le plaisir de vous inviter</p>'
+    + '<h1 style="margin:8px 0 2px;' + A + 'font-size:27px;line-height:1.1;color:' + EMAIL_NAVY + ';">' + nom + '</h1>'
+    + ((date || lieu) ? '<p style="margin:4px 0 0;' + A + 'font-weight:bold;font-size:15px;color:' + EMAIL_NAVY + ';">'
+      + [date, lieu].filter(Boolean).join('<span style="color:' + EMAIL_BLEU + ';"> · </span>') + '</p>' : '')
+    + '<div style="width:90px;height:4px;background:' + EMAIL_BLEU + ';margin:14px auto 0;border-radius:2px;font-size:0;line-height:0;">&nbsp;</div>'
+    + '</div>';
+
+  // L'affiche du tournoi, centrée et plus grande (l'email reste léger : 340 px maxi).
+  const blocAffiche = imgSrc
+    ? '<img src="' + echapper(imgSrc) + '" alt="Affiche — ' + nom + '" '
+      + 'style="display:block;width:100%;max-width:340px;height:auto;border-radius:8px;margin:16px auto 0;">'
+    : '';
 
   // Salutation + intro.
   // La phrase d'intro est du texte LIBRE (multi-lignes) : sauts de ligne → <br> + texte justifié.
   const bloc_salut = '<p style="margin:18px 0 4px;' + A + 'font-size:15px;color:' + EMAIL_TXT + ';">' + salutationHtml + '</p>'
     + (String(intro || '').trim() ? '<p style="margin:0;' + A + 'font-size:14px;color:' + EMAIL_TXT + ';text-align:justify;">' + nl2brEmail(intro) + '</p>' : '');
 
-  // Bouton d'ACTION principal : « Répondre à l'invitation » (lien personnel avec jeton).
+  // Bouton d'ACTION principal : « Répondre à l'invitation » (lien personnel avec jeton),
+  // suivi du lien vers l'invitation complète (page vitrine, personnalisée par club à l'envoi).
   const boutonReponse = lienReponse
     ? '<p style="margin:18px 0 4px;text-align:center;"><a href="' + echapper(lienReponse) + '" '
       + 'style="display:inline-block;background:' + EMAIL_BLEU + ';color:#ffffff;text-decoration:none;'
       + 'border-radius:999px;padding:13px 28px;' + A + 'font-size:15px;font-weight:bold;">Répondre à l\'invitation</a></p>'
       + '<p style="margin:0 0 4px;text-align:center;' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
-      + '(présence, catégories engagées et nombre d\'équipes)</p>'
+      + '(présence, équipes engagées, joueurs et éducateurs par équipe)</p>'
+      + '<p style="margin:6px 0 4px;text-align:center;' + A + 'font-size:13px;">'
+      + '<a href="' + lienInv + '" style="color:' + EMAIL_BLEU + ';">📄 Voir l\'invitation complète</a></p>'
     : '';
 
-  // « Vous êtes invités » : tableau catégorie / équipes par club / effectif mini.
-  let tblInvites = '';
-  if (cats.length) {
-    const th = 'style="text-align:left;background:' + EMAIL_NAVY + ';color:#fff;' + A + 'font-size:13px;padding:6px 8px;"';
-    const td = 'style="' + A + 'font-size:13px;padding:6px 8px;border-bottom:1px solid ' + EMAIL_FILET + ';color:' + EMAIL_TXT + ';"';
-    let rows = '';
-    cats.forEach(function (c) {
-      const max = parseInt(String(c.max_equipes_par_club || '').trim(), 10);
-      const eq = (isFinite(max) && max >= 1) ? ('Jusqu\'à ' + max + ' équipe' + (max > 1 ? 's' : '')) : 'Plusieurs possibles';
-      const effMin = parseInt(String(c.effectif_min || '').trim(), 10);
-      const eff = (isFinite(effMin) && effMin >= 1) ? (effMin + ' joueur' + (effMin > 1 ? 's' : '') + ' mini') : '—';
-      rows += '<tr><td ' + td + '><strong>' + echapper(String(c.categorie || '')) + '</strong></td>'
-        + '<td ' + td + '>' + echapper(eq) + '</td><td ' + td + '>' + echapper(eff) + '</td></tr>';
-    });
-    tblInvites = emailTitreSection('Vous êtes invités')
-      + '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;width:100%;">'
-      + '<tr><th ' + th + '>Catégorie</th><th ' + th + '>Équipes par club</th><th ' + th + '>Effectif</th></tr>'
-      + rows + '</table>';
-  }
-
-  // « Le jour J, en bref ».
+  // « La journée en un coup d'œil » : mêmes étapes que la frise de la page vitrine.
   const ligneJ = function (lib, val) {
     if (!val) return '';
     return '<tr><td style="' + A + 'font-size:13px;color:' + EMAIL_GRIS + ';padding:3px 10px 3px 0;">' + echapper(lib) + '</td>'
@@ -151,13 +197,44 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
   };
   const arbitrages = [];
   cats.forEach(function (c) { const v = String(c.arbitrage_organisation || '').trim(); if (v && arbitrages.indexOf(v) === -1) arbitrages.push(v); });
-  const formatPhrase = cats.length ? 'Poules le matin, puis une phase l\'après-midi (temps de jeu adapté par catégorie).' : '';
+  const pauseDuree = parseInt(String(g.pause_dejeuner_duree_min || '').trim(), 10);
+  const pauseTxt = String(g.pause_dejeuner_debut || '').trim()
+    ? String(g.pause_dejeuner_debut).trim() + ((isFinite(pauseDuree) && pauseDuree > 0) ? ' (' + pauseDuree + ' min)' : '')
+    : '';
+  const reprise = (String(g.pause_dejeuner_debut || '').trim() && isFinite(pauseDuree) && pauseDuree > 0)
+    ? heurePlusMinutesEmail(g.pause_dejeuner_debut, pauseDuree) : '';
   const jourJ = ligneJ('Accueil des équipes', String(g.heure_rdv || '').trim())
+    + ligneJ('Coup d\'envoi', String(g.heure_debut || '').trim())
+    + ligneJ('Pause méridienne', pauseTxt)
+    + ligneJ('Reprise', reprise)
     + ligneJ('Fin envisagée', heureFinCommuniqueeAdmin(g))
-    + ligneJ('Format des matchs', formatPhrase)
     + ligneJ('Arbitrage', arbitrages.join(' · '));
-  const blocJourJ = jourJ ? (emailTitreSection('Le jour J, en bref')
+  const blocJourJ = jourJ ? (emailTitreSection('La journée en un coup d\'œil')
     + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + jourJ + '</table>') : '';
+
+  // « Vous êtes invités » : tableau enrichi — catégorie (+ forme de jeu), temps de jeu,
+  // effectif, équipes par club. Le détail complet vit sur la page vitrine (lien ci-dessus).
+  let tblInvites = '';
+  if (cats.length) {
+    const th = 'style="text-align:left;background:' + EMAIL_NAVY + ';color:#fff;' + A + 'font-size:12px;padding:6px 8px;"';
+    const td = 'style="' + A + 'font-size:13px;padding:6px 8px;border-bottom:1px solid ' + EMAIL_FILET + ';color:' + EMAIL_TXT + ';vertical-align:top;"';
+    let rows = '';
+    cats.forEach(function (c) {
+      const max = parseInt(String(c.max_equipes_par_club || '').trim(), 10);
+      const eq = (isFinite(max) && max >= 1) ? ('Jusqu\'à ' + max) : 'Plusieurs';
+      const forme = formeJeuEmailTxt(c);
+      rows += '<tr><td ' + td + '><strong>' + echapper(String(c.categorie || '')) + '</strong>'
+        + (forme ? '<br><span style="' + A + 'font-size:11px;color:' + EMAIL_GRIS + ';">' + echapper(forme) + '</span>' : '')
+        + '</td>'
+        + '<td ' + td + '>' + (echapper(tempsJeuEmailTxt(c)) || '—') + '</td>'
+        + '<td ' + td + '>' + (echapper(effectifEmailTxt(c)) || '—') + '</td>'
+        + '<td ' + td + '>' + echapper(eq) + '</td></tr>';
+    });
+    tblInvites = emailTitreSection('Vous êtes invités')
+      + '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;width:100%;">'
+      + '<tr><th ' + th + '>Catégorie</th><th ' + th + '>Temps de jeu</th><th ' + th + '>Effectif</th><th ' + th + '>Équipes/club</th></tr>'
+      + rows + '</table>';
+  }
 
   // « Sur place » : pastilles (seulement si cochées) + tarif si demandé.
   const pastilles = [];
@@ -195,45 +272,56 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
   const blocReponse = reponse ? (emailTitreSection('Réponse attendue')
     + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + reponse + '</table>') : '';
 
-  // Pied : mention + lien de secours vers la page complète.
+  // Pied : mention (même entité que la vitrine) + lien de secours vers la page complète.
   const pied = '<p style="margin:20px 0 0;padding-top:12px;border-top:1px solid ' + EMAIL_FILET + ';' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
-    + 'Génération R92 · École de rugby du Racing 92<br>'
-    + '<a href="' + lien + '" style="color:' + EMAIL_BLEU + ';">Voir la version complète en ligne</a></p>';
+    + 'Génération R92 · École de Rugby du Racing Club de France<br>'
+    + '<a href="' + lienInv + '" style="color:' + EMAIL_BLEU + ';">Voir la version complète en ligne</a></p>';
 
+  // Ordre VITRINE : en-tête, affiche, salutation, bouton, journée, catégories, sur place, réponse.
   return '<div style="background:#eef2f7;padding:16px;' + A + '">'
     + '<table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;margin:0 auto;background:#ffffff;border-collapse:collapse;">'
     + '<tr><td style="padding:22px 24px;">'
-    + '<div style="border-bottom:3px solid ' + EMAIL_NAVY + ';padding-bottom:12px;">' + entete + '</div>'
-    + bloc_salut + boutonReponse + tblInvites + blocJourJ + surPlace + blocReponse + pied
+    + '<div style="border-bottom:3px solid ' + EMAIL_NAVY + ';padding-bottom:14px;">' + entete + '</div>'
+    + blocAffiche + bloc_salut + boutonReponse + blocJourJ + tblInvites + surPlace + blocReponse + pied
     + '</td></tr></table></div>';
 }
 
-/** Version TEXTE brut (fallback anti-spam / clients sans HTML). `salutationTexte` = jeton ou exemple. */
-function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse) {
+/** Version TEXTE brut (fallback anti-spam / clients sans HTML). `salutationTexte` et les liens
+ *  sont des jetons à l'envoi ({{SALUTATION}}, {{LIEN_REPONSE}}, {{LIEN_INVITATION}}) ou des
+ *  exemples pour l'aperçu. */
+function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse, lienInvitation) {
   const nom = String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92';
   const L = [];
   L.push(salutationTexte);
   L.push('');
   if (String(intro || '').trim()) { L.push(String(intro).trim()); L.push(''); }
   if (lienReponse) { L.push('▶ Répondre à l\'invitation : ' + lienReponse); L.push(''); }
+  if (lienInvitation) { L.push('📄 Voir l\'invitation complète : ' + lienInvitation); L.push(''); }
   if (cats.length) {
     L.push('VOUS ÊTES INVITÉS');
     cats.forEach(function (c) {
       const max = parseInt(String(c.max_equipes_par_club || '').trim(), 10);
       const eq = (isFinite(max) && max >= 1) ? ('jusqu\'à ' + max + ' équipe(s)/club') : 'plusieurs équipes possibles';
-      const effMin = parseInt(String(c.effectif_min || '').trim(), 10);
-      const eff = (isFinite(effMin) && effMin >= 1) ? (' · ' + effMin + ' joueur(s) mini') : '';
-      L.push('- ' + String(c.categorie || '') + ' : ' + eq + eff);
+      const seg = [eq];
+      const forme = formeJeuEmailTxt(c);
+      if (forme) seg.unshift(forme);
+      const temps = tempsJeuEmailTxt(c);
+      if (temps) seg.push(temps);
+      const eff = effectifEmailTxt(c);
+      if (eff) seg.push(eff);
+      L.push('- ' + String(c.categorie || '') + ' : ' + seg.join(' · '));
     });
     L.push('');
   }
   const jour = [];
   if (String(g.heure_rdv || '').trim()) jour.push('Accueil : ' + String(g.heure_rdv).trim());
+  if (String(g.heure_debut || '').trim()) jour.push('Coup d\'envoi : ' + String(g.heure_debut).trim());
+  if (String(g.pause_dejeuner_debut || '').trim()) jour.push('Pause méridienne : ' + String(g.pause_dejeuner_debut).trim());
   if (heureFinCommuniqueeAdmin(g)) jour.push('Fin envisagée : ' + heureFinCommuniqueeAdmin(g));
   const arb = [];
   cats.forEach(function (c) { const v = String(c.arbitrage_organisation || '').trim(); if (v && arb.indexOf(v) === -1) arb.push(v); });
   if (arb.length) jour.push('Arbitrage : ' + arb.join(' · '));
-  if (jour.length) { L.push('LE JOUR J : ' + jour.join(' · ')); L.push(''); }
+  if (jour.length) { L.push('LA JOURNÉE : ' + jour.join(' · ')); L.push(''); }
   const services = [];
   if (estOui(g.buvette_disponible)) services.push('buvette');
   if (estOui(g.espace_sandwich_disponible)) services.push('espace sandwich');
@@ -252,10 +340,10 @@ function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse) {
   if (String(g.contact_reponse_email || '').trim()) c2.push(String(g.contact_reponse_email).trim());
   if (c2.length) L.push('Contact : ' + c2.join(' · '));
   L.push('');
-  L.push('Voir la version complète en ligne : ' + lienInvitationPublique());
+  L.push('Voir la version complète en ligne : ' + (lienInvitation || lienInvitationPublique()));
   L.push('');
   L.push('Au plaisir de vous accueillir,');
-  L.push('Génération R92');
+  L.push('Génération R92 · École de Rugby du Racing Club de France');
   return L.join('\n');
 }
 
@@ -298,8 +386,8 @@ function majApercuInvitation() {
   const cats = catsInvitationTriees();
   const imgSrc = String(g.tournoi_affiche_id || '').trim() ? urlAffiche(g.tournoi_affiche_id, 800) : '';
   const salut = 'Bonjour ' + echapper(exemplePrenomInvitation()) + ',';
-  // Aperçu : lien de réponse d'EXEMPLE (le vrai lien, avec jeton, est construit par club à l'envoi).
-  rendu.srcdoc = emailHtmlInvitation(g, cats, imgSrc, salut, intro.value, lienReponseApercu());
+  // Aperçu : liens d'EXEMPLE (les vrais liens, avec jeton, sont construits par club à l'envoi).
+  rendu.srcdoc = emailHtmlInvitation(g, cats, imgSrc, salut, intro.value, lienReponseApercu(), lienInvitationApercu());
 }
 
 /** URL absolue de la page de réponse (base, sans club/token — le backend les ajoute par club). */
@@ -340,16 +428,17 @@ function introInvitationCourant() {
   return el ? el.value : introInvitationDefaut(globalInvitation());
 }
 
-/** Modèle HTML envoyé au backend : jeton {{SALUTATION}} + affiche en cid:affiche (si présente). */
+/** Modèle HTML envoyé au backend : jetons {{SALUTATION}} / {{LIEN_REPONSE}} / {{LIEN_INVITATION}}
+ *  + affiche en cid:affiche (si présente). */
 function htmlModeleInvitation() {
   const g = globalInvitation();
   const imgSrc = String(g.tournoi_affiche_id || '').trim() ? 'cid:affiche' : '';
-  return emailHtmlInvitation(g, catsInvitationTriees(), imgSrc, '{{SALUTATION}}', introInvitationCourant(), '{{LIEN_REPONSE}}');
+  return emailHtmlInvitation(g, catsInvitationTriees(), imgSrc, '{{SALUTATION}}', introInvitationCourant(), '{{LIEN_REPONSE}}', '{{LIEN_INVITATION}}');
 }
 
-/** Modèle TEXTE envoyé au backend (fallback), avec les jetons {{SALUTATION}} et {{LIEN_REPONSE}}. */
+/** Modèle TEXTE envoyé au backend (fallback), avec les trois mêmes jetons. */
 function texteModeleInvitation() {
-  return emailTexteInvitation(globalInvitation(), catsInvitationTriees(), '{{SALUTATION}}', introInvitationCourant(), '{{LIEN_REPONSE}}');
+  return emailTexteInvitation(globalInvitation(), catsInvitationTriees(), '{{SALUTATION}}', introInvitationCourant(), '{{LIEN_REPONSE}}', '{{LIEN_INVITATION}}');
 }
 
 /** Vrai si un club est ENCORE invitable (ni Accepté, ni Décliné). */
@@ -370,7 +459,7 @@ async function envoyerInvitationClubUI(nom) {
   try {
     const res = await ecrireAdmin('envoyerInvitationClub', {
       club_nom: nom, sujet: sujet, html_modele: htmlModeleInvitation(), texte_modele: texteModeleInvitation(),
-      base_reponse: baseReponseInvitation()
+      base_reponse: baseReponseInvitation(), base_invitation: lienInvitationPublique()
     });
     if (res && res.invitation_envoyee) club.invitation_envoyee = res.invitation_envoyee;
     afficherClubsInvites();
@@ -419,7 +508,8 @@ async function onEnvoyerInvitationsGroupe() {
   try {
     const res = await ecrireAdmin('envoyerInvitationsGroupe', {
       sujet: sujet, html_modele: htmlModeleInvitation(), texte_modele: texteModeleInvitation(),
-      base_reponse: baseReponseInvitation(), renvoyer: renvoyer ? 'oui' : 'non'
+      base_reponse: baseReponseInvitation(), base_invitation: lienInvitationPublique(),
+      renvoyer: renvoyer ? 'oui' : 'non'
     });
     await chargerClubsInvites(); // rafraîchit invitation_envoyee + l'aperçu (exemple prénom)
     const nbOk = (res.envoyes || []).length;
