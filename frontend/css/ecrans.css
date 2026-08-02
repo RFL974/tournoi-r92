@@ -274,3 +274,16 @@ body.avec-ecrans .ecran[hidden] { display: none !important; }
    -------------------------------------------------------------------------- */
 body.avec-ecrans #etat-avancement .ea-entete,
 body.avec-ecrans #etat-avancement .ea-fil { display: none; }
+
+/* Explication du VERROU : pourquoi cette étape est inaccessible. Affichée au clic sur un
+   onglet grisé — avant, l'onglet se contentait de trembler sans rien dire. */
+.ecr-verrou-msg {
+  margin: 8px 10px 0;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: rgba(214, 141, 20, .16);
+  color: #b26a00;
+  font-size: .82rem;
+  line-height: 1.45;
+}
+.theme-clair .ecr-verrou-msg { background: #FFF4E0; color: #8a5200; }
