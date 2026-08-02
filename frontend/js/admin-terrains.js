@@ -950,6 +950,10 @@ function afficherRepartition(res, cats) {
        'pendant le glisser. Les numéros se recalculent tout seuls. « Répartir les terrains » recalcule ' +
        'tout et annule les ajustements.</p>';
   if ((res.misDeCote || []).length) {
+    h += '<p class="note-generation">💡 Un mini-terrain peut aussi rester de côté <strong>volontairement</strong> ' +
+         '(terrain que tu ne veux pas utiliser) : tu peux valider et appliquer sans le reposer. ' +
+         'Avec moins de terrains la journée s\'allonge — l\'<strong>arbitrage des horaires</strong> le ' +
+         'vérifiera à la génération du planning et proposera des pistes si l\'heure de fin est dépassée.</p>';
     h += '<div id="repart-tray" class="repart-tray" aria-label="Mini-terrains mis de côté">' +
       res.misDeCote.map(function (c, i) {
         if (c.plein) {
@@ -1196,21 +1200,21 @@ function poserMiniTerrainSur(iField, iChip, xm, ym) {
 }
 
 /** « Valider le placement » : fige la disposition et pose les tables de marque d'un seul coup.
- *  Refuse tant que des mini-terrains sont encore de côté (ils seraient perdus). */
+ *  Des mini-terrains laissés de côté ne bloquent PAS : c'est un choix légitime (terrain qu'on ne
+ *  souhaite pas utiliser). On le rappelle simplement — la journée sera plus longue, et le système
+ *  d'arbitrage le vérifiera à la génération du planning. */
 function onValiderPlacement() {
   const res = repartitionCalculee;
   if (!res || !res.ctxManuel) return;
-  const message = document.getElementById('message-repartition');
   const restants = (res.misDeCote || []).length;
-  if (restants) {
-    afficherMessage(message, '⚠️ ' + restants + ' mini-terrain(s) encore de côté : pose-les (ou ' +
-      'relance « Répartir les terrains ») avant de valider.', 'ko');
-    return;
-  }
   poserTablesMarques(res);
   afficherRepartition(res, res.ctxManuel.cats);
   afficherMessage(document.getElementById('message-repartition'),
-    '✅ Placement validé, tables de marque posées.', 'ok');
+    restants
+      ? '✅ Placement validé — ' + restants + ' mini-terrain(s) laissé(s) de côté ne seront pas ' +
+        'utilisés. Moins de terrains = journée plus longue : l\'arbitrage des horaires le vérifiera ' +
+        'à la génération du planning.'
+      : '✅ Placement validé, tables de marque posées.', 'ok');
 }
 
 /** Pivote une pastille mise de côté (longueur ↔ largeur) et réaffiche. */
@@ -1418,13 +1422,27 @@ async function onAppliquerRepartition() {
     return;
   }
 
+  // Mini-terrains laissés de côté : un CHOIX possible (terrain qu'on ne veut pas utiliser), pas
+  // une anomalie — on l'énonce sans alarme. Grands terrains sans aucun mini-terrain : idem.
   const enAttente = (repartitionCalculee.misDeCote || []).length;
+  const inutilises = repartitionCalculee.fieldsPlan
+    .filter(function (fp) { return !fp.zones.some(function (z) { return z.tiles.length; }); })
+    .map(function (fp) { return fp.field.nom; });
+  // Catégorie dont TOUS les mini-terrains ont été mis de côté : son réglage actuel reste en place
+  // (on n'efface jamais un champ « Terrains » sans le dire).
+  const sansAucunTerrain = Object.keys(par).filter(function (n) { return !par[n] || !par[n].length; });
+
   const ok = await dialogConfirmer(
     'Écrire ces terrains dans les catégories en mode Auto ?\n\n' +
     noms.map(function (n) { return n + ' → ' + par[n].join(', '); }).join('\n') +
     (ignorees.length ? '\n\nLaissées telles quelles (mode Manuel) : ' + ignorees.join(', ') + '.' : '') +
-    (enAttente ? '\n\n⚠️ ' + enAttente + ' mini-terrain(s) encore MIS DE CÔTÉ ne seront PAS appliqués : ' +
-      'repose-les d\'abord sur la carte si tu veux les garder.' : '') +
+    (enAttente ? '\n\n' + enAttente + ' mini-terrain(s) laissé(s) de côté : ils ne seront pas utilisés.' : '') +
+    (inutilises.length ? '\n\nGrand(s) terrain(s) non utilisé(s) : ' + inutilises.join(', ') + '.' : '') +
+    (sansAucunTerrain.length ? '\n\n⚠️ Sans aucun terrain : ' + sansAucunTerrain.join(', ') +
+      ' — leur réglage « Terrains » actuel est CONSERVÉ (rien n\'est effacé).' : '') +
+    ((enAttente || inutilises.length)
+      ? '\n\nMoins de terrains = journée plus longue : à la génération du planning, l\'arbitrage des ' +
+        'horaires vérifiera l\'heure de fin et proposera des pistes si besoin.' : '') +
     '\n\nCela remplace le champ « Terrains » de ces catégories (pris en compte à la prochaine génération du planning).',
     { ok: 'Appliquer' });
   if (!ok) return;

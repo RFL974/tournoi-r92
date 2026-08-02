@@ -25,6 +25,15 @@ automatiquement étaient **impossibles à refaire à la main**. Désormais :
 Les deux seules règles conservées restent physiques : tenir dans le grand terrain et respecter le
 couloir de circulation. **100 % front**, aucun redéploiement backend.
 
+**Un terrain laissé de côté est un choix, pas une anomalie.** Mettre un mini-terrain de côté peut
+simplement vouloir dire « je ne veux pas l'utiliser » : la validation **ne bloque plus** et
+l'attribution aux catégories reste possible avec un ou plusieurs terrains inutilisés. Les messages
+l'énoncent sans alarme (mini-terrains de côté, grands terrains non utilisés) et rappellent que
+**moins de terrains = journée plus longue** — l'**arbitrage des horaires** vérifie l'heure de fin à
+la génération du planning et propose ses pistes si elle est dépassée. Garde-fou ajouté : une
+catégorie dont **tous** les terrains ont été mis de côté est signalée, et son réglage « Terrains »
+actuel est **conservé** (rien n'est effacé en silence).
+
 ### Correctif : ouvrir le crayon d'une équipe ne verrouille plus la barre latérale — 2026-08-02
 Cliquer sur le crayon ✏️ d'une équipe **grisait aussitôt les étapes suivantes** de la barre
 latérale (Terrains, Poules & planning, Publication, Après-midi) — **même sans rien modifier**,
