@@ -5,6 +5,24 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Feuille de fin de journée : bilan chronologique, PDF et envoi aux clubs — 2026-08-02
+Nouvel item **« Feuille de journée »**, placé **après « Après-midi »** dans la barre latérale :
+- **tous les matchs de la journée dans l'ordre chronologique** (heure de début, puis terrain, puis
+  catégorie), avec leur **score**, la catégorie, le terrain et le moment (matin / après-midi) ;
+- **rien n'est inventé** : un match sans score affiche « — » (jamais 0 – 0, qui serait un résultat
+  faux) et un match sans heure lisible est rangé **en fin** de liste plutôt qu'en tête ;
+- un **compteur** rappelle combien de matchs ont un score et combien restent en attente ;
+- **📄 Télécharger le PDF** — document créé de zéro avec `pdf-lib`, **100 % navigateur, sans
+  backend** : titre, bilan, tableau paginé (l'en-tête se répète à chaque page), valeurs trop
+  longues tronquées proprement. Nom de fichier daté ;
+- **✉️ Envoyer aux clubs** — envoi de la feuille (email HTML + version texte de repli) aux clubs
+  **acceptés**, sur **l'adresse qui a servi à les inviter**. Confirmation préalable listant les
+  destinataires, les clubs **sans adresse** (non contactés) et le nombre de matchs encore sans
+  score. Chaque club est traité individuellement : l'échec de l'un n'annule pas les autres, et les
+  échecs sont **affichés**, jamais silencieux.
+Backend : nouvelle action protégée `envoyerFeuilleJour` (réutilise l'envoi d'email existant).
+**Redéploiement backend nécessaire.**
+
 ### Terrains : placement manuel au point exact, orientation au choix, tables en dernier — 2026-08-02
 Le placement manuel cherchait « la meilleure place libre » près du point lâché : le mini-terrain
 partait ailleurs que là où on le posait, et certaines configurations pourtant produites

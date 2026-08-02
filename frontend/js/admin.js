@@ -255,6 +255,7 @@ async function initAdmin() {
       afficherEquipes(data.equipes);
       afficherPlanning(data.poules, data.matchs);
       majApresMidi();
+      majFeuilleJour();
 
       // 4) Infos du tournoi + contacts & sécurité + dossier + publication.
       majInfosTournoi();
@@ -493,6 +494,7 @@ async function rechargerEtRendre(opt) {
 
   afficherPlanning(data.poules, data.matchs);
   majApresMidi();
+  majFeuilleJour();
 
   if (opt.infos)       { majInfosTournoi(); majContactsSecurite(); majInvitation(); }
   if (opt.publication) majPublication();
