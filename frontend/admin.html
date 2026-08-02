@@ -236,14 +236,23 @@
           pour pouvoir saisir des équipes.
         </p>
 
-        <!-- Formulaire d'ajout : nom + catégorie -->
+        <!-- Formulaire d'ajout : nom + catégorie + effectifs déclarés (joueurs / éducateurs).
+             Les effectifs sont FACULTATIFS (laisser vide = non déclaré) et alimentent la
+             demande d'autorisation (A.4 participants, B.3 éducateurs). -->
         <form id="form-equipe" class="form-equipe">
           <input id="champ-nom" type="text" placeholder="Nom de l'équipe" autocomplete="off" required>
           <select id="champ-categorie" required>
             <option value="">Catégorie…</option>
           </select>
+          <input id="champ-joueurs" class="champ-effectif" type="number" min="0" step="1"
+                 placeholder="Joueurs" aria-label="Nombre de joueurs de cette équipe (facultatif)">
+          <input id="champ-educateurs" class="champ-effectif" type="number" min="0" step="1"
+                 placeholder="Éducs" aria-label="Nombre d'éducateurs accompagnant cette équipe (facultatif)">
           <button type="submit" class="bouton" id="bouton-ajouter">Ajouter</button>
         </form>
+        <p class="note-generation">💡 « Joueurs » et « Éducs » sont facultatifs : renseignés, ils
+          alimentent automatiquement la <strong>demande d'autorisation</strong> (nombre de
+          participants et nombre d'éducateurs). Modifiables ensuite avec le crayon ✏️.</p>
 
         <!-- Message de retour (succès / erreur) -->
         <div id="message-equipe" class="message-form"></div>

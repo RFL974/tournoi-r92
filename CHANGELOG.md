@@ -5,6 +5,27 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Équipes : joueurs et éducateurs déclarés par équipe → demande d'autorisation — 2026-08-01
+À l'**ajout d'une équipe** comme au **crayon ✏️ de modification**, deux champs facultatifs
+s'ajoutent : **« Joueurs »** et **« Éducs »** (nombre d'éducateurs accompagnant cette équipe).
+Deux nouvelles colonnes `nb_joueurs` / `nb_educateurs` dans l'onglet Equipes (migration douce :
+elles se créent toutes seules, les équipes existantes restent intactes).
+- **repris automatiquement par la demande d'autorisation** : les joueurs alimentent **A.4 —
+  Nombre de participants**, les éducateurs le total **B.3 — Nombre d'éducateurs**, avec une
+  origine détaillée (« 30 déclarés par les clubs invités + 20 déclarés sur les équipes saisies
+  à la main ») ;
+- **anti-double-compte** : une équipe créée par une **réponse d'invitation** (`source` = auto)
+  est déjà couverte par les totaux de son club — elle n'est **jamais** recomptée ici, et le
+  crayon le dit explicitement. Les équipes sans `source` (antérieures à la colonne) sont
+  traitées comme manuelles, le cas prudent ;
+- **« vide » ≠ « zéro »** : un champ laissé vide signifie « non déclaré » (jamais transformé en
+  0, ce qui déclarerait « aucun joueur ») ; un `0` saisi est une **réponse**. Vider un champ au
+  crayon **efface** bien la valeur enregistrée ;
+- **déclaration partielle signalée** : si certaines équipes portent leur effectif et d'autres
+  non, la feuille le dit en orange (le total est incomplet) plutôt que de compléter au jugé ;
+- **PDF pré-rempli** : même règle exactement.
+Tests backend : **470/470** (+13 tests session 27, dont l'anti-double-compte).
+
 ### Demande d'autorisation : total des éducateurs (B.3) = clubs + club organisateur — 2026-08-01
 **Défaut corrigé** : un total d'éducateurs saisi à la main **masquait** les éducateurs déclarés par
 les clubs à la réponse d'invitation (24 saisi cachait 7 déclarés, sans rien signaler) — et cette

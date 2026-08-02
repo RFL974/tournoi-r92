@@ -460,6 +460,22 @@ var PDF_FORMAT_SPORTIF = {
   '14': { p1n: 'Texte40',  p1d: 'Texte41',  f1n: 'Texte42',  f1d: 'Texte43',  f2n: 'Texte44',  f2d: 'Texte45' }
 };
 
+/** Effectifs déclarés sur les équipes SAISIES À LA MAIN — miroir de effectifsEquipesManuelles
+ *  (backend, session 27). ANTI-DOUBLE-COMPTE : les équipes créées par une réponse d'invitation
+ *  (`source` = 'auto') sont écartées, leurs effectifs étant déjà dans les totaux de leur club.
+ *  Une équipe sans `source` est traitée comme manuelle (cas prudent : aucun club derrière elle). */
+function effectifsEquipesManuellesAut(equipes) {
+  var joueurs = null, educateurs = null;
+  (equipes || []).forEach(function (e) {
+    if (String((e && e.source) || '').trim().toLowerCase() === 'auto') return;
+    var j = parseInt(String((e && e.nb_joueurs) == null ? '' : e.nb_joueurs).trim(), 10);
+    var ed = parseInt(String((e && e.nb_educateurs) == null ? '' : e.nb_educateurs).trim(), 10);
+    if (isFinite(j) && j >= 0) joueurs = (joueurs || 0) + j;
+    if (isFinite(ed) && ed >= 0) educateurs = (educateurs || 0) + ed;
+  });
+  return { joueurs: joueurs, educateurs: educateurs };
+}
+
 /** Total des ÉDUCATEURS (B.3) — miroir de totalEducateursAutorisation (backend, session 26) :
  *  déclarés par les clubs acceptés + encadrants du club organisateur (org_nb_educateurs_club, qui
  *  ne figurent dans aucune réponse d'invitation) ; repli sur l'ancien total manuel si aucune des
@@ -935,6 +951,12 @@ async function onTelechargerPdfAutorisation() {
       const ed = parseInt(c.nb_educateurs_total, 10);
       if (isFinite(ed)) nbEducateurs += ed;
     });
+    // Effectifs déclarés ÉQUIPE PAR ÉQUIPE sur les équipes saisies à la main (session 27) —
+    // miroir de effectifsEquipesManuelles (backend) : on écarte les équipes 'auto', déjà
+    // couvertes par les totaux de leur club, sinon elles seraient comptées deux fois.
+    const effEq = effectifsEquipesManuellesAut(eqs);
+    if (effEq.joueurs != null) nbParticipants += effEq.joueurs;
+    if (effEq.educateurs != null) nbEducateurs += effEq.educateurs;
     const setClubs = {};
     eqs.forEach(function (e) { const c = clubDeAut(e.nom_equipe); if (c) setClubs[c] = true; });
     const nbClubs = nbClubsAcceptes > 0 ? nbClubsAcceptes : Object.keys(setClubs).length;
