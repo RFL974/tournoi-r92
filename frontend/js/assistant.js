@@ -35,6 +35,7 @@ const ASSISTANT_ETAPES = [
   { id: 'poules',    titre: 'Poules',       icone: '🎲', blocs: ['bloc-generation'] },
   { id: 'autorisation', titre: 'Autorisation', icone: '🏛️', blocs: ['bloc-autorisation'] },
   { id: 'apresmidi', titre: 'Après-midi',   icone: '🏉', blocs: ['bloc-apresmidi'] },
+  { id: 'feuillejour', titre: 'Feuille de journée', icone: '📋', blocs: ['bloc-feuille-jour'] },
   { id: 'resume',    titre: 'Résumé',       icone: '📋', blocs: ['tableau-bord', 'etat-avancement', 'bloc-publication', 'bloc-reinitialisation'] }
 ];
 

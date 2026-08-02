@@ -55,6 +55,9 @@ const ECRANS_DEF = [
      le matin ; l'après-midi se génère plus tard, une fois les scores saisis). */
   { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [] },
   { id: 'apresmidi',   titre: 'Après-midi',        icone: 'ballon',   blocs: ['bloc-apresmidi'],          cles: ['apresmidi'] },
+  /* Feuille de fin de journée : bilan des matchs joués. Jamais verrouillée (`libre`) — on peut la
+     consulter à tout moment de la journée, même si tout n'est pas encore terminé. */
+  { id: 'feuillejour', titre: 'Feuille de journée', icone: 'dossier', blocs: ['bloc-feuille-jour'],       cles: [], libre: true },
   /* Zone de danger, toujours accessible (libre) : on doit pouvoir remettre à
      zéro un tournoi même à moitié préparé — le verrou ne s'applique pas. */
   { id: 'reinitialisation', titre: 'Réinitialiser', icone: 'balai',   blocs: ['bloc-reinitialisation'],   cles: [], danger: true, libre: true }

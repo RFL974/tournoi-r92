@@ -2555,6 +2555,7 @@ function doPost(e) {
       case 'modifierClubInvite':   resultat = modifierClubInvite(classeur, requete); break;
       case 'envoyerInvitationClub': resultat = envoyerInvitationClub(classeur, requete); break;
       case 'envoyerInvitationsGroupe': resultat = envoyerInvitationsGroupe(classeur, requete); break;
+      case 'envoyerFeuilleJour':   resultat = envoyerFeuilleJour(classeur, requete); break;
       case 'repondreInvitation':   resultat = repondreInvitation(classeur, requete); break;
       case 'supprimerClubInvite':  resultat = supprimerClubInvite(classeur, requete); break;
       case 'reinitialiserTournoi': resultat = reinitialiserTournoi(classeur); break;
@@ -3635,6 +3636,44 @@ function envoyerDossierEmail(classeur, data) {
     cell.setValue(today);
   }
   return { ok: true, dossier_envoye: today, destinataire: email };
+}
+
+/**
+ * FEUILLE DE FIN DE JOURNÉE — envoi aux clubs invités ACCEPTÉS, sur l'adresse qui a servi à les
+ * inviter (`club_contact_email`). Le CONTENU est fourni par le front (`html_modele` /
+ * `texte_modele`, construits depuis les matchs affichés) : le backend ne fait qu'expédier, comme
+ * pour le dossier club — une seule mécanique d'email pour toute l'application.
+ * Chaque club est traité INDIVIDUELLEMENT : l'échec de l'un n'annule pas les autres, et la liste
+ * des échecs revient au front pour être affichée telle quelle (jamais d'échec silencieux).
+ * @return {{ok:boolean, envoyes:number, echecs:string[], sansEmail:string[]}}
+ */
+function envoyerFeuilleJour(classeur, data) {
+  var sujet = String((data && data.sujet) == null ? '' : data.sujet).trim();
+  var html = String((data && data.html_modele) == null ? '' : data.html_modele);
+  var texte = String((data && data.texte_modele) == null ? '' : data.texte_modele);
+  if (!sujet) return { error: 'L\'objet du message est vide.' };
+  if (!html.trim()) return { error: 'Le contenu du message est vide.' };
+
+  var onglet = assurerOngletClubsInvites(classeur);
+  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
+  var texteRepli = texte.trim() ? texte : html.replace(/<[^>]+>/g, ' ');
+
+  var envoyes = 0, echecs = [], sansEmail = [];
+  clubs.forEach(function (c) {
+    if (statutClubCanonique(c.statut) !== 'Accepté') return;
+    var nom = String(c.club_nom || '').trim();
+    var email = String(c.club_contact_email || '').trim();
+    if (!email || !estEmailValide(email)) { sansEmail.push(nom); return; }
+    try {
+      envoyerEmailHtml(email, sujet, html, texteRepli, null, expediteur);
+      envoyes++;
+    } catch (e) {
+      echecs.push(nom + ' (' + (e && e.message ? e.message : e) + ')');
+    }
+  });
+  if (!envoyes && !echecs.length) return { error: 'Aucun club accepté avec une adresse email valide.' };
+  return { ok: true, envoyes: envoyes, echecs: echecs, sansEmail: sansEmail };
 }
 
 /* -------- Création des équipes à l'envoi du dossier final (Sprint 6, point 5) -------- */

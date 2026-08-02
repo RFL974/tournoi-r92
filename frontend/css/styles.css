@@ -2278,3 +2278,23 @@ a.bouton { display: inline-block; text-decoration: none; }
 .theme-clair .ffr-tag-rouge  { color: #8a1c0c; background: #fbe0da; }
 .theme-clair .ffr-tag-orange { color: #8a5a0c; background: #fbeecd; }
 .theme-clair .ffr-alerte-eff { color: #8a5a0c; }
+
+/* ==========================================================================
+   FEUILLE DE FIN DE JOURNÉE (carte admin #bloc-feuille-jour)
+   ========================================================================== */
+.feuille-jour-titre { margin: 4px 0 2px; font-size: 1.05rem; }
+.feuille-jour-bilan { margin: 0 0 10px; opacity: .7; font-family: 'Barlow Condensed', sans-serif; }
+.tab-feuille-jour { border-collapse: collapse; width: 100%; font-family: 'Barlow Condensed', sans-serif; }
+.tab-feuille-jour th, .tab-feuille-jour td {
+  border-bottom: 1px solid rgba(255,255,255,.12); padding: 6px 10px; text-align: left; white-space: nowrap;
+}
+.tab-feuille-jour thead th { font-weight: 600; opacity: .75; }
+.tab-feuille-jour .fj-match { white-space: normal; }
+.tab-feuille-jour .fj-score { font-weight: 700; text-align: center; }
+.tab-feuille-jour .fj-phase { opacity: .6; }
+/* Match dont le score n'est pas encore saisi : présent, mais visiblement en attente. */
+.tab-feuille-jour tr.fj-attente td { opacity: .55; }
+.tab-feuille-jour tr.fj-attente .fj-score { font-weight: 400; }
+
+.theme-clair .tab-feuille-jour th, .theme-clair .tab-feuille-jour td { border-bottom-color: #e6edf5; }
+.theme-clair .tab-feuille-jour thead th { color: var(--accent); background: #F5F9FD; }

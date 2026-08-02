@@ -322,6 +322,24 @@
         </div>
       </section>
 
+      <!-- 4 ter) FEUILLE DE FIN DE JOURNÉE — tous les matchs de la journée dans l'ordre
+           chronologique, avec leur score. Se télécharge en PDF et s'envoie aux clubs sur
+           l'adresse qui a servi à les inviter. Rempli par admin-feuille-jour.js. -->
+      <section class="carte" id="bloc-feuille-jour">
+        <h2>📋 Feuille de fin de journée</h2>
+        <p class="note-generation">
+          Tous les matchs de la journée <strong>dans l'ordre chronologique</strong>, avec leur score.
+          À <strong>télécharger en PDF</strong> et à <strong>envoyer aux clubs</strong> sur l'adresse
+          qui a servi à les inviter.
+        </p>
+        <div id="feuille-jour-contenu"><p class="vide">Chargement…</p></div>
+        <div class="ligne-action">
+          <button type="button" class="bouton" id="bouton-feuille-jour-pdf">📄 Télécharger le PDF</button>
+          <button type="button" class="bouton" id="bouton-feuille-jour-envoi">✉️ Envoyer aux clubs</button>
+          <span id="message-feuille-jour" class="message-form"></span>
+        </div>
+      </section>
+
       <!-- 4 bis) CLUBS INVITÉS (Phase 1) — en TÊTE de la page « Inviter un club » : liste + ajout,
            statut, envoi individuel de l'invitation, et (une fois Accepté) génération du dossier
            Phase 2. ⚠️ Les emails ne sont JAMAIS publics : la liste se charge avec la clé admin
@@ -649,6 +667,8 @@
   <!-- pdf-lib : remplissage du formulaire officiel FFR (AcroForm) côté navigateur, sans build. -->
   <script src="js/vendor/pdf-lib.min.js"></script>
   <script src="js/admin-autorisation.js"></script>
+  <!-- Feuille de fin de journée : réutilise pdf-lib (chargé juste au-dessus) pour le PDF. -->
+  <script src="js/admin-feuille-jour.js"></script>
   <!-- Surcouches de présentation (déplacent les blocs ci-dessus SANS toucher à admin.js) :
        6) ecrans.js    → barre latérale + onglets sur GRAND écran
        7) assistant.js → assistant à cartes sur mobile (verrou « Suivant »),
