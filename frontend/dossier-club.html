@@ -26,6 +26,12 @@
   <div class="barre-outils no-print">
     <a class="btn-outil admin-seul" href="admin.html" hidden>← Retour à l'administration</a>
     <span class="barre-outils-titre admin-seul" hidden>Dossier club — aperçu avant envoi</span>
+    <!-- Le pied de page du NAVIGATEUR (date, titre, adresse, n° de page) n'est pas contrôlable en
+         CSS : c'est une option de la fenêtre d'impression. Or l'adresse imprimée contient le JETON
+         personnel du club — un dossier imprimé le laisserait lire à qui le ramasse. On le dit ici,
+         juste avant le bouton, au moment exact où l'utilisateur va imprimer. -->
+    <span class="barre-outils-astuce">Dans la fenêtre d'impression, décochez
+      « En-têtes et pieds de page » : l'adresse de votre lien personnel n'apparaîtra pas sur le papier.</span>
     <button type="button" class="btn-outil btn-principal" id="bouton-imprimer">🖨️ Exporter en PDF</button>
   </div>
 
