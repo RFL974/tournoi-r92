@@ -665,6 +665,24 @@ function sponsorsCompterClic(id, emplacement) {
   f.clics = (f.clics || 0) + 1;
   f.aff['clic_' + emplacement] = (f.aff['clic_' + emplacement] || 0) + 1;
   sponsorsMesureEnregistrer(true); // un clic précède souvent une navigation : on écrit tout de suite
+
+  // ET ON REMONTE IMMÉDIATEMENT. Le clic est l'événement le plus précieux de la fiche
+  // partenaire — celui qu'un sponsor regarde en premier — et c'est aussi le plus fragile :
+  // le lien s'ouvre dans un NOUVEL onglet, donc la page d'origine n'est jamais déchargée.
+  // Ni `pagehide` ni `visibilitychange` ne sont garantis dans ce cas (le comportement dépend
+  // du navigateur et de la façon dont l'onglet est ouvert), et attendre le relevé périodique
+  // ferait patienter jusqu'à 10 minutes. On n'attend donc pas.
+  sponsorsEnvoyerRelevePourClic();
+}
+
+/* Un clic déclenche un relevé, mais pas dix relevés pour dix clics : au-delà d'un envoi
+   toutes les 3 s, les clics suivants sont simplement comptés et partiront avec le prochain
+   relevé (les compteurs étant cumulatifs, rien n'est perdu). */
+var SPONSORS_CLIC_ANTI_RAFALE_MS = 3000;
+
+function sponsorsEnvoyerRelevePourClic() {
+  if (Date.now() - sponsorsDernierEnvoi < SPONSORS_CLIC_ANTI_RAFALE_MS) return;
+  sponsorsEnvoyerReleve(true); // keepalive : la requête survit même si la page est quittée
 }
 
 function sponsorsCompterPlein(id, secondes, passe) {
@@ -956,6 +974,9 @@ function sponsorsConsolider(releves) {
 
   (releves || []).forEach(function (r) {
     if (!r || !r.sponsors) return;
+    // Les relevés d'autodiagnostic de l'admin portent un identifiant réservé : ils ne
+    // doivent compter ni dans la portée, ni dans les chiffres d'un partenaire.
+    if (Object.keys(r.sponsors).every(function (id) { return id.indexOf('__') === 0; })) return;
     appareils[r.appareil] = 1;
     var courant = parSession[r.session];
     if (!courant) { parSession[r.session] = r.sponsors; return; }
@@ -969,6 +990,7 @@ function sponsorsConsolider(releves) {
   Object.keys(parSession).forEach(function (session) {
     var fiches = parSession[session];
     Object.keys(fiches).forEach(function (id) {
+      if (id.indexOf('__') === 0) return;   // identifiant réservé (autodiagnostic)
       total[id] = sponsorsAdditionnerFiche(total[id], fiches[id]);
     });
   });

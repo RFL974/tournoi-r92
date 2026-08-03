@@ -58,6 +58,7 @@ function initAdminSponsors() {
   document.getElementById('bouton-imprimer-bilan').addEventListener('click', function () { window.print(); });
   document.getElementById('bouton-exporter-bilan').addEventListener('click', onExporterBilanCsv);
   document.getElementById('bouton-vider-bilan').addEventListener('click', onViderBilan);
+  document.getElementById('bouton-tester-remontee').addEventListener('click', onTesterRemontee);
   document.getElementById('projection-appareils').addEventListener('input', afficherBilanSponsors);
 }
 
@@ -411,6 +412,116 @@ async function onSupprimerSponsor(id) {
 /* ==========================================================================
    3. FICHE DE VISIBILITÉ
    ========================================================================== */
+
+/* ==========================================================================
+   AUTODIAGNOSTIC DE LA REMONTÉE
+   --------------------------------------------------------------------------
+   « J'ai déployé, et pourtant la fiche dit qu'aucun relevé n'arrive. » Impossible à
+   trancher depuis un écran : la chaîne compte plusieurs maillons (déploiement du
+   backend, écriture, relecture). Ce bouton les teste UN PAR UN et nomme celui qui
+   casse, au lieu de laisser deviner.
+
+   Le relevé de test porte l'identifiant réservé `__test__`, ignoré par la
+   consolidation : il ne pollue jamais la fiche d'un partenaire.
+   ========================================================================== */
+
+/** Identifiant réservé au relevé d'autodiagnostic (filtré de toute consolidation). */
+var SPONSOR_ID_TEST = '__test__';
+
+async function onTesterRemontee() {
+  const zone = document.getElementById('diagnostic-remontee');
+  const bouton = document.getElementById('bouton-tester-remontee');
+  zone.hidden = false;
+  zone.className = 'diagnostic-remontee';
+  zone.innerHTML = '<p>⏳ Test en cours…</p>';
+  bouton.disabled = true;
+
+  const lignes = [];
+  let verdict = '';
+  let classe = 'diag-ok';
+
+  try {
+    // ÉTAPE 1 — l'écriture publique. C'est elle qui dira si le backend en service
+    // connaît la nouvelle action, donc si le redéploiement a réellement pris.
+    const marque = 'diag' + Math.random().toString(36).slice(2, 10);
+    const releve = {
+      appareil: marque,
+      session: marque,
+      sponsors: {}
+    };
+    releve.sponsors[SPONSOR_ID_TEST] = {
+      expo: { mur: 1 }, aff: { mur: 1 }, clics: 0,
+      plein: { ouverts: 0, secondes: 0, passes: 0 }, tranches: {}
+    };
+
+    let ecritureOk = false;
+    try {
+      const r = await apiPost('mesureSponsors', releve);
+      ecritureOk = !!(r && r.ok);
+      lignes.push(ecritureOk
+        ? '✅ <strong>Écriture</strong> — le backend a accepté un relevé de test.'
+        : '⚠️ <strong>Écriture</strong> — réponse inattendue du backend.');
+    } catch (err) {
+      const msg = String(err.message || '');
+      if (/Action inconnue/i.test(msg)) {
+        lignes.push('❌ <strong>Écriture</strong> — le backend en service <strong>ne connaît pas</strong> ' +
+          'l\'action <code>mesureSponsors</code>.');
+        verdict =
+          '<strong>Le déploiement n\'a pas pris.</strong> C\'est presque toujours la même cause : ' +
+          'avoir utilisé <em>« Nouveau déploiement »</em>, qui crée une <strong>autre URL</strong> — ' +
+          'la page continue alors d\'appeler l\'ancienne, avec l\'ancien code.<br><br>' +
+          'Refais-le ainsi : <strong>Déployer → Gérer les déploiements → ✏️ (crayon) → ' +
+          'Version : « Nouvelle version » → Déployer.</strong><br>' +
+          'Vérifie aussi que le contenu de <code>backend/Code.gs</code> a bien été collé <em>en entier</em> ' +
+          '(l\'ancien remplacé, pas ajouté à la suite).';
+        classe = 'diag-ko';
+      } else {
+        lignes.push('❌ <strong>Écriture</strong> — ' + echapper(msg));
+        verdict = 'Le relevé n\'a pas pu être enregistré. Message du serveur ci-dessus.';
+        classe = 'diag-ko';
+      }
+    }
+
+    // ÉTAPE 2 — la relecture. Elle n'a de sens que si l'écriture est passée.
+    if (ecritureOk) {
+      try {
+        const lu = await apiPostProtege('lireMesuresSponsors', {}, 'admin', 'admin');
+        const trouve = (lu.releves || []).some(function (x) { return x.session === marque; });
+        if (trouve) {
+          lignes.push('✅ <strong>Relecture</strong> — le relevé de test a bien été retrouvé.');
+          const vrais = (lu.releves || []).filter(function (x) { return x.session !== marque; });
+          if (vrais.length) {
+            lignes.push('✅ <strong>Relevés réels</strong> — ' + vrais.length + ' déjà remonté(s) des spectateurs.');
+            verdict = '<strong>La chaîne fonctionne de bout en bout.</strong> Clique ' +
+              '« Rafraîchir les chiffres » pour les voir apparaître.';
+          } else {
+            lignes.push('ℹ️ <strong>Relevés réels</strong> — aucun pour l\'instant.');
+            verdict = '<strong>La chaîne fonctionne</strong> — il ne manque que des visiteurs. ' +
+              'Ouvre la page publique des scores <em>avec les partenaires activés</em> et ' +
+              'laisse-la au premier plan <strong>au moins 20 secondes</strong> : c\'est le délai ' +
+              'du premier relevé. Reviens ensuite ici et rafraîchis.';
+          }
+        } else {
+          lignes.push('❌ <strong>Relecture</strong> — le relevé de test n\'a pas été retrouvé.');
+          verdict = 'L\'écriture passe mais la relecture ne voit rien. Regarde l\'onglet ' +
+            '<code>Mesures</code> du Sheet : si la ligne y est, c\'est la date qui ne correspond pas ' +
+            '(la relecture ne montre que la journée en cours).';
+          classe = 'diag-ko';
+        }
+      } catch (err) {
+        lignes.push('❌ <strong>Relecture</strong> — ' + echapper(String(err.message || '')));
+        verdict = 'L\'écriture fonctionne mais la relecture échoue.';
+        classe = 'diag-ko';
+      }
+    }
+  } finally {
+    bouton.disabled = false;
+  }
+
+  zone.className = 'diagnostic-remontee ' + classe;
+  zone.innerHTML = '<ul>' + lignes.map(function (l) { return '<li>' + l + '</li>'; }).join('') +
+    '</ul>' + (verdict ? '<p class="diag-verdict">' + verdict + '</p>' : '');
+}
 
 /**
  * Facteur de projection : « et si N personnes avaient consulté la page ? ». Les compteurs

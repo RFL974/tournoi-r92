@@ -5,6 +5,26 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Le clic partenaire remonte tout de suite, et la remontée se diagnostique — 2026-08-03
+Deux corrections nées de l'usage réel.
+
+**Le clic ne remontait qu'au relevé suivant**, soit jusqu'à dix minutes plus tard. Il était bien
+compté, mais un lien partenaire s'ouvre dans un **nouvel onglet** : la page d'origine n'est jamais
+déchargée, donc ni `pagehide` ni `visibilitychange` ne sont garantis. Or le clic est l'événement
+que le sponsor regarde en premier. Il déclenche désormais un **envoi immédiat**, avec un
+anti-rafale de 3 s — dix clics ne font pas dix requêtes, et rien n'est perdu puisque les
+compteurs sont cumulatifs.
+
+**Et un bouton « Tester la remontée »** dans l'écran Partenaires, parce que « j'ai déployé et
+pourtant rien ne remonte » est indiscernable depuis un écran : la chaîne compte plusieurs
+maillons. Le test les éprouve un par un — écriture, relecture, relevés réels déjà arrivés — et
+**nomme celui qui casse**. Quand le backend ignore l'action, il pointe directement la cause la
+plus fréquente : avoir utilisé *« Nouveau déploiement »*, qui crée une **autre URL**, au lieu de
+*Gérer les déploiements → Nouvelle version*. Tout semble déployé, et rien ne l'est.
+
+Le relevé de test porte un identifiant réservé, filtré de la consolidation : il n'apparaît jamais
+dans la fiche d'un partenaire ni dans la portée annoncée.
+
 ### La visibilité partenaire, mesurée sur TOUS les appareils — 2026-08-03
 La fiche de visibilité ne portait que sur le navigateur qui la consultait — « ces chiffres ne
 représentent que ce navigateur ». Elle **additionne désormais tous les spectateurs** : chaque
