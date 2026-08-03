@@ -607,9 +607,12 @@ body {
      Constaté à l'export : « Rappel — vos catégories engagées » terminait la page 2, ses cartes
      commençaient page 3. Idem pour la phrase d'introduction des cartes. */
   .d-section h2, .inv-cats-intro { break-after: avoid; }
-  /* La mention « document généré le… » reste collée au pied de page. */
-  .d-genere { break-after: avoid; }
-  .d-pied { break-inside: avoid; }
+  /* La mention « document généré le… » reste collée au pied de page — et le duo est COMPACTÉ :
+     à l'export, ces deux lignes ne tenaient pas dans le bas de la dernière page et s'exilaient
+     sur une feuille à elles seules. Moins de marges, logo plus petit : elles rentrent. */
+  .d-genere { break-after: avoid; margin-top: 4px; font-size: 7.5pt; }
+  .d-pied { break-inside: avoid; margin-top: 8px; padding-top: 6px; font-size: 9pt; }
+  .d-pied-logo { height: 20px; }
   .inv-affiche img { max-height: 130mm; box-shadow: none; }
   /* Dossier : l'affiche réduite le reste à l'impression (sinon la règle ci-dessus la ferait
      regrossir en hauteur et repousserait le jour J en page 2). */

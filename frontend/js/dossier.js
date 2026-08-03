@@ -45,7 +45,9 @@ async function initDossier() {
   // (vue `club`, filtrée + jeton) ; getClubDossier fournit le prénom pour l'accueil personnalisé.
   const params = new URLSearchParams(window.location.search);
   const clubParam = txt(params.get('club'));
-  const token = txt(params.get('token'));
+  // Le jeton vient de l'adresse OU de l'onglet : il en est retiré après le chargement
+  // (masquerJetonDeLUrl ci-dessous) pour ne plus s'imprimer en pied de feuille.
+  const token = jetonCourant('dossier:' + clubParam, params);
 
   // Lien incomplet (ancien lien sans jeton, ou accès direct) → message courtois, aucune donnée.
   if (!clubParam || !token) { await afficherLienDossierExpire(zone); return; }
@@ -59,6 +61,9 @@ async function initDossier() {
     const club = (r && r.club) || null;
     zone.innerHTML = construireDossier(config.global || {}, config.categories || [], club);
     dessinerQR(); // le QR se dessine après coup (il vise un conteneur du HTML rendu)
+    // Données en main : le jeton n'a plus rien à faire dans l'adresse (ni à l'écran, ni au
+    // pied de page imprimé). L'onglet le garde, un rechargement fonctionne toujours.
+    masquerJetonDeLUrl('dossier:' + clubParam, token);
   } catch (erreur) {
     // Jeton invalide/expiré (le backend renvoie « Lien invalide ou expiré. ») → message courtois.
     await afficherLienDossierExpire(zone);

@@ -5,6 +5,22 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Sécurité : le jeton personnel disparaît de l'adresse (et donc du papier) — 2026-08-03
+Demander à l'utilisateur de décocher « En-têtes et pieds de page » avant chaque impression ne
+protégeait rien : personne ne le fait, et **les clubs encore moins**. Le jeton est donc retiré de
+l'**adresse elle-même**, dès que la page a chargé ses données (`history.replaceState`) — après
+avoir été rangé dans le `sessionStorage` de l'onglet, pour qu'un **rechargement (F5) continue de
+fonctionner**. Conséquence : il ne s'imprime plus en pied de feuille, ne s'affiche plus sur une
+capture d'écran, et n'entre plus dans l'historique du navigateur. S'applique au **dossier** et à
+l'**invitation** ; le bouton « Répondre à l'invitation » retrouve le jeton dans l'onglet après un
+rechargement. **Prudent par construction** : si le stockage de l'onglet est refusé (navigation
+privée verrouillée), l'adresse n'est **pas** touchée — mieux vaut un jeton visible qu'une page
+irrécupérable au premier rechargement.
+*Effet de bord assumé : l'adresse copiée depuis la barre du navigateur ne suffit plus à ouvrir le
+dossier — c'est le lien de l'email (ou celui régénéré depuis l'admin) qui fait foi.*
+Au passage, la mention « document généré le… » et le pied de page sont **compactés à
+l'impression** : ils s'exilaient sur une feuille à eux seuls.
+
 ### Impression du dossier : coupures propres et lien personnel hors du papier — 2026-08-03
 Premier vrai export PDF du dossier refondu (4 feuilles) — trois défauts constatés, trois
 corrections :

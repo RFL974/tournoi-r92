@@ -35,6 +35,46 @@ function revelerOutilsAdmin() {
 }
 
 /* --------------------------------------------------------------------------
+   JETON PERSONNEL — le sortir de l'ADRESSE dès que la page est chargée
+   --------------------------------------------------------------------------
+   Le lien reçu par email porte le jeton du club (`?club=…&token=…`). Tant qu'il
+   reste dans la barre d'adresse, il fuit partout : le pied de page du navigateur
+   l'IMPRIME sur chaque feuille (option « En-têtes et pieds de page », que l'app ne
+   commande pas), il s'affiche sur une capture d'écran, il entre dans l'historique.
+   Un dossier imprimé et oublié sur une table donne alors l'accès au dossier du club.
+
+   On le retire donc de l'adresse dès que les données sont chargées, après l'avoir
+   rangé dans le sessionStorage de l'onglet : un rechargement (F5) continue de
+   fonctionner, mais plus rien de secret n'est affiché ni imprimé.
+
+   PRUDENT PAR CONSTRUCTION : si le stockage est refusé (navigation privée
+   verrouillée), on NE touche PAS à l'adresse — mieux vaut un jeton visible qu'une
+   page devenue irrécupérable au premier rechargement.
+   -------------------------------------------------------------------------- */
+
+/** Jeton courant : celui de l'adresse, sinon celui rangé pour cette page dans l'onglet. */
+function jetonCourant(cle, params) {
+  const p = params || new URLSearchParams(window.location.search);
+  const t = (p.get('token') || '').trim();
+  if (t) return t;
+  try { return (sessionStorage.getItem('jeton_' + cle) || '').trim(); } catch (e) { return ''; }
+}
+
+/** Range le jeton dans l'onglet puis l'efface de l'adresse (sans recharger la page). */
+function masquerJetonDeLUrl(cle, token) {
+  if (!token) return;
+  let memorise = false;
+  try { sessionStorage.setItem('jeton_' + cle, token); memorise = true; } catch (e) { /* stockage refusé */ }
+  if (!memorise) return;                       // pas de filet → on laisse l'adresse intacte
+  try {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('token')) return;
+    url.searchParams.delete('token');
+    window.history.replaceState(null, '', url.toString());
+  } catch (e) { /* navigateur sans history API : l'adresse reste telle quelle */ }
+}
+
+/* --------------------------------------------------------------------------
    PETITS HELPERS DE MISE EN FORME
    -------------------------------------------------------------------------- */
 
