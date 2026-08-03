@@ -71,7 +71,11 @@ async function initDossier() {
       gelees:         !!(r && r.reponses_gelees),
       contactEmail:   (r && r.contact_email) || '',
       club:           clubParam,
-      token:          token
+      token:          token,
+      // VERROU : poules et matchs ne s'affichent que si l'organisateur les a publiés. Tout ce qui
+      // n'est pas un « oui » explicite vaut non — témoin absent (tournoi d'avant la fonction),
+      // vide, ou config partielle. Le défaut est FERMÉ, comme les listes blanches du backend.
+      planningVisible: String((config.global || {}).planning_visible_clubs || '').toLowerCase() === 'oui'
     };
     zone.innerHTML = construireDossier(config.global || {}, config.categories || [], club, ctx);
     dessinerQR(); // le QR se dessine après coup (il vise un conteneur du HTML rendu)
@@ -310,7 +314,7 @@ function construireDossier(g, categories, club, ctx) {
     enteteDossier(g, club, filtreApplique ? catsFormat : []),   //  1. qui reçoit, quoi, quand — et pour QUI
     accueilPersonnalise(g, club),                               //  2. le mot d'accueil
     sectionJournee(g, catsFormat),                              //  3. LE JOUR J : la journée en un coup d'œil
-    sectionMesEquipes(ctx.equipes),                             //  3 bis. … avec QUI (équipes, poules)
+    sectionMesEquipes(ctx),                                     //  3 bis. … avec QUI (équipes, poules)
     sectionMonPlanning(ctx, catsFormat),                        //  3 ter. … et QUAND (matchs du club)
     sectionInfosPratiques(g),                                   //  4.   … où, et ce qu'on y trouve
     sectionParking(g),                                          //  5.   … comment y accéder
@@ -370,27 +374,51 @@ function sectionJournee(g, cats) {
  * poule dès qu'elle est tirée. Rien tant qu'aucune équipe n'est créée — la section se masque et
  * apparaîtra d'elle-même : la page se reconstruit à chaque ouverture du lien.
  */
-function sectionMesEquipes(equipes) {
-  const liste = (equipes || []).filter(function (e) { return txt(e.nom_equipe); });
+function sectionMesEquipes(ctx) {
+  const liste = (ctx.equipes || []).filter(function (e) { return txt(e.nom_equipe); });
   if (!liste.length) return '';
+  const publie = ctx.planningVisible;   // poules et planning : montrés seulement une fois validés
 
   const lignes = liste.map(function (e) {
     const detail = [];
-    if (txt(e.poule)) detail.push('poule ' + echapper(txt(e.poule)));
+    if (publie && txt(e.poule)) detail.push('poule ' + echapper(txt(e.poule)));
     const j = parseInt(txt(e.nb_joueurs), 10);
     if (isFinite(j) && j > 0) detail.push(j + ' joueur' + (j > 1 ? 's' : ''));
     const ed = parseInt(txt(e.nb_educateurs), 10);
     if (isFinite(ed) && ed > 0) detail.push(ed + ' éducateur' + (ed > 1 ? 's' : ''));
-    return '<li><span class="d-eq-nom">' + echapper(txt(e.nom_equipe)) + '</span>' +
+    // La POULE COMPLÈTE : un club veut savoir qui il rencontre, pas seulement dans quelle lettre
+    // il est tombé. Ses adversaires viennent de l'instantané public (même catégorie, même poule).
+    const adversaires = publie ? poulePleine(ctx.equipesTournoi, e) : [];
+    return '<li>' +
+      '<span class="d-eq-nom">' + echapper(txt(e.nom_equipe)) + '</span>' +
       '<span class="d-eq-cat">' + echapper(txt(e.categorie)) + '</span>' +
       (detail.length ? '<span class="d-eq-detail">' + detail.join(' · ') + '</span>' : '') +
+      (adversaires.length
+        ? '<span class="d-eq-poule">Poule ' + echapper(txt(e.poule)) + ' : ' +
+          adversaires.map(function (n) {
+            return (n === txt(e.nom_equipe))
+              ? '<strong>' + echapper(n) + '</strong>' : echapper(n);
+          }).join(' · ') + '</span>'
+        : '') +
     '</li>';
   }).join('');
 
-  const sansPoule = liste.some(function (e) { return !txt(e.poule); });
+  const attendu = !publie || liste.some(function (e) { return !txt(e.poule); });
   return section('Vos équipes', '<ul class="d-equipes">' + lignes + '</ul>' +
-    (sansPoule ? '<p class="d-note">Les poules sont tirées à la génération du planning : ' +
-      'elles s\'afficheront ici dès qu\'elles seront connues.</p>' : ''));
+    (attendu ? '<p class="d-note">Les poules et le planning s\'afficheront ici dès qu\'ils seront ' +
+      'arrêtés par l\'organisation.</p>' : ''));
+}
+
+/** Toutes les équipes de la poule d'une équipe donnée (même catégorie, même poule), triées.
+ *  [] si la poule n'est pas encore tirée — on ne montre jamais une poule d'une seule équipe. */
+function poulePleine(equipesTournoi, equipe) {
+  const poule = txt(equipe.poule), cat = txt(equipe.categorie);
+  if (!poule) return [];
+  const membres = (equipesTournoi || []).filter(function (x) {
+    return txt(x.poule) === poule && txt(x.categorie) === cat && txt(x.nom_equipe);
+  }).map(function (x) { return txt(x.nom_equipe); });
+  membres.sort(function (a, b) { return a.localeCompare(b, 'fr'); });
+  return membres.length > 1 ? membres : [];
 }
 
 /** Nom lisible d'une équipe à partir de son identifiant (matchs → équipes de l'instantané public). */
@@ -411,6 +439,7 @@ function nomEquipeParId(equipesTournoi, id) {
  * Aucun match connu du tout ⇒ section entièrement masquée.
  */
 function sectionMonPlanning(ctx, catsFormat) {
+  if (!ctx.planningVisible) return '';            // pas encore validé par l'organisation
   const mesIds = (ctx.equipes || []).map(function (e) { return txt(e.id_equipe); }).filter(Boolean);
   if (!mesIds.length) return '';
 
@@ -420,27 +449,47 @@ function sectionMonPlanning(ctx, catsFormat) {
   if (!miens.length) return '';
 
   const estMatin = function (m) { return txt(m.phase).toLowerCase() !== 'classement'; };
-  const matin = miens.filter(estMatin);
-  const apresMidi = miens.filter(function (m) { return !estMatin(m); });
+
+  // UN BLOC PAR CATÉGORIE. Un club engagé en U8 et en U10 a deux groupes d'enfants, deux
+  // éducateurs, deux journées parallèles : mélanger leurs matchs dans un seul tableau trié à
+  // l'heure oblige chacun à faire le tri à l'œil. Les catégories sont dans l'ordre du tournoi.
+  const cats = [];
+  miens.forEach(function (m) {
+    const c = txt(m.categorie);
+    if (cats.indexOf(c) === -1) cats.push(c);
+  });
+  cats.sort(comparerCategorie);
 
   // Un tournoi 100 % Super Challenge n'a pas de phase d'après-midi : on ne promet pas ce qui
   // n'existera jamais (même règle que la frise et les cartes).
   const tousScf = !!(catsFormat && catsFormat.length) &&
                   catsFormat.every(function (c) { return ctxScf(c).estScf; });
+  const blocs = cats.map(function (c) {
+    const deCat = miens.filter(function (m) { return txt(m.categorie) === c; });
+    const matin = deCat.filter(estMatin);
+    const aprem = deCat.filter(function (m) { return !estMatin(m); });
+    // L'attente de l'après-midi est dite DANS la catégorie concernée : une note globale
+    // affirmerait « l'après-midi n'est pas établi » alors qu'une autre catégorie a déjà le sien.
+    const attend = matin.length && !aprem.length && !tousScf;
 
-  let html = tableauPlanning(matin, mesIds, ctx.equipesTournoi);
-  if (apresMidi.length) {
-    html += '<h3 class="d-planning-titre">Après-midi</h3>' +
-            tableauPlanning(apresMidi, mesIds, ctx.equipesTournoi);
-  } else if (matin.length && !tousScf) {
-    html += '<p class="d-note">L\'après-midi suit le format de chaque catégorie et se compose ' +
-      'à partir du classement du matin : il n\'est donc établi qu\'en cours de journée. ' +
-      'Rouvrez ce lien, il s\'affichera ici.</p>';
-  }
-  return section('Votre planning', html, 'd-planning-section');
+    return '<div class="d-pl-bloc">' +
+      (cats.length > 1 ? '<h3 class="d-planning-titre">' + echapper(c) + '</h3>' : '') +
+      tableauPlanning(matin.length ? matin : deCat, mesIds, ctx.equipesTournoi) +
+      (aprem.length
+        ? '<p class="d-pl-phase">Après-midi</p>' + tableauPlanning(aprem, mesIds, ctx.equipesTournoi)
+        : '') +
+      (attend
+        ? '<p class="d-note">L\'après-midi se compose à partir du classement du matin : il n\'est ' +
+          'établi qu\'en cours de journée. Rouvrez ce lien, il s\'affichera ici.</p>'
+        : '') +
+    '</div>';
+  }).join('');
+
+  return section('Votre planning', blocs, 'd-planning-section');
 }
 
-/** Un tableau de matchs : heure, votre équipe (+ catégorie), adversaire, terrain. */
+/** Un tableau de matchs : heure, votre équipe, adversaire, terrain. La catégorie n'y figure
+ *  plus — elle titre le bloc (sauf si le club n'en a qu'une : la colonne serait du bruit). */
 function tableauPlanning(matchs, mesIds, equipesTournoi) {
   if (!matchs.length) return '';
   const lignes = matchs.map(function (m) {
@@ -450,8 +499,7 @@ function tableauPlanning(matchs, mesIds, equipesTournoi) {
     const adverse = nomEquipeParId(equipesTournoi, aEstMoi ? m.equipe_B : m.equipe_A);
     return '<tr>' +
       '<td class="d-pl-heure">' + echapper(txt(m.heure_debut)) + '</td>' +
-      '<td>' + echapper(moi) +
-        (txt(m.categorie) ? ' <span class="d-pl-cat">' + echapper(txt(m.categorie)) + '</span>' : '') + '</td>' +
+      '<td>' + echapper(moi) + '</td>' +
       '<td>' + (adverse ? echapper(adverse) : '—') + '</td>' +
       '<td class="d-pl-terrain">' + echapper(txt(m.terrain)) + '</td>' +
     '</tr>';

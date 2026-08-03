@@ -550,6 +550,9 @@ var CONFIG_PUBLIQUE_VUES = {
   club: {
     global: ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_adresse', 'tournoi_description',
              'tournoi_affiche_id', 'url_tournoi_public', 'repartition_grands_terrains',
+             // Témoin de publication du planning : le dossier n'affiche poules et matchs QUE si
+             // l'organisateur les a explicitement rendus visibles (voir publierPlanningClubs).
+             'planning_visible_clubs',
              'heure_debut', 'heure_rdv', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
              'heure_fin', 'heure_fin_communiquee', 'marge_fin_communiquee_min',
              'logistique_parking', 'logistique_buvette', 'logistique_vestiaires',
@@ -2583,6 +2586,7 @@ function doPost(e) {
       case 'envoyerFeuilleJour':   resultat = envoyerFeuilleJour(classeur, requete); break;
       case 'repondreInvitation':   resultat = repondreInvitation(classeur, requete); break;
       case 'supprimerClubInvite':  resultat = supprimerClubInvite(classeur, requete); break;
+      case 'publierPlanningClubs': resultat = publierPlanningClubs(classeur, requete); break;
       case 'reinitialiserTournoi': resultat = reinitialiserTournoi(classeur); break;
       default: resultat = { error: 'Action inconnue : ' + action };
     }
@@ -5897,6 +5901,10 @@ function reorganiserPoulesMatin(classeur, data) {
   if (autoFin && finJournee > 0) {
     ecrireParamGlobal(classeur.getSheetByName('Config'), 'heure_fin', minVersHm(finJournee));
   }
+  // Réorganiser les poules, c'est CHANGER les adversaires : le planning que les clubs auraient
+  // sous les yeux n'est plus celui qu'ils ont reçu. Il repasse donc invisible, comme après une
+  // génération — l'organisateur republie quand l'équilibre lui convient.
+  ecrireParamGlobal(classeur.getSheetByName('Config'), 'planning_visible_clubs', 'non');
 
   return {
     ok: true,
@@ -5905,6 +5913,24 @@ function reorganiserPoulesMatin(classeur, data) {
     heure_fin_journee: (autoFin && finJournee > 0) ? minVersHm(finJournee) : '',
     avertissements: r.avert
   };
+}
+
+/**
+ * PUBLICATION DU PLANNING AUX CLUBS (clé admin). Un simple témoin oui/non dans Config, que le
+ * dossier de chaque club interroge avant d'afficher ses poules et ses matchs.
+ *
+ * POURQUOI : générer les poules ne veut pas dire les valider. Une « équipe 1 » tombée dans une
+ * poule d'équipes 2 fait un match sans intérêt pour personne ; l'organisateur veut regarder,
+ * corriger, et seulement ENSUITE montrer. Toute génération ou réorganisation des poules remet ce
+ * témoin à « non » : on ne peut pas publier par oubli, seulement par décision.
+ *
+ * ⚠️ Ce verrou couvre le DOSSIER des clubs. La page publique des scores, elle, reste commandée
+ * par `tournoi_publie` : tant que le tournoi est publié, elle montre le planning à qui a le lien.
+ */
+function publierPlanningClubs(classeur, data) {
+  var visible = String((data && data.visible) || '').toLowerCase() === 'oui' ? 'oui' : 'non';
+  ecrireParamGlobal(classeur.getSheetByName('Config'), 'planning_visible_clubs', visible);
+  return { ok: true, planning_visible_clubs: visible };
 }
 
 /**
@@ -6648,7 +6674,11 @@ function genererPoulesEtPlanning(classeur) {
     ['tournoi_id', Utilities.formatDate(new Date(), classeur.getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm:ss')],
     ['signature_generation', signatureGeneration(global, config.categories, equipes)],
     ['signature_structure', signatureStructure(config.categories, equipes)],
-    ['pause_echelonnee_fin', finPauseEch]
+    ['pause_echelonnee_fin', finPauseEch],
+    // PRUDENT PAR CONSTRUCTION : un planning fraîchement généré n'est PAS montré aux clubs.
+    // L'organisateur regarde d'abord l'équilibre des poules (une « équipe 1 » avec des équipes 2
+    // fait un match sans intérêt), corrige, PUIS publie. Republier est un geste explicite.
+    ['planning_visible_clubs', 'non']
   ]);
 
   return {
