@@ -5,6 +5,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Correctif : les liserés d'état des clubs étaient invisibles — 2026-08-02
+Les badges (« À enregistrer », « Sélection enregistrée »…) s'affichaient bien, mais **aucun
+liseré de couleur** n'apparaissait sur les cartes. Cause : le **piège des deux feuilles de
+style** du projet — `theme-r92.css` (chargé après `styles.css`) contient
+`.theme-clair .equipe-item { border-color: navy }`, de **spécificité égale** aux règles de
+liseré ; à égalité, c'est la dernière feuille chargée qui gagne, et la bordure repassait navy
+sur fond navy. Les 4 états sont donc redéclarés dans `theme-r92.css`, avec la classe de thème.
+*(Ce défaut existait déjà pour les anciens liserés vert/rouge par statut : ils n'avaient jamais
+été visibles dans le thème navy de l'admin.)* **100 % front**, aucun redéploiement backend.
+
 ### Clubs invités : robustesse de la synchronisation (revue multi-agents) — 2026-08-02
 Une revue adversariale (4 lentilles + contre-vérification) a été passée sur les PR #140/#141 :
 **12 trouvailles confirmées**, toutes corrigées ici. Les cinq importantes :
