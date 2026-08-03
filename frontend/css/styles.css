@@ -1942,7 +1942,8 @@ a.bouton { display: inline-block; text-decoration: none; }
 .club-invite-item { border-left: 4px solid rgba(120, 180, 255, 0.5); }
 .club-invite-item.club-etat-a-enregistrer { border-left-color: #e5a33c; }
 .club-invite-item.club-etat-attente       { border-left-color: #9b7fd4; }
-.club-invite-item.club-etat-enregistree   { border-left-color: #35c06a; }
+.club-invite-item.club-etat-a-envoyer     { border-left-color: #2E8FE0; }
+.club-invite-item.club-etat-complet       { border-left-color: #35c06a; }
 .club-invite-item.club-etat-decline       { border-left-color: #e07878; }
 /* Badge d'état assorti au liseré (pastille discrète, lisible sur fond navy). */
 .club-etat-badge {
@@ -1955,7 +1956,8 @@ a.bouton { display: inline-block; text-decoration: none; }
 }
 .club-etat-badge.etat-a-enregistrer { background: rgba(229, 163, 60, 0.18); color: #f0b95e; }
 .club-etat-badge.etat-attente       { background: rgba(155, 127, 212, 0.18); color: #bda8ea; }
-.club-etat-badge.etat-enregistree   { background: rgba(53, 192, 106, 0.16); color: #6fd898; }
+.club-etat-badge.etat-a-envoyer     { background: rgba(46, 143, 224, 0.18); color: #8ec7f5; }
+.club-etat-badge.etat-complet       { background: rgba(53, 192, 106, 0.16); color: #6fd898; }
 .club-etat-badge.etat-decline       { background: rgba(224, 120, 120, 0.16); color: #eda3a3; }
 .club-invite-item { flex-wrap: wrap; }
 .club-invite-item .nom { display: flex; flex-direction: column; min-width: 0; }
