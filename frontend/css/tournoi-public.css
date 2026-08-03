@@ -673,16 +673,21 @@ tr.cl-vainqueur .col-equipe { font-weight: 700; color: var(--navy); }
   max-width: 100%;
   object-fit: contain;
 }
-.sp-bandeau  .sp-logo-img { max-height: 48px; }
-.sp-rail     .sp-logo-img { max-height: 42px; }
-.sp-barre    .sp-logo-img { max-height: 32px; }
-.sp-fil      .sp-logo-img { max-height: 38px; }
-.sp-mur-case .sp-logo-img { max-height: 46px; }
+/* Taille de référence par emplacement, multipliée par le zoom du partenaire
+   (--sp-zoom, posé sur l'image ; 1 par défaut). Le zoom sert aux fichiers qui
+   embarquent leurs propres marges blanches : le logo y paraît petit alors que
+   l'image est à la bonne taille, et seul un agrandissement au cas par cas le corrige. */
+.sp-logo-img { max-height: calc(var(--sp-ref, 48px) * var(--sp-zoom, 1)); }
+.sp-bandeau  .sp-logo-img { --sp-ref: 60px; }
+.sp-rail     .sp-logo-img { --sp-ref: 48px; }
+.sp-barre    .sp-logo-img { --sp-ref: 34px; }
+.sp-fil      .sp-logo-img { --sp-ref: 42px; }
+.sp-mur-case .sp-logo-img { --sp-ref: 52px; }
 @media (min-width: 700px) {
-  .sp-bandeau  .sp-logo-img { max-height: 64px; }
-  .sp-rail     .sp-logo-img { max-height: 48px; }
-  .sp-fil      .sp-logo-img { max-height: 44px; }
-  .sp-mur-case .sp-logo-img { max-height: 52px; }
+  .sp-bandeau  .sp-logo-img { --sp-ref: 84px; }
+  .sp-rail     .sp-logo-img { --sp-ref: 56px; }
+  .sp-fil      .sp-logo-img { --sp-ref: 50px; }
+  .sp-mur-case .sp-logo-img { --sp-ref: 62px; }
 }
 /* Repli quand le partenaire n'a pas (encore) de logo : une pastille à son nom, sur sa
    couleur de marque. Un commerçant sans fichier exploitable reste affichable. */
@@ -713,7 +718,7 @@ tr.cl-vainqueur .col-equipe { font-weight: 700; color: var(--navy); }
   display: flex;
   align-items: center;
   gap: 14px;
-  min-height: 72px;            /* hauteur réservée : pas de saut au chargement du logo */
+  min-height: 84px;            /* hauteur réservée : pas de saut au chargement du logo */
   background: var(--blanc);
   border: 1px solid var(--bordure);
   border-left: 4px solid var(--bleu-vif);
@@ -755,7 +760,7 @@ a.sp-bandeau:hover {
 }
 .sp-rail-mention { margin-bottom: 8px; }
 /* Pile de vues superposées : une seule opaque à la fois → aucune variation de hauteur. */
-.sp-rail-vues { position: relative; min-height: 86px; }
+.sp-rail-vues { position: relative; min-height: 96px; }
 .sp-rail-vue {
   position: absolute;
   inset: 0;
@@ -821,7 +826,7 @@ body.sp-barre-active { padding-bottom: 64px; }
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 60px;
+  min-height: 64px;
   background: var(--blanc);
   border: 1px dashed var(--bordure);
   border-radius: 10px;
@@ -941,7 +946,8 @@ a.sp-plein-visuel:hover { text-decoration: none; }
 .sp-mur-case {
   display: grid;
   place-items: center;
-  min-height: 70px;             /* hauteur réservée : la grille ne bouge pas au chargement */
+  overflow: hidden;             /* un logo très agrandi reste dans sa tuile */
+  min-height: 78px;             /* hauteur réservée : la grille ne bouge pas au chargement */
   padding: 10px;
   background: var(--blanc);     /* voir .sp-rail : blanc pour se fondre avec le fond peint */
   border: 1px solid var(--bordure);

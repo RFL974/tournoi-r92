@@ -5,6 +5,33 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Un logo enfin à la bonne taille, et réglable — 2026-08-03
+Trois retours de suite sur la taille du logo partenaire : il est temps de donner le réglage
+plutôt que de continuer à ajuster à l'aveugle.
+
+**Les tailles de référence augmentent** partout — le bandeau passe de 64 à **84 px** sur
+ordinateur et de 48 à 60 px sur téléphone, le mur de 52 à 62 px, le rail de 48 à 56 px. Les
+hauteurs réservées des blocs suivent, pour que la carte ne se dilate toujours pas au chargement
+de l'image.
+
+**Et surtout, chaque partenaire a désormais sa taille**, en pourcentage (50 à 200 %, défaut 100).
+La raison est simple : beaucoup de fichiers de logo **embarquent leurs propres marges blanches**.
+Le logo paraît alors minuscule alors que l'image, elle, occupe bien la place qu'on lui donne —
+et aucun réglage global ne peut le rattraper, puisque le vide fait partie du fichier. Recadrer
+l'image reste la bonne solution ; le zoom est le rattrapage quand on ne l'a pas sous la main.
+
+Techniquement, la taille est passée par une **variable CSS** posée sur l'image, et non par une
+taille en ligne. La nuance décide de tout : une taille en ligne écraserait les règles de la
+feuille de style — c'est exactement ce qui rendait le logo minuscule sur grand écran — tandis
+qu'une variable les ALIMENTE. Chaque emplacement garde donc sa taille de référence et son
+adaptation à l'écran, simplement multipliée.
+
+La colonne `logo_zoom` est ajoutée **à droite** de l'onglet Sponsors (migration douce, vide =
+comportement d'origine), et `assurerOngletSponsors` complète désormais la ligne d'en-tête des
+classeurs existants. Sans ça, la valeur serait écrite dans une cellule sans en-tête — et la
+lecture ignore les colonnes sans en-tête : elle serait partie dans le Sheet pour n'être jamais
+relue, en silence.
+
 ### Des partenaires sur la page des scores (prototype) — 2026-08-03
 La page publique du tournoi peut désormais accueillir des **sponsors**, pilotés depuis un nouvel
 écran **Partenaires** de l'admin. **Prototype assumé** : aucune dépense, aucun service en plus —

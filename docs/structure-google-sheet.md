@@ -349,6 +349,7 @@ est destiné à être affiché.
 | `couleur` | `#0A5AA8` | Couleur de marque (`#RRGGBB`), fond du plein écran auto-composé. Vide ⇒ navy de la charte |
 | `actif` | `oui` | `oui` = affiché. Toute autre valeur ⇒ retiré de la page **sans perdre la fiche** |
 | `ordre` | `1` | Entier — position dans le **mur des partenaires** uniquement |
+| `logo_zoom` | `130` | **Nouveau.** Taille du logo en **% de la taille de référence** (50 à 200 ; vide ⇒ 100). Rattrape les fichiers qui embarquent leurs propres marges blanches. Migration douce : colonne ajoutée **à droite**, complétée automatiquement par `assurerOngletSponsors` |
 
 > ♻️ **Conservé par la réinitialisation**, comme `ClubsInvites` : un partenariat se reconduit
 > d'une édition à l'autre, et le remettre à zéro obligerait à re-téléverser tous les logos. Pour

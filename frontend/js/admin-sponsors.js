@@ -197,7 +197,8 @@ function afficherListeSponsors() {
       '<div class="sponsor-carte' + (actif ? '' : ' est-inactif') + '">' +
         '<div class="sponsor-carte-logo">' +
           (s.logo_id
-            ? '<img src="' + echapper(urlAffiche(s.logo_id, 240)) + '" alt="' + echapper(s.nom) + '">'
+            ? '<img src="' + echapper(urlAffiche(s.logo_id, 240)) + '" alt="' + echapper(s.nom) +
+              '" style="--sp-zoom:' + sponsorsZoom(s) + '">'
             : '<span class="sponsor-pastille" style="background:' + echapper(couleurSponsor(s)) + '">' +
               echapper(s.nom) + '</span>') +
         '</div>' +
@@ -247,6 +248,7 @@ function remplirFormSponsor(id) {
   form.couleur.value = couleurSponsor(s).toLowerCase();
   form.poids.value = s.poids || 1;
   form.ordre.value = s.ordre || 100;
+  form.logo_zoom.value = parseInt(s.logo_zoom, 10) || 100;
   form.actif.checked = String(s.actif || '').toLowerCase() === 'oui';
 
   const emplacements = String(s.emplacements || '').split(',').map(function (x) { return x.trim(); });
@@ -270,6 +272,7 @@ function reinitialiserFormSponsor() {
   form.couleur.value = '#0c1c2e';
   form.poids.value = 1;
   form.ordre.value = 100;
+  form.logo_zoom.value = 100;
   form.actif.checked = true;
   SPONSORS_EMPLACEMENTS.forEach(function (e) { form['emp_' + e].checked = (e === 'mur'); });
 
@@ -349,6 +352,7 @@ async function onEnregistrerSponsor() {
     emplacements: emplacements.join(','),
     poids: form.poids.value,
     ordre: form.ordre.value,
+    logo_zoom: form.logo_zoom.value,
     actif: form.actif.checked ? 'oui' : 'non'
   };
   if (sponsorLogoDataURI) data.logo = sponsorLogoDataURI;
