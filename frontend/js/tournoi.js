@@ -18,6 +18,12 @@
 let equipes = [];
 let matchs = [];
 let config = { global: {} };
+let sponsors = [];                  // partenaires actifs (servis par l'instantané)
+let sponsorsReg = null;             // réglages d'affichage normalisés
+let sponsorFil = null;              // partenaire de l'encart au fil — FIGÉ pour la session
+let sponsorFilCompte = false;       // son affichage n'est compté qu'une fois
+let sponsorsSignature = '';         // évite de redessiner (et de relancer la rotation) pour rien
+let sponsorPleinFait = false;       // l'interstitiel ne se joue qu'au chargement, jamais sur un refresh
 let nomParEquipe = {};       // index id_equipe → nom (reconstruit à chaque chargement)
 let derniereSignature = '';
 let categorieActive = '';
@@ -138,6 +144,16 @@ async function charger(premier) {
     majHeure();
     majTitre(); // le bandeau prend le nom de l'événement s'il est renseigné
 
+    // Partenaires : réglages + liste, AVANT l'affichage (l'encart au fil s'insère dans les vues).
+    sponsorsReg = sponsorsReglages(config);
+    sponsors = sponsorsReg.actifs ? sponsorsListe(data, sponsorsReg) : [];
+    // L'encart au fil est tiré UNE FOIS pour toute la session : il ne doit pas changer sous les
+    // yeux du lecteur à chaque rafraîchissement automatique (toutes les ~15 s).
+    if (sponsors.length && !sponsorFil) {
+      sponsorFil = sponsorsTirer('fil', sponsorsPourEmplacement(sponsors, 'fil'), true);
+    }
+    if (!sponsors.length) sponsorFil = null;
+
     if (premier || signature !== derniereSignature) {
       derniereSignature = signature;
       peuplerCategorie();
@@ -146,6 +162,7 @@ async function charger(premier) {
     }
     // Verrou de publication (peut changer sans que les matchs/équipes changent).
     appliquerPublication();
+    appliquerSponsors(premier);
   } catch (err) {
     if (premier) {
       document.getElementById('mon-planning').innerHTML =
@@ -204,6 +221,135 @@ function appliquerPublication() {
   if (!pub) { const pod = document.getElementById('podium'); if (pod) pod.hidden = true; }
   // Le filtre catégorie : masqué si non publié ; sinon c'est peuplerCategorie qui décide.
   if (!pub) document.getElementById('filtre-categorie').hidden = true;
+}
+
+/* ==========================================================================
+   PARTENAIRES (sponsors) — emplacements A, B, D, E
+   --------------------------------------------------------------------------
+   L'emplacement C (encart au fil) est inséré directement dans les vues, par
+   afficherEquipe et afficherClassements. Tout le moteur est dans sponsors.js.
+   ========================================================================== */
+
+/**
+ * Dessine (ou efface) les emplacements partenaires. Les zones A, B et E ne sont redessinées
+ * QUE si la composition change : sinon chaque rafraîchissement automatique relancerait la
+ * rotation du rail depuis le début et regonflerait le compteur d'affichages.
+ *
+ * Tout est conditionné à la publication du tournoi : sur l'écran « à venir », la page reste
+ * exactement celle d'aujourd'hui.
+ *
+ * @param {boolean} premier vrai au tout premier chargement (autorise l'interstitiel)
+ */
+function appliquerSponsors(premier) {
+  const zoneBandeau = document.getElementById('sp-bandeau');
+  const zoneRail = document.getElementById('sp-rail');
+  const zoneBarre = document.getElementById('sp-barre');
+  const zoneMur = document.getElementById('sp-mur');
+  const don = document.getElementById('don-lien');
+  if (!zoneBandeau) return;
+
+  const montrer = !!(sponsorsReg && sponsorsReg.actifs && sponsors.length && estPublie());
+  if (!montrer) {
+    [zoneBandeau, zoneRail, zoneBarre, zoneMur].forEach(function (z) {
+      if (z) { z.hidden = true; z.innerHTML = ''; }
+    });
+    document.body.classList.remove('sp-barre-active');
+    if (don) don.classList.remove('don-bandeau-bas');
+    sponsorsSignature = '';
+    return;
+  }
+
+  const signature = sponsors.map(function (s) {
+    return s.id_sponsor + ':' + s.emplacements + ':' + s.poids;
+  }).join('|') + '#' + sponsorsReg.rotationS + '#' + sponsorsReg.mur + '#' + sponsorsReg.barreMobile;
+
+  if (signature !== sponsorsSignature) {
+    sponsorsSignature = signature;
+
+    // A — bandeau principal.
+    const htmlBandeau = sponsorsRendreBandeau(sponsors);
+    zoneBandeau.innerHTML = htmlBandeau;
+    zoneBandeau.hidden = !htmlBandeau;
+    // Arbitrage : un seul appel commercial au-dessus du contenu. Le bandeau de don descend.
+    if (don) don.classList.toggle('don-bandeau-bas', !!htmlBandeau);
+
+    // B — rail (ordinateur) et barre basse (téléphone) : même contenu, deux rendus.
+    const htmlRail = sponsorsRendreRail(sponsors);
+    if (zoneRail) { zoneRail.innerHTML = htmlRail; zoneRail.hidden = !htmlRail; }
+    if (zoneBarre) {
+      const avecBarre = !!htmlRail && sponsorsReg.barreMobile;
+      zoneBarre.innerHTML = avecBarre ? htmlRail : '';
+      zoneBarre.hidden = !avecBarre;
+      // Le corps de page réserve la hauteur de la barre : elle ne recouvre jamais un score.
+      document.body.classList.toggle('sp-barre-active', avecBarre);
+    }
+
+    // E — mur des partenaires.
+    const htmlMur = sponsorsReg.mur ? sponsorsRendreMur(sponsors) : '';
+    if (zoneMur) { zoneMur.innerHTML = htmlMur; zoneMur.hidden = !htmlMur; }
+
+    [zoneBandeau, zoneRail, zoneBarre, zoneMur].forEach(function (z) {
+      if (z && !z.hidden) sponsorsBrancherMesure(z);
+    });
+    // La rotation pilote les DEUX rendus du rail (colonne et barre) : une seule est visible
+    // à la fois selon la largeur d'écran, mais toutes deux doivent rester synchronisées.
+    sponsorsDemarrerRotation([zoneRail, zoneBarre], sponsorsReg.rotationS);
+  }
+
+  // D — interstitiel : au chargement seulement, jamais sur un rafraîchissement automatique.
+  if (premier && !sponsorPleinFait) {
+    sponsorPleinFait = true;
+    const candidats = sponsorsPourEmplacement(sponsors, 'plein');
+    const visites = sponsorsCompterVisite();
+    if (sponsorsPeutAfficherPlein(sponsorsReg, candidats, visites, estPublie())) {
+      sponsorsAfficherPlein(sponsorsTirer('plein', candidats, true), sponsorsReg);
+    }
+  }
+
+  if (sponsorsReg.demo) afficherBandeauDemo();
+}
+
+/**
+ * Encart partenaire (emplacement C) prêt à insérer dans une vue. Son affichage n'est compté
+ * qu'une seule fois : la vue est reconstruite à chaque rafraîchissement, mais c'est le même
+ * encart, sous les mêmes yeux.
+ */
+function encartFil() {
+  if (!sponsorsReg || !sponsorsReg.actifs || !sponsorFil || !estPublie()) return '';
+  return sponsorsRendreFil(sponsorFil);
+}
+
+/** Rebranche la mesure sur les encarts au fil après un rendu de vue. */
+function brancherEncartsFil() {
+  const zones = [document.getElementById('mon-planning'), document.getElementById('vue-classements')];
+  zones.forEach(function (z) {
+    if (z) sponsorsBrancherMesure(z, { sansAffichage: sponsorFilCompte });
+  });
+  if (sponsorFil) sponsorFilCompte = true;
+}
+
+/**
+ * Barre flottante du MODE DÉMO (?demo=sponsors) : rejouer l'interstitiel à volonté et
+ * repérer les emplacements. Absente de la page publique normale.
+ */
+function afficherBandeauDemo() {
+  if (document.getElementById('sp-demo')) return;
+  const barre = document.createElement('div');
+  barre.id = 'sp-demo';
+  barre.className = 'sp-demo';
+  barre.innerHTML =
+    '<span class="sp-demo-titre">Mode démo</span>' +
+    '<button type="button" id="sp-demo-plein">Rejouer le plein écran</button>' +
+    '<button type="button" id="sp-demo-reperes">Repérer les emplacements</button>';
+  document.body.appendChild(barre);
+
+  document.getElementById('sp-demo-plein').addEventListener('click', function () {
+    const candidats = sponsorsPourEmplacement(sponsors, 'plein');
+    if (candidats.length) sponsorsAfficherPlein(sponsorsTirer('plein', candidats, true), sponsorsReg);
+  });
+  document.getElementById('sp-demo-reperes').addEventListener('click', function () {
+    document.body.classList.toggle('sp-reperes');
+  });
 }
 
 function majHeure() {
@@ -355,9 +501,14 @@ function afficherEquipe() {
     html += '<div class="planning-phase">' + titreAprem + '</div>' + cartes(aprem, id);
   }
 
+  // Encart partenaire (C) : entre les matchs et les classements — une respiration naturelle
+  // du fil, jamais au milieu d'un tableau.
+  html += encartFil();
+
   const eq = equipes.find(function (x) { return x.id_equipe === id; });
   if (eq) html += sectionClassementsEquipe(eq);
   zone.innerHTML = html;
+  brancherEncartsFil();
 }
 
 /** Cartes de matchs (triées par heure) du point de vue de l'équipe id. */
@@ -457,10 +608,13 @@ function afficherClassements() {
   const matin = classementParGroupe('matin');
 
   // En tête : le fil des derniers scores du tournoi (portée « tournoi entier », comme les classements).
-  let html = sectionDerniersScores();
+  // L'encart partenaire (C) se glisse APRÈS les premiers scores : on ne fait jamais attendre
+  // le lecteur qui vient chercher un résultat.
+  let html = sectionDerniersScores() + encartFil();
 
   if (!matin.length) {
     zone.innerHTML = html + '<p class="vide">Aucune poule pour le moment.</p>';
+    brancherEncartsFil();
     return;
   }
 
@@ -472,6 +626,7 @@ function afficherClassements() {
 
   html += sectionApresMidiClassements(categorieActive);
   zone.innerHTML = html;
+  brancherEncartsFil();
 }
 
 /**

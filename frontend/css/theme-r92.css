@@ -642,3 +642,274 @@ body.theme-clair {
    -------------------------------------------------------------------------- */
 .theme-clair .barre-connexion { margin-bottom: 38px; padding: 12px 16px; }
 .theme-clair .etat-avancement { margin-top: 26px; }
+
+/* --------------------------------------------------------------------------
+   ÉCRAN « PARTENAIRES » (sponsors)
+   Trois cartes : réglages d'affichage, fiches partenaires, fiche de visibilité.
+   Tout est scopé sous .theme-clair, comme le reste de cette surcouche.
+   -------------------------------------------------------------------------- */
+
+/* --- Choix des emplacements (cases à cocher groupées) --- */
+.theme-clair .sponsor-emplacements {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 6px 0 16px;
+  padding: 12px 14px;
+  background: var(--r92-ciel-soft);
+  border: 1px solid var(--r92-ligne);
+  border-radius: 10px;
+}
+.theme-clair .sponsor-emplacements b {
+  display: inline-grid;
+  place-items: center;
+  width: 20px; height: 20px;
+  margin-right: 4px;
+  border-radius: 5px;
+  background: var(--r92-navy);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* --- Liste des fiches partenaires --- */
+.theme-clair .sponsor-cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.theme-clair .sponsor-carte {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 4px 12px;
+  align-items: start;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--r92-ligne);
+  border-radius: 12px;
+}
+.theme-clair .sponsor-carte.est-inactif { opacity: 0.55; }
+.theme-clair .sponsor-carte-logo {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  min-height: 46px;
+}
+.theme-clair .sponsor-carte-logo img { max-width: 100%; max-height: 46px; object-fit: contain; }
+.theme-clair .sponsor-pastille {
+  display: inline-grid;
+  place-items: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.theme-clair .sponsor-carte-corps { min-width: 0; }
+.theme-clair .sponsor-carte-corps strong { display: block; color: var(--r92-navy); }
+.theme-clair .sponsor-accroche { display: block; font-size: 0.85rem; color: var(--r92-txt-doux); }
+.theme-clair .sponsor-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.theme-clair .sp-tag {
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--r92-ciel-soft);
+  color: var(--r92-accent-ink);
+  border: 1px solid var(--r92-ligne);
+  white-space: nowrap;
+}
+.theme-clair .sp-tag-poids { background: #fff; color: var(--r92-txt-doux); }
+.theme-clair .sp-tag-off { background: #FDECEA; color: #B03A2C; border-color: #F5C6C0; }
+.theme-clair .sponsor-carte-actions {
+  grid-column: 2;
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.theme-clair .bouton-lien.danger { color: #B03A2C; }
+
+/* --- Fiche de visibilité --- */
+.theme-clair .bilan-avertissement {
+  background: var(--r92-ciel-soft);
+  border: 1px solid var(--r92-ligne);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 14px 0;
+  font-size: 0.9rem;
+}
+/* Le bandeau de projection doit être IMPOSSIBLE à confondre avec un bilan réel. */
+.theme-clair .bilan-avertissement.bilan-projection {
+  background: #FFF6DF;
+  border-color: #E9B53E;
+  color: #6B4E00;
+}
+
+.theme-clair .fiche-sponsor {
+  background: #fff;
+  border: 1px solid var(--r92-ligne);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.theme-clair .fs-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--r92-navy);
+  border-bottom: 3px solid var(--r92-accent);
+}
+.theme-clair .fs-marque {
+  background: var(--r92-accent);
+  color: #fff;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+.theme-clair .fs-qui { display: flex; flex-direction: column; }
+.theme-clair .fs-qui b { color: #fff; }
+.theme-clair .fs-qui span { color: var(--r92-ciel-soft); font-size: 0.82rem; }
+
+.theme-clair .fs-tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 10px;
+  padding: 16px 18px 4px;
+}
+.theme-clair .fs-tuile {
+  background: var(--r92-ciel-soft);
+  border: 1px solid var(--r92-ligne);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.theme-clair .fs-tuile .v {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--r92-navy);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.theme-clair .fs-tuile .k {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--r92-txt-doux);
+}
+
+.theme-clair .fs-fig { padding: 16px 18px 4px; }
+.theme-clair .fs-fig-titre { display: block; font-weight: 600; color: var(--r92-navy); }
+.theme-clair .fs-fig-sous {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--r92-txt-doux);
+  margin-bottom: 10px;
+}
+
+/* Histogramme : série UNIQUE → teinte unique, la hauteur porte la grandeur.
+   Pas de légende (le titre nomme la série), étiquette directe sur le seul sommet. */
+.theme-clair .fs-histo {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  align-items: end;
+  height: 150px;
+  padding-top: 18px;
+  border-bottom: 1px solid var(--r92-champ-bd);
+}
+.theme-clair .fs-barre {
+  position: relative;
+  background: var(--r92-accent);
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+}
+.theme-clair .fs-barre.pic { background: var(--r92-accent-ink); }
+.theme-clair .fs-etiq {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--r92-navy);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.theme-clair .fs-axe {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  margin-top: 5px;
+}
+.theme-clair .fs-axe span {
+  font-size: 0.62rem;
+  text-align: center;
+  color: var(--r92-txt-doux);
+  font-variant-numeric: tabular-nums;
+}
+.theme-clair .fs-axe span.creux { visibility: hidden; }
+
+/* Barres classées : une seule teinte, la longueur porte la grandeur. */
+.theme-clair .fs-rang { display: flex; flex-direction: column; gap: 6px; }
+.theme-clair .fs-rang-l {
+  display: grid;
+  grid-template-columns: minmax(90px, 150px) 1fr 68px;
+  gap: 10px;
+  align-items: center;
+}
+.theme-clair .fs-rang-l .n { font-size: 0.82rem; color: var(--r92-txt-doux); }
+.theme-clair .fs-rang-l .p {
+  background: var(--r92-ciel-soft);
+  border-radius: 4px;
+  height: 14px;
+  overflow: hidden;
+}
+.theme-clair .fs-rang-l .p i { display: block; height: 100%; background: var(--r92-accent); }
+.theme-clair .fs-rang-l .v {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--r92-navy);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.theme-clair .fs-table { margin-top: 10px; }
+.theme-clair .fs-table summary { cursor: pointer; font-size: 0.82rem; color: var(--r92-accent-ink); }
+.theme-clair .fs-note,
+.theme-clair .fs-methode {
+  padding: 10px 18px;
+  font-size: 0.8rem;
+  color: var(--r92-txt-doux);
+  line-height: 1.5;
+}
+.theme-clair .fs-methode { border-top: 1px solid var(--r92-ligne); margin-top: 12px; }
+
+/* À l'impression : seule la fiche de visibilité part sur le papier. */
+@media print {
+  body.theme-clair .barre-laterale,
+  body.theme-clair .entete,
+  body.theme-clair #tableau-bord,
+  body.theme-clair #etat-avancement,
+  body.theme-clair .ligne-action,
+  body.theme-clair #bloc-sponsors-reglages,
+  body.theme-clair #bloc-sponsors-liste,
+  body.theme-clair #ligne-projection { display: none !important; }
+  body.theme-clair .fiche-sponsor { break-inside: avoid; border-color: #999; }
+  body.theme-clair .fs-tete { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* Sélecteur de couleur : sans hauteur explicite, il se réduit à un trait dans le thème clair. */
+.theme-clair input.r-input[type="color"] {
+  height: 42px;
+  padding: 4px;
+  cursor: pointer;
+}

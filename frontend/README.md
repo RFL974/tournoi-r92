@@ -59,6 +59,10 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
   blocs : corriger une formulation les corrige tous les deux.
 - `js/api.js` — `apiGet` / `apiPost` / `apiPostProtege` + gestion des clés (session).
 - `js/admin.js`, `js/saisie.js`, `js/tournoi.js`, `js/perfs.js` — logique de chaque page.
+- `js/sponsors.js` — **partenaires** : roue de rotation équitable, rendu des 5 emplacements,
+  message plein écran accessible, mesure de visibilité **locale** (rien n'est envoyé). Partagé
+  entre la page publique et l'admin. Voir [`../docs/sponsors.md`](../docs/sponsors.md).
+- `js/admin-sponsors.js` — écran admin « Partenaires » : réglages, fiches, fiche de visibilité.
 
 **Présentation de la page admin** (surcouches, la logique reste dans `admin.js`) :
 - `css/theme-r92.css` — habillage navy/blanc/ciel, chargé après `styles.css`, scopé `.theme-clair`.

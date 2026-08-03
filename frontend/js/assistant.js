@@ -36,6 +36,9 @@ const ASSISTANT_ETAPES = [
   { id: 'autorisation', titre: 'Autorisation', icone: '🏛️', blocs: ['bloc-autorisation'] },
   { id: 'apresmidi', titre: 'Après-midi',   icone: '🏉', blocs: ['bloc-apresmidi'] },
   { id: 'feuillejour', titre: 'Feuille de journée', icone: '📋', blocs: ['bloc-feuille-jour'] },
+  /* Partenaires (sponsors de la page publique) : réglages, fiches, fiche de visibilité.
+     Juste avant le résumé — on habille la page une fois le tournoi prêt. */
+  { id: 'sponsors',  titre: 'Partenaires',  icone: '🤝', blocs: ['bloc-sponsors-reglages', 'bloc-sponsors-liste', 'bloc-sponsors-bilan'] },
   { id: 'resume',    titre: 'Résumé',       icone: '📋', blocs: ['tableau-bord', 'etat-avancement', 'bloc-publication', 'bloc-reinitialisation'] }
 ];
 

@@ -326,6 +326,40 @@ clubs qui **acceptent** (Phase 2).
 
 ---
 
+## Onglet `Sponsors` (partenaires de la page publique)
+
+Les partenaires affichés sur la page publique des scores, gérés par l'écran « **Partenaires** »
+de la page admin. **Aucune donnée personnelle** : un partenaire est une entreprise, et tout, ici,
+est destiné à être affiché.
+
+> 🧪 **Prototype.** L'affichage est piloté par les réglages `sponsors_*` de l'onglet `Config`,
+> tous exposés à la page publique. **La mesure de visibilité ne passe PAS par le Sheet** : elle
+> reste dans le navigateur du spectateur (aucun envoi). Voir [`docs/sponsors.md`](sponsors.md).
+
+| Colonne | Exemple | Signification |
+|---|---|---|
+| `id_sponsor` | `SP4A2E19C7` | Identifiant tiré au sort à la création (**clé** de la fiche) |
+| `nom` | `Décathlon Le Plessis` | Nom affiché. Sert aussi de **texte alternatif** au logo (lecteurs d'écran) |
+| `logo_id` | `1AbC…` | Id du fichier Drive du logo (public en lecture), comme `tournoi_affiche_id`. Vide ⇒ pastille au nom du partenaire sur sa couleur de marque |
+| `url` | `https://…` | Site du partenaire (optionnel). Lien en `rel="noopener sponsored"`, nouvel onglet |
+| `accroche` | `Tout l'équipement rugby` | Une ligne (60 car. max) affichée sous le logo |
+| `emplacements` | `bandeau,mur` | Où il apparaît, séparés par des virgules : `bandeau` (A) · `rail` (B) · `fil` (C) · `plein` (D) · `mur` (E). Vide ⇒ `mur`. Un jeton inconnu est **ignoré** à l'écriture |
+| `poids` | `3` | 1 à 5 — part du partenaire dans la **roue de rotation**. Poids 3 = 3× plus de tours que poids 1. Sans effet sur les emplacements à partenaire unique |
+| `visuel_id` | `1XyZ…` | Id Drive d'un **visuel plein écran** fourni par le partenaire (optionnel). Absent ⇒ l'interstitiel se compose depuis logo + accroche + couleur |
+| `couleur` | `#0A5AA8` | Couleur de marque (`#RRGGBB`), fond du plein écran auto-composé. Vide ⇒ navy de la charte |
+| `actif` | `oui` | `oui` = affiché. Toute autre valeur ⇒ retiré de la page **sans perdre la fiche** |
+| `ordre` | `1` | Entier — position dans le **mur des partenaires** uniquement |
+
+> ♻️ **Conservé par la réinitialisation**, comme `ClubsInvites` : un partenariat se reconduit
+> d'une édition à l'autre, et le remettre à zéro obligerait à re-téléverser tous les logos. Pour
+> retirer un partenaire, décocher `actif`.
+
+> 🆕 **Créé à la demande** (`assurerOngletSponsors`) : un classeur antérieur aux partenaires
+> reste valide, l'onglet apparaît à la première écriture. Inutile de relancer `setupSheet`, qui
+> réécrirait `Config`.
+
+---
+
 ## Système de classement (rappel)
 
 Calculé en direct à partir des matchs `terminé` :
