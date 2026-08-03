@@ -5,6 +5,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Correctif : le descriptif du tournoi perdait ses sauts de ligne — 2026-08-03
+Les retours à la ligne saisis dans « Descriptif du tournoi » (carte *Infos du tournoi*)
+n'apparaissaient **ni dans l'aperçu de la page d'article, ni sur le site vitrine** : en HTML,
+un saut de ligne est un espace comme un autre, il faut le demander explicitement. Le bloc
+`.vp-texte` de l'aperçu passe donc en `white-space: pre-line` — les lignes saisies deviennent
+de vrais retours à la ligne, une ligne vide reste une ligne vide — et le texte est **justifié**
+avec césure (`hyphens: auto`), comme demandé. L'extrait de la **carte d'actualité** (160 car.),
+lui, ramène les sauts de ligne à des espaces : une accroche de trois lignes n'est pas une mise
+en page. Le site vitrine reçoit la **même** règle sur `#art-description` (dépôt `boutique-r92`) :
+les deux rendus restent au pixel près. **100 % front**, aucun redéploiement backend.
+
 ### Correctif : les liserés d'état des clubs étaient invisibles — 2026-08-02
 Les badges (« À enregistrer », « Sélection enregistrée »…) s'affichaient bien, mais **aucun
 liseré de couleur** n'apparaissait sur les cartes. Cause : le **piège des deux feuilles de

@@ -81,9 +81,12 @@ function formaterDateFr(dateISO) {
 }
 
 /** Coupe un texte au dernier mot entier avant `max` caractères — même règle
- *  que le site vitrine (extraitCourt), pour un aperçu au caractère près. */
+ *  que le site vitrine (extraitCourt), pour un aperçu au caractère près.
+ *  Comme sur le site, les sauts de ligne saisis deviennent de simples espaces :
+ *  l'extrait d'une carte est une accroche, pas une mise en page (celle-ci est
+ *  respectée sur la page d'article, cf. .vp-texte / #art-description). */
 function extraitCourt(texte, max) {
-  const t = String(texte || '').trim();
+  const t = String(texte || '').replace(/\s+/g, ' ').trim();
   if (t.length <= max) return t;
   const coupe = t.slice(0, max);
   return coupe.slice(0, coupe.lastIndexOf(' ') > 0 ? coupe.lastIndexOf(' ') : max).trim() + '…';
