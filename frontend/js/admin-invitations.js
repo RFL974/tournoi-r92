@@ -974,6 +974,9 @@ async function chargerClubsInvites() {
     const res = await ecrireAdmin('listerClubsInvites', {});
     clubsInvitesCourants = (res && res.clubs) || [];
     afficherClubsInvites();
+    // L'aperçu du dossier ouvre le dossier D'UN CLUB : sa liste de choix suit les clubs chargés
+    // (elle est vide au premier rendu de la carte, avant cet appel).
+    if (typeof majApercuDossier === 'function') majApercuDossier();
   } catch (erreur) {
     zone.innerHTML = '<p class="vide">⚠️ Impossible de charger les clubs invités : '
       + echapper(erreur.message) + '</p>';

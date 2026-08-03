@@ -1912,6 +1912,11 @@ a.bouton { display: inline-block; text-decoration: none; }
 .dossier-etat li { padding: 2px 0; }
 .dossier-etat li.est-vide { opacity: 0.65; }
 .dossier-etat-note { font-size: 0.8em; color: var(--bleu-ciel); }
+/* Aperçu du dossier : « Aperçu du dossier de [club] » + bouton. Le select porte .r-input,
+   déclarée dans les DEUX feuilles (styles.css sombre + theme-r92.css clair) — un nouveau nom
+   de classe n'aurait été stylé que dans l'une des deux. */
+.dossier-apercu-lib { color: var(--bleu-ciel); }
+#ligne-apercu-dossier select { max-width: 260px; }
 
 /* ==========================================================================
    Carte « Clubs invités » (admin) : liste des clubs (réutilise .equipe-item)

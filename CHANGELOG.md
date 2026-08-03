@@ -5,6 +5,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Correctif : l'aperçu du dossier depuis l'admin ne fonctionnait plus — 2026-08-03
+Le bouton **« Aperçu du dossier (générique) »** de la carte *Dossier complet* ouvrait
+`dossier-club.html?admin=1` — **sans club ni jeton**. Il marchait le jour où il a été écrit
+(24 juillet), mais le dossier est passé **sous jeton** trois jours plus tard (28 juillet,
+protection des contacts jour J, du parking et des secours) : depuis, l'aperçu affichait
+invariablement « Ce lien de dossier n'est plus valide ou incomplet ». Ça ressemble à une panne,
+c'est en réalité la sécurité qui parle — et **aucun aperçu « générique » ne peut plus exister**.
+Le bouton est donc remplacé par le **choix d'un club** (« Aperçu du dossier de … ») puis
+« Ouvrir l'aperçu » : on relit le dossier **tel que le club le recevra**, avec son nom et ses
+catégories engagées. Sans aucun club invité, la carte l'explique au lieu d'afficher un lien mort.
+**100 % front**, aucun redéploiement backend.
+
 ### Le dossier ne ressemble plus à un doublon de l'invitation (lot 1 bis) — 2026-08-03
 Après la refonte du lot 1, le dossier ressemblait **trop** à l'invitation : même charte, mais
 aussi même hiérarchie et même contenu — un club pouvait croire recevoir deux fois le même
