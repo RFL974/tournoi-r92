@@ -200,12 +200,19 @@ function brancherZoneImage(cfg) {
  * Redimensionne une image (fichier) à `maxDim` px max sur le plus grand côté et renvoie
  * un Data URI (qualité 0..1). Allège fortement le poids avant l'envoi au backend.
  *
- * @param {string} [typeSortie] 'image/jpeg' par défaut (photos : bien plus léger).
- *   Passer 'image/png' pour PRÉSERVER LA TRANSPARENCE — indispensable aux logos de
- *   partenaires, qui sont presque toujours des PNG détourés : en JPEG, le fond
- *   transparent devient NOIR et le logo est inutilisable sur la page publique.
+ * @param {string} [typeSortie]  'image/jpeg' par défaut (photos : bien plus léger).
+ * @param {string} [fondCouleur] couleur peinte SOUS l'image avant l'encodage.
+ *
+ * ⚠️ POURQUOI PEINDRE UN FOND — le piège du logo sur fond noir.
+ * Un canevas vierge est transparent-NOIR (rgba(0,0,0,0)). Tout maillon de la chaîne qui
+ * aplatit la transparence — un encodage JPEG, mais aussi le proxy d'images de Google qui
+ * sert les fichiers Drive — révèle donc ce noir, et un logo PNG détouré (le cas de presque
+ * tous les logos de marque) ressort sur un carré noir.
+ * Peindre un fond BLANC avant de dessiner rend le résultat déterministe : plus aucune
+ * transparence à aplatir, donc plus aucun maillon capable de la rater. Les tuiles qui
+ * accueillent les logos sont blanches elles aussi, le fond peint est donc invisible.
  */
-function redimensionnerImage(fichier, maxDim, qualite, typeSortie) {
+function redimensionnerImage(fichier, maxDim, qualite, typeSortie, fondCouleur) {
   return new Promise(function (resoudre, rejeter) {
     const img = new Image();
     img.onload = function () {
@@ -216,7 +223,9 @@ function redimensionnerImage(fichier, maxDim, qualite, typeSortie) {
       }
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const ctx = canvas.getContext('2d');
+      if (fondCouleur) { ctx.fillStyle = fondCouleur; ctx.fillRect(0, 0, w, h); }
+      ctx.drawImage(img, 0, 0, w, h);
       resoudre(canvas.toDataURL(typeSortie || 'image/jpeg', qualite));
     };
     img.onerror = rejeter;

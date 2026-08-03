@@ -744,7 +744,9 @@ a.sp-bandeau:hover {
 
 /* --- B · Rail (ordinateur) --- */
 .sp-rail {
-  background: var(--surface-clair);
+  /* Blanc, comme le fond peint sous les logos au téléversement : sans ça, un logo détouré
+     laisserait un rectangle blanc visible sur une tuile bleutée. */
+  background: var(--blanc);
   border: 1px solid var(--bordure);
   border-radius: 12px;
   padding: 12px 14px;
@@ -941,7 +943,7 @@ a.sp-plein-visuel:hover { text-decoration: none; }
   place-items: center;
   min-height: 70px;             /* hauteur réservée : la grille ne bouge pas au chargement */
   padding: 10px;
-  background: var(--surface-clair);
+  background: var(--blanc);     /* voir .sp-rail : blanc pour se fondre avec le fond peint */
   border: 1px solid var(--bordure);
   border-radius: 8px;
   text-decoration: none;
