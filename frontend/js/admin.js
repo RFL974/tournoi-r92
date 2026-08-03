@@ -198,9 +198,14 @@ function brancherZoneImage(cfg) {
 
 /**
  * Redimensionne une image (fichier) à `maxDim` px max sur le plus grand côté et renvoie
- * un Data URI JPEG (qualité 0..1). Allège fortement le poids avant l'envoi au backend.
+ * un Data URI (qualité 0..1). Allège fortement le poids avant l'envoi au backend.
+ *
+ * @param {string} [typeSortie] 'image/jpeg' par défaut (photos : bien plus léger).
+ *   Passer 'image/png' pour PRÉSERVER LA TRANSPARENCE — indispensable aux logos de
+ *   partenaires, qui sont presque toujours des PNG détourés : en JPEG, le fond
+ *   transparent devient NOIR et le logo est inutilisable sur la page publique.
  */
-function redimensionnerImage(fichier, maxDim, qualite) {
+function redimensionnerImage(fichier, maxDim, qualite, typeSortie) {
   return new Promise(function (resoudre, rejeter) {
     const img = new Image();
     img.onload = function () {
@@ -212,7 +217,7 @@ function redimensionnerImage(fichier, maxDim, qualite) {
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resoudre(canvas.toDataURL('image/jpeg', qualite));
+      resoudre(canvas.toDataURL(typeSortie || 'image/jpeg', qualite));
     };
     img.onerror = rejeter;
     const lecteur = new FileReader();

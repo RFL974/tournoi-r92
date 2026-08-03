@@ -280,12 +280,21 @@ function sponsorsCouleur(s) {
  * Logo d'un partenaire. Sans fichier téléversé, on compose une pastille au nom du
  * partenaire sur sa couleur de marque : un commerçant qui n'a pas de logo exploitable
  * reste affichable, et la démo fonctionne avant même le premier téléversement.
+ *
+ * ⚠️ La TAILLE d'affichage n'est PAS fixée ici : elle est gouvernée par la feuille de style,
+ * emplacement par emplacement (section 19 de tournoi-public.css), avec des valeurs différentes
+ * sur téléphone et sur ordinateur. Un style en ligne l'emporterait sur le CSS et interdirait
+ * ces adaptations — c'est exactement ce qui rendait le logo minuscule sur grand écran.
+ *
+ * La largeur demandée à Drive est fixe (600 px) : c'est la taille à laquelle l'admin
+ * redimensionne les logos au téléversement, donc en demander plus n'apporterait rien, et en
+ * demander moins piquerait sur les écrans à haute densité.
  */
-function sponsorsLogo(s, hauteur) {
+function sponsorsLogo(s) {
   var nom = echapper(s.nom);
   if (s.logo_id) {
-    return '<img class="sp-logo-img" src="' + echapper(sponsorsUrlImage(s.logo_id, (hauteur || 40) * 6)) +
-      '" alt="' + nom + '" loading="lazy" decoding="async" style="max-height:' + (hauteur || 40) + 'px">';
+    return '<img class="sp-logo-img" src="' + echapper(sponsorsUrlImage(s.logo_id, 600)) +
+      '" alt="' + nom + '" loading="lazy" decoding="async">';
   }
   return '<span class="sp-logo-texte" style="background:' + echapper(sponsorsCouleur(s)) + '">' + nom + '</span>';
 }
@@ -319,7 +328,7 @@ function sponsorsRendreBandeau(liste) {
   var s = sponsorsTirer('bandeau', candidats, true);
   if (!s) return '';
   var corps =
-    '<span class="sp-bandeau-logo">' + sponsorsLogo(s, 34) + '</span>' +
+    '<span class="sp-bandeau-logo">' + sponsorsLogo(s) + '</span>' +
     '<span class="sp-bandeau-texte">' +
       '<span class="sp-mention">Partenaire du tournoi</span>' +
       sponsorsNomACote(s) +
@@ -334,7 +343,7 @@ function sponsorsRendreRail(liste) {
   var ordre = sponsorsOrdreRoue('rail', sponsorsPourEmplacement(liste, 'rail'));
   if (!ordre.length) return '';
   var vues = ordre.map(function (s, i) {
-    var corps = '<span class="sp-rail-logo">' + sponsorsLogo(s, 30) + '</span>' +
+    var corps = '<span class="sp-rail-logo">' + sponsorsLogo(s) + '</span>' +
       (s.accroche ? '<span class="sp-accroche">' + echapper(s.accroche) + '</span>' : '');
     return '<div class="sp-rail-vue' + (i === 0 ? ' active' : '') + '" data-index="' + i + '"' +
       (i === 0 ? '' : ' aria-hidden="true"') + '>' +
@@ -353,7 +362,7 @@ function sponsorsRendreRail(liste) {
 function sponsorsRendreFil(s) {
   if (!s) return '';
   var corps =
-    '<span class="sp-fil-logo">' + sponsorsLogo(s, 30) + '</span>' +
+    '<span class="sp-fil-logo">' + sponsorsLogo(s) + '</span>' +
     '<span class="sp-fil-texte">' +
       '<span class="sp-mention">Partenaire</span>' +
       sponsorsNomACote(s) +
@@ -367,7 +376,7 @@ function sponsorsRendreMur(liste) {
   var candidats = sponsorsPourEmplacement(liste, 'mur');
   if (!candidats.length) return '';
   var cases = candidats.map(function (s) {
-    return sponsorsOuvrir(s, sponsorsLogo(s, 38), 'sp-mur-case', 'mur');
+    return sponsorsOuvrir(s, sponsorsLogo(s), 'sp-mur-case', 'mur');
   }).join('');
   return '<div class="sp-mur">' +
       '<div class="sp-mur-titre">Ils rendent le tournoi possible</div>' +
