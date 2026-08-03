@@ -401,7 +401,18 @@ body.theme-clair {
 }
 .theme-clair .vp-titre-section.est-blanc { color: #FFFFFF; }
 .theme-clair .vp-section { padding: 18px; }
-.theme-clair .vp-texte { margin: 8px 0 0; font-size: 0.9rem; line-height: 1.55; }
+/* Le descriptif du tournoi dans l'aperçu de la page d'article : MÊME rendu que le
+   site vitrine (#art-description dans style.css de boutique-r92) — les sauts de ligne
+   saisis sont conservés (`pre-line`) et le texte est justifié avec césure. */
+.theme-clair .vp-texte {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  white-space: pre-line;
+  text-align: justify;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
 .theme-clair .vp-affiche {
   width: 100%;
   margin-top: 14px;
