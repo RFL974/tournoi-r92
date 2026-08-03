@@ -35,6 +35,10 @@ async function initInvitation() {
   try {
     const config = await apiGet('getConfig'); // { global, categories }
     zone.innerHTML = construireInvitation((config && config.global) || {}, (config && config.categories) || []);
+    // Page rendue (le bouton « Répondre » porte déjà son lien) : le jeton sort de l'adresse —
+    // il s'imprimait en pied de feuille et s'affichait sur la moindre capture d'écran.
+    const p = new URLSearchParams(window.location.search);
+    masquerJetonDeLUrl('invitation:' + txt(p.get('club')), jetonCourant('invitation:' + txt(p.get('club')), p));
   } catch (erreur) {
     zone.innerHTML = '<div class="message-chargement erreur">Impossible de charger les données du tournoi.<br>'
       + 'Détail : ' + echapper(erreur.message) + '</div>';
@@ -128,7 +132,9 @@ function lienReponsePersonnel(g) {
   try {
     const params = new URLSearchParams(window.location.search);
     const club = txt(params.get('club'));
-    const token = txt(params.get('token'));
+    // Jeton de l'adresse OU de l'onglet : après un rechargement, l'adresse n'en a plus (il a été
+    // masqué au premier affichage) et le bouton « Répondre » doit rester là.
+    const token = jetonCourant('invitation:' + club, params);
     if (!club || !token) return '';
     const url = new URL('reponse-invitation.html', window.location.href);
     if (txt(g.tournoi_nom)) url.searchParams.set('tournoi', txt(g.tournoi_nom));
