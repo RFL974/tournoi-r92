@@ -5,6 +5,22 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Correctif : « pas de place pour la table de marque » alors qu'il en reste dans l'en-but — 2026-08-03
+La répartition annonçait parfois **« Pas de place pour la table de marque »** sur un grand terrain
+où, dans la réalité, il restait de la place. Cause : la longueur d'un grand terrain est mesurée
+**d'une ligne de poteaux à l'autre** — l'**en-but** existe sur le terrain mais n'existait nulle
+part dans le calcul, qui ne regardait donc que le rectangle de jeu. Chaque grand terrain reçoit
+désormais une profondeur d'**en-but** déclarée (colonne « en-but », `0` par défaut : **rien n'est
+deviné**, c'est une mesure du terrain). Quand la surface de jeu est pleine, la table de marque se
+pose **derrière la ligne de but**, au fond de l'en-but, du côté le plus proche des mini-terrains
+qu'elle surveille — le couloir de circulation ne s'y applique pas (l'en-but est de l'espace dédié,
+pas un passage). Les **mini-terrains, eux, restent entre les deux lignes de but** : rien ne change
+au découpage ni à la capacité. La carte dessine les deux bandes d'en-but en hachuré, et
+l'avertissement restant dit désormais **quoi faire** (« aucun en-but déclaré sur Rugby 1 : indique
+sa profondeur »). Au passage, sur un grand terrain occupé **en entier** (U14), la table passe
+**sur la ligne de touche mais à l'extérieur du terrain** : le match utilise toute la surface de
+jeu, la table n'a rien à y faire. **100 % front**, aucun redéploiement backend.
+
 ### Correctif : le descriptif du tournoi perdait ses sauts de ligne — 2026-08-03
 Les retours à la ligne saisis dans « Descriptif du tournoi » (carte *Infos du tournoi*)
 n'apparaissaient **ni dans l'aperçu de la page d'article, ni sur le site vitrine** : en HTML,
