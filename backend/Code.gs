@@ -3913,7 +3913,7 @@ function autresNomsClubsInvites(classeur, nomClub) {
 /**
  * Cœur PUR de la synchronisation des équipes d'un club (testé sans classeur, backend/Tests.gs).
  * Compare l'engagement déclaré (catégories + nb d'équipes) aux équipes existantes du club et
- * renvoie un PLAN : { aCreer, aSupprimer, alertes } — l'écriture reste dans creerEquipesClub.
+ * renvoie un PLAN : { aCreer, aSupprimer, aRenommer, alertes } — l'écriture reste dans creerEquipesClub.
  *
  * Règles (décisions Romain, session liserés) :
  *  - AJOUTS automatiques (logique historique : « {club} » si 1 équipe, sinon « {club}-1 »…) ;
@@ -3942,7 +3942,7 @@ function motifConservationEquipe(e, nomsReferences) {
 
 function planifierSyncEquipesClub(equipes, nomClub, categories, nbMap, nomsReferences, autresClubs) {
   nomsReferences = nomsReferences || {};
-  var aCreer = [], aSupprimer = [], alertes = [];
+  var aCreer = [], aSupprimer = [], aRenommer = [], alertes = [];
 
   // DÉDUPLICATION des catégories engagées (revue) : « U8,U8 » — cellule éditée à la main ou
   // deux lignes U8 en zone B — créait deux fois les mêmes équipes (noms en double dans l'onglet,
@@ -3988,6 +3988,32 @@ function planifierSyncEquipesClub(equipes, nomClub, categories, nbMap, nomsRefer
       return memeTexteSouple(e.categorie, cat) && estAMoi(e);
     }).sort(function (a, b) { return rangEquipe(a.nom_equipe) - rangEquipe(b.nom_equipe); });
 
+    // HÉRITAGE — AVANT toute autre décision, y compris « déjà à jour » : une équipe au nom NU
+    // (« MASSY », créée quand le club n'en avait qu'une) rejoint la numérotation sous « MASSY-1 ».
+    // C'est le cas qui produisait la paire bancale « MASSY » + « MASSY-1 » quand le club passait
+    // à deux équipes. Garde-fou identique à celui de la suppression : une équipe déjà placée en
+    // poule ou présente dans des matchs générés n'est PAS touchée — renommer sous les pieds d'un
+    // planning déjà diffusé ferait plus de dégâts qu'un nom hétérogène — on le SIGNALE.
+    var nomsPris = {};
+    equipes.forEach(function (e) {
+      if (memeTexteSouple(e.categorie, cat)) nomsPris[String(e.nom_equipe).trim()] = true;
+    });
+    var estNomDunAutreClub = function (n) {
+      return (autresClubs || []).some(function (autre) { return memeTexteSouple(autre, n); });
+    };
+    var nue = existantes.filter(function (e) { return String(e.nom_equipe).trim() === nomClub; })[0];
+    var cible1 = nomClub + '-1';
+    if (nue && desired > 0 && !nomsPris[cible1] && !estNomDunAutreClub(cible1)) {
+      var motifNue = motifConservationEquipe(nue, nomsReferences);
+      if (motifNue) {
+        alertes.push('« ' + nomClub + ' » (' + cat + ') garde son nom sans numéro : ' + motifNue +
+          ' — renomme-la en « ' + cible1 + ' » à la main si tu veux une numérotation homogène.');
+      } else {
+        aRenommer.push({ id_equipe: nue.id_equipe, de: nomClub, vers: cible1, categorie: cat });
+        nue.nom_equipe = cible1;                  // le reste du plan raisonne sur le nom FINAL
+      }
+    }
+
     if (existantes.length > desired) {
       // RÉDUCTION / DÉSENGAGEMENT : on garde les `desired` premières, on examine les suivantes.
       existantes.slice(desired).forEach(function (e) {
@@ -4009,18 +4035,15 @@ function planifierSyncEquipesClub(equipes, nomClub, categories, nbMap, nomsRefer
     // jamais boucler indéfiniment si beaucoup de noms sont pris.
     var presents = {};
     existantes.forEach(function (e) { presents[String(e.nom_equipe).trim()] = true; });
-    var estNomDunAutreClub = function (n) {
-      return (autresClubs || []).some(function (autre) { return memeTexteSouple(autre, n); });
-    };
+    // NUMÉROTATION TOUJOURS SUFFIXÉE : « MASSY-1 », « MASSY-2 »… Avant, une équipe seule
+    // s'appelait « MASSY » tout court ; le jour où le club en engageait une deuxième, on gardait
+    // ce nom nu et on ajoutait « MASSY-1 » — d'où la paire bancale « MASSY » + « MASSY-1 ».
     var cibles = [];
-    if (desired === 1) {
-      cibles = [nomClub];
-    } else {
-      for (var k = 1; cibles.length < desired && k <= desired + 50; k++) {
-        var candidat = nomClub + '-' + k;
-        if (!estNomDunAutreClub(candidat)) cibles.push(candidat);
-      }
+    for (var k = 1; cibles.length < desired && k <= desired + 50; k++) {
+      var candidat = nomClub + '-' + k;
+      if (!estNomDunAutreClub(candidat)) cibles.push(candidat);
     }
+
     var aFaire = desired - existantes.length;
     for (var c = 0; c < cibles.length && aFaire > 0; c++) {
       if (presents[cibles[c]]) continue;
@@ -4030,7 +4053,7 @@ function planifierSyncEquipesClub(equipes, nomClub, categories, nbMap, nomsRefer
     }
   });
 
-  return { aCreer: aCreer, aSupprimer: aSupprimer, alertes: alertes };
+  return { aCreer: aCreer, aSupprimer: aSupprimer, aRenommer: aRenommer, alertes: alertes };
 }
 
 /**
@@ -4090,6 +4113,14 @@ function creerEquipesClub(classeur, data) {
   var plan = planifierSyncEquipesClub(equipes, nomExact, categories, nbMap, nomsReferences, autresClubs);
 
   var creees = [];
+  // RENOMMAGES d'abord : « MASSY » → « MASSY-1 » libère la place avant toute création, et évite
+  // qu'une création prenne le nom que le renommage vise.
+  var renommees = [];
+  plan.aRenommer.forEach(function (t) {
+    if (renommerEquipeParId(oEquipes, t.id_equipe, t.vers)) {
+      renommees.push({ de: t.de, vers: t.vers, categorie: t.categorie });
+    }
+  });
   plan.aCreer.forEach(function (t) {
     ecrireNouvelleEquipe(oEquipes, t.nom, t.categorie, 'auto');
     creees.push({ nom: t.nom, categorie: t.categorie });
@@ -4106,7 +4137,32 @@ function creerEquipesClub(classeur, data) {
     cell.setNumberFormat('@');
     cell.setValue(plan.alertes.length ? plan.alertes.join(' | ') : '');
   }
-  return { ok: true, equipes_creees: creees, equipes_supprimees: supprimees, alerte: plan.alertes.join(' | ') };
+  return { ok: true, equipes_creees: creees, equipes_supprimees: supprimees,
+           equipes_renommees: renommees, alerte: plan.alertes.join(' | ') };
+}
+
+/** Renomme UNE équipe (par identifiant) dans l'onglet Équipes. Les matchs et les poules
+ *  référencent l'équipe par son `id_equipe` : le nom n'est qu'un libellé d'affichage, et le
+ *  plan de synchronisation n'autorise le renommage que pour une équipe hors poule et hors
+ *  match. @return {boolean} vrai si la ligne a été trouvée et écrite. */
+function renommerEquipeParId(oEquipes, idEquipe, nouveauNom) {
+  var id = String(idEquipe || '').trim();
+  if (!id || !String(nouveauNom || '').trim()) return false;
+  var dernier = oEquipes.getLastRow();
+  if (dernier < 2) return false;
+  var entetes = oEquipes.getRange(1, 1, 1, oEquipes.getLastColumn()).getValues()[0];
+  var colId = entetes.indexOf('id_equipe'), colNom = entetes.indexOf('nom_equipe');
+  if (colId === -1 || colNom === -1) return false;
+  var ids = oEquipes.getRange(2, colId + 1, dernier - 1, 1).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    if (String(ids[i][0] || '').trim() === id) {
+      var cellule = oEquipes.getRange(i + 2, colNom + 1);
+      cellule.setNumberFormat('@');
+      cellule.setValue(String(nouveauNom).trim());
+      return true;
+    }
+  }
+  return false;
 }
 
 /**

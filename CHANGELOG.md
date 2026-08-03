@@ -5,6 +5,22 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Numérotation des équipes d'un club, et carte qui dit où on en est — 2026-08-03
+Deux constats en testant avec un club fictif :
+- **`MASSY` + `MASSY-1` au lieu de `MASSY-1` + `MASSY-2`.** La synchronisation nommait la
+  première équipe d'un club **sans numéro** (« MASSY »), et n'ajoutait les suffixes qu'à partir
+  de la deuxième — d'où la paire bancale dès qu'un club passait de une à deux équipes. La
+  numérotation est désormais **toujours suffixée**, et une équipe héritée au nom nu est
+  **renommée** pour rejoindre la série. Prudence identique à celle des suppressions : une équipe
+  déjà **placée en poule**, **présente dans des matchs** ou **créée à la main** n'est jamais
+  renommée — on le **signale** plutôt que de renommer sous les pieds d'un planning diffusé.
+- **La carte d'un club ne disait pas si son dossier était parti.** L'information tenait dans une
+  petite mention peu visible. Un **cinquième état** apparaît : « **Dossier à envoyer** » (liseré
+  bleu) tant que la sélection est enregistrée mais que le club n'a **rien reçu**, puis
+  « **Dossier envoyé** » (vert) avec la date. La pile se trie en conséquence : ce qui demande une
+  action d'abord, ce qui est terminé en bas.
+⚠️ **Redéploiement backend nécessaire.**
+
 ### « Partager le dossier à mes équipes » — 2026-08-03
 Le dossier arrive chez **une** personne : le président, ou le contact qui a répondu à l'invitation.
 Or le jour J, ce sont les **éducateurs** qui ont besoin des horaires, de l'accès et du planning. Un

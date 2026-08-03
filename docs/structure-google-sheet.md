@@ -169,7 +169,7 @@ Une ligne par équipe. En-têtes :
 | Colonne | Exemple | Rempli par |
 |---|---|---|
 | `id_equipe` | `E01` | Identifiant unique (généré ou saisi) |
-| `nom_equipe` | `Suresnes 1` | Saisi par l'admin |
+| `nom_equipe` | `Suresnes-1` | Saisi par l'admin. Les équipes créées pour un **club invité** sont TOUJOURS numérotées `{club}-1`, `{club}-2`… (avant le 2026-08-03, une équipe seule portait le nom nu du club, ce qui donnait la paire bancale `MASSY` + `MASSY-1` dès la 2ᵉ). Une équipe héritée au nom nu est **renommée automatiquement** en `{club}-1` — sauf si elle est déjà en poule ou dans des matchs : elle est alors conservée telle quelle, avec une alerte |
 | `categorie` | `U8` | Saisi par l'admin |
 | `poule` | `A` | **Auto** — rempli par « Générer poules et planning » |
 | `source` | `manuel` | **Nouveau (Sprint 6).** `manuel` = équipe ajoutée à la main ; `auto` = équipe **créée à l'enregistrement de la sélection des catégories engagées** d'un club invité (bouton « Enregistrer la sélection »). **Vide = `manuel`** (rétrocompatibilité) |

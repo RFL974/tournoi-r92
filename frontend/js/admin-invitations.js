@@ -988,7 +988,9 @@ async function chargerClubsInvites() {
  *  - 'a-enregistrer' (orange) : Accepté, sélection PAS (ou PLUS) enregistrée — le club a répondu
  *    ou modifié sa réponse (repondreInvitation efface la marque), action requise ;
  *  - 'attente'       (violet) : pas encore de réponse (Invité) ;
- *  - 'enregistree'   (vert)   : Accepté, sélection enregistrée — à jour ;
+ *  - 'a-envoyer'     (bleu)   : Accepté, sélection enregistrée, DOSSIER PAS ENCORE ENVOYÉ —
+ *    le club n'a toujours rien reçu, c'est la dernière action qui lui manque ;
+ *  - 'complet'       (vert)   : sélection enregistrée ET dossier envoyé — rien à faire ;
  *  - 'decline'       (rouge)  : invitation déclinée.
  * Colonne selection_enregistree absente (vieux Sheet) ⇒ orange : défaut PRUDENT, la carte
  * réclame une relecture plutôt que de se dire à jour.
@@ -996,7 +998,10 @@ async function chargerClubsInvites() {
 function etatClubInvite(club) {
   if (memeTexteSouple(club.statut, 'Décliné')) return 'decline';
   if (estAccepte(club.statut)) {
-    return String(club.selection_enregistree || '').trim() ? 'enregistree' : 'a-enregistrer';
+    if (!String(club.selection_enregistree || '').trim()) return 'a-enregistrer';
+    // Sélection enregistrée : il RESTE à envoyer le dossier. Tant qu'il ne l'est pas, la carte
+    // le dit — c'est une action à faire, pas un état terminé. Le club, lui, n'a encore rien reçu.
+    return String(club.dossier_envoye || '').trim() ? 'complet' : 'a-envoyer';
   }
   return 'attente';
 }
@@ -1005,7 +1010,8 @@ function etatClubInvite(club) {
 const LIBELLES_ETAT_CLUB = {
   'a-enregistrer': 'À enregistrer',
   'attente': 'En attente de réponse',
-  'enregistree': 'Sélection enregistrée',
+  'a-envoyer': 'Dossier à envoyer',
+  'complet': 'Dossier envoyé',
   'decline': 'Déclinée'
 };
 
@@ -1104,7 +1110,9 @@ function parseCatsEnginesNb(brut) {
  *   3 = rouge « Déclinée » (cartes mortes, tout en bas)
  */
 function bucketClub(club) {
-  return { 'a-enregistrer': 0, 'attente': 1, 'enregistree': 2, 'decline': 3 }[etatClubInvite(club)];
+  // Ordre de la pile : ce qui demande une action d'abord (enregistrer, puis envoyer), l'attente
+  // ensuite, et tout en bas ce qui est terminé ou décliné.
+  return { 'a-enregistrer': 0, 'a-envoyer': 1, 'attente': 2, 'complet': 3, 'decline': 4 }[etatClubInvite(club)];
 }
 
 /** Affiche la liste des clubs invités (triée), avec statut, réponse remontée, panneau, envoi. */
@@ -1147,7 +1155,7 @@ function afficherClubsInvites() {
     const badges =
       '<span class="club-etat-badge etat-' + etat + '">' + LIBELLES_ETAT_CLUB[etat] + '</span>' +
       (invite ? '<span class="club-envoye club-badge-invite" title="Invitation envoyée">✉️ Invité le ' + echapper(invite) + '</span>' : '') +
-      (envoye ? '<span class="club-envoye" title="Dossier envoyé">📧 Dossier le ' + echapper(envoye) + '</span>' : '') +
+      (envoye ? '<span class="club-envoye" title="Dossier envoyé">le ' + echapper(envoye) + '</span>' : '') +
       (alerte ? '<span class="club-alerte-ecart" tabindex="0" role="button" title="' + echapper(alerte) + '" data-club="' + echapper(nom) + '">⚠️ Écart</span>' : '');
     // Bouton d'envoi INDIVIDUEL de l'invitation (désactivé si le club n'a pas d'email).
     const boutonInviter = aEmail

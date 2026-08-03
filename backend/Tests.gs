@@ -51,6 +51,7 @@ function lancerTestsFFR() {
   testClubs_planSuppressionCascade(etat);
   testClubs_collisionNomsClubs(etat);
   testClubs_categoriesDupliquees(etat);
+  testClubs_numerotationHomogene(etat);
   testCfg_jetonDossier(etat);
   testDossier_equipesDuClub(etat);
   testDossier_verrouPlanning(etat);
@@ -742,9 +743,10 @@ function testClubs_planSyncEquipes(etat) {
   var p = planifierSyncEquipesClub([], 'PUC', ['U8'], { U8: 2 }, {});
   _ffrAssert(etat, p.aCreer.length === 2 && p.aCreer[0].nom === 'PUC-1' && p.aCreer[1].nom === 'PUC-2',
     'planSync : création U8=2 → PUC-1 + PUC-2');
-  // 2) Une seule équipe → nom du club sans suffixe.
+  // 2) Une seule équipe → « PUC-1 ». (Avant : « PUC » tout court. Changé le 2026-08-03 : le nom
+  //    nu devenait bancal dès que le club engageait une 2ᵉ équipe — cf. testClubs_numerotationHomogene.)
   p = planifierSyncEquipesClub([], 'PUC', ['U8'], { U8: 1 }, {});
-  _ffrAssert(etat, p.aCreer.length === 1 && p.aCreer[0].nom === 'PUC', 'planSync : U8=1 → « PUC »');
+  _ffrAssert(etat, p.aCreer.length === 1 && p.aCreer[0].nom === 'PUC-1', 'planSync : U8=1 → « PUC-1 »');
   // 3) nbMap sans la catégorie → défaut 1 équipe (jamais 0 deviné).
   p = planifierSyncEquipesClub([], 'PUC', ['U10'], {}, {});
   _ffrAssert(etat, p.aCreer.length === 1 && p.aCreer[0].categorie === 'U10', 'planSync : nb inconnu → défaut 1');
@@ -904,6 +906,52 @@ function testDossier_declareEtGel(etat) {
   _ffrAssert(etat, muet.club.nb_joueurs_total === '' && muet.club.categories_engagees === '' &&
                    muet.reponses_gelees === false,
     'dossier : club sans réponse → chaînes vides, pas de gel');
+}
+
+/** NUMÉROTATION DES ÉQUIPES D'UN CLUB — retour terrain : engager UNE équipe la nommait « MASSY »
+ *  tout court ; passer à DEUX gardait ce nom nu et ajoutait « MASSY-1 », d'où la paire bancale
+ *  « MASSY » + « MASSY-1 » au lieu de « MASSY-1 » + « MASSY-2 ». Désormais : toujours suffixé, et
+ *  l'équipe au nom nu REJOINT la numérotation — sauf si elle est déjà en poule ou dans des matchs
+ *  (on ne renomme pas sous les pieds d'un planning diffusé : on le signale). */
+function testClubs_numerotationHomogene(etat) {
+  // 1) Première équipe : « MASSY-1 », plus jamais « MASSY ».
+  var p1 = planifierSyncEquipesClub([], 'MASSY', ['U8'], { U8: 1 }, {}, []);
+  _ffrAssert(etat, p1.aCreer.length === 1 && p1.aCreer[0].nom === 'MASSY-1',
+    'numérotation : une seule équipe s\'appelle déjà MASSY-1');
+
+  // 2) Le cas constaté : « MASSY » (hérité) + passage à 2 → renommage + une seule création.
+  var heritee = _eqFactice('MASSY', 'U8');
+  var p2 = planifierSyncEquipesClub([heritee], 'MASSY', ['U8'], { U8: 2 }, {}, []);
+  _ffrAssert(etat, p2.aRenommer.length === 1 && p2.aRenommer[0].vers === 'MASSY-1',
+    'numérotation : l\'équipe au nom nu est renommée MASSY-1');
+  _ffrAssert(etat, p2.aCreer.length === 1 && p2.aCreer[0].nom === 'MASSY-2',
+    'numérotation : la seconde équipe est MASSY-2 (obtenu : ' +
+    p2.aCreer.map(function (t) { return t.nom; }).join(',') + ')');
+  _ffrAssert(etat, p2.aSupprimer.length === 0, 'numérotation : aucune suppression au passage');
+
+  // 3) « Déjà à jour » ne doit PAS empêcher la réparation : MASSY + MASSY-1 avec 2 engagées.
+  var p3 = planifierSyncEquipesClub([_eqFactice('MASSY', 'U8'), _eqFactice('MASSY-1', 'U8')],
+    'MASSY', ['U8'], { U8: 2 }, {}, []);
+  _ffrAssert(etat, p3.aRenommer.length === 0 && p3.aCreer.length === 0,
+    'numérotation : MASSY-1 déjà pris → on ne renomme pas par-dessus, et on ne crée rien');
+
+  // 4) Équipe nue DÉJÀ EN POULE : intouchable, mais l'organisateur est prévenu.
+  var enPoule = _eqFactice('MASSY', 'U8', 'A');
+  var p4 = planifierSyncEquipesClub([enPoule], 'MASSY', ['U8'], { U8: 2 }, {}, []);
+  _ffrAssert(etat, p4.aRenommer.length === 0 && p4.alertes.length === 1 &&
+    /poule A/.test(p4.alertes[0]),
+    'numérotation : équipe en poule non renommée, alerte explicite');
+
+  // 5) Équipe créée À LA MAIN : jamais renommée non plus (source = manuel).
+  var manuelle = _eqFactice('MASSY', 'U8', '', 'manuel');
+  var p5 = planifierSyncEquipesClub([manuelle], 'MASSY', ['U8'], { U8: 2 }, {}, []);
+  _ffrAssert(etat, p5.aRenommer.length === 0 && /à la main/.test(p5.alertes[0] || ''),
+    'numérotation : équipe manuelle non renommée, alerte explicite');
+
+  // 6) Collision : le club « MASSY-1 » existe → on ne lui vole pas son nom.
+  var p6 = planifierSyncEquipesClub([_eqFactice('MASSY', 'U8')], 'MASSY', ['U8'], { U8: 2 }, {}, ['MASSY-1']);
+  _ffrAssert(etat, p6.aRenommer.length === 0,
+    'numérotation : « MASSY-1 » est un autre club invité → aucun renommage');
 }
 
 /** COLLISION DE NOMS (revue) : deux clubs invités « PUC » et « PUC-2 ». L'équipe « PUC-2 »
