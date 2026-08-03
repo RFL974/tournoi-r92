@@ -294,9 +294,13 @@ function majApercuLogoSponsor(src) {
 /**
  * Un logo est une petite image : 600 px de côté suffisent largement, et allègent l'envoi.
  *
- * ⚠️ Sortie en PNG, pas en JPEG. Un logo de partenaire est presque toujours un PNG détouré :
- * converti en JPEG, son fond transparent devient NOIR et le logo est inutilisable sur la page
- * publique. Le PNG pèse plus lourd, mais à 600 px un logo reste très léger.
+ * ⚠️ FOND BLANC PEINT, ET SORTIE EN PNG. Un logo de partenaire est presque toujours un PNG
+ * détouré. Tout maillon qui aplatit la transparence — encodage JPEG, mais aussi le proxy
+ * d'images qui sert les fichiers Drive — le fait ressortir sur un carré NOIR, parce qu'un
+ * canevas vierge est transparent-noir. Plutôt que de parier sur le bon comportement de
+ * chaque maillon, on peint un fond blanc : il n'y a plus de transparence à rater, et le
+ * résultat est le même partout. Les tuiles qui accueillent les logos sont blanches, le fond
+ * peint est donc invisible.
  */
 async function traiterFichierLogoSponsor(fichier) {
   const message = document.getElementById('message-sponsor');
@@ -306,7 +310,7 @@ async function traiterFichierLogoSponsor(fichier) {
     return;
   }
   try {
-    sponsorLogoDataURI = await redimensionnerImage(fichier, 600, 0.92, 'image/png');
+    sponsorLogoDataURI = await redimensionnerImage(fichier, 600, 0.92, 'image/png', '#FFFFFF');
     sponsorLogoRetirer = false;
     majApercuLogoSponsor(sponsorLogoDataURI);
     afficherMessage(message, 'Logo prêt — clique « Enregistrer le partenaire » pour le sauvegarder.', 'ok');
