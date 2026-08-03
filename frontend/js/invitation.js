@@ -45,7 +45,12 @@ async function initInvitation() {
    heureFinCommuniquee, urlAffiche, ligne, listeOuVide, section) et les résumés
    sportifs (resumeMiTemps, resumeEffectif, resumeReglement, resumeApresMidi,
    tempsDeJeuDe, cleFormatApresMidi, DOSSIER_FORMATS…) sont dans commun-dossier.js
-   (partagés avec dossier.js) ; ctxScf est dans commun.js. */
+   (partagés avec dossier.js) ; ctxScf est dans commun.js.
+
+   Les BLOCS DE PAGE eux-mêmes (heroDocument, friseJournee, cartesCategories,
+   piedDocument) y sont aussi : le dossier Phase 2 affiche EXACTEMENT les mêmes,
+   pour que les deux documents se ressemblent et disent la même chose. Ne restent
+   ici que les blocs propres à l'invitation : « Sur place » et « Votre réponse ». */
 
 /* --------------------------------------------------------------------------
    CONSTRUCTION DE L'INVITATION (Phase 1)
@@ -58,7 +63,10 @@ function construireInvitation(g, categories) {
 
   // 1-3) EN-TÊTE VITRINE : blason centré en grand, titre, date · lieu, affiche en héros,
   //      puis le descriptif COMPLET du tournoi (plus de troncature : c'est la vitrine).
-  html += enteteInvitation(g);
+  html += heroDocument(g, {
+    surtitre: 'L\'École de Rugby du Racing Club de France<br>a le plaisir de vous inviter',
+    presentationDefaut: 'Nous serions ravis de vous compter parmi les clubs invités de cette journée.'
+  });
 
   // 4) LA JOURNÉE EN UN COUP D'ŒIL : frise horaire (accueil → coup d'envoi → pause
   //    méridienne → reprise → fin envisagée). Chaque étape sans heure est omise.
@@ -74,245 +82,11 @@ function construireInvitation(g, categories) {
   // 7) VOTRE RÉPONSE : encart mis en avant — date limite + contact référent.
   html += section('Votre réponse', blocReponse(g), 'inv-reponse');
 
-  // 8) PIED DE PAGE : logo + liens de l'association (Instagram, site).
-  html += piedInvitation(g);
+  // 8) PIED DE PAGE : logo + liens de l'association (Instagram, site). L'invitation n'a pas
+  //    de bandeau d'actions : ses liens vivent dans le pied.
+  html += piedDocument(g, true);
 
   return html;
-}
-
-/* --------------------------------------------------------------------------
-   1-3) EN-TÊTE VITRINE (blason · titre · affiche · descriptif)
-   -------------------------------------------------------------------------- */
-
-function enteteInvitation(g) {
-  const nom = txt(g.tournoi_nom) || 'Tournoi Génération R92';
-
-  // Date · lieu sur une même ligne (chaque morceau est omis s'il manque).
-  const quand = [];
-  if (txt(g.tournoi_date)) quand.push('<span class="inv-quand-date">' + echapper(dateLongueFr(g.tournoi_date)) + '</span>');
-  if (txt(g.tournoi_lieu)) quand.push('<span>' + echapper(txt(g.tournoi_lieu)) + '</span>');
-
-  let html = '<header class="inv-hero">' +
-    // Blason du club centré, en GRAND : c'est l'École de Rugby qui invite (session 24).
-    '<img class="inv-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
-    '<p class="inv-surtitre">L\'École de Rugby du Racing Club de France<br>a le plaisir de vous inviter</p>' +
-    '<h1 class="inv-titre">' + echapper(nom) + '</h1>' +
-    (quand.length ? '<p class="inv-quand">' + quand.join('<span class="inv-quand-sep"> · </span>') + '</p>' : '') +
-  '</header>';
-
-  // L'affiche du tournoi en héros, centrée et en grand.
-  if (txt(g.tournoi_affiche_id)) {
-    html += '<figure class="inv-affiche">' +
-      '<img src="' + echapper(urlAffiche(g.tournoi_affiche_id, 1200)) + '" alt="Affiche — ' + echapper(nom) + '">' +
-    '</figure>';
-  }
-
-  // Le descriptif COMPLET (un paragraphe par ligne saisie). S'il est vide : phrase d'accueil.
-  const description = txt(g.tournoi_description);
-  const paragraphes = description
-    ? description.split(/\n+/).map(function (p) { return p.trim(); }).filter(Boolean)
-    : ['Nous serions ravis de vous compter parmi les clubs invités de cette journée.'];
-  html += '<div class="inv-presentation">' + paragraphes.map(function (p) {
-    return '<p>' + echapper(p) + '</p>';
-  }).join('') + '</div>';
-
-  return html;
-}
-
-/* --------------------------------------------------------------------------
-   4) FRISE HORAIRE DE LA JOURNÉE
-   -------------------------------------------------------------------------- */
-
-/**
- * Les 5 étapes de la journée, chacune UNIQUEMENT si son heure est connue :
- * accueil (heure_rdv), coup d'envoi (heure_debut), pause méridienne
- * (pause_dejeuner_debut + durée), reprise (début + durée de la pause, simple
- * arithmétique sur des données réelles), fin envisagée (heureFinCommuniquee :
- * manuelle, sinon fin du dernier match + marge trophées).
- *
- * Les NOTES « matin : poules » / « après-midi : selon la catégorie » ne valent
- * que pour les tournois ordinaires : un tournoi 100 % Super Challenge suit la
- * formule de son règlement (triangulaires, pas de phase d'après-midi) — ses
- * notes sont donc omises, seules restent les heures (des données réelles).
- */
-function friseJournee(g, cats) {
-  const tousScf = !!(cats && cats.length) && cats.every(function (c) { return ctxScf(c).estScf; });
-  const etapes = [];
-  if (txt(g.heure_rdv)) {
-    etapes.push({ h: txt(g.heure_rdv), t: 'Accueil des équipes', n: '' });
-  }
-  if (txt(g.heure_debut)) {
-    etapes.push({ h: txt(g.heure_debut), t: 'Coup d\'envoi', n: tousScf ? '' : 'Matin : matchs de poules' });
-  }
-  const pauseDebut = txt(g.pause_dejeuner_debut);
-  const pauseDuree = parseInt(txt(g.pause_dejeuner_duree_min), 10);
-  if (pauseDebut) {
-    etapes.push({ h: pauseDebut, t: 'Pause méridienne',
-      n: (isFinite(pauseDuree) && pauseDuree > 0) ? pauseDuree + ' min' : '' });
-    const reprise = (isFinite(pauseDuree) && pauseDuree > 0) ? heurePlusMinutes(pauseDebut, pauseDuree) : '';
-    if (reprise) {
-      etapes.push({ h: reprise, t: 'Reprise', n: tousScf ? '' : 'Après-midi : selon la catégorie' });
-    }
-  }
-  const fin = heureFinCommuniquee(g);
-  if (fin) {
-    etapes.push({ h: fin, t: 'Fin envisagée', n: '' });
-  }
-  if (!etapes.length) return '';
-
-  return '<ol class="inv-frise">' + etapes.map(function (e) {
-    return '<li>' +
-      '<span class="inv-frise-heure">' + echapper(e.h) + '</span>' +
-      '<span class="inv-frise-titre">' + echapper(e.t) + '</span>' +
-      (e.n ? '<span class="inv-frise-note">' + echapper(e.n) + '</span>' : '') +
-    '</li>';
-  }).join('') + '</ol>';
-}
-
-/* --------------------------------------------------------------------------
-   5) LES CATÉGORIES INVITÉES — une carte détaillée par catégorie
-   -------------------------------------------------------------------------- */
-
-function cartesCategories(cats) {
-  if (!cats.length) return '';
-
-  // Phrase d'introduction : le déroulé commun (matin en poules round-robin — même règle que
-  // le dossier Phase 2). Le Super Challenge de France fait EXCEPTION (triangulaires /
-  // quadrangulaires où chaque équipe ne joue que 2 matchs) : on ne lui applique pas la
-  // phrase générale, sa carte porte sa formule.
-  const nonScf = cats.filter(function (c) { return !ctxScf(c).estScf; });
-  const aScf = nonScf.length < cats.length;
-  let intro = '';
-  if (nonScf.length) {
-    intro = 'Le matin, les catégories jouent en poules : chaque équipe rencontre toutes celles ' +
-      'de sa poule. L\'après-midi suit le format propre à chaque catégorie, détaillé ci-dessous.';
-    if (aScf) intro += ' Le Super Challenge de France (U14) suit la formule de son règlement, ' +
-      'détaillée sur sa carte.';
-  } else {
-    intro = 'Le Super Challenge de France suit la formule de son règlement, détaillée ci-dessous.';
-  }
-  let html = '<p class="inv-cats-intro">' + intro + '</p>';
-
-  html += '<div class="inv-cartes">' + cats.map(carteCategorie).join('') + '</div>';
-
-  // Repères FFR sous les cartes : rappel sécurité (effectif minimum) + doctrine du format
-  // (poules de niveau) — mêmes conditions d'affichage qu'avant la refonte (décisions S20).
-  html += rappelEffectifFFR(cats);
-  html += noteFormat(cats);
-  return html;
-}
-
-/** UNE carte : bandeau navy (catégorie + forme de jeu), faits sportifs, format d'après-midi. */
-function carteCategorie(c) {
-  const scf = ctxScf(c); // Super Challenge de France (U14) : vocabulaire et temps dédiés
-
-  // Badge du bandeau : contexte SCF prioritaire, sinon la forme de jeu FFR retenue.
-  const badge = scf.estScf ? 'Super Challenge de France' : txt(c.forme_jeu);
-
-  // Faits sportifs (chaque ligne sans valeur est omise).
-  const lignes = [];
-  if (scf.estScf) {
-    // SCF : temps de match imposés par le règlement (P2 = 2×15 ; P3 = 2×11, miroir de
-    // dureeMatchScf côté backend) ; la formule remplace le format d'après-midi.
-    const periode = (scf.phase === 'P3') ? 11 : 15;
-    lignes.push(ligneCarte('Forme de jeu', 'Jeu à XV (15 contre 15)'));
-    lignes.push(ligneCarte('Temps de jeu', resumeMiTemps({ format_mi_temps: '2',
-      duree_mi_temps_min: String(periode), pause_mi_temps_min: c.pause_mi_temps_min })));
-    lignes.push(ligneCarte('Formule', (scf.phase === 'P3')
-      ? 'Samedi : triangulaires · Dimanche : brassage par niveau'
-      : 'Plateau en triangulaires / quadrangulaires'));
-  } else {
-    if (txt(c.forme_jeu)) lignes.push(ligneCarte('Forme de jeu', txt(c.forme_jeu)));
-    const miTemps = resumeMiTemps(c);
-    if (miTemps) {
-      const jeu = tempsDeJeuDe(c);
-      lignes.push(ligneCarte('Temps de jeu', miTemps + (jeu ? ' — ' + jeu + ' min par match' : '')));
-    }
-  }
-  const recup = txt(c.recup_entre_matchs_min);
-  if (recup) lignes.push(ligneCarte('Récupération', recup + ' min minimum entre deux matchs'));
-  const effectif = resumeEffectif(c);
-  if (effectif) lignes.push(ligneCarte('Effectif', effectif + ' par équipe'));
-  lignes.push(ligneCarte('Équipes par club', phraseMaxEquipes(c)));
-  if (txt(c.arbitrage_organisation)) lignes.push(ligneCarte('Arbitrage', txt(c.arbitrage_organisation)));
-  const reglement = resumeReglement(c); // déjà échappé / lien sûr (commun-dossier.js)
-  if (reglement) lignes.push(ligneCarteHtml('Règlement', reglement));
-
-  // Format d'après-midi expliqué (libellé + description concise) — pas pour le SCF,
-  // dont les catégories n'ont pas de phase d'après-midi (la formule dit tout).
-  let apresMidi = '';
-  if (!scf.estScf) {
-    const cle = cleFormatApresMidi(c);
-    apresMidi = '<p class="inv-carte-apm"><strong>Après-midi — ' + echapper(DOSSIER_FORMATS[cle]) +
-      '</strong> : ' + echapper(DOSSIER_FORMATS_DESC[cle]) + '</p>';
-  }
-
-  return '<article class="inv-carte">' +
-    '<div class="inv-carte-tete">' +
-      '<span class="inv-carte-cat">' + echapper(txt(c.categorie)) + '</span>' +
-      (badge ? '<span class="inv-carte-forme">' + echapper(badge) + '</span>' : '') +
-    '</div>' +
-    '<ul class="inv-carte-infos">' + lignes.join('') + '</ul>' +
-    apresMidi +
-  '</article>';
-}
-
-/** Une ligne « libellé / valeur » de carte ('' si valeur vide) — la valeur est échappée ici. */
-function ligneCarte(libelle, valeur) {
-  return valeur ? ligneCarteHtml(libelle, echapper(valeur)) : '';
-}
-
-/** Variante pour une valeur DÉJÀ en HTML sûr (lien règlement). */
-function ligneCarteHtml(libelle, valeurHtml) {
-  if (!valeurHtml) return '';
-  return '<li><span class="inv-carte-libelle">' + libelle + '</span>' +
-    '<span class="inv-carte-valeur">' + valeurHtml + '</span></li>';
-}
-
-/**
- * Équipes par club : max_equipes_par_club renseigné → « Jusqu'à X équipe(s) » ;
- * vide → « Plusieurs équipes possibles » (jamais « illimité » ni « 0 »).
- */
-function phraseMaxEquipes(c) {
-  const max = parseInt(txt(c.max_equipes_par_club), 10);
-  return (isFinite(max) && max >= 1)
-    ? 'Jusqu\'à ' + max + ' équipe' + (max > 1 ? 's' : '')
-    : 'Plusieurs équipes possibles';
-}
-
-/**
- * Rappel sécurité FFR (session 20) : un club qui vient à l'effectif MINIMUM fait jouer chaque
- * enfant la quasi-totalité du temps de jeu de l'équipe — or la FFR plafonne le temps de jeu par
- * joueur et par jour (règle de sécurité). Affiché dès qu'au moins une catégorie a un effectif
- * minimum ; invite à venir avec une feuille de match complète pour faire tourner.
- */
-function rappelEffectifFFR(cats) {
-  const aEffectifMin = cats.some(function (c) {
-    const n = parseInt(txt(c.effectif_min), 10);
-    return isFinite(n) && n >= 1;
-  });
-  if (!aEffectifMin) return '';
-  // Texte partagé avec l'email d'invitation (FFR_RAPPEL_EFFECTIF, commun.js) : une seule source.
-  return '<p class="inv-rappel-effectif">⚠️ <strong>Rappel sécurité FFR</strong> — ' +
-    echapper(FFR_RAPPEL_EFFECTIF) + '</p>';
-}
-
-/** Vrai si au moins une catégorie joue l'après-midi en « poules de niveau ». */
-function aPoulesNiveau(cats) {
-  return cats.some(function (c) {
-    return String(txt(c.format_apresmidi)).toUpperCase() === 'POULES_NIVEAU';
-  });
-}
-
-/** Note « pourquoi ce format » : la doctrine FFR École de Rugby, expliquée aux clubs invités.
- *  Affichée seulement quand une catégorie joue en poules de niveau — décisions Romain
- *  (session 20) : dire le POURQUOI du format et rappeler la doctrine, y compris le choix
- *  « en cas d'effectif impair, l'équipe supplémentaire va en poule basse ». */
-function noteFormat(cats) {
-  if (!aPoulesNiveau(cats)) return '';
-  // Texte partagé avec l'email d'invitation (FFR_POURQUOI_FORMAT, commun.js) : une seule source.
-  return '<p class="inv-note-format">💡 <strong>Pourquoi ce format ?</strong> ' +
-    echapper(FFR_POURQUOI_FORMAT) + '</p>';
 }
 
 /* --------------------------------------------------------------------------
@@ -396,27 +170,4 @@ function blocReponse(g) {
     action +
     (contact.length ? '<p class="inv-cta-contact">' + contact.join('<span class="inv-cta-sep"> · </span>') + '</p>' : '') +
   '</div>';
-}
-
-/** Un lien externe du pied de page — '' si l'URL n'est pas en http(s) : un schéma exotique
- *  (javascript:, data:…) glissé dans Config ne devient JAMAIS un lien cliquable (même règle
- *  que resumeReglement). */
-function lienExterneSur(url, libelle) {
-  const u = txt(url);
-  if (!/^https?:\/\//i.test(u)) return '';
-  return '<a class="inv-lien" href="' + echapper(u) + '" target="_blank" rel="noopener">' + libelle + '</a>';
-}
-
-/** Pied de page : logo + lien Instagram + lien site de l'association. */
-function piedInvitation(g) {
-  const liens = [];
-  const instagram = lienExterneSur(g.url_instagram, '📣 Instagram');
-  if (instagram) liens.push(instagram);
-  const site = lienExterneSur(g.url_site_association, '🌐 Site de l\'association');
-  if (site) liens.push(site);
-  return '<footer class="d-pied inv-pied">' +
-    '<img class="d-pied-logo" src="img/blason-racing92.svg" alt="" onerror="this.style.display=\'none\'">' +
-    '<span class="inv-pied-nom">École de Rugby du Racing Club de France</span>' +
-    (liens.length ? '<span class="inv-pied-liens">' + liens.join('') + '</span>' : '') +
-  '</footer>';
 }

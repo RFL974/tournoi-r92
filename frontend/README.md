@@ -21,10 +21,15 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
   email) : même en-tête vitrine que l'invitation, puis le formulaire libre-service — présent /
   absent, équipes par catégorie, joueurs + éducateurs par équipe, totaux vivants
   (`js/reponse.js`).
-- **`dossier-club.html`** — **dossier d'invitation** : document A4 (1-2 pages) assemblé
-  automatiquement pour les clubs invités (infos pratiques, programme, format sportif, modalités
-  d'inscription, parking & accès, encadrement & assurance, QR code du suivi live, sécurité,
-  contact) ; export PDF via l'impression du navigateur (`css/dossier.css`, `js/dossier.js`,
+- **`dossier-club.html`** — **dossier du club** (Phase 2, lien PERSONNEL avec jeton) : la page
+  envoyée au club APRÈS son acceptation. **Même agencement que l'invitation** — elle en reprend
+  les blocs communs (`js/commun-dossier.js`) : blason centré, affiche en héros, descriptif
+  complet, frise horaire, **une carte par catégorie ENGAGÉE par le club** — puis ce qui n'existe
+  qu'ici : infos pratiques, modalités d'inscription, parking & accès, encadrement & assurance,
+  QR code du suivi live, sécurité, contact, bandeau d'actions.
+  **Page VIVANTE** : le club garde son lien et la page se reconstruit à chaque ouverture avec les
+  données du moment — ce qui n'existe pas encore à l'envoi apparaîtra tout seul.
+  Export PDF via l'impression du navigateur (`css/dossier.css`, `js/dossier.js`,
   QR généré en local par `js/vendor/qrcode.js`). Le bouton « **Autorisation droit à l'image** »
   génère un `.docx` **côté client** depuis le modèle `assets/autorisation-droit-image-template.docx`
   (balises `{nom_tournoi}` / `{date_tournoi}` / `{lieu_tournoi}` remplacées par
@@ -37,6 +42,12 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
 - `js/config.js` — `API_URL` (backend) + `SNAPSHOT_URL` (relais CDN, vide par défaut).
 - `js/commun.js` — petites fonctions utilitaires communes aux 4 pages (`echapper`, `estTermine`,
   `afficherMessage`, `libelleTourFr`, `comparerCategorie`) ; chargé juste après `config.js`.
+- `js/commun-dossier.js` — le socle des pages « document » (invitation, réponse, dossier) :
+  helpers de mise en forme (`txt`, `dateLongueFr`, `section`, `ligne`…), résumés sportifs
+  (`resumeMiTemps`, `resumeEffectif`, `resumeReglement`…) et surtout les **blocs de page
+  partagés** — `heroDocument` (blason + affiche + descriptif), `friseJournee`,
+  `cartesCategories`, `piedDocument`. L'invitation et le dossier affichent ainsi les MÊMES
+  blocs : corriger une formulation les corrige tous les deux.
 - `js/api.js` — `apiGet` / `apiPost` / `apiPostProtege` + gestion des clés (session).
 - `js/admin.js`, `js/saisie.js`, `js/tournoi.js`, `js/perfs.js` — logique de chaque page.
 
