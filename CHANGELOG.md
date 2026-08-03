@@ -5,6 +5,25 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Impression du dossier : coupures propres et lien personnel hors du papier — 2026-08-03
+Premier vrai export PDF du dossier refondu (4 feuilles) — trois défauts constatés, trois
+corrections :
+- **Un titre de section restait seul en bas de page** : « Rappel — vos catégories engagées »
+  terminait la page 2, ses cartes commençaient page 3. Un titre part désormais **avec ce qu'il
+  annonce** (`break-after: avoid` sur les titres de section et sur la phrase d'introduction des
+  cartes) ; la mention « document généré le… » reste collée au pied de page.
+- **Le bandeau d'actions occupait une feuille entière à lui seul** (page 4 ne contenait que lui).
+  Ce sont des **boutons** — agenda, itinéraires, autorisation droit à l'image : sur du papier ils
+  ne cliquent pas et leurs adresses ne sont même pas lisibles. Ils sont donc **retirés de
+  l'impression**. Ce qui compte reste imprimé : l'adresse dans « Infos pratiques », le **QR code**
+  des scores dans « Suivi ».
+- **L'adresse de la page s'imprimait en pied de feuille** — avec le **jeton personnel du club**
+  dedans. Ce pied de page appartient au navigateur, aucune CSS ne le commande : le dossier et
+  l'invitation affichent donc, **juste avant le bouton d'export**, comment le désactiver
+  (« décochez En-têtes et pieds de page »). Un dossier imprimé ne laisse plus traîner le lien
+  d'accès du club.
+**100 % front**, aucun redéploiement backend.
+
 ### Correctif : l'aperçu du dossier depuis l'admin ne fonctionnait plus — 2026-08-03
 Le bouton **« Aperçu du dossier (générique) »** de la carte *Dossier complet* ouvrait
 `dossier-club.html?admin=1` — **sans club ni jeton**. Il marchait le jour où il a été écrit

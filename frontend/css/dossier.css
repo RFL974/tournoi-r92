@@ -28,10 +28,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 10px 16px;
   background: var(--d-navy);
   color: #fff;
+}
+/* Astuce d'impression, juste avant le bouton : discrète, mais lue au bon moment. */
+.barre-outils-astuce {
+  flex: 0 1 auto;
+  max-width: 52ch;
+  margin-left: auto;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #b8d8f8;
 }
 .barre-outils-titre {
   font-family: 'Barlow Condensed', sans-serif;
@@ -593,13 +603,25 @@ body {
      la précédente aux trois quarts vide — constaté à l'export PDF). */
   .d-section.inv-categories { break-inside: auto; }
   .inv-carte, .inv-cta, .inv-frise { break-inside: avoid; }
+  /* …mais un TITRE ne reste jamais seul en bas d'une page : il part avec ce qu'il annonce.
+     Constaté à l'export : « Rappel — vos catégories engagées » terminait la page 2, ses cartes
+     commençaient page 3. Idem pour la phrase d'introduction des cartes. */
+  .d-section h2, .inv-cats-intro { break-after: avoid; }
+  /* La mention « document généré le… » reste collée au pied de page. */
+  .d-genere { break-after: avoid; }
+  .d-pied { break-inside: avoid; }
   .inv-affiche img { max-height: 130mm; box-shadow: none; }
   /* Dossier : l'affiche réduite le reste à l'impression (sinon la règle ci-dessus la ferait
      regrossir en hauteur et repousserait le jour J en page 2). */
   .inv-affiche-compacte img { max-height: 70mm; }
   /* Pastille du club : sans les couleurs forcées, elle s'imprime en blanc sur blanc. */
   .inv-hero-club { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .d-actions { break-inside: avoid; background: var(--d-navy); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  /* Bandeau d'actions : RETIRÉ du papier. Ce sont des BOUTONS (agenda, itinéraires, autorisation
+     droit à l'image) — sur une feuille imprimée, ils ne cliquent pas, et leurs adresses ne sont
+     même pas lisibles. Il coûtait une feuille entière à lui seul (constaté à l'export : page 4
+     ne contenait que lui). Ce qui compte reste imprimé : l'adresse est dans « Infos pratiques »
+     et le QR code des scores dans « Suivi ». */
+  .d-actions, .d-action-erreur { display: none !important; }
   .d-contact { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   a { color: var(--d-bleu); text-decoration: none; }
 }
