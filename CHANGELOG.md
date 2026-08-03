@@ -5,6 +5,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### « Partager le dossier à mes équipes » — 2026-08-03
+Le dossier arrive chez **une** personne : le président, ou le contact qui a répondu à l'invitation.
+Or le jour J, ce sont les **éducateurs** qui ont besoin des horaires, de l'accès et du planning. Un
+bouton leur transmet le dossier — **partage natif du téléphone** (WhatsApp, Messages, Mail… en une
+fois) quand le navigateur le propose, sinon trois options explicites : email, WhatsApp, copie du
+lien. Le presse-papiers refusé n'échoue pas en silence : le lien s'affiche, à copier à la main.
+Le lien partagé porte le **jeton** — il reste donc valable chez le destinataire, ce qui est tout
+l'intérêt. C'est aussi pourquoi un bouton est nécessaire : le jeton ayant quitté la barre
+d'adresse, l'adresse visible ne suffirait plus. Le bloc ne s'imprime pas, et une phrase rappelle
+que ce lien vaut accès — à partager à son encadrement, pas au-delà. **100 % front**, aucun
+redéploiement backend.
+
 ### Le planning du dossier : lisible par catégorie, poule complète, et publié quand tu le décides — 2026-08-03
 Trois retours après la mise en ligne du lot 2 :
 - **Un bloc par catégorie.** Un club engagé en U8 et en U10 a deux groupes d'enfants et deux
