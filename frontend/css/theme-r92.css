@@ -488,6 +488,18 @@ body.theme-clair {
 .theme-clair .bouton-icone:hover,
 .theme-clair .equipe-item .bouton-icone:hover,
 .theme-clair .club-invite-item .bouton-icone:hover { background: rgba(255, 255, 255, 0.16); }
+
+/* ----- LISERÉS D'ÉTAT des clubs invités (à REPRENDRE ICI, piège des 2 feuilles) -------------
+   `.theme-clair .equipe-item` (plus haut) repeint TOUTE la bordure en navy — à spécificité
+   égale avec les règles de styles.css et chargé après, il gagnait : le liseré restait navy
+   sur navy, donc invisible. On redéclare donc les 4 états ici, avec la classe de thème.
+   Orange = « À enregistrer » · violet = « En attente » · vert = « Enregistrée » · rouge =
+   « Déclinée ». Toute nouvelle couleur d'état doit être ajoutée AUX DEUX feuilles. */
+.theme-clair .club-invite-item { border-left: 4px solid rgba(120, 180, 255, 0.5); }
+.theme-clair .club-invite-item.club-etat-a-enregistrer { border-left-color: #e5a33c; }
+.theme-clair .club-invite-item.club-etat-attente       { border-left-color: #9b7fd4; }
+.theme-clair .club-invite-item.club-etat-enregistree   { border-left-color: #35c06a; }
+.theme-clair .club-invite-item.club-etat-decline       { border-left-color: #e07878; }
 /* Cartes de format d'après-midi */
 .theme-clair .format-carte { background: var(--r92-navy); border-color: var(--r92-navy); }
 .theme-clair .format-carte .f-titre { color: #FFFFFF; }
