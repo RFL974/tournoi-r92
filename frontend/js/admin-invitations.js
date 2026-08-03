@@ -1451,17 +1451,63 @@ async function genererDossierFinal(nom) {
   const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
   if (!club) return;
 
+  // Dossier DÉJÀ envoyé : le lien précédent a circulé — le président a pu le partager à ses
+  // éducateurs. On PROPOSE de le renouveler (l'ancien meurt, copies partagées comprises), sans
+  // jamais l'imposer : un clic pour relire l'aperçu ne doit pas couper un lien en service la
+  // veille du tournoi. Les deux réponses ouvrent le dossier — seule l'adresse change.
+  const renouvele = await renouvelerLienSiDemande(club);
+  if (renouvele === null) return;   // renouvellement en échec : on n'ouvre rien
+
   // APERÇU / ENVOI du dossier. Le lien porte le jeton personnel du club (accès aux sections
   // contacts/logistique du dossier, protégées par jeton côté backend).
   const email = String(club.club_contact_email || '').trim();
   const lien = lienDossierClub(String(club.club_nom || ''), String(club.club_token || ''));
-  if (email) { ouvrirApercuEmail(club, lien); return; }
+  if (email) { ouvrirApercuEmail(club, lien, renouvele); return; }
 
   // Pas d'email : mode manuel. On copie le lien (best-effort) et on l'affiche pour copie.
   try { if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(lien); } catch (e) { /* copie indispo */ }
   await dialogDemander(
     'Ce club n\'a pas d\'email de contact.\nCopie le lien du dossier ci-dessous et envoie-le manuellement :',
     lien, { ok: 'Fermer' });
+}
+
+/**
+ * Renouvellement du lien d'un club dont le dossier a DÉJÀ été envoyé.
+ *
+ * Pourquoi ici : « Générer le dossier final » est le geste qui PRODUIT le lien — c'est donc là
+ * qu'il doit pouvoir se renouveler, pas dans un bouton séparé qu'on oublierait. Mais le
+ * renouvellement est destructeur et invisible : il coupe le lien du président ET toutes les
+ * copies qu'il a partagées à ses éducateurs. On demande donc, et on n'impose pas.
+ *
+ * @return {Promise<?boolean>} true = lien RENOUVELÉ, false = lien conservé (on continue dans les
+ *   deux cas), null = le renouvellement a échoué → l'appelant n'ouvre rien.
+ */
+async function renouvelerLienSiDemande(club) {
+  const envoye = String(club.dossier_envoye || '').trim();
+  if (!envoye) return false;                      // jamais envoyé : aucun lien en circulation
+
+  const neuf = await dialogConfirmer(
+    'Ce club a déjà reçu son dossier le ' + formaterDateFr(envoye) + '.\n\n' +
+    'Veux-tu lui donner un NOUVEAU lien ?\n' +
+    'L\'ancien cessera aussitôt de fonctionner — y compris les copies que le club a pu partager ' +
+    'à ses éducateurs. À utiliser si le lien a circulé trop largement.\n\n' +
+    '« Garder l\'actuel » réutilise le même lien : ceux qui l\'ont continuent d\'y accéder.',
+    { ok: 'Nouveau lien', annuler: 'Garder l\'actuel' });
+  if (!neuf) return false;
+
+  try {
+    const res = await ecrireAdmin('regenererJetonClub', { club_nom: String(club.club_nom || '') });
+    if (res && res.club_token) club.club_token = res.club_token;
+    await dialogAlerter('🔑 Nouveau lien créé pour ' + String(club.club_nom || '') + '.\n' +
+      'L\'ancien ne fonctionne plus : il faut maintenant ENVOYER celui-ci au club.');
+    return true;
+  } catch (erreur) {
+    // Échec du renouvellement : on n'ouvre PAS l'aperçu. Sinon l'organisateur enverrait
+    // l'ancien lien en croyant avoir renouvelé.
+    await dialogAlerter('⚠️ Impossible de créer un nouveau lien : ' + erreur.message +
+      '\nRien n\'a changé, l\'ancien lien fonctionne toujours.');
+    return null;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -1632,7 +1678,7 @@ function emailTexteDossier(g, club, salutationTexte, intro, lienDossier) {
  * « Envoyer » déclenche l'envoi réel HTML (envoyerDossierEmail avec html_modele + texte_modele) ;
  * dossier_envoye n'est posé qu'en cas de succès. « Annuler » ferme sans rien envoyer.
  */
-function ouvrirApercuEmail(club, lien) {
+function ouvrirApercuEmail(club, lien, lienRenouvele) {
   const nom = String(club.club_nom || '');
   const email = String(club.club_contact_email || '');
   const prenom = String(club.club_contact_prenom || '').trim();
@@ -1676,7 +1722,17 @@ function ouvrirApercuEmail(club, lien) {
   rafraichir();
   champIntro.addEventListener('input', rafraichir);
 
-  const fermer = function () { overlay.remove(); };
+  // Fermer SANS avoir envoyé, alors qu'on vient de renouveler le lien : l'ancien est déjà mort
+  // (le jeton a changé côté Sheet) et le club n'a rien reçu. Personne ne le verrait — on le dit.
+  let envoye = false;
+  const fermer = function () {
+    overlay.remove();
+    if (lienRenouvele && !envoye) {
+      dialogAlerter('⚠️ Le lien de ' + String(club.club_nom || '') + ' a été renouvelé, mais ' +
+        'RIEN n\'a été envoyé.\nSon ancien lien ne fonctionne plus : relance « Générer le dossier ' +
+        'final » et clique « Envoyer » pour lui transmettre le nouveau.');
+    }
+  };
   overlay.addEventListener('click', function (e) { if (e.target === overlay) fermer(); });
   overlay.querySelector('#eml-annuler').addEventListener('click', fermer);
 
@@ -1700,6 +1756,7 @@ function ouvrirApercuEmail(club, lien) {
         texte_modele: emailTexteDossier(g, club, salutTexte, intro, lien)
       });
       // Succès : dossier_envoye posé côté serveur (uniquement en cas de succès).
+      envoye = true;   // le nouveau lien est parti : plus d'avertissement à la fermeture
       const c = clubsInvitesCourants.find(function (x) { return memeTexteSouple(x.club_nom, nom); });
       if (c && res && res.dossier_envoye) c.dossier_envoye = res.dossier_envoye;
       afficherClubsInvites();

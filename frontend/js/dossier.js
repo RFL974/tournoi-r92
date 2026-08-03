@@ -78,7 +78,8 @@ async function initDossier() {
       planningVisible: String((config.global || {}).planning_visible_clubs || '').toLowerCase() === 'oui'
     };
     zone.innerHTML = construireDossier(config.global || {}, config.categories || [], club, ctx);
-    dessinerQR(); // le QR se dessine après coup (il vise un conteneur du HTML rendu)
+    dessinerQR();      // le QR se dessine après coup (il vise un conteneur du HTML rendu)
+    brancherPartage(); // « Partager le dossier à mes équipes » (une seule fois)
     // Données en main : le jeton n'a plus rien à faire dans l'adresse (ni à l'écran, ni au
     // pied de page imprimé). L'onglet le garde, un rechargement fonctionne toujours.
     masquerJetonDeLUrl('dossier:' + clubParam, token);
@@ -313,6 +314,7 @@ function construireDossier(g, categories, club, ctx) {
   return [
     enteteDossier(g, club, filtreApplique ? catsFormat : []),   //  1. qui reçoit, quoi, quand — et pour QUI
     accueilPersonnalise(g, club),                               //  2. le mot d'accueil
+    barrePartage(g, ctx),                                       //  2 bis. partager à ses éducateurs
     sectionJournee(g, catsFormat),                              //  3. LE JOUR J : la journée en un coup d'œil
     sectionMesEquipes(ctx),                                     //  3 bis. … avec QUI (équipes, poules)
     sectionMonPlanning(ctx, catsFormat),                        //  3 ter. … et QUAND (matchs du club)
@@ -357,6 +359,116 @@ function enteteDossier(g, club, catsEngagees) {
     afficheCompacte: true,
     sansPresentation: true   // le descriptif du tournoi a été lu à l'invitation (décision Romain)
   });
+}
+
+/* --------------------------------------------------------------------------
+   2 bis) PARTAGER LE DOSSIER À SES ÉQUIPES
+   --------------------------------------------------------------------------
+   Le dossier arrive chez UNE personne — le président, ou le contact qui a répondu
+   à l'invitation. Mais le jour J, ce sont les éducateurs qui ont besoin des
+   horaires, de l'accès et du planning. Ce bouton leur transmet le dossier.
+
+   POURQUOI UN BOUTON, ET PAS « copier l'adresse » : le jeton a été retiré de la
+   barre d'adresse (il s'imprimait et s'affichait sur les captures). L'adresse
+   visible ne suffit donc plus à ouvrir le dossier — seul ce bouton sait
+   reconstruire le lien COMPLET, jeton compris, pour qu'il reste valable une fois
+   partagé.
+   -------------------------------------------------------------------------- */
+
+/** Lien COMPLET du dossier (jeton compris), tel qu'il doit voyager. Sans `admin` : le
+ *  destinataire est un éducateur, pas l'organisateur. */
+function lienPartageDossier(g, ctx) {
+  const url = new URL('dossier-club.html', window.location.href);
+  if (txt(g.tournoi_nom)) url.searchParams.set('tournoi', txt(g.tournoi_nom));
+  url.searchParams.set('club', ctx.club);
+  url.searchParams.set('token', ctx.token);
+  return url.toString();
+}
+
+function barrePartage(g, ctx) {
+  if (!ctx.club || !ctx.token) return '';
+  const lien = lienPartageDossier(g, ctx);
+  const nom = txt(g.tournoi_nom) || 'Tournoi Génération R92';
+  const quand = txt(g.tournoi_date) ? ' du ' + dateLongueFr(g.tournoi_date) : '';
+  const texte = 'Dossier du ' + nom + quand + ' : horaires, accès, contacts et planning de nos ' +
+    'équipes.\n' + lien;
+
+  // Les liens mailto: et WhatsApp sont construits ici (le clic doit partir immédiatement) ;
+  // le bouton principal, lui, tente d'abord le partage NATIF du téléphone.
+  const mail = 'mailto:?subject=' + encodeURIComponent('Dossier — ' + nom) +
+               '&body=' + encodeURIComponent(texte);
+  const whatsapp = 'https://wa.me/?text=' + encodeURIComponent(texte);
+
+  return '<div class="d-partage no-print">' +
+    '<p class="d-partage-titre">Vos éducateurs seront sur le terrain, pas devant leur boîte mail.</p>' +
+    '<div class="d-partage-actions">' +
+      '<button type="button" class="d-action" id="bouton-partager" ' +
+        'data-url="' + echapper(lien) + '" data-texte="' + echapper(texte) + '" ' +
+        'data-titre="' + echapper('Dossier — ' + nom) + '">📤 Partager le dossier à mes équipes</button>' +
+      '<span class="d-partage-choix" id="d-partage-choix" hidden>' +
+        '<a class="d-action" href="' + echapper(mail) + '">✉️ Par email</a>' +
+        '<a class="d-action" href="' + echapper(whatsapp) + '" target="_blank" rel="noopener">💬 WhatsApp</a>' +
+        '<button type="button" class="d-action" id="bouton-copier-lien">🔗 Copier le lien</button>' +
+      '</span>' +
+    '</div>' +
+    '<p class="d-partage-note">Ils ouvriront <strong>ce dossier</strong>, à jour au moment où ils ' +
+      'le consultent. Le lien vaut accès : partagez-le à votre encadrement, pas au-delà.</p>' +
+    '<span class="message-form" id="d-partage-msg"></span>' +
+  '</div>';
+}
+
+/** Branche le partage UNE seule fois (les données voyagent dans les attributs du bouton :
+ *  aucun état à garder, et le HTML peut être reconstruit sans empiler les écouteurs). */
+function brancherPartage() {
+  if (brancherPartage.fait) return;
+  brancherPartage.fait = true;
+  document.addEventListener('click', function (e) {
+    const cible = e.target;
+    if (!cible || !cible.id) return;
+    const message = document.getElementById('d-partage-msg');
+
+    if (cible.id === 'bouton-partager') {
+      const donnees = { title: cible.getAttribute('data-titre'),
+                        text: cible.getAttribute('data-texte'),
+                        url: cible.getAttribute('data-url') };
+      // Téléphone : le partage natif ouvre WhatsApp, Messages, Mail… en une fois. Ordinateur (ou
+      // refus) : on révèle les trois options explicites. Une annulation n'est PAS un échec.
+      if (navigator.share) {
+        navigator.share(donnees).catch(function (err) {
+          if (err && err.name === 'AbortError') return;
+          revelerChoixPartage();
+        });
+      } else {
+        revelerChoixPartage();
+      }
+      return;
+    }
+
+    if (cible.id === 'bouton-copier-lien') {
+      const lien = (document.getElementById('bouton-partager') || {}).getAttribute
+        ? document.getElementById('bouton-partager').getAttribute('data-url') : '';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(lien).then(function () {
+          if (message) { message.textContent = '✅ Lien copié — collez-le où vous voulez.'; message.className = 'message-form ok'; }
+        }).catch(function () { afficherLienAcopier(lien, message); });
+      } else {
+        afficherLienAcopier(lien, message);
+      }
+    }
+  });
+}
+
+function revelerChoixPartage() {
+  const choix = document.getElementById('d-partage-choix');
+  if (choix) choix.hidden = false;
+}
+
+/** Presse-papiers refusé (Safari ancien, permission) : on affiche le lien, à copier à la main —
+ *  jamais d'échec muet. */
+function afficherLienAcopier(lien, message) {
+  if (!message) return;
+  message.innerHTML = 'Copiez ce lien : <span class="d-partage-lien">' + echapper(lien) + '</span>';
+  message.className = 'message-form';
 }
 
 /** 3) LA JOURNÉE EN UN COUP D'ŒIL : la frise horaire, suivie de la note « horaires indicatifs »

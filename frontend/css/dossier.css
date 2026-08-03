@@ -114,6 +114,18 @@ body {
 
 .d-note { margin: 8px 0 0; font-size: 0.8rem; color: var(--d-gris); font-style: italic; }
 
+/* ----- Partager le dossier à ses équipes ------------------------------------- */
+.d-partage {
+  margin: 16px 0 4px; padding: 14px 16px; border-radius: 10px;
+  background: #f2f7fd; border-left: 4px solid var(--d-bleu);
+}
+.d-partage-titre { margin: 0 0 10px; font-weight: 600; color: var(--d-navy); }
+.d-partage-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.d-partage-choix { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.d-partage-choix[hidden] { display: none; }
+.d-partage-note { margin: 10px 0 0; font-size: 0.85rem; color: var(--d-gris); line-height: 1.5; }
+.d-partage-lien { word-break: break-all; color: var(--d-bleu); }
+
 /* ----- Vos équipes + votre planning (lot « jour J ») ------------------------- */
 .d-equipes { list-style: none; margin: 0; padding: 0; }
 .d-equipes li {

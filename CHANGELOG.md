@@ -5,6 +5,28 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### « Partager le dossier à mes équipes » — 2026-08-03
+Le dossier arrive chez **une** personne : le président, ou le contact qui a répondu à l'invitation.
+Or le jour J, ce sont les **éducateurs** qui ont besoin des horaires, de l'accès et du planning. Un
+bouton leur transmet le dossier — **partage natif du téléphone** (WhatsApp, Messages, Mail… en une
+fois) quand le navigateur le propose, sinon trois options explicites : email, WhatsApp, copie du
+lien. Le presse-papiers refusé n'échoue pas en silence : le lien s'affiche, à copier à la main.
+Le lien partagé porte le **jeton** — il reste donc valable chez le destinataire, ce qui est tout
+l'intérêt. C'est aussi pourquoi un bouton est nécessaire : le jeton ayant quitté la barre
+d'adresse, l'adresse visible ne suffirait plus. Le bloc ne s'imprime pas, et une phrase rappelle
+que ce lien vaut accès — à partager à son encadrement, pas au-delà.
+
+Et parce qu'un lien partagé doit pouvoir se **reprendre** : regénérer le dossier d'un club qui l'a
+déjà reçu **propose** un nouveau lien (l'ancien meurt aussitôt, copies comprises). Proposé, jamais
+imposé : un clic pour relire l'aperçu ne doit pas couper un lien en service la veille du tournoi,
+et « Garder l'actuel » ouvre le dossier avec le lien existant. Renouveler **n'envoie rien tout
+seul** : l'aperçu s'ouvre avec le nouveau lien, l'email part au clic sur « Envoyer ». Et si la
+fenêtre est fermée sans envoi après un renouvellement, l'admin le **dit** — sinon le club se
+retrouverait sans lien valide sans que personne ne le sache. Enfin, la **réinitialisation du
+tournoi efface les jetons** — les liens d'une édition ne survivent plus à la suivante, et chaque
+club en reçoit un neuf au chargement suivant de l'admin.
+⚠️ **Redéploiement backend nécessaire.**
+
 ### Le planning du dossier : lisible par catégorie, poule complète, et publié quand tu le décides — 2026-08-03
 Trois retours après la mise en ligne du lot 2 :
 - **Un bloc par catégorie.** Un club engagé en U8 et en U10 a deux groupes d'enfants et deux

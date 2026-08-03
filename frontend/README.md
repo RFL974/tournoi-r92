@@ -34,7 +34,9 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
   **Page VIVANTE** : le club garde son lien et la page se reconstruit à chaque ouverture avec les
   données du moment — ce qui n'existe pas encore à l'envoi apparaîtra tout seul.
   Export PDF via l'impression du navigateur (`css/dossier.css`, `js/dossier.js`,
-  QR généré en local par `js/vendor/qrcode.js`).
+  QR généré en local par `js/vendor/qrcode.js`). Un bouton **« Partager le dossier à mes
+  équipes »** transmet le lien COMPLET (jeton compris, donc valable chez le destinataire) —
+  partage natif du téléphone si disponible, sinon email / WhatsApp / copie du lien.
   Ouverte depuis l'admin (« Aperçu du dossier de … », qui ouvre le dossier d'un club réel).
 
   > L'**autorisation de droit à l'image** (génération d'un `.docx` côté client) a été **retirée
