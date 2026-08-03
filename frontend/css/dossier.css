@@ -170,7 +170,6 @@ body {
 .d-action:hover { background: #227ac4; }
 .d-action:disabled { opacity: 0.6; cursor: wait; }
 /* Message d'erreur du bandeau (ex : modèle d'autorisation introuvable). */
-.d-action-erreur { margin: 6px 0 0; font-size: 0.85rem; color: #b3261e; }
 
 /* ----- Pied de page ------------------------------------------------------------- */
 .d-pied {
@@ -622,11 +621,11 @@ body {
   /* Pastille du club : sans les couleurs forcées, elle s'imprime en blanc sur blanc. */
   .inv-hero-club { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   /* Bandeau d'actions : RETIRÉ du papier. Ce sont des BOUTONS (agenda, itinéraires, autorisation
-     droit à l'image) — sur une feuille imprimée, ils ne cliquent pas, et leurs adresses ne sont
+     liens du club) — sur une feuille imprimée, ils ne cliquent pas, et leurs adresses ne sont
      même pas lisibles. Il coûtait une feuille entière à lui seul (constaté à l'export : page 4
      ne contenait que lui). Ce qui compte reste imprimé : l'adresse est dans « Infos pratiques »
      et le QR code des scores dans « Suivi ». */
-  .d-actions, .d-action-erreur { display: none !important; }
+  .d-actions { display: none !important; }
   .d-contact { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   a { color: var(--d-bleu); text-decoration: none; }
 }
