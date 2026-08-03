@@ -295,7 +295,7 @@ clubs qui **acceptent** (Phase 2).
 | `categories_engagees` | `U8,U10` | **Nouveau.** Catégories réellement engagées par le club (texte séparé par virgules, ou JSON). **Vide** tant que le club n'a pas répondu. Filtre le tableau « Format sportif » du dossier Phase 2 |
 | `dossier_envoye` | `2026-07-24` | **Nouveau.** Date (AAAA-MM-JJ) posée **automatiquement** quand l'envoi du **dossier Phase 2** **réussit** (jamais en cas d'échec). Vide par défaut |
 | `invitation_envoyee` | `2026-07-24` | **Nouveau (Sprint 5).** Date (AAAA-MM-JJ) posée **automatiquement** quand l'envoi de l'**invitation Phase 1** **réussit** (individuel ou groupé). Sert à exclure un club du prochain envoi groupé (sauf « Renvoyer aussi »). Vide par défaut |
-| `club_token` | `a1b2c3d4-…` | **Nouveau (Sprint 6).** Jeton aléatoire unique (UUID) généré à l'ajout du club. Sécurise l'accès à sa page de réponse publique (`reponse-invitation.html?…&token=…`). Ne jamais partager hors de l'email du club |
+| `club_token` | `a1b2c3d4-…` | **Nouveau (Sprint 6).** Jeton aléatoire unique (UUID) généré à l'ajout du club. Sécurise l'accès à sa page de réponse **et à son dossier** (`?club=…&token=…`). Le club peut le partager à **son encadrement** (bouton « Partager le dossier à mes équipes »). **RENOUVELABLE** : regénérer un dossier déjà envoyé propose un nouveau jeton (`regenererJetonClub`) — l'ancien lien et toutes ses copies meurent aussitôt. **EFFACÉ** par la réinitialisation du tournoi (un nouveau est réattribué au chargement suivant de l'admin) |
 | `date_reponse` | `2026-09-10` | **Nouveau (Sprint 6).** Date de la réponse du club en libre-service (Accepté **ou** Décliné). Vide par défaut |
 | `nb_equipes_par_categorie` | `{"U8":2,"U10":1}` | **Nouveau (Sprint 6).** JSON du nombre d'équipes engagées par catégorie (saisi par le club). Validé ≤ `max_equipes_par_club` côté backend |
 | `nb_joueurs_total` | `24` | **Nouveau (Sprint 6).** Total de joueurs attendus pour toutes les équipes du club (entier, saisi par le club, informatif) |
@@ -311,8 +311,10 @@ clubs qui **acceptent** (Phase 2).
 > position. Les clubs **sans jeton** (fiches d'avant le Sprint 6) en reçoivent un automatiquement à
 > l'ouverture de l'admin ou au prochain envoi (`assurerTokensClubs`).
 > ✅ La **réinitialisation du tournoi** CONSERVE le carnet d'adresses (noms, contacts, prénoms,
-> statuts) **et le `club_token`** (identité stable), mais **remet à zéro** les colonnes propres à
-> l'édition : `categories_engagees`, `dossier_envoye`, `invitation_envoyee`, `date_reponse`,
+> statuts), mais **remet à zéro** les colonnes propres à l'édition — **`club_token` compris** :
+> les liens de l'édition passée (dossiers, pages de réponse, copies partagées aux éducateurs)
+> cessent de fonctionner, et chaque club reçoit un jeton neuf au prochain chargement de l'admin.
+> Sont aussi vidées : `categories_engagees`, `dossier_envoye`, `invitation_envoyee`, `date_reponse`,
 > `nb_equipes_par_categorie`, `nb_joueurs_total`, `selection_enregistree` (les cartes
 > repartent donc en **violet « En attente de réponse »**).
 

@@ -2579,6 +2579,7 @@ function doPost(e) {
       case 'modifierStatutClubInvite': resultat = modifierStatutClubInvite(classeur, requete); break;
       case 'enregistrerCategoriesEngagees': resultat = enregistrerCategoriesEngagees(classeur, requete); break;
       case 'envoyerDossierEmail':  resultat = envoyerDossierEmail(classeur, requete); break;
+      case 'regenererJetonClub':   resultat = regenererJetonClub(classeur, requete); break;
       case 'creerEquipesClub':     resultat = creerEquipesClub(classeur, requete); break;
       case 'modifierClubInvite':   resultat = modifierClubInvite(classeur, requete); break;
       case 'envoyerInvitationClub': resultat = envoyerInvitationClub(classeur, requete); break;
@@ -3764,6 +3765,29 @@ function enregistrerCategoriesEngagees(classeur, data) {
 }
 
 /**
+ * RENOUVELLE LE JETON d'un club (clé admin). L'ancien lien cesse IMMÉDIATEMENT de fonctionner —
+ * le dossier, la page de réponse, et toutes les copies que le club a pu partager à ses éducateurs.
+ *
+ * Sert au moment où l'on regénère un dossier déjà envoyé : le lien précédent a circulé, et
+ * l'organisateur veut reprendre la main. Geste volontaire, jamais automatique : côté admin, il
+ * est proposé — pas imposé — car un lien coupé la veille du tournoi, c'est un club qui appelle.
+ */
+function regenererJetonClub(classeur, data) {
+  var nom = String((data && data.club_nom) || '').trim();
+  if (!nom) return { error: 'Club manquant.' };
+  var onglet = assurerOngletClubsInvites(classeur);
+  var ligne = ligneClubInvite(onglet, nom);
+  if (ligne === -1) return { error: 'Club introuvable : ' + nom };
+  var col = colClubInvite(onglet, 'club_token');
+  if (col === -1) return { error: 'Colonne club_token absente de l\'onglet ClubsInvites.' };
+  var jeton = genererTokenClub();
+  var cellule = onglet.getRange(ligne, col);
+  cellule.setNumberFormat('@');
+  cellule.setValue(jeton);
+  return { ok: true, club_token: jeton };
+}
+
+/**
  * ENVOI AUTOMATIQUE du dossier Phase 2 par email (Point 7 du sprint).
  * Le destinataire (email de contact) est TOUJOURS relu dans le Sheet — jamais pris du client —
  * pour éviter tout détournement. L'objet et le contenu sont fournis par l'aperçu admin (modifiables).
@@ -4423,8 +4447,11 @@ function reinitialiserPhase2Clubs(classeur) {
   var dernier = onglet.getLastRow();
   if (dernier < 2) return; // en-tête seul : rien à vider
   var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
-  // club_token est CONSERVÉ (identité stable du club d'une édition à l'autre).
-  ['categories_engagees', 'dossier_envoye', 'invitation_envoyee',
+  // club_token EFFACÉ : réinitialiser, c'est ouvrir une nouvelle édition. Les liens de la
+  // précédente — dossiers, pages de réponse, et toutes les copies partagées aux éducateurs —
+  // pointeraient sur des données qui n'existent plus. `assurerTokensClubs` en réattribue un à
+  // chaque club au prochain chargement de l'admin : effacer ici, c'est RENOUVELER, pas casser.
+  ['club_token', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee',
    'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total',
    'selection_enregistree'].forEach(function (h) {
     var c = entetes.indexOf(h);

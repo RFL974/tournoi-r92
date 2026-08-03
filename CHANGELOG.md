@@ -14,8 +14,15 @@ lien. Le presse-papiers refusé n'échoue pas en silence : le lien s'affiche, à
 Le lien partagé porte le **jeton** — il reste donc valable chez le destinataire, ce qui est tout
 l'intérêt. C'est aussi pourquoi un bouton est nécessaire : le jeton ayant quitté la barre
 d'adresse, l'adresse visible ne suffirait plus. Le bloc ne s'imprime pas, et une phrase rappelle
-que ce lien vaut accès — à partager à son encadrement, pas au-delà. **100 % front**, aucun
-redéploiement backend.
+que ce lien vaut accès — à partager à son encadrement, pas au-delà.
+
+Et parce qu'un lien partagé doit pouvoir se **reprendre** : regénérer le dossier d'un club qui l'a
+déjà reçu **propose** un nouveau lien (l'ancien meurt aussitôt, copies comprises). Proposé, jamais
+imposé : un clic pour relire l'aperçu ne doit pas couper un lien en service la veille du tournoi,
+et « Garder l'actuel » ouvre le dossier avec le lien existant. Enfin, la **réinitialisation du
+tournoi efface les jetons** — les liens d'une édition ne survivent plus à la suivante, et chaque
+club en reçoit un neuf au chargement suivant de l'admin.
+⚠️ **Redéploiement backend nécessaire.**
 
 ### Le planning du dossier : lisible par catégorie, poule complète, et publié quand tu le décides — 2026-08-03
 Trois retours après la mise en ligne du lot 2 :
