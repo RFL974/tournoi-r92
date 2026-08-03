@@ -17,7 +17,9 @@ qu'elle surveille — le couloir de circulation ne s'y applique pas (l'en-but es
 pas un passage). Les **mini-terrains, eux, restent entre les deux lignes de but** : rien ne change
 au découpage ni à la capacité. La carte dessine les deux bandes d'en-but en hachuré, et
 l'avertissement restant dit désormais **quoi faire** (« aucun en-but déclaré sur Rugby 1 : indique
-sa profondeur »). **100 % front**, aucun redéploiement backend.
+sa profondeur »). Au passage, sur un grand terrain occupé **en entier** (U14), la table passe
+**sur la ligne de touche mais à l'extérieur du terrain** : le match utilise toute la surface de
+jeu, la table n'a rien à y faire. **100 % front**, aucun redéploiement backend.
 
 ### Correctif : le descriptif du tournoi perdait ses sauts de ligne — 2026-08-03
 Les retours à la ligne saisis dans « Descriptif du tournoi » (carte *Infos du tournoi*)

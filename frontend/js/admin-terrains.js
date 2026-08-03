@@ -945,7 +945,8 @@ function obstaclesDuTerrain(fp) {
  * Elle se pose dans l'espace LIBRE le plus proche du barycentre de TOUS les mini-terrains du grand
  * terrain (couloir respecté), et à défaut dans l'EN-BUT déclaré (derrière une ligne de but) : la
  * surface de jeu peut être pleine alors qu'il reste de la place au-delà des poteaux.
- * Un terrain « plein » (U14) garde la sienne sur la ligne de touche.
+ * Un terrain « plein » (U14) a la sienne sur la ligne de touche, mais À L'EXTÉRIEUR du terrain :
+ * le match occupe TOUTE la surface de jeu, la table n'a rien à y faire.
  */
 function poserTablesMarques(res) {
   const ctx = res.ctxManuel || {};
@@ -960,8 +961,10 @@ function poserTablesMarques(res) {
     if (!tuiles.length) return;                                 // grand terrain non utilisé
 
     if (fp.mode === 'plein') {
-      fp.table = { x: Math.max(0, fp.field.L / 2 - tmL / 2), y: Math.max(0, fp.field.W - tmW),
-                   w: tmL, h: tmW };
+      // Le match occupe le grand terrain ENTIER : la table se met le long de la ligne de touche,
+      // mais DEHORS (y = W, donc au-delà de la touche) — à mi-longueur pour tout voir.
+      fp.table = { x: Math.max(0, fp.field.L / 2 - tmL / 2), y: fp.field.W,
+                   w: tmL, h: tmW, horsTerrain: true };
       return;
     }
     // Barycentre de TOUS les mini-terrains du grand terrain : la table est au centre de gravité
@@ -1060,7 +1063,9 @@ function afficherRepartition(res, cats) {
          'place (une table par catégorie demandait trop de bénévoles). Elle est posée dans l\'espace ' +
          'libre le plus proche du centre des mini-terrains qu\'elle couvre, et à défaut ' +
          '<strong>dans l\'en-but</strong> (bande hachurée derrière la ligne de but) quand la surface ' +
-         'de jeu est pleine. Déplace encore un terrain et elles seront recalculées.</p>';
+         'de jeu est pleine. Sur un grand terrain occupé <strong>en entier</strong> (U14), elle se ' +
+         'met <strong>sur la ligne de touche, à l\'extérieur du terrain</strong>. Déplace encore un ' +
+         'terrain et elles seront recalculées.</p>';
     if ((res.tablesManquantes || []).length) {
       const sans = res.tablesSansEnBut || [];
       h += '<div class="repart-avert">⚠️ Pas de place pour la table de marque : ' +
@@ -1440,7 +1445,9 @@ function groupeTerrain(fp, ox, oy, ppm, iField) {
     const cxT = (fp.table.x + fp.table.w / 2) * ppm, cyT = (fp.table.y + fp.table.h / 2) * ppm;
     const tw = Math.max(fp.table.w * ppm, 9), th = Math.max(fp.table.h * ppm, 9);
     const tx = cxT - tw / 2, ty = cyT - th / 2;
-    g += '<rect x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" width="' + tw.toFixed(1) + '" height="' + th.toFixed(1) + '" class="carte-table"><title>Table de marque du terrain' + (fp.table.enBut ? ' (dans l\'en-but)' : '') + '</title></rect>';
+    g += '<rect x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" width="' + tw.toFixed(1) + '" height="' + th.toFixed(1) + '" class="carte-table"><title>Table de marque du terrain' +
+         (fp.table.enBut ? ' (dans l\'en-but)' : '') +
+         (fp.table.horsTerrain ? ' (sur la touche, hors du terrain)' : '') + '</title></rect>';
     if (tw > 18 && th > 11) g += '<text x="' + cxT.toFixed(1) + '" y="' + (cyT + 3).toFixed(1) + '" class="carte-tm">TM</text>';
   }
   g += '</g>';
@@ -1457,6 +1464,10 @@ function dessinerCarte(res) {
   // Échelle : les bandes d'en-but débordent du rectangle de jeu (de part et d'autre) — elles
   // comptent dans l'encombrement dessiné, sinon elles sortiraient de la carte.
   const enButMax = Math.max.apply(null, fps.map(function (fp) { return profondeurEnBut(fp.field); }).concat([0]));
+  // Idem sous la ligne de touche : la table d'un terrain « plein » (U14) est posée DEHORS.
+  const debordBas = Math.max.apply(null, fps.map(function (fp) {
+    return fp.table ? Math.max(0, fp.table.y + fp.table.h - fp.field.W) : 0;
+  }).concat([0]));
 
   if (aPos) {
     const maxDim = Math.max.apply(null, fps.map(function (fp) {
@@ -1477,7 +1488,7 @@ function dessinerCarte(res) {
       parts.push(groupeTerrain(fp, ox, oy, ppm, iField).g);
     });
     const width = pad * 2 + 2 * marge + (maxCol + 1) * (cell + gap);
-    const height = pad * 2 + (maxRow + 1) * (cell + titreH + gap);
+    const height = pad * 2 + (maxRow + 1) * (cell + titreH + gap) + Math.max(0, debordBas * ppm - gap);
     return '<svg viewBox="0 0 ' + width.toFixed(0) + ' ' + height.toFixed(0) + '" width="100%" class="carte-svg" ' +
            'role="img" aria-label="Plan de répartition des terrains">' + parts.join('') + '</svg>';
   }
@@ -1492,7 +1503,9 @@ function dessinerCarte(res) {
   fps.forEach(function (fp, iField) {
     const t = groupeTerrain(fp, pad + marge, y0 + titreH, ppm, iField);
     parts.push(t.g);
-    y0 += titreH + t.h + 16;
+    // + le débord sous la touche (table d'un terrain « plein » posée dehors) : sans lui, la
+    // table chevaucherait le titre du terrain suivant.
+    y0 += titreH + t.h + 16 + debordBas * ppm;
   });
   return '<svg viewBox="0 0 ' + (460 + 2 * pad + 2 * marge).toFixed(0) + ' ' + (y0 + 6).toFixed(0) + '" width="100%" class="carte-svg" ' +
          'role="img" aria-label="Carte de répartition des terrains">' + parts.join('') + '</svg>';

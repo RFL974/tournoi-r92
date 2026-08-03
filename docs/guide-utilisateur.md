@@ -205,7 +205,8 @@ Principes de la répartition :
   catégories s'y partagent la place. Elle n'est posée qu'au clic sur **📍 Valider le placement**,
   dans l'espace **libre** le plus proche du centre des mini-terrains qu'elle surveille — et, si la
   surface de jeu est pleine, **dans l'en-but** (bande hachurée derrière la ligne de but, si tu en
-  as déclaré un).
+  as déclaré un). Sur un grand terrain occupé **en entier** (U14), elle se met **sur la ligne de
+  touche, à l'extérieur du terrain** : le match utilise toute la surface de jeu.
 - **Numérotation continue** : les mini-terrains sont numérotés **1, 2, 3… en continu** sur tout le
   tournoi (chaque numéro est **unique** → aucune confusion à la table des marques).
 - Sur la carte, **la couleur indique la catégorie** (pas le terrain) ; le **nom du terrain** (Rugby 1,
