@@ -291,7 +291,13 @@ function majApercuLogoSponsor(src) {
   bloc.hidden = false;
 }
 
-/** Un logo est une petite image : 600 px de côté suffisent largement, et allègent l'envoi. */
+/**
+ * Un logo est une petite image : 600 px de côté suffisent largement, et allègent l'envoi.
+ *
+ * ⚠️ Sortie en PNG, pas en JPEG. Un logo de partenaire est presque toujours un PNG détouré :
+ * converti en JPEG, son fond transparent devient NOIR et le logo est inutilisable sur la page
+ * publique. Le PNG pèse plus lourd, mais à 600 px un logo reste très léger.
+ */
 async function traiterFichierLogoSponsor(fichier) {
   const message = document.getElementById('message-sponsor');
   if (!fichier) return;
@@ -300,7 +306,7 @@ async function traiterFichierLogoSponsor(fichier) {
     return;
   }
   try {
-    sponsorLogoDataURI = await redimensionnerImage(fichier, 600, 0.9);
+    sponsorLogoDataURI = await redimensionnerImage(fichier, 600, 0.92, 'image/png');
     sponsorLogoRetirer = false;
     majApercuLogoSponsor(sponsorLogoDataURI);
     afficherMessage(message, 'Logo prêt — clique « Enregistrer le partenaire » pour le sauvegarder.', 'ok');
