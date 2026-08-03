@@ -19,7 +19,10 @@ que ce lien vaut accès — à partager à son encadrement, pas au-delà.
 Et parce qu'un lien partagé doit pouvoir se **reprendre** : regénérer le dossier d'un club qui l'a
 déjà reçu **propose** un nouveau lien (l'ancien meurt aussitôt, copies comprises). Proposé, jamais
 imposé : un clic pour relire l'aperçu ne doit pas couper un lien en service la veille du tournoi,
-et « Garder l'actuel » ouvre le dossier avec le lien existant. Enfin, la **réinitialisation du
+et « Garder l'actuel » ouvre le dossier avec le lien existant. Renouveler **n'envoie rien tout
+seul** : l'aperçu s'ouvre avec le nouveau lien, l'email part au clic sur « Envoyer ». Et si la
+fenêtre est fermée sans envoi après un renouvellement, l'admin le **dit** — sinon le club se
+retrouverait sans lien valide sans que personne ne le sache. Enfin, la **réinitialisation du
 tournoi efface les jetons** — les liens d'une édition ne survivent plus à la suivante, et chaque
 club en reçoit un neuf au chargement suivant de l'admin.
 ⚠️ **Redéploiement backend nécessaire.**
