@@ -153,12 +153,18 @@ comparaison souple : casse, accents et espaces ignorés («  u10 » = « U10 »)
 - **Plusieurs équipes d'un même club** : les nommer `CLUB-1`, `CLUB-2` (tiret + numéro). Elles
   seront placées dans des **poules différentes** au tirage. *(Un chiffre collé au nom, « RACING 92 »,
   fait partie du nom ; utiliser le tiret pour distinguer les équipes.)*
-- **Équipes créées automatiquement (clubs invités).** Quand tu cliques sur **« Générer le dossier
-  final »** d'un club Accepté (carte *Clubs invités*), ses équipes engagées sont **créées ici
+- **Équipes synchronisées automatiquement (clubs invités).** Quand tu cliques sur **« Enregistrer
+  la sélection »** d'un club Accepté (carte *Clubs invités*), ses équipes engagées sont **créées ici
   automatiquement** : `{Club}` pour 1 équipe, `{Club}-1`, `{Club}-2`… pour plusieurs — en respectant
-  la **casse exacte** du nom du club. Recliquer ne crée **pas de doublon**. Si le club a **réduit**
-  son engagement entre-temps, aucune équipe n'est supprimée : un **badge ⚠️** te prévient de vérifier
-  cette liste à la main.
+  la **casse exacte** du nom du club. Recliquer ne crée **pas de doublon**.
+  Si le club a **réduit** son engagement (ou désengagé une catégorie), les équipes en trop sont
+  **retirées** — mais **uniquement** celles créées par ce circuit, **hors poule** et **absentes de
+  tout match généré**. Une équipe que tu as créée à la main, déjà placée en poule ou présente dans
+  des matchs n'est **jamais** supprimée : elle est conservée et un **badge ⚠️** t'indique quoi faire
+  (la retirer toi-même, ou régénérer le planning). Le message de confirmation liste toujours les
+  équipes **créées et retirées**.
+  *« Générer le dossier final » ne touche plus aux équipes* : tu peux peaufiner ton dossier sans
+  effet de bord.
 
 ### 1.4 Terrains & répartition automatique
 Cette carte part de tes **grands terrains réels** (les terrains de foot / rugby que tu occupes) et

@@ -304,14 +304,16 @@ clubs qui **acceptent** (Phase 2).
 > 🛠️ **Création + migration automatiques.** L'onglet et son en-tête sont créés tout seuls au
 > premier accès (`assurerOngletClubsInvites`). Les **colonnes nouvelles** (`club_contact_prenom`,
 > `categories_engagees`, `dossier_envoye`, `invitation_envoyee`, puis `club_token`, `date_reponse`,
-> `nb_equipes_par_categorie`, `nb_joueurs_total`, `alerte_ecart`) sont ajoutées **à droite** des colonnes existantes
+> `nb_equipes_par_categorie`, `nb_joueurs_total`, `alerte_ecart`, `detail_effectifs`,
+> `nb_educateurs_total`, `selection_enregistree`) sont ajoutées **à droite** des colonnes existantes
 > sur un Sheet déjà en service (`assurerColonnesClubsInvites`) — les 5 premières gardent leur
 > position. Les clubs **sans jeton** (fiches d'avant le Sprint 6) en reçoivent un automatiquement à
 > l'ouverture de l'admin ou au prochain envoi (`assurerTokensClubs`).
 > ✅ La **réinitialisation du tournoi** CONSERVE le carnet d'adresses (noms, contacts, prénoms,
 > statuts) **et le `club_token`** (identité stable), mais **remet à zéro** les colonnes propres à
 > l'édition : `categories_engagees`, `dossier_envoye`, `invitation_envoyee`, `date_reponse`,
-> `nb_equipes_par_categorie`, `nb_joueurs_total`.
+> `nb_equipes_par_categorie`, `nb_joueurs_total`, `selection_enregistree` (les cartes
+> repartent donc en **violet « En attente de réponse »**).
 
 > 🔓 **Réponse en libre-service (Sprint 6).** Le club répond lui-même via
 > `reponse-invitation.html?tournoi=…&club=…&token=…` : lecture par `getReponseInvitation` (doGet,

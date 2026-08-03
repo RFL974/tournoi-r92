@@ -1371,40 +1371,47 @@ async function enregistrerCatsClub(bouton) {
   const texte = bouton.textContent;
   bouton.textContent = 'Enregistrement…';
   try {
-    const resSel = await ecrireAdmin('enregistrerCategoriesEngagees', {
+    // UN SEUL appel : le serveur enregistre la sélection, SYNCHRONISE les équipes (ajouts +
+    // retraits prudents), puis ne pose la marque « sélection enregistrée » (liseré VERT) qu'en
+    // cas de succès complet. Un échec laisse donc la carte ORANGE — l'état affiché est prouvé,
+    // jamais deviné (correctif de revue : deux appels séparés pouvaient laisser une carte verte
+    // alors que les équipes n'étaient pas synchronisées).
+    let res = await ecrireAdmin('enregistrerCategoriesEngagees', {
       club_nom: nom, categories_engagees: cats, club_contact_prenom: prenom
     });
+    // REPLI (backend pas encore redéployé) : l'ancienne action ne synchronise pas les équipes
+    // — on rappelle alors creerEquipesClub, comme avant, pour ne pas perdre la création.
+    if (!res || res.equipes_creees === undefined) {
+      try {
+        const sync = await ecrireAdmin('creerEquipesClub', { club_nom: nom });
+        res = Object.assign({}, res, sync);
+      } catch (e2) {
+        res = Object.assign({}, res, { alerte: 'équipes non synchronisées : ' + e2.message });
+      }
+    }
+
+    const creees = (res && res.equipes_creees) || [];
+    const supprimees = (res && res.equipes_supprimees) || [];
     const club = clubsInvitesCourants.find(function (c) { return memeTexteSouple(c.club_nom, nom); });
     if (club) {
       club.categories_engagees = cats;
       club.club_contact_prenom = prenom;
-      // Marque « sélection enregistrée » (posée côté serveur) : le liseré passe au VERT
-      // immédiatement, sans recharger la liste depuis le Sheet.
-      club.selection_enregistree = (resSel && resSel.selection_enregistree) || 'oui';
+      club.alerte_ecart = (res && res.alerte) || '';
+      // Marque telle que RENVOYÉE par le serveur (aucun repli optimiste : un backend qui ne la
+      // renvoie pas laisse la carte orange plutôt que d'annoncer un vert non prouvé).
+      club.selection_enregistree = (res && res.selection_enregistree) || '';
     }
 
-    // SYNCHRONISATION DES ÉQUIPES — déclenchée ICI, à l'enregistrement de la sélection.
-    // Ajouts automatiques (« {club} » / « {club}-N », source=auto, idempotent) ; un engagement
-    // RÉDUIT retire les équipes supprimables (hors poule, hors matchs, jamais une équipe créée
-    // à la main) et remonte une alerte pour les autres.
     let txtEquipes = '';
-    try {
-      const res = await ecrireAdmin('creerEquipesClub', { club_nom: nom });
-      const creees = (res && res.equipes_creees) || [];
-      const supprimees = (res && res.equipes_supprimees) || [];
-      if (creees.length) txtEquipes += ' ' + creees.length + ' équipe(s) créée(s) : '
-        + creees.map(function (e) { return e.nom; }).join(', ') + '.';
-      if (supprimees.length) txtEquipes += ' ' + supprimees.length + ' équipe(s) retirée(s) : '
-        + supprimees.map(function (e) { return e.nom; }).join(', ') + '.';
-      if (res && res.alerte) txtEquipes += ' ⚠️ ' + res.alerte;
-      if (club) club.alerte_ecart = (res && res.alerte) || '';
-      // Recharge la liste des équipes + le tableau de bord (l'étape « Équipes » de la barre
-      // latérale se met à jour tout de suite, sans rafraîchir la page).
-      if ((creees.length || supprimees.length) && typeof rechargerEquipes === 'function') {
-        try { await rechargerEquipes(); } catch (e) { /* best-effort */ }
-      }
-    } catch (e2) {
-      txtEquipes = ' ⚠️ (équipes non synchronisées : ' + e2.message + ')';
+    if (creees.length) txtEquipes += ' ' + creees.length + ' équipe(s) créée(s) : '
+      + creees.map(function (e) { return e.nom; }).join(', ') + '.';
+    if (supprimees.length) txtEquipes += ' ' + supprimees.length + ' équipe(s) retirée(s) : '
+      + supprimees.map(function (e) { return e.nom; }).join(', ') + '.';
+    if (res && res.alerte) txtEquipes += ' ⚠️ ' + res.alerte;
+    // Recharge la liste des équipes + le tableau de bord (l'étape « Équipes » de la barre
+    // latérale se met à jour tout de suite, sans rafraîchir la page).
+    if ((creees.length || supprimees.length) && typeof rechargerEquipes === 'function') {
+      try { await rechargerEquipes(); } catch (e) { /* best-effort */ }
     }
 
     afficherClubsInvites(); // liseré vert + « Générer le dossier final » + badge d'alerte éventuel

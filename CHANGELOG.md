@@ -5,6 +5,33 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Clubs invités : robustesse de la synchronisation (revue multi-agents) — 2026-08-02
+Une revue adversariale (4 lentilles + contre-vérification) a été passée sur les PR #140/#141 :
+**12 trouvailles confirmées**, toutes corrigées ici. Les cinq importantes :
+- **Collision de noms entre clubs** — deux clubs invités « PUC » et « PUC-2 » : l'équipe
+  « PUC-2 » était comptée comme la 2ᵉ équipe du club PUC, qui pouvait donc **supprimer
+  l'unique équipe d'un autre club** en réduisant son engagement. Désormais, un nom d'équipe
+  qui **est** le nom d'un autre club invité lui reste rattaché : il n'est ni compté, ni
+  supprimé, ni réutilisé à la création (le numéro se décale : PUC-1, puis PUC-3) ;
+- **Catégories en double** (`U8,U8` — cellule éditée à la main, ou deux lignes U8 en zone B) :
+  les mêmes équipes étaient créées **deux fois**, avec des noms identiques dans l'onglet Équipes
+  (or les matchs référencent les équipes par nom). Les catégories sont maintenant dédupliquées ;
+- **Carte verte mensongère** : la marque « sélection enregistrée » était posée par un premier
+  appel, la synchronisation par un second — si le second échouait (réseau, quota Apps Script),
+  la carte restait **verte « à jour »** alors que les équipes n'étaient pas synchronisées.
+  Les deux opérations sont désormais **atomiques côté serveur** : la marque n'est posée qu'après
+  une synchronisation réussie, sinon la carte reste **orange** et réclame un nouveau clic ;
+- **Repli optimiste supprimé** : le front n'invente plus un vert quand le serveur ne renvoie pas
+  la marque (cas du backend pas encore redéployé) — il affiche l'état réel et rappelle
+  l'ancienne action pour que les équipes soient tout de même créées ;
+- **Club qui décline après création de ses équipes** : ses équipes restaient orphelines sur une
+  carte rouge sans action possible. Une **alerte ⚠️ actionnable** est désormais posée sur sa
+  fiche, listant les équipes à retirer (rien n'est supprimé : un club ne déclenche jamais de
+  suppression).
+Documentation remise à jour (guide utilisateur §1.3 — le déclencheur est « Enregistrer la
+sélection », et des équipes **peuvent** être retirées ; structure du Sheet ; commentaires
+périmés du backend). **Backend à redéployer** ; tests : **521/521** (+9).
+
 ### Clubs invités : gel des réponses à J-16 + suppression de club en cascade — 2026-08-02
 Suite du cadrage « liserés » (PR B, décisions Romain) :
 - **Gel à J-16** : la demande d'autorisation doit partir au plus tard à J-15 — à partir de
