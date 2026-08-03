@@ -48,6 +48,8 @@ function lancerTestsFFR() {
   testClubs_colonneSelectionEnregistree(etat);
   testClubs_gelReponsesJ16(etat);
   testClubs_planSuppressionCascade(etat);
+  testClubs_collisionNomsClubs(etat);
+  testClubs_categoriesDupliquees(etat);
   testCfg_jetonDossier(etat);
 
   // Référentiel FFR — règles de jeu et grilles de temps (session 5).
@@ -801,6 +803,51 @@ function testClubs_planSuppressionCascade(etat) {
   var plan2 = planifierSuppressionClub([_eqFactice('PUC', 'U8')], 'PUC', { 'PUC': true });
   _ffrAssert(etat, plan2.bloquees.length === 1 && /matchs/.test(plan2.bloquees[0].motif),
     'cascade : équipe dans des matchs → bloquante');
+}
+
+/** COLLISION DE NOMS (revue) : deux clubs invités « PUC » et « PUC-2 ». L'équipe « PUC-2 »
+ *  appartient au club PUC-2 — le club PUC ne doit ni la compter, ni la supprimer, ni réutiliser
+ *  son nom à la création. Sans ce garde-fou, réduire l'engagement de PUC détruisait l'unique
+ *  équipe d'un AUTRE club. */
+function testClubs_collisionNomsClubs(etat) {
+  var autres = ['PUC-2'];                       // vus depuis le club « PUC »
+  // Rattachement : « PUC-1 » est à PUC, « PUC-2 » est au club homonyme.
+  _ffrAssert(etat, equipeRattacheeAuClub('PUC-1', 'PUC', autres) === true,
+    'collision : PUC-1 rattachée à PUC');
+  _ffrAssert(etat, equipeRattacheeAuClub('PUC-2', 'PUC', autres) === false,
+    'collision : PUC-2 (nom d\'un autre club) NON rattachée à PUC');
+  _ffrAssert(etat, equipeRattacheeAuClub('PUC', 'PUC', autres) === true,
+    'collision : l\'équipe « PUC » reste à PUC');
+
+  // Réduction de PUC à 1 équipe : PUC-3 part, PUC-2 (autre club) est INTOUCHÉE.
+  var equipes = [_eqFactice('PUC-1', 'U10'), _eqFactice('PUC-2', 'U10'), _eqFactice('PUC-3', 'U10')];
+  var p = planifierSyncEquipesClub(equipes, 'PUC', ['U10'], { U10: 1 }, {}, autres);
+  _ffrAssert(etat, p.aSupprimer.length === 1 && p.aSupprimer[0].nom === 'PUC-3',
+    'collision : réduction de PUC ne supprime QUE PUC-3 (jamais l\'équipe du club PUC-2)');
+
+  // Création : le nom « PUC-2 » est réservé à l'autre club → PUC utilise PUC-1 puis PUC-3.
+  var p2 = planifierSyncEquipesClub([], 'PUC', ['U10'], { U10: 2 }, {}, autres);
+  _ffrAssert(etat, p2.aCreer.map(function (t) { return t.nom; }).join(',') === 'PUC-1,PUC-3',
+    'collision : création saute « PUC-2 » (nom d\'un autre club)');
+
+  // Suppression en cascade du club PUC : l'équipe PUC-2 n'est jamais embarquée.
+  var pc = planifierSuppressionClub(equipes, 'PUC', {}, autres);
+  var noms = pc.supprimables.map(function (e) { return e.nom; }).join(',');
+  _ffrAssert(etat, noms === 'PUC-1,PUC-3', 'collision : cascade PUC n\'emporte pas PUC-2');
+}
+
+/** Catégories engagées EN DOUBLE (« U8,U8 », ou « U8,u8 ») : une catégorie n'est traitée qu'une
+ *  fois — sinon les mêmes équipes étaient créées deux fois (noms identiques dans l'onglet, or
+ *  les matchs référencent les équipes par NOM). */
+function testClubs_categoriesDupliquees(etat) {
+  var p = planifierSyncEquipesClub([], 'PUC', ['U8', 'U8'], { U8: 2 }, {}, []);
+  _ffrAssert(etat, p.aCreer.length === 2 &&
+    p.aCreer.map(function (t) { return t.nom; }).join(',') === 'PUC-1,PUC-2',
+    'catsDupliquees : « U8,U8 » → 2 équipes (pas 4)');
+  var p2 = planifierSyncEquipesClub([], 'PUC', ['U8', 'u8'], { U8: 1 }, {}, []);
+  _ffrAssert(etat, p2.aCreer.length === 1, 'catsDupliquees : « U8,u8 » (casse) → 1 seule équipe');
+  var p3 = planifierSyncEquipesClub([], 'PUC', ['U8', '', '  '], { U8: 1 }, {}, []);
+  _ffrAssert(etat, p3.aCreer.length === 1, 'catsDupliquees : entrées vides ignorées');
 }
 
 /* --- Jetons : faux classeur (getSheetByName → getDataRange → getValues), sans Sheet réel --- */
