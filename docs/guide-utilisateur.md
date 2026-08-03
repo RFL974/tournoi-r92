@@ -172,10 +172,16 @@ les **découpe automatiquement** en petits terrains à la bonne taille selon les
 remplit ensuite le champ **Terrains** de chaque catégorie à ta place (fini le « au hasard »).
 
 **a) Déclarer les grands terrains.** Pour chaque grand terrain : un **nom** (Rugby 1, Foot 2…), un
-**type** (🏉 rugby / ⚽ foot), sa **longueur × largeur** en mètres, et son **emplacement** sur le
-site (grille 3×3 : haut-centre, centre-gauche…). Boutons **+ Ajouter un grand terrain** et **✕**
-pour en retirer un. Règle aussi le **couloir de circulation** entre les petits terrains (5 m par
-défaut).
+**type** (🏉 rugby / ⚽ foot), sa **longueur × largeur** en mètres, la profondeur de son
+**en-but**, et son **emplacement** sur le site (grille 3×3 : haut-centre, centre-gauche…). Boutons
+**+ Ajouter un grand terrain** et **✕** pour en retirer un. Règle aussi le **couloir de
+circulation** entre les petits terrains (5 m par défaut).
+
+> 📏 **La longueur se mesure d'une ligne de poteaux à l'autre** : l'**en-but** n'est pas compté
+> dedans. Indique sa **profondeur derrière chaque ligne de but** dans la colonne « en-but »
+> (0 = pas d'en-but utilisable). Les mini-terrains restent **entre les deux lignes**, mais la
+> **table de marque** peut s'y installer quand la surface de jeu est pleine — sans ça, l'appli
+> conclut « pas de place » alors qu'il en reste dans la réalité.
 
 **b) Taille de chaque catégorie.** Une ligne par catégorie présente : sa **longueur × largeur** de
 terrain (ex. U8 30×20, U10 40×30). Coche **« terrain entier »** si un match occupe un grand terrain
@@ -195,9 +201,11 @@ Principes de la répartition :
   de terrain égale, le nombre de terrains suit le nombre d'équipes.)*
 - **Partage d'un grand terrain** : s'il y a plus de catégories que de grands terrains, un grand
   terrain peut être **scindé en deux** (une catégorie de chaque côté).
-- **Table des marques** : sur chaque grand terrain, **1 mini-terrain central est réservé** à la
-  table des marques (zone grise **« TM »**) ; elle est **dessinée en deux** quand deux catégories
-  partagent un grand terrain, pour éviter la confusion.
+- **Table des marques** : **une seule par grand terrain** (zone grise **« TM »**), même quand deux
+  catégories s'y partagent la place. Elle n'est posée qu'au clic sur **📍 Valider le placement**,
+  dans l'espace **libre** le plus proche du centre des mini-terrains qu'elle surveille — et, si la
+  surface de jeu est pleine, **dans l'en-but** (bande hachurée derrière la ligne de but, si tu en
+  as déclaré un).
 - **Numérotation continue** : les mini-terrains sont numérotés **1, 2, 3… en continu** sur tout le
   tournoi (chaque numéro est **unique** → aucune confusion à la table des marques).
 - Sur la carte, **la couleur indique la catégorie** (pas le terrain) ; le **nom du terrain** (Rugby 1,

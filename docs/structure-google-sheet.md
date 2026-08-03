@@ -55,7 +55,7 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 | `tournoi_adresse` | `11 av. Paul Langevin, 92350…` | Adresse postale complète du lieu (dossier club) — carte « Infos du tournoi » de l'admin |
 | `tournoi_description` | `Le Challenge…` | Description (carte + article) |
 | `tournoi_affiche_id` | `1-3DZBDd…` | Identifiant du fichier **Google Drive** de l'affiche (affichée via `lh3.googleusercontent.com/d/{id}`) |
-| `terrains_physiques` | `[{"nom":"Rugby 1",…}]` | JSON — les **grands terrains** réels déclarés (onglet admin « Terrains & répartition ») |
+| `terrains_physiques` | `[{"nom":"Rugby 1","type":"rugby","L":100,"W":70,"enBut":6,"pos":"CG"},…]` | JSON — les **grands terrains** réels déclarés (onglet admin « Terrains & répartition »). `L` va d'une **ligne de poteaux à l'autre** ; `enBut` = profondeur de l'**en-but** derrière **chaque** ligne de but (m, `0`/absent = non déclaré) : les mini-terrains n'y vont pas, la **table de marque** oui quand la surface de jeu est pleine |
 | `dimensions_categories` | `{"U8":{"l":30,"w":20},…}` | JSON — taille de mini-terrain par catégorie (`plein:true` = grand terrain entier) |
 | `couloir_terrain_m` | `5` | Couloir de circulation entre mini-terrains (m) |
 | `tm_longueur_m` / `tm_largeur_m` | `4` | Taille de la table des marques (m) |
