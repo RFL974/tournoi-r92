@@ -521,8 +521,14 @@ var CONFIG_PUBLIQUE_VUES = {
   // champs sont des FAITS DE FORMAT ou d'HORAIRE, sans aucune donnée personnelle — le programme
   // d'un tournoi est public par nature. Restent derrière le jeton (vue club) : adresse précise,
   // parking, secours, téléphones — tout ce qui relève de la logistique jour J.
+  // `tournoi_publie` EST dans cette liste, et c'est essentiel : le site vitrine (boutique-r92)
+  // interroge getConfig et n'affiche la carte « Tournoi » des actualités — ni la page d'article —
+  // QUE si ce témoin vaut 'oui'. Sans lui, le bouton « Publier le tournoi » de l'admin écrit bien
+  // dans Config mais la vitrine ne peut jamais le savoir : elle conclut « non publié » en silence.
+  // Non sensible : c'est un simple témoin oui/non, déjà exposé par la vue live (getAll).
   invitation: {
-    global: ['tournoi_nom', 'tournoi_description', 'tournoi_affiche_id', 'tournoi_date', 'tournoi_lieu',
+    global: ['tournoi_publie',
+             'tournoi_nom', 'tournoi_description', 'tournoi_affiche_id', 'tournoi_date', 'tournoi_lieu',
              'heure_rdv', 'heure_debut', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
              'heure_fin', 'heure_fin_communiquee', 'marge_fin_communiquee_min',
              'buvette_disponible', 'espace_sandwich_disponible', 'boutique_r92_disponible',

@@ -43,6 +43,7 @@ function lancerTestsFFR() {
   testCfg_vueClubContientLesContacts(etat);
   testCfg_categoriesFiltrees(etat);
   testCfg_invitationVitrineCadreSportif(etat);
+  testCfg_vitrineVoitTournoiPublie(etat);
   testCfg_liensPersonnalisesEmail(etat);
   testClubs_planSyncEquipes(etat);
   testClubs_colonneSelectionEnregistree(etat);
@@ -673,6 +674,27 @@ function testCfg_invitationVitrineCadreSportif(etat) {
   var live = filtrerConfigPublique(cfg, 'live');
   _ffrAssert(etat, !('duree_mi_temps_min' in (live.categories[0] || {}))
     && !('heure_debut' in live.global), 'invVitrine : la vue live reste minimale (aucune fuite)');
+}
+
+/** CONTRAT DE LA VITRINE : le site boutique-r92 interroge getConfig (vue « invitation ») et
+ *  n'affiche la carte « Tournoi » des actualités — ni sa page d'article — que si le témoin
+ *  `tournoi_publie` vaut 'oui'. Retirer ce champ de la liste blanche rend le bouton « Publier le
+ *  tournoi » de l'admin SILENCIEUSEMENT sans effet côté vitrine (elle conclut « non publié »).
+ *  Ce test tient les DEUX vues publiques consommées par un site : invitation ET live. */
+function testCfg_vitrineVoitTournoiPublie(etat) {
+  var cfg = { global: { tournoi_publie: 'oui', tournoi_nom: 'Challenge', contact_reponse_tel: '0612345678' },
+              categories: [] };
+  var inv = filtrerConfigPublique(cfg, 'invitation');
+  _ffrAssert(etat, inv.global.tournoi_publie === 'oui',
+    'vitrine : getConfig (invitation) expose tournoi_publie — sinon la carte actus n\'apparaît jamais');
+  var live = filtrerConfigPublique(cfg, 'live');
+  _ffrAssert(etat, live.global.tournoi_publie === 'oui',
+    'vitrine : la vue live expose aussi tournoi_publie (page publique du tournoi)');
+  // Le témoin passe bien à 'non' sans emporter les frontières de la vue.
+  var masque = filtrerConfigPublique({ global: { tournoi_publie: 'non' }, categories: [] }, 'invitation');
+  _ffrAssert(etat, masque.global.tournoi_publie === 'non', 'vitrine : le masquage remonte aussi (non)');
+  _ffrAssert(etat, !('contact_reponse_tel' in inv.global),
+    'vitrine : ouvrir tournoi_publie n\'ouvre rien d\'autre (téléphone toujours exclu)');
 }
 
 /** Personnalisation des emails d'invitation : les TROIS jetons ({{SALUTATION}}, {{LIEN_REPONSE}},
