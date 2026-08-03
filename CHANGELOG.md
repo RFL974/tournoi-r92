@@ -5,6 +5,29 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Le dossier du club affiche sa journée : équipes, poules, planning, engagement (lot 2) — 2026-08-03
+Le dossier ne se contentait plus de ressembler à l'invitation : il devait lui **servir le jour J**.
+Trois sections nouvelles, toutes **masquées tant qu'elles n'ont rien à dire** — la page se
+reconstruit à chaque ouverture du lien, elles apparaissent donc d'elles-mêmes :
+- **Vos équipes** — les équipes du club telles qu'elles existent dans le tournoi, avec leur
+  **poule** dès qu'elle est tirée, et les effectifs déclarés par équipe.
+- **Votre planning** — les matchs du club : heure, son équipe, l'adversaire, le terrain. Le
+  **matin** s'affiche dès la génération du planning ; l'**après-midi** n'existe qu'une fois le
+  classement du matin établi (poules de niveau) — le dossier le dit au lieu de montrer un tableau
+  vide, puis l'affiche quand il arrive. Un tournoi 100 % Super Challenge, qui n'a pas de phase
+  d'après-midi, ne reçoit pas cette promesse.
+- **Votre engagement** — ce que le club a déclaré (équipes par catégorie, joueurs, éducateurs),
+  avec un bouton **« Modifier ma réponse »** tant que les réponses ne sont pas gelées (J-16), et
+  après le gel la mention que les chiffres sont figés + l'adresse où écrire.
+
+Côté backend, `getClubDossier` renvoie désormais **les équipes du club** (identifiant, catégorie,
+poule, effectifs) et l'état du gel : le rattachement passe par `equipeRattacheeAuClub`, donc le
+piège « PUC » / « PUC-2 » ne se repose pas. Le planning, lui, est croisé côté navigateur avec
+l'instantané **public** (`getAll`) qui sert déjà la page des scores — pas de deuxième chemin de
+lecture pour la même information, et **aucune donnée personnelle supplémentaire exposée** :
+l'email du club ne sort toujours jamais. Si `getAll` échoue, le dossier s'affiche comme avant.
+⚠️ **Redéploiement backend nécessaire** (le premier depuis le début du chantier dossier).
+
 ### Retrait (temporaire) de l'autorisation de droit à l'image — 2026-08-03
 Sur décision du club, le bouton **« 🖼️ Autorisation droit à l'image »** disparaît du dossier,
 avec toute la mécanique qui allait avec : la génération du `.docx` côté client, les deux

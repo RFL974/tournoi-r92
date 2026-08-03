@@ -3237,11 +3237,67 @@ function colClubInvite(onglet, nomEntete) {
 function getClubDossier(classeur, params) {
   var club = trouverClubParToken(classeur, params.club, params.token);
   if (!club) return { error: 'Lien invalide ou expiré.' };
-  return { ok: true, club: {
-    club_nom:            String(club.club_nom || ''),
-    club_contact_prenom: String(club.club_contact_prenom || ''),
-    categories_engagees: String(club.categories_engagees || '')
-  } };
+
+  var config = lireConfig(classeur);
+  var g = config.global || {};
+  var aujourdhui = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  return dossierClubPur(
+    club,
+    lireOngletSimple(classeur, 'Equipes'),
+    autresNomsClubsInvites(classeur, club.club_nom),
+    reponsesGelees(g.tournoi_date, aujourdhui),
+    String(g.contact_reponse_email || '').trim());
+}
+
+/**
+ * CŒUR PUR du dossier club (testé sans classeur) : compose ce que la page dossier a le droit de
+ * voir pour CE club. Trois familles d'informations, et rien d'autre :
+ *  - qui il est (nom, prénom du contact) ;
+ *  - ce qu'il a DÉCLARÉ (catégories, équipes par catégorie, joueurs, éducateurs) — pour qu'il
+ *    puisse le relire et le corriger tant que les réponses ne sont pas gelées ;
+ *  - SES équipes telles qu'elles existent dans le tournoi (nom, catégorie, poule), d'où la page
+ *    déduira son planning en croisant les matchs publics.
+ * Le rattachement passe par `equipeRattacheeAuClub` : le piège « PUC » / « PUC-2 » (deux clubs
+ * invités dont l'un ressemble à la 2ᵉ équipe de l'autre) ne se repose pas ici.
+ * `reponses_gelees` et `contact_email` disent à la page s'il faut proposer « Modifier ma
+ * réponse » ou, passé le gel, renvoyer vers l'organisateur.
+ * AUCUN email de club n'est jamais renvoyé (seul celui, public, du contact du tournoi).
+ */
+function dossierClubPur(club, equipes, autresClubs, gelees, contactEmail) {
+  var nomClub = String((club && club.club_nom) || '').trim();
+  var miennes = (equipes || []).filter(function (e) {
+    return equipeRattacheeAuClub(e.nom_equipe, nomClub, autresClubs);
+  }).map(function (e) {
+    return {
+      id_equipe:     String(e.id_equipe || ''),
+      nom_equipe:    String(e.nom_equipe || '').trim(),
+      categorie:     String(e.categorie || '').trim(),
+      poule:         String(e.poule || '').trim(),
+      nb_joueurs:    String(e.nb_joueurs == null ? '' : e.nb_joueurs).trim(),
+      nb_educateurs: String(e.nb_educateurs == null ? '' : e.nb_educateurs).trim()
+    };
+  });
+  // Tri : par catégorie (ordre du tournoi), puis par nom d'équipe — l'ordre d'un onglet Sheet
+  // n'a aucune raison d'être celui qu'un club veut lire.
+  miennes.sort(function (a, b) {
+    return comparerCategorieServeur(a.categorie, b.categorie) ||
+           a.nom_equipe.localeCompare(b.nom_equipe, 'fr');
+  });
+
+  return { ok: true,
+    reponses_gelees: !!gelees,
+    contact_email:   String(contactEmail || ''),
+    club: {
+      club_nom:            nomClub,
+      club_contact_prenom: String((club && club.club_contact_prenom) || ''),
+      categories_engagees: String((club && club.categories_engagees) || ''),
+      // Ce que le club a DÉCLARÉ en répondant (jamais recalculé ici : c'est sa parole).
+      nb_equipes_par_categorie: String((club && club.nb_equipes_par_categorie) || ''),
+      nb_joueurs_total:         String((club && club.nb_joueurs_total) || ''),
+      nb_educateurs_total:      String((club && club.nb_educateurs_total) || ''),
+      detail_effectifs:         String((club && club.detail_effectifs) || '')
+    },
+    equipes: miennes };
 }
 
 /**
