@@ -527,6 +527,67 @@ function majDossier() {
       (s[1] ? '✅ ' : '⚪️ ') + echapper(s[0]) +
       (s[1] ? '' : ' <span class="dossier-etat-note">(sera masqué)</span>') + '</li>';
   }).join('') + '</ul>';
+
+  majApercuDossier();
+}
+
+/**
+ * Aperçu du dossier : le CHOIX D'UN CLUB, puis « Ouvrir l'aperçu ».
+ *
+ * Il y avait avant un lien fixe vers `dossier-club.html?admin=1`, sans club ni jeton. Il a cessé
+ * de fonctionner le jour où le dossier est passé SOUS JETON (les contacts jour J, le parking et
+ * les secours ne sortent plus sans lien personnel) : la page répondait « Ce lien de dossier n'est
+ * plus valide ou incomplet », ce qui ressemble à une panne alors que c'est la sécurité qui parle.
+ * Un aperçu « générique » ne peut donc PAS exister — et tant mieux : ce que tu veux relire avant
+ * d'envoyer, c'est le dossier tel que le club le recevra, avec son nom et ses catégories.
+ *
+ * Sans aucun club invité, on ne propose pas un bouton mort : on dit quoi faire.
+ */
+function majApercuDossier() {
+  const zone = document.getElementById('ligne-apercu-dossier');
+  if (!zone) return;
+
+  // Un club n'est prévisualisable que s'il a un JETON (colonne club_token) : c'est lui qui ouvre
+  // les sections protégées. Les clubs acceptés d'abord — ce sont eux qui reçoivent un dossier.
+  const clubs = (typeof clubsInvitesCourants !== 'undefined' ? (clubsInvitesCourants || []) : [])
+    .filter(function (c) { return String(c.club_nom || '').trim() && String(c.club_token || '').trim(); })
+    .slice()
+    .sort(function (a, b) {
+      const aa = estAccepte(a.statut) ? 0 : 1, bb = estAccepte(b.statut) ? 0 : 1;
+      return (aa - bb) || String(a.club_nom).localeCompare(String(b.club_nom), 'fr');
+    });
+
+  if (!clubs.length) {
+    zone.innerHTML = '<p class="note-generation">👉 L\'aperçu ouvre le dossier <strong>d\'un club</strong> ' +
+      '(son nom, ses catégories, ses contacts jour J) : ajoute d\'abord un club dans ' +
+      '<strong>« Clubs invités »</strong>. Il n\'existe pas d\'aperçu sans club — le dossier est ' +
+      'protégé par le <strong>lien personnel</strong> de chacun.</p>';
+    return;
+  }
+
+  zone.innerHTML =
+    '<label class="dossier-apercu-lib" for="dossier-apercu-club">Aperçu du dossier de</label>' +
+    '<select class="r-input" id="dossier-apercu-club">' +
+      clubs.map(function (c) {
+        const nom = String(c.club_nom).trim();
+        return '<option value="' + echapper(nom) + '">' + echapper(nom) +
+          (estAccepte(c.statut) ? '' : ' (' + echapper(String(c.statut || 'invité')) + ')') + '</option>';
+      }).join('') +
+    '</select>' +
+    '<button type="button" class="bouton" id="bouton-ouvrir-dossier" data-ic="dossier">Ouvrir l\'aperçu</button>';
+}
+
+/** Clic dans la carte « Dossier » : ouvre le dossier du club choisi, en mode admin (?admin=1
+ *  révèle le bandeau « aperçu avant envoi » et le retour à l'administration). */
+function onClicApercuDossier(evenement) {
+  if (!evenement.target || evenement.target.id !== 'bouton-ouvrir-dossier') return;
+  const select = document.getElementById('dossier-apercu-club');
+  const nom = select ? select.value : '';
+  const club = (clubsInvitesCourants || []).find(function (c) { return memeTexteSouple(c.club_nom, nom); });
+  if (!club) return;
+  const url = new URL(lienDossierClub(String(club.club_nom || ''), String(club.club_token || '')));
+  url.searchParams.set('admin', '1');
+  window.open(url.toString(), '_blank', 'noopener');
 }
 
 /* --------------------------------------------------------------------------

@@ -330,6 +330,10 @@ async function initAdmin() {
   // Bouton du brassage du dimanche (Super Challenge Phase 3) — bloc révélé par majDimancheScf().
   document.getElementById('bouton-dimanche-scf').addEventListener('click', onGenererDimancheScf);
 
+  // Carte « Dossier » : le bouton d'aperçu est RECONSTRUIT à chaque majApercuDossier() (la liste
+  // des clubs change) — écouteur DÉLÉGUÉ sur la carte, jamais sur le bouton lui-même.
+  document.getElementById('bloc-dossier').addEventListener('click', onClicApercuDossier);
+
   // Bouton publier / masquer le tournoi.
   document.getElementById('bouton-publier').addEventListener('click', onPublier);
 

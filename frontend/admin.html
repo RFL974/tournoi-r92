@@ -556,19 +556,21 @@
       <section class="carte" id="bloc-dossier">
         <h2>Dossier complet (accepté) — Phase 2</h2>
         <p class="note-generation">
-          Assemble automatiquement le <strong>dossier récapitulatif complet</strong> envoyé aux clubs
-          qui ont <strong>accepté</strong> : infos pratiques, programme de la journée, format sportif
-          par catégorie, suivi des scores (QR code), sécurité et contact. Un seul dossier par tournoi.<br>
+          Assemble automatiquement le <strong>dossier</strong> envoyé aux clubs qui ont
+          <strong>accepté</strong> : le jour J (journée, infos pratiques, parking, contact, sécurité,
+          suivi des scores), puis le rappel du format sportif, l'encadrement et les modalités.
+          Chaque club a son <strong>dossier personnel</strong> — son nom, ses catégories engagées.<br>
           💡 Toute section <strong>sans donnée</strong> est simplement <strong>masquée</strong> —
           tu peux générer le dossier à tout moment et le regénérer quand tu complètes les infos.<br>
-          👉 Pour l'<strong>envoi personnalisé</strong> à un club précis (accueil + filtrage des
-          catégories engagées + email automatique), utilise <strong>« Générer le dossier final »</strong>
-          sur la ligne du club dans <strong>« Clubs invités »</strong>.
+          👉 Pour l'<strong>envoi</strong> à un club (accueil personnalisé + email automatique),
+          utilise <strong>« Générer le dossier final »</strong> sur la ligne du club dans
+          <strong>« Clubs invités »</strong>.
         </p>
         <div id="etat-dossier"></div>
-        <div class="ligne-action">
-          <a class="bouton" id="bouton-ouvrir-dossier" href="dossier-club.html?admin=1" target="_blank" rel="noopener" data-ic="dossier">Aperçu du dossier (générique)</a>
-        </div>
+        <!-- L'aperçu ouvre le dossier D'UN CLUB : les contacts jour J, le parking et les secours
+             sont protégés par le jeton personnel du club (le backend refuse sans lui). Rendu par
+             majApercuDossier() — sans club invité, la carte l'explique au lieu d'un lien mort. -->
+        <div class="ligne-action" id="ligne-apercu-dossier"></div>
         <p class="note-generation">
           Le dossier s'ouvre dans un nouvel onglet : vérifie-le, puis
           <strong>« Exporter en PDF »</strong> si tu préfères l'envoyer manuellement.
