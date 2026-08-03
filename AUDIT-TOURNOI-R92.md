@@ -184,7 +184,7 @@ avec la saisie des scores un jour de tournoi.
 | `perfs.html` | interne | Bilan tournoi + cumul de saison par adversaire |
 | `invitation-club.html` | public | Invitation Phase 1 (version web complète) |
 | `reponse-invitation.html` | club (jeton) | Réponse en libre-service : accepte/décline, catégories, nb d'équipes, nb de joueurs |
-| `dossier-club.html` | public | Dossier Phase 2 personnalisé : format sportif, jour J, logistique, QR live, autorisation droit à l'image en `.docx`, mentions licence FFR + FDM EDR |
+| `dossier-club.html` | public | Dossier Phase 2 personnalisé : format sportif, jour J, logistique, QR live, mentions licence FFR + FDM EDR |
 
 `frontend/js/admin-conformite-ffr.js` porte la restitution du verdict, la forme attendue par
 catégorie, son miroir `normaliserCategorieFFR`, et depuis la session 2 `messageCouvertureFFR`

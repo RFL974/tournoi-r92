@@ -303,7 +303,7 @@ function construireDossier(g, categories, club) {
     sectionCategories(catsFormat, filtreApplique),              //  9. RAPPEL SPORTIF (déjà lu à l'invitation)
     sectionEncadrement(g),                                      // 10. ce qu'on attend du club
     sectionModalites(g),                                        // 11. l'administratif
-    bandeauActions(g),                                          // 12. agenda, itinéraires, droit à l'image
+    bandeauActions(g),                                          // 12. agenda, itinéraires, liens
     mentionGeneration(),                                        // 13. daté (le PDF fige, pas la page)
     piedDocument(g, false)                                      // 14. pied (sans liens : le bandeau les porte)
   ].join('');
@@ -468,9 +468,6 @@ function bandeauActions(g) {
     boutons.push('<a class="d-action" href="https://www.google.com/maps/search/?api=1&query=' + q + '" target="_blank" rel="noopener">🗺️ Itinéraire (Google Maps)</a>');
     boutons.push('<a class="d-action" href="https://waze.com/ul?q=' + q + '&navigate=yes" target="_blank" rel="noopener">🚗 Itinéraire (Waze)</a>');
   }
-  // Autorisation de droit à l'image : docx généré EN LOCAL depuis le modèle du site
-  // (les balises nom/date/lieu sont remplacées ; le nom du club reste manuscrit).
-  boutons.push('<button type="button" class="d-action" id="bouton-droit-image">🖼️ Autorisation droit à l\'image</button>');
   if (txt(g.url_site_association)) {
     boutons.push('<a class="d-action" href="' + echapper(txt(g.url_site_association)) + '" target="_blank" rel="noopener">🌐 Site de l\'association</a>');
   }
@@ -480,86 +477,12 @@ function bandeauActions(g) {
   }
   if (!boutons.length) return '';
 
-  // Les boutons .ics et droit à l'image ont besoin des données : branchés après le rendu (délégué).
+  // Le bouton .ics a besoin des données du tournoi : branché après le rendu (délégué).
   document.addEventListener('click', function brancherActions(e) {
     if (e.target && e.target.id === 'bouton-ics') telechargerICS(g);
-    if (e.target && e.target.id === 'bouton-droit-image') telechargerAutorisationImage(g);
   });
 
-  return '<div class="d-actions">' + boutons.join('') + '</div>' +
-         '<p class="d-action-erreur" id="d-action-erreur" hidden></p>';
-}
-
-/* --------------------------------------------------------------------------
-   AUTORISATION DE DROIT À L'IMAGE — docx généré CÔTÉ CLIENT
-   --------------------------------------------------------------------------
-   Le modèle assets/autorisation-droit-image-template.docx contient les balises
-   {nom_tournoi}, {date_tournoi} et {lieu_tournoi}, remplacées à la volée par
-   PizZip + docxtemplater (js/vendor/, chargés par dossier-club.html — aucun
-   appel externe, comme le QR code). Le document reste GÉNÉRIQUE : le nom du
-   club est écrit à la main par chaque famille.
-   -------------------------------------------------------------------------- */
-
-/** « Challenge Marc Chevalier » → « challenge-marc-chevalier » (nom de fichier sûr). */
-function slugifier(texte) {
-  return String(texte || '')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // é → e (accents retirés)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-/**
- * Génère et télécharge l'autorisation de droit à l'image du tournoi affiché.
- * En cas de problème (modèle manquant/renommé, librairie absente), un message
- * clair s'affiche sous le bandeau — jamais d'échec silencieux.
- */
-async function telechargerAutorisationImage(g) {
-  const erreurZone = document.getElementById('d-action-erreur');
-  const bouton = document.getElementById('bouton-droit-image');
-  if (erreurZone) { erreurZone.hidden = true; erreurZone.textContent = ''; }
-  if (bouton) bouton.disabled = true;
-
-  try {
-    if (typeof PizZip === 'undefined' || typeof docxtemplater === 'undefined') {
-      throw new Error('librairies de génération non chargées');
-    }
-    // 1) Le modèle .docx, récupéré à côté de la page (binaire → ArrayBuffer).
-    const reponse = await fetch('assets/autorisation-droit-image-template.docx');
-    if (!reponse.ok) throw new Error('modèle introuvable (' + reponse.status + ')');
-    const contenu = await reponse.arrayBuffer();
-
-    // 2-3) Chargement PizZip + docxtemplater, puis remplacement des 3 balises.
-    const doc = new docxtemplater(new PizZip(contenu), { paragraphLoop: true, linebreaks: true });
-    doc.render({
-      nom_tournoi:  txt(g.tournoi_nom) || 'Tournoi Génération R92',
-      date_tournoi: txt(g.tournoi_date) ? dateLongueFr(g.tournoi_date) : '',
-      lieu_tournoi: txt(g.tournoi_lieu) || txt(g.tournoi_adresse)
-    });
-
-    // 4-5) Docx de sortie (blob) → téléchargement avec un nom de fichier parlant.
-    const blob = doc.getZip().generate({
-      type: 'blob',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'Autorisation-droit-image-'
-      + (slugifier(txt(g.tournoi_nom)) || 'tournoi-generation-r92')
-      + (txt(g.tournoi_date) ? '-' + txt(g.tournoi_date) : '') + '.docx';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  } catch (e) {
-    const referent = txt(g.referent_nom) || 'l\'organisateur du tournoi';
-    if (erreurZone) {
-      erreurZone.textContent = '⚠️ Impossible de charger le modèle d\'autorisation, contactez '
-        + referent + '.';
-      erreurZone.hidden = false;
-    }
-  } finally {
-    if (bouton) bouton.disabled = false;
-  }
+  return '<div class="d-actions">' + boutons.join('') + '</div>';
 }
 
 /* --------------------------------------------------------------------------

@@ -32,11 +32,14 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
   **Page VIVANTE** : le club garde son lien et la page se reconstruit à chaque ouverture avec les
   données du moment — ce qui n'existe pas encore à l'envoi apparaîtra tout seul.
   Export PDF via l'impression du navigateur (`css/dossier.css`, `js/dossier.js`,
-  QR généré en local par `js/vendor/qrcode.js`). Le bouton « **Autorisation droit à l'image** »
-  génère un `.docx` **côté client** depuis le modèle `assets/autorisation-droit-image-template.docx`
-  (balises `{nom_tournoi}` / `{date_tournoi}` / `{lieu_tournoi}` remplacées par
-  `js/vendor/pizzip.min.js` + `js/vendor/docxtemplater.min.js` — aucun appel externe).
-  Ouverte depuis l'admin (« Générer le dossier »).
+  QR généré en local par `js/vendor/qrcode.js`).
+  Ouverte depuis l'admin (« Aperçu du dossier de … », qui ouvre le dossier d'un club réel).
+
+  > L'**autorisation de droit à l'image** (génération d'un `.docx` côté client) a été **retirée
+  > du dossier** le 2026-08-03, à la demande du club. Le modèle
+  > `assets/autorisation-droit-image-template.docx` et les librairies `js/vendor/pizzip.min.js`
+  > + `js/vendor/docxtemplater.min.js` restent dans le dépôt : plus rien ne les charge, mais
+  > tout est là si la fonction revient.
 - **`index.html`** — redirige la racine vers `tournoi.html`.
 
 **Fichiers partagés** :

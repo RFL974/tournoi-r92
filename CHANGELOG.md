@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Retrait (temporaire) de l'autorisation de droit à l'image — 2026-08-03
+Sur décision du club, le bouton **« 🖼️ Autorisation droit à l'image »** disparaît du dossier,
+avec toute la mécanique qui allait avec : la génération du `.docx` côté client, les deux
+librairies chargées pour elle (`pizzip`, `docxtemplater`), la zone de message d'erreur dédiée et
+son style. Le bandeau d'actions garde l'agenda, les deux itinéraires et les liens de
+l'association. **Le modèle `assets/autorisation-droit-image-template.docx` et les librairies
+restent dans le dépôt** — plus rien ne les charge, mais tout est là si la fonction revient.
+**100 % front**, aucun redéploiement backend.
+
 ### La dernière feuille imprimée ne contient plus que le pied de page — 2026-08-03
 Deux exports successifs ont fini sur une **feuille supplémentaire** ne portant que le blason, le
 nom de l'école et la mention « document généré le… ». Compacter les marges n'a pas suffi : le
