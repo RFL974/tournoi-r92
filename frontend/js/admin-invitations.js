@@ -1552,32 +1552,45 @@ function emailHtmlDossier(g, club, imgSrc, salutationHtml, intro, lienDossier) {
   const A = 'font-family:Arial,Helvetica,sans-serif;';
   const nom = echapper(String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
   const date = String(g.tournoi_date || '').trim() ? echapper(formaterDateFr(g.tournoi_date)) : '';
+  const lieu = echapper(String(g.tournoi_lieu || '').trim());
+  const nomClub = echapper(String((club && club.club_nom) || '').trim());
+  const lien = lienDossier ? echapper(lienDossier) : '';
 
-  // En-tête : affiche (optionnelle) + surtitre + nom + date.
-  let entete = '';
-  if (imgSrc) {
-    entete += '<img src="' + echapper(imgSrc) + '" alt="Affiche — ' + nom + '" '
-      + 'style="display:block;max-width:180px;width:100%;height:auto;border-radius:6px;margin:0 0 10px;">';
-  }
-  entete += '<p style="margin:0;' + A + 'text-transform:uppercase;letter-spacing:1px;font-size:12px;color:' + EMAIL_BLEU + ';">Dossier club — Génération R92</p>'
-    + '<h1 style="margin:4px 0 2px;' + A + 'font-size:24px;color:' + EMAIL_NAVY + ';">' + nom + '</h1>'
-    + (date ? '<p style="margin:0;' + A + 'font-weight:bold;color:' + EMAIL_TXT + ';">' + date + '</p>' : '');
+  // Les catégories du club : les mêmes cartes que l'invitation, limitées à ses ENGAGÉES.
+  const engagees = parseCatsEngagees(club && club.categories_engagees);
+  const toutes = catsInvitationTriees();
+  const cats = engagees.length
+    ? toutes.filter(function (c) { return engagees.indexOf(String(c.categorie).trim().toUpperCase()) !== -1; })
+    : toutes;
 
-  // Salutation + intro (texte libre multi-lignes : sauts de ligne → <br>).
-  const bloc_salut = '<p style="margin:18px 0 4px;' + A + 'font-size:15px;color:' + EMAIL_TXT + ';">' + salutationHtml + '</p>'
-    + (String(intro || '').trim() ? '<p style="margin:0;' + A + 'font-size:14px;color:' + EMAIL_TXT + ';text-align:justify;">' + nl2brEmail(intro) + '</p>' : '');
+  /* --- 1) EN-TÊTE : blason, « votre dossier », titre, date · lieu, NOM DU CLUB --- */
+  let entete = '<div style="text-align:center;">'
+    + '<img src="' + echapper(urlBlasonEmail()) + '" alt="Racing 92" width="110" '
+    + 'style="display:block;width:110px;height:auto;margin:0 auto 10px;">'
+    + '<p style="margin:0;' + A + 'text-transform:uppercase;letter-spacing:2px;font-size:12px;line-height:1.5;color:' + EMAIL_BLEU + ';">'
+    + 'École de Rugby du Racing Club de France<br>votre dossier pour la journée</p>'
+    + '<h1 style="margin:8px 0 2px;' + A + 'font-size:27px;line-height:1.1;color:' + EMAIL_NAVY + ';">' + nom + '</h1>'
+    + ((date || lieu) ? '<p style="margin:4px 0 0;' + A + 'font-weight:bold;font-size:15px;color:' + EMAIL_NAVY + ';">'
+      + [date, lieu].filter(Boolean).join('<span style="color:' + EMAIL_BLEU + ';"> · </span>') + '</p>' : '')
+    + (nomClub ? '<p style="margin:12px 0 0;"><span style="display:inline-block;background:' + EMAIL_NAVY + ';'
+      + 'color:#ffffff;border-radius:999px;padding:5px 16px;' + A + 'font-size:13px;text-transform:uppercase;'
+      + 'letter-spacing:1px;">Dossier — ' + nomClub + '</span></p>' : '')
+    + (engagees.length ? '<p style="margin:6px 0 0;' + A + 'font-size:13px;color:' + EMAIL_GRIS + ';">Engagé en '
+      + engagees.map(echapper).join(' · ') + '</p>' : '')
+    + '<div style="width:90px;height:4px;background:' + EMAIL_BLEU + ';margin:14px auto 0;border-radius:2px;font-size:0;line-height:0;">&nbsp;</div>'
+    + '</div>';
 
-  // Bouton d'ACTION principal : « Voir le dossier complet » (lien personnalisé du club).
-  const bouton = lienDossier
-    ? '<p style="margin:18px 0 4px;text-align:center;"><a href="' + echapper(lienDossier) + '" '
-      + 'style="display:inline-block;background:' + EMAIL_BLEU + ';color:#ffffff;text-decoration:none;'
-      + 'border-radius:999px;padding:13px 28px;' + A + 'font-size:15px;font-weight:bold;">Voir le dossier complet</a></p>'
-      + '<p style="margin:0 0 4px;text-align:center;' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
-      + '(infos pratiques, programme, format sportif, sécurité et contact)</p>'
+  // Affiche RÉDUITE : le club l'a déjà vue en grand à l'invitation.
+  const blocAffiche = imgSrc
+    ? '<img src="' + echapper(imgSrc) + '" alt="Affiche — ' + nom + '" '
+      + 'style="display:block;width:100%;max-width:190px;height:auto;border-radius:8px;margin:16px auto 0;">'
     : '';
 
-  // Ligne « libellé / valeur » (omise si la valeur est vide) + section-tableau.
-  const ligne = function (lib, val) {
+  const bloc_salut = '<p style="margin:18px 0 4px;' + A + 'font-size:15px;color:' + EMAIL_TXT + ';">' + salutationHtml + '</p>'
+    + (String(intro || '').trim() ? '<p style="margin:0;' + A + 'font-size:14px;color:' + EMAIL_TXT + ';text-align:justify;line-height:1.55;">' + nl2brEmail(intro) + '</p>' : '');
+
+  /* --- Petites briques de section « libellé / valeur » --- */
+  const ligneJ = function (lib, val) {
     if (!val) return '';
     return '<tr><td style="' + A + 'font-size:13px;color:' + EMAIL_GRIS + ';padding:3px 10px 3px 0;vertical-align:top;">' + echapper(lib) + '</td>'
       + '<td style="' + A + 'font-size:13px;color:' + EMAIL_TXT + ';font-weight:bold;padding:3px 0;">' + echapper(val) + '</td></tr>';
@@ -1587,90 +1600,169 @@ function emailHtmlDossier(g, club, imgSrc, salutationHtml, intro, lienDossier) {
       + '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">' + lignesHtml + '</table>') : '';
   };
 
-  // Modalités d'inscription : catégories engagées + confirmation + tarif (si demandé).
-  const engagees = parseCatsEngagees(club && club.categories_engagees).join(' · ');
-  const tarifOui = estOui(g.tarif_engagement_oui);
-  const modalites = ligne('Catégories engagées', engagees)
-    + ligne('Confirmation attendue avant le', String(g.date_limite_confirmation || '').trim() ? formaterDateFr(g.date_limite_confirmation) : '')
-    + ligne('Tarif d\'engagement', tarifOui ? String(g.tarif_engagement_montant || '').trim() : '')
-    + ligne('Modalités de paiement', tarifOui ? String(g.tarif_engagement_modalites || '').trim() : '');
+  /* --- 2) LE JOUR J : la journée en un coup d'œil (même frise que l'invitation) --- */
+  const frise = friseJourneeEmail(g, cats, A);
+  const blocJournee = frise ? (emailTitreSection('La journée en un coup d\'œil') + frise) : '';
 
-  // Le jour J, en bref : accueil + fin envisagée.
-  const jourJ = ligne('Accueil des équipes', String(g.heure_rdv || '').trim())
-    + ligne('Fin envisagée', heureFinCommuniqueeAdmin(g));
+  /* --- 3) OÙ, COMMENT Y ACCÉDER, QUI APPELER — l'ordre du dossier : le jour J d'abord --- */
+  const blocPratique = bloc('Infos pratiques',
+    ligneJ('Lieu', String(g.tournoi_lieu || '').trim())
+    + ligneJ('Adresse', String(g.tournoi_adresse || '').trim())
+    + ligneJ('Parking', String(g.logistique_parking || '').trim())
+    + ligneJ('Buvette / restauration', String(g.logistique_buvette || '').trim())
+    + ligneJ('Vestiaires', String(g.logistique_vestiaires || '').trim()));
 
-  // Parking & accès : texte libre (la photo reste sur le dossier complet).
   const parkingTxt = String(g.parking_texte || '').trim();
-  const parking = parkingTxt
+  const blocParking = parkingTxt
     ? emailTitreSection('Parking & accès')
-      + '<p style="margin:0;' + A + 'font-size:13px;color:' + EMAIL_TXT + ';text-align:justify;">' + nl2brEmail(parkingTxt) + '</p>'
+      + '<p style="margin:0;' + A + 'font-size:13px;color:' + EMAIL_TXT + ';text-align:justify;line-height:1.55;">' + nl2brEmail(parkingTxt) + '</p>'
     : '';
 
-  // Encadrement & assurance.
-  const encadrement = ligne('Encadrement', String(g.encadrement_ratio || '').trim())
-    + ligne('Diplômes exigés', String(g.encadrement_diplomes || '').trim())
-    + ligne('Assurance', estOui(g.assurance_attestation_requise) ? 'Attestation d\'assurance du club à fournir' : '');
-
-  // Votre contact : référent du tournoi.
   const contactParts = [];
   if (String(g.referent_nom || '').trim()) contactParts.push(String(g.referent_nom).trim());
   if (String(g.referent_tel || '').trim()) contactParts.push(telephoneLisibleAdmin(g.referent_tel));
-  const contact = ligne('Votre contact', contactParts.join(' · '));
+  const secoursOui = estOui(g.securite_secours_oui);
+  const secuIdentique = String(g.securite_referent_identique || 'oui').toLowerCase() !== 'non';
+  const secuNom = secuIdentique ? String(g.referent_nom || '').trim() : String(g.securite_referent_nom || '').trim();
+  const secuTel = secuIdentique ? String(g.referent_tel || '').trim() : String(g.securite_referent_tel || '').trim();
+  const blocContact = bloc('Votre contact le jour J',
+    ligneJ('Référent tournoi', contactParts.join(' · '))
+    + ligneJ('Poste de secours', secoursOui
+        ? ('Sur place' + (String(g.securite_secours_precisions || '').trim() ? ' — ' + String(g.securite_secours_precisions).trim() : ''))
+        : '')
+    + ligneJ('Référent sécurité', [secuNom, secuTel ? telephoneLisibleAdmin(secuTel) : ''].filter(Boolean).join(' — ')));
 
-  // Pied : mention + lien de secours vers le dossier complet.
-  const pied = '<p style="margin:20px 0 0;padding-top:12px;border-top:1px solid ' + EMAIL_FILET + ';' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';">'
-    + 'Génération R92 · École de rugby du Racing 92'
-    + (lienDossier ? '<br><a href="' + echapper(lienDossier) + '" style="color:' + EMAIL_BLEU + ';">Voir le dossier complet en ligne</a>' : '')
+  /* --- 4) RAPPEL SPORTIF : les cartes par catégorie engagée + les repères FFR --- */
+  const blocCats = cats.length
+    ? emailTitreSection(engagees.length ? 'Rappel — vos catégories engagées' : 'Rappel — les catégories du tournoi')
+      + cats.map(function (c) { return carteCategorieEmail(c, A); }).join('')
+      + reperesFFREmail(cats, A)
+    : '';
+
+  /* --- 5) CE QU'ON ATTEND DU CLUB, PUIS L'ADMINISTRATIF --- */
+  const blocEncadrement = bloc('Encadrement & assurance',
+    ligneJ('Encadrement', String(g.encadrement_ratio || '').trim())
+    + ligneJ('Diplômes exigés', String(g.encadrement_diplomes || '').trim())
+    + ligneJ('Assurance', estOui(g.assurance_attestation_requise) ? 'Attestation d\'assurance du club à fournir' : '')
+    + ligneJ('Licences', 'Licence FFR validée obligatoire pour tous les joueurs')
+    + ligneJ('Feuille de match', 'FDM dématérialisée (FDM EDR) pour toutes les rencontres'));
+
+  const tarifOui = estOui(g.tarif_engagement_oui);
+  const blocModalites = bloc('Modalités d\'inscription',
+    ligneJ('Confirmation attendue avant le', String(g.date_limite_confirmation || '').trim() ? formaterDateFr(g.date_limite_confirmation) : '')
+    + ligneJ('Tarif d\'engagement', tarifOui ? String(g.tarif_engagement_montant || '').trim() : '')
+    + ligneJ('Modalités de paiement', tarifOui ? String(g.tarif_engagement_modalites || '').trim() : ''));
+
+  /* --- 6) LE LIEN — non plus pour LIRE le dossier (il est ci-dessus), mais pour ce qui BOUGE :
+         les poules et le planning une fois arrêtés, et le partage aux éducateurs. --- */
+  const blocLien = lien
+    ? emailTitreSection('Votre espace en ligne')
+      + '<p style="margin:0 0 10px;' + A + 'font-size:13px;color:' + EMAIL_TXT + ';line-height:1.55;">'
+      + 'Tout l\'essentiel est dans cet email. Votre lien personnel, lui, reste vivant : il affichera '
+      + '<strong>vos poules et votre planning</strong> dès qu\'ils seront arrêtés, et il vous permet de '
+      + '<strong>partager le dossier à vos éducateurs</strong> en un geste.</p>'
+      + '<p style="margin:0;text-align:center;"><a href="' + lien + '" '
+      + 'style="display:inline-block;background:' + EMAIL_BLEU + ';color:#ffffff;text-decoration:none;'
+      + 'border-radius:999px;padding:13px 28px;' + A + 'font-size:15px;font-weight:bold;">Ouvrir mon espace</a></p>'
+    : '';
+
+  const pied = barreLiensEmail(A)
+    + '<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ' + EMAIL_FILET + ';' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';text-align:center;">'
+    + 'Génération R92 · École de Rugby du Racing Club de France'
+    + (lien ? '<br><a href="' + lien + '" style="color:' + EMAIL_BLEU + ';">Voir la version en ligne</a>' : '')
     + '</p>';
 
+  // ORDRE DU DOSSIER : le jour J d'abord (journée, accès, contact), le sportif en rappel,
+  // l'administratif ensuite, et le lien à la fin — il ne sert plus à LIRE, mais à SUIVRE.
   return '<div style="background:#eef2f7;padding:16px;' + A + '">'
     + '<table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;margin:0 auto;background:#ffffff;border-collapse:collapse;">'
     + '<tr><td style="padding:22px 24px;">'
-    + '<div style="border-bottom:3px solid ' + EMAIL_NAVY + ';padding-bottom:12px;">' + entete + '</div>'
-    + bloc_salut + bouton
-    + bloc('Modalités d\'inscription', modalites)
-    + bloc('Le jour J, en bref', jourJ)
-    + parking
-    + bloc('Encadrement & assurance', encadrement)
-    + bloc('Votre contact', contact)
-    + pied
+    + '<div style="border-bottom:3px solid ' + EMAIL_NAVY + ';padding-bottom:14px;">' + entete + '</div>'
+    + blocAffiche + bloc_salut
+    + blocJournee + blocPratique + blocParking + blocContact
+    + blocCats + blocEncadrement + blocModalites + blocLien + pied
     + '</td></tr></table></div>';
 }
 
-/** Version TEXTE brut de l'email de dossier final (repli anti-spam / clients sans HTML). */
+/** Version TEXTE brut de l'email de dossier final (repli anti-spam / clients sans HTML).
+ *  Même contenu, même ordre : le jour J, le rappel sportif, l'administratif, puis le lien. */
 function emailTexteDossier(g, club, salutationTexte, intro, lienDossier) {
   const L = [];
+  const nom = String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92';
+  const engagees = parseCatsEngagees(club && club.categories_engagees);
+  const toutes = catsInvitationTriees();
+  const cats = engagees.length
+    ? toutes.filter(function (c) { return engagees.indexOf(String(c.categorie).trim().toUpperCase()) !== -1; })
+    : toutes;
+
+  L.push(nom.toUpperCase() + (String(g.tournoi_date || '').trim() ? ' — ' + formaterDateFr(g.tournoi_date) : ''));
+  if (String((club && club.club_nom) || '').trim()) {
+    L.push('Dossier de ' + String(club.club_nom).trim() +
+      (engagees.length ? ' — engagé en ' + engagees.join(', ') : ''));
+  }
+  L.push('');
   L.push(salutationTexte);
   L.push('');
   if (String(intro || '').trim()) { L.push(String(intro).trim()); L.push(''); }
-  if (lienDossier) { L.push('▶ Voir le dossier complet : ' + lienDossier); L.push(''); }
 
-  const engagees = parseCatsEngagees(club && club.categories_engagees).join(', ');
-  const mod = [];
-  if (engagees) mod.push('Catégories engagées : ' + engagees);
-  if (String(g.date_limite_confirmation || '').trim()) mod.push('Confirmation attendue avant le ' + formaterDateFr(g.date_limite_confirmation));
-  if (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim()) mod.push('Tarif d\'engagement : ' + String(g.tarif_engagement_montant).trim());
-  if (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_modalites || '').trim()) mod.push('Modalités de paiement : ' + String(g.tarif_engagement_modalites).trim());
-  if (mod.length) { L.push('MODALITÉS D\'INSCRIPTION'); mod.forEach(function (m) { L.push('- ' + m); }); L.push(''); }
+  const etapes = etapesJourneeEmail(g, cats);
+  if (etapes.length) {
+    L.push('LA JOURNÉE');
+    etapes.forEach(function (e) { L.push('- ' + e.h + ' ' + e.t + (e.n ? ' (' + e.n + ')' : '')); });
+    L.push('');
+  }
 
-  const jour = [];
-  if (String(g.heure_rdv || '').trim()) jour.push('Accueil : ' + String(g.heure_rdv).trim());
-  if (heureFinCommuniqueeAdmin(g)) jour.push('Fin envisagée : ' + heureFinCommuniqueeAdmin(g));
-  if (jour.length) { L.push('LE JOUR J : ' + jour.join(' · ')); L.push(''); }
+  const prat = [];
+  if (String(g.tournoi_lieu || '').trim()) prat.push('Lieu : ' + String(g.tournoi_lieu).trim());
+  if (String(g.tournoi_adresse || '').trim()) prat.push('Adresse : ' + String(g.tournoi_adresse).trim());
+  if (String(g.logistique_parking || '').trim()) prat.push('Parking : ' + String(g.logistique_parking).trim());
+  if (String(g.logistique_buvette || '').trim()) prat.push('Buvette : ' + String(g.logistique_buvette).trim());
+  if (String(g.logistique_vestiaires || '').trim()) prat.push('Vestiaires : ' + String(g.logistique_vestiaires).trim());
+  if (String(g.parking_texte || '').trim()) prat.push('Accès : ' + String(g.parking_texte).trim());
+  if (prat.length) { L.push('INFOS PRATIQUES'); prat.forEach(function (x) { L.push('- ' + x); }); L.push(''); }
 
-  if (String(g.parking_texte || '').trim()) { L.push('Parking & accès : ' + String(g.parking_texte).trim()); L.push(''); }
+  const contact = [];
+  if (String(g.referent_nom || '').trim()) contact.push(String(g.referent_nom).trim());
+  if (String(g.referent_tel || '').trim()) contact.push(telephoneLisibleAdmin(g.referent_tel));
+  if (contact.length) { L.push('VOTRE CONTACT LE JOUR J : ' + contact.join(' · ')); }
+  if (estOui(g.securite_secours_oui)) {
+    L.push('Poste de secours sur place' +
+      (String(g.securite_secours_precisions || '').trim() ? ' — ' + String(g.securite_secours_precisions).trim() : ''));
+  }
+  if (contact.length || estOui(g.securite_secours_oui)) L.push('');
+
+  if (cats.length) {
+    L.push(engagees.length ? 'VOS CATÉGORIES ENGAGÉES' : 'LES CATÉGORIES DU TOURNOI');
+    cats.forEach(function (c) {
+      const bouts = [formeJeuEmailTxt(c), tempsJeuEmailTxt(c), effectifEmailTxt(c)].filter(Boolean);
+      L.push('- ' + String(c.categorie).trim() + (bouts.length ? ' : ' + bouts.join(' · ') : ''));
+    });
+    L.push('');
+  }
 
   const enc = [];
   if (String(g.encadrement_ratio || '').trim()) enc.push('Encadrement : ' + String(g.encadrement_ratio).trim());
   if (String(g.encadrement_diplomes || '').trim()) enc.push('Diplômes exigés : ' + String(g.encadrement_diplomes).trim());
   if (estOui(g.assurance_attestation_requise)) enc.push('Attestation d\'assurance du club à fournir');
-  if (enc.length) { enc.forEach(function (e) { L.push(e); }); L.push(''); }
-
-  const c2 = [];
-  if (String(g.referent_nom || '').trim()) c2.push(String(g.referent_nom).trim());
-  if (String(g.referent_tel || '').trim()) c2.push(telephoneLisibleAdmin(g.referent_tel));
-  if (c2.length) L.push('Contact : ' + c2.join(' · '));
+  enc.push('Licence FFR validée obligatoire pour tous les joueurs');
+  enc.push('Feuille de match dématérialisée (FDM EDR) pour toutes les rencontres');
+  L.push('ENCADREMENT & ASSURANCE');
+  enc.forEach(function (x) { L.push('- ' + x); });
   L.push('');
+
+  const mod = [];
+  if (String(g.date_limite_confirmation || '').trim()) mod.push('Confirmation attendue avant le ' + formaterDateFr(g.date_limite_confirmation));
+  if (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim()) mod.push('Tarif d\'engagement : ' + String(g.tarif_engagement_montant).trim());
+  if (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_modalites || '').trim()) mod.push('Modalités de paiement : ' + String(g.tarif_engagement_modalites).trim());
+  if (mod.length) { L.push('MODALITÉS'); mod.forEach(function (x) { L.push('- ' + x); }); L.push(''); }
+
+  if (lienDossier) {
+    L.push('VOTRE ESPACE EN LIGNE');
+    L.push('Tout l\'essentiel est dans ce message. Votre lien personnel affichera vos poules et');
+    L.push('votre planning dès qu\'ils seront arrêtés, et permet de partager le dossier à vos éducateurs :');
+    L.push(lienDossier);
+    L.push('');
+  }
   L.push('À très bientôt,');
   L.push('Génération R92');
   return L.join('\n');

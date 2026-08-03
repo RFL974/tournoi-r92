@@ -5,6 +5,19 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### L'email du dossier EST le dossier — 2026-08-03
+Même reproche que pour l'invitation avant sa refonte : le club recevait un email qui ne servait
+qu'à héberger un bouton **« Voir le dossier complet »**. Un clic de trop, une raison de plus de ne
+jamais l'ouvrir. L'email porte désormais **le dossier lui-même**, dans l'ordre du document — la
+journée en un coup d'œil (frise), les infos pratiques, le parking, **le contact du jour J**, le
+rappel des **catégories engagées du club** (les mêmes cartes que l'invitation, avec les repères
+FFR), l'encadrement, les modalités — plus l'en-tête qui porte le **nom du club** et son engagement.
+Le lien ne disparaît pas : il descend en fin de message et **change de rôle**. Il ne sert plus à
+lire, mais à **suivre** — les poules et le planning s'y afficheront dès qu'ils seront arrêtés, et
+c'est de là que le club **partage le dossier à ses éducateurs**. Le message le dit en toutes
+lettres, pour qu'un club ne croie pas son planning inexistant parce que l'email ne le contient pas.
+Version texte de repli mise au même niveau. **100 % front**, aucun redéploiement backend.
+
 ### Numérotation des équipes d'un club, et carte qui dit où on en est — 2026-08-03
 Deux constats en testant avec un club fictif :
 - **`MASSY` + `MASSY-1` au lieu de `MASSY-1` + `MASSY-2`.** La synchronisation nommait la
