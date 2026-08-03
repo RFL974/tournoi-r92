@@ -205,6 +205,23 @@ body {
   color: var(--d-navy);
 }
 .inv-quand { margin: 4px 0 0; font-weight: 600; font-size: 1.05rem; color: var(--d-navy); }
+
+/* Mention sous la date, propre au DOSSIER : le nom du club et son engagement. Le document
+   appartient à ce club-là, et ça doit se voir sans lire une ligne de texte. */
+.inv-hero-mention { margin: 10px 0 0; }
+.inv-hero-club {
+  display: inline-block;
+  margin: 0;
+  padding: 5px 16px;
+  background: var(--d-navy);
+  color: #fff;
+  border-radius: 999px;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.95rem;
+}
+.inv-hero-engagement { margin: 6px 0 0; color: var(--d-gris); font-size: 0.92rem; }
 /* Typo française : seule la PREMIÈRE lettre de « dimanche 13 juin 2027 » prend la majuscule
    (::first-letter exige un élément de type bloc, d'où l'inline-block). */
 .inv-quand-date { display: inline-block; }
@@ -577,6 +594,11 @@ body {
   .d-section.inv-categories { break-inside: auto; }
   .inv-carte, .inv-cta, .inv-frise { break-inside: avoid; }
   .inv-affiche img { max-height: 130mm; box-shadow: none; }
+  /* Dossier : l'affiche réduite le reste à l'impression (sinon la règle ci-dessus la ferait
+     regrossir en hauteur et repousserait le jour J en page 2). */
+  .inv-affiche-compacte img { max-height: 70mm; }
+  /* Pastille du club : sans les couleurs forcées, elle s'imprime en blanc sur blanc. */
+  .inv-hero-club { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .d-actions { break-inside: avoid; background: var(--d-navy); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .d-contact { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   a { color: var(--d-bleu); text-decoration: none; }

@@ -186,8 +186,13 @@ function tempsDeJeuDe(cat) {
  * EN-TÊTE « vitrine » : blason centré en grand, surtitre, titre du tournoi, date · lieu,
  * puis l'affiche en héros et le descriptif COMPLET (un paragraphe par ligne saisie).
  * @param {Object} g       paramètres globaux du tournoi
- * @param {Object} [opts]  { surtitre: HTML sûr écrit par nous, presentationDefaut: phrase
- *                           affichée quand le descriptif est vide ('' = rien) }
+ * @param {Object} [opts]  { surtitre: HTML sûr écrit par nous,
+ *                           presentationDefaut: phrase affichée quand le descriptif est vide,
+ *                           mention: HTML sûr inséré sous la date (le dossier y met le nom du
+ *                             club — le document est le SIEN, ça se voit en une seconde),
+ *                           afficheCompacte: true = affiche réduite. L'invitation la met en
+ *                             héros (c'est son argument) ; le dossier la réduit : le club l'a
+ *                             déjà vue, et la place sert à ce qu'il vient chercher }
  */
 function heroDocument(g, opts) {
   opts = opts || {};
@@ -204,12 +209,18 @@ function heroDocument(g, opts) {
     (opts.surtitre ? '<p class="inv-surtitre">' + opts.surtitre + '</p>' : '') +
     '<h1 class="inv-titre">' + echapper(nom) + '</h1>' +
     (quand.length ? '<p class="inv-quand">' + quand.join('<span class="inv-quand-sep"> · </span>') + '</p>' : '') +
+    (opts.mention ? '<div class="inv-hero-mention">' + opts.mention + '</div>' : '') +
   '</header>';
 
-  // L'affiche du tournoi en héros, centrée et en grand.
+  // L'affiche du tournoi : en héros pour l'invitation, réduite pour le dossier — mais TOUJOURS
+  // la même URL (=w1200). C'est la taille d'affichage qui change, en CSS, pas le fichier
+  // demandé : le club a déjà cette image en cache depuis l'invitation, elle s'affiche
+  // instantanément et sans nouvel appel au CDN. Demander une autre largeur ne gagnerait rien
+  // (l'affiche source fait moins de 1200 px) et multiplierait les variantes à charger.
   if (txt(g.tournoi_affiche_id)) {
-    html += '<figure class="inv-affiche">' +
-      '<img src="' + echapper(urlAffiche(g.tournoi_affiche_id, 1200)) + '" alt="Affiche — ' + echapper(nom) + '">' +
+    html += '<figure class="inv-affiche' + (opts.afficheCompacte ? ' inv-affiche-compacte' : '') + '">' +
+      '<img src="' + echapper(urlAffiche(g.tournoi_affiche_id, 1200)) +
+      '" alt="Affiche — ' + echapper(nom) + '">' +
     '</figure>';
   }
 

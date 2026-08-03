@@ -5,6 +5,23 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Le dossier ne ressemble plus à un doublon de l'invitation (lot 1 bis) — 2026-08-03
+Après la refonte du lot 1, le dossier ressemblait **trop** à l'invitation : même charte, mais
+aussi même hiérarchie et même contenu — un club pouvait croire recevoir deux fois le même
+document. Trois corrections, sans changer de charte :
+- **L'ordre dit le rôle.** L'invitation *vend* (affiche en héros, cadre sportif haut, réponse en
+  bas) ; le dossier *organise* : le **jour J d'abord** — la journée en un coup d'œil, infos
+  pratiques, parking & accès, **votre contact** (remonté : c'était en dernière page, alors que
+  c'est le numéro qu'on cherche quand on est en retard), sécurité, suivi & QR — puis le cadre
+  sportif en **rappel** (le club l'a lu à l'invitation, deux mois plus tôt), l'encadrement et
+  l'administratif. L'ordre est désormais **écrit noir sur blanc** dans `construireDossier` :
+  une liste de sections nommées, chacune sa fonction.
+- **Affiche réduite** : le club l'a déjà vue en grand. Même URL d'image que l'invitation, donc
+  déjà en cache — seule la taille d'affichage change.
+- **Le document porte le nom du club** dès l'en-tête (« Dossier — AS Massy ») avec le rappel de
+  son engagement (« Engagé en U8 · U10 ») : on voit en une seconde que ce dossier est le sien.
+**100 % front**, aucun redéploiement backend.
+
 ### Le dossier du club reprend l'agencement de l'invitation (lot 1) — 2026-08-03
 Le **dossier Phase 2** (envoyé au club après son acceptation) avait une génération de retard sur
 l'invitation refondue : en-tête en vignette, descriptif **tronqué à 400 caractères**, programme en
