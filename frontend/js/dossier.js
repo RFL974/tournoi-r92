@@ -1,14 +1,25 @@
 /**
  * ============================================================================
- *  DOSSIER CLUB — assemble le dossier récapitulatif envoyé aux clubs invités
+ *  DOSSIER CLUB (Phase 2) — le dossier envoyé au club APRÈS son acceptation
  * ============================================================================
- *  Construit un document A4 (1-2 pages) à partir des données du tournoi
- *  (Config Zone A + Zone B), via le MÊME backend que les autres pages (apiGet).
- *  Un seul dossier par tournoi, générique : pas de filtrage par club ou par
- *  catégorie — un club engagé sur plusieurs catégories y retrouve tout.
+ *  Construit la page personnelle d'un club (?club=…&token=…) à partir des données
+ *  du tournoi (Config Zone A + Zone B), via le MÊME backend que les autres pages.
+ *
+ *  MÊME DOCUMENT QUE L'INVITATION, À UN AUTRE MOMENT. Le dossier reprend, dans le
+ *  même ordre, les blocs de la page d'invitation (`commun-dossier.js`) :
+ *    1. blason centré, affiche en héros, descriptif complet ;
+ *    2. l'accueil personnalisé du club ;
+ *    3. la journée en un coup d'œil (frise horaire) ;
+ *    4. UNE CARTE PAR CATÉGORIE — limitée aux catégories ENGAGÉES par le club ;
+ *  puis ce qui n'existe qu'ici, une fois le club engagé : infos pratiques,
+ *  modalités, parking, encadrement, suivi & QR, sécurité, contact, actions.
  *
  *  Règle d'or : toute section dont TOUS les champs sont vides est masquée
  *  entièrement (titre compris). Jamais de « non communiqué ».
+ *
+ *  PAGE VIVANTE : le club garde son lien ; à chaque ouverture la page se
+ *  reconstruit avec les données du moment. Ce qui n'existe pas encore au moment
+ *  de l'envoi (planning, poules…) apparaîtra tout seul, sans rien renvoyer.
  *
  *  L'export PDF passe par l'impression du navigateur (CSS print dans
  *  css/dossier.css) — aucune librairie PDF. Le QR code est généré en local
@@ -16,10 +27,10 @@
  * ============================================================================
  */
 
-/* Les libellés et descriptions des formats d'après-midi (DOSSIER_FORMATS,
-   DOSSIER_FORMATS_DESC, cleFormatApresMidi) ainsi que les résumés sportifs
-   (resumeMiTemps, resumeEffectif, resumeReglement, resumeApresMidi, tempsDeJeuDe)
-   sont désormais dans commun-dossier.js (partagés avec invitation.js). */
+/* Les blocs de page communs aux deux documents (heroDocument, friseJournee,
+   cartesCategories, piedDocument), les résumés sportifs (resumeMiTemps,
+   resumeEffectif, resumeReglement, tempsDeJeuDe…) et les libellés de formats
+   (DOSSIER_FORMATS…) vivent dans commun-dossier.js / commun.js. */
 
 // Le déclencheur d'impression [#bouton-imprimer] et revelerOutilsAdmin() sont désormais
 // dans commun-dossier.js (partagés avec invitation-club.html).
@@ -102,12 +113,12 @@ function accueilPersonnalise(g, club) {
     + '. Voici les informations détaillées de cette journée.</p>';
 }
 
-/* Les petits helpers de mise en forme (txt, dateLongueFr, tronquer, heurePlusMinutes,
+/* Les petits helpers de mise en forme (txt, dateLongueFr, heurePlusMinutes,
    heureFinCommuniquee, telephoneLisible, jsonSur, urlAffiche, ligne, section, listeOuVide,
    catPresente…) sont désormais dans commun-dossier.js (partagés avec invitation/reponse). */
 
 /* --------------------------------------------------------------------------
-   LOGIQUES DE RÉSUMÉ (terrains, cadre sportif, sécurité)
+   LOGIQUES DE RÉSUMÉ (terrains, sécurité)
    -------------------------------------------------------------------------- */
 
 /**
@@ -263,42 +274,44 @@ function construireDossier(g, categories, club) {
   // section vide. Sans club / sans sélection : `catsFormat` = toutes les catégories.
   const engagees = categoriesEngageesListe(club);
   let catsFormat = cats;
+  let filtreApplique = false;
   if (engagees.length) {
     const filtre = cats.filter(function (c) {
       return engagees.indexOf(txt(c.categorie).toUpperCase()) !== -1;
     });
-    if (filtre.length) catsFormat = filtre;
+    if (filtre.length) { catsFormat = filtre; filtreApplique = true; }
   }
 
   let html = '';
 
-  // 1) EN-TÊTE : affiche, nom, date, horodatage de génération.
-  const nom = txt(g.tournoi_nom) || 'Tournoi Génération R92';
-  const genereLe = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-    + ' à ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  html += '<header class="d-entete">' +
-    (txt(g.tournoi_affiche_id)
-      ? '<img class="d-affiche" src="' + echapper(urlAffiche(g.tournoi_affiche_id, 800)) + '" alt="Affiche — ' + echapper(nom) + '">'
-      : '') +
-    '<div class="d-entete-textes">' +
-      '<p class="d-surtitre">Dossier club — École de Rugby du Racing Club de France</p>' +
-      '<h1>' + echapper(nom) + '</h1>' +
-      (txt(g.tournoi_date) ? '<p class="d-date">' + echapper(dateLongueFr(g.tournoi_date)) + '</p>' : '') +
-      '<p class="d-genere">Généré le ' + echapper(genereLe) + '</p>' +
-    '</div>' +
-  '<img class="d-entete-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
-  '</header>';
+  // 1) EN-TÊTE VITRINE : EXACTEMENT le même bloc que l'invitation (heroDocument) — blason
+  //    centré, affiche en héros, descriptif complet. Le club retrouve le document qu'il a
+  //    reçu à l'invitation, avec la suite de l'histoire ; c'est le même tournoi, la même
+  //    voix. (Le descriptif n'est plus tronqué à 400 caractères : plus rien ne le justifie.)
+  html += heroDocument(g, {
+    surtitre: 'École de Rugby du Racing Club de France<br>votre dossier pour la journée'
+  });
 
-  // 1 bis) ACCUEIL PERSONNALISÉ (Phase 2) : inséré AVANT la Présentation, seulement si le
-  //        club est connu (paramètre ?club= présent et trouvé). Sinon rien (mode générique).
+  // 1 bis) ACCUEIL PERSONNALISÉ (Phase 2) : seulement si le club est connu (paramètre
+  //        ?club= présent et jeton valide). Sinon rien (mode générique).
   html += accueilPersonnalise(g, club);
 
-  // 2) PRÉSENTATION (2-3 phrases, tronquée à 400 caractères).
-  if (txt(g.tournoi_description)) {
-    html += '<p class="d-presentation">' + echapper(tronquer(g.tournoi_description, 400)) + '</p>';
-  }
+  // 2) LA JOURNÉE EN UN COUP D'ŒIL : la frise horaire de l'invitation, suivie de la note
+  //    « horaires indicatifs » propre au dossier (le planning détaillé fait foi le jour J).
+  //    La note ne s'affiche JAMAIS seule : sans heures, pas de section.
+  const frise = friseJournee(g, catsFormat);
+  html += section('La journée en un coup d\'œil', frise && (frise +
+    '<p class="d-note">Après le dernier match : retour aux vestiaires puis cérémonie de remise ' +
+    'des trophées — l\'événement se termine à l\'issue de la remise. Horaires indicatifs — ' +
+    'le planning détaillé fera foi le jour du tournoi.</p>'), 'inv-journee');
 
-  // 3) INFOS PRATIQUES : lieu + adresse, puis logistique si renseignée dans Config
+  // 3) VOS CATÉGORIES : une carte par catégorie (mêmes cartes que l'invitation), limitées
+  //    aux catégories ENGAGÉES par le club quand on les connaît — le tableau d'avant
+  //    demandait au club de relire des colonnes qui ne le concernaient pas.
+  html += section(filtreApplique ? 'Vos catégories engagées' : 'Les catégories du tournoi',
+    cartesCategories(catsFormat), 'inv-categories');
+
+  // 4) INFOS PRATIQUES : lieu + adresse, puis logistique si renseignée dans Config
   //    (paramètres optionnels de la Zone A : logistique_parking / _buvette / _vestiaires).
   html += section('Infos pratiques', listeOuVide([
     ligne('Lieu', echapper(txt(g.tournoi_lieu))),
@@ -308,29 +321,8 @@ function construireDossier(g, categories, club) {
     ligne('Vestiaires', echapper(txt(g.logistique_vestiaires)))
   ]));
 
-  // 4) PROGRAMME DE LA JOURNÉE (+ mention « horaires indicatifs »).
-  const pause = txt(g.pause_dejeuner_debut)
-    ? echapper(txt(g.pause_dejeuner_debut)) + (txt(g.pause_dejeuner_duree_min) ? ' (' + echapper(txt(g.pause_dejeuner_duree_min)) + ' min)' : '')
-    : '';
-  const lignesProgramme = listeOuVide([
-    ligne('Accueil des équipes (RDV)', echapper(txt(g.heure_rdv))),
-    ligne('Premier coup d\'envoi', echapper(txt(g.heure_debut))),
-    ligne('Pause déjeuner', pause),
-    ligne('Fin de l\'événement', echapper(heureFinCommuniquee(g)))
-  ]);
-  html += section('Programme de la journée',
-    lignesProgramme && (lignesProgramme +
-      '<p class="d-note">Après le dernier match : retour aux vestiaires puis cérémonie de remise des trophées — '
-      + 'l\'événement se termine à l\'issue de la remise. '
-      + 'Horaires indicatifs — le planning détaillé fera foi le jour du tournoi.</p>'));
-
-  // 5) FORMAT SPORTIF : tableau si plusieurs catégories, puces si une seule.
-  //    Filtré sur les catégories ENGAGÉES du club en Phase 2 (catsFormat) — une seule
-  //    catégorie engagée bascule automatiquement en affichage puces (cf. cadreSportif).
-  html += section('Format sportif', cadreSportif(catsFormat));
-
-  // 5 bis) MODALITÉS D'INSCRIPTION (dossier d'INVITATION) : date limite de confirmation,
-  //        tarif d'engagement (montant + modalités) SEULEMENT si un tarif est demandé.
+  // 5) MODALITÉS D'INSCRIPTION : date limite de confirmation,
+  //    tarif d'engagement (montant + modalités) SEULEMENT si un tarif est demandé.
   const tarifOui = String(txt(g.tarif_engagement_oui)).toLowerCase() === 'oui';
   html += section('Modalités d\'inscription', listeOuVide([
     ligne('Confirmation attendue avant le',
@@ -339,7 +331,7 @@ function construireDossier(g, categories, club) {
     ligne('Modalités de paiement', tarifOui ? echapper(txt(g.tarif_engagement_modalites)) : '')
   ]));
 
-  // 5 ter) PARKING & ACCÈS : texte + photo (plan du parking) en pleine largeur.
+  // 6) PARKING & ACCÈS : texte + photo (plan du parking) en pleine largeur.
   html += section('Parking & accès',
     (txt(g.parking_texte) ? '<p class="d-parking-texte">' + echapper(txt(g.parking_texte)) + '</p>' : '') +
     (txt(g.parking_photo_id)
@@ -347,7 +339,7 @@ function construireDossier(g, categories, club) {
         'alt="Plan du parking et des accès">'
       : ''));
 
-  // 5 quater) ENCADREMENT & ASSURANCE : ratio, diplômes, attestation si requise.
+  // 7) ENCADREMENT & ASSURANCE : ratio, diplômes, attestation si requise.
   const attestation = String(txt(g.assurance_attestation_requise)).toLowerCase() === 'oui';
   html += section('Encadrement & assurance', listeOuVide([
     ligne('Encadrement', echapper(txt(g.encadrement_ratio))),
@@ -358,7 +350,7 @@ function construireDossier(g, categories, club) {
     ligne('Feuille de match', 'La feuille de match dématérialisée des Écoles de Rugby (FDM EDR) est utilisée pour l\'ensemble des rencontres du tournoi. Elle remplace la composition d\'équipe, la feuille de régulation et la feuille de score papier.')
   ]));
 
-  // 6) SUIVI & ORGANISATION : lien live + QR, table de marque, résumé des terrains.
+  // 8) SUIVI & ORGANISATION : lien live + QR, table de marque, résumé des terrains.
   const urlLive = urlSuiviPublic(g);
   const terrains = resumeTerrains(g, cats);
   html += section('Suivi des scores & organisation',
@@ -371,7 +363,7 @@ function construireDossier(g, categories, club) {
       '<div class="d-qr" id="d-qr" data-url="' + echapper(urlLive) + '"><span class="d-qr-legende">Scores en direct</span></div>' +
     '</div>');
 
-  // 7) SÉCURITÉ : poste de secours (si coché) + référent sécurité résolu.
+  // 9) SÉCURITÉ : poste de secours (si coché) + référent sécurité résolu.
   const secours = String(txt(g.securite_secours_oui)).toLowerCase() === 'oui';
   const refSecu = referentSecurite(g);
   const contactSecu = [refSecu.nom ? echapper(refSecu.nom) : '', refSecu.tel ? echapper(telephoneLisible(refSecu.tel)) : '']
@@ -383,7 +375,7 @@ function construireDossier(g, categories, club) {
     ligne('Référent sécurité', contactSecu)
   ]));
 
-  // 8) BLOC CONTACT : référent tournoi.
+  // 10) BLOC CONTACT : référent tournoi.
   if (txt(g.referent_nom) || txt(g.referent_tel)) {
     html += '<section class="d-section d-contact">' +
       '<h2>Votre contact</h2>' +
@@ -396,123 +388,23 @@ function construireDossier(g, categories, club) {
       '</p></section>';
   }
 
-  // 9) BANDEAU D'ACTIONS : agenda .ics, itinéraires, liens de l'association.
+  // 11) BANDEAU D'ACTIONS : agenda .ics, itinéraires, liens de l'association.
   html += bandeauActions(g);
 
-  // 10) PIED DE PAGE : logo + mention discrète (document identifiable même découpé).
-  html += '<footer class="d-pied">' +
-    '<img class="d-pied-logo" src="img/blason-racing92.svg" alt="" onerror="this.style.display=\'none\'">' +
-    '<span>École de Rugby du Racing Club de France</span>' +
-  '</footer>';
+  // 12) DATE DE GÉNÉRATION : utile sur le PAPIER (un dossier imprimé fige la version du jour),
+  //     avec le rappel que le lien personnel, lui, montre toujours l'état à jour.
+  const genereLe = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    + ' à ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  html += '<p class="d-genere">Document généré le ' + echapper(genereLe) +
+    ' — votre lien personnel affiche toujours la version à jour.</p>';
+
+  // 13) PIED DE PAGE : le même que l'invitation, SANS ses liens (le bandeau d'actions
+  //     ci-dessus porte déjà le site et l'Instagram — pas deux fois à 3 cm d'écart).
+  html += piedDocument(g, false);
 
   return html;
 }
 
-
-/**
- * Cadre sportif :
- *  - 1 catégorie active  → puces simples (pas de tableau pour une seule ligne) ;
- *  - plusieurs           → tableau compact, une ligne par catégorie, colonnes
- *    entièrement vides retirées (mêmes règles que les sections).
- * Le matin est toujours joué en poules (round-robin) — libellé fixe.
- */
-function cadreSportif(cats) {
-  if (!cats.length) return '';
-  const tries = cats.slice().sort(function (a, b) { return comparerCategorie(a.categorie, b.categorie); });
-
-  if (tries.length === 1) {
-    const c = tries[0];
-    const liste = listeOuVide([
-      ligne('Catégorie', echapper(txt(c.categorie))),
-      ligne('Matin', 'Poules (round-robin)'),
-      ligne('Après-midi', echapper(resumeApresMidi(c))),
-      ligne('Mi-temps', echapper(resumeMiTemps(c))),
-      ligne('Effectif par équipe', echapper(resumeEffectif(c))),
-      ligne('Règlement', resumeReglement(c)),
-      ligne('Arbitrage', echapper(txt(c.arbitrage_organisation)))
-    ]);
-    return liste + legendeFormatSportif(tries);
-  }
-
-  // Colonnes candidates : celles dont AU MOINS une catégorie a une valeur sont gardées.
-  // `courte: true` = valeurs brèves (« Poules », « 2 × 10 min ») affichées SANS retour à la
-  // ligne (classe .col-courte) — sinon la coupure de secours du tableau peut casser un mot
-  // (« Poule / s ») quand les colonnes se serrent.
-  const colonnes = [
-    { titre: 'Catégorie',  courte: true, v: function (c) { return echapper(txt(c.categorie)); } },
-    { titre: 'Matin',      courte: true, v: function ()  { return 'Poules'; } },
-    { titre: 'Après-midi', v: function (c) { return echapper(resumeApresMidi(c)); } },
-    { titre: 'Mi-temps',   courte: true, v: function (c) { return echapper(resumeMiTemps(c)); } },
-    { titre: 'Effectif',   courte: true, v: function (c) { return echapper(resumeEffectif(c)); } },
-    { titre: 'Règlement',  v: function (c) { return resumeReglement(c); } },
-    { titre: 'Arbitrage',  v: function (c) { return echapper(txt(c.arbitrage_organisation)); } }
-  ].filter(function (col) {
-    return tries.some(function (c) { return col.v(c) !== ''; });
-  });
-
-  let html = '<table class="d-table"><thead><tr>';
-  colonnes.forEach(function (col) {
-    html += '<th' + (col.courte ? ' class="col-courte"' : '') + '>' + col.titre + '</th>';
-  });
-  html += '</tr></thead><tbody>';
-  tries.forEach(function (c) {
-    html += '<tr>';
-    colonnes.forEach(function (col) {
-      html += '<td' + (col.courte ? ' class="col-courte"' : '') + '>' + (col.v(c) || '—') + '</td>';
-    });
-    html += '</tr>';
-  });
-  html += '</tbody></table>';
-  return html + legendeFormatSportif(tries);
-}
-
-/**
- * Légende SOUS le tableau du cadre sportif : le dossier ne se contente pas de
- * nommer le format, il l'explique. Deux lignes :
- *  - « Déroulé » : le matin (poules round-robin) + la description de CHAQUE format
- *    d'après-midi présent (dédupliqué : une seule description par format utilisé) ;
- *  - « Temps de jeu » : par catégorie, le temps de jeu par match (mi-temps × durée)
- *    et la récupération entre deux matchs. Complète la colonne « Mi-temps » du tableau
- *    (qui donne le découpage) avec le total joué et le repos — les infos que réclament
- *    les clubs pour organiser leurs rotations.
- * Chaque bout d'info manquant est simplement omis (jamais de « non communiqué »).
- */
-function legendeFormatSportif(cats) {
-  const parts = [];
-
-  // 1) Déroulé + description des formats présents (dédupliqués, dans l'ordre des catégories).
-  const formatsPresents = [];
-  cats.forEach(function (c) {
-    const cle = cleFormatApresMidi(c);
-    if (formatsPresents.indexOf(cle) === -1) formatsPresents.push(cle);
-  });
-  let deroule = '<strong>Déroulé</strong> — <em>Matin :</em> poules en round-robin '
-    + '(chaque équipe rencontre toutes celles de sa poule).';
-  formatsPresents.forEach(function (cle) {
-    deroule += ' <em>Après-midi, ' + echapper(DOSSIER_FORMATS[cle]) + ' :</em> '
-      + echapper(DOSSIER_FORMATS_DESC[cle]);
-  });
-  parts.push('<p class="d-legende-ligne">' + deroule + '</p>');
-
-  // 2) Temps de jeu par catégorie : temps de jeu par match + récupération entre matchs.
-  const lignesTemps = [];
-  cats.forEach(function (c) {
-    const seg = [];
-    const jeu = tempsDeJeuDe(c);
-    if (jeu) seg.push(jeu + ' min de jeu par match');
-    const recup = txt(c.recup_entre_matchs_min);
-    if (recup) seg.push('récupération ' + echapper(recup) + ' min entre deux matchs');
-    if (seg.length) {
-      lignesTemps.push('<strong>' + echapper(txt(c.categorie)) + '</strong> : ' + seg.join(', '));
-    }
-  });
-  if (lignesTemps.length) {
-    parts.push('<p class="d-legende-ligne"><strong>Temps de jeu</strong> — '
-      + lignesTemps.join(' · ') + '.</p>');
-  }
-
-  return '<div class="d-legende">' + parts.join('') + '</div>';
-}
 
 /** Bandeau d'actions : chaque bouton n'apparaît que si son lien est constructible. */
 function bandeauActions(g) {

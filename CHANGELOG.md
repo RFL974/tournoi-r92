@@ -5,6 +5,22 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Le dossier du club reprend l'agencement de l'invitation (lot 1) — 2026-08-03
+Le **dossier Phase 2** (envoyé au club après son acceptation) avait une génération de retard sur
+l'invitation refondue : en-tête en vignette, descriptif **tronqué à 400 caractères**, programme en
+liste, cadre sportif en tableau. Or c'est le **même document à un autre moment de la relation** :
+il doit se lire pareil. Il reprend donc, dans le même ordre, les blocs de l'invitation — blason
+centré, **affiche en héros**, **descriptif complet**, **frise horaire** de la journée, **une carte
+par catégorie** (forme de jeu FFR, temps de jeu, récupération, effectif, arbitrage, règlement,
+format d'après-midi expliqué) **limitée aux catégories engagées par le club** — puis ce qui
+n'existe qu'ici : infos pratiques, modalités, parking, encadrement, suivi & QR, sécurité, contact.
+Ces blocs sont désormais écrits **une seule fois** dans `commun-dossier.js` (`heroDocument`,
+`friseJournee`, `cartesCategories`, `piedDocument`) et appelés par les deux pages : plus de
+divergence possible entre ce qu'on promet à l'invitation et ce qu'on redit au dossier. Le tableau
+« Format sportif », son en-tête d'origine et le helper `tronquer` — sans appelant — sont retirés,
+CSS comprise. Le dossier rappelle enfin qu'il est **vivant** : « votre lien personnel affiche
+toujours la version à jour ». **100 % front**, aucun redéploiement backend.
+
 ### Correctif : « pas de place pour la table de marque » alors qu'il en reste dans l'en-but — 2026-08-03
 La répartition annonçait parfois **« Pas de place pour la table de marque »** sur un grand terrain
 où, dans la réalité, il restait de la place. Cause : la longueur d'un grand terrain est mesurée
