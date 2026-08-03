@@ -1863,6 +1863,119 @@ function effectifsEquipesManuelles(equipes) {
 }
 
 /**
+ * Rang (0-indexé) de l'entrée d'effectifs que porte une équipe d'un club : « {club}-2 » → 1,
+ * « {club}-1 » → 0, et « {club} » (nom nu, antérieur à la numérotation homogène) → 0 aussi.
+ * `null` si le nom ne suit pas la convention. Sert à retirer LA BONNE entrée déclarée quand une
+ * équipe disparaît (plutôt que « la dernière » par défaut). PUR.
+ */
+function indexEquipeDuClub(nomEquipe, nomClub) {
+  var ne = String(nomEquipe == null ? '' : nomEquipe).trim();
+  var nc = String(nomClub == null ? '' : nomClub).trim();
+  if (!ne || !nc) return null;
+  if (ne === nc) return 0;
+  if (ne.indexOf(nc + '-') !== 0) return null;
+  var n = parseInt(ne.substring(nc.length + 1), 10);
+  return (isFinite(n) && n >= 1) ? n - 1 : null;
+}
+
+/**
+ * Effectifs d'un club invité AJUSTÉS aux équipes réellement présentes dans l'onglet Équipes
+ * (session 28). Un club déclare ses joueurs et ses éducateurs SUR SA FICHE, en répondant
+ * (`nb_joueurs_total` / `detail_effectifs`) — jamais sur ses équipes. Retirer une de ses équipes
+ * (poubelle de l'écran Équipes, ou engagement réduit sur sa carte) ne touchait donc à rien :
+ * « Nombre d'équipes » baissait, « Nombre de participants » restait au chiffre déclaré, et la
+ * demande d'autorisation partait SURESTIMÉE sans le dire.
+ *
+ * Règles — jamais estimé (§4.2), prudent par défaut :
+ *  1. sélection JAMAIS enregistrée (`selection_enregistree` vide) ⇒ AUCUNE déduction : les
+ *     équipes du club n'ont pas encore été créées, leur absence ne prouve rien ;
+ *  2. réponse SANS détail par équipe (ancien chemin : un total global) ⇒ AUCUNE déduction non
+ *     plus — partager un total au prorata serait une estimation — mais l'écart est SIGNALÉ
+ *     (`nonDeductible`), pour que le chiffre trop haut ne parte pas en silence ;
+ *  3. sinon, CATÉGORIE PAR CATÉGORIE : la réponse porte autant d'entrées que d'équipes engagées.
+ *     S'il en reste moins dans l'onglet Équipes, on retire EXACTEMENT l'écart — jamais plus, et
+ *     jamais d'ajout si l'admin en a créé davantage. Laquelle retirer ? celle que le nom désigne
+ *     (« {club}-2 » porte l'entrée n° 2) et, à défaut, les DERNIÈRES : c'est la règle même de la
+ *     synchronisation, qui « garde les N premières équipes ».
+ * Le total déclaré fait foi : on lui SOUSTRAIT les entrées retirées (jamais de re-somme), donc
+ * sans retrait le chiffre est rigoureusement celui d'avant. PUR (aucun classeur).
+ *
+ * @param {Object} club               ligne ClubsInvites
+ * @param {Array}  equipes            toutes les équipes de l'onglet Équipes
+ * @param {Array<string>} autresClubs noms des AUTRES clubs invités (anti-collision « {club}-N »)
+ * @return {{joueurs:?number, educateurs:?number, retraits:Array, nonDeductible:?Object}}
+ */
+function effectifsClubAjustes(club, equipes, autresClubs) {
+  var nomClub = String((club && club.club_nom) || '').trim();
+  var res = { joueurs: effectifDeclare(club && club.nb_joueurs_total),
+              educateurs: effectifDeclare(club && club.nb_educateurs_total),
+              retraits: [], nonDeductible: null };
+  if (!nomClub) return res;
+  // 1. Sélection jamais enregistrée : la synchro n'a pas encore créé les équipes du club.
+  if (String((club && club.selection_enregistree) || '').trim() === '') return res;
+
+  // Équipes du club effectivement présentes, groupées par catégorie.
+  var presentes = {};
+  (equipes || []).forEach(function (e) {
+    if (!equipeRattacheeAuClub(e && e.nom_equipe, nomClub, autresClubs)) return;
+    var cat = String((e && e.categorie) || '').trim();
+    (presentes[cat] = presentes[cat] || []).push(String(e.nom_equipe).trim());
+  });
+
+  var detail = null;
+  try { detail = JSON.parse(String((club && club.detail_effectifs) || '')); } catch (err) { detail = null; }
+  if (!detail || typeof detail !== 'object') {
+    // 2. Pas de détail par équipe : on ne sait pas ce que pesait l'équipe partie. On le DIT.
+    var nbMap = {};
+    try { nbMap = JSON.parse(String((club && club.nb_equipes_par_categorie) || '{}')) || {}; }
+    catch (err2) { nbMap = {}; }
+    var attendues = 0, restantes = 0;
+    for (var cat in nbMap) {
+      var n = parseInt(nbMap[cat], 10);
+      if (!isFinite(n) || n < 0) continue;
+      attendues += n;
+      restantes += (presentes[cat] || []).length;
+    }
+    if (attendues > 0 && restantes < attendues) {
+      res.nonDeductible = { club: nomClub, attendues: attendues, restantes: restantes };
+    }
+    return res;
+  }
+
+  // 3. Détail par équipe : retrait de l'écart, catégorie par catégorie.
+  var retireJ = 0, retireE = 0;
+  Object.keys(detail).forEach(function (categorie) {
+    var entrees = detail[categorie];
+    if (!entrees || !entrees.length) return;
+    var noms = presentes[categorie] || [];
+    var manquantes = entrees.length - noms.length;
+    if (manquantes <= 0) return;                    // rien de retiré (ou davantage : jamais d'ajout)
+    var occupees = {};
+    noms.forEach(function (nom) {
+      var i = indexEquipeDuClub(nom, nomClub);
+      if (i != null && i < entrees.length) occupees[i] = true;
+    });
+    var joueurs = 0, educateurs = 0, retirees = 0;
+    for (var i = entrees.length - 1; i >= 0 && retirees < manquantes; i--) {
+      if (occupees[i]) continue;                    // cette entrée a encore son équipe
+      var entree = entrees[i] || {};
+      var nj = effectifDeclare(entree.j);  if (nj != null) joueurs += nj;
+      var ne = effectifDeclare(entree.e);  if (ne != null) educateurs += ne;
+      retirees++;
+    }
+    if (!retirees) return;
+    retireJ += joueurs;
+    retireE += educateurs;
+    res.retraits.push({ club: nomClub, categorie: categorie, nb: retirees,
+                        joueurs: joueurs, educateurs: educateurs });
+  });
+
+  if (res.joueurs != null)    res.joueurs    = Math.max(0, res.joueurs - retireJ);
+  if (res.educateurs != null) res.educateurs = Math.max(0, res.educateurs - retireE);
+  return res;
+}
+
+/**
  * Nombre d'ÉDUCATEURS (B.3) — cascade ADDITIVE (session 26). Deux sources qui s'AJOUTENT, parce
  * qu'elles couvrent des personnes différentes et qu'aucune ne connaît l'autre :
  *   1. les éducateurs DÉCLARÉS par les clubs acceptés (réponse à l'invitation, session 23) ;
@@ -2202,6 +2315,34 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
       etat: 'avert', origine: 'contrôle de cohérence' });
   }
 
+  // Équipes de clubs RETIRÉES après leur réponse (session 28) : leurs effectifs sont déduits du
+  // total ci-dessus. Un chiffre corrigé doit rester VÉRIFIABLE — on montre donc le détail du
+  // retrait plutôt que de laisser le total baisser sans explication.
+  var retraits = participants.retraitsClubs || [];
+  if (retraits.length) {
+    var nbRetirees = 0, joueursRetires = 0;
+    retraits.forEach(function (r) { nbRetirees += r.nb; joueursRetires += r.joueurs; });
+    if (champParticipants.etat === 'calcule' && joueursRetires > 0) {
+      champParticipants.origine += ' − ' + joueursRetires + ' joueur(s) de ' +
+        nbRetirees + ' équipe(s) retirée(s)';
+    }
+    champsPart.push({ libelle: 'Effectifs des équipes retirées',
+      valeur: retraits.map(function (r) {
+        return r.club + ' — ' + r.nb + ' équipe(s) ' + r.categorie + ' : −' + r.joueurs + ' joueur(s)' +
+               (r.educateurs > 0 ? ', −' + r.educateurs + ' éducateur(s)' : '');
+      }).join(' ; '),
+      etat: 'calcule', origine: 'équipes retirées depuis la réponse du club' });
+  }
+  // Retrait CONSTATÉ mais non déductible : la réponse du club ne détaille pas ses effectifs équipe
+  // par équipe (ancienne réponse). On ne partage pas son total au prorata — ce serait estimer.
+  (participants.clubsNonDeductibles || []).forEach(function (nd) {
+    champsPart.push({ libelle: '⚠️ Retrait non déduit',
+      valeur: nd.club + ' a déclaré ' + nd.attendues + ' équipe(s), il n\'en reste que ' + nd.restantes +
+        '. Sa réponse ne détaille pas les effectifs équipe par équipe : le total ci-dessus reste celui ' +
+        'qu\'il a déclaré, donc SURESTIMÉ. Fais-lui renvoyer sa réponse pour le corriger.',
+      etat: 'avert', origine: 'contrôle de cohérence' });
+  });
+
   if (String(g.org_equipes_etrangeres || '').trim().toLowerCase() === 'oui') {
     champsPart.push(saisi('Liste des équipes étrangères (noms, prénoms, dates de naissance)', 'org_equipes_etrangeres_liste'));
     champsPart.push({ libelle: 'Rappel équipes étrangères', valeur: 'Joindre à la ligue : autorisation des fédérations étrangères, liste nominative, dates de naissance.',
@@ -2407,15 +2548,21 @@ function getDossierAutorisation(classeur) {
   // équipes 'auto', déjà couvertes par les totaux de leur club. Source 3 (clubs seulement) : clubs
   // distincts déduits des noms d'équipes via clubDe (convention « {club} » / « {club}-N »).
   // Rien nulle part ⇒ repli sur org_nb_participants (saisi) ; jamais estimé.
+  // Session 28 : les totaux d'un club sont AJUSTÉS aux équipes qui restent dans l'onglet Équipes
+  // (une équipe retirée emporte ses joueurs et ses éducateurs) — voir effectifsClubAjustes.
   var nbClubsInvites = 0, nbParticipants = 0, nbEducateurs = 0;
+  var retraitsClubs = [], clubsNonDeductibles = [];
+  var nomsClubs = clubs.map(function (c) { return String(c.club_nom || '').trim(); }).filter(Boolean);
   clubs.forEach(function (c) {
-    if (statutClubCanonique(c.statut) === 'Accepté') {
-      nbClubsInvites++;
-      var n = parseInt(c.nb_joueurs_total, 10);
-      if (isFinite(n)) nbParticipants += n;
-      var ed = parseInt(c.nb_educateurs_total, 10);
-      if (isFinite(ed)) nbEducateurs += ed;
-    }
+    if (statutClubCanonique(c.statut) !== 'Accepté') return;
+    nbClubsInvites++;
+    var nomExact = String(c.club_nom || '').trim();
+    var autres = nomsClubs.filter(function (n) { return !memeTexteSouple(n, nomExact); });
+    var aj = effectifsClubAjustes(c, equipes, autres);
+    if (aj.joueurs != null) nbParticipants += aj.joueurs;
+    if (aj.educateurs != null) nbEducateurs += aj.educateurs;
+    aj.retraits.forEach(function (r) { retraitsClubs.push(r); });
+    if (aj.nonDeductible) clubsNonDeductibles.push(aj.nonDeductible);
   });
   var effManuels = effectifsEquipesManuelles(equipes);
   if (effManuels.joueurs != null) nbParticipants += effManuels.joueurs;
@@ -2465,7 +2612,9 @@ function getDossierAutorisation(classeur) {
                     // Part venant des équipes saisies à la main (pour détailler l'origine).
                     nbJoueursEquipes: effManuels.joueurs, nbEducateursEquipes: effManuels.educateurs,
                     nbEquipesDeclarees: effManuels.nbEquipesDeclarees,
-                    nbEquipesManuelles: effManuels.nbEquipesManuelles },
+                    nbEquipesManuelles: effManuels.nbEquipesManuelles,
+                    // Équipes de clubs retirées après leur réponse (effectifs déduits / à signaler).
+                    retraitsClubs: retraitsClubs, clubsNonDeductibles: clubsNonDeductibles },
     catsPresentes: catsPresentes,
     matchsParCategorie: mpc,
     terrains: terrains

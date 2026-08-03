@@ -327,6 +327,22 @@ function lancerTestsFFR() {
   testS27_declarationCompletePasDeSignalement(etat);
   testS27_sansEffectifsComportementHistorique(etat);
 
+  // Session 28 — une équipe retirée emporte ses effectifs (déduction, ou signalement).
+  testS28_indexDepuisLeNom(etat);
+  testS28_equipeRetireeDeduite(etat);
+  testS28_nomDesigneLentree(etat);
+  testS28_sansRetraitTotalIdentique(etat);
+  testS28_selectionNonEnregistreeJamaisDeduite(etat);
+  testS28_sansDetailSignaleJamaisDeduit(etat);
+  testS28_detailIllisiblePrudent(etat);
+  testS28_plusDequipesJamaisAjoute(etat);
+  testS28_toutesRetireesTombeAZero(etat);
+  testS28_collisionNomsClubs(etat);
+  testS28_retraitParCategorie(etat);
+  testS28_dossierParticipantsDeduits(etat);
+  testS28_dossierRetraitNonDeduitSignale(etat);
+  testS28_dossierSansRetraitInchange(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -3425,4 +3441,154 @@ function testS27_sansEffectifsComportementHistorique(etat) {
   var c = _autoChamp(d, 'Nombre de participants');
   _ffrAssert(etat, c && c.valeur === '240' && c.etat === 'saisi', 'S27 : sans effectifs → repli saisi inchangé');
   _ffrAssert(etat, !_autoChamp(d, 'Cohérence effectifs par équipe'), 'S27 : aucune équipe déclarée → pas de signalement');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SESSION 28 — une équipe retirée emporte ses effectifs                      */
+/*  Un club déclare ses joueurs SUR SA FICHE, pas sur ses équipes : retirer    */
+/*  une de ses équipes laissait « Nombre de participants » au chiffre déclaré, */
+/*  donc SURESTIMÉ. effectifsClubAjustes est PUR. Enjeu : déduire exactement   */
+/*  l'écart, sans jamais estimer — et le DIRE quand on ne peut pas déduire.    */
+/* -------------------------------------------------------------------------- */
+
+/** Fabrique une fiche de club invité pour les tests (réponse avec détail par équipe). */
+function _clubS28(nom, detail, totJ, totE, nbMap, marque) {
+  return { club_nom: nom, statut: 'Accepté',
+           detail_effectifs: detail == null ? '' : JSON.stringify(detail),
+           nb_joueurs_total: totJ == null ? '' : String(totJ),
+           nb_educateurs_total: totE == null ? '' : String(totE),
+           nb_equipes_par_categorie: nbMap == null ? '' : JSON.stringify(nbMap),
+           selection_enregistree: marque === undefined ? '2026-08-03' : marque };
+}
+
+/** Équipe 'auto' d'un club (celles que crée la synchronisation). */
+function _eqClub(nom, cat) {
+  return { id_equipe: nom, nom_equipe: nom, categorie: cat, poule: '', source: 'auto' };
+}
+
+/** Le rang de l'entrée déclarée se lit dans le nom : « -2 » → 2ᵉ, nom nu → 1re. */
+function testS28_indexDepuisLeNom(etat) {
+  _ffrAssert(etat, indexEquipeDuClub('MASSY-2', 'MASSY') === 1, 'S28 : « MASSY-2 » → entrée n° 2');
+  _ffrAssert(etat, indexEquipeDuClub('MASSY-1', 'MASSY') === 0, 'S28 : « MASSY-1 » → entrée n° 1');
+  _ffrAssert(etat, indexEquipeDuClub('MASSY', 'MASSY') === 0, 'S28 : nom nu (héritage) → entrée n° 1');
+  _ffrAssert(etat, indexEquipeDuClub('SURESNES', 'MASSY') === null, 'S28 : autre club → aucun rang');
+  _ffrAssert(etat, indexEquipeDuClub('MASSY-0', 'MASSY') === null, 'S28 : « -0 » n\'est pas un rang');
+}
+
+/** CŒUR DU SUJET : une équipe retirée emporte ses joueurs ET ses éducateurs. */
+function testS28_equipeRetireeDeduite(etat) {
+  var club = _clubS28('MASSY', { U8: [{ j: 8, e: 2 }, { j: 9, e: 2 }, { j: 10, e: 3 }] }, 27, 7, { U8: 3 });
+  var r = effectifsClubAjustes(club, [_eqClub('MASSY-1', 'U8'), _eqClub('MASSY-2', 'U8')], []);
+  _ffrAssert(etat, r.joueurs === 17 && r.educateurs === 4, 'S28 : 3ᵉ équipe retirée → 27−10 joueurs, 7−3 éducateurs');
+  _ffrAssert(etat, r.retraits.length === 1 && r.retraits[0].nb === 1 && r.retraits[0].categorie === 'U8',
+    'S28 : le retrait est tracé (1 équipe U8)');
+}
+
+/** Le NOM désigne l'entrée : « -2 » manquante retire la 2ᵉ entrée, pas la dernière. */
+function testS28_nomDesigneLentree(etat) {
+  var club = _clubS28('MASSY', { U8: [{ j: 8, e: 1 }, { j: 20, e: 5 }, { j: 10, e: 2 }] }, 38, 8, { U8: 3 });
+  var r = effectifsClubAjustes(club, [_eqClub('MASSY-1', 'U8'), _eqClub('MASSY-3', 'U8')], []);
+  _ffrAssert(etat, r.joueurs === 18 && r.educateurs === 3, 'S28 : c\'est bien l\'entrée n° 2 (20 joueurs) qui part');
+}
+
+/** Aucune équipe retirée ⇒ le total déclaré est rigoureusement conservé (pas de re-somme). */
+function testS28_sansRetraitTotalIdentique(etat) {
+  var club = _clubS28('MASSY', { U8: [{ j: 8, e: 2 }, { j: 9, e: 2 }] }, 17, 4, { U8: 2 });
+  var r = effectifsClubAjustes(club, [_eqClub('MASSY-1', 'U8'), _eqClub('MASSY-2', 'U8')], []);
+  _ffrAssert(etat, r.joueurs === 17 && r.educateurs === 4 && !r.retraits.length,
+    'S28 : rien retiré → totaux déclarés intacts');
+}
+
+/** PRUDENCE 1 : sélection jamais enregistrée ⇒ les équipes n'existent pas encore, on ne déduit rien. */
+function testS28_selectionNonEnregistreeJamaisDeduite(etat) {
+  var club = _clubS28('MASSY', { U8: [{ j: 8, e: 2 }, { j: 9, e: 2 }] }, 17, 4, { U8: 2 }, '');
+  var r = effectifsClubAjustes(club, [], []);
+  _ffrAssert(etat, r.joueurs === 17 && r.educateurs === 4 && !r.retraits.length,
+    'S28 : synchro pas faite → aucune déduction (leur absence ne prouve rien)');
+  _ffrAssert(etat, !r.nonDeductible, 'S28 : synchro pas faite → pas de signalement non plus');
+}
+
+/** PRUDENCE 2 : réponse sans détail par équipe ⇒ rien de déduit (jamais de prorata), mais SIGNALÉ. */
+function testS28_sansDetailSignaleJamaisDeduit(etat) {
+  var club = _clubS28('MASSY', null, 45, 6, { U8: 3 });
+  var r = effectifsClubAjustes(club, [_eqClub('MASSY-1', 'U8'), _eqClub('MASSY-2', 'U8')], []);
+  _ffrAssert(etat, r.joueurs === 45 && !r.retraits.length, 'S28 : sans détail → total déclaré conservé');
+  _ffrAssert(etat, r.nonDeductible && r.nonDeductible.attendues === 3 && r.nonDeductible.restantes === 2,
+    'S28 : sans détail → l\'écart est signalé (3 déclarées, 2 restantes)');
+}
+
+/** Détail illisible (JSON cassé) ⇒ chemin prudent, aucune exception. */
+function testS28_detailIllisiblePrudent(etat) {
+  var club = _clubS28('MASSY', null, 45, 6, { U8: 3 });
+  club.detail_effectifs = '{ceci n\'est pas du JSON';
+  var r = effectifsClubAjustes(club, [_eqClub('MASSY-1', 'U8')], []);
+  _ffrAssert(etat, r.joueurs === 45 && r.nonDeductible, 'S28 : JSON illisible → conservé + signalé, sans erreur');
+}
+
+/** Plus d'équipes que d'entrées déclarées (ajouts de l'admin) ⇒ jamais d'AJOUT d'effectifs. */
+function testS28_plusDequipesJamaisAjoute(etat) {
+  var club = _clubS28('MASSY', { U8: [{ j: 8, e: 2 }, { j: 9, e: 2 }] }, 17, 4, { U8: 2 });
+  var r = effectifsClubAjustes(club,
+    [_eqClub('MASSY-1', 'U8'), _eqClub('MASSY-2', 'U8'), _eqClub('MASSY-3', 'U8')], []);
+  _ffrAssert(etat, r.joueurs === 17 && !r.retraits.length, 'S28 : équipe en plus → total inchangé, jamais gonflé');
+}
+
+/** Toutes les équipes retirées (catégorie désengagée) ⇒ le club ne pèse plus rien. */
+function testS28_toutesRetireesTombeAZero(etat) {
+  var club = _clubS28('MASSY', { U8: [{ j: 8, e: 2 }, { j: 9, e: 2 }] }, 17, 4, { U8: 2 });
+  var r = effectifsClubAjustes(club, [], []);
+  _ffrAssert(etat, r.joueurs === 0 && r.educateurs === 0, 'S28 : plus aucune équipe → 0 joueur, 0 éducateur');
+}
+
+/** ANTI-COLLISION : l'équipe « PUC-2 » appartient au club « PUC-2 », jamais à « PUC ». */
+function testS28_collisionNomsClubs(etat) {
+  var club = _clubS28('PUC', { U8: [{ j: 10, e: 2 }, { j: 12, e: 2 }] }, 22, 4, { U8: 2 });
+  var r = effectifsClubAjustes(club, [_eqClub('PUC-1', 'U8'), _eqClub('PUC-2', 'U8')], ['PUC-2']);
+  _ffrAssert(etat, r.joueurs === 10 && r.educateurs === 2,
+    'S28 : « PUC-2 » rendue au club homonyme → PUC perd bien sa 2ᵉ entrée');
+}
+
+/** Une catégorie entièrement conservée n'est pas touchée par le retrait d'une autre. */
+function testS28_retraitParCategorie(etat) {
+  var club = _clubS28('MASSY', { U8: [{ j: 8, e: 2 }, { j: 9, e: 2 }], U10: [{ j: 12, e: 3 }] },
+    29, 7, { U8: 2, U10: 1 });
+  var r = effectifsClubAjustes(club, [_eqClub('MASSY-1', 'U8'), _eqClub('MASSY-2', 'U8')], []);
+  _ffrAssert(etat, r.joueurs === 17 && r.educateurs === 4, 'S28 : seule la catégorie U10 est déduite');
+  _ffrAssert(etat, r.retraits.length === 1 && r.retraits[0].categorie === 'U10', 'S28 : le retrait cite la bonne catégorie');
+}
+
+/** A.4 : le total participants baisse ET l'origine dit de combien (chiffre vérifiable). */
+function testS28_dossierParticipantsDeduits(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbParticipants: 17, nbEquipes: 2, nbClubsInvites: 1,
+    retraitsClubs: [{ club: 'MASSY', categorie: 'U8', nb: 1, joueurs: 10, educateurs: 3 }] } },
+    _cfgAutorisation([], {}), { formes: [] });
+  var c = _autoChamp(d, 'Nombre de participants');
+  _ffrAssert(etat, c && c.valeur === '17' && /− 10 joueur\(s\) de 1 équipe\(s\) retirée\(s\)/.test(c.origine),
+    'S28 : l\'origine du total dit ce qui a été retiré');
+  var det = _autoChamp(d, 'Effectifs des équipes retirées');
+  _ffrAssert(etat, det && det.etat === 'calcule' && /MASSY/.test(det.valeur) && /−10 joueur/.test(det.valeur),
+    'S28 : le détail du retrait est affiché (MASSY, −10 joueurs)');
+  _ffrAssert(etat, /−3 éducateur/.test(det.valeur), 'S28 : le détail cite aussi les éducateurs');
+}
+
+/** Retrait CONSTATÉ mais non déductible ⇒ avertissement orange, total laissé tel quel. */
+function testS28_dossierRetraitNonDeduitSignale(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbParticipants: 45, nbEquipes: 2, nbClubsInvites: 1,
+    clubsNonDeductibles: [{ club: 'MASSY', attendues: 3, restantes: 2 }] } },
+    _cfgAutorisation([], {}), { formes: [] });
+  var a = _autoChamp(d, 'Retrait non déduit');
+  _ffrAssert(etat, a && a.etat === 'avert' && /MASSY/.test(a.valeur) && /SURESTIMÉ/.test(a.valeur),
+    'S28 : retrait non déductible → signalé comme surestimation');
+  var c = _autoChamp(d, 'Nombre de participants');
+  _ffrAssert(etat, c && c.valeur === '45', 'S28 : le total n\'est pas corrigé au jugé');
+}
+
+/** Aucun retrait ⇒ la feuille est exactement celle d'avant (aucun champ en plus). */
+function testS28_dossierSansRetraitInchange(etat) {
+  var d = assemblerDossierAutorisation({ participants: { nbParticipants: 45, nbEquipes: 3, nbClubsInvites: 2 } },
+    _cfgAutorisation([], {}), { formes: [] });
+  _ffrAssert(etat, !_autoChamp(d, 'Effectifs des équipes retirées'), 'S28 : sans retrait → pas de champ de détail');
+  _ffrAssert(etat, !_autoChamp(d, 'Retrait non déduit'), 'S28 : sans retrait → pas d\'avertissement');
+  var c = _autoChamp(d, 'Nombre de participants');
+  _ffrAssert(etat, c && !/retirée/.test(c.origine), 'S28 : sans retrait → origine inchangée');
 }

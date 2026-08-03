@@ -5,6 +5,31 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Une équipe retirée emporte ses effectifs — 2026-08-03
+Un club déclare ses joueurs et ses éducateurs **sur sa fiche**, en répondant à l'invitation —
+jamais sur ses équipes. Conséquence invisible : retirer une de ses équipes (poubelle de l'écran
+**Équipes**, ou engagement réduit sur sa carte) faisait baisser le **nombre d'équipes** de la
+demande d'autorisation, mais laissait le **nombre de participants** au chiffre déclaré. Le dossier
+partait à la ligue **surestimé, sans le dire**.
+
+Les totaux d'un club sont désormais **ajustés aux équipes qui restent**, catégorie par catégorie :
+la réponse porte une entrée d'effectif **par équipe**, il en manque une dans l'onglet Équipes, on
+retire **exactement** celle-là — celle que le nom désigne (« MASSY-2 » porte la 2ᵉ entrée), et à
+défaut la dernière, ce qui est déjà la règle de la synchronisation. Jamais plus que l'écart, et
+jamais d'ajout si l'admin a créé des équipes en plus. Le total déclaré reste la référence : on lui
+**soustrait** les entrées retirées, donc sans retrait le chiffre est rigoureusement celui d'avant.
+
+Deux garde-fous, dans l'esprit du reste de la feuille de report — **jamais estimé** :
+- **sélection pas encore enregistrée** ⇒ aucune déduction : les équipes du club n'ont pas encore
+  été créées, leur absence ne prouve rien ;
+- **réponse sans le détail par équipe** (ancien format : un total global) ⇒ aucune déduction non
+  plus — partager un total au prorata serait une estimation — mais l'écart est **signalé en
+  orange** (« MASSY a déclaré 3 équipe(s), il n'en reste que 2… le total est surestimé »).
+
+Et parce qu'un chiffre corrigé doit rester **vérifiable**, la feuille affiche le détail du
+retrait (« MASSY — 1 équipe(s) U8 : −10 joueur(s), −3 éducateur(s) ») et l'origine du total le
+mentionne. Rien à créer dans le Sheet. Tests **573/573**. ⚠️ **backend à redéployer.**
+
 ### L'email du dossier EST le dossier — 2026-08-03
 Même reproche que pour l'invitation avant sa refonte : le club recevait un email qui ne servait
 qu'à héberger un bouton **« Voir le dossier complet »**. Un clic de trop, une raison de plus de ne
