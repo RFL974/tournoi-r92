@@ -607,12 +607,14 @@ body {
      Constaté à l'export : « Rappel — vos catégories engagées » terminait la page 2, ses cartes
      commençaient page 3. Idem pour la phrase d'introduction des cartes. */
   .d-section h2, .inv-cats-intro { break-after: avoid; }
-  /* La mention « document généré le… » reste collée au pied de page — et le duo est COMPACTÉ :
-     à l'export, ces deux lignes ne tenaient pas dans le bas de la dernière page et s'exilaient
-     sur une feuille à elles seules. Moins de marges, logo plus petit : elles rentrent. */
-  .d-genere { break-after: avoid; margin-top: 4px; font-size: 7.5pt; }
-  .d-pied { break-inside: avoid; margin-top: 8px; padding-top: 6px; font-size: 9pt; }
-  .d-pied-logo { height: 20px; }
+  /* PIED DE PAGE RETIRÉ DU PAPIER. Compacter n'a pas suffi : blason + nom + mention pesaient
+     encore plus que le fond de page disponible, et s'exilaient sur une feuille à eux seuls
+     (constaté sur deux exports successifs). Or, sur papier, ce pied fait DOUBLON — le blason et
+     le nom de l'école ouvrent déjà la première page, en grand. Ne survit que la mention
+     « document généré le… » : une ligne, la seule information que le papier n'a pas déjà, et
+     celle qui dit au club que son impression peut être périmée. */
+  .d-pied { display: none; }
+  .d-genere { margin-top: 8px; font-size: 7.5pt; }
   .inv-affiche img { max-height: 130mm; box-shadow: none; }
   /* Dossier : l'affiche réduite le reste à l'impression (sinon la règle ci-dessus la ferait
      regrossir en hauteur et repousserait le jour J en page 2). */
