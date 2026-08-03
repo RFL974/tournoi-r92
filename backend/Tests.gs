@@ -53,6 +53,7 @@ function lancerTestsFFR() {
   testClubs_categoriesDupliquees(etat);
   testCfg_jetonDossier(etat);
   testDossier_equipesDuClub(etat);
+  testDossier_verrouPlanning(etat);
   testDossier_declareEtGel(etat);
 
   // Référentiel FFR — règles de jeu et grilles de temps (session 5).
@@ -827,6 +828,27 @@ function testClubs_planSuppressionCascade(etat) {
   var plan2 = planifierSuppressionClub([_eqFactice('PUC', 'U8')], 'PUC', { 'PUC': true });
   _ffrAssert(etat, plan2.bloquees.length === 1 && /matchs/.test(plan2.bloquees[0].motif),
     'cascade : équipe dans des matchs → bloquante');
+}
+
+/** VERROU DE PUBLICATION DU PLANNING — le dossier doit pouvoir lire le témoin, et lui SEUL
+ *  (la page publique des scores, à forte charge, n'en a que faire). Un témoin absent du Sheet
+ *  (tournoi d'avant la fonction) ne doit surtout pas valoir « publié » : le dossier ne montre le
+ *  planning que sur un « oui » explicite — la valeur manquante retombe donc côté fermé. */
+function testDossier_verrouPlanning(etat) {
+  var cfg = _cfgFactice();
+  cfg.global.planning_visible_clubs = 'oui';
+  _ffrAssert(etat, filtrerConfigPublique(cfg, 'club').global.planning_visible_clubs === 'oui',
+    'verrou : le dossier (vue club) lit planning_visible_clubs');
+  _ffrAssert(etat, filtrerConfigPublique(cfg, 'live').global.planning_visible_clubs === undefined,
+    'verrou : la vue live (page des scores) ne le reçoit pas');
+  _ffrAssert(etat, filtrerConfigPublique(cfg, 'invitation').global.planning_visible_clubs === undefined,
+    'verrou : la vue invitation ne le reçoit pas non plus');
+
+  // Tournoi d'avant la fonction : le témoin n'existe pas → il ne SORT pas, donc le dossier lira
+  // « rien », et sa règle (n'afficher que sur 'oui') le traitera comme non publié.
+  var vieux = _cfgFactice();
+  _ffrAssert(etat, filtrerConfigPublique(vieux, 'club').global.planning_visible_clubs === undefined,
+    'verrou : témoin absent → rien ne sort (le dossier reste fermé par défaut)');
 }
 
 /** DOSSIER CLUB — le cœur pur ne rend au club QUE ses équipes, triées, et jamais celles d'un

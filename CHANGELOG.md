@@ -5,6 +5,25 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Le planning du dossier : lisible par catégorie, poule complète, et publié quand tu le décides — 2026-08-03
+Trois retours après la mise en ligne du lot 2 :
+- **Un bloc par catégorie.** Un club engagé en U8 et en U10 a deux groupes d'enfants et deux
+  journées parallèles : mélanger leurs matchs dans un seul tableau trié à l'heure l'obligeait à
+  faire le tri à l'œil. Chaque catégorie a désormais son propre tableau (et l'attente de
+  l'après-midi est dite **dans** la catégorie concernée, pas globalement — une autre peut déjà
+  avoir le sien).
+- **La poule complète.** Sous chaque équipe, tous ses adversaires de poule, la sienne en gras :
+  le club veut savoir **qui** il rencontre, pas seulement dans quelle lettre il est tombé.
+- **Un verrou de publication.** Générer les poules n'est pas les valider : une « équipe 1 » tombée
+  dans une poule d'équipes 2 fait un match sans intérêt, et l'organisateur doit pouvoir rééquilibrer
+  avant que quiconque ne le voie. Nouveau témoin `planning_visible_clubs` (**défaut fermé**) :
+  tant qu'il n'est pas posé, le dossier n'affiche **ni les poules, ni les matchs**. Toute
+  **génération ou réorganisation des poules le remet à « non »** — on ne publie jamais par oubli,
+  seulement par décision, via le bouton « Rendre le planning visible par les clubs » (carte
+  *Poules & planning*). **Deux décisions indépendantes, dans l'ordre qu'on veut** : ce bouton
+  commande le **dossier des clubs**, « Publier le tournoi » commande le **site public**.
+⚠️ **Redéploiement backend nécessaire.**
+
 ### Le dossier du club affiche sa journée : équipes, poules, planning, engagement (lot 2) — 2026-08-03
 Le dossier ne se contentait plus de ressembler à l'invitation : il devait lui **servir le jour J**.
 Trois sections nouvelles, toutes **masquées tant qu'elles n'ont rien à dire** — la page se

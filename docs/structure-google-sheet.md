@@ -59,6 +59,7 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 | `dimensions_categories` | `{"U8":{"l":30,"w":20},…}` | JSON — taille de mini-terrain par catégorie (`plein:true` = grand terrain entier) |
 | `couloir_terrain_m` | `5` | Couloir de circulation entre mini-terrains (m) |
 | `tm_longueur_m` / `tm_largeur_m` | `4` | Taille de la table des marques (m) |
+| `planning_visible_clubs` | `non` | `oui` = les **dossiers des clubs** affichent poules et matchs. **Vide/absent = `non`** (défaut FERMÉ). Remis à `non` automatiquement par **toute génération ou réorganisation des poules** ; repassé à `oui` par le bouton « Rendre le planning visible par les clubs » (carte *Poules & planning*). ⚠️ **Indépendant de `tournoi_publie`**, qui commande le site public |
 | `repartition_grands_terrains` | `{"Rugby 1":["1","2"],…}` | JSON — **composition de chaque grand terrain** (numéros de mini-terrains), écrite quand la répartition est **appliquée** ; alimente le filtre « Grand terrain » de la page Saisie |
 
 Paramètres **Contacts & sécurité** (écrits par la carte « Contacts &amp; sécurité » de la page

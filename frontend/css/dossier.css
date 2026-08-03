@@ -127,7 +127,16 @@ body {
   font-size: 0.8rem; color: #fff; background: var(--d-bleu); border-radius: 999px; padding: 1px 9px;
 }
 .d-eq-detail { color: var(--d-gris); font-size: 0.9rem; }
+/* La poule complète, sous l'équipe : le club voit QUI il rencontre, pas seulement sa lettre. */
+.d-eq-poule { flex-basis: 100%; font-size: 0.9rem; color: var(--d-texte); }
+.d-eq-poule strong { color: var(--d-navy); }
 
+/* Un bloc par catégorie : le club engagé en U8 et en U10 lit deux plannings, pas un mélange. */
+.d-pl-bloc + .d-pl-bloc { margin-top: 16px; }
+.d-pl-phase {
+  margin: 10px 0 2px; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase;
+  letter-spacing: 0.6px; font-size: 0.85rem; color: var(--d-gris);
+}
 .d-planning-titre {
   margin: 14px 0 4px; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase;
   letter-spacing: 0.8px; font-size: 0.95rem; color: var(--d-bleu);

@@ -83,6 +83,10 @@ body.theme-clair {
   margin-bottom: 6px;
 }
 .theme-clair .note-generation { color: var(--r92-txt-doux); }
+/* Verrou « planning visible par les clubs » : le fond sombre de styles.css devient illisible
+   sur la carte blanche du thème clair — piège des DEUX feuilles de style du projet. */
+.theme-clair .publi-planning { background: #f2f7fd; }
+.theme-clair .publi-planning-note { color: var(--r92-txt-doux); }
 
 /* --------------------------------------------------------------------------
    BOUTONS — pilules, tous NAVY (la couleur de la barre latérale)

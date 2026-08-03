@@ -266,6 +266,7 @@ async function initAdmin() {
       majApercuInvitation();
       majPublication();
       majDossier();
+      majPublicationPlanning(); // verrou « planning visible par les clubs »
       if (typeof majAutorisation === 'function') majAutorisation(); // feuille de report FFR (session 7)
 
       // 5) Tableau de bord + horodatage.
@@ -333,6 +334,9 @@ async function initAdmin() {
   // Carte « Dossier » : le bouton d'aperçu est RECONSTRUIT à chaque majApercuDossier() (la liste
   // des clubs change) — écouteur DÉLÉGUÉ sur la carte, jamais sur le bouton lui-même.
   document.getElementById('bloc-dossier').addEventListener('click', onClicApercuDossier);
+
+  // Verrou « planning visible par les clubs » : bouton reconstruit à chaque état → délégué.
+  document.getElementById('publication-planning').addEventListener('click', onPublierPlanning);
 
   // Bouton publier / masquer le tournoi.
   document.getElementById('bouton-publier').addEventListener('click', onPublier);
@@ -499,6 +503,7 @@ async function rechargerEtRendre(opt) {
   afficherPlanning(data.poules, data.matchs);
   majApresMidi();
   majFeuilleJour();
+  majPublicationPlanning(); // le verrou « visible par les clubs » suit chaque génération
 
   if (opt.infos)       { majInfosTournoi(); majContactsSecurite(); majInvitation(); }
   if (opt.publication) majPublication();

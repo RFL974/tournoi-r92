@@ -285,6 +285,10 @@
         <!-- Modification manuelle des poules du matin (rééquilibrer les niveaux avant de jouer) -->
         <button id="bouton-modifier-poules" class="bouton" hidden data-ic="crayon">Modifier les poules du matin</button>
         <div id="edition-poules"></div>
+        <!-- VERROU DE PUBLICATION : générer n'est pas valider. Tant que l'organisateur n'a pas
+             regardé l'équilibre des poules, les clubs ne voient rien dans leur dossier. Toute
+             génération ou réorganisation remet ce témoin à « non » — rendu par majPublicationPlanning(). -->
+        <div id="publication-planning"></div>
         <div id="affichage-planning"></div>
       </section>
 
