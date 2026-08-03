@@ -89,7 +89,23 @@ var ENTETES = {
   // Journal de saison : un match terminé = une ligne, JAMAIS effacée par une génération.
   // On stocke les NOMS d'équipe (stables d'un tournoi à l'autre, contrairement aux id).
   Historique: ['date', 'tournoi_id', 'id_match', 'categorie', 'phase',
-               'equipe_A', 'equipe_B', 'score_A', 'score_B']
+               'equipe_A', 'equipe_B', 'score_A', 'score_B'],
+  // PARTENAIRES du tournoi, affichés sur la page publique des scores. Aucune donnée
+  // personnelle : un partenaire est une entreprise, tout y est destiné à être public.
+  //   logo_id      : id du fichier Drive du logo (public en lecture), comme tournoi_affiche_id.
+  //   url          : site du partenaire (facultatif). Lien en rel="noopener sponsored".
+  //   accroche     : une ligne affichée sous le logo (bandeau, encart, plein écran).
+  //   emplacements : liste séparée par des virgules parmi bandeau,rail,fil,plein,mur
+  //                  (= emplacements A, B, C, D, E de la page publique). Vide ⇒ mur seul.
+  //   poids        : 1 à 5 — part du partenaire dans la roue de rotation. Vide ⇒ 1.
+  //   visuel_id    : id Drive d'un visuel plein écran fourni par le partenaire (facultatif) ;
+  //                  sans lui, l'interstitiel se compose à partir du logo + accroche + couleur.
+  //   couleur      : fond de l'interstitiel auto-composé (#RRGGBB). Vide ⇒ navy de la charte.
+  //   actif        : 'oui' = affiché. Toute autre valeur ⇒ le partenaire disparaît de la page
+  //                  sans que sa fiche soit perdue.
+  //   ordre        : entier, position dans le mur des partenaires uniquement.
+  Sponsors: ['id_sponsor', 'nom', 'logo_id', 'url', 'accroche', 'emplacements',
+             'poids', 'visuel_id', 'couleur', 'actif', 'ordre']
 };
 var COULEUR_FOND_ENTETE = '#0B2138';
 var COULEUR_TEXTE_ENTETE = '#F2F6FB';
@@ -102,11 +118,23 @@ function setupSheet() {
   creerOngletAvecEntetes(classeur, 'Matchs', ENTETES.Matchs);
   creerOngletAvecEntetes(classeur, 'Historique', ENTETES.Historique);
   creerOngletAvecEntetes(classeur, 'ClubsInvites', ENTETES.ClubsInvites);
+  creerOngletAvecEntetes(classeur, 'Sponsors', ENTETES.Sponsors);
   creerOngletConfig(classeur);
   try {
-    SpreadsheetApp.getUi().alert('✅ Base prête !', 'Les 6 onglets ont été créés.',
+    SpreadsheetApp.getUi().alert('✅ Base prête !', 'Les 7 onglets ont été créés.',
       SpreadsheetApp.getUi().ButtonSet.OK);
   } catch (e) { Logger.log('Base prête !'); }
+}
+
+/**
+ * Crée l'onglet Sponsors À LA DEMANDE s'il manque. `setupSheet` ne se relance jamais sur un
+ * classeur en service (il réécrirait Config) : sans ce filet, un Sheet créé avant les
+ * partenaires n'aurait jamais l'onglet et toute écriture échouerait. Sans effet s'il existe.
+ */
+function assurerOngletSponsors(classeur) {
+  var onglet = classeur.getSheetByName('Sponsors');
+  if (!onglet) creerOngletAvecEntetes(classeur, 'Sponsors', ENTETES.Sponsors);
+  return classeur.getSheetByName('Sponsors');
 }
 
 function creerOngletAvecEntetes(classeur, nomOnglet, entetes) {
@@ -306,11 +334,53 @@ function repondreJson(objet) {
  *  jamais de contact ni de donnée personnelle. */
 function construireSnapshot(classeur) {
   return {
-    config:  lireConfigPublique(classeur, 'live'),
-    equipes: lireOngletSimple(classeur, 'Equipes'),
-    poules:  lireOngletSimple(classeur, 'Poules'),
-    matchs:  lireOngletSimple(classeur, 'Matchs')
+    config:   lireConfigPublique(classeur, 'live'),
+    equipes:  lireOngletSimple(classeur, 'Equipes'),
+    poules:   lireOngletSimple(classeur, 'Poules'),
+    matchs:   lireOngletSimple(classeur, 'Matchs'),
+    // Partenaires ACTIFS uniquement (≈ 200 octets par fiche) : ils voyagent dans l'instantané
+    // déjà servi par le relais CDN, donc la page publique n'émet AUCUNE requête réseau de plus.
+    sponsors: lireSponsorsPublics(classeur)
   };
+}
+
+/* ===================== PARTENAIRES (sponsors de la page publique) =====================
+ * Aucune donnée personnelle : un partenaire est une entreprise et tout, ici, est destiné à
+ * être affiché. On applique quand même la doctrine opt-in du reste du fichier — seules les
+ * colonnes nommées ci-dessous sortent, une colonne ajoutée plus tard reste privée par défaut.
+ * ==================================================================================== */
+
+/** Colonnes de l'onglet Sponsors réellement servies à la page publique. */
+var SPONSOR_CHAMPS_PUBLICS = ['id_sponsor', 'nom', 'logo_id', 'url', 'accroche',
+                              'emplacements', 'poids', 'visuel_id', 'couleur', 'ordre'];
+
+/**
+ * Partenaires actifs, prêts pour l'affichage public : filtrés sur `actif`, réduits aux
+ * colonnes publiques, triés par `ordre` (le mur des partenaires suit cet ordre).
+ * Renvoie [] si l'onglet n'existe pas encore — un Sheet d'avant les partenaires reste valide.
+ */
+function lireSponsorsPublics(classeur) {
+  var lignes = lireOngletSimple(classeur, 'Sponsors');
+  var actifs = [];
+  for (var i = 0; i < lignes.length; i++) {
+    var l = lignes[i];
+    if (String(l.actif || '').toLowerCase() !== 'oui') continue;
+    if (!String(l.id_sponsor || '').trim()) continue;
+    var s = {};
+    for (var c = 0; c < SPONSOR_CHAMPS_PUBLICS.length; c++) {
+      var champ = SPONSOR_CHAMPS_PUBLICS[c];
+      s[champ] = (l[champ] === null || l[champ] === undefined) ? '' : String(l[champ]);
+    }
+    actifs.push(s);
+  }
+  actifs.sort(function (a, b) {
+    var oa = parseInt(a.ordre, 10), ob = parseInt(b.ordre, 10);
+    if (!isFinite(oa)) oa = 9999;
+    if (!isFinite(ob)) ob = 9999;
+    if (oa !== ob) return oa - ob;
+    return String(a.nom).localeCompare(String(b.nom));
+  });
+  return actifs;
 }
 
 /**
@@ -509,7 +579,15 @@ function lireConfig(classeur) {
 var CONFIG_PUBLIQUE_VUES = {
   // Page des scores : le strict nécessaire. Aucune donnée personnelle, aucun réglage d'édition.
   live: {
-    global: ['tournoi_publie', 'tournoi_nom', 'repartition_grands_terrains'],
+    // Réglages PARTENAIRES : ce sont des consignes d'affichage (durées, interrupteurs), sans
+    // aucune donnée personnelle — la page publique en a besoin pour rendre les emplacements.
+    // Ils DOIVENT figurer ici : la config publique est en opt-in strict, un paramètre non
+    // nommé ne sort pas et la page conclurait « sponsors désactivés » en silence.
+    global: ['tournoi_publie', 'tournoi_nom', 'repartition_grands_terrains',
+             'sponsors_actifs', 'sponsors_mur_actif', 'sponsor_barre_mobile',
+             'sponsor_rotation_s', 'sponsor_interstitiel_actif', 'sponsor_interstitiel_duree_s',
+             'sponsor_interstitiel_skip_s', 'sponsor_interstitiel_repos_min',
+             'sponsor_interstitiel_premiere_visite'],
     // contexte_tournoi / scf_phase : NON sensibles (format de jeu) — exposés pour que la saisie et la
     // page publique affichent le bon vocabulaire Super Challenge (Samedi/Dimanche, Triangulaire, E/F/G).
     categories: ['categorie', 'presente', 'contexte_tournoi', 'scf_phase']
@@ -2652,7 +2730,7 @@ var ACTIONS_TOKEN = { repondreInvitation: true };
  * porter) mais qui NE MODIFIENT RIEN : elles NE prennent PAS le verrou d'écriture. L'admin
  * recharge la config à de nombreux endroits ; un jour de tournoi, prendre le verrou d'écriture
  * la mettrait en concurrence avec la saisie des scores. Ces actions le court-circuitent. */
-var ACTIONS_LECTURE = { getConfigAdmin: true, getDossierAutorisation: true };
+var ACTIONS_LECTURE = { getConfigAdmin: true, getDossierAutorisation: true, listerSponsors: true };
 
 function doPost(e) {
   var lock, classeur, snapshotJson = null;
@@ -2678,6 +2756,7 @@ function doPost(e) {
       switch (action) {
         case 'getConfigAdmin': lecture = { ok: true, config: lireConfig(classeur) }; break;
         case 'getDossierAutorisation': lecture = getDossierAutorisation(classeur); break;
+        case 'listerSponsors': lecture = listerSponsors(classeur); break;
         default: lecture = { error: 'Action inconnue : ' + action };
       }
       return repondreJson(lecture);
@@ -2723,6 +2802,11 @@ function doPost(e) {
       case 'enregistrerReponseInvitation': resultat = enregistrerReponseInvitation(classeur, requete); break;
       case 'enregistrerPhotoParking': resultat = enregistrerPhotoParking(classeur, requete); break;
       case 'supprimerPhotoParking':   resultat = supprimerPhotoParking(classeur); break;
+      // Partenaires : les trois écritures de l'écran admin « Partenaires ». Chacune rafraîchit
+      // l'instantané public (voir plus bas) → la page des scores voit le changement en ~10 s.
+      case 'enregistrerReglagesSponsors': resultat = enregistrerReglagesSponsors(classeur, requete); break;
+      case 'enregistrerSponsor':      resultat = enregistrerSponsor(classeur, requete); break;
+      case 'supprimerSponsor':        resultat = supprimerSponsor(classeur, requete); break;
       case 'listerClubsInvites':   resultat = listerClubsInvites(classeur); break;
       case 'ajouterClubInvite':    resultat = ajouterClubInvite(classeur, requete); break;
       case 'modifierStatutClubInvite': resultat = modifierStatutClubInvite(classeur, requete); break;
@@ -3142,7 +3226,12 @@ var AFFICHE_MAX_OCTETS = 5 * 1024 * 1024;
  * @param {string} champCle   paramètre global qui reçoit l'id (ex 'tournoi_affiche_id')
  * @param {string} nomFichier nom du fichier créé dans Drive
  */
-function enregistrerImageConfig(classeur, uri, champCle, nomFichier) {
+/**
+ * Cœur du dépôt d'image : valide un Data URI, crée le fichier Drive et le rend public en
+ * lecture. Renvoie { ok, id } ou { error }. NE TOUCHE PAS au classeur — c'est l'appelant qui
+ * décide où l'identifiant est rangé (paramètre de Config, colonne de l'onglet Sponsors…).
+ */
+function creerFichierImageDrive(uri, nomFichier) {
   var m = String(uri || '').match(/^data:([^;]+);base64,(.*)$/);
   if (!m) return { error: 'Image invalide (Data URI base64 attendu).' };
 
@@ -3162,16 +3251,25 @@ function enregistrerImageConfig(classeur, uri, champCle, nomFichier) {
   if (octets.length > AFFICHE_MAX_OCTETS) {
     return { error: 'Image trop lourde (5 Mo maximum). Réduis l\'image avant de l\'envoyer.' };
   }
-  var blob = Utilities.newBlob(octets, type, nomFichier);
+  var fichier = DriveApp.createFile(Utilities.newBlob(octets, type, nomFichier));
+  try { fichier.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
+  return { ok: true, id: fichier.getId() };
+}
+
+/** Met un fichier Drive à la corbeille sans jamais faire échouer l'appelant. */
+function corbeilleFichierDrive(id) {
+  if (!id) return;
+  try { DriveApp.getFileById(String(id)).setTrashed(true); } catch (e) {}
+}
+
+function enregistrerImageConfig(classeur, uri, champCle, nomFichier) {
+  var depot = creerFichierImageDrive(uri, nomFichier);
+  if (depot.error) return depot;
 
   var onglet = classeur.getSheetByName('Config');
-  var ancienId = (lireConfig(classeur).global || {})[champCle];
-  if (ancienId) { try { DriveApp.getFileById(ancienId).setTrashed(true); } catch (e) {} }
-
-  var fichier = DriveApp.createFile(blob);
-  try { fichier.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
-  ecrireParamGlobal(onglet, champCle, fichier.getId());
-  return { ok: true, id: fichier.getId() };
+  corbeilleFichierDrive((lireConfig(classeur).global || {})[champCle]);
+  ecrireParamGlobal(onglet, champCle, depot.id);
+  return { ok: true, id: depot.id };
 }
 
 /**
@@ -3200,6 +3298,186 @@ function enregistrerPhotoParking(classeur, data) {
 }
 function supprimerPhotoParking(classeur) {
   return supprimerImageConfig(classeur, 'parking_photo_id');
+}
+
+/* ===================== PARTENAIRES — écriture (écran admin « Partenaires ») =====================
+ * Trois actions seulement : lister (lecture admin), enregistrer une fiche (création OU mise à
+ * jour, logo et visuel compris), supprimer une fiche. Les RÉGLAGES d'affichage (durées,
+ * interrupteurs) sont des paramètres globaux de Config et passent par enregistrerReglagesSponsors.
+ * =============================================================================================== */
+
+/** Emplacements reconnus sur la page publique (A, B, C, D, E). Tout autre jeton est ignoré. */
+var SPONSOR_EMPLACEMENTS_OK = { bandeau: true, rail: true, fil: true, plein: true, mur: true };
+
+/**
+ * Réglages d'affichage des partenaires : nom du paramètre → borne min, borne max, défaut.
+ * Les bornes ne sont pas décoratives : elles empêchent qu'une faute de frappe dans l'admin
+ * (« 500 » au lieu de « 5 ») ne transforme l'interstitiel en écran bloquant le jour du tournoi.
+ */
+var SPONSOR_REGLAGES_NUM = {
+  sponsor_rotation_s:                 { min: 0, max: 60,  defaut: 8 },
+  sponsor_interstitiel_duree_s:       { min: 3, max: 10,  defaut: 5 },
+  sponsor_interstitiel_skip_s:        { min: 0, max: 10,  defaut: 2 },
+  sponsor_interstitiel_repos_min:     { min: 1, max: 240, defaut: 30 }
+};
+/** Réglages oui/non. Défaut prudent : tout est éteint sauf le mur et la barre mobile. */
+var SPONSOR_REGLAGES_BOOL = {
+  sponsors_actifs:                      'non',
+  sponsor_interstitiel_actif:           'non',
+  sponsor_interstitiel_premiere_visite: 'non',
+  sponsors_mur_actif:                   'oui',
+  sponsor_barre_mobile:                 'oui'
+};
+
+/** Ramène une valeur numérique dans ses bornes ; valeur absente ou illisible ⇒ défaut. */
+function bornerReglageSponsor(valeur, regle) {
+  var n = parseInt(valeur, 10);
+  if (!isFinite(n)) return regle.defaut;
+  return Math.max(regle.min, Math.min(regle.max, n));
+}
+
+/**
+ * Enregistre les réglages d'affichage des partenaires (onglet Config, zone des paramètres
+ * globaux). Seuls les champs PRÉSENTS dans la requête sont écrits — chaque carte de l'admin
+ * n'envoie que les siens, comme les autres formulaires du fichier.
+ */
+function enregistrerReglagesSponsors(classeur, data) {
+  var onglet = classeur.getSheetByName('Config');
+  if (!onglet) return { error: 'Onglet Config introuvable.' };
+
+  Object.keys(SPONSOR_REGLAGES_BOOL).forEach(function (cle) {
+    if (!Object.prototype.hasOwnProperty.call(data, cle)) return;
+    ecrireParamGlobal(onglet, cle, (String(data[cle]).toLowerCase() === 'oui') ? 'oui' : 'non');
+  });
+  Object.keys(SPONSOR_REGLAGES_NUM).forEach(function (cle) {
+    if (!Object.prototype.hasOwnProperty.call(data, cle)) return;
+    ecrireParamGlobal(onglet, cle, bornerReglageSponsor(data[cle], SPONSOR_REGLAGES_NUM[cle]));
+  });
+
+  // Cohérence : on ne peut pas rendre le bouton « Passer » disponible APRÈS la fermeture
+  // automatique — l'interstitiel serait impossible à écourter. On rabote silencieusement.
+  var g = lireConfig(classeur).global || {};
+  var duree = bornerReglageSponsor(g.sponsor_interstitiel_duree_s, SPONSOR_REGLAGES_NUM.sponsor_interstitiel_duree_s);
+  var skip  = bornerReglageSponsor(g.sponsor_interstitiel_skip_s,  SPONSOR_REGLAGES_NUM.sponsor_interstitiel_skip_s);
+  if (skip > duree) ecrireParamGlobal(onglet, 'sponsor_interstitiel_skip_s', duree);
+
+  return { ok: true };
+}
+
+/** Toutes les fiches partenaires, actives ou non (écran admin). Lecture protégée par la clé admin. */
+function listerSponsors(classeur) {
+  assurerOngletSponsors(classeur);
+  return { ok: true, sponsors: lireOngletSimple(classeur, 'Sponsors') };
+}
+
+/** Index (1-based, ligne du Sheet) d'un partenaire par son identifiant ; -1 si absent. */
+function ligneSponsor(onglet, idSponsor) {
+  var donnees = onglet.getDataRange().getValues();
+  for (var i = 1; i < donnees.length; i++) {
+    if (String(donnees[i][0]) === String(idSponsor)) return i + 1;
+  }
+  return -1;
+}
+
+/**
+ * Crée ou met à jour une fiche partenaire.
+ *  - sans `id_sponsor` → création (identifiant tiré au sort) ;
+ *  - avec `id_sponsor` → mise à jour de la ligne existante.
+ * `logo` et `visuel` sont des Data URI facultatifs : fournis, ils remplacent l'image et
+ * l'ancienne part à la corbeille ; absents, l'image en place est conservée telle quelle.
+ * `logo_retirer` / `visuel_retirer` permettent de repasser à « pas d'image ».
+ */
+function enregistrerSponsor(classeur, data) {
+  var onglet = assurerOngletSponsors(classeur);
+
+  var nom = String(data.nom || '').trim();
+  if (!nom) return { error: 'Le nom du partenaire est obligatoire.' };
+
+  var id = String(data.id_sponsor || '').trim();
+  var ligne = id ? ligneSponsor(onglet, id) : -1;
+  if (id && ligne === -1) return { error: 'Partenaire introuvable (a-t-il été supprimé ?).' };
+
+  // Valeurs déjà en place (mise à jour) : servent de repli pour les images non renvoyées.
+  var existant = {};
+  if (ligne !== -1) {
+    var entetes = onglet.getRange(1, 1, 1, ENTETES.Sponsors.length).getValues()[0];
+    var valeurs = onglet.getRange(ligne, 1, 1, ENTETES.Sponsors.length).getValues()[0];
+    for (var e = 0; e < entetes.length; e++) existant[entetes[e]] = valeurs[e];
+  }
+
+  // Images : dépôt sur Drive AVANT toute écriture dans le Sheet, pour ne jamais laisser une
+  // ligne pointer vers un fichier qui n'existe pas.
+  var logoId   = String(existant.logo_id || '');
+  var visuelId = String(existant.visuel_id || '');
+  if (data.logo) {
+    var dlogo = creerFichierImageDrive(data.logo, 'sponsor-logo-' + nom);
+    if (dlogo.error) return dlogo;
+    corbeilleFichierDrive(logoId);
+    logoId = dlogo.id;
+  } else if (String(data.logo_retirer) === 'oui') {
+    corbeilleFichierDrive(logoId);
+    logoId = '';
+  }
+  if (data.visuel) {
+    var dvisuel = creerFichierImageDrive(data.visuel, 'sponsor-visuel-' + nom);
+    if (dvisuel.error) return dvisuel;
+    corbeilleFichierDrive(visuelId);
+    visuelId = dvisuel.id;
+  } else if (String(data.visuel_retirer) === 'oui') {
+    corbeilleFichierDrive(visuelId);
+    visuelId = '';
+  }
+
+  // Emplacements : on ne garde que les jetons connus (une valeur inventée côté client ne doit
+  // pas créer un emplacement fantôme que la page publique ignorerait en silence).
+  var emplacements = String(data.emplacements || '').split(',')
+    .map(function (x) { return x.trim().toLowerCase(); })
+    .filter(function (x) { return SPONSOR_EMPLACEMENTS_OK[x]; });
+  // Aucun emplacement coché ⇒ le mur, le plus discret : une fiche enregistrée s'affiche toujours
+  // quelque part, sinon l'organisateur croit avoir perdu sa saisie.
+  if (!emplacements.length) emplacements = ['mur'];
+
+  var poids = parseInt(data.poids, 10);
+  if (!isFinite(poids)) poids = 1;
+  poids = Math.max(1, Math.min(5, poids));
+
+  var ordre = parseInt(data.ordre, 10);
+  if (!isFinite(ordre)) ordre = 100;
+
+  var couleur = String(data.couleur || '').trim();
+  if (couleur && !/^#[0-9a-fA-F]{6}$/.test(couleur)) couleur = '';
+
+  if (!id) id = 'SP' + Utilities.getUuid().slice(0, 8).toUpperCase();
+
+  var valeursLigne = [[
+    id, nom, logoId,
+    String(data.url || '').trim(),
+    String(data.accroche || '').trim(),
+    emplacements.join(','),
+    poids, visuelId, couleur,
+    (String(data.actif).toLowerCase() === 'oui') ? 'oui' : 'non',
+    ordre
+  ]];
+
+  var cible = (ligne !== -1) ? ligne : onglet.getLastRow() + 1;
+  var plage = onglet.getRange(cible, 1, 1, ENTETES.Sponsors.length);
+  plage.setNumberFormat('@'); // tout en texte : un id « SP0012 » ne doit pas devenir un nombre
+  plage.setValues(valeursLigne);
+
+  return { ok: true, id_sponsor: id };
+}
+
+/** Supprime une fiche partenaire et met ses images à la corbeille. */
+function supprimerSponsor(classeur, data) {
+  var onglet = assurerOngletSponsors(classeur);
+  var ligne = ligneSponsor(onglet, String(data.id_sponsor || ''));
+  if (ligne === -1) return { error: 'Partenaire introuvable.' };
+
+  var valeurs = onglet.getRange(ligne, 1, 1, ENTETES.Sponsors.length).getValues()[0];
+  corbeilleFichierDrive(valeurs[2]); // logo_id
+  corbeilleFichierDrive(valeurs[7]); // visuel_id
+  onglet.deleteRow(ligne);
+  return { ok: true };
 }
 
 /* ===================== DOSSIER D'INVITATION (modalités, parking, encadrement) ===================== */
@@ -6597,6 +6875,9 @@ function reinitialiserTournoi(classeur) {
   // 3 quater) Dossier d'invitation : champs effacés + photo du parking mise à la corbeille.
   //           ✅ La LISTE des clubs invités (onglet ClubsInvites) est CONSERVÉE, comme
   //           l'historique : c'est un carnet d'adresses réutilisable d'une édition à l'autre.
+  //           ✅ Même choix pour l'onglet Sponsors et les réglages d'affichage des partenaires :
+  //           un partenariat se reconduit d'une édition à l'autre, le réinitialiser obligerait
+  //           à re-téléverser tous les logos. Pour retirer un partenaire, on décoche « actif ».
   var idParking = (lireConfig(classeur).global || {}).parking_photo_id;
   if (idParking) { try { DriveApp.getFileById(idParking).setTrashed(true); } catch (e) {} }
   CHAMPS_INVITATION.concat(['parking_photo_id'])

@@ -63,7 +63,8 @@ tournoi-r92/
 │   ├── deploiement.md           → déploiement backend + mise en ligne frontend
 │   ├── relais-cdn.md            → montée en charge (cache serveur + relais CDN Cloudflare)
 │   ├── phases-tournoi.md        → note de conception (matin / après-midi)
-│   └── formats-apres-midi.md    → 🆕 formats d'après-midi par catégorie (croisé / libre / coupe+plateau)
+│   ├── formats-apres-midi.md    → formats d'après-midi par catégorie (croisé / libre / coupe+plateau)
+│   └── sponsors.md              → 🆕 partenaires sur la page publique (prototype) + fiche de visibilité
 │
 ├── backend/                 → code Google Apps Script
 │   └── Code.gs
@@ -176,6 +177,12 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   (activable pour une garantie « béton »). Repli automatique intégré. Voir [`docs/relais-cdn.md`](docs/relais-cdn.md).
 - ✅ **Saisie** : filtre par catégorie (table de marque) + **accordéons** matin/après-midi qui se
   replient dès leur dernier score ; lisible sur téléphone (scoreboard vertical).
+- 🧪 **Partenaires (prototype)** : cinq emplacements sur la page publique (bandeau permanent, rail /
+  barre basse, encart au fil, message plein écran, mur des logos), **rotation équitable pondérée**,
+  et **fiche de visibilité** imprimable pour chaque partenaire. Réglé depuis l'écran admin
+  **Partenaires** ; **interrupteur général sur « non » par défaut** ⇒ page publique inchangée.
+  Mesure **100 % locale** (aucun envoi, aucun cookie) — donc « mesuré sur 1 appareil », c'est écrit
+  sur la fiche. Aucun service payant. Voir [`docs/sponsors.md`](docs/sponsors.md).
 
 **Reste à faire (confort / avant le vrai tournoi) :**
 - **Nettoyer les données de test** du Sheet avant le vrai tournoi (le bouton « Générer poules et

@@ -267,6 +267,8 @@ async function initAdmin() {
       majPublication();
       majDossier();
       majPublicationPlanning(); // verrou « planning visible par les clubs »
+      // 5) Partenaires (sponsors de la page publique) : réglages + fiches + fiche de visibilité.
+      if (typeof majSponsors === 'function') majSponsors();
       if (typeof majAutorisation === 'function') majAutorisation(); // feuille de report FFR (session 7)
 
       // 5) Tableau de bord + horodatage.

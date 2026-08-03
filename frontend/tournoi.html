@@ -48,6 +48,11 @@
   <!-- ============ CONTENU ============ -->
   <main id="contenu" class="section">
     <div class="conteneur">
+      <!-- ============ A · BANDEAU PARTENAIRE PRINCIPAL ============
+           Rempli par sponsors.js. Reste vide (et invisible) tant qu'aucun partenaire
+           n'est déclaré sur cet emplacement : la page est alors STRICTEMENT celle d'avant. -->
+      <div id="sp-bandeau" class="sp-zone-bandeau" hidden></div>
+
       <div class="carte-app">
 
         <!-- Écran « à venir » : affiché tant que le tournoi n'est pas publié depuis l'admin. -->
@@ -60,7 +65,10 @@
           </div>
         </div>
 
-        <!-- Bandeau de don : mène à la page « Faire un don » du site vitrine. -->
+        <!-- Bandeau de don : mène à la page « Faire un don » du site vitrine.
+             ⚠️ Quand un bandeau partenaire occupe le haut de page, celui-ci DESCEND sous les
+             premiers contrôles (classe .don-bandeau-bas posée par tournoi.js) : on n'empile
+             jamais deux appels commerciaux avant le premier score. -->
         <a class="don-bandeau" id="don-lien" href="https://rfl974.github.io/boutique-r92/faire-un-don.html" target="_blank" rel="noopener">
           💙 Soutenez l'association Génération R92 — <strong>Je fais un don</strong>
         </a>
@@ -86,8 +94,15 @@
             </div>
           </div>
 
-          <!-- Podium (top 3) : affiché seulement quand il est mathématiquement certain. -->
-          <aside id="podium" class="podium" hidden></aside>
+          <!-- Colonne de droite : le podium (quand il est certain) puis le rail partenaires.
+               Sur ordinateur cette colonne est vide les trois quarts du temps — le rail s'y
+               installe sans rien pousser. Sur téléphone, il bascule en barre basse (CSS). -->
+          <div class="tete-cote">
+            <!-- Podium (top 3) : affiché seulement quand il est mathématiquement certain. -->
+            <aside id="podium" class="podium" hidden></aside>
+            <!-- B · RAIL PARTENAIRES (ordinateur). Rempli par sponsors.js. -->
+            <aside id="sp-rail" class="sp-rail" hidden aria-label="Partenaires du tournoi"></aside>
+          </div>
         </div>
 
         <div id="vues">
@@ -108,9 +123,18 @@
           </div>
         </div>
 
+        <!-- ============ E · MUR DES PARTENAIRES ============
+             Tous les logos, sans hiérarchie, en bas de la carte. Rempli par sponsors.js. -->
+        <div id="sp-mur" hidden></div>
+
       </div>
     </div>
   </main>
+
+  <!-- ============ B · BARRE PARTENAIRE (téléphone) ============
+       Même contenu que le rail, rendu en barre basse sur petit écran. Le corps de page
+       réserve sa hauteur (classe .sp-barre-active) pour ne jamais recouvrir un score. -->
+  <div id="sp-barre" class="sp-barre" hidden aria-label="Partenaires du tournoi"></div>
 
   <!-- ============ PIED DE PAGE (navy) ============ -->
   <footer class="pied">
@@ -129,6 +153,7 @@
   <script src="js/commun.js"></script>
   <script src="js/dialog.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/sponsors.js"></script>
   <script src="js/tournoi.js"></script>
 
 </body>

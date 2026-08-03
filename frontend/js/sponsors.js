@@ -1,0 +1,810 @@
+/**
+ * ============================================================================
+ *  PARTENAIRES — moteur d'affichage et de mesure des sponsors
+ * ============================================================================
+ *
+ *  Fichier PARTAGÉ entre la page publique (tournoi.html) et l'écran d'administration
+ *  (admin.html, pour l'aperçu et la fiche de visibilité). Il ne touche jamais au DOM
+ *  de lui-même : il FABRIQUE du balisage et EXPOSE des fonctions, l'appelant décide où.
+ *
+ *  Cinq emplacements, repris tels quels du document de conception :
+ *    A « bandeau » — bandeau partenaire principal, permanent, sous le titre
+ *    B « rail »    — rail à droite (ordinateur) / barre basse (téléphone), rotatif
+ *    C « fil »     — encart intégré au fil des scores, figé pour la session
+ *    D « plein »   — interstitiel d'accueil, quelques secondes, passable
+ *    E « mur »     — mur des partenaires, tous les logos, en bas de page
+ *
+ *  ⚠️ PROTOTYPE — LA MESURE NE SORT PAS DE L'APPAREIL.
+ *  Les compteurs (temps d'exposition, affichages, clics) vivent dans le stockage local
+ *  du navigateur. Aucun envoi réseau, aucun cookie, aucun traceur tiers, aucune donnée
+ *  personnelle. La fiche de visibilité de l'admin lit donc les compteurs DE L'APPAREIL
+ *  QUI LA CONSULTE, et le dit explicitement. Consolider entre spectateurs demanderait un
+ *  collecteur séparé (voir docs/sponsors.md) : hors périmètre du prototype, volontairement.
+ *
+ *  Nécessite (chargé AVANT) : commun.js (echapper).
+ * ============================================================================
+ */
+
+/* ==========================================================================
+   RÉGLAGES ET CONSTANTES
+   ========================================================================== */
+
+/** Les cinq emplacements, dans l'ordre de la conception. */
+var SPONSORS_EMPLACEMENTS = ['bandeau', 'rail', 'fil', 'plein', 'mur'];
+
+/** Libellés lisibles (fiche de visibilité, aperçu admin). */
+var SPONSORS_LIBELLES = {
+  bandeau: 'A · Bandeau titre',
+  rail:    'B · Rail / barre',
+  fil:     'C · Encart au fil',
+  plein:   'D · Plein écran',
+  mur:     'E · Mur partenaires'
+};
+
+/* Clés de stockage local. Préfixe r92_ comme le reste du frontend. */
+var SPONSORS_CLE_ROUES   = 'r92_sponsors_roues';    // ordre de rotation mémorisé, par emplacement
+var SPONSORS_CLE_PLEIN   = 'r92_sponsors_plein';    // dernier interstitiel vu (horodatage)
+var SPONSORS_CLE_MESURE  = 'r92_sponsors_mesure';   // compteurs d'exposition / clics
+var SPONSORS_CLE_VISITES = 'r92_sponsors_visites';  // nb de chargements de la page dans la journée
+
+/** Valeurs par défaut — identiques aux bornes du backend (SPONSOR_REGLAGES_*). */
+var SPONSORS_DEFAUTS = {
+  actifs: false,
+  mur: true,
+  barreMobile: true,
+  rotationS: 8,
+  pleinActif: false,
+  pleinDureeS: 5,
+  pleinSkipS: 2,
+  pleinReposMin: 30,
+  pleinPremiereVisite: false
+};
+
+/* ==========================================================================
+   MODE DÉMO — ?demo=sponsors
+   --------------------------------------------------------------------------
+   Sert à MONTRER le dispositif sans attendre : sponsors forcés visibles même si
+   l'interrupteur général est sur « non », interstitiel rejouable à volonté (pas de
+   période de repos), rotation accélérée. Il n'altère RIEN côté serveur : c'est un
+   simple paramètre d'URL, donc la page publique reste intacte pour les spectateurs.
+   ========================================================================== */
+
+/** Vrai si l'URL courante demande le mode démo. */
+function sponsorsModeDemo() {
+  try {
+    return new URLSearchParams(window.location.search).get('demo') === 'sponsors';
+  } catch (e) { return false; }
+}
+
+/**
+ * Partenaires d'exemple, utilisés UNIQUEMENT en mode démo et UNIQUEMENT si aucun
+ * partenaire réel n'est enregistré. Permet de faire la démonstration complète avant
+ * même d'avoir saisi le premier vrai sponsor dans l'admin.
+ */
+var SPONSORS_EXEMPLES = [
+  { id_sponsor: 'DEMO1', nom: 'Décathlon Le Plessis', accroche: "Tout l'équipement rugby des U6 aux U14.",
+    emplacements: 'bandeau,mur', poids: '3', couleur: '#0A5AA8', url: '', logo_id: '', visuel_id: '', ordre: '1' },
+  { id_sponsor: 'DEMO2', nom: 'BNP Paribas', accroche: 'Fier de soutenir le rugby des jeunes.',
+    emplacements: 'rail,fil,plein,mur', poids: '2', couleur: '#14795B', url: '', logo_id: '', visuel_id: '', ordre: '2' },
+  { id_sponsor: 'DEMO3', nom: 'Intersport', accroche: "L'équipementier officiel du tournoi.",
+    emplacements: 'rail,fil,plein,mur', poids: '2', couleur: '#8C3A2E', url: '', logo_id: '', visuel_id: '', ordre: '3' },
+  { id_sponsor: 'DEMO4', nom: 'La Poste', accroche: 'Partenaire des associations du 92.',
+    emplacements: 'rail,plein,mur', poids: '1', couleur: '#4A3A82', url: '', logo_id: '', visuel_id: '', ordre: '4' },
+  { id_sponsor: 'DEMO5', nom: 'Boulangerie Martin', accroche: '',
+    emplacements: 'mur', poids: '1', couleur: '#8A6D1F', url: '', logo_id: '', visuel_id: '', ordre: '5' }
+];
+
+/* ==========================================================================
+   LECTURE DES RÉGLAGES
+   ========================================================================== */
+
+/** Lit un réglage oui/non de la config publique. */
+function sponsorsOui(global, cle, defaut) {
+  var v = String((global || {})[cle] || '').toLowerCase();
+  if (v === 'oui') return true;
+  if (v === 'non') return false;
+  return defaut;
+}
+
+/** Lit un réglage numérique borné de la config publique. */
+function sponsorsNombre(global, cle, defaut, min, max) {
+  var n = parseInt((global || {})[cle], 10);
+  if (!isFinite(n)) return defaut;
+  return Math.max(min, Math.min(max, n));
+}
+
+/**
+ * Réglages normalisés à partir de `config.global` (vue publique « live »).
+ * En mode démo, les verrous qui empêchent de MONTRER le dispositif sont levés :
+ * tout est allumé, l'interstitiel n'a plus de période de repos et tourne plus vite.
+ */
+function sponsorsReglages(config) {
+  var g = (config && config.global) || {};
+  var d = SPONSORS_DEFAUTS;
+  var r = {
+    actifs:      sponsorsOui(g, 'sponsors_actifs', d.actifs),
+    mur:         sponsorsOui(g, 'sponsors_mur_actif', d.mur),
+    barreMobile: sponsorsOui(g, 'sponsor_barre_mobile', d.barreMobile),
+    rotationS:   sponsorsNombre(g, 'sponsor_rotation_s', d.rotationS, 0, 60),
+    pleinActif:  sponsorsOui(g, 'sponsor_interstitiel_actif', d.pleinActif),
+    pleinDureeS: sponsorsNombre(g, 'sponsor_interstitiel_duree_s', d.pleinDureeS, 3, 10),
+    pleinSkipS:  sponsorsNombre(g, 'sponsor_interstitiel_skip_s', d.pleinSkipS, 0, 10),
+    pleinReposMin: sponsorsNombre(g, 'sponsor_interstitiel_repos_min', d.pleinReposMin, 1, 240),
+    pleinPremiereVisite: sponsorsOui(g, 'sponsor_interstitiel_premiere_visite', d.pleinPremiereVisite),
+    demo: false
+  };
+  // Garde-fou identique au backend : « Passer » ne peut pas arriver après la fermeture.
+  if (r.pleinSkipS > r.pleinDureeS) r.pleinSkipS = r.pleinDureeS;
+
+  if (sponsorsModeDemo()) {
+    r.demo = true;
+    r.actifs = true;
+    r.mur = true;
+    r.pleinActif = true;
+    r.pleinReposMin = 0;          // rejouable immédiatement
+    r.pleinPremiereVisite = true; // visible dès la première arrivée
+    r.rotationS = Math.min(r.rotationS || 8, 4);
+  }
+  return r;
+}
+
+/* ==========================================================================
+   SÉLECTION DES PARTENAIRES
+   ========================================================================== */
+
+/** Liste normalisée des partenaires, avec repli sur les exemples en mode démo. */
+function sponsorsListe(donnees, reglages) {
+  var liste = (donnees && donnees.sponsors) || [];
+  if (!liste.length && reglages && reglages.demo) liste = SPONSORS_EXEMPLES;
+  return liste.filter(function (s) { return s && s.id_sponsor && s.nom; });
+}
+
+/** Partenaires déclarés sur un emplacement donné. */
+function sponsorsPourEmplacement(liste, emplacement) {
+  return liste.filter(function (s) {
+    return String(s.emplacements || '').toLowerCase().split(',')
+      .map(function (x) { return x.trim(); })
+      .indexOf(emplacement) >= 0;
+  });
+}
+
+/** Poids d'un partenaire, borné 1–5 (comme le backend). */
+function sponsorsPoids(s) {
+  var p = parseInt(s.poids, 10);
+  if (!isFinite(p)) p = 1;
+  return Math.max(1, Math.min(5, p));
+}
+
+/* --- Stockage local, tolérant aux navigateurs qui le refusent (mode privé) --- */
+function sponsorsLire(cle, defaut) {
+  try {
+    var brut = localStorage.getItem(cle);
+    return brut ? JSON.parse(brut) : defaut;
+  } catch (e) { return defaut; }
+}
+function sponsorsEcrire(cle, valeur) {
+  try { localStorage.setItem(cle, JSON.stringify(valeur)); } catch (e) { /* stockage indisponible */ }
+}
+
+/**
+ * LA ROUE ÉQUITABLE.
+ *
+ * Le tirage au hasard ne convient pas : sur dix chargements il donnerait trois fois le gros
+ * partenaire et zéro fois le petit — indéfendable en fin de saison. On construit donc, une
+ * fois par appareil, une liste où chaque partenaire figure `poids` fois, on la mélange, et
+ * on avance d'un cran à chaque affichage. Conséquence : TOUT LE MONDE EST VU UNE FOIS AVANT
+ * QUE QUICONQUE SOIT VU DEUX FOIS, et deux spectateurs n'ont pas la même séquence.
+ *
+ * L'ordre est mémorisé par emplacement : le partenaire de l'interstitiel n'est donc jamais
+ * celui de l'encart au même instant. La roue se reconstruit toute seule si la composition
+ * change (ajout d'un partenaire, poids modifié) — la signature ci-dessous le détecte.
+ *
+ * @param {string} emplacement  bandeau | rail | fil | plein | mur
+ * @param {Array}  candidats    partenaires éligibles à cet emplacement
+ * @param {boolean} avancer     vrai = consommer un tour (l'affichage a réellement eu lieu)
+ * @returns {Object|null} le partenaire tiré, ou null s'il n'y a aucun candidat
+ */
+function sponsorsTirer(emplacement, candidats, avancer) {
+  if (!candidats.length) return null;
+
+  var signature = candidats.map(function (s) { return s.id_sponsor + ':' + sponsorsPoids(s); }).join('|');
+  var roues = sponsorsLire(SPONSORS_CLE_ROUES, {}) || {};
+  var roue = roues[emplacement];
+
+  if (!roue || roue.signature !== signature || !roue.ordre || !roue.ordre.length) {
+    var expansee = [];
+    candidats.forEach(function (s) {
+      var n = sponsorsPoids(s);
+      for (var i = 0; i < n; i++) expansee.push(s.id_sponsor);
+    });
+    // Mélange de Fisher-Yates : un ordre propre à cet appareil, figé ensuite.
+    for (var k = expansee.length - 1; k > 0; k--) {
+      var j = Math.floor(Math.random() * (k + 1));
+      var t = expansee[k]; expansee[k] = expansee[j]; expansee[j] = t;
+    }
+    roue = { signature: signature, ordre: expansee, curseur: 0 };
+  }
+
+  var id = roue.ordre[roue.curseur % roue.ordre.length];
+  if (avancer) {
+    roue.curseur = (roue.curseur + 1) % roue.ordre.length;
+    roues[emplacement] = roue;
+    sponsorsEcrire(SPONSORS_CLE_ROUES, roues);
+  } else if (!roues[emplacement]) {
+    roues[emplacement] = roue;
+    sponsorsEcrire(SPONSORS_CLE_ROUES, roues);
+  }
+
+  var trouve = candidats.filter(function (s) { return s.id_sponsor === id; })[0];
+  return trouve || candidats[0];
+}
+
+/** Ordre complet de la roue d'un emplacement (sert au rail, qui les fait défiler tous). */
+function sponsorsOrdreRoue(emplacement, candidats) {
+  if (!candidats.length) return [];
+  sponsorsTirer(emplacement, candidats, false); // construit la roue si besoin
+  var roue = (sponsorsLire(SPONSORS_CLE_ROUES, {}) || {})[emplacement];
+  if (!roue) return candidats;
+  // On déplie la roue en retirant les répétitions consécutives : le rail ne doit pas
+  // afficher deux fois de suite le même logo, même si le partenaire a un poids élevé.
+  var vus = {}, ordre = [];
+  roue.ordre.forEach(function (id) {
+    if (vus[id]) return;
+    vus[id] = true;
+    var s = candidats.filter(function (c) { return c.id_sponsor === id; })[0];
+    if (s) ordre.push(s);
+  });
+  return ordre.length ? ordre : candidats;
+}
+
+/* ==========================================================================
+   IMAGES
+   ========================================================================== */
+
+/**
+ * URL publique d'une image Drive. On passe par lh3.googleusercontent.com (et non
+ * drive.google.com/thumbnail, qui bloque le hotlinking) — même mécanisme que l'affiche
+ * du tournoi, déjà éprouvé sur le site vitrine.
+ */
+function sponsorsUrlImage(id, largeur) {
+  return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (largeur || 400);
+}
+
+/** Couleur de marque d'un partenaire (repli : le navy de la charte). */
+function sponsorsCouleur(s) {
+  var c = String(s.couleur || '').trim();
+  return /^#[0-9a-fA-F]{6}$/.test(c) ? c : '#0C1C2E';
+}
+
+/**
+ * Logo d'un partenaire. Sans fichier téléversé, on compose une pastille au nom du
+ * partenaire sur sa couleur de marque : un commerçant qui n'a pas de logo exploitable
+ * reste affichable, et la démo fonctionne avant même le premier téléversement.
+ */
+function sponsorsLogo(s, hauteur) {
+  var nom = echapper(s.nom);
+  if (s.logo_id) {
+    return '<img class="sp-logo-img" src="' + echapper(sponsorsUrlImage(s.logo_id, (hauteur || 40) * 6)) +
+      '" alt="' + nom + '" loading="lazy" decoding="async" style="max-height:' + (hauteur || 40) + 'px">';
+  }
+  return '<span class="sp-logo-texte" style="background:' + echapper(sponsorsCouleur(s)) + '">' + nom + '</span>';
+}
+
+/** Ouvre-t-on un lien ? (partenaire sans site : on rend un bloc non cliquable). */
+function sponsorsOuvrir(s, contenu, classe, emplacement) {
+  var url = String(s.url || '').trim();
+  var attrs = ' class="' + classe + '" data-sponsor="' + echapper(s.id_sponsor) +
+              '" data-emplacement="' + echapper(emplacement) + '"';
+  if (!/^https?:\/\//i.test(url)) return '<div' + attrs + '>' + contenu + '</div>';
+  return '<a' + attrs + ' href="' + echapper(url) + '" target="_blank" rel="noopener sponsored">' +
+    contenu + '</a>';
+}
+
+/* ==========================================================================
+   RENDU DES EMPLACEMENTS
+   ========================================================================== */
+
+/**
+ * Nom du partenaire à afficher à côté du logo. À VIDE quand le partenaire n'a pas d'image :
+ * la pastille de repli porte déjà son nom, et l'écrire deux fois côte à côte est disgracieux
+ * — surtout sur téléphone, où le doublon mange la moitié du bandeau.
+ */
+function sponsorsNomACote(s) {
+  return s.logo_id ? '<strong>' + echapper(s.nom) + '</strong>' : '';
+}
+
+/** A — bandeau partenaire principal (un seul partenaire, permanent sur la journée). */
+function sponsorsRendreBandeau(liste) {
+  var candidats = sponsorsPourEmplacement(liste, 'bandeau');
+  var s = sponsorsTirer('bandeau', candidats, true);
+  if (!s) return '';
+  var corps =
+    '<span class="sp-bandeau-logo">' + sponsorsLogo(s, 34) + '</span>' +
+    '<span class="sp-bandeau-texte">' +
+      '<span class="sp-mention">Partenaire du tournoi</span>' +
+      sponsorsNomACote(s) +
+      (s.accroche ? '<span class="sp-accroche">' + echapper(s.accroche) + '</span>' : '') +
+    '</span>';
+  return sponsorsOuvrir(s, corps, 'sp-bandeau', 'bandeau');
+}
+
+/** B — rail (ordinateur) / barre basse (téléphone). Contient TOUS les partenaires du rail,
+ *  un seul visible à la fois : la rotation est faite en CSS/JS par sponsorsDemarrerRotation. */
+function sponsorsRendreRail(liste) {
+  var ordre = sponsorsOrdreRoue('rail', sponsorsPourEmplacement(liste, 'rail'));
+  if (!ordre.length) return '';
+  var vues = ordre.map(function (s, i) {
+    var corps = '<span class="sp-rail-logo">' + sponsorsLogo(s, 30) + '</span>' +
+      (s.accroche ? '<span class="sp-accroche">' + echapper(s.accroche) + '</span>' : '');
+    return '<div class="sp-rail-vue' + (i === 0 ? ' active' : '') + '" data-index="' + i + '"' +
+      (i === 0 ? '' : ' aria-hidden="true"') + '>' +
+      sponsorsOuvrir(s, corps, 'sp-rail-lien', 'rail') + '</div>';
+  }).join('');
+  var points = ordre.length > 1
+    ? '<span class="sp-points" aria-hidden="true">' + ordre.map(function (s, i) {
+        return '<i class="' + (i === 0 ? 'on' : '') + '"></i>';
+      }).join('') + '</span>'
+    : '';
+  return '<span class="sp-mention sp-rail-mention">Nos partenaires</span>' +
+    '<div class="sp-rail-vues">' + vues + '</div>' + points;
+}
+
+/** C — encart intégré au fil des scores. */
+function sponsorsRendreFil(s) {
+  if (!s) return '';
+  var corps =
+    '<span class="sp-fil-logo">' + sponsorsLogo(s, 30) + '</span>' +
+    '<span class="sp-fil-texte">' +
+      '<span class="sp-mention">Partenaire</span>' +
+      sponsorsNomACote(s) +
+      (s.accroche ? '<span class="sp-accroche">' + echapper(s.accroche) + '</span>' : '') +
+    '</span>';
+  return sponsorsOuvrir(s, corps, 'sp-fil', 'fil');
+}
+
+/** E — mur des partenaires : tous les logos, sans hiérarchie, en bas de page. */
+function sponsorsRendreMur(liste) {
+  var candidats = sponsorsPourEmplacement(liste, 'mur');
+  if (!candidats.length) return '';
+  var cases = candidats.map(function (s) {
+    return sponsorsOuvrir(s, sponsorsLogo(s, 38), 'sp-mur-case', 'mur');
+  }).join('');
+  return '<div class="sp-mur">' +
+      '<div class="sp-mur-titre">Ils rendent le tournoi possible</div>' +
+      '<div class="sp-mur-grille">' + cases + '</div>' +
+    '</div>';
+}
+
+/* ==========================================================================
+   ROTATION DU RAIL (emplacement B)
+   ========================================================================== */
+
+var sponsorsMinuteurRotation = null;
+
+/**
+ * Fait défiler les vues du rail toutes les `rotationS` secondes.
+ *
+ * Le rail est rendu DEUX FOIS (colonne de droite sur ordinateur, barre basse sur téléphone) :
+ * une seule est visible à la fois, selon la largeur d'écran. On fait donc tourner les deux en
+ * même temps — sinon la bascule d'orientation d'une tablette figerait celle qui s'affiche.
+ * L'affichage n'est compté que pour le rendu RÉELLEMENT visible, pour ne pas doubler le chiffre.
+ *
+ * Une seule boucle à la fois (la précédente est arrêtée), et rien du tout s'il n'y a qu'un
+ * partenaire ou si la rotation est réglée à 0.
+ *
+ * @param {Array|Element} racines une zone ou plusieurs
+ * @param {number} rotationS secondes entre deux partenaires (0 = pas de rotation)
+ */
+function sponsorsDemarrerRotation(racines, rotationS) {
+  if (sponsorsMinuteurRotation) { clearInterval(sponsorsMinuteurRotation); sponsorsMinuteurRotation = null; }
+  if (!racines || !rotationS) return;
+
+  var zones = (racines.length === undefined) ? [racines] : Array.prototype.slice.call(racines);
+  zones = zones.filter(function (z) { return z && z.querySelectorAll('.sp-rail-vue').length > 1; });
+  if (!zones.length) return;
+
+  var reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var index = 0;
+
+  sponsorsMinuteurRotation = setInterval(function () {
+    if (document.hidden) return; // onglet en arrière-plan : inutile de tourner dans le vide
+    index++;
+    zones.forEach(function (zone) {
+      var vues = zone.querySelectorAll('.sp-rail-vue');
+      var points = zone.querySelectorAll('.sp-points i');
+      var courant = index % vues.length;
+      for (var i = 0; i < vues.length; i++) {
+        var actif = (i === courant);
+        vues[i].classList.toggle('active', actif);
+        if (reduit) vues[i].style.transition = 'none';
+        if (actif) { vues[i].removeAttribute('aria-hidden'); } else { vues[i].setAttribute('aria-hidden', 'true'); }
+        if (points[i]) points[i].classList.toggle('on', actif);
+      }
+      // offsetParent nul = zone masquée par une règle CSS (l'autre rendu est à l'écran).
+      if (zone.offsetParent === null) return;
+      var lien = vues[courant].querySelector('[data-sponsor]');
+      if (lien) sponsorsCompterAffichage(lien.getAttribute('data-sponsor'), 'rail');
+    });
+  }, rotationS * 1000);
+}
+
+/* ==========================================================================
+   D — INTERSTITIEL D'ACCUEIL
+   ========================================================================== */
+
+/** Nombre de chargements de la page aujourd'hui (sert à sauter la toute première visite). */
+function sponsorsCompterVisite() {
+  var v = sponsorsLire(SPONSORS_CLE_VISITES, null);
+  var jour = new Date().toISOString().slice(0, 10);
+  if (!v || v.jour !== jour) v = { jour: jour, n: 0 };
+  v.n++;
+  sponsorsEcrire(SPONSORS_CLE_VISITES, v);
+  return v.n;
+}
+
+/**
+ * Décide si l'interstitiel doit s'afficher MAINTENANT. Quatre verrous, dans cet ordre :
+ *  1. l'emplacement est allumé et au moins un partenaire y est déclaré ;
+ *  2. ce n'est pas la toute première arrivée de la journée (réglable) — c'est le cas que
+ *     les moteurs de recherche pénalisent et celui qui agace le plus un parent pressé ;
+ *  3. la période de repos depuis le dernier affichage est écoulée ;
+ *  4. le tournoi est publié (sinon la page ne montre qu'un écran « à venir » : un message
+ *     plein écran par-dessus n'aurait aucun sens).
+ */
+function sponsorsPeutAfficherPlein(reglages, candidats, nbVisites, publie) {
+  if (!reglages.pleinActif || !candidats.length) return false;
+  if (!publie) return false;
+  if (!reglages.pleinPremiereVisite && nbVisites <= 1) return false;
+  var dernier = sponsorsLire(SPONSORS_CLE_PLEIN, null);
+  if (dernier && dernier.t) {
+    var ecoule = (Date.now() - dernier.t) / 60000;
+    if (ecoule < reglages.pleinReposMin) return false;
+  }
+  return true;
+}
+
+/**
+ * Affiche l'interstitiel. Vraie boîte de dialogue : focus capturé à l'intérieur, Échap qui
+ * ferme, bouton « Passer » d'au moins 44 px, focus rendu à son point de départ à la fermeture.
+ *
+ * @param {Object} s        partenaire à afficher
+ * @param {Object} reglages durées
+ * @param {Function} [surFermeture] rappel optionnel
+ */
+function sponsorsAfficherPlein(s, reglages, surFermeture) {
+  if (!s) return;
+
+  var debut = Date.now();
+  var minuteurs = [];
+  var focusDepart = document.activeElement;
+
+  var fond = document.createElement('div');
+  fond.className = 'sp-plein';
+  fond.setAttribute('role', 'dialog');
+  fond.setAttribute('aria-modal', 'true');
+  fond.setAttribute('aria-label', 'Message d\'un partenaire du tournoi');
+  // Le conteneur est focalisable au programme (jamais au Tab) : c'est LUI qui reçoit le focus
+  // à l'ouverture. Le bouton « Passer » ne peut pas jouer ce rôle — il est désactivé pendant
+  // le décompte, et un élément désactivé refuse le focus : le clavier resterait derrière la boîte.
+  fond.setAttribute('tabindex', '-1');
+
+  // Visuel fourni par le partenaire, sinon composition automatique logo + accroche + couleur.
+  var visuel = s.visuel_id
+    ? '<img class="sp-plein-image" src="' + echapper(sponsorsUrlImage(s.visuel_id, 900)) +
+      '" alt="' + echapper(s.nom) + '" decoding="async">'
+    : '<div class="sp-plein-compose" style="background:' + echapper(sponsorsCouleur(s)) + '">' +
+        '<span class="sp-plein-marque">' + echapper(s.nom) + '</span>' +
+        (s.accroche ? '<span class="sp-plein-accroche">' + echapper(s.accroche) + '</span>' : '') +
+        (String(s.url || '').trim() ? '<span class="sp-plein-cta">Découvrir →</span>' : '') +
+      '</div>';
+
+  fond.innerHTML =
+    '<div class="sp-plein-boite">' +
+      sponsorsOuvrir(s, visuel, 'sp-plein-visuel', 'plein') +
+      '<span class="sp-plein-mention">Partenaire du tournoi</span>' +
+      '<div class="sp-plein-jauge" aria-hidden="true"><i></i></div>' +
+      '<button type="button" class="sp-plein-passer">Passer</button>' +
+    '</div>';
+
+  var bouton = fond.querySelector('.sp-plein-passer');
+  var jauge = fond.querySelector('.sp-plein-jauge i');
+
+  function fermer(raison) {
+    minuteurs.forEach(clearTimeout);
+    if (!fond.parentNode) return;
+    document.removeEventListener('keydown', surTouche, true);
+    fond.parentNode.removeChild(fond);
+    document.body.classList.remove('sp-plein-ouvert');
+    sponsorsCompterPlein(s.id_sponsor, Math.round((Date.now() - debut) / 1000), raison === 'passer');
+    if (focusDepart && focusDepart.focus) { try { focusDepart.focus(); } catch (e) {} }
+    if (typeof surFermeture === 'function') surFermeture();
+  }
+
+  function surTouche(e) {
+    if (e.key === 'Escape') { e.preventDefault(); fermer('passer'); return; }
+    if (e.key !== 'Tab') return;
+    // Piège à focus : on ne sort pas de la boîte au clavier tant qu'elle est ouverte.
+    var focusables = fond.querySelectorAll('a[href], button:not([disabled])');
+    if (!focusables.length) { e.preventDefault(); return; }
+    var premier = focusables[0], dernier = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === premier) { e.preventDefault(); dernier.focus(); }
+    else if (!e.shiftKey && document.activeElement === dernier) { e.preventDefault(); premier.focus(); }
+  }
+
+  bouton.addEventListener('click', function () { fermer('passer'); });
+  fond.addEventListener('click', function (e) { if (e.target === fond) fermer('passer'); });
+  document.addEventListener('keydown', surTouche, true);
+
+  document.body.appendChild(fond);
+  document.body.classList.add('sp-plein-ouvert');
+  fond.focus();
+
+  // Le bouton existe dès le départ (jamais de croix cachée) mais n'agit qu'après le délai :
+  // il affiche le décompte pour que l'attente soit lisible plutôt que subie.
+  var restant = reglages.pleinSkipS;
+  if (restant > 0) {
+    bouton.disabled = true;
+    bouton.textContent = 'Passer dans ' + restant + ' s';
+    var tic = setInterval(function () {
+      restant--;
+      if (restant > 0) { bouton.textContent = 'Passer dans ' + restant + ' s'; return; }
+      clearInterval(tic);
+      bouton.disabled = false;
+      bouton.textContent = 'Passer';
+      bouton.focus(); // dès qu'il devient actionnable, le clavier tombe dessus
+    }, 1000);
+    minuteurs.push(tic);
+  } else {
+    bouton.focus();
+  }
+
+  if (jauge) {
+    jauge.style.transition = 'width ' + reglages.pleinDureeS + 's linear';
+    // Un souffle avant de lancer la transition, sinon le navigateur applique la largeur finale
+    // directement et la jauge paraît figée.
+    requestAnimationFrame(function () { requestAnimationFrame(function () { jauge.style.width = '100%'; }); });
+  }
+  minuteurs.push(setTimeout(function () { fermer('fin'); }, reglages.pleinDureeS * 1000));
+
+  sponsorsEcrire(SPONSORS_CLE_PLEIN, { t: Date.now(), id: s.id_sponsor });
+}
+
+/* ==========================================================================
+   MESURE — 100 % LOCALE
+   --------------------------------------------------------------------------
+   Trois compteurs par partenaire :
+     • temps d'exposition réel, par emplacement — le logo présent à plus de 50 % dans
+       l'écran ET l'onglet au premier plan. C'est le seul indicateur qu'un partenaire
+       peut comparer à un panneau au bord du terrain ;
+     • nombre d'affichages, par emplacement ;
+     • clics, plus le détail de l'interstitiel (durée regardée, passages anticipés).
+   Plus une répartition par tranche de 30 minutes : la « visibilité tout au long de
+   l'événement » que la fiche restitue en courbe.
+   ========================================================================== */
+
+/** Structure vide d'un partenaire dans les compteurs. */
+function sponsorsMesureVide() {
+  return { expo: {}, aff: {}, clics: 0, plein: { ouverts: 0, secondes: 0, passes: 0 }, tranches: {} };
+}
+
+/** Compteurs du jour (remis à zéro au changement de date : un tournoi tient sur une journée). */
+function sponsorsMesure() {
+  var jour = new Date().toISOString().slice(0, 10);
+  var m = sponsorsLire(SPONSORS_CLE_MESURE, null);
+  if (!m || m.jour !== jour) m = { jour: jour, debut: Date.now(), sponsors: {} };
+  if (!m.sponsors) m.sponsors = {};
+  return m;
+}
+
+var sponsorsMesureEnCours = null;   // copie de travail, écrite par à-coups
+var sponsorsMesureSale = false;
+
+function sponsorsMesureCharger() {
+  if (!sponsorsMesureEnCours) sponsorsMesureEnCours = sponsorsMesure();
+  return sponsorsMesureEnCours;
+}
+function sponsorsMesureFiche(id) {
+  var m = sponsorsMesureCharger();
+  if (!m.sponsors[id]) m.sponsors[id] = sponsorsMesureVide();
+  return m.sponsors[id];
+}
+/** Écriture différée : on ne martèle pas le stockage local à chaque seconde comptée. */
+function sponsorsMesureEnregistrer(tout_de_suite) {
+  sponsorsMesureSale = true;
+  if (!tout_de_suite) return;
+  sponsorsEcrire(SPONSORS_CLE_MESURE, sponsorsMesureCharger());
+  sponsorsMesureSale = false;
+}
+
+/** Tranche de 30 minutes courante, au format HH:MM (clé de la courbe de visibilité). */
+function sponsorsTranche() {
+  var d = new Date();
+  var h = String(d.getHours()).padStart(2, '0');
+  var m = (d.getMinutes() < 30) ? '00' : '30';
+  return h + ':' + m;
+}
+
+function sponsorsCompterAffichage(id, emplacement) {
+  if (!id) return;
+  var f = sponsorsMesureFiche(id);
+  f.aff[emplacement] = (f.aff[emplacement] || 0) + 1;
+  sponsorsMesureEnregistrer(false);
+}
+
+function sponsorsCompterClic(id, emplacement) {
+  if (!id) return;
+  var f = sponsorsMesureFiche(id);
+  f.clics = (f.clics || 0) + 1;
+  f.aff['clic_' + emplacement] = (f.aff['clic_' + emplacement] || 0) + 1;
+  sponsorsMesureEnregistrer(true); // un clic précède souvent une navigation : on écrit tout de suite
+}
+
+function sponsorsCompterPlein(id, secondes, passe) {
+  if (!id) return;
+  var f = sponsorsMesureFiche(id);
+  f.plein.ouverts += 1;
+  f.plein.secondes += Math.max(0, secondes || 0);
+  if (passe) f.plein.passes += 1;
+  f.aff.plein = (f.aff.plein || 0) + 1;
+  sponsorsMesureEnregistrer(true);
+}
+
+/* --- Chronomètre d'exposition --- */
+
+var sponsorsObserves = [];      // { element, id, emplacement, visible }
+var sponsorsObservateur = null;
+var sponsorsTicker = null;
+
+/**
+ * Met un élément sous surveillance : tant qu'il est visible à plus de 50 % ET que l'onglet est
+ * au premier plan, une seconde d'exposition est créditée à son partenaire, chaque seconde.
+ */
+function sponsorsSurveiller(element, id, emplacement) {
+  if (!element || !id || typeof IntersectionObserver === 'undefined') return;
+
+  if (!sponsorsObservateur) {
+    sponsorsObservateur = new IntersectionObserver(function (entrees) {
+      entrees.forEach(function (e) {
+        for (var i = 0; i < sponsorsObserves.length; i++) {
+          if (sponsorsObserves[i].element === e.target) {
+            sponsorsObserves[i].visible = (e.intersectionRatio >= 0.5);
+            break;
+          }
+        }
+      });
+    }, { threshold: [0, 0.5, 1] });
+  }
+
+  sponsorsObserves.push({ element: element, id: id, emplacement: emplacement, visible: false });
+  sponsorsObservateur.observe(element);
+  sponsorsDemarrerChrono();
+}
+
+/** Une seule horloge pour tout le monde : elle crédite chaque élément réellement exposé. */
+function sponsorsDemarrerChrono() {
+  if (sponsorsTicker) return;
+  sponsorsTicker = setInterval(function () {
+    if (document.hidden) return; // téléphone verrouillé, autre appli : on ne compte pas
+    var tranche = sponsorsTranche();
+    var creditees = {};
+    sponsorsObserves.forEach(function (o) {
+      if (!o.visible || !o.element.isConnected) return;
+      var f = sponsorsMesureFiche(o.id);
+      f.expo[o.emplacement] = (f.expo[o.emplacement] || 0) + 1;
+      // La courbe horaire compte une seconde par partenaire, pas par emplacement : un même
+      // logo présent deux fois à l'écran ne doit pas doubler artificiellement sa visibilité.
+      if (!creditees[o.id]) {
+        creditees[o.id] = true;
+        f.tranches[tranche] = (f.tranches[tranche] || 0) + 1;
+      }
+    });
+    sponsorsMesureEnregistrer(false);
+  }, 1000);
+
+  // Filet : on écrit vraiment toutes les 5 s, et systématiquement quand la page disparaît
+  // (pagehide couvre la fermeture d'onglet, visibilitychange le passage en arrière-plan sur
+  // téléphone — où pagehide n'est pas garanti). Un onglet fermé brutalement perd au pire
+  // les 5 dernières secondes : acceptable pour une mesure de visibilité.
+  setInterval(function () { if (sponsorsMesureSale) sponsorsMesureEnregistrer(true); }, 5000);
+  window.addEventListener('pagehide', function () { sponsorsMesureEnregistrer(true); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) sponsorsMesureEnregistrer(true);
+  });
+}
+
+/** Oublie les éléments retirés du DOM (la page se redessine à chaque rafraîchissement). */
+function sponsorsOublierDetaches() {
+  sponsorsObserves = sponsorsObserves.filter(function (o) {
+    if (o.element.isConnected) return true;
+    if (sponsorsObservateur) sponsorsObservateur.unobserve(o.element);
+    return false;
+  });
+}
+
+/**
+ * Branche la mesure sur une zone fraîchement rendue : compte un affichage pour chaque bloc
+ * partenaire, met les logos sous chronomètre, et enregistre les clics.
+ */
+function sponsorsBrancherMesure(racine, options) {
+  if (!racine) return;
+  sponsorsOublierDetaches();
+  var compterAffichage = !(options && options.sansAffichage);
+
+  racine.querySelectorAll('[data-sponsor]').forEach(function (el) {
+    var id = el.getAttribute('data-sponsor');
+    var emplacement = el.getAttribute('data-emplacement') || '';
+    if (el.getAttribute('data-mesure') === 'oui') return; // déjà branché
+    el.setAttribute('data-mesure', 'oui');
+
+    if (compterAffichage) sponsorsCompterAffichage(id, emplacement);
+    sponsorsSurveiller(el, id, emplacement);
+    el.addEventListener('click', function () { sponsorsCompterClic(id, emplacement); });
+  });
+}
+
+/* ==========================================================================
+   BILAN — ce que lit la fiche de visibilité de l'admin
+   ========================================================================== */
+
+/**
+ * Consolide les compteurs de CET APPAREIL en un bilan par partenaire, prêt à afficher.
+ * @param {Array} liste partenaires connus (pour retrouver les noms)
+ * @returns {Object} { jour, total_expo, sponsors: [ { id, nom, expo, affichages, clics, … } ] }
+ */
+function sponsorsBilan(liste) {
+  var m = sponsorsMesure();
+  var parId = {};
+  (liste || []).forEach(function (s) { parId[s.id_sponsor] = s; });
+
+  var lignes = [];
+  var totalExpo = 0;
+
+  Object.keys(m.sponsors).forEach(function (id) {
+    var f = m.sponsors[id];
+    var expo = 0, affichages = 0;
+    Object.keys(f.expo || {}).forEach(function (k) { expo += f.expo[k]; });
+    Object.keys(f.aff || {}).forEach(function (k) {
+      if (k.indexOf('clic_') !== 0) affichages += f.aff[k];
+    });
+    totalExpo += expo;
+    lignes.push({
+      id: id,
+      nom: (parId[id] && parId[id].nom) || id,
+      expo: expo,
+      parEmplacement: f.expo || {},
+      affichages: affichages,
+      clics: f.clics || 0,
+      plein: f.plein || { ouverts: 0, secondes: 0, passes: 0 },
+      tranches: f.tranches || {}
+    });
+  });
+
+  lignes.forEach(function (l) {
+    l.partDeVoix = totalExpo ? Math.round(l.expo / totalExpo * 100) : 0;
+    l.tauxClic = l.affichages ? Math.round(l.clics / l.affichages * 1000) / 10 : 0;
+  });
+  lignes.sort(function (a, b) { return b.expo - a.expo; });
+
+  return { jour: m.jour, debut: m.debut, totalExpo: totalExpo, sponsors: lignes };
+}
+
+/** Efface les compteurs de l'appareil (bouton « repartir de zéro » de l'admin). */
+function sponsorsRemettreAZero() {
+  sponsorsMesureEnCours = null;
+  sponsorsMesureSale = false;
+  try {
+    localStorage.removeItem(SPONSORS_CLE_MESURE);
+    localStorage.removeItem(SPONSORS_CLE_ROUES);
+    localStorage.removeItem(SPONSORS_CLE_PLEIN);
+    localStorage.removeItem(SPONSORS_CLE_VISITES);
+  } catch (e) { /* stockage indisponible */ }
+}
+
+/** Durée en secondes → « 4 h 37 » / « 58 min » / « 42 s ». */
+function sponsorsDuree(secondes) {
+  var s = Math.max(0, Math.round(secondes || 0));
+  if (s < 60) return s + ' s';
+  var min = Math.round(s / 60);
+  if (min < 60) return min + ' min';
+  return Math.floor(min / 60) + ' h ' + String(min % 60).padStart(2, '0');
+}

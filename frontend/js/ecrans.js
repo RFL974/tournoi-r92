@@ -54,6 +54,11 @@ const ECRANS_DEF = [
   /* La Publication vient AVANT l'après-midi : elle n'en dépend pas (on publie
      le matin ; l'après-midi se génère plus tard, une fois les scores saisis). */
   { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [] },
+  /* Partenaires (sponsors de la page publique) : réglages d'affichage, fiches, puis fiche de
+     visibilité à renvoyer. Placé APRÈS la Publication — on habille la page une fois qu'elle
+     est en ligne. Libre : jamais verrouillé, on prépare les partenaires quand on veut, et
+     l'interrupteur général reste sur « non » tant qu'on n'a pas décidé de les montrer. */
+  { id: 'sponsors',    titre: 'Partenaires',       icone: 'sponsor',  blocs: ['bloc-sponsors-reglages', 'bloc-sponsors-liste', 'bloc-sponsors-bilan'], cles: [], libre: true },
   { id: 'apresmidi',   titre: 'Après-midi',        icone: 'ballon',   blocs: ['bloc-apresmidi'],          cles: ['apresmidi'] },
   /* Feuille de fin de journée : bilan des matchs joués. Jamais verrouillée (`libre`) — on peut la
      consulter à tout moment de la journée, même si tout n'est pas encore terminé. */
@@ -75,6 +80,8 @@ const ECRANS_ICONES = {
   ballon:    '<ellipse cx="12" cy="12" rx="5" ry="8" transform="rotate(45 12 12)"></ellipse><path d="M9 9l6 6M10.5 7.5l6 6M7.5 10.5l6 6"></path>',
   monde:     '<circle cx="12" cy="12" r="8"></circle><path d="M4 12h16M12 4c2.5 2.5 2.5 13 0 16M12 4c-2.5 2.5-2.5 13 0 16"></path>',
   dossier:   '<path d="M6 3h8l4 4v14H6z"></path><path d="M14 3v4h4M9 12h6M9 16h4"></path>',
+  /* Partenaires : une poignée de main stylisée (deux mains qui se rejoignent). */
+  sponsor:   '<path d="M3 10.5l3-3 3.5 3.5 2.5-1 2.5 1L18 7.5l3 3"></path><path d="M3 10.5v4l4.5 4 2-2 2 2 2-2 2 2 4.5-4v-4"></path>',
   courrier:  '<rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3.5 7l8.5 6 8.5-6"></path>',
   balai:     '<path d="M14 4l6 6M13 5l-7 7 5 5 7-7M6 12l-2 6 6-2"></path>'
 };
@@ -93,7 +100,9 @@ const ECRANS_ORDRE_ORIGINE = [
   'bloc-equipes', 'bloc-terrains', 'bloc-generation', 'bloc-apresmidi',
   'bloc-clubs-invites', 'bloc-apercu-invitation', 'bloc-surplace', 'bloc-reponse',
   'bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier',
-  'bloc-autorisation', 'bloc-publication', 'bloc-reinitialisation'
+  'bloc-autorisation', 'bloc-publication',
+  'bloc-sponsors-reglages', 'bloc-sponsors-liste', 'bloc-sponsors-bilan',
+  'bloc-reinitialisation'
 ];
 
 const ECRANS_CLE_ACTIF = 'r92_ecran_admin'; // dernier écran ouvert (mémorisé)

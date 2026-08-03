@@ -5,6 +5,71 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Des partenaires sur la page des scores (prototype) — 2026-08-03
+La page publique du tournoi peut désormais accueillir des **sponsors**, pilotés depuis un nouvel
+écran **Partenaires** de l'admin. **Prototype assumé** : aucune dépense, aucun service en plus —
+tout tient dans le Sheet, Apps Script, Drive et le relais gratuit déjà en place. L'objectif est de
+**montrer le résultat sur la vraie page, le jour J**.
+
+**Cinq emplacements**, chacun activable par partenaire : **A** bandeau permanent sous le titre ·
+**B** rail à droite sur ordinateur, qui devient une barre basse sur téléphone · **C** encart au
+gabarit d'une carte de match, glissé dans le fil des scores · **D** message plein écran à
+l'arrivée · **E** mur de tous les logos en bas de page.
+
+Une **règle** les gouverne tous : *un parent qui ouvre la page pendant le match de son enfant doit
+voir le score en moins de trois secondes*. D'où : hauteur réservée partout (un logo qui charge en
+retard ne fait jamais sauter les scores sous le doigt), barre basse qui ne recouvre rien, plein
+écran jamais rejoué sur un rafraîchissement automatique, et **un seul appel commercial au-dessus
+du contenu** — quand le bandeau partenaire est là, le bandeau de don descend sous les contrôles.
+
+**La rotation est équitable, pas aléatoire.** Un tirage au hasard donnerait, sur dix chargements,
+trois fois le gros partenaire et zéro fois le petit : indéfendable en fin de saison. Chaque
+appareil construit donc une roue où chaque partenaire figure `poids` fois, la mélange une fois
+pour toutes, et avance d'un cran **à chaque affichage réel**. Tout le monde est vu une fois avant
+que quiconque soit vu deux fois, deux spectateurs n'ont pas la même séquence, et le poids (1 à 5)
+devient le seul levier commercial — explicable tel quel au partenaire.
+
+**Tout se règle dans l'admin** : interrupteur général, durée du plein écran, délai avant que
+« Passer » devienne actionnable, période avant de le revoir, vitesse de rotation. Les bornes sont
+appliquées **deux fois** (écran et backend) : elles empêchent qu'un « 500 » au lieu d'un « 5 » ne
+transforme le message en écran bloquant. Un bouton **teste le plein écran** avec les réglages en
+cours de saisie, avant publication.
+
+**Et une fiche de visibilité à renvoyer au partenaire.** Pas des « impressions » — ça ne veut rien
+dire pour un bandeau permanent — mais le **temps d'exposition réel** : logo présent à plus de 50 %
+dans l'écran, onglet au premier plan, compteur arrêté quand le téléphone se verrouille. Plus les
+affichages, les clics, la **courbe de visibilité par tranche de 30 minutes** sur toute la journée,
+la part de voix, et pour le plein écran la durée réellement regardée et le taux de passage
+anticipé. Imprimable en PDF, exportable en CSV.
+
+**La mesure ne sort pas de l'appareil**, et la fiche le dit. Pas par négligence : faire remonter
+des relevés par l'API des scores est exclu (chaque écriture y prend un verrou et reconstruit
+l'instantané public — ils entreraient en concurrence avec la saisie le jour J), et on ne paie pas
+un stockage pour un prototype. Les compteurs vivent donc dans le navigateur, aucun envoi, aucun
+cookie, aucun traceur tiers. La fiche porte la mention **« Mesuré sur 1 appareil »** : on ne
+montre jamais à un partenaire un chiffre qui laisserait croire à une audience non mesurée. Pour
+une réunion, un champ **Projection** multiplie les chiffres par une fréquentation saisie à la
+main — et la fiche bascule alors sur un bandeau **« Projection — données simulées »** impossible à
+retirer par erreur.
+
+**Un mode démo** (`tournoi.html?demo=sponsors`) force l'affichage même interrupteur éteint, rejoue
+le plein écran à volonté, accélère la rotation, repère les emplacements et injecte cinq
+partenaires d'exemple s'il n'y en a aucun — de quoi préparer et répéter la démonstration sans rien
+activer en production. Recommandation pour le jour J : garder l'interrupteur sur « non » et
+basculer en direct depuis l'admin au moment de montrer.
+
+**Rien ne change tant qu'on n'active pas.** Interrupteur général sur « non » (le défaut), la page
+publique est **exactement celle d'avant**, au pixel près — c'est vérifié par un test de
+non-régression. Le plein écran est une vraie boîte de dialogue (focus capturé, `Échap`, bouton
+« Passer » de 44 px jamais caché), les fondus respectent `prefers-reduced-motion`, et les
+partenaires voyagent dans l'instantané `getAll` : **zéro requête réseau supplémentaire**.
+
+Ce qui est volontairement **hors périmètre**, documenté sans être construit : la consolidation
+entre appareils (un collecteur Apps Script séparé, gratuit, décrit dans la doc) et le compteur en
+direct, qui n'a de sens qu'avec elle.
+
+📖 [`docs/sponsors.md`](docs/sponsors.md)
+
 ### Une équipe retirée emporte ses effectifs — 2026-08-03
 Un club déclare ses joueurs et ses éducateurs **sur sa fiche**, en répondant à l'invitation —
 jamais sur ses équipes. Conséquence invisible : retirer une de ses équipes (poubelle de l'écran
