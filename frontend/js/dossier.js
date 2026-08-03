@@ -268,10 +268,10 @@ function telechargerICS(g) {
 function construireDossier(g, categories, club) {
   const cats = (categories || []).filter(catPresente);
 
-  // Filtrage Phase 2 : si le club a des catégories engagées, le FORMAT SPORTIF ne montre
-  // que ces catégories (les autres sections restent inchangées). Repli sur toutes les
-  // catégories si la sélection ne correspond à aucune (donnée incohérente) — jamais de
-  // section vide. Sans club / sans sélection : `catsFormat` = toutes les catégories.
+  // Filtrage Phase 2 : si le club a des catégories engagées, les CARTES ne montrent que
+  // celles-là (les autres sections restent inchangées). Repli sur toutes les catégories si la
+  // sélection ne correspond à aucune (donnée incohérente) — jamais de section vide. Sans club
+  // / sans sélection : `catsFormat` = toutes les catégories.
   const engagees = categoriesEngageesListe(club);
   let catsFormat = cats;
   let filtreApplique = false;
@@ -282,78 +282,122 @@ function construireDossier(g, categories, club) {
     if (filtre.length) { catsFormat = filtre; filtreApplique = true; }
   }
 
-  let html = '';
+  // L'ORDRE DIT LE RÔLE DU DOCUMENT. L'invitation VEND : affiche en héros, cadre sportif haut,
+  // « votre réponse » en bas. Le dossier ORGANISE : le club l'ouvre pour savoir où se garer, à
+  // quelle heure être là et qui appeler — donc le JOUR J d'abord, et le cadre sportif (qu'il a
+  // déjà lu à l'invitation, deux mois plus tôt) en RAPPEL plus bas. Même charte, autre rôle.
+  return [
+    enteteDossier(g, club, filtreApplique ? catsFormat : []),   //  1. qui reçoit, quoi, quand — et pour QUI
+    accueilPersonnalise(g, club),                               //  2. le mot d'accueil
+    sectionJournee(g, catsFormat),                              //  3. LE JOUR J : la journée en un coup d'œil
+    sectionInfosPratiques(g),                                   //  4.   … où, et ce qu'on y trouve
+    sectionParking(g),                                          //  5.   … comment y accéder
+    sectionContact(g),                                          //  6.   … qui appeler (remonté : c'était en bas)
+    sectionSecurite(g),                                         //  7.   … et en cas de pépin
+    sectionSuivi(g, cats),                                      //  8.   … suivre les scores sur place
+    sectionCategories(catsFormat, filtreApplique),              //  9. RAPPEL SPORTIF (déjà lu à l'invitation)
+    sectionEncadrement(g),                                      // 10. ce qu'on attend du club
+    sectionModalites(g),                                        // 11. l'administratif
+    bandeauActions(g),                                          // 12. agenda, itinéraires, droit à l'image
+    mentionGeneration(),                                        // 13. daté (le PDF fige, pas la page)
+    piedDocument(g, false)                                      // 14. pied (sans liens : le bandeau les porte)
+  ].join('');
+}
 
-  // 1) EN-TÊTE VITRINE : EXACTEMENT le même bloc que l'invitation (heroDocument) — blason
-  //    centré, affiche en héros, descriptif complet. Le club retrouve le document qu'il a
-  //    reçu à l'invitation, avec la suite de l'histoire ; c'est le même tournoi, la même
-  //    voix. (Le descriptif n'est plus tronqué à 400 caractères : plus rien ne le justifie.)
-  html += heroDocument(g, {
-    surtitre: 'École de Rugby du Racing Club de France<br>votre dossier pour la journée'
+/**
+ * 1) EN-TÊTE : le même bloc vitrine que l'invitation, à quatre nuances près — le surtitre dit
+ * « votre dossier », l'affiche est RÉDUITE (le club l'a déjà vue en grand), le descriptif du
+ * tournoi n'est PAS répété (il a été lu à l'invitation) et le nom du club s'affiche sous la
+ * date : ce document est le sien, il doit le voir en une seconde.
+ * `catsEngagees` (vide si on ne sait pas) ajoute le rappel de son engagement.
+ */
+function enteteDossier(g, club, catsEngagees) {
+  const nomClub = txt(club && club.club_nom);
+  const noms = (catsEngagees || []).map(function (c) { return txt(c.categorie); }).filter(Boolean);
+  let mention = '';
+  if (nomClub) {
+    // « Dossier — {club} » et pas « Dossier de {club} » : l'élision dépend du nom du club
+    // (« de l'AS Massy », « du PUC », « de Suresnes ») et aucune règle ne la devine à coup sûr.
+    mention = '<p class="inv-hero-club">Dossier — ' + echapper(nomClub) + '</p>';
+    if (noms.length) {
+      mention += '<p class="inv-hero-engagement">Engagé en ' +
+        noms.map(echapper).join('<span class="inv-quand-sep"> · </span>') + '</p>';
+    }
+  }
+  return heroDocument(g, {
+    surtitre: 'École de Rugby du Racing Club de France<br>votre dossier pour la journée',
+    mention: mention,
+    afficheCompacte: true,
+    sansPresentation: true   // le descriptif du tournoi a été lu à l'invitation (décision Romain)
   });
+}
 
-  // 1 bis) ACCUEIL PERSONNALISÉ (Phase 2) : seulement si le club est connu (paramètre
-  //        ?club= présent et jeton valide). Sinon rien (mode générique).
-  html += accueilPersonnalise(g, club);
-
-  // 2) LA JOURNÉE EN UN COUP D'ŒIL : la frise horaire de l'invitation, suivie de la note
-  //    « horaires indicatifs » propre au dossier (le planning détaillé fait foi le jour J).
-  //    La note ne s'affiche JAMAIS seule : sans heures, pas de section.
-  const frise = friseJournee(g, catsFormat);
-  html += section('La journée en un coup d\'œil', frise && (frise +
+/** 3) LA JOURNÉE EN UN COUP D'ŒIL : la frise horaire, suivie de la note « horaires indicatifs »
+ *  propre au dossier. La note ne s'affiche JAMAIS seule : sans heures, pas de section. */
+function sectionJournee(g, cats) {
+  const frise = friseJournee(g, cats);
+  return section('La journée en un coup d\'œil', frise && (frise +
     '<p class="d-note">Après le dernier match : retour aux vestiaires puis cérémonie de remise ' +
     'des trophées — l\'événement se termine à l\'issue de la remise. Horaires indicatifs — ' +
     'le planning détaillé fera foi le jour du tournoi.</p>'), 'inv-journee');
+}
 
-  // 3) VOS CATÉGORIES : une carte par catégorie (mêmes cartes que l'invitation), limitées
-  //    aux catégories ENGAGÉES par le club quand on les connaît — le tableau d'avant
-  //    demandait au club de relire des colonnes qui ne le concernaient pas.
-  html += section(filtreApplique ? 'Vos catégories engagées' : 'Les catégories du tournoi',
-    cartesCategories(catsFormat), 'inv-categories');
-
-  // 4) INFOS PRATIQUES : lieu + adresse, puis logistique si renseignée dans Config
-  //    (paramètres optionnels de la Zone A : logistique_parking / _buvette / _vestiaires).
-  html += section('Infos pratiques', listeOuVide([
+/** 4) INFOS PRATIQUES : lieu + adresse, puis la logistique si elle est renseignée
+ *  (paramètres optionnels de la Zone A : logistique_parking / _buvette / _vestiaires). */
+function sectionInfosPratiques(g) {
+  return section('Infos pratiques', listeOuVide([
     ligne('Lieu', echapper(txt(g.tournoi_lieu))),
     ligne('Adresse', echapper(txt(g.tournoi_adresse))),
     ligne('Parking', echapper(txt(g.logistique_parking))),
     ligne('Buvette / restauration', echapper(txt(g.logistique_buvette))),
     ligne('Vestiaires', echapper(txt(g.logistique_vestiaires)))
   ]));
+}
 
-  // 5) MODALITÉS D'INSCRIPTION : date limite de confirmation,
-  //    tarif d'engagement (montant + modalités) SEULEMENT si un tarif est demandé.
-  const tarifOui = String(txt(g.tarif_engagement_oui)).toLowerCase() === 'oui';
-  html += section('Modalités d\'inscription', listeOuVide([
-    ligne('Confirmation attendue avant le',
-      txt(g.date_limite_confirmation) ? echapper(dateLongueFr(g.date_limite_confirmation)) : ''),
-    ligne('Tarif d\'engagement', tarifOui ? echapper(txt(g.tarif_engagement_montant)) : ''),
-    ligne('Modalités de paiement', tarifOui ? echapper(txt(g.tarif_engagement_modalites)) : '')
-  ]));
-
-  // 6) PARKING & ACCÈS : texte + photo (plan du parking) en pleine largeur.
-  html += section('Parking & accès',
+/** 5) PARKING & ACCÈS : texte + photo (plan du parking) en pleine largeur. */
+function sectionParking(g) {
+  return section('Parking & accès',
     (txt(g.parking_texte) ? '<p class="d-parking-texte">' + echapper(txt(g.parking_texte)) + '</p>' : '') +
     (txt(g.parking_photo_id)
       ? '<img class="d-parking-photo" src="' + echapper(urlAffiche(g.parking_photo_id, 1000)) + '" ' +
         'alt="Plan du parking et des accès">'
       : ''));
+}
 
-  // 7) ENCADREMENT & ASSURANCE : ratio, diplômes, attestation si requise.
-  const attestation = String(txt(g.assurance_attestation_requise)).toLowerCase() === 'oui';
-  html += section('Encadrement & assurance', listeOuVide([
-    ligne('Encadrement', echapper(txt(g.encadrement_ratio))),
-    ligne('Diplômes exigés', echapper(txt(g.encadrement_diplomes))),
-    ligne('Assurance', attestation ? 'Attestation d\'assurance du club à fournir' : ''),
-    // Mentions réglementaires FFR (toujours affichées) : licence obligatoire + FDM EDR.
-    ligne('Licences', 'Tous les joueurs participant au tournoi doivent être titulaires d\'une licence FFR validée.'),
-    ligne('Feuille de match', 'La feuille de match dématérialisée des Écoles de Rugby (FDM EDR) est utilisée pour l\'ensemble des rencontres du tournoi. Elle remplace la composition d\'équipe, la feuille de régulation et la feuille de score papier.')
+/** 6) VOTRE CONTACT : le référent du tournoi, en évidence — c'est le numéro qu'on cherche
+ *  quand on est en retard sur l'autoroute, pas en dernière page. */
+function sectionContact(g) {
+  if (!txt(g.referent_nom) && !txt(g.referent_tel)) return '';
+  return '<section class="d-section d-contact">' +
+    '<h2>Votre contact</h2>' +
+    '<p class="d-contact-ligne">' +
+      (txt(g.referent_nom) ? '<strong>' + echapper(txt(g.referent_nom)) + '</strong>' : '') +
+      (txt(g.referent_tel)
+        ? (txt(g.referent_nom) ? ' · ' : '') + '<a href="tel:' + echapper(txt(g.referent_tel)) + '">'
+          + echapper(telephoneLisible(g.referent_tel)) + '</a>'
+        : '') +
+    '</p></section>';
+}
+
+/** 7) SÉCURITÉ : poste de secours (si coché) + référent sécurité résolu. */
+function sectionSecurite(g) {
+  const secours = String(txt(g.securite_secours_oui)).toLowerCase() === 'oui';
+  const refSecu = referentSecurite(g);
+  const contactSecu = [refSecu.nom ? echapper(refSecu.nom) : '', refSecu.tel ? echapper(telephoneLisible(refSecu.tel)) : '']
+    .filter(Boolean).join(' — ');
+  return section('Sécurité', listeOuVide([
+    ligne('Poste de secours', secours
+      ? 'Sur place' + (txt(g.securite_secours_precisions) ? ' — ' + echapper(txt(g.securite_secours_precisions)) : '')
+      : ''),
+    ligne('Référent sécurité', contactSecu)
   ]));
+}
 
-  // 8) SUIVI & ORGANISATION : lien live + QR, table de marque, résumé des terrains.
+/** 8) SUIVI & ORGANISATION : lien live + QR, table de marque, résumé des terrains. */
+function sectionSuivi(g, cats) {
   const urlLive = urlSuiviPublic(g);
   const terrains = resumeTerrains(g, cats);
-  html += section('Suivi des scores & organisation',
+  return section('Suivi des scores & organisation',
     '<div class="d-suivi">' +
       '<div class="d-suivi-texte">' + listeOuVide([
         ligne('Scores en direct', '<a href="' + echapper(urlLive) + '" target="_blank" rel="noopener">' + echapper(urlLive) + '</a>'),
@@ -362,49 +406,49 @@ function construireDossier(g, categories, club) {
       ]) + '</div>' +
       '<div class="d-qr" id="d-qr" data-url="' + echapper(urlLive) + '"><span class="d-qr-legende">Scores en direct</span></div>' +
     '</div>');
-
-  // 9) SÉCURITÉ : poste de secours (si coché) + référent sécurité résolu.
-  const secours = String(txt(g.securite_secours_oui)).toLowerCase() === 'oui';
-  const refSecu = referentSecurite(g);
-  const contactSecu = [refSecu.nom ? echapper(refSecu.nom) : '', refSecu.tel ? echapper(telephoneLisible(refSecu.tel)) : '']
-    .filter(Boolean).join(' — ');
-  html += section('Sécurité', listeOuVide([
-    ligne('Poste de secours', secours
-      ? 'Sur place' + (txt(g.securite_secours_precisions) ? ' — ' + echapper(txt(g.securite_secours_precisions)) : '')
-      : ''),
-    ligne('Référent sécurité', contactSecu)
-  ]));
-
-  // 10) BLOC CONTACT : référent tournoi.
-  if (txt(g.referent_nom) || txt(g.referent_tel)) {
-    html += '<section class="d-section d-contact">' +
-      '<h2>Votre contact</h2>' +
-      '<p class="d-contact-ligne">' +
-        (txt(g.referent_nom) ? '<strong>' + echapper(txt(g.referent_nom)) + '</strong>' : '') +
-        (txt(g.referent_tel)
-          ? (txt(g.referent_nom) ? ' · ' : '') + '<a href="tel:' + echapper(txt(g.referent_tel)) + '">'
-            + echapper(telephoneLisible(g.referent_tel)) + '</a>'
-          : '') +
-      '</p></section>';
-  }
-
-  // 11) BANDEAU D'ACTIONS : agenda .ics, itinéraires, liens de l'association.
-  html += bandeauActions(g);
-
-  // 12) DATE DE GÉNÉRATION : utile sur le PAPIER (un dossier imprimé fige la version du jour),
-  //     avec le rappel que le lien personnel, lui, montre toujours l'état à jour.
-  const genereLe = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-    + ' à ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  html += '<p class="d-genere">Document généré le ' + echapper(genereLe) +
-    ' — votre lien personnel affiche toujours la version à jour.</p>';
-
-  // 13) PIED DE PAGE : le même que l'invitation, SANS ses liens (le bandeau d'actions
-  //     ci-dessus porte déjà le site et l'Instagram — pas deux fois à 3 cm d'écart).
-  html += piedDocument(g, false);
-
-  return html;
 }
 
+/** 9) RAPPEL SPORTIF : les mêmes cartes que l'invitation, limitées aux catégories ENGAGÉES
+ *  par le club quand on les connaît. En RAPPEL (plus bas) : le club a choisi son engagement
+ *  sur ces informations-là, il ne les redécouvre pas ici. */
+function sectionCategories(cats, filtreApplique) {
+  return section(filtreApplique ? 'Rappel — vos catégories engagées' : 'Rappel — les catégories du tournoi',
+    cartesCategories(cats), 'inv-categories');
+}
+
+/** 10) ENCADREMENT & ASSURANCE : ratio, diplômes, attestation si requise, mentions FFR. */
+function sectionEncadrement(g) {
+  const attestation = String(txt(g.assurance_attestation_requise)).toLowerCase() === 'oui';
+  return section('Encadrement & assurance', listeOuVide([
+    ligne('Encadrement', echapper(txt(g.encadrement_ratio))),
+    ligne('Diplômes exigés', echapper(txt(g.encadrement_diplomes))),
+    ligne('Assurance', attestation ? 'Attestation d\'assurance du club à fournir' : ''),
+    // Mentions réglementaires FFR (toujours affichées) : licence obligatoire + FDM EDR.
+    ligne('Licences', 'Tous les joueurs participant au tournoi doivent être titulaires d\'une licence FFR validée.'),
+    ligne('Feuille de match', 'La feuille de match dématérialisée des Écoles de Rugby (FDM EDR) est utilisée pour l\'ensemble des rencontres du tournoi. Elle remplace la composition d\'équipe, la feuille de régulation et la feuille de score papier.')
+  ]));
+}
+
+/** 11) MODALITÉS D'INSCRIPTION : date limite de confirmation, tarif d'engagement
+ *  (montant + modalités) SEULEMENT si un tarif est demandé. */
+function sectionModalites(g) {
+  const tarifOui = String(txt(g.tarif_engagement_oui)).toLowerCase() === 'oui';
+  return section('Modalités d\'inscription', listeOuVide([
+    ligne('Confirmation attendue avant le',
+      txt(g.date_limite_confirmation) ? echapper(dateLongueFr(g.date_limite_confirmation)) : ''),
+    ligne('Tarif d\'engagement', tarifOui ? echapper(txt(g.tarif_engagement_montant)) : ''),
+    ligne('Modalités de paiement', tarifOui ? echapper(txt(g.tarif_engagement_modalites)) : '')
+  ]));
+}
+
+/** 13) DATE DE GÉNÉRATION : utile sur le PAPIER (un dossier imprimé fige la version du jour),
+ *  avec le rappel que le lien personnel, lui, montre toujours l'état à jour. */
+function mentionGeneration() {
+  const genereLe = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    + ' à ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return '<p class="d-genere">Document généré le ' + echapper(genereLe) +
+    ' — votre lien personnel affiche toujours la version à jour.</p>';
+}
 
 /** Bandeau d'actions : chaque bouton n'apparaît que si son lien est constructible. */
 function bandeauActions(g) {

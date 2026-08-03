@@ -22,11 +22,13 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
   absent, équipes par catégorie, joueurs + éducateurs par équipe, totaux vivants
   (`js/reponse.js`).
 - **`dossier-club.html`** — **dossier du club** (Phase 2, lien PERSONNEL avec jeton) : la page
-  envoyée au club APRÈS son acceptation. **Même agencement que l'invitation** — elle en reprend
-  les blocs communs (`js/commun-dossier.js`) : blason centré, affiche en héros, descriptif
-  complet, frise horaire, **une carte par catégorie ENGAGÉE par le club** — puis ce qui n'existe
-  qu'ici : infos pratiques, modalités d'inscription, parking & accès, encadrement & assurance,
-  QR code du suivi live, sécurité, contact, bandeau d'actions.
+  envoyée au club APRÈS son acceptation. **Même charte que l'invitation** (blocs communs de
+  `js/commun-dossier.js`) mais **un autre rôle, donc un autre ordre** : l'invitation *vend*
+  (affiche en héros, descriptif du tournoi, cadre sportif haut), le dossier *organise*. En-tête
+  avec le **nom du club** et son engagement, affiche **réduite**, **pas de descriptif** (il a été
+  lu à l'invitation), puis le **jour J** — la journée en un coup d'œil, infos
+  pratiques, parking & accès, votre contact, sécurité, suivi & QR — puis en **rappel** les cartes
+  des catégories engagées, l'encadrement, les modalités, et le bandeau d'actions.
   **Page VIVANTE** : le club garde son lien et la page se reconstruit à chaque ouverture avec les
   données du moment — ce qui n'existe pas encore à l'envoi apparaîtra tout seul.
   Export PDF via l'impression du navigateur (`css/dossier.css`, `js/dossier.js`,
