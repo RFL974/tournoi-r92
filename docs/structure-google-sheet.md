@@ -48,7 +48,7 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 | parametre | valeur (exemple) | Signification |
 |---|---|---|
 | `tournoi_id` | `2026-11-11 21:37:00` | Identifiant du tournoi, posé à chaque génération (clé de l'onglet `Historique`) |
-| `tournoi_publie` | `oui` | `oui` = la page publique est visible ; sinon écran « à venir ». Piloté par « Générer le tournoi » |
+| `tournoi_publie` | `oui` | `oui` = la page publique est visible ; sinon écran « à venir ». Piloté par le bouton **« Publier le tournoi »** de l'admin. Ce témoin commande AUSSI la carte « Tournoi » des actualités du site vitrine : il doit rester dans les listes blanches `live` **et** `invitation` de `CONFIG_PUBLIQUE_VUES` (Code.gs), sans quoi la vitrine conclut « non publié » en silence |
 | `tournoi_nom` | `Challenge Marc Chevalier` | Nom affiché sur la carte + la page d'article du site vitrine |
 | `tournoi_date` | `2026-11-11` | Date du tournoi (carte, article, agenda .ics) |
 | `tournoi_lieu` | `Stade Paul Langevin` | Lieu (article + itinéraire + agenda .ics) |
