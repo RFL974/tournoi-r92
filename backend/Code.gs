@@ -613,6 +613,11 @@ function assurerOngletMesures(classeur) {
   if (!onglet) {
     creerOngletAvecEntetes(classeur, 'Mesures', ENTETES.Mesures);
     onglet = classeur.getSheetByName('Mesures');
+    // Tout en TEXTE, comme l'onglet Config. Sans ça, Google Sheets reconnaît « 2026-08-03 »
+    // et convertit la cellule en vraie date : la relecture reçoit alors un objet Date au lieu
+    // de la chaîne écrite, et le filtrage par journée ne trouve plus rien (cf. mesureJourTexte,
+    // qui reste le filet de sécurité pour les lignes déjà écrites).
+    onglet.getRange(1, 1, onglet.getMaxRows(), ENTETES.Mesures.length).setNumberFormat('@');
   }
   return onglet;
 }
@@ -3646,17 +3651,39 @@ function enregistrerMesureSponsors(classeur, data) {
  * qui consolide : le backend ne fait que servir les lignes, sans calcul, pour rester court.
  * @param data.jour AAAA-MM-JJ ; vide ⇒ aujourd'hui.
  */
+/**
+ * Journée au format AAAA-MM-JJ, que la cellule contienne du TEXTE ou une vraie DATE.
+ *
+ * ⚠️ PIÈGE QUI A COÛTÉ CHER — à ne pas « simplifier ».
+ * `appendRow` reçoit la chaîne « 2026-08-03 », mais Google Sheets RECONNAÎT une date et
+ * convertit la cellule : à la relecture, `getValues()` renvoie un objet Date, pas la chaîne
+ * écrite. Comparer `String(cellule)` à « 2026-08-03 » donnait alors
+ * « Mon Aug 03 2026 00:00:00 GMT+0200 » ≠ « 2026-08-03 » — donc AUCUNE ligne ne
+ * correspondait jamais. Les relevés arrivaient bien dans le Sheet, mais la fiche annonçait
+ * « aucun relevé remonté » : une panne invisible, qui ressemblait à un problème de
+ * déploiement. On normalise donc les deux formes, ici et une seule fois.
+ */
+function mesureJourTexte(valeur) {
+  if (valeur instanceof Date) {
+    return Utilities.formatDate(valeur, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+  return String(valeur == null ? '' : valeur).trim().slice(0, 10);
+}
+
 function lireMesuresSponsors(classeur, data) {
   var onglet = classeur.getSheetByName('Mesures');
-  if (!onglet) return { ok: true, jour: '', releves: [] };
+  if (!onglet) return { ok: true, jour: '', releves: [], total: 0 };
 
   var jour = String((data && data.jour) || '').trim() ||
     Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 
   var lignes = lireOngletSimple(classeur, 'Mesures');
   var releves = [];
+  var jours = {};
   for (var i = 0; i < lignes.length; i++) {
-    if (String(lignes[i].jour) !== jour) continue;
+    var jourLigne = mesureJourTexte(lignes[i].jour);
+    jours[jourLigne] = (jours[jourLigne] || 0) + 1;
+    if (jourLigne !== jour) continue;
     var donnees = null;
     try { donnees = JSON.parse(lignes[i].donnees); } catch (e) { continue; }
     if (!donnees) continue;
@@ -3666,7 +3693,9 @@ function lireMesuresSponsors(classeur, data) {
       sponsors: donnees
     });
   }
-  return { ok: true, jour: jour, releves: releves };
+  // `total` et `jours` servent au diagnostic de l'admin : ils permettent de distinguer
+  // « aucun relevé n'est jamais arrivé » de « des relevés existent, mais pas pour ce jour ».
+  return { ok: true, jour: jour, releves: releves, total: lignes.length, jours: jours };
 }
 
 /** Efface tous les relevés (bouton « repartir de zéro » de l'admin). Les fiches ne bougent pas. */

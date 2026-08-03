@@ -5,6 +5,30 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Les relevés arrivaient bien — c'est la relecture qui ne les voyait pas — 2026-08-03
+La fiche annonçait obstinément « aucun relevé n'est encore remonté », y compris après un
+redéploiement correct du backend. Les relevés arrivaient pourtant : c'est la **relecture** qui
+n'en trouvait jamais aucun.
+
+`appendRow` écrit la journée sous forme de chaîne (« 2026-08-03 »), mais **Google Sheets
+reconnaît une date et convertit la cellule**. À la relecture, `getValues()` renvoie donc un objet
+`Date`, pas la chaîne écrite — et la comparaison donnait
+« Mon Aug 03 2026 00:00:00 GMT+0200 » ≠ « 2026-08-03 ». **Aucune ligne ne correspondait jamais.**
+
+Une panne parfaitement invisible : les données étaient dans le Sheet, l'écriture répondait `ok`,
+et le seul symptôme ressemblait à un problème de déploiement — ce qui a envoyé chercher au
+mauvais endroit.
+
+Deux parades, l'une pour le passé, l'autre pour l'avenir : la journée est désormais **normalisée
+à la lecture** (chaîne ou `Date`, même résultat), ce qui rattrape les lignes déjà écrites ; et
+l'onglet `Mesures` est créé **au format texte**, comme `Config`, pour que Sheets cesse de
+convertir. Une suite de tests rejoue les deux formes, y compris mélangées.
+
+Au passage, `lireMesuresSponsors` renvoie le **nombre total de relevés toutes journées
+confondues**. L'écran sait donc distinguer « rien n'est jamais arrivé » de « des relevés
+existent, mais pas pour aujourd'hui » — le cas typique du lendemain de tournoi, qui aurait
+autrement ressemblé à la même panne.
+
 ### Le clic partenaire remonte tout de suite, et la remontée se diagnostique — 2026-08-03
 Deux corrections nées de l'usage réel.
 

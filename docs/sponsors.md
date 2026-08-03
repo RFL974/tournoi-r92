@@ -197,7 +197,13 @@ maillon et **nomme celui qui casse**, au lieu de laisser deviner :
 2. **Relecture** — vérifie que ce relevé ressort bien.
 3. **Relevés réels** — compte ceux déjà remontés des spectateurs.
 
-> ⚠️ **La cause de loin la plus fréquente** : avoir cliqué *« Nouveau déploiement »* au lieu de
+> 🐛 **Un piège déjà rencontré, corrigé, et à ne pas réintroduire.** `appendRow` écrit la journée
+> en chaîne, mais **Sheets la convertit en vraie date** : la relecture reçoit alors un objet
+> `Date` et le filtrage par journée ne trouve plus rien — les relevés sont dans le Sheet, et la
+> fiche annonce « aucun relevé ». `mesureJourTexte` normalise les deux formes, et l'onglet est
+> créé au format texte. Ne « simplifiez » pas cette comparaison.
+
+> ⚠️ **L'autre cause fréquente** : avoir cliqué *« Nouveau déploiement »* au lieu de
 > **Gérer les déploiements → ✏️ → Version : Nouvelle version**. Le premier crée une **nouvelle
 > URL** ; `frontend/js/config.js` pointe alors toujours sur l'ancienne, qui exécute l'ancien
 > code. Tout *semble* déployé, et rien ne l'est.

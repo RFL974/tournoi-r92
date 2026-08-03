@@ -83,6 +83,8 @@ async function chargerMesuresSponsors() {
     if (r && r.releves) {
       sponsorsConsolide = sponsorsConsolider(r.releves);
       sponsorsConsolide.jour = r.jour;
+      sponsorsConsolide.totalToutesJournees = r.total || 0;
+      sponsorsConsolide.jours = r.jours || {};
     } else {
       sponsorsConsolide = null;
     }
@@ -494,6 +496,13 @@ async function onTesterRemontee() {
             lignes.push('✅ <strong>Relevés réels</strong> — ' + vrais.length + ' déjà remonté(s) des spectateurs.');
             verdict = '<strong>La chaîne fonctionne de bout en bout.</strong> Clique ' +
               '« Rafraîchir les chiffres » pour les voir apparaître.';
+          } else if (lu.total > 1) {
+            // > 1 car le relevé de test qu'on vient d'écrire compte lui aussi.
+            lignes.push('ℹ️ <strong>Relevés réels</strong> — aucun <em>pour la journée en cours</em>, ' +
+              'mais ' + (lu.total - 1) + ' au total sur d\'autres journées.');
+            verdict = '<strong>La chaîne fonctionne.</strong> Les relevés déjà remontés datent ' +
+              'd\'un autre jour : la fiche ne montre que la journée en cours. Refais une visite ' +
+              'sur la page publique aujourd\'hui pour voir les chiffres apparaître.';
           } else {
             lignes.push('ℹ️ <strong>Relevés réels</strong> — aucun pour l\'instant.');
             verdict = '<strong>La chaîne fonctionne</strong> — il ne manque que des visiteurs. ' +
@@ -565,9 +574,16 @@ function afficherBilanSponsors() {
       'Un appareil équipé d\'un bloqueur ou fermé brutalement peut manquer à l\'appel : ' +
       'ces chiffres sont un <strong>plancher mesuré</strong>, jamais une estimation.</p>';
   } else {
+    // Des relevés existent, mais pour d'AUTRES journées : le dire, plutôt que de laisser
+    // croire que rien n'arrive jamais. C'est le cas typique du lendemain de tournoi.
+    const autresJours = (sponsorsConsolide && sponsorsConsolide.totalToutesJournees) || 0;
     html += '<p class="bilan-avertissement">📏 <strong>Mesuré sur cet appareil seulement</strong> — ' +
-      'aucun relevé n\'est encore remonté des spectateurs. Vérifie que le backend a bien été ' +
-      'redéployé, puis laisse la page publique tourner une dizaine de minutes.</p>';
+      (autresJours
+        ? autresJours + ' relevé(s) existent, mais <strong>aucun pour la journée en cours</strong> ' +
+          '(' + echapper(String((sponsorsConsolide && sponsorsConsolide.jour) || '')) + ').'
+        : 'aucun relevé n\'est encore remonté des spectateurs.') +
+      ' Clique <strong>« Tester la remontée »</strong> ci-dessus : il dira en une seconde ' +
+      'quel maillon de la chaîne ne répond pas.</p>';
   }
 
   bilan.sponsors.forEach(function (s) {
