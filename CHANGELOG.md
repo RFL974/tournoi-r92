@@ -20,6 +20,9 @@ document. Trois corrections, sans changer de charte :
   déjà en cache — seule la taille d'affichage change.
 - **Le document porte le nom du club** dès l'en-tête (« Dossier — AS Massy ») avec le rappel de
   son engagement (« Engagé en U8 · U10 ») : on voit en une seconde que ce dossier est le sien.
+- **Le descriptif du tournoi n'est plus répété** : il a été lu à l'invitation, c'est son rôle à
+  elle de raconter le tournoi. Le dossier gagne **374 px avant le jour J** — sur un téléphone,
+  la journée s'affiche désormais sans avoir à faire défiler.
 **100 % front**, aucun redéploiement backend.
 
 ### Le dossier du club reprend l'agencement de l'invitation (lot 1) — 2026-08-03

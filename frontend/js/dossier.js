@@ -305,9 +305,10 @@ function construireDossier(g, categories, club) {
 }
 
 /**
- * 1) EN-TÊTE : le même bloc vitrine que l'invitation, à trois nuances près — le surtitre dit
- * « votre dossier », l'affiche est RÉDUITE (le club l'a déjà vue en grand) et le nom du club
- * s'affiche sous la date : ce document est le sien, il doit le voir en une seconde.
+ * 1) EN-TÊTE : le même bloc vitrine que l'invitation, à quatre nuances près — le surtitre dit
+ * « votre dossier », l'affiche est RÉDUITE (le club l'a déjà vue en grand), le descriptif du
+ * tournoi n'est PAS répété (il a été lu à l'invitation) et le nom du club s'affiche sous la
+ * date : ce document est le sien, il doit le voir en une seconde.
  * `catsEngagees` (vide si on ne sait pas) ajoute le rappel de son engagement.
  */
 function enteteDossier(g, club, catsEngagees) {
@@ -326,7 +327,8 @@ function enteteDossier(g, club, catsEngagees) {
   return heroDocument(g, {
     surtitre: 'École de Rugby du Racing Club de France<br>votre dossier pour la journée',
     mention: mention,
-    afficheCompacte: true
+    afficheCompacte: true,
+    sansPresentation: true   // le descriptif du tournoi a été lu à l'invitation (décision Romain)
   });
 }
 

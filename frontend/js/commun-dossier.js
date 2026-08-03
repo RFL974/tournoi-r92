@@ -192,7 +192,10 @@ function tempsDeJeuDe(cat) {
  *                             club — le document est le SIEN, ça se voit en une seconde),
  *                           afficheCompacte: true = affiche réduite. L'invitation la met en
  *                             héros (c'est son argument) ; le dossier la réduit : le club l'a
- *                             déjà vue, et la place sert à ce qu'il vient chercher }
+ *                             déjà vue, et la place sert à ce qu'il vient chercher,
+ *                           sansPresentation: true = pas de descriptif. L'invitation le porte
+ *                             (c'est là qu'on raconte le tournoi) ; le dossier ne le répète
+ *                             pas — le club l'a lu, il vient chercher autre chose }
  */
 function heroDocument(g, opts) {
   opts = opts || {};
@@ -224,11 +227,13 @@ function heroDocument(g, opts) {
     '</figure>';
   }
 
-  // Le descriptif COMPLET (jamais tronqué : c'est la présentation du tournoi).
-  const description = txt(g.tournoi_description);
+  // Le descriptif COMPLET (jamais tronqué : c'est la présentation du tournoi) — sauf pour un
+  // document qui n'a pas à le répéter : le dossier arrive APRÈS l'invitation, où le club l'a
+  // déjà lu. Le redire, c'est reculer d'un écran ce qu'il vient chercher.
+  const description = opts.sansPresentation ? '' : txt(g.tournoi_description);
   const paragraphes = description
     ? description.split(/\n+/).map(function (p) { return p.trim(); }).filter(Boolean)
-    : (opts.presentationDefaut ? [opts.presentationDefaut] : []);
+    : ((opts.presentationDefaut && !opts.sansPresentation) ? [opts.presentationDefaut] : []);
   if (paragraphes.length) {
     html += '<div class="inv-presentation">' + paragraphes.map(function (p) {
       return '<p>' + echapper(p) + '</p>';
