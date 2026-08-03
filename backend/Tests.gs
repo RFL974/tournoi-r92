@@ -52,6 +52,8 @@ function lancerTestsFFR() {
   testClubs_collisionNomsClubs(etat);
   testClubs_categoriesDupliquees(etat);
   testCfg_jetonDossier(etat);
+  testDossier_equipesDuClub(etat);
+  testDossier_declareEtGel(etat);
 
   // Référentiel FFR — règles de jeu et grilles de temps (session 5).
   testS5_eclaterForme(etat);
@@ -825,6 +827,61 @@ function testClubs_planSuppressionCascade(etat) {
   var plan2 = planifierSuppressionClub([_eqFactice('PUC', 'U8')], 'PUC', { 'PUC': true });
   _ffrAssert(etat, plan2.bloquees.length === 1 && /matchs/.test(plan2.bloquees[0].motif),
     'cascade : équipe dans des matchs → bloquante');
+}
+
+/** DOSSIER CLUB — le cœur pur ne rend au club QUE ses équipes, triées, et jamais celles d'un
+ *  homonyme. Même garde-fou que la synchro : « PUC-2 » appartient au club PUC-2, pas à PUC. */
+function testDossier_equipesDuClub(etat) {
+  var club = { club_nom: 'PUC', club_contact_prenom: 'Noélise', categories_engagees: 'U8,U10' };
+  var equipes = [
+    _eqFactice('PUC-3', 'U10', 'B'),
+    _eqFactice('MASSY', 'U8', 'A'),
+    _eqFactice('PUC-1', 'U10', 'A'),
+    _eqFactice('PUC', 'U8', 'C'),
+    _eqFactice('PUC-2', 'U8', 'A')            // = un AUTRE club invité
+  ];
+  var r = dossierClubPur(club, equipes, ['PUC-2'], false, 'contact@r92.fr');
+
+  var noms = r.equipes.map(function (e) { return e.nom_equipe; }).join(',');
+  _ffrAssert(etat, noms === 'PUC,PUC-1,PUC-3',
+    'dossier : seules les équipes du club, triées par catégorie puis par nom (obtenu : ' + noms + ')');
+  _ffrAssert(etat, r.equipes.every(function (e) { return e.nom_equipe !== 'MASSY'; }),
+    'dossier : aucune équipe d\'un autre club');
+  _ffrAssert(etat, r.equipes[0].categorie === 'U8' && r.equipes[0].poule === 'C',
+    'dossier : catégorie et poule remontées telles quelles');
+  _ffrAssert(etat, r.equipes[0].id_equipe === 'id-PUC',
+    'dossier : l\'identifiant d\'équipe est fourni (croisement avec les matchs publics)');
+
+  // Aucune équipe encore créée : la liste est vide, jamais une erreur (le dossier masquera).
+  var vide = dossierClubPur(club, [], [], false, '');
+  _ffrAssert(etat, vide.ok === true && vide.equipes.length === 0,
+    'dossier : sans équipe, réponse valide et liste vide');
+}
+
+/** DOSSIER CLUB — ce que le club a DÉCLARÉ est rendu tel quel (jamais recalculé : c'est sa
+ *  parole), et l'état du gel J-16 accompagne la réponse pour piloter le bouton « Modifier ».
+ *  Aucun email de club ne sort JAMAIS — seul celui, public, du contact du tournoi. */
+function testDossier_declareEtGel(etat) {
+  var club = {
+    club_nom: 'MASSY', club_contact_prenom: 'Camille', club_contact_email: 'secret@massy.fr',
+    categories_engagees: 'U8,U10', nb_equipes_par_categorie: '{"U8":2,"U10":1}',
+    nb_joueurs_total: '31', nb_educateurs_total: '6', detail_effectifs: '{"MASSY-1":12}'
+  };
+  var r = dossierClubPur(club, [], [], true, 'contact@r92.fr');
+
+  _ffrAssert(etat, r.club.nb_equipes_par_categorie === '{"U8":2,"U10":1}' &&
+                   r.club.nb_joueurs_total === '31' && r.club.nb_educateurs_total === '6',
+    'dossier : les chiffres déclarés sont rendus tels quels');
+  _ffrAssert(etat, r.reponses_gelees === true && r.contact_email === 'contact@r92.fr',
+    'dossier : gel J-16 et contact du tournoi accompagnent la réponse');
+  _ffrAssert(etat, JSON.stringify(r).indexOf('secret@massy.fr') === -1,
+    'dossier : l\'email du club ne sort JAMAIS');
+
+  // Club qui n'a pas encore répondu : des chaînes vides, jamais « undefined ».
+  var muet = dossierClubPur({ club_nom: 'PUC' }, [], [], false, '');
+  _ffrAssert(etat, muet.club.nb_joueurs_total === '' && muet.club.categories_engagees === '' &&
+                   muet.reponses_gelees === false,
+    'dossier : club sans réponse → chaînes vides, pas de gel');
 }
 
 /** COLLISION DE NOMS (revue) : deux clubs invités « PUC » et « PUC-2 ». L'équipe « PUC-2 »

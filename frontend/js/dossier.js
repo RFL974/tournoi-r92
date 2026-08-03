@@ -53,13 +53,27 @@ async function initDossier() {
   if (!clubParam || !token) { await afficherLienDossierExpire(zone); return; }
 
   try {
-    const [cfgClub, r] = await Promise.all([
+    // getAll est l'instantané PUBLIC (équipes, poules, matchs) : c'est lui qui porte le planning.
+    // Il n'expose aucune donnée personnelle et sert déjà la page des scores — on ne crée donc pas
+    // un deuxième chemin de lecture pour la même information. Son échec n'est PAS bloquant : sans
+    // lui, le dossier s'affiche comme avant, sans les sections « jour J ».
+    const [cfgClub, r, data] = await Promise.all([
       apiGet('getConfigClub', { club: clubParam, token: token }),
-      apiGet('getClubDossier', { club: clubParam, token: token })
+      apiGet('getClubDossier', { club: clubParam, token: token }),
+      apiGet('getAll').catch(function () { return null; })
     ]);
     const config = (cfgClub && cfgClub.config) || { global: {}, categories: [] };
     const club = (r && r.club) || null;
-    zone.innerHTML = construireDossier(config.global || {}, config.categories || [], club);
+    const ctx = {
+      equipes:        (r && r.equipes) || [],       // MES équipes (backend, protégé par jeton)
+      equipesTournoi: (data && data.equipes) || [], // toutes les équipes : pour nommer l'adversaire
+      matchs:         (data && data.matchs) || [],
+      gelees:         !!(r && r.reponses_gelees),
+      contactEmail:   (r && r.contact_email) || '',
+      club:           clubParam,
+      token:          token
+    };
+    zone.innerHTML = construireDossier(config.global || {}, config.categories || [], club, ctx);
     dessinerQR(); // le QR se dessine après coup (il vise un conteneur du HTML rendu)
     // Données en main : le jeton n'a plus rien à faire dans l'adresse (ni à l'écran, ni au
     // pied de page imprimé). L'onglet le garde, un rechargement fonctionne toujours.
@@ -270,8 +284,9 @@ function telechargerICS(g) {
    CONSTRUCTION DU DOSSIER (le HTML complet, section par section)
    -------------------------------------------------------------------------- */
 
-function construireDossier(g, categories, club) {
+function construireDossier(g, categories, club, ctx) {
   const cats = (categories || []).filter(catPresente);
+  ctx = ctx || {};   // sans contexte (aperçu, ancien appel) : les sections « jour J » se masquent
 
   // Filtrage Phase 2 : si le club a des catégories engagées, les CARTES ne montrent que
   // celles-là (les autres sections restent inchangées). Repli sur toutes les catégories si la
@@ -295,6 +310,8 @@ function construireDossier(g, categories, club) {
     enteteDossier(g, club, filtreApplique ? catsFormat : []),   //  1. qui reçoit, quoi, quand — et pour QUI
     accueilPersonnalise(g, club),                               //  2. le mot d'accueil
     sectionJournee(g, catsFormat),                              //  3. LE JOUR J : la journée en un coup d'œil
+    sectionMesEquipes(ctx.equipes),                             //  3 bis. … avec QUI (équipes, poules)
+    sectionMonPlanning(ctx, catsFormat),                        //  3 ter. … et QUAND (matchs du club)
     sectionInfosPratiques(g),                                   //  4.   … où, et ce qu'on y trouve
     sectionParking(g),                                          //  5.   … comment y accéder
     sectionContact(g),                                          //  6.   … qui appeler (remonté : c'était en bas)
@@ -302,6 +319,7 @@ function construireDossier(g, categories, club) {
     sectionSuivi(g, cats),                                      //  8.   … suivre les scores sur place
     sectionCategories(catsFormat, filtreApplique),              //  9. RAPPEL SPORTIF (déjà lu à l'invitation)
     sectionEncadrement(g),                                      // 10. ce qu'on attend du club
+    sectionMonEngagement(g, club, ctx),                         // 10 bis. ce que le club a déclaré
     sectionModalites(g),                                        // 11. l'administratif
     bandeauActions(g),                                          // 12. agenda, itinéraires, liens
     mentionGeneration(),                                        // 13. daté (le PDF fige, pas la page)
@@ -345,6 +363,144 @@ function sectionJournee(g, cats) {
     '<p class="d-note">Après le dernier match : retour aux vestiaires puis cérémonie de remise ' +
     'des trophées — l\'événement se termine à l\'issue de la remise. Horaires indicatifs — ' +
     'le planning détaillé fera foi le jour du tournoi.</p>'), 'inv-journee');
+}
+
+/**
+ * 3 bis) VOS ÉQUIPES : les équipes du club telles qu'elles existent dans le tournoi, avec leur
+ * poule dès qu'elle est tirée. Rien tant qu'aucune équipe n'est créée — la section se masque et
+ * apparaîtra d'elle-même : la page se reconstruit à chaque ouverture du lien.
+ */
+function sectionMesEquipes(equipes) {
+  const liste = (equipes || []).filter(function (e) { return txt(e.nom_equipe); });
+  if (!liste.length) return '';
+
+  const lignes = liste.map(function (e) {
+    const detail = [];
+    if (txt(e.poule)) detail.push('poule ' + echapper(txt(e.poule)));
+    const j = parseInt(txt(e.nb_joueurs), 10);
+    if (isFinite(j) && j > 0) detail.push(j + ' joueur' + (j > 1 ? 's' : ''));
+    const ed = parseInt(txt(e.nb_educateurs), 10);
+    if (isFinite(ed) && ed > 0) detail.push(ed + ' éducateur' + (ed > 1 ? 's' : ''));
+    return '<li><span class="d-eq-nom">' + echapper(txt(e.nom_equipe)) + '</span>' +
+      '<span class="d-eq-cat">' + echapper(txt(e.categorie)) + '</span>' +
+      (detail.length ? '<span class="d-eq-detail">' + detail.join(' · ') + '</span>' : '') +
+    '</li>';
+  }).join('');
+
+  const sansPoule = liste.some(function (e) { return !txt(e.poule); });
+  return section('Vos équipes', '<ul class="d-equipes">' + lignes + '</ul>' +
+    (sansPoule ? '<p class="d-note">Les poules sont tirées à la génération du planning : ' +
+      'elles s\'afficheront ici dès qu\'elles seront connues.</p>' : ''));
+}
+
+/** Nom lisible d'une équipe à partir de son identifiant (matchs → équipes de l'instantané public). */
+function nomEquipeParId(equipesTournoi, id) {
+  const cible = txt(id);
+  if (!cible) return '';
+  const e = (equipesTournoi || []).find(function (x) { return txt(x.id_equipe) === cible; });
+  return e ? txt(e.nom_equipe) : '';
+}
+
+/**
+ * 3 ter) VOTRE PLANNING — les matchs du club, croisés entre SES équipes (backend, protégé par
+ * jeton) et les matchs de l'instantané PUBLIC. Deux blocs :
+ *  - le MATIN (phase « poule »), connu dès la génération du planning ;
+ *  - l'APRÈS-MIDI, qui n'existe qu'une fois les matchs du matin joués — les poules de niveau se
+ *    composent de leur classement. Tant qu'il n'existe pas, on ne montre pas un tableau vide :
+ *    on dit qu'il arrivera, et il apparaîtra tout seul (la page se reconstruit à chaque ouverture).
+ * Aucun match connu du tout ⇒ section entièrement masquée.
+ */
+function sectionMonPlanning(ctx, catsFormat) {
+  const mesIds = (ctx.equipes || []).map(function (e) { return txt(e.id_equipe); }).filter(Boolean);
+  if (!mesIds.length) return '';
+
+  const miens = (ctx.matchs || []).filter(function (m) {
+    return mesIds.indexOf(txt(m.equipe_A)) !== -1 || mesIds.indexOf(txt(m.equipe_B)) !== -1;
+  }).slice().sort(function (a, b) { return txt(a.heure_debut).localeCompare(txt(b.heure_debut)); });
+  if (!miens.length) return '';
+
+  const estMatin = function (m) { return txt(m.phase).toLowerCase() !== 'classement'; };
+  const matin = miens.filter(estMatin);
+  const apresMidi = miens.filter(function (m) { return !estMatin(m); });
+
+  // Un tournoi 100 % Super Challenge n'a pas de phase d'après-midi : on ne promet pas ce qui
+  // n'existera jamais (même règle que la frise et les cartes).
+  const tousScf = !!(catsFormat && catsFormat.length) &&
+                  catsFormat.every(function (c) { return ctxScf(c).estScf; });
+
+  let html = tableauPlanning(matin, mesIds, ctx.equipesTournoi);
+  if (apresMidi.length) {
+    html += '<h3 class="d-planning-titre">Après-midi</h3>' +
+            tableauPlanning(apresMidi, mesIds, ctx.equipesTournoi);
+  } else if (matin.length && !tousScf) {
+    html += '<p class="d-note">L\'après-midi suit le format de chaque catégorie et se compose ' +
+      'à partir du classement du matin : il n\'est donc établi qu\'en cours de journée. ' +
+      'Rouvrez ce lien, il s\'affichera ici.</p>';
+  }
+  return section('Votre planning', html, 'd-planning-section');
+}
+
+/** Un tableau de matchs : heure, votre équipe (+ catégorie), adversaire, terrain. */
+function tableauPlanning(matchs, mesIds, equipesTournoi) {
+  if (!matchs.length) return '';
+  const lignes = matchs.map(function (m) {
+    const aEstMoi = mesIds.indexOf(txt(m.equipe_A)) !== -1;
+    // Un match du club CONTRE lui-même (deux de ses équipes) : on garde l'ordre du planning.
+    const moi = nomEquipeParId(equipesTournoi, aEstMoi ? m.equipe_A : m.equipe_B);
+    const adverse = nomEquipeParId(equipesTournoi, aEstMoi ? m.equipe_B : m.equipe_A);
+    return '<tr>' +
+      '<td class="d-pl-heure">' + echapper(txt(m.heure_debut)) + '</td>' +
+      '<td>' + echapper(moi) +
+        (txt(m.categorie) ? ' <span class="d-pl-cat">' + echapper(txt(m.categorie)) + '</span>' : '') + '</td>' +
+      '<td>' + (adverse ? echapper(adverse) : '—') + '</td>' +
+      '<td class="d-pl-terrain">' + echapper(txt(m.terrain)) + '</td>' +
+    '</tr>';
+  }).join('');
+  return '<table class="d-planning"><thead><tr>' +
+    '<th>Heure</th><th>Votre équipe</th><th>Adversaire</th><th>Terrain</th>' +
+    '</tr></thead><tbody>' + lignes + '</tbody></table>';
+}
+
+/**
+ * 10 bis) VOTRE ENGAGEMENT : ce que le club a DÉCLARÉ en répondant — jamais recalculé, c'est sa
+ * parole. Tant que les réponses ne sont pas gelées (J-16), un bouton le renvoie à son formulaire
+ * pour corriger ; après le gel, on dit clairement que c'est figé et à qui écrire.
+ */
+function sectionMonEngagement(g, club, ctx) {
+  if (!club) return '';
+  const parCat = jsonSur(club.nb_equipes_par_categorie, null);
+  const detail = [];
+  if (parCat && typeof parCat === 'object') {
+    Object.keys(parCat).sort(comparerCategorie).forEach(function (c) {
+      const n = parseInt(parCat[c], 10);
+      if (isFinite(n) && n > 0) detail.push(echapper(c) + ' : ' + n + ' équipe' + (n > 1 ? 's' : ''));
+    });
+  }
+  const lignes = listeOuVide([
+    ligne('Équipes engagées', detail.join('<span class="inv-quand-sep"> · </span>')),
+    ligne('Joueurs annoncés', echapper(txt(club.nb_joueurs_total))),
+    ligne('Éducateurs annoncés', echapper(txt(club.nb_educateurs_total)))
+  ]);
+  if (!lignes) return '';
+
+  // Lien personnel vers le formulaire de réponse (le jeton n'est plus dans l'adresse de la page :
+  // il vient du contexte, qui l'a lu avant qu'on l'en retire).
+  let action = '';
+  if (ctx.gelees) {
+    action = '<p class="d-note">Ces chiffres sont <strong>figés</strong> : la demande ' +
+      'd\'autorisation du tournoi part sur cette base. Une correction reste possible — ' +
+      (ctx.contactEmail
+        ? 'écrivez à <a href="mailto:' + echapper(ctx.contactEmail) + '">' + echapper(ctx.contactEmail) + '</a>.'
+        : 'contactez l\'organisateur.') + '</p>';
+  } else if (ctx.club && ctx.token) {
+    const url = new URL('reponse-invitation.html', window.location.href);
+    if (txt(g.tournoi_nom)) url.searchParams.set('tournoi', txt(g.tournoi_nom));
+    url.searchParams.set('club', ctx.club);
+    url.searchParams.set('token', ctx.token);
+    action = '<p class="d-engagement-action"><a class="d-action" href="' + echapper(url.toString()) +
+      '">✏️ Modifier ma réponse</a></p>';
+  }
+  return section('Votre engagement', lignes + action);
 }
 
 /** 4) INFOS PRATIQUES : lieu + adresse, puis la logistique si elle est renseignée

@@ -114,6 +114,37 @@ body {
 
 .d-note { margin: 8px 0 0; font-size: 0.8rem; color: var(--d-gris); font-style: italic; }
 
+/* ----- Vos équipes + votre planning (lot « jour J ») ------------------------- */
+.d-equipes { list-style: none; margin: 0; padding: 0; }
+.d-equipes li {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px;
+  padding: 5px 0; border-bottom: 1px dashed var(--d-filet);
+}
+.d-equipes li:last-child { border-bottom: none; }
+.d-eq-nom { font-weight: 700; color: var(--d-navy); }
+.d-eq-cat {
+  font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 0.6px;
+  font-size: 0.8rem; color: #fff; background: var(--d-bleu); border-radius: 999px; padding: 1px 9px;
+}
+.d-eq-detail { color: var(--d-gris); font-size: 0.9rem; }
+
+.d-planning-titre {
+  margin: 14px 0 4px; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase;
+  letter-spacing: 0.8px; font-size: 0.95rem; color: var(--d-bleu);
+}
+.d-planning { width: 100%; border-collapse: collapse; margin: 4px 0 0; }
+.d-planning th {
+  text-align: left; padding: 5px 8px; background: var(--d-navy); color: #fff;
+  font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 0.6px;
+  font-size: 0.82rem; font-weight: 600;
+}
+.d-planning td { padding: 5px 8px; border-bottom: 1px solid var(--d-filet); vertical-align: top; }
+.d-planning tr:nth-child(even) td { background: #f5f8fc; }
+.d-pl-heure { font-weight: 700; color: var(--d-navy); white-space: nowrap; }
+.d-pl-terrain { white-space: nowrap; }
+.d-pl-cat { color: var(--d-gris); font-size: 0.85em; }
+.d-engagement-action { margin: 10px 0 0; }
+
 /* ----- Parking & accès (texte + photo pleine largeur) -------------------------- */
 .d-parking-texte { margin: 0 0 4px; }
 .d-parking-photo {
@@ -601,6 +632,12 @@ body {
      des catégories, elle, PEUT se couper (sinon elle démarre seule sur une page en laissant
      la précédente aux trois quarts vide — constaté à l'export PDF). */
   .d-section.inv-categories { break-inside: auto; }
+  /* Un planning peut être long : il a le droit de se couper d'une page à l'autre — mais jamais
+     au milieu d'un match, et l'en-tête du tableau se répète en haut de chaque page. */
+  .d-section.d-planning-section { break-inside: auto; }
+  .d-planning tr { break-inside: avoid; }
+  .d-planning thead { display: table-header-group; }
+  .d-planning th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .inv-carte, .inv-cta, .inv-frise { break-inside: avoid; }
   /* …mais un TITRE ne reste jamais seul en bas d'une page : il part avec ce qu'il annonce.
      Constaté à l'export : « Rappel — vos catégories engagées » terminait la page 2, ses cartes
