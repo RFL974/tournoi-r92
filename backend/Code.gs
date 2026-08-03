@@ -110,7 +110,19 @@ var ENTETES = {
   //                  bonne taille — seul un agrandissement au cas par cas le corrige.
   //                  Migration douce : ajoutée À DROITE, vide = comportement d'origine.
   Sponsors: ['id_sponsor', 'nom', 'logo_id', 'url', 'accroche', 'emplacements',
-             'poids', 'visuel_id', 'couleur', 'actif', 'ordre', 'logo_zoom']
+             'poids', 'visuel_id', 'couleur', 'actif', 'ordre', 'logo_zoom'],
+  // RELEVÉS DE VISIBILITÉ des partenaires, déposés par les navigateurs des spectateurs.
+  // Aucune donnée personnelle : deux identifiants ALÉATOIRES, tirés sur l'appareil, remis à
+  // zéro chaque jour, qui ne permettent d'identifier personne ni de suivre qui que ce soit
+  // d'un site à l'autre. Onglet ISOLÉ : aucune autre partie du logiciel ne le lit.
+  //   appareil : identifiant aléatoire de l'appareil (compte la PORTÉE — combien de monde).
+  //   session  : identifiant aléatoire de la visite (une par ouverture de page).
+  //   donnees  : JSON des compteurs CUMULÉS de la session (exposition, affichages, clics).
+  //
+  // ⚠️ Les relevés sont CUMULATIFS et une session en dépose plusieurs au fil de la visite.
+  // La consolidation prend donc le MAXIMUM par session, jamais la somme — c'est ce qui rend
+  // le total juste même si un relevé se perd, ou s'il arrive deux fois.
+  Mesures: ['horodatage', 'jour', 'appareil', 'session', 'donnees']
 };
 var COULEUR_FOND_ENTETE = '#0B2138';
 var COULEUR_TEXTE_ENTETE = '#F2F6FB';
@@ -590,6 +602,19 @@ function lireConfig(classeur) {
     }
   }
   return { global: global, categories: categories };
+}
+
+/**
+ * Crée l'onglet Mesures À LA DEMANDE s'il manque (même logique qu'assurerOngletSponsors :
+ * un classeur en service ne se re-`setupSheet` jamais). Sans effet s'il existe déjà.
+ */
+function assurerOngletMesures(classeur) {
+  var onglet = classeur.getSheetByName('Mesures');
+  if (!onglet) {
+    creerOngletAvecEntetes(classeur, 'Mesures', ENTETES.Mesures);
+    onglet = classeur.getSheetByName('Mesures');
+  }
+  return onglet;
 }
 
 /* ===================== CONFIG PUBLIQUE (listes blanches OPT-IN) =====================
@@ -2758,13 +2783,33 @@ var ACTIONS_TOKEN = { repondreInvitation: true };
  * porter) mais qui NE MODIFIENT RIEN : elles NE prennent PAS le verrou d'écriture. L'admin
  * recharge la config à de nombreux endroits ; un jour de tournoi, prendre le verrou d'écriture
  * la mettrait en concurrence avec la saisie des scores. Ces actions le court-circuitent. */
-var ACTIONS_LECTURE = { getConfigAdmin: true, getDossierAutorisation: true, listerSponsors: true };
+var ACTIONS_LECTURE = { getConfigAdmin: true, getDossierAutorisation: true, listerSponsors: true,
+                        lireMesuresSponsors: true };
 
 function doPost(e) {
   var lock, classeur, snapshotJson = null;
   try {
     var requete = JSON.parse(e.postData.contents);
     var action = requete.action;
+
+    // ⚡ RELEVÉ DE VISIBILITÉ DES PARTENAIRES — traité TOUT DE SUITE, avant le contrôle de clé
+    // et surtout AVANT LE VERROU D'ÉCRITURE.
+    //
+    // C'est la seule écriture PUBLIQUE (sans clé) du fichier, et ce n'est pas un oubli : les
+    // relevés viennent des téléphones des spectateurs, qui n'ont évidemment aucune clé. Trois
+    // raisons rendent la chose acceptable ici :
+    //  1. la charge utile est MINUSCULE et strictement validée (voir enregistrerMesureSponsors) ;
+    //  2. elle n'écrit que dans l'onglet `Mesures`, isolé, effaçable d'un bouton, et qu'aucune
+    //     autre partie du logiciel ne lit — un abus ne peut donc rien corrompre ;
+    //  3. elle ne prend PAS le verrou et ne reconstruit PAS l'instantané public.
+    //
+    // Ce dernier point est le vrai enjeu : la saisie des scores prend un verrou à chaque
+    // validation. Si les relevés passaient par le chemin d'écriture normal, quelques centaines
+    // de spectateurs suffiraient à faire attendre le marqueur au bord du terrain. Ils sortent
+    // donc ici, par la porte la plus courte possible.
+    if (action === 'mesureSponsors') {
+      return repondreJson(enregistrerMesureSponsors(SpreadsheetApp.openById(sheetId()), requete));
+    }
 
     // Contrôle d'accès : chaque écriture exige la bonne clé (scores selon l'action, sinon admin).
     // Les actions à JETON (réponse publique d'un club) contournent la clé ici et valident le
@@ -2785,6 +2830,7 @@ function doPost(e) {
         case 'getConfigAdmin': lecture = { ok: true, config: lireConfig(classeur) }; break;
         case 'getDossierAutorisation': lecture = getDossierAutorisation(classeur); break;
         case 'listerSponsors': lecture = listerSponsors(classeur); break;
+        case 'lireMesuresSponsors': lecture = lireMesuresSponsors(classeur, requete); break;
         default: lecture = { error: 'Action inconnue : ' + action };
       }
       return repondreJson(lecture);
@@ -2835,6 +2881,7 @@ function doPost(e) {
       case 'enregistrerReglagesSponsors': resultat = enregistrerReglagesSponsors(classeur, requete); break;
       case 'enregistrerSponsor':      resultat = enregistrerSponsor(classeur, requete); break;
       case 'supprimerSponsor':        resultat = supprimerSponsor(classeur, requete); break;
+      case 'viderMesuresSponsors':    resultat = viderMesuresSponsors(classeur); break;
       case 'listerClubsInvites':   resultat = listerClubsInvites(classeur); break;
       case 'ajouterClubInvite':    resultat = ajouterClubInvite(classeur, requete); break;
       case 'modifierStatutClubInvite': resultat = modifierStatutClubInvite(classeur, requete); break;
@@ -3500,6 +3547,136 @@ function enregistrerSponsor(classeur, data) {
   plage.setValues(valeursLigne);
 
   return { ok: true, id_sponsor: id };
+}
+
+/* ===================== RELEVÉS DE VISIBILITÉ (consolidation entre appareils) =====================
+ * Chaque navigateur qui affiche des partenaires dépose ici, quelques fois par visite, le
+ * CUMUL de ce qu'il a vu. L'écran admin additionne ensuite tous les appareils pour produire
+ * la fiche envoyée au partenaire.
+ *
+ * Deux propriétés rendent le total juste sans coordination :
+ *  • les relevés sont CUMULATIFS (pas des écarts) → un relevé perdu ne perd que le temps
+ *    écoulé depuis le précédent, jamais tout l'historique de la session ;
+ *  • la consolidation prend le MAXIMUM par session → un relevé arrivé deux fois ne compte
+ *    pas double. C'est ce qui permet d'écrire sans verrou et sans jamais relire.
+ * ============================================================================================ */
+
+/** Garde-fous de la charge utile publique. Au-delà, le relevé est refusé sans discussion. */
+var MESURE_MAX_SPONSORS  = 40;        // bien au-delà d'un vrai tournoi
+var MESURE_MAX_SECONDES  = 24 * 3600; // une journée : au-delà, la valeur est absurde
+var MESURE_MAX_COMPTEUR  = 100000;    // affichages / clics d'une seule session
+
+/** Entier borné, quelle que soit la fantaisie reçue. */
+function mesureEntier(v, maxi) {
+  var n = parseInt(v, 10);
+  if (!isFinite(n) || n < 0) return 0;
+  return Math.min(n, maxi);
+}
+
+/** Identifiant aléatoire acceptable : court, alphanumérique. Sinon chaîne vide. */
+function mesureIdentifiant(v) {
+  var s = String(v || '').trim();
+  return /^[A-Za-z0-9_-]{4,40}$/.test(s) ? s : '';
+}
+
+/**
+ * Enregistre UN relevé de visibilité. Appelée sans clé (les spectateurs n'en ont pas), donc
+ * tout est revalidé ici : identifiants, nombre de partenaires, bornes de chaque compteur.
+ * Rien de ce qui entre n'est cru sur parole, et rien n'est jamais réinjecté ailleurs.
+ *
+ * N'utilise PAS de verrou : `appendRow` ajoute en fin d'onglet, et deux relevés simultanés
+ * qui se marcheraient dessus ne coûteraient qu'une mesure d'audience — jamais un score.
+ */
+function enregistrerMesureSponsors(classeur, data) {
+  var appareil = mesureIdentifiant(data.appareil);
+  var session  = mesureIdentifiant(data.session);
+  if (!appareil || !session) return { error: 'Relevé invalide.' };
+
+  var brut = data.sponsors;
+  if (!brut || typeof brut !== 'object') return { error: 'Relevé invalide.' };
+
+  var ids = Object.keys(brut);
+  if (!ids.length || ids.length > MESURE_MAX_SPONSORS) return { error: 'Relevé invalide.' };
+
+  // Reconstruction champ par champ : ce qui n'est pas prévu ici ne sera jamais stocké.
+  var propre = {};
+  for (var i = 0; i < ids.length; i++) {
+    var id = mesureIdentifiant(ids[i]);
+    if (!id) continue;
+    var f = brut[ids[i]] || {};
+    var expo = {}, aff = {}, tranches = {};
+
+    Object.keys(f.expo || {}).slice(0, 10).forEach(function (k) {
+      expo[String(k).slice(0, 20)] = mesureEntier(f.expo[k], MESURE_MAX_SECONDES);
+    });
+    Object.keys(f.aff || {}).slice(0, 20).forEach(function (k) {
+      aff[String(k).slice(0, 20)] = mesureEntier(f.aff[k], MESURE_MAX_COMPTEUR);
+    });
+    // Une journée = 48 tranches de 30 min ; on borne large pour absorber un fuseau exotique.
+    Object.keys(f.tranches || {}).slice(0, 60).forEach(function (k) {
+      tranches[String(k).slice(0, 5)] = mesureEntier(f.tranches[k], MESURE_MAX_SECONDES);
+    });
+
+    propre[id] = {
+      expo: expo,
+      aff: aff,
+      clics: mesureEntier(f.clics, MESURE_MAX_COMPTEUR),
+      plein: {
+        ouverts:  mesureEntier((f.plein || {}).ouverts, MESURE_MAX_COMPTEUR),
+        secondes: mesureEntier((f.plein || {}).secondes, MESURE_MAX_SECONDES),
+        passes:   mesureEntier((f.plein || {}).passes, MESURE_MAX_COMPTEUR)
+      },
+      tranches: tranches
+    };
+  }
+  if (!Object.keys(propre).length) return { error: 'Relevé invalide.' };
+
+  var onglet = assurerOngletMesures(classeur);
+  var maintenant = new Date();
+  onglet.appendRow([
+    Utilities.formatDate(maintenant, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss'),
+    Utilities.formatDate(maintenant, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    appareil, session, JSON.stringify(propre)
+  ]);
+  return { ok: true };
+}
+
+/**
+ * Relevés bruts d'une journée, pour l'écran admin (protégé par la clé admin). C'est l'admin
+ * qui consolide : le backend ne fait que servir les lignes, sans calcul, pour rester court.
+ * @param data.jour AAAA-MM-JJ ; vide ⇒ aujourd'hui.
+ */
+function lireMesuresSponsors(classeur, data) {
+  var onglet = classeur.getSheetByName('Mesures');
+  if (!onglet) return { ok: true, jour: '', releves: [] };
+
+  var jour = String((data && data.jour) || '').trim() ||
+    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
+  var lignes = lireOngletSimple(classeur, 'Mesures');
+  var releves = [];
+  for (var i = 0; i < lignes.length; i++) {
+    if (String(lignes[i].jour) !== jour) continue;
+    var donnees = null;
+    try { donnees = JSON.parse(lignes[i].donnees); } catch (e) { continue; }
+    if (!donnees) continue;
+    releves.push({
+      appareil: String(lignes[i].appareil),
+      session: String(lignes[i].session),
+      sponsors: donnees
+    });
+  }
+  return { ok: true, jour: jour, releves: releves };
+}
+
+/** Efface tous les relevés (bouton « repartir de zéro » de l'admin). Les fiches ne bougent pas. */
+function viderMesuresSponsors(classeur) {
+  var onglet = classeur.getSheetByName('Mesures');
+  if (!onglet) return { ok: true, effaces: 0 };
+  var dernier = onglet.getLastRow();
+  var effaces = Math.max(0, dernier - 1);
+  if (effaces > 0) onglet.deleteRows(2, effaces);
+  return { ok: true, effaces: effaces };
 }
 
 /** Supprime une fiche partenaire et met ses images à la corbeille. */

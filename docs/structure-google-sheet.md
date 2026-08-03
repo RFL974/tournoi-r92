@@ -361,6 +361,38 @@ est destiné à être affiché.
 
 ---
 
+## Onglet `Mesures` (relevés de visibilité des partenaires)
+
+Les relevés déposés par les **navigateurs des spectateurs**, qui permettent d'additionner la
+visibilité de **tous les appareils** dans la fiche partenaire. Écrit par l'action publique
+`mesureSponsors`, lu par l'admin via `lireMesuresSponsors`.
+
+> 🔒 **Aucune donnée personnelle.** Deux identifiants **aléatoires** tirés sur l'appareil et
+> remis à zéro chaque jour : ils ne permettent d'identifier personne ni de suivre qui que ce
+> soit d'un site à l'autre. Aucun cookie, aucun traceur tiers.
+
+| Colonne | Exemple | Signification |
+|---|---|---|
+| `horodatage` | `2026-12-14 11:07:32` | Moment de réception du relevé |
+| `jour` | `2026-12-14` | Journée (clé de filtrage de la consolidation) |
+| `appareil` | `67h2rvuug17a` | Identifiant aléatoire de l'appareil — compte la **portée** (combien de monde) |
+| `session` | `k3p9wq2zt5ab` | Identifiant aléatoire de la **visite** (une par ouverture de page) |
+| `donnees` | `{"SP1":{"expo":{…},…}}` | JSON des compteurs **cumulés** de la session |
+
+> ⚠️ **Les relevés sont CUMULATIFS**, et une session en dépose plusieurs (20 s après
+> l'ouverture, puis toutes les 10 min, plus un à la fermeture). La consolidation prend donc le
+> **MAXIMUM par session**, puis **somme les sessions** — jamais la somme des relevés d'une même
+> session, qui compterait le même temps autant de fois qu'il y a eu d'envois. C'est aussi ce qui
+> rend le total juste quand un relevé se perd ou arrive en double, et ce qui autorise à écrire
+> **sans verrou et sans jamais relire**.
+
+> 🧹 **Vidable d'un bouton** depuis l'écran admin (« Repartir de zéro »), et **isolé** : aucune
+> autre partie du logiciel ne lit cet onglet.
+
+> 🆕 **Créé à la demande** (`assurerOngletMesures`), comme `Sponsors`.
+
+---
+
 ## Système de classement (rappel)
 
 Calculé en direct à partir des matchs `terminé` :

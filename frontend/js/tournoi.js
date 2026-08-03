@@ -291,6 +291,10 @@ function appliquerSponsors(premier) {
     [zoneBandeau, zoneRail, zoneBarre, zoneMur].forEach(function (z) {
       if (z && !z.hidden) sponsorsBrancherMesure(z);
     });
+    // Des partenaires sont réellement à l'écran : on arme la remontée des relevés, pour que
+    // la fiche de visibilité porte sur TOUS les spectateurs et non sur le seul appareil qui
+    // la consulte. Rien n'est envoyé si les sponsors sont éteints — on n'arrive jamais ici.
+    sponsorsArmerEnvoi();
     // La rotation pilote les DEUX rendus du rail (colonne et barre) : une seule est visible
     // à la fois selon la largeur d'écran, mais toutes deux doivent rester synchronisées.
     sponsorsDemarrerRotation([zoneRail, zoneBarre], sponsorsReg.rotationS);

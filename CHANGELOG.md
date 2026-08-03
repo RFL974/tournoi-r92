@@ -5,6 +5,44 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### La visibilité partenaire, mesurée sur TOUS les appareils — 2026-08-03
+La fiche de visibilité ne portait que sur le navigateur qui la consultait — « ces chiffres ne
+représentent que ce navigateur ». Elle **additionne désormais tous les spectateurs** : chaque
+appareil qui affiche des partenaires remonte ses compteurs, et la fiche annonce la portée réelle
+(« mesuré sur 47 appareils, 61 visites »).
+
+**Le chemin emprunté.** Une action publique `mesureSponsors`, traitée **avant le contrôle de clé
+et avant le verrou d'écriture**, qui ajoute une ligne à un nouvel onglet `Mesures`. Ce
+contournement du verrou est tout l'enjeu : la saisie des scores en prend un à chaque validation,
+et des relevés passant par le chemin normal feraient attendre le marqueur au bord du terrain.
+Aucun service en plus, aucune dépense — le Sheet suffit.
+
+**Le rythme.** Un premier relevé **20 secondes** après l'ouverture, puis un **toutes les 10
+minutes**, plus un dernier à la fermeture. Le premier est volontairement rapide : la plupart des
+visites durent moins d'une minute, et si leur seul relevé était celui de la fermeture — le moment
+où le navigateur peut couper la requête — ces spectateurs manqueraient à la portée annoncée.
+
+**Ce qui rend le total juste sans coordination**, et c'est le cœur du mécanisme : les relevés
+sont **cumulatifs** (un relevé perdu ne coûte que le temps écoulé depuis le précédent, jamais
+l'historique), et la consolidation prend le **maximum par session** avant de sommer les sessions
+(un relevé arrivé deux fois ne compte donc pas double). C'est ce qui autorise à écrire **sans
+verrou et sans jamais relire** — et c'est vérifié par un test qui rejoue tous les relevés en
+double et obtient le même total.
+
+**Vie privée inchangée** : aucun cookie, aucun traceur tiers, aucune donnée personnelle. Deux
+identifiants **aléatoires** tirés sur l'appareil et remis à zéro chaque jour — l'un compte la
+portée, l'autre la visite. Ils ne permettent d'identifier personne ni de suivre qui que ce soit
+d'un site à l'autre. L'onglet est isolé, et se vide d'un bouton.
+
+**La surface publique est assumée et bornée** : `mesureSponsors` est la seule écriture sans clé
+du backend (les spectateurs n'en ont pas). La charge utile est donc entièrement revalidée côté
+serveur — identifiants au format strict, 40 partenaires maximum, chaque compteur borné — et
+n'atterrit que dans `Mesures`, que rien d'autre ne lit. Un abus ne peut polluer qu'une mesure
+d'audience, jamais un score.
+
+Si aucun relevé n'est encore arrivé, la fiche retombe sur les compteurs de l'appareil courant
+**et le dit** : on ne laisse jamais croire à une audience qu'on n'a pas mesurée.
+
 ### Un logo enfin à la bonne taille, et réglable — 2026-08-03
 Trois retours de suite sur la taille du logo partenaire : il est temps de donner le réglage
 plutôt que de continuer à ajuster à l'aveugle.

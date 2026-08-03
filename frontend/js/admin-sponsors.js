@@ -8,11 +8,11 @@
  *   2. Fiches partenaires    — création / modification / suppression, logo sur Drive ;
  *   3. Fiche de visibilité   — ce qu'on renvoie au partenaire après l'événement.
  *
- *  ⚠️ PROTOTYPE — LA MESURE NE SORT PAS DE L'APPAREIL. La carte « fiche de visibilité »
- *  lit les compteurs du NAVIGATEUR COURANT (voir sponsors.js). Elle affiche donc les
- *  chiffres de la tablette restée sur la page pendant le tournoi, et l'écrit noir sur
- *  blanc sur la fiche imprimée. Consolider entre spectateurs demanderait un collecteur
- *  séparé — hors périmètre, documenté dans docs/sponsors.md.
+ *  MESURE CONSOLIDÉE ENTRE TOUS LES APPAREILS. Chaque navigateur qui affiche des
+ *  partenaires remonte ses compteurs (voir sponsors.js) ; la carte « fiche de visibilité »
+ *  les additionne ici et annonce la portée réelle (« mesuré sur N appareils »). Si aucun
+ *  relevé n'est encore arrivé, elle retombe sur les compteurs de l'appareil courant — et
+ *  le dit, plutôt que de laisser croire à une audience non mesurée.
  *
  *  Nécessite (chargés AVANT) : commun.js, api.js, admin.js (redimensionnerImage,
  *  brancherZoneImage, urlAffiche), sponsors.js.
@@ -20,6 +20,7 @@
  */
 
 let sponsorsAdmin = [];          // fiches telles que renvoyées par le backend
+let sponsorsConsolide = null;    // relevés de TOUS les appareils, consolidés (null = pas encore lu)
 let sponsorLogoDataURI = null;   // logo choisi mais pas encore enregistré
 let sponsorLogoRetirer = false;  // l'utilisateur a demandé à retirer le logo existant
 
@@ -53,7 +54,7 @@ function initAdminSponsors() {
   });
   document.getElementById('bouton-retirer-sponsor-logo').addEventListener('click', onRetirerLogoSponsor);
 
-  document.getElementById('bouton-rafraichir-bilan').addEventListener('click', afficherBilanSponsors);
+  document.getElementById('bouton-rafraichir-bilan').addEventListener('click', chargerMesuresSponsors);
   document.getElementById('bouton-imprimer-bilan').addEventListener('click', function () { window.print(); });
   document.getElementById('bouton-exporter-bilan').addEventListener('click', onExporterBilanCsv);
   document.getElementById('bouton-vider-bilan').addEventListener('click', onViderBilan);
@@ -65,6 +66,28 @@ async function majSponsors() {
   if (!document.getElementById('bloc-sponsors-liste')) return;
   injecterReglagesSponsors(configCourante.global || {});
   await chargerSponsors();
+  await chargerMesuresSponsors();
+}
+
+/**
+ * Récupère les relevés déposés par les navigateurs des spectateurs et les consolide.
+ * En cas d'échec (backend pas encore redéployé, réseau), on retombe sur les compteurs
+ * de CET appareil : la fiche reste affichable, et elle le dit.
+ */
+async function chargerMesuresSponsors() {
+  const zone = document.getElementById('bilan-sponsors');
+  if (zone) zone.innerHTML = '<div class="message">Lecture des relevés…</div>';
+  try {
+    const r = await apiPostProtege('lireMesuresSponsors', {}, 'admin', 'admin');
+    if (r && r.releves) {
+      sponsorsConsolide = sponsorsConsolider(r.releves);
+      sponsorsConsolide.jour = r.jour;
+    } else {
+      sponsorsConsolide = null;
+    }
+  } catch (err) {
+    sponsorsConsolide = null;
+  }
   afficherBilanSponsors();
 }
 
@@ -403,15 +426,19 @@ function afficherBilanSponsors() {
   const zone = document.getElementById('bilan-sponsors');
   if (!zone) return;
 
-  const bilan = sponsorsBilan(sponsorsActifsAdmin());
+  // Consolidé si des relevés sont remontés, sinon les compteurs du seul appareil courant.
+  const consolide = !!(sponsorsConsolide && sponsorsConsolide.sessions);
+  const bilan = sponsorsBilan(sponsorsActifsAdmin(), consolide ? sponsorsConsolide : null);
   const facteur = facteurProjection();
   const projection = facteur > 1;
 
   if (!bilan.sponsors.length) {
     zone.innerHTML =
-      '<p class="vide">Aucune mesure sur cet appareil pour l\'instant. Ouvre la page publique ' +
-      'des scores (avec les partenaires activés, ou en ajoutant <code>?demo=sponsors</code> à ' +
-      'son adresse), laisse-la tourner quelques minutes, puis reviens ici.</p>';
+      '<p class="vide">Aucun relevé pour l\'instant. Ouvre la page publique des scores ' +
+      '(avec les partenaires activés, ou en ajoutant <code>?demo=sponsors</code> à son ' +
+      'adresse) et laisse-la tourner quelques minutes. Les appareils des spectateurs ' +
+      'remontent leur relevé <strong>toutes les 10 minutes</strong> et à la fermeture de ' +
+      'la page — le premier chiffre met donc un moment à apparaître.</p>';
     return;
   }
 
@@ -420,9 +447,16 @@ function afficherBilanSponsors() {
     html += '<p class="bilan-avertissement bilan-projection">⚠️ <strong>Projection — données simulées.</strong> ' +
       'Chiffres mesurés sur 1 appareil, multipliés par ' + facteur + '. À utiliser pour ' +
       'expliquer le dispositif, <strong>jamais</strong> comme un bilan réel envoyé à un partenaire.</p>';
+  } else if (consolide) {
+    html += '<p class="bilan-avertissement bilan-consolide">📡 <strong>Mesuré sur ' +
+      sponsorsConsolide.appareils + ' appareil(s)</strong>, ' + sponsorsConsolide.sessions +
+      ' visite(s) — relevés remontés par les navigateurs des spectateurs et consolidés ici. ' +
+      'Un appareil équipé d\'un bloqueur ou fermé brutalement peut manquer à l\'appel : ' +
+      'ces chiffres sont un <strong>plancher mesuré</strong>, jamais une estimation.</p>';
   } else {
-    html += '<p class="bilan-avertissement">📏 <strong>Mesuré sur 1 appareil</strong> — prototype, ' +
-      'sans consolidation entre spectateurs. Ces chiffres sont réels mais ne représentent que ce navigateur.</p>';
+    html += '<p class="bilan-avertissement">📏 <strong>Mesuré sur cet appareil seulement</strong> — ' +
+      'aucun relevé n\'est encore remonté des spectateurs. Vérifie que le backend a bien été ' +
+      'redéployé, puis laisse la page publique tourner une dizaine de minutes.</p>';
   }
 
   bilan.sponsors.forEach(function (s) {
@@ -435,12 +469,16 @@ function afficherBilanSponsors() {
 function ficheSponsor(s, facteur, projection, totalExpo) {
   const expo = s.expo * facteur;
   const nomTournoi = (configCourante.global && configCourante.global.tournoi_nom) || 'Tournoi';
+  const consolide = !!(sponsorsConsolide && sponsorsConsolide.sessions);
+  const portee = consolide
+    ? sponsorsConsolide.appareils + ' appareil(s), ' + sponsorsConsolide.sessions + ' visite(s)'
+    : 'mesure sur 1 appareil';
 
   let h = '<article class="fiche-sponsor">' +
     '<header class="fs-tete">' +
       '<span class="fs-marque">' + echapper(s.nom) + '</span>' +
       '<span class="fs-qui"><b>' + echapper(nomTournoi) + '</b>' +
-        '<span>Fiche de visibilité' + (projection ? ' — projection' : ' — mesure sur 1 appareil') + '</span></span>' +
+        '<span>Fiche de visibilité — ' + echapper(projection ? 'projection' : portee) + '</span></span>' +
     '</header>' +
     '<div class="fs-tuiles">' +
       tuileBilan(sponsorsDuree(expo), 'Exposition cumulée') +
@@ -483,10 +521,15 @@ function ficheSponsor(s, facteur, projection, totalExpo) {
     'logo présent à plus de 50 % dans l\'écran, onglet actif. Les compteurs restent sur ' +
     'l\'appareil — aucun envoi, aucun cookie, aucun traceur tiers, aucune donnée personnelle. ' +
     (projection
-      ? '<strong>Ces chiffres sont une PROJECTION</strong> (mesure d\'un appareil multipliée par ' +
-        facteur + '), pas un relevé d\'audience.'
-      : '<strong>Version prototype : les chiffres portent sur le seul appareil qui a affiché la ' +
-        'page</strong>, ils ne sont pas cumulés entre spectateurs.') +
+      ? '<strong>Ces chiffres sont une PROJECTION</strong> (mesure multipliée par ' + facteur +
+        '), pas un relevé d\'audience.'
+      : consolide
+        ? 'Relevés remontés par <strong>' + sponsorsConsolide.appareils + ' appareil(s)</strong> ' +
+          'sur ' + sponsorsConsolide.sessions + ' visite(s), consolidés. Un appareil équipé d\'un ' +
+          'bloqueur ou fermé brutalement peut manquer à l\'appel : <strong>ces chiffres sont un ' +
+          'plancher mesuré</strong>, jamais une estimation.'
+        : '<strong>Les chiffres portent sur le seul appareil qui a affiché la page</strong> : ' +
+          'aucun relevé n\'est encore remonté des spectateurs.') +
     '</p></article>';
   return h;
 }
@@ -535,7 +578,8 @@ function courbeVisibilite(s, facteur) {
 
 /** Export CSV : le tableur du partenaire, ou le tien pour comparer les éditions. */
 function onExporterBilanCsv() {
-  const bilan = sponsorsBilan(sponsorsActifsAdmin());
+  const consolide = !!(sponsorsConsolide && sponsorsConsolide.sessions);
+  const bilan = sponsorsBilan(sponsorsActifsAdmin(), consolide ? sponsorsConsolide : null);
   const facteur = facteurProjection();
   const lignes = [['partenaire', 'exposition_secondes', 'affichages', 'clics', 'part_de_voix_pct',
                    'plein_ouverts', 'plein_secondes', 'plein_passes', 'mesure']];
@@ -547,7 +591,8 @@ function onExporterBilanCsv() {
       Math.round(s.clics * facteur),
       s.partDeVoix,
       s.plein.ouverts, s.plein.secondes, s.plein.passes,
-      facteur > 1 ? ('projection x' + facteur) : '1 appareil'
+      facteur > 1 ? ('projection x' + facteur)
+        : (consolide ? (sponsorsConsolide.appareils + ' appareils') : '1 appareil')
     ]);
   });
   const csv = lignes.map(function (l) {
@@ -562,12 +607,16 @@ function onExporterBilanCsv() {
 }
 
 async function onViderBilan() {
-  const ok = await dialogConfirmer('Effacer les mesures de cet appareil ?\n\n' +
-    'Les compteurs de visibilité repartent de zéro. Les fiches partenaires, elles, ne bougent pas.',
-    { ok: 'Effacer', danger: true });
+  const ok = await dialogConfirmer('Effacer TOUS les relevés de visibilité ?\n\n' +
+    'Les compteurs repartent de zéro, sur cet appareil comme sur le serveur — les relevés ' +
+    'déjà remontés par les spectateurs sont supprimés. Les fiches partenaires, elles, ne ' +
+    'bougent pas.', { ok: 'Effacer', danger: true });
   if (!ok) return;
   sponsorsRemettreAZero();
-  afficherBilanSponsors();
+  try {
+    await apiPostProtege('viderMesuresSponsors', {}, 'admin', 'admin');
+  } catch (err) { /* le local est déjà effacé : on n'échoue pas là-dessus */ }
+  await chargerMesuresSponsors();
 }
 
 document.addEventListener('DOMContentLoaded', initAdminSponsors);
