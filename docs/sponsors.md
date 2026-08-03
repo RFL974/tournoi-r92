@@ -13,7 +13,7 @@
 | **Où ça se règle** | `admin.html` → écran **Partenaires** |
 | **Où c'est stocké** | onglet **Sponsors** du Google Sheet + paramètres de l'onglet **Config** |
 | **Coût réseau** | **zéro requête en plus** — les partenaires voyagent dans l'instantané `getAll` |
-| **Mesure** | **100 % locale** (stockage du navigateur) — aucun envoi, aucun cookie, aucun tiers |
+| **Mesure** | comptée dans le navigateur, **consolidée entre tous les appareils** — aucun cookie, aucun tiers |
 | **Interrupteur général** | `sponsors_actifs` — sur `non`, la page publique est **exactement celle d'avant** |
 
 ---
@@ -155,37 +155,67 @@ dire pour un bandeau permanent** — c'est juste le nombre d'ouvertures de la pa
 partenaire peut comparer à un panneau au bord du terrain, c'est le temps réellement passé à
 l'écran.
 
-### Où c'est stocké : nulle part ailleurs que sur l'appareil
+### La remontée : tous les appareils, sans verrou et sans serveur en plus
 
-**Rien n'est envoyé.** Les compteurs vivent dans le stockage local du navigateur
-(`r92_sponsors_mesure`), écrits par à-coups (toutes les 5 s, et systématiquement sur `pagehide`
-et `visibilitychange`).
+Les compteurs sont calculés dans le navigateur, puis **remontés** pour que la fiche porte sur
+tous les spectateurs.
 
-Deux raisons, dans cet ordre :
+**Le chemin.** Une action `mesureSponsors` dans `doPost`, traitée **avant le contrôle de clé et
+avant le verrou d'écriture**, qui ajoute une ligne à l'onglet `Mesures`. C'est la seule écriture
+publique du backend, et le contournement du verrou est le vrai enjeu : la saisie des scores en
+prend un à chaque validation, et des relevés passant par le chemin normal feraient attendre le
+marqueur au bord du terrain.
 
-1. **Technique.** Faire remonter les relevés par l'API des scores est **exclu** : chaque écriture
-   y prend un verrou (`LockService`) et reconstruit l'instantané public. Des milliers de relevés
-   passant par là entreraient en concurrence directe avec la saisie des scores le jour J.
-2. **Budget.** Le stockage du relais Cloudflare gratuit plafonne bien en dessous de ce qu'un vrai
-   tournoi produirait, et **on ne paie pas pour lever cette limite sur un prototype**.
+**Le rythme.** Un premier relevé **20 secondes** après l'ouverture, puis un **toutes les 10
+minutes**, plus un dernier à la fermeture. Le premier est volontairement rapide : la plupart des
+visites durent moins d'une minute, et si leur seul relevé était celui de la fermeture — le moment
+où le navigateur peut couper la requête — ces spectateurs manqueraient à la portée annoncée.
+Ordre de grandeur : ~2 à 3 relevés par visite, soit quelques milliers de lignes sur une journée.
 
-### Ce que la fiche démontre, et ce qu'elle ne démontre pas
+**Pourquoi ça reste juste sans coordination.** Deux propriétés, et elles se répondent :
 
-Sur la tablette de démo, la fiche affiche de **vrais** chiffres : le temps d'exposition
-réellement accumulé, les clics réellement faits. C'est la preuve que la mesure fonctionne.
+- les relevés sont **cumulatifs**, jamais des écarts → un relevé perdu ne coûte que le temps
+  écoulé depuis le précédent, jamais l'historique de la session ;
+- la consolidation prend le **maximum par session**, puis **somme les sessions** → un relevé
+  arrivé deux fois ne compte pas double.
 
-Ce qu'elle ne donne pas, c'est le cumul des centaines de spectateurs. **La fiche l'écrit noir sur
-blanc : « Mesuré sur 1 appareil ».** On ne montre jamais à un partenaire un chiffre qui
-laisserait croire à une audience qu'on n'a pas mesurée.
+C'est ce qui autorise à écrire **sans verrou et sans jamais relire** : `appendRow` ajoute en fin
+d'onglet, et deux relevés simultanés qui se marcheraient dessus ne coûteraient qu'une mesure
+d'audience — jamais un score.
 
-Pour une réunion sponsors, le champ **Projection** multiplie les chiffres mesurés par une
-fréquentation saisie à la main. La fiche porte alors un bandeau **« Projection — données
-simulées »** impossible à retirer par erreur.
+⚠️ **Le piège à éviter si vous touchez à ce code** : additionner les relevés d'une même session
+au lieu d'en prendre le maximum. Le temps d'exposition serait alors compté autant de fois qu'il
+y a eu d'envois — un chiffre faux, et faux **à la hausse**, donc invisible à la relecture.
+
+### Ce que la fiche annonce
+
+- Des relevés sont arrivés → **« Mesuré sur N appareils, M visites »**, chiffres consolidés.
+- Aucun relevé → **« Mesuré sur cet appareil seulement »**, et elle le dit plutôt que de laisser
+  croire à une audience non mesurée.
+
+Dans les deux cas c'est un **plancher mesuré** : un appareil équipé d'un bloqueur, fermé
+brutalement ou en navigation privée peut manquer à l'appel. Jamais une estimation.
+
+Pour une réunion sponsors, le champ **Projection** multiplie les chiffres par une fréquentation
+saisie à la main. La fiche porte alors un bandeau **« Projection — données simulées »**
+impossible à retirer par erreur.
 
 ### Vie privée
 
-Aucun cookie, aucun traceur tiers, aucune donnée personnelle, aucune requête sortante. Seuls des
-compteurs agrégés, sur l'appareil, remis à zéro au changement de date.
+Aucun cookie, aucun traceur tiers, aucune donnée personnelle. Seulement **deux identifiants
+aléatoires** tirés sur l'appareil et **remis à zéro chaque jour** : l'un compte la portée
+(combien d'appareils), l'autre la visite. Ils ne permettent d'identifier personne, ni de suivre
+qui que ce soit d'un site à l'autre. L'onglet `Mesures` est isolé — aucune autre partie du
+logiciel ne le lit — et se vide d'un bouton depuis l'admin.
+
+### La surface publique, dite franchement
+
+`mesureSponsors` est une écriture **sans clé** : les spectateurs n'en ont évidemment pas. Ce que
+ça implique, et pourquoi c'est tenable ici : la charge utile est minuscule et **entièrement
+revalidée** côté serveur (identifiants au format strict, 40 partenaires maximum, chaque compteur
+borné) ; elle n'écrit que dans `Mesures`, effaçable d'un bouton ; et rien de ce qui y entre n'est
+jamais réinjecté ailleurs. Un abus ne peut donc que polluer une mesure d'audience — pas un score,
+pas un classement, pas un dossier.
 
 ---
 

@@ -14,12 +14,12 @@
  *    D « plein »   — interstitiel d'accueil, quelques secondes, passable
  *    E « mur »     — mur des partenaires, tous les logos, en bas de page
  *
- *  ⚠️ PROTOTYPE — LA MESURE NE SORT PAS DE L'APPAREIL.
- *  Les compteurs (temps d'exposition, affichages, clics) vivent dans le stockage local
- *  du navigateur. Aucun envoi réseau, aucun cookie, aucun traceur tiers, aucune donnée
- *  personnelle. La fiche de visibilité de l'admin lit donc les compteurs DE L'APPAREIL
- *  QUI LA CONSULTE, et le dit explicitement. Consolider entre spectateurs demanderait un
- *  collecteur séparé (voir docs/sponsors.md) : hors périmètre du prototype, volontairement.
+ *  MESURE — comptée en local, consolidée entre tous les appareils.
+ *  Les compteurs (temps d'exposition, affichages, clics) sont calculés dans le navigateur,
+ *  puis remontés quelques fois par visite pour que la fiche partenaire porte sur TOUS les
+ *  spectateurs. Aucun cookie, aucun traceur tiers, aucune donnée personnelle : seulement
+ *  deux identifiants ALÉATOIRES tirés sur l'appareil et remis à zéro chaque jour, qui ne
+ *  permettent d'identifier personne ni de suivre qui que ce soit d'un site à l'autre.
  *
  *  Nécessite (chargé AVANT) : commun.js (echapper).
  * ============================================================================
@@ -779,8 +779,12 @@ function sponsorsBrancherMesure(racine, options) {
  * @param {Array} liste partenaires connus (pour retrouver les noms)
  * @returns {Object} { jour, total_expo, sponsors: [ { id, nom, expo, affichages, clics, … } ] }
  */
-function sponsorsBilan(liste) {
-  var m = sponsorsMesure();
+function sponsorsBilan(liste, compteurs) {
+  // `compteurs` = compteurs consolidés de TOUS les appareils (voir sponsorsConsolider).
+  // Absent, on retombe sur ceux de l'appareil courant — c'est le mode dégradé, utile quand
+  // la remontée n'est pas encore déployée ou qu'aucun relevé n'est arrivé.
+  var m = compteurs ? { jour: (compteurs.jour || ''), debut: 0, sponsors: compteurs.sponsors || compteurs }
+                    : sponsorsMesure();
   var parId = {};
   (liste || []).forEach(function (s) { parId[s.id_sponsor] = s; });
 
@@ -814,6 +818,205 @@ function sponsorsBilan(liste) {
   lignes.sort(function (a, b) { return b.expo - a.expo; });
 
   return { jour: m.jour, debut: m.debut, totalExpo: totalExpo, sponsors: lignes };
+}
+
+/* ==========================================================================
+   ENVOI DES RELEVÉS — consolidation entre appareils
+   --------------------------------------------------------------------------
+   Les compteurs restent calculés en local (rien ne change à la mesure elle-même) ;
+   ce qui s'ajoute ici, c'est leur REMONTÉE, pour que la fiche partenaire porte sur
+   tous les spectateurs et plus seulement sur l'appareil qui la consulte.
+
+   Trois choix qui tiennent l'ensemble :
+    • on envoie des CUMULS, jamais des écarts — un envoi perdu ne coûte que le temps
+      écoulé depuis le précédent, jamais l'historique de la session ;
+    • la consolidation prendra le MAXIMUM par session — un envoi arrivé deux fois ne
+      compte donc pas double, ce qui autorise à écrire sans verrou ni relecture ;
+    • on n'envoie qu'À INTERVALLES ESPACÉS (10 min) et à la fermeture, jamais à chaque
+      seconde comptée : quelques relevés par visite, pas des milliers.
+
+   VIE PRIVÉE — deux identifiants ALÉATOIRES tirés sur l'appareil, remis à zéro chaque
+   jour. Ils ne portent aucune donnée personnelle, ne permettent d'identifier personne,
+   et ne suivent personne d'un site à l'autre. Aucun cookie, aucun traceur tiers.
+   ========================================================================== */
+
+var SPONSORS_CLE_APPAREIL = 'r92_sponsors_appareil'; // identifiant d'appareil (portée)
+/* Le PREMIER relevé part vite (20 s), les suivants s'espacent (10 min).
+   Ce n'est pas un détail de réglage : la grande majorité des visites durent moins d'une
+   minute. Si le seul relevé d'une visite courte était celui de la fermeture — le moment
+   le moins fiable, où le navigateur peut couper la requête —, ces spectateurs
+   n'apparaîtraient nulle part, et la PORTÉE annoncée au partenaire serait sous-estimée. */
+var SPONSORS_PREMIER_ENVOI_MS = 20 * 1000;
+var SPONSORS_ENVOI_MS = 10 * 60 * 1000;
+var sponsorsSession = null;                          // identifiant de la visite en cours
+var sponsorsDernierEnvoi = 0;                        // 0 = aucun relevé encore parti
+var sponsorsDebutVisite = Date.now();
+var sponsorsEnvoiArme = false;
+
+/** Identifiant aléatoire court, sans dépendance à crypto (vieux navigateurs compris). */
+function sponsorsIdAleatoire() {
+  return (Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 6))
+    .replace(/[^a-z0-9]/g, '') || 'anonyme';
+}
+
+/** Identifiant de CET APPAREIL pour la journée. Sert à compter la portée (combien de monde). */
+function sponsorsIdAppareil() {
+  var jour = new Date().toISOString().slice(0, 10);
+  var m = sponsorsLire(SPONSORS_CLE_APPAREIL, null);
+  if (!m || m.jour !== jour || !m.id) {
+    m = { jour: jour, id: sponsorsIdAleatoire() };
+    sponsorsEcrire(SPONSORS_CLE_APPAREIL, m);
+  }
+  return m.id;
+}
+
+/** Identifiant de la VISITE en cours (jamais mémorisé : une nouvelle par ouverture de page). */
+function sponsorsIdSession() {
+  if (!sponsorsSession) sponsorsSession = sponsorsIdAleatoire();
+  return sponsorsSession;
+}
+
+/**
+ * Envoie le cumul courant. `definitif` = on quitte la page : on utilise alors `keepalive`,
+ * qui laisse le navigateur terminer la requête après la fermeture de l'onglet.
+ *
+ * Ne renvoie rien et n'attend rien : un relevé perdu n'est qu'une mesure d'audience, il ne
+ * doit JAMAIS retarder l'affichage d'un score ni faire échouer quoi que ce soit.
+ */
+function sponsorsEnvoyerReleve(definitif) {
+  var m = sponsorsMesureCharger();
+  if (!m || !m.sponsors || !Object.keys(m.sponsors).length) return;
+  if (typeof API_URL !== 'string' || !API_URL) return;
+
+  sponsorsDernierEnvoi = Date.now();
+  var corps = JSON.stringify({
+    action: 'mesureSponsors',
+    appareil: sponsorsIdAppareil(),
+    session: sponsorsIdSession(),
+    sponsors: m.sponsors
+  });
+
+  try {
+    // text/plain : évite la requête de contrôle CORS préalable, qu'Apps Script ne gère pas.
+    fetch(API_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      keepalive: !!definitif,
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: corps
+    }).catch(function () { /* relevé perdu : sans conséquence */ });
+  } catch (e) { /* idem */ }
+}
+
+/**
+ * Arme la remontée : un relevé toutes les 10 minutes tant que la page vit, et un dernier
+ * quand elle disparaît. Appelée une seule fois, quand des partenaires sont réellement à
+ * l'écran (donc jamais si les sponsors sont éteints).
+ */
+function sponsorsArmerEnvoi() {
+  if (sponsorsEnvoiArme) return;
+  sponsorsEnvoiArme = true;
+
+  setInterval(function () {
+    if (document.hidden) return; // onglet en poche : rien de neuf à remonter
+    var attente = sponsorsDernierEnvoi ? SPONSORS_ENVOI_MS : SPONSORS_PREMIER_ENVOI_MS;
+    var depuis = Date.now() - (sponsorsDernierEnvoi || sponsorsDebutVisite);
+    if (depuis < attente) return;
+    sponsorsEnvoyerReleve(false);
+  }, 5000);
+
+  // La page disparaît : dernier relevé. `pagehide` couvre la fermeture d'onglet,
+  // `visibilitychange` le passage en arrière-plan sur téléphone, où `pagehide` n'est
+  // pas garanti. Les deux peuvent tirer : le doublon est absorbé par le MAX par session.
+  window.addEventListener('pagehide', function () { sponsorsEnvoyerReleve(true); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) sponsorsEnvoyerReleve(true);
+  });
+}
+
+/* ==========================================================================
+   CONSOLIDATION — additionner tous les appareils
+   ========================================================================== */
+
+/**
+ * Fusionne les relevés de TOUS les appareils en un jeu de compteurs unique, au format de
+ * `sponsorsMesure()` — la fiche de visibilité n'a donc rien à savoir de leur provenance.
+ *
+ * Règle centrale : **MAXIMUM par session, puis somme des sessions**. Une session dépose
+ * plusieurs relevés cumulatifs au fil de la visite ; les additionner compterait le même
+ * temps autant de fois qu'il y a eu d'envois. Le maximum retient l'état final de chaque
+ * session, et reste juste même si un relevé s'est perdu ou est arrivé en double.
+ *
+ * @param {Array} releves  [{ appareil, session, sponsors }]
+ * @returns {Object} { sponsors, appareils, sessions }
+ */
+function sponsorsConsolider(releves) {
+  var parSession = {};   // session → derniers compteurs connus (les plus élevés)
+  var appareils = {};
+
+  (releves || []).forEach(function (r) {
+    if (!r || !r.sponsors) return;
+    appareils[r.appareil] = 1;
+    var courant = parSession[r.session];
+    if (!courant) { parSession[r.session] = r.sponsors; return; }
+    // Relevé plus récent de la même session : on garde, valeur par valeur, la plus grande.
+    Object.keys(r.sponsors).forEach(function (id) {
+      courant[id] = sponsorsMaxFiche(courant[id], r.sponsors[id]);
+    });
+  });
+
+  var total = {};
+  Object.keys(parSession).forEach(function (session) {
+    var fiches = parSession[session];
+    Object.keys(fiches).forEach(function (id) {
+      total[id] = sponsorsAdditionnerFiche(total[id], fiches[id]);
+    });
+  });
+
+  return {
+    sponsors: total,
+    appareils: Object.keys(appareils).length,
+    sessions: Object.keys(parSession).length
+  };
+}
+
+/** Maximum champ à champ de deux relevés cumulatifs d'une MÊME session. */
+function sponsorsMaxFiche(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  var r = sponsorsMesureVide();
+  ['expo', 'aff', 'tranches'].forEach(function (bloc) {
+    Object.keys(a[bloc] || {}).forEach(function (k) { r[bloc][k] = a[bloc][k]; });
+    Object.keys(b[bloc] || {}).forEach(function (k) {
+      r[bloc][k] = Math.max(r[bloc][k] || 0, b[bloc][k]);
+    });
+  });
+  r.clics = Math.max(a.clics || 0, b.clics || 0);
+  r.plein = {
+    ouverts:  Math.max((a.plein || {}).ouverts || 0,  (b.plein || {}).ouverts || 0),
+    secondes: Math.max((a.plein || {}).secondes || 0, (b.plein || {}).secondes || 0),
+    passes:   Math.max((a.plein || {}).passes || 0,   (b.plein || {}).passes || 0)
+  };
+  return r;
+}
+
+/** Somme champ à champ de deux relevés de sessions DIFFÉRENTES. */
+function sponsorsAdditionnerFiche(a, b) {
+  if (!a) return sponsorsMaxFiche(sponsorsMesureVide(), b);
+  var r = sponsorsMesureVide();
+  ['expo', 'aff', 'tranches'].forEach(function (bloc) {
+    Object.keys(a[bloc] || {}).forEach(function (k) { r[bloc][k] = a[bloc][k]; });
+    Object.keys((b || {})[bloc] || {}).forEach(function (k) {
+      r[bloc][k] = (r[bloc][k] || 0) + b[bloc][k];
+    });
+  });
+  r.clics = (a.clics || 0) + ((b || {}).clics || 0);
+  r.plein = {
+    ouverts:  ((a.plein || {}).ouverts || 0)  + (((b || {}).plein || {}).ouverts || 0),
+    secondes: ((a.plein || {}).secondes || 0) + (((b || {}).plein || {}).secondes || 0),
+    passes:   ((a.plein || {}).passes || 0)   + (((b || {}).plein || {}).passes || 0)
+  };
+  return r;
 }
 
 /** Efface les compteurs de l'appareil (bouton « repartir de zéro » de l'admin). */
