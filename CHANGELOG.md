@@ -5,6 +5,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### La dernière feuille imprimée ne contient plus que le pied de page — 2026-08-03
+Deux exports successifs ont fini sur une **feuille supplémentaire** ne portant que le blason, le
+nom de l'école et la mention « document généré le… ». Compacter les marges n'a pas suffi : le
+bloc restait plus haut que le fond de page disponible. Le **pied de page est donc retiré de
+l'impression** — sur papier il fait doublon, le blason et le nom ouvrent déjà la première page,
+en grand. Seule survit la mention **« document généré le… »** : une ligne, la seule information
+que le papier n'a pas déjà, et celle qui prévient le club que son impression peut être périmée.
+*(À l'écran, le pied de page ne bouge pas.)* **100 % front**, aucun redéploiement backend.
+
 ### Sécurité : le jeton personnel disparaît de l'adresse (et donc du papier) — 2026-08-03
 Demander à l'utilisateur de décocher « En-têtes et pieds de page » avant chaque impression ne
 protégeait rien : personne ne le fait, et **les clubs encore moins**. Le jeton est donc retiré de
