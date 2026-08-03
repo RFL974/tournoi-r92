@@ -375,10 +375,12 @@
         </p>
         <div class="ligne-action">
           <button type="button" class="bouton" id="bouton-rafraichir-bilan">Rafraîchir les chiffres</button>
+          <button type="button" class="bouton-lien" id="bouton-tester-remontee">Tester la remontée</button>
           <button type="button" class="bouton-lien" id="bouton-imprimer-bilan">Imprimer / PDF</button>
           <button type="button" class="bouton-lien" id="bouton-exporter-bilan">Exporter en CSV</button>
           <button type="button" class="bouton-lien" id="bouton-vider-bilan">Repartir de zéro</button>
         </div>
+        <div id="diagnostic-remontee" class="diagnostic-remontee" hidden></div>
         <label class="reglage" id="ligne-projection">
           <span class="r-libelle">Projection — « et si tant de personnes avaient consulté la page ? »</span>
           <input class="r-input" type="number" id="projection-appareils" min="1" max="20000" step="10"

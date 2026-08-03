@@ -187,6 +187,24 @@ d'audience — jamais un score.
 au lieu d'en prendre le maximum. Le temps d'exposition serait alors compté autant de fois qu'il
 y a eu d'envois — un chiffre faux, et faux **à la hausse**, donc invisible à la relecture.
 
+### « J'ai déployé, et pourtant rien ne remonte »
+
+L'écran Partenaires a un bouton **« Tester la remontée »** qui éprouve la chaîne maillon par
+maillon et **nomme celui qui casse**, au lieu de laisser deviner :
+
+1. **Écriture** — envoie un relevé de test au backend. S'il répond *« Action inconnue »*, le
+   déploiement n'a pas pris.
+2. **Relecture** — vérifie que ce relevé ressort bien.
+3. **Relevés réels** — compte ceux déjà remontés des spectateurs.
+
+> ⚠️ **La cause de loin la plus fréquente** : avoir cliqué *« Nouveau déploiement »* au lieu de
+> **Gérer les déploiements → ✏️ → Version : Nouvelle version**. Le premier crée une **nouvelle
+> URL** ; `frontend/js/config.js` pointe alors toujours sur l'ancienne, qui exécute l'ancien
+> code. Tout *semble* déployé, et rien ne l'est.
+
+Le relevé de test porte l'identifiant réservé `__test__` : il est filtré de la consolidation et
+n'apparaît jamais dans la fiche d'un partenaire, ni dans la portée annoncée.
+
 ### Ce que la fiche annonce
 
 - Des relevés sont arrivés → **« Mesuré sur N appareils, M visites »**, chiffres consolidés.
