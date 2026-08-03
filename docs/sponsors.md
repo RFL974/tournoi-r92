@@ -110,10 +110,23 @@ faute de frappe (« 500 » au lieu de « 5 ») ne transforme le message en écra
 | `couleur` | `#RRGGBB`, fond du plein écran auto-composé. |
 | `actif` | `oui` = visible. Toute autre valeur ⇒ retiré de la page **sans perdre la fiche**. |
 | `ordre` | Position dans le mur des partenaires uniquement. |
+| `logo_zoom` | Taille du logo en **% de la taille de référence** (50 à 200, défaut 100). |
 
 **Sans logo**, le partenaire s'affiche en pastille à son nom sur sa couleur de marque : un
 commerçant qui n'a pas de fichier exploitable reste affichable, et la démo fonctionne avant
 même le premier téléversement.
+
+**Logo qui paraît trop petit ?** Beaucoup de fichiers embarquent leurs propres **marges
+blanches** : le logo semble minuscule alors que l'image, elle, est à la bonne taille. Aucun
+réglage global ne peut le rattraper — le vide fait partie du fichier. D'où `logo_zoom`, réglable
+par partenaire dans l'admin (130 à 150 % dans ce cas). Recadrer le fichier reste la meilleure
+solution, le zoom est le rattrapage.
+
+**Fond blanc peint au téléversement.** Un canevas vierge est transparent-**noir** : tout maillon
+qui aplatit la transparence (encodage JPEG, mais aussi le proxy d'images qui sert les fichiers
+Drive) fait ressortir un logo détouré sur un carré noir. On peint donc un fond blanc sous le
+logo à l'envoi — plus de transparence à rater, donc plus aucun maillon capable de la rater. Les
+tuiles qui accueillent les logos sont blanches, le fond peint est invisible.
 
 **Sans visuel plein écran**, l'interstitiel se compose tout seul (logo + accroche + couleur) :
 inutile de relancer douze commerçants pour une image.

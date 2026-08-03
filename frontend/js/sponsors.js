@@ -293,10 +293,29 @@ function sponsorsCouleur(s) {
 function sponsorsLogo(s) {
   var nom = echapper(s.nom);
   if (s.logo_id) {
+    // On pose une VARIABLE CSS, pas une taille. Nuance essentielle : une taille en ligne
+    // écraserait les règles de la feuille de style (c'est ce qui rendait le logo minuscule
+    // sur grand écran) ; une variable, elle, ALIMENTE ces règles — chaque emplacement garde
+    // donc sa taille de référence et son adaptation à l'écran, simplement multipliée.
     return '<img class="sp-logo-img" src="' + echapper(sponsorsUrlImage(s.logo_id, 600)) +
-      '" alt="' + nom + '" loading="lazy" decoding="async">';
+      '" alt="' + nom + '" loading="lazy" decoding="async"' +
+      ' style="--sp-zoom:' + sponsorsZoom(s) + '">';
   }
   return '<span class="sp-logo-texte" style="background:' + echapper(sponsorsCouleur(s)) + '">' + nom + '</span>';
+}
+
+/**
+ * Facteur d'agrandissement du logo d'un partenaire (1 = taille de référence).
+ *
+ * Beaucoup de fichiers de logo embarquent leurs propres marges blanches : à l'écran le
+ * logo paraît alors petit, alors que l'IMAGE, elle, est à la bonne taille — aucun réglage
+ * global ne peut le rattraper, puisque le vide fait partie du fichier. D'où ce réglage
+ * au cas par cas, saisi dans l'admin en pourcentage (50 à 200).
+ */
+function sponsorsZoom(s) {
+  var z = parseInt(s.logo_zoom, 10);
+  if (!isFinite(z)) return 1;
+  return Math.max(50, Math.min(200, z)) / 100;
 }
 
 /** Ouvre-t-on un lien ? (partenaire sans site : on rend un bloc non cliquable). */

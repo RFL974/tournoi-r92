@@ -913,3 +913,7 @@ body.theme-clair {
   padding: 4px;
   cursor: pointer;
 }
+
+/* La vignette de la liste des partenaires suit le zoom saisi dans la fiche : l'aperçu de
+   l'admin doit montrer ce que la page publique affichera, pas une taille de convention. */
+.theme-clair .sponsor-carte-logo img { max-height: calc(46px * var(--sp-zoom, 1)); }

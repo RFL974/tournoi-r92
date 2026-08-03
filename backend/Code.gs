@@ -104,8 +104,13 @@ var ENTETES = {
   //   actif        : 'oui' = affiché. Toute autre valeur ⇒ le partenaire disparaît de la page
   //                  sans que sa fiche soit perdue.
   //   ordre        : entier, position dans le mur des partenaires uniquement.
+  //   logo_zoom    : taille du logo en POURCENTAGE de la taille de référence (50 à 200 ;
+  //                  vide ⇒ 100). Sert aux fichiers qui embarquent leurs propres marges
+  //                  blanches : le logo y paraît petit alors que l'image, elle, est à la
+  //                  bonne taille — seul un agrandissement au cas par cas le corrige.
+  //                  Migration douce : ajoutée À DROITE, vide = comportement d'origine.
   Sponsors: ['id_sponsor', 'nom', 'logo_id', 'url', 'accroche', 'emplacements',
-             'poids', 'visuel_id', 'couleur', 'actif', 'ordre']
+             'poids', 'visuel_id', 'couleur', 'actif', 'ordre', 'logo_zoom']
 };
 var COULEUR_FOND_ENTETE = '#0B2138';
 var COULEUR_TEXTE_ENTETE = '#F2F6FB';
@@ -133,8 +138,30 @@ function setupSheet() {
  */
 function assurerOngletSponsors(classeur) {
   var onglet = classeur.getSheetByName('Sponsors');
-  if (!onglet) creerOngletAvecEntetes(classeur, 'Sponsors', ENTETES.Sponsors);
-  return classeur.getSheetByName('Sponsors');
+  if (!onglet) {
+    creerOngletAvecEntetes(classeur, 'Sponsors', ENTETES.Sponsors);
+    return classeur.getSheetByName('Sponsors');
+  }
+
+  // MIGRATION DOUCE des colonnes ajoutées après coup (elles le sont toujours À DROITE).
+  // Sans ça, une nouvelle colonne serait écrite dans une cellule SANS EN-TÊTE — et
+  // `lireOngletSimple` ignore les colonnes sans en-tête : la valeur partirait dans le
+  // Sheet pour n'être jamais relue, en silence. On complète donc la ligne d'en-tête.
+  var largeur = ENTETES.Sponsors.length;
+  if (onglet.getMaxColumns() < largeur) {
+    onglet.insertColumnsAfter(onglet.getMaxColumns(), largeur - onglet.getMaxColumns());
+  }
+  var entetes = onglet.getRange(1, 1, 1, largeur).getValues()[0];
+  var manque = false;
+  for (var i = 0; i < largeur; i++) {
+    if (String(entetes[i]) !== ENTETES.Sponsors[i]) { manque = true; break; }
+  }
+  if (manque) {
+    var zone = onglet.getRange(1, 1, 1, largeur);
+    zone.setValues([ENTETES.Sponsors]);
+    stylerEntete(zone);
+  }
+  return onglet;
 }
 
 function creerOngletAvecEntetes(classeur, nomOnglet, entetes) {
@@ -352,7 +379,8 @@ function construireSnapshot(classeur) {
 
 /** Colonnes de l'onglet Sponsors réellement servies à la page publique. */
 var SPONSOR_CHAMPS_PUBLICS = ['id_sponsor', 'nom', 'logo_id', 'url', 'accroche',
-                              'emplacements', 'poids', 'visuel_id', 'couleur', 'ordre'];
+                              'emplacements', 'poids', 'visuel_id', 'couleur', 'ordre',
+                              'logo_zoom'];
 
 /**
  * Partenaires actifs, prêts pour l'affichage public : filtrés sur `actif`, réduits aux
@@ -3444,6 +3472,13 @@ function enregistrerSponsor(classeur, data) {
   var ordre = parseInt(data.ordre, 10);
   if (!isFinite(ordre)) ordre = 100;
 
+  // Taille du logo en % de la référence. Bornée : en dessous de 50 le logo devient
+  // illisible, au-dessus de 200 il déborde de son emplacement et pousse l'accroche
+  // hors de l'écran sur téléphone.
+  var zoom = parseInt(data.logo_zoom, 10);
+  if (!isFinite(zoom)) zoom = 100;
+  zoom = Math.max(50, Math.min(200, zoom));
+
   var couleur = String(data.couleur || '').trim();
   if (couleur && !/^#[0-9a-fA-F]{6}$/.test(couleur)) couleur = '';
 
@@ -3456,7 +3491,7 @@ function enregistrerSponsor(classeur, data) {
     emplacements.join(','),
     poids, visuelId, couleur,
     (String(data.actif).toLowerCase() === 'oui') ? 'oui' : 'non',
-    ordre
+    ordre, zoom
   ]];
 
   var cible = (ligne !== -1) ? ligne : onglet.getLastRow() + 1;
