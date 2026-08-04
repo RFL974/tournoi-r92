@@ -4,7 +4,7 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-04 (session 5)
+**Dernière mise à jour** : 2026-08-04 (session 5, après décisions de Romain)
 **Commit de référence** : `d0a0ea5` (branche `claude/cartographie-donnees-etape-1-t1e9xq`)
 
 ---
@@ -12,7 +12,9 @@
 ## 1. EN UNE PHRASE
 
 L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 a commencé** : le **domaine A (métier)** est audité —
-**11 problèmes identifiés, dont 5 P1, aucun P0**. Il reste **7 domaines** à auditer.
+**12 problèmes identifiés, dont 5 P1, aucun P0**. Romain a tranché **deux règles métier**
+(forfait, limite des scores) et **deux propositions attendent sa validation** (ajustement du
+planning, critères de départage). Il reste **7 domaines** à auditer.
 **Aucun fichier de l'application n'a été modifié** et **aucun problème n'est corrigé**.
 
 ---
@@ -37,7 +39,7 @@ L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 a commencé** : le **domaine A (mé
 
 | Domaine | Nom | Statut |
 |---|---|---|
-| **A** | **Métier / Product Owner** | ✅ **FAIT** (session 5) — 11 problèmes, 0 P0, 5 P1, 5 P2, 1 P3 |
+| **A** | **Métier / Product Owner** | ✅ **FAIT** (session 5) — 12 problèmes, 0 P0, 5 P1, 6 P2, 1 P3 |
 | C | Sécurité | ⬜ **Prochain** |
 | B | RGPD / Protection des données | ⬜ À faire |
 | D | QA / Tests | ⬜ À faire |
@@ -91,17 +93,32 @@ le registre et `AUDIT.md` pour l'explication de chacun.
 | Priorité | Nombre | Domaine A |
 |---|---|---|
 | **P0** | **0** | — |
-| **P1** | **5** | R-001 forfait · R-002 blocage après-midi · R-003 planning figé · R-004 départage · R-005 score aberrant |
-| **P2** | 5 | R-006 → R-010 |
+| **P1** | **5** | R-001 forfait ✅ *(règle tranchée)* · R-002 blocage après-midi · R-003 planning figé ⏳ · R-004 départage ⏳ · R-005 score aberrant ✅ *(règle tranchée)* |
+| **P2** | 6 | R-006 → R-010, plus **R-012** (aucune règle sportive n'est écrite pour les clubs) |
 | **P3** | 1 | R-011 |
+
+✅ = la **règle métier** est décidée, le **code n'est pas écrit**. ⏳ = ma proposition attend la
+validation de Romain.
 
 **Le fil rouge du domaine A** : l'application est excellente **avant** le coup d'envoi et rigide
 **après**. Les 5 P1 apparaissent tous le jour J, quand la réalité s'écarte du plan — forfait,
 match non saisi, terrain impraticable, égalité parfaite, faute de frappe.
 
-**Trois questions bloquent une correction** et n'appartiennent qu'à Romain (elles seront posées à
-l'ÉTAPE 4) : quelle règle pour un forfait ? quels critères de départage ajouter ? à partir de quel
-score demander confirmation ?
+**Décisions métier prises le 2026-08-04** :
+
+- **D-011 — forfait** : l'absent marque **0 point**, le présent **gagne**, le score attribué est un
+  **paramètre de l'organisateur**, et la règle retenue doit être **communiquée aux clubs** ;
+- **D-012 — scores** : **2 chiffres maximum** (au-delà, refus) et **confirmation avant chaque
+  validation**.
+
+**Deux propositions attendent la validation de Romain** : **D-013** (déplacer un match + décaler
+toute la journée de X minutes) et **D-014** (ajouter la confrontation directe puis l'ordre
+alphabétique au départage).
+
+> L'exigence de transparence posée par D-011 a fait apparaître **R-012** : ni le barème, ni le
+> départage ne sont écrits où que ce soit pour les clubs, et le champ « Règlement » du dossier a
+> été **retiré de l'écran d'administration**. La règle décidée ne serait donc, en l'état,
+> communicable à personne.
 
 > ⚠️ Les 7 autres domaines ne sont **pas** audités. L'absence de problème n'y signifie rien.
 
@@ -134,10 +151,14 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-004 | Messages de commit : convention existante conservée — `type(scope): description en français` | ✅ Validée |
 | D-006 | Documentation → commit direct sur `main` ; code de l'application → branche + PR + validation préalable | ✅ Validée |
 | D-010 | Ordre d'audit des 8 domaines : **A → C → B → D → E → F → G → H** — « on fait les choses dans l'ordre pour bien les faire » | ✅ Validée (session 5) |
+| D-011 | Règle du **forfait** : absent = 0 point, présent gagne, score = paramètre de l'organisateur, règle à communiquer aux clubs | ✅ Validée (session 5) |
+| D-012 | **Scores** : 2 chiffres maximum, plus confirmation avant chaque validation | ✅ Validée (session 5) |
 
 **En attente de validation** (voir `DECISIONS.md`) :
 
 - D-005 — Périmètre exact du dépôt à auditer (le site vitrine `boutique-r92` est un **autre** dépôt)
+- **D-013** — Comment ajuster le planning en cours de journée (proposition faite à sa demande)
+- **D-014** — Quels critères de départage ajouter (proposition faite à sa demande)
 
 ---
 

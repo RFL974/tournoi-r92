@@ -619,3 +619,80 @@ par le navigateur), **B-11** (la réinitialisation ne demande aucune confirmatio
 Format imposé par `CLAUDE.md` §6.C, pour chaque faille : criticité, scénario d'exploitation,
 impact, recommandation, difficulté de correction. **Aucune mesure de sécurité ne sera modifiée
 sans validation préalable.**
+
+### Session 5 — complément du même jour : réponses de Romain
+
+Romain a répondu aux trois questions ouvertes du domaine A **le jour même**, avant la clôture de
+la session. Le travail ci-dessous est donc rattaché à la session 5, et non à une session 6.
+
+**Ce qu'il a tranché**
+
+- **D-011 — le forfait** : *« l'absent marque 0 point et le présent gagne (différence de points à
+  mettre en paramètre à la discrétion de l'organisateur du tournoi). Peu importe son choix, toutes
+  les équipes doivent être informées de tout point de règlement dans leur dossier final a
+  minima. »* → R-001 passe au statut **VALIDÉ** (la règle, pas le code).
+- **D-012 — les scores** : *« max un nombre à 2 chiffres plus demande de confirmation du score
+  avant de valider »* → R-005 passe au statut **VALIDÉ** (la règle, pas le code).
+
+**Ce que j'avais mal posé**
+
+Romain : *« je ne comprends pas les questions 2 et 3 »*. Les deux questions étaient formulées en
+vocabulaire technique, ce que `CLAUDE.md` §0 interdit :
+
+- la question 2 (« quels critères de départage ? ») supposait connu le mot **départage** ;
+- la question 3 (« à partir de quel score demander confirmation ? ») supposait qu'il fallait un
+  **seuil** — alors que Romain, en répondant sur R-005, a proposé quelque chose de **plus simple et
+  plus sûr** : une limite dure à 2 chiffres. La question portait sur une solution que je lui
+  imposais implicitement, pas sur son besoin.
+
+Leçon retenue pour les prochains domaines : **poser la question sur le besoin, pas sur la solution
+technique que j'ai en tête.**
+
+**Deux propositions faites à sa demande** (« que me suggères-tu ? »)
+
+- **D-013 (R-003)** — ajuster le planning en cours de journée. Trois niveaux proposés ; je
+  recommande de ne faire que les deux premiers : **déplacer un match** (heure et/ou terrain, sans
+  rien regénérer) et **décaler toute la journée de X minutes** (les matchs pas encore joués).
+  Le troisième — redistribuer automatiquement les matchs d'un terrain devenu impraticable — est le
+  seul qui touche au planificateur, donc le seul réellement risqué : à garder pour plus tard.
+- **D-014 (R-004)** — le départage. Proposition : ajouter **deux critères à la suite des trois
+  existants**, sans toucher aux trois — (4) la **confrontation directe**, (5) l'**ordre
+  alphabétique** en dernier recours. Argument central : ces critères n'interviennent que là où
+  l'application n'a **aujourd'hui aucune règle**, donc aucun classement actuellement correct ne
+  change. Et le dernier recours doit être **déterministe** (pas un tirage au sort), parce que le
+  classement est calculé deux fois : un tirage donnerait un classement à la page publique et un
+  autre au tirage de l'après-midi.
+
+**Nouveau problème découvert — R-012**
+
+L'exigence de transparence posée par Romain dans D-011 m'a fait vérifier ce que les clubs
+reçoivent réellement. Constat : **ni le barème (3/2/1), ni l'ordre de départage ne sont écrits où
+que ce soit** pour les clubs — ils n'existent que dans les commentaires du code et dans
+`docs/regles-classement.md`, un document technique. Il y a bien une ligne « Règlement » dans le
+dossier des clubs, mais c'est un **texte libre**, et son champ **a été retiré de l'écran
+d'administration** (`admin.js` le dit explicitement) : **il n'existe aujourd'hui aucun moyen de le
+remplir.** *(CERTAIN, vérifié.)*
+
+Autrement dit : la règle que Romain vient de fixer ne serait, en l'état, **communicable à
+personne**. → **R-012**, P2, à traiter **avec** R-001 et R-004 plutôt que séparément.
+
+**Question adjacente laissée ouverte** (sans urgence) : faut-il un état « **match annulé** »
+(l'orage qui arrête le tournoi), distinct du forfait ? Personne n'a tort, personne n'est absent —
+le match n'a simplement pas eu lieu. C'est le même chantier technique que R-001, donc le bon moment
+pour y penser.
+
+**Tests réalisés**
+
+Aucun. Toujours aucune ligne de code touchée.
+
+**Commit**
+
+`docs(industrialisation): enregistrer les règles de forfait et de saisie des scores` — branche
+`claude/cartographie-donnees-etape-1-t1e9xq`. Contenu : `AUDIT.md`, `RISQUES.md`, `DECISIONS.md`,
+`ETAT.md`, `SESSIONS.md`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+Inchangée : **session 6 — ÉTAPE 2, domaine C (sécurité)**. Les propositions D-013 et D-014
+n'empêchent pas d'avancer : elles attendront l'ÉTAPE 4, comme le reste. Rien ne sera codé avant la
+fin des 8 audits.

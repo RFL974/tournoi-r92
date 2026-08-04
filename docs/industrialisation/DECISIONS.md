@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 5)
+**Dernière mise à jour** : 2026-08-04 (session 5, après réponses de Romain)
 
 ---
 
@@ -288,7 +288,156 @@
 
 ---
 
+### D-011 — La règle du forfait (équipe absente)
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 5 |
+| **Statut** | ✅ **VALIDÉE PAR ROMAIN** |
+| **Couvre** | R-001 |
+
+**Problème posé**
+> Un match n'a que deux états : « à venir » et « terminé ». Une équipe absente n'a aucune façon
+> correcte d'être enregistrée : un 0-0 lui donne 2 points (match nul), un score inventé lui offre
+> de la différence — or la différence sert à départager.
+
+**Décision de Romain, mot pour mot**
+> *« L'absent marque 0 point et le présent gagne (différence de points à mettre en paramètre à la
+> discrétion de l'organisateur du tournoi). Peu importe son choix, toutes les équipes doivent être
+> informées de tout point de règlement dans leur dossier final a minima. »*
+
+**Ce que cela fixe**
+> - équipe **absente** : **0 point** de classement (et non 1, comme une défaite jouée) ;
+> - équipe **présente** : **elle gagne** — 3 points ;
+> - le **score attribué**, donc la différence : **paramètre réglable par l'organisateur** ;
+> - **exigence de transparence** : la règle retenue doit figurer dans le dossier final des clubs.
+
+**Conséquence technique à retenir pour l'ÉTAPE 3**
+> C'est **l'état « forfait » qui porte la victoire**, pas le score. L'application déduit
+> aujourd'hui victoire/nul/défaite en comparant les deux scores : un forfait réglé à « 0-0 » ne
+> pourrait donc pas produire une victoire sans cet état explicite. C'est la raison technique pour
+> laquelle « inventer un score » ne peut pas suffire.
+
+**Recommandation de valeur par défaut (non tranchée, sans urgence)**
+> **`0 – 0`** : la victoire par forfait pèse alors exactement 3 points et rien de plus, sans
+> fausser aucun départage. L'organisateur qui veut autre chose règle le paramètre — c'est
+> précisément ce que la décision prévoit.
+
+**Conséquence non prévue, remontée le jour même**
+> L'exigence de transparence **n'est pas réalisable en l'état** : ni le barème, ni le départage ne
+> sont écrits où que ce soit pour les clubs, et le champ « Règlement » du dossier a été retiré de
+> l'écran d'administration. Nouveau constat **R-012**.
+
+---
+
+### D-012 — Limite et confirmation des scores saisis
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 5 |
+| **Statut** | ✅ **VALIDÉE PAR ROMAIN** |
+| **Couvre** | R-005 |
+
+**Problème posé**
+> Un score est accepté dès lors qu'il est un entier ≥ 0. Aucune borne haute, ni dans la page ni
+> dans le serveur : 150 au lieu de 15 passe sans un mot et fausse toute une poule via la différence.
+
+**Décision de Romain, mot pour mot**
+> *« R-005 max un nombre à 2 chiffres plus demande de confirmation du score avant de valider. »*
+
+**Ce que cela fixe**
+> - **maximum 2 chiffres** : au-delà de 99, la saisie est **refusée** (pas seulement signalée) ;
+> - **confirmation demandée avant chaque validation** de score.
+
+**Précision de ma part sur la question posée**
+> J'avais demandé « à partir de quel score demander confirmation ? ». La question était mal posée :
+> Romain ne veut pas d'un seuil, mais d'une **limite dure** doublée d'une **confirmation
+> systématique**. C'est plus simple et plus sûr que ce que je proposais.
+
+**Conséquences techniques à retenir pour l'ÉTAPE 3**
+> - la limite s'applique à **tout champ tapé par un humain**, donc aussi aux compteurs du mode
+>   détaillé (essais, transformations, pénalités, drops) : une seule règle couvre les deux modes ;
+> - elle doit être posée **des deux côtés** — dans la page (le marqueur voit l'erreur tout de
+>   suite) **et** dans le serveur (elle n'est pas contournable). C'est la leçon du point B-03.
+
+**Point mineur reporté au domaine E (UX)**
+> Une confirmation à **chaque** score, c'est un appui de plus sur 60 matchs, sur un téléphone,
+> debout, sous la pluie. La décision est appliquée telle quelle ; seul le **confort du geste** sera
+> réexaminé au domaine E, jamais le principe.
+
+---
+
 ## DÉCISIONS EN ATTENTE DE ROMAIN
+
+### D-013 — Comment ajuster le planning en cours de journée
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 5 |
+| **Statut** | ⏳ **PROPOSITION FAITE — EN ATTENTE DE ROMAIN** |
+| **Couvre** | R-003 |
+
+**Demande de Romain**
+> *« R-003 en effet je n'ai pas prévu ce cas, que me suggères-tu ? »*
+
+**Proposition — trois niveaux, dont je recommande de ne faire que les deux premiers**
+> 1. **Déplacer un match** : changer son heure et/ou son terrain, un match à la fois, sans rien
+>    regénérer. Coût faible (3 cellules d'une ligne), aucun impact sur les poules, les scores ou
+>    le tirage ;
+> 2. **Tout décaler de X minutes** : un bouton qui décale tous les matchs **pas encore joués**.
+>    C'est le besoin le plus fréquent de tous — la journée qui démarre en retard ;
+> 3. *(plus tard, si l'expérience le réclame)* **rendre un terrain indisponible** et laisser
+>    l'application redistribuer ses matchs restants. Seul niveau qui touche au planificateur, donc
+>    seul niveau réellement risqué.
+
+**Trois règles de conception proposées**
+> - **avertir, jamais interdire** : si le terrain est occupé ou l'équipe déjà en jeu, on le
+>   signale, on laisse faire. Le jour J, l'organisateur en sait plus que l'algorithme ;
+> - **ne jamais bloquer parce que l'après-midi est généré** : c'est précisément là que le besoin naît ;
+> - **réservé à la clé admin** : cela change ce que les parents lisent sur la page publique.
+
+**Détail complet** : `AUDIT.md` §A.4, point 7.
+
+---
+
+### D-014 — Quels critères de départage ajouter
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 5 |
+| **Statut** | ⏳ **PROPOSITION FAITE — EN ATTENTE DE ROMAIN** |
+| **Couvre** | R-004 |
+
+**Demande de Romain**
+> *« R-004 que me suggères-tu ? »*
+
+**Proposition — ajouter deux critères À LA SUITE des trois existants, sans toucher aux trois**
+> 4. **la confrontation directe** — si les deux équipes se sont rencontrées, celle qui a gagné
+>    passe devant ;
+> 5. **l'ordre alphabétique** du nom d'équipe, en dernier recours.
+
+**Pourquoi c'est peu risqué**
+> Ces critères n'interviennent **qu'après** les trois existants, donc uniquement dans les cas où
+> l'application n'a aujourd'hui **aucune règle**. Aucun classement actuellement correct ne change.
+
+**Pourquoi l'alphabétique et pas un tirage au sort**
+> Le classement est calculé **deux fois** (serveur pour tirer l'après-midi, navigateur pour
+> l'affichage public). Un tirage au sort donnerait **deux réponses différentes** : la page publique
+> afficherait un classement, l'après-midi serait tiré sur un autre. Le dernier recours doit donc
+> être **déterministe**.
+
+**Condition non négociable**
+> Cette correction touche au cœur sportif, écrit deux fois. Elle ne doit pas être écrite avant que
+> des **tests** couvrent les cas d'égalité (domaine D).
+
+**Détail complet** : `AUDIT.md` §A.5, point 7.
+
+---
+
 
 ### D-009 — Où atterrit la documentation quand une branche est imposée
 

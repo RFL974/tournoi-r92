@@ -7,7 +7,7 @@
 > Le registre des problèmes (avec leur statut de correction) vit dans `RISQUES.md`.
 > Ce document-ci **explique** ; `RISQUES.md` **suit**.
 
-**Dernière mise à jour** : 2026-08-04 (session 5)
+**Dernière mise à jour** : 2026-08-04 (session 5, complétée par les décisions de Romain)
 
 | Domaine | Nom | Statut |
 |---|---|---|
@@ -142,6 +142,28 @@ certaine, dès la première fois qu'il se manifeste.
 > l'application n'a **jamais servi de tournoi réel** (point I-04). Il ne casse rien aujourd'hui ;
 > il cassera la première fois.
 
+### ✅ 7. La règle, tranchée par Romain le 2026-08-04 *(décision D-011)*
+
+| Point | Décision |
+|---|---|
+| L'équipe **absente** | **0 point** de classement — pas 1 comme une défaite jouée |
+| L'équipe **présente** | **Elle gagne** : 3 points, comme une victoire |
+| Le **score** attribué (donc la différence) | **Paramètre réglable par l'organisateur**, à sa discrétion |
+| **Transparence** | Quel que soit le réglage choisi, **toutes les équipes doivent en être informées** — au minimum dans leur dossier final |
+
+**Ce que cela implique techniquement** *(à retenir pour l'ÉTAPE 3)* :
+
+- c'est bien **l'état « forfait » qui porte la victoire**, pas le score. Aujourd'hui l'application
+  déduit victoire/nul/défaite en comparant les deux scores : un forfait réglé à « 0-0 » ne pourrait
+  donc **pas** produire une victoire sans cet état explicite. C'est la raison technique qui rend la
+  solution « inventer un score » définitivement insuffisante ;
+- le paramètre ne pilote **que la différence de points**, jamais le résultat ;
+- **recommandation de valeur par défaut : `0 – 0`.** Raison : la différence est le 2ᵉ critère de
+  départage ; un défaut à 0 laisse la victoire par forfait peser exactement 3 points et **rien de
+  plus**, ce qui ne fausse aucun classement. Un organisateur qui veut un autre usage règle la
+  valeur — c'est précisément ce que la décision prévoit ;
+- la **transparence exigée par Romain n'est pas réalisable aujourd'hui** : voir **R-012**.
+
 ---
 
 ## A.3 — R-002 · Un seul match non saisi bloque **tout** l'après-midi *(P1)*
@@ -254,6 +276,37 @@ téléphone, au bord d'un terrain, sans se tromper de colonne. Ce n'est pas une 
 **À corriger avant une utilisation réelle.** C'est le problème le plus fréquent en pratique : le
 forfait arrive parfois, le décalage d'horaire arrive **toujours**.
 
+### ⏳ 7. Ma proposition détaillée, en attente de validation *(D-013)*
+
+Romain a répondu le 2026-08-04 : *« en effet je n'ai pas prévu ce cas, que me suggères-tu ? »*.
+Voici trois niveaux, du plus simple au plus ambitieux. **Je recommande de ne faire que les deux
+premiers.**
+
+| Niveau | Ce que ça fait | Ce que ça coûte | Ce que ça couvre |
+|---|---|---|---|
+| **1 — Déplacer un match** | Changer l'heure et/ou le terrain **d'un match**, sans rien regénérer | **Faible** : on écrit 3 cellules d'une ligne. Ni poule, ni score, ni tirage touchés | Le terrain qui devient inutilisable, le match qu'on avance ou qu'on recule |
+| **2 — Tout décaler de X minutes** | Un bouton qui décale **tous les matchs pas encore joués** de +15 / +30 min | **Faible** : même écriture, en masse, sur les seuls matchs « à venir » | **Le retard général** — le besoin le plus fréquent de tous |
+| **3 — Rendre un terrain indisponible** | L'application **redistribue** les matchs restants de ce terrain sur les autres | **Moyen à élevé** : cela touche au planificateur | La pluie qui condamne un terrain pour la journée |
+
+**Pourquoi s'arrêter aux niveaux 1 et 2** : ensemble, ils couvrent presque toutes les situations
+réelles, pour un risque quasi nul — ce ne sont que des écritures ciblées dans l'onglet `Matchs`.
+Le niveau 3 est le seul qui touche au moteur de planification, donc le seul qui puisse casser
+quelque chose. Autant attendre de savoir, après un vrai tournoi, s'il manque vraiment.
+
+**Trois règles de conception à retenir** :
+
+1. **avertir, ne jamais interdire.** Si le terrain visé est occupé ou si une équipe joue déjà à
+   cette heure-là, l'application le **signale** — mais elle laisse faire. Le jour J, c'est
+   l'organisateur qui sait, pas l'algorithme ;
+2. **ne jamais bloquer parce que l'après-midi est généré.** C'est précisément là que le besoin
+   apparaît ;
+3. **réservé à la clé admin.** Déplacer un match change ce que les parents lisent sur la page
+   publique : ce n'est pas un geste de marqueur.
+
+**Le gain immédiat, même avec le seul niveau 1** : aujourd'hui, quand l'organisateur improvise sur
+le terrain, l'affichage public **continue d'annoncer les anciens horaires**. L'application ment aux
+parents. Le niveau 1 suffit à faire cesser cela.
+
 ---
 
 ## A.5 — R-004 · Deux équipes à égalité parfaite sont départagées par l'ordre du tableur *(P1)*
@@ -312,6 +365,56 @@ Romain**, pas une décision technique.
 écrits d'abord** (le domaine D en fera son sujet). C'est le problème le plus délicat des cinq :
 celui où une correction bâclée ferait plus de dégâts que le problème lui-même.
 
+### ⏳ 7. Ma proposition détaillée, en attente de validation *(D-014)*
+
+Romain a répondu le 2026-08-04 : *« que me suggères-tu ? »*.
+
+**Ma proposition : ajouter deux critères À LA SUITE des trois existants, sans toucher aux trois.**
+
+| Rang | Critère | Statut |
+|---|---|---|
+| 1 | Le plus de **points** | existe déjà |
+| 2 | La meilleure **différence** (marqués − encaissés) | existe déjà |
+| 3 | Le plus de **points marqués** | existe déjà |
+| **4** | **La confrontation directe** — si les deux équipes se sont rencontrées, celle qui a gagné passe devant | **à ajouter** |
+| **5** | **L'ordre alphabétique** du nom d'équipe | **à ajouter** |
+
+**Pourquoi la confrontation directe en 4ᵉ** :
+
+- c'est la règle **la plus facile à expliquer à un éducateur** : « on s'est joué, tu as gagné, tu
+  passes devant » ;
+- dans une poule du matin, **elle existe toujours** : chaque équipe rencontre chacune des autres
+  une fois. Deux équipes à égalité se sont donc forcément affrontées ;
+- et surtout : **elle ne peut rien casser.** Elle n'intervient qu'après les trois critères
+  existants, c'est-à-dire **uniquement dans les cas où l'application n'a aujourd'hui aucune règle**.
+  Aucun classement actuellement correct ne changera. C'est ce qui rend cette correction beaucoup
+  moins risquée qu'elle n'en a l'air.
+
+**Pourquoi un 5ᵉ critère, et pourquoi l'ordre alphabétique plutôt qu'un tirage au sort** :
+
+Il faut un dernier recours, parce que la confrontation directe ne tranche pas toujours : si trois
+équipes sont à égalité et que chacune a battu une autre (A bat B, B bat C, C bat A), il n'y a pas
+de vainqueur à désigner.
+
+Et ce dernier recours doit être **déterministe** — c'est-à-dire donner **toujours** la même
+réponse. Raison technique, et elle est décisive : le classement est calculé **deux fois**, une fois
+par le serveur (pour tirer l'après-midi) et une fois par le navigateur (pour l'affichage public).
+Un **tirage au sort** donnerait deux réponses différentes : **la page publique afficherait un
+classement, et l'après-midi serait tiré sur un autre**. L'ordre alphabétique, lui, donne le même
+résultat des deux côtés, toujours.
+
+> Ce n'est pas « juste » au sens sportif — mais à ce stade, plus aucun critère sportif ne
+> départage. Le choix est entre **un ordre arbitraire mais annoncé** et **un ordre arbitraire et
+> caché**, qui est la situation actuelle.
+
+**Et la transparence** : conformément à la règle que Romain a posée en tranchant le forfait
+(D-011), cet ordre de départage devra figurer dans le dossier des clubs. C'est l'objet de **R-012**.
+
+**Condition de mise en œuvre, non négociable** : cette correction touche au cœur sportif, et le
+classement est **écrit deux fois**. Elle ne doit pas être écrite avant que des **tests** couvrent
+les cas d'égalité — sinon rien ne prouvera que les deux versions donnent la même réponse. C'est
+un sujet pour le domaine D.
+
 ---
 
 ## A.6 — R-005 · Un score aberrant est accepté sans le moindre avertissement *(P1)*
@@ -366,6 +469,28 @@ Le seuil est **une décision de Romain** : il connaît les scores réels de ces 
 
 **À corriger avant une utilisation réelle.** C'est le meilleur rapport bénéfice/effort du domaine :
 peu de code, aucune logique métier touchée, et cela protège directement la justesse des résultats.
+
+### ✅ 7. La règle, tranchée par Romain le 2026-08-04 *(décision D-012)*
+
+| Point | Décision |
+|---|---|
+| **Valeur maximale** | **2 chiffres** — au-delà de 99, la saisie est **refusée** |
+| **Confirmation** | **Demandée avant chaque validation** de score |
+
+**Ce que cela implique techniquement** *(à retenir pour l'ÉTAPE 3)* :
+
+- la limite de 2 chiffres s'applique à **tout champ qu'un humain tape** — donc aussi aux compteurs
+  du mode détaillé (essais, transformations, pénalités, drops). Une seule règle couvre ainsi les
+  deux modes de saisie, et le total calculé par le serveur reste borné sans qu'on ait à le brider
+  séparément ;
+- la limite doit être posée **des deux côtés** : dans la page (pour que le marqueur voie l'erreur
+  tout de suite) **et** dans le serveur (pour qu'elle ne soit pas contournable). C'est la leçon du
+  point B-03 de la cartographie ;
+- **question restante, mineure, à trancher au domaine E (UX)** : une confirmation à **chaque**
+  score, c'est un appui de plus sur 60 matchs. Elle attrape la faute de frappe au bon moment, mais
+  elle ajoute de la friction sur un téléphone, debout, sous la pluie. La décision de Romain est
+  « toujours » et elle est appliquée telle quelle ; le confort de ce geste sera réexaminé au
+  domaine E, sans revenir sur le principe.
 
 ---
 
@@ -455,6 +580,49 @@ mécanisme, qui est bon.
 
 ---
 
+### R-012 · Aucune règle sportive n'est écrite nulle part pour les clubs *(P2)*
+
+**Constat.** Le barème (3 / 2 / 1) et l'ordre de départage n'existent que dans les **commentaires
+du code** et dans `docs/regles-classement.md`, un document technique que personne d'autre que le
+développeur ne lira. Ni la page publique, ni le dossier des clubs, ni l'invitation ne les affichent.
+*(CERTAIN — recherche faite sur tout le frontend.)*
+
+Il existe bien une ligne « **Règlement** » dans le dossier des clubs, mais :
+
+1. c'est un **champ de texte libre** que l'organisateur doit remplir lui-même — l'application n'y
+   met rien automatiquement ;
+2. ce champ **a été retiré de l'écran d'administration**. Le commentaire du code le dit :
+   *« le champ `reglement` a été retiré de la carte (sa valeur stockée est PRÉSERVÉE à
+   l'enregistrement) »*. Autrement dit : **il n'existe aujourd'hui aucun moyen, dans l'interface,
+   de le remplir.** *(CERTAIN.)*
+
+**Pourquoi ça compte, et pourquoi ça remonte maintenant.** Romain a posé une exigence claire en
+tranchant la règle du forfait (D-011) : *« toutes les équipes doivent être informées de tout point
+de règlement dans leur dossier final, a minima »*. **Cette exigence n'est pas réalisable
+aujourd'hui** — ni pour le forfait, ni pour le barème, ni pour le départage.
+
+**Exemple concret.** Sèvres finit à égalité parfaite avec Antony et se retrouve 2ᵉ. L'éducateur
+demande pourquoi. Personne ne peut lui montrer la règle : elle n'est écrite dans aucun document
+que le club ait reçu.
+
+**Ce que je propose.** Que le dossier des clubs affiche les règles que **l'application applique
+réellement**, générées automatiquement à partir de ses propres valeurs :
+
+- le barème (victoire 3, nul 2, défaite 1) ;
+- l'ordre de départage complet ;
+- la règle de forfait, avec le score paramétré par l'organisateur ;
+- le format d'après-midi (déjà affiché aujourd'hui — le modèle existe donc).
+
+**Le point clé** : ces règles ne doivent **pas** être retapées à la main. L'application connaît
+ses propres valeurs ; les afficher depuis la source garantit que le document remis aux clubs ne
+pourra jamais raconter autre chose que ce que le classement calcule.
+
+**Conseil** : à traiter **en même temps que R-001 et R-004**, pas séparément. C'est ce qui rend
+ces deux corrections opposables aux clubs — sans quoi on aura corrigé la règle sans que personne
+ne la connaisse.
+
+---
+
 ## A.8 — Le problème P3 (à garder pour plus tard)
 
 ### R-011 · Un tirage ne peut être ni reproduit, ni annulé *(P3)*
@@ -484,12 +652,18 @@ Par honnêteté sur les limites de cet audit :
 - ❌ **Le code réellement en service chez Google n'a pas été vu** → **INCONNU** (I-01). Il est
   possible que la version en ligne diffère de celle auditée ici.
 - ❌ **La conformité au règlement FFR n'est pas jugée** : chantier séparé (D-003).
-- ❓ **Trois questions restent ouvertes et n'appartiennent qu'à Romain** :
-  1. quelle règle appliquer à une équipe forfait (R-001) ?
-  2. quels critères de départage ajouter, et dans quel ordre (R-004) ?
-  3. à partir de quel score faut-il demander confirmation (R-005) ?
-
-  Ces trois questions **bloquent la correction**, pas l'audit. Elles seront posées à l'ÉTAPE 4.
+- ✅ **Deux des trois questions ouvertes ont été tranchées par Romain** le 2026-08-04 :
+  1. **la règle du forfait** → décision **D-011** (§A.2, point 7) ;
+  2. le seuil de confirmation d'un score → **la question était mal posée de ma part** : Romain n'a
+     pas voulu d'un seuil, mais d'une **limite dure à 2 chiffres** doublée d'une **confirmation
+     systématique** → décision **D-012** (§A.6, point 7).
+- ⏳ **Deux propositions attendent sa validation**, formulées à sa demande :
+  - **D-013** — comment ajuster le planning en cours de journée (§A.4, point 7) ;
+  - **D-014** — quels critères de départage ajouter (§A.5, point 7).
+- ❓ **Une question adjacente, non urgente, reste posée** : faut-il un état « **match annulé** »
+  (l'orage qui arrête le tournoi), distinct du forfait ? Personne n'a tort, personne n'est absent :
+  le match n'a simplement pas eu lieu. C'est le même chantier technique que R-001, donc le bon
+  moment pour trancher — mais rien ne presse.
 
 ---
 
@@ -508,18 +682,31 @@ Par honnêteté sur les limites de cet audit :
 | **R-009** | Super Challenge phase 3 incomplet | P2 | Fonctionnalité partielle, annoncée | Élevée |
 | **R-010** | Deux publications indépendantes, libellés ambigus | P2 | Malentendu | Très faible |
 | **R-011** | Tirage non reproductible ni annulable | P3 | Rien aujourd'hui | Moyenne |
+| **R-012** | Aucune règle sportive n'est écrite nulle part pour les clubs (et le champ prévu pour le faire a été retiré de l'interface) | P2 | Une règle qu'on ne peut opposer à personne | Faible |
 
-**Total : 0 P0 · 5 P1 · 5 P2 · 1 P3.**
+**Total : 0 P0 · 5 P1 · 6 P2 · 1 P3 — soit 12 problèmes.**
+
+### État des décisions
+
+| Réf | Décision attendue | Statut |
+|---|---|---|
+| R-001 | Règle du forfait | ✅ **Tranchée** — D-011 |
+| R-005 | Limite et confirmation des scores | ✅ **Tranchée** — D-012 |
+| R-003 | Comment ajuster le planning en cours de journée | ⏳ Proposition faite (D-013) |
+| R-004 | Critères de départage à ajouter | ⏳ Proposition faite (D-014) |
+| R-012 | Afficher les règles dans le dossier des clubs | ⏳ Découle de D-011, à confirmer |
 
 ### Si je devais ne corriger que trois choses
 
-1. **R-005** (borne haute sur les scores) — quelques lignes, aucun risque, protège directement la
-   justesse des résultats ;
-2. **R-003** (déplacer un match) — risque faible, et c'est le besoin qui se présentera **à chaque
-   tournoi** ;
-3. **R-001** (le forfait) — le plus structurant, et celui qui demande d'abord une **décision de
-   Romain**.
+1. **R-005** (limite à 2 chiffres + confirmation) — quelques lignes, aucun risque, protège
+   directement la justesse des résultats. **La règle est tranchée : c'est prêt à être planifié** ;
+2. **R-003** (déplacer un match, + le décalage global) — risque faible, et c'est le besoin qui se
+   présentera **à chaque tournoi** ;
+3. **R-001** (le forfait) — le plus structurant. **La règle est tranchée** ; reste à l'écrire.
 
 R-004 (le départage) vient juste après, mais mérite qu'on écrive des tests **avant** d'y toucher.
+
+**Et R-012 ne doit pas être traité seul** : il est ce qui rend R-001 et R-004 opposables aux clubs.
+Corriger une règle que personne ne peut lire ne règle qu'une moitié du problème.
 
 ---

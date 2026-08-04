@@ -5,7 +5,7 @@
 > L'**explication** de chaque problème (pourquoi, exemple concret, ce qui est proposé) vit dans
 > `AUDIT.md`. Ce fichier-ci **suit** ; `AUDIT.md` **explique**.
 
-**Dernière mise à jour** : 2026-08-04 (session 5)
+**Dernière mise à jour** : 2026-08-04 (session 5, après décisions de Romain)
 **Audits réalisés** : domaine A (métier). Les 7 autres domaines restent à faire.
 
 ---
@@ -57,9 +57,12 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
 | P0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| P1 | **5** | 0 | 0 | 0 | 0 | 0 |
-| P2 | **5** | 0 | 0 | 0 | 0 | 0 |
+| P1 | **5** | 0 | **2** | 0 | 0 | 0 |
+| P2 | **6** | 0 | 0 | 0 | 0 | 0 |
 | P3 | **1** | 0 | 0 | 0 | 0 | 0 |
+
+> **« Validés = 2 »** signifie que **la règle métier** de R-001 et R-005 est tranchée par Romain
+> (décisions D-011 et D-012) — **pas** que le code est écrit. Rien n'est corrigé.
 
 > ⚠️ **Aucun problème n'est corrigé.** Tous sont au statut **IDENTIFIÉ** : ils ont été vus, rien
 > de plus. Aucun fichier de l'application n'a été modifié à ce jour.
@@ -78,27 +81,29 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 
 | Réf | Problème | Priorité | Certitude | Statut | Détail |
 |---|---|---|---|---|---|
-| **R-001** | **Le forfait n'existe pas** : aucun état « équipe absente ». Un 0-0 donne 2 points à l'absent ; un score inventé fausse la différence, qui est un critère de départage | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.2 |
+| **R-001** | **Le forfait n'existe pas** : aucun état « équipe absente ». Un 0-0 donne 2 points à l'absent ; un score inventé fausse la différence, qui est un critère de départage | **P1** | CERTAIN | ✅ **VALIDÉ** — règle fixée par **D-011** (absent = 0 pt · présent gagne · score = paramètre · règle à publier aux clubs). Code **non écrit** | `AUDIT.md` §A.2 |
 | **R-002** | **Un seul match du matin non saisi bloque l'après-midi de TOUTES les catégories** — le contrôle ne regarde pas la catégorie, et le message ne dit pas quels matchs manquent | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.3 |
-| **R-003** | **Aucun ajustement de planning une fois la journée lancée** : impossible de déplacer ou reporter un match. Les seuls outils sont refusés dès qu'un score existe, sauf « tout regénérer », qui efface les scores | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.4 |
-| **R-004** | **Pas de départage au-delà du 3ᵉ critère** : deux équipes strictement à égalité sont classées dans l'ordre du tableur. Ce rang décide de la composition de l'après-midi | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.5 |
-| **R-005** | **Aucune borne haute sur un score** : 150 au lieu de 15 est accepté sans avertissement, des deux côtés. La différence étant un critère de départage, une faute de frappe fausse toute une poule | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.6 |
+| **R-003** | **Aucun ajustement de planning une fois la journée lancée** : impossible de déplacer ou reporter un match. Les seuls outils sont refusés dès qu'un score existe, sauf « tout regénérer », qui efface les scores | **P1** | CERTAIN | IDENTIFIÉ — proposition **D-013** en attente de Romain | `AUDIT.md` §A.4 |
+| **R-004** | **Pas de départage au-delà du 3ᵉ critère** : deux équipes strictement à égalité sont classées dans l'ordre du tableur. Ce rang décide de la composition de l'après-midi | **P1** | CERTAIN | IDENTIFIÉ — proposition **D-014** en attente de Romain | `AUDIT.md` §A.5 |
+| **R-005** | **Aucune borne haute sur un score** : 150 au lieu de 15 est accepté sans avertissement, des deux côtés. La différence étant un critère de départage, une faute de frappe fausse toute une poule | **P1** | CERTAIN | ✅ **VALIDÉ** — règle fixée par **D-012** (max 2 chiffres + confirmation avant validation). Code **non écrit** | `AUDIT.md` §A.6 |
 | **R-006** | **Forcer le nombre de poules peut produire des poules de 2** (= match sec), ce que la règle des 3 équipes minimum vise à interdire. Le contrôle porte sur la catégorie, pas sur la poule | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.7 |
 | **R-007** | **Une catégorie à 1 ou 2 équipes bloque tout le tournoi**, et le message n'indique pas le remède — contrairement au message voisin sur la durée de mi-temps, qui le donne | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.7 |
 | **R-008** | **Une date de tournoi vide désactive silencieusement le gel des réponses à J-16.** Le choix est délibéré et documenté ; c'est le silence qui pose problème | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.7 |
 | **R-009** | **Super Challenge phase 3 incomplet** — le code l'avertit lui-même (« socle multi-journées pas encore branché ») | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.7 |
 | **R-010** | **Les deux interrupteurs de publication sont indépendants** : un tournoi publié montre le planning à qui a le lien public même si les clubs ne le voient pas. Volontaire, mais les libellés ne le disent pas | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.7 |
 | **R-011** | **Un tirage ne peut être ni reproduit ni annulé** : aucune trace n'en est gardée. Sans conséquence aujourd'hui ; en aurait dans un usage multi-clubs | P3 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.8 |
+| **R-012** | **Aucune règle sportive n'est écrite nulle part pour les clubs** : barème et départage n'existent que dans les commentaires du code. La ligne « Règlement » du dossier est un texte libre, et son champ **a été retiré de l'écran d'administration** — il n'existe donc aucun moyen de le remplir | P2 | CERTAIN | IDENTIFIÉ — **découle de D-011**, à confirmer | `AUDIT.md` §A.7 |
 
-### Questions ouvertes qui bloquent une correction
+### État des décisions métier
 
-Ces trois questions n'appartiennent qu'à Romain. Elles seront posées à l'ÉTAPE 4.
-
-| Bloque | Question |
-|---|---|
-| R-001 | Quelle règle appliquer à une équipe forfait — l'absent marque-t-il 0 point ? le présent gagne-t-il avec ou sans différence ? |
-| R-004 | Quels critères de départage ajouter, et dans quel ordre ? (la confrontation directe est la piste recommandée) |
-| R-005 | À partir de quel score faut-il demander une confirmation ? |
+| Bloque | Question | État |
+|---|---|---|
+| R-001 | Quelle règle pour une équipe forfait ? | ✅ **Tranchée** — D-011 |
+| R-005 | Quelle limite / quelle confirmation sur un score ? | ✅ **Tranchée** — D-012 |
+| R-003 | Comment ajuster le planning en cours de journée ? | ⏳ Proposition **D-013** faite, en attente |
+| R-004 | Quels critères de départage ajouter ? | ⏳ Proposition **D-014** faite, en attente |
+| R-012 | Faut-il publier les règles sportives dans le dossier des clubs ? | ⏳ Découle de D-011, à confirmer |
+| — | Faut-il un état « **match annulé** » (l'orage), distinct du forfait ? | ❓ Question adjacente, sans urgence |
 
 ### Domaines non audités
 
