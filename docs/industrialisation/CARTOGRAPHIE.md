@@ -417,7 +417,8 @@ le classeur, il lit ce que le programme veut bien lui répondre.
 | A-09 | L'onglet `ClubsInvites` contient des **emails** ; il est exclu des données publiques et protégé par la clé admin | B — RGPD | CERTAIN (mécanisme constaté, efficacité non testée) |
 | A-10 | Les jetons des clubs **voyagent dans des liens envoyés par courriel** | B / C | CERTAIN |
 | A-11 | Le relais CDN existe mais est **éteint** (`SNAPSHOT_URL = ""`) : en cas d'affluence, tout repose sur Apps Script | F — performance | CERTAIN |
-| A-12 | Les onglets `RefFFR_*` sont **remplis à la main** et ne sont créés par aucun code ; s'ils manquent ou si leur nom diffère d'un caractère, le programme renvoie une liste vide **sans le signaler** | A — métier / H | CERTAIN |
+| A-12 | Les onglets `RefFFR_*` sont **remplis à la main** et ne sont créés par aucun code ; s'ils manquent ou si leur nom diffère d'un caractère, le programme renvoie une liste vide **sans le signaler**. *(Les 4 onglets sont bien présents et correctement nommés — vérifié le 2026-08-04. Le constat porte sur l'absence de signalement, pas sur un manque actuel.)* | A — métier / H | CERTAIN |
+| A-14 | Le classeur contient de **vraies adresses email** de contacts de clubs, alors que le tournoi qui s'y trouve est un tournoi de **test** | B — RGPD | CERTAIN (déclaré par Romain le 2026-08-04) |
 | A-13 | ~~Le partage réel du Google Sheet n'est pas vérifiable ici~~ → ✅ **levé le 2026-08-04 : le classeur est privé** (capture Drive fournie par Romain). Reste un constat de dépendance : la sécurité des données repose entièrement sur ce réglage, qui vit **chez Google** et qu'aucun code ne protège d'un changement accidentel | C — sécurité | **CERTAIN** |
 
 ---

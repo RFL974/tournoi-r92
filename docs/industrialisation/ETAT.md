@@ -101,8 +101,7 @@ vérification supplémentaire.
 |---|---|---|---|
 | I-01 | Le code réellement en service chez Google est-il identique à `backend/Code.gs` ? | Le backend s'exécute chez Google, hors du dépôt | Vérification manuelle par Romain dans Apps Script |
 | I-02 | Les tests du fichier `backend/Tests.gs` passent-ils aujourd'hui ? | Ils ne peuvent être exécutés que dans Google Apps Script | Lancement manuel par Romain |
-| I-03 | Quelles données personnelles réelles sont présentes dans le Google Sheet en production ? | Le Sheet n'est pas dans le dépôt | À examiner avec Romain (domaine B — RGPD) |
-| I-04 | L'application a-t-elle déjà servi un tournoi réel, ou seulement des tests ? | Non déterminable depuis le code | Question à Romain |
+| I-03 | Quelles données personnelles réelles sont présentes dans le Google Sheet ? | 🟡 **partiellement répondu** (2026-08-04) : Romain indique que **les adresses email sont réelles**, alors que les équipes sont fictives. Il reste à établir **lesquelles**, combien, et depuis quand | Inventaire complet au **volet C** de la cartographie, puis instruction au **domaine B (RGPD)** |
 | I-05 | Qui utilise l'administration le jour J, et sur quel matériel ? | Information de terrain | Question à Romain (domaine E — UX) |
 
 ### Points levés
@@ -110,7 +109,18 @@ vérification supplémentaire.
 | # | Point | Réponse | Levé le |
 |---|---|---|---|
 | **I-06** | Comment le Google Sheet est-il réellement partagé ? | ✅ **LEVÉ — le classeur est PRIVÉ.** Romain a fourni une capture du panneau Drive de « Tournoi R92 - Base de données » : *Qui a accès → **Privé*** (propriétaire seul), et *Limites de sécurité → aucune limite appliquée*. L'identifiant du classeur est donc public dans le dépôt **sans que cela expose les données** : le connaître ne suffit pas à ouvrir le fichier. C'est le réglage attendu. Cela confirme aussi que la Web App s'exécute bien **au nom du propriétaire** — c'est ce qui lui permet de lire un classeur privé au profit de visiteurs qui, eux, n'y ont aucun accès. | 2026-08-04, session 2 |
-| **I-07** | Les 4 onglets `RefFFR_*` existent-ils et sont-ils à jour ? | 🟡 **LEVÉ PAR ROMAIN, une précision restant à confirmer.** Romain confirme : « les 4 onglets existent et sont à jour ». Réserve : la capture Drive montre par ailleurs **deux fichiers Sheets distincts**, `RefFFR-formes-de-jeu` et `RefFFR-dates-federales`, qui ne sont **pas** ce que le code lit. Le code lit des **onglets internes** au classeur principal, nommés **exactement** `RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`, `RefFFR_Temps` (tirets **bas**, majuscules initiales). Un nom qui différerait d'un caractère ferait renvoyer une liste vide **en silence**, sans message d'erreur. → confirmation de l'orthographe exacte demandée à Romain. | 2026-08-04, session 2 |
+| **I-07** | Les 4 onglets `RefFFR_*` existent-ils et sont-ils à jour ? | ✅ **LEVÉ — les 4 onglets existent, aux noms exacts attendus.** Capture du bas du classeur fournie par Romain : `RefFFR_Formes`, `RefFFR_Regles`, `RefFFR_Temps`, `RefFFR_Dates` — orthographe **identique** à ce que lit `Code.gs`. Contenu visible cohérent (millésimes 2026-2027, formes de jeu 5x5 / 7x7). Les fichiers Drive `RefFFR-formes-de-jeu` et `RefFFR-dates-federales` sont donc des documents **sources** distincts, sans rôle dans le fonctionnement. | 2026-08-04, session 2 |
+| **I-04** | L'application a-t-elle servi un tournoi réel ? | ✅ **LEVÉ — non : le tournoi actuellement en base est un tournoi de TEST.** Romain : « c'est juste un faux tournoi avec de vrais noms ». Les noms d'équipes visibles (Racing 92, Stade Français, Clamart, Meudon, Vélizy, Antony, Sèvres, Issy-les-Moulineaux) sont de vrais clubs, mais les engagements sont fictifs. | 2026-08-04, session 2 |
+
+> ⚠️ **À retenir de I-04 + I-03 (conséquence pour la suite)** : le tournoi en base est fictif, mais
+> **les adresses email, elles, sont réelles**. Le classeur contient donc des **données personnelles
+> de personnes existantes** (onglet `ClubsInvites` : nom, prénom, email de contact), même si aucun
+> tournoi réel n'a eu lieu. Le domaine B (RGPD) devra donc être traité **sérieusement, dès
+> maintenant** — et non « plus tard, quand ce sera en vrai ».
+>
+> Deux protections sont déjà constatées : le classeur est **privé** (I-06) et l'onglet
+> `ClubsInvites` est **exclu** des données publiques (`getAll`) et de tout accès sans clé admin.
+> Leur efficacité réelle reste **NON VÉRIFIÉE** — elle sera testée au domaine B.
 
 ---
 

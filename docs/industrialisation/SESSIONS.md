@@ -115,11 +115,17 @@ en fin de session :
 
 - **I-06 → LEVÉ.** Capture du panneau Drive fournie : *Qui a accès → **Privé***. Le classeur n'est
   accessible qu'à son propriétaire. L'identifiant public dans le dépôt n'expose donc rien.
-- **I-07 → LEVÉ, sous une réserve d'orthographe.** Romain confirme que les 4 onglets existent et
-  sont à jour. La même capture montre par ailleurs deux fichiers Drive **distincts**
-  (`RefFFR-formes-de-jeu`, `RefFFR-dates-federales`) qui ne sont pas ce que le code lit : le code lit
-  des **onglets internes** au classeur, nommés exactement `RefFFR_Formes`, `RefFFR_Dates`,
-  `RefFFR_Regles`, `RefFFR_Temps`. Confirmation de l'orthographe demandée.
+- **I-07 → LEVÉ.** Seconde capture fournie (bas du classeur) : les onglets `RefFFR_Formes`,
+  `RefFFR_Regles`, `RefFFR_Temps`, `RefFFR_Dates` existent, **aux noms exacts** attendus par le code,
+  avec un contenu cohérent (millésimes 2026-2027, formes 5x5 / 7x7). Les fichiers Drive
+  `RefFFR-formes-de-jeu` et `RefFFR-dates-federales` sont des documents sources distincts, sans rôle
+  dans le fonctionnement.
+- **I-04 → LEVÉ.** Le tournoi présent en base est un tournoi de **test** : « un faux tournoi avec de
+  vrais noms ». Les clubs affichés sont réels, les engagements non.
+- **I-03 → partiellement levé, et c'est le point à retenir.** Romain précise que **les adresses email
+  sont réelles**. Le classeur contient donc de vraies données personnelles alors que le tournoi est
+  fictif → le domaine B (RGPD) devra être traité dès maintenant, pas « quand ce sera en vrai ».
+  Nouveau point d'attention **A-14** ajouté à `CARTOGRAPHIE.md` §A.10.
 
 **Tests réalisés**
 
