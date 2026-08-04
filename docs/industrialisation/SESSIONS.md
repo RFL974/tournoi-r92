@@ -258,3 +258,102 @@ Attention : le projet est volumineux (le seul fichier `backend/Code.gs` fait env
 caractères). La cartographie prendra probablement **plus d'une session**. Il faudra sans doute la
 découper — par exemple : (2a) le squelette et les échanges entre parties, (2b) les fonctionnalités
 métier, (2c) les données manipulées.
+
+---
+
+## SESSION 3 — 2026-08-04
+
+**Objectif**
+
+ÉTAPE 1 — CARTOGRAPHIE, **volet B : les fonctionnalités**. Parcourir ce que l'application sait
+faire, du premier réglage jusqu'au tournoi terminé, et l'expliquer en langage simple.
+**Aucun fichier de l'application ne devait être modifié — et aucun ne l'a été.**
+
+**Vérification préalable demandée par Romain**
+
+`docs/industrialisation/CARTOGRAPHIE.md` existe bien et contient le **volet A complet**
+(§A.1 à §A.12, 451 lignes, points d'attention A-01 à A-14). Condition remplie → session lancée.
+
+**Ce qui a été fait**
+
+Lecture (sans modification) du backend et du frontend, sur les zones qui portent les
+fonctionnalités :
+
+- `backend/Code.gs` : `doGet` / `doPost` et l'inventaire complet des actions ; le moteur sportif
+  (`genererPoulesEtPlanning`, `calculerPlanning`, `nombrePoules`, `calculerClassement`,
+  `comparerClassement`) ; les cinq formats d'après-midi et le bracket de coupe ; la saisie des
+  scores (`enregistrerScore`, score détaillé, propagation) ; le parcours d'invitation
+  (`repondreInvitation`, `creerEquipesClub`, `planifierSyncEquipesClub`, envois de courriels) ;
+  la conformité et l'autorisation FFR ; les partenaires et leurs relevés ; la réinitialisation ;
+  le Super Challenge de France ;
+- `frontend/js/` : `ecrans.js` et `assistant.js` (les deux présentations de l'administration),
+  les 11 modules `admin-*.js`, `tournoi.js`, `saisie.js`, `dossier.js`, `invitation.js`,
+  `reponse.js`, `sponsors.js`, `perfs.js`.
+
+**Résultat produit**
+
+`docs/industrialisation/CARTOGRAPHIE.md` — **volet B** ajouté (§B.1 à §B.14) :
+
+- la ligne de vie d'un tournoi, du premier réglage à la feuille de fin de journée ;
+- l'inventaire des **65 actions** du serveur (15 lectures + 50 écritures), regroupées par sujet ;
+- les **14 écrans** de l'administration et le verrou d'étapes ;
+- le parcours des clubs en **deux phases** (invitation → réponse en libre-service → dossier) ;
+- le moteur sportif : les deux refus avant écriture, la composition des poules, le placement des
+  horaires, l'assistant d'arbitrage, la pause échelonnée, le Super Challenge ;
+- le barème de classement et son départage ;
+- les **cinq formats d'après-midi** ;
+- la saisie des scores et ses protections ;
+- ce que voit le public, plus les fonctionnalités annexes (autorisation FFR, conformité,
+  partenaires, feuille de journée, page Perfs, réinitialisation).
+
+**Points d'attention relevés** — B-01 à B-12 (`CARTOGRAPHIE.md` §B.12). Ce sont des
+**observations**, pas des verdicts : la classification P0/P1/P2/P3 est le travail de l'ÉTAPE 2.
+
+Les trois plus structurants :
+
+- **B-03** — regénérer les poules efface tous les scores. Le garde-fou (double confirmation +
+  re-saisie de la clé admin) existe **uniquement dans le navigateur** ; le serveur ne vérifie pas.
+  À comparer avec deux protections comparables **tenues par le serveur** : la réorganisation des
+  poules et le gel des réponses à J-16 ;
+- **B-01 / B-02 / B-12** — trois calculs vivent **en double** (serveur + navigateur) : le barème de
+  classement, les empreintes de réglages, et le classement général affiché au public ;
+- **B-04 / B-05 / B-06** — trois situations de terrain que l'application ne sait pas gérer :
+  le **forfait**, le **déplacement d'un match**, et un match du matin resté non saisi (qui bloque
+  toute la génération de l'après-midi).
+
+**Contradictions avec la mémoire automatique**
+
+Aucune constatée.
+
+**Tests réalisés**
+
+Aucun. Volet de cartographie : aucune ligne de code n'a été touchée, il n'y avait rien à tester.
+
+**Tests NON réalisés (et pourquoi)**
+
+- Le fonctionnement réel des fonctionnalités décrites : **NON VÉRIFIÉ**. Tout ce volet décrit ce
+  que le code **prévoit**, pas ce qui se produit à l'exécution. Rien n'a été lancé.
+- Les tests de `backend/Tests.gs` : **NON VÉRIFIÉ** — ils ne s'exécutent que chez Google (I-02).
+- Le comportement en production : **INCONNU** (I-01, règle permanente de `CLAUDE.md` §13.6).
+
+**Décisions prises**
+
+Aucune décision nouvelle. Aucune validation n'était requise pour ce volet (cartographie =
+description, pas modification).
+
+**Commit**
+
+`docs(industrialisation): cartographier les fonctionnalités de l'application` — sur la branche
+`claude/cartographie-volet-b-fonctionnalites-busrpe`. Contenu : `CARTOGRAPHIE.md` (volet B),
+`ETAT.md`, `PLAN.md`, `SESSIONS.md`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+**Session 4 — ÉTAPE 1, volet C : les données.** Dernier volet de la cartographie. Inventorier
+ce qui est stocké, onglet par onglet et colonne par colonne : qui peut le voir, combien de temps
+cela reste, et ce qui relève de la vie privée — contacts de clubs, effectifs d'enfants mineurs,
+images déposées sur Drive, relevés de visibilité des partenaires.
+
+Ce volet prépare le domaine B (RGPD) de l'ÉTAPE 2 **sans le remplacer** : il décrit, il ne juge
+pas. Il est particulièrement utile **maintenant**, avant la première invitation réelle : c'est à ce
+moment-là que de vraies données personnelles de tiers entreront dans le classeur (voir I-03).

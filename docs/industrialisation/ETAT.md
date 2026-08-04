@@ -4,16 +4,16 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-04 (session 2)
-**Commit de référence** : `beb12d6` (branche `claude/industrialisation-phase2-cartographie-usis7l`)
+**Dernière mise à jour** : 2026-08-04 (session 3)
+**Commit de référence** : `c6b3cf3` (branche `claude/cartographie-volet-b-fonctionnalites-busrpe`)
 
 ---
 
 ## 1. EN UNE PHRASE
 
-Le **squelette** de l'application est cartographié et expliqué
-(`CARTOGRAPHIE.md`, volet A) ; **aucun audit n'a encore été fait** et **aucun fichier de
-l'application n'a été modifié**.
+Le **squelette** (volet A) et les **fonctionnalités** (volet B) de l'application sont
+cartographiés et expliqués dans `CARTOGRAPHIE.md` ; il reste le volet C (les données).
+**Aucun audit n'a encore été fait** et **aucun fichier de l'application n'a été modifié**.
 
 ---
 
@@ -22,7 +22,7 @@ l'application n'a été modifié**.
 | # | Phase | Statut |
 |---|---|---|
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
-| 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | 🟡 **EN COURS** — volet A fait (session 2), volets B et C à faire |
+| 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | 🟡 **EN COURS** — volets A (session 2) et B (session 3) faits, volet C à faire |
 | 2 | ÉTAPE 2 — Audit global (8 domaines, P0→P3) | ⬜ À faire |
 | 3 | ÉTAPE 3 — Plan d'industrialisation priorisé | ⬜ À faire |
 | 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
@@ -38,18 +38,20 @@ l'application n'a été modifié**.
 | Volet | Contenu | Statut |
 |---|---|---|
 | A — Le squelette | De quoi l'application est faite, où ça tourne, comment ça se parle, comment le code arrive en ligne | ✅ **FAIT** (session 2) |
-| B — Les fonctionnalités | Ce que l'application sait faire, écran par écran | ⬜ À faire |
+| B — Les fonctionnalités | Ce que l'application sait faire, écran par écran | ✅ **FAIT** (session 3) |
 | C — Les données | Ce qui est stocké, où, combien de temps, et ce qui touche à la vie privée | ⬜ À faire |
 
 ---
 
 ## 4. PROCHAINE ÉTAPE
 
-**Session 3 — ÉTAPE 1, volet B : les fonctionnalités.**
+**Session 4 — ÉTAPE 1, volet C : les données.** *(dernier volet de la cartographie)*
 
-Objectif : parcourir ce que l'application **sait faire**, du premier réglage jusqu'au tournoi
-terminé — les 14 écrans de l'administration, la saisie des scores, la page publique, le parcours
-d'invitation des clubs — et l'expliquer en langage simple. **Toujours sans rien modifier.**
+Objectif : inventorier **ce qui est stocké**, onglet par onglet et colonne par colonne — qui peut
+le voir, combien de temps cela reste, et ce qui relève de la **vie privée** (contacts de clubs,
+effectifs d'enfants mineurs, images, relevés de visibilité). Ce volet prépare directement le
+domaine B (RGPD) de l'ÉTAPE 2, **sans le remplacer** : il décrit, il ne juge pas.
+**Toujours sans rien modifier.**
 
 **Condition de démarrage** : instruction explicite de Romain.
 
@@ -70,9 +72,15 @@ l'industrialisation.
 
 **L'audit n'a pas commencé** : aucun problème n'est classé P0/P1/P2/P3 à ce jour.
 
-La session 2 a toutefois relevé **13 points d'attention** (A-01 à A-13) en cartographiant le
-squelette. Ce sont des **observations**, pas des verdicts : ils sont listés dans
-`CARTOGRAPHIE.md` §A.10 et seront classés à l'ÉTAPE 2.
+La cartographie a toutefois relevé **26 points d'attention**, qui sont des **observations**, pas
+des verdicts. Ils seront classés à l'ÉTAPE 2 :
+
+- **A-01 à A-14** (session 2, le squelette) → `CARTOGRAPHIE.md` §A.10 ;
+- **B-01 à B-12** (session 3, les fonctionnalités) → `CARTOGRAPHIE.md` §B.12.
+
+Le plus structurant du volet B est **B-03** : le garde-fou qui empêche d'effacer tous les scores en
+regénérant les poules vit **uniquement dans le navigateur**, alors que des protections comparables
+(réorganisation des poules, gel des réponses à J-16) sont, elles, tenues par le serveur.
 
 ---
 
