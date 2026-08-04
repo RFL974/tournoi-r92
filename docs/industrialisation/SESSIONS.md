@@ -1126,3 +1126,41 @@ lui-même serait pire qu'inutile.
 **Prochaine session recommandée** — **session 7, ÉTAPE 2, domaine B (RGPD)**.
 
 ---
+
+---
+
+## SESSION 6 — CLÔTURE — 2026-08-04
+
+**PR #175 fusionnée dans `main`** (commit de fusion `7617d6c`). Les quatre commits de la session y
+sont : l'audit du domaine C, la correction du P0, la mise à jour du suivi, la vérification en
+conditions réelles.
+
+**Pourquoi cette fiche existe** — la session 6 a dû être **relancée** parce que le travail des
+sessions 4 et 5 vivait sur une branche **non fusionnée** : une session repartant de `main` ne le
+voyait pas et aurait pu le refaire. La leçon est simple et vaut pour la suite :
+
+> **Une session n'est réellement terminée que lorsque son travail est dans `main`.**
+> Tant qu'il vit sur une branche, il est invisible pour la session suivante.
+
+`ETAT.md` porte désormais, en tête, le **commit de référence sur `main`** et la mention explicite
+que le travail y est fusionné. C'est ce qu'une prochaine session lira en premier.
+
+**Bilan chiffré de la session 6**
+
+| | |
+|---|---|
+| Domaines audités | **2 sur 8** — A (métier, session 5) et C (sécurité, session 6) |
+| Problèmes du domaine C | 14 — **1 P0 · 5 P1 · 6 P2 · 2 P3** |
+| Problèmes réglés | **1** — R-014, statut **TESTÉ** (le premier du chantier) |
+| Inconnues levées | **I-02**, **I-11**, **I-12**, **I-13** |
+| Décisions | **D-016** validée · **D-017** ouverte, en attente |
+| Fichiers de l'application modifiés | 3 (`Code.gs`, `Tests.gs`, `admin-sponsors.js`) |
+
+**Ce qui attend Romain, et lui seul** — **D-017** : remplacer les deux clés, qui sont des mots
+choisis à la main, par des suites aléatoires (menu « Tournoi R92 → Configurer les clés »). Aucun
+code. Tant que ce n'est pas fait, **R-019 reste P1**.
+
+**Prochaine session** — **session 7, ÉTAPE 2, domaine B (RGPD)**, à démarrer sur instruction
+explicite de Romain.
+
+---
