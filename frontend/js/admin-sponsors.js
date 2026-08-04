@@ -63,6 +63,7 @@ function initAdminSponsors() {
   document.getElementById('bouton-exporter-bilan').addEventListener('click', onExporterBilanCsv);
   document.getElementById('bouton-vider-bilan').addEventListener('click', onViderBilan);
   document.getElementById('bouton-tester-remontee').addEventListener('click', onTesterRemontee);
+  document.getElementById('bouton-verifier-public').addEventListener('click', onVerifierPublic);
   document.getElementById('projection-appareils').addEventListener('input', afficherBilanSponsors);
 }
 
@@ -755,6 +756,120 @@ async function onTesterRemontee() {
   zone.className = 'diagnostic-remontee ' + classe;
   zone.innerHTML = '<ul>' + lignes.map(function (l) { return '<li>' + l + '</li>'; }).join('') +
     '</ul>' + (verdict ? '<p class="diag-verdict">' + verdict + '</p>' : '');
+}
+
+/* ==========================================================================
+   3 bis. CONTRÔLE « CE QUE REÇOIT LE PUBLIC »
+   --------------------------------------------------------------------------
+   L'admin montre ce qu'on a SAISI. Cette carte montre ce qui est SERVI — en relisant
+   l'instantané public (`getAll`), exactement celui que reçoivent la page des scores et
+   le dossier club. Entre les deux, il y a un enregistrement, un Sheet et un cache : le
+   jour où « j'ai réglé et rien ne change », c'est ici qu'on voit lequel des trois n'a
+   pas suivi, au lieu de le supposer.
+   ========================================================================== */
+
+/** D'où vient une valeur, en clair. */
+const SPONSORS_ORIGINES = {
+  encart:  { texte: 'réglé ici',            classe: 'sp-src-encart' },
+  general: { texte: 'réglage du partenaire', classe: 'sp-src-general' },
+  defaut:  { texte: 'défaut',                classe: 'sp-src-defaut' },
+  aucun:   { texte: 'rien',                  classe: 'sp-src-defaut' }
+};
+
+function pastilleOrigine(origine) {
+  const o = SPONSORS_ORIGINES[origine] || SPONSORS_ORIGINES.defaut;
+  return '<span class="sp-src ' + o.classe + '">' + echapper(o.texte) + '</span>';
+}
+
+async function onVerifierPublic() {
+  const zone = document.getElementById('verif-public');
+  const bouton = document.getElementById('bouton-verifier-public');
+  zone.hidden = false;
+  zone.className = 'diagnostic-remontee';
+  zone.innerHTML = '<p>⏳ Lecture de l\'instantané public…</p>';
+  bouton.disabled = true;
+
+  let data = null;
+  let erreur = '';
+  try {
+    data = await apiGet('getAll');
+  } catch (err) {
+    erreur = String(err.message || err);
+  } finally {
+    bouton.disabled = false;
+  }
+
+  if (!data) {
+    zone.className = 'diagnostic-remontee diag-ko';
+    zone.innerHTML = '<p>❌ <strong>L\'instantané public n\'a pas pu être lu.</strong> ' +
+      echapper(erreur) + '</p><p class="diag-verdict">Sans lui, ni la page des scores ni le ' +
+      'dossier club ne peuvent afficher de partenaire.</p>';
+    return;
+  }
+
+  const reglages = sponsorsReglages(data.config || {});
+  const liste = sponsorsListe(data, reglages);
+  let h = '';
+
+  // 1. L'interrupteur général. S'il est éteint, rien d'autre ne compte.
+  if (!reglages.actifs) {
+    h += '<p>⛔ <strong>« Afficher les partenaires » est sur « non ».</strong> Aucun partenaire ' +
+      'n\'apparaît, ni sur la page des scores, ni sur le dossier club — quels que soient les ' +
+      'réglages ci-dessous.</p>';
+  } else {
+    h += '<p>✅ <strong>« Afficher les partenaires » est actif</strong>, et l\'instantané public ' +
+      'porte <strong>' + liste.length + ' partenaire(s)</strong>.</p>';
+  }
+
+  if (!liste.length) {
+    h += '<p class="diag-verdict">Aucun partenaire <em>actif</em> n\'est servi. Vérifie que la ' +
+      'fiche est bien enregistrée et que sa case « visible » est cochée.</p>';
+    zone.className = 'diagnostic-remontee ' + (reglages.actifs ? 'diag-ko' : '');
+    zone.innerHTML = h;
+    return;
+  }
+
+  // 2. Partenaire par partenaire, emplacement par emplacement : la valeur SERVIE et son origine.
+  h += '<table class="sp-verif"><thead><tr><th>Partenaire</th><th>Emplacement</th>' +
+       '<th>Texte affiché</th><th>Taille</th><th>Disposition</th></tr></thead><tbody>';
+  liste.forEach(function (s) {
+    const emplacements = SPONSORS_EMPLACEMENTS.filter(function (e) {
+      return sponsorsPourEmplacement([s], e).length;
+    });
+    if (!emplacements.length) return;
+    emplacements.forEach(function (e, i) {
+      const r = sponsorsReglageEmplacement(s, e);
+      const muet = (r.dispo === 'seul');
+      h += '<tr>' +
+        (i === 0 ? '<th rowspan="' + emplacements.length + '">' + echapper(s.nom) + '</th>' : '') +
+        '<td>' + echapper(SPONSORS_LIBELLES[e] || e) + '</td>' +
+        '<td>' + (muet
+          ? '<em>aucun — disposition « logo seul »</em>'
+          : (r.texte ? echapper(r.texte) + ' ' + pastilleOrigine(r.origine.texte) : '<em>aucun</em>')) + '</td>' +
+        '<td>' + Math.round(r.zoom * 100) + ' % ' + pastilleOrigine(r.origine.zoom) + '</td>' +
+        '<td>' + echapper(SPONSORS_DISPO_COURT[r.dispo] || r.dispo) + ' ' +
+                 pastilleOrigine(r.origine.dispo) + '</td>' +
+      '</tr>';
+    });
+  });
+  h += '</tbody></table>';
+
+  // 3. Le bandeau du dossier club, rendu tel quel. C'est la pièce à conviction : ce bloc-ci
+  //    est EXACTEMENT celui que le club voit en haut de son dossier.
+  const bandeau = reglages.actifs ? sponsorsRendreDossier(liste) : '';
+  h += '<p class="sp-verif-titre">En tête du dossier club, le club voit ceci :</p>';
+  h += bandeau
+    ? '<div class="sp-verif-dossier">' + bandeau + '</div>'
+    : '<p><em>Rien — aucun partenaire n\'est coché sur l\'emplacement « F · Dossier club »' +
+      (reglages.actifs ? '' : ', et l\'interrupteur général est éteint') + '.</em></p>';
+
+  h += '<p class="diag-verdict">Ce tableau vient de l\'instantané <strong>public</strong>, pas du ' +
+    'formulaire. Si une valeur que tu viens de saisir n\'apparaît pas ici, c\'est qu\'elle n\'a pas ' +
+    'été enregistrée — pas que la page l\'ignore. Une valeur marquée ' +
+    pastilleOrigine('defaut') + ' n\'a été saisie nulle part.</p>';
+
+  zone.className = 'diagnostic-remontee';
+  zone.innerHTML = h;
 }
 
 /**

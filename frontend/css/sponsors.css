@@ -395,3 +395,95 @@ body.sp-reperes .sp-mur { outline: 2px dashed #e9b53e; outline-offset: 3px; }
   .sp-bandeau,
   .sp-mur-case { transition: none !important; }
 }
+
+/* =========================================================
+   F · DOSSIER CLUB — bandeau permanent en tête du dossier
+   ---------------------------------------------------------
+   Vit ici et non dans dossier.css : c'est un emplacement partenaire
+   comme les cinq autres, et l'écran d'administration en a besoin
+   pour montrer, à l'identique, ce que le club recevra.
+   ========================================================= */
+.sp-dossier {
+  margin: 0 0 22px;
+  padding: 14px 18px;
+  border: 1px solid var(--d-filet, #dbe3ec);
+  border-radius: 10px;
+  background: #fff;
+  text-align: center;
+  /* Ne jamais se faire couper en deux par un saut de page à l'impression. */
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.sp-dossier-titre {
+  margin: 0 0 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--d-gris, #5b6570);
+}
+.sp-dossier-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 26px;
+}
+.sp-dossier-case {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;      /* hauteur réservée : la page ne saute pas au chargement du logo */
+  max-width: 190px;
+  text-decoration: none;
+}
+.sp-dossier .sp-logo-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  /* Même réglage de taille par partenaire que sur la page des scores (--sp-zoom). */
+  max-height: calc(52px * var(--sp-zoom, 1));
+  object-fit: contain;
+}
+/* Dispositions, comme sur la page des scores : le même partenaire peut être « logo seul »
+   ici et « logo + texte » ailleurs. Le balisage ne change pas, seule cette classe décide. */
+.sp-dossier .sp-dispo-gauche { flex-direction: row; }
+.sp-dossier .sp-dispo-droite { flex-direction: row-reverse; text-align: right; }
+.sp-dossier .sp-dispo-haut   { flex-direction: column; text-align: center; }
+.sp-dossier .sp-bloc-logo    { flex: 0 0 auto; display: grid; place-items: center; }
+.sp-dossier .sp-bloc-texte   { min-width: 0; font-size: 0.82rem; color: var(--d-gris, #5b6570); }
+.sp-dossier .sp-bloc-texte strong { display: block; color: var(--d-navy, #0C1C2E); }
+.sp-dossier .sp-mention {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.sp-dossier .sp-logo-texte {
+  display: inline-grid;
+  place-items: center;
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.15;
+  text-align: center;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+
+@media print {
+  /* Les logos partenaires sont l'objet même de ce bandeau : on force l'impression des
+     couleurs, sans quoi une pastille de repli sortirait blanche sur blanc. */
+  .sp-dossier { border-color: #bbb; }
+  .sp-dossier .sp-logo-texte,
+  .sp-dossier .sp-logo-img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

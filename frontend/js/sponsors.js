@@ -305,25 +305,37 @@ function sponsorsReglagesBruts(s) {
 
 /**
  * Réglages effectifs d'un partenaire POUR UN EMPLACEMENT donné.
- * @returns {{texte: string, zoom: number, dispo: string}}
+ *
+ * Chaque valeur dit AUSSI d'où elle vient (`origine`) : `encart` si elle a été saisie pour
+ * cet emplacement, `general` si elle vient du réglage global du partenaire, `defaut` si
+ * personne n'a rien dit. C'est ce qui permet à l'admin de répondre « j'ai réglé et rien ne
+ * change » par un constat plutôt que par une supposition.
+ *
+ * @returns {{texte: string, zoom: number, dispo: string, origine: Object}}
  */
 function sponsorsReglageEmplacement(s, emplacement) {
   var r = (sponsorsReglagesBruts(s) || {})[emplacement] || {};
+  var origine = {};
 
   var zoom = parseInt(r.zoom, 10);
-  if (!isFinite(zoom)) zoom = parseInt(s.logo_zoom, 10);
-  if (!isFinite(zoom)) zoom = 100;
+  origine.zoom = 'encart';
+  if (!isFinite(zoom)) { zoom = parseInt(s.logo_zoom, 10); origine.zoom = 'general'; }
+  if (!isFinite(zoom)) { zoom = 100; origine.zoom = 'defaut'; }
   zoom = Math.max(50, Math.min(200, zoom)) / 100;
 
   var dispo = String(r.dispo || '').toLowerCase();
+  origine.dispo = 'encart';
   if (SPONSORS_DISPOSITIONS.indexOf(dispo) < 0) {
     dispo = SPONSORS_DISPO_DEFAUT[emplacement] || 'gauche';
+    origine.dispo = 'defaut';
   }
 
   // Texte : celui de l'emplacement, sinon l'accroche générale du partenaire.
-  var texte = String(r.texte == null ? '' : r.texte).trim() || String(s.accroche || '').trim();
+  var texte = String(r.texte == null ? '' : r.texte).trim();
+  origine.texte = 'encart';
+  if (!texte) { texte = String(s.accroche || '').trim(); origine.texte = texte ? 'general' : 'aucun'; }
 
-  return { texte: texte, zoom: zoom, dispo: dispo };
+  return { texte: texte, zoom: zoom, dispo: dispo, origine: origine };
 }
 
 /* ==========================================================================
