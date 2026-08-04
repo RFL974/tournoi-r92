@@ -2820,6 +2820,11 @@ function doPost(e) {
     // de spectateurs suffiraient à faire attendre le marqueur au bord du terrain. Ils sortent
     // donc ici, par la porte la plus courte possible.
     if (action === 'mesureSponsors') {
+      // Plafonds de débit vérifiés AVANT d'ouvrir le classeur (openById ≈ 0,5 s) : une requête
+      // refusée coûte alors une lecture de cache au lieu d'une demi-seconde de serveur. C'est
+      // tout l'intérêt du garde-fou — voir le bloc « Plafonds de DÉBIT et de VOLUME » plus haut.
+      var debit = mesureDebitAutorise(requete);
+      if (!debit.ok) return repondreJson({ ok: true, ignore: debit.motif });
       return repondreJson(enregistrerMesureSponsors(SpreadsheetApp.openById(sheetId()), requete));
     }
 
@@ -3628,6 +3633,107 @@ var MESURE_MAX_SPONSORS  = 40;        // bien au-delà d'un vrai tournoi
 var MESURE_MAX_SECONDES  = 24 * 3600; // une journée : au-delà, la valeur est absurde
 var MESURE_MAX_COMPTEUR  = 100000;    // affichages / clics d'une seule session
 
+/* ---------- Plafonds de DÉBIT et de VOLUME de l'écriture publique (audit C, R-014) ----------
+ *
+ * `mesureSponsors` est la SEULE écriture sans clé du fichier (voir doPost). Elle est publique
+ * à raison : les spectateurs n'ont évidemment pas de mot de passe. Mais jusqu'ici elle n'avait
+ * AUCUNE limite — ni par appareil, ni par minute, ni par jour. N'importe qui pouvait donc
+ * envoyer des relevés en boucle jusqu'à remplir l'onglet Mesures, et par ricochet le classeur
+ * (limite Google : 10 millions de cases). Un classeur plein, c'est PLUS AUCUNE ÉCRITURE
+ * possible : ni les scores, ni les équipes. Le jour du tournoi, la saisie s'arrête.
+ *
+ * Trois garde-fous, énoncés du plus fiable au moins fiable :
+ *
+ *  1. MESURE_MAX_LIGNES — plafond DUR sur la taille de l'onglet, lu directement dans le
+ *     classeur. Déterministe et incontournable : c'est LUI qui garantit que le classeur ne
+ *     peut plus être rempli par cette porte. Les deux autres ne font que réduire le débit.
+ *  2. MESURE_MAX_FENETRE — débit global, tous appareils confondus, par tranche de 6 h.
+ *  3. MESURE_MAX_APPAREIL — débit d'un même appareil, par tranche d'une heure. L'identifiant
+ *     d'appareil étant choisi par le client, ce plafond n'arrête PAS quelqu'un de déterminé
+ *     (il lui suffit d'en changer) : il arrête une page partie en boucle, ce qui est le cas
+ *     de loin le plus probable.
+ *
+ * Les plafonds 2 et 3 s'appuient sur CacheService, qui n'est pas transactionnel : ils sont
+ * « best-effort », exactement comme le compteur anti-force-brute des clés plus haut. Ils
+ * plafonnent fortement le débit sans prétendre à l'exactitude.
+ *
+ * ⚠️ HONNÊTETÉ SUR LA PORTÉE : ces plafonds suppriment le dégât DURABLE (le classeur rempli)
+ * et rendent l'abus beaucoup plus coûteux — une requête refusée n'ouvre pas le classeur, elle
+ * coûte une lecture de cache au lieu d'une demi-seconde. Ils ne rendent PAS l'adresse immunisée
+ * contre un envoi massif : Apps Script ne fournit pas l'adresse du visiteur, on ne peut donc
+ * pas distinguer un abuseur d'un spectateur. Ce qui est visé, et atteint, c'est qu'un abus
+ * n'empêche plus jamais la SAISIE DES SCORES.
+ *
+ * Dépassement = la requête répond OK sans rien écrire. Une mesure d'audience est une donnée de
+ * confort : jamais un score, jamais une équipe, jamais un club. Rien d'autre n'est affecté.
+ *
+ * Ce qui n'est PAS traité ici, volontairement : la PURGE automatique des vieux relevés
+ * (point C-09 de la cartographie). Tant qu'elle n'existe pas, l'onglet finit par atteindre le
+ * plafond dur et la mesure s'arrête — sans rien casser. L'organisateur dispose du bouton
+ * « Vider les relevés » de l'écran Partenaires. */
+var MESURE_MAX_LIGNES   = 100000; // lignes de l'onglet Mesures (~5 % de la limite du classeur)
+var MESURE_FENETRE_S    = 21600;  // 6 h — durée de vie maximale d'une entrée de CacheService
+var MESURE_MAX_FENETRE  = 30000;  // relevés acceptés par tranche de 6 h, tous appareils
+var MESURE_APPAREIL_S   = 3600;   // 1 h
+var MESURE_MAX_APPAREIL = 30;     // relevés acceptés par appareil et par heure (la page en
+                                  // envoie un toutes les 10 min : 5× la cadence légitime)
+
+/**
+ * CŒUR PUR du plafonnement (testable sans classeur ni cache) : à partir des trois compteurs,
+ * dit s'il faut refuser le relevé, et pourquoi. Chaîne vide = on écrit.
+ * Les compteurs valent le rang du relevé COURANT (1 pour le premier), d'où les comparaisons
+ * strictes : le 30 000ᵉ relevé d'une fenêtre passe encore, le 30 001ᵉ non.
+ * Un compteur à 0 signifie « inconnu » (cache indisponible) et n'entraîne jamais de refus :
+ * une panne de cache ne doit pas éteindre la mesure.
+ */
+function mesureMotifRefus(nbLignes, nbFenetre, nbAppareil) {
+  if (nbLignes   > MESURE_MAX_LIGNES)   return 'plafond_lignes';
+  if (nbFenetre  > MESURE_MAX_FENETRE)  return 'debit_global';
+  if (nbAppareil > MESURE_MAX_APPAREIL) return 'debit_appareil';
+  return '';
+}
+
+/**
+ * Incrémente un compteur de fenêtre dans le cache serveur et renvoie sa nouvelle valeur.
+ * La clé porte le NUMÉRO DE FENÊTRE (et non un simple compteur reconduit) : sans cela, chaque
+ * écriture repousserait la durée de vie et le plafond, une fois atteint, ne se relâcherait
+ * jamais tant que le trafic dure — on bloquerait les spectateurs légitimes indéfiniment.
+ * Renvoie 0 si le cache est indisponible : on n'échoue jamais une requête pour un compteur.
+ */
+function mesureCompteurFenetre(cache, prefixe, dureeS, maintenantMs) {
+  try {
+    var fenetre = Math.floor(maintenantMs / (dureeS * 1000));
+    var cle = prefixe + fenetre;
+    var n = (parseInt(cache.get(cle), 10) || 0) + 1;
+    cache.put(cle, String(n), dureeS);
+    return n;
+  } catch (e) { return 0; }
+}
+
+/**
+ * Les plafonds de DÉBIT sont-ils respectés ? Appelée par doPost AVANT d'ouvrir le classeur
+ * (`openById` coûte à lui seul ~0,5 s) : une requête refusée doit être bon marché, sinon le
+ * garde-fou coûterait presque aussi cher que l'abus qu'il empêche.
+ * Le plafond de VOLUME (nombre de lignes), lui, exige le classeur : il est vérifié plus bas,
+ * dans enregistrerMesureSponsors.
+ * @return {{ok:boolean, motif:string}}
+ */
+function mesureDebitAutorise(data) {
+  var appareil = mesureIdentifiant(data && data.appareil);
+  if (!appareil) return { ok: false, motif: 'identifiant' };
+
+  var cache;
+  try { cache = CacheService.getScriptCache(); } catch (e) { cache = null; }
+  if (!cache) return { ok: true, motif: '' }; // pas de cache : on laisse passer (plafond dur en aval)
+
+  var maintenant = new Date().getTime();
+  var motif = mesureMotifRefus(
+    0, // le nombre de lignes n'est pas connu ici : il exige le classeur
+    mesureCompteurFenetre(cache, 'mesure_total_', MESURE_FENETRE_S, maintenant),
+    mesureCompteurFenetre(cache, 'mesure_app_' + appareil + '_', MESURE_APPAREIL_S, maintenant));
+  return { ok: !motif, motif: motif };
+}
+
 /** Entier borné, quelle que soit la fantaisie reçue. */
 function mesureEntier(v, maxi) {
   var n = parseInt(v, 10);
@@ -3694,6 +3800,17 @@ function enregistrerMesureSponsors(classeur, data) {
   if (!Object.keys(propre).length) return { error: 'Relevé invalide.' };
 
   var onglet = assurerOngletMesures(classeur);
+
+  // PLAFOND DUR de volume (R-014) : au-delà, on n'écrit plus une seule ligne. C'est ce qui
+  // rend définitivement impossible de remplir le classeur par cette porte — et donc de bloquer
+  // la saisie des scores. Lecture d'une seule valeur (getLastRow), donc sans coût notable.
+  // On journalise : un plafond atteint en silence ressemblerait à une panne inexplicable.
+  if (onglet.getLastRow() > MESURE_MAX_LIGNES) {
+    Logger.log('mesureSponsors : plafond de ' + MESURE_MAX_LIGNES + ' lignes atteint dans l\'onglet ' +
+               'Mesures — relevé ignoré. Vider les relevés depuis l\'écran Partenaires.');
+    return { ok: true, ignore: 'plafond_lignes' };
+  }
+
   var maintenant = new Date();
   onglet.appendRow([
     Utilities.formatDate(maintenant, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss'),
