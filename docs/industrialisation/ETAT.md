@@ -12,12 +12,12 @@
 ## 1. EN UNE PHRASE
 
 L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 avance** : **deux domaines sur huit sont audités** —
-le **A (métier)** et le **C (sécurité)**, soit **27 problèmes identifiés**. La sécurité a fait
-apparaître **le premier P0 du chantier** (**R-014** : la seule porte ouverte sans mot de passe n'a
-aucune limite, on peut s'en servir pour bloquer la saisie des scores le jour du tournoi) et
-**4 P1**. Une décision t'attend : **corriger ce P0 tout de suite, ou attendre la fin des audits**
-(**D-016**). Il reste **6 domaines** à auditer.
-**Aucun fichier de l'application n'a été modifié** et **aucun problème n'est corrigé.**
+le **A (métier)** et le **C (sécurité)**, soit **27 problèmes**. La sécurité a fait apparaître
+**le premier P0 du chantier** (**R-014**), qui a été **corrigé aussitôt** par exception validée
+(**D-016**) — mais **il n'est pas encore en production** : le backend doit être redéployé à la
+main chez Google. Une seconde chose t'attend, et elle ne demande aucun code : **remplacer les
+deux mots de passe par des suites aléatoires** (**D-017**) — ce sont aujourd'hui des mots choisis
+à la main, ce qui fait passer **R-019 de P2 à P1**. Il reste **6 domaines** à auditer.
 
 ---
 
@@ -58,15 +58,23 @@ aucune limite, on peut s'en servir pour bloquer la saisie des scores le jour du 
 
 ## 4. PROCHAINE ÉTAPE
 
-**Avant toute chose : une décision t'attend — D-016.**
+### Deux gestes qui n'appartiennent qu'à Romain, et qu'aucune session ne peut faire à sa place
 
-Le domaine C a trouvé **un P0** (R-014). Trois choix possibles : (a) il attend la fin des 8 audits
-comme tout le reste ; (b) on le corrige seul, tout de suite, dans une modification isolée ;
-(c) on corrige aussi R-015 et R-016 dans la foulée. **Ma recommandation : (b).** Le détail et le
-raisonnement sont dans `DECISIONS.md` → D-016.
+**1. Redéployer le backend chez Google** — sans cela, la correction du P0 ne protège rien.
+Copier le contenu de `backend/Code.gs` dans l'éditeur Apps Script (remplacer l'ancien, ne pas
+l'ajouter à la suite), puis **Déployer → Gérer les déploiements → crayon → Version : « Nouvelle
+version » → Déployer**. Surtout **pas** « Nouveau déploiement », qui créerait une autre adresse.
+Vérifier ensuite avec le bouton **« Tester la remontée »** de l'écran Partenaires, et lancer
+`lancerTestsFFR` dans l'éditeur (cela répond du même coup à **I-02**).
 
-**Puis : session 7 — ÉTAPE 2, domaine B : la protection des données (RGPD).** *(toujours sans
-rien modifier)*
+**2. Remplacer les deux mots de passe par des suites aléatoires** — **D-017**. Menu du classeur
+**« Tournoi R92 → Configurer les clés »**. Cinq minutes, aucune ligne de code, et R-019 redevient
+un problème théorique. La vraie question à trancher n'est pas technique : **où ranger ces clés**,
+et **comment transmettre celle des scores aux bénévoles le jour J**.
+
+### Puis : session 7 — ÉTAPE 2, domaine B : la protection des données (RGPD)
+
+*(toujours sans rien modifier)*
 
 C'est l'ordre validé par D-010, et c'est aussi le bon moment : le classeur ne contient **aucune
 donnée personnelle de tiers aujourd'hui** (I-03, I-04). Le domaine B doit être traité **avant la
@@ -86,8 +94,21 @@ des polices depuis les serveurs de Google, relevé en session 6.
 
 ## 5. CORRECTIONS DÉJÀ RÉALISÉES DANS CE CADRE
 
-**Aucune.** Aucun fichier de l'application n'a été modifié à ce jour dans le cadre de
-l'industrialisation.
+**Une seule — R-014, le P0 de sécurité** *(session 6, commit `c1948fc`, exception validée D-016)*.
+
+| Ce qui a changé | Où | État |
+|---|---|---|
+| Trois plafonds sur `mesureSponsors`, la seule écriture ouverte sans mot de passe : un plafond **dur** sur la taille de l'onglet des relevés, et deux plafonds de **débit** (global et par appareil) vérifiés **avant** d'ouvrir le classeur | `backend/Code.gs` | 🟠 **CORRIGÉ dans le dépôt** |
+| 9 tests ajoutés (16 vérifications), **16/16 OK** hors de Google | `backend/Tests.gs` | ✅ Vérifié sur les fonctions pures |
+| Le diagnostic « Tester la remontée » dit désormais qu'un plafond est atteint, au lieu d'annoncer une écriture réussie suivie d'une relecture introuvable | `frontend/js/admin-sponsors.js` | 🟠 Publié automatiquement sur le site |
+
+> ⚠️ **CE N'EST PAS ENCORE EN PRODUCTION.** Le frontend est publié tout seul, mais **le backend
+> doit être recopié à la main** dans l'éditeur Apps Script, puis redéployé
+> (**Déployer → Gérer les déploiements → crayon → Version : « Nouvelle version »**).
+> Tant que ce n'est pas fait, **la version en service est l'ancienne, sans plafond.**
+>
+> Et « corrigé » n'est pas « testé » : le statut **TESTÉ** exige que les 301 tests soient lancés
+> dans Apps Script (`lancerTestsFFR`) **et** que le bouton « Tester la remontée » soit rejoué.
 
 > ⚠️ Le projet a une longue histoire de corrections **antérieures** à ce cadre (voir `CHANGELOG.md`
 > et l'historique Git). Elles ne sont **pas** considérées comme vérifiées par ce chantier tant que
@@ -97,14 +118,14 @@ l'industrialisation.
 
 ## 6. PROBLÈMES RESTANT À TRAITER
 
-**27 problèmes identifiés, tous au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
+**27 problèmes — 1 corrigé, 26 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
 le registre et `AUDIT.md` pour l'explication de chacun.
 
 | Priorité | Total | Domaine A (métier) | Domaine C (sécurité) |
 |---|---|---|---|
-| **P0** | **1** | — | **R-014** porte ouverte sans limite |
-| **P1** | **9** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs |
-| **P2** | 14 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-019 → R-025 |
+| **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **corrigé**, reste à redéployer |
+| **P1** | **10** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* |
+| **P2** | 13 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 |
 | **P3** | 3 | R-011 | R-026 · R-027 |
 
 ✅ = la **règle métier est décidée**, le **code n'est pas écrit**. R-002 et R-006 → R-010
@@ -197,11 +218,12 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-013 | **Planning** : déplacer un match, et décaler toute la journée de X minutes | ✅ Validée (session 5) |
 | D-014 | **Départage** : confrontation directe, puis ordre alphabétique en dernier recours | ✅ Validée (session 5) |
 | D-015 | **Match annulé** : même mécanisme que le forfait, libellé distinct, ne compte pour personne | ✅ Validée (session 5), **par défaut** — une règle FFR primerait |
+| D-016 | **Corriger R-014 (le P0) tout de suite**, seul, hors de l'ordre du chantier — puis reprendre les audits | ✅ Validée (session 6) — *« va pour B alors je te suis dans ton raisonnement »* |
 
-**En attente de validation** (voir `DECISIONS.md`) :
+**En attente** (voir `DECISIONS.md`) :
 
-- **D-016 — Faut-il corriger R-014 (le P0) tout de suite, hors de l'ordre du chantier ?**
-  *(la seule décision qui presse — recommandation : oui, seul, dans une modification isolée)* ;
+- **D-017 — Remplacer les deux clés par des suites aléatoires.** *(aucun code : une action de
+  Romain, cinq minutes — c'est ce qui referme R-019)* ;
 - D-005 — Périmètre exact du dépôt à auditer (le site vitrine `boutique-r92` est un **autre** dépôt).
 
 *(Aucune décision du domaine A n'est en attente.)*
@@ -222,8 +244,7 @@ vérification supplémentaire.
 | I-10 | La FFR encadre-t-elle le sort d'un match d'École de Rugby **qui n'a pas pu se jouer** (forfait, ou annulation pour intempéries) ? Existe-t-il une règle de classement imposée ? | `AUDIT-TOURNOI-R92.md` **ne contient rien** sur le sujet : aucun de ses 25 points de vérification (Q11→Q25) ne le couvre. C'est une question de **règle du jeu**, donc du chantier FFR (D-003) | Question de Romain au **Directeur EDR du Racing** ou au **Comité 92** — la voie qui a déjà résolu Q23. Une règle fédérale primerait sur D-011 **et** D-015 |
 | I-08 | Une image mise à la corbeille du Drive (affiche, logo, photo de parking) reste-t-elle visible par un lien déjà diffusé, pendant les ~30 jours avant que Google vide la corbeille ? | Le comportement de la corbeille Drive appartient à Google, il n'est pas dans le code | Test réel : mettre une image à la corbeille, puis rouvrir son lien depuis une navigation privée |
 | I-09 | Que conserve le **journal d'exécution** de Google Apps Script, et pendant combien de temps ? | Ce journal vit chez Google, hors du dépôt | Consultation par Romain dans l'éditeur Apps Script (« Exécutions ») |
-| **I-11** | Comment la Web App est-elle **réellement publiée** chez Google : « Exécuter en tant que » = moi, et « Qui a accès » = **tout le monde** ou **tout le monde disposant d'un compte Google** ? | Ce réglage vit dans l'écran de déploiement Apps Script, **pas dans le code**. Il change complètement l'exposition : « tout le monde » signifie que la porte de R-014 est ouverte à un visiteur anonyme | Vérification par Romain : Apps Script → **Déployer → Gérer les déploiements** → lire les deux lignes |
-| **I-12** | Les deux mots de passe actuels (`CLE_ADMIN`, `CLE_SCORES`) sont-ils des **suites aléatoires** ou des **mots choisis à la main** ? | Ils vivent dans les propriétés du script, chez Google — invisibles depuis le dépôt. C'est la donnée qui décide si **R-019** est théorique ou sérieux : 8 600 essais par jour ne cassent jamais une suite aléatoire, mais peuvent casser `racing92club` | Vérification par Romain : Apps Script → **Paramètres du projet → Propriétés du script**. Si ce sont des mots, les remplacer par des clés générées suffit à refermer le sujet |
+| **I-13** | Le redéploiement du backend a-t-il eu lieu, et la correction de **R-014** est-elle réellement active ? | Le backend s'exécute chez Google et doit y être republié à la main (cas particulier de **I-01**) | Redéploiement par Romain, puis bouton **« Tester la remontée »** de l'écran Partenaires |
 
 ### Points levés
 
@@ -231,6 +252,8 @@ vérification supplémentaire.
 |---|---|---|---|
 | **I-06** | Comment le Google Sheet est-il réellement partagé ? | ✅ **LEVÉ — le classeur est PRIVÉ.** Romain a fourni une capture du panneau Drive de « Tournoi R92 - Base de données » : *Qui a accès → **Privé*** (propriétaire seul), et *Limites de sécurité → aucune limite appliquée*. L'identifiant du classeur est donc public dans le dépôt **sans que cela expose les données** : le connaître ne suffit pas à ouvrir le fichier. C'est le réglage attendu. Cela confirme aussi que la Web App s'exécute bien **au nom du propriétaire** — c'est ce qui lui permet de lire un classeur privé au profit de visiteurs qui, eux, n'y ont aucun accès. | 2026-08-04, session 2 |
 | **I-07** | Les 4 onglets `RefFFR_*` existent-ils et sont-ils à jour ? | ✅ **LEVÉ — les 4 onglets existent, aux noms exacts attendus.** Capture du bas du classeur fournie par Romain : `RefFFR_Formes`, `RefFFR_Regles`, `RefFFR_Temps`, `RefFFR_Dates` — orthographe **identique** à ce que lit `Code.gs`. Contenu visible cohérent (millésimes 2026-2027, formes de jeu 5x5 / 7x7). Les fichiers Drive `RefFFR-formes-de-jeu` et `RefFFR-dates-federales` sont donc des documents **sources** distincts, sans rôle dans le fonctionnement. | 2026-08-04, session 2 |
+| **I-11** | Comment la Web App est-elle réellement publiée chez Google ? | ✅ **LEVÉ — « Exécuter en tant que : Moi » et « Qui a accès : Tout le monde ».** Capture de l'écran de déploiement fournie par Romain. « Tout le monde » veut dire **sans compte Google, sans rien**. C'est le réglage **nécessaire** (les spectateurs doivent pouvoir lire les scores) : rien à y changer. Mais cela confirme que R-014 n'exigeait aucun préalable — d'où sa correction immédiate. | 2026-08-04, session 6 |
+| **I-12** | Les deux clés sont-elles des suites aléatoires ou des mots choisis à la main ? | ⚠️ **LEVÉ — ce sont des MOTS choisis par Romain** : *« pour les MDP c'est moi qui ai choisi ce sont des mots »*. C'est la réponse défavorable : **R-019 passe de P2 à P1**. Le remède ne demande aucun code — remplacer les deux clés par des suites aléatoires (**D-017**). | 2026-08-04, session 6 |
 | **I-04** | L'application a-t-elle servi un tournoi réel ? | ✅ **LEVÉ — non : le tournoi actuellement en base est un tournoi de TEST.** Romain : « c'est juste un faux tournoi avec de vrais noms ». Les noms d'équipes visibles (Racing 92, Stade Français, Clamart, Meudon, Vélizy, Antony, Sèvres, Issy-les-Moulineaux) sont de vrais clubs, mais les engagements sont fictifs. | 2026-08-04, session 2 |
 
 > ✅ **À retenir de I-03 + I-04** : le classeur ne contient **aucune donnée personnelle de tiers**

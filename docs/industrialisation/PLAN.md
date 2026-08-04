@@ -48,7 +48,7 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 | Domaine | Nom | Statut | Session |
 |---|---|---|---|
 | A | Métier / Product Owner | ✅ **FAIT** — 0 P0 · 5 P1 · 7 P2 · 1 P3 | 5 |
-| C | Sécurité | ✅ **FAIT** — **1 P0** · 4 P1 · 7 P2 · 2 P3 | 6 |
+| C | Sécurité | ✅ **FAIT** — **1 P0 (corrigé)** · 5 P1 · 6 P2 · 2 P3 | 6 |
 | B | RGPD / Protection des données | ⬜ **Prochain** | 7 |
 | D | QA / Tests | ⬜ Non commencé | — |
 | E | UX / UI / Accessibilité | ⬜ Non commencé | — |
@@ -73,7 +73,8 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | ID | Chantier | Priorité | Statut | Dépend de | Validé par Romain | Implémenté | Testé |
 |---|---|---|---|---|---|---|---|
-| — | *(aucun chantier — le tableau se remplit à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
+| **C-001** | **Plafonner l'écriture publique des relevés de partenaires** (R-014) — *hors ordre normal, par exception D-016* | **P0** | 🟠 CORRIGÉ dans le dépôt | — | ✅ oui (D-016) | ✅ commit `c1948fc` | ❌ **non** — exige un redéploiement chez Google + `lancerTestsFFR` |
+| — | *(les autres chantiers se rempliront à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
 
 > **Pourquoi ce tableau est encore vide alors que 27 problèmes sont identifiés ?** Parce qu'un
 > chantier regroupe des corrections qui doivent être faites **ensemble**, et qu'on ne peut pas

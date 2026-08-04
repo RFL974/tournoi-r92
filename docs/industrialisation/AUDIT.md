@@ -966,6 +966,63 @@ tournoi d'école de rugby. Je dis que **la porte est ouverte et qu'elle est bon 
 > nécessaire pour remplir le classeur **n'ont pas été testés** et ne peuvent pas l'être depuis
 > le dépôt. Le raisonnement tient, la mesure n'a pas été faite.
 
+### ✅ 7. Ce qui a été fait — décision D-016, option (b), le 2026-08-04
+
+Romain a retenu l'**exception ciblée** : *« va pour B alors je te suis dans ton raisonnement »*.
+R-014 a donc été corrigé **seul**, en avance sur l'ordre du chantier. Commit `c1948fc`.
+
+**Le réglage qui rend l'exposition sérieuse a été confirmé au passage** — l'inconnue **I-11** est
+levée. Romain a fourni la capture de l'écran de déploiement Apps Script :
+
+> *Exécuter en tant que* : **Moi (romain.rifleu@gmail.com)** · *Qui a accès* : **Tout le monde**
+
+« Tout le monde » signifie **sans compte Google, sans rien** : le scénario décrit plus haut ne
+supposait donc aucun préalable. C'est aussi le réglage **nécessaire** au fonctionnement — la page
+publique des scores doit être lisible par des spectateurs anonymes. Il n'y a rien à changer là ;
+c'est précisément pour cela que la porte devait être plafonnée.
+
+**Trois plafonds, énoncés du plus fiable au moins fiable** :
+
+| # | Plafond | Valeur | Fiabilité |
+|---|---|---|---|
+| 1 | **Taille de l'onglet `Mesures`** | 100 000 lignes | **Déterministe** — lu dans le classeur. C'est lui qui rend le remplissage **définitivement impossible** |
+| 2 | **Débit global**, tous appareils | 30 000 par tranche de 6 h | Best-effort (mémoire temporaire non transactionnelle) |
+| 3 | **Débit d'un même appareil** | 30 par heure | Best-effort, et **contournable** : l'identifiant d'appareil est choisi par le client. Il arrête une page partie en boucle, pas quelqu'un de déterminé |
+
+Deux choix de mise en œuvre méritent d'être expliqués :
+
+- **les plafonds de débit sont vérifiés AVANT d'ouvrir le classeur.** Ouvrir le classeur coûte à
+  lui seul environ une demi-seconde de serveur ; une requête refusée ne coûte plus qu'une lecture
+  de mémoire. Sans cela, le garde-fou aurait coûté presque aussi cher que l'abus qu'il empêche ;
+- **le compteur est rangé sous un numéro de tranche horaire**, et non reconduit. Sinon, chaque
+  nouvel envoi aurait repoussé sa date d'expiration : une fois le plafond atteint, il ne se serait
+  **jamais** relâché tant que le trafic dure — et ce sont les spectateurs légitimes qui auraient
+  été bloqués.
+
+**Ce que la correction NE fait PAS — à lire, c'est important** :
+
+- ❌ **elle ne rend pas l'adresse immunisée contre un envoi massif.** Google Apps Script ne fournit
+  pas l'adresse du visiteur : on ne peut donc pas distinguer un abuseur d'un spectateur. Ce qui est
+  visé, et atteint, c'est qu'un abus **n'empêche plus jamais la saisie des scores** — et qu'il ne
+  laisse plus de **dégât durable** ;
+- ❌ **elle n'ajoute pas la purge automatique des vieux relevés** (point C-09). C'est volontaire :
+  c'est un autre sujet, qui relève du domaine B. Tant qu'elle n'existe pas, l'onglet finit par
+  atteindre le plafond dur et la mesure s'arrête — **sans rien casser d'autre**. Le bouton
+  « Vider les relevés » de l'écran Partenaires reste disponible ;
+- ❌ **elle n'est pas active tant que le backend n'a pas été redéployé chez Google.** Statut :
+  **CORRIGÉ dans le dépôt**, **PAS en production** (`CLAUDE.md` §13.6).
+
+**Un effet de bord qu'il a fallu traiter dans le même geste** : le bouton « Tester la remontée »
+de l'écran Partenaires aurait annoncé *« ✅ Écriture acceptée »* puis *« ❌ Relecture introuvable »*,
+et envoyé chercher une panne qui n'existe pas. Il dit désormais explicitement qu'un plafond est
+atteint, et lequel.
+
+**Vérifications faites** : syntaxe des trois fichiers modifiés contrôlée ; **9 tests ajoutés**
+(16 vérifications), rejoués hors de Google sur les fonctions pures — **16/16 OK**.
+**NON VÉRIFIÉ** : le reste du harnais (301 tests) n'est pas exécutable ici (M-03), et le
+comportement réel en production reste **INCONNU** tant que Romain n'a pas redéployé et relancé
+les tests dans Apps Script.
+
 ---
 
 ## C.3 — R-015 · Regénérer les poules efface tous les scores, et seul le navigateur s'y oppose *(P1)*
@@ -1280,11 +1337,37 @@ même si quelqu'un attaque au même instant. C'est bien pensé.
 passe tiré au hasard. Ils peuvent casser un mot de passe **choisi par un humain** — `racing92club`
 fait bien 12 caractères et se devine en quelques milliers d'essais.
 
-**Ce que je propose** : (a) prolonger la fenêtre à chaque tentative, même refusée ; (b) **et
-surtout** vérifier que les deux clés actuelles sont bien des suites aléatoires, pas des mots.
-Si elles le sont, ce problème devient théorique. → **question I-12 ci-dessous.**
+### ⚠️ Requalifié **P2 → P1** le 2026-08-04 — I-12 est levée, et la réponse est la mauvaise
 
-**Difficulté : très faible.**
+Romain : *« pour les MDP c'est moi qui ai choisi ce sont des mots »*.
+
+Le raisonnement bascule donc du côté défavorable. Trois éléments qui se combinent :
+
+1. **la porte est trouvable** — l'adresse du serveur est publiquement lisible dans le code du
+   site, et l'écran d'administration est en ligne (R-022) ;
+2. **le débit toléré est de l'ordre de 8 600 essais par jour**, sans alerte ni notification ;
+3. **des mots se devinent.** Un dictionnaire français courant tient en quelques dizaines de
+   milliers d'entrées ; les combinaisons de deux mots familiers d'un club de rugby se comptent en
+   milliers. Ce n'est plus une hypothèse d'école.
+
+Et ce qu'ouvre la clé ADMIN, c'est **tout** : effacer les scores, réinitialiser le tournoi, lire
+le carnet d'adresses complet avec les liens personnels, envoyer des courriels sous l'adresse du
+propriétaire.
+
+**Ce que je propose — et ce n'est pas du code** : remplacer les deux clés par des **suites
+aléatoires** (24 caractères tirés par un gestionnaire de mots de passe), via le menu
+**« Tournoi R92 → Configurer les clés »** du classeur. **Cinq minutes, aucune ligne à écrire**, et
+le problème redevient théorique — parce que 8 600 essais par jour contre une suite aléatoire, ce
+n'est rien du tout.
+
+**La vraie question n'est donc pas technique, elle est pratique** : une clé aléatoire ne se retient
+plus par cœur. Il faut décider **où elle est rangée** et **comment la clé SCORES est transmise aux
+bénévoles le jour J**. C'est un changement d'habitude, et c'est le seul point à trancher.
+→ **décision D-017**, en attente.
+
+**Amélioration de code utile mais secondaire** : prolonger la fenêtre à chaque tentative, même
+refusée. **Difficulté : très faible.** Elle ne remplace pas le changement de clés — elle
+diviserait le débit toléré, sans changer la nature du problème.
 
 ---
 
@@ -1450,9 +1533,12 @@ Par honnêteté sur les limites de cet audit :
 - ❌ **Le code réellement en service chez Google n'a pas été vu** → **INCONNU** (I-01). La version
   en ligne peut différer de celle auditée ici. **C'est particulièrement gênant en sécurité** : une
   correction non redéployée ne protège personne.
-- ❌ **Les réglages de publication de la Web App n'ont pas été vus** → nouvelle inconnue **I-11**.
-- ❌ **La force réelle des deux mots de passe est inconnue** → nouvelle inconnue **I-12**. C'est
-  la donnée qui décide si R-019 est théorique ou sérieux.
+- ✅ **I-11 est LEVÉE** *(2026-08-04, capture fournie par Romain)* : la Web App s'exécute **au nom
+  du propriétaire** et son accès est ouvert à **« Tout le monde »** — donc sans compte Google.
+  C'est le réglage **nécessaire** (les spectateurs doivent pouvoir lire les scores) : rien à y
+  changer, mais cela confirme que R-014 n'exigeait aucun préalable.
+- ✅ **I-12 est LEVÉE** *(2026-08-04)* : **les deux clés sont des mots choisis à la main.**
+  R-019 passe donc de **P2 à P1**, et la réponse est une action de Romain, pas du code (D-017).
 - ❌ **Les bibliothèques extérieures n'ont pas été analysées** (R-024) : sans version, il n'y a
   rien à comparer à une liste de failles connues.
 - ❌ **Aucune certification de sécurité n'est prononcée** — et il n'y en aura jamais
@@ -1466,12 +1552,12 @@ Par honnêteté sur les limites de cet audit :
 
 | Réf | Problème | Priorité | Où ça fait mal | Difficulté de correction |
 |---|---|---|---|---|
-| **R-014** | La seule porte ouverte sans clé n'a **aucune limite** | **P0** | L'application peut être rendue inutilisable le jour J | **Faible** — le mécanisme existe déjà |
+| **R-014** | La seule porte ouverte sans clé n'a **aucune limite** | **P0** | L'application peut être rendue inutilisable le jour J | ✅ **CORRIGÉ** dans le dépôt (D-016) — **reste à redéployer** |
 | **R-015** | Regénérer les poules efface les scores, sans garde-fou serveur | **P1** | Perte de tous les scores du matin | **Faible** — le modèle existe à côté |
 | **R-016** | La réinitialisation efface tout, sans confirmation serveur ni sauvegarde | **P1** | Perte de toute la préparation d'un tournoi | Faible (confirmation) à moyenne (sauvegarde) |
 | **R-017** | Mots de passe partagés : aucune personne, aucune révocation, aucune trace | **P1** | Une contestation de score est inarbitrable | **Faible** (un prénom dans l'`Historique`) |
 | **R-018** | Les liens des clubs sont permanents et transférables | **P1** | Téléphones du jour J accessibles pour toujours | Faible à moyenne — **à tester avec soin** |
-| **R-019** | Garde-fou anti-devinette global et faible | P2 | Dépend entièrement de la force du mot de passe | Très faible |
+| **R-019** | Garde-fou anti-devinette global et faible — **et les clés sont des mots** | **P1** *(était P2)* | La clé ADMIN ouvre tout : scores, réinitialisation, carnet d'adresses, courriels | **Nulle côté code** — remplacer les deux clés suffit (D-017) |
 | **R-020** | Le contenu des courriels vient du navigateur | P2 | Message trompeur envoyé sous une adresse de confiance | Moyenne |
 | **R-021** | Quatre onglets sortent en entier, sans liste blanche | P2 | Une colonne ajoutée demain devient publique | Faible |
 | **R-022** | L'écran d'administration est public et référençable | P2 | Le mot de passe partagé est plus exposé | Très faible |
@@ -1481,7 +1567,11 @@ Par honnêteté sur les limites de cet audit :
 | **R-026** | Aucune politique de sécurité du contenu | P3 | Rien aujourd'hui | Moyenne (essais) |
 | **R-027** | Briques d'automatisation épinglées par étiquette mobile | P3 | Rien aujourd'hui | Très faible |
 
-**Total : 1 P0 · 4 P1 · 7 P2 · 2 P3 — soit 14 problèmes.**
+**Total : 1 P0 · 5 P1 · 6 P2 · 2 P3 — soit 14 problèmes**, après la requalification de R-019.
+
+**État au 2026-08-04, en fin de session 6** : **R-014 est corrigé dans le dépôt** (D-016) et
+attend un redéploiement. **R-019 attend une action de Romain**, pas du code (D-017). Les
+douze autres sont au statut **IDENTIFIÉ**.
 
 ### Le fil rouge du domaine C
 
@@ -1499,14 +1589,18 @@ Par honnêteté sur les limites de cet audit :
 
 ### Si je devais ne corriger que trois choses
 
-1. **R-014** (mettre une limite sur la porte ouverte) — **c'est le seul point que je traiterais
-   en avance**, hors de l'ordre normal du chantier. Peu de travail, aucun risque pour le métier,
-   et c'est la seule faiblesse exploitable sans rien connaître ;
-2. **R-015 + R-016** ensemble (les deux gestes destructeurs, protégés côté serveur) — même
+1. ✅ **R-014** (mettre une limite sur la porte ouverte) — **fait** (D-016). Il reste **à
+   redéployer chez Google** pour que cela protège quoi que ce soit ;
+2. ⏳ **R-019 / D-017** (remplacer les deux clés par des suites aléatoires) — **c'est désormais
+   la première chose à faire, et elle ne demande aucun code** : cinq minutes dans le menu du
+   classeur. Elle est passée devant les deux suivantes le jour où on a appris que les clés
+   étaient des mots ;
+3. **R-015 + R-016** ensemble (les deux gestes destructeurs, protégés côté serveur) — même
    famille, même correction, et ils protègent contre l'erreur humaine bien plus que contre une
-   attaque. C'est le meilleur rapport bénéfice/risque de tout l'audit ;
-3. **R-017 point (1)** (un prénom dans l'`Historique`) — quelques lignes, et une contestation de
-   score devient arbitrable.
+   attaque. C'est le meilleur rapport bénéfice/risque de ce qui reste.
+
+**R-017 point (1)** (un prénom dans l'`Historique`) vient juste après : quelques lignes, et une
+contestation de score devient arbitrable.
 
 **R-018 (les liens des clubs) vient juste après**, mais avec une consigne : **le traiter avec le
 domaine B, et le tester sérieusement.** Une expiration mal calculée couperait l'accès aux clubs

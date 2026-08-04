@@ -7,6 +7,7 @@
 
 **Dernière mise à jour** : 2026-08-04 (session 6, close)
 **Audits réalisés** : domaine A (métier), domaine C (sécurité). Les 6 autres domaines restent à faire.
+**Correction réalisée** : R-014 (le P0), par exception validée — voir D-016.
 
 ---
 
@@ -56,12 +57,21 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
-| **P0** | **1** | 0 | 0 | 0 | 0 | 0 |
-| P1 | **9** | 0 | **5** | 0 | 0 | 0 |
-| P2 | **14** | 0 | **2** | 0 | 0 | 0 |
+| **P0** | 0 | 0 | 0 | 0 | **1** | **0** |
+| P1 | **10** | 0 | **5** | 0 | 0 | 0 |
+| P2 | **13** | 0 | **2** | 0 | 0 | 0 |
 | P3 | **3** | 0 | 0 | 0 | 0 | 0 |
 
 **Total : 27 problèmes** — domaine A (13) + domaine C (14).
+
+> 🟠 **Le seul « Corrigé » du tableau (R-014) l'est DANS LE DÉPÔT, pas en production.** Le backend
+> s'exécute chez Google et doit y être republié à la main. Tant que Romain n'a pas redéployé, la
+> version en service est **l'ancienne, sans plafond**. C'est la règle permanente de `CLAUDE.md`
+> §13.6, et elle vaut particulièrement ici : *ne jamais écrire « c'est corrigé en production » sur
+> la seule foi du dépôt.*
+>
+> Et « Corrigé » n'est pas « Testé » : le passage à **TESTÉ** demande que les tests soient lancés
+> dans Apps Script et que le diagnostic « Tester la remontée » soit rejoué.
 
 > ⚠️ **« Validé » signifie que la RÈGLE MÉTIER est tranchée par Romain — jamais que le code est
 > écrit.** Les **5 problèmes P1 du domaine A** ont leur règle décidée (D-011 à D-014), ainsi que
@@ -71,8 +81,8 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 > l'ÉTAPE 4 (`CLAUDE.md` §7) — **sauf décision contraire de Romain sur R-014** (voir D-016,
 > en attente dans `DECISIONS.md`).
 
-> ⚠️ **Aucun problème n'est corrigé.** Tous sont au statut **IDENTIFIÉ** : ils ont été vus, rien
-> de plus. Aucun fichier de l'application n'a été modifié à ce jour.
+> ⚠️ **Un seul problème est corrigé : R-014**, par exception validée (D-016). Tous les autres sont
+> au statut **IDENTIFIÉ** : ils ont été vus, rien de plus.
 >
 > Ce tableau ne couvre que les **domaines A et C**. Les 6 autres domaines n'ont pas été audités :
 > leur absence de ligne ne signifie pas leur absence de problème.
@@ -133,12 +143,12 @@ aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Rom
 
 | Réf | Problème | Priorité | Certitude | Statut | Détail |
 |---|---|---|---|---|---|
-| **R-014** | **La seule écriture ouverte sans clé (`mesureSponsors`) n'a aucune limite** : ni par appareil, ni par minute, ni par jour. Chaque envoi ajoute une ligne au classeur, rien ne les efface, et l'adresse du serveur est publique. Permet de saturer le classeur (10 M de cases) et les exécutions simultanées — donc de **bloquer la saisie des scores le jour J** | **P0** | **CERTAIN** (absence de limite constatée) · **PROBABLE** (conséquences chiffrées : plafonds Google non testés) | IDENTIFIÉ | `AUDIT.md` §C.2 |
+| **R-014** | **La seule écriture ouverte sans clé (`mesureSponsors`) n'avait aucune limite** : ni par appareil, ni par minute, ni par jour. Chaque envoi ajoutait une ligne au classeur, rien ne les efface, et l'adresse du serveur est publique. Permettait de saturer le classeur (10 M de cases) et les exécutions simultanées — donc de **bloquer la saisie des scores le jour J** | **P0** | **CERTAIN** (absence de limite constatée) · **PROBABLE** (conséquences chiffrées : plafonds Google non testés) | 🟠 **CORRIGÉ DANS LE DÉPÔT** (D-016, commit `c1948fc`) — **PAS ENCORE EN PRODUCTION** : exige un redéploiement manuel chez Google par Romain. Passera à **TESTÉ** quand les 301 tests auront été lancés dans Apps Script **et** que le diagnostic « Tester la remontée » aura été rejoué | `AUDIT.md` §C.2 |
 | **R-015** | **Regénérer les poules efface tous les scores, et le serveur ne vérifie jamais s'il y en a.** Le garde-fou (double confirmation + re-saisie de la clé) vit **uniquement dans le navigateur** — alors que « réorganiser les poules » refuse, lui, côté serveur | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.3 |
 | **R-016** | **La réinitialisation efface tout dès réception de la clé admin** : équipes, poules, matchs, catégories, horaires, contacts, dossier, et met affiche et photo de parking à la corbeille. Aucune confirmation serveur, aucune sauvegarde, aucun retour en arrière | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.4 |
 | **R-017** | **Deux mots de passe partagés, aucune notion de personne** : impossible de retirer l'accès à quelqu'un, aucune trace de l'auteur d'un score dans l'`Historique`, et un score validé peut être réécrit par toute personne ayant la clé SCORES. Une contestation est **inarbitrable** | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.5 |
 | **R-018** | **Les liens personnels des clubs sont des passe-partout permanents** : jamais expirés, transportés dans l'adresse de la page, transférables par simple renvoi de courriel. Ils ouvrent les **téléphones du référent et du responsable sécurité**. Aucune trace d'utilisation | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.6 |
-| **R-019** | **Garde-fou anti-devinette global et faible** : 30 échecs / 5 min, compteur non prolongé une fois le seuil atteint (≈ 8 600 essais/jour), mémoire non fiable à 100 %. Sans conséquence si les clés sont aléatoires — **décisif si elles sont des mots** (voir I-12) | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-019** | **Garde-fou anti-devinette global et faible** : 30 échecs / 5 min, compteur non prolongé une fois le seuil atteint (≈ 8 600 essais/jour), mémoire non fiable à 100 %. ⚠️ **Requalifié P2 → P1 le 2026-08-04** : Romain a précisé que **les deux clés sont des mots qu'il a choisis** (I-12 levée). 8 600 essais/jour ne cassent jamais une suite aléatoire, mais peuvent casser des mots — et la clé ADMIN ouvre **tout** | **P1** *(était P2)* | CERTAIN | IDENTIFIÉ · **remède immédiat sans code** : remplacer les deux clés par des suites aléatoires (**D-017**, en attente de Romain). Redeviendra P2 dès que ce sera fait | `AUDIT.md` §C.7 |
 | **R-020** | **Le contenu des courriels est fabriqué par le navigateur** et expédié tel quel sous l'identité Gmail du propriétaire. Le destinataire, lui, est toujours relu dans le classeur (bon point) — mais le message peut dire n'importe quoi | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
 | **R-021** | **`Equipes`, `Poules`, `Matchs`, `Historique` sortent en entier, sans clé et sans liste blanche.** Rien de personnel aujourd'hui ; une colonne ajoutée demain serait publique **sans décision** | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
 | **R-022** | **`admin.html` et `saisie.html` sont publics et indexables** — alors que les trois pages à jeton portent bien « ne pas indexer ». Ce n'est pas une protection manquante, c'est une exposition inutile | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |

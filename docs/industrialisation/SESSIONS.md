@@ -988,3 +988,94 @@ aujourd'hui (I-03, I-04). Le domaine B doit être traité **avant la première i
 **Mais avant** : la décision **D-016**, et si possible les réponses à **I-11** et **I-12**.
 
 ---
+
+---
+
+## SESSION 6 (suite) — 2026-08-04 — correction du P0
+
+**Ce qui a déclenché cette suite**
+
+Deux réponses de Romain, le même jour :
+
+1. **D-016, option (b)** — *« va pour B alors je te suis dans ton raisonnement »* : R-014 est
+   corrigé **seul**, tout de suite, hors de l'ordre normal du chantier ;
+2. **I-12 levée, et défavorablement** — *« pour les MDP c'est moi qui ai choisi ce sont des
+   mots »*.
+
+Il a également fourni une capture de l'écran de déploiement Apps Script, qui **lève I-11**.
+
+**Ce qui a été modifié** *(commit `c1948fc`)*
+
+Premier commit de code du chantier d'industrialisation. Trois fichiers :
+
+- `backend/Code.gs` — trois plafonds sur `mesureSponsors` : `MESURE_MAX_LIGNES` (100 000 lignes,
+  plafond **dur** lu dans le classeur), `MESURE_MAX_FENETRE` (30 000 / 6 h) et
+  `MESURE_MAX_APPAREIL` (30 / h). Nouvelles fonctions `mesureMotifRefus` (cœur **pur**),
+  `mesureCompteurFenetre` (cache injecté, donc testable) et `mesureDebitAutorise`. Les plafonds de
+  débit sont appelés depuis `doPost` **avant** `openById`, pour qu'une requête refusée coûte une
+  lecture de mémoire au lieu d'une demi-seconde de serveur ;
+- `backend/Tests.gs` — **9 tests**, enregistrés dans `lancerTestsFFR` ;
+- `frontend/js/admin-sponsors.js` — le diagnostic « Tester la remontée » distingue désormais
+  « rien écrit parce qu'un plafond est atteint » de « écriture réussie ». **Nécessité technique**,
+  pas une amélioration d'ergonomie : sans cela, la correction aurait rendu ce diagnostic menteur
+  (✅ écriture, puis ❌ relecture introuvable, et un verdict qui envoie chercher une panne
+  inexistante). C'est la seule raison pour laquelle un fichier du frontend est dans ce commit.
+
+**Deux choix de mise en œuvre à connaître**
+
+- **la clé de cache porte le numéro de tranche horaire**, et non un compteur reconduit. Sans cela,
+  chaque envoi aurait repoussé la date d'expiration : le plafond, une fois atteint, ne se serait
+  **jamais** relâché tant que le trafic dure — et ce sont les spectateurs légitimes qui auraient
+  été bloqués ;
+- **un compteur inconnu (cache en panne) ne refuse jamais.** Une panne de mémoire temporaire ne
+  doit pas éteindre la mesure des partenaires. Le plafond dur, lui, reste actif dans tous les cas.
+
+**Vérifications réellement faites**
+
+- ✅ syntaxe des trois fichiers contrôlée ;
+- ✅ **16 vérifications sur 16 passent** : les fonctions ajoutées étant pures, les 9 tests ont pu
+  être **réellement exécutés** hors de Google, en les extrayant dans un harnais jetable ;
+- ✅ relecture des chemins voisins : `doPost` n'est modifié qu'à l'intérieur de la branche
+  `mesureSponsors`, qui sort avant tout le reste. `enregistrerScore` et les 49 autres actions
+  sont **intacts**.
+
+**Ce qui reste NON VÉRIFIÉ — à ne pas confondre avec « ça marche »**
+
+- ❌ **les 301 tests existants n'ont pas été lancés** : ils n'existent que dans Apps Script
+  (M-03, I-02) ;
+- ❌ **rien n'a été exécuté en conditions réelles.** Le comportement sous charge est **INCONNU** ;
+- ❌ **la correction n'est PAS en production.** Le backend doit être recopié à la main chez Google
+  et redéployé. Tant que ce n'est pas fait, **la version en service est l'ancienne, sans
+  plafond** — nouvelle inconnue **I-13**.
+
+**Portée réelle de la correction, dite sans exagération**
+
+Elle supprime le **dégât durable** (le classeur rempli, donc la saisie des scores bloquée) et rend
+l'abus beaucoup plus coûteux. Elle **ne rend pas** l'adresse immunisée contre un envoi massif :
+Apps Script ne fournit pas l'adresse du visiteur, on ne peut donc pas distinguer un abuseur d'un
+spectateur. Ce qui est visé, et atteint : **un abus n'empêche plus jamais la saisie des scores.**
+
+**Requalification : R-019 passe de P2 à P1**
+
+Les clés étant des **mots**, les ~8 600 essais par jour tolérés par le garde-fou anti-devinette
+cessent d'être une limite théorique. Un dictionnaire courant tient en quelques dizaines de
+milliers d'entrées. Et la clé ADMIN ouvre **tout** : effacer les scores, réinitialiser, lire le
+carnet d'adresses, envoyer des courriels sous l'adresse du propriétaire.
+
+**Le remède ne demande aucun code** — remplacer les deux clés par des suites aléatoires, via le
+menu « Tournoi R92 → Configurer les clés » du classeur. C'est la **décision D-017**, en attente.
+La vraie question n'est pas technique : où ranger des clés qui ne se retiennent plus, et comment
+transmettre celle des scores aux bénévoles le jour J.
+
+**Deux inconnues levées, une ouverte**
+
+- ✅ **I-11** — la Web App s'exécute au nom du propriétaire, et son accès est ouvert à **« Tout le
+  monde »** (donc sans compte Google). Réglage **nécessaire**, rien à y changer : cela confirme
+  simplement que R-014 n'exigeait aucun préalable ;
+- ⚠️ **I-12** — les clés sont des mots (voir ci-dessus) ;
+- 🆕 **I-13** — le redéploiement a-t-il eu lieu, et la correction est-elle active ?
+
+**Prochaine session recommandée** — inchangée : **session 7, ÉTAPE 2, domaine B (RGPD)**.
+Mais **deux gestes de Romain d'abord** : redéployer le backend, et remplacer les deux clés.
+
+---
