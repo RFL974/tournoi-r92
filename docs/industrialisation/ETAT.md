@@ -4,18 +4,16 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-04 (session 4)
-**Commit de référence** : `6382f7e` (branche `claude/cartographie-donnees-etape-1-t1e9xq`)
+**Dernière mise à jour** : 2026-08-04 (session 5)
+**Commit de référence** : `d0a0ea5` (branche `claude/cartographie-donnees-etape-1-t1e9xq`)
 
 ---
 
 ## 1. EN UNE PHRASE
 
-L'**ÉTAPE 1 — Cartographie est TERMINÉE** : le squelette (volet A), les fonctionnalités
-(volet B) et les données (volet C) sont cartographiés et expliqués dans `CARTOGRAPHIE.md`.
-**Aucun audit n'a encore été fait** et **aucun fichier de l'application n'a été modifié**.
-La prochaine étape est l'**ÉTAPE 2 — l'audit**, qui demande une validation de Romain sur son
-ordre de passage.
+L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 a commencé** : le **domaine A (métier)** est audité —
+**11 problèmes identifiés, dont 5 P1, aucun P0**. Il reste **7 domaines** à auditer.
+**Aucun fichier de l'application n'a été modifié** et **aucun problème n'est corrigé**.
 
 ---
 
@@ -25,7 +23,7 @@ ordre de passage.
 |---|---|---|
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
-| 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | 🟡 **PROCHAINE** — ordre de passage à valider |
+| 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | 🟡 **EN COURS** — domaine A fait (session 5), 7 restants |
 | 3 | ÉTAPE 3 — Plan d'industrialisation priorisé | ⬜ À faire |
 | 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
 | 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
@@ -33,35 +31,44 @@ ordre de passage.
 
 ---
 
-## 3. PHASE TERMINÉE — L'ÉTAPE 1
+## 3. PHASE EN COURS — L'ÉTAPE 2 (audit)
 
-**ÉTAPE 1 — Cartographie**, découpée en trois volets, tous écrits dans `CARTOGRAPHIE.md` :
+**Ordre validé par Romain** (décision D-010) : **A → C → B → D → E → F → G → H**.
 
-| Volet | Contenu | Statut |
+| Domaine | Nom | Statut |
 |---|---|---|
-| A — Le squelette | De quoi l'application est faite, où ça tourne, comment ça se parle, comment le code arrive en ligne | ✅ **FAIT** (session 2) |
-| B — Les fonctionnalités | Ce que l'application sait faire, écran par écran | ✅ **FAIT** (session 3) |
-| C — Les données | Ce qui est stocké, où, combien de temps, et ce qui touche à la vie privée | ✅ **FAIT** (session 4) |
+| **A** | **Métier / Product Owner** | ✅ **FAIT** (session 5) — 11 problèmes, 0 P0, 5 P1, 5 P2, 1 P3 |
+| C | Sécurité | ⬜ **Prochain** |
+| B | RGPD / Protection des données | ⬜ À faire |
+| D | QA / Tests | ⬜ À faire |
+| E | UX / UI / Accessibilité | ⬜ À faire |
+| F | Performance | ⬜ À faire |
+| G | Architecture / Maintenabilité | ⬜ À faire |
+| H | Qualité du code | ⬜ À faire |
+
+> L'**ÉTAPE 1 (cartographie)** est terminée : volets A (session 2), B (session 3) et C (session 4),
+> tous dans `CARTOGRAPHIE.md`. Elle a produit les **39 points d'attention** qui servent de matière
+> première à l'audit.
 
 ---
 
 ## 4. PROCHAINE ÉTAPE
 
-**Session 5 — ÉTAPE 2 : début de l'audit.** *(toujours sans rien modifier)*
+**Session 6 — ÉTAPE 2, domaine C : la sécurité.** *(toujours sans rien modifier)*
 
-Une **décision de Romain est requise avant de commencer** : l'ordre de passage des 8 domaines.
-L'ordre recommandé dans `PLAN.md` §2 est **A → C → B → D → E → F → G → H** (métier, puis sécurité,
-puis données personnelles, puis tests, puis le confort). Il n'est **pas validé** à ce jour.
+Objectif : passer en revue qui peut faire quoi, et ce qu'un visiteur mal intentionné pourrait
+obtenir. Les points de la cartographie qui l'alimentent directement : **A-05** (clés = mots de
+passe partagés, sans notion de personne), **A-06** (une écriture publique sans clé), **A-10**
+(jetons voyageant par courriel), **B-03** (garde-fou d'effacement des scores tenu par la seule
+page), **B-09** (le contenu des courriels est fabriqué par le navigateur), **B-11** (la
+réinitialisation ne demande aucune confirmation au serveur), **C-11** (une requête donne tout le
+carnet d'adresses).
 
-Deux remarques pour éclairer ce choix :
+Pour chaque faille : criticité, scénario d'exploitation, impact, recommandation, difficulté de
+correction — comme l'impose `CLAUDE.md` §6.C. **Aucune mesure de sécurité ne sera modifiée sans
+validation préalable.**
 
-- la cartographie a relevé **39 points d'attention** (A-01→A-14, B-01→B-12, C-01→C-13) qui
-  attendent d'être classés P0/P1/P2/P3 ; ils constituent la matière première de l'audit ;
-- le **domaine B (données personnelles)** a une fenêtre de tir : le classeur est encore vide de
-  données de tiers. Le traiter **avant la première invitation réelle** évite d'avoir à corriger
-  après coup (voir I-03 et le volet C).
-
-**Condition de démarrage** : instruction explicite de Romain, avec l'ordre des domaines retenu.
+**Condition de démarrage** : instruction explicite de Romain.
 
 ---
 
@@ -78,9 +85,27 @@ l'industrialisation.
 
 ## 6. PROBLÈMES RESTANT À TRAITER
 
-**L'audit n'a pas commencé** : aucun problème n'est classé P0/P1/P2/P3 à ce jour.
+**11 problèmes identifiés, tous au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
+le registre et `AUDIT.md` pour l'explication de chacun.
 
-La cartographie a toutefois relevé **39 points d'attention**, qui sont des **observations**, pas
+| Priorité | Nombre | Domaine A |
+|---|---|---|
+| **P0** | **0** | — |
+| **P1** | **5** | R-001 forfait · R-002 blocage après-midi · R-003 planning figé · R-004 départage · R-005 score aberrant |
+| **P2** | 5 | R-006 → R-010 |
+| **P3** | 1 | R-011 |
+
+**Le fil rouge du domaine A** : l'application est excellente **avant** le coup d'envoi et rigide
+**après**. Les 5 P1 apparaissent tous le jour J, quand la réalité s'écarte du plan — forfait,
+match non saisi, terrain impraticable, égalité parfaite, faute de frappe.
+
+**Trois questions bloquent une correction** et n'appartiennent qu'à Romain (elles seront posées à
+l'ÉTAPE 4) : quelle règle pour un forfait ? quels critères de départage ajouter ? à partir de quel
+score demander confirmation ?
+
+> ⚠️ Les 7 autres domaines ne sont **pas** audités. L'absence de problème n'y signifie rien.
+
+La cartographie a par ailleurs relevé **39 points d'attention**, qui sont des **observations**, pas
 des verdicts. Ils seront classés à l'ÉTAPE 2 :
 
 - **A-01 à A-14** (session 2, le squelette) → `CARTOGRAPHIE.md` §A.10 ;
@@ -108,6 +133,7 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-003 | Audit FFR et industrialisation restent **deux chantiers séparés** : l'un traite la règle du jeu, l'autre la solidité de l'outil | ✅ Validée |
 | D-004 | Messages de commit : convention existante conservée — `type(scope): description en français` | ✅ Validée |
 | D-006 | Documentation → commit direct sur `main` ; code de l'application → branche + PR + validation préalable | ✅ Validée |
+| D-010 | Ordre d'audit des 8 domaines : **A → C → B → D → E → F → G → H** — « on fait les choses dans l'ordre pour bien les faire » | ✅ Validée (session 5) |
 
 **En attente de validation** (voir `DECISIONS.md`) :
 

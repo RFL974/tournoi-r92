@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 2)
+**Dernière mise à jour** : 2026-08-04 (session 5)
 
 ---
 
@@ -248,6 +248,43 @@
 **Conséquences**
 > Un point d'attention de la cartographie n'a **aucune valeur d'alerte**. Il ne faut ni s'en
 > inquiéter, ni le corriger, tant que l'ÉTAPE 2 ne l'a pas repris.
+
+---
+
+### D-010 — Ordre de passage des 8 domaines d'audit
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 5 |
+| **Statut** | ✅ **VALIDÉE PAR ROMAIN** |
+
+**Problème posé**
+> L'ÉTAPE 2 comporte 8 domaines d'audit. `CLAUDE.md` §7 impose de ne **pas** les traiter
+> simultanément, mais ne fixe pas leur ordre. Il fallait donc le décider avant de commencer.
+
+**Décision retenue**
+> **A → C → B → D → E → F → G → H.**
+> Métier d'abord, puis sécurité, puis données personnelles, puis tests, puis le confort
+> (UX, performance, architecture, qualité du code).
+
+**Raison**
+> C'est l'ordre de priorité imposé par `CLAUDE.md` §11 : la fonctionnalité métier passe avant
+> tout, puis ce qui peut faire du mal, puis ce qui prouve, puis ce qui rend agréable.
+
+**Alternative écartée**
+> Remonter le domaine B (données personnelles) juste après A, au motif que le classeur est encore
+> vide de données de tiers et que tout pourrait être **préparé** plutôt que **rattrapé**
+> (argument issu du volet C de la cartographie).
+>
+> **Écartée par Romain le 2026-08-04**, avec sa raison : *« on fait les choses dans l'ordre pour
+> bien les faire, la production attendra — de toute façon personne ne sait ce qui est en train
+> d'être construit pour le moment »*. La fenêtre de tir du domaine B reste ouverte tant qu'aucun
+> vrai club n'est invité ; l'urgence invoquée n'en était donc pas une.
+
+**Conséquence concrète**
+> Aucune correction de code ne commence avant la fin des 8 audits **et** la validation de
+> l'ÉTAPE 4. Le rythme est assumé : la mise en production attend.
 
 ---
 

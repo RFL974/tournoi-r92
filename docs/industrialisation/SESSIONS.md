@@ -497,3 +497,125 @@ L'ordre recommandé reste **A → C → B → D → E → F → G → H** (méti
 personnelles, tests, puis le confort). Le volet C apporte toutefois un argument pour **remonter le
 domaine B** si de vrais clubs doivent être invités prochainement : le classeur est encore vide de
 données de tiers, donc tout peut être **préparé** plutôt que **rattrapé**.
+
+---
+
+## SESSION 5 — 2026-08-04
+
+**Objectif**
+
+ÉTAPE 2 — AUDIT, **domaine A : métier / Product Owner**. Répondre à une seule question : un
+organisateur réel, le jour d'un vrai tournoi, peut-il faire son travail avec cet outil — et
+l'outil produit-il des **résultats sportifs justes** ? **Aucun fichier de l'application ne devait
+être modifié — et aucun ne l'a été.**
+
+**Décision préalable prise par Romain**
+
+L'ordre de passage des 8 domaines : **A → C → B → D → E → F → G → H** (décision **D-010**,
+validée). L'alternative proposée — remonter le domaine B pour profiter de la fenêtre où le
+classeur est encore vide de données de tiers — a été **écartée par Romain** : *« on fait les
+choses dans l'ordre pour bien les faire, la production attendra, de toute façon personne ne sait
+ce qui est en train d'être construit pour le moment »*. La fenêtre du domaine B reste ouverte tant
+qu'aucun vrai club n'est invité : l'urgence invoquée n'en était pas une.
+
+**Ce qui a été fait**
+
+Lecture ciblée (sans exécution) du code qui porte les **règles sportives** et le **déroulé de la
+journée** :
+
+- `backend/Code.gs` — `calculerClassement`, `comparerClassement`, `enregistrerResultat` (le barème
+  et le départage) ; `validerScore`, `validerCompteur`, `litDetailEquipe`, `enregistrerScore` (ce
+  qu'un score peut valoir) ; `genererPoulesEtPlanning`, `analyserEffectifsCategories`,
+  `categoriesSansDureeMiTemps`, `nombrePoules`, `nbGroupesScf` et la répartition en poules ;
+  `genererApresMidi` et les cinq sous-générateurs de format ; `recalculerHoraires`,
+  `reorganiserPoulesMatin` (les outils de rattrapage et leurs refus) ; `reponsesGelees` ;
+- `frontend/js/` — `saisie.js` (les contrôles réels de la saisie), `tournoi.js` (`comparer`,
+  `podiumCertain`, `podiumCroise`, `garantiDevant`) ;
+- `docs/regles-classement.md` — la spécification de référence du barème.
+
+Recherche systématique des états possibles d'un match (`statut`) : **deux seulement**, « à venir »
+et « terminé ».
+
+**Résultat produit**
+
+Nouveau fichier `docs/industrialisation/AUDIT.md` — domaine A (§A.0 à §A.10) :
+
+- le verdict en une phrase, **ce qui est solide** (9 points, à ne pas casser), puis les problèmes ;
+- les 5 problèmes P1 traités au format complet de `CLAUDE.md` §1 (ce que j'ai trouvé / pourquoi
+  c'est important / exemple concret / ce que je propose / impact / ce que je conseille) ;
+- les 5 P2 et le P3 en format court ;
+- ce que le domaine A **ne peut pas** conclure, et les 3 questions qui n'appartiennent qu'à Romain ;
+- un récapitulatif chiffré, et « si je devais ne corriger que trois choses ».
+
+`RISQUES.md` — le registre est ouvert : **R-001 à R-011**, tous au statut **IDENTIFIÉ**.
+
+**Problèmes découverts** — 11 au total : **0 P0 · 5 P1 · 5 P2 · 1 P3**.
+
+Les cinq P1, qui ont tous le même point commun (ils apparaissent **le jour J**) :
+
+- **R-001** — **le forfait n'existe pas.** Un match n'a que deux états. Une équipe absente n'a
+  aucune façon correcte d'être enregistrée : un 0-0 donne **2 points à l'absent** (match nul),
+  un score inventé offre de la différence — or la différence est le 2ᵉ critère de départage.
+  Quel que soit le choix de l'organisateur, le classement est faux ;
+- **R-002** — **un seul match du matin non saisi bloque l'après-midi de toutes les catégories**
+  (le contrôle ne regarde pas la catégorie), et le message ne dit pas quels matchs manquent ;
+- **R-003** — **aucun ajustement de planning une fois la journée lancée.** Impossible de déplacer
+  ou reporter un match. « Réorganiser les poules » est refusé dès le premier score ; « recalculer
+  les horaires » est refusé dès que l'après-midi est généré ; il ne reste que « tout regénérer »,
+  qui efface les scores. Terrain impraticable = gestion papier, pendant que l'affichage public
+  continue d'annoncer les anciens horaires ;
+- **R-004** — **pas de départage au-delà du 3ᵉ critère.** Deux équipes strictement à égalité sont
+  classées dans l'ordre des lignes du tableur. Ce rang **décide de la composition de l'après-midi**
+  (en croisé, les 1ᵉʳˢ jouent ensemble). Limite déjà documentée dans `docs/regles-classement.md`,
+  jamais traitée ;
+- **R-005** — **aucune borne haute sur un score**, ni côté serveur ni côté navigateur. 150 au lieu
+  de 15 passe sans un mot, et fausse toute la poule via la différence.
+
+**Ce qui est ressorti de solide** (et qui ne doit pas être dégradé) : les refus **avant** écriture,
+le tirage qui sépare les clubs et le dit quand il n'y arrive pas, le planning à trois contraintes,
+l'assistant d'arbitrage, la synchronisation qui ne détruit jamais à l'aveugle, « recalculer les
+horaires » qui **préserve les scores**, les protections critiques tenues **par le serveur**, et
+surtout le **podium qui refuse de s'afficher tant qu'il n'est pas mathématiquement certain** —
+vérification faite jusqu'à la frontière avec le 4ᵉ, en tenant compte des matchs restants.
+
+**Tests réalisés**
+
+Aucun. Audit de lecture : rien n'a été exécuté, aucune ligne de code n'a été touchée.
+
+**Tests NON réalisés (et pourquoi)**
+
+- **Aucun scénario n'a été joué** : tous les constats portent sur ce que le code **prévoit**.
+  Statut **NON VÉRIFIÉ** pour tout comportement réel.
+- Les tests de `backend/Tests.gs` : **NON VÉRIFIÉ** — ils ne s'exécutent que chez Google (I-02).
+- Le comportement en production : **INCONNU** (I-01).
+
+**Décisions prises**
+
+- **D-010** — ordre d'audit des 8 domaines : **A → C → B → D → E → F → G → H**. ✅ Validée par
+  Romain.
+
+**Questions ouvertes qui bloquent une correction** (à poser à l'ÉTAPE 4, pas maintenant)
+
+1. quelle règle appliquer à une équipe forfait (R-001) ?
+2. quels critères de départage ajouter, et dans quel ordre (R-004) ?
+3. à partir de quel score faut-il demander une confirmation (R-005) ?
+
+**Commit**
+
+`docs(industrialisation): auditer le domaine métier` — sur la branche
+`claude/cartographie-donnees-etape-1-t1e9xq`. Contenu : `AUDIT.md` (nouveau), `RISQUES.md`,
+`DECISIONS.md`, `ETAT.md`, `PLAN.md`, `SESSIONS.md`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+**Session 6 — ÉTAPE 2, domaine C : la sécurité.** Qui peut faire quoi, et ce qu'un visiteur mal
+intentionné pourrait obtenir. Points de la cartographie qui l'alimentent directement : **A-05**
+(les clés sont des mots de passe partagés, sans notion de personne), **A-06** (une écriture
+publique sans clé), **A-10** (les jetons voyagent par courriel), **B-03** (le garde-fou qui évite
+d'effacer tous les scores ne vit que dans la page), **B-09** (le contenu des courriels est fabriqué
+par le navigateur), **B-11** (la réinitialisation ne demande aucune confirmation au serveur),
+**C-11** (une seule requête rend tout le carnet d'adresses).
+
+Format imposé par `CLAUDE.md` §6.C, pour chaque faille : criticité, scénario d'exploitation,
+impact, recommandation, difficulté de correction. **Aucune mesure de sécurité ne sera modifiée
+sans validation préalable.**

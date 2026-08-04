@@ -4,7 +4,7 @@
 > Tant que l'audit (ÉTAPE 2) n'a pas eu lieu, le tableau des chantiers reste **vide** :
 > on ne planifie pas des travaux qu'on n'a pas encore constatés.
 
-**Dernière mise à jour** : 2026-08-04 (session 4)
+**Dernière mise à jour** : 2026-08-04 (session 5)
 
 ---
 
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
-| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. | 🟡 **PROCHAINE** — ordre des domaines à valider |
+| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaine A fait |
 | 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ⬜ À faire |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
@@ -47,24 +47,22 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | Domaine | Nom | Statut | Session |
 |---|---|---|---|
-| A | Métier / Product Owner | ⬜ Non commencé | — |
+| A | Métier / Product Owner | ✅ **FAIT** — 0 P0 · 5 P1 · 5 P2 · 1 P3 | 5 |
 | B | RGPD / Protection des données | ⬜ Non commencé | — |
-| C | Sécurité | ⬜ Non commencé | — |
+| C | Sécurité | ⬜ **Prochain** | 6 |
 | D | QA / Tests | ⬜ Non commencé | — |
 | E | UX / UI / Accessibilité | ⬜ Non commencé | — |
 | F | Performance | ⬜ Non commencé | — |
 | G | Architecture / Maintenabilité | ⬜ Non commencé | — |
 | H | Qualité du code | ⬜ Non commencé | — |
 
-> **Ordre d'audit recommandé** : A → C → B → D → E → F → G → H.
-> Raison : le métier d'abord (c'est la priorité n°1 du prompt maître), puis ce qui peut faire du
+> ✅ **Ordre d'audit VALIDÉ par Romain le 2026-08-04** (décision D-010) : **A → C → B → D → E → F
+> → G → H**. Raison : le métier d'abord (priorité n°1 du prompt maître), puis ce qui peut faire du
 > mal (sécurité, données personnelles), puis ce qui prouve (tests), puis le confort.
-> **⚠️ Non validé à ce stade — c'est la décision attendue de Romain pour ouvrir l'ÉTAPE 2.**
 >
-> **Élément nouveau apporté par le volet C** : le domaine **B (données personnelles)** a une
-> fenêtre de tir. Le classeur ne contient aujourd'hui **aucune donnée de tiers** ; tout ce qui sera
-> décidé pourra donc être mis en place **avant** la première invitation réelle, plutôt que corrigé
-> après. Si Romain prévoit d'inviter de vrais clubs prochainement, remonter B avant C se défend.
+> L'alternative — remonter le domaine B pour profiter de la fenêtre où le classeur est encore vide
+> de données de tiers — a été **écartée** : *« on fait les choses dans l'ordre pour bien les faire,
+> la production attendra »*. La fenêtre reste ouverte tant qu'aucun vrai club n'est invité.
 
 ---
 
@@ -75,7 +73,13 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | ID | Chantier | Priorité | Statut | Dépend de | Validé par Romain | Implémenté | Testé |
 |---|---|---|---|---|---|---|---|
-| — | *(aucun chantier — audit non commencé)* | — | — | — | — | — | — |
+| — | *(aucun chantier — le tableau se remplit à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
+
+> **Pourquoi ce tableau est encore vide alors que 11 problèmes sont identifiés ?** Parce qu'un
+> chantier regroupe des corrections qui doivent être faites **ensemble**, et qu'on ne peut pas
+> savoir ce qui va ensemble tant que les 8 domaines n'ont pas parlé. Exemple : R-005 (borne haute
+> sur un score) touchera peut-être le même code qu'un futur constat du domaine D (tests). Les
+> regrouper évitera de modifier deux fois le même fichier.
 
 ### Modèle de fiche de chantier
 
