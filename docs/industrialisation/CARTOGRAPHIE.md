@@ -7,13 +7,15 @@
 > Le document est construit **par volets**, sur plusieurs sessions, parce que le projet est gros
 > (plus de 11 000 lignes rien que pour le serveur).
 
-**Dernière mise à jour** : 2026-08-04 (session 3)
+**Dernière mise à jour** : 2026-08-04 (session 4)
 
 | Volet | Contenu | Statut |
 |---|---|---|
 | **A — Le squelette** | Les morceaux qui composent l'application, où ils tournent, comment ils se parlent, comment le code arrive en ligne | ✅ **FAIT** (session 2) |
 | **B — Les fonctionnalités** | Ce que l'application sait faire, écran par écran, du premier clic au tournoi terminé | ✅ **FAIT** (session 3) |
-| C — Les données | Ce qui est stocké, où, combien de temps, et ce qui relève de la vie privée | ⬜ À faire |
+| **C — Les données** | Ce qui est stocké, où, combien de temps, et ce qui relève de la vie privée | ✅ **FAIT** (session 4) |
+
+> ✅ **La cartographie (ÉTAPE 1) est terminée.** La suite est l'ÉTAPE 2 — l'audit.
 
 ---
 
@@ -994,3 +996,432 @@ Ce qui est **délibérément conservé** :
 7. **Mais tous ces refus ne sont pas au même endroit.** Certains sont tenus par le serveur, donc
    incontournables ; d'autres seulement par la page, donc contournables. C'est la principale
    observation de structure de ce volet (B-03).
+
+---
+
+# VOLET C — LES DONNÉES
+
+> **Ce que fait ce volet** : ouvrir les tiroirs. Quelles informations l'application range,
+> **où**, **qui peut les voir**, **combien de temps elles restent**, et lesquelles touchent à la
+> **vie privée**. **Aucun fichier de l'application n'a été modifié.**
+>
+> **Ce qu'il ne fait pas** : juger. Il n'y a ici **aucun** P0/P1/P2/P3, et **aucune** appréciation
+> de conformité au RGPD. C'est le travail du **domaine B** de l'ÉTAPE 2. Ce volet lui prépare le
+> terrain : on ne peut pas dire si des données sont bien traitées avant de savoir **lesquelles**
+> existent.
+
+**Écrit en session 4 (2026-08-04).**
+
+> 📌 **Rappel indispensable pour lire ce volet.** Aujourd'hui, le classeur ne contient **aucune
+> donnée personnelle de tiers** : le tournoi en base est fictif (I-04) et les seules adresses
+> présentes sont celles de Romain et de son épouse, saisies pour tester les envois (I-03).
+> Tout ce volet décrit donc **ce que l'application est capable de collecter** le jour où de vrais
+> clubs seront invités — pas ce qu'elle détient à cet instant.
+
+---
+
+## C.1 — L'essentiel en une phrase
+
+L'application manipule **très peu de données personnelles**, et elle ne connaît **aucun enfant par
+son nom** : les mineurs n'y existent que sous forme de **nombres** (« 12 joueurs, 2 éducateurs »).
+Les seules personnes identifiées nominativement sont **des adultes** : les contacts des clubs, le
+référent du tournoi, le responsable sécurité, et les dirigeants renseignés pour la demande
+d'autorisation fédérale.
+
+---
+
+## C.2 — Les cinq endroits où vivent des données
+
+Le classeur n'est pas le seul tiroir. Il y en a cinq, et c'est important : effacer le classeur
+n'efface pas les quatre autres.
+
+```
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │  1. LE CLASSEUR GOOGLE SHEET  ──  le tiroir principal, 12 onglets    │
+   │     PRIVÉ (vérifié, I-06). Tout passe par le programme.              │
+   └──────────────────────────────────────────────────────────────────────┘
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │  2. GOOGLE DRIVE  ──  affiche, logos des partenaires, photo parking  │
+   │     Fichiers rendus PUBLICS en lecture (« toute personne             │
+   │     disposant du lien »).                                            │
+   └──────────────────────────────────────────────────────────────────────┘
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │  3. LA BOÎTE GMAIL DU PROPRIÉTAIRE  ──  une copie de CHAQUE courriel │
+   │     envoyé reste dans « Messages envoyés », avec l'adresse du club.  │
+   └──────────────────────────────────────────────────────────────────────┘
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │  4. LES APPAREILS DES VISITEURS  ──  mémoire du navigateur           │
+   │     compteurs de partenaires, équipe choisie, clé saisie.            │
+   └──────────────────────────────────────────────────────────────────────┘
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │  5. LE RELAIS CLOUDFLARE  ──  ÉTEINT aujourd'hui                     │
+   │     S'il était rallumé : une copie de l'instantané public, hors      │
+   │     de chez Google.                                                  │
+   └──────────────────────────────────────────────────────────────────────┘
+```
+
+> **Analogie** : le classeur est l'armoire du bureau. Le Drive est le panneau d'affichage dans le
+> hall (visible de tous ceux qui savent où regarder). Gmail, c'est le double au carbone de chaque
+> lettre envoyée, gardé dans un tiroir séparé. Vider l'armoire ne décroche pas le panneau et ne
+> brûle pas les doubles.
+
+---
+
+## C.3 — Le classeur, onglet par onglet
+
+Douze onglets. Voici, pour chacun : ce qu'il contient, qui l'écrit, qui peut le lire, et s'il
+touche à la vie privée.
+
+| Onglet | Contient | Écrit par | Lisible **sans aucune clé** ? | Données personnelles ? |
+|---|---|---|---|---|
+| **`Config`** *(zone A)* | ~104 réglages du tournoi : horaires, textes, images, contacts, sécurité, demande d'autorisation, partenaires | admin (clé) | ❌ **Non** — seuls les champs d'une **liste blanche** sortent | ✅ **OUI** — noms, téléphones, emails d'adultes |
+| **`Config`** *(zone B)* | 20 colonnes de réglages **par catégorie** (temps de jeu, effectifs, format, terrains) | admin (clé) | Partiellement (liste blanche) | ❌ Non |
+| **`Equipes`** | 7 colonnes : identifiant, nom d'équipe, catégorie, poule, origine, **nb de joueurs**, **nb d'éducateurs** | admin **et** synchronisation des clubs | ✅ **Oui, en entier** | ⚠️ Des **effectifs** (nombres), aucun nom de personne |
+| **`Poules`** | 3 colonnes : identifiant, catégorie, nom de poule | génération | ✅ Oui, en entier | ❌ Non |
+| **`Matchs`** | 27 colonnes : horaires, terrains, équipes, scores, détail du score, tableau de coupe, arbitre | génération + marqueurs | ✅ Oui, en entier | ❌ Non |
+| **`Historique`** | 9 colonnes : le journal de saison, un match terminé = une ligne | saisie des scores | ✅ Oui, en entier | ❌ Non |
+| **`ClubsInvites`** | **17 colonnes** : le carnet d'adresses des clubs + tout ce qu'ils ont déclaré | admin + réponses des clubs | ❌ **Non** — clé admin obligatoire | ✅ **OUI** — le cœur du sujet |
+| **`Sponsors`** | 13 colonnes : fiches des partenaires (entreprises) | admin (clé) | Partiellement (liste blanche des champs publics, partenaires actifs seulement) | ❌ Non — un partenaire est une entreprise |
+| **`Mesures`** | 5 colonnes : relevés de visibilité déposés par les téléphones des spectateurs | **le public, sans clé** | ❌ Non (lecture réservée à l'admin) | ❌ Non — deux identifiants **aléatoires**, renouvelés chaque jour |
+| **`RefFFR_Formes`** · **`RefFFR_Dates`** · **`RefFFR_Regles`** · **`RefFFR_Temps`** | Le référentiel de la Fédération | **rempli à la main** | ✅ Oui | ❌ Non |
+
+**Deux choses à retenir de ce tableau :**
+
+1. **Un seul onglet concentre la quasi-totalité du sujet vie privée : `ClubsInvites`.** Avec, en
+   second, une partie de la zone A de `Config`.
+2. **Quatre onglets sortent en entier, sans aucune clé** : `Equipes`, `Poules`, `Matchs`,
+   `Historique`. Ce point est développé en §C.6.
+
+---
+
+## C.4 — `ClubsInvites` : le seul carnet d'adresses de l'application
+
+C'est l'onglet le plus sensible. Voici ses **17 colonnes**, une par une.
+
+| Colonne | Ce que c'est | Qui la remplit | Vie privée |
+|---|---|---|---|
+| `club_nom` | Nom du club (« MASSY ») | admin | ❌ (une personne morale) |
+| `club_contact_nom` | **Nom du référent du club** | admin | ✅ **Personne physique** |
+| `club_contact_prenom` | **Prénom du référent** (sert à la formule de politesse) | admin | ✅ **Personne physique** |
+| `club_contact_email` | **Adresse email du référent** | admin | ✅ **Personne physique** |
+| `statut` | Invité / Accepté / Décliné | admin **et** réponse du club | ❌ |
+| `date_ajout` | Date d'entrée dans le carnet | admin | ❌ |
+| `club_token` | **Le jeton secret** : la clé du lien personnel envoyé au club | généré automatiquement | ⚠️ C'est un **secret d'accès** |
+| `invitation_envoyee` | Date d'envoi de l'invitation (phase 1) | automatique | ❌ |
+| `dossier_envoye` | Date d'envoi du dossier (phase 2) | automatique | ❌ |
+| `date_reponse` | Date de la réponse du club | le club | ❌ |
+| `categories_engagees` | « U8,U10 » | le club | ❌ |
+| `nb_equipes_par_categorie` | `{"U8":2,"U10":1}` | le club | ❌ |
+| `nb_joueurs_total` | Total d'enfants attendus | calculé par le serveur | ⚠️ **Effectif de mineurs** (un nombre) |
+| `nb_educateurs_total` | Total d'encadrants | calculé par le serveur | ⚠️ Effectif d'adultes (un nombre) |
+| `detail_effectifs` | **Le détail équipe par équipe** : `{"U8":[{"j":8,"e":2},…]}` | le club | ⚠️ **Effectifs de mineurs**, au niveau de l'équipe |
+| `alerte_ecart` | Message d'alerte pour l'organisateur | automatique | ❌ |
+| `selection_enregistree` | Date du « j'ai enregistré la sélection » | admin | ❌ |
+
+### Ce que le code fait déjà pour protéger cet onglet *(CERTAIN, constaté)*
+
+- **Il n'est jamais dans les données publiques.** L'instantané servi à la page des scores
+  (`getAll`) ne le contient pas, et aucune lecture publique n'y touche.
+- **Sa lecture exige la clé admin**, et passe volontairement par le chemin d'**écriture**
+  (`doPost`) : une adresse de lecture aurait laissé la clé traîner dans l'historique du
+  navigateur (voir volet A).
+- **L'email d'un club n'est jamais renvoyé à personne** — même pas au club lui-même. Le
+  commentaire du code est explicite : *« AUCUN email de club n'est jamais renvoyé »*.
+- **Le destinataire d'un courriel est toujours relu dans le classeur**, jamais pris dans la
+  demande envoyée par la page — pour qu'on ne puisse pas détourner un envoi.
+- **Un envoi groupé envoie un courriel par club**, jamais un courriel commun : les clubs ne
+  découvrent pas les adresses les uns des autres.
+
+---
+
+## C.5 — Les données personnelles dans `Config`
+
+La zone A de `Config` contient ~104 réglages. La très grande majorité sont des horaires, des
+textes ou des interrupteurs. **Onze** portent sur des personnes physiques :
+
+| Champ | Qui c'est | Où il apparaît |
+|---|---|---|
+| `referent_nom`, `referent_tel` | Le **référent du tournoi**, joignable le jour J | Dossier des clubs (derrière le jeton) |
+| `securite_referent_nom`, `securite_referent_tel` | Le **responsable sécurité**, si c'est une autre personne | Dossier des clubs (derrière le jeton) |
+| `contact_reponse_nom`, `contact_reponse_email` | Le contact à qui écrire pour répondre à l'invitation | **Page publique d'invitation** |
+| `contact_reponse_tel` | Son téléphone | **Nulle part en public** — retiré volontairement (décision de session 3 : *« le portable d'un bénévole n'a rien à faire sur une page mise en avant »*) |
+| `email_expediteur` | L'adresse d'expédition des courriels | Nulle part |
+| `org_representant_nom / _tel / _mail` | Le **représentant du club organisateur** (formulaire FFR) | Nulle part — écran admin seulement |
+| `org_president_nom / _tel / _mail` | Le **président du club** (formulaire FFR) | Nulle part — écran admin seulement |
+| `org_medecin_nom / _tel`, `org_secours_nom / _tel` | Le **médecin** et l'**antenne de secours** | Nulle part — écran admin seulement |
+
+### Et une exception qui mérite d'être signalée
+
+Un champ, et un seul, invite explicitement à saisir des **identités d'enfants** :
+
+> `org_equipes_etrangeres_liste` — libellé affiché à l'organisateur :
+> **« Liste des équipes étrangères (noms, prénoms, dates de naissance) »**
+
+Il n'apparaît que si l'organisateur a coché « équipes étrangères : oui », il n'est visible qu'avec
+la clé admin, et il ne sort **jamais** en public. Mais c'est le **seul endroit de toute
+l'application** où des noms de mineurs peuvent entrer. *(CERTAIN, `Code.gs` ligne 2490.)*
+
+---
+
+## C.6 — La règle « rien ne sort sauf ce qui est autorisé » — et sa limite
+
+C'est le mécanisme de protection le plus important du code, et il mérite d'être compris.
+
+### Le principe, en une image
+
+Il y a deux façons de décider ce qui sort d'un bureau :
+
+- **« Tout sort, sauf ce qu'on pense à retenir »** → le jour où un nouveau dossier arrive, il part
+  avec le reste. Personne n'a rien décidé : il est parti par défaut.
+- **« Rien ne sort, sauf ce qui est nommé sur une liste »** → un nouveau dossier reste au bureau
+  tant que personne ne l'a explicitement ajouté à la liste.
+
+Le code applique **la seconde règle** pour `Config` et `Sponsors`, et il l'écrit noir sur blanc :
+
+> *« PRINCIPE NON NÉGOCIABLE : rien ne sort sauf ce qui est nommément autorisé. Un paramètre
+> ajouté dans Config plus tard est donc PRIVÉ PAR DÉFAUT — personne n'a à y penser. »*
+
+Mieux : il existe **trois listes différentes** selon à qui l'on parle, et la plus fermée est celle
+qui s'applique par défaut si l'on se trompe de nom.
+
+| Liste | Servie à | Contient |
+|---|---|---|
+| **`live`** | La page publique des scores (des milliers de téléphones) | Le strict minimum : nom du tournoi, témoin de publication, réglages d'affichage des partenaires. **Aucune donnée personnelle.** |
+| **`invitation`** | La page vitrine publique | Le programme de la journée, le cadre sportif, + `contact_reponse_nom` et `contact_reponse_email`. **Pas de téléphone.** |
+| **`club`** | Le dossier d'un club, **derrière son jeton** | Tout ce qui précède + adresse précise, parking, tarifs, secours, **et les téléphones du référent et du responsable sécurité**. |
+
+### La limite : quatre onglets ne passent pas par ce filtre
+
+`Equipes`, `Poules`, `Matchs` et `Historique` sont servis **tels quels**, **toutes colonnes
+comprises**, à qui les demande sans aucune clé. La fonction de lecture renvoie systématiquement
+**toute colonne qui porte un en-tête**. *(CERTAIN, `lireOngletSimple`, ligne 545.)*
+
+**Ce que cela donne aujourd'hui** : rien de personnel n'en sort. Les colonnes les plus proches du
+sujet sont `nb_joueurs` et `nb_educateurs` de l'onglet `Equipes` — c'est-à-dire *« l'équipe
+MASSY-1 est venue avec 12 enfants et 2 éducateurs »*. Un nombre, pas une personne.
+
+**Ce qu'il faut noter** : ces quatre onglets fonctionnent donc sur la règle inverse de tout le
+reste. Une colonne ajoutée demain à `Equipes` ou à `Matchs` sera publique **sans que personne ait
+eu à le décider**. C'est le point C-01 ci-dessous.
+
+---
+
+## C.7 — Qui voit quoi : les cinq niveaux d'accès
+
+| # | Qui | Ce qu'il faut pour entrer | Ce qu'il voit |
+|---|---|---|---|
+| 1 | **N'importe qui** | Rien | Nom du tournoi, programme, équipes (**effectifs compris**), poules, matchs, scores, classements, journal de saison, référentiel FFR, partenaires actifs, nom + email du contact d'invitation |
+| 2 | **Un club invité** | **Son jeton**, reçu par courriel | Tout ce qui précède + **sa** fiche (prénom du contact, ce qu'il a déclaré), **ses** équipes, et les contacts jour J : **téléphones** du référent et du responsable sécurité, parking, secours, tarifs |
+| 3 | **Un marqueur** | La **clé SCORES** | Rien de plus en lecture — il **écrit** les scores |
+| 4 | **L'organisateur** | La **clé ADMIN** | **Tout** : la zone A entière de `Config` (contacts, sécurité, dirigeants), l'onglet `ClubsInvites` **en entier — emails et jetons compris** — les partenaires, les relevés de visibilité |
+| 5 | **Le propriétaire du compte Google** | Son mot de passe Google | **Tout, sans passer par l'application** : le classeur, le Drive, et la boîte Gmail avec la copie de chaque courriel envoyé |
+
+**Deux points importants sur ce tableau :**
+
+- **Un club ne voit jamais un autre club.** Son jeton n'ouvre que sa propre fiche. La seule
+  information qu'il obtient sur les autres, c'est la liste des équipes du tournoi — qui est
+  publique de toute façon.
+- **Le niveau 4 n'est pas une personne, c'est un mot de passe.** Comme noté au volet A (point
+  A-05), il n'y a **aucun compte utilisateur** : le classeur ne garde donc **aucune trace de qui**
+  a consulté le carnet d'adresses.
+
+---
+
+## C.8 — Et les enfants ?
+
+C'est la question qui compte le plus, alors elle mérite une réponse nette.
+
+**L'application ne stocke le nom d'aucun enfant.** Il n'existe, dans tout le code, **aucune**
+colonne de nom de joueur, de prénom de joueur, de date de naissance ou de numéro de licence.
+*(CERTAIN — vérifié par recherche sur l'ensemble du dépôt.)*
+
+Ce qui est collecté sur les mineurs se résume à **trois nombres** :
+
+| Donnée | Où | Précision | Qui la voit |
+|---|---|---|---|
+| Nombre de joueurs **par équipe** | `Equipes.nb_joueurs` | « MASSY-1 : 12 » | **Tout le monde** |
+| Nombre de joueurs **par équipe, tel que déclaré par le club** | `ClubsInvites.detail_effectifs` | `{"U8":[{"j":12,"e":2},…]}` | Clé admin, **et le club lui-même** |
+| Nombre **total** de joueurs d'un club | `ClubsInvites.nb_joueurs_total` | « 34 » | Clé admin, et le club lui-même |
+
+Ces nombres servent à deux choses réelles : **remplir la demande d'autorisation fédérale** (qui
+exige un nombre de participants) et **vérifier l'effectif minimum FFR par équipe**.
+
+> **En résumé, avec une image** : l'application sait qu'il y aura *« 34 enfants du club de
+> Massy »*. Elle ne sait pas **lesquels**, ni leur âge exact, ni comment les joindre. La seule
+> personne joignable, c'est **l'adulte référent du club**.
+
+**La seule exception** est le champ libre « équipes étrangères » décrit en §C.5 : là,
+l'organisateur est explicitement invité à saisir des noms et des dates de naissance.
+
+---
+
+## C.9 — Combien de temps les données restent
+
+C'est le point le plus simple à énoncer, et le plus structurant :
+
+> **Rien ne disparaît tout seul.** Il n'existe dans le code **aucune durée de conservation**,
+> **aucune purge automatique**, **aucune date d'expiration**. Toute suppression est le résultat
+> d'un **geste manuel**. *(CERTAIN.)*
+
+| Donnée | Ce qui l'efface | Automatique ? |
+|---|---|---|
+| Équipes, poules, matchs, scores | « Tout regénérer » ou la **réinitialisation** | ❌ Non |
+| `Historique` (journal de saison) | **Rien** — délibérément conservé, édition après édition | ❌ Non |
+| Carnet d'adresses `ClubsInvites` | Suppression d'un club, un par un, à la main | ❌ Non |
+| Relevés `Mesures` | Le bouton « repartir de zéro » de l'écran Partenaires | ❌ Non |
+| Fiches partenaires | Suppression d'une fiche, à la main | ❌ Non |
+| Affiche, logos, photo de parking (Drive) | Mis **à la corbeille** du Drive quand on les remplace ou qu'on réinitialise | ⚠️ Google vide la corbeille ~30 jours plus tard |
+| Courriels envoyés (Gmail) | **Rien** | ❌ Non |
+| Mémoire des navigateurs des visiteurs | Change de jour en jour (compteurs), ou à la fermeture de l'onglet (clés) | ✅ Oui, partiellement |
+
+### La réinitialisation, en détail
+
+C'est le seul « grand ménage » de l'application. Voici exactement ce qu'elle fait aux données
+personnelles.
+
+**Ce qu'elle efface** ✅
+
+- Les **contacts & sécurité** : référent du tournoi, responsable sécurité, poste de secours ;
+- Les **contacts d'invitation** : nom, téléphone et email du contact « réponse » ;
+- Dans `ClubsInvites` : les **jetons** (donc tous les anciens liens deviennent inopérants — c'est
+  voulu, le code l'explique : *« réinitialiser, c'est ouvrir une nouvelle édition »*), les
+  catégories engagées, les dates d'envoi, la date de réponse, le nombre d'équipes par catégorie et
+  le nombre total de joueurs ;
+- L'affiche et la photo du parking (mises à la corbeille du Drive).
+
+**Ce qu'elle conserve délibérément** 🟡
+
+- Le **carnet d'adresses lui-même** : nom du club, nom et prénom du contact, **son adresse email**.
+  C'est assumé et documenté : *« c'est un carnet d'adresses réutilisable d'une édition à l'autre »* ;
+- L'onglet `Historique` (mémoire de la saison) ;
+- Les fiches partenaires et leurs logos ;
+- L'adresse d'expédition des courriels.
+
+**Ce qu'elle conserve sans que ce soit expliqué** ⚠️ *(voir C-03 et C-04)*
+
+- Dans `ClubsInvites` : le **statut** de l'édition précédente, l'alerte d'écart, et surtout
+  **`detail_effectifs`** et **`nb_educateurs_total`** — c'est-à-dire les effectifs d'enfants
+  déclarés équipe par équipe l'année d'avant, alors que le total (`nb_joueurs_total`), lui, est
+  bien effacé ;
+- **Tous les champs de la demande d'autorisation** : noms, téléphones et emails du représentant,
+  du président, du médecin et de l'antenne de secours.
+
+---
+
+## C.10 — Les données qui sortent du classeur
+
+Cinq chemins de sortie, tous constatés dans le code.
+
+**1. Les courriels.** Invitation (phase 1), dossier (phase 2), feuille de fin de journée. Ils
+partent vers les adresses des contacts de clubs, **depuis la boîte Gmail du propriétaire**, et une
+copie reste dans « Messages envoyés ». Leur contenu est fabriqué **par la page d'administration**
+puis expédié par le serveur (déjà relevé en B-09) : les coordonnées transitent donc par le
+navigateur de l'organisateur.
+
+**2. Les liens à jeton.** Chaque club reçoit un lien personnel. Ce lien ouvre son dossier — donc
+les téléphones du jour J, le parking, les secours. Deux protections constatées : la page **retire
+le jeton de la barre d'adresse** dès l'ouverture et le range dans une mémoire vidée à la fermeture
+de l'onglet ; et un jeton peut être **régénéré** à tout moment par l'organisateur, ce qui invalide
+l'ancien lien. Mais **le courriel, lui, reste transférable** — quiconque le reçoit d'un club a le
+lien.
+
+**3. Les images sur Drive.** L'affiche, les logos des partenaires et la photo du parking sont
+déposés sur le Drive puis **explicitement rendus publics en lecture** (« toute personne disposant
+du lien »). C'est nécessaire pour que la page publique et les courriels les affichent.
+
+**4. Les documents fabriqués dans le navigateur.** La feuille de fin de journée en PDF et le
+dossier club imprimable sont produits **entièrement sur l'appareil**, sans aucun appel serveur
+supplémentaire, grâce aux quatre bibliothèques recopiées dans le dépôt. Aucune donnée ne part vers
+un service tiers.
+
+**5. Le relais Cloudflare — éteint.** S'il était rallumé, il conserverait une **copie de
+l'instantané public** hors de chez Google. Comme cet instantané est filtré par la liste `live`, il
+ne contient aucune donnée personnelle — mais cela ferait un endroit de plus où les données du
+tournoi sont recopiées.
+
+---
+
+## C.11 — Ce qui est stocké sur les appareils des visiteurs
+
+| Ce qui est rangé | Où | Durée |
+|---|---|---|
+| Les compteurs de visibilité des partenaires | Mémoire longue du navigateur | **Remis à zéro chaque jour** |
+| **Deux identifiants aléatoires** (l'appareil, la visite) | Mémoire longue du navigateur | **Renouvelés chaque jour** |
+| La catégorie et l'équipe choisies sur la page publique | Mémoire longue | Jusqu'à effacement manuel |
+| La catégorie et le terrain choisis par un marqueur | Mémoire longue | Jusqu'à effacement manuel |
+| La préférence d'affichage de l'administration (assistant / classique) | Mémoire longue | Jusqu'à effacement manuel |
+| **La clé ADMIN ou SCORES saisie** | Mémoire **de l'onglet** | **Effacée à la fermeture de l'onglet** |
+| Le jeton d'un club | Mémoire **de l'onglet** | Effacé à la fermeture de l'onglet |
+
+**Aucun cookie. Aucun traceur tiers. Aucun outil de mesure d'audience extérieur.** Les deux
+identifiants de la mesure des partenaires sont tirés au hasard sur l'appareil, remis à zéro chaque
+jour, et ne permettent de suivre personne d'un site à l'autre. *(CERTAIN, `sponsors.js` et
+`Code.gs`.)*
+
+Le serveur **revalide tout** ce que ces relevés contiennent : format des identifiants, nombre de
+partenaires, borne haute de chaque compteur. Le commentaire du code résume l'esprit : *« Rien de
+ce qui entre n'est cru sur parole. »*
+
+---
+
+## C.12 — Points d'attention repérés pendant ce volet
+
+> ⚠️ **Ce ne sont PAS des conclusions d'audit**, et surtout **pas des manquements RGPD** : la
+> classification P0/P1/P2/P3 et l'appréciation de conformité sont le travail de l'ÉTAPE 2,
+> domaine B. Ce sont des **choses vues en chemin**, notées pour ne pas les perdre.
+
+| Réf | Ce qui a été remarqué | Domaine (étape 2) | Certitude |
+|---|---|---|---|
+| **C-01** | Quatre onglets (`Equipes`, `Poules`, `Matchs`, `Historique`) sortent **en entier, toutes colonnes comprises**, sans aucune clé — la règle inverse de `Config` et `Sponsors`, protégés par liste blanche. Aucune donnée personnelle n'en sort **aujourd'hui**, mais une colonne ajoutée demain serait publique **sans décision** | B / C | CERTAIN |
+| **C-02** | `Equipes.nb_joueurs` et `nb_educateurs` — les **effectifs d'enfants par équipe** — sont accessibles **sans aucune clé** (via `getEquipes` et l'instantané public). Ce sont des nombres, sans aucun nom | B — RGPD | CERTAIN |
+| **C-03** | La **réinitialisation** efface `nb_joueurs_total` mais **conserve** `detail_effectifs` et `nb_educateurs_total` : les effectifs d'enfants déclarés **équipe par équipe** pour l'édition précédente restent dans le classeur. Le `statut` et l'`alerte_ecart` de l'édition passée restent également | B / A | CERTAIN |
+| **C-04** | La réinitialisation n'efface **aucun** champ de la demande d'autorisation : noms, téléphones et emails du **représentant**, du **président**, du **médecin** et de l'**antenne de secours** traversent les éditions. C'est peut-être voulu (mêmes dirigeants d'une année sur l'autre) mais ce n'est **écrit nulle part**, alors que les autres conservations le sont | B — RGPD | CERTAIN |
+| **C-05** | **Aucune durée de conservation nulle part.** Rien n'expire, rien ne se purge : `Historique`, `ClubsInvites` et `Mesures` s'accumulent jusqu'à un geste manuel | B — RGPD | CERTAIN |
+| **C-06** | Les **jetons de club ne se périment pas**. Un lien reste valable tant qu'il n'est pas régénéré ou effacé par une réinitialisation. Il ouvre les **téléphones du jour J** et la logistique. La page masque le jeton de la barre d'adresse, mais le **courriel reste transférable** | B / C | CERTAIN |
+| **C-07** | Une **copie de chaque courriel envoyé** reste dans la boîte Gmail du propriétaire, avec l'adresse du club. Le classeur n'est donc pas le seul endroit où vivent ces coordonnées, et la réinitialisation n'y a **aucune prise** | B — RGPD | CERTAIN |
+| **C-08** | Les images du Drive sont **explicitement rendues publiques en lecture**. Leur suppression les met **à la corbeille** (Google la vide ~30 jours plus tard), pas au pilon immédiat. Ce qu'un lien déjà diffusé donne encore à voir pendant ce délai est **INCONNU** | B / C | CERTAIN (mise en corbeille) · **INCONNU** (accès résiduel) |
+| **C-09** | L'onglet `Mesures` **grossit sans limite** : chaque appareil dépose plusieurs relevés au fil de la visite, et rien ne les efface automatiquement | B / F | CERTAIN |
+| **C-10** | Un champ libre invite explicitement à saisir des **noms, prénoms et dates de naissance d'enfants** (« liste des équipes étrangères »). C'est le **seul endroit** de l'application où des identités de mineurs peuvent entrer. Il n'est ni public, ni effacé par la réinitialisation | B — RGPD | CERTAIN |
+| **C-11** | La lecture du carnet renvoie l'onglet `ClubsInvites` **en entier**, **jetons compris**, à la page d'administration. C'est nécessaire à l'écran, mais cela signifie que la clé admin donne accès, **en une seule requête**, à tout le carnet d'adresses et à tous les jetons | B / C | CERTAIN |
+| **C-12** | **Aucune trace de qui accède à quoi.** Les clés étant des mots de passe partagés (A-05), le classeur ne garde aucun registre des consultations du carnet d'adresses. Ce que le journal d'exécution de Google conserve, et pendant combien de temps, est **INCONNU** depuis le dépôt | B / C | CERTAIN (côté application) · **INCONNU** (côté Google) |
+| **C-13** | Les navigateurs des visiteurs gardent des informations (compteurs, choix d'équipe, clés) — mais **aucun cookie, aucun traceur tiers**, et les identifiants de mesure sont aléatoires et renouvelés chaque jour | B / E | CERTAIN |
+
+---
+
+## C.13 — Ce que ce volet ne dit PAS
+
+- ❌ **Il ne dit pas si tout cela est conforme au RGPD.** Ce n'est ni son rôle ni son moment :
+  c'est le domaine B de l'ÉTAPE 2. Et conformément à `CLAUDE.md` §6.B, **aucune certification
+  juridique ne sera jamais prononcée** — seulement des risques et des mesures techniques.
+- ❌ **Il ne dit pas ce que le classeur contient réellement à cet instant.** Il décrit ce que le
+  **code** est capable d'écrire. Le contenu réel n'a pas été lu (et ne peut pas l'être depuis le
+  dépôt).
+- ❌ **Il ne dit rien des données déjà présentes chez Google** hors du classeur : journaux
+  d'exécution, corbeille du Drive, sauvegardes Google. **INCONNU.**
+- ❌ **Il ne vérifie pas que les protections décrites fonctionnent.** Le code prévoit que l'email
+  d'un club ne sorte jamais ; **rien n'a été exécuté pour le prouver**. Statut : **NON VÉRIFIÉ**.
+- ❌ **Il ne dit rien du code réellement en service chez Google** → **INCONNU** (I-01).
+
+---
+
+## C.14 — Le résumé qu'il faut retenir
+
+1. **Aucun enfant n'est identifié.** Pas de nom, pas de date de naissance, pas de licence — que
+   des **nombres**. Les seules personnes nommées sont **des adultes** : contacts de clubs,
+   référent, responsable sécurité, dirigeants du formulaire fédéral.
+2. **Un seul onglet concentre le sujet : `ClubsInvites`.** C'est le carnet d'adresses. Il est
+   exclu des données publiques et protégé par la clé admin.
+3. **Le code applique déjà la bonne règle** pour les réglages : *rien ne sort sauf ce qui est
+   nommé sur une liste*, avec trois listes selon l'interlocuteur, et la plus fermée par défaut.
+   C'est une protection solide, et écrite comme un principe.
+4. **Mais quatre onglets échappent à cette règle** et sortent en entier, sans clé. Sans
+   conséquence aujourd'hui ; sans garde-fou demain.
+5. **Rien ne s'efface tout seul.** Aucune durée de conservation, aucune purge. La réinitialisation
+   est le seul grand ménage, et elle laisse volontairement le carnet d'adresses — plus quelques
+   champs dont personne n'a écrit pourquoi ils restent.
+6. **Le classeur n'est pas le seul tiroir.** Les courriels envoyés, les images publiques du Drive
+   et les liens à jeton continuent d'exister en dehors de lui, hors de portée de toute
+   réinitialisation.
+7. **Le bon moment, c'est maintenant.** Le classeur est encore vide de données de tiers. Tout ce
+   qui sera décidé au domaine B pourra donc être mis en place **avant** que de vraies coordonnées
+   y entrent — c'est-à-dire avant la première invitation réelle.

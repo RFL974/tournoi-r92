@@ -4,7 +4,7 @@
 > Tant que l'audit (ÉTAPE 2) n'a pas eu lieu, le tableau des chantiers reste **vide** :
 > on ne planifie pas des travaux qu'on n'a pas encore constatés.
 
-**Dernière mise à jour** : 2026-08-04 (session 3)
+**Dernière mise à jour** : 2026-08-04 (session 5)
 
 ---
 
@@ -13,8 +13,8 @@
 | Étape | Nom | Ce qu'elle produit | Statut |
 |---|---|---|---|
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
-| 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | 🟡 EN COURS (volets A et B faits) |
-| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. | ⬜ À faire |
+| 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
+| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaine A fait |
 | 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ⬜ À faire |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
@@ -33,10 +33,13 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 |---|---|---|---|
 | **A — Le squelette** | Les morceaux de l'application, où ils tournent, comment ils se parlent, comment le code arrive en ligne, qui a le droit de quoi | 2 | ✅ FAIT |
 | **B — Les fonctionnalités** | Ce que l'application sait faire : les 14 écrans d'administration, la génération des poules et du planning, la saisie des scores, le classement, la page publique, le parcours d'invitation des clubs | 3 | ✅ FAIT |
-| **C — Les données** | Quelles données sont stockées, dans quel onglet, qui peut les voir, combien de temps elles restent — en particulier les données personnelles (clubs, contacts, mineurs) | 4 | ⬜ **À faire — prochaine session** |
+| **C — Les données** | Quelles données sont stockées, dans quel onglet, qui peut les voir, combien de temps elles restent — en particulier les données personnelles (clubs, contacts, mineurs) | 4 | ✅ FAIT |
 
 > Le volet C prépare directement le domaine B (RGPD) de l'ÉTAPE 2, sans le remplacer : il **décrit**
 > ce qui existe, il ne juge pas.
+
+> ✅ **L'ÉTAPE 1 est terminée.** Elle a produit `CARTOGRAPHIE.md` (3 volets) et **39 points
+> d'attention** (A-01→A-14, B-01→B-12, C-01→C-13), qui sont la matière première de l'ÉTAPE 2.
 
 ---
 
@@ -44,19 +47,22 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | Domaine | Nom | Statut | Session |
 |---|---|---|---|
-| A | Métier / Product Owner | ⬜ Non commencé | — |
+| A | Métier / Product Owner | ✅ **FAIT** — 0 P0 · 5 P1 · 5 P2 · 1 P3 | 5 |
 | B | RGPD / Protection des données | ⬜ Non commencé | — |
-| C | Sécurité | ⬜ Non commencé | — |
+| C | Sécurité | ⬜ **Prochain** | 6 |
 | D | QA / Tests | ⬜ Non commencé | — |
 | E | UX / UI / Accessibilité | ⬜ Non commencé | — |
 | F | Performance | ⬜ Non commencé | — |
 | G | Architecture / Maintenabilité | ⬜ Non commencé | — |
 | H | Qualité du code | ⬜ Non commencé | — |
 
-> **Ordre d'audit recommandé** (à valider en fin d'ÉTAPE 1) : A → C → B → D → E → F → G → H.
-> Raison : le métier d'abord (c'est la priorité n°1 du prompt maître), puis ce qui peut faire du
+> ✅ **Ordre d'audit VALIDÉ par Romain le 2026-08-04** (décision D-010) : **A → C → B → D → E → F
+> → G → H**. Raison : le métier d'abord (priorité n°1 du prompt maître), puis ce qui peut faire du
 > mal (sécurité, données personnelles), puis ce qui prouve (tests), puis le confort.
-> **Non validé à ce stade.**
+>
+> L'alternative — remonter le domaine B pour profiter de la fenêtre où le classeur est encore vide
+> de données de tiers — a été **écartée** : *« on fait les choses dans l'ordre pour bien les faire,
+> la production attendra »*. La fenêtre reste ouverte tant qu'aucun vrai club n'est invité.
 
 ---
 
@@ -67,7 +73,13 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | ID | Chantier | Priorité | Statut | Dépend de | Validé par Romain | Implémenté | Testé |
 |---|---|---|---|---|---|---|---|
-| — | *(aucun chantier — audit non commencé)* | — | — | — | — | — | — |
+| — | *(aucun chantier — le tableau se remplit à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
+
+> **Pourquoi ce tableau est encore vide alors que 11 problèmes sont identifiés ?** Parce qu'un
+> chantier regroupe des corrections qui doivent être faites **ensemble**, et qu'on ne peut pas
+> savoir ce qui va ensemble tant que les 8 domaines n'ont pas parlé. Exemple : R-005 (borne haute
+> sur un score) touchera peut-être le même code qu'un futur constat du domaine D (tests). Les
+> regrouper évitera de modifier deux fois le même fichier.
 
 ### Modèle de fiche de chantier
 

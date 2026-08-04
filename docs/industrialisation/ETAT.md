@@ -4,16 +4,19 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-04 (session 3)
-**Commit de référence** : `c6b3cf3` (branche `claude/cartographie-volet-b-fonctionnalites-busrpe`)
+**Dernière mise à jour** : 2026-08-04 (session 5, close)
+**Commit de référence** : `6111ba5` (branche `claude/cartographie-donnees-etape-1-t1e9xq`)
 
 ---
 
 ## 1. EN UNE PHRASE
 
-Le **squelette** (volet A) et les **fonctionnalités** (volet B) de l'application sont
-cartographiés et expliqués dans `CARTOGRAPHIE.md` ; il reste le volet C (les données).
-**Aucun audit n'a encore été fait** et **aucun fichier de l'application n'a été modifié**.
+L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 a commencé** : le **domaine A (métier)** est audité —
+**13 problèmes identifiés, dont 5 P1, aucun P0**. **Toutes les décisions métier du domaine A
+sont prises** (D-011 à D-015). Une seule inconnue subsiste, et elle est **extérieure au dépôt** :
+le sort d'un match annulé relève d'une règle FFR que rien ici ne documente (**I-10**). Il reste
+**7 domaines** à auditer.
+**Aucun fichier de l'application n'a été modifié** et **aucun problème n'est corrigé.**
 
 ---
 
@@ -22,8 +25,8 @@ cartographiés et expliqués dans `CARTOGRAPHIE.md` ; il reste le volet C (les d
 | # | Phase | Statut |
 |---|---|---|
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
-| 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | 🟡 **EN COURS** — volets A (session 2) et B (session 3) faits, volet C à faire |
-| 2 | ÉTAPE 2 — Audit global (8 domaines, P0→P3) | ⬜ À faire |
+| 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
+| 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | 🟡 **EN COURS** — domaine A fait (session 5), 7 restants |
 | 3 | ÉTAPE 3 — Plan d'industrialisation priorisé | ⬜ À faire |
 | 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
 | 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
@@ -31,27 +34,42 @@ cartographiés et expliqués dans `CARTOGRAPHIE.md` ; il reste le volet C (les d
 
 ---
 
-## 3. PHASE EN COURS
+## 3. PHASE EN COURS — L'ÉTAPE 2 (audit)
 
-**ÉTAPE 1 — Cartographie**, découpée en trois volets :
+**Ordre validé par Romain** (décision D-010) : **A → C → B → D → E → F → G → H**.
 
-| Volet | Contenu | Statut |
+| Domaine | Nom | Statut |
 |---|---|---|
-| A — Le squelette | De quoi l'application est faite, où ça tourne, comment ça se parle, comment le code arrive en ligne | ✅ **FAIT** (session 2) |
-| B — Les fonctionnalités | Ce que l'application sait faire, écran par écran | ✅ **FAIT** (session 3) |
-| C — Les données | Ce qui est stocké, où, combien de temps, et ce qui touche à la vie privée | ⬜ À faire |
+| **A** | **Métier / Product Owner** | ✅ **CLOS** (session 5) — 13 problèmes, 0 P0, 5 P1, 7 P2, 1 P3 · **toutes les décisions métier prises** |
+| C | Sécurité | ⬜ **Prochain** |
+| B | RGPD / Protection des données | ⬜ À faire |
+| D | QA / Tests | ⬜ À faire |
+| E | UX / UI / Accessibilité | ⬜ À faire |
+| F | Performance | ⬜ À faire |
+| G | Architecture / Maintenabilité | ⬜ À faire |
+| H | Qualité du code | ⬜ À faire |
+
+> L'**ÉTAPE 1 (cartographie)** est terminée : volets A (session 2), B (session 3) et C (session 4),
+> tous dans `CARTOGRAPHIE.md`. Elle a produit les **39 points d'attention** qui servent de matière
+> première à l'audit.
 
 ---
 
 ## 4. PROCHAINE ÉTAPE
 
-**Session 4 — ÉTAPE 1, volet C : les données.** *(dernier volet de la cartographie)*
+**Session 6 — ÉTAPE 2, domaine C : la sécurité.** *(toujours sans rien modifier)*
 
-Objectif : inventorier **ce qui est stocké**, onglet par onglet et colonne par colonne — qui peut
-le voir, combien de temps cela reste, et ce qui relève de la **vie privée** (contacts de clubs,
-effectifs d'enfants mineurs, images, relevés de visibilité). Ce volet prépare directement le
-domaine B (RGPD) de l'ÉTAPE 2, **sans le remplacer** : il décrit, il ne juge pas.
-**Toujours sans rien modifier.**
+Objectif : passer en revue qui peut faire quoi, et ce qu'un visiteur mal intentionné pourrait
+obtenir. Les points de la cartographie qui l'alimentent directement : **A-05** (clés = mots de
+passe partagés, sans notion de personne), **A-06** (une écriture publique sans clé), **A-10**
+(jetons voyageant par courriel), **B-03** (garde-fou d'effacement des scores tenu par la seule
+page), **B-09** (le contenu des courriels est fabriqué par le navigateur), **B-11** (la
+réinitialisation ne demande aucune confirmation au serveur), **C-11** (une requête donne tout le
+carnet d'adresses).
+
+Pour chaque faille : criticité, scénario d'exploitation, impact, recommandation, difficulté de
+correction — comme l'impose `CLAUDE.md` §6.C. **Aucune mesure de sécurité ne sera modifiée sans
+validation préalable.**
 
 **Condition de démarrage** : instruction explicite de Romain.
 
@@ -70,17 +88,70 @@ l'industrialisation.
 
 ## 6. PROBLÈMES RESTANT À TRAITER
 
-**L'audit n'a pas commencé** : aucun problème n'est classé P0/P1/P2/P3 à ce jour.
+**11 problèmes identifiés, tous au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
+le registre et `AUDIT.md` pour l'explication de chacun.
 
-La cartographie a toutefois relevé **26 points d'attention**, qui sont des **observations**, pas
+| Priorité | Nombre | Domaine A |
+|---|---|---|
+| **P0** | **0** | — |
+| **P1** | **5** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ |
+| **P2** | 7 | R-006 → R-010 · **R-012** (aucune règle sportive n'est écrite pour les clubs) ✅ · **R-013** (match annulé) ✅ |
+| **P3** | 1 | R-011 |
+
+✅ = la **règle métier est décidée**, le **code n'est pas écrit**. R-002 et R-006 → R-010
+n'appelaient aucune décision de Romain : ce sont des choix techniques, réglés à l'ÉTAPE 3.
+
+**Le fil rouge du domaine A** : l'application est excellente **avant** le coup d'envoi et rigide
+**après**. Les 5 P1 apparaissent tous le jour J, quand la réalité s'écarte du plan — forfait,
+match non saisi, terrain impraticable, égalité parfaite, faute de frappe.
+
+**Décisions métier prises le 2026-08-04** — les 5 P1 sont tous tranchés :
+
+- **D-011 — forfait** : un **bouton « Forfait » sous chaque équipe** dans la page de saisie.
+  L'absent marque **0 point**, le présent **gagne** (3 points), **aucun score n'est attribué**,
+  et une **double mise en garde** protège le geste. *(Le réglage que j'avais recommandé a été
+  écarté par Romain, à juste titre : il aurait permis de fausser la différence.)* La règle retenue
+  doit être **communiquée aux clubs** ;
+- **D-012 — scores** : **2 chiffres maximum** (au-delà, refus) et **confirmation avant chaque
+  validation** ;
+- **D-013 — planning** : **déplacer un match** (heure et/ou terrain) et **décaler toute la journée
+  de X minutes**. Le 3ᵉ niveau — redistribuer automatiquement un terrain devenu impraticable — est
+  **écarté pour l'instant** : c'est le seul qui touche au moteur de planification ;
+- **D-014 — départage** : ajouter la **confrontation directe** (4ᵉ critère) puis l'**ordre
+  alphabétique** (5ᵉ), **à la suite** des trois critères existants, sans y toucher.
+
+> L'exigence de transparence posée par D-011 a fait apparaître **R-012** : ni le barème, ni le
+> départage ne sont écrits où que ce soit pour les clubs, et le champ « Règlement » du dossier a
+> été **retiré de l'écran d'administration**. La règle décidée ne serait donc, en l'état,
+> communicable à personne.
+
+- **D-015 — match annulé** : le **même mécanisme que le forfait, avec un libellé distinct**. Un
+  match annulé ne compte pour personne et ne bloque pas l'après-midi. **Validé par défaut** : une
+  règle fédérale primerait.
+
+**Une seule inconnue subsiste, et elle est extérieure au dépôt** — **I-10** : `AUDIT-TOURNOI-R92.md`
+**ne dit rien** du forfait ni de l'annulation. C'est une **question de règle du jeu**, qui
+appartient au chantier FFR (D-003) et que Romain doit porter au Directeur EDR du Racing ou au
+Comité 92. Sa réponse primerait sur D-011 **et** D-015.
+
+> ⚠️ Les 7 autres domaines ne sont **pas** audités. L'absence de problème n'y signifie rien.
+
+La cartographie a par ailleurs relevé **39 points d'attention**, qui sont des **observations**, pas
 des verdicts. Ils seront classés à l'ÉTAPE 2 :
 
 - **A-01 à A-14** (session 2, le squelette) → `CARTOGRAPHIE.md` §A.10 ;
-- **B-01 à B-12** (session 3, les fonctionnalités) → `CARTOGRAPHIE.md` §B.12.
+- **B-01 à B-12** (session 3, les fonctionnalités) → `CARTOGRAPHIE.md` §B.12 ;
+- **C-01 à C-13** (session 4, les données) → `CARTOGRAPHIE.md` §C.12.
 
 Le plus structurant du volet B est **B-03** : le garde-fou qui empêche d'effacer tous les scores en
 regénérant les poules vit **uniquement dans le navigateur**, alors que des protections comparables
 (réorganisation des poules, gel des réponses à J-16) sont, elles, tenues par le serveur.
+
+Le plus structurant du volet C est **C-05** : **aucune donnée ne disparaît d'elle-même**. Il
+n'existe nulle part de durée de conservation ni de purge automatique — toute suppression est un
+geste manuel. À rapprocher de **C-07** (une copie de chaque courriel envoyé reste dans la boîte
+Gmail, hors de portée de la réinitialisation) et de **C-03 / C-04** (la réinitialisation laisse
+derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que ce soit expliqué).
 
 ---
 
@@ -93,10 +164,17 @@ regénérant les poules vit **uniquement dans le navigateur**, alors que des pro
 | D-003 | Audit FFR et industrialisation restent **deux chantiers séparés** : l'un traite la règle du jeu, l'autre la solidité de l'outil | ✅ Validée |
 | D-004 | Messages de commit : convention existante conservée — `type(scope): description en français` | ✅ Validée |
 | D-006 | Documentation → commit direct sur `main` ; code de l'application → branche + PR + validation préalable | ✅ Validée |
+| D-010 | Ordre d'audit des 8 domaines : **A → C → B → D → E → F → G → H** — « on fait les choses dans l'ordre pour bien les faire » | ✅ Validée (session 5) |
+| D-011 | Règle du **forfait** : absent = 0 point, présent gagne, score = paramètre de l'organisateur, règle à communiquer aux clubs | ✅ Validée (session 5) |
+| D-012 | **Scores** : 2 chiffres maximum, plus confirmation avant chaque validation | ✅ Validée (session 5) |
+| D-013 | **Planning** : déplacer un match, et décaler toute la journée de X minutes | ✅ Validée (session 5) |
+| D-014 | **Départage** : confrontation directe, puis ordre alphabétique en dernier recours | ✅ Validée (session 5) |
+| D-015 | **Match annulé** : même mécanisme que le forfait, libellé distinct, ne compte pour personne | ✅ Validée (session 5), **par défaut** — une règle FFR primerait |
 
 **En attente de validation** (voir `DECISIONS.md`) :
 
 - D-005 — Périmètre exact du dépôt à auditer (le site vitrine `boutique-r92` est un **autre** dépôt)
+*(Aucune décision du domaine A n'est en attente.)*
 
 ---
 
@@ -109,8 +187,11 @@ vérification supplémentaire.
 |---|---|---|---|
 | I-01 | Le code réellement en service chez Google est-il identique à `backend/Code.gs` ? | Le backend s'exécute chez Google, hors du dépôt | Vérification manuelle par Romain dans Apps Script |
 | I-02 | Les tests du fichier `backend/Tests.gs` passent-ils aujourd'hui ? | Ils ne peuvent être exécutés que dans Google Apps Script | Lancement manuel par Romain |
-| I-03 | Quelles données personnelles de **tiers** seront présentes dans le Google Sheet une fois de vrais clubs invités ? | ✅ **Rien à ce jour** (précisé par Romain le 2026-08-04) : les seules adresses email présentes sont **la sienne et celle de son épouse**, utilisées pour tester les envois. Aucune donnée d'un tiers extérieur. La question reste ouverte pour **l'avenir** : l'application est conçue pour collecter les coordonnées de contacts de clubs, et le fera dès la première invitation réelle | Inventaire de ce que l'application **est capable de collecter** au **volet C**, puis instruction au **domaine B (RGPD)** — **avant** la première invitation réelle |
+| I-03 | Quelles données personnelles de **tiers** seront présentes dans le Google Sheet une fois de vrais clubs invités ? | ✅ **Rien à ce jour** (précisé par Romain le 2026-08-04) : les seules adresses email présentes sont **la sienne et celle de son épouse**, utilisées pour tester les envois. ✅ L'**inventaire de ce que l'application peut collecter** est désormais **fait** (volet C, session 4) : nom / prénom / email du contact de chaque club, et des **effectifs** d'enfants (jamais leur nom). Ce qui reste ouvert n'est plus « quoi », mais « **que décide-t-on d'en faire** » | Instruction au **domaine B (RGPD)** de l'ÉTAPE 2 — **avant** la première invitation réelle |
 | I-05 | Qui utilise l'administration le jour J, et sur quel matériel ? | Information de terrain | Question à Romain (domaine E — UX) |
+| I-10 | La FFR encadre-t-elle le sort d'un match d'École de Rugby **qui n'a pas pu se jouer** (forfait, ou annulation pour intempéries) ? Existe-t-il une règle de classement imposée ? | `AUDIT-TOURNOI-R92.md` **ne contient rien** sur le sujet : aucun de ses 25 points de vérification (Q11→Q25) ne le couvre. C'est une question de **règle du jeu**, donc du chantier FFR (D-003) | Question de Romain au **Directeur EDR du Racing** ou au **Comité 92** — la voie qui a déjà résolu Q23. Une règle fédérale primerait sur D-011 **et** D-015 |
+| I-08 | Une image mise à la corbeille du Drive (affiche, logo, photo de parking) reste-t-elle visible par un lien déjà diffusé, pendant les ~30 jours avant que Google vide la corbeille ? | Le comportement de la corbeille Drive appartient à Google, il n'est pas dans le code | Test réel : mettre une image à la corbeille, puis rouvrir son lien depuis une navigation privée |
+| I-09 | Que conserve le **journal d'exécution** de Google Apps Script, et pendant combien de temps ? | Ce journal vit chez Google, hors du dépôt | Consultation par Romain dans l'éditeur Apps Script (« Exécutions ») |
 
 ### Points levés
 

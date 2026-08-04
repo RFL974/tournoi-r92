@@ -357,3 +357,483 @@ images déposées sur Drive, relevés de visibilité des partenaires.
 Ce volet prépare le domaine B (RGPD) de l'ÉTAPE 2 **sans le remplacer** : il décrit, il ne juge
 pas. Il est particulièrement utile **maintenant**, avant la première invitation réelle : c'est à ce
 moment-là que de vraies données personnelles de tiers entreront dans le classeur (voir I-03).
+
+---
+
+## SESSION 4 — 2026-08-04
+
+**Objectif**
+
+ÉTAPE 1 — CARTOGRAPHIE, **volet C : les données**. Inventorier ce que l'application stocke, onglet
+par onglet et colonne par colonne : où c'est rangé, qui peut le voir, combien de temps cela reste,
+et ce qui relève de la vie privée. **Aucun fichier de l'application ne devait être modifié — et
+aucun ne l'a été.**
+
+**Vérification préalable**
+
+`CARTOGRAPHIE.md` contenait bien les volets A (§A.1→A.12) et B (§B.1→B.14), soit 996 lignes et
+26 points d'attention. Dépôt propre, branche `claude/cartographie-donnees-etape-1-t1e9xq` à jour
+sur `6382f7e`. Condition remplie → session lancée.
+
+**Ce qui a été fait**
+
+Lecture (sans modification) des zones du code qui **définissent, écrivent, filtrent ou effacent**
+des données :
+
+- `backend/Code.gs` — la déclaration `ENTETES` (les colonnes des 8 onglets créés par le code) ;
+  `creerOngletConfig` (la zone A et la zone B de `Config`) ; les listes `CHAMPS_AUTORISATION`,
+  `CHAMPS_CONTACTS_SECURITE`, `CHAMPS_INVITATION`, `CHAMPS_SURPLACE`, `CHAMPS_REPONSE` ;
+  `CONFIG_PUBLIQUE_VUES` et `filtrerConfigPublique` (les trois listes blanches) ;
+  `lireOngletSimple` et `construireSnapshot` (ce qui sort en public) ; `lireSponsorsPublics` ;
+  `getClubDossier`, `getConfigClub`, `getReponseInvitation`, `trouverClubParToken`,
+  `repondreInvitation`, `validerDetailEffectifs`, `listerClubsInvites` ; les envois de courriels
+  (`envoyerEmailAvec`, `envoyerEmailHtml`, `envoyerInvitationsGroupe`, `envoyerFeuilleJour`) ;
+  `enregistrerMesureSponsors`, `lireMesuresSponsors`, `viderMesuresSponsors` ;
+  `reinitialiserTournoi` et `reinitialiserPhase2Clubs` ; tous les appels `DriveApp` et `Logger.log` ;
+- `frontend/js/` — `api.js` (rangement des clés), `commun-dossier.js` (le jeton retiré de la barre
+  d'adresse), `sponsors.js` (les identifiants aléatoires et les compteurs), `dossier.js`,
+  `admin-invitations.js`, `admin-feuille-jour.js`, `saisie.js`, `tournoi.js`, `ecrans.js` ;
+- `cloudflare/worker-tournoi.js` (ce que stockerait le relais s'il était rallumé).
+
+Recherche systématique de champs nominatifs d'enfants (`nom_joueur`, `prenom`, `date_naissance`,
+`licence`) sur l'ensemble du dépôt : **aucun**, sauf le champ libre décrit ci-dessous.
+
+**Résultat produit**
+
+`docs/industrialisation/CARTOGRAPHIE.md` — **volet C** ajouté (§C.1 à §C.14) :
+
+- les **cinq endroits** où vivent des données (classeur, Drive, Gmail, appareils des visiteurs,
+  relais CDN éteint) — et pourquoi vider le classeur ne vide pas les quatre autres ;
+- les **12 onglets** du classeur, avec pour chacun : contenu, qui l'écrit, lisibilité sans clé,
+  présence ou non de données personnelles ;
+- `ClubsInvites` détaillé **colonne par colonne** (17 colonnes), et les protections déjà en place ;
+- les **11 champs personnels** de la zone A de `Config` et leur exposition réelle ;
+- la doctrine « rien ne sort sauf ce qui est nommé » (trois listes blanches) **et sa limite** ;
+- les **cinq niveaux d'accès** : public, club à jeton, marqueur, organisateur, propriétaire Google ;
+- une réponse nette à la question des **mineurs** ;
+- les **durées de conservation**, et le détail de ce que la réinitialisation efface / conserve ;
+- ce qui **sort** du classeur et ce qui reste sur les appareils des visiteurs.
+
+**Points d'attention relevés** — C-01 à C-13 (`CARTOGRAPHIE.md` §C.12). Ce sont des
+**observations**, pas des verdicts : la classification P0/P1/P2/P3 et l'appréciation de conformité
+sont le travail de l'ÉTAPE 2, domaine B.
+
+Les plus structurants :
+
+- **C-05** — **rien ne disparaît tout seul** : aucune durée de conservation, aucune purge
+  automatique nulle part. Toute suppression est un geste manuel ;
+- **C-07** — une **copie de chaque courriel envoyé** reste dans la boîte Gmail du propriétaire,
+  avec l'adresse du club : le classeur n'est pas le seul endroit où vivent ces coordonnées, et la
+  réinitialisation n'y a aucune prise ;
+- **C-03 / C-04** — la réinitialisation **conserve sans l'expliquer** les effectifs d'enfants
+  déclarés équipe par équipe (`detail_effectifs`) et **tous** les contacts de la demande
+  d'autorisation (représentant, président, médecin, secours), alors que les autres conservations
+  volontaires, elles, sont documentées dans le code ;
+- **C-01** — quatre onglets (`Equipes`, `Poules`, `Matchs`, `Historique`) sortent **en entier,
+  sans clé**, à rebours de la doctrine « liste blanche » appliquée à `Config` et `Sponsors`. Aucune
+  conséquence aujourd'hui ; aucun garde-fou demain ;
+- **C-10** — un champ libre invite explicitement à saisir **noms, prénoms et dates de naissance**
+  d'enfants (« liste des équipes étrangères ») : le seul endroit de l'application où des identités
+  de mineurs peuvent entrer.
+
+**Ce qui est plutôt rassurant, et mérite d'être dit**
+
+- **Aucun enfant n'est identifié** : ni nom, ni date de naissance, ni licence. Que des nombres ;
+- la doctrine **opt-in** de la config publique est explicite, appliquée en trois vues, avec le
+  défaut le plus fermé en cas d'erreur de nom ;
+- l'email d'un club **n'est jamais renvoyé à personne** — pas même au club ;
+- un envoi groupé envoie **un courriel par club**, jamais un courriel commun ;
+- le destinataire d'un envoi est **toujours relu dans le classeur**, jamais pris dans la demande ;
+- **aucun cookie, aucun traceur tiers** ; les deux identifiants de mesure sont aléatoires et remis
+  à zéro chaque jour ; le serveur revalide chaque compteur reçu.
+
+**Points INCONNU ajoutés**
+
+- **I-08** — une image mise à la corbeille du Drive reste-t-elle atteignable par un lien déjà
+  diffusé, pendant les ~30 jours avant purge par Google ?
+- **I-09** — que conserve le journal d'exécution Apps Script, et pendant combien de temps ?
+
+**Point INCONNU précisé**
+
+- **I-03** — l'inventaire de ce que l'application **peut** collecter est désormais **fait**. La
+  question restante n'est plus « quoi », mais « qu'en décide-t-on », et elle relève du domaine B.
+
+**Contradictions avec la mémoire automatique**
+
+Aucune constatée.
+
+**Tests réalisés**
+
+Aucun. Volet de cartographie : aucune ligne de code n'a été touchée, il n'y avait rien à tester.
+
+**Tests NON réalisés (et pourquoi)**
+
+- **Le contenu réel du classeur : NON VÉRIFIÉ.** Ce volet décrit ce que le code est capable
+  d'écrire, pas ce que le classeur contient à cet instant — il n'est pas lisible depuis le dépôt.
+- **L'efficacité des protections décrites : NON VÉRIFIÉE.** Le code prévoit que l'email d'un club
+  ne sorte jamais et que `ClubsInvites` exige la clé admin ; rien n'a été exécuté pour le prouver.
+- Les tests de `backend/Tests.gs` : **NON VÉRIFIÉ** — ils ne s'exécutent que chez Google (I-02).
+- Le comportement en production : **INCONNU** (I-01, règle permanente de `CLAUDE.md` §13.6).
+
+**Décisions prises**
+
+Aucune décision nouvelle. Aucune validation n'était requise pour ce volet (cartographie =
+description, pas modification).
+
+**Commit**
+
+`docs(industrialisation): cartographier les données de l'application` — sur la branche
+`claude/cartographie-donnees-etape-1-t1e9xq`. Contenu : `CARTOGRAPHIE.md` (volet C), `ETAT.md`,
+`PLAN.md`, `SESSIONS.md`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+**Session 5 — ÉTAPE 2 : début de l'audit.** L'ÉTAPE 1 est terminée : les trois volets de la
+cartographie sont écrits et ont produit **39 points d'attention** (A-01→A-14, B-01→B-12,
+C-01→C-13) qui attendent d'être classés P0/P1/P2/P3.
+
+⚠️ **Une décision de Romain est requise avant de commencer** : l'ordre de passage des 8 domaines.
+L'ordre recommandé reste **A → C → B → D → E → F → G → H** (métier, sécurité, données
+personnelles, tests, puis le confort). Le volet C apporte toutefois un argument pour **remonter le
+domaine B** si de vrais clubs doivent être invités prochainement : le classeur est encore vide de
+données de tiers, donc tout peut être **préparé** plutôt que **rattrapé**.
+
+---
+
+## SESSION 5 — 2026-08-04
+
+**Objectif**
+
+ÉTAPE 2 — AUDIT, **domaine A : métier / Product Owner**. Répondre à une seule question : un
+organisateur réel, le jour d'un vrai tournoi, peut-il faire son travail avec cet outil — et
+l'outil produit-il des **résultats sportifs justes** ? **Aucun fichier de l'application ne devait
+être modifié — et aucun ne l'a été.**
+
+**Décision préalable prise par Romain**
+
+L'ordre de passage des 8 domaines : **A → C → B → D → E → F → G → H** (décision **D-010**,
+validée). L'alternative proposée — remonter le domaine B pour profiter de la fenêtre où le
+classeur est encore vide de données de tiers — a été **écartée par Romain** : *« on fait les
+choses dans l'ordre pour bien les faire, la production attendra, de toute façon personne ne sait
+ce qui est en train d'être construit pour le moment »*. La fenêtre du domaine B reste ouverte tant
+qu'aucun vrai club n'est invité : l'urgence invoquée n'en était pas une.
+
+**Ce qui a été fait**
+
+Lecture ciblée (sans exécution) du code qui porte les **règles sportives** et le **déroulé de la
+journée** :
+
+- `backend/Code.gs` — `calculerClassement`, `comparerClassement`, `enregistrerResultat` (le barème
+  et le départage) ; `validerScore`, `validerCompteur`, `litDetailEquipe`, `enregistrerScore` (ce
+  qu'un score peut valoir) ; `genererPoulesEtPlanning`, `analyserEffectifsCategories`,
+  `categoriesSansDureeMiTemps`, `nombrePoules`, `nbGroupesScf` et la répartition en poules ;
+  `genererApresMidi` et les cinq sous-générateurs de format ; `recalculerHoraires`,
+  `reorganiserPoulesMatin` (les outils de rattrapage et leurs refus) ; `reponsesGelees` ;
+- `frontend/js/` — `saisie.js` (les contrôles réels de la saisie), `tournoi.js` (`comparer`,
+  `podiumCertain`, `podiumCroise`, `garantiDevant`) ;
+- `docs/regles-classement.md` — la spécification de référence du barème.
+
+Recherche systématique des états possibles d'un match (`statut`) : **deux seulement**, « à venir »
+et « terminé ».
+
+**Résultat produit**
+
+Nouveau fichier `docs/industrialisation/AUDIT.md` — domaine A (§A.0 à §A.10) :
+
+- le verdict en une phrase, **ce qui est solide** (9 points, à ne pas casser), puis les problèmes ;
+- les 5 problèmes P1 traités au format complet de `CLAUDE.md` §1 (ce que j'ai trouvé / pourquoi
+  c'est important / exemple concret / ce que je propose / impact / ce que je conseille) ;
+- les 5 P2 et le P3 en format court ;
+- ce que le domaine A **ne peut pas** conclure, et les 3 questions qui n'appartiennent qu'à Romain ;
+- un récapitulatif chiffré, et « si je devais ne corriger que trois choses ».
+
+`RISQUES.md` — le registre est ouvert : **R-001 à R-011**, tous au statut **IDENTIFIÉ**.
+
+**Problèmes découverts** — 11 au total : **0 P0 · 5 P1 · 5 P2 · 1 P3**.
+
+Les cinq P1, qui ont tous le même point commun (ils apparaissent **le jour J**) :
+
+- **R-001** — **le forfait n'existe pas.** Un match n'a que deux états. Une équipe absente n'a
+  aucune façon correcte d'être enregistrée : un 0-0 donne **2 points à l'absent** (match nul),
+  un score inventé offre de la différence — or la différence est le 2ᵉ critère de départage.
+  Quel que soit le choix de l'organisateur, le classement est faux ;
+- **R-002** — **un seul match du matin non saisi bloque l'après-midi de toutes les catégories**
+  (le contrôle ne regarde pas la catégorie), et le message ne dit pas quels matchs manquent ;
+- **R-003** — **aucun ajustement de planning une fois la journée lancée.** Impossible de déplacer
+  ou reporter un match. « Réorganiser les poules » est refusé dès le premier score ; « recalculer
+  les horaires » est refusé dès que l'après-midi est généré ; il ne reste que « tout regénérer »,
+  qui efface les scores. Terrain impraticable = gestion papier, pendant que l'affichage public
+  continue d'annoncer les anciens horaires ;
+- **R-004** — **pas de départage au-delà du 3ᵉ critère.** Deux équipes strictement à égalité sont
+  classées dans l'ordre des lignes du tableur. Ce rang **décide de la composition de l'après-midi**
+  (en croisé, les 1ᵉʳˢ jouent ensemble). Limite déjà documentée dans `docs/regles-classement.md`,
+  jamais traitée ;
+- **R-005** — **aucune borne haute sur un score**, ni côté serveur ni côté navigateur. 150 au lieu
+  de 15 passe sans un mot, et fausse toute la poule via la différence.
+
+**Ce qui est ressorti de solide** (et qui ne doit pas être dégradé) : les refus **avant** écriture,
+le tirage qui sépare les clubs et le dit quand il n'y arrive pas, le planning à trois contraintes,
+l'assistant d'arbitrage, la synchronisation qui ne détruit jamais à l'aveugle, « recalculer les
+horaires » qui **préserve les scores**, les protections critiques tenues **par le serveur**, et
+surtout le **podium qui refuse de s'afficher tant qu'il n'est pas mathématiquement certain** —
+vérification faite jusqu'à la frontière avec le 4ᵉ, en tenant compte des matchs restants.
+
+**Tests réalisés**
+
+Aucun. Audit de lecture : rien n'a été exécuté, aucune ligne de code n'a été touchée.
+
+**Tests NON réalisés (et pourquoi)**
+
+- **Aucun scénario n'a été joué** : tous les constats portent sur ce que le code **prévoit**.
+  Statut **NON VÉRIFIÉ** pour tout comportement réel.
+- Les tests de `backend/Tests.gs` : **NON VÉRIFIÉ** — ils ne s'exécutent que chez Google (I-02).
+- Le comportement en production : **INCONNU** (I-01).
+
+**Décisions prises**
+
+- **D-010** — ordre d'audit des 8 domaines : **A → C → B → D → E → F → G → H**. ✅ Validée par
+  Romain.
+
+**Questions ouvertes qui bloquent une correction** (à poser à l'ÉTAPE 4, pas maintenant)
+
+1. quelle règle appliquer à une équipe forfait (R-001) ?
+2. quels critères de départage ajouter, et dans quel ordre (R-004) ?
+3. à partir de quel score faut-il demander une confirmation (R-005) ?
+
+**Commit**
+
+`docs(industrialisation): auditer le domaine métier` — sur la branche
+`claude/cartographie-donnees-etape-1-t1e9xq`. Contenu : `AUDIT.md` (nouveau), `RISQUES.md`,
+`DECISIONS.md`, `ETAT.md`, `PLAN.md`, `SESSIONS.md`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+**Session 6 — ÉTAPE 2, domaine C : la sécurité.** Qui peut faire quoi, et ce qu'un visiteur mal
+intentionné pourrait obtenir. Points de la cartographie qui l'alimentent directement : **A-05**
+(les clés sont des mots de passe partagés, sans notion de personne), **A-06** (une écriture
+publique sans clé), **A-10** (les jetons voyagent par courriel), **B-03** (le garde-fou qui évite
+d'effacer tous les scores ne vit que dans la page), **B-09** (le contenu des courriels est fabriqué
+par le navigateur), **B-11** (la réinitialisation ne demande aucune confirmation au serveur),
+**C-11** (une seule requête rend tout le carnet d'adresses).
+
+Format imposé par `CLAUDE.md` §6.C, pour chaque faille : criticité, scénario d'exploitation,
+impact, recommandation, difficulté de correction. **Aucune mesure de sécurité ne sera modifiée
+sans validation préalable.**
+
+### Session 5 — complément du même jour : réponses de Romain
+
+Romain a répondu aux trois questions ouvertes du domaine A **le jour même**, avant la clôture de
+la session. Le travail ci-dessous est donc rattaché à la session 5, et non à une session 6.
+
+**Ce qu'il a tranché**
+
+- **D-011 — le forfait** : *« l'absent marque 0 point et le présent gagne (différence de points à
+  mettre en paramètre à la discrétion de l'organisateur du tournoi). Peu importe son choix, toutes
+  les équipes doivent être informées de tout point de règlement dans leur dossier final a
+  minima. »* → R-001 passe au statut **VALIDÉ** (la règle, pas le code).
+- **D-012 — les scores** : *« max un nombre à 2 chiffres plus demande de confirmation du score
+  avant de valider »* → R-005 passe au statut **VALIDÉ** (la règle, pas le code).
+
+**Ce que j'avais mal posé**
+
+Romain : *« je ne comprends pas les questions 2 et 3 »*. Les deux questions étaient formulées en
+vocabulaire technique, ce que `CLAUDE.md` §0 interdit :
+
+- la question 2 (« quels critères de départage ? ») supposait connu le mot **départage** ;
+- la question 3 (« à partir de quel score demander confirmation ? ») supposait qu'il fallait un
+  **seuil** — alors que Romain, en répondant sur R-005, a proposé quelque chose de **plus simple et
+  plus sûr** : une limite dure à 2 chiffres. La question portait sur une solution que je lui
+  imposais implicitement, pas sur son besoin.
+
+Leçon retenue pour les prochains domaines : **poser la question sur le besoin, pas sur la solution
+technique que j'ai en tête.**
+
+**Deux propositions faites à sa demande** (« que me suggères-tu ? »)
+
+- **D-013 (R-003)** — ajuster le planning en cours de journée. Trois niveaux proposés ; je
+  recommande de ne faire que les deux premiers : **déplacer un match** (heure et/ou terrain, sans
+  rien regénérer) et **décaler toute la journée de X minutes** (les matchs pas encore joués).
+  Le troisième — redistribuer automatiquement les matchs d'un terrain devenu impraticable — est le
+  seul qui touche au planificateur, donc le seul réellement risqué : à garder pour plus tard.
+- **D-014 (R-004)** — le départage. Proposition : ajouter **deux critères à la suite des trois
+  existants**, sans toucher aux trois — (4) la **confrontation directe**, (5) l'**ordre
+  alphabétique** en dernier recours. Argument central : ces critères n'interviennent que là où
+  l'application n'a **aujourd'hui aucune règle**, donc aucun classement actuellement correct ne
+  change. Et le dernier recours doit être **déterministe** (pas un tirage au sort), parce que le
+  classement est calculé deux fois : un tirage donnerait un classement à la page publique et un
+  autre au tirage de l'après-midi.
+
+**Nouveau problème découvert — R-012**
+
+L'exigence de transparence posée par Romain dans D-011 m'a fait vérifier ce que les clubs
+reçoivent réellement. Constat : **ni le barème (3/2/1), ni l'ordre de départage ne sont écrits où
+que ce soit** pour les clubs — ils n'existent que dans les commentaires du code et dans
+`docs/regles-classement.md`, un document technique. Il y a bien une ligne « Règlement » dans le
+dossier des clubs, mais c'est un **texte libre**, et son champ **a été retiré de l'écran
+d'administration** (`admin.js` le dit explicitement) : **il n'existe aujourd'hui aucun moyen de le
+remplir.** *(CERTAIN, vérifié.)*
+
+Autrement dit : la règle que Romain vient de fixer ne serait, en l'état, **communicable à
+personne**. → **R-012**, P2, à traiter **avec** R-001 et R-004 plutôt que séparément.
+
+**Question adjacente laissée ouverte** (sans urgence) : faut-il un état « **match annulé** »
+(l'orage qui arrête le tournoi), distinct du forfait ? Personne n'a tort, personne n'est absent —
+le match n'a simplement pas eu lieu. C'est le même chantier technique que R-001, donc le bon moment
+pour y penser.
+
+**Tests réalisés**
+
+Aucun. Toujours aucune ligne de code touchée.
+
+**Commit**
+
+`docs(industrialisation): enregistrer les règles de forfait et de saisie des scores` — branche
+`claude/cartographie-donnees-etape-1-t1e9xq`. Contenu : `AUDIT.md`, `RISQUES.md`, `DECISIONS.md`,
+`ETAT.md`, `SESSIONS.md`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+Inchangée : **session 6 — ÉTAPE 2, domaine C (sécurité)**. Les propositions D-013 et D-014
+n'empêchent pas d'avancer : elles attendront l'ÉTAPE 4, comme le reste. Rien ne sera codé avant la
+fin des 8 audits.
+
+### Session 5 — 3ᵉ échange : les 5 P1 sont tranchés
+
+Troisième aller-retour du même jour. Romain a validé les deux propositions en attente, précisé la
+forme du forfait, et posé une question que ce chantier ne peut pas trancher.
+
+**Ce qu'il a validé**
+
+- **D-013 (R-003)** — ajuster le planning : déplacer un match, et décaler toute la journée de
+  X minutes. Le 3ᵉ niveau (redistribuer automatiquement un terrain condamné) reste écarté ;
+- **D-014 (R-004)** — départage : confrontation directe en 4ᵉ critère, ordre alphabétique en 5ᵉ ;
+- **D-012 (R-005)** — confirmé.
+
+**Ce qu'il a amendé — et il a eu raison contre moi**
+
+J'avais recommandé que le score attribué en cas de forfait soit un **paramètre réglable**. Romain
+l'a écarté au profit d'un **bouton « Forfait » sous chaque équipe**, avec une règle fixe : 3 points
+au présent, 0 à l'absent, **aucun score**, et une **double mise en garde**.
+
+Sa version est meilleure que la mienne. Le paramètre que je proposais était un piège : réglé sur
+« 25-0 », il aurait offert +25 de différence à une équipe — or la différence sert à départager.
+Une règle fixe sans score ne peut fausser aucun classement. **Un réglage en moins, c'est une façon
+de se tromper en moins.** Amendement porté dans `DECISIONS.md`, D-011.
+
+**Ce que j'ai proposé en retour** — six compléments techniques (`AUDIT.md` §A.2, point 8), dont le
+plus important : **le forfait doit être annulable**. Sans cela, un appui malheureux à 9h coûterait
+une regénération complète, donc tous les scores de la journée. Les cinq autres : prévoir les deux
+équipes forfait, faire afficher **la conséquence** par la deuxième mise en garde plutôt que de
+répéter la question, afficher « Forfait » et jamais « 0-0 », faire **débloquer** la génération de
+l'après-midi par un match forfait, et **garder la clé scores** plutôt que la clé admin (qui ne doit
+pas circuler au bord d'un terrain).
+
+**Nouveau problème — R-013, le match annulé**
+
+Romain : *« match annulé, j'attends une suggestion de ta part, je ne sais pas si la FFR met des
+recommandations là-dessus ou si un règlement existe sur le sujet. »*
+
+**Vérification faite** : `AUDIT-TOURNOI-R92.md` (~129 000 caractères) **ne contient rien** sur le
+forfait, l'annulation, les intempéries ou le report. Aucun de ses 25 points de vérification
+(Q11 → Q25) ne porte sur le sujet. **Je ne sais donc pas ce que la FFR prescrit, et je ne l'ai pas
+inventé** (`CLAUDE.md` §9 et §10).
+
+- **Question sortante** ouverte : **I-10** dans `ETAT.md`, à porter au chantier FFR par Romain
+  (Directeur EDR du Racing / Comité 92 — la voie qui a résolu Q23). Ce chantier-ci ne modifie pas
+  `AUDIT-TOURNOI-R92.md` : décision D-003.
+- **Ma proposition, valable tant qu'aucune règle fédérale ne la contredit** (D-015) : le **même
+  mécanisme que le forfait, avec un libellé différent**. Un match annulé ne compte pour personne,
+  et ne bloque pas l'après-midi. Techniquement c'est un « double forfait », mais le mot compte :
+  un forfait désigne un fautif, une annulation n'accuse personne. Une fois le forfait construit,
+  l'annulation ne coûte presque rien.
+- **Limite signalée** : si seuls *certains* matchs sont annulés, les équipes n'auront pas joué le
+  même nombre de matchs. Je recommande de l'accepter et de le rendre visible (la colonne « J »
+  existe déjà) plutôt que de passer à une moyenne de points par match — parce que dans le cas réel,
+  l'orage n'annule pas un match mais **toute la journée en même temps**.
+
+**Bilan du domaine A après ces trois échanges**
+
+**13 problèmes : 0 P0 · 5 P1 · 7 P2 · 1 P3.** Les **5 P1 ont tous leur règle métier tranchée**
+(D-011 à D-014), ainsi que R-012. Seul R-013 attend une réponse extérieure.
+
+> ⚠️ **Rien n'est corrigé.** « Validé » signifie que la règle est décidée, jamais que le code est
+> écrit. Aucun fichier de l'application n'a été modifié.
+
+**Tests réalisés**
+
+Aucun. Toujours aucune ligne de code touchée.
+
+**Commit**
+
+`docs(industrialisation): trancher les cinq règles métier du domaine A` — branche
+`claude/cartographie-donnees-etape-1-t1e9xq`. Contenu : `AUDIT.md`, `RISQUES.md`, `DECISIONS.md`,
+`ETAT.md`, `SESSIONS.md`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+Inchangée : **session 6 — ÉTAPE 2, domaine C (sécurité)**. Les décisions prises ici n'accélèrent
+rien : le code ne sera écrit qu'à l'ÉTAPE 5, après les 8 audits et la validation de l'ÉTAPE 4.
+
+### Session 5 — CLÔTURE
+
+Romain : *« ok tout ça me va. »*
+
+**Ce que cela valide**
+
+- les **six compléments techniques** proposés sur le bouton forfait (annulabilité, double forfait,
+  deuxième mise en garde qui affiche la conséquence, affichage « Forfait » et jamais « 0-0 »,
+  déblocage de l'après-midi, clé scores conservée) → **D-011 est entièrement fixée** ;
+- **D-015** — le match annulé : même mécanisme que le forfait, libellé distinct, ne compte pour
+  personne. **Validée par défaut** : une règle fédérale primerait si elle existe.
+
+**Bilan définitif du domaine A**
+
+**13 problèmes — 0 P0 · 5 P1 · 7 P2 · 1 P3.** **Toutes les décisions métier sont prises**
+(D-011 → D-015). Aucune question n'attend plus Romain sur ce domaine.
+
+| Réf | Priorité | Décision |
+|---|---|---|
+| R-001 forfait | P1 | D-011 amendée — bouton par équipe, 3/0, sans score, double mise en garde, annulable |
+| R-002 blocage après-midi | P1 | Aucune décision métier requise — choix technique, ÉTAPE 3 |
+| R-003 planning figé | P1 | D-013 — déplacer un match · décaler la journée · 3ᵉ niveau écarté |
+| R-004 départage | P1 | D-014 — confrontation directe, puis ordre alphabétique |
+| R-005 score aberrant | P1 | D-012 — 2 chiffres max + confirmation |
+| R-006 → R-010 | P2 | Choix techniques, ÉTAPE 3 |
+| R-012 règles non publiées | P2 | Exigence posée par Romain dans D-011 |
+| R-013 match annulé | P2 | D-015, par défaut |
+| R-011 tirage non reproductible | P3 | Rien à faire maintenant |
+
+**Ce qui reste ouvert, et qui ne dépend pas de ce chantier**
+
+**I-10** — la FFR encadre-t-elle le sort d'un match qui n'a pas pu se jouer ?
+`AUDIT-TOURNOI-R92.md` ne contient rien sur le sujet. Question à porter au Directeur EDR du Racing
+ou au Comité 92 (même voie que Q23). Sa réponse **primerait sur D-011 et D-015**.
+
+**Tests réalisés**
+
+Aucun sur les cinq échanges de cette session. **Aucune ligne de code n'a été touchée.**
+
+**Tests NON réalisés (et pourquoi)**
+
+- Aucun scénario n'a été joué : tous les constats portent sur ce que le code **prévoit**.
+  **NON VÉRIFIÉ** pour tout comportement réel.
+- `backend/Tests.gs` : **NON VÉRIFIÉ** — exécutable seulement chez Google (I-02).
+- Comportement en production : **INCONNU** (I-01).
+
+**Leçon de méthode retenue**
+
+Deux des trois questions posées à Romain en fin d'audit étaient **mal formulées** : elles
+supposaient un mot technique connu (« départage ») ou imposaient implicitement ma solution
+(« à partir de quel seuil ? »). Ses réponses ont produit **deux solutions meilleures que les
+miennes** — la limite dure à 2 chiffres plutôt qu'un seuil d'alerte, et le bouton à règle fixe
+plutôt qu'un paramètre réglable. **Poser la question sur le besoin, jamais sur la solution.**
+
+**Commit**
+
+`docs(industrialisation): clore le domaine A — toutes les décisions métier prises` — branche
+`claude/cartographie-donnees-etape-1-t1e9xq`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+**Session 6 — ÉTAPE 2, domaine C : la sécurité.** Condition de démarrage : instruction explicite
+de Romain. Rien ne sera codé avant la fin des 8 audits et la validation de l'ÉTAPE 4.
