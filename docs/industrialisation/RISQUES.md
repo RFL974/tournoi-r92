@@ -5,8 +5,9 @@
 > L'**explication** de chaque problème (pourquoi, exemple concret, ce qui est proposé) vit dans
 > `AUDIT.md`. Ce fichier-ci **suit** ; `AUDIT.md` **explique**.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, close)
-**Audits réalisés** : domaine A (métier). Les 7 autres domaines restent à faire.
+**Dernière mise à jour** : 2026-08-04 (session 6, close)
+**Audits réalisés** : domaine A (métier), domaine C (sécurité). Les 6 autres domaines restent à faire.
+**Correction réalisée** : R-014 (le P0), par exception validée — voir D-016.
 
 ---
 
@@ -56,23 +57,42 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
-| P0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| P1 | **5** | 0 | **5** | 0 | 0 | 0 |
-| P2 | **7** | 0 | **2** | 0 | 0 | 0 |
-| P3 | **1** | 0 | 0 | 0 | 0 | 0 |
+| **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
+| P1 | **10** | 0 | **5** | 0 | 0 | 0 |
+| P2 | **13** | 0 | **2** | 0 | 0 | 0 |
+| P3 | **3** | 0 | 0 | 0 | 0 | 0 |
+
+**Total : 27 problèmes** — domaine A (13) + domaine C (14).
+
+> ✅ **R-014 est le premier problème du chantier à atteindre le statut TESTÉ**, le 2026-08-04.
+> Trois preuves réunies, et c'est la raison pour laquelle ce statut est accordé :
+>
+> 1. **le code en service est bien le nouveau** — Romain a redéployé chez Google (lève **I-13**) ;
+> 2. **573 tests sur 573 passent** dans Apps Script (lève **I-02**), dont les **16 vérifications**
+>    ajoutées pour cette correction ;
+> 3. **la chaîne fonctionne toujours de bout en bout** — le diagnostic « Tester la remontée »
+>    confirme écriture, relecture, et **109 relevés réels** déjà remontés des spectateurs. C'est
+>    la preuve de **non-régression** qui manquait : le plafonnement n'a rien cassé.
+>
+> ⚠️ **Ce qui reste NON VÉRIFIÉ, et qu'il faut dire** : le chemin de **refus** — ce qui se passe
+> une fois un plafond franchi — n'est prouvé que par les tests unitaires. Personne n'a envoyé
+> 30 001 relevés pour l'observer en vrai, et personne ne le fera. Le diagnostic ne peut pas non
+> plus l'atteindre : il tire un identifiant d'appareil neuf à chaque essai, donc il ne consomme
+> jamais le plafond par appareil — c'est voulu, il ne doit jamais se bloquer lui-même.
 
 > ⚠️ **« Validé » signifie que la RÈGLE MÉTIER est tranchée par Romain — jamais que le code est
 > écrit.** Les **5 problèmes P1 du domaine A** ont leur règle décidée (D-011 à D-014), ainsi que
 > R-012 et R-013 (D-015). **Rien n'est corrigé. Aucun fichier de l'application n'a été modifié.**
 >
 > Le passage à **EN COURS** n'aura pas lieu avant la fin des 8 audits et la validation de
-> l'ÉTAPE 4 (`CLAUDE.md` §7).
+> l'ÉTAPE 4 (`CLAUDE.md` §7) — **sauf décision contraire de Romain sur R-014** (voir D-016,
+> en attente dans `DECISIONS.md`).
 
-> ⚠️ **Aucun problème n'est corrigé.** Tous sont au statut **IDENTIFIÉ** : ils ont été vus, rien
-> de plus. Aucun fichier de l'application n'a été modifié à ce jour.
+> ⚠️ **Un seul problème est réglé : R-014**, au statut **TESTÉ**, par exception validée (D-016).
+> Tous les autres sont au statut **IDENTIFIÉ** : ils ont été vus, rien de plus.
 >
-> Ce tableau ne couvre que le **domaine A**. Les 7 autres domaines n'ont pas été audités : leur
-> absence de ligne ne signifie pas leur absence de problème.
+> Ce tableau ne couvre que les **domaines A et C**. Les 6 autres domaines n'ont pas été audités :
+> leur absence de ligne ne signifie pas leur absence de problème.
 
 ---
 
@@ -126,11 +146,47 @@ aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Rom
 **Destinataires suggérés** : Directeur EDR du Racing / Comité 92 — la même voie qui a résolu Q23.
 **Impact si une règle existe** : elle primerait sur D-011 (forfait) **et** sur D-015 (annulation).
 
+### Domaine C — Sécurité (session 6)
+
+| Réf | Problème | Priorité | Certitude | Statut | Détail |
+|---|---|---|---|---|---|
+| **R-014** | **La seule écriture ouverte sans clé (`mesureSponsors`) n'avait aucune limite** : ni par appareil, ni par minute, ni par jour. Chaque envoi ajoutait une ligne au classeur, rien ne les efface, et l'adresse du serveur est publique. Permettait de saturer le classeur (10 M de cases) et les exécutions simultanées — donc de **bloquer la saisie des scores le jour J** | **P0** | **CERTAIN** (absence de limite constatée) · **PROBABLE** (conséquences chiffrées : plafonds Google non testés) | ✅ **TESTÉ** (2026-08-04) — corrigé par D-016 (commit `c1948fc`), **redéployé chez Google**, **573/573 tests OK** dans Apps Script et **chaîne vérifiée de bout en bout** par le diagnostic « Tester la remontée » (écriture, relecture, 109 relevés réels). ⚠️ **Réserve** : le chemin de REFUS (que se passe-t-il une fois un plafond franchi ?) n'a été prouvé que par les tests unitaires, jamais observé en production | `AUDIT.md` §C.2 |
+| **R-015** | **Regénérer les poules efface tous les scores, et le serveur ne vérifie jamais s'il y en a.** Le garde-fou (double confirmation + re-saisie de la clé) vit **uniquement dans le navigateur** — alors que « réorganiser les poules » refuse, lui, côté serveur | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.3 |
+| **R-016** | **La réinitialisation efface tout dès réception de la clé admin** : équipes, poules, matchs, catégories, horaires, contacts, dossier, et met affiche et photo de parking à la corbeille. Aucune confirmation serveur, aucune sauvegarde, aucun retour en arrière | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.4 |
+| **R-017** | **Deux mots de passe partagés, aucune notion de personne** : impossible de retirer l'accès à quelqu'un, aucune trace de l'auteur d'un score dans l'`Historique`, et un score validé peut être réécrit par toute personne ayant la clé SCORES. Une contestation est **inarbitrable** | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.5 |
+| **R-018** | **Les liens personnels des clubs sont des passe-partout permanents** : jamais expirés, transportés dans l'adresse de la page, transférables par simple renvoi de courriel. Ils ouvrent les **téléphones du référent et du responsable sécurité**. Aucune trace d'utilisation | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.6 |
+| **R-019** | **Garde-fou anti-devinette global et faible** : 30 échecs / 5 min, compteur non prolongé une fois le seuil atteint (≈ 8 600 essais/jour), mémoire non fiable à 100 %. ⚠️ **Requalifié P2 → P1 le 2026-08-04** : Romain a précisé que **les deux clés sont des mots qu'il a choisis** (I-12 levée). 8 600 essais/jour ne cassent jamais une suite aléatoire, mais peuvent casser des mots — et la clé ADMIN ouvre **tout** | **P1** *(était P2)* | CERTAIN | IDENTIFIÉ · **remède immédiat sans code** : remplacer les deux clés par des suites aléatoires (**D-017**, en attente de Romain). Redeviendra P2 dès que ce sera fait | `AUDIT.md` §C.7 |
+| **R-020** | **Le contenu des courriels est fabriqué par le navigateur** et expédié tel quel sous l'identité Gmail du propriétaire. Le destinataire, lui, est toujours relu dans le classeur (bon point) — mais le message peut dire n'importe quoi | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-021** | **`Equipes`, `Poules`, `Matchs`, `Historique` sortent en entier, sans clé et sans liste blanche.** Rien de personnel aujourd'hui ; une colonne ajoutée demain serait publique **sans décision** | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-022** | **`admin.html` et `saisie.html` sont publics et indexables** — alors que les trois pages à jeton portent bien « ne pas indexer ». Ce n'est pas une protection manquante, c'est une exposition inutile | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-023** | **Aucune trace de qui consulte le carnet d'adresses**, qui se lit en une seule requête (emails **et** jetons compris). Ce que garde le journal Google est **INCONNU** (I-09) | P2 | CERTAIN (côté application) | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-024** | **Quatre bibliothèques extérieures sans version, sans origine, sans empreinte** (`pdf-lib`, `docxtemplater`, `pizzip`, `qrcode`, ~750 Ko). Hébergées localement (bon point), mais **impossible de savoir si une faille publiée les concerne** | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-025** | **Toute la confidentialité tient au réglage de partage du classeur**, qu'aucun code ne protège — l'identifiant, lui, est public dans le dépôt. Le classeur est bien privé aujourd'hui (I-06) | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-026** | **Aucune politique de sécurité du contenu (CSP)** : rien ne limiterait les dégâts si un texte piégé passait un jour entre les mailles | P3 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.8 |
+| **R-027** | **Les briques d'automatisation GitHub sont épinglées par étiquette mobile** (`@v4`, `@v5`) et non par empreinte figée. Droits accordés minimaux et corrects | P3 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.8 |
+
+### Ce qui a été VÉRIFIÉ et s'est révélé sain (domaine C)
+
+À porter au crédit du code — et à ne pas casser en corrigeant le reste :
+
+| Point vérifié | Résultat |
+|---|---|
+| Mots de passe dans l'historique Git | ✅ **Aucun** — historique **complet** relu (513 enregistrements, dépôt dé-tronqué pour l'occasion) |
+| Injection de formule dans le classeur | ✅ Format « texte » forcé avant écriture, ~30 endroits |
+| Texte piégé dans les pages (XSS) | ✅ Échappement systématique, des deux côtés — **aucun oubli trouvé** (vérification par sondage, pas exhaustive) |
+| Liens des partenaires | ✅ Bornés à `http(s)://` — un lien piégé est refusé ; couleurs validées en hexadécimal |
+| Détournement de destinataire d'un courriel | ✅ Impossible — l'adresse est **toujours relue dans le classeur** |
+| Dépôt d'images | ✅ Liste blanche de formats + plafond 5 Mo, contrôlés avant écriture |
+| Relevés des partenaires | ✅ Entièrement revalidés (format des identifiants, bornes de tous les compteurs) |
+| Cloisonnement entre clubs | ✅ Un jeton n'ouvre que la fiche de son club ; **aucun email de club n'est jamais renvoyé** |
+| Jetons des clubs | ✅ Vrais identifiants aléatoires (`Utilities.getUuid()`) |
+| Messages d'erreur | ✅ Génériques côté visiteur, détail journalisé côté serveur |
+
 ### Domaines non audités
 
 | Domaine | Statut |
 |---|---|
-| C — Sécurité · B — RGPD · D — Tests · E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
+| B — RGPD · D — Tests · E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
 
 ### Modèle de fiche de problème
 
@@ -222,8 +278,23 @@ encore, le jour du tournoi, l'ancienne version.
 | Champ | Valeur |
 |---|---|
 | **Priorité** | P1 (méthode) |
-| **Certitude** | PROBABLE — à confirmer en ÉTAPE 1 |
-| **Statut** | IDENTIFIÉ |
+| **Certitude** | **CERTAIN** — confirmé |
+| **Statut** | IDENTIFIÉ — **atténué**, pas résolu |
+
+> ✅ **Le harnais fonctionne, et il est en bonne santé** : Romain a lancé `lancerTestsFFR` dans
+> Apps Script le 2026-08-04 → **573/573 OK**. L'inconnue **I-02** est donc levée.
+>
+> ⚠️ **Le risque de méthode, lui, demeure entier** : les tests ne se lancent toujours que **à la
+> main, chez Google**. Rien ne les déclenche automatiquement, donc rien ne garantit qu'ils seront
+> relancés à la prochaine modification. Deux atténuations ont été trouvées en session 6 :
+>
+> - écrire les nouvelles fonctions en **cœur pur** (données injectées, aucun accès au classeur)
+>   permet de les **rejouer hors de Google** — c'est ce qui a été fait pour les 16 vérifications
+>   de R-014, exécutées ici avant même le redéploiement ;
+> - le compte d'assertions sert de **contrôle croisé** : 564 appels statiques + 9 dans des boucles
+>   = 573, ce qui confirme que le lot exécuté chez Google contenait bien les tests ajoutés.
+>
+> À reprendre au **domaine D (QA / tests)**.
 
 **Description** — Le fichier `backend/Tests.gs` existe et semble contenir un grand nombre de tests
 automatiques, mais ces tests sont écrits pour être exécutés **chez Google**, pas ici. Tant que ce

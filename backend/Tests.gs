@@ -343,6 +343,17 @@ function lancerTestsFFR() {
   testS28_dossierRetraitNonDeduitSignale(etat);
   testS28_dossierSansRetraitInchange(etat);
 
+  // Industrialisation session 6 — plafonds de l'écriture publique (R-014, audit sécurité).
+  testS6sec_sousLesPlafondsOnEcrit(etat);
+  testS6sec_bornesExactes(etat);
+  testS6sec_leVolumePrimeSurLeDebit(etat);
+  testS6sec_compteurInconnuNeRefuseJamais(etat);
+  testS6sec_compteurSAdditionneDansLaFenetre(etat);
+  testS6sec_fenetreSuivanteRepartDeZero(etat);
+  testS6sec_appareilsIndependants(etat);
+  testS6sec_cacheEnPanneNeCassePas(etat);
+  testS6sec_identifiantInvalideRefuse(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -3591,4 +3602,110 @@ function testS28_dossierSansRetraitInchange(etat) {
   _ffrAssert(etat, !_autoChamp(d, 'Retrait non déduit'), 'S28 : sans retrait → pas d\'avertissement');
   var c = _autoChamp(d, 'Nombre de participants');
   _ffrAssert(etat, c && !/retirée/.test(c.origine), 'S28 : sans retrait → origine inchangée');
+}
+
+/* ==========================================================================================
+ *  SESSION 6 (industrialisation) — PLAFONDS DE L'ÉCRITURE PUBLIQUE (R-014, audit sécurité)
+ * ==========================================================================================
+ *  `mesureSponsors` est la seule écriture sans clé de l'application. Ces tests vérifient le
+ *  CŒUR PUR du plafonnement (`mesureMotifRefus`) et le compteur de fenêtre
+ *  (`mesureCompteurFenetre`, testé avec un cache factice injecté).
+ *
+ *  Ce qu'ils NE prouvent PAS : que le service tienne face à un envoi massif réel. Cela ne se
+ *  vérifie qu'en conditions réelles, et reste NON VÉRIFIÉ.
+ * ========================================================================================== */
+
+/** Cache factice injectable : même interface que CacheService (get / put), en mémoire. */
+function _mesureCacheFactice() {
+  return {
+    magasin: {},
+    get: function (cle) { return this.magasin.hasOwnProperty(cle) ? this.magasin[cle] : null; },
+    put: function (cle, valeur) { this.magasin[cle] = valeur; }
+  };
+}
+
+/** Cache en panne : lève à chaque appel. Le code ne doit jamais échouer pour autant. */
+function _mesureCacheCasse() {
+  return {
+    get: function () { throw new Error('cache indisponible'); },
+    put: function () { throw new Error('cache indisponible'); }
+  };
+}
+
+/** Sous tous les plafonds ⇒ on écrit. */
+function testS6sec_sousLesPlafondsOnEcrit(etat) {
+  _ffrAssert(etat, mesureMotifRefus(10, 10, 1) === '',
+    'S6-séc : relevé ordinaire → accepté');
+}
+
+/** Le DERNIER relevé autorisé passe encore ; le suivant est refusé (bornes exactes). */
+function testS6sec_bornesExactes(etat) {
+  _ffrAssert(etat, mesureMotifRefus(MESURE_MAX_LIGNES, 1, 1) === '',
+    'S6-séc : pile au plafond de lignes → encore accepté');
+  _ffrAssert(etat, mesureMotifRefus(MESURE_MAX_LIGNES + 1, 1, 1) === 'plafond_lignes',
+    'S6-séc : une ligne au-dessus du plafond → refusé');
+  _ffrAssert(etat, mesureMotifRefus(1, MESURE_MAX_FENETRE, 1) === '',
+    'S6-séc : pile au plafond de débit global → encore accepté');
+  _ffrAssert(etat, mesureMotifRefus(1, MESURE_MAX_FENETRE + 1, 1) === 'debit_global',
+    'S6-séc : un relevé au-dessus du débit global → refusé');
+  _ffrAssert(etat, mesureMotifRefus(1, 1, MESURE_MAX_APPAREIL) === '',
+    'S6-séc : pile au plafond par appareil → encore accepté');
+  _ffrAssert(etat, mesureMotifRefus(1, 1, MESURE_MAX_APPAREIL + 1) === 'debit_appareil',
+    'S6-séc : un relevé au-dessus du plafond par appareil → refusé');
+}
+
+/** Le plafond DUR (volume) prime sur les plafonds de débit : c'est le seul incontournable. */
+function testS6sec_leVolumePrimeSurLeDebit(etat) {
+  _ffrAssert(etat,
+    mesureMotifRefus(MESURE_MAX_LIGNES + 1, MESURE_MAX_FENETRE + 1, MESURE_MAX_APPAREIL + 1) === 'plafond_lignes',
+    'S6-séc : tout dépassé → c\'est le plafond de lignes qui est annoncé');
+}
+
+/** Compteurs inconnus (0 = cache indisponible) ⇒ JAMAIS de refus : une panne de cache ne doit
+ *  pas éteindre la mesure des partenaires. */
+function testS6sec_compteurInconnuNeRefuseJamais(etat) {
+  _ffrAssert(etat, mesureMotifRefus(0, 0, 0) === '',
+    'S6-séc : compteurs inconnus → le relevé passe (pas de refus par ignorance)');
+}
+
+/** Deux relevés dans la MÊME fenêtre s'additionnent. */
+function testS6sec_compteurSAdditionneDansLaFenetre(etat) {
+  var cache = _mesureCacheFactice();
+  var t = 1000000000000; // instant arbitraire, injecté (aucune dépendance à l'horloge)
+  var a = mesureCompteurFenetre(cache, 'test_', 3600, t);
+  var b = mesureCompteurFenetre(cache, 'test_', 3600, t + 60000); // +1 min, même fenêtre
+  _ffrAssert(etat, a === 1 && b === 2, 'S6-séc : deux relevés dans la même heure → 1 puis 2');
+}
+
+/** La fenêtre SUIVANTE repart de zéro : un plafond atteint se relâche tout seul.
+ *  C'est le point qui évite de bloquer indéfiniment des spectateurs légitimes. */
+function testS6sec_fenetreSuivanteRepartDeZero(etat) {
+  var cache = _mesureCacheFactice();
+  var t = 1000000000000;
+  mesureCompteurFenetre(cache, 'test_', 3600, t);
+  mesureCompteurFenetre(cache, 'test_', 3600, t);
+  var apres = mesureCompteurFenetre(cache, 'test_', 3600, t + 3600 * 1000); // +1 h
+  _ffrAssert(etat, apres === 1, 'S6-séc : nouvelle fenêtre → le compteur repart à 1');
+}
+
+/** Deux appareils différents ont des compteurs indépendants. */
+function testS6sec_appareilsIndependants(etat) {
+  var cache = _mesureCacheFactice();
+  var t = 1000000000000;
+  mesureCompteurFenetre(cache, 'app_AAAA_', 3600, t);
+  var autre = mesureCompteurFenetre(cache, 'app_BBBB_', 3600, t);
+  _ffrAssert(etat, autre === 1, 'S6-séc : un autre appareil ne consomme pas le quota du premier');
+}
+
+/** Cache en panne ⇒ 0 (inconnu), et surtout AUCUNE exception qui remonterait au visiteur. */
+function testS6sec_cacheEnPanneNeCassePas(etat) {
+  var n = mesureCompteurFenetre(_mesureCacheCasse(), 'test_', 3600, 1000000000000);
+  _ffrAssert(etat, n === 0, 'S6-séc : cache en panne → compteur inconnu, aucune erreur levée');
+}
+
+/** Un identifiant d'appareil invalide est refusé avant tout le reste (règle inchangée). */
+function testS6sec_identifiantInvalideRefuse(etat) {
+  _ffrAssert(etat, mesureIdentifiant('ab') === '', 'S6-séc : identifiant trop court → refusé');
+  _ffrAssert(etat, mesureIdentifiant('<script>') === '', 'S6-séc : identifiant non alphanumérique → refusé');
+  _ffrAssert(etat, mesureIdentifiant('a1b2-c3_d4') === 'a1b2-c3_d4', 'S6-séc : identifiant normal → accepté');
 }

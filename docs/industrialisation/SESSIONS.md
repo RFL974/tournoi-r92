@@ -1,8 +1,12 @@
 # JOURNAL DES SESSIONS — Industrialisation de Tournoi R92
 
-> Une ligne par session de travail. Le plus récent **en haut**.
-> Ce journal sert à répondre à : « qu'est-ce qui a réellement été fait, et qu'est-ce qui ne l'a
-> **pas** été ? »
+> Une fiche par session de travail. Ce journal sert à répondre à : « qu'est-ce qui a réellement
+> été fait, et qu'est-ce qui ne l'a **pas** été ? »
+>
+> ⚠️ **Ordre de lecture** : les sessions 1 et 2 sont en **haut** du fichier ; à partir de la
+> session 3, les fiches sont ajoutées **à la suite, en bas** (la plus récente en dernier). La
+> consigne d'origine (« le plus récent en haut ») n'a pas été suivie, et il vaut mieux le dire
+> que de laisser chercher.
 
 ---
 
@@ -837,3 +841,288 @@ plutôt qu'un paramètre réglable. **Poser la question sur le besoin, jamais su
 
 **Session 6 — ÉTAPE 2, domaine C : la sécurité.** Condition de démarrage : instruction explicite
 de Romain. Rien ne sera codé avant la fin des 8 audits et la validation de l'ÉTAPE 4.
+
+---
+
+## SESSION 6 — 2026-08-04
+
+**Objectif**
+
+ÉTAPE 2 — AUDIT, **domaine C : sécurité / DevSecOps**. Répondre à une seule question : **qui peut
+faire quoi, et que pourrait obtenir, casser ou détourner quelqu'un de mal intentionné ?**
+**Aucun fichier de l'application ne devait être modifié — et aucun ne l'a été.**
+
+**Note de contexte** — cette session a été **relancée** : la précédente tentative n'avait pas été
+fusionnée (branche restée de côté). Le point de départ réel est `dda3987`, qui contient bien tout
+le travail des sessions 1 à 5. Vérifié avant de commencer.
+
+**Ce qui a été fait**
+
+Lecture ciblée (sans exécution, sans aucune tentative d'attaque) de tout ce qui porte le contrôle
+d'accès et l'exposition des données :
+
+- `backend/Code.gs` — les **deux points d'entrée** (`doGet`, `doPost`) et l'ordre exact dans lequel
+  ils traitent une demande ; `verifierCle`, `lireCle`, `configurerCles` et le compteur
+  anti-devinette (`nbEchecsCleRecents`, `incrementerEchecsCle`) ; les trois tables d'actions
+  (`ACTIONS_SCORES`, `ACTIONS_TOKEN`, `ACTIONS_LECTURE`) ; `trouverClubParToken`,
+  `getClubDossier`, `getConfigClub`, `getReponseInvitation`, `repondreInvitation`,
+  `regenererJetonClub` ; `enregistrerMesureSponsors`, `mesureIdentifiant`, `lireMesuresSponsors` ;
+  `envoyerDossierEmail`, `envoyerFeuilleJour`, `envoyerEmailAvec`, `envoyerEmailHtml`,
+  `personnaliserInvitation`, `echapperHtmlServeur` ; `creerFichierImageDrive`,
+  `corbeilleFichierDrive`, `enregistrerSponsor`, `supprimerSponsor` ; `genererPoulesEtPlanning`,
+  `reinitialiserTournoi`, `enregistrerScore` ; `lireOngletSimple`, `lireConfigPublique`,
+  `lireSponsorsPublics`, `snapshotJsonCache` ;
+- `frontend/js/` — `api.js` (comment la clé est rangée et envoyée, `connexion`, `cleValide`),
+  `commun.js` (`echapper`), `sponsors.js` (rendu des liens et des couleurs), et sondage des
+  ~130 endroits où du texte est injecté dans une page (`tournoi.js`, `saisie.js`,
+  `admin-sponsors.js`, `admin-invitations.js`, `dossier.js`) ;
+- `frontend/*.html` — ressources extérieures chargées, mentions « ne pas indexer » ;
+- `cloudflare/worker-tournoi.js`, `.github/workflows/pages.yml`, `.gitignore`,
+  `docs/passation.md` ;
+- **l'historique Git complet** : le dépôt était **tronqué** (110 enregistrements seulement) ; il a
+  été **dé-tronqué** (`git fetch --unshallow`) pour permettre une vraie recherche de secrets sur
+  les **513** enregistrements. Recherche sur `CLE_ADMIN`, `CLE_SCORES`, `SNAPSHOT_KEY`,
+  `RELAIS_CLE` et sur les formes courantes de mot de passe en dur.
+
+**Résultat produit**
+
+`AUDIT.md` — nouvelle partie **DOMAINE C** (§C.0 à §C.11) :
+
+- le verdict en une phrase, puis **13 points solides** listés d'abord (ce qu'il ne faut pas casser
+  en corrigeant le reste) ;
+- le **P0** et les **4 P1** au format complet de `CLAUDE.md` §1, chacun avec **criticité, scénario
+  d'exploitation, impact, recommandation et difficulté de correction**, comme l'exige §6.C ;
+- les 7 P2 et les 2 P3 en format court ;
+- ce que le domaine C **ne peut pas** conclure, et **deux nouvelles inconnues** ;
+- un récapitulatif chiffré, le fil rouge, et « si je devais ne corriger que trois choses ».
+
+`RISQUES.md` — **R-014 à R-027** ajoutés, tous au statut **IDENTIFIÉ**, plus un tableau nouveau :
+**« ce qui a été vérifié et s'est révélé sain »** (10 points).
+
+`DECISIONS.md` — **D-016** ouverte, en attente de Romain.
+
+`ETAT.md`, `PLAN.md` — mis à jour (compteurs, prochaine étape, familles de chantiers qui se
+dessinent).
+
+**Problèmes découverts** — 14 au total : **1 P0 · 4 P1 · 7 P2 · 2 P3**.
+
+**Le P0** :
+
+- **R-014** — **la seule porte ouverte sans mot de passe n'a aucune limite.** `mesureSponsors`
+  reçoit les statistiques d'affichage des partenaires envoyées par les téléphones des spectateurs.
+  Elle est publique **à raison** (les spectateurs n'ont pas de clé) et traitée avant tout le reste
+  **à raison** (pour ne pas faire attendre le marqueur). Mais elle n'a **aucun plafond**, chaque
+  envoi **ajoute une ligne** au classeur, **rien ne les efface**, et l'adresse du serveur est
+  publiquement lisible. Conséquence : on peut remplir le classeur (limite Google : 10 millions de
+  cases) ou saturer les exécutions simultanées, et donc **bloquer la saisie des scores le jour du
+  tournoi**. Correction **facile** : le mécanisme de comptage nécessaire existe déjà dans le
+  fichier (c'est celui qui compte les mauvaises tentatives de mot de passe).
+
+**Les quatre P1**, dont trois ont la même cause :
+
+- **R-015** — **regénérer les poules efface tous les scores, et le serveur ne vérifie jamais s'il
+  y en a.** Le garde-fou vit uniquement dans le navigateur — alors que « réorganiser les poules »
+  refuse, lui, côté serveur, quelques dizaines de lignes plus loin ;
+- **R-016** — **la réinitialisation efface tout dès réception de la clé admin**, sans confirmation
+  serveur, sans sauvegarde, sans retour en arrière — et met affiche et photo de parking à la
+  corbeille du Drive ;
+- **R-017** — **deux mots de passe partagés, aucune notion de personne.** Aucun retrait d'accès
+  individuel possible, aucune trace de l'auteur d'un score, et un score validé peut être réécrit
+  par toute personne ayant la clé SCORES. Une contestation est **inarbitrable** ;
+- **R-018** — **les liens personnels des clubs sont des passe-partout permanents** : jamais
+  expirés, transportés dans l'adresse de la page, transférables par simple renvoi de courriel. Ils
+  ouvrent les **téléphones du jour J**. Sans conséquence aujourd'hui (aucun vrai club invité) ;
+  indispensable à traiter **avant** la première invitation réelle.
+
+**Ce qui a été vérifié et s'est révélé SAIN** — à dire aussi clairement que le reste :
+
+- **aucun mot de passe dans l'historique Git**, sur les 513 enregistrements ;
+- **aucune injection de formule possible** dans le classeur (format « texte » forcé, ~30 endroits) ;
+- **aucun oubli d'échappement trouvé** dans les pages (vérification par sondage, pas exhaustive) ;
+- **liens des partenaires bornés** à `http(s)://` — un lien piégé est refusé ; couleurs validées ;
+- **impossible de détourner le destinataire d'un courriel** : l'adresse est toujours relue dans le
+  classeur ;
+- **cloisonnement entre clubs correct** : un jeton n'ouvre que sa propre fiche, et **aucun email
+  de club n'est jamais renvoyé** ;
+- **dépôt d'images verrouillé** (formats + 5 Mo), **relevés des partenaires entièrement
+  revalidés**, **messages d'erreur génériques**.
+
+**Deux nouvelles inconnues, toutes deux levables par Romain en deux minutes**
+
+- **I-11** — comment la Web App est **réellement publiée** chez Google (« Qui a accès » = tout le
+  monde, ou tout le monde disposant d'un compte Google ?). Ce réglage change complètement
+  l'exposition de R-014, et il n'est **pas dans le code** ;
+- **I-12** — les deux mots de passe actuels sont-ils des **suites aléatoires** ou des **mots
+  choisis à la main** ? C'est la donnée qui décide si **R-019** est théorique ou sérieux.
+
+**Décision ouverte**
+
+- **D-016** — faut-il corriger **R-014** tout de suite, hors de l'ordre du chantier ?
+  Trois options présentées (attendre / le corriger seul / le corriger avec R-015 et R-016).
+  **Recommandation : le corriger seul.** En attente de Romain.
+
+**Non-régression**
+
+**Sans objet** : aucun fichier de l'application n'a été touché. Aucune fonctionnalité n'a pu être
+affectée, et aucune n'a été vérifiée non plus. Tous les constats portent sur **ce que le code
+prévoit**, jamais sur ce qui se produit réellement — **NON VÉRIFIÉ** pour tout comportement réel,
+et **INCONNU** (I-01) pour la version en service chez Google.
+
+**Ce qui n'a PAS été fait, volontairement**
+
+- **aucune tentative d'attaque, aucun test d'intrusion** : lecture de code uniquement ;
+- **aucune analyse des bibliothèques extérieures** (impossible sans connaître leur version — c'est
+  précisément R-024) ;
+- **aucune appréciation RGPD** : c'est le domaine B, session 7. Les points croisés en chemin
+  (polices chargées depuis Google, effacement partiel à la réinitialisation) y ont été renvoyés,
+  pas jugés ici ;
+- **aucune certification de sécurité**, et il n'y en aura jamais (`CLAUDE.md` §10). Cet audit dit
+  ce qui a été trouvé, **pas** qu'il n'y a rien d'autre.
+
+**Prochaine session recommandée**
+
+**Session 7 — ÉTAPE 2, domaine B : la protection des données (RGPD).** C'est l'ordre validé
+(D-010), et c'est le bon moment : le classeur ne contient **aucune donnée personnelle de tiers**
+aujourd'hui (I-03, I-04). Le domaine B doit être traité **avant la première invitation réelle**.
+
+**Mais avant** : la décision **D-016**, et si possible les réponses à **I-11** et **I-12**.
+
+---
+
+---
+
+## SESSION 6 (suite) — 2026-08-04 — correction du P0
+
+**Ce qui a déclenché cette suite**
+
+Deux réponses de Romain, le même jour :
+
+1. **D-016, option (b)** — *« va pour B alors je te suis dans ton raisonnement »* : R-014 est
+   corrigé **seul**, tout de suite, hors de l'ordre normal du chantier ;
+2. **I-12 levée, et défavorablement** — *« pour les MDP c'est moi qui ai choisi ce sont des
+   mots »*.
+
+Il a également fourni une capture de l'écran de déploiement Apps Script, qui **lève I-11**.
+
+**Ce qui a été modifié** *(commit `c1948fc`)*
+
+Premier commit de code du chantier d'industrialisation. Trois fichiers :
+
+- `backend/Code.gs` — trois plafonds sur `mesureSponsors` : `MESURE_MAX_LIGNES` (100 000 lignes,
+  plafond **dur** lu dans le classeur), `MESURE_MAX_FENETRE` (30 000 / 6 h) et
+  `MESURE_MAX_APPAREIL` (30 / h). Nouvelles fonctions `mesureMotifRefus` (cœur **pur**),
+  `mesureCompteurFenetre` (cache injecté, donc testable) et `mesureDebitAutorise`. Les plafonds de
+  débit sont appelés depuis `doPost` **avant** `openById`, pour qu'une requête refusée coûte une
+  lecture de mémoire au lieu d'une demi-seconde de serveur ;
+- `backend/Tests.gs` — **9 tests**, enregistrés dans `lancerTestsFFR` ;
+- `frontend/js/admin-sponsors.js` — le diagnostic « Tester la remontée » distingue désormais
+  « rien écrit parce qu'un plafond est atteint » de « écriture réussie ». **Nécessité technique**,
+  pas une amélioration d'ergonomie : sans cela, la correction aurait rendu ce diagnostic menteur
+  (✅ écriture, puis ❌ relecture introuvable, et un verdict qui envoie chercher une panne
+  inexistante). C'est la seule raison pour laquelle un fichier du frontend est dans ce commit.
+
+**Deux choix de mise en œuvre à connaître**
+
+- **la clé de cache porte le numéro de tranche horaire**, et non un compteur reconduit. Sans cela,
+  chaque envoi aurait repoussé la date d'expiration : le plafond, une fois atteint, ne se serait
+  **jamais** relâché tant que le trafic dure — et ce sont les spectateurs légitimes qui auraient
+  été bloqués ;
+- **un compteur inconnu (cache en panne) ne refuse jamais.** Une panne de mémoire temporaire ne
+  doit pas éteindre la mesure des partenaires. Le plafond dur, lui, reste actif dans tous les cas.
+
+**Vérifications réellement faites**
+
+- ✅ syntaxe des trois fichiers contrôlée ;
+- ✅ **16 vérifications sur 16 passent** : les fonctions ajoutées étant pures, les 9 tests ont pu
+  être **réellement exécutés** hors de Google, en les extrayant dans un harnais jetable ;
+- ✅ relecture des chemins voisins : `doPost` n'est modifié qu'à l'intérieur de la branche
+  `mesureSponsors`, qui sort avant tout le reste. `enregistrerScore` et les 49 autres actions
+  sont **intacts**.
+
+**Ce qui reste NON VÉRIFIÉ — à ne pas confondre avec « ça marche »**
+
+- ❌ **les 301 tests existants n'ont pas été lancés** : ils n'existent que dans Apps Script
+  (M-03, I-02) ;
+- ❌ **rien n'a été exécuté en conditions réelles.** Le comportement sous charge est **INCONNU** ;
+- ❌ **la correction n'est PAS en production.** Le backend doit être recopié à la main chez Google
+  et redéployé. Tant que ce n'est pas fait, **la version en service est l'ancienne, sans
+  plafond** — nouvelle inconnue **I-13**.
+
+**Portée réelle de la correction, dite sans exagération**
+
+Elle supprime le **dégât durable** (le classeur rempli, donc la saisie des scores bloquée) et rend
+l'abus beaucoup plus coûteux. Elle **ne rend pas** l'adresse immunisée contre un envoi massif :
+Apps Script ne fournit pas l'adresse du visiteur, on ne peut donc pas distinguer un abuseur d'un
+spectateur. Ce qui est visé, et atteint : **un abus n'empêche plus jamais la saisie des scores.**
+
+**Requalification : R-019 passe de P2 à P1**
+
+Les clés étant des **mots**, les ~8 600 essais par jour tolérés par le garde-fou anti-devinette
+cessent d'être une limite théorique. Un dictionnaire courant tient en quelques dizaines de
+milliers d'entrées. Et la clé ADMIN ouvre **tout** : effacer les scores, réinitialiser, lire le
+carnet d'adresses, envoyer des courriels sous l'adresse du propriétaire.
+
+**Le remède ne demande aucun code** — remplacer les deux clés par des suites aléatoires, via le
+menu « Tournoi R92 → Configurer les clés » du classeur. C'est la **décision D-017**, en attente.
+La vraie question n'est pas technique : où ranger des clés qui ne se retiennent plus, et comment
+transmettre celle des scores aux bénévoles le jour J.
+
+**Deux inconnues levées, une ouverte**
+
+- ✅ **I-11** — la Web App s'exécute au nom du propriétaire, et son accès est ouvert à **« Tout le
+  monde »** (donc sans compte Google). Réglage **nécessaire**, rien à y changer : cela confirme
+  simplement que R-014 n'exigeait aucun préalable ;
+- ⚠️ **I-12** — les clés sont des mots (voir ci-dessus) ;
+- 🆕 **I-13** — le redéploiement a-t-il eu lieu, et la correction est-elle active ?
+
+**Prochaine session recommandée** — inchangée : **session 7, ÉTAPE 2, domaine B (RGPD)**.
+Mais **deux gestes de Romain d'abord** : redéployer le backend, et remplacer les deux clés.
+
+---
+
+---
+
+## SESSION 6 (fin) — 2026-08-04 — vérification en conditions réelles
+
+**Ce que Romain a fait de son côté**
+
+1. **redéployé le backend** chez Google ;
+2. lancé `lancerTestsFFR` dans Apps Script → **573 / 573 OK** ;
+3. rejoué le diagnostic **« Tester la remontée »** de l'écran Partenaires →
+   *« ✅ Écriture · ✅ Relecture · ✅ 109 relevés réels déjà remontés des spectateurs. La chaîne
+   fonctionne de bout en bout. »*
+
+**Ce que cela prouve, et ce que cela ne prouve pas**
+
+| Question | Réponse |
+|---|---|
+| Le code en service est-il bien le nouveau ? | ✅ oui — **I-13 levée** |
+| Les tests passent-ils ? | ✅ **573/573** — **I-02 levée** |
+| Les 16 vérifications ajoutées étaient-elles du lot ? | ✅ oui — **contrôle croisé** : 564 appels écrits en dur dans `Tests.gs` + 9 situés dans des boucles = 573 |
+| La mesure des partenaires fonctionne-t-elle toujours ? | ✅ oui — écriture, relecture, **109 relevés réels**. C'est la **preuve de non-régression** |
+| Que se passe-t-il une fois un plafond franchi ? | ❌ **NON VÉRIFIÉ en réel** — prouvé par les tests unitaires seulement |
+
+Le dernier point mérite d'être explicité plutôt que passé sous silence : personne n'a envoyé
+30 001 relevés pour observer le refus, et personne ne le fera. Le bouton de diagnostic ne peut pas
+davantage l'atteindre — il tire un identifiant d'appareil **neuf à chaque essai**, donc il ne
+consomme jamais le plafond par appareil. C'est voulu : un outil de diagnostic qui se bloquerait
+lui-même serait pire qu'inutile.
+
+**Conséquence sur le registre**
+
+**R-014 passe au statut TESTÉ** — le **premier problème du chantier** à l'atteindre. Le chantier
+**C-001** est clos dans `PLAN.md`.
+
+**Ce que cela ne change PAS**
+
+- **M-03 reste ouvert.** Le harnais fonctionne, mais rien ne le lance automatiquement : c'est un
+  geste manuel, donc oubliable. À reprendre au **domaine D**. Une atténuation utile a été validée
+  au passage : écrire les fonctions en **cœur pur** permet de les rejouer hors de Google, ce qui a
+  permis de vérifier les 16 nouvelles avant même le redéploiement ;
+- **R-019 reste P1** et attend toujours **D-017** : remplacer les deux mots de passe, qui sont des
+  mots choisis à la main, par des suites aléatoires. Aucun code — cinq minutes dans le menu du
+  classeur.
+
+**Prochaine session recommandée** — **session 7, ÉTAPE 2, domaine B (RGPD)**.
+
+---

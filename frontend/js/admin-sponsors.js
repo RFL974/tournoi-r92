@@ -704,10 +704,28 @@ async function onTesterRemontee() {
     let ecritureOk = false;
     try {
       const r = await apiPost('mesureSponsors', releve);
-      ecritureOk = !!(r && r.ok);
-      lignes.push(ecritureOk
-        ? '✅ <strong>Écriture</strong> — le backend a accepté un relevé de test.'
-        : '⚠️ <strong>Écriture</strong> — réponse inattendue du backend.');
+      // `ignore` = le backend a répondu OK mais n'a VOLONTAIREMENT rien écrit (un plafond de
+      // l'écriture publique est atteint). Sans ce cas, le diagnostic annoncerait une écriture
+      // réussie puis une relecture introuvable, et enverrait chercher une panne inexistante.
+      if (r && r.ok && r.ignore) {
+        ecritureOk = false;
+        lignes.push('⚠️ <strong>Écriture</strong> — le backend a répondu, mais n\'a rien enregistré : ' +
+          'un <strong>plafond de sécurité</strong> est atteint (<code>' + echapper(r.ignore) + '</code>).');
+        verdict = (r.ignore === 'plafond_lignes')
+          ? '<strong>L\'onglet des relevés est plein.</strong> C\'est un garde-fou volontaire : ' +
+            'au-delà d\'une certaine taille, plus rien n\'est enregistré, pour qu\'un afflux de ' +
+            'relevés ne puisse jamais empêcher la saisie des scores. Clique ' +
+            '« Vider les relevés » pour repartir, après avoir noté les chiffres qui t\'intéressent.'
+          : '<strong>Le débit maximal de relevés est atteint</strong> pour le moment. C\'est un ' +
+            'garde-fou volontaire, et il se relâche tout seul : réessaie dans un moment. ' +
+            'Si cela se reproduit sans raison, signale-le — les plafonds sont peut-être trop bas.';
+        classe = 'diag-ko';
+      } else {
+        ecritureOk = !!(r && r.ok);
+        lignes.push(ecritureOk
+          ? '✅ <strong>Écriture</strong> — le backend a accepté un relevé de test.'
+          : '⚠️ <strong>Écriture</strong> — réponse inattendue du backend.');
+      }
     } catch (err) {
       const msg = String(err.message || '');
       if (/Action inconnue/i.test(msg)) {

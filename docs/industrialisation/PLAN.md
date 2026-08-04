@@ -4,7 +4,7 @@
 > Tant que l'audit (ÉTAPE 2) n'a pas eu lieu, le tableau des chantiers reste **vide** :
 > on ne planifie pas des travaux qu'on n'a pas encore constatés.
 
-**Dernière mise à jour** : 2026-08-04 (session 5)
+**Dernière mise à jour** : 2026-08-04 (session 6)
 
 ---
 
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
-| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaine A fait |
+| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaines A et C faits |
 | 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ⬜ À faire |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
@@ -47,9 +47,9 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | Domaine | Nom | Statut | Session |
 |---|---|---|---|
-| A | Métier / Product Owner | ✅ **FAIT** — 0 P0 · 5 P1 · 5 P2 · 1 P3 | 5 |
-| B | RGPD / Protection des données | ⬜ Non commencé | — |
-| C | Sécurité | ⬜ **Prochain** | 6 |
+| A | Métier / Product Owner | ✅ **FAIT** — 0 P0 · 5 P1 · 7 P2 · 1 P3 | 5 |
+| C | Sécurité | ✅ **FAIT** — **1 P0 (TESTÉ)** · 5 P1 · 6 P2 · 2 P3 | 6 |
+| B | RGPD / Protection des données | ⬜ **Prochain** | 7 |
 | D | QA / Tests | ⬜ Non commencé | — |
 | E | UX / UI / Accessibilité | ⬜ Non commencé | — |
 | F | Performance | ⬜ Non commencé | — |
@@ -73,13 +73,30 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | ID | Chantier | Priorité | Statut | Dépend de | Validé par Romain | Implémenté | Testé |
 |---|---|---|---|---|---|---|---|
-| — | *(aucun chantier — le tableau se remplit à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
+| **C-001** | **Plafonner l'écriture publique des relevés de partenaires** (R-014) — *hors ordre normal, par exception D-016* | **P0** | ✅ **TESTÉ** | — | ✅ oui (D-016) | ✅ commit `c1948fc`, **redéployé** | ✅ **573/573** dans Apps Script + chaîne vérifiée en réel |
+| — | *(les autres chantiers se rempliront à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
 
-> **Pourquoi ce tableau est encore vide alors que 11 problèmes sont identifiés ?** Parce qu'un
-> chantier regroupe des corrections qui doivent être faites **ensemble**, et qu'on ne peut pas
-> savoir ce qui va ensemble tant que les 8 domaines n'ont pas parlé. Exemple : R-005 (borne haute
-> sur un score) touchera peut-être le même code qu'un futur constat du domaine D (tests). Les
-> regrouper évitera de modifier deux fois le même fichier.
+> **Pourquoi ce tableau ne contient-il qu'une ligne, alors que 27 problèmes sont identifiés ?**
+> Parce qu'un chantier regroupe des corrections qui doivent être faites **ensemble**, et qu'on ne
+> peut pas savoir ce qui va ensemble tant que les 8 domaines n'ont pas parlé. Exemple : R-005
+> (borne haute sur un score) touchera peut-être le même code qu'un futur constat du domaine D
+> (tests). Les regrouper évitera de modifier deux fois le même fichier.
+>
+> ✅ **C-001 est une exception assumée**, validée par Romain (**D-016**) : le domaine C a trouvé un
+> **P0**, corrigé seul et en avance parce que c'était la seule faiblesse exploitable sans
+> connaître aucun secret. Il est aujourd'hui **TESTÉ** et **en service**. Cette exception ne crée
+> pas de précédent : tout le reste attend l'ÉTAPE 3.
+
+### Regroupements déjà visibles (à confirmer à l'ÉTAPE 3)
+
+Ce ne sont pas encore des chantiers, mais des **familles** qui se dessinent après deux audits :
+
+| Famille | Problèmes | Pourquoi ils vont ensemble |
+|---|---|---|
+| **Filet de sécurité sur les gestes destructeurs** | R-015, R-016 | Même cause (protection tenue par la page, pas par le serveur), même correction, mêmes tests |
+| **Savoir qui a fait quoi** | R-017, R-023 | Les deux ajoutent une trace ; autant toucher l'`Historique` une seule fois |
+| **Ce qui sort de l'application** | R-021, R-018 | Tous deux dépendent du domaine B (RGPD), qui vient ensuite — à ne pas figer avant |
+| **Le forfait, l'annulation et le classement** | R-001, R-004, R-013, R-012 | Domaine A : même code (classement, états d'un match), même besoin de tests préalables |
 
 ### Modèle de fiche de chantier
 

@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, close)
+**Dernière mise à jour** : 2026-08-04 (session 6, close)
 
 ---
 
@@ -529,6 +529,93 @@ c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
 
 ---
 
+
+### D-016 — Corriger le P0 (R-014) tout de suite, hors de l'ordre du chantier
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 6 |
+| **Statut** | ✅ **VALIDÉE** — option **(b)** retenue par Romain |
+
+**Problème posé**
+> L'audit de sécurité a trouvé **un problème P0** : `mesureSponsors`, la seule porte de
+> l'application ouverte **sans mot de passe**, n'avait **aucune limite** — ni par appareil, ni par
+> minute, ni par jour. Chaque envoi ajoutait une ligne au classeur, et rien ne les efface.
+> N'importe qui pouvait donc **remplir le classeur** (limite Google : 10 millions de cases) et,
+> ce faisant, **empêcher la saisie des scores le jour du tournoi**. Détail : `AUDIT.md` §C.2.
+
+**La règle du chantier**
+> `CLAUDE.md` §7 : l'ÉTAPE 2 est un **audit**, on ne modifie rien ; les corrections viennent à
+> l'ÉTAPE 5, après les 8 audits. Trois options ont été présentées : **(a)** attendre ;
+> **(b)** corriger R-014 seul ; **(c)** corriger aussi R-015 et R-016.
+
+**Décision de Romain**, le 2026-08-04
+> **(b)** — *« va pour B alors je te suis dans ton raisonnement »*. Exception ciblée : R-014 est
+> corrigé seul, dans une modification isolée, puis les audits reprennent où ils s'étaient arrêtés.
+
+**Pourquoi (b) et pas (c)**
+> R-015 et R-016 touchent à des boutons réellement utilisés (regénérer les poules, réinitialiser).
+> Les corriger demande de **vérifier qu'on n'empêche pas Romain de travailler** — donc du temps,
+> donc pas dans la précipitation. Ils restent au statut **IDENTIFIÉ** et reviendront à l'ÉTAPE 3.
+
+**Ce qui a été fait** *(commit `c1948fc`)*
+> Trois plafonds sur cette seule porte : un **plafond dur** sur la taille de l'onglet `Mesures`
+> (déterministe, c'est lui qui protège vraiment), et deux **plafonds de débit** (global et par
+> appareil) vérifiés **avant** d'ouvrir le classeur, pour qu'une requête refusée coûte presque
+> rien. 9 tests ajoutés.
+
+**Portée réelle, dite sans exagération**
+> Cela supprime le **dégât durable** (le classeur rempli) et rend l'abus beaucoup plus coûteux.
+> Cela ne rend **pas** l'adresse immunisée contre un envoi massif : Apps Script ne fournit pas
+> l'adresse du visiteur, on ne peut donc pas distinguer un abuseur d'un spectateur. Ce qui est
+> visé, et atteint : **un abus n'empêche plus jamais la saisie des scores.**
+
+**✅ Correction déployée et vérifiée le 2026-08-04.** Romain a redéployé le backend chez Google,
+lancé `lancerTestsFFR` (**573/573 OK**) et rejoué le diagnostic « Tester la remontée » (écriture,
+relecture, 109 relevés réels). R-014 passe au statut **TESTÉ** — le premier du chantier.
+La règle permanente de `CLAUDE.md` §13.6 est donc satisfaite ici : ce n'est pas le dépôt qui le
+dit, c'est une vérification faite en production.
+
+---
+
+### D-017 — Les deux clés doivent être remplacées par des suites aléatoires
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 6 |
+| **Statut** | ⏳ **EN ATTENTE** — action de Romain, aucun code à écrire |
+
+**Ce qui a été appris**
+> Romain, le 2026-08-04 : *« pour les MDP c'est moi qui ai choisi ce sont des mots »*.
+> Cela **lève l'inconnue I-12** — et cela **change la gravité de R-019**.
+
+**Pourquoi c'est important**
+> Le garde-fou anti-devinette laisse passer de l'ordre de **8 600 essais par jour** (30 essais
+> toutes les 5 minutes). Ce chiffre ne casse **jamais** une suite tirée au hasard. Il peut casser
+> **des mots** : un dictionnaire français courant tient en quelques dizaines de milliers d'entrées,
+> et les combinaisons de deux mots familiers d'un club de rugby se comptent en milliers.
+>
+> Et la porte est trouvable : l'adresse du serveur est publiquement lisible dans le code du site.
+> La clé ADMIN, elle, ouvre **tout** — effacer les scores, réinitialiser le tournoi, lire le
+> carnet d'adresses, envoyer des courriels sous l'adresse du propriétaire.
+
+**Ce que je propose**
+> **Remplacer les deux clés par des suites aléatoires** (par exemple 24 caractères tirés par un
+> gestionnaire de mots de passe), via le menu **« Tournoi R92 → Configurer les clés »** du
+> classeur. Aucune ligne de code à écrire.
+>
+> **Conséquence pratique** : ces clés ne se retiennent plus par cœur. Il faut donc décider **où
+> elles sont rangées** (gestionnaire de mots de passe, ou note protégée) et **comment la clé
+> SCORES est transmise aux bénévoles le jour J**. C'est un changement d'habitude, pas un
+> changement d'outil — et c'est la vraie question à trancher.
+
+**Effet sur l'audit**
+> Si c'est fait : **R-019 redevient théorique** et retombe en P2. Tant que ce n'est pas fait,
+> R-019 est classé **P1** — voir `RISQUES.md`.
+
+---
 
 ## DÉCISIONS EN ATTENTE DE ROMAIN
 
