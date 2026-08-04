@@ -5,7 +5,12 @@
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
 **Dernière mise à jour** : 2026-08-04 (session 6, close)
-**Commit de référence** : `dda3987` (branche `claude/session-6-etape-2-securite-0tul4c`)
+**Commit de référence** : `7617d6c` sur **`main`** — la session 6 est **fusionnée** (PR #175).
+
+> ✅ **Tout le travail décrit ci-dessous est dans `main`.** Une session qui démarre depuis `main`
+> voit donc l'état réel du chantier. *(Ce n'était pas le cas au démarrage de la session 6, où une
+> PR non fusionnée avait fait croire que le travail des sessions 4 et 5 n'existait pas — d'où
+> cette ligne, désormais tenue à jour à chaque fin de session.)*
 
 ---
 
