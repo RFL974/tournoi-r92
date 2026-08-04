@@ -4,7 +4,7 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, close)
+**Dernière mise à jour** : 2026-08-04 (session 5, close — PR #174 ouverte)
 **Commit de référence** : `6111ba5` (branche `claude/cartographie-donnees-etape-1-t1e9xq`)
 
 ---
@@ -170,11 +170,11 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-013 | **Planning** : déplacer un match, et décaler toute la journée de X minutes | ✅ Validée (session 5) |
 | D-014 | **Départage** : confrontation directe, puis ordre alphabétique en dernier recours | ✅ Validée (session 5) |
 | D-015 | **Match annulé** : même mécanisme que le forfait, libellé distinct, ne compte pour personne | ✅ Validée (session 5), **par défaut** — une règle FFR primerait |
+| D-009 | Quand une **branche est imposée**, la documentation y est commitée puis **ramenée dans `main` par une pull request** à la clôture de la session | ✅ Validée (session 5) |
 
-**En attente de validation** (voir `DECISIONS.md`) :
+**En attente de validation** (voir `DECISIONS.md`) — **une seule** :
 
 - D-005 — Périmètre exact du dépôt à auditer (le site vitrine `boutique-r92` est un **autre** dépôt)
-*(Aucune décision du domaine A n'est en attente.)*
 
 ---
 

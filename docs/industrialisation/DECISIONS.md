@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, close)
+**Dernière mise à jour** : 2026-08-04 (session 5, close — D-009 tranchée)
 
 ---
 
@@ -530,15 +530,13 @@ c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
 ---
 
 
-## DÉCISIONS EN ATTENTE DE ROMAIN
-
 ### D-009 — Où atterrit la documentation quand une branche est imposée
 
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-04 |
-| **Session** | 2 |
-| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Session** | 2, tranchée en session 5 |
+| **Statut** | ✅ **VALIDÉE PAR ROMAIN** (2026-08-04) — option **(a)** |
 
 **Problème posé**
 > **D-006** dit que la documentation part **directement sur `main`**, sans branche ni relecture.
@@ -558,7 +556,7 @@ c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
 > session qui démarrerait depuis `main`. Elle croirait la cartographie non commencée et risquerait
 > de la refaire.
 
-**Question à Romain** — deux possibilités :
+**Question posée à Romain** — deux possibilités :
 > **(a)** ramener la branche dans `main` dès maintenant (fusion), et garder D-006 tel quel : la
 > documentation continue d'aller directement sur `main` quand aucune branche n'est imposée ;
 > **(b)** modifier D-006 : toute session, documentation comprise, passe désormais par une branche.
@@ -566,7 +564,33 @@ c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
 > **Recommandation : (a).** C'est le comportement décrit par D-006, que tu as déjà validé, et il
 > garantit qu'une nouvelle session partant de `main` retrouve toujours l'état réel du chantier.
 
+**✅ Réponse de Romain, 2026-08-04 : option (a), par PULL REQUEST.**
+
+> Interrogé à la clôture de la session 5 (« on a fait une PR pour clore cette session ? »), Romain
+> a choisi **« ouvrir une PR »** parmi trois possibilités (PR / fusion directe / laisser la branche).
+
+**Règle retenue, applicable à toutes les sessions suivantes**
+
+> Quand une **branche est imposée** au démarrage d'une session, la documentation de suivi y est
+> commitée normalement, puis **ramenée dans `main` par une pull request à la clôture de la
+> session**. D-006 reste inchangée : quand aucune branche n'est imposée, la documentation va
+> **directement sur `main`**.
+>
+> Ce que cela ajoute par rapport à la recommandation initiale : un **point de relecture** pour
+> Romain avant que l'état officiel du chantier ne change.
+
+**Pourquoi cela compte**
+
+> Sans ce retour dans `main`, `CARTOGRAPHIE.md` et `AUDIT.md` n'existeraient que sur une branche :
+> une session démarrant depuis `main` croirait la cartographie jamais commencée et **referait le
+> travail**. C'est le risque exact que D-009 avait identifié en session 2.
+
+**Première application** : PR **#174** — sessions 4 et 5 (volet C de la cartographie + audit du
+domaine A), 5 commits, 7 fichiers, **aucun fichier de l'application**.
+
 ---
+
+## DÉCISIONS EN ATTENTE DE ROMAIN
 
 ### D-005 — Périmètre du dépôt à auditer
 

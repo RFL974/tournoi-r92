@@ -837,3 +837,33 @@ plutôt qu'un paramètre réglable. **Poser la question sur le besoin, jamais su
 
 **Session 6 — ÉTAPE 2, domaine C : la sécurité.** Condition de démarrage : instruction explicite
 de Romain. Rien ne sera codé avant la fin des 8 audits et la validation de l'ÉTAPE 4.
+
+### Session 5 — clôture technique : PR #174 et résolution de D-009
+
+Romain à la fin de la session : *« On a fait une PR pour clore cette session ? »*
+
+**Réponse : non.** Les 5 commits des sessions 4 et 5 étaient poussés sur la branche
+`claude/cartographie-donnees-etape-1-t1e9xq`, mais **aucune pull request n'avait été ouverte** —
+une PR n'est jamais créée sans demande explicite.
+
+**Le risque que cela faisait courir** : `CARTOGRAPHIE.md` (les 3 volets) et `AUDIT.md` (domaine A)
+n'existaient **que sur cette branche**. Une session démarrant depuis `main` ne les aurait pas vus,
+aurait cru la cartographie jamais commencée, et **aurait refait le travail**. C'est exactement le
+danger identifié par **D-009** en session 2, resté en attente depuis.
+
+**Décision de Romain** : ouvrir une PR. Trois possibilités lui ont été présentées (pull request /
+fusion directe dans `main` / laisser la branche telle quelle) ; il a retenu la **pull request**.
+
+**D-009 est donc tranchée** — option (a), par pull request. Règle retenue pour toutes les sessions
+suivantes :
+
+> Quand une **branche est imposée** au démarrage d'une session, la documentation de suivi y est
+> commitée normalement, puis **ramenée dans `main` par une pull request à la clôture**. D-006 reste
+> inchangée : sans branche imposée, la documentation va **directement sur `main`**.
+
+**PR #174** — « docs(industrialisation) : clore l'ÉTAPE 1 et auditer le domaine métier
+(sessions 4 et 5) ». 5 commits, 7 fichiers, tous dans `docs/industrialisation/`.
+**Aucun fichier de l'application.**
+
+**Décisions encore en attente après cette session** : une seule — **D-005** (périmètre du dépôt à
+auditer, le site vitrine `boutique-r92` étant un autre dépôt).
