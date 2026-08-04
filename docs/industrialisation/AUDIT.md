@@ -7,7 +7,7 @@
 > Le registre des problèmes (avec leur statut de correction) vit dans `RISQUES.md`.
 > Ce document-ci **explique** ; `RISQUES.md` **suit**.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, après les trois échanges avec Romain)
+**Dernière mise à jour** : 2026-08-04 (session 5, close)
 
 | Domaine | Nom | Statut |
 |---|---|---|
@@ -691,6 +691,10 @@ presque jamais serait exactement l'optimisation prématurée que `CLAUDE.md` int
 **Conseil** : à traiter **avec R-001**, dont il réutilise toute la machinerie. Mais **poser la
 question à la FFR d'abord** : si une règle fédérale existe, elle prime sur ma proposition.
 
+> ✅ **Validé par Romain le 2026-08-04**, *par défaut* : la proposition D-015 s'applique tant
+> qu'aucune règle fédérale ne la contredit. La question à la Fédération reste ouverte (**I-10**)
+> et sa réponse primerait — sur D-015 comme sur D-011.
+
 ---
 
 ## A.8 — Le problème P3 (à garder pour plus tard)
@@ -766,11 +770,14 @@ Par honnêteté sur les limites de cet audit :
 | R-003 | Ajuster le planning en cours de journée | ✅ **Tranchée** — D-013 (déplacer un match + décaler toute la journée de X minutes) |
 | R-004 | Critères de départage à ajouter | ✅ **Tranchée** — D-014 (confrontation directe, puis ordre alphabétique) |
 | R-012 | Publier les règles dans le dossier des clubs | ✅ **Acquise** — c'est l'exigence même posée par Romain dans D-011 |
-| R-013 | Le match annulé | ⏳ Proposition **D-015** faite — **subordonnée à une question FFR restée sans réponse** |
+| R-013 | Le match annulé | ✅ **Tranchée par défaut** — D-015 ; une règle FFR primerait (**I-10**, question sortante) |
 
-> **Les cinq problèmes P1 du domaine A ont désormais tous leur règle métier tranchée.** Il ne reste
-> que l'écriture du code, qui n'aura pas lieu avant la fin des 8 audits et la validation de
-> l'ÉTAPE 4.
+> ✅ **Le domaine A est clos.** Les **13 problèmes** sont identifiés et **toutes les décisions
+> métier sont prises**. Il ne reste que l'écriture du code, qui n'aura pas lieu avant la fin des
+> **8 audits** et la validation de l'**ÉTAPE 4**.
+>
+> Une seule inconnue subsiste, et elle est **extérieure au dépôt** : ce que la FFR prescrit pour un
+> match qui n'a pas pu se jouer (**I-10**).
 
 ### Si je devais ne corriger que trois choses
 

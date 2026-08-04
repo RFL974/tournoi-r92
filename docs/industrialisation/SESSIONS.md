@@ -773,3 +773,67 @@ Aucun. Toujours aucune ligne de code touchée.
 
 Inchangée : **session 6 — ÉTAPE 2, domaine C (sécurité)**. Les décisions prises ici n'accélèrent
 rien : le code ne sera écrit qu'à l'ÉTAPE 5, après les 8 audits et la validation de l'ÉTAPE 4.
+
+### Session 5 — CLÔTURE
+
+Romain : *« ok tout ça me va. »*
+
+**Ce que cela valide**
+
+- les **six compléments techniques** proposés sur le bouton forfait (annulabilité, double forfait,
+  deuxième mise en garde qui affiche la conséquence, affichage « Forfait » et jamais « 0-0 »,
+  déblocage de l'après-midi, clé scores conservée) → **D-011 est entièrement fixée** ;
+- **D-015** — le match annulé : même mécanisme que le forfait, libellé distinct, ne compte pour
+  personne. **Validée par défaut** : une règle fédérale primerait si elle existe.
+
+**Bilan définitif du domaine A**
+
+**13 problèmes — 0 P0 · 5 P1 · 7 P2 · 1 P3.** **Toutes les décisions métier sont prises**
+(D-011 → D-015). Aucune question n'attend plus Romain sur ce domaine.
+
+| Réf | Priorité | Décision |
+|---|---|---|
+| R-001 forfait | P1 | D-011 amendée — bouton par équipe, 3/0, sans score, double mise en garde, annulable |
+| R-002 blocage après-midi | P1 | Aucune décision métier requise — choix technique, ÉTAPE 3 |
+| R-003 planning figé | P1 | D-013 — déplacer un match · décaler la journée · 3ᵉ niveau écarté |
+| R-004 départage | P1 | D-014 — confrontation directe, puis ordre alphabétique |
+| R-005 score aberrant | P1 | D-012 — 2 chiffres max + confirmation |
+| R-006 → R-010 | P2 | Choix techniques, ÉTAPE 3 |
+| R-012 règles non publiées | P2 | Exigence posée par Romain dans D-011 |
+| R-013 match annulé | P2 | D-015, par défaut |
+| R-011 tirage non reproductible | P3 | Rien à faire maintenant |
+
+**Ce qui reste ouvert, et qui ne dépend pas de ce chantier**
+
+**I-10** — la FFR encadre-t-elle le sort d'un match qui n'a pas pu se jouer ?
+`AUDIT-TOURNOI-R92.md` ne contient rien sur le sujet. Question à porter au Directeur EDR du Racing
+ou au Comité 92 (même voie que Q23). Sa réponse **primerait sur D-011 et D-015**.
+
+**Tests réalisés**
+
+Aucun sur les cinq échanges de cette session. **Aucune ligne de code n'a été touchée.**
+
+**Tests NON réalisés (et pourquoi)**
+
+- Aucun scénario n'a été joué : tous les constats portent sur ce que le code **prévoit**.
+  **NON VÉRIFIÉ** pour tout comportement réel.
+- `backend/Tests.gs` : **NON VÉRIFIÉ** — exécutable seulement chez Google (I-02).
+- Comportement en production : **INCONNU** (I-01).
+
+**Leçon de méthode retenue**
+
+Deux des trois questions posées à Romain en fin d'audit étaient **mal formulées** : elles
+supposaient un mot technique connu (« départage ») ou imposaient implicitement ma solution
+(« à partir de quel seuil ? »). Ses réponses ont produit **deux solutions meilleures que les
+miennes** — la limite dure à 2 chiffres plutôt qu'un seuil d'alerte, et le bouton à règle fixe
+plutôt qu'un paramètre réglable. **Poser la question sur le besoin, jamais sur la solution.**
+
+**Commit**
+
+`docs(industrialisation): clore le domaine A — toutes les décisions métier prises` — branche
+`claude/cartographie-donnees-etape-1-t1e9xq`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+**Session 6 — ÉTAPE 2, domaine C : la sécurité.** Condition de démarrage : instruction explicite
+de Romain. Rien ne sera codé avant la fin des 8 audits et la validation de l'ÉTAPE 4.

@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, 3ᵉ échange avec Romain)
+**Dernière mise à jour** : 2026-08-04 (session 5, close)
 
 ---
 
@@ -352,11 +352,15 @@ un piège. Un organisateur qui l'aurait réglé sur « 25-0 » aurait offert +25
 équipe — or la différence sert à départager. Supprimer le réglage supprime le piège. Une règle
 fixe, sans score, ne peut fausser aucun classement.
 
-**Compléments techniques que j'ai proposés en retour** *(voir `AUDIT.md` §A.2, point 8)* : le
-forfait doit être **annulable**, le cas des **deux équipes absentes** doit être prévu, la deuxième
-mise en garde doit **afficher la conséquence** plutôt que répéter la question, l'affichage doit dire
-« Forfait » et **jamais « 0-0 »**, et un match forfait doit **débloquer** la génération de
-l'après-midi.
+**Compléments techniques proposés en retour et ✅ ACCEPTÉS par Romain le 2026-08-04**
+*(détail dans `AUDIT.md` §A.2, point 8)* : le forfait doit être **annulable**, le cas des **deux
+équipes absentes** doit être prévu, la deuxième mise en garde doit **afficher la conséquence**
+plutôt que répéter la question, l'affichage doit dire « Forfait » et **jamais « 0-0 »**, un match
+forfait doit **débloquer** la génération de l'après-midi, et le geste reste protégé par la **clé
+scores** (jamais la clé admin, qui ne doit pas circuler au bord d'un terrain).
+
+**La règle métier de R-001 est donc entièrement fixée.** Il ne reste que l'écriture du code, à
+l'ÉTAPE 5.
 
 ---
 
@@ -466,15 +470,13 @@ l'après-midi.
 ---
 
 
-## DÉCISIONS EN ATTENTE DE ROMAIN
-
 ### D-015 — Le match annulé (l'orage), distinct du forfait
 
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-04 |
 | **Session** | 5 |
-| **Statut** | ⏳ **PROPOSITION FAITE — EN ATTENTE DE ROMAIN** |
+| **Statut** | ✅ **VALIDÉE PAR ROMAIN** (2026-08-04) — **sous réserve d'une règle FFR contraire** |
 | **Couvre** | R-013 |
 
 **Demande de Romain**
@@ -527,6 +529,8 @@ c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
 
 ---
 
+
+## DÉCISIONS EN ATTENTE DE ROMAIN
 
 ### D-009 — Où atterrit la documentation quand une branche est imposée
 

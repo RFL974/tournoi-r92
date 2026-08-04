@@ -5,7 +5,7 @@
 > L'**explication** de chaque problème (pourquoi, exemple concret, ce qui est proposé) vit dans
 > `AUDIT.md`. Ce fichier-ci **suit** ; `AUDIT.md` **explique**.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, 3ᵉ échange avec Romain)
+**Dernière mise à jour** : 2026-08-04 (session 5, close)
 **Audits réalisés** : domaine A (métier). Les 7 autres domaines restent à faire.
 
 ---
@@ -58,12 +58,12 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 |---|---|---|---|---|---|---|
 | P0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | P1 | **5** | 0 | **5** | 0 | 0 | 0 |
-| P2 | **7** | 0 | **1** | 0 | 0 | 0 |
+| P2 | **7** | 0 | **2** | 0 | 0 | 0 |
 | P3 | **1** | 0 | 0 | 0 | 0 | 0 |
 
 > ⚠️ **« Validé » signifie que la RÈGLE MÉTIER est tranchée par Romain — jamais que le code est
-> écrit.** Les **5 problèmes P1 du domaine A** ont désormais leur règle décidée (D-011 à D-014),
-> ainsi que R-012. **Rien n'est corrigé. Aucun fichier de l'application n'a été modifié.**
+> écrit.** Les **5 problèmes P1 du domaine A** ont leur règle décidée (D-011 à D-014), ainsi que
+> R-012 et R-013 (D-015). **Rien n'est corrigé. Aucun fichier de l'application n'a été modifié.**
 >
 > Le passage à **EN COURS** n'aura pas lieu avant la fin des 8 audits et la validation de
 > l'ÉTAPE 4 (`CLAUDE.md` §7).
@@ -97,7 +97,7 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | **R-010** | **Les deux interrupteurs de publication sont indépendants** : un tournoi publié montre le planning à qui a le lien public même si les clubs ne le voient pas. Volontaire, mais les libellés ne le disent pas | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.7 |
 | **R-011** | **Un tirage ne peut être ni reproduit ni annulé** : aucune trace n'en est gardée. Sans conséquence aujourd'hui ; en aurait dans un usage multi-clubs | P3 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §A.8 |
 | **R-012** | **Aucune règle sportive n'est écrite nulle part pour les clubs** : barème et départage n'existent que dans les commentaires du code. La ligne « Règlement » du dossier est un texte libre, et son champ **a été retiré de l'écran d'administration** — il n'existe donc aucun moyen de le remplir | P2 | CERTAIN | ✅ **VALIDÉ** — c'est l'exigence même posée par Romain dans **D-011** : « toutes les équipes doivent être informées de tout point de règlement ». Code **non écrit** | `AUDIT.md` §A.7 |
-| **R-013** | **Aucun état « match annulé »** : l'orage, le terrain condamné, la journée écourtée ne peuvent pas être enregistrés. Ce n'est pas un forfait — personne n'est fautif | P2 | CERTAIN | IDENTIFIÉ — proposition **D-015** faite, **subordonnée à une question FFR sans réponse** | `AUDIT.md` §A.7 |
+| **R-013** | **Aucun état « match annulé »** : l'orage, le terrain condamné, la journée écourtée ne peuvent pas être enregistrés. Ce n'est pas un forfait — personne n'est fautif | P2 | CERTAIN | ✅ **VALIDÉ** — solution fixée par **D-015** (même mécanisme que le forfait, libellé distinct ; ne compte pour personne). **Sous réserve d'une règle FFR contraire — voir I-10.** Code **non écrit** | `AUDIT.md` §A.7 |
 
 ### État des décisions métier
 
@@ -108,7 +108,10 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | R-003 | Comment ajuster le planning en cours de journée ? | ✅ **Tranchée** — D-013 |
 | R-004 | Quels critères de départage ajouter ? | ✅ **Tranchée** — D-014 |
 | R-012 | Faut-il publier les règles sportives dans le dossier des clubs ? | ✅ **Acquise** — exigence posée dans D-011 |
-| R-013 | Le match annulé (l'orage) | ⏳ Proposition **D-015** faite — **bloquée par une question FFR** |
+| R-013 | Le match annulé (l'orage) | ✅ **Tranchée** — D-015, **par défaut** : une règle FFR primerait (I-10) |
+
+**Toutes les décisions métier du domaine A sont prises.** Il ne reste aucune question bloquante
+côté Romain ; seule une **question sortante** (I-10) attend une réponse de la Fédération.
 
 ### ⚠️ Question sortante — à porter au chantier FFR
 

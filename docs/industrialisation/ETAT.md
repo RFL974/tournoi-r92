@@ -4,17 +4,18 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, 3ᵉ échange avec Romain)
-**Commit de référence** : `d0a0ea5` (branche `claude/cartographie-donnees-etape-1-t1e9xq`)
+**Dernière mise à jour** : 2026-08-04 (session 5, close)
+**Commit de référence** : `6111ba5` (branche `claude/cartographie-donnees-etape-1-t1e9xq`)
 
 ---
 
 ## 1. EN UNE PHRASE
 
 L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 a commencé** : le **domaine A (métier)** est audité —
-**13 problèmes identifiés, dont 5 P1, aucun P0**. Romain a tranché **la règle métier des 5 P1**
-(D-011 à D-014). Une seule question reste ouverte, et elle est **sortante** : le sort d'un match
-annulé relève d'une règle FFR que le dépôt ne documente pas. Il reste **7 domaines** à auditer.
+**13 problèmes identifiés, dont 5 P1, aucun P0**. **Toutes les décisions métier du domaine A
+sont prises** (D-011 à D-015). Une seule inconnue subsiste, et elle est **extérieure au dépôt** :
+le sort d'un match annulé relève d'une règle FFR que rien ici ne documente (**I-10**). Il reste
+**7 domaines** à auditer.
 **Aucun fichier de l'application n'a été modifié** et **aucun problème n'est corrigé.**
 
 ---
@@ -39,7 +40,7 @@ annulé relève d'une règle FFR que le dépôt ne documente pas. Il reste **7 d
 
 | Domaine | Nom | Statut |
 |---|---|---|
-| **A** | **Métier / Product Owner** | ✅ **FAIT** (session 5) — 13 problèmes, 0 P0, 5 P1, 7 P2, 1 P3 · **les 5 P1 ont leur règle tranchée** |
+| **A** | **Métier / Product Owner** | ✅ **CLOS** (session 5) — 13 problèmes, 0 P0, 5 P1, 7 P2, 1 P3 · **toutes les décisions métier prises** |
 | C | Sécurité | ⬜ **Prochain** |
 | B | RGPD / Protection des données | ⬜ À faire |
 | D | QA / Tests | ⬜ À faire |
@@ -94,11 +95,11 @@ le registre et `AUDIT.md` pour l'explication de chacun.
 |---|---|---|
 | **P0** | **0** | — |
 | **P1** | **5** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ |
-| **P2** | 7 | R-006 → R-010 · **R-012** (aucune règle sportive n'est écrite pour les clubs) ✅ · **R-013** (match annulé) ⏳ |
+| **P2** | 7 | R-006 → R-010 · **R-012** (aucune règle sportive n'est écrite pour les clubs) ✅ · **R-013** (match annulé) ✅ |
 | **P3** | 1 | R-011 |
 
-✅ = la **règle métier est décidée**, le **code n'est pas écrit**. ⏳ = en attente d'une réponse
-extérieure. R-002 n'appelait aucune décision : c'est un choix purement technique, réglé à l'ÉTAPE 3.
+✅ = la **règle métier est décidée**, le **code n'est pas écrit**. R-002 et R-006 → R-010
+n'appelaient aucune décision de Romain : ce sont des choix techniques, réglés à l'ÉTAPE 3.
 
 **Le fil rouge du domaine A** : l'application est excellente **avant** le coup d'envoi et rigide
 **après**. Les 5 P1 apparaissent tous le jour J, quand la réalité s'écarte du plan — forfait,
@@ -124,11 +125,14 @@ match non saisi, terrain impraticable, égalité parfaite, faute de frappe.
 > été **retiré de l'écran d'administration**. La règle décidée ne serait donc, en l'état,
 > communicable à personne.
 
-**Une seule question reste ouverte, et elle est sortante** — **R-013 / D-015**, le match annulé
-(l'orage) : `AUDIT-TOURNOI-R92.md` **ne dit rien** du forfait ni de l'annulation. C'est une
-**question de règle du jeu**, qui appartient au chantier FFR (D-003) et que Romain doit porter au
-Directeur EDR du Racing ou au Comité 92. Ma proposition (D-015) tient tant qu'aucune règle
-fédérale ne la contredit.
+- **D-015 — match annulé** : le **même mécanisme que le forfait, avec un libellé distinct**. Un
+  match annulé ne compte pour personne et ne bloque pas l'après-midi. **Validé par défaut** : une
+  règle fédérale primerait.
+
+**Une seule inconnue subsiste, et elle est extérieure au dépôt** — **I-10** : `AUDIT-TOURNOI-R92.md`
+**ne dit rien** du forfait ni de l'annulation. C'est une **question de règle du jeu**, qui
+appartient au chantier FFR (D-003) et que Romain doit porter au Directeur EDR du Racing ou au
+Comité 92. Sa réponse primerait sur D-011 **et** D-015.
 
 > ⚠️ Les 7 autres domaines ne sont **pas** audités. L'absence de problème n'y signifie rien.
 
@@ -165,12 +169,12 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-012 | **Scores** : 2 chiffres maximum, plus confirmation avant chaque validation | ✅ Validée (session 5) |
 | D-013 | **Planning** : déplacer un match, et décaler toute la journée de X minutes | ✅ Validée (session 5) |
 | D-014 | **Départage** : confrontation directe, puis ordre alphabétique en dernier recours | ✅ Validée (session 5) |
+| D-015 | **Match annulé** : même mécanisme que le forfait, libellé distinct, ne compte pour personne | ✅ Validée (session 5), **par défaut** — une règle FFR primerait |
 
 **En attente de validation** (voir `DECISIONS.md`) :
 
 - D-005 — Périmètre exact du dépôt à auditer (le site vitrine `boutique-r92` est un **autre** dépôt)
-- **D-015** — Le sort d'un **match annulé** (proposition faite ; **bloquée par une question FFR**
-  que le dépôt ne permet pas de trancher — voir ci-dessous)
+*(Aucune décision du domaine A n'est en attente.)*
 
 ---
 
