@@ -638,7 +638,82 @@ body {
    ========================================================================== */
 @page { size: A4; margin: 12mm; }
 
+/* =========================================================
+   PARTENAIRES (emplacement F) — bandeau permanent du dossier
+   ---------------------------------------------------------
+   Discret par construction : le dossier est un document
+   d'organisation, pas une page publicitaire. Les logos disent
+   qui soutient le tournoi, sans accroche commerciale, et
+   surtout sans jamais retarder l'information que le club
+   vient chercher.
+   ========================================================= */
+.sp-dossier {
+  margin: 0 0 22px;
+  padding: 14px 18px;
+  border: 1px solid var(--d-filet);
+  border-radius: 10px;
+  background: #fff;
+  text-align: center;
+  /* Ne jamais se faire couper en deux par un saut de page à l'impression. */
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.sp-dossier-titre {
+  margin: 0 0 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--d-gris);
+}
+.sp-dossier-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 26px;
+}
+.sp-dossier-case {
+  display: grid;
+  place-items: center;
+  min-height: 48px;      /* hauteur réservée : la page ne saute pas au chargement du logo */
+  max-width: 190px;
+  text-decoration: none;
+}
+.sp-dossier .sp-logo-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  /* Même réglage de taille par partenaire que sur la page des scores (--sp-zoom). */
+  max-height: calc(52px * var(--sp-zoom, 1));
+  object-fit: contain;
+}
+.sp-dossier .sp-logo-texte {
+  display: inline-grid;
+  place-items: center;
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.15;
+  text-align: center;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
 @media print {
+  /* Les logos partenaires sont l'objet même de ce bandeau : on force l'impression des
+     couleurs, sans quoi une pastille de repli sortirait blanche sur blanc. */
+  .sp-dossier { border-color: #bbb; }
+  .sp-dossier .sp-logo-texte,
+  .sp-dossier .sp-logo-img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .no-print { display: none !important; }
   body { background: #fff; font-size: 11pt; }
   .feuille {

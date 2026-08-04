@@ -75,9 +75,19 @@ async function initDossier() {
       // VERROU : poules et matchs ne s'affichent que si l'organisateur les a publiés. Tout ce qui
       // n'est pas un « oui » explicite vaut non — témoin absent (tournoi d'avant la fonction),
       // vide, ou config partielle. Le défaut est FERMÉ, comme les listes blanches du backend.
-      planningVisible: String((config.global || {}).planning_visible_clubs || '').toLowerCase() === 'oui'
+      planningVisible: String((config.global || {}).planning_visible_clubs || '').toLowerCase() === 'oui',
+      // L'instantané public complet : il porte AUSSI les partenaires et leurs réglages
+      // d'affichage. On le garde tel quel plutôt que d'en extraire des morceaux — le
+      // bandeau partenaires a besoin de `config.global` autant que de `sponsors`.
+      donneesPubliques: data
     };
     zone.innerHTML = construireDossier(config.global || {}, config.categories || [], club, ctx);
+    // Le bandeau partenaires du dossier compte comme n'importe quel emplacement : son temps
+    // d'exposition et ses clics rejoignent la fiche de visibilité du partenaire.
+    if (typeof sponsorsBrancherMesure === 'function' && zone.querySelector('[data-sponsor]')) {
+      sponsorsBrancherMesure(zone);
+      sponsorsArmerEnvoi();
+    }
     dessinerQR();      // le QR se dessine après coup (il vise un conteneur du HTML rendu)
     brancherPartage(); // « Partager le dossier à mes équipes » (une seule fois)
     // Données en main : le jeton n'a plus rien à faire dans l'adresse (ni à l'écran, ni au
@@ -313,6 +323,7 @@ function construireDossier(g, categories, club, ctx) {
   // déjà lu à l'invitation, deux mois plus tôt) en RAPPEL plus bas. Même charte, autre rôle.
   return [
     enteteDossier(g, club, filtreApplique ? catsFormat : []),   //  1. qui reçoit, quoi, quand — et pour QUI
+    bandeauPartenaires(ctx),                                    //  1 bis. qui soutient le tournoi
     accueilPersonnalise(g, club),                               //  2. le mot d'accueil
     barrePartage(g, ctx),                                       //  2 bis. partager à ses éducateurs
     sectionJournee(g, catsFormat),                              //  3. LE JOUR J : la journée en un coup d'œil
@@ -340,6 +351,30 @@ function construireDossier(g, categories, club, ctx) {
  * date : ce document est le sien, il doit le voir en une seconde.
  * `catsEngagees` (vide si on ne sait pas) ajoute le rappel de son engagement.
  */
+/**
+ * Bandeau des partenaires (emplacement F) — permanent, imprimé avec le dossier.
+ *
+ * DEUX VERROUS, et ils comptent :
+ *  • l'interrupteur général `sponsors_actifs` doit être sur « oui » — le même qui commande
+ *    la page des scores : on n'allume pas les partenaires à moitié ;
+ *  • seuls les partenaires COCHÉS pour le dossier apparaissent. Un sponsor de la page des
+ *    scores n'atterrit pas ici sans décision explicite.
+ *
+ * Et une absence assumée : JAMAIS de message plein écran sur le dossier. Un club l'ouvre
+ * pour trouver un horaire, un parking, un contact — il ne doit pas attendre.
+ *
+ * Les données viennent de `getAll`, déjà chargé pour le planning : aucun appel réseau de
+ * plus. Si `getAll` a échoué (il n'est pas bloquant), le bandeau se tait, comme le reste
+ * des sections « jour J ».
+ */
+function bandeauPartenaires(ctx) {
+  const donnees = (ctx && ctx.donneesPubliques) || null;
+  if (!donnees) return '';
+  const reglages = sponsorsReglages(donnees.config || {});
+  if (!reglages.actifs) return '';
+  return sponsorsRendreDossier(sponsorsListe(donnees, reglages));
+}
+
 function enteteDossier(g, club, catsEngagees) {
   const nomClub = txt(club && club.club_nom);
   const noms = (catsEngagees || []).map(function (c) { return txt(c.categorie); }).filter(Boolean);

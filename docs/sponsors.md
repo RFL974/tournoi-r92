@@ -18,7 +18,9 @@
 
 ---
 
-## 1. Les cinq emplacements
+## 1. Les emplacements
+
+Les cinq premiers sont sur la page publique des scores ; le sixième est sur le **dossier club**.
 
 | Code | Nom | Comportement | Combien de partenaires |
 |------|-----|--------------|------------------------|
@@ -27,6 +29,32 @@
 | **C** | `fil` | Encart au gabarit d'une carte de match, dans le fil des scores | 1, **figé pour la session** |
 | **D** | `plein` | Message plein écran à l'arrivée, passable | 1 par affichage |
 | **E** | `mur` | Grille de tous les logos, en bas de page | tous |
+| **F** | `dossier` | Bandeau permanent en tête du **dossier club**, imprimé avec le PDF | ceux qui sont cochés |
+
+### F — le dossier club, un cas à part
+
+Le dossier (`dossier-club.html`) est le document envoyé aux clubs inscrits. Trois différences
+volontaires avec la page des scores :
+
+- **Bandeau permanent uniquement, et JAMAIS de message plein écran.** Un club ouvre son dossier
+  pour trouver un horaire, un parking, un contact — il ne doit pas attendre. C'est la contrainte
+  d'origine de cet emplacement, et elle est inscrite dans le code, pas seulement dans un réglage.
+- **Aucune rotation** : tous les partenaires cochés figurent côte à côte. Le dossier s'imprime, et
+  ce qui tourne n'existe pas sur le papier — un club qui garde son PDF doit y retrouver
+  exactement ce qu'il a vu à l'écran.
+- **Pas d'accroche commerciale**, seulement les logos : c'est un document d'organisation.
+
+Deux verrous : l'**interrupteur général** `sponsors_actifs` (le même que la page des scores — on
+n'allume pas les partenaires à moitié) et la case **F** cochée sur la fiche du partenaire. Un
+sponsor de la page des scores n'atterrit jamais sur le dossier sans décision explicite.
+
+Les données viennent de `getAll`, déjà chargé par le dossier pour le planning : **aucun appel
+réseau supplémentaire**. Le temps d'exposition et les clics y sont comptés comme ailleurs et
+rejoignent la fiche de visibilité.
+
+> ℹ️ La page d'**invitation** (`invitation-club.html`), envoyée avant l'inscription, n'a
+> volontairement **pas** de partenaires : elle sert à convaincre un club de venir, pas à
+> exposer des marques.
 
 ### La règle qui gouverne tout
 
@@ -104,7 +132,7 @@ faute de frappe (« 500 » au lieu de « 5 ») ne transforme le message en écra
 | `logo_id` | Fichier Drive, public en lecture — même mécanisme que `tournoi_affiche_id`. |
 | `url` | Site du partenaire. Lien en `rel="noopener sponsored"`, nouvel onglet. |
 | `accroche` | Une ligne, 60 caractères, affichée sous le logo. |
-| `emplacements` | `bandeau,rail,fil,plein,mur` (virgules). Vide ⇒ `mur`. |
+| `emplacements` | `bandeau,rail,fil,plein,mur,dossier` (virgules). Vide ⇒ `mur`. |
 | `poids` | 1 à 5. Part dans la roue. |
 | `visuel_id` | Visuel plein écran fourni par le partenaire (facultatif). |
 | `couleur` | `#RRGGBB`, fond du plein écran auto-composé. |
@@ -270,7 +298,9 @@ démonstration — le retour en arrière prend une seconde.
 |---|---|
 | `frontend/js/sponsors.js` | **Le moteur.** Roue équitable, rendu des 5 emplacements, plein écran accessible, mesure locale, mode démo. Partagé public/admin. |
 | `frontend/js/tournoi.js` | `appliquerSponsors()`, `encartFil()`, insertion dans les deux vues. |
-| `frontend/css/tournoi-public.css` | Section 19 — styles des 5 emplacements. |
+| `frontend/css/tournoi-public.css` | Section 19 — styles des emplacements A à E. |
+| `frontend/js/dossier.js` | `bandeauPartenaires()` — l'emplacement F, en tête du dossier club. |
+| `frontend/css/dossier.css` | Styles du bandeau F, écran **et** impression. |
 | `frontend/js/admin-sponsors.js` | Écran admin : réglages, fiches, fiche de visibilité. |
 | `frontend/css/theme-r92.css` | Styles de l'écran admin + règles d'impression de la fiche. |
 | `backend/Code.gs` | Onglet `Sponsors`, `lireSponsorsPublics`, CRUD, réglages, liste blanche `live`. |

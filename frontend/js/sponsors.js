@@ -13,6 +13,10 @@
  *    C « fil »     — encart intégré au fil des scores, figé pour la session
  *    D « plein »   — interstitiel d'accueil, quelques secondes, passable
  *    E « mur »     — mur des partenaires, tous les logos, en bas de page
+ *  Et, hors page des scores :
+ *    F « dossier » — bandeau permanent en tête du DOSSIER CLUB (dossier-club.html),
+ *                    imprimé avec lui. JAMAIS de plein écran là-bas : un club qui ouvre
+ *                    son dossier cherche une information et ne doit pas attendre.
  *
  *  MESURE — comptée en local, consolidée entre tous les appareils.
  *  Les compteurs (temps d'exposition, affichages, clics) sont calculés dans le navigateur,
@@ -29,8 +33,9 @@
    RÉGLAGES ET CONSTANTES
    ========================================================================== */
 
-/** Les cinq emplacements, dans l'ordre de la conception. */
-var SPONSORS_EMPLACEMENTS = ['bandeau', 'rail', 'fil', 'plein', 'mur'];
+/** Les emplacements, dans l'ordre de la conception. Les cinq premiers sont sur la page
+ *  publique des scores ; le sixième est le bandeau du DOSSIER CLUB. */
+var SPONSORS_EMPLACEMENTS = ['bandeau', 'rail', 'fil', 'plein', 'mur', 'dossier'];
 
 /** Libellés lisibles (fiche de visibilité, aperçu admin). */
 var SPONSORS_LIBELLES = {
@@ -38,7 +43,8 @@ var SPONSORS_LIBELLES = {
   rail:    'B · Rail / barre',
   fil:     'C · Encart au fil',
   plein:   'D · Plein écran',
-  mur:     'E · Mur partenaires'
+  mur:     'E · Mur partenaires',
+  dossier: 'F · Dossier club'
 };
 
 /* Clés de stockage local. Préfixe r92_ comme le reste du frontend. */
@@ -401,6 +407,36 @@ function sponsorsRendreMur(liste) {
       '<div class="sp-mur-titre">Ils rendent le tournoi possible</div>' +
       '<div class="sp-mur-grille">' + cases + '</div>' +
     '</div>';
+}
+
+/**
+ * F — bandeau permanent du DOSSIER CLUB.
+ *
+ * Trois différences volontaires avec le bandeau de la page des scores :
+ *  • TOUS les partenaires cochés y figurent, côte à côte — il n'y a pas de rotation. Le
+ *    dossier est un document qu'on imprime : ce qui tourne n'existe pas sur le papier, et
+ *    un club qui garde son PDF doit y retrouver exactement ce qu'il a vu à l'écran.
+ *  • Pas d'accroche commerciale : le dossier est un document d'organisation, les logos
+ *    suffisent à dire qui soutient le tournoi.
+ *  • Aucun plein écran, jamais — c'est la règle même de cet emplacement.
+ *
+ * @param {Array} liste partenaires actifs
+ * @returns {string} balisage, ou '' si aucun partenaire n'est coché pour le dossier
+ */
+function sponsorsRendreDossier(liste) {
+  var candidats = sponsorsPourEmplacement(liste, 'dossier');
+  if (!candidats.length) return '';
+
+  var logos = candidats.map(function (s) {
+    return sponsorsOuvrir(s, sponsorsLogo(s), 'sp-dossier-case', 'dossier');
+  }).join('');
+
+  return '<section class="sp-dossier">' +
+      '<p class="sp-dossier-titre">' +
+        (candidats.length > 1 ? 'Nos partenaires' : 'Notre partenaire') +
+      '</p>' +
+      '<div class="sp-dossier-logos">' + logos + '</div>' +
+    '</section>';
 }
 
 /* ==========================================================================
