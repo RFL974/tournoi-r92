@@ -48,7 +48,7 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 | Domaine | Nom | Statut | Session |
 |---|---|---|---|
 | A | Métier / Product Owner | ✅ **FAIT** — 0 P0 · 5 P1 · 7 P2 · 1 P3 | 5 |
-| C | Sécurité | ✅ **FAIT** — **1 P0 (corrigé)** · 5 P1 · 6 P2 · 2 P3 | 6 |
+| C | Sécurité | ✅ **FAIT** — **1 P0 (TESTÉ)** · 5 P1 · 6 P2 · 2 P3 | 6 |
 | B | RGPD / Protection des données | ⬜ **Prochain** | 7 |
 | D | QA / Tests | ⬜ Non commencé | — |
 | E | UX / UI / Accessibilité | ⬜ Non commencé | — |
@@ -73,19 +73,19 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | ID | Chantier | Priorité | Statut | Dépend de | Validé par Romain | Implémenté | Testé |
 |---|---|---|---|---|---|---|---|
-| **C-001** | **Plafonner l'écriture publique des relevés de partenaires** (R-014) — *hors ordre normal, par exception D-016* | **P0** | 🟠 CORRIGÉ dans le dépôt | — | ✅ oui (D-016) | ✅ commit `c1948fc` | ❌ **non** — exige un redéploiement chez Google + `lancerTestsFFR` |
+| **C-001** | **Plafonner l'écriture publique des relevés de partenaires** (R-014) — *hors ordre normal, par exception D-016* | **P0** | ✅ **TESTÉ** | — | ✅ oui (D-016) | ✅ commit `c1948fc`, **redéployé** | ✅ **573/573** dans Apps Script + chaîne vérifiée en réel |
 | — | *(les autres chantiers se rempliront à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
 
-> **Pourquoi ce tableau est encore vide alors que 27 problèmes sont identifiés ?** Parce qu'un
-> chantier regroupe des corrections qui doivent être faites **ensemble**, et qu'on ne peut pas
-> savoir ce qui va ensemble tant que les 8 domaines n'ont pas parlé. Exemple : R-005 (borne haute
-> sur un score) touchera peut-être le même code qu'un futur constat du domaine D (tests). Les
-> regrouper évitera de modifier deux fois le même fichier.
+> **Pourquoi ce tableau ne contient-il qu'une ligne, alors que 27 problèmes sont identifiés ?**
+> Parce qu'un chantier regroupe des corrections qui doivent être faites **ensemble**, et qu'on ne
+> peut pas savoir ce qui va ensemble tant que les 8 domaines n'ont pas parlé. Exemple : R-005
+> (borne haute sur un score) touchera peut-être le même code qu'un futur constat du domaine D
+> (tests). Les regrouper évitera de modifier deux fois le même fichier.
 >
-> ⚠️ **Une exception possible est en discussion** : le domaine C a trouvé **un P0** (R-014), et
-> j'ai proposé de le corriger seul, en avance, sans attendre la fin des audits. C'est la décision
-> **D-016**, **en attente de Romain** — voir `DECISIONS.md`. Si elle est prise, elle créera le
-> premier chantier de ce tableau, hors ordre normal.
+> ✅ **C-001 est une exception assumée**, validée par Romain (**D-016**) : le domaine C a trouvé un
+> **P0**, corrigé seul et en avance parce que c'était la seule faiblesse exploitable sans
+> connaître aucun secret. Il est aujourd'hui **TESTÉ** et **en service**. Cette exception ne crée
+> pas de précédent : tout le reste attend l'ÉTAPE 3.
 
 ### Regroupements déjà visibles (à confirmer à l'ÉTAPE 3)
 

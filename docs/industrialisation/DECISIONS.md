@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, close)
+**Dernière mise à jour** : 2026-08-04 (session 6, close)
 
 ---
 
@@ -571,10 +571,11 @@ c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
 > l'adresse du visiteur, on ne peut donc pas distinguer un abuseur d'un spectateur. Ce qui est
 > visé, et atteint : **un abus n'empêche plus jamais la saisie des scores.**
 
-**⚠️ Cette correction n'est PAS active tant que Romain n'a pas redéployé** le backend chez Google
-(copier `backend/Code.gs` dans l'éditeur Apps Script, puis **Déployer → Gérer les déploiements →
-crayon → Nouvelle version**). Tant que ce n'est pas fait, le statut du problème est **CORRIGÉ dans
-le dépôt**, jamais « corrigé en production » (règle permanente, `CLAUDE.md` §13.6).
+**✅ Correction déployée et vérifiée le 2026-08-04.** Romain a redéployé le backend chez Google,
+lancé `lancerTestsFFR` (**573/573 OK**) et rejoué le diagnostic « Tester la remontée » (écriture,
+relecture, 109 relevés réels). R-014 passe au statut **TESTÉ** — le premier du chantier.
+La règle permanente de `CLAUDE.md` §13.6 est donc satisfaite ici : ce n'est pas le dépôt qui le
+dit, c'est une vérification faite en production.
 
 ---
 

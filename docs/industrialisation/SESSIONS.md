@@ -1079,3 +1079,50 @@ transmettre celle des scores aux bénévoles le jour J.
 Mais **deux gestes de Romain d'abord** : redéployer le backend, et remplacer les deux clés.
 
 ---
+
+---
+
+## SESSION 6 (fin) — 2026-08-04 — vérification en conditions réelles
+
+**Ce que Romain a fait de son côté**
+
+1. **redéployé le backend** chez Google ;
+2. lancé `lancerTestsFFR` dans Apps Script → **573 / 573 OK** ;
+3. rejoué le diagnostic **« Tester la remontée »** de l'écran Partenaires →
+   *« ✅ Écriture · ✅ Relecture · ✅ 109 relevés réels déjà remontés des spectateurs. La chaîne
+   fonctionne de bout en bout. »*
+
+**Ce que cela prouve, et ce que cela ne prouve pas**
+
+| Question | Réponse |
+|---|---|
+| Le code en service est-il bien le nouveau ? | ✅ oui — **I-13 levée** |
+| Les tests passent-ils ? | ✅ **573/573** — **I-02 levée** |
+| Les 16 vérifications ajoutées étaient-elles du lot ? | ✅ oui — **contrôle croisé** : 564 appels écrits en dur dans `Tests.gs` + 9 situés dans des boucles = 573 |
+| La mesure des partenaires fonctionne-t-elle toujours ? | ✅ oui — écriture, relecture, **109 relevés réels**. C'est la **preuve de non-régression** |
+| Que se passe-t-il une fois un plafond franchi ? | ❌ **NON VÉRIFIÉ en réel** — prouvé par les tests unitaires seulement |
+
+Le dernier point mérite d'être explicité plutôt que passé sous silence : personne n'a envoyé
+30 001 relevés pour observer le refus, et personne ne le fera. Le bouton de diagnostic ne peut pas
+davantage l'atteindre — il tire un identifiant d'appareil **neuf à chaque essai**, donc il ne
+consomme jamais le plafond par appareil. C'est voulu : un outil de diagnostic qui se bloquerait
+lui-même serait pire qu'inutile.
+
+**Conséquence sur le registre**
+
+**R-014 passe au statut TESTÉ** — le **premier problème du chantier** à l'atteindre. Le chantier
+**C-001** est clos dans `PLAN.md`.
+
+**Ce que cela ne change PAS**
+
+- **M-03 reste ouvert.** Le harnais fonctionne, mais rien ne le lance automatiquement : c'est un
+  geste manuel, donc oubliable. À reprendre au **domaine D**. Une atténuation utile a été validée
+  au passage : écrire les fonctions en **cœur pur** permet de les rejouer hors de Google, ce qui a
+  permis de vérifier les 16 nouvelles avant même le redéploiement ;
+- **R-019 reste P1** et attend toujours **D-017** : remplacer les deux mots de passe, qui sont des
+  mots choisis à la main, par des suites aléatoires. Aucun code — cinq minutes dans le menu du
+  classeur.
+
+**Prochaine session recommandée** — **session 7, ÉTAPE 2, domaine B (RGPD)**.
+
+---

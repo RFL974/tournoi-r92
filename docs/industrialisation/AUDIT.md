@@ -1017,11 +1017,31 @@ de l'écran Partenaires aurait annoncé *« ✅ Écriture acceptée »* puis *«
 et envoyé chercher une panne qui n'existe pas. Il dit désormais explicitement qu'un plafond est
 atteint, et lequel.
 
-**Vérifications faites** : syntaxe des trois fichiers modifiés contrôlée ; **9 tests ajoutés**
-(16 vérifications), rejoués hors de Google sur les fonctions pures — **16/16 OK**.
-**NON VÉRIFIÉ** : le reste du harnais (301 tests) n'est pas exécutable ici (M-03), et le
-comportement réel en production reste **INCONNU** tant que Romain n'a pas redéployé et relancé
-les tests dans Apps Script.
+### ✅ 8. Vérifié en conditions réelles — statut **TESTÉ** *(2026-08-04)*
+
+R-014 est **le premier problème du chantier à atteindre le statut TESTÉ**. Trois preuves,
+apportées par Romain après le redéploiement :
+
+| Preuve | Résultat |
+|---|---|
+| Le backend en service est-il bien le nouveau ? | ✅ **Redéployé** → lève **I-13** |
+| Les tests passent-ils ? | ✅ **573 sur 573** dans Apps Script → lève **I-02** |
+| La mesure des partenaires fonctionne-t-elle toujours ? | ✅ Écriture, relecture, et **109 relevés réels** de spectateurs |
+
+La troisième ligne est la plus importante des trois : c'est la **preuve de non-régression**.
+Le plafonnement n'a rien cassé — les relevés continuent d'arriver et d'être relus.
+
+**Contrôle croisé du nombre de tests** : le fichier contient **564** appels de vérification écrits
+en dur, plus **9** situés à l'intérieur de boucles — soit 573. Le compte annoncé par Google
+correspond exactement, ce qui confirme que **les 16 vérifications ajoutées pour cette correction
+étaient bien dans le lot exécuté**. Sans ce recoupement, « 573/573 » ne prouverait pas que les
+nouveaux tests ont tourné.
+
+**⚠️ Ce qui reste NON VÉRIFIÉ, et le restera** : le chemin de **refus** — ce qui se passe une fois
+un plafond franchi — n'est prouvé que par les tests unitaires. Personne n'a envoyé 30 001 relevés
+pour l'observer en vrai, et personne ne le fera. Le bouton de diagnostic ne peut pas non plus
+l'atteindre : il tire un identifiant d'appareil neuf à chaque essai, donc il ne consomme jamais le
+plafond par appareil — c'est voulu, il ne doit jamais se bloquer lui-même.
 
 ---
 
@@ -1552,7 +1572,7 @@ Par honnêteté sur les limites de cet audit :
 
 | Réf | Problème | Priorité | Où ça fait mal | Difficulté de correction |
 |---|---|---|---|---|
-| **R-014** | La seule porte ouverte sans clé n'a **aucune limite** | **P0** | L'application peut être rendue inutilisable le jour J | ✅ **CORRIGÉ** dans le dépôt (D-016) — **reste à redéployer** |
+| **R-014** | La seule porte ouverte sans clé n'a **aucune limite** | **P0** | L'application peut être rendue inutilisable le jour J | ✅ **TESTÉ** et en service (D-016) — 573/573, chaîne vérifiée |
 | **R-015** | Regénérer les poules efface les scores, sans garde-fou serveur | **P1** | Perte de tous les scores du matin | **Faible** — le modèle existe à côté |
 | **R-016** | La réinitialisation efface tout, sans confirmation serveur ni sauvegarde | **P1** | Perte de toute la préparation d'un tournoi | Faible (confirmation) à moyenne (sauvegarde) |
 | **R-017** | Mots de passe partagés : aucune personne, aucune révocation, aucune trace | **P1** | Une contestation de score est inarbitrable | **Faible** (un prénom dans l'`Historique`) |
@@ -1569,9 +1589,9 @@ Par honnêteté sur les limites de cet audit :
 
 **Total : 1 P0 · 5 P1 · 6 P2 · 2 P3 — soit 14 problèmes**, après la requalification de R-019.
 
-**État au 2026-08-04, en fin de session 6** : **R-014 est corrigé dans le dépôt** (D-016) et
-attend un redéploiement. **R-019 attend une action de Romain**, pas du code (D-017). Les
-douze autres sont au statut **IDENTIFIÉ**.
+**État au 2026-08-04, en fin de session 6** : **R-014 est TESTÉ et en service** (D-016).
+**R-019 attend une action de Romain**, pas du code (D-017). Les douze autres sont au statut
+**IDENTIFIÉ**.
 
 ### Le fil rouge du domaine C
 
@@ -1589,8 +1609,7 @@ douze autres sont au statut **IDENTIFIÉ**.
 
 ### Si je devais ne corriger que trois choses
 
-1. ✅ **R-014** (mettre une limite sur la porte ouverte) — **fait** (D-016). Il reste **à
-   redéployer chez Google** pour que cela protège quoi que ce soit ;
+1. ✅ **R-014** (mettre une limite sur la porte ouverte) — **fait, déployé et vérifié** (D-016) ;
 2. ⏳ **R-019 / D-017** (remplacer les deux clés par des suites aléatoires) — **c'est désormais
    la première chose à faire, et elle ne demande aucun code** : cinq minutes dans le menu du
    classeur. Elle est passée devant les deux suivantes le jour où on a appris que les clés
