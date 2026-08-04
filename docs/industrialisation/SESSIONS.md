@@ -110,7 +110,16 @@ le domaine d'audit qui les reprendra. Les trois plus structurants :
   partenaires déposés par les téléphones des spectateurs).
 
 Deux nouveaux points **INCONNU** ajoutés à `ETAT.md` : **I-06** (partage réel du Google Sheet) et
-**I-07** (présence et fraîcheur des onglets `RefFFR_*`).
+**I-07** (présence et fraîcheur des onglets `RefFFR_*`). **Tous deux levés le jour même par Romain**,
+en fin de session :
+
+- **I-06 → LEVÉ.** Capture du panneau Drive fournie : *Qui a accès → **Privé***. Le classeur n'est
+  accessible qu'à son propriétaire. L'identifiant public dans le dépôt n'expose donc rien.
+- **I-07 → LEVÉ, sous une réserve d'orthographe.** Romain confirme que les 4 onglets existent et
+  sont à jour. La même capture montre par ailleurs deux fichiers Drive **distincts**
+  (`RefFFR-formes-de-jeu`, `RefFFR-dates-federales`) qui ne sont pas ce que le code lit : le code lit
+  des **onglets internes** au classeur, nommés exactement `RefFFR_Formes`, `RefFFR_Dates`,
+  `RefFFR_Regles`, `RefFFR_Temps`. Confirmation de l'orthographe demandée.
 
 **Tests réalisés**
 

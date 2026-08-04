@@ -384,8 +384,18 @@ L'identifiant du classeur, lui, est visible dans le dépôt public. Le `README` 
 la bonne conclusion : **le classeur ne doit jamais être partagé « toute personne disposant du
 lien »**, sinon connaître l'identifiant suffirait à tout lire.
 
-**Statut** : **INCONNU** — les réglages de partage réels du classeur ne sont pas vérifiables depuis
-le dépôt. À vérifier avec Romain (ce sera un point du domaine C — sécurité).
+**Statut** : ✅ **VÉRIFIÉ — le classeur est PRIVÉ.** Romain a fourni le 2026-08-04 une capture du
+panneau Drive de « Tournoi R92 - Base de données » : *Qui a accès → **Privé***. L'identifiant public
+dans le dépôt **n'expose donc rien** : le connaître ne permet pas d'ouvrir le fichier.
+
+Cela éclaire au passage un point du montage : la Web App est déployée avec « Exécuter en tant que :
+Moi ». Le programme lit donc le classeur **avec l'identité du propriétaire**. C'est exactement ce qui
+permet à un spectateur qui n'a aucun accès au classeur de voir malgré tout les scores : il ne lit pas
+le classeur, il lit ce que le programme veut bien lui répondre.
+
+> **Analogie** : le classeur est un dossier rangé dans un bureau fermé. Le public ne peut pas entrer.
+> Mais un employé (le programme) y a accès et vient annoncer les résultats au guichet. Le public
+> obtient l'information sans jamais approcher du dossier.
 
 ---
 
@@ -407,8 +417,8 @@ le dépôt. À vérifier avec Romain (ce sera un point du domaine C — sécurit
 | A-09 | L'onglet `ClubsInvites` contient des **emails** ; il est exclu des données publiques et protégé par la clé admin | B — RGPD | CERTAIN (mécanisme constaté, efficacité non testée) |
 | A-10 | Les jetons des clubs **voyagent dans des liens envoyés par courriel** | B / C | CERTAIN |
 | A-11 | Le relais CDN existe mais est **éteint** (`SNAPSHOT_URL = ""`) : en cas d'affluence, tout repose sur Apps Script | F — performance | CERTAIN |
-| A-12 | Les onglets `RefFFR_*` sont **remplis à la main** et ne sont créés par aucun code | A — métier | CERTAIN |
-| A-13 | Le partage réel du Google Sheet n'est pas vérifiable ici, alors que son identifiant est public | C — sécurité | **INCONNU** |
+| A-12 | Les onglets `RefFFR_*` sont **remplis à la main** et ne sont créés par aucun code ; s'ils manquent ou si leur nom diffère d'un caractère, le programme renvoie une liste vide **sans le signaler** | A — métier / H | CERTAIN |
+| A-13 | ~~Le partage réel du Google Sheet n'est pas vérifiable ici~~ → ✅ **levé le 2026-08-04 : le classeur est privé** (capture Drive fournie par Romain). Reste un constat de dépendance : la sécurité des données repose entièrement sur ce réglage, qui vit **chez Google** et qu'aucun code ne protège d'un changement accidentel | C — sécurité | **CERTAIN** |
 
 ---
 

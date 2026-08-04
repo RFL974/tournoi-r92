@@ -104,8 +104,13 @@ vérification supplémentaire.
 | I-03 | Quelles données personnelles réelles sont présentes dans le Google Sheet en production ? | Le Sheet n'est pas dans le dépôt | À examiner avec Romain (domaine B — RGPD) |
 | I-04 | L'application a-t-elle déjà servi un tournoi réel, ou seulement des tests ? | Non déterminable depuis le code | Question à Romain |
 | I-05 | Qui utilise l'administration le jour J, et sur quel matériel ? | Information de terrain | Question à Romain (domaine E — UX) |
-| I-06 | Comment le Google Sheet est-il réellement partagé ? | Les réglages de partage vivent chez Google, pas dans le dépôt. Or l'identifiant du classeur, lui, est public (`Code.gs` ligne 15) | Vérification par Romain : Sheet → Partager → la ligne « Accès général » doit être **Restreint**, jamais « Toute personne disposant du lien » |
-| I-07 | Les 4 onglets `RefFFR_*` existent-ils et sont-ils à jour dans le classeur ? | Aucun code ne les crée : ils sont remplis à la main. Le programme se contente de renvoyer une liste vide s'ils manquent | Vérification par Romain dans le classeur |
+
+### Points levés
+
+| # | Point | Réponse | Levé le |
+|---|---|---|---|
+| **I-06** | Comment le Google Sheet est-il réellement partagé ? | ✅ **LEVÉ — le classeur est PRIVÉ.** Romain a fourni une capture du panneau Drive de « Tournoi R92 - Base de données » : *Qui a accès → **Privé*** (propriétaire seul), et *Limites de sécurité → aucune limite appliquée*. L'identifiant du classeur est donc public dans le dépôt **sans que cela expose les données** : le connaître ne suffit pas à ouvrir le fichier. C'est le réglage attendu. Cela confirme aussi que la Web App s'exécute bien **au nom du propriétaire** — c'est ce qui lui permet de lire un classeur privé au profit de visiteurs qui, eux, n'y ont aucun accès. | 2026-08-04, session 2 |
+| **I-07** | Les 4 onglets `RefFFR_*` existent-ils et sont-ils à jour ? | 🟡 **LEVÉ PAR ROMAIN, une précision restant à confirmer.** Romain confirme : « les 4 onglets existent et sont à jour ». Réserve : la capture Drive montre par ailleurs **deux fichiers Sheets distincts**, `RefFFR-formes-de-jeu` et `RefFFR-dates-federales`, qui ne sont **pas** ce que le code lit. Le code lit des **onglets internes** au classeur principal, nommés **exactement** `RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`, `RefFFR_Temps` (tirets **bas**, majuscules initiales). Un nom qui différerait d'un caractère ferait renvoyer une liste vide **en silence**, sans message d'erreur. → confirmation de l'orthographe exacte demandée à Romain. | 2026-08-04, session 2 |
 
 ---
 
