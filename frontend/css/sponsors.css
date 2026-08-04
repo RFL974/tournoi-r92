@@ -108,6 +108,18 @@ html {
 .sp-bloc-texte { min-width: 0; }
 .sp-bloc-texte strong { display: block; color: var(--navy); line-height: 1.2; }
 
+/* PARTAGE DE LA LARGEUR quand le logo et le texte sont CÔTE À CÔTE.
+   Sans ces deux règles, un logo agrandi (150–200 %) prend toute la largeur de l'encart
+   et le texte tombe à un mot par ligne — constaté sur le bandeau du dossier club, où
+   l'accroche s'écrivait verticalement à côté d'un logo qui, lui, ne grandissait plus.
+   Le logo cède donc du terrain (`flex: 0 1`) et ne dépasse jamais 45 % de l'encart ;
+   le texte prend le reste. Au-dessus (`haut`) ou seul, rien de tout ça ne s'applique :
+   la largeur entière revient au logo. */
+.sp-dispo-gauche > .sp-bloc-logo,
+.sp-dispo-droite > .sp-bloc-logo { flex: 0 1 auto; min-width: 0; }
+.sp-dispo-gauche > .sp-bloc-texte,
+.sp-dispo-droite > .sp-bloc-texte { flex: 1 1 9rem; min-width: 0; }
+
 /* --- A · Bandeau partenaire principal --- */
 .sp-zone-bandeau { margin-bottom: 16px; }
 .sp-bandeau {
@@ -436,6 +448,8 @@ body.sp-reperes .sp-mur { outline: 2px dashed #e9b53e; outline-offset: 3px; }
   align-items: center;
   justify-content: center;
   min-height: 48px;      /* hauteur réservée : la page ne saute pas au chargement du logo */
+  /* 190 px : la largeur d'une TUILE DE GRILLE, quand plusieurs logos se rangent côte à côte.
+     C'est la bonne mesure pour « logo seul » — et seulement pour lui (voir juste dessous). */
   max-width: 190px;
   text-decoration: none;
 }
@@ -449,11 +463,23 @@ body.sp-reperes .sp-mur { outline: 2px dashed #e9b53e; outline-offset: 3px; }
 }
 /* Dispositions, comme sur la page des scores : le même partenaire peut être « logo seul »
    ici et « logo + texte » ailleurs. Le balisage ne change pas, seule cette classe décide. */
-.sp-dossier .sp-dispo-gauche { flex-direction: row; }
+/* Le bandeau est centré ; un texte posé À CÔTÉ du logo, lui, se lit aligné de son côté. */
+.sp-dossier .sp-dispo-gauche { flex-direction: row; text-align: left; }
 .sp-dossier .sp-dispo-droite { flex-direction: row-reverse; text-align: right; }
 .sp-dossier .sp-dispo-haut   { flex-direction: column; text-align: center; }
-.sp-dossier .sp-bloc-logo    { flex: 0 0 auto; display: grid; place-items: center; }
-.sp-dossier .sp-bloc-texte   { min-width: 0; font-size: 0.82rem; color: var(--d-gris, #5b6570); }
+/* DÈS QU'UN TEXTE ACCOMPAGNE LE LOGO, la tuile de grille ne convient plus : 190 px, c'est
+   moins que le logo lui-même une fois agrandi, et l'accroche n'avait plus un pixel où
+   s'écrire. L'encart prend alors toute la place que la feuille lui laisse, dans la limite
+   d'une ligne de lecture confortable. Le partage logo/texte, lui, est générique (plus haut). */
+.sp-dossier-case:not(.sp-dispo-seul) {
+  /* Un seul partenaire prend toute la largeur de la feuille ; deux la partagent. C'est le
+     travail de flex, et c'est ce qui laisse un logo agrandi tenir sa taille SANS écraser
+     l'accroche : on ne rogne la place de personne tant que la feuille en a. */
+  flex: 1 1 320px;
+  max-width: 100%;
+  flex-wrap: wrap;      /* filet : sur un écran étroit, le texte passe sous le logo */
+}
+.sp-dossier .sp-bloc-texte   { font-size: 0.82rem; color: var(--d-gris, #5b6570); }
 .sp-dossier .sp-bloc-texte strong { display: block; color: var(--d-navy, #0C1C2E); }
 .sp-dossier .sp-mention {
   display: block;

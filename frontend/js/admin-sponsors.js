@@ -225,6 +225,22 @@ const SPONSORS_DISPO_COURT = {
  */
 const SPONSORS_APERCU_REF = { bandeau: 84, rail: 56, fil: 50, plein: 84, mur: 62, dossier: 52 };
 
+/**
+ * Largeur RÉELLE de chaque encart, en pixels — la place dont le partenaire dispose là-bas.
+ *
+ * Sans elle, l'aperçu s'étalait sur toute la largeur de la carte d'admin et montrait une
+ * accroche bien à plat, là où le vrai encart, plus étroit, la coupait en morceaux. Un aperçu
+ * plus large que la réalité est pire que pas d'aperçu : il rassure à tort.
+ */
+const SPONSORS_APERCU_LARGEUR = {
+  bandeau: 780,   // carte de la page publique
+  rail:    230,   // colonne de droite (260 px moins ses marges)
+  fil:     560,   // encart au gabarit d'une carte de match
+  plein:   380,   // carte du message plein écran
+  mur:     150,   // tuile de la grille de logos
+  dossier: 640    // largeur utile du bandeau, marges de la feuille déduites
+};
+
 /** Construit le panneau : une case par emplacement, chacune dépliant ses réglages. */
 function construireEmplacements() {
   const zone = document.getElementById('sponsor-emplacements');
@@ -354,6 +370,9 @@ function rafraichirApercusEmplacements() {
 
     rendu.className = 'sp-emp-rendu sp-dispo-' + reg.dispo;
     rendu.style.setProperty('--sp-ref', (SPONSORS_APERCU_REF[e] || 52) + 'px');
+    // L'aperçu occupe la largeur du VRAI encart, pas celle de la carte d'admin : c'est cette
+    // contrainte-là qui décide si l'accroche tient sur une ligne ou se casse en morceaux.
+    rendu.style.setProperty('--sp-largeur', (SPONSORS_APERCU_LARGEUR[e] || 400) + 'px');
     rendu.innerHTML = sponsorsCorps(fiche, e, '');
 
     // Logo choisi mais pas encore téléversé : il n'a pas d'identifiant Drive, on branche

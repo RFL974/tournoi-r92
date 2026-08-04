@@ -190,6 +190,12 @@ le même moteur (`sponsors.js`) et la même feuille de style (`css/sponsors.css`
 publique et le dossier club — logo à sa taille réelle, texte, disposition. Il se redessine à la
 frappe, sans rien enregistrer.
 
+L'aperçu prend aussi la **largeur du vrai encart** (`SPONSORS_APERCU_LARGEUR`), et pas celle de
+la carte d'administration. Ce n'est pas un détail cosmétique : c'est cette contrainte-là qui
+décide si une accroche tient sur une ligne ou se casse en morceaux. Un aperçu plus large que la
+réalité est pire que pas d'aperçu — il rassure à tort. Un test compare les deux rendus ligne
+pour ligne.
+
 Deux garde-fous l'accompagnent, parce que le piège classique est de taper une accroche qui ne
 s'affichera jamais :
 
@@ -229,6 +235,13 @@ il y a un enregistrement, un Sheet et un cache : ce tableau dit lequel des trois
 > joue en CSS. La taille, elle, passe par la variable `--sp-zoom` que la feuille de style
 > multiplie par la référence de l'emplacement : jamais par une taille en ligne, qui écraserait
 > les règles et interdirait l'adaptation à l'écran.
+
+**Logo à côté d'un texte : qui prend la place ?** Le logo cède du terrain avant le texte, et le
+texte garde toujours de quoi s'écrire. Sans cette règle, un logo agrandi à 150–200 % occupait
+toute la largeur de l'encart et l'accroche tombait à **un mot par ligne** — le bandeau du dossier
+club, calibré sur une tuile de 190 px, en était l'exemple parfait. Cet encart s'élargit désormais
+dès qu'un texte l'accompagne : un partenaire seul prend toute la largeur de la feuille, deux la
+partagent.
 
 **Logo qui paraît trop petit ?** Beaucoup de fichiers embarquent leurs propres **marges
 blanches** : le logo semble minuscule alors que l'image, elle, est à la bonne taille. Aucun
