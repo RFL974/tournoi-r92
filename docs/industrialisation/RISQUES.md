@@ -5,8 +5,8 @@
 > L'**explication** de chaque problème (pourquoi, exemple concret, ce qui est proposé) vit dans
 > `AUDIT.md`. Ce fichier-ci **suit** ; `AUDIT.md` **explique**.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, close)
-**Audits réalisés** : domaine A (métier). Les 7 autres domaines restent à faire.
+**Dernière mise à jour** : 2026-08-04 (session 6, close)
+**Audits réalisés** : domaine A (métier), domaine C (sécurité). Les 6 autres domaines restent à faire.
 
 ---
 
@@ -57,13 +57,23 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
 | P0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| P1 | **5** | 0 | **5** | 0 | 0 | 0 |
-| P2 | **7** | 0 | **2** | 0 | 0 | 0 |
-| P3 | **1** | 0 | 0 | 0 | 0 | 0 |
+| P1 | **8** | 0 | **5** | 0 | 0 | 0 |
+| P2 | **13** | 0 | **2** | 0 | 0 | 0 |
+| P3 | **4** | 0 | 0 | 0 | 0 | 0 |
+
+**Répartition par domaine**
+
+| Domaine | P0 | P1 | P2 | P3 | Total |
+|---|---|---|---|---|---|
+| A — Métier (session 5) | 0 | 5 | 7 | 1 | **13** |
+| C — Sécurité (session 6) | 0 | 3 | 6 | 3 | **12** |
+| **Total** | **0** | **8** | **13** | **4** | **25** |
 
 > ⚠️ **« Validé » signifie que la RÈGLE MÉTIER est tranchée par Romain — jamais que le code est
 > écrit.** Les **5 problèmes P1 du domaine A** ont leur règle décidée (D-011 à D-014), ainsi que
-> R-012 et R-013 (D-015). **Rien n'est corrigé. Aucun fichier de l'application n'a été modifié.**
+> R-012 et R-013 (D-015). **Aucun problème du domaine C n'est validé** : ils appellent des
+> arbitrages techniques, pas des décisions métier — sauf deux questions posées à Romain (voir plus
+> bas). **Rien n'est corrigé. Aucun fichier de l'application n'a été modifié.**
 >
 > Le passage à **EN COURS** n'aura pas lieu avant la fin des 8 audits et la validation de
 > l'ÉTAPE 4 (`CLAUDE.md` §7).
@@ -71,8 +81,8 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 > ⚠️ **Aucun problème n'est corrigé.** Tous sont au statut **IDENTIFIÉ** : ils ont été vus, rien
 > de plus. Aucun fichier de l'application n'a été modifié à ce jour.
 >
-> Ce tableau ne couvre que le **domaine A**. Les 7 autres domaines n'ont pas été audités : leur
-> absence de ligne ne signifie pas leur absence de problème.
+> Ce tableau ne couvre que les domaines **A** et **C**. Les 6 autres domaines n'ont pas été
+> audités : leur absence de ligne ne signifie pas leur absence de problème.
 
 ---
 
@@ -126,11 +136,42 @@ aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Rom
 **Destinataires suggérés** : Directeur EDR du Racing / Comité 92 — la même voie qui a résolu Q23.
 **Impact si une règle existe** : elle primerait sur D-011 (forfait) **et** sur D-015 (annulation).
 
+### Domaine C — Sécurité (session 6)
+
+| Réf | Problème | Priorité | Certitude | Statut | Détail |
+|---|---|---|---|---|---|
+| **R-014** | **La seule écriture ouverte à tous (`mesureSponsors`) n'a aucune limite de débit ni de volume.** Le contenu est strictement validé, mais rien ne borne le nombre d'appels : même budget Google et mêmes 30 exécutions simultanées que la saisie des scores et la page publique | **P1** | CERTAIN (absence de borne) · **INCONNU** (seuil exact de saturation, qui vit chez Google) | IDENTIFIÉ | `AUDIT.md` §C.2 |
+| **R-015** | **Deux mots de passe partagés, sans notion de personne** : jamais renouvelés, non révocables individuellement, aucune trace de qui les utilise. La clé SCORES sera dans les mains de tous les bénévoles le jour J, et le restera | **P1** | CERTAIN | IDENTIFIÉ — **deux questions posées à Romain** (voir plus bas) | `AUDIT.md` §C.3 |
+| **R-016** | **Deux gestes destructeurs ne sont retenus que par l'écran** : regénérer les poules (efface tous les scores) et réinitialiser le tournoi. Le serveur exécute dès qu'il reçoit la clé, sans vérifier ni confirmer — alors que le même fichier refuse côté serveur pour la réorganisation des poules et le gel J-16 | **P1** | CERTAIN | IDENTIFIÉ — **à regrouper avec R-003** (même code) | `AUDIT.md` §C.4 |
+| **R-017** | **Le compteur anti-devinette est remis à zéro par n'importe quelle clé valide, y compris la clé SCORES** — la plus partagée. Son porteur peut donc essayer la clé ADMIN sans plafond effectif | P2 | CERTAIN (mécanisme) · **INCONNU** (gravité réelle — dépend de I-12) | IDENTIFIÉ | `AUDIT.md` §C.5 |
+| **R-018** | **Le contenu des courriels est fabriqué par le navigateur** et expédié tel quel sous l'adresse du propriétaire, à tous les clubs acceptés. Le **destinataire**, lui, est toujours relu dans le classeur (protection en place) | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.5 |
+| **R-019** | **Aucune trace de qui fait quoi** : ni saisie de score, ni consultation du carnet, ni envoi de courriel, ni réinitialisation. Un litige sportif est donc insoluble | P2 | CERTAIN (côté application) · **INCONNU** (côté journal Google — I-09) | IDENTIFIÉ | `AUDIT.md` §C.5 |
+| **R-020** | **Tout le carnet d'adresses ET tous les jetons sortent en une seule requête** (`listerClubsInvites`). Les jetons **ne périment jamais** : un lien de 2026 fonctionne encore en 2028 | P2 | CERTAIN | IDENTIFIÉ — l'expiration relève aussi du **domaine B** | `AUDIT.md` §C.5 |
+| **R-021** | **Les 4 bibliothèques tierces du frontend sont copiées sans version, sans provenance, sans empreinte.** Impossible de savoir si elles portent une faille connue, ni si elles sont à jour | P2 | CERTAIN (absence de version) · **INCONNU** (exposition réelle) | IDENTIFIÉ | `AUDIT.md` §C.5 |
+| **R-022** | **Deux liens du dossier club (« Site de l'association », « Relayer sur les réseaux ») sont construits sans le filtre `http(s)`** que le code applique partout ailleurs, via une fonction dédiée et commentée | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.5 |
+| **R-023** | **La table des droits est interrogée avec l'action brute** : des noms hérités du langage (`constructor`, `toString`) répondent « vrai » et sautent le contrôle de clé. **Aucune conséquence aujourd'hui** (le `switch` retombe sur « Action inconnue ») | P3 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.6 |
+| **R-024** | **`dossier-club.html` ne porte pas la protection d'adresse** (`no-referrer`) de ses deux pages sœurs, alors qu'elle porte le même jeton. Portée réelle faible : les navigateurs récents ne transmettent déjà que le nom du site | P3 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.6 |
+| **R-025** | **`admin.html`, `saisie.html` et `perfs.html` ne demandent pas aux moteurs de recherche de ne pas les référencer**, contrairement aux 3 pages clubs. Portée très faible : le dépôt est public, les adresses sont connaissables | P3 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.6 |
+
+### ⚠️ Questions posées à Romain — domaine C
+
+Deux questions, **et il ne faut écrire aucune clé dans ce dépôt en y répondant** :
+
+| # | Question | Pourquoi elle compte |
+|---|---|---|
+| **I-11** | Dans l'éditeur Apps Script → *Déployer* → *Gérer les déploiements* : que valent « **Exécuter en tant que** » et « **Qui a accès** » ? | C'est le réglage qui décide si la Web App lit le classeur privé au nom du propriétaire, et si le public peut l'appeler. Le fonctionnement actuel rend les valeurs attendues **PROBABLES**, mais rien ne le prouve depuis le dépôt |
+| **I-12** | La clé ADMIN en service est-elle **aléatoire** (gestionnaire de mots de passe) ou **choisie de tête** ? Idem pour la clé SCORES | La réponse change directement la gravité de **R-017**. Réponse attendue : le mot « aléatoire » ou le mot « choisie ». **Jamais la clé elle-même** |
+
 ### Domaines non audités
 
 | Domaine | Statut |
 |---|---|
-| C — Sécurité · B — RGPD · D — Tests · E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
+| B — RGPD · D — Tests · E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur servent de matière première |
+
+> Le **domaine B (RGPD)** est le prochain, et plusieurs constats du domaine C l'attendent
+> explicitement : **R-020** (expiration des jetons), les images Drive publiques (C-08), et la
+> conception du journal de **R-019**, qui ne doit surtout pas devenir un fichier de surveillance
+> des bénévoles.
 
 ### Modèle de fiche de problème
 

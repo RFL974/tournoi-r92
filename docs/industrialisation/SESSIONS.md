@@ -1,6 +1,8 @@
 # JOURNAL DES SESSIONS — Industrialisation de Tournoi R92
 
-> Une ligne par session de travail. Le plus récent **en haut**.
+> Une session de travail par entrée, dans l'ordre chronologique — la **plus récente en bas**.
+> *(Corrigé en session 6 : l'en-tête annonçait « le plus récent en haut », alors que les six
+> sessions sont écrites de la plus ancienne à la plus récente. C'est l'en-tête qui était faux.)*
 > Ce journal sert à répondre à : « qu'est-ce qui a réellement été fait, et qu'est-ce qui ne l'a
 > **pas** été ? »
 
@@ -837,3 +839,132 @@ plutôt qu'un paramètre réglable. **Poser la question sur le besoin, jamais su
 
 **Session 6 — ÉTAPE 2, domaine C : la sécurité.** Condition de démarrage : instruction explicite
 de Romain. Rien ne sera codé avant la fin des 8 audits et la validation de l'ÉTAPE 4.
+
+---
+
+## SESSION 6 — 2026-08-04
+
+**Objectif**
+
+ÉTAPE 2 — AUDIT GLOBAL, **domaine C : la sécurité**. Passer en revue qui peut faire quoi, et ce
+qu'une personne mal intentionnée pourrait obtenir ou abîmer. Classer chaque constat P0/P1/P2/P3
+avec, comme l'impose `CLAUDE.md` §6.C : criticité, scénario d'exploitation, impact, recommandation,
+difficulté de correction. **Aucun fichier de l'application ne devait être modifié — et aucun ne
+l'a été.**
+
+**Vérification préalable**
+
+La branche de travail imposée (`claude/securite-etape-2-domaine-c-r4nmrm`) partait de `main`,
+c'est-à-dire de l'état de **fin de session 3**. Les sessions 4 et 5 vivent sur la branche
+`claude/cartographie-donnees-etape-1-t1e9xq`, **non fusionnée** et **sans pull request ouverte**.
+La branche de travail a donc été avancée sur cette base avant tout travail, pour ne pas produire un
+audit assis sur un état périmé. C'est exactement le risque décrit par **D-009**, et il s'est
+matérialisé.
+
+**Ce qui a été fait**
+
+Lecture, sans rien exécuter et sans rien modifier :
+
+- `backend/Code.gs` — les deux portes d'entrée (`doGet` ligne 313, `doPost` ligne 2801) et leur
+  contrôle d'accès ; `verifierCle` et le garde-fou anti-devinette ; `configurerCles` ; les trois
+  « vues » de configuration publique (`CONFIG_PUBLIQUE_VUES`) ; les jetons de club
+  (`genererTokenClub`, `trouverClubParToken`, `regenererJetonClub`) ; les quatre actions protégées
+  par jeton ; `enregistrerMesureSponsors` ; les trois fonctions d'envoi de courriels ;
+  `creerFichierImageDrive` ; `reinitialiserTournoi` ; `repondreInvitation` et
+  `validerDetailEffectifs` ;
+- `frontend/js/` — `api.js` (stockage et transmission des clés), `commun.js` (`echapper`),
+  `commun-dossier.js` (masquage du jeton, `lienExterneSur`), `dossier.js`, `sponsors.js`,
+  `admin-invitations.js`, et un relevé des 27 fichiers pour les points d'insertion HTML ;
+- les **8 pages HTML** (`noindex`, `referrer`) ;
+- `cloudflare/worker-tournoi.js`, `.gitignore`, `.github/workflows/pages.yml` ;
+- **l'intégralité de l'historique Git**, à la recherche d'un secret publié par accident ;
+- la **visibilité du dépôt** sur GitHub.
+
+**Résultat produit**
+
+`docs/industrialisation/AUDIT.md` — **domaine C** ajouté (§C.0 à §C.8) : verdict, ce qui est solide
+(14 points), trois problèmes P1 détaillés selon la structure en 6 points de `CLAUDE.md` §1, six P2,
+trois P3, ce que le domaine **ne peut pas** conclure, et le récapitulatif.
+
+**12 problèmes** : **0 P0 · 3 P1 · 6 P2 · 3 P3** → `RISQUES.md`, R-014 à R-025.
+
+**Les trois P1** :
+
+- **R-014** — `mesureSponsors`, la seule écriture ouverte à tous, n'a **aucune limite de débit**.
+  Elle partage le budget Google et les ~30 exécutions simultanées avec la saisie des scores et la
+  page publique. C'est le **seul** problème du domaine qu'une personne totalement extérieure, sans
+  aucune clé, peut déclencher seule ;
+- **R-015** — **deux mots de passe partagés**, sans notion de personne, jamais renouvelés, non
+  révocables individuellement, sans aucune trace. Le cœur du domaine ;
+- **R-016** — **deux gestes destructeurs** (regénérer les poules = effacer tous les scores ;
+  réinitialiser) ne sont retenus que par l'écran. Le serveur exécute dès qu'il reçoit la clé — alors
+  que le même fichier refuse côté serveur pour la réorganisation des poules et pour le gel J-16,
+  avec un commentaire disant qu'un verrou d'écran serait contournable.
+
+**Ce que l'audit a trouvé de bon — et il faut le dire**
+
+Le code du serveur est **nettement meilleur que la moyenne** sur les mécanismes de base : rien ne
+sort par défaut (trois listes blanches nommées), le serveur ne croit jamais le navigateur sur
+parole, les textes sont échappés partout (plus de 400 appels à une fonction unique), les cellules
+sont forcées en texte avant écriture, le destinataire d'un courriel est toujours relu dans le
+classeur, les jetons sont de vrais aléas de 122 bits, les messages d'erreur ne révèlent rien.
+**Aucune clé n'a jamais été publiée dans le dépôt** — vérifié sur tout l'historique.
+
+**Un fait de contexte établi cette session**
+
+Le dépôt GitHub est **public** (vérifié le 2026-08-04). Le code, l'adresse du serveur et celle de
+la page d'administration sont donc connus de tous. Ce n'est pas anormal, mais cela signifie qu'il
+ne reste **que les clés** comme barrière — ce qui donne son poids à R-015.
+
+**Contradictions avec la mémoire automatique**
+
+Aucune constatée.
+
+**Tests réalisés**
+
+Aucun. Audit de lecture : aucune ligne de code n'a été touchée, il n'y avait rien à tester.
+
+**Tests NON réalisés (et pourquoi)**
+
+- **Aucun test d'intrusion.** Rien n'a été envoyé au serveur, aucune tentative réelle n'a été
+  faite. Tout ce document est déduit de la **lecture du code**. Une faille qui n'apparaîtrait qu'à
+  l'exécution n'a pas pu être vue ;
+- Le code réellement en service chez Google : **NON VÉRIFIÉ** (I-01). S'il est plus ancien, il peut
+  ne pas contenir les protections décrites ;
+- Les réglages du déploiement et la robustesse réelle des clés : **INCONNU** → nouveaux points
+  **I-11** et **I-12** ;
+- Les versions des 4 bibliothèques tierces, donc leur exposition à des failles connues :
+  **INCONNU** (R-021).
+
+**Décisions prises**
+
+Aucune décision validée. Une décision **proposée**, en attente de Romain :
+
+- **D-016** — renouveler les deux clés avant et après chaque édition. C'est une décision
+  d'**organisation**, pas de code : dix minutes, deux fois par an, et c'est le meilleur rapport
+  bénéfice/effort de tout l'audit sécurité.
+
+**Deux questions posées à Romain**
+
+- **I-11** — que valent « Exécuter en tant que » et « Qui a accès » dans les réglages de
+  déploiement de la Web App ?
+- **I-12** — les deux clés en service sont-elles **aléatoires** ou **choisies de tête** ? La réponse
+  change la gravité de R-017. ⚠️ **La réponse est un mot, jamais une clé.**
+
+**Commit**
+
+`docs(industrialisation): auditer la sécurité (domaine C)` — sur la branche
+`claude/securite-etape-2-domaine-c-r4nmrm`. Contenu : `AUDIT.md`, `RISQUES.md`, `ETAT.md`,
+`PLAN.md`, `DECISIONS.md`, `SESSIONS.md`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+**Session 7 — ÉTAPE 2, domaine B : RGPD / protection des données.** C'est l'ordre validé par
+Romain (D-010), et c'est le bon moment : le classeur ne contient encore **aucune donnée personnelle
+de tiers** (I-03, I-04). La question n'est donc pas « faut-il réparer » mais « faut-il préparer »,
+et la fenêtre reste ouverte tant qu'aucun vrai club n'est invité.
+
+Trois constats du domaine C l'attendent explicitement : **R-020** (les jetons de club ne périment
+jamais), **C-08** (les images Drive sont publiques en lecture, corbeille comprise), et la
+conception du journal de **R-019**, qui ne doit pas devenir un fichier de surveillance des
+bénévoles.

@@ -4,7 +4,7 @@
 > Tant que l'audit (ÉTAPE 2) n'a pas eu lieu, le tableau des chantiers reste **vide** :
 > on ne planifie pas des travaux qu'on n'a pas encore constatés.
 
-**Dernière mise à jour** : 2026-08-04 (session 5)
+**Dernière mise à jour** : 2026-08-04 (session 6)
 
 ---
 
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
-| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaine A fait |
+| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaines A et C faits (2/8) |
 | 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ⬜ À faire |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
@@ -47,9 +47,9 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | Domaine | Nom | Statut | Session |
 |---|---|---|---|
-| A | Métier / Product Owner | ✅ **FAIT** — 0 P0 · 5 P1 · 5 P2 · 1 P3 | 5 |
-| B | RGPD / Protection des données | ⬜ Non commencé | — |
-| C | Sécurité | ⬜ **Prochain** | 6 |
+| A | Métier / Product Owner | ✅ **FAIT** — 0 P0 · 5 P1 · 7 P2 · 1 P3 | 5 |
+| C | Sécurité | ✅ **FAIT** — 0 P0 · 3 P1 · 6 P2 · 3 P3 | 6 |
+| B | RGPD / Protection des données | ⬜ **Prochain** | 7 |
 | D | QA / Tests | ⬜ Non commencé | — |
 | E | UX / UI / Accessibilité | ⬜ Non commencé | — |
 | F | Performance | ⬜ Non commencé | — |
@@ -75,11 +75,25 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 |---|---|---|---|---|---|---|---|
 | — | *(aucun chantier — le tableau se remplit à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
 
-> **Pourquoi ce tableau est encore vide alors que 11 problèmes sont identifiés ?** Parce qu'un
+> **Pourquoi ce tableau est encore vide alors que 25 problèmes sont identifiés ?** Parce qu'un
 > chantier regroupe des corrections qui doivent être faites **ensemble**, et qu'on ne peut pas
 > savoir ce qui va ensemble tant que les 8 domaines n'ont pas parlé. Exemple : R-005 (borne haute
 > sur un score) touchera peut-être le même code qu'un futur constat du domaine D (tests). Les
 > regrouper évitera de modifier deux fois le même fichier.
+
+### Regroupements déjà visibles (à confirmer à l'ÉTAPE 3)
+
+Deux rapprochements sont apparus **entre domaines** et méritent d'être notés tout de suite, pour ne
+pas être oubliés :
+
+| Rapprochement | Pourquoi ils vont ensemble |
+|---|---|
+| **R-016** (sécurité — les effacements ne sont retenus que par l'écran) **+ R-003** (métier — déplacer un match) **+ R-001** (métier — le forfait) | Les trois touchent la génération des poules et du planning. Les traiter séparément ferait ouvrir **trois fois** le même code, avec trois risques de régression au lieu d'un |
+| **R-017 + R-022 + R-023 + R-024 + R-025** (sécurité) | Cinq corrections d'une à trois lignes, sans risque, sans lien fonctionnel entre elles. Elles ne méritent pas cinq passages : **un seul commit de durcissement** |
+
+Deux constats du domaine C attendent par ailleurs le **domaine B (RGPD)** avant d'être planifiés :
+**R-020** (expiration des jetons de club) et la conception du journal de **R-019**, qui ne doit pas
+devenir un fichier de surveillance des bénévoles.
 
 ### Modèle de fiche de chantier
 

@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, close)
+**Dernière mise à jour** : 2026-08-04 (session 6, close)
 
 ---
 
@@ -590,3 +590,57 @@ c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
 
 **Question à Romain** : veux-tu inclure `boutique-r92` dans le périmètre plus tard, et si oui,
 peux-tu le rendre accessible ?
+
+---
+
+### D-016 — Renouveler les deux clés avant et après chaque édition
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 6 |
+| **Statut** | ⏳ **EN ATTENTE DE ROMAIN** |
+| **Proposée par** | Claude (technique) — issue de **R-015**, domaine C |
+
+**Problème posé**
+
+> L'application est protégée par **deux mots de passe partagés** (une clé ADMIN, une clé SCORES).
+> Ils sont les mêmes pour tout le monde, ils ne changent jamais, et on ne peut pas les retirer à
+> une seule personne : changer la clé la change pour tous.
+>
+> Le jour du tournoi, la clé SCORES sera dans les mains de tous les marqueurs. Elle circulera par
+> message, elle sera peut-être écrite sur un papier à la table de marque. Comme elle ne change
+> jamais, le bénévole de 2026 pourra encore modifier des scores en 2028 — depuis n'importe où,
+> puisque l'adresse du serveur est publique.
+
+**Décision proposée**
+
+> **Renouveler les deux clés deux fois par édition** : une fois **avant** le tournoi (quelques
+> jours avant, pas la veille au soir), une fois **après** le tournoi, une fois la journée close.
+> Les générer avec un **gestionnaire de mots de passe** plutôt que de les inventer.
+>
+> Le renouvellement se fait déjà sans code : menu *Tournoi R92* → *Configurer les clés* dans le
+> classeur. La fonction impose déjà 12 caractères minimum.
+
+**Raison**
+
+> C'est le meilleur rapport bénéfice/effort de tout l'audit sécurité : **dix minutes, deux fois par
+> an, aucune ligne de code**. Cela ne rend pas une clé plus difficile à deviner ; cela fait qu'une
+> clé qui a fuité **cesse de valoir à vie**.
+
+**Ce que cela change / ce que cela ne change pas**
+
+> Rien dans l'application. Rien dans les écrans. Le seul effet visible : les bénévoles doivent
+> recevoir la nouvelle clé avant le coup d'envoi.
+
+**Le risque de cette décision — il est réel et il est humain**
+
+> Si la nouvelle clé n'est pas transmise aux bons bénévoles **avant** le matin du tournoi, la
+> saisie des scores est bloquée au pire moment. C'est pourquoi la décision doit préciser **quand**
+> renouveler (quelques jours avant, avec confirmation que chacun l'a reçue), et non pas seulement
+> « régulièrement ».
+
+**Question à Romain** : acceptes-tu cette règle, et à quel moment précis veux-tu placer le
+renouvellement d'avant-tournoi (J-7 ? J-3 ?) ?
+
+> ⚠️ **En répondant, n'écris jamais une clé dans ce dépôt, ni dans une conversation.**
