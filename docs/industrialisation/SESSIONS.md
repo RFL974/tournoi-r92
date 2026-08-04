@@ -696,3 +696,80 @@ Aucun. Toujours aucune ligne de code touchée.
 Inchangée : **session 6 — ÉTAPE 2, domaine C (sécurité)**. Les propositions D-013 et D-014
 n'empêchent pas d'avancer : elles attendront l'ÉTAPE 4, comme le reste. Rien ne sera codé avant la
 fin des 8 audits.
+
+### Session 5 — 3ᵉ échange : les 5 P1 sont tranchés
+
+Troisième aller-retour du même jour. Romain a validé les deux propositions en attente, précisé la
+forme du forfait, et posé une question que ce chantier ne peut pas trancher.
+
+**Ce qu'il a validé**
+
+- **D-013 (R-003)** — ajuster le planning : déplacer un match, et décaler toute la journée de
+  X minutes. Le 3ᵉ niveau (redistribuer automatiquement un terrain condamné) reste écarté ;
+- **D-014 (R-004)** — départage : confrontation directe en 4ᵉ critère, ordre alphabétique en 5ᵉ ;
+- **D-012 (R-005)** — confirmé.
+
+**Ce qu'il a amendé — et il a eu raison contre moi**
+
+J'avais recommandé que le score attribué en cas de forfait soit un **paramètre réglable**. Romain
+l'a écarté au profit d'un **bouton « Forfait » sous chaque équipe**, avec une règle fixe : 3 points
+au présent, 0 à l'absent, **aucun score**, et une **double mise en garde**.
+
+Sa version est meilleure que la mienne. Le paramètre que je proposais était un piège : réglé sur
+« 25-0 », il aurait offert +25 de différence à une équipe — or la différence sert à départager.
+Une règle fixe sans score ne peut fausser aucun classement. **Un réglage en moins, c'est une façon
+de se tromper en moins.** Amendement porté dans `DECISIONS.md`, D-011.
+
+**Ce que j'ai proposé en retour** — six compléments techniques (`AUDIT.md` §A.2, point 8), dont le
+plus important : **le forfait doit être annulable**. Sans cela, un appui malheureux à 9h coûterait
+une regénération complète, donc tous les scores de la journée. Les cinq autres : prévoir les deux
+équipes forfait, faire afficher **la conséquence** par la deuxième mise en garde plutôt que de
+répéter la question, afficher « Forfait » et jamais « 0-0 », faire **débloquer** la génération de
+l'après-midi par un match forfait, et **garder la clé scores** plutôt que la clé admin (qui ne doit
+pas circuler au bord d'un terrain).
+
+**Nouveau problème — R-013, le match annulé**
+
+Romain : *« match annulé, j'attends une suggestion de ta part, je ne sais pas si la FFR met des
+recommandations là-dessus ou si un règlement existe sur le sujet. »*
+
+**Vérification faite** : `AUDIT-TOURNOI-R92.md` (~129 000 caractères) **ne contient rien** sur le
+forfait, l'annulation, les intempéries ou le report. Aucun de ses 25 points de vérification
+(Q11 → Q25) ne porte sur le sujet. **Je ne sais donc pas ce que la FFR prescrit, et je ne l'ai pas
+inventé** (`CLAUDE.md` §9 et §10).
+
+- **Question sortante** ouverte : **I-10** dans `ETAT.md`, à porter au chantier FFR par Romain
+  (Directeur EDR du Racing / Comité 92 — la voie qui a résolu Q23). Ce chantier-ci ne modifie pas
+  `AUDIT-TOURNOI-R92.md` : décision D-003.
+- **Ma proposition, valable tant qu'aucune règle fédérale ne la contredit** (D-015) : le **même
+  mécanisme que le forfait, avec un libellé différent**. Un match annulé ne compte pour personne,
+  et ne bloque pas l'après-midi. Techniquement c'est un « double forfait », mais le mot compte :
+  un forfait désigne un fautif, une annulation n'accuse personne. Une fois le forfait construit,
+  l'annulation ne coûte presque rien.
+- **Limite signalée** : si seuls *certains* matchs sont annulés, les équipes n'auront pas joué le
+  même nombre de matchs. Je recommande de l'accepter et de le rendre visible (la colonne « J »
+  existe déjà) plutôt que de passer à une moyenne de points par match — parce que dans le cas réel,
+  l'orage n'annule pas un match mais **toute la journée en même temps**.
+
+**Bilan du domaine A après ces trois échanges**
+
+**13 problèmes : 0 P0 · 5 P1 · 7 P2 · 1 P3.** Les **5 P1 ont tous leur règle métier tranchée**
+(D-011 à D-014), ainsi que R-012. Seul R-013 attend une réponse extérieure.
+
+> ⚠️ **Rien n'est corrigé.** « Validé » signifie que la règle est décidée, jamais que le code est
+> écrit. Aucun fichier de l'application n'a été modifié.
+
+**Tests réalisés**
+
+Aucun. Toujours aucune ligne de code touchée.
+
+**Commit**
+
+`docs(industrialisation): trancher les cinq règles métier du domaine A` — branche
+`claude/cartographie-donnees-etape-1-t1e9xq`. Contenu : `AUDIT.md`, `RISQUES.md`, `DECISIONS.md`,
+`ETAT.md`, `SESSIONS.md`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+Inchangée : **session 6 — ÉTAPE 2, domaine C (sécurité)**. Les décisions prises ici n'accélèrent
+rien : le code ne sera écrit qu'à l'ÉTAPE 5, après les 8 audits et la validation de l'ÉTAPE 4.

@@ -7,7 +7,7 @@
 > Le registre des problèmes (avec leur statut de correction) vit dans `RISQUES.md`.
 > Ce document-ci **explique** ; `RISQUES.md` **suit**.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, complétée par les décisions de Romain)
+**Dernière mise à jour** : 2026-08-04 (session 5, après les trois échanges avec Romain)
 
 | Domaine | Nom | Statut |
 |---|---|---|
@@ -163,6 +163,37 @@ certaine, dès la première fois qu'il se manifeste.
   plus**, ce qui ne fausse aucun classement. Un organisateur qui veut un autre usage règle la
   valeur — c'est précisément ce que la décision prévoit ;
 - la **transparence exigée par Romain n'est pas réalisable aujourd'hui** : voir **R-012**.
+
+### ✅ 8. La forme retenue : un bouton, pas un réglage *(amendement du 2026-08-04)*
+
+Romain a précisé sa décision en **écartant le paramètre que je recommandais** :
+
+> *« Au lieu de dire "on va paramétrer", on ajoute un bouton forfait en dessous de chaque équipe
+> sur chaque match de la table de saisie des scores. Cela reste une victoire à mon sens, donc
+> 3 points pour l'équipe présente, 0 pour celle qui est forfait. Quand on clique dessus il faut une
+> double mise en garde. »*
+
+**Et il a raison contre moi.** Le paramètre que je proposais était un piège : réglé sur « 25-0 »,
+il aurait offert +25 de différence à une équipe — or la différence sert à départager. Une règle
+fixe, **sans aucun score**, ne peut fausser aucun classement. Un réglage en moins, c'est une façon
+de se tromper en moins.
+
+Le **bouton sous chaque équipe** est également le bon geste : il fait dire à l'application **qui**
+est forfait, qui est exactement l'information qui manque aujourd'hui.
+
+#### Six compléments techniques à retenir pour l'ÉTAPE 3
+
+| # | Complément | Pourquoi |
+|---|---|---|
+| 1 | **Le forfait doit être annulable** — un bouton « annuler le forfait » qui remet le match « à venir » | C'est le plus important. Sans cela, un appui malheureux à 9h coûte une regénération complète, donc tous les scores de la journée |
+| 2 | **Prévoir les DEUX équipes forfait** sur le même match | Le cas existe : un club annule et retire toutes ses équipes. Un bouton par équipe le permet naturellement — reste à décider que personne ne marque alors |
+| 3 | **La 2ᵉ mise en garde doit montrer la CONSÉQUENCE**, pas répéter la question | Deux fenêtres identiques s'enchaînent par réflexe. « MEUDON forfait → 0 point pour MEUDON, victoire pour ANTONY. Valider ? » oblige à *lire*, pas à *recliquer* |
+| 4 | **Afficher « Forfait » partout, jamais « 0-0 »** — page publique, feuille de journée, journal de saison | Un « 0-0 » affiché ressemble à un match nul. Les parents et les clubs liraient un résultat qui n'a pas eu lieu |
+| 5 | **Un match forfait doit DÉBLOQUER la génération de l'après-midi** | Sinon le forfait ne résout que la moitié du problème : le match reste « non terminé » et bloque tout (R-002) |
+| 6 | **Garder la clé SCORES**, pas la clé admin | Déclarer un forfait a des conséquences sportives, mais exiger la clé admin obligerait à la partager au bord d'un terrain — or c'est elle qui peut effacer tout le tournoi. La double mise en garde **est** le garde-fou ; l'annulabilité (point 1) en est le filet |
+
+> **Statut** : la règle métier de R-001 est **entièrement tranchée**. Il ne reste que l'écriture du
+> code, à l'ÉTAPE 5, après les 8 audits.
 
 ---
 
@@ -623,6 +654,45 @@ ne la connaisse.
 
 ---
 
+### R-013 · Aucun état « match annulé » — l'orage n'est pas prévu *(P2)*
+
+**Constat.** Le même que R-001, vu sous un autre angle : un match n'a que deux états. Il n'existe
+aucune façon d'enregistrer un match **qui n'a pas eu lieu sans que personne soit fautif** —
+l'orage, le terrain condamné, la journée écourtée. *(CERTAIN.)*
+
+**Ce que dit la FFR : INCONNU.** J'ai cherché dans `AUDIT-TOURNOI-R92.md`, l'audit de conformité
+fédérale du dépôt : **il ne contient rien** sur le forfait, l'annulation, les intempéries ou le
+report. Aucun de ses 25 points de vérification (Q11 → Q25) ne porte sur le sujet. Je ne sais donc
+pas ce que la Fédération prescrit, **et je ne l'inventerai pas**.
+
+> **Question à porter au chantier FFR** (décision D-003 — les deux chantiers restent séparés,
+> c'est donc à Romain de la poser là-bas) :
+> *« La FFR encadre-t-elle le sort d'un match d'École de Rugby qui n'a pas pu se jouer — forfait
+> d'une équipe, ou annulation pour intempéries ? Existe-t-il une règle de classement imposée ? »*
+> Mêmes destinataires que la question Q23, qui a déjà été résolue par cette voie.
+
+**Ma proposition** *(détail complet dans `DECISIONS.md`, D-015)* : **le même mécanisme que le
+forfait, avec un libellé différent.** Un match annulé ne compte pour personne — 0 point pour les
+deux équipes, aucun point marqué ni encaissé — et il **ne bloque pas** la génération de
+l'après-midi.
+
+Techniquement, c'est un « double forfait ». Mais le mot compte : un forfait **désigne un fautif**,
+une annulation **n'accuse personne**. Deux libellés, un seul mécanisme : une fois le forfait
+construit, l'annulation ne coûte presque rien.
+
+**La limite, signalée honnêtement.** Si **certains** matchs seulement sont annulés, les équipes
+n'auront pas joué le même nombre de matchs et comparer leurs totaux devient inéquitable. Je
+recommande néanmoins de **l'accepter et de le rendre visible** (la colonne « J » du classement
+existe déjà) plutôt que de passer à une moyenne de points par match — parce que dans le cas réel,
+l'orage n'annule pas un match, il annule **toute la journée en même temps** : toutes les équipes
+sont alors touchées également. Changer le cœur du classement pour un cas qui ne se présente
+presque jamais serait exactement l'optimisation prématurée que `CLAUDE.md` interdit.
+
+**Conseil** : à traiter **avec R-001**, dont il réutilise toute la machinerie. Mais **poser la
+question à la FFR d'abord** : si une règle fédérale existe, elle prime sur ma proposition.
+
+---
+
 ## A.8 — Le problème P3 (à garder pour plus tard)
 
 ### R-011 · Un tirage ne peut être ni reproduit, ni annulé *(P3)*
@@ -683,18 +753,24 @@ Par honnêteté sur les limites de cet audit :
 | **R-010** | Deux publications indépendantes, libellés ambigus | P2 | Malentendu | Très faible |
 | **R-011** | Tirage non reproductible ni annulable | P3 | Rien aujourd'hui | Moyenne |
 | **R-012** | Aucune règle sportive n'est écrite nulle part pour les clubs (et le champ prévu pour le faire a été retiré de l'interface) | P2 | Une règle qu'on ne peut opposer à personne | Faible |
+| **R-013** | Aucun état « match annulé » : l'orage n'est pas prévu | P2 | La journée écourtée ne peut pas être enregistrée | Faible **si** traité avec R-001 |
 
-**Total : 0 P0 · 5 P1 · 6 P2 · 1 P3 — soit 12 problèmes.**
+**Total : 0 P0 · 5 P1 · 7 P2 · 1 P3 — soit 13 problèmes.**
 
 ### État des décisions
 
 | Réf | Décision attendue | Statut |
 |---|---|---|
-| R-001 | Règle du forfait | ✅ **Tranchée** — D-011 |
-| R-005 | Limite et confirmation des scores | ✅ **Tranchée** — D-012 |
-| R-003 | Comment ajuster le planning en cours de journée | ⏳ Proposition faite (D-013) |
-| R-004 | Critères de départage à ajouter | ⏳ Proposition faite (D-014) |
-| R-012 | Afficher les règles dans le dossier des clubs | ⏳ Découle de D-011, à confirmer |
+| R-001 | Règle **et forme** du forfait | ✅ **Tranchée** — D-011 + son amendement (bouton par équipe, 3/0, sans score, double mise en garde) |
+| R-005 | Limite et confirmation des scores | ✅ **Tranchée** — D-012 (2 chiffres max + confirmation) |
+| R-003 | Ajuster le planning en cours de journée | ✅ **Tranchée** — D-013 (déplacer un match + décaler toute la journée de X minutes) |
+| R-004 | Critères de départage à ajouter | ✅ **Tranchée** — D-014 (confrontation directe, puis ordre alphabétique) |
+| R-012 | Publier les règles dans le dossier des clubs | ✅ **Acquise** — c'est l'exigence même posée par Romain dans D-011 |
+| R-013 | Le match annulé | ⏳ Proposition **D-015** faite — **subordonnée à une question FFR restée sans réponse** |
+
+> **Les cinq problèmes P1 du domaine A ont désormais tous leur règle métier tranchée.** Il ne reste
+> que l'écriture du code, qui n'aura pas lieu avant la fin des 8 audits et la validation de
+> l'ÉTAPE 4.
 
 ### Si je devais ne corriger que trois choses
 

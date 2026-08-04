@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, après réponses de Romain)
+**Dernière mise à jour** : 2026-08-04 (session 5, 3ᵉ échange avec Romain)
 
 ---
 
@@ -329,6 +329,35 @@
 > sont écrits où que ce soit pour les clubs, et le champ « Règlement » du dossier a été retiré de
 > l'écran d'administration. Nouveau constat **R-012**.
 
+#### ⚠️ AMENDEMENT du 2026-08-04 — le paramètre est abandonné
+
+Romain a précisé sa décision le jour même, en écartant le réglage que je recommandais :
+
+> *« Au lieu de dire "on va paramétrer", on ajoute un bouton forfait en dessous de chaque équipe
+> sur chaque match de la table de saisie des scores. Cela reste une victoire à mon sens, donc
+> 3 points pour l'équipe présente, 0 pour celle qui est forfait. Quand on clique dessus il faut
+> une double mise en garde. »*
+
+**Ce qui change par rapport à la version initiale de D-011** :
+
+| | Version initiale (ma proposition) | ✅ Version retenue (Romain) |
+|---|---|---|
+| Score attribué | **paramètre réglable** par l'organisateur | **aucun score** — le match n'a pas de score |
+| Points | 3 / 0 | 3 / 0 — **inchangé** |
+| Déclenchement | non précisé | **un bouton « Forfait » sous chaque équipe**, sur chaque match de la page de saisie |
+| Garde-fou | non précisé | **double mise en garde** avant validation |
+
+**Pourquoi la version de Romain est meilleure que la mienne** : le paramètre que je proposais était
+un piège. Un organisateur qui l'aurait réglé sur « 25-0 » aurait offert +25 de différence à une
+équipe — or la différence sert à départager. Supprimer le réglage supprime le piège. Une règle
+fixe, sans score, ne peut fausser aucun classement.
+
+**Compléments techniques que j'ai proposés en retour** *(voir `AUDIT.md` §A.2, point 8)* : le
+forfait doit être **annulable**, le cas des **deux équipes absentes** doit être prévu, la deuxième
+mise en garde doit **afficher la conséquence** plutôt que répéter la question, l'affichage doit dire
+« Forfait » et **jamais « 0-0 »**, et un match forfait doit **débloquer** la génération de
+l'après-midi.
+
 ---
 
 ### D-012 — Limite et confirmation des scores saisis
@@ -369,15 +398,13 @@
 
 ---
 
-## DÉCISIONS EN ATTENTE DE ROMAIN
-
 ### D-013 — Comment ajuster le planning en cours de journée
 
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-04 |
 | **Session** | 5 |
-| **Statut** | ⏳ **PROPOSITION FAITE — EN ATTENTE DE ROMAIN** |
+| **Statut** | ✅ **VALIDÉE PAR ROMAIN** (2026-08-04) |
 | **Couvre** | R-003 |
 
 **Demande de Romain**
@@ -409,7 +436,7 @@
 |---|---|
 | **Date** | 2026-08-04 |
 | **Session** | 5 |
-| **Statut** | ⏳ **PROPOSITION FAITE — EN ATTENTE DE ROMAIN** |
+| **Statut** | ✅ **VALIDÉE PAR ROMAIN** (2026-08-04) |
 | **Couvre** | R-004 |
 
 **Demande de Romain**
@@ -435,6 +462,68 @@
 > des **tests** couvrent les cas d'égalité (domaine D).
 
 **Détail complet** : `AUDIT.md` §A.5, point 7.
+
+---
+
+
+## DÉCISIONS EN ATTENTE DE ROMAIN
+
+### D-015 — Le match annulé (l'orage), distinct du forfait
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 5 |
+| **Statut** | ⏳ **PROPOSITION FAITE — EN ATTENTE DE ROMAIN** |
+| **Couvre** | R-013 |
+
+**Demande de Romain**
+> *« Match annulé, j'attends une suggestion de ta part. Je ne sais pas si la FFR met des
+> recommandations là-dessus ou si un règlement existe sur le sujet. »*
+
+**Réponse à la question FFR : INCONNU**
+> J'ai cherché dans `AUDIT-TOURNOI-R92.md` (l'audit de conformité FFR du dépôt, ~129 000
+> caractères) : **il ne contient rien** sur le forfait, l'annulation, les intempéries ou le report
+> d'un match. Aucun des 25 points de vérification FFR (Q11 → Q25) ne porte sur le sujet.
+> **Je ne sais donc pas ce que la FFR prescrit, et je ne l'inventerai pas.** *(CLAUDE.md §9 et §10.)*
+
+**Question à router vers le chantier FFR** (décision D-003 : les deux chantiers restent séparés,
+c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
+
+> *« La FFR encadre-t-elle le sort d'un match d'École de Rugby qui n'a pas pu se jouer — forfait
+> d'une équipe, ou annulation pour intempéries ? Existe-t-il une règle de classement imposée
+> (points attribués, match à rejouer, match neutralisé) ? »*
+> **Destinataire suggéré** : Directeur EDR du Racing / Comité 92 — les mêmes qui ont répondu à Q23.
+
+**Ma proposition, conçue pour rester valable quelle que soit la réponse FFR**
+
+> **Le même mécanisme que le forfait, avec un libellé différent.** Un match annulé **ne compte pour
+> personne** : 0 point pour les deux équipes, aucun point marqué ni encaissé, et il **ne bloque
+> pas** la génération de l'après-midi.
+>
+> Techniquement, c'est le résultat d'un « double forfait » — mais le mot compte : un forfait
+> **désigne un fautif**, une annulation **n'accuse personne**. Deux libellés, un seul mécanisme :
+> une fois le forfait construit (D-011), l'annulation ne coûte presque rien.
+
+**La limite que je signale honnêtement**
+> Si **certains** matchs seulement sont annulés, les équipes n'auront pas joué le même nombre de
+> matchs, et comparer leurs totaux de points devient inéquitable. Deux options :
+> - **accepter, et le rendre visible** — le classement affiche déjà la colonne « J » (matchs
+>   joués) : l'inégalité se voit ;
+> - classer à la **moyenne de points par match joué** — plus juste sur le papier, mais cela change
+>   le classement de **tout le monde**, y compris quand rien n'est annulé, et devient difficile à
+>   expliquer à un éducateur.
+>
+> **Je recommande la première.** Raison de terrain : dans le cas réel — l'orage — ce n'est pas un
+> match qui saute, c'est **toute la journée en même temps**. Toutes les équipes sont alors touchées
+> également, et l'inégalité ne se produit pas. Changer le cœur du classement pour un cas qui ne se
+> présente presque jamais serait exactement l'« optimisation prématurée » que `CLAUDE.md` §6.F
+> interdit.
+
+**Où mettre le bouton**
+> À côté du bouton « Forfait », sur le match, pour le cas isolé. Le cas de masse (l'orage qui
+> arrête tout) est un besoin **d'organisateur**, pas de marqueur : il rejoint la famille d'outils
+> de **D-013** (agir sur plusieurs matchs d'un coup) et gagnerait à être traité avec elle.
 
 ---
 

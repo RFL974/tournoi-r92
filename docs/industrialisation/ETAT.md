@@ -4,7 +4,7 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, après décisions de Romain)
+**Dernière mise à jour** : 2026-08-04 (session 5, 3ᵉ échange avec Romain)
 **Commit de référence** : `d0a0ea5` (branche `claude/cartographie-donnees-etape-1-t1e9xq`)
 
 ---
@@ -12,10 +12,10 @@
 ## 1. EN UNE PHRASE
 
 L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 a commencé** : le **domaine A (métier)** est audité —
-**12 problèmes identifiés, dont 5 P1, aucun P0**. Romain a tranché **deux règles métier**
-(forfait, limite des scores) et **deux propositions attendent sa validation** (ajustement du
-planning, critères de départage). Il reste **7 domaines** à auditer.
-**Aucun fichier de l'application n'a été modifié** et **aucun problème n'est corrigé**.
+**13 problèmes identifiés, dont 5 P1, aucun P0**. Romain a tranché **la règle métier des 5 P1**
+(D-011 à D-014). Une seule question reste ouverte, et elle est **sortante** : le sort d'un match
+annulé relève d'une règle FFR que le dépôt ne documente pas. Il reste **7 domaines** à auditer.
+**Aucun fichier de l'application n'a été modifié** et **aucun problème n'est corrigé.**
 
 ---
 
@@ -39,7 +39,7 @@ planning, critères de départage). Il reste **7 domaines** à auditer.
 
 | Domaine | Nom | Statut |
 |---|---|---|
-| **A** | **Métier / Product Owner** | ✅ **FAIT** (session 5) — 12 problèmes, 0 P0, 5 P1, 6 P2, 1 P3 |
+| **A** | **Métier / Product Owner** | ✅ **FAIT** (session 5) — 13 problèmes, 0 P0, 5 P1, 7 P2, 1 P3 · **les 5 P1 ont leur règle tranchée** |
 | C | Sécurité | ⬜ **Prochain** |
 | B | RGPD / Protection des données | ⬜ À faire |
 | D | QA / Tests | ⬜ À faire |
@@ -93,32 +93,42 @@ le registre et `AUDIT.md` pour l'explication de chacun.
 | Priorité | Nombre | Domaine A |
 |---|---|---|
 | **P0** | **0** | — |
-| **P1** | **5** | R-001 forfait ✅ *(règle tranchée)* · R-002 blocage après-midi · R-003 planning figé ⏳ · R-004 départage ⏳ · R-005 score aberrant ✅ *(règle tranchée)* |
-| **P2** | 6 | R-006 → R-010, plus **R-012** (aucune règle sportive n'est écrite pour les clubs) |
+| **P1** | **5** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ |
+| **P2** | 7 | R-006 → R-010 · **R-012** (aucune règle sportive n'est écrite pour les clubs) ✅ · **R-013** (match annulé) ⏳ |
 | **P3** | 1 | R-011 |
 
-✅ = la **règle métier** est décidée, le **code n'est pas écrit**. ⏳ = ma proposition attend la
-validation de Romain.
+✅ = la **règle métier est décidée**, le **code n'est pas écrit**. ⏳ = en attente d'une réponse
+extérieure. R-002 n'appelait aucune décision : c'est un choix purement technique, réglé à l'ÉTAPE 3.
 
 **Le fil rouge du domaine A** : l'application est excellente **avant** le coup d'envoi et rigide
 **après**. Les 5 P1 apparaissent tous le jour J, quand la réalité s'écarte du plan — forfait,
 match non saisi, terrain impraticable, égalité parfaite, faute de frappe.
 
-**Décisions métier prises le 2026-08-04** :
+**Décisions métier prises le 2026-08-04** — les 5 P1 sont tous tranchés :
 
-- **D-011 — forfait** : l'absent marque **0 point**, le présent **gagne**, le score attribué est un
-  **paramètre de l'organisateur**, et la règle retenue doit être **communiquée aux clubs** ;
+- **D-011 — forfait** : un **bouton « Forfait » sous chaque équipe** dans la page de saisie.
+  L'absent marque **0 point**, le présent **gagne** (3 points), **aucun score n'est attribué**,
+  et une **double mise en garde** protège le geste. *(Le réglage que j'avais recommandé a été
+  écarté par Romain, à juste titre : il aurait permis de fausser la différence.)* La règle retenue
+  doit être **communiquée aux clubs** ;
 - **D-012 — scores** : **2 chiffres maximum** (au-delà, refus) et **confirmation avant chaque
-  validation**.
-
-**Deux propositions attendent la validation de Romain** : **D-013** (déplacer un match + décaler
-toute la journée de X minutes) et **D-014** (ajouter la confrontation directe puis l'ordre
-alphabétique au départage).
+  validation** ;
+- **D-013 — planning** : **déplacer un match** (heure et/ou terrain) et **décaler toute la journée
+  de X minutes**. Le 3ᵉ niveau — redistribuer automatiquement un terrain devenu impraticable — est
+  **écarté pour l'instant** : c'est le seul qui touche au moteur de planification ;
+- **D-014 — départage** : ajouter la **confrontation directe** (4ᵉ critère) puis l'**ordre
+  alphabétique** (5ᵉ), **à la suite** des trois critères existants, sans y toucher.
 
 > L'exigence de transparence posée par D-011 a fait apparaître **R-012** : ni le barème, ni le
 > départage ne sont écrits où que ce soit pour les clubs, et le champ « Règlement » du dossier a
 > été **retiré de l'écran d'administration**. La règle décidée ne serait donc, en l'état,
 > communicable à personne.
+
+**Une seule question reste ouverte, et elle est sortante** — **R-013 / D-015**, le match annulé
+(l'orage) : `AUDIT-TOURNOI-R92.md` **ne dit rien** du forfait ni de l'annulation. C'est une
+**question de règle du jeu**, qui appartient au chantier FFR (D-003) et que Romain doit porter au
+Directeur EDR du Racing ou au Comité 92. Ma proposition (D-015) tient tant qu'aucune règle
+fédérale ne la contredit.
 
 > ⚠️ Les 7 autres domaines ne sont **pas** audités. L'absence de problème n'y signifie rien.
 
@@ -153,12 +163,14 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-010 | Ordre d'audit des 8 domaines : **A → C → B → D → E → F → G → H** — « on fait les choses dans l'ordre pour bien les faire » | ✅ Validée (session 5) |
 | D-011 | Règle du **forfait** : absent = 0 point, présent gagne, score = paramètre de l'organisateur, règle à communiquer aux clubs | ✅ Validée (session 5) |
 | D-012 | **Scores** : 2 chiffres maximum, plus confirmation avant chaque validation | ✅ Validée (session 5) |
+| D-013 | **Planning** : déplacer un match, et décaler toute la journée de X minutes | ✅ Validée (session 5) |
+| D-014 | **Départage** : confrontation directe, puis ordre alphabétique en dernier recours | ✅ Validée (session 5) |
 
 **En attente de validation** (voir `DECISIONS.md`) :
 
 - D-005 — Périmètre exact du dépôt à auditer (le site vitrine `boutique-r92` est un **autre** dépôt)
-- **D-013** — Comment ajuster le planning en cours de journée (proposition faite à sa demande)
-- **D-014** — Quels critères de départage ajouter (proposition faite à sa demande)
+- **D-015** — Le sort d'un **match annulé** (proposition faite ; **bloquée par une question FFR**
+  que le dépôt ne permet pas de trancher — voir ci-dessous)
 
 ---
 
@@ -173,6 +185,7 @@ vérification supplémentaire.
 | I-02 | Les tests du fichier `backend/Tests.gs` passent-ils aujourd'hui ? | Ils ne peuvent être exécutés que dans Google Apps Script | Lancement manuel par Romain |
 | I-03 | Quelles données personnelles de **tiers** seront présentes dans le Google Sheet une fois de vrais clubs invités ? | ✅ **Rien à ce jour** (précisé par Romain le 2026-08-04) : les seules adresses email présentes sont **la sienne et celle de son épouse**, utilisées pour tester les envois. ✅ L'**inventaire de ce que l'application peut collecter** est désormais **fait** (volet C, session 4) : nom / prénom / email du contact de chaque club, et des **effectifs** d'enfants (jamais leur nom). Ce qui reste ouvert n'est plus « quoi », mais « **que décide-t-on d'en faire** » | Instruction au **domaine B (RGPD)** de l'ÉTAPE 2 — **avant** la première invitation réelle |
 | I-05 | Qui utilise l'administration le jour J, et sur quel matériel ? | Information de terrain | Question à Romain (domaine E — UX) |
+| I-10 | La FFR encadre-t-elle le sort d'un match d'École de Rugby **qui n'a pas pu se jouer** (forfait, ou annulation pour intempéries) ? Existe-t-il une règle de classement imposée ? | `AUDIT-TOURNOI-R92.md` **ne contient rien** sur le sujet : aucun de ses 25 points de vérification (Q11→Q25) ne le couvre. C'est une question de **règle du jeu**, donc du chantier FFR (D-003) | Question de Romain au **Directeur EDR du Racing** ou au **Comité 92** — la voie qui a déjà résolu Q23. Une règle fédérale primerait sur D-011 **et** D-015 |
 | I-08 | Une image mise à la corbeille du Drive (affiche, logo, photo de parking) reste-t-elle visible par un lien déjà diffusé, pendant les ~30 jours avant que Google vide la corbeille ? | Le comportement de la corbeille Drive appartient à Google, il n'est pas dans le code | Test réel : mettre une image à la corbeille, puis rouvrir son lien depuis une navigation privée |
 | I-09 | Que conserve le **journal d'exécution** de Google Apps Script, et pendant combien de temps ? | Ce journal vit chez Google, hors du dépôt | Consultation par Romain dans l'éditeur Apps Script (« Exécutions ») |
 
