@@ -5,6 +5,33 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Les partenaires arrivent sur le dossier club — 2026-08-03
+Un sixième emplacement, **F**, sur le document envoyé aux clubs inscrits : un **bandeau
+permanent** en tête du dossier, qui **s'imprime avec le PDF**. On choisit partenaire par
+partenaire qui y figure — une case à cocher sur sa fiche, à côté des cinq emplacements de la
+page des scores.
+
+**Deux verrous.** L'interrupteur général `sponsors_actifs` commande aussi cet emplacement (on
+n'allume pas les partenaires à moitié), et seuls les partenaires **explicitement cochés pour le
+dossier** y apparaissent. Un sponsor de la page des scores n'y atterrit jamais par ricochet.
+
+**Et une absence, qui est le cœur de la demande : jamais de message plein écran sur un dossier.**
+Un club l'ouvre pour trouver un horaire, un parking, un numéro — il ne doit pas attendre derrière
+une publicité. Ce n'est pas un réglage qu'on pourrait activer par mégarde : l'emplacement ne
+connaît que la forme « bandeau ».
+
+Deux autres différences suivent de la même logique. **Aucune rotation** : tous les partenaires
+cochés sont côte à côte, parce que le dossier s'imprime et que ce qui tourne n'existe pas sur le
+papier — un club qui garde son PDF doit y retrouver exactement ce qu'il a vu. Et **pas
+d'accroche commerciale**, seulement les logos : c'est un document d'organisation.
+
+Aucun appel réseau supplémentaire — le dossier chargeait déjà l'instantané public pour le
+planning, et celui-ci porte les partenaires. Le temps d'exposition et les clics y sont comptés
+comme ailleurs et rejoignent la fiche de visibilité.
+
+La page d'**invitation**, elle, reste sans partenaires : elle sert à convaincre un club de venir,
+pas à exposer des marques.
+
 ### Les relevés arrivaient bien — c'est la relecture qui ne les voyait pas — 2026-08-03
 La fiche annonçait obstinément « aucun relevé n'est encore remonté », y compris après un
 redéploiement correct du backend. Les relevés arrivaient pourtant : c'est la **relecture** qui

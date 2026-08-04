@@ -95,8 +95,9 @@ var ENTETES = {
   //   logo_id      : id du fichier Drive du logo (public en lecture), comme tournoi_affiche_id.
   //   url          : site du partenaire (facultatif). Lien en rel="noopener sponsored".
   //   accroche     : une ligne affichée sous le logo (bandeau, encart, plein écran).
-  //   emplacements : liste séparée par des virgules parmi bandeau,rail,fil,plein,mur
-  //                  (= emplacements A, B, C, D, E de la page publique). Vide ⇒ mur seul.
+  //   emplacements : liste séparée par des virgules parmi bandeau,rail,fil,plein,mur,dossier
+  //                  (= emplacements A à E de la page publique, F = bandeau du dossier club).
+  //                  Vide ⇒ mur seul.
   //   poids        : 1 à 5 — part du partenaire dans la roue de rotation. Vide ⇒ 1.
   //   visuel_id    : id Drive d'un visuel plein écran fourni par le partenaire (facultatif) ;
   //                  sans lui, l'interstitiel se compose à partir du logo + accroche + couleur.
@@ -3386,8 +3387,15 @@ function supprimerPhotoParking(classeur) {
  * interrupteurs) sont des paramètres globaux de Config et passent par enregistrerReglagesSponsors.
  * =============================================================================================== */
 
-/** Emplacements reconnus sur la page publique (A, B, C, D, E). Tout autre jeton est ignoré. */
-var SPONSOR_EMPLACEMENTS_OK = { bandeau: true, rail: true, fil: true, plein: true, mur: true };
+/**
+ * Emplacements reconnus (A à F). Tout autre jeton est ignoré à l'écriture.
+ *  A-E : page publique des scores.
+ *  F `dossier` : bandeau permanent en tête du DOSSIER CLUB. Volontairement limité à cette
+ *  forme — un club qui ouvre son dossier cherche une information (horaire, parking,
+ *  contact) et ne doit JAMAIS attendre derrière un message plein écran.
+ */
+var SPONSOR_EMPLACEMENTS_OK = { bandeau: true, rail: true, fil: true, plein: true, mur: true,
+                                dossier: true };
 
 /**
  * Réglages d'affichage des partenaires : nom du paramètre → borne min, borne max, défaut.
