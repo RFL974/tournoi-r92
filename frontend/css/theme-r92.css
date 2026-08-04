@@ -649,18 +649,27 @@ body.theme-clair {
    Tout est scopé sous .theme-clair, comme le reste de cette surcouche.
    -------------------------------------------------------------------------- */
 
-/* --- Choix des emplacements (cases à cocher groupées) --- */
+/* --- Emplacements : une carte par emplacement, dépliant ses propres réglages --- */
 .theme-clair .sponsor-emplacements {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin: 6px 0 16px;
-  padding: 12px 14px;
-  background: var(--r92-ciel-soft);
+}
+.theme-clair .sp-emp {
   border: 1px solid var(--r92-ligne);
   border-radius: 10px;
+  padding: 12px 14px;
+  background: #fff;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
-.theme-clair .sponsor-emplacements b {
+/* Un emplacement coché se distingue nettement : c'est lui qui porte des réglages. */
+.theme-clair .sp-emp.est-actif {
+  border-color: var(--r92-accent);
+  background: var(--r92-ciel-soft);
+}
+.theme-clair .sp-emp-tete { font-weight: 600; }
+.theme-clair .sp-emp-tete b {
   display: inline-grid;
   place-items: center;
   width: 20px; height: 20px;
@@ -671,6 +680,20 @@ body.theme-clair {
   font-size: 0.78rem;
   font-weight: 700;
 }
+.theme-clair .sp-emp-aide {
+  margin: 4px 0 0 26px;
+  font-size: 0.8rem;
+  color: var(--r92-txt-doux);
+}
+.theme-clair .sp-emp-reglages {
+  margin: 12px 0 0 26px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--r92-champ-bd);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+.theme-clair .sp-emp-reglages .reglage { margin: 0; }
 
 /* --- Liste des fiches partenaires --- */
 .theme-clair .sponsor-cartes {

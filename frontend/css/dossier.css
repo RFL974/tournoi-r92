@@ -675,8 +675,10 @@ body {
   gap: 12px 26px;
 }
 .sp-dossier-case {
-  display: grid;
-  place-items: center;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
   min-height: 48px;      /* hauteur réservée : la page ne saute pas au chargement du logo */
   max-width: 190px;
   text-decoration: none;
@@ -688,6 +690,20 @@ body {
   /* Même réglage de taille par partenaire que sur la page des scores (--sp-zoom). */
   max-height: calc(52px * var(--sp-zoom, 1));
   object-fit: contain;
+}
+/* Dispositions, comme sur la page des scores : le même partenaire peut être « logo seul »
+   ici et « logo + texte » ailleurs. Le balisage ne change pas, seule cette classe décide. */
+.sp-dossier .sp-dispo-gauche { flex-direction: row; }
+.sp-dossier .sp-dispo-droite { flex-direction: row-reverse; text-align: right; }
+.sp-dossier .sp-dispo-haut   { flex-direction: column; text-align: center; }
+.sp-dossier .sp-bloc-logo    { flex: 0 0 auto; display: grid; place-items: center; }
+.sp-dossier .sp-bloc-texte   { min-width: 0; font-size: 0.82rem; color: var(--d-gris); }
+.sp-dossier .sp-bloc-texte strong { display: block; color: var(--d-navy); }
+.sp-dossier .sp-mention {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 .sp-dossier .sp-logo-texte {
   display: inline-grid;

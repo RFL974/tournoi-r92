@@ -336,22 +336,14 @@
             <input class="r-input" type="color" name="couleur" value="#0c1c2e">
           </label>
 
-          <span class="r-libelle">Emplacements sur la page</span>
-          <div class="sponsor-emplacements">
-            <label class="mini-toggle"><input type="checkbox" name="emp_bandeau"> <b>A</b> Bandeau titre (permanent, en haut)</label>
-            <label class="mini-toggle"><input type="checkbox" name="emp_rail"> <b>B</b> Rail / barre basse (rotatif)</label>
-            <label class="mini-toggle"><input type="checkbox" name="emp_fil"> <b>C</b> Encart dans le fil des scores</label>
-            <label class="mini-toggle"><input type="checkbox" name="emp_plein"> <b>D</b> Message plein écran</label>
-            <label class="mini-toggle"><input type="checkbox" name="emp_mur" checked> <b>E</b> Mur des partenaires</label>
-            <label class="mini-toggle"><input type="checkbox" name="emp_dossier"> <b>F</b> Dossier club (bandeau en tête)</label>
-          </div>
+          <span class="r-libelle">Emplacements et réglages</span>
           <p class="note-generation">
-            <strong>F — le dossier club</strong> est le document envoyé aux clubs inscrits.
-            Les partenaires cochés y apparaissent en <strong>bandeau permanent</strong>, en tête,
-            et <strong>s'impriment avec le PDF</strong>. Jamais de message plein écran sur un
-            dossier : un club l'ouvre pour trouver un horaire ou un contact, il ne doit pas
-            attendre. L'interrupteur général ci-dessus commande aussi cet emplacement.
+            Coche un emplacement pour y faire apparaître ce partenaire. Chaque emplacement
+            ouvre alors <strong>ses propres réglages</strong> — texte, taille du logo et
+            disposition — pour l'adapter exactement à la forme de l'encart. Laisser un réglage
+            vide reprend celui du partenaire, puis le défaut de l'emplacement.
           </p>
+          <div class="sponsor-emplacements" id="sponsor-emplacements"></div>
 
           <label class="reglage"><span class="r-libelle">Poids dans la rotation (1 à 5)</span>
             <input class="r-input" type="number" name="poids" min="1" max="5" step="1" value="1">

@@ -138,11 +138,50 @@ faute de frappe (« 500 » au lieu de « 5 ») ne transforme le message en écra
 | `couleur` | `#RRGGBB`, fond du plein écran auto-composé. |
 | `actif` | `oui` = visible. Toute autre valeur ⇒ retiré de la page **sans perdre la fiche**. |
 | `ordre` | Position dans le mur des partenaires uniquement. |
-| `logo_zoom` | Taille du logo en **% de la taille de référence** (50 à 200, défaut 100). |
+| `logo_zoom` | Taille du logo en **% de la taille de référence** (50 à 200, défaut 100). Réglage **général** du partenaire. |
+| `reglages_emplacements` | JSON des réglages **par emplacement** : `{"bandeau":{"texte":"…","zoom":150,"dispo":"droite"}}`. |
 
 **Sans logo**, le partenaire s'affiche en pastille à son nom sur sa couleur de marque : un
 commerçant qui n'a pas de fichier exploitable reste affichable, et la démo fonctionne avant
 même le premier téléversement.
+
+## 4 bis. Régler un partenaire **encart par encart**
+
+Un même logo ne se comporte pas pareil dans un bandeau large, dans une barre basse de téléphone
+et sur une feuille imprimée. Chaque couple **(partenaire × emplacement)** a donc ses propres
+réglages, saisis dans l'admin sous la case de l'emplacement :
+
+| Réglage | Effet |
+|---|---|
+| **Texte affiché ici** | Remplace l'accroche du partenaire, pour cet emplacement seulement (80 car.). |
+| **Taille du logo (%)** | 50 à 200 % de la taille de référence de l'emplacement. |
+| **Disposition** | `gauche` · `droite` · `haut` · `seul` (logo sans texte). |
+
+**Trois niveaux de repli**, du plus précis au plus général :
+
+1. le réglage saisi pour **cet** emplacement ;
+2. à défaut, le réglage **général** du partenaire (`accroche`, `logo_zoom`) ;
+3. à défaut, le **défaut de l'emplacement**.
+
+Ne rien saisir donne donc exactement le comportement d'avant — c'est ce qui rend la colonne
+rétrocompatible.
+
+**Défauts de disposition**, choisis pour la forme de chaque encart :
+
+| Emplacement | Défaut | Pourquoi |
+|---|---|---|
+| A `bandeau` | `gauche` | large : logo à gauche, texte à droite |
+| B `rail` | `haut` | colonne étroite : logo au-dessus |
+| C `fil` | `gauche` | au gabarit d'une carte de match |
+| D `plein` | `haut` | visuel vertical |
+| E `mur` | `seul` | grille de logos : le texte alourdirait |
+| F `dossier` | `seul` | document d'organisation : les logos suffisent |
+
+> 🧩 **Comment c'est fait.** Le balisage est le **même partout** — un bloc logo, un bloc texte.
+> C'est une classe `sp-dispo-*` posée sur le conteneur qui décide de l'agencement, donc tout se
+> joue en CSS. La taille, elle, passe par la variable `--sp-zoom` que la feuille de style
+> multiplie par la référence de l'emplacement : jamais par une taille en ligne, qui écraserait
+> les règles et interdirait l'adaptation à l'écran.
 
 **Logo qui paraît trop petit ?** Beaucoup de fichiers embarquent leurs propres **marges
 blanches** : le logo semble minuscule alors que l'image, elle, est à la bonne taille. Aucun

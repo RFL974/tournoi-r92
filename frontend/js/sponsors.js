@@ -264,6 +264,69 @@ function sponsorsOrdreRoue(emplacement, candidats) {
 }
 
 /* ==========================================================================
+   RÉGLAGES PAR EMPLACEMENT — adapter un partenaire à chaque encart
+   --------------------------------------------------------------------------
+   Un même logo ne se comporte pas pareil dans un bandeau large, dans une barre
+   basse de téléphone et sur une feuille imprimée. Chaque couple
+   (partenaire × emplacement) a donc ses propres réglages : le TEXTE qui
+   l'accompagne, la TAILLE du logo, et sa DISPOSITION dans l'encart.
+
+   Trois niveaux de repli, du plus précis au plus général :
+     1. le réglage saisi pour CET emplacement (colonne reglages_emplacements) ;
+     2. à défaut, le réglage général du partenaire (accroche, logo_zoom) ;
+     3. à défaut, le défaut de l'emplacement (ci-dessous).
+   Ne rien saisir donne donc exactement le comportement d'avant.
+   ========================================================================== */
+
+/** Disposition par défaut de chaque emplacement, choisie pour sa forme. */
+var SPONSORS_DISPO_DEFAUT = {
+  bandeau: 'gauche',  // large : logo à gauche, texte à droite
+  rail:    'haut',    // colonne étroite : logo au-dessus, texte dessous
+  fil:     'gauche',  // au gabarit d'une carte de match
+  plein:   'haut',    // visuel vertical
+  mur:     'seul',    // grille de logos : le texte alourdirait
+  dossier: 'seul'     // document d'organisation : les logos suffisent
+};
+
+/** Dispositions reconnues (miroir de SPONSOR_DISPOSITIONS_OK côté backend). */
+var SPONSORS_DISPOSITIONS = ['gauche', 'droite', 'haut', 'seul'];
+
+/** Réglages par emplacement d'un partenaire, décodés une fois. */
+function sponsorsReglagesBruts(s) {
+  if (s && s.__reglages) return s.__reglages;
+  var r = {};
+  try {
+    var brut = (s && s.reglages_emplacements) || '';
+    if (brut) r = (typeof brut === 'string') ? JSON.parse(brut) : brut;
+  } catch (e) { r = {}; }
+  if (s) { try { s.__reglages = r; } catch (e) {} }
+  return r || {};
+}
+
+/**
+ * Réglages effectifs d'un partenaire POUR UN EMPLACEMENT donné.
+ * @returns {{texte: string, zoom: number, dispo: string}}
+ */
+function sponsorsReglageEmplacement(s, emplacement) {
+  var r = (sponsorsReglagesBruts(s) || {})[emplacement] || {};
+
+  var zoom = parseInt(r.zoom, 10);
+  if (!isFinite(zoom)) zoom = parseInt(s.logo_zoom, 10);
+  if (!isFinite(zoom)) zoom = 100;
+  zoom = Math.max(50, Math.min(200, zoom)) / 100;
+
+  var dispo = String(r.dispo || '').toLowerCase();
+  if (SPONSORS_DISPOSITIONS.indexOf(dispo) < 0) {
+    dispo = SPONSORS_DISPO_DEFAUT[emplacement] || 'gauche';
+  }
+
+  // Texte : celui de l'emplacement, sinon l'accroche générale du partenaire.
+  var texte = String(r.texte == null ? '' : r.texte).trim() || String(s.accroche || '').trim();
+
+  return { texte: texte, zoom: zoom, dispo: dispo };
+}
+
+/* ==========================================================================
    IMAGES
    ========================================================================== */
 
@@ -283,52 +346,32 @@ function sponsorsCouleur(s) {
 }
 
 /**
- * Logo d'un partenaire. Sans fichier téléversé, on compose une pastille au nom du
- * partenaire sur sa couleur de marque : un commerçant qui n'a pas de logo exploitable
- * reste affichable, et la démo fonctionne avant même le premier téléversement.
+ * Logo d'un partenaire, dimensionné POUR UN EMPLACEMENT. Sans fichier téléversé, on compose
+ * une pastille au nom du partenaire sur sa couleur de marque : un commerçant qui n'a pas de
+ * logo exploitable reste affichable, et la démo fonctionne avant le premier téléversement.
  *
- * ⚠️ La TAILLE d'affichage n'est PAS fixée ici : elle est gouvernée par la feuille de style,
- * emplacement par emplacement (section 19 de tournoi-public.css), avec des valeurs différentes
- * sur téléphone et sur ordinateur. Un style en ligne l'emporterait sur le CSS et interdirait
- * ces adaptations — c'est exactement ce qui rendait le logo minuscule sur grand écran.
- *
- * La largeur demandée à Drive est fixe (600 px) : c'est la taille à laquelle l'admin
- * redimensionne les logos au téléversement, donc en demander plus n'apporterait rien, et en
- * demander moins piquerait sur les écrans à haute densité.
+ * ⚠️ La taille n'est pas fixée ici mais ALIMENTÉE : on pose la variable CSS `--sp-zoom`, que
+ * la feuille de style multiplie par la taille de référence de l'emplacement. Une taille en
+ * ligne, elle, écraserait ces règles et interdirait toute adaptation à l'écran — c'est
+ * exactement ce qui rendait autrefois le logo minuscule sur grand écran.
  */
-function sponsorsLogo(s) {
+function sponsorsLogo(s, emplacement) {
   var nom = echapper(s.nom);
+  var zoom = sponsorsReglageEmplacement(s, emplacement || 'bandeau').zoom;
   if (s.logo_id) {
-    // On pose une VARIABLE CSS, pas une taille. Nuance essentielle : une taille en ligne
-    // écraserait les règles de la feuille de style (c'est ce qui rendait le logo minuscule
-    // sur grand écran) ; une variable, elle, ALIMENTE ces règles — chaque emplacement garde
-    // donc sa taille de référence et son adaptation à l'écran, simplement multipliée.
     return '<img class="sp-logo-img" src="' + echapper(sponsorsUrlImage(s.logo_id, 600)) +
-      '" alt="' + nom + '" loading="lazy" decoding="async"' +
-      ' style="--sp-zoom:' + sponsorsZoom(s) + '">';
+      '" alt="' + nom + '" loading="lazy" decoding="async" style="--sp-zoom:' + zoom + '">';
   }
-  return '<span class="sp-logo-texte" style="background:' + echapper(sponsorsCouleur(s)) + '">' + nom + '</span>';
-}
-
-/**
- * Facteur d'agrandissement du logo d'un partenaire (1 = taille de référence).
- *
- * Beaucoup de fichiers de logo embarquent leurs propres marges blanches : à l'écran le
- * logo paraît alors petit, alors que l'IMAGE, elle, est à la bonne taille — aucun réglage
- * global ne peut le rattraper, puisque le vide fait partie du fichier. D'où ce réglage
- * au cas par cas, saisi dans l'admin en pourcentage (50 à 200).
- */
-function sponsorsZoom(s) {
-  var z = parseInt(s.logo_zoom, 10);
-  if (!isFinite(z)) return 1;
-  return Math.max(50, Math.min(200, z)) / 100;
+  return '<span class="sp-logo-texte" style="--sp-zoom:' + zoom +
+    ';background:' + echapper(sponsorsCouleur(s)) + '">' + nom + '</span>';
 }
 
 /** Ouvre-t-on un lien ? (partenaire sans site : on rend un bloc non cliquable). */
 function sponsorsOuvrir(s, contenu, classe, emplacement) {
   var url = String(s.url || '').trim();
-  var attrs = ' class="' + classe + '" data-sponsor="' + echapper(s.id_sponsor) +
-              '" data-emplacement="' + echapper(emplacement) + '"';
+  var dispo = sponsorsReglageEmplacement(s, emplacement).dispo;
+  var attrs = ' class="' + classe + ' sp-dispo-' + dispo + '" data-sponsor="' +
+              echapper(s.id_sponsor) + '" data-emplacement="' + echapper(emplacement) + '"';
   if (!/^https?:\/\//i.test(url)) return '<div' + attrs + '>' + contenu + '</div>';
   return '<a' + attrs + ' href="' + echapper(url) + '" target="_blank" rel="noopener sponsored">' +
     contenu + '</a>';
@@ -339,12 +382,26 @@ function sponsorsOuvrir(s, contenu, classe, emplacement) {
    ========================================================================== */
 
 /**
- * Nom du partenaire à afficher à côté du logo. À VIDE quand le partenaire n'a pas d'image :
- * la pastille de repli porte déjà son nom, et l'écrire deux fois côte à côte est disgracieux
- * — surtout sur téléphone, où le doublon mange la moitié du bandeau.
+ * Corps commun d'un encart partenaire : le logo, puis le bloc de texte. La DISPOSITION
+ * (logo à gauche / à droite / au-dessus / seul) est portée par une classe sur le conteneur,
+ * donc gérée entièrement en CSS — le balisage, lui, ne change pas.
+ *
+ * @param {string} mention petite étiquette au-dessus du nom ('' pour aucune)
  */
-function sponsorsNomACote(s) {
-  return s.logo_id ? '<strong>' + echapper(s.nom) + '</strong>' : '';
+function sponsorsCorps(s, emplacement, mention) {
+  var reg = sponsorsReglageEmplacement(s, emplacement);
+  if (reg.dispo === 'seul') {
+    // Logo seul : ni mention, ni nom, ni texte. C'est le mode des grilles de logos.
+    return '<span class="sp-bloc-logo">' + sponsorsLogo(s, emplacement) + '</span>';
+  }
+  return '<span class="sp-bloc-logo">' + sponsorsLogo(s, emplacement) + '</span>' +
+    '<span class="sp-bloc-texte">' +
+      (mention ? '<span class="sp-mention">' + echapper(mention) + '</span>' : '') +
+      // Le nom n'est écrit que si le partenaire a un VRAI logo : sinon la pastille de repli
+      // le porte déjà, et l'afficher deux fois côte à côte mange la moitié d'un bandeau.
+      (s.logo_id ? '<strong>' + echapper(s.nom) + '</strong>' : '') +
+      (reg.texte ? '<span class="sp-accroche">' + echapper(reg.texte) + '</span>' : '') +
+    '</span>';
 }
 
 /** A — bandeau partenaire principal (un seul partenaire, permanent sur la journée). */
@@ -352,14 +409,8 @@ function sponsorsRendreBandeau(liste) {
   var candidats = sponsorsPourEmplacement(liste, 'bandeau');
   var s = sponsorsTirer('bandeau', candidats, true);
   if (!s) return '';
-  var corps =
-    '<span class="sp-bandeau-logo">' + sponsorsLogo(s) + '</span>' +
-    '<span class="sp-bandeau-texte">' +
-      '<span class="sp-mention">Partenaire du tournoi</span>' +
-      sponsorsNomACote(s) +
-      (s.accroche ? '<span class="sp-accroche">' + echapper(s.accroche) + '</span>' : '') +
-    '</span>';
-  return sponsorsOuvrir(s, corps, 'sp-bandeau', 'bandeau');
+  return sponsorsOuvrir(s, sponsorsCorps(s, 'bandeau', 'Partenaire du tournoi'),
+                        'sp-bandeau', 'bandeau');
 }
 
 /** B — rail (ordinateur) / barre basse (téléphone). Contient TOUS les partenaires du rail,
@@ -368,11 +419,9 @@ function sponsorsRendreRail(liste) {
   var ordre = sponsorsOrdreRoue('rail', sponsorsPourEmplacement(liste, 'rail'));
   if (!ordre.length) return '';
   var vues = ordre.map(function (s, i) {
-    var corps = '<span class="sp-rail-logo">' + sponsorsLogo(s) + '</span>' +
-      (s.accroche ? '<span class="sp-accroche">' + echapper(s.accroche) + '</span>' : '');
     return '<div class="sp-rail-vue' + (i === 0 ? ' active' : '') + '" data-index="' + i + '"' +
       (i === 0 ? '' : ' aria-hidden="true"') + '>' +
-      sponsorsOuvrir(s, corps, 'sp-rail-lien', 'rail') + '</div>';
+      sponsorsOuvrir(s, sponsorsCorps(s, 'rail', ''), 'sp-rail-lien', 'rail') + '</div>';
   }).join('');
   var points = ordre.length > 1
     ? '<span class="sp-points" aria-hidden="true">' + ordre.map(function (s, i) {
@@ -386,14 +435,7 @@ function sponsorsRendreRail(liste) {
 /** C — encart intégré au fil des scores. */
 function sponsorsRendreFil(s) {
   if (!s) return '';
-  var corps =
-    '<span class="sp-fil-logo">' + sponsorsLogo(s) + '</span>' +
-    '<span class="sp-fil-texte">' +
-      '<span class="sp-mention">Partenaire</span>' +
-      sponsorsNomACote(s) +
-      (s.accroche ? '<span class="sp-accroche">' + echapper(s.accroche) + '</span>' : '') +
-    '</span>';
-  return sponsorsOuvrir(s, corps, 'sp-fil', 'fil');
+  return sponsorsOuvrir(s, sponsorsCorps(s, 'fil', 'Partenaire'), 'sp-fil', 'fil');
 }
 
 /** E — mur des partenaires : tous les logos, sans hiérarchie, en bas de page. */
@@ -401,7 +443,7 @@ function sponsorsRendreMur(liste) {
   var candidats = sponsorsPourEmplacement(liste, 'mur');
   if (!candidats.length) return '';
   var cases = candidats.map(function (s) {
-    return sponsorsOuvrir(s, sponsorsLogo(s), 'sp-mur-case', 'mur');
+    return sponsorsOuvrir(s, sponsorsCorps(s, 'mur', ''), 'sp-mur-case', 'mur');
   }).join('');
   return '<div class="sp-mur">' +
       '<div class="sp-mur-titre">Ils rendent le tournoi possible</div>' +
@@ -416,8 +458,8 @@ function sponsorsRendreMur(liste) {
  *  • TOUS les partenaires cochés y figurent, côte à côte — il n'y a pas de rotation. Le
  *    dossier est un document qu'on imprime : ce qui tourne n'existe pas sur le papier, et
  *    un club qui garde son PDF doit y retrouver exactement ce qu'il a vu à l'écran.
- *  • Pas d'accroche commerciale : le dossier est un document d'organisation, les logos
- *    suffisent à dire qui soutient le tournoi.
+ *  • Disposition « logo seul » par défaut — mais réglable comme partout ailleurs si on veut
+ *    y accompagner un logo d'une ligne de texte.
  *  • Aucun plein écran, jamais — c'est la règle même de cet emplacement.
  *
  * @param {Array} liste partenaires actifs
@@ -428,7 +470,7 @@ function sponsorsRendreDossier(liste) {
   if (!candidats.length) return '';
 
   var logos = candidats.map(function (s) {
-    return sponsorsOuvrir(s, sponsorsLogo(s), 'sp-dossier-case', 'dossier');
+    return sponsorsOuvrir(s, sponsorsCorps(s, 'dossier', ''), 'sp-dossier-case', 'dossier');
   }).join('');
 
   return '<section class="sp-dossier">' +
