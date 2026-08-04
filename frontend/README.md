@@ -48,6 +48,9 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
 
 **Fichiers partagés** :
 - `css/styles.css` (thème sombre admin/saisie/perfs) · `css/tournoi-public.css` (thème clair public).
+- `css/sponsors.css` — les encarts partenaires (A→E), chargés par `tournoi.html` **et** par
+  `admin.html` : l'admin en a besoin pour que l'aperçu de chaque emplacement et le test du
+  message plein écran montrent le rendu réel, et non du texte brut.
 - `js/config.js` — `API_URL` (backend) + `SNAPSHOT_URL` (relais CDN, vide par défaut).
 - `js/commun.js` — petites fonctions utilitaires communes aux 4 pages (`echapper`, `estTermine`,
   `afficherMessage`, `libelleTourFr`, `comparerCategorie`) ; chargé juste après `config.js`.

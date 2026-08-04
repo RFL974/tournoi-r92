@@ -695,6 +695,49 @@ body.theme-clair {
 }
 .theme-clair .sp-emp-reglages .reglage { margin: 0; }
 
+/* Avertissement « logo seul » : le texte saisi juste au-dessus ne sera pas affiché.
+   Sans lui, on tape une accroche, on enregistre, et on cherche pourquoi elle n'apparaît
+   nulle part — c'est exactement le piège du dossier club, réglé sur « logo seul ». */
+.theme-clair .sp-emp-muet {
+  grid-column: 1 / -1;
+  margin: -4px 0 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #fdf3dd;
+  border: 1px solid #e9c96a;
+  font-size: 0.78rem;
+  color: #6b5312;
+}
+
+/* Aperçu de l'encart : le MÊME balisage et les MÊMES règles que la page publique
+   (css/sponsors.css), à la taille réelle. C'est la réponse immédiate à « qu'est-ce que
+   ça donne ? », sans enregistrer ni recharger la page des scores. */
+.theme-clair .sp-emp-apercu {
+  grid-column: 1 / -1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--r92-champ-bd);
+  background: #fff;
+}
+.theme-clair .sp-emp-apercu-titre {
+  display: block;
+  margin-bottom: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--r92-txt-doux);
+}
+.theme-clair .sp-emp-rendu {
+  display: flex;
+  gap: 10px;
+  min-height: 40px;   /* hauteur réservée : la carte ne saute pas au chargement du logo */
+}
+.theme-clair .sp-emp-rendu .sp-bloc-logo { flex: 0 0 auto; display: grid; place-items: center; }
+.theme-clair .sp-emp-rendu .sp-bloc-texte { min-width: 0; }
+.theme-clair .sp-emp-rendu .sp-bloc-texte strong { display: block; color: var(--r92-navy); }
+
 /* --- Liste des fiches partenaires --- */
 .theme-clair .sponsor-cartes {
   display: grid;

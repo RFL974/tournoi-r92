@@ -5,6 +5,28 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Un aperçu sous chaque emplacement partenaire — 2026-08-04
+« J'ai tout réglé et rien ne change sur le dossier final. » Les réglages étaient bien
+enregistrés et bien appliqués : ils étaient saisis sur l'emplacement **A · Bandeau titre**,
+alors que le dossier club est l'emplacement **F**, indépendant par construction — et **F**,
+laissé vide, retombait sur son défaut `seul`, c'est-à-dire **le logo sans aucun texte**. Rien
+dans l'écran ne le disait.
+
+Trois corrections, dans l'ordre où on tombe dans le piège :
+
+- **Un aperçu de l'encart** sous les champs de chaque emplacement coché, dessiné avec le même
+  moteur et la même feuille de style que la page publique et le dossier club. Logo à sa taille
+  réelle, texte, disposition — redessiné à la frappe, sans rien enregistrer.
+- **Le choix « défaut » annonce ce qu'il fait** : « Défaut : logo seul » au lieu de « Défaut de
+  l'emplacement », qui laissait deviner.
+- **Un avertissement** dès qu'un emplacement se retrouve en « logo seul » : le texte saisi
+  au-dessus ne sera pas affiché ici.
+
+Au passage, les règles d'affichage des encarts sortent de `css/tournoi-public.css` vers une
+feuille partagée **`css/sponsors.css`**, chargée par la page publique **et** par l'admin. Le
+test du message plein écran, jusqu'ici affiché en texte brut dans l'admin faute de styles,
+montre enfin le vrai rendu.
+
 ### Chaque partenaire se règle encart par encart — 2026-08-03
 Un même logo ne se comporte pas pareil dans un bandeau large, dans une barre basse de téléphone
 et sur une feuille imprimée. Chaque couple **(partenaire × emplacement)** a donc désormais ses

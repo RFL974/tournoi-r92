@@ -44,6 +44,9 @@ function initAdminSponsors() {
     .addEventListener('change', majLignesInterstitiel);
 
   construireEmplacements();
+  // Le nom, l'accroche, la couleur et la taille générale vivent HORS du panneau des
+  // emplacements mais alimentent chaque aperçu : on écoute donc tout le formulaire.
+  document.getElementById('form-sponsor').addEventListener('input', rafraichirApercusEmplacements);
   document.getElementById('bouton-enregistrer-sponsor').addEventListener('click', onEnregistrerSponsor);
   document.getElementById('bouton-annuler-sponsor').addEventListener('click', reinitialiserFormSponsor);
   document.getElementById('liste-sponsors').addEventListener('click', onClicListeSponsors);
@@ -208,12 +211,29 @@ const SPONSORS_DISPO_LIBELLES = [
   ['seul',   'Logo seul, sans texte']
 ];
 
+/** Forme courte : la liste déroulante est étroite, un libellé long y serait tronqué. */
+const SPONSORS_DISPO_COURT = {
+  gauche: 'logo à gauche', droite: 'logo à droite',
+  haut: 'logo au-dessus', seul: 'logo seul'
+};
+
+/**
+ * Taille de référence du logo à L'APERÇU, en pixels — les mêmes valeurs que les feuilles
+ * de style publiques (`--sp-ref`), version grand écran. L'aperçu montre donc la taille
+ * RÉELLE du logo dans son encart, pas une vignette décorative.
+ */
+const SPONSORS_APERCU_REF = { bandeau: 84, rail: 56, fil: 50, plein: 84, mur: 62, dossier: 52 };
+
 /** Construit le panneau : une case par emplacement, chacune dépliant ses réglages. */
 function construireEmplacements() {
   const zone = document.getElementById('sponsor-emplacements');
   if (!zone) return;
   zone.innerHTML = SPONSORS_EMPLACEMENTS.map(function (e, i) {
     const lettre = String.fromCharCode(65 + i);
+    // Le défaut de l'emplacement est ANNONCÉ : « Défaut » tout court laissait croire que
+    // le texte saisi s'afficherait, alors que le dossier club, par exemple, part sur
+    // « logo seul » — donc sans aucun texte. Ne rien choisir doit rester prévisible.
+    const defaut = SPONSORS_DISPO_DEFAUT[e] || 'gauche';
     return '<div class="sp-emp" data-emplacement="' + e + '">' +
       '<label class="mini-toggle sp-emp-tete">' +
         '<input type="checkbox" name="emp_' + e + '"' + (e === 'mur' ? ' checked' : '') + '> ' +
@@ -224,24 +244,34 @@ function construireEmplacements() {
         '<label class="reglage"><span class="r-libelle">Texte affiché ici</span>' +
           '<input class="r-input" type="text" name="txt_' + e + '" maxlength="80" ' +
             'placeholder="Vide = l\'accroche du partenaire"></label>' +
+        '<p class="sp-emp-muet" hidden>Disposition « logo seul » : ce texte ne sera pas affiché ' +
+          'dans cet encart. Choisis une autre disposition pour le faire apparaître.</p>' +
         '<label class="reglage"><span class="r-libelle">Taille du logo (%)</span>' +
           '<input class="r-input" type="number" name="zoom_' + e + '" min="50" max="200" step="10" ' +
             'placeholder="Vide = taille du partenaire"></label>' +
         '<label class="reglage"><span class="r-libelle">Disposition</span>' +
           '<select class="r-input" name="dispo_' + e + '">' +
-            '<option value="">Défaut de l\'emplacement</option>' +
+            '<option value="">Défaut : ' + echapper(SPONSORS_DISPO_COURT[defaut] || defaut) + '</option>' +
             SPONSORS_DISPO_LIBELLES.map(function (d) {
               return '<option value="' + d[0] + '">' + echapper(d[1]) + '</option>';
             }).join('') +
           '</select></label>' +
+        '<div class="sp-emp-apercu">' +
+          '<span class="sp-emp-apercu-titre">Aperçu de cet encart</span>' +
+          '<div class="sp-emp-rendu"></div>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 
-  // Les réglages d'un emplacement n'ont de sens que s'il est coché.
+  // Les réglages d'un emplacement n'ont de sens que s'il est coché ; et tout changement
+  // se voit tout de suite dans l'aperçu — c'est lui qui répond à « pourquoi mon texte
+  // n'apparaît pas ? » sans avoir à enregistrer puis recharger le dossier.
   zone.addEventListener('change', function (e) {
     if (e.target && /^emp_/.test(e.target.name || '')) majReglagesEmplacement(e.target);
+    rafraichirApercusEmplacements();
   });
+  zone.addEventListener('input', rafraichirApercusEmplacements);
 }
 
 /** Déplie ou replie les réglages d'un emplacement selon sa case. */
@@ -257,6 +287,80 @@ function majTousReglagesEmplacements() {
   const form = document.getElementById('form-sponsor');
   SPONSORS_EMPLACEMENTS.forEach(function (e) {
     if (form['emp_' + e]) majReglagesEmplacement(form['emp_' + e]);
+  });
+  rafraichirApercusEmplacements();
+}
+
+/**
+ * Partenaire FICTIF construit à partir de l'état courant du formulaire — y compris ce qui
+ * n'est pas encore enregistré. C'est ce que le moteur d'affichage (sponsors.js) recevrait
+ * si on publiait maintenant : l'aperçu passe donc par exactement le même code que la page
+ * publique et le dossier club, et ne peut pas mentir sur le résultat.
+ */
+function sponsorDepuisFormulaire() {
+  const form = document.getElementById('form-sponsor');
+  if (!form) return null;
+  return {
+    id_sponsor: form.id_sponsor.value || '__apercu__',
+    nom: form.nom.value.trim() || 'Nom du partenaire',
+    accroche: form.accroche.value.trim(),
+    couleur: form.couleur.value,
+    // Logo pas encore téléversé : on met un identifiant factice pour que le moteur produise
+    // bien une <img> (dont on remplacera la source par l'image locale) plutôt que la
+    // pastille de repli — sinon l'aperçu montrerait autre chose que le résultat final.
+    logo_id: sponsorLogoDataURI ? '__local__'
+           : (sponsorLogoRetirer ? '' : (fichePartenaireCourante('logo_id') || '')),
+    logo_zoom: form.logo_zoom.value,
+    // Un objet neuf à chaque appel : sponsorsReglagesBruts met son résultat en cache sur
+    // la fiche (`__reglages`), un objet réutilisé figerait l'aperçu au premier rendu.
+    reglages_emplacements: JSON.stringify(lireReglagesEmplacements())
+  };
+}
+
+/** Valeur d'un champ de la fiche en cours de modification (vide en création). */
+function fichePartenaireCourante(champ) {
+  const id = document.getElementById('form-sponsor').id_sponsor.value;
+  if (!id) return '';
+  const s = sponsorsAdmin.filter(function (x) { return String(x.id_sponsor) === String(id); })[0];
+  return s ? String(s[champ] || '') : '';
+}
+
+/** Redessine l'aperçu de chaque emplacement coché, avec les réglages courants du formulaire. */
+function rafraichirApercusEmplacements() {
+  const zone = document.getElementById('sponsor-emplacements');
+  const fiche = sponsorDepuisFormulaire();
+  if (!zone || !fiche) return;
+
+  const form = document.getElementById('form-sponsor');
+
+  SPONSORS_EMPLACEMENTS.forEach(function (e) {
+    const bloc = zone.querySelector('.sp-emp[data-emplacement="' + e + '"]');
+    if (!bloc) return;
+    const rendu = bloc.querySelector('.sp-emp-rendu');
+    const muet = bloc.querySelector('.sp-emp-muet');
+    if (!rendu) return;
+
+    // Emplacement décoché : ses réglages sont repliés, inutile d'aller chercher le logo
+    // pour un aperçu que personne ne voit.
+    if (!form['emp_' + e] || !form['emp_' + e].checked) {
+      rendu.innerHTML = '';
+      if (muet) muet.hidden = true;
+      return;
+    }
+
+    const reg = sponsorsReglageEmplacement(fiche, e);
+    if (muet) muet.hidden = (reg.dispo !== 'seul');
+
+    rendu.className = 'sp-emp-rendu sp-dispo-' + reg.dispo;
+    rendu.style.setProperty('--sp-ref', (SPONSORS_APERCU_REF[e] || 52) + 'px');
+    rendu.innerHTML = sponsorsCorps(fiche, e, '');
+
+    // Logo choisi mais pas encore téléversé : il n'a pas d'identifiant Drive, on branche
+    // directement l'image locale pour que l'aperçu soit juste dès le glisser-déposer.
+    if (sponsorLogoDataURI) {
+      const img = rendu.querySelector('.sp-logo-img');
+      if (img) img.src = sponsorLogoDataURI;
+    }
   });
 }
 
@@ -435,9 +539,9 @@ function reinitialiserFormSponsor() {
 function majApercuLogoSponsor(src) {
   const bloc = document.getElementById('apercu-sponsor-logo');
   const img = document.getElementById('apercu-sponsor-logo-img');
-  if (!src) { bloc.hidden = true; img.removeAttribute('src'); return; }
-  img.src = src;
-  bloc.hidden = false;
+  if (!src) { bloc.hidden = true; img.removeAttribute('src'); }
+  else { img.src = src; bloc.hidden = false; }
+  rafraichirApercusEmplacements();  // les aperçus par emplacement montrent le même logo
 }
 
 /**
