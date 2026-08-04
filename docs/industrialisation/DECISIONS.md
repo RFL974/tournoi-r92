@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 1)
+**Dernière mise à jour** : 2026-08-04 (session 2)
 
 ---
 
@@ -189,7 +189,105 @@
 
 ---
 
+### D-007 — La cartographie est découpée en trois volets
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 2 |
+| **Statut** | ✅ VALIDÉE |
+| **Décidée par** | Claude (technique) |
+
+**Problème posé**
+> L'ÉTAPE 1 demande de « comprendre entièrement le projet ». Mais le serveur fait à lui seul
+> 8 030 lignes, et le reste du code environ autant. Tout embrasser en une session produirait soit
+> un survol trop vague pour être utile, soit un document trop long pour être lu.
+
+**Décision prise**
+> L'ÉTAPE 1 est découpée en **trois volets**, un par session, écrits dans un **seul** fichier
+> `docs/industrialisation/CARTOGRAPHIE.md` :
+> - **A — le squelette** : de quoi l'application est faite, comment les morceaux se parlent, comment
+>   le code arrive en ligne, qui a le droit de quoi ;
+> - **B — les fonctionnalités** : ce que l'application sait faire, écran par écran ;
+> - **C — les données** : ce qui est stocké, où, combien de temps, et ce qui touche à la vie privée.
+
+**Raison**
+> Chaque volet répond à une question différente, et chacun tient dans une session. Un seul fichier
+> évite d'éparpiller la compréhension du projet dans plusieurs documents.
+
+**Conséquences**
+> L'ÉTAPE 2 (l'audit) ne peut pas commencer avant la fin des trois volets — auditer sans connaître
+> les données manipulées reviendrait à juger sans avoir tout lu.
+
+---
+
+### D-008 — La cartographie décrit, elle ne classe pas
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 2 |
+| **Statut** | ✅ VALIDÉE |
+| **Décidée par** | Claude (technique) |
+
+**Problème posé**
+> En lisant le code pour le cartographier, on remarque forcément des choses discutables. La
+> tentation est de les classer tout de suite en P0/P1/P2/P3. Ce serait un mélange dangereux : un
+> problème signalé sans avoir été instruit devient soit une alerte injustifiée, soit une fausse
+> réassurance.
+
+**Décision prise**
+> Les observations faites pendant la cartographie sont notées comme **points d'attention**
+> (`CARTOGRAPHIE.md` §A.10), avec le domaine d'audit qui les reprendra, et **sans aucune priorité**.
+> La classification P0/P1/P2/P3 appartient exclusivement à l'ÉTAPE 2, dans `RISQUES.md`.
+
+**Raison**
+> `CLAUDE.md` §5 l'impose : « ne jamais traiter automatiquement un P2 ou P3 comme un P0 ». La façon
+> la plus sûre de respecter cette règle est de ne pas classer avant d'avoir instruit.
+
+**Conséquences**
+> Un point d'attention de la cartographie n'a **aucune valeur d'alerte**. Il ne faut ni s'en
+> inquiéter, ni le corriger, tant que l'ÉTAPE 2 ne l'a pas repris.
+
+---
+
 ## DÉCISIONS EN ATTENTE DE ROMAIN
+
+### D-009 — Où atterrit la documentation quand une branche est imposée
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 2 |
+| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+
+**Problème posé**
+> **D-006** dit que la documentation part **directement sur `main`**, sans branche ni relecture.
+> Mais la session 2 a été lancée avec une consigne d'exécution qui impose une branche de travail
+> (`claude/industrialisation-phase2-cartographie-usis7l`) et interdit de pousser ailleurs.
+>
+> *Une « branche », c'est une copie de côté du projet : on y travaille sans toucher à la version
+> officielle (`main`), jusqu'à ce qu'on décide de l'y ramener.*
+
+**Ce qui a été fait**
+> La **consigne d'exécution l'a emporté** : le travail de la session 2 a été poussé sur la branche
+> imposée, pas sur `main`. C'est le choix prudent — pousser sur `main` contre une consigne explicite
+> aurait été pire que le léger détour.
+
+**Conséquence concrète**
+> Tant que cette branche n'est pas ramenée dans `main`, `CARTOGRAPHIE.md` **n'existe pas** pour une
+> session qui démarrerait depuis `main`. Elle croirait la cartographie non commencée et risquerait
+> de la refaire.
+
+**Question à Romain** — deux possibilités :
+> **(a)** ramener la branche dans `main` dès maintenant (fusion), et garder D-006 tel quel : la
+> documentation continue d'aller directement sur `main` quand aucune branche n'est imposée ;
+> **(b)** modifier D-006 : toute session, documentation comprise, passe désormais par une branche.
+>
+> **Recommandation : (a).** C'est le comportement décrit par D-006, que tu as déjà validé, et il
+> garantit qu'une nouvelle session partant de `main` retrouve toujours l'état réel du chantier.
+
+---
 
 ### D-005 — Périmètre du dépôt à auditer
 
