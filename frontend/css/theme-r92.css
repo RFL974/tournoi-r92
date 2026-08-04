@@ -738,6 +738,53 @@ body.theme-clair {
 .theme-clair .sp-emp-rendu .sp-bloc-texte { min-width: 0; }
 .theme-clair .sp-emp-rendu .sp-bloc-texte strong { display: block; color: var(--r92-navy); }
 
+/* --- Contrôle « ce que reçoit le public » --- */
+.theme-clair .sp-verif {
+  width: 100%;
+  margin: 10px 0;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+.theme-clair .sp-verif th,
+.theme-clair .sp-verif td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--r92-ligne);
+  text-align: left;
+  vertical-align: top;
+}
+.theme-clair .sp-verif thead th {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--r92-txt-doux);
+}
+.theme-clair .sp-verif tbody th { color: var(--r92-navy); white-space: nowrap; }
+/* Pastille d'origine : elle dit d'où vient la valeur servie. Le « défaut » est en ambre —
+   c'est le cas où l'organisateur croit avoir réglé quelque chose qui n'a jamais été saisi. */
+.theme-clair .sp-src {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+.theme-clair .sp-src-encart  { background: var(--r92-ciel-soft); color: var(--r92-navy); }
+.theme-clair .sp-src-general { background: #eef1f5; color: #55606d; }
+.theme-clair .sp-src-defaut  { background: #fdf3dd; color: #6b5312; }
+.theme-clair .sp-verif-titre {
+  margin: 14px 0 6px;
+  font-weight: 600;
+  color: var(--r92-navy);
+}
+/* Le bandeau du dossier est rendu tel quel : fond blanc, comme la feuille imprimée. */
+.theme-clair .sp-verif-dossier {
+  padding: 10px;
+  border-radius: 8px;
+  background: #eef1f5;
+}
+
 /* --- Liste des fiches partenaires --- */
 .theme-clair .sponsor-cartes {
   display: grid;

@@ -297,6 +297,14 @@
         </p>
         <div id="liste-sponsors"><div class="message">Chargement des partenaires…</div></div>
 
+        <!-- Contrôle de vérité : relit l'instantané PUBLIC (le même que reçoivent la page des
+             scores et le dossier club) et affiche, réglage par réglage, ce qui est réellement
+             servi. Répond à « j'ai réglé et rien ne change » sans avoir à deviner. -->
+        <div class="ligne-action">
+          <button type="button" class="bouton-lien" id="bouton-verifier-public">Vérifier ce que reçoit le public</button>
+        </div>
+        <div id="verif-public" class="diagnostic-remontee" hidden></div>
+
         <form id="form-sponsor">
           <h3 class="apercu-sous-titre" id="titre-form-sponsor">Ajouter un partenaire</h3>
           <input type="hidden" name="id_sponsor" value="">

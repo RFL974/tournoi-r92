@@ -198,7 +198,27 @@ s'affichera jamais :
 - dès qu'un emplacement se retrouve en `seul`, un bandeau ambre prévient que **le texte saisi
   au-dessus ne sera pas affiché ici**.
 
-> ⚠️ `css/sponsors.css` est chargée par `tournoi.html` **et** par `admin.html`. Sans elle côté
+### Vérifier ce que reçoit le public
+
+L'admin montre ce qu'on a **saisi**. Le bouton **« Vérifier ce que reçoit le public »**, sous la
+liste des fiches, montre ce qui est **servi** : il relit l'instantané public (`getAll`), celui-là
+même que reçoivent la page des scores et le dossier club, et affiche pour chaque partenaire, et
+chaque emplacement, la valeur réellement servie **avec son origine** :
+
+| Pastille | Sens |
+|---|---|
+| `réglé ici` | la valeur a été saisie pour **cet** emplacement |
+| `réglage du partenaire` | elle vient du réglage général de la fiche (`accroche`, `logo_zoom`) |
+| `défaut` | **personne n'a rien saisi** — c'est le défaut de l'emplacement qui s'applique |
+
+Le contrôle rend aussi, en bas, le **bandeau du dossier club tel quel** : la pièce à conviction.
+
+Ce que ça tranche, en un clic : une valeur qu'on vient de saisir et qui n'apparaît **pas** dans
+ce tableau n'a pas été enregistrée — ce n'est pas la page qui l'ignore. Une valeur en `défaut`
+n'a été saisie nulle part, quoi qu'en dise le souvenir. Entre le formulaire et la page publique
+il y a un enregistrement, un Sheet et un cache : ce tableau dit lequel des trois n'a pas suivi.
+
+> ⚠️ `css/sponsors.css` est chargée par `tournoi.html`, `admin.html` **et** `dossier-club.html`. Sans elle côté
 > admin, l'aperçu et le test du message plein écran s'affichaient en texte brut, sans rapport
 > avec le résultat réel. Ses couleurs de secours sont posées sur `html` (spécificité plus faible
 > que `:root`) : la page publique garde sa palette, l'admin — qui a sa propre charte et ne

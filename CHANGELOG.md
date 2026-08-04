@@ -5,6 +5,25 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Savoir ce que le public reçoit vraiment — 2026-08-04
+« J'ai réglé et rien ne change sur le dossier final. » Entre le formulaire de l'admin et la page
+que voit le club, il y a un enregistrement, un Sheet et un cache. Tant qu'on ne peut pas
+regarder ce qui sort à l'autre bout, on suppose — et on peut supposer longtemps.
+
+Un bouton **« Vérifier ce que reçoit le public »** sous la liste des fiches relit l'instantané
+public (`getAll`), celui-là même que reçoivent la page des scores et le dossier club. Il affiche,
+pour chaque partenaire et chaque emplacement, la valeur **réellement servie** et **d'où elle
+vient** : `réglé ici`, `réglage du partenaire`, ou `défaut` — c'est-à-dire *saisie nulle part*.
+Puis il rend le bandeau du dossier club tel quel, comme pièce à conviction.
+
+Ce que ça tranche : une valeur qu'on vient de saisir et qui n'apparaît pas dans ce tableau n'a
+pas été enregistrée — ce n'est pas la page qui l'ignore.
+
+Au passage, le bandeau du dossier club (emplacement F) rejoint `css/sponsors.css` avec les cinq
+autres emplacements. Il vivait dans `dossier.css`, ce qui interdisait à l'admin de le montrer à
+l'identique. Un emplacement, une feuille, trois pages qui la chargent — et un aperçu qui ne peut
+plus diverger du résultat.
+
 ### Un aperçu sous chaque emplacement partenaire — 2026-08-04
 « J'ai tout réglé et rien ne change sur le dossier final. » Les réglages étaient bien
 enregistrés et bien appliqués : ils étaient saisis sur l'emplacement **A · Bandeau titre**,
