@@ -5,6 +5,28 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Le bandeau du dossier club écrasait son accroche — 2026-08-04
+Enfin le vrai coupable, et il n'était pas là où trois allers-retours l'avaient cherché : les
+réglages **s'appliquaient bien**. C'est l'encart qui était trop étroit pour eux.
+
+L'encart du bandeau partenaires était calibré à **190 px** — la largeur d'une tuile quand
+plusieurs logos se rangent côte à côte. Parfait pour « logo seul ». Mais dès qu'on choisit une
+disposition **avec texte** et qu'on agrandit le logo, celui-ci occupe à lui seul plus que ces
+190 px : le bloc de texte tombe à **zéro pixel de large** et l'accroche s'écrit **un mot par
+ligne**, verticalement, à côté d'un logo qui refuse de grandir. Exactement ce qu'on voyait.
+
+Trois corrections :
+
+- **L'encart s'élargit dès qu'un texte accompagne le logo.** Un seul partenaire prend toute la
+  largeur de la feuille, deux la partagent — c'est le travail de flex, et ça laisse un logo à
+  200 % tenir sa taille sans écraser personne.
+- **Le partage logo/texte devient une règle générale**, valable sur les six emplacements : le
+  logo cède du terrain quand il le faut, le texte garde toujours de quoi s'écrire.
+- **L'aperçu de l'admin prend la largeur du VRAI encart.** Il s'étalait sur toute la carte
+  d'administration et montrait une accroche bien à plat, là où l'encart réel la coupait en
+  morceaux. Un aperçu plus large que la réalité est pire que pas d'aperçu : il rassure à tort.
+  Un test compare désormais les deux rendus ligne pour ligne.
+
 ### Savoir ce que le public reçoit vraiment — 2026-08-04
 « J'ai réglé et rien ne change sur le dossier final. » Entre le formulaire de l'admin et la page
 que voit le club, il y a un enregistrement, un Sheet et un cache. Tant qu'on ne peut pas

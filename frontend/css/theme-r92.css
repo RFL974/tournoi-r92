@@ -733,6 +733,11 @@ body.theme-clair {
   display: flex;
   gap: 10px;
   min-height: 40px;   /* hauteur réservée : la carte ne saute pas au chargement du logo */
+  flex-wrap: wrap;
+  /* Largeur du VRAI encart, posée par le script. Un aperçu plus large que la réalité
+     rassure à tort : c'est ainsi qu'une accroche « à plat » ici se retrouvait coupée
+     en un mot par ligne sur le dossier du club. */
+  max-width: min(100%, var(--sp-largeur, 400px));
 }
 .theme-clair .sp-emp-rendu .sp-bloc-logo { flex: 0 0 auto; display: grid; place-items: center; }
 .theme-clair .sp-emp-rendu .sp-bloc-texte { min-width: 0; }
