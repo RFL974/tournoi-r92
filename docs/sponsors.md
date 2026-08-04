@@ -177,6 +177,33 @@ rétrocompatible.
 | E `mur` | `seul` | grille de logos : le texte alourdirait |
 | F `dossier` | `seul` | document d'organisation : les logos suffisent |
 
+**Chaque emplacement est indépendant.** Le texte saisi sous *A · Bandeau titre* ne descend pas
+sur *F · Dossier club* : c'est tout l'intérêt de régler encart par encart. Cocher un emplacement
+sans rien saisir dedans est parfaitement valide — mais on obtient alors son **défaut**, pas les
+réglages du voisin. Pour le dossier club, ce défaut est `seul` : **le logo, sans aucun texte**.
+Un texte tapé là ne s'affichera donc que si on choisit aussi une disposition qui en montre un.
+
+### Voir avant d'enregistrer
+
+Chaque emplacement coché affiche, sous ses trois champs, un **aperçu de l'encart** dessiné avec
+le même moteur (`sponsors.js`) et la même feuille de style (`css/sponsors.css`) que la page
+publique et le dossier club — logo à sa taille réelle, texte, disposition. Il se redessine à la
+frappe, sans rien enregistrer.
+
+Deux garde-fous l'accompagnent, parce que le piège classique est de taper une accroche qui ne
+s'affichera jamais :
+
+- le choix « défaut » de la liste **annonce ce qu'il fait** (« Défaut : logo seul ») au lieu de
+  laisser deviner ;
+- dès qu'un emplacement se retrouve en `seul`, un bandeau ambre prévient que **le texte saisi
+  au-dessus ne sera pas affiché ici**.
+
+> ⚠️ `css/sponsors.css` est chargée par `tournoi.html` **et** par `admin.html`. Sans elle côté
+> admin, l'aperçu et le test du message plein écran s'affichaient en texte brut, sans rapport
+> avec le résultat réel. Ses couleurs de secours sont posées sur `html` (spécificité plus faible
+> que `:root`) : la page publique garde sa palette, l'admin — qui a sa propre charte et ne
+> définit pas ces variables — trouve quand même de quoi dessiner les encarts.
+
 > 🧩 **Comment c'est fait.** Le balisage est le **même partout** — un bloc logo, un bloc texte.
 > C'est une classe `sp-dispo-*` posée sur le conteneur qui décide de l'agencement, donc tout se
 > joue en CSS. La taille, elle, passe par la variable `--sp-zoom` que la feuille de style
