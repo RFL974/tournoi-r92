@@ -122,10 +122,17 @@ en fin de session :
   dans le fonctionnement.
 - **I-04 → LEVÉ.** Le tournoi présent en base est un tournoi de **test** : « un faux tournoi avec de
   vrais noms ». Les clubs affichés sont réels, les engagements non.
-- **I-03 → partiellement levé, et c'est le point à retenir.** Romain précise que **les adresses email
-  sont réelles**. Le classeur contient donc de vraies données personnelles alors que le tournoi est
-  fictif → le domaine B (RGPD) devra être traité dès maintenant, pas « quand ce sera en vrai ».
-  Nouveau point d'attention **A-14** ajouté à `CARTOGRAPHIE.md` §A.10.
+- **I-03 → LEVÉ pour l'état actuel.** Après un échange en deux temps : les seules adresses email
+  présentes dans le classeur sont **celle de Romain et celle de son épouse**, saisies pour tester les
+  envois. **Aucune donnée personnelle de tiers à ce jour.** La question reste entière pour l'avenir —
+  l'application est conçue pour collecter les coordonnées de contacts de clubs. Nouveau point
+  d'attention **A-14** ajouté à `CARTOGRAPHIE.md` §A.10, formulé comme une **préparation** (avant la
+  première invitation réelle) et non comme une correction.
+
+  > *Note de méthode* : la première formulation de A-14, écrite sur une lecture erronée de la
+  > réponse de Romain, annonçait de « vraies adresses de contacts de clubs ». Corrigée le jour même
+  > après précision. Rappel utile de la règle §9 de `CLAUDE.md` : une déclaration ambiguë doit être
+  > **confirmée** avant d'être écrite comme un fait.
 
 **Tests réalisés**
 

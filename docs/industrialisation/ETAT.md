@@ -101,7 +101,7 @@ vérification supplémentaire.
 |---|---|---|---|
 | I-01 | Le code réellement en service chez Google est-il identique à `backend/Code.gs` ? | Le backend s'exécute chez Google, hors du dépôt | Vérification manuelle par Romain dans Apps Script |
 | I-02 | Les tests du fichier `backend/Tests.gs` passent-ils aujourd'hui ? | Ils ne peuvent être exécutés que dans Google Apps Script | Lancement manuel par Romain |
-| I-03 | Quelles données personnelles réelles sont présentes dans le Google Sheet ? | 🟡 **partiellement répondu** (2026-08-04) : Romain indique que **les adresses email sont réelles**, alors que les équipes sont fictives. Il reste à établir **lesquelles**, combien, et depuis quand | Inventaire complet au **volet C** de la cartographie, puis instruction au **domaine B (RGPD)** |
+| I-03 | Quelles données personnelles de **tiers** seront présentes dans le Google Sheet une fois de vrais clubs invités ? | ✅ **Rien à ce jour** (précisé par Romain le 2026-08-04) : les seules adresses email présentes sont **la sienne et celle de son épouse**, utilisées pour tester les envois. Aucune donnée d'un tiers extérieur. La question reste ouverte pour **l'avenir** : l'application est conçue pour collecter les coordonnées de contacts de clubs, et le fera dès la première invitation réelle | Inventaire de ce que l'application **est capable de collecter** au **volet C**, puis instruction au **domaine B (RGPD)** — **avant** la première invitation réelle |
 | I-05 | Qui utilise l'administration le jour J, et sur quel matériel ? | Information de terrain | Question à Romain (domaine E — UX) |
 
 ### Points levés
@@ -112,15 +112,18 @@ vérification supplémentaire.
 | **I-07** | Les 4 onglets `RefFFR_*` existent-ils et sont-ils à jour ? | ✅ **LEVÉ — les 4 onglets existent, aux noms exacts attendus.** Capture du bas du classeur fournie par Romain : `RefFFR_Formes`, `RefFFR_Regles`, `RefFFR_Temps`, `RefFFR_Dates` — orthographe **identique** à ce que lit `Code.gs`. Contenu visible cohérent (millésimes 2026-2027, formes de jeu 5x5 / 7x7). Les fichiers Drive `RefFFR-formes-de-jeu` et `RefFFR-dates-federales` sont donc des documents **sources** distincts, sans rôle dans le fonctionnement. | 2026-08-04, session 2 |
 | **I-04** | L'application a-t-elle servi un tournoi réel ? | ✅ **LEVÉ — non : le tournoi actuellement en base est un tournoi de TEST.** Romain : « c'est juste un faux tournoi avec de vrais noms ». Les noms d'équipes visibles (Racing 92, Stade Français, Clamart, Meudon, Vélizy, Antony, Sèvres, Issy-les-Moulineaux) sont de vrais clubs, mais les engagements sont fictifs. | 2026-08-04, session 2 |
 
-> ⚠️ **À retenir de I-04 + I-03 (conséquence pour la suite)** : le tournoi en base est fictif, mais
-> **les adresses email, elles, sont réelles**. Le classeur contient donc des **données personnelles
-> de personnes existantes** (onglet `ClubsInvites` : nom, prénom, email de contact), même si aucun
-> tournoi réel n'a eu lieu. Le domaine B (RGPD) devra donc être traité **sérieusement, dès
-> maintenant** — et non « plus tard, quand ce sera en vrai ».
+> ✅ **À retenir de I-03 + I-04** : le classeur ne contient **aucune donnée personnelle de tiers**
+> aujourd'hui. Tournoi fictif, et les seuls emails présents sont ceux de Romain et de son épouse,
+> saisis pour tester les envois.
 >
-> Deux protections sont déjà constatées : le classeur est **privé** (I-06) et l'onglet
+> **La question n'est donc pas « faut-il réparer », mais « faut-il préparer ».** L'application est
+> conçue pour collecter les coordonnées des contacts de clubs : le jour de la première invitation
+> réelle, de vraies données personnelles de tiers entreront dans le classeur. Le bon moment pour
+> traiter le domaine B (RGPD) est donc **avant ce jour-là**, pas après.
+>
+> Deux protections sont déjà constatées dans le code : le classeur est **privé** (I-06) et l'onglet
 > `ClubsInvites` est **exclu** des données publiques (`getAll`) et de tout accès sans clé admin.
-> Leur efficacité réelle reste **NON VÉRIFIÉE** — elle sera testée au domaine B.
+> Leur efficacité réelle reste **NON VÉRIFIÉE** — elle sera éprouvée au domaine B.
 
 ---
 
