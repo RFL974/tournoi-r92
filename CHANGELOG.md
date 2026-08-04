@@ -5,6 +5,28 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+### Chaque partenaire se règle encart par encart — 2026-08-03
+Un même logo ne se comporte pas pareil dans un bandeau large, dans une barre basse de téléphone
+et sur une feuille imprimée. Chaque couple **(partenaire × emplacement)** a donc désormais ses
+propres réglages : le **texte** qui accompagne le logo, sa **taille**, et sa **disposition** dans
+l'encart — logo à gauche, à droite, au-dessus, ou seul.
+
+Dans l'admin, cocher un emplacement **déplie ses réglages** juste en dessous, avec une phrase qui
+rappelle ce qu'est cet emplacement. On règle donc en voyant ce qu'on règle, au lieu de deviner.
+
+**Trois niveaux de repli**, du plus précis au plus général : le réglage de cet emplacement, sinon
+le réglage général du partenaire, sinon le défaut de l'emplacement. **Ne rien saisir donne
+exactement le comportement d'avant** — la colonne est rétrocompatible, et les fiches existantes
+ne bougent pas.
+
+Les défauts sont choisis pour la forme de chaque encart : logo à gauche dans le bandeau large,
+au-dessus dans le rail étroit, seul dans les grilles de logos (mur, dossier) où un texte
+alourdirait.
+
+Côté code, les six emplacements partagent maintenant **le même balisage** — un bloc logo, un bloc
+texte — et c'est une simple classe sur le conteneur qui décide de l'agencement. Ajouter une
+disposition demain sera une règle CSS, pas une fonction de rendu de plus.
+
 ### Les partenaires arrivent sur le dossier club — 2026-08-03
 Un sixième emplacement, **F**, sur le document envoyé aux clubs inscrits : un **bandeau
 permanent** en tête du dossier, qui **s'imprime avec le PDF**. On choisit partenaire par

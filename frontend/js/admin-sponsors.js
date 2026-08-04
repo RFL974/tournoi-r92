@@ -43,6 +43,7 @@ function initAdminSponsors() {
   document.querySelector('[name="sponsor_interstitiel_actif"]')
     .addEventListener('change', majLignesInterstitiel);
 
+  construireEmplacements();
   document.getElementById('bouton-enregistrer-sponsor').addEventListener('click', onEnregistrerSponsor);
   document.getElementById('bouton-annuler-sponsor').addEventListener('click', reinitialiserFormSponsor);
   document.getElementById('liste-sponsors').addEventListener('click', onClicListeSponsors);
@@ -178,6 +179,117 @@ function onTesterInterstitiel() {
   sponsorsAfficherPlein(sponsorsTirer('plein', candidats, true), reglages);
 }
 
+
+/* ==========================================================================
+   EMPLACEMENTS ET LEURS RÉGLAGES
+   --------------------------------------------------------------------------
+   Un même logo ne se comporte pas pareil dans un bandeau large, dans une barre
+   basse de téléphone et sur une feuille imprimée. Chaque emplacement coché ouvre
+   donc SES propres réglages : le texte qui accompagne le logo, sa taille, et sa
+   disposition dans l'encart. Laisser un champ vide reprend le réglage général du
+   partenaire, puis le défaut de l'emplacement — ne rien saisir marche donc aussi.
+   ========================================================================== */
+
+/** Ce que chaque emplacement est, en une phrase — pour choisir sans deviner. */
+const SPONSORS_EMPLACEMENT_AIDE = {
+  bandeau: 'Page des scores — bandeau permanent en haut de page.',
+  rail:    'Page des scores — colonne de droite sur ordinateur, barre basse sur téléphone. Rotatif.',
+  fil:     'Page des scores — encart glissé dans le fil des résultats.',
+  plein:   'Page des scores — message plein écran à l\'arrivée.',
+  mur:     'Page des scores — grille de tous les logos, en bas de page.',
+  dossier: 'Dossier club — bandeau permanent en tête, imprimé avec le PDF.'
+};
+
+/** Dispositions proposées, dans l'ordre où on les essaie en pratique. */
+const SPONSORS_DISPO_LIBELLES = [
+  ['gauche', 'Logo à gauche du texte'],
+  ['droite', 'Logo à droite du texte'],
+  ['haut',   'Logo au-dessus du texte'],
+  ['seul',   'Logo seul, sans texte']
+];
+
+/** Construit le panneau : une case par emplacement, chacune dépliant ses réglages. */
+function construireEmplacements() {
+  const zone = document.getElementById('sponsor-emplacements');
+  if (!zone) return;
+  zone.innerHTML = SPONSORS_EMPLACEMENTS.map(function (e, i) {
+    const lettre = String.fromCharCode(65 + i);
+    return '<div class="sp-emp" data-emplacement="' + e + '">' +
+      '<label class="mini-toggle sp-emp-tete">' +
+        '<input type="checkbox" name="emp_' + e + '"' + (e === 'mur' ? ' checked' : '') + '> ' +
+        '<b>' + lettre + '</b> ' + echapper(SPONSORS_LIBELLES[e].replace(/^[A-F] · /, '')) +
+      '</label>' +
+      '<p class="sp-emp-aide">' + echapper(SPONSORS_EMPLACEMENT_AIDE[e] || '') + '</p>' +
+      '<div class="sp-emp-reglages" hidden>' +
+        '<label class="reglage"><span class="r-libelle">Texte affiché ici</span>' +
+          '<input class="r-input" type="text" name="txt_' + e + '" maxlength="80" ' +
+            'placeholder="Vide = l\'accroche du partenaire"></label>' +
+        '<label class="reglage"><span class="r-libelle">Taille du logo (%)</span>' +
+          '<input class="r-input" type="number" name="zoom_' + e + '" min="50" max="200" step="10" ' +
+            'placeholder="Vide = taille du partenaire"></label>' +
+        '<label class="reglage"><span class="r-libelle">Disposition</span>' +
+          '<select class="r-input" name="dispo_' + e + '">' +
+            '<option value="">Défaut de l\'emplacement</option>' +
+            SPONSORS_DISPO_LIBELLES.map(function (d) {
+              return '<option value="' + d[0] + '">' + echapper(d[1]) + '</option>';
+            }).join('') +
+          '</select></label>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // Les réglages d'un emplacement n'ont de sens que s'il est coché.
+  zone.addEventListener('change', function (e) {
+    if (e.target && /^emp_/.test(e.target.name || '')) majReglagesEmplacement(e.target);
+  });
+}
+
+/** Déplie ou replie les réglages d'un emplacement selon sa case. */
+function majReglagesEmplacement(caseACocher) {
+  const bloc = caseACocher.closest('.sp-emp');
+  if (!bloc) return;
+  bloc.classList.toggle('est-actif', caseACocher.checked);
+  bloc.querySelector('.sp-emp-reglages').hidden = !caseACocher.checked;
+}
+
+/** Applique l'état déplié/replié à tous les emplacements (après remplissage du formulaire). */
+function majTousReglagesEmplacements() {
+  const form = document.getElementById('form-sponsor');
+  SPONSORS_EMPLACEMENTS.forEach(function (e) {
+    if (form['emp_' + e]) majReglagesEmplacement(form['emp_' + e]);
+  });
+}
+
+/** Lit les réglages par emplacement saisis dans le formulaire. */
+function lireReglagesEmplacements() {
+  const form = document.getElementById('form-sponsor');
+  const out = {};
+  SPONSORS_EMPLACEMENTS.forEach(function (e) {
+    if (!form['emp_' + e] || !form['emp_' + e].checked) return;   // décoché ⇒ rien à retenir
+    const bloc = {};
+    const texte = (form['txt_' + e].value || '').trim();
+    const zoom = parseInt(form['zoom_' + e].value, 10);
+    const dispo = form['dispo_' + e].value;
+    if (texte) bloc.texte = texte;
+    if (isFinite(zoom)) bloc.zoom = zoom;
+    if (dispo) bloc.dispo = dispo;
+    if (Object.keys(bloc).length) out[e] = bloc;
+  });
+  return out;
+}
+
+/** Remplit les réglages par emplacement depuis une fiche existante. */
+function injecterReglagesEmplacements(s) {
+  const form = document.getElementById('form-sponsor');
+  const reglages = sponsorsReglagesBruts(s) || {};
+  SPONSORS_EMPLACEMENTS.forEach(function (e) {
+    const r = reglages[e] || {};
+    form['txt_' + e].value = r.texte || '';
+    form['zoom_' + e].value = isFinite(parseInt(r.zoom, 10)) ? parseInt(r.zoom, 10) : '';
+    form['dispo_' + e].value = r.dispo || '';
+  });
+}
+
 /* ==========================================================================
    2. FICHES PARTENAIRES
    ========================================================================== */
@@ -224,7 +336,7 @@ function afficherListeSponsors() {
         '<div class="sponsor-carte-logo">' +
           (s.logo_id
             ? '<img src="' + echapper(urlAffiche(s.logo_id, 240)) + '" alt="' + echapper(s.nom) +
-              '" style="--sp-zoom:' + sponsorsZoom(s) + '">'
+              '" style="--sp-zoom:' + sponsorsReglageEmplacement(s, 'bandeau').zoom + '">'
             : '<span class="sponsor-pastille" style="background:' + echapper(couleurSponsor(s)) + '">' +
               echapper(s.nom) + '</span>') +
         '</div>' +
@@ -281,6 +393,8 @@ function remplirFormSponsor(id) {
   SPONSORS_EMPLACEMENTS.forEach(function (e) {
     form['emp_' + e].checked = emplacements.indexOf(e) >= 0;
   });
+  injecterReglagesEmplacements(s);
+  majTousReglagesEmplacements();
 
   sponsorLogoDataURI = null;
   sponsorLogoRetirer = false;
@@ -300,7 +414,13 @@ function reinitialiserFormSponsor() {
   form.ordre.value = 100;
   form.logo_zoom.value = 100;
   form.actif.checked = true;
-  SPONSORS_EMPLACEMENTS.forEach(function (e) { form['emp_' + e].checked = (e === 'mur'); });
+  SPONSORS_EMPLACEMENTS.forEach(function (e) {
+    form['emp_' + e].checked = (e === 'mur');
+    form['txt_' + e].value = '';
+    form['zoom_' + e].value = '';
+    form['dispo_' + e].value = '';
+  });
+  majTousReglagesEmplacements();
 
   sponsorLogoDataURI = null;
   sponsorLogoRetirer = false;
@@ -379,6 +499,7 @@ async function onEnregistrerSponsor() {
     poids: form.poids.value,
     ordre: form.ordre.value,
     logo_zoom: form.logo_zoom.value,
+    reglages_emplacements: JSON.stringify(lireReglagesEmplacements()),
     actif: form.actif.checked ? 'oui' : 'non'
   };
   if (sponsorLogoDataURI) data.logo = sponsorLogoDataURI;

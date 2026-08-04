@@ -707,16 +707,31 @@ tr.cl-vainqueur .col-equipe { font-weight: 700; color: var(--navy); }
   max-width: 100%;
   overflow-wrap: break-word;
 }
-/* Le logo peut occuper jusqu'à la moitié de la carte, mais jamais plus : au-delà, l'accroche
+/* Le logo peut occuper jusqu'à la moitié de l'encart, mais jamais plus : au-delà, le texte
    du partenaire passerait sous la ligne de flottaison sur téléphone. */
-.sp-bandeau-logo { max-width: 50%; }
-.sp-fil-logo     { max-width: 45%; }
+.sp-bandeau .sp-bloc-logo { max-width: 50%; }
+.sp-fil     .sp-bloc-logo { max-width: 45%; }
+
+/* --- DISPOSITIONS — réglées par partenaire ET par emplacement -------------
+   Le balisage est toujours le même (logo, puis bloc de texte) ; c'est cette
+   classe, posée sur le conteneur, qui décide de l'agencement. Un même logo
+   peut donc être à gauche dans le bandeau large, au-dessus dans le rail
+   étroit, et seul sur la feuille imprimée. */
+.sp-dispo-gauche { flex-direction: row; align-items: center; }
+.sp-dispo-droite { flex-direction: row-reverse; align-items: center; text-align: right; }
+.sp-dispo-haut   { flex-direction: column; align-items: center; text-align: center; }
+.sp-dispo-seul   { flex-direction: row; align-items: center; justify-content: center; }
+/* « Seul » ne rend pas le bloc de texte : il n'est même pas construit (voir sponsorsCorps).
+   La règle ci-dessous n'est là que pour les rendus historiques encore en cache. */
+.sp-dispo-seul .sp-bloc-texte { display: none; }
+.sp-bloc-logo  { flex: 0 0 auto; display: grid; place-items: center; }
+.sp-bloc-texte { min-width: 0; }
+.sp-bloc-texte strong { display: block; color: var(--navy); line-height: 1.2; }
 
 /* --- A · Bandeau partenaire principal --- */
 .sp-zone-bandeau { margin-bottom: 16px; }
 .sp-bandeau {
   display: flex;
-  align-items: center;
   gap: 14px;
   min-height: 84px;            /* hauteur réservée : pas de saut au chargement du logo */
   background: var(--blanc);
@@ -734,14 +749,9 @@ a.sp-bandeau:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(12, 28, 46, 0.12);
 }
-.sp-bandeau-logo { flex: 0 0 auto; display: grid; place-items: center; }
-.sp-bandeau-texte { min-width: 0; }
-.sp-bandeau-texte strong {
-  display: block;
-  color: var(--navy);
-  font-size: 1.02rem;
-  line-height: 1.2;
-}
+
+
+.sp-bandeau .sp-bloc-texte strong { font-size: 1.02rem; }
 
 /* Quand un bandeau partenaire occupe le haut de page, le bandeau de don DESCEND sous les
    contrôles : on n'empile jamais deux appels commerciaux avant le premier score. */
@@ -765,7 +775,6 @@ a.sp-bandeau:hover {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
@@ -774,14 +783,8 @@ a.sp-bandeau:hover {
   transition: opacity 0.45s ease;
 }
 .sp-rail-vue.active { opacity: 1; visibility: visible; }
-.sp-rail-lien {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  text-decoration: none;
-  color: inherit;
-}
+/* La direction vient de la classe de disposition ; ici, seulement le socle commun. */
+.sp-rail-lien { display: flex; gap: 5px; text-decoration: none; color: inherit; }
 a.sp-rail-lien:hover { text-decoration: none; }
 .sp-points { display: flex; justify-content: center; gap: 5px; margin-top: 10px; }
 .sp-points i {
@@ -809,8 +812,8 @@ a.sp-rail-lien:hover { text-decoration: none; }
 }
 .sp-barre .sp-rail-mention { margin: 0; flex: 0 0 auto; }
 .sp-barre .sp-rail-vues { flex: 1 1 auto; min-height: 40px; }
-.sp-barre .sp-rail-vue { flex-direction: row; gap: 10px; }
-.sp-barre .sp-rail-lien { flex-direction: row; align-items: center; gap: 10px; }
+
+
 .sp-barre .sp-accroche { display: none; }   /* trop étroit : le logo suffit */
 .sp-barre .sp-points { margin: 0; flex: 0 0 auto; }
 /* La barre ne recouvre JAMAIS le contenu : le corps de page réserve sa hauteur. */
@@ -824,7 +827,6 @@ body.sp-barre-active { padding-bottom: 64px; }
 /* --- C · Encart intégré au fil --- */
 .sp-fil {
   display: flex;
-  align-items: center;
   gap: 12px;
   min-height: 64px;
   background: var(--blanc);
@@ -836,9 +838,9 @@ body.sp-barre-active { padding-bottom: 64px; }
   color: inherit;
 }
 a.sp-fil:hover { text-decoration: none; border-color: var(--bleu-vif); }
-.sp-fil-logo { flex: 0 0 auto; display: grid; place-items: center; }
-.sp-fil-texte { min-width: 0; }
-.sp-fil-texte strong { display: block; color: var(--navy); line-height: 1.2; }
+
+
+
 
 /* --- D · Plein écran (interstitiel) --- */
 body.sp-plein-ouvert { overflow: hidden; }
@@ -944,8 +946,10 @@ a.sp-plein-visuel:hover { text-decoration: none; }
   gap: 10px;
 }
 .sp-mur-case {
-  display: grid;
-  place-items: center;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;             /* un logo très agrandi reste dans sa tuile */
   min-height: 78px;             /* hauteur réservée : la grille ne bouge pas au chargement */
   padding: 10px;

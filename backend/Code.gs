@@ -105,13 +105,19 @@ var ENTETES = {
   //   actif        : 'oui' = affiché. Toute autre valeur ⇒ le partenaire disparaît de la page
   //                  sans que sa fiche soit perdue.
   //   ordre        : entier, position dans le mur des partenaires uniquement.
+  //   reglages_emplacements : JSON des réglages PAR EMPLACEMENT, pour adapter le partenaire
+  //                  à chaque encart : {"bandeau":{"texte":"…","zoom":130,"dispo":"gauche"}}.
+  //                  Chaque clé est facultative et retombe sur le réglage général du
+  //                  partenaire (accroche, logo_zoom) puis sur le défaut de l'emplacement.
+  //                  Migration douce : colonne ajoutée à droite, vide = comportement d'origine.
   //   logo_zoom    : taille du logo en POURCENTAGE de la taille de référence (50 à 200 ;
   //                  vide ⇒ 100). Sert aux fichiers qui embarquent leurs propres marges
   //                  blanches : le logo y paraît petit alors que l'image, elle, est à la
   //                  bonne taille — seul un agrandissement au cas par cas le corrige.
   //                  Migration douce : ajoutée À DROITE, vide = comportement d'origine.
   Sponsors: ['id_sponsor', 'nom', 'logo_id', 'url', 'accroche', 'emplacements',
-             'poids', 'visuel_id', 'couleur', 'actif', 'ordre', 'logo_zoom'],
+             'poids', 'visuel_id', 'couleur', 'actif', 'ordre', 'logo_zoom',
+             'reglages_emplacements'],
   // RELEVÉS DE VISIBILITÉ des partenaires, déposés par les navigateurs des spectateurs.
   // Aucune donnée personnelle : deux identifiants ALÉATOIRES, tirés sur l'appareil, remis à
   // zéro chaque jour, qui ne permettent d'identifier personne ni de suivre qui que ce soit
@@ -393,7 +399,7 @@ function construireSnapshot(classeur) {
 /** Colonnes de l'onglet Sponsors réellement servies à la page publique. */
 var SPONSOR_CHAMPS_PUBLICS = ['id_sponsor', 'nom', 'logo_id', 'url', 'accroche',
                               'emplacements', 'poids', 'visuel_id', 'couleur', 'ordre',
-                              'logo_zoom'];
+                              'logo_zoom', 'reglages_emplacements'];
 
 /**
  * Partenaires actifs, prêts pour l'affichage public : filtrés sur `actif`, réduits aux
@@ -3417,6 +3423,47 @@ var SPONSOR_REGLAGES_BOOL = {
   sponsor_barre_mobile:                 'oui'
 };
 
+/** Dispositions reconnues d'un logo dans son encart. Tout autre jeton retombe sur le défaut
+ *  de l'emplacement (voir SPONSORS_DISPO_DEFAUT côté frontend). */
+var SPONSOR_DISPOSITIONS_OK = { gauche: true, droite: true, haut: true, seul: true };
+
+/**
+ * Nettoie les réglages PAR EMPLACEMENT reçus de l'admin.
+ *
+ * Reconstruction champ par champ, comme partout ailleurs dans ce fichier : ce qui n'est pas
+ * prévu ici n'est jamais stocké. Un emplacement inconnu, une disposition inventée ou un zoom
+ * fantaisiste sont écartés en silence plutôt que d'aller polluer la page publique.
+ *
+ * @returns {string} JSON compact, ou '' si rien de valide n'a été fourni.
+ */
+function nettoyerReglagesEmplacements(brut) {
+  var recu = brut;
+  if (typeof recu === 'string') {
+    try { recu = JSON.parse(recu); } catch (e) { return ''; }
+  }
+  if (!recu || typeof recu !== 'object') return '';
+
+  var propre = {};
+  Object.keys(recu).forEach(function (emplacement) {
+    if (!SPONSOR_EMPLACEMENTS_OK[emplacement]) return;
+    var r = recu[emplacement] || {};
+    var bloc = {};
+
+    var texte = String(r.texte == null ? '' : r.texte).trim().slice(0, 80);
+    if (texte) bloc.texte = texte;
+
+    var zoom = parseInt(r.zoom, 10);
+    if (isFinite(zoom)) bloc.zoom = Math.max(50, Math.min(200, zoom));
+
+    var dispo = String(r.dispo || '').toLowerCase();
+    if (SPONSOR_DISPOSITIONS_OK[dispo]) bloc.dispo = dispo;
+
+    if (Object.keys(bloc).length) propre[emplacement] = bloc;
+  });
+
+  return Object.keys(propre).length ? JSON.stringify(propre) : '';
+}
+
 /** Ramène une valeur numérique dans ses bornes ; valeur absente ou illisible ⇒ défaut. */
 function bornerReglageSponsor(valeur, regle) {
   var n = parseInt(valeur, 10);
@@ -3542,6 +3589,8 @@ function enregistrerSponsor(classeur, data) {
   var couleur = String(data.couleur || '').trim();
   if (couleur && !/^#[0-9a-fA-F]{6}$/.test(couleur)) couleur = '';
 
+  var reglagesEmplacements = nettoyerReglagesEmplacements(data.reglages_emplacements);
+
   if (!id) id = 'SP' + Utilities.getUuid().slice(0, 8).toUpperCase();
 
   var valeursLigne = [[
@@ -3551,7 +3600,7 @@ function enregistrerSponsor(classeur, data) {
     emplacements.join(','),
     poids, visuelId, couleur,
     (String(data.actif).toLowerCase() === 'oui') ? 'oui' : 'non',
-    ordre, zoom
+    ordre, zoom, reglagesEmplacements
   ]];
 
   var cible = (ligne !== -1) ? ligne : onglet.getLastRow() + 1;
