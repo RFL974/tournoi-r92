@@ -4,7 +4,7 @@
 > Tant que l'audit (ÉTAPE 2) n'a pas eu lieu, le tableau des chantiers reste **vide** :
 > on ne planifie pas des travaux qu'on n'a pas encore constatés.
 
-**Dernière mise à jour** : 2026-08-04 (session 3)
+**Dernière mise à jour** : 2026-08-04 (session 4)
 
 ---
 
@@ -13,8 +13,8 @@
 | Étape | Nom | Ce qu'elle produit | Statut |
 |---|---|---|---|
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
-| 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | 🟡 EN COURS (volets A et B faits) |
-| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. | ⬜ À faire |
+| 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
+| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. | 🟡 **PROCHAINE** — ordre des domaines à valider |
 | 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ⬜ À faire |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
@@ -33,10 +33,13 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 |---|---|---|---|
 | **A — Le squelette** | Les morceaux de l'application, où ils tournent, comment ils se parlent, comment le code arrive en ligne, qui a le droit de quoi | 2 | ✅ FAIT |
 | **B — Les fonctionnalités** | Ce que l'application sait faire : les 14 écrans d'administration, la génération des poules et du planning, la saisie des scores, le classement, la page publique, le parcours d'invitation des clubs | 3 | ✅ FAIT |
-| **C — Les données** | Quelles données sont stockées, dans quel onglet, qui peut les voir, combien de temps elles restent — en particulier les données personnelles (clubs, contacts, mineurs) | 4 | ⬜ **À faire — prochaine session** |
+| **C — Les données** | Quelles données sont stockées, dans quel onglet, qui peut les voir, combien de temps elles restent — en particulier les données personnelles (clubs, contacts, mineurs) | 4 | ✅ FAIT |
 
 > Le volet C prépare directement le domaine B (RGPD) de l'ÉTAPE 2, sans le remplacer : il **décrit**
 > ce qui existe, il ne juge pas.
+
+> ✅ **L'ÉTAPE 1 est terminée.** Elle a produit `CARTOGRAPHIE.md` (3 volets) et **39 points
+> d'attention** (A-01→A-14, B-01→B-12, C-01→C-13), qui sont la matière première de l'ÉTAPE 2.
 
 ---
 
@@ -53,10 +56,15 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 | G | Architecture / Maintenabilité | ⬜ Non commencé | — |
 | H | Qualité du code | ⬜ Non commencé | — |
 
-> **Ordre d'audit recommandé** (à valider en fin d'ÉTAPE 1) : A → C → B → D → E → F → G → H.
+> **Ordre d'audit recommandé** : A → C → B → D → E → F → G → H.
 > Raison : le métier d'abord (c'est la priorité n°1 du prompt maître), puis ce qui peut faire du
 > mal (sécurité, données personnelles), puis ce qui prouve (tests), puis le confort.
-> **Non validé à ce stade.**
+> **⚠️ Non validé à ce stade — c'est la décision attendue de Romain pour ouvrir l'ÉTAPE 2.**
+>
+> **Élément nouveau apporté par le volet C** : le domaine **B (données personnelles)** a une
+> fenêtre de tir. Le classeur ne contient aujourd'hui **aucune donnée de tiers** ; tout ce qui sera
+> décidé pourra donc être mis en place **avant** la première invitation réelle, plutôt que corrigé
+> après. Si Romain prévoit d'inviter de vrais clubs prochainement, remonter B avant C se défend.
 
 ---
 

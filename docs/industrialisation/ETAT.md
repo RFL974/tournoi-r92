@@ -4,16 +4,18 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-04 (session 3)
-**Commit de référence** : `c6b3cf3` (branche `claude/cartographie-volet-b-fonctionnalites-busrpe`)
+**Dernière mise à jour** : 2026-08-04 (session 4)
+**Commit de référence** : `6382f7e` (branche `claude/cartographie-donnees-etape-1-t1e9xq`)
 
 ---
 
 ## 1. EN UNE PHRASE
 
-Le **squelette** (volet A) et les **fonctionnalités** (volet B) de l'application sont
-cartographiés et expliqués dans `CARTOGRAPHIE.md` ; il reste le volet C (les données).
+L'**ÉTAPE 1 — Cartographie est TERMINÉE** : le squelette (volet A), les fonctionnalités
+(volet B) et les données (volet C) sont cartographiés et expliqués dans `CARTOGRAPHIE.md`.
 **Aucun audit n'a encore été fait** et **aucun fichier de l'application n'a été modifié**.
+La prochaine étape est l'**ÉTAPE 2 — l'audit**, qui demande une validation de Romain sur son
+ordre de passage.
 
 ---
 
@@ -22,8 +24,8 @@ cartographiés et expliqués dans `CARTOGRAPHIE.md` ; il reste le volet C (les d
 | # | Phase | Statut |
 |---|---|---|
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
-| 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | 🟡 **EN COURS** — volets A (session 2) et B (session 3) faits, volet C à faire |
-| 2 | ÉTAPE 2 — Audit global (8 domaines, P0→P3) | ⬜ À faire |
+| 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
+| 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | 🟡 **PROCHAINE** — ordre de passage à valider |
 | 3 | ÉTAPE 3 — Plan d'industrialisation priorisé | ⬜ À faire |
 | 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
 | 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
@@ -31,29 +33,35 @@ cartographiés et expliqués dans `CARTOGRAPHIE.md` ; il reste le volet C (les d
 
 ---
 
-## 3. PHASE EN COURS
+## 3. PHASE TERMINÉE — L'ÉTAPE 1
 
-**ÉTAPE 1 — Cartographie**, découpée en trois volets :
+**ÉTAPE 1 — Cartographie**, découpée en trois volets, tous écrits dans `CARTOGRAPHIE.md` :
 
 | Volet | Contenu | Statut |
 |---|---|---|
 | A — Le squelette | De quoi l'application est faite, où ça tourne, comment ça se parle, comment le code arrive en ligne | ✅ **FAIT** (session 2) |
 | B — Les fonctionnalités | Ce que l'application sait faire, écran par écran | ✅ **FAIT** (session 3) |
-| C — Les données | Ce qui est stocké, où, combien de temps, et ce qui touche à la vie privée | ⬜ À faire |
+| C — Les données | Ce qui est stocké, où, combien de temps, et ce qui touche à la vie privée | ✅ **FAIT** (session 4) |
 
 ---
 
 ## 4. PROCHAINE ÉTAPE
 
-**Session 4 — ÉTAPE 1, volet C : les données.** *(dernier volet de la cartographie)*
+**Session 5 — ÉTAPE 2 : début de l'audit.** *(toujours sans rien modifier)*
 
-Objectif : inventorier **ce qui est stocké**, onglet par onglet et colonne par colonne — qui peut
-le voir, combien de temps cela reste, et ce qui relève de la **vie privée** (contacts de clubs,
-effectifs d'enfants mineurs, images, relevés de visibilité). Ce volet prépare directement le
-domaine B (RGPD) de l'ÉTAPE 2, **sans le remplacer** : il décrit, il ne juge pas.
-**Toujours sans rien modifier.**
+Une **décision de Romain est requise avant de commencer** : l'ordre de passage des 8 domaines.
+L'ordre recommandé dans `PLAN.md` §2 est **A → C → B → D → E → F → G → H** (métier, puis sécurité,
+puis données personnelles, puis tests, puis le confort). Il n'est **pas validé** à ce jour.
 
-**Condition de démarrage** : instruction explicite de Romain.
+Deux remarques pour éclairer ce choix :
+
+- la cartographie a relevé **39 points d'attention** (A-01→A-14, B-01→B-12, C-01→C-13) qui
+  attendent d'être classés P0/P1/P2/P3 ; ils constituent la matière première de l'audit ;
+- le **domaine B (données personnelles)** a une fenêtre de tir : le classeur est encore vide de
+  données de tiers. Le traiter **avant la première invitation réelle** évite d'avoir à corriger
+  après coup (voir I-03 et le volet C).
+
+**Condition de démarrage** : instruction explicite de Romain, avec l'ordre des domaines retenu.
 
 ---
 
@@ -72,15 +80,22 @@ l'industrialisation.
 
 **L'audit n'a pas commencé** : aucun problème n'est classé P0/P1/P2/P3 à ce jour.
 
-La cartographie a toutefois relevé **26 points d'attention**, qui sont des **observations**, pas
+La cartographie a toutefois relevé **39 points d'attention**, qui sont des **observations**, pas
 des verdicts. Ils seront classés à l'ÉTAPE 2 :
 
 - **A-01 à A-14** (session 2, le squelette) → `CARTOGRAPHIE.md` §A.10 ;
-- **B-01 à B-12** (session 3, les fonctionnalités) → `CARTOGRAPHIE.md` §B.12.
+- **B-01 à B-12** (session 3, les fonctionnalités) → `CARTOGRAPHIE.md` §B.12 ;
+- **C-01 à C-13** (session 4, les données) → `CARTOGRAPHIE.md` §C.12.
 
 Le plus structurant du volet B est **B-03** : le garde-fou qui empêche d'effacer tous les scores en
 regénérant les poules vit **uniquement dans le navigateur**, alors que des protections comparables
 (réorganisation des poules, gel des réponses à J-16) sont, elles, tenues par le serveur.
+
+Le plus structurant du volet C est **C-05** : **aucune donnée ne disparaît d'elle-même**. Il
+n'existe nulle part de durée de conservation ni de purge automatique — toute suppression est un
+geste manuel. À rapprocher de **C-07** (une copie de chaque courriel envoyé reste dans la boîte
+Gmail, hors de portée de la réinitialisation) et de **C-03 / C-04** (la réinitialisation laisse
+derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que ce soit expliqué).
 
 ---
 
@@ -109,8 +124,10 @@ vérification supplémentaire.
 |---|---|---|---|
 | I-01 | Le code réellement en service chez Google est-il identique à `backend/Code.gs` ? | Le backend s'exécute chez Google, hors du dépôt | Vérification manuelle par Romain dans Apps Script |
 | I-02 | Les tests du fichier `backend/Tests.gs` passent-ils aujourd'hui ? | Ils ne peuvent être exécutés que dans Google Apps Script | Lancement manuel par Romain |
-| I-03 | Quelles données personnelles de **tiers** seront présentes dans le Google Sheet une fois de vrais clubs invités ? | ✅ **Rien à ce jour** (précisé par Romain le 2026-08-04) : les seules adresses email présentes sont **la sienne et celle de son épouse**, utilisées pour tester les envois. Aucune donnée d'un tiers extérieur. La question reste ouverte pour **l'avenir** : l'application est conçue pour collecter les coordonnées de contacts de clubs, et le fera dès la première invitation réelle | Inventaire de ce que l'application **est capable de collecter** au **volet C**, puis instruction au **domaine B (RGPD)** — **avant** la première invitation réelle |
+| I-03 | Quelles données personnelles de **tiers** seront présentes dans le Google Sheet une fois de vrais clubs invités ? | ✅ **Rien à ce jour** (précisé par Romain le 2026-08-04) : les seules adresses email présentes sont **la sienne et celle de son épouse**, utilisées pour tester les envois. ✅ L'**inventaire de ce que l'application peut collecter** est désormais **fait** (volet C, session 4) : nom / prénom / email du contact de chaque club, et des **effectifs** d'enfants (jamais leur nom). Ce qui reste ouvert n'est plus « quoi », mais « **que décide-t-on d'en faire** » | Instruction au **domaine B (RGPD)** de l'ÉTAPE 2 — **avant** la première invitation réelle |
 | I-05 | Qui utilise l'administration le jour J, et sur quel matériel ? | Information de terrain | Question à Romain (domaine E — UX) |
+| I-08 | Une image mise à la corbeille du Drive (affiche, logo, photo de parking) reste-t-elle visible par un lien déjà diffusé, pendant les ~30 jours avant que Google vide la corbeille ? | Le comportement de la corbeille Drive appartient à Google, il n'est pas dans le code | Test réel : mettre une image à la corbeille, puis rouvrir son lien depuis une navigation privée |
+| I-09 | Que conserve le **journal d'exécution** de Google Apps Script, et pendant combien de temps ? | Ce journal vit chez Google, hors du dépôt | Consultation par Romain dans l'éditeur Apps Script (« Exécutions ») |
 
 ### Points levés
 

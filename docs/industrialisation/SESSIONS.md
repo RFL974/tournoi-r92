@@ -357,3 +357,143 @@ images déposées sur Drive, relevés de visibilité des partenaires.
 Ce volet prépare le domaine B (RGPD) de l'ÉTAPE 2 **sans le remplacer** : il décrit, il ne juge
 pas. Il est particulièrement utile **maintenant**, avant la première invitation réelle : c'est à ce
 moment-là que de vraies données personnelles de tiers entreront dans le classeur (voir I-03).
+
+---
+
+## SESSION 4 — 2026-08-04
+
+**Objectif**
+
+ÉTAPE 1 — CARTOGRAPHIE, **volet C : les données**. Inventorier ce que l'application stocke, onglet
+par onglet et colonne par colonne : où c'est rangé, qui peut le voir, combien de temps cela reste,
+et ce qui relève de la vie privée. **Aucun fichier de l'application ne devait être modifié — et
+aucun ne l'a été.**
+
+**Vérification préalable**
+
+`CARTOGRAPHIE.md` contenait bien les volets A (§A.1→A.12) et B (§B.1→B.14), soit 996 lignes et
+26 points d'attention. Dépôt propre, branche `claude/cartographie-donnees-etape-1-t1e9xq` à jour
+sur `6382f7e`. Condition remplie → session lancée.
+
+**Ce qui a été fait**
+
+Lecture (sans modification) des zones du code qui **définissent, écrivent, filtrent ou effacent**
+des données :
+
+- `backend/Code.gs` — la déclaration `ENTETES` (les colonnes des 8 onglets créés par le code) ;
+  `creerOngletConfig` (la zone A et la zone B de `Config`) ; les listes `CHAMPS_AUTORISATION`,
+  `CHAMPS_CONTACTS_SECURITE`, `CHAMPS_INVITATION`, `CHAMPS_SURPLACE`, `CHAMPS_REPONSE` ;
+  `CONFIG_PUBLIQUE_VUES` et `filtrerConfigPublique` (les trois listes blanches) ;
+  `lireOngletSimple` et `construireSnapshot` (ce qui sort en public) ; `lireSponsorsPublics` ;
+  `getClubDossier`, `getConfigClub`, `getReponseInvitation`, `trouverClubParToken`,
+  `repondreInvitation`, `validerDetailEffectifs`, `listerClubsInvites` ; les envois de courriels
+  (`envoyerEmailAvec`, `envoyerEmailHtml`, `envoyerInvitationsGroupe`, `envoyerFeuilleJour`) ;
+  `enregistrerMesureSponsors`, `lireMesuresSponsors`, `viderMesuresSponsors` ;
+  `reinitialiserTournoi` et `reinitialiserPhase2Clubs` ; tous les appels `DriveApp` et `Logger.log` ;
+- `frontend/js/` — `api.js` (rangement des clés), `commun-dossier.js` (le jeton retiré de la barre
+  d'adresse), `sponsors.js` (les identifiants aléatoires et les compteurs), `dossier.js`,
+  `admin-invitations.js`, `admin-feuille-jour.js`, `saisie.js`, `tournoi.js`, `ecrans.js` ;
+- `cloudflare/worker-tournoi.js` (ce que stockerait le relais s'il était rallumé).
+
+Recherche systématique de champs nominatifs d'enfants (`nom_joueur`, `prenom`, `date_naissance`,
+`licence`) sur l'ensemble du dépôt : **aucun**, sauf le champ libre décrit ci-dessous.
+
+**Résultat produit**
+
+`docs/industrialisation/CARTOGRAPHIE.md` — **volet C** ajouté (§C.1 à §C.14) :
+
+- les **cinq endroits** où vivent des données (classeur, Drive, Gmail, appareils des visiteurs,
+  relais CDN éteint) — et pourquoi vider le classeur ne vide pas les quatre autres ;
+- les **12 onglets** du classeur, avec pour chacun : contenu, qui l'écrit, lisibilité sans clé,
+  présence ou non de données personnelles ;
+- `ClubsInvites` détaillé **colonne par colonne** (17 colonnes), et les protections déjà en place ;
+- les **11 champs personnels** de la zone A de `Config` et leur exposition réelle ;
+- la doctrine « rien ne sort sauf ce qui est nommé » (trois listes blanches) **et sa limite** ;
+- les **cinq niveaux d'accès** : public, club à jeton, marqueur, organisateur, propriétaire Google ;
+- une réponse nette à la question des **mineurs** ;
+- les **durées de conservation**, et le détail de ce que la réinitialisation efface / conserve ;
+- ce qui **sort** du classeur et ce qui reste sur les appareils des visiteurs.
+
+**Points d'attention relevés** — C-01 à C-13 (`CARTOGRAPHIE.md` §C.12). Ce sont des
+**observations**, pas des verdicts : la classification P0/P1/P2/P3 et l'appréciation de conformité
+sont le travail de l'ÉTAPE 2, domaine B.
+
+Les plus structurants :
+
+- **C-05** — **rien ne disparaît tout seul** : aucune durée de conservation, aucune purge
+  automatique nulle part. Toute suppression est un geste manuel ;
+- **C-07** — une **copie de chaque courriel envoyé** reste dans la boîte Gmail du propriétaire,
+  avec l'adresse du club : le classeur n'est pas le seul endroit où vivent ces coordonnées, et la
+  réinitialisation n'y a aucune prise ;
+- **C-03 / C-04** — la réinitialisation **conserve sans l'expliquer** les effectifs d'enfants
+  déclarés équipe par équipe (`detail_effectifs`) et **tous** les contacts de la demande
+  d'autorisation (représentant, président, médecin, secours), alors que les autres conservations
+  volontaires, elles, sont documentées dans le code ;
+- **C-01** — quatre onglets (`Equipes`, `Poules`, `Matchs`, `Historique`) sortent **en entier,
+  sans clé**, à rebours de la doctrine « liste blanche » appliquée à `Config` et `Sponsors`. Aucune
+  conséquence aujourd'hui ; aucun garde-fou demain ;
+- **C-10** — un champ libre invite explicitement à saisir **noms, prénoms et dates de naissance**
+  d'enfants (« liste des équipes étrangères ») : le seul endroit de l'application où des identités
+  de mineurs peuvent entrer.
+
+**Ce qui est plutôt rassurant, et mérite d'être dit**
+
+- **Aucun enfant n'est identifié** : ni nom, ni date de naissance, ni licence. Que des nombres ;
+- la doctrine **opt-in** de la config publique est explicite, appliquée en trois vues, avec le
+  défaut le plus fermé en cas d'erreur de nom ;
+- l'email d'un club **n'est jamais renvoyé à personne** — pas même au club ;
+- un envoi groupé envoie **un courriel par club**, jamais un courriel commun ;
+- le destinataire d'un envoi est **toujours relu dans le classeur**, jamais pris dans la demande ;
+- **aucun cookie, aucun traceur tiers** ; les deux identifiants de mesure sont aléatoires et remis
+  à zéro chaque jour ; le serveur revalide chaque compteur reçu.
+
+**Points INCONNU ajoutés**
+
+- **I-08** — une image mise à la corbeille du Drive reste-t-elle atteignable par un lien déjà
+  diffusé, pendant les ~30 jours avant purge par Google ?
+- **I-09** — que conserve le journal d'exécution Apps Script, et pendant combien de temps ?
+
+**Point INCONNU précisé**
+
+- **I-03** — l'inventaire de ce que l'application **peut** collecter est désormais **fait**. La
+  question restante n'est plus « quoi », mais « qu'en décide-t-on », et elle relève du domaine B.
+
+**Contradictions avec la mémoire automatique**
+
+Aucune constatée.
+
+**Tests réalisés**
+
+Aucun. Volet de cartographie : aucune ligne de code n'a été touchée, il n'y avait rien à tester.
+
+**Tests NON réalisés (et pourquoi)**
+
+- **Le contenu réel du classeur : NON VÉRIFIÉ.** Ce volet décrit ce que le code est capable
+  d'écrire, pas ce que le classeur contient à cet instant — il n'est pas lisible depuis le dépôt.
+- **L'efficacité des protections décrites : NON VÉRIFIÉE.** Le code prévoit que l'email d'un club
+  ne sorte jamais et que `ClubsInvites` exige la clé admin ; rien n'a été exécuté pour le prouver.
+- Les tests de `backend/Tests.gs` : **NON VÉRIFIÉ** — ils ne s'exécutent que chez Google (I-02).
+- Le comportement en production : **INCONNU** (I-01, règle permanente de `CLAUDE.md` §13.6).
+
+**Décisions prises**
+
+Aucune décision nouvelle. Aucune validation n'était requise pour ce volet (cartographie =
+description, pas modification).
+
+**Commit**
+
+`docs(industrialisation): cartographier les données de l'application` — sur la branche
+`claude/cartographie-donnees-etape-1-t1e9xq`. Contenu : `CARTOGRAPHIE.md` (volet C), `ETAT.md`,
+`PLAN.md`, `SESSIONS.md`. **Aucun fichier de l'application.**
+
+**Prochaine session recommandée**
+
+**Session 5 — ÉTAPE 2 : début de l'audit.** L'ÉTAPE 1 est terminée : les trois volets de la
+cartographie sont écrits et ont produit **39 points d'attention** (A-01→A-14, B-01→B-12,
+C-01→C-13) qui attendent d'être classés P0/P1/P2/P3.
+
+⚠️ **Une décision de Romain est requise avant de commencer** : l'ordre de passage des 8 domaines.
+L'ordre recommandé reste **A → C → B → D → E → F → G → H** (métier, sécurité, données
+personnelles, tests, puis le confort). Le volet C apporte toutefois un argument pour **remonter le
+domaine B** si de vrais clubs doivent être invités prochainement : le classeur est encore vide de
+données de tiers, donc tout peut être **préparé** plutôt que **rattrapé**.
