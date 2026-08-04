@@ -7,12 +7,12 @@
 > Le registre des problèmes (avec leur statut de correction) vit dans `RISQUES.md`.
 > Ce document-ci **explique** ; `RISQUES.md` **suit**.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, close)
+**Dernière mise à jour** : 2026-08-04 (session 6, close)
 
 | Domaine | Nom | Statut |
 |---|---|---|
 | **A** | **Métier / Product Owner** | ✅ **FAIT** (session 5) |
-| C | Sécurité | ⬜ À faire |
+| **C** | **Sécurité** | ✅ **FAIT** (session 6) |
 | B | RGPD / Protection des données | ⬜ À faire |
 | D | QA / Tests | ⬜ À faire |
 | E | UX / UI / Accessibilité | ⬜ À faire |
@@ -791,5 +791,725 @@ R-004 (le départage) vient juste après, mais mérite qu'on écrive des tests *
 
 **Et R-012 ne doit pas être traité seul** : il est ce qui rend R-001 et R-004 opposables aux clubs.
 Corriger une règle que personne ne peut lire ne règle qu'une moitié du problème.
+
+---
+
+# DOMAINE C — SÉCURITÉ / DEVSECOPS
+
+> **La question posée** : qui peut faire quoi dans cette application — et que pourrait obtenir,
+> casser ou détourner quelqu'un de mal intentionné ? **Aucun fichier de l'application n'a été
+> modifié.** Comme l'exige `CLAUDE.md` §6.C, chaque faille est décrite avec : sa criticité, un
+> **scénario d'exploitation**, son impact, une recommandation et la **difficulté de correction**.
+
+**Audité en session 6, le 2026-08-04.**
+
+---
+
+## C.0 — Le verdict en une phrase
+
+**Le code est bien plus propre en sécurité que la moyenne des projets amateurs** — les mots de
+passe ne sont nulle part dans le dépôt, les textes affichés sont systématiquement neutralisés,
+les liens des clubs sont de vrais numéros aléatoires — **mais une seule porte est ouverte à tout
+le monde, sans aucune clé et sans aucune limite, et c'est par elle qu'on peut mettre l'application
+à genoux le jour du tournoi**. Le reste des problèmes tient en une phrase : **il n'y a pas de
+personnes, seulement des mots de passe partagés**, et personne ne peut donc être ni reconnu, ni
+retiré, ni retrouvé après coup.
+
+---
+
+## C.1 — Ce qui est solide (et qu'il ne faut surtout pas casser)
+
+Il faut le dire avant les problèmes, parce que c'est vrai et que ce sont des acquis fragiles :
+les casser en corrigeant autre chose serait un très mauvais échange.
+
+1. **Les deux clés ne sont PAS dans le dépôt.** J'ai vérifié **l'historique complet** du projet —
+   **513 enregistrements**, pas seulement les récents — en cherchant les mots de passe et les
+   secrets du relais : **aucune fuite**. Seuls apparaissent le code qui *range* les clés et des
+   exemples volontairement bidons (`NOUVELLE_CLE_ADMIN_LONGUE`). *(CERTAIN.)*
+2. **La règle « rien ne sort sauf ce qui est nommé ».** Pour les réglages (`Config`) et les
+   partenaires, le serveur ne renvoie que des champs **listés à la main**, et il existe **trois
+   listes différentes** selon l'interlocuteur (public / vitrine / club). Un réglage ajouté demain
+   est **privé par défaut** : personne n'a à y penser. C'est la bonne façon de faire.
+3. **Tout ce qui est écrit dans le classeur est forcé en « texte ».** Une trentaine d'endroits du
+   code posent ce format avant d'écrire. Conséquence : un nom d'équipe commençant par `=` reste
+   un texte et **ne devient jamais une formule de calcul** — un piège classique, ici évité.
+4. **Tout ce qui est affiché est neutralisé.** Les deux côtés (navigateur et serveur) possèdent la
+   même fonction d'échappement, appliquée partout où du texte venant du classeur est injecté dans
+   une page. J'ai vérifié par sondage sur la page publique, la saisie, les partenaires, le dossier
+   club : **je n'ai pas trouvé d'oubli**.
+5. **Les liens des partenaires sont bornés** : seuls `http://` et `https://` sont acceptés à
+   l'affichage — un lien piégé de type `javascript:` est **refusé**. Les couleurs sont validées
+   comme code couleur à 6 caractères. Deux pièges classiques, tous deux fermés.
+6. **Les liens personnels des clubs sont de vrais numéros aléatoires** (`Utilities.getUuid()` —
+   le générateur cryptographique de Google), pas des suites devinables.
+7. **Le destinataire d'un courriel est TOUJOURS relu dans le classeur**, jamais pris dans la
+   demande du navigateur. Impossible de faire envoyer un message à une adresse choisie par
+   l'attaquant. Ce point est explicitement commenté dans le code : c'était un choix conscient.
+8. **Le dépôt d'images est verrouillé** : liste blanche stricte de formats (PNG / JPEG / WebP /
+   GIF) et plafond de 5 Mo, contrôlés **avant** d'écrire quoi que ce soit dans le Drive.
+9. **Les relevés des partenaires sont entièrement revalidés** : identifiants au format strict
+   (4 à 40 caractères, lettres/chiffres/tiret), nombre de partenaires borné, chaque compteur
+   plafonné. Le commentaire du code dit juste : *« Rien de ce qui entre n'est cru sur parole. »*
+10. **Les messages d'erreur inattendus sont génériques.** Le détail part dans le journal du
+    serveur, jamais dans la réponse : l'intérieur du système n'est pas raconté au visiteur.
+11. **Le gel des réponses à J-16 est tenu par le serveur**, avec un commentaire expliquant
+    pourquoi un verrou d'écran seul serait contournable. C'est exactement le bon raisonnement.
+12. **Les trois pages qui contiennent un lien personnel** (dossier club, invitation, réponse) sont
+    marquées « ne pas indexer » : elles ne remonteront pas dans un moteur de recherche.
+13. **L'onglet des clubs invités est exclu** des données publiques, et **le classeur est privé**
+    (vérifié par Romain, I-06). Deux barrières indépendantes sur le carnet d'adresses.
+
+> **À retenir** : la personne qui a écrit ce code **connaissait** les pièges de sécurité classiques
+> et les a fermés un par un. Les problèmes ci-dessous ne sont pas des négligences ; ce sont des
+> **choix de conception** qui tiennent tant que l'application reste petite et confidentielle.
+
+---
+
+## C.2 — R-014 · La seule porte ouverte sans clé n'a aucun garde-fou *(P0)*
+
+### 1. Ce que j'ai trouvé
+
+Toutes les écritures de l'application exigent un mot de passe — **sauf une**. Elle s'appelle
+`mesureSponsors`. C'est celle qui reçoit les **statistiques d'affichage des partenaires** envoyées
+par les téléphones des spectateurs : « le logo du garage X a été vu 4 secondes ».
+
+Elle est traitée **en tout premier**, avant le contrôle de clé, et pour de bonnes raisons
+expliquées dans le code : les spectateurs n'ont évidemment pas de mot de passe, et il ne faut
+surtout pas que ces relevés fassent attendre le marqueur au bord du terrain.
+
+**Le problème n'est pas qu'elle soit ouverte. Le problème est qu'elle n'a AUCUNE limite** :
+
+- **aucun plafond du nombre d'envois** — ni par appareil, ni par minute, ni par jour ;
+- **chaque envoi ajoute une ligne** dans l'onglet `Mesures` ;
+- **rien n'efface jamais ces lignes** automatiquement (déjà relevé en cartographie, point C-09) ;
+- l'adresse du serveur est **publiquement lisible** dans `frontend/js/config.js` — c'est
+  inévitable (le navigateur doit la connaître), mais cela veut dire que **n'importe qui** peut
+  trouver cette porte en trente secondes.
+
+*(CERTAIN — constaté dans `backend/Code.gs`, `doPost` et `enregistrerMesureSponsors`.)*
+
+### 2. Pourquoi c'est important
+
+Deux plafonds existent chez Google, et l'application dépend des deux :
+
+- un classeur Google Sheets ne peut pas dépasser **10 millions de cases**. Chaque relevé occupe
+  5 cases. **Environ 2 millions de relevés suffisent donc à remplir le classeur** — et quand un
+  classeur est plein, **plus AUCUNE écriture ne passe** : ni les scores, ni les équipes, ni rien ;
+- le programme ne peut exécuter qu'un **nombre limité de demandes en même temps** (~30). Les
+  saturer, c'est faire échouer ou attendre toutes les autres.
+
+Autrement dit : **une porte prévue pour compter des logos de sponsors peut servir à empêcher la
+saisie des scores.**
+
+### 3. Exemple concret
+
+Le samedi du tournoi, 9 h 30. Une personne — un plaisantin, un club mécontent, ou simplement un
+programme mal écrit qui tourne en boucle — envoie des relevés en continu depuis un ordinateur
+portable, sur le réseau mobile du stade.
+
+À 10 h, le marqueur du terrain 3 valide un score. La page tourne, tourne, puis affiche
+*« Serveur momentanément occupé, réessaie dans un instant. »* Il réessaie. Même chose.
+
+Sur les téléviseurs de la buvette, la page publique reste figée sur les scores de 9 h 15.
+
+Personne ne comprend ce qui se passe : **rien n'est cassé, rien n'a été piraté, aucune donnée
+n'a été volée**. L'application est simplement occupée à compter des logos.
+
+Et la remise en route n'est pas immédiate : il faut ouvrir le classeur à la main et supprimer
+les lignes accumulées.
+
+### 4. Ce que je propose
+
+Trois mesures, de la plus simple à la plus complète. La première suffit déjà à écarter le pire.
+
+1. **Un plafond quotidien global** : au-delà de N relevés dans la journée (par exemple 20 000 —
+   très au-delà d'un vrai tournoi), le serveur répond « merci » **sans rien écrire**. La mesure
+   des partenaires continue de fonctionner normalement pour tout le monde, elle cesse simplement
+   d'être enregistrée quand le chiffre devient absurde ;
+2. **Un plafond par appareil** : un même identifiant d'appareil ne peut déposer qu'un petit nombre
+   de relevés par heure. Le code connaît déjà cet identifiant, il n'y a rien à inventer ;
+3. **Une purge automatique** : les relevés de plus de X jours sont effacés d'eux-mêmes. Cela règle
+   du même coup le point C-09 (l'onglet qui grossit sans fin) et prépare le domaine B.
+
+**Difficulté de correction : FAIBLE.** Le mécanisme de comptage nécessaire **existe déjà** dans le
+fichier — c'est exactement celui qui compte les mauvaises tentatives de mot de passe. Il s'agit de
+le réutiliser, pas de l'écrire.
+
+### 5. Impact
+
+- **Ce que cela change** : rien de visible. Un spectateur ne verra aucune différence ; l'écran des
+  partenaires affichera les mêmes chiffres.
+- **Risques de la correction** : très faibles. Le seul effet possible serait de **sous-compter**
+  les partenaires si le plafond était mal réglé — d'où l'importance de le placer très haut.
+- **Bénéfices** : la seule porte ouverte de l'application cesse d'être un levier ; l'onglet
+  `Mesures` cesse de grossir indéfiniment.
+- **Fonctionnalités concernées** : uniquement la mesure de visibilité des partenaires. **Ni les
+  scores, ni le classement, ni les clubs, ni le planning** ne sont touchés.
+
+### 6. Ce que je conseille
+
+**Corriger avant la production — et c'est le seul point de tout cet audit dont je dirais qu'il
+mérite d'être traité en avance, hors de l'ordre normal.**
+
+Pourquoi je le classe **P0** alors que rien n'est cassé aujourd'hui :
+
+- c'est **le seul problème exploitable sans connaître aucun secret** ;
+- il frappe exactement **le moment et la fonction qui comptent** (la saisie des scores, le jour J) ;
+- il coûte **peu** à corriger et **ne présente presque aucun risque de régression**.
+
+**Ce que je ne dis pas** : je ne dis pas que cela va arriver. Aucun tournoi réel n'a encore eu
+lieu, l'adresse n'est connue de personne, et il n'existe aucune raison qu'on s'en prenne à un
+tournoi d'école de rugby. Je dis que **la porte est ouverte et qu'elle est bon marché à fermer**.
+
+> **Niveau de certitude** : **CERTAIN** pour le code (l'absence de limite est constatée).
+> **PROBABLE** pour les conséquences chiffrées : les plafonds exacts de Google et le temps
+> nécessaire pour remplir le classeur **n'ont pas été testés** et ne peuvent pas l'être depuis
+> le dépôt. Le raisonnement tient, la mesure n'a pas été faite.
+
+---
+
+## C.3 — R-015 · Regénérer les poules efface tous les scores, et seul le navigateur s'y oppose *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+Le bouton « regénérer les poules et le planning » **efface tous les matchs**, donc tous les scores
+déjà saisis. C'est normal : on refait le tirage.
+
+Ce qui ne l'est pas : **le serveur ne vérifie jamais si des scores existent**. J'ai lu la fonction
+en entier. Elle refuse une catégorie à moins de 3 équipes, elle refuse une durée de mi-temps
+manquante — **elle ne regarde pas une seule fois si la journée a déjà commencé**.
+
+La protection existe, mais **uniquement dans la page web** : double confirmation, puis re-saisie
+du mot de passe admin.
+
+*(CERTAIN — `genererPoulesEtPlanning`, `backend/Code.gs`.)*
+
+### 2. Pourquoi c'est important
+
+Une protection qui ne vit que dans la page est **une protection qu'on peut contourner sans le
+vouloir**. Et surtout : elle disparaît si la page est rechargée pendant l'opération, si un autre
+outil parle au serveur, ou si quelqu'un utilise un vieil onglet ouvert la veille.
+
+Le comparatif est ce qui rend le constat gênant : dans **le même fichier**, deux protections
+voisines sont, elles, tenues par le serveur — « réorganiser les poules » **refuse** dès qu'un
+score existe, et le gel des réponses à J-16 est vérifié côté serveur avec un commentaire
+expliquant pourquoi. **Le raisonnement correct a été fait ailleurs, mais pas ici.**
+
+### 3. Exemple concret
+
+15 h 10. Les poules du matin sont jouées, les scores sont saisis, l'après-midi est généré.
+
+Un bénévole ouvre l'onglet admin resté ouvert depuis ce matin, cherche « où en est le planning ? »,
+et clique sur le bouton de génération en pensant qu'il rafraîchit l'affichage. Deux confirmations
+apparaissent, il les valide machinalement — la journée est chargée, il va vite.
+
+**Tous les scores du matin sont perdus.** Il n'existe **aucune annulation** et **aucune
+sauvegarde**. L'onglet `Historique` a bien gardé une ligne par score, mais rien dans l'application
+ne sait les remettre en place : il faudrait tout ressaisir à la main.
+
+### 4. Ce que je propose
+
+**Déplacer le garde-fou côté serveur**, exactement comme c'est déjà fait pour « réorganiser les
+poules » : si au moins un match est terminé, la génération est **refusée**, sauf si la demande
+porte une confirmation explicite (un champ que seule la page envoie après ses deux avertissements).
+
+**Difficulté : FAIBLE.** Le code de référence existe déjà quelques dizaines de lignes plus loin.
+
+### 5. Impact
+
+- **Ce que cela change** : rien tant qu'aucun score n'est saisi. Après le premier score, le
+  bouton demandera une confirmation supplémentaire au lieu de faire confiance à la page.
+- **Risques** : faibles, mais réels — si la confirmation était mal branchée, l'organisateur ne
+  pourrait plus regénérer du tout. À tester avec soin.
+- **Bénéfices** : la perte de données devient **impossible par accident**.
+- **Fonctionnalités concernées** : la génération des poules et du planning, uniquement.
+
+### 6. Ce que je conseille
+
+**Corriger avant la production.** Ce n'est pas une faille au sens « quelqu'un vous attaque » :
+c'est un filet de sécurité manquant sur **l'action la plus destructrice de l'application**.
+
+---
+
+## C.4 — R-016 · La réinitialisation efface tout sans que le serveur demande quoi que ce soit *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+L'action « réinitialiser le tournoi » vide les équipes, les poules, les matchs, toutes les
+catégories, les horaires, les contacts, le dossier d'invitation, et **met à la corbeille du Drive
+l'affiche et la photo du parking**.
+
+Le serveur **exécute dès qu'il reçoit le bon mot de passe**. Aucune question, aucune confirmation,
+aucune sauvegarde préalable, aucun retour en arrière. La confirmation vit **uniquement dans la
+page** (déjà relevé en cartographie, point B-11).
+
+*(CERTAIN — `reinitialiserTournoi`, `backend/Code.gs`.)*
+
+### 2. Pourquoi c'est important
+
+C'est **la même faiblesse que R-015, en pire** : là où la génération détruit les scores, la
+réinitialisation détruit **toute l'édition en cours**, y compris des fichiers du Drive qui ne
+sont pas dans le classeur.
+
+Un mot de passe donne le droit de tout effacer. Il ne devrait pas suffire à le faire **par
+inadvertance**.
+
+### 3. Exemple concret
+
+Trois jours avant le tournoi. Tout est prêt : 14 clubs, 38 équipes, le planning, l'affiche, la
+photo du parking, les contacts de secours.
+
+Une personne qui prépare **l'édition suivante** sur le même écran clique sur « Réinitialiser ».
+Elle comprend le message, elle est sûre d'elle : elle veut repartir de zéro pour l'année
+prochaine. Elle ne réalise pas que le tournoi de samedi est **dans la même base**.
+
+Tout est effacé. Il reste : le carnet d'adresses des clubs, les partenaires, l'historique — **et
+c'est tout**. Le planning, les équipes, les horaires, l'affiche : à refaire.
+
+### 4. Ce que je propose
+
+Trois pistes, à combiner ou non — **ce choix appartient à Romain**, parce qu'il change sa façon
+de travailler :
+
+1. **Une confirmation vérifiée par le serveur** : la demande doit contenir un mot exact (par
+   exemple le nom du tournoi en cours). Un clic seul ne suffit plus ;
+2. **Une sauvegarde automatique avant effacement** : le serveur recopie les onglets dans un
+   classeur daté avant de vider. C'est la seule mesure qui rende l'erreur **réparable** ;
+3. **Ne rien effacer, mais archiver** : la réinitialisation crée une nouvelle « édition » et met
+   l'ancienne de côté. C'est le plus propre, et **de loin le plus lourd** — cela touche à la
+   structure des données. **Je ne le recommande pas maintenant** (à garder pour la piste SaaS).
+
+**Ma recommandation : (1) tout de suite, (2) si c'est acceptable.** Difficulté : **faible** pour
+(1), **moyenne** pour (2), **élevée** pour (3).
+
+### 5. Impact
+
+- **Ce que cela change** : un geste de plus pour réinitialiser. C'est voulu.
+- **Risques** : faibles pour (1). Pour (2), il faut vérifier que la copie ne dépasse pas les
+  quotas de Drive.
+- **Bénéfices** : la seule action réellement irréversible de l'application cesse de l'être.
+- **Fonctionnalités concernées** : la réinitialisation, et elle seule.
+
+### 6. Ce que je conseille
+
+**Corriger avant la production**, au moins la mesure (1). C'est peu de travail pour supprimer le
+risque le plus coûteux du logiciel : perdre la préparation d'un tournoi entier.
+
+---
+
+## C.5 — R-017 · Deux mots de passe partagés, aucune personne, aucune révocation, aucune trace *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+Il n'existe **aucun compte utilisateur** dans l'application. Personne ne « se connecte » à son
+nom. Il y a **deux mots de passe** :
+
+- la **clé ADMIN**, qui ouvre tout (44 actions) ;
+- la **clé SCORES**, qui ouvre une seule chose : enregistrer un score.
+
+**Qui connaît la clé EST l'administrateur.** Et le jour du tournoi, la clé SCORES est
+nécessairement communiquée à plusieurs bénévoles — c'est le principe même de l'outil.
+
+Trois conséquences, toutes constatées dans le code :
+
+- **on ne peut retirer l'accès à personne** sans le retirer à tout le monde (changer la clé oblige
+  à la redistribuer à tous, en pleine journée) ;
+- **le classeur ne garde aucune trace de qui a fait quoi.** L'onglet `Historique` enregistre bien
+  chaque score, mais avec **le match et le score, jamais l'auteur** ;
+- **un score validé peut être réécrit** : le serveur refuse une deuxième saisie… sauf si la
+  demande porte un simple indicateur « je corrige » — que la page envoie quand on clique sur
+  « Corriger ». C'est **volontaire et nécessaire**, mais cela signifie que **toute personne ayant
+  la clé SCORES peut modifier n'importe quel score, à n'importe quel moment, sans être identifiée.**
+
+*(CERTAIN — `verifierCle`, `enregistrerScore`, `ENTETES.Historique`.)*
+
+### 2. Pourquoi c'est important
+
+Le critère P0 de ce projet inclut « produire des résultats sportifs incorrects ». Ici, on n'y est
+pas — il faut connaître la clé — mais on en est à un seul pas.
+
+Et surtout : **en cas de contestation, il n'y a rien à montrer.** Un club affirme que son score a
+été changé ? L'application peut dire *ce qui* a changé, jamais *qui* l'a changé.
+
+### 3. Exemple concret
+
+16 h. Le Racing et Clamart sont à égalité parfaite dans la poule U10. Le classement décide de la
+composition de l'après-midi.
+
+Un bénévole — de bonne foi — croit se souvenir que le score du match Racing/Vélizy était 15-10 et
+non 10-15. Il ouvre la saisie, clique « Corriger », valide.
+
+Le classement bascule. Personne ne s'en aperçoit sur le moment.
+
+Le soir, un dirigeant conteste. On ouvre l'`Historique` : on y voit bien les deux versions du
+score, à deux heures d'intervalle. **On ne peut pas dire qui a fait la seconde.** Il n'y a pas de
+mauvaise foi dans cette histoire — juste **aucun moyen de trancher**.
+
+### 4. Ce que je propose
+
+Par ordre de coût croissant. **Je ne recommande PAS de créer des comptes utilisateurs** : ce
+serait une transformation profonde, pour un besoin qui n'existe pas encore.
+
+1. **Ajouter une colonne « qui » à l'`Historique`** — pas un compte, juste un **prénom saisi une
+   fois** par le marqueur au début de sa session (« Terrain 3 — Julien »), envoyé avec chaque
+   score. Ce n'est **pas une sécurité** (rien ne l'empêche de mentir), c'est une **traçabilité de
+   bonne foi** — et cela suffit à trancher 99 % des contestations réelles ;
+2. **Distinguer une correction d'une saisie dans l'`Historique`**, pour qu'on voie d'un coup
+   d'œil les scores réécrits ;
+3. **Écrire une procédure de changement de clé** (aujourd'hui il n'en existe aucune) : quand,
+   comment, qui prévenir. C'est de la documentation, pas du code ;
+4. *(plus tard)* de vrais comptes, le jour où plusieurs clubs utiliseraient l'outil — **P3**.
+
+**Difficulté : faible** pour (1) à (3).
+
+### 5. Impact
+
+- **Ce que cela change** : le marqueur saisit son prénom une fois en ouvrant la page. C'est tout.
+- **Risques** : quasi nuls — on **ajoute** une information, on n'en modifie aucune. Attention
+  toutefois : un prénom est une **donnée personnelle** ; à signaler au domaine B (RGPD).
+- **Bénéfices** : une contestation devient arbitrable.
+- **Fonctionnalités concernées** : la saisie des scores, l'`Historique`.
+
+### 6. Ce que je conseille
+
+**Corriger avant la production** pour (1) et (3). Le point (4) — de vrais comptes — est **P3** :
+à garder pour le jour où l'outil servirait à plusieurs clubs.
+
+---
+
+## C.6 — R-018 · Les liens envoyés aux clubs sont des passe-partout permanents *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+Chaque club reçoit par courriel **un lien personnel** contenant son numéro secret. Ce lien lui
+ouvre son dossier et sa page de réponse.
+
+Ce que ce lien donne à voir, exactement *(constaté dans la vue « club » du serveur)* : l'adresse
+précise du tournoi, le parking, les tarifs, le poste de secours, **et les numéros de téléphone du
+référent et du responsable sécurité** — les contacts du jour J.
+
+Quatre constats sur ce lien :
+
+- **il n'expire jamais.** Aucune date de validité. Il reste valable tant que personne ne le
+  régénère à la main ou ne réinitialise le tournoi ;
+- **il voyage dans l'adresse de la page** (`?club=…&token=…`). Il se retrouve donc dans
+  l'historique du navigateur, dans les copier-coller, et dans les journaux de Google ;
+- **un courriel se transfère.** Il suffit qu'un contact de club fasse suivre le message à son
+  équipe, ou qu'il utilise une boîte partagée, pour que le lien circule ;
+- **il n'y a aucun moyen de savoir s'il a fuité** : aucune trace de qui l'utilise.
+
+*(CERTAIN — `trouverClubParToken`, `getConfigClub`, `lireConfigPublique(…, 'club')`.)*
+
+**Deux points rassurants, à ne pas perdre de vue** : le lien d'un club **n'ouvre que sa propre
+fiche** (jamais celle d'un autre), et il **ne révèle jamais l'adresse email d'un club** — j'ai
+vérifié les trois fonctions concernées. Le cloisonnement entre clubs est correct.
+
+### 2. Pourquoi c'est important
+
+Ce lien est **un mot de passe déguisé en adresse web**. Or on ne traite pas une adresse web comme
+un mot de passe : on la colle dans un message, on la partage, on la garde dans ses favoris.
+
+**Aujourd'hui, cela n'a aucune conséquence** : les seuls contacts en base sont ceux de Romain et
+de son épouse (I-03, I-04). **Le jour de la première invitation réelle**, ce lien donnera accès
+aux numéros de téléphone des responsables du tournoi, à toute personne l'ayant reçu de seconde
+main — et pour toujours.
+
+### 3. Exemple concret
+
+Le club de Meudon reçoit son invitation sur une boîte partagée `contact@…`. Le lien est transféré
+à quatre personnes pour organiser le déplacement, puis oublié dans une conversation.
+
+Trois ans plus tard, une de ces personnes n'a plus rien à voir avec le club. Elle retrouve le
+message, clique par curiosité. **Le lien fonctionne encore** — et lui affiche le numéro de
+portable du responsable sécurité.
+
+Personne n'a rien fait de mal. Le lien n'a simplement jamais cessé d'être valable.
+
+### 4. Ce que je propose
+
+1. **Faire expirer les liens** — au minimum, les périmer automatiquement **après le tournoi**. Le
+   code sait déjà comparer la date du jour à la date du tournoi (c'est le mécanisme du gel à
+   J-16) : il y a là un outil réutilisable ;
+2. **Réduire ce que le lien donne à voir après le tournoi** : les numéros du jour J n'ont plus
+   d'utilité le lundi ;
+3. **Prévoir un bouton « invalider tous les liens »** — l'équivalent d'un changement de serrure ;
+   le code sait déjà régénérer un jeton club par club ;
+4. **Expliquer aux clubs, dans le courriel, que ce lien est personnel** et ne doit pas être
+   transféré. C'est du texte, et c'est probablement la mesure la plus efficace par euro dépensé.
+
+**Difficulté : faible à moyenne.** (1) et (4) sont simples ; (3) existe presque.
+
+### 5. Impact
+
+- **Ce que cela change** : un club qui rouvrirait son lien longtemps après le tournoi verrait un
+  message « lien expiré » au lieu de son dossier.
+- **Risques** : **réels et à surveiller.** Si l'expiration était mal calculée, des clubs
+  perdraient l'accès à leur dossier **avant** le tournoi — ce qui serait bien pire que le
+  problème. À tester en priorité ; c'est la principale raison de ne pas bâcler cette correction.
+- **Bénéfices** : un lien qui traîne cesse d'être une porte ouverte.
+- **Fonctionnalités concernées** : dossier club, page de réponse, envoi des invitations.
+
+### 6. Ce que je conseille
+
+**Corriger avant la première invitation réelle.** Ce n'est pas urgent aujourd'hui — il n'y a rien
+derrière la porte. C'est indispensable **avant** qu'il y ait quelque chose.
+
+À traiter **avec le domaine B (RGPD)**, qui viendra juste après : c'est le même sujet vu sous deux
+angles.
+
+---
+
+## C.7 — Les problèmes P2 (à corriger, mais pas dans l'urgence)
+
+### R-019 · Le garde-fou contre la devinette de mot de passe est global et faible *(P2)*
+
+**Ce qui existe** : au-delà de **30 mauvaises tentatives en 5 minutes**, les mauvaises clés sont
+refusées un moment. Une **bonne** clé passe toujours — donc **le marqueur n'est jamais bloqué**,
+même si quelqu'un attaque au même instant. C'est bien pensé.
+
+**Trois limites** :
+
+1. le compteur est **global**, pas par personne ni par appareil — Google Apps Script ne fournit
+   pas l'adresse du visiteur, donc **on ne peut pas faire mieux simplement** ;
+2. une fois le seuil atteint, le compteur **cesse d'être prolongé** : après 5 minutes de calme,
+   30 nouvelles tentatives sont possibles. Cela laisse de l'ordre de **8 600 essais par jour** ;
+3. le compteur vit dans une mémoire temporaire **non fiable à 100 %** (le code le reconnaît :
+   « best-effort ») : des tentatives simultanées peuvent en échapper.
+
+**Ce que cela veut dire concrètement** : 8 600 essais par jour ne cassent **jamais** un mot de
+passe tiré au hasard. Ils peuvent casser un mot de passe **choisi par un humain** — `racing92club`
+fait bien 12 caractères et se devine en quelques milliers d'essais.
+
+**Ce que je propose** : (a) prolonger la fenêtre à chaque tentative, même refusée ; (b) **et
+surtout** vérifier que les deux clés actuelles sont bien des suites aléatoires, pas des mots.
+Si elles le sont, ce problème devient théorique. → **question I-12 ci-dessous.**
+
+**Difficulté : très faible.**
+
+---
+
+### R-020 · Le contenu des courriels est fabriqué par le navigateur, le serveur ne fait que poster *(P2)*
+
+Le serveur reçoit **l'objet et le corps HTML complets** depuis la page d'administration et les
+expédie tels quels, sous l'identité Gmail du propriétaire.
+
+**Le bon côté** — et il est important : **le destinataire est toujours relu dans le classeur**,
+jamais fourni par le navigateur. Impossible d'envoyer à une adresse arbitraire.
+
+**Le problème restant** : toute personne disposant de la clé admin peut faire partir, **depuis
+une adresse que les clubs reconnaissent**, un message dont elle a écrit chaque mot — par exemple
+un faux message d'inscription renvoyant vers un site qu'elle contrôle. Le serveur ne vérifie
+rien de ce qui part en son nom.
+
+**Ce que je propose** : construire le squelette du message **côté serveur** (l'en-tête, le pied,
+les liens officiels), et ne laisser venir du navigateur que le **texte libre**. Le code sait déjà
+faire cela — c'est exactement le mécanisme `{{SALUTATION}}` / `{{LIEN_REPONSE}}` déjà en place.
+
+**Difficulté : moyenne** (il faut déplacer les gabarits). **Bénéfice** : réel mais différé — il
+suppose que la clé admin ait fuité.
+
+---
+
+### R-021 · Quatre onglets sortent en entier, sans aucune clé et sans liste blanche *(P2)*
+
+`Equipes`, `Poules`, `Matchs` et `Historique` sont renvoyés **toutes colonnes comprises**, à qui
+les demande, **sans mot de passe** — la règle exactement inverse de celle appliquée aux réglages
+et aux partenaires.
+
+**Aujourd'hui, rien de personnel n'en sort.** Ce qui s'en rapproche le plus, ce sont les effectifs
+(« MASSY-1 est venue avec 12 enfants ») : des nombres, jamais des noms.
+
+**Le problème est dans le futur** : le jour où quelqu'un ajoute une colonne à `Equipes` — un nom
+de contact, un téléphone d'entraîneur, une remarque — **elle devient publique sans que personne
+l'ait décidé.**
+
+**Ce que je propose** : appliquer à ces quatre onglets la même règle qu'au reste — une liste des
+colonnes autorisées. C'est **une trentaine de lignes**, et le modèle existe déjà dans le fichier.
+
+**Difficulté : faible.** **À traiter avec le domaine B**, qui en dépend directement.
+
+---
+
+### R-022 · L'écran d'administration est public et référençable *(P2)*
+
+`admin.html` et `saisie.html` sont publiés sur GitHub Pages comme toutes les autres pages :
+**n'importe qui peut les ouvrir**. Elles ne montrent aucune donnée sans la clé — le contrôle est
+côté serveur, c'est correct — mais elles sont **accessibles et indexables**.
+
+Le détail qui rend le constat parlant : les trois pages contenant un lien personnel de club, elles,
+portent bien la mention « ne pas indexer ». **La réflexion a été faite pour les pages des clubs,
+pas pour la page d'administration.**
+
+**Ce que je propose** : ajouter la mention « ne pas indexer » sur `admin.html` et `saisie.html`
+(une ligne chacune), et un fichier `robots.txt`. **Ce n'est pas de la sécurité** — cela ne protège
+rien — c'est de la **discrétion** : moins la page est trouvée par hasard, moins le mot de passe
+partagé est mis à l'épreuve.
+
+**Difficulté : très faible.**
+
+---
+
+### R-023 · Aucune trace de qui accède à quoi *(P2)*
+
+Complément de R-017, côté lecture : le carnet d'adresses des clubs se lit **en une seule demande**,
+avec la clé admin — emails **et** liens personnels compris (point C-11 de la cartographie). Le
+classeur ne garde **aucune trace** de ces consultations.
+
+Ce que le **journal d'exécution de Google** conserve, et pendant combien de temps, est **INCONNU**
+depuis le dépôt (I-09).
+
+**Ce que je propose** : ne pas renvoyer les liens personnels des clubs quand l'écran n'en a pas
+besoin (ils ne servent qu'au bouton « copier le lien »), et consigner les lectures du carnet dans
+l'`Historique`. **Difficulté : faible** pour le premier, **moyenne** pour le second.
+
+---
+
+### R-024 · Quatre bibliothèques extérieures, sans version, sans origine, sans contrôle *(P2)*
+
+Le dossier `frontend/js/vendor/` contient **quatre fichiers de code écrits par d'autres**
+(~750 Ko au total) : `pdf-lib`, `docxtemplater`, `pizzip`, `qrcode`. Ils servent à fabriquer les
+documents PDF et Word.
+
+**Le bon côté** : ils sont **hébergés localement**. Aucune page ne charge de programme depuis un
+site extérieur — c'est le bon choix, et il évite toute une famille de problèmes.
+
+**Le problème** : **rien n'indique d'où ils viennent ni quelle version c'est.** Ni fichier de
+suivi, ni commentaire, ni empreinte de contrôle. Conséquence pratique : **il est impossible de
+savoir si une faille publiée un jour concerne ces fichiers.** Personne ne peut répondre à la
+question « sommes-nous à jour ? ».
+
+**Ce que je propose** : un simple fichier texte listant, pour chacun, **le nom, la version, la
+date et l'adresse d'origine**. Cinq lignes. Cela ne corrige rien, mais cela rend la question
+**vérifiable** — c'est le préalable à toute mise à jour.
+
+**Difficulté : très faible** (mais il faudra retrouver les versions, ce qui n'est pas immédiat).
+
+---
+
+### R-025 · Toute la sécurité des données tient à un réglage Google qu'aucun code ne protège *(P2)*
+
+L'identifiant du classeur est **écrit en clair dans le dépôt public**. Ce n'est pas un problème
+**tant que le classeur est privé** — et il l'est, Romain l'a vérifié (I-06).
+
+Mais : **rien dans le code ne protège ce réglage.** Un partage fait un jour par commodité
+(« je le passe en lien pour envoyer les scores à un collègue ») rendrait **tout le contenu
+lisible** par quiconque a lu le dépôt — carnet d'adresses compris.
+
+**Ce que je propose** : ce n'est **pas une correction de code**. C'est (a) une note explicite dans
+la documentation de passation, et (b) une **vérification périodique** — deux minutes, à faire
+avant chaque tournoi. À inscrire dans la future liste de contrôle d'avant-tournoi.
+
+**Difficulté : nulle côté code.** C'est une habitude à prendre.
+
+---
+
+## C.8 — Les problèmes P3 (à garder pour plus tard)
+
+### R-026 · Aucune politique de sécurité du contenu *(P3)*
+
+Les pages ne déclarent pas ce qu'elles s'autorisent à charger. Si un jour un texte piégé passait
+entre les mailles (ce que je n'ai **pas** trouvé aujourd'hui — voir C.1 point 4), rien ne
+limiterait les dégâts.
+
+**Pourquoi P3** : c'est une **deuxième ceinture**, utile seulement si la première lâche. Et sa
+mise en place demande des essais page par page (les polices Google, les images du Drive et les
+appels au serveur doivent rester autorisés) — pour un bénéfice invisible.
+
+À reprendre le jour d'une refonte du frontend.
+
+---
+
+### R-027 · Les briques d'automatisation GitHub sont épinglées par étiquette mobile *(P3)*
+
+La publication automatique du site utilise quatre briques externes désignées par `@v4` / `@v5`.
+Ces étiquettes **peuvent être déplacées** par leur auteur : le code exécuté demain ne sera pas
+forcément celui d'aujourd'hui.
+
+**Pourquoi P3** : ce sont les briques officielles de GitHub, les droits accordés sont **minimaux
+et corrects** (lecture du code, écriture des pages), et le risque est théorique.
+
+À reprendre si le dépôt devenait le socle d'un service pour plusieurs clubs.
+
+---
+
+### Un point renvoyé au domaine B (RGPD), pas classé ici
+
+Chaque page charge ses **polices d'écriture depuis les serveurs de Google**
+(`fonts.googleapis.com`). Ce n'est **pas une faille de sécurité** : c'est une requête vers un
+tiers à chaque visite, et donc un sujet de **protection des données**. Je le note ici pour qu'il
+ne se perde pas, et je le laisse au **domaine B**.
+
+---
+
+## C.9 — Ce que le domaine C ne peut PAS conclure
+
+Par honnêteté sur les limites de cet audit :
+
+- ❌ **Rien n'a été exécuté. Aucune attaque n'a été tentée.** Tous les constats portent sur ce que
+  le code **prévoit**. Statut : **NON VÉRIFIÉ** pour tout comportement réel.
+- ❌ **Le code réellement en service chez Google n'a pas été vu** → **INCONNU** (I-01). La version
+  en ligne peut différer de celle auditée ici. **C'est particulièrement gênant en sécurité** : une
+  correction non redéployée ne protège personne.
+- ❌ **Les réglages de publication de la Web App n'ont pas été vus** → nouvelle inconnue **I-11**.
+- ❌ **La force réelle des deux mots de passe est inconnue** → nouvelle inconnue **I-12**. C'est
+  la donnée qui décide si R-019 est théorique ou sérieux.
+- ❌ **Les bibliothèques extérieures n'ont pas été analysées** (R-024) : sans version, il n'y a
+  rien à comparer à une liste de failles connues.
+- ❌ **Aucune certification de sécurité n'est prononcée** — et il n'y en aura jamais
+  (`CLAUDE.md` §10). Cet audit dit ce que j'ai trouvé, **pas** qu'il n'y a rien d'autre.
+- ✅ **Ce que j'ai réellement vérifié, en revanche** : l'historique Git **complet** (513
+  enregistrements, dépôt « dé-tronqué » pour l'occasion) ne contient **aucun mot de passe**.
+
+---
+
+## C.10 — Récapitulatif du domaine C
+
+| Réf | Problème | Priorité | Où ça fait mal | Difficulté de correction |
+|---|---|---|---|---|
+| **R-014** | La seule porte ouverte sans clé n'a **aucune limite** | **P0** | L'application peut être rendue inutilisable le jour J | **Faible** — le mécanisme existe déjà |
+| **R-015** | Regénérer les poules efface les scores, sans garde-fou serveur | **P1** | Perte de tous les scores du matin | **Faible** — le modèle existe à côté |
+| **R-016** | La réinitialisation efface tout, sans confirmation serveur ni sauvegarde | **P1** | Perte de toute la préparation d'un tournoi | Faible (confirmation) à moyenne (sauvegarde) |
+| **R-017** | Mots de passe partagés : aucune personne, aucune révocation, aucune trace | **P1** | Une contestation de score est inarbitrable | **Faible** (un prénom dans l'`Historique`) |
+| **R-018** | Les liens des clubs sont permanents et transférables | **P1** | Téléphones du jour J accessibles pour toujours | Faible à moyenne — **à tester avec soin** |
+| **R-019** | Garde-fou anti-devinette global et faible | P2 | Dépend entièrement de la force du mot de passe | Très faible |
+| **R-020** | Le contenu des courriels vient du navigateur | P2 | Message trompeur envoyé sous une adresse de confiance | Moyenne |
+| **R-021** | Quatre onglets sortent en entier, sans liste blanche | P2 | Une colonne ajoutée demain devient publique | Faible |
+| **R-022** | L'écran d'administration est public et référençable | P2 | Le mot de passe partagé est plus exposé | Très faible |
+| **R-023** | Aucune trace de qui consulte le carnet d'adresses | P2 | Aucune enquête possible après un incident | Faible à moyenne |
+| **R-024** | Quatre bibliothèques sans version ni origine | P2 | Impossible de savoir si une faille nous concerne | Très faible |
+| **R-025** | Tout tient à un réglage Google qu'aucun code ne protège | P2 | Tout le classeur deviendrait lisible | Nulle (habitude) |
+| **R-026** | Aucune politique de sécurité du contenu | P3 | Rien aujourd'hui | Moyenne (essais) |
+| **R-027** | Briques d'automatisation épinglées par étiquette mobile | P3 | Rien aujourd'hui | Très faible |
+
+**Total : 1 P0 · 4 P1 · 7 P2 · 2 P3 — soit 14 problèmes.**
+
+### Le fil rouge du domaine C
+
+**Le domaine A avait le sien** : l'application est excellente **avant** le coup d'envoi et rigide
+**après**.
+
+**Celui du domaine C tient en deux phrases** :
+
+1. **Il n'y a pas de personnes, seulement des mots de passe.** Sept des quatorze problèmes en
+   découlent : pas de retrait d'accès, pas de trace, pas d'arbitrage, pas d'enquête.
+2. **Les protections les plus importantes sont au bon endroit — sauf les trois plus
+   destructrices.** Le gel des réponses, le refus de réorganiser les poules, la revalidation des
+   relevés : tenus par le serveur. Effacer les scores, tout réinitialiser, limiter la porte
+   ouverte : **tenus par personne, ou par la seule page web**.
+
+### Si je devais ne corriger que trois choses
+
+1. **R-014** (mettre une limite sur la porte ouverte) — **c'est le seul point que je traiterais
+   en avance**, hors de l'ordre normal du chantier. Peu de travail, aucun risque pour le métier,
+   et c'est la seule faiblesse exploitable sans rien connaître ;
+2. **R-015 + R-016** ensemble (les deux gestes destructeurs, protégés côté serveur) — même
+   famille, même correction, et ils protègent contre l'erreur humaine bien plus que contre une
+   attaque. C'est le meilleur rapport bénéfice/risque de tout l'audit ;
+3. **R-017 point (1)** (un prénom dans l'`Historique`) — quelques lignes, et une contestation de
+   score devient arbitrable.
+
+**R-018 (les liens des clubs) vient juste après**, mais avec une consigne : **le traiter avec le
+domaine B, et le tester sérieusement.** Une expiration mal calculée couperait l'accès aux clubs
+*avant* le tournoi — un remède pire que le mal.
 
 ---

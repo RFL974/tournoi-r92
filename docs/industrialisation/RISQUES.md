@@ -5,8 +5,8 @@
 > L'**explication** de chaque problème (pourquoi, exemple concret, ce qui est proposé) vit dans
 > `AUDIT.md`. Ce fichier-ci **suit** ; `AUDIT.md` **explique**.
 
-**Dernière mise à jour** : 2026-08-04 (session 5, close)
-**Audits réalisés** : domaine A (métier). Les 7 autres domaines restent à faire.
+**Dernière mise à jour** : 2026-08-04 (session 6, close)
+**Audits réalisés** : domaine A (métier), domaine C (sécurité). Les 6 autres domaines restent à faire.
 
 ---
 
@@ -56,23 +56,26 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
-| P0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| P1 | **5** | 0 | **5** | 0 | 0 | 0 |
-| P2 | **7** | 0 | **2** | 0 | 0 | 0 |
-| P3 | **1** | 0 | 0 | 0 | 0 | 0 |
+| **P0** | **1** | 0 | 0 | 0 | 0 | 0 |
+| P1 | **9** | 0 | **5** | 0 | 0 | 0 |
+| P2 | **14** | 0 | **2** | 0 | 0 | 0 |
+| P3 | **3** | 0 | 0 | 0 | 0 | 0 |
+
+**Total : 27 problèmes** — domaine A (13) + domaine C (14).
 
 > ⚠️ **« Validé » signifie que la RÈGLE MÉTIER est tranchée par Romain — jamais que le code est
 > écrit.** Les **5 problèmes P1 du domaine A** ont leur règle décidée (D-011 à D-014), ainsi que
 > R-012 et R-013 (D-015). **Rien n'est corrigé. Aucun fichier de l'application n'a été modifié.**
 >
 > Le passage à **EN COURS** n'aura pas lieu avant la fin des 8 audits et la validation de
-> l'ÉTAPE 4 (`CLAUDE.md` §7).
+> l'ÉTAPE 4 (`CLAUDE.md` §7) — **sauf décision contraire de Romain sur R-014** (voir D-016,
+> en attente dans `DECISIONS.md`).
 
 > ⚠️ **Aucun problème n'est corrigé.** Tous sont au statut **IDENTIFIÉ** : ils ont été vus, rien
 > de plus. Aucun fichier de l'application n'a été modifié à ce jour.
 >
-> Ce tableau ne couvre que le **domaine A**. Les 7 autres domaines n'ont pas été audités : leur
-> absence de ligne ne signifie pas leur absence de problème.
+> Ce tableau ne couvre que les **domaines A et C**. Les 6 autres domaines n'ont pas été audités :
+> leur absence de ligne ne signifie pas leur absence de problème.
 
 ---
 
@@ -126,11 +129,47 @@ aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Rom
 **Destinataires suggérés** : Directeur EDR du Racing / Comité 92 — la même voie qui a résolu Q23.
 **Impact si une règle existe** : elle primerait sur D-011 (forfait) **et** sur D-015 (annulation).
 
+### Domaine C — Sécurité (session 6)
+
+| Réf | Problème | Priorité | Certitude | Statut | Détail |
+|---|---|---|---|---|---|
+| **R-014** | **La seule écriture ouverte sans clé (`mesureSponsors`) n'a aucune limite** : ni par appareil, ni par minute, ni par jour. Chaque envoi ajoute une ligne au classeur, rien ne les efface, et l'adresse du serveur est publique. Permet de saturer le classeur (10 M de cases) et les exécutions simultanées — donc de **bloquer la saisie des scores le jour J** | **P0** | **CERTAIN** (absence de limite constatée) · **PROBABLE** (conséquences chiffrées : plafonds Google non testés) | IDENTIFIÉ | `AUDIT.md` §C.2 |
+| **R-015** | **Regénérer les poules efface tous les scores, et le serveur ne vérifie jamais s'il y en a.** Le garde-fou (double confirmation + re-saisie de la clé) vit **uniquement dans le navigateur** — alors que « réorganiser les poules » refuse, lui, côté serveur | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.3 |
+| **R-016** | **La réinitialisation efface tout dès réception de la clé admin** : équipes, poules, matchs, catégories, horaires, contacts, dossier, et met affiche et photo de parking à la corbeille. Aucune confirmation serveur, aucune sauvegarde, aucun retour en arrière | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.4 |
+| **R-017** | **Deux mots de passe partagés, aucune notion de personne** : impossible de retirer l'accès à quelqu'un, aucune trace de l'auteur d'un score dans l'`Historique`, et un score validé peut être réécrit par toute personne ayant la clé SCORES. Une contestation est **inarbitrable** | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.5 |
+| **R-018** | **Les liens personnels des clubs sont des passe-partout permanents** : jamais expirés, transportés dans l'adresse de la page, transférables par simple renvoi de courriel. Ils ouvrent les **téléphones du référent et du responsable sécurité**. Aucune trace d'utilisation | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.6 |
+| **R-019** | **Garde-fou anti-devinette global et faible** : 30 échecs / 5 min, compteur non prolongé une fois le seuil atteint (≈ 8 600 essais/jour), mémoire non fiable à 100 %. Sans conséquence si les clés sont aléatoires — **décisif si elles sont des mots** (voir I-12) | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-020** | **Le contenu des courriels est fabriqué par le navigateur** et expédié tel quel sous l'identité Gmail du propriétaire. Le destinataire, lui, est toujours relu dans le classeur (bon point) — mais le message peut dire n'importe quoi | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-021** | **`Equipes`, `Poules`, `Matchs`, `Historique` sortent en entier, sans clé et sans liste blanche.** Rien de personnel aujourd'hui ; une colonne ajoutée demain serait publique **sans décision** | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-022** | **`admin.html` et `saisie.html` sont publics et indexables** — alors que les trois pages à jeton portent bien « ne pas indexer ». Ce n'est pas une protection manquante, c'est une exposition inutile | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-023** | **Aucune trace de qui consulte le carnet d'adresses**, qui se lit en une seule requête (emails **et** jetons compris). Ce que garde le journal Google est **INCONNU** (I-09) | P2 | CERTAIN (côté application) | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-024** | **Quatre bibliothèques extérieures sans version, sans origine, sans empreinte** (`pdf-lib`, `docxtemplater`, `pizzip`, `qrcode`, ~750 Ko). Hébergées localement (bon point), mais **impossible de savoir si une faille publiée les concerne** | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-025** | **Toute la confidentialité tient au réglage de partage du classeur**, qu'aucun code ne protège — l'identifiant, lui, est public dans le dépôt. Le classeur est bien privé aujourd'hui (I-06) | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.7 |
+| **R-026** | **Aucune politique de sécurité du contenu (CSP)** : rien ne limiterait les dégâts si un texte piégé passait un jour entre les mailles | P3 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.8 |
+| **R-027** | **Les briques d'automatisation GitHub sont épinglées par étiquette mobile** (`@v4`, `@v5`) et non par empreinte figée. Droits accordés minimaux et corrects | P3 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.8 |
+
+### Ce qui a été VÉRIFIÉ et s'est révélé sain (domaine C)
+
+À porter au crédit du code — et à ne pas casser en corrigeant le reste :
+
+| Point vérifié | Résultat |
+|---|---|
+| Mots de passe dans l'historique Git | ✅ **Aucun** — historique **complet** relu (513 enregistrements, dépôt dé-tronqué pour l'occasion) |
+| Injection de formule dans le classeur | ✅ Format « texte » forcé avant écriture, ~30 endroits |
+| Texte piégé dans les pages (XSS) | ✅ Échappement systématique, des deux côtés — **aucun oubli trouvé** (vérification par sondage, pas exhaustive) |
+| Liens des partenaires | ✅ Bornés à `http(s)://` — un lien piégé est refusé ; couleurs validées en hexadécimal |
+| Détournement de destinataire d'un courriel | ✅ Impossible — l'adresse est **toujours relue dans le classeur** |
+| Dépôt d'images | ✅ Liste blanche de formats + plafond 5 Mo, contrôlés avant écriture |
+| Relevés des partenaires | ✅ Entièrement revalidés (format des identifiants, bornes de tous les compteurs) |
+| Cloisonnement entre clubs | ✅ Un jeton n'ouvre que la fiche de son club ; **aucun email de club n'est jamais renvoyé** |
+| Jetons des clubs | ✅ Vrais identifiants aléatoires (`Utilities.getUuid()`) |
+| Messages d'erreur | ✅ Génériques côté visiteur, détail journalisé côté serveur |
+
 ### Domaines non audités
 
 | Domaine | Statut |
 |---|---|
-| C — Sécurité · B — RGPD · D — Tests · E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
+| B — RGPD · D — Tests · E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
 
 ### Modèle de fiche de problème
 

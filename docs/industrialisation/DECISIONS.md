@@ -532,6 +532,53 @@ c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
 
 ## DÉCISIONS EN ATTENTE DE ROMAIN
 
+### D-016 — Faut-il corriger R-014 (le P0) tout de suite, hors de l'ordre du chantier ?
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-04 |
+| **Session** | 6 |
+| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+
+**Problème posé**
+> L'audit de sécurité a trouvé **un problème P0** : `mesureSponsors`, la seule porte de
+> l'application ouverte **sans mot de passe**, n'a **aucune limite** — ni par appareil, ni par
+> minute, ni par jour. Chaque envoi ajoute une ligne au classeur, et rien ne les efface.
+>
+> En clair : n'importe qui peut envoyer ces relevés en boucle et, à terme, **remplir le classeur**
+> (limite Google : 10 millions de cases) ou **saturer le serveur**. Le jour du tournoi, cela
+> voudrait dire : la saisie des scores ne passe plus, la page publique ne se met plus à jour.
+>
+> Détail complet : `AUDIT.md` §C.2.
+
+**La règle du chantier**
+> `CLAUDE.md` §7 est clair : l'ÉTAPE 2 est un **audit**, on ne modifie rien ; les corrections
+> viennent à l'ÉTAPE 5, après les 8 audits et la validation de l'ÉTAPE 4. **Je m'y suis tenu :
+> aucun fichier de l'application n'a été modifié dans cette session.**
+
+**Question à Romain** — trois possibilités :
+> **(a)** **respecter la règle** : R-014 attend la fin des 8 audits, comme tout le reste ;
+> **(b)** **une exception ciblée** : on corrige R-014 seul, dans une modification isolée, puis on
+> reprend les audits là où ils se sont arrêtés ;
+> **(c)** **une exception élargie** : on corrige R-014 **et** R-015 + R-016 (les deux gestes
+> destructeurs sans garde-fou serveur), qui relèvent de la même logique de filet de sécurité.
+
+**Recommandation : (b).**
+> Trois raisons : c'est **le seul problème exploitable sans connaître aucun secret** ; il coûte
+> **peu** à corriger (le mécanisme de comptage nécessaire existe déjà dans le fichier) ; et il ne
+> touche **aucune fonctionnalité métier** — ni les scores, ni le classement, ni les clubs, ni le
+> planning.
+>
+> Je ne recommande **pas** (c) : R-015 et R-016 touchent à des actions que tu utilises réellement
+> (regénérer, réinitialiser). Les corriger demande de **tester** qu'on ne t'empêche pas de
+> travailler — donc du temps, donc pas dans la précipitation.
+>
+> **Et une précision d'honnêteté** : rien ne presse au sens « c'est en train d'arriver ». Aucun
+> tournoi réel n'a eu lieu, l'adresse n'est connue de personne. Ce que je dis, c'est que **la
+> porte est ouverte et qu'elle est bon marché à fermer** — pas qu'on frappe déjà à cette porte.
+
+---
+
 ### D-009 — Où atterrit la documentation quand une branche est imposée
 
 | Champ | Valeur |
