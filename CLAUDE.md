@@ -529,29 +529,63 @@ CLAUDE.md                    (ce fichier — les règles)
 docs/industrialisation/      (l'état réel du chantier)
 ```
 
-## 12.2 — Les 5 fichiers de suivi
+## 12.2 — Les 7 fichiers de suivi
 
 | Fichier | Rôle |
 |---|---|
 | `docs/industrialisation/ETAT.md` | **Où on en est** — synthétique, mis à jour à chaque session |
 | `docs/industrialisation/PLAN.md` | Le plan global : phases, chantiers, priorités, statuts, dépendances |
-| `docs/industrialisation/RISQUES.md` | Les problèmes trouvés, classés P0/P1/P2/P3, avec leur statut de correction |
+| `docs/industrialisation/RISQUES.md` | Le **registre** des problèmes trouvés, classés P0/P1/P2/P3, avec leur statut de correction |
 | `docs/industrialisation/DECISIONS.md` | Les décisions importantes et **pourquoi** elles ont été prises |
 | `docs/industrialisation/SESSIONS.md` | Le journal de chaque session de travail |
+| `docs/industrialisation/CARTOGRAPHIE.md` | Le produit de l'**ÉTAPE 1** : comment l'application est faite (créé en session 2) |
+| `docs/industrialisation/AUDIT.md` | Le produit de l'**ÉTAPE 2** : l'**explication** de chaque problème, domaine par domaine (créé en session 5). `RISQUES.md` **suit**, `AUDIT.md` **explique** |
+
+> Cette liste doit être tenue à jour : une session qui croit qu'il n'existe que 5 fichiers ne lira
+> jamais les deux autres.
 
 ## 12.3 — Démarrage d'une session
 
 Quand Romain dit simplement : **« On continue la phase d'industrialisation. »**
 
-1. lire `CLAUDE.md` ;
-2. lire `docs/industrialisation/ETAT.md` ;
-3. consulter `docs/industrialisation/PLAN.md` ;
-4. consulter ce qui est nécessaire dans `RISQUES.md`, `DECISIONS.md` et `SESSIONS.md` ;
-5. vérifier l'état Git ;
-6. identifier la prochaine étape logique ;
-7. présenter brièvement où on en est ;
-8. présenter l'objectif de la session ;
-9. **ne travailler que sur cet objectif**.
+### ÉTAPE 0 — SE METTRE À JOUR AVANT DE LIRE QUOI QUE CE SOIT
+
+> ⚠️ **Cette étape est la première, et elle n'est pas négociable.** Lire les fichiers de suivi d'une
+> copie périmée du dépôt, c'est lire un état du chantier qui n'existe plus.
+
+1. `git fetch origin` — récupérer ce qui existe sur GitHub ;
+2. `git status -sb` — et **lire la réponse en entier**.
+
+**La règle** : si la réponse contient le mot **« retard »** (`en retard de N`), la copie locale est
+**périmée**. Il faut se mettre à jour (`git pull` sur une branche propre) **avant** de lire le
+moindre fichier de suivi, et le **dire à Romain**.
+
+> ❌ **Le piège à connaître** : `git status` peut répondre « dépôt propre » alors que la copie a
+> plusieurs semaines de retard. « Propre » veut dire « aucune modification en cours », **pas**
+> « à jour ». C'est exact, et c'est trompeur.
+>
+> **Cette erreur a déjà coûté deux sessions** :
+> - au démarrage de la **session 6**, une pull request non fusionnée a fait croire que le travail
+>   des sessions 4 et 5 n'existait pas ;
+> - lors d'une tentative de **session 8**, un `main` local en retard de 28 commits a fait croire
+>   que seule la session 1 existait — un audit entier a été produit sur un état faux, puis jeté.
+>
+> Dans les deux cas, le symptôme est le même : **`ETAT.md` paraît beaucoup plus ancien qu'attendu**.
+> Si la date de `ETAT.md` ou le numéro de la dernière session ne correspond pas à ce que dit Romain,
+> **c'est presque toujours un problème de synchronisation, pas une contradiction de sa part.**
+> Se remettre à jour d'abord ; ne contredire Romain qu'après.
+
+### Puis, dans cet ordre
+
+3. lire `CLAUDE.md` ;
+4. lire `docs/industrialisation/ETAT.md` ;
+5. consulter `docs/industrialisation/PLAN.md` ;
+6. consulter ce qui est nécessaire dans `RISQUES.md`, `AUDIT.md`, `CARTOGRAPHIE.md`,
+   `DECISIONS.md` et `SESSIONS.md` ;
+7. identifier la prochaine étape logique ;
+8. présenter brièvement où on en est ;
+9. présenter l'objectif de la session ;
+10. **ne travailler que sur cet objectif**.
 
 > Ne pas recommencer inutilement une analyse déjà terminée.
 > Ne pas considérer automatiquement qu'une nouvelle étape doit être exécutée si une **validation
