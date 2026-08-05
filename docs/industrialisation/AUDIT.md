@@ -7,7 +7,7 @@
 > Le registre des problèmes (avec leur statut de correction) vit dans `RISQUES.md`.
 > Ce document-ci **explique** ; `RISQUES.md` **suit**.
 
-**Dernière mise à jour** : 2026-08-05 (session 9)
+**Dernière mise à jour** : 2026-08-05 (session 11)
 
 | Domaine | Nom | Statut |
 |---|---|---|
@@ -16,9 +16,9 @@
 | **B** | **RGPD / Protection des données** | ✅ **FAIT** (session 7) |
 | **D** | **QA / Tests** | ✅ **FAIT** (session 8) |
 | **E** | **UX / UI / Accessibilité** | ✅ **FAIT** (session 9) |
-| F | Performance | ⬜ À faire |
-| G | Architecture / Maintenabilité | ⬜ À faire |
-| H | Qualité du code | ⬜ À faire |
+| **F** | **Performance** | ✅ **FAIT** (session 10) |
+| **G** | **Architecture / Maintenabilité** | ✅ **FAIT** (session 11) |
+| H | Qualité du code | ⬜ À faire — **dernier domaine** |
 
 > **Ordre validé par Romain le 2026-08-04** : A → C → B → D → E → F → G → H (décision D-010).
 
@@ -4640,3 +4640,801 @@ Le travail ne part pas de zéro :
 La conception de Romain consiste donc à : **les animer**, **les rendre explicites**, et surtout
 **leur ajouter la troisième issue**.
 
+
+---
+
+# DOMAINE G — ARCHITECTURE / MAINTENABILITÉ
+
+> **Session 11 — 2026-08-05.** Aucun fichier de l'application n'a été modifié.
+>
+> **La question de ce domaine** : *si quelqu'un d'autre que Romain devait reprendre ce projet
+> demain — ou si Romain lui-même devait y revenir dans six mois — combien de temps lui faudrait-il
+> avant de pouvoir toucher au code sans rien casser ?*
+>
+> Ce n'est pas une question de goût. `CLAUDE.md` §11 en fait le deuxième objectif final du
+> chantier : *« compréhensible par un développeur extérieur »*.
+
+> ⚠️ **Rappel de la règle de prudence** (`CLAUDE.md` §6.G) : *ne pas refactorer massivement pour
+> obtenir une architecture théoriquement plus élégante*. Ce domaine **constate**, il ne propose
+> aucune réécriture. Chaque fois qu'une correction coûterait quelque chose ailleurs, ce coût est
+> dit — y compris quand il rend la correction déconseillée.
+
+---
+
+## G.0 — Le verdict en une phrase
+
+**Le code est en bien meilleur état que sa documentation.**
+
+C'est le résultat inverse de celui qu'on attend d'un projet construit avec une IA, et il mérite
+d'être dit franchement : les fondations techniques sont **saines** — le classeur n'est touché
+qu'à **8 endroits**, le cœur du calcul du planning (224 lignes) ne connaît même pas l'existence
+de Google, l'aiguillage des demandes est séparé du travail, et les commentaires expliquent le
+**pourquoi** et pas seulement le **quoi**, ce qui est rare.
+
+Le problème est ailleurs, et il est **mesurable** : **les trois documents qui servent de carte au
+projet décrivent une application qui n'existe plus.** `docs/architecture.md` documente **21 des 65
+demandes** que le serveur sait traiter — soit **68 % d'invisible**. Tout le parcours d'invitation
+des clubs, qui a occupé le dernier mois de travail, n'y figure nulle part. Et le fichier de tests
+— **3 711 lignes, 589 vérifications**, la seule preuve dont ce projet dispose — n'est cité par
+**aucun** document : ni le mode d'emploi du déploiement, ni celui de la passation, ni aucun des
+trois `README`.
+
+Ce n'est pas une remarque de confort. **Cette lacune a déjà coûté une preuve fausse** : en
+session 8, le fichier de tests présent chez Google était périmé, il a répondu « 573/573 OK », et
+ce résultat est entré au dossier comme une preuve de la correction du seul P0 du chantier. Il a
+fallu attendre le 2026-08-05 pour la refaire (**M-04**, **I-17**).
+
+**Aucun P0. Deux P1**, tous deux de la même famille : *ce qui est écrit ne correspond plus à ce
+qui existe.* **Sept P2**, dont aucun n'est urgent et dont **un seul appelle une décision de
+Romain** (**D-028** : faut-il découper le fichier serveur ?) — parce que c'est lui qui recopie le
+code à la main chez Google, et que cette décision-là lui coûterait du temps à chaque fois.
+
+---
+
+## G.1 — Ce qui est solide (et qu'il ne faut surtout pas casser)
+
+Ce paragraphe n'est pas de la politesse. Les points ci-dessous sont **la raison pour laquelle ce
+projet est réparable**, et plusieurs sont meilleurs que ce qu'on trouve dans des logiciels
+professionnels.
+
+### 1. Le classeur n'est ouvert qu'à huit endroits
+
+C'est le point le plus important du domaine, et il mérite une image.
+
+> Imagine un stade dont les clés du local technique seraient distribuées à trois cents bénévoles :
+> personne ne saurait plus qui a touché à quoi. Ici, c'est l'inverse : il n'existe que **huit
+> portes** vers le classeur, toutes situées à l'entrée du bâtiment. Tout le reste du code travaille
+> sur des données qu'on lui **apporte** — il ne va jamais les chercher lui-même.
+
+Le compte exact : `SpreadsheetApp.openById(...)` — l'instruction qui ouvre le classeur Google —
+apparaît **8 fois** dans **8 147 lignes**. Et **92 fonctions** reçoivent le classeur *en
+paramètre* au lieu de l'ouvrir.
+
+**Pourquoi ça compte concrètement** : c'est exactement ce qui rend possible les **589
+vérifications** de `Tests.gs`, qui tournent **sans aucun Google Sheet**. Un projet où les données
+sont lues n'importe où serait intestable. Celui-ci ne l'est pas.
+
+### 2. Le cœur du calcul ne connaît pas Google
+
+`calculerPlanning` — **224 lignes**, la fonction qui décide *quel match se joue à quelle heure sur
+quel terrain*, c'est-à-dire **le cœur métier du logiciel** — ne contient **aucune** référence au
+classeur. Elle reçoit des chiffres, elle rend un planning.
+
+> C'est la différence entre un cuisinier qui va lui-même faire les courses au milieu du service,
+> et un cuisinier à qui on apporte les ingrédients. Le second peut travailler ailleurs, et on peut
+> vérifier sa recette sans ouvrir un magasin.
+
+**Cette qualité ne doit être perdue sous aucun prétexte.** C'est le seul endroit du projet où une
+erreur produirait des **résultats sportifs faux** — priorité n° 1 de `CLAUDE.md` §11.
+
+### 3. L'aiguillage est séparé du travail
+
+`doGet` (lectures) et `doPost` (écritures) sont des **standards téléphoniques** : ils lisent le nom
+de la demande, et passent l'appel à une fonction nommée. Ils ne font eux-mêmes presque rien.
+
+```
+  "enregistrerScore"  →  enregistrerScore(classeur, requête)
+  "genererApresMidi"  →  genererApresMidi(classeur)
+```
+
+**Ce que ça permet** : ajouter une fonctionnalité ne demande pas de comprendre les 64 autres. Et
+les contrôles qui doivent s'appliquer *à toutes* les écritures (la clé, le verrou, le
+rafraîchissement du cache) sont écrits **une seule fois**, au standard — donc impossibles à
+oublier.
+
+### 4. Le fichier serveur est long, mais il est rangé
+
+**8 147 lignes**, oui. Mais **26 bandeaux de section** les découpent : `SÉCURITÉ (clés
+d'écriture)`, `SAISIE DES SCORES`, `CLASSEMENT DES POULES`, `PHASE APRÈS-MIDI`, `RÉPONSE EN
+LIBRE-SERVICE DU CLUB`…
+
+> Ce n'est pas un grenier : c'est un grand entrepôt avec des panneaux au-dessus des allées.
+> Chercher « où est calculé le classement » prend quelques secondes, pas une heure.
+
+### 5. Les commentaires expliquent *pourquoi*, pas *quoi*
+
+C'est la qualité la plus rare, et elle est ici **systématique**. Exemple réel, au-dessus du
+traitement des relevés de partenaires :
+
+> *« Si les relevés passaient par le chemin d'écriture normal, quelques centaines de spectateurs
+> suffiraient à faire attendre le marqueur au bord du terrain. Ils sortent donc ici, par la porte
+> la plus courte possible. »*
+
+Un commentaire qui dirait *« traite les relevés »* n'apprendrait rien. Celui-ci apprend **la
+raison**, donc il dit aussi **ce qu'il ne faut pas défaire**. Une session future qui « rangerait »
+ce code sans lire ce paragraphe casserait la saisie du jour J.
+
+### 6. `frontend/README.md` est un très bon document
+
+À contre-courant du reste (voir **R-073**), ce fichier est **à jour au 2026-08-04** et décrit
+réellement les 8 pages, leur rôle, ce qui les distingue, et jusqu'aux choix retirés (*« le modèle
+et les librairies restent dans le dépôt : plus rien ne les charge, mais tout est là si la fonction
+revient »*). **C'est le modèle à suivre pour réparer les autres.**
+
+### 7. Le journal des évolutions est tenu, et il est lisible
+
+`CHANGELOG.md` — **2 406 lignes** — n'est pas une liste de codes techniques. Chaque entrée est
+datée et **racontée** : *« Le bandeau du dossier club écrasait son accroche »*, suivi de
+l'explication du vrai coupable. C'est de la mémoire de projet utilisable, pas de la paperasse.
+
+### 8. Aucun appel cassé entre fichiers
+
+**Vérifié, pas supposé.** Les 26 fichiers du navigateur ont été analysés page par page : pour
+chacune des 7 pages, tous les noms appelés sont bien fournis par un fichier chargé sur cette page.
+Deux suspects sont ressortis de l'analyse automatique ; **les deux ont été ouverts à la main et se
+sont révélés faux** (une fonction locale, et un faux positif de lecture). **Aucun appel dans le
+vide.**
+
+---
+
+## G.2 — R-072 · La procédure de redéploiement du serveur est incomplète — et ça a déjà produit une preuve fausse *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+Le serveur du projet, c'est **deux fichiers** :
+
+| Fichier | Taille | Rôle |
+|---|---|---|
+| `backend/Code.gs` | 8 147 lignes | **le logiciel** — tout ce que le serveur sait faire |
+| `backend/Tests.gs` | 3 711 lignes | **la preuve** — 277 groupes de tests, **589 vérifications** |
+
+Les deux doivent être recopiés à la main dans l'éditeur Google, parce qu'il n'existe aucun
+mécanisme automatique (c'est un choix assumé, voir **R-081**).
+
+Or : **`Tests.gs` n'est cité par aucun document du projet.** Vérifié, un par un :
+
+| Document | Cite `Tests.gs` ? |
+|---|---|
+| `docs/deploiement.md` | ❌ **non** |
+| `docs/passation.md` | ❌ **non** |
+| `README.md` | ❌ **non** |
+| `backend/README.md` | ❌ **non** |
+| `frontend/README.md` | ❌ non *(normal, ce n'est pas son sujet)* |
+| `CLAUDE.md` | ❌ **non** |
+
+Et `docs/deploiement.md` §A, le document qu'on ouvre **quand il faut redéployer**, dit textuellement :
+
+> *« 1. Coller le contenu de `backend/Code.gs` dans l'éditeur Apps Script du Sheet. »*
+
+**Un seul fichier.** Quelqu'un qui suit cette procédure à la lettre laisse le fichier de tests
+dans l'état où il était — c'est-à-dire dans un état **inconnu**.
+
+Le même document contient deux autres erreurs constatées :
+
+- *« Lancer une fois `setupSheet()` → crée les **5 onglets** »* → il en crée **7** ;
+- il nomme la fonction **`assurerColonnePhase`**, qui **n'existe plus** (remplacée par
+  `assurerColonnesMatchs` ; le code lui-même le dit, ligne 6651 : *« Remplace l'ancienne
+  assurerColonnePhase() »*).
+
+### 2. Pourquoi c'est important
+
+Parce que **ce n'est pas une hypothèse : c'est arrivé.**
+
+Le déroulé exact, reconstitué et déjà inscrit au dossier (**M-04**, `AUDIT.md` §D.8) :
+
+1. En session 6, une faille (**R-014**, le **seul P0** du chantier) est corrigée, avec **16
+   nouvelles vérifications** ajoutées à `Tests.gs`.
+2. Romain recolle `Code.gs` chez Google et redéploie. **Il suit la procédure écrite — qui ne parle
+   que de `Code.gs`.**
+3. Il lance les tests : **« 573/573 OK »**. Ce résultat est inscrit au dossier comme **preuve n° 2**
+   que la correction fonctionne.
+4. En session 8, on rejoue les deux versions du fichier : celle **d'avant** la correction donne
+   **exactement 573**, celle **d'après** en donne **589**. Le « 573/573 » était donc le compte du
+   fichier **sans** les 16 vérifications de la correction. **La preuve ne prouvait pas ce qu'elle
+   prétendait prouver.**
+5. Il a fallu attendre le **2026-08-05** (**I-17**) pour que Romain recolle `Tests.gs` et obtienne
+   le vrai résultat : **589/589 OK**.
+
+> **Le point à retenir n'est pas que quelqu'un s'est trompé. C'est que la procédure écrite
+> conduisait mécaniquement à cette erreur.** Elle décrivait la moitié du geste.
+
+**Et le risque n'est pas refermé** : la prochaine session qui corrigera quelque chose au serveur
+retombera dans le même trou, parce que rien n'a changé dans `deploiement.md`.
+
+### 3. Exemple concret, côté Tournoi R92
+
+Imagine le samedi matin du tournoi. Un problème apparaît dans le calcul du classement d'une
+catégorie. Une correction est écrite, testée dans le dépôt : **591/591**.
+
+Romain ouvre `docs/deploiement.md` — le document fait pour ça — et suit les étapes. Il colle
+`Code.gs`. Il lance les tests, par acquit de conscience. Le journal répond **« 589/589 OK »**.
+
+Tout va bien ? **Non.** 589, c'est le compte de l'**ancien** fichier de tests : les deux nouvelles
+vérifications de la correction n'ont jamais tourné. Le chiffre vert est rassurant **et faux** —
+et il porte précisément sur le calcul qui décide du classement.
+
+> C'est la situation la plus dangereuse qui existe : **pas une panne, une fausse assurance.** Une
+> panne se voit. Une preuve fausse, non.
+
+### 4. Ce que je propose
+
+**Rien qui touche à l'application.** Trois corrections de texte :
+
+1. **Réécrire `docs/deploiement.md` §A** pour que le geste de redéploiement soit complet et
+   vérifiable :
+   - coller `Code.gs` **et** `Tests.gs` ;
+   - lancer `lancerTestsFFR` ;
+   - **vérifier deux nombres** — le total attendu (aujourd'hui **589**) et le nombre de lignes du
+     fichier collé (aujourd'hui **3 711**). C'est exactement le double contrôle qui a permis de
+     refermer M-04 le 2026-08-05 : il fonctionne, il faut l'écrire.
+2. **Corriger les deux erreurs de fait** du même document (« 5 onglets » → 7 ; retirer
+   `assurerColonnePhase`).
+3. **Ajouter `Tests.gs` à `docs/passation.md`** (inventaire de ce qui doit suivre) et à
+   `backend/README.md`.
+
+### 5. Impact
+
+| | |
+|---|---|
+| **Ce que ça change dans l'application** | **Rien.** Aucun fichier de `backend/` ou `frontend/` n'est touché |
+| **Risques de la correction** | **Aucun risque technique.** Le seul risque est d'écrire une procédure fausse à son tour — d'où la vérification par **deux nombres**, qui ne dépend d'aucune interprétation |
+| **Bénéfices** | Le prochain redéploiement produit une preuve **vraie**. Le double contrôle rend une preuve fausse **détectable en cinq secondes** |
+| **Fonctionnalités concernées** | Aucune |
+
+### 6. Ce que je conseille
+
+**Corriger maintenant** — dès l'ÉTAPE 3, et en tête de liste des corrections documentaires.
+
+Raison : c'est **cinq lignes de texte**, zéro risque, et ça referme la porte par laquelle le
+chantier est déjà tombé une fois. Tout le reste du domaine G peut attendre ; **pas celui-ci**,
+parce qu'il se déclenchera de nouveau au **prochain** redéploiement du serveur — c'est-à-dire
+très probablement à la prochaine correction validée.
+
+> ⚠️ **Ce que cette correction NE fait PAS** : elle ne garantit pas que le code en service chez
+> Google soit celui du dépôt (**I-01**, **M-02**). Ça, seul un dépôt automatisé le garantirait
+> (**R-081**, P3). Elle garantit seulement que **le geste manuel est décrit en entier**, et
+> qu'une erreur se voit.
+
+---
+
+## G.3 — R-073 · La carte du projet ne décrit plus le projet *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+Trois documents servent de **carte** à ce projet — ce sont ceux qu'on ouvre en premier :
+
+- `README.md` — « voilà ce qu'est ce projet »
+- `docs/architecture.md` — « voilà comment les morceaux se parlent »
+- `backend/README.md` — « voilà ce que fait le serveur »
+
+**Les trois décrivent l'application telle qu'elle était vers la mi-juillet.** Voici l'écart,
+mesuré :
+
+#### `docs/architecture.md` *(dernière modification réelle : 2026-07-20)*
+
+| Ce que le document décrit | La réalité constatée | Écart |
+|---|---|---|
+| **21 demandes** listées dans le tableau des actions | **65** (15 en lecture, 50 en écriture) | **44 invisibles — 68 %** |
+| **4 pages** web (`tournoi`, `admin`, `saisie`, `perfs`) | **8** | **4 pages absentes** |
+| 3 fichiers partagés (`config`, `commun`, `api`) | **26 fichiers** | — |
+| « Base de données (**5 onglets**) » | jusqu'à **12** onglets | — |
+
+**Et surtout** : le parcours qui a occupé tout le dernier mois de travail — **inviter un club, lui
+envoyer un lien personnel, recevoir sa réponse, lui fabriquer son dossier** (`invitation-club.html`,
+`reponse-invitation.html`, `dossier-club.html`, et les ~2 000 lignes de serveur qui vont avec) —
+**n'apparaît nulle part**. Ni les partenaires, ni le référentiel FFR, ni la demande d'autorisation,
+ni le Super Challenge.
+
+#### `README.md` *(2026-08-03, mais la section « structure » n'a pas suivi)*
+
+| Ce que le document liste | La réalité | 
+|---|---|
+| **6** fichiers JavaScript | **26** |
+| **2** feuilles de style | **6** |
+| **5** pages HTML | **8** |
+| `backend/` → **`Code.gs`** seul | `Code.gs` **+ `Tests.gs`** + `README.md` |
+| **9** documents dans `docs/` | **11** |
+| « Google Sheets (**5 onglets**) » | jusqu'à **12** |
+
+#### `backend/README.md` *(2026-07-23)*
+
+- liste **7** actions de lecture sur **15** ;
+- annonce que `setupSheet()` crée les « **6 onglets** » — il en crée **7** (l'onglet `Sponsors`
+  manque à l'appel).
+
+### 2. Pourquoi c'est important
+
+Il y a une objection évidente, et il faut la traiter d'abord : *« l'application marche, qui lit la
+documentation ? »*
+
+**Réponse : ce chantier la lit. Et il s'est déjà fait piéger.**
+
+Le chiffre de **« ~1000–1300 personnes »** susceptibles de consulter le direct est écrit dans
+`docs/architecture.md` (§ Scalabilité) **et** dans `docs/relais-cdn.md` — **sans source, dans les
+deux**. La session 10 s'est appuyée dessus et a conclu que la capacité du serveur (150 à 300
+écrans) était **très insuffisante**. C'est Romain qui a corrigé, en faisant remarquer que la
+question était mal posée (**I-19**) : ce qui compte, ce sont les **écrans allumés au même
+instant**, pas les personnes.
+
+> **Un chiffre non sourcé, recopié dans deux documents, a produit une conclusion trop pessimiste
+> dans un audit.** C'est exactement le mécanisme que `CLAUDE.md` §9 cherche à empêcher : une
+> hypothèse présentée comme un fait.
+
+Et il y a la conséquence de fond, celle qui touche à l'objectif du chantier : **aujourd'hui,
+personne d'autre que Romain ne peut reprendre ce projet** — non pas parce que le code serait
+illisible (il ne l'est pas, voir **G.1**), mais parce que **la carte mène à un autre endroit que
+le territoire**. Quelqu'un qui lirait `architecture.md` puis ouvrirait `Code.gs` ne
+reconnaîtrait pas ce qu'il a devant lui.
+
+### 3. Exemple concret, côté Tournoi R92
+
+`docs/passation.md` existe précisément pour organiser le transfert du projet vers les comptes de
+l'association (et §11 prévoit déjà la bascule de l'adresse d'envoi vers le compte de Jérémy).
+
+Imaginons ce transfert. La personne qui reçoit le projet ouvre `README.md`, lit *« 5 onglets :
+Equipes, Poules, Matchs, Config, Historique »*, ouvre le classeur — et y trouve **`ClubsInvites`,
+`Sponsors`, `Mesures`, `RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`, `RefFFR_Temps`**.
+
+Sept onglets dont le document ne dit rien. Dont **un qui contient des adresses email de contact**.
+
+> À ce moment précis, deux réactions sont possibles, et **les deux sont mauvaises** : croire que
+> ces onglets sont des restes inutiles (et les supprimer), ou ne plus faire confiance à aucun
+> document du projet (et tout redécouvrir à la main). La première fait perdre des données, la
+> seconde fait perdre des semaines.
+
+### 4. Ce que je propose
+
+**Aucune modification de l'application.** Et surtout : **ne pas tout réécrire**. Trois gestes
+proportionnés :
+
+1. **`docs/architecture.md` — remplacer le tableau des 21 actions par une liste complète des 65**,
+   et ajouter un schéma du parcours d'invitation des clubs (le grand absent). C'est le document
+   qui souffre le plus.
+2. **`README.md` — remettre la section « Structure du projet » en face de la réalité** : 8 pages,
+   26 fichiers JS, 6 feuilles de style, `Tests.gs`, 11 documents, le bon nombre d'onglets.
+3. **Poser une règle simple pour que ça ne recommence pas** : *un nouvel écran, une nouvelle
+   action serveur ou un nouvel onglet ⇒ la carte est mise à jour dans le même lot.* C'est déjà ce
+   qui se passe pour `CHANGELOG.md` et pour `frontend/README.md` — les deux documents qui, eux,
+   sont restés à jour. **La preuve que la discipline est tenable existe donc dans le dépôt.**
+
+> 💡 **Une idée à évaluer à l'ÉTAPE 3, pas maintenant** : la liste des 65 actions pourrait être
+> **fabriquée automatiquement** à partir du code, plutôt que recopiée à la main — une liste
+> recopiée redevient fausse, une liste engendrée ne le peut pas. Mais cela suppose de l'outillage
+> que le projet n'a pas (**R-081**), donc ce n'est pas la réponse d'aujourd'hui.
+
+### 5. Impact
+
+| | |
+|---|---|
+| **Ce que ça change dans l'application** | **Rien.** Uniquement des fichiers `.md` |
+| **Risques de la correction** | Faible, mais réel : **une carte fausse est pire qu'une carte absente**, parce qu'on lui fait confiance. Chaque affirmation réécrite doit être **vérifiée dans le code**, pas déduite. C'est du temps, pas du risque technique |
+| **Bénéfices** | Le projet redevient reprenable par quelqu'un d'autre — **objectif n° 2 de `CLAUDE.md` §11**. Et les sessions futures de ce chantier cessent de travailler sur des chiffres non sourcés |
+| **Fonctionnalités concernées** | Aucune |
+
+### 6. Ce que je conseille
+
+**Corriger avant la production** — c'est-à-dire à l'ÉTAPE 3, groupé avec **R-072**, mais **sans
+urgence le jour J**.
+
+**Pourquoi P1 et pas P2** — la question mérite d'être posée honnêtement, parce qu'un document
+périmé n'empêche aucun tournoi de se dérouler. Trois raisons la font pencher :
+
+1. **Le défaut a déjà produit une conclusion fausse dans ce chantier** (le 1 300 non sourcé). Ce
+   n'est pas un risque théorique.
+2. **L'écart n'est pas un détail** : 68 % du serveur n'est pas documenté. Ce n'est plus « un
+   document un peu vieux », c'est un document qui parle d'autre chose.
+3. **La passation est un projet écrit**, pas une hypothèse (`docs/passation.md` §11).
+
+> **Ce qui rendrait ce problème plus urgent encore** : savoir que quelqu'un reprendra
+> effectivement le code, et quand (**I-20**). Ce qui le rendrait moins urgent : savoir que Romain
+> restera seul dessus durablement. **La réponse appartient à Romain**, et elle ne change pas la
+> nature du problème — seulement son rang.
+
+---
+
+## G.4 — Les problèmes P2 *(réels, mais aucun n'est urgent)*
+
+### R-074 · Tout le serveur tient dans un seul fichier de 8 147 lignes — alors que Google en accepte plusieurs
+
+**Le constat.** `backend/Code.gs` : **8 147 lignes, 277 fonctions**. Google Apps Script accepte
+**plusieurs fichiers** dans un même projet (ils partagent le même espace, aucun assemblage n'est
+nécessaire) : **ce fichier unique est donc un choix, pas une contrainte**.
+
+Trois effets mesurés :
+
+- l'aiguillage des **lectures** (ligne 312) et celui des **écritures** (ligne 2784) sont séparés
+  par **2 470 lignes** — le référentiel FFR et la demande d'autorisation se sont installés entre
+  les deux ;
+- la **génération du planning** est éclatée en **trois blocs non contigus** (6687→7241,
+  7802→7948, 7949→8147), avec la *réinitialisation du tournoi* posée au milieu ;
+- la plus longue fonction, `assemblerDossierAutorisation`, fait **333 lignes** à elle seule.
+
+> Ce n'est pas un fouillis (les 26 bandeaux de section font leur travail, voir **G.1.4**). C'est
+> un entrepôt où trois allées portant le même nom sont à trois endroits différents.
+
+**⚠️ Et voici pourquoi je ne recommande PAS de le découper aujourd'hui.**
+
+Le serveur se dépose **à la main**, par copier-coller (**R-072**, **I-01**). Passer de 1 fichier à
+5 transformerait **un** collage en **cinq** — cinq occasions d'en oublier un, alors qu'on vient de
+voir qu'en oublier un a déjà produit une preuve fausse. **La correction aggraverait le problème le
+plus grave du domaine.**
+
+**Ce que je conseille** : **conserver pour plus tard**, et ne rouvrir la question que **si** le
+dépôt du serveur est un jour automatisé (**R-081**). C'est une **décision de Romain** (**D-028**),
+parce que c'est lui qui fait le collage. Reportée à l'ÉTAPE 3 (**D-024**).
+
+---
+
+### R-075 · Rien ne permet de dire quelle version tourne
+
+**Le constat.** Trois faits qui, ensemble, font un trou :
+
+| Fait | Vérifié |
+|---|---|
+| `CHANGELOG.md` — **2 406 lignes**, et **toutes** les entrées sont sous le titre **`## [Non publié]`** | ✅ |
+| **Aucune étiquette de version** dans l'historique Git (`git tag` ne renvoie rien) | ✅ |
+| Le serveur est déposé **à la main**, sans trace de ce qui a été déposé | ✅ |
+
+**Traduction.** Depuis le début du projet, **aucune version n'a jamais été « publiée »** au sens du
+journal. Tout est, formellement, « en cours ».
+
+> Un tournoi sans feuille de match : les scores existent, les gens s'en souviennent, mais rien ne
+> permet de dire *officiellement* ce qui s'est passé, ni de comparer deux journées.
+
+**Pourquoi ça compte.** C'est la **cause structurelle** de l'inconnue permanente **I-01** (« le
+code chez Google est-il celui du dépôt ? »). Aujourd'hui, la seule façon de répondre est de
+comparer un nombre de lignes sur une capture d'écran — c'est ce qui a été fait le 2026-08-05, et
+ça a marché, mais c'est de l'artisanat.
+
+**Ce que je conseille** : **plus tard, et c'est peu coûteux** — poser une étiquette de version au
+moment où le serveur est déposé, et l'écrire à la fois dans le journal et dans le code (une ligne
+`var VERSION = '...'` qui ressortirait dans la réponse de `ping`). Alors *demander* au serveur sa
+version deviendrait possible, et **I-01 se lèverait toute seule, à chaque fois**. À évaluer à
+l'ÉTAPE 3 avec **R-081**.
+
+---
+
+### R-076 · Les tests sont rangés par date d'écriture, pas par sujet — et leur point d'entrée porte un nom trompeur
+
+**Le constat.** `backend/Tests.gs` : **3 711 lignes**, **277 groupes de tests** appelés depuis une
+seule fonction. Ces groupes portent **31 préfixes** différents — et **27 d'entre eux sont des
+numéros de session** :
+
+```
+  testS5_…  testS6_…  testS7_…  testS8_…  testS9_…  testS10_… … testS28_…
+```
+
+Seuls **4** disent de quoi ils parlent : `testFFR_`, `testCfg_`, `testClubs_`, `testDossier_`.
+
+Et le point d'entrée s'appelle **`lancerTestsFFR`**, avec un en-tête qui annonce *« TESTS BACKEND —
+Conformité FFR »*. Or il lance **la totalité** des 589 vérifications : le classement, la saisie des
+scores, les clubs invités, les partenaires, le planning, le Super Challenge…
+
+**Pourquoi ça compte.**
+
+> Pour retrouver « les tests qui protègent le calcul du classement », il faut savoir **à quelle
+> session** ils ont été écrits. C'est une bibliothèque rangée par date d'achat.
+
+Deux conséquences concrètes :
+
+1. **Un test existant peut être réécrit sans qu'on s'en aperçoive** — on ne l'a pas trouvé, donc
+   on croit qu'il n'existe pas.
+2. **Le nom trompeur invite à créer un second point d'entrée.** Quelqu'un qui cherche « les tests
+   du classement » ne pensera pas à ouvrir une fonction nommée `…FFR`. Le jour où deux points
+   d'entrée coexistent, **plus personne ne sait quel nombre fait foi** — et on retombe exactement
+   dans **M-04**.
+
+**Ce que je conseille** : **plus tard, et par petits pas**. Ne **rien renommer en masse** (277
+groupes renommés = 277 occasions de casser l'appel et de perdre silencieusement un test). Deux
+gestes suffisants et sûrs :
+
+- **ajouter** un point d'entrée `lancerTousLesTests()` qui appelle simplement `lancerTestsFFR()`,
+  et le documenter (l'ancien nom continue de marcher — aucune régression possible) ;
+- **corriger l'en-tête** du fichier pour qu'il dise ce que le fichier fait vraiment.
+
+Le rangement par sujet, lui, se fera **naturellement** : les tests écrits à partir de maintenant
+prendront un préfixe de sujet (`testClassement_`, `testScore_`…), sans toucher aux anciens. C'est
+un changement **progressif et réversible**, comme l'exige `CLAUDE.md` §6.G.
+
+---
+
+### R-077 · L'administration est un anneau : 13 paires de fichiers qui s'appellent mutuellement
+
+**Le constat.** La page d'administration charge **19 fichiers JavaScript**. En cartographiant qui
+appelle quoi, on trouve **13 paires qui s'appellent dans les deux sens** :
+
+```
+  admin.js  ⇄  admin-reglages.js        admin-tableau-bord.js  ⇄  assistant.js
+  admin.js  ⇄  admin-equipes.js         admin-generation.js    ⇄  admin-tableau-bord.js
+  admin.js  ⇄  admin-terrains.js        admin-reglages.js      ⇄  admin-terrains.js
+  admin.js  ⇄  admin-invitations.js     assistant.js           ⇄  ecrans.js
+  … (13 au total)
+```
+
+`admin.js` à lui seul appelle du code de **9** autres fichiers, et **8** d'entre eux le rappellent.
+
+**Pourquoi ça compte.**
+
+> Les fichiers portent des noms qui promettent des pièces séparées — « les équipes », « les
+> terrains », « la génération ». Mais aucune cloison ne les sépare : ce sont des **zones d'une
+> seule grande pièce**, avec des noms peints au sol.
+
+Conséquence pratique : **aucun de ces fichiers ne peut être compris, déplacé ou testé seul.**
+C'est la raison de fond pour laquelle **R-043** (le code du navigateur n'a aucun test) n'est pas
+qu'une question de temps : il n'y a pas de morceau isolable à tester.
+
+**⚠️ Nuance importante, et elle est en faveur du code existant** : cette forme est **normale** pour
+des pages web sans outillage d'assemblage. Il n'existe pas de mécanisme, ici, pour dire « ce
+fichier a besoin de celui-là » — tout est chargé ensemble et se voit. **Ce n'est pas de la
+négligence, c'est la contrainte du terrain.**
+
+**Ce que je conseille** : **ne rien faire maintenant.** Un découpage propre demanderait le même
+outillage que le projet a délibérément refusé (`CLAUDE.md` §10 : ne pas ajouter de dépendance
+inutile). À reconsidérer **seulement** si l'écran d'administration devient difficile à modifier —
+ce qui n'est pas le cas aujourd'hui.
+
+---
+
+### R-078 · Tout le code du navigateur partage un seul espace de noms — et 7 noms y sont déjà en double
+
+**Le constat.** Les 26 fichiers du navigateur déclarent **600 fonctions** et **142 variables**
+dans un **espace unique et partagé** : tout ce qui est déclaré dans un fichier est visible — et
+écrasable — par tous les autres.
+
+**Sept noms de fonction sont déjà déclarés deux ou trois fois :**
+
+| Nom | Fichiers | Chargés ensemble ? |
+|---|---|---|
+| `nomEquipe` | `perfs.js`, `saisie.js`, `tournoi.js` | **non** |
+| `carteMatch` | `saisie.js`, `tournoi.js` | **non** |
+| `basculer`, `majHeure` | `perfs.js`, `tournoi.js` | **non** |
+| `estPublie` | `admin-infos-publication.js`, `tournoi.js` | **non** |
+| `categoriesPresentes` | `admin-terrains.js`, `tournoi.js` | **non** |
+| `urlAffiche` | `admin.js`, `commun-dossier.js` | **non** |
+
+**Et cinq variables**, dont `INTERVALLE_MS` (le délai de rafraîchissement : **15 s** dans
+`tournoi.js`, **60 s** dans `perfs.js`), `equipes`, `matchs`, `nomParEquipe`, `derniereSignature`.
+
+✅ **Aucune collision aujourd'hui — vérifié page par page**, et pas seulement supposé : les
+doublons vivent dans `tournoi.js`, `saisie.js` et `perfs.js`, trois fichiers que **jamais aucune
+page ne charge ensemble**.
+
+**Pourquoi ça compte quand même.** À cause de la **forme** que prendrait la panne.
+
+Pour les variables, la déclaration est faite avec `const` / `let`. Redéclarer un tel nom dans le
+même espace n'est pas une erreur discrète : c'est une **erreur de syntaxe**, qui **arrête le
+fichier entier** avant même qu'il commence.
+
+> Concrètement : le jour où quelqu'un voudrait afficher les scores en direct **dans la page
+> d'administration** (ce qui est une demande parfaitement naturelle) et chargerait `tournoi.js`
+> avec les autres, **la page d'administration deviendrait blanche**. Pas « un bouton en panne » :
+> **blanche**.
+
+**Ce que je conseille** : **plus tard, et de façon ciblée.** Pas de renommage général — **600
+fonctions renommées, c'est 600 occasions de casser un appel**. Le geste utile et proportionné est
+de **renommer les 12 doublons** (7 fonctions + 5 variables) en leur donnant un préfixe de page
+(`pubNomEquipe`, `saisieCarteMatch`…). Une douzaine de renommages, faciles à vérifier, et le piège
+disparaît définitivement. À grouper avec **R-043** (les tests du navigateur), qui protégerait le
+geste.
+
+---
+
+### R-079 · Côté navigateur, calculer et afficher sont le même geste — c'est ce qui rend R-043 difficile
+
+**Le constat.** Les 26 fichiers du navigateur contiennent **137** écritures directes dans la page
+(`innerHTML`) et **594** recherches d'élément à l'écran. Les fonctions les plus longues mélangent
+systématiquement les deux : `htmlClubEdition` (254 lignes), `planRemplissageAutorisation` (239),
+`afficherEquipes` (187) **décident** *et* **dessinent** dans le même mouvement.
+
+**C'est exactement l'inverse du serveur**, où `calculerPlanning` (224 lignes) décide sans jamais
+rien écrire (**G.1.2**).
+
+**Pourquoi ça compte.** C'est **la cause** de **R-043** (le code du navigateur n'a aucun test), et
+c'est ce que le domaine D ne pouvait pas dire : le problème n'est pas qu'on n'a pas écrit les
+tests, c'est qu'**il n'y a rien à tester séparément**. Pour vérifier qu'une règle est juste, il
+faudrait ouvrir une vraie page dans un vrai navigateur.
+
+Et c'est aussi ce qui **entretient R-044** (les 29 règles écrites deux fois) : quand la règle est
+enfermée dans le dessin, on ne peut pas la partager — on la recopie.
+
+**Ce que je conseille** : **plus tard, et jamais en bloc.** La bonne méthode est **opportuniste** :
+chaque fois qu'une règle métier doit être corrigée de toute façon, la **sortir** de la fonction
+d'affichage à ce moment-là — une petite fonction qui prend des chiffres et rend un résultat. Elle
+devient testable, et sa jumelle du serveur devient confrontable (**R-044**).
+
+> **À faire dès le premier chantier de correction du navigateur**, pas comme un chantier séparé.
+
+---
+
+### R-080 · 183 Ko sont publiés sur Internet à chaque envoi, sans que rien ne les charge
+
+**Le constat.** Le dossier publié (`frontend/`, **3,2 Mo**) contient trois éléments que **plus
+aucune page ne charge**, depuis le retrait de l'autorisation de droit à l'image le 2026-08-03 :
+
+| Fichier | Poids |
+|---|---|
+| `js/vendor/docxtemplater.min.js` | 93 Ko |
+| `js/vendor/pizzip.min.js` | 80 Ko |
+| `assets/autorisation-droit-image-template.docx` | 10 Ko |
+
+✅ **Ce n'est pas un oubli** : `frontend/README.md` le dit explicitement — *« plus rien ne les
+charge, mais tout est là si la fonction revient »*. **C'est un choix, assumé et écrit**, et c'est
+la bonne façon de faire.
+
+Deux remarques quand même :
+
+1. **Le coût réel est nul pour les spectateurs.** Un fichier publié mais jamais demandé n'est
+   jamais téléchargé : la page publique reste à **59 Ko** (mesuré au domaine F). Le coût est
+   uniquement du **stockage** et de la **place mentale**.
+2. **En revanche, `pizzip.min.js` annonce une licence qui n'existe pas** : sa première ligne
+   renvoie à `pizzip.min.js.LICENSE.txt`, **absent du dépôt**. Et aucune des 4 bibliothèques
+   extérieures (~750 Ko au total) ne porte de **numéro de version** ni d'**adresse d'origine** —
+   c'est **R-024**, déjà ouvert ; le domaine G confirme et y ajoute la licence manquante.
+
+**Ce que je conseille** : **ne rien supprimer.** Le choix de garder est bon. Deux gestes de
+rangement, à faire à l'occasion :
+
+- écrire **à côté de chaque bibliothèque** sa version et son adresse d'origine (referme **R-024**),
+  et récupérer le fichier de licence manquant ;
+- **décider** de la date de retrait des deux bibliothèques inutilisées — par exemple : si
+  l'autorisation de droit à l'image n'est pas revenue à la fin de la saison, on les enlève. Sans
+  échéance, « on garde au cas où » devient définitif.
+
+---
+
+## G.5 — Le problème P3 *(à garder pour plus tard)*
+
+### R-081 · Le serveur est déposé à la main, et c'est la racine de plusieurs autres problèmes
+
+**Le constat.** Il n'existe **aucun** outillage dans ce dépôt : pas de `package.json`, pas de
+vérificateur de syntaxe, pas d'étape d'assemblage, et surtout **aucun moyen d'envoyer le code chez
+Google autrement qu'en le sélectionnant et en le collant**.
+
+Cette absence est la **cause commune** de quatre problèmes déjà ouverts :
+
+| Elle cause… | Comment |
+|---|---|
+| **I-01 / M-02** (inconnue permanente) | rien ne relie le dépôt au code en service |
+| **R-072** (P1) | le geste manuel doit être décrit dans un document — et il l'était à moitié |
+| **R-075** | pas de version déposée, donc rien à comparer |
+| **R-043** (P1, domaine D) | rien ne s'exécute avant publication, donc rien ne peut bloquer une erreur |
+
+Il existe un outil officiel de Google (`clasp`) qui enverrait le code d'une seule commande, et
+rendrait « quelle version tourne ? » vérifiable.
+
+**⚠️ Et voici pourquoi c'est P3 et pas plus.** Installer cet outil demande d'installer **Node.js**
+et un gestionnaire de paquets sur l'ordinateur de Romain — c'est-à-dire exactement l'outillage que
+le projet a **délibérément** refusé (`README.md` : *« Aucun framework, aucune dépendance à
+installer : c'est volontairement simple et léger »*), et que `CLAUDE.md` §10 met en garde
+d'ajouter sans justification.
+
+> **La bonne question n'est pas technique** : est-ce que Romain veut, sur son ordinateur, un outil
+> qu'il devra maintenir — pour supprimer un geste manuel qu'il fait aujourd'hui **quelques fois
+> par mois** ?
+
+**Ce que je conseille** : **ne rien faire maintenant.** À rouvrir seulement si l'une de ces deux
+choses arrive : le rythme de redéploiement augmente nettement, **ou** une seconde erreur du type
+de M-04 se produit malgré la procédure corrigée par **R-072**. **Deux occurrences valent une
+règle ; une seule vaut une correction de texte.**
+
+---
+
+## G.6 — La question qui n'appartient qu'à Romain
+
+Le domaine G n'ouvre **qu'une seule décision**, et elle est reportée à l'ÉTAPE 3 (**D-024**).
+
+### D-028 — Faut-il découper le fichier serveur ?
+
+**Pourquoi c'est ta décision et pas la mienne** : parce que **c'est toi qui colles le code chez
+Google**. Un choix qui améliore la lisibilité pour un développeur et qui, en échange, te fait
+répéter cinq fois un geste que tu fais une fois aujourd'hui — ce n'est pas un arbitrage technique,
+c'est un arbitrage sur **ton temps** et sur **le risque d'oubli**.
+
+| | Garder un seul fichier | Découper en 4 ou 5 |
+|---|---|---|
+| **Ce que tu fais à chaque redéploiement** | 1 collage | **4 ou 5 collages** |
+| **Risque d'en oublier un** | nul | réel — et c'est **exactement** ce qui a produit M-04 |
+| **Confort pour s'y retrouver** | correct (26 sections) | meilleur |
+| **Réversible ?** | — | oui, mais le geste manuel reste |
+
+**Ma recommandation : garder un seul fichier**, et ne rouvrir la question que si le dépôt devient
+automatique (**R-081**). Le confort gagné ne vaut pas le risque ajouté sur le geste qui a déjà
+failli.
+
+---
+
+## G.7 — Ce que le domaine G ne peut PAS conclure
+
+`CLAUDE.md` §9 impose de distinguer ce qui est constaté de ce qui est déduit. Voici ce que cet
+audit **ne dit pas** :
+
+| Question | Pourquoi elle reste ouverte |
+|---|---|
+| **Le code en service chez Google est-il celui du dépôt ?** | **INCONNU permanent** (**I-01**, **M-02**). Tout ce qui précède décrit **le dépôt**. Le 2026-08-05 a fortement réduit le doute sur `Tests.gs` (589 + 3 711 lignes concordent), **pas** supprimé |
+| **Combien de temps faudrait-il réellement à quelqu'un pour reprendre ce projet ?** | **INCONNU** — cela ne se mesure pas en lisant le code. La seule façon de le savoir serait qu'une personne extérieure essaie |
+| **Le site vitrine `boutique-r92` a-t-il les mêmes défauts ?** | **HORS PÉRIMÈTRE** tant que **D-005** n'est pas tranchée. Or **R-066** (domaine F) y a déjà trouvé un problème mesuré : le logo de 229 Ko servi à la page publique **vit dans l'autre dépôt** |
+| **Le projet est-il « bien » ou « mal » architecturé dans l'absolu ?** | **Question mal posée, et volontairement écartée.** Un logiciel qui tient dans un Google Sheet et deux dépôts gratuits, tenu par une personne seule, n'a pas à ressembler à un logiciel d'entreprise. Le seul critère retenu ici est celui de `CLAUDE.md` §11 : **est-il reprenable ?** |
+| **Les 173 Ko de bibliothèques inutilisées contiennent-ils une faille connue ?** | **INCONNU** — aucune version n'est écrite (**R-024**), donc aucune vérification n'est possible sans identifier les fichiers d'abord |
+
+---
+
+## G.8 — Récapitulatif du domaine G
+
+### Les chiffres du domaine
+
+| Mesure | Valeur constatée |
+|---|---|
+| `backend/Code.gs` | **8 147 lignes**, **277 fonctions**, **26 sections nommées** |
+| `backend/Tests.gs` | **3 711 lignes**, **277 groupes**, **589 vérifications**, **31 préfixes dont 27 sont des n° de session** |
+| Ouvertures du classeur dans tout le serveur | **8** |
+| Fonctions recevant le classeur en paramètre | **92** |
+| Actions du serveur | **65** (15 lecture + 50 écriture) |
+| … dont documentées dans `architecture.md` | **21** — soit **68 % d'invisible** |
+| Documents citant `backend/Tests.gs` | **0** |
+| Frontend | **26 fichiers**, **17 712 lignes**, **600 fonctions globales**, **142 variables globales** |
+| Noms globaux en double | **12** (7 fonctions + 5 variables) — **0 collision effective** |
+| Paires de fichiers s'appelant mutuellement | **13** |
+| Écritures directes dans la page (`innerHTML`) | **137** |
+| Entrées de `CHANGELOG.md` sous « Non publié » | **toutes** (2 406 lignes) · **étiquettes Git : 0** |
+| Publié mais jamais chargé | **183 Ko** (2 bibliothèques + 1 modèle) |
+| Outillage (`package.json`, vérificateur, assemblage) | **aucun** |
+
+### Les problèmes
+
+| Réf | Problème | Priorité |
+|---|---|---|
+| **R-072** | La procédure de redéploiement du serveur est incomplète (`Tests.gs` cité nulle part) — **a déjà produit une preuve fausse (M-04)** | **P1** |
+| **R-073** | La carte du projet ne décrit plus le projet : **68 %** des actions du serveur, 4 pages sur 8 et tout le parcours d'invitation absents | **P1** |
+| **R-074** | 8 147 lignes en un seul fichier serveur, alors que Google en accepte plusieurs — **mais le découper aggraverait R-072** | P2 |
+| **R-075** | Aucune version, aucune étiquette : impossible de dire ce qui tourne | P2 |
+| **R-076** | Tests rangés par n° de session, et point d'entrée nommé `lancerTestsFFR` alors qu'il teste tout | P2 |
+| **R-077** | L'administration est un anneau : 13 paires de fichiers mutuellement dépendants | P2 |
+| **R-078** | Un seul espace de noms partagé ; 12 noms déjà en double, dont des `const`/`let` qui rendraient une page **blanche** | P2 |
+| **R-079** | Côté navigateur, calculer et afficher sont le même geste — **c'est la cause de R-043** | P2 |
+| **R-080** | 183 Ko publiés que rien ne charge (choix assumé) + licence annoncée mais absente | P2 |
+| **R-081** | Le serveur est déposé à la main — racine commune de I-01, R-072, R-075 et R-043 | P3 |
+
+**Total : 10 problèmes — 0 P0 · 2 P1 · 7 P2 · 1 P3.**
+
+### ⚠️ Pourquoi aucun P0 — et il faut le dire
+
+Un P0 supposerait une architecture qui **fait perdre des données**, **fausse un résultat sportif**
+ou **rend l'application inutilisable**. Rien de tel n'a été trouvé, et c'est cohérent avec
+**G.1** : le cœur du calcul est isolé, le classeur n'est touché qu'à huit endroits, et les 589
+vérifications passent.
+
+**Les deux P1 ne portent pas sur ce que l'application fait. Ils portent sur ce que le projet
+raconte de lui-même.** C'est une différence de nature, pas de gravité : un logiciel juste et mal
+décrit se répare ; un logiciel faux et bien décrit, non.
+
+### Ce que le domaine G apporte aux domaines déjà audités
+
+Ce domaine n'ajoute pas seulement des problèmes : il **explique** trois problèmes déjà connus.
+
+| Problème déjà ouvert | Ce que G en dit |
+|---|---|
+| **R-043** (domaine D — aucun test du navigateur) | Ce n'est pas un manque de temps : **il n'y a rien à tester séparément** (R-079). Calculer et afficher sont le même geste |
+| **R-044** (domaine D — 29 règles écrites deux fois) | Ce n'est pas de la négligence : **il n'existe aucun moyen de partager du code** entre Google et le navigateur (deux mondes, aucun assemblage). La bonne réponse n'est donc pas « arrêter de recopier », c'est **faire se confronter les deux copies** |
+| **M-04 / I-01** (une preuve fausse est entrée au dossier) | La cause n'est pas humaine : **la procédure écrite décrivait la moitié du geste** (R-072), et rien ne relie le dépôt au code en service (R-081) |
+
+### Ce qui attend Romain
+
+**Une seule chose, et elle n'est pas urgente** : **D-028** — faut-il découper le fichier serveur ?
+Ma recommandation est **non, pas tant que le dépôt est manuel**. Reportée à l'ÉTAPE 3 (**D-024**).
+
+**Une inconnue nouvelle, et elle ne bloque rien** : **I-20** — quelqu'un d'autre reprendra-t-il ce
+code, et quand ? Elle ne change pas la nature de **R-073**, seulement son rang de priorité.
+
+**Rien d'autre.** Les 10 problèmes de ce domaine sont des constats ; aucun n'appelle d'arbitrage
+métier, aucun ne touche à une règle du rugby, et **aucun ne demande de modifier l'application
+avant l'ÉTAPE 3**.

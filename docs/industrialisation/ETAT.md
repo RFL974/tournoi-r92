@@ -4,8 +4,8 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-05 (session 10, close — **domaine F audité ; I-18 levée le soir même**)
-**Commit de référence** : `48e3451` sur **`main`** — la session 10 part de là.
+**Dernière mise à jour** : 2026-08-05 (session 11, close — **domaine G audité**)
+**Commit de référence** : `1667696` sur **`main`** — la session 11 part de là.
 **Documentation uniquement — aucun fichier de l'application modifié**, aucun redéploiement requis.
 
 > ✅ **Tout le travail décrit ci-dessous est dans `main`.** Une session qui démarre depuis `main`
@@ -17,20 +17,21 @@
 
 ## 1. EN UNE PHRASE
 
-L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 a passé les trois quarts** : **six domaines sur huit
-sont audités** — le **A (métier)**, le **C (sécurité)**, le **B (protection des données)**, le
-**D (tests)**, le **E (expérience d'utilisation)** et le **F (performance)**, soit **71 problèmes**.
-Le domaine F, fait en session 10, dit une chose simple : **le travail de performance a été fait, et
-bien fait — puis arrêté juste avant la fin.** Ce qui tourne dans le navigateur est **rapide** (page
-prête en 527 ms, calculs à moins d'une milliseconde) ; ce qui tourne chez Google est **lent par
-nature** (2,3 s même pour une action qui n'exécute rien). Et les deux dispositifs prévus pour
-encaisser la foule sont, l'un **éteint** (le relais CDN, pourtant entièrement écrit), l'autre
-**programmé pour s'éteindre tout seul** au-delà d'environ 165 matchs — sans rien dire. **Aucun
-P0**, **deux P1**, qui ne font qu'un sujet : **personne ne sait ce qui se passe si trois cents
-parents ouvrent la page des scores en même temps.** Deux inconnues nouvelles (**I-18**, **I-19**),
-toutes deux levables **sans écrire une ligne de code**. **Une seule chose t'attend et n'est pas
-technique** : remplacer les deux mots de passe par des suites aléatoires (**D-017**, ce qui referme
-R-019). Il reste **2 domaines** à auditer.
+L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 touche au but** : **sept domaines sur huit sont
+audités** — le **A (métier)**, le **C (sécurité)**, le **B (protection des données)**, le
+**D (tests)**, le **E (expérience d'utilisation)**, le **F (performance)** et le
+**G (architecture)**, soit **81 problèmes**. Le domaine G, fait en session 11, rend un verdict
+inhabituel et rassurant sur le fond : **le code est en bien meilleur état que sa documentation.**
+Les fondations sont saines — le classeur Google n'est ouvert qu'à **8 endroits** dans 8 147 lignes,
+et le cœur qui décide du planning ne connaît même pas l'existence de Google. Le problème est
+ailleurs, et il est mesuré : **les trois documents qui servent de carte au projet décrivent une
+application qui n'existe plus** (68 % des actions du serveur n'y figurent pas, et tout le parcours
+d'invitation des clubs est absent) — et **le fichier de tests, qui est la seule preuve dont ce
+projet dispose, n'est cité par aucun document**. Ce n'est pas de la paperasse : **c'est exactement
+ce qui a produit la preuve fausse de M-04**. **Aucun P0**, **deux P1**, tous deux réparables **sans
+toucher une ligne de l'application**. **Une seule chose t'attend et n'est pas technique** :
+remplacer les deux mots de passe par des suites aléatoires (**D-017**, ce qui referme R-019). Il
+reste **1 domaine** à auditer : le **H (qualité du code)**.
 
 ---
 
@@ -40,7 +41,7 @@ R-019). Il reste **2 domaines** à auditer.
 |---|---|---|
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
-| 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | 🟡 **EN COURS** — domaines A (s. 5), C (s. 6), B (s. 7), D (s. 8) et E (s. 9) faits, **3 restants** |
+| 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | 🟡 **EN COURS** — A (s. 5), C (s. 6), B (s. 7), D (s. 8), E (s. 9), F (s. 10) et G (s. 11) faits, **1 restant** |
 | 3 | ÉTAPE 3 — Plan d'industrialisation priorisé | ⬜ À faire |
 | 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
 | 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
@@ -60,8 +61,8 @@ R-019). Il reste **2 domaines** à auditer.
 | **D** | **QA / Tests** | ✅ **CLOS** (session 8) — 10 problèmes, **0 P0**, 4 P1, 5 P2, 1 P3 · **+ M-04** (une preuve du dossier était fausse) · aucune décision de Romain requise pour constater |
 | **E** | **UX / UI / Accessibilité** | ✅ **CLOS** (session 9) — 10 problèmes, **0 P0**, 2 P1, 7 P2, 1 P3 · **I-05 levée** · écrans **réellement ouverts et mesurés** dans un navigateur · aucune décision de Romain requise pour constater |
 | **F** | **Performance** | ✅ **CLOS** (session 10) — 11 problèmes, **0 P0**, 2 P1, 7 P2, 2 P3 · **2 inconnues ouvertes** (I-18, I-19) · **42 appels réels chronométrés**, poids transféré mesuré, **25 lectures simultanées** essayées · aucune décision de Romain requise pour constater |
-| G | Architecture / Maintenabilité | ⬜ **Prochain** |
-| H | Qualité du code | ⬜ À faire |
+| **G** | **Architecture / Maintenabilité** | ✅ **CLOS** (session 11) — 10 problèmes, **0 P0**, 2 P1, 7 P2, 1 P3 · **1 décision** (D-028) · **1 inconnue** (I-20), ni l'une ni l'autre bloquante · relevés faits **sur le code réel**, et les 2 suspects de l'analyse automatique **ouverts à la main** avant d'être écartés |
+| H | Qualité du code | ⬜ **Prochain — dernier domaine** |
 
 > L'**ÉTAPE 1 (cartographie)** est terminée : volets A (session 2), B (session 3) et C (session 4),
 > tous dans `CARTOGRAPHIE.md`. Elle a produit les **39 points d'attention** qui servent de matière
@@ -124,29 +125,37 @@ Pour mémoire, les trois questions reportées :
 | **D-019** | **Que fait-on de la mesure des partenaires**, qui écrit déjà sur le téléphone de chaque spectateur ? Informer · demander l'accord · alléger | **Informer**, avec un moyen de dire non. C'est le seul qui améliore la situation sans dégrader la page des scores |
 | **D-020** | **Combien de temps garde-t-on quoi ?** Valider ou corriger le tableau des durées | **Valider le tableau, corriger ce qui te paraît faux** — c'est ton métier qui décide. Écrire les durées ne touche à aucun code |
 
-### Puis : session 11 — ÉTAPE 2, domaine G : l'architecture et la maintenabilité
+### Puis : session 12 — ÉTAPE 2, domaine H : la qualité du code — **LE DERNIER**
 
 *(toujours sans rien modifier)*
 
-C'est l'ordre validé par D-010 (**A → C → B → D → E → F → G → H**). Le domaine G regarde
-**comment le projet est rangé, et ce qu'il en coûterait à quelqu'un d'autre de le reprendre** :
-structure des fichiers, responsabilités, duplication, dépendances, conventions, documentation,
-dette technique.
+C'est l'ordre validé par D-010 (**A → C → B → D → E → F → G → H**). Le domaine H regarde le code
+**de près**, ligne à ligne, là où le domaine G le regardait **de loin** : fonctions trop longues,
+logique dupliquée, noms peu explicites, code mort, commentaires devenus faux, complexité inutile,
+gestion d'erreurs insuffisante.
 
-> ⚠️ **Règle de prudence rappelée par `CLAUDE.md` §6.G** : *ne pas refactorer massivement pour
-> obtenir une architecture théoriquement plus élégante*. Privilégier les changements
-> **progressifs et réversibles**.
+> ⚠️ **Règle rappelée par `CLAUDE.md` §6.H** : toute modification doit conserver **exactement** le
+> comportement métier attendu. Le domaine H **constate**, il ne nettoie pas.
 
-Ce qui l'alimente déjà, et c'est copieux : **un seul fichier de 8 147 lignes et 277 fonctions**
-pour tout le serveur ; **693 fonctions dans un espace commun** côté navigateur, dont **8 noms en
-double** ; **29 mentions de « miroir »** (des règles écrites deux fois, serveur et navigateur,
-que rien ne confronte — **R-044**) ; **aucun outillage** (pas de `package.json`, aucune étape de
-construction, aucune vérification automatique) ; **R-024** (bibliothèques sans version ni origine
-documentée, que le domaine F vient de chiffrer à 207 Ko pour la seule bibliothèque PDF) ; et
-**D-005**, la décision en attente sur le périmètre — que **R-066** rend maintenant concrète, un
-problème mesuré ici se corrigeant dans l'autre dépôt.
+Ce qui l'alimente déjà, et c'est copieux :
+
+- **les fonctions les plus longues sont repérées et mesurées** — côté serveur
+  `assemblerDossierAutorisation` (**333 lignes**), `calculerPlanning` (224), `evaluerConformiteFFR`
+  (179), `enregistrerSponsor` (159) ; côté navigateur `redimensionnerImage` (338),
+  `htmlClubEdition` (254), `planRemplissageAutorisation` (239) ;
+- **des commentaires déjà démontrés faux** : celui de `doGet` annonce une réponse « en quelques
+  millisecondes » alors que la mesure donne **1,65 s** (domaine F), et l'en-tête de `Tests.gs`
+  annonce des tests « de conformité FFR » alors qu'il teste tout le serveur (**R-076**) ;
+- **du code mort à qualifier** : le domaine G a trouvé **183 Ko publiés que rien ne charge**
+  (**R-080**) — reste à chercher l'équivalent *dans* le code ;
+- **les 29 « miroirs »** (**R-044**) : le domaine G a dit **pourquoi** ils existent ; le domaine H
+  doit dire **s'ils disent la même chose**.
 
 **Condition de démarrage** : instruction explicite de Romain.
+
+> 🏁 **Après le domaine H, l'ÉTAPE 2 sera terminée** et l'ÉTAPE 3 (le plan priorisé) pourra
+> s'ouvrir — en commençant, comme le prévoit **§10.4**, par reprendre une à une les inconnues puis
+> les décisions accumulées par **D-024**.
 
 ---
 
@@ -206,15 +215,15 @@ preuves, telles qu'inscrites au départ :
 
 ## 6. PROBLÈMES RESTANT À TRAITER
 
-**71 problèmes — 1 corrigé, 70 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
+**81 problèmes — 1 corrigé, 80 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
 le registre et `AUDIT.md` pour l'explication de chacun.
 
-| Priorité | Total | Domaine A (métier) | Domaine C (sécurité) | Domaine B (données) | Domaine D (tests) | Domaine E (expérience) | Domaine F (performance) |
-|---|---|---|---|---|---|---|---|
-| **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **TESTÉ, en service** *(une preuve remplacée, voir §5)* | — | — | — | — |
-| **P1** | **21** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* | R-028 personne n'est informé · **R-029 mesure des spectateurs** *(SUSPENDU — partenaires désactivés le 2026-08-05)* · R-030 rien ne s'efface | **R-041 classement/départage non testés** · **R-042 saisie du score non testée** · **R-043 le navigateur part en ligne sans contrôle** · **R-044 règles écrites en double, jamais confrontées** | **R-051 « Rafraîchir » échoue en silence** · **R-052 « Failed to fetch » affiché au bénévole** | **R-061 le relais anti-affluence est éteint** · **R-062 le cache s'éteint tout seul vers 165 matchs** |
-| **P2** | 41 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 | R-063 → R-069 |
-| **P3** | 8 | R-011 | R-026 · R-027 | R-040 | R-050 | R-060 | R-070 · R-071 |
+| Priorité | Total | Domaine A (métier) | Domaine C (sécurité) | Domaine B (données) | Domaine D (tests) | Domaine E (expérience) | Domaine F (performance) | Domaine G (architecture) |
+|---|---|---|---|---|---|---|---|---|
+| **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **TESTÉ, en service** *(une preuve remplacée, voir §5)* | — | — | — | — | — |
+| **P1** | **23** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* | R-028 personne n'est informé · **R-029 mesure des spectateurs** *(SUSPENDU — partenaires désactivés le 2026-08-05)* · R-030 rien ne s'efface | **R-041 classement/départage non testés** · **R-042 saisie du score non testée** · **R-043 le navigateur part en ligne sans contrôle** · **R-044 règles écrites en double, jamais confrontées** | **R-051 « Rafraîchir » échoue en silence** · **R-052 « Failed to fetch » affiché au bénévole** | **R-061 le relais anti-affluence est éteint** · **R-062 le cache s'éteint tout seul vers 165 matchs** | **R-072 la procédure de redéploiement décrit la moitié du geste** *(le mécanisme même de M-04)* · **R-073 la carte du projet décrit une autre application** |
+| **P2** | 48 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 | R-063 → R-069 | R-074 → R-080 |
+| **P3** | 9 | R-011 | R-026 · R-027 | R-040 | R-050 | R-060 | R-070 · R-071 | R-081 |
 
 **Risques de méthode** : M-01 · M-02 · M-03 *(largement levé en session 8)* · **M-04** *(nouveau —
 un compte de tests ne dit pas quelle version a été exécutée)*.
@@ -392,7 +401,40 @@ Comité 92. Sa réponse primerait sur D-011 **et** D-015.
 > tenu** (**R-067**) — l'attente est donc réelle et s'allonge quand plusieurs marqueurs valident
 > ensemble. Un bouton muet pendant quatre secondes est un bouton sur lequel on reclique.
 
-> ⚠️ Les 2 autres domaines (G, H) ne sont **pas** audités. L'absence de problème n'y signifie rien.
+### Domaine G — architecture et maintenabilité *(session 11)* — **10 problèmes, 0 P0, 2 P1**
+
+> 🟢 **Verdict inhabituel, et il faut le dire tel quel : le code est en bien meilleur état que sa
+> documentation.** Le classeur Google n'est ouvert qu'à **8 endroits** dans 8 147 lignes ;
+> `calculerPlanning` — **224 lignes**, le cœur qui décide quel match se joue où et quand — ne
+> contient **aucune** référence à Google ; l'aiguillage des demandes est séparé du travail ; et les
+> commentaires expliquent le **pourquoi**, ce qui est rare. C'est exactement ce qui rend possibles
+> les **589 vérifications sans aucun Sheet**.
+
+> ⚠️ **Les deux P1 ne portent pas sur ce que l'application FAIT, mais sur ce que le projet RACONTE
+> de lui-même.**
+>
+> **R-072** — la procédure de redéploiement décrit **la moitié du geste** : le serveur, c'est
+> `Code.gs` **et `Tests.gs`** (3 711 lignes, 589 vérifications), or `Tests.gs` n'est cité par
+> **aucun** des six documents du projet, et `deploiement.md` dit *« coller `Code.gs` »*, point.
+> **Ce n'est pas théorique : c'est le mécanisme exact de M-04**, la preuve fausse entrée au dossier
+> en session 6 et refaite seulement le 2026-08-05.
+>
+> **R-073** — la carte du projet ne décrit plus le projet : `architecture.md` documente **21 des
+> 65 actions** du serveur (**68 % d'invisible**) et 4 pages sur 8 ; **tout le parcours d'invitation
+> des clubs — le travail du dernier mois — n'y figure nulle part**. Là non plus ce n'est pas
+> théorique : le chiffre non sourcé de « 1 000-1 300 spectateurs », écrit dans deux documents, a
+> conduit la session 10 à une conclusion trop pessimiste, corrigée par Romain (**I-19**).
+
+> 🔗 **Le domaine G explique trois problèmes déjà ouverts** — c'est peut-être son apport principal :
+> **R-043** (aucun test du navigateur) n'est pas un manque de temps mais un manque de **prise** :
+> calculer et afficher sont le même geste (**R-079**) ; **R-044** (29 règles écrites deux fois)
+> n'est pas de la négligence mais une **contrainte** (aucun moyen de partager du code entre Google
+> et le navigateur) — donc la bonne réponse n'est pas « arrêter de recopier » mais **faire se
+> confronter les deux copies** ; et **M-04 / I-01** ont une cause commune : le dépôt manuel du
+> serveur (**R-081**).
+
+> ⚠️ **Le dernier domaine (H — qualité du code) n'est pas audité.** L'absence de problème n'y
+> signifie rien.
 
 La cartographie a par ailleurs relevé **39 points d'attention**, qui sont des **observations**, pas
 des verdicts. Ils seront classés à l'ÉTAPE 2 :
@@ -516,9 +558,14 @@ vérification supplémentaire.
 | **Couverture mesurée** (session 8) | **104 fonctions sur 277 traversées = 38 %** · 173 jamais exécutées · **110** reçoivent le classeur (hors de portée par construction) · **85 pures et non testées** = testables aujourd'hui sans rien changer |
 | Points d'entrée backend | `doGet` (ligne 313) = **15 actions de lecture** · `doPost` (ligne 2801) = **50 actions** |
 | Onglets du Google Sheet | jusqu'à **12** (7 créés par `setupSheet`, `Mesures` à la demande, 4 `RefFFR_*` remplis à la main) |
-| `frontend/` | 8 pages HTML, **26 fichiers JS = 17 712 lignes** (+ 4 bibliothèques dans `js/vendor/`), 6 feuilles CSS — **0 test** |
-| Frontend — code | **693 fonctions globales** dans un espace unique ; 8 noms en double, **sans collision effective aujourd'hui** |
-| Outillage | **aucun** `package.json`, aucune étape de construction, aucune vérification automatique |
+| `frontend/` | 8 pages HTML, **26 fichiers JS = 17 712 lignes** (+ 4 bibliothèques dans `js/vendor/`), 6 feuilles CSS — **0 test**. Dossier publié : **3,2 Mo**, dont **183 Ko que rien ne charge** (R-080) |
+| Frontend — code | **600 fonctions globales** (colonne 0) + 131 imbriquées, et **142 variables globales**, dans un espace unique ; **12 noms en double** (7 fonctions + 5 variables), **sans collision effective aujourd'hui — vérifié page par page** *(chiffre affiné en session 11 : le « 693 » des sessions précédentes mélangeait fonctions globales et imbriquées)* |
+| Frontend — dépendances internes | **13 paires de fichiers s'appellent mutuellement** ; `admin.js` appelle du code de **9** autres fichiers, dont **8** le rappellent (**R-077**) |
+| Backend — couplage au classeur | ✅ `SpreadsheetApp.openById` **8 fois** en 8 147 lignes · **92 fonctions** reçoivent le classeur en paramètre · `calculerPlanning` (224 l., le cœur métier) **n'y touche pas du tout** |
+| Backend — rangement | **26 bandeaux de section** dans `Code.gs` · `Tests.gs` : **277 groupes de tests**, **31 préfixes dont 27 sont des n° de session** (**R-076**) |
+| Documentation — état | `architecture.md` documente **21 des 65 actions** (**68 % d'invisible**) et 4 pages sur 8 · `README.md` : 6 fichiers JS sur 26 · **`Tests.gs` cité par 0 document sur 6** (**R-072**, **R-073**) |
+| Versions | **aucune** : `CHANGELOG.md` (2 406 lignes) est **intégralement** sous `## [Non publié]`, et **`git tag` ne renvoie rien** (**R-075**) |
+| Outillage | **aucun** `package.json`, aucune étape de construction, aucune vérification automatique, **aucun dépôt automatisé du serveur** (**R-081**) |
 | Publication du frontend | `.github/workflows/pages.yml` publie `frontend/` sur Internet **à chaque envoi sur `main`** — **sans lancer aucun test, pas même un contrôle de syntaxe** (R-043) |
 | Règles écrites **en double** (serveur + navigateur) | **29 mentions de « miroir »** dans le frontend, dont le **barème et le départage**. Rien ne vérifie qu'elles disent la même chose (R-044) |
 | `docs/` | 11 documents existants (architecture, déploiement, guide utilisateur, passation…) |
@@ -541,7 +588,23 @@ vérification supplémentaire.
 > l'ÉTAPE 3. Ce tableau est **mis à jour à la fin de chaque session d'audit** — c'est le seul
 > endroit où regarder pour savoir ce qui reste ouvert.
 
-**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine F).
+**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine **G**).
+
+> ✅ **Le domaine G ajoute UNE décision (D-028) et UNE inconnue (I-20) — et aucune des deux ne
+> bloque quoi que ce soit.**
+>
+> **D-028 — faut-il découper le fichier serveur de 8 147 lignes ?** C'est une décision de Romain
+> **parce que c'est lui qui colle le code chez Google** : découper en 5 fichiers transformerait
+> **un** collage en **cinq**, donc cinq occasions d'en oublier un — précisément ce qui a produit
+> **M-04**. **Ma recommandation : non, pas tant que le dépôt est manuel.**
+>
+> **I-20 — quelqu'un d'autre reprendra-t-il ce code, et quand ?** Elle ne change **pas la nature**
+> de **R-073** (la carte est fausse, que quelqu'un la lise ou non), seulement son **rang** de
+> priorité. `docs/passation.md` §11 prévoit déjà une bascule vers les comptes de l'association.
+>
+> ⚠️ **Et une chose que le domaine G n'ajoute pas mais confirme** : **R-072 est le seul problème
+> de tout le chantier qui se redéclenchera au prochain geste technique** — le prochain
+> redéploiement du serveur, quel qu'il soit. Cinq lignes de texte le referment.
 
 > ✅ **Le domaine F n'a ajouté AUCUNE décision en attente**, mais **deux inconnues — et les deux
 > ont bougé le soir même.**
@@ -588,6 +651,7 @@ vérification supplémentaire.
 | **D-018** | **Que dit-on aux personnes** dont on garde les informations ? *(trois textes courts)* | Session 7 | **R-028** (P1) |
 | **D-019** | **Que fait-on de la mesure des partenaires ?** Informer · demander l'accord · alléger | Session 7 | **R-029** (P1) — **suspendu** tant que les partenaires restent éteints |
 | **D-020** | **Combien de temps garde-t-on quoi ?** *(tableau de durées à valider)* | Session 7 | **R-030** (P1), **R-031**, **R-033**, **R-034** |
+| **D-028** | **Faut-il découper le fichier serveur ?** `backend/Code.gs` fait **8 147 lignes**, et Apps Script accepte plusieurs fichiers — c'est donc un choix. **Mais c'est toi qui colles le code chez Google** : 1 fichier → **5 collages**, soit cinq occasions d'en oublier un (le mécanisme même de **M-04**). **Ma recommandation : garder un seul fichier**, et ne rouvrir la question que si le dépôt devient automatique (**R-081**) | Session 11 | **R-074** |
 | **D-025** | **Quels tests écrit-on, et dans quel ordre ?** 4 lots proposés (`AUDIT.md` §D.9) : ① barème et départage ② une journée de bout en bout ③ contrôle de syntaxe à la publication ④ la saisie d'un score. **Ma recommandation si un seul devait être fait : le lot ①** — il est le moins cher, il protège ce qui compte le plus, et **D-014 est déjà décidée** : écrits après la modification, ces tests graveraient le nouveau comportement sans avoir jamais vu l'ancien | Session 8 | **R-041** (et le calendrier de D-014, D-011, D-012) |
 
 ### 10.3 — Inconnues à lever
@@ -603,6 +667,7 @@ vérification supplémentaire.
 | **I-15** | Le droit à l'image des enfants est-il géré ailleurs ? | **Question sortante** — voir §10.1 | **B** — **R-036** |
 | **I-16** | Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page de confidentialité ? | Vérification de Romain, ou extension du périmètre (**D-005**) | **B** — **D-018** |
 | ~~**I-18**~~ | ~~Combien de temps une demande occupe-t-elle réellement le serveur de Google ?~~ | ✅ **LEVÉE le 2026-08-05** — 128 exécutions analysées, capacité ≈ 150-300 spectateurs. Voir §8 et `AUDIT.md` §F.9 | ~~F~~ |
+| **I-20** | **Quelqu'un d'autre que Romain reprendra-t-il ce code, et quand ?** `docs/passation.md` §11 prévoit une bascule vers les comptes de l'association (dont l'adresse d'envoi, vers le compte de Jérémy) — mais cela concerne les **comptes**, pas forcément le **code** | **Réponse de Romain.** ⚠️ **Non bloquante** : elle ne change pas la nature de **R-073** (la carte est fausse, que quelqu'un la lise ou non), seulement son rang de priorité | **G** — **R-073** |
 | **I-19** *(reformulée le 2026-08-05)* | **Quelle part du public regarde son écran au MÊME INSTANT lors d'un pic** (fin de match, annonce du classement) ? ⚠️ **La question d'origine — « combien de spectateurs ? » — était mal posée** : Romain a montré qu'elle n'est pas prévisible (elle dépend des équipes présentes, des éducateurs, des parents sur place **et de ceux qui suivent depuis la maison ou le travail**). Elle est en revanche **calculable** : `Equipes` porte déjà `nb_joueurs` et `nb_educateurs`, remplies par les clubs à leur réponse | Le seul paramètre qui ne se déduit d'aucune donnée. La page se mettant en pause quand l'onglet n'est pas visible, seuls comptent les **écrans allumés sur la page** | **Observation le jour J** : regarder le journal « Exécutions » **pendant** le tournoi | **F** — **R-061**, **R-064** |
 
 ### 10.4 — Comment ce registre sera traité

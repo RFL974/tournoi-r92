@@ -5,8 +5,8 @@
 > L'**explication** de chaque problème (pourquoi, exemple concret, ce qui est proposé) vit dans
 > `AUDIT.md`. Ce fichier-ci **suit** ; `AUDIT.md` **explique**.
 
-**Dernière mise à jour** : 2026-08-05 (session 10, **complétée le soir même — I-18 levée**)
-**Audits réalisés** : domaine A (métier), domaine C (sécurité), domaine B (RGPD), domaine D (QA / tests), domaine E (UX / accessibilité), **domaine F (performance)**. Les 2 autres domaines (G, H) restent à faire.
+**Dernière mise à jour** : 2026-08-05 (session 11, **domaine G**)
+**Audits réalisés** : domaine A (métier), domaine C (sécurité), domaine B (RGPD), domaine D (QA / tests), domaine E (UX / accessibilité), domaine F (performance), **domaine G (architecture)**. **Un seul domaine reste : H (qualité du code).**
 **Correction réalisée** : R-014 (le P0), par exception validée — voir D-016. ⚠️ Une de ses trois preuves est tombée en session 8, ✅ **et a été refaite correctement le jour même** (`589/589 OK` chez Google) — voir la note sous le tableau de synthèse, `AUDIT.md` §D.8 et **M-04**.
 
 ---
@@ -58,12 +58,23 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
 | **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
-| P1 | **21** | 0 | **5** | 0 | 0 | 0 |
-| P2 | **41** | 0 | **2** | 0 | 0 | 0 |
-| P3 | **8** | 0 | 0 | 0 | 0 | 0 |
+| P1 | **23** | 0 | **5** | 0 | 0 | 0 |
+| P2 | **48** | 0 | **2** | 0 | 0 | 0 |
+| P3 | **9** | 0 | 0 | 0 | 0 | 0 |
 
-**Total : 71 problèmes** — domaine A (13) + domaine C (14) + domaine B (13) + domaine D (10)
-+ domaine E (10) + **domaine F (11)**.
+**Total : 81 problèmes** — domaine A (13) + domaine C (14) + domaine B (13) + domaine D (10)
++ domaine E (10) + domaine F (11) + **domaine G (10)**.
+
+> ⚠️ **Le domaine G n'a produit AUCUN P0, et il faut dire pourquoi.** Un P0 supposerait une
+> architecture qui **fait perdre des données**, **fausse un résultat sportif** ou **rend
+> l'application inutilisable**. Rien de tel : le cœur du calcul est isolé de Google, le classeur
+> n'est ouvert qu'à **8 endroits**, et les 589 vérifications passent.
+>
+> **Ses deux P1 ne portent pas sur ce que l'application FAIT, mais sur ce que le projet RACONTE de
+> lui-même** — la procédure de redéploiement (**R-072**) et la carte du projet (**R-073**). C'est
+> une différence de **nature**, pas de gravité : un logiciel juste et mal décrit se répare ; un
+> logiciel faux et bien décrit, non. Et **R-072 n'est pas théorique** : c'est le mécanisme exact
+> qui a produit **M-04**.
 
 > ⚠️➜✅ **UNE PREUVE DE R-014 EST TOMBÉE EN SESSION 8 — PUIS A ÉTÉ REFAITE LE JOUR MÊME.**
 >
@@ -122,8 +133,8 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 > ⚠️ **Un seul problème est réglé : R-014**, au statut **TESTÉ**, par exception validée (D-016).
 > Tous les autres sont au statut **IDENTIFIÉ** : ils ont été vus, rien de plus.
 >
-> Ce tableau ne couvre que les **domaines A, C, B, D et E**. Les 3 autres domaines n'ont pas été
-> audités : leur absence de ligne ne signifie pas leur absence de problème.
+> Ce tableau couvre les **domaines A, C, B, D, E, F et G**. Le domaine **H (qualité du code)** n'a
+> pas été audité : son absence de ligne ne signifie pas son absence de problème.
 
 > ⚠️ **Le domaine E n'a produit AUCUN P0, et il faut dire pourquoi.** Un P0 supposerait une
 > interface qui **fait perdre ou fausser des données**. Ce n'est pas le cas : les gestes
@@ -404,11 +415,44 @@ aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Rom
 | **Chargement en parallèle** | ✅ La page de saisie lance ses deux appels **en même temps** (`Promise.all`), et le second est **tolérant à l'échec** |
 | **Repli du relais** | ✅ Si le relais est allumé puis tombe, la page publique **retombe automatiquement** sur Apps Script — le code du repli est déjà écrit et lisible |
 
-### Domaines non audités
+### Domaine G — Architecture / Maintenabilité *(session 11)*
+
+| Réf | Problème | Priorité | Certitude | Statut | Détail |
+|---|---|---|---|---|---|
+| **R-072** | **La procédure de redéploiement du serveur décrit la moitié du geste — et cette lacune a DÉJÀ produit une preuve fausse.** Le serveur, c'est **deux** fichiers : `Code.gs` (8 147 lignes) **et `Tests.gs`** (3 711 lignes, 589 vérifications). Or `Tests.gs` n'est cité par **AUCUN** document : ni `deploiement.md`, ni `passation.md`, ni les trois `README`, ni `CLAUDE.md`. Et `deploiement.md` §A dit textuellement *« Coller le contenu de `backend/Code.gs` »* — **un seul fichier**. 🔗 **C'est le mécanisme exact de M-04** : en session 6 le `Tests.gs` de Google était périmé, a répondu « 573/573 » et cette preuve fausse est entrée au dossier ; il a fallu attendre le 2026-08-05 (**I-17**) pour la refaire. Le même document contient deux autres erreurs : « crée les **5 onglets** » (il en crée **7**) et la fonction **`assurerColonnePhase`**, qui **n'existe plus** | **P1** | **CERTAIN** *(les 6 documents ont été fouillés un par un ; l'incident est daté et documenté)* | IDENTIFIÉ — **à corriger en tête de l'ÉTAPE 3** : 5 lignes de texte, zéro risque, et le piège se redéclenchera au **prochain** redéploiement du serveur | `AUDIT.md` §G.2 |
+| **R-073** | **La carte du projet ne décrit plus le projet.** `docs/architecture.md` (2026-07-20) documente **21 des 65 actions** du serveur — **68 % d'invisible** — et **4 des 8 pages** ; **tout le parcours d'invitation des clubs** (invitation, réponse, dossier — le travail du dernier mois), les partenaires, le référentiel FFR, la demande d'autorisation et le Super Challenge **n'y figurent nulle part**. `README.md` liste **6 fichiers JS sur 26**, **2 feuilles de style sur 6**, **5 pages sur 8**, `backend/` sans `Tests.gs`, et « 5 onglets » là où il y en a jusqu'à **12**. `backend/README.md` : **7 actions de lecture sur 15**, « 6 onglets » pour 7. 🔗 **Le défaut a déjà produit une conclusion fausse dans ce chantier** : le chiffre non sourcé de **« ~1000-1300 spectateurs »**, écrit dans `architecture.md` **et** `relais-cdn.md`, a conduit la session 10 à une conclusion trop pessimiste — corrigée par Romain (**I-19**) | **P1** | **CERTAIN** *(chaque écart compté sur le code)* | IDENTIFIÉ — ⚠️ **une carte fausse est pire qu'une carte absente** : chaque affirmation réécrite devra être **vérifiée dans le code**, jamais déduite | `AUDIT.md` §G.3 |
+| **R-074** | **Tout le serveur tient dans un seul fichier de 8 147 lignes**, alors qu'Apps Script en accepte plusieurs : c'est un **choix**, pas une contrainte. L'aiguillage des lectures (l. 312) et celui des écritures (l. 2784) sont séparés par **2 470 lignes** ; la génération du planning est éclatée en **3 blocs non contigus** avec la *réinitialisation* posée au milieu ; la plus longue fonction fait **333 lignes**. ✅ **Atténué** : **26 bandeaux de section** rangent le fichier — ce n'est pas un fouillis | P2 | CERTAIN | IDENTIFIÉ — ⛔️ **NE PAS découper aujourd'hui** : le serveur se colle **à la main**, 1 fichier → 5 collages, soit **5 occasions d'en oublier un** — précisément ce qui a produit M-04. **La correction aggraverait R-072.** Décision de Romain : **D-028** | `AUDIT.md` §G.4 |
+| **R-075** | **Rien ne permet de dire quelle version tourne.** `CHANGELOG.md` : **2 406 lignes**, et **toutes** les entrées sous le titre `## [Non publié]` — aucune version n'a **jamais** été publiée. **Aucune étiquette Git** (`git tag` ne renvoie rien). Et le serveur est déposé à la main, sans trace. **C'est la cause structurelle de I-01** (« le code chez Google est-il celui du dépôt ? ») : aujourd'hui la seule réponse possible est de compter des lignes sur une capture d'écran | P2 | CERTAIN | IDENTIFIÉ — piste peu coûteuse : une ligne `var VERSION` renvoyée par `ping`, et **I-01 se lèverait toute seule à chaque fois**. À évaluer avec **R-081** | `AUDIT.md` §G.4 |
+| **R-076** | **Les tests sont rangés par date d'écriture, pas par sujet.** **277 groupes**, **31 préfixes** — dont **27 sont des numéros de session** (`testS5_`…`testS28_`). Seuls 4 disent de quoi ils parlent. Et le point d'entrée s'appelle **`lancerTestsFFR`** (en-tête : « TESTS BACKEND — Conformité FFR ») alors qu'il lance **la totalité** des 589 vérifications : classement, scores, clubs, partenaires, planning, Super Challenge. Conséquences : un test existant peut être réécrit sans qu'on le retrouve, et **le nom trompeur invite à créer un second point d'entrée** — le jour où deux coexistent, plus personne ne sait quel nombre fait foi, et **on retombe dans M-04** | P2 | CERTAIN | IDENTIFIÉ — ⛔️ **ne rien renommer en masse** (277 renommages = 277 occasions de perdre un test en silence). Geste sûr : **ajouter** `lancerTousLesTests()` qui appelle l'ancien, corriger l'en-tête, et laisser les **nouveaux** tests prendre un préfixe de sujet | `AUDIT.md` §G.4 |
+| **R-077** | **L'administration est un anneau : 13 paires de fichiers s'appellent mutuellement.** La page charge **19 fichiers** ; `admin.js` appelle du code de **9** autres, dont **8** le rappellent. Aucun de ces fichiers ne peut être compris, déplacé ou testé seul — **c'est la raison de fond pour laquelle R-043 (aucun test du navigateur) n'est pas qu'une question de temps**. ✅ **Nuance en faveur du code** : cette forme est **normale** sans outillage d'assemblage — il n'existe ici aucun moyen de dire « ce fichier a besoin de celui-là ». Ce n'est pas de la négligence, c'est la contrainte du terrain | P2 | CERTAIN *(cartographie automatique des appels, 26 fichiers)* | IDENTIFIÉ — **ne rien faire maintenant** : un découpage propre exigerait l'outillage que `CLAUDE.md` §10 met en garde d'ajouter | `AUDIT.md` §G.4 |
+| **R-078** | **Tout le code du navigateur partage un seul espace de noms** : **600 fonctions** et **142 variables** visibles — et écrasables — par tous. **12 noms sont déjà en double** : 7 fonctions (`nomEquipe`, `carteMatch`, `basculer`, `majHeure`, `estPublie`, `categoriesPresentes`, `urlAffiche`) et 5 variables (`INTERVALLE_MS` — **15 s** dans `tournoi.js`, **60 s** dans `perfs.js` —, `equipes`, `matchs`, `nomParEquipe`, `derniereSignature`). ✅ **Aucune collision aujourd'hui, vérifié page par page** (les doublons vivent dans `tournoi.js` / `saisie.js` / `perfs.js`, jamais chargés ensemble). ⚠️ **Mais la panne serait brutale** : les variables sont en `const`/`let`, dont la redéclaration est une **erreur de syntaxe qui arrête le fichier entier**. Le jour où quelqu'un voudrait les scores en direct **dans l'administration**, la page deviendrait **blanche** | P2 | CERTAIN | IDENTIFIÉ — ⛔️ **pas de renommage général** (600 fonctions = 600 occasions de casser un appel). Geste proportionné : **renommer les 12 doublons** avec un préfixe de page. À grouper avec **R-043** | `AUDIT.md` §G.4 |
+| **R-079** | **Côté navigateur, calculer et afficher sont le même geste** : **137** écritures directes dans la page (`innerHTML`) et **594** recherches d'élément ; les plus longues fonctions (`htmlClubEdition` 254 l., `planRemplissageAutorisation` 239 l., `afficherEquipes` 187 l.) **décident et dessinent** dans le même mouvement — **l'inverse exact du serveur**, où `calculerPlanning` (224 l.) décide sans rien écrire. 🔗 **C'est LA cause de R-043** (et ce que le domaine D ne pouvait pas dire) : le problème n'est pas qu'on n'a pas écrit les tests, c'est qu'**il n'y a rien à tester séparément**. Et c'est ce qui **entretient R-044** : une règle enfermée dans le dessin ne se partage pas, elle se recopie | P2 | CERTAIN (mesuré) | IDENTIFIÉ — ⛔️ **jamais en bloc.** Méthode **opportuniste** : chaque fois qu'une règle doit être corrigée de toute façon, la **sortir** de la fonction d'affichage à ce moment-là | `AUDIT.md` §G.4 |
+| **R-080** | **183 Ko sont publiés sur Internet à chaque envoi sans que rien ne les charge** : `docxtemplater.min.js` (93 Ko), `pizzip.min.js` (80 Ko) et `assets/autorisation-droit-image-template.docx` (10 Ko), orphelins depuis le retrait de l'autorisation de droit à l'image le 2026-08-03. ✅ **Ce n'est PAS un oubli** : `frontend/README.md` l'écrit noir sur blanc (*« plus rien ne les charge, mais tout est là si la fonction revient »*) — choix assumé, et le coût pour les spectateurs est **nul** (un fichier jamais demandé n'est jamais téléchargé ; la page publique reste à 59 Ko). ⚠️ En revanche `pizzip.min.js` **annonce une licence absente du dépôt** (`pizzip.min.js.LICENSE.txt`), et aucune des 4 bibliothèques (~750 Ko) ne porte de version ni d'origine — **confirme R-024** | P2 | CERTAIN | IDENTIFIÉ — **ne rien supprimer** ; écrire version + origine + licence, et **fixer une échéance** de retrait, sinon « au cas où » devient définitif | `AUDIT.md` §G.4 |
+| **R-081** | **Le serveur est déposé à la main, et c'est la racine commune de quatre problèmes.** Aucun outillage dans le dépôt : pas de `package.json`, pas de vérificateur, pas d'assemblage, **aucun moyen d'envoyer le code chez Google autrement qu'en le collant**. Cause commune de **I-01/M-02** (rien ne relie le dépôt au code en service), **R-072** (le geste manuel doit être décrit — et l'était à moitié), **R-075** (rien à comparer) et **R-043** (rien ne s'exécute avant publication). L'outil officiel de Google (`clasp`) réglerait tout cela d'une commande | P3 | CERTAIN | IDENTIFIÉ — **ne rien faire maintenant** : il exige d'installer Node.js sur l'ordinateur de Romain, soit **exactement** ce que le projet a délibérément refusé (*« aucune dépendance à installer »*). À rouvrir si le rythme de redéploiement augmente **ou** si une 2ᵉ erreur type M-04 survient malgré R-072 corrigé | `AUDIT.md` §G.5 |
+
+### Ce qui a été VÉRIFIÉ et s'est révélé sain (domaine G)
+
+> À lire **avant** la liste ci-dessus. Le domaine G aboutit à un verdict inhabituel : **le code est
+> en bien meilleur état que sa documentation.** Les deux P1 ne portent pas sur ce que
+> l'application **fait**, mais sur ce que le projet **raconte de lui-même**.
+
+| Point vérifié | Résultat |
+|---|---|
+| **Accès au classeur** | ✅ **8 ouvertures seulement** dans 8 147 lignes (`SpreadsheetApp.openById`), et **92 fonctions** reçoivent le classeur **en paramètre** au lieu d'aller le chercher. C'est exactement ce qui rend possibles les **589 vérifications sans aucun Sheet** |
+| **Le cœur du calcul métier** | ✅ `calculerPlanning` — **224 lignes**, la fonction qui décide quel match se joue où et quand — ne contient **aucune** référence à Google. **À ne perdre sous aucun prétexte** : c'est le seul endroit où une erreur produirait des résultats sportifs faux |
+| **Séparation aiguillage / travail** | ✅ `doGet` et `doPost` sont des **standards téléphoniques** : ils lisent le nom de la demande et passent l'appel. Les contrôles communs (clé, verrou, rafraîchissement du cache) sont donc écrits **une seule fois** — impossibles à oublier |
+| **Rangement du fichier serveur** | ✅ **26 bandeaux de section nommés** (`SAISIE DES SCORES`, `CLASSEMENT DES POULES`…). Long, mais pas en vrac |
+| **Qualité des commentaires** | ✅ **Rare et systématique** : ils expliquent le **pourquoi**, donc aussi **ce qu'il ne faut pas défaire**. Ex. : *« si les relevés passaient par le chemin d'écriture normal, quelques centaines de spectateurs suffiraient à faire attendre le marqueur au bord du terrain »* |
+| **`frontend/README.md`** | ✅ **À jour (2026-08-04) et excellent** — décrit les 8 pages, leur rôle, et jusqu'aux choix retirés. **C'est le modèle pour réparer R-073**, et la preuve que la discipline est tenable dans ce dépôt |
+| **`CHANGELOG.md`** | ✅ Tenu, daté et **raconté** en langage clair — de la mémoire de projet utilisable, pas de la paperasse *(voir toutefois R-075 sur l'absence de version)* |
+| **Appels entre fichiers du navigateur** | ✅ **Aucun appel cassé.** Les 26 fichiers ont été confrontés page par page ; **2 suspects** sont ressortis de l'analyse automatique et **les 2 ont été ouverts à la main et se sont révélés faux** (une fonction locale, un faux positif de lecture) |
+| **Feuille de style des partenaires** | ✅ `sponsors.css` est partagée par la page publique, l'admin et le dossier club : **un seul endroit par emplacement**, ce qui garantit que l'aperçu admin montre ce que le club recevra. Choix délibéré et documenté |
+
+### Domaine non audité
 
 | Domaine | Statut |
 |---|---|
-| G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
+| H — Qualité du code | ⬜ **Non audité — dernier domaine.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) lui servent de matière première |
 
 ### Modèle de fiche de problème
 

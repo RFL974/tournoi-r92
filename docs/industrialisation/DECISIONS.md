@@ -935,6 +935,57 @@ conseils »*. Les quatre réserves ci-dessous ne sont donc **plus des réserves*
 
 ## DÉCISIONS EN ATTENTE DE ROMAIN
 
+### D-028 — Faut-il découper le fichier serveur de 8 147 lignes ?
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 11 |
+| **Statut** | ⏳ EN ATTENTE DE ROMAIN — **traitée à l'ÉTAPE 3** (D-024) |
+| **Débloque** | **R-074** (P2) |
+
+**Problème posé**
+> Tout le serveur tient dans **un seul fichier** : `backend/Code.gs`, **8 147 lignes**,
+> **277 fonctions**. Google Apps Script accepte pourtant **plusieurs fichiers** dans un même
+> projet — c'est donc un **choix**, pas une contrainte technique.
+>
+> Le fichier n'est pas en vrac (**26 bandeaux de section** le découpent), mais trois choses se
+> paient : l'aiguillage des lectures et celui des écritures sont séparés par **2 470 lignes** ;
+> la génération du planning est éclatée en **trois blocs non contigus** avec la *réinitialisation
+> du tournoi* posée au milieu ; et la plus longue fonction fait **333 lignes**.
+
+**Pourquoi c'est TA décision et pas la mienne**
+> Parce que **c'est toi qui colles le code chez Google**. Un choix qui améliore le confort d'un
+> développeur et qui, en échange, te fait répéter cinq fois un geste que tu fais une fois — ce
+> n'est pas un arbitrage technique, c'est un arbitrage sur **ton temps** et sur **le risque
+> d'oubli**.
+
+**Les deux options, honnêtement**
+
+| | Garder un seul fichier | Découper en 4 ou 5 |
+|---|---|---|
+| Ce que tu fais à chaque redéploiement | **1 collage** | **4 ou 5 collages** |
+| Risque d'en oublier un | nul | **réel — et c'est exactement ce qui a produit M-04** |
+| Confort pour s'y retrouver | correct (26 sections) | meilleur |
+| Réversible ? | — | oui, mais le geste manuel reste |
+
+**Ma recommandation : GARDER UN SEUL FICHIER**
+> Le confort gagné ne vaut pas le risque ajouté **sur le geste qui a déjà failli**. En session 6,
+> un fichier oublié au collage a produit une preuve fausse restée six sessions au dossier
+> (**M-04**). Multiplier par cinq le nombre de fichiers à coller multiplie par cinq les occasions
+> de recommencer.
+>
+> **La question se rouvrira d'elle-même** si le dépôt du serveur devient un jour automatique
+> (**R-081**, P3) : à ce moment-là, découper ne coûterait plus rien, et deviendrait la bonne idée.
+
+**Ce qu'il ne faut PAS conclure de cette recommandation**
+> Que le fichier est bien comme il est. Il est **trop long**, c'est constaté. Simplement, la
+> correction disponible aujourd'hui coûte plus cher que le problème — et `CLAUDE.md` §6.G
+> l'annonce : *ne pas refactorer massivement pour obtenir une architecture théoriquement plus
+> élégante*.
+
+---
+
 ### D-025 — Quels tests écrit-on, et dans quel ordre ?
 
 | Champ | Valeur |

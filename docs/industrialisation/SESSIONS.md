@@ -1967,3 +1967,162 @@ d'inventer un chiffre. Ce qui la remplace :
 > question n'était pas *« combien de monde ? »* mais *« combien d'écrans allumés au même
 > instant ? »* — et c'est la connaissance métier de Romain, pas la mesure, qui l'a fait
 > apparaître.
+
+---
+
+## SESSION 11 — 2026-08-05 · ÉTAPE 2, domaine G : l'architecture et la maintenabilité
+
+**Objectif** : auditer le domaine **G** (architecture / maintenabilité), **septième** des huit dans
+l'ordre **D-010**. **Aucun fichier de l'application modifié.** Documentation uniquement.
+
+### 1. Point de départ
+
+`git fetch origin` puis `git status -sb` → **`## main...origin/main`**, aucun retard. La copie
+locale était **réellement** à jour (et pas seulement « propre » — c'est le piège que `CLAUDE.md`
+§12.3 décrit, et qui a déjà coûté deux sessions).
+
+**Commit de départ** : `1667696` sur `main` (fusion de la PR **#180**, session 10).
+
+### 2. La question posée au domaine G
+
+Pas « ce code est-il élégant ? » — question sans intérêt pour ce projet. Mais :
+
+> **Si quelqu'un d'autre que Romain devait reprendre ce projet demain — ou si Romain lui-même
+> devait y revenir dans six mois — combien de temps lui faudrait-il avant de pouvoir toucher au
+> code sans rien casser ?**
+
+C'est le deuxième objectif final du chantier (`CLAUDE.md` §11 : *« compréhensible par un
+développeur extérieur »*).
+
+### 3. Méthode : compter, puis vérifier à la main ce que le comptage prétend
+
+Trois familles de relevés, tous faits **sur le code réel du dépôt**, aucun sur une impression :
+
+1. **Structure et poids** — lignes, fonctions, sections, fichiers, poids publié, dépendances
+   extérieures, outillage, étiquettes Git.
+2. **Couplage** — un petit programme d'analyse a cartographié, pour les 26 fichiers du navigateur,
+   **qui appelle du code de qui**, puis **page par page**, quels noms sont réellement disponibles.
+3. **Documentation contre code** — chaque affirmation des documents « carte » (`README.md`,
+   `docs/architecture.md`, `backend/README.md`, `docs/deploiement.md`) a été **confrontée au code**,
+   pas relue.
+
+> ⚠️ **Un point de méthode qui compte, et qui a failli produire un faux constat.** L'analyse
+> automatique a signalé **2 appels de fonction « introuvables »** — ce qui, si c'était vrai,
+> vaudrait un défaut sérieux. **Les deux ont été ouverts à la main avant d'être écrits nulle part.
+> Les deux étaient faux** : l'un était une fonction déclarée **localement** dans la fonction
+> appelante (`majDossier`, `admin-infos-publication.js:510`), l'autre un faux positif de lecture.
+>
+> **Conclusion inscrite au dossier : aucun appel cassé** — et elle vaut parce qu'elle a été
+> vérifiée, pas parce qu'un programme l'a dite. Un audit qui aurait publié la sortie brute de
+> l'outil aurait inventé deux bugs.
+
+### 4. Ce qui a été trouvé — 10 problèmes, 0 P0, 2 P1, 7 P2, 1 P3
+
+**Le verdict est inhabituel, et il est dans ce sens-là : le code est en bien meilleur état que sa
+documentation.**
+
+**Ce qui est solide** (détail : `AUDIT.md` §G.1) — et qui explique le « 0 P0 » :
+
+- le classeur Google n'est ouvert qu'à **8 endroits** dans 8 147 lignes ; **92 fonctions** le
+  reçoivent en paramètre au lieu d'aller le chercher ;
+- `calculerPlanning` — **224 lignes**, le cœur qui décide quel match se joue où et quand —
+  **ne contient aucune référence à Google** ;
+- `doGet` / `doPost` sont des **standards téléphoniques** : les contrôles communs (clé, verrou,
+  cache) sont donc écrits **une seule fois** ;
+- **26 bandeaux de section** rangent `Code.gs` ; les commentaires expliquent le **pourquoi** ;
+- `frontend/README.md` est **à jour et excellent** — **la preuve que la discipline est tenable
+  dans ce dépôt**, et le modèle pour réparer les autres.
+
+**Les deux P1 ne portent pas sur ce que l'application FAIT, mais sur ce que le projet RACONTE de
+lui-même** :
+
+| Réf | Problème | Ce qui le rend P1 et non P2 |
+|---|---|---|
+| **R-072** | La procédure de redéploiement décrit **la moitié du geste** : `Tests.gs` (3 711 lignes, 589 vérifications) n'est cité par **aucun** des 6 documents, et `deploiement.md` dit *« coller `Code.gs` »*, point | **Ce n'est pas théorique : c'est le mécanisme exact de M-04.** Et il se **redéclenchera au prochain redéploiement** |
+| **R-073** | La carte du projet ne décrit plus le projet : **21 des 65 actions** documentées (**68 % d'invisible**), 4 pages sur 8, tout le parcours d'invitation des clubs absent | **Un chiffre non sourcé de ces documents a déjà produit une conclusion fausse dans ce chantier** (le « 1 000-1 300 », session 10, corrigé par Romain → I-19) |
+
+**Les sept P2** : un seul fichier serveur de 8 147 lignes (**R-074**) · aucune version, aucune
+étiquette Git (**R-075**) · tests rangés par n° de session (**R-076**) · l'administration est un
+anneau de 13 paires (**R-077**) · 12 noms globaux en double (**R-078**) · calculer et afficher sont
+le même geste (**R-079**) · 183 Ko publiés que rien ne charge (**R-080**).
+**Le P3** : le dépôt manuel du serveur (**R-081**).
+
+### 5. L'apport principal : le domaine G **explique** trois problèmes déjà ouverts
+
+C'est peut-être ce qu'il faut retenir de cette session. Elle n'ajoute pas seulement des problèmes,
+elle donne la **cause** de trois autres :
+
+| Déjà ouvert | Ce que G en dit |
+|---|---|
+| **R-043** — aucun test du navigateur | Pas un manque de temps : **il n'y a rien à tester séparément**. Calculer et afficher sont le même geste (**R-079**) |
+| **R-044** — 29 règles écrites deux fois | Pas de la négligence : **aucun moyen de partager du code** entre Google et le navigateur. Donc la bonne réponse n'est pas « arrêter de recopier », c'est **faire se confronter les deux copies** |
+| **M-04 / I-01** — une preuve fausse au dossier | Pas une erreur humaine : **la procédure écrite décrivait la moitié du geste** (**R-072**), et rien ne relie le dépôt au code en service (**R-081**) |
+
+### 6. Une règle transversale qui ressort de ce domaine
+
+Quatre des dix problèmes (**R-074**, **R-076**, **R-077**, **R-081**) ont la même forme : *le
+défaut est réel, et la correction évidente est pire que le défaut.*
+
+- découper le serveur en 5 fichiers = **5 collages manuels** au lieu d'un → **aggrave R-072** ;
+- renommer 277 groupes de tests = **277 occasions d'en perdre un en silence** ;
+- découper l'administration = exige l'outillage que `CLAUDE.md` §10 déconseille d'ajouter ;
+- installer `clasp` = installer Node.js sur l'ordinateur de Romain, soit exactement ce que le
+  projet a **délibérément** refusé.
+
+> C'est `CLAUDE.md` §6.G appliqué à la lettre : **progressif et réversible, ou rien.** Ces quatre
+> problèmes sont donc inscrits **avec leur contre-indication**, et `PLAN.md` porte désormais une
+> ligne « ⛔️ Ce qui NE doit PAS être groupé » pour empêcher qu'une future session les traite
+> ensemble en croyant bien faire.
+
+### 7. Ce qui a été VÉRIFIÉ, et comment
+
+| Affirmation | Comment elle a été établie |
+|---|---|
+| « 65 actions, 21 documentées » | Comptées dans `doGet` (15) et `doPost` (50), puis confrontées une à une au tableau de `architecture.md` |
+| « `Tests.gs` cité par 0 document » | Recherche exhaustive dans les 6 documents concernés |
+| « `assurerColonnePhase` n'existe plus » | Recherche dans `Code.gs` : 0 définition ; le code lui-même le dit (l. 6651) |
+| « `setupSheet` crée 7 onglets » | Lu dans la fonction (l. 138-151) |
+| « aucune collision de noms aujourd'hui » | Les 7 pages HTML ont été dépouillées ; les doublons vivent dans 3 fichiers **jamais chargés ensemble** |
+| « aucun appel cassé » | Analyse automatique **puis vérification manuelle des 2 suspects** — voir §3 |
+| « 8 ouvertures du classeur » | `SpreadsheetApp.openById` compté et localisé (l. 139, 318, 336, 462, 808, 1649, 2828, 2844, 2865 — dont 2 dans le même chemin) |
+| « aucune étiquette Git » | `git tag` → vide |
+| « 183 Ko publiés que rien ne charge » | Chaque bibliothèque cherchée dans les 8 pages HTML et les 26 fichiers JS |
+
+**Chiffre corrigé** : les sessions précédentes annonçaient « **693 fonctions** » côté navigateur.
+Le comptage précis donne **600 fonctions globales** (colonne 0) et **131 imbriquées** = 731
+déclarations. Le 693 mélangeait les deux catégories. `ETAT.md` §9 porte désormais la valeur exacte
+et la mention de l'affinage.
+
+### 8. Ce qui n'a PAS été fait
+
+- **Aucune modification de l'application.** Aucun fichier de `backend/` ou `frontend/` touché.
+- **Aucune documentation corrigée** — alors que les deux P1 sont précisément des corrections de
+  documentation, et qu'elles ne coûteraient presque rien. **C'est délibéré** : `CLAUDE.md` §7
+  interdit de sauter de l'audit à la modification, et **D-024** accumule tout jusqu'à l'ÉTAPE 3.
+  Corriger « puisque c'est facile » aurait été exactement le geste que le cadre interdit.
+- **Le site vitrine `boutique-r92` n'a pas été regardé** — hors périmètre tant que **D-005** n'est
+  pas tranchée.
+- **Le temps réel de reprise par une personne extérieure n'a pas été estimé** : cela ne se mesure
+  pas en lisant du code (voir `AUDIT.md` §G.7).
+
+### 9. Points ajoutés au registre
+
+- **D-028** — faut-il découper le fichier serveur ? *(décision de Romain, parce que c'est lui qui
+  colle le code ; recommandation : **non**, pas tant que le dépôt est manuel)* ;
+- **I-20** — quelqu'un d'autre reprendra-t-il ce code, et quand ? *(non bloquante : elle change le
+  **rang** de R-073, pas sa nature)*.
+
+### 10. Prochaine session recommandée
+
+**Session 12 — ÉTAPE 2, domaine H : la qualité du code. LE DERNIER.**
+
+Le domaine G a regardé le code **de loin** ; le domaine H le regarde **de près** : fonctions trop
+longues, logique dupliquée, noms peu explicites, code mort, commentaires devenus faux, gestion
+d'erreurs. Il démarre avec de la matière déjà repérée — les fonctions les plus longues sont
+mesurées, et **deux commentaires sont déjà démontrés faux** (celui de `doGet` sur les
+« millisecondes », l'en-tête de `Tests.gs` sur les tests « FFR »).
+
+> 🏁 **Après lui, l'ÉTAPE 2 est terminée**, et l'ÉTAPE 3 s'ouvre en reprenant une à une les
+> inconnues puis les décisions accumulées par **D-024** (`ETAT.md` §10.4).
+
+**Condition de démarrage** : instruction explicite de Romain.
