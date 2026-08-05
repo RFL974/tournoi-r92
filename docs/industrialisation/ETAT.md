@@ -61,7 +61,7 @@ reste **1 domaine** à auditer : le **H (qualité du code)**.
 | **D** | **QA / Tests** | ✅ **CLOS** (session 8) — 10 problèmes, **0 P0**, 4 P1, 5 P2, 1 P3 · **+ M-04** (une preuve du dossier était fausse) · aucune décision de Romain requise pour constater |
 | **E** | **UX / UI / Accessibilité** | ✅ **CLOS** (session 9) — 10 problèmes, **0 P0**, 2 P1, 7 P2, 1 P3 · **I-05 levée** · écrans **réellement ouverts et mesurés** dans un navigateur · aucune décision de Romain requise pour constater |
 | **F** | **Performance** | ✅ **CLOS** (session 10) — 11 problèmes, **0 P0**, 2 P1, 7 P2, 2 P3 · **2 inconnues ouvertes** (I-18, I-19) · **42 appels réels chronométrés**, poids transféré mesuré, **25 lectures simultanées** essayées · aucune décision de Romain requise pour constater |
-| **G** | **Architecture / Maintenabilité** | ✅ **CLOS** (session 11) — 10 problèmes, **0 P0**, 2 P1, 7 P2, 1 P3 · **1 décision** (D-028) · **1 inconnue** (I-20), ni l'une ni l'autre bloquante · relevés faits **sur le code réel**, et les 2 suspects de l'analyse automatique **ouverts à la main** avant d'être écartés |
+| **G** | **Architecture / Maintenabilité** | ✅ **CLOS** (session 11) — 10 problèmes, **0 P0**, 2 P1, 7 P2, 1 P3 · **sa seule décision (D-028) est déjà tranchée** le jour même · **1 inconnue** (I-20), non bloquante · relevés faits **sur le code réel**, et les 2 suspects de l'analyse automatique **ouverts à la main** avant d'être écartés |
 | H | Qualité du code | ⬜ **Prochain — dernier domaine** |
 
 > L'**ÉTAPE 1 (cartographie)** est terminée : volets A (session 2), B (session 3) et C (session 4),
@@ -477,6 +477,7 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-016 | **Corriger R-014 (le P0) tout de suite**, seul, hors de l'ordre du chantier — puis reprendre les audits | ✅ Validée (session 6) — *« va pour B alors je te suis dans ton raisonnement »* |
 | **D-021** | **Phase prototype : tout appartient à Romain, et c'est assumé.** Classeur, Drive, boîte d'envoi et données de test sont sur ses comptes personnels — le bon choix pour un prototype. La question du responsable se repose au déclencheur | ✅ **Validée (session 7)** — *« dans cette phase de test tout est à moi »* |
 | **D-022** | **Le déclencheur remplace la date** : le jour où l'email d'un tiers entre dans le classeur, les trois P1 du domaine B doivent être réglés. Tant qu'il n'est pas atteint, **aucune exception** à l'ordre du chantier | ✅ **Validée (session 7)** |
+| **D-028** | **Le fichier serveur n'est PAS découpé tant que le dépôt chez Google est manuel.** `Code.gs` fait 8 147 lignes et Apps Script accepte plusieurs fichiers — mais 1 fichier → **5 collages à la main**, soit cinq occasions d'en oublier un : **le mécanisme même de M-04**. ⚠️ **Ce n'est pas un permis d'agrandir le fichier**, et **R-074 reste ouvert au registre**. **Réouverture** : le jour où le dépôt cesse d'être manuel (**R-081**) | ✅ **Validée (session 11)** — *« la 2 »*. Première décision prise **avant** l'ÉTAPE 3, et sans entorse à **D-024** : décider de **ne rien faire** n'engage aucun travail et ne peut pas être invalidé par un constat ultérieur |
 
 **En attente** (voir `DECISIONS.md`) :
 
@@ -590,13 +591,15 @@ vérification supplémentaire.
 
 **Dernière mise à jour du registre** : 2026-08-05 (fin du domaine **G**).
 
-> ✅ **Le domaine G ajoute UNE décision (D-028) et UNE inconnue (I-20) — et aucune des deux ne
-> bloque quoi que ce soit.**
+> ✅ **Le domaine G a ajouté UNE décision (D-028) et UNE inconnue (I-20) — et la décision est déjà
+> tranchée.**
 >
-> **D-028 — faut-il découper le fichier serveur de 8 147 lignes ?** C'est une décision de Romain
-> **parce que c'est lui qui colle le code chez Google** : découper en 5 fichiers transformerait
-> **un** collage en **cinq**, donc cinq occasions d'en oublier un — précisément ce qui a produit
-> **M-04**. **Ma recommandation : non, pas tant que le dépôt est manuel.**
+> ✅ **D-028 — TRANCHÉE le 2026-08-05 : le fichier serveur n'est PAS découpé** tant que le dépôt
+> chez Google est manuel. Découper en 5 fichiers transformerait **un** collage en **cinq**, donc
+> cinq occasions d'en oublier un — précisément ce qui a produit **M-04**. ⚠️ **Ce n'est pas un
+> permis d'agrandir le fichier**, et **R-074 reste ouvert** : le fichier est trop long, c'est
+> constaté ; c'est la **correction** qui coûte plus cher que le problème. **Réouverture** : le jour
+> où le dépôt cesse d'être manuel (**R-081**).
 >
 > **I-20 — quelqu'un d'autre reprendra-t-il ce code, et quand ?** Elle ne change **pas la nature**
 > de **R-073** (la carte est fausse, que quelqu'un la lise ou non), seulement son **rang** de
@@ -651,7 +654,7 @@ vérification supplémentaire.
 | **D-018** | **Que dit-on aux personnes** dont on garde les informations ? *(trois textes courts)* | Session 7 | **R-028** (P1) |
 | **D-019** | **Que fait-on de la mesure des partenaires ?** Informer · demander l'accord · alléger | Session 7 | **R-029** (P1) — **suspendu** tant que les partenaires restent éteints |
 | **D-020** | **Combien de temps garde-t-on quoi ?** *(tableau de durées à valider)* | Session 7 | **R-030** (P1), **R-031**, **R-033**, **R-034** |
-| **D-028** | **Faut-il découper le fichier serveur ?** `backend/Code.gs` fait **8 147 lignes**, et Apps Script accepte plusieurs fichiers — c'est donc un choix. **Mais c'est toi qui colles le code chez Google** : 1 fichier → **5 collages**, soit cinq occasions d'en oublier un (le mécanisme même de **M-04**). **Ma recommandation : garder un seul fichier**, et ne rouvrir la question que si le dépôt devient automatique (**R-081**) | Session 11 | **R-074** |
+| ~~**D-028**~~ | ~~Faut-il découper le fichier serveur de 8 147 lignes ?~~ | ~~Session 11~~ | ✅ **TRANCHÉE le 2026-08-05** — **non**, tant que le dépôt chez Google est manuel. Voir §7 et `DECISIONS.md` |
 | **D-025** | **Quels tests écrit-on, et dans quel ordre ?** 4 lots proposés (`AUDIT.md` §D.9) : ① barème et départage ② une journée de bout en bout ③ contrôle de syntaxe à la publication ④ la saisie d'un score. **Ma recommandation si un seul devait être fait : le lot ①** — il est le moins cher, il protège ce qui compte le plus, et **D-014 est déjà décidée** : écrits après la modification, ces tests graveraient le nouveau comportement sans avoir jamais vu l'ancien | Session 8 | **R-041** (et le calendrier de D-014, D-011, D-012) |
 
 ### 10.3 — Inconnues à lever

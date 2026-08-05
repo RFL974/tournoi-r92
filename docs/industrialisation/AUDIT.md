@@ -4685,9 +4685,11 @@ ce résultat est entré au dossier comme une preuve de la correction du seul P0 
 fallu attendre le 2026-08-05 pour la refaire (**M-04**, **I-17**).
 
 **Aucun P0. Deux P1**, tous deux de la même famille : *ce qui est écrit ne correspond plus à ce
-qui existe.* **Sept P2**, dont aucun n'est urgent et dont **un seul appelle une décision de
+qui existe.* **Sept P2**, dont aucun n'est urgent et dont **un seul appelait une décision de
 Romain** (**D-028** : faut-il découper le fichier serveur ?) — parce que c'est lui qui recopie le
 code à la main chez Google, et que cette décision-là lui coûterait du temps à chaque fois.
+✅ **Elle a été tranchée le jour même : on ne découpe pas** tant que le dépôt reste manuel
+(voir **§G.6**). **Il ne reste donc rien en attente de Romain dans ce domaine.**
 
 ---
 
@@ -5069,9 +5071,15 @@ Le serveur se dépose **à la main**, par copier-coller (**R-072**, **I-01**). P
 voir qu'en oublier un a déjà produit une preuve fausse. **La correction aggraverait le problème le
 plus grave du domaine.**
 
-**Ce que je conseille** : **conserver pour plus tard**, et ne rouvrir la question que **si** le
-dépôt du serveur est un jour automatisé (**R-081**). C'est une **décision de Romain** (**D-028**),
-parce que c'est lui qui fait le collage. Reportée à l'ÉTAPE 3 (**D-024**).
+**✅ TRANCHÉ le 2026-08-05 — D-028** : **on ne découpe pas**, et on ne rouvrira la question que
+**si** le dépôt du serveur est un jour automatisé (**R-081**). C'était une **décision de Romain**,
+parce que c'est lui qui fait le collage — il l'a prise le jour même de l'audit.
+
+> ⚠️ **R-074 reste OUVERT au registre malgré cette décision, et ce n'est pas une contradiction.**
+> Le fichier est trop long : c'est **constaté**, et ça ne devient pas faux parce qu'on renonce à y
+> toucher. Ce qui est décidé, c'est que **la correction coûte plus cher que le défaut** — un
+> arbitrage, pas un démenti. Et cette décision **n'autorise pas à agrandir le fichier** : une
+> session qui ajouterait une fonctionnalité importante au serveur devra **reposer la question**.
 
 ---
 
@@ -5329,27 +5337,44 @@ règle ; une seule vaut une correction de texte.**
 
 ---
 
-## G.6 — La question qui n'appartient qu'à Romain
+## G.6 — La question qui n'appartenait qu'à Romain — ✅ **tranchée le 2026-08-05**
 
-Le domaine G n'ouvre **qu'une seule décision**, et elle est reportée à l'ÉTAPE 3 (**D-024**).
+Le domaine G n'ouvre **qu'une seule décision**, et elle a été **prise le jour même** de l'audit.
 
-### D-028 — Faut-il découper le fichier serveur ?
+### D-028 — ✅ Le fichier serveur n'est PAS découpé tant que le dépôt chez Google est manuel
 
-**Pourquoi c'est ta décision et pas la mienne** : parce que **c'est toi qui colles le code chez
+**Pourquoi c'était ta décision et pas la mienne** : parce que **c'est toi qui colles le code chez
 Google**. Un choix qui améliore la lisibilité pour un développeur et qui, en échange, te fait
 répéter cinq fois un geste que tu fais une fois aujourd'hui — ce n'est pas un arbitrage technique,
 c'est un arbitrage sur **ton temps** et sur **le risque d'oubli**.
 
-| | Garder un seul fichier | Découper en 4 ou 5 |
+| | **Garder un seul fichier** ✅ | Découper en 4 ou 5 |
 |---|---|---|
 | **Ce que tu fais à chaque redéploiement** | 1 collage | **4 ou 5 collages** |
 | **Risque d'en oublier un** | nul | réel — et c'est **exactement** ce qui a produit M-04 |
 | **Confort pour s'y retrouver** | correct (26 sections) | meilleur |
 | **Réversible ?** | — | oui, mais le geste manuel reste |
 
-**Ma recommandation : garder un seul fichier**, et ne rouvrir la question que si le dépôt devient
-automatique (**R-081**). Le confort gagné ne vaut pas le risque ajouté sur le geste qui a déjà
-failli.
+**Décision prise : garder un seul fichier.** Le confort gagné ne vaut pas le risque ajouté sur le
+geste qui a déjà failli.
+
+> ⚠️ **Trois choses que cette décision ne dit PAS**, et qu'il faut inscrire pour qu'une session
+> future ne s'en serve pas de mauvaise façon :
+>
+> 1. **Elle ne dit pas que le fichier va bien.** Il est **trop long**, c'est constaté, et
+>    **R-074 reste ouvert au registre**. Ce qui est décidé, c'est que la correction disponible
+>    aujourd'hui **coûte plus cher que le défaut**.
+> 2. **Elle n'autorise pas à agrandir le fichier.** Renoncer à découper 8 147 lignes n'autorise
+>    pas à en écrire 12 000. Toute session qui ajouterait une fonctionnalité importante au serveur
+>    devra **reposer la question**, pas s'abriter derrière cette décision.
+> 3. **Elle n'est pas définitive.** Elle a une **condition de réouverture écrite** : le jour où le
+>    dépôt du serveur cesse d'être manuel (**R-081**). Sans collage à répéter, le coût du
+>    découpage tombe à zéro et son bénéfice reste entier.
+
+> 🔗 **Ce que cette décision change pour le reste du chantier** : **R-081** (P3) n'est plus
+> seulement « automatiser un geste » — c'est désormais **ce qui débloquerait R-074**. Deux
+> problèmes qui semblaient indépendants sont maintenant reliés par une décision, et c'est le genre
+> de lien qui compte à l'ÉTAPE 3, au moment de composer les chantiers.
 
 ---
 
@@ -5427,10 +5452,18 @@ Ce domaine n'ajoute pas seulement des problèmes : il **explique** trois problè
 | **R-044** (domaine D — 29 règles écrites deux fois) | Ce n'est pas de la négligence : **il n'existe aucun moyen de partager du code** entre Google et le navigateur (deux mondes, aucun assemblage). La bonne réponse n'est donc pas « arrêter de recopier », c'est **faire se confronter les deux copies** |
 | **M-04 / I-01** (une preuve fausse est entrée au dossier) | La cause n'est pas humaine : **la procédure écrite décrivait la moitié du geste** (R-072), et rien ne relie le dépôt au code en service (R-081) |
 
-### Ce qui attend Romain
+### Ce qui attendait Romain — ✅ réglé le jour même
 
-**Une seule chose, et elle n'est pas urgente** : **D-028** — faut-il découper le fichier serveur ?
-Ma recommandation est **non, pas tant que le dépôt est manuel**. Reportée à l'ÉTAPE 3 (**D-024**).
+**La seule décision du domaine est prise** : **D-028** — le fichier serveur **n'est pas découpé**
+tant que le dépôt chez Google est manuel. Validée par Romain le **2026-08-05**. Détail et
+conditions de réouverture en **§G.6**.
+
+> ℹ️ **Pourquoi cette décision n'attend pas l'ÉTAPE 3, contrairement à D-024.** Parce qu'elle
+> consiste à **ne rien faire**. D-024 reporte les décisions pour éviter de trancher à l'aveugle,
+> sans voir les autres problèmes ; ici, il n'y a **aucun travail engagé, aucun budget consommé**,
+> et donc rien qu'un constat ultérieur pourrait invalider — au pire, il **rouvrirait** la
+> question, ce que la décision prévoit explicitement. **Une décision de statu quo ne coûte rien à
+> prendre tôt.**
 
 **Une inconnue nouvelle, et elle ne bloque rien** : **I-20** — quelqu'un d'autre reprendra-t-il ce
 code, et quand ? Elle ne change pas la nature de **R-073**, seulement son rang de priorité.

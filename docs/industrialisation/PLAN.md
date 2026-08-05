@@ -53,7 +53,7 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 | D | QA / Tests | ✅ **FAIT** — 0 P0 · 4 P1 · 5 P2 · 1 P3 · **+ M-04** (risque de méthode) | 8 |
 | E | UX / UI / Accessibilité | ✅ **FAIT** — 0 P0 · 2 P1 · 7 P2 · 1 P3 · **I-05 levée** | 9 |
 | F | Performance | ✅ **FAIT** — 0 P0 · 2 P1 · 7 P2 · 2 P3 · **2 inconnues ouvertes** (I-18, I-19) | 10 |
-| G | Architecture / Maintenabilité | ✅ **FAIT** — 0 P0 · 2 P1 · 7 P2 · 1 P3 · **1 décision** (D-028) · **1 inconnue** (I-20) | 11 |
+| G | Architecture / Maintenabilité | ✅ **FAIT** — 0 P0 · 2 P1 · 7 P2 · 1 P3 · **D-028 tranchée le jour même** (on ne découpe pas `Code.gs`) · **1 inconnue** (I-20) | 11 |
 | H | Qualité du code | ⬜ **Prochain — dernier domaine** | — |
 
 > ✅ **Ordre d'audit VALIDÉ par Romain le 2026-08-04** (décision D-010) : **A → C → B → D → E → F
@@ -110,7 +110,7 @@ Ce ne sont pas encore des chantiers, mais des **familles** qui se dessinent apr�
 | **Le verrou et ce qu'on met dedans** | **R-067**, **R-068**, R-070 | Trois fois le même sujet : du travail fait **sous le verrou d'écriture** alors qu'il pourrait être fait dehors — ou pas du tout. ⚠️ **R-068 touche à la sécurité** : à trancher avec R-017, R-018, R-059 |
 | **📄 Remettre le projet en face de lui-même** | **R-072**, **R-073**, R-024 *(+ R-080)* | Le domaine G a parlé : la procédure de redéploiement décrit la moitié du geste, la carte du projet décrit une autre application, les bibliothèques n'ont ni version ni origine. **Zéro ligne de code, zéro risque technique, un seul livrable** — et ça referme la porte par laquelle **M-04** est déjà entré. ⚠️ **R-072 d'abord et seul si le temps manque** : c'est le seul problème du chantier qui **se redéclenchera au prochain redéploiement** |
 | **Les noms qui se marchent dessus** | **R-078**, R-043 | 12 noms globaux en double dans le navigateur. Aucun ne collisionne aujourd'hui, mais la panne serait **une page blanche**, pas un bouton en panne. Une douzaine de renommages ciblés — **à faire sous la protection des tests de R-043**, jamais à l'aveugle |
-| **⛔️ Ce qui NE doit PAS être groupé** | **R-074**, **R-076**, **R-077**, **R-081** | Quatre problèmes qui se **ressemblent** (découper, ranger, outiller) et qu'il serait tentant de traiter ensemble. **Ils ne doivent pas l'être** : chacun, fait en bloc, aggrave un problème plus grave que lui — découper le serveur multiplie le collage manuel (**M-04**), renommer 277 tests fait perdre un test en silence, découper l'admin exige l'outillage que `CLAUDE.md` §10 déconseille. **Progressif et réversible, ou rien** |
+| **⛔️ Ce qui NE doit PAS être groupé** | ~~R-074~~, **R-076**, **R-077**, **R-081** | Des problèmes qui se **ressemblent** (découper, ranger, outiller) et qu'il serait tentant de traiter ensemble. **Ils ne doivent pas l'être** : chacun, fait en bloc, aggrave un problème plus grave que lui — renommer 277 tests fait perdre un test en silence, découper l'admin exige l'outillage que `CLAUDE.md` §10 déconseille. **Progressif et réversible, ou rien.** ✅ **R-074 est sorti de cette liste : il est ARBITRÉ** (**D-028**, 2026-08-05) — on ne découpe pas `Code.gs` tant que le dépôt est manuel |
 
 ### Modèle de fiche de chantier
 

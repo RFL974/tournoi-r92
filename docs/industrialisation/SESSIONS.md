@@ -2108,7 +2108,8 @@ et la mention de l'affinage.
 ### 9. Points ajoutés au registre
 
 - **D-028** — faut-il découper le fichier serveur ? *(décision de Romain, parce que c'est lui qui
-  colle le code ; recommandation : **non**, pas tant que le dépôt est manuel)* ;
+  colle le code ; recommandation : **non**, pas tant que le dépôt est manuel)* → ✅ **TRANCHÉE le
+  jour même**, voir l'addendum ci-dessous ;
 - **I-20** — quelqu'un d'autre reprendra-t-il ce code, et quand ? *(non bloquante : elle change le
   **rang** de R-073, pas sa nature)*.
 
@@ -2124,5 +2125,96 @@ mesurées, et **deux commentaires sont déjà démontrés faux** (celui de `doGe
 
 > 🏁 **Après lui, l'ÉTAPE 2 est terminée**, et l'ÉTAPE 3 s'ouvre en reprenant une à une les
 > inconnues puis les décisions accumulées par **D-024** (`ETAT.md` §10.4).
+
+**Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+## SESSION 11 — ADDENDUM du même jour : D-028 tranchée, R-074 arbitré
+
+**Objectif** : enregistrer la décision de Romain sur la seule question ouverte par le domaine G.
+**Aucun fichier de l'application modifié.** Documentation uniquement.
+
+### 1. Ce que Romain a décidé
+
+Réponse : **« la 2 »** — c'est-à-dire le second des deux conseils du rapport de session, celui qui
+se note au dossier.
+
+> ✅ **D-028 — le fichier serveur `backend/Code.gs` (8 147 lignes) n'est PAS découpé tant que le
+> dépôt chez Google est manuel.**
+
+La raison retenue est celle du rapport : Apps Script accepterait plusieurs fichiers, mais **c'est
+Romain qui colle le code à la main**. Passer de 1 à 5 fichiers, c'est passer de **un** collage à
+**cinq**, donc **cinq occasions d'en oublier un** — précisément le mécanisme qui a produit
+**M-04** (une preuve fausse restée six sessions au dossier).
+
+### 2. Ce qui a été inscrit, et pourquoi c'est plus qu'une case cochée
+
+La décision, telle qu'elle est enregistrée, porte **trois garde-fous** qui n'étaient pas dans la
+question d'origine. Ils comptent autant que la décision elle-même :
+
+| Garde-fou | Pourquoi il est là |
+|---|---|
+| **R-074 reste OUVERT au registre** | Le fichier **est** trop long — c'est constaté, et ça ne devient pas faux parce qu'on renonce à y toucher. Ce qui est décidé, c'est que la **correction** coûte plus cher que le **défaut**. Un arbitrage, pas un démenti |
+| **Ce n'est PAS un permis d'agrandir le fichier** | Renoncer à découper 8 147 lignes n'autorise pas à en écrire 12 000. Toute session future qui ajouterait une fonctionnalité importante au serveur devra **reposer la question**, sans s'abriter derrière cette décision |
+| **Une condition de réouverture ÉCRITE** | Le jour où le dépôt du serveur cesse d'être manuel (**R-081**). Sans collage à répéter, le coût du découpage tombe à zéro et son bénéfice reste entier. Un second déclencheur, moins net : si le fichier devenait difficile à modifier sans se tromper — ce qui **n'est pas le cas** aujourd'hui |
+
+> **Sans ces trois lignes, la décision serait devenue, avec le temps, « le fichier unique est le bon
+> choix » — ce qui n'est pas ce qui a été décidé.**
+
+### 3. Un effet de bord utile : deux problèmes viennent de se relier
+
+**R-081** (P3 — le dépôt manuel du serveur) n'est plus seulement « automatiser un geste » : c'est
+désormais **ce qui débloquerait R-074**. Deux problèmes qui paraissaient indépendants sont
+maintenant reliés **par une décision**, et c'est exactement le genre de lien qui sert à l'ÉTAPE 3,
+au moment de composer les chantiers.
+
+`PLAN.md` a été mis à jour en conséquence : **R-074 sort** de la ligne « ⛔️ ce qui NE doit PAS être
+groupé », qui ne concerne plus que **R-076**, **R-077** et **R-081** — les trois qui n'ont pas été
+arbitrés.
+
+### 4. Pourquoi cette décision n'attend pas l'ÉTAPE 3, alors que D-024 l'exigerait
+
+La question mérite d'être posée, parce que **D-024** dit que *tous* les points en suspens sont
+traités à l'ÉTAPE 3, et que trois exceptions seulement sont prévues (D-017, les questions
+sortantes, un éventuel P0). D-028 n'en fait partie d'aucune.
+
+**Ce n'est pourtant pas une entorse, et voici le raisonnement :**
+
+> D-024 existe pour empêcher de **trancher à l'aveugle** — décider avant d'avoir tous les problèmes
+> sous les yeux, et s'apercevoir trop tard qu'on a engagé le chantier dans la mauvaise direction.
+>
+> Or **D-028 consiste à ne rien faire.** Elle n'engage aucun travail, ne consomme aucun budget, et
+> ne ferme aucune porte : au pire, un constat ultérieur la **rouvrirait**, ce que la décision
+> prévoit explicitement par écrit.
+>
+> **Une décision de statu quo ne coûte rien à prendre tôt.** C'est ce qui la distingue de D-018,
+> D-019, D-020 ou D-025, qui engagent toutes du travail réel.
+
+Ce raisonnement est inscrit dans `DECISIONS.md` au-dessus de la décision, pour qu'une session
+future ne le prenne pas pour un précédent : **une décision qui engage du travail, elle, attend
+toujours l'ÉTAPE 3.**
+
+### 5. Ce qui a été mis à jour
+
+| Fichier | Modification |
+|---|---|
+| `DECISIONS.md` | D-028 **sortie** de « en attente », inscrite comme **validée**, avec ses trois garde-fous et sa condition de réouverture |
+| `ETAT.md` | §3 (ligne du domaine G) · §7 (tableau des décisions validées) · §10 (la décision est barrée du registre en suspens) |
+| `RISQUES.md` | **R-074** passe de `IDENTIFIÉ` à **`ARBITRÉ`** — avec la mention explicite que **le problème reste ouvert** |
+| `PLAN.md` | R-074 sort de la ligne « ⛔️ ce qui NE doit PAS être groupé » |
+| `AUDIT.md` | §G.0, §G.4 et §G.6 mis au passé : la question est tranchée |
+
+### 6. État du registre après cet addendum
+
+- **Décisions en attente** : D-005, D-009, D-017, D-018, D-019, D-020, D-025 *(D-028 en sort)* ;
+- **Inconnues à lever** : I-01, I-08, I-09, I-10, I-14, I-15, I-16, I-19, **I-20** ;
+- **Problèmes** : 81 — 1 TESTÉ (R-014), 80 identifiés, dont **1 désormais arbitré** (R-074).
+
+### 7. Prochaine session recommandée
+
+**Inchangée : session 12 — ÉTAPE 2, domaine H (qualité du code). LE DERNIER.**
+
+Après lui, l'ÉTAPE 2 est terminée et l'ÉTAPE 3 s'ouvre.
 
 **Condition de démarrage** : instruction explicite de Romain.

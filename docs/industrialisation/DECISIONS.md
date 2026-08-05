@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-05 (session 8)
+**Dernière mise à jour** : 2026-08-05 (session 11 — **D-028 validée**)
 
 ---
 
@@ -933,16 +933,23 @@ conseils »*. Les quatre réserves ci-dessous ne sont donc **plus des réserves*
 
 ---
 
-## DÉCISIONS EN ATTENTE DE ROMAIN
-
-### D-028 — Faut-il découper le fichier serveur de 8 147 lignes ?
+### D-028 — Le fichier serveur n'est PAS découpé tant que le dépôt chez Google est manuel
 
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-05 |
 | **Session** | 11 |
-| **Statut** | ⏳ EN ATTENTE DE ROMAIN — **traitée à l'ÉTAPE 3** (D-024) |
-| **Débloque** | **R-074** (P2) |
+| **Statut** | ✅ **VALIDÉE par Romain le 2026-08-05** — *« la 2 »*, en réponse aux deux conseils du rapport de session |
+| **Décidée par** | Romain |
+| **Concerne** | **R-074** (P2) — et, par ricochet, **R-081** (P3), qui devient la **condition de réouverture** |
+
+> ⚠️ **Première décision du chantier prise AVANT l'ÉTAPE 3, et il faut dire pourquoi ce n'est pas
+> une entorse à D-024.** D-024 reporte les points en suspens parce qu'on ne veut pas décider à
+> l'aveugle, sans avoir les autres problèmes sous les yeux. Ici, la décision est **de ne rien
+> faire** : elle n'engage aucun travail, ne consomme aucun budget, et **ne peut donc pas être
+> invalidée par un problème découvert plus tard** — au pire, un futur constat rouvrirait la
+> question, ce que la décision prévoit explicitement. Une décision de statu quo ne coûte rien à
+> prendre tôt.
 
 **Problème posé**
 > Tout le serveur tient dans **un seul fichier** : `backend/Code.gs`, **8 147 lignes**,
@@ -969,7 +976,7 @@ conseils »*. Les quatre réserves ci-dessous ne sont donc **plus des réserves*
 | Confort pour s'y retrouver | correct (26 sections) | meilleur |
 | Réversible ? | — | oui, mais le geste manuel reste |
 
-**Ma recommandation : GARDER UN SEUL FICHIER**
+**DÉCISION PRISE : GARDER UN SEUL FICHIER**
 > Le confort gagné ne vaut pas le risque ajouté **sur le geste qui a déjà failli**. En session 6,
 > un fichier oublié au collage a produit une preuve fausse restée six sessions au dossier
 > (**M-04**). Multiplier par cinq le nombre de fichiers à coller multiplie par cinq les occasions
@@ -978,13 +985,38 @@ conseils »*. Les quatre réserves ci-dessous ne sont donc **plus des réserves*
 > **La question se rouvrira d'elle-même** si le dépôt du serveur devient un jour automatique
 > (**R-081**, P3) : à ce moment-là, découper ne coûterait plus rien, et deviendrait la bonne idée.
 
-**Ce qu'il ne faut PAS conclure de cette recommandation**
-> Que le fichier est bien comme il est. Il est **trop long**, c'est constaté. Simplement, la
-> correction disponible aujourd'hui coûte plus cher que le problème — et `CLAUDE.md` §6.G
-> l'annonce : *ne pas refactorer massivement pour obtenir une architecture théoriquement plus
-> élégante*.
+**Ce qu'il ne faut PAS conclure de cette décision**
+> Que le fichier est bien comme il est. Il est **trop long**, c'est constaté, et **R-074 reste
+> ouvert au registre**. Simplement, la correction disponible aujourd'hui coûte plus cher que le
+> problème — et `CLAUDE.md` §6.G l'annonce : *ne pas refactorer massivement pour obtenir une
+> architecture théoriquement plus élégante*.
+>
+> ⚠️ **Et surtout : ce n'est pas un permis d'agrandir le fichier.** Décider de ne pas découper 8 147
+> lignes n'autorise pas à en écrire 12 000. Toute session future qui ajouterait une fonctionnalité
+> importante au serveur devra **poser la question à nouveau**, pas s'abriter derrière cette
+> décision.
+
+**Condition explicite de réouverture**
+> **Le jour où le dépôt du serveur cesse d'être manuel** (**R-081**). C'est le seul événement qui
+> renverse l'arbitrage : sans collage à répéter, le coût du découpage tombe à zéro et son bénéfice
+> reste entier.
+>
+> Un second déclencheur, moins net mais réel : **si le fichier devenait difficile à modifier sans
+> se tromper** — par exemple si une correction en cassait une autre à l'autre bout du fichier. Ce
+> n'est **pas** le cas aujourd'hui (les 26 sections font leur travail, et les 589 vérifications
+> attrapent les régressions).
+
+**Ce que cette décision change pour la suite du chantier**
+> - **R-074** passe de « à trancher » à **arbitré** : aucune session ne doit proposer de découper
+>   `Code.gs` sans que la condition de réouverture ci-dessus soit remplie ;
+> - **R-081** (P3) gagne un enjeu : ce n'est plus seulement « automatiser un geste », c'est aussi
+>   **ce qui débloquerait R-074** ;
+> - la ligne « ⛔️ ce qui NE doit PAS être groupé » de `PLAN.md` reste valable pour **R-076**,
+>   **R-077** et **R-081**, qui n'ont pas été arbitrés.
 
 ---
+
+## DÉCISIONS EN ATTENTE DE ROMAIN
 
 ### D-025 — Quels tests écrit-on, et dans quel ordre ?
 
