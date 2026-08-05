@@ -1705,3 +1705,265 @@ des suites aléatoires (menu du classeur → « Configurer les clés »), ce qui
 
 **Session 10 — ÉTAPE 2, domaine F : la performance.** Toujours sans rien modifier.
 **Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+## SESSION 10 — 2026-08-05 · ÉTAPE 2, domaine F : la performance
+
+**Objectif** : auditer le domaine **F** (performance), sixième des huit dans l'ordre **D-010**.
+**Aucun fichier de l'application modifié.** Documentation uniquement.
+
+### 1. Point de départ
+
+`git fetch` puis `git status -sb` — **l'étape 0 a servi** : la branche de la session 9 était à
+jour, mais `main` avait avancé de 2 commits (PR **#179**, la session 9 fusionnée). `main` local
+était **en retard**. Mise à jour avant toute lecture, conformément à `CLAUDE.md` §12.3.
+
+**Commit de départ** : `48e3451` sur `main`.
+**Branche de travail** : `claude/session-10-domaine-f-performance`.
+
+### 2. Méthode : mesurer, pas supposer
+
+`CLAUDE.md` §6.F interdit l'optimisation prématurée et exige qu'une optimisation soit justifiée
+par **une mesure ou un risque identifiable**. La session a donc commencé par **mesurer
+l'application réellement en ligne**, avant de lire quoi que ce soit comme un défaut.
+
+| Mesure | Moyen | Volume |
+|---|---|---|
+| Temps de réponse du serveur Google | Appels réels à l'adresse publique (`ping`, `getAll`) | **42 appels** |
+| Effet du cache serveur | Rafale (chaud) contre appels espacés de 13 s (froid) | 6 + 4 |
+| Tenue à plusieurs | **25 lectures lancées au même instant** | 1 vague |
+| Poids transféré | Téléchargement depuis GitHub Pages, compression comprise | 3 pages, 31 fichiers |
+| Temps d'affichage | Chronomètre du navigateur sur la page publique en ligne | page réelle |
+| Coût des calculs | Chronométrage des fonctions d'affichage (50 répétitions) | page réelle |
+| Composition des données | Analyse de l'instantané servi | 51 matchs, 37 équipes |
+
+**Trois choses ont été délibérément NON faites, et il faut le dire** :
+
+1. **Aucun test de charge à grande échelle.** 25 spectateurs simulés, une fois. Simuler trois
+   cents personnes sur le service en production de quelqu'un d'autre, sans son accord, n'est pas
+   un geste d'audit.
+2. **Aucune écriture chronométrée.** Une écriture exige une clé, et une écriture ratée ferait
+   monter le compteur anti-force-brute installé en session 6 — au risque de gêner Romain. Le coût
+   d'une validation de score est donc **reconstitué**, et marqué **PROBABLE**.
+3. **Aucune mesure sur un vrai téléphone.** Le temps de connexion mesuré est de **16 ms** : la
+   machine de mesure est très proche des serveurs Google. **Tous les temps donnés sont des temps
+   plancher.**
+
+### 3. Résultat : 11 problèmes
+
+| Priorité | Nombre | Références |
+|---|---|---|
+| **P0** | **0** | — |
+| **P1** | **2** | **R-061**, **R-062** |
+| **P2** | **7** | R-063 → R-069 |
+| **P3** | **2** | R-070, R-071 |
+
+### 4. Ce que la session a appris, et qui n'était pas attendu
+
+**a) Le navigateur n'est pas le problème — pas du tout.** Page prête en **527 ms**, réaffichage
+complet des deux vues en **0,9 ms**. Même sur un téléphone vingt fois plus lent : 18 ms. **Il ne
+faut rien optimiser là** : ce serait exactement l'optimisation prématurée interdite.
+
+**b) Le plancher est chez Google, et il est infranchissable.** `ping`, l'action qui n'exécute
+**rien** et renvoie 48 octets, prend **2,3 à 2,8 secondes**. Ce n'est pas le code du projet qui
+est lent : c'est le fait de passer par Apps Script. Conséquence de méthode : **la vraie réponse à
+l'affluence n'est pas d'accélérer le serveur, c'est de ne plus l'interroger** — donc le relais.
+
+**c) Les deux filets anti-affluence sont noués l'un à l'autre, et le premier est éteint.** Le
+relais CDN est **entièrement écrit** des deux côtés, avec repli automatique et pas-à-pas
+d'installation — il manque **une ligne** (`SNAPSHOT_URL = ""`). Et le cache de repli **refuse de
+s'enregistrer au-delà de 95 000 octets**, ce qui, mesures à l'appui, arrive vers **165 matchs** —
+en silence complet. Le commentaire du code renvoie alors « au relais CDN », qui n'est pas là.
+
+**d) 58 % de ce qui voyage jusqu'à chaque spectateur ne transporte aucune information.**
+17 champs vides sur 27 par match : `"essais_A":""` pèse 16 octets pour ne rien dire. Mesuré :
+**14 541 octets sur 25 029**.
+
+**e) Le cache dure moins longtemps qu'on ne l'appelle.** Cache 10 s, rafraîchissement 15-19 s :
+**un spectateur seul trouve toujours le cache expiré**. D'où le comportement à l'envers de
+l'intuition — **l'application est plus rapide quand il y a du monde**. Corollaire de méthode :
+**on ne peut rien conclure sur la performance en la testant seul.**
+
+**f) Une inquiétude a été levée, pas confirmée.** Un minuteur à **5 secondes** repéré dans
+`sponsors.js` faisait craindre un envoi réseau toutes les 5 s par spectateur. Vérification faite :
+ces 5 secondes n'écrivent **que sur le téléphone** ; l'envoi réseau est bien espacé de 10 minutes.
+**Le réglage est bon.** — *rappel utile : un minuteur court n'est pas un appel réseau.*
+
+### 5. Le domaine F répond au domaine E
+
+`ETAT.md` demandait explicitement au domaine F de trancher **R-053** (« le bouton Valider ne
+montre rien pendant l'envoi ») : détail, ou problème ?
+
+**Réponse : ce n'est pas un détail.** La reconstruction de l'instantané public, **mesurée à
+2,5-4,5 secondes**, se fait **pendant que le verrou d'écriture est tenu** (**R-067**). L'attente
+après « Valider » est donc réelle, et s'allonge quand plusieurs marqueurs valident ensemble. Un
+bouton muet pendant quatre secondes est un bouton sur lequel on reclique. **R-053 monte en
+importance relative** — et son remède (deux lignes) devient encore plus rentable.
+
+### 6. Ce que le domaine F ne peut PAS conclure
+
+- **Combien de spectateurs l'application peut servir** → **INCONNU**, dépend de **I-18** ;
+- **Combien de spectateurs sont attendus** → **INCONNU**, dépend de **I-19** (seul Romain sait) ;
+- **Le temps réel d'une validation de score** → **PROBABLE : 3 à 8 s**, reconstitué, jamais
+  chronométré ;
+- **Le comportement sur un vrai téléphone, dehors, en 4G** → **INCONNU** (temps plancher) ;
+- **L'origine des pointes à 16,8 s et 20,1 s** → **PROBABLE : la plateforme Google**, puisque
+  `ping` seul prend déjà 2,3 s.
+
+### 7. Registre des points en suspens
+
+Le domaine F n'ajoute **aucune décision en attente**, mais **deux inconnues** — et toutes deux se
+lèvent **sans écrire une ligne de code** :
+
+- **I-18** — la durée d'exécution réelle chez Google. **Cinq minutes** dans l'onglet
+  « Exécutions » de l'éditeur Apps Script. **C'est le chiffre sans lequel tout le domaine F est
+  une conversation sans données.**
+- **I-19** — combien de spectateurs viennent vraiment. Le chiffre de 1 300 est écrit dans
+  `docs/relais-cdn.md` **sans source**. Seul Romain peut répondre.
+
+Une décision naîtra d'elles à l'ÉTAPE 3 : **allumer ou non le relais** (**R-061**).
+
+### 8. Ce qui reste à Romain
+
+1. **D-017** — remplacer les deux mots de passe par des suites aléatoires *(inchangé depuis la
+   session 6, referme R-019)* ;
+2. **I-18** — regarder la durée d'une exécution dans « Exécutions » *(nouveau, 5 minutes)* ;
+3. **I-19** — dire combien de spectateurs sont attendus *(nouveau, une question de terrain)* ;
+4. **I-10** et **I-15** — les deux questions sortantes, inchangées.
+
+### 9. Prochaine session
+
+**Session 11 — ÉTAPE 2, domaine G : l'architecture et la maintenabilité.** Toujours sans rien
+modifier. Matière déjà repérée : un fichier serveur de **8 147 lignes / 277 fonctions**, **693
+fonctions** dans un espace commun côté navigateur (dont 8 noms en double), **29 « miroirs »** de
+règles écrites deux fois (**R-044**), **aucun outillage**, et **D-005** (le périmètre) que
+**R-066** vient de rendre concrète.
+
+**Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+## SESSION 10 *(suite, même jour)* — I-18 levée : les chiffres réels
+
+**2026-08-05, quelques heures après la clôture.** Romain a ouvert le journal « Exécutions »
+d'Apps Script et fourni **trois pages de captures**. **I-18 est levée.**
+
+### Ce qu'il a fallu corriger en chemin
+
+Premier essai : Romain a cliqué sur ▶ **Exécuter** avec `doGet` sélectionné. **Piège** — lancé
+depuis l'éditeur, `doGet` ne reçoit aucun paramètre et retombe sur `action = 'ping'` par défaut.
+**Ce n'est donc pas `getAll` qui a été mesuré, mais l'action vide.** Le bon geste n'était pas de
+*lancer* quelque chose, mais de *regarder ce qui s'était déjà passé* : la page « Exécutions ».
+
+> 📌 **À retenir pour les prochaines fois** : le bouton ▶ de l'éditeur **ne reproduit pas un vrai
+> visiteur**. Pour mesurer la réalité, c'est la page « Exécutions » — accessible en remplaçant
+> `/edit` par `/executions` à la fin de l'adresse.
+
+### Le résultat : 128 exécutions, 0 échec
+
+| Type | Nombre | Médiane | Moyenne | Max |
+|---|---|---|---|---|
+| Lectures `doGet` (Application Web) | **82** | **2,07 s** | 3,16 s | **19,55 s** |
+| Écritures `doPost` (Application Web) | **43** | **2,67 s** | 3,27 s | **8,20 s** |
+| `ping` (bouton ▶, n'exécute **rien**) | 1 | **1,59 s** | — | — |
+
+**Les exécutions du 4 août sont l'usage réel de Romain**, pas mes mesures — et elles disent la
+même chose (écritures 2,40 s de médiane, lectures 3,11 s). **L'audit et la vie réelle
+concordent.**
+
+### Cinq conséquences
+
+1. **Le cache est excellent, et le code n'y est pour presque rien.** Servir tout le tournoi coûte
+   **+0,06 s** par rapport à ne rien faire du tout. Mais **~1,6 s de démarrage par appel est
+   incompressible** — ce n'est ni le code, ni le classeur, c'est Apps Script.
+2. ⚠️ **Un commentaire du code est faux de deux ordres de grandeur.** `doGet` affirme *« servi du
+   cache, répond en quelques millisecondes »* : la mesure dit **1 650 millisecondes**. L'intention
+   était juste, le chiffre non — **et c'est sur ce chiffre que reposait l'idée d'une capacité
+   confortable**.
+3. **La capacité est chiffrée : 150 à 300 spectateurs, pas 1 300.** **R-061** passe d'un risque
+   théorique à un risque **mesuré**.
+4. **Un levier gratuit apparaît, plus puissant que tout le reste** : porter le rafraîchissement de
+   **15 s à 30 s double la capacité** (≈ 550). Un seul chiffre à changer. **R-064 est élargi** :
+   le vrai sujet n'est pas la durée du cache, c'est que **les réglages de cadence n'ont jamais été
+   accordés entre eux**.
+5. **R-067 passe de PROBABLE à CERTAIN.** L'estimation « 3 à 8 s pour une validation de score »
+   est confirmée par **43 écritures réelles** (médiane 2,67 s, max 8,20 s, dont 7 au-dessus de
+   5 s). Et le journal du 4 août montre **quatre exécutions démarrées à la même seconde** : la
+   concurrence existe déjà avec une seule personne aux commandes. **R-053 (le bouton muet) est
+   définitivement confirmé.**
+
+### Une trouvaille qui n'était pas cherchée — une trace pour M-02
+
+La colonne « Déploiement » distingue **« Version 148 »** (toutes les exécutions Application Web)
+de **« Head »** (celles lancées depuis l'éditeur). **C'est le mécanisme de M-02 constaté
+directement** : l'adresse publique sert une **version figée**, pas le code de l'éditeur. Cela ne
+prouve pas une divergence — mais cela donne enfin un repère concret : **le jour d'un
+redéploiement, ce numéro doit changer.** À inscrire dans la procédure de déploiement.
+
+### Ce qui reste ouvert
+
+**I-19 uniquement** : combien de spectateurs viennent réellement ? **C'est désormais la seule
+question qui décide** — sous ~150 personnes, on ne touche à rien ; au-delà, il faut agir. Elle
+n'est pas technique.
+
+---
+
+## SESSION 10 *(suite)* — I-19 reformulée : le public invisible
+
+**2026-08-05.** Interrogé sur le nombre de spectateurs, Romain répond que c'est **« difficilement
+quantifiable »** — et donne la structure : équipes présentes, éducateurs bénévoles, parents sur
+place, **et surtout les parents qui n'ont pas pu venir et suivent depuis la maison ou le travail**.
+
+### Ce que cet apport a corrigé
+
+**Une conclusion de F.9 était trop pessimiste.** Elle disait « capacité 150 à 300 spectateurs ».
+L'erreur était d'interprétation, pas de mesure : *« exécution simultanée »* avait été assimilé à
+*« spectateur »*.
+
+Or **la page se met en pause dès que l'onglet n'est plus visible** — un comportement déjà codé,
+déjà salué en F.2, mais dont la conséquence n'avait pas été tirée. **La bonne unité est l'écran
+allumé sur la page, pas la personne.** Un parent qui regarde le match ne coûte rien.
+
+### Ce que l'apport ajoute
+
+Deux publics au comportement **opposé**, et le second n'avait jamais été envisagé :
+
+- **sur place** : regarde le terrain, téléphone en poche → **coût faible** ;
+- **à distance** : l'écran **est** le seul lien avec le tournoi → **2 à 3 fois plus de charge par
+  personne**.
+
+> **Contre-intuitif, et il fallait l'entendre d'un homme de terrain** : *les gens qui ne sont pas
+> venus pèsent plus lourd sur le serveur que ceux qui sont là.*
+
+### Conduite à tenir qui en découle
+
+| Public total qui suit | Avec 15 s *(aujourd'hui)* | Avec **30 s** |
+|---|---|---|
+| 400 | ✅ | ✅ |
+| **700** | ❌ saturé au pic | ✅ |
+| 1 000 | ❌ | limite |
+
+- **Le tournoi actuel tient en régime courant** (~145 écrans actifs pour une capacité de 310) ;
+  **la saturation n'arrive que dans les pics** (fin de match, annonce du classement).
+- **R-064 (15 s → 30 s) suffit** jusqu'à ~1 000 personnes qui suivent. Un chiffre, gratuit.
+- **R-061 (le relais) redescend en urgence sans changer de priorité** : il reste **P1** — il
+  faudra l'allumer un jour, et un dispositif jamais essayé n'est pas un dispositif — mais **ce
+  n'est pas le geste utile aujourd'hui**.
+
+### I-19 n'est pas levée : elle est **reformulée**
+
+Réclamer un nombre de spectateurs était **une mauvaise question** — Romain a eu raison de refuser
+d'inventer un chiffre. Ce qui la remplace :
+
+- **la partie calculable** : `Equipes` porte déjà `nb_joueurs` et `nb_educateurs`, remplies par
+  les clubs à leur réponse d'invitation. **Le jour où de vrais clubs auront répondu, l'application
+  connaîtra elle-même le public concerné** ;
+- **la partie qui restera inconnue jusqu'au jour J** : la **part du public qui regarde au même
+  instant** lors d'un pic. Elle ne se déduit d'aucune donnée — elle s'observera **pendant** le
+  tournoi, dans le journal « Exécutions ».
+
+> 📌 **Leçon de méthode.** Une inconnue mal posée produit une réponse inutile. Ici, la bonne
+> question n'était pas *« combien de monde ? »* mais *« combien d'écrans allumés au même
+> instant ? »* — et c'est la connaissance métier de Romain, pas la mesure, qui l'a fait
+> apparaître.

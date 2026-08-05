@@ -4,8 +4,8 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-05 (session 9, close — **domaine E audité, I-05 levée**)
-**Commit de référence** : `98b87db` sur **`main`** — la session 9 part de là.
+**Dernière mise à jour** : 2026-08-05 (session 10, close — **domaine F audité ; I-18 levée le soir même**)
+**Commit de référence** : `48e3451` sur **`main`** — la session 10 part de là.
 **Documentation uniquement — aucun fichier de l'application modifié**, aucun redéploiement requis.
 
 > ✅ **Tout le travail décrit ci-dessous est dans `main`.** Une session qui démarre depuis `main`
@@ -17,19 +17,20 @@
 
 ## 1. EN UNE PHRASE
 
-L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 a passé les cinq huitièmes** : **cinq domaines sur huit
+L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 a passé les trois quarts** : **six domaines sur huit
 sont audités** — le **A (métier)**, le **C (sécurité)**, le **B (protection des données)**, le
-**D (tests)** et le **E (expérience d'utilisation)**, soit **60 problèmes**. Le domaine E, fait en
-session 9, dit quelque chose d'encourageant : **l'application sait déjà tout faire correctement —
-elle ne l'a simplement pas fait partout.** Les 44 pixels de cible tactile, le bouton qui annonce sa
-progression, la confirmation qui nomme ce qu'elle va détruire : tout cela **existe déjà**, sur les
-écrans construits récemment, et manque sur les plus anciens et les plus utilisés. Il y a donc peu à
-inventer, beaucoup à **propager**. **Aucun P0**, **deux P1**, tous deux sur le même sujet : **la
-page de saisie ne dit pas au bénévole où il en est** — elle peut affirmer que les scores sont à
-jour alors qu'ils ne le sont pas, et affiche « Failed to fetch » quand elle échoue. L'inconnue
-**I-05** (qui utilise quoi, sur quel matériel) a été **levée par Romain**. **Une seule chose
-t'attend, et elle n'est pas technique** : remplacer les deux mots de passe par des suites
-aléatoires (**D-017**, ce qui referme R-019). Il reste **3 domaines** à auditer.
+**D (tests)**, le **E (expérience d'utilisation)** et le **F (performance)**, soit **71 problèmes**.
+Le domaine F, fait en session 10, dit une chose simple : **le travail de performance a été fait, et
+bien fait — puis arrêté juste avant la fin.** Ce qui tourne dans le navigateur est **rapide** (page
+prête en 527 ms, calculs à moins d'une milliseconde) ; ce qui tourne chez Google est **lent par
+nature** (2,3 s même pour une action qui n'exécute rien). Et les deux dispositifs prévus pour
+encaisser la foule sont, l'un **éteint** (le relais CDN, pourtant entièrement écrit), l'autre
+**programmé pour s'éteindre tout seul** au-delà d'environ 165 matchs — sans rien dire. **Aucun
+P0**, **deux P1**, qui ne font qu'un sujet : **personne ne sait ce qui se passe si trois cents
+parents ouvrent la page des scores en même temps.** Deux inconnues nouvelles (**I-18**, **I-19**),
+toutes deux levables **sans écrire une ligne de code**. **Une seule chose t'attend et n'est pas
+technique** : remplacer les deux mots de passe par des suites aléatoires (**D-017**, ce qui referme
+R-019). Il reste **2 domaines** à auditer.
 
 ---
 
@@ -58,8 +59,8 @@ aléatoires (**D-017**, ce qui referme R-019). Il reste **3 domaines** à audite
 | **B** | **RGPD / Protection des données** | ✅ **CLOS** (session 7) — 13 problèmes, **0 P0**, 3 P1, 9 P2, 1 P3 · 3 décisions **reportées à l'ÉTAPE 3** (D-018, D-019, D-020 — voir **D-023**) |
 | **D** | **QA / Tests** | ✅ **CLOS** (session 8) — 10 problèmes, **0 P0**, 4 P1, 5 P2, 1 P3 · **+ M-04** (une preuve du dossier était fausse) · aucune décision de Romain requise pour constater |
 | **E** | **UX / UI / Accessibilité** | ✅ **CLOS** (session 9) — 10 problèmes, **0 P0**, 2 P1, 7 P2, 1 P3 · **I-05 levée** · écrans **réellement ouverts et mesurés** dans un navigateur · aucune décision de Romain requise pour constater |
-| F | Performance | ⬜ **Prochain** |
-| G | Architecture / Maintenabilité | ⬜ À faire |
+| **F** | **Performance** | ✅ **CLOS** (session 10) — 11 problèmes, **0 P0**, 2 P1, 7 P2, 2 P3 · **2 inconnues ouvertes** (I-18, I-19) · **42 appels réels chronométrés**, poids transféré mesuré, **25 lectures simultanées** essayées · aucune décision de Romain requise pour constater |
+| G | Architecture / Maintenabilité | ⬜ **Prochain** |
 | H | Qualité du code | ⬜ À faire |
 
 > L'**ÉTAPE 1 (cartographie)** est terminée : volets A (session 2), B (session 3) et C (session 4),
@@ -89,7 +90,21 @@ fois vraie.
 tôt ne coûte rien et peut faire gagner des semaines. Ce sont les deux seules exceptions à D-024,
 avec D-017.
 
-**4. Rien d'autre.** Les trois questions du domaine B — **D-018, D-019, D-020** — ont été
+**4. ✅ FAIT le 2026-08-05 — I-18 levée.** Romain a fourni **trois pages** du journal
+« Exécutions ». **128 exécutions réelles analysées, 100 % « Terminée », aucun échec.** Le
+résultat n'est pas celui qu'on espérait : une lecture occupe le serveur **1,65 s** — alors que
+`ping`, qui n'exécute **rien**, en occupe déjà **1,59 s**. Le cache est donc **excellent**
+(+0,06 s pour servir tout le tournoi), mais **~1,6 s de démarrage par appel est incompressible**.
+**Capacité : 150 à 300 spectateurs, pas 1 300.** Détail complet en `AUDIT.md` **§F.9**.
+
+**5. 🏉 LA question, et toi seul peux y répondre** : **combien de spectateurs viennent
+réellement ?** (**I-19**). Le chiffre de **1 300** est écrit dans `docs/relais-cdn.md`, **sans
+source**. Depuis que I-18 est levée, **c'est la seule question qui décide** : sous ~150 personnes,
+on ne touche à rien ; au-delà, il faut allonger le rafraîchissement (gratuit, double la capacité)
+et probablement allumer le relais (**R-061**). Ce n'est pas une question technique : c'est ta
+connaissance du terrain.
+
+**6. Rien d'autre.** Les trois questions du domaine B — **D-018, D-019, D-020** — ont été
 **reportées à la fin des audits** par Romain (**D-023**, puis généralisé par **D-024** à *tous*
 les points en suspens — registre en **§10**) : plus rien ne presse depuis
 que `D-022` fixe un déclencheur et que R-029 est suspendu. Elles seront reprises au début de
@@ -109,26 +124,27 @@ Pour mémoire, les trois questions reportées :
 | **D-019** | **Que fait-on de la mesure des partenaires**, qui écrit déjà sur le téléphone de chaque spectateur ? Informer · demander l'accord · alléger | **Informer**, avec un moyen de dire non. C'est le seul qui améliore la situation sans dégrader la page des scores |
 | **D-020** | **Combien de temps garde-t-on quoi ?** Valider ou corriger le tableau des durées | **Valider le tableau, corriger ce qui te paraît faux** — c'est ton métier qui décide. Écrire les durées ne touche à aucun code |
 
-### Puis : session 10 — ÉTAPE 2, domaine F : la performance
+### Puis : session 11 — ÉTAPE 2, domaine G : l'architecture et la maintenabilité
 
 *(toujours sans rien modifier)*
 
-C'est l'ordre validé par D-010 (**A → C → B → D → E → F → G → H**). Le domaine F regarde
-**combien de temps les choses prennent, et ce qui arrive quand beaucoup de monde regarde en même
-temps** : temps de chargement, nombre d'appels au serveur Google, requêtes répétées, taille des
-images, mise en cache, quotas d'exécution chez Google, et comportement un dimanche à 11 h quand
-deux cents parents rafraîchissent la page des scores.
+C'est l'ordre validé par D-010 (**A → C → B → D → E → F → G → H**). Le domaine G regarde
+**comment le projet est rangé, et ce qu'il en coûterait à quelqu'un d'autre de le reprendre** :
+structure des fichiers, responsabilités, duplication, dépendances, conventions, documentation,
+dette technique.
 
-> ⚠️ **Règle de prudence rappelée par `CLAUDE.md` §6.F** : *aucune optimisation prématurée*.
-> Toute optimisation devra être justifiée par une **mesure** ou un **risque identifiable** — pas
-> par une intuition.
+> ⚠️ **Règle de prudence rappelée par `CLAUDE.md` §6.G** : *ne pas refactorer massivement pour
+> obtenir une architecture théoriquement plus élégante*. Privilégier les changements
+> **progressifs et réversibles**.
 
-Ce qui l'alimente déjà : **R-053** (le domaine E vient de constater qu'on ne sait pas combien de
-temps prend réellement une validation de score — c'est le domaine F qui le dira, et qui dira donc
-si R-053 est un détail ou un problème), **R-014** (les plafonds posés sur la seule porte ouverte,
-et les quotas Google qu'ils protègent), le **relais CDN Cloudflare** prévu mais **désactivé**
-(`SNAPSHOT_URL` vide dans `config.js`), les **~750 Ko de bibliothèques extérieures** chargées par
-le navigateur (R-024), et les points d'attention de la cartographie sur les appels répétés.
+Ce qui l'alimente déjà, et c'est copieux : **un seul fichier de 8 147 lignes et 277 fonctions**
+pour tout le serveur ; **693 fonctions dans un espace commun** côté navigateur, dont **8 noms en
+double** ; **29 mentions de « miroir »** (des règles écrites deux fois, serveur et navigateur,
+que rien ne confronte — **R-044**) ; **aucun outillage** (pas de `package.json`, aucune étape de
+construction, aucune vérification automatique) ; **R-024** (bibliothèques sans version ni origine
+documentée, que le domaine F vient de chiffrer à 207 Ko pour la seule bibliothèque PDF) ; et
+**D-005**, la décision en attente sur le périmètre — que **R-066** rend maintenant concrète, un
+problème mesuré ici se corrigeant dans l'autre dépôt.
 
 **Condition de démarrage** : instruction explicite de Romain.
 
@@ -190,15 +206,15 @@ preuves, telles qu'inscrites au départ :
 
 ## 6. PROBLÈMES RESTANT À TRAITER
 
-**60 problèmes — 1 corrigé, 59 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
+**71 problèmes — 1 corrigé, 70 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
 le registre et `AUDIT.md` pour l'explication de chacun.
 
-| Priorité | Total | Domaine A (métier) | Domaine C (sécurité) | Domaine B (données) | Domaine D (tests) | Domaine E (expérience) |
-|---|---|---|---|---|---|---|
-| **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **TESTÉ, en service** *(une preuve remplacée, voir §5)* | — | — | — |
-| **P1** | **19** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* | R-028 personne n'est informé · **R-029 mesure des spectateurs** *(SUSPENDU — partenaires désactivés le 2026-08-05)* · R-030 rien ne s'efface | **R-041 classement/départage non testés** · **R-042 saisie du score non testée** · **R-043 le navigateur part en ligne sans contrôle** · **R-044 règles écrites en double, jamais confrontées** | **R-051 « Rafraîchir » échoue en silence** · **R-052 « Failed to fetch » affiché au bénévole** |
-| **P2** | 34 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 |
-| **P3** | 6 | R-011 | R-026 · R-027 | R-040 | R-050 | R-060 |
+| Priorité | Total | Domaine A (métier) | Domaine C (sécurité) | Domaine B (données) | Domaine D (tests) | Domaine E (expérience) | Domaine F (performance) |
+|---|---|---|---|---|---|---|---|
+| **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **TESTÉ, en service** *(une preuve remplacée, voir §5)* | — | — | — | — |
+| **P1** | **21** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* | R-028 personne n'est informé · **R-029 mesure des spectateurs** *(SUSPENDU — partenaires désactivés le 2026-08-05)* · R-030 rien ne s'efface | **R-041 classement/départage non testés** · **R-042 saisie du score non testée** · **R-043 le navigateur part en ligne sans contrôle** · **R-044 règles écrites en double, jamais confrontées** | **R-051 « Rafraîchir » échoue en silence** · **R-052 « Failed to fetch » affiché au bénévole** | **R-061 le relais anti-affluence est éteint** · **R-062 le cache s'éteint tout seul vers 165 matchs** |
+| **P2** | 41 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 | R-063 → R-069 |
+| **P3** | 8 | R-011 | R-026 · R-027 | R-040 | R-050 | R-060 | R-070 · R-071 |
 
 **Risques de méthode** : M-01 · M-02 · M-03 *(largement levé en session 8)* · **M-04** *(nouveau —
 un compte de tests ne dit pas quelle version a été exécutée)*.
@@ -335,7 +351,48 @@ match non saisi, terrain impraticable, égalité parfaite, faute de frappe.
 appartient au chantier FFR (D-003) et que Romain doit porter au Directeur EDR du Racing ou au
 Comité 92. Sa réponse primerait sur D-011 **et** D-015.
 
-> ⚠️ Les 7 autres domaines ne sont **pas** audités. L'absence de problème n'y signifie rien.
+**Le fil rouge du domaine F**, en deux phrases :
+
+1. **Le travail de performance a été fait, puis arrêté juste avant la fin.** Cache serveur,
+   anti-ruée, copie de secours, pause en arrière-plan, étalement aléatoire, délai d'abandon,
+   verrou court-circuité pour les lectures d'administration : **tout est là, et bien fait**. Le
+   relais qui couronne l'édifice est écrit des deux côtés, documenté pas à pas — et **il n'a
+   jamais été allumé**. Ce domaine ne demande pas de construire : il demande de **terminer**.
+2. **Ce qui est lent n'est pas le code, c'est le lieu.** Une action qui ne fait strictement rien
+   met déjà **2,3 secondes** à répondre, parce qu'elle passe par Google Apps Script. Aucune
+   optimisation ne descendra sous ce plancher — et c'est pourquoi la vraie réponse à l'affluence
+   n'est pas d'accélérer le serveur, mais de **ne plus l'interroger** : c'est exactement ce que
+   fait le relais éteint.
+
+> ✅ **Ce que le domaine F a montré de bon** : la page publique est **prête en 527 ms** et pèse
+> **59 Ko** hors logo, sur 12 fichiers seulement ; les calculs du navigateur sont **négligeables**
+> (réaffichage complet des deux vues en **0,9 ms**) — **il ne faut surtout pas y toucher** ;
+> **25 lectures simultanées** ont été servies **25 fois sur 25, sans une erreur**, toutes depuis
+> la même copie en cache ; le cache serveur **divise le temps par trois** (1,4-2 s contre 4,4-6,3 s) ;
+> la « ruée sur le cache » est **traitée** (un seul reconstructeur élu, copie de secours pour les
+> autres) ; la taille du cache est mesurée en **octets réels** et non en caractères, avec le
+> commentaire disant que le piège avait déjà été rencontré ; le rafraîchissement **se met en pause
+> en arrière-plan**, est **étalé au hasard**, **n'empile jamais** deux requêtes et **abandonne au
+> bout de 12 s** ; les lectures d'administration **court-circuitent le verrou** pour ne pas
+> concurrencer la saisie le jour J ; et une fausse alerte a été **levée** — le minuteur à 5 s des
+> partenaires n'écrit que sur le téléphone, l'envoi réseau est bien espacé de 10 minutes. La liste
+> complète est dans `RISQUES.md` (« ce qui a été vérifié et s'est révélé sain — domaine F »).
+
+> ⚠️ **Les limites du domaine F, et il faut les dire** : toutes les mesures viennent d'un
+> **ordinateur situé à 16 millisecondes des serveurs Google** — ce sont donc des temps
+> **plancher**, jamais des temps réels de téléphone en bord de terrain. **Je n'ai pas simulé
+> trois cents spectateurs** : j'en ai simulé **vingt-cinq**, une fois — un vrai test de charge sur
+> le service en production n'est pas un geste d'audit. Et **aucune écriture n'a été chronométrée**
+> (une écriture exige une clé, et une écriture ratée ferait monter le compteur anti-force-brute) :
+> le coût d'une validation de score — **3 à 8 s** — est **reconstitué**, donc **PROBABLE**.
+
+> 🔗 **Le domaine F répond à la question que le domaine E lui avait laissée.** `R-053` demandait
+> si l'attente après « Valider » était un détail. **Réponse : non.** La reconstruction de
+> l'instantané public, mesurée à **2,5-4,5 s**, se fait **pendant que le verrou d'écriture est
+> tenu** (**R-067**) — l'attente est donc réelle et s'allonge quand plusieurs marqueurs valident
+> ensemble. Un bouton muet pendant quatre secondes est un bouton sur lequel on reclique.
+
+> ⚠️ Les 2 autres domaines (G, H) ne sont **pas** audités. L'absence de problème n'y signifie rien.
 
 La cartographie a par ailleurs relevé **39 points d'attention**, qui sont des **observations**, pas
 des verdicts. Ils seront classés à l'ÉTAPE 2 :
@@ -371,6 +428,8 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-013 | **Planning** : déplacer un match, et décaler toute la journée de X minutes | ✅ Validée (session 5) |
 | D-014 | **Départage** : confrontation directe, puis ordre alphabétique en dernier recours | ✅ Validée (session 5) |
 | D-015 | **Match annulé** : même mécanisme que le forfait, libellé distinct, ne compte pour personne | ✅ Validée (session 5), **par défaut** — une règle FFR primerait |
+| **D-027** | **L'attente est annoncée, jamais subie.** Page publique : indicateur de chargement **animé** + courte explication du délai, **sans aucun chiffre** (un délai annoncé devient une promesse — or 4 % des appels dépassent 10 s). Page de saisie : animation en **deux temps**, « c'est pris en compte » → « c'est bon ». ✅ **4 arbitrages validés par Romain** (*« je vais suivre l'ensemble de tes conseils »*) : **délai retenu = 30 s, PAS 60** (le bouton « Rafraîchir » concentre la charge au pic ; 60 s seulement si une mesure le justifie) · une animation **ne doit jamais mentir** (3 issues : ça arrive / c'est arrivé / **ça a échoué**) · **CSS pur**, jamais d'image · **l'animation prime sur l'accélération**, car 60 % du temps d'une validation est incompressible | ✅ **Validée (session 10)** — **conception proposée par Romain** |
+| **D-026** | **Mieux vaut faire attendre que ne pas délivrer.** Entre des scores très frais et la certitude que chacun finira par les obtenir, on choisit **la certitude** — allonger le rafraîchissement est donc un geste acceptable. ⚠️ **Mais accepter l'attente INTERDIT le silence** : une attente voulue que l'écran n'annonce pas devient indistinguable d'une panne, et les gens rechargent — ce qui aggrave la charge. **D-026 renforce donc R-051, R-052, R-053 et R-069**, qui deviennent le **préalable** de tout allongement de délai | ✅ **Validée (session 10)** — décision **spontanée** de Romain : *« même s'ils doivent attendre un peu […] la finalité c'est qu'ils l'obtiennent »* |
 | **D-024** | **Tous les points en suspens (questions, décisions, inconnues) sont accumulés pendant l'ÉTAPE 2 et traités un par un à l'ÉTAPE 3.** Registre unique en **§10**. Trois exceptions : D-017 (une action, pas une question), les questions **sortantes** (I-10, I-15), et un éventuel **P0** | ✅ **Validée (session 7)** — *« on pourra les traiter une par une, de manière détaillée »* |
 | **D-023** | **Les trois décisions du domaine B (D-018/019/020) sont reportées à la fin des audits.** Plus rien ne presse : D-022 fixe le déclencheur, R-029 est suspendu. Et elles **ne dépendent pas de l'hébergement**, contrairement à ce qu'on pouvait croire | ✅ **Validée (session 7)** — *« oui après me semble juste »* |
 | D-016 | **Corriger R-014 (le P0) tout de suite**, seul, hors de l'ordre du chantier — puis reprendre les audits | ✅ Validée (session 6) — *« va pour B alors je te suis dans ton raisonnement »* |
@@ -409,6 +468,7 @@ vérification supplémentaire.
 | **I-14** | **Qui est officiellement responsable** de ces données — l'association Génération R92, le Racing 92, ou Romain à titre personnel ? Et le classeur doit-il rester dans un **compte Google individuel** ? | Aucun document du dépôt ne le dit. Ce n'est pas qu'un sujet RGPD : si ce compte est perdu ou bloqué, **l'association perd d'un coup son carnet d'adresses, ses images et son historique** | Réponse de Romain, à écrire dans `DECISIONS.md`. Elle conditionne D-018 (les textes doivent nommer le responsable) — voir **R-039** |
 | **I-15** | **Le droit à l'image des enfants est-il géré ailleurs** — par la licence FFR, un document du club, une consigne aux clubs invités ? | Le mécanisme existait dans l'application et a été **retiré sur décision du club** le 2026-08-03. Le modèle `.docx` reste dans le dépôt, plus rien ne le charge. **Rien n'écrit ce qui l'a remplacé** | Question de Romain au club. Tant que la réponse est inconnue, ce n'est **pas un défaut du code** — voir **R-036** |
 | **I-16** | **Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page « Vos données » ?** | C'est un **autre dépôt**, hors périmètre tant que D-005 n'est pas tranchée — or c'est l'endroit naturel de la page prévue par D-018 | Vérification par Romain, ou extension du périmètre (D-005) |
+| **I-19** | **Combien de spectateurs sont réellement attendus ?** Le chiffre de **1 300** vient de `docs/relais-cdn.md`, **sans source**. C'est lui qui décide s'il faut allumer le relais (**R-061**) ou non | Aucun document du dépôt ne le justifie. C'est une connaissance de terrain, pas une donnée technique | Réponse de Romain — **il est le seul à savoir** combien de familles viennent à ce tournoi |
 
 ### Points levés
 
@@ -421,6 +481,7 @@ vérification supplémentaire.
 | **I-11** | Comment la Web App est-elle réellement publiée chez Google ? | ✅ **LEVÉ — « Exécuter en tant que : Moi » et « Qui a accès : Tout le monde ».** Capture de l'écran de déploiement fournie par Romain. « Tout le monde » veut dire **sans compte Google, sans rien**. C'est le réglage **nécessaire** (les spectateurs doivent pouvoir lire les scores) : rien à y changer. Mais cela confirme que R-014 n'exigeait aucun préalable — d'où sa correction immédiate. | 2026-08-04, session 6 |
 | **I-12** | Les deux clés sont-elles des suites aléatoires ou des mots choisis à la main ? | ⚠️ **LEVÉ — ce sont des MOTS choisis par Romain** : *« pour les MDP c'est moi qui ai choisi ce sont des mots »*. C'est la réponse défavorable : **R-019 passe de P2 à P1**. Le remède ne demande aucun code — remplacer les deux clés par des suites aléatoires (**D-017**). | 2026-08-04, session 6 |
 | **I-17** | Les 16 vérifications de R-014 passent-elles **chez Google** ? | ✅ **LEVÉ — OUI, `R92 — 589/589 OK, 0 FAIL`.** Romain a recollé `backend/Tests.gs` dans Apps Script et relancé `lancerTestsFFR` le jour même où le problème a été signalé. Deux contrôles croisés sur la capture : le **nombre** (589 = le compte du fichier *après* la correction ; 573 était celui d'avant) et la **dernière ligne du fichier** (3711 = exactement le nombre de lignes de `backend/Tests.gs`). **M-04 refermé** ; la 2ᵉ preuve du statut TESTÉ de **R-014** est reconstituée. ⚠️ **Portée exacte** : les tests tournent dans l'**éditeur**, donc contre le `Code.gs` **du projet** — pas nécessairement contre la version figée à l'adresse publique. **M-02 fortement réduit, pas supprimé.** | 2026-08-05, session 8 |
+| **I-18** | **Combien de temps une demande occupe-t-elle réellement le serveur de Google ?** | ✅ **LEVÉE — 1,59 s pour ne RIEN faire, 1,65 s pour tout servir.** Romain a fourni **trois pages** du journal « Exécutions » : **128 exécutions réelles, 100 % « Terminée », aucun échec**. Lectures : médiane **2,07 s** (max 19,55 s). Écritures : médiane **2,67 s** (max 8,20 s) — ce qui **confirme** l'estimation « PROBABLE 3 à 8 s » de R-067, désormais **CERTAIN**. ⚠️ **Trois conséquences** : (1) **capacité ≈ 150 à 300 spectateurs, pas 1 300** ; (2) le commentaire de `doGet` (« quelques millisecondes ») est **faux de deux ordres de grandeur** — le coût est un **démarrage incompressible de ~1,6 s**, que le code ne peut pas réduire ; (3) **levier gratuit** : porter le rafraîchissement de 15 s à 30 s **double la capacité**. ✅ Au passage, une trace inédite pour **M-02** : les exécutions web portent **« Version 148 »**, l'éditeur **« Head »** — le mécanisme du risque est constaté directement. Détail : `AUDIT.md` §F.9 | 2026-08-05, session 10 |
 | **I-05** | Qui utilise l'administration le jour J, et sur quel matériel ? | ✅ **LEVÉE — partiellement, et c'est suffisant pour le domaine E.** Réponses de Romain : **création du tournoi depuis un ordinateur** ; **scores saisis par des bénévoles sur leur propre téléphone** *(à confirmer)* ; **qui** fera quoi le jour J n'est **pas encore décidé** — on raisonne donc sur quelqu'un **qui n'a pas été formé** ; **réseau excellent au Racing** (Plessis-Robinson, Colombes, 5G), **inconnu ailleurs**. ⚠️ **« Leur propre téléphone » est la contrainte la plus lourde** : matériel **inconnu** (petit écran, vieil appareil, plein soleil) — d'où les mesures faites jusqu'à **320 px** de large. | 2026-08-05, session 9 |
 | **I-04** | L'application a-t-elle servi un tournoi réel ? | ✅ **LEVÉ — non : le tournoi actuellement en base est un tournoi de TEST.** Romain : « c'est juste un faux tournoi avec de vrais noms ». Les noms d'équipes visibles (Racing 92, Stade Français, Clamart, Meudon, Vélizy, Antony, Sèvres, Issy-les-Moulineaux) sont de vrais clubs, mais les engagements sont fictifs. | 2026-08-04, session 2 |
 
@@ -467,6 +528,9 @@ vérification supplémentaire.
 | `cloudflare/` | 1 dossier |
 | Historique Git | **513 enregistrements** au total (relus **en entier** en session 6, à la recherche de mots de passe : **aucune fuite**). Branche de travail `claude/session-6-etape-2-securite-0tul4c`, partie de `dda3987` |
 | `frontend/js/vendor/` | **4 bibliothèques extérieures**, ~750 Ko, **sans version ni origine documentée** (`pdf-lib`, `docxtemplater`, `pizzip`, `qrcode`) — voir R-024 |
+| **Mesures de performance** *(session 10, sur l'application EN LIGNE)* | **Page publique** : prête en **527 ms**, chargée en **718 ms**, **59 Ko** transférés hors logo, **12 fichiers**. **Page de saisie** : **47 Ko**. **Administration** : **468 Ko** sur 25 fichiers, dont **207 Ko de `pdf-lib`** (44 %). **Logo** : **229 Ko** à lui seul (chargé en 700×558, affiché en 60×48) — servi par l'autre dépôt |
+| **Serveur Google** *(42 appels chronométrés)* | Plancher **2,3 s** (`ping`, qui n'exécute rien) · `getAll` médiane **≈ 2,1 s** · cache chaud **1,36-2,05 s** · cache froid **4,36-6,30 s** · pointes observées **16,8 s** et **20,1 s** (au-delà du délai d'abandon de 12 s) · **25 lectures simultanées → 25/25 servies**, la plus lente à 8,57 s |
+| **Instantané public servi** | **30 460 octets** pour **51 matchs / 37 équipes** — **466 o par match**, **142 o par équipe**. **58 % du poids des matchs = des champs vides** (17 champs vides sur 27). Le cache serveur **s'éteint au-delà de 95 000 o**, soit **≈ 165 matchs** (R-062) |
 
 ---
 
@@ -477,9 +541,23 @@ vérification supplémentaire.
 > l'ÉTAPE 3. Ce tableau est **mis à jour à la fin de chaque session d'audit** — c'est le seul
 > endroit où regarder pour savoir ce qui reste ouvert.
 
-**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine E).
+**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine F).
 
-> ✅ **Le domaine E n'a ajouté AUCUNE décision en attente et AUCUNE inconnue.** Ses 10 problèmes
+> ✅ **Le domaine F n'a ajouté AUCUNE décision en attente**, mais **deux inconnues — et les deux
+> ont bougé le soir même.**
+>
+> **I-18 est LEVÉE** : 128 exécutions réelles analysées, la capacité est chiffrée.
+>
+> **I-19 est REFORMULÉE**, parce que Romain a montré qu'elle était **mal posée** : le nombre de
+> spectateurs n'est pas prévisible (il dépend des équipes, des éducateurs, des parents présents
+> **et de ceux qui suivent depuis la maison ou le travail** — un public que l'audit avait
+> entièrement oublié). Sa remarque a **corrigé une conclusion trop pessimiste** : la capacité se
+> compte en **écrans allumés sur la page**, pas en personnes — or la page **se met en pause** dès
+> que l'onglet n'est plus visible. **Conduite à tenir qui en découle** : porter le rafraîchissement
+> de 15 s à 30 s (**R-064**, un chiffre à changer) suffit jusqu'à ~1 000 personnes qui suivent ;
+> le relais (**R-061**) ne devient nécessaire qu'au-delà. Détail : `AUDIT.md` **§F.10**.
+>
+> ✅ **Le domaine E n'avait ajouté AUCUNE décision en attente et AUCUNE inconnue.** Ses 10 problèmes
 > sont des **choix techniques** — ils n'appellent aucun arbitrage de Romain pour être constatés,
 > seulement pour être **ordonnés**, à l'ÉTAPE 3 (**D-024**). Il a en revanche **levé I-05**.
 >
@@ -524,6 +602,8 @@ vérification supplémentaire.
 | **I-14** | Qui est officiellement responsable des données, et le classeur doit-il rester dans un compte individuel ? | Réponse de Romain **au déclencheur** — non bloquant aujourd'hui (**D-021**) | **B** — **R-039** |
 | **I-15** | Le droit à l'image des enfants est-il géré ailleurs ? | **Question sortante** — voir §10.1 | **B** — **R-036** |
 | **I-16** | Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page de confidentialité ? | Vérification de Romain, ou extension du périmètre (**D-005**) | **B** — **D-018** |
+| ~~**I-18**~~ | ~~Combien de temps une demande occupe-t-elle réellement le serveur de Google ?~~ | ✅ **LEVÉE le 2026-08-05** — 128 exécutions analysées, capacité ≈ 150-300 spectateurs. Voir §8 et `AUDIT.md` §F.9 | ~~F~~ |
+| **I-19** *(reformulée le 2026-08-05)* | **Quelle part du public regarde son écran au MÊME INSTANT lors d'un pic** (fin de match, annonce du classement) ? ⚠️ **La question d'origine — « combien de spectateurs ? » — était mal posée** : Romain a montré qu'elle n'est pas prévisible (elle dépend des équipes présentes, des éducateurs, des parents sur place **et de ceux qui suivent depuis la maison ou le travail**). Elle est en revanche **calculable** : `Equipes` porte déjà `nb_joueurs` et `nb_educateurs`, remplies par les clubs à leur réponse | Le seul paramètre qui ne se déduit d'aucune donnée. La page se mettant en pause quand l'onglet n'est pas visible, seuls comptent les **écrans allumés sur la page** | **Observation le jour J** : regarder le journal « Exécutions » **pendant** le tournoi | **F** — **R-061**, **R-064** |
 
 ### 10.4 — Comment ce registre sera traité
 

@@ -5,8 +5,8 @@
 > L'**explication** de chaque problème (pourquoi, exemple concret, ce qui est proposé) vit dans
 > `AUDIT.md`. Ce fichier-ci **suit** ; `AUDIT.md` **explique**.
 
-**Dernière mise à jour** : 2026-08-05 (session 8)
-**Audits réalisés** : domaine A (métier), domaine C (sécurité), domaine B (RGPD), domaine D (QA / tests). Les 4 autres domaines restent à faire.
+**Dernière mise à jour** : 2026-08-05 (session 10, **complétée le soir même — I-18 levée**)
+**Audits réalisés** : domaine A (métier), domaine C (sécurité), domaine B (RGPD), domaine D (QA / tests), domaine E (UX / accessibilité), **domaine F (performance)**. Les 2 autres domaines (G, H) restent à faire.
 **Correction réalisée** : R-014 (le P0), par exception validée — voir D-016. ⚠️ Une de ses trois preuves est tombée en session 8, ✅ **et a été refaite correctement le jour même** (`589/589 OK` chez Google) — voir la note sous le tableau de synthèse, `AUDIT.md` §D.8 et **M-04**.
 
 ---
@@ -58,12 +58,12 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
 | **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
-| P1 | **19** | 0 | **5** | 0 | 0 | 0 |
-| P2 | **34** | 0 | **2** | 0 | 0 | 0 |
-| P3 | **6** | 0 | 0 | 0 | 0 | 0 |
+| P1 | **21** | 0 | **5** | 0 | 0 | 0 |
+| P2 | **41** | 0 | **2** | 0 | 0 | 0 |
+| P3 | **8** | 0 | 0 | 0 | 0 | 0 |
 
-**Total : 60 problèmes** — domaine A (13) + domaine C (14) + domaine B (13) + domaine D (10)
-+ **domaine E (10)**.
+**Total : 71 problèmes** — domaine A (13) + domaine C (14) + domaine B (13) + domaine D (10)
++ domaine E (10) + **domaine F (11)**.
 
 > ⚠️➜✅ **UNE PREUVE DE R-014 EST TOMBÉE EN SESSION 8 — PUIS A ÉTÉ REFAITE LE JOUR MÊME.**
 >
@@ -363,11 +363,52 @@ aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Rom
 | **Piège du cache mobile** | ✅ **Déjà vu et déjà réglé** : anti-cache sur le rafraîchissement, avec le commentaire qui l'explique |
 | **Fenêtres de dialogue** | ✅ Clavier géré (Entrée / Échap), focus donné au bon endroit, bouton destructeur **en rouge** |
 
+### Domaine F — Performance *(session 10)*
+
+| # | Problème | Priorité | Certitude | Statut | Détail |
+|---|---|---|---|---|---|
+| **R-061** | ✅ **CAPACITÉ CHIFFRÉE LE 2026-08-05 (I-18 levée)** : **≈ 310 écrans actifs simultanés** en régime normal, ≈ 165 en régime moyen, ≈ 110 cache froid. ⚠️ **CORRECTION du même jour (§F.10)** : l'unité est l'**écran allumé sur la page**, **pas** la personne — la page **se met en pause** quand l'onglet n'est pas visible. 310 écrans actifs correspondent donc à un public **bien plus large**. Modèle appliqué au tournoi actuel (37 équipes) : ~145 écrans en régime courant *(large marge)*, saturation **seulement dans les pics**. **Le geste utile aujourd'hui est R-064** (15 s → 30 s, suffit jusqu'à ~1 000 personnes qui suivent), **pas** le relais — qui reste P1 pour plus tard, et parce qu'un dispositif jamais essayé n'est pas un dispositif. Mesure clé : `ping`, qui n'exécute **rien**, occupe déjà le serveur **1,59 s** ; une lecture complète servie du cache, **1,65 s** — soit **+0,06 s**. Le cache est donc excellent, mais **~1,6 s de démarrage par appel est incompressible**. ⚠️ Le commentaire de `doGet` (« répond en quelques millisecondes ») est **faux de deux ordres de grandeur**. **Levier gratuit découvert** : porter le rafraîchissement de **15 s à 30 s double la capacité** (≈ 550). — **La protection contre l'affluence est écrite, documentée… et éteinte.** Le relais CDN (Cloudflare) existe des deux côtés — programme du relais, poussée depuis Apps Script, lecture prioritaire par la page publique avec repli automatique, pas-à-pas d'installation. Il manque **une seule ligne** : `SNAPSHOT_URL = ""` (`frontend/js/config.js:30`). Or **42 appels mesurés** donnent : plancher **2,3 s** (même pour `ping`, qui n'exécute rien), médiane **≈ 2,1 s**, et **deux pointes à 16,8 s et 20,1 s** — soit **au-delà du délai d'abandon de 12 s** de la page publique, donc deux abandons silencieux (R-051) | **P1** | **CERTAIN** *(le dispositif est éteint)* · **INCONNU** *(la capacité réelle — I-18)* | IDENTIFIÉ — décision d'exploitation à l'ÉTAPE 3 | `AUDIT.md` §F.3 |
+| **R-062** | **Le filet de repli est programmé pour lâcher quand le tournoi grossit.** Le cache serveur refuse de s'enregistrer au-delà de **95 000 octets** (`mettreEnCacheSnapshot`) — délibéré, mais **totalement silencieux**. Mesures : instantané actuel **30 460 o** pour **51 matchs** (466 o/match, 142 o/équipe) → **bascule vers ~165 matchs**. Un tournoi à 8 catégories, matin + après-midi, l'atteint. Le commentaire du code renvoie alors « au relais CDN » — **qui est éteint** (R-061). Les deux filets sont noués l'un à l'autre | **P1** | **CERTAIN** *(seuil lu dans le code, taille mesurée, projection calculée)* | IDENTIFIÉ | `AUDIT.md` §F.4 |
+| **R-063** | **58 % de ce qui voyage jusqu'à chaque spectateur, ce sont des cases vides.** Chaque match transporte **27 champs dont 17 vides** pour un match non joué : `"essais_A":""` pèse 16 octets pour ne rien dire. Mesuré sur les 51 matchs réels : **14 541 o sur 25 029**. Payé par chaque spectateur **toutes les 15 s, toute la journée**. Les retirer ferait passer l'instantané de ~30 Ko à ~16 Ko et repousserait le seuil de R-062 de ~165 à ~330 matchs | P2 | CERTAIN (mesuré) | IDENTIFIÉ — ⚠️ **à ne PAS faire avant R-041/R-042** : un champ absent arrive en `undefined` et non `""`, ce que le frontend compare à de nombreux endroits | `AUDIT.md` §F.5 |
+| **R-064** | ⚡ **ÉLARGI le 2026-08-05** — le vrai sujet est que **les réglages de cadence n'ont jamais été accordés entre eux** : ni le cache (10 s) avec l'intervalle (15-19 s), ni l'intervalle avec la capacité réelle du serveur (I-18). **Le levier le plus puissant du chantier est ici** : passer le rafraîchissement de **15 s à 30 s double la capacité** (≈ 310 → ≈ 550 spectateurs), en changeant **un seul chiffre** (`INTERVALLE_MS`), sans rien casser — le bouton « Rafraîchir » reste là pour qui veut tout de suite, et 30 s de fraîcheur suffisent largement pour du rugby. — **Le cache dure 10 s, mais on l'appelle toutes les 15 à 19 s.** Les deux réglages ne se parlent pas : cache serveur **10 s**, rafraîchissement **15 s + jusqu'à 4 s d'étalement**. Conséquence mesurée : **un spectateur seul trouve toujours le cache expiré** → **4,36 à 6,30 s** au lieu de **1,36 à 2,05 s** en cache chaud. **Trois fois plus lent, et c'est le cas normal quand il y a peu de monde.** ✅ Presque gratuit à corriger : **toute écriture repose le cache** (`apresEcriture` vérifié dans `doPost`), donc allonger sa durée ne retarde **pas** un score saisi dans l'application — seulement une modification faite **à la main dans le Sheet** | P2 | CERTAIN (mesuré) | IDENTIFIÉ — **meilleur rapport bénéfice/risque du domaine** | `AUDIT.md` §F.5 |
+| **R-065** | **L'administration télécharge 207 Ko d'outil PDF avant d'afficher quoi que ce soit.** Poids réellement transféré mesuré : **468 Ko sur 25 fichiers**, dont **`pdf-lib.min.js` = 207 Ko (44 %)**, qui ne sert qu'à fabriquer le document d'autorisation. Et **aucun des 21 scripts n'a `defer` ni `async`** : tout bloque l'affichage. ℹ️ **Chiffre R-024** (qui parlait de « ~750 Ko sans version documentée »). Atténué : usage sur ordinateur, avant le tournoi (I-05), et mis en cache par le navigateur | P2 | CERTAIN (mesuré) | IDENTIFIÉ — ⚠️ `defer` change l'ordre d'exécution, et le projet a **693 fonctions dans un espace commun** : à vérifier écran par écran | `AUDIT.md` §F.5 |
+| **R-066** | **Le logo pèse à lui seul 79 % de la page publique** : **229 Ko** contre **61 Ko** pour tout le reste (6 scripts + 3 feuilles + le HTML). Chargé en **700 × 558** pour être affiché en **60 × 48** (en-tête) et **65 × 52** (pied) — **~8 Ko suffiraient**. C'est la première chose que télécharge chaque spectateur. ⚠️ **Le fichier n'est PAS dans ce dépôt** : il est servi par `boutique-r92`, donc **hors périmètre tant que D-005 n'est pas tranchée**. Cas concret qui donne du poids à cette décision en attente | P2 | CERTAIN (mesuré dans le navigateur) | IDENTIFIÉ — **dépend de D-005** | `AUDIT.md` §F.5 |
+| **R-067** | **Le verrou d'écriture est tenu pendant qu'on reconstruit l'instantané public.** `apresEcriture` (qui relit config + équipes + poules + matchs + partenaires) tourne **sous le verrou**, dans `doPost`. Coût mesuré de cette reconstruction : **2,5 à 4,5 s**. Le code a **déjà appliqué ce raisonnement à l'étape suivante** — *« Push CDN APRÈS le verrou »* — mais la reconstruction, elle, est restée dedans. 🔗 **Répond à la question que le domaine E posait au domaine F** : **R-053 n'est PAS un détail** — l'attente après « Valider » est réelle et s'allonge quand plusieurs marqueurs valident ensemble | P2 | ✅ **CERTAIN** *(le code **et** la mesure — 43 écritures réelles : médiane **2,67 s**, max **8,20 s**)* | IDENTIFIÉ — ⚠️ **REVU À LA BAISSE le 2026-08-05 (§F.12)** : le verrou n'est tenu que **~1 s**, et non 2,5-4,5 s comme annoncé en §F.5 — le démarrage Apps Script (**1,59 s, soit 60 % du total**) a lieu **avant** la prise du verrou. Attente du 6ᵉ marqueur : **~8 s**, et non ~16 s. **R-067 reste P2 mais descend dans l'ordre d'intérêt** : le sortir du verrou ferait gagner **moins d'une seconde**. ⚠️ Et cela peut faire écraser un instantané récent par un plus ancien : à réfléchir à l'ÉTAPE 3, pas au fil de l'eau | `AUDIT.md` §F.5, **§F.9**, **§F.12** |
+| **R-068** | **Vérifier un mot de passe passe par le chemin le plus coûteux du serveur.** `cleValide` (`frontend/js/api.js`) envoie une **vraie demande d'enregistrement de score** avec un identifiant bidon (`__verif_cle__`) : le serveur **prend le verrou d'écriture** (jusqu'à 20 s d'attente possible) puis **ouvre le classeur** (~0,5 s)… pour ne rien modifier. Six marqueurs qui ouvrent la page le matin = six prises de verrou inutiles | P2 | CERTAIN | IDENTIFIÉ — ⚠️ **à trancher AVEC R-017, R-018 et R-059** : toucher à la vérification des clés, c'est toucher à la sécurité (`CLAUDE.md` §6.C) | `AUDIT.md` §F.5 |
+| **R-069** | **Les écritures peuvent attendre indéfiniment.** Les lectures ont un délai d'abandon (12 s sur la page publique) ; **`apiPost` n'en a aucun**. Réseau qui « pend » → bouton grisé sans fin, sans message. C'est la **moitié manquante de R-051 et R-052** : ceux-là disent que l'application ne parle pas quand ça échoue, celui-ci qu'elle peut **ne jamais savoir** que ça a échoué | P2 | CERTAIN | IDENTIFIÉ — ⚠️ abandonner l'attente **n'annule pas** l'écriture : le message devra dire *« pas de réponse, rafraîchis pour vérifier »*, **jamais « échec »** | `AUDIT.md` §F.5 |
+| **R-070** | **L'envoi groupé d'invitations bloque tout le reste pendant sa durée** : `envoyerInvitationsGroupe` boucle sur les clubs **en tenant le verrou d'écriture**, ~1-2 s par courriel avec l'affiche en pièce jointe → **1 à 2 minutes pour 50 clubs**. Et Google coupe tout traitement de plus de **6 minutes** (~200 clubs). ℹ️ Un compte Google gratuit est limité à **100 destinataires/jour** ; le projet sait lire ce compteur (`MailApp.getRemainingDailyQuota`) mais **ne le consulte pas avant un envoi groupé**. ✅ Les échecs individuels sont **déjà bien gérés** (collectés et rapportés) | P3 | CERTAIN | IDENTIFIÉ — **ne rien faire maintenant** (jamais le jour J, carnet encore petit) ; à revoir avec **R-040** | `AUDIT.md` §F.6 |
+| **R-071** | **Le compteur de visibilité des partenaires s'arrêterait avant la fin d'une grosse journée** : plafond **30 000 relevés / 6 h** (posé en session 6 pour refermer **R-014**) contre **1 300 spectateurs × 36 relevés ≈ 46 800**. La mesure s'arrêterait vers les deux tiers de la journée. ✅ **Ce n'est pas un défaut** : c'est le comportement voulu, et un relevé de visibilité est une donnée de confort. Il faut simplement **le savoir**, pour ne pas lire une chute de fréquentation là où il n'y a qu'un plafond. Partenaires **éteints depuis le 2026-08-05** (R-029 suspendu) | P3 | CERTAIN | IDENTIFIÉ — **ne rien faire** ; à documenter | `AUDIT.md` §F.6 |
+
+### Ce qui a été VÉRIFIÉ et s'est révélé sain (domaine F)
+
+> À lire **avant** la liste ci-dessus. Le domaine F ne trouve **aucune négligence** : il trouve un
+> travail **bien fait puis arrêté en chemin**, et un réglage devenu faux avec le temps.
+
+| Point vérifié | Résultat |
+|---|---|
+| **Vitesse d'affichage de la page publique** | ✅ **Prête en 527 ms**, entièrement chargée en **718 ms**. Excellent |
+| **Poids de la page publique** | ✅ **59 Ko** transférés hors logo, **12 fichiers seulement**. Très léger |
+| **Calculs dans le navigateur** | ✅ **Négligeables** : réaffichage complet des deux vues **0,9 ms**, comparaison anti-clignotement **0,05 ms**. Même sur un téléphone 20× plus lent : 18 ms. **Rien à optimiser — et il ne faut pas y toucher** |
+| **Tenue à 25 spectateurs simultanés** | ✅ **25 réponses correctes sur 25**, aucune erreur, aucune troncature, **toutes de taille identique** (le cache a bien servi). Le plus rapide 1,92 s, le plus lent 8,57 s |
+| **Cache serveur** | ✅ Réel et efficace : **1,36-2,05 s** en cache chaud contre **4,36-6,30 s** à froid. Il divise le temps par trois |
+| **Anti-ruée sur le cache** | ✅ **Traité** : un seul « reconstructeur » est élu par jeton court, les autres reçoivent une **copie de secours** gardée 6 h. C'est le piège classique, et il est évité |
+| **Mesure du cache en octets réels** | ✅ `Utilities.newBlob` et non `.length` — parce qu'un « é » compte double. Le commentaire dit que le bug avait déjà été rencontré |
+| **`ping` et `getAll` sans ouvrir le classeur** | ✅ Le cas courant (cache chaud) **ne touche jamais au Sheet** — l'ouverture coûte ~0,5 s |
+| **Pause en arrière-plan** | ✅ Le rafraîchissement **s'arrête** quand l'onglet est caché et repart au retour : des centaines de téléphones « en poche » n'appellent pas pour rien |
+| **Étalement aléatoire** | ✅ Jusqu'à 4 s de décalage : les spectateurs n'appellent pas tous à la même seconde |
+| **Pas d'empilement de requêtes** | ✅ Le rafraîchissement **enchaîne après la fin du précédent** (pas de minuteur fixe) |
+| **Délai d'abandon sur les lectures** | ✅ **12 s** : une connexion mobile qui « pend » ne gèle pas la boucle |
+| **Lectures admin hors verrou** | ✅ `getConfigAdmin`, `listerSponsors`… **court-circuitent le verrou d'écriture** pour ne pas concurrencer la saisie le jour J |
+| **Envoi groupé** | ✅ Index construit **une seule fois** au lieu de relire le carnet à chaque club — le commentaire dit que le coût « au carré » avait été repéré et corrigé |
+| **Cadence des relevés partenaires** | ✅ **Fausse alerte levée** : le minuteur à 5 s de `sponsors.js` n'écrit **que sur le téléphone** (mémoire locale) ; l'envoi réseau est bien espacé de **10 minutes** |
+| **Chargement en parallèle** | ✅ La page de saisie lance ses deux appels **en même temps** (`Promise.all`), et le second est **tolérant à l'échec** |
+| **Repli du relais** | ✅ Si le relais est allumé puis tombe, la page publique **retombe automatiquement** sur Apps Script — le code du repli est déjà écrit et lisible |
+
 ### Domaines non audités
 
 | Domaine | Statut |
 |---|---|
-| F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
+| G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
 
 ### Modèle de fiche de problème
 

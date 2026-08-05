@@ -4,7 +4,7 @@
 > Tant que l'audit (ÉTAPE 2) n'a pas eu lieu, le tableau des chantiers reste **vide** :
 > on ne planifie pas des travaux qu'on n'a pas encore constatés.
 
-**Dernière mise à jour** : 2026-08-05 (session 9)
+**Dernière mise à jour** : 2026-08-05 (session 10)
 
 ---
 
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
-| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaines A, C, B, D et E faits (5 sur 8) |
+| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaines A, C, B, D, E et F faits (**6 sur 8**) |
 | 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ⬜ À faire |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
@@ -51,9 +51,9 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 | C | Sécurité | ✅ **FAIT** — **1 P0 (TESTÉ)** · 5 P1 · 6 P2 · 2 P3 | 6 |
 | B | RGPD / Protection des données | ✅ **FAIT** — 0 P0 · 3 P1 · 9 P2 · 1 P3 · **3 décisions en attente** (D-018/019/020) | 7 |
 | D | QA / Tests | ✅ **FAIT** — 0 P0 · 4 P1 · 5 P2 · 1 P3 · **+ M-04** (risque de méthode) | 8 |
-| E | UX / UI / Accessibilité | ⬜ **Prochain** | — |
-| F | Performance | ⬜ Non commencé | — |
-| G | Architecture / Maintenabilité | ⬜ Non commencé | — |
+| E | UX / UI / Accessibilité | ✅ **FAIT** — 0 P0 · 2 P1 · 7 P2 · 1 P3 · **I-05 levée** | 9 |
+| F | Performance | ✅ **FAIT** — 0 P0 · 2 P1 · 7 P2 · 2 P3 · **2 inconnues ouvertes** (I-18, I-19) | 10 |
+| G | Architecture / Maintenabilité | ⬜ **Prochain** | — |
 | H | Qualité du code | ⬜ Non commencé | — |
 
 > ✅ **Ordre d'audit VALIDÉ par Romain le 2026-08-04** (décision D-010) : **A → C → B → D → E → F
@@ -104,6 +104,10 @@ Ce ne sont pas encore des chantiers, mais des **familles** qui se dessinent apr�
 | **Le geste du jour J** | **R-042**, R-005, R-013, R-001 | D-011, D-012 et D-015 rouvrent toutes `enregistrerScore`. R-042 (séparer le cœur de l'écriture) doit être fait **une fois, avant**, sinon on touche trois fois au même code |
 | **Le chemin vers la production** | **R-043**, R-049, R-050 | Rien ne contrôle ce qui part en ligne, et un document annonce une preuve qui n'existe pas. Même sujet : ce qu'on croit vérifié et qui ne l'est pas |
 | **Le filet côté serveur** | R-015, R-016, **R-047** | Trois protections tenues par la **page** et non par le serveur. R-047 (équipes en double) rejoint la famille déjà repérée au domaine C |
+| **⚡ Terminer le travail d'affluence** | **R-061**, **R-062**, **R-064** | Le domaine F a parlé : le relais est écrit mais éteint, le cache de repli s'éteint tout seul vers 165 matchs, et sa durée (10 s) est plus courte que le rythme d'appel (15-19 s). **Un seul sujet, une seule séance.** Précédé de **I-18** (5 minutes) et **I-19** (une question à Romain), sans lesquelles on décide à l'aveugle |
+| **Faire parler le geste du jour J** | **R-051**, **R-052**, **R-053**, **R-069** | Les trois premiers viennent du domaine E (l'écran ne dit rien), le quatrième du domaine F (l'écriture peut attendre sans fin). **Même fichier, même correction, mêmes essais.** Et R-067 explique *pourquoi* ça compte : l'attente après « Valider » est réelle, mesurée |
+| **Alléger ce qui voyage** | **R-063**, **R-065**, **R-066**, R-024 | Champs vides (58 % du poids), outil PDF chargé pour rien (44 % de l'admin), logo surdimensionné (79 % de la page publique). ⚠️ **R-063 exige les tests de R-041/R-042 AVANT** ; **R-066 dépend de D-005** (autre dépôt) |
+| **Le verrou et ce qu'on met dedans** | **R-067**, **R-068**, R-070 | Trois fois le même sujet : du travail fait **sous le verrou d'écriture** alors qu'il pourrait être fait dehors — ou pas du tout. ⚠️ **R-068 touche à la sécurité** : à trancher avec R-017, R-018, R-059 |
 
 ### Modèle de fiche de chantier
 
