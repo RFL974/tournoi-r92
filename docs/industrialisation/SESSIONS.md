@@ -2562,8 +2562,9 @@ problème.
 ### 9. Prochaine session recommandée
 
 **Session 13 — l'ÉTAPE 3 : le plan priorisé.** Elle commence, comme le prévoit **§10.4** et la
-décision **D-024**, par reprendre le registre des points en suspens : **d'abord les 7 inconnues**
-(on ne décide pas sur du sable), **puis les 6 décisions**, **puis seulement** le tableau des
+décision **D-024**, par reprendre le registre des points en suspens : **d'abord les 9 inconnues**
+(I-01, I-08, I-09, I-10, I-14, I-15, I-16, I-19, I-20 — on ne décide pas sur du sable), **puis les
+6 décisions** (D-005, D-009, D-018, D-019, D-020, D-025), **puis seulement** le tableau des
 chantiers.
 
 > ⚠️ **L'ÉTAPE 3 ne tient pas dans une séance.** Un découpage en volets sera proposé au démarrage —

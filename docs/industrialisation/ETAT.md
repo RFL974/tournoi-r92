@@ -55,7 +55,7 @@ qui referme R-019). **L'ÉTAPE 3 — le plan priorisé — peut s'ouvrir.**
 | Domaine | Nom | Statut |
 |---|---|---|
 | **A** | **Métier / Product Owner** | ✅ **CLOS** (session 5) — 13 problèmes, 0 P0, 5 P1, 7 P2, 1 P3 · **toutes les décisions métier prises** |
-| **C** | **Sécurité** | ✅ **CLOS** (session 6) — 14 problèmes, **1 P0**, 4 P1, 7 P2, 2 P3 · **1 décision en attente (D-016)** |
+| **C** | **Sécurité** | ✅ **CLOS** (session 6) — 14 problèmes, **1 P0**, 5 P1, 6 P2, 2 P3 · **1 décision en attente (D-016)** |
 | **B** | **RGPD / Protection des données** | ✅ **CLOS** (session 7) — 13 problèmes, **0 P0**, 3 P1, 9 P2, 1 P3 · 3 décisions **reportées à l'ÉTAPE 3** (D-018, D-019, D-020 — voir **D-023**) |
 | **D** | **QA / Tests** | ✅ **CLOS** (session 8) — 10 problèmes, **0 P0**, 4 P1, 5 P2, 1 P3 · **+ M-04** (une preuve du dossier était fausse) · aucune décision de Romain requise pour constater |
 | **E** | **UX / UI / Accessibilité** | ✅ **CLOS** (session 9) — 10 problèmes, **0 P0**, 2 P1, 7 P2, 1 P3 · **I-05 levée** · écrans **réellement ouverts et mesurés** dans un navigateur · aucune décision de Romain requise pour constater |
@@ -132,9 +132,10 @@ plus rien à auditer.
 L'ÉTAPE 3 construit **le plan de travail** : quels problèmes on corrige, dans quel ordre, groupés
 comment, et avec quelles preuves. Elle se déroule dans l'ordre fixé par **§10.4** :
 
-1. **d'abord les inconnues** — on ne décide pas sur du sable. Il en reste **7** (§10.3), dont deux
-   qui ne demandent qu'une question sortante (I-10, I-15) et une qui ne se lèvera que **le jour du
-   tournoi** (I-19) ;
+1. **d'abord les inconnues** — on ne décide pas sur du sable. Il en reste **9** (§10.3) :
+   I-01, I-08, I-09, I-10, I-14, I-15, I-16, I-19, I-20. Deux ne demandent qu'une **question
+   sortante** (I-10 à la FFR, I-15 au club), une ne se lèvera que **le jour du tournoi** (I-19), et
+   une est **permanente** (I-01 — le code en service chez Google) ;
 2. **puis les décisions**, une par une, chacune présentée avec le problème en langage simple, les
    options, ce que chacune coûte et apporte, et une recommandation. Il en reste **6** (§10.2) ;
 3. **puis seulement** le tableau des chantiers de `PLAN.md` — les **15 familles** déjà repérées y
