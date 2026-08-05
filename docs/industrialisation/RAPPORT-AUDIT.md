@@ -11,8 +11,32 @@
 **Établi le** : 2026-08-05, à la clôture de la session 12
 **Périmètre** : dépôt `tournoi-r92` — serveur (`backend/`), navigateur (`frontend/`),
 documentation (`docs/`), automatisation (`.github/`)
-**Hors périmètre** : le dépôt `boutique-r92` (site vitrine, décision **D-005** en attente) et la
-conformité réglementaire FFR (chantier distinct, décision **D-003**)
+**Hors périmètre** : le dépôt `boutique-r92` (site vitrine — ✅ décision **D-005** tranchée le
+2026-08-05 : il **reste hors périmètre**) et la conformité réglementaire FFR (chantier distinct,
+décision **D-003**)
+
+---
+
+> ## ⚠️ POST-SCRIPTUM — à lire avant de citer un chiffre de ce rapport
+>
+> **Ce rapport est CLOS. Il photographie l'ÉTAPE 2 au 2026-08-05, et ses chiffres ne sont pas mis
+> à jour.** Il n'est pas réécrit après coup — le réécrire ferait perdre la seule chose qu'il
+> apporte : **ce qu'on savait, et quand.**
+>
+> Deux choses ont bougé **après** sa clôture. Elles ne l'invalident pas, mais un lecteur qui
+> l'ouvre aujourd'hui doit les connaître :
+>
+> | Quoi | Où en lire l'état à jour |
+> |---|---|
+> | **Les 6 décisions listées en §5.2 comme « en attente » sont TOUTES TRANCHÉES** *(session 13, 2026-08-05)* — dont **D-025** *(lot ① des tests avant la correction du départage)*, **D-020** *(les 7 durées de conservation)*, **D-018**, **D-019**, **D-005**, **D-009** | `ETAT.md` §7 · `DECISIONS.md` |
+> | **I-16 est levée** — le site vitrine porte déjà une page RGPD, qui **nomme le responsable et l'adresse de contact**. Le remède de **R-028** devient une **section à ajouter**, pas une page à créer *(le problème, lui, reste entier)* | `ETAT.md` §8 |
+> | ⚡ **Un 89ᵉ problème est entré au registre — R-089**, le **tournoi suspendu ou annulé** pour force majeure. **Aucun des huit domaines ne l'avait vu** : il a été **apporté par Romain** (**D-030**). Deux inconnues en découlent : **I-10 élargie** au tournoi entier, et **I-21** *(peut-on réduire le temps de jeu ?)* | `DECISIONS.md` **D-030** · `RISQUES.md` |
+>
+> **En clair** : le **88** de ce rapport reste juste — c'est le résultat de l'audit, et il ne
+> bougera plus. Le registre de suivi, lui, en compte **89** parce qu'il continue de vivre.
+> Confondre les deux laisserait croire que l'audit avait vu ce qu'il n'a pas vu — exactement
+> l'erreur que **M-06** cherche à empêcher. C'est aussi **M-05** en action : *l'audit photographie
+> une application qui bouge*, et son **périmètre fonctionnel** bouge aussi.
 
 ---
 

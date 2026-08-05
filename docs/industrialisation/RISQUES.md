@@ -9,7 +9,7 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-05 (**session 13 — ÉTAPE 3, volet ①** : R-028, R-029, R-030 et R-041 ne sont **plus bloqués par une décision en attente**)
+**Dernière mise à jour** : 2026-08-05 (**session 13 — ÉTAPE 3, volet ①** : R-028, R-029, R-030 et R-041 ne sont **plus bloqués par une décision en attente** · ⚡ **addendum : R-089 inscrit**, tournoi suspendu / annulé, apporté par Romain — voir **D-030**)
 **Audits réalisés** : 🏁 **les 8 domaines** — A (métier), C (sécurité), B (RGPD), D (QA / tests), E (UX / accessibilité), F (performance), G (architecture) et **H (qualité du code)**. **Aucun domaine ne reste à auditer.**
 **Correction réalisée** : R-014 (le P0), par exception validée — voir D-016. ⚠️ Une de ses trois preuves est tombée en session 8, ✅ **et a été refaite correctement le jour même** (`589/589 OK` chez Google) — voir la note sous le tableau de synthèse, `AUDIT.md` §D.8 et **M-04**.
 
@@ -62,14 +62,22 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
 | **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
-| P1 | **23** | 0 | **5** | 0 | 0 | 0 |
+| P1 | **24** | 0 | **6** | 0 | 0 | 0 |
 | P2 | **53** | 0 | **2** | 0 | 0 | 0 |
 | P3 | **11** | 0 | 0 | 0 | 0 | 0 |
 
-**Total : 88 problèmes** — domaine A (13) + domaine C (14) + domaine B (13) + domaine D (10)
-+ domaine E (10) + domaine F (11) + domaine G (10) + **domaine H (7)**.
+**Total : 89 problèmes** — **88 issus des 8 domaines d'audit** [domaine A (13) + domaine C (14) +
+domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (10) + **domaine H
+(7)**] **+ 1 ajouté après la clôture de l'audit** : ⚡ **R-089** *(tournoi suspendu / annulé —
+apporté par Romain le 2026-08-05, voir **D-030**)*.
 
 > ✅ **L'ÉTAPE 2 EST TERMINÉE : les 8 domaines sont audités** (session 12, 2026-08-05).
+
+> ⚡ **Pourquoi 89 et non 88, et pourquoi les deux chiffres sont vrais.** **88** est le résultat de
+> l'audit — il ne bougera plus, et c'est le chiffre de `RAPPORT-AUDIT.md`. **89** est l'état du
+> **registre de suivi**, qui continue de vivre : **R-089** n'a été trouvé par aucun domaine, il a
+> été **apporté par Romain** après la clôture. Confondre les deux, ce serait laisser croire que
+> l'audit avait vu ce qu'il n'a pas vu — l'erreur exacte que **M-06** cherche à empêcher.
 
 > ⚠️ **Le domaine H n'a produit NI P0 NI P1, et il faut dire pourquoi.** Un P0 supposerait un code
 > qui **perd des données**, **fausse un résultat sportif** ou **rend l'application inutilisable** ;
@@ -194,32 +202,62 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | **R-012** | **Aucune règle sportive n'est écrite nulle part pour les clubs** : barème et départage n'existent que dans les commentaires du code. La ligne « Règlement » du dossier est un texte libre, et son champ **a été retiré de l'écran d'administration** — il n'existe donc aucun moyen de le remplir | P2 | CERTAIN | ✅ **VALIDÉ** — c'est l'exigence même posée par Romain dans **D-011** : « toutes les équipes doivent être informées de tout point de règlement ». Code **non écrit** | `AUDIT.md` §A.7 |
 | **R-013** | **Aucun état « match annulé »** : l'orage, le terrain condamné, la journée écourtée ne peuvent pas être enregistrés. Ce n'est pas un forfait — personne n'est fautif | P2 | CERTAIN | ✅ **VALIDÉ** — solution fixée par **D-015** (même mécanisme que le forfait, libellé distinct ; ne compte pour personne). **Sous réserve d'une règle FFR contraire — voir I-10.** Code **non écrit** | `AUDIT.md` §A.7 |
 
+| ⚡ **R-089** | **L'application ne sait pas gérer un tournoi INTERROMPU ou ANNULÉ.** L'orage, la foudre, le terrain condamné, l'incident de sécurité arrêtent **toute la journée d'un coup** — et rien dans l'application ne permet de le dire. Elle continue d'afficher un programme qui n'aura pas lieu : les matchs à venir restent saisissables, le match en cours n'est pas verrouillé, la page publique annonce des rencontres qui ne se joueront pas, et aucun bandeau n'explique quoi que ce soit aux familles. **Il n'existe aucun état au niveau du TOURNOI** — seulement, depuis D-015, un état au niveau du **match** | **P1** | CERTAIN | ✅ **SPÉCIFIÉ — D-030** *(décision de Romain, 2026-08-05)*. Implémentation en **ÉTAPE 3 volet ③**, **après** le lot ① des tests (D-025) et **après R-042**. Découpée en **2 niveaux** : ① l'état et sa visibilité · ② les scénarios de reprise *(touche `calculerPlanning`, bloqué par **I-21**)* | `DECISIONS.md` **D-030** |
+
+> ⚡ **R-089 n'est PAS issu d'un audit — et il faut le dire, sinon le chiffre ment.** Les huit
+> domaines ont produit **88** problèmes et l'ÉTAPE 2 est close. **R-089 a été inscrit après cette
+> clôture**, le 2026-08-05, à la demande de Romain, qui a apporté un besoin de terrain que l'audit
+> **n'avait pas vu**. Son numéro suit la série pour rester traçable ; sa **source** est différente.
+>
+> **Ce que ça illustre** : c'est exactement **M-05** — *l'audit photographie une application qui
+> bouge*, et son périmètre fonctionnel bouge aussi. Le registre doit pouvoir grandir après la
+> clôture, à condition de dire **d'où vient chaque ligne**.
+>
+> **Pourquoi P1 et pas P2** : le domaine A avait déjà établi son fil rouge — *« l'application est
+> excellente **avant** le coup d'envoi et rigide **après** ; les cinq P1 apparaissent tous le jour J,
+> quand la réalité s'écarte du plan »*. Un tournoi arrêté par la foudre est précisément ce cas, et
+> il est **au moins aussi probable** qu'une égalité parfaite (R-004, P1). Ce n'est pas un P0 : rien
+> n'est perdu ni faussé — l'application est simplement **muette** au moment où elle devrait parler.
+
 ### État des décisions métier
 
 | Bloque | Question | État |
 |---|---|---|
 | R-001 | Quelle règle pour une équipe forfait ? | ✅ **Tranchée** — D-011 |
+| ⚡ **R-089** | Que fait-on d'un tournoi suspendu ou annulé pour force majeure ? | ✅ **Tranchée** — **D-030**, décision **apportée par Romain**. ⚠️ Une règle FFR primerait (**I-10 élargie**), et le niveau 2 attend **I-21** |
 | R-005 | Quelle limite / quelle confirmation sur un score ? | ✅ **Tranchée** — D-012 |
 | R-003 | Comment ajuster le planning en cours de journée ? | ✅ **Tranchée** — D-013 |
 | R-004 | Quels critères de départage ajouter ? | ✅ **Tranchée** — D-014 |
 | R-012 | Faut-il publier les règles sportives dans le dossier des clubs ? | ✅ **Acquise** — exigence posée dans D-011 |
 | R-013 | Le match annulé (l'orage) | ✅ **Tranchée** — D-015, **par défaut** : une règle FFR primerait (I-10) |
 
-**Toutes les décisions métier du domaine A sont prises.** Il ne reste aucune question bloquante
-côté Romain ; seule une **question sortante** (I-10) attend une réponse de la Fédération.
+**Toutes les décisions métier du domaine A sont prises**, R-089 comprise. Il ne reste aucune
+question bloquante côté Romain ; seules des **questions sortantes** (**I-10 élargie** et **I-21**)
+attendent une réponse de la Fédération.
 
-### ⚠️ Question sortante — à porter au chantier FFR
+### ⚠️ Questions sortantes — à porter au chantier FFR
 
-Une question de **règle du jeu** est apparue et **ne peut pas être tranchée ici** (décision D-003 :
-les deux chantiers restent séparés). `AUDIT-TOURNOI-R92.md` **ne contient rien** sur le sujet —
-aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Romain de la porter.
+Des questions de **règle du jeu** sont apparues et **ne peuvent pas être tranchées ici** (décision
+D-003 : les deux chantiers restent séparés). `AUDIT-TOURNOI-R92.md` **ne contient rien** sur le
+sujet — aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Romain de les
+porter. **Elles tiennent dans un seul courriel.**
 
-> *« La FFR encadre-t-elle le sort d'un match d'École de Rugby qui n'a pas pu se jouer — forfait
-> d'une équipe, ou annulation pour intempéries ? Existe-t-il une règle de classement imposée
-> (points attribués, match à rejouer, match neutralisé) ? »*
+> **I-10** *(élargie le 2026-08-05)* — *« La FFR encadre-t-elle le sort d'un match d'École de Rugby
+> qui n'a pas pu se jouer — forfait d'une équipe, ou annulation pour intempéries ? **Et le sort
+> d'un tournoi entier interrompu ou annulé pour force majeure ?** Existe-t-il une règle de
+> classement imposée (points attribués, match à rejouer, match neutralisé, journée non
+> classée) ? »*
+
+> ⚡ **I-21** *(nouvelle, née de D-030)* — *« En cas de force majeure, **peut-on réduire le temps de
+> jeu** pour faire tenir les rencontres restantes — périodes raccourcies, deux périodes ramenées à
+> une ? Existe-t-il une **durée minimale** à respecter ? Et **combien de rencontres** faut-il avoir
+> jouées pour qu'un classement reste valable ? »*
 
 **Destinataires suggérés** : Directeur EDR du Racing / Comité 92 — la même voie qui a résolu Q23.
-**Impact si une règle existe** : elle primerait sur D-011 (forfait) **et** sur D-015 (annulation).
+
+**Impact si une règle existe** : **I-10** primerait sur D-011 (forfait), D-015 (match annulé) **et
+D-030** (tournoi suspendu / annulé). **I-21 bloque le niveau 2 de D-030** — on ne propose pas de
+raccourcir un temps de jeu d'enfants sans savoir ce que la Fédération autorise.
 
 ### Domaine C — Sécurité (session 6)
 

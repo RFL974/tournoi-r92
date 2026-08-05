@@ -1481,3 +1481,190 @@ peux-tu le rendre accessible ?
 >
 > **Réouverture** : le jour où Romain rend `boutique-r92` accessible à ce chantier. Rien ne l'oblige
 > aujourd'hui — les quatre constats ci-dessus se corrigent à la main en quelques minutes.
+
+---
+
+## DÉCISION FONCTIONNELLE AJOUTÉE APRÈS LA CLÔTURE DE L'AUDIT
+
+### D-030 — Tournoi SUSPENDU / Tournoi ANNULÉ (force majeure)
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 13 *(addendum)* |
+| **Statut** | ✅ **VALIDÉE — c'est une décision de Romain, product owner du tournoi** |
+| **Nature** | **Spécification fonctionnelle à conserver**, pas une demande d'implémentation |
+| **Couvre** | **R-089** *(nouveau)* · complète **R-013 / D-015** (le match) d'un cran au-dessus (la journée) |
+| **Implémentation** | **ÉTAPE 3, volet ③** — **pas avant** le lot ① des tests (**D-025**) ni **R-042** |
+| **⚠️ Aucun code écrit** | Consigne explicite de Romain : *« ne code rien maintenant »* |
+
+---
+
+#### 1. Le besoin, en une phrase
+
+Quand un événement extérieur impose l'arrêt du tournoi — orage, foudre, terrain impraticable,
+problème de sécurité — **l'application doit savoir le dire, le figer et le montrer.** Aujourd'hui
+elle ne sait rien faire de tout cela : elle continue d'afficher un programme qui n'aura pas lieu.
+
+#### 2. Les deux états, tels que Romain les a définis
+
+##### 🟠 TOURNOI SUSPENDU — *temporaire, le tournoi peut reprendre*
+
+À l'activation par l'administrateur :
+
+- **l'intégralité du tournoi est immédiatement figée** ;
+- **le match en cours est figé** ;
+- **les scores saisis pendant ce match sont verrouillés et considérés comme validés à l'instant de
+  la suspension** ;
+- **aucun score ultérieur** ne peut être ajouté ni modifié sur ce match pendant la suspension ;
+- **les matchs à venir sont bloqués** ;
+- le moteur de planification prend **l'état du tournoi à cet instant comme nouvel état de
+  référence** pour préparer une reprise.
+
+**À la reprise** : le match interrompu **n'est pas rejoué depuis zéro** — son résultat au moment de
+la suspension est **conservé et validé**.
+
+Le moteur **propose ensuite des scénarios** pour faire tenir les matchs restants dans le temps
+disponible, en respectant la sécurité et le temps de jeu des enfants. Par exemple : réduire la
+durée des périodes · passer de deux périodes à une · réduire ou supprimer des marges entre
+rencontres · réorganiser les terrains · toute autre adaptation compatible avec les règles.
+
+> 🔑 **La règle d'or posée par Romain** : **le moteur propose, il ne décide jamais seul d'une
+> modification réglementaire.**
+
+##### 🔴 TOURNOI ANNULÉ — *définitif pour la journée*
+
+À l'activation par l'administrateur :
+
+- le tournoi est **définitivement** placé dans l'état ANNULÉ ;
+- **les matchs à venir deviennent inaccessibles et sont grisés** ;
+- le match en cours est **figé et grisé** ; son état et son score au moment de l'annulation sont
+  **conservés** ;
+- **aucun nouveau résultat ne peut être saisi** ;
+- **aucun classement final n'est généré** pour un tournoi **EDR classique** annulé ;
+- les résultats **validés avant** l'annulation **restent consultables** comme historique de la
+  journée.
+
+##### Dans les deux cas
+
+- **activation ET reprise/désactivation exigent la clé administrateur**, comme les autres
+  opérations sensibles ;
+- **l'état est clairement visible dans l'interface d'administration** ;
+- **un bandeau apparaît sur la page publique** ;
+- **le texte du bandeau est personnalisable par l'administrateur**.
+
+---
+
+#### 3. ✅ Vérification de compatibilité — cette décision contredit-elle quelque chose ?
+
+*Passage en revue de toutes les décisions et contraintes déjà inscrites. **Réponse : aucune
+contradiction.** Mais trois articulations doivent être écrites, sans quoi le même code sera touché
+deux fois.*
+
+| Ce qui existe | Verdict | Ce qu'il faut retenir |
+|---|---|---|
+| **D-015** — le match annulé (l'orage) | ✅ **Compatible, et complémentaire** | D-015 traite **un match**, D-030 traite **la journée**. Ce ne sont pas deux façons de dire la même chose : un tournoi annulé n'est **pas** « N matchs annulés un par un ». **D-030 est un cran au-dessus** et ne remplace pas D-015 |
+| **D-013** — ajuster le planning en cours de journée | ⚠️ **Compatible, mais D-030 ROUVRE son niveau 3** | D-013 avait **écarté** le niveau 3 (*« rendre un terrain indisponible et laisser l'application redistribuer »*), au motif que c'est *« le seul niveau qui touche au planificateur, donc le seul réellement risqué »*. Les scénarios de reprise de D-030 touchent **exactement** ce même code. → **Les deux doivent être traités dans le même chantier**, sinon on ouvre `calculerPlanning` deux fois |
+| **D-013** — règle *« avertir, jamais interdire »* | ✅ **Compatible, et c'est même la même idée** | *« Le moteur propose, il ne décide pas seul »* (D-030) est la formulation exacte de *« le jour J, l'organisateur en sait plus que l'algorithme »* (D-013) |
+| **D-013** — règle *« réservé à la clé admin »* | ✅ **Identique** | D-030 l'exige aussi, pour l'activation **et** la reprise |
+| **D-011** (forfait) · **D-012** (score) | ✅ **Compatible** | Un tournoi figé **interdit toute saisie**, forfait compris. À écrire noir sur blanc : le gel est **au-dessus** de la saisie |
+| **D-025** — le lot ① des tests avant de toucher au départage | ⚠️ **CONTRAINTE D'ORDRE** | *« Aucun classement final pour un tournoi annulé »* **touche le calcul du classement**. D-030 passe donc **après** les 5 tests du lot ① |
+| **D-020** — durées de conservation | ✅ **Compatible** | L'historique d'une journée annulée vit dans `Historique`, dont la durée retenue est **« conservé »** *(aucune donnée personnelle)* |
+| **D-027** — l'attente est annoncée, une animation **ne ment jamais** | ✅ **Compatible, et s'applique au bandeau** | Un bandeau « suspendu » doit refléter l'état **réel**, jamais un état supposé |
+| **D-005** — périmètre fermé | ✅ **Sans objet** | Tout se passe dans `tournoi-r92` |
+| **D-028** — on ne découpe pas `Code.gs` | ✅ **Sans objet** | D-030 ajoute du code au fichier existant |
+| **`CLAUDE.md` §11** — la fonctionnalité métier prime | ✅ **Renforcé** | C'est une fonctionnalité **de terrain**, née d'un besoin réel |
+
+---
+
+#### 4. ⚠️ Les contraintes techniques que l'audit impose à cette fonctionnalité
+
+*Elles ne sont pas des objections : ce sont les pièges déjà connus du projet, écrits maintenant pour
+qu'ils ne soient pas redécouverts au moment de coder.*
+
+1. **L'état doit être tenu par le SERVEUR, jamais par la page.** C'est le fil rouge du domaine C :
+   les trois protections les plus destructrices (**R-015** effacer les scores, **R-016**
+   réinitialiser, **R-047** équipes en double) sont tenues par la page web, donc contournables.
+   Un gel tenu par le navigateur **ne gèle rien** : il suffit d'ouvrir la page de saisie ailleurs.
+   → **D-030 rejoint la famille « le filet côté serveur ».**
+2. **Le bandeau public passe par l'instantané en cache.** La page publique lit une copie
+   pré-calculée, rafraîchie toutes les 15 s (**R-064**, qu'on envisage de porter à 30 s). Une
+   suspension mettra donc **jusqu'à 15-30 secondes** à apparaître sur les téléphones.
+   > ⚠️ **Conséquence à dire clairement, et elle est importante** : ce bandeau est un **moyen
+   > d'information**, **pas un système d'alerte de sécurité**. On n'évacue pas un terrain sous la
+   > foudre avec un bandeau qui arrive une demi-minute plus tard. La consigne de sécurité passe par
+   > la voix et le sifflet ; le bandeau explique, il n'alerte pas.
+3. **Tout champ nouveau montré au public doit entrer dans la liste blanche.** Le projet a déjà
+   connu ce piège : un réglage enregistré en administration qui ne change rien sur le site public,
+   parce que le champ n'était pas déclaré dans la liste des vues publiques. L'état du tournoi et le
+   texte du bandeau **devront y être ajoutés**.
+4. **Les nouveaux états écrits dans le classeur doivent résister à l'encodage.** Le projet a déjà
+   été mordu par un statut *« terminé »* dont le « é » revient décomposé du tableur, ce qui casse
+   l'égalité stricte. Les libellés SUSPENDU / ANNULÉ doivent être comparés par un utilitaire, pas
+   par un `===` sur du texte accentué.
+5. **Le gel doit survivre à R-002.** Le garde-fou qui refuse de générer l'après-midi tant que le
+   matin est incomplet doit **savoir** qu'un match gelé ou annulé n'est pas un match « oublié »,
+   sinon une reprise sera impossible.
+6. **Le gel doit résister aux gestes destructeurs.** « Tout regénérer » et « réinitialiser »
+   (R-015, R-016) ne doivent pas pouvoir effacer un état de suspension ni les scores qu'il a
+   validés.
+
+---
+
+#### 5. ❓ Ce que la décision ne dit pas encore — points ouverts, à trancher avant de coder
+
+| # | La question laissée ouverte | Pourquoi elle compte |
+|---|---|---|
+| **a** | **Le Super Challenge est-il concerné par « aucun classement final » ?** Romain a écrit *« tournoi EDR **classique** »* | Le SCF se joue **sur deux journées** (samedi poules / dimanche brassage). Annuler le samedi n'a pas le même sens qu'annuler un tournoi d'un jour |
+| **b** | **Une suspension peut-elle franchir la pause méridienne**, ou l'après-midi déjà généré ? | Le tournoi se génère **en deux temps** (matin, puis après-midi d'après le classement du matin). Une suspension le matin change le classement qui sert à fabriquer l'après-midi |
+| **c** | **Un tournoi ANNULÉ peut-il être « dé-annulé » ?** | Romain a écrit *« définitif pour la journée »*. Reste à savoir si c'est **définitif dans les données** (irréversible) ou seulement **définitif dans l'intention** (réversible avec la clé admin, comme la suspension) |
+| **d** | **Le classement partiel reste-t-il affiché** pendant une SUSPENSION ? | L'annulation dit « pas de classement final ». La suspension ne dit rien — or le tournoi peut reprendre |
+| **e** | **Que devient un tournoi suspendu qui ne reprend jamais** ? Bascule-t-il en ANNULÉ à la main, ou reste-t-il suspendu ? | C'est le cas réel le plus probable : l'orage ne s'arrête pas, et personne ne pense à changer l'état avant de rentrer |
+
+> Ces cinq points **ne bloquent pas l'inscription de la décision** : ils seront présentés à Romain
+> au moment de construire la fiche de chantier, au **volet ③**. Les inscrire maintenant évite qu'ils
+> soient tranchés à la va-vite pendant l'implémentation — c'est exactement ce que `CLAUDE.md` §4
+> demande.
+
+---
+
+#### 6. 🏉 La question fédérale — **I-10 est élargie, et I-21 est ouverte**
+
+`AUDIT-TOURNOI-R92.md` **ne contient rien** sur le forfait, l'annulation, les intempéries ou le
+report — vérifié : aucun de ses 25 points (Q11 → Q25) ne couvre le sujet. La décision D-030 ajoute
+une deuxième question, d'un niveau au-dessus.
+
+| Réf | La question à porter à la FFR | Ce qu'elle décide |
+|---|---|---|
+| **I-10** *(élargie)* | Le sort d'un **match** qui n'a pas pu se jouer — **et désormais d'un tournoi entier interrompu ou annulé pour force majeure** — est-il encadré ? | Primerait sur **D-011**, **D-015** **et D-030** |
+| **I-21** *(nouvelle)* | En cas de force majeure, **peut-on réduire le temps de jeu** (périodes raccourcies, deux périodes ramenées à une) ? Existe-t-il une **durée minimale** ? Et **combien de rencontres** faut-il avoir jouées pour qu'un classement reste valable ? | **Bloque le niveau 2 de D-030** (les scénarios de reprise) — on ne propose pas de raccourcir un temps de jeu d'enfants sans savoir ce que la Fédération autorise |
+
+> 📮 **Les deux questions tiennent dans le même courriel que I-15**, aux mêmes destinataires
+> (Directeur EDR du Racing / Comité 92) — la voie qui a déjà résolu Q23. **Une seule démarche, trois
+> questions.**
+
+---
+
+#### 7. Où cette fonctionnalité s'implémente — **volet ③, et découpée en deux niveaux**
+
+> **Ma recommandation, et elle suit exactement la méthode qui a servi à D-013** : découper, faire le
+> niveau 1 seul, et ne toucher au moteur qu'après.
+
+| Niveau | Contenu | Ce que ça touche | Quand |
+|---|---|---|---|
+| **1 — l'état et sa visibilité** | Les deux états · le gel · le verrouillage du score en cours · la clé admin à l'activation **et** à la reprise · le grisage des matchs à venir · le bandeau public personnalisable · pas de classement final si annulé | Le serveur *(état + garde-fous)*, l'écran d'administration, la page publique, le calcul du classement | **Après** le lot ① des tests (**D-025**) et **après R-042** |
+| **2 — les scénarios de reprise** | Les propositions de rattrapage : périodes réduites, deux périodes → une, marges, terrains | **`calculerPlanning`** — le cœur de 224 lignes qui décide quel match se joue où et quand | **Après le niveau 1**, et **après la réponse à I-21**. À traiter **avec le niveau 3 de D-013**, jamais séparément |
+
+**Pourquoi cet ordre, en une phrase** : le niveau 1 rend l'application utilisable le jour de
+l'orage **sans toucher au moteur de planification** ; le niveau 2 est utile mais il ouvre la pièce
+la plus délicate du projet, et il dépend d'une réponse fédérale qu'on n'a pas encore.
+
+**Prérequis, dans l'ordre** :
+
+1. **Lot ① des tests** (R-041, D-025) — parce que le niveau 1 modifie le comportement du classement
+   *(pas de classement final si annulé)* ;
+2. **R-042** — séparer le cœur de la saisie du score de son écriture, parce que le gel verrouille la
+   saisie. Sans cela, **D-011, D-012, D-015 et D-030 rouvrent quatre fois le même code** ;
+3. **famille « le filet côté serveur »** (R-015, R-016, R-047) — même cause, même correction, mêmes
+   tests que le point 1 des contraintes techniques ci-dessus ;
+4. **I-21** — uniquement pour le niveau 2.

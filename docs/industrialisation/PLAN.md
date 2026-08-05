@@ -22,7 +22,7 @@ Reprendre 9 inconnues, 6 décisions et 88 problèmes ne tient pas dans une séan
 |---|---|---|---|
 | **①** | **Les inconnues et les décisions** — elles conditionnent tout le reste | 13 | ✅ **TERMINÉ** — 9 inconnues → 7 *(dont **0 bloquante**)*, **6 décisions → 0 en attente** |
 | **②** | Les chantiers **sans code** : documentation, textes d'information, durées de conservation, commentaires faux | 14 | 🔜 **PROCHAIN** |
-| **③** | Les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi | — | ⬜ À faire |
+| **③** | Les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi — ⚡ **dont D-030 / R-089, le tournoi suspendu ou annulé** | — | ⬜ À faire |
 
 ### ⚠️ Les deux contraintes d'ordre déjà FIXÉES — elles ne se négocient plus
 
@@ -33,8 +33,19 @@ Elles s'imposeront au volet ③ et à l'ÉTAPE 5 :
    **sera** modifié. Écrits après, ces tests graveraient le **nouveau** comportement sans avoir
    jamais vu l'ancien — ils ne prouveraient plus qu'on n'a rien cassé.*
 2. **R-042 — séparer le cœur de la saisie du score de son écriture — AVANT** d'y toucher, sinon
-   **D-011** (forfait), **D-012** (limite de score) et **D-015** (match annulé) rouvrent **trois
-   fois** le même code.
+   **D-011** (forfait), **D-012** (limite de score), **D-015** (match annulé) ⚡ **et D-030** (le
+   gel d'un tournoi suspendu) rouvrent **quatre fois** le même code.
+
+### ⚡ Ce qui est entré au chantier APRÈS la clôture de l'audit
+
+> **Le registre n'est pas figé par la fin de l'ÉTAPE 2.** Une décision fonctionnelle apportée par
+> Romain le 2026-08-05 ajoute un **89ᵉ** problème — **R-089** — qui n'a été trouvé par **aucun**
+> domaine. C'est la démonstration de **M-05** : *l'audit photographie une application qui bouge*,
+> et son **périmètre fonctionnel** bouge aussi.
+
+| Réf | Ce que c'est | Où ça atterrit |
+|---|---|---|
+| **D-030 / R-089** (P1) | **Tournoi SUSPENDU / ANNULÉ pour force majeure** — deux états au niveau du **tournoi**, un cran au-dessus du match annulé de D-015. Spécification complète en `DECISIONS.md` **D-030** | **Volet ③**, en **2 niveaux** — voir la famille « 🌩️ Le tournoi qui s'arrête » ci-dessous |
 
 ### Ce que le volet ① a rendu constructible
 
@@ -99,6 +110,10 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 > 🏁 **L'ÉTAPE 2 EST TERMINÉE** (2026-08-05). Les huit domaines ont parlé, dans l'ordre exact validé
 > par **D-010**. Total : **88 problèmes** — 1 P0 (corrigé et testé), 23 P1, 53 P2, 11 P3 — et
 > **6 risques de méthode** (M-01 → M-06).
+>
+> ⚡ **Le registre de suivi en compte 89 depuis le 2026-08-05**, et les deux chiffres sont vrais :
+> **88** = ce que l'audit a trouvé *(figé)* · **89** = l'état du registre, qui continue de vivre.
+> **R-089** n'a été trouvé par aucun domaine — il a été **apporté par Romain** (**D-030**).
 
 > ✅ **Ordre d'audit VALIDÉ par Romain le 2026-08-04** (décision D-010) : **A → C → B → D → E → F
 > → G → H**. Raison : le métier d'abord (priorité n°1 du prompt maître), puis ce qui peut faire du
@@ -157,6 +172,8 @@ Ce ne sont pas encore des chantiers, mais des **familles** qui se dessinent apr�
 | **📝 Ce que le code raconte de faux sur lui-même** | **R-083**, **R-084**, **R-087** *(+ R-072, R-073)* | Le domaine H a parlé : cinq commentaires annoncent l'inverse de ce que fait le code, une colonne du classeur est documentée mais lue par personne, et quinze lignes mortes affirment servir. **Zéro ligne exécutable, zéro risque, un seul livrable** — et c'est exactement le lot documentaire de R-072/R-073, un cran plus bas. ⚠️ **Même avertissement** : chaque phrase réécrite doit être **vérifiée dans le code**, jamais déduite |
 | **🔇 Faire parler le geste du jour J** *(élargi)* | **R-051**, **R-052**, **R-053**, **R-069**, **R-086**, **R-085** | Le domaine H apporte les deux pièces qui manquaient : **R-086** chiffre le problème (**29 endroits sur 21 fichiers** montrent l'erreur brute du navigateur) **et porte la correction** — un seul endroit à écrire ; **R-085** en est le pendant côté serveur (une image qu'on jette sans vérifier, et l'application répond « c'est fait »). **Même sujet : l'application dit qu'elle a réussi sans le savoir.** ⚠️ Sous contrainte **D-027** : un message ne doit jamais mentir |
 | **🏉 Le Super Challenge** | **R-082**, **R-083** *(sa part SCF)* | Trois lignes de garde côté serveur, et trois commentaires à effacer. Tout est au même endroit et ne touche **que le remplissage d'un formulaire**. ⚠️ **Ce lot change de priorité tout seul** : P2 aujourd'hui, **P1 le jour où le club accueille réellement un Super Challenge** |
+| ⚡ **🌩️ Le tournoi qui s'arrête** — ***niveau 1*** | **R-089** *(D-030)*, **R-015**, **R-016**, **R-047**, R-051, R-052 | **L'état SUSPENDU / ANNULÉ, son gel et sa visibilité.** Il rejoint **obligatoirement** la famille « le filet côté serveur » : un gel tenu par la page web **ne gèle rien** — il suffit d'ouvrir la saisie ailleurs. Même cause, même correction, mêmes tests. Le **bandeau public** rejoint « faire parler le geste du jour J », sous contrainte **D-027** *(un message ne ment jamais)*. ⚠️ **Prérequis : le lot ① des tests** (le « pas de classement final si annulé » touche le classement) **et R-042** (le gel verrouille la saisie) |
+| ⚡ **🌩️ Le tournoi qui s'arrête** — ***niveau 2*** | **R-089** *(D-030, scénarios de reprise)*, **R-003** *(niveau 3 de D-013)* | **Les propositions de rattrapage** : périodes réduites, deux périodes → une, marges, terrains. ⚠️ **Ces deux-là ne doivent JAMAIS être faits séparément** : D-013 avait écarté son niveau 3 (*« redistribuer un terrain devenu impraticable »*) comme *« le seul niveau qui touche au planificateur, donc le seul réellement risqué »* — or D-030 niveau 2 touche **exactement** le même code. Les séparer, c'est ouvrir `calculerPlanning` deux fois. ⛔ **Bloqué par I-21** : on ne propose pas de raccourcir un temps de jeu **d'enfants** sans savoir ce que la FFR autorise |
 | **⛔️ Ce qui NE doit PAS être groupé** | ~~R-074~~, **R-076**, **R-077**, **R-081**, **R-088** | Des problèmes qui se **ressemblent** (découper, ranger, outiller) et qu'il serait tentant de traiter ensemble. **Ils ne doivent pas l'être** : chacun, fait en bloc, aggrave un problème plus grave que lui — renommer 277 tests fait perdre un test en silence, découper l'admin exige l'outillage que `CLAUDE.md` §10 déconseille. **Progressif et réversible, ou rien.** ✅ **R-074 est sorti de cette liste : il est ARBITRÉ** (**D-028**, 2026-08-05) — on ne découpe pas `Code.gs` tant que le dépôt est manuel. ➕ **R-088 rejoint la liste** (domaine H) : renommer en masse des variables courtes, c'est 42 occasions de casser un appel pour un gain de **confort de lecture**. Méthode **opportuniste** uniquement, la même que R-079 |
 
 ### Modèle de fiche de chantier

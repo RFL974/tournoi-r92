@@ -2797,3 +2797,85 @@ en face de lui-même · le barème et le départage communiqués aux clubs · la
 bibliothèques). Deux d'entre eux referment des **P1**, et **aucun ne touche une ligne exécutable**.
 
 **Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+## SESSION 13 — ADDENDUM du même jour : ⚡ **D-030, le tournoi suspendu ou annulé**
+
+> **Demande de Romain, avant de lancer la session 14** : *« Je veux ajouter une décision
+> fonctionnelle au chantier concernant I-10 → FFR : gestion d'un tournoi interrompu / annulé pour
+> force majeure. Cette décision doit être prise en compte dans la documentation et le plan de
+> travail, mais ne code rien maintenant. »*
+>
+> ⚠️ **Consigne respectée à la lettre : aucun fichier de l'application n'a été ouvert en écriture.**
+> Le livrable de cet addendum est une **spécification conservée**, pas un début d'implémentation.
+
+### 1. Les cinq points demandés, et ce qu'ils ont donné
+
+| # | Demande de Romain | Réponse |
+|---|---|---|
+| **1** | *Où cette décision doit-elle être documentée ?* | **`DECISIONS.md` → D-030** (fiche complète : les deux états, les contraintes techniques, les points ouverts, l'ordre d'implémentation) · **`RISQUES.md` → R-089** (le registre de suivi) · **`PLAN.md`** (deux nouvelles familles) · **`ETAT.md`** (§1, §4, §6, §7, §8, §10) · **`RAPPORT-AUDIT.md`** (post-scriptum, sans réécrire le rapport) |
+| **2** | *Quelles références existantes sont concernées ?* | **I-10 élargie** au tournoi entier · ⚡ **I-21 ouverte** *(peut-on réduire le temps de jeu ?)* · **D-015** *(le match annulé — complété, pas remplacé)* · **D-013** *(son niveau 3 est rouvert)* · **R-002, R-015, R-016, R-047, R-003, R-042, R-041, R-051/052, R-064** |
+| **3** | *Dans quel futur lot faut-il l'implémenter ?* | **ÉTAPE 3, volet ③**, découpée en **2 niveaux**. Prérequis, dans l'ordre : **lot ① des tests (D-025)** → **R-042** → **famille « filet côté serveur »**. Le niveau 2 attend en plus **I-21** |
+| **4** | *Contredit-elle une décision existante ?* | ✅ **Non — aucune contradiction sur 11 décisions et contraintes passées en revue.** Mais **trois articulations** devaient être écrites, sinon le même code aurait été ouvert deux fois *(détail ci-dessous)* |
+| **5** | *Mettre à jour la documentation* | ✅ Fait — **6 fichiers de suivi**, **0 fichier applicatif** |
+
+### 2. ⚠️ Les trois articulations qu'il fallait écrire
+
+**a) D-030 n'est pas D-015 en plus gros.** D-015 annule **un match**, D-030 arrête **la journée**.
+Un tournoi annulé n'est **pas** « N matchs annulés un par un » : les deux mécanismes coexistent, à
+deux étages différents. Sans cette phrase, l'implémentation aurait pu croire qu'il suffisait de
+boucler sur les matchs.
+
+**b) D-030 niveau 2 ROUVRE le niveau 3 de D-013 — et c'est le point le plus important.** D-013
+avait **délibérément écarté** *« rendre un terrain indisponible et laisser l'application
+redistribuer »*, au motif que c'est *« le seul niveau qui touche au planificateur, donc le seul
+réellement risqué »*. Or les scénarios de reprise de D-030 (réduire les périodes, réorganiser les
+terrains) touchent **exactement le même code** — `calculerPlanning`, 224 lignes, le cœur qui décide
+quel match se joue où et quand. **Les deux doivent donc être traités dans le même chantier.** Les
+séparer reviendrait à ouvrir deux fois la pièce la plus délicate du projet.
+
+**c) Le gel doit être tenu par le SERVEUR.** C'est le fil rouge du domaine C : les trois
+protections les plus destructrices (R-015, R-016, R-047) sont tenues par **la page web**, donc
+contournables. Un gel tenu par le navigateur **ne gèle rien** — il suffit d'ouvrir la page de
+saisie sur un autre téléphone. D-030 rejoint donc **obligatoirement** la famille « le filet côté
+serveur ».
+
+### 3. Ce que l'addendum a ajouté au registre
+
+| Réf | Quoi | Priorité |
+|---|---|---|
+| **D-030** | La spécification fonctionnelle complète | ✅ Validée *(décision de Romain)* |
+| ⚡ **R-089** | L'application ne sait pas gérer un tournoi interrompu ou annulé | **P1** |
+| ⚡ **I-21** | La FFR autorise-t-elle une réduction du temps de jeu en force majeure ? | Bloque le **niveau 2** seulement |
+| **I-10** | **Élargie** au sort d'un tournoi entier | *(inchangée par ailleurs)* |
+
+> ⚡ **Pourquoi le registre passe à 89 alors que l'audit en a trouvé 88 — et pourquoi il fallait
+> l'écrire noir sur blanc.** **R-089 n'a été trouvé par aucun des huit domaines.** Il vient de la
+> connaissance du terrain de Romain, pas d'une lecture de code. Laisser le compteur glisser
+> silencieusement de 88 à 89 aurait laissé croire, dans six mois, que l'audit avait vu ce cas —
+> c'est exactement le mécanisme de **M-06** *(un chiffre qui ne porte pas sa provenance)*. Les deux
+> chiffres coexistent désormais, chacun avec sa source : **88 = l'audit** *(figé)*, **89 = le
+> registre** *(vivant)*.
+
+### 4. Ce que j'ai signalé à Romain sans qu'il le demande
+
+- ⚠️ **Le bandeau public n'est pas un système d'alerte de sécurité.** Il voyage dans l'instantané
+  mis en cache, rafraîchi toutes les 15 s (30 s si R-064 est appliqué) : une suspension mettra
+  **jusqu'à une demi-minute** à apparaître sur les téléphones. On n'évacue pas un terrain sous la
+  foudre avec un bandeau. **Il explique ; il n'alerte pas.**
+- **Cinq points restent ouverts** dans la spécification (le Super Challenge · la suspension qui
+  franchit la pause méridienne · un tournoi annulé peut-il être « dé-annulé » · le classement
+  partiel pendant une suspension · le tournoi suspendu qui ne reprend jamais). Ils sont **inscrits
+  en D-030 §5** pour ne pas être tranchés à la va-vite pendant l'implémentation.
+- **Trois pièges déjà connus du projet** s'appliqueront : la **liste blanche** des champs publics,
+  l'**encodage des libellés** accentués venant du tableur, et le **garde-fou R-002** qui ne doit pas
+  confondre « match gelé » et « match oublié ».
+
+### 5. État
+
+- **Aucun fichier de l'application modifié** — vérifié ;
+- **aucune ligne de code écrite**, conformément à la consigne ;
+- fichiers touchés : `DECISIONS.md`, `RISQUES.md`, `ETAT.md`, `PLAN.md`, `RAPPORT-AUDIT.md`,
+  `SESSIONS.md` ;
+- **la session 14 (volet ②) n'est pas commencée** et ne le sera pas sans instruction explicite.
