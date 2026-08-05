@@ -3530,3 +3530,637 @@ Romain n'est nécessaire pour les constater** — ce sont des choix techniques, 
 > vrai**. Trente minutes, dehors, avec deux ou trois bénévoles et **leurs** téléphones, à saisir
 > de faux scores. Cela vérifierait en une fois ce que ce domaine ne peut qu'estimer — et ferait
 > probablement apparaître des problèmes qu'aucune mesure ne trouve.
+
+---
+
+# DOMAINE F — LA PERFORMANCE
+
+> **Session 10** — 2026-08-05. Domaine **F** de l'ÉTAPE 2, sixième des huit
+> (ordre **D-010** : A → C → B → D → E → **F** → G → H).
+> **Aucun fichier de l'application n'a été modifié.**
+>
+> ⚠️ **Règle rappelée par `CLAUDE.md` §6.F, et suivie ici à la lettre** : *aucune optimisation
+> prématurée*. Tout ce qui suit est appuyé sur une **mesure** ou sur un **risque nommé**. Quand
+> je n'ai pas pu mesurer, je l'écris.
+
+## F.0 — Le verdict en une phrase
+
+**Ce qui tourne dans le navigateur est rapide ; ce qui tourne chez Google est lent — et les deux
+dispositifs prévus pour encaisser la foule sont, l'un éteint, l'autre programmé pour s'éteindre
+tout seul le jour où le tournoi deviendra gros.**
+
+Aucun **P0**. **Deux P1**, et ils ne font qu'un seul sujet : **personne ne sait ce qui se passe
+si trois cents parents ouvrent la page des scores en même temps**, parce que la protection écrite
+pour ce cas-là (le relais CDN) n'est pas allumée, et que la protection de repli (le cache du
+serveur) se coupe silencieusement au-delà d'une certaine taille de tournoi.
+
+---
+
+## F.1 — Comment j'ai mesuré (et ce que ça vaut)
+
+Tout ce qui suit vient de mesures faites **le 2026-08-05**, sur l'application **réellement en
+ligne** — pas sur une copie locale.
+
+| Ce qui a été mesuré | Comment | Nombre de mesures |
+|---|---|---|
+| Temps de réponse du serveur Google (`getAll`, `ping`) | Appels réels à l'adresse publique | **42 appels** |
+| Effet du cache serveur | Rafale (cache chaud) contre appels espacés de 13 s (cache froid) | 6 + 4 appels |
+| Comportement à plusieurs | **25 lectures lancées au même instant** | 1 vague |
+| Poids réellement transféré des pages | Téléchargement depuis GitHub Pages, compression comprise | 3 pages, 31 fichiers |
+| Temps d'affichage de la page publique | Chronomètre du navigateur (`PerformanceNavigationTiming`) | page réelle |
+| Coût des calculs dans le navigateur | Chronométrage des fonctions d'affichage, 50 répétitions | page réelle |
+| Composition des données transmises | Analyse de l'instantané servi (30 460 octets) | 51 matchs, 37 équipes |
+
+> ⚠️ **Trois limites, à dire tout de suite.**
+>
+> 1. **Les mesures sont prises depuis un ordinateur, pas depuis un téléphone au bord d'un
+>    terrain.** Le temps de connexion mesuré est de **16 millisecondes** : autrement dit, la
+>    machine de mesure est très proche des serveurs de Google. Un téléphone en 4G ajoutera du
+>    sien. **Les temps donnés ici sont donc des temps PLANCHER — la réalité sera pire, jamais
+>    meilleure.**
+> 2. **Je n'ai pas simulé trois cents spectateurs.** J'en ai simulé **vingt-cinq**, une fois. Un
+>    vrai test de charge sur le service en production, sans accord préalable, n'est pas un geste
+>    d'audit — c'est un geste qui peut dégrader le service de quelqu'un d'autre. Ce qui est
+>    au-delà de 25 est donc **INCONNU**, et je ne l'extrapole pas.
+> 3. **Je n'ai mesuré aucune écriture** (validation de score, envoi d'invitation). Une écriture
+>    exige une clé, et une écriture ratée fait monter le compteur anti-force-brute installé en
+>    session 6. Le coût d'une validation de score est donc **reconstitué par décomposition**, et
+>    signalé comme **PROBABLE** — jamais comme certain.
+
+---
+
+## F.2 — Ce qui est bon, et qu'il ne faut pas toucher
+
+Le domaine F commence par une bonne nouvelle, et elle est large : **le travail de performance a
+déjà été fait, et il a été bien fait.** Les mesures le confirment, elles ne le supposent pas.
+
+**Le navigateur n'est pas le problème — et de très loin.**
+
+| Mesure | Résultat | Ce que ça veut dire |
+|---|---|---|
+| Page publique prête à l'affichage | **527 ms** | Une demi-seconde. Excellent |
+| Page publique entièrement chargée | **718 ms** | Excellent |
+| Poids de la page publique (hors logo) | **59 Ko** transférés | Très léger |
+| Nombre de fichiers à télécharger | **12** | Très peu |
+| Réaffichage complet des deux vues | **0,9 ms** | Imperceptible |
+| Comparaison des données pour éviter de clignoter | **0,05 ms** | Imperceptible |
+
+> **À retenir** : même en supposant un téléphone **vingt fois plus lent** que la machine de
+> mesure, le réaffichage complet prendrait **18 millisecondes**. Il n'y a **rien à optimiser**
+> dans les calculs du navigateur, et il ne faut pas s'y attaquer : ce serait exactement
+> l'optimisation prématurée que `CLAUDE.md` §6.F interdit.
+
+**Le serveur, lui, a déjà reçu les bons soins.** Ce sont des choix visibles dans le code, et
+plusieurs sont des réflexes de professionnel :
+
+- `ping` et `getAll` répondent **sans ouvrir le classeur** quand le cache est chaud — car ouvrir
+  le classeur coûte à lui seul environ une demi-seconde ;
+- le cache serveur garde **une copie de secours** et élit **un seul reconstructeur** quand il
+  expire, pour que cinquante spectateurs ne relisent pas le classeur en même temps (c'est le
+  piège classique de la « ruée sur le cache », et il est traité) ;
+- la taille du cache est mesurée en **octets réels** et pas en caractères — parce qu'un « é »
+  compte pour deux ; le commentaire dit que le bug avait déjà été rencontré ;
+- le rafraîchissement automatique **s'arrête quand l'onglet passe en arrière-plan** et repart au
+  retour : des centaines de téléphones « en poche » n'appellent pas pour rien ;
+- il est **étalé au hasard** (jusqu'à 4 s) pour que les spectateurs n'appellent pas tous à la
+  même seconde ;
+- il **enchaîne après la fin de l'appel précédent** au lieu d'utiliser un minuteur fixe : deux
+  requêtes ne peuvent jamais s'empiler ;
+- chaque lecture a un **délai d'abandon** (12 s), pour qu'une connexion mobile qui « pend » ne
+  gèle pas la boucle ;
+- les lectures authentifiées de l'administration (`getConfigAdmin`, `listerSponsors`…)
+  **court-circuitent le verrou d'écriture** — pour ne pas concurrencer la saisie des scores le
+  jour J ;
+- l'envoi groupé d'invitations construit **un index une seule fois** au lieu de relire le carnet
+  d'adresses à chaque club, avec le commentaire qui explique que c'était un coût « au carré ».
+
+**Et la mesure de charge, telle qu'elle a pu être faite, est rassurante** : **25 lectures lancées
+au même instant → 25 réponses correctes, aucune erreur, aucune réponse tronquée.** Le cache a
+tenu (les 25 réponses font exactement la même taille : elles viennent bien toutes de la même
+copie en mémoire).
+
+> Autrement dit : **il n'y a pas de négligence de performance dans ce projet.** Ce que le domaine
+> F trouve n'est pas un travail bâclé — c'est un travail **arrêté en chemin**, et un réglage
+> devenu faux avec le temps.
+
+---
+
+## F.3 — R-061 · La protection contre l'affluence est écrite, documentée… et éteinte *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+L'application a **deux filets** pour tenir le choc un dimanche de tournoi :
+
+- **Filet n°1 — le cache du serveur.** Quand un spectateur demande les scores, Google garde la
+  réponse toute prête pendant 10 secondes et la resert aux suivants sans relire le classeur.
+  **Il est actif.**
+- **Filet n°2 — le relais.** Une copie des données est déposée sur un service extérieur
+  (Cloudflare), conçu pour servir des millions de lectures. Les spectateurs liraient là, et
+  Google ne serait plus jamais interrogé par eux. **Il est éteint.**
+
+Le filet n°2 n'est pas une idée : il est **entièrement écrit**. Le programme du relais existe
+(`cloudflare/worker-tournoi.js`), le serveur sait lui envoyer les données
+(`pousserSnapshot`, `configurerRelais` dans `backend/Code.gs`), la page publique sait le lire en
+priorité et **retombe automatiquement sur Google** s'il ne répond pas (`lireDonnees` dans
+`frontend/js/tournoi.js`), et le pas-à-pas d'installation est rédigé (`docs/relais-cdn.md`).
+
+Il ne manque **qu'une ligne** : dans `frontend/js/config.js`, la ligne 30 dit
+`const SNAPSHOT_URL = "";` — vide, donc inactif.
+
+### 2. Pourquoi c'est important
+
+Voici ce que j'ai mesuré sur l'adresse réellement en service, sur 42 appels :
+
+| Situation | Temps de réponse |
+|---|---|
+| Le plus rapide observé | **1,36 s** |
+| Médiane | **≈ 2,1 s** |
+| Cache serveur froid (systématiquement) | **4,4 à 6,3 s** |
+| Les deux plus lents observés | **16,8 s** et **20,1 s** |
+
+Deux choses à retenir, et la seconde est la plus gênante :
+
+**a) Le plancher est de deux secondes, et rien n'y changera.** J'ai mesuré `ping` — l'action qui
+ne fait strictement **rien** et renvoie 48 octets : elle prend **2,3 à 2,8 secondes**. Ce n'est
+pas le code du projet qui est lent, c'est le fait de passer par Google Apps Script. **Aucune
+optimisation du code ne descendra sous ce plancher.**
+
+**b) Deux appels sur dix-sept ont dépassé le délai d'abandon.** La page publique abandonne une
+requête au bout de **12 secondes** (c'est un bon réglage, il évite de geler la boucle). Or j'ai
+mesuré **16,8 s** et **20,1 s**. Ces deux-là auraient été **abandonnées** — et, à cause de R-051
+constaté au domaine E, **sans que le spectateur en soit informé**.
+
+### 3. Exemple concret
+
+Dimanche, 11 h. Trois cents parents suivent les scores sur leur téléphone. Chaque téléphone
+redemande les données toutes les 15 à 19 secondes. Cela fait environ **17 demandes par seconde**
+qui arrivent chez Google.
+
+Google Apps Script accepte un nombre limité de traitements en même temps — la documentation du
+projet elle-même écrit « **environ 30 exécutions simultanées** » (`docs/relais-cdn.md`). Tant que
+chaque demande est servie par le cache en quelques millisecondes, ces 17 par seconde passent sans
+difficulté. **Mais dès qu'une demande doit relire le classeur — ce qui prend 4 à 6 secondes —
+elle occupe une place pendant tout ce temps.**
+
+Ma mesure à 25 spectateurs simultanés montre exactement le début de ce phénomène : le plus rapide
+a été servi en **1,92 s**, le plus lent en **8,57 s**. Personne n'a eu d'erreur, mais **la file
+d'attente a commencé**.
+
+### 4. Ce que je propose
+
+**Ne rien décider aujourd'hui — mais lever l'inconnue, parce qu'elle se lève en cinq minutes.**
+
+Le calcul de capacité dépend d'un seul chiffre que je n'ai pas : **combien de temps une demande
+occupe-t-elle réellement le serveur de Google ?** Ce n'est pas le temps que j'ai mesuré (qui
+inclut tout le transport), c'est la durée d'exécution — et Google l'inscrit dans le journal
+« Exécutions » de l'éditeur Apps Script.
+
+Selon ce chiffre, la réponse change du tout au tout :
+
+| Si une demande occupe le serveur… | …alors la limite se situe vers |
+|---|---|
+| 0,1 s | ≈ 5 000 spectateurs |
+| 0,5 s | ≈ 1 000 spectateurs |
+| 2 s | ≈ 250 spectateurs |
+
+C'est **I-18**, nouvelle inconnue de ce domaine. Tant qu'elle n'est pas levée, **toute affirmation
+sur la capacité de l'application est du bavardage** — y compris rassurante.
+
+Puis, une fois ce chiffre connu, deux options qui ne s'excluent pas :
+
+- **Option A — allumer le relais.** Coût : un compte Cloudflare gratuit, environ 30 minutes de
+  mise en place, et **~5 $ le mois de l'événement** au-delà du palier gratuit (chiffre déjà écrit
+  dans `docs/relais-cdn.md`). Bénéfice : le problème disparaît, quel que soit le nombre de
+  spectateurs. Risque : quasi nul, puisque le repli automatique est déjà codé et que la page
+  retombe sur Google si le relais tombe.
+- **Option B — allonger le cache du serveur.** Gratuit, une valeur à changer. Voir **R-064** :
+  c'est le réglage qui est aujourd'hui incohérent.
+
+### 5. Impact
+
+**Ce que ça change** : rien tant qu'on ne touche à rien — c'est un risque, pas une panne.
+
+**Ce que ça pourrait provoquer si on ne fait rien** : le jour d'affluence, la page des scores
+met 10 à 20 secondes à répondre, ou n'affiche rien. Les parents rechargent, ce qui **aggrave**
+la charge. **La saisie des scores, elle, continuerait de fonctionner** — c'est un point important
+et rassurant : les marqueurs passent par un autre chemin (écriture), et le travail de session 6
+a précisément veillé à ce que la charge des spectateurs ne bloque jamais la saisie.
+
+**Fonctionnalités concernées** : l'affichage public uniquement.
+
+### 6. Ce que je conseille
+
+**Lever I-18 tout de suite** (cinq minutes dans le journal « Exécutions »), et **décider
+d'allumer ou non le relais à l'ÉTAPE 3**, avec le chiffre sous les yeux. Ce n'est pas une
+correction de code : c'est une décision d'exploitation, et elle appartient à Romain.
+
+> ⚠️ **Une chose à ne PAS faire** : allumer le relais « au cas où », sans avoir mesuré. Un
+> dispositif de secours qu'on n'a jamais éprouvé est un dispositif dont on ignore s'il marche.
+> S'il est allumé, il devra l'être **assez tôt pour être essayé avant le jour J**, pas la veille.
+
+---
+
+## F.4 — R-062 · Le filet de repli est programmé pour lâcher quand le tournoi grossit *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+Le cache du serveur — le filet n°1, celui qui est actif — refuse de fonctionner au-delà d'une
+certaine taille de données. C'est écrit noir sur blanc dans `backend/Code.gs`
+(`mettreEnCacheSnapshot`) : si l'instantané dépasse **95 000 octets**, il n'est **pas mis en
+cache du tout**.
+
+Ce n'est pas un bug : c'est **délibéré**, et pour une bonne raison — au-delà de 100 000 octets,
+Google refuserait l'enregistrement, et le code préfère ne pas essayer plutôt que d'échouer en
+silence. Le commentaire l'assume : *« Dans ce cas rare (très gros tournoi), mieux vaut compter
+sur le relais CDN. »*
+
+**Sauf que le relais est éteint** (R-061). Les deux filets sont donc **noués l'un à l'autre** :
+le premier passe la main au second, qui n'est pas là.
+
+### 2. Pourquoi c'est important
+
+J'ai mesuré la taille réelle des données servies et calculé où se situe la bascule :
+
+| Mesure du tournoi actuellement en base | Valeur |
+|---|---|
+| Instantané servi | **30 460 octets** |
+| Matchs | **51** |
+| Équipes | **37** |
+| Coût moyen d'un match | **466 octets** |
+| Coût moyen d'une équipe | **142 octets** |
+
+D'où la projection :
+
+| Matchs | Équipes | Taille | Le cache… |
+|---|---|---|---|
+| 51 | 37 | 30 460 o | ✅ fonctionne *(situation actuelle)* |
+| 100 | 60 | 56 558 o | ✅ fonctionne |
+| 150 | 80 | 82 694 o | ✅ fonctionne |
+| **180** | **90** | **98 091 o** | ❌ **s'éteint** |
+| 250 | 120 | 134 967 o | ❌ éteint |
+
+**La bascule se situe vers 165 matchs.** Le tournoi de test en compte 51 — il y a donc
+aujourd'hui une marge de plus du triple. Mais un tournoi complet à huit catégories, avec une
+phase le matin et une l'après-midi, atteint sans peine ce nombre.
+
+### 3. Exemple concret
+
+Le tournoi grossit d'une année sur l'autre : deux catégories de plus, quelques clubs de plus. Un
+dimanche, il franchit les 165 matchs. **Rien ne le signale.** Aucun message, aucune alerte, aucune
+ligne dans un journal : `put()` est simplement sauté.
+
+Et à partir de cet instant, **chaque** demande d'un spectateur relit le classeur — c'est-à-dire
+passe de 2 secondes à 4-6 secondes, comme je l'ai mesuré. Le jour où il y a le plus de matchs est
+aussi le jour où il y a le plus de monde. **Les deux courbes se croisent au pire moment.**
+
+### 4. Ce que je propose
+
+Trois choses, par ordre de coût croissant :
+
+1. **Rendre l'extinction visible** — écrire une ligne dans le journal du serveur quand
+   l'instantané dépasse le seuil. Coût : deux lignes. Bénéfice : on ne découvre plus le problème
+   le dimanche matin.
+2. **Alléger l'instantané** — voir **R-063** : **58 % de ce qui voyage aujourd'hui ne transporte
+   aucune information**. Le corriger repousserait la bascule d'environ 165 à environ 330 matchs,
+   sans rien changer d'autre.
+3. **Allumer le relais** (R-061), qui rend le seuil sans objet.
+
+### 5. Impact
+
+**Risque de la correction n°1** : nul (on ajoute une trace, on ne change aucun comportement).
+**Risque de la n°2** : réel, voir R-063 — c'est pourquoi elle n'est pas classée P1.
+**Fonctionnalités concernées** : l'affichage public.
+
+### 6. Ce que je conseille
+
+**Corriger le point 1 à l'ÉTAPE 5**, groupé avec les autres travaux sur l'instantané. Il n'y a
+aucune urgence tant que le tournoi reste sous 150 matchs — mais **personne ne surveille ce
+compteur aujourd'hui**, et c'est précisément le problème.
+
+---
+
+## F.5 — Les problèmes P2 (améliorations utiles, non bloquantes)
+
+### R-063 · 58 % de ce qui voyage jusqu'à chaque spectateur, ce sont des cases vides *(P2)*
+
+**Ce que j'ai trouvé.** Chaque match envoyé aux spectateurs transporte **27 champs**, dont
+**17 sont vides** pour un match qui n'a pas encore été joué. Le nom du champ voyage quand même :
+`"essais_A":""` pèse 16 octets pour ne rien dire.
+
+Mesuré sur les 51 matchs réels : **14 541 octets sur 25 029 sont des champs vides — soit 58 %.**
+
+**Pourquoi c'est important.** Ce poids est payé **par chaque spectateur, toutes les 15 secondes,
+toute la journée**. Avec 300 spectateurs sur 6 heures, cela représente plusieurs centaines de
+mégaoctets transmis pour du vide — sur des forfaits mobiles qui ne sont pas tous illimités. Et
+c'est ce poids qui déclenche l'extinction du cache décrite en R-062.
+
+**Ce que je propose.** Ne pas envoyer les champs vides. Le gain est mécanique : l'instantané
+passerait d'environ 30 Ko à environ 16 Ko, et le seuil de R-062 reculerait de ~165 à ~330 matchs.
+
+> ⚠️ **Et voici pourquoi ce n'est PAS un P1, malgré un bénéfice net.** Aujourd'hui, un champ
+> absent du classeur arrive au navigateur comme **une chaîne vide** (`""`). Si on cesse de
+> l'envoyer, il arrivera comme **« inexistant »** (`undefined`). Ce ne sont pas la même chose en
+> JavaScript, et le frontend fait des comparaisons sur ces valeurs à de nombreux endroits. **Une
+> optimisation de confort ne doit pas risquer de fausser un affichage de score.**
+>
+> Cette correction exige donc un vrai filet de tests **avant** — ce qui la range naturellement
+> derrière **R-041 et R-042** (domaine D). C'est un bon exemple de ce que `PLAN.md` appelle une
+> famille : elle ne doit pas être faite seule.
+
+---
+
+### R-064 · Le cache dure 10 secondes, mais on l'appelle toutes les 15 à 19 secondes *(P2)*
+
+**Ce que j'ai trouvé.** Deux réglages qui ne se parlent pas :
+
+- le cache du serveur garde la réponse **10 secondes** (`backend/Code.gs`) ;
+- la page publique redemande les données toutes les **15 secondes, plus jusqu'à 4 secondes
+  d'étalement au hasard** (`frontend/js/tournoi.js`).
+
+Le second est **toujours plus long que le premier**. Conséquence : **un spectateur seul trouve
+systématiquement le cache expiré**, et paie donc à chaque fois la relecture complète du classeur.
+
+**C'est exactement ce que la mesure montre** :
+
+| Situation | Temps mesuré |
+|---|---|
+| Appels enchaînés (cache chaud) | **1,36 à 2,05 s** |
+| Appels espacés de 13 s (cache expiré) | **4,36 à 6,30 s** |
+
+**Trois fois plus lent, et c'est le cas normal quand il y a peu de monde.**
+
+**Pourquoi c'est intéressant.** Cela produit un comportement à l'envers de l'intuition :
+**l'application répond plus vite quand il y a beaucoup de monde** (le cache reste chaud) que
+quand il y en a peu. Ce n'est pas grave — c'est même plutôt heureux — mais cela veut dire qu'on ne
+peut **rien conclure sur la performance en la testant seul**.
+
+**Ce que je propose.** Porter la durée du cache à **20 ou 30 secondes**.
+
+**Et voici pourquoi c'est presque gratuit, ce qui n'était pas évident** : j'ai vérifié dans
+`doPost` que **toute écriture réussie repose immédiatement le cache** (`apresEcriture`). Donc
+allonger sa durée **ne retarde pas** l'affichage d'un score saisi depuis l'application : le score
+validé chasse l'ancienne copie tout de suite.
+
+> ⚠️ **La seule chose que ça retarderait** : une modification faite **à la main directement dans
+> le Google Sheet**, qui mettrait alors jusqu'à 30 secondes à apparaître au lieu de 10. C'est le
+> seul effet, et il faut le dire avant de décider.
+
+---
+
+### R-065 · L'administration télécharge 207 Ko d'outil PDF avant d'afficher quoi que ce soit *(P2)*
+
+**Ce que j'ai trouvé.** J'ai mesuré le poids **réellement transféré** de l'écran
+d'administration, compression comprise : **468 Ko**, répartis sur 25 fichiers.
+
+**Un seul fichier en représente 44 % : `pdf-lib.min.js`, 207 Ko** (525 Ko avant compression). Il
+sert à fabriquer le document PDF d'autorisation parentale — une fonction utile, mais qui n'est
+pas utilisée à chaque ouverture de l'administration.
+
+Et **aucun des 21 scripts n'est marqué `defer` ou `async`** : le navigateur les télécharge et les
+exécute **avant** de finir d'afficher la page. Les 207 Ko de l'outil PDF sont donc sur le chemin
+critique de l'affichage.
+
+**Pourquoi c'est modéré et pas grave.** L'administration est utilisée depuis un ordinateur, avant
+le tournoi (**I-05**, levée en session 9), et le navigateur garde ces fichiers en mémoire après
+la première visite. Ce n'est donc ni le jour J, ni sur un téléphone, ni à chaque fois.
+
+**Ce que je propose.** Deux gestes indépendants, du moins risqué au plus utile :
+
+1. **Ajouter `defer` aux scripts** : une page qui s'affiche avant de tout exécuter. Attention —
+   `defer` change l'ordre d'exécution, et ce projet a **693 fonctions dans un espace commun**
+   (relevé de `ETAT.md` §9) : à vérifier écran par écran, pas à poser à l'aveugle.
+2. **Ne charger l'outil PDF qu'au moment d'en avoir besoin** — c'est-à-dire quand on clique sur
+   le bouton qui fabrique le document. C'est le geste le plus rentable : **−44 % du poids** de
+   l'écran d'administration.
+
+> ℹ️ **Ceci chiffre R-024** (domaine C), qui signalait « ~750 Ko de bibliothèques extérieures sans
+> version ni origine documentée ». Le domaine F apporte le chiffre qui manquait : **207 Ko
+> réellement transférés pour la seule bibliothèque PDF**, à chaque première ouverture.
+
+---
+
+### R-066 · Le logo pèse à lui seul 79 % de la page publique *(P2)*
+
+**Ce que j'ai trouvé.** Mesuré dans le navigateur, sur la page publique en ligne :
+
+| Élément | Poids transféré |
+|---|---|
+| **`logo-r92.png`** | **229 Ko** |
+| Tout le reste de la page (6 scripts + 3 feuilles de style + le HTML) | 61 Ko |
+
+Et le logo est chargé en **700 × 558 pixels** pour être affiché en… **60 × 48 pixels** dans
+l'en-tête et **65 × 52** dans le pied de page. Même sur un écran à haute densité, une image de
+**130 × 104** suffirait — soit environ **8 Ko au lieu de 229**.
+
+**Pourquoi c'est important.** C'est **la première chose que télécharge chaque spectateur**, et
+c'est presque tout le poids de la page. Sur un téléphone en bord de terrain, c'est ce qui retarde
+le premier affichage.
+
+> ⚠️ **Mais ce fichier n'est pas dans ce dépôt.** Il est servi par le **site vitrine
+> `boutique-r92`**, qui est un autre dépôt — donc **hors périmètre** tant que **D-005** n'est pas
+> tranchée. C'est un cas concret qui donne du poids à cette décision en attente : un problème
+> mesuré ici se corrige ailleurs.
+
+**Ce que je propose.** Deux voies, à trancher avec D-005 : soit réduire l'image dans le dépôt
+vitrine (elle profiterait alors **aussi** au site vitrine), soit héberger une version réduite dans
+ce dépôt-ci. **La première est meilleure ; la seconde ne dépend de personne.**
+
+---
+
+### R-067 · Le verrou d'écriture est tenu pendant qu'on reconstruit l'instantané public *(P2)*
+
+**Ce que j'ai trouvé.** Quand un marqueur valide un score, le serveur pose un **verrou** — une
+barrière qui empêche deux écritures simultanées de se marcher dessus. C'est indispensable et bien
+fait.
+
+Mais dans `doPost`, **la reconstruction de l'instantané public** (`apresEcriture`, qui relit la
+configuration, les équipes, les poules, les matchs et les partenaires) se fait **pendant que le
+verrou est encore tenu**. Or j'ai mesuré ce que coûte cette reconstruction : **2,5 à 4,5
+secondes** (c'est l'écart entre cache chaud et cache froid).
+
+Ce qui frappe, c'est que **le code a déjà identifié ce raisonnement** — pour l'étape d'après. Le
+commentaire dit, à propos de l'envoi vers le relais : *« Push CDN APRÈS le verrou : la latence
+réseau du relais ne prolonge plus la détention du verrou. »* **La même remarque vaut pour la
+reconstruction, qui est restée dedans.**
+
+**Ce que ça donne, concrètement.** Chaque validation de score tient le verrou pendant, au
+minimum : l'ouverture du classeur (~0,5 s) + la lecture des matchs + l'écriture + l'archivage +
+**la reconstruction complète (2,5 à 4,5 s)**. Six marqueurs qui valident au même moment font donc
+la queue.
+
+> 🔗 **Ceci répond à la question laissée ouverte par le domaine E.** `ETAT.md` demandait au
+> domaine F de dire si **R-053** (« le bouton Valider ne montre rien pendant l'envoi ») était un
+> détail ou un problème. **Réponse : ce n'est pas un détail.** L'attente est réelle, mesurable en
+> secondes, et elle s'allonge quand plusieurs marqueurs valident ensemble. Un bouton muet pendant
+> quatre secondes, au bord d'un terrain, c'est un bouton sur lequel on reclique. **R-053 monte
+> donc en importance relative** — et son remède (deux lignes) devient encore plus rentable.
+
+**Ce que je propose.** Sortir la reconstruction de l'instantané hors du verrou, comme l'envoi au
+relais l'a déjà été.
+
+> ⚠️ **Attention, ce n'est pas anodin, et je ne le recommande pas les yeux fermés.** Si deux
+> écritures se suivent de très près, reconstruire hors du verrou peut faire qu'un instantané
+> **plus ancien** écrase un **plus récent** dans le cache. Les spectateurs verraient alors un
+> score avec quelques secondes de retard — sans conséquence sur les données, qui sont dans le
+> classeur. Mais cela demande d'y réfléchir posément, à l'ÉTAPE 3, et non de le faire au fil de
+> l'eau.
+
+---
+
+### R-068 · Vérifier un mot de passe passe par le chemin le plus coûteux du serveur *(P2)*
+
+**Ce que j'ai trouvé.** Quand un bénévole ouvre la page de saisie, l'application vérifie sa clé.
+Pour cela (`cleValide` dans `frontend/js/api.js`), elle **envoie une vraie demande
+d'enregistrement de score avec un identifiant de match bidon** (`__verif_cle__`) : si le serveur
+répond « match introuvable », c'est que la clé était bonne.
+
+L'astuce est ingénieuse — mais elle emprunte le chemin d'écriture complet : **prise du verrou**
+(jusqu'à 20 secondes d'attente possible) puis **ouverture du classeur** (~0,5 s)… **pour ne rien
+modifier**.
+
+**Pourquoi c'est important.** Le matin du tournoi, six marqueurs ouvrent la page en même temps :
+six prises du verrou d'écriture pour une simple vérification de mot de passe. Si cela tombe
+pendant qu'un score est validé, ils attendent.
+
+Ce n'est pas grave — cela dure une poignée de secondes, une fois par ouverture d'onglet. Mais
+c'est **gratuitement évitable** : il manque une action de vérification qui ne fasse que comparer
+la clé, sans verrou ni classeur.
+
+> ⚠️ **À ne pas traiter isolément** : toucher à la vérification des clés, c'est toucher à la
+> sécurité. Cela rejoint **R-017**, **R-018** et **R-059**, et doit être tranché **avec eux**,
+> jamais séparément — `CLAUDE.md` §6.C interdit de modifier une mesure de sécurité sans
+> validation préalable.
+
+---
+
+### R-069 · Les écritures peuvent attendre indéfiniment *(P2)*
+
+**Ce que j'ai trouvé.** Les **lectures** ont un délai d'abandon (`apiGet` accepte `delaiMs`, et la
+page publique l'utilise : 12 secondes). Les **écritures** (`apiPost`) n'en ont **aucun**.
+
+Si le réseau « pend » — ce qui arrive sur un téléphone en bord de terrain — la validation d'un
+score peut rester en attente **sans fin**, bouton grisé, sans message.
+
+**Pourquoi c'est important.** C'est la moitié manquante de **R-051** et **R-052** (domaine E) :
+ceux-là disent que l'application ne parle pas quand ça échoue ; celui-ci dit qu'elle **peut ne
+jamais savoir que ça a échoué**. Les trois se corrigent au même endroit et devraient être faits
+ensemble.
+
+**Ce que je propose.** Donner à `apiPost` le même délai maximum qu'aux lectures.
+
+> ⚠️ **Avec une précaution qui compte** : abandonner l'attente **n'annule pas** l'écriture côté
+> serveur. Le score peut très bien avoir été enregistré alors que le téléphone a renoncé. Le
+> message affiché devra donc dire *« nous n'avons pas eu de réponse — rafraîchis pour vérifier
+> si ton score est passé »*, et surtout **pas** *« échec »*. Dire « échec » à tort serait pire
+> que se taire.
+
+---
+
+## F.6 — Les problèmes P3 (à garder pour plus tard)
+
+### R-070 · L'envoi groupé d'invitations bloque tout le reste pendant sa durée *(P3)*
+
+`envoyerInvitationsGroupe` parcourt tous les clubs et envoie un courriel à chacun — **en tenant le
+verrou d'écriture du début à la fin**. Avec l'affiche en pièce jointe, chaque envoi prend une à
+deux secondes : pour cinquante clubs, cela fait **une à deux minutes** pendant lesquelles aucune
+autre écriture ne passe.
+
+Par ailleurs, Google interrompt tout traitement de plus de **6 minutes** : au-delà d'environ
+200 clubs, l'envoi serait coupé en cours de route.
+
+**Pourquoi P3** : on n'envoie pas les invitations le jour du tournoi, et le carnet compte
+aujourd'hui bien moins de clubs. Les échecs individuels sont d'ailleurs **déjà bien gérés** (ils
+sont collectés et rapportés, pas avalés). À revoir seulement si le carnet d'adresses grossit
+beaucoup — ou au moment du passage en multi-clubs (**R-040**).
+
+> ℹ️ **Un chiffre à connaître, qui n'est pas un défaut du code** : un compte Google gratuit est
+> limité à **100 destinataires par jour**. Le projet sait lire ce compteur
+> (`MailApp.getRemainingDailyQuota`, utilisé par `autoriserEnvoiEmail`) mais **ne le consulte pas
+> avant un envoi groupé**. Ce serait un ajout utile le jour où le carnet dépassera la cinquantaine
+> de clubs.
+
+---
+
+### R-071 · Le compteur de visibilité des partenaires s'arrêterait avant la fin d'une grosse journée *(P3)*
+
+Les plafonds posés en session 6 pour refermer le P0 **R-014** acceptent **30 000 relevés par
+tranche de 6 heures**, tous appareils confondus. La page envoie un relevé toutes les 10 minutes
+par spectateur.
+
+Calcul : **1 300 spectateurs** (le chiffre écrit dans `docs/relais-cdn.md`) × 36 relevés sur
+6 heures ≈ **46 800** — soit **au-delà du plafond**. La mesure s'arrêterait donc vers les deux
+tiers de la journée.
+
+**Pourquoi P3, et pourquoi ce n'est pas un défaut** : c'est exactement le comportement voulu. Le
+plafond protège la saisie des scores, et un relevé de visibilité est *« une donnée de confort :
+jamais un score, jamais une équipe, jamais un club »* — le commentaire du code le dit. Perdre le
+dernier tiers d'une mesure d'audience est sans gravité. **Et les partenaires sont éteints depuis
+le 2026-08-05** (voir R-029, suspendu).
+
+Ce qu'il faut simplement, c'est **le savoir avant** — pour ne pas conclure, en lisant le tableau
+de bord des partenaires, que la fréquentation a chuté l'après-midi.
+
+> ✅ **Au passage, une inquiétude que j'ai eue et qui s'est révélée infondée** : j'avais relevé un
+> minuteur à **5 secondes** dans `frontend/js/sponsors.js` et craint un envoi réseau toutes les
+> 5 secondes par spectateur. Vérification faite, **ces 5 secondes n'écrivent que sur le téléphone**
+> (mémoire locale) ; l'envoi réseau, lui, est bien espacé de **10 minutes**. Le réglage est bon.
+
+---
+
+## F.7 — Ce que le domaine F ne peut PAS conclure
+
+| Question | Statut | Pourquoi |
+|---|---|---|
+| Combien de spectateurs l'application peut-elle réellement servir ? | **INCONNU** | Dépend de la durée d'exécution réelle chez Google — **I-18**. J'ai testé 25 simultanés (tous servis) ; au-delà, je n'extrapole pas |
+| Combien de spectateurs sont réellement attendus ? | **INCONNU** | Le chiffre de 1 300 vient de `docs/relais-cdn.md`, sans source. Seul Romain le sait — **I-19** |
+| Combien de temps prend réellement une validation de score ? | **PROBABLE : 3 à 8 s** | Reconstitué par décomposition (openById + lecture + écritures + reconstruction mesurée à 2,5-4,5 s). **Aucune écriture réelle n'a été chronométrée** — voir F.1 |
+| L'application est-elle rapide sur un vrai téléphone, dehors, en 4G ? | **INCONNU** | Toutes les mesures viennent d'un ordinateur à 16 ms des serveurs Google. **Ce sont des temps plancher** |
+| Le code mesuré est-il celui qui tourne chez Google ? | **INCONNU** *(permanent)* | **M-02** — mais ici le doute est faible : les mesures portent sur l'adresse publique réelle, donc sur le code réellement servi |
+| Les pointes de lenteur (16,8 s, 20,1 s) viennent-elles du code ou de Google ? | **PROBABLE : de Google** | `ping`, qui n'exécute rien, prend déjà 2,3-2,8 s. La variabilité observée est celle de la plateforme |
+
+---
+
+## F.8 — Récapitulatif du domaine F
+
+| Priorité | Nombre | Références |
+|---|---|---|
+| **P0** | **0** | — |
+| **P1** | **2** | **R-061** *(le relais est éteint et la capacité est inconnue)* · **R-062** *(le cache s'éteint tout seul quand le tournoi grossit)* |
+| **P2** | **7** | R-063 · R-064 · R-065 · R-066 · R-067 · R-068 · R-069 |
+| **P3** | **2** | R-070 · R-071 |
+
+**Total domaine F : 11 problèmes.** **Deux inconnues nouvelles** (**I-18**, **I-19**), toutes deux
+levables **sans écrire une ligne de code**. **Aucune décision de Romain n'est nécessaire pour les
+constater** ; une le sera à l'ÉTAPE 3 : allumer ou non le relais.
+
+### Le fil rouge du domaine F, en deux phrases
+
+1. **Le travail de performance a été fait, puis arrêté juste avant la fin.** Cache serveur,
+   anti-ruée, copie de secours, pause en arrière-plan, étalement aléatoire, délai d'abandon,
+   verrou court-circuité pour les lectures : **tout est là, et bien fait**. Le relais qui
+   couronne l'édifice est écrit, documenté, testé dans son principe — et **il n'a jamais été
+   allumé**. Ce domaine ne demande pas de construire : il demande de **terminer**.
+2. **Ce qui est lent n'est pas le code, c'est le lieu.** Une action qui ne fait rien du tout met
+   déjà 2,3 secondes à répondre, parce qu'elle passe par Google Apps Script. Aucune optimisation
+   ne descendra sous ce plancher — et c'est pourquoi la seule vraie réponse à l'affluence n'est
+   pas d'accélérer le serveur, mais de **ne plus l'interroger** : c'est exactement ce que fait le
+   relais.
+
+### Si je devais ne corriger que trois choses
+
+1. **Lever I-18** *(cinq minutes, aucun code)*. Ouvrir le journal « Exécutions » d'Apps Script et
+   regarder combien de temps dure réellement un `getAll`. **Sans ce chiffre, tout le reste du
+   domaine F est une conversation sans données.**
+2. **Allonger le cache de 10 à 20-30 secondes (R-064)** *(une valeur à changer)*. C'est le
+   meilleur rapport bénéfice/risque du domaine : trois fois moins de relectures du classeur, et
+   **aucun retard ajouté** pour les scores saisis dans l'application, puisque toute écriture
+   repose le cache. Seul un changement fait à la main dans le Sheet mettrait plus longtemps à
+   apparaître.
+3. **Faire dire au serveur qu'il a cessé de mettre en cache (R-062)** *(deux lignes)*. Ne change
+   rien au fonctionnement, mais évite de découvrir un dimanche matin que le filet a lâché.
+
+> ⚠️ **Et ce que je conseille de NE PAS faire.** Ne pas toucher aux calculs du navigateur : ils
+> prennent **moins d'une milliseconde**. Ne pas alléger l'instantané (R-063) **avant** d'avoir
+> les tests du domaine D — le gain est réel, mais il se paie d'un risque sur l'affichage des
+> scores, et `CLAUDE.md` §11 place la fiabilité avant la performance. Ne pas allumer le relais
+> « au cas où » sans l'avoir essayé avant le jour J.
