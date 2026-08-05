@@ -871,6 +871,63 @@ dit, c'est une vérification faite en production.
 
 ---
 
+### D-027 — L'attente est annoncée, jamais subie
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 10 |
+| **Statut** | ✅ **VALIDÉE** par Romain le 2026-08-05 — **conception proposée par lui** |
+| **Découle de** | D-026 (mieux vaut faire attendre que ne pas délivrer) |
+| **Porte sur** | R-051, R-052, R-053, R-069 (l'écran ne dit rien) · R-064 (délai de rafraîchissement) · R-067 |
+
+**Décision prise — les mots de Romain**
+> *« On va faire ce qu'on fait dans les jeux vidéo : un écran avec une animation qui explique que
+> ça charge et que les données vont arriver sous peu. […] informer du potentiel délai d'attente
+> […] **sans donner de chiffre que certains prendraient pour comptant**. […] **on accepte mieux
+> l'attente quand on a l'information**. Pour la partie bénévole […] une petite animation pour lui
+> expliquer que son action est en train d'être prise en compte, puis l'animation change pour lui
+> dire c'est ok, c'est tout bon. »*
+
+**Décision**
+> **Page publique** — un indicateur de chargement **animé**, qui explique que les données arrivent,
+> et une **courte explication du délai possible, SANS aucun chiffre**.
+>
+> **Page de saisie** — une animation en **deux temps** : *« ton action est prise en compte »* →
+> *« c'est bon »*. Et un effort d'**accélération** du délai, **en complément**.
+
+**Raison**
+> Une attente annoncée est **acceptée** ; la même attente, non annoncée, est lue comme une
+> **panne**. C'est la réponse directe au « fil rouge » du domaine E : *le seul vrai défaut de
+> conception est le silence*.
+
+**⭐ Ce que la décision a de particulièrement juste : l'absence de chiffre**
+> Un délai annoncé devient une **promesse**. « Environ 10 secondes » qui en prend 20 est **pire**
+> que de n'avoir rien annoncé. Or **§F.9 a mesuré que 4 % des appels dépassent 10 secondes**,
+> jusqu'à **19,5 s** : **aucun chiffre ne serait tenable**. L'intuition de Romain rejoint donc
+> exactement ce que dit la mesure.
+
+**⚠️ Quatre réserves inscrites avec la décision** *(détail en `AUDIT.md` §F.13)*
+> 1. **Les 60 s ne donneront pas 4× la capacité.** Allonger le délai réduit la charge de fond,
+>    **pas le pic** : à la fin d'un match, les gens appuient sur « Rafraîchir » — tous en même
+>    temps. **Recommandation : 30 s d'abord ; 60 s seulement si une mesure le justifie.**
+> 2. **Une animation ne doit JAMAIS mentir.** Une animation qui tourne indéfiniment après un échec
+>    réseau serait **R-051 déguisé en interface soignée**. Toute animation doit avoir **trois
+>    issues visibles** : *ça arrive* · *c'est arrivé* · **_ça n'a pas marché, voilà quoi faire_**.
+> 3. **En CSS pur, jamais en image.** La page publique pèse 59 Ko, ce qui est excellent. Une
+>    animation CSS coûte ~1 Ko ; un GIF ou une bibliothèque, cent fois plus.
+> 4. **L'ordre des priorités s'inverse côté bénévole.** **60 % du temps d'une validation est un
+>    démarrage incompressible** (§F.12) : une validation ne descendra jamais sous ~1,6 s. **On ne
+>    peut pas supprimer l'attente, seulement la rendre lisible** — donc **l'animation est la
+>    solution principale**, l'accélération le complément.
+
+**Statut de mise en œuvre**
+> ⏳ **Rien n'est implémenté** — nous sommes en **ÉTAPE 2 (audit)**. Cette conception sera reprise
+> à l'**ÉTAPE 3**, où elle formera vraisemblablement un chantier unique avec R-051, R-052, R-053
+> et R-069, qu'elle referme tous les quatre.
+
+---
+
 ## DÉCISIONS EN ATTENTE DE ROMAIN
 
 ### D-025 — Quels tests écrit-on, et dans quel ordre ?

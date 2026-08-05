@@ -4479,3 +4479,147 @@ excessive : elle correspond au chiffre.
 > inscrits — que l'application connaîtra —, **les deux curseurs deviennent des mesures**. Le
 > modèle cesse alors d'être une estimation pour devenir un réglage.
 
+
+---
+
+## F.12 — ⚠️ Correction : le verrou est tenu ~1 s, pas 2,5 à 4,5 s
+
+> **2026-08-05.** En décomposant les mesures pour répondre à la conception de Romain (**§F.13**),
+> une **surestimation de §F.5 apparaît**. Elle doit être corrigée, car elle change la gravité
+> relative de **R-067**.
+
+### Ce qui était écrit, et pourquoi c'était trop
+
+**§F.5 annonçait** : *« la reconstruction de l'instantané coûte 2,5 à 4,5 s, et elle se fait
+pendant que le verrou est tenu »*, d'où une attente estimée à **16 secondes pour le sixième
+marqueur**.
+
+Ce chiffre de 2,5-4,5 s venait de l'écart **mesuré depuis l'extérieur** entre cache chaud et cache
+froid. Il **incluait donc le transport et la variabilité de la plateforme** — pas seulement le
+travail du serveur.
+
+### Ce que dit la décomposition des durées d'exécution réelles
+
+| Poste | Durée | Part |
+|---|---|---|
+| **Démarrage Apps Script** *(mesuré : `ping`, qui n'exécute rien)* | **1,59 s** | **60 %** |
+| **Travail réel** *(ouvrir le classeur, lire, écrire, archiver, reconstruire)* | **1,08 s** | **40 %** |
+| **Total d'une écriture** *(médiane de 43 écritures réelles)* | **2,67 s** | 100 % |
+
+**Le démarrage a lieu AVANT la prise du verrou.** Le verrou ne couvre donc que le travail :
+**environ 1 seconde**, et non 2,5 à 4,5.
+
+### Les chiffres corrigés
+
+| Marqueurs qui valident au même instant | Attente du dernier — **corrigée** | *(annoncé à tort en §F.5)* |
+|---|---|---|
+| 2 | **≈ 4 s** | *≈ 5 s* |
+| 4 | **≈ 6 s** | *≈ 11 s* |
+| 6 | **≈ 8 s** | *≈ 16 s* |
+
+### Ce que cette correction change — et ce qu'elle ne change pas
+
+- ❌ **R-067 est moins grave que dit.** Sortir la reconstruction du verrou ferait gagner
+  **moins d'une seconde** par marqueur en attente, pas trois ou quatre. **Il reste P2**, mais il
+  descend dans l'ordre d'intérêt.
+- ✅ **R-053 n'est pas affecté** — au contraire. Même corrigée, l'attente reste de **2,7 s en
+  moyenne** pour un marqueur seul et **~8 s** à six. Un bouton muet pendant tout ce temps reste
+  le problème, et il reste entier.
+- ⚠️ **Un fait nouveau et important apparaît** : **60 % du temps d'une validation est un
+  démarrage que personne ne peut réduire.** Même en supprimant *tout* le travail du serveur, une
+  validation ne descendrait jamais sous **1,59 s**.
+
+> **Conséquence directe pour la conception : on ne peut pas supprimer l'attente du bénévole. On
+> peut seulement la rendre lisible.** L'animation n'est donc pas un lot de consolation à côté de
+> l'optimisation — **c'est la solution principale**, et l'optimisation est le complément.
+
+
+---
+
+## F.13 — La conception de Romain : « on accepte mieux l'attente quand on est informé »
+
+> **2026-08-05.** Romain propose une conception complète, en réponse à D-026 :
+>
+> *« On va faire ce qu'on fait dans les jeux vidéo : un écran avec une animation qui explique que
+> ça charge et que les données vont arriver sous peu. On peut aussi informer du potentiel délai
+> d'attente sur la page publique avec une courte explication, **sans donner de chiffre que certains
+> prendraient pour comptant**. À partir de là je pense qu'on peut même aller jusqu'à 60 secondes,
+> car **on accepte mieux l'attente quand on a l'information**. Pour la partie bénévole et saisie
+> des scores, il faut qu'on puisse accélérer le délai, et pour lui aussi mettre une petite
+> animation pour lui expliquer que son action est en train d'être prise en compte, puis
+> l'animation change pour lui dire c'est ok, c'est tout bon. »*
+
+**Cette conception est retenue** — elle devient **D-027**. Ce qui suit en évalue chaque pièce.
+
+### Ce qui est juste, et pourquoi
+
+| L'idée | Pourquoi elle tient |
+|---|---|
+| **Annoncer l'attente plutôt que la subir** | C'est le principe même de ce que le domaine E appelait « faire parler l'interface ». Une attente annoncée est **acceptée** ; la même attente non annoncée est lue comme **une panne** |
+| **Ne donner AUCUN chiffre** | ⭐ **La meilleure intuition des trois.** Un délai annoncé devient une **promesse** : « 10 secondes » qui en prend 20, c'est pire que ne rien avoir dit. Et §F.9 a montré que **4 % des appels dépassent 10 s**, jusqu'à 19,5 s. **Aucun chiffre ne serait tenable** |
+| **Séquence « en cours » → « c'est bon »** *(saisie)* | Exactement le bon schéma : un retour de **progression**, puis une **confirmation**. C'est ce qui manque à R-053, et ce qui existe déjà ailleurs dans l'administration (« Génération… ») |
+| **Accélérer pour le bénévole, pas pour le spectateur** | ✅ La distinction est juste, et Romain l'a reprise à son compte : un parent ne remarque pas 30 s de retard ; un marqueur au bord du terrain, si |
+
+### ⚠️ Les quatre points de vigilance
+
+**1. Les 60 secondes ne donneront pas quatre fois la capacité — à cause du bouton « Rafraîchir ».**
+
+C'est l'objection la plus sérieuse. Allonger le délai réduit la charge **de fond**, mais **pas le
+pic** — et le pic est justement le seul moment qui pose problème.
+
+À la fin d'un match, un parent ne veut pas attendre une minute : **il appuie sur « Rafraîchir »**,
+qui déclenche un appel immédiat. Et il n'est pas seul à le faire — **tout le monde le fait au même
+moment**, précisément parce que le match vient de finir.
+
+> **La charge automatique diminue ; la charge manuelle se concentre là où ça fait le plus mal.**
+
+Ce n'est pas une raison de renoncer : un appel déclenché par quelqu'un qui regarde vraiment son
+écran est plus « utile » qu'un appel automatique émis dans le vide. Mais **il ne faut pas compter
+sur un gain de capacité proportionnel au délai**. Un délai de **30 s** capte l'essentiel du gain
+en donnant moins envie de cliquer ; **60 s** transfère une part croissante de la charge vers le
+bouton. **Recommandation : 30 s d'abord, 60 s seulement si une mesure le justifie.**
+
+**2. Une animation ne doit JAMAIS mentir.**
+
+Une animation de chargement qui tourne indéfiniment quand le réseau a échoué est **pire que rien** :
+elle affirme activement que tout va bien. Ce serait **R-051 déguisé en interface soignée** — le
+problème le plus grave du domaine E, rhabillé.
+
+> **Règle à poser dès la conception** : toute animation de chargement doit avoir **une fin** et
+> **trois issues visibles** — *ça arrive* · *c'est arrivé* · **_ça n'a pas marché, voilà quoi
+> faire_**. La troisième est celle qu'on oublie, et c'est la seule qui compte vraiment.
+
+**3. L'animation doit être en CSS pur, pas en image.**
+
+La page publique pèse **59 Ko** aujourd'hui, ce qui est excellent (**§F.2**). Une animation faite
+de CSS coûte **~1 Ko** ; un GIF ou une bibliothèque d'animation en coûterait **cent fois plus** —
+et retarderait précisément l'affichage qu'on cherche à rendre agréable. **Le projet n'a
+aujourd'hui que deux animations** (`@keyframes ecr-secousse`, `asst-secousse`), toutes deux pour
+signaler une erreur : il n'existe **aucun indicateur de chargement animé**. C'est donc bien un
+ajout, mais un ajout léger.
+
+**4. Côté bénévole : l'accélération est plafonnée, et c'est important à savoir.**
+
+Voir **§F.12** : **60 % du temps d'une validation est un démarrage incompressible** (1,59 s sur
+2,67 s). Même en optimisant tout le reste, **une validation ne descendra jamais sous ~1,6 s**.
+
+> **Donc l'ordre des priorités de Romain doit être inversé sur ce point** : il demande *« accélérer
+> le délai **et** mettre une animation »*. En réalité, **l'animation est la solution principale**
+> et l'accélération le complément — parce que la seconde est bornée et la première ne l'est pas.
+
+### Ce qui existe déjà, et sur quoi s'appuyer
+
+Le travail ne part pas de zéro :
+
+| Existe déjà | Où |
+|---|---|
+| « — Chargement… — » dans le choix d'équipe | `tournoi.html` |
+| « Chargement des classements… » | `tournoi.html` |
+| « Chargement des matchs… » | `saisie.html` |
+| « ⏳ Rafraîchissement… » sur le bouton | `tournoi.js` |
+| « ⏳ … » sur le bouton de la saisie | `saisie.js` |
+
+**Ce sont des textes figés.** Ils disent *« ça charge »* mais ne disent jamais *« ça a échoué »*.
+La conception de Romain consiste donc à : **les animer**, **les rendre explicites**, et surtout
+**leur ajouter la troisième issue**.
+
