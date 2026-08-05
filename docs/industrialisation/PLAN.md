@@ -411,6 +411,39 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
   constante de la nature : c'est **un choix d'organisateur**, qui dépend du terrain, des catégories
   et de la journée.
 
+- ⚠️ **ET IL Y A PIRE — un champ existant est ignoré en silence** *(constaté le 2026-08-05)* :
+
+  | | Comportement réel |
+  |---|---|
+  | **Pause classique** *(tout le monde s'arrête ensemble)* | ✅ Le champ **« Pause déjeuner — durée (min) »** *(`pause_dejeuner_duree_min`, défaut 60)* **fonctionne** : aucun match n'est placé dans la fenêtre |
+  | **Pause échelonnée** *(deux vagues)* | ❌ **Ce champ est IGNORÉ** pour les catégories concernées — le code le dit lui-même *(« sans pause déjeuner globale »)* — et le repos est **forcé à 60 en dur** |
+
+  > 🔴 **Autrement dit** : un organisateur peut écrire *« Pause déjeuner — durée : 45 min »* et voir
+  > les catégories en pause échelonnée appliquer **60**, **sans un mot d'avertissement**. **L'écran
+  > dit une chose, le moteur en fait une autre** — exactement la famille de défauts du domaine H
+  > *(ce que le code raconte de faux sur lui-même)*.
+
+- 🎯 **Décision de conception : un champ DISTINCT, pas la réutilisation de l'existant.** Les deux
+  réglages ne désignent pas la même chose :
+  - **« Pause déjeuner — durée »** = une **fenêtre** pendant laquelle **personne** ne joue ;
+  - **« Temps de repos minimal »** = un **minimum garanti à chaque équipe**, pendant que **l'autre
+    vague joue**.
+
+  > Réutiliser le même champ ferait qu'un organisateur réglant 45 min pour une raison d'intendance
+  > **raccourcirait en silence le repos des enfants**. C'est précisément le type de couplage
+  > invisible que ce projet a déjà payé.
+
+  **L'écran cible** *(formulation de Romain)* :
+
+  ```
+  ☑ Pause méridienne échelonnée
+      → Temps de repos minimal : [ 60 ] min
+  ```
+
+  Le champ **n'apparaît que si la case est cochée**, et l'ancien champ « durée » est **estompé pour
+  les catégories concernées**, puisqu'il ne s'y applique pas. *(L'écran porte déjà une bascule de
+  libellé selon le mode — la plomberie existe.)*
+
 - **Ce que ça donne concrètement**, dans la page de configuration horaire :
 
   ```
@@ -420,10 +453,13 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
 
   Cette valeur **devient une contrainte du planning**.
 
-- **Risques couverts** : préalable du **levier n° 7** de **C-003** · confort d'organisation
-  immédiat, hors de toute suspension.
-- **Priorité** : **P2** *(rien n'est cassé aujourd'hui : 60 est une valeur raisonnable)* — mais
-  **P1 dès qu'on veut C-003**, dont il est le préalable.
+- **Risques couverts** : préalable du **levier n° 7** de **C-003** · **referme l'écart entre le
+  champ affiché et le comportement réel** *(ci-dessus)* · confort d'organisation immédiat, hors de
+  toute suspension.
+- **Priorité** : **P2** — mais pour une raison qui a changé. Ce n'est plus seulement *« 60 est une
+  valeur raisonnable »* : c'est qu'aujourd'hui **un réglage affiché n'a pas l'effet annoncé**. Le
+  risque reste faible *(60 est plus protecteur que ce que l'organisateur aurait choisi)*, mais
+  **c'est un écran qui ment**. → **P1 dès qu'on veut C-003**, dont il est le préalable.
 
 - ⚡ **Bénéfice / coût — c'est la bonne surprise** : le cœur de calcul **est déjà prêt**.
   `planifierCategorieEchelonnee` **reçoit déjà le repos en paramètre** *(`opts.repos`, avec 60 comme
@@ -445,7 +481,9 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
   - ⭐ **valeur absente ou vide ⇒ planning identique à aujourd'hui, caractère par caractère** ;
   - une valeur saisie ⇒ le repos réellement obtenu est **≥ à cette valeur** ;
   - une valeur aberrante *(0, négative, texte)* ⇒ **repli prudent sur 60**, jamais un plantage ;
-  - l'avertissement du cas dégénéré **fonctionne toujours** avec une valeur autre que 60.
+  - l'avertissement du cas dégénéré **fonctionne toujours** avec une valeur autre que 60 ;
+  - ⭐ **le nouveau champ et `pause_dejeuner_duree_min` restent INDÉPENDANTS** : changer l'un ne
+    déplace jamais l'autre. C'est le test qui protège la décision de conception ci-dessus.
 
 - **Vérifications de non-régression** : la **pause échelonnée** *(les deux vagues, l'équité, le
   repos garanti)* · les catégories **sans** pause échelonnée, qui ne doivent pas être effleurées.
