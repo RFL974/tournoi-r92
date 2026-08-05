@@ -820,6 +820,57 @@ dit, c'est une vérification faite en production.
 
 ---
 
+### D-026 — Mieux vaut faire attendre que ne pas délivrer
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 10 |
+| **Statut** | ✅ **VALIDÉE** par Romain le 2026-08-05 |
+| **Décidée par** | Romain, **spontanément** (aucune question ne le lui demandait) |
+| **Porte sur** | Tous les arbitrages entre **fraîcheur** et **fiabilité** — R-061, R-064, et le futur réglage du rafraîchissement |
+
+**Décision prise — les mots de Romain**
+> *« Le temps d'attente est souvent une friction pour les gens, et tu sais quoi : même s'ils
+> doivent attendre un peu avant de recevoir le résultat, la finalité c'est qu'ils l'obtiennent. »*
+
+**Décision**
+> Quand il faut choisir entre **des scores très frais** et **la certitude que chacun finira par
+> les obtenir**, on choisit **la certitude**.
+>
+> Concrètement : **allonger le délai de rafraîchissement est un geste acceptable**, y compris
+> jusqu'à 30 ou 60 secondes, si cela évite qu'une partie du public ne reçoive rien du tout un
+> jour d'affluence.
+
+**Raison**
+> 1. **Elle règle un arbitrage que la technique ne peut pas trancher.** Le domaine F a montré que
+>    capacité et fraîcheur sont directement liées : doubler le délai double le nombre de personnes
+>    servies (**§F.9**). Choisir entre les deux est un **choix de service**, pas un choix
+>    technique — il appartenait à Romain, et il l'a pris sans qu'on le lui demande.
+> 2. **Elle est cohérente avec `CLAUDE.md` §11**, qui place la **fiabilité** (n° 2) avant
+>    l'**expérience utilisateur** (n° 5) et la **performance** (n° 7).
+> 3. **Un score en retard de 30 secondes reste juste. Un score qui n'arrive pas ne l'est pas.**
+
+**⚠️ Conséquence que cette décision NE doit PAS avoir**
+> **Accepter l'attente n'autorise pas le silence — au contraire, cela l'interdit.**
+>
+> Si l'application fait attendre volontairement, elle doit **d'autant plus dire qu'elle
+> travaille**. Sans cela, une attente voulue devient indistinguable d'une panne, et le bénévole
+> ou le parent reclique — ce qui **aggrave** la charge qu'on cherchait justement à réduire.
+>
+> **D-026 renforce donc R-051, R-052, R-053 et R-069** (les quatre problèmes « l'écran ne dit
+> rien ») au lieu de les affaiblir. Ils deviennent le **préalable** de tout allongement de délai,
+> pas son complément.
+
+**Ce que ça change**
+> - **R-064** (porter le rafraîchissement de 15 s à 30 s) passe d'une proposition technique à une
+>   proposition **conforme à une doctrine validée** ;
+> - **R-061** (le relais) reste P1 mais **cesse d'être le premier geste** : la doctrine ouvre une
+>   solution gratuite qui suffit dans la plupart des cas ;
+> - tout futur arbitrage « plus rapide vs plus sûr » a désormais une **règle de tranchage écrite**.
+
+---
+
 ## DÉCISIONS EN ATTENTE DE ROMAIN
 
 ### D-025 — Quels tests écrit-on, et dans quel ordre ?

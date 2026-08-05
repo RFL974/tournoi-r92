@@ -4393,3 +4393,89 @@ une mauvaise question. Elle est donc **reformulée** :
 au même instant** lors d'un pic. C'est le seul paramètre du modèle qui ne se déduit d'aucune
 donnée — il s'observera le jour J, en regardant le journal « Exécutions » **pendant** le tournoi.
 
+
+---
+
+## F.11 — Le modèle de Romain : estimer le public à partir du nombre d'enfants
+
+> **2026-08-05.** Romain propose une méthode d'estimation :
+>
+> *« Une fois qu'on connaît le nombre d'enfants, partir du postulat qu'un enfant a un père et une
+> mère — on peut donc simuler un public, sachant au passage que tous les parents ne suivront pas
+> forcément les résultats, et que tous ne le feront pas non plus forcément en même temps. »*
+>
+> **C'est la bonne méthode**, pour une raison précise : elle part de la **seule donnée que
+> l'application possédera vraiment** (`nb_joueurs`, rempli par les clubs à leur réponse
+> d'invitation), et elle isole les deux inconnues au lieu de les noyer dans une intuition.
+
+### La formule
+
+```
+public potentiel  =  2 × enfants        (père + mère)
+                  +  enfants ÷ 4        (≈ 3 éducateurs pour ≈ 12 enfants)
+
+écrans actifs au pic  =  public × taux de SUIVI × taux de SIMULTANÉITÉ
+```
+
+Les deux curseurs sont exactement ceux que Romain a nommés :
+
+- **taux de SUIVI** — la part des parents qui consultent réellement les scores ;
+- **taux de SIMULTANÉITÉ** — la part de ceux-là qui regardent **au même instant** (le pic).
+
+### La table de référence
+
+Capacité mesurée : **310** écrans actifs à 15 s, **550** à 30 s, **1 090** à 60 s. On ne remplit
+jamais un tel plafond à plus de **60 %**.
+
+**Hypothèse médiane** *(suivi 60 %, pic 30 %)* :
+
+| Enfants inscrits | Public | Écrans au pic | 15 s | 30 s | 60 s |
+|---|---|---|---|---|---|
+| 200 | 450 | 81 | ✅ | ✅ | ✅ |
+| **400** | 900 | 162 | ✅ | ✅ | ✅ |
+| 600 | 1 350 | 243 | ❌ | ✅ | ✅ |
+| 1 000 | 2 250 | 405 | ❌ | ❌ | ✅ |
+
+**Hypothèse pessimiste** *(suivi 80 %, pic 45 % — l'annonce du classement)* :
+
+| Enfants inscrits | Public | Écrans au pic | 15 s | 30 s | 60 s |
+|---|---|---|---|---|---|
+| 200 | 450 | 162 | ✅ | ✅ | ✅ |
+| **400** | 900 | **324** | ❌ | ✅ | ✅ |
+| 600 | 1 350 | 486 | ❌ | ❌ | ✅ |
+| 1 000 | 2 250 | 810 | ❌ | ❌ | ❌ |
+
+### La règle de poche qui en sort
+
+> **≈ 13 enfants inscrits par seconde de délai de rafraîchissement.**
+>
+> | Rafraîchissement | Tient jusqu'à |
+> |---|---|
+> | **15 s** *(aujourd'hui)* | **≈ 230 enfants** |
+> | **30 s** | **≈ 400 enfants** |
+> | **60 s** | **≈ 800 enfants** |
+
+**Appliqué au tournoi réel** — 37 équipes U8/U10, soit **≈ 400 enfants** : dans l'hypothèse
+pessimiste, **les 15 secondes actuelles ne suffisent déjà pas au pic**. **30 secondes conviennent
+exactement.** L'intuition de Romain d'accepter un délai plus long n'était donc pas de la prudence
+excessive : elle correspond au chiffre.
+
+### ⚠️ Les trois limites de ce modèle, et il faut les dire
+
+1. **« Deux parents par enfant » surestime autant qu'il sous-estime.** Il **surestime** à cause
+   des **fratries** — deux frères dans le même club, ce sont les mêmes parents comptés deux fois,
+   et c'est fréquent en école de rugby. Il **sous-estime** en ignorant les grands-parents, oncles
+   et tantes — précisément ce public à distance que Romain a décrit. **Les deux biais jouent en
+   sens contraire ; rien ne dit qu'ils s'annulent.**
+2. **Les deux curseurs sont des hypothèses, pas des mesures.** 60 % / 80 % de suivi, 30 % / 45 %
+   de simultanéité : **aucune donnée ne les appuie**. Ils sont là pour donner un ordre de
+   grandeur et une conduite à tenir, **pas une prédiction**.
+3. **Le modèle ignore la durée du pic.** Une pointe de dix secondes à l'annonce d'un classement
+   n'a pas les mêmes conséquences qu'une pointe de dix minutes à la pause de midi. Le premier cas
+   se traduit par quelques pages lentes ; le second, par une file d'attente qui s'entretient.
+
+> ✅ **Mais sa vraie vertu est ailleurs : il est CALIBRABLE.** Le jour du tournoi, le journal
+> « Exécutions » donnera le nombre réel d'appels par minute. En le rapprochant du nombre d'enfants
+> inscrits — que l'application connaîtra —, **les deux curseurs deviennent des mesures**. Le
+> modèle cesse alors d'être une estimation pour devenir un réglage.
+
