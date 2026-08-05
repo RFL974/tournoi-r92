@@ -709,6 +709,66 @@ dit, c'est une vérification faite en production.
 
 ---
 
+### D-023 — Les trois décisions du domaine B sont reportées à la fin des audits
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ✅ **VALIDÉE** par Romain le 2026-08-05 |
+| **Décidée par** | Romain |
+| **Porte sur** | D-018, D-019, D-020 |
+
+**Problème posé**
+> Les trois décisions du domaine B ne demandent aucune ligne de code, ce qui rendait tentant de
+> les prendre tout de suite. Fallait-il ?
+
+**Décision prise — les mots de Romain**
+> *« Oui après me semble juste, mais le souci c'est que je n'ai pas encore réfléchi à
+> l'hébergement, je n'ai pas encore réfléchi au stockage ni à la conservation des données. »*
+
+**Décision**
+> **D-018, D-019 et D-020 sont prises à la fin des 8 audits**, au moment de l'ÉTAPE 3, et non
+> pendant l'ÉTAPE 2. Elles restent au statut ⏳ EN ATTENTE.
+
+**Raison**
+> Trois raisons, dans l'ordre d'importance :
+> 1. **Rien ne presse plus.** `D-022` (le déclencheur) garantit qu'on ne ratera pas le moment où
+>    ces décisions deviennent nécessaires, et `R-029` est **suspendu** depuis la désactivation
+>    des partenaires. Il n'y a plus aucune horloge qui tourne.
+> 2. **C'est l'ordre validé** (`D-010`, `CLAUDE.md` §7). Prendre ces décisions maintenant serait
+>    un écart, et il n'y a plus d'urgence pour le justifier.
+> 3. **Romain n'a pas les éléments, et il le dit.** Le forcer à décider produirait des décisions
+>    de façade, qu'il faudrait défaire.
+
+**⚠️ Ce qu'il faut dissiper, parce que c'est la raison invoquée**
+> Romain lie ces décisions à l'**hébergement** et au **stockage**. **Ce lien n'existe pas**, et
+> c'est important qu'il soit écrit noir sur blanc pour les sessions suivantes :
+>
+> | Mot | Ce que c'est | Est-ce décidé ? |
+> |---|---|---|
+> | **Hébergement** | *Où* le code tourne et où les fichiers vivent | ✅ **Déjà tranché de fait** : Google Apps Script + Google Drive + Gmail pour le serveur et les fichiers, GitHub Pages pour les pages. Ça fonctionne, et `CLAUDE.md` §10 interdit d'en changer sans justification |
+> | **Stockage** | *Dans quoi* les données sont rangées | ✅ **Déjà tranché de fait** : le Google Sheet, 12 onglets (cartographie, volet C) |
+> | **Conservation** | *Combien de temps* on garde | ❌ **Jamais décidé** — c'est `D-020`, et c'est le seul des trois qui reste ouvert |
+>
+> **La durée de conservation ne dépend ni de l'hébergement ni du stockage.** « On garde les
+> coordonnées d'un contact de club trois éditions » est une phrase **également vraie** dans un
+> Google Sheet, dans une base de données, ou dans un cahier à spirale. C'est une décision
+> **métier**, que Romain peut prendre sans avoir rien tranché d'autre.
+>
+> Ce qui dépend vraiment de l'hébergement, c'est la capacité à **appliquer** la durée
+> automatiquement — pas à la **décider**.
+
+**Conséquences**
+> - L'ÉTAPE 2 continue : domaine D (tests) en session 8, puis E, F, G, H ;
+> - `D-018`, `D-019`, `D-020` sont reprises **au début de l'ÉTAPE 3**, avec les 40 problèmes sous
+>   les yeux — ce qui est d'ailleurs le meilleur moment pour les prendre ;
+> - **Aucune réflexion sur l'hébergement n'est attendue de Romain.** Le sujet appartient au
+>   domaine **G (architecture)** et à `R-040` (le SaaS, P3), et il est **prématuré** tant que
+>   l'application cherche son public.
+
+---
+
 ## DÉCISIONS EN ATTENTE DE ROMAIN
 
 ### D-018 — Que dit-on aux personnes dont on garde les informations ?

@@ -21,12 +21,13 @@ L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 avance** : **trois domaines sur hui
 le **A (métier)**, le **C (sécurité)** et le **B (protection des données)**, soit **40
 problèmes**. Le domaine B, fait en session 7, dit une chose simple : **l'application collecte
 remarquablement peu — aucun enfant n'y est identifié — mais elle ne dit rien à personne et
-n'efface jamais rien**. **Aucun P0**, **trois P1**, et surtout **trois décisions qui n'attendent
-que toi** (**D-018**, **D-019**, **D-020**) : elles ne demandent **aucune ligne de code**, et
-elles doivent être prises **avant la première invitation réelle**. Deux choses t'attendent donc
-maintenant, aucune n'est technique : **remplacer les deux mots de passe par des suites
-aléatoires** (**D-017**, ce qui referme R-019) et **trancher les trois questions du domaine B**.
-Il reste **5 domaines** à auditer.
+n'efface jamais rien**. **Aucun P0**, **trois P1**. Les trois décisions qui en découlent
+(**D-018**, **D-019**, **D-020**) ne demandent aucune ligne de code, et Romain les a **reportées
+à la fin des audits** (**D-023**) : plus rien ne presse depuis que **D-022** fixe un déclencheur
+— *le jour où l'email d'un tiers entre dans le classeur* — et que **R-029 est suspendu**, les
+partenaires ayant été désactivés. **Une seule chose t'attend donc maintenant, et elle n'est pas
+technique** : remplacer les deux mots de passe par des suites aléatoires (**D-017**, ce qui
+referme R-019). Il reste **5 domaines** à auditer.
 
 ---
 
@@ -52,7 +53,7 @@ Il reste **5 domaines** à auditer.
 |---|---|---|
 | **A** | **Métier / Product Owner** | ✅ **CLOS** (session 5) — 13 problèmes, 0 P0, 5 P1, 7 P2, 1 P3 · **toutes les décisions métier prises** |
 | **C** | **Sécurité** | ✅ **CLOS** (session 6) — 14 problèmes, **1 P0**, 4 P1, 7 P2, 2 P3 · **1 décision en attente (D-016)** |
-| **B** | **RGPD / Protection des données** | ✅ **CLOS** (session 7) — 13 problèmes, **0 P0**, 3 P1, 9 P2, 1 P3 · **3 décisions en attente (D-018, D-019, D-020)** |
+| **B** | **RGPD / Protection des données** | ✅ **CLOS** (session 7) — 13 problèmes, **0 P0**, 3 P1, 9 P2, 1 P3 · 3 décisions **reportées à l'ÉTAPE 3** (D-018, D-019, D-020 — voir **D-023**) |
 | D | QA / Tests | ⬜ **Prochain** |
 | E | UX / UI / Accessibilité | ⬜ À faire |
 | F | Performance | ⬜ À faire |
@@ -74,9 +75,18 @@ Il reste **5 domaines** à auditer.
 un problème théorique. La vraie question à trancher n'est pas technique : **où ranger ces clés**,
 et **comment transmettre celle des scores aux bénévoles le jour J**.
 
-**2. Trancher les trois questions du domaine B** — **D-018, D-019, D-020**. Elles sont détaillées
-dans `DECISIONS.md`, aucune ne demande d'écrire du code, et elles doivent être prises **avant la
-première invitation réelle** :
+**2. Rien d'autre.** Les trois questions du domaine B — **D-018, D-019, D-020** — ont été
+**reportées à la fin des audits** par Romain (**D-023**, 2026-08-05) : plus rien ne presse depuis
+que `D-022` fixe un déclencheur et que R-029 est suspendu. Elles seront reprises au début de
+l'ÉTAPE 3, avec les 40 problèmes sous les yeux.
+
+> ⚠️ **À dissiper, parce que c'était la raison invoquée** : ces décisions **ne dépendent pas de
+> l'hébergement**. Hébergement (Google + GitHub Pages) et stockage (le Google Sheet) sont **déjà
+> tranchés de fait** et n'ont pas à être rouverts. Seule la **conservation** reste ouverte — et
+> une durée se décide sans savoir où vivent les données. Aucune réflexion sur l'hébergement n'est
+> attendue de Romain : c'est le domaine G et R-040 (SaaS, P3), prématuré aujourd'hui.
+
+Pour mémoire, les trois questions reportées :
 
 | Réf | La question, en une phrase | Ma recommandation |
 |---|---|---|
@@ -262,6 +272,7 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-013 | **Planning** : déplacer un match, et décaler toute la journée de X minutes | ✅ Validée (session 5) |
 | D-014 | **Départage** : confrontation directe, puis ordre alphabétique en dernier recours | ✅ Validée (session 5) |
 | D-015 | **Match annulé** : même mécanisme que le forfait, libellé distinct, ne compte pour personne | ✅ Validée (session 5), **par défaut** — une règle FFR primerait |
+| **D-023** | **Les trois décisions du domaine B (D-018/019/020) sont reportées à la fin des audits.** Plus rien ne presse : D-022 fixe le déclencheur, R-029 est suspendu. Et elles **ne dépendent pas de l'hébergement**, contrairement à ce qu'on pouvait croire | ✅ **Validée (session 7)** — *« oui après me semble juste »* |
 | D-016 | **Corriger R-014 (le P0) tout de suite**, seul, hors de l'ordre du chantier — puis reprendre les audits | ✅ Validée (session 6) — *« va pour B alors je te suis dans ton raisonnement »* |
 | **D-021** | **Phase prototype : tout appartient à Romain, et c'est assumé.** Classeur, Drive, boîte d'envoi et données de test sont sur ses comptes personnels — le bon choix pour un prototype. La question du responsable se repose au déclencheur | ✅ **Validée (session 7)** — *« dans cette phase de test tout est à moi »* |
 | **D-022** | **Le déclencheur remplace la date** : le jour où l'email d'un tiers entre dans le classeur, les trois P1 du domaine B doivent être réglés. Tant qu'il n'est pas atteint, **aucune exception** à l'ordre du chantier | ⏳ **Proposée (session 7)** — à confirmer |
