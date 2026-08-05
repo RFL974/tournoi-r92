@@ -5,8 +5,8 @@
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
 **Dernière mise à jour** : 2026-08-05 (session 7, close)
-**Commit de référence** : session 7 sur la branche `claude/industrialisation-rgpd-donnees-n03yu8`,
-partie de `77f8ae7` (`main`). **Documentation uniquement — aucun fichier de l'application modifié.**
+**Commit de référence** : `6b663c8` sur **`main`** — la session 7 est **fusionnée** (PR #177).
+**Documentation uniquement — aucun fichier de l'application modifié**, aucun redéploiement requis.
 
 > ✅ **Tout le travail décrit ci-dessous est dans `main`.** Une session qui démarre depuis `main`
 > voit donc l'état réel du chantier. *(Ce n'était pas le cas au démarrage de la session 6, où une
@@ -282,7 +282,7 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | **D-023** | **Les trois décisions du domaine B (D-018/019/020) sont reportées à la fin des audits.** Plus rien ne presse : D-022 fixe le déclencheur, R-029 est suspendu. Et elles **ne dépendent pas de l'hébergement**, contrairement à ce qu'on pouvait croire | ✅ **Validée (session 7)** — *« oui après me semble juste »* |
 | D-016 | **Corriger R-014 (le P0) tout de suite**, seul, hors de l'ordre du chantier — puis reprendre les audits | ✅ Validée (session 6) — *« va pour B alors je te suis dans ton raisonnement »* |
 | **D-021** | **Phase prototype : tout appartient à Romain, et c'est assumé.** Classeur, Drive, boîte d'envoi et données de test sont sur ses comptes personnels — le bon choix pour un prototype. La question du responsable se repose au déclencheur | ✅ **Validée (session 7)** — *« dans cette phase de test tout est à moi »* |
-| **D-022** | **Le déclencheur remplace la date** : le jour où l'email d'un tiers entre dans le classeur, les trois P1 du domaine B doivent être réglés. Tant qu'il n'est pas atteint, **aucune exception** à l'ordre du chantier | ⏳ **Proposée (session 7)** — à confirmer |
+| **D-022** | **Le déclencheur remplace la date** : le jour où l'email d'un tiers entre dans le classeur, les trois P1 du domaine B doivent être réglés. Tant qu'il n'est pas atteint, **aucune exception** à l'ordre du chantier | ✅ **Validée (session 7)** |
 
 **En attente** (voir `DECISIONS.md`) :
 
@@ -403,7 +403,6 @@ vérification supplémentaire.
 | **D-018** | **Que dit-on aux personnes** dont on garde les informations ? *(trois textes courts)* | Session 7 | **R-028** (P1) |
 | **D-019** | **Que fait-on de la mesure des partenaires ?** Informer · demander l'accord · alléger | Session 7 | **R-029** (P1) — **suspendu** tant que les partenaires restent éteints |
 | **D-020** | **Combien de temps garde-t-on quoi ?** *(tableau de durées à valider)* | Session 7 | **R-030** (P1), **R-031**, **R-033**, **R-034** |
-| **D-022** | **Le déclencheur** — *le jour où l'email d'un tiers entre dans le classeur* — est-il confirmé ? | Session 7 | Rien ne l'attend ; il **fixe le calendrier** de tout le reste |
 
 ### 10.3 — Inconnues à lever
 
