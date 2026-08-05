@@ -907,10 +907,15 @@ dit, c'est une vérification faite en production.
 > jusqu'à **19,5 s** : **aucun chiffre ne serait tenable**. L'intuition de Romain rejoint donc
 > exactement ce que dit la mesure.
 
-**⚠️ Quatre réserves inscrites avec la décision** *(détail en `AUDIT.md` §F.13)*
-> 1. **Les 60 s ne donneront pas 4× la capacité.** Allonger le délai réduit la charge de fond,
+**✅ ARBITRAGES VALIDÉS PAR ROMAIN le 2026-08-05** — *« je vais suivre l'ensemble de tes
+conseils »*. Les quatre réserves ci-dessous ne sont donc **plus des réserves** : elles font
+**partie de la décision**. En particulier : **le délai retenu est 30 secondes, pas 60.**
+
+*(détail en `AUDIT.md` §F.13)*
+> 1. ✅ **DÉLAI RETENU : 30 SECONDES** *(et non 60)*. Allonger le délai réduit la charge de fond,
 >    **pas le pic** : à la fin d'un match, les gens appuient sur « Rafraîchir » — tous en même
->    temps. **Recommandation : 30 s d'abord ; 60 s seulement si une mesure le justifie.**
+>    temps. À 30 s on capte l'essentiel du gain sans trop donner envie de cliquer. **60 s ne sera
+>    envisagé que si une mesure réelle le justifie**, jamais par anticipation.
 > 2. **Une animation ne doit JAMAIS mentir.** Une animation qui tourne indéfiniment après un échec
 >    réseau serait **R-051 déguisé en interface soignée**. Toute animation doit avoir **trois
 >    issues visibles** : *ça arrive* · *c'est arrivé* · **_ça n'a pas marché, voilà quoi faire_**.

@@ -4146,6 +4146,23 @@ constater** ; une le sera à l'ÉTAPE 3 : allumer ou non le relais.
    pas d'accélérer le serveur, mais de **ne plus l'interroger** : c'est exactement ce que fait le
    relais.
 
+> ## ⚠️ CE RÉCAPITULATIF A ÉTÉ DÉPASSÉ LE JOUR MÊME — lire §F.9 à §F.13
+>
+> Tout ce qui suit dans §F.8 a été écrit **avant** que Romain fournisse le journal d'exécution.
+> Cinq sections l'ont complété ou corrigé le même jour :
+>
+> | § | Ce qu'elle apporte |
+> |---|---|
+> | **F.9** | ✅ **I-18 levée** — 128 exécutions réelles. Le plancher est de **1,59 s** (démarrage), le cache ne coûte que **+0,06 s**. Capacité chiffrée |
+> | **F.10** | ⚠️ **Correction** — l'unité est l'**écran allumé**, pas la personne : la page se met en pause en arrière-plan. **I-19 reformulée** ; le public **à distance** entre au modèle |
+> | **F.11** | Le **modèle d'estimation** de Romain (1 enfant = 2 parents) → règle de poche : **~13 enfants par seconde de délai** |
+> | **F.12** | ⚠️ **Correction** — le verrou est tenu **~1 s**, pas 2,5-4,5 s. **R-067 descend dans l'ordre d'intérêt** |
+> | **F.13** | La **conception validée** de Romain (**D-027**) : animation + explication **sans chiffre**, **délai retenu 30 s** |
+>
+> **Les trois gestes ci-dessous restent justes, mais leur ordre a changé** : I-18 est faite, et le
+> geste n° 1 est désormais **R-064 porté à 30 s**, avec **D-027 comme préalable** (faire parler
+> l'écran avant d'allonger l'attente).
+
 ### Si je devais ne corriger que trois choses
 
 1. **Lever I-18** *(cinq minutes, aucun code)*. Ouvrir le journal « Exécutions » d'Apps Script et
