@@ -491,6 +491,7 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-016 | **Corriger R-014 (le P0) tout de suite**, seul, hors de l'ordre du chantier — puis reprendre les audits | ✅ Validée (session 6) — *« va pour B alors je te suis dans ton raisonnement »* |
 | **D-021** | **Phase prototype : tout appartient à Romain, et c'est assumé.** Classeur, Drive, boîte d'envoi et données de test sont sur ses comptes personnels — le bon choix pour un prototype. La question du responsable se repose au déclencheur | ✅ **Validée (session 7)** — *« dans cette phase de test tout est à moi »* |
 | **D-022** | **Le déclencheur remplace la date** : le jour où l'email d'un tiers entre dans le classeur, les trois P1 du domaine B doivent être réglés. Tant qu'il n'est pas atteint, **aucune exception** à l'ordre du chantier | ✅ **Validée (session 7)** |
+| **D-029** | ⚡ **L'industrialisation n'arrête pas les fonctionnalités — et deux mesures s'appliquent donc TOUT DE SUITE.** *« Une phase de pré-industrialisation, pas une fermeture totale des fonctionnalités »* (Romain). **① La fiche de redéploiement est complète** (`docs/deploiement.md` : le serveur = **deux** fichiers, `Tests.gs` compris, + contrôle par **deux nombres** — 589 et 3711). **② La carte se met à jour dans le même lot** que la fonctionnalité (`CLAUDE.md` **§8 bis**, nouvelle section, valable pour **tous** les chantiers). ⚠️ **Aucune autre exception à D-024** : le critère est **cumulatif** — aucun code touché **ET** un coût d'attente qui court à chaque livraison | ✅ **Validée ET APPLIQUÉE (session 11)** — *« applique les deux »*. Seule décision du chantier à avoir été **exécutée** hors ÉTAPE 3 |
 | **D-028** | **Le fichier serveur n'est PAS découpé tant que le dépôt chez Google est manuel.** `Code.gs` fait 8 147 lignes et Apps Script accepte plusieurs fichiers — mais 1 fichier → **5 collages à la main**, soit cinq occasions d'en oublier un : **le mécanisme même de M-04**. ⚠️ **Ce n'est pas un permis d'agrandir le fichier**, et **R-074 reste ouvert au registre**. **Réouverture** : le jour où le dépôt cesse d'être manuel (**R-081**) | ✅ **Validée (session 11)** — *« la 2 »*. Première décision prise **avant** l'ÉTAPE 3, et sans entorse à **D-024** : décider de **ne rien faire** n'engage aucun travail et ne peut pas être invalidé par un constat ultérieur |
 
 **En attente** (voir `DECISIONS.md`) :
@@ -615,9 +616,14 @@ vérification supplémentaire.
 > qui se passe quand du code neuf arrive **pendant** l'audit. Or c'est le cas — chantier
 > fonctionnalités à sa **session 28**, déployée la **veille** du démarrage de l'industrialisation.
 >
-> Conséquence inscrite : **M-05** (risque de méthode) et **D-029** (décision en attente). Le point
-> à retenir : **deux problèmes sur 81 coûtent quelque chose à attendre** — **R-072** et **R-073** —
-> et ce sont justement les deux qui ne demandent **aucune ligne de code**.
+> Conséquence inscrite : **M-05** (risque de méthode) et **D-029** — ✅ **tranchée ET appliquée le
+> jour même**. Le point à retenir : **deux problèmes sur 81 coûtaient quelque chose à attendre** —
+> **R-072** et **R-073** — et ce sont justement les deux qui ne demandaient **aucune ligne de code**.
+>
+> ✅ **Ce sont donc les deux SEULES mesures exécutées hors ÉTAPE 3 depuis le début du chantier**
+> (avec la correction du P0, R-014, par exception D-016). Le critère qui les a fait passer est
+> **cumulatif** : *aucun code touché* **ET** *un coût d'attente qui court à chaque livraison*.
+> Aucun autre problème ne remplit les deux.
 
 > ✅ **Le domaine G a ajouté UNE décision (D-028) et UNE inconnue (I-20) — et la décision est déjà
 > tranchée.**
@@ -677,7 +683,7 @@ vérification supplémentaire.
 
 | Réf | La question | Née en | Bloque |
 |---|---|---|---|
-| **D-029** | ⚡ **Comment les deux chantiers cohabitent.** *« C'est une phase de pré-industrialisation, pas une fermeture totale des fonctionnalités »* (Romain, 2026-08-05) — et c'est exact : le chantier fonctionnalités en est à sa **session 28**, déployée la **veille** du démarrage de l'industrialisation. **Deux problèmes sur 81 coûtent quelque chose à attendre** : **R-072** (chaque fonctionnalité serveur = un redéploiement = **un nouveau tirage du piège M-04**) et **R-073** (l'écart de 68 % s'élargit à la vitesse du développement). Ce ne sont pas des corrections mais des **habitudes**, sans code et sans risque. **Ma recommandation : les appliquer maintenant, et rien d'autre** | Session 11 | **M-05** — et le calendrier de **R-072**, **R-073** |
+| ~~**D-029**~~ | ~~Comment les deux chantiers cohabitent~~ | ~~Session 11~~ | ✅ **TRANCHÉE ET APPLIQUÉE le 2026-08-05** — *« applique les deux »*. Voir §7 |
 | **D-005** | **Périmètre du dépôt à auditer** : le site vitrine `boutique-r92` entre-t-il dans le chantier ? | Session 1 | **I-16**, et l'emplacement de la future page « Vos données » (**D-018**) |
 | **D-009** | **Où atterrit la documentation** quand une branche de travail est imposée ? | Session 2 | Rien de fonctionnel — une question de méthode |
 | **D-018** | **Que dit-on aux personnes** dont on garde les informations ? *(trois textes courts)* | Session 7 | **R-028** (P1) |

@@ -1016,17 +1016,40 @@ conseils »*. Les quatre réserves ci-dessous ne sont donc **plus des réserves*
 
 ---
 
-## DÉCISIONS EN ATTENTE DE ROMAIN
-
-### D-029 — Comment les deux chantiers cohabitent : l'industrialisation n'arrête pas les fonctionnalités
+### D-029 — L'industrialisation n'arrête pas les fonctionnalités : deux mesures s'appliquent tout de suite
 
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-05 |
 | **Session** | 11 |
-| **Statut** | ⏳ **EN ATTENTE DE ROMAIN** |
+| **Statut** | ✅ **VALIDÉE par Romain le 2026-08-05** — *« applique les deux »* · **APPLIQUÉE le jour même** |
+| **Décidée par** | Romain |
 | **Née de** | Une remarque de Romain : *« c'est une phase de pré-industrialisation, pas une fermeture totale des fonctionnalités de l'app — il y aura forcément des ajouts de code et de fonctionnalités »* |
 | **Concerne** | **M-05**, et le calendrier de **R-072** et **R-073** |
+
+**✅ CE QUI A ÉTÉ FAIT** *(2026-08-05, aucun fichier de l'application touché)*
+
+| Mesure | Fichier | Contenu |
+|---|---|---|
+| **1 — La fiche de redéploiement est complète** | `docs/deploiement.md` | Le serveur est déclaré comme **deux** fichiers ; la fiche passe à **5 gestes** dont *« coller `Tests.gs` — le fichier qu'on oublie »* ; **contrôle par deux nombres** (bilan **589**, dernière ligne **3711**) avec ce qu'un écart signifie ; l'incident **M-04** est raconté en tête, pour que la raison de la fiche soit lisible |
+| **2 — La carte se met à jour dans le même lot** | `CLAUDE.md` **§8 bis** *(nouvelle section)* | *« Une session qui ajoute un écran, une action serveur ou un onglet met la carte à jour DANS LE MÊME LOT — pas plus tard. »* Avec ce que la règle **ne demande pas**, pour qu'elle ne devienne pas une corvée |
+
+> **Deux corrections de fait ont été faites au passage**, dans le document qu'on réécrivait : « crée
+> les **5** onglets » → **7**, et la fonction **`assurerColonnePhase`** (supprimée depuis) →
+> `assurerColonnesMatchs`. Réécrire un document en y laissant sciemment des affirmations fausses
+> n'aurait eu aucun sens.
+
+**⚠️ CE QUI RESTE DE R-072, ET QUI N'A PAS ÉTÉ FAIT**
+> `Tests.gs` n'est toujours cité ni par `docs/passation.md`, ni par `backend/README.md`, ni par
+> `README.md`. **C'est volontaire** : D-029 portait sur la **fiche de redéploiement**, pas sur
+> l'ensemble de R-072. Le reste attend l'ÉTAPE 3, avec **R-073**. **R-072 n'est donc PAS refermé** —
+> il est *désamorcé là où il se déclenchait*.
+
+**⚠️ CE QUE CETTE DÉCISION N'AUTORISE PAS**
+> **Aucune autre exception à D-024.** Toutes les corrections qui touchent au **code** — R-041,
+> R-042, R-074, R-076, R-077, R-078, R-079 — attendent l'ÉTAPE 3. Le critère qui a justifié
+> l'exception est **cumulatif** : aucun code touché **ET** un coût d'attente qui court à chaque
+> livraison. Un problème qui ne remplit pas les deux ne passe pas.
 
 **Problème posé**
 
@@ -1084,14 +1107,12 @@ conseils »*. Les quatre réserves ci-dessous ne sont donc **plus des réserves*
 >    deux chantiers restent indépendants (comme **D-003** l'a fait pour l'audit FFR) ; c'est
 >    l'industrialisation qui s'adapte au mouvement, jamais l'inverse.
 
-**Question à Romain**
-
-> **(a)** J'applique les deux habitudes maintenant *(recommandé)* — 5 lignes dans
-> `docs/deploiement.md`, et la règle de mise à jour de la carte inscrite dans `CLAUDE.md` ;
-> **(b)** tout attend l'ÉTAPE 3, y compris ces deux-là — auquel cas il faut savoir que chaque
-> redéploiement d'ici là rejoue le piège de M-04, en connaissance de cause.
+**Réponse de Romain** — *« D-029 applique les deux dans ce cas stp »* → **option (a)**, les deux
+mesures appliquées immédiatement.
 
 ---
+
+## DÉCISIONS EN ATTENTE DE ROMAIN
 
 ### D-025 — Quels tests écrit-on, et dans quel ordre ?
 

@@ -19,6 +19,7 @@
 - [6. Les 8 domaines d'audit](#6-les-8-domaines-daudit)
 - [7. Ordre de travail (6 étapes)](#7-ordre-de-travail-6-étapes)
 - [8. Règle de non-régression](#8-règle-de-non-régression)
+- [8 bis. Règle de la carte à jour](#8-bis-règle-de-la-carte-à-jour)
 - [9. Règle de transparence](#9-règle-de-transparence)
 - [10. Règle de prudence](#10-règle-de-prudence)
 - [11. Objectif final](#11-objectif-final)
@@ -458,6 +459,56 @@ Si une fonctionnalité ne peut pas être vérifiée, l'indiquer clairement :
 > **NON VÉRIFIÉ**
 
 > Ne jamais prétendre qu'une fonctionnalité est sûre simplement parce que le code semble correct.
+
+---
+
+## 8 bis. RÈGLE DE LA CARTE À JOUR
+
+> ⚠️ **Cette règle s'applique à TOUTES les sessions du projet — fonctionnalités comme
+> industrialisation.** Elle est née du domaine G (session 11 d'industrialisation) et validée par
+> Romain le 2026-08-05 (**D-029**).
+
+**La règle, en une phrase :**
+
+> **Une session qui ajoute un écran, une action serveur ou un onglet met la carte à jour DANS LE
+> MÊME LOT — pas plus tard.**
+
+### Ce qu'on appelle « la carte »
+
+Les trois documents qu'on ouvre en premier pour comprendre ce projet :
+
+| Document | Ce qu'il doit toujours refléter |
+|---|---|
+| `README.md` | la **structure** : pages, fichiers, onglets, documents |
+| `docs/architecture.md` | les **actions** du serveur et **comment les morceaux se parlent** |
+| `backend/README.md` | ce que fait le serveur, et ses utilitaires |
+
+*(`frontend/README.md` a toujours été tenu à jour : c'est le modèle à suivre.)*
+
+### Pourquoi cette règle existe
+
+Parce que l'écart s'est creusé **fonctionnalité après fonctionnalité**, sans que personne ne le
+décide. Constat de la session 11, chiffré : **`docs/architecture.md` documentait 21 des 65 actions
+du serveur — 68 % d'invisible** — et **4 pages sur 8**. Tout le parcours d'invitation des clubs,
+soit un mois de travail, n'y figurait pas.
+
+> **Ce n'est pas de la paperasse.** Un chiffre non sourcé recopié dans deux documents (« ~1000-1300
+> spectateurs ») a déjà conduit un audit à une conclusion fausse, corrigée par Romain.
+
+### Ce que ça coûte, et ce que ça évite
+
+- **Sur une fonctionnalité qu'on écrit de toute façon : deux minutes.**
+- **Rattrapé plus tard : une session entière.**
+
+C'est tout l'intérêt de la faire **dans le même lot** : la personne qui vient d'écrire l'action est
+la seule à savoir exactement ce qu'elle fait.
+
+### Ce que la règle ne demande PAS
+
+- ❌ **Pas** de réécrire toute la documentation à chaque commit ;
+- ❌ **Pas** de documenter le fonctionnement interne d'une fonction *(c'est le rôle des commentaires
+  dans le code, et ils sont bons)* ;
+- ✅ **Seulement** ceci : *ce qui existe est-il listé là où on va le chercher ?*
 
 ---
 

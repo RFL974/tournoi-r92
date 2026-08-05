@@ -2316,3 +2316,87 @@ exception.
 
 ⚠️ **Mais D-029 se répond avant, ou en même temps** — elle ne dépend d'aucun audit restant, et son
 coût d'attente court dès le prochain redéploiement du serveur.
+
+---
+
+## SESSION 11 — ADDENDUM n° 3 : D-029 tranchée **et appliquée**
+
+**Objectif** : appliquer les deux mesures validées par Romain.
+**Aucun fichier de l'application modifié** — uniquement `docs/deploiement.md` et `CLAUDE.md`.
+
+### 1. La décision
+
+> *« D-029 applique les deux habitudes dans ce cas stp »* — Romain, 2026-08-05.
+
+⚠️ **Le mot « habitudes » n'avait pas été compris à la première explication**, et c'était ma faute :
+mot abstrait, jamais défini. Reformulé avec ce qui serait **littéralement écrit** dans chaque
+fichier et **qui fait quoi**, la décision a été immédiate. *Leçon : quand une question reste sans
+réponse, suspecter le vocabulaire avant de suspecter la question.*
+
+### 2. Ce qui a été fait — mesure ① : la fiche de redéploiement
+
+**Fichier** : `docs/deploiement.md`, section A.
+
+| Avant | Après |
+|---|---|
+| *« Coller le contenu de `backend/Code.gs` »* — **un** fichier | Un encadré déclare le serveur comme **DEUX** fichiers, avec la correspondance des noms (`Tests.gs` du dépôt = **`Test.gs`** chez Google, au singulier) |
+| Aucune mention de `Tests.gs` | Geste **2** de la fiche : *« Coller `Tests.gs` — LE FICHIER QU'ON OUBLIE »* |
+| Aucune vérification | Geste **4** : lancer `lancerTestsFFR` et **vérifier deux nombres** — le bilan (**589**) **et** la dernière ligne du fichier collé (**3711**), avec un tableau disant **ce qu'un écart signifie** |
+| — | L'incident **M-04** est raconté en tête, pour que la raison de la fiche soit lisible et non subie |
+| — | Un avertissement : **ces deux nombres changent** quand les tests évoluent ; où lire les valeurs à jour |
+| — | La **portée exacte** du contrôle : les tests tournent dans l'**éditeur**, pas contre l'adresse publique (**M-02** reste ouvert) |
+
+**Deux corrections de fait faites au passage**, dans le document qu'on réécrivait : « crée les
+**5** onglets » → **7** (et la liste nommée), et la fonction **`assurerColonnePhase`** — supprimée
+du code depuis — remplacée par `assurerColonnesMatchs`.
+
+> **Réécrire un document en y laissant sciemment des affirmations fausses n'aurait eu aucun sens** —
+> c'est le défaut même que R-073 dénonce.
+
+### 3. Ce qui a été fait — mesure ② : la règle de la carte à jour
+
+**Fichier** : `CLAUDE.md`, **nouvelle section §8 bis** (insérée sans renuméroter les suivantes ;
+sommaire mis à jour).
+
+> **« Une session qui ajoute un écran, une action serveur ou un onglet met la carte à jour DANS LE
+> MÊME LOT — pas plus tard. »**
+
+Trois choix de rédaction, tous délibérés :
+
+1. **Placée dans `CLAUDE.md`, pas dans `docs/industrialisation/`.** La règle vaut pour **toutes**
+   les sessions du projet — **fonctionnalités comprises**. La ranger dans le dossier
+   d'industrialisation l'aurait rendue invisible pour le chantier qui écrit le plus de code.
+2. **Elle dit ce qu'elle NE demande PAS** (pas de réécriture globale, pas de documentation du
+   fonctionnement interne) — sans quoi une règle de documentation devient une corvée qu'on contourne.
+3. **Elle porte son chiffre** (68 %, 21 actions sur 65) et son incident (le « 1 000-1 300 » non
+   sourcé). Une règle dont on a oublié la raison finit par sauter.
+
+### 4. Ce qui n'a PAS été fait — et c'est volontaire
+
+| Non fait | Pourquoi |
+|---|---|
+| `Tests.gs` toujours absent de `passation.md`, `backend/README.md`, `README.md` | **D-029 portait sur la fiche de redéploiement**, pas sur tout R-072. Élargir sans demander aurait été exactement le geste que D-024 interdit |
+| Les **44 actions**, 4 pages et 20 fichiers manquants de la carte **non rattrapés** | C'est un travail de vérification **ligne à ligne** contre le code, pas une habitude. Il appartient à l'ÉTAPE 3 |
+| Aucune autre exception à D-024 | Le critère est **cumulatif** : *aucun code touché* **ET** *un coût d'attente qui court à chaque livraison*. R-041, R-042, R-074, R-076, R-077, R-078, R-079 n'en remplissent qu'un au mieux |
+
+### 5. Statut des deux problèmes — la nuance qui compte
+
+**Ni l'un ni l'autre n'est refermé**, et le registre le dit en ces termes :
+
+| | Statut | Ce que ça veut dire |
+|---|---|---|
+| **R-072** | 🟡 **DÉSAMORCÉ là où il se déclenchait** | Le prochain redéploiement est protégé. Mais `Tests.gs` reste invisible dans trois autres documents |
+| **R-073** | 🟡 **L'hémorragie est arrêtée, le retard reste entier** | L'écart cesse de se creuser. Les 68 % déjà accumulés sont toujours là |
+| **M-05** | 🟡 **ATTÉNUÉ, jamais refermable** | Tant que l'application évolue, les chiffres de l'audit se périment. C'est une **donnée permanente** du chantier, pas un défaut réparable |
+
+> ⚠️ **Il aurait été facile — et faux — d'écrire « CORRIGÉ ».** On a arrêté une aggravation, on n'a
+> pas réparé un retard. Confondre les deux, c'est exactement le genre de preuve trop généreuse qui a
+> produit **M-04**.
+
+### 6. Prochaine session recommandée
+
+**Inchangée : session 12 — ÉTAPE 2, domaine H (qualité du code). LE DERNIER.**
+
+Après lui, l'ÉTAPE 2 est terminée et l'ÉTAPE 3 s'ouvre.
+
+**Condition de démarrage** : instruction explicite de Romain.
