@@ -7,14 +7,14 @@
 > Le registre des problèmes (avec leur statut de correction) vit dans `RISQUES.md`.
 > Ce document-ci **explique** ; `RISQUES.md` **suit**.
 
-**Dernière mise à jour** : 2026-08-05 (session 7)
+**Dernière mise à jour** : 2026-08-05 (session 8)
 
 | Domaine | Nom | Statut |
 |---|---|---|
 | **A** | **Métier / Product Owner** | ✅ **FAIT** (session 5) |
 | **C** | **Sécurité** | ✅ **FAIT** (session 6) |
 | **B** | **RGPD / Protection des données** | ✅ **FAIT** (session 7) |
-| D | QA / Tests | ⬜ À faire |
+| **D** | **QA / Tests** | ✅ **FAIT** (session 8) |
 | E | UX / UI / Accessibilité | ⬜ À faire |
 | F | Performance | ⬜ À faire |
 | G | Architecture / Maintenabilité | ⬜ À faire |
@@ -2392,3 +2392,620 @@ Le domaine C avait le sien : il n'y a **pas de personnes, seulement des mots de 
 domaine B pour l'essentiel. **La condition est le calendrier** : ils doivent être faits **avant
 la première invitation réelle**, pendant que le classeur est encore vide de données de tiers.
 C'est la fenêtre décrite par I-03 et I-04, et elle ne se rouvrira pas.
+
+---
+
+# DOMAINE D — QA / TESTS
+
+**Audité en session 8** (2026-08-05). Aucun fichier de l'application n'a été modifié.
+
+> **De quoi parle ce domaine ?**
+> Des **preuves**. Les domaines A, C et B ont trouvé 40 problèmes. L'ÉTAPE 5 va corriger une
+> partie de ces problèmes, et chaque correction touchera du code qui marche aujourd'hui.
+> La question du domaine D est donc : **comment saura-t-on qu'on n'a rien cassé ?**
+>
+> Un « test », ici, c'est un petit programme qui pose une question au code et vérifie la réponse.
+> Exemple : *« deux équipes à 6 points, l'une avec +12 de différence et l'autre +3 : laquelle est
+> classée première ? »* Si la réponse change un jour sans qu'on l'ait voulu, le test le dit.
+
+---
+
+## D.0 — Le verdict en une phrase
+
+**Le harnais de tests est sérieux, bien conçu, et il tourne — mais il regarde presque partout
+sauf là où ça compte le jour du tournoi : le classement, le départage et la saisie des scores ne
+sont vérifiés par aucun test, et les 17 712 lignes qui tournent dans le navigateur n'en ont
+aucun non plus.**
+
+Deux chiffres pour situer :
+
+| | |
+|---|---|
+| Vérifications automatiques qui existent | **589**, réparties en 278 tests, **0 échec** |
+| Part du code serveur réellement traversée par ces tests | **38 %** *(104 fonctions sur 277 — mesuré, pas estimé)* |
+| Part du code du navigateur traversée | **0 %** |
+| Vérifications portant sur le départage à la différence de points | **0 sur 589** |
+
+Et une bonne nouvelle inattendue, qui change la donne pour la suite du chantier :
+**ces tests peuvent tourner ailleurs que chez Google.** C'est démontré plus bas (§D.1).
+
+---
+
+## D.1 — Ce qui est solide (et qu'il ne faut pas casser)
+
+Il faut le dire avant les problèmes, parce que c'est réellement au-dessus de la moyenne pour un
+projet de cette taille.
+
+| Ce qui a été vérifié | Résultat |
+|---|---|
+| **Le harnais existe et il est vivant** | `backend/Tests.gs` : 3 711 lignes, **278 fonctions de test**, **589 vérifications**, **0 échec**. Il a grandi session après session (S5 → S28), c'est-à-dire qu'il est **entretenu**, pas abandonné |
+| **Les tests sont écrits « en cœur pur »** | Ils n'ouvrent jamais le classeur : on leur **injecte** des données inventées et on regarde ce qui sort. C'est la bonne façon de faire, et c'est ce qui les rend rapides et rejouables |
+| **Ils sont reproductibles** | Le tirage au sort est un **interrupteur** (`melange`) : les tests le mettent à « non » et obtiennent donc toujours le même résultat. Sans ça, un test sur deux échouerait au hasard |
+| **Ils sont prudents par construction** | Plusieurs tests vérifient qu'un format **inventé de toutes pièces** retombe sur le chemin prudent. C'est rare et c'est excellent : on ne teste pas seulement ce que le code sait faire, on teste **ce qu'il fait quand il ne sait pas** |
+| **Les écritures simultanées sont sérialisées** | Un **verrou** (`LockService`) protège toutes les écritures : deux marqueurs qui valident au même instant ne peuvent pas s'écraser. Attente maximale 20 s, puis « réessaie ». Le risque « concurrence » de `CLAUDE.md` §6.D est **traité** |
+| **Le double-clic est bloqué sur la saisie des scores** | Le bouton « Valider » est désactivé pendant l'envoi et réactivé à la fin, quoi qu'il arrive |
+| **Le piège du « é » décomposé est neutralisé** | `estTermineServeur` / `estTermine` comparent sur `termin` et non sur `terminé` — sans quoi le classement se viderait silencieusement |
+| **Le barème est documenté** | `docs/regles-classement.md` est une vraie spécification : barème, ordre de départage, matchs comptés, et il **dit lui-même** qu'il n'y a pas de 4ᵉ critère |
+
+### ✅ Et le constat le plus utile de cette session : **les tests tournent hors de Google**
+
+C'est le point qui débloque le risque de méthode **M-03** (*« aucun test ne peut être lancé depuis
+cet ordinateur »*), traîné depuis la session 1.
+
+**Ce qui a été fait pour l'établir** : les deux fichiers `Code.gs` et `Tests.gs` ont été chargés
+tels quels dans un exécuteur JavaScript ordinaire, avec **une vingtaine de lignes de doublures**
+pour les trois outils Google que les tests touchent (le journal, le générateur d'identifiants, le
+formateur de dates). Résultat :
+
+```
+R92 — 589/589 OK, 0 FAIL       (en ~1 seconde)
+```
+
+**Traduction en langage simple** : on croyait que ces tests étaient prisonniers de Google. Ils ne
+le sont pas. Ils étaient simplement **écrits pour Google**, ce qui n'est pas la même chose. La
+distance entre « on ne peut pas les lancer » et « on les lance en une seconde » est d'environ
+vingt lignes.
+
+> ⚠️ **Ce que cela ne prouve pas** : que le code **en service chez Google** est le même. C'est
+> **M-02**, et ce risque-là reste entier. Faire tourner les tests ici prouve que **le code du
+> dépôt** est cohérent, jamais que la version publiée l'est.
+
+---
+
+## D.2 — R-041 · Le calcul qui décide du vainqueur n'est vérifié par aucun test *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+Le classement d'une poule repose sur trois fonctions :
+
+- `enregistrerResultat` — attribue les points d'un match (victoire 3, nul 2, défaite 1) ;
+- `comparerClassement` — départage : points, puis **différence**, puis **points marqués** ;
+- `calculerClassement` — assemble le tout à partir du classeur.
+
+**Aucune des trois n'est vérifiée par un test.** Plus précisément, et c'est pire que « aucun
+test » :
+
+- `enregistrerResultat` et `calculerClassement` ne sont **jamais exécutés** par le harnais ;
+- `comparerClassement` **est** exécuté, mais **par accident** : il est appelé au passage par un
+  test qui vérifie autre chose (l'ordre des équipes à midi). Aucune vérification ne porte sur lui ;
+- et surtout : **dans les 3 711 lignes du fichier de tests, il n'existe qu'un seul endroit qui
+  fabrique des statistiques d'équipe — et il met toujours `diff: 0, bp: 0`.**
+
+**Conséquence exacte, et elle est vérifiable** : sur 589 vérifications, **le 2ᵉ critère de
+départage (la différence de points) et le 3ᵉ (les points marqués) ne sont jamais mis à
+l'épreuve. Pas une seule fois.** Le seul critère jamais éprouvé est le premier — les points.
+
+### 2. Pourquoi c'est important
+
+Le classement des poules du matin ne sert pas seulement à afficher un tableau. **Il décide de la
+composition de l'après-midi** : le 1er de la poule A rencontre le 1er de la poule B, et ainsi de
+suite. Un classement faux, c'est un après-midi entier construit de travers — et personne ne s'en
+apercevra avant la remise des récompenses.
+
+Et il y a un enchaînement précis à voir : **la décision D-014 va justement modifier ce code**
+(ajouter la confrontation directe en 4ᵉ critère, puis l'ordre alphabétique en 5ᵉ). On s'apprête
+donc à toucher, à l'ÉTAPE 5, la fonction la plus critique de l'application — celle qui n'a aucun
+filet.
+
+`RISQUES.md` l'avait d'ailleurs déjà pressenti pour R-004 : *« tests exigés d'abord »*. Le domaine
+D confirme que ce n'était pas une précaution de style.
+
+### 3. Exemple concret
+
+U10, poule A, dernière journée. Deux équipes finissent à 7 points :
+
+- **Clamart** : 3 matchs, 1 victoire, 1 nul, 1 défaite, 24 marqués, 12 encaissés → **différence +12**
+- **Meudon** : 3 matchs, 1 victoire, 1 nul, 1 défaite, 15 marqués, 12 encaissés → **différence +3**
+
+Clamart doit être 1ᵉʳ. Supposons qu'une correction future inverse par erreur le sens de la
+comparaison sur la différence : **Meudon passe 1ᵉʳ**, part en N1 l'après-midi, Clamart en N2. Les
+589 tests continuent d'afficher `589/589 OK` — parce qu'aucun d'eux ne fait jamais jouer la
+différence.
+
+Personne ne le verra. Ni le jour même, ni jamais : le tableau affiché sera cohérent avec lui-même.
+
+### 4. Ce que je propose
+
+Écrire les tests **avant** de toucher au départage (D-014), pas après. Concrètement, cinq
+situations suffisent à verrouiller la règle actuelle :
+
+1. deux équipes à points égaux, différences différentes → la meilleure différence devant ;
+2. points et différence égaux, points marqués différents → le meilleur attaquant devant ;
+3. **égalité parfaite** sur les trois critères → c'est exactement R-004, et le test **écrit noir
+   sur blanc ce que fait le code aujourd'hui** (il suit l'ordre du tableur) ;
+4. un match non terminé n'est pas compté ;
+5. un match dont le statut est « terminé » avec un « é » décomposé **est** compté.
+
+Ces tests sont écrivables **aujourd'hui, sans toucher une ligne du code de l'application** :
+`enregistrerResultat` et `comparerClassement` sont des fonctions pures (voir §D.9).
+
+### 5. Impact
+
+- **Ce que ça change dans l'application** : **rien**. Un test n'ajoute aucun comportement.
+- **Risque** : quasi nul. Le seul risque réel est d'écrire un test qui **se trompe** et qui grave
+  une règle fausse. D'où le point 3 ci-dessus : le test doit décrire ce que fait le code
+  **aujourd'hui**, et c'est ensuite D-014 qui décidera de le changer.
+- **Bénéfice** : la modification prévue par D-014 devient **vérifiable**. Sans ces tests, la
+  seule preuve possible sera « on a regardé et ça avait l'air bon ».
+
+### 6. Ce que je conseille
+
+**À faire avant toute correction du classement, donc au tout début de l'ÉTAPE 5.** Ce n'est pas
+une amélioration : c'est le préalable de D-014 et de D-011 (le forfait, qui touche les mêmes
+points).
+
+---
+
+## D.3 — R-042 · L'enregistrement d'un score n'est vérifié par aucun test *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+`enregistrerScore` est la fonction que déclenche chaque bénévole, à chaque match, toute la
+journée. Elle n'est **jamais exécutée** par le harnais — pas une fois sur 589 vérifications.
+
+Or ce n'est pas une petite fonction. Elle contient **six garde-fous successifs** :
+
+1. un match de Coupe dont les deux équipes ne sont pas encore connues est refusé ;
+2. un score déjà validé est refusé, sauf « Corriger » explicite ;
+3. en Coupe, une égalité **exige** qu'un vainqueur soit désigné ;
+4. corriger un résultat de Coupe déjà propagé au tour suivant demande une confirmation ;
+5. le score est calculé depuis le détail (essais, transformations…) **s'il est fourni**, sinon le
+   score saisi fait foi ;
+6. le résultat est archivé au journal de saison, sans jamais bloquer la saisie.
+
+**Six règles, zéro test.**
+
+### 2. Pourquoi c'est important
+
+C'est le geste le plus répété de la journée, et le seul qui soit fait **sous pression**, debout,
+sur un téléphone, par quelqu'un qui n'a pas le temps de vérifier. Si un de ces six garde-fous
+cède, il cède au pire moment.
+
+Le garde-fou n° 2 mérite une mention particulière : c'est lui qui empêche qu'un score validé soit
+réécrit par mégarde. Le domaine C a déjà signalé (R-017) qu'on ne sait pas **qui** saisit. Si en
+plus le refus de réécriture cède, une contestation devient impossible à trancher.
+
+### 3. Exemple concret
+
+Phase finale U12, demi-finale. Le bénévole saisit 10-10 et valide. En Coupe, il n'y a pas de match
+nul : le garde-fou n° 3 doit refuser et demander qui a gagné.
+
+Supposons qu'une correction future — par exemple celle de D-012, qui va justement ajouter une
+limite de 2 chiffres sur les scores — déplace ce contrôle d'une ligne. Le 10-10 passe. Le match
+suivant reçoit un vainqueur vide. **La finale se retrouve avec une équipe fantôme**, et il faut
+comprendre le problème sur le terrain, sans le code sous les yeux.
+
+### 4. Ce que je propose
+
+Séparer le **cœur** de la **plomberie**, comme la session 6 l'a fait pour les plafonds de R-014 :
+une fonction qui reçoit *(le match tel qu'il est, ce que le bénévole a envoyé)* et qui répond
+*(accepté / refusé, et pourquoi)* — sans toucher au classeur. Cette fonction-là est testable.
+L'écriture dans le classeur reste à part, et reste non testée.
+
+Six tests, un par garde-fou, plus deux sur le score lui-même (score négatif refusé, score à
+virgule refusé).
+
+### 5. Impact
+
+- **Ce que ça change** : c'est le seul point de ce domaine qui demande de **déplacer du code**
+  existant. Ce n'est pas anodin, et ça ne doit pas être fait à la légère.
+- **Risque** : réel mais maîtrisable, **à condition de le faire avant** les corrections D-011
+  (forfait) et D-012 (limite de score), qui vont de toute façon rouvrir cette fonction. Le faire
+  **pendant** serait mélanger deux sujets dans un même geste — ce que `CLAUDE.md` §7 interdit.
+- **Bénéfice** : les trois décisions déjà prises qui touchent la saisie (D-011, D-012, D-015)
+  deviennent vérifiables au lieu d'être « constatées à l'œil ».
+
+### 6. Ce que je conseille
+
+**Corriger avant l'utilisation réelle**, et **avant** D-011/D-012. C'est le seul chantier de tests
+qui demande un peu de découpage de code : il doit donc être planifié à l'ÉTAPE 3, pas improvisé.
+
+---
+
+## D.4 — R-043 · Le code du navigateur n'a aucun test, et rien ne l'empêche d'être publié *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+Deux constats qui se renforcent :
+
+- **26 fichiers, 17 712 lignes** de code tournent dans le navigateur (`frontend/js/`). **Aucun
+  test. Aucun outil de test. Aucun `package.json`.** Zéro vérification d'aucune sorte.
+- **La publication est automatique et sans contrôle.** `.github/workflows/pages.yml` publie le
+  dossier `frontend/` sur Internet **à chaque envoi sur `main`**. Il ne lance aucun test, ne
+  vérifie même pas que les fichiers sont du JavaScript valide.
+
+Et ce n'est pas du code décoratif. C'est le code qui **calcule et affiche le classement public**,
+qui décide du **podium**, et qui porte la **page de saisie des scores** que les bénévoles utilisent.
+
+### 2. Pourquoi c'est important
+
+Une virgule mal placée dans un de ces fichiers ne se voit pas à la lecture. Elle empêche le
+fichier entier de se charger — et la page devient blanche, ou le bouton ne répond plus. Chez
+Google, au moins, coller un `Code.gs` cassé donne une erreur tout de suite. Ici, **rien** :
+le fichier part en ligne tel quel, et le premier à s'en apercevoir est l'utilisateur.
+
+Le délai entre « je pousse » et « c'est en ligne » est de l'ordre de la minute. **Le seul filet
+existant, c'est de regarder la page après.**
+
+### 3. Exemple concret
+
+Un exemple précis, tiré de ce même dossier : la fonction `podiumCertain` (dans `tournoi.js`)
+décide si le podium est **mathématiquement verrouillé** — c'est-à-dire si aucun résultat restant
+ne peut encore le changer. Elle raisonne sur des fourchettes de points (« au mieux cette équipe
+finira à tant, au pire à tant »), sur plusieurs dizaines de lignes.
+
+C'est le genre de calcul où une erreur de comparaison ne se voit **jamais** à la lecture, et se
+voit **une seule fois** : le jour où l'application annonce un podium définitif alors qu'il reste
+un match à jouer. Devant les familles.
+
+Aucun test ne l'éprouve, et il n'existe aujourd'hui aucun moyen d'en écrire un.
+
+### 4. Ce que je propose
+
+Deux niveaux, dans cet ordre, du moins cher au plus utile :
+
+**a) Une simple vérification de syntaxe à la publication** — quelques lignes ajoutées à
+`pages.yml` : si un fichier JavaScript est cassé, la publication s'arrête et rien ne part en
+ligne. Ça n'attrape aucune erreur de raisonnement, mais ça attrape la faute de frappe, qui est
+la panne la plus bête et la plus fréquente.
+
+**b) Un harnais de tests pour le navigateur**, sur le même principe que celui du backend : les
+fonctions de calcul (classement, podium, miroirs) sont chargées et interrogées hors du navigateur.
+Le travail de la session 8 montre que c'est faisable **sans installer quoi que ce soit** et sans
+ajouter de dépendance — ce que `CLAUDE.md` §10 déconseille explicitement.
+
+### 5. Impact
+
+- **(a)** ne change rien à l'application ; le seul effet visible est qu'une publication peut
+  désormais **échouer** — ce qui est le but.
+- **(b)** n'ajoute aucun comportement non plus. Le vrai coût est le temps d'écrire les tests.
+- **Bénéfice** : c'est aujourd'hui **le seul chemin vers la production qui n'a aucun contrôle**.
+
+### 6. Ce que je conseille
+
+**(a) est à faire avant l'utilisation réelle** — c'est peu de travail pour supprimer un risque
+franc. **(b) est à planifier à l'ÉTAPE 3**, en même temps que R-044 ci-dessous, dont il est le
+préalable technique.
+
+---
+
+## D.5 — R-044 · La même règle métier est écrite deux fois, et rien ne vérifie qu'elles disent la même chose *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+Parce qu'Apps Script (chez Google) et le navigateur ne peuvent pas partager un même fichier,
+certaines règles sont **écrites deux fois** : une version serveur, une version navigateur.
+
+Ce n'est pas un accident, et le projet ne s'en cache pas : le code porte **29 mentions du mot
+« miroir »**, et deux commentaires en majuscules — `⚠️ BARÈME DE CLASSEMENT — CONTRAT PARTAGÉ ⚠️` —
+qui renvoient à `docs/regles-classement.md`. C'est de la bonne tenue.
+
+**Mais un commentaire n'est pas un contrôle.** Rien ne vérifie que les deux versions disent la
+même chose. Et la règle de départage est dans ce cas : `comparerClassement` côté serveur,
+`comparer` côté navigateur — même code, écrit deux fois, **aucun test des deux côtés**.
+
+Autres exemples relevés : le tableau des formules de phase 2 (`FORMULES_PHASE2` /
+`FORMULES_PHASE2_AUT`), le découpage des poules de niveau, les effectifs déclarés, le total des
+éducateurs, les natures de terrain, la structure des poules du matin, la durée des matchs du
+Super Challenge.
+
+### 2. Pourquoi c'est important
+
+Deux copies d'une même règle finissent **toujours** par diverger : quelqu'un corrige un bug d'un
+côté et oublie l'autre. C'est la panne classique, et elle est particulièrement vicieuse ici,
+parce que les deux copies servent à des choses différentes :
+
+- la version **serveur** sert à **générer l'après-midi** ;
+- la version **navigateur** sert à **afficher le classement au public**.
+
+Si elles divergent, **l'écran public et la génération ne sont plus d'accord** — et les deux ont
+l'air corrects, chacun de son côté.
+
+### 3. Exemple concret
+
+L'après-midi est généré : le serveur calcule que Clamart est 1ᵉʳ de la poule A et l'envoie en N1.
+Au même moment, l'affichage public — qui recalcule le classement de son côté — met Meudon 1ᵉʳ.
+
+Un parent regarde son téléphone, voit Meudon en tête de la poule, puis voit Meudon jouer en N2.
+Il vient demander pourquoi. **Personne ne peut répondre**, parce que les deux chiffres viennent
+de deux calculs différents que rien ne confronte.
+
+### 4. Ce que je propose
+
+Un **test de miroir** : pour chaque règle écrite en double, un test qui pose la **même question
+aux deux versions** et vérifie qu'elles donnent la **même réponse**. Une trentaine de questions
+suffit pour les miroirs importants.
+
+C'est le seul type de test qui attrape une divergence, et il ne demande **aucune modification du
+code de l'application** : il se contente de charger les deux fichiers et de comparer.
+
+> **Ce que je ne propose pas** : fusionner les deux copies en une seule. Ce serait la solution
+> élégante, mais elle demande de changer la façon dont le code arrive chez Google — un chantier
+> d'architecture (domaine G), disproportionné aujourd'hui, et interdit par `CLAUDE.md` §10 sans
+> justification forte.
+
+### 5. Impact
+
+- **Ce que ça change** : rien dans l'application.
+- **Risque** : nul.
+- **Bénéfice** : la seule chose qui protège aujourd'hui ces 29 miroirs est **la vigilance de celui
+  qui modifie**. Un test la remplace par un contrôle qui ne fatigue pas.
+- **Dépendance** : suppose (b) de R-043 — il faut pouvoir exécuter le code du navigateur.
+
+### 6. Ce que je conseille
+
+**Après R-043 (b), et à traiter dans le même chantier.** Priorité aux miroirs qui touchent le
+**résultat sportif** (le barème et le départage) : les autres concernent des formulaires, où une
+divergence se voit et se corrige à la main.
+
+---
+
+## D.6 — Les problèmes P2 (améliorations utiles, non bloquantes)
+
+### R-045 · Aucun scénario ne rejoue une journée de tournoi de bout en bout *(P2)*
+
+Les 589 vérifications portent toutes sur des **morceaux** pris isolément. Aucune ne rejoue la
+**chaîne complète** : créer un tournoi → engager des équipes → générer les poules → saisir tous
+les scores du matin → calculer le classement → générer l'après-midi → saisir → classer.
+
+**Pourquoi c'est gênant** : la plupart des pannes réelles ne sont pas dans un morceau, elles sont
+**entre deux morceaux** — au moment où l'un passe ses résultats à l'autre. C'est exactement là
+que vivent R-002 (un match non saisi bloque tout l'après-midi) et R-015 (regénérer efface les
+scores) : deux problèmes de **jonction**, qu'aucun test de morceau ne peut voir.
+
+**Ce que je propose** : un seul scénario, sur un tournoi inventé de 8 équipes en 2 poules, qui
+enchaîne tout et vérifie le classement final. C'est le test qui rend service pour le coût le plus
+faible — et il est **écrivable aujourd'hui**, puisque `calculerPlanning` et les répartiteurs
+d'après-midi sont déjà des fonctions pures.
+
+---
+
+### R-046 · Tout ce qui écrit dans le classeur est hors de portée du harnais *(P2)*
+
+**110 des 277 fonctions** du serveur reçoivent le classeur en premier paramètre. Par construction,
+elles ne peuvent pas être testées ailleurs que chez Google — et elles ne le sont pas là-bas non
+plus, puisque le harnais ne les appelle jamais.
+
+C'est **la limite structurelle du harnais**, et elle est en partie assumée : tester une écriture
+dans un vrai classeur demanderait un classeur de test, donc une infrastructure.
+
+**Ce qu'il faut en retenir** : ce n'est pas une négligence, c'est un **plafond**. La bonne réponse
+n'est pas de tester ces 110 fonctions, c'est de faire en sorte qu'elles contiennent **le moins de
+décisions possible** — la décision dans un cœur pur testable, l'écriture à part. C'est exactement
+ce que la session 6 a fait pour R-014, et ce que R-042 propose pour la saisie des scores.
+
+---
+
+### R-047 · Le refus des équipes en double n'existe que dans le navigateur *(P2)*
+
+Ajouter deux fois « CLAMART 1 » en U10 est refusé — **par la page d'administration seulement**
+(`admin-equipes.js`). Le serveur, lui, accepte : `ajouterEquipe` vérifie que le nom n'est pas vide,
+et rien d'autre.
+
+C'est **le même schéma** que R-015 et R-016 (domaine C) : une protection tenue par la page, pas
+par le serveur. Elle disparaît dès qu'on passe à côté de la page — et il existe un autre chemin
+qui crée des équipes sans passer par cet écran : `creerEquipesClub`, déclenché quand un club
+répond à son invitation.
+
+**Conséquence** : deux équipes de même nom dans la même catégorie. Le classement, lui, ne se
+trompe pas (il travaille sur des identifiants), mais **l'affichage devient illisible** et la
+synchronisation avec les clubs invités part sur de mauvaises bases — le sujet exact qui avait déjà
+demandé une correction en 2026-08-02 (collision de noms de clubs).
+
+---
+
+### R-048 · Un envoi qui n'aboutit pas fige le bouton indéfiniment *(P2)*
+
+Les **lectures** (`apiGet`) peuvent recevoir un délai maximum : au-delà, la requête est
+abandonnée. Les **écritures** (`apiPost`) n'en ont **aucun**.
+
+**Conséquence sur le terrain** : le bénévole valide un score, la 4G décroche sans couper
+franchement. Le bouton reste sur « Enregistrement… », désactivé, **pour toujours**. Rien ne
+revient, aucun message. Le seul remède est de recharger la page — ce qu'il faut deviner.
+
+C'est le cas « perte de connexion » de `CLAUDE.md` §6.D, et c'est le plus probable de tous : un
+tournoi se joue dehors.
+
+> ✅ **Le bon côté** : si le score **est** passé mais que la réponse s'est perdue, le garde-fou
+> n° 2 d'`enregistrerScore` refuse la seconde saisie (« déjà validé »). Le double envoi ne fait
+> donc **pas** de dégât — c'est l'attente sans fin qui pose problème, pas le doublon.
+
+---
+
+### R-049 · La documentation annonce un test qui n'existe pas *(P2)*
+
+`docs/sponsors.md` affirme : *« Un test compare les deux rendus ligne pour ligne »*, à propos de
+l'aperçu de l'encart partenaires et de son rendu réel.
+
+**Ce test n'existe nulle part.** Ni dans `Tests.gs`, ni ailleurs — la constante citée
+(`SPONSORS_APERCU_LARGEUR`) n'apparaît que dans le frontend, et jamais dans un test.
+
+**Pourquoi ce n'est pas un détail** : une documentation qui annonce une preuve inexistante est
+**pire qu'une documentation muette**. Elle décourage la vérification. Et si celle-ci est fausse,
+plus rien dans les autres documents ne peut être cru sur parole.
+
+---
+
+## D.7 — Le problème P3 (à garder pour plus tard)
+
+### R-050 · Rien n'empêche une nouvelle fonction d'arriver sans test *(P3)*
+
+Aucune mesure de couverture n'est suivie, aucune règle ne dit « une nouvelle règle métier arrive
+avec ses tests ». Le harnais grandit parce que quelqu'un y pense, pas parce que quelque chose
+l'exige.
+
+Ça marche aujourd'hui — la preuve, il a grandi de la session 5 à la session 28. Mais ça repose
+entièrement sur la discipline d'une seule personne, et ça ne tiendra pas si le projet devient un
+outil loué à plusieurs clubs (R-040).
+
+**Ne rien implémenter maintenant.** Une règle de ce genre imposée trop tôt ralentit sans protéger.
+
+---
+
+## D.8 — ⚠️ Une preuve inscrite au dossier est fausse (et ce qu'elle change)
+
+C'est le constat le plus inconfortable de cette session, et il concerne **notre propre méthode**,
+pas le code.
+
+### Ce qui est écrit dans `ETAT.md` et `RISQUES.md`
+
+La correction du P0 de sécurité (**R-014**) a reçu le statut **TESTÉ** le 2026-08-04, sur trois
+preuves. La deuxième était :
+
+> *« 573 tests sur 573 passent dans Apps Script. Contrôle croisé : 564 appels de test écrits en
+> dur dans le fichier + 9 situés dans des boucles = 573. Le compte confirme que le lot exécuté
+> contenait bien les 16 vérifications ajoutées pour cette correction. »*
+
+### Ce que dit la vérification
+
+Les deux versions du fichier de tests ont été rejouées, celle d'avant la correction et celle
+d'après :
+
+| Version du dépôt | Vérifications exécutées |
+|---|---|
+| **Avant** la correction de R-014 (`c1948fc^`) | **573** |
+| **Après** la correction, c'est-à-dire aujourd'hui | **589** |
+
+**573 est exactement le compte du fichier qui ne contient PAS les 16 vérifications de R-014.**
+
+Le « contrôle croisé » ne tenait pas : les 564 appels comptés l'ont été dans le fichier **d'après**
+la correction, et rapprochés d'un total obtenu **avant**. Les vrais comptes sont 547 + 26 = 573
+avant, et 563 + 26 = 589 après.
+
+**Explication la plus probable** *(PROBABLE, pas CERTAIN)* : lors du redéploiement, `Code.gs` a été
+recollé chez Google, mais **pas** `Tests.gs`. C'est deux fichiers, et rien ne le rappelle.
+
+### Ce que ça change, et ce que ça ne change pas
+
+| | |
+|---|---|
+| ❌ **Ce qui tombe** | Les 16 vérifications de R-014 **n'ont jamais tourné chez Google**. La preuve n° 2 du statut TESTÉ est **nulle** |
+| ✅ **Ce qui tient, et même se renforce** | Ces 16 vérifications **passent** : elles ont été exécutées pendant cette session sur le code du dépôt, avec le reste — **589/589, 0 échec**. La logique de la correction est donc **mieux** prouvée qu'avant, mais **pour une autre raison** que celle inscrite |
+| ⚠️ **Ce qui reste ouvert** | Que le code **en service** soit bien celui du dépôt repose sur la déclaration de Romain (« j'ai redéployé »). C'est **M-02**, le risque permanent, et rien ici ne le contredit |
+
+### Le geste qui referme le sujet — 2 minutes
+
+Coller le contenu actuel de `backend/Tests.gs` dans le projet Apps Script (à côté de `Code.gs`),
+puis relancer `lancerTestsFFR`. **Le résultat attendu est `589/589`.**
+
+- Si Apps Script affiche **589/589** → les tests de R-014 ont tourné là où c'est utile, et le
+  statut TESTÉ retrouve ses trois preuves.
+- S'il affiche **573/573** → c'est l'ancien fichier qui est resté ; le recoller.
+- S'il affiche autre chose → il faut le dire, c'est une information en soi.
+
+> Ce geste fait aussi d'une pierre deux coups : **il vérifie que le `Code.gs` en service est bien
+> le bon**. Les tests s'exécutent chez Google **contre le code chez Google** — si le `Code.gs`
+> déployé était l'ancien, les 16 vérifications de R-014 échoueraient. C'est le seul contrôle
+> simple qui attaque **M-02** de front.
+
+**Nouveau risque de méthode : `M-04` — un compte de tests ne dit pas quelle version a été
+exécutée.** Voir `RISQUES.md` §6.
+
+---
+
+## D.9 — Les scénarios prioritaires *(la proposition demandée par `CLAUDE.md` §6.D)*
+
+> `CLAUDE.md` §6.D est explicite : *« Avant de créer de nombreux tests, proposer d'abord les
+> scénarios prioritaires. »* Rien n'est écrit tant que Romain n'a pas choisi.
+
+### Le point de départ est meilleur qu'attendu
+
+Une mesure faite pendant cette session : **85 fonctions du serveur sont déjà « pures »** — elles
+reçoivent des données, rendent un résultat, ne touchent ni au classeur ni à Internet — **et ne
+sont testées par rien.**
+
+**Traduction** : pour ces 85 fonctions, l'obstacle n'est **pas** technique. Il n'y a rien à
+refactorer, rien à installer, aucune décision d'architecture. Il n'y a qu'à écrire les tests.
+Parmi elles : `comparerClassement`, `enregistrerResultat`, `validerScore`, la construction du
+tableau de Coupe, les trois formats d'après-midi non couverts, `estTermineServeur`.
+
+### Les 4 lots, par ordre de rendement
+
+| # | Lot | Ce qu'il protège | Coût | Préalable |
+|---|---|---|---|---|
+| **1** | **Le barème et le départage** *(R-041)* — 5 tests | Le résultat sportif. **Préalable de D-014 et D-011** | Faible — fonctions déjà pures | Aucun |
+| **2** | **La journée de bout en bout** *(R-045)* — 1 scénario | Les **jonctions** entre étapes, là où vivent R-002 et R-015 | Moyen | Aucun |
+| **3** | **La syntaxe du navigateur à la publication** *(R-043 a)* | Le seul chemin vers la production sans contrôle | Très faible | Aucun |
+| **4** | **La saisie d'un score** *(R-042)* — 8 tests | Les 6 garde-fous du geste le plus répété. **Préalable de D-012 et D-015** | Le plus élevé : demande de séparer le cœur de l'écriture | À planifier |
+
+Puis, dans un second temps : le harnais navigateur (R-043 b) et les tests de miroir (R-044), qui
+vont ensemble.
+
+### Ce que je recommanderais si un seul lot devait être fait
+
+**Le lot 1.** Parce qu'il est le moins cher, qu'il protège ce qui compte le plus, et surtout
+parce que **D-014 est déjà décidée** : le départage **sera** modifié à l'ÉTAPE 5. Écrire ces
+tests après la modification ne prouverait plus rien — ils graveraient le nouveau comportement
+sans jamais avoir vu l'ancien.
+
+---
+
+## D.10 — Ce que le domaine D ne peut PAS conclure
+
+Par honnêteté (`CLAUDE.md` §9), voici ce qui reste **INCONNU** ou **NON VÉRIFIÉ** :
+
+| Point | Pourquoi |
+|---|---|
+| **Le code en service chez Google passe-t-il les 589 vérifications ?** | **INCONNU.** Les 589 ont été obtenues sur le code **du dépôt**. C'est **M-02** — et le geste de §D.8 est justement ce qui permettrait de le savoir |
+| **Les 173 fonctions jamais exécutées contiennent-elles des bugs ?** | **INCONNU, et c'est le fond du sujet.** L'absence de test ne prouve **aucun** défaut. Ce domaine dit où on ne regarde pas, pas où ça casse |
+| **Les 17 712 lignes du navigateur fonctionnent-elles ?** | **NON VÉRIFIÉ.** Elles fonctionnent visiblement en usage réel, ce qui est une preuve — mais une preuve d'usage, pas une preuve de non-régression |
+| **Le chiffre de 38 % est-il comparable à une couverture standard ?** | **Non.** Il compte les fonctions **traversées au moins une fois**, pas les lignes ni les cas. La vraie couverture des **situations** est plus basse : `comparerClassement` est traversée, et pourtant deux de ses trois critères ne sont jamais éprouvés |
+| **La mesure de couverture reflète-t-elle Apps Script ?** | **PROBABLE.** Elle a été faite hors de Google avec des doublures. Les tests étant purs, le chemin suivi devrait être identique — mais ça n'a pas été confronté à une exécution réelle |
+
+---
+
+## D.11 — Récapitulatif du domaine D
+
+| Priorité | Nombre | Références |
+|---|---|---|
+| **P0** | **0** | — |
+| **P1** | **4** | R-041 · R-042 · R-043 · R-044 |
+| **P2** | **5** | R-045 · R-046 · R-047 · R-048 · R-049 |
+| **P3** | **1** | R-050 |
+| **Risque de méthode** | **1** | **M-04** — un compte de tests ne dit pas quelle version a été exécutée |
+
+**Total domaine D : 10 problèmes.** Aucune décision de Romain n'est nécessaire pour les
+**constater** ; une seule question lui revient (le choix des lots — §D.9), et elle rejoint le
+registre des points en suspens de `ETAT.md` §10, conformément à **D-024**.
+
+### Le fil rouge du domaine D, en deux phrases
+
+1. **On teste ce qui a été construit récemment, pas ce qui compte depuis le début.** Le harnais
+   suit fidèlement le chantier FFR — conformité, invitations, feuille de report, Super Challenge —
+   c'est-à-dire tout ce qui se passe **avant** le tournoi. Le classement, le départage et la
+   saisie des scores, eux, sont le **cœur historique** de l'application : ils fonctionnent depuis
+   si longtemps que personne n'a jamais éprouvé le besoin de les protéger. **Ce sont précisément
+   ceux que l'ÉTAPE 5 va modifier.**
+2. **L'obstacle n'était pas là où on le croyait.** On pensait les tests prisonniers de Google
+   (M-03) : ils tournent ici en une seconde. On croyait le harnais trop petit : il fait 589
+   vérifications. Le vrai manque n'est ni technique ni quantitatif — **c'est que rien ne vérifie
+   les deux gestes qui décident du classement d'un tournoi.**
+
+### Si je devais ne corriger que trois choses
+
+1. **Les 5 tests de barème et de départage (R-041).** Ils sont écrivables aujourd'hui, sans
+   toucher au code, et **D-014 les rendra impossibles à écrire honnêtement une fois passée**.
+2. **Recoller `Tests.gs` chez Google et relancer (§D.8).** Deux minutes. C'est le seul geste
+   simple qui attaque **M-02** de front — le doute permanent sur ce qui tourne réellement.
+3. **La vérification de syntaxe à la publication (R-043 a).** Peu de travail, et ça referme le
+   seul chemin vers la production qui n'a aujourd'hui **aucun** contrôle.

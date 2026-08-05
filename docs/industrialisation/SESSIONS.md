@@ -1341,3 +1341,176 @@ correction. Un clic la défait.
 **D-018** (les textes), **D-019** (la mesure), **D-020** (les durées), **I-15** (droit à l'image),
 **I-16** (mentions légales du site vitrine). Elles seront posées **une par une**, à la demande de
 Romain.
+
+---
+
+# SESSION 8 — ÉTAPE 2, domaine D : QA / Tests
+
+**Date** : 2026-08-05
+**Objectif** : auditer le domaine **D (QA / tests)**, 4ᵉ des 8 domaines dans l'ordre validé
+par **D-010** (A → C → B → **D** → E → F → G → H).
+**Consigne de Romain** : *« Session 8 — ÉTAPE 2, domaine D : les tests (QA) »*
+**Modification de l'application** : **AUCUNE.** Documentation uniquement (D-006).
+
+---
+
+## 0. Mise à jour avant lecture (`CLAUDE.md` §12.3)
+
+`git fetch origin` puis `git status -sb` → `## main...origin/main`, **0 commit d'écart**, dépôt
+propre. Contrôle croisé `git rev-list --left-right --count main...origin/main` → `0 0`.
+Commit de départ : **`bb0b917`**.
+
+> Le piège documenté (une copie locale en retard qui fait lire un état périmé) **ne s'est pas
+> produit cette fois** — c'est la première session où l'étape 0 se déroule sans incident depuis
+> qu'elle a été écrite.
+
+---
+
+## 1. Ce qui a été fait
+
+Un audit du domaine D, en cinq temps :
+
+1. **inventaire** du harnais `backend/Tests.gs` et du reste du dépôt ;
+2. **mesure de couverture par exécution instrumentée** — chaque fonction de `Code.gs` a été
+   enveloppée pour savoir si les tests la traversent réellement ;
+3. **recherche des cas limites** listés par `CLAUDE.md` §6.D : doublons, saisies invalides,
+   double-clic, perte de connexion, concurrence, caractères spéciaux ;
+4. **vérification du couple serveur / navigateur** — les règles écrites en double ;
+5. **contrôle des preuves déjà inscrites au dossier** — c'est ce dernier point qui a produit le
+   constat le plus gênant.
+
+**Livrables** : `AUDIT.md` §D (nouvelle section, ~610 lignes), 10 problèmes **R-041 → R-050** dans
+`RISQUES.md`, un risque de méthode **M-04**, une décision en attente **D-025**, une inconnue
+**I-17**, et la requalification de **M-03**.
+
+---
+
+## 2. Le résultat, en trois constats
+
+### ① Le harnais est meilleur que prévu — et tourne hors de Google
+
+**`589 vérifications, 278 tests, 0 échec.`** Et surtout : **`Code.gs` + `Tests.gs` chargés dans un
+exécuteur JavaScript ordinaire, avec une vingtaine de lignes de doublures (journal, générateur
+d'identifiants, formateur de dates) → `589/589 OK` en ~1 seconde.**
+
+C'est ce qui **lève l'essentiel de M-03**, traîné depuis la session 1. Le titre de ce risque —
+*« aucun test ne peut être lancé depuis cet ordinateur »* — était **faux**. Les tests n'étaient
+pas prisonniers de Google, ils étaient **écrits pour** Google. M-03 passe de **P1 à P2** : il ne
+reste que « rien ne les déclenche automatiquement ».
+
+### ② Mais ils ne regardent pas là où ça compte
+
+Couverture **mesurée** (pas estimée) : **104 fonctions sur 277 traversées = 38 %**.
+
+| Fonction | Rôle | Testée ? |
+|---|---|---|
+| `enregistrerResultat` | attribue les points d'un match | ❌ **jamais exécutée** |
+| `calculerClassement` | assemble le classement des poules | ❌ **jamais exécutée** |
+| `comparerClassement` | **le départage** | ⚠️ exécutée **par accident**, aucune vérification ne porte sur elle |
+| `enregistrerScore` | le geste le plus répété du jour J, **6 garde-fous** | ❌ **jamais exécutée** |
+
+Et le détail le plus parlant : **dans les 3 711 lignes du fichier de tests, un seul endroit
+fabrique des statistiques d'équipe, et il met toujours `diff: 0, bp: 0`.** Conséquence exacte :
+**sur 589 vérifications, le 2ᵉ critère de départage (la différence) et le 3ᵉ (les points marqués)
+ne sont jamais mis à l'épreuve. Pas une fois.**
+
+Côté navigateur : **17 712 lignes, 0 test** — et `.github/workflows/pages.yml` les publie sur
+Internet **à chaque envoi sur `main`**, sans lancer quoi que ce soit, **pas même un contrôle de
+syntaxe**.
+
+### ③ Une preuve inscrite au dossier était fausse
+
+C'est le constat le plus inconfortable, et il porte sur **notre méthode**, pas sur le code.
+
+`ETAT.md` et `RISQUES.md` justifiaient le statut **TESTÉ** de **R-014** (le P0 de sécurité) par :
+*« 573/573 passent chez Google, et le contrôle croisé confirme que les 16 vérifications ajoutées
+étaient du lot »*.
+
+**Vérification faite en rejouant les deux versions du fichier :**
+
+| Version | Vérifications |
+|---|---|
+| Avant la correction (`c1948fc^`) | **573** |
+| Après la correction (aujourd'hui) | **589** |
+
+**573 est exactement le compte du fichier SANS les 16 vérifications.** Le contrôle croisé
+rapprochait 564 appels comptés sur le fichier **d'après** d'un total obtenu **avant** ; les vrais
+comptes sont 547 + 26 = 573 et 563 + 26 = 589.
+
+**Explication la plus probable** *(PROBABLE)* : `Code.gs` a été recollé chez Google, **pas**
+`Tests.gs`. Ce sont deux fichiers, et rien ne le rappelle.
+
+**Ce qui tient quand même** : les 16 vérifications **passent** — exécutées cette session sur le
+code du dépôt, avec les 573 autres. La correction est donc **mieux** prouvée qu'avant, mais **pour
+une autre raison** que celle inscrite. Ce qui manque est qu'elles tournent **là où c'est utile**.
+
+→ **M-04** (nouveau risque de méthode, P1) et **I-17** (geste de 2 minutes pour Romain).
+
+---
+
+## 3. Ce qui a été mis à jour
+
+| Fichier | Ce qui change |
+|---|---|
+| `AUDIT.md` | **Nouvelle section DOMAINE D** (§D.0 → §D.11) : verdict, ce qui est solide, 4 fiches P1 en 6 points, les P2, le P3, la preuve tombée (§D.8), **les 4 lots de tests proposés** (§D.9), les limites (§D.10) |
+| `RISQUES.md` | **R-041 → R-050** · « ce qui s'est révélé sain — domaine D » · **tableau de couverture mesurée** · **M-03 requalifié P1 → P2 (largement levé)** · **M-04 créé** · encadré sur la preuve tombée · synthèse 40 → **50 problèmes** |
+| `ETAT.md` | §1 réécrite · domaine D clos · **I-17** ajoutée · §5 (statut de R-014 rectifié) · §6 (fil rouge D + ce qui est sain) · §9 (chiffres à jour + publication sans contrôle) · §10 (registre : **D-025** et **I-17**) · prochaine session = **domaine E** |
+| `PLAN.md` | Domaine D marqué FAIT · domaine E prochain · **4 nouvelles familles de chantiers** dessinées par le domaine D |
+| `DECISIONS.md` | **D-025** — quels tests écrit-on, et dans quel ordre (4 lots + recommandation) |
+
+---
+
+## 4. Ce qui a été VÉRIFIÉ, et comment
+
+| Affirmation | Preuve |
+|---|---|
+| 589 vérifications, 0 échec | Exécution réelle du harnais hors de Google (~1 s) |
+| Couverture 38 % (104/277) | Exécution **instrumentée** : chaque fonction enveloppée, appels comptés |
+| 573 = version d'avant R-014 | `git show c1948fc^:backend/Tests.gs` puis exécution de cette version |
+| Départage jamais éprouvé | `grep "diff:\|bp:\|bc:"` sur `Tests.gs` → **une seule occurrence**, à `0` |
+| 17 712 lignes de JS sans test | `wc -l frontend/js/*.js` ; aucun fichier de test, aucun `package.json` |
+| Publication sans contrôle | Lecture de `.github/workflows/pages.yml` — aucune étape de test |
+| Verrou d'écriture | `LockService.getScriptLock()` + `tryLock(20000)` + `finally { releaseLock() }` |
+| Doublons acceptés par le serveur | Lecture de `ajouterEquipe` — seul contrôle : nom non vide |
+| `apiPost` sans délai maximum | Lecture de `frontend/js/api.js` — le délai n'existe que sur `apiGet` |
+| Test annoncé et inexistant | `docs/sponsors.md` cite un test ; `SPONSORS_APERCU_LARGEUR` n'apparaît dans aucun test |
+
+### Ce qui reste NON VÉRIFIÉ
+
+- **Le code en service chez Google passe-t-il les 589 ?** **INCONNU** — c'est **M-02**, et **I-17**
+  est le geste qui permettrait de le savoir ;
+- **Les 173 fonctions jamais exécutées contiennent-elles des bugs ?** **INCONNU** — ce domaine dit
+  où on ne regarde pas, **pas** où ça casse ;
+- **Les 17 712 lignes du navigateur fonctionnent-elles ?** **NON VÉRIFIÉ** — elles fonctionnent en
+  usage réel, ce qui est une preuve d'usage, pas une preuve de non-régression ;
+- **La couverture mesurée reflète-t-elle Apps Script ?** **PROBABLE** — mesurée hors de Google
+  avec des doublures ; les tests étant purs, le chemin devrait être identique, mais ça n'a pas été
+  confronté à une exécution réelle.
+
+---
+
+## 5. Ce qui n'a PAS été fait
+
+- **Aucun test n'a été écrit.** `CLAUDE.md` §6.D l'interdit avant que les scénarios soient
+  proposés et choisis : c'est **D-025**, en attente ;
+- **Aucun fichier de l'application modifié**, conformément à l'ÉTAPE 2 ;
+- **Aucun problème corrigé** — les 10 sont au statut **IDENTIFIÉ** ;
+- **Aucune décision prise à la place de Romain** (**D-024**).
+
+---
+
+## 6. Prochaine session recommandée
+
+**Session 9 — ÉTAPE 2, domaine E : UX / UI / accessibilité.**
+
+Ordre D-010. Le domaine E regarde l'application **comme un bénévole la voit** : téléphone, debout,
+dehors, sous pression. Il hérite déjà de **R-048** (un envoi qui n'aboutit pas fige le bouton sans
+rien dire), de **D-012** (confirmation avant de valider un score), de **D-011** (le bouton
+« Forfait » et sa double mise en garde), de **R-007** et **R-010** (messages qui ne disent pas ce
+qu'il faut faire).
+
+> ⚠️ **Inconnue à lever en début de session** : **I-05** — *qui utilise l'administration le jour J,
+> et sur quel matériel ?* Sans cette réponse, le domaine E raisonnerait sur un utilisateur
+> imaginaire.
+
+**Condition de démarrage** : instruction explicite de Romain.

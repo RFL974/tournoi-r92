@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-05 (session 7)
+**Dernière mise à jour** : 2026-08-05 (session 8)
 
 ---
 
@@ -821,6 +821,57 @@ dit, c'est une vérification faite en production.
 ---
 
 ## DÉCISIONS EN ATTENTE DE ROMAIN
+
+### D-025 — Quels tests écrit-on, et dans quel ordre ?
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 8 |
+| **Statut** | ⏳ EN ATTENTE DE ROMAIN — **traitée à l'ÉTAPE 3** (D-024) |
+| **Débloque** | **R-041**, R-042, R-043, R-044, R-045 — et conditionne le **calendrier** de D-014, D-011, D-012, D-015 |
+
+**Problème posé**
+> Le domaine D a montré que **le classement, le départage et la saisie des scores ne sont vérifiés
+> par aucun test** — alors que ce sont exactement les trois choses que l'ÉTAPE 5 va modifier
+> (D-011 forfait, D-012 limite de score, D-014 départage, D-015 match annulé).
+>
+> `CLAUDE.md` §6.D impose de **proposer les scénarios avant d'écrire des tests en nombre**. Voici
+> donc les lots, sans qu'aucune ligne n'ait été écrite.
+
+**Les 4 lots proposés** *(détail complet : `AUDIT.md` §D.9)*
+
+| # | Lot | Ce qu'il protège | Coût | Préalable |
+|---|---|---|---|---|
+| **①** | **Le barème et le départage** (R-041) — 5 tests | Le résultat sportif. **Préalable de D-014 et D-011** | Faible — les fonctions sont **déjà pures**, rien à refactorer | Aucun |
+| **②** | **La journée de bout en bout** (R-045) — 1 scénario | Les **jonctions** entre étapes, là où vivent R-002 et R-015 | Moyen | Aucun |
+| **③** | **Le contrôle de syntaxe à la publication** (R-043 a) | Le seul chemin vers la production sans aucun contrôle | Très faible | Aucun |
+| **④** | **La saisie d'un score** (R-042) — 8 tests | Les 6 garde-fous du geste le plus répété. **Préalable de D-012 et D-015** | Le plus élevé : demande de **séparer le cœur de l'écriture** | À planifier |
+
+**Ma recommandation**
+> **Le lot ① d'abord, et si un seul lot devait être fait, celui-là.** Trois raisons :
+> 1. il est le **moins cher** — les fonctions concernées (`enregistrerResultat`,
+>    `comparerClassement`) sont déjà pures, il n'y a **rien à modifier dans l'application** ;
+> 2. il protège **ce qui compte le plus** : le calcul qui décide du vainqueur ;
+> 3. et surtout, **il a une date de péremption**. **D-014 est déjà décidée** : le départage
+>    **sera** modifié. Écrits après, ces tests graveraient le **nouveau** comportement sans avoir
+>    jamais vu l'ancien — ils ne prouveraient donc plus qu'on n'a rien cassé, seulement qu'on a
+>    bien écrit ce qu'on venait d'écrire.
+
+**Ce que je ne propose pas, et pourquoi**
+> **Fusionner les copies serveur / navigateur** (R-044) en une seule. Ce serait la solution
+> élégante, mais elle demande de changer la façon dont le code arrive chez Google : un chantier
+> d'architecture (domaine G), disproportionné aujourd'hui, et que `CLAUDE.md` §10 interdit sans
+> justification forte. Le **test de miroir** obtient 90 % du bénéfice pour 5 % du risque.
+
+**Impact sur l'application** : **aucun**, pour les lots ①②③ — un test n'ajoute aucun comportement.
+Seul le lot ④ déplace du code existant, et c'est pourquoi il est le dernier.
+
+**Question à Romain** : par quel lot commence-t-on à l'ÉTAPE 5 — et confirmes-tu que **les tests
+du lot ① passent AVANT la correction du départage (D-014)**, et non après ?
+
+---
+
 
 ### D-018 — Que dit-on aux personnes dont on garde les informations ?
 

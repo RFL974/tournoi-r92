@@ -5,9 +5,9 @@
 > L'**explication** de chaque problème (pourquoi, exemple concret, ce qui est proposé) vit dans
 > `AUDIT.md`. Ce fichier-ci **suit** ; `AUDIT.md` **explique**.
 
-**Dernière mise à jour** : 2026-08-05 (session 7)
-**Audits réalisés** : domaine A (métier), domaine C (sécurité), domaine B (RGPD). Les 5 autres domaines restent à faire.
-**Correction réalisée** : R-014 (le P0), par exception validée — voir D-016.
+**Dernière mise à jour** : 2026-08-05 (session 8)
+**Audits réalisés** : domaine A (métier), domaine C (sécurité), domaine B (RGPD), domaine D (QA / tests). Les 4 autres domaines restent à faire.
+**Correction réalisée** : R-014 (le P0), par exception validée — voir D-016. ⚠️ **Une de ses trois preuves est tombée en session 8** — voir la note sous le tableau de synthèse et `AUDIT.md` §D.8.
 
 ---
 
@@ -57,19 +57,41 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
-| **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
-| P1 | **13** | 0 | **5** | 0 | 0 | 0 |
-| P2 | **22** | 0 | **2** | 0 | 0 | 0 |
-| P3 | **4** | 0 | 0 | 0 | 0 | 0 |
+| **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** *(sous réserve — voir ci-dessous)* |
+| P1 | **17** | 0 | **5** | 0 | 0 | 0 |
+| P2 | **27** | 0 | **2** | 0 | 0 | 0 |
+| P3 | **5** | 0 | 0 | 0 | 0 | 0 |
 
-**Total : 40 problèmes** — domaine A (13) + domaine C (14) + domaine B (13).
+**Total : 50 problèmes** — domaine A (13) + domaine C (14) + domaine B (13) + domaine D (10).
+
+> ⚠️ **UNE PREUVE DE R-014 EST TOMBÉE EN SESSION 8 — à lire avant de se fier au statut TESTÉ.**
+>
+> La preuve n° 2 ci-dessous disait : *« 573/573 passent dans Apps Script, et le contrôle croisé
+> confirme que les 16 vérifications de R-014 étaient du lot »*. **C'est faux, et c'est
+> démontré** : les deux versions du fichier de tests ont été rejouées, celle d'avant la correction
+> donne **exactement 573**, celle d'après en donne **589**. Le nombre 573 est donc le compte du
+> fichier **sans** les 16 vérifications. Explication la plus probable (PROBABLE) : `Code.gs` a été
+> recollé chez Google, **pas** `Tests.gs`.
+>
+> **Ce qui tient quand même — et se renforce** : ces 16 vérifications **passent**. Elles ont été
+> exécutées en session 8 sur le code du dépôt, avec les 573 autres : **589/589, 0 échec**. La
+> logique de la correction est donc **mieux** prouvée qu'avant, mais **pour une autre raison**
+> que celle inscrite au dossier.
+>
+> **Ce qui reste ouvert** : que le code en service soit bien celui du dépôt (**M-02**), et que les
+> tests de R-014 aient tourné **là où c'est utile**. Un geste de 2 minutes referme les deux :
+> coller `backend/Tests.gs` dans Apps Script et relancer `lancerTestsFFR` → **589/589 attendu**
+> (nouvelle inconnue **I-17**). Détail complet : `AUDIT.md` §D.8. Risque de méthode : **M-04**.
 
 > ✅ **R-014 est le premier problème du chantier à atteindre le statut TESTÉ**, le 2026-08-04.
 > Trois preuves réunies, et c'est la raison pour laquelle ce statut est accordé :
 >
 > 1. **le code en service est bien le nouveau** — Romain a redéployé chez Google (lève **I-13**) ;
-> 2. **573 tests sur 573 passent** dans Apps Script (lève **I-02**), dont les **16 vérifications**
->    ajoutées pour cette correction ;
+> 2. ~~**573 tests sur 573 passent** dans Apps Script (lève **I-02**), dont les **16 vérifications**
+>    ajoutées pour cette correction~~ → ⚠️ **PREUVE ANNULÉE en session 8** : 573 est le compte du
+>    fichier **sans** ces 16 vérifications (le compte avec est 589). Les 573 restent une bonne
+>    nouvelle — **I-02 reste levée**, le harnais passe chez Google — mais elles ne prouvent
+>    **rien** sur R-014. Voir l'encadré du §4 et `AUDIT.md` §D.8 ;
 > 3. **la chaîne fonctionne toujours de bout en bout** — le diagnostic « Tester la remontée »
 >    confirme écriture, relecture, et **109 relevés** présents dans le classeur. ⚠️ **Corrigé le
 >    2026-08-05** : ils viennent des **appareils de Romain**, pas de spectateurs — la preuve tient
@@ -93,7 +115,7 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 > ⚠️ **Un seul problème est réglé : R-014**, au statut **TESTÉ**, par exception validée (D-016).
 > Tous les autres sont au statut **IDENTIFIÉ** : ils ont été vus, rien de plus.
 >
-> Ce tableau ne couvre que les **domaines A, C et B**. Les 5 autres domaines n'ont pas été
+> Ce tableau ne couvre que les **domaines A, C, B et D**. Les 4 autres domaines n'ont pas été
 > audités : leur absence de ligne ne signifie pas leur absence de problème.
 
 > ⚠️ **Le domaine B n'a produit AUCUN P0, et il faut dire pourquoi** — sinon le chiffre ne veut
@@ -229,11 +251,64 @@ aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Rom
 | Documents produits (PDF, dossier) | ✅ Fabriqués **entièrement sur l'appareil** — aucune donnée vers un service tiers |
 | Relais Cloudflare | ✅ Éteint ; et même rallumé, il ne recopierait que l'instantané public, sans donnée personnelle |
 
+### Domaine D — QA / Tests (session 8)
+
+> ⚠️ **Ce domaine ne dit pas où le code casse. Il dit où personne ne regarde.** L'absence de test
+> ne prouve aucun défaut — et n'en écarte aucun.
+
+| Réf | Problème | Priorité | Certitude | Statut | Détail |
+|---|---|---|---|---|---|
+| **R-041** | **Le calcul qui décide du vainqueur n'est vérifié par aucun test.** `enregistrerResultat` et `calculerClassement` ne sont **jamais exécutés** ; `comparerClassement` l'est **par accident** (au passage d'un test qui vérifie autre chose). Et **sur 589 vérifications, aucune ne met à l'épreuve le 2ᵉ critère de départage (la différence) ni le 3ᵉ (les points marqués)** : le seul endroit du fichier de tests qui fabrique des statistiques met toujours `diff: 0, bp: 0`. Or **D-014 va modifier ce code** | **P1** | **CERTAIN** (mesuré par exécution instrumentée) | IDENTIFIÉ — **préalable de D-014 et D-011** | `AUDIT.md` §D.2 |
+| **R-042** | **L'enregistrement d'un score n'est vérifié par aucun test.** `enregistrerScore` — le geste le plus répété de la journée — n'est **jamais exécuté** par le harnais, alors qu'il porte **six garde-fous** (Coupe en attente · score déjà validé · vainqueur obligatoire en élimination · correction en cascade · score détaillé · archivage). Seul chantier du domaine qui demande de **séparer le cœur de l'écriture** | **P1** | CERTAIN | IDENTIFIÉ — **préalable de D-012 et D-015** | `AUDIT.md` §D.3 |
+| **R-043** | **Les 17 712 lignes du navigateur n'ont aucun test, et rien ne les empêche d'être publiées.** 26 fichiers JS, aucun outil de test, aucun `package.json` — et `.github/workflows/pages.yml` publie `frontend/` sur Internet **à chaque envoi sur `main`**, sans lancer quoi que ce soit, **pas même un contrôle de syntaxe**. C'est le seul chemin vers la production sans aucun contrôle. Il porte le classement public, le podium et la page de saisie | **P1** | CERTAIN | IDENTIFIÉ — **(a)** contrôle de syntaxe : peu de travail · **(b)** harnais navigateur : à planifier | `AUDIT.md` §D.4 |
+| **R-044** | **La même règle métier est écrite deux fois, et rien ne vérifie qu'elles disent la même chose.** **29 mentions de « miroir »** dans le frontend, dont le **barème et le départage** (`comparerClassement` côté serveur / `comparer` côté navigateur) — non testés des deux côtés. Le serveur **génère l'après-midi**, le navigateur **affiche au public** : une divergence rend les deux écrans faux **sans que ni l'un ni l'autre ne paraisse anormal** | **P1** | CERTAIN | IDENTIFIÉ — dépend de **R-043 (b)** | `AUDIT.md` §D.5 |
+| **R-045** | **Aucun scénario ne rejoue une journée de bout en bout.** Les 589 vérifications portent sur des morceaux isolés ; rien n'enchaîne création → génération → saisie → classement → après-midi. Or les pannes réelles vivent **entre** les morceaux — c'est exactement là que se trouvent R-002 et R-015 | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §D.6 |
+| **R-046** | **Tout ce qui écrit dans le classeur est hors de portée du harnais** : **110 des 277 fonctions** reçoivent le classeur en premier paramètre. C'est un **plafond structurel**, pas une négligence. La réponse n'est pas de les tester, c'est qu'elles contiennent le moins de décisions possible | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §D.6 |
+| **R-047** | **Le refus des équipes en double n'existe que dans le navigateur** (`admin-equipes.js`). Le serveur (`ajouterEquipe`) vérifie seulement que le nom n'est pas vide. Même schéma que R-015 / R-016 — et il existe un autre chemin de création : `creerEquipesClub`, déclenché par la réponse d'un club | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §D.6 |
+| **R-048** | **Un envoi qui n'aboutit pas fige le bouton indéfiniment** : les lectures (`apiGet`) acceptent un délai maximum, **les écritures (`apiPost`) n'en ont aucun**. Sur une 4G qui décroche sans couper, le bouton reste sur « Enregistrement… », désactivé, sans message. Cas « perte de connexion » de `CLAUDE.md` §6.D — le plus probable, un tournoi se joue dehors | P2 | CERTAIN | IDENTIFIÉ — ✅ le **double envoi**, lui, est sans danger (garde-fou « déjà validé ») | `AUDIT.md` §D.6 |
+| **R-049** | **La documentation annonce un test qui n'existe pas** : `docs/sponsors.md` affirme *« Un test compare les deux rendus ligne pour ligne »*. Ce test n'existe **nulle part** (la constante citée n'apparaît dans aucun test). Une documentation qui annonce une preuve inexistante est **pire que muette** : elle décourage la vérification | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §D.6 |
+| **R-050** | **Rien n'empêche une nouvelle fonction d'arriver sans test** : aucune mesure de couverture suivie, aucune règle. Le harnais grandit parce que quelqu'un y pense. Ça tient aujourd'hui ; ça ne tiendra pas en multi-clubs (R-040) | P3 | CERTAIN | IDENTIFIÉ — **ne rien imposer maintenant** | `AUDIT.md` §D.7 |
+
+### Ce qui a été VÉRIFIÉ et s'est révélé sain (domaine D)
+
+À porter au crédit du projet — et à ne pas casser :
+
+| Point vérifié | Résultat |
+|---|---|
+| **Le harnais est réel et entretenu** | ✅ `backend/Tests.gs` : 3 711 lignes, **278 tests, 589 vérifications, 0 échec**. Il a grandi de la session 5 à la session 28 |
+| **✅ Les tests tournent HORS de Google** | ✅ **Démontré en session 8** : `Code.gs` + `Tests.gs` chargés dans un exécuteur JavaScript ordinaire, avec **une vingtaine de lignes de doublures** → `589/589 OK` en ~1 seconde. **M-03 était surestimé** : les tests n'étaient pas prisonniers de Google, seulement **écrits pour** Google |
+| Conception des tests | ✅ « Cœur pur » : données injectées, aucun accès au classeur. C'est la bonne méthode |
+| Reproductibilité | ✅ Le tirage au sort est un **interrupteur** (`melange`) que les tests mettent à « non » — aucun test ne dépend du hasard |
+| **Prudence par construction** | ✅ Plusieurs tests vérifient qu'un format **inventé de toutes pièces** retombe sur le chemin prudent. On teste ce que le code fait **quand il ne sait pas** — c'est rare |
+| **Écritures simultanées** | ✅ Un **verrou** (`LockService`, 20 s) sérialise toutes les écritures. Le risque « concurrence » de `CLAUDE.md` §6.D est **traité** |
+| Double-clic sur la saisie | ✅ Bouton désactivé pendant l'envoi, réactivé dans tous les cas (`finally`) |
+| Piège du « é » décomposé (NFD) | ✅ Neutralisé des deux côtés (`estTermineServeur` / `estTermine`) |
+| Barème documenté | ✅ `docs/regles-classement.md` est une vraie spécification — et **dit lui-même** qu'il n'existe pas de 4ᵉ critère de départage |
+| **85 fonctions pures non testées** | ✅ **Bonne nouvelle** : pour elles, l'obstacle n'est **pas** technique. Rien à refactorer, rien à installer — il n'y a qu'à écrire les tests (dont `comparerClassement`, `enregistrerResultat`, `validerScore`) |
+
+### Couverture mesurée (domaine D)
+
+> Chiffres obtenus **par exécution instrumentée** du harnais, pas par estimation.
+
+| Mesure | Valeur |
+|---|---|
+| Fonctions déclarées dans `backend/Code.gs` | **277** |
+| Fonctions **réellement traversées** au moins une fois par les tests | **104 — soit 38 %** |
+| Fonctions **jamais exécutées** | **173** |
+| Fonctions recevant le classeur en 1ᵉʳ paramètre (hors de portée par construction) | **110** |
+| Fonctions **pures et non testées** (testables aujourd'hui, sans rien changer) | **85** |
+| Lignes de JavaScript dans le navigateur | **17 712** — **0 test** |
+
+> ⚠️ **Ce chiffre de 38 % n'est pas comparable à une « couverture » standard** : il compte les
+> fonctions **traversées**, pas les lignes ni les situations. La couverture des **cas** est plus
+> basse — `comparerClassement` est traversée, et pourtant deux de ses trois critères ne sont
+> jamais éprouvés.
+
 ### Domaines non audités
 
 | Domaine | Statut |
 |---|---|
-| D — Tests · E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
+| E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
 
 ### Modèle de fiche de problème
 
@@ -324,31 +399,74 @@ encore, le jour du tournoi, l'ancienne version.
 
 | Champ | Valeur |
 |---|---|
-| **Priorité** | P1 (méthode) |
-| **Certitude** | **CERTAIN** — confirmé |
-| **Statut** | IDENTIFIÉ — **atténué**, pas résolu |
+| **Priorité** | ~~P1~~ → **P2 (méthode)** — requalifié en session 8 |
+| **Certitude** | **CERTAIN** |
+| **Statut** | ✅ **LARGEMENT LEVÉ** (session 8) — il ne reste que la partie « automatique » |
 
-> ✅ **Le harnais fonctionne, et il est en bonne santé** : Romain a lancé `lancerTestsFFR` dans
-> Apps Script le 2026-08-04 → **573/573 OK**. L'inconnue **I-02** est donc levée.
+> ✅ **LEVÉ SUR L'ESSENTIEL — le titre de ce risque était faux.** Les tests **peuvent** être
+> lancés depuis cet ordinateur, et ils l'ont été en session 8 : `Code.gs` et `Tests.gs` chargés
+> tels quels dans un exécuteur JavaScript ordinaire, avec **une vingtaine de lignes de doublures**
+> pour les trois outils Google que les tests touchent (journal, générateur d'identifiants,
+> formateur de dates) → **`589/589 OK` en ~1 seconde**.
 >
-> ⚠️ **Le risque de méthode, lui, demeure entier** : les tests ne se lancent toujours que **à la
-> main, chez Google**. Rien ne les déclenche automatiquement, donc rien ne garantit qu'ils seront
-> relancés à la prochaine modification. Deux atténuations ont été trouvées en session 6 :
+> Ils n'étaient pas **prisonniers** de Google ; ils étaient **écrits pour** Google. Ce n'est pas la
+> même chose, et la distance entre les deux est d'environ vingt lignes.
 >
-> - écrire les nouvelles fonctions en **cœur pur** (données injectées, aucun accès au classeur)
->   permet de les **rejouer hors de Google** — c'est ce qui a été fait pour les 16 vérifications
->   de R-014, exécutées ici avant même le redéploiement ;
-> - le compte d'assertions sert de **contrôle croisé** : 564 appels statiques + 9 dans des boucles
->   = 573, ce qui confirme que le lot exécuté chez Google contenait bien les tests ajoutés.
+> ⚠️ **Ce qui subsiste, et devient P2** : rien ne les **déclenche automatiquement**. Il faut y
+> penser. C'est un vrai risque, mais un cran plus bas qu'un empêchement technique.
 >
-> À reprendre au **domaine D (QA / tests)**.
+> ⚠️ **Ce que cela ne prouvera jamais** : que le code **en service chez Google** est le même —
+> c'est **M-02**, intact.
+>
+> ✅ **I-02 reste levée** : `lancerTestsFFR` a bien tourné chez Google le 2026-08-04.
+> ❌ **Le « contrôle croisé » écrit ici (564 + 9 = 573) était faux** — voir **M-04** ci-dessous.
 
-**Description** — Le fichier `backend/Tests.gs` existe et semble contenir un grand nombre de tests
-automatiques, mais ces tests sont écrits pour être exécutés **chez Google**, pas ici. Tant que ce
-point n'est pas résolu, la vérification « les tests passent » dépend d'une action manuelle de
-Romain.
+**Description** — `backend/Tests.gs` est écrit pour être exécuté **chez Google**. Il peut
+néanmoins être rejoué ailleurs, ce que la session 8 a démontré. Ce qui manque est le
+**déclenchement** : aucun mécanisme ne relance les tests à la modification.
 
-**Impact concret** — Le passage d'un problème au statut **TESTÉ** dépend d'une manipulation humaine,
-donc peut être oublié.
+**Impact concret** — Le passage d'un problème au statut **TESTÉ** dépend d'un geste humain, donc
+peut être oublié. C'est exactement ce qui s'est produit pour R-014 (**M-04**).
 
-**Correction recommandée** — À examiner en ÉTAPE 1 puis en domaine D (QA / Tests).
+**Correction recommandée** — Traitée au domaine D : voir **R-043** (rien ne contrôle la
+publication) et les lots de §D.9 de `AUDIT.md`.
+
+---
+
+### M-04 — Un compte de tests ne dit pas quelle VERSION a été exécutée
+
+| Champ | Valeur |
+|---|---|
+| **Priorité** | **P1 (méthode)** |
+| **Certitude** | **CERTAIN** — démontré en rejouant les deux versions du fichier |
+| **Statut** | **IDENTIFIÉ** (session 8) |
+
+**Description** — Le 2026-08-04, « **573/573 OK** » a été inscrit au dossier comme preuve que les
+16 vérifications ajoutées pour R-014 avaient tourné chez Google. La session 8 a rejoué les deux
+versions du fichier de tests :
+
+| Version | Vérifications |
+|---|---|
+| Avant la correction de R-014 (`c1948fc^`) | **573** |
+| Après la correction (aujourd'hui) | **589** |
+
+**573 est exactement le compte du fichier qui ne contient PAS ces 16 vérifications.** Le contrôle
+croisé inscrit dans M-03 rapprochait un décompte fait sur le fichier **d'après** (564 appels) d'un
+total obtenu **avant** — les vrais comptes sont 547 + 26 = 573 avant, 563 + 26 = 589 après.
+
+**Explication la plus probable** *(PROBABLE)* — Lors du redéploiement, `Code.gs` a été recollé chez
+Google, mais **pas** `Tests.gs`. Ce sont **deux fichiers**, et rien ne le rappelle.
+
+**Impact concret** — Un nombre de tests qui passent est une preuve **de ce qui a tourné**, jamais
+**de ce qui aurait dû tourner**. Sans repère de version, il rassure exactement autant qu'il
+trompe. C'est le seul cas, à ce jour, où le chantier a inscrit au dossier une preuve **fausse**.
+
+**Correction recommandée** — Deux gestes, aucun n'est du code :
+
+1. **Immédiat, 2 minutes** — coller `backend/Tests.gs` dans Apps Script et relancer
+   `lancerTestsFFR`. **589/589 attendu** (inconnue **I-17**). Ce geste attaque aussi **M-02** de
+   front : les tests s'exécutent chez Google **contre le code chez Google**, donc un `Code.gs`
+   resté ancien ferait échouer les 16 vérifications de R-014 ;
+2. **Durable** — toujours écrire **le nombre attendu** à côté du nombre obtenu, et toujours dire
+   **quels fichiers** ont été recollés. « 589/589, `Code.gs` et `Tests.gs` recollés » est une
+   preuve ; « 573/573 » n'en est pas une.

@@ -4,7 +4,7 @@
 > Tant que l'audit (ÉTAPE 2) n'a pas eu lieu, le tableau des chantiers reste **vide** :
 > on ne planifie pas des travaux qu'on n'a pas encore constatés.
 
-**Dernière mise à jour** : 2026-08-05 (session 7)
+**Dernière mise à jour** : 2026-08-05 (session 8)
 
 ---
 
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
-| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaines A, C et B faits |
+| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaines A, C, B et D faits (4 sur 8) |
 | 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ⬜ À faire |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
@@ -50,8 +50,8 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 | A | Métier / Product Owner | ✅ **FAIT** — 0 P0 · 5 P1 · 7 P2 · 1 P3 | 5 |
 | C | Sécurité | ✅ **FAIT** — **1 P0 (TESTÉ)** · 5 P1 · 6 P2 · 2 P3 | 6 |
 | B | RGPD / Protection des données | ✅ **FAIT** — 0 P0 · 3 P1 · 9 P2 · 1 P3 · **3 décisions en attente** (D-018/019/020) | 7 |
-| D | QA / Tests | ⬜ **Prochain** | — |
-| E | UX / UI / Accessibilité | ⬜ Non commencé | — |
+| D | QA / Tests | ✅ **FAIT** — 0 P0 · 4 P1 · 5 P2 · 1 P3 · **+ M-04** (risque de méthode) | 8 |
+| E | UX / UI / Accessibilité | ⬜ **Prochain** | — |
 | F | Performance | ⬜ Non commencé | — |
 | G | Architecture / Maintenabilité | ⬜ Non commencé | — |
 | H | Qualité du code | ⬜ Non commencé | — |
@@ -100,6 +100,10 @@ Ce ne sont pas encore des chantiers, mais des **familles** qui se dessinent apr�
 | **Savoir jeter** | **R-030, R-031, R-033, R-034**, R-018 | Une seule décision (D-020) les met tous en ordre de marche ; même écran, même code de suppression, mêmes tests |
 | **Cadre écrit, hors code** | **R-036, R-039** | Ni l'un ni l'autre ne se corrige dans le dépôt : ce sont des questions au club et des documents |
 | **Le forfait, l'annulation et le classement** | R-001, R-004, R-013, R-012 | Domaine A : même code (classement, états d'un match), même besoin de tests préalables |
+| **⚠️ Le filet AVANT les corrections** | **R-041**, R-004, R-001 | Le domaine D a parlé : le départage et le barème n'ont **aucun test**, et **D-014 va les modifier**. Les tests de R-041 sont le **préalable** de ce chantier, pas son complément — écrits après, ils graveraient le nouveau comportement sans avoir jamais vu l'ancien |
+| **Le geste du jour J** | **R-042**, R-005, R-013, R-001 | D-011, D-012 et D-015 rouvrent toutes `enregistrerScore`. R-042 (séparer le cœur de l'écriture) doit être fait **une fois, avant**, sinon on touche trois fois au même code |
+| **Le chemin vers la production** | **R-043**, R-049, R-050 | Rien ne contrôle ce qui part en ligne, et un document annonce une preuve qui n'existe pas. Même sujet : ce qu'on croit vérifié et qui ne l'est pas |
+| **Le filet côté serveur** | R-015, R-016, **R-047** | Trois protections tenues par la **page** et non par le serveur. R-047 (équipes en double) rejoint la famille déjà repérée au domaine C |
 
 ### Modèle de fiche de chantier
 
