@@ -2879,3 +2879,74 @@ serveur ».
 - fichiers touchés : `DECISIONS.md`, `RISQUES.md`, `ETAT.md`, `PLAN.md`, `RAPPORT-AUDIT.md`,
   `SESSIONS.md` ;
 - **la session 14 (volet ②) n'est pas commencée** et ne le sera pas sans instruction explicite.
+
+---
+
+## SESSION 13 — ADDENDUM n° 2 : ✅ **I-21 levée, et le niveau 2 de D-030 est prêt à être implémenté**
+
+> **Réponse rapportée par Romain** : *« La reprise avec adaptation du format/durée est autorisée,
+> sous réserve du temps de jeu maximal et de l'interdiction des phases finales. »*
+>
+> **Demande** : intégrer cette règle à D-030 et **préparer l'implémentation** du niveau 2.
+> ⚠️ **Préparer, pas implémenter** — aucun fichier de l'application n'a été ouvert en écriture.
+
+### 1. Ce que la réponse débloque
+
+**I-21 est levée le jour même où elle a été ouverte**, et c'est la réponse la plus favorable
+possible : le niveau 2 n'est **plus bloqué**, et il n'est pas non plus laissé sans limites — il
+reçoit **deux garde-fous nets**, ce qui est exactement ce qu'il fallait pour ne pas écrire un
+moteur qui décide seul.
+
+### 2. ⚡ Trois faits vérifiés dans le code — ils changent la fiche de chantier
+
+*Je n'ai pas planifié sur des suppositions : les trois points ci-dessous sont **constatés**, pas
+déduits.*
+
+| # | Fait | Où | Conséquence |
+|---|---|---|---|
+| **1** | ⚠️ **Le plafond de temps de jeu n'est aujourd'hui qu'un AFFICHAGE.** `plafond_joueur_min` est lu de `RefFFR_Temps`, montré dans l'écran de conformité avec la mention **« (sécurité) »** et injecté dans un prévisionnel — **mais rien dans `calculerPlanning` ne refuse un planning qui le dépasse** | `backend/Code.gs` *(lecture des grilles et plafonds)* · `frontend/js/admin-conformite-ffr.js` | **La première réserve de la FFR n'est pas un branchement, c'est un travail.** Il faut transformer un **indicateur** en **contrôle réel** |
+| **2** | ⛔ **Le repos de 60 minutes de la pause méridienne est écrit EN DUR** dans le code *(`repos: 60`)*, et c'est une mesure de **sécurité** | `backend/Code.gs` — `planifierBlocRepos`, `vaguesRepos` | **I-21 n'en parle pas, et c'est le piège.** *« Supprimer les marges »* ne doit **jamais** s'y appliquer. Écrit noir sur blanc dans D-030 §8.3 et dans la fiche C-003 |
+| **3** | Il existe **trois marges différentes**, de statuts très différents : le **battement** entre deux matchs sur un terrain *(logistique)*, la **récupération** d'une même équipe entre deux matchs *(repos d'enfants)*, et le **repos méridien de 60 min** *(sécurité)* | `battement_terrain_min` · `recup_entre_matchs_min` · `repos: 60` | Les traiter comme un seul « réglage de marges » serait une faute. La fiche C-003 les sépare et leur donne trois régimes distincts |
+
+> 🏉 **Pourquoi le point 2 compte plus qu'il n'en a l'air.** La formulation de D-030 —
+> *« supprimer ou réduire certaines marges entre rencontres »* — est ambiguë. **Quelqu'un de
+> parfaitement bien intentionné, moi compris, pourrait optimiser ce 60 en croyant bien faire.**
+> C'est exactement le type de régression qu'on ne voit qu'après : le planning est plus dense, il
+> tient dans le temps, et des enfants enchaînent sans souffler.
+
+### 3. Le livrable : **deux fiches de chantier**, dans `PLAN.md` §6
+
+| Fiche | Contenu | État |
+|---|---|---|
+| **C-002** — niveau 1 : l'état et sa visibilité | **Esquisse**, écrite parce que C-003 en dépend et ne peut pas être planifié dans le vide. Sera complétée au volet ③ | **PLANIFIÉ** |
+| **C-003** — niveau 2 : les scénarios de reprise | **Fiche complète** : les 6 leviers du moins au plus intrusif, les **3 garde-fous durs**, les 3 règles de conception, la stratégie de test, et les vérifications de non-régression | **PLANIFIÉ** |
+
+**Ordre d'exécution inscrit** :
+
+```
+lot ① des tests (D-025)  →  R-042  →  C-002 (niveau 1)  →  C-003 (niveau 2)
+```
+
+> ⭐ **La ligne la plus importante de C-003, et elle conditionne tout le chantier** : *sans
+> suspension, `calculerPlanning` doit produire **exactement le même planning qu'avant**, comparé
+> **caractère par caractère** sur un tournoi de référence. **Si ce test n'existe pas, le chantier ne
+> commence pas.*** C'est la seule protection réelle contre une régression qui **ne se voit pas** :
+> `calculerPlanning` ne plante pas quand il se trompe — il produit un planning **plausible et faux**.
+
+### 4. Une précision demandée, qui ne bloque rien
+
+*« Phases finales interdites »* est **sans ambiguïté pour le moteur** : il ne propose **jamais** une
+phase finale comme moyen de rattrapage. **C'est acté.**
+
+Reste une question plus étroite : **une suspension écarte-t-elle aussi une phase finale déjà prévue
+au programme** ? Un seul des quatre formats d'après-midi est concerné — **COUPE_PLATEAU**. Ma
+lecture prudente est **oui**, et elle est inscrite comme **point ouvert (f)** de D-030 §5 plutôt que
+comme un fait — parce que les deux lectures ne produisent pas le même code.
+
+### 5. État
+
+- **Aucun fichier de l'application modifié** — vérifié ;
+- **aucune ligne de code écrite** : la demande était de **préparer**, pas d'implémenter ;
+- **7 inconnues ouvertes** *(I-21 ouverte puis levée le même jour)*, **0 décision en attente** ;
+- fichiers touchés : `DECISIONS.md`, `PLAN.md`, `ETAT.md`, `RISQUES.md`, `SESSIONS.md` ;
+- **la session 14 (volet ②) n'est pas commencée.**

@@ -1620,6 +1620,7 @@ qu'ils ne soient pas redécouverts au moment de coder.*
 | **c** | **Un tournoi ANNULÉ peut-il être « dé-annulé » ?** | Romain a écrit *« définitif pour la journée »*. Reste à savoir si c'est **définitif dans les données** (irréversible) ou seulement **définitif dans l'intention** (réversible avec la clé admin, comme la suspension) |
 | **d** | **Le classement partiel reste-t-il affiché** pendant une SUSPENSION ? | L'annulation dit « pas de classement final ». La suspension ne dit rien — or le tournoi peut reprendre |
 | **e** | **Que devient un tournoi suspendu qui ne reprend jamais** ? Bascule-t-il en ANNULÉ à la main, ou reste-t-il suspendu ? | C'est le cas réel le plus probable : l'orage ne s'arrête pas, et personne ne pense à changer l'état avant de rentrer |
+| ⚡ **f** *(né de la réponse I-21)* | **« Phases finales interdites » annule-t-il aussi une phase finale DÉJÀ PRÉVUE**, ou seulement celles que le moteur pourrait inventer pour rattraper ? Un seul des quatre formats d'après-midi est concerné : **COUPE_PLATEAU** | Ma lecture prudente : **oui, elle est écartée à la reprise**. Mais les deux lectures ne produisent pas le même code — voir **§8.4** |
 
 > Ces cinq points **ne bloquent pas l'inscription de la décision** : ils seront présentés à Romain
 > au moment de construire la fiche de chantier, au **volet ③**. Les inscrire maintenant évite qu'ils
@@ -1668,3 +1669,78 @@ la plus délicate du projet, et il dépend d'une réponse fédérale qu'on n'a p
 3. **famille « le filet côté serveur »** (R-015, R-016, R-047) — même cause, même correction, mêmes
    tests que le point 1 des contraintes techniques ci-dessus ;
 4. **I-21** — uniquement pour le niveau 2.
+
+---
+
+#### 8. ✅ **I-21 EST RÉSOLUE** — la règle fédérale entre dans la décision *(2026-08-05)*
+
+**Réponse rapportée par Romain** :
+
+> **La reprise avec adaptation du format et de la durée est AUTORISÉE**, sous deux réserves :
+> ⛔ **le temps de jeu maximal** doit être respecté ;
+> ⛔ **les phases finales sont interdites.**
+
+C'est la réponse la plus favorable possible : **le niveau 2 n'est plus bloqué**, et il n'est pas
+non plus laissé sans limites — il reçoit **deux garde-fous nets**, ce qui est exactement ce qu'il
+fallait pour ne pas écrire un moteur qui décide seul.
+
+##### 8.1 — Ce que cela change dans D-030
+
+| Avant | Après |
+|---|---|
+| Le niveau 2 était **suspendu à une réponse fédérale** | ✅ **Débloqué** — il peut être planifié et implémenté |
+| Les leviers de rattrapage étaient une **liste d'exemples** | Ils deviennent une **liste encadrée** : tout est permis **sauf** dépasser le temps de jeu maximal et **sauf** introduire une phase finale |
+| On ignorait s'il fallait un plancher de durée | ⚠️ **Toujours inconnu** — la réponse encadre le **maximum**, elle ne dit rien d'un **minimum** *(voir §8.3)* |
+
+##### 8.2 — ⚠️ Le point à connaître avant de coder : **le plafond de temps de jeu n'est aujourd'hui qu'un AFFICHAGE**
+
+*Constaté dans le code, pas supposé :*
+
+- `plafond_joueur_min` est bien **lu** de l'onglet `RefFFR_Temps` *(`backend/Code.gs`, lecture des
+  grilles et plafonds)* ;
+- il est **affiché** dans l'écran de conformité FFR, avec la mention **« (sécurité) »**
+  *(`frontend/js/admin-conformite-ffr.js`)* ;
+- il alimente un **prévisionnel** de conformité *(`previsionnelCategorieFFR`)* ;
+- ❌ **mais rien, dans `calculerPlanning`, ne refuse un planning qui le dépasse.**
+
+> **Conséquence directe sur le chantier** : la première réserve posée par la FFR — *« sous réserve
+> du temps de jeu maximal »* — **n'est pas un branchement, c'est un travail à part entière**. Le
+> niveau 2 doit transformer un **indicateur** en **contrôle réel**. Le prévoir maintenant évite de
+> découvrir en cours de route qu'on croyait le garde-fou déjà là.
+
+##### 8.3 — ⚠️ Un garde-fou que la réponse fédérale ne mentionne PAS, et qu'il ne faut surtout pas écraser
+
+D-030 autorise de *« supprimer ou réduire certaines marges entre rencontres »*. Il faut distinguer
+**trois marges différentes**, qui n'ont pas du tout le même statut :
+
+| Marge | Où elle vit | Peut-on y toucher ? |
+|---|---|---|
+| **Le battement entre deux matchs sur un même terrain** *(`battement_terrain_min`, 5 min par défaut)* | Réglage global | ✅ **Oui** — c'est de la logistique, pas du jeu |
+| **La récupération entre deux matchs d'une même équipe** *(`recup_entre_matchs_min`, par catégorie)* | Réglage par catégorie | ⚠️ **Avec prudence** — c'est du repos d'enfants. Un plancher doit être fixé |
+| ⛔ **Le repos de 60 minutes de la pause méridienne échelonnée** | **Écrit en dur dans le code** *(`repos: 60`)* | ❌ **JAMAIS.** C'est une mesure de **sécurité**, obtenue de haute lutte pour garantir qu'aucune équipe n'enchaîne sans souffler |
+
+> 🏉 **Pourquoi je l'écris ici plutôt que dans le code plus tard** : la formulation *« supprimer les
+> marges »* est ambiguë, et quelqu'un de parfaitement bien intentionné — moi compris — pourrait
+> optimiser ce 60 en croyant faire son travail. **Le repos méridien n'est pas une marge : c'est une
+> règle de sécurité.**
+
+##### 8.4 — ❓ Une précision demandée sur « phases finales interdites »
+
+La règle est **sans ambiguïté pour le moteur** : *il ne propose jamais une phase finale comme moyen
+de rattrapage* — pas de « on saute directement à une finale entre les deux premiers ». **C'est acté.**
+
+Reste une question plus étroite, qui ne bloque rien :
+
+> **Une suspension annule-t-elle aussi une phase finale DÉJÀ PRÉVUE au programme ?** Des quatre
+> formats d'après-midi, un seul s'en approche — **COUPE_PLATEAU**.
+
+**Ma lecture, prudente et cohérente avec la doctrine du projet** *(« prudent par construction »)* :
+**oui** — après une suspension, le moteur **ne propose ni ne régénère** de format à élimination. Je
+l'inscris comme **point ouvert (f)** du §5 plutôt que comme un fait, parce que les deux lectures ne
+produisent pas le même code.
+
+##### 8.5 — Le niveau 2 est donc **prêt à être planifié**
+
+➡️ **Fiche de chantier : `PLAN.md` → C-003.** Ses dépendances restantes ne sont plus fédérales,
+elles sont **techniques** : le lot ① des tests (**D-025**), puis **R-042**, puis le **niveau 1**
+(**C-002**) — sans état SUSPENDU, il n'y a rien à reprendre.

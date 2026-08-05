@@ -9,9 +9,10 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-05 (session 13 + **addendum** — **ÉTAPE 3 ouverte, volet ①
-terminé : les 6 décisions en attente sont TRANCHÉES** · ⚡ **et une 7ᵉ décision, apportée par
-Romain, entre au chantier : D-030 — tournoi suspendu / annulé**)
+**Dernière mise à jour** : 2026-08-05 (session 13 + **2 addendums** — **ÉTAPE 3 ouverte, volet ①
+terminé : les 6 décisions en attente sont TRANCHÉES** · ⚡ **une 7ᵉ décision apportée par Romain
+entre au chantier : D-030 — tournoi suspendu / annulé** · ⚡ **I-21 levée par la FFR, et les deux
+premières fiches de chantier du volet ③ sont écrites : C-002 et C-003**)
 **Commit de référence** : `b5cc9df` sur **`main`** — la session 13 part de là.
 **Documentation uniquement — aucun fichier de l'application modifié**, aucun redéploiement requis.
 
@@ -32,11 +33,10 @@ chantier : **les tests du barème et du départage sont écrits AVANT qu'on touc
 seule vérification, gratuite, a débloqué deux d'entre elles : la lecture du **site vitrine public**
 a **levé I-16** et livré les deux informations qui manquaient à D-018 — **le responsable
 (Génération R92) et l'adresse de contact**. Le registre des inconnues passe de **9 à 8** *(I-16
-levée, ⚡ I-21 ajoutée par l'addendum D-030)*, et **aucune n'empêche de construire le plan** :
-**trois** sont des **courriels à envoyer** — dont **deux dans le même** —, deux des
-**vérifications de cinq minutes**, une ne se lèvera **que le jour du tournoi**, une est **sans
-effet**, et la dernière est **permanente**. **Le volet ② — les chantiers sans code — peut
-s'ouvrir.**
+levée · ⚡ I-21 ouverte **puis levée le jour même**)*, et **aucune n'empêche de construire le
+plan** : deux sont des **courriels à envoyer**, deux des **vérifications de cinq minutes**, une ne
+se lèvera **que le jour du tournoi**, une est **sans effet**, et la dernière est **permanente**.
+**Le volet ② — les chantiers sans code — peut s'ouvrir.**
 
 ⚡ **Et une chose est entrée au chantier le même jour, qui ne vient pas de l'audit** : Romain a
 apporté une **décision fonctionnelle** que les huit domaines n'avaient pas vue — **D-030, le
@@ -118,14 +118,16 @@ la capture fournie : la dernière ligne du fichier chez Google est la **3711**, 
 près. **M-04 est refermé**, et le statut TESTÉ de **R-014** retrouve une troisième preuve, cette
 fois vraie.
 
-**3. Poser les questions sortantes — elles sont désormais TROIS, et deux tiennent dans le même
-courriel.** **I-10** *(à la FFR, **élargie le 2026-08-05**)* : le sort d'un match non joué **et
-celui d'un tournoi entier interrompu ou annulé pour force majeure** · ⚡ **I-21** *(à la FFR,
-nouvelle, née de **D-030**)* : peut-on **réduire le temps de jeu** pour faire tenir les rencontres
-restantes, y a-t-il une **durée minimale**, et combien de rencontres faut-il avoir jouées pour
-qu'un classement reste valable ? · **I-15** *(au club)* : le droit à l'image. Le délai de réponse
-ne dépend pas de nous, donc les poser tôt ne coûte rien et peut faire gagner des semaines. Ce sont
-les seules exceptions à D-024, avec D-017.
+**3. Poser les deux questions sortantes restantes** — **I-10** *(à la FFR, **élargie le
+2026-08-05** : le sort d'un match non joué **et celui d'un tournoi entier interrompu ou annulé**)*
+et **I-15** *(au club : le droit à l'image)*. Le délai de réponse ne dépend pas de nous, donc les
+poser tôt ne coûte rien et peut faire gagner des semaines. Ce sont les seules exceptions à D-024,
+avec D-017.
+
+> ✅ **FAIT le 2026-08-05 — I-21 est LEVÉE**, et c'est la réponse la plus favorable possible : **la
+> reprise avec adaptation du format et de la durée est AUTORISÉE**, sous deux réserves — ⛔ le
+> **temps de jeu maximal** et ⛔ **aucune phase finale**. **Le niveau 2 de D-030 est débloqué**, et
+> sa fiche de chantier est écrite (**`PLAN.md` C-003**).
 
 **4. ✅ FAIT le 2026-08-05 — I-18 levée.** Romain a fourni **trois pages** du journal
 « Exécutions ». **128 exécutions réelles analysées, 100 % « Terminée », aucun échec.** Le
@@ -611,7 +613,7 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 
 | Réf | Décision | Statut |
 |---|---|---|
-| **D-030** | **Tournoi SUSPENDU / Tournoi ANNULÉ (force majeure)** — deux états au niveau du **tournoi**, un cran au-dessus du match annulé de D-015. **SUSPENDU** : tout est figé, le match en cours est verrouillé et **son score validé à l'instant de la suspension**, la reprise ne le rejoue pas, et le moteur **propose** des scénarios de rattrapage sans jamais **décider** seul d'une modification réglementaire. **ANNULÉ** : définitif pour la journée, matchs à venir grisés et inaccessibles, **aucun classement final** pour un tournoi EDR classique, résultats déjà validés **conservés** comme historique. **Dans les deux cas** : clé administrateur à l'activation **et** à la reprise, état visible en administration, **bandeau public au texte personnalisable**. ⚠️ **Spécification conservée — aucun code écrit.** Implémentation **volet ③**, en **2 niveaux**, après le lot ① des tests et après R-042 | ✅ **Validée (session 13, addendum)** — **couvre R-089** |
+| **D-030** | **Tournoi SUSPENDU / Tournoi ANNULÉ (force majeure)** — deux états au niveau du **tournoi**, un cran au-dessus du match annulé de D-015. **SUSPENDU** : tout est figé, le match en cours est verrouillé et **son score validé à l'instant de la suspension**, la reprise ne le rejoue pas, et le moteur **propose** des scénarios de rattrapage sans jamais **décider** seul d'une modification réglementaire. **ANNULÉ** : définitif pour la journée, matchs à venir grisés et inaccessibles, **aucun classement final** pour un tournoi EDR classique, résultats déjà validés **conservés** comme historique. **Dans les deux cas** : clé administrateur à l'activation **et** à la reprise, état visible en administration, **bandeau public au texte personnalisable**. ⚠️ **Spécification conservée — aucun code écrit.** Implémentation **volet ③**, en **2 niveaux**, après le lot ① des tests et après R-042. ⚡ **I-21 levée le même jour** : la reprise avec **adaptation du format et de la durée est autorisée**, sous réserve du **temps de jeu maximal** et de **l'interdiction des phases finales** → le **niveau 2 est débloqué**, et les deux fiches de chantier sont écrites (`PLAN.md` **C-002** et **C-003**) | ✅ **Validée (session 13, addendums)** — **couvre R-089** |
 
 **En attente** (voir `DECISIONS.md`) :
 
@@ -639,7 +641,7 @@ vérification supplémentaire.
 | I-01 | Le code réellement en service chez Google est-il identique à `backend/Code.gs` ? | Le backend s'exécute chez Google, hors du dépôt | Vérification manuelle par Romain dans Apps Script |
 | I-03 | Quelles données personnelles de **tiers** seront présentes dans le Google Sheet une fois de vrais clubs invités ? | ✅ **Rien à ce jour** (précisé par Romain le 2026-08-04) : les seules adresses email présentes sont **la sienne et celle de son épouse**, utilisées pour tester les envois. ✅ L'**inventaire de ce que l'application peut collecter** est désormais **fait** (volet C, session 4) : nom / prénom / email du contact de chaque club, et des **effectifs** d'enfants (jamais leur nom). Ce qui reste ouvert n'est plus « quoi », mais « **que décide-t-on d'en faire** » | Instruction au **domaine B (RGPD)** de l'ÉTAPE 2 — **avant** la première invitation réelle |
 | I-10 *(élargie le 2026-08-05)* | La FFR encadre-t-elle le sort d'un match d'École de Rugby **qui n'a pas pu se jouer** (forfait, ou annulation pour intempéries) — ⚡ **et celui d'un TOURNOI ENTIER interrompu ou annulé pour force majeure** ? Existe-t-il une règle de classement imposée (points attribués, match à rejouer, match neutralisé, journée non classée) ? | `AUDIT-TOURNOI-R92.md` **ne contient rien** sur le sujet : aucun de ses 25 points de vérification (Q11→Q25) ne le couvre. C'est une question de **règle du jeu**, donc du chantier FFR (D-003) | Question de Romain au **Directeur EDR du Racing** ou au **Comité 92** — la voie qui a déjà résolu Q23. Une règle fédérale primerait sur D-011, D-015 **et D-030** |
-| ⚡ **I-21** *(nouvelle, née de D-030)* | **En cas de force majeure, peut-on réduire le temps de jeu** pour faire tenir les rencontres restantes — périodes raccourcies, deux périodes ramenées à une ? Existe-t-il une **durée minimale** ? Et **combien de rencontres** faut-il avoir jouées pour qu'un classement reste valable ? | Le moteur sait déjà lire les **plafonds** de temps du référentiel fédéral, mais rien n'y dit ce qui est permis **quand la journée déraille**. On ne propose pas de raccourcir un temps de jeu **d'enfants** sans le savoir | **Même courriel que I-10**, mêmes destinataires. ⚠️ **Bloque le niveau 2 de D-030** (les scénarios de reprise) — **pas** le niveau 1 |
+| ~~⚡ **I-21**~~ | ~~En cas de force majeure, peut-on réduire le temps de jeu ?~~ | ✅ **LEVÉE le 2026-08-05** — **oui, la reprise avec adaptation du format et de la durée est autorisée**, sous deux réserves : ⛔ **temps de jeu maximal** · ⛔ **aucune phase finale** | Voir « Points levés » ci-dessous |
 | I-08 | Une image mise à la corbeille du Drive (affiche, logo, photo de parking) reste-t-elle visible par un lien déjà diffusé, pendant les ~30 jours avant que Google vide la corbeille ? | Le comportement de la corbeille Drive appartient à Google, il n'est pas dans le code | Test réel : mettre une image à la corbeille, puis rouvrir son lien depuis une navigation privée |
 | I-09 | Que conserve le **journal d'exécution** de Google Apps Script, et pendant combien de temps ? | Ce journal vit chez Google, hors du dépôt | Consultation par Romain dans l'éditeur Apps Script (« Exécutions ») |
 | **I-14** ✅ *(largement répondue le 2026-08-05)* | **Qui est officiellement responsable** de ces données ? ✅ **Le site vitrine le déclare publiquement : « Génération R92 — association loi 1901 », contact `generationr92@gmail.com`, directeur de la publication Jérémy Jost.** ⚠️ **Avec une réserve** : la déclaration en préfecture est **« en cours »** (siège et n° RNA *« à définir »*), donc **aujourd'hui c'est Romain qui porte ces données de fait** (**D-021**). **Ce qui reste ouvert** : le classeur doit-il rester dans un **compte Google individuel** ? | La partie « qui » est désormais **écrite** (levée avec **I-16**). La partie « quel compte » reste entière : si ce compte est perdu ou bloqué, **l'association perd d'un coup son carnet d'adresses, ses images et son historique** | ✅ **Suffisant pour D-018** (les textes peuvent nommer le responsable). Reste à décider **au déclencheur** (**D-022**) : basculer le classeur vers un compte de l'association — voir **R-039** et `docs/passation.md` §11 |
@@ -651,6 +653,7 @@ vérification supplémentaire.
 
 | # | Point | Réponse | Levé le |
 |---|---|---|---|
+| ⚡ **I-21** | **En cas de force majeure, peut-on réduire le temps de jeu** pour faire tenir les rencontres restantes — périodes raccourcies, deux périodes ramenées à une ? | ✅ **LEVÉE — OUI, la reprise avec adaptation du format et de la durée est AUTORISÉE**, sous **deux réserves** rapportées par Romain : ⛔ **le temps de jeu maximal** doit être respecté · ⛔ **les phases finales sont interdites**. ⚡ **Trois conséquences, dont une qui n'était pas prévue** : (1) **le niveau 2 de D-030 est débloqué** — sa fiche de chantier est écrite (`PLAN.md` **C-003**) ; (2) ⚠️ **la première réserve n'est pas un branchement, c'est un travail** — `plafond_joueur_min` est aujourd'hui **lu, affiché avec la mention « (sécurité) » et injecté dans un prévisionnel, mais rien dans `calculerPlanning` ne refuse un planning qui le dépasse** *(constaté dans le code)*. Il faut transformer un **indicateur** en **contrôle réel** ; (3) ⚠️ **la réponse ne dit rien d'une durée MINIMALE, ni du repos** — or le **repos de 60 min** de la pause méridienne est écrit **en dur** dans le code et relève de la **sécurité** : *« supprimer les marges »* ne doit **jamais** s'y appliquer. Détail : `DECISIONS.md` **D-030 §8** | 2026-08-05, session 13 *(addendum n° 2)* |
 | **I-16** | Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page « Vos données » ? | ✅ **LEVÉE — OUI.** Lecture des pages publiques (`index.html`, `rgpd.html`, `mentions-legales.html`). Le pied de page porte **« Mentions légales · CGV · RGPD · Statuts »**. ⚡ **Deux gains immédiats** : (1) la page RGPD existe, donc D-018 n'a plus à créer une page — seulement à y **ajouter une section « Tournoi »** ; (2) elle **nomme le responsable** (*Génération R92*) et **l'adresse de contact** (*generationr92@gmail.com*) — les deux informations qui bloquaient D-018 depuis la session 7. ⚠️ **La limite, et elle est nette** : cette page **ne parle pas du tournoi** — ni clubs invités, ni contacts de clubs, ni effectifs d'enfants, ni mesure de visibilité des partenaires. Elle couvre l'adhésion, le don et l'achat. **R-028 reste donc entier** ; seul son **coût de correction** a baissé. 📌 Quatre constats hors périmètre inscrits en **V-01 → V-04** (`DECISIONS.md`, D-005) | 2026-08-05, session 13 |
 | **I-06** | Comment le Google Sheet est-il réellement partagé ? | ✅ **LEVÉ — le classeur est PRIVÉ.** Romain a fourni une capture du panneau Drive de « Tournoi R92 - Base de données » : *Qui a accès → **Privé*** (propriétaire seul), et *Limites de sécurité → aucune limite appliquée*. L'identifiant du classeur est donc public dans le dépôt **sans que cela expose les données** : le connaître ne suffit pas à ouvrir le fichier. C'est le réglage attendu. Cela confirme aussi que la Web App s'exécute bien **au nom du propriétaire** — c'est ce qui lui permet de lire un classeur privé au profit de visiteurs qui, eux, n'y ont aucun accès. | 2026-08-04, session 2 |
 | **I-07** | Les 4 onglets `RefFFR_*` existent-ils et sont-ils à jour ? | ✅ **LEVÉ — les 4 onglets existent, aux noms exacts attendus.** Capture du bas du classeur fournie par Romain : `RefFFR_Formes`, `RefFFR_Regles`, `RefFFR_Temps`, `RefFFR_Dates` — orthographe **identique** à ce que lit `Code.gs`. Contenu visible cohérent (millésimes 2026-2027, formes de jeu 5x5 / 7x7). Les fichiers Drive `RefFFR-formes-de-jeu` et `RefFFR-dates-federales` sont donc des documents **sources** distincts, sans rôle dans le fonctionnement. | 2026-08-04, session 2 |
@@ -735,14 +738,14 @@ vérification supplémentaire.
 > | | Avant la session 13 | Après |
 > |---|---|---|
 > | **Décisions en attente** | 6 | ✅ **0** |
-> | **Inconnues ouvertes** | 9 | **8** — *I-16 levée, I-14 partiellement · ⚡ **I-21 ajoutée** par l'addendum D-030* |
-> | **Inconnues qui BLOQUENT le plan** | *jamais compté* | ✅ **0** — *I-21 ne bloque que le **niveau 2** de D-030, le dernier de la file* |
+> | **Inconnues ouvertes** | 9 | **7** — *I-16 levée, I-14 partiellement · ⚡ I-21 ajoutée **puis levée le jour même**, par la réponse fédérale* |
+> | **Inconnues qui BLOQUENT le plan** | *jamais compté* | ✅ **0** |
 >
-> **Ce qu'il faut retenir des 8 inconnues restantes** : **3 sont des courriels à envoyer, et deux
-> d'entre elles tiennent dans le même** (I-10 et ⚡ **I-21** à la FFR, I-15 au club), 2 des
-> **vérifications de 5 minutes** ne touchant que des P2 (I-08, I-09), 1 ne se lèvera **que le jour
-> du tournoi** (I-19), 1 est **sans effet sur le plan** (I-20), et 1 est **permanente** (I-01 — le
-> code en service chez Google, c'est **M-02**, on la compense, on ne la lève pas).
+> **Ce qu'il faut retenir des 7 inconnues restantes** : 2 sont des **courriels à envoyer** (I-10 à
+> la FFR, I-15 au club), 2 des **vérifications de 5 minutes** ne touchant que des P2 (I-08, I-09),
+> 1 ne se lèvera **que le jour du tournoi** (I-19), 1 est **sans effet sur le plan** (I-20), et 1
+> est **permanente** (I-01 — le code en service chez Google, c'est **M-02**, on la compense, on ne
+> la lève pas).
 
 > ✅ **Le domaine H n'a ajouté NI décision NI inconnue** — le seul des huit dans ce cas. Ses sept
 > problèmes sont des constats techniques qui n'appellent aucun arbitrage de Romain pour être
@@ -820,7 +823,7 @@ vérification supplémentaire.
 |---|---|---|
 | **D-017** | **Remplacer les deux clés par des suites aléatoires** | Ce n'est pas une question, c'est une **action** : cinq minutes, aucune réflexion, et elle referme **R-019** (P1). Menu du classeur → « Configurer les clés » |
 | **I-10** *(élargie)* | **Question à la FFR** : le sort d'un match qui n'a pas pu se jouer (forfait, intempéries) est-il encadré — ⚡ **et celui d'un tournoi entier interrompu ou annulé** ? | **Question sortante** — Directeur EDR du Racing / Comité 92. Le délai de réponse ne dépend pas de nous. Une règle fédérale primerait sur **D-011**, **D-015** et **D-030** |
-| ⚡ **I-21** | **Question à la FFR** : peut-on réduire le temps de jeu en cas de force majeure ? Y a-t-il une durée minimale, et un nombre minimal de rencontres pour qu'un classement tienne ? | **Question sortante — dans le MÊME courriel que I-10.** Bloque le **niveau 2** de **D-030** (les scénarios de reprise), pas le niveau 1 |
+| ~~⚡ **I-21**~~ | ~~Peut-on réduire le temps de jeu en cas de force majeure ?~~ | ✅ **LEVÉE le 2026-08-05** — **oui**, sous réserve du **temps de jeu maximal** et de **l'interdiction des phases finales**. Le niveau 2 de D-030 est **débloqué** |
 | **I-15** | **Question au club** : le droit à l'image des enfants est-il géré ailleurs (licence FFR, document du club, consigne aux clubs invités) ? | **Question sortante** — même raison. Le mécanisme a été retiré de l'application le 2026-08-03 sur décision du club, sans que rien n'écrive ce qui l'a remplacé (**R-036**) |
 
 | ~~**I-17**~~ | ~~Recoller `Tests.gs` chez Google et relancer~~ | ✅ **FAIT le 2026-08-05 — `589/589 OK, 0 FAIL`.** M-04 refermé |
@@ -858,7 +861,7 @@ vérification supplémentaire.
 | **I-08** | Une image mise à la corbeille du Drive reste-t-elle visible par un lien déjà diffusé pendant ~30 jours ? | Test réel de 5 minutes : corbeille, puis rouvrir le lien en navigation privée | **B** — **R-035** |
 | **I-09** | Que conserve le journal d'exécution de Google Apps Script, et combien de temps ? | Consultation dans l'éditeur Apps Script (« Exécutions ») | **B / C** — **R-023**, **R-039** |
 | **I-10** *(élargie)* | La FFR encadre-t-elle le sort d'un match non joué — ⚡ **et d'un tournoi entier interrompu ou annulé** ? | **Question sortante** — voir §10.1 | **A** — D-011, D-015, **D-030** |
-| ⚡ **I-21** | Peut-on **réduire le temps de jeu** en cas de force majeure ? Durée minimale ? Nombre minimal de rencontres pour qu'un classement soit valable ? | **Question sortante**, même courriel que I-10 — voir §10.1 | **A** — **D-030 niveau 2** |
+| ~~⚡ **I-21**~~ | ~~Peut-on **réduire le temps de jeu** en cas de force majeure ?~~ | ✅ **LEVÉE le 2026-08-05** — **oui**, sous réserve du temps de jeu maximal et de l'interdiction des phases finales. Voir §8 et `DECISIONS.md` **D-030 §8** | ~~A~~ |
 | **I-14** *(partiellement levée le 2026-08-05)* | ✅ **« Qui » est répondu** : *Génération R92*, contact `generationr92@gmail.com` — trouvé en levant **I-16**, avec la réserve que la **déclaration est en cours**. ❓ **Reste** : le classeur doit-il rester dans un compte Google individuel ? | Réponse de Romain **au déclencheur** — non bloquant aujourd'hui (**D-021**), et **plus du tout bloquant pour D-018** | **B** — **R-039** |
 | **I-15** | Le droit à l'image des enfants est-il géré ailleurs ? | **Question sortante** — voir §10.1 | **B** — **R-036** |
 | ~~**I-16**~~ | ~~Le site vitrine porte-t-il déjà des mentions légales ou une page de confidentialité ?~~ | ✅ **LEVÉE le 2026-08-05** (session 13) — **oui**, et elle livre le **responsable** et **l'adresse de contact** qui bloquaient D-018. ⚠️ Mais elle **ne parle pas du tournoi** : R-028 reste entier | ~~B~~ |

@@ -10,7 +10,9 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
-**Dernière mise à jour** : 2026-08-05 (session 13 — **l'ÉTAPE 3 est ouverte, volet ① terminé**)
+**Dernière mise à jour** : 2026-08-05 (session 13 + addendums — **l'ÉTAPE 3 est ouverte, volet ①
+terminé** · ⚡ **D-030 inscrite, I-21 levée, et les fiches de chantier C-002 / C-003 rédigées** —
+voir **§6**)
 
 ---
 
@@ -22,7 +24,7 @@ Reprendre 9 inconnues, 6 décisions et 88 problèmes ne tient pas dans une séan
 |---|---|---|---|
 | **①** | **Les inconnues et les décisions** — elles conditionnent tout le reste | 13 | ✅ **TERMINÉ** — 9 inconnues → 7 *(dont **0 bloquante**)*, **6 décisions → 0 en attente** |
 | **②** | Les chantiers **sans code** : documentation, textes d'information, durées de conservation, commentaires faux | 14 | 🔜 **PROCHAIN** |
-| **③** | Les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi — ⚡ **dont D-030 / R-089, le tournoi suspendu ou annulé** | — | ⬜ À faire |
+| **③** | Les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi | — | ⬜ À faire — ⚡ **mais ses deux premières fiches sont DÉJÀ écrites** : **C-002** et **C-003** *(le tournoi suspendu ou annulé, D-030)*, voir **§6** |
 
 ### ⚠️ Les deux contraintes d'ordre déjà FIXÉES — elles ne se négocient plus
 
@@ -173,7 +175,7 @@ Ce ne sont pas encore des chantiers, mais des **familles** qui se dessinent apr�
 | **🔇 Faire parler le geste du jour J** *(élargi)* | **R-051**, **R-052**, **R-053**, **R-069**, **R-086**, **R-085** | Le domaine H apporte les deux pièces qui manquaient : **R-086** chiffre le problème (**29 endroits sur 21 fichiers** montrent l'erreur brute du navigateur) **et porte la correction** — un seul endroit à écrire ; **R-085** en est le pendant côté serveur (une image qu'on jette sans vérifier, et l'application répond « c'est fait »). **Même sujet : l'application dit qu'elle a réussi sans le savoir.** ⚠️ Sous contrainte **D-027** : un message ne doit jamais mentir |
 | **🏉 Le Super Challenge** | **R-082**, **R-083** *(sa part SCF)* | Trois lignes de garde côté serveur, et trois commentaires à effacer. Tout est au même endroit et ne touche **que le remplissage d'un formulaire**. ⚠️ **Ce lot change de priorité tout seul** : P2 aujourd'hui, **P1 le jour où le club accueille réellement un Super Challenge** |
 | ⚡ **🌩️ Le tournoi qui s'arrête** — ***niveau 1*** | **R-089** *(D-030)*, **R-015**, **R-016**, **R-047**, R-051, R-052 | **L'état SUSPENDU / ANNULÉ, son gel et sa visibilité.** Il rejoint **obligatoirement** la famille « le filet côté serveur » : un gel tenu par la page web **ne gèle rien** — il suffit d'ouvrir la saisie ailleurs. Même cause, même correction, mêmes tests. Le **bandeau public** rejoint « faire parler le geste du jour J », sous contrainte **D-027** *(un message ne ment jamais)*. ⚠️ **Prérequis : le lot ① des tests** (le « pas de classement final si annulé » touche le classement) **et R-042** (le gel verrouille la saisie) |
-| ⚡ **🌩️ Le tournoi qui s'arrête** — ***niveau 2*** | **R-089** *(D-030, scénarios de reprise)*, **R-003** *(niveau 3 de D-013)* | **Les propositions de rattrapage** : périodes réduites, deux périodes → une, marges, terrains. ⚠️ **Ces deux-là ne doivent JAMAIS être faits séparément** : D-013 avait écarté son niveau 3 (*« redistribuer un terrain devenu impraticable »*) comme *« le seul niveau qui touche au planificateur, donc le seul réellement risqué »* — or D-030 niveau 2 touche **exactement** le même code. Les séparer, c'est ouvrir `calculerPlanning` deux fois. ⛔ **Bloqué par I-21** : on ne propose pas de raccourcir un temps de jeu **d'enfants** sans savoir ce que la FFR autorise |
+| ⚡ **🌩️ Le tournoi qui s'arrête** — ***niveau 2*** | **R-089** *(D-030, scénarios de reprise)*, **R-003** *(niveau 3 de D-013)* | **Les propositions de rattrapage** : périodes réduites, deux périodes → une, marges, terrains. ⚠️ **Ces deux-là ne doivent JAMAIS être faits séparément** : D-013 avait écarté son niveau 3 (*« redistribuer un terrain devenu impraticable »*) comme *« le seul niveau qui touche au planificateur, donc le seul réellement risqué »* — or D-030 niveau 2 touche **exactement** le même code. Les séparer, c'est ouvrir `calculerPlanning` deux fois. ✅ **I-21 LEVÉE le 2026-08-05** : la reprise avec adaptation du format et de la durée est **autorisée**, sous deux réserves — ⛔ **temps de jeu maximal** *(aujourd'hui simple affichage, à transformer en contrôle réel)* et ⛔ **aucune phase finale**. → **fiche C-003** |
 | **⛔️ Ce qui NE doit PAS être groupé** | ~~R-074~~, **R-076**, **R-077**, **R-081**, **R-088** | Des problèmes qui se **ressemblent** (découper, ranger, outiller) et qu'il serait tentant de traiter ensemble. **Ils ne doivent pas l'être** : chacun, fait en bloc, aggrave un problème plus grave que lui — renommer 277 tests fait perdre un test en silence, découper l'admin exige l'outillage que `CLAUDE.md` §10 déconseille. **Progressif et réversible, ou rien.** ✅ **R-074 est sorti de cette liste : il est ARBITRÉ** (**D-028**, 2026-08-05) — on ne découpe pas `Code.gs` tant que le dépôt est manuel. ➕ **R-088 rejoint la liste** (domaine H) : renommer en masse des variables courtes, c'est 42 occasions de casser un appel pour un gain de **confort de lecture**. Méthode **opportuniste** uniquement, la même que R-079 |
 
 ### Modèle de fiche de chantier
@@ -225,3 +227,135 @@ compliquée le jour J, ce n'est pas une amélioration — elle est refusée ou r
 | La conformité réglementaire FFR | Traitée par `AUDIT-TOURNOI-R92.md`, chantier distinct — voir D-003 |
 | Toute réécriture complète de l'application | Interdite par `CLAUDE.md` §2 et §10 |
 | Tout changement de technologie | Interdit sans justification explicite (`CLAUDE.md` §10) |
+
+---
+
+## 6. FICHES DE CHANTIER RÉDIGÉES
+
+> **Comment lire les identifiants** : `C-00X` est un **identifiant, pas un rang**. Il est attribué
+> au moment où la fiche est écrite, pas selon l'ordre d'exécution. **L'ordre réel se lit dans le
+> champ « Dépendances »** de chaque fiche.
+
+**Ordre d'exécution connu à ce jour**, du premier au dernier :
+
+```
+lot ① des tests (D-025)  →  R-042  →  C-002 (niveau 1)  →  C-003 (niveau 2)
+```
+
+---
+
+### C-002 — 🌩️ Le tournoi qui s'arrête · **niveau 1 : l'état et sa visibilité**
+
+> ⚠️ **Esquisse.** Cette fiche est écrite parce que **C-003 en dépend** et ne peut pas être planifié
+> dans le vide. Elle sera complétée au **volet ③**, avec les six points ouverts de `DECISIONS.md`
+> D-030 §5 tranchés.
+
+- **Problème** (en langage simple) : quand l'orage arrête le tournoi, l'application continue
+  d'afficher un programme qui n'aura pas lieu. Les matchs à venir restent saisissables, le match en
+  cours n'est pas verrouillé, et rien n'explique quoi que ce soit aux familles.
+- **Risques couverts** : **R-089** *(partie 1)* · rejoint **R-015**, **R-016**, **R-047**
+  *(le filet côté serveur)* · **R-051**, **R-052** *(faire parler l'application)*
+- **Priorité** : **P1**
+- **Bénéfice** : le jour où ça arrive, l'organisateur appuie sur un bouton. Tout se fige, la page
+  publique l'explique, et **rien ne peut plus être saisi par erreur**.
+- **Risque de la correction** : **moyen.** Touche la saisie du score et le calcul du classement
+  *(« aucun classement final si annulé »)* — d'où ses deux prérequis.
+- **Fichiers concernés** : `backend/Code.gs` *(état, garde-fous, instantané public)* ·
+  `backend/Tests.gs` · `frontend/js/admin-*.js` · la page publique · la page de saisie
+- **Dépendances** : **lot ① des tests (D-025)** → **R-042**
+- **Statut** : **PLANIFIÉ**
+- **Validation de Romain** : ✅ **oui** — décision **D-030**, 2026-08-05
+- **Commit** : —
+
+---
+
+### C-003 — 🌩️ Le tournoi qui s'arrête · **niveau 2 : les scénarios de reprise**
+
+- **Problème** (en langage simple) :
+  > Le tournoi a été suspendu à 11 h 20. Il reste **23 matchs** et **2 h 40** avant que les terrains
+  > ferment. **Aujourd'hui, personne ne sait dire ce qui rentre.** L'organisateur décide de tête,
+  > sous la pluie, avec deux cents personnes qui attendent une réponse.
+  >
+  > Ce chantier fait faire ce calcul par la machine : elle **propose** deux ou trois combinaisons
+  > chiffrées, l'organisateur **choisit**.
+
+- **Risques couverts** : **R-089** *(partie 2)* · **R-003** — ⚠️ **le niveau 3 de D-013**, celui qui
+  avait été écarté *(« rendre un terrain indisponible et laisser l'application redistribuer »)*.
+  **Les deux ne doivent jamais être faits séparément** : ils ouvrent le même code.
+
+- **Priorité** : **P1** *(hérité de R-089)* — mais **le dernier de la file d'exécution**.
+
+- **Bénéfice** : une décision prise en **trente secondes sur des chiffres**, au lieu d'un pari.
+
+- **Risque de la correction elle-même** : ⚠️⚠️ **c'est le chantier le plus risqué de tout le plan.**
+  `calculerPlanning` *(`backend/Code.gs:6953`, **224 lignes**)* est le cœur qui décide **quel match
+  se joue où et quand**. Une régression ici **ne se voit pas** : elle ne plante pas, elle produit un
+  planning **plausible et faux**.
+
+#### Les leviers, du moins au plus intrusif
+
+| # | Levier | Réglage concerné | Touche au jeu ? | Garde-fou |
+|---|---|---|---|---|
+| 1 | Réduire le **battement entre deux matchs sur un terrain** | `battement_terrain_min` *(5 min par défaut)* | ❌ Non — logistique pure | Un plancher à fixer |
+| 2 | **Mieux répartir sur les terrains** *(paralléliser)* | affectation | ❌ Non | Jamais une équipe sur deux terrains à la fois |
+| 3 | Réduire la **récupération d'une même équipe** entre deux matchs | `recup_entre_matchs_min` *(par catégorie)* | ⚠️ **Oui — repos d'enfants** | Plancher **à faire valider par Romain** |
+| 4 | **Raccourcir les périodes** | `duree_mi_temps_min` | ⚠️ Oui | ⛔ plafond de temps de jeu |
+| 5 | **Deux périodes → une** | `format_mi_temps` | ⚠️ Oui | ⛔ plafond de temps de jeu |
+| 6 | **Retirer des rencontres** | le planning | ⚠️ Oui — **équité** | Dernier recours. Les équipes n'auront pas joué le même nombre de matchs — la colonne « J » du classement existe déjà pour le montrer |
+
+#### Les garde-fous DURS — aucun scénario proposé ne peut les franchir
+
+| # | Garde-fou | Origine | État aujourd'hui |
+|---|---|---|---|
+| ⛔ **1** | **Le temps de jeu maximal par enfant** | ✅ **I-21** — réponse fédérale | ⚠️ **Simple AFFICHAGE.** `plafond_joueur_min` est lu de `RefFFR_Temps`, montré dans l'écran de conformité avec la mention « (sécurité) » et injecté dans un prévisionnel — **mais rien dans `calculerPlanning` ne refuse un planning qui le dépasse.** → **à transformer en contrôle réel : c'est du travail, pas un branchement** |
+| ⛔ **2** | **Aucune phase finale** | ✅ **I-21** — réponse fédérale | À écrire. Le moteur ne propose **jamais** une phase finale comme rattrapage. *(Le sort d'un COUPE_PLATEAU déjà prévu est le point ouvert (f) de D-030 §5)* |
+| ⛔ **3** | **Le repos de 60 minutes de la pause méridienne** | **Sécurité — déjà dans le code** *(`repos: 60`, écrit en dur)* | ⚠️ **I-21 n'en parle pas, et c'est justement le piège.** *« Supprimer les marges »* ne doit **jamais** s'appliquer à celui-là : ce n'est pas une marge, c'est une règle de sécurité |
+
+#### Trois règles de conception
+
+1. **Le moteur propose, il ne décide jamais** *(règle posée par Romain dans D-030, identique à
+   l'esprit de D-013 : « le jour J, l'organisateur en sait plus que l'algorithme »)* ;
+2. **Prudent par construction** : un scénario qu'on ne sait pas valider **n'est pas proposé**. Le
+   projet a déjà ce réflexe — un format inventé retombe sur le chemin prudent, et un test le
+   protège ;
+3. **Le choix retenu laisse une trace** : qui a choisi quel scénario, et à quelle heure. C'est la
+   même exigence que R-017 *(savoir qui a fait quoi)*, et elle coûte une ligne si on y pense
+   maintenant.
+
+#### Stratégie de test
+
+- **Cœur pur** : le calcul des scénarios reçoit ses données en paramètre et **ne touche pas au
+  classeur**. C'est ce qui rend les 589 vérifications existantes exécutables **hors de Google**, en
+  une seconde ;
+- un test : **aucun scénario proposé ne dépasse le plafond de temps de jeu** ;
+- un test : **aucun scénario ne contient de phase finale** ;
+- un test : **le repos de 60 minutes est intact** dans tous les scénarios ;
+- un test : **un format inventé ne produit aucun scénario** *(protège la forme de la règle, pas son
+  contenu)* ;
+- un test : **zéro minute disponible → aucun scénario, et un message clair** — pas une liste vide
+  qu'on prendrait pour un bug.
+
+#### ⭐ Vérifications de non-régression — la première conditionne tout le chantier
+
+> **Sans suspension, `calculerPlanning` doit produire EXACTEMENT le même planning qu'avant** —
+> comparaison **caractère par caractère** sur un tournoi de référence.
+> **Si ce test n'existe pas, ce chantier ne commence pas.** C'est la seule protection réelle contre
+> une régression qui ne se voit pas.
+
+Puis, dans l'ordre : les **quatre formats d'après-midi** *(CROISE, CROISE_DIAGONAL, LIBRE,
+COUPE_PLATEAU)* · le **Super Challenge** *(samedi poules, dimanche brassage)* · la **pause
+méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génération de l'après-midi**
+à partir du classement du matin.
+
+- **Dépendances** *(ordre strict)* :
+  1. **lot ① des tests** (R-041, **D-025**) ;
+  2. **R-042** ;
+  3. **C-002** — sans état SUSPENDU, il n'y a **rien à reprendre** ;
+  4. ~~**I-21**~~ ✅ **LEVÉE le 2026-08-05**.
+- **Statut** : **PLANIFIÉ**
+- **Validation de Romain** : ✅ **oui** — décision **D-030** + réponse **I-21**, 2026-08-05
+- **Commit** : —
+
+> ⚠️ **Ce que cette fiche ne fait pas** : elle ne décide **pas** des planchers *(battement minimal,
+> récupération minimale)*. Ce sont des **choix de terrain**, à trancher avec Romain à l'ouverture du
+> chantier — pas des constantes à choisir en écrivant le code.

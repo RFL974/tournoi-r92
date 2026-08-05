@@ -202,7 +202,7 @@ apporté par Romain le 2026-08-05, voir **D-030**)*.
 | **R-012** | **Aucune règle sportive n'est écrite nulle part pour les clubs** : barème et départage n'existent que dans les commentaires du code. La ligne « Règlement » du dossier est un texte libre, et son champ **a été retiré de l'écran d'administration** — il n'existe donc aucun moyen de le remplir | P2 | CERTAIN | ✅ **VALIDÉ** — c'est l'exigence même posée par Romain dans **D-011** : « toutes les équipes doivent être informées de tout point de règlement ». Code **non écrit** | `AUDIT.md` §A.7 |
 | **R-013** | **Aucun état « match annulé »** : l'orage, le terrain condamné, la journée écourtée ne peuvent pas être enregistrés. Ce n'est pas un forfait — personne n'est fautif | P2 | CERTAIN | ✅ **VALIDÉ** — solution fixée par **D-015** (même mécanisme que le forfait, libellé distinct ; ne compte pour personne). **Sous réserve d'une règle FFR contraire — voir I-10.** Code **non écrit** | `AUDIT.md` §A.7 |
 
-| ⚡ **R-089** | **L'application ne sait pas gérer un tournoi INTERROMPU ou ANNULÉ.** L'orage, la foudre, le terrain condamné, l'incident de sécurité arrêtent **toute la journée d'un coup** — et rien dans l'application ne permet de le dire. Elle continue d'afficher un programme qui n'aura pas lieu : les matchs à venir restent saisissables, le match en cours n'est pas verrouillé, la page publique annonce des rencontres qui ne se joueront pas, et aucun bandeau n'explique quoi que ce soit aux familles. **Il n'existe aucun état au niveau du TOURNOI** — seulement, depuis D-015, un état au niveau du **match** | **P1** | CERTAIN | ✅ **SPÉCIFIÉ — D-030** *(décision de Romain, 2026-08-05)*. Implémentation en **ÉTAPE 3 volet ③**, **après** le lot ① des tests (D-025) et **après R-042**. Découpée en **2 niveaux** : ① l'état et sa visibilité · ② les scénarios de reprise *(touche `calculerPlanning`, bloqué par **I-21**)* | `DECISIONS.md` **D-030** |
+| ⚡ **R-089** | **L'application ne sait pas gérer un tournoi INTERROMPU ou ANNULÉ.** L'orage, la foudre, le terrain condamné, l'incident de sécurité arrêtent **toute la journée d'un coup** — et rien dans l'application ne permet de le dire. Elle continue d'afficher un programme qui n'aura pas lieu : les matchs à venir restent saisissables, le match en cours n'est pas verrouillé, la page publique annonce des rencontres qui ne se joueront pas, et aucun bandeau n'explique quoi que ce soit aux familles. **Il n'existe aucun état au niveau du TOURNOI** — seulement, depuis D-015, un état au niveau du **match** | **P1** | CERTAIN | ✅ **SPÉCIFIÉ — D-030** *(décision de Romain, 2026-08-05)*. Implémentation en **ÉTAPE 3 volet ③**, **après** le lot ① des tests (D-025) et **après R-042**. ✅ **PLANIFIÉ le 2026-08-05** — découpée en **2 niveaux**, **fiches de chantier écrites** : **C-002** *(l'état et sa visibilité)* et **C-003** *(les scénarios de reprise — touche `calculerPlanning`)*. ✅ **I-21 levée** : l'adaptation du format et de la durée est **autorisée**, sous réserve du **temps de jeu maximal** et de **l'interdiction des phases finales** | `DECISIONS.md` **D-030** · `PLAN.md` **§6** |
 
 > ⚡ **R-089 n'est PAS issu d'un audit — et il faut le dire, sinon le chiffre ment.** Les huit
 > domaines ont produit **88** problèmes et l'ÉTAPE 2 est close. **R-089 a été inscrit après cette
@@ -224,7 +224,7 @@ apporté par Romain le 2026-08-05, voir **D-030**)*.
 | Bloque | Question | État |
 |---|---|---|
 | R-001 | Quelle règle pour une équipe forfait ? | ✅ **Tranchée** — D-011 |
-| ⚡ **R-089** | Que fait-on d'un tournoi suspendu ou annulé pour force majeure ? | ✅ **Tranchée** — **D-030**, décision **apportée par Romain**. ⚠️ Une règle FFR primerait (**I-10 élargie**), et le niveau 2 attend **I-21** |
+| ⚡ **R-089** | Que fait-on d'un tournoi suspendu ou annulé pour force majeure ? | ✅ **Tranchée** — **D-030**, décision **apportée par Romain**. ✅ **I-21 répondue** : l'adaptation du format et de la durée est autorisée, sous deux réserves. ⚠️ **I-10** (élargie) reste ouverte et primerait |
 | R-005 | Quelle limite / quelle confirmation sur un score ? | ✅ **Tranchée** — D-012 |
 | R-003 | Comment ajuster le planning en cours de journée ? | ✅ **Tranchée** — D-013 |
 | R-004 | Quels critères de départage ajouter ? | ✅ **Tranchée** — D-014 |
@@ -248,16 +248,23 @@ porter. **Elles tiennent dans un seul courriel.**
 > classement imposée (points attribués, match à rejouer, match neutralisé, journée non
 > classée) ? »*
 
-> ⚡ **I-21** *(nouvelle, née de D-030)* — *« En cas de force majeure, **peut-on réduire le temps de
-> jeu** pour faire tenir les rencontres restantes — périodes raccourcies, deux périodes ramenées à
-> une ? Existe-t-il une **durée minimale** à respecter ? Et **combien de rencontres** faut-il avoir
-> jouées pour qu'un classement reste valable ? »*
+> ~~⚡ **I-21**~~ — ✅ **RÉPONDUE le 2026-08-05** : *« En cas de force majeure, peut-on réduire le
+> temps de jeu ? »* → **OUI. La reprise avec adaptation du format et de la durée est AUTORISÉE**,
+> sous **deux réserves** : ⛔ **le temps de jeu maximal** doit être respecté · ⛔ **les phases
+> finales sont interdites.** **Le niveau 2 de D-030 est débloqué** — fiche de chantier `PLAN.md`
+> **C-003**.
 
 **Destinataires suggérés** : Directeur EDR du Racing / Comité 92 — la même voie qui a résolu Q23.
 
 **Impact si une règle existe** : **I-10** primerait sur D-011 (forfait), D-015 (match annulé) **et
-D-030** (tournoi suspendu / annulé). **I-21 bloque le niveau 2 de D-030** — on ne propose pas de
-raccourcir un temps de jeu d'enfants sans savoir ce que la Fédération autorise.
+D-030** (tournoi suspendu / annulé).
+
+> ⚠️ **Ce que la réponse à I-21 a révélé au passage, et qui n'était pas la question posée** : la
+> réserve *« sous réserve du temps de jeu maximal »* suppose un garde-fou qui **n'existe pas
+> encore**. `plafond_joueur_min` est bien lu de `RefFFR_Temps` et **affiché** dans l'écran de
+> conformité avec la mention « (sécurité) », mais **rien dans `calculerPlanning` ne refuse un
+> planning qui le dépasse** *(constaté dans le code)*. Le respecter n'est donc pas un branchement :
+> c'est un **contrôle à construire**. Inscrit dans la fiche **C-003**.
 
 ### Domaine C — Sécurité (session 6)
 
