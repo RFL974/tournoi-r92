@@ -5,8 +5,8 @@
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
 **Dernière mise à jour** : 2026-08-05 (session 7, close)
-**Commit de référence** : session 7 sur la branche `claude/industrialisation-rgpd-donnees-n03yu8`,
-partie de `77f8ae7` (`main`). **Documentation uniquement — aucun fichier de l'application modifié.**
+**Commit de référence** : `6b663c8` sur **`main`** — la session 7 est **fusionnée** (PR #177).
+**Documentation uniquement — aucun fichier de l'application modifié**, aucun redéploiement requis.
 
 > ✅ **Tout le travail décrit ci-dessous est dans `main`.** Une session qui démarre depuis `main`
 > voit donc l'état réel du chantier. *(Ce n'était pas le cas au démarrage de la session 6, où une
