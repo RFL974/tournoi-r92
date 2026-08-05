@@ -4,7 +4,7 @@
 > Tant que l'audit (ÉTAPE 2) n'a pas eu lieu, le tableau des chantiers reste **vide** :
 > on ne planifie pas des travaux qu'on n'a pas encore constatés.
 
-**Dernière mise à jour** : 2026-08-04 (session 6)
+**Dernière mise à jour** : 2026-08-05 (session 7)
 
 ---
 
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
-| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaines A et C faits |
+| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaines A, C et B faits |
 | 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ⬜ À faire |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
@@ -49,8 +49,8 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 |---|---|---|---|
 | A | Métier / Product Owner | ✅ **FAIT** — 0 P0 · 5 P1 · 7 P2 · 1 P3 | 5 |
 | C | Sécurité | ✅ **FAIT** — **1 P0 (TESTÉ)** · 5 P1 · 6 P2 · 2 P3 | 6 |
-| B | RGPD / Protection des données | ⬜ **Prochain** | 7 |
-| D | QA / Tests | ⬜ Non commencé | — |
+| B | RGPD / Protection des données | ✅ **FAIT** — 0 P0 · 3 P1 · 9 P2 · 1 P3 · **3 décisions en attente** (D-018/019/020) | 7 |
+| D | QA / Tests | ⬜ **Prochain** | — |
 | E | UX / UI / Accessibilité | ⬜ Non commencé | — |
 | F | Performance | ⬜ Non commencé | — |
 | G | Architecture / Maintenabilité | ⬜ Non commencé | — |
@@ -95,7 +95,10 @@ Ce ne sont pas encore des chantiers, mais des **familles** qui se dessinent apr�
 |---|---|---|
 | **Filet de sécurité sur les gestes destructeurs** | R-015, R-016 | Même cause (protection tenue par la page, pas par le serveur), même correction, mêmes tests |
 | **Savoir qui a fait quoi** | R-017, R-023 | Les deux ajoutent une trace ; autant toucher l'`Historique` une seule fois |
-| **Ce qui sort de l'application** | R-021, R-018 | Tous deux dépendent du domaine B (RGPD), qui vient ensuite — à ne pas figer avant |
+| **Ce qui sort de l'application** | R-021, R-018, **R-032** | Le domaine B a parlé : R-021 (liste blanche sur les 4 onglets) referme aussi R-032, et R-018 (jetons permanents) est le pendant technique de R-030 (durées) |
+| **Dire aux gens ce qu'on fait de leurs données** | **R-028, R-029, R-038** | Même livrable : trois textes + une page « Vos données ». **Zéro code** pour R-028 et R-038 |
+| **Savoir jeter** | **R-030, R-031, R-033, R-034**, R-018 | Une seule décision (D-020) les met tous en ordre de marche ; même écran, même code de suppression, mêmes tests |
+| **Cadre écrit, hors code** | **R-036, R-039** | Ni l'un ni l'autre ne se corrige dans le dépôt : ce sont des questions au club et des documents |
 | **Le forfait, l'annulation et le classement** | R-001, R-004, R-013, R-012 | Domaine A : même code (classement, états d'un match), même besoin de tests préalables |
 
 ### Modèle de fiche de chantier

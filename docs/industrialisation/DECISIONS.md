@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 6, close)
+**Dernière mise à jour** : 2026-08-05 (session 7)
 
 ---
 
@@ -618,6 +618,130 @@ dit, c'est une vérification faite en production.
 ---
 
 ## DÉCISIONS EN ATTENTE DE ROMAIN
+
+### D-018 — Que dit-on aux personnes dont on garde les informations ?
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Débloque** | R-028 (P1) |
+
+**Problème posé**
+> Il n'existe, dans **aucune** page, **aucun** courriel et **aucune** ligne du serveur, une seule
+> phrase qui explique aux gens ce qu'on fait de leurs informations. J'ai cherché les mots *RGPD*,
+> *confidentialité*, *données personnelles*, *mentions légales*, *consentement* : **zéro
+> occurrence**. C'est l'obligation la plus élémentaire du RGPD, et la plus visible de l'extérieur.
+
+**Ce qu'il faut écrire — trois textes courts**
+> 1. un **paragraphe en bas du courriel d'invitation** : qui organise, ce qu'on garde (nom,
+>    prénom, email du contact ; effectifs déclarés), pourquoi, combien de temps, et à qui écrire
+>    pour être retiré ou corrigé ;
+> 2. **le même bloc en bas de la page de réponse**, là où le club saisit ses effectifs ;
+> 3. **une petite page « Vos données »** sur le site public, vers laquelle les deux autres
+>    pointent — elle sert aussi aux spectateurs (voir D-019).
+
+**Question à Romain**
+> **Valides-tu que j'en rédige une première version, que tu relis, corriges et fais valider par
+> le club ?**
+>
+> Je ne peux pas les écrire seul et les considérer comme acquis : **ils engagent l'association,
+> pas moi.** Et deux informations me manquent, que toi seul as : **qui est officiellement
+> responsable** (l'association Génération R92 ? le Racing 92 ?) et **quelle adresse de contact**
+> y faire figurer (voir R-038 et R-039).
+
+**Recommandation**
+> **Oui, et maintenant.** Le coût est de rédiger trois paragraphes. Après la première vague
+> d'invitations réelles, il faudra en plus **revenir vers des gens à qui on aura déjà écrit**.
+
+---
+
+### D-019 — Que fait-on de la mesure de visibilité des partenaires ?
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Débloque** | R-029 (P1) |
+
+**Problème posé**
+> La page publique des scores **écrit un identifiant sur le téléphone de chaque spectateur** (dans
+> la mémoire longue du navigateur), compte le temps d'affichage de chaque logo de partenaire par
+> tranche de 30 minutes, et **remonte tout cela au serveur**. Sans un mot d'explication, et sans
+> aucun moyen de refuser. **C'est le seul problème du domaine B qui tourne déjà en vrai** : le
+> classeur contient 109 relevés réels.
+>
+> La règle française ne parle pas seulement de données personnelles : **déposer quelque chose sur
+> l'appareil de quelqu'un demande son accord**, sauf si c'est strictement nécessaire au service
+> qu'il a demandé. Or le spectateur a demandé **les scores** — pas à prouver à un partenaire
+> commercial combien de temps son logo a été vu.
+
+**Trois voies**
+> **(a) Informer, sans bandeau** — une ligne visible en bas de la page publique, l'explication
+> dans la page « Vos données », et un moyen simple de dire non, mémorisé sur l'appareil.
+> Tout est conservé, rien n'est dégradé.
+>
+> **(b) Informer + demander l'accord** — un vrai bandeau « accepter / refuser » au premier
+> chargement. Position la plus sûre, mais **un bandeau devant les scores**, sur un terrain, sous
+> la pluie, en 30 secondes : c'est exactement ce que `CLAUDE.md` §11 interdit de dégrader. Et la
+> mesure devient incomplète.
+>
+> **(c) Alléger la mesure** — supprimer l'identifiant d'appareil et ne compter que des totaux. Le
+> sujet se referme presque entièrement, mais on perd la **portée** (combien de personnes
+> différentes) — le chiffre qu'un partenaire regarde en premier.
+
+**Recommandation**
+> **(a).** C'est le seul qui améliore réellement la situation **sans rien casser**. Il transforme
+> une collecte silencieuse en collecte annoncée et refusable. Je ne recommande pas d'arrêter la
+> mesure : elle est légitime, bien construite, et elle sert un besoin réel du club.
+
+**Calendrier**
+> **Avant le prochain tournoi réel**, et **avant** de présenter une fiche de visibilité à un
+> partenaire payant.
+
+---
+
+### D-020 — Combien de temps garde-t-on quoi ?
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Débloque** | R-030 (P1), R-031, R-033, R-034 |
+
+**Problème posé**
+> **Rien ne s'efface jamais tout seul.** Il n'existe dans le code aucune durée de conservation,
+> aucune purge, aucune date d'expiration. Le carnet d'adresses est même conservé **délibérément**
+> d'une édition à l'autre — ce qui est un choix défendable, mais **sans limite**, ce qui ne l'est
+> pas. Ce n'est pas un choix contestable : c'est un **choix qui n'a jamais été fait**.
+
+**Proposition de départ, à valider ou à corriger**
+
+| Donnée | Durée proposée | Pourquoi |
+|---|---|---|
+| Contacts des clubs (carnet) | **3 éditions** sans participation, puis suppression | Un club absent depuis 3 ans n'a plus de lien avec le tournoi |
+| Effectifs déclarés d'une édition | **Effacés à la réinitialisation** | Ils ne servent qu'à l'édition en cours (R-033) |
+| Contacts de la demande FFR (représentant, président, **médecin**, secours) | **1 an**, ou à chaque réinitialisation | Ce sont les dirigeants de l'année — et un contact de secours doit être **à jour** |
+| Champ libre « équipes étrangères » | **Effacé après envoi du dossier** | Seul endroit où des enfants sont nommés (R-034) |
+| Relevés de visibilité (`Mesures`) | **Effacés après remise de la fiche au partenaire** | Aucun usage ensuite |
+| Journal de saison (`Historique`) | **Conservé** | **Aucune donnée personnelle** — noms d'équipes et scores |
+| Copies de courriels (Gmail) | **1 an** | Nettoyage manuel de la boîte |
+
+**Question à Romain**
+> **Ce tableau te convient-il ?** Corrige les durées qui te paraissent fausses : c'est **ton**
+> métier qui décide, pas la technique. Une seule règle : chaque ligne doit avoir une durée, même
+> longue, même « conservé ».
+
+**Ce que cela déclenche — et ce que cela ne déclenche PAS**
+> **Écrire les durées ne touche à aucun code.** L'outillage (un écran qui signale ce qui est
+> périmé) vient **après**, à l'ÉTAPE 3, et avec une consigne ferme : **toute suppression reste
+> déclenchée par un humain.** Un outil qui efface tout seul est le type de code le plus dangereux
+> du projet — le domaine C l'a déjà montré avec la réinitialisation (R-016).
+
+---
 
 ### D-009 — Où atterrit la documentation quand une branche est imposée
 

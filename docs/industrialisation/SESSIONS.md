@@ -1164,3 +1164,107 @@ code. Tant que ce n'est pas fait, **R-019 reste P1**.
 explicite de Romain.
 
 ---
+
+---
+
+## SESSION 7 — 2026-08-05
+
+**Objectif** : ÉTAPE 2, **domaine B — RGPD / protection des données**. Auditer, classer, expliquer.
+**Ne rien modifier dans l'application.**
+
+**Branche** : `claude/industrialisation-rgpd-donnees-n03yu8`, partie de `77f8ae7` (`main`).
+
+### Ce qui a été fait
+
+Lecture ciblée du dépôt sous l'angle « données personnelles », à partir du volet C de la
+cartographie (session 4) qui avait déjà ouvert tous les tiroirs. **Aucun fichier de l'application
+n'a été modifié.**
+
+Vérifications menées, et ce qu'elles ont donné :
+
+| Ce qui a été cherché | Résultat |
+|---|---|
+| Les mots *RGPD*, *confidentialité*, *données personnelles*, *mentions légales*, *CNIL*, *consentement* dans toutes les pages, tout le serveur et tous les modèles de courriels | **Zéro occurrence** → R-028 |
+| Le fonctionnement réel de la mesure de visibilité des partenaires (`sponsors.js`, `tournoi.js`) | Identifiant d'appareil en mémoire longue, compteurs par tranche de 30 min, envois à 20 s / 10 min / fermeture de page → R-029 |
+| Les listes blanches publiques (`filtrerConfigPublique`) | Confirmées ; `contact_reponse_email` est bien public, `contact_reponse_tel` bien exclu → R-038 |
+| La colonne `arbitre` de l'onglet `Matchs` | ✅ C'est un **identifiant d'équipe**, jamais un nom de personne. La cartographie disait vrai |
+| Les ressources chargées depuis l'extérieur | Polices Google sur **7 pages** ; aucun autre appel externe → R-037 |
+| Le chemin de suppression d'un club (`supprimerClubInvite`) | Existe, mais **refusé** si une équipe du club figure dans un match → R-031 |
+| Le champ libre « équipes étrangères » (`Code.gs` 2490) | Confirmé : seul endroit où des enfants peuvent être nommés ; part dans le PDF fabriqué sur l'appareil → R-034 |
+| Les bibliothèques et fichiers non chargés | `docxtemplater` et `pizzip` ne sont chargés par **aucune page**, et le modèle `autorisation-droit-image-template.docx` est **orphelin** → R-036 |
+
+### La trouvaille de la session
+
+**Le modèle d'autorisation de droit à l'image existe dans le dépôt, bien écrit, et plus rien ne
+l'utilise.** Le `CHANGELOG` du 2026-08-03 est explicite : le bouton a été retiré **sur décision du
+club**. Ce n'est donc **pas un oubli du code**, et l'audit ne le présente pas comme tel — mais
+rien n'écrit ce qui l'a remplacé, alors que des photos d'enfants seront prises et publiées. C'est
+devenu **R-036** et le point inconnu **I-15** : une question à poser au club, pas un chantier.
+
+### Résultat
+
+**13 problèmes** — **0 P0**, **3 P1**, **9 P2**, **1 P3**. Total du chantier : **40 problèmes**.
+
+- **R-028** *(P1)* — personne n'est jamais informé de rien ;
+- **R-029** *(P1)* — la mesure des partenaires écrit sur le téléphone des spectateurs sans le
+  dire. **Seul problème du domaine qui tourne déjà en production** ;
+- **R-030** *(P1)* — aucune durée de conservation, aucune purge, nulle part ;
+- R-031 → R-039 *(P2)* · R-040 *(P3)*.
+
+**Pourquoi aucun P0** — et c'est important de le dire, sinon le chiffre ne veut rien dire : un P0
+supposerait une exposition **grave** de données personnelles. Or le carnet d'adresses est exclu
+des données publiques, il exige la clé admin, le classeur est privé (I-06), et **il ne contient
+aujourd'hui aucune donnée de tiers** (I-03, I-04).
+
+### Trois décisions ouvertes
+
+**D-018** (que dit-on aux gens ?), **D-019** (que fait-on de la mesure des partenaires ?),
+**D-020** (combien de temps garde-t-on quoi ?). **Aucune ne demande d'écrire du code.** Toutes
+les trois doivent être prises **avant la première invitation réelle**.
+
+### Trois inconnues nouvelles
+
+**I-14** (qui est responsable, et le classeur doit-il rester dans un compte Google individuel ?),
+**I-15** (le droit à l'image est-il géré ailleurs ?), **I-16** (le site vitrine porte-t-il déjà
+des mentions légales ?).
+
+### Ce qui n'a PAS été fait, et pourquoi
+
+- ❌ **Aucune conformité n'est prononcée** — `CLAUDE.md` §6.B l'interdit, et c'est une bonne règle ;
+- ❌ **Rien n'a été exécuté** : que l'email d'un club ne sorte jamais est **écrit dans le code**,
+  ce n'est pas **prouvé**. Statut **NON VÉRIFIÉ** → domaine D ;
+- ❌ **Le contenu réel du classeur n'a pas été lu** — impossible depuis le dépôt ;
+- ❌ **Le site vitrine `boutique-r92` n'a pas été audité** (autre dépôt, D-005 en attente) — or
+  c'est lui qui accueillerait la page « Vos données ».
+
+### Prochaine session recommandée
+
+**Session 8 — ÉTAPE 2, domaine D : les tests (QA).** C'est l'ordre de D-010, et c'est le bon
+moment : trois domaines ont produit **40 problèmes**, et pas un seul n'a pu être prouvé par un
+test lancé depuis ici (**M-03**). Avant de corriger quoi que ce soit à l'ÉTAPE 5, il faut savoir
+comment on prouvera que rien n'est cassé.
+
+**Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+## SESSION 7 — CLÔTURE — 2026-08-05
+
+**Objectif de la session : atteint.** Le domaine B est audité, classé et expliqué.
+
+**Fichiers modifiés** — **documentation uniquement** :
+
+| Fichier | Ce qui a changé |
+|---|---|
+| `docs/industrialisation/AUDIT.md` | Section **DOMAINE B** complète (B.0 → B.9) |
+| `docs/industrialisation/RISQUES.md` | 13 problèmes R-028 → R-040, tableau de synthèse, « ce qui s'est révélé sain (domaine B) » |
+| `docs/industrialisation/DECISIONS.md` | **D-018**, **D-019**, **D-020** en attente |
+| `docs/industrialisation/ETAT.md` | Avancement, prochaine étape, problèmes, décisions, I-14 → I-16 |
+| `docs/industrialisation/PLAN.md` | Domaine B ✅, familles de chantiers complétées |
+| `docs/industrialisation/SESSIONS.md` | Cette fiche |
+
+**Aucun fichier de l'application n'a été modifié.** Aucun redéploiement nécessaire.
+
+**Rappel de méthode** : rien n'est corrigé. Les 13 problèmes sont au statut **IDENTIFIÉ**, et les
+trois décisions attendent Romain. Le passage à **EN COURS** n'aura pas lieu avant la fin des 8
+audits et la validation de l'ÉTAPE 4 (`CLAUDE.md` §7).

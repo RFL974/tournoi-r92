@@ -7,13 +7,13 @@
 > Le registre des problèmes (avec leur statut de correction) vit dans `RISQUES.md`.
 > Ce document-ci **explique** ; `RISQUES.md` **suit**.
 
-**Dernière mise à jour** : 2026-08-04 (session 6, close)
+**Dernière mise à jour** : 2026-08-05 (session 7)
 
 | Domaine | Nom | Statut |
 |---|---|---|
 | **A** | **Métier / Product Owner** | ✅ **FAIT** (session 5) |
 | **C** | **Sécurité** | ✅ **FAIT** (session 6) |
-| B | RGPD / Protection des données | ⬜ À faire |
+| **B** | **RGPD / Protection des données** | ✅ **FAIT** (session 7) |
 | D | QA / Tests | ⬜ À faire |
 | E | UX / UI / Accessibilité | ⬜ À faire |
 | F | Performance | ⬜ À faire |
@@ -1626,3 +1626,734 @@ domaine B, et le tester sérieusement.** Une expiration mal calculée couperait 
 *avant* le tournoi — un remède pire que le mal.
 
 ---
+
+# DOMAINE B — RGPD / PROTECTION DES DONNÉES
+
+> **La question posée** : quelles informations sur des **personnes** cette application recueille,
+> garde, montre et envoie — et que faudrait-il mettre en place pour que ce soit fait proprement,
+> **avant** que de vraies coordonnées y entrent ? **Aucun fichier de l'application n'a été
+> modifié.**
+>
+> ⚠️ **Ce que ce domaine ne fera jamais** (`CLAUDE.md` §6.B) : **prononcer une conformité
+> juridique**. Je ne suis pas juriste, et personne ici ne peut dire « l'application est conforme
+> au RGPD ». Ce que je peux faire, et ce que je fais ci-dessous : **décrire les risques** et
+> **proposer les mesures techniques** qui les réduisent.
+
+**Audité en session 7, le 2026-08-05.**
+
+> 📖 **Un mot de vocabulaire, une fois pour toutes.**
+> **RGPD** = *Règlement Général sur la Protection des Données*. C'est la loi européenne qui dit
+> ce qu'on a le droit de faire avec les informations concernant des personnes. Son idée tient en
+> une phrase : **on ne collecte que ce dont on a besoin, on dit aux gens ce qu'on en fait, et on
+> ne les garde pas pour toujours.**
+>
+> **Donnée personnelle** = toute information qui permet de reconnaître quelqu'un : un nom, un
+> email, un téléphone. Un **nombre** (« 12 joueurs ») n'en est pas une : il ne désigne personne.
+
+---
+
+## B.0 — Le verdict en une phrase
+
+**L'application collecte remarquablement peu, et elle protège bien ce qu'elle collecte — mais
+elle ne dit rien à personne, et elle ne jette jamais rien.** Le point le plus important d'abord,
+parce qu'il est excellent et qu'il n'était pas gagné d'avance : **aucun enfant n'est identifié**.
+Pas un nom, pas une date de naissance, pas un numéro de licence. Les mineurs n'existent dans ce
+logiciel que sous forme de **nombres**. C'est la meilleure protection qui soit, et c'est un choix
+de conception, pas un hasard.
+
+Ce qui manque est d'un autre ordre, et c'est du **cadre**, pas du code : **il n'existe nulle
+part, dans aucune page et dans aucun courriel, une seule phrase qui explique aux personnes ce
+qu'on fait de leurs informations** — et **rien ne s'efface jamais tout seul**. À quoi s'ajoute
+une chose qui, elle, tourne **déjà en production aujourd'hui** : la mesure de visibilité des
+partenaires **écrit sur le téléphone de chaque spectateur** et **remonte au serveur** sans que
+personne n'en soit informé ni n'ait le choix.
+
+**Aucun problème P0.** Et il faut dire pourquoi, sinon le chiffre ne veut rien dire : un P0
+supposerait une **exposition grave** de données personnelles. Or le carnet d'adresses est
+**exclu** des données publiques, il exige la clé admin, le classeur est **privé** (I-06), et
+surtout — aujourd'hui — **il n'y a aucune donnée de tiers dedans** (I-03, I-04). **Trois
+problèmes P1**, tous à régler **avant la première invitation réelle**. C'est exactement la
+fenêtre dans laquelle on se trouve.
+
+---
+
+## B.1 — Ce qui est solide (et qu'il ne faut surtout pas casser)
+
+Cette liste n'est pas de la politesse. En protection des données, la plupart des projets amateurs
+collectent **tout ce qu'ils peuvent**, « au cas où ». Ici, c'est l'inverse, et c'est visible dans
+le code.
+
+1. **Aucun enfant n'est identifié. Nulle part.** Aucune colonne de nom de joueur, de prénom, de
+   date de naissance ou de licence dans tout le dépôt. Les mineurs sont **trois nombres** :
+   combien par équipe, combien par club, combien d'éducateurs. *(CERTAIN — recherche sur
+   l'ensemble du dépôt, confirmée en session 4.)* **C'est la protection la plus forte de toute
+   l'application** : ce qu'on ne collecte pas ne peut ni fuiter, ni être réclamé, ni être perdu.
+2. **La règle « rien ne sort sauf ce qui est nommé sur une liste »**, appliquée aux réglages et
+   aux partenaires, avec **trois listes selon l'interlocuteur** (public / vitrine / club) et la
+   plus fermée par défaut. Un réglage ajouté demain est **privé d'office**.
+3. **L'email d'un club n'est jamais renvoyé à personne** — pas même au club lui-même. Le code
+   l'écrit noir sur blanc.
+4. **Un envoi groupé envoie un courriel par club**, jamais un courriel commun. Les clubs ne
+   découvrent donc pas les adresses les uns des autres. *(C'est l'erreur la plus banale du monde
+   associatif : mettre 40 adresses en copie visible. Elle est évitée ici.)*
+5. **Le destinataire d'un courriel est toujours relu dans le classeur**, jamais fourni par le
+   navigateur.
+6. **Le téléphone du contact d'invitation a été volontairement retiré de la page publique**, avec
+   une raison écrite : *« le portable d'un bénévole n'a rien à faire sur une page mise en
+   avant »*. C'est exactement le bon réflexe, et il a été pris **spontanément**.
+7. **Le carnet d'adresses est doublement protégé** : exclu des données publiques, **et** derrière
+   la clé admin — dont la lecture passe volontairement par le chemin d'écriture pour que la clé
+   ne traîne pas dans l'historique du navigateur.
+8. **Les liens personnels des clubs sont retirés de la barre d'adresse** dès l'ouverture de la
+   page, et rangés dans une mémoire vidée à la fermeture de l'onglet. Conséquence directe : ils
+   ne partent pas dans une impression, ni dans une capture d'écran.
+9. **Aucun cookie, aucun traceur tiers, aucun outil de mesure d'audience extérieur.** Pas de
+   Google Analytics, pas de bouton Facebook, rien. *(CERTAIN.)*
+10. **Les documents (PDF de la feuille de fin de journée, dossier club) sont fabriqués
+    entièrement sur l'appareil**, sans qu'aucune donnée ne parte vers un service extérieur.
+11. **Le classeur est privé** (vérifié, I-06) et **le relais Cloudflare est éteint** — et même
+    rallumé, il ne recopierait que l'instantané public, qui ne contient aucune donnée personnelle.
+12. **La documentation du projet signale déjà la sensibilité du carnet d'adresses**
+    (`docs/structure-google-sheet.md` : *« Cet onglet contient des emails de contact »*).
+
+> **À retenir** : la **collecte** est saine et le **cloisonnement** est bon. Ce qui suit ne
+> conteste pas cela. Ce qui manque, c'est **le mode d'emploi** : dire aux gens, et savoir jeter.
+
+---
+
+## B.2 — R-028 · Personne n'est jamais informé de rien *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+J'ai cherché dans **toutes** les pages, **tout** le code du serveur et **tous** les modèles de
+courriels les mots : *RGPD*, *confidentialité*, *données personnelles*, *mentions légales*,
+*CNIL*, *consentement*.
+
+**Résultat : zéro occurrence.** *(CERTAIN.)*
+
+Il n'existe donc, nulle part dans l'application :
+
+- aucune page qui explique **qui** est responsable de ces informations ;
+- aucune phrase, dans le courriel d'invitation, qui dise au contact du club **pourquoi** on
+  détient son nom, son prénom et son email, ni **combien de temps** ;
+- aucune indication, sur la page où le club déclare ses effectifs, de ce que deviennent les
+  chiffres qu'il saisit ;
+- aucune mention de la façon dont on demande à être retiré du carnet d'adresses.
+
+### 2. Pourquoi c'est important
+
+C'est **l'obligation la plus élémentaire** du RGPD, et c'est aussi la plus facile à constater de
+l'extérieur : au moment où on recueille des informations sur quelqu'un, on doit lui dire ce qu'on
+en fait. Pas un contrat, pas un texte de juriste : **quelques lignes honnêtes**.
+
+Ce n'est pas une formalité vide. C'est ce qui fait la différence entre *« le Racing garde mon
+email »* et *« le Racing garde mon email, je sais pourquoi, et je sais à qui écrire pour qu'il
+l'efface »*. Le premier crée de la méfiance ; le second n'en crée aucune.
+
+Et il y a un aspect très concret : le jour où un club invité demandera *« qu'est-ce que vous avez
+sur moi ? »*, il n'existe aujourd'hui **aucune réponse écrite** à lui donner. Il faudra
+l'improviser.
+
+### 3. Exemple concret
+
+Le référent de Clamart reçoit l'invitation. Il voit son prénom dans la formule de politesse. Il
+se demande — légitimement — *« comment ont-ils mon adresse ? »* Réponse réelle : Romain l'a saisie
+à la main dans le carnet, parce qu'il l'avait par ailleurs. C'est parfaitement normal et
+parfaitement légal. **Mais rien ne le lui dit**, et la seule façon de le savoir est de
+téléphoner.
+
+Un an plus tard, ce référent a quitté le club. Son adresse est **toujours** dans le carnet — le
+code le dit explicitement : *« c'est un carnet d'adresses réutilisable d'une édition à l'autre »*.
+Il recevra l'invitation de l'année suivante. Il n'a jamais été informé, et il n'a jamais eu de
+moyen simple de dire non.
+
+### 4. Ce que je propose
+
+**Trois textes courts, écrits une fois, et c'est réglé.** Aucune refonte, aucun juriste.
+
+1. **Un paragraphe dans le courriel d'invitation** (5 à 8 lignes) : qui organise, quelles
+   informations sont conservées (nom, prénom, email du contact ; effectifs déclarés), pourquoi
+   (organiser le tournoi et inviter les éditions suivantes), combien de temps, et **à quelle
+   adresse écrire** pour être retiré ou corrigé.
+2. **Le même bloc, en bas de la page de réponse** — l'endroit exact où le club saisit ses
+   effectifs.
+3. **Une petite page « Vos données » sur le site public**, vers laquelle les deux autres
+   pointent. Elle sert aussi aux spectateurs (voir R-029).
+
+### 5. Impact
+
+| | |
+|---|---|
+| **Ce que ça change dans l'application** | Rien de fonctionnel. Du **texte** ajouté à un modèle de courriel, à une page, et une page nouvelle |
+| **Risques** | **Très faibles.** Le seul point d'attention : le courriel d'invitation s'allonge un peu. À placer **en bas**, pas en tête, pour ne pas noyer le message principal |
+| **Bénéfices** | L'obligation la plus visible est remplie ; un club qui pose la question a une réponse écrite ; et le jour où l'outil servira plusieurs clubs, la base est déjà là |
+| **Fonctionnalités concernées** | Envoi des invitations, page de réponse, site public. **Aucune règle sportive, aucun calcul, aucun score** |
+
+### 6. Ce que je conseille
+
+**À corriger avant la première invitation réelle** — c'est-à-dire **maintenant**, pendant que le
+carnet ne contient que ton adresse et celle de ton épouse. Le coût est de **rédiger trois
+paragraphes**. Après la première vague d'invitations, il faudra en plus recontacter les gens.
+
+> ⚠️ **Ce que je ne peux pas faire** : rédiger ces textes **à ta place et seul**. Ils engagent
+> l'association, pas moi. Je peux en proposer une **première version** que tu relis, corriges et
+> fais valider par le club — c'est ce que je recommande, et c'est le sujet de la **décision
+> D-018**.
+
+---
+
+## B.3 — R-029 · La mesure des partenaires écrit sur le téléphone des spectateurs, sans le leur dire *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+C'est le seul problème de ce domaine qui **tourne déjà en vrai** : le classeur contient
+aujourd'hui **109 relevés réels** remontés par des téléphones de spectateurs.
+
+Voici ce que fait la page publique des scores, en détail *(CERTAIN, `frontend/js/sponsors.js` et
+`frontend/js/tournoi.js` ligne 297)* :
+
+1. elle **tire un numéro au hasard** pour l'appareil, et le **range dans la mémoire longue du
+   navigateur** — celle qui survit à la fermeture de la page ;
+2. elle compte, pour chaque partenaire, **combien de temps son logo a été à l'écran**, combien de
+   fois il est apparu, combien de clics il a reçus, **par tranche de 30 minutes** ;
+3. elle **envoie tout cela au serveur** : 20 secondes après l'arrivée, puis toutes les 10
+   minutes, puis **au moment où on quitte la page** (avec un mécanisme spécial pour que la
+   requête parte même si l'onglet se ferme) ;
+4. le serveur range chaque relevé dans l'onglet `Mesures`, et **rien ne les efface**.
+
+Il n'y a **aucune information affichée**, **aucun choix proposé**, et **aucun moyen de refuser**.
+
+### 2. Pourquoi c'est important
+
+Il faut être précis ici, parce que c'est le point le plus technique du domaine — et aussi le plus
+solide juridiquement.
+
+**La règle française ne parle pas seulement de « données personnelles ».** Elle dit, en substance :
+**déposer ou lire quelque chose sur l'appareil de quelqu'un exige son accord**, sauf si c'est
+*strictement nécessaire au service qu'il a demandé*.
+
+Or :
+
+- le spectateur a demandé **une chose** : voir les scores ;
+- l'identifiant d'appareil et les compteurs d'exposition ne servent **pas** à lui montrer les
+  scores. Ils servent à **prouver à un partenaire commercial** combien de personnes ont vu son
+  logo et pendant combien de temps.
+
+Ce n'est donc pas « strictement nécessaire au service demandé ». Il existe bien une tolérance
+pour la **mesure d'audience** — compter ses visiteurs pour soi —, mais elle est **étroite**, et
+le fait que le résultat serve à **rendre des comptes à un tiers commercial** la fragilise
+sérieusement.
+
+> **Niveau de certitude, et je pèse mes mots** : le **fonctionnement** est **CERTAIN** (je l'ai
+> lu ligne à ligne). L'**appréciation juridique** est **PROBABLE**, pas certaine — et
+> conformément à `CLAUDE.md` §6.B, **je ne certifie rien**. Ce que je peux dire sans hésiter :
+> c'est **le point de toute l'application qu'un tiers attentif remarquerait en premier**, parce
+> qu'il concerne **des milliers de personnes** au lieu de quelques dizaines de contacts de clubs.
+
+### 3. Exemple concret
+
+Un parent est au bord du terrain, il ouvre la page des scores sur son téléphone pour suivre la
+poule de son fils. Sans qu'aucun message n'apparaisse :
+
+- un numéro est écrit dans la mémoire de son navigateur ;
+- pendant les 3 heures de la journée, chaque fois qu'un logo de partenaire est à l'écran, le
+  temps est compté ;
+- une quinzaine de relevés partent vers le classeur ;
+- à la fin, la fiche de visibilité annonce au partenaire : *« 312 appareils, 41 minutes
+  d'exposition moyenne »*.
+
+Rien de tout cela n'est malveillant — c'est même **très bien fait techniquement** : identifiants
+aléatoires, remis à zéro chaque jour, aucun suivi d'un site à l'autre, tout revalidé par le
+serveur. **Le problème n'est pas ce qui est fait. C'est que personne ne l'a dit, et que personne
+n'a pu dire non.**
+
+### 4. Ce que je propose
+
+Trois voies possibles. **Je recommande la première** — c'est le sujet de la **décision D-019**.
+
+| | Ce que c'est | Ce qu'on garde | Ce qu'on perd |
+|---|---|---|---|
+| **(a) Informer, sans bandeau** *(recommandé)* | Une ligne visible en bas de la page publique (« cette page compte l'affichage des logos de nos partenaires — [en savoir plus] »), et l'explication dans la page « Vos données » de R-028. **Plus** un moyen simple de dire non, mémorisé sur l'appareil | Toute la mesure actuelle | Rien de fonctionnel. Reste **PROBABLE** que ce ne soit pas suffisant si l'on considère qu'un accord préalable est requis |
+| **(b) Informer + demander l'accord** | Un vrai bandeau au premier chargement : « accepter / refuser ». Sans accord, aucune écriture sur l'appareil et aucun relevé | La position la plus sûre | **Un bandeau devant les scores** — sur un terrain, sous la pluie, en 30 secondes. C'est exactement ce que `CLAUDE.md` §11 interdit de dégrader : *« une amélioration technique qui dégrade l'expérience métier n'est pas une amélioration »*. Et la mesure devient **incomplète** : les refus ne comptent plus |
+| **(c) Alléger la mesure** | Supprimer l'identifiant d'appareil rangé dans la mémoire longue ; ne compter que des totaux, sans « portée » (= combien de personnes différentes) | Aucune écriture durable sur l'appareil, donc le sujet se referme presque entièrement | La **portée** — le chiffre qu'un partenaire regarde en premier. C'est perdre l'argument commercial principal |
+
+**Pourquoi (a)** : c'est le seul qui améliore réellement la situation **sans rien casser**. Il
+transforme une collecte silencieuse en collecte annoncée, et il donne un moyen de refuser à qui
+le demande. (b) protège mieux mais abîme l'usage terrain ; (c) protège mieux encore mais retire
+au dispositif partenaires sa valeur.
+
+### 5. Impact
+
+| | |
+|---|---|
+| **Ce que ça change** | Option (a) : une ligne de texte en bas de la page publique, un interrupteur « ne pas compter » mémorisé sur l'appareil, un paragraphe dans la page « Vos données ». **Aucune modification du serveur** |
+| **Risques** | Faibles. Le point d'attention est l'**affichage sur téléphone** : cette ligne ne doit pas pousser les scores vers le bas |
+| **Bénéfices** | Le seul traitement qui touche **des milliers de personnes** devient annoncé et refusable. C'est le meilleur rapport effort/risque de tout le domaine B |
+| **Fonctionnalités concernées** | Page publique des scores, fiche de visibilité des partenaires. **Aucun score, aucun classement** |
+
+### 6. Ce que je conseille
+
+**À traiter avant le prochain tournoi réel**, et **avant** de présenter la fiche de visibilité à
+un partenaire payant. C'est le seul problème de ce domaine qui produit **déjà** des données, tous
+les jours, sur de vraies personnes.
+
+> ⚠️ **Précision qui compte** : je ne dis pas d'arrêter la mesure. Elle est **légitime**, elle
+> est **bien construite**, et elle sert un besoin réel du club. Je dis qu'elle doit être
+> **annoncée**, et qu'on doit pouvoir la refuser.
+
+---
+
+## B.4 — R-030 · Rien ne s'efface jamais, et c'est écrit nulle part *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+**Il n'existe, dans tout le code, aucune durée de conservation, aucune purge automatique, aucune
+date d'expiration.** *(CERTAIN — confirmé en session 4, §C.9.)*
+
+Toute suppression est un **geste manuel**. Concrètement :
+
+| Ce qui s'accumule | Ce qui pourrait l'effacer | Automatique ? |
+|---|---|---|
+| Le **carnet d'adresses** (nom, prénom, email des contacts de clubs) | Suppression d'un club, un par un | ❌ Non — et la réinitialisation le **conserve volontairement** |
+| Les **copies de courriels** dans la boîte Gmail | Rien | ❌ Non |
+| Les **contacts de la demande d'autorisation FFR** (représentant, président, médecin, secours) | Rien — la réinitialisation ne les touche pas | ❌ Non |
+| Les **effectifs déclarés équipe par équipe** des éditions passées | Rien — la réinitialisation les conserve | ❌ Non |
+| Les **relevés de visibilité** (`Mesures`) | Un bouton « repartir de zéro », à la main | ❌ Non |
+| Le **journal de saison** (`Historique`) | Rien — conservé délibérément | ❌ Non |
+
+### 2. Pourquoi c'est important
+
+C'est le **deuxième pilier** du RGPD, après l'information : on ne garde pas les informations sur
+les gens **indéfiniment**. On les garde **le temps qu'il faut**, puis on les supprime.
+
+Et ce n'est pas qu'une question de loi — c'est aussi une question de **risque**. Chaque année qui
+passe ajoute des adresses au carnet et n'en retire aucune. Dans cinq ans, il contiendra les
+contacts de personnes qui ne sont plus dans leur club depuis longtemps, qui ne s'attendent plus à
+recevoir quoi que ce soit, et dont plus personne ne sait pourquoi elles sont là. **Le jour d'une
+fuite, ce sont ces adresses-là qui font le plus de dégâts** : les gens ne comprennent pas
+pourquoi on les avait encore.
+
+> **L'image** : c'est une armoire à laquelle on ajoute un dossier par an et dont on n'a jamais
+> ouvert le tiroir du bas. Le jour où elle prend l'eau, ce qu'on perd, ce n'est pas l'année en
+> cours — c'est dix ans d'archives dont personne ne se souvenait.
+
+### 3. Exemple concret
+
+Le référent de Sèvres est saisi dans le carnet en 2026. Il quitte son club en 2027. En 2031,
+l'application lui envoie toujours l'invitation annuelle. Il répond, agacé : *« retirez-moi de
+votre liste »*. Aujourd'hui, la seule façon de le faire est que **Romain** ouvre l'écran
+d'administration, retrouve la ligne, la supprime — et pense en plus à supprimer les copies dans
+sa boîte Gmail, sans quoi l'adresse y reste (**C-07**).
+
+Rien de tout cela n'est impossible. Mais **rien de tout cela n'est écrit**, donc rien ne garantit
+que ce sera fait, ni par Romain, ni par la personne qui reprendra le tournoi après lui.
+
+### 4. Ce que je propose
+
+**Deux choses, dans cet ordre.**
+
+**a) Écrire les durées.** C'est une décision, pas du code — c'est la **décision D-020**. Une
+proposition de départ, à ajuster :
+
+| Donnée | Durée proposée | Pourquoi |
+|---|---|---|
+| Contacts des clubs (carnet) | **3 éditions**, puis suppression si aucun contact entre-temps | Un club qui n'a pas participé depuis 3 ans n'a plus de lien avec le tournoi |
+| Effectifs déclarés d'une édition | **Effacés à la réinitialisation** | Ils ne servent qu'à l'édition en cours (voir R-033) |
+| Contacts de la demande FFR | **1 an**, ou à chaque réinitialisation | Ce sont les dirigeants de l'année |
+| Relevés de visibilité (`Mesures`) | **Effacés après remise de la fiche au partenaire** | Ils n'ont plus d'usage ensuite |
+| Journal de saison (`Historique`) | **Conservé** | Il ne contient **aucune donnée personnelle** — noms d'équipes et scores. Rien à purger |
+| Copies de courriels (Gmail) | **1 an** | Nettoyage manuel de la boîte |
+
+**b) Outiller ce qui peut l'être.** Une fois les durées écrites, une partie devient automatisable
+— un écran qui signale *« 4 contacts n'ont pas participé depuis 3 éditions : les retirer ? »* est
+bien plus efficace qu'une consigne que personne ne relit. **Mais l'outil vient après la
+décision**, jamais avant.
+
+### 5. Impact
+
+| | |
+|---|---|
+| **Ce que ça change** | **Étape (a) : rien du tout dans l'application.** C'est un texte. Étape (b), plus tard : un écran d'administration supplémentaire |
+| **Risques** | Le vrai risque est à l'étape (b) : **une purge automatique qui se déclenche toute seule peut effacer ce qu'il ne fallait pas.** D'où ma recommandation ferme : **toute suppression reste déclenchée par un humain**, l'application se contentant de **signaler** ce qui est périmé |
+| **Bénéfices** | Le carnet cesse de grossir indéfiniment ; une demande de retrait a une réponse ; et la personne qui reprendra le tournoi trouve une règle écrite |
+| **Fonctionnalités concernées** | Carnet d'adresses, réinitialisation, écran Partenaires. **Aucune fonctionnalité sportive** |
+
+### 6. Ce que je conseille
+
+**Écrire les durées maintenant** (étape a) : c'est gratuit, ça ne touche à rien, et c'est le
+préalable de tout le reste. **Reporter l'outillage** (étape b) à l'ÉTAPE 3 : il faudra le tester
+sérieusement, parce qu'un outil qui efface est le type de code le plus dangereux du projet — le
+domaine C l'a déjà montré avec la réinitialisation (R-016).
+
+---
+
+## B.5 — Les problèmes P2 (utiles, non bloquants)
+
+### R-031 · Effacer quelqu'un est possible, mais partiel et parfois bloqué *(P2)*
+
+**Ce que j'ai trouvé.** L'application sait supprimer un club du carnet (`supprimerClubInvite`).
+Deux limites, toutes deux constatées dans le code :
+
+1. **La suppression est refusée** si l'une des équipes du club apparaît déjà dans un match — le
+   message dit alors de retirer d'abord ces équipes, ou de régénérer le planning. Autrement dit :
+   **pendant tout un tournoi, on ne peut pas retirer un contact** sans casser le planning.
+2. **Elle ne touche que le classeur.** Les copies des courriels dans Gmail restent (C-07), et il
+   n'existe **aucun moyen d'effacer seulement le contact** en gardant le club.
+
+**Pourquoi ça compte.** Le droit d'être effacé est l'un des plus connus, et c'est celui qu'on
+vous demandera d'exercer en premier. Aujourd'hui la réponse est *« oui, mais à la main, en
+plusieurs endroits, et pas tout de suite »*.
+
+**Ce que je propose.** Séparer deux gestes qui n'ont rien à voir : **retirer un club du tournoi**
+(qui touche aux équipes, aux poules, aux matchs — donc légitimement bloquant) et **effacer les
+coordonnées d'un contact** (nom, prénom, email), qui ne devrait **jamais** être bloqué par un
+planning. Le second est quelques lignes : vider trois cases.
+
+**Difficulté** : faible. **À traiter avec** R-030 (les durées) : même écran, même famille.
+
+---
+
+### R-032 · Les effectifs d'enfants sont publics, et tout ce qu'on ajoutera demain le sera aussi *(P2)*
+
+**Ce que j'ai trouvé.** Les colonnes `nb_joueurs` et `nb_educateurs` de l'onglet `Equipes` sortent
+**sans aucune clé** : n'importe qui peut lire *« MASSY-1 : 12 joueurs, 2 éducateurs »*
+*(CERTAIN)*. Ce sont des **nombres**, pas des personnes : le risque direct est **très faible**.
+
+**Le vrai sujet est ailleurs**, et il est déjà connu du domaine C sous la référence **R-021** :
+ces quatre onglets (`Equipes`, `Poules`, `Matchs`, `Historique`) sont servis **en entier, toutes
+colonnes comprises**, sur la règle **inverse** du reste de l'application. Une colonne ajoutée
+demain — « nom du capitaine », « téléphone de l'éducateur » — serait publique **sans que personne
+ne l'ait décidé**.
+
+**Pourquoi ça compte pour ce domaine.** C'est la différence entre *« aujourd'hui il n'y a rien de
+personnel »* et *« il ne peut rien y avoir de personnel »*. Aujourd'hui, seule la première phrase
+est vraie. C'est le principe même de **protection dès la conception** : mettre la barrière avant
+d'en avoir besoin, pas après.
+
+**Ce que je propose.** Traiter **R-021** (une liste blanche sur ces quatre onglets, comme partout
+ailleurs) et considérer R-032 comme réglé du même coup. Sur les effectifs eux-mêmes : les laisser
+publics est défendable — un tournoi affiche ses équipes — mais c'est une **décision à prendre**,
+pas un état de fait à subir.
+
+**Difficulté** : faible. **À traiter avec R-021.**
+
+---
+
+### R-033 · La réinitialisation garde des choses sans que ce soit expliqué *(P2)*
+
+**Ce que j'ai trouvé** *(CERTAIN, points C-03 et C-04 de la cartographie)*. La réinitialisation
+efface beaucoup, et documente ce qu'elle conserve — sauf deux familles :
+
+- **les effectifs déclarés équipe par équipe** (`detail_effectifs`) et le total d'éducateurs
+  restent, alors que le total de joueurs, lui, est bien effacé. C'est **incohérent** : soit les
+  effectifs d'une édition passée servent encore, soit ils doivent partir — mais pas l'un et
+  l'autre ;
+- **aucun champ de la demande d'autorisation FFR n'est effacé** : noms, téléphones et emails du
+  **représentant**, du **président**, du **médecin** et de l'**antenne de secours** traversent
+  toutes les éditions.
+
+**Pourquoi ça compte.** Le second point est le plus sérieux : ce sont des **données personnelles
+d'adultes identifiés**, dont un **médecin**, conservées sans limite et sans raison écrite. C'est
+peut-être délibéré (mêmes dirigeants d'une année sur l'autre) — mais **ce n'est écrit nulle
+part**, alors que les autres conservations, elles, le sont.
+
+**Ce que je propose.** Trancher chaque cas dans D-020, puis aligner le code sur la décision. Ma
+recommandation : effacer `detail_effectifs` avec le reste de l'édition, et remettre à zéro les
+contacts FFR à chaque réinitialisation — les redemander une fois par an coûte cinq minutes et
+garantit qu'ils sont **à jour**, ce qui compte pour un contact de secours.
+
+**Difficulté** : très faible (quelques lignes dans la fonction de réinitialisation).
+
+---
+
+### R-034 · Un champ libre invite à saisir les noms et dates de naissance d'enfants *(P2 — deviendrait P1 s'il servait)*
+
+**Ce que j'ai trouvé** *(CERTAIN, `Code.gs` ligne 2490)*. Un champ, et un seul, invite
+explicitement à saisir des identités de mineurs :
+
+> **« Liste des équipes étrangères (noms, prénoms, dates de naissance) »**
+
+Il n'apparaît que si l'organisateur répond « oui » à *« équipes étrangères »*, il est protégé par
+la clé admin, il ne sort jamais en public — et son contenu part dans le **PDF de la demande
+d'autorisation**, fabriqué sur l'ordinateur de l'organisateur puis téléchargé.
+
+**Pourquoi ça compte.** C'est le **seul endroit de toute l'application** où des enfants peuvent
+cesser d'être des nombres pour devenir des personnes nommées. Or ce champ n'a **aucun** des
+garde-fous du reste : pas de durée de conservation, pas d'effacement à la réinitialisation,
+aucune information des familles, et un fichier qui atterrit dans un dossier « Téléchargements ».
+
+**Pourquoi P2 et pas P1.** Parce que ce champ n'existe à l'écran **que** si l'organisateur
+répond « oui », et qu'un tournoi d'École de Rugby départemental n'accueille pas d'équipes
+étrangères. **Aujourd'hui il est vide et le restera.** Mais si la réponse devient « oui » un
+jour, ce problème passe **immédiatement en P1** : ce sont les données les plus sensibles que
+l'application puisse contenir.
+
+**Ce que je propose.** Trois lignes de travail, dans l'ordre de coût croissant :
+
+1. **une phrase d'avertissement sous le champ** : *« ces informations sont exigées par le
+   formulaire fédéral ; elles sont effacées après l'envoi du dossier »* ;
+2. **l'effacer à la réinitialisation**, avec les autres champs FFR (R-033) ;
+3. **vérifier ce que la FFR exige réellement** — si le formulaire accepte une liste jointe
+   séparément, ce champ n'a pas à vivre dans le classeur. → **question sortante**, chantier FFR
+   (D-003), au même titre que I-10.
+
+**Difficulté** : très faible pour (1) et (2).
+
+---
+
+### R-035 · Toute image déposée devient publique, et ne disparaît pas vraiment *(P2)*
+
+**Ce que j'ai trouvé** *(CERTAIN)*. L'affiche du tournoi, les logos des partenaires et **la photo
+du parking** sont déposés sur le Drive puis **explicitement rendus publics en lecture** (« toute
+personne disposant du lien »). C'est **nécessaire** : sans cela, ni la page publique ni les
+courriels ne peuvent les afficher.
+
+Deux conséquences, dont une déjà notée en session 4 :
+
+- **la suppression met à la corbeille**, elle ne détruit pas : Google vide la corbeille ~30 jours
+  plus tard. Ce qu'un lien déjà diffusé donne encore à voir pendant ce délai est **INCONNU**
+  (I-08) ;
+- **rien ne contrôle ce que montre l'image.** Une photo de parking prise sur place peut contenir
+  des **plaques d'immatriculation**, des visages, l'entrée d'une maison voisine. Le code vérifie
+  le **format** et le **poids** du fichier — jamais son contenu, et c'est normal : aucun
+  programme ne sait faire cela de façon fiable.
+
+**Ce que je propose.** Une **phrase sous le bouton de dépôt** : *« cette image sera publique.
+Vérifie qu'on n'y voit ni visage, ni plaque d'immatriculation. »* C'est le meilleur rapport
+effort/bénéfice du domaine : **une ligne de texte**, au moment exact où la décision se prend.
+Et pour I-08, un test réel de 5 minutes (mettre une image à la corbeille, rouvrir son lien depuis
+une navigation privée) lèvera l'inconnue une fois pour toutes.
+
+**Difficulté** : très faible.
+
+---
+
+### R-036 · Le droit à l'image n'est plus outillé, et rien ne dit ce qui l'a remplacé *(P2)*
+
+**Ce que j'ai trouvé** *(CERTAIN)*. Le dépôt contient un modèle de document
+`frontend/assets/autorisation-droit-image-template.docx` — une **autorisation de droit à l'image**
+bien écrite, qui couvre les photos et vidéos des joueurs, leur usage (site, Instagram, affiches),
+l'absence de cession à un tiers, le consentement des familles recueilli par le club, et le droit
+de retrait.
+
+**Plus rien ne l'utilise.** Le `CHANGELOG` est explicite : le 2026-08-03, *« sur décision du
+club »*, le bouton a été retiré du dossier, avec la mécanique qui allait avec. Le modèle et les
+deux bibliothèques nécessaires **restent dans le dépôt**, chargés par aucune page.
+
+**Pourquoi je le signale quand même.** Parce que **c'est une décision du club, pas un oubli du
+code** — et je ne la conteste pas. Mais le domaine B doit dire ce qu'il constate : lors d'un
+tournoi d'École de Rugby, **des photos d'enfants seront prises et publiées**, y compris sur
+Instagram (l'application connaît déjà le champ `url_instagram`). C'est, de loin, le traitement de
+données le plus sensible autour de cet événement — et **l'outil n'en porte plus aucune trace**.
+
+**Ce que je propose.** Rien dans le code. **Une question à poser au club**, et sa réponse à
+écrire dans `DECISIONS.md` :
+
+> *« Le droit à l'image des enfants est-il géré ailleurs — par la licence FFR, par un document
+> du club, par une consigne aux clubs invités ? Si oui, où est-ce écrit ? Si non, souhaite-t-on
+> remettre le bouton ? »*
+
+Tant que la réponse n'est pas connue, c'est un **point INCONNU** (I-15), pas un défaut du code.
+
+**Difficulté** : nulle côté code. C'est une question, pas un chantier.
+
+---
+
+### R-037 · Les polices d'écriture sont chargées chez Google, sur les 7 pages *(P2)*
+
+**Ce que j'ai trouvé** *(CERTAIN)*. Les sept pages de l'application chargent leurs polices
+d'écriture depuis `fonts.googleapis.com` et `fonts.gstatic.com`. Conséquence : à chaque
+ouverture, le navigateur du visiteur **contacte les serveurs de Google** et leur transmet son
+adresse réseau, sans que rien ne le lui dise.
+
+**Pourquoi ça compte — et pourquoi je ne le monte pas plus haut.** Ce point est régulièrement
+reproché aux sites français. **Mais soyons honnêtes sur le gain réel** : cette application parle
+**déjà** à Google à chaque chargement, puisque le serveur *est* chez Google (Apps Script).
+Supprimer les polices distantes ne fait donc pas disparaître Google du parcours du spectateur.
+Le gain est **réel mais modeste** ; il est surtout de **cohérence** : le projet héberge déjà
+750 Ko de bibliothèques localement, précisément pour ne dépendre de personne.
+
+**Ce que je propose.** Recopier les 3 ou 4 fichiers de polices dans le dépôt et remplacer 7
+lignes. **Bénéfice secondaire, et pas le plus petit : la page s'affiche plus vite**, surtout sur
+un téléphone en 4G au bord d'un terrain — c'est un sujet qui reviendra au domaine F.
+
+**Difficulté** : très faible. **À traiter avec le domaine F (performance)**, pas seul.
+
+---
+
+### R-038 · L'adresse d'un bénévole est lisible par n'importe quel programme *(P2)*
+
+**Ce que j'ai trouvé** *(CERTAIN)*. Les champs `contact_reponse_nom` et `contact_reponse_email`
+font partie de la liste blanche **publique** : ils sortent par une simple lecture sans clé, et
+s'affichent sur la page d'invitation sous forme de lien cliquable.
+
+C'est **volontaire et nécessaire** : un club doit pouvoir répondre. Et le travail déjà fait est
+bon — le **téléphone**, lui, a été délibérément retiré de cette liste.
+
+**Le point d'attention** : cette adresse n'est pas seulement *affichée*, elle est **servie en
+clair par le serveur à qui la demande**, sous une forme qu'un programme lit sans effort. La page
+porte bien « ne pas indexer », ce qui la protège des moteurs de recherche — mais pas d'un
+aspirateur d'adresses. **Résultat probable : du spam**, sur ce qui est le plus souvent l'adresse
+personnelle d'un bénévole.
+
+**Ce que je propose.** Pas de code : une **habitude**. Utiliser à cet endroit une **adresse de
+fonction** (`tournoi@…`, `contact@…`) plutôt que l'adresse personnelle de quelqu'un. Elle se
+transmet au bénévole suivant, elle se filtre, et elle se ferme. Si l'association n'en a pas, une
+redirection suffit.
+
+**Difficulté** : nulle côté code.
+
+---
+
+### R-039 · Il n'existe aucun cadre écrit : ni responsable, ni registre, ni conduite à tenir *(P2)*
+
+**Ce que j'ai trouvé** *(CERTAIN pour ce qui est du dépôt)*. Aucun document du projet ne dit :
+
+- **qui est responsable** de ces informations. L'association Génération R92 ? Le Racing 92 ?
+  Romain à titre personnel ? Le classeur, le Drive et la boîte d'envoi vivent aujourd'hui dans
+  **un compte Google individuel** ;
+- **quels traitements existent** — la liste de ce qu'on collecte, pourquoi, et pour combien de
+  temps. C'est ce qu'on appelle un **registre** : une simple feuille, obligatoire même pour une
+  petite association, mais surtout **utile** : c'est le document que la cartographie a déjà
+  presque entièrement écrit (volet C) ;
+- **ce qu'on fait si les données fuitent.** Le RGPD impose de signaler une fuite grave **sous
+  72 heures**. Or l'application ne garde **aucune trace** des accès (c'est **R-023**), donc on ne
+  saurait probablement même pas qu'il s'est passé quelque chose.
+
+**Pourquoi ça compte.** Le point le plus concret n'est pas le registre : c'est le **compte
+individuel**. Si ce compte est perdu, bloqué, ou si Romain cesse un jour d'organiser le tournoi,
+**l'association perd d'un coup son carnet d'adresses, ses images et son historique** — et
+personne d'autre ne peut y accéder. Ce n'est pas seulement un sujet RGPD : c'est un sujet de
+**continuité**.
+
+**Ce que je propose.**
+
+1. **Écrire qui est responsable** — une phrase dans `DECISIONS.md`, et la même dans les textes de
+   R-028 ;
+2. **Fabriquer le registre à partir du volet C de la cartographie** — le travail est déjà fait à
+   90 %, il ne reste qu'à le mettre en forme ;
+3. **Poser la question du compte** : le classeur doit-il rester dans un compte individuel ? Un
+   compte au nom de l'association, avec un second administrateur, règle à la fois la continuité
+   et la question du responsable.
+
+**Difficulté** : nulle côté code — c'est du document et de l'organisation.
+
+---
+
+## B.6 — Le problème P3 (à garder pour plus tard)
+
+### R-040 · Le jour où l'outil servira plusieurs clubs, le sujet change de nature *(P3)*
+
+**Ce que j'ai trouvé.** `ETAT.md` fixe comme horizon un outil « capable d'évoluer vers un
+véritable SaaS » — un logiciel loué en ligne à plusieurs clubs. Aujourd'hui, l'application
+héberge les données **d'un seul organisateur**, dans **son** classeur. Tout ce domaine B a été
+écrit dans ce cadre.
+
+**Pourquoi ça change tout.** Le jour où le club de Massy saisit ses contacts dans une application
+tenue par Génération R92, ce n'est plus la même situation : Génération R92 devient un
+**prestataire** qui traite les données **de quelqu'un d'autre**. Cela implique un **contrat
+écrit** entre les deux, un **cloisonnement étanche** entre les clubs, et des engagements sur la
+sécurité et la restitution des données.
+
+**Ce que je propose.** **Rien maintenant** — c'est précisément la définition d'un P3. Mais deux
+choix d'aujourd'hui pèseront lourd ce jour-là, et il faut les avoir en tête :
+
+- **le cloisonnement par mot de passe partagé** (R-017) ne tient pas à plusieurs clubs : il
+  faudra de vrais comptes ;
+- **le carnet d'adresses unique** devra être découpé par club.
+
+**Ne rien implémenter maintenant.** Le noter suffit.
+
+---
+
+## B.7 — Les trois décisions qui t'attendent
+
+Le domaine B ne se corrige pas d'abord avec du code : il se corrige avec **trois décisions**.
+Elles sont détaillées dans `DECISIONS.md` et **aucune n'est prise** à ce stade.
+
+| Réf | La question, en une phrase | Ce que ça débloque |
+|---|---|---|
+| **D-018** | **Que dit-on aux gens ?** Valides-tu que je rédige une première version des trois textes d'information, que tu relis et fais valider par le club ? | R-028 |
+| **D-019** | **Que fait-on de la mesure des partenaires ?** Informer seulement (recommandé), demander l'accord, ou alléger la mesure ? | R-029 |
+| **D-020** | **Combien de temps garde-t-on quoi ?** Valider (ou corriger) le tableau des durées proposé en B.4 | R-030, R-031, R-033, R-034 |
+
+> Aucune de ces trois décisions ne demande d'écrire une ligne de code. Toutes les trois **doivent
+> être prises avant la première invitation réelle** — après, il faudra en plus revenir vers des
+> gens à qui on aura déjà écrit.
+
+---
+
+## B.8 — Ce que le domaine B ne peut PAS conclure
+
+La règle de transparence (`CLAUDE.md` §9) impose de dire ce que cet audit **ne prouve pas**.
+
+- ❌ **Aucune conformité n'est prononcée, et il n'y en aura jamais.** `CLAUDE.md` §6.B l'interdit
+  explicitement, et c'est une bonne règle : je n'ai pas la compétence juridique pour cela. Ce
+  document dit **ce que j'ai trouvé** et **ce que je propose** — pas que le reste est en ordre.
+- ❌ **Je n'ai pas lu le contenu réel du classeur.** Je décris ce que le **code** est capable
+  d'écrire. Ce qui s'y trouve réellement à cet instant ne peut pas être vu depuis le dépôt.
+  *(Ce qu'on sait vient de toi : I-03 et I-04.)*
+- ❌ **Je n'ai rien exécuté.** Que l'email d'un club ne sorte jamais est **écrit dans le code** —
+  ce n'est pas **prouvé par un test**. Statut : **NON VÉRIFIÉ**. Le domaine D (tests) devra
+  fabriquer cette preuve.
+- ❌ **Je ne sais pas ce que Google conserve** : journaux d'exécution, corbeille du Drive,
+  sauvegardes internes. **INCONNU** (I-09, I-08).
+- ❌ **Je ne sais pas si le code en service chez Google est celui du dépôt.** **INCONNU** (I-01).
+- ❌ **Je n'ai pas audité le site vitrine** `boutique-r92` : c'est un autre dépôt (D-005, en
+  attente). Or c'est **lui** qui accueillerait naturellement la page « Vos données » de R-028.
+- ✅ **Ce que j'ai réellement vérifié, en revanche** : qu'aucune page, aucun modèle de courriel et
+  aucune ligne du serveur ne contient les mots *RGPD*, *confidentialité*, *données personnelles*,
+  *mentions légales* ou *consentement*. **Zéro occurrence** — c'est le constat le plus solide de
+  ce domaine.
+
+---
+
+## B.9 — Récapitulatif du domaine B
+
+| Réf | Problème | Priorité | Où ça fait mal | Difficulté de correction |
+|---|---|---|---|---|
+| **R-028** | Personne n'est jamais informé de rien | **P1** | Obligation la plus élémentaire, et la plus visible de l'extérieur | **Nulle côté code** — trois textes à écrire |
+| **R-029** | La mesure des partenaires écrit sur le téléphone des spectateurs, sans le dire | **P1** | Le seul traitement qui touche **des milliers de personnes**, et il tourne **déjà** | Faible (option recommandée) |
+| **R-030** | Aucune durée de conservation, aucune purge | **P1** | Le carnet grossit sans fin ; une fuite ferait bien plus de dégâts | **Nulle** pour décider · moyenne pour outiller |
+| **R-031** | Effacer quelqu'un est partiel, et parfois bloqué par le planning | P2 | Une demande d'effacement n'a pas de réponse simple | Faible |
+| **R-032** | Effectifs d'enfants publics, et tout ajout futur le sera aussi | P2 | Rien aujourd'hui ; une colonne demain | Faible — **c'est R-021** |
+| **R-033** | La réinitialisation conserve des contacts sans raison écrite | P2 | Médecin, président, secours conservés sans limite | Très faible |
+| **R-034** | Un champ libre invite à saisir noms et dates de naissance d'enfants | P2 → **P1 s'il sert** | Les données les plus sensibles de l'application | Très faible |
+| **R-035** | Toute image déposée devient publique et ne disparaît pas vraiment | P2 | Plaques, visages sur une photo de parking | Très faible (une phrase) |
+| **R-036** | Le droit à l'image n'est plus outillé, et rien ne dit ce qui l'a remplacé | P2 | Photos d'enfants sur Instagram | **Nulle** — c'est une question au club |
+| **R-037** | Les polices sont chargées chez Google sur les 7 pages | P2 | Reproche classique ; gain réel mais modeste | Très faible |
+| **R-038** | L'adresse d'un bénévole est servie en clair à qui la demande | P2 | Spam sur une adresse personnelle | **Nulle** — une habitude |
+| **R-039** | Aucun cadre écrit : ni responsable, ni registre, ni conduite à tenir | P2 | Le compte individuel : continuité **et** responsabilité | Nulle côté code |
+| **R-040** | Le multi-clubs changera la nature du sujet | P3 | Rien aujourd'hui | À ne pas traiter maintenant |
+
+**Total : 0 P0 · 3 P1 · 9 P2 · 1 P3 — soit 13 problèmes.**
+
+### Le fil rouge du domaine B
+
+Le domaine A avait le sien : excellent **avant** le coup d'envoi, rigide **après**.
+Le domaine C avait le sien : il n'y a **pas de personnes, seulement des mots de passe**.
+
+**Celui du domaine B tient en deux phrases :**
+
+1. **La collecte est exemplaire ; le silence ne l'est pas.** L'application ne demande presque
+   rien, et n'identifie **aucun enfant**. Mais elle ne dit **rien à personne** — ni au contact
+   d'un club, ni au spectateur dont le téléphone compte des logos.
+2. **Rien ne s'efface, et personne ne l'a décidé.** L'absence de durée de conservation n'est pas
+   un choix contestable : c'est un **choix qui n'a jamais été fait**. Neuf des treize problèmes
+   disparaissent le jour où ces durées sont écrites.
+
+### Si je devais ne corriger que trois choses
+
+1. **R-029 — la mesure des partenaires.** Parce que c'est le **seul** qui produit déjà, tous les
+   jours, des données sur des milliers de vraies personnes. Les douze autres sont pour l'instant
+   théoriques ; celui-là ne l'est pas.
+2. **R-028 — les trois textes d'information.** Parce que c'est **gratuit**, que ça ne touche
+   aucun code, et que c'est la première chose qu'un tiers regarde.
+3. **R-030 — écrire les durées de conservation** (étape a seulement, pas l'outillage). Parce que
+   c'est le préalable de R-031, R-033 et R-034 : quatre problèmes que cette seule décision met en
+   ordre de marche.
+
+**Les trois tiennent en un après-midi d'écriture et zéro ligne de code**, et ils referment le
+domaine B pour l'essentiel. **La condition est le calendrier** : ils doivent être faits **avant
+la première invitation réelle**, pendant que le classeur est encore vide de données de tiers.
+C'est la fenêtre décrite par I-03 et I-04, et elle ne se rouvrira pas.
