@@ -4,6 +4,11 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
+> 📕 **Pour une vue d'ensemble du chantier — et non de son avancement — lire
+> [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md).** C'est la **synthèse close de l'ÉTAPE 2** : les 8
+> domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
+> révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
+
 **Dernière mise à jour** : 2026-08-05 (session 12, close — **domaine H audité : l'ÉTAPE 2 est
 TERMINÉE**)
 **Commit de référence** : `e2fe59c` sur **`main`** — la session 12 part de là.

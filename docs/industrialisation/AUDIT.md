@@ -7,7 +7,13 @@
 > Le registre des problèmes (avec leur statut de correction) vit dans `RISQUES.md`.
 > Ce document-ci **explique** ; `RISQUES.md` **suit**.
 
-**Dernière mise à jour** : 2026-08-05 (session 11)
+> 📕 **Ce document fait 6 200 lignes — ne le lis pas en entier pour te faire une idée.** La
+> **synthèse close de l'ÉTAPE 2** est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md) : les 8 domaines,
+> les 88 problèmes, ce qui s'est révélé sain, l'ordre proposé, et les limites de l'audit. Reviens
+> **ici** quand tu veux le détail d'un problème précis — chaque fiche R-0XX y renvoie.
+
+**Dernière mise à jour** : 2026-08-05 (session 12 — 🏁 **l'ÉTAPE 2 est TERMINÉE, les 8 domaines
+sont audités**)
 
 | Domaine | Nom | Statut |
 |---|---|---|
@@ -18,9 +24,15 @@
 | **E** | **UX / UI / Accessibilité** | ✅ **FAIT** (session 9) |
 | **F** | **Performance** | ✅ **FAIT** (session 10) |
 | **G** | **Architecture / Maintenabilité** | ✅ **FAIT** (session 11) |
-| H | Qualité du code | ⬜ À faire — **dernier domaine** |
+| **H** | **Qualité du code** | ✅ **FAIT** (session 12) — 🏁 **le dernier** |
 
 > **Ordre validé par Romain le 2026-08-04** : A → C → B → D → E → F → G → H (décision D-010).
+> **Les huit ont été traités dans cet ordre exact, sans exception.**
+
+> 🏁 **L'ÉTAPE 2 est close le 2026-08-05** — **88 problèmes** (R-001 → R-088) : 1 P0 *(corrigé,
+> déployé, testé)*, 23 P1, 53 P2, 11 P3, plus **6 risques de méthode** (M-01 → M-06). La suite est
+> l'**ÉTAPE 3** (le plan priorisé), qui **ne commence pas d'elle-même** : elle attend une
+> instruction explicite de Romain.
 
 ---
 

@@ -4,6 +4,12 @@
 > Tant que l'audit (ÉTAPE 2) n'a pas eu lieu, le tableau des chantiers reste **vide** :
 > on ne planifie pas des travaux qu'on n'a pas encore constatés.
 
+> 📕 **L'ÉTAPE 2 est close** (2026-08-05). La matière première de ce plan est dans
+> [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md) — dont le **§6** contient déjà une **proposition d'ordre
+> de traitement en 6 étapes**, ainsi qu'une liste de ce qu'il ne faut **PAS** faire. ⚠️ C'est une
+> **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
+> chantier par chantier.
+
 **Dernière mise à jour** : 2026-08-05 (session 12 — **l'ÉTAPE 2 est terminée**)
 
 ---
@@ -80,7 +86,7 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 | **C-001** | **Plafonner l'écriture publique des relevés de partenaires** (R-014) — *hors ordre normal, par exception D-016* | **P0** | ✅ **TESTÉ** | — | ✅ oui (D-016) | ✅ commit `c1948fc`, **redéployé** | ✅ **573/573** dans Apps Script + chaîne vérifiée en réel |
 | — | *(les autres chantiers se rempliront à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
 
-> **Pourquoi ce tableau ne contient-il qu'une ligne, alors que 81 problèmes sont identifiés ?**
+> **Pourquoi ce tableau ne contient-il qu'une ligne, alors que 88 problèmes sont identifiés ?**
 > Parce qu'un chantier regroupe des corrections qui doivent être faites **ensemble**, et qu'on ne
 > peut pas savoir ce qui va ensemble tant que les 8 domaines n'ont pas parlé. Exemple : R-005
 > (borne haute sur un score) touchera peut-être le même code qu'un futur constat du domaine D

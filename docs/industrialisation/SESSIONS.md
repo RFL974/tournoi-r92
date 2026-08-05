@@ -8,6 +8,15 @@
 > consigne d'origine (« le plus récent en haut ») n'a pas été suivie, et il vaut mieux le dire
 > que de laisser chercher.
 
+> 📕 **Ce journal raconte le chemin, pas le résultat.** Le résultat de l'ÉTAPE 2 — les 8 domaines,
+> les 88 problèmes, ce qui s'est révélé sain — est rassemblé dans
+> [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md) (session 12).
+>
+> ⚠️ **Les chiffres inscrits dans les fiches de session ci-dessous sont datés et ne sont PAS
+> réécrits** : une fiche qui dit « 81 problèmes » en session 11 disait vrai **ce jour-là**. Le
+> compte à jour est **88**, et il vit dans `ETAT.md` et `RISQUES.md`. Réécrire un journal
+> a posteriori ferait perdre la seule chose qu'il apporte — **ce qu'on savait, et quand**.
+
 ---
 
 ## Modèle de fiche
@@ -2573,3 +2582,85 @@ chantiers.
 > départage, R-042 avant de rouvrir la saisie du score).
 
 **Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+## SESSION 12 — ADDENDUM : le rapport entre dans la mémoire durable
+
+**Demande de Romain** : *« Le rapport détaillé de l'audit doit faire partie de la mémoire durable du
+projet. Consigne-le […] sans modifier son contenu ni perdre les références R-001 à R-088 et M-01 à
+M-06. Vérifie également que RISQUES.md, ETAT.md, PLAN.md et SESSIONS.md restent cohérents avec la
+clôture de l'étape 2. »*
+
+### 1. Où le consigner — et pourquoi PAS dans `AUDIT.md`
+
+La consigne laissait le choix : `AUDIT.md`, ou *« le fichier jugé approprié si un document
+équivalent existe déjà »*. **Le document existait déjà** : `RAPPORT-AUDIT.md`, écrit et poussé le
+jour même (`cece8b2`), **dans `docs/industrialisation/`**.
+
+**Il n'a pas été fondu dans `AUDIT.md`, et c'est un choix argumenté** :
+
+| | |
+|---|---|
+| `AUDIT.md` | **6 200 lignes**, organisé **domaine par domaine** (A.1 → H.9). Il **explique** un problème quand on sait lequel on cherche |
+| `RAPPORT-AUDIT.md` | **600 lignes**, organisé **en travers des domaines**. Il donne **le sens de l'ensemble** à qui n'en connaît aucun |
+
+Les fondre reviendrait à ranger la synthèse **à la fin** du plus gros fichier du chantier : elle y
+serait techniquement présente et pratiquement introuvable. Le dépôt applique déjà la règle inverse —
+*un fichier = un rôle* (`RISQUES.md` **suit**, `AUDIT.md` **explique**) — et cette règle est ce qui
+le rend lisible.
+
+### 2. ⚠️ Le vrai trou n'était pas l'emplacement du fichier : c'était que **rien ne le citait**
+
+Vérification faite : `grep -rl "RAPPORT-AUDIT"` sur `docs/`, `CLAUDE.md` et `README.md` →
+**aucun résultat**. Le document était dans le dépôt, versionné, complet… et **invisible**.
+
+> **C'est exactement ce que `CLAUDE.md` §12.2 met en garde de faire** : *« une session qui croit
+> qu'il n'existe que 5 fichiers ne lira jamais les deux autres »*. J'avais créé un 8ᵉ document sans
+> l'inscrire nulle part — donc aucune session future ne l'aurait ouvert. **La même maladie que
+> R-073**, commise par la session qui venait de l'auditer.
+
+**Corrigé** :
+
+- `CLAUDE.md` §12.2 → **« Les 8 fichiers de suivi »**, avec le rôle de `RAPPORT-AUDIT.md` et un
+  tableau **« lequel ouvrir selon ce qu'on cherche »** ;
+- `CLAUDE.md` §12.3 → ajouté à l'ordre de lecture au démarrage, avec une consigne pour les sessions
+  qui **découvrent** le chantier : le lire **en entier**, juste après `ETAT.md` ;
+- renvois croisés ajoutés dans **`ETAT.md`, `PLAN.md`, `RISQUES.md`, `AUDIT.md` et `SESSIONS.md`**.
+
+### 3. Cohérence de la clôture de l'ÉTAPE 2 — **29 contrôles, 0 échec**
+
+Vérifiée par script, pas à l'œil. Ce que les contrôles établissent :
+
+| Famille | Ce qui est vérifié |
+|---|---|
+| **Intégrité du rapport** | Contenu **bit à bit identique** (empreinte inchangée) · **88 références R-001 → R-088** présentes · **6 références M-01 → M-06** présentes |
+| **Atteignabilité** | Cité par `CLAUDE.md` **et** par les 5 autres documents de suivi |
+| **Clôture de l'ÉTAPE 2** | Marquée TERMINÉE dans `ETAT.md`, `PLAN.md`, `AUDIT.md` · plus aucun « domaine prochain » · la section « Domaine non audité » de `RISQUES.md` a disparu |
+| **Totaux** | 88 partout · répartition **23 / 53 / 11** · **aucun « 81 problèmes » résiduel** dans les documents vivants |
+| **Domaine H** | Registre, tableau « vérifié et sain », section `AUDIT.md` §H, fiche M-06, fiche de session : tous présents |
+| **L'ÉTAPE 3 n'est PAS commencée** | Le tableau des chantiers de `PLAN.md` contient **toujours une seule ligne** (C-001) · l'ÉTAPE 3 est marquée « prochaine » et **attend une instruction explicite** |
+
+**Trois en-têtes étaient restés en session 11** et ont été remis à jour : `RISQUES.md` (*« un seul
+domaine reste : H »*), `AUDIT.md` (tableau des domaines, H encore « à faire ») et le total de
+`PLAN.md` (81 → 88).
+
+### 4. ⚠️ Ce qui n'a **PAS** été touché, délibérément
+
+Deux mentions de « 81 problèmes » subsistent, et **c'est voulu** :
+
+| Où | Pourquoi on n'y touche pas |
+|---|---|
+| `SESSIONS.md` — fiche de la session 11 | **C'est un journal.** Le 2026-08-05 au matin, il y avait bien 81 problèmes |
+| `DECISIONS.md` — motivation de **D-029** | **C'est le raisonnement tel qu'il a été tenu** pour prendre la décision |
+
+> **Réécrire un journal ou la motivation d'une décision a posteriori ferait perdre la seule chose
+> qu'ils apportent : ce qu'on savait, et quand.** Une note explicite a été ajoutée en tête de
+> `SESSIONS.md` pour que personne ne prenne ces chiffres pour le compte à jour.
+
+### 5. État
+
+- **Aucun fichier de l'application modifié** — vérifié ;
+- **l'ÉTAPE 3 n'est pas commencée**, et ne le sera pas sans instruction explicite ;
+- fichiers touchés : `CLAUDE.md`, `ETAT.md`, `PLAN.md`, `RISQUES.md`, `AUDIT.md`, `SESSIONS.md`.
+  **`RAPPORT-AUDIT.md` n'a pas été modifié d'un caractère.**

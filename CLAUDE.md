@@ -580,7 +580,7 @@ CLAUDE.md                    (ce fichier — les règles)
 docs/industrialisation/      (l'état réel du chantier)
 ```
 
-## 12.2 — Les 7 fichiers de suivi
+## 12.2 — Les 8 fichiers de suivi
 
 | Fichier | Rôle |
 |---|---|
@@ -591,9 +591,25 @@ docs/industrialisation/      (l'état réel du chantier)
 | `docs/industrialisation/SESSIONS.md` | Le journal de chaque session de travail |
 | `docs/industrialisation/CARTOGRAPHIE.md` | Le produit de l'**ÉTAPE 1** : comment l'application est faite (créé en session 2) |
 | `docs/industrialisation/AUDIT.md` | Le produit de l'**ÉTAPE 2** : l'**explication** de chaque problème, domaine par domaine (créé en session 5). `RISQUES.md` **suit**, `AUDIT.md` **explique** |
+| `docs/industrialisation/RAPPORT-AUDIT.md` | La **synthèse close de l'ÉTAPE 2** (créée en session 12) : les 8 domaines, les **88 problèmes** (R-001 → R-088), les **6 risques de méthode** (M-01 → M-06), ce qui a été vérifié et s'est révélé **sain**, ce qui reste à décider, l'ordre proposé, et les **limites** de l'audit. C'est **le document d'entrée** pour qui découvre le chantier — et la **seule vue transversale** aux huit domaines |
 
-> Cette liste doit être tenue à jour : une session qui croit qu'il n'existe que 5 fichiers ne lira
-> jamais les deux autres.
+> ⚠️ **Cette liste doit être tenue à jour : une session qui croit qu'il n'existe que 5 fichiers ne
+> lira jamais les trois autres.** *(Elle est passée de 5 à 7 puis à 8 — chaque ajout a dû être
+> inscrit ici, sans quoi le document nouveau serait resté invisible. C'est la même discipline que
+> **§8 bis**, appliquée aux documents de suivi eux-mêmes.)*
+
+### Lequel ouvrir, selon ce qu'on cherche
+
+| La question | Le fichier |
+|---|---|
+| *« Où en est le chantier, aujourd'hui ? »* | `ETAT.md` |
+| *« C'est quoi, ce chantier ? Qu'a-t-il trouvé ? »* | **`RAPPORT-AUDIT.md`** |
+| *« Ce problème R-0XX, c'est quoi exactement, et pourquoi ? »* | `AUDIT.md` |
+| *« Où en est ce problème R-0XX ? »* | `RISQUES.md` |
+| *« Pourquoi a-t-on décidé ça ? »* | `DECISIONS.md` |
+| *« Qu'a-t-on fait à la session N ? »* | `SESSIONS.md` |
+| *« Comment l'application est-elle faite ? »* | `CARTOGRAPHIE.md` |
+| *« Qu'est-ce qu'on corrige, et dans quel ordre ? »* | `PLAN.md` |
 
 ## 12.3 — Démarrage d'une session
 
@@ -631,8 +647,13 @@ moindre fichier de suivi, et le **dire à Romain**.
 3. lire `CLAUDE.md` ;
 4. lire `docs/industrialisation/ETAT.md` ;
 5. consulter `docs/industrialisation/PLAN.md` ;
-6. consulter ce qui est nécessaire dans `RISQUES.md`, `AUDIT.md`, `CARTOGRAPHIE.md`,
-   `DECISIONS.md` et `SESSIONS.md` ;
+6. consulter ce qui est nécessaire dans `RISQUES.md`, `AUDIT.md`, `RAPPORT-AUDIT.md`,
+   `CARTOGRAPHIE.md`, `DECISIONS.md` et `SESSIONS.md` ;
+
+> 💡 **Session qui découvre le chantier, ou qui reprend après une longue interruption** : lire
+> `RAPPORT-AUDIT.md` **en entier** juste après `ETAT.md`. C'est la seule vue transversale aux huit
+> domaines — elle évite de reparcourir les 6 200 lignes de `AUDIT.md` pour se faire une idée
+> d'ensemble, et elle dit aussi **ce que l'audit ne prouve pas**.
 7. identifier la prochaine étape logique ;
 8. présenter brièvement où on en est ;
 9. présenter l'objectif de la session ;

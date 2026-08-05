@@ -5,8 +5,12 @@
 > L'**explication** de chaque problème (pourquoi, exemple concret, ce qui est proposé) vit dans
 > `AUDIT.md`. Ce fichier-ci **suit** ; `AUDIT.md` **explique**.
 
-**Dernière mise à jour** : 2026-08-05 (session 11, **domaine G — complétée le jour même : D-028 tranchée, R-074 arbitré**)
-**Audits réalisés** : domaine A (métier), domaine C (sécurité), domaine B (RGPD), domaine D (QA / tests), domaine E (UX / accessibilité), domaine F (performance), **domaine G (architecture)**. **Un seul domaine reste : H (qualité du code).**
+> 📕 **La vue d'ensemble des 88 problèmes** — leur répartition, leurs fils rouges, et ce qui s'est
+> révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
+> **détail ligne à ligne** ; le rapport donne **le sens**.
+
+**Dernière mise à jour** : 2026-08-05 (session 12, **domaine H — l'ÉTAPE 2 est TERMINÉE**)
+**Audits réalisés** : 🏁 **les 8 domaines** — A (métier), C (sécurité), B (RGPD), D (QA / tests), E (UX / accessibilité), F (performance), G (architecture) et **H (qualité du code)**. **Aucun domaine ne reste à auditer.**
 **Correction réalisée** : R-014 (le P0), par exception validée — voir D-016. ⚠️ Une de ses trois preuves est tombée en session 8, ✅ **et a été refaite correctement le jour même** (`589/589 OK` chez Google) — voir la note sous le tableau de synthèse, `AUDIT.md` §D.8 et **M-04**.
 
 ---
