@@ -7,7 +7,7 @@
 > Le registre des problèmes (avec leur statut de correction) vit dans `RISQUES.md`.
 > Ce document-ci **explique** ; `RISQUES.md` **suit**.
 
-**Dernière mise à jour** : 2026-08-05 (session 8)
+**Dernière mise à jour** : 2026-08-05 (session 9)
 
 | Domaine | Nom | Statut |
 |---|---|---|
@@ -15,7 +15,7 @@
 | **C** | **Sécurité** | ✅ **FAIT** (session 6) |
 | **B** | **RGPD / Protection des données** | ✅ **FAIT** (session 7) |
 | **D** | **QA / Tests** | ✅ **FAIT** (session 8) |
-| E | UX / UI / Accessibilité | ⬜ À faire |
+| **E** | **UX / UI / Accessibilité** | ✅ **FAIT** (session 9) |
 | F | Performance | ⬜ À faire |
 | G | Architecture / Maintenabilité | ⬜ À faire |
 | H | Qualité du code | ⬜ À faire |
@@ -3036,3 +3036,497 @@ registre des points en suspens de `ETAT.md` §10, conformément à **D-024**.
    `589/589 OK, 0 FAIL`.**
 3. **La vérification de syntaxe à la publication (R-043 a).** Peu de travail, et ça referme le
    seul chemin vers la production qui n'a aujourd'hui **aucun** contrôle.
+
+---
+
+# DOMAINE E — UX / UI / ACCESSIBILITÉ
+
+> **Session 9 — 2026-08-05.** Produit de l'**ÉTAPE 2**, cinquième domaine sur huit.
+> **Aucun fichier de l'application n'a été modifié.**
+>
+> **Comment ce domaine a été audité.** Pas seulement en lisant le code : une **copie de travail
+> du frontend** a été montée hors du dépôt, avec un faux serveur (des données fictives), et les
+> écrans ont été **réellement ouverts dans un navigateur**, à la taille d'un téléphone
+> (375 × 812), d'un vieux téléphone (320 × 568) et d'un ordinateur (1280 × 800). Les tailles de
+> boutons et les contrastes ne sont donc pas **estimés** : ils sont **mesurés**.
+>
+> ⚠️ **Une mesure a dû être refaite.** Le premier balayage des contrastes annonçait que
+> *tout* échouait, y compris des textes visiblement lisibles. La méthode était fausse : elle ne
+> savait pas lire les **fonds en dégradé** et les comptait comme blancs. Corrigée, elle donne
+> l'inverse — la page de saisie est **très bien contrastée**. Les chiffres ci-dessous sont ceux
+> de la **méthode corrigée**, et les éléments posés sur un dégradé sont **écartés et signalés**
+> plutôt que mal mesurés.
+
+---
+
+## E.0 — Le verdict en une phrase
+
+**L'application est belle, soignée, et elle sait déjà tout faire correctement — mais elle ne l'a
+pas fait partout : les bons réflexes sont appliqués sur les écrans construits récemment, et
+absents sur ceux qui servent le plus.** Le domaine E ne trouve **aucun P0** et **deux P1**, tous
+deux sur le même sujet : **la page de saisie ne dit pas au bénévole où il en est**. Elle peut lui
+affirmer que les scores sont à jour alors qu'ils ne le sont pas, et, quand quelque chose échoue,
+elle lui montre un message technique en anglais.
+
+---
+
+## E.1 — Le préalable qui a été levé : pour QUI juge-t-on ? *(I-05)*
+
+Un audit d'expérience d'utilisation ne veut **rien dire** sans savoir qui utilise quoi, et sur
+quel matériel. Un bouton de 35 pixels est confortable à la souris et pénible au doigt : c'est
+le **même** bouton, et deux verdicts opposés.
+
+**I-05 a été levée par Romain le 2026-08-05** :
+
+| Question | Réponse | Ce que ça fixe |
+|---|---|---|
+| Qui utilise l'**administration** le jour J ? | **Pas encore décidé** | On raisonne donc sur le pire cas raisonnable : quelqu'un qui **n'a pas été formé** |
+| Sur quel **matériel** ? | **Création du tournoi depuis un ordinateur** | L'administration est jugée **au clavier et à la souris** |
+| Qui **saisit les scores**, et sur quoi ? | **Des bénévoles, sur leur propre téléphone** *(à confirmer)* | La page de saisie est jugée **au doigt, sur petit écran, dehors** |
+| Le **réseau** tient-il ? | **Excellent au Racing** (Plessis-Robinson, Colombes — 5G) | La coupure réseau n'est **pas** un scénario prioritaire **au Racing**. Ailleurs : **INCONNU** |
+
+> ⚠️ **« Leur propre téléphone » est la contrainte la plus lourde de tout ce domaine**, et elle
+> mérite d'être dite : cela veut dire **matériel inconnu**. Vieil iPhone à petit écran, Android
+> en mode économie d'énergie, écran fissuré, doigts mouillés, plein soleil. On ne peut rien
+> supposer. C'est pourquoi les mesures ci-dessous ont aussi été faites en **320 pixels de large**
+> — la largeur des plus petits téléphones encore en circulation.
+
+---
+
+## E.2 — Ce qui est solide (et qu'il ne faut surtout pas casser)
+
+Il faut le dire avant le reste, parce que c'est **la majorité** de ce qui a été mesuré.
+
+**Sur la page de saisie**
+
+- **Les contrastes sont excellents.** Mesurés entre **9,6 et 21** là où la norme demande **4,5**.
+  Le fond marine et le texte presque blanc sont un très bon choix pour un écran vu dehors.
+- **Le tableau des scores est vertical** — une équipe par ligne, son score à droite. Le commentaire
+  du code dit pourquoi : *« fini l'enroulement des scores »*. Quelqu'un a corrigé un vrai problème
+  de terrain.
+- **La saisie détaillée (U14 à XV) est exemplaire** : boutons **−** et **+** de **44 × 44 pixels**
+  exactement, avec ce commentaire dans la feuille de style : *« grande cible tactile (44px),
+  lisibles sous la pluie »*. Le total en points s'affiche **en grand** (27 px) et il est
+  **calculé, jamais saisi**. C'est de la très bonne conception.
+- **Le double-clic ne peut pas envoyer deux fois** : le bouton se désactive pendant l'envoi.
+- **Le contexte de chaque match est écrit** : « 🏆 Demi-finale — Coupe U12 », « 🎈 Match amical —
+  sans classement », « ⚔️ Élimination directe : un vainqueur est obligatoire ». Le bénévole sait
+  **ce qu'il saisit**.
+- **Corriger un score déjà validé redemande le mot de passe.** C'est une vraie protection du geste.
+- **Corriger un score du matin quand l'après-midi est déjà généré déclenche un avertissement**
+  qui explique la conséquence et dit quoi faire (« préviens l'organisateur, il doit régénérer »).
+- **Les filtres catégorie et grand terrain sont mémorisés** sur l'appareil : le bénévole retrouve
+  son terrain à chaque ouverture.
+- **Une phase entièrement saisie se replie toute seule** et affiche « 2 à saisir sur 3 » /
+  « tous saisis ✓ ». On sait où on en est **sans compter**.
+- **Un score en cours de frappe n'est jamais écrasé** : le rechargement est un bouton manuel,
+  volontairement, et c'est écrit dans le code.
+- **Aucun débordement horizontal**, même à **320 pixels** de large. Les noms longs
+  (« Issy-les-Moulineaux Rugby Club ») passent à la ligne au lieu de pousser le score hors écran.
+
+**Sur l'administration**
+
+- **28 confirmations** avant les actions qui détruisent. Et elles sont **bien écrites** :
+  la réinitialisation liste précisément ce qui disparaît **et ce qui survit** (« seul l'historique
+  de saison est conservé »), puis redemande une seconde confirmation.
+- **Régénérer alors que des scores existent** annonce **le nombre exact** de scores qui seront
+  effacés, puis exige **la re-saisie du mot de passe**. C'est le bon niveau de friction.
+- **Les boutons de l'administration disent ce qu'ils font pendant qu'ils le font** :
+  « Génération… », « Réinitialisation… », « Recalcul… ». *(Retenir ce point : c'est exactement ce
+  qui manque à la page de saisie — voir R-053.)*
+- **Les cibles sont largement suffisantes à la souris** : sur **212** éléments cliquables mesurés,
+  **4** seulement passent sous 24 × 24 px (des cases à cocher et deux petits liens).
+- **Les contrastes tiennent** : sur **603** textes mesurés, **578 sont conformes** (96 %).
+
+**Partout**
+
+- `lang="fr"`, un seul titre principal par page, les repères de structure (`main`, `header`)
+  présents — ce sont les bases de l'accessibilité, et elles sont là.
+- **Un lien « Aller au contenu »** sur la page publique (pour la navigation au clavier).
+- **Les animations sont désactivées** si l'appareil demande à les réduire
+  (`prefers-reduced-motion`) — c'est un réflexe que peu de sites ont.
+- **Un anti-cache a été ajouté sur le bouton Rafraîchir**, avec ce commentaire : *« sans ça, le
+  navigateur (surtout sur mobile) peut resservir une réponse en cache »*. Un vrai piège mobile,
+  déjà vu et déjà réglé.
+- **Les fenêtres de dialogue maison** gèrent le clavier (Entrée / Échap), donnent le focus au
+  bon endroit, et marquent le bouton destructeur **en rouge**.
+
+---
+
+## E.3 — R-051 · Le bouton « Rafraîchir » peut échouer **en silence complet** *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+Le bouton « 🔄 Rafraîchir » de la page de saisie sert à voir les scores saisis par **les autres**
+tables de marque. J'ai coupé le réseau et je l'ai actionné. Voici ce qui s'est passé :
+
+- le bouton a affiché « ⏳ … » puis est **revenu à la normale** ;
+- l'heure « Mis à jour à 15:22:30 » n'a **pas changé** ;
+- **aucun message n'est apparu.** Nulle part.
+
+Dans le code, c'est explicite : quand l'appel échoue, il n'y a **rien** à faire.
+
+```js
+} catch (err) {
+  // On garde l'affichage actuel en cas d'erreur réseau.
+}
+```
+
+### 2. Pourquoi c'est important
+
+Ce n'est pas « une erreur mal affichée ». C'est **une erreur qui se fait passer pour un succès**.
+L'écran continue d'afficher une liste de matchs et un compteur « 3 à saisir sur 8 » — le bénévole
+n'a **aucune raison** de douter. Il croit voir l'état réel du tournoi. Il voit une photographie
+périmée.
+
+Un logiciel qui se tait quand il échoue est plus dangereux qu'un logiciel qui plante : le plantage
+prévient, le silence non.
+
+### 3. Exemple concret
+
+Deux tables de marque, terrain 1 et terrain 3. Celle du terrain 3 appuie sur Rafraîchir pendant
+que son téléphone est dans une zone d'ombre derrière le club-house. Rien ne se passe — donc,
+pour elle, tout va bien. Elle regarde le compteur : « 2 à saisir ». Elle va voir l'organisateur :
+« il manque deux matchs sur le terrain 1 ». L'organisateur relance les bénévoles du terrain 1, qui
+ont pourtant tout saisi il y a dix minutes. Dix minutes perdues, à l'heure exacte où il faut
+générer l'après-midi.
+
+### 4. Ce que je propose
+
+Trois choses, dans cet ordre de simplicité :
+
+1. **Dire que ça a raté** : un message court sous le bouton, du type
+   « ⚠️ Impossible de récupérer les scores — vérifie ta connexion et réessaie. »
+2. **Faire vieillir l'heure affichée** : au lieu de « Mis à jour à 15:22 », écrire
+   « Mis à jour il y a 12 minutes » et la passer en orange au-delà de quelques minutes.
+   L'information périmée **se dénonce elle-même**.
+3. *(plus tard)* rafraîchir tout seul de temps en temps, comme le fait déjà la page publique.
+
+### 5. Impact
+
+- **Ce que ça change** : un message d'échec et un horodatage qui vieillit. Rien d'autre.
+- **Risques** : très faibles. On ajoute un affichage, on ne touche ni à la saisie, ni à l'envoi,
+  ni au classement.
+- **Bénéfice** : le bénévole cesse de faire confiance à un écran périmé.
+- **Fonctionnalités concernées** : la page de saisie uniquement.
+
+### 6. Ce que je conseille
+
+**Corriger avant la première utilisation réelle.** C'est peu de travail, et c'est le seul endroit
+de l'application où un échec est **totalement invisible**.
+
+---
+
+## E.4 — R-052 · Quand ça échoue, le bénévole lit un message technique, souvent en anglais *(P1)*
+
+### 1. Ce que j'ai trouvé
+
+J'ai coupé le réseau, saisi un score, et appuyé sur « Valider ». Voici, **mot pour mot**, ce que
+l'application a affiché au bénévole :
+
+> **Failed to fetch**
+
+Ce n'est pas un texte écrit par l'application : c'est le message brut du navigateur, en anglais.
+Il arrive tel quel à l'écran parce que le code affiche directement le message de l'erreur, sans
+le traduire :
+
+```js
+} catch (err) {
+  afficherMessage(msg, err.message, 'ko');
+}
+```
+
+Ce n'est pas isolé : **38 endroits** du frontend affichent ainsi le message brut de l'erreur.
+
+> ✅ **Deux bonnes nouvelles quand même**, vérifiées : le score tapé **n'est pas perdu** (il reste
+> dans les champs) et le bouton **redevient actif** (on peut réessayer). L'état de l'application
+> est sain ; c'est **uniquement** ce qui est dit à l'humain qui ne va pas.
+
+### 2. Pourquoi c'est important
+
+Le bénévole se pose **une seule** question : *« est-ce que mon score est enregistré, oui ou non ? »*
+« Failed to fetch » ne répond pas à cette question. Il ne dit pas non plus quoi faire.
+
+Face à un message qu'il ne comprend pas, un bénévole fait l'une de ces trois choses : il abandonne
+(le score est perdu) ; il appuie dix fois (sans effet ici, mais il perd du temps) ; ou il va
+chercher l'organisateur (qui est occupé ailleurs).
+
+### 3. Exemple concret
+
+Fin du dernier match de poule en U10. Le bénévole saisit 4-2, valide, lit « Failed to fetch »,
+hausse les épaules et va ranger les plots. Le score n'est pas parti. Une demi-heure plus tard,
+l'organisateur ne peut pas générer l'après-midi : il manque un score — et **un seul match non
+saisi bloque tout l'après-midi** (c'est **R-002**, déjà au registre). Personne ne sait lequel.
+
+### 4. Ce que je propose
+
+Une **seule fonction** qui traduit un échec technique en phrase utile, et que les 38 endroits
+utilisent. Trois cas suffisent à couvrir presque tout :
+
+| Ce qui s'est passé | Ce qu'on affiche aujourd'hui | Ce qu'on afficherait |
+|---|---|---|
+| Le téléphone n'a pas de réseau | `Failed to fetch` | « ⚠️ Pas de connexion. **Ton score n'est pas enregistré.** Réessaie quand le réseau revient. » |
+| Le serveur a répondu une erreur | `Le serveur a répondu avec une erreur (500).` | « ⚠️ Le serveur n'a pas répondu. **Ton score n'est pas enregistré.** Réessaie dans quelques secondes. » |
+| Le mot de passe est refusé | `Clé incorrecte` *(déjà correct)* | inchangé |
+
+La phrase importante est celle en gras : **dire si le score est passé ou non**.
+
+### 5. Impact
+
+- **Ce que ça change** : uniquement le **texte** affiché en cas d'échec.
+- **Risques** : faibles, mais **pas nuls** — il faut veiller à ne pas masquer les messages **utiles**
+  que le serveur renvoie déjà (« vainqueur obligatoire », « correction en cascade », « clé
+  incorrecte »). On traduit les échecs **techniques**, pas les refus **métier**.
+- **Bénéfice** : le bénévole sait toujours si son score compte.
+- **Fonctionnalités concernées** : toutes les pages, mais la saisie d'abord.
+
+### 6. Ce que je conseille
+
+**Corriger avant la première utilisation réelle**, en commençant par la **page de saisie** seule.
+Les 37 autres endroits sont dans l'administration, où c'est toi qui lis le message — c'est moins
+grave, et ça peut suivre.
+
+> **À rapprocher de R-048** *(domaine D, P2)* : les écritures n'ont **aucun délai maximum**. Sur
+> une 4G qui « pend » sans couper franchement, il n'y a même pas de message — l'attente est
+> infinie. Les deux vont ensemble, et **R-048 est le plus grave des deux** ; il est déjà inscrit.
+>
+> ⚠️ **Précision apportée à R-048 par cette session** : sa description dit *« le bouton reste sur
+> "Enregistrement…" »*. C'est vrai **dans l'administration**. Sur la **page de saisie**, c'est
+> pire : le bouton reste sur **« Valider »** — voir R-053 juste après.
+
+---
+
+## E.5 — Les problèmes P2 (améliorations utiles, non bloquantes)
+
+### R-053 · Le bouton « Valider » ne montre rien pendant l'envoi *(P2)*
+
+**Mesuré, une seconde après le clic, sur un envoi de 4 secondes** : le bouton affiche toujours
+« Valider », il est grisé à 60 % d'opacité, **il n'y a aucun message et aucun indicateur de
+chargement**. C'est tout ce que voit le bénévole.
+
+Or l'application **sait** faire mieux, et le fait ailleurs :
+
+| Bouton | Pendant l'action |
+|---|---|
+| « Rafraîchir » *(même page)* | ⏳ … |
+| « Générer » *(administration)* | Génération… |
+| « Réinitialiser » *(administration)* | Réinitialisation… |
+| **« Valider » un score** | **« Valider »** — inchangé |
+
+Le geste **le plus répété de la journée** est le seul à ne rien dire. Le remède est de deux
+lignes : changer le texte du bouton en « Envoi… » pendant l'attente.
+
+**Pourquoi ce n'est « que » P2** : le bouton est tout de même désactivé et légèrement pâli, donc
+il y a un signal — faible. Et au Racing, la 5G rend l'attente courte. Ailleurs, ce serait P1.
+
+---
+
+### R-054 · La saisie simple a des cibles trop petites pour un doigt *(P2)*
+
+**Mesures réelles, à la taille d'un téléphone (375 px)** :
+
+| Élément | Taille mesurée | Cible visée |
+|---|---|---|
+| **Bouton « Valider »** | **85 × 35 px** | 44 × 44 |
+| **Champ de score** | **72 × 36 px** | 44 de haut |
+| Menu « Catégorie à saisir » | 309 × 38 px | 44 de haut |
+| Titre de phase (à déplier) | 309 × 29 px | 44 de haut |
+| Bouton « Rafraîchir » | 131 × **46** px | ✅ conforme |
+| **Boutons − / + de la saisie U14** | **44 × 44 px** | ✅ **conforme** |
+
+**Le point intéressant n'est pas le chiffre, c'est l'écart.** La règle des 44 pixels est **connue
+dans ce projet** — elle est écrite noir sur blanc dans la feuille de style, avec sa justification
+(« lisibles sous la pluie »). Elle a été appliquée à la saisie détaillée, qui ne concerne
+**qu'une catégorie** (U14 à XV). Elle n'a pas été appliquée à la saisie simple, qui concerne
+**toutes les autres** — donc la grande majorité des matchs de la journée.
+
+Ce n'est pas un oubli d'inattention : c'est ce qui arrive quand on améliore un écran neuf sans
+revenir sur l'ancien.
+
+> ⚠️ **Ce que je ne peux pas affirmer** : que cela provoque des erreurs. Un doigt qui rate le
+> bouton « Valider » ne casse rien — il ne se passe simplement rien. Le coût est en **temps** et
+> en **agacement**, pas en données fausses. C'est pour cela que c'est P2 et non P1.
+
+---
+
+### R-055 · Sur la page publique, l'information la plus utile est la moins lisible *(P2)*
+
+**Balayage automatique de tous les textes de la page publique** (page peuplée, un parent qui suit
+son équipe) : **46 textes mesurés**, **8 sous la norme**, 5 écartés (posés sur un dégradé, non
+mesurables par cette méthode).
+
+Le plus gênant :
+
+| Texte | Contraste mesuré | Exigé |
+|---|---|---|
+| **« 09:00 · Terrain 1 · Poule A »** | **2,81** | 4,5 |
+| « à venir » | 2,81 | 4,5 |
+| « 4 - 2 · Victoire » | 4,15 | 4,5 |
+| « Mis à jour à 15:29 » | 2,98 | 4,5 |
+| Onglet actif « 📋 Mon équipe » | 3,43 | 4,5 |
+
+*(Vérifié au calcul : gris `rgb(138,151,166)` sur fond `rgb(245,249,253)` = **2,81**.)*
+
+**L'heure et le numéro de terrain sont exactement ce qu'un parent vient chercher.** C'est la
+seule chose qui l'intéresse : *où et quand joue mon enfant ?* Et c'est le texte le plus pâle de
+la page, lu dehors, en plein soleil, sur un téléphone dont la luminosité est peut-être réduite
+pour économiser la batterie.
+
+**Cas particulier à part** : le **bleu d'accent** revient partout à **3,43** — c'est le blanc sur
+`#2E8FE0` (thème sombre) et sur `#3E8FD6` (thème clair). Il touche **tous les boutons principaux
+de l'application**, y compris le bouton « Valider » de la saisie. Ce n'est pas un oubli mais un
+**choix de charte graphique** : c'est le bleu du club. Le corriger sans trahir la charte demande
+simplement de **foncer légèrement** ce bleu quand il porte du texte blanc.
+
+---
+
+### R-056 · La zone de dépôt d'image est **invisible** : du blanc sur du blanc *(P2)*
+
+**C'est un vrai défaut d'affichage, pas une question de goût, et il est certain.**
+
+Dans l'administration, sous « Affiche du tournoi (image) », il doit y avoir une zone où déposer
+un fichier. Voici ce que dit la mesure :
+
+| Élément | Couleur du texte | Couleur du fond | Contraste |
+|---|---|---|---|
+| « **Glisse ton affiche ici** » | `rgb(255,255,255)` — **blanc** | `rgb(255,255,255)` — **blanc** | **1,00** |
+| « ou clique pour choisir une image » | `rgb(199,213,232)` — bleu très pâle | blanc | **1,49** |
+
+Un contraste de 1,00 signifie **exactement la même couleur** : le texte est **littéralement
+invisible**. La capture d'écran le confirme : on ne voit qu'une petite flèche et une ligne
+fantôme.
+
+**La cause est connue de ce projet** : il y a **deux feuilles de style**. La zone de dépôt a été
+dessinée pour le thème **sombre** (texte blanc sur carte marine). L'administration est passée au
+thème **clair** (cartes blanches), et cette zone n'a pas suivi.
+
+**Trois endroits sont touchés** : l'affiche du tournoi, la photo du parking, le logo d'un
+partenaire.
+
+**Conséquence concrète** : tu peux croire que la fonction n'existe pas. Le clic fonctionne quand
+même — mais rien ne l'indique.
+
+---
+
+### R-057 · Rien n'est annoncé aux personnes qui n'y voient pas *(P2)*
+
+Balayage de la page de saisie :
+
+- **Zéro** zone d'annonce (`aria-live`) sur toute la page. Quand « Score enregistré ✓ » apparaît,
+  un lecteur d'écran **ne dit rien** ;
+- **8 champs de score sur 10 n'ont aucune étiquette** rattachée. Un lecteur d'écran annonce
+  « zone de texte », sans dire de quelle équipe il s'agit ;
+- les boutons **−** et **+** disent « moins » et « plus » — mais **moins quoi, pour qui ?**
+  Sur une carte U14, on entend huit fois « moins, plus » sans savoir ce que l'on compte.
+
+Sur l'ensemble du frontend, on compte **5** annonces accessibles, toutes dans d'autres pages.
+
+**Ce que je ne prétends pas** : qu'un bénévole aveugle saisira les scores. C'est peu probable.
+Mais la **page publique** est lue par des centaines de parents et grands-parents, dont certains
+utilisent le grossissement ou un lecteur d'écran, et les mêmes manques s'y retrouvent. Et ces
+corrections coûtent quelques attributs.
+
+---
+
+### R-058 · La touche « Entrée » ne valide rien *(P2)*
+
+Il n'y a **aucun formulaire** (`<form>`) sur la page de saisie — mesuré : zéro. Conséquence :
+après avoir tapé les deux scores, il est impossible de valider au clavier. Il faut **fermer le
+clavier du téléphone** (qui masque le bas de l'écran), puis **viser le bouton de 35 pixels**.
+
+Deux gestes au lieu d'un, **à chaque match**. Sur une journée à 60 matchs, ce n'est plus un détail.
+
+---
+
+### R-059 · Le bénévole doit taper un mot de passe, et il lui est redemandé *(P2)*
+
+À l'ouverture de la page de saisie, l'application demande le **mot de passe des scores**. Il est
+mémorisé **pour l'onglet en cours seulement** (`sessionStorage`) — donc **redemandé** à chaque
+nouvelle ouverture du lien.
+
+Sur un téléphone, un onglet ouvert le matin peut être fermé par le système quand la batterie
+faiblit ou quand on ouvre d'autres applications. Le bénévole doit alors **retaper un mot de
+passe** — un mot de passe **partagé**, qu'il a reçu par SMS ou lu sur un papier, au bord d'un
+terrain, sous la pluie.
+
+> Ce n'est **pas** un défaut de sécurité — au contraire, oublier la clé à la fermeture est le bon
+> choix. C'est le **coût d'usage** de ce choix qui est ici relevé, et il rejoint **R-017**
+> (*« deux mots de passe partagés, aucune notion de personne »*, P1, domaine C). La solution
+> confortable — un lien qui contient déjà le droit de saisir, valable la journée — est une
+> question de **sécurité**, pas d'ergonomie : elle sera tranchée avec R-017 et R-018 à l'ÉTAPE 3.
+>
+> ⚠️ **PROBABLE, non vérifié** : que le système ferme réellement l'onglet en cours de journée
+> dépend du téléphone et de son état. Je n'ai pas pu l'éprouver.
+
+---
+
+## E.6 — Le problème P3 (à garder pour plus tard)
+
+### R-060 · L'administration n'a pas de lien « Aller au contenu » *(P3)*
+
+La page publique en a un ; l'administration non. Pour une navigation au clavier, il faut traverser
+la barre des 14 écrans avant d'atteindre le contenu. C'est un vrai point d'accessibilité, mais
+l'administration est utilisée par une ou deux personnes, à la souris, sur un ordinateur.
+
+**Ne rien faire maintenant.**
+
+---
+
+## E.7 — Ce que le domaine E ne peut PAS conclure
+
+Par honnêteté (`CLAUDE.md` §9) :
+
+| Point | Statut |
+|---|---|
+| **L'application est-elle utilisable en conditions réelles ?** | **NON VÉRIFIÉ, et c'est la limite principale de ce domaine.** Tout a été mesuré **dans un navigateur d'ordinateur simulant un téléphone**. Personne n'a jamais saisi un score dehors, en plein soleil, debout, avec de vrais doigts. Aucun tournoi réel n'a eu lieu (**I-04**) |
+| **Les couleurs mesurées sont-elles celles que voit un bénévole ?** | **NON.** Un écran de téléphone en plein soleil, à luminosité réduite, affiche des contrastes **très inférieurs** aux valeurs calculées. Les chiffres donnés sont donc un **plancher optimiste** : ce qui est à 2,81 ici est pire là-bas |
+| **Les textes posés sur un dégradé sont-ils lisibles ?** | **NON MESURÉ** — écartés volontairement (5 sur la page publique, 3 dans l'administration). Ils **paraissent** bien contrastés à l'œil sur les captures, mais « paraître » n'est pas « mesurer » |
+| **Combien de temps prend réellement une validation de score ?** | **INCONNU.** L'attente dépend d'Apps Script et du réseau. C'est le **domaine F (performance)**, prochain sur la liste — et c'est lui qui dira si R-053 est un détail ou un problème |
+| **Le rendu est-il le même sur iPhone et sur Android ?** | **INCONNU.** Un seul moteur de rendu a été utilisé. Les champs `type="number"` et les menus déroulants s'affichent différemment selon les téléphones |
+| **Les 14 écrans de l'administration ont-ils tous été parcourus ?** | **Partiellement.** Le balayage automatique (contrastes, cibles) a porté sur **toute la page chargée** — soit 603 textes et 212 cibles, ce qui couvre l'ensemble. Mais les **parcours** écran par écran (que se passe-t-il si je fais ceci puis cela ?) n'ont **pas** été éprouvés un par un |
+
+---
+
+## E.8 — Récapitulatif du domaine E
+
+| Priorité | Nombre | Références |
+|---|---|---|
+| **P0** | **0** | — |
+| **P1** | **2** | **R-051** *(Rafraîchir échoue en silence)* · **R-052** *(messages techniques en anglais)* |
+| **P2** | **7** | R-053 · R-054 · R-055 · R-056 · R-057 · R-058 · R-059 |
+| **P3** | **1** | R-060 |
+
+**Total domaine E : 10 problèmes.** **Une inconnue levée** (**I-05**). **Aucune décision de
+Romain n'est nécessaire pour les constater** — ce sont des choix techniques, qui seront ordonnés
+à l'ÉTAPE 3 (**D-024**).
+
+### Le fil rouge du domaine E, en deux phrases
+
+1. **L'application sait déjà tout faire bien — elle ne l'a pas fait partout.** Les 44 pixels, le
+   bouton qui annonce sa progression, la confirmation qui nomme ce qu'elle va détruire, l'anti-cache
+   mobile : tout cela **existe dans ce projet**, écrit par la même main, souvent avec le commentaire
+   qui explique pourquoi. Ces bons réflexes sont sur les écrans **construits récemment**. Les écrans
+   **les plus anciens et les plus utilisés** — la saisie simple, la page publique — sont restés en
+   arrière. Il n'y a donc presque rien à **inventer** : il y a à **propager**.
+2. **Le seul vrai défaut de conception est le silence.** La page de saisie ne dit pas qu'elle
+   travaille, ne dit pas qu'elle a échoué, et — le plus grave — peut affirmer qu'elle est à jour
+   quand elle ne l'est pas. Un bénévole sous pression ne peut pas deviner ce que l'écran ne lui
+   dit pas. Rendre l'interface *« difficile à utiliser incorrectement »* (`CLAUDE.md` §6.E), ici,
+   ce n'est pas la redessiner : **c'est la faire parler**.
+
+### Si je devais ne corriger que trois choses
+
+1. **Faire parler la page de saisie (R-051 + R-052 + R-053).** Les trois sont le même sujet et se
+   corrigent ensemble, dans un seul fichier (`frontend/js/saisie.js`), sans toucher ni au calcul
+   des scores, ni au classement, ni au serveur. C'est le meilleur rapport bénéfice / risque de
+   tout le domaine.
+2. **Foncer le bleu des textes secondaires de la page publique (R-055).** Une poignée de couleurs
+   dans une feuille de style. Ça rend lisible, en plein soleil, l'heure et le terrain — c'est-à-dire
+   ce que des centaines de parents viennent chercher.
+3. **Réparer la zone de dépôt invisible (R-056).** C'est un **bug**, pas une préférence : du blanc
+   sur du blanc. Trois endroits, quelques lignes de style.
+
+> ⚠️ **Et une chose qui ne coûte rien et vaut mieux que tout ce qui précède** : **essayer pour de
+> vrai**. Trente minutes, dehors, avec deux ou trois bénévoles et **leurs** téléphones, à saisir
+> de faux scores. Cela vérifierait en une fois ce que ce domaine ne peut qu'estimer — et ferait
+> probablement apparaître des problèmes qu'aucune mesure ne trouve.

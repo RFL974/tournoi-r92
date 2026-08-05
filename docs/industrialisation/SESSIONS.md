@@ -1568,3 +1568,140 @@ Dans le projet Apps Script, le fichier s'appelle **`Test.gs`** (au singulier) ; 
 
 **Un seul geste**, et il n'a pas bougé : **D-017** — remplacer les deux mots de passe par des
 suites aléatoires (menu du classeur → « Configurer les clés »), ce qui referme **R-019**.
+
+---
+
+## SESSION 9 — 2026-08-05 — ÉTAPE 2, domaine E : l'expérience d'utilisation
+
+**Objectif** : auditer le domaine **E (UX / UI / accessibilité)**, cinquième des huit, dans
+l'ordre validé par **D-010**. **Ne rien modifier.**
+
+**Point de départ** : `main`, commit `98b87db`. `git fetch` + `git status -sb` → **à jour, aucun
+retard** (procédure obligatoire de `CLAUDE.md` §12.3, ÉTAPE 0).
+
+### 1. Le préalable : I-05 levée avant toute chose
+
+Un audit d'expérience sans savoir **qui utilise quoi** juge un utilisateur imaginaire. **I-05** a
+donc été posée à Romain **en ouverture de session**, avant toute lecture de code. Ses réponses :
+
+| Question | Réponse |
+|---|---|
+| Qui utilise l'administration le jour J ? | **Pas encore décidé** → on suppose quelqu'un **non formé** |
+| Sur quel matériel ? | **Création du tournoi depuis un ordinateur** |
+| Qui saisit les scores, sur quoi ? | **Des bénévoles, sur leur propre téléphone** *(à confirmer)* |
+| Le réseau tient-il ? | **Excellent au Racing** (Plessis-Robinson, Colombes, 5G). Ailleurs : **inconnu** |
+
+**Conséquence directe sur la méthode** : « leur propre téléphone » = **matériel inconnu**. Les
+mesures ont donc été faites à **375 px** (téléphone courant), **320 px** (plus petits téléphones
+encore en circulation) **et 1280 px** (ordinateur, pour l'administration).
+
+### 2. Méthode : des écrans réellement ouverts, pas seulement du code lu
+
+Une **copie de travail du frontend** a été montée **hors du dépôt** (dossier temporaire de
+session), avec un **faux serveur** (données fictives injectées en remplaçant `fetch`). Les pages
+`saisie.html`, `tournoi.html` et `admin.html` ont été **ouvertes dans un navigateur** et
+instrumentées.
+
+> ⚠️ **Aucun fichier du dépôt n'a été modifié**, et **aucun appel n'a atteint le vrai serveur
+> Google** — c'était l'objectif de la copie : ne toucher ni à la base de données réelle, ni au
+> garde-fou anti-devinette des mots de passe (R-019).
+
+Le serveur d'aperçu du dépôt (`.claude/serveur-preview.js`) n'a **pas** été utilisé : il sert le
+vrai dossier `frontend/`, donc il aurait parlé au vrai backend.
+
+### 3. ⚠️ Une mesure fausse, détectée et refaite — à retenir
+
+Le **premier** balayage des contrastes annonçait que **tout** échouait, y compris des textes
+manifestement lisibles (« Total en points » à 1,05). Le résultat était **trop uniforme pour être
+vrai**, et il a été **remis en cause avant d'être écrit**.
+
+**Cause** : la méthode remontait la pile des fonds à la recherche d'une couleur opaque, mais ne
+savait pas lire un **fond en dégradé** (`background-image`) — elle retombait alors sur du blanc
+par défaut. Or le fond du site **est** un dégradé.
+
+**Correction** : la méthode s'arrête et **renonce** dès qu'elle rencontre un dégradé, plutôt que
+de produire un chiffre faux. Les éléments concernés sont **comptés et signalés** comme non
+mesurables (5 sur la page publique, 3 dans l'administration).
+
+**Résultat après correction** : l'inverse du diagnostic initial — la page de saisie est **très
+bien contrastée** (9,6 à 21 pour 4,5 exigé). Deux chiffres mis en avant ont ensuite été
+**revérifiés à la main** : le bleu d'accent (blanc sur `#2E8FE0` = **3,43**) et l'heure/terrain de
+la page publique (`rgb(138,151,166)` sur `rgb(245,249,253)` = **2,81**).
+
+> **Règle qui en découle, pour les sessions suivantes** : un outil de mesure se vérifie sur un cas
+> dont on connaît la réponse **avant** de croire ses résultats. Un balayage qui condamne tout ne
+> condamne probablement que lui-même.
+
+Un second faux positif a été écarté de la même façon : la page publique affichait « Poule
+undefined ». Vérification faite, c'est la **maquette** qui ne renseignait pas le champ `poule` des
+équipes fictives, **pas** un défaut de l'application.
+
+### 4. Ce qui a été mesuré
+
+| Mesure | Résultat |
+|---|---|
+| Contrastes — page de **saisie** | **9,6 à 21** (4,5 exigé) — ✅ excellents |
+| Contrastes — page **publique** | 46 textes mesurés, **8 sous la norme**, 5 écartés (dégradé) |
+| Contrastes — **administration** | 603 textes mesurés, **25 sous la norme** (96 % conformes), 3 écartés |
+| Cibles cliquables — **administration** | 212 mesurées, **4** sous 24 × 24 px |
+| Cibles tactiles — **saisie simple** | Valider **85 × 35 px** · score **72 × 36 px** · catégorie 38 px · phase 29 px |
+| Cibles tactiles — **saisie détaillée U14** | **44 × 44 px** — ✅ conformes |
+| Débordement horizontal à **320 px** | **Aucun** |
+| Zones d'annonce accessibles (`aria-live`) — saisie | **0** |
+| Formulaires sur la page de saisie | **0** (donc « Entrée » ne valide rien) |
+| Endroits affichant le message brut d'une erreur | **38** |
+
+**Trois comportements ont été reproduits en direct**, réseau coupé ou ralenti :
+
+1. **« Rafraîchir » sans réseau** → aucun message, horodatage inchangé, bouton normal → **R-051** ;
+2. **« Valider » sans réseau** → l'écran affiche **« Failed to fetch »** → **R-052** ;
+3. **« Valider » sur un envoi de 4 s** → à 1 s : bouton toujours « Valider », grisé, **aucun
+   message ni indicateur** → **R-053**.
+
+### 5. Résultat de l'audit
+
+**10 problèmes — R-051 → R-060.** **Aucun P0**, **2 P1**, 7 P2, 1 P3.
+
+Les deux P1 sont le même sujet : **la page de saisie ne dit pas au bénévole où il en est.**
+
+Une **précision** a par ailleurs été apportée à **R-048** (domaine D) : sa description dit que le
+bouton *« reste sur "Enregistrement…" »*. C'est vrai dans l'administration ; sur la page de saisie
+il reste sur **« Valider »**, sans rien indiquer du tout.
+
+### 6. Le fil rouge
+
+**L'application sait déjà tout faire bien — elle ne l'a pas fait partout.** Les 44 pixels de cible
+tactile, le bouton qui annonce sa progression, la confirmation qui nomme ce qu'elle détruit,
+l'anti-cache mobile : **tout cela existe dans ce projet**, souvent avec le commentaire qui
+l'explique. Ces bons réflexes sont sur les écrans **récents** ; les écrans **les plus anciens et
+les plus utilisés** sont restés en arrière. Il y a peu à inventer, beaucoup à **propager**.
+
+### 7. Ce que cette session ne peut PAS conclure
+
+- **L'application n'a jamais été utilisée dehors.** Tout a été mesuré dans un navigateur
+  d'ordinateur simulant un téléphone. Les contrastes calculés sont un **plancher optimiste** : un
+  écran au soleil, à luminosité réduite, fait bien pire ;
+- **Un seul moteur de rendu** a été utilisé : iPhone vs Android reste **INCONNU** ;
+- **Le temps réel d'une validation** de score est **INCONNU** — c'est le **domaine F**, et c'est
+  lui qui dira si R-053 est un détail ou un problème ;
+- Les **parcours** écran par écran de l'administration (« si je fais ceci puis cela ») n'ont pas
+  été éprouvés un par un ; seul le balayage global (603 textes, 212 cibles) les couvre.
+
+### 8. Registre des points en suspens
+
+Le domaine E n'ajoute **aucune décision en attente** et **aucune inconnue** : ses 10 problèmes sont
+des choix techniques, à **ordonner** à l'ÉTAPE 3 (**D-024**), pas à arbitrer maintenant. Il **lève
+I-05**.
+
+**Une recommandation, qui n'est ni une question ni une décision** : essayer la saisie **pour de
+vrai**, trente minutes, dehors, avec deux ou trois bénévoles et **leurs** téléphones.
+
+### 9. Ce qui reste à Romain
+
+**Un seul geste, inchangé depuis la session 6** : **D-017** — remplacer les deux mots de passe par
+des suites aléatoires (menu du classeur → « Configurer les clés »), ce qui referme **R-019**.
+
+### 10. Prochaine session
+
+**Session 10 — ÉTAPE 2, domaine F : la performance.** Toujours sans rien modifier.
+**Condition de démarrage** : instruction explicite de Romain.
