@@ -4,7 +4,7 @@
 > Tant que l'audit (ÉTAPE 2) n'a pas eu lieu, le tableau des chantiers reste **vide** :
 > on ne planifie pas des travaux qu'on n'a pas encore constatés.
 
-**Dernière mise à jour** : 2026-08-05 (session 8)
+**Dernière mise à jour** : 2026-08-05 (session 9)
 
 ---
 
@@ -14,7 +14,7 @@
 |---|---|---|---|
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
-| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaines A, C, B et D faits (4 sur 8) |
+| 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | 🟡 **EN COURS** — domaines A, C, B, D et E faits (5 sur 8) |
 | 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ⬜ À faire |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |

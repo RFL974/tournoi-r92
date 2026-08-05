@@ -58,11 +58,12 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
 | **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
-| P1 | **17** | 0 | **5** | 0 | 0 | 0 |
-| P2 | **27** | 0 | **2** | 0 | 0 | 0 |
-| P3 | **5** | 0 | 0 | 0 | 0 | 0 |
+| P1 | **19** | 0 | **5** | 0 | 0 | 0 |
+| P2 | **34** | 0 | **2** | 0 | 0 | 0 |
+| P3 | **6** | 0 | 0 | 0 | 0 | 0 |
 
-**Total : 50 problèmes** — domaine A (13) + domaine C (14) + domaine B (13) + domaine D (10).
+**Total : 60 problèmes** — domaine A (13) + domaine C (14) + domaine B (13) + domaine D (10)
++ **domaine E (10)**.
 
 > ⚠️➜✅ **UNE PREUVE DE R-014 EST TOMBÉE EN SESSION 8 — PUIS A ÉTÉ REFAITE LE JOUR MÊME.**
 >
@@ -121,8 +122,15 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 > ⚠️ **Un seul problème est réglé : R-014**, au statut **TESTÉ**, par exception validée (D-016).
 > Tous les autres sont au statut **IDENTIFIÉ** : ils ont été vus, rien de plus.
 >
-> Ce tableau ne couvre que les **domaines A, C, B et D**. Les 4 autres domaines n'ont pas été
+> Ce tableau ne couvre que les **domaines A, C, B, D et E**. Les 3 autres domaines n'ont pas été
 > audités : leur absence de ligne ne signifie pas leur absence de problème.
+
+> ⚠️ **Le domaine E n'a produit AUCUN P0, et il faut dire pourquoi.** Un P0 supposerait une
+> interface qui **fait perdre ou fausser des données**. Ce n'est pas le cas : les gestes
+> destructeurs sont confirmés (28 confirmations dans l'administration, dont deux qui nomment le
+> nombre exact de scores effacés), le double-clic est bloqué, et un score en cours de frappe
+> n'est jamais écrasé. Les deux P1 portent sur ce que l'application **ne dit pas** à l'utilisateur,
+> jamais sur ce qu'elle **fait**.
 
 > ⚠️ **Le domaine B n'a produit AUCUN P0, et il faut dire pourquoi** — sinon le chiffre ne veut
 > rien dire. Un P0 supposerait une **exposition grave** de données personnelles. Or le carnet
@@ -310,11 +318,56 @@ aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Rom
 > basse — `comparerClassement` est traversée, et pourtant deux de ses trois critères ne sont
 > jamais éprouvés.
 
+### Domaine E — UX / UI / Accessibilité (session 9)
+
+> **Méthode** : les écrans ont été **réellement ouverts dans un navigateur**, sur une copie de
+> travail hors du dépôt alimentée par un faux serveur, aux tailles 375 × 812 (téléphone),
+> 320 × 568 (vieux téléphone) et 1280 × 800 (ordinateur). Les tailles et les contrastes sont
+> **mesurés**, pas estimés. Détail et captures : `AUDIT.md` §E.
+
+| Réf | Problème | Priorité | Certitude | Statut | Détail |
+|---|---|---|---|---|---|
+| **R-051** | **Le bouton « Rafraîchir » de la saisie échoue en SILENCE COMPLET** : réseau coupé → le bouton revient à la normale, l'heure « Mis à jour à… » ne bouge pas, **aucun message**. Le bénévole croit voir l'état réel du tournoi ; il voit une photographie périmée. Le code le dit : `catch (err) { // On garde l'affichage actuel }`. Une erreur qui **se fait passer pour un succès** | **P1** | **CERTAIN** (reproduit dans le navigateur, réseau coupé) | IDENTIFIÉ | `AUDIT.md` §E.3 |
+| **R-052** | **Un échec affiche un message technique, souvent en anglais** : validation d'un score sans réseau → le bénévole lit **« Failed to fetch »**. Aucune indication de ce qu'il doit faire, ni si son score est passé. **38 endroits** du frontend affichent ainsi le message brut de l'erreur. ✅ L'état reste sain (score conservé, bouton réactivé) : seul le **dire** est en cause | **P1** | **CERTAIN** (reproduit) | IDENTIFIÉ — à corriger **d'abord sur la page de saisie** | `AUDIT.md` §E.4 |
+| **R-053** | **Le bouton « Valider » ne montre rien pendant l'envoi** : mesuré 1 s après le clic sur un envoi de 4 s → texte inchangé (« Valider »), grisé à 60 %, **aucun message, aucun indicateur**. Or « Rafraîchir » affiche « ⏳ … » et l'administration affiche « Génération… », « Réinitialisation… ». **Le geste le plus répété de la journée est le seul à se taire** | P2 | CERTAIN | IDENTIFIÉ — remède : 2 lignes | `AUDIT.md` §E.5 |
+| **R-054** | **Cibles tactiles trop petites sur la saisie simple** : bouton « Valider » **85 × 35 px**, champ de score **72 × 36 px**, menu catégorie 38 px, titre de phase 29 px — pour une cible visée de 44 px. **Alors que la saisie détaillée U14 fait exactement 44 × 44**, avec le commentaire *« grande cible tactile (44px), lisibles sous la pluie »*. La règle est connue du projet ; elle n'a pas été propagée à l'écran le plus utilisé | P2 | CERTAIN (mesuré) | IDENTIFIÉ | `AUDIT.md` §E.5 |
+| **R-055** | **Sur la page publique, l'information la plus utile est la moins lisible** : « 09:00 · Terrain 1 · Poule A » à **2,81** de contraste (4,5 exigé), « à venir » à 2,81. C'est précisément ce qu'un parent vient chercher, lu dehors au soleil. Balayage : 46 textes mesurés, **8 sous la norme**. Cas à part : le **bleu d'accent** (blanc sur `#2E8FE0` / `#3E8FD6`) est à **3,43** — il touche **tous les boutons principaux** de l'application. Choix de charte, corrigeable en fonçant le bleu | P2 | CERTAIN (mesuré + revérifié au calcul) | IDENTIFIÉ | `AUDIT.md` §E.5 |
+| **R-056** | **La zone de dépôt d'image est INVISIBLE — blanc sur blanc.** « Glisse ton affiche ici » : texte `rgb(255,255,255)` sur fond `rgb(255,255,255)` = contraste **1,00**, soit exactement la même couleur. Sous-titre à 1,49. **3 endroits** (affiche, photo de parking, logo partenaire). Cause : composant dessiné pour le thème **sombre**, resté tel quel quand l'administration est passée au thème **clair** — le piège des deux feuilles de style. C'est un **bug**, pas une préférence | P2 | **CERTAIN** (couleurs calculées relevées dans le navigateur + capture) | IDENTIFIÉ | `AUDIT.md` §E.5 |
+| **R-057** | **Rien n'est annoncé aux lecteurs d'écran** : **zéro** zone d'annonce (`aria-live`) sur la page de saisie — « Score enregistré ✓ » n'est jamais dit. **8 champs de score sur 10 sans étiquette** rattachée. Les boutons − / + annoncent « moins » / « plus » sans dire de quoi ni pour qui. Sur tout le frontend : **5** annonces accessibles, toutes ailleurs. Concerne surtout la **page publique**, lue par des centaines de personnes | P2 | CERTAIN (balayage) | IDENTIFIÉ | `AUDIT.md` §E.5 |
+| **R-058** | **La touche « Entrée » ne valide rien** : **aucun formulaire** sur la page de saisie. Il faut fermer le clavier du téléphone (qui masque le bas de l'écran) puis viser un bouton de 35 px. Deux gestes au lieu d'un, **à chaque match** — sur une journée à 60 matchs, ce n'est plus un détail | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §E.5 |
+| **R-059** | **Le bénévole doit taper un mot de passe partagé, et il lui est redemandé** à chaque nouvelle ouverture de l'onglet (`sessionStorage`, oublié à la fermeture). Sur un téléphone qui ferme ses onglets pour économiser la batterie, cela veut dire retaper un mot de passe au bord d'un terrain. ⚠️ Ce n'est **pas** un défaut de sécurité — oublier la clé est le bon choix ; c'est son **coût d'usage**. Rejoint **R-017** et **R-018**, et se tranchera avec eux | P2 | CERTAIN *(le mécanisme)* · **PROBABLE** *(que le téléphone ferme l'onglet en cours de journée — non éprouvé)* | IDENTIFIÉ | `AUDIT.md` §E.5 |
+| **R-060** | **L'administration n'a pas de lien « Aller au contenu »** (la page publique en a un). Navigation au clavier : il faut traverser la barre des 14 écrans. Vrai point d'accessibilité, mais l'administration sert à une ou deux personnes, à la souris | P3 | CERTAIN | IDENTIFIÉ — **ne rien faire maintenant** | `AUDIT.md` §E.6 |
+
+### Ce qui a été VÉRIFIÉ et s'est révélé sain (domaine E)
+
+> À lire **avant** la liste ci-dessus : c'est la majorité de ce qui a été mesuré.
+
+| Point vérifié | Résultat |
+|---|---|
+| **Contrastes de la page de saisie** | ✅ **Excellents — de 9,6 à 21** pour 4,5 exigé. Le fond marine + texte presque blanc est un très bon choix pour un écran vu dehors |
+| **Contrastes de l'administration** | ✅ **603 textes mesurés, 578 conformes (96 %)**. Les 25 écarts sont des textes d'aide secondaires |
+| **Cibles cliquables de l'administration** | ✅ **212 mesurées, 4 seulement sous 24 × 24 px** (cases à cocher et deux petits liens). Très bon pour un usage à la souris |
+| **Saisie détaillée U14** | ✅ **Exemplaire** : boutons − / + de **44 × 44 px** exactement, total en points **en grand (27 px)** et **calculé, jamais saisi** |
+| **Confirmations avant destruction** | ✅ **28 confirmations** dans l'administration. La réinitialisation liste ce qui disparaît **et ce qui survit**, puis reconfirme. Régénérer avec des scores annonce **le nombre exact** effacé **et exige la re-saisie du mot de passe** |
+| **Boutons de l'administration** | ✅ Ils **annoncent leur progression** : « Génération… », « Réinitialisation… », « Recalcul… » |
+| **Double-clic sur « Valider »** | ✅ **Bloqué** — le bouton se désactive pendant l'envoi |
+| **Saisie en cours de frappe** | ✅ **Jamais écrasée** : le rechargement est un bouton manuel, volontairement, et c'est écrit dans le code |
+| **Correction d'un score validé** | ✅ **Redemande le mot de passe** — vraie protection du geste |
+| **Correction d'un score du matin après génération de l'après-midi** | ✅ **Avertissement explicite** qui donne la conséquence **et** le remède |
+| **Contexte de chaque match** | ✅ Écrit : « 🏆 Demi-finale — Coupe U12 », « 🎈 Match amical — sans classement », « ⚔️ Élimination directe » |
+| **Petits écrans** | ✅ **Aucun débordement horizontal jusqu'à 320 px**. Les noms longs passent à la ligne au lieu de pousser le score hors écran |
+| **Mémoire des filtres** | ✅ Catégorie et grand terrain **mémorisés** sur l'appareil |
+| **Repli automatique des phases** | ✅ Une phase entièrement saisie se replie et affiche « tous saisis ✓ » / « 2 à saisir sur 3 » |
+| **Bases de l'accessibilité** | ✅ `lang="fr"`, un seul `h1` par page, repères `main` / `header`, **lien « Aller au contenu »** sur la page publique |
+| **Animations réduites** | ✅ `prefers-reduced-motion` respecté — réflexe que peu de sites ont |
+| **Piège du cache mobile** | ✅ **Déjà vu et déjà réglé** : anti-cache sur le rafraîchissement, avec le commentaire qui l'explique |
+| **Fenêtres de dialogue** | ✅ Clavier géré (Entrée / Échap), focus donné au bon endroit, bouton destructeur **en rouge** |
+
 ### Domaines non audités
 
 | Domaine | Statut |
 |---|---|
-| E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
+| F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
 
 ### Modèle de fiche de problème
 
