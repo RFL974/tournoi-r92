@@ -3033,3 +3033,89 @@ touchées.
 - **7 inconnues ouvertes**, **0 décision en attente**, **4 fiches de chantier** *(C-001 → C-004)* ;
 - fichiers touchés : `DECISIONS.md`, `PLAN.md`, `ETAT.md`, `RISQUES.md`, `SESSIONS.md` ;
 - **la session 14 (volet ②) n'est pas commencée.**
+
+---
+
+## SESSION 13 — ADDENDUM n° 4 : **D-031 et D-032** — deux règles de Romain, deux défauts trouvés
+
+> **Deux précisions apportées par Romain**, et une troisième en cours de rédaction :
+>
+> 1. *« La réglementation importe au responsable du tournoi, pas à l'app — à lui de renseigner ce
+>    que la réglementation impose. »*
+> 2. *« Quand la pause échelonnée est cochée, la pause classique ne s'applique pas, et inversement.
+>    Elles ne doivent jamais coexister. »*
+> 3. *« On ne touche pas au bouton "Appliquer les valeurs FFR" aux catégories — ici c'est juste une
+>    aide à la saisie qu'il peut modifier. »*
+>
+> ⚠️ **Aucun code modifié.**
+
+### 1. D-031 — la réglementation appartient au responsable
+
+**Ce que ça change** : aucun seuil réglementaire n'est écrit dans le code. L'application applique
+**les valeurs saisies**, et **rien d'autre**.
+
+**Ce que ça ferme immédiatement** : le point ouvert **(g)** de D-030 — *« existe-t-il un repos
+méridien minimal réglementaire ? »*. **La question ne se pose plus** : ce n'est pas l'affaire de
+l'application. Une question sortante de moins, un avertissement de moins à construire, et **C-004
+se simplifie**.
+
+> ⚠️ **La contrepartie, et elle n'est pas négociable** : quand une valeur **manque**, l'application
+> ne doit **ni inventer, ni faire comme si le contrôle avait eu lieu**. Elle le dit :
+> *« aucun plafond renseigné pour cette catégorie — cette proposition n'a pas pu être vérifiée sur
+> ce point »*. C'est **D-027** : une case non cochée n'est pas une case verte.
+
+> 🚧 **Garde-fou inscrit explicitement, à la demande de Romain.** D-031 ne vise **pas** le bouton
+> **« Appliquer les valeurs FFR »**, ni la lecture des `RefFFR_*`, ni l'écran de conformité.
+> **Loin de contredire D-031, ce bouton en est le meilleur exemple** : D-031 dit que *c'est le
+> responsable qui renseigne* — le bouton est l'outil qui l'aide à le faire vite, **et il garde le
+> dernier mot**. Ce que D-031 interdit est autre chose : que l'application **décide** à sa place ou
+> **refuse** une valeur au nom d'une règle qu'elle croirait connaître.
+>
+> 🏉 **En une image** : le bouton est un **formulaire pré-rempli**, pas un **agent qui vérifie à la
+> sortie**. → une **liste « ce qu'aucun chantier ne doit toucher »** est désormais en tête de
+> `PLAN.md` §6, pour qu'aucune session future ne le « nettoie » au nom de D-031.
+
+### 2. D-032 — et le défaut qu'elle a révélé
+
+**Vérification faite avant d'écrire quoi que ce soit** : aujourd'hui, **les deux modes coexistent**.
+La pause échelonnée est un réglage **global**, une catégorie y est éligible **dès 4 équipes**, et
+**en dessous le code la bascule en pause classique** — avec cet avertissement, écrit tel quel :
+
+> *« Catégorie X : pause échelonnée demandée mais seulement 3 équipe(s) — **pause classique
+> conservée pour cette catégorie**. »*
+
+C'est **délibéré**, et **D-032 l'interdit désormais**. → **R-091** inscrit au registre.
+
+**✅ Arbitrage de Romain** : *la petite catégorie garde une pause, mais la sienne* — pas de deux
+vagues *(impossible à 3 équipes)*, mais **une coupure de midi propre, de la durée du repos minimal
+configuré**. Les trois autres options ont été écartées : *tout ou rien* aurait privé toutes les
+catégories pour une seule ; *interdire de cocher la case* était trop rigide (un désistement la
+veille) ; *aucune pause* aurait laissé **des enfants jouer toute la journée sans coupure**.
+
+### 3. ⚡ Deux défauts trouvés — et aucun ne vient de l'audit
+
+| Réf | Défaut | Comment il a été trouvé |
+|---|---|---|
+| **R-090** (P2) | **En pause échelonnée, le champ « Pause déjeuner — durée (min) » est ignoré sans le dire.** Il fonctionne en pause classique ; pour les catégories échelonnées le code l'ignore et **force 60 en dur**. On peut donc régler **45** et voir **60**, sans avertissement | **En répondant à la question de Romain** *« tu parles du repos du midi ? »* |
+| **R-091** (P2) | **Les deux modes de pause coexistent** dans le même tournoi | **En vérifiant** la règle que Romain venait de poser |
+
+> 💡 **Ce que ces deux lignes disent de la méthode, et c'est le vrai enseignement de l'addendum** :
+> **les questions de Romain trouvent des défauts que huit domaines d'audit n'ont pas vus.** Ni l'un
+> ni l'autre n'a été trouvé en relisant du code — mais en **confrontant le code à ce que
+> l'organisateur croit qu'il fait**.
+>
+> 🔗 **R-090 appartient au fil rouge du domaine H** *(ce n'est pas le code qui se trompe, c'est ce
+> qu'il raconte)* — **en pire** : ce n'est pas un commentaire qui ment à un développeur, c'est
+> **un écran qui ment à l'organisateur**.
+
+**Un sixième commentaire faux** a été relevé au passage et rattaché à **R-083** : sur l'éligibilité
+à la pause échelonnée, deux commentaires du même fichier se contredisent *(« effectif pair ≥ 4 »
+contre « dès 4 équipes, impairs gérés par un bye »)*. **Le code teste seulement `≥ 4`.**
+
+### 4. État
+
+- **Aucun fichier de l'application modifié** ;
+- registre : **91 problèmes** — **88 de l'audit** *(figé)* **+ 3 post-clôture** (R-089, R-090, R-091) ;
+- **0 décision en attente** · **7 inconnues** · **4 fiches de chantier** (C-001 → C-004) ;
+- fichiers touchés : `DECISIONS.md`, `RISQUES.md`, `PLAN.md`, `ETAT.md`, `SESSIONS.md` ;
+- **la session 14 (volet ②) n'est pas commencée.**

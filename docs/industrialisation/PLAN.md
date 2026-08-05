@@ -236,6 +236,18 @@ compliquée le jour J, ce n'est pas une amélioration — elle est refusée ou r
 > au moment où la fiche est écrite, pas selon l'ordre d'exécution. **L'ordre réel se lit dans le
 > champ « Dépendances »** de chaque fiche.
 
+> ## ⛔ CE QU'AUCUN CHANTIER NE DOIT TOUCHER
+>
+> *Liste courte, tenue à jour, à lire avant d'ouvrir n'importe quelle fiche.*
+>
+> | Ce qui est protégé | Décision | Pourquoi |
+> |---|---|---|
+> | **Le bouton « Appliquer les valeurs FFR » par catégorie**, la lecture des onglets `RefFFR_*`, l'écran de conformité et ses avertissements | **D-031** | C'est **une aide à la saisie**, pas une décision de l'application : elle pré-remplit, **le responsable garde le dernier mot**. *« On ne touche pas au bouton »* — Romain, 2026-08-05 |
+> | **La règle d'équité de la pause échelonnée** *(une équipe reposée n'affronte jamais une équipe qui ne l'est pas)* | **D-030 §9.1**, contrainte 4 | Déjà implémentée par Romain. ⚠️ Tenue par la **forme** du planning, **vérifiée nulle part** — donc cassable en silence |
+> | **Le mode de pause classique pur** *(case décochée)* | — | C'est le mode **historique**, celui de tous les tournois passés. Il doit rester **strictement identique** |
+> | **Les calculs d'affichage du navigateur** | `RAPPORT-AUDIT.md` §6 | Mesurés à **0,9 ms** : rien à y gagner, tout à y perdre |
+> | **Le découpage de `Code.gs`** | **D-028** | 1 fichier → 5 collages à la main, soit le mécanisme même de **M-04** |
+
 **Ordre d'exécution connu à ce jour**, du premier au dernier :
 
 ```
@@ -453,9 +465,29 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
 
   Cette valeur **devient une contrainte du planning**.
 
-- **Risques couverts** : préalable du **levier n° 7** de **C-003** · **referme l'écart entre le
-  champ affiché et le comportement réel** *(ci-dessus)* · confort d'organisation immédiat, hors de
-  toute suspension.
+- ⛔ **ET UNE TROISIÈME PIÈCE — l'exclusivité des deux modes** *(décision **D-032**, 2026-08-05)* :
+
+  > *« Quand la pause échelonnée est cochée, la pause classique ne s'applique pas, et inversement.
+  > Elles ne doivent jamais coexister. »* — Romain
+
+  **Aujourd'hui elles coexistent**, délibérément : la pause échelonnée est un réglage **global**,
+  une catégorie y est éligible **à partir de 4 équipes**, et **en dessous le code bascule cette
+  catégorie en pause classique** — avec un avertissement écrit tel quel.
+
+  **✅ Comportement retenu** *(arbitré par Romain)* : **la petite catégorie garde une pause, mais la
+  sienne.** Elle n'est pas planifiée en deux vagues *(impossible à moins de 4 équipes)*, mais elle
+  obtient **une coupure de midi propre, de la durée du repos minimal configuré**. **La pause
+  classique globale ne s'applique alors nulle part.**
+
+  > 🏉 **Ce que ça garantit** : aucune coexistence des deux modes, **et aucun enfant sans coupure**.
+  >
+  > ⚠️ **Ce que ça n'autorise pas** : supprimer le **repli** lui-même. Une catégorie de moins de
+  > 4 équipes doit continuer d'être planifiée, et l'avertissement doit continuer d'exister — **son
+  > texte change, pas sa présence**.
+
+- **Risques couverts** : **R-090** *(le champ ignoré sans le dire)* · **R-091** *(les deux modes qui
+  coexistent)* · préalable du **levier n° 7** de **C-003** · confort d'organisation immédiat, hors
+  de toute suspension.
 - **Priorité** : **P2** — mais pour une raison qui a changé. Ce n'est plus seulement *« 60 est une
   valeur raisonnable »* : c'est qu'aujourd'hui **un réglage affiché n'a pas l'effet annoncé**. Le
   risque reste faible *(60 est plus protecteur que ce que l'organisateur aurait choisi)*, mais
@@ -483,10 +515,18 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
   - une valeur aberrante *(0, négative, texte)* ⇒ **repli prudent sur 60**, jamais un plantage ;
   - l'avertissement du cas dégénéré **fonctionne toujours** avec une valeur autre que 60 ;
   - ⭐ **le nouveau champ et `pause_dejeuner_duree_min` restent INDÉPENDANTS** : changer l'un ne
-    déplace jamais l'autre. C'est le test qui protège la décision de conception ci-dessus.
+    déplace jamais l'autre. C'est le test qui protège la décision de conception ci-dessus ;
+  - ⭐ **exclusivité (D-032)** : pause échelonnée active ⇒ **aucune catégorie** ne subit la fenêtre
+    de pause classique — **y compris celles de moins de 4 équipes** ;
+  - ⭐ **aucun enfant sans coupure** : une catégorie de 3 équipes, en mode échelonné, obtient **quand
+    même** un trou de midi ≥ au repos configuré ;
+  - le **repli reste présent et averti** : une catégorie sous 4 équipes est toujours planifiée, et
+    l'avertissement existe toujours *(son texte change)*.
 
 - **Vérifications de non-régression** : la **pause échelonnée** *(les deux vagues, l'équité, le
-  repos garanti)* · les catégories **sans** pause échelonnée, qui ne doivent pas être effleurées.
+  repos garanti)* · les catégories **sans** pause échelonnée, qui ne doivent pas être effleurées ·
+  ⭐ **le mode classique pur** *(case décochée)*, qui doit rester **strictement identique** — c'est
+  le mode historique, et la majorité des tournois passés.
 
 - **Dépendances** : **aucune.** ✅ **Ce chantier peut être fait à tout moment**, y compris avant
   C-002 et C-003.
@@ -494,8 +534,8 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
 - **Validation de Romain** : ✅ **oui** — précision du 2026-08-05
 - **Commit** : —
 
-> ❓ **Le seul point à trancher** : faut-il un **plancher** sous lequel l'application avertit
-> l'organisateur ? Cela suppose de savoir s'il existe une **durée de repos minimale réglementaire**
-> en École de Rugby — **point ouvert (g)** de D-030 §5, à poser dans le même courriel que **I-10**.
-> ⚠️ **Cela ne bloque pas C-004** : sans cette réponse, le champ existe et fonctionne ; il n'avertit
-> simplement pas.
+> ✅ **Il n'y a plus de point à trancher.** J'avais ouvert une question — *« faut-il un plancher
+> réglementaire sous lequel l'application avertit ? »*. **Romain a tranché autrement, et plus
+> simplement** (**D-031**) : *« la réglementation importe au responsable du tournoi, pas à l'app. »*
+> **Aucun plancher, aucun avertissement réglementaire, aucune règle écrite dans le code.** Le
+> responsable saisit la valeur qu'il doit respecter — l'application l'applique.

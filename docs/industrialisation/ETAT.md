@@ -9,11 +9,13 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-05 (session 13 + **3 addendums** — **ÉTAPE 3 ouverte, volet ①
+**Dernière mise à jour** : 2026-08-05 (session 13 + **4 addendums** — **ÉTAPE 3 ouverte, volet ①
 terminé : les 6 décisions en attente sont TRANCHÉES** · ⚡ **une 7ᵉ décision apportée par Romain
 entre au chantier : D-030 — tournoi suspendu / annulé** · ⚡ **I-21 levée par la FFR** · ⚡ **cadre
 de la reprise précisé — 6 contraintes / 8 leviers / 5 principes — et trois fiches de chantier
-écrites : C-002, C-003, C-004**)
+écrites : C-002, C-003, C-004** · ⚡ **D-031 (la réglementation appartient au responsable, pas à
+l'app) et D-032 (les deux pauses méridiennes ne coexistent jamais) — 2 problèmes de plus au
+registre : R-090, R-091**)
 **Commit de référence** : `b5cc9df` sur **`main`** — la session 13 part de là.
 **Documentation uniquement — aucun fichier de l'application modifié**, aucun redéploiement requis.
 
@@ -261,7 +263,7 @@ preuves, telles qu'inscrites au départ :
 
 ## 6. PROBLÈMES RESTANT À TRAITER
 
-**89 problèmes — 1 corrigé, 88 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
+**91 problèmes — 1 corrigé, 90 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
 le registre et `AUDIT.md` pour l'explication de chacun.
 
 > ⚡ **88 ou 89 ? Les deux chiffres sont vrais, et ils ne disent pas la même chose.**
@@ -278,7 +280,7 @@ le registre et `AUDIT.md` pour l'explication de chacun.
 |---|---|---|---|---|---|---|---|---|---|
 | **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **TESTÉ, en service** *(une preuve remplacée, voir §5)* | — | — | — | — | — | — |
 | **P1** | **24** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ · ⚡ **R-089 tournoi suspendu / annulé** ✅ *(hors audit — D-030)* | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* | R-028 personne n'est informé · **R-029 mesure des spectateurs** *(SUSPENDU — partenaires désactivés le 2026-08-05)* · R-030 rien ne s'efface | **R-041 classement/départage non testés** · **R-042 saisie du score non testée** · **R-043 le navigateur part en ligne sans contrôle** · **R-044 règles écrites en double** *(⚠️ **requalifié par le domaine H** : les deux copies sont d'accord — 179 comparaisons, 0 écart. Dette à surveiller, plus défaut possible)* | **R-051 « Rafraîchir » échoue en silence** · **R-052 « Failed to fetch » affiché au bénévole** | **R-061 le relais anti-affluence est éteint** · **R-062 le cache s'éteint tout seul vers 165 matchs** | **R-072 la procédure de redéploiement décrit la moitié du geste** *(le mécanisme même de M-04)* · **R-073 la carte du projet décrit une autre application** | **aucun** |
-| **P2** | 53 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 | R-063 → R-069 | R-074 → R-080 | R-082 → R-086 |
+| **P2** | 55 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 | R-063 → R-069 | R-074 → R-080 | R-082 → R-086 |
 | **P3** | 11 | R-011 | R-026 · R-027 | R-040 | R-050 | R-060 | R-070 · R-071 | R-081 | R-087 · R-088 |
 
 **Risques de méthode** : M-01 · M-02 · M-03 *(largement levé en session 8)* · M-04 *(traité en
@@ -614,6 +616,8 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 
 | Réf | Décision | Statut |
 |---|---|---|
+| **D-031** | ⚡ **L'application ne porte pas la réglementation : le responsable la renseigne.** *« La réglementation importe au responsable du tournoi, pas à l'app — à lui de renseigner ce que la réglementation impose. »* **Doctrine générale**, valable pour tout le projet. Aucun seuil réglementaire n'est écrit dans le code ; l'application applique **les valeurs saisies**. ⚠️ **Contrepartie obligatoire** : si une valeur manque, l'application **le dit** — elle n'invente pas et ne fait pas comme si le contrôle avait eu lieu (**D-027**). 🚧 **Garde-fou explicite** : le **bouton « Appliquer les valeurs FFR »**, la lecture des onglets `RefFFR_*` et l'écran de conformité **ne sont PAS visés** — *« c'est juste une aide à la saisie qu'il peut modifier »*. Ferme le point ouvert (g) de D-030 | ✅ **Validée (session 13, addendum n° 4)** |
+| **D-032** | ⚡ **Les deux pauses méridiennes ne coexistent jamais.** *« Quand la pause échelonnée est cochée, la pause classique ne s'applique pas, et inversement. »* ⚠️ **Le code d'aujourd'hui ne respecte pas cette règle** : sous 4 équipes, une catégorie retombe en pause classique (**R-091**). ✅ **Comportement retenu** : la petite catégorie **garde une pause, mais la sienne** — durée = le repos minimal configuré ; la pause classique globale ne s'applique alors **nulle part**. *Garantit qu'aucun mode ne coexiste **et** qu'aucun enfant n'est sans coupure.* Planifié dans **C-004** | ✅ **Validée (session 13, addendum n° 4)** — **couvre R-091** |
 | **D-030** | **Tournoi SUSPENDU / Tournoi ANNULÉ (force majeure)** — deux états au niveau du **tournoi**, un cran au-dessus du match annulé de D-015. **SUSPENDU** : tout est figé, le match en cours est verrouillé et **son score validé à l'instant de la suspension**, la reprise ne le rejoue pas, et le moteur **propose** des scénarios de rattrapage sans jamais **décider** seul d'une modification réglementaire. **ANNULÉ** : définitif pour la journée, matchs à venir grisés et inaccessibles, **aucun classement final** pour un tournoi EDR classique, résultats déjà validés **conservés** comme historique. **Dans les deux cas** : clé administrateur à l'activation **et** à la reprise, état visible en administration, **bandeau public au texte personnalisable**. ⚠️ **Spécification conservée — aucun code écrit.** Implémentation **volet ③**, en **2 niveaux**, après le lot ① des tests et après R-042. ⚡ **I-21 levée le même jour** : la reprise avec **adaptation du format et de la durée est autorisée**, sous réserve du **temps de jeu maximal** et de **l'interdiction des phases finales** → le **niveau 2 est débloqué**. ⚡ **Cadre de la reprise précisé par Romain le même jour** (**D-030 §9**) : **6 contraintes** que le moteur ne franchit jamais *(dont la règle d'équité « jamais une équipe reposée contre une équipe qui ne l'est pas »)*, **8 leviers** ordonnés du moins au plus intrusif, et **5 principes** — dont le plus important : **le moteur n'a pas le droit de conclure « impossible » avant d'avoir parcouru les huit leviers**, et **il ne modifie jamais seul une valeur configurable**. **Trois fiches de chantier écrites** : `PLAN.md` **C-002**, **C-003**, **C-004** | ✅ **Validée (session 13, addendums)** — **couvre R-089** |
 
 **En attente** (voir `DECISIONS.md`) :

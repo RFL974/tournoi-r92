@@ -9,7 +9,7 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-05 (**session 13 — ÉTAPE 3, volet ①** : R-028, R-029, R-030 et R-041 ne sont **plus bloqués par une décision en attente** · ⚡ **addendum : R-089 inscrit**, tournoi suspendu / annulé, apporté par Romain — voir **D-030**)
+**Dernière mise à jour** : 2026-08-05 (**session 13 — ÉTAPE 3, volet ①** : R-028, R-029, R-030 et R-041 ne sont **plus bloqués par une décision en attente** · ⚡ **addendums : R-089, R-090 et R-091 inscrits** — le tournoi suspendu / annulé (**D-030**), un réglage de pause ignoré sans le dire, et deux modes de pause qui coexistent (**D-032**))
 **Audits réalisés** : 🏁 **les 8 domaines** — A (métier), C (sécurité), B (RGPD), D (QA / tests), E (UX / accessibilité), F (performance), G (architecture) et **H (qualité du code)**. **Aucun domaine ne reste à auditer.**
 **Correction réalisée** : R-014 (le P0), par exception validée — voir D-016. ⚠️ Une de ses trois preuves est tombée en session 8, ✅ **et a été refaite correctement le jour même** (`589/589 OK` chez Google) — voir la note sous le tableau de synthèse, `AUDIT.md` §D.8 et **M-04**.
 
@@ -63,21 +63,30 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 |---|---|---|---|---|---|---|
 | **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
 | P1 | **24** | 0 | **6** | 0 | 0 | 0 |
-| P2 | **53** | 0 | **2** | 0 | 0 | 0 |
+| P2 | **55** | 0 | **2** | 0 | 0 | 0 |
 | P3 | **11** | 0 | 0 | 0 | 0 | 0 |
 
-**Total : 89 problèmes** — **88 issus des 8 domaines d'audit** [domaine A (13) + domaine C (14) +
+**Total : 91 problèmes** — **88 issus des 8 domaines d'audit** [domaine A (13) + domaine C (14) +
 domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (10) + **domaine H
-(7)**] **+ 1 ajouté après la clôture de l'audit** : ⚡ **R-089** *(tournoi suspendu / annulé —
-apporté par Romain le 2026-08-05, voir **D-030**)*.
+(7)**] **+ 3 ajoutés après la clôture de l'audit**, tous le **2026-08-05**, tous autour de **D-030** :
+
+| Réf | Quoi | D'où il vient |
+|---|---|---|
+| ⚡ **R-089** (P1) | Tournoi suspendu / annulé pour force majeure | **Apporté par Romain** — connaissance du terrain |
+| ⚡ **R-090** (P2) | Le champ « Pause déjeuner — durée » est ignoré en mode échelonné | **Trouvé en répondant à une question de Romain** |
+| ⚡ **R-091** (P2) | Les deux modes de pause coexistent dans le même tournoi | **Trouvé en vérifiant** une règle posée par Romain (**D-032**) |
+
+> 💡 **Ce que ces trois lignes disent de la méthode** : **les questions de Romain trouvent des
+> défauts que huit domaines d'audit n'ont pas vus.** Deux des trois n'existent pas parce qu'on a
+> relu du code, mais parce qu'on a **confronté le code à ce que l'organisateur croit qu'il fait**.
 
 > ✅ **L'ÉTAPE 2 EST TERMINÉE : les 8 domaines sont audités** (session 12, 2026-08-05).
 
-> ⚡ **Pourquoi 89 et non 88, et pourquoi les deux chiffres sont vrais.** **88** est le résultat de
-> l'audit — il ne bougera plus, et c'est le chiffre de `RAPPORT-AUDIT.md`. **89** est l'état du
-> **registre de suivi**, qui continue de vivre : **R-089** n'a été trouvé par aucun domaine, il a
-> été **apporté par Romain** après la clôture. Confondre les deux, ce serait laisser croire que
-> l'audit avait vu ce qu'il n'a pas vu — l'erreur exacte que **M-06** cherche à empêcher.
+> ⚡ **Pourquoi 91 et non 88, et pourquoi les deux chiffres sont vrais.** **88** est le résultat de
+> l'audit — il ne bougera plus, et c'est le chiffre de `RAPPORT-AUDIT.md`. **91** est l'état du
+> **registre de suivi**, qui continue de vivre : **R-089, R-090 et R-091** n'ont été trouvés par
+> aucun domaine. Confondre les deux, ce serait laisser croire que l'audit avait vu ce qu'il n'a pas
+> vu — l'erreur exacte que **M-06** cherche à empêcher.
 
 > ⚠️ **Le domaine H n'a produit NI P0 NI P1, et il faut dire pourquoi.** Un P0 supposerait un code
 > qui **perd des données**, **fausse un résultat sportif** ou **rend l'application inutilisable** ;
@@ -218,6 +227,20 @@ apporté par Romain le 2026-08-05, voir **D-030**)*.
 > quand la réalité s'écarte du plan »*. Un tournoi arrêté par la foudre est précisément ce cas, et
 > il est **au moins aussi probable** qu'une égalité parfaite (R-004, P1). Ce n'est pas un P0 : rien
 > n'est perdu ni faussé — l'application est simplement **muette** au moment où elle devrait parler.
+
+| ⚡ **R-090** | **En pause méridienne échelonnée, le champ « Pause déjeuner — durée (min) » est ignoré sans le dire.** Le réglage existe dans l'écran *(`pause_dejeuner_duree_min`, défaut 60)* et **fonctionne en pause classique** — aucun match n'est placé dans la fenêtre. Mais pour les catégories en pause échelonnée, le code l'ignore *(il l'écrit lui-même : « sans pause déjeuner globale »)* et **force 60 minutes en dur**. Un organisateur peut donc régler **45 min** et voir **60** appliqué, **sans aucun avertissement** | **P2** | **CERTAIN** *(lu dans le code)* | ✅ **PLANIFIÉ** — chantier **C-004**, qui ajoute le champ manquant **et** referme cet écart | `PLAN.md` **C-004** |
+| ⚡ **R-091** | **Les deux modes de pause méridienne coexistent dans le même tournoi.** La pause échelonnée est un réglage **global** ; une catégorie y est éligible **à partir de 4 équipes** ; en dessous, le code **bascule cette catégorie en pause classique** — avec un avertissement explicite. Le mélange est donc **délibéré**, mais **D-032 l'interdit désormais** | **P2** | **CERTAIN** *(lu dans le code)* | ✅ **SPÉCIFIÉ — D-032**, et **PLANIFIÉ** dans **C-004**. Comportement retenu : la petite catégorie **garde une pause, mais la sienne** *(durée = le repos minimal configuré)* ; la pause classique globale ne s'applique alors **nulle part** | `DECISIONS.md` **D-032** · `PLAN.md` **C-004** |
+
+> ⚡ **R-090 et R-091 ne viennent pas de l'audit non plus.** Ils ont été trouvés le 2026-08-05 en
+> instruisant **D-030** — l'un en répondant à une question de Romain sur ce que désignait le repos
+> de 60 minutes, l'autre en vérifiant si les deux modes de pause pouvaient coexister. **Aucun des
+> huit domaines ne les avait vus** : le domaine A n'a pas ouvert la pause méridienne, et le domaine
+> H a cherché les commentaires faux, pas les **réglages sans effet**.
+>
+> 🔗 **Ils appartiennent pourtant tous deux au fil rouge du domaine H** — *ce n'est pas le code qui
+> se trompe, c'est ce que le code raconte*. **R-090 en est même un cas plus grave que ceux du
+> domaine H** : ce n'est pas un commentaire qui ment à un développeur, c'est **un écran qui ment à
+> l'organisateur**.
 
 ### État des décisions métier
 
@@ -517,7 +540,7 @@ D-030** (tournoi suspendu / annulé).
 | Réf | Problème | Priorité | Certitude | Statut | Détail |
 |---|---|---|---|---|---|
 | **R-082** | **Le seul miroir en désaccord : l'U14 en Super Challenge.** Le format sportif de la demande d'autorisation est calculé **deux fois** — `formatSportifCategorie` (serveur, ce que tu **vois** dans la feuille de report) et `formatSportifCategorieAut` (navigateur, ce qui est **réellement écrit dans le PDF**). Le second porte une garde « Super Challenge » que le premier n'a pas, alors que son commentaire le dit *« miroir FIDÈLE »*. Résultat, **prouvé en exécutant les deux versions sur le même cas** : le PDF n'écrit **rien** (correct) tandis que l'écran annonce **2 phases** (il n'y en a qu'une : le code saute l'après-midi en SCF), une **phase 2 « manquante »** qui n'existera jamais, et une **durée de match de 1 × 10 min alors que 30 min seront jouées** (2×15 imposé par `dureeMatchScf` ; 22 min en phase 3). Format d'après-midi vide ⇒ l'écran dit *« non configuré — CROISE serait appliqué par défaut »*, ce qui est **faux** et pousse vers l'état le plus faux. ⚠️ Le serveur **sait déjà** reconnaître le SCF : la garde existe une marche plus bas (`predictionPhase2FormatSportif`, l. 2224) | **P2** ⚠️ **→ P1 le jour d'un vrai Super Challenge** | **CERTAIN** *(les deux versions chargées dans un même bac à sable et appelées sur les mêmes entrées)* | IDENTIFIÉ — correction = **3 lignes**, au même endroit que la garde existante. Ne touche **que le remplissage d'un formulaire** : ni génération, ni horaires, ni scores, ni classement | `AUDIT.md` §H.2 |
-| **R-083** | **Cinq commentaires annoncent le contraire de ce que le code fait.** Trois disent que le Super Challenge n'est *« pas encore branché (prévu session 14) »* — il l'est depuis la session 14, fusionnée et déployée : `Code.gs:281` (**l'en-tête qui documente les colonnes du classeur**), `admin-reglages.js:511` (*« le récapitulatif est informatif »* — il est appliqué), `Code.gs:7072` (*« socle multi-journées pas encore branché »* — `genererDimancheScf` existe l. 7880, est routée l. 2884 et **a son bouton**). Deux annoncent une réponse *« en quelques millisecondes »* (`Code.gs:320` et `:439`) là où le domaine F a mesuré **1,65 s**, dont 1,59 s incompressible (**I-18**). 🔗 **C'est le mécanisme de R-073 descendu d'un cran** : l'écart entre ce que le projet raconte et ce qu'il fait a commencé à entrer **dans le code**, et toujours dans la partie la plus récente | P2 | **CERTAIN** *(chaque affirmation confrontée à la ligne de code correspondante)* | IDENTIFIÉ — **zéro ligne exécutable** ; balayage fait : 48 occurrences de « pas encore / prévu session », **45 légitimes** (elles décrivent l'application en marche). Règle proposée : *une session qui branche ce qu'une précédente annonçait « pas encore branché » efface la phrase dans le même lot* — le pendant de `CLAUDE.md` §8 bis pour les commentaires | `AUDIT.md` §H.3 |
+| **R-083** | **Cinq commentaires annoncent le contraire de ce que le code fait.** Trois disent que le Super Challenge n'est *« pas encore branché (prévu session 14) »* — il l'est depuis la session 14, fusionnée et déployée : `Code.gs:281` (**l'en-tête qui documente les colonnes du classeur**), `admin-reglages.js:511` (*« le récapitulatif est informatif »* — il est appliqué), `Code.gs:7072` (*« socle multi-journées pas encore branché »* — `genererDimancheScf` existe l. 7880, est routée l. 2884 et **a son bouton**). Deux annoncent une réponse *« en quelques millisecondes »* (`Code.gs:320` et `:439`) là où le domaine F a mesuré **1,65 s**, dont 1,59 s incompressible (**I-18**). 🔗 **C'est le mécanisme de R-073 descendu d'un cran** : l'écart entre ce que le projet raconte et ce qu'il fait a commencé à entrer **dans le code**, et toujours dans la partie la plus récente | P2 | **CERTAIN** *(chaque affirmation confrontée à la ligne de code correspondante)* | IDENTIFIÉ — **zéro ligne exécutable** ; balayage fait : 48 occurrences de « pas encore / prévu session », **45 légitimes** (elles décrivent l'application en marche). Règle proposée : *une session qui branche ce qu'une précédente annonçait « pas encore branché » efface la phrase dans le même lot* — le pendant de `CLAUDE.md` §8 bis pour les commentaires. ⚡ **UN SIXIÈME cas trouvé le 2026-08-05**, hors audit : sur l'éligibilité à la pause échelonnée, **deux commentaires du même fichier se contredisent** — l'un annonce *« éligible si effectif **pair** ≥ 4 »*, l'autre *« éligible **dès 4 équipes**, les effectifs impairs sont gérés par un bye »*. **Le code, lui, teste seulement `≥ 4`** : c'est le second qui dit vrai. À corriger avec les cinq autres | `AUDIT.md` §H.3 |
 | **R-084** | **Une colonne est créée dans ton classeur, documentée, munie de sa fonction de lecture — et rien ne la lit.** La pause méridienne échelonnée se règle par une case **globale** (`Code.gs:6971`). Mais le code crée aussi une colonne **par catégorie** `pause_echelonnee` (`Code.gs:290`), l'ajoute automatiquement aux classeurs en service (`:6684`), et écrit `pauseEchelonneeDe(cat)` pour la lire (`:7961`) — **la seule fonction morte des 277**. `docs/structure-google-sheet.md` la documente comme active ; `docs/pause-echelonnee.md` se contredit (« Config (global) » puis « pour les catégories `pause_echelonnee = oui` »). Un organisateur qui écrit `oui` dans la ligne U14 obtient **rien, sans aucun message** — et c'est **précisément le cas d'usage qui a motivé la fonctionnalité** (U14 sur 2 terrains) | P2 | CERTAIN | IDENTIFIÉ — **3 voies**, recommandée = **① aligner la documentation sur le code** (texte + 3 lignes mortes). ⛔️ **Pas la voie ②** (brancher le par-catégorie) : elle ouvre `calculerPlanning`, que le domaine G désigne comme *« à ne perdre sous aucun prétexte »* | `AUDIT.md` §H.4 |
 | **R-085** | **Jeter une image ne se vérifie jamais — et l'application répond quand même « c'est fait ».** `try { …setTrashed(true); } catch (e) {}` puis `{ ok: true }` : **4 chemins** (affiche remplacée, image retirée, réinitialisation du tournoi ×2). La fonction écrite **exprès pour ce geste**, `corbeilleFichierDrive`, est utilisée 7 fois et **contournée aux 3 autres** par un copier-coller du même `try/catch`. Symétriquement au dépôt, `setSharing(...)` — le geste qui rend l'image publiquement visible — est aussi avalé : le fichier est créé, l'écran dit *« enregistré »*, **et l'affiche n'apparaît nulle part**. 🔗 Touche **R-035 / I-08** : une image dont la mise à la corbeille échoue reste sur le Drive, son lien déjà diffusé continue de fonctionner, **et la suppression est déclarée réussie** | P2 | CERTAIN *(les 4 chemins lus ligne à ligne)* | IDENTIFIÉ — ⛔️ **ne pas retirer les `try`** (un hoquet Drive ne doit jamais empêcher d'enregistrer le tournoi) : les faire **passer par la fonction unique**, et **tracer l'échec** dans l'onglet `Historique` qui existe déjà. ⚠️ **NON VÉRIFIÉ** : aucun de ces échecs n'a jamais été observé — ils sont possibles, pas constatés | `AUDIT.md` §H.5 |
 | **R-086** | **Vingt-neuf endroits montrent au bénévole le message d'erreur brut du navigateur.** `afficherMessage(message, '⚠️ ' + erreur.message, 'ko')` — soit **« Failed to fetch »**, **« NetworkError… »**, **« The operation was aborted »**. Compté : **29 endroits sur 21 fichiers**, jusque dans la page de saisie utilisée au bord du terrain. Ces messages sont **exacts et inutilisables** : en anglais, techniques, et **sans aucune conduite à tenir**. 🔗 **C'est le mécanisme chiffré de R-052** : pas un oubli sur un écran, **le geste par défaut de toute l'application** | P2 | CERTAIN (compté) | IDENTIFIÉ — correction = **un seul endroit à écrire** (une fonction qui traduit l'erreur en phrase utile), puis 29 appels à y renvoyer **fichier par fichier, jamais d'un coup**. ⚠️ **Le texte ne doit pas mentir** (**D-027**) : une requête peut échouer côté navigateur alors que le serveur a enregistré ⇒ dire *« nous n'avons pas eu confirmation »*, jamais *« ce n'est pas enregistré »* | `AUDIT.md` §H.6 |

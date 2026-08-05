@@ -1621,7 +1621,7 @@ qu'ils ne soient pas redécouverts au moment de coder.*
 | **d** | **Le classement partiel reste-t-il affiché** pendant une SUSPENSION ? | L'annulation dit « pas de classement final ». La suspension ne dit rien — or le tournoi peut reprendre |
 | **e** | **Que devient un tournoi suspendu qui ne reprend jamais** ? Bascule-t-il en ANNULÉ à la main, ou reste-t-il suspendu ? | C'est le cas réel le plus probable : l'orage ne s'arrête pas, et personne ne pense à changer l'état avant de rentrer |
 | ⚡ **f** *(né de la réponse I-21)* | **« Phases finales interdites » annule-t-il aussi une phase finale DÉJÀ PRÉVUE**, ou seulement celles que le moteur pourrait inventer pour rattraper ? Un seul des quatre formats d'après-midi est concerné : **COUPE_PLATEAU** | Ma lecture prudente : **oui, elle est écartée à la reprise**. Mais les deux lectures ne produisent pas le même code — voir **§8.4** |
-| ⚡ **g** *(né de la précision du 2026-08-05)* | **Existe-t-il une durée de repos méridien MINIMALE imposée** en École de Rugby ? Romain écrit *« dans le respect du cadre réglementaire applicable »* — le cadre existe donc, mais rien ne l'écrit dans le dépôt | **Ne bloque pas le levier n° 7** *(l'organisateur décide)*, mais sans elle l'application ne peut pas **l'avertir** s'il descend trop bas. À poser dans le **même courriel que I-10** — voir **§9.5** |
+| ~~⚡ **g**~~ | ~~Existe-t-il une durée de repos méridien MINIMALE imposée en École de Rugby ?~~ | ✅ **FERMÉ le 2026-08-05 par D-031** — **ce n'est pas une question de l'application.** *« La réglementation importe au responsable du tournoi, pas à l'app »* : c'est lui qui saisit la valeur qu'il doit respecter. Rien à demander à la FFR, rien à coder |
 
 > Ces cinq points **ne bloquent pas l'inscription de la décision** : ils seront présentés à Romain
 > au moment de construire la fiche de chantier, au **volet ③**. Les inscrire maintenant évite qu'ils
@@ -1804,7 +1804,7 @@ elles sont **techniques** : le lot ① des tests (**D-025**), puis **R-042**, pu
 | # | Contrainte | Nature |
 |---|---|---|
 | 1 | **Une équipe ne peut pas jouer deux rencontres en même temps** | Physique — indiscutable |
-| 2 | **Le temps de jeu maximal applicable** | ⛔ **Réglementaire** *(réserve posée par la réponse à I-21)*. ⚠️ **N'existe aujourd'hui que comme affichage** — voir §8.2 |
+| 2 | **Le temps de jeu maximal applicable** | ⛔ **Réglementaire** *(réserve posée par la réponse à I-21)*. ⚠️ **N'existe aujourd'hui que comme affichage** — voir §8.2. ⚡ **Sa SOURCE est fixée par D-031** : c'est une **valeur que le responsable a saisie**, pas une règle que l'application connaîtrait. **Valeur absente ⇒ l'application ne vérifie pas, et elle le DIT** |
 | 3 | **La cohérence du repos entre adversaires** | Sécurité + équité sportive |
 | 4 | **Une équipe ayant déjà bénéficié de son repos ne peut pas affronter une équipe qui ne l'a pas encore eu** | ⛔ **Règle déjà implémentée par Romain — elle doit impérativement rester.** ⚠️ Elle est tenue par la **forme** du planning, pas par un contrôle — voir §8.3 ter |
 | 5 | **Aucune phase finale** | ⛔ **Réglementaire** *(réserve posée par la réponse à I-21)* |
@@ -1857,12 +1857,144 @@ elles sont **techniques** : le lot ① des tests (**D-025**), puis **R-042**, pu
 | **D-030 §8.3, version du matin** | ❌ **Contredite et CORRIGÉE** — voir l'encadré en tête de §8.3 |
 | **`PLAN.md` C-003, version du matin** | ❌ **Contredite et RÉÉCRITE** — le repos passe de « garde-fou dur » à « levier n° 7, sous décision explicite » |
 
-##### 9.5 — ❓ Un point à confirmer, qui tient dans le courriel déjà prévu
+##### 9.5 — ✅ **FERMÉ le 2026-08-05 par D-031** — la question ne se pose pas
 
-> **Existe-t-il une durée de repos méridien MINIMALE imposée** pour les catégories d'École de
-> Rugby ? Romain écrit *« dans le respect du cadre réglementaire applicable »* — le cadre existe
-> donc, mais il n'est écrit nulle part dans le dépôt.
+> J'avais ouvert un point (g) : *« existe-t-il une durée de repos méridien minimale imposée ? »*.
+> **Romain a tranché autrement, et plus simplement** : *« la réglementation importe au responsable
+> du tournoi, pas à l'app — à lui de renseigner ce que la réglementation impose. »*
 >
-> **Sans cette réponse, le levier n° 7 reste utilisable** *(l'organisateur décide)*, mais
-> l'application ne peut pas **l'avertir** s'il descend trop bas. → inscrit comme **point ouvert (g)**
-> du §5, à poser dans le même courriel que **I-10**.
+> **Conséquence** : le levier n° 7 s'utilise **sans qu'aucune règle soit écrite dans le code**. Le
+> responsable saisit la valeur qu'il doit respecter, et l'application l'applique. **Rien à demander
+> à la FFR, rien à coder, et un avertissement de moins à construire.** → **D-031**.
+
+---
+
+### D-031 — L'application ne porte pas la réglementation : le responsable la renseigne
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 13 *(addendum n° 4)* |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Portée** | **Doctrine générale.** S'applique à tout le projet, pas seulement à D-030 |
+
+**Décision, dans les mots de Romain**
+
+> *« La réglementation importe au responsable du tournoi, pas à l'app. À lui de renseigner ce que la
+> réglementation impose. »*
+
+**Ce que cela veut dire concrètement**
+
+| ❌ Ce que l'application ne fait PAS | ✅ Ce qu'elle fait |
+|---|---|
+| Connaître une durée minimale ou maximale imposée par la Fédération | **Utiliser les valeurs que le responsable a saisies** |
+| Écrire un seuil réglementaire dans son code | Lire les grilles et plafonds de `RefFFR_*`, **remplis à la main** |
+| Refuser une valeur au nom d'une règle qu'elle croirait connaître | Appliquer la contrainte **telle qu'elle a été déclarée** |
+| Deviner ce qui manque | **Dire que ça manque** |
+
+> ✅ **Ce n'est pas une nouveauté, c'est la mise en mots d'une doctrine déjà à l'œuvre.** Tout le
+> chantier de conformité fédérale est bâti là-dessus : l'application **reporte ce qui est déclaré et
+> ne devine jamais**. D-031 l'étend explicitement aux **durées et aux temps de jeu**.
+
+**⚠️ La contrepartie, et elle est indispensable**
+
+Si une valeur n'a **pas** été renseignée, l'application ne peut pas vérifier. Elle ne doit alors ni
+inventer une valeur, ni laisser croire que le contrôle a eu lieu. Elle **le dit** :
+
+> *« Aucun plafond de temps de jeu renseigné pour cette catégorie — cette proposition n'a pas pu
+> être vérifiée sur ce point. »*
+
+C'est **D-027** appliqué *(un message ne ment jamais)* : une case non cochée n'est pas une case
+verte.
+
+**Ce que D-031 referme immédiatement**
+
+- ✅ **le point ouvert (g) de D-030 §5** — *« existe-t-il un repos méridien minimal réglementaire ? »*
+  **n'est plus une question de l'application.** Le responsable saisit la valeur qu'il doit
+  respecter ;
+- ✅ **C-004 se simplifie** : un champ, une valeur, aucun « plancher » à construire, aucun
+  avertissement réglementaire à écrire ;
+- ✅ **la contrainte n° 2 de D-030 §9.1** *(le temps de jeu maximal)* **reste une contrainte** — mais
+  sa **source** est claire : c'est une **valeur déclarée**, pas une règle que l'application
+  connaîtrait.
+
+**🚧 CE QUE D-031 NE REMET PAS EN CAUSE — garde-fou explicite**
+
+> ⚠️ **Précision de Romain, le jour même** : *« On ne touche pas au bouton "Appliquer les valeurs
+> FFR" aux catégories. Quand je dis que la réglementation importe au responsable du tournoi, ici
+> c'est juste une aide à la saisie qu'il peut modifier. »*
+
+| Ce qui est **protégé**, et ne doit être ni retiré ni affaibli | Pourquoi |
+|---|---|
+| ⛔ **Le bouton « Appliquer les valeurs FFR » par catégorie** | C'est une **aide à la saisie**, pas une décision de l'application. Il **pré-remplit** des champs que le responsable **peut ensuite modifier** |
+| ⛔ **La lecture des onglets `RefFFR_*`** et l'écran de conformité | Ils **montrent** ce que le référentiel dit. Montrer n'est pas imposer |
+| ⛔ **Les avertissements de conformité existants** | Ils informent ; ils ne bloquent pas |
+
+> ✅ **Loin de contredire D-031, ce bouton en est le meilleur exemple.** D-031 dit que
+> **c'est le responsable qui renseigne** — le bouton est précisément **l'outil qui l'aide à le
+> faire vite**, et il **garde le dernier mot**. Ce que D-031 interdit, c'est tout autre chose : que
+> l'application **décide** à sa place, **refuse** une valeur au nom d'une règle qu'elle croirait
+> connaître, ou **fasse comme si** un contrôle avait eu lieu.
+>
+> 🏉 **En une image** : le bouton est un **formulaire pré-rempli**, pas un **agent qui vérifie à la
+> sortie**.
+
+**Compatibilité** : ✅ aucune contradiction. **D-027** est appliqué, la réponse à **I-21** est
+intacte *(le temps de jeu maximal reste à respecter — simplement, sa valeur vient de toi)*, le
+**bouton « Appliquer les valeurs FFR » est expressément préservé** *(ci-dessus)*, et `CLAUDE.md`
+§6.B interdisait déjà de « certifier » une conformité.
+
+---
+
+### D-032 — Les deux pauses méridiennes ne coexistent jamais
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 13 *(addendum n° 4)* |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Couvre** | **R-091** *(nouveau)* — et conditionne **C-004** |
+
+**Décision, dans les mots de Romain**
+
+> *« Quand la pause échelonnée est cochée, la pause classique ne s'applique pas, et inversement.
+> Elles ne doivent jamais coexister. »*
+
+**⚠️ Ce que fait le code AUJOURD'HUI — et qui ne respecte pas cette règle**
+
+*Constaté, pas supposé :*
+
+- la pause échelonnée est un réglage **global** ;
+- une catégorie y est éligible **à partir de 4 équipes** ;
+- **en dessous**, le code **bascule cette catégorie en pause classique**, avec un avertissement
+  écrit tel quel : *« pause échelonnée demandée mais seulement N équipe(s) — **pause classique
+  conservée pour cette catégorie** »*.
+
+**Les deux modes coexistent donc dans le même tournoi**, délibérément. C'est ce que D-032 interdit.
+
+**✅ Ce qui remplace ce comportement** *(arbitré par Romain le 2026-08-05)*
+
+> **La petite catégorie garde une pause — mais la sienne.**
+>
+> Elle n'est pas planifiée en deux vagues *(c'est impossible à moins de 4 équipes)*, mais elle
+> obtient **une coupure de midi propre**, **de la durée du repos minimal configuré**.
+> **La « pause classique globale » ne s'applique alors nulle part.**
+
+**Pourquoi cette option, et pas les autres**
+
+| Option écartée | Pourquoi |
+|---|---|
+| **Tout ou rien** *(une petite catégorie ⇒ tout le tournoi en classique)* | Une catégorie à 3 équipes priverait **toutes les autres** du bénéfice de l'échelonné |
+| **Interdire de cocher la case** s'il existe une catégorie < 4 équipes | Trop rigide : un club qui se désiste la veille ferait basculer toute l'organisation |
+| **Aucune pause pour la petite catégorie** | ⛔ **Des enfants joueraient toute la journée sans coupure de midi**, et personne ne s'en apercevrait avant le jour J |
+
+> 🏉 **Ce que l'option retenue garantit, en une phrase** : **aucune coexistence des deux modes, et
+> aucun enfant sans coupure.**
+
+**Compatibilité** : ✅ aucune contradiction avec une décision existante. Elle **change en revanche un
+comportement du code** *(le repli en pause classique)* — c'est donc un **problème inscrit au
+registre** (**R-091**) et un travail planifié (**C-004**), pas une correction improvisée.
+
+⚠️ **Ce que D-032 n'autorise pas** : à supprimer le **repli** lui-même. Une catégorie de moins de
+4 équipes doit continuer d'être planifiée *(elle joue, simplement pas en deux vagues)*, et
+l'avertissement doit continuer d'exister — **son texte change**, pas sa présence.
