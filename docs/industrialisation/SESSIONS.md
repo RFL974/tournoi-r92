@@ -2218,3 +2218,101 @@ toujours l'ÉTAPE 3.**
 Après lui, l'ÉTAPE 2 est terminée et l'ÉTAPE 3 s'ouvre.
 
 **Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+## SESSION 11 — ADDENDUM n° 2 : « l'industrialisation n'arrête pas les fonctionnalités »
+
+**Objectif** : enregistrer une remarque de Romain qui corrige une **hypothèse implicite du cadre**.
+**Aucun fichier de l'application modifié.** Documentation uniquement.
+
+### 1. La remarque
+
+> *« C'est une phase de pré-industrialisation, pas une fermeture totale des fonctionnalités de
+> l'app — il y aura forcément des ajouts de code et de fonctionnalités. »*
+
+### 2. Vérification : le cadre est effectivement muet là-dessus
+
+Recherche faite dans `CLAUDE.md` et `DECISIONS.md` avant de répondre quoi que ce soit :
+**aucun texte ne prévoit ce qui se passe quand du code neuf arrive pendant l'audit.**
+
+`CLAUDE.md` dit « ne rien modifier » ; **D-024** accumule tout jusqu'à l'ÉTAPE 3 ; **D-003** sépare
+bien deux chantiers, mais ce sont l'audit FFR et l'industrialisation — **deux chantiers de
+documentation**. Le chantier qui **écrit du code**, lui, n'est mentionné nulle part.
+
+**Et la réalité tranche dans le sens de Romain** : le chantier fonctionnalités en est à sa
+**session 28** (PR #159, déployée le **2026-08-03**), soit **la veille** du démarrage de
+l'industrialisation. Les deux avancent **en parallèle**, et le cadre fait comme s'il n'y en avait
+qu'un.
+
+### 3. Ce que ça change — et ce que ça ne change pas
+
+> ✅ **Ça ne remet PAS en cause l'audit.** Un problème constaté le 2026-08-05 ne devient pas faux
+> parce qu'on ajoute du code après : il devient **plus grand**. Le mouvement va **dans le sens** du
+> constat, pas contre lui.
+
+> ⚠️ **Ça remet en cause une seule chose : l'idée que TOUT peut attendre l'ÉTAPE 3 sans coût.**
+
+Le travail utile a donc consisté à **trier les 81 problèmes selon leur comportement dans le temps**,
+ce qu'aucun domaine n'avait fait :
+
+| Comportement | Problèmes | Conséquence |
+|---|---|---|
+| **Figés** — attendre ne coûte rien | la grande majorité | Rien à changer : ÉTAPE 3 |
+| **Qui grossissent** avec le développement | R-073, R-074, R-076, R-078, R-044, R-079/R-043 | À traiter **tôt dans** l'ÉTAPE 3, pas tard |
+| ⚠️ **Qui se REDÉCLENCHE** | **R-072**, seul de son espèce | **Chaque fonctionnalité serveur = un redéploiement = un nouveau tirage du piège M-04** |
+
+**C'est la distinction qui manquait.** R-072 ne devient pas « plus gros » : il **rejoue**. Le nombre
+de fonctionnalités à venir est exactement le nombre d'occasions de réinscrire une preuve fausse au
+dossier.
+
+### 4. Ce qui a été inscrit
+
+- **M-05** (risque de méthode, P1) — *l'audit photographie une application qui continue de bouger* :
+  les chiffres sont datés, six problèmes grossissent, un se redéclenche ;
+- **D-029** (décision en attente) — *comment les deux chantiers cohabitent* : faut-il appliquer
+  **maintenant** les deux seules mesures dont l'attente coûte quelque chose ?
+
+**Les deux mesures en question, et pourquoi ce sont les seules** :
+
+| | **R-072** | **R-073** |
+|---|---|---|
+| Ce qu'on ferait | Écrire la procédure de redéploiement **complète** (`Code.gs` **et** `Tests.gs`, + vérification par **deux nombres**) | Poser la **règle** : nouvel écran / nouvelle action / nouvel onglet ⇒ la carte est mise à jour **dans le même lot** |
+| Coût | ~5 lignes de texte, une fois | **zéro**, sur une fonctionnalité qu'on écrit de toute façon |
+| Code touché | **aucun** | **aucun** |
+| Coût d'attendre | un tirage du piège M-04 **par redéploiement** | l'écart de 68 % s'élargit à la vitesse du développement |
+
+> **Ce ne sont pas des corrections, ce sont des habitudes.** Elles ne réparent rien : elles
+> empêchent la dette de **grossir** pendant qu'on finit l'audit. C'est ce qui les distingue des
+> 79 autres problèmes — et c'est le seul argument qui justifie une exception à **D-024**.
+
+### 5. Ce que je n'ai PAS fait, et pourquoi
+
+**Je n'ai appliqué aucune des deux mesures.** Elles sont proposées, pas faites.
+
+Raison : **D-024 est une décision de Romain**, et y déroger — même pour cinq lignes de texte, même
+avec un bon argument — reste **sa décision, pas la mienne**. Un audit qui commence à corriger au fil
+de l'eau parce que « c'est vite fait » n'est plus un audit. La question est posée en **D-029**, avec
+ma recommandation ; c'est tout.
+
+**Et je n'ai proposé aucune exception au-delà de ces deux-là.** Toutes les corrections qui touchent
+au **code** — R-041, R-042, R-074, R-076, R-077, R-078, R-079 — **attendent l'ÉTAPE 3**, sans
+exception.
+
+### 6. Trois règles qui s'appliquent quelle que soit la réponse à D-029
+
+1. **Toute mesure inscrite au dossier porte sa date.** « 8 147 lignes » est vrai *au 2026-08-05*,
+   pas éternellement. Le récapitulatif du domaine G (`AUDIT.md` §G.8) porte désormais cet
+   avertissement en tête.
+2. **Une fonctionnalité importante rouvre les chiffres qu'elle change** — c'est déjà le garde-fou
+   n° 2 de **D-028**, étendu à l'ensemble du domaine G.
+3. **Une session de fonctionnalité n'a PAS à connaître l'industrialisation pour travailler.** Les
+   deux chantiers restent indépendants ; **c'est l'industrialisation qui s'adapte au mouvement,
+   jamais l'inverse.**
+
+### 7. Prochaine session recommandée
+
+**Inchangée : session 12 — ÉTAPE 2, domaine H (qualité du code). LE DERNIER.**
+
+⚠️ **Mais D-029 se répond avant, ou en même temps** — elle ne dépend d'aucun audit restant, et son
+coût d'attente court dès le prochain redéploiement du serveur.

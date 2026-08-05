@@ -225,8 +225,22 @@ le registre et `AUDIT.md` pour l'explication de chacun.
 | **P2** | 48 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 | R-063 → R-069 | R-074 → R-080 |
 | **P3** | 9 | R-011 | R-026 · R-027 | R-040 | R-050 | R-060 | R-070 · R-071 | R-081 |
 
-**Risques de méthode** : M-01 · M-02 · M-03 *(largement levé en session 8)* · **M-04** *(nouveau —
-un compte de tests ne dit pas quelle version a été exécutée)*.
+**Risques de méthode** : M-01 · M-02 · M-03 *(largement levé en session 8)* · M-04 *(traité en
+session 8 — un compte de tests ne dit pas quelle version a été exécutée)* · ⚡ **M-05** *(nouveau,
+session 11 — **l'audit photographie une application qui continue de bouger**)*.
+
+> ⚡ **M-05, et pourquoi il compte plus qu'il n'en a l'air.** Le cadre est écrit comme si
+> l'application était **stable** pendant qu'on l'audite. Elle ne l'est pas, et **elle ne doit pas
+> l'être** : *« c'est une phase de pré-industrialisation, pas une fermeture totale des
+> fonctionnalités »* (Romain, 2026-08-05). Le chantier fonctionnalités en est à sa **session 28**,
+> déployée la **veille** du démarrage de celui-ci.
+>
+> **Ce que ça ne change pas** : l'audit reste valable. Un problème constaté ne devient pas faux
+> parce qu'on ajoute du code après — il devient **plus grand**.
+>
+> **Ce que ça change** : six problèmes **grossissent tout seuls** (R-073, R-074, R-076, R-078,
+> R-044, R-079), et **un se REDÉCLENCHE** — **R-072** : chaque fonctionnalité serveur est un
+> redéploiement, donc **un nouveau tirage du piège de M-04**. → **D-029**.
 
 ✅ = la **règle métier est décidée**, le **code n'est pas écrit**. R-002 et R-006 → R-010
 n'appelaient aucune décision de Romain : ce sont des choix techniques, réglés à l'ÉTAPE 3.
@@ -589,7 +603,21 @@ vérification supplémentaire.
 > l'ÉTAPE 3. Ce tableau est **mis à jour à la fin de chaque session d'audit** — c'est le seul
 > endroit où regarder pour savoir ce qui reste ouvert.
 
-**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine **G**).
+**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine **G**, complétée le soir même —
+**D-028 tranchée**, **D-029 ouverte**).
+
+> ⚡ **UNE REMARQUE DE ROMAIN A OUVERT LA SEULE QUESTION QUE LE CADRE NE POSAIT PAS.**
+>
+> *« C'est une phase de pré-industrialisation, pas une fermeture totale des fonctionnalités de
+> l'app — il y aura forcément des ajouts de code et de fonctionnalités. »*
+>
+> **C'est exact, et le cadre n'en disait rien** : ni `CLAUDE.md`, ni `DECISIONS.md` ne prévoient ce
+> qui se passe quand du code neuf arrive **pendant** l'audit. Or c'est le cas — chantier
+> fonctionnalités à sa **session 28**, déployée la **veille** du démarrage de l'industrialisation.
+>
+> Conséquence inscrite : **M-05** (risque de méthode) et **D-029** (décision en attente). Le point
+> à retenir : **deux problèmes sur 81 coûtent quelque chose à attendre** — **R-072** et **R-073** —
+> et ce sont justement les deux qui ne demandent **aucune ligne de code**.
 
 > ✅ **Le domaine G a ajouté UNE décision (D-028) et UNE inconnue (I-20) — et la décision est déjà
 > tranchée.**
@@ -649,6 +677,7 @@ vérification supplémentaire.
 
 | Réf | La question | Née en | Bloque |
 |---|---|---|---|
+| **D-029** | ⚡ **Comment les deux chantiers cohabitent.** *« C'est une phase de pré-industrialisation, pas une fermeture totale des fonctionnalités »* (Romain, 2026-08-05) — et c'est exact : le chantier fonctionnalités en est à sa **session 28**, déployée la **veille** du démarrage de l'industrialisation. **Deux problèmes sur 81 coûtent quelque chose à attendre** : **R-072** (chaque fonctionnalité serveur = un redéploiement = **un nouveau tirage du piège M-04**) et **R-073** (l'écart de 68 % s'élargit à la vitesse du développement). Ce ne sont pas des corrections mais des **habitudes**, sans code et sans risque. **Ma recommandation : les appliquer maintenant, et rien d'autre** | Session 11 | **M-05** — et le calendrier de **R-072**, **R-073** |
 | **D-005** | **Périmètre du dépôt à auditer** : le site vitrine `boutique-r92` entre-t-il dans le chantier ? | Session 1 | **I-16**, et l'emplacement de la future page « Vos données » (**D-018**) |
 | **D-009** | **Où atterrit la documentation** quand une branche de travail est imposée ? | Session 2 | Rien de fonctionnel — une question de méthode |
 | **D-018** | **Que dit-on aux personnes** dont on garde les informations ? *(trois textes courts)* | Session 7 | **R-028** (P1) |

@@ -1018,6 +1018,81 @@ conseils »*. Les quatre réserves ci-dessous ne sont donc **plus des réserves*
 
 ## DÉCISIONS EN ATTENTE DE ROMAIN
 
+### D-029 — Comment les deux chantiers cohabitent : l'industrialisation n'arrête pas les fonctionnalités
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 11 |
+| **Statut** | ⏳ **EN ATTENTE DE ROMAIN** |
+| **Née de** | Une remarque de Romain : *« c'est une phase de pré-industrialisation, pas une fermeture totale des fonctionnalités de l'app — il y aura forcément des ajouts de code et de fonctionnalités »* |
+| **Concerne** | **M-05**, et le calendrier de **R-072** et **R-073** |
+
+**Problème posé**
+
+> Le cadre de l'industrialisation est écrit comme si l'application était **stable** pendant qu'on
+> l'audite : `CLAUDE.md` dit « ne rien modifier », **D-024** accumule tout jusqu'à l'ÉTAPE 3.
+> **Rien ne dit ce qui se passe quand du code neuf arrive pendant ce temps.**
+>
+> Or c'est le cas, et c'est **normal** : le chantier fonctionnalités en est à sa **session 28**
+> (PR #159, déployée le 2026-08-03, soit la veille du démarrage de l'industrialisation). Les deux
+> chantiers sont vivants en parallèle, et Romain a raison de rappeler qu'il n'est pas question de
+> geler l'application pendant des semaines pour finir un audit.
+
+**Ce que ça change — et ce que ça ne change pas**
+
+> ✅ **Ça ne remet pas en cause l'audit.** Un problème constaté le 2026-08-05 ne devient pas faux
+> parce qu'on a ajouté du code après : il devient **plus grand**.
+>
+> ⚠️ **Ça remet en cause une chose : l'idée que TOUT peut attendre l'ÉTAPE 3 sans coût.** Pour la
+> grande majorité des 81 problèmes, attendre ne coûte rien. Pour **deux** d'entre eux, attendre
+> coûte — et le coût est **proportionnel au nombre de fonctionnalités livrées entre-temps**.
+
+**Les deux exceptions demandées, et pourquoi ce sont les seules**
+
+| | **R-072** — la procédure de redéploiement | **R-073** — la carte du projet |
+|---|---|---|
+| **Ce qu'on ferait** | Écrire la procédure **complète** : coller `Code.gs` **et** `Tests.gs`, lancer `lancerTestsFFR`, vérifier **deux nombres** (le total attendu et le nombre de lignes du fichier) | Poser la **règle** : un nouvel écran, une nouvelle action serveur ou un nouvel onglet ⇒ la carte est mise à jour **dans le même lot** |
+| **Coût** | **~5 lignes de texte**, une fois | **Zéro**, sur une fonctionnalité qu'on écrit de toute façon |
+| **Ce que ça touche** | `docs/deploiement.md` — **aucun code** | `README.md` / `docs/architecture.md` — **aucun code** |
+| **Coût d'attendre** | **Chaque** fonctionnalité serveur = un redéploiement = **un nouveau tirage du piège M-04** | L'écart (**68 %** aujourd'hui) s'élargit à la vitesse du développement ; le rattrapage devient une session entière au lieu de deux minutes |
+| **Réversible ?** | Oui — c'est du texte | Oui — c'est du texte |
+
+> **Ce ne sont pas des corrections, ce sont des habitudes.** Elles ne réparent rien : elles
+> empêchent la dette de **grossir** pendant qu'on finit l'audit. C'est précisément ce qui les
+> distingue des 79 autres problèmes.
+
+**Ma recommandation : OUI aux deux, et à rien d'autre**
+
+> Ces deux-là rejoignent la courte liste des exceptions à **D-024** (aux côtés de D-017, des
+> questions sortantes I-10/I-15, et d'un éventuel P0), **pour la même raison qui a justifié les
+> autres** : ce sont des gestes **sans arbitrage et sans risque**, dont l'attente ne protège rien.
+>
+> ⚠️ **Et rien d'autre.** Toutes les corrections qui touchent au **code** — R-041, R-042, R-074,
+> R-076, R-077, R-078, R-079 — **attendent l'ÉTAPE 3**, sans exception. Un audit qui commence à
+> corriger au fil de l'eau n'est plus un audit.
+
+**Ce qui découle de cette décision, quelle qu'elle soit**
+
+> **Trois règles à appliquer dans tous les cas**, parce qu'elles ne dépendent d'aucun arbitrage :
+>
+> 1. **Toute mesure inscrite au dossier porte sa date** et la mention qu'elle vaut à cet instant.
+>    « 8 147 lignes » est vrai **au 2026-08-05**, pas éternellement.
+> 2. **Une fonctionnalité importante rouvre les chiffres du domaine G** qu'elle change — c'est déjà
+>    le garde-fou n° 2 de **D-028** (« ce n'est pas un permis d'agrandir le fichier »), à étendre.
+> 3. **Une session de fonctionnalité n'a PAS à connaître l'industrialisation pour travailler.** Les
+>    deux chantiers restent indépendants (comme **D-003** l'a fait pour l'audit FFR) ; c'est
+>    l'industrialisation qui s'adapte au mouvement, jamais l'inverse.
+
+**Question à Romain**
+
+> **(a)** J'applique les deux habitudes maintenant *(recommandé)* — 5 lignes dans
+> `docs/deploiement.md`, et la règle de mise à jour de la carte inscrite dans `CLAUDE.md` ;
+> **(b)** tout attend l'ÉTAPE 3, y compris ces deux-là — auquel cas il faut savoir que chaque
+> redéploiement d'ici là rejoue le piège de M-04, en connaissance de cause.
+
+---
+
 ### D-025 — Quels tests écrit-on, et dans quel ordre ?
 
 | Champ | Valeur |

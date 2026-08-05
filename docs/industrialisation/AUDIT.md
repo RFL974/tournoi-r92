@@ -5414,11 +5414,34 @@ audit **ne dit pas** :
 | Publié mais jamais chargé | **183 Ko** (2 bibliothèques + 1 modèle) |
 | Outillage (`package.json`, vérificateur, assemblage) | **aucun** |
 
+> ⏱️ **Tous ces chiffres valent au 2026-08-05, et à cette date seulement.** Ils décrivent une
+> application qui **continue d'être développée** — *« une phase de pré-industrialisation, pas une
+> fermeture totale des fonctionnalités »* (Romain). Le chantier fonctionnalités en est à sa
+> **session 28**, déployée la **veille** du démarrage de celui-ci. Voir **M-05**.
+
+### ⚡ Les problèmes de ce domaine ne sont pas figés — six grossissent, un se redéclenche
+
+C'est la conséquence directe de **M-05**, et elle change l'ordre dans lequel il faudra les traiter.
+
+| Problème | Ce que le développement en cours lui fait |
+|---|---|
+| **R-073** — la carte est fausse à 68 % | **Grossit** : chaque écran, action ou onglet ajouté élargit l'écart |
+| **R-074** — 8 147 lignes | **Grossit** : le fichier grandit à chaque fonctionnalité serveur |
+| **R-076** — tests rangés par n° de session | **Grossit** : chaque session ajoute `testS29_`, `testS30_`… |
+| **R-078** — 12 noms globaux en double | **Grossit** : plus de code, plus de noms, plus de chances qu'une **vraie** collision arrive |
+| **R-044** *(domaine D)* — 29 règles en double | **Grossit** : toute règle à faire vivre des deux côtés en ajoute une 30ᵉ |
+| **R-079 / R-043** — rien de testable au navigateur | **Grossit** : chaque écran neuf est écrit dans le style non testable |
+| **R-072** — la procédure décrit la moitié du geste | ⚠️ **NE grossit PAS : il REJOUE.** Chaque fonctionnalité serveur = un redéploiement = **un nouveau tirage du piège M-04** |
+
+> **C'est pourquoi R-072 et R-073 font l'objet de D-029** : ce sont les deux seuls problèmes du
+> chantier dont **l'attente coûte quelque chose**, et ce sont justement les deux qui ne demandent
+> **aucune ligne de code**. Les huit autres peuvent attendre l'ÉTAPE 3 sans dommage.
+
 ### Les problèmes
 
 | Réf | Problème | Priorité |
 |---|---|---|
-| **R-072** | La procédure de redéploiement du serveur est incomplète (`Tests.gs` cité nulle part) — **a déjà produit une preuve fausse (M-04)** | **P1** |
+| **R-072** | La procédure de redéploiement du serveur est incomplète (`Tests.gs` cité nulle part) — **a déjà produit une preuve fausse (M-04)**, et **rejoue à chaque redéploiement** | **P1** |
 | **R-073** | La carte du projet ne décrit plus le projet : **68 %** des actions du serveur, 4 pages sur 8 et tout le parcours d'invitation absents | **P1** |
 | **R-074** | 8 147 lignes en un seul fichier serveur, alors que Google en accepte plusieurs — **mais le découper aggraverait R-072** | P2 |
 | **R-075** | Aucune version, aucune étiquette : impossible de dire ce qui tourne | P2 |

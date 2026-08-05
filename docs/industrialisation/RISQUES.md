@@ -623,3 +623,66 @@ trompe. C'est le seul cas, à ce jour, où le chantier a inscrit au dossier une 
 > le code **du projet**. L'adresse web publique peut être figée sur une version antérieure —
 > **M-02 reste ouvert**, atténué. La seule vérification qui interroge la vraie adresse publique
 > est le bouton « Tester la remontée » de l'écran Partenaires.
+
+---
+
+### M-05 — L'audit photographie une application qui continue de bouger
+
+| Champ | Valeur |
+|---|---|
+| **Priorité** | **P1 (méthode)** |
+| **Certitude** | **CERTAIN** — constaté par Romain le 2026-08-05, et confirmé par l'historique du dépôt |
+| **Statut** | **IDENTIFIÉ** — appelle **D-029** |
+
+**Description** — Tout le cadre de l'industrialisation est écrit comme si l'application était
+**stable** pendant qu'on l'audite. `CLAUDE.md` dit « ne rien modifier » ; **D-024** accumule tout
+jusqu'à l'ÉTAPE 3. Rien, nulle part, ne dit ce qui se passe quand du **code neuf** arrive pendant
+ce temps.
+
+Or c'est le cas, et ce n'est pas une hypothèse : **le chantier fonctionnalités en est à sa session
+28** (PR #159, déployée le **2026-08-03**), soit **la veille** du démarrage de l'industrialisation.
+Les deux chantiers sont **vivants en même temps**, et c'est **normal** : Romain l'a rappelé — *« une
+phase de pré-industrialisation, pas une fermeture totale des fonctionnalités »*.
+
+**Impact concret — trois effets, de gravité croissante** :
+
+**1. Les chiffres de l'audit sont datés, et ils se périment.** « 8 147 lignes », « 65 actions »,
+« 68 % non documentées », « 12 noms en double » : tous vrais **au 2026-08-05**, tous faux dès la
+prochaine fonctionnalité. Ce n'est pas grave **à condition que ce soit écrit** — sinon une session
+future croira lire un état actuel.
+
+**2. Certains problèmes GROSSISSENT tout seuls.** Ils ne sont pas figés en attendant l'ÉTAPE 3 :
+
+| Problème | Comment il grossit |
+|---|---|
+| **R-073** — la carte est fausse à 68 % | **Chaque** écran, action ou onglet ajouté **élargit l'écart**. La dette documentaire croît à la vitesse du développement |
+| **R-074** — 8 147 lignes | Le fichier grandit à chaque fonctionnalité serveur |
+| **R-076** — tests rangés par n° de session | Chaque session ajoute `testS29_`, `testS30_`… : le rangement par date **se renforce** |
+| **R-078** — 12 noms globaux en double | Plus de code = plus de noms = plus de chances qu'une **vraie** collision arrive |
+| **R-044** — 29 règles écrites deux fois | Toute règle nouvelle à faire vivre des deux côtés en ajoute une 30ᵉ |
+| **R-079 / R-043** — rien n'est testable dans le navigateur | Chaque écran neuf est écrit dans le style non testable : la dette grandit **en même temps** que la fonctionnalité |
+
+**3. Et un problème ne grossit pas — il SE REDÉCLENCHE.** C'est le plus sérieux :
+
+> **R-072** (la procédure de redéploiement décrit la moitié du geste) ne devient pas « plus gros ».
+> Il **rejoue**. **Chaque fonctionnalité serveur = un redéploiement = un nouveau tirage du piège
+> M-04.** Le nombre de fonctionnalités à venir est exactement le nombre d'occasions de réinscrire
+> une preuve fausse au dossier.
+
+**Ce que ça ne remet PAS en cause** — l'audit lui-même. Un problème constaté le 2026-08-05 ne
+devient pas faux parce que du code a été ajouté après ; il devient **plus grand**, ce qui va dans
+le sens du constat, pas contre lui.
+
+**Ce que ça remet en cause** — l'idée que *tout* peut attendre l'ÉTAPE 3 sans coût. Pour la plupart
+des problèmes, c'est vrai (attendre ne coûte rien). Pour **R-072** et **R-073**, attendre **coûte**,
+et le coût est proportionnel au nombre de fonctionnalités livrées entre-temps. → **D-029**.
+
+**Correction proposée** :
+
+1. **Dater les chiffres.** Toute mesure inscrite au dossier porte sa date et la mention qu'elle
+   vaut **à cet instant** — déjà fait pour l'inventaire de `ETAT.md` §9, à généraliser.
+2. **Trancher D-029** : les deux « habitudes » qui ne coûtent rien (procédure de redéploiement
+   complète, mise à jour de la carte dans le même lot que la fonctionnalité) sont-elles appliquées
+   **dès maintenant**, par exception à D-024 ?
+3. **Rouvrir automatiquement ce qui a été mesuré** quand une fonctionnalité importante atterrit :
+   c'est déjà le garde-fou n° 2 de **D-028**, à étendre aux autres chiffres du domaine G.
