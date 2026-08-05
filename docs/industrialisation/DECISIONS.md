@@ -769,6 +769,57 @@ dit, c'est une vérification faite en production.
 
 ---
 
+### D-024 — Tous les points en suspens sont traités à l'issue de l'ensemble des audits
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ✅ **VALIDÉE** par Romain le 2026-08-05 |
+| **Décidée par** | Romain |
+| **Généralise** | D-023 (qui ne portait que sur le domaine B) |
+
+**Décision prise — les mots de Romain**
+> *« Ok on garde les questions, les éléments en suspens à l'issue de l'ensemble de l'audit […]
+> comme ça on pourra les traiter une par une, de manière détaillée. »*
+
+**Décision**
+> **Aucune question, décision ou inconnue soulevée par un audit n'est tranchée pendant
+> l'ÉTAPE 2.** Tout est **accumulé**, puis repris **une par une** au début de l'ÉTAPE 3, quand
+> les 8 domaines auront parlé.
+>
+> Pour que rien ne se perde, un **registre unique** est tenu dans `ETAT.md` §10 — « points en
+> suspens » — mis à jour à la fin de chaque session d'audit.
+
+**Raison**
+> 1. **Une décision prise trop tôt est prise avec moins d'information.** Le domaine B en a déjà
+>    donné la preuve : `R-032` (les effectifs d'enfants publics) se referme **tout seul** en
+>    corrigeant `R-021`, trouvé au domaine sécurité la session d'avant. Décider séparément aurait
+>    fait modifier deux fois le même fichier.
+> 2. **C'est l'ordre validé** (`D-010`, `CLAUDE.md` §7) : audit → plan → validation.
+> 3. **Cela protège la qualité des réponses.** Traitées une par une, en fin de parcours, avec le
+>    temps qu'il faut — plutôt qu'au fil de l'eau, en fin de session, quand l'attention baisse.
+
+**⚠️ Trois exceptions, à conserver**
+> 1. **`D-017` n'est pas une question, c'est une action.** Remplacer les deux clés par des suites
+>    aléatoires prend cinq minutes, ne demande aucune réflexion et referme `R-019` (P1). **Ne pas
+>    la mettre en attente.**
+> 2. **Les questions SORTANTES partent maintenant.** `I-10` (la FFR encadre-t-elle un match non
+>    joué ?) et `I-15` (le droit à l'image est-il géré ailleurs ?) s'adressent à des tiers — le
+>    Comité 92, le Directeur EDR, le club. **Le délai de réponse ne dépend pas de nous** : les
+>    poser tôt ne coûte rien et peut faire gagner des semaines. Les garder en réserve ne
+>    protégerait rien.
+> 3. **Un P0 casse la règle.** Si un audit à venir trouve un problème bloquant, il sera présenté
+>    **immédiatement**, comme `R-014` l'a été (précédent `D-016`). Un P0 ne se met pas en file
+>    d'attente.
+
+**Conséquences**
+> - L'ÉTAPE 2 se déroule sans interruption : domaines **D → E → F → G → H** ;
+> - chaque session d'audit **alimente** le registre `ETAT.md` §10, sans rien trancher ;
+> - l'**ÉTAPE 3 s'ouvrira par une série de séances de décision**, une question à la fois.
+
+---
+
 ## DÉCISIONS EN ATTENTE DE ROMAIN
 
 ### D-018 — Que dit-on aux personnes dont on garde les informations ?

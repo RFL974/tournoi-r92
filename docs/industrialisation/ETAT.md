@@ -75,8 +75,14 @@ referme R-019). Il reste **5 domaines** à auditer.
 un problème théorique. La vraie question à trancher n'est pas technique : **où ranger ces clés**,
 et **comment transmettre celle des scores aux bénévoles le jour J**.
 
-**2. Rien d'autre.** Les trois questions du domaine B — **D-018, D-019, D-020** — ont été
-**reportées à la fin des audits** par Romain (**D-023**, 2026-08-05) : plus rien ne presse depuis
+**2. Poser les deux questions sortantes** — **I-10** (à la FFR : le sort d'un match non joué) et
+**I-15** (au club : le droit à l'image). Le délai de réponse ne dépend pas de nous, donc les poser
+tôt ne coûte rien et peut faire gagner des semaines. Ce sont les deux seules exceptions à D-024,
+avec D-017.
+
+**3. Rien d'autre.** Les trois questions du domaine B — **D-018, D-019, D-020** — ont été
+**reportées à la fin des audits** par Romain (**D-023**, puis généralisé par **D-024** à *tous*
+les points en suspens — registre en **§10**) : plus rien ne presse depuis
 que `D-022` fixe un déclencheur et que R-029 est suspendu. Elles seront reprises au début de
 l'ÉTAPE 3, avec les 40 problèmes sous les yeux.
 
@@ -272,6 +278,7 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-013 | **Planning** : déplacer un match, et décaler toute la journée de X minutes | ✅ Validée (session 5) |
 | D-014 | **Départage** : confrontation directe, puis ordre alphabétique en dernier recours | ✅ Validée (session 5) |
 | D-015 | **Match annulé** : même mécanisme que le forfait, libellé distinct, ne compte pour personne | ✅ Validée (session 5), **par défaut** — une règle FFR primerait |
+| **D-024** | **Tous les points en suspens (questions, décisions, inconnues) sont accumulés pendant l'ÉTAPE 2 et traités un par un à l'ÉTAPE 3.** Registre unique en **§10**. Trois exceptions : D-017 (une action, pas une question), les questions **sortantes** (I-10, I-15), et un éventuel **P0** | ✅ **Validée (session 7)** — *« on pourra les traiter une par une, de manière détaillée »* |
 | **D-023** | **Les trois décisions du domaine B (D-018/019/020) sont reportées à la fin des audits.** Plus rien ne presse : D-022 fixe le déclencheur, R-029 est suspendu. Et elles **ne dépendent pas de l'hébergement**, contrairement à ce qu'on pouvait croire | ✅ **Validée (session 7)** — *« oui après me semble juste »* |
 | D-016 | **Corriger R-014 (le P0) tout de suite**, seul, hors de l'ordre du chantier — puis reprendre les audits | ✅ Validée (session 6) — *« va pour B alors je te suis dans ton raisonnement »* |
 | **D-021** | **Phase prototype : tout appartient à Romain, et c'est assumé.** Classeur, Drive, boîte d'envoi et données de test sont sur ses comptes personnels — le bon choix pour un prototype. La question du responsable se repose au déclencheur | ✅ **Validée (session 7)** — *« dans cette phase de test tout est à moi »* |
@@ -363,3 +370,63 @@ vérification supplémentaire.
 | `cloudflare/` | 1 dossier |
 | Historique Git | **513 enregistrements** au total (relus **en entier** en session 6, à la recherche de mots de passe : **aucune fuite**). Branche de travail `claude/session-6-etape-2-securite-0tul4c`, partie de `dda3987` |
 | `frontend/js/vendor/` | **4 bibliothèques extérieures**, ~750 Ko, **sans version ni origine documentée** (`pdf-lib`, `docxtemplater`, `pizzip`, `qrcode`) — voir R-024 |
+
+---
+
+## 10. REGISTRE DES POINTS EN SUSPENS
+
+> **À quoi sert cette section.** Décision **D-024** : rien n'est tranché pendant l'ÉTAPE 2. Tout
+> ce qui attend une réponse est **accumulé ici**, puis repris **une par une** au début de
+> l'ÉTAPE 3. Ce tableau est **mis à jour à la fin de chaque session d'audit** — c'est le seul
+> endroit où regarder pour savoir ce qui reste ouvert.
+
+**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine B).
+
+### 10.1 — Ce qui ne doit PAS attendre *(les trois exceptions de D-024)*
+
+| # | Quoi | Pourquoi ça ne peut pas attendre |
+|---|---|---|
+| **D-017** | **Remplacer les deux clés par des suites aléatoires** | Ce n'est pas une question, c'est une **action** : cinq minutes, aucune réflexion, et elle referme **R-019** (P1). Menu du classeur → « Configurer les clés » |
+| **I-10** | **Question à la FFR** : le sort d'un match qui n'a pas pu se jouer (forfait, intempéries) est-il encadré ? | **Question sortante** — Directeur EDR du Racing / Comité 92. Le délai de réponse ne dépend pas de nous. Une règle fédérale primerait sur **D-011** et **D-015** |
+| **I-15** | **Question au club** : le droit à l'image des enfants est-il géré ailleurs (licence FFR, document du club, consigne aux clubs invités) ? | **Question sortante** — même raison. Le mécanisme a été retiré de l'application le 2026-08-03 sur décision du club, sans que rien n'écrive ce qui l'a remplacé (**R-036**) |
+
+> Ces trois-là ne coûtent rien à traiter tout de suite, et les garder en réserve ne protégerait
+> rien. **Un P0 découvert dans un audit à venir constituerait une quatrième exception** : il
+> serait présenté immédiatement, comme R-014 l'a été (**D-016**).
+
+### 10.2 — Décisions en attente
+
+| Réf | La question | Née en | Bloque |
+|---|---|---|---|
+| **D-005** | **Périmètre du dépôt à auditer** : le site vitrine `boutique-r92` entre-t-il dans le chantier ? | Session 1 | **I-16**, et l'emplacement de la future page « Vos données » (**D-018**) |
+| **D-009** | **Où atterrit la documentation** quand une branche de travail est imposée ? | Session 2 | Rien de fonctionnel — une question de méthode |
+| **D-018** | **Que dit-on aux personnes** dont on garde les informations ? *(trois textes courts)* | Session 7 | **R-028** (P1) |
+| **D-019** | **Que fait-on de la mesure des partenaires ?** Informer · demander l'accord · alléger | Session 7 | **R-029** (P1) — **suspendu** tant que les partenaires restent éteints |
+| **D-020** | **Combien de temps garde-t-on quoi ?** *(tableau de durées à valider)* | Session 7 | **R-030** (P1), **R-031**, **R-033**, **R-034** |
+| **D-022** | **Le déclencheur** — *le jour où l'email d'un tiers entre dans le classeur* — est-il confirmé ? | Session 7 | Rien ne l'attend ; il **fixe le calendrier** de tout le reste |
+
+### 10.3 — Inconnues à lever
+
+| Réf | Ce qu'on ne sait pas | Comment le lever | Pour quel domaine |
+|---|---|---|---|
+| **I-01** | Le code en service chez Google est-il identique à `backend/Code.gs` ? | Vérification de Romain dans Apps Script | Permanent (**M-02**) |
+| **I-05** | Qui utilise l'administration le jour J, et sur quel matériel ? | Question à Romain | **E** — UX |
+| **I-08** | Une image mise à la corbeille du Drive reste-t-elle visible par un lien déjà diffusé pendant ~30 jours ? | Test réel de 5 minutes : corbeille, puis rouvrir le lien en navigation privée | **B** — **R-035** |
+| **I-09** | Que conserve le journal d'exécution de Google Apps Script, et combien de temps ? | Consultation dans l'éditeur Apps Script (« Exécutions ») | **B / C** — **R-023**, **R-039** |
+| **I-10** | La FFR encadre-t-elle le sort d'un match non joué ? | **Question sortante** — voir §10.1 | **A** — D-011, D-015 |
+| **I-14** | Qui est officiellement responsable des données, et le classeur doit-il rester dans un compte individuel ? | Réponse de Romain **au déclencheur** — non bloquant aujourd'hui (**D-021**) | **B** — **R-039** |
+| **I-15** | Le droit à l'image des enfants est-il géré ailleurs ? | **Question sortante** — voir §10.1 | **B** — **R-036** |
+| **I-16** | Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page de confidentialité ? | Vérification de Romain, ou extension du périmètre (**D-005**) | **B** — **D-018** |
+
+### 10.4 — Comment ce registre sera traité
+
+À l'ouverture de l'**ÉTAPE 3**, les points ci-dessus seront repris **un par un**, dans cet ordre :
+
+1. **les inconnues d'abord** — on ne décide pas sur du sable ;
+2. **puis les décisions**, chacune présentée avec : le problème en langage simple, les options,
+   ce que chacune coûte et apporte, et une recommandation ;
+3. **puis seulement** le tableau des chantiers de `PLAN.md`.
+
+> ⚠️ **Chaque session d'audit doit alimenter ce registre avant de se clore.** Une question
+> soulevée mais non inscrite ici est une question perdue — c'est exactement ce que **D-001**
+> cherche à empêcher.
