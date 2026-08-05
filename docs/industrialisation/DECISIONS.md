@@ -5,7 +5,7 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-04 (session 6, close)
+**Dernière mise à jour** : 2026-08-05 (session 7)
 
 ---
 
@@ -573,7 +573,7 @@ c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
 
 **✅ Correction déployée et vérifiée le 2026-08-04.** Romain a redéployé le backend chez Google,
 lancé `lancerTestsFFR` (**573/573 OK**) et rejoué le diagnostic « Tester la remontée » (écriture,
-relecture, 109 relevés réels). R-014 passe au statut **TESTÉ** — le premier du chantier.
+relecture, 109 relevés). R-014 passe au statut **TESTÉ** — le premier du chantier. *(Précision du 2026-08-05 : ces 109 relevés viennent des appareils de Romain, pas de spectateurs. La preuve de non-régression reste entière — des relevés ont bien été écrits puis relus.)*
 La règle permanente de `CLAUDE.md` §13.6 est donc satisfaite ici : ce n'est pas le dépôt qui le
 dit, c'est une vérification faite en production.
 
@@ -617,7 +617,336 @@ dit, c'est une vérification faite en production.
 
 ---
 
+### D-021 — Phase prototype : tout appartient à Romain, et c'est assumé
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ✅ **VALIDÉE** par Romain le 2026-08-05 |
+| **Décidée par** | Romain |
+| **Répond à** | I-14 (partiellement), R-039, R-040 |
+
+**Problème posé**
+> Le domaine B a demandé **qui est responsable** de ces données, et si le classeur devait rester
+> dans un compte Google individuel. La réponse conditionne les textes d'information (D-018) et
+> la continuité du projet.
+
+**Décision prise — les mots de Romain**
+> *« Dans cette phase de test tout est à moi. […] Tout est sur mes comptes donc tout cela
+> m'appartient. »*
+>
+> Et sur l'avenir : *« aujourd'hui ça fonctionne avec mon classeur ; à terme, si cela doit
+> devenir un SaaS, ce ne sera plus possible. Il faudra scinder tout ça. »*
+
+**Ce que cela établit**
+> 1. **En phase prototype, il n'y a pas de sujet de responsabilité partagée** : le classeur, le
+>    Drive, la boîte d'envoi, les données de test et les 109 relevés de mesure sont tous à
+>    Romain, sur ses propres comptes, et ne concernent que lui et son épouse. **Le compte
+>    individuel est le bon choix pour un prototype** — le changer maintenant serait du travail
+>    sans bénéficiaire.
+> 2. **La question du responsable n'est donc pas bloquante aujourd'hui.** Elle le redevient au
+>    **déclencheur** (voir D-022) : le jour où les données d'un tiers entrent, il faudra nommer
+>    une structure. La piste déjà écrite dans le dépôt reste l'**association Génération R92**,
+>    désignée comme telle dans le modèle d'autorisation de droit à l'image.
+> 3. **R-040 (P3) est confirmé par Romain lui-même**, et c'est important : le passage en SaaS
+>    n'est pas seulement un sujet de contrat, c'est un sujet **d'architecture**. Un classeur
+>    unique ne peut pas héberger plusieurs clubs.
+
+**Conséquences**
+> - **Rien ne change maintenant.** Aucun compte à créer, aucun classeur à déplacer.
+> - **I-14 reste ouverte, mais dégradée** : ce n'est plus une inconnue bloquante, c'est une
+>   question à reposer au déclencheur.
+> - **R-039 (aucun cadre écrit) reste P2**, mais sa partie « qui est responsable » a une réponse
+>   claire pour la phase actuelle : Romain.
+
+---
+
+### D-022 — Le déclencheur : ce qui fait basculer le prototype en usage réel
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ⏳ PROPOSÉE — en attente de confirmation de Romain |
+| **Décidée par** | Claude (proposition), sur réponse de Romain à la question du calendrier |
+
+**Problème posé**
+> La question posée était : *« quand invites-tu de vrais clubs ? »* Réponse de Romain, le
+> 2026-08-05 : *« je ne sais pas, c'est juste sincère. Je suis sur un prototype de démo. Je ne
+> sais même pas si celui-ci, même après la phase d'industrialisation, trouvera son public. »*
+>
+> C'est une réponse honnête et utile — mais elle laisse le chantier sans repère : on ne sait pas
+> quand les problèmes théoriques deviennent réels.
+
+**Décision proposée — remplacer la date par un signal**
+> **Le jour où l'adresse email d'une personne qui n'est ni Romain ni son épouse entre dans le
+> classeur, les trois P1 du domaine B (R-028, R-029, R-030) doivent être réglés — avant, pas
+> après.**
+>
+> Traduction pratique : **tout est permis avec ce prototype, sauf saisir les coordonnées d'un
+> vrai contact de club.**
+
+**Raison**
+> Une date, Romain ne l'a pas, et ne l'aura probablement pas à l'avance : un prototype ne bascule
+> pas à une date, il bascule un jour où quelqu'un dit « on le fait ». Un **déclencheur** ne se
+> périme pas, ne peut pas être raté, et se déclenche **exactement** au moment où le risque
+> apparaît.
+>
+> Le vrai danger n'est pas l'oubli, c'est le **glissement** : l'outil est montré, quelqu'un dit
+> « on le prend pour le tournoi de mars », et le prototype devient la production sans que
+> personne ne l'ait décidé. Ce déclencheur rend ce moment **visible**.
+
+**Ce que le déclencheur commande, le jour venu**
+> 1. les trois P1 du domaine B (R-028, R-029, R-030) ;
+> 2. le remplacement des deux clés par des suites aléatoires (D-017, R-019) ;
+> 3. la désignation d'une structure responsable et le passage à un compte de l'association
+>    (D-021, R-039).
+
+**Conséquence tant qu'il n'est pas atteint**
+> **Aucune exception à l'ordre du chantier.** On finit les 8 audits, puis le plan, puis les
+> corrections. `CLAUDE.md` §7 s'applique sans aménagement.
+
+---
+
+### D-023 — Les trois décisions du domaine B sont reportées à la fin des audits
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ✅ **VALIDÉE** par Romain le 2026-08-05 |
+| **Décidée par** | Romain |
+| **Porte sur** | D-018, D-019, D-020 |
+
+**Problème posé**
+> Les trois décisions du domaine B ne demandent aucune ligne de code, ce qui rendait tentant de
+> les prendre tout de suite. Fallait-il ?
+
+**Décision prise — les mots de Romain**
+> *« Oui après me semble juste, mais le souci c'est que je n'ai pas encore réfléchi à
+> l'hébergement, je n'ai pas encore réfléchi au stockage ni à la conservation des données. »*
+
+**Décision**
+> **D-018, D-019 et D-020 sont prises à la fin des 8 audits**, au moment de l'ÉTAPE 3, et non
+> pendant l'ÉTAPE 2. Elles restent au statut ⏳ EN ATTENTE.
+
+**Raison**
+> Trois raisons, dans l'ordre d'importance :
+> 1. **Rien ne presse plus.** `D-022` (le déclencheur) garantit qu'on ne ratera pas le moment où
+>    ces décisions deviennent nécessaires, et `R-029` est **suspendu** depuis la désactivation
+>    des partenaires. Il n'y a plus aucune horloge qui tourne.
+> 2. **C'est l'ordre validé** (`D-010`, `CLAUDE.md` §7). Prendre ces décisions maintenant serait
+>    un écart, et il n'y a plus d'urgence pour le justifier.
+> 3. **Romain n'a pas les éléments, et il le dit.** Le forcer à décider produirait des décisions
+>    de façade, qu'il faudrait défaire.
+
+**⚠️ Ce qu'il faut dissiper, parce que c'est la raison invoquée**
+> Romain lie ces décisions à l'**hébergement** et au **stockage**. **Ce lien n'existe pas**, et
+> c'est important qu'il soit écrit noir sur blanc pour les sessions suivantes :
+>
+> | Mot | Ce que c'est | Est-ce décidé ? |
+> |---|---|---|
+> | **Hébergement** | *Où* le code tourne et où les fichiers vivent | ✅ **Déjà tranché de fait** : Google Apps Script + Google Drive + Gmail pour le serveur et les fichiers, GitHub Pages pour les pages. Ça fonctionne, et `CLAUDE.md` §10 interdit d'en changer sans justification |
+> | **Stockage** | *Dans quoi* les données sont rangées | ✅ **Déjà tranché de fait** : le Google Sheet, 12 onglets (cartographie, volet C) |
+> | **Conservation** | *Combien de temps* on garde | ❌ **Jamais décidé** — c'est `D-020`, et c'est le seul des trois qui reste ouvert |
+>
+> **La durée de conservation ne dépend ni de l'hébergement ni du stockage.** « On garde les
+> coordonnées d'un contact de club trois éditions » est une phrase **également vraie** dans un
+> Google Sheet, dans une base de données, ou dans un cahier à spirale. C'est une décision
+> **métier**, que Romain peut prendre sans avoir rien tranché d'autre.
+>
+> Ce qui dépend vraiment de l'hébergement, c'est la capacité à **appliquer** la durée
+> automatiquement — pas à la **décider**.
+
+**Conséquences**
+> - L'ÉTAPE 2 continue : domaine D (tests) en session 8, puis E, F, G, H ;
+> - `D-018`, `D-019`, `D-020` sont reprises **au début de l'ÉTAPE 3**, avec les 40 problèmes sous
+>   les yeux — ce qui est d'ailleurs le meilleur moment pour les prendre ;
+> - **Aucune réflexion sur l'hébergement n'est attendue de Romain.** Le sujet appartient au
+>   domaine **G (architecture)** et à `R-040` (le SaaS, P3), et il est **prématuré** tant que
+>   l'application cherche son public.
+
+---
+
+### D-024 — Tous les points en suspens sont traités à l'issue de l'ensemble des audits
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ✅ **VALIDÉE** par Romain le 2026-08-05 |
+| **Décidée par** | Romain |
+| **Généralise** | D-023 (qui ne portait que sur le domaine B) |
+
+**Décision prise — les mots de Romain**
+> *« Ok on garde les questions, les éléments en suspens à l'issue de l'ensemble de l'audit […]
+> comme ça on pourra les traiter une par une, de manière détaillée. »*
+
+**Décision**
+> **Aucune question, décision ou inconnue soulevée par un audit n'est tranchée pendant
+> l'ÉTAPE 2.** Tout est **accumulé**, puis repris **une par une** au début de l'ÉTAPE 3, quand
+> les 8 domaines auront parlé.
+>
+> Pour que rien ne se perde, un **registre unique** est tenu dans `ETAT.md` §10 — « points en
+> suspens » — mis à jour à la fin de chaque session d'audit.
+
+**Raison**
+> 1. **Une décision prise trop tôt est prise avec moins d'information.** Le domaine B en a déjà
+>    donné la preuve : `R-032` (les effectifs d'enfants publics) se referme **tout seul** en
+>    corrigeant `R-021`, trouvé au domaine sécurité la session d'avant. Décider séparément aurait
+>    fait modifier deux fois le même fichier.
+> 2. **C'est l'ordre validé** (`D-010`, `CLAUDE.md` §7) : audit → plan → validation.
+> 3. **Cela protège la qualité des réponses.** Traitées une par une, en fin de parcours, avec le
+>    temps qu'il faut — plutôt qu'au fil de l'eau, en fin de session, quand l'attention baisse.
+
+**⚠️ Trois exceptions, à conserver**
+> 1. **`D-017` n'est pas une question, c'est une action.** Remplacer les deux clés par des suites
+>    aléatoires prend cinq minutes, ne demande aucune réflexion et referme `R-019` (P1). **Ne pas
+>    la mettre en attente.**
+> 2. **Les questions SORTANTES partent maintenant.** `I-10` (la FFR encadre-t-elle un match non
+>    joué ?) et `I-15` (le droit à l'image est-il géré ailleurs ?) s'adressent à des tiers — le
+>    Comité 92, le Directeur EDR, le club. **Le délai de réponse ne dépend pas de nous** : les
+>    poser tôt ne coûte rien et peut faire gagner des semaines. Les garder en réserve ne
+>    protégerait rien.
+> 3. **Un P0 casse la règle.** Si un audit à venir trouve un problème bloquant, il sera présenté
+>    **immédiatement**, comme `R-014` l'a été (précédent `D-016`). Un P0 ne se met pas en file
+>    d'attente.
+
+**Conséquences**
+> - L'ÉTAPE 2 se déroule sans interruption : domaines **D → E → F → G → H** ;
+> - chaque session d'audit **alimente** le registre `ETAT.md` §10, sans rien trancher ;
+> - l'**ÉTAPE 3 s'ouvrira par une série de séances de décision**, une question à la fois.
+
+---
+
 ## DÉCISIONS EN ATTENTE DE ROMAIN
+
+### D-018 — Que dit-on aux personnes dont on garde les informations ?
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Débloque** | R-028 (P1) |
+
+**Problème posé**
+> Il n'existe, dans **aucune** page, **aucun** courriel et **aucune** ligne du serveur, une seule
+> phrase qui explique aux gens ce qu'on fait de leurs informations. J'ai cherché les mots *RGPD*,
+> *confidentialité*, *données personnelles*, *mentions légales*, *consentement* : **zéro
+> occurrence**. C'est l'obligation la plus élémentaire du RGPD, et la plus visible de l'extérieur.
+
+**Ce qu'il faut écrire — trois textes courts**
+> 1. un **paragraphe en bas du courriel d'invitation** : qui organise, ce qu'on garde (nom,
+>    prénom, email du contact ; effectifs déclarés), pourquoi, combien de temps, et à qui écrire
+>    pour être retiré ou corrigé ;
+> 2. **le même bloc en bas de la page de réponse**, là où le club saisit ses effectifs ;
+> 3. **une petite page « Vos données »** sur le site public, vers laquelle les deux autres
+>    pointent — elle sert aussi aux spectateurs (voir D-019).
+
+**Question à Romain**
+> **Valides-tu que j'en rédige une première version, que tu relis, corriges et fais valider par
+> le club ?**
+>
+> Je ne peux pas les écrire seul et les considérer comme acquis : **ils engagent l'association,
+> pas moi.** Et deux informations me manquent, que toi seul as : **qui est officiellement
+> responsable** (l'association Génération R92 ? le Racing 92 ?) et **quelle adresse de contact**
+> y faire figurer (voir R-038 et R-039).
+
+**Recommandation**
+> **Oui, et maintenant.** Le coût est de rédiger trois paragraphes. Après la première vague
+> d'invitations réelles, il faudra en plus **revenir vers des gens à qui on aura déjà écrit**.
+
+---
+
+### D-019 — Que fait-on de la mesure de visibilité des partenaires ?
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Débloque** | R-029 (P1) |
+
+**Problème posé**
+> La page publique des scores **écrit un identifiant sur le téléphone de chaque spectateur** (dans
+> la mémoire longue du navigateur), compte le temps d'affichage de chaque logo de partenaire par
+> tranche de 30 minutes, et **remonte tout cela au serveur**. Sans un mot d'explication, et sans
+> aucun moyen de refuser. **C'est le seul problème du domaine B qui tourne déjà en vrai** : le
+> classeur contient 109 relevés — **venant des propres appareils de Romain** (précision du 2026-08-05),
+> pas de spectateurs. **Et les partenaires ont été désactivés le 2026-08-05**, ce qui coupe la mesure :
+> le risque est **suspendu**, pas réglé. Il se rallume avec l'interrupteur.
+>
+> La règle française ne parle pas seulement de données personnelles : **déposer quelque chose sur
+> l'appareil de quelqu'un demande son accord**, sauf si c'est strictement nécessaire au service
+> qu'il a demandé. Or le spectateur a demandé **les scores** — pas à prouver à un partenaire
+> commercial combien de temps son logo a été vu.
+
+**Trois voies**
+> **(a) Informer, sans bandeau** — une ligne visible en bas de la page publique, l'explication
+> dans la page « Vos données », et un moyen simple de dire non, mémorisé sur l'appareil.
+> Tout est conservé, rien n'est dégradé.
+>
+> **(b) Informer + demander l'accord** — un vrai bandeau « accepter / refuser » au premier
+> chargement. Position la plus sûre, mais **un bandeau devant les scores**, sur un terrain, sous
+> la pluie, en 30 secondes : c'est exactement ce que `CLAUDE.md` §11 interdit de dégrader. Et la
+> mesure devient incomplète.
+>
+> **(c) Alléger la mesure** — supprimer l'identifiant d'appareil et ne compter que des totaux. Le
+> sujet se referme presque entièrement, mais on perd la **portée** (combien de personnes
+> différentes) — le chiffre qu'un partenaire regarde en premier.
+
+**Recommandation**
+> **(a).** C'est le seul qui améliore réellement la situation **sans rien casser**. Il transforme
+> une collecte silencieuse en collecte annoncée et refusable. Je ne recommande pas d'arrêter la
+> mesure : elle est légitime, bien construite, et elle sert un besoin réel du club.
+
+**Calendrier**
+> **Avant le prochain tournoi réel**, et **avant** de présenter une fiche de visibilité à un
+> partenaire payant.
+
+---
+
+### D-020 — Combien de temps garde-t-on quoi ?
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Débloque** | R-030 (P1), R-031, R-033, R-034 |
+
+**Problème posé**
+> **Rien ne s'efface jamais tout seul.** Il n'existe dans le code aucune durée de conservation,
+> aucune purge, aucune date d'expiration. Le carnet d'adresses est même conservé **délibérément**
+> d'une édition à l'autre — ce qui est un choix défendable, mais **sans limite**, ce qui ne l'est
+> pas. Ce n'est pas un choix contestable : c'est un **choix qui n'a jamais été fait**.
+
+**Proposition de départ, à valider ou à corriger**
+
+| Donnée | Durée proposée | Pourquoi |
+|---|---|---|
+| Contacts des clubs (carnet) | **3 éditions** sans participation, puis suppression | Un club absent depuis 3 ans n'a plus de lien avec le tournoi |
+| Effectifs déclarés d'une édition | **Effacés à la réinitialisation** | Ils ne servent qu'à l'édition en cours (R-033) |
+| Contacts de la demande FFR (représentant, président, **médecin**, secours) | **1 an**, ou à chaque réinitialisation | Ce sont les dirigeants de l'année — et un contact de secours doit être **à jour** |
+| Champ libre « équipes étrangères » | **Effacé après envoi du dossier** | Seul endroit où des enfants sont nommés (R-034) |
+| Relevés de visibilité (`Mesures`) | **Effacés après remise de la fiche au partenaire** | Aucun usage ensuite |
+| Journal de saison (`Historique`) | **Conservé** | **Aucune donnée personnelle** — noms d'équipes et scores |
+| Copies de courriels (Gmail) | **1 an** | Nettoyage manuel de la boîte |
+
+**Question à Romain**
+> **Ce tableau te convient-il ?** Corrige les durées qui te paraissent fausses : c'est **ton**
+> métier qui décide, pas la technique. Une seule règle : chaque ligne doit avoir une durée, même
+> longue, même « conservé ».
+
+**Ce que cela déclenche — et ce que cela ne déclenche PAS**
+> **Écrire les durées ne touche à aucun code.** L'outillage (un écran qui signale ce qui est
+> périmé) vient **après**, à l'ÉTAPE 3, et avec une consigne ferme : **toute suppression reste
+> déclenchée par un humain.** Un outil qui efface tout seul est le type de code le plus dangereux
+> du projet — le domaine C l'a déjà montré avec la réinitialisation (R-016).
+
+---
 
 ### D-009 — Où atterrit la documentation quand une branche est imposée
 

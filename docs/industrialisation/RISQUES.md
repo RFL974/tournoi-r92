@@ -5,8 +5,8 @@
 > L'**explication** de chaque problème (pourquoi, exemple concret, ce qui est proposé) vit dans
 > `AUDIT.md`. Ce fichier-ci **suit** ; `AUDIT.md` **explique**.
 
-**Dernière mise à jour** : 2026-08-04 (session 6, close)
-**Audits réalisés** : domaine A (métier), domaine C (sécurité). Les 6 autres domaines restent à faire.
+**Dernière mise à jour** : 2026-08-05 (session 7)
+**Audits réalisés** : domaine A (métier), domaine C (sécurité), domaine B (RGPD). Les 5 autres domaines restent à faire.
 **Correction réalisée** : R-014 (le P0), par exception validée — voir D-016.
 
 ---
@@ -58,11 +58,11 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
 | **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
-| P1 | **10** | 0 | **5** | 0 | 0 | 0 |
-| P2 | **13** | 0 | **2** | 0 | 0 | 0 |
-| P3 | **3** | 0 | 0 | 0 | 0 | 0 |
+| P1 | **13** | 0 | **5** | 0 | 0 | 0 |
+| P2 | **22** | 0 | **2** | 0 | 0 | 0 |
+| P3 | **4** | 0 | 0 | 0 | 0 | 0 |
 
-**Total : 27 problèmes** — domaine A (13) + domaine C (14).
+**Total : 40 problèmes** — domaine A (13) + domaine C (14) + domaine B (13).
 
 > ✅ **R-014 est le premier problème du chantier à atteindre le statut TESTÉ**, le 2026-08-04.
 > Trois preuves réunies, et c'est la raison pour laquelle ce statut est accordé :
@@ -71,7 +71,9 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 > 2. **573 tests sur 573 passent** dans Apps Script (lève **I-02**), dont les **16 vérifications**
 >    ajoutées pour cette correction ;
 > 3. **la chaîne fonctionne toujours de bout en bout** — le diagnostic « Tester la remontée »
->    confirme écriture, relecture, et **109 relevés réels** déjà remontés des spectateurs. C'est
+>    confirme écriture, relecture, et **109 relevés** présents dans le classeur. ⚠️ **Corrigé le
+>    2026-08-05** : ils viennent des **appareils de Romain**, pas de spectateurs — la preuve tient
+>    quand même, des relevés ont bien été écrits puis relus. C'est
 >    la preuve de **non-régression** qui manquait : le plafonnement n'a rien cassé.
 >
 > ⚠️ **Ce qui reste NON VÉRIFIÉ, et qu'il faut dire** : le chemin de **refus** — ce qui se passe
@@ -91,8 +93,15 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 > ⚠️ **Un seul problème est réglé : R-014**, au statut **TESTÉ**, par exception validée (D-016).
 > Tous les autres sont au statut **IDENTIFIÉ** : ils ont été vus, rien de plus.
 >
-> Ce tableau ne couvre que les **domaines A et C**. Les 6 autres domaines n'ont pas été audités :
-> leur absence de ligne ne signifie pas leur absence de problème.
+> Ce tableau ne couvre que les **domaines A, C et B**. Les 5 autres domaines n'ont pas été
+> audités : leur absence de ligne ne signifie pas leur absence de problème.
+
+> ⚠️ **Le domaine B n'a produit AUCUN P0, et il faut dire pourquoi** — sinon le chiffre ne veut
+> rien dire. Un P0 supposerait une **exposition grave** de données personnelles. Or le carnet
+> d'adresses est exclu des données publiques, il exige la clé admin, le classeur est **privé**
+> (I-06) — et surtout, **il ne contient aujourd'hui aucune donnée de tiers** (I-03, I-04). Les
+> trois P1 sont à régler **avant la première invitation réelle** : c'est exactement la fenêtre
+> dans laquelle se trouve le projet, et elle ne se rouvrira pas.
 
 ---
 
@@ -150,7 +159,7 @@ aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Rom
 
 | Réf | Problème | Priorité | Certitude | Statut | Détail |
 |---|---|---|---|---|---|
-| **R-014** | **La seule écriture ouverte sans clé (`mesureSponsors`) n'avait aucune limite** : ni par appareil, ni par minute, ni par jour. Chaque envoi ajoutait une ligne au classeur, rien ne les efface, et l'adresse du serveur est publique. Permettait de saturer le classeur (10 M de cases) et les exécutions simultanées — donc de **bloquer la saisie des scores le jour J** | **P0** | **CERTAIN** (absence de limite constatée) · **PROBABLE** (conséquences chiffrées : plafonds Google non testés) | ✅ **TESTÉ** (2026-08-04) — corrigé par D-016 (commit `c1948fc`), **redéployé chez Google**, **573/573 tests OK** dans Apps Script et **chaîne vérifiée de bout en bout** par le diagnostic « Tester la remontée » (écriture, relecture, 109 relevés réels). ⚠️ **Réserve** : le chemin de REFUS (que se passe-t-il une fois un plafond franchi ?) n'a été prouvé que par les tests unitaires, jamais observé en production | `AUDIT.md` §C.2 |
+| **R-014** | **La seule écriture ouverte sans clé (`mesureSponsors`) n'avait aucune limite** : ni par appareil, ni par minute, ni par jour. Chaque envoi ajoutait une ligne au classeur, rien ne les efface, et l'adresse du serveur est publique. Permettait de saturer le classeur (10 M de cases) et les exécutions simultanées — donc de **bloquer la saisie des scores le jour J** | **P0** | **CERTAIN** (absence de limite constatée) · **PROBABLE** (conséquences chiffrées : plafonds Google non testés) | ✅ **TESTÉ** (2026-08-04) — corrigé par D-016 (commit `c1948fc`), **redéployé chez Google**, **573/573 tests OK** dans Apps Script et **chaîne vérifiée de bout en bout** par le diagnostic « Tester la remontée » (écriture, relecture, 109 relevés — venant des appareils de Romain, précision du 2026-08-05). ⚠️ **Réserve** : le chemin de REFUS (que se passe-t-il une fois un plafond franchi ?) n'a été prouvé que par les tests unitaires, jamais observé en production | `AUDIT.md` §C.2 |
 | **R-015** | **Regénérer les poules efface tous les scores, et le serveur ne vérifie jamais s'il y en a.** Le garde-fou (double confirmation + re-saisie de la clé) vit **uniquement dans le navigateur** — alors que « réorganiser les poules » refuse, lui, côté serveur | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.3 |
 | **R-016** | **La réinitialisation efface tout dès réception de la clé admin** : équipes, poules, matchs, catégories, horaires, contacts, dossier, et met affiche et photo de parking à la corbeille. Aucune confirmation serveur, aucune sauvegarde, aucun retour en arrière | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.4 |
 | **R-017** | **Deux mots de passe partagés, aucune notion de personne** : impossible de retirer l'accès à quelqu'un, aucune trace de l'auteur d'un score dans l'`Historique`, et un score validé peut être réécrit par toute personne ayant la clé SCORES. Une contestation est **inarbitrable** | **P1** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §C.5 |
@@ -182,11 +191,49 @@ aucun de ses 25 points de vérification (Q11 → Q25) ne le couvre. C'est à Rom
 | Jetons des clubs | ✅ Vrais identifiants aléatoires (`Utilities.getUuid()`) |
 | Messages d'erreur | ✅ Génériques côté visiteur, détail journalisé côté serveur |
 
+### Domaine B — RGPD / Protection des données (session 7)
+
+> ⚠️ **Aucune conformité juridique n'est prononcée ici, ni ailleurs** (`CLAUDE.md` §6.B). Ces
+> lignes décrivent des **risques** et des **mesures techniques**, jamais un verdict de légalité.
+
+| Réf | Problème | Priorité | Certitude | Statut | Détail |
+|---|---|---|---|---|---|
+| **R-028** | **Personne n'est jamais informé de rien** : aucune page, aucun courriel, aucune ligne du serveur ne dit qui détient ces informations, pourquoi, combien de temps, ni comment demander leur retrait. Recherche des mots *RGPD / confidentialité / données personnelles / mentions légales / consentement* : **zéro occurrence** dans tout le dépôt applicatif | **P1** | CERTAIN | IDENTIFIÉ · **décision D-018 en attente** | `AUDIT.md` §B.2 |
+| **R-029** | **La mesure de visibilité des partenaires écrit sur le téléphone de chaque spectateur et remonte au serveur, sans information ni choix** : identifiant d'appareil rangé en mémoire longue, temps d'exposition par tranche de 30 min, envoi à 20 s puis toutes les 10 min puis à la fermeture | **P1** | **CERTAIN** (fonctionnement) · **PROBABLE** (appréciation juridique) | IDENTIFIÉ · **SUSPENDU le 2026-08-05** : Romain a **désactivé les partenaires** depuis l'écran Partenaires, ce qui **coupe la mesure** (vérifié dans le code : `tournoi.js` sort avant `sponsorsArmerEnvoi()` si `sponsors_actifs` est faux ; `dossier.js` n'affiche aucun logo). Les 109 relevés déjà présents venaient de **ses propres appareils**, pas de spectateurs. ⚠️ **Le problème n'est pas réglé : il se rallume avec l'interrupteur.** Reste **P1** — à traiter **avant de rallumer** (D-019). Seule voie de contournement connue : l'adresse `?demo=sponsors`, qui force l'affichage et donc la mesure | `AUDIT.md` §B.3 |
+| **R-030** | **Aucune durée de conservation, aucune purge, nulle part.** Le carnet d'adresses est conservé **délibérément** d'une édition à l'autre, les copies de courriels restent dans Gmail, les contacts FFR et les effectifs passés traversent les réinitialisations. Rien n'expire | **P1** | CERTAIN | IDENTIFIÉ · **décision D-020 en attente** | `AUDIT.md` §B.4 |
+| **R-031** | **Le droit d'effacement est partiel et parfois bloqué** : `supprimerClubInvite` est **refusé** tant qu'une équipe du club figure dans un match, il n'existe aucun moyen d'effacer le seul contact en gardant le club, et les copies Gmail restent hors de portée | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
+| **R-032** | **Les effectifs d'enfants (`nb_joueurs`, `nb_educateurs`) sortent sans aucune clé**, et surtout : toute colonne ajoutée demain à ces onglets sera publique **sans décision**. Se referme en traitant **R-021** | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
+| **R-033** | **La réinitialisation conserve des données personnelles sans raison écrite** : `detail_effectifs` et le total d'éducateurs de l'édition passée, et **tous** les contacts de la demande FFR — représentant, président, **médecin**, antenne de secours | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
+| **R-034** | **Un champ libre invite explicitement à saisir noms, prénoms et dates de naissance d'enfants** (« équipes étrangères »). Seul endroit de l'application où un mineur cesse d'être un nombre. Sans durée, sans effacement, sans information des familles | P2 → **P1 le jour où il sert** | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
+| **R-035** | **Toute image déposée est rendue publique en lecture et ne disparaît pas vraiment** (corbeille Drive ~30 j, I-08). Rien n'avertit qu'une photo de parking peut montrer plaques et visages — le code contrôle format et poids, jamais le contenu | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
+| **R-036** | **Le droit à l'image n'est plus outillé** : le modèle `autorisation-droit-image-template.docx` reste dans le dépôt, plus rien ne le charge depuis le **retrait décidé par le club** le 2026-08-03. Rien n'écrit ce qui l'a remplacé | P2 | CERTAIN | IDENTIFIÉ · **question au club (I-15)** | `AUDIT.md` §B.5 |
+| **R-037** | **Les polices d'écriture sont chargées depuis les serveurs de Google sur les 7 pages** : l'adresse réseau de chaque visiteur y est transmise sans que rien ne le dise. Gain réel mais **modeste** (le serveur est déjà chez Google) | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
+| **R-038** | **L'adresse du contact d'invitation est servie en clair par le serveur à qui la demande** (liste blanche publique). Volontaire et nécessaire ; le téléphone, lui, a bien été retiré. Risque : aspiration et spam sur l'adresse **personnelle** d'un bénévole | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
+| **R-039** | **Aucun cadre écrit** : ni responsable désigné, ni registre des traitements, ni conduite à tenir en cas de fuite — et **aucune trace** pour en détecter une (**R-023**). Le classeur, le Drive et la boîte d'envoi vivent dans un **compte Google individuel** : sujet de continuité autant que de responsabilité | P2 | CERTAIN (côté dépôt) | IDENTIFIÉ | `AUDIT.md` §B.5 |
+| **R-040** | **Le multi-clubs (SaaS) changera la nature du sujet** : contrat écrit, cloisonnement étanche, restitution des données. Le mot de passe partagé (R-017) et le carnet unique ne tiendront pas | P3 | CERTAIN | IDENTIFIÉ — **ne rien implémenter maintenant** | `AUDIT.md` §B.6 |
+
+### Ce qui a été VÉRIFIÉ et s'est révélé sain (domaine B)
+
+À porter au crédit du code — et à ne pas casser en corrigeant le reste :
+
+| Point vérifié | Résultat |
+|---|---|
+| **Identité des enfants** | ✅ **Aucune, nulle part** — pas un nom, pas une date de naissance, pas une licence dans tout le dépôt. Les mineurs sont **trois nombres**. C'est la protection la plus forte de l'application |
+| Emails des clubs | ✅ **Jamais renvoyés à personne**, pas même au club concerné |
+| Envoi groupé | ✅ **Un courriel par club** — les clubs ne découvrent pas les adresses les uns des autres |
+| Téléphone du contact public | ✅ **Retiré volontairement** de la liste blanche publique, avec la raison écrite |
+| Carnet d'adresses | ✅ Exclu des données publiques **et** derrière la clé admin, lue par un chemin qui ne laisse pas la clé dans l'historique du navigateur |
+| Liens personnels des clubs | ✅ Retirés de la barre d'adresse dès l'ouverture, rangés dans une mémoire vidée à la fermeture de l'onglet |
+| Cookies et traceurs | ✅ **Aucun cookie, aucun traceur tiers, aucun outil de mesure d'audience extérieur** |
+| Identifiants de la mesure partenaires | ✅ Aléatoires, **renouvelés chaque jour**, aucun suivi d'un site à l'autre |
+| Documents produits (PDF, dossier) | ✅ Fabriqués **entièrement sur l'appareil** — aucune donnée vers un service tiers |
+| Relais Cloudflare | ✅ Éteint ; et même rallumé, il ne recopierait que l'instantané public, sans donnée personnelle |
+
 ### Domaines non audités
 
 | Domaine | Statut |
 |---|---|
-| B — RGPD · D — Tests · E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
+| D — Tests · E — UX · F — Performance · G — Architecture · H — Code | ⬜ **Non audités.** Les 39 points d'attention de la cartographie (A-01→A-14, B-01→B-12, C-01→C-13) leur serviront de matière première |
 
 ### Modèle de fiche de problème
 

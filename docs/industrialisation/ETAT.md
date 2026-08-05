@@ -4,8 +4,9 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-04 (session 6, close)
-**Commit de référence** : `7617d6c` sur **`main`** — la session 6 est **fusionnée** (PR #175).
+**Dernière mise à jour** : 2026-08-05 (session 7, close)
+**Commit de référence** : session 7 sur la branche `claude/industrialisation-rgpd-donnees-n03yu8`,
+partie de `77f8ae7` (`main`). **Documentation uniquement — aucun fichier de l'application modifié.**
 
 > ✅ **Tout le travail décrit ci-dessous est dans `main`.** Une session qui démarre depuis `main`
 > voit donc l'état réel du chantier. *(Ce n'était pas le cas au démarrage de la session 6, où une
@@ -16,14 +17,17 @@
 
 ## 1. EN UNE PHRASE
 
-L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 avance** : **deux domaines sur huit sont audités** —
-le **A (métier)** et le **C (sécurité)**, soit **27 problèmes**. La sécurité a fait apparaître
-**le premier P0 du chantier** (**R-014**), qui est aujourd'hui le **premier problème réglé de
-bout en bout** : corrigé par exception validée (**D-016**), **redéployé chez Google**,
-**573/573 tests OK**, chaîne vérifiée en conditions réelles → statut **TESTÉ**. Une seule chose
-t'attend encore, et elle ne demande aucun code : **remplacer les deux mots de passe par des
-suites aléatoires** (**D-017**) — ce sont aujourd'hui des mots choisis à la main, ce qui fait
-passer **R-019 de P2 à P1**. Il reste **6 domaines** à auditer.
+L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 avance** : **trois domaines sur huit sont audités** —
+le **A (métier)**, le **C (sécurité)** et le **B (protection des données)**, soit **40
+problèmes**. Le domaine B, fait en session 7, dit une chose simple : **l'application collecte
+remarquablement peu — aucun enfant n'y est identifié — mais elle ne dit rien à personne et
+n'efface jamais rien**. **Aucun P0**, **trois P1**. Les trois décisions qui en découlent
+(**D-018**, **D-019**, **D-020**) ne demandent aucune ligne de code, et Romain les a **reportées
+à la fin des audits** (**D-023**) : plus rien ne presse depuis que **D-022** fixe un déclencheur
+— *le jour où l'email d'un tiers entre dans le classeur* — et que **R-029 est suspendu**, les
+partenaires ayant été désactivés. **Une seule chose t'attend donc maintenant, et elle n'est pas
+technique** : remplacer les deux mots de passe par des suites aléatoires (**D-017**, ce qui
+referme R-019). Il reste **5 domaines** à auditer.
 
 ---
 
@@ -33,7 +37,7 @@ passer **R-019 de P2 à P1**. Il reste **6 domaines** à auditer.
 |---|---|---|
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
-| 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | 🟡 **EN COURS** — domaines A (session 5) et C (session 6) faits, 6 restants |
+| 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | 🟡 **EN COURS** — domaines A (session 5), C (session 6) et B (session 7) faits, 5 restants |
 | 3 | ÉTAPE 3 — Plan d'industrialisation priorisé | ⬜ À faire |
 | 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
 | 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
@@ -49,8 +53,8 @@ passer **R-019 de P2 à P1**. Il reste **6 domaines** à auditer.
 |---|---|---|
 | **A** | **Métier / Product Owner** | ✅ **CLOS** (session 5) — 13 problèmes, 0 P0, 5 P1, 7 P2, 1 P3 · **toutes les décisions métier prises** |
 | **C** | **Sécurité** | ✅ **CLOS** (session 6) — 14 problèmes, **1 P0**, 4 P1, 7 P2, 2 P3 · **1 décision en attente (D-016)** |
-| B | RGPD / Protection des données | ⬜ **Prochain** |
-| D | QA / Tests | ⬜ À faire |
+| **B** | **RGPD / Protection des données** | ✅ **CLOS** (session 7) — 13 problèmes, **0 P0**, 3 P1, 9 P2, 1 P3 · 3 décisions **reportées à l'ÉTAPE 3** (D-018, D-019, D-020 — voir **D-023**) |
+| D | QA / Tests | ⬜ **Prochain** |
 | E | UX / UI / Accessibilité | ⬜ À faire |
 | F | Performance | ⬜ À faire |
 | G | Architecture / Maintenabilité | ⬜ À faire |
@@ -64,31 +68,52 @@ passer **R-019 de P2 à P1**. Il reste **6 domaines** à auditer.
 
 ## 4. PROCHAINE ÉTAPE
 
-### Un geste qui n'appartient qu'à Romain, et qu'aucune session ne peut faire à sa place
+### Ce qui n'appartient qu'à Romain, et qu'aucune session ne peut faire à sa place
 
-~~**1. Redéployer le backend chez Google**~~ → ✅ **FAIT le 2026-08-04.** 573/573 tests OK, et le
-diagnostic « Tester la remontée » confirme la chaîne complète. R-014 est **TESTÉ**.
-
-**Remplacer les deux mots de passe par des suites aléatoires** — **D-017**. Menu du classeur
+**1. Remplacer les deux mots de passe par des suites aléatoires** — **D-017**. Menu du classeur
 **« Tournoi R92 → Configurer les clés »**. Cinq minutes, aucune ligne de code, et R-019 redevient
 un problème théorique. La vraie question à trancher n'est pas technique : **où ranger ces clés**,
 et **comment transmettre celle des scores aux bénévoles le jour J**.
 
-### Puis : session 7 — ÉTAPE 2, domaine B : la protection des données (RGPD)
+**2. Poser les deux questions sortantes** — **I-10** (à la FFR : le sort d'un match non joué) et
+**I-15** (au club : le droit à l'image). Le délai de réponse ne dépend pas de nous, donc les poser
+tôt ne coûte rien et peut faire gagner des semaines. Ce sont les deux seules exceptions à D-024,
+avec D-017.
+
+**3. Rien d'autre.** Les trois questions du domaine B — **D-018, D-019, D-020** — ont été
+**reportées à la fin des audits** par Romain (**D-023**, puis généralisé par **D-024** à *tous*
+les points en suspens — registre en **§10**) : plus rien ne presse depuis
+que `D-022` fixe un déclencheur et que R-029 est suspendu. Elles seront reprises au début de
+l'ÉTAPE 3, avec les 40 problèmes sous les yeux.
+
+> ⚠️ **À dissiper, parce que c'était la raison invoquée** : ces décisions **ne dépendent pas de
+> l'hébergement**. Hébergement (Google + GitHub Pages) et stockage (le Google Sheet) sont **déjà
+> tranchés de fait** et n'ont pas à être rouverts. Seule la **conservation** reste ouverte — et
+> une durée se décide sans savoir où vivent les données. Aucune réflexion sur l'hébergement n'est
+> attendue de Romain : c'est le domaine G et R-040 (SaaS, P3), prématuré aujourd'hui.
+
+Pour mémoire, les trois questions reportées :
+
+| Réf | La question, en une phrase | Ma recommandation |
+|---|---|---|
+| **D-018** | **Que dit-on aux gens ?** Puis-je rédiger une première version des trois textes d'information, que tu relis et fais valider par le club ? | **Oui, et maintenant** — il me manque deux choses que toi seul as : qui est officiellement responsable, et quelle adresse de contact y mettre |
+| **D-019** | **Que fait-on de la mesure des partenaires**, qui écrit déjà sur le téléphone de chaque spectateur ? Informer · demander l'accord · alléger | **Informer**, avec un moyen de dire non. C'est le seul qui améliore la situation sans dégrader la page des scores |
+| **D-020** | **Combien de temps garde-t-on quoi ?** Valider ou corriger le tableau des durées | **Valider le tableau, corriger ce qui te paraît faux** — c'est ton métier qui décide. Écrire les durées ne touche à aucun code |
+
+### Puis : session 8 — ÉTAPE 2, domaine D : les tests (QA)
 
 *(toujours sans rien modifier)*
 
-C'est l'ordre validé par D-010, et c'est aussi le bon moment : le classeur ne contient **aucune
-donnée personnelle de tiers aujourd'hui** (I-03, I-04). Le domaine B doit être traité **avant la
-première invitation réelle**, pas après.
+C'est l'ordre validé par D-010 (**A → C → B → D → E → F → G → H**). Le domaine D arrive au bon
+moment : **trois domaines ont produit 40 problèmes, et pas un seul n'a pu être prouvé par un
+test lancé depuis ici** (risque de méthode **M-03**). Avant de corriger quoi que ce soit à
+l'ÉTAPE 5, il faut savoir **comment on prouvera que rien n'est cassé**.
 
-Les points qui l'alimentent directement, tous déjà repérés : **C-01** (quatre onglets sortent en
-entier — c'est R-021), **C-02** (effectifs d'enfants accessibles sans clé), **C-03 / C-04** (la
-réinitialisation laisse derrière elle des effectifs et des contacts de dirigeants), **C-05**
-(aucune durée de conservation nulle part), **C-06** (jetons qui ne périment pas — c'est R-018),
-**C-07** (une copie de chaque courriel reste dans Gmail), **C-08** (images du Drive publiques),
-**C-10** (le champ libre qui invite à saisir des identités d'enfants), **A-08**, et le chargement
-des polices depuis les serveurs de Google, relevé en session 6.
+Les points qui l'alimentent directement : **M-03** (les tests ne se lancent qu'à la main, chez
+Google), le harnais `backend/Tests.gs` (3 594 lignes, 573 vérifications, 301 fonctions), la piste
+du **cœur pur** trouvée en session 6 (des fonctions sans accès au classeur, donc rejouables hors
+de Google), et les fonctions critiques repérées par les domaines A et C : classement, départage,
+génération des poules et du planning, calcul des scores.
 
 **Condition de démarrage** : instruction explicite de Romain.
 
@@ -111,9 +136,14 @@ preuves, apportées par Romain :
 2. **573 tests sur 573 passent** dans Apps Script → lève **I-02**. *(Contrôle croisé : 564 appels
    de test écrits en dur dans le fichier + 9 situés dans des boucles = 573. Le compte confirme
    que le lot exécuté contenait bien les 16 vérifications ajoutées pour cette correction.)* ;
-3. **la chaîne fonctionne toujours de bout en bout** : écriture ✅, relecture ✅, et **109 relevés
-   réels** déjà remontés des spectateurs. C'est la **preuve de non-régression** qui manquait —
-   le plafonnement n'a rien cassé.
+3. **la chaîne fonctionne toujours de bout en bout** : écriture ✅, relecture ✅, et **109 relevés**
+   présents dans le classeur. C'est la **preuve de non-régression** qui manquait — le plafonnement
+   n'a rien cassé.
+   > ⚠️ **Corrigé le 2026-08-05** : ces 109 relevés viennent des **propres appareils de Romain**
+   > (essais depuis plusieurs appareils, pour vérifier que la remontée ne partait pas du seul
+   > navigateur de son ordinateur) — **pas de spectateurs**, comme l'écrivait la version
+   > précédente de ce document. **La preuve de non-régression tient entièrement** : des relevés
+   > ont bien été écrits puis relus. Seule l'origine était fausse.
 
 > ⚠️ **Ce qui reste NON VÉRIFIÉ, et le restera** : le chemin de **refus** — ce qui se passe une
 > fois un plafond franchi — n'est prouvé que par les tests. Personne n'a envoyé 30 001 relevés
@@ -129,15 +159,15 @@ preuves, apportées par Romain :
 
 ## 6. PROBLÈMES RESTANT À TRAITER
 
-**27 problèmes — 1 corrigé, 26 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
+**40 problèmes — 1 corrigé, 39 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
 le registre et `AUDIT.md` pour l'explication de chacun.
 
-| Priorité | Total | Domaine A (métier) | Domaine C (sécurité) |
-|---|---|---|---|
-| **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **TESTÉ, en service** |
-| **P1** | **10** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* |
-| **P2** | 13 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 |
-| **P3** | 3 | R-011 | R-026 · R-027 |
+| Priorité | Total | Domaine A (métier) | Domaine C (sécurité) | Domaine B (données) |
+|---|---|---|---|---|
+| **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **TESTÉ, en service** | — |
+| **P1** | **13** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* | R-028 personne n'est informé · **R-029 mesure des spectateurs** *(SUSPENDU — partenaires désactivés le 2026-08-05)* · R-030 rien ne s'efface |
+| **P2** | 22 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 |
+| **P3** | 4 | R-011 | R-026 · R-027 | R-040 |
 
 ✅ = la **règle métier est décidée**, le **code n'est pas écrit**. R-002 et R-006 → R-010
 n'appelaient aucune décision de Romain : ce sont des choix techniques, réglés à l'ÉTAPE 3.
@@ -156,6 +186,25 @@ match non saisi, terrain impraticable, égalité parfaite, faute de frappe.
    réponses à J-16, le refus de réorganiser les poules, la revalidation des relevés : tous tenus
    par le serveur, donc incontournables. Mais effacer tous les scores, tout réinitialiser, et
    limiter la seule porte ouverte : **tenus par personne, ou par la seule page web.**
+
+**Le fil rouge du domaine B**, en deux phrases :
+
+1. **La collecte est exemplaire ; le silence ne l'est pas.** L'application ne demande presque
+   rien et **n'identifie aucun enfant** — pas un nom, pas une date de naissance, pas une licence.
+   Mais elle ne dit **rien à personne** : ni au contact d'un club dont elle garde l'adresse d'une
+   édition à l'autre, ni au spectateur dont le téléphone compte des logos de partenaires.
+2. **Rien ne s'efface, et personne ne l'a décidé.** L'absence de durée de conservation n'est pas
+   un choix contestable : c'est un **choix qui n'a jamais été fait**. Neuf des treize problèmes
+   du domaine disparaissent le jour où ces durées sont écrites — et les écrire ne demande
+   **aucune ligne de code**.
+
+> ✅ **Ce que la protection des données a montré de bon** : **aucun enfant n'est identifié**
+> (recherche sur l'ensemble du dépôt) ; l'email d'un club n'est **jamais** renvoyé, pas même au
+> club concerné ; un envoi groupé envoie **un courriel par club**, jamais un courriel commun ; le
+> téléphone du contact public a été **volontairement retiré** de la page publique, avec la raison
+> écrite ; les documents PDF sont fabriqués **entièrement sur l'appareil** ; et il n'y a **aucun
+> cookie, aucun traceur tiers, aucun outil de mesure d'audience extérieur**. La liste complète
+> est dans `RISQUES.md` (« ce qui a été vérifié et s'est révélé sain — domaine B »).
 
 > ✅ **Ce que la sécurité a aussi montré, et qu'il faut dire** : le code est **bien meilleur que la
 > moyenne** sur ce terrain. Les mots de passe ne sont **nulle part** dans le dépôt (historique
@@ -229,13 +278,24 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | D-013 | **Planning** : déplacer un match, et décaler toute la journée de X minutes | ✅ Validée (session 5) |
 | D-014 | **Départage** : confrontation directe, puis ordre alphabétique en dernier recours | ✅ Validée (session 5) |
 | D-015 | **Match annulé** : même mécanisme que le forfait, libellé distinct, ne compte pour personne | ✅ Validée (session 5), **par défaut** — une règle FFR primerait |
+| **D-024** | **Tous les points en suspens (questions, décisions, inconnues) sont accumulés pendant l'ÉTAPE 2 et traités un par un à l'ÉTAPE 3.** Registre unique en **§10**. Trois exceptions : D-017 (une action, pas une question), les questions **sortantes** (I-10, I-15), et un éventuel **P0** | ✅ **Validée (session 7)** — *« on pourra les traiter une par une, de manière détaillée »* |
+| **D-023** | **Les trois décisions du domaine B (D-018/019/020) sont reportées à la fin des audits.** Plus rien ne presse : D-022 fixe le déclencheur, R-029 est suspendu. Et elles **ne dépendent pas de l'hébergement**, contrairement à ce qu'on pouvait croire | ✅ **Validée (session 7)** — *« oui après me semble juste »* |
 | D-016 | **Corriger R-014 (le P0) tout de suite**, seul, hors de l'ordre du chantier — puis reprendre les audits | ✅ Validée (session 6) — *« va pour B alors je te suis dans ton raisonnement »* |
+| **D-021** | **Phase prototype : tout appartient à Romain, et c'est assumé.** Classeur, Drive, boîte d'envoi et données de test sont sur ses comptes personnels — le bon choix pour un prototype. La question du responsable se repose au déclencheur | ✅ **Validée (session 7)** — *« dans cette phase de test tout est à moi »* |
+| **D-022** | **Le déclencheur remplace la date** : le jour où l'email d'un tiers entre dans le classeur, les trois P1 du domaine B doivent être réglés. Tant qu'il n'est pas atteint, **aucune exception** à l'ordre du chantier | ⏳ **Proposée (session 7)** — à confirmer |
 
 **En attente** (voir `DECISIONS.md`) :
 
 - **D-017 — Remplacer les deux clés par des suites aléatoires.** *(aucun code : une action de
   Romain, cinq minutes — c'est ce qui referme R-019)* ;
-- D-005 — Périmètre exact du dépôt à auditer (le site vitrine `boutique-r92` est un **autre** dépôt).
+- **D-018 — Que dit-on aux personnes dont on garde les informations ?** *(trois textes courts —
+  referme R-028)* ;
+- **D-019 — Que fait-on de la mesure de visibilité des partenaires ?** *(informer / demander
+  l'accord / alléger — referme R-029, le seul problème du domaine B qui tourne déjà)* ;
+- **D-020 — Combien de temps garde-t-on quoi ?** *(un tableau de durées à valider — referme
+  R-030, et met R-031, R-033 et R-034 en ordre de marche)* ;
+- D-005 — Périmètre exact du dépôt à auditer (le site vitrine `boutique-r92` est un **autre**
+  dépôt — et c'est **lui** qui accueillerait naturellement la page « Vos données » de D-018).
 
 *(Aucune décision du domaine A n'est en attente.)*
 
@@ -254,6 +314,9 @@ vérification supplémentaire.
 | I-10 | La FFR encadre-t-elle le sort d'un match d'École de Rugby **qui n'a pas pu se jouer** (forfait, ou annulation pour intempéries) ? Existe-t-il une règle de classement imposée ? | `AUDIT-TOURNOI-R92.md` **ne contient rien** sur le sujet : aucun de ses 25 points de vérification (Q11→Q25) ne le couvre. C'est une question de **règle du jeu**, donc du chantier FFR (D-003) | Question de Romain au **Directeur EDR du Racing** ou au **Comité 92** — la voie qui a déjà résolu Q23. Une règle fédérale primerait sur D-011 **et** D-015 |
 | I-08 | Une image mise à la corbeille du Drive (affiche, logo, photo de parking) reste-t-elle visible par un lien déjà diffusé, pendant les ~30 jours avant que Google vide la corbeille ? | Le comportement de la corbeille Drive appartient à Google, il n'est pas dans le code | Test réel : mettre une image à la corbeille, puis rouvrir son lien depuis une navigation privée |
 | I-09 | Que conserve le **journal d'exécution** de Google Apps Script, et pendant combien de temps ? | Ce journal vit chez Google, hors du dépôt | Consultation par Romain dans l'éditeur Apps Script (« Exécutions ») |
+| **I-14** | **Qui est officiellement responsable** de ces données — l'association Génération R92, le Racing 92, ou Romain à titre personnel ? Et le classeur doit-il rester dans un **compte Google individuel** ? | Aucun document du dépôt ne le dit. Ce n'est pas qu'un sujet RGPD : si ce compte est perdu ou bloqué, **l'association perd d'un coup son carnet d'adresses, ses images et son historique** | Réponse de Romain, à écrire dans `DECISIONS.md`. Elle conditionne D-018 (les textes doivent nommer le responsable) — voir **R-039** |
+| **I-15** | **Le droit à l'image des enfants est-il géré ailleurs** — par la licence FFR, un document du club, une consigne aux clubs invités ? | Le mécanisme existait dans l'application et a été **retiré sur décision du club** le 2026-08-03. Le modèle `.docx` reste dans le dépôt, plus rien ne le charge. **Rien n'écrit ce qui l'a remplacé** | Question de Romain au club. Tant que la réponse est inconnue, ce n'est **pas un défaut du code** — voir **R-036** |
+| **I-16** | **Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page « Vos données » ?** | C'est un **autre dépôt**, hors périmètre tant que D-005 n'est pas tranchée — or c'est l'endroit naturel de la page prévue par D-018 | Vérification par Romain, ou extension du périmètre (D-005) |
 
 ### Points levés
 
@@ -262,7 +325,7 @@ vérification supplémentaire.
 | **I-06** | Comment le Google Sheet est-il réellement partagé ? | ✅ **LEVÉ — le classeur est PRIVÉ.** Romain a fourni une capture du panneau Drive de « Tournoi R92 - Base de données » : *Qui a accès → **Privé*** (propriétaire seul), et *Limites de sécurité → aucune limite appliquée*. L'identifiant du classeur est donc public dans le dépôt **sans que cela expose les données** : le connaître ne suffit pas à ouvrir le fichier. C'est le réglage attendu. Cela confirme aussi que la Web App s'exécute bien **au nom du propriétaire** — c'est ce qui lui permet de lire un classeur privé au profit de visiteurs qui, eux, n'y ont aucun accès. | 2026-08-04, session 2 |
 | **I-07** | Les 4 onglets `RefFFR_*` existent-ils et sont-ils à jour ? | ✅ **LEVÉ — les 4 onglets existent, aux noms exacts attendus.** Capture du bas du classeur fournie par Romain : `RefFFR_Formes`, `RefFFR_Regles`, `RefFFR_Temps`, `RefFFR_Dates` — orthographe **identique** à ce que lit `Code.gs`. Contenu visible cohérent (millésimes 2026-2027, formes de jeu 5x5 / 7x7). Les fichiers Drive `RefFFR-formes-de-jeu` et `RefFFR-dates-federales` sont donc des documents **sources** distincts, sans rôle dans le fonctionnement. | 2026-08-04, session 2 |
 | **I-02** | Les tests de `backend/Tests.gs` passent-ils aujourd'hui ? | ✅ **LEVÉ — 573 sur 573 passent.** `lancerTestsFFR` lancé par Romain dans Apps Script, après le redéploiement. Le compte confirme au passage que les 16 vérifications ajoutées pour R-014 étaient bien du lot (564 appels écrits en dur + 9 dans des boucles = 573). ⚠️ **Le risque de méthode M-03 demeure** : rien ne lance ces tests automatiquement, c'est un geste manuel qui peut être oublié. | 2026-08-04, session 6 |
-| **I-13** | Le redéploiement du backend a-t-il eu lieu, et la correction de R-014 est-elle active ? | ✅ **LEVÉ — oui.** Le diagnostic « Tester la remontée » confirme la chaîne complète : écriture, relecture, et 109 relevés réels de spectateurs. R-014 passe au statut **TESTÉ**. | 2026-08-04, session 6 |
+| **I-13** | Le redéploiement du backend a-t-il eu lieu, et la correction de R-014 est-elle active ? | ✅ **LEVÉ — oui.** Le diagnostic « Tester la remontée » confirme la chaîne complète : écriture, relecture, et 109 relevés. ⚠️ **Corrigé le 2026-08-05** : ces relevés viennent des **appareils de Romain**, pas de spectateurs. **La preuve tient quand même** — des relevés ont bien été écrits puis relus. R-014 reste **TESTÉ**. | 2026-08-04, session 6 |
 | **I-11** | Comment la Web App est-elle réellement publiée chez Google ? | ✅ **LEVÉ — « Exécuter en tant que : Moi » et « Qui a accès : Tout le monde ».** Capture de l'écran de déploiement fournie par Romain. « Tout le monde » veut dire **sans compte Google, sans rien**. C'est le réglage **nécessaire** (les spectateurs doivent pouvoir lire les scores) : rien à y changer. Mais cela confirme que R-014 n'exigeait aucun préalable — d'où sa correction immédiate. | 2026-08-04, session 6 |
 | **I-12** | Les deux clés sont-elles des suites aléatoires ou des mots choisis à la main ? | ⚠️ **LEVÉ — ce sont des MOTS choisis par Romain** : *« pour les MDP c'est moi qui ai choisi ce sont des mots »*. C'est la réponse défavorable : **R-019 passe de P2 à P1**. Le remède ne demande aucun code — remplacer les deux clés par des suites aléatoires (**D-017**). | 2026-08-04, session 6 |
 | **I-04** | L'application a-t-elle servi un tournoi réel ? | ✅ **LEVÉ — non : le tournoi actuellement en base est un tournoi de TEST.** Romain : « c'est juste un faux tournoi avec de vrais noms ». Les noms d'équipes visibles (Racing 92, Stade Français, Clamart, Meudon, Vélizy, Antony, Sèvres, Issy-les-Moulineaux) sont de vrais clubs, mais les engagements sont fictifs. | 2026-08-04, session 2 |
@@ -273,8 +336,12 @@ vérification supplémentaire.
 >
 > **La question n'est donc pas « faut-il réparer », mais « faut-il préparer ».** L'application est
 > conçue pour collecter les coordonnées des contacts de clubs : le jour de la première invitation
-> réelle, de vraies données personnelles de tiers entreront dans le classeur. Le bon moment pour
-> traiter le domaine B (RGPD) est donc **avant ce jour-là**, pas après.
+> réelle, de vraies données personnelles de tiers entreront dans le classeur.
+>
+> ✅ **Le domaine B a été traité dans cette fenêtre, comme prévu** (session 7). Ce qui reste à
+> faire **avant** la première invitation réelle n'est donc plus un audit, mais **trois décisions**
+> — D-018, D-019, D-020 — dont **aucune ne demande d'écrire du code**. La fenêtre est encore
+> ouverte ; elle ne se rouvrira pas.
 >
 > Deux protections sont déjà constatées dans le code : le classeur est **privé** (I-06) et l'onglet
 > `ClubsInvites` est **exclu** des données publiques (`getAll`) et de tout accès sans clé admin.
@@ -303,3 +370,63 @@ vérification supplémentaire.
 | `cloudflare/` | 1 dossier |
 | Historique Git | **513 enregistrements** au total (relus **en entier** en session 6, à la recherche de mots de passe : **aucune fuite**). Branche de travail `claude/session-6-etape-2-securite-0tul4c`, partie de `dda3987` |
 | `frontend/js/vendor/` | **4 bibliothèques extérieures**, ~750 Ko, **sans version ni origine documentée** (`pdf-lib`, `docxtemplater`, `pizzip`, `qrcode`) — voir R-024 |
+
+---
+
+## 10. REGISTRE DES POINTS EN SUSPENS
+
+> **À quoi sert cette section.** Décision **D-024** : rien n'est tranché pendant l'ÉTAPE 2. Tout
+> ce qui attend une réponse est **accumulé ici**, puis repris **une par une** au début de
+> l'ÉTAPE 3. Ce tableau est **mis à jour à la fin de chaque session d'audit** — c'est le seul
+> endroit où regarder pour savoir ce qui reste ouvert.
+
+**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine B).
+
+### 10.1 — Ce qui ne doit PAS attendre *(les trois exceptions de D-024)*
+
+| # | Quoi | Pourquoi ça ne peut pas attendre |
+|---|---|---|
+| **D-017** | **Remplacer les deux clés par des suites aléatoires** | Ce n'est pas une question, c'est une **action** : cinq minutes, aucune réflexion, et elle referme **R-019** (P1). Menu du classeur → « Configurer les clés » |
+| **I-10** | **Question à la FFR** : le sort d'un match qui n'a pas pu se jouer (forfait, intempéries) est-il encadré ? | **Question sortante** — Directeur EDR du Racing / Comité 92. Le délai de réponse ne dépend pas de nous. Une règle fédérale primerait sur **D-011** et **D-015** |
+| **I-15** | **Question au club** : le droit à l'image des enfants est-il géré ailleurs (licence FFR, document du club, consigne aux clubs invités) ? | **Question sortante** — même raison. Le mécanisme a été retiré de l'application le 2026-08-03 sur décision du club, sans que rien n'écrive ce qui l'a remplacé (**R-036**) |
+
+> Ces trois-là ne coûtent rien à traiter tout de suite, et les garder en réserve ne protégerait
+> rien. **Un P0 découvert dans un audit à venir constituerait une quatrième exception** : il
+> serait présenté immédiatement, comme R-014 l'a été (**D-016**).
+
+### 10.2 — Décisions en attente
+
+| Réf | La question | Née en | Bloque |
+|---|---|---|---|
+| **D-005** | **Périmètre du dépôt à auditer** : le site vitrine `boutique-r92` entre-t-il dans le chantier ? | Session 1 | **I-16**, et l'emplacement de la future page « Vos données » (**D-018**) |
+| **D-009** | **Où atterrit la documentation** quand une branche de travail est imposée ? | Session 2 | Rien de fonctionnel — une question de méthode |
+| **D-018** | **Que dit-on aux personnes** dont on garde les informations ? *(trois textes courts)* | Session 7 | **R-028** (P1) |
+| **D-019** | **Que fait-on de la mesure des partenaires ?** Informer · demander l'accord · alléger | Session 7 | **R-029** (P1) — **suspendu** tant que les partenaires restent éteints |
+| **D-020** | **Combien de temps garde-t-on quoi ?** *(tableau de durées à valider)* | Session 7 | **R-030** (P1), **R-031**, **R-033**, **R-034** |
+| **D-022** | **Le déclencheur** — *le jour où l'email d'un tiers entre dans le classeur* — est-il confirmé ? | Session 7 | Rien ne l'attend ; il **fixe le calendrier** de tout le reste |
+
+### 10.3 — Inconnues à lever
+
+| Réf | Ce qu'on ne sait pas | Comment le lever | Pour quel domaine |
+|---|---|---|---|
+| **I-01** | Le code en service chez Google est-il identique à `backend/Code.gs` ? | Vérification de Romain dans Apps Script | Permanent (**M-02**) |
+| **I-05** | Qui utilise l'administration le jour J, et sur quel matériel ? | Question à Romain | **E** — UX |
+| **I-08** | Une image mise à la corbeille du Drive reste-t-elle visible par un lien déjà diffusé pendant ~30 jours ? | Test réel de 5 minutes : corbeille, puis rouvrir le lien en navigation privée | **B** — **R-035** |
+| **I-09** | Que conserve le journal d'exécution de Google Apps Script, et combien de temps ? | Consultation dans l'éditeur Apps Script (« Exécutions ») | **B / C** — **R-023**, **R-039** |
+| **I-10** | La FFR encadre-t-elle le sort d'un match non joué ? | **Question sortante** — voir §10.1 | **A** — D-011, D-015 |
+| **I-14** | Qui est officiellement responsable des données, et le classeur doit-il rester dans un compte individuel ? | Réponse de Romain **au déclencheur** — non bloquant aujourd'hui (**D-021**) | **B** — **R-039** |
+| **I-15** | Le droit à l'image des enfants est-il géré ailleurs ? | **Question sortante** — voir §10.1 | **B** — **R-036** |
+| **I-16** | Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page de confidentialité ? | Vérification de Romain, ou extension du périmètre (**D-005**) | **B** — **D-018** |
+
+### 10.4 — Comment ce registre sera traité
+
+À l'ouverture de l'**ÉTAPE 3**, les points ci-dessus seront repris **un par un**, dans cet ordre :
+
+1. **les inconnues d'abord** — on ne décide pas sur du sable ;
+2. **puis les décisions**, chacune présentée avec : le problème en langage simple, les options,
+   ce que chacune coûte et apporte, et une recommandation ;
+3. **puis seulement** le tableau des chantiers de `PLAN.md`.
+
+> ⚠️ **Chaque session d'audit doit alimenter ce registre avant de se clore.** Une question
+> soulevée mais non inscrite ici est une question perdue — c'est exactement ce que **D-001**
+> cherche à empêcher.
