@@ -573,7 +573,7 @@ c'est donc à Romain de la porter là-bas, pas à moi de modifier ce document) :
 
 **✅ Correction déployée et vérifiée le 2026-08-04.** Romain a redéployé le backend chez Google,
 lancé `lancerTestsFFR` (**573/573 OK**) et rejoué le diagnostic « Tester la remontée » (écriture,
-relecture, 109 relevés réels). R-014 passe au statut **TESTÉ** — le premier du chantier.
+relecture, 109 relevés). R-014 passe au statut **TESTÉ** — le premier du chantier. *(Précision du 2026-08-05 : ces 109 relevés viennent des appareils de Romain, pas de spectateurs. La preuve de non-régression reste entière — des relevés ont bien été écrits puis relus.)*
 La règle permanente de `CLAUDE.md` §13.6 est donc satisfaite ici : ce n'est pas le dépôt qui le
 dit, c'est une vérification faite en production.
 
@@ -614,6 +614,98 @@ dit, c'est une vérification faite en production.
 **Effet sur l'audit**
 > Si c'est fait : **R-019 redevient théorique** et retombe en P2. Tant que ce n'est pas fait,
 > R-019 est classé **P1** — voir `RISQUES.md`.
+
+---
+
+### D-021 — Phase prototype : tout appartient à Romain, et c'est assumé
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ✅ **VALIDÉE** par Romain le 2026-08-05 |
+| **Décidée par** | Romain |
+| **Répond à** | I-14 (partiellement), R-039, R-040 |
+
+**Problème posé**
+> Le domaine B a demandé **qui est responsable** de ces données, et si le classeur devait rester
+> dans un compte Google individuel. La réponse conditionne les textes d'information (D-018) et
+> la continuité du projet.
+
+**Décision prise — les mots de Romain**
+> *« Dans cette phase de test tout est à moi. […] Tout est sur mes comptes donc tout cela
+> m'appartient. »*
+>
+> Et sur l'avenir : *« aujourd'hui ça fonctionne avec mon classeur ; à terme, si cela doit
+> devenir un SaaS, ce ne sera plus possible. Il faudra scinder tout ça. »*
+
+**Ce que cela établit**
+> 1. **En phase prototype, il n'y a pas de sujet de responsabilité partagée** : le classeur, le
+>    Drive, la boîte d'envoi, les données de test et les 109 relevés de mesure sont tous à
+>    Romain, sur ses propres comptes, et ne concernent que lui et son épouse. **Le compte
+>    individuel est le bon choix pour un prototype** — le changer maintenant serait du travail
+>    sans bénéficiaire.
+> 2. **La question du responsable n'est donc pas bloquante aujourd'hui.** Elle le redevient au
+>    **déclencheur** (voir D-022) : le jour où les données d'un tiers entrent, il faudra nommer
+>    une structure. La piste déjà écrite dans le dépôt reste l'**association Génération R92**,
+>    désignée comme telle dans le modèle d'autorisation de droit à l'image.
+> 3. **R-040 (P3) est confirmé par Romain lui-même**, et c'est important : le passage en SaaS
+>    n'est pas seulement un sujet de contrat, c'est un sujet **d'architecture**. Un classeur
+>    unique ne peut pas héberger plusieurs clubs.
+
+**Conséquences**
+> - **Rien ne change maintenant.** Aucun compte à créer, aucun classeur à déplacer.
+> - **I-14 reste ouverte, mais dégradée** : ce n'est plus une inconnue bloquante, c'est une
+>   question à reposer au déclencheur.
+> - **R-039 (aucun cadre écrit) reste P2**, mais sa partie « qui est responsable » a une réponse
+>   claire pour la phase actuelle : Romain.
+
+---
+
+### D-022 — Le déclencheur : ce qui fait basculer le prototype en usage réel
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-05 |
+| **Session** | 7 |
+| **Statut** | ⏳ PROPOSÉE — en attente de confirmation de Romain |
+| **Décidée par** | Claude (proposition), sur réponse de Romain à la question du calendrier |
+
+**Problème posé**
+> La question posée était : *« quand invites-tu de vrais clubs ? »* Réponse de Romain, le
+> 2026-08-05 : *« je ne sais pas, c'est juste sincère. Je suis sur un prototype de démo. Je ne
+> sais même pas si celui-ci, même après la phase d'industrialisation, trouvera son public. »*
+>
+> C'est une réponse honnête et utile — mais elle laisse le chantier sans repère : on ne sait pas
+> quand les problèmes théoriques deviennent réels.
+
+**Décision proposée — remplacer la date par un signal**
+> **Le jour où l'adresse email d'une personne qui n'est ni Romain ni son épouse entre dans le
+> classeur, les trois P1 du domaine B (R-028, R-029, R-030) doivent être réglés — avant, pas
+> après.**
+>
+> Traduction pratique : **tout est permis avec ce prototype, sauf saisir les coordonnées d'un
+> vrai contact de club.**
+
+**Raison**
+> Une date, Romain ne l'a pas, et ne l'aura probablement pas à l'avance : un prototype ne bascule
+> pas à une date, il bascule un jour où quelqu'un dit « on le fait ». Un **déclencheur** ne se
+> périme pas, ne peut pas être raté, et se déclenche **exactement** au moment où le risque
+> apparaît.
+>
+> Le vrai danger n'est pas l'oubli, c'est le **glissement** : l'outil est montré, quelqu'un dit
+> « on le prend pour le tournoi de mars », et le prototype devient la production sans que
+> personne ne l'ait décidé. Ce déclencheur rend ce moment **visible**.
+
+**Ce que le déclencheur commande, le jour venu**
+> 1. les trois P1 du domaine B (R-028, R-029, R-030) ;
+> 2. le remplacement des deux clés par des suites aléatoires (D-017, R-019) ;
+> 3. la désignation d'une structure responsable et le passage à un compte de l'association
+>    (D-021, R-039).
+
+**Conséquence tant qu'il n'est pas atteint**
+> **Aucune exception à l'ordre du chantier.** On finit les 8 audits, puis le plan, puis les
+> corrections. `CLAUDE.md` §7 s'applique sans aménagement.
 
 ---
 
@@ -671,7 +763,9 @@ dit, c'est une vérification faite en production.
 > la mémoire longue du navigateur), compte le temps d'affichage de chaque logo de partenaire par
 > tranche de 30 minutes, et **remonte tout cela au serveur**. Sans un mot d'explication, et sans
 > aucun moyen de refuser. **C'est le seul problème du domaine B qui tourne déjà en vrai** : le
-> classeur contient 109 relevés réels.
+> classeur contient 109 relevés — **venant des propres appareils de Romain** (précision du 2026-08-05),
+> pas de spectateurs. **Et les partenaires ont été désactivés le 2026-08-05**, ce qui coupe la mesure :
+> le risque est **suspendu**, pas réglé. Il se rallume avec l'interrupteur.
 >
 > La règle française ne parle pas seulement de données personnelles : **déposer quelque chose sur
 > l'appareil de quelqu'un demande son accord**, sauf si c'est strictement nécessaire au service

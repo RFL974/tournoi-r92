@@ -1268,3 +1268,76 @@ comment on prouvera que rien n'est cassé.
 **Rappel de méthode** : rien n'est corrigé. Les 13 problèmes sont au statut **IDENTIFIÉ**, et les
 trois décisions attendent Romain. Le passage à **EN COURS** n'aura pas lieu avant la fin des 8
 audits et la validation de l'ÉTAPE 4 (`CLAUDE.md` §7).
+
+---
+
+## SESSION 7 — COMPLÉMENT — 2026-08-05 — réponses de Romain, et une correction
+
+Après le rapport de fin de session, Romain a répondu aux deux premières questions ouvertes. Ses
+réponses **corrigent une erreur** de la documentation et **font naître deux décisions**.
+
+### Question 1 — « Quand invites-tu de vrais clubs ? »
+
+> *« Je ne sais pas, c'est juste sincère. Je suis sur un prototype de démo. Je ne sais même pas
+> si celui-ci, même après la phase d'industrialisation, trouvera son public. »*
+
+**Conséquence** : aucune exception à l'ordre du chantier. Et une proposition — **D-022** :
+remplacer la date, qu'il n'a pas, par un **déclencheur** — *le jour où l'email d'une personne qui
+n'est ni lui ni son épouse entre dans le classeur*. Un prototype ne bascule pas à une date : il
+bascule le jour où quelqu'un dit « on le fait ». Le déclencheur rend ce moment visible.
+
+### Question 2 — « Qui est responsable, et où doivent vivre les données ? »
+
+> *« Dans cette phase de test tout est à moi. […] Tout est sur mes comptes donc tout cela
+> m'appartient. Par ailleurs je viens de désactiver la pub par précaution depuis l'onglet
+> partenariat. Je vais aussi être honnête : aujourd'hui ça fonctionne avec mon classeur ; à
+> terme, si cela doit devenir un SaaS, ce ne sera plus possible. Il faudra scinder tout ça. »*
+
+**Conséquence** : **D-021** — le compte individuel est le bon choix pour un prototype, rien ne
+change maintenant, et la question du responsable se repose au déclencheur. **R-040 (P3) est
+confirmé par Romain lui-même**, avec une précision qui compte : le passage en SaaS n'est pas
+seulement un sujet de contrat, c'est un sujet **d'architecture**.
+
+### ⚠️ Une erreur de la documentation, corrigée
+
+La documentation écrite en **session 6** affirmait que les 109 relevés de mesure des partenaires
+venaient **« de spectateurs »**. **C'est faux** : ils viennent des **propres appareils de
+Romain**, ouverts depuis plusieurs machines pour vérifier que la remontée ne partait pas du seul
+navigateur de son ordinateur. L'affirmation a été reprise telle quelle dans l'audit du domaine B
+avant d'être corrigée.
+
+**Ce que cela change** :
+
+- **Aucune personne extérieure n'a jamais été mesurée** par ce dispositif ;
+- **R-029 n'est donc pas « le seul problème qui tourne déjà sur de vraies personnes »** — c'était
+  la formulation de l'audit initial, elle était fausse ;
+- **la preuve de non-régression de R-014 tient entièrement** : des relevés ont bien été écrits
+  puis relus. Seule leur **origine** était mal décrite. R-014 reste **TESTÉ**.
+
+Corrigé dans `AUDIT.md`, `ETAT.md`, `RISQUES.md` et `DECISIONS.md`.
+
+### R-029 passe au statut SUSPENDU — et la vérification qui va avec
+
+Romain a **désactivé les partenaires** depuis l'écran Partenaires. **Vérifié dans le code** que
+cela coupe bien la mesure *(CERTAIN)* :
+
+| Chemin | Preuve |
+|---|---|
+| Page publique | `frontend/js/tournoi.js` ligne 251 — sortie de fonction **avant** `sponsorsArmerEnvoi()` (ligne 297) si `sponsors_actifs` est faux |
+| Dossier club | `frontend/js/dossier.js` ligne 374 — `if (!reglages.actifs) return '';` : aucun logo produit, donc la mesure n'est jamais branchée |
+| **Exception connue** | `?demo=sponsors` force `actifs = true` (`sponsors.js` ligne 147) et **rallume la mesure**. Paramètre à taper à la main, pas un chemin emprunté par hasard |
+
+**R-029 reste P1** — « à corriger avant une utilisation réelle », et rallumer l'interrupteur *est*
+l'utilisation réelle. Son statut opérationnel devient **SUSPENDU** : une pause, pas une
+correction. Un clic la défait.
+
+> **Dit honnêtement** : la désactivation **n'était pas nécessaire**, puisque personne d'extérieur
+> n'avait été mesuré. Ce n'est pas une erreur pour autant — elle ne coûte rien. Son seul coût est
+> **commercial** : sans partenaires affichés, la démonstration perd un argument. **D-019** reste
+> la vraie réponse.
+
+### Questions encore ouvertes
+
+**D-018** (les textes), **D-019** (la mesure), **D-020** (les durées), **I-15** (droit à l'image),
+**I-16** (mentions légales du site vitrine). Elles seront posées **une par une**, à la demande de
+Romain.

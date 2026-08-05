@@ -1026,7 +1026,7 @@ apportées par Romain après le redéploiement :
 |---|---|
 | Le backend en service est-il bien le nouveau ? | ✅ **Redéployé** → lève **I-13** |
 | Les tests passent-ils ? | ✅ **573 sur 573** dans Apps Script → lève **I-02** |
-| La mesure des partenaires fonctionne-t-elle toujours ? | ✅ Écriture, relecture, et **109 relevés réels** de spectateurs |
+| La mesure des partenaires fonctionne-t-elle toujours ? | ✅ Écriture, relecture, et **109 relevés** présents dans le classeur. ⚠️ **Correction du 2026-08-05** : ces 109 relevés viennent des **propres appareils de Romain** (essais multi-appareils), **pas de spectateurs**. Cela ne change **rien à la preuve** — des relevés ont bien été écrits puis relus — mais la formulation d'origine était fausse |
 
 La troisième ligne est la plus importante des trois : c'est la **preuve de non-régression**.
 Le plafonnement n'a rien cassé — les relevés continuent d'arriver et d'être relus.
@@ -1664,9 +1664,10 @@ de conception, pas un hasard.
 Ce qui manque est d'un autre ordre, et c'est du **cadre**, pas du code : **il n'existe nulle
 part, dans aucune page et dans aucun courriel, une seule phrase qui explique aux personnes ce
 qu'on fait de leurs informations** — et **rien ne s'efface jamais tout seul**. À quoi s'ajoute
-une chose qui, elle, tourne **déjà en production aujourd'hui** : la mesure de visibilité des
-partenaires **écrit sur le téléphone de chaque spectateur** et **remonte au serveur** sans que
-personne n'en soit informé ni n'ait le choix.
+un dispositif qui, lui, **fonctionne dès que les partenaires sont allumés** : la mesure de
+visibilité **écrit sur le téléphone de chaque spectateur** et **remonte au serveur** sans que
+personne n'en soit informé ni n'ait le choix. *(Mise à jour du 2026-08-05 : les partenaires ont
+été **désactivés**, ce qui coupe la mesure — le risque est **suspendu**, pas réglé. Voir §B.3.7.)*
 
 **Aucun problème P0.** Et il faut dire pourquoi, sinon le chiffre ne veut rien dire : un P0
 supposerait une **exposition grave** de données personnelles. Or le carnet d'adresses est
@@ -1807,7 +1808,7 @@ paragraphes**. Après la première vague d'invitations, il faudra en plus recont
 ### 1. Ce que j'ai trouvé
 
 C'est le seul problème de ce domaine qui **tourne déjà en vrai** : le classeur contient
-aujourd'hui **109 relevés réels** remontés par des téléphones de spectateurs.
+aujourd'hui **109 relevés**. ⚠️ **Précisé par Romain le 2026-08-05** : ils viennent de **ses propres appareils**, utilisés pour vérifier que la remontée ne partait pas du seul navigateur de son ordinateur — **pas de spectateurs**. Et **il a désactivé les partenaires** le même jour, depuis l'écran Partenaires, ce qui **coupe la mesure** (voir le point 7 ci-dessous).
 
 Voici ce que fait la page publique des scores, en détail *(CERTAIN, `frontend/js/sponsors.js` et
 `frontend/js/tournoi.js` ligne 297)* :
@@ -1893,13 +1894,45 @@ au dispositif partenaires sa valeur.
 
 ### 6. Ce que je conseille
 
-**À traiter avant le prochain tournoi réel**, et **avant** de présenter la fiche de visibilité à
-un partenaire payant. C'est le seul problème de ce domaine qui produit **déjà** des données, tous
-les jours, sur de vraies personnes.
+**À traiter avant de rallumer les partenaires**, et **avant** de présenter la fiche de visibilité
+à un partenaire payant.
 
 > ⚠️ **Précision qui compte** : je ne dis pas d'arrêter la mesure. Elle est **légitime**, elle
 > est **bien construite**, et elle sert un besoin réel du club. Je dis qu'elle doit être
 > **annoncée**, et qu'on doit pouvoir la refuser.
+
+### 7. Ce qui a changé le 2026-08-05 — le risque est SUSPENDU, pas réglé
+
+Deux précisions de Romain, le lendemain de l'audit, qui corrigent ce qui précède :
+
+1. **Les 109 relevés viennent de ses propres appareils**, pas de spectateurs : il a ouvert la page
+   depuis plusieurs appareils pour vérifier que la remontée ne partait pas du seul navigateur de
+   son ordinateur. **Aucune personne extérieure n'a donc été mesurée à ce jour.** *(La version
+   précédente de ce document et de `ETAT.md` disait « spectateurs » : c'était faux.)*
+2. **Il a désactivé les partenaires** depuis l'écran Partenaires, par précaution.
+
+**Vérification faite dans le code — la désactivation coupe bien la mesure** *(CERTAIN)* :
+
+| Chemin | Ce que fait le code |
+|---|---|
+| Page publique des scores | `tournoi.js` ligne 251 : `const montrer = ... sponsorsReg.actifs ...` — si c'est faux, la fonction **sort avant** `sponsorsArmerEnvoi()` (ligne 297). Aucun relevé n'est armé |
+| Dossier d'un club | `dossier.js` ligne 374 : `if (!reglages.actifs) return '';` — aucun logo n'est produit, donc la condition `querySelector('[data-sponsor]')` est fausse et la mesure n'est jamais branchée |
+
+> ⚠️ **Une seule voie de contournement connue** : l'adresse `?demo=sponsors` force `actifs = true`
+> (`sponsors.js` ligne 147) et **rallume donc l'affichage et la mesure**, même partenaires
+> éteints. C'est un paramètre qu'il faut connaître et taper à la main : ce n'est pas un chemin
+> qu'un visiteur emprunte par hasard.
+
+**Conséquence sur le classement.** R-029 reste **P1** — la définition d'un P1 est « à corriger
+avant une utilisation réelle », et rallumer l'interrupteur *est* l'utilisation réelle. Mais son
+statut opérationnel devient **SUSPENDU** : il ne produit plus rien aujourd'hui. **Ce n'est pas
+une correction, c'est une mise en pause** — un clic la défait.
+
+> **Ce qu'il faut dire honnêtement** : la désactivation **n'était pas nécessaire**, puisque
+> aucune personne extérieure n'avait été mesurée. Ce n'est pas pour autant une erreur — elle ne
+> coûte rien et elle sort le sujet du chemin critique. Le seul coût est **commercial** : sans
+> partenaires affichés, la démonstration de l'application perd un de ses arguments. C'est à
+> Romain de juger si ce coût vaut la précaution, et **D-019** reste la vraie réponse.
 
 ---
 
@@ -2313,7 +2346,7 @@ La règle de transparence (`CLAUDE.md` §9) impose de dire ce que cet audit **ne
 | Réf | Problème | Priorité | Où ça fait mal | Difficulté de correction |
 |---|---|---|---|---|
 | **R-028** | Personne n'est jamais informé de rien | **P1** | Obligation la plus élémentaire, et la plus visible de l'extérieur | **Nulle côté code** — trois textes à écrire |
-| **R-029** | La mesure des partenaires écrit sur le téléphone des spectateurs, sans le dire | **P1** | Le seul traitement qui touche **des milliers de personnes**, et il tourne **déjà** | Faible (option recommandée) |
+| **R-029** | La mesure des partenaires écrit sur le téléphone des spectateurs, sans le dire | **P1** · **SUSPENDU** *(partenaires désactivés le 2026-08-05)* | Le seul traitement qui toucherait **des milliers de personnes** — se rallume avec l'interrupteur | Faible (option recommandée) |
 | **R-030** | Aucune durée de conservation, aucune purge | **P1** | Le carnet grossit sans fin ; une fuite ferait bien plus de dégâts | **Nulle** pour décider · moyenne pour outiller |
 | **R-031** | Effacer quelqu'un est partiel, et parfois bloqué par le planning | P2 | Une demande d'effacement n'a pas de réponse simple | Faible |
 | **R-032** | Effectifs d'enfants publics, et tout ajout futur le sera aussi | P2 | Rien aujourd'hui ; une colonne demain | Faible — **c'est R-021** |
@@ -2344,9 +2377,11 @@ Le domaine C avait le sien : il n'y a **pas de personnes, seulement des mots de 
 
 ### Si je devais ne corriger que trois choses
 
-1. **R-029 — la mesure des partenaires.** Parce que c'est le **seul** qui produit déjà, tous les
-   jours, des données sur des milliers de vraies personnes. Les douze autres sont pour l'instant
-   théoriques ; celui-là ne l'est pas.
+1. **R-029 — la mesure des partenaires.** Parce que c'est le seul qui touche **des milliers de
+   personnes** au lieu de quelques dizaines de contacts de clubs, et parce qu'il suffit d'un clic
+   pour le remettre en marche. *(Depuis le 2026-08-05 les partenaires sont éteints, donc il ne
+   produit plus rien — mais c'est une pause, pas une correction : à traiter **avant de
+   rallumer**.)*
 2. **R-028 — les trois textes d'information.** Parce que c'est **gratuit**, que ça ne touche
    aucun code, et que c'est la première chose qu'un tiers regarde.
 3. **R-030 — écrire les durées de conservation** (étape a seulement, pas l'outillage). Parce que
