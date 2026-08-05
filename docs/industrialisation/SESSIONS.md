@@ -2950,3 +2950,86 @@ comme un fait — parce que les deux lectures ne produisent pas le même code.
 - **7 inconnues ouvertes** *(I-21 ouverte puis levée le même jour)*, **0 décision en attente** ;
 - fichiers touchés : `DECISIONS.md`, `PLAN.md`, `ETAT.md`, `RISQUES.md`, `SESSIONS.md` ;
 - **la session 14 (volet ②) n'est pas commencée.**
+
+---
+
+## SESSION 13 — ADDENDUM n° 3 : ⚡ **le cadre de la reprise — et une correction de ma part**
+
+> **Précision de Romain**, apportée pour que la règle soit *« pensée dans son contexte fonctionnel
+> réel et dans la logique de reprise après interruption »*.
+>
+> ⚠️ **Aucun code modifié**, conformément à la consigne : *« ne modifie aucun code pour l'instant »*.
+
+### 1. ❌ Ce que j'avais écrit de faux, et pourquoi c'était faux
+
+**L'addendum n° 2 classait le repos méridien de 60 minutes comme un garde-fou dur, à ne franchir
+« jamais ».** C'était une **erreur de cadrage**.
+
+Ce 60 n'est pas une constante de sécurité gravée dans le marbre : c'est **une valeur que
+l'organisateur choisit**, qui n'a simplement **jamais eu d'écran pour être saisie**. Le vrai
+principe n'est pas *« on n'y touche jamais »* — c'est :
+
+> **La machine ne la modifie jamais toute seule. L'organisateur, si.**
+
+> ✅ **L'inquiétude de fond était juste, sa catégorie ne l'était pas.** Le danger réel — qu'un
+> planning se densifie en rognant le repos des enfants **sans que personne l'ait décidé** — est
+> **exactement** ce que le principe 5 de Romain interdit. Le garde-fou survit donc, sous une forme
+> plus juste et plus utile : il protège **la décision**, pas la valeur.
+>
+> *(Conformément à la doctrine du projet, l'addendum n° 2 n'est **pas réécrit** : un journal dit ce
+> qu'on savait, et quand. Cette entrée-ci porte la correction.)*
+
+### 2. Le cadre qui fait désormais foi — `DECISIONS.md` **D-030 §9**
+
+> 🎯 *« Je ne veux pas que C-003 soit construit autour de l'idée "60 minutes = verrou qui bloque la
+> reprise". Je veux que le moteur cherche toutes les marges de manœuvre disponibles avant de
+> conclure que le tournoi ne peut plus être repris. »* — Romain
+
+**6 CONTRAINTES** que le moteur ne franchit jamais · **8 LEVIERS** ordonnés du moins au plus
+intrusif · **5 PRINCIPES** d'escalade.
+
+Le plus structurant des cinq : **quand une contrainte configurable doit changer, on demande une
+décision explicite à l'organisateur — on ne la modifie jamais automatiquement.**
+
+### 3. ⚡ Deux faits vérifiés dans le code, qui changent le travail
+
+| # | Fait constaté | Conséquence |
+|---|---|---|
+| **1** | ✅ **Le cœur de calcul accepte DÉJÀ le repos en paramètre.** `planifierCategorieEchelonnee` reçoit `opts.repos` *(60 par défaut)*, et il existe même déjà un **avertissement** pour le cas dégénéré. **Seul l'appelant passe 60 en dur.** | **Rendre le repos saisissable ne demande AUCUNE modification de l'algorithme** — un champ, sa lecture, son passage. → nouveau chantier **C-004**, petit et **indépendant** |
+| **2** | ⚠️ **La règle d'équité n'est vérifiée nulle part.** *« Une équipe reposée n'affronte pas une équipe qui ne l'est pas »* est garantie par la **forme** du planning : matin *(inter-vagues, tous frais)* → vague 1 en pause pendant que la vague 2 joue **ses matchs internes** → l'inverse → après-midi *(inter-vagues, tous ayant déjeuné)* | 🔴 **Un levier qui réorganiserait librement les rencontres casserait l'équité EN SILENCE** — ni erreur, ni avertissement. **Deux mesures inscrites dans C-003** : le levier « réorganiser » **conserve la structure en 4 blocs**, et un **test d'équité** est ajouté pour que la règle devienne **prouvable** |
+
+### 4. Ce qui a été écrit
+
+| Document | Changement |
+|---|---|
+| `DECISIONS.md` **D-030 §8.3** | **Réécrit** — trois marges, trois régimes. Le repos passe de « jamais » à « levier sous décision explicite » |
+| `DECISIONS.md` **D-030 §8.3 bis / ter** | Les deux faits vérifiés dans le code |
+| `DECISIONS.md` **D-030 §9** *(nouveau)* | ⭐ **Le cadre de la reprise** : 6 contraintes / 8 leviers / 5 principes + vérification de compatibilité |
+| `DECISIONS.md` **D-030 §5** | Point ouvert **(g)** : existe-t-il un **repos minimal réglementaire** en École de Rugby ? |
+| `PLAN.md` **C-003** | **Réécrit** autour du cadre. Nouveaux tests : **équité**, **escalade** *(un retard rattrapable au levier 1 n'en utilise pas d'autre)*, **épuisement** *(« impossible » seulement après les 8 leviers)* |
+| `PLAN.md` **C-004** *(nouveau)* | Rendre saisissable le repos minimal — **P2, indépendant, faisable à tout moment**, migration douce *(absent ⇒ 60)* |
+| `ETAT.md`, `RISQUES.md` | Mis en cohérence |
+
+### 5. ✅ Vérification des contradictions *(demandée par Romain)*
+
+| Ce qui existe | Verdict |
+|---|---|
+| **D-013** — *« avertir, jamais interdire »* | ✅ **Même idée.** Le principe 5 en est la version pour les valeurs configurables |
+| **D-027** — *« un message ne ment jamais »* | ✅ **Renforcé, et étendu** : annoncer *« la reprise est impossible »* sans avoir parcouru les 8 leviers **serait un message qui ment** |
+| **Réponse à I-21** *(temps de jeu max, pas de phase finale)* | ✅ **Intacte** — contraintes 2 et 5 |
+| **Règle d'équité implémentée par Romain** | ✅ **Préservée explicitement** *(contrainte 4)*, et **rendue prouvable** par un test |
+| **`CLAUDE.md` §11** — la fonctionnalité métier prime | ✅ **Renforcé** : refuser une reprise à cause d'une valeur qu'un humain aurait pu ajuster serait une **rigidité technique qui dégrade l'usage métier** — donc, au sens de §11, **pas une amélioration** |
+| **D-030 §8.3, version du matin** | ❌ **Contredite → CORRIGÉE** |
+| **`PLAN.md` C-003, version du matin** | ❌ **Contredite → RÉÉCRITE** |
+
+**Aucune autre contradiction.** Les décisions métier (D-011, D-012, D-014, D-015), les décisions de
+données (D-018 → D-020) et les décisions de méthode (D-005, D-009, D-025, D-028, D-029) ne sont pas
+touchées.
+
+### 6. État
+
+- **Aucun fichier de l'application modifié** — vérifié ;
+- **aucune ligne de code écrite** ;
+- **7 inconnues ouvertes**, **0 décision en attente**, **4 fiches de chantier** *(C-001 → C-004)* ;
+- fichiers touchés : `DECISIONS.md`, `PLAN.md`, `ETAT.md`, `RISQUES.md`, `SESSIONS.md` ;
+- **la session 14 (volet ②) n'est pas commencée.**

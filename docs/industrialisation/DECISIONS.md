@@ -1621,6 +1621,7 @@ qu'ils ne soient pas redécouverts au moment de coder.*
 | **d** | **Le classement partiel reste-t-il affiché** pendant une SUSPENSION ? | L'annulation dit « pas de classement final ». La suspension ne dit rien — or le tournoi peut reprendre |
 | **e** | **Que devient un tournoi suspendu qui ne reprend jamais** ? Bascule-t-il en ANNULÉ à la main, ou reste-t-il suspendu ? | C'est le cas réel le plus probable : l'orage ne s'arrête pas, et personne ne pense à changer l'état avant de rentrer |
 | ⚡ **f** *(né de la réponse I-21)* | **« Phases finales interdites » annule-t-il aussi une phase finale DÉJÀ PRÉVUE**, ou seulement celles que le moteur pourrait inventer pour rattraper ? Un seul des quatre formats d'après-midi est concerné : **COUPE_PLATEAU** | Ma lecture prudente : **oui, elle est écartée à la reprise**. Mais les deux lectures ne produisent pas le même code — voir **§8.4** |
+| ⚡ **g** *(né de la précision du 2026-08-05)* | **Existe-t-il une durée de repos méridien MINIMALE imposée** en École de Rugby ? Romain écrit *« dans le respect du cadre réglementaire applicable »* — le cadre existe donc, mais rien ne l'écrit dans le dépôt | **Ne bloque pas le levier n° 7** *(l'organisateur décide)*, mais sans elle l'application ne peut pas **l'avertir** s'il descend trop bas. À poser dans le **même courriel que I-10** — voir **§9.5** |
 
 > Ces cinq points **ne bloquent pas l'inscription de la décision** : ils seront présentés à Romain
 > au moment de construire la fiche de chantier, au **volet ③**. Les inscrire maintenant évite qu'ils
@@ -1708,21 +1709,61 @@ fallait pour ne pas écrire un moteur qui décide seul.
 > niveau 2 doit transformer un **indicateur** en **contrôle réel**. Le prévoir maintenant évite de
 > découvrir en cours de route qu'on croyait le garde-fou déjà là.
 
-##### 8.3 — ⚠️ Un garde-fou que la réponse fédérale ne mentionne PAS, et qu'il ne faut surtout pas écraser
+##### 8.3 — Les trois marges, et leurs trois régimes *(corrigé par Romain le 2026-08-05)*
 
-D-030 autorise de *« supprimer ou réduire certaines marges entre rencontres »*. Il faut distinguer
-**trois marges différentes**, qui n'ont pas du tout le même statut :
+> ⚠️ **Correction d'une erreur de cadrage de ma part.** J'avais écrit que le repos méridien de
+> 60 minutes ne devait **jamais** être touché. **C'est faux, et Romain l'a rectifié** : ce 60 n'est
+> pas une constante de sécurité gravée, c'est **une valeur que l'organisateur choisit** — elle a
+> simplement été écrite en dur faute d'écran pour la saisir. Le vrai principe n'est pas *« on n'y
+> touche jamais »*, c'est : **la machine ne la modifie jamais toute seule ; l'organisateur, si.**
+> *(Le garde-fou survit donc, sous une forme plus juste : voir le principe 5 du §9.)*
 
-| Marge | Où elle vit | Peut-on y toucher ? |
+D-030 autorise de *« supprimer ou réduire certaines marges entre rencontres »*. Il y en a **trois**,
+et elles n'ont pas le même régime :
+
+| Marge | Où elle vit | Régime |
 |---|---|---|
-| **Le battement entre deux matchs sur un même terrain** *(`battement_terrain_min`, 5 min par défaut)* | Réglage global | ✅ **Oui** — c'est de la logistique, pas du jeu |
-| **La récupération entre deux matchs d'une même équipe** *(`recup_entre_matchs_min`, par catégorie)* | Réglage par catégorie | ⚠️ **Avec prudence** — c'est du repos d'enfants. Un plancher doit être fixé |
-| ⛔ **Le repos de 60 minutes de la pause méridienne échelonnée** | **Écrit en dur dans le code** *(`repos: 60`)* | ❌ **JAMAIS.** C'est une mesure de **sécurité**, obtenue de haute lutte pour garantir qu'aucune équipe n'enchaîne sans souffler |
+| **Le battement entre deux matchs sur un même terrain** *(`battement_terrain_min`, 5 min par défaut)* | Réglage global | ✅ **Levier libre** — c'est de la logistique, pas du jeu |
+| **La récupération entre deux matchs d'une même équipe** *(`recup_entre_matchs_min`, par catégorie)* | Réglage par catégorie | ⚠️ **Levier, avec prudence** — c'est du repos d'enfants |
+| **Le repos minimal de la pause méridienne échelonnée** *(aujourd'hui `repos: 60`, écrit en dur)* | ⚠️ **Aucun écran ne permet de le saisir** | ⚠️ **Levier — mais SEULEMENT par une modification explicite de l'organisateur**, jamais par le moteur, et dans le respect du cadre réglementaire |
 
-> 🏉 **Pourquoi je l'écris ici plutôt que dans le code plus tard** : la formulation *« supprimer les
-> marges »* est ambiguë, et quelqu'un de parfaitement bien intentionné — moi compris — pourrait
-> optimiser ce 60 en croyant faire son travail. **Le repos méridien n'est pas une marge : c'est une
-> règle de sécurité.**
+##### 8.3 bis — ⚡ Ce que le code permet déjà, et qui rend la correction bon marché
+
+*Constaté, pas supposé :*
+
+- la fonction de planification échelonnée **accepte déjà** le repos **en paramètre**
+  *(`planifierCategorieEchelonnee(ids, terrains, opts)` — `opts.repos`, avec 60 comme valeur par
+  défaut)* ;
+- ❌ **seul l'appelant** passe la valeur en dur *(`repos: 60`)* ;
+- il existe même déjà un **avertissement** pour le cas dégénéré où le repos réel tomberait sous le
+  seuil demandé.
+
+> ✅ **Conséquence** : rendre ce repos configurable **ne demande aucune modification du cœur de
+> calcul**. Il faut un champ dans l'écran de configuration horaire, sa lecture, et le passage de la
+> valeur. → **chantier `PLAN.md` C-004**, petit et indépendant.
+
+##### 8.3 ter — ⚠️ La règle d'équité est tenue par la FORME du planning, pas par un contrôle
+
+*C'est le point le plus important pour le levier « réorganiser les rencontres ».*
+
+La règle *« une équipe qui a déjà bénéficié de son repos ne peut pas affronter une équipe qui ne
+l'a pas encore eu »* n'est **vérifiée nulle part** dans le code. Elle est **garantie par
+construction**, par l'ordre des blocs :
+
+1. **matin** — les matchs **entre les deux vagues**, tout le monde à égalité de fraîcheur ;
+2. **vague 1 en pause**, pendant que la **vague 2** joue ses matchs **internes** *(les deux équipes
+   d'un même match sont dans le même état)* ;
+3. **vague 2 en pause** à son tour, pendant que la **vague 1** joue les siens ;
+4. **après-midi** — le reste des matchs entre vagues, **tout le monde ayant déjeuné**.
+
+> ⚠️ **Conséquence directe, et elle est sévère** : un levier qui **réorganiserait librement** les
+> rencontres **casserait l'équité en silence**. Rien ne s'en apercevrait — ni une erreur, ni un
+> avertissement : juste une équipe reposée face à une équipe qui ne l'est pas.
+>
+> **Deux mesures en découlent, inscrites dans C-003** : (1) le levier « réorganiser » **conserve la
+> structure en quatre blocs** et ne redate qu'à l'intérieur ; (2) un **contrôle explicite d'équité**
+> est ajouté — pour que la règle cesse d'être seulement une propriété de la forme, et devienne
+> quelque chose que l'on peut **prouver**.
 
 ##### 8.4 — ❓ Une précision demandée sur « phases finales interdites »
 
@@ -1744,3 +1785,84 @@ produisent pas le même code.
 ➡️ **Fiche de chantier : `PLAN.md` → C-003.** Ses dépendances restantes ne sont plus fédérales,
 elles sont **techniques** : le lot ① des tests (**D-025**), puis **R-042**, puis le **niveau 1**
 (**C-002**) — sans état SUSPENDU, il n'y a rien à reprendre.
+
+---
+
+#### 9. ⭐ **LE CADRE DE LA REPRISE** — contraintes, leviers, et l'ordre dans lequel on s'en sert
+
+> **Précision apportée par Romain le 2026-08-05**, et c'est **la partie la plus structurante de
+> D-030**. Elle remplace toute lecture antérieure : ce chapitre fait foi pour construire **C-003**.
+
+> 🎯 **L'intention, dans les mots de Romain** : *« Je ne veux pas que C-003 soit construit autour de
+> l'idée "60 minutes = verrou qui bloque la reprise". Je veux que le moteur cherche toutes les
+> marges de manœuvre disponibles avant de conclure que le tournoi ne peut plus être repris. »*
+
+##### 9.1 — 🔒 CONTRAINTES À RESPECTER
+
+*Ce que le moteur ne franchit jamais, quel que soit le retard à absorber.*
+
+| # | Contrainte | Nature |
+|---|---|---|
+| 1 | **Une équipe ne peut pas jouer deux rencontres en même temps** | Physique — indiscutable |
+| 2 | **Le temps de jeu maximal applicable** | ⛔ **Réglementaire** *(réserve posée par la réponse à I-21)*. ⚠️ **N'existe aujourd'hui que comme affichage** — voir §8.2 |
+| 3 | **La cohérence du repos entre adversaires** | Sécurité + équité sportive |
+| 4 | **Une équipe ayant déjà bénéficié de son repos ne peut pas affronter une équipe qui ne l'a pas encore eu** | ⛔ **Règle déjà implémentée par Romain — elle doit impérativement rester.** ⚠️ Elle est tenue par la **forme** du planning, pas par un contrôle — voir §8.3 ter |
+| 5 | **Aucune phase finale** | ⛔ **Réglementaire** *(réserve posée par la réponse à I-21)* |
+| 6 | **Toute autre contrainte réglementaire explicitement applicable** | Ouvert par construction — une règle fédérale nouvelle entre ici |
+
+##### 9.2 — 🔧 LEVIERS D'ADAPTATION, dans l'ordre du moins au plus intrusif
+
+*Ce que le moteur a le droit d'utiliser pour absorber le retard.*
+
+| Ordre | Levier | Touche au jeu ? | Décision |
+|---|---|---|---|
+| **1** | **Les battements logistiques** entre les matchs | ❌ Non | Le moteur peut proposer |
+| **2** | **Les marges entre les séquences** *(réduites ou supprimées)* | ❌ Non | Le moteur peut proposer |
+| **3** | **Réorganiser les rencontres** sur les terrains disponibles | ❌ Non | Le moteur peut proposer — ⚠️ **en conservant la structure en 4 blocs** (§8.3 ter) |
+| **4** | **Le nombre de périodes** d'un match | ⚠️ Oui | Le moteur peut proposer, **sous la contrainte 2** |
+| **5** | **La durée des périodes**, ou la durée totale d'un match | ⚠️ Oui | Le moteur peut proposer, **sous la contrainte 2** *(« dans les limites autorisées »)* |
+| **6** | **Certaines marges de récupération** | ⚠️ Oui — repos d'enfants | Le moteur peut proposer, **sous les contraintes 3 et 4** |
+| **7** | **Le repos minimal configuré** pour la pause méridienne échelonnée | ⚠️ Oui — sécurité | 🔴 **UNIQUEMENT par une modification EXPLICITE de l'organisateur**, jamais par le moteur, et **dans le respect du cadre réglementaire applicable** |
+| **8** | **Retirer des rencontres** de la reprise | ⚠️ Oui — équité sportive | 🔴 **Dernier recours**, et il doit être annoncé comme tel |
+
+##### 9.3 — Les cinq principes qui gouvernent l'usage des leviers
+
+1. **Conserver autant que possible les contraintes initiales** — on ne « nettoie » pas un planning
+   parce que l'occasion se présente ;
+2. **Utiliser d'abord les leviers les moins intrusifs** ;
+3. **N'utiliser un levier plus important que si c'est nécessaire** — et le dire ;
+4. **Ne jamais franchir une contrainte de sécurité ou une contrainte réglementaire impérative** ;
+5. **Lorsqu'une contrainte CONFIGURABLE doit être modifiée, demander une décision explicite à
+   l'organisateur — jamais la modifier automatiquement.**
+
+> 🏉 **Ce que ces cinq principes changent, concrètement.** Le moteur n'a pas le droit de dire
+> *« impossible »* tant qu'il n'a pas parcouru les huit leviers. Et il n'a pas le droit de dire
+> *« j'ai réussi »* en ayant abaissé le repos des enfants sans que personne l'ait décidé. **Entre
+> les deux, il propose — et l'organisateur tranche.**
+>
+> 🔗 **Cela rejoint deux règles déjà écrites** : *« avertir, jamais interdire »* (**D-013** — *« le
+> jour J, l'organisateur en sait plus que l'algorithme »*) et *« un message ne ment jamais »*
+> (**D-027**). Annoncer *« aucune solution »* sans avoir exploré toutes les marges **serait un
+> message qui ment**.
+
+##### 9.4 — ✅ Vérification de compatibilité de cette précision
+
+| Ce qui existe | Verdict |
+|---|---|
+| **D-013** — *« avertir, jamais interdire »* | ✅ **Même idée, formulée deux fois.** Le principe 5 en est la version pour les valeurs configurables |
+| **D-027** — *« un message ne ment jamais »* | ✅ **Renforcé** — il s'applique désormais aussi au verdict *« la reprise est impossible »* |
+| **La réponse à I-21** *(temps de jeu maximal, pas de phase finale)* | ✅ **Intacte** — ce sont les contraintes 2 et 5 |
+| **La règle d'équité implémentée par Romain** | ✅ **Préservée explicitement** — contrainte 4, et un contrôle est ajouté pour qu'elle devienne prouvable |
+| **`CLAUDE.md` §11** — la fonctionnalité métier prime | ✅ **Renforcé.** Refuser une reprise à cause d'une valeur qu'un humain aurait pu ajuster serait une rigidité technique qui dégrade l'usage métier — donc, au sens de §11, **pas une amélioration** |
+| **D-030 §8.3, version du matin** | ❌ **Contredite et CORRIGÉE** — voir l'encadré en tête de §8.3 |
+| **`PLAN.md` C-003, version du matin** | ❌ **Contredite et RÉÉCRITE** — le repos passe de « garde-fou dur » à « levier n° 7, sous décision explicite » |
+
+##### 9.5 — ❓ Un point à confirmer, qui tient dans le courriel déjà prévu
+
+> **Existe-t-il une durée de repos méridien MINIMALE imposée** pour les catégories d'École de
+> Rugby ? Romain écrit *« dans le respect du cadre réglementaire applicable »* — le cadre existe
+> donc, mais il n'est écrit nulle part dans le dépôt.
+>
+> **Sans cette réponse, le levier n° 7 reste utilisable** *(l'organisateur décide)*, mais
+> l'application ne peut pas **l'avertir** s'il descend trop bas. → inscrit comme **point ouvert (g)**
+> du §5, à poser dans le même courriel que **I-10**.

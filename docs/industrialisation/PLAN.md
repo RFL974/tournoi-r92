@@ -11,8 +11,8 @@
 > chantier par chantier.
 
 **Dernière mise à jour** : 2026-08-05 (session 13 + addendums — **l'ÉTAPE 3 est ouverte, volet ①
-terminé** · ⚡ **D-030 inscrite, I-21 levée, et les fiches de chantier C-002 / C-003 rédigées** —
-voir **§6**)
+terminé** · ⚡ **D-030 inscrite, I-21 levée, cadre de reprise précisé par Romain, et les fiches de
+chantier C-002 / C-003 / C-004 rédigées** — voir **§6**)
 
 ---
 
@@ -175,7 +175,7 @@ Ce ne sont pas encore des chantiers, mais des **familles** qui se dessinent apr�
 | **🔇 Faire parler le geste du jour J** *(élargi)* | **R-051**, **R-052**, **R-053**, **R-069**, **R-086**, **R-085** | Le domaine H apporte les deux pièces qui manquaient : **R-086** chiffre le problème (**29 endroits sur 21 fichiers** montrent l'erreur brute du navigateur) **et porte la correction** — un seul endroit à écrire ; **R-085** en est le pendant côté serveur (une image qu'on jette sans vérifier, et l'application répond « c'est fait »). **Même sujet : l'application dit qu'elle a réussi sans le savoir.** ⚠️ Sous contrainte **D-027** : un message ne doit jamais mentir |
 | **🏉 Le Super Challenge** | **R-082**, **R-083** *(sa part SCF)* | Trois lignes de garde côté serveur, et trois commentaires à effacer. Tout est au même endroit et ne touche **que le remplissage d'un formulaire**. ⚠️ **Ce lot change de priorité tout seul** : P2 aujourd'hui, **P1 le jour où le club accueille réellement un Super Challenge** |
 | ⚡ **🌩️ Le tournoi qui s'arrête** — ***niveau 1*** | **R-089** *(D-030)*, **R-015**, **R-016**, **R-047**, R-051, R-052 | **L'état SUSPENDU / ANNULÉ, son gel et sa visibilité.** Il rejoint **obligatoirement** la famille « le filet côté serveur » : un gel tenu par la page web **ne gèle rien** — il suffit d'ouvrir la saisie ailleurs. Même cause, même correction, mêmes tests. Le **bandeau public** rejoint « faire parler le geste du jour J », sous contrainte **D-027** *(un message ne ment jamais)*. ⚠️ **Prérequis : le lot ① des tests** (le « pas de classement final si annulé » touche le classement) **et R-042** (le gel verrouille la saisie) |
-| ⚡ **🌩️ Le tournoi qui s'arrête** — ***niveau 2*** | **R-089** *(D-030, scénarios de reprise)*, **R-003** *(niveau 3 de D-013)* | **Les propositions de rattrapage** : périodes réduites, deux périodes → une, marges, terrains. ⚠️ **Ces deux-là ne doivent JAMAIS être faits séparément** : D-013 avait écarté son niveau 3 (*« redistribuer un terrain devenu impraticable »*) comme *« le seul niveau qui touche au planificateur, donc le seul réellement risqué »* — or D-030 niveau 2 touche **exactement** le même code. Les séparer, c'est ouvrir `calculerPlanning` deux fois. ✅ **I-21 LEVÉE le 2026-08-05** : la reprise avec adaptation du format et de la durée est **autorisée**, sous deux réserves — ⛔ **temps de jeu maximal** *(aujourd'hui simple affichage, à transformer en contrôle réel)* et ⛔ **aucune phase finale**. → **fiche C-003** |
+| ⚡ **🌩️ Le tournoi qui s'arrête** — ***niveau 2*** | **R-089** *(D-030, scénarios de reprise)*, **R-003** *(niveau 3 de D-013)* | **Les propositions de rattrapage** : périodes réduites, deux périodes → une, marges, terrains. ⚠️ **Ces deux-là ne doivent JAMAIS être faits séparément** : D-013 avait écarté son niveau 3 (*« redistribuer un terrain devenu impraticable »*) comme *« le seul niveau qui touche au planificateur, donc le seul réellement risqué »* — or D-030 niveau 2 touche **exactement** le même code. Les séparer, c'est ouvrir `calculerPlanning` deux fois. ✅ **I-21 LEVÉE le 2026-08-05** : la reprise avec adaptation du format et de la durée est **autorisée**, sous deux réserves — ⛔ **temps de jeu maximal** *(aujourd'hui simple affichage, à transformer en contrôle réel)* et ⛔ **aucune phase finale**. ⚡ **Cadre précisé par Romain le même jour** : **6 contraintes / 8 leviers / 5 principes** (`DECISIONS.md` D-030 §9) — le moteur **cherche toutes les marges avant de conclure à l'impossibilité**. → **fiches C-003 et C-004** |
 | **⛔️ Ce qui NE doit PAS être groupé** | ~~R-074~~, **R-076**, **R-077**, **R-081**, **R-088** | Des problèmes qui se **ressemblent** (découper, ranger, outiller) et qu'il serait tentant de traiter ensemble. **Ils ne doivent pas l'être** : chacun, fait en bloc, aggrave un problème plus grave que lui — renommer 277 tests fait perdre un test en silence, découper l'admin exige l'outillage que `CLAUDE.md` §10 déconseille. **Progressif et réversible, ou rien.** ✅ **R-074 est sorti de cette liste : il est ARBITRÉ** (**D-028**, 2026-08-05) — on ne découpe pas `Code.gs` tant que le dépôt est manuel. ➕ **R-088 rejoint la liste** (domaine H) : renommer en masse des variables courtes, c'est 42 occasions de casser un appel pour un gain de **confort de lecture**. Méthode **opportuniste** uniquement, la même que R-079 |
 
 ### Modèle de fiche de chantier
@@ -240,6 +240,8 @@ compliquée le jour J, ce n'est pas une amélioration — elle est refusée ou r
 
 ```
 lot ① des tests (D-025)  →  R-042  →  C-002 (niveau 1)  →  C-003 (niveau 2)
+
+C-004 (repos minimal saisissable) — indépendant, à tout moment, mais AVANT C-003
 ```
 
 ---
@@ -292,44 +294,75 @@ lot ① des tests (D-025)  →  R-042  →  C-002 (niveau 1)  →  C-003 (niveau
   se joue où et quand**. Une régression ici **ne se voit pas** : elle ne plante pas, elle produit un
   planning **plausible et faux**.
 
-#### Les leviers, du moins au plus intrusif
+> ⚠️ **Cette section a été RÉÉCRITE le 2026-08-05**, après une précision de Romain. La version du
+> matin traitait le repos méridien de 60 min comme un **verrou infranchissable** — c'était une
+> erreur de cadrage de ma part. **Le cadre qui fait foi est `DECISIONS.md` D-030 §9** ; ce qui suit
+> l'applique.
 
-| # | Levier | Réglage concerné | Touche au jeu ? | Garde-fou |
-|---|---|---|---|---|
-| 1 | Réduire le **battement entre deux matchs sur un terrain** | `battement_terrain_min` *(5 min par défaut)* | ❌ Non — logistique pure | Un plancher à fixer |
-| 2 | **Mieux répartir sur les terrains** *(paralléliser)* | affectation | ❌ Non | Jamais une équipe sur deux terrains à la fois |
-| 3 | Réduire la **récupération d'une même équipe** entre deux matchs | `recup_entre_matchs_min` *(par catégorie)* | ⚠️ **Oui — repos d'enfants** | Plancher **à faire valider par Romain** |
-| 4 | **Raccourcir les périodes** | `duree_mi_temps_min` | ⚠️ Oui | ⛔ plafond de temps de jeu |
-| 5 | **Deux périodes → une** | `format_mi_temps` | ⚠️ Oui | ⛔ plafond de temps de jeu |
-| 6 | **Retirer des rencontres** | le planning | ⚠️ Oui — **équité** | Dernier recours. Les équipes n'auront pas joué le même nombre de matchs — la colonne « J » du classement existe déjà pour le montrer |
+#### 🔒 CONTRAINTES — aucun scénario proposé ne peut les franchir
 
-#### Les garde-fous DURS — aucun scénario proposé ne peut les franchir
-
-| # | Garde-fou | Origine | État aujourd'hui |
+| # | Contrainte | Origine | État aujourd'hui |
 |---|---|---|---|
-| ⛔ **1** | **Le temps de jeu maximal par enfant** | ✅ **I-21** — réponse fédérale | ⚠️ **Simple AFFICHAGE.** `plafond_joueur_min` est lu de `RefFFR_Temps`, montré dans l'écran de conformité avec la mention « (sécurité) » et injecté dans un prévisionnel — **mais rien dans `calculerPlanning` ne refuse un planning qui le dépasse.** → **à transformer en contrôle réel : c'est du travail, pas un branchement** |
-| ⛔ **2** | **Aucune phase finale** | ✅ **I-21** — réponse fédérale | À écrire. Le moteur ne propose **jamais** une phase finale comme rattrapage. *(Le sort d'un COUPE_PLATEAU déjà prévu est le point ouvert (f) de D-030 §5)* |
-| ⛔ **3** | **Le repos de 60 minutes de la pause méridienne** | **Sécurité — déjà dans le code** *(`repos: 60`, écrit en dur)* | ⚠️ **I-21 n'en parle pas, et c'est justement le piège.** *« Supprimer les marges »* ne doit **jamais** s'appliquer à celui-là : ce n'est pas une marge, c'est une règle de sécurité |
+| ⛔ **1** | Une équipe ne joue **jamais deux rencontres en même temps** | Physique | ✅ Déjà tenu par le planificateur |
+| ⛔ **2** | **Le temps de jeu maximal applicable** | **Réglementaire** *(réponse à I-21)* | ⚠️ **Simple AFFICHAGE.** `plafond_joueur_min` est lu de `RefFFR_Temps`, montré dans l'écran de conformité avec la mention « (sécurité) » et injecté dans un prévisionnel — **mais rien dans `calculerPlanning` ne refuse un planning qui le dépasse** → **à transformer en contrôle réel : c'est du travail, pas un branchement** |
+| ⛔ **3** | **La cohérence du repos entre adversaires** | Sécurité + équité | Tenue par la **forme** du planning |
+| ⛔ **4** | **Une équipe reposée n'affronte jamais une équipe qui ne l'est pas encore** | **Règle déjà implémentée par Romain — elle doit impérativement rester** | ⚠️ **Garantie par CONSTRUCTION, vérifiée nulle part.** Elle vient de l'ordre des blocs : matin *(inter-vagues, tous frais)* → vague 1 en pause pendant que la vague 2 joue **ses matchs internes** → l'inverse → après-midi *(inter-vagues, tous ayant déjeuné)*. **Un levier qui réorganiserait librement les rencontres la casserait EN SILENCE** |
+| ⛔ **5** | **Aucune phase finale** | **Réglementaire** *(réponse à I-21)* | À écrire. *(Le sort d'un COUPE_PLATEAU déjà prévu = point ouvert (f) de D-030 §5)* |
+| ⛔ **6** | Toute autre contrainte réglementaire explicitement applicable | Ouvert par construction | — |
 
-#### Trois règles de conception
+#### 🔧 LEVIERS — du moins au plus intrusif, et on ne monte que si nécessaire
 
-1. **Le moteur propose, il ne décide jamais** *(règle posée par Romain dans D-030, identique à
-   l'esprit de D-013 : « le jour J, l'organisateur en sait plus que l'algorithme »)* ;
-2. **Prudent par construction** : un scénario qu'on ne sait pas valider **n'est pas proposé**. Le
-   projet a déjà ce réflexe — un format inventé retombe sur le chemin prudent, et un test le
-   protège ;
-3. **Le choix retenu laisse une trace** : qui a choisi quel scénario, et à quelle heure. C'est la
-   même exigence que R-017 *(savoir qui a fait quoi)*, et elle coûte une ligne si on y pense
-   maintenant.
+| Ordre | Levier | Réglage concerné | Touche au jeu ? | Qui décide |
+|---|---|---|---|---|
+| **1** | Réduire les **battements logistiques** entre matchs | `battement_terrain_min` *(5 min par défaut)* | ❌ Non | Le moteur propose |
+| **2** | Réduire ou supprimer des **marges entre les séquences** | ordonnancement | ❌ Non | Le moteur propose |
+| **3** | **Réorganiser les rencontres** sur les terrains disponibles | affectation | ❌ Non | Le moteur propose — ⚠️ **en conservant la structure en 4 blocs** *(contrainte 4)* |
+| **4** | Modifier le **nombre de périodes** d'un match | `format_mi_temps` | ⚠️ Oui | Le moteur propose, **sous la contrainte 2** |
+| **5** | Réduire la **durée des périodes** ou la durée totale | `duree_mi_temps_min` | ⚠️ Oui | Le moteur propose, **sous la contrainte 2** |
+| **6** | Ajuster certaines **marges de récupération** | `recup_entre_matchs_min` | ⚠️ Oui — repos d'enfants | Le moteur propose, **sous les contraintes 3 et 4** |
+| **7** | Modifier le **repos minimal configuré** de la pause échelonnée | `repos` — *à rendre saisissable, chantier **C-004*** | ⚠️ Oui — sécurité | 🔴 **UNIQUEMENT par décision explicite de l'organisateur.** Le moteur peut **montrer** ce que ça débloquerait ; il ne l'applique **jamais** seul |
+| **8** | **Retirer des rencontres** de la reprise | le planning | ⚠️ Oui — équité sportive | 🔴 **Dernier recours**, annoncé comme tel. Les équipes n'auront pas joué le même nombre de matchs — la colonne « J » du classement existe déjà pour le montrer |
+
+#### Les cinq principes *(D-030 §9.3)*
+
+1. **conserver autant que possible les contraintes initiales** ;
+2. **utiliser d'abord les leviers les moins intrusifs** ;
+3. **n'utiliser un levier plus important que si nécessaire** — et le dire ;
+4. **ne jamais franchir une contrainte de sécurité ou réglementaire impérative** ;
+5. **quand une contrainte CONFIGURABLE doit changer, demander une décision explicite** — jamais la
+   modifier automatiquement.
+
+#### Trois règles de conception qui en découlent
+
+1. ⭐ **Le moteur n'a pas le droit de conclure « impossible » avant d'avoir parcouru les huit
+   leviers.** C'est l'exigence centrale de ce chantier, et elle rejoint **D-027** *(un message ne
+   ment jamais)* : annoncer *« la reprise est impossible »* sans avoir cherché **serait un message
+   qui ment** ;
+2. **Le moteur propose, l'organisateur tranche** — identique à **D-013** *(« le jour J,
+   l'organisateur en sait plus que l'algorithme »)*. Chaque scénario annonce **quels leviers il a
+   utilisés et jusqu'où**, pour qu'on choisisse en connaissance de cause ;
+3. **Le choix retenu laisse une trace** : qui a choisi quel scénario, à quelle heure, et **quelles
+   valeurs configurables ont été modifiées**. Même exigence que R-017 *(savoir qui a fait quoi)* —
+   et elle coûte une ligne si on y pense maintenant.
 
 #### Stratégie de test
 
 - **Cœur pur** : le calcul des scénarios reçoit ses données en paramètre et **ne touche pas au
   classeur**. C'est ce qui rend les 589 vérifications existantes exécutables **hors de Google**, en
   une seconde ;
-- un test : **aucun scénario proposé ne dépasse le plafond de temps de jeu** ;
-- un test : **aucun scénario ne contient de phase finale** ;
-- un test : **le repos de 60 minutes est intact** dans tous les scénarios ;
+- un test **par contrainte** : aucun scénario proposé ne dépasse le **temps de jeu maximal** · aucun
+  ne contient de **phase finale** · aucun ne fait jouer une équipe **deux fois en même temps** ;
+- ⭐ un test **d'équité, qui n'existe pas aujourd'hui** : dans tout scénario, **aucun match n'oppose
+  une équipe déjà reposée à une équipe qui ne l'est pas encore**. C'est la contrainte 4 — elle est
+  aujourd'hui garantie par la **forme** du planning et **vérifiée nulle part**. Ce test la rend
+  **prouvable**, ce qui est le préalable de tout levier de réorganisation ;
+- un test : **le repos réellement obtenu est ≥ à la valeur configurée** — quelle qu'elle soit, pas
+  seulement 60 ;
+- ⭐ un test **d'escalade** : sur un retard qui se rattrape avec le levier 1 seul, **les leviers 2 à
+  8 ne sont pas utilisés**. C'est ce qui prouve le principe *« du moins au plus intrusif »* ;
+- ⭐ un test **d'épuisement** : le moteur ne conclut *« impossible »* **qu'après** avoir essayé les
+  huit leviers — et il **dit lesquels** ;
+- un test : le levier 7 *(le repos configuré)* **n'est jamais appliqué sans décision explicite** ;
 - un test : **un format inventé ne produit aucun scénario** *(protège la forme de la règle, pas son
   contenu)* ;
 - un test : **zéro minute disponible → aucun scénario, et un message clair** — pas une liste vide
@@ -351,11 +384,80 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
   1. **lot ① des tests** (R-041, **D-025**) ;
   2. **R-042** ;
   3. **C-002** — sans état SUSPENDU, il n'y a **rien à reprendre** ;
-  4. ~~**I-21**~~ ✅ **LEVÉE le 2026-08-05**.
+  4. **C-004** — le levier n° 7 suppose que le repos minimal soit **saisissable**. *(C-004 est
+     indépendant et peut être fait bien avant.)* ;
+  5. ~~**I-21**~~ ✅ **LEVÉE le 2026-08-05**.
 - **Statut** : **PLANIFIÉ**
-- **Validation de Romain** : ✅ **oui** — décision **D-030** + réponse **I-21**, 2026-08-05
+- **Validation de Romain** : ✅ **oui** — décision **D-030** *(+ réponse I-21 et précision du cadre
+  de reprise, D-030 §9)*, 2026-08-05
 - **Commit** : —
 
 > ⚠️ **Ce que cette fiche ne fait pas** : elle ne décide **pas** des planchers *(battement minimal,
-> récupération minimale)*. Ce sont des **choix de terrain**, à trancher avec Romain à l'ouverture du
-> chantier — pas des constantes à choisir en écrivant le code.
+> récupération minimale, repos minimal réglementaire — point ouvert **(g)** de D-030 §5)*. Ce sont
+> des **choix de terrain**, à trancher avec Romain à l'ouverture du chantier — pas des constantes à
+> choisir en écrivant le code.
+
+---
+
+### C-004 — ⏱️ Rendre **saisissable** le temps de repos minimal de la pause échelonnée
+
+> **Petit chantier, indépendant, et utile même sans aucune suspension.** Il naît de la précision de
+> Romain du 2026-08-05 : *« lorsque l'organisateur choisit un fonctionnement avec des pauses
+> méridiennes échelonnées, c'est à ce moment-là qu'il doit pouvoir définir le temps de repos minimal
+> à respecter. »*
+
+- **Problème** (en langage simple) : le repos minimal entre les deux vagues de la pause de midi est
+  **fixé à 60 minutes dans le code**. Aucun écran ne permet de le changer. Or ce n'est pas une
+  constante de la nature : c'est **un choix d'organisateur**, qui dépend du terrain, des catégories
+  et de la journée.
+
+- **Ce que ça donne concrètement**, dans la page de configuration horaire :
+
+  ```
+  ☑ Pause méridienne échelonnée
+      → Temps de repos minimal : [ 60 ] min
+  ```
+
+  Cette valeur **devient une contrainte du planning**.
+
+- **Risques couverts** : préalable du **levier n° 7** de **C-003** · confort d'organisation
+  immédiat, hors de toute suspension.
+- **Priorité** : **P2** *(rien n'est cassé aujourd'hui : 60 est une valeur raisonnable)* — mais
+  **P1 dès qu'on veut C-003**, dont il est le préalable.
+
+- ⚡ **Bénéfice / coût — c'est la bonne surprise** : le cœur de calcul **est déjà prêt**.
+  `planifierCategorieEchelonnee` **reçoit déjà le repos en paramètre** *(`opts.repos`, avec 60 comme
+  valeur par défaut)*, et il existe même déjà un **avertissement** pour le cas dégénéré où le repos
+  réel tomberait sous le seuil demandé. **Seul l'appelant passe la valeur en dur.** Il n'y a donc
+  **rien à changer dans l'algorithme** — un champ, sa lecture, son passage.
+
+- **Risque de la correction** : **faible**, mais **non nul** : cela touche l'appel du planificateur.
+  D'où la vérification de non-régression ci-dessous, qui n'est pas négociable.
+
+- **Fichiers concernés** : `backend/Code.gs` *(le réglage horaire, l'appel de
+  `planifierCategorieEchelonnee`)* · `backend/Tests.gs` · l'écran de configuration horaire du
+  frontend.
+
+- **Migration douce** — la règle constante de ce projet : **valeur absente ⇒ 60**, exactement le
+  comportement actuel. Un tournoi déjà configuré ne bouge pas d'une minute.
+
+- **Stratégie de test** :
+  - ⭐ **valeur absente ou vide ⇒ planning identique à aujourd'hui, caractère par caractère** ;
+  - une valeur saisie ⇒ le repos réellement obtenu est **≥ à cette valeur** ;
+  - une valeur aberrante *(0, négative, texte)* ⇒ **repli prudent sur 60**, jamais un plantage ;
+  - l'avertissement du cas dégénéré **fonctionne toujours** avec une valeur autre que 60.
+
+- **Vérifications de non-régression** : la **pause échelonnée** *(les deux vagues, l'équité, le
+  repos garanti)* · les catégories **sans** pause échelonnée, qui ne doivent pas être effleurées.
+
+- **Dépendances** : **aucune.** ✅ **Ce chantier peut être fait à tout moment**, y compris avant
+  C-002 et C-003.
+- **Statut** : **PLANIFIÉ**
+- **Validation de Romain** : ✅ **oui** — précision du 2026-08-05
+- **Commit** : —
+
+> ❓ **Le seul point à trancher** : faut-il un **plancher** sous lequel l'application avertit
+> l'organisateur ? Cela suppose de savoir s'il existe une **durée de repos minimale réglementaire**
+> en École de Rugby — **point ouvert (g)** de D-030 §5, à poser dans le même courriel que **I-10**.
+> ⚠️ **Cela ne bloque pas C-004** : sans cette réponse, le champ existe et fonctionne ; il n'avertit
+> simplement pas.
