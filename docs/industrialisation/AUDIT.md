@@ -5494,3 +5494,717 @@ code, et quand ? Elle ne change pas la nature de **R-073**, seulement son rang d
 **Rien d'autre.** Les 10 problèmes de ce domaine sont des constats ; aucun n'appelle d'arbitrage
 métier, aucun ne touche à une règle du rugby, et **aucun ne demande de modifier l'application
 avant l'ÉTAPE 3**.
+
+---
+
+# DOMAINE H — QUALITÉ DU CODE *(session 12)*
+
+> **Ce que ce domaine regarde.** Le domaine G regardait le code **de loin** : comment les gros
+> morceaux sont rangés. Le domaine H le regarde **de près**, ligne à ligne, sur les sept points que
+> fixe `CLAUDE.md` §6.H : fonctions trop longues · logique dupliquée · noms peu explicites · code
+> mort · commentaires devenus faux · complexité inutile · gestion d'erreurs insuffisante.
+>
+> ⚠️ **Le domaine H constate, il ne nettoie pas.** Aucun fichier de l'application n'a été modifié.
+
+---
+
+## H.0 — Le verdict en une phrase
+
+> 🟢 **Le code tient ses promesses — sauf quand il parle de lui-même.**
+>
+> Les sept points de contrôle ressortent **sains, et souvent excellents** : la fonction médiane fait
+> **10 lignes** côté serveur et **9** côté navigateur ; **zéro bloc de 8 lignes n'est répété** dans
+> les 8 147 lignes du serveur ; **une seule** fonction morte sur 277, **zéro** sur 600 côté
+> navigateur ; **89 % et 92 %** des fonctions portent un bloc d'explication au-dessus d'elles.
+>
+> Et surtout — c'est le résultat principal de cette session — **la question que le domaine G avait
+> laissée ouverte a une réponse, et elle est bonne** : les règles écrites en double des deux côtés
+> (**R-044**) **disent bien la même chose**. Ce n'est pas une lecture, c'est une **exécution** :
+> **179 comparaisons** ont été jouées, le serveur et le navigateur côte à côte, sur les mêmes
+> entrées. **179 fois sur 179, le même résultat.** Le barème du classement est identique **au
+> caractère près**.
+>
+> ⚠️ **Les sept problèmes trouvés ont tous la même forme** : ce n'est jamais le code qui se trompe,
+> c'est **ce que le code raconte**. Un commentaire qui annonce l'inverse de ce que fait la ligne
+> d'en dessous. Une colonne créée dans ton classeur que rien ne lit. Un écran qui annonce une durée
+> de match qui ne sera pas jouée. Une suppression d'image qui répond « c'est fait » sans avoir
+> vérifié.
+>
+> **C'est exactement le défaut que le domaine G avait trouvé dans la documentation — il a commencé
+> à entrer dans le code.** Et toujours au même endroit : la partie la plus récente (le Super
+> Challenge).
+
+---
+
+## H.1 — Ce qui est solide (et qu'il ne faut surtout pas « améliorer »)
+
+### 1. ⭐ Les règles écrites en double disent la même chose — 179 comparaisons, 0 écart
+
+C'est **la** question que le domaine G avait posée sans pouvoir y répondre. **R-044** dit qu'il
+existe **29 « miroirs »** : des règles écrites une fois pour Google et une fois pour le navigateur,
+parce qu'il n'existe aucun moyen de partager du code entre les deux. Le domaine G a expliqué
+**pourquoi** ils existent. Le domaine H devait dire **s'ils sont d'accord**.
+
+**Méthode employée — et elle est vérifiable.** Le serveur (`backend/Code.gs`) et douze fichiers du
+navigateur ont été chargés dans un même bac à sable sur cet ordinateur, avec des doublures pour
+Google et pour l'écran, puis les deux versions de chaque règle ont été appelées **sur les mêmes
+entrées**, y compris des entrées tordues (chaînes vides, `null`, nombres négatifs, décimaux,
+accents, emoji, valeurs inventées).
+
+| Règle écrite en double | Comparaisons | Résultat |
+|---|---|---|
+| **Barème du classement** (`enregistrerResultat` ↔ `appliquer`) | 8 | ✅ identique |
+| **Ordre du classement** (`comparerClassement` ↔ `comparer`) | 25 | ✅ identique |
+| Points du rugby : essai 5, transformation 2, pénalité 3, drop 3 | 1 + 5 | ✅ identique |
+| Nombre d'essais connu pour l'alerte « 5 essais d'écart » | 8 | ✅ identique |
+| Lecture d'un score (`validerScore` ↔ `entierPos`) | 14 | ✅ identique |
+| Contexte Super Challenge (`contexteScfCategorie` ↔ `ctxScf`) | 9 | ✅ identique |
+| Formules de la phase 2 (`FORMULES_PHASE2`) — **format inventé compris** | 20 | ✅ identique |
+| Tailles des poules de niveau (`taillesPoulesNiveau`) — de 0 à 25 équipes | 26 | ✅ identique |
+| Nom de club déduit d'un nom d'équipe (`clubDe`) | 8 | ✅ identique |
+| Empreinte de génération (`hachageChaine`, `signature*`) | 8 | ✅ identique |
+| Comparaison souple de deux textes (`memeTexteSouple`) | 7 | ✅ identique |
+| Numéro de téléphone (`normaliserTelephone`) | 8 | ✅ identique |
+| Libellé d'un tour de coupe (`libelleTourFr`) | 8 | ✅ identique |
+| Statuts d'un club invité | 1 | ✅ identique |
+| Réglages des partenaires : 5 défauts oui/non, 4 défauts numériques, 6 emplacements | 15 | ✅ identique |
+| Dispositions d'un logo | 7 | ✅ identique |
+| **TOTAL** | **179** | ✅ **0 écart** |
+
+> 🏉 **Ce que ça veut dire pour toi, en clair.** Le classement affiché sur la page publique est
+> recalculé par le navigateur **sans redemander au serveur**. Si les deux avaient divergé, deux
+> personnes auraient pu voir **deux classements différents du même tournoi**, sans que rien ne
+> l'annonce. **Ce n'est pas le cas** : le barème (victoire 3, nul 2, défaite 1) et l'ordre de
+> départage (points, puis différence, puis points marqués) sont écrits **exactement pareil** des
+> deux côtés — au caractère près, ligne pour ligne.
+
+> ⚠️ **Ce que ça ne prouve pas, et il faut le dire.** Cela prouve que les deux copies **sont
+> d'accord aujourd'hui**. Cela ne les empêche pas de diverger **demain** : rien ne le vérifie
+> automatiquement. **R-044 reste donc entier** — mais on sait désormais qu'il est en **dette**, pas
+> en **défaut**. Et la méthode qui vient de le prouver est reproductible en une minute : c'est
+> exactement ce que **R-044** demandait à l'ÉTAPE 3.
+
+### 2. Les fonctions sont courtes — la moitié fait moins de dix lignes
+
+| Mesure | Serveur (`Code.gs`) | Navigateur (26 fichiers) |
+|---|---|---|
+| Fonctions | 277 | 600 |
+| **Longueur médiane** | **10 lignes** | **9 lignes** |
+| Longueur moyenne | 21 lignes | 17 lignes |
+| Plus de 100 lignes | **11** (4 %) | **3** (0,5 %) |
+| Plus de 200 lignes | **2** | **0** |
+
+> ✅ **C'est un très bon profil.** Une fonction de dix lignes se lit d'un coup d'œil, se comprend
+> sans faire défiler et se corrige sans risque. Les fonctions longues existent, mais elles sont
+> **l'exception assumée** — voir §H.4.
+
+### 3. Il n'y a presque pas de code recopié
+
+Un détecteur automatique a cherché tout bloc de **8 lignes significatives** apparaissant deux fois :
+
+- **`Code.gs` (8 147 lignes) : 0 bloc répété.**
+- **Frontend (17 712 lignes) : 2 blocs répétés**, tous deux à quelques lignes d'intervalle dans le
+  même fichier.
+
+En abaissant le seuil à **5 lignes** : 5 blocs côté serveur, 9 côté navigateur — et le plus fréquent
+(7 occurrences) est le geste normal *« si ça rate, affiche le message »*, pas une règle métier
+recopiée.
+
+> ✅ **Autrement dit : quand une règle existe, elle existe à un seul endroit.** C'est ce qui fait
+> qu'une correction se fait une fois et non sept.
+
+### 4. Il n'y a presque pas de code mort
+
+Chaque fonction et chaque variable globale a été recherchée **dans tout le dépôt** — les autres
+fichiers JavaScript, les pages HTML, les feuilles de style et le fichier de tests :
+
+| Cherché | Trouvé |
+|---|---|
+| Fonctions du navigateur jamais appelées | **0 sur 600** |
+| Variables globales du navigateur jamais relues | **1 sur ~142** (§H.7) |
+| Fonctions du serveur jamais appelées | **1 sur 277** (§H.4), + 3 qui sont des **outils manuels documentés** (`onOpen`, `autoriserDrive`, `autoriserEnvoiEmail`) |
+| Constantes du serveur jamais relues | **0** |
+
+> ✅ **Zéro fonction morte sur 600 dans le navigateur, c'est rare.** Cela veut dire que ce qui a été
+> retiré au fil des sessions a été retiré **proprement**, sans laisser de moignons.
+
+### 5. La complexité est maîtrisée : jamais plus de six niveaux
+
+L'imbrication réelle (les « boîtes dans les boîtes » : un `si` dans une boucle dans un `si`…) a été
+comptée sur chaque fonction :
+
+- **maximum observé : 6 niveaux**, sur `calculerPlanning`, `planifierApresMidi` et trois autres ;
+- fonctions à 5 niveaux ou plus : **18 sur 277** côté serveur, **14 sur 600** côté navigateur.
+
+> ℹ️ **Une mesure a été écartée en cours de route, et c'est le sujet même de ce domaine.** Une
+> première méthode, fondée sur le décalage à gauche du texte, annonçait **24 niveaux** pour `doPost`.
+> C'était **faux** : elle comptait comme de l'imbrication les lignes simplement alignées sous une
+> parenthèse. Recomptée sur les accolades, la vraie profondeur est de **5**. Le chiffre faux n'est
+> pas entré au dossier — voir **M-06**.
+
+### 6. Le code est expliqué, et les explications sont exactes
+
+| Mesure | Serveur | Navigateur |
+|---|---|---|
+| Fonctions précédées d'un bloc d'explication | **246 / 277 (89 %)** | **552 / 600 (92 %)** |
+| Part de lignes de commentaire | **31 %** | **25 %** |
+
+Un contrôle automatique a cherché les commentaires citant du **code qui n'existe plus** : **25
+suspects**, tous ouverts à la main, **tous légitimes** — noms de paramètres, méthodes de Google, et
+surtout des **panneaux indicateurs** délibérés, du type :
+
+> `/* comparerCat() est désormais comparerCategorie() dans commun.js. */`
+
+> ✅ **Ces panneaux sont excellents et rares.** Quand une fonction déménage, le code laisse une
+> pancarte à l'ancienne adresse. C'est exactement ce qui manque à la documentation du projet
+> (**R-073**) — la discipline existe donc **dans ce dépôt**, prouvée à l'échelle de la ligne.
+
+### 7. Les noms de fonctions sont explicites
+
+- **Aucune** fonction du serveur ne porte un nom de 4 caractères ou moins.
+- Côté navigateur, **4 sur 600** (`txt`, `oui`, `stat`, `puce`) — toutes des aides d'une ligne.
+- Les noms disent ce que la fonction **fait** : `essaisConnusEquipe`, `reponsesGelees`,
+  `motifConservationEquipe`, `projeterFinApresMidi`.
+
+Les variables très courtes existent (`c`, `z`, `L`…), mais leur **portée médiane est de 4,5 lignes** :
+elles naissent et meurent sous les yeux du lecteur. Les exceptions sont traitées en **§H.8**.
+
+---
+
+## H.2 — R-082 · Le seul miroir en désaccord : l'U14 en Super Challenge *(P2)*
+
+### 1. Ce que j'ai trouvé
+
+Sur les 29 règles écrites en double, **une seule** n'est pas d'accord avec elle-même. Il s'agit du
+**format sportif** de la demande d'autorisation — l'information que tu déclares à la fédération
+pour avoir le droit d'organiser le tournoi.
+
+Cette information est calculée **deux fois** :
+
+- côté serveur, par `formatSportifCategorie` — c'est ce que tu **vois à l'écran**, dans la feuille
+  de report de la demande d'autorisation ;
+- côté navigateur, par `formatSportifCategorieAut` — c'est ce qui est **réellement écrit dans le
+  PDF** que tu envoies.
+
+Le commentaire du second dit : *« miroir FIDÈLE de formatSportifCategorie (backend), même
+doctrine »*. **Il ne l'est pas.** Le navigateur a reçu une garde pour le Super Challenge ; le
+serveur ne l'a pas reçue.
+
+**Les deux versions ont été exécutées côte à côte sur le même cas.** Voici le résultat brut :
+
+```
+Catégorie U14, contexte « Super Challenge de France », phase 2
+Configuration : 1 mi-temps de 10 min · format d'après-midi non renseigné
+Matchs générés : une triangulaire du samedi (3 équipes, 3 matchs)
+
+  À L'ÉCRAN (serveur)  → « format sportif : MANQUANT
+                           — non configuré, CROISE serait appliqué par défaut »
+  DANS LE PDF (navigateur) → (rien du tout)
+```
+
+Et si le format d'après-midi est resté sur `CROISE` — ce qui est le **cas le plus courant**, parce
+qu'une catégorie nouvellement créée reçoit `CROISE` par défaut et que basculer en Super Challenge ne
+fait que **masquer** les cartes de format sans effacer la valeur :
+
+```
+  À L'ÉCRAN (serveur)  → 2 phases · Phase 1 : 2 matchs/équipe · durée : 1 × 10 min
+                          Phase 2 : manquant · durée : 1 × 10 min
+  DANS LE PDF (navigateur) → (rien du tout)
+
+  Durée RÉELLEMENT JOUÉE par le moteur de planning : 2 × 15 = 30 min
+                                        (phase 3 : 2 × 11 = 22 min)
+```
+
+**Trois choses fausses dans ces quatre lignes d'écran :**
+
+1. il n'y a **pas deux phases** en Super Challenge — il n'y a pas d'après-midi séparé, le code le
+   saute explicitement ;
+2. la **phase 2 « manquante »** n'existera jamais, donc elle ne sera jamais complétée ;
+3. la **durée annoncée (10 min) n'est pas celle qui sera jouée (30 min)** — et c'est la seule des
+   trois qui compte vraiment.
+
+### 2. Pourquoi c'est important
+
+Parce que cet écran a été construit — session 7 du chantier FFR — avec une doctrine explicite :
+**« états calculé / saisi / manquant, jamais deviné »**. Ici il devine, et il devine faux. Il te
+demande même de corriger un problème qui n'en est pas un (*« non configuré »*) — et si tu suis le
+conseil, tu passes du premier cas au second, c'est-à-dire du **silence** à la **fausse durée**.
+
+Le message d'erreur **t'emmène vers l'état le plus faux.**
+
+### 3. Exemple concret, côté Tournoi R92
+
+Le club est **candidat à l'accueil d'un Super Challenge de France U14**. Le jour où ça se fait, tu
+ouvres l'écran « Demande d'autorisation » pour préparer le dossier. L'écran t'annonce **deux phases
+et des matchs de 10 minutes**. Tu recopies ça sur le formulaire — c'est fait pour.
+
+Le jour J, l'application génère des matchs de **30 minutes**. La journée déclarée à la fédération
+dure la moitié de la journée réellement organisée.
+
+> ⚠️ **Le PDF, lui, est juste** : il n'écrit rien, donc il ne ment pas. Le risque ne vient pas du
+> document — il vient de **l'écran de préparation**, qui est précisément l'endroit où tu vas
+> chercher les chiffres.
+
+### 4. Ce que je propose
+
+Poser côté serveur **la même garde** que celle qui existe déjà côté navigateur : si la catégorie est
+en Super Challenge, `formatSportifCategorie` n'écrit **aucun nombre** et dit pourquoi — *« Super
+Challenge : structure et durées fixées par le règlement, à compléter à la main »*.
+
+C'est **trois lignes**, au même endroit que la garde qui existe déjà dans la fonction de prédiction
+juste au-dessus (`predictionPhase2FormatSportif`, ligne 2224) : le serveur **sait déjà** reconnaître
+le Super Challenge, il s'arrête simplement une marche trop bas.
+
+### 5. Impact
+
+| | |
+|---|---|
+| **Ce que ça change** | Une catégorie en Super Challenge cesse d'afficher des chiffres inventés dans la feuille de report |
+| **Ce que ça ne change pas** | **Rien du tournoi** : ni la génération, ni les horaires, ni les scores, ni le classement. La fonction touchée ne sert **qu'à remplir un formulaire** |
+| **Risque de la correction** | **Faible et cerné** : la garde n'agit que si `contexte_tournoi = SCF` **et** catégorie U14. Toute autre catégorie suit le chemin d'aujourd'hui, à la ligne près |
+| **Preuve possible** | Le harnais de tests couvre déjà `formatSportifCategorie` ; deux tests suffisent (SCF ⇒ rien · ordinaire ⇒ inchangé) |
+
+### 6. Ce que je conseille
+
+**À faire à l'ÉTAPE 3, dans le lot du Super Challenge** — pas avant, et sans urgence **aujourd'hui**.
+
+> ⚠️ **Mais il devient P1 le jour où le club accueille réellement un Super Challenge.** À ce
+> moment-là, un chiffre faux part dans un dossier officiel. Le déclencheur est clair, comme celui de
+> **D-022** pour les données personnelles.
+
+---
+
+## H.3 — R-083 · Cinq commentaires annoncent le contraire de ce que le code fait *(P2)*
+
+### 1. Ce que j'ai trouvé
+
+**Trois** commentaires affirment que le Super Challenge n'est **pas encore** branché. Il l'est
+depuis la session 14, fusionnée et déployée.
+
+| Où | Ce qui est écrit | Ce que fait le code |
+|---|---|---|
+| `backend/Code.gs:281` | *« PUREMENT DÉCLARATIF (session 13) : la génération réelle du planning et l'application des temps **ne consomment pas encore** ces colonnes (prévu session 14) »* | `calculerPlanning` **lit** `contexte_tournoi` (l. 7069) et `planifierApresMidi` **impose** 2×15 / 2×11 (l. 6552) |
+| `frontend/js/admin-reglages.js:511` | *« ce bloc ne fait que DÉCLARER le cadre […] le récapitulatif est **informatif** »* | Le récapitulatif décrit des temps qui sont **réellement appliqués** |
+| `backend/Code.gs:7072` | *« le socle multi-journées […] **n'est pas encore branché** (prévu PR B/C) »* | `genererDimancheScf` existe (l. 7880), a son entrée serveur (l. 2884) **et son bouton** dans l'écran de génération |
+
+**Deux** autres annoncent une vitesse que le domaine F a mesurée fausse de deux ordres de grandeur :
+
+| Où | Ce qui est écrit | Ce qui a été mesuré (domaine F, **I-18**) |
+|---|---|---|
+| `backend/Code.gs:320` et `:439` | *« répond en **quelques millisecondes** sans toucher au Sheet »* | **1,65 s** — dont **1,59 s** de démarrage incompressible |
+
+### 2. Pourquoi c'est important
+
+Le premier commentaire n'est pas n'importe lequel : il est dans **l'en-tête qui documente les
+colonnes du classeur**. C'est l'endroit où quelqu'un — toi dans six mois, ou un développeur
+extérieur — va chercher *« à quoi sert cette colonne »*. Il y lira que changer la durée de mi-temps
+d'une catégorie en Super Challenge **n'a aucun effet**. C'est faux dans les deux sens : la colonne
+est bien lue, et sa valeur est bien **ignorée au profit de 2×15** — mais pas pour la raison écrite.
+
+Le commentaire sur les millisecondes, lui, a une conséquence directe : il **décourage de chercher**.
+Quelqu'un qui trouve la page lente et lit *« répond en quelques millisecondes »* conclut que le
+problème est ailleurs. Le domaine F a mis une session à établir le contraire.
+
+### 3. Exemple concret, côté Tournoi R92
+
+C'est **exactement le mécanisme de M-04 et de R-073**, mais un cran plus bas. Le domaine G a montré
+que **la carte du projet décrit une autre application**. Le domaine H montre que **le même écart a
+commencé à entrer dans le code**, et toujours au même endroit : **la partie la plus récente**.
+
+La raison est mécanique, et elle n'accuse personne : une session écrit *« pas encore branché,
+prévu à la suivante »*, la session suivante branche — et ne relit pas le commentaire de la
+précédente.
+
+### 4. Ce que je propose
+
+Cinq corrections de texte. Aucune ligne de code exécutable. Et **une règle**, dans l'esprit de
+`CLAUDE.md` §8 bis qui vient d'être écrite pour la documentation :
+
+> **Quand une session branche ce qu'une session précédente avait annoncé comme « pas encore
+> branché », elle efface la phrase dans le même lot.**
+
+Le repérage est mécanique : chercher `pas encore`, `prévu session`, `provisoire` dans les fichiers
+touchés. Le balayage complet de ce domaine a produit **48 occurrences**, dont **45 sont légitimes**
+(elles décrivent un état de l'application au moment où elle tourne : *« pas encore enregistrée »*,
+*« pas encore terminé »*). Seules celles qui parlent d'une **version future du code** sont visées.
+
+### 5. Impact
+
+| | |
+|---|---|
+| **Ce que ça change** | Un lecteur du code lit ce que le code fait |
+| **Ce que ça ne change pas** | **Rien du tout** : aucune ligne exécutable n'est touchée |
+| **Risque** | **Nul** — sauf celui de mal relire : chaque phrase doit être **vérifiée dans le code**, jamais déduite. C'est l'avertissement déjà posé pour **R-073** |
+
+### 6. Ce que je conseille
+
+**À faire à l'ÉTAPE 3, avec R-072 et R-073** — c'est le même sujet, la même journée de travail, et
+zéro risque technique. **Aucune urgence**, aucun geste avant.
+
+---
+
+## H.4 — R-084 · Une colonne créée dans ton classeur, documentée, et que rien ne lit *(P2)*
+
+### 1. Ce que j'ai trouvé
+
+La **pause méridienne échelonnée** (deux vagues qui déjeunent l'une après l'autre, pour libérer les
+terrains) existe et fonctionne. Elle se règle par une **case globale**, dans la carte « Horaires de
+la journée » : elle vaut pour **tout le tournoi**.
+
+Mais le code contient aussi tout ce qu'il faut pour un réglage **par catégorie** :
+
+| Ce qui existe | Où |
+|---|---|
+| La colonne `pause_echelonnee` est **créée** dans la zone « réglages par catégorie » du classeur | `Code.gs:290` |
+| Elle est **ajoutée automatiquement** aux classeurs déjà en service | `Code.gs:6684` |
+| Une fonction est écrite **exprès pour la lire** : `pauseEchelonneeDe(cat)` | `Code.gs:7961` |
+| Elle est **documentée** dans `docs/structure-google-sheet.md`, avec une description complète | ligne 149 |
+
+**Et personne ne l'appelle.** `pauseEchelonneeDe` est **la seule fonction morte des 277** du
+serveur. La seule chose que le planning consulte, c'est la case **globale** (`Code.gs:6971`).
+
+### 2. Pourquoi c'est important
+
+Parce que la documentation **promet un comportement** :
+
+> *« **`oui`** = la catégorie joue en un round-robin planifié en deux vagues […] Utile quand les
+> terrains sont rares. »*
+
+Un organisateur qui lit cette phrase et écrit `oui` dans la ligne U14 de son classeur obtient…
+**rien**. Pas d'effet, pas de message, pas d'avertissement. Le tournoi se génère normalement, avec
+la pause classique. **Il n'a aucun moyen de s'en apercevoir avant le jour J.**
+
+Et `docs/pause-echelonnee.md` se contredit lui-même : il dit *« Config (**global**) »* dans un
+paragraphe, puis *« `calculerPlanning` l'appelle pour **les catégories** `pause_echelonnee = oui` »*
+dans le suivant.
+
+### 3. Exemple concret, côté Tournoi R92
+
+C'est **précisément le cas d'usage qui a motivé cette fonctionnalité** : l'U14 sur deux terrains
+seulement, où la pause échelonnée fait gagner une heure — alors que les U8, qui ont de la place, ne
+la veulent pas. Aujourd'hui, c'est **tout ou rien** : soit tout le tournoi est échelonné, soit
+personne.
+
+### 4. Ce que je propose
+
+**Trois voies possibles, et je recommande la première.**
+
+| | Ce qu'on fait | Coût | Ce que ça donne |
+|---|---|---|---|
+| **① Aligner la documentation sur le code** *(recommandé)* | Écrire que le réglage est **global**, retirer la colonne de la doc, supprimer la fonction morte | **Très faible** — du texte et 3 lignes | Plus personne n'est trompé. La colonne reste dans le classeur (inoffensive) |
+| ② Brancher le réglage par catégorie | Faire lire `pauseEchelonneeDe` par `calculerPlanning` | **Moyen** — touche le moteur de planning, à protéger par des tests | La fonctionnalité promise existe enfin |
+| ③ Ne rien faire | — | Nul | Le piège reste posé |
+
+> **Pourquoi ① et pas ②, alors que ② donne plus ?** Parce que ② touche **`calculerPlanning`**, la
+> fonction que le domaine G a désignée comme *« à ne perdre sous aucun prétexte : le seul endroit où
+> une erreur produirait des résultats sportifs faux »*. On ne l'ouvre pas pour une commodité de
+> réglage. Si le besoin par catégorie se confirme, ② se fera **seule, avec ses tests**, jamais en
+> passant.
+
+### 5. Impact
+
+| | |
+|---|---|
+| **Ce que ça change** (voie ①) | La documentation dit vrai ; 3 lignes de code mort disparaissent |
+| **Ce que ça ne change pas** | La pause échelonnée globale **continue de fonctionner exactement pareil** |
+| **Risque** | **Faible** : il faut vérifier que la colonne n'est lue nulle part ailleurs — c'est fait, elle ne l'est pas |
+
+### 6. Ce que je conseille
+
+**À faire à l'ÉTAPE 3**, dans le lot documentaire (R-072 / R-073 / R-083). Aucune urgence : le
+défaut ne se déclenche que si quelqu'un remplit la colonne à la main.
+
+---
+
+## H.5 — R-085 · Jeter une image ne se vérifie jamais — et l'application répond quand même « c'est fait » *(P2)*
+
+### 1. Ce que j'ai trouvé
+
+Quand tu remplaces l'affiche du tournoi, retires la photo du parking ou réinitialises le tournoi,
+l'application met l'ancien fichier à la corbeille de Google Drive. Le geste est écrit ainsi :
+
+```javascript
+try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {}
+```
+
+`catch (e) {}` veut dire : **« si ça échoue, ne rien faire, ne rien dire, continuer »**. Et juste
+après, la fonction répond `{ ok: true }`.
+
+**Quatre chemins font ça**, et il y a un détail qui compte : une fonction existe **exactement pour
+ce geste** — `corbeilleFichierDrive(id)`, avec son commentaire *« sans jamais faire échouer
+l'appelant »*. Elle est utilisée à **7 endroits**… et **contournée aux 3 autres**, où le même
+`try/catch` est recopié à la main.
+
+Le même problème existe **à l'envers** au dépôt : quand une image est envoyée sur Drive,
+`setSharing(...)` — le geste qui la rend visible publiquement — est lui aussi entouré d'un
+`catch (e) {}`. S'il échoue, le fichier est créé, l'application répond **« enregistré »**, et
+l'affiche n'apparaît **nulle part**.
+
+### 2. Pourquoi c'est important
+
+Il y a deux conséquences très différentes, et la seconde est la plus sérieuse.
+
+**a) Ce qui devait disparaître ne disparaît pas — et personne ne le sait.** Une ancienne affiche
+dont la mise à la corbeille échoue reste sur le Drive. Son lien, s'il a été diffusé, **continue de
+fonctionner**. C'est exactement la zone de **R-035** et de l'inconnue **I-08** du domaine « données
+personnelles ». L'application déclare pourtant une suppression réussie.
+
+**b) L'affiche ne s'affiche pas, et l'écran dit que si.** Tu enregistres, tu vois « enregistré », tu
+ouvres la page publique : rien. Aucun message ne t'oriente. Le domaine E a un nom pour ça : **le
+silence est le seul vrai défaut de conception**.
+
+### 3. Exemple concret, côté Tournoi R92
+
+La veille du tournoi, tu remplaces l'affiche par la version définitive. Google a un hoquet sur le
+partage — ça arrive, et c'est justement pour ça que le `try` est là. L'application répond
+« enregistré ». La page publique montre l'ancienne affiche, ou pas d'affiche du tout. Tu ne le
+découvres qu'en ouvrant la page **avec ton téléphone**, si tu y penses.
+
+### 4. Ce que je propose
+
+**Ne pas supprimer les `try`** : ils sont là pour une bonne raison — un problème de Drive ne doit
+jamais empêcher d'enregistrer les infos du tournoi. **Mais un échec avalé doit laisser une trace.**
+
+1. **Passer les 3 chemins recopiés par `corbeilleFichierDrive`** — un seul endroit, un seul
+   comportement ;
+2. **Dans cette fonction unique, écrire l'échec** dans l'onglet `Historique` (qui existe déjà) au
+   lieu de ne rien faire ;
+3. **Pour le partage**, distinguer les deux : l'image est déposée mais pas partagée ⇒ répondre
+   *« enregistrée, mais Google n'a pas pu la rendre visible — réessaie »*, pas `{ ok: true }`.
+
+### 5. Impact
+
+| | |
+|---|---|
+| **Ce que ça change** | Un échec silencieux devient un échec **visible** — et traçable |
+| **Ce que ça ne change pas** | Le chemin normal, à l'identique : quand ça marche, rien ne bouge |
+| **Risque** | **Faible**, mais réel sur le point 3 : il faut être sûr de ne pas transformer un hoquet sans conséquence en refus d'enregistrer. **À trancher à l'ÉTAPE 3** |
+| **Ce qui reste NON VÉRIFIÉ** | **Personne n'a jamais vu l'un de ces échecs se produire.** Ils sont possibles, pas constatés |
+
+### 6. Ce que je conseille
+
+**À faire à l'ÉTAPE 3**, groupé avec les problèmes de silence du domaine E (**R-051**, **R-052**,
+**R-053**) : c'est le même sujet — *l'application dit qu'elle a réussi sans le savoir*.
+
+---
+
+## H.6 — R-086 · Vingt-neuf endroits montrent au bénévole le message d'erreur brut du navigateur *(P2)*
+
+### 1. Ce que j'ai trouvé
+
+Le geste est le même partout dans l'administration :
+
+```javascript
+} catch (erreur) {
+  afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+}
+```
+
+`erreur.message`, c'est le texte que **le navigateur** produit — pas l'application. En français
+courant, ça donne des phrases comme **« Failed to fetch »**, **« NetworkError when attempting to
+fetch resource »** ou **« The operation was aborted »**.
+
+**Compté : 29 endroits**, répartis sur **21 fichiers** — jusque dans la page de saisie des scores,
+celle que les bénévoles utilisent au bord du terrain.
+
+### 2. Pourquoi c'est important
+
+C'est le **mécanisme précis** de **R-052**, que le domaine E avait constaté sur un écran. Le domaine
+H donne le chiffre : ce n'est pas un oubli sur une page, c'est **le geste par défaut de toute
+l'application**.
+
+Et ces messages ont une particularité désagréable : ils sont **exacts et inutilisables**. Ils sont
+en anglais, ils nomment une cause technique, et surtout **ils n'indiquent aucune conduite à tenir**.
+Un bénévole qui voit « Failed to fetch » ne sait pas s'il doit recommencer, attendre, ou aller
+chercher quelqu'un.
+
+### 3. Exemple concret, côté Tournoi R92
+
+Un marqueur valide un score sur son téléphone. Le réseau tombe une seconde. L'écran affiche
+**« ⚠️ Failed to fetch »**. Il ne sait pas si le score est enregistré. Il revalide — ou il ne
+revalide pas. **Les deux sont des mauvaises réponses**, et l'écran ne l'aide ni dans un cas ni dans
+l'autre.
+
+### 4. Ce que je propose
+
+**Un seul endroit à écrire** : une fonction qui traduit une erreur en phrase utile, et que les 29
+appels utilisent.
+
+| Ce qui s'est passé | Ce qu'on affiche |
+|---|---|
+| Coupure réseau (`Failed to fetch`, `NetworkError`) | *« Pas de réseau. Ton score n'est pas enregistré — vérifie ta connexion et réessaie. »* |
+| Délai dépassé (`aborted`) | *« Le serveur met trop de temps à répondre. Réessaie dans quelques secondes. »* |
+| Erreur renvoyée par le serveur (message français) | Le message tel quel — il est déjà écrit pour être lu |
+| Autre | *« Une erreur est survenue. Réessaie ; si ça recommence, préviens l'organisateur. »* |
+
+> ⚠️ **Point de vigilance, et il est important** : dire *« ton score n'est pas enregistré »* n'est
+> vrai que si on **en est sûr**. Une requête peut échouer côté navigateur alors que le serveur l'a
+> reçue et traitée. La formulation doit donc rester honnête — *« nous n'avons pas eu confirmation »*
+> plutôt que *« ce n'est pas enregistré »*. **C'est exactement l'exigence de D-027** : une animation,
+> ou un message, **ne doit jamais mentir**.
+
+### 5. Impact
+
+| | |
+|---|---|
+| **Ce que ça change** | Le bénévole sait quoi faire |
+| **Ce que ça ne change pas** | Le comportement de l'application : mêmes appels, mêmes échecs, seul le texte change |
+| **Risque** | **Faible** — mais 29 endroits à modifier, donc 29 occasions de se tromper. **À faire fichier par fichier**, jamais d'un coup |
+
+### 6. Ce que je conseille
+
+**À faire à l'ÉTAPE 3, dans le même lot que R-051 / R-052 / R-053 / R-069** — « faire parler le
+geste du jour J ». Ce problème en est la **partie chiffrée**, et il porte la correction qui manquait :
+l'endroit unique où écrire les phrases.
+
+---
+
+## H.7 — Les problèmes P3 *(à garder pour plus tard)*
+
+### R-087 · Quinze lignes mortes dont le commentaire affirme qu'elles servent
+
+`frontend/js/admin.js:71` déclare `FORMAT_COUPE_PLATEAU_LEGACY`, précédé de six lignes
+d'explication qui disent pourquoi il faut le garder :
+
+> *« Format INTERDIT en École de Rugby — **conservé pour la rétrocompatibilité de l'AFFICHAGE** […]
+> On garde donc son titre « Coupe + Plateau » disponible **ici**. »*
+
+**Rien ne le lit.** C'est **la seule variable globale morte** des ~142 du navigateur. Et le titre
+qu'il prétend fournir existe **ailleurs et vraiment** : `commun.js:266` porte
+`COUPE_PLATEAU: 'Coupe + Plateau'`, et c'est **celui-là** qui sert.
+
+> ℹ️ **Ce n'est pas grave — c'est instructif.** Le commentaire est convaincant, détaillé, sourcé
+> (il cite le formulaire FFR 2026-2027). Il a **tout l'air** d'être vrai. C'est exactement pourquoi
+> une explication ne remplace jamais une vérification : **le domaine H tout entier tient dans cette
+> observation.**
+
+**Conduite à tenir** : supprimer les 15 lignes. Vérification préalable faite : aucune référence dans
+les 26 fichiers JavaScript, les 8 pages HTML ni les 6 feuilles de style.
+
+### R-088 · Les noms très courts vivent trop longtemps dans les trois plus longues fonctions
+
+Les variables d'une ou deux lettres sont **normalement bien employées** : leur **portée médiane est
+de 4,5 lignes**. Mais **17 sur 42** dépassent 20 lignes, et les extrêmes sont dans les fonctions les
+plus longues :
+
+| Nom | Ce que c'est | Nombre de lignes traversées |
+|---|---|---|
+| `g` | les paramètres généraux du tournoi (`config.global`) | **293** dans `assemblerDossierAutorisation` |
+| `c` | *(varie)* | 135 dans la même fonction |
+| `id` | l'identifiant du match | 101 dans `enregistrerScore` |
+| `r` | le résultat de la génération | 97 dans `genererPoulesEtPlanning` |
+
+> **Pourquoi ça compte, et pourquoi c'est seulement P3.** `g` sur trois lignes est parfait ; `g` sur
+> 293 lignes oblige à remonter tout en haut pour savoir de quoi on parle. Mais **aucune erreur n'en
+> découle** : le code est juste. C'est un coût de **lecture**, pas de fonctionnement — donc P3.
+
+**Conduite à tenir** : ⛔️ **aucun renommage global.** Le geste sûr est **opportuniste** : quand une
+de ces fonctions doit être modifiée de toute façon, renommer **ses** variables longues à ce
+moment-là. Même méthode que **R-079**.
+
+---
+
+## H.8 — Ce que le domaine H ne peut PAS conclure
+
+| Question | Pourquoi elle reste ouverte |
+|---|---|
+| Le code **en service chez Google** a-t-il ces qualités ? | Tout a été mesuré sur `backend/Code.gs`, **dans le dépôt**. **I-01 / M-02** s'appliquent intégralement |
+| Les 179 comparaisons resteront-elles à 0 écart ? | **Non garanti** : rien ne les rejoue automatiquement. C'est un **instantané du 2026-08-05**, pas une protection |
+| Les 29 miroirs sont-ils **tous** couverts ? | **Non.** 179 comparaisons couvrent **16 familles de règles** — celles qui décident d'un résultat, d'un temps ou d'une déclaration. Les miroirs purement **visuels** (mise en forme des emails, frise horaire, cartes de catégorie) n'ont **pas** été confrontés : un écart y produirait un email moins joli, pas un résultat faux |
+| Le code est-il **correct** ? | **Ce n'est pas la question du domaine H.** Il regarde la **forme** — lisibilité, doublons, code mort. La justesse métier est le domaine A ; la preuve, le domaine D |
+| Les fonctions longues cachent-elles des erreurs ? | **Inconnu.** `assemblerDossierAutorisation` (327 lignes) a été **lue en entier** : elle est longue parce qu'elle suit **section par section** le formulaire officiel (A.1, A.2, A.3, A.4, B.1, B.2, B.3), avec 5 niveaux d'imbrication seulement. **Sa longueur est justifiée par le document qu'elle produit**, pas par un enchevêtrement |
+
+---
+
+## H.9 — Récapitulatif du domaine H
+
+### Les chiffres du domaine
+
+| Mesure | Valeur |
+|---|---|
+| **Comparaisons serveur ↔ navigateur exécutées** | **179** — **0 écart** |
+| Familles de règles écrites en double confrontées | **16 sur 29** |
+| Miroir en désaccord | **1** (R-082, prouvé par exécution) |
+| Fonctions — serveur / navigateur | 277 / 600 |
+| **Longueur médiane d'une fonction** | **10 l. / 9 l.** |
+| Fonctions de plus de 100 lignes | 11 / 3 |
+| Blocs de 8 lignes répétés | **0 / 2** |
+| **Fonctions mortes** | **1 sur 277 / 0 sur 600** |
+| Variables globales mortes | 0 / **1** |
+| Imbrication maximale réelle | **6 niveaux** (des deux côtés) |
+| Fonctions expliquées par un bloc de doc | **89 % / 92 %** |
+| Part de lignes de commentaire | **31 % / 25 %** |
+| Commentaires citant du code disparu | **0** *(25 suspects, tous vérifiés légitimes)* |
+| Commentaires annonçant l'inverse du code | **5** (R-083) |
+| Endroits montrant l'erreur brute du navigateur | **29**, sur 21 fichiers (R-086) |
+| `catch` du serveur qui n'utilisent pas l'erreur | 37 sur 49 — dont **29 explicitement commentés** comme volontaires |
+
+### Les problèmes
+
+| Réf | Problème | Priorité |
+|---|---|---|
+| **R-082** | Le seul miroir en désaccord : l'U14 en Super Challenge — l'écran annonce deux phases et une durée de 10 min là où 30 min seront jouées | **P2** *(→ P1 le jour d'un vrai Super Challenge)* |
+| **R-083** | Cinq commentaires annoncent le contraire de ce que le code fait | **P2** |
+| **R-084** | Une colonne créée dans le classeur, documentée, et que rien ne lit | **P2** |
+| **R-085** | Jeter une image ne se vérifie jamais — et l'application répond « c'est fait » | **P2** |
+| **R-086** | 29 endroits montrent au bénévole le message d'erreur brut du navigateur | **P2** |
+| **R-087** | 15 lignes mortes dont le commentaire affirme qu'elles servent | **P3** |
+| **R-088** | Les noms très courts vivent trop longtemps dans les 3 plus longues fonctions | **P3** |
+
+### ⚠️ Pourquoi aucun P0 ni aucun P1 — et il faut le dire
+
+Un **P0** supposerait un code qui **perd des données**, **fausse un résultat sportif** ou **rend
+l'application inutilisable**. Un **P1** supposerait un défaut à corriger **avant toute utilisation
+réelle**.
+
+Ni l'un ni l'autre n'a été trouvé, et la raison est mesurable : **la règle qui décide d'un
+classement est écrite deux fois et les deux copies sont identiques** — 179 comparaisons, 0 écart.
+Aucun des sept problèmes ne touche à la génération du planning, au calcul des scores ou au
+classement. **Six sur sept ne touchent aucune ligne exécutable** ou seulement du texte affiché.
+
+> ⚠️ **Ce n'est pas un satisfecit.** L'absence de P0 dans ce domaine ne dit rien de la justesse
+> métier (domaine A) ni de ce qui est prouvé (domaine D, **R-041** : *rien ne vérifie les deux
+> gestes qui décident du classement d'un tournoi*). **Le domaine H dit que le code est bien écrit,
+> pas qu'il est juste.**
+
+### Ce que le domaine H apporte aux domaines déjà audités
+
+| Problème déjà ouvert | Ce que H en dit |
+|---|---|
+| **R-044** (29 règles écrites deux fois) | ✅ **Elles sont d'accord.** 179 comparaisons, 0 écart, dont le barème et le départage **identiques au caractère près**. Le problème passe de « défaut possible » à **« dette à surveiller »** — et la méthode qui le prouve tient dans une minute |
+| **R-052** (« Failed to fetch » affiché au bénévole) | ✅ **Chiffré : 29 endroits, 21 fichiers.** Ce n'est pas un oubli sur un écran, c'est le geste par défaut — et la correction est **un seul endroit à écrire** (R-086) |
+| **R-035 / I-08** (images à la corbeille du Drive) | ⚠️ **Aggravé** : quand la mise à la corbeille échoue, **personne ne l'apprend** — l'application répond « ok » (R-085) |
+| **R-073** (la carte décrit une autre application) | ⚠️ **Le même écart a commencé à entrer dans le code**, et au même endroit : la partie la plus récente (R-083). `CLAUDE.md` §8 bis vise la documentation ; il lui manque son pendant pour les commentaires |
+| **R-079** (calculer et afficher sont le même geste) | ✅ **Confirmé et nuancé** : les 3 plus longues fonctions du navigateur font 135, 130 et 113 lignes — **pas 338, 254 et 239** comme le disait le dossier. Voir **M-06** |
+
+### ⚠️ Correction : trois chiffres du dossier étaient faux
+
+La session 11 avait relevé, côté navigateur, `redimensionnerImage` **338 lignes**,
+`htmlClubEdition` **254** et `planRemplissageAutorisation` **239**. `ETAT.md` §4 les reprenait comme
+matière première du domaine H.
+
+**Recomptés fonction par fonction, et vérifiés à la main :**
+
+| Fonction | Chiffre au dossier | Chiffre réel | Vérifié |
+|---|---|---|---|
+| `redimensionnerImage` | 338 l. | **23 l.** | `admin.js:215-237`, lue en entier |
+| `htmlClubEdition` | 254 l. | **19 l.** | `admin-invitations.js:1188-1206`, lue en entier |
+| `planRemplissageAutorisation` | 239 l. | **113 l.** | `admin-autorisation.js:671-783` |
+
+La plus longue fonction du navigateur fait **135 lignes** (`emailHtmlDossier`), et **aucune** n'atteint
+150. Le constat de fond du domaine G — *les fonctions d'affichage décident et dessinent en même
+temps* — **reste vrai** ; c'est son ampleur chiffrée qui était trop grande.
+
+> ⚡ **Ce n'est pas un détail de comptage : c'est la deuxième fois.** Après **M-04** (le « 573/573 »
+> qui ne disait pas quelle version avait tourné), un chiffre est entré au dossier sans que personne
+> puisse le refaire. → **M-06**.
+
+### Ce qui attend Romain
+
+**Rien.** Les sept problèmes du domaine H sont des **constats techniques**. Aucun n'appelle
+d'arbitrage métier, aucun ne touche à une règle du rugby, **aucune décision n'est ouverte** et
+**aucune inconnue n'est ajoutée**.
+
+Une seule chose est à **savoir** plutôt qu'à décider : **R-082 devient P1 le jour où le club
+accueille réellement un Super Challenge de France.** Tant que ce n'est pas le cas, il attend
+l'ÉTAPE 3 avec les autres.

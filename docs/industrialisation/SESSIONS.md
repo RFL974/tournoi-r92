@@ -2400,3 +2400,175 @@ Trois choix de rédaction, tous délibérés :
 Après lui, l'ÉTAPE 2 est terminée et l'ÉTAPE 3 s'ouvre.
 
 **Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+## SESSION 12 — 2026-08-05 · ÉTAPE 2, domaine H : la qualité du code — 🏁 **LE DERNIER**
+
+**Objectif** : auditer le domaine **H** (qualité du code), **huitième et dernier** dans l'ordre
+**D-010**. **Aucun fichier de l'application modifié.** Documentation uniquement.
+
+### 1. Point de départ
+
+`git fetch origin` puis `git status -sb` → **`## main...origin/main`**, aucun retard. La copie
+locale était **réellement** à jour, pas seulement « propre ».
+
+**Commit de départ** : `e2fe59c` sur `main` (fin de la session 11, D-029 appliquée).
+
+### 2. La question posée au domaine H
+
+Le domaine G regardait le code **de loin** ; le domaine H le regarde **de près**, sur les sept
+points de `CLAUDE.md` §6.H : fonctions trop longues · logique dupliquée · noms peu explicites · code
+mort · commentaires devenus faux · complexité inutile · gestion d'erreurs insuffisante.
+
+Mais **la vraie question de cette session était ailleurs**, et le domaine G l'avait posée sans
+pouvoir y répondre :
+
+> **Les 29 règles écrites deux fois — une pour Google, une pour le navigateur (R-044) — disent-elles
+> la même chose ?**
+
+C'est la question qui compte, parce que **le classement affiché sur la page publique est recalculé
+par le navigateur, sans redemander au serveur**. Deux copies qui divergent, ce sont deux classements
+différents du même tournoi.
+
+### 3. Méthode : on n'a pas relu les miroirs, on les a **exécutés**
+
+Relire deux versions d'une règle et conclure qu'elles sont pareilles, c'est une **impression**. La
+session a donc construit un **harnais** — dans l'esprit de ce qu'avait fait la session 8 pour
+`Tests.gs` :
+
+1. `backend/Code.gs` chargé dans un bac à sable sur cet ordinateur, avec des **doublures** pour tous
+   les services Google (classeur, cache, verrou, Drive, envoi d'emails) ;
+2. **douze fichiers du navigateur** chargés dans des bacs **séparés**, un par page réelle, avec des
+   doublures pour l'écran ;
+3. les deux versions de chaque règle appelées **sur les mêmes entrées**, y compris tordues : chaîne
+   vide, `null`, nombres négatifs, décimaux, accents, emoji, chaîne de 300 caractères, et **formats
+   de tournoi inventés**.
+
+**Résultat : 179 comparaisons, 0 écart**, sur 16 familles de règles.
+
+> ⚠️ **Trois pièges rencontrés, et ils valent d'être notés.**
+>
+> **① Le harnais a reproduit R-078 par accident.** Charger `saisie.js` puis `tournoi.js` dans le
+> même bac a échoué : *« Identifier 'equipes' has already been declared »*. C'est **exactement** la
+> panne que R-078 annonce — une redéclaration en `const`/`let` **arrête le fichier entier**. La
+> prédiction du domaine G est donc constatée, pas seulement déduite. *(Correction du harnais : un
+> bac par page, ce qui reflète la réalité — ces fichiers ne sont jamais chargés ensemble.)*
+>
+> **② Un huitième nom partagé a été découvert au passage** : `STATUTS_CLUB_INVITE`, déclaré **des
+> deux côtés** (`Code.gs:4007` et `admin-invitations.js:950`). Le relevé de la session 11 ne
+> comptait que les **fonctions** homonymes (6) ; il en existe au moins une **constante** de plus.
+>
+> **③ Trois premiers « écarts » étaient des artefacts du harnais** (les constantes déclarées en
+> `const` ne s'exposent pas comme celles déclarées en `var`). Ils ont été corrigés **avant** d'être
+> écrits nulle part. Un audit qui aurait publié la sortie brute aurait annoncé un barème divergent.
+
+### 4. Ce qui a été trouvé — 7 problèmes, **0 P0, 0 P1**, 5 P2, 2 P3
+
+**Le verdict** : *le code tient ses promesses — sauf quand il parle de lui-même.*
+
+**Ce qui est solide** (détail : `AUDIT.md` §H.1) — et qui explique le « 0 P0, 0 P1 » :
+
+| Mesure | Serveur | Navigateur |
+|---|---|---|
+| Longueur **médiane** d'une fonction | **10 lignes** | **9 lignes** |
+| Blocs de 8 lignes répétés | **0** (sur 8 147 l.) | 2 (sur 17 712 l.) |
+| Fonctions mortes | **1 sur 277** | **0 sur 600** |
+| Imbrication maximale réelle | 6 niveaux | 6 niveaux |
+| Fonctions expliquées par un bloc de doc | **89 %** | **92 %** |
+| Commentaires citant du code disparu | **0** | **0** |
+
+**Les sept problèmes ont tous la même forme** : ce n'est jamais le code qui se trompe, c'est **ce
+que le code raconte**.
+
+| Réf | En une ligne | Prio |
+|---|---|---|
+| **R-082** | Le seul miroir en désaccord : l'écran annonce des matchs de **10 min** là où **30** seront jouées (U14 Super Challenge) | P2 → **P1 le jour d'un vrai SCF** |
+| **R-083** | Cinq commentaires annoncent le contraire de ce que fait le code | P2 |
+| **R-084** | Une colonne créée dans le classeur, documentée, et que **rien ne lit** | P2 |
+| **R-085** | Jeter une image ne se vérifie jamais — et l'application répond « c'est fait » | P2 |
+| **R-086** | **29 endroits** montrent au bénévole le message d'erreur brut du navigateur | P2 |
+| **R-087** | 15 lignes mortes dont le commentaire affirme qu'elles servent | P3 |
+| **R-088** | Les noms très courts vivent trop longtemps dans les 3 plus longues fonctions | P3 |
+
+### 5. R-082 : trouvé à la lecture, **prouvé par exécution**
+
+Le seul désaccord entre deux miroirs n'a pas été trouvé par le harnais — il a été trouvé **en lisant
+les deux versions côte à côte**, puis confirmé en les exécutant sur le même cas :
+
+```
+Catégorie U14, contexte « Super Challenge de France », phase 2
+
+  À L'ÉCRAN (serveur)      → 2 phases · Phase 1 : 2 matchs/équipe · durée 1 × 10 min
+                              Phase 2 : manquant
+  DANS LE PDF (navigateur) → (rien du tout)
+  RÉELLEMENT JOUÉ          → 2 × 15 = 30 min
+```
+
+Le navigateur a reçu une garde « Super Challenge » ; le serveur ne l'a pas reçue — alors qu'il
+**sait déjà** reconnaître le contexte, une marche plus bas dans le même fichier. **Trois lignes** le
+corrigent, et la fonction touchée ne sert **qu'à remplir un formulaire** : ni génération, ni
+horaires, ni scores, ni classement.
+
+### 6. ⚡ Trois chiffres du dossier étaient faux — **M-06**
+
+En voulant se servir de la matière première laissée par la session 11 (`ETAT.md` §4), la session 12
+a recompté les fonctions du navigateur :
+
+| Fonction | Chiffre au dossier | Chiffre réel | Vérifié comment |
+|---|---|---|---|
+| `redimensionnerImage` | 338 l. | **23 l.** | `admin.js:215-237`, **lue en entier** |
+| `htmlClubEdition` | 254 l. | **19 l.** | `admin-invitations.js:1188-1206`, **lue en entier** |
+| `planRemplissageAutorisation` | 239 l. | **113 l.** | `admin-autorisation.js:671-783` |
+
+La plus longue fonction du navigateur fait **135 lignes** ; **aucune n'atteint 150**.
+
+> **Ce n'est pas une coquille, c'est un mécanisme — et c'est la deuxième fois.** **M-04** était un
+> nombre juste en apparence (« 573/573 ») dont rien ne disait **quelle version** l'avait produit.
+> Ici, un nombre dont rien ne disait **comment** il avait été produit. Dans les deux cas : **une
+> preuve non reproductible entre au dossier et y reste.**
+>
+> **Le remède est appliqué dès cette session** : chaque chiffre du domaine H porte sa méthode à côté
+> de lui dans `AUDIT.md` §H. Et une mesure douteuse a été **écartée en cours de route, et le dit** :
+> une première méthode annonçait **24 niveaux** d'imbrication pour `doPost` ; elle comptait comme
+> imbrication des lignes simplement alignées sous une parenthèse. Recomptée sur les accolades : **5**.
+
+**Ce que M-06 ne remet pas en cause** : le constat de fond de **R-079** (*calculer et afficher sont
+le même geste côté navigateur*) **reste vrai** — ses deux autres chiffres se **retrouvent par une méthode
+indépendante** : 137 écritures directes dans la page et 594 recherches d'élément, recomptées à
+**135** et **595**. C'est **l'ampleur chiffrée des fonctions** qui était fausse, pas la nature du
+problème.
+
+### 7. Ce que le domaine H apporte aux domaines déjà audités
+
+| Problème | Ce que H en dit |
+|---|---|
+| **R-044** | ✅ **Requalifié.** Les deux copies sont d'accord — 179 comparaisons, 0 écart, barème et départage **identiques au caractère près**. Passe de *« défaut possible »* à *« dette à surveiller »* |
+| **R-052** | ✅ **Chiffré : 29 endroits, 21 fichiers** — et la correction identifiée : **un seul endroit à écrire** (R-086) |
+| **R-078** | ✅ **Constaté**, pas seulement prédit : le harnais a reproduit la panne |
+| **R-035 / I-08** | ⚠️ **Aggravé** : quand la mise à la corbeille d'une image échoue, personne ne l'apprend (R-085) |
+| **R-073** | ⚠️ **Le même écart a commencé à entrer dans le code** (R-083), et au même endroit : la partie la plus récente |
+| **R-079** | ✅ Confirmé sur le fond, ⚠️ **corrigé sur les chiffres** (voir §6) |
+
+### 8. État à la fin de la session
+
+- **🏁 L'ÉTAPE 2 EST TERMINÉE** — les 8 domaines audités, **88 problèmes** au registre ;
+- **aucune décision ouverte** et **aucune inconnue ajoutée** par le domaine H — le seul des huit
+  dans ce cas ;
+- **aucun fichier de l'application modifié** ; aucun redéploiement requis ;
+- documents mis à jour : `AUDIT.md` (§H.0 → §H.9), `RISQUES.md` (7 problèmes + tableau « vérifié et
+  sain » + **M-06**), `ETAT.md`, `PLAN.md`, `SESSIONS.md`.
+
+### 9. Prochaine session recommandée
+
+**Session 13 — l'ÉTAPE 3 : le plan priorisé.** Elle commence, comme le prévoit **§10.4** et la
+décision **D-024**, par reprendre le registre des points en suspens : **d'abord les 7 inconnues**
+(on ne décide pas sur du sable), **puis les 6 décisions**, **puis seulement** le tableau des
+chantiers.
+
+> ⚠️ **L'ÉTAPE 3 ne tient pas dans une séance.** Un découpage en volets sera proposé au démarrage —
+> le plus probable : ① inconnues et décisions ; ② chantiers **sans code** ; ③ chantiers **avec
+> code**, ordonnés par ce qui doit être fait **avant** quoi (les tests de R-041 avant de toucher au
+> départage, R-042 avant de rouvrir la saisie du score).
+
+**Condition de démarrage** : instruction explicite de Romain.

@@ -4,8 +4,9 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-05 (session 11, close — **domaine G audité**)
-**Commit de référence** : `1667696` sur **`main`** — la session 11 part de là.
+**Dernière mise à jour** : 2026-08-05 (session 12, close — **domaine H audité : l'ÉTAPE 2 est
+TERMINÉE**)
+**Commit de référence** : `e2fe59c` sur **`main`** — la session 12 part de là.
 **Documentation uniquement — aucun fichier de l'application modifié**, aucun redéploiement requis.
 
 > ✅ **Tout le travail décrit ci-dessous est dans `main`.** Une session qui démarre depuis `main`
@@ -17,21 +18,19 @@
 
 ## 1. EN UNE PHRASE
 
-L'**ÉTAPE 1 est terminée** et l'**ÉTAPE 2 touche au but** : **sept domaines sur huit sont
-audités** — le **A (métier)**, le **C (sécurité)**, le **B (protection des données)**, le
-**D (tests)**, le **E (expérience d'utilisation)**, le **F (performance)** et le
-**G (architecture)**, soit **81 problèmes**. Le domaine G, fait en session 11, rend un verdict
-inhabituel et rassurant sur le fond : **le code est en bien meilleur état que sa documentation.**
-Les fondations sont saines — le classeur Google n'est ouvert qu'à **8 endroits** dans 8 147 lignes,
-et le cœur qui décide du planning ne connaît même pas l'existence de Google. Le problème est
-ailleurs, et il est mesuré : **les trois documents qui servent de carte au projet décrivent une
-application qui n'existe plus** (68 % des actions du serveur n'y figurent pas, et tout le parcours
-d'invitation des clubs est absent) — et **le fichier de tests, qui est la seule preuve dont ce
-projet dispose, n'est cité par aucun document**. Ce n'est pas de la paperasse : **c'est exactement
-ce qui a produit la preuve fausse de M-04**. **Aucun P0**, **deux P1**, tous deux réparables **sans
-toucher une ligne de l'application**. **Une seule chose t'attend et n'est pas technique** :
-remplacer les deux mots de passe par des suites aléatoires (**D-017**, ce qui referme R-019). Il
-reste **1 domaine** à auditer : le **H (qualité du code)**.
+🏁 **L'ÉTAPE 1 et l'ÉTAPE 2 sont TERMINÉES : les huit domaines sont audités** — A (métier),
+C (sécurité), B (protection des données), D (tests), E (expérience d'utilisation), F (performance),
+G (architecture) et H (qualité du code), soit **88 problèmes**. Le dernier domaine, fait en
+session 12, **confirme et complète le verdict du précédent** : le code tient ses promesses, sauf
+quand il parle de lui-même. Et il apporte **la réponse à la question la plus importante que le
+chantier avait laissée ouverte** — les règles de classement écrites **deux fois**, une pour Google
+et une pour le navigateur (**R-044**), **disent bien la même chose** : **179 comparaisons ont été
+exécutées côte à côte, 0 écart**, le barème et le départage identiques **au caractère près**. Les
+sept problèmes du domaine H portent tous sur ce que le code **raconte** — un commentaire qui annonce
+l'inverse de la ligne d'en dessous, une colonne créée dans le classeur que rien ne lit, un écran qui
+annonce une durée de match qui ne sera pas jouée. **Aucun P0, aucun P1.** **Une seule chose t'attend
+et n'est pas technique** : remplacer les deux mots de passe par des suites aléatoires (**D-017**, ce
+qui referme R-019). **L'ÉTAPE 3 — le plan priorisé — peut s'ouvrir.**
 
 ---
 
@@ -41,15 +40,15 @@ reste **1 domaine** à auditer : le **H (qualité du code)**.
 |---|---|---|
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
-| 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | 🟡 **EN COURS** — A (s. 5), C (s. 6), B (s. 7), D (s. 8), E (s. 9), F (s. 10) et G (s. 11) faits, **1 restant** |
-| 3 | ÉTAPE 3 — Plan d'industrialisation priorisé | ⬜ À faire |
+| 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
+| 3 | ÉTAPE 3 — Plan d'industrialisation priorisé | 🔜 **PROCHAINE** — commence par le registre des points en suspens (**§10**, règle **D-024**) |
 | 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
 | 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
 
 ---
 
-## 3. PHASE EN COURS — L'ÉTAPE 2 (audit)
+## 3. PHASE TERMINÉE — L'ÉTAPE 2 (audit)
 
 **Ordre validé par Romain** (décision D-010) : **A → C → B → D → E → F → G → H**.
 
@@ -62,7 +61,7 @@ reste **1 domaine** à auditer : le **H (qualité du code)**.
 | **E** | **UX / UI / Accessibilité** | ✅ **CLOS** (session 9) — 10 problèmes, **0 P0**, 2 P1, 7 P2, 1 P3 · **I-05 levée** · écrans **réellement ouverts et mesurés** dans un navigateur · aucune décision de Romain requise pour constater |
 | **F** | **Performance** | ✅ **CLOS** (session 10) — 11 problèmes, **0 P0**, 2 P1, 7 P2, 2 P3 · **2 inconnues ouvertes** (I-18, I-19) · **42 appels réels chronométrés**, poids transféré mesuré, **25 lectures simultanées** essayées · aucune décision de Romain requise pour constater |
 | **G** | **Architecture / Maintenabilité** | ✅ **CLOS** (session 11) — 10 problèmes, **0 P0**, 2 P1, 7 P2, 1 P3 · **sa seule décision (D-028) est déjà tranchée** le jour même · **1 inconnue** (I-20), non bloquante · relevés faits **sur le code réel**, et les 2 suspects de l'analyse automatique **ouverts à la main** avant d'être écartés |
-| H | Qualité du code | ⬜ **Prochain — dernier domaine** |
+| **H** | **Qualité du code** | ✅ **CLOS** (session 12) — 7 problèmes, **0 P0, 0 P1**, 5 P2, 2 P3 · **aucune décision ouverte, aucune inconnue ajoutée** · **179 comparaisons serveur ↔ navigateur exécutées, 0 écart** — ce qui **répond à R-044** · **+ M-06** (trois chiffres du dossier étaient faux) |
 
 > L'**ÉTAPE 1 (cartographie)** est terminée : volets A (session 2), B (session 3) et C (session 4),
 > tous dans `CARTOGRAPHIE.md`. Elle a produit les **39 points d'attention** qui servent de matière
@@ -125,37 +124,35 @@ Pour mémoire, les trois questions reportées :
 | **D-019** | **Que fait-on de la mesure des partenaires**, qui écrit déjà sur le téléphone de chaque spectateur ? Informer · demander l'accord · alléger | **Informer**, avec un moyen de dire non. C'est le seul qui améliore la situation sans dégrader la page des scores |
 | **D-020** | **Combien de temps garde-t-on quoi ?** Valider ou corriger le tableau des durées | **Valider le tableau, corriger ce qui te paraît faux** — c'est ton métier qui décide. Écrire les durées ne touche à aucun code |
 
-### Puis : session 12 — ÉTAPE 2, domaine H : la qualité du code — **LE DERNIER**
+### 🏁 Puis : session 13 — **l'ÉTAPE 3**, le plan priorisé
 
-*(toujours sans rien modifier)*
+**L'ÉTAPE 2 est finie.** Les huit domaines ont parlé, **88 problèmes** sont au registre. Il n'y a
+plus rien à auditer.
 
-C'est l'ordre validé par D-010 (**A → C → B → D → E → F → G → H**). Le domaine H regarde le code
-**de près**, ligne à ligne, là où le domaine G le regardait **de loin** : fonctions trop longues,
-logique dupliquée, noms peu explicites, code mort, commentaires devenus faux, complexité inutile,
-gestion d'erreurs insuffisante.
+L'ÉTAPE 3 construit **le plan de travail** : quels problèmes on corrige, dans quel ordre, groupés
+comment, et avec quelles preuves. Elle se déroule dans l'ordre fixé par **§10.4** :
 
-> ⚠️ **Règle rappelée par `CLAUDE.md` §6.H** : toute modification doit conserver **exactement** le
-> comportement métier attendu. Le domaine H **constate**, il ne nettoie pas.
+1. **d'abord les inconnues** — on ne décide pas sur du sable. Il en reste **7** (§10.3), dont deux
+   qui ne demandent qu'une question sortante (I-10, I-15) et une qui ne se lèvera que **le jour du
+   tournoi** (I-19) ;
+2. **puis les décisions**, une par une, chacune présentée avec le problème en langage simple, les
+   options, ce que chacune coûte et apporte, et une recommandation. Il en reste **6** (§10.2) ;
+3. **puis seulement** le tableau des chantiers de `PLAN.md` — les **15 familles** déjà repérées y
+   sont, en attente d'être ordonnées.
 
-Ce qui l'alimente déjà, et c'est copieux :
-
-- **les fonctions les plus longues sont repérées et mesurées** — côté serveur
-  `assemblerDossierAutorisation` (**333 lignes**), `calculerPlanning` (224), `evaluerConformiteFFR`
-  (179), `enregistrerSponsor` (159) ; côté navigateur `redimensionnerImage` (338),
-  `htmlClubEdition` (254), `planRemplissageAutorisation` (239) ;
-- **des commentaires déjà démontrés faux** : celui de `doGet` annonce une réponse « en quelques
-  millisecondes » alors que la mesure donne **1,65 s** (domaine F), et l'en-tête de `Tests.gs`
-  annonce des tests « de conformité FFR » alors qu'il teste tout le serveur (**R-076**) ;
-- **du code mort à qualifier** : le domaine G a trouvé **183 Ko publiés que rien ne charge**
-  (**R-080**) — reste à chercher l'équivalent *dans* le code ;
-- **les 29 « miroirs »** (**R-044**) : le domaine G a dit **pourquoi** ils existent ; le domaine H
-  doit dire **s'ils disent la même chose**.
+> ⚠️ **L'ÉTAPE 3 ne modifie toujours rien.** C'est l'**ÉTAPE 4** (ta validation, chantier par
+> chantier) qui ouvre l'ÉTAPE 5 (l'implémentation). Rien ne sera touché dans l'application sans que
+> tu aies dit oui à un chantier précis.
 
 **Condition de démarrage** : instruction explicite de Romain.
 
-> 🏁 **Après le domaine H, l'ÉTAPE 2 sera terminée** et l'ÉTAPE 3 (le plan priorisé) pourra
-> s'ouvrir — en commençant, comme le prévoit **§10.4**, par reprendre une à une les inconnues puis
-> les décisions accumulées par **D-024**.
+> 💡 **Une remarque sur la taille de l'ÉTAPE 3.** Reprendre 7 inconnues, 6 décisions et 88 problèmes
+> ne tient pas dans une séance. Je proposerai un **découpage en volets** au démarrage — le plus
+> probable étant : ① les inconnues et les décisions (elles conditionnent tout le reste) ; ② les
+> chantiers **sans code** (documentation, textes, durées de conservation), qui sont nombreux et sans
+> risque ; ③ les chantiers **avec code**, ordonnés par ce qui doit être fait **avant** quoi — car
+> plusieurs le sont : les tests de **R-041** avant de toucher au départage, **R-042** avant de
+> rouvrir la saisie du score.
 
 ---
 
@@ -215,19 +212,21 @@ preuves, telles qu'inscrites au départ :
 
 ## 6. PROBLÈMES RESTANT À TRAITER
 
-**81 problèmes — 1 corrigé, 80 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
+**88 problèmes — 1 corrigé, 87 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
 le registre et `AUDIT.md` pour l'explication de chacun.
 
-| Priorité | Total | Domaine A (métier) | Domaine C (sécurité) | Domaine B (données) | Domaine D (tests) | Domaine E (expérience) | Domaine F (performance) | Domaine G (architecture) |
-|---|---|---|---|---|---|---|---|---|
-| **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **TESTÉ, en service** *(une preuve remplacée, voir §5)* | — | — | — | — | — |
-| **P1** | **23** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* | R-028 personne n'est informé · **R-029 mesure des spectateurs** *(SUSPENDU — partenaires désactivés le 2026-08-05)* · R-030 rien ne s'efface | **R-041 classement/départage non testés** · **R-042 saisie du score non testée** · **R-043 le navigateur part en ligne sans contrôle** · **R-044 règles écrites en double, jamais confrontées** | **R-051 « Rafraîchir » échoue en silence** · **R-052 « Failed to fetch » affiché au bénévole** | **R-061 le relais anti-affluence est éteint** · **R-062 le cache s'éteint tout seul vers 165 matchs** | **R-072 la procédure de redéploiement décrit la moitié du geste** *(le mécanisme même de M-04)* · **R-073 la carte du projet décrit une autre application** |
-| **P2** | 48 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 | R-063 → R-069 | R-074 → R-080 |
-| **P3** | 9 | R-011 | R-026 · R-027 | R-040 | R-050 | R-060 | R-070 · R-071 | R-081 |
+| Priorité | Total | Domaine A (métier) | Domaine C (sécurité) | Domaine B (données) | Domaine D (tests) | Domaine E (expérience) | Domaine F (performance) | Domaine G (architecture) | Domaine H (qualité du code) |
+|---|---|---|---|---|---|---|---|---|---|
+| **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **TESTÉ, en service** *(une preuve remplacée, voir §5)* | — | — | — | — | — | — |
+| **P1** | **23** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* | R-028 personne n'est informé · **R-029 mesure des spectateurs** *(SUSPENDU — partenaires désactivés le 2026-08-05)* · R-030 rien ne s'efface | **R-041 classement/départage non testés** · **R-042 saisie du score non testée** · **R-043 le navigateur part en ligne sans contrôle** · **R-044 règles écrites en double** *(⚠️ **requalifié par le domaine H** : les deux copies sont d'accord — 179 comparaisons, 0 écart. Dette à surveiller, plus défaut possible)* | **R-051 « Rafraîchir » échoue en silence** · **R-052 « Failed to fetch » affiché au bénévole** | **R-061 le relais anti-affluence est éteint** · **R-062 le cache s'éteint tout seul vers 165 matchs** | **R-072 la procédure de redéploiement décrit la moitié du geste** *(le mécanisme même de M-04)* · **R-073 la carte du projet décrit une autre application** | **aucun** |
+| **P2** | 53 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 | R-063 → R-069 | R-074 → R-080 | R-082 → R-086 |
+| **P3** | 11 | R-011 | R-026 · R-027 | R-040 | R-050 | R-060 | R-070 · R-071 | R-081 | R-087 · R-088 |
 
 **Risques de méthode** : M-01 · M-02 · M-03 *(largement levé en session 8)* · M-04 *(traité en
-session 8 — un compte de tests ne dit pas quelle version a été exécutée)* · ⚡ **M-05** *(nouveau,
-session 11 — **l'audit photographie une application qui continue de bouger**)*.
+session 8 — un compte de tests ne dit pas quelle version a été exécutée)* · **M-05** *(session 11 —
+l'audit photographie une application qui continue de bouger)* · ⚡ **M-06** *(nouveau, session 12 —
+**les chiffres de l'audit ne portent pas leur méthode de mesure**, et trois d'entre eux étaient
+faux)*.
 
 > ⚡ **M-05, et pourquoi il compte plus qu'il n'en a l'air.** Le cadre est écrit comme si
 > l'application était **stable** pendant qu'on l'audite. Elle ne l'est pas, et **elle ne doit pas
@@ -447,8 +446,55 @@ Comité 92. Sa réponse primerait sur D-011 **et** D-015.
 > confronter les deux copies** ; et **M-04 / I-01** ont une cause commune : le dépôt manuel du
 > serveur (**R-081**).
 
-> ⚠️ **Le dernier domaine (H — qualité du code) n'est pas audité.** L'absence de problème n'y
-> signifie rien.
+### Domaine H — qualité du code *(session 12)* — **7 problèmes, 0 P0, 0 P1** — 🏁 **le dernier**
+
+> 🟢 **Le code tient ses promesses — sauf quand il parle de lui-même.** Les sept points de contrôle
+> de `CLAUDE.md` §6.H ressortent sains, et souvent excellents : la fonction **médiane fait 10
+> lignes** (serveur) et **9** (navigateur) ; **zéro bloc de 8 lignes répété** dans les 8 147 lignes
+> du serveur ; **1 seule fonction morte sur 277**, **zéro sur 600** côté navigateur ; **89 % et
+> 92 %** des fonctions sont précédées d'un bloc d'explication ; imbrication maximale **6 niveaux**.
+
+> ⭐ **LE RÉSULTAT PRINCIPAL : R-044 a sa réponse, et elle est bonne.** Le domaine G avait expliqué
+> **pourquoi** 29 règles sont écrites en double (aucun moyen de partager du code entre Google et le
+> navigateur) mais ne pouvait pas dire **si les deux copies sont d'accord**. Elles le sont : le
+> serveur et douze fichiers du navigateur ont été chargés dans un même bac à sable sur cet
+> ordinateur, puis les deux versions de chaque règle appelées **sur les mêmes entrées** —
+> **179 comparaisons, 0 écart**, sur 16 familles de règles.
+>
+> 🏉 **En clair, pour un tournoi réel** : le classement affiché sur la page publique est recalculé
+> **par le navigateur, sans redemander au serveur**. Si les deux avaient divergé, deux personnes
+> auraient pu voir **deux classements différents du même tournoi**. Ce n'est pas le cas — barème
+> (victoire 3 / nul 2 / défaite 1) et départage (points, différence, points marqués) sont écrits
+> **identiques au caractère près**.
+>
+> ⚠️ **Ce que ça ne prouve pas** : que ça le restera. **Rien ne le revérifie automatiquement.**
+> R-044 reste ouvert, mais il passe de *« défaut possible »* à *« dette à surveiller »* — et la
+> méthode qui vient de le prouver tient en une minute.
+
+> ⚠️ **Les sept problèmes ont tous la même forme, et ce n'est pas un hasard** : ce n'est jamais le
+> code qui se trompe, c'est **ce que le code raconte**. Un commentaire qui annonce l'inverse de la
+> ligne d'en dessous (**R-083**). Une colonne créée dans ton classeur, documentée, que rien ne lit
+> (**R-084**). Un écran qui annonce des matchs de 10 minutes là où 30 seront jouées (**R-082**). Une
+> suppression d'image qui répond « c'est fait » sans avoir vérifié (**R-085**). Un message d'erreur
+> en anglais montré au bénévole (**R-086**).
+>
+> 🔗 **C'est exactement le défaut que le domaine G avait trouvé dans la documentation — il a commencé
+> à entrer dans le code.** Et toujours au même endroit : **la partie la plus récente** (le Super
+> Challenge). `CLAUDE.md` §8 bis protège désormais la documentation ; **il lui manque son pendant
+> pour les commentaires**.
+
+> ⚡ **Une correction à porter au dossier — et c'est la deuxième fois.** Trois chiffres inscrits par
+> la session 11 étaient faux : `redimensionnerImage` fait **23 lignes** (et non 338),
+> `htmlClubEdition` **19** (et non 254), `planRemplissageAutorisation` **113** (et non 239). La plus
+> longue fonction du navigateur fait **135 lignes**, aucune n'atteint 150. Le constat de fond du
+> domaine G (**R-079** : calculer et afficher sont le même geste) **reste vrai** ; c'est son ampleur
+> chiffrée qui était trop grande. → **M-06** : *un chiffre dont la méthode de mesure n'est pas
+> écrite n'est pas une preuve.*
+
+> ✅ **Le domaine H n'ajoute AUCUNE décision en attente et AUCUNE inconnue.** Ses 7 problèmes sont
+> des constats techniques : ils n'appellent aucun arbitrage métier, aucun ne touche à une règle du
+> rugby. Une seule chose est à **savoir** plutôt qu'à décider : **R-082 devient P1 le jour où le club
+> accueille réellement un Super Challenge de France** — même logique de déclencheur que **D-022**.
 
 La cartographie a par ailleurs relevé **39 points d'attention**, qui sont des **observations**, pas
 des verdicts. Ils seront classés à l'ÉTAPE 2 :
@@ -576,6 +622,8 @@ vérification supplémentaire.
 | Onglets du Google Sheet | jusqu'à **12** (7 créés par `setupSheet`, `Mesures` à la demande, 4 `RefFFR_*` remplis à la main) |
 | `frontend/` | 8 pages HTML, **26 fichiers JS = 17 712 lignes** (+ 4 bibliothèques dans `js/vendor/`), 6 feuilles CSS — **0 test**. Dossier publié : **3,2 Mo**, dont **183 Ko que rien ne charge** (R-080) |
 | Frontend — code | **600 fonctions globales** (colonne 0) + 131 imbriquées, et **142 variables globales**, dans un espace unique ; **12 noms en double** (7 fonctions + 5 variables), **sans collision effective aujourd'hui — vérifié page par page** *(chiffre affiné en session 11 : le « 693 » des sessions précédentes mélangeait fonctions globales et imbriquées)* |
+| **Qualité du code** *(session 12 — méthode écrite à côté de chaque chiffre en `AUDIT.md` §H)* | **Longueur médiane d'une fonction : 10 lignes** (serveur) et **9** (navigateur) · plus de 100 lignes : **11 sur 277** et **3 sur 600** · la plus longue : **327 l.** (serveur) et **135 l.** (navigateur) · **blocs de 8 lignes répétés : 0** dans `Code.gs`, **2** dans le frontend · **fonctions mortes : 1 sur 277** et **0 sur 600** · variables globales mortes : 0 et **1** · **imbrication maximale : 6 niveaux** des deux côtés · fonctions expliquées : **89 %** et **92 %** · lignes de commentaire : **31 %** et **25 %** · commentaires citant du code disparu : **0** *(25 suspects, tous vérifiés légitimes)* |
+| **Miroirs serveur ↔ navigateur** *(session 12)* | **179 comparaisons exécutées** sur **16 familles** de règles, entrées tordues comprises — **0 écart**. Le barème du classement et l'ordre de départage sont **identiques au caractère près**. **1 seul miroir en désaccord**, trouvé à la lecture puis **prouvé par exécution** : le format sportif de la demande d'autorisation pour l'U14 en Super Challenge (**R-082**) |
 | Frontend — dépendances internes | **13 paires de fichiers s'appellent mutuellement** ; `admin.js` appelle du code de **9** autres fichiers, dont **8** le rappellent (**R-077**) |
 | Backend — couplage au classeur | ✅ `SpreadsheetApp.openById` **8 fois** en 8 147 lignes · **92 fonctions** reçoivent le classeur en paramètre · `calculerPlanning` (224 l., le cœur métier) **n'y touche pas du tout** |
 | Backend — rangement | **26 bandeaux de section** dans `Code.gs` · `Tests.gs` : **277 groupes de tests**, **31 préfixes dont 27 sont des n° de session** (**R-076**) |
@@ -604,8 +652,23 @@ vérification supplémentaire.
 > l'ÉTAPE 3. Ce tableau est **mis à jour à la fin de chaque session d'audit** — c'est le seul
 > endroit où regarder pour savoir ce qui reste ouvert.
 
-**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine **G**, complétée le soir même —
-**D-028 tranchée**, **D-029 ouverte**).
+**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine **H** — **le dernier**).
+
+> 🏁 **CE REGISTRE EST DÉSORMAIS COMPLET.** Les huit domaines ont parlé ; plus aucun audit ne
+> viendra l'alimenter. Il devient **le point de départ de l'ÉTAPE 3**, qui commencera par le
+> reprendre **point par point**, dans l'ordre de **§10.4**.
+
+> ✅ **Le domaine H n'a ajouté NI décision NI inconnue** — le seul des huit dans ce cas. Ses sept
+> problèmes sont des constats techniques qui n'appellent aucun arbitrage de Romain pour être
+> constatés, seulement pour être **ordonnés**, à l'ÉTAPE 3 (**D-024**).
+>
+> Il a en revanche **requalifié R-044** (les deux copies des règles sont d'accord : 179
+> comparaisons, 0 écart) et **ajouté M-06** (les chiffres de l'audit ne portent pas leur méthode de
+> mesure — trois d'entre eux étaient faux).
+>
+> Une seule chose est à **savoir** : **R-082 devient P1 le jour où le club accueille réellement un
+> Super Challenge de France.** Ce n'est pas une question posée à Romain, c'est un **déclencheur** à
+> inscrire, comme celui de **D-022**.
 
 > ⚡ **UNE REMARQUE DE ROMAIN A OUVERT LA SEULE QUESTION QUE LE CADRE NE POSAIT PAS.**
 >
