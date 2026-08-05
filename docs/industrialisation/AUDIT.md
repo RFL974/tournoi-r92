@@ -30,9 +30,17 @@ sont audités**)
 > **Les huit ont été traités dans cet ordre exact, sans exception.**
 
 > 🏁 **L'ÉTAPE 2 est close le 2026-08-05** — **88 problèmes** (R-001 → R-088) : 1 P0 *(corrigé,
-> déployé, testé)*, 23 P1, 53 P2, 11 P3, plus **6 risques de méthode** (M-01 → M-06). La suite est
-> l'**ÉTAPE 3** (le plan priorisé), qui **ne commence pas d'elle-même** : elle attend une
-> instruction explicite de Romain.
+> déployé, testé)*, 23 P1, 53 P2, 11 P3, plus **6 risques de méthode** (M-01 → M-06).
+
+> ⚠️ **Ce fichier explique les 88 problèmes de l'audit — et eux seuls.** Le registre de suivi en
+> compte **91** depuis le 2026-08-05 : **R-089**, **R-090** et **R-091** ont été inscrits **après**
+> la clôture, et **aucun n'a été trouvé par un domaine d'audit** — ils sont nés de questions de
+> Romain, autour de **D-030**. Leur explication vit donc dans `DECISIONS.md` *(D-030, D-031,
+> D-032)* et `PLAN.md` *(C-002 → C-004)*, **pas ici**. Les deux chiffres sont vrais : **88 = ce que
+> l'audit a trouvé** *(figé)*, **91 = l'état du registre** *(vivant)*.
+
+> ✅ **L'ÉTAPE 3 est ouverte depuis le 2026-08-05** (session 13). Volet ① terminé : les 6 décisions
+> en attente sont tranchées, et plus aucune inconnue ne bloque le plan. Voir `ETAT.md` §4.
 
 ---
 
