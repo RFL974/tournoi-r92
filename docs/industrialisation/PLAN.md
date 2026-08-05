@@ -10,7 +10,41 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
-**Dernière mise à jour** : 2026-08-05 (session 12 — **l'ÉTAPE 2 est terminée**)
+**Dernière mise à jour** : 2026-08-05 (session 13 — **l'ÉTAPE 3 est ouverte, volet ① terminé**)
+
+---
+
+## 0. DÉCOUPAGE DE L'ÉTAPE 3
+
+Reprendre 9 inconnues, 6 décisions et 88 problèmes ne tient pas dans une séance. Trois volets :
+
+| Volet | Contenu | Session | Statut |
+|---|---|---|---|
+| **①** | **Les inconnues et les décisions** — elles conditionnent tout le reste | 13 | ✅ **TERMINÉ** — 9 inconnues → 7 *(dont **0 bloquante**)*, **6 décisions → 0 en attente** |
+| **②** | Les chantiers **sans code** : documentation, textes d'information, durées de conservation, commentaires faux | 14 | 🔜 **PROCHAIN** |
+| **③** | Les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi | — | ⬜ À faire |
+
+### ⚠️ Les deux contraintes d'ordre déjà FIXÉES — elles ne se négocient plus
+
+Elles s'imposeront au volet ③ et à l'ÉTAPE 5 :
+
+1. **Les 5 tests du barème et du départage (R-041) AVANT la correction du départage** — décision
+   **D-025**, validée par Romain le 2026-08-05. *Raison : **D-014 est déjà décidée**, le départage
+   **sera** modifié. Écrits après, ces tests graveraient le **nouveau** comportement sans avoir
+   jamais vu l'ancien — ils ne prouveraient plus qu'on n'a rien cassé.*
+2. **R-042 — séparer le cœur de la saisie du score de son écriture — AVANT** d'y toucher, sinon
+   **D-011** (forfait), **D-012** (limite de score) et **D-015** (match annulé) rouvrent **trois
+   fois** le même code.
+
+### Ce que le volet ① a rendu constructible
+
+| Rendu possible par | Ce qui peut enfin être planifié |
+|---|---|
+| **D-020** *(durées adoptées)* | **R-030** (P1), R-031, R-033, R-034 — **9 problèmes** cessent d'attendre |
+| **D-018** *(textes autorisés)* + **I-16** *(la page RGPD existe déjà)* | **R-028** (P1), R-038 — et le coût baisse : une **section** à ajouter, pas une page à créer |
+| **D-019** *(voie « informer »)* | **R-029** (P1) — reste **suspendu** tant que les partenaires sont éteints |
+| **D-025** *(lot ① des tests)* | **R-041**, et l'ordre de tout le volet ③ |
+| **D-005** *(périmètre fermé)* | Les textes de D-018 sont **livrés**, jamais posés par le chantier |
 
 ---
 
@@ -21,7 +55,7 @@
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
 | 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | ✅ **TERMINÉE** — **8 sur 8**, sessions 5 à 12, **88 problèmes** |
-| 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | 🔜 **PROCHAINE** |
+| 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | 🚧 **EN COURS** — **volet ① ✅ fait** (session 13) · ② et ③ à venir |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
 | 6 | **Commit** | Un commit atomique par chantier validé | ⬜ À faire |

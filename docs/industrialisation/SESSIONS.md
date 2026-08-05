@@ -2664,3 +2664,136 @@ Deux mentions de « 81 problèmes » subsistent, et **c'est voulu** :
 - **l'ÉTAPE 3 n'est pas commencée**, et ne le sera pas sans instruction explicite ;
 - fichiers touchés : `CLAUDE.md`, `ETAT.md`, `PLAN.md`, `RISQUES.md`, `AUDIT.md`, `SESSIONS.md`.
   **`RAPPORT-AUDIT.md` n'a pas été modifié d'un caractère.**
+
+---
+
+# SESSION 13 — 2026-08-05 · 🏁 **ÉTAPE 3 OUVERTE — volet ① : les inconnues et les décisions**
+
+> **Objectif unique de la séance** : ouvrir l'ÉTAPE 3 en reprenant le **registre des points en
+> suspens** (`ETAT.md` §10), dans l'ordre imposé par **§10.4** — *les inconnues d'abord, les
+> décisions ensuite, le tableau des chantiers seulement après*.
+>
+> ⚠️ **Rappel posé en ouverture, à la demande de Romain** : *aucune modification applicative avant
+> validation du plan.* L'ÉTAPE 3 **ne modifie rien** — c'est l'ÉTAPE 4 (validation chantier par
+> chantier) qui ouvre l'ÉTAPE 5.
+
+## 0. Mise à jour avant lecture (`CLAUDE.md` §12.3)
+
+`git fetch origin` puis `git status -sb` → **`## main...origin/main`**, aucune mention de
+« retard », dépôt propre. Commit de référence **`b5cc9df`**. La copie locale reflète bien l'état
+réel du chantier — le piège des sessions 6 et 8 n'a pas joué.
+
+## 1. Ce qui a été fait
+
+1. **Découpage de l'ÉTAPE 3 proposé et appliqué** — trois volets : ① inconnues + décisions
+   *(cette séance)* · ② chantiers **sans code** · ③ chantiers **avec code** ;
+2. **les 9 inconnues reprises une par une**, avec pour chacune : qui peut la lever, à quel coût, et
+   **ce qu'elle bloque réellement** ;
+3. **une vérification menée pendant la séance** — la seule qui était à ma portée : lecture des
+   pages publiques du **site vitrine** (`index.html`, `rgpd.html`, `mentions-legales.html`) ;
+4. **les 6 décisions en attente présentées une par une** (problème en langage simple, options,
+   coût, bénéfice, recommandation) puis **soumises à Romain** ;
+5. **les 6 tranchées le jour même**, et inscrites dans `DECISIONS.md`.
+
+## 2. Le résultat, en trois constats
+
+### ⭐ Constat n° 1 — **Une lecture de page publique a débloqué la décision qui attendait depuis la session 7**
+
+**I-16 est LEVÉE** : le site vitrine porte déjà **« Mentions légales · CGV · RGPD · Statuts »**.
+
+Les deux informations qui manquaient à **D-018** depuis six sessions — *qui est officiellement
+responsable* et *quelle adresse de contact* — y sont **écrites publiquement** :
+
+| Ce qui manquait | Ce que le site déclare |
+|---|---|
+| Le responsable | **Génération R92 — association loi 1901** |
+| L'adresse de contact | **generationr92@gmail.com** |
+| Le directeur de la publication | **Jérémy Jost, Président** |
+
+**Deux conséquences, et elles vont dans des directions opposées :**
+
+- ✅ **le coût de R-028 baisse** : il ne s'agit plus de créer une page « Vos données » à partir de
+  rien, mais d'**ajouter une section « Tournoi »** à une page qui existe et que les gens trouvent ;
+- ⚠️ **R-028 reste entier** : cette page **ne parle pas du tournoi**. Ni clubs invités, ni contacts
+  de clubs, ni effectifs d'enfants, ni mesure de visibilité des partenaires. Elle couvre
+  l'adhésion, le don et l'achat en boutique. **Seul le coût de correction a changé, pas le
+  problème.**
+
+**I-14 est largement répondue** au passage — avec une réserve qu'il faut dire : les mentions légales
+précisent *« association loi 1901 (**déclaration en cours**) »*, siège et n° RNA *« à définir »*.
+Une association non déclarée n'a pas d'existence juridique propre : **aujourd'hui, c'est Romain qui
+porte ces données de fait**, exactement ce que **D-021** avait constaté. Aucune conformité juridique
+n'est prononcée (`CLAUDE.md` §6.B) — c'est un **écart de fait**, à corriger quand la déclaration
+aboutira.
+
+📌 **Quatre constats hors périmètre** inscrits en **V-01 → V-04** (`DECISIONS.md`, fiche D-005),
+dont une durée de conservation affichée publiquement comme *« [À DÉFINIR] »* — **à laquelle D-020
+répond**, et un hébergeur déclaré (Netlify) qui n'est pas celui qui sert le site (GitHub Pages).
+
+### ⭐ Constat n° 2 — **Aucune des 7 inconnues restantes ne bloque le plan**
+
+C'est le résultat qui autorise le volet ② à s'ouvrir.
+
+| Réf | Ce qu'il faut pour la lever | Ça bloque quoi ? |
+|---|---|---|
+| **I-10** | 1 courriel *(FFR / Comité 92)* | Confirmerait D-011 et D-015, **déjà décidées** |
+| **I-15** | 1 courriel *(le club)* | R-036 — tant que c'est inconnu, **ce n'est pas un défaut du code** |
+| **I-08** | **5 min** *(corbeille Drive + navigation privée)* | R-035 (P2) |
+| **I-09** | **2 min** *(journal « Exécutions »)* | R-023, R-039 (P2) |
+| **I-19** | **le jour du tournoi** | R-061 seulement — **pas R-064**, qui suffit jusqu'à ~1 000 personnes |
+| **I-20** | une phrase de Romain | **Rien** — change le rang de R-073, pas sa nature |
+| **I-01** | ❌ **jamais** | **Permanente** (M-02) — elle se **compense** (D-029), elle ne se lève pas |
+
+### ⭐ Constat n° 3 — **Les 6 décisions sont tranchées, et l'une d'elles fixe l'ordre de tout le chantier**
+
+| Réf | Décision retenue | Ce que ça débloque |
+|---|---|---|
+| **D-025** | **Lot ① seul** — les 5 tests du **barème et du départage** — **écrits AVANT** la correction du départage | **R-041**, et **l'ordre du volet ③** |
+| **D-020** | **Le tableau des 7 durées est adopté tel quel.** ⚠️ Aucun effacement automatique : toute suppression reste déclenchée par un humain | **R-030** (P1), R-031, R-033, R-034 — **9 problèmes** |
+| **D-018** | **Oui** — trois textes rédigés, dont une **section « Tournoi »** pour la page RGPD existante | **R-028** (P1), R-038 |
+| **D-019** | **Voie (a)** — informer, sans bandeau, avec un moyen de dire non | **R-029** (P1), suspendu tant que les partenaires sont éteints |
+| **D-005** | **Périmètre fermé** à `tournoi-r92` ; ce qui est vu ailleurs est **signalé** | I-16, et V-01 → V-04 |
+| **D-009** | **D-006 conservé** — la doc va sur `main`, une branche imposée y est ramenée avant la fin de session | Une règle de méthode |
+
+> 🏉 **Pourquoi D-025 compte plus que les autres.** Les tests du lot ① sont **le filet qu'on tend
+> avant** de toucher au classement. Écrits après la correction du départage, ils graveraient le
+> **nouveau** comportement sans avoir jamais vu l'ancien : ils ne prouveraient plus qu'on n'a rien
+> cassé, seulement qu'on a bien écrit ce qu'on venait d'écrire. Sans eux, une erreur de départage
+> ne produirait **aucune alerte** — juste un autre vainqueur.
+
+## 3. Ce qui a été mis à jour
+
+| Fichier | Ce qui a changé |
+|---|---|
+| `DECISIONS.md` | Les **6 fiches** passent de ⏳ EN ATTENTE à ✅ VALIDÉE, chacune avec un bloc **« Décision retenue »** ; la section est renommée ; **V-01 → V-04** inscrits sous D-005 |
+| `ETAT.md` | §1 réécrit · §2 (ÉTAPE 3 en cours) · §4 entièrement refait *(la prochaine session est le volet ②)* · §7 (6 décisions ajoutées, liste d'attente **vidée**) · §8 (I-14, I-16) · §10.2, §10.3, §10.4 |
+| `PLAN.md` | Nouvelle **§0 — découpage de l'ÉTAPE 3** en trois volets, les **deux contraintes d'ordre fixées**, et ce que le volet ① a rendu constructible |
+| `SESSIONS.md` | Cette fiche |
+
+## 4. Ce qui a été VÉRIFIÉ, et comment
+
+| Affirmation | Statut | Preuve |
+|---|---|---|
+| La copie locale est à jour | **CERTAIN** | `git fetch` + `git status -sb` → `## main...origin/main`, sans « retard » |
+| Le site vitrine porte des mentions légales et une page RGPD | **CERTAIN** | Lecture des pages publiques, libellés relevés au pied de page |
+| Cette page RGPD ne couvre pas le tournoi | **CERTAIN** | Lecture du contenu : adhésion, don, achat — rien d'autre |
+| Le responsable déclaré est *Génération R92* | **CERTAIN** *(pour ce que le site déclare)* | Cité mot pour mot dans `rgpd.html` et `mentions-legales.html` |
+| L'association existe juridiquement | ❌ **NON VÉRIFIÉ — et le site dit lui-même « déclaration en cours »** | Aucune source hors du site. Ne peut être établi que par Romain |
+| Aucun fichier de l'application n'a été modifié | **CERTAIN** | Seuls 4 fichiers de `docs/industrialisation/` sont touchés |
+
+## 5. Ce qui n'a **PAS** été fait
+
+- ❌ **le tableau des chantiers de `PLAN.md` n'est toujours pas rempli** — c'est le volet ② ;
+- ❌ **les trois textes de D-018 ne sont pas rédigés** — la décision autorise leur rédaction, elle
+  ne la remplace pas. Volet ② ;
+- ❌ **aucune ligne de l'application n'a été touchée**, et aucune ne le sera avant l'ÉTAPE 4 ;
+- ❌ **I-08, I-09, I-10, I-15 n'ont pas été levées** : elles n'appartiennent qu'à Romain.
+
+## 6. Prochaine session recommandée
+
+**Session 14 — ÉTAPE 3, volet ② : les chantiers SANS code.** Cinq lots entrent dans ce volet
+(les trois textes d'information · le tableau des durées écrit noir sur blanc · remettre le projet
+en face de lui-même · le barème et le départage communiqués aux clubs · la version des
+bibliothèques). Deux d'entre eux referment des **P1**, et **aucun ne touche une ligne exécutable**.
+
+**Condition de démarrage** : instruction explicite de Romain.

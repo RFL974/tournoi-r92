@@ -1112,16 +1112,35 @@ mesures appliquées immédiatement.
 
 ---
 
-## DÉCISIONS EN ATTENTE DE ROMAIN
+## DÉCISIONS TRANCHÉES À L'OUVERTURE DE L'ÉTAPE 3 *(session 13, 2026-08-05)*
+
+> 🏁 **Les six décisions qui suivent étaient « en attente de Romain » depuis les sessions 1 à 8.**
+> Elles ont été reprises **une par une** au volet ① de l'ÉTAPE 3, conformément à **D-024** et à
+> l'ordre de `ETAT.md` §10.4, et **toutes les six sont tranchées**. Le registre des décisions en
+> attente est désormais **vide**.
 
 ### D-025 — Quels tests écrit-on, et dans quel ordre ?
 
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-05 |
-| **Session** | 8 |
-| **Statut** | ⏳ EN ATTENTE DE ROMAIN — **traitée à l'ÉTAPE 3** (D-024) |
+| **Session** | 8 (posée) → **13 (tranchée)** |
+| **Statut** | ✅ **VALIDÉE (session 13)** — **lot ① seul**, et **avant** la correction du départage |
 | **Débloque** | **R-041**, R-042, R-043, R-044, R-045 — et conditionne le **calendrier** de D-014, D-011, D-012, D-015 |
+
+> ### ✅ DÉCISION RETENUE
+>
+> **Le lot ① — le barème et le départage — et lui seul pour commencer.** Les 5 tests sont écrits
+> **AVANT** la correction du départage (**D-014**), pas après. Confirmé explicitement par Romain.
+>
+> **Ce que cela fixe pour l'ÉTAPE 5** : le premier chantier de code du chantier d'industrialisation
+> sera **l'écriture de ces 5 tests** — et **aucune ligne de l'application n'y sera modifiée**, les
+> fonctions concernées (`enregistrerResultat`, `comparerClassement`) étant déjà testables telles
+> quelles.
+>
+> **Ce que cela n'exclut pas** : les lots ②, ③ et ④ ne sont **pas refusés**, ils sont **différés**.
+> Le lot ④ (la saisie d'un score) reste le préalable de **D-012** et **D-015** — il devra être
+> replanifié avant que ces deux règles ne soient écrites.
 
 **Problème posé**
 > Le domaine D a montré que **le classement, le départage et la saisie des scores ne sont vérifiés
@@ -1170,9 +1189,36 @@ du lot ① passent AVANT la correction du départage (D-014)**, et non après ?
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-05 |
-| **Session** | 7 |
-| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Session** | 7 (posée) → **13 (tranchée)** |
+| **Statut** | ✅ **VALIDÉE (session 13)** — **oui, je rédige les trois textes** |
 | **Débloque** | R-028 (P1) |
+
+> ### ✅ DÉCISION RETENUE
+>
+> **Oui.** Les trois textes sont rédigés au volet ② de l'ÉTAPE 3, **et la troisième prend la forme
+> d'une section « Tournoi » à ajouter à la page RGPD qui existe déjà** sur le site vitrine.
+>
+> **Ce qui a débloqué cette décision, le jour même** : les deux informations qui manquaient — **qui
+> est officiellement responsable** et **quelle adresse de contact** — ont été trouvées en levant
+> **I-16** (lecture du site vitrine public) :
+>
+> | Ce qui manquait | Ce que le site déclare publiquement |
+> |---|---|
+> | Le responsable | **Génération R92 — association loi 1901** |
+> | L'adresse de contact | **generationr92@gmail.com** |
+> | Le directeur de la publication | **Jérémy Jost, Président** |
+>
+> ⚠️ **Réserve à porter dans les textes, et elle est datée** : les mentions légales précisent
+> *« association loi 1901 (**déclaration en cours**) »*, avec l'adresse du siège et le numéro RNA
+> marqués **« [À DÉFINIR] »**. Une association non déclarée n'a pas d'existence juridique propre :
+> **aujourd'hui, c'est donc Romain personnellement qui porte ces données** — exactement ce que
+> **D-021** avait constaté. Aucune conformité juridique n'est prononcée ici (`CLAUDE.md` §6.B) :
+> c'est un **écart de fait** entre ce que le site annonce et ce qui existe, à corriger le jour où
+> la déclaration aboutit.
+>
+> **Ce que la décision ne fait PAS** : rien n'est mis en ligne. Les textes sont **livrés**, Romain
+> les relit et les fait valider **par le bureau** — ils engagent l'association, pas le chantier.
+> Leur mise en ligne sur le site vitrine relève de **D-005**, qui reste fermée.
 
 **Problème posé**
 > Il n'existe, dans **aucune** page, **aucun** courriel et **aucune** ligne du serveur, une seule
@@ -1208,9 +1254,29 @@ du lot ① passent AVANT la correction du départage (D-014)**, et non après ?
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-05 |
-| **Session** | 7 |
-| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Session** | 7 (posée) → **13 (tranchée)** |
+| **Statut** | ✅ **VALIDÉE (session 13)** — **voie (a) : informer, sans bandeau, avec un moyen de dire non** |
 | **Débloque** | R-029 (P1) |
+
+> ### ✅ DÉCISION RETENUE — **(a)**
+>
+> **On informe, on ne demande pas l'accord, et on n'allège pas la mesure.** Concrètement, trois
+> choses à écrire (au volet ③, car elles touchent du code) :
+>
+> 1. une **ligne visible en bas de la page publique** des scores ;
+> 2. **l'explication dans la page « Vos données »** (la section « Tournoi » de D-018) ;
+> 3. **un moyen simple de dire non**, mémorisé sur l'appareil.
+>
+> **Pourquoi (a) et pas (b)** : un bandeau « accepter / refuser » devant les scores, sur un terrain,
+> sous la pluie, en 30 secondes, dégrade exactement ce que `CLAUDE.md` §11 place au-dessus de tout
+> — l'usage métier. **Pourquoi pas (c)** : supprimer l'identifiant d'appareil ferait perdre la
+> **portée** (combien de personnes différentes ont vu le logo), le chiffre qu'un partenaire regarde
+> en premier.
+>
+> ⚠️ **Le calendrier est tenu par un interrupteur, pas par une date.** Les partenaires sont
+> désactivés depuis le 2026-08-05, donc **R-029 est suspendu, pas réglé**. Ces trois écritures
+> doivent être en place **avant que l'interrupteur soit rallumé**, et en tout état de cause avant
+> de présenter une fiche de visibilité à un partenaire payant.
 
 **Problème posé**
 > La page publique des scores **écrit un identifiant sur le téléphone de chaque spectateur** (dans
@@ -1256,9 +1322,35 @@ du lot ① passent AVANT la correction du départage (D-014)**, et non après ?
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-05 |
-| **Session** | 7 |
-| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Session** | 7 (posée) → **13 (tranchée)** |
+| **Statut** | ✅ **VALIDÉE (session 13)** — **le tableau est adopté tel quel, les 7 lignes** |
 | **Débloque** | R-030 (P1), R-031, R-033, R-034 |
+
+> ### ✅ DÉCISION RETENUE — **le tableau ci-dessous est LA règle de conservation du projet**
+>
+> | Donnée | Durée retenue |
+> |---|---|
+> | Contacts des clubs (le carnet) | **3 éditions** sans participation, puis suppression |
+> | Effectifs déclarés d'une édition | **Effacés à la réinitialisation** |
+> | Contacts de la demande FFR (représentant, président, **médecin**, secours) | **1 an**, ou à chaque réinitialisation |
+> | Champ libre « équipes étrangères » | **Effacé après envoi du dossier** |
+> | Relevés de visibilité (`Mesures`) | **Effacés après remise de la fiche au partenaire** |
+> | Journal de saison (`Historique`) | **Conservé** *(aucune donnée personnelle)* |
+> | Copies de courriels (Gmail) | **1 an** *(nettoyage manuel de la boîte)* |
+>
+> **Ce que cela met en ordre de marche** : **R-030** (P1), **R-031**, **R-033**, **R-034** — et,
+> par ricochet, les jetons permanents de **R-018**. Une seule réponse, **neuf problèmes** qui
+> cessent d'attendre.
+>
+> ⚠️ **Ce que cette décision NE déclenche PAS, et c'est une garde permanente** : **aucun
+> effacement automatique.** L'outillage (un écran qui *signale* ce qui est périmé) viendra au volet
+> ③, et **toute suppression restera déclenchée par un humain**. Un outil qui efface tout seul est le
+> type de code le plus dangereux du projet — le domaine C l'a déjà montré avec la réinitialisation
+> (**R-016**).
+>
+> 📌 **À signaler au bureau** : la page RGPD du site vitrine affiche publiquement, aujourd'hui,
+> *« [À DÉFINIR une fois la politique de conservation clarifiée avec le bureau] »*. **Ce tableau est
+> la réponse à cette phrase.** Sa mise en ligne relève de **D-005**, qui reste fermée.
 
 **Problème posé**
 > **Rien ne s'efface jamais tout seul.** Il n'existe dans le code aucune durée de conservation,
@@ -1296,8 +1388,23 @@ du lot ① passent AVANT la correction du départage (D-014)**, et non après ?
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-04 |
-| **Session** | 2 |
-| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Session** | 2 (posée) → **13 (tranchée)** |
+| **Statut** | ✅ **VALIDÉE (session 13)** — **option (a) : D-006 est conservé tel quel** |
+
+> ### ✅ DÉCISION RETENUE — **(a)**
+>
+> **La documentation continue d'aller directement sur `main`.** Si une consigne d'exécution impose
+> une branche de travail, cette branche est **ramenée dans `main` avant la fin de la session** —
+> jamais laissée de côté.
+>
+> **Pourquoi (a) et pas (b)** : l'option (b) paraît plus prudente, mais c'est **exactement** ce qui
+> a coûté deux sessions au chantier. Session 6 : une PR non fusionnée a fait croire que le travail
+> des sessions 4 et 5 n'existait pas. Tentative de session 8 : un `main` local en retard de
+> 28 commits a fait produire un audit entier sur un état faux, puis jeté. Une branche non fusionnée
+> **fait disparaître le travail** aux yeux de la session suivante.
+>
+> **Constat de fait au moment de trancher** : tout le travail des sessions 2 à 12 **est dans
+> `main`** (vérifié au démarrage de la session 13). Le scénario redouté ne s'est pas reproduit.
 
 **Problème posé**
 > **D-006** dit que la documentation part **directement sur `main`**, sans branche ni relecture.
@@ -1332,8 +1439,8 @@ du lot ① passent AVANT la correction du départage (D-014)**, et non après ?
 | Champ | Valeur |
 |---|---|
 | **Date** | 2026-08-04 |
-| **Session** | 1 |
-| **Statut** | ⏳ EN ATTENTE DE ROMAIN |
+| **Session** | 1 (posée) → **13 (tranchée)** |
+| **Statut** | ✅ **VALIDÉE (session 13)** — **le périmètre reste fermé à `tournoi-r92`** |
 
 **Problème posé**
 > L'application Tournoi R92 est reliée à un autre projet, le site vitrine `boutique-r92`, qui vit
@@ -1349,3 +1456,28 @@ du lot ① passent AVANT la correction du départage (D-014)**, et non après ?
 
 **Question à Romain** : veux-tu inclure `boutique-r92` dans le périmètre plus tard, et si oui,
 peux-tu le rendre accessible ?
+
+> ### ✅ DÉCISION RETENUE — **non, le périmètre reste `tournoi-r92`**
+>
+> **Le chantier ne corrige rien dans `boutique-r92`.** Ce qui y est constaté est **signalé** ici,
+> jamais corrigé à l'aveugle dans un dépôt qu'on ne peut pas lire.
+>
+> **Conséquence pratique sur D-018** : les trois textes sont **rédigés** dans ce chantier et
+> **livrés à Romain**, qui les porte lui-même de l'autre côté. La section « Tournoi » de la page
+> RGPD est donc **un livrable**, pas une modification.
+>
+> #### 📌 Ce qui a été constaté sur le site vitrine le 2026-08-05 *(signalé, non corrigé)*
+>
+> *Relevé en levant **I-16**, par simple lecture des pages publiques. Ce ne sont **pas** des
+> problèmes du registre R-0XX : ils sont hors périmètre. Ils sont inscrits ici pour ne pas être
+> perdus.*
+>
+> | # | Constat | Où |
+> |---|---|---|
+> | **V-01** | La page RGPD **ne parle pas du tournoi** : ni clubs invités, ni contacts de clubs, ni effectifs d'enfants, ni mesure de visibilité des partenaires. Elle ne couvre que l'adhésion, le don et l'achat | `rgpd.html` |
+> | **V-02** | La durée de conservation est affichée **publiquement** comme *« [À DÉFINIR une fois la politique de conservation clarifiée avec le bureau] »* — **D-020 y répond** | `rgpd.html` |
+> | **V-03** | Les mentions légales déclarent l'hébergeur **Netlify**, alors que le site est servi par **GitHub Pages** (`rfl974.github.io`). Mention obligatoire, information inexacte | `mentions-legales.html` |
+> | **V-04** | L'association est déclarée *« loi 1901 (**déclaration en cours**) »*, adresse du siège et numéro **RNA** marqués *« [À DÉFINIR] »* — voir la réserve de **D-018** | `mentions-legales.html` |
+>
+> **Réouverture** : le jour où Romain rend `boutique-r92` accessible à ce chantier. Rien ne l'oblige
+> aujourd'hui — les quatre constats ci-dessus se corrigent à la main en quelques minutes.

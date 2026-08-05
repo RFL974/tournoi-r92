@@ -9,9 +9,9 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-05 (session 12, close — **domaine H audité : l'ÉTAPE 2 est
-TERMINÉE**)
-**Commit de référence** : `e2fe59c` sur **`main`** — la session 12 part de là.
+**Dernière mise à jour** : 2026-08-05 (session 13, close — **ÉTAPE 3 ouverte, volet ① terminé :
+les 6 décisions en attente sont TRANCHÉES**)
+**Commit de référence** : `b5cc9df` sur **`main`** — la session 13 part de là.
 **Documentation uniquement — aucun fichier de l'application modifié**, aucun redéploiement requis.
 
 > ✅ **Tout le travail décrit ci-dessous est dans `main`.** Une session qui démarre depuis `main`
@@ -23,7 +23,24 @@ TERMINÉE**)
 
 ## 1. EN UNE PHRASE
 
-🏁 **L'ÉTAPE 1 et l'ÉTAPE 2 sont TERMINÉES : les huit domaines sont audités** — A (métier),
+🏁 **L'ÉTAPE 3 est OUVERTE, et son volet ① est terminé : plus aucune décision n'est en attente, et
+plus aucune inconnue ne bloque le plan.** Les **six décisions** qui traînaient depuis les sessions 1
+à 8 ont été reprises une par une et **toutes tranchées le 2026-08-05** — dont les trois du domaine B
+(D-018, D-019, D-020) et **D-025**, qui fixe la contrainte d'ordre la plus importante de tout le
+chantier : **les tests du barème et du départage sont écrits AVANT qu'on touche au départage**. Une
+seule vérification, gratuite, a débloqué deux d'entre elles : la lecture du **site vitrine public**
+a **levé I-16** et livré les deux informations qui manquaient à D-018 — **le responsable
+(Génération R92) et l'adresse de contact**. Le registre des inconnues passe de **9 à 7**, et aucune
+des sept n'empêche de construire le plan : deux sont des **courriels à envoyer**, deux des
+**vérifications de cinq minutes**, une ne se lèvera **que le jour du tournoi**, une est **sans
+effet**, et la dernière est **permanente**. **Le volet ② — les chantiers sans code — peut
+s'ouvrir.**
+
+---
+
+## 1 bis. CE QUE L'ÉTAPE 2 AVAIT ÉTABLI *(pour mémoire)*
+
+**L'ÉTAPE 1 et l'ÉTAPE 2 sont TERMINÉES : les huit domaines sont audités** — A (métier),
 C (sécurité), B (protection des données), D (tests), E (expérience d'utilisation), F (performance),
 G (architecture) et H (qualité du code), soit **88 problèmes**. Le dernier domaine, fait en
 session 12, **confirme et complète le verdict du précédent** : le code tient ses promesses, sauf
@@ -35,7 +52,7 @@ sept problèmes du domaine H portent tous sur ce que le code **raconte** — un 
 l'inverse de la ligne d'en dessous, une colonne créée dans le classeur que rien ne lit, un écran qui
 annonce une durée de match qui ne sera pas jouée. **Aucun P0, aucun P1.** **Une seule chose t'attend
 et n'est pas technique** : remplacer les deux mots de passe par des suites aléatoires (**D-017**, ce
-qui referme R-019). **L'ÉTAPE 3 — le plan priorisé — peut s'ouvrir.**
+qui referme R-019). ✅ **L'ÉTAPE 3 s'est ouverte à la session 13** — voir §1.
 
 ---
 
@@ -46,7 +63,7 @@ qui referme R-019). **L'ÉTAPE 3 — le plan priorisé — peut s'ouvrir.**
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
 | 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
-| 3 | ÉTAPE 3 — Plan d'industrialisation priorisé | 🔜 **PROCHAINE** — commence par le registre des points en suspens (**§10**, règle **D-024**) |
+| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | 🚧 **EN COURS** (ouverte session 13) — **volet ① ✅ TERMINÉ** (inconnues + décisions) · volet ② 🔜 chantiers **sans code** · volet ③ ⬜ chantiers **avec code** |
 | 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
 | 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
@@ -109,56 +126,64 @@ on ne touche à rien ; au-delà, il faut allonger le rafraîchissement (gratuit,
 et probablement allumer le relais (**R-061**). Ce n'est pas une question technique : c'est ta
 connaissance du terrain.
 
-**6. Rien d'autre.** Les trois questions du domaine B — **D-018, D-019, D-020** — ont été
-**reportées à la fin des audits** par Romain (**D-023**, puis généralisé par **D-024** à *tous*
-les points en suspens — registre en **§10**) : plus rien ne presse depuis
-que `D-022` fixe un déclencheur et que R-029 est suspendu. Elles seront reprises au début de
-l'ÉTAPE 3, avec les 40 problèmes sous les yeux.
+**6. Deux vérifications de cinq minutes, qui ne concernent que des P2** — **I-08** (mettre une image
+à la corbeille du Drive, puis rouvrir son lien en navigation privée : reste-t-elle visible ?) et
+**I-09** (l'éditeur Apps Script → « Exécutions » : que garde ce journal, et combien de temps ?).
+Elles ferment **R-035**, **R-023** et **R-039**.
 
-> ⚠️ **À dissiper, parce que c'était la raison invoquée** : ces décisions **ne dépendent pas de
-> l'hébergement**. Hébergement (Google + GitHub Pages) et stockage (le Google Sheet) sont **déjà
-> tranchés de fait** et n'ont pas à être rouverts. Seule la **conservation** reste ouverte — et
-> une durée se décide sans savoir où vivent les données. Aucune réflexion sur l'hébergement n'est
-> attendue de Romain : c'est le domaine G et R-040 (SaaS, P3), prématuré aujourd'hui.
+**7. ✅ FAIT le 2026-08-05 — les six décisions en attente sont TRANCHÉES** *(session 13, volet ① de
+l'ÉTAPE 3)*. Le registre des décisions en attente est **vide**. Ce qu'elles engagent :
 
-Pour mémoire, les trois questions reportées :
-
-| Réf | La question, en une phrase | Ma recommandation |
+| Réf | Ce qui a été décidé | Ce que ça débloque |
 |---|---|---|
-| **D-018** | **Que dit-on aux gens ?** Puis-je rédiger une première version des trois textes d'information, que tu relis et fais valider par le club ? | **Oui, et maintenant** — il me manque deux choses que toi seul as : qui est officiellement responsable, et quelle adresse de contact y mettre |
-| **D-019** | **Que fait-on de la mesure des partenaires**, qui écrit déjà sur le téléphone de chaque spectateur ? Informer · demander l'accord · alléger | **Informer**, avec un moyen de dire non. C'est le seul qui améliore la situation sans dégrader la page des scores |
-| **D-020** | **Combien de temps garde-t-on quoi ?** Valider ou corriger le tableau des durées | **Valider le tableau, corriger ce qui te paraît faux** — c'est ton métier qui décide. Écrire les durées ne touche à aucun code |
+| **D-025** | **Lot ① seul : les 5 tests du barème et du départage — et ils passent AVANT la correction du départage** | **R-041**, et la contrainte d'ordre la plus importante du chantier |
+| **D-020** | **Le tableau des 7 durées de conservation est adopté tel quel** ⚠️ aucun effacement automatique : toute suppression reste déclenchée par un humain | **R-030** (P1), R-031, R-033, R-034 — **9 problèmes** en ordre de marche |
+| **D-018** | **Oui** — je rédige les trois textes, dont une **section « Tournoi »** pour la page RGPD **qui existe déjà** sur le site vitrine | **R-028** (P1), R-038 |
+| **D-019** | **Voie (a)** : informer, sans bandeau, avec un moyen de dire non | **R-029** (P1) — reste **suspendu** tant que les partenaires sont éteints |
+| **D-005** | **Périmètre fermé à `tournoi-r92`** : ce qui est vu ailleurs est **signalé**, jamais corrigé à l'aveugle | **I-16**, et 4 constats inscrits (V-01 → V-04) |
+| **D-009** | **D-006 conservé** : la documentation va sur `main` ; une branche imposée y est ramenée avant la fin de session | Rien de fonctionnel — une règle de méthode |
 
-### 🏁 Puis : session 13 — **l'ÉTAPE 3**, le plan priorisé
+> ⚡ **Ce qui a débloqué D-018, et ça n'a coûté qu'une lecture de page publique.** Les deux
+> informations qui manquaient depuis la session 7 — **qui est responsable** et **quelle adresse de
+> contact** — sont écrites en clair sur le site vitrine : **Génération R92, association loi 1901**,
+> **generationr92@gmail.com**, directeur de la publication **Jérémy Jost**. C'est **I-16 levée**, et
+> c'est aussi la réponse à l'essentiel de **I-14**.
+>
+> ⚠️ **Avec une réserve datée** : l'association est déclarée *« déclaration **en cours** »*, siège
+> et numéro RNA *« à définir »*. Une association non déclarée n'a pas d'existence juridique propre :
+> **aujourd'hui, c'est Romain qui porte ces données**, comme **D-021** l'avait constaté. Aucune
+> conformité juridique n'est prononcée — c'est un **écart de fait**, à corriger quand la déclaration
+> aboutira.
 
-**L'ÉTAPE 2 est finie.** Les huit domaines ont parlé, **88 problèmes** sont au registre. Il n'y a
-plus rien à auditer.
+### 🏁 Puis : session 14 — **ÉTAPE 3, volet ②** : les chantiers **sans code**
 
-L'ÉTAPE 3 construit **le plan de travail** : quels problèmes on corrige, dans quel ordre, groupés
-comment, et avec quelles preuves. Elle se déroule dans l'ordre fixé par **§10.4** :
+**Le volet ① est fini.** Les inconnues sont triées, les six décisions sont tranchées. **Rien
+n'attend plus de réponse pour construire le plan.**
 
-1. **d'abord les inconnues** — on ne décide pas sur du sable. Il en reste **9** (§10.3) :
-   I-01, I-08, I-09, I-10, I-14, I-15, I-16, I-19, I-20. Deux ne demandent qu'une **question
-   sortante** (I-10 à la FFR, I-15 au club), une ne se lèvera que **le jour du tournoi** (I-19), et
-   une est **permanente** (I-01 — le code en service chez Google) ;
-2. **puis les décisions**, une par une, chacune présentée avec le problème en langage simple, les
-   options, ce que chacune coûte et apporte, et une recommandation. Il en reste **6** (§10.2) ;
-3. **puis seulement** le tableau des chantiers de `PLAN.md` — les **15 familles** déjà repérées y
-   sont, en attente d'être ordonnées.
+Le **volet ②** construit les fiches de chantier de tout ce qui **ne touche aucune ligne
+exécutable**. C'est le meilleur rapport entre ce que ça coûte et ce que ça apporte, et **plusieurs
+de ces chantiers referment des P1** :
+
+| Ce qui entre au volet ② | Problèmes | Rendu possible par |
+|---|---|---|
+| **Les trois textes d'information** | **R-028** (P1), R-038 | ✅ **D-018** tranchée |
+| **Le tableau des durées de conservation**, écrit noir sur blanc | **R-030** (P1), R-031, R-033, R-034 | ✅ **D-020** tranchée |
+| **Remettre le projet en face de lui-même** : fiche de redéploiement, carte du projet, commentaires faux, colonne fantôme, code mort | **R-072** (P1), **R-073** (P1), R-083, R-084, R-087 | — *(R-072 partiellement traité par D-029)* |
+| **Écrire le barème et le départage pour les clubs** | **R-012** | ✅ **D-011** et **D-014** tranchées |
+| **Noter la version et l'origine des 4 bibliothèques** | R-024 | — |
+
+**Puis le volet ③** — les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi.
+Deux contraintes d'ordre sont déjà fixées et ne se négocient plus :
+
+1. **les 5 tests de R-041 AVANT la correction du départage** (**D-025**) ;
+2. **R-042 — séparer le cœur de la saisie du score de son écriture — AVANT** d'y toucher, sinon
+   D-011, D-012 et D-015 rouvrent trois fois le même code.
 
 > ⚠️ **L'ÉTAPE 3 ne modifie toujours rien.** C'est l'**ÉTAPE 4** (ta validation, chantier par
-> chantier) qui ouvre l'ÉTAPE 5 (l'implémentation). Rien ne sera touché dans l'application sans que
-> tu aies dit oui à un chantier précis.
+> chantier) qui ouvre l'ÉTAPE 5 (l'implémentation). **Rien ne sera touché dans l'application sans
+> que tu aies dit oui à un chantier précis.**
 
 **Condition de démarrage** : instruction explicite de Romain.
-
-> 💡 **Une remarque sur la taille de l'ÉTAPE 3.** Reprendre 7 inconnues, 6 décisions et 88 problèmes
-> ne tient pas dans une séance. Je proposerai un **découpage en volets** au démarrage — le plus
-> probable étant : ① les inconnues et les décisions (elles conditionnent tout le reste) ; ② les
-> chantiers **sans code** (documentation, textes, durées de conservation), qui sont nombreux et sans
-> risque ; ③ les chantiers **avec code**, ordonnés par ce qui doit être fait **avant** quoi — car
-> plusieurs le sont : les tests de **R-041** avant de toucher au départage, **R-042** avant de
-> rouvrir la saisie du score.
 
 ---
 
@@ -546,18 +571,28 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | **D-029** | ⚡ **L'industrialisation n'arrête pas les fonctionnalités — et deux mesures s'appliquent donc TOUT DE SUITE.** *« Une phase de pré-industrialisation, pas une fermeture totale des fonctionnalités »* (Romain). **① La fiche de redéploiement est complète** (`docs/deploiement.md` : le serveur = **deux** fichiers, `Tests.gs` compris, + contrôle par **deux nombres** — 589 et 3711). **② La carte se met à jour dans le même lot** que la fonctionnalité (`CLAUDE.md` **§8 bis**, nouvelle section, valable pour **tous** les chantiers). ⚠️ **Aucune autre exception à D-024** : le critère est **cumulatif** — aucun code touché **ET** un coût d'attente qui court à chaque livraison | ✅ **Validée ET APPLIQUÉE (session 11)** — *« applique les deux »*. Seule décision du chantier à avoir été **exécutée** hors ÉTAPE 3 |
 | **D-028** | **Le fichier serveur n'est PAS découpé tant que le dépôt chez Google est manuel.** `Code.gs` fait 8 147 lignes et Apps Script accepte plusieurs fichiers — mais 1 fichier → **5 collages à la main**, soit cinq occasions d'en oublier un : **le mécanisme même de M-04**. ⚠️ **Ce n'est pas un permis d'agrandir le fichier**, et **R-074 reste ouvert au registre**. **Réouverture** : le jour où le dépôt cesse d'être manuel (**R-081**) | ✅ **Validée (session 11)** — *« la 2 »*. Première décision prise **avant** l'ÉTAPE 3, et sans entorse à **D-024** : décider de **ne rien faire** n'engage aucun travail et ne peut pas être invalidé par un constat ultérieur |
 
+### Tranchées à l'ouverture de l'ÉTAPE 3 — **volet ①, session 13, 2026-08-05**
+
+| Réf | Décision | Statut |
+|---|---|---|
+| **D-025** | **Quels tests, dans quel ordre** : **lot ① seul** — les 5 tests du **barème et du départage** — et ils sont écrits **AVANT** la correction du départage (**D-014**), pas après. *Aucune ligne de l'application n'est modifiée par ce lot : les deux fonctions sont déjà testables telles quelles.* Les lots ②③④ ne sont **pas refusés**, ils sont **différés** — le lot ④ reste le préalable de D-012 et D-015 | ✅ **Validée (session 13)** |
+| **D-020** | **Combien de temps garde-t-on quoi** : le **tableau des 7 durées est adopté tel quel** (carnet des clubs = 3 éditions · effectifs = effacés à la réinitialisation · contacts FFR = 1 an · champ « équipes étrangères » = effacé après envoi · relevés de visibilité = effacés après remise de la fiche · `Historique` = conservé · courriels Gmail = 1 an). ⚠️ **Aucun effacement automatique** : toute suppression reste **déclenchée par un humain** | ✅ **Validée (session 13)** |
+| **D-018** | **Que dit-on aux gens** : **oui**, les trois textes sont rédigés — bas du courriel d'invitation, bas de la page de réponse du club, et une **section « Tournoi »** pour la page RGPD **qui existe déjà** sur le site vitrine. Responsable : **Génération R92** · contact : **generationr92@gmail.com**. ⚠️ Ils **engagent l'association** : Romain les relit et les fait valider par le bureau ; rien n'est mis en ligne par le chantier | ✅ **Validée (session 13)** |
+| **D-019** | **La mesure des partenaires** : **voie (a)** — informer, **sans bandeau**, avec un moyen simple de dire non. Un bandeau devant les scores dégraderait l'usage métier (`CLAUDE.md` §11) ; alléger la mesure ferait perdre la **portée**. ⚠️ À écrire **avant que l'interrupteur des partenaires soit rallumé** | ✅ **Validée (session 13)** |
+| **D-005** | **Périmètre** : le chantier reste **`tournoi-r92` seul**. Ce qui est constaté dans `boutique-r92` est **signalé** (V-01 → V-04 dans `DECISIONS.md`), **jamais corrigé à l'aveugle**. Les textes de D-018 sont **livrés** à Romain, qui les porte lui-même | ✅ **Validée (session 13)** |
+| **D-009** | **Où atterrit la documentation** : **D-006 conservé** — elle va directement sur `main` ; une branche imposée est **ramenée dans `main` avant la fin de la session**. L'option inverse est exactement ce qui a coûté les sessions 6 et 8 | ✅ **Validée (session 13)** |
+
 **En attente** (voir `DECISIONS.md`) :
 
-- **D-017 — Remplacer les deux clés par des suites aléatoires.** *(aucun code : une action de
-  Romain, cinq minutes — c'est ce qui referme R-019)* ;
-- **D-018 — Que dit-on aux personnes dont on garde les informations ?** *(trois textes courts —
-  referme R-028)* ;
-- **D-019 — Que fait-on de la mesure de visibilité des partenaires ?** *(informer / demander
-  l'accord / alléger — referme R-029, le seul problème du domaine B qui tourne déjà)* ;
-- **D-020 — Combien de temps garde-t-on quoi ?** *(un tableau de durées à valider — referme
-  R-030, et met R-031, R-033 et R-034 en ordre de marche)* ;
-- D-005 — Périmètre exact du dépôt à auditer (le site vitrine `boutique-r92` est un **autre**
-  dépôt — et c'est **lui** qui accueillerait naturellement la page « Vos données » de D-018).
+> 🏁 **Le registre des décisions en attente est VIDE.** Les six dernières ont été tranchées au
+> volet ① de l'ÉTAPE 3 (session 13). Plus aucune décision n'est requise de Romain pour construire
+> le plan.
+
+Reste **une action**, qui n'a jamais été une question :
+
+- **D-017 — Remplacer les deux clés par des suites aléatoires.** *(aucun code : cinq minutes dans
+  le menu du classeur « Tournoi R92 → Configurer les clés » — c'est ce qui referme **R-019**, un
+  P1)*.
 
 *(Aucune décision du domaine A n'est en attente.)*
 
@@ -575,15 +610,16 @@ vérification supplémentaire.
 | I-10 | La FFR encadre-t-elle le sort d'un match d'École de Rugby **qui n'a pas pu se jouer** (forfait, ou annulation pour intempéries) ? Existe-t-il une règle de classement imposée ? | `AUDIT-TOURNOI-R92.md` **ne contient rien** sur le sujet : aucun de ses 25 points de vérification (Q11→Q25) ne le couvre. C'est une question de **règle du jeu**, donc du chantier FFR (D-003) | Question de Romain au **Directeur EDR du Racing** ou au **Comité 92** — la voie qui a déjà résolu Q23. Une règle fédérale primerait sur D-011 **et** D-015 |
 | I-08 | Une image mise à la corbeille du Drive (affiche, logo, photo de parking) reste-t-elle visible par un lien déjà diffusé, pendant les ~30 jours avant que Google vide la corbeille ? | Le comportement de la corbeille Drive appartient à Google, il n'est pas dans le code | Test réel : mettre une image à la corbeille, puis rouvrir son lien depuis une navigation privée |
 | I-09 | Que conserve le **journal d'exécution** de Google Apps Script, et pendant combien de temps ? | Ce journal vit chez Google, hors du dépôt | Consultation par Romain dans l'éditeur Apps Script (« Exécutions ») |
-| **I-14** | **Qui est officiellement responsable** de ces données — l'association Génération R92, le Racing 92, ou Romain à titre personnel ? Et le classeur doit-il rester dans un **compte Google individuel** ? | Aucun document du dépôt ne le dit. Ce n'est pas qu'un sujet RGPD : si ce compte est perdu ou bloqué, **l'association perd d'un coup son carnet d'adresses, ses images et son historique** | Réponse de Romain, à écrire dans `DECISIONS.md`. Elle conditionne D-018 (les textes doivent nommer le responsable) — voir **R-039** |
+| **I-14** ✅ *(largement répondue le 2026-08-05)* | **Qui est officiellement responsable** de ces données ? ✅ **Le site vitrine le déclare publiquement : « Génération R92 — association loi 1901 », contact `generationr92@gmail.com`, directeur de la publication Jérémy Jost.** ⚠️ **Avec une réserve** : la déclaration en préfecture est **« en cours »** (siège et n° RNA *« à définir »*), donc **aujourd'hui c'est Romain qui porte ces données de fait** (**D-021**). **Ce qui reste ouvert** : le classeur doit-il rester dans un **compte Google individuel** ? | La partie « qui » est désormais **écrite** (levée avec **I-16**). La partie « quel compte » reste entière : si ce compte est perdu ou bloqué, **l'association perd d'un coup son carnet d'adresses, ses images et son historique** | ✅ **Suffisant pour D-018** (les textes peuvent nommer le responsable). Reste à décider **au déclencheur** (**D-022**) : basculer le classeur vers un compte de l'association — voir **R-039** et `docs/passation.md` §11 |
 | **I-15** | **Le droit à l'image des enfants est-il géré ailleurs** — par la licence FFR, un document du club, une consigne aux clubs invités ? | Le mécanisme existait dans l'application et a été **retiré sur décision du club** le 2026-08-03. Le modèle `.docx` reste dans le dépôt, plus rien ne le charge. **Rien n'écrit ce qui l'a remplacé** | Question de Romain au club. Tant que la réponse est inconnue, ce n'est **pas un défaut du code** — voir **R-036** |
-| **I-16** | **Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page « Vos données » ?** | C'est un **autre dépôt**, hors périmètre tant que D-005 n'est pas tranchée — or c'est l'endroit naturel de la page prévue par D-018 | Vérification par Romain, ou extension du périmètre (D-005) |
+| ~~**I-16**~~ | ~~Le site vitrine porte-t-il déjà des mentions légales ou une page « Vos données » ?~~ | ✅ **LEVÉE le 2026-08-05** (session 13) — **oui : « Mentions légales », « CGV », « RGPD », « Statuts »** figurent au pied de page. ⚠️ **Mais la page RGPD ne parle pas du tournoi** | Voir « Points levés » ci-dessous |
 | **I-19** | **Combien de spectateurs sont réellement attendus ?** Le chiffre de **1 300** vient de `docs/relais-cdn.md`, **sans source**. C'est lui qui décide s'il faut allumer le relais (**R-061**) ou non | Aucun document du dépôt ne le justifie. C'est une connaissance de terrain, pas une donnée technique | Réponse de Romain — **il est le seul à savoir** combien de familles viennent à ce tournoi |
 
 ### Points levés
 
 | # | Point | Réponse | Levé le |
 |---|---|---|---|
+| **I-16** | Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page « Vos données » ? | ✅ **LEVÉE — OUI.** Lecture des pages publiques (`index.html`, `rgpd.html`, `mentions-legales.html`). Le pied de page porte **« Mentions légales · CGV · RGPD · Statuts »**. ⚡ **Deux gains immédiats** : (1) la page RGPD existe, donc D-018 n'a plus à créer une page — seulement à y **ajouter une section « Tournoi »** ; (2) elle **nomme le responsable** (*Génération R92*) et **l'adresse de contact** (*generationr92@gmail.com*) — les deux informations qui bloquaient D-018 depuis la session 7. ⚠️ **La limite, et elle est nette** : cette page **ne parle pas du tournoi** — ni clubs invités, ni contacts de clubs, ni effectifs d'enfants, ni mesure de visibilité des partenaires. Elle couvre l'adhésion, le don et l'achat. **R-028 reste donc entier** ; seul son **coût de correction** a baissé. 📌 Quatre constats hors périmètre inscrits en **V-01 → V-04** (`DECISIONS.md`, D-005) | 2026-08-05, session 13 |
 | **I-06** | Comment le Google Sheet est-il réellement partagé ? | ✅ **LEVÉ — le classeur est PRIVÉ.** Romain a fourni une capture du panneau Drive de « Tournoi R92 - Base de données » : *Qui a accès → **Privé*** (propriétaire seul), et *Limites de sécurité → aucune limite appliquée*. L'identifiant du classeur est donc public dans le dépôt **sans que cela expose les données** : le connaître ne suffit pas à ouvrir le fichier. C'est le réglage attendu. Cela confirme aussi que la Web App s'exécute bien **au nom du propriétaire** — c'est ce qui lui permet de lire un classeur privé au profit de visiteurs qui, eux, n'y ont aucun accès. | 2026-08-04, session 2 |
 | **I-07** | Les 4 onglets `RefFFR_*` existent-ils et sont-ils à jour ? | ✅ **LEVÉ — les 4 onglets existent, aux noms exacts attendus.** Capture du bas du classeur fournie par Romain : `RefFFR_Formes`, `RefFFR_Regles`, `RefFFR_Temps`, `RefFFR_Dates` — orthographe **identique** à ce que lit `Code.gs`. Contenu visible cohérent (millésimes 2026-2027, formes de jeu 5x5 / 7x7). Les fichiers Drive `RefFFR-formes-de-jeu` et `RefFFR-dates-federales` sont donc des documents **sources** distincts, sans rôle dans le fonctionnement. | 2026-08-04, session 2 |
 | **I-02** | Les tests de `backend/Tests.gs` passent-ils aujourd'hui ? | ✅ **LEVÉ — 573 sur 573 passent.** `lancerTestsFFR` lancé par Romain dans Apps Script, après le redéploiement. Le compte confirme au passage que les 16 vérifications ajoutées pour R-014 étaient bien du lot (564 appels écrits en dur + 9 dans des boucles = 573). ⚠️ **Le risque de méthode M-03 demeure** : rien ne lance ces tests automatiquement, c'est un geste manuel qui peut être oublié. | 2026-08-04, session 6 |
@@ -658,11 +694,23 @@ vérification supplémentaire.
 > l'ÉTAPE 3. Ce tableau est **mis à jour à la fin de chaque session d'audit** — c'est le seul
 > endroit où regarder pour savoir ce qui reste ouvert.
 
-**Dernière mise à jour du registre** : 2026-08-05 (fin du domaine **H** — **le dernier**).
+**Dernière mise à jour du registre** : 2026-08-05 (**session 13 — volet ① de l'ÉTAPE 3**).
 
-> 🏁 **CE REGISTRE EST DÉSORMAIS COMPLET.** Les huit domaines ont parlé ; plus aucun audit ne
-> viendra l'alimenter. Il devient **le point de départ de l'ÉTAPE 3**, qui commencera par le
-> reprendre **point par point**, dans l'ordre de **§10.4**.
+> 🏁 **CE REGISTRE EST COMPLET, ET IL A ÉTÉ TRAITÉ.** Les huit domaines ont parlé ; plus aucun
+> audit ne viendra l'alimenter. Il a été repris **point par point** au volet ① de l'ÉTAPE 3, dans
+> l'ordre de **§10.4** :
+>
+> | | Avant la session 13 | Après |
+> |---|---|---|
+> | **Décisions en attente** | 6 | ✅ **0** |
+> | **Inconnues ouvertes** | 9 | **7** *(I-16 levée, I-14 partiellement)* |
+> | **Inconnues qui BLOQUENT le plan** | *jamais compté* | ✅ **0** |
+>
+> **Ce qu'il faut retenir des 7 inconnues restantes** : 2 sont des **courriels à envoyer** (I-10,
+> I-15), 2 des **vérifications de 5 minutes** ne touchant que des P2 (I-08, I-09), 1 ne se lèvera
+> **que le jour du tournoi** (I-19), 1 est **sans effet sur le plan** (I-20), et 1 est
+> **permanente** (I-01 — le code en service chez Google, c'est **M-02**, on la compense, on ne la
+> lève pas).
 
 > ✅ **Le domaine H n'a ajouté NI décision NI inconnue** — le seul des huit dans ce cas. Ses sept
 > problèmes sont des constats techniques qui n'appellent aucun arbitrage de Romain pour être
@@ -750,16 +798,23 @@ vérification supplémentaire.
 
 ### 10.2 — Décisions en attente
 
-| Réf | La question | Née en | Bloque |
+> 🏁 **PLUS AUCUNE DÉCISION N'EST EN ATTENTE.** Les six dernières ont été reprises **une par une**
+> au volet ① de l'ÉTAPE 3 (session 13, 2026-08-05) et **toutes tranchées le même jour**. Le détail
+> de chacune est en **§7** et dans `DECISIONS.md`.
+
+| Réf | La question | Née en | Statut |
 |---|---|---|---|
 | ~~**D-029**~~ | ~~Comment les deux chantiers cohabitent~~ | ~~Session 11~~ | ✅ **TRANCHÉE ET APPLIQUÉE le 2026-08-05** — *« applique les deux »*. Voir §7 |
-| **D-005** | **Périmètre du dépôt à auditer** : le site vitrine `boutique-r92` entre-t-il dans le chantier ? | Session 1 | **I-16**, et l'emplacement de la future page « Vos données » (**D-018**) |
-| **D-009** | **Où atterrit la documentation** quand une branche de travail est imposée ? | Session 2 | Rien de fonctionnel — une question de méthode |
-| **D-018** | **Que dit-on aux personnes** dont on garde les informations ? *(trois textes courts)* | Session 7 | **R-028** (P1) |
-| **D-019** | **Que fait-on de la mesure des partenaires ?** Informer · demander l'accord · alléger | Session 7 | **R-029** (P1) — **suspendu** tant que les partenaires restent éteints |
-| **D-020** | **Combien de temps garde-t-on quoi ?** *(tableau de durées à valider)* | Session 7 | **R-030** (P1), **R-031**, **R-033**, **R-034** |
-| ~~**D-028**~~ | ~~Faut-il découper le fichier serveur de 8 147 lignes ?~~ | ~~Session 11~~ | ✅ **TRANCHÉE le 2026-08-05** — **non**, tant que le dépôt chez Google est manuel. Voir §7 et `DECISIONS.md` |
-| **D-025** | **Quels tests écrit-on, et dans quel ordre ?** 4 lots proposés (`AUDIT.md` §D.9) : ① barème et départage ② une journée de bout en bout ③ contrôle de syntaxe à la publication ④ la saisie d'un score. **Ma recommandation si un seul devait être fait : le lot ①** — il est le moins cher, il protège ce qui compte le plus, et **D-014 est déjà décidée** : écrits après la modification, ces tests graveraient le nouveau comportement sans avoir jamais vu l'ancien | Session 8 | **R-041** (et le calendrier de D-014, D-011, D-012) |
+| ~~**D-028**~~ | ~~Faut-il découper le fichier serveur de 8 147 lignes ?~~ | ~~Session 11~~ | ✅ **TRANCHÉE le 2026-08-05** — **non**, tant que le dépôt chez Google est manuel |
+| ~~**D-005**~~ | ~~Le site vitrine `boutique-r92` entre-t-il dans le chantier ?~~ | ~~Session 1~~ | ✅ **TRANCHÉE (session 13)** — **non** : périmètre fermé, ce qui est vu ailleurs est **signalé** (V-01 → V-04) |
+| ~~**D-009**~~ | ~~Où atterrit la documentation quand une branche est imposée ?~~ | ~~Session 2~~ | ✅ **TRANCHÉE (session 13)** — **D-006 conservé** : la doc va sur `main`, une branche imposée y est ramenée avant la fin de session |
+| ~~**D-018**~~ | ~~Que dit-on aux personnes dont on garde les informations ?~~ | ~~Session 7~~ | ✅ **TRANCHÉE (session 13)** — **oui**, trois textes rédigés, dont une **section « Tournoi »** pour la page RGPD existante. Débloquée par **I-16** |
+| ~~**D-019**~~ | ~~Que fait-on de la mesure des partenaires ?~~ | ~~Session 7~~ | ✅ **TRANCHÉE (session 13)** — **voie (a)** : informer, sans bandeau, avec un moyen de dire non |
+| ~~**D-020**~~ | ~~Combien de temps garde-t-on quoi ?~~ | ~~Session 7~~ | ✅ **TRANCHÉE (session 13)** — **le tableau des 7 durées est adopté tel quel**. ⚠️ Aucun effacement automatique |
+| ~~**D-025**~~ | ~~Quels tests écrit-on, et dans quel ordre ?~~ | ~~Session 8~~ | ✅ **TRANCHÉE (session 13)** — **lot ① seul** (barème et départage), **AVANT** la correction du départage. C'est **la contrainte d'ordre la plus importante du chantier** |
+
+> ⚠️ **Reste une ACTION, qui n'a jamais été une question** : **D-017** — remplacer les deux clés par
+> des suites aléatoires. Cinq minutes, aucun code, referme **R-019** (P1).
 
 ### 10.3 — Inconnues à lever
 
@@ -770,21 +825,24 @@ vérification supplémentaire.
 | **I-08** | Une image mise à la corbeille du Drive reste-t-elle visible par un lien déjà diffusé pendant ~30 jours ? | Test réel de 5 minutes : corbeille, puis rouvrir le lien en navigation privée | **B** — **R-035** |
 | **I-09** | Que conserve le journal d'exécution de Google Apps Script, et combien de temps ? | Consultation dans l'éditeur Apps Script (« Exécutions ») | **B / C** — **R-023**, **R-039** |
 | **I-10** | La FFR encadre-t-elle le sort d'un match non joué ? | **Question sortante** — voir §10.1 | **A** — D-011, D-015 |
-| **I-14** | Qui est officiellement responsable des données, et le classeur doit-il rester dans un compte individuel ? | Réponse de Romain **au déclencheur** — non bloquant aujourd'hui (**D-021**) | **B** — **R-039** |
+| **I-14** *(partiellement levée le 2026-08-05)* | ✅ **« Qui » est répondu** : *Génération R92*, contact `generationr92@gmail.com` — trouvé en levant **I-16**, avec la réserve que la **déclaration est en cours**. ❓ **Reste** : le classeur doit-il rester dans un compte Google individuel ? | Réponse de Romain **au déclencheur** — non bloquant aujourd'hui (**D-021**), et **plus du tout bloquant pour D-018** | **B** — **R-039** |
 | **I-15** | Le droit à l'image des enfants est-il géré ailleurs ? | **Question sortante** — voir §10.1 | **B** — **R-036** |
-| **I-16** | Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page de confidentialité ? | Vérification de Romain, ou extension du périmètre (**D-005**) | **B** — **D-018** |
+| ~~**I-16**~~ | ~~Le site vitrine porte-t-il déjà des mentions légales ou une page de confidentialité ?~~ | ✅ **LEVÉE le 2026-08-05** (session 13) — **oui**, et elle livre le **responsable** et **l'adresse de contact** qui bloquaient D-018. ⚠️ Mais elle **ne parle pas du tournoi** : R-028 reste entier | ~~B~~ |
 | ~~**I-18**~~ | ~~Combien de temps une demande occupe-t-elle réellement le serveur de Google ?~~ | ✅ **LEVÉE le 2026-08-05** — 128 exécutions analysées, capacité ≈ 150-300 spectateurs. Voir §8 et `AUDIT.md` §F.9 | ~~F~~ |
 | **I-20** | **Quelqu'un d'autre que Romain reprendra-t-il ce code, et quand ?** `docs/passation.md` §11 prévoit une bascule vers les comptes de l'association (dont l'adresse d'envoi, vers le compte de Jérémy) — mais cela concerne les **comptes**, pas forcément le **code** | **Réponse de Romain.** ⚠️ **Non bloquante** : elle ne change pas la nature de **R-073** (la carte est fausse, que quelqu'un la lise ou non), seulement son rang de priorité | **G** — **R-073** |
 | **I-19** *(reformulée le 2026-08-05)* | **Quelle part du public regarde son écran au MÊME INSTANT lors d'un pic** (fin de match, annonce du classement) ? ⚠️ **La question d'origine — « combien de spectateurs ? » — était mal posée** : Romain a montré qu'elle n'est pas prévisible (elle dépend des équipes présentes, des éducateurs, des parents sur place **et de ceux qui suivent depuis la maison ou le travail**). Elle est en revanche **calculable** : `Equipes` porte déjà `nb_joueurs` et `nb_educateurs`, remplies par les clubs à leur réponse | Le seul paramètre qui ne se déduit d'aucune donnée. La page se mettant en pause quand l'onglet n'est pas visible, seuls comptent les **écrans allumés sur la page** | **Observation le jour J** : regarder le journal « Exécutions » **pendant** le tournoi | **F** — **R-061**, **R-064** |
 
-### 10.4 — Comment ce registre sera traité
+### 10.4 — Comment ce registre a été traité
 
-À l'ouverture de l'**ÉTAPE 3**, les points ci-dessus seront repris **un par un**, dans cet ordre :
+À l'ouverture de l'**ÉTAPE 3**, les points ci-dessus ont été repris **un par un**, dans cet ordre :
 
-1. **les inconnues d'abord** — on ne décide pas sur du sable ;
-2. **puis les décisions**, chacune présentée avec : le problème en langage simple, les options,
-   ce que chacune coûte et apporte, et une recommandation ;
-3. **puis seulement** le tableau des chantiers de `PLAN.md`.
+1. ✅ **les inconnues d'abord** — on ne décide pas sur du sable. *Fait au volet ① : 9 → 7, et
+   **I-16** levée par une simple lecture du site vitrine public, ce qui a débloqué **D-018*** ;
+2. ✅ **puis les décisions**, chacune présentée avec : le problème en langage simple, les options,
+   ce que chacune coûte et apporte, et une recommandation. *Fait au volet ① : **les 6 tranchées le
+   même jour***, dont **D-025** qui fixe la contrainte d'ordre du chantier ;
+3. 🔜 **puis seulement** le tableau des chantiers de `PLAN.md` — **volets ② (sans code) et ③ (avec
+   code)**, à venir.
 
 > ⚠️ **Chaque session d'audit doit alimenter ce registre avant de se clore.** Une question
 > soulevée mais non inscrite ici est une question perdue — c'est exactement ce que **D-001**
