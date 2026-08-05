@@ -668,8 +668,8 @@ dit, c'est une vérification faite en production.
 |---|---|
 | **Date** | 2026-08-05 |
 | **Session** | 7 |
-| **Statut** | ⏳ PROPOSÉE — en attente de confirmation de Romain |
-| **Décidée par** | Claude (proposition), sur réponse de Romain à la question du calendrier |
+| **Statut** | ✅ **VALIDÉE** par Romain le 2026-08-05 |
+| **Décidée par** | Romain — proposition de Claude, validée sans réserve |
 
 **Problème posé**
 > La question posée était : *« quand invites-tu de vrais clubs ? »* Réponse de Romain, le
