@@ -2903,23 +2903,50 @@ recollé chez Google, mais **pas** `Tests.gs`. C'est deux fichiers, et rien ne l
 | ✅ **Ce qui tient, et même se renforce** | Ces 16 vérifications **passent** : elles ont été exécutées pendant cette session sur le code du dépôt, avec le reste — **589/589, 0 échec**. La logique de la correction est donc **mieux** prouvée qu'avant, mais **pour une autre raison** que celle inscrite |
 | ⚠️ **Ce qui reste ouvert** | Que le code **en service** soit bien celui du dépôt repose sur la déclaration de Romain (« j'ai redéployé »). C'est **M-02**, le risque permanent, et rien ici ne le contredit |
 
-### Le geste qui referme le sujet — 2 minutes
+### ✅ Le geste a été fait — le jour même *(2026-08-05)*
 
-Coller le contenu actuel de `backend/Tests.gs` dans le projet Apps Script (à côté de `Code.gs`),
-puis relancer `lancerTestsFFR`. **Le résultat attendu est `589/589`.**
+Romain a collé le contenu actuel de `backend/Tests.gs` dans le projet Apps Script et relancé
+`lancerTestsFFR`. Résultat lu dans le journal d'exécution :
 
-- Si Apps Script affiche **589/589** → les tests de R-014 ont tourné là où c'est utile, et le
-  statut TESTÉ retrouve ses trois preuves.
-- S'il affiche **573/573** → c'est l'ancien fichier qui est resté ; le recoller.
-- S'il affiche autre chose → il faut le dire, c'est une information en soi.
+```
+R92 — 589/589 OK, 0 FAIL
+```
 
-> Ce geste fait aussi d'une pierre deux coups : **il vérifie que le `Code.gs` en service est bien
-> le bon**. Les tests s'exécutent chez Google **contre le code chez Google** — si le `Code.gs`
-> déployé était l'ancien, les 16 vérifications de R-014 échoueraient. C'est le seul contrôle
-> simple qui attaque **M-02** de front.
+**Deux contrôles croisés confirment que c'est bien la bonne version qui a tourné** :
 
-**Nouveau risque de méthode : `M-04` — un compte de tests ne dit pas quelle version a été
-exécutée.** Voir `RISQUES.md` §6.
+| Contrôle | Attendu | Constaté |
+|---|---|---|
+| Le **nombre de vérifications** | **589** *(573 aurait signalé l'ancien fichier)* | ✅ 589 |
+| La **dernière ligne du fichier** chez Google | **3 711** *(= le nombre de lignes de `backend/Tests.gs`)* | ✅ 3711, et les trois dernières assertions sont mot pour mot celles du dépôt |
+
+**Ce que ça referme** :
+
+- **I-17 — LEVÉE.** Les 16 vérifications de R-014 passent **chez Google** ;
+- **M-04 — TRAITÉ** pour le geste ; il ne reste que la règle d'écriture permanente (toujours dire
+  le nombre **attendu** et **quels fichiers** ont été recollés) ;
+- **R-014** retrouve sa deuxième preuve, cette fois vraie. Statut **TESTÉ** confirmé.
+
+### ⚠️ Ce que ce résultat prouve — et ce qu'il ne prouve pas
+
+Il faut être précis, parce que la formulation employée pendant l'audit était trop large.
+
+Les tests s'exécutent dans l'**éditeur** Apps Script. Ils tournent donc contre le `Code.gs`
+**enregistré dans le projet** — ce qui est déjà beaucoup : cela prouve que **ce** code passe les
+589 vérifications, R-014 comprise, et donc qu'il correspond bien au dépôt sur tout ce que les
+tests couvrent.
+
+Mais Apps Script distingue **le code du projet** et **le déploiement** : l'adresse web publique
+peut rester figée sur une version antérieure (c'est le piège classique de « Nouveau déploiement »,
+que le diagnostic « Tester la remontée » sait justement expliquer). **M-02 est donc fortement
+réduit, pas supprimé.** La seule vérification qui interroge la **vraie adresse publique** reste ce
+bouton de diagnostic, sur l'écran Partenaires.
+
+> 🪤 **Piège de nommage, à noter pour les sessions suivantes** : dans le projet Apps Script, le
+> fichier s'appelle **`Test.gs`** (au singulier) ; dans le dépôt, **`Tests.gs`**. Ce n'est pas un
+> second fichier, c'est le même.
+
+**Risque de méthode créé par cet épisode : `M-04` — un compte de tests ne dit pas quelle version
+a été exécutée.** Voir `RISQUES.md` §6.
 
 ---
 
@@ -3005,7 +3032,7 @@ registre des points en suspens de `ETAT.md` §10, conformément à **D-024**.
 
 1. **Les 5 tests de barème et de départage (R-041).** Ils sont écrivables aujourd'hui, sans
    toucher au code, et **D-014 les rendra impossibles à écrire honnêtement une fois passée**.
-2. **Recoller `Tests.gs` chez Google et relancer (§D.8).** Deux minutes. C'est le seul geste
-   simple qui attaque **M-02** de front — le doute permanent sur ce qui tourne réellement.
+2. ~~Recoller `Tests.gs` chez Google et relancer (§D.8).~~ ✅ **FAIT le 2026-08-05 —
+   `589/589 OK, 0 FAIL`.**
 3. **La vérification de syntaxe à la publication (R-043 a).** Peu de travail, et ça referme le
    seul chemin vers la production qui n'a aujourd'hui **aucun** contrôle.

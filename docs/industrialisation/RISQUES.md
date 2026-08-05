@@ -7,7 +7,7 @@
 
 **Dernière mise à jour** : 2026-08-05 (session 8)
 **Audits réalisés** : domaine A (métier), domaine C (sécurité), domaine B (RGPD), domaine D (QA / tests). Les 4 autres domaines restent à faire.
-**Correction réalisée** : R-014 (le P0), par exception validée — voir D-016. ⚠️ **Une de ses trois preuves est tombée en session 8** — voir la note sous le tableau de synthèse et `AUDIT.md` §D.8.
+**Correction réalisée** : R-014 (le P0), par exception validée — voir D-016. ⚠️ Une de ses trois preuves est tombée en session 8, ✅ **et a été refaite correctement le jour même** (`589/589 OK` chez Google) — voir la note sous le tableau de synthèse, `AUDIT.md` §D.8 et **M-04**.
 
 ---
 
@@ -57,14 +57,14 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
-| **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** *(sous réserve — voir ci-dessous)* |
+| **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
 | P1 | **17** | 0 | **5** | 0 | 0 | 0 |
 | P2 | **27** | 0 | **2** | 0 | 0 | 0 |
 | P3 | **5** | 0 | 0 | 0 | 0 | 0 |
 
 **Total : 50 problèmes** — domaine A (13) + domaine C (14) + domaine B (13) + domaine D (10).
 
-> ⚠️ **UNE PREUVE DE R-014 EST TOMBÉE EN SESSION 8 — à lire avant de se fier au statut TESTÉ.**
+> ⚠️➜✅ **UNE PREUVE DE R-014 EST TOMBÉE EN SESSION 8 — PUIS A ÉTÉ REFAITE LE JOUR MÊME.**
 >
 > La preuve n° 2 ci-dessous disait : *« 573/573 passent dans Apps Script, et le contrôle croisé
 > confirme que les 16 vérifications de R-014 étaient du lot »*. **C'est faux, et c'est
@@ -78,20 +78,26 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 > logique de la correction est donc **mieux** prouvée qu'avant, mais **pour une autre raison**
 > que celle inscrite au dossier.
 >
-> **Ce qui reste ouvert** : que le code en service soit bien celui du dépôt (**M-02**), et que les
-> tests de R-014 aient tourné **là où c'est utile**. Un geste de 2 minutes referme les deux :
-> coller `backend/Tests.gs` dans Apps Script et relancer `lancerTestsFFR` → **589/589 attendu**
-> (nouvelle inconnue **I-17**). Détail complet : `AUDIT.md` §D.8. Risque de méthode : **M-04**.
+> ✅ **ET LA PREUVE A ÉTÉ REFAITE LE JOUR MÊME.** Romain a recollé `backend/Tests.gs` dans Apps
+> Script et relancé `lancerTestsFFR` → **`R92 — 589/589 OK, 0 FAIL`**. Deux contrôles croisés sur
+> la capture : le **nombre** (589 = le compte du fichier *après* la correction) et la **dernière
+> ligne du fichier** (3711 = exactement le nombre de lignes de `backend/Tests.gs`). **I-17 levée,
+> M-04 refermé**, et le statut TESTÉ de R-014 retrouve ses trois preuves.
+>
+> ⚠️ **Portée exacte de ce résultat** : les tests s'exécutent dans l'**éditeur** Apps Script, donc
+> contre le `Code.gs` **enregistré dans le projet**. Ils ne prouvent pas à eux seuls que
+> l'**adresse web publique** sert cette version (Apps Script permet de figer un déploiement sur
+> une ancienne). **M-02 est fortement réduit, pas supprimé.** Détail : `AUDIT.md` §D.8.
 
 > ✅ **R-014 est le premier problème du chantier à atteindre le statut TESTÉ**, le 2026-08-04.
 > Trois preuves réunies, et c'est la raison pour laquelle ce statut est accordé :
 >
 > 1. **le code en service est bien le nouveau** — Romain a redéployé chez Google (lève **I-13**) ;
-> 2. ~~**573 tests sur 573 passent** dans Apps Script (lève **I-02**), dont les **16 vérifications**
->    ajoutées pour cette correction~~ → ⚠️ **PREUVE ANNULÉE en session 8** : 573 est le compte du
->    fichier **sans** ces 16 vérifications (le compte avec est 589). Les 573 restent une bonne
->    nouvelle — **I-02 reste levée**, le harnais passe chez Google — mais elles ne prouvent
->    **rien** sur R-014. Voir l'encadré du §4 et `AUDIT.md` §D.8 ;
+> 2. ~~**573 tests sur 573 passent** dans Apps Script, dont les **16 vérifications** ajoutées pour
+>    cette correction~~ → ⚠️ **annulée en session 8** (573 = le compte du fichier **sans** ces 16)
+>    → ✅ **REFAITE LE MÊME JOUR : `R92 — 589/589 OK, 0 FAIL` dans Apps Script.** Les 16
+>    vérifications de R-014 ont bien tourné chez Google. **I-02 reste levée**, **I-17 levée**,
+>    **M-04 refermé**. Voir l'encadré du §4 et `AUDIT.md` §D.8 ;
 > 3. **la chaîne fonctionne toujours de bout en bout** — le diagnostic « Tester la remontée »
 >    confirme écriture, relecture, et **109 relevés** présents dans le classeur. ⚠️ **Corrigé le
 >    2026-08-05** : ils viennent des **appareils de Romain**, pas de spectateurs — la preuve tient
@@ -420,6 +426,7 @@ encore, le jour du tournoi, l'ancienne version.
 >
 > ✅ **I-02 reste levée** : `lancerTestsFFR` a bien tourné chez Google le 2026-08-04.
 > ❌ **Le « contrôle croisé » écrit ici (564 + 9 = 573) était faux** — voir **M-04** ci-dessous.
+> ✅ **Rejoué correctement le 2026-08-05 : `589/589 OK, 0 FAIL` chez Google.**
 
 **Description** — `backend/Tests.gs` est écrit pour être exécuté **chez Google**. Il peut
 néanmoins être rejoué ailleurs, ce que la session 8 a démontré. Ce qui manque est le
@@ -439,7 +446,7 @@ publication) et les lots de §D.9 de `AUDIT.md`.
 |---|---|
 | **Priorité** | **P1 (méthode)** |
 | **Certitude** | **CERTAIN** — démontré en rejouant les deux versions du fichier |
-| **Statut** | **IDENTIFIÉ** (session 8) |
+| **Statut** | ✅ **TRAITÉ** (session 8, le jour même) — le geste n° 1 est fait ; le point n° 2 reste une règle d'écriture permanente |
 
 **Description** — Le 2026-08-04, « **573/573 OK** » a été inscrit au dossier comme preuve que les
 16 vérifications ajoutées pour R-014 avaient tourné chez Google. La session 8 a rejoué les deux
@@ -461,12 +468,20 @@ Google, mais **pas** `Tests.gs`. Ce sont **deux fichiers**, et rien ne le rappel
 **de ce qui aurait dû tourner**. Sans repère de version, il rassure exactement autant qu'il
 trompe. C'est le seul cas, à ce jour, où le chantier a inscrit au dossier une preuve **fausse**.
 
-**Correction recommandée** — Deux gestes, aucun n'est du code :
+**Correction — faite, et la règle qui en découle** :
 
-1. **Immédiat, 2 minutes** — coller `backend/Tests.gs` dans Apps Script et relancer
-   `lancerTestsFFR`. **589/589 attendu** (inconnue **I-17**). Ce geste attaque aussi **M-02** de
-   front : les tests s'exécutent chez Google **contre le code chez Google**, donc un `Code.gs`
-   resté ancien ferait échouer les 16 vérifications de R-014 ;
-2. **Durable** — toujours écrire **le nombre attendu** à côté du nombre obtenu, et toujours dire
-   **quels fichiers** ont été recollés. « 589/589, `Code.gs` et `Tests.gs` recollés » est une
-   preuve ; « 573/573 » n'en est pas une.
+1. ✅ **FAIT le 2026-08-05** — Romain a recollé `backend/Tests.gs` dans Apps Script et relancé
+   `lancerTestsFFR` → **`R92 — 589/589 OK, 0 FAIL`**. **I-17 levée.** Le `Code.gs` **du projet**
+   passe donc bien les 16 vérifications de R-014 ;
+2. **Règle permanente à appliquer désormais** — toujours écrire **le nombre attendu** à côté du
+   nombre obtenu, et toujours dire **quels fichiers** ont été recollés. *« 589/589, `Code.gs` et
+   `Tests.gs` recollés »* est une preuve ; *« 573/573 »* n'en est pas une.
+
+> ⚠️ **Piège de nommage à connaître** : dans le projet Apps Script, le fichier s'appelle
+> **`Test.gs`** (au singulier), alors qu'il s'appelle **`Tests.gs`** dans le dépôt. Ce n'est pas
+> une erreur — c'est juste une différence à ne pas prendre pour un second fichier.
+
+> ⚠️ **Ce que ce contrôle ne couvre toujours pas** : les tests tournent dans l'**éditeur**, contre
+> le code **du projet**. L'adresse web publique peut être figée sur une version antérieure —
+> **M-02 reste ouvert**, atténué. La seule vérification qui interroge la vraie adresse publique
+> est le bouton « Tester la remontée » de l'écran Partenaires.

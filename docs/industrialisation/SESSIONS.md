@@ -1514,3 +1514,57 @@ qu'il faut faire).
 > imaginaire.
 
 **Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+## Session 8 — ADDENDUM du même jour : I-17 levée, M-04 refermé
+
+**2026-08-05, après la clôture de la session.**
+
+Romain a collé `backend/Tests.gs` dans le projet Apps Script et relancé `lancerTestsFFR`.
+Journal d'exécution :
+
+```
+R92 — 589/589 OK, 0 FAIL
+```
+
+### Ce qui a été vérifié sur la capture fournie
+
+| Contrôle | Attendu | Constaté |
+|---|---|---|
+| Nombre de vérifications | **589** *(573 = l'ancien fichier)* | ✅ **589**, 0 échec |
+| Dernière ligne du fichier chez Google | **3711** *(= `wc -l backend/Tests.gs`)* | ✅ **3711** |
+| Trois dernières assertions | `identifiant trop court` · `non alphanumérique` · `normal → accepté` | ✅ identiques mot pour mot au dépôt |
+
+**C'est bien la version actuelle du dépôt qui a tourné chez Google.**
+
+### Conséquences sur le dossier
+
+- **I-17 — LEVÉE.** Déplacée dans les « points levés » de `ETAT.md` §8 ;
+- **M-04 — TRAITÉ** pour le geste. Il ne subsiste que la **règle d'écriture permanente** : toujours
+  écrire le nombre **attendu** à côté du nombre obtenu, et toujours dire **quels fichiers** ont été
+  recollés ;
+- **R-014** retrouve sa deuxième preuve, cette fois exacte. Statut **TESTÉ** confirmé, sans réserve
+  sur ce point.
+
+### ⚠️ Une précision que je dois apporter à ma propre formulation
+
+Pendant l'audit, j'ai écrit que ce geste vérifierait « que le `Code.gs` **en service** est le bon ».
+**C'est trop large, et il faut le corriger** : les tests s'exécutent dans l'**éditeur** Apps Script,
+donc contre le `Code.gs` **enregistré dans le projet**.
+
+C'est déjà beaucoup — cela prouve que ce code passe les 589 vérifications, R-014 comprise. Mais
+Apps Script distingue **le code du projet** et **le déploiement** : l'adresse web publique peut
+rester figée sur une version antérieure. **M-02 est fortement réduit, pas supprimé.** La seule
+vérification qui interroge la vraie adresse publique reste le bouton « Tester la remontée » de
+l'écran Partenaires.
+
+### 🪤 Piège de nommage, pour les sessions suivantes
+
+Dans le projet Apps Script, le fichier s'appelle **`Test.gs`** (au singulier) ; dans le dépôt,
+**`Tests.gs`**. C'est le même fichier — ne pas le prendre pour un second.
+
+### Ce qui reste à Romain
+
+**Un seul geste**, et il n'a pas bougé : **D-017** — remplacer les deux mots de passe par des
+suites aléatoires (menu du classeur → « Configurer les clés »), ce qui referme **R-019**.

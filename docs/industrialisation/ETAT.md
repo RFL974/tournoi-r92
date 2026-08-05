@@ -4,7 +4,7 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-05 (session 8, close)
+**Dernière mise à jour** : 2026-08-05 (session 8, close — **I-17 levée le jour même**)
 **Commit de référence** : `bb0b917` sur **`main`** — la session 8 part de là.
 **Documentation uniquement — aucun fichier de l'application modifié**, aucun redéploiement requis.
 
@@ -25,10 +25,10 @@ vérifie ni le classement, ni le départage, ni la saisie des scores**, c'est-à
 trois choses que l'ÉTAPE 5 va modifier. **Aucun P0**, **quatre P1**. Deux nouvelles importantes
 l'accompagnent : une **bonne** — les tests **tournent hors de Google**, ce qui lève l'essentiel du
 vieux risque **M-03** ; une **mauvaise** — une des trois preuves du statut « TESTÉ » de **R-014**
-était **fausse** (**M-04**), et un geste de deux minutes suffit à la remplacer. **Deux choses
-t'attendent, aucune n'est technique** : remplacer les deux mots de passe par des suites aléatoires
-(**D-017**, ce qui referme R-019), et **recoller `Tests.gs` chez Google puis relancer les tests**
-(**I-17**). Il reste **4 domaines** à auditer.
+était **fausse** (**M-04**) — ✅ **et elle a été remplacée le jour même** : Romain a recollé le
+fichier de tests chez Google et relancé, **`589/589 OK, 0 FAIL`** (**I-17 levée**). **Une seule
+chose t'attend donc, et elle n'est pas technique** : remplacer les deux mots de passe par des
+suites aléatoires (**D-017**, ce qui referme R-019). Il reste **4 domaines** à auditer.
 
 ---
 
@@ -76,18 +76,12 @@ t'attendent, aucune n'est technique** : remplacer les deux mots de passe par des
 un problème théorique. La vraie question à trancher n'est pas technique : **où ranger ces clés**,
 et **comment transmettre celle des scores aux bénévoles le jour J**.
 
-**2. Recoller `Tests.gs` chez Google et relancer les tests** — **I-17**, deux minutes. Ouvre
-l'éditeur Apps Script, colle le contenu actuel de `backend/Tests.gs` **par-dessus l'ancien**
-(c'est un fichier **différent** de `Code.gs`), puis lance `lancerTestsFFR`. **Le résultat attendu
-est `589/589`.** Si tu lis **573/573**, c'est l'ancien fichier qui est resté : recolle-le.
-
-> **Pourquoi ce geste compte.** Le dossier disait que les 16 vérifications ajoutées pour corriger
-> le problème de sécurité **R-014** avaient tourné chez Google. **C'était faux** : 573 est le
-> compte du fichier **sans** ces 16 vérifications. Elles passent — ça a été vérifié ici, sur le
-> code du dépôt (589/589) — mais jamais **là où c'est utile**. Et ce geste fait d'une pierre deux
-> coups : les tests s'exécutent chez Google **contre le code chez Google**, donc s'ils passent,
-> c'est aussi que le bon `Code.gs` est bien en place. C'est le seul contrôle simple qui attaque
-> **M-02** — le doute permanent sur ce qui tourne réellement. Détail : `AUDIT.md` §D.8.
+**2. ✅ FAIT le 2026-08-05 — recoller `Tests.gs` chez Google et relancer** (**I-17**). Romain a
+collé le fichier et lancé `lancerTestsFFR` → **`R92 — 589/589 OK, 0 FAIL`**. Contrôle croisé sur
+la capture fournie : la dernière ligne du fichier chez Google est la **3711**, et
+`backend/Tests.gs` en compte exactement **3 711** — c'est bien la version du dépôt, au caractère
+près. **M-04 est refermé**, et le statut TESTÉ de **R-014** retrouve une troisième preuve, cette
+fois vraie.
 
 **3. Poser les deux questions sortantes** — **I-10** (à la FFR : le sort d'un match non joué) et
 **I-15** (au club : le droit à l'image). Le délai de réponse ne dépend pas de nous, donc les poser
@@ -153,11 +147,11 @@ d'administration.
 preuves, telles qu'inscrites au départ :
 
 1. **le backend a été redéployé** chez Google → lève **I-13** ;
-2. ~~**573 tests sur 573 passent** dans Apps Script, dont les 16 vérifications de cette
-   correction~~ → ❌ **PREUVE ANNULÉE (session 8)**. **573 est le compte du fichier de tests
-   *avant* la correction** ; celui d'après en compte **589**. Les 16 vérifications n'ont donc
-   **jamais tourné chez Google**. ✅ **I-02 reste levée** (le harnais passe bien là-bas), mais ces
-   573 ne prouvent **rien** sur R-014 ;
+2. ~~**573 tests sur 573 passent**~~ → ❌ **preuve annulée en session 8** (573 = le compte du
+   fichier ***avant*** la correction) → ✅ **REMPLACÉE LE MÊME JOUR, ET CETTE FOIS ELLE EST
+   VRAIE** : Romain a recollé `Tests.gs` chez Google et relancé `lancerTestsFFR` →
+   **`R92 — 589/589 OK, 0 FAIL`**. Les 16 vérifications de R-014 ont donc bien tourné **chez
+   Google**. **I-17 levée**, **M-04 refermé** ;
 3. **la chaîne fonctionne toujours de bout en bout** : écriture ✅, relecture ✅, et **109 relevés**
    présents dans le classeur. C'est la **preuve de non-régression** qui manquait — le plafonnement
    n'a rien cassé.
@@ -167,15 +161,18 @@ preuves, telles qu'inscrites au départ :
    > précédente de ce document. **La preuve de non-régression tient entièrement** : des relevés
    > ont bien été écrits puis relus. Seule l'origine était fausse.
 
-> ✅ **Ce qui remplace la preuve tombée, et qui vaut mieux qu'elle** : les 16 vérifications
-> **passent**. Elles ont été exécutées en session 8 sur le code du dépôt, avec les 573 autres :
-> **589/589, 0 échec**. La logique de la correction est donc **mieux** prouvée qu'avant — mais
-> **pour une autre raison** que celle inscrite au dossier, et **sur le dépôt, pas sur Google**.
+> ✅ **La preuve a été refaite, correctement, le 2026-08-05** — **`589/589 OK, 0 FAIL`** dans Apps
+> Script. Deux contrôles croisés sur la capture fournie par Romain : le **nombre** (589 = le
+> compte du fichier *après* la correction) et la **dernière ligne du fichier** (3711, exactement
+> le nombre de lignes de `backend/Tests.gs`). C'est bien la bonne version qui a tourné.
 >
-> ⚠️ **Ce qu'il reste à faire, et c'est deux minutes** : coller `backend/Tests.gs` dans Apps
-> Script et relancer `lancerTestsFFR` → **589/589 attendu** (**I-17**). Ce geste referme le sujet
-> **et** contrôle au passage que le bon `Code.gs` est en service. Détail : `AUDIT.md` §D.8,
-> risque de méthode **M-04**.
+> ⚠️ **Ce que ce résultat prouve — et ce qu'il ne prouve pas.** Les tests s'exécutent dans
+> l'**éditeur** Apps Script, donc contre le `Code.gs` **enregistré dans le projet**. Ils prouvent
+> que **ce** code passe les 589 vérifications, R-014 comprise. Ils ne prouvent pas à eux seuls que
+> l'**adresse web publique** sert cette version : Apps Script permet de figer un déploiement sur
+> une ancienne version. **M-02 est donc fortement réduit, pas supprimé** — et la vérification qui
+> le supprimerait est celle qui existe déjà : le bouton « Tester la remontée » de l'écran
+> Partenaires, qui interroge, lui, la vraie adresse publique.
 
 > ⚠️ **Ce qui reste NON VÉRIFIÉ, et le restera** : le chemin de **refus** — ce qui se passe une
 > fois un plafond franchi — n'est prouvé que par les tests. Personne n'a envoyé 30 001 relevés
@@ -377,7 +374,6 @@ vérification supplémentaire.
 | **I-14** | **Qui est officiellement responsable** de ces données — l'association Génération R92, le Racing 92, ou Romain à titre personnel ? Et le classeur doit-il rester dans un **compte Google individuel** ? | Aucun document du dépôt ne le dit. Ce n'est pas qu'un sujet RGPD : si ce compte est perdu ou bloqué, **l'association perd d'un coup son carnet d'adresses, ses images et son historique** | Réponse de Romain, à écrire dans `DECISIONS.md`. Elle conditionne D-018 (les textes doivent nommer le responsable) — voir **R-039** |
 | **I-15** | **Le droit à l'image des enfants est-il géré ailleurs** — par la licence FFR, un document du club, une consigne aux clubs invités ? | Le mécanisme existait dans l'application et a été **retiré sur décision du club** le 2026-08-03. Le modèle `.docx` reste dans le dépôt, plus rien ne le charge. **Rien n'écrit ce qui l'a remplacé** | Question de Romain au club. Tant que la réponse est inconnue, ce n'est **pas un défaut du code** — voir **R-036** |
 | **I-16** | **Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page « Vos données » ?** | C'est un **autre dépôt**, hors périmètre tant que D-005 n'est pas tranchée — or c'est l'endroit naturel de la page prévue par D-018 | Vérification par Romain, ou extension du périmètre (D-005) |
-| **I-17** | **Les 16 vérifications de R-014 passent-elles chez Google ?** Et, du même coup : **le `Code.gs` en service est-il bien celui du dépôt ?** | Le « 573/573 » du 2026-08-04 est le compte du fichier de tests **avant** la correction (le compte après est **589**) : ces 16 vérifications n'ont jamais tourné là-bas — voir **M-04** | **Geste de 2 minutes par Romain** : coller `backend/Tests.gs` dans Apps Script, relancer `lancerTestsFFR`. **589/589 attendu.** C'est aussi le seul contrôle simple contre **M-02** |
 
 ### Points levés
 
@@ -389,6 +385,7 @@ vérification supplémentaire.
 | **I-13** | Le redéploiement du backend a-t-il eu lieu, et la correction de R-014 est-elle active ? | ✅ **LEVÉ — oui.** Le diagnostic « Tester la remontée » confirme la chaîne complète : écriture, relecture, et 109 relevés. ⚠️ **Corrigé le 2026-08-05** : ces relevés viennent des **appareils de Romain**, pas de spectateurs. **La preuve tient quand même** — des relevés ont bien été écrits puis relus. R-014 reste **TESTÉ**. | 2026-08-04, session 6 |
 | **I-11** | Comment la Web App est-elle réellement publiée chez Google ? | ✅ **LEVÉ — « Exécuter en tant que : Moi » et « Qui a accès : Tout le monde ».** Capture de l'écran de déploiement fournie par Romain. « Tout le monde » veut dire **sans compte Google, sans rien**. C'est le réglage **nécessaire** (les spectateurs doivent pouvoir lire les scores) : rien à y changer. Mais cela confirme que R-014 n'exigeait aucun préalable — d'où sa correction immédiate. | 2026-08-04, session 6 |
 | **I-12** | Les deux clés sont-elles des suites aléatoires ou des mots choisis à la main ? | ⚠️ **LEVÉ — ce sont des MOTS choisis par Romain** : *« pour les MDP c'est moi qui ai choisi ce sont des mots »*. C'est la réponse défavorable : **R-019 passe de P2 à P1**. Le remède ne demande aucun code — remplacer les deux clés par des suites aléatoires (**D-017**). | 2026-08-04, session 6 |
+| **I-17** | Les 16 vérifications de R-014 passent-elles **chez Google** ? | ✅ **LEVÉ — OUI, `R92 — 589/589 OK, 0 FAIL`.** Romain a recollé `backend/Tests.gs` dans Apps Script et relancé `lancerTestsFFR` le jour même où le problème a été signalé. Deux contrôles croisés sur la capture : le **nombre** (589 = le compte du fichier *après* la correction ; 573 était celui d'avant) et la **dernière ligne du fichier** (3711 = exactement le nombre de lignes de `backend/Tests.gs`). **M-04 refermé** ; la 2ᵉ preuve du statut TESTÉ de **R-014** est reconstituée. ⚠️ **Portée exacte** : les tests tournent dans l'**éditeur**, donc contre le `Code.gs` **du projet** — pas nécessairement contre la version figée à l'adresse publique. **M-02 fortement réduit, pas supprimé.** | 2026-08-05, session 8 |
 | **I-04** | L'application a-t-elle servi un tournoi réel ? | ✅ **LEVÉ — non : le tournoi actuellement en base est un tournoi de TEST.** Romain : « c'est juste un faux tournoi avec de vrais noms ». Les noms d'équipes visibles (Racing 92, Stade Français, Clamart, Meudon, Vélizy, Antony, Sèvres, Issy-les-Moulineaux) sont de vrais clubs, mais les engagements sont fictifs. | 2026-08-04, session 2 |
 
 > ✅ **À retenir de I-03 + I-04** : le classeur ne contient **aucune donnée personnelle de tiers**
@@ -454,10 +451,10 @@ vérification supplémentaire.
 | **I-10** | **Question à la FFR** : le sort d'un match qui n'a pas pu se jouer (forfait, intempéries) est-il encadré ? | **Question sortante** — Directeur EDR du Racing / Comité 92. Le délai de réponse ne dépend pas de nous. Une règle fédérale primerait sur **D-011** et **D-015** |
 | **I-15** | **Question au club** : le droit à l'image des enfants est-il géré ailleurs (licence FFR, document du club, consigne aux clubs invités) ? | **Question sortante** — même raison. Le mécanisme a été retiré de l'application le 2026-08-03 sur décision du club, sans que rien n'écrive ce qui l'a remplacé (**R-036**) |
 
-| **I-17** | **Recoller `Tests.gs` chez Google et relancer `lancerTestsFFR`** (589/589 attendu) | Comme D-017, ce n'est **pas une question, c'est une action** : deux minutes. Elle referme **M-04** (une preuve fausse au dossier) et fournit le seul contrôle simple contre **M-02** (le code en service est-il le bon ?) |
+| ~~**I-17**~~ | ~~Recoller `Tests.gs` chez Google et relancer~~ | ✅ **FAIT le 2026-08-05 — `589/589 OK, 0 FAIL`.** M-04 refermé |
 
-> Ces quatre-là ne coûtent rien à traiter tout de suite, et les garder en réserve ne protégerait
-> rien. **Un P0 découvert dans un audit à venir constituerait une cinquième exception** : il
+> Ces trois-là ne coûtent rien à traiter tout de suite, et les garder en réserve ne protégerait
+> rien. **Un P0 découvert dans un audit à venir constituerait une quatrième exception** : il
 > serait présenté immédiatement, comme R-014 l'a été (**D-016**).
 
 ### 10.2 — Décisions en attente
@@ -483,7 +480,6 @@ vérification supplémentaire.
 | **I-14** | Qui est officiellement responsable des données, et le classeur doit-il rester dans un compte individuel ? | Réponse de Romain **au déclencheur** — non bloquant aujourd'hui (**D-021**) | **B** — **R-039** |
 | **I-15** | Le droit à l'image des enfants est-il géré ailleurs ? | **Question sortante** — voir §10.1 | **B** — **R-036** |
 | **I-16** | Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page de confidentialité ? | Vérification de Romain, ou extension du périmètre (**D-005**) | **B** — **D-018** |
-| **I-17** | Les 16 vérifications de R-014 passent-elles **chez Google** — et le `Code.gs` en service est-il le bon ? | **Geste de 2 minutes** — voir §10.1 | **D** — **M-04**, **M-02**, R-014 |
 
 ### 10.4 — Comment ce registre sera traité
 
