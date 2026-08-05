@@ -541,12 +541,19 @@ vérification supplémentaire.
 
 **Dernière mise à jour du registre** : 2026-08-05 (fin du domaine F).
 
-> ✅ **Le domaine F n'a ajouté AUCUNE décision en attente**, mais **deux inconnues** — et **I-18 a
-> été levée le soir même** : Romain a fourni le journal d'exécution, 128 exécutions ont été
-> analysées, et la capacité est désormais **chiffrée entre 150 et 300 spectateurs**. **Il ne reste
-> que I-19** : combien de monde vient réellement ? C'est **la seule question qui décide**, et elle
-> n'est pas technique. Une décision en naîtra à l'ÉTAPE 3 : **allonger le rafraîchissement**
-> (gratuit, double la capacité) et **allumer ou non le relais**.
+> ✅ **Le domaine F n'a ajouté AUCUNE décision en attente**, mais **deux inconnues — et les deux
+> ont bougé le soir même.**
+>
+> **I-18 est LEVÉE** : 128 exécutions réelles analysées, la capacité est chiffrée.
+>
+> **I-19 est REFORMULÉE**, parce que Romain a montré qu'elle était **mal posée** : le nombre de
+> spectateurs n'est pas prévisible (il dépend des équipes, des éducateurs, des parents présents
+> **et de ceux qui suivent depuis la maison ou le travail** — un public que l'audit avait
+> entièrement oublié). Sa remarque a **corrigé une conclusion trop pessimiste** : la capacité se
+> compte en **écrans allumés sur la page**, pas en personnes — or la page **se met en pause** dès
+> que l'onglet n'est plus visible. **Conduite à tenir qui en découle** : porter le rafraîchissement
+> de 15 s à 30 s (**R-064**, un chiffre à changer) suffit jusqu'à ~1 000 personnes qui suivent ;
+> le relais (**R-061**) ne devient nécessaire qu'au-delà. Détail : `AUDIT.md` **§F.10**.
 >
 > ✅ **Le domaine E n'avait ajouté AUCUNE décision en attente et AUCUNE inconnue.** Ses 10 problèmes
 > sont des **choix techniques** — ils n'appellent aucun arbitrage de Romain pour être constatés,
@@ -594,7 +601,7 @@ vérification supplémentaire.
 | **I-15** | Le droit à l'image des enfants est-il géré ailleurs ? | **Question sortante** — voir §10.1 | **B** — **R-036** |
 | **I-16** | Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page de confidentialité ? | Vérification de Romain, ou extension du périmètre (**D-005**) | **B** — **D-018** |
 | ~~**I-18**~~ | ~~Combien de temps une demande occupe-t-elle réellement le serveur de Google ?~~ | ✅ **LEVÉE le 2026-08-05** — 128 exécutions analysées, capacité ≈ 150-300 spectateurs. Voir §8 et `AUDIT.md` §F.9 | ~~F~~ |
-| **I-19** | **Combien de spectateurs sont réellement attendus au tournoi ?** ⚠️ **Depuis que I-18 est levée, c'est LA question qui décide** : sous ~150 personnes on ne touche à rien, au-delà il faut agir | Réponse de Romain — connaissance de terrain, pas donnée technique | **F** — **R-061**, **R-064** |
+| **I-19** *(reformulée le 2026-08-05)* | **Quelle part du public regarde son écran au MÊME INSTANT lors d'un pic** (fin de match, annonce du classement) ? ⚠️ **La question d'origine — « combien de spectateurs ? » — était mal posée** : Romain a montré qu'elle n'est pas prévisible (elle dépend des équipes présentes, des éducateurs, des parents sur place **et de ceux qui suivent depuis la maison ou le travail**). Elle est en revanche **calculable** : `Equipes` porte déjà `nb_joueurs` et `nb_educateurs`, remplies par les clubs à leur réponse | Le seul paramètre qui ne se déduit d'aucune donnée. La page se mettant en pause quand l'onglet n'est pas visible, seuls comptent les **écrans allumés sur la page** | **Observation le jour J** : regarder le journal « Exécutions » **pendant** le tournoi | **F** — **R-061**, **R-064** |
 
 ### 10.4 — Comment ce registre sera traité
 

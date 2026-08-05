@@ -1906,3 +1906,64 @@ redéploiement, ce numéro doit changer.** À inscrire dans la procédure de dé
 **I-19 uniquement** : combien de spectateurs viennent réellement ? **C'est désormais la seule
 question qui décide** — sous ~150 personnes, on ne touche à rien ; au-delà, il faut agir. Elle
 n'est pas technique.
+
+---
+
+## SESSION 10 *(suite)* — I-19 reformulée : le public invisible
+
+**2026-08-05.** Interrogé sur le nombre de spectateurs, Romain répond que c'est **« difficilement
+quantifiable »** — et donne la structure : équipes présentes, éducateurs bénévoles, parents sur
+place, **et surtout les parents qui n'ont pas pu venir et suivent depuis la maison ou le travail**.
+
+### Ce que cet apport a corrigé
+
+**Une conclusion de F.9 était trop pessimiste.** Elle disait « capacité 150 à 300 spectateurs ».
+L'erreur était d'interprétation, pas de mesure : *« exécution simultanée »* avait été assimilé à
+*« spectateur »*.
+
+Or **la page se met en pause dès que l'onglet n'est plus visible** — un comportement déjà codé,
+déjà salué en F.2, mais dont la conséquence n'avait pas été tirée. **La bonne unité est l'écran
+allumé sur la page, pas la personne.** Un parent qui regarde le match ne coûte rien.
+
+### Ce que l'apport ajoute
+
+Deux publics au comportement **opposé**, et le second n'avait jamais été envisagé :
+
+- **sur place** : regarde le terrain, téléphone en poche → **coût faible** ;
+- **à distance** : l'écran **est** le seul lien avec le tournoi → **2 à 3 fois plus de charge par
+  personne**.
+
+> **Contre-intuitif, et il fallait l'entendre d'un homme de terrain** : *les gens qui ne sont pas
+> venus pèsent plus lourd sur le serveur que ceux qui sont là.*
+
+### Conduite à tenir qui en découle
+
+| Public total qui suit | Avec 15 s *(aujourd'hui)* | Avec **30 s** |
+|---|---|---|
+| 400 | ✅ | ✅ |
+| **700** | ❌ saturé au pic | ✅ |
+| 1 000 | ❌ | limite |
+
+- **Le tournoi actuel tient en régime courant** (~145 écrans actifs pour une capacité de 310) ;
+  **la saturation n'arrive que dans les pics** (fin de match, annonce du classement).
+- **R-064 (15 s → 30 s) suffit** jusqu'à ~1 000 personnes qui suivent. Un chiffre, gratuit.
+- **R-061 (le relais) redescend en urgence sans changer de priorité** : il reste **P1** — il
+  faudra l'allumer un jour, et un dispositif jamais essayé n'est pas un dispositif — mais **ce
+  n'est pas le geste utile aujourd'hui**.
+
+### I-19 n'est pas levée : elle est **reformulée**
+
+Réclamer un nombre de spectateurs était **une mauvaise question** — Romain a eu raison de refuser
+d'inventer un chiffre. Ce qui la remplace :
+
+- **la partie calculable** : `Equipes` porte déjà `nb_joueurs` et `nb_educateurs`, remplies par
+  les clubs à leur réponse d'invitation. **Le jour où de vrais clubs auront répondu, l'application
+  connaîtra elle-même le public concerné** ;
+- **la partie qui restera inconnue jusqu'au jour J** : la **part du public qui regarde au même
+  instant** lors d'un pic. Elle ne se déduit d'aucune donnée — elle s'observera **pendant** le
+  tournoi, dans le journal « Exécutions ».
+
+> 📌 **Leçon de méthode.** Une inconnue mal posée produit une réponse inutile. Ici, la bonne
+> question n'était pas *« combien de monde ? »* mais *« combien d'écrans allumés au même
+> instant ? »* — et c'est la connaissance métier de Romain, pas la mesure, qui l'a fait
+> apparaître.

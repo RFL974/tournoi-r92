@@ -4303,3 +4303,93 @@ redéploiement a lieu, ce numéro doit changer.** À noter dans la procédure de
 | Le plafond des « ~30 exécutions simultanées » est-il exact pour ce compte ? | **PROBABLE** — chiffre de la documentation Google, repris par `docs/relais-cdn.md`, jamais vérifié en conditions réelles |
 | D'où viennent les pics à 13 s, 15,9 s et 19,6 s ? | **INCONNU** — ils ne suivent aucun motif visible ; `ping` seul prenant déjà 1,6 s, la plateforme reste l'explication la plus probable |
 
+
+---
+
+## F.10 — I-19 : ce que Romain a apporté, et la correction que cela impose
+
+> **2026-08-05, même journée.** Interrogé sur le nombre de spectateurs attendus (**I-19**),
+> Romain répond qu'il est **« difficilement quantifiable »** — puis en donne la **structure**, qui
+> vaut mieux qu'un chiffre :
+>
+> *« ça dépend du nombre d'équipes présentes, du nombre d'éducateurs bénévoles, du nombre de
+> parents d'enfants présents dans les équipes — et surtout **les parents qui n'ont pas pu venir et
+> qui suivent aussi les scores depuis la maison** car le petit frère dort, **depuis le travail**. »*
+
+### ⚠️ Correction d'une conclusion de F.9
+
+**F.9 concluait : « capacité 150 à 300 spectateurs ».** C'est **trop pessimiste**, et l'erreur
+est d'interprétation, pas de mesure : j'ai assimilé *« exécution simultanée »* à *« spectateur »*.
+
+Or **la page se met en pause dès que l'onglet n'est plus visible** — écran éteint, autre
+application, autre onglet. C'est un comportement **déjà codé et vérifié** (`visibilitychange` dans
+`frontend/js/tournoi.js`), salué en F.2, mais dont je n'avais pas tiré la conséquence.
+
+> **La bonne unité n'est pas « spectateurs », c'est « écrans allumés sur la page au même
+> instant ».** Un parent qui regarde le match ne regarde pas son téléphone : il ne coûte rien.
+>
+> **La capacité de ≈ 310 correspond donc à un public bien plus large que 310 personnes.**
+
+### Ce que l'apport de Romain change vraiment
+
+Il fait apparaître **deux publics au comportement opposé**, et le second n'avait jamais été
+envisagé :
+
+| Public | Comportement | Coût pour le serveur |
+|---|---|---|
+| **Sur place** *(parents, éducateurs, bénévoles)* | Regarde le **match**, téléphone en poche. Sort l'écran par à-coups | **Faible** — ~10 % du temps |
+| **À distance** *(maison, travail)* | Ne voit rien du terrain : **l'écran EST le seul lien**. Consulte bien plus souvent | **2 à 3 fois plus élevé, par personne** |
+
+**C'est contre-intuitif et il fallait le dire** : *les gens qui ne sont pas venus pèsent plus lourd
+sur le serveur que ceux qui sont là.*
+
+### Le modèle, appliqué au tournoi actuel (37 équipes U8/U10)
+
+~407 enfants, ~111 éducateurs → un public concerné d'environ **950 personnes**.
+
+- **En régime courant** : ≈ **145 écrans actifs** — largement sous la capacité de 310. ✅
+- **Au pic** (fin de match, mi-temps, annonce du classement — *tout le monde sort son téléphone en
+  même temps*) : **c'est là, et seulement là, que ça se joue**.
+
+| Part du public qui regarde au même instant | Écrans actifs | Verdict |
+|---|---|---|
+| 20 % | ≈ 195 | limite |
+| 30 % | ≈ 290 | limite |
+| **40 % et plus** | **≈ 385+** | ❌ **saturation** |
+
+### Le point de bascule, enfin chiffré
+
+| Public total qui suit | Pic estimé | Avec 15 s *(aujourd'hui)* | Avec **30 s** |
+|---|---|---|---|
+| 400 personnes | ≈ 140 | ✅ | ✅ |
+| **700 personnes** | ≈ 245 | ❌ saturé | ✅ |
+| 1 000 personnes | ≈ 350 | ❌ | ❌ *(limite)* |
+| 1 500 personnes | ≈ 525 | ❌ | ❌ |
+
+> ### Ce que cela donne comme conduite à tenir
+>
+> 1. **Le tournoi actuel est à la limite — mais seulement dans les pics.** Pas en régime courant.
+> 2. **Porter le rafraîchissement de 15 s à 30 s (R-064) suffit** jusqu'à environ **1 000 à 1 200
+>    personnes qui suivent**. Un chiffre à changer, gratuit, sans risque.
+> 3. **Le relais (R-061) ne devient nécessaire qu'au-delà** — c'est-à-dire pour le tournoi que le
+>    club vise peut-être un jour, pas pour celui de cette année.
+>
+> **R-061 redescend donc d'un cran en urgence, sans changer de priorité** : il reste P1 parce
+> qu'il faudra l'allumer un jour, et parce qu'un dispositif jamais essayé n'est pas un dispositif.
+> Mais **le geste utile aujourd'hui, c'est R-064**, pas le relais.
+
+### I-19 : levée ? Non — **remplacée par quelque chose de mieux**
+
+Romain a raison : le nombre exact **n'est pas connaissable à l'avance**, et le lui réclamer était
+une mauvaise question. Elle est donc **reformulée** :
+
+> **I-19 (reformulée)** — Le nombre de spectateurs n'est pas prévisible, mais il est
+> **calculable** : l'onglet `Equipes` porte déjà les colonnes **`nb_joueurs`** et
+> **`nb_educateurs`**, remplies par les clubs au moment de leur réponse à l'invitation.
+> **Le jour où de vrais clubs auront répondu, l'application connaîtra elle-même le public
+> concerné** — il ne restera qu'à appliquer les ratios ci-dessus.
+
+**Ce qui reste INCONNU, et le restera jusqu'à un vrai tournoi** : la **part du public qui regarde
+au même instant** lors d'un pic. C'est le seul paramètre du modèle qui ne se déduit d'aucune
+donnée — il s'observera le jour J, en regardant le journal « Exécutions » **pendant** le tournoi.
+
