@@ -4,7 +4,7 @@
 > Il est court **volontairement**. Il est mis à jour **à la fin de chaque session**.
 > Le détail vit dans `PLAN.md`, `RISQUES.md`, `DECISIONS.md`, `SESSIONS.md`.
 
-**Dernière mise à jour** : 2026-08-05 (session 10, close — **domaine F audité, deux inconnues ouvertes**)
+**Dernière mise à jour** : 2026-08-05 (session 10, close — **domaine F audité ; I-18 levée le soir même**)
 **Commit de référence** : `48e3451` sur **`main`** — la session 10 part de là.
 **Documentation uniquement — aucun fichier de l'application modifié**, aucun redéploiement requis.
 
@@ -90,16 +90,18 @@ fois vraie.
 tôt ne coûte rien et peut faire gagner des semaines. Ce sont les deux seules exceptions à D-024,
 avec D-017.
 
-**4. ⏱️ NOUVEAU (session 10) — regarder combien de temps dure vraiment une exécution chez
-Google** — **I-18**. Éditeur Apps Script → onglet **« Exécutions »** → la durée d'un `doGet`
-récent. **Cinq minutes, aucune ligne de code.** C'est le seul chiffre qui manque pour savoir si
-la page des scores tiendra le jour d'affluence. Sans lui, **toute réponse sur la capacité est du
-bavardage** — y compris une réponse rassurante.
+**4. ✅ FAIT le 2026-08-05 — I-18 levée.** Romain a fourni **trois pages** du journal
+« Exécutions ». **128 exécutions réelles analysées, 100 % « Terminée », aucun échec.** Le
+résultat n'est pas celui qu'on espérait : une lecture occupe le serveur **1,65 s** — alors que
+`ping`, qui n'exécute **rien**, en occupe déjà **1,59 s**. Le cache est donc **excellent**
+(+0,06 s pour servir tout le tournoi), mais **~1,6 s de démarrage par appel est incompressible**.
+**Capacité : 150 à 300 spectateurs, pas 1 300.** Détail complet en `AUDIT.md` **§F.9**.
 
-**5. 🏉 NOUVEAU (session 10) — et une question à laquelle toi seul peux répondre** : **combien
-de spectateurs viennent réellement ?** (**I-19**). Le chiffre de **1 300** est écrit dans
-`docs/relais-cdn.md`, **sans source**. C'est lui qui décide s'il faut allumer le relais
-anti-affluence (**R-061**) ou le laisser dormir. Ce n'est pas une question technique : c'est ta
+**5. 🏉 LA question, et toi seul peux y répondre** : **combien de spectateurs viennent
+réellement ?** (**I-19**). Le chiffre de **1 300** est écrit dans `docs/relais-cdn.md`, **sans
+source**. Depuis que I-18 est levée, **c'est la seule question qui décide** : sous ~150 personnes,
+on ne touche à rien ; au-delà, il faut allonger le rafraîchissement (gratuit, double la capacité)
+et probablement allumer le relais (**R-061**). Ce n'est pas une question technique : c'est ta
 connaissance du terrain.
 
 **6. Rien d'autre.** Les trois questions du domaine B — **D-018, D-019, D-020** — ont été
@@ -464,7 +466,6 @@ vérification supplémentaire.
 | **I-14** | **Qui est officiellement responsable** de ces données — l'association Génération R92, le Racing 92, ou Romain à titre personnel ? Et le classeur doit-il rester dans un **compte Google individuel** ? | Aucun document du dépôt ne le dit. Ce n'est pas qu'un sujet RGPD : si ce compte est perdu ou bloqué, **l'association perd d'un coup son carnet d'adresses, ses images et son historique** | Réponse de Romain, à écrire dans `DECISIONS.md`. Elle conditionne D-018 (les textes doivent nommer le responsable) — voir **R-039** |
 | **I-15** | **Le droit à l'image des enfants est-il géré ailleurs** — par la licence FFR, un document du club, une consigne aux clubs invités ? | Le mécanisme existait dans l'application et a été **retiré sur décision du club** le 2026-08-03. Le modèle `.docx` reste dans le dépôt, plus rien ne le charge. **Rien n'écrit ce qui l'a remplacé** | Question de Romain au club. Tant que la réponse est inconnue, ce n'est **pas un défaut du code** — voir **R-036** |
 | **I-16** | **Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page « Vos données » ?** | C'est un **autre dépôt**, hors périmètre tant que D-005 n'est pas tranchée — or c'est l'endroit naturel de la page prévue par D-018 | Vérification par Romain, ou extension du périmètre (D-005) |
-| **I-18** | **Combien de temps une demande occupe-t-elle réellement le serveur de Google ?** C'est le seul chiffre qui manque pour savoir **combien de spectateurs l'application peut servir**. Le temps que j'ai mesuré (≈ 2 s) inclut tout le transport ; la durée d'**exécution**, elle, est bien plus courte — et c'est elle qui compte, car Apps Script n'accepte qu'**environ 30 traitements en même temps**. Selon ce chiffre, la limite se situe vers **250** (si 2 s), **1 000** (si 0,5 s) ou **5 000** spectateurs (si 0,1 s) | Le temps mesuré depuis l'extérieur ne distingue pas le transport du calcul. Google, lui, l'inscrit | **Cinq minutes, aucun code** : éditeur Apps Script → « Exécutions » → regarder la durée d'un `doGet` récent. **Sans ce chiffre, toute affirmation sur la capacité est du bavardage** — y compris rassurante |
 | **I-19** | **Combien de spectateurs sont réellement attendus ?** Le chiffre de **1 300** vient de `docs/relais-cdn.md`, **sans source**. C'est lui qui décide s'il faut allumer le relais (**R-061**) ou non | Aucun document du dépôt ne le justifie. C'est une connaissance de terrain, pas une donnée technique | Réponse de Romain — **il est le seul à savoir** combien de familles viennent à ce tournoi |
 
 ### Points levés
@@ -478,6 +479,7 @@ vérification supplémentaire.
 | **I-11** | Comment la Web App est-elle réellement publiée chez Google ? | ✅ **LEVÉ — « Exécuter en tant que : Moi » et « Qui a accès : Tout le monde ».** Capture de l'écran de déploiement fournie par Romain. « Tout le monde » veut dire **sans compte Google, sans rien**. C'est le réglage **nécessaire** (les spectateurs doivent pouvoir lire les scores) : rien à y changer. Mais cela confirme que R-014 n'exigeait aucun préalable — d'où sa correction immédiate. | 2026-08-04, session 6 |
 | **I-12** | Les deux clés sont-elles des suites aléatoires ou des mots choisis à la main ? | ⚠️ **LEVÉ — ce sont des MOTS choisis par Romain** : *« pour les MDP c'est moi qui ai choisi ce sont des mots »*. C'est la réponse défavorable : **R-019 passe de P2 à P1**. Le remède ne demande aucun code — remplacer les deux clés par des suites aléatoires (**D-017**). | 2026-08-04, session 6 |
 | **I-17** | Les 16 vérifications de R-014 passent-elles **chez Google** ? | ✅ **LEVÉ — OUI, `R92 — 589/589 OK, 0 FAIL`.** Romain a recollé `backend/Tests.gs` dans Apps Script et relancé `lancerTestsFFR` le jour même où le problème a été signalé. Deux contrôles croisés sur la capture : le **nombre** (589 = le compte du fichier *après* la correction ; 573 était celui d'avant) et la **dernière ligne du fichier** (3711 = exactement le nombre de lignes de `backend/Tests.gs`). **M-04 refermé** ; la 2ᵉ preuve du statut TESTÉ de **R-014** est reconstituée. ⚠️ **Portée exacte** : les tests tournent dans l'**éditeur**, donc contre le `Code.gs` **du projet** — pas nécessairement contre la version figée à l'adresse publique. **M-02 fortement réduit, pas supprimé.** | 2026-08-05, session 8 |
+| **I-18** | **Combien de temps une demande occupe-t-elle réellement le serveur de Google ?** | ✅ **LEVÉE — 1,59 s pour ne RIEN faire, 1,65 s pour tout servir.** Romain a fourni **trois pages** du journal « Exécutions » : **128 exécutions réelles, 100 % « Terminée », aucun échec**. Lectures : médiane **2,07 s** (max 19,55 s). Écritures : médiane **2,67 s** (max 8,20 s) — ce qui **confirme** l'estimation « PROBABLE 3 à 8 s » de R-067, désormais **CERTAIN**. ⚠️ **Trois conséquences** : (1) **capacité ≈ 150 à 300 spectateurs, pas 1 300** ; (2) le commentaire de `doGet` (« quelques millisecondes ») est **faux de deux ordres de grandeur** — le coût est un **démarrage incompressible de ~1,6 s**, que le code ne peut pas réduire ; (3) **levier gratuit** : porter le rafraîchissement de 15 s à 30 s **double la capacité**. ✅ Au passage, une trace inédite pour **M-02** : les exécutions web portent **« Version 148 »**, l'éditeur **« Head »** — le mécanisme du risque est constaté directement. Détail : `AUDIT.md` §F.9 | 2026-08-05, session 10 |
 | **I-05** | Qui utilise l'administration le jour J, et sur quel matériel ? | ✅ **LEVÉE — partiellement, et c'est suffisant pour le domaine E.** Réponses de Romain : **création du tournoi depuis un ordinateur** ; **scores saisis par des bénévoles sur leur propre téléphone** *(à confirmer)* ; **qui** fera quoi le jour J n'est **pas encore décidé** — on raisonne donc sur quelqu'un **qui n'a pas été formé** ; **réseau excellent au Racing** (Plessis-Robinson, Colombes, 5G), **inconnu ailleurs**. ⚠️ **« Leur propre téléphone » est la contrainte la plus lourde** : matériel **inconnu** (petit écran, vieil appareil, plein soleil) — d'où les mesures faites jusqu'à **320 px** de large. | 2026-08-05, session 9 |
 | **I-04** | L'application a-t-elle servi un tournoi réel ? | ✅ **LEVÉ — non : le tournoi actuellement en base est un tournoi de TEST.** Romain : « c'est juste un faux tournoi avec de vrais noms ». Les noms d'équipes visibles (Racing 92, Stade Français, Clamart, Meudon, Vélizy, Antony, Sèvres, Issy-les-Moulineaux) sont de vrais clubs, mais les engagements sont fictifs. | 2026-08-04, session 2 |
 
@@ -539,11 +541,12 @@ vérification supplémentaire.
 
 **Dernière mise à jour du registre** : 2026-08-05 (fin du domaine F).
 
-> ✅ **Le domaine F n'a ajouté AUCUNE décision en attente**, mais **deux inconnues** — **I-18** et
-> **I-19** — qui ont ceci de particulier qu'elles se lèvent **sans écrire une ligne de code** :
-> l'une se lit dans le journal de Google en cinq minutes, l'autre est une question à laquelle
-> **seul Romain peut répondre** (combien de monde vient, réellement ?). Une décision naîtra d'elles
-> à l'ÉTAPE 3 : **allumer ou non le relais**.
+> ✅ **Le domaine F n'a ajouté AUCUNE décision en attente**, mais **deux inconnues** — et **I-18 a
+> été levée le soir même** : Romain a fourni le journal d'exécution, 128 exécutions ont été
+> analysées, et la capacité est désormais **chiffrée entre 150 et 300 spectateurs**. **Il ne reste
+> que I-19** : combien de monde vient réellement ? C'est **la seule question qui décide**, et elle
+> n'est pas technique. Une décision en naîtra à l'ÉTAPE 3 : **allonger le rafraîchissement**
+> (gratuit, double la capacité) et **allumer ou non le relais**.
 >
 > ✅ **Le domaine E n'avait ajouté AUCUNE décision en attente et AUCUNE inconnue.** Ses 10 problèmes
 > sont des **choix techniques** — ils n'appellent aucun arbitrage de Romain pour être constatés,
@@ -590,8 +593,8 @@ vérification supplémentaire.
 | **I-14** | Qui est officiellement responsable des données, et le classeur doit-il rester dans un compte individuel ? | Réponse de Romain **au déclencheur** — non bloquant aujourd'hui (**D-021**) | **B** — **R-039** |
 | **I-15** | Le droit à l'image des enfants est-il géré ailleurs ? | **Question sortante** — voir §10.1 | **B** — **R-036** |
 | **I-16** | Le site vitrine `boutique-r92` porte-t-il déjà des mentions légales ou une page de confidentialité ? | Vérification de Romain, ou extension du périmètre (**D-005**) | **B** — **D-018** |
-| **I-18** | Combien de temps une demande occupe-t-elle réellement le serveur de Google ? | **Cinq minutes, aucun code** : éditeur Apps Script → « Exécutions » → durée d'un `doGet` | **F** — **R-061**, **R-062** |
-| **I-19** | Combien de spectateurs sont réellement attendus au tournoi ? | Réponse de Romain — connaissance de terrain | **F** — **R-061** |
+| ~~**I-18**~~ | ~~Combien de temps une demande occupe-t-elle réellement le serveur de Google ?~~ | ✅ **LEVÉE le 2026-08-05** — 128 exécutions analysées, capacité ≈ 150-300 spectateurs. Voir §8 et `AUDIT.md` §F.9 | ~~F~~ |
+| **I-19** | **Combien de spectateurs sont réellement attendus au tournoi ?** ⚠️ **Depuis que I-18 est levée, c'est LA question qui décide** : sous ~150 personnes on ne touche à rien, au-delà il faut agir | Réponse de Romain — connaissance de terrain, pas donnée technique | **F** — **R-061**, **R-064** |
 
 ### 10.4 — Comment ce registre sera traité
 

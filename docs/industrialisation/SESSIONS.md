@@ -1841,3 +1841,68 @@ règles écrites deux fois (**R-044**), **aucun outillage**, et **D-005** (le p�
 **R-066** vient de rendre concrète.
 
 **Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+## SESSION 10 *(suite, même jour)* — I-18 levée : les chiffres réels
+
+**2026-08-05, quelques heures après la clôture.** Romain a ouvert le journal « Exécutions »
+d'Apps Script et fourni **trois pages de captures**. **I-18 est levée.**
+
+### Ce qu'il a fallu corriger en chemin
+
+Premier essai : Romain a cliqué sur ▶ **Exécuter** avec `doGet` sélectionné. **Piège** — lancé
+depuis l'éditeur, `doGet` ne reçoit aucun paramètre et retombe sur `action = 'ping'` par défaut.
+**Ce n'est donc pas `getAll` qui a été mesuré, mais l'action vide.** Le bon geste n'était pas de
+*lancer* quelque chose, mais de *regarder ce qui s'était déjà passé* : la page « Exécutions ».
+
+> 📌 **À retenir pour les prochaines fois** : le bouton ▶ de l'éditeur **ne reproduit pas un vrai
+> visiteur**. Pour mesurer la réalité, c'est la page « Exécutions » — accessible en remplaçant
+> `/edit` par `/executions` à la fin de l'adresse.
+
+### Le résultat : 128 exécutions, 0 échec
+
+| Type | Nombre | Médiane | Moyenne | Max |
+|---|---|---|---|---|
+| Lectures `doGet` (Application Web) | **82** | **2,07 s** | 3,16 s | **19,55 s** |
+| Écritures `doPost` (Application Web) | **43** | **2,67 s** | 3,27 s | **8,20 s** |
+| `ping` (bouton ▶, n'exécute **rien**) | 1 | **1,59 s** | — | — |
+
+**Les exécutions du 4 août sont l'usage réel de Romain**, pas mes mesures — et elles disent la
+même chose (écritures 2,40 s de médiane, lectures 3,11 s). **L'audit et la vie réelle
+concordent.**
+
+### Cinq conséquences
+
+1. **Le cache est excellent, et le code n'y est pour presque rien.** Servir tout le tournoi coûte
+   **+0,06 s** par rapport à ne rien faire du tout. Mais **~1,6 s de démarrage par appel est
+   incompressible** — ce n'est ni le code, ni le classeur, c'est Apps Script.
+2. ⚠️ **Un commentaire du code est faux de deux ordres de grandeur.** `doGet` affirme *« servi du
+   cache, répond en quelques millisecondes »* : la mesure dit **1 650 millisecondes**. L'intention
+   était juste, le chiffre non — **et c'est sur ce chiffre que reposait l'idée d'une capacité
+   confortable**.
+3. **La capacité est chiffrée : 150 à 300 spectateurs, pas 1 300.** **R-061** passe d'un risque
+   théorique à un risque **mesuré**.
+4. **Un levier gratuit apparaît, plus puissant que tout le reste** : porter le rafraîchissement de
+   **15 s à 30 s double la capacité** (≈ 550). Un seul chiffre à changer. **R-064 est élargi** :
+   le vrai sujet n'est pas la durée du cache, c'est que **les réglages de cadence n'ont jamais été
+   accordés entre eux**.
+5. **R-067 passe de PROBABLE à CERTAIN.** L'estimation « 3 à 8 s pour une validation de score »
+   est confirmée par **43 écritures réelles** (médiane 2,67 s, max 8,20 s, dont 7 au-dessus de
+   5 s). Et le journal du 4 août montre **quatre exécutions démarrées à la même seconde** : la
+   concurrence existe déjà avec une seule personne aux commandes. **R-053 (le bouton muet) est
+   définitivement confirmé.**
+
+### Une trouvaille qui n'était pas cherchée — une trace pour M-02
+
+La colonne « Déploiement » distingue **« Version 148 »** (toutes les exécutions Application Web)
+de **« Head »** (celles lancées depuis l'éditeur). **C'est le mécanisme de M-02 constaté
+directement** : l'adresse publique sert une **version figée**, pas le code de l'éditeur. Cela ne
+prouve pas une divergence — mais cela donne enfin un repère concret : **le jour d'un
+redéploiement, ce numéro doit changer.** À inscrire dans la procédure de déploiement.
+
+### Ce qui reste ouvert
+
+**I-19 uniquement** : combien de spectateurs viennent réellement ? **C'est désormais la seule
+question qui décide** — sous ~150 personnes, on ne touche à rien ; au-delà, il faut agir. Elle
+n'est pas technique.

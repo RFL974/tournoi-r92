@@ -4164,3 +4164,142 @@ constater** ; une le sera à l'ÉTAPE 3 : allumer ou non le relais.
 > les tests du domaine D — le gain est réel, mais il se paie d'un risque sur l'affichage des
 > scores, et `CLAUDE.md` §11 place la fiabilité avant la performance. Ne pas allumer le relais
 > « au cas où » sans l'avoir essayé avant le jour J.
+
+---
+
+## F.9 — ✅ I-18 LEVÉE LE JOUR MÊME — les chiffres réels, et ce qu'ils changent
+
+> **2026-08-05, quelques heures après la clôture du domaine F.** Romain a ouvert le journal
+> « Exécutions » d'Apps Script et fourni **trois pages de captures**. L'inconnue **I-18** — *combien
+> de temps une demande occupe-t-elle réellement le serveur de Google ?* — est **levée**.
+>
+> ⚠️ **Elle ne se lève pas dans le sens espéré.** Trois conclusions du domaine F changent, une
+> quatrième se confirme, et un cinquième fait apparaît qui n'était pas cherché.
+
+### Ce qui a été relevé
+
+**128 exécutions réelles**, toutes à l'état **« Terminée »** — **aucun échec, aucun dépassement de
+délai, sur trois pages de journal**. Elles se répartissent ainsi :
+
+| Type | Ce que c'est | Nombre | Médiane | Moyenne | Maximum |
+|---|---|---|---|---|---|
+| `doGet` (Application Web) | Une lecture — un spectateur qui regarde les scores | **82** | **2,07 s** | 3,16 s | **19,55 s** |
+| `doPost` (Application Web) | Une **écriture** — un marqueur qui valide un score | **43** | **2,67 s** | 3,27 s | **8,20 s** |
+| `doGet` (Éditeur) | Le bouton ▶ de Romain — donc l'action `ping`, qui n'exécute **rien** | 1 | **1,59 s** | — | — |
+| `lancerTestsFFR` (Éditeur) | Les 589 tests | 2 | 2,6 – 3,2 s | — | — |
+| `onOpen` (Déclencheur) | L'ouverture du classeur | 1 | 1,78 s | — | — |
+
+> ✅ **Un point de méthode qui compte** : les exécutions du **4 août** ne sont **pas** les miennes —
+> c'est l'**usage réel de Romain** (administration, saisie de scores). Elles disent la même chose
+> que mes mesures : écritures à **2,40 s de médiane** (max 7,11 s), lectures à **3,11 s**.
+> **L'audit et la vie réelle concordent.**
+
+### Fait n° 1 — Le plancher est bien plus haut qu'annoncé, et le code n'y peut rien
+
+**`ping`, qui ne fait strictement rien, occupe le serveur pendant 1,59 seconde.**
+
+Et la vague de **25 lectures simultanées** — mon test de charge — a une **médiane de 1,65 s**.
+
+> **L'écart entre « ne rien faire » et « servir tout le tournoi depuis le cache » est de
+> 0,06 seconde.**
+
+C'est le résultat le plus important de tout le domaine F, et il dit deux choses opposées :
+
+- ✅ **Le cache est excellent.** Servir l'intégralité des données coûte **6 centièmes de seconde**
+  de plus que renvoyer 48 octets. On ne fera pas mieux.
+- ❌ **Il existe un coût fixe de ~1,6 seconde par appel que rien ne peut réduire.** Ce n'est ni le
+  code du projet, ni le classeur : c'est le démarrage d'une exécution Apps Script.
+
+⚠️ **Une phrase du code est donc à corriger.** Le commentaire de `doGet` affirme : *« servi du
+cache, il doit répondre en quelques millisecondes »*. **C'est faux, et de deux ordres de
+grandeur** : la mesure dit **1 650 millisecondes**. L'intention était juste ; le chiffre ne l'est
+pas — et c'est sur ce chiffre que reposait l'idée que la capacité serait confortable.
+
+### Fait n° 2 — La capacité est maintenant calculable, et elle est basse
+
+Une exécution occupe une place pendant **1,65 s**. Chaque spectateur appelle toutes les **17 s**
+en moyenne. Apps Script accepte **≈ 30 exécutions simultanées**.
+
+| Régime | Durée d'une exécution | Capacité |
+|---|---|---|
+| Tout va bien (cache chaud) | 1,65 s | **≈ 310 spectateurs** |
+| Régime moyen constaté | 3,06 s | **≈ 165 spectateurs** |
+| Cache froid (ou tournoi > 165 matchs, voir **R-062**) | 4,5 s | **≈ 110 spectateurs** |
+
+> **Ordre de grandeur retenu : entre 150 et 300 spectateurs.** Pas 1 300.
+>
+> Et ce sont des **moyennes** : les spectateurs n'arrivent pas régulièrement, et **4 % des appels
+> mesurés ont dépassé 10 secondes** (jusqu'à 19,55 s). Une file d'attente se forme bien avant
+> d'atteindre la moyenne. En exploitation, on ne remplit pas un tel plafond à plus de 50-60 %.
+
+**Ce que ça change pour R-061** : la question n'est plus « faut-il allumer le relais ? » mais
+**« l'affluence dépassera-t-elle 150 personnes ? »**. C'est exactement **I-19**, qui reste
+ouverte, et qui devient **la seule question qui compte**.
+
+### Fait n° 3 — Un levier gratuit, plus puissant que tout le reste
+
+La capacité est proportionnelle à l'intervalle entre deux rafraîchissements. Or il est
+aujourd'hui de **15 secondes** (`INTERVALLE_MS` dans `frontend/js/tournoi.js`).
+
+| Rafraîchissement toutes les… | Capacité |
+|---|---|
+| **15 s** *(aujourd'hui)* | ≈ 310 |
+| **30 s** | **≈ 550** |
+| **45 s** | ≈ 820 |
+| **60 s** | ≈ 1 090 |
+
+**Passer de 15 à 30 secondes double la capacité, gratuitement, en changeant un chiffre.** Pour des
+scores de rugby à VII où un match dure une dizaine de minutes, une fraîcheur de 30 secondes est
+largement suffisante — et le bouton « Rafraîchir » reste là pour qui veut tout de suite.
+
+> C'est **le meilleur rapport bénéfice/risque de tout le chantier de performance**, et il n'était
+> pas visible avant d'avoir le chiffre d'I-18. **Il rejoint R-064**, qui devient : *les réglages de
+> cadence n'ont jamais été accordés entre eux* — ni le cache (10 s) avec l'intervalle (15-19 s),
+> ni l'intervalle avec la capacité réelle du serveur.
+
+### Fait n° 4 — R-067 passe de PROBABLE à CERTAIN
+
+L'audit estimait le coût d'une validation de score à *« 3 à 8 secondes, PROBABLE »*, faute de
+pouvoir chronométrer une écriture. **Le journal contient 43 écritures réelles** :
+
+**médiane 2,67 s · moyenne 3,27 s · maximum 8,20 s** — dont **sept au-dessus de 5 secondes**
+(5,16 · 5,27 · 5,58 · 7,11 · 7,14 · 8,11 · 8,20).
+
+**L'estimation était juste. R-067 devient CERTAIN.** Et comme le verrou est tenu pendant toute
+cette durée :
+
+| Marqueurs qui valident au même instant | Attente du dernier |
+|---|---|
+| 2 | ≈ 5 s |
+| 4 | ≈ 11 s |
+| 6 | ≈ 16 s |
+
+> ⚠️ **Et ce n'est pas théorique** : le journal du 4 août montre **quatre exécutions démarrées à
+> la même seconde** (19:28:42) — trois écritures et une lecture. La concurrence existe déjà, avec
+> une seule personne aux commandes.
+
+> 🔗 **R-053 est définitivement confirmé** : un bouton « Valider » qui ne dit rien pendant **3
+> secondes en moyenne, et jusqu'à 17 secondes** quand plusieurs terrains valident ensemble, est un
+> bouton sur lequel un bénévole va recliquer. Son remède — deux lignes — n'est plus un confort.
+
+### Fait n° 5 — Ce qui n'était pas cherché : une trace pour M-02
+
+La colonne « Déploiement » du journal distingue nettement deux mondes :
+
+- toutes les exécutions **« Application Web »** portent la mention **« Version 148 »** ;
+- celles lancées depuis l'éditeur portent **« Head »** (la version en cours d'édition).
+
+**C'est le mécanisme de M-02, constaté pour la première fois de façon directe** : l'adresse
+publique ne sert pas le code de l'éditeur, elle sert une **version figée**. Cela **ne dit pas**
+que la Version 148 diffère du dépôt — elle en est très probablement identique. Mais cela confirme
+que **les deux peuvent diverger**, et donne enfin un repère concret : **le jour où un
+redéploiement a lieu, ce numéro doit changer.** À noter dans la procédure de déploiement.
+
+### Ce qui reste INCONNU après I-18
+
+| Question | Statut |
+|---|---|
+| Combien de spectateurs sont réellement attendus ? | **INCONNU — I-19**, et c'est désormais **la seule question qui décide** |
+| Le plafond des « ~30 exécutions simultanées » est-il exact pour ce compte ? | **PROBABLE** — chiffre de la documentation Google, repris par `docs/relais-cdn.md`, jamais vérifié en conditions réelles |
+| D'où viennent les pics à 13 s, 15,9 s et 19,6 s ? | **INCONNU** — ils ne suivent aucun motif visible ; `ping` seul prenant déjà 1,6 s, la plateforme reste l'explication la plus probable |
+
