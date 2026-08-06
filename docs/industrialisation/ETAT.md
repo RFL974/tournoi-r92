@@ -9,7 +9,8 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-05 (session 13 + **4 addendums** — **ÉTAPE 3 ouverte, volet ①
+**Dernière mise à jour** : 2026-08-06 (**session 14 — ÉTAPE 3, volet ② terminé** : 6 fiches de
+chantier écrites, C-005 → C-010). *Rappel de la veille : session 13 + **4 addendums*** — **ÉTAPE 3 ouverte, volet ①
 terminé : les 6 décisions en attente sont TRANCHÉES** · ⚡ **une 7ᵉ décision apportée par Romain
 entre au chantier : D-030 — tournoi suspendu / annulé** · ⚡ **I-21 levée par la FFR** · ⚡ **cadre
 de la reprise précisé — 6 contraintes / 8 leviers / 5 principes — et trois fiches de chantier
@@ -28,8 +29,21 @@ registre : R-090, R-091**)
 
 ## 1. EN UNE PHRASE
 
-🏁 **L'ÉTAPE 3 est OUVERTE, et son volet ① est terminé : plus aucune décision n'est en attente, et
-plus aucune inconnue ne bloque le plan.** Les **six décisions** qui traînaient depuis les sessions 1
+🏁 **L'ÉTAPE 3 avance : ses volets ① et ② sont TERMINÉS.** Plus aucune décision n'est en attente,
+plus aucune inconnue ne bloque le plan, et **six chantiers ont désormais une fiche complète**
+(**C-005 → C-010**, session 14) — dont **quatre qui ne dépendent de rien** et peuvent démarrer dès
+validation, **deux d'entre eux refermant des P1** *(les textes d'information, la politique de
+conservation)*. Le volet ② a **corrigé son propre intitulé** au passage : annoncé comme « cinq lots
+sans code », il en compte **deux qui ouvrent des fichiers source** — sans changer un comportement,
+mais en passant obligatoirement par une branche et une relecture *(D-006)*. Une vérification a par
+ailleurs montré que **la partie dangereuse de R-072 était déjà refermée**. **Le volet ③ — les
+chantiers avec code — peut s'ouvrir.**
+
+---
+
+## 1 bis. CE QUE LE VOLET ① AVAIT ÉTABLI *(session 13)*
+
+**Plus aucune décision n'est en attente, et plus aucune inconnue ne bloque le plan.** Les **six décisions** qui traînaient depuis les sessions 1
 à 8 ont été reprises une par une et **toutes tranchées le 2026-08-05** — dont les trois du domaine B
 (D-018, D-019, D-020) et **D-025**, qui fixe la contrainte d'ordre la plus importante de tout le
 chantier : **les tests du barème et du départage sont écrits AVANT qu'on touche au départage**. Une
@@ -39,7 +53,6 @@ a **levé I-16** et livré les deux informations qui manquaient à D-018 — **l
 levée · ⚡ I-21 ouverte **puis levée le jour même**)*, et **aucune n'empêche de construire le
 plan** : deux sont des **courriels à envoyer**, deux des **vérifications de cinq minutes**, une ne
 se lèvera **que le jour du tournoi**, une est **sans effet**, et la dernière est **permanente**.
-**Le volet ② — les chantiers sans code — peut s'ouvrir.**
 
 ⚡ **Et une chose est entrée au chantier le même jour, qui ne vient pas de l'audit** : Romain a
 apporté une **décision fonctionnelle** que les huit domaines n'avaient pas vue — **D-030, le
@@ -52,7 +65,7 @@ pas pouvoir s'en attribuer le mérite plus tard. **Aucune ligne de code n'a ét�
 
 ---
 
-## 1 bis. CE QUE L'ÉTAPE 2 AVAIT ÉTABLI *(pour mémoire)*
+## 1 ter. CE QUE L'ÉTAPE 2 AVAIT ÉTABLI *(pour mémoire)*
 
 **L'ÉTAPE 1 et l'ÉTAPE 2 sont TERMINÉES : les huit domaines sont audités** — A (métier),
 C (sécurité), B (protection des données), D (tests), E (expérience d'utilisation), F (performance),
@@ -77,7 +90,7 @@ qui referme R-019). ✅ **L'ÉTAPE 3 s'est ouverte à la session 13** — voir �
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
 | 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
-| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | 🚧 **EN COURS** (ouverte session 13) — **volet ① ✅ TERMINÉ** (inconnues + décisions) · volet ② 🔜 chantiers **sans code** · volet ③ ⬜ chantiers **avec code** |
+| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | 🚧 **EN COURS** — **volet ① ✅ TERMINÉ** (session 13 : inconnues + décisions) · **volet ② ✅ TERMINÉ** (session 14 : **6 fiches**, C-005 → C-010) · volet ③ 🔜 **PROCHAIN** — chantiers **avec code** |
 | 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
 | 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
@@ -175,29 +188,46 @@ l'ÉTAPE 3)*. Le registre des décisions en attente est **vide**. Ce qu'elles en
 > conformité juridique n'est prononcée — c'est un **écart de fait**, à corriger quand la déclaration
 > aboutira.
 
-### 🏁 Puis : session 14 — **ÉTAPE 3, volet ②** : les chantiers **sans code**
+### ✅ FAIT — session 14 : **ÉTAPE 3, volet ②** — 6 fiches écrites *(`PLAN.md` §7)*
 
-**Le volet ① est fini.** Les inconnues sont triées, les six décisions sont tranchées. **Rien
-n'attend plus de réponse pour construire le plan.**
+**Les volets ① et ② sont finis.** Les inconnues sont triées, les décisions sont tranchées, et
+**six chantiers ont désormais une fiche complète** : problème, bénéfice, risque, fichiers,
+dépendances, comment on prouve que c'est fait.
 
-Le **volet ②** construit les fiches de chantier de tout ce qui **ne touche aucune ligne
-exécutable**. C'est le meilleur rapport entre ce que ça coûte et ce que ça apporte, et **plusieurs
-de ces chantiers referment des P1** :
+| Fiche | Chantier | Problèmes | Touche du code ? |
+|---|---|---|---|
+| **C-005** | 📣 **Les trois textes d'information** | **R-028** (P1), R-038 | ❌ non |
+| **C-006** | 🗑️ **La politique de conservation**, écrite là où on la lira | **R-030** (P1), R-031, R-033, R-034 | ❌ non |
+| **C-007** | 📄 **Remettre le projet en face de lui-même** | **R-073** (P1), **R-072** *(reliquat)*, R-024 | ❌ non |
+| **C-008** | 📝 **Les commentaires qui disent le contraire du code** | R-083 *(6 cas)* | ⚠️ **oui** — fichiers source, 0 ligne exécutable |
+| **C-009** | 🧹 **Le code mort qui affirme servir** | R-084, R-087 | ⚠️ **oui** — des lignes supprimées |
+| **C-010** | 🏉 **Le barème et le départage pour les clubs** | R-012 | ⚠️ **moitié ① non · moitié ② oui** |
 
-| Ce qui entre au volet ② | Problèmes | Rendu possible par |
-|---|---|---|
-| **Les trois textes d'information** | **R-028** (P1), R-038 | ✅ **D-018** tranchée |
-| **Le tableau des durées de conservation**, écrit noir sur blanc | **R-030** (P1), R-031, R-033, R-034 | ✅ **D-020** tranchée |
-| **Remettre le projet en face de lui-même** : fiche de redéploiement, carte du projet, commentaires faux, colonne fantôme, code mort | **R-072** (P1), **R-073** (P1), R-083, R-084, R-087 | — *(R-072 partiellement traité par D-029)* |
-| **Écrire le barème et le départage pour les clubs** | **R-012** | ✅ **D-011** et **D-014** tranchées |
-| **Noter la version et l'origine des 4 bibliothèques** | R-024 | — |
+> ⚠️ **Une correction apportée par ce volet, et elle change la route de deux chantiers.** Le volet ②
+> avait été annoncé comme *« cinq lots qui ne touchent aucune ligne exécutable »*. **C'est faux pour
+> deux d'entre eux** : effacer un commentaire faux et supprimer du code mort, **ce sont des fichiers
+> source qu'on ouvre**. Le comportement ne change pas, mais **D-006 impose alors branche + PR**, pas
+> un commit direct sur `main`.
 
-**Puis le volet ③** — les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi.
-Deux contraintes d'ordre sont déjà fixées et ne se négocient plus :
+> ✅ **Une bonne nouvelle vérifiée dans les fichiers** : **la partie dangereuse de R-072 est déjà
+> corrigée.** `docs/deploiement.md` nomme bien les **deux** fichiers du serveur et donne les **deux
+> nombres de contrôle** (589 et 3711) — c'était **le mécanisme exact de M-04**, et il est refermé
+> *(D-029, session 11)*. Le reliquat *(`passation.md`, deux `README`)* est du **confort**, plus un
+> piège.
+
+> 💡 **Quatre chantiers ne dépendent de rien** — **C-005**, **C-006**, **C-007** et la **moitié ①
+> de C-010** peuvent commencer **dès que tu les valides**, sans attendre une ligne de code. **Deux
+> d'entre eux referment des P1.**
+
+### 🔜 Puis : session 15 — **ÉTAPE 3, volet ③** : les chantiers **avec code**
+
+Les contraintes d'ordre sont déjà fixées et ne se négocient plus :
 
 1. **les 5 tests de R-041 AVANT la correction du départage** (**D-025**) ;
 2. **R-042 — séparer le cœur de la saisie du score de son écriture — AVANT** d'y toucher, sinon
-   D-011, D-012 et D-015 rouvrent trois fois le même code.
+   D-011, D-012, D-015 **et D-030** rouvrent **quatre fois** le même code ;
+3. **C-004 avant C-003** *(le levier n° 7 suppose le repos saisissable)* **et avant C-009** *(même
+   zone : la pause échelonnée)*.
 
 > ⚠️ **L'ÉTAPE 3 ne modifie toujours rien.** C'est l'**ÉTAPE 4** (ta validation, chantier par
 > chantier) qui ouvre l'ÉTAPE 5 (l'implémentation). **Rien ne sera touché dans l'application sans

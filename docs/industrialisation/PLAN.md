@@ -10,9 +10,9 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
-**Dernière mise à jour** : 2026-08-05 (session 13 + addendums — **l'ÉTAPE 3 est ouverte, volet ①
-terminé** · ⚡ **D-030 inscrite, I-21 levée, cadre de reprise précisé par Romain, et les fiches de
-chantier C-002 / C-003 / C-004 rédigées** — voir **§6**)
+**Dernière mise à jour** : 2026-08-06 (**session 14 — volet ② terminé** : 6 fiches de chantier
+écrites, **C-005 → C-010**, voir **§7**). Rappel du 2026-08-05 : volet ① terminé, D-030/031/032
+inscrites, I-21 levée, fiches **C-002 / C-003 / C-004** — voir **§6**.
 
 ---
 
@@ -23,7 +23,7 @@ Reprendre 9 inconnues, 6 décisions et 88 problèmes ne tient pas dans une séan
 | Volet | Contenu | Session | Statut |
 |---|---|---|---|
 | **①** | **Les inconnues et les décisions** — elles conditionnent tout le reste | 13 | ✅ **TERMINÉ** — 9 inconnues → 7 *(dont **0 bloquante**)*, **6 décisions → 0 en attente** |
-| **②** | Les chantiers **sans code** : documentation, textes d'information, durées de conservation, commentaires faux | 14 | 🔜 **PROCHAIN** |
+| **②** | Les chantiers **sans code** : documentation, textes d'information, durées de conservation, commentaires faux | 14 | ✅ **TERMINÉ** — **6 fiches** écrites (C-005 → C-010), voir **§7**. ⚠️ **2 des 6 touchent des fichiers source** : le volet n'était pas aussi « sans code » qu'annoncé |
 | **③** | Les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi | — | ⬜ À faire — ⚡ **mais ses deux premières fiches sont DÉJÀ écrites** : **C-002** et **C-003** *(le tournoi suspendu ou annulé, D-030)*, voir **§6** |
 
 ### ⚠️ Les deux contraintes d'ordre déjà FIXÉES — elles ne se négocient plus
@@ -251,10 +251,19 @@ compliquée le jour J, ce n'est pas une amélioration — elle est refusée ou r
 **Ordre d'exécution connu à ce jour**, du premier au dernier :
 
 ```
-lot ① des tests (D-025)  →  R-042  →  C-002 (niveau 1)  →  C-003 (niveau 2)
+SANS CODE, à tout moment et en parallèle :
+    C-005 (textes d'information)  ·  C-006 (durées)  ·  C-007 (la carte du projet)
+    C-010 moitié ① (le texte du règlement)
 
-C-004 (repos minimal saisissable) — indépendant, à tout moment, mais AVANT C-003
+AVEC CODE, dans cet ordre :
+    lot ① des tests (D-025)  →  R-042  →  C-002 (niveau 1)  →  C-003 (niveau 2)
+    C-004 (repos minimal saisissable) — indépendant, mais AVANT C-003 et AVANT C-009
+    C-008 (commentaires)  ·  C-009 (code mort, APRÈS C-004)  ·  C-010 moitié ②
 ```
+
+> 💡 **Ce que ce schéma dit, et qui n'était pas évident** : **quatre chantiers ne dépendent de
+> rien.** C-005, C-006, C-007 et la moitié ① de C-010 peuvent commencer **dès que Romain les
+> valide**, sans attendre une seule ligne de code — et **deux d'entre eux referment des P1**.
 
 ---
 
@@ -539,3 +548,229 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
 > simplement** (**D-031**) : *« la réglementation importe au responsable du tournoi, pas à l'app. »*
 > **Aucun plancher, aucun avertissement réglementaire, aucune règle écrite dans le code.** Le
 > responsable saisit la valeur qu'il doit respecter — l'application l'applique.
+
+---
+
+## 7. VOLET ② — LES CHANTIERS SANS CODE *(session 14, 2026-08-06)*
+
+> ⚠️ **UNE CORRECTION D'ABORD, PARCE QU'ELLE CHANGE LA ROUTE DE DEUX CHANTIERS.**
+>
+> Le volet ② avait été annoncé comme *« cinq lots qui ne touchent aucune ligne exécutable »*.
+> **En les instruisant, c'est faux pour deux d'entre eux** : effacer un commentaire faux et
+> supprimer du code mort, **ce sont des fichiers source qu'on ouvre**. Le comportement ne change
+> pas — mais **D-006 impose alors branche + PR + validation**, pas un commit direct sur `main`.
+>
+> **Le volet ② se répartit donc en trois groupes**, et ce n'est pas une nuance administrative :
+> c'est ce qui décide de **comment le travail arrive dans le dépôt**.
+
+| Groupe | Ce que ça touche | Comment ça arrive dans le dépôt |
+|---|---|---|
+| **① Documentation pure** — C-005, C-006, C-007 | Uniquement des `.md` | **Commit direct sur `main`** *(D-006)* |
+| **② Commentaires** — C-008 | Des fichiers source, **zéro ligne exécutable** | **Branche + PR** *(D-006)* |
+| **③ Code mort** — C-009 | Des fichiers source, **des lignes supprimées** | **Branche + PR + tests** *(D-006)* |
+| **⚠️ Mixte** — C-010 | Le texte est de la doc ; **le rendre atteignable est du code** | **Coupé en deux** — voir la fiche |
+
+---
+
+### C-005 — 📣 Les trois textes d'information
+
+- **Problème** (en langage simple) : **personne n'est jamais informé de rien.** Aucune page, aucun
+  courriel, aucune ligne du serveur ne dit qui détient les informations des clubs, pourquoi,
+  combien de temps, ni comment demander leur retrait. *(Recherche des mots « RGPD »,
+  « confidentialité », « données personnelles », « mentions légales », « consentement » dans tout le
+  dépôt applicatif : **zéro occurrence**.)*
+- **Risques couverts** : **R-028** *(P1)* · **R-038**
+- **Priorité** : **P1** — et c'est **le seul P1 du volet ②** dont la correction complète tienne en
+  une séance.
+- **Bénéfice** : le jour de la première invitation réelle, un contact de club qui demande *« vous
+  gardez mon adresse combien de temps ? »* obtient une réponse écrite. Et **on n'a pas à revenir
+  vers des gens à qui on a déjà écrit.**
+- **Ce qu'il y a à écrire — trois textes courts** :
+  1. un **paragraphe en bas du courriel d'invitation** ;
+  2. **le même bloc en bas de la page de réponse** du club ;
+  3. une **section « Tournoi »** pour la page RGPD **qui existe déjà** sur le site vitrine.
+- ✅ **Ce qui a débloqué ce chantier** *(session 13)* : les deux informations qui manquaient sont
+  trouvées — **responsable : Génération R92** · **contact : `generationr92@gmail.com`**.
+- ⚠️ **La réserve à porter dans les textes** : l'association est déclarée *« déclaration en
+  cours »*. **Aujourd'hui, c'est Romain qui porte ces données de fait** *(D-021)*.
+- ⚡ **R-038 se referme par une phrase, pas par du code** : l'adresse du contact d'invitation est
+  **servie en clair** à qui la demande — c'est **voulu et nécessaire**. Le remède est de **le dire
+  au bénévole concerné**, et de **recommander une adresse partagée du club plutôt qu'une adresse
+  personnelle**.
+- **Risque de la correction** : ⚪ **nul** — aucun fichier de l'application.
+- **Fichiers concernés** : un document livrable dans `docs/` · ⚠️ **rien n'est posé** sur le site
+  vitrine *(D-005 : périmètre fermé)*.
+- **Dépendances** : ✅ **aucune** — **D-018 est tranchée**.
+- **Comment on prouve que c'est fait** : les trois textes existent, **chacun nomme le responsable,
+  la finalité, la durée** *(de C-006)* **et le moyen de demander un retrait**.
+- ⚠️ **Ce chantier ne referme pas R-028 tout seul** : il **produit** les textes. **R-028 ne sera
+  clos que le jour où ils sont en ligne** — ce qui appartient à Romain *(D-005)*.
+- **Statut** : **PLANIFIÉ** · **Validation de Romain** : ✅ **D-018**
+
+---
+
+### C-006 — 🗑️ La politique de conservation, écrite là où on la lira
+
+- **Problème** (en langage simple) : **rien ne s'efface jamais tout seul.** Aucune durée, aucune
+  purge, aucune date d'expiration nulle part. Ce n'est pas un choix contestable : c'est **un choix
+  qui n'avait jamais été fait**.
+- **Risques couverts** : **R-030** *(P1)* · **R-031** · **R-033** · **R-034**
+- **Priorité** : **P1**
+- ✅ **La décision est déjà prise** — **D-020**, les 7 durées adoptées telles quelles. **Ce chantier
+  ne redécide rien** : il **écrit**.
+- ⚠️ **Pourquoi ce n'est PAS déjà fait, alors que D-020 existe** : les durées vivent aujourd'hui
+  dans `DECISIONS.md`, **un document que personne n'ouvre pour organiser un tournoi**. Une règle
+  rangée là où on ne la lit pas n'est pas appliquée.
+- **Ce qu'il y a à écrire** :
+  1. un document de conservation **dans `docs/`**, à l'endroit où on cherche les règles
+     d'exploitation ;
+  2. les durées **reprises dans les textes de C-005** — c'est la même information, vue par le club ;
+  3. ⭐ **une liste des gestes à faire À LA MAIN en attendant l'outillage** — c'est la partie qui
+     sert **dès demain**.
+- ⚠️ **Ce que ce chantier NE fait PAS, et il faut le dire** :
+  - il **n'efface rien** et **ne construit aucun outil** de purge — l'outillage est du **code**, il
+    ira au volet ③ ;
+  - il ne corrige donc **ni R-031** *(le droit d'effacement partiel : `supprimerClubInvite` est
+    refusé tant qu'une équipe figure dans un match)* **ni R-033** *(la réinitialisation conserve les
+    contacts FFR, dont le **médecin**)*. Il les met **en ordre de marche** — il ne les referme pas.
+  - ⛔ **Garde permanente** *(D-020)* : **toute suppression restera déclenchée par un humain.** Un
+    outil qui efface tout seul est le type de code le plus dangereux du projet.
+- 🏉 **Le point le plus urgent de tout le chantier, et il ne coûte rien** : **R-034** — un champ
+  libre *(« équipes étrangères »)* **invite explicitement à saisir noms, prénoms et dates de
+  naissance d'enfants**. C'est le **seul endroit de l'application où un mineur cesse d'être un
+  nombre**. D-020 tranche : **effacé après envoi du dossier**. Écrire cette ligne, et l'appliquer à
+  la main, est **le meilleur rapport effort / risque évité de tout le plan**.
+- **Risque de la correction** : ⚪ **nul**.
+- **Dépendances** : ✅ **aucune** — **D-020 est tranchée**. Fournit une entrée à **C-005**.
+- **Comment on prouve que c'est fait** : **chaque donnée personnelle listée au volet C de la
+  cartographie a une durée écrite**, sans exception — même « conservé ».
+- **Statut** : **PLANIFIÉ** · **Validation de Romain** : ✅ **D-020**
+
+---
+
+### C-007 — 📄 Remettre le projet en face de lui-même
+
+- **Problème** (en langage simple) : **la carte du projet décrit une autre application.**
+  `docs/architecture.md` documente **21 des 65 actions** du serveur *(68 % d'invisible)* et **4 des
+  8 pages** ; **tout le parcours d'invitation des clubs — le travail d'un mois — n'y figure nulle
+  part**. `README.md` liste **6 fichiers JS sur 26** et « 5 onglets » là où il y en a jusqu'à **12**.
+- **Risques couverts** : **R-073** *(P1)* · **R-072** *(P1 — **reliquat seulement**, voir ci-dessous)*
+  · **R-024**
+- **Priorité** : **P1**
+- ✅ **Bonne nouvelle vérifiée ce jour : la partie dangereuse de R-072 est DÉJÀ CORRIGÉE.**
+  `docs/deploiement.md` dit maintenant que le serveur est **deux** fichiers, nomme `Tests.gs`, et
+  donne **les deux nombres de contrôle** — **589** *(le bilan attendu)* et **3711** *(la dernière
+  ligne du fichier)*. C'était **le mécanisme exact de M-04**, et il est refermé *(D-029, appliquée
+  en session 11)*.
+  ⚠️ **Le reliquat** : `Tests.gs` n'est toujours cité **ni par `passation.md`, ni par
+  `backend/README.md`, ni par `README.md`**. C'est **du confort**, plus un piège.
+- **Bénéfice** : quelqu'un d'autre — ou Romain dans six mois — peut comprendre l'application **sans
+  lire 8 000 lignes de code**.
+- ⚡ **R-024 rejoint ce lot parce que c'est le même geste** : les **4 bibliothèques extérieures**
+  *(`pdf-lib`, `docxtemplater`, `pizzip`, `qrcode`, ~750 Ko)* n'ont **ni version, ni origine, ni
+  empreinte**. Les héberger localement est un **bon point** ; ne pas savoir **laquelle** on héberge
+  fait qu'**on ne peut pas savoir si une faille publiée nous concerne**. Le remède : un tableau —
+  nom, version, origine, date. **Zéro code.**
+- **Risque de la correction** : ⚪ **nul** — uniquement des `.md`.
+- ⚠️ **Le vrai risque de ce chantier n'est pas de casser, c'est de MENTIR** *(leçon **M-06**)* :
+  chaque phrase écrite doit être **vérifiée dans le code**, jamais déduite. Un document faux est
+  pire qu'un document absent — **c'est exactement comme ça que R-073 est né.**
+- **Dépendances** : aucune. ⚠️ **Ce chantier vieillit** *(M-05)* : chaque fonctionnalité livrée
+  élargit l'écart. **`CLAUDE.md` §8 bis empêche désormais qu'il se recreuse** ; ce chantier comble
+  le retard **déjà accumulé**.
+- **Comment on prouve que c'est fait** : on **recompte**. Les 65 actions du serveur sont-elles
+  listées ? Les 8 pages ? Les 26 fichiers JS ? Le compte doit **tomber juste**, et la méthode de
+  comptage doit être **écrite à côté du chiffre**.
+- **Statut** : **PLANIFIÉ** · **Validation de Romain** : ⏳ **à donner** *(ÉTAPE 4)*
+
+---
+
+### C-008 — 📝 Les commentaires qui disent le contraire du code
+
+> ⚠️ **Ce chantier ouvre des fichiers source.** Il ne change **aucune ligne exécutable**, mais
+> **D-006 s'applique : branche + PR**, pas de commit direct sur `main`.
+
+- **Problème** (en langage simple) : **six commentaires annoncent l'inverse de ce que fait la ligne
+  d'en dessous.** Trois disent que le Super Challenge n'est *« pas encore branché »* — il l'est.
+  Et deux commentaires du même fichier **se contredisent** sur l'éligibilité à la pause échelonnée
+  *(« effectif pair ≥ 4 » contre « dès 4 équipes »)* — **le code teste seulement `≥ 4`**.
+- **Risques couverts** : **R-083** *(6 cas)*
+- **Priorité** : **P2**
+- **Bénéfice** : le prochain qui lit ce code — Romain, moi, ou quelqu'un d'autre — **ne part pas sur
+  une fausse piste**. Un commentaire faux fait perdre plus de temps qu'un commentaire absent.
+- **Risque de la correction** : 🟡 **faible mais réel** — on ouvre `Code.gs` et des fichiers du
+  navigateur. Le risque n'est pas de changer le comportement *(on ne touche que des commentaires)*,
+  c'est la **faute de frappe** qui casse une accolade ou un `*/`.
+- **Vérification** : les **589 tests** doivent passer **à l'identique**, et le nombre de lignes
+  changer **uniquement** dans les blocs de commentaires modifiés.
+- ⭐ **Ce chantier doit poser une règle en même temps qu'il corrige** : `CLAUDE.md` **§8 bis**
+  protège la **documentation** ; **il lui manque son pendant pour les commentaires** — *une session
+  qui branche ce qu'une précédente annonçait « pas encore branché » efface la phrase dans le même
+  lot.* **Sans cette règle, ce chantier sera à refaire.**
+- **Dépendances** : aucune.
+- **Statut** : **PLANIFIÉ** · **Validation de Romain** : ⏳ **à donner** *(ÉTAPE 4)*
+
+---
+
+### C-009 — 🧹 Le code mort qui affirme servir
+
+> ⚠️ **Ce chantier SUPPRIME du code.** Branche + PR + tests, **obligatoirement** *(D-006)*.
+
+- **Problème** (en langage simple) : deux morceaux de code **ne servent à rien**, et **le
+  commentaire qui les accompagne affirme le contraire** :
+  - **R-084** — une colonne `pause_echelonnee` est **créée dans ton classeur**, ajoutée
+    automatiquement aux classeurs en service, munie de sa fonction de lecture — **et rien ne la
+    lit**. C'est la **seule fonction morte des 277** du serveur. Deux documents la décrivent comme
+    active, et l'un des deux **se contredit lui-même** ;
+  - **R-087** — une variable du navigateur est précédée de **six lignes** expliquant qu'elle est
+    *« conservée pour la rétrocompatibilité de l'affichage »*. **Rien ne la lit**, et le titre
+    qu'elle prétend fournir existe vraiment **ailleurs**.
+- **Risques couverts** : **R-084** · **R-087**
+- **Priorité** : **P2**
+- ⚠️ **La question qu'il faut poser AVANT de supprimer, et elle est métier** : la colonne
+  `pause_echelonnee` **par catégorie** est morte aujourd'hui — mais **D-032 vient de rendre le
+  sujet vivant**. **Faut-il la supprimer, ou la brancher ?** *(Le réglage est aujourd'hui
+  **global** ; une pause échelonnée **par catégorie** est une fonctionnalité différente, que
+  personne n'a demandée.)*
+  > ⛔ **Ce chantier ne tranche pas cette question tout seul.** `CLAUDE.md` §10 interdit de supprimer
+  > du code « qui semble inutile » sans vérifier ses usages — ici l'usage est **potentiel**, pas
+  > passé. **À poser à Romain à l'ÉTAPE 4.**
+- **Risque de la correction** : 🟡 **faible**, mais c'est le seul chantier du volet ② où une erreur
+  **casse quelque chose**. ⚠️ **La colonne existe déjà dans le classeur de Romain** : la retirer du
+  code ne la retire pas du classeur.
+- **Vérification** : **589 tests** au vert · la pause échelonnée fonctionne à l'identique · aucun
+  écran ne perd un titre.
+- **Dépendances** : ⚠️ **à traiter APRÈS C-004**, qui touche la même zone *(la pause échelonnée)*.
+  Les faire dans l'ordre inverse, c'est modifier deux fois le même code.
+- **Statut** : **PLANIFIÉ** · **Validation de Romain** : ⏳ **à donner** — **avec la question
+  ci-dessus**
+
+---
+
+### C-010 — 🏉 Écrire le barème et le départage pour les clubs
+
+> ⚠️ **Chantier MIXTE — et c'est sa principale information.**
+
+- **Problème** (en langage simple) : **aucune règle sportive n'est écrite nulle part pour les
+  clubs.** Le barème *(victoire 3 / nul 2 / défaite 1)* et l'ordre de départage n'existent que dans
+  les **commentaires du code**. Et la ligne « Règlement » du dossier **a été retirée de l'écran
+  d'administration** : **il n'existe aujourd'hui aucun moyen de la remplir.**
+- **Risques couverts** : **R-012**
+- **Priorité** : **P2** — mais ⚠️ **c'est une exigence posée par Romain lui-même dans D-011** :
+  *« toutes les équipes doivent être informées de tout point de règlement »*. Et **D-011 (forfait)
+  et D-014 (départage) vont MODIFIER ces règles** : elles seront **encore moins connues** des clubs
+  qu'aujourd'hui.
+- **Les deux moitiés, et elles ne vont pas au même endroit** :
+
+  | Moitié | Ce que c'est | Où |
+  |---|---|---|
+  | **① Le texte** | Écrire le barème, l'ordre de départage, la règle du forfait *(D-011)* et celle du match annulé *(D-015)*, en français lisible par un éducateur | ✅ **Volet ②** — zéro code |
+  | **② Le rendre atteignable** | **Remettre le champ « Règlement » dans l'écran d'administration** pour qu'il puisse être rempli et parvenir aux clubs | ⚠️ **Volet ③** — c'est du code |
+
+- ⚠️ **Conséquence à assumer** : **la moitié ① ne referme pas R-012.** Un texte que personne ne peut
+  publier ne prévient personne. Le chantier **prépare** ; il ne clôt pas.
+- 🔗 **Dépendance de contenu** : le texte doit refléter les règles **décidées**, donc **D-011** et
+  **D-014**. Elles sont tranchées — mais **pas encore écrites dans le code**. Le texte décrira donc
+  **la règle voulue**, et devra être **relu au moment où le code l'appliquera**.
+- **Risque de la correction** : ⚪ **nul** pour la moitié ①.
+- **Statut** : **PLANIFIÉ** *(moitié ①)* · **Validation de Romain** : ⏳ **à donner**

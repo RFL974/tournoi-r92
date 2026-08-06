@@ -3119,3 +3119,120 @@ contre « dès 4 équipes, impairs gérés par un bye »)*. **Le code teste seul
 - **0 décision en attente** · **7 inconnues** · **4 fiches de chantier** (C-001 → C-004) ;
 - fichiers touchés : `DECISIONS.md`, `RISQUES.md`, `PLAN.md`, `ETAT.md`, `SESSIONS.md` ;
 - **la session 14 (volet ②) n'est pas commencée.**
+
+---
+
+# SESSION 14 — 2026-08-06 · **ÉTAPE 3, volet ② : les chantiers SANS CODE**
+
+> **Objectif unique** : écrire les **fiches de chantier** de tout ce qui ne touche aucune ligne
+> exécutable. ⚠️ **Écrire les fiches, pas faire le travail** — l'exécution appartient à l'ÉTAPE 5,
+> après validation de Romain à l'ÉTAPE 4.
+
+## 0. Mise à jour avant lecture (`CLAUDE.md` §12.3)
+
+`git fetch origin` puis `git status -sb` → **`## main...origin/main`**, aucun « retard », dépôt
+propre, dernier commit `64f863b`. **Rien de neuf côté chantier fonctionnalités** depuis la veille.
+
+## 1. Ce qui a été fait
+
+**Six fiches de chantier écrites** — `PLAN.md` **§7**, une par lot, au format du modèle.
+
+| Fiche | Chantier | Problèmes | Priorité |
+|---|---|---|---|
+| **C-005** | 📣 Les trois textes d'information | **R-028** (P1), R-038 | **P1** |
+| **C-006** | 🗑️ La politique de conservation, écrite là où on la lira | **R-030** (P1), R-031, R-033, R-034 | **P1** |
+| **C-007** | 📄 Remettre le projet en face de lui-même | **R-073** (P1), R-072 *(reliquat)*, R-024 | **P1** |
+| **C-008** | 📝 Les commentaires qui disent le contraire du code | R-083 *(6 cas)* | P2 |
+| **C-009** | 🧹 Le code mort qui affirme servir | R-084, R-087 | P2 |
+| **C-010** | 🏉 Le barème et le départage pour les clubs | R-012 | P2 |
+
+## 2. Le résultat, en trois constats
+
+### ⭐ Constat n° 1 — **Le volet ② n'était pas « sans code », et ça change une route**
+
+Annoncé comme *« cinq lots qui ne touchent aucune ligne exécutable »*. **En les instruisant, c'est
+faux pour deux d'entre eux** : effacer un commentaire faux (**C-008**) et supprimer du code mort
+(**C-009**), **ce sont des fichiers source qu'on ouvre**.
+
+Le comportement ne change pas — mais **D-006 impose alors branche + PR + validation**, pas un commit
+direct sur `main`. Le volet se répartit donc en **trois groupes** selon **comment le travail arrive
+dans le dépôt** :
+
+| Groupe | Fiches | Route |
+|---|---|---|
+| Documentation pure | C-005, C-006, C-007 | Commit direct sur `main` |
+| Commentaires *(0 ligne exécutable)* | C-008 | Branche + PR |
+| Code mort *(des lignes supprimées)* | C-009 | Branche + PR + tests |
+| Mixte | C-010 | Coupé en deux : le texte au volet ②, le champ au volet ③ |
+
+> 💡 **Ce n'est pas une nuance administrative.** C'est la différence entre *« je peux le faire ce
+> soir »* et *« il faut que tu relises avant »*.
+
+### ⭐ Constat n° 2 — **La partie dangereuse de R-072 est déjà corrigée** *(vérifié dans les fichiers)*
+
+`docs/deploiement.md` nomme désormais les **deux** fichiers du serveur — `Code.gs` **et
+`Tests.gs`** — et donne les **deux nombres de contrôle** : **589** *(le bilan attendu)* et **3711**
+*(la dernière ligne du fichier collé)*.
+
+**C'était le mécanisme exact de M-04** — la preuve fausse entrée au dossier en session 6 — et il est
+**refermé** *(D-029, appliquée en session 11)*.
+
+⚠️ **Le reliquat est réel mais petit** : `Tests.gs` n'est toujours cité ni par `passation.md`, ni par
+`backend/README.md`, ni par `README.md`. **C'est du confort, ce n'est plus un piège.** Le registre
+le disait déjà correctement — la vérification l'a confirmé plutôt que corrigé.
+
+### ⭐ Constat n° 3 — **Quatre chantiers ne dépendent de rien**
+
+**C-005**, **C-006**, **C-007** et la **moitié ① de C-010** peuvent commencer **dès validation**,
+sans attendre une seule ligne de code. **Deux d'entre eux referment des P1.**
+
+> 🏉 **Et l'un d'eux a le meilleur rapport effort / risque évité de tout le plan** : **R-034** — un
+> champ libre *(« équipes étrangères »)* **invite explicitement à saisir noms, prénoms et dates de
+> naissance d'enfants**. C'est le **seul endroit de l'application où un mineur cesse d'être un
+> nombre**. D-020 a tranché : **effacé après envoi du dossier**. Écrire cette ligne — et l'appliquer
+> à la main — ne coûte rien.
+
+## 3. Ce que les fiches disent d'inconfortable, et qu'il fallait écrire
+
+- **C-005 ne referme pas R-028 tout seul** : il **produit** les textes. R-028 ne sera clos que
+  lorsqu'ils seront **en ligne** — ce qui appartient à Romain *(D-005 : périmètre fermé)* ;
+- **C-006 n'efface rien** : il écrit les durées et liste les **gestes à faire à la main**.
+  L'outillage de purge est du **code**, il ira au volet ③. Il **ne referme donc ni R-031 ni R-033** ;
+- **C-010 moitié ① ne referme pas R-012** : le champ « Règlement » **a été retiré de l'écran
+  d'administration**. Un texte que personne ne peut publier ne prévient personne ;
+- **C-009 pose une question métier avant de supprimer** : la colonne `pause_echelonnee` **par
+  catégorie** est morte — mais **D-032 vient de rendre le sujet vivant**. Faut-il la **supprimer**,
+  ou la **brancher** ? `CLAUDE.md` §10 interdit de supprimer du code « qui semble inutile » sans
+  vérifier ses usages : ici l'usage est **potentiel**, pas passé. **→ à trancher à l'ÉTAPE 4** ;
+- **C-007 a un risque qui n'est pas de casser, mais de mentir** *(leçon **M-06**)* : chaque phrase
+  écrite doit être **vérifiée dans le code**, jamais déduite. **Un document faux est pire qu'un
+  document absent — c'est exactement comme ça que R-073 est né.**
+
+## 4. Une règle que C-008 doit poser en même temps qu'il corrige
+
+`CLAUDE.md` **§8 bis** protège la **documentation**. **Il lui manque son pendant pour les
+commentaires** :
+
+> *Une session qui branche ce qu'une précédente annonçait « pas encore branché » efface la phrase
+> dans le même lot.*
+
+**Sans cette règle, C-008 sera à refaire.**
+
+## 5. Ce qui n'a **PAS** été fait
+
+- ❌ **Aucun texte n'a été rédigé** — C-005 et C-010 **planifient** la rédaction, ils ne la font pas ;
+- ❌ **aucune durée n'a été écrite** ailleurs que dans `DECISIONS.md` ;
+- ❌ **aucun commentaire, aucun code mort n'a été touché** ;
+- ❌ **aucun fichier de l'application modifié** — vérifié.
+
+## 6. Prochaine session recommandée
+
+**Session 15 — ÉTAPE 3, volet ③ : les chantiers AVEC code.** Il reste à écrire les fiches du lot ①
+des tests (**R-041**/D-025), de **R-042**, et des familles déjà repérées *(le filet côté serveur,
+faire parler le geste du jour J, terminer le travail d'affluence, alléger ce qui voyage)*.
+
+> ⚠️ **Ou bien — et c'est un choix qui t'appartient — l'ÉTAPE 4 peut commencer AVANT le volet ③**,
+> sur les quatre chantiers qui ne dépendent de rien. Deux referment des P1, et **rien ne les oblige
+> à attendre que le reste du plan soit écrit.**
+
+**Condition de démarrage** : instruction explicite de Romain.
