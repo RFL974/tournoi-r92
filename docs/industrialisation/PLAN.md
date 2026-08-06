@@ -912,7 +912,9 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 - **Statut** : ⚙️ **EN COURS** — écrit, **les deux preuves obtenues dans GitHub**, **PR #182**
 - **Validation de Romain** : ✅ **oui, le 2026-08-06**
 - **Preuves** : branche cassée → contrôle **failure** *(#183, fermée)* · branche saine → **30 fichiers vérifiés**, **success**
-- ⚠️ **Reste à observer** : le verrou `needs` au **premier envoi réel sur `main`**
+- ✅ **Statuts arrêtés par Romain le 2026-08-06** : **CORRIGÉ = oui** · **contrôle de syntaxe = PROUVÉ** · **chaînage `needs` sur le chemin réel de publication = À OBSERVER** au premier déploiement sur `main`
+- ⛔ **Essai supplémentaire refusé** *(déclencher le workflow sur la branche cassée)* : il visait le chemin de publication du site en production. Branche de preuve **supprimée** ; preuve conservée dans la **PR #183** et son journal
+- ⏸️ **Consigne** : **ne pas passer au chantier suivant avant la fusion de la PR #182**, puis vérifier ensemble le premier passage dans Actions
 
 ---
 

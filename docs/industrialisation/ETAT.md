@@ -62,7 +62,7 @@ VALIDATION (ÉTAPE 4)**, chantier par chantier.
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
 | 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
 | 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers** (C-001 → C-030), **91 problèmes placés sur 91**, **0 sans place** |
-| 4 | **ÉTAPE 4 — Validation par Romain** | 🚧 **EN COURS** — ✅ **C-011 et C-013 validés** le 2026-08-06 · ordre retenu : *« d'abord ce qui ne peut rien casser »* |
+| 4 | **ÉTAPE 4 — Validation par Romain** | ⏸️ **EN PAUSE** — ✅ **C-011 et C-013 validés** le 2026-08-06 · **reprise après la fusion de la PR #182** · ordre retenu : *« d'abord ce qui ne peut rien casser »* |
 | 5 | **ÉTAPE 5 — Implémentation par petites unités** | 🚧 **DÉMARRÉE** — **C-011** (PR #181) et **C-013** (PR #182) écrits et poussés |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
 

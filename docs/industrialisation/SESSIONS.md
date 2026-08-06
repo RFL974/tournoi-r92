@@ -3590,3 +3590,38 @@ façon** *(`if: github.event_name != 'pull_request'`)*.
 - **R-043** : `IDENTIFIÉ` → ⚙️ **`EN COURS`**, **moitié (a) faite et prouvée** ; la moitié (b)
   *(harnais du navigateur)* **reste entière** et hors périmètre ;
 - **R-049**, **R-050** : couverts par la documentation du même lot.
+
+---
+
+## C-013 — **ADDENDUM : statuts arrêtés par Romain, et essai refusé** *(2026-08-06)*
+
+### Les trois statuts, dans ses termes
+
+| | |
+|---|---|
+| **CORRIGÉ** | ✅ **oui** |
+| **CONTRÔLE DE SYNTAXE** | ✅ **PROUVÉ** |
+| **CHAÎNAGE `needs` sur le chemin réel de publication** | ⏳ **À OBSERVER** au premier déploiement sur `main` |
+
+### ⛔ L'essai supplémentaire a été refusé — et c'est le bon arbitrage
+
+J'avais proposé de déclencher le workflow à la main sur la branche cassée, pour **observer** le
+verrou plutôt que de le déduire. **Romain a refusé**, et sa raison est meilleure que ma proposition :
+
+> *« Je préfère cette preuve réelle plutôt que de provoquer volontairement une exécution du chemin de
+> publication. »*
+
+**Le raisonnement, écrit pour les sessions futures** : on a déjà une preuve réelle que le contrôle
+échoue sur une faute de syntaxe **et** que la publication est neutralisée dans ce contexte. Le
+chaînage manquant s'observera **gratuitement**, sur un déploiement **légitime**, dès la fusion.
+**Provoquer une exécution du chemin de publication pour prouver quelque chose qu'un événement
+normal prouvera de toute façon, c'est prendre un risque de production pour rien.**
+
+### Ce qui a été fait ensuite
+
+- 🗑️ **Branche `preuve/c-013-syntaxe-cassee` supprimée**, locale et distante, sur autorisation
+  explicite. ✅ **La preuve n'est pas perdue** : la **PR #183** *(fermée)* et son **journal
+  d'exécution** sont conservés par GitHub ;
+- ⏸️ **L'ÉTAPE 4 est en pause.** Consigne : *« Ne passe pas au chantier suivant tant que la PR #182
+  n'est pas fusionnée. »* À la reprise, on vérifie **ensemble** le premier passage dans Actions et
+  on confirme le résultat du déploiement réel.
