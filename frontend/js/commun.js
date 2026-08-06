@@ -1,3 +1,7 @@
+// PREUVE C-013 — faute de syntaxe VOLONTAIRE, branche jetable, ne doit jamais atteindre main.
+function preuveC013Cassee( {
+  return 'accolade jamais fermée' ;
+
 /**
  * ============================================================================
  *  COMMUN — petites fonctions utilitaires partagées par TOUTES les pages
