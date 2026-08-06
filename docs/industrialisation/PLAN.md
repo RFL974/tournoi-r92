@@ -619,7 +619,10 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
   la finalité, la durée** *(de C-006)* **et le moyen de demander un retrait**.
 - ⚠️ **Ce chantier ne referme pas R-028 tout seul** : il **produit** les textes. **R-028 ne sera
   clos que le jour où ils sont en ligne** — ce qui appartient à Romain *(D-005)*.
-- **Statut** : **PLANIFIÉ** · **Validation de Romain** : ✅ **D-018**
+- **Statut** : ⚙️ **EN COURS** — **livrable écrit** : `docs/textes-information-donnees.md` *(252 lignes)*. **Aucun fichier de l'application touché, rien mis en ligne.**
+- **Validation de Romain** : ✅ **oui, le 2026-08-06** *(+ D-018)*
+- ⏳ **En attente** : relecture de Romain · choix entre les **formulations A et B** *(situation de l'association)* · validation du **bureau**
+- ⚠️ **Ne referme PAS R-028** — voir §7 du livrable
 
 ---
 
