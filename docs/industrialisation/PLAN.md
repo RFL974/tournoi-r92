@@ -663,7 +663,10 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
 - **Dépendances** : ✅ **aucune** — **D-020 est tranchée**. Fournit une entrée à **C-005**.
 - **Comment on prouve que c'est fait** : **chaque donnée personnelle listée au volet C de la
   cartographie a une durée écrite**, sans exception — même « conservé ».
-- **Statut** : **PLANIFIÉ** · **Validation de Romain** : ✅ **D-020**
+- **Statut** : ⚙️ **LIVRÉ** — `docs/conservation-donnees.md`. **Aucun fichier de l'application touché, aucune donnée supprimée, aucun outil construit.**
+- **Validation de Romain** : ✅ **oui, le 2026-08-06** *(+ D-020, D-033)*
+- ⭐ **Ce que la vérification a trouvé, et qui n'était pas connu** : **5 gestes sur 7 sont VÉRIFIÉS** dans le code · **2 restent À CONFIRMER** *(le détail des effectifs, les copies de courriels)* · et surtout : **la réinitialisation N'EFFACE PAS les contacts de la demande fédérale, médecin compris** — la règle décidée et le code divergent
+- ⚠️ **Ne referme ni R-031 ni R-033** : ce sont des comportements du code, chantier du volet ③
 
 ---
 
