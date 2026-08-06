@@ -3427,3 +3427,73 @@ chantiers, **un par un**.
 **Trois questions attendent Romain à l'ÉTAPE 4** : la colonne morte de **C-009** *(supprimer ou
 brancher ?)*, jusqu'où va **C-020** *(savoir qui a fait quoi)*, et les **cinq points ouverts** de
 D-030 §5 pour **C-003**.
+
+---
+
+# ÉTAPE 4 — LA VALIDATION · **C-011** *(2026-08-06)*
+
+> **Ouverture de l'ÉTAPE 4.** Romain : *« Nous allons valider les chantiers un par un avant toute
+> modification du code. Commence par C-011. »* Format de présentation imposé par lui : problème
+> couvert · problèmes du registre · objectif · ce qui sera modifié · ce qui ne le sera pas · risques
+> · dépendances · critères de fin.
+
+## 1. Deux décisions prises
+
+| | |
+|---|---|
+| **C-011** | ✅ **VALIDÉ** le 2026-08-06 |
+| **L'ordre des chantiers** | ✅ **« D'abord tout ce qui ne peut rien casser »** → **C-011 → C-013 → C-005 · C-006 · C-007**, puis C-012 |
+
+> 💡 **Ce que cet ordre garantit** : **six P1 sont refermés avant que la première ligne de
+> comportement ne bouge.** Le premier chantier qui modifie vraiment quelque chose sera **C-012** —
+> et il sera déjà protégé par les tests de C-011.
+
+## 2. C-011 — ce qui a été fait
+
+**5 fonctions de test, 27 vérifications**, dans `backend/Tests.gs` :
+
+| Test | Ce qu'il protège |
+|---|---|
+| `testClassement_baremeVictoireNulDefaite` | Victoire 3 / nul 2 / défaite 1, les compteurs V-N-D, et **0-0 est un nul, pas une défaite** |
+| `testClassement_cumulSurPlusieursMatchs` | Marqués, encaissés, différence — **y compris une différence négative** |
+| `testClassement_departageParLesPoints` | Les points priment sur tout le reste |
+| ⭐ `testClassement_departageParLaDifference` | **Le 2ᵉ critère — que rien ne testait** |
+| ⭐ `testClassement_departageParLesPointsMarquesEtOrdreStable` | **Le 3ᵉ critère — que rien ne testait**, l'égalité stricte qui ne départage pas, et un tri complet de poule |
+
+**`backend/Code.gs` n'a pas été touché d'une ligne** — vérifié par `git diff`.
+
+## 3. La preuve
+
+```
+R92 — 616/616 OK, 0 FAIL
+```
+
+Exécuté **hors d'Apps Script**, sur les fichiers réels du dépôt : `Code.gs` et `Tests.gs` chargés
+dans un bac à sable avec une vingtaine de lignes de doublures *(la méthode démontrée en session 8)*.
+**Les 27 nouvelles vérifications passent, et aucune des 589 existantes n'est cassée.**
+
+> ⚠️ **Ce que cette preuve ne prouve pas** : que ça passe **chez Google**. Le statut reste donc
+> `EN COURS` → `CORRIGÉ` à la fusion → **`TESTÉ` seulement quand Romain aura relancé
+> `lancerTestsFFR` dans Apps Script**. C'est exactement la règle qui a coûté **M-04**.
+
+## 4. Les deux nombres de contrôle ont suivi — dans le même lot
+
+`docs/deploiement.md` : **589 → 616** et **3711 → 3859**.
+
+> 🔗 **Les mettre « plus tard » aurait rouvert M-04 de nos propres mains**, juste après l'avoir
+> refermé. C'est pourquoi ce fichier de documentation est **dans la PR** et non sur `main` : il est
+> **inséparable** du changement de code.
+
+## 5. Une amélioration opportuniste, au passage
+
+Les tests sont nommés **par sujet** (`testClassement_…`), **pas par numéro de session**. **R-076**
+avait montré que **27 préfixes sur 31** sont des numéros de session — ce qui ne dit jamais de quoi
+le test parle. **On n'aggrave pas le compte.** C'est l'application de la règle de **C-030** :
+*quand on ouvre un fichier pour une autre raison, on améliore ce qu'on touche, et rien d'autre.*
+
+## 6. État
+
+- **PR [#181](https://github.com/RFL974/tournoi-r92/pull/181)** ouverte, commit `af31664` ;
+- **R-041** : `IDENTIFIÉ` → ⚙️ **`EN COURS`** ;
+- ⚠️ **à faire à la main après fusion** : coller `Tests.gs` chez Google, lancer `lancerTestsFFR`,
+  vérifier **616/616** et **la dernière ligne à 3859**.

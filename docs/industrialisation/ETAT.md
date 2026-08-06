@@ -9,7 +9,7 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-06 (**session 16 — 🏁 L'ÉTAPE 3 EST TERMINÉE** : vague 2 écrite,
+**Dernière mise à jour** : 2026-08-06 (**ÉTAPE 4 OUVERTE — C-011 validé, écrit, PR #181** · *616/616 OK hors Google, preuve chez Google en attente*). *Session 16 : 🏁 l'ÉTAPE 3 est terminée* : vague 2 écrite,
 **C-017 → C-030**, et **la couverture des 91 problèmes est prouvée : 91 sur 91 placés, 0 sans
 place**.) *Sessions 13-15 : volets ①, ② et vague 1 du ③.* *Rappel de la veille : session 13 + **4 addendums*** — **ÉTAPE 3 ouverte, volet ①
 terminé : les 6 décisions en attente sont TRANCHÉES** · ⚡ **une 7ᵉ décision apportée par Romain
@@ -62,8 +62,8 @@ VALIDATION (ÉTAPE 4)**, chantier par chantier.
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
 | 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
 | 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers** (C-001 → C-030), **91 problèmes placés sur 91**, **0 sans place** |
-| 4 | **ÉTAPE 4 — Validation par Romain** | 🔜 **PROCHAINE** — chantier par chantier |
-| 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
+| 4 | **ÉTAPE 4 — Validation par Romain** | 🚧 **EN COURS** — ✅ **C-011 validé** le 2026-08-06 · ordre retenu : *« d'abord ce qui ne peut rien casser »* |
+| 5 | **ÉTAPE 5 — Implémentation par petites unités** | 🚧 **DÉMARRÉE** — **C-011** écrit et poussé, **PR #181** |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
 
 ---

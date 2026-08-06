@@ -70,8 +70,8 @@ Elles s'imposeront au volet ③ et à l'ÉTAPE 5 :
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
 | 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | ✅ **TERMINÉE** — **8 sur 8**, sessions 5 à 12, **88 problèmes** |
 | 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers**, **91 problèmes placés sur 91** |
-| 4 | **Validation** | Accord explicite de Romain, chantier par chantier | 🔜 **PROCHAINE** |
-| 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
+| 4 | **Validation** | Accord explicite de Romain, chantier par chantier | 🚧 **EN COURS** — ✅ **C-011 validé** (2026-08-06) |
+| 5 | **Implémentation** | Une modification cohérente à la fois | 🚧 **DÉMARRÉE** — **C-011**, PR #181 |
 | 6 | **Commit** | Un commit atomique par chantier validé | ⬜ À faire |
 
 > **Règle** : on ne passe pas à l'étape suivante sans que la précédente soit terminée **et**
@@ -135,6 +135,7 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | ID | Chantier | Priorité | Statut | Dépend de | Validé par Romain | Implémenté | Testé |
 |---|---|---|---|---|---|---|---|
+| **C-011** | **Les tests du barème et du départage** (R-041) — *premier chantier de l'ÉTAPE 5* | **P1** | ⚙️ **EN COURS** | — | ✅ **oui** (2026-08-06) | ✅ `af31664`, **PR #181** | ⏳ **616/616 hors Google** ; reste la preuve **chez Google** |
 | **C-001** | **Plafonner l'écriture publique des relevés de partenaires** (R-014) — *hors ordre normal, par exception D-016* | **P0** | ✅ **TESTÉ** | — | ✅ oui (D-016) | ✅ commit `c1948fc`, **redéployé** | ✅ **573/573** dans Apps Script + chaîne vérifiée en réel |
 | — | *(les autres chantiers se rempliront à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
 
@@ -852,7 +853,9 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 - **Comment on prouve que c'est fait** : le bilan passe de **589** à **589 + n**, `0 FAIL`, **chez
   Google**. ⚠️ Et **`docs/deploiement.md` doit être mis à jour avec le nouveau nombre** — sinon le
   contrôle à deux nombres devient faux, et on rouvre **M-04** de nos propres mains.
-- **Statut** : **PLANIFIÉ** · **Validation** : ✅ **D-025**
+- **Statut** : ⚙️ **EN COURS** — écrit, testé hors d'Apps Script (**616/616 OK, 0 FAIL**), **PR #181** ouverte
+- **Validation de Romain** : ✅ **oui, le 2026-08-06** *(+ D-025)*
+- **Commit** : `af31664` sur `chantier/c-011-tests-bareme-departage`
 
 ---
 
