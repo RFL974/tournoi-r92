@@ -1998,3 +1998,47 @@ registre** (**R-091**) et un travail planifié (**C-004**), pas une correction i
 ⚠️ **Ce que D-032 n'autorise pas** : à supprimer le **repli** lui-même. Une catégorie de moins de
 4 équipes doit continuer d'être planifiée *(elle joue, simplement pas en deux vagues)*, et
 l'avertissement doit continuer d'exister — **son texte change**, pas sa présence.
+
+
+---
+
+### D-033 — Les durées de conservation sont garanties par un **rappel manuel**
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-06 |
+| **Chantier** | C-005 *(point 6 des points à confirmer)* |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Couvre** | **R-030** (P1), et conditionne **C-006** |
+
+**Le problème posé**
+
+> Les sept durées de **D-020** sont **décidées**, et le livrable de C-005 les **annonce à des
+> tiers**. Mais **aucun outil ne les applique** : ce sont des gestes manuels. **Un engagement écrit
+> non tenu est pire que pas d'engagement** — un contact de club qui découvre trois ans plus tard
+> qu'on a gardé son adresse n'a pas affaire à un oubli technique, mais à une **promesse rompue**.
+
+**Décision retenue**
+
+> ✅ **Le principe du rappel manuel est confirmé** *(Romain, 2026-08-06)*.
+>
+> Tant qu'aucun outil ne signale ce qui est périmé, **le respect des durées est assuré par un
+> rappel explicite**, inscrit dans la procédure — et non par la mémoire de quelqu'un.
+
+**Ce que cela permet, et c'est le point important**
+
+> **Les durées peuvent être annoncées publiquement.** Sans cette décision, il aurait fallu soit
+> **les retirer des textes** *(or c'est l'information que les gens attendent le plus)*, soit
+> **construire l'outillage d'abord** *(un chantier de code)*. Le rappel manuel est **la seule des
+> trois options qui ne coûte rien et ne dégrade rien.**
+
+**Ce que cela n'est pas**
+
+> ⚠️ **Ce n'est pas une solution définitive, et il ne faut pas la présenter comme telle.** Un rappel
+> manuel dépend d'un humain disponible et attentif. L'outillage reste souhaitable — il viendra au
+> **volet ③**, avec la garde permanente de **D-020** : **toute suppression restera déclenchée par un
+> humain.** Le rappel dit *quand* ; il n'efface jamais tout seul.
+
+**Compatibilité** : ✅ aucune contradiction. **D-020** est appliquée, pas modifiée. **D-027**
+*(un message ne ment jamais)* est respecté : le texte public annonce une durée que quelqu'un
+s'engage à tenir.

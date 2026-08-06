@@ -621,7 +621,9 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
   clos que le jour où ils sont en ligne** — ce qui appartient à Romain *(D-005)*.
 - **Statut** : ⚙️ **EN COURS** — **livrable écrit** : `docs/textes-information-donnees.md` *(252 lignes)*. **Aucun fichier de l'application touché, rien mis en ligne.**
 - **Validation de Romain** : ✅ **oui, le 2026-08-06** *(+ D-018)*
-- ⏳ **En attente** : relecture de Romain · choix entre les **formulations A et B** *(situation de l'association)* · validation du **bureau**
+- ✅ **2026-08-06 — les deux points qui pouvaient rendre le texte FAUX sont tranchés** : **point 1** *(le champ « équipes étrangères » attend « nom du club, pays » — aucune demande de nom d'enfant, constat d'origine de R-034 corrigé)* et **point 6** *(**D-033** : les durées sont garanties par un **rappel manuel**)*
+- ⏳ **Restent 3 points, tous administratifs — ils retardent la mise en ligne, ils ne remettent rien en cause dans le texte** : validation du **bureau** · les **cinq crochets** · mentionner ou non la situation en cours
+- ⚠️ **Point conditionnel** : si l'interrupteur des partenaires est rallumé, **un quatrième texte** devient nécessaire *(D-019, et c'est du code)*
 - ⚠️ **Ne referme PAS R-028** — voir §7 du livrable
 
 ---
