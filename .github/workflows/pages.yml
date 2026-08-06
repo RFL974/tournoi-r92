@@ -2,6 +2,11 @@ name: Déploiement GitHub Pages (dossier frontend)
 
 # Publie le contenu de `frontend/` sur GitHub Pages à chaque push sur main
 # (URLs : https://rfl974.github.io/tournoi-r92/tournoi.html, /admin.html, …).
+#
+# ⚠️ DEPUIS LE CHANTIER C-013 (R-043) : rien ne part en ligne sans avoir été vérifié.
+# Le travail `verifier` s'exécute AVANT `deploy`, et `deploy` en dépend (`needs`).
+# Si un fichier JavaScript ne se lit pas, la publication N'A PAS LIEU : le site
+# déjà en ligne reste intact.
 
 on:
   push:
@@ -9,20 +14,79 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/pages.yml'
+  # Le contrôle tourne aussi sur les propositions de fusion : on voit le problème
+  # AVANT que le code n'atteigne `main`, pas après. (`deploy` y est neutralisé.)
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch: {}
 
+# Droits minimaux ici ; `deploy` demande les siens pour lui seul (voir plus bas).
+# Une exécution déclenchée par une proposition de fusion n'obtient donc JAMAIS
+# le droit d'écrire sur Pages.
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
-  deploy:
+  # --------------------------------------------------------------------------
+  # 1) LE CONTRÔLE — syntaxe uniquement.
+  #
+  # `node --check` répond à UNE seule question : « ce fichier est-il lisible ? ».
+  # Il ne juge ni le style, ni les conventions, ni la qualité. C'est délibéré :
+  # un contrôle trop exigeant qui refuserait de publier une correction urgente
+  # LE JOUR DU TOURNOI serait pire que pas de contrôle du tout.
+  #
+  # Portée : tous les `.js` de `frontend/`, bibliothèques extérieures comprises
+  # (elles sont déposées à la main, donc elles peuvent arriver tronquées).
+  # Le HTML n'est PAS vérifié : il ne contient aucun script en ligne, et
+  # contrôler sa syntaxe exigerait une dépendance que le projet a refusée.
+  # --------------------------------------------------------------------------
+  verifier:
+    name: Vérifier la syntaxe des fichiers publiés
     runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Vérifier la syntaxe de chaque fichier JavaScript
+        run: |
+          echec=0
+          total=0
+          while IFS= read -r fichier; do
+            total=$((total + 1))
+            if node --check "$fichier" 2>/tmp/erreur; then
+              echo "  OK     $fichier"
+            else
+              echec=1
+              echo "  CASSÉ  $fichier"
+              sed 's/^/         /' /tmp/erreur
+            fi
+          done < <(find frontend -name '*.js' -type f | sort)
+
+          echo "----------------------------------------------"
+          if [ "$echec" -ne 0 ]; then
+            echo "PUBLICATION REFUSÉE — au moins un fichier ne se lit pas."
+            echo "Le site actuellement en ligne n'est pas remplacé."
+            exit 1
+          fi
+          echo "$total fichiers JavaScript vérifiés, aucun cassé."
+
+  # --------------------------------------------------------------------------
+  # 2) LA PUBLICATION — ne s'exécute que si le contrôle est passé.
+  # --------------------------------------------------------------------------
+  deploy:
+    name: Publier sur GitHub Pages
+    needs: verifier                              # ⬅️ le verrou de C-013
+    if: github.event_name != 'pull_request'      # jamais depuis une proposition de fusion
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -133,6 +133,29 @@ via le workflow [`.github/workflows/pages.yml`](../.github/workflows/pages.yml).
 
 Mise en service (déjà faite) : dépôt GitHub → **Settings → Pages → Source : GitHub Actions**.
 
+### 🚦 Un contrôle passe AVANT la publication *(chantier C-013, referme R-043)*
+
+**Depuis le 2026-08-06, rien ne part en ligne sans avoir été vérifié.**
+
+Le workflow contient **deux travaux** : `verifier` s'exécute **d'abord**, `deploy` en **dépend**
+(`needs: verifier`). Si le contrôle échoue, **la publication n'a pas lieu du tout** — et
+**le site déjà en ligne reste intact**.
+
+| | |
+|---|---|
+| **Ce qui est vérifié** | La **syntaxe** de **tous** les fichiers `.js` de `frontend/`, bibliothèques extérieures comprises *(elles sont déposées à la main, donc elles peuvent arriver tronquées)*. L'outil est `node --check` |
+| **Ce qui n'est PAS vérifié** | Le **style**, les conventions, la qualité — **rien de tout cela**. Ni le **HTML** : il ne contient aucun script en ligne, et contrôler sa syntaxe exigerait une dépendance que le projet a refusée |
+| **Quand ça tourne** | À chaque envoi sur `main` **et** sur chaque proposition de fusion — on voit le problème **avant** qu'il atteigne `main` |
+| **Sur une proposition de fusion** | Le contrôle tourne, **la publication est neutralisée** (`if: github.event_name != 'pull_request'`) |
+
+> 🎯 **Pourquoi la syntaxe et rien d'autre.** Un contrôle trop exigeant qui refuserait de publier une
+> **correction urgente le jour du tournoi** serait **pire que pas de contrôle du tout**. Celui-ci
+> répond à une seule question : *ce fichier est-il lisible par un navigateur ?*
+
+**Si la publication échoue** : ouvrir l'onglet **Actions** du dépôt → le travail
+**« Vérifier la syntaxe des fichiers publiés »** nomme le fichier fautif et affiche l'erreur, avec
+son numéro de ligne.
+
 Adresses (base `https://rfl974.github.io/tournoi-r92/`) :
 - public : `…/tournoi.html` · admin : `…/admin.html` · saisie : `…/saisie.html` · perfs : `…/perfs.html`
 - `index.html` redirige la racine vers `tournoi.html`.
