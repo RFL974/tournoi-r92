@@ -92,9 +92,9 @@ n'empêche rien non plus.*
 | Champ libre | Libellé à l'écran | Ce qui y est attendu | Qui peut y écrire |
 |---|---|---|---|
 | `org_equipes_etrangeres_liste` | « **Liste des équipes étrangères** » | ✅ **« Nom du club, pays »** — libellé du formulaire fédéral, vérifié le 2026-08-06. **Aucune information nominative n'y est demandée** | L'organisateur *(écran d'administration)* |
-| `tournoi_description` | La description du tournoi | L'organisateur |
-| `tarif_engagement_modalites` | Les modalités de règlement | L'organisateur |
-| `reglement` | Le règlement sportif — ⚠️ **le champ existe mais a été retiré de l'écran** : il ne peut pas être rempli aujourd'hui *(R-012)* | *(personne, en l'état)* |
+| `tournoi_description` | La description du tournoi | Un texte de présentation, destiné à être **lu publiquement** | L'organisateur |
+| `tarif_engagement_modalites` | Les modalités de règlement | Les conditions de paiement de l'engagement | L'organisateur |
+| `reglement` | Le règlement sportif | Les règles du tournoi — ⚠️ **le champ existe mais a été retiré de l'écran** : il ne peut pas être rempli aujourd'hui *(R-012)* | *(personne, en l'état)* |
 
 > ✅ **Un fait vérifié qui compte, et qui n'était pas acquis : un club participant NE PEUT SAISIR
 > AUCUN TEXTE LIBRE.** Sa page de réponse ne contient **aucune zone de texte** — uniquement des
