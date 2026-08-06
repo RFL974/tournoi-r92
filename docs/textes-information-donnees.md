@@ -2,6 +2,9 @@
 
 > **Livrable du chantier C-005** *(industrialisation, prépare **R-028**)*.
 > Rédigé le **2026-08-06**, corrigé le même jour à la demande de Romain.
+> ✅ **Travail documentaire TERMINÉ le 2026-08-06** — les deux points qui pouvaient rendre un texte
+> **faux** sont tranchés *(§9, points 1 et 6)*. Les trois points restants sont **administratifs** :
+> ils retardent la mise en ligne, ils ne remettent rien en cause dans ce qui est écrit.
 > Destiné à être **relu**, puis **transmis au bureau de l'association organisatrice** pour validation.
 
 ---
@@ -86,9 +89,9 @@ remplis.
 *Zones de texte sans format imposé. L'application ne demande rien de particulier — mais elle
 n'empêche rien non plus.*
 
-| Champ libre | Libellé à l'écran | Qui peut y écrire |
-|---|---|---|
-| `org_equipes_etrangeres_liste` | « **Liste des équipes étrangères** » | L'organisateur *(écran d'administration)* |
+| Champ libre | Libellé à l'écran | Ce qui y est attendu | Qui peut y écrire |
+|---|---|---|---|
+| `org_equipes_etrangeres_liste` | « **Liste des équipes étrangères** » | ✅ **« Nom du club, pays »** — libellé du formulaire fédéral, vérifié le 2026-08-06. **Aucune information nominative n'y est demandée** | L'organisateur *(écran d'administration)* |
 | `tournoi_description` | La description du tournoi | L'organisateur |
 | `tarif_engagement_modalites` | Les modalités de règlement | L'organisateur |
 | `reglement` | Le règlement sportif — ⚠️ **le champ existe mais a été retiré de l'écran** : il ne peut pas être rempli aujourd'hui *(R-012)* | *(personne, en l'état)* |
@@ -226,9 +229,10 @@ Pour consulter, corriger ou faire supprimer ces informations : **[ADRESSE DE CON
 > représentés que par des **effectifs**.
 >
 > Certains champs de commentaire, réservés à l'organisation, sont libres : ils permettent
-> techniquement d'y écrire n'importe quel texte. **Nous nous engageons à n'y saisir aucune
-> information nominative concernant un enfant**, et à effacer ces champs une fois le dossier de la
-> journée envoyé.
+> techniquement d'y écrire n'importe quel texte. Le seul qui puisse concerner des participants —
+> la liste des équipes étrangères — **attend le nom du club et le pays**, et rien d'autre.
+> **Nous nous engageons à n'y saisir aucune information nominative concernant un enfant**, et à
+> effacer ces champs une fois le dossier de la journée envoyé.
 
 **Ce que nous ne faisons pas**
 
@@ -276,7 +280,7 @@ reste vraie quel que soit l'état d'avancement des formalités.
 
 | # | Ce qu'il faut confirmer | Pourquoi ça compte |
 |---|---|---|
-| **1** | **Que contient réellement le champ « Liste des équipes étrangères » ?** Il est **libre** *(catégorie 2)*. Les textes ci-dessus ne prétendent plus qu'il ne peut rien contenir : ils **engagent l'organisateur** à n'y saisir aucune information nominative concernant un enfant | Détermine si l'engagement pris est **tenu** |
+| ~~**1**~~ | ✅ **CONFIRMÉ le 2026-08-06 — et le constat d'origine de l'audit était inexact.** Le formulaire fédéral dit : *« Précisez ci-dessous les équipes étrangères (**nom du club, pays**) »*. **Aucune information nominative n'est demandée dans ce champ.** Il reste **libre** *(catégorie 2)*, donc l'engagement des textes est **maintenu** — mais il ne repose plus sur une hypothèse : il confirme une pratique. ⚡ **Point distinct, à porter au bureau** : le formulaire exige **par ailleurs**, dans ses **pièces à fournir**, les noms, prénoms et dates de naissance des joueurs et dirigeants étrangers. **Cette liste vit dans le dossier de l'association, hors de l'application** — elle échappe donc à tout ce que ce document peut couvrir | ✅ **Levé** |
 | **2** | **Le bureau valide-t-il ces textes ?** Ils **engagent l'association**, pas moi | Bloquant pour la mise en ligne |
 | **3** | **Les crochets** — nom de l'association, adresse de contact, prestataires | Bloquant pour la mise en ligne |
 | **4** | **Mentionne-t-on la situation en cours** dans le texte public ? *(§8)* | Question du bureau |
