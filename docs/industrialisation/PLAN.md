@@ -135,8 +135,8 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | ID | Chantier | Priorité | Statut | Dépend de | Validé par Romain | Implémenté | Testé |
 |---|---|---|---|---|---|---|---|
-| **C-013** | **Un contrôle de syntaxe avant publication** (R-043 moitié a, R-049, R-050) | **P1** | ⚙️ **EN COURS** | — | ✅ **oui** (2026-08-06) | ✅ **PR #182** | ✅ **2 preuves réelles dans GitHub** ; verrou `needs` à observer sur `main` |
-| **C-011** | **Les tests du barème et du départage** (R-041) — *premier chantier de l'ÉTAPE 5* | **P1** | ⚙️ **EN COURS** | — | ✅ **oui** (2026-08-06) | ✅ `af31664`, **PR #181** | ⏳ **616/616 hors Google** ; reste la preuve **chez Google** |
+| **C-013** | **Un contrôle de syntaxe avant publication** (R-043 moitié a, R-049, R-050) | **P1** | 🏁 **CLÔTURÉ** | — | ✅ **oui** (2026-08-06) | ✅ **PR #182 fusionnée** | 🏁 **TESTÉ** — contrôle prouvé, chaînage observé, publication réussie, site vérifié |
+| **C-011** | **Les tests du barème et du départage** (R-041) — *premier chantier de l'ÉTAPE 5* | **P1** | 🏁 **CLÔTURÉ** | — | ✅ **oui** (2026-08-06) | ✅ **PR #181 fusionnée** | 🏁 **TESTÉ** — `R92 — 616/616 OK, 0 FAIL` **chez Google** |
 | **C-001** | **Plafonner l'écriture publique des relevés de partenaires** (R-014) — *hors ordre normal, par exception D-016* | **P0** | ✅ **TESTÉ** | — | ✅ oui (D-016) | ✅ commit `c1948fc`, **redéployé** | ✅ **573/573** dans Apps Script + chaîne vérifiée en réel |
 | — | *(les autres chantiers se rempliront à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
 
@@ -854,7 +854,7 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 - **Comment on prouve que c'est fait** : le bilan passe de **589** à **589 + n**, `0 FAIL`, **chez
   Google**. ⚠️ Et **`docs/deploiement.md` doit être mis à jour avec le nouveau nombre** — sinon le
   contrôle à deux nombres devient faux, et on rouvre **M-04** de nos propres mains.
-- **Statut** : ⚙️ **EN COURS** — écrit, testé hors d'Apps Script (**616/616 OK, 0 FAIL**), **PR #181** ouverte
+- **Statut** : 🏁 **TESTÉ — CHANTIER DÉFINITIVEMENT CLÔTURÉ** *(2026-08-06)*. PR #181 **fusionnée**. Preuve **chez Google** : `R92 — 616/616 OK, 0 FAIL`
 - **Validation de Romain** : ✅ **oui, le 2026-08-06** *(+ D-025)*
 - **Commit** : `af31664` sur `chantier/c-011-tests-bareme-departage`
 
@@ -909,13 +909,13 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 - **Comment on prouve que c'est fait** : on introduit **volontairement** une faute de syntaxe dans
   une branche → **la publication doit échouer**. Sans cette démonstration, on ne sait pas si le
   contrôle contrôle quelque chose.
-- **Statut** : ⚙️ **EN COURS** — écrit, **les deux preuves obtenues dans GitHub**, **PR #182**
+- **Statut** : 🏁 **TESTÉ — CHANTIER DÉFINITIVEMENT CLÔTURÉ** *(2026-08-06)*. PR #182 **fusionnée**. **Contrôle de syntaxe PROUVÉ** · **chaînage `verifier → deploy` OBSERVÉ sur un vrai envoi sur `main`** · **publication réussie** · **site vérifié après publication**
 - **Validation de Romain** : ✅ **oui, le 2026-08-06**
 - **Preuves** : branche cassée → contrôle **failure** *(#183, fermée)* · branche saine → **30 fichiers vérifiés**, **success**
 - ✅ **Statut final** : **CORRIGÉ = oui** · **contrôle de syntaxe = PROUVÉ** · ✅ **chaînage `needs` = OBSERVÉ le 2026-08-06** *(exécution `31090376142` sur `main`, événement `push` : `verifier` fini à 09:44:46, `deploy` démarré à **09:44:57** — il a attendu)*
 - ✅ **Bout en bout** : le site réellement en ligne répond HTTP 200 et son JavaScript se lit sans erreur
 - ⛔ **Essai supplémentaire refusé** *(déclencher le workflow sur la branche cassée)* : il visait le chemin de publication du site en production. Branche de preuve **supprimée** ; preuve conservée dans la **PR #183** et son journal
-- ⏸️ **Consigne** : **ne pas passer au chantier suivant avant la fusion de la PR #182**, puis vérifier ensemble le premier passage dans Actions
+- 🏁 **Clôturé le 2026-08-06**, après vérification commune du premier passage dans Actions
 
 ---
 

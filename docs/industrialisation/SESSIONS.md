@@ -3678,3 +3678,32 @@ La PR #181 est fusionnée, `backend/Tests.gs` fait bien **3859 lignes** sur `mai
 > **R-041 reste `CORRIGÉ`, pas `TESTÉ`.** Il faut coller `Tests.gs` dans Apps Script et lancer
 > `lancerTestsFFR`. C'est **exactement la règle qui a coûté M-04** : un compte de tests ne dit pas
 > quelle version a été exécutée.
+
+---
+
+## 🏁 C-011 et C-013 — **définitivement clôturés** *(2026-08-06)*
+
+**Confirmation de Romain**, preuve Apps Script à l'appui :
+
+```
+R92 — 616/616 OK, 0 FAIL
+```
+
+| Chantier | Statut final | Ce qui le prouve |
+|---|---|---|
+| **C-011** | 🏁 **TESTÉ — CLÔTURÉ** | Le bilan ci-dessus, obtenu **chez Google**. **R-041 : `CORRIGÉ` → `TESTÉ`** |
+| **C-013** | 🏁 **TESTÉ — CLÔTURÉ** | Contrôle de syntaxe **PROUVÉ** · chaînage `verifier → deploy` **OBSERVÉ sur un vrai envoi sur `main`** · **publication réussie** · **site vérifié après publication** |
+
+> 🏉 **Deux P1 refermés — et pas une ligne du comportement de l'application n'a bougé.** L'un ajoute
+> des tests, l'autre un garde-fou avant publication. Un bénévole ne verra aucune différence le jour
+> J : c'était tout l'intérêt de l'ordre choisi par Romain, *« d'abord tout ce qui ne peut rien
+> casser »*.
+
+**Ce qui reste ouvert et qu'il ne faut pas confondre avec une victoire complète** :
+
+- **R-043 moitié (b)** — un vrai **harnais de tests du navigateur** — **entière**, hors périmètre ;
+- **R-041** protège les deux **règles** *(barème, départage)*, **pas la chaîne complète** du
+  classement : `calculerClassement` lit le classeur et reste hors de portée du harnais (**R-046**).
+
+**Reprise de l'ÉTAPE 4** : chantier suivant présenté à Romain — **C-005**, les trois textes
+d'information.
