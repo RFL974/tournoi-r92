@@ -59,14 +59,15 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 
 | Ce qu'on vérifie | Valeur attendue **aujourd'hui** | Ce qu'un écart signifie |
 |---|---|---|
-| **Le bilan** affiché en fin de journal | **`R92 — 589/589 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
-| **La dernière ligne** du fichier collé chez Google | **3711** | Le fichier collé n'est pas celui du dépôt |
+| **Le bilan** affiché en fin de journal | **`R92 — 616/616 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
+| **La dernière ligne** du fichier collé chez Google | **3859** | Le fichier collé n'est pas celui du dépôt |
 
 > 🎯 **Pourquoi deux nombres et pas un.** Le bilan seul ne dit **jamais quelle version** a été
 > exécutée : « 573/573 OK » était un vrai résultat sur un faux fichier. Le nombre de lignes est ce
 > qui identifie le fichier. **Les deux ensemble prouvent ce qu'un seul laisse croire.**
 
-> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-05**.
+> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-06**
+> *(chantier **C-011** : +27 vérifications sur le barème et le départage)*.
 > Les valeurs de référence à jour se lisent toujours dans le dépôt :
 > `wc -l backend/Tests.gs` pour le nombre de lignes, et
 > `docs/industrialisation/ETAT.md` §9 pour le total attendu.

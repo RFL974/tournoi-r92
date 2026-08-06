@@ -354,6 +354,13 @@ function lancerTestsFFR() {
   testS6sec_cacheEnPanneNeCassePas(etat);
   testS6sec_identifiantInvalideRefuse(etat);
 
+  // Industrialisation — chantier C-011 : le barème et le départage (R-041, décision D-025).
+  testClassement_baremeVictoireNulDefaite(etat);
+  testClassement_cumulSurPlusieursMatchs(etat);
+  testClassement_departageParLesPoints(etat);
+  testClassement_departageParLaDifference(etat);
+  testClassement_departageParLesPointsMarquesEtOrdreStable(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -3708,4 +3715,145 @@ function testS6sec_identifiantInvalideRefuse(etat) {
   _ffrAssert(etat, mesureIdentifiant('ab') === '', 'S6-séc : identifiant trop court → refusé');
   _ffrAssert(etat, mesureIdentifiant('<script>') === '', 'S6-séc : identifiant non alphanumérique → refusé');
   _ffrAssert(etat, mesureIdentifiant('a1b2-c3_d4') === 'a1b2-c3_d4', 'S6-séc : identifiant normal → accepté');
+}
+
+/* ============================================================================
+ * INDUSTRIALISATION — CHANTIER C-011 : LE BARÈME ET LE DÉPARTAGE (R-041)
+ * ----------------------------------------------------------------------------
+ * POURQUOI CES TESTS EXISTENT
+ *   `enregistrerResultat` et `comparerClassement` décident du vainqueur d'un
+ *   tournoi, et n'étaient vérifiés par AUCUN test — alors que D-014 va modifier
+ *   le départage (ajout de la confrontation directe puis de l'ordre
+ *   alphabétique). Écrits APRÈS cette modification, ces tests auraient gravé le
+ *   nouveau comportement sans avoir jamais vu l'ancien : ils ne prouveraient
+ *   plus qu'on n'a rien cassé. D'où leur écriture AVANT (décision D-025).
+ *
+ * CE QU'ILS COUVRENT — et ce qu'ils NE couvrent pas
+ *   Ils portent sur les DEUX RÈGLES pures : le barème (3/2/1) et l'ordre de
+ *   départage (points → différence → points marqués). Ils ne couvrent PAS la
+ *   chaîne complète du classement : `calculerClassement` lit le classeur, il est
+ *   hors de portée du harnais (R-046).
+ *
+ * NOMMAGE : par SUJET (`testClassement_…`) et non par numéro de session. R-076
+ *   a montré que 27 préfixes sur 31 sont des numéros de session, ce qui ne dit
+ *   pas de quoi le test parle. On n'aggrave pas le compte.
+ * ========================================================================== */
+
+/** Statistiques neuves d'une équipe — même forme que celles de `calculerClassement`. */
+function _statsC011(nom) {
+  return { id_equipe: nom, nom_equipe: nom,
+           j: 0, v: 0, n: 0, d: 0, bp: 0, bc: 0, diff: 0, pts: 0 };
+}
+
+/** Équipe dont on impose directement points / différence / points marqués. */
+function _equipeC011(nom, pts, diff, bp) {
+  var s = _statsC011(nom); s.pts = pts; s.diff = diff; s.bp = bp; return s;
+}
+
+/** LE BARÈME : victoire 3, nul 2, défaite 1 — et les compteurs qui vont avec. */
+function testClassement_baremeVictoireNulDefaite(etat) {
+  var gagnant = _statsC011('A'); enregistrerResultat(gagnant, 17, 5);
+  _ffrAssert(etat, gagnant.pts === 3, 'C-011 : une victoire vaut 3 points');
+  _ffrAssert(etat, gagnant.v === 1 && gagnant.n === 0 && gagnant.d === 0,
+    'C-011 : une victoire incrémente V, et elle seule');
+
+  var perdant = _statsC011('B'); enregistrerResultat(perdant, 5, 17);
+  _ffrAssert(etat, perdant.pts === 1, 'C-011 : une défaite vaut 1 point');
+  _ffrAssert(etat, perdant.d === 1 && perdant.v === 0 && perdant.n === 0,
+    'C-011 : une défaite incrémente D, et elle seule');
+
+  var nul = _statsC011('C'); enregistrerResultat(nul, 12, 12);
+  _ffrAssert(etat, nul.pts === 2, 'C-011 : un match nul vaut 2 points');
+  _ffrAssert(etat, nul.n === 1 && nul.v === 0 && nul.d === 0,
+    'C-011 : un nul incrémente N, et lui seul');
+
+  _ffrAssert(etat, gagnant.j === 1 && perdant.j === 1 && nul.j === 1,
+    'C-011 : chaque résultat compte exactement un match joué');
+
+  // Un score 0-0 est un nul, pas une double défaite : le piège classique du `>` mal posé.
+  var vierge = _statsC011('D'); enregistrerResultat(vierge, 0, 0);
+  _ffrAssert(etat, vierge.pts === 2 && vierge.n === 1,
+    'C-011 : 0-0 est un match nul (2 points), pas une défaite');
+}
+
+/** LE CUMUL : marqués, encaissés et différence s'additionnent sur plusieurs matchs. */
+function testClassement_cumulSurPlusieursMatchs(etat) {
+  var s = _statsC011('A');
+  enregistrerResultat(s, 20, 5);   // +15
+  enregistrerResultat(s, 7, 7);    //   0
+  enregistrerResultat(s, 3, 15);   // −12
+
+  _ffrAssert(etat, s.j === 3, 'C-011 : trois matchs joués sont comptés');
+  _ffrAssert(etat, s.bp === 30, 'C-011 : points marqués cumulés = 20+7+3 = 30');
+  _ffrAssert(etat, s.bc === 27, 'C-011 : points encaissés cumulés = 5+7+15 = 27');
+  _ffrAssert(etat, s.diff === 3, 'C-011 : la différence est marqués − encaissés = 3');
+  _ffrAssert(etat, s.pts === 6, 'C-011 : 1 victoire + 1 nul + 1 défaite = 3+2+1 = 6 points');
+  _ffrAssert(etat, s.v === 1 && s.n === 1 && s.d === 1,
+    'C-011 : le détail V/N/D suit le cumul');
+
+  // La différence n'est jamais recalculée à part : elle doit rester cohérente à chaque étape.
+  var t = _statsC011('B');
+  enregistrerResultat(t, 5, 12);
+  _ffrAssert(etat, t.diff === -7, 'C-011 : une différence négative est conservée telle quelle');
+}
+
+/** DÉPARTAGE, 1er critère : les points d'abord, quoi qu'il arrive. */
+function testClassement_departageParLesPoints(etat) {
+  var fort   = _equipeC011('Fort', 9, -50, 3);   // peu de points marqués, différence catastrophique
+  var faible = _equipeC011('Faible', 6, 200, 400); // différence énorme, mais moins de points
+
+  _ffrAssert(etat, comparerClassement(fort, faible) < 0,
+    'C-011 : plus de points passe devant, même avec une différence bien pire');
+  _ffrAssert(etat, comparerClassement(faible, fort) > 0,
+    'C-011 : la comparaison est symétrique sur les points');
+}
+
+/** DÉPARTAGE, 2e critère : à égalité de points, la DIFFÉRENCE tranche.
+ *  ⚠️ Ce critère n'était mis à l'épreuve par AUCUNE des 589 vérifications existantes. */
+function testClassement_departageParLaDifference(etat) {
+  var meilleure = _equipeC011('Meilleure', 7, 12, 20);
+  var moindre   = _equipeC011('Moindre',   7, 3,  80); // beaucoup plus de points marqués
+
+  _ffrAssert(etat, comparerClassement(meilleure, moindre) < 0,
+    'C-011 : à égalité de points, la meilleure différence passe devant');
+  _ffrAssert(etat, comparerClassement(moindre, meilleure) > 0,
+    'C-011 : la comparaison est symétrique sur la différence');
+  _ffrAssert(etat, comparerClassement(meilleure, moindre) < 0 &&
+                   moindre.bp > meilleure.bp,
+    'C-011 : la différence prime sur les points marqués (elle passe en 2e, eux en 3e)');
+
+  // Différences négatives : −2 doit passer devant −9.
+  var moinsPire = _equipeC011('MoinsPire', 4, -2, 10);
+  var plusPire  = _equipeC011('PlusPire',  4, -9, 10);
+  _ffrAssert(etat, comparerClassement(moinsPire, plusPire) < 0,
+    'C-011 : entre deux différences négatives, la moins mauvaise passe devant');
+}
+
+/** DÉPARTAGE, 3e critère et ordre stable : à égalité de points ET de différence,
+ *  ce sont les POINTS MARQUÉS. Et si tout est égal, l'ordre ne bouge pas.
+ *  ⚠️ Ce critère non plus n'était mis à l'épreuve par aucune vérification existante. */
+function testClassement_departageParLesPointsMarquesEtOrdreStable(etat) {
+  var offensive = _equipeC011('Offensive', 7, 5, 60);
+  var prudente  = _equipeC011('Prudente',  7, 5, 22);
+
+  _ffrAssert(etat, comparerClassement(offensive, prudente) < 0,
+    'C-011 : à égalité de points ET de différence, le plus de points marqués passe devant');
+  _ffrAssert(etat, comparerClassement(prudente, offensive) > 0,
+    'C-011 : la comparaison est symétrique sur les points marqués');
+
+  // Strictement égales : la comparaison doit renvoyer 0 (ordre inchangé, pas de départage inventé).
+  var jumelleA = _equipeC011('JumelleA', 7, 5, 22);
+  var jumelleB = _equipeC011('JumelleB', 7, 5, 22);
+  _ffrAssert(etat, comparerClassement(jumelleA, jumelleB) === 0,
+    'C-011 : deux équipes strictement égales ne sont pas départagées (0)');
+
+  // Le tri complet, dans l'ordre attendu : c'est ce que voit l'organisateur.
+  var poule = [prudente, jumelleA, offensive, _equipeC011('Tete', 9, 0, 0)];
+  var ordre = poule.slice().sort(comparerClassement).map(function (e) { return e.nom_equipe; });
+  _ffrAssert(etat, ordre[0] === 'Tete',
+    'C-011 : tri complet — les points passent en premier');
+  _ffrAssert(etat, ordre[1] === 'Offensive',
+    'C-011 : tri complet — puis les points marqués départagent');
+  _ffrAssert(etat, ordre.length === 4,
+    'C-011 : le tri ne perd aucune équipe');
 }
