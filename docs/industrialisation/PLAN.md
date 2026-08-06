@@ -663,10 +663,13 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
 - **Dépendances** : ✅ **aucune** — **D-020 est tranchée**. Fournit une entrée à **C-005**.
 - **Comment on prouve que c'est fait** : **chaque donnée personnelle listée au volet C de la
   cartographie a une durée écrite**, sans exception — même « conservé ».
-- **Statut** : ⚙️ **LIVRÉ** — `docs/conservation-donnees.md`. **Aucun fichier de l'application touché, aucune donnée supprimée, aucun outil construit.**
+- **Statut** : 🏁 **CLÔTURÉ CÔTÉ TRAVAIL DOCUMENTAIRE** *(validé par Romain le 2026-08-06)* — `docs/conservation-donnees.md`. **Aucun fichier de l'application touché, aucune donnée supprimée, aucun outil construit.**
 - **Validation de Romain** : ✅ **oui, le 2026-08-06** *(+ D-020, D-033)*
 - ⭐ **Ce que la vérification a trouvé, et qui n'était pas connu** : **5 gestes sur 7 sont VÉRIFIÉS** dans le code · **2 restent À CONFIRMER** *(le détail des effectifs, les copies de courriels)* · et surtout : **la réinitialisation N'EFFACE PAS les contacts de la demande fédérale, médecin compris** — la règle décidée et le code divergent
-- ⚠️ **Ne referme ni R-031 ni R-033** : ce sont des comportements du code, chantier du volet ③
+- ⚠️ **Ne referme NI R-030 (part outillage), NI R-031, NI R-033** — ce sont des **comportements du code**. Validé explicitement par Romain : *« sans fermer les problèmes du registre qui dépendent encore d'un changement de comportement »*
+- ⛔ **DEUX CONSTATS À CONSERVER POUR LES FUTURS CHANTIERS DE CODE** *(demande expresse de Romain)* :
+  1. **la réinitialisation n'efface PAS les contacts de la demande fédérale**, médecin compris — la règle décidée (D-020) et le code **divergent** ;
+  2. **`detail_effectifs` et `nb_educateurs_total` ne sont effacés par RIEN** : ni la réinitialisation, ni aucun écran *(l'édition d'une fiche ne touche que 4 colonnes)*, et ils sont **lus** par le calcul des effectifs
 
 ---
 

@@ -3707,3 +3707,39 @@ R92 — 616/616 OK, 0 FAIL
 
 **Reprise de l'ÉTAPE 4** : chantier suivant présenté à Romain — **C-005**, les trois textes
 d'information.
+
+---
+
+## 🏁 C-005 et C-006 — clôturés côté travail documentaire *(2026-08-06)*
+
+| Chantier | Livrable | Statut |
+|---|---|---|
+| **C-005** | `docs/textes-information-donnees.md` | 🏁 **Travail documentaire terminé** — ⚠️ **R-028 reste OUVERT** : rien n'est en ligne |
+| **C-006** | `docs/conservation-donnees.md` | 🏁 **Travail documentaire terminé** — ⚠️ **R-030, R-031 et R-033 restent OUVERTS** : ils dépendent d'un changement de comportement |
+
+> ✅ **Validation de Romain, mot pour mot** : *« Tu peux donc clôturer C-006 côté travail
+> documentaire et mettre à jour le suivi **sans fermer les problèmes du registre qui dépendent
+> encore d'un changement de comportement**. »*
+
+### ⛔ Les deux constats à conserver pour les futurs chantiers de code
+
+**Demande expresse de Romain.** Ils sont inscrits en tête de la fiche C-006 et dans le registre :
+
+1. **La réinitialisation n'efface PAS les contacts de la demande fédérale** — représentant,
+   président, **médecin**, secours. **La règle décidée (D-020) et le code divergent.** C'est le
+   geste le plus facile à oublier, parce que la réinitialisation donne le sentiment que tout est
+   fait ;
+2. **`detail_effectifs` et `nb_educateurs_total` ne sont effacés par RIEN** : ni la réinitialisation
+   *(ils ne figurent dans aucune des huit colonnes remises à zéro)*, ni aucun écran *(l'édition
+   d'une fiche ne touche que quatre colonnes)*. Et ils sont **lus** par le calcul des effectifs —
+   d'où le refus d'inventer un vidage manuel.
+
+### ⚠️ Une lacune de MON plan, découverte en clôturant
+
+Le tableau de couverture *(`PLAN.md` §12)* dit que **R-030, R-031 et R-033 sont « placés » dans
+C-006**. **C'est vrai pour la documentation, et faux pour la correction** : C-006 est un chantier
+sans code, et ces trois-là demandent un changement de comportement.
+
+> **Il manque donc une fiche** — celle du chantier de code qui corrigera l'effacement.
+> **Signalé à Romain, pas créé d'office** : ajouter un chantier au plan est une décision qui lui
+> appartient.
