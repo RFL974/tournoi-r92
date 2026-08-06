@@ -3625,3 +3625,56 @@ normal prouvera de toute façon, c'est prendre un risque de production pour rien
 - ⏸️ **L'ÉTAPE 4 est en pause.** Consigne : *« Ne passe pas au chantier suivant tant que la PR #182
   n'est pas fusionnée. »* À la reprise, on vérifie **ensemble** le premier passage dans Actions et
   on confirme le résultat du déploiement réel.
+
+---
+
+## C-013 — ✅ **LE CHAÎNAGE EST OBSERVÉ** · C-011 fusionné *(2026-08-06)*
+
+**Romain a fusionné les deux propositions** : #181 *(C-011)* puis #182 *(C-013)*.
+
+### La preuve qui manquait, obtenue sur un déploiement **légitime**
+
+Exécution **`31090376142`** sur `main`, **événement `push`** — donc, cette fois, `deploy` **n'était
+pas neutralisé** :
+
+| Travail | Résultat | Démarré | Fini |
+|---|---|---|---|
+| Vérifier la syntaxe des fichiers publiés | ✅ **success** | 09:44:42 | 09:44:46 |
+| Publier sur GitHub Pages | ✅ **success** | **09:44:57** | 09:52:03 |
+
+> ⭐ **`deploy` a démarré 11 secondes APRÈS la fin de `verifier`.** Il ne s'est pas lancé en
+> parallèle : **il a attendu**. Le verrou `needs:` passe donc de *« prouvé par construction »* à
+> **« observé »**.
+>
+> 🎯 **Et l'arbitrage de Romain est validé par le résultat** : refuser de provoquer une exécution du
+> chemin de publication n'a rien coûté — **la preuve est arrivée seule, 90 secondes après la
+> fusion**, sur un déploiement qui devait avoir lieu de toute façon.
+
+### Vérification de bout en bout — le site, pas seulement le journal
+
+| Contrôle | Résultat |
+|---|---|
+| `js/commun.js` servi par GitHub Pages | **HTTP 200**, 17 054 octets |
+| Le fichier réellement en ligne passe `node --check` | ✅ **oui** |
+| Trace de la faute volontaire dans le fichier en ligne | ✅ **aucune** |
+| Page publique `tournoi.html` | **HTTP 200** |
+
+### 🏁 C-013 est TERMINÉ
+
+| | |
+|---|---|
+| **CORRIGÉ** | ✅ oui |
+| **Contrôle de syntaxe** | ✅ **PROUVÉ** |
+| **Chaînage `needs`** | ✅ **OBSERVÉ** |
+
+**R-043 moitié (a) : refermée.** ⚠️ La moitié **(b)** — un vrai harnais de tests du navigateur —
+**reste entière** et hors périmètre. **R-049** et **R-050** sont couverts par la documentation.
+
+### ⚠️ C-011, lui, n'est PAS terminé
+
+La PR #181 est fusionnée, `backend/Tests.gs` fait bien **3859 lignes** sur `main`, et
+`docs/deploiement.md` annonce **616**. **Mais rien n'a encore tourné chez Google.**
+
+> **R-041 reste `CORRIGÉ`, pas `TESTÉ`.** Il faut coller `Tests.gs` dans Apps Script et lancer
+> `lancerTestsFFR`. C'est **exactement la règle qui a coûté M-04** : un compte de tests ne dit pas
+> quelle version a été exécutée.

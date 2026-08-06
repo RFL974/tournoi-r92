@@ -378,7 +378,23 @@ D-030** (tournoi suspendu / annulé).
 |---|---|
 | **CORRIGÉ** | ✅ **oui** |
 | **Contrôle de syntaxe** | ✅ **PROUVÉ** *(les deux essais réels dans GitHub)* |
-| **Chaînage `needs` sur le chemin réel de publication** | ⏳ **À OBSERVER** au premier déploiement sur `main` |
+| **Chaînage `needs` sur le chemin réel de publication** | ✅ **OBSERVÉ le 2026-08-06** — voir ci-dessous |
+
+✅ **LE CHAÎNAGE EST PROUVÉ, sur un déploiement légitime.** À la fusion de la PR #182, exécution
+**`31090376142`** sur `main`, **événement `push`** *(donc `deploy` n'était PAS neutralisé)* :
+
+| Travail | Résultat | Démarré | Fini |
+|---|---|---|---|
+| Vérifier la syntaxe des fichiers publiés | ✅ **success** | 09:44:42 | 09:44:46 |
+| Publier sur GitHub Pages | ✅ **success** | **09:44:57** | 09:52:03 |
+
+> ⭐ **`deploy` a démarré 11 secondes APRÈS la fin de `verifier`** — il ne s'est donc pas lancé en
+> parallèle : il a **attendu**. C'est exactement ce que `needs:` devait produire, et c'est
+> **observé**, plus déduit.
+
+✅ **Vérification de bout en bout du site réellement en ligne** *(et pas seulement du journal)* :
+`js/commun.js` servi par GitHub Pages répond **HTTP 200**, **se lit sans erreur** (`node --check`),
+et ne contient **aucune trace** de la faute volontaire. La page publique répond **HTTP 200**.
 
 ⛔ **L'essai supplémentaire sur la branche cassée a été explicitement REFUSÉ par Romain** — il visait le chemin de publication du site en production. La branche `preuve/c-013-syntaxe-cassee` a été **supprimée** ; la preuve reste consultable dans la **PR #183** *(fermée)* et son journal d'exécution. · **(b)** harnais navigateur : **toujours à planifier**, hors périmètre de C-013 | `AUDIT.md` §D.4 |
 | **R-044** | **La même règle métier est écrite deux fois, et rien ne vérifie qu'elles disent la même chose.** **29 mentions de « miroir »** dans le frontend, dont le **barème et le départage** (`comparerClassement` côté serveur / `comparer` côté navigateur) — non testés des deux côtés. Le serveur **génère l'après-midi**, le navigateur **affiche au public** : une divergence rend les deux écrans faux **sans que ni l'un ni l'autre ne paraisse anormal** | **P1** | CERTAIN | IDENTIFIÉ — dépend de **R-043 (b)** | `AUDIT.md` §D.5 |
