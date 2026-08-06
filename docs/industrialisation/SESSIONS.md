@@ -3328,3 +3328,102 @@ quoi, l'interface sur le terrain, et le reste)*.
 > t'appartient.
 
 **Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+# SESSION 16 — 2026-08-06 · 🏁 **ÉTAPE 3, vague 2 — ET CLÔTURE DE L'ÉTAPE 3**
+
+> **Choix de Romain, et il commande toute la séance** : *« Je préfère qu'on ait la vision complète
+> plutôt que commencer un chantier pour ensuite devoir repasser dessus parce qu'une session
+> ultérieure devra ajouter, supprimer ou modifier quelque chose sur lequel on a décidé de travailler
+> trop tôt. »*
+>
+> ⚠️ **Aucune ligne de code écrite.**
+
+## 0. Mise à jour avant lecture
+
+`git fetch` + `git status -sb` → **`## main...origin/main`**, propre, aucun retard.
+
+## 1. La séance a commencé par une mesure, pas par de la rédaction
+
+**Puisque l'objectif était la couverture complète, il fallait d'abord savoir ce qui manquait.**
+Extraction du registre et confrontation aux fiches existantes :
+
+> **36 problèmes sur 91 avaient une fiche. 55 n'en avaient aucune.**
+
+C'est ce chiffre qui a défini la séance — pas une intuition.
+
+## 2. Ce qui a été écrit
+
+**14 fiches** — **C-017 → C-030** :
+
+| Fiche | Chantier | Referme |
+|---|---|---|
+| **C-017** | ⚡ Terminer le travail d'affluence | **R-064**, **R-061** (P1), R-062, R-071 |
+| **C-018** | 🪶 Alléger ce qui voyage | R-066, R-065, R-063, R-080 |
+| **C-019** | 🔐 Le verrou et ce qu'on met dedans | R-067, R-068, R-070 |
+| **C-020** | 🕵️ Savoir qui a fait quoi | **R-017** (P1), R-023, R-059 |
+| **C-021** | 🚪 Fermer ce qui sort | R-021, **R-018** (P1), R-032, R-020 |
+| **C-022** | 📱 L'interface sur le terrain | R-054 → R-058, R-060 |
+| **C-023** | 🏉 Le Super Challenge | R-082, R-009 |
+| **C-024** | 🪞 Le miroir qui se vérifie tout seul | **R-044** (P1) |
+| **C-025** | 🧱 Les rigidités de génération | **R-002** (P1), R-006 → R-008, R-010 |
+| **C-026** | 🕶️ Les expositions inutiles | R-022, R-025, R-037, R-026, R-027 |
+| **C-027** | 🧪 Les tests qui manquent encore | R-045, R-046 |
+| **C-028** | 🔏 La protection des données : ce qui reste | R-035, R-036, R-039, **R-029** (P1) |
+| **C-029** | 📌 Savoir quelle version tourne | R-075 |
+| **C-030** | 🧭 La maintenabilité, **en opportuniste** | R-074, R-076 → R-079, R-081, R-088 |
+
+**Plus un rattachement** : **R-048** *(un envoi qui n'aboutit pas fige le bouton indéfiniment — les
+lectures ont un délai d'abandon, **les écritures n'en ont aucun**)* rejoint **C-014**. Même écran,
+même sujet : **rendre l'application bavarde sans borner l'attente ne servirait à rien.**
+
+## 3. 🎯 Le livrable principal : **la couverture est prouvée**
+
+| | |
+|---|---|
+| Problèmes au registre | **91** |
+| Placés dans un chantier | **88** |
+| Explicitement écartés | **3** — R-011, R-019, R-040 |
+| **Sans place** | ✅ **0** |
+| Chantiers | **30** *(C-001 → C-030)* |
+
+**Le tableau complet est en `PLAN.md` §12**, ligne par ligne, et il a été **produit en relisant les
+fiches** — pas de mémoire.
+
+> ⚠️ **Ce que ce tableau ne prouve pas** : que les 91 seront corrigés. Il prouve que **chacun a une
+> place et une décision** — y compris *« on ne le fait pas, et voici pourquoi »*.
+
+## 4. Trois choix de méthode assumés
+
+1. **Les fiches de la vague 2 sont plus courtes**, et c'est délibéré : ce sont des P2 et des P3.
+   Trois pages pour un problème de confort seraient de la sur-instrumentation, et feraient perdre de
+   vue les P1 ;
+2. **C-030 n'est pas un chantier, c'est une RÈGLE** : les sept constats d'architecture *(fichier de
+   8 147 lignes, tests rangés par date, administration en anneau, 12 noms en double…)* ne doivent
+   **jamais** être traités en bloc — chacun, fait d'un coup, **aggrave un problème plus grave que
+   lui**. La règle retenue : *quand on ouvre un fichier pour une autre raison, on améliore ce qu'on
+   touche, et rien d'autre* ;
+3. **Trois problèmes n'auront pas de fiche**, et c'est écrit noir sur blanc : **R-019** *(ce n'est
+   pas un chantier, c'est l'action D-017 de Romain)*, **R-011** et **R-040** *(P3, prématurés)*.
+
+## 5. `ETAT.md` a été raccourci
+
+Le fichier accumulait des sections historiques *(« 1 bis », « 1 ter », « 1 quater »…)* alors qu'il
+est censé rester **court volontairement**. Les quatre ont été **condensées en un tableau de cinq
+lignes**. Rien n'est perdu : le détail vit dans `SESSIONS.md`, `RAPPORT-AUDIT.md` et `PLAN.md`.
+
+## 6. Prochaine étape : **l'ÉTAPE 4 — LA VALIDATION**
+
+Ce n'est plus une étape d'écriture. C'est **celle de Romain** : accepter, refuser ou réordonner les
+chantiers, **un par un**.
+
+> 💡 **Ma recommandation** : **ne pas les prendre dans l'ordre du numéro.** Commencer par **ce qui
+> ne peut rien casser** — **C-011** *(les tests)*, **C-013** *(le contrôle avant publication)*,
+> **C-005 · C-006 · C-007** *(documentation pure)*. **Six P1 y sont refermés, et aucun ne touche au
+> comportement de l'application.** Le premier chantier qui modifie vraiment quelque chose serait
+> alors **C-012** — et il serait déjà protégé par les tests de C-011.
+
+**Trois questions attendent Romain à l'ÉTAPE 4** : la colonne morte de **C-009** *(supprimer ou
+brancher ?)*, jusqu'où va **C-020** *(savoir qui a fait quoi)*, et les **cinq points ouverts** de
+D-030 §5 pour **C-003**.

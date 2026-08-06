@@ -9,9 +9,9 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-06 (**session 15 — ÉTAPE 3, volet ③, vague 1** : 6 fiches de
-plus, **C-011 → C-016**, et la vague 2 listée. **16 chantiers ont désormais une fiche.**)
-*Session 14 : volet ② terminé, C-005 → C-010.* *Rappel de la veille : session 13 + **4 addendums*** — **ÉTAPE 3 ouverte, volet ①
+**Dernière mise à jour** : 2026-08-06 (**session 16 — 🏁 L'ÉTAPE 3 EST TERMINÉE** : vague 2 écrite,
+**C-017 → C-030**, et **la couverture des 91 problèmes est prouvée : 91 sur 91 placés, 0 sans
+place**.) *Sessions 13-15 : volets ①, ② et vague 1 du ③.* *Rappel de la veille : session 13 + **4 addendums*** — **ÉTAPE 3 ouverte, volet ①
 terminé : les 6 décisions en attente sont TRANCHÉES** · ⚡ **une 7ᵉ décision apportée par Romain
 entre au chantier : D-030 — tournoi suspendu / annulé** · ⚡ **I-21 levée par la FFR** · ⚡ **cadre
 de la reprise précisé — 6 contraintes / 8 leviers / 5 principes — et trois fiches de chantier
@@ -30,72 +30,27 @@ registre : R-090, R-091**)
 
 ## 1. EN UNE PHRASE
 
-🏁 **L'ÉTAPE 3 avance vite : volets ① et ② TERMINÉS, volet ③ à moitié écrit — 16 chantiers ont
-désormais une fiche** (C-001 → C-016). La **vague 1 du volet ③** (session 15) couvre **ce qui doit
-passer en premier** : le filet de tests **avant** de toucher au classement (**C-011**, qui ne
-modifie **aucune ligne de l'application** — vérifié : les deux fonctions qui décident du vainqueur
-font **6 et 5 lignes** et ne touchent pas au classeur), puis la séparation du cœur de la saisie
-(**C-012**), puis les **quatre P1 du jour J** (**C-015** : forfait, annulation, planning, départage,
-borne de score — **toutes les règles sont déjà décidées, il ne reste qu'à les écrire**). S'y
-ajoutent le **filet côté serveur** (**C-016**), **faire parler l'application** (**C-014**, dont la
-conception est déjà validée par **D-027**) et le **contrôle avant publication** (**C-013** — le
-chantier **le moins cher du plan**). La **vague 2** est listée, rien n'est perdu.
+🏁 **L'ÉTAPE 3 EST TERMINÉE.** **30 chantiers ont une fiche** (C-001 → C-030), et surtout : **les
+91 problèmes du registre sont TOUS placés — 88 dans un chantier, 3 explicitement écartés, 0 sans
+place** *(`PLAN.md` §12, tableau vérifiable)*. C'était la condition posée par Romain : *« je préfère
+qu'on ait la vision complète plutôt que commencer un chantier pour ensuite devoir repasser dessus »*
+— **elle est remplie.** L'ordre est établi de bout en bout, et **la prochaine étape est la
+VALIDATION (ÉTAPE 4)**, chantier par chantier.
 
 ---
 
-## 1 bis. CE QUE LES VOLETS ① ET ② AVAIENT ÉTABLI
+## 1 bis. CE QUI A MENÉ LÀ, EN QUATRE LIGNES
 
-**L'ÉTAPE 3 avance : ses volets ① et ② sont TERMINÉS.** Plus aucune décision n'est en attente,
-plus aucune inconnue ne bloque le plan, et **six chantiers ont désormais une fiche complète**
-(**C-005 → C-010**, session 14) — dont **quatre qui ne dépendent de rien** et peuvent démarrer dès
-validation, **deux d'entre eux refermant des P1** *(les textes d'information, la politique de
-conservation)*. Le volet ② a **corrigé son propre intitulé** au passage : annoncé comme « cinq lots
-sans code », il en compte **deux qui ouvrent des fichiers source** — sans changer un comportement,
-mais en passant obligatoirement par une branche et une relecture *(D-006)*. Une vérification a par
-ailleurs montré que **la partie dangereuse de R-072 était déjà refermée**. **Le volet ③ — les
-chantiers avec code — peut s'ouvrir.**
+> *Ce fichier doit rester court. Le détail de chaque étape vit dans `SESSIONS.md` ; la vue
+> d'ensemble de l'audit dans `RAPPORT-AUDIT.md` ; les chantiers dans `PLAN.md`.*
 
----
-
-## 1 ter. CE QUE LE VOLET ① AVAIT ÉTABLI *(session 13)*
-
-**Plus aucune décision n'est en attente, et plus aucune inconnue ne bloque le plan.** Les **six décisions** qui traînaient depuis les sessions 1
-à 8 ont été reprises une par une et **toutes tranchées le 2026-08-05** — dont les trois du domaine B
-(D-018, D-019, D-020) et **D-025**, qui fixe la contrainte d'ordre la plus importante de tout le
-chantier : **les tests du barème et du départage sont écrits AVANT qu'on touche au départage**. Une
-seule vérification, gratuite, a débloqué deux d'entre elles : la lecture du **site vitrine public**
-a **levé I-16** et livré les deux informations qui manquaient à D-018 — **le responsable
-(Génération R92) et l'adresse de contact**. Le registre des inconnues passe de **9 à 8** *(I-16
-levée · ⚡ I-21 ouverte **puis levée le jour même**)*, et **aucune n'empêche de construire le
-plan** : deux sont des **courriels à envoyer**, deux des **vérifications de cinq minutes**, une ne
-se lèvera **que le jour du tournoi**, une est **sans effet**, et la dernière est **permanente**.
-
-⚡ **Et une chose est entrée au chantier le même jour, qui ne vient pas de l'audit** : Romain a
-apporté une **décision fonctionnelle** que les huit domaines n'avaient pas vue — **D-030, le
-tournoi SUSPENDU ou ANNULÉ** pour force majeure (orage, foudre, terrain impraticable, sécurité).
-L'application sait aujourd'hui annuler **un match** (D-015) ; elle ne sait rien faire quand c'est
-**toute la journée** qui s'arrête. C'est **R-089**, classé **P1**, et le registre passe donc de
-**88 à 89** — avec sa source écrite à côté, parce qu'un audit qui n'a pas vu quelque chose ne doit
-pas pouvoir s'en attribuer le mérite plus tard. **Aucune ligne de code n'a été écrite** : c'est une
-**spécification conservée**, à implanter au **volet ③**, après les tests du lot ① et après R-042.
-
----
-
-## 1 quater. CE QUE L'ÉTAPE 2 AVAIT ÉTABLI *(pour mémoire)*
-
-**L'ÉTAPE 1 et l'ÉTAPE 2 sont TERMINÉES : les huit domaines sont audités** — A (métier),
-C (sécurité), B (protection des données), D (tests), E (expérience d'utilisation), F (performance),
-G (architecture) et H (qualité du code), soit **88 problèmes**. Le dernier domaine, fait en
-session 12, **confirme et complète le verdict du précédent** : le code tient ses promesses, sauf
-quand il parle de lui-même. Et il apporte **la réponse à la question la plus importante que le
-chantier avait laissée ouverte** — les règles de classement écrites **deux fois**, une pour Google
-et une pour le navigateur (**R-044**), **disent bien la même chose** : **179 comparaisons ont été
-exécutées côte à côte, 0 écart**, le barème et le départage identiques **au caractère près**. Les
-sept problèmes du domaine H portent tous sur ce que le code **raconte** — un commentaire qui annonce
-l'inverse de la ligne d'en dessous, une colonne créée dans le classeur que rien ne lit, un écran qui
-annonce une durée de match qui ne sera pas jouée. **Aucun P0, aucun P1.** **Une seule chose t'attend
-et n'est pas technique** : remplacer les deux mots de passe par des suites aléatoires (**D-017**, ce
-qui referme R-019). ✅ **L'ÉTAPE 3 s'est ouverte à la session 13** — voir §1.
+| Quand | Ce qui s'est passé |
+|---|---|
+| Sessions **2 → 4** | **ÉTAPE 1 — cartographie.** Le projet est compris et décrit : 3 volets, **39 points d'attention** |
+| Sessions **5 → 12** | **ÉTAPE 2 — audit des 8 domaines.** **88 problèmes**, 1 P0 *(corrigé et testé)*, 6 risques de méthode. Synthèse close : `RAPPORT-AUDIT.md` |
+| Session **13** | **ÉTAPE 3, volet ①.** Les **6 dernières décisions tranchées**, plus aucune inconnue bloquante. ⚡ **D-030/031/032** entrent le même jour, et **3 problèmes hors audit** : R-089, R-090, R-091 |
+| Session **14** | **ÉTAPE 3, volet ②** — 6 fiches **sans code** (C-005 → C-010). Correction : **2 des 6 touchent des fichiers source** |
+| Sessions **15-16** | **ÉTAPE 3, volet ③** — 20 fiches **avec code** (C-011 → C-030), en 2 vagues, puis **la couverture prouvée** |
 
 ---
 
@@ -106,8 +61,8 @@ qui referme R-019). ✅ **L'ÉTAPE 3 s'est ouverte à la session 13** — voir �
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
 | 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
-| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | 🚧 **EN COURS** — **volet ① ✅** (session 13) · **volet ② ✅** (session 14, C-005 → C-010) · **volet ③ 🚧** (session 15 : **vague 1 écrite**, C-011 → C-016 ; **vague 2 listée**) |
-| 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
+| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers** (C-001 → C-030), **91 problèmes placés sur 91**, **0 sans place** |
+| 4 | **ÉTAPE 4 — Validation par Romain** | 🔜 **PROCHAINE** — chantier par chantier |
 | 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
 
@@ -235,44 +190,53 @@ dépendances, comment on prouve que c'est fait.
 > de C-010** peuvent commencer **dès que tu les valides**, sans attendre une ligne de code. **Deux
 > d'entre eux referment des P1.**
 
-### ✅ FAIT — session 15 : **volet ③, vague 1** — 6 fiches de plus *(`PLAN.md` §8)*
+### 🏁 L'ÉTAPE 3 EST TERMINÉE — sessions 13 à 16
 
-| Fiche | Chantier | Referme | Risque de la correction |
-|---|---|---|---|
-| **C-011** | 🥅 **Les tests du barème et du départage** | **R-041** (P1) | ⚪ **nul** — aucune ligne de l'application |
-| **C-012** | 🔧 **Séparer le cœur de la saisie du score** | **R-042** (P1) | 🟠 élevé — le geste le plus répété du jour |
-| **C-013** | 🚦 **Un contrôle avant publication** | **R-043** (P1), R-049, R-050 | 🟢 très faible |
-| **C-014** | 🔊 **Faire parler l'application le jour J** | **R-051**, **R-052** (P1), R-053, R-069, R-085, R-086 | 🟡 faible à moyen |
-| **C-015** | 🏉 **Les règles du jour J** | **R-001, R-003, R-004, R-005** (4 P1), R-013 | 🟠 élevé |
-| **C-016** | 🔒 **Le filet côté serveur** | **R-015**, **R-016** (P1), R-047 | 🟡 moyen |
+**30 chantiers ont une fiche** (C-001 → C-030) et **les 91 problèmes sont tous placés** :
 
-> ⭐ **Le fait le plus utile de la séance, vérifié dans le code** : les deux fonctions qui décident
-> du vainqueur — `enregistrerResultat` et `comparerClassement` — font **6 et 5 lignes**, et **ne
-> touchent pas au classeur**. **C-011 n'a donc AUCUNE ligne de l'application à modifier** : on
-> ajoute des tests, c'est tout. C'est le meilleur rapport protection / risque du plan entier — et ça
-> confirme la promesse de **D-025**.
->
-> ⚠️ **Sans en surestimer la portée** : `calculerClassement`, lui, **lit le classeur**. C-011 protège
-> **les règles**, pas la chaîne complète du classement.
+| | |
+|---|---|
+| Placés dans un chantier | **88** |
+| Explicitement écartés, avec la raison écrite | **3** — R-011, R-019 *(= l'action D-017)*, R-040 |
+| **Sans place** | ✅ **0** |
 
-> ⚠️ **Le volet ③ est coupé en DEUX VAGUES**, et c'est assumé : il reste une cinquantaine de
-> problèmes. Les écrire tous en une séance produirait des **fiches creuses** — et une fiche creuse
-> est **pire que pas de fiche**, parce qu'elle donne l'illusion que le travail est instruit. La
-> **vague 2** est listée en `PLAN.md` **§9**, rien n'est perdu.
+> 🎯 **C'était la condition posée par Romain** : *« je préfère qu'on ait la vision complète plutôt
+> que commencer un chantier pour ensuite devoir repasser dessus parce qu'une session ultérieure
+> devra ajouter, supprimer ou modifier quelque chose sur lequel on a décidé de travailler trop
+> tôt. »* **Le tableau de `PLAN.md` §12 est la preuve que c'est rempli** — et il a été produit en
+> relisant les fiches, pas de mémoire.
 
-### 🔜 Puis : session 16 — **volet ③, vague 2**
+**Les six chantiers les moins risqués, pour situer** :
 
-Les contraintes d'ordre sont déjà fixées et ne se négocient plus :
+| Chantier | Risque | Referme |
+|---|---|---|
+| **C-011** les tests du barème et du départage | ⚪ **nul** — aucune ligne de l'application | **R-041** (P1) |
+| **C-024** le miroir qui se vérifie tout seul | ⚪ **nul** | **R-044** (P1) |
+| **C-029** savoir quelle version tourne | ⚪ **nul** | R-075 |
+| **C-005 · C-006 · C-007** documentation pure | ⚪ **nul** | **R-028, R-030, R-073** (3 P1) |
+| **C-013** un contrôle avant publication | 🟢 très faible | **R-043** (P1) |
+| **C-022** l'interface sur le terrain | 🟢 faible | R-054 → R-060 |
 
-1. **les 5 tests de R-041 AVANT la correction du départage** (**D-025**) ;
-2. **R-042 — séparer le cœur de la saisie du score de son écriture — AVANT** d'y toucher, sinon
-   D-011, D-012, D-015 **et D-030** rouvrent **quatre fois** le même code ;
-3. **C-004 avant C-003** *(le levier n° 7 suppose le repos saisissable)* **et avant C-009** *(même
-   zone : la pause échelonnée)*.
+### 🔜 Puis : l'**ÉTAPE 4 — LA VALIDATION**
 
-> ⚠️ **L'ÉTAPE 3 ne modifie toujours rien.** C'est l'**ÉTAPE 4** (ta validation, chantier par
-> chantier) qui ouvre l'ÉTAPE 5 (l'implémentation). **Rien ne sera touché dans l'application sans
-> que tu aies dit oui à un chantier précis.**
+L'étape suivante n'est plus une étape d'écriture. C'est **la tienne** : accepter, refuser ou
+réordonner les chantiers, **un par un**. Rien ne sera touché dans l'application avant.
+
+> 💡 **Ma recommandation sur la façon de valider** : **ne les prends pas dans l'ordre du
+> numéro.** Commence par **ce qui ne peut rien casser** *(C-011, C-013, C-005, C-006, C-007)* — six
+> P1 y sont refermés, et **aucun ne touche au comportement de l'application**. Le premier chantier
+> qui modifie vraiment quelque chose serait alors **C-012**, et il sera déjà protégé par les tests
+> de C-011.
+
+**Trois questions t'attendent à l'ÉTAPE 4**, inscrites dans les fiches :
+
+1. **C-009** — la colonne `pause_echelonnee` par catégorie est morte, mais **D-032 vient de rendre
+   le sujet vivant** : faut-il la **supprimer** ou la **brancher** ?
+2. **C-020** — *savoir qui a fait quoi* : jusqu'où va-t-on ? Une trace nominative ? De vrais
+   comptes ? Un simple prénom saisi ? **Ce chantier change la façon dont tout le monde se connecte
+   le jour J** ;
+3. **C-003** — les cinq points ouverts de **D-030 §5** *(le Super Challenge, la pause méridienne,
+   la « dé-annulation », le classement partiel, le tournoi suspendu qui ne reprend jamais)*.
 
 **Condition de démarrage** : instruction explicite de Romain.
 

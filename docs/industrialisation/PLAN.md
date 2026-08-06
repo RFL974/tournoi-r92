@@ -10,9 +10,9 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
-**Dernière mise à jour** : 2026-08-06 (**session 15 — volet ③, vague 1** : 6 fiches de plus,
-**C-011 → C-016**, voir **§8** ; la **vague 2** est listée en **§9**). Session 14 : volet ② terminé,
-**C-005 → C-010**, voir **§7**. Rappel du 2026-08-05 : volet ① terminé, D-030/031/032
+**Dernière mise à jour** : 2026-08-06 (**session 16 — 🏁 L'ÉTAPE 3 EST TERMINÉE** : vague 2 écrite,
+**C-017 → C-030**, voir **§10**, et **la couverture des 91 problèmes est prouvée** — **§12**).
+Sessions 13-15 : volets ①, ② et vague 1 du ③. Rappel du 2026-08-05 : volet ① terminé, D-030/031/032
 inscrites, I-21 levée, fiches **C-002 / C-003 / C-004** — voir **§6**.
 
 ---
@@ -25,7 +25,7 @@ Reprendre 9 inconnues, 6 décisions et 88 problèmes ne tient pas dans une séan
 |---|---|---|---|
 | **①** | **Les inconnues et les décisions** — elles conditionnent tout le reste | 13 | ✅ **TERMINÉ** — 9 inconnues → 7 *(dont **0 bloquante**)*, **6 décisions → 0 en attente** |
 | **②** | Les chantiers **sans code** : documentation, textes d'information, durées de conservation, commentaires faux | 14 | ✅ **TERMINÉ** — **6 fiches** écrites (C-005 → C-010), voir **§7**. ⚠️ **2 des 6 touchent des fichiers source** : le volet n'était pas aussi « sans code » qu'annoncé |
-| **③** | Les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi | 15 | 🚧 **EN COURS** — **vague 1 ✅ écrite** (C-011 → C-016, **§8**) · **vague 2** listée (**§9**). ⚡ C-002, C-003 et C-004 en font aussi partie (**§6**) |
+| **③** | Les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi | 15-16 | ✅ **TERMINÉ** — **vague 1** (C-011 → C-016, **§8**) et **vague 2** (C-017 → C-030, **§10**). ⚡ C-002 à C-004 en font aussi partie (**§6**) |
 
 ### ⚠️ Les deux contraintes d'ordre déjà FIXÉES — elles ne se négocient plus
 
@@ -69,8 +69,8 @@ Elles s'imposeront au volet ③ et à l'ÉTAPE 5 :
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
 | 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | ✅ **TERMINÉE** — **8 sur 8**, sessions 5 à 12, **88 problèmes** |
-| 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | 🚧 **EN COURS** — **volet ① ✅ fait** (session 13) · ② et ③ à venir |
-| 4 | **Validation** | Accord explicite de Romain, chantier par chantier | ⬜ À faire |
+| 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers**, **91 problèmes placés sur 91** |
+| 4 | **Validation** | Accord explicite de Romain, chantier par chantier | 🔜 **PROCHAINE** |
 | 5 | **Implémentation** | Une modification cohérente à la fois | ⬜ À faire |
 | 6 | **Commit** | Un commit atomique par chantier validé | ⬜ À faire |
 
@@ -917,7 +917,11 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   un bénévole. Le bouton « Valider » reste **muet pendant 3 à 8 secondes**, alors on reclique. Et
   côté serveur, une image supprimée répond *« c'est fait »* sans avoir vérifié.
 - **Risques couverts** : **R-051** *(P1)* · **R-052** *(P1)* · **R-053** · **R-069** · **R-085** ·
-  **R-086**
+  **R-086** · **R-048** *(rattaché en vague 2)*
+  > ⚡ **R-048 rejoint ce lot parce que c'est le même écran et le même sujet** : un envoi qui
+  > n'aboutit pas **fige le bouton indéfiniment**. Les lectures acceptent un délai d'abandon *(12 s)*
+  > ; **les écritures n'en ont aucun.** Sur une 4G qui décroche sans couper, le bénévole reste devant
+  > un bouton mort. **Rendre l'application bavarde sans borner l'attente ne servirait à rien.**
 - **Priorité** : **P1**
 - ⭐ **Ce chantier a déjà sa conception validée — c'est rare, et ça change tout** : **D-027**, dont
   les 4 arbitrages ont été tranchés par Romain. *Une animation ne doit jamais mentir* : **trois
@@ -1001,10 +1005,10 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 
 ---
 
-## 9. VOLET ③ — **vague 2** : ce qui reste à instruire
+## 9. VOLET ③ — **vague 2** : la liste de départ *(historique)*
 
-> **Inscrit maintenant pour que rien ne se perde.** Ces familles ont leur regroupement (**§3**) mais
-> **pas encore de fiche**. Elles seront écrites à la session suivante.
+> ✅ **Ces familles ONT MAINTENANT LEUR FICHE** — voir **§10** *(C-017 → C-030)*. Ce tableau est
+> conservé parce qu'il montre **le regroupement de départ**, avant instruction.
 
 | Famille | Problèmes | Pourquoi elle attend |
 |---|---|---|
@@ -1019,3 +1023,412 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 | **Les miroirs serveur ↔ navigateur** | R-044 | Requalifié : **dette à surveiller**. La méthode qui l'a prouvé tient en une minute |
 | **Le reste** | R-002, R-006 → R-011, R-019 *(= D-017)*, R-020, R-022, R-025 → R-027, R-035 → R-037, R-039, R-040, R-045, R-046, R-048, R-071, R-074 → R-077, R-079 → R-081, R-088 | À répartir |
 | ⛔ **Ce qui ne doit PAS être groupé** | R-076, R-077, R-081, R-088 | Chacun, fait en bloc, aggrave un problème plus grave que lui |
+
+---
+
+## 10. VOLET ③ — **vague 2** : les chantiers restants *(session 16, 2026-08-06)*
+
+> 📏 **Ces fiches sont volontairement plus courtes que celles de la vague 1**, et c'est un choix, pas
+> un relâchement : ce sont des **P2 et des P3**. Écrire trois pages pour un problème de confort
+> serait de la sur-instrumentation — et ferait perdre de vue les quatre P1 qui, eux, méritent le
+> détail. **Chaque fiche garde ce qui décide** : ce que ça referme, ce que ça risque, ce qui doit
+> passer avant, et comment on prouve que c'est fait.
+
+---
+
+### C-017 — ⚡ Terminer le travail d'affluence
+
+- **Problème** : le travail de performance a été fait **puis arrêté juste avant la fin**. Les
+  cadences n'ont **jamais été accordées entre elles** *(le cache dure 10 s, l'intervalle d'appel
+  15-19 s, la capacité ~310 écrans actifs)*, le **relais est écrit des deux côtés et n'a jamais été
+  allumé**, et le cache de repli **refuse de s'enregistrer au-delà de 95 000 octets** — soit
+  **~165 matchs** — sans que rien ne le dise.
+- **Risques couverts** : **R-064** *(P1)* · **R-061** *(P1)* · **R-062** · **R-071**
+- ⭐ **R-064 est le meilleur levier de tout le plan** : **un chiffre à changer** *(15 s → 30 s)*
+  **double la capacité**, gratuitement.
+- **Risque** : 🟡 moyen — ⚠️ **allonger le délai sans prévenir transforme une attente voulue en
+  panne apparente**, et les gens rechargent. **D-026 l'a tranché** : accepter l'attente **interdit
+  le silence**.
+- **Dépendances** : ⛔ **C-014 EN PREMIER**, sans exception. Puis **I-19** *(observation le jour J)*
+  pour décider s'il faut allumer le relais.
+- **R-071 ne demande aucun code** : le plafond anti-abus arrêterait le compteur de partenaires avant
+  la fin d'une grosse journée. **C'est voulu — il faut juste l'écrire**, pour ne pas lire une chute
+  de fréquentation là où il n'y a qu'un plafond.
+- **Preuve** : on **recompte** la capacité après le changement, dans le journal « Exécutions ».
+
+---
+
+### C-018 — 🪶 Alléger ce qui voyage
+
+- **Problème** : chaque spectateur télécharge, **toutes les 15 secondes et toute la journée**, des
+  choses qui ne servent à rien. **58 % du poids des matchs = des cases vides.** Le **logo pèse 79 %
+  de la page publique** *(229 Ko, chargé en 700×558 pour être affiché en 60×48)*. L'administration
+  télécharge **207 Ko d'outil PDF avant d'afficher quoi que ce soit**. Et **183 Ko sont publiés sur
+  Internet sans que rien ne les charge**.
+- **Risques couverts** : **R-066** · **R-065** · **R-063** · **R-080**
+- **Risque** : 🟡 variable selon la pièce. **R-066 (le logo) est presque gratuit** ; **R-063 est le
+  plus délicat** — ⚠️ **exige C-011 et C-012 AVANT** : un champ absent arrive en `undefined` et non
+  en `""`, or le navigateur compare cette valeur à de nombreux endroits.
+- **Dépendances** : R-066 ⚠️ **dépend de D-005** *(le logo est servi par l'autre dépôt)* · R-063
+  après C-011/C-012.
+- **Preuve** : le poids transféré, **remesuré** — pas estimé.
+
+---
+
+### C-019 — 🔐 Le verrou et ce qu'on met dedans
+
+- **Problème** : trois fois le même sujet — **du travail lourd fait pendant que le verrou d'écriture
+  est tenu**, alors qu'il pourrait être fait dehors, ou pas du tout. La reconstruction de
+  l'instantané public *(2,5-4,5 s)* tourne **sous le verrou**. Vérifier un mot de passe passe par
+  **le chemin le plus coûteux du serveur** *(une fausse écriture de score)*. Et **un envoi groupé
+  d'invitations bloque tout le reste** pendant sa durée.
+- **Risques couverts** : **R-067** · **R-068** · **R-070**
+- **Risque** : 🟠 **élevé** — on touche à la sérialisation des écritures, c'est-à-dire **à ce qui
+  empêche deux marqueurs de s'écraser**. ⚠️ **R-068 touche la sécurité** *(le chemin de
+  vérification d'une clé)* : à trancher **avec** R-017, R-018 et R-059, jamais isolément.
+- **Dépendances** : après **C-016** *(le filet côté serveur)*, même zone.
+- **Preuve** : les **écritures simultanées restent sérialisées** — un test qui le prouve, pas une
+  relecture.
+
+---
+
+### C-020 — 🕵️ Savoir qui a fait quoi
+
+- **Problème** : **il n'y a pas de personnes, seulement deux mots de passe partagés.** On ne peut
+  retirer l'accès à personne, on ne sait **jamais qui a saisi un score**, et une contestation de
+  résultat est **inarbitrable**. Personne ne sait non plus **qui a consulté le carnet d'adresses**,
+  qui se lit en une seule requête, jetons compris. Et le bénévole doit **retaper le mot de passe à
+  chaque ouverture d'onglet**.
+- **Risques couverts** : **R-017** *(P1)* · **R-023** · **R-059**
+- 🏉 **C'est le fil rouge n° 1 de la sécurité** : **sept des quatorze problèmes du domaine C en
+  découlent.**
+- **Risque** : 🟠 **élevé, et c'est le plus structurant du plan.** Introduire des personnes change
+  la façon dont **tout le monde se connecte le jour J**. ⚠️ **Une amélioration technique qui rend
+  l'organisation plus compliquée n'est pas une amélioration** *(`CLAUDE.md` §11)* — il y a un vrai
+  risque de dégrader l'usage terrain.
+- **Dépendances** : aucune techniquement. ⚠️ **Mais c'est le chantier qui appelle le plus une
+  décision de Romain AVANT d'être conçu** : jusqu'où va-t-on ? *(une trace nominative ? de vrais
+  comptes ? un simple prénom saisi ?)*
+- **Preuve** : l'`Historique` porte l'auteur de chaque score.
+
+---
+
+### C-021 — 🚪 Fermer ce qui sort
+
+- **Problème** : **quatre onglets sortent en entier, sans clé et sans liste blanche.** Rien de
+  personnel aujourd'hui — mais **une colonne ajoutée demain serait publique sans que personne ne
+  l'ait décidé**. Les **liens des clubs sont des passe-partout permanents** : jamais expirés,
+  transportés dans l'adresse de la page, transférables par simple renvoi de courriel. Et le
+  **contenu des courriels est fabriqué par le navigateur** puis expédié tel quel sous l'identité
+  Gmail du propriétaire.
+- **Risques couverts** : **R-021** · **R-018** *(P1)* · **R-032** · **R-020**
+- ⭐ **Le principe qui referme R-021 et R-032 d'un coup** : une **liste blanche** — on décide **ce
+  qui sort**, au lieu de tout laisser sortir et de retirer au cas par cas. *(Le projet a déjà ce
+  réflexe pour la configuration publique : il suffit de l'étendre.)*
+- **Risque** : 🟡 moyen. ⚠️ **Une liste blanche trop serrée casse la page publique en silence** :
+  un champ oublié disparaît de l'affichage **sans erreur**. Ce piège est **déjà connu du projet**.
+- **Dépendances** : **R-018 dépend de D-020** *(les durées)* — un jeton sans expiration est le
+  pendant technique de « rien ne s'efface ».
+- **Preuve** : ajouter une colonne de test dans le classeur → **elle ne doit PAS apparaître** dans
+  la réponse publique.
+
+---
+
+### C-022 — 📱 L'interface sur le terrain
+
+- **Problème** : les bons réflexes existent **déjà** dans ce projet — 44 px de cible, contrastes
+  excellents, confirmations qui nomment ce qu'elles détruisent. **Mais ils sont sur les écrans
+  récents.** Les plus anciens et les plus utilisés sont restés en arrière : bouton « Valider »
+  **85 × 35 px**, champ de score **72 × 36 px**, l'information la plus utile de la page publique à
+  **2,81 de contraste** *(4,5 exigé)*, une zone de dépôt d'image **littéralement invisible**
+  *(blanc sur blanc, contraste 1,00)*, **rien n'est annoncé aux lecteurs d'écran**, et la touche
+  **« Entrée » ne valide rien**.
+- **Risques couverts** : **R-054** · **R-055** · **R-056** · **R-057** · **R-058** · **R-060**
+- 💡 **Il y a peu à inventer, beaucoup à propager.**
+- **Risque** : 🟢 **faible** — ce sont des tailles, des couleurs et des attributs. ⚠️ Sauf **R-058**
+  *(la touche Entrée)*, qui introduit un **formulaire** là où il n'y en avait pas : un
+  comportement nouveau, à tester.
+- ⚠️ **La limite à garder en tête** : tout a été mesuré **dans un navigateur d'ordinateur simulant
+  un téléphone**. **Personne n'a jamais saisi un score dehors.** **Trente minutes d'essai réel avec
+  deux ou trois bénévoles vaudraient mieux que tout ce chantier.**
+- **Preuve** : on **remesure** — contrastes et tailles de cible, avec la méthode écrite à côté.
+
+---
+
+### C-023 — 🏉 Le Super Challenge
+
+- **Problème** : **le seul miroir en désaccord de toute l'application.** Le format sportif de la
+  demande d'autorisation pour l'U14 en Super Challenge est calculé **deux fois**, et les deux
+  copies **ne disent pas la même chose** — l'écran annonce une durée de match qui ne sera pas jouée.
+  Par ailleurs, la **phase 3 est incomplète** et le code **l'avertit lui-même**.
+- **Risques couverts** : **R-082** · **R-009**
+- ⚠️ **Ce lot change de priorité tout seul** : **P2 aujourd'hui, P1 le jour où le club accueille
+  réellement un Super Challenge de France.** Même logique de déclencheur que D-022.
+- **Risque** : 🟢 **faible** — trois lignes de garde côté serveur, et ça ne touche **que le
+  remplissage d'un formulaire**.
+- **Dépendances** : à faire **avec la part SCF de C-008** *(les trois commentaires à effacer)* :
+  même endroit, même lot.
+
+---
+
+### C-024 — 🪞 Le miroir qui se vérifie tout seul
+
+- **Problème** : **29 règles métier sont écrites deux fois** — une pour Google, une pour le
+  navigateur — et **rien ne vérifie qu'elles disent la même chose**. Le classement affiché sur la
+  page publique est **recalculé par le navigateur**, sans redemander au serveur : si les deux
+  copies divergeaient, **deux personnes pourraient voir deux classements différents du même
+  tournoi**.
+- **Risques couverts** : **R-044** *(P1)*
+- ✅ **Ce chantier part d'une bonne nouvelle** : **elles sont d'accord aujourd'hui** —
+  **179 comparaisons exécutées, 0 écart**, barème et départage **identiques au caractère près**
+  *(session 12)*. R-044 est passé de *« défaut possible »* à **« dette à surveiller »**.
+- ⭐ **Ce qu'il faut faire n'est donc PAS de fusionner les deux copies** *(ce serait un chantier
+  d'architecture disproportionné, et `CLAUDE.md` §10 l'interdit sans justification forte)* — **c'est
+  de rendre la comparaison automatique.** *La méthode qui l'a prouvé une fois tient en une minute :
+  il s'agit de la rejouer à chaque fois.*
+- **Risque** : ⚪ **nul** — on ajoute une vérification, on ne touche à aucune règle.
+- **Dépendances** : idéalement après **C-013** *(qui installe l'endroit où faire tourner un
+  contrôle automatique)*.
+
+---
+
+### C-025 — 🧱 Les rigidités de génération
+
+- **Problème** : cinq petits blocages, tous de la même famille — **l'application refuse, mais ne dit
+  pas comment s'en sortir**. **Un seul match du matin non saisi bloque l'après-midi de TOUTES les
+  catégories** *(et le message ne dit pas lesquels manquent)*. Une catégorie à 1 ou 2 équipes
+  **bloque tout le tournoi**, sans indiquer le remède. Forcer le nombre de poules **peut produire
+  des poules de 2**, ce que la règle des 3 équipes vise justement à interdire. Une date vide
+  **désactive silencieusement** le gel des réponses. Et les deux interrupteurs de publication sont
+  indépendants **sans que les libellés le disent**.
+- **Risques couverts** : **R-002** *(P1)* · **R-006** · **R-007** · **R-008** · **R-010**
+- 💡 **Le fil commun** : ce ne sont pas des bugs, ce sont des **refus muets**. Le remède est presque
+  toujours **une phrase**, pas un algorithme.
+- **Risque** : 🟡 faible à moyen. ⚠️ **R-002 est le seul à toucher la génération** : il faut que le
+  contrôle regarde **la catégorie** et non le tournoi entier.
+- **Preuve** : chaque message de refus **nomme ce qui manque et donne le remède**.
+
+---
+
+### C-026 — 🕶️ Les expositions inutiles
+
+- **Problème** : quatre points où l'application **s'expose sans y gagner quoi que ce soit**.
+  `admin.html` et `saisie.html` sont **publics et indexables**, alors que les trois pages à jeton
+  portent bien « ne pas indexer ». Toute la confidentialité **tient au réglage de partage du
+  classeur**, qu'aucun code ne protège. Les **polices d'écriture sont chargées depuis les serveurs
+  de Google** sur 7 pages — l'adresse réseau de chaque visiteur y est transmise, sans que rien ne le
+  dise. Et il n'existe **aucune politique de sécurité du contenu**.
+- **Risques couverts** : **R-022** · **R-025** · **R-037** · **R-026** *(P3)* · **R-027** *(P3)*
+- **Risque** : 🟢 **faible** — ⚠️ sauf la politique de sécurité du contenu (**R-026**), qui **casse
+  silencieusement une page** si elle est trop stricte. **À faire en dernier, et en observant.**
+- 💡 **R-037 a un bénéfice double** : héberger les polices localement **supprime une transmission
+  d'adresse réseau** *(protection des données)* **et** accélère l'affichage *(performance)*.
+
+---
+
+### C-027 — 🧪 Les tests qui manquent encore
+
+- **Problème** : **aucun scénario ne rejoue une journée de bout en bout.** Les 589 vérifications
+  portent sur des morceaux isolés ; **rien n'enchaîne** création → génération → saisie → classement
+  → après-midi. Or **c'est aux jonctions que vivent les problèmes** *(R-002, R-015)*. Et **tout ce
+  qui écrit dans le classeur est hors de portée du harnais** : **110 des 277 fonctions** le
+  reçoivent en paramètre.
+- **Risques couverts** : **R-045** · **R-046**
+- ⚠️ **R-046 est un plafond structurel, pas une négligence.** Le lever demanderait une **doublure de
+  classeur** — un vrai chantier. **Ce n'est pas une priorité** : la valeur est dans **R-045**.
+- **Dépendances** : après **C-011** et **C-012**.
+- **Preuve** : un scénario complet qui tourne **hors de Google**, en quelques secondes.
+
+---
+
+### C-028 — 🔏 La protection des données : ce qui reste
+
+- **Problème** : quatre points que ni C-005 *(les textes)* ni C-006 *(les durées)* ne referment.
+  **Toute image déposée est rendue publique** et ne disparaît pas vraiment — et rien n'avertit
+  qu'**une photo de parking peut montrer des plaques et des visages**. Le **droit à l'image n'est
+  plus outillé** depuis son retrait, et **rien n'écrit ce qui l'a remplacé**. Il n'existe **aucun
+  cadre écrit** : ni registre, ni conduite à tenir en cas de fuite. Et la **mesure de visibilité des
+  partenaires** attend l'implémentation de **D-019**.
+- **Risques couverts** : **R-035** · **R-036** · **R-039** · **R-029** *(P1, suspendu)*
+- **Risque** : 🟢 faible — l'essentiel est **documentaire**, sauf **R-029** *(voie (a) : une ligne
+  visible + un moyen de dire non)*, qui est du code.
+- **Dépendances** : **R-036 attend I-15** *(question au club)* · **R-029 doit être fait AVANT que
+  l'interrupteur des partenaires soit rallumé** · **R-039 s'appuie sur C-005 et C-006**.
+
+---
+
+### C-029 — 📌 Savoir quelle version tourne
+
+- **Problème** : **rien ne permet de dire quelle version est en service.** `CHANGELOG.md` fait
+  **2 406 lignes** et **toutes** ses entrées sont sous le titre « Non publié » ; **`git tag` ne
+  renvoie rien**. Quand quelque chose se passe mal un dimanche, on ne peut pas dire *« on est passé
+  de telle version à telle version »*.
+- **Risques couverts** : **R-075**
+- **Risque** : ⚪ **nul** — ce sont des étiquettes et un fichier texte.
+- 🔗 **Complète C-007** : la carte dit **ce que fait** l'application, les versions disent **depuis
+  quand**.
+
+---
+
+### C-030 — 🧭 La maintenabilité : **en opportuniste, jamais en bloc**
+
+> ⛔ **Ce n'est pas un chantier qu'on ouvre. C'est une RÈGLE qu'on applique quand on passe déjà par
+> là.**
+
+- **Problème** : sept constats d'architecture réels — un fichier serveur de **8 147 lignes**, des
+  tests rangés **par date d'écriture** et non par sujet, une administration **en anneau** *(13
+  paires de fichiers qui s'appellent mutuellement)*, **12 noms globaux en double**, calculer et
+  afficher confondus, **aucun outillage**, et des variables trop courtes dans les longues fonctions.
+- **Risques couverts** : **R-074** · **R-076** · **R-077** · **R-078** · **R-079** · **R-081** ·
+  **R-088**
+- 🔴 **Pourquoi aucun d'eux ne doit être traité en bloc** — chacun, fait d'un coup, **aggrave un
+  problème plus grave que lui** :
+
+  | | Ce que « le faire en bloc » coûterait |
+  |---|---|
+  | **R-074** *(découper `Code.gs`)* | ✅ **Déjà arbitré — NON** *(**D-028**)* : 1 fichier → **5 collages à la main**, soit le mécanisme même de **M-04**. Réouverture le jour où le dépôt cesse d'être manuel |
+  | **R-076** *(renommer 277 groupes de tests)* | **277 occasions de perdre un test en silence** |
+  | **R-078** *(12 noms en double)* | La panne serait **une page blanche**, pas un bouton en panne. ⚠️ **Sous la protection des tests de C-013**, jamais à l'aveugle |
+  | **R-077 / R-079** *(découper l'administration)* | Exige l'outillage que le projet a **délibérément refusé** |
+  | **R-088** *(variables courtes)* | **42 occasions de casser un appel** pour un gain de **confort de lecture** |
+  | **R-081** *(le dépôt manuel du serveur)* | C'est la **racine commune** de M-04, I-01 et D-028 — mais l'automatiser est un chantier à part entière, pas un nettoyage |
+
+- ⭐ **La règle retenue** : **quand on ouvre un fichier pour une autre raison, on améliore ce qu'on
+  touche — et rien d'autre.** Progressif et réversible, ou rien.
+- **Statut** : **RÈGLE PERMANENTE**, pas un chantier daté.
+
+---
+
+## 11. ⛔ CE QU'ON NE FAIT PAS — et pourquoi
+
+> **Trois problèmes du registre n'auront pas de fiche**, et c'est une décision, pas un oubli.
+
+| Réf | Pourquoi |
+|---|---|
+| **R-019** *(P1)* | **Ce n'est pas un chantier, c'est une action de Romain** : remplacer les deux clés par des suites aléatoires, cinq minutes dans le menu du classeur *(**D-017**)*. Aucun code ne peut le faire à sa place |
+| **R-011** *(P3)* | Un tirage ne peut être ni reproduit ni annulé. **Sans conséquence aujourd'hui** : le tirage se fait avant le tournoi et le refaire ne coûte rien. Le sujet naîtrait dans un usage multi-clubs |
+| **R-040** *(P3)* | Le multi-clubs (SaaS) changera la nature du sujet des données. **Prématuré** — `RAPPORT-AUDIT.md` §6 le classe explicitement dans « ce qu'il ne faut PAS faire » |
+
+---
+
+## 12. 🎯 LA COUVERTURE — **les 91 problèmes sont tous placés**
+
+> **C'est la pièce qui clôt l'ÉTAPE 3**, et la raison pour laquelle Romain a voulu la vision
+> complète avant de commencer : *« plutôt que commencer un chantier pour ensuite devoir repasser
+> dessus parce qu'une session ultérieure devra ajouter, supprimer ou modifier quelque chose ».*
+>
+> **Ce tableau est vérifiable** : il a été produit en relisant les fiches, pas de mémoire.
+
+| | |
+|---|---|
+| **Problèmes au registre** | **91** *(88 de l'audit + 3 post-clôture)* |
+| **Placés dans un chantier** | **88** |
+| **Explicitement hors chantier** | **3** *(R-011, R-019, R-040 — voir §11)* |
+| **Sans place** | ✅ **0** |
+| **Chantiers écrits** | **30** *(C-001 → C-030)* |
+
+### 12.1 — Le tableau complet
+
+| Réf | Priorité | Où il est traité |
+|---|---|---|
+| **R-001** | P1 | C-015 |
+| **R-002** | P1 | C-025 |
+| **R-003** | P1 | C-003 + C-015 |
+| **R-004** | P1 | C-015 |
+| **R-005** | P1 | C-015 |
+| **R-006** | P2 | C-025 |
+| **R-007** | P2 | C-025 |
+| **R-008** | P2 | C-025 |
+| **R-009** | P2 | C-023 |
+| **R-010** | P2 | C-025 |
+| **R-011** | P3 | ⛔ hors chantier |
+| **R-012** | P2 | C-010 |
+| **R-013** | P2 | C-015 |
+| **R-014** | P0 | C-001 |
+| **R-015** | P1 | C-002 + C-016 |
+| **R-016** | P1 | C-002 + C-016 |
+| **R-017** | P1 | C-020 |
+| **R-018** | P1 | C-021 |
+| **R-019** | — | ⛔ hors chantier |
+| **R-020** | P2 | C-021 |
+| **R-021** | P2 | C-021 |
+| **R-022** | P2 | C-026 |
+| **R-023** | P2 | C-020 |
+| **R-024** | P2 | C-007 |
+| **R-025** | P2 | C-026 |
+| **R-026** | P3 | C-026 |
+| **R-027** | P3 | C-026 |
+| **R-028** | P1 | C-005 |
+| **R-029** | P1 | C-028 |
+| **R-030** | P1 | C-006 |
+| **R-031** | P2 | C-006 |
+| **R-032** | P2 | C-021 |
+| **R-033** | P2 | C-006 |
+| **R-034** | P2 | C-006 |
+| **R-035** | P2 | C-028 |
+| **R-036** | P2 | C-028 |
+| **R-037** | P2 | C-026 |
+| **R-038** | P2 | C-005 |
+| **R-039** | P2 | C-028 |
+| **R-040** | P3 | ⛔ hors chantier |
+| **R-041** | P1 | C-011 |
+| **R-042** | P1 | C-012 |
+| **R-043** | P1 | C-013 |
+| **R-044** | P1 | C-024 |
+| **R-045** | P2 | C-027 |
+| **R-046** | P2 | C-027 |
+| **R-047** | P2 | C-002 + C-016 |
+| **R-048** | P2 | C-014 |
+| **R-049** | P2 | C-013 |
+| **R-050** | P3 | C-013 |
+| **R-051** | P1 | C-002 + C-014 |
+| **R-052** | P1 | C-002 + C-014 |
+| **R-053** | P2 | C-014 |
+| **R-054** | P2 | C-022 |
+| **R-055** | P2 | C-022 |
+| **R-056** | P2 | C-022 |
+| **R-057** | P2 | C-022 |
+| **R-058** | P2 | C-022 |
+| **R-059** | P2 | C-020 |
+| **R-060** | P3 | C-022 |
+| **R-061** | P1 | C-017 |
+| **R-062** | P1 | C-017 |
+| **R-063** | P2 | C-018 |
+| **R-064** | P2 | C-017 |
+| **R-065** | P2 | C-018 |
+| **R-066** | P2 | C-018 |
+| **R-067** | P2 | C-019 |
+| **R-068** | P2 | C-019 |
+| **R-069** | P2 | C-014 |
+| **R-070** | P3 | C-019 |
+| **R-071** | P3 | C-017 |
+| **R-072** | P1 | C-007 |
+| **R-073** | P1 | C-007 |
+| **R-074** | P2 | C-030 |
+| **R-075** | P2 | C-029 |
+| **R-076** | P2 | C-030 |
+| **R-077** | P2 | C-030 |
+| **R-078** | P2 | C-030 |
+| **R-079** | P2 | C-030 |
+| **R-080** | P2 | C-018 |
+| **R-081** | P3 | C-030 |
+| **R-082** | — | C-023 |
+| **R-083** | P2 | C-008 |
+| **R-084** | P2 | C-009 |
+| **R-085** | P2 | C-014 |
+| **R-086** | P2 | C-014 |
+| **R-087** | P3 | C-009 |
+| **R-088** | P3 | C-030 |
+| **R-089** | P1 | C-002 + C-003 |
+| **R-090** | P2 | C-004 |
+| **R-091** | P2 | C-004 |
+### 12.2 — Ce que ce tableau permet, et qui n'était pas possible avant
+
+1. **Aucun chantier ne sera à refaire** parce qu'un problème oublié aurait forcé à rouvrir le même
+   fichier — c'était l'inquiétude exacte de Romain, et elle est levée ;
+2. **L'ordre est établi de bout en bout** : on sait ce qui doit passer avant quoi, et **pourquoi** ;
+3. **L'ÉTAPE 3 est terminée.** La suivante est l'**ÉTAPE 4** — la validation, chantier par chantier.
+
+> ⚠️ **Ce que ce tableau ne prouve PAS** : que les 91 problèmes seront corrigés. Il prouve que
+> **chacun a une place et une décision** — y compris *« on ne le fait pas, et voici pourquoi »*.
+> Trois sont dans ce cas, et c'est écrit.
