@@ -135,6 +135,7 @@ pour le serveur). L'étape est donc découpée en **trois volets**, un par sessi
 
 | ID | Chantier | Priorité | Statut | Dépend de | Validé par Romain | Implémenté | Testé |
 |---|---|---|---|---|---|---|---|
+| **C-013** | **Un contrôle de syntaxe avant publication** (R-043 moitié a, R-049, R-050) | **P1** | ⚙️ **EN COURS** | — | ✅ **oui** (2026-08-06) | ✅ **PR #182** | ✅ **2 preuves réelles dans GitHub** ; verrou `needs` à observer sur `main` |
 | **C-011** | **Les tests du barème et du départage** (R-041) — *premier chantier de l'ÉTAPE 5* | **P1** | ⚙️ **EN COURS** | — | ✅ **oui** (2026-08-06) | ✅ `af31664`, **PR #181** | ⏳ **616/616 hors Google** ; reste la preuve **chez Google** |
 | **C-001** | **Plafonner l'écriture publique des relevés de partenaires** (R-014) — *hors ordre normal, par exception D-016* | **P0** | ✅ **TESTÉ** | — | ✅ oui (D-016) | ✅ commit `c1948fc`, **redéployé** | ✅ **573/573** dans Apps Script + chaîne vérifiée en réel |
 | — | *(les autres chantiers se rempliront à l'ÉTAPE 3, quand les 8 audits seront finis)* | — | — | — | — | — | — |
@@ -908,7 +909,10 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 - **Comment on prouve que c'est fait** : on introduit **volontairement** une faute de syntaxe dans
   une branche → **la publication doit échouer**. Sans cette démonstration, on ne sait pas si le
   contrôle contrôle quelque chose.
-- **Statut** : **PLANIFIÉ** · **Validation** : ⏳ **à donner**
+- **Statut** : ⚙️ **EN COURS** — écrit, **les deux preuves obtenues dans GitHub**, **PR #182**
+- **Validation de Romain** : ✅ **oui, le 2026-08-06**
+- **Preuves** : branche cassée → contrôle **failure** *(#183, fermée)* · branche saine → **30 fichiers vérifiés**, **success**
+- ⚠️ **Reste à observer** : le verrou `needs` au **premier envoi réel sur `main`**
 
 ---
 

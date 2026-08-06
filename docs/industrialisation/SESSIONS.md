@@ -3497,3 +3497,96 @@ le test parle. **On n'aggrave pas le compte.** C'est l'application de la règle 
 - **R-041** : `IDENTIFIÉ` → ⚙️ **`EN COURS`** ;
 - ⚠️ **à faire à la main après fusion** : coller `Tests.gs` chez Google, lancer `lancerTestsFFR`,
   vérifier **616/616** et **la dernière ligne à 3859**.
+
+---
+
+# ÉTAPE 5 — **C-013** : un contrôle avant publication *(2026-08-06)*
+
+> **Consigne de Romain** : *« Respecte exactement le périmètre présenté : syntaxe uniquement ;
+> aucun changement applicatif ; documentation dans le même lot ; contrôle placé avant la
+> publication. »* Et : *« Ne considère pas C-013 comme "testé" sur la seule base d'une inspection du
+> workflow. Je veux la preuve réelle dans GitHub. »*
+
+## 1. Ce qui a été fait
+
+Le workflow de publication contient désormais **deux travaux** :
+
+```
+verifier  ──(needs)──►  deploy
+```
+
+`node --check` sur **tous les `.js` de `frontend/`** — **30 fichiers**, bibliothèques extérieures
+comprises *(elles sont déposées à la main, donc elles peuvent arriver tronquées)*.
+
+**Fichiers modifiés** : `.github/workflows/pages.yml` · `docs/deploiement.md` §B.
+**Aucun fichier de l'application** — ni serveur, ni navigateur, ni page.
+
+## 2. ⚠️ Une correction de périmètre, annoncée AVANT d'écrire
+
+J'avais présenté *« JavaScript **ou HTML** »*. **Le HTML n'est pas vérifié** : les 8 pages ne
+contiennent **aucun script en ligne** *(constaté)*, et contrôler la syntaxe HTML exigerait
+**une dépendance que le projet a délibérément refusée**. C'est écrit dans la documentation, pas
+seulement dit ici.
+
+## 3. Les deux preuves — **réelles, dans GitHub**
+
+### Preuve 1 — branche volontairement cassée → le contrôle refuse
+
+Branche jetable `preuve/c-013-syntaxe-cassee` *(PR **#183**, **fermée sans fusion**)* : une accolade
+jamais fermée dans `frontend/js/commun.js`.
+
+```
+  CASSÉ  frontend/js/commun.js
+         frontend/js/commun.js:3
+         SyntaxError: Unexpected string
+----------------------------------------------
+PUBLICATION REFUSÉE — au moins un fichier ne se lit pas.
+Le site actuellement en ligne n'est pas remplacé.
+##[error]Process completed with exit code 1.
+```
+
+| Travail | Résultat |
+|---|---|
+| Vérifier la syntaxe des fichiers publiés | ❌ **failure** |
+| Publier sur GitHub Pages | ⏭️ **skipped** |
+
+### Preuve 2 — branche saine → le contrôle passe
+
+```
+30 fichiers JavaScript vérifiés, aucun cassé.
+```
+
+Travail **success**.
+
+## 4. ⚠️ CE QUE CES PREUVES NE PROUVENT PAS — et pourquoi je l'écris
+
+Sur **les deux** exécutions, « Publier sur GitHub Pages » est **skipped**. Ce n'est pas le verrou qui
+l'explique : c'est que **sur une proposition de fusion, la publication est neutralisée de toute
+façon** *(`if: github.event_name != 'pull_request'`)*.
+
+> **Le contrôle est prouvé. Le verrou `needs: verifier` ne l'est que par construction.**
+>
+> Il sera **observé au premier envoi réel sur `main`** : la publication n'aura lieu qu'après un
+> contrôle réussi, et cela se lira dans l'onglet Actions.
+>
+> 🔗 **C'est exactement la discipline de M-04** : ne pas appeler « prouvé » ce qui est seulement
+> « très probable ». Un moyen de l'observer tout de suite existe — déclencher le workflow à la main
+> sur la branche cassée — **mais il vise le chemin de publication du site en production**, et il ne
+> sera pas employé sans accord explicite de Romain.
+
+## 5. Deux précautions prises au passage, qui n'étaient pas demandées
+
+1. **Les droits `pages: write` et `id-token: write` sont descendus au niveau du travail `deploy`.**
+   Une exécution déclenchée par une proposition de fusion n'obtient donc **jamais** le droit
+   d'écrire sur Pages ;
+2. **Le verrou de concurrence `pages` est descendu lui aussi sur `deploy`.** Sans cela, un contrôle
+   lancé par une proposition de fusion aurait pu **annuler une publication en cours sur `main`** —
+   le workflow portant `cancel-in-progress: true`. **C'aurait été une régression introduite par le
+   chantier censé protéger la publication.**
+
+## 6. État
+
+- **PR [#182](https://github.com/RFL974/tournoi-r92/pull/182)** ouverte · **#183** fermée sans fusion ;
+- **R-043** : `IDENTIFIÉ` → ⚙️ **`EN COURS`**, **moitié (a) faite et prouvée** ; la moitié (b)
+  *(harnais du navigateur)* **reste entière** et hors périmètre ;
+- **R-049**, **R-050** : couverts par la documentation du même lot.
