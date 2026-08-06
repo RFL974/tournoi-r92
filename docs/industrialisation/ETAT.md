@@ -9,8 +9,9 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-06 (**session 14 — ÉTAPE 3, volet ② terminé** : 6 fiches de
-chantier écrites, C-005 → C-010). *Rappel de la veille : session 13 + **4 addendums*** — **ÉTAPE 3 ouverte, volet ①
+**Dernière mise à jour** : 2026-08-06 (**session 15 — ÉTAPE 3, volet ③, vague 1** : 6 fiches de
+plus, **C-011 → C-016**, et la vague 2 listée. **16 chantiers ont désormais une fiche.**)
+*Session 14 : volet ② terminé, C-005 → C-010.* *Rappel de la veille : session 13 + **4 addendums*** — **ÉTAPE 3 ouverte, volet ①
 terminé : les 6 décisions en attente sont TRANCHÉES** · ⚡ **une 7ᵉ décision apportée par Romain
 entre au chantier : D-030 — tournoi suspendu / annulé** · ⚡ **I-21 levée par la FFR** · ⚡ **cadre
 de la reprise précisé — 6 contraintes / 8 leviers / 5 principes — et trois fiches de chantier
@@ -29,7 +30,22 @@ registre : R-090, R-091**)
 
 ## 1. EN UNE PHRASE
 
-🏁 **L'ÉTAPE 3 avance : ses volets ① et ② sont TERMINÉS.** Plus aucune décision n'est en attente,
+🏁 **L'ÉTAPE 3 avance vite : volets ① et ② TERMINÉS, volet ③ à moitié écrit — 16 chantiers ont
+désormais une fiche** (C-001 → C-016). La **vague 1 du volet ③** (session 15) couvre **ce qui doit
+passer en premier** : le filet de tests **avant** de toucher au classement (**C-011**, qui ne
+modifie **aucune ligne de l'application** — vérifié : les deux fonctions qui décident du vainqueur
+font **6 et 5 lignes** et ne touchent pas au classeur), puis la séparation du cœur de la saisie
+(**C-012**), puis les **quatre P1 du jour J** (**C-015** : forfait, annulation, planning, départage,
+borne de score — **toutes les règles sont déjà décidées, il ne reste qu'à les écrire**). S'y
+ajoutent le **filet côté serveur** (**C-016**), **faire parler l'application** (**C-014**, dont la
+conception est déjà validée par **D-027**) et le **contrôle avant publication** (**C-013** — le
+chantier **le moins cher du plan**). La **vague 2** est listée, rien n'est perdu.
+
+---
+
+## 1 bis. CE QUE LES VOLETS ① ET ② AVAIENT ÉTABLI
+
+**L'ÉTAPE 3 avance : ses volets ① et ② sont TERMINÉS.** Plus aucune décision n'est en attente,
 plus aucune inconnue ne bloque le plan, et **six chantiers ont désormais une fiche complète**
 (**C-005 → C-010**, session 14) — dont **quatre qui ne dépendent de rien** et peuvent démarrer dès
 validation, **deux d'entre eux refermant des P1** *(les textes d'information, la politique de
@@ -41,7 +57,7 @@ chantiers avec code — peut s'ouvrir.**
 
 ---
 
-## 1 bis. CE QUE LE VOLET ① AVAIT ÉTABLI *(session 13)*
+## 1 ter. CE QUE LE VOLET ① AVAIT ÉTABLI *(session 13)*
 
 **Plus aucune décision n'est en attente, et plus aucune inconnue ne bloque le plan.** Les **six décisions** qui traînaient depuis les sessions 1
 à 8 ont été reprises une par une et **toutes tranchées le 2026-08-05** — dont les trois du domaine B
@@ -65,7 +81,7 @@ pas pouvoir s'en attribuer le mérite plus tard. **Aucune ligne de code n'a ét�
 
 ---
 
-## 1 ter. CE QUE L'ÉTAPE 2 AVAIT ÉTABLI *(pour mémoire)*
+## 1 quater. CE QUE L'ÉTAPE 2 AVAIT ÉTABLI *(pour mémoire)*
 
 **L'ÉTAPE 1 et l'ÉTAPE 2 sont TERMINÉES : les huit domaines sont audités** — A (métier),
 C (sécurité), B (protection des données), D (tests), E (expérience d'utilisation), F (performance),
@@ -90,7 +106,7 @@ qui referme R-019). ✅ **L'ÉTAPE 3 s'est ouverte à la session 13** — voir �
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
 | 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
-| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | 🚧 **EN COURS** — **volet ① ✅ TERMINÉ** (session 13 : inconnues + décisions) · **volet ② ✅ TERMINÉ** (session 14 : **6 fiches**, C-005 → C-010) · volet ③ 🔜 **PROCHAIN** — chantiers **avec code** |
+| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | 🚧 **EN COURS** — **volet ① ✅** (session 13) · **volet ② ✅** (session 14, C-005 → C-010) · **volet ③ 🚧** (session 15 : **vague 1 écrite**, C-011 → C-016 ; **vague 2 listée**) |
 | 4 | ÉTAPE 4 — Validation par Romain | ⬜ À faire |
 | 5 | ÉTAPE 5 — Implémentation par petites unités | ⬜ À faire |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
@@ -219,7 +235,32 @@ dépendances, comment on prouve que c'est fait.
 > de C-010** peuvent commencer **dès que tu les valides**, sans attendre une ligne de code. **Deux
 > d'entre eux referment des P1.**
 
-### 🔜 Puis : session 15 — **ÉTAPE 3, volet ③** : les chantiers **avec code**
+### ✅ FAIT — session 15 : **volet ③, vague 1** — 6 fiches de plus *(`PLAN.md` §8)*
+
+| Fiche | Chantier | Referme | Risque de la correction |
+|---|---|---|---|
+| **C-011** | 🥅 **Les tests du barème et du départage** | **R-041** (P1) | ⚪ **nul** — aucune ligne de l'application |
+| **C-012** | 🔧 **Séparer le cœur de la saisie du score** | **R-042** (P1) | 🟠 élevé — le geste le plus répété du jour |
+| **C-013** | 🚦 **Un contrôle avant publication** | **R-043** (P1), R-049, R-050 | 🟢 très faible |
+| **C-014** | 🔊 **Faire parler l'application le jour J** | **R-051**, **R-052** (P1), R-053, R-069, R-085, R-086 | 🟡 faible à moyen |
+| **C-015** | 🏉 **Les règles du jour J** | **R-001, R-003, R-004, R-005** (4 P1), R-013 | 🟠 élevé |
+| **C-016** | 🔒 **Le filet côté serveur** | **R-015**, **R-016** (P1), R-047 | 🟡 moyen |
+
+> ⭐ **Le fait le plus utile de la séance, vérifié dans le code** : les deux fonctions qui décident
+> du vainqueur — `enregistrerResultat` et `comparerClassement` — font **6 et 5 lignes**, et **ne
+> touchent pas au classeur**. **C-011 n'a donc AUCUNE ligne de l'application à modifier** : on
+> ajoute des tests, c'est tout. C'est le meilleur rapport protection / risque du plan entier — et ça
+> confirme la promesse de **D-025**.
+>
+> ⚠️ **Sans en surestimer la portée** : `calculerClassement`, lui, **lit le classeur**. C-011 protège
+> **les règles**, pas la chaîne complète du classement.
+
+> ⚠️ **Le volet ③ est coupé en DEUX VAGUES**, et c'est assumé : il reste une cinquantaine de
+> problèmes. Les écrire tous en une séance produirait des **fiches creuses** — et une fiche creuse
+> est **pire que pas de fiche**, parce qu'elle donne l'illusion que le travail est instruit. La
+> **vague 2** est listée en `PLAN.md` **§9**, rien n'est perdu.
+
+### 🔜 Puis : session 16 — **volet ③, vague 2**
 
 Les contraintes d'ordre sont déjà fixées et ne se négocient plus :
 

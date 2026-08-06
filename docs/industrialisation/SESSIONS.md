@@ -3236,3 +3236,95 @@ faire parler le geste du jour J, terminer le travail d'affluence, alléger ce qu
 > à attendre que le reste du plan soit écrit.**
 
 **Condition de démarrage** : instruction explicite de Romain.
+
+---
+
+# SESSION 15 — 2026-08-06 · **ÉTAPE 3, volet ③ (vague 1) : les chantiers AVEC code**
+
+> **Objectif** : écrire les fiches des chantiers qui touchent au code, en commençant par **ceux qui
+> doivent passer en premier**. ⚠️ **Écrire les fiches, pas coder.**
+
+## 0. Mise à jour avant lecture (`CLAUDE.md` §12.3)
+
+`git fetch` + `git status -sb` → **`## main...origin/main`**, aucun retard, dépôt propre.
+
+## 1. Une décision de méthode prise en ouverture : **deux vagues**
+
+Il restait **une cinquantaine de problèmes** à répartir. Les instruire tous en une séance aurait
+produit des **fiches creuses**.
+
+> ⚠️ **Et une fiche creuse est pire que pas de fiche** : elle donne l'illusion que le travail est
+> instruit, donc plus personne ne le refait.
+
+**Vague 1** *(cette séance)* = ce qui doit passer en premier, et rien d'autre. **Vague 2**
+*(session 16)* = listée en `PLAN.md` §9, pour que rien ne se perde.
+
+## 2. Les six fiches
+
+| Fiche | Chantier | Referme | Risque de la correction |
+|---|---|---|---|
+| **C-011** | 🥅 Les tests du barème et du départage | **R-041** (P1) | ⚪ **nul** |
+| **C-012** | 🔧 Séparer le cœur de la saisie du score | **R-042** (P1) | 🟠 élevé |
+| **C-013** | 🚦 Un contrôle avant publication | **R-043** (P1), R-049, R-050 | 🟢 très faible |
+| **C-014** | 🔊 Faire parler l'application le jour J | **R-051**, **R-052** (P1), R-053, R-069, R-085, R-086 | 🟡 faible à moyen |
+| **C-015** | 🏉 Les règles du jour J | **R-001, R-003, R-004, R-005** (4 P1), R-013 | 🟠 élevé |
+| **C-016** | 🔒 Le filet côté serveur | **R-015**, **R-016** (P1), R-047 | 🟡 moyen |
+
+**Ordre d'exécution inscrit** :
+
+```
+C-011 → C-012 → C-015 · C-002 → C-016 · C-014 → C-003
+C-013 : indépendant, à tout moment
+```
+
+## 3. Ce que la vérification dans le code a apporté
+
+### ⭐ **C-011 ne modifie AUCUNE ligne de l'application** — et c'est vérifié, pas supposé
+
+| Fonction | Taille réelle | Touche le classeur ? |
+|---|---|---|
+| `enregistrerResultat(s, pour, contre)` | **6 lignes** | ❌ non |
+| `comparerClassement(a, b)` | **5 lignes** | ❌ non |
+
+**La promesse de D-025 tient** : les deux fonctions qui décident du vainqueur sont déjà pures et
+minuscules. **On ajoute des tests, c'est tout.** Meilleur rapport protection / risque du plan.
+
+> ⚠️ **Sans surestimer la portée, et c'est important** : `calculerClassement(classeur)`, lui, **lit
+> le classeur** — il n'est pas pur. **C-011 protège les RÈGLES, pas la chaîne complète.** Confondre
+> les deux ferait croire le classement protégé de bout en bout, ce qui serait faux.
+
+### Deux autres constats
+
+- **`enregistrerScore` fait 111 lignes** et reçoit le classeur → **C-012 est bien un déménagement**,
+  pas une réécriture. Et **quatre décisions** *(D-011, D-012, D-015, D-030)* rouvrent cette même
+  fonction : fait une fois avant, c'est **un** chantier ; fait après, **quatre** ;
+- **le fichier de publication ne contient aucune étape de contrôle** — la publication part sur
+  `main` sans même une vérification de syntaxe. **C-013 confirmé, et c'est le moins cher du plan.**
+
+## 4. Deux pièges inscrits dans les fiches, pour ne pas les redécouvrir
+
+- ⚠️ **C-011 oblige à mettre à jour `docs/deploiement.md`** : le bilan passera de **589** à un autre
+  nombre. Si on l'oublie, **le contrôle à deux nombres devient faux** — et on rouvre **M-04** de nos
+  propres mains, après l'avoir refermé ;
+- ⚠️ **C-013 ne doit pas trop en demander** : un contrôle trop strict qui refuserait de publier une
+  correction urgente **le jour du tournoi** serait pire que pas de contrôle. **Il vérifie la
+  syntaxe, il ne juge pas le style.** Et il se prouve en **cassant volontairement** une branche —
+  sans cette démonstration, on ne sait pas si le contrôle contrôle quelque chose.
+
+## 5. Ce qui n'a **PAS** été fait
+
+- ❌ **aucune ligne de code écrite** ; ❌ **aucun test ajouté** ;
+- ❌ **la vague 2 n'est pas instruite** — seulement **listée** ;
+- ❌ **aucun fichier de l'application modifié** — vérifié.
+
+## 6. Prochaine session recommandée
+
+**Session 16 — volet ③, vague 2** *(affluence, alléger ce qui voyage, le verrou, savoir qui a fait
+quoi, l'interface sur le terrain, et le reste)*.
+
+> ⚠️ **Ou l'ÉTAPE 4 — la validation.** **16 chantiers ont maintenant une fiche**, dont **six qui ne
+> dépendent de rien** et **plusieurs qui referment des P1**. Écrire le reste du plan avant de
+> commencer à corriger est **défendable, mais ce n'est pas obligatoire** — et ce choix
+> t'appartient.
+
+**Condition de démarrage** : instruction explicite de Romain.

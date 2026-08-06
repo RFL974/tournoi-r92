@@ -10,8 +10,9 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
-**Dernière mise à jour** : 2026-08-06 (**session 14 — volet ② terminé** : 6 fiches de chantier
-écrites, **C-005 → C-010**, voir **§7**). Rappel du 2026-08-05 : volet ① terminé, D-030/031/032
+**Dernière mise à jour** : 2026-08-06 (**session 15 — volet ③, vague 1** : 6 fiches de plus,
+**C-011 → C-016**, voir **§8** ; la **vague 2** est listée en **§9**). Session 14 : volet ② terminé,
+**C-005 → C-010**, voir **§7**. Rappel du 2026-08-05 : volet ① terminé, D-030/031/032
 inscrites, I-21 levée, fiches **C-002 / C-003 / C-004** — voir **§6**.
 
 ---
@@ -24,7 +25,7 @@ Reprendre 9 inconnues, 6 décisions et 88 problèmes ne tient pas dans une séan
 |---|---|---|---|
 | **①** | **Les inconnues et les décisions** — elles conditionnent tout le reste | 13 | ✅ **TERMINÉ** — 9 inconnues → 7 *(dont **0 bloquante**)*, **6 décisions → 0 en attente** |
 | **②** | Les chantiers **sans code** : documentation, textes d'information, durées de conservation, commentaires faux | 14 | ✅ **TERMINÉ** — **6 fiches** écrites (C-005 → C-010), voir **§7**. ⚠️ **2 des 6 touchent des fichiers source** : le volet n'était pas aussi « sans code » qu'annoncé |
-| **③** | Les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi | — | ⬜ À faire — ⚡ **mais ses deux premières fiches sont DÉJÀ écrites** : **C-002** et **C-003** *(le tournoi suspendu ou annulé, D-030)*, voir **§6** |
+| **③** | Les chantiers **avec code**, ordonnés par ce qui doit passer **avant** quoi | 15 | 🚧 **EN COURS** — **vague 1 ✅ écrite** (C-011 → C-016, **§8**) · **vague 2** listée (**§9**). ⚡ C-002, C-003 et C-004 en font aussi partie (**§6**) |
 
 ### ⚠️ Les deux contraintes d'ordre déjà FIXÉES — elles ne se négocient plus
 
@@ -256,8 +257,19 @@ SANS CODE, à tout moment et en parallèle :
     C-010 moitié ① (le texte du règlement)
 
 AVEC CODE, dans cet ordre :
-    lot ① des tests (D-025)  →  R-042  →  C-002 (niveau 1)  →  C-003 (niveau 2)
-    C-004 (repos minimal saisissable) — indépendant, mais AVANT C-003 et AVANT C-009
+    C-011 (tests du barème et du départage)
+       ↓
+    C-012 (séparer le cœur de la saisie du score)
+       ↓
+    C-015 (les règles du jour J)  ·  C-002 (tournoi suspendu/annulé)   ← adjacents
+       ↓
+    C-016 (le filet côté serveur)  ·  C-014 (faire parler l'application)
+       ↓
+    C-003 (les scénarios de reprise)   ← le plus risqué, en dernier
+
+    INDÉPENDANTS, à tout moment :
+    C-013 (contrôle avant publication) — le moins cher du plan
+    C-004 (repos minimal saisissable) — mais AVANT C-003 et AVANT C-009
     C-008 (commentaires)  ·  C-009 (code mort, APRÈS C-004)  ·  C-010 moitié ②
 ```
 
@@ -774,3 +786,236 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
   **la règle voulue**, et devra être **relu au moment où le code l'appliquera**.
 - **Risque de la correction** : ⚪ **nul** pour la moitié ①.
 - **Statut** : **PLANIFIÉ** *(moitié ①)* · **Validation de Romain** : ⏳ **à donner**
+
+---
+
+## 8. VOLET ③ — LES CHANTIERS AVEC CODE · **vague 1** *(session 15, 2026-08-06)*
+
+> ⚠️ **Le volet ③ est coupé en deux vagues, et il faut dire pourquoi.** Il reste une cinquantaine de
+> problèmes à répartir. Les écrire tous en une séance produirait des fiches creuses — or **une fiche
+> creuse est pire que pas de fiche** : elle donne l'illusion que le travail est instruit.
+>
+> **La vague 1 (ci-dessous) contient ce qui doit passer EN PREMIER**, et rien d'autre : les
+> chantiers dont dépendent tous les suivants, plus ceux qui rendent l'application tenable **le jour
+> du tournoi**. La **vague 2** est listée en **§9**, pour que rien ne se perde.
+
+### Ordre d'exécution de la vague 1
+
+```
+C-011 (les tests du barème et du départage)     ← le filet, il passe d'abord
+   ↓
+C-012 (séparer le cœur de la saisie du score)   ← sinon 4 chantiers rouvrent le même code
+   ↓
+C-015 (les règles du jour J)  ·  C-002 (tournoi suspendu/annulé)  ← adjacents, même zone
+   ↓
+C-016 (le filet côté serveur)  ·  C-014 (faire parler l'application)
+
+C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, à tout moment
+```
+
+---
+
+### C-011 — 🥅 Le filet : les tests du barème et du départage
+
+> ⭐ **C'est le premier chantier de code de tout l'ouvrage.** Décidé par **D-025**.
+
+- **Problème** (en langage simple) : **le calcul qui décide du vainqueur n'est vérifié par aucun
+  test.** Et sur les 589 vérifications existantes, **aucune ne met à l'épreuve le 2ᵉ critère de
+  départage (la différence) ni le 3ᵉ (les points marqués)** — le seul endroit qui fabrique des
+  statistiques met toujours `diff: 0, bp: 0`.
+- **Risques couverts** : **R-041** *(P1)*
+- **Priorité** : **P1** — et ⚠️ **il a une date de péremption.** **D-014 va modifier le départage.**
+  Écrits après, ces tests graveraient le **nouveau** comportement sans avoir jamais vu l'ancien :
+  ils ne prouveraient plus qu'on n'a rien cassé.
+- ✅ **Vérifié dans le code ce jour — la promesse de D-025 tient** : les deux fonctions qui décident
+  sont **déjà pures et minuscules**.
+
+  | Fonction | Taille | Touche le classeur ? |
+  |---|---|---|
+  | `enregistrerResultat(s, pour, contre)` | **6 lignes** | ❌ non |
+  | `comparerClassement(a, b)` | **5 lignes** | ❌ non |
+
+  > **Conséquence** : **aucune ligne de l'application n'est modifiée par ce chantier.** On ajoute
+  > des tests, c'est tout. C'est le meilleur rapport protection / risque du plan entier.
+
+- ⚠️ **Le périmètre exact, et il ne faut pas le surestimer** : `calculerClassement(classeur)`,
+  **lui, lit le classeur** — il n'est pas pur. **C-011 protège les RÈGLES** *(le barème, l'ordre de
+  départage)*, **pas la chaîne complète** qui va des matchs au tableau affiché. Cette chaîne-là
+  relève du lot ② de D-025, différé.
+- **Les 5 tests** : victoire / nul / défaite donnent bien 3 / 2 / 1 · la différence et les points
+  marqués sont **cumulés correctement** · ⭐ **deux équipes à égalité de points sont départagées par
+  la différence** · ⭐ **à égalité de points ET de différence, par les points marqués** · l'ordre est
+  **stable** quand tout est égal.
+- **Risque de la correction** : ⚪ **nul** — on n'ajoute que des tests.
+- **Fichiers concernés** : `backend/Tests.gs` **uniquement**.
+- **Dépendances** : ✅ **aucune.**
+- **Comment on prouve que c'est fait** : le bilan passe de **589** à **589 + n**, `0 FAIL`, **chez
+  Google**. ⚠️ Et **`docs/deploiement.md` doit être mis à jour avec le nouveau nombre** — sinon le
+  contrôle à deux nombres devient faux, et on rouvre **M-04** de nos propres mains.
+- **Statut** : **PLANIFIÉ** · **Validation** : ✅ **D-025**
+
+---
+
+### C-012 — 🔧 Séparer le cœur de la saisie du score de son écriture
+
+- **Problème** (en langage simple) : `enregistrerScore` fait **111 lignes** et **mélange deux
+  choses** — décider *(le score est-il valide ? le match est-il verrouillé ? faut-il recalculer ?)*
+  et **écrire dans le classeur**. Tant que les deux sont mêlés, **on ne peut pas tester les
+  décisions** sans un vrai Google Sheet.
+- **Risques couverts** : **R-042** *(P1)*
+- **Priorité** : **P1**
+- ⭐ **Pourquoi il passe tôt, et c'est l'argument principal** : **D-011** *(forfait)*, **D-012**
+  *(limite de score)*, **D-015** *(match annulé)* **et D-030** *(le gel d'un tournoi suspendu)*
+  rouvrent **toutes** cette fonction. Fait une fois, avant : **un seul chantier**. Fait après :
+  **quatre fois le même code**, avec quatre occasions de casser le geste le plus répété de la
+  journée.
+- **Risque de la correction** : 🟠 **le plus élevé de la vague 1 après C-003.** On déplace du code
+  qui tourne **à chaque score saisi**. ⚠️ **Aucun comportement ne doit changer** — c'est un
+  déménagement, pas une réécriture.
+- **Fichiers concernés** : `backend/Code.gs` *(`enregistrerScore`, ligne ~5538)* · `backend/Tests.gs`
+- **Dépendances** : **C-011 d'abord** — on ne déplace pas du code qui décide d'un classement sans
+  filet.
+- **Stratégie de test** : les **8 tests du lot ④ de D-025** — les 6 garde-fous du geste *(score
+  verrouillé, double-clic, score hors bornes, match inconnu, saisie concurrente, recalcul)*.
+- **Non-régression** : ⭐ **une saisie de score de bout en bout donne exactement le même résultat
+  qu'avant**, y compris la saisie détaillée U14 *(essais / transformations / pénalités / drops)* et
+  l'alerte des 5 essais d'écart.
+- **Statut** : **PLANIFIÉ** · **Validation** : ⏳ **à donner**
+
+---
+
+### C-013 — 🚦 Un contrôle avant publication
+
+> 💡 **Le chantier le moins cher de tout le plan, et probablement le meilleur rapport
+> effort / risque.**
+
+- **Problème** (en langage simple) : **rien ne vérifie ce qui part en ligne.** La publication se
+  déclenche **à chaque envoi sur `main`** touchant `frontend/`, et le fichier de publication ne
+  contient **aucune étape de contrôle** — pas même une vérification de syntaxe. **Une virgule
+  oubliée met une page blanche en ligne**, et personne ne l'apprend avant qu'un bénévole appelle.
+- **Risques couverts** : **R-043** *(P1, partie « contrôle de syntaxe »)* · **R-049** · **R-050**
+- **Priorité** : **P1**
+- **Bénéfice** : la faute de frappe est arrêtée **avant** la mise en ligne, pas après.
+- **Risque de la correction** : 🟢 **très faible** — on ajoute une étape au fichier de publication.
+  ⚠️ **Le seul vrai risque est de trop en demander** : un contrôle trop strict qui refuse de publier
+  une correction urgente **le jour du tournoi** serait pire que pas de contrôle. **Il vérifie la
+  syntaxe, il ne juge pas le style.**
+- **Fichiers concernés** : `.github/workflows/pages.yml` · aucun fichier de l'application.
+- **Dépendances** : ✅ **aucune.** Peut être fait **à tout moment**, y compris avant C-011.
+- **Comment on prouve que c'est fait** : on introduit **volontairement** une faute de syntaxe dans
+  une branche → **la publication doit échouer**. Sans cette démonstration, on ne sait pas si le
+  contrôle contrôle quelque chose.
+- **Statut** : **PLANIFIÉ** · **Validation** : ⏳ **à donner**
+
+---
+
+### C-014 — 🔊 Faire parler l'application le jour J
+
+- **Problème** (en langage simple) : **l'application dit qu'elle a réussi sans le savoir.** Le
+  bouton « Rafraîchir » peut **échouer en silence** et laisser croire que les scores affichés sont à
+  jour — c'est le plus grave. Une erreur réseau s'affiche en anglais *(« Failed to fetch »)* devant
+  un bénévole. Le bouton « Valider » reste **muet pendant 3 à 8 secondes**, alors on reclique. Et
+  côté serveur, une image supprimée répond *« c'est fait »* sans avoir vérifié.
+- **Risques couverts** : **R-051** *(P1)* · **R-052** *(P1)* · **R-053** · **R-069** · **R-085** ·
+  **R-086**
+- **Priorité** : **P1**
+- ⭐ **Ce chantier a déjà sa conception validée — c'est rare, et ça change tout** : **D-027**, dont
+  les 4 arbitrages ont été tranchés par Romain. *Une animation ne doit jamais mentir* : **trois
+  issues** — ça arrive / c'est arrivé / **ça a échoué**. **CSS pur**, jamais d'image. **Aucun chiffre
+  annoncé** *(un délai annoncé devient une promesse — or 4 % des appels dépassent 10 s)*.
+- ⚡ **R-086 porte sa propre correction** : **29 endroits sur 21 fichiers** montrent l'erreur brute
+  du navigateur. **Un seul endroit à écrire** — une fonction qui traduit — et les 29 se referment.
+- 🔗 **Et R-067 explique pourquoi ça compte** : l'attente après « Valider » est **réelle et
+  mesurée** — la reconstruction de l'instantané public prend **2,5 à 4,5 s**, **pendant que le
+  verrou d'écriture est tenu**. **Un bouton muet pendant quatre secondes est un bouton sur lequel on
+  reclique.**
+- ⚠️ **Contrainte forte, posée par D-026** : accepter l'attente **interdit le silence**. Ce chantier
+  est donc le **préalable** de tout allongement de délai *(vague 2, R-064)*.
+- **Risque de la correction** : 🟡 **faible à moyen** — on touche les écrans les plus utilisés
+  *(saisie, page publique)*, mais **on ajoute de l'information, on ne change aucun calcul**.
+- **Fichiers concernés** : la page de saisie · la page publique · un utilitaire commun *(R-086)* ·
+  `backend/Code.gs` *(R-085)*
+- **Dépendances** : aucune techniquement. **À faire après C-012** si les deux touchent la saisie,
+  pour ne pas la rouvrir deux fois.
+- **Non-régression** : la saisie ne doit **rien perdre** de ses garde-fous existants *(double-clic
+  bloqué, saisie en cours jamais écrasée, mot de passe redemandé sur un score validé)*.
+- **Statut** : **PLANIFIÉ** · **Validation** : ✅ **D-027** *(conception)* · ⏳ **le lot reste à
+  valider**
+
+---
+
+### C-015 — 🏉 Les règles du jour J : forfait, annulation, planning, départage, score
+
+- **Problème** (en langage simple) : **l'application est excellente avant le coup d'envoi et rigide
+  après.** Une équipe ne vient pas : rien ne permet de l'enregistrer. L'orage annule un match :
+  rien. Un match doit être décalé : impossible dès qu'un score existe. Deux équipes sont à égalité
+  parfaite : elles sont classées **dans l'ordre du tableur**. Un score de 150 au lieu de 15 est
+  accepté **sans un mot**.
+- **Risques couverts** : **R-001** *(P1)* · **R-003** *(P1)* · **R-004** *(P1)* · **R-005** *(P1)* ·
+  **R-013**
+- **Priorité** : **P1** — **quatre P1 dans un seul chantier**, et ce sont **les quatre du fil rouge
+  métier** : ils apparaissent **tous le jour J**, quand la réalité s'écarte du plan.
+- ✅ **Toutes les règles sont DÉJÀ décidées** — **D-011** *(forfait : absent 0 point, présent gagne,
+  aucun score attribué, double mise en garde)* · **D-012** *(2 chiffres maximum + confirmation)* ·
+  **D-013** *(déplacer un match, décaler la journée — le niveau 3 est écarté et rejoint C-003)* ·
+  **D-014** *(confrontation directe puis ordre alphabétique, ajoutés **à la suite** des trois
+  critères existants)* · **D-015** *(match annulé : même mécanisme, libellé distinct)*.
+  **Il ne reste qu'à les écrire.**
+- ⚠️ **Une réserve permanente** : **I-10** *(la FFR encadre-t-elle le sort d'un match non joué ?)*
+  **reste ouverte**, et une règle fédérale **primerait sur D-011 et D-015**. Ce n'est pas bloquant
+  *(D-015 est validée « par défaut »)*, mais **le texte de C-010 devra être relu** si la réponse
+  arrive.
+- **Risque de la correction** : 🟠 **élevé** — on modifie **le calcul du classement** et **la saisie
+  du score**. C'est précisément pourquoi **C-011 et C-012 passent avant**.
+- **Dépendances** *(strictes)* : **C-011** → **C-012** → C-015.
+  🔗 **À traiter en voisinage immédiat de C-002** *(tournoi suspendu / annulé)* : même zone, mêmes
+  états de match, mêmes tests.
+- **Non-régression** : le classement d'un tournoi **sans** forfait ni annulation doit être
+  **identique au caractère près** · les 4 formats d'après-midi · le Super Challenge.
+- **Statut** : **PLANIFIÉ** · **Validation** : ✅ **D-011 → D-015** *(les règles)* · ⏳ **le lot reste
+  à valider**
+
+---
+
+### C-016 — 🔒 Le filet côté serveur
+
+- **Problème** (en langage simple) : **les trois gestes les plus destructeurs de l'application sont
+  retenus par la page web, pas par le serveur.** Effacer tous les scores, tout réinitialiser,
+  créer des équipes en double : les garde-fous vivent **dans le navigateur**, donc ils sont
+  **contournables**. Toutes les autres protections du projet — le gel des réponses à J-16, le refus
+  de réorganiser les poules — sont, elles, tenues par le serveur.
+- **Risques couverts** : **R-015** *(P1)* · **R-016** *(P1)* · **R-047**
+- **Priorité** : **P1**
+- 🏉 **L'image qui dit tout** : le stade a une salle de contrôle. La porte est fermée à clé partout
+  — **sauf sur les trois boutons qui peuvent effacer la journée.**
+- **Risque de la correction** : 🟡 **moyen** — on **ajoute** des refus côté serveur. ⚠️ **Le vrai
+  danger est de refuser trop** : un serveur qui bloque une réinitialisation légitime le jour J
+  serait pire que le problème. **Les protections doivent reproduire exactement ce que la page fait
+  déjà**, pas inventer de nouvelles règles.
+- **Fichiers concernés** : `backend/Code.gs` · `backend/Tests.gs`
+- **Dépendances** : aucune. 🔗 **C-002 rejoint ce chantier** : l'état SUSPENDU / ANNULÉ **doit** être
+  tenu par le serveur — un gel tenu par le navigateur **ne gèle rien**.
+- **Stratégie de test** : un test **par refus**, appelé **sans passer par la page** — c'est le seul
+  moyen de prouver que la protection est bien côté serveur.
+- **Statut** : **PLANIFIÉ** · **Validation** : ⏳ **à donner**
+
+---
+
+## 9. VOLET ③ — **vague 2** : ce qui reste à instruire
+
+> **Inscrit maintenant pour que rien ne se perde.** Ces familles ont leur regroupement (**§3**) mais
+> **pas encore de fiche**. Elles seront écrites à la session suivante.
+
+| Famille | Problèmes | Pourquoi elle attend |
+|---|---|---|
+| ⚡ **Terminer le travail d'affluence** | R-061, R-062, **R-064** | **Précédée de C-014** *(D-026 : accepter l'attente interdit le silence)*. R-064 est **un chiffre à changer**, et c'est le levier le plus puissant |
+| **Alléger ce qui voyage** | R-063, R-065, R-066 | ⚠️ **R-063 exige C-011 et C-012 AVANT** *(un champ absent arrive en `undefined`, pas `""`)* |
+| **Le verrou et ce qu'on met dedans** | R-067, R-068, R-070 | ⚠️ **R-068 touche la sécurité** — à trancher avec R-017, R-018, R-059 |
+| **Savoir qui a fait quoi** | R-017, R-023 | Les deux ajoutent une trace : autant toucher l'`Historique` une seule fois |
+| **Ce qui sort de l'application** | R-018, R-021, R-032 | Liste blanche + jetons permanents ; le pendant technique de C-006 |
+| **L'interface sur le terrain** | R-054 → R-059 | Cibles trop petites, contrastes, zone invisible, touche « Entrée » |
+| **Les noms qui se marchent dessus** | R-078 | ⚠️ **Sous la protection des tests de R-043**, jamais à l'aveugle |
+| **Le Super Challenge** | R-082 | **P2 aujourd'hui, P1 le jour où le club en accueille un** |
+| **Les miroirs serveur ↔ navigateur** | R-044 | Requalifié : **dette à surveiller**. La méthode qui l'a prouvé tient en une minute |
+| **Le reste** | R-002, R-006 → R-011, R-019 *(= D-017)*, R-020, R-022, R-025 → R-027, R-035 → R-037, R-039, R-040, R-045, R-046, R-048, R-071, R-074 → R-077, R-079 → R-081, R-088 | À répartir |
+| ⛔ **Ce qui ne doit PAS être groupé** | R-076, R-077, R-081, R-088 | Chacun, fait en bloc, aggrave un problème plus grave que lui |
