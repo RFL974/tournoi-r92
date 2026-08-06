@@ -244,7 +244,22 @@ réordonner les chantiers, **un par un**. Rien ne sera touché dans l'applicatio
 
 ## 5. CORRECTIONS DÉJÀ RÉALISÉES DANS CE CADRE
 
-**Une seule — R-014, le P0 de sécurité** *(session 6, commit `c1948fc`, exception validée D-016)*.
+**Trois désormais** — le P0 de sécurité *(session 6)*, puis les deux premiers chantiers de
+l'ÉTAPE 5, validés et livrés le **2026-08-06** :
+
+| Chantier | Ce qu'il referme | Statut |
+|---|---|---|
+| **C-011** — les tests du barème et du départage | **R-041** (P1) | ✅ **TESTÉ** — `R92 — 616/616 OK, 0 FAIL` **chez Google**, PR #181 fusionnée |
+| **C-013** — un contrôle de syntaxe avant publication | **R-043** (P1) *moitié (a)*, R-049, R-050 | ✅ **TESTÉ** — contrôle **prouvé**, chaînage `needs` **observé** sur un déploiement réel, PR #182 fusionnée |
+
+> 🏉 **Ce que ces deux chantiers ont en commun, et pourquoi ils ont été faits en premier** : **ni
+> l'un ni l'autre ne change une seule ligne du comportement de l'application.** L'un ajoute des
+> tests, l'autre ajoute un garde-fou avant la publication. **Deux P1 refermés sans qu'un bénévole ne
+> voie la moindre différence le jour J.**
+
+---
+
+### Le premier — R-014, le P0 de sécurité *(session 6, commit `c1948fc`, exception validée D-016)*.
 
 | Ce qui a changé | Où | État |
 |---|---|---|

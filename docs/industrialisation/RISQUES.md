@@ -62,9 +62,14 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
 |---|---|---|---|---|---|---|
 | **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
-| P1 | **24** | 0 | **6** | 0 | 0 | 0 |
+| P1 | **22** | 0 | **6** | **1** | 0 | ✅ **1** |
 | P2 | **55** | 0 | **2** | 0 | 0 | 0 |
 | P3 | **11** | 0 | 0 | 0 | 0 | 0 |
+
+> ✅ **Premiers mouvements du tableau depuis l'ouverture de l'ÉTAPE 5** *(2026-08-06)* :
+> **R-041** *(le barème et le départage)* passe à **TESTÉ** — prouvé **chez Google** ;
+> **R-043** *(le contrôle avant publication)* passe à **EN COURS** — sa **moitié (a) est refermée et
+> prouvée**, sa moitié **(b)** *(harnais du navigateur)* reste entière.
 
 **Total : 91 problèmes** — **88 issus des 8 domaines d'audit** [domaine A (13) + domaine C (14) +
 domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (10) + **domaine H
@@ -370,7 +375,7 @@ D-030** (tournoi suspendu / annulé).
 
 | Réf | Problème | Priorité | Certitude | Statut | Détail |
 |---|---|---|---|---|---|
-| **R-041** | **Le calcul qui décide du vainqueur n'est vérifié par aucun test.** `enregistrerResultat` et `calculerClassement` ne sont **jamais exécutés** ; `comparerClassement` l'est **par accident** (au passage d'un test qui vérifie autre chose). Et **sur 589 vérifications, aucune ne met à l'épreuve le 2ᵉ critère de départage (la différence) ni le 3ᵉ (les points marqués)** : le seul endroit du fichier de tests qui fabrique des statistiques met toujours `diff: 0, bp: 0`. Or **D-014 va modifier ce code** | **P1** | **CERTAIN** (mesuré par exécution instrumentée) | ⚙️ **EN COURS** — ✅ **chantier C-011 VALIDÉ par Romain le 2026-08-06**, écrit et poussé : **5 tests, 27 vérifications**, **`R92 — 616/616 OK, 0 FAIL`** vérifié hors d'Apps Script · **PR #181 ouverte** · ⚠️ passera **CORRIGÉ** à la fusion, **TESTÉ** seulement quand Romain aura relancé `lancerTestsFFR` **chez Google** · préalable de D-014 et D-011 · ✅ **D-025 TRANCHÉE (session 13)** : c'est le **lot ①**, le premier chantier de code du chantier, et il est écrit **AVANT** la correction du départage — pas après | `AUDIT.md` §D.2 |
+| **R-041** | **Le calcul qui décide du vainqueur n'est vérifié par aucun test.** `enregistrerResultat` et `calculerClassement` ne sont **jamais exécutés** ; `comparerClassement` l'est **par accident** (au passage d'un test qui vérifie autre chose). Et **sur 589 vérifications, aucune ne met à l'épreuve le 2ᵉ critère de départage (la différence) ni le 3ᵉ (les points marqués)** : le seul endroit du fichier de tests qui fabrique des statistiques met toujours `diff: 0, bp: 0`. Or **D-014 va modifier ce code** | **P1** | **CERTAIN** (mesuré par exécution instrumentée) | ✅ **TESTÉ le 2026-08-06** — chantier **C-011**, PR #181 **fusionnée**. **5 tests, 27 vérifications** ajoutés ; **aucune ligne de `Code.gs` modifiée**. ⭐ **Preuve fournie par Romain, obtenue CHEZ GOOGLE** : `11:55:15  Infos  R92 — 616/616 OK, 0 FAIL`. Les deux critères de départage qui n'étaient couverts par **aucune** des 589 vérifications précédentes le sont désormais. ⚠️ **Portée** : les deux **règles** sont protégées, **pas la chaîne complète** du classement — `calculerClassement` lit le classeur et reste hors de portée du harnais (**R-046**) | `AUDIT.md` §D.2 |
 | **R-042** | **L'enregistrement d'un score n'est vérifié par aucun test.** `enregistrerScore` — le geste le plus répété de la journée — n'est **jamais exécuté** par le harnais, alors qu'il porte **six garde-fous** (Coupe en attente · score déjà validé · vainqueur obligatoire en élimination · correction en cascade · score détaillé · archivage). Seul chantier du domaine qui demande de **séparer le cœur de l'écriture** | **P1** | CERTAIN | IDENTIFIÉ — **préalable de D-012 et D-015** | `AUDIT.md` §D.3 |
 | **R-043** | **Les 17 712 lignes du navigateur n'ont aucun test, et rien ne les empêche d'être publiées.** 26 fichiers JS, aucun outil de test, aucun `package.json` — et `.github/workflows/pages.yml` publie `frontend/` sur Internet **à chaque envoi sur `main`**, sans lancer quoi que ce soit, **pas même un contrôle de syntaxe**. C'est le seul chemin vers la production sans aucun contrôle. Il porte le classement public, le podium et la page de saisie | **P1** | CERTAIN | ⚙️ **EN COURS — moitié (a) FAITE ET PROUVÉE** : chantier **C-013** validé le 2026-08-06, **PR #182**. Le workflow porte un travail `verifier` dont `deploy` dépend (`needs`). **Preuves réelles dans GitHub** : branche cassée → contrôle **failure**, publication **skipped** *(#183, fermée sans fusion)* · branche saine → **« 30 fichiers JavaScript vérifiés, aucun cassé »**, contrôle **success**. ✅ **STATUTS ARRÊTÉS PAR ROMAIN le 2026-08-06**, en trois états distincts — *« je préfère cette preuve réelle plutôt que de provoquer volontairement une exécution du chemin de publication »* :
 
