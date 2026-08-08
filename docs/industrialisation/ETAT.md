@@ -9,7 +9,13 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-06 (**🏁 C-011 et C-013 DÉFINITIVEMENT CLÔTURÉS et TESTÉS** —
+**Dernière mise à jour** : 2026-08-08 (**🏁 QUATRE CHANTIERS CLÔTURÉS** — C-011 et C-013 *(TESTÉS
+chez Google)*, puis **C-005 et C-006 côté travail documentaire** le 2026-08-06. ⚠️ **Les problèmes
+qui dépendent d'un changement de comportement restent OUVERTS** : R-028, R-030 *(part outillage)*,
+R-031, R-033. **Chantier présenté à la validation : C-007**, et **ses chiffres ont été recomptés
+dans le code du 2026-08-08 — ils tiennent tous**.)
+
+*Rappel de la mise à jour précédente — 2026-08-06* : (**🏁 C-011 et C-013 DÉFINITIVEMENT CLÔTURÉS et TESTÉS** —
 deux P1 refermés **sans changer une ligne du comportement de l'application** · `R92 — 616/616 OK,
 0 FAIL` obtenu **chez Google**). *Session 16 : 🏁 l'ÉTAPE 3 est terminée* : vague 2 écrite,
 **C-017 → C-030**, et **la couverture des 91 problèmes est prouvée : 91 sur 91 placés, 0 sans
@@ -64,8 +70,8 @@ VALIDATION (ÉTAPE 4)**, chantier par chantier.
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
 | 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
 | 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers** (C-001 → C-030), **91 problèmes placés sur 91**, **0 sans place** |
-| 4 | **ÉTAPE 4 — Validation par Romain** | 🚧 **EN COURS** — 🏁 **C-011 et C-013 CLÔTURÉS** le 2026-08-06 · chantier présenté ensuite : **C-005** · ordre retenu : *« d'abord ce qui ne peut rien casser »* |
-| 5 | **ÉTAPE 5 — Implémentation par petites unités** | 🚧 **EN COURS** — **2 chantiers clôturés et TESTÉS** : C-011 (PR #181) · C-013 (PR #182) |
+| 4 | **ÉTAPE 4 — Validation par Romain** | 🚧 **EN COURS** — 🏁 **4 chantiers clôturés** : C-011, C-013, **C-005 et C-006** *(travail documentaire)* · chantier présenté ensuite : **C-007** · ordre retenu : *« d'abord ce qui ne peut rien casser »* |
+| 5 | **ÉTAPE 5 — Implémentation par petites unités** | 🚧 **EN COURS** — **2 chantiers clôturés et TESTÉS** : C-011 (PR #181) · C-013 (PR #182) · **2 chantiers documentaires livrés** : C-005, C-006 |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
 
 ---
@@ -246,13 +252,34 @@ réordonner les chantiers, **un par un**. Rien ne sera touché dans l'applicatio
 
 ## 5. CORRECTIONS DÉJÀ RÉALISÉES DANS CE CADRE
 
-**Trois désormais** — le P0 de sécurité *(session 6)*, puis les deux premiers chantiers de
-l'ÉTAPE 5, validés et livrés le **2026-08-06** :
+**Cinq désormais** — le P0 de sécurité *(session 6)*, puis **quatre chantiers** validés et livrés le
+**2026-08-06** : deux avec preuve d'exécution *(C-011, C-013)* et deux purement documentaires
+*(C-005, C-006)* :
 
 | Chantier | Ce qu'il referme | Statut |
 |---|---|---|
 | **C-011** — les tests du barème et du départage | **R-041** (P1) | ✅ **TESTÉ** — `R92 — 616/616 OK, 0 FAIL` **chez Google**, PR #181 fusionnée |
 | **C-013** — un contrôle de syntaxe avant publication | **R-043** (P1) *moitié (a)*, R-049, R-050 | ✅ **TESTÉ** — contrôle **prouvé**, chaînage `needs` **observé** sur un déploiement réel, PR #182 fusionnée |
+| **C-005** — les trois textes d'information | **R-028** (P1), R-038 | 🏁 **Travail documentaire TERMINÉ** — `docs/textes-information-donnees.md`. ⚠️ **R-028 reste OUVERT : rien n'est en ligne** |
+| **C-006** — la politique de conservation | **R-030** (P1), R-031, R-033, R-034 | 🏁 **Travail documentaire TERMINÉ** — `docs/conservation-donnees.md`, **5 gestes sur 7 vérifiés dans le code**. ⚠️ **R-030 *(part outillage)*, R-031 et R-033 restent OUVERTS** |
+
+> ⚠️ **Ce que C-005 et C-006 ne referment pas, et pourquoi c'est écrit ici.** Ces deux chantiers
+> **produisent des textes** ; ils ne changent **rien** au comportement de l'application. Un texte
+> d'information que personne ne peut lire n'informe personne, et une durée de conservation écrite
+> n'efface rien toute seule. **Validation de Romain, mot pour mot** : *« clôturer C-006 côté travail
+> documentaire […] sans fermer les problèmes du registre qui dépendent encore d'un changement de
+> comportement »*.
+>
+> ⛔ **Deux constats à conserver pour les futurs chantiers de code** *(demande expresse de Romain)* :
+> **1.** la **réinitialisation n'efface PAS** les contacts de la demande fédérale — représentant,
+> président, **médecin**, secours : la règle décidée (**D-020**) et le code **divergent** ;
+> **2.** **`detail_effectifs` et `nb_educateurs_total` ne sont effacés par RIEN**, et ils sont
+> **lus** par le calcul des effectifs.
+>
+> ❓ **Une lacune de plan signalée, non comblée d'office** : le tableau de couverture (`PLAN.md` §12)
+> place R-030, R-031 et R-033 dans C-006 — **vrai pour la documentation, faux pour la correction**.
+> **Il manque la fiche du chantier de code qui corrigera l'effacement.** Ajouter un chantier au plan
+> appartient à Romain : **question ouverte à l'ÉTAPE 4**.
 
 > 🏉 **Ce que ces deux chantiers ont en commun, et pourquoi ils ont été faits en premier** : **ni
 > l'un ni l'autre ne change une seule ligne du comportement de l'application.** L'un ajoute des

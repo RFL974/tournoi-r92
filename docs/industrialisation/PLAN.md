@@ -619,7 +619,7 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
   la finalité, la durée** *(de C-006)* **et le moyen de demander un retrait**.
 - ⚠️ **Ce chantier ne referme pas R-028 tout seul** : il **produit** les textes. **R-028 ne sera
   clos que le jour où ils sont en ligne** — ce qui appartient à Romain *(D-005)*.
-- **Statut** : ⚙️ **EN COURS** — **livrable écrit** : `docs/textes-information-donnees.md` *(252 lignes)*. **Aucun fichier de l'application touché, rien mis en ligne.**
+- **Statut** : 🏁 **CLÔTURÉ CÔTÉ TRAVAIL DOCUMENTAIRE** *(validé par Romain le 2026-08-06)* — **livrable écrit** : `docs/textes-information-donnees.md` *(252 lignes)*. **Aucun fichier de l'application touché, rien mis en ligne.** ⚠️ **Ne referme PAS R-028** : un texte que personne ne peut lire n'informe personne — la clôture du problème demande la **mise en ligne**, et la validation du bureau
 - **Validation de Romain** : ✅ **oui, le 2026-08-06** *(+ D-018)*
 - ✅ **2026-08-06 — les deux points qui pouvaient rendre le texte FAUX sont tranchés** : **point 1** *(le champ « équipes étrangères » attend « nom du club, pays » — aucune demande de nom d'enfant, constat d'origine de R-034 corrigé)* et **point 6** *(**D-033** : les durées sont garanties par un **rappel manuel**)*
 - ⏳ **Restent 3 points, tous administratifs — ils retardent la mise en ligne, ils ne remettent rien en cause dans le texte** : validation du **bureau** · les **cinq crochets** · mentionner ou non la situation en cours
@@ -706,6 +706,35 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
 - **Comment on prouve que c'est fait** : on **recompte**. Les 65 actions du serveur sont-elles
   listées ? Les 8 pages ? Les 26 fichiers JS ? Le compte doit **tomber juste**, et la méthode de
   comptage doit être **écrite à côté du chiffre**.
+
+#### 🔁 Recomptage du 2026-08-08 — **tous les chiffres tiennent**, méthode incluse
+
+*(Fait à l'ouverture de l'ÉTAPE 4 pour ce chantier, précisément parce que **M-05** dit que
+l'application bouge pendant qu'on l'audite, et **M-06** qu'un chiffre sans méthode est un piège.)*
+
+| Ce qu'on compte | Chiffre | Comment il a été obtenu |
+|---|---|---|
+| Actions du serveur | **65** | 61 `case '…'` des trois `switch` de `doGet`/`doPost` *(les 6 `case` de tours — `FINALE`, `DEMI_FINALE`… — exclus : ce n'est pas un aiguillage d'action)* **+ 4 traitées par `if`** : `ping`, `getAll`, `getRefFFR`, `mesureSponsors` |
+| Actions citées par `docs/architecture.md` | **21** | Recherche du **nom exact** de chacune des 65 dans le fichier → **21 présentes, 44 absentes** = **67,7 % d'invisible** |
+| Pages | **8** | `frontend/*.html` |
+| Pages citées par `docs/architecture.md` | **4** | `admin`, `saisie`, `tournoi`, `perfs` ✅ · **absentes** : `index`, `dossier-club`, `invitation-club`, `reponse-invitation` — **soit tout le parcours d'invitation des clubs** |
+| Fichiers JS | **26** | `frontend/js/*.js` |
+| Fichiers JS cités par `README.md` | **6** | Recherche du nom de fichier → **20 absents** |
+| Onglets du classeur cités par `README.md` | **5** | `README.md` ligne 34. Le code en nomme **au moins 8** en clair *(`Config`, `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`, `Sponsors`, `Mesures`)*. ⚠️ **Le « jusqu'à 12 » de la session 11 n'a PAS été reconfirmé** : je n'écris que ce que j'ai vu — **8 certains** |
+| Bibliothèques extérieures **(R-024)** | **4**, **~737 Ko** | `frontend/js/vendor/` : `pdf-lib.min.js` (525 Ko), `docxtemplater.min.js` (93 Ko), `pizzip.min.js` (80 Ko), `qrcode.js` (57 Ko). **Aucune version, aucune origine, aucune empreinte** nulle part dans le dépôt |
+
+> ✅ **Le reliquat de R-072 a rétréci depuis l'écriture de la fiche** : `docs/deploiement.md` porte
+> désormais les **bons** nombres de contrôle — **616** *(le bilan des tests)* et **3859** *(la
+> dernière ligne de `Tests.gs`)* — remis d'aplomb par **C-011**. La preuve que **§8 bis fonctionne**
+> quand on l'applique. Reste le confort : `Tests.gs` n'est toujours cité ni par `passation.md`, ni
+> par `backend/README.md`, ni par `README.md`.
+
+> ⚡ **Un constat trouvé pendant le recomptage, qui n'appartient pas à ce chantier.**
+> `frontend/README.md` écrit que `pizzip.min.js` + `docxtemplater.min.js` sont conservés alors que
+> *« plus rien ne les charge »* — **173 Ko sur les 737**. Ce n'est **pas** de la documentation
+> fausse : c'est du **code mort assumé et écrit**. Il relève donc de **C-009**, pas d'ici.
+> **Signalé, pas traité.**
+
 - **Statut** : **PLANIFIÉ** · **Validation de Romain** : ⏳ **à donner** *(ÉTAPE 4)*
 
 ---

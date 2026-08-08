@@ -3743,3 +3743,74 @@ sans code, et ces trois-là demandent un changement de comportement.
 > **Il manque donc une fiche** — celle du chantier de code qui corrigera l'effacement.
 > **Signalé à Romain, pas créé d'office** : ajouter un chantier au plan est une décision qui lui
 > appartient.
+
+---
+
+## ÉTAPE 4 — **C-007 présenté à la validation** *(2026-08-08)*
+
+**Objectif de la séance** : reprendre l'ÉTAPE 4 là où elle s'était arrêtée, c'est-à-dire présenter à
+Romain le **chantier suivant dans l'ordre qu'il a retenu** — *« d'abord ce qui ne peut rien
+casser »*. Après C-011, C-013, C-005 et C-006, c'est **C-007**.
+
+### 0. Mise à jour avant lecture
+
+`git fetch origin` puis `git status -sb` : la branche de travail est **exactement au niveau de
+`origin/main`**, 0 commit d'écart. *(Le `main` local, lui, est en retard — mais on ne travaille pas
+dessus.)*
+
+### 1. Un retard de `ETAT.md` corrigé
+
+`ETAT.md` n'avait **pas** été mis à jour par le dernier commit `d665575` : il annonçait encore
+*« chantier présenté ensuite : C-005 »* et ne mentionnait ni la clôture de C-005, ni celle de C-006.
+**Corrigé** — avec, inscrits noir sur blanc, les problèmes qui **restent ouverts** *(R-028, R-030
+part outillage, R-031, R-033)* et les **deux constats à conserver** pour les futurs chantiers de
+code.
+
+### 2. Deux cellules de tableau en trop dans `RISQUES.md`
+
+Les lignes **R-031** et **R-033** portaient leur dernière colonne **en double**
+(`| AUDIT.md §B.5 | AUDIT.md §B.5 |`), ce qui décale la lecture du tableau. **Corrigé.** Sans
+conséquence sur le fond.
+
+### 3. 🎯 Le vrai travail : **les chiffres de C-007 ont été recomptés dans le code d'aujourd'hui**
+
+C'est le point qui compte. La fiche C-007 s'appuie sur des chiffres relevés en **session 11**, et
+**M-05** dit que l'application bouge pendant qu'on l'audite. Un chantier dont tout l'objet est de
+*« ne pas mentir »* ne pouvait pas être présenté sur des chiffres non revérifiés.
+
+**Résultat : les sept chiffres tiennent.** Le détail, et surtout **la méthode de comptage de
+chacun**, sont désormais dans la fiche `PLAN.md` C-007 — pas dans ce journal, pour qu'ils soient là
+où on ira les chercher.
+
+En résumé : **65 actions du serveur, 21 documentées** *(44 absentes, 67,7 %)* · **8 pages,
+4 documentées** *(tout le parcours d'invitation des clubs est absent)* · **26 fichiers JS, 6 cités**
+· **4 bibliothèques extérieures, ~737 Ko, sans version ni origine**.
+
+### 4. Trois précisions apportées par le recomptage
+
+1. ✅ **Le reliquat de R-072 a rétréci** : `docs/deploiement.md` porte les **bons** nombres de
+   contrôle — **616** et **3859** — remis d'aplomb par C-011. **§8 bis a fonctionné.** Reste le
+   confort : `Tests.gs` absent de `passation.md`, `backend/README.md` et `README.md` ;
+2. ⚠️ **Un chiffre de la session 11 n'a PAS été reconfirmé** : le *« jusqu'à 12 onglets »*.
+   Le code en nomme **8** en clair. **La fiche n'écrit donc que 8** — on n'inscrit pas un chiffre
+   qu'on n'a pas revu ;
+3. ⚡ **Un constat trouvé au passage, et renvoyé ailleurs** : `frontend/README.md` écrit que
+   `pizzip` + `docxtemplater` *(173 Ko)* sont conservés alors que *« plus rien ne les charge »*.
+   Ce n'est pas de la documentation fausse, c'est du **code mort assumé** → **C-009**, pas ici.
+   **Signalé, pas traité.**
+
+### 5. Ce qui n'a **PAS** été fait
+
+- ❌ **Aucune ligne de C-007 n'a été écrite.** C'est l'ÉTAPE 4 : on présente, Romain décide ;
+- ❌ **La fiche manquante** *(le chantier de code qui corrigera l'effacement)* **n'a pas été créée** :
+  ajouter un chantier au plan appartient à Romain ;
+- ❌ **Aucun fichier de l'application touché.** Aucun redéploiement requis.
+
+### 6. Prochaine session recommandée
+
+**La décision de Romain sur C-007** — accepté, refusé ou réordonné. Puis, selon sa réponse, soit
+l'exécution de C-007, soit la présentation du chantier suivant.
+
+**Deux questions ouvertes l'accompagnent** : la fiche manquante du chantier d'effacement, et
+**C-009**, qui ne peut pas être validé sans trancher d'abord *« supprimer ou brancher »* la colonne
+`pause_echelonnee`.
