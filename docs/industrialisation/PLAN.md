@@ -707,7 +707,7 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
   listées ? Les 8 pages ? Les 26 fichiers JS ? Le compte doit **tomber juste**, et la méthode de
   comptage doit être **écrite à côté du chiffre**.
 
-#### 🔁 Recomptage du 2026-08-08 — **tous les chiffres tiennent**, méthode incluse
+#### 🔁 Recomptage du 2026-08-09 — **tous les chiffres tiennent**, méthode incluse
 
 *(Fait à l'ouverture de l'ÉTAPE 4 pour ce chantier, précisément parce que **M-05** dit que
 l'application bouge pendant qu'on l'audite, et **M-06** qu'un chiffre sans méthode est un piège.)*
@@ -735,7 +735,47 @@ l'application bouge pendant qu'on l'audite, et **M-06** qu'un chiffre sans méth
 > fausse : c'est du **code mort assumé et écrit**. Il relève donc de **C-009**, pas d'ici.
 > **Signalé, pas traité.**
 
-- **Statut** : **PLANIFIÉ** · **Validation de Romain** : ⏳ **à donner** *(ÉTAPE 4)*
+#### 🏁 Statut final
+
+- **Validation de Romain** : ✅ **oui, le 2026-08-09**, **périmètre complet** — les 65 actions, les
+  8 pages, les 26 fichiers navigateur, les 8 onglets, et les 4 bibliothèques avec nom, version,
+  origine et date. Consigne explicite : *« si une version ou une origine ne peut pas être établie
+  avec certitude, écris « à confirmer » plutôt que de l'inventer »*.
+- **Statut** : 🏁 **LIVRÉ** — **documentation uniquement, aucun fichier applicatif touché, aucun
+  changement de comportement, aucun redéploiement Google.**
+
+| Fichier | Ce qui a changé |
+|---|---|
+| `docs/architecture.md` | **Réécrit.** Les **65 actions** une par une, groupées en 11 familles, chacune avec son **niveau d'accès** ; les **8 pages** ; les **26 fichiers JS** ; les **8 onglets** ; le schéma de ce qui se passe après une écriture ; et **§7 : la méthode de comptage de chaque chiffre** |
+| `docs/dependances-externes.md` | **Créé.** Les 4 bibliothèques : taille, licence, date d'entrée, page qui la charge, **empreinte SHA-256**, et ce qui reste « à confirmer » — avec la liste de ce qui a été cherché en vain |
+| `README.md` | « 5 onglets » → **8** ; les **26 fichiers JS** listés au lieu de 6 ; les 8 pages ; `Tests.gs` ajouté ; **une affirmation fausse corrigée** *(voir ci-dessous)* |
+| `backend/README.md` | **Réécrit.** « un seul fichier » → **deux** ; « 6 onglets » → **7 créés, 8 en service** ; les exceptions d'accès expliquées |
+| `docs/passation.md` | `Tests.gs` ajouté au geste de re-déploiement — **reliquat de R-072 refermé** |
+
+**Preuve que c'est fait** — vérification automatique repassée après écriture :
+
+| Contrôle | Résultat |
+|---|---|
+| Les 65 actions du code sont-elles citées dans `architecture.md` ? | ✅ **65 / 65** |
+| Les 26 fichiers JS sont-ils cités dans `README.md` ? | ✅ **26 / 26** |
+| … et dans `architecture.md` ? | ✅ **26 / 26** |
+| Les 8 pages sont-elles citées ? | ✅ **8 / 8** |
+| Les 8 onglets ? | ✅ **8 / 8** |
+| Les 4 bibliothèques inventoriées ? | ✅ **4 / 4** |
+| Les comptes de lignes cités concordent-ils avec `wc -l` ? | ✅ **tous** |
+| Les empreintes SHA-256 concordent-elles avec les fichiers ? | ✅ **4 / 4** |
+
+> ⚡ **Ce que le chantier a trouvé EN PLUS, et que l'audit n'avait pas vu.** `README.md` annonçait
+> que la mesure de visibilité des partenaires était *« 100 % locale (aucun envoi, aucun cookie) »*.
+> **Le code contredit cette phrase** : `sponsors.js` range un identifiant d'appareil dans
+> `localStorage` **et envoie** les relevés au serveur (action `mesureSponsors`). Corrigé dans le
+> README, avec renvoi à **R-029**. C'est exactement le danger que ce chantier visait : **une carte
+> fausse est pire qu'une carte absente**.
+
+> ⚠️ **Ce que ce chantier ne prouve pas.** Que la documentation restera juste. Elle le restera si
+> **§8 bis** est appliquée — et C-011 vient d'en donner la démonstration : les nombres de contrôle
+> de `deploiement.md` (616 / 3859) avaient été mis à jour **dans le même lot**, sans que personne
+> n'ait à y revenir.
 
 ---
 

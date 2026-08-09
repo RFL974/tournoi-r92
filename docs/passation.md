@@ -57,9 +57,17 @@ nouveaux comptes.**
 > un projet Apps Script vierge** (voir 3.2) et un **nouveau `SHEET_ID`** (à reporter dans `Code.gs`).
 
 ### 3.2 Re-déployer le backend sous le compte asso (NOUVELLE `API_URL`)
+
+> ⚠️ **Le serveur, ce sont DEUX fichiers** : `backend/Code.gs` **et** `backend/Tests.gs`. Une copie
+> ou un nouveau projet Apps Script les demande **tous les deux**. Ne recoller que `Code.gs` laisse un
+> harnais de tests périmé, et un bilan « au vert » ne prouve alors rien.
+> **Les deux nombres de contrôle à vérifier après collage sont dans**
+> [`deploiement.md`](deploiement.md).
+
 Même après transfert, il faut **re-déployer** pour que le web app s'exécute sous le compte asso :
 1. Google Sheet (compte asso) → **Extensions → Apps Script**.
 2. Vérifier que `SHEET_ID` (en tête de `Code.gs`) correspond bien au Sheet de l'asso.
+   ⚠️ **Coller aussi `Tests.gs`**, puis lancer `lancerTestsFFR` → **`R92 — 616/616 OK, 0 FAIL`**.
 3. **Déployer → Nouveau déploiement → Type : Application Web**, « Exécuter en tant que : moi »,
    « Accès : tout le monde » → **Déployer**. **Copier la nouvelle URL `/exec`.**
 4. Reporter cette URL dans `frontend/js/config.js` → `API_URL = "…/exec"`, puis pousser sur GitHub.

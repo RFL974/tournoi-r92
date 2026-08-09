@@ -31,8 +31,11 @@ Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
 ## 🧱 Stack technique
 
-- **Base de données** : Google Sheets (**5 onglets** : `Equipes`, `Poules`, `Matchs`, `Config`, `Historique`)
-- **Backend** : Google Apps Script, déployé en **Web App** qui répond en **JSON**
+- **Base de données** : Google Sheets — **8 onglets** : `Config`, `Equipes`, `Poules`, `Matchs`,
+  `Historique`, `ClubsInvites`, `Sponsors`, `Mesures`
+  *(`setupSheet()` en crée 7 ; `Mesures` est créé à la demande, au premier relevé de visibilité)*
+- **Backend** : Google Apps Script, déployé en **Web App** qui répond en **JSON** — **65 actions**,
+  détaillées une par une dans [`docs/architecture.md`](docs/architecture.md)
 - **Frontend** : pages web statiques **HTML / CSS / JS**, pensées **mobile-first**, **hébergées sur
   GitHub Pages** (workflow `.github/workflows/pages.yml` qui publie le dossier `frontend/`) :
   - public : **https://rfl974.github.io/tournoi-r92/tournoi.html**
@@ -58,37 +61,78 @@ tournoi-r92/
 ├── docs/                    → documentation détaillée
 │   ├── guide-utilisateur.md     → ⭐ mode d'emploi complet (organisateur / saisie / visiteur)
 │   ├── passation.md             → ⭐ portabilité : tout transférer vers les comptes de l'asso
-│   ├── architecture.md          → comment les briques communiquent
+│   ├── architecture.md          → ⭐ LA CARTE : les 65 actions, les 8 pages, les 26 fichiers JS
 │   ├── structure-google-sheet.md→ colonnes de chaque onglet du Sheet
 │   ├── deploiement.md           → déploiement backend + mise en ligne frontend
+│   ├── dependances-externes.md  → les 4 bibliothèques extérieures (version, origine, empreinte)
+│   ├── conservation-donnees.md  → combien de temps on garde chaque donnée, et qui l'efface
+│   ├── textes-information-donnees.md → ce qu'on dit aux gens sur leurs données
 │   ├── relais-cdn.md            → montée en charge (cache serveur + relais CDN Cloudflare)
 │   ├── phases-tournoi.md        → note de conception (matin / après-midi)
 │   ├── formats-apres-midi.md    → formats d'après-midi par catégorie (croisé / libre / coupe+plateau)
-│   └── sponsors.md              → 🆕 partenaires sur la page publique (prototype) + fiche de visibilité
+│   ├── sponsors.md              → partenaires sur la page publique + fiche de visibilité
+│   └── industrialisation/       → le chantier d'industrialisation (état, plan, risques, décisions)
 │
-├── backend/                 → code Google Apps Script
-│   └── Code.gs
+├── backend/                 → code Google Apps Script — DEUX fichiers à coller chez Google
+│   ├── Code.gs                  → le serveur (65 actions)
+│   ├── Tests.gs                 → le harnais de tests (à coller AUSSI — voir docs/deploiement.md)
+│   └── README.md                → ce que fait le serveur, et ses utilitaires
 │
 ├── cloudflare/              → relais CDN optionnel (dormant par défaut)
 │   └── worker-tournoi.js
 │
-└── frontend/                → pages web
+└── frontend/                → pages web (8 pages, 26 fichiers JS, 4 bibliothèques extérieures)
     ├── index.html           → redirige la racine vers tournoi.html
-    ├── admin.html           → page organisateur (équipes, réglages, infos tournoi, génération, publication)
-    ├── saisie.html          → saisie des scores (table de marque)
     ├── tournoi.html         → page publique unique (onglets Mon équipe / Classements + filtre catégorie)
+    ├── saisie.html          → saisie des scores (table de marque) — clé SCORES
+    ├── admin.html           → page organisateur — clé ADMIN
+    ├── invitation-club.html → Phase 1 : l'invitation envoyée au club
+    ├── reponse-invitation.html → Phase 1 : le club accepte ou décline lui-même (jeton)
+    ├── dossier-club.html    → Phase 2 : le dossier complet du club accepté (jeton)
     ├── perfs.html           → « Perfs Racing » (page interne, non liée)
+    ├── assets/              → 1 modèle .docx (autorisation de droit à l'image — plus utilisé)
+    ├── modeles/             → 1 modèle PDF (demande d'autorisation FFR)
+    ├── img/                 → 5 images (blasons, logos, icônes)
+    ├── README.md            → le détail de chaque page du frontend
     ├── css/
     │   ├── styles.css           → thème sombre (admin / saisie / perfs)
     │   └── tournoi-public.css   → thème clair de la page publique (charte du site vitrine)
-    └── js/
+    └── js/                  → 26 fichiers
+        │  — le socle, chargé par presque toutes les pages —
         ├── config.js        → réglages partagés (API_URL du backend, SNAPSHOT_URL du relais)
+        ├── commun.js        → utilitaires communs à toutes les pages
         ├── api.js           → communication avec le backend (apiGet / apiPost + clés)
-        ├── admin.js
-        ├── saisie.js
-        ├── tournoi.js
-        └── perfs.js
+        ├── dialog.js        → fenêtres de confirmation « maison »
+        ├── commun-dossier.js→ utilitaires des 3 pages « document » du parcours club
+        │  — les pages —
+        ├── tournoi.js       → la page publique
+        ├── saisie.js        → la saisie des scores
+        ├── perfs.js         → Perfs Racing
+        ├── invitation.js    → l'invitation Phase 1
+        ├── reponse.js       → la réponse du club
+        ├── dossier.js       → le dossier Phase 2
+        ├── sponsors.js      → affichage ET mesure des partenaires
+        │  — l'administration (14 fichiers) —
+        ├── admin.js         → le noyau (chargement, navigation, orchestration)
+        ├── admin-tableau-bord.js  → récapitulatif d'état, « Où en suis-je ? »
+        ├── admin-equipes.js       → les équipes
+        ├── admin-reglages.js      → horaires et catégories
+        ├── admin-generation.js    → génération des poules et du planning
+        ├── admin-terrains.js      → terrains physiques et répartition géométrique
+        ├── admin-invitations.js   → invitations et clubs invités
+        ├── admin-infos-publication.js → contenus publics et publication
+        ├── admin-conformite-ffr.js→ conformité FFR (informative)
+        ├── admin-autorisation.js  → demande d'autorisation FFR
+        ├── admin-feuille-jour.js  → feuille de fin de journée
+        ├── admin-sponsors.js      → écran Partenaires
+        ├── ecrans.js              → mode « écrans » à onglets (ordinateur)
+        ├── assistant.js           → présentation guidée de la page admin
+        └── vendor/          → 4 bibliothèques extérieures (voir docs/dependances-externes.md)
 ```
+
+> 📐 **Ces comptes sont vérifiables** — 8 pages, 26 fichiers JS, 8 onglets, 65 actions,
+> 4 bibliothèques. La **méthode de comptage de chacun** est écrite au §7 de
+> [`docs/architecture.md`](docs/architecture.md).
 
 ---
 
@@ -135,7 +179,8 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 
 **Au 2026-07-14 : l'application est complète, EN LIGNE et fonctionnelle** (backend Apps Script + frontend GitHub Pages + intégration au site vitrine boutique-r92).
 
-- ✅ **Base de données** Google Sheets (5 onglets) créée automatiquement (`setupSheet`).
+- ✅ **Base de données** Google Sheets (**8 onglets**) créée automatiquement — `setupSheet()` en crée
+  7, `Mesures` apparaît au premier relevé de visibilité.
 - ✅ **Backend** déployé en Web App : API de lecture (`doGet`) et d'écriture (`doPost`), **vérifié en
   ligne** (scores, après-midi, historique, nombre de poules, clés).
 - ✅ **Page admin** complète : horaires (fin auto ou manuelle, battement, pause déjeuner) ; catégories
@@ -181,8 +226,14 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
   barre basse, encart au fil, message plein écran, mur des logos), **rotation équitable pondérée**,
   et **fiche de visibilité** imprimable pour chaque partenaire. Réglé depuis l'écran admin
   **Partenaires** ; **interrupteur général sur « non » par défaut** ⇒ page publique inchangée.
-  Mesure **100 % locale** (aucun envoi, aucun cookie) — donc « mesuré sur 1 appareil », c'est écrit
-  sur la fiche. Aucun service payant. Voir [`docs/sponsors.md`](docs/sponsors.md).
+  Aucun service payant, aucun outil de mesure extérieur. Voir [`docs/sponsors.md`](docs/sponsors.md).
+  > ⚠️ **Correction du 2026-08-09.** Cette ligne annonçait une mesure *« 100 % locale (aucun envoi,
+  > aucun cookie) »*. **C'est faux depuis que la remontée existe** : la page range un identifiant
+  > d'appareil dans la mémoire du navigateur (`localStorage`) et **envoie les relevés au serveur**
+  > (action `mesureSponsors`, à 20 s puis toutes les 10 min). Il n'y a bien **aucun cookie** et
+  > **aucun service extérieur** — mais il y a **un envoi**. C'est le problème **R-029**, suivi dans
+  > le chantier d'industrialisation ; la mesure est aujourd'hui **à l'arrêt**, l'interrupteur
+  > Partenaires étant sur « non ».
 
 **Reste à faire (confort / avant le vrai tournoi) :**
 - **Nettoyer les données de test** du Sheet avant le vrai tournoi (le bouton « Générer poules et

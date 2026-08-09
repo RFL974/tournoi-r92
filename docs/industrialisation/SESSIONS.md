@@ -3746,7 +3746,7 @@ sans code, et ces trois-là demandent un changement de comportement.
 
 ---
 
-## ÉTAPE 4 — **C-007 présenté à la validation** *(2026-08-08)*
+## ÉTAPE 4 — **C-007 présenté à la validation** *(2026-08-09)*
 
 **Objectif de la séance** : reprendre l'ÉTAPE 4 là où elle s'était arrêtée, c'est-à-dire présenter à
 Romain le **chantier suivant dans l'ordre qu'il a retenu** — *« d'abord ce qui ne peut rien
@@ -3773,6 +3773,8 @@ Les lignes **R-031** et **R-033** portaient leur dernière colonne **en double**
 conséquence sur le fond.
 
 ### 3. 🎯 Le vrai travail : **les chiffres de C-007 ont été recomptés dans le code d'aujourd'hui**
+
+> 📌 *Note du 2026-08-09 : cette séance avait été datée par erreur du 2026-08-08. Corrigé.*
 
 C'est le point qui compte. La fiche C-007 s'appuie sur des chiffres relevés en **session 11**, et
 **M-05** dit que l'application bouge pendant qu'on l'audite. Un chantier dont tout l'objet est de
@@ -3814,3 +3816,94 @@ l'exécution de C-007, soit la présentation du chantier suivant.
 **Deux questions ouvertes l'accompagnent** : la fiche manquante du chantier d'effacement, et
 **C-009**, qui ne peut pas être validé sans trancher d'abord *« supprimer ou brancher »* la colonne
 `pause_echelonnee`.
+
+---
+
+## 🏁 C-007 — **LIVRÉ** : la carte du projet décrit enfin le projet *(2026-08-09)*
+
+**Validation de Romain, périmètre complet** : les 65 actions, les 8 pages, les 26 fichiers
+navigateur, les 8 onglets, et les 4 bibliothèques avec nom, version, origine et date. Avec deux
+consignes explicites, toutes deux tenues :
+
+1. *« uniquement de la documentation, aucun fichier applicatif, aucun changement de comportement et
+   aucun redéploiement Google »* ;
+2. *« si une version ou une origine ne peut pas être établie avec certitude, écris « à confirmer »
+   plutôt que de l'inventer »*.
+
+### 1. Ce qui a été écrit
+
+| Fichier | Ce qui a changé |
+|---|---|
+| `docs/architecture.md` | **Réécrit** — 140 → ~380 lignes. Les **65 actions** une par une, groupées en 11 familles *(A → K)*, chacune avec son **niveau d'accès** ; les **8 pages** ; les **26 fichiers JS** ; les **8 onglets** ; un schéma de ce qui se passe après une écriture ; et **§7 : la méthode de comptage de chaque chiffre** |
+| `docs/dependances-externes.md` | **Créé** — les 4 bibliothèques : taille exacte, licence, date d'entrée *(retrouvée dans l'historique Git)*, page qui la charge, **empreinte SHA-256**, et la liste de ce qui a été cherché en vain pour établir les versions |
+| `README.md` | « 5 onglets » → **8** · les **26 fichiers JS** listés au lieu de 6 · les 8 pages · `Tests.gs` ajouté · **une affirmation fausse corrigée** *(§3)* |
+| `backend/README.md` | **Réécrit** — « un seul fichier » → **deux** · « 6 onglets » → **7 créés, 8 en service** · les deux exceptions d'accès expliquées |
+| `docs/passation.md` | `Tests.gs` ajouté au geste de re-déploiement — **reliquat de R-072 refermé** |
+
+**Trois problèmes refermés** : **R-073** (P1), le **reliquat de R-072** (P1), **R-024** (P2).
+
+### 2. La preuve — une vérification automatique, repassée APRÈS écriture
+
+La fiche demandait : *« on recompte. Le compte doit tomber juste. »* Il tombe juste.
+
+| Contrôle | Résultat |
+|---|---|
+| Les 65 actions du code sont-elles citées dans `architecture.md` ? | ✅ **65 / 65** |
+| Les 26 fichiers JS, dans `README.md` ? | ✅ **26 / 26** |
+| … et dans `architecture.md` ? | ✅ **26 / 26** |
+| Les 8 pages ? | ✅ **8 / 8** |
+| Les 8 onglets ? | ✅ **8 / 8** |
+| Les 4 bibliothèques inventoriées ? | ✅ **4 / 4** |
+| Les comptes de lignes cités concordent-ils avec `wc -l` ? | ✅ **tous** |
+| Les empreintes SHA-256 concordent-elles avec les fichiers ? | ✅ **4 / 4** |
+
+**Et un contrôle croisé, par deux chemins indépendants** : la somme des 11 familles
+*(12+4+5+4+5+5+1+8+15+5+1)* et la somme des 4 niveaux d'accès *(13+4+1+47)* tombent toutes deux
+sur **65**. Un seul chemin aurait pu se tromper deux fois de la même façon ; deux, beaucoup moins.
+
+### 3. ⚡ Ce que le chantier a trouvé EN PLUS — et que l'audit n'avait pas vu
+
+`README.md` annonçait que la mesure de visibilité des partenaires était **« 100 % locale (aucun
+envoi, aucun cookie) »**. **Le code dit le contraire** : `sponsors.js` range un identifiant
+d'appareil dans `localStorage` **et envoie** les relevés au serveur (action `mesureSponsors`).
+
+**Il n'y a bien aucun cookie et aucun service extérieur — mais il y a un envoi.** Corrigé dans le
+README, avec renvoi à **R-029**. C'est précisément le danger que ce chantier visait : **une carte
+fausse est pire qu'une carte absente.**
+
+### 4. Trois choix de méthode assumés
+
+1. **Le « jusqu'à 12 onglets » de la session 11 n'a pas été repris.** Le code en nomme **8** en
+   clair *(7 clés de `ENTETES` + `Config`)*. C'est **8** qui est écrit, avec la note expliquant que
+   des onglets ajoutés à la main dans un classeur réel resteraient hors du code ;
+2. **Le chiffre « ~1000-1300 spectateurs » a été RETIRÉ de `architecture.md`.** Il n'a aucune source
+   et a déjà conduit un audit à une conclusion fausse *(M-06)*. Remplacé par ce qui est **mesuré**
+   — 1,65 s par lecture, 1,59 s pour un `ping` vide, capacité estimée 150-300 — et par le renvoi
+   explicite à la question ouverte **I-19**, qui appartient à Romain ;
+3. **Les 170 Kio de `pizzip` + `docxtemplater` n'ont pas été supprimés.** Ils sont **constatés**
+   comme non chargés, et renvoyés à **R-080**, dont la décision appartient à Romain. Ce chantier
+   documente, il ne tranche pas.
+
+### 5. Ce qui n'a **PAS** été fait
+
+- ❌ **aucun fichier de l'application touché** — ni `.gs`, ni `.js`, ni `.html`, ni `.css` ;
+- ❌ **aucun changement de comportement**, donc **aucun redéploiement Google requis** ;
+- ❌ **aucune version de bibliothèque inventée** : les quatre restent « à confirmer », avec la
+  méthode pour les établir un jour *(comparer l'empreinte SHA-256 d'une version officielle)* ;
+- ❌ **la fiche manquante du chantier d'effacement (C-031) n'a toujours pas été créée** — c'est la
+  décision de Romain, et il ne l'a pas prise.
+
+### 6. Prochaine session recommandée
+
+**L'ordre *« d'abord ce qui ne peut rien casser »* est épuisé** : C-011, C-013, C-005, C-006 et
+C-007 sont tous livrés. La suite demande donc **une décision de Romain sur l'ordre**, et deux
+questions restent en attente :
+
+| Question | Pourquoi elle bloque |
+|---|---|
+| **C-031** — créer, ou non, la fiche du chantier d'effacement | R-030, R-031 et R-033 sont « placés » dans un chantier qui n'écrit que du texte |
+| **C-009** — `pause_echelonnee` : supprimer ou brancher ? | Décision **métier**, personne ne peut la prendre à sa place |
+
+Les candidats naturels pour la suite : **C-012** *(séparer le cœur de la saisie du score de son
+écriture)*, protégé par les tests de C-011 ; ou **C-008** *(les commentaires qui disent le contraire
+du code)*, encore très peu risqué.
