@@ -12,7 +12,7 @@
 **Dernière mise à jour** : 2026-08-09 (**🏁 CINQ CHANTIERS CLÔTURÉS** — C-011 et C-013 *(TESTÉS
 chez Google)*, **C-005 et C-006** côté travail documentaire le 2026-08-06, et **🆕 C-007 LIVRÉ** le
 2026-08-09 : **la carte du projet décrit enfin le projet** — 65 actions, 8 pages, 26 fichiers,
-8 onglets, 4 bibliothèques. ⚠️ **Les problèmes qui dépendent d'un changement de comportement restent
+**12 onglets**, 4 bibliothèques. ⚠️ **Les problèmes qui dépendent d'un changement de comportement restent
 OUVERTS** : R-028, R-030 *(part outillage)*, R-031, R-033.)
 
 *Rappel de la mise à jour précédente — 2026-08-06* : (**🏁 C-011 et C-013 DÉFINITIVEMENT CLÔTURÉS et TESTÉS** —
@@ -262,7 +262,7 @@ deux avec preuve d'exécution chez Google *(C-011, C-013)* et **trois purement d
 | **C-013** — un contrôle de syntaxe avant publication | **R-043** (P1) *moitié (a)*, R-049, R-050 | ✅ **TESTÉ** — contrôle **prouvé**, chaînage `needs` **observé** sur un déploiement réel, PR #182 fusionnée |
 | **C-005** — les trois textes d'information | **R-028** (P1), R-038 | 🏁 **Travail documentaire TERMINÉ** — `docs/textes-information-donnees.md`. ⚠️ **R-028 reste OUVERT : rien n'est en ligne** |
 | **C-006** — la politique de conservation | **R-030** (P1), R-031, R-033, R-034 | 🏁 **Travail documentaire TERMINÉ** — `docs/conservation-donnees.md`, **5 gestes sur 7 vérifiés dans le code**. ⚠️ **R-030 *(part outillage)*, R-031 et R-033 restent OUVERTS** |
-| **C-007** — remettre la carte du projet en face du projet | **R-073** (P1), **R-072** (P1, reliquat), R-024 | 🏁 **LIVRÉ le 2026-08-09 — les 3 problèmes sont REFERMÉS.** `docs/architecture.md` réécrit, `docs/dependances-externes.md` créé, `README.md` / `backend/README.md` / `passation.md` corrigés. **Vérification automatique : 65/65 actions, 26/26 fichiers, 8/8 pages, 8/8 onglets, 4/4 bibliothèques** |
+| **C-007** — remettre la carte du projet en face du projet | **R-073** (P1), **R-072** (P1, reliquat), R-024 | 🏁 **LIVRÉ le 2026-08-09 — les 3 problèmes sont REFERMÉS.** `docs/architecture.md` réécrit, `docs/dependances-externes.md` créé, `README.md` / `backend/README.md` / `passation.md` corrigés. **Vérification automatique : 65/65 actions, 26/26 fichiers, 8/8 pages, 12/12 onglets, 4/4 bibliothèques** |
 
 > ⚠️ **Ce que C-005 et C-006 ne referment pas, et pourquoi c'est écrit ici.** Ces deux chantiers
 > **produisent des textes** ; ils ne changent **rien** au comportement de l'application. Un texte

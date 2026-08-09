@@ -19,13 +19,10 @@ Le projet repose sur **3 briques** qui se parlent en JSON.
 ```
 ┌─────────────────────┐        ┌──────────────────────────┐        ┌──────────────────────────┐
 │   Frontend (web)    │  HTTP  │  Backend Apps Script     │        │   Google Sheet           │
-│  8 pages            │ <────> │  (Web App, répond JSON)  │ <────> │  8 onglets               │
-│  26 fichiers JS     │  JSON  │  doGet() / doPost()      │        │  Config / Equipes /      │
-│                     │        │  65 actions              │        │  Poules / Matchs /       │
-└─────────────────────┘        └──────────────────────────┘        │  Historique /            │
-     HTML/CSS/JS                    Google Apps Script              │  ClubsInvites /          │
-  (GitHub Pages)                  (lié au Google Sheet)             │  Sponsors / Mesures      │
-                                                                    └──────────────────────────┘
+│  8 pages            │ <────> │  (Web App, répond JSON)  │ <────> │  12 onglets              │
+│  26 fichiers JS     │  JSON  │  doGet() / doPost()      │        │  8 de travail            │
+│                     │        │  65 actions              │        │  + 4 de référence FFR    │
+└─────────────────────┘        └──────────────────────────┘        └──────────────────────────┘
 ```
 
 > Montée en charge spectateurs : la page publique lit `getAll` **mis en cache serveur ~10 s** (et
@@ -39,7 +36,10 @@ Stocke toutes les données. Voir [`structure-google-sheet.md`](structure-google-
 détail des colonnes. C'est aussi l'endroit où l'organisateur peut vérifier ou corriger les données
 à la main.
 
-**8 onglets** — 7 portent une simple ligne d'en-têtes, `Config` a une structure particulière :
+**12 onglets**, et ils ne jouent pas le même rôle : **8 onglets de travail** — les données du
+tournoi — et **4 onglets de référence** qui portent le cadre fédéral.
+
+### Les 8 onglets de travail
 
 | Onglet | Ce qu'il contient | Créé par |
 |---|---|---|
@@ -52,9 +52,27 @@ détail des colonnes. C'est aussi l'endroit où l'organisateur peut vérifier ou
 | `Sponsors` | Les fiches partenaires (entreprises) | `setupSheet()`, et `assurerOngletSponsors()` **à la demande** sur un classeur plus ancien |
 | `Mesures` | Les relevés de visibilité des partenaires | `assurerOngletMesures()` **à la demande**, au premier relevé |
 
-> ⚠️ **`setupSheet()` annonce « Les 7 onglets ont été créés »** — et c'est exact : il en crée 7.
-> `Mesures` n'est créé qu'au premier relevé de visibilité. **Le message n'est pas faux, il est
-> partiel** : le classeur en service en compte bien **8**.
+> ℹ️ **`setupSheet()` en crée 7** et l'annonce ainsi dans sa fenêtre de confirmation. Le 8ᵉ,
+> `Mesures`, apparaît au premier relevé de visibilité.
+
+### Les 4 onglets de référence FFR
+
+Ils portent le **calendrier et les règles de l'École de Rugby** publiés par la fédération. Ils ne
+contiennent **aucune donnée personnelle**, sont lus **en public** (action `getRefFFR`, avec son
+propre cache), et **se remplissent à la main** — `setupSheet()` ne les crée pas.
+
+| Onglet | Ce qu'il contient |
+|---|---|
+| `RefFFR_Formes` | Les formes de jeu autorisées par catégorie |
+| `RefFFR_Dates` | Le calendrier fédéral : quelles dates sont compatibles, par zone |
+| `RefFFR_Regles` | Une ligne par *catégorie × forme × effectif* : terrain, effectifs, ballon, carton, tir au but |
+| `RefFFR_Temps` | Les grilles de temps de jeu, par *catégorie × effectif × nombre de demi-journées × nombre d'équipes* |
+
+> 🛡️ **Migration douce, et c'est une qualité du code** : si l'un de ces onglets est **absent, vide
+> ou illisible**, la lecture renvoie une liste vide **sans jamais lever d'erreur**, et toute la
+> chaîne de conformité se met en repli. **L'application continue de fonctionner exactement comme
+> avant.** C'est pourquoi un classeur peut très bien tourner avec 8 onglets seulement — il perd la
+> conformité FFR, rien d'autre.
 
 ---
 
@@ -380,15 +398,14 @@ Deux charges à distinguer :
 - **lecture publique** → **le point critique**, car Apps Script (compte Gmail) plafonne à
   ~**30 exécutions simultanées**.
 
-> ⚠️ **Un chiffre a été retiré de ce document le 2026-08-09.** Il annonçait « ~1000–1300 personnes »
-> susceptibles de consulter le live. **Ce chiffre n'a aucune source connue** — et il a déjà conduit
-> un audit à une conclusion fausse.
->
-> **Ce qui est mesuré, en revanche** : une lecture occupe le serveur **1,65 s**, alors qu'un `ping`,
-> qui n'exécute rien, en occupe déjà **1,59 s**. Le cache est donc excellent, mais le **temps de
+> 📏 **Ce qui est mesuré** : une lecture occupe le serveur **1,65 s**, alors qu'un `ping`, qui
+> n'exécute rien, en occupe déjà **1,59 s**. Le cache est donc excellent, mais le **temps de
 > démarrage est incompressible**. Sur cette base, la capacité réelle est estimée à **150–300
-> spectateurs simultanés**. Le nombre réel de spectateurs reste une **question ouverte** (**I-19**
-> du chantier d'industrialisation) : c'est une connaissance de terrain, pas une mesure technique.
+> spectateurs simultanés**.
+>
+> ⚠️ **Le nombre réel de spectateurs n'est pas connu**, et aucun chiffre n'est avancé ici : c'est
+> une **question ouverte** (**I-19** du chantier d'industrialisation), qui relève de la connaissance
+> du terrain et non d'une mesure technique.
 
 **Ce qui est en place, gratuitement :**
 
@@ -424,13 +441,18 @@ Détails et activation : [`relais-cdn.md`](relais-cdn.md).
 | **Fichiers JavaScript** | **26** | Les fichiers `frontend/js/*.js` — **le sous-dossier `js/vendor/` n'est pas compté** : ce sont des bibliothèques extérieures, inventoriées séparément |
 | **Lignes par fichier** | *voir tableaux* | `wc -l` sur chaque fichier |
 | **Scripts chargés par page** | *voir §3* | Les balises `<script src="js/…">` de chaque page HTML |
-| **Onglets du classeur** | **8** | Les 7 clés de la constante `ENTETES` *(`Equipes`, `Poules`, `ClubsInvites`, `Matchs`, `Historique`, `Sponsors`, `Mesures`)* **plus `Config`**, qui n'y figure pas parce que sa structure n'est pas un simple tableau à en-têtes. Recoupé avec les appels `getSheetByName('…')` du fichier |
+| **Onglets du classeur** | **12** *(8 de travail + 4 de référence)* | ⚠️ **Compter les `getSheetByName('…')` ne suffit pas** — c'est ainsi qu'un compte de 8 a d'abord été obtenu, à tort. Les 4 onglets `RefFFR_*` sont lus par `lireOngletSimple(classeur, '…')`, sans passer par `getSheetByName`. **La méthode juste réunit quatre sources** : `getSheetByName('…')`, `lireOngletSimple(classeur, '…')`, `creerOngletAvecEntetes(classeur, '…')` et `insertSheet('…')`, puis déduplique. Recoupé avec `deploiement.md`, qui documentait déjà les 4 onglets `RefFFR_*` |
 | **Bibliothèques extérieures** | **4** | Les fichiers `frontend/js/vendor/*.js` |
 
-> ⚠️ **Un chiffre plus ancien n'a PAS été repris**, faute d'avoir pu le revérifier : une note de la
-> session 11 du chantier d'industrialisation évoquait *« jusqu'à 12 onglets »*. Le code d'aujourd'hui
-> en nomme **8**. C'est **8** qui est écrit ici. Si les 4 manquants existent dans un classeur réel,
-> ils y ont été ajoutés à la main, hors du code.
+> ℹ️ **Ces comptes portent sur ce que le code nomme.** Un onglet ajouté à la main dans un classeur
+> réel, sans passer par le code, n'y figurerait pas.
+
+> 🎯 **La leçon de ce document, et elle vaut plus que ses chiffres.** Le compte des onglets a
+> d'abord été établi à **8**, par une méthode qui semblait raisonnable — chercher les
+> `getSheetByName`. Elle était **incomplète**, et le contrôle croisé entre documents l'a révélé :
+> `deploiement.md` mentionnait 4 onglets que le compte ignorait. **Un chiffre juste ne prouve pas
+> une méthode juste ; seule une méthode écrite peut être prise en défaut.** C'est exactement à ça
+> que sert ce §7.
 
 ---
 

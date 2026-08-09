@@ -31,9 +31,11 @@ Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
 ## 🧱 Stack technique
 
-- **Base de données** : Google Sheets — **8 onglets** : `Config`, `Equipes`, `Poules`, `Matchs`,
-  `Historique`, `ClubsInvites`, `Sponsors`, `Mesures`
-  *(`setupSheet()` en crée 7 ; `Mesures` est créé à la demande, au premier relevé de visibilité)*
+- **Base de données** : Google Sheets — **12 onglets** :
+  - **8 de travail** : `Config`, `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`,
+    `Sponsors`, `Mesures` *(`setupSheet()` en crée 7 ; `Mesures` apparaît au premier relevé)* ;
+  - **4 de référence FFR**, remplis à la main : `RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`,
+    `RefFFR_Temps` *(absents ⇒ l'app fonctionne, elle perd seulement la conformité FFR)*
 - **Backend** : Google Apps Script, déployé en **Web App** qui répond en **JSON** — **65 actions**,
   détaillées une par une dans [`docs/architecture.md`](docs/architecture.md)
 - **Frontend** : pages web statiques **HTML / CSS / JS**, pensées **mobile-first**, **hébergées sur
@@ -130,7 +132,7 @@ tournoi-r92/
         └── vendor/          → 4 bibliothèques extérieures (voir docs/dependances-externes.md)
 ```
 
-> 📐 **Ces comptes sont vérifiables** — 8 pages, 26 fichiers JS, 8 onglets, 65 actions,
+> 📐 **Ces comptes sont vérifiables** — 8 pages, 26 fichiers JS, 12 onglets, 65 actions,
 > 4 bibliothèques. La **méthode de comptage de chacun** est écrite au §7 de
 > [`docs/architecture.md`](docs/architecture.md).
 
@@ -179,8 +181,9 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 
 **Au 2026-07-14 : l'application est complète, EN LIGNE et fonctionnelle** (backend Apps Script + frontend GitHub Pages + intégration au site vitrine boutique-r92).
 
-- ✅ **Base de données** Google Sheets (**8 onglets**) créée automatiquement — `setupSheet()` en crée
-  7, `Mesures` apparaît au premier relevé de visibilité.
+- ✅ **Base de données** Google Sheets : **8 onglets de travail** créés automatiquement
+  (`setupSheet()` en crée 7, `Mesures` apparaît au premier relevé) **+ 4 onglets de référence FFR**
+  remplis à la main, soit **12**.
 - ✅ **Backend** déployé en Web App : API de lecture (`doGet`) et d'écriture (`doPost`), **vérifié en
   ligne** (scores, après-midi, historique, nombre de poules, clés).
 - ✅ **Page admin** complète : horaires (fin auto ou manuelle, battement, pause déjeuner) ; catégories
@@ -225,15 +228,11 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 - 🧪 **Partenaires (prototype)** : cinq emplacements sur la page publique (bandeau permanent, rail /
   barre basse, encart au fil, message plein écran, mur des logos), **rotation équitable pondérée**,
   et **fiche de visibilité** imprimable pour chaque partenaire. Réglé depuis l'écran admin
-  **Partenaires** ; **interrupteur général sur « non » par défaut** ⇒ page publique inchangée.
-  Aucun service payant, aucun outil de mesure extérieur. Voir [`docs/sponsors.md`](docs/sponsors.md).
-  > ⚠️ **Correction du 2026-08-09.** Cette ligne annonçait une mesure *« 100 % locale (aucun envoi,
-  > aucun cookie) »*. **C'est faux depuis que la remontée existe** : la page range un identifiant
-  > d'appareil dans la mémoire du navigateur (`localStorage`) et **envoie les relevés au serveur**
-  > (action `mesureSponsors`, à 20 s puis toutes les 10 min). Il n'y a bien **aucun cookie** et
-  > **aucun service extérieur** — mais il y a **un envoi**. C'est le problème **R-029**, suivi dans
-  > le chantier d'industrialisation ; la mesure est aujourd'hui **à l'arrêt**, l'interrupteur
-  > Partenaires étant sur « non ».
+  **Partenaires** ; **interrupteur général sur « non » par défaut** ⇒ page publique inchangée, et
+  **mesure à l'arrêt**. Aucun service payant, aucun cookie, aucun outil de mesure extérieur.
+  ⚠️ **La mesure n'est pas locale** : quand elle est allumée, la page range un identifiant d'appareil
+  dans la mémoire du navigateur (`localStorage`) et **envoie les relevés au serveur** (action
+  `mesureSponsors`, à 20 s puis toutes les 10 min). Voir [`docs/sponsors.md`](docs/sponsors.md).
 
 **Reste à faire (confort / avant le vrai tournoi) :**
 - **Nettoyer les données de test** du Sheet avant le vrai tournoi (le bouton « Générer poules et

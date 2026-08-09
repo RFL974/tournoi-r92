@@ -83,7 +83,7 @@ Cache serveur + **relais CDN** optionnel (`pousserSnapshot` / `configurerRelais`
 
 | Fonction | Ce qu'elle fait |
 |---|---|
-| `setupSheet()` | Crée **7 onglets** : `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`, `Sponsors` et `Config`. ⚠️ **Le 8ᵉ, `Mesures`, est créé à la demande** au premier relevé de visibilité — le classeur en service en compte donc **8**. ⚠️ **Ne jamais relancer `setupSheet()` sur un classeur en service** : il réécrirait `Config` |
+| `setupSheet()` | Crée **7 onglets de travail** : `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`, `Sponsors` et `Config`. ⚠️ **Il n'en crée pas d'autres** : `Mesures` apparaît au premier relevé de visibilité, et les **4 onglets de référence FFR** (`RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`, `RefFFR_Temps`) se remplissent **à la main**. Un classeur complet en compte donc **12**. ⚠️ **Ne jamais relancer `setupSheet()` sur un classeur en service** : il réécrirait `Config` |
 | `configurerCles()` | Définit les deux clés. À lancer **depuis le menu « Tournoi R92 » du classeur**, pas depuis le bouton ▶ de l'éditeur — les fenêtres de saisie ne s'affichent pas depuis l'éditeur |
 | `autoriserDrive()` | Donne au script l'autorisation Google Drive, nécessaire pour l'affiche **et** la photo du parking |
 | `configurerRelais(...)` | Renseigne le relais CDN (optionnel, dormant par défaut) |

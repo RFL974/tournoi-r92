@@ -402,7 +402,9 @@ code**. Elles se règlent **une fois** dans l'éditeur Apps Script via `configur
 
 ## 6. Où sont les données ?
 
-Tout vit dans un **Google Sheet** à 5 onglets : **Equipes**, **Poules**, **Matchs**, **Config**
-(réglages globaux + catégories), **Historique** (cumul saison). Le détail des colonnes est décrit
-dans [`structure-google-sheet.md`](structure-google-sheet.md). L'architecture technique complète
-est dans [`architecture.md`](architecture.md).
+Tout vit dans un **Google Sheet** à **12 onglets** : **8 de travail** — **Equipes**, **Poules**,
+**Matchs**, **Config** (réglages globaux + catégories), **Historique** (cumul saison),
+**ClubsInvites**, **Sponsors**, **Mesures** — et **4 de référence FFR** (`RefFFR_*`), remplis à la
+main. Le détail des colonnes est décrit dans
+[`structure-google-sheet.md`](structure-google-sheet.md). L'architecture technique complète est dans
+[`architecture.md`](architecture.md).

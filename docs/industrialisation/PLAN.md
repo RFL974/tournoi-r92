@@ -720,7 +720,7 @@ l'application bouge pendant qu'on l'audite, et **M-06** qu'un chiffre sans méth
 | Pages citées par `docs/architecture.md` | **4** | `admin`, `saisie`, `tournoi`, `perfs` ✅ · **absentes** : `index`, `dossier-club`, `invitation-club`, `reponse-invitation` — **soit tout le parcours d'invitation des clubs** |
 | Fichiers JS | **26** | `frontend/js/*.js` |
 | Fichiers JS cités par `README.md` | **6** | Recherche du nom de fichier → **20 absents** |
-| Onglets du classeur cités par `README.md` | **5** | `README.md` ligne 34. Le code en nomme **au moins 8** en clair *(`Config`, `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`, `Sponsors`, `Mesures`)*. ⚠️ **Le « jusqu'à 12 » de la session 11 n'a PAS été reconfirmé** : je n'écris que ce que j'ai vu — **8 certains** |
+| Onglets du classeur cités par `README.md` | **5** | `README.md` ligne 34. ⚠️ **Le compte réel est 12**, et il a fallu deux tentatives pour l'établir — voir la correction ci-dessous. **Le « jusqu'à 12 » de la session 11 était JUSTE** |
 | Bibliothèques extérieures **(R-024)** | **4**, **~737 Ko** | `frontend/js/vendor/` : `pdf-lib.min.js` (525 Ko), `docxtemplater.min.js` (93 Ko), `pizzip.min.js` (80 Ko), `qrcode.js` (57 Ko). **Aucune version, aucune origine, aucune empreinte** nulle part dans le dépôt |
 
 > ✅ **Le reliquat de R-072 a rétréci depuis l'écriture de la fiche** : `docs/deploiement.md` porte
@@ -728,6 +728,21 @@ l'application bouge pendant qu'on l'audite, et **M-06** qu'un chiffre sans méth
 > dernière ligne de `Tests.gs`)* — remis d'aplomb par **C-011**. La preuve que **§8 bis fonctionne**
 > quand on l'applique. Reste le confort : `Tests.gs` n'est toujours cité ni par `passation.md`, ni
 > par `backend/README.md`, ni par `README.md`.
+
+> ⛔ **CORRECTION DU 2026-08-09 — mon compte des onglets était FAUX, et c'est instructif.**
+> J'avais écrit **8**, en cherchant les `getSheetByName('…')` du serveur. **La méthode était
+> incomplète** : les **4 onglets de référence FFR** *(`RefFFR_Formes`, `RefFFR_Dates`,
+> `RefFFR_Regles`, `RefFFR_Temps`)* sont lus par `lireOngletSimple(classeur, '…')`, sans passer par
+> `getSheetByName`. **Le compte réel est 12**, et **la note de la session 11 — « jusqu'à 12 onglets »
+> — avait raison** : c'est moi qui l'avais écartée, faute d'avoir su la revérifier.
+>
+> **Ce qui a rattrapé l'erreur n'est pas une relecture, c'est le contrôle croisé entre documents** :
+> `deploiement.md` documentait **déjà** ces 4 onglets. Un document seul se relit sans se contredire ;
+> **c'est la confrontation de plusieurs documents qui fait apparaître le trou.**
+>
+> ⚡ **Et la leçon dépasse le chiffre** : une méthode de comptage écrite peut être **prise en
+> défaut** — c'est précisément ce qui vient de se passer. Une méthode non écrite, non. C'est
+> l'argument le plus fort en faveur du §7 de `architecture.md`.
 
 > ⚡ **Un constat trouvé pendant le recomptage, qui n'appartient pas à ce chantier.**
 > `frontend/README.md` écrit que `pizzip.min.js` + `docxtemplater.min.js` sont conservés alors que
@@ -760,7 +775,7 @@ l'application bouge pendant qu'on l'audite, et **M-06** qu'un chiffre sans méth
 | Les 26 fichiers JS sont-ils cités dans `README.md` ? | ✅ **26 / 26** |
 | … et dans `architecture.md` ? | ✅ **26 / 26** |
 | Les 8 pages sont-elles citées ? | ✅ **8 / 8** |
-| Les 8 onglets ? | ✅ **8 / 8** |
+| Les onglets ? | ✅ **12 / 12** *(compte corrigé — voir ci-dessus)* |
 | Les 4 bibliothèques inventoriées ? | ✅ **4 / 4** |
 | Les comptes de lignes cités concordent-ils avec `wc -l` ? | ✅ **tous** |
 | Les empreintes SHA-256 concordent-elles avec les fichiers ? | ✅ **4 / 4** |

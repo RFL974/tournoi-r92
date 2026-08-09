@@ -3907,3 +3907,100 @@ questions restent en attente :
 Les candidats naturels pour la suite : **C-012** *(séparer le cœur de la saisie du score de son
 écriture)*, protégé par les tests de C-011 ; ou **C-008** *(les commentaires qui disent le contraire
 du code)*, encore très peu risqué.
+
+---
+
+## 🧹 C-007 — **passe de nettoyage demandée par Romain** *(2026-08-09)*
+
+**Demande, mot pour mot** : *« une passe de nettoyage de C-007 : supprimer les anciennes
+affirmations devenues fausses ou contradictoires ; conserver une seule version de chaque
+information ; ne rien ajouter au périmètre. »*
+
+### 1. ⚠️ Trois des quatre points signalés n'étaient PAS dans les fichiers
+
+Romain relisait la **vue « diff » de GitHub**, qui affiche les lignes **supprimées** (en rouge)
+au-dessus des lignes ajoutées. Les anciennes phrases y apparaissent donc encore, alors que le
+fichier, lui, ne les contient plus. Vérifié un par un :
+
+| Point signalé | État réel du fichier |
+|---|---|
+| `README.md` — « 5 onglets » toujours présent | ❌ **absent** — 0 occurrence |
+| `backend/README.md` — « un seul fichier `Code.gs` » | ❌ **absent** — le fichier s'ouvre sur *« ce sont DEUX fichiers »* |
+| `backend/README.md` — `setupSheet()` « 6 onglets » | ❌ **absent** |
+| `README.md` — « mesure 100 % locale » | ✅ **VRAI** — la phrase subsistait, citée dans un encadré de correction |
+
+### 2. Le vrai défaut, et il était réel : de l'**archéologie documentaire**
+
+J'avais gardé, dans la documentation produit, des encadrés du type *« cette ligne annonçait X,
+c'est faux »*. **Deux versions de la même information cohabitaient** — l'ancienne citée, la nouvelle
+énoncée. Romain a raison : la documentation produit doit porter **l'état actuel**, un point c'est
+tout. L'histoire appartient au suivi et à Git.
+
+**Quatre encadrés supprimés**, remplacés par l'énoncé direct du fait :
+
+| Fichier | Encadré retiré |
+|---|---|
+| `README.md` | la « correction » qui recitait *« mesure 100 % locale »* |
+| `docs/architecture.md` | *« un chiffre a été retiré… il annonçait ~1000-1300 personnes »* |
+| `docs/architecture.md` | *« un chiffre plus ancien n'a PAS été repris… jusqu'à 12 onglets »* |
+| `docs/architecture.md` | *« le message n'est pas faux, il est partiel »* sur `setupSheet()` |
+
+### 3. ⛔ Et le contrôle de cohérence a trouvé une ERREUR DE FOND : **12 onglets, pas 8**
+
+C'est le point le plus important de cette passe.
+
+**Mon compte était faux.** J'avais établi **8** en cherchant les `getSheetByName('…')` du serveur.
+**La méthode était incomplète** : les **4 onglets de référence FFR** — `RefFFR_Formes`,
+`RefFFR_Dates`, `RefFFR_Regles`, `RefFFR_Temps` — sont lus par `lireOngletSimple(classeur, '…')`,
+sans jamais passer par `getSheetByName`.
+
+> 🎯 **La note de la session 11 — « jusqu'à 12 onglets » — était JUSTE.** Je l'avais écartée en
+> écrivant *« je n'écris que ce que j'ai vu »*. La prudence était bonne ; **la méthode qui l'a
+> justifiée ne l'était pas.**
+
+**Ce qui a rattrapé l'erreur n'est pas une relecture, c'est le contrôle croisé entre documents** :
+`deploiement.md` documentait **déjà** ces 4 onglets, depuis toujours. Un document seul se relit
+sans se contredire ; **c'est la confrontation de plusieurs documents qui fait apparaître le trou.**
+
+⚡ **Et la leçon dépasse le chiffre** : une méthode de comptage **écrite** peut être prise en défaut
+— c'est exactement ce qui vient de se passer, en quelques secondes. Une méthode **non écrite**, non.
+C'est l'argument le plus fort en faveur du §7 de `architecture.md`.
+
+**Corrigé dans 5 documents** : `architecture.md` *(schéma, §1 scindé en « 8 de travail » + « 4 de
+référence », §7 avec la méthode juste)*, `README.md`, `backend/README.md`,
+`structure-google-sheet.md` *(« 6 onglets » → 12)*, `guide-utilisateur.md` *(« 5 onglets » → 12)*.
+
+### 4. Une seconde affirmation fausse trouvée, dans un autre fichier
+
+`structure-google-sheet.md` écrivait que la mesure de visibilité *« ne passe PAS par le Sheet :
+elle reste dans le navigateur du spectateur (aucun envoi) »*. **C'est la même erreur que celle du
+README**, dans un fichier que C-007 n'avait pas ouvert. Corrigée : les relevés sont bien écrits dans
+l'onglet `Mesures`.
+
+### 5. ⛔ Ce que je n'ai PAS touché, et pourquoi
+
+**`docs/relais-cdn.md` contient trois fois le chiffre « ~1300 spectateurs »** — le chiffre non
+sourcé à l'origine de **M-06**. Je l'ai **laissé tel quel**.
+
+**La raison** : dans `architecture.md`, ce chiffre était une phrase isolée, retirable sans rien
+changer. Dans `relais-cdn.md`, il est le **fondement du raisonnement entier** du document — quand
+allumer le relais, et à partir de quel volume. Le corriger, ce n'est pas nettoyer une contradiction :
+c'est **refaire le raisonnement de capacité**, donc toucher à **R-061** et à la question ouverte
+**I-19**. C'est un chantier, pas une passe de nettoyage. **Signalé à Romain, pas fait.**
+
+### 6. Contrôle final — tout repassé après correction
+
+| Contrôle | Résultat |
+|---|---|
+| Tournures d'archéologie restantes | ✅ **aucune** |
+| Contradictions sur le nombre d'onglets | ✅ **aucune** — 12 partout |
+| « aucun envoi » / « 100 % locale » | ✅ **aucune occurrence** |
+| Les 65 actions citées dans `architecture.md` | ✅ **65 / 65** |
+| Les **12** onglets cités | ✅ **12 / 12** |
+| Les 26 fichiers JS cités dans `README.md` | ✅ **26 / 26** |
+| Les 8 pages, les 4 bibliothèques | ✅ **8 / 8** · **4 / 4** |
+
+### 7. Ce qui n'a pas bougé
+
+**R-029, R-080, C-031 et C-009 : intacts**, comme demandé. Aucun fichier applicatif touché, aucun
+nouveau chantier, aucune décision prise.
