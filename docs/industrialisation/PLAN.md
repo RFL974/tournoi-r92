@@ -619,7 +619,7 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
   la finalité, la durée** *(de C-006)* **et le moyen de demander un retrait**.
 - ⚠️ **Ce chantier ne referme pas R-028 tout seul** : il **produit** les textes. **R-028 ne sera
   clos que le jour où ils sont en ligne** — ce qui appartient à Romain *(D-005)*.
-- **Statut** : ⚙️ **EN COURS** — **livrable écrit** : `docs/textes-information-donnees.md` *(252 lignes)*. **Aucun fichier de l'application touché, rien mis en ligne.**
+- **Statut** : 🏁 **CLÔTURÉ CÔTÉ TRAVAIL DOCUMENTAIRE** *(validé par Romain le 2026-08-06)* — **livrable écrit** : `docs/textes-information-donnees.md` *(252 lignes)*. **Aucun fichier de l'application touché, rien mis en ligne.** ⚠️ **Ne referme PAS R-028** : un texte que personne ne peut lire n'informe personne — la clôture du problème demande la **mise en ligne**, et la validation du bureau
 - **Validation de Romain** : ✅ **oui, le 2026-08-06** *(+ D-018)*
 - ✅ **2026-08-06 — les deux points qui pouvaient rendre le texte FAUX sont tranchés** : **point 1** *(le champ « équipes étrangères » attend « nom du club, pays » — aucune demande de nom d'enfant, constat d'origine de R-034 corrigé)* et **point 6** *(**D-033** : les durées sont garanties par un **rappel manuel**)*
 - ⏳ **Restent 3 points, tous administratifs — ils retardent la mise en ligne, ils ne remettent rien en cause dans le texte** : validation du **bureau** · les **cinq crochets** · mentionner ou non la situation en cours
@@ -706,7 +706,94 @@ méridienne échelonnée** *(les deux vagues, le repos garanti)* · la **génér
 - **Comment on prouve que c'est fait** : on **recompte**. Les 65 actions du serveur sont-elles
   listées ? Les 8 pages ? Les 26 fichiers JS ? Le compte doit **tomber juste**, et la méthode de
   comptage doit être **écrite à côté du chiffre**.
-- **Statut** : **PLANIFIÉ** · **Validation de Romain** : ⏳ **à donner** *(ÉTAPE 4)*
+
+#### 🔁 Recomptage du 2026-08-09 — **tous les chiffres tiennent**, méthode incluse
+
+*(Fait à l'ouverture de l'ÉTAPE 4 pour ce chantier, précisément parce que **M-05** dit que
+l'application bouge pendant qu'on l'audite, et **M-06** qu'un chiffre sans méthode est un piège.)*
+
+| Ce qu'on compte | Chiffre | Comment il a été obtenu |
+|---|---|---|
+| Actions du serveur | **65** | 61 `case '…'` des trois `switch` de `doGet`/`doPost` *(les 6 `case` de tours — `FINALE`, `DEMI_FINALE`… — exclus : ce n'est pas un aiguillage d'action)* **+ 4 traitées par `if`** : `ping`, `getAll`, `getRefFFR`, `mesureSponsors` |
+| Actions citées par `docs/architecture.md` | **21** | Recherche du **nom exact** de chacune des 65 dans le fichier → **21 présentes, 44 absentes** = **67,7 % d'invisible** |
+| Pages | **8** | `frontend/*.html` |
+| Pages citées par `docs/architecture.md` | **4** | `admin`, `saisie`, `tournoi`, `perfs` ✅ · **absentes** : `index`, `dossier-club`, `invitation-club`, `reponse-invitation` — **soit tout le parcours d'invitation des clubs** |
+| Fichiers JS | **26** | `frontend/js/*.js` |
+| Fichiers JS cités par `README.md` | **6** | Recherche du nom de fichier → **20 absents** |
+| Onglets du classeur cités par `README.md` | **5** | `README.md` ligne 34. ⚠️ **Le compte réel est 12**, et il a fallu deux tentatives pour l'établir — voir la correction ci-dessous. **Le « jusqu'à 12 » de la session 11 était JUSTE** |
+| Bibliothèques extérieures **(R-024)** | **4**, **~737 Ko** | `frontend/js/vendor/` : `pdf-lib.min.js` (525 Ko), `docxtemplater.min.js` (93 Ko), `pizzip.min.js` (80 Ko), `qrcode.js` (57 Ko). **Aucune version, aucune origine, aucune empreinte** nulle part dans le dépôt |
+
+> ✅ **Le reliquat de R-072 a rétréci depuis l'écriture de la fiche** : `docs/deploiement.md` porte
+> désormais les **bons** nombres de contrôle — **616** *(le bilan des tests)* et **3859** *(la
+> dernière ligne de `Tests.gs`)* — remis d'aplomb par **C-011**. La preuve que **§8 bis fonctionne**
+> quand on l'applique. Reste le confort : `Tests.gs` n'est toujours cité ni par `passation.md`, ni
+> par `backend/README.md`, ni par `README.md`.
+
+> ⛔ **CORRECTION DU 2026-08-09 — mon compte des onglets était FAUX, et c'est instructif.**
+> J'avais écrit **8**, en cherchant les `getSheetByName('…')` du serveur. **La méthode était
+> incomplète** : les **4 onglets de référence FFR** *(`RefFFR_Formes`, `RefFFR_Dates`,
+> `RefFFR_Regles`, `RefFFR_Temps`)* sont lus par `lireOngletSimple(classeur, '…')`, sans passer par
+> `getSheetByName`. **Le compte réel est 12**, et **la note de la session 11 — « jusqu'à 12 onglets »
+> — avait raison** : c'est moi qui l'avais écartée, faute d'avoir su la revérifier.
+>
+> **Ce qui a rattrapé l'erreur n'est pas une relecture, c'est le contrôle croisé entre documents** :
+> `deploiement.md` documentait **déjà** ces 4 onglets. Un document seul se relit sans se contredire ;
+> **c'est la confrontation de plusieurs documents qui fait apparaître le trou.**
+>
+> ⚡ **Et la leçon dépasse le chiffre** : une méthode de comptage écrite peut être **prise en
+> défaut** — c'est précisément ce qui vient de se passer. Une méthode non écrite, non. C'est
+> l'argument le plus fort en faveur du §7 de `architecture.md`.
+
+> ⚡ **Un constat trouvé pendant le recomptage, qui n'appartient pas à ce chantier.**
+> `frontend/README.md` écrit que `pizzip.min.js` + `docxtemplater.min.js` sont conservés alors que
+> *« plus rien ne les charge »* — **173 Ko sur les 737**. Ce n'est **pas** de la documentation
+> fausse : c'est du **code mort assumé et écrit**. Il relève donc de **C-009**, pas d'ici.
+> **Signalé, pas traité.**
+
+#### 🏁 Statut final
+
+- **Validation de Romain** : ✅ **oui, le 2026-08-09**, **périmètre complet** — les 65 actions, les
+  8 pages, les 26 fichiers navigateur, les **12 onglets** *(le périmètre validé disait « 8 onglets » :
+  le comptage a établi qu'il y en a **12**)*, et les 4 bibliothèques avec nom, version, origine et
+  date. Consigne explicite : *« si une version ou une origine ne peut pas être établie
+  avec certitude, écris « à confirmer » plutôt que de l'inventer »*.
+- **Statut** : 🏁 **LIVRÉ** — **documentation uniquement, aucun fichier applicatif touché, aucun
+  changement de comportement, aucun redéploiement Google.**
+
+| Fichier | Ce qui a changé |
+|---|---|
+| `docs/architecture.md` | **Réécrit.** Les **65 actions** une par une, groupées en 11 familles, chacune avec son **niveau d'accès** ; les **8 pages** ; les **26 fichiers JS** ; les **12 onglets**, séparés entre **8 de travail** et **4 de référence FFR** ; le schéma de ce qui se passe après une écriture ; et **§7 : la méthode de comptage de chaque chiffre** |
+| `docs/dependances-externes.md` | **Créé.** Les 4 bibliothèques : taille, licence, date d'entrée, page qui la charge, **empreinte SHA-256**, et ce qui reste « à confirmer » — avec la liste de ce qui a été cherché en vain |
+| `README.md` | « 5 onglets » → **12** ; les **26 fichiers JS** listés au lieu de 6 ; les 8 pages ; `Tests.gs` ajouté ; **une affirmation fausse corrigée** *(voir ci-dessous)* |
+| `backend/README.md` | **Réécrit.** « un seul fichier » → **deux** ; « 6 onglets » → **7 créés par `setupSheet()`, 12 en service** ; les exceptions d'accès expliquées |
+| `docs/structure-google-sheet.md` | « 6 onglets » → **12** ; **la même affirmation fausse sur la mesure de visibilité**, corrigée |
+| `docs/guide-utilisateur.md` | « 5 onglets » → **12** |
+| `docs/passation.md` | `Tests.gs` ajouté au geste de re-déploiement — **reliquat de R-072 refermé** |
+
+**Preuve que c'est fait** — vérification automatique repassée après écriture :
+
+| Contrôle | Résultat |
+|---|---|
+| Les 65 actions du code sont-elles citées dans `architecture.md` ? | ✅ **65 / 65** |
+| Les 26 fichiers JS sont-ils cités dans `README.md` ? | ✅ **26 / 26** |
+| … et dans `architecture.md` ? | ✅ **26 / 26** |
+| Les 8 pages sont-elles citées ? | ✅ **8 / 8** |
+| Les onglets ? | ✅ **12 / 12** *(compte corrigé — voir ci-dessus)* |
+| Les 4 bibliothèques inventoriées ? | ✅ **4 / 4** |
+| Les comptes de lignes cités concordent-ils avec `wc -l` ? | ✅ **tous** |
+| Les empreintes SHA-256 concordent-elles avec les fichiers ? | ✅ **4 / 4** |
+
+> ⚡ **Ce que le chantier a trouvé EN PLUS, et que l'audit n'avait pas vu.** `README.md` annonçait
+> que la mesure de visibilité des partenaires était *« 100 % locale (aucun envoi, aucun cookie) »*.
+> **Le code contredit cette phrase** : `sponsors.js` range un identifiant d'appareil dans
+> `localStorage` **et envoie** les relevés au serveur (action `mesureSponsors`). Corrigé dans le
+> README, avec renvoi à **R-029**. C'est exactement le danger que ce chantier visait : **une carte
+> fausse est pire qu'une carte absente**.
+
+> ⚠️ **Ce que ce chantier ne prouve pas.** Que la documentation restera juste. Elle le restera si
+> **§8 bis** est appliquée — et C-011 vient d'en donner la démonstration : les nombres de contrôle
+> de `deploiement.md` (616 / 3859) avaient été mis à jour **dans le même lot**, sans que personne
+> n'ait à y revenir.
 
 ---
 

@@ -1,8 +1,15 @@
 # Structure du Google Sheet
 
-Le Google Sheet sert de **base de données** du tournoi. Il contient **6 onglets**
-(`Config`, `Equipes`, `Poules`, `Matchs`, `Historique` — le journal de saison — et
-`ClubsInvites` — la liste des clubs invités, décrite tout en bas).
+Le Google Sheet sert de **base de données** du tournoi. Il contient **12 onglets** :
+
+- **8 de travail** — `Config`, `Equipes`, `Poules`, `Matchs`, `Historique` *(le journal de
+  saison)*, `ClubsInvites` *(les clubs invités)*, `Sponsors` *(les partenaires)* et `Mesures`
+  *(les relevés de visibilité)* ;
+- **4 de référence FFR**, remplis à la main — `RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`,
+  `RefFFR_Temps`.
+
+> 📖 Le rôle de chacun, et lequel est créé automatiquement, sont dans
+> [`architecture.md`](architecture.md) §1.
 
 > URL du Sheet :
 > https://docs.google.com/spreadsheets/d/17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U/edit
@@ -333,8 +340,9 @@ de la page admin. **Aucune donnée personnelle** : un partenaire est une entrepr
 est destiné à être affiché.
 
 > 🧪 **Prototype.** L'affichage est piloté par les réglages `sponsors_*` de l'onglet `Config`,
-> tous exposés à la page publique. **La mesure de visibilité ne passe PAS par le Sheet** : elle
-> reste dans le navigateur du spectateur (aucun envoi). Voir [`docs/sponsors.md`](sponsors.md).
+> tous exposés à la page publique. ⚠️ **La mesure de visibilité, elle, PASSE par le Sheet** : les
+> relevés envoyés par les téléphones des spectateurs (action `mesureSponsors`) sont écrits dans
+> l'onglet **`Mesures`**. Voir [`docs/sponsors.md`](sponsors.md).
 
 | Colonne | Exemple | Signification |
 |---|---|---|

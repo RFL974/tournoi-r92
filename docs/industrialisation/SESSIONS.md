@@ -393,7 +393,7 @@ sur `6382f7e`. Condition remplie → session lancée.
 Lecture (sans modification) des zones du code qui **définissent, écrivent, filtrent ou effacent**
 des données :
 
-- `backend/Code.gs` — la déclaration `ENTETES` (les colonnes des 8 onglets créés par le code) ;
+- `backend/Code.gs` — la déclaration `ENTETES` (les colonnes des **7** onglets qu'elle décrit) ;
   `creerOngletConfig` (la zone A et la zone B de `Config`) ; les listes `CHAMPS_AUTORISATION`,
   `CHAMPS_CONTACTS_SECURITE`, `CHAMPS_INVITATION`, `CHAMPS_SURPLACE`, `CHAMPS_REPONSE` ;
   `CONFIG_PUBLIQUE_VUES` et `filtrerConfigPublique` (les trois listes blanches) ;
@@ -3743,3 +3743,339 @@ sans code, et ces trois-là demandent un changement de comportement.
 > **Il manque donc une fiche** — celle du chantier de code qui corrigera l'effacement.
 > **Signalé à Romain, pas créé d'office** : ajouter un chantier au plan est une décision qui lui
 > appartient.
+
+---
+
+## ÉTAPE 4 — **C-007 présenté à la validation** *(2026-08-09)*
+
+**Objectif de la séance** : reprendre l'ÉTAPE 4 là où elle s'était arrêtée, c'est-à-dire présenter à
+Romain le **chantier suivant dans l'ordre qu'il a retenu** — *« d'abord ce qui ne peut rien
+casser »*. Après C-011, C-013, C-005 et C-006, c'est **C-007**.
+
+### 0. Mise à jour avant lecture
+
+`git fetch origin` puis `git status -sb` : la branche de travail est **exactement au niveau de
+`origin/main`**, 0 commit d'écart. *(Le `main` local, lui, est en retard — mais on ne travaille pas
+dessus.)*
+
+### 1. Un retard de `ETAT.md` corrigé
+
+`ETAT.md` n'avait **pas** été mis à jour par le dernier commit `d665575` : il annonçait encore
+*« chantier présenté ensuite : C-005 »* et ne mentionnait ni la clôture de C-005, ni celle de C-006.
+**Corrigé** — avec, inscrits noir sur blanc, les problèmes qui **restent ouverts** *(R-028, R-030
+part outillage, R-031, R-033)* et les **deux constats à conserver** pour les futurs chantiers de
+code.
+
+### 2. Deux cellules de tableau en trop dans `RISQUES.md`
+
+Les lignes **R-031** et **R-033** portaient leur dernière colonne **en double**
+(`| AUDIT.md §B.5 | AUDIT.md §B.5 |`), ce qui décale la lecture du tableau. **Corrigé.** Sans
+conséquence sur le fond.
+
+### 3. 🎯 Le vrai travail : **les chiffres de C-007 ont été recomptés dans le code d'aujourd'hui**
+
+> 📌 *Note du 2026-08-09 : cette séance avait été datée par erreur du 2026-08-08. Corrigé.*
+
+C'est le point qui compte. La fiche C-007 s'appuie sur des chiffres relevés en **session 11**, et
+**M-05** dit que l'application bouge pendant qu'on l'audite. Un chantier dont tout l'objet est de
+*« ne pas mentir »* ne pouvait pas être présenté sur des chiffres non revérifiés.
+
+**Résultat : les sept chiffres tiennent.** Le détail, et surtout **la méthode de comptage de
+chacun**, sont désormais dans la fiche `PLAN.md` C-007 — pas dans ce journal, pour qu'ils soient là
+où on ira les chercher.
+
+En résumé : **65 actions du serveur, 21 documentées** *(44 absentes, 67,7 %)* · **8 pages,
+4 documentées** *(tout le parcours d'invitation des clubs est absent)* · **26 fichiers JS, 6 cités**
+· **4 bibliothèques extérieures, ~737 Ko, sans version ni origine**.
+
+### 4. Trois précisions apportées par le recomptage
+
+1. ✅ **Le reliquat de R-072 a rétréci** : `docs/deploiement.md` porte les **bons** nombres de
+   contrôle — **616** et **3859** — remis d'aplomb par C-011. **§8 bis a fonctionné.** Reste le
+   confort : `Tests.gs` absent de `passation.md`, `backend/README.md` et `README.md` ;
+2. ⚠️ **Un chiffre de la session 11 n'a PAS été reconfirmé** : le *« jusqu'à 12 onglets »*.
+   Le code en nomme **8** en clair. **La fiche n'écrit donc que 8** — on n'inscrit pas un chiffre
+   qu'on n'a pas revu ;
+3. ⚡ **Un constat trouvé au passage, et renvoyé ailleurs** : `frontend/README.md` écrit que
+   `pizzip` + `docxtemplater` *(173 Ko)* sont conservés alors que *« plus rien ne les charge »*.
+   Ce n'est pas de la documentation fausse, c'est du **code mort assumé** → **C-009**, pas ici.
+   **Signalé, pas traité.**
+
+### 5. Ce qui n'a **PAS** été fait
+
+- ❌ **Aucune ligne de C-007 n'a été écrite.** C'est l'ÉTAPE 4 : on présente, Romain décide ;
+- ❌ **La fiche manquante** *(le chantier de code qui corrigera l'effacement)* **n'a pas été créée** :
+  ajouter un chantier au plan appartient à Romain ;
+- ❌ **Aucun fichier de l'application touché.** Aucun redéploiement requis.
+
+### 6. Prochaine session recommandée
+
+**La décision de Romain sur C-007** — accepté, refusé ou réordonné. Puis, selon sa réponse, soit
+l'exécution de C-007, soit la présentation du chantier suivant.
+
+**Deux questions ouvertes l'accompagnent** : la fiche manquante du chantier d'effacement, et
+**C-009**, qui ne peut pas être validé sans trancher d'abord *« supprimer ou brancher »* la colonne
+`pause_echelonnee`.
+
+---
+
+## 🏁 C-007 — **LIVRÉ** : la carte du projet décrit enfin le projet *(2026-08-09)*
+
+**Validation de Romain, périmètre complet** : les 65 actions, les 8 pages, les 26 fichiers
+navigateur, les onglets, et les 4 bibliothèques avec nom, version, origine et date. Avec deux
+consignes explicites, toutes deux tenues :
+
+1. *« uniquement de la documentation, aucun fichier applicatif, aucun changement de comportement et
+   aucun redéploiement Google »* ;
+2. *« si une version ou une origine ne peut pas être établie avec certitude, écris « à confirmer »
+   plutôt que de l'inventer »*.
+
+### 1. Ce qui a été écrit
+
+| Fichier | Ce qui a changé |
+|---|---|
+| `docs/architecture.md` | **Réécrit** — 140 → ~380 lignes. Les **65 actions** une par une, groupées en 11 familles *(A → K)*, chacune avec son **niveau d'accès** ; les **8 pages** ; les **26 fichiers JS** ; les **12 onglets** ; un schéma de ce qui se passe après une écriture ; et **§7 : la méthode de comptage de chaque chiffre** |
+| `docs/dependances-externes.md` | **Créé** — les 4 bibliothèques : taille exacte, licence, date d'entrée *(retrouvée dans l'historique Git)*, page qui la charge, **empreinte SHA-256**, et la liste de ce qui a été cherché en vain pour établir les versions |
+| `README.md` | « 5 onglets » → **12** · les **26 fichiers JS** listés au lieu de 6 · les 8 pages · `Tests.gs` ajouté · **une affirmation fausse corrigée** *(§3)* |
+| `backend/README.md` | **Réécrit** — « un seul fichier » → **deux** · « 6 onglets » → **7 créés par `setupSheet()`, 12 en service** · les deux exceptions d'accès expliquées |
+| `docs/passation.md` | `Tests.gs` ajouté au geste de re-déploiement — **reliquat de R-072 refermé** |
+
+**Trois problèmes refermés** : **R-073** (P1), le **reliquat de R-072** (P1), **R-024** (P2).
+
+### 2. La preuve — une vérification automatique, repassée APRÈS écriture
+
+La fiche demandait : *« on recompte. Le compte doit tomber juste. »* Il tombe juste.
+
+| Contrôle | Résultat |
+|---|---|
+| Les 65 actions du code sont-elles citées dans `architecture.md` ? | ✅ **65 / 65** |
+| Les 26 fichiers JS, dans `README.md` ? | ✅ **26 / 26** |
+| … et dans `architecture.md` ? | ✅ **26 / 26** |
+| Les 8 pages ? | ✅ **8 / 8** |
+| Les onglets ? | ✅ **12 / 12** — ⚠️ **ce contrôle avait d'abord conclu « 8 / 8 »** : le compte a été corrigé le jour même, voir l'entrée « passe de nettoyage » plus bas |
+| Les 4 bibliothèques inventoriées ? | ✅ **4 / 4** |
+| Les comptes de lignes cités concordent-ils avec `wc -l` ? | ✅ **tous** |
+| Les empreintes SHA-256 concordent-elles avec les fichiers ? | ✅ **4 / 4** |
+
+**Et un contrôle croisé, par deux chemins indépendants** : la somme des 11 familles
+*(12+4+5+4+5+5+1+8+15+5+1)* et la somme des 4 niveaux d'accès *(13+4+1+47)* tombent toutes deux
+sur **65**. Un seul chemin aurait pu se tromper deux fois de la même façon ; deux, beaucoup moins.
+
+### 3. ⚡ Ce que le chantier a trouvé EN PLUS — et que l'audit n'avait pas vu
+
+`README.md` annonçait que la mesure de visibilité des partenaires était **« 100 % locale (aucun
+envoi, aucun cookie) »**. **Le code dit le contraire** : `sponsors.js` range un identifiant
+d'appareil dans `localStorage` **et envoie** les relevés au serveur (action `mesureSponsors`).
+
+**Il n'y a bien aucun cookie et aucun service extérieur — mais il y a un envoi.** Corrigé dans le
+README, avec renvoi à **R-029**. C'est précisément le danger que ce chantier visait : **une carte
+fausse est pire qu'une carte absente.**
+
+### 4. Trois choix de méthode assumés
+
+1. **Le « jusqu'à 12 onglets » de la session 11 n'a pas été repris.** Le code en nomme **8** en
+   clair *(7 clés de `ENTETES` + `Config`)*. C'est **8** qui est écrit, avec la note expliquant que
+   des onglets ajoutés à la main dans un classeur réel resteraient hors du code ;
+2. **Le chiffre « ~1000-1300 spectateurs » a été RETIRÉ de `architecture.md`.** Il n'a aucune source
+   et a déjà conduit un audit à une conclusion fausse *(M-06)*. Remplacé par ce qui est **mesuré**
+   — 1,65 s par lecture, 1,59 s pour un `ping` vide, capacité estimée 150-300 — et par le renvoi
+   explicite à la question ouverte **I-19**, qui appartient à Romain ;
+3. **Les 170 Kio de `pizzip` + `docxtemplater` n'ont pas été supprimés.** Ils sont **constatés**
+   comme non chargés, et renvoyés à **R-080**, dont la décision appartient à Romain. Ce chantier
+   documente, il ne tranche pas.
+
+### 5. Ce qui n'a **PAS** été fait
+
+- ❌ **aucun fichier de l'application touché** — ni `.gs`, ni `.js`, ni `.html`, ni `.css` ;
+- ❌ **aucun changement de comportement**, donc **aucun redéploiement Google requis** ;
+- ❌ **aucune version de bibliothèque inventée** : les quatre restent « à confirmer », avec la
+  méthode pour les établir un jour *(comparer l'empreinte SHA-256 d'une version officielle)* ;
+- ❌ **la fiche manquante du chantier d'effacement (C-031) n'a toujours pas été créée** — c'est la
+  décision de Romain, et il ne l'a pas prise.
+
+### 6. Prochaine session recommandée
+
+**L'ordre *« d'abord ce qui ne peut rien casser »* est épuisé** : C-011, C-013, C-005, C-006 et
+C-007 sont tous livrés. La suite demande donc **une décision de Romain sur l'ordre**, et deux
+questions restent en attente :
+
+| Question | Pourquoi elle bloque |
+|---|---|
+| **C-031** — créer, ou non, la fiche du chantier d'effacement | R-030, R-031 et R-033 sont « placés » dans un chantier qui n'écrit que du texte |
+| **C-009** — `pause_echelonnee` : supprimer ou brancher ? | Décision **métier**, personne ne peut la prendre à sa place |
+
+Les candidats naturels pour la suite : **C-012** *(séparer le cœur de la saisie du score de son
+écriture)*, protégé par les tests de C-011 ; ou **C-008** *(les commentaires qui disent le contraire
+du code)*, encore très peu risqué.
+
+---
+
+## 🧹 C-007 — **passe de nettoyage demandée par Romain** *(2026-08-09)*
+
+**Demande, mot pour mot** : *« une passe de nettoyage de C-007 : supprimer les anciennes
+affirmations devenues fausses ou contradictoires ; conserver une seule version de chaque
+information ; ne rien ajouter au périmètre. »*
+
+### 1. ⚠️ Trois des quatre points signalés n'étaient PAS dans les fichiers
+
+Romain relisait la **vue « diff » de GitHub**, qui affiche les lignes **supprimées** (en rouge)
+au-dessus des lignes ajoutées. Les anciennes phrases y apparaissent donc encore, alors que le
+fichier, lui, ne les contient plus. Vérifié un par un :
+
+| Point signalé | État réel du fichier |
+|---|---|
+| `README.md` — « 5 onglets » toujours présent | ❌ **absent** — 0 occurrence |
+| `backend/README.md` — « un seul fichier `Code.gs` » | ❌ **absent** — le fichier s'ouvre sur *« ce sont DEUX fichiers »* |
+| `backend/README.md` — `setupSheet()` « 6 onglets » | ❌ **absent** |
+| `README.md` — « mesure 100 % locale » | ✅ **VRAI** — la phrase subsistait, citée dans un encadré de correction |
+
+### 2. Le vrai défaut, et il était réel : de l'**archéologie documentaire**
+
+J'avais gardé, dans la documentation produit, des encadrés du type *« cette ligne annonçait X,
+c'est faux »*. **Deux versions de la même information cohabitaient** — l'ancienne citée, la nouvelle
+énoncée. Romain a raison : la documentation produit doit porter **l'état actuel**, un point c'est
+tout. L'histoire appartient au suivi et à Git.
+
+**Quatre encadrés supprimés**, remplacés par l'énoncé direct du fait :
+
+| Fichier | Encadré retiré |
+|---|---|
+| `README.md` | la « correction » qui recitait *« mesure 100 % locale »* |
+| `docs/architecture.md` | *« un chiffre a été retiré… il annonçait ~1000-1300 personnes »* |
+| `docs/architecture.md` | *« un chiffre plus ancien n'a PAS été repris… jusqu'à 12 onglets »* |
+| `docs/architecture.md` | *« le message n'est pas faux, il est partiel »* sur `setupSheet()` |
+
+### 3. ⛔ Et le contrôle de cohérence a trouvé une ERREUR DE FOND : **12 onglets, pas 8**
+
+C'est le point le plus important de cette passe.
+
+**Mon compte était faux.** J'avais établi **8** en cherchant les `getSheetByName('…')` du serveur.
+**La méthode était incomplète** : les **4 onglets de référence FFR** — `RefFFR_Formes`,
+`RefFFR_Dates`, `RefFFR_Regles`, `RefFFR_Temps` — sont lus par `lireOngletSimple(classeur, '…')`,
+sans jamais passer par `getSheetByName`.
+
+> 🎯 **La note de la session 11 — « jusqu'à 12 onglets » — était JUSTE.** Je l'avais écartée en
+> écrivant *« je n'écris que ce que j'ai vu »*. La prudence était bonne ; **la méthode qui l'a
+> justifiée ne l'était pas.**
+
+**Ce qui a rattrapé l'erreur n'est pas une relecture, c'est le contrôle croisé entre documents** :
+`deploiement.md` documentait **déjà** ces 4 onglets, depuis toujours. Un document seul se relit
+sans se contredire ; **c'est la confrontation de plusieurs documents qui fait apparaître le trou.**
+
+⚡ **Et la leçon dépasse le chiffre** : une méthode de comptage **écrite** peut être prise en défaut
+— c'est exactement ce qui vient de se passer, en quelques secondes. Une méthode **non écrite**, non.
+C'est l'argument le plus fort en faveur du §7 de `architecture.md`.
+
+**Corrigé dans 5 documents** : `architecture.md` *(schéma, §1 scindé en « 8 de travail » + « 4 de
+référence », §7 avec la méthode juste)*, `README.md`, `backend/README.md`,
+`structure-google-sheet.md` *(« 6 onglets » → 12)*, `guide-utilisateur.md` *(« 5 onglets » → 12)*.
+
+### 4. Une seconde affirmation fausse trouvée, dans un autre fichier
+
+`structure-google-sheet.md` écrivait que la mesure de visibilité *« ne passe PAS par le Sheet :
+elle reste dans le navigateur du spectateur (aucun envoi) »*. **C'est la même erreur que celle du
+README**, dans un fichier que C-007 n'avait pas ouvert. Corrigée : les relevés sont bien écrits dans
+l'onglet `Mesures`.
+
+### 5. ⛔ Ce que je n'ai PAS touché, et pourquoi
+
+**`docs/relais-cdn.md` contient trois fois le chiffre « ~1300 spectateurs »** — le chiffre non
+sourcé à l'origine de **M-06**. Je l'ai **laissé tel quel**.
+
+**La raison** : dans `architecture.md`, ce chiffre était une phrase isolée, retirable sans rien
+changer. Dans `relais-cdn.md`, il est le **fondement du raisonnement entier** du document — quand
+allumer le relais, et à partir de quel volume. Le corriger, ce n'est pas nettoyer une contradiction :
+c'est **refaire le raisonnement de capacité**, donc toucher à **R-061** et à la question ouverte
+**I-19**. C'est un chantier, pas une passe de nettoyage. **Signalé à Romain, pas fait.**
+
+### 6. Contrôle final — tout repassé après correction
+
+| Contrôle | Résultat |
+|---|---|
+| Tournures d'archéologie restantes | ✅ **aucune** |
+| Contradictions sur le nombre d'onglets | ✅ **aucune** — 12 partout |
+| « aucun envoi » / « 100 % locale » | ✅ **aucune occurrence** |
+| Les 65 actions citées dans `architecture.md` | ✅ **65 / 65** |
+| Les **12** onglets cités | ✅ **12 / 12** |
+| Les 26 fichiers JS cités dans `README.md` | ✅ **26 / 26** |
+| Les 8 pages, les 4 bibliothèques | ✅ **8 / 8** · **4 / 4** |
+
+### 7. Ce qui n'a pas bougé
+
+**R-029, R-080, C-031 et C-009 : intacts**, comme demandé. Aucun fichier applicatif touché, aucun
+nouveau chantier, aucune décision prise.
+
+---
+
+## 🔍 C-007 — **contrôle ciblé demandé par Romain : le compte des onglets** *(2026-08-09)*
+
+**Romain avait raison, et j'avais tort de dire que tout était corrigé.**
+
+À la passe de nettoyage précédente, j'avais annoncé le compte corrigé « partout ». **C'était faux** :
+j'avais corrigé la **documentation produit** *(architecture, README, backend/README,
+structure-google-sheet, guide-utilisateur)* et **oublié les documents de suivi**, où la fiche C-007
+et le journal de livraison affirmaient encore **8**.
+
+### 1. Le code, revérifié sans rien supposer
+
+Les quatre sources réunies et dédupliquées :
+
+| Source | Onglets trouvés |
+|---|---|
+| `getSheetByName('…')` | 8 |
+| `lireOngletSimple(classeur, '…')` | 11 *(dont les 4 `RefFFR_*`)* |
+| `creerOngletAvecEntetes(…)` | 7 |
+| `insertSheet('…')` | 1 *(`Config`)* |
+| **Total dédupliqué** | **12** ✅ |
+
+### 2. Les 11 endroits qui affirmaient encore 8
+
+| Fichier | Quoi |
+|---|---|
+| `PLAN.md` | le périmètre validé, le tableau des livrables ×2, *« 5 onglets » → 8*, *« 7 créés, 8 en service »* |
+| `SESSIONS.md` | l'entrée de livraison : périmètre, tableau des livrables ×2, et — le plus gênant — **son tableau de preuve, qui annonçait « Les 8 onglets ? ✅ 8/8 »** |
+| `SESSIONS.md` | une vieille entrée de la **session 2** : *« les colonnes des 8 onglets créés par le code »* — `ENTETES` en décrit **7** |
+| `architecture.md` | *« un classeur peut tourner avec 8 onglets seulement »* — vrai mais ambigu, précisé en *« les 8 onglets de travail »* |
+
+> ⚠️ **Le tableau de preuve était le pire des onze.** Un contrôle qui affiche « ✅ 8/8 » ne dit pas
+> seulement un chiffre faux : il **certifie** un chiffre faux. C'est exactement ce que M-06
+> décrit — un chiffre qui porte l'apparence de la vérification sans l'avoir.
+>
+> Il n'a pas été effacé : il porte désormais **12/12**, **et** la mention que ce contrôle avait
+> d'abord conclu 8/8. Un résultat de contrôle qui a changé doit dire qu'il a changé.
+
+### 3. La leçon, et elle est différente de la précédente
+
+La fois d'avant, l'erreur était **une méthode de comptage incomplète**. Cette fois, la méthode était
+bonne : **c'est la propagation de la correction qui a été incomplète**. J'ai corrigé là où je
+regardais — les documents du produit — sans repasser sur les documents qui **parlaient** de cette
+correction.
+
+> 🎯 **Corriger un chiffre ne suffit pas : il faut corriger tout ce qui le cite.** Et la seule
+> manière fiable de s'en assurer est de **chercher le chiffre faux dans tous les fichiers**, pas de
+> se rappeler où on l'a écrit.
+
+C'est ce qui a été fait cette fois : recherche de toute occurrence dans **les 11 fichiers de la PR**,
+puis revue à l'œil de **chaque** compte restant pour distinguer les légitimes *(« 8 onglets de
+travail », « 7 créés par `setupSheet()` », les citations des anciennes erreurs corrigées)* des
+fautifs.
+
+### 4. Contrôle final — tout recalculé depuis le code
+
+| Contrôle | Résultat |
+|---|---|
+| 65 actions → `architecture.md` | ✅ **65 / 65** |
+| **12 onglets** → `architecture.md` | ✅ **12 / 12** |
+| 8 pages → `architecture.md` | ✅ **8 / 8** |
+| 26 fichiers JS → `architecture.md` **et** `README.md` | ✅ **26 / 26** *(les deux)* |
+| 4 bibliothèques → `dependances-externes.md` | ✅ **4 / 4** |
+| Empreintes SHA-256 | ✅ **4 / 4** |
+| Tournures d'archéologie | ✅ **aucune** |
+| « aucun envoi » / « 100 % locale » | ✅ **aucune** |
+| **Un total d'onglets ≠ 12, où que ce soit** | ✅ **aucun** |
+| Fichiers applicatifs touchés | ✅ **aucun — que du `.md`** |
+
+### 5. Ce qui n'a pas bougé
+
+**R-029, R-080, C-031, C-009 : intacts.** `docs/relais-cdn.md` : **non touché**, hors périmètre par
+décision de Romain. Aucun chantier lancé.
