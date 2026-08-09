@@ -393,7 +393,7 @@ sur `6382f7e`. Condition remplie → session lancée.
 Lecture (sans modification) des zones du code qui **définissent, écrivent, filtrent ou effacent**
 des données :
 
-- `backend/Code.gs` — la déclaration `ENTETES` (les colonnes des 8 onglets créés par le code) ;
+- `backend/Code.gs` — la déclaration `ENTETES` (les colonnes des **7** onglets qu'elle décrit) ;
   `creerOngletConfig` (la zone A et la zone B de `Config`) ; les listes `CHAMPS_AUTORISATION`,
   `CHAMPS_CONTACTS_SECURITE`, `CHAMPS_INVITATION`, `CHAMPS_SURPLACE`, `CHAMPS_REPONSE` ;
   `CONFIG_PUBLIQUE_VUES` et `filtrerConfigPublique` (les trois listes blanches) ;
@@ -3822,7 +3822,7 @@ l'exécution de C-007, soit la présentation du chantier suivant.
 ## 🏁 C-007 — **LIVRÉ** : la carte du projet décrit enfin le projet *(2026-08-09)*
 
 **Validation de Romain, périmètre complet** : les 65 actions, les 8 pages, les 26 fichiers
-navigateur, les 8 onglets, et les 4 bibliothèques avec nom, version, origine et date. Avec deux
+navigateur, les onglets, et les 4 bibliothèques avec nom, version, origine et date. Avec deux
 consignes explicites, toutes deux tenues :
 
 1. *« uniquement de la documentation, aucun fichier applicatif, aucun changement de comportement et
@@ -3834,10 +3834,10 @@ consignes explicites, toutes deux tenues :
 
 | Fichier | Ce qui a changé |
 |---|---|
-| `docs/architecture.md` | **Réécrit** — 140 → ~380 lignes. Les **65 actions** une par une, groupées en 11 familles *(A → K)*, chacune avec son **niveau d'accès** ; les **8 pages** ; les **26 fichiers JS** ; les **8 onglets** ; un schéma de ce qui se passe après une écriture ; et **§7 : la méthode de comptage de chaque chiffre** |
+| `docs/architecture.md` | **Réécrit** — 140 → ~380 lignes. Les **65 actions** une par une, groupées en 11 familles *(A → K)*, chacune avec son **niveau d'accès** ; les **8 pages** ; les **26 fichiers JS** ; les **12 onglets** ; un schéma de ce qui se passe après une écriture ; et **§7 : la méthode de comptage de chaque chiffre** |
 | `docs/dependances-externes.md` | **Créé** — les 4 bibliothèques : taille exacte, licence, date d'entrée *(retrouvée dans l'historique Git)*, page qui la charge, **empreinte SHA-256**, et la liste de ce qui a été cherché en vain pour établir les versions |
-| `README.md` | « 5 onglets » → **8** · les **26 fichiers JS** listés au lieu de 6 · les 8 pages · `Tests.gs` ajouté · **une affirmation fausse corrigée** *(§3)* |
-| `backend/README.md` | **Réécrit** — « un seul fichier » → **deux** · « 6 onglets » → **7 créés, 8 en service** · les deux exceptions d'accès expliquées |
+| `README.md` | « 5 onglets » → **12** · les **26 fichiers JS** listés au lieu de 6 · les 8 pages · `Tests.gs` ajouté · **une affirmation fausse corrigée** *(§3)* |
+| `backend/README.md` | **Réécrit** — « un seul fichier » → **deux** · « 6 onglets » → **7 créés par `setupSheet()`, 12 en service** · les deux exceptions d'accès expliquées |
 | `docs/passation.md` | `Tests.gs` ajouté au geste de re-déploiement — **reliquat de R-072 refermé** |
 
 **Trois problèmes refermés** : **R-073** (P1), le **reliquat de R-072** (P1), **R-024** (P2).
@@ -3852,7 +3852,7 @@ La fiche demandait : *« on recompte. Le compte doit tomber juste. »* Il tombe 
 | Les 26 fichiers JS, dans `README.md` ? | ✅ **26 / 26** |
 | … et dans `architecture.md` ? | ✅ **26 / 26** |
 | Les 8 pages ? | ✅ **8 / 8** |
-| Les 8 onglets ? | ✅ **8 / 8** |
+| Les onglets ? | ✅ **12 / 12** — ⚠️ **ce contrôle avait d'abord conclu « 8 / 8 »** : le compte a été corrigé le jour même, voir l'entrée « passe de nettoyage » plus bas |
 | Les 4 bibliothèques inventoriées ? | ✅ **4 / 4** |
 | Les comptes de lignes cités concordent-ils avec `wc -l` ? | ✅ **tous** |
 | Les empreintes SHA-256 concordent-elles avec les fichiers ? | ✅ **4 / 4** |
@@ -4004,3 +4004,78 @@ c'est **refaire le raisonnement de capacité**, donc toucher à **R-061** et à 
 
 **R-029, R-080, C-031 et C-009 : intacts**, comme demandé. Aucun fichier applicatif touché, aucun
 nouveau chantier, aucune décision prise.
+
+---
+
+## 🔍 C-007 — **contrôle ciblé demandé par Romain : le compte des onglets** *(2026-08-09)*
+
+**Romain avait raison, et j'avais tort de dire que tout était corrigé.**
+
+À la passe de nettoyage précédente, j'avais annoncé le compte corrigé « partout ». **C'était faux** :
+j'avais corrigé la **documentation produit** *(architecture, README, backend/README,
+structure-google-sheet, guide-utilisateur)* et **oublié les documents de suivi**, où la fiche C-007
+et le journal de livraison affirmaient encore **8**.
+
+### 1. Le code, revérifié sans rien supposer
+
+Les quatre sources réunies et dédupliquées :
+
+| Source | Onglets trouvés |
+|---|---|
+| `getSheetByName('…')` | 8 |
+| `lireOngletSimple(classeur, '…')` | 11 *(dont les 4 `RefFFR_*`)* |
+| `creerOngletAvecEntetes(…)` | 7 |
+| `insertSheet('…')` | 1 *(`Config`)* |
+| **Total dédupliqué** | **12** ✅ |
+
+### 2. Les 11 endroits qui affirmaient encore 8
+
+| Fichier | Quoi |
+|---|---|
+| `PLAN.md` | le périmètre validé, le tableau des livrables ×2, *« 5 onglets » → 8*, *« 7 créés, 8 en service »* |
+| `SESSIONS.md` | l'entrée de livraison : périmètre, tableau des livrables ×2, et — le plus gênant — **son tableau de preuve, qui annonçait « Les 8 onglets ? ✅ 8/8 »** |
+| `SESSIONS.md` | une vieille entrée de la **session 2** : *« les colonnes des 8 onglets créés par le code »* — `ENTETES` en décrit **7** |
+| `architecture.md` | *« un classeur peut tourner avec 8 onglets seulement »* — vrai mais ambigu, précisé en *« les 8 onglets de travail »* |
+
+> ⚠️ **Le tableau de preuve était le pire des onze.** Un contrôle qui affiche « ✅ 8/8 » ne dit pas
+> seulement un chiffre faux : il **certifie** un chiffre faux. C'est exactement ce que M-06
+> décrit — un chiffre qui porte l'apparence de la vérification sans l'avoir.
+>
+> Il n'a pas été effacé : il porte désormais **12/12**, **et** la mention que ce contrôle avait
+> d'abord conclu 8/8. Un résultat de contrôle qui a changé doit dire qu'il a changé.
+
+### 3. La leçon, et elle est différente de la précédente
+
+La fois d'avant, l'erreur était **une méthode de comptage incomplète**. Cette fois, la méthode était
+bonne : **c'est la propagation de la correction qui a été incomplète**. J'ai corrigé là où je
+regardais — les documents du produit — sans repasser sur les documents qui **parlaient** de cette
+correction.
+
+> 🎯 **Corriger un chiffre ne suffit pas : il faut corriger tout ce qui le cite.** Et la seule
+> manière fiable de s'en assurer est de **chercher le chiffre faux dans tous les fichiers**, pas de
+> se rappeler où on l'a écrit.
+
+C'est ce qui a été fait cette fois : recherche de toute occurrence dans **les 11 fichiers de la PR**,
+puis revue à l'œil de **chaque** compte restant pour distinguer les légitimes *(« 8 onglets de
+travail », « 7 créés par `setupSheet()` », les citations des anciennes erreurs corrigées)* des
+fautifs.
+
+### 4. Contrôle final — tout recalculé depuis le code
+
+| Contrôle | Résultat |
+|---|---|
+| 65 actions → `architecture.md` | ✅ **65 / 65** |
+| **12 onglets** → `architecture.md` | ✅ **12 / 12** |
+| 8 pages → `architecture.md` | ✅ **8 / 8** |
+| 26 fichiers JS → `architecture.md` **et** `README.md` | ✅ **26 / 26** *(les deux)* |
+| 4 bibliothèques → `dependances-externes.md` | ✅ **4 / 4** |
+| Empreintes SHA-256 | ✅ **4 / 4** |
+| Tournures d'archéologie | ✅ **aucune** |
+| « aucun envoi » / « 100 % locale » | ✅ **aucune** |
+| **Un total d'onglets ≠ 12, où que ce soit** | ✅ **aucun** |
+| Fichiers applicatifs touchés | ✅ **aucun — que du `.md`** |
+
+### 5. Ce qui n'a pas bougé
+
+**R-029, R-080, C-031, C-009 : intacts.** `docs/relais-cdn.md` : **non touché**, hors périmètre par
+décision de Romain. Aucun chantier lancé.

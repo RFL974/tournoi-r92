@@ -71,8 +71,8 @@ propre cache), et **se remplissent à la main** — `setupSheet()` ne les crée 
 > 🛡️ **Migration douce, et c'est une qualité du code** : si l'un de ces onglets est **absent, vide
 > ou illisible**, la lecture renvoie une liste vide **sans jamais lever d'erreur**, et toute la
 > chaîne de conformité se met en repli. **L'application continue de fonctionner exactement comme
-> avant.** C'est pourquoi un classeur peut très bien tourner avec 8 onglets seulement — il perd la
-> conformité FFR, rien d'autre.
+> avant.** C'est pourquoi un classeur peut très bien tourner avec **les 8 onglets de travail
+> seulement** — il perd alors la conformité FFR, rien d'autre.
 
 ---
 

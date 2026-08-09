@@ -753,18 +753,21 @@ l'application bouge pendant qu'on l'audite, et **M-06** qu'un chiffre sans méth
 #### 🏁 Statut final
 
 - **Validation de Romain** : ✅ **oui, le 2026-08-09**, **périmètre complet** — les 65 actions, les
-  8 pages, les 26 fichiers navigateur, les 8 onglets, et les 4 bibliothèques avec nom, version,
-  origine et date. Consigne explicite : *« si une version ou une origine ne peut pas être établie
+  8 pages, les 26 fichiers navigateur, les **12 onglets** *(le périmètre validé disait « 8 onglets » :
+  le comptage a établi qu'il y en a **12**)*, et les 4 bibliothèques avec nom, version, origine et
+  date. Consigne explicite : *« si une version ou une origine ne peut pas être établie
   avec certitude, écris « à confirmer » plutôt que de l'inventer »*.
 - **Statut** : 🏁 **LIVRÉ** — **documentation uniquement, aucun fichier applicatif touché, aucun
   changement de comportement, aucun redéploiement Google.**
 
 | Fichier | Ce qui a changé |
 |---|---|
-| `docs/architecture.md` | **Réécrit.** Les **65 actions** une par une, groupées en 11 familles, chacune avec son **niveau d'accès** ; les **8 pages** ; les **26 fichiers JS** ; les **8 onglets** ; le schéma de ce qui se passe après une écriture ; et **§7 : la méthode de comptage de chaque chiffre** |
+| `docs/architecture.md` | **Réécrit.** Les **65 actions** une par une, groupées en 11 familles, chacune avec son **niveau d'accès** ; les **8 pages** ; les **26 fichiers JS** ; les **12 onglets**, séparés entre **8 de travail** et **4 de référence FFR** ; le schéma de ce qui se passe après une écriture ; et **§7 : la méthode de comptage de chaque chiffre** |
 | `docs/dependances-externes.md` | **Créé.** Les 4 bibliothèques : taille, licence, date d'entrée, page qui la charge, **empreinte SHA-256**, et ce qui reste « à confirmer » — avec la liste de ce qui a été cherché en vain |
-| `README.md` | « 5 onglets » → **8** ; les **26 fichiers JS** listés au lieu de 6 ; les 8 pages ; `Tests.gs` ajouté ; **une affirmation fausse corrigée** *(voir ci-dessous)* |
-| `backend/README.md` | **Réécrit.** « un seul fichier » → **deux** ; « 6 onglets » → **7 créés, 8 en service** ; les exceptions d'accès expliquées |
+| `README.md` | « 5 onglets » → **12** ; les **26 fichiers JS** listés au lieu de 6 ; les 8 pages ; `Tests.gs` ajouté ; **une affirmation fausse corrigée** *(voir ci-dessous)* |
+| `backend/README.md` | **Réécrit.** « un seul fichier » → **deux** ; « 6 onglets » → **7 créés par `setupSheet()`, 12 en service** ; les exceptions d'accès expliquées |
+| `docs/structure-google-sheet.md` | « 6 onglets » → **12** ; **la même affirmation fausse sur la mesure de visibilité**, corrigée |
+| `docs/guide-utilisateur.md` | « 5 onglets » → **12** |
 | `docs/passation.md` | `Tests.gs` ajouté au geste de re-déploiement — **reliquat de R-072 refermé** |
 
 **Preuve que c'est fait** — vérification automatique repassée après écriture :
