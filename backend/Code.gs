@@ -278,11 +278,14 @@ function creerOngletConfig(classeur) {
   //   douce, à DROITE. Ne concerne QUE l'U14 (catégorie FFR M14) ; ignoré pour les autres.
   // scf_phase : phase du Super Challenge quand contexte_tournoi = 'SCF' — 'P2' (phase 2 : 1 journée,
   //   triangulaire/quadrangulaire, 2×15) ou 'P3' (phase 3 & clôture : 2 journées, triangulaire, 2×11).
-  //   VIDE = 'P2' (défaut prudent). PUREMENT DÉCLARATIF (session 13) : la génération réelle du
-  //   planning et l'application des temps ne consomment pas encore ces colonnes (prévu session 14).
+  //   VIDE = 'P2' (défaut prudent). CES DEUX COLONNES SONT CONSOMMÉES par la génération (session 14) :
+  //   `calculerPlanning` regroupe en triangulaires/quadrangulaires (via contexteScfCategorie), et la
+  //   durée de match est IMPOSÉE par `dureeMatchScf` — 2×15 (P2) ou 2×11 (P3), plus pause_mi_temps_min.
+  //   ⚠️ Là où `dureeMatchScf` s'applique, duree_mi_temps_min de la catégorie n'est PAS lue.
   // pause_echelonnee : 'oui' = la catégorie joue en un round-robin planifié en 2 vagues avec repos
   //   échelonné (≥ 60 min garanti, équité) au lieu d'une pause déjeuner globale. Vide/'non' = mode
-  //   classique (historique). Migration douce, à droite. Éligible si effectif pair ≥ 4 (sinon repli).
+  //   classique (historique). Migration douce, à droite. Seuil : dès 4 équipes, effectif pair OU
+  //   impair (les vagues inégales sont gérées par un bye) ; en dessous, repli + avertissement.
   var entetesCategorie = ['categorie', 'presente', 'terrains', 'terrains_auto', 'nb_poules',
     'format_mi_temps', 'duree_mi_temps_min', 'pause_mi_temps_min', 'recup_entre_matchs_min',
     'format_apresmidi', 'param_format',
@@ -316,9 +319,12 @@ function doGet(e) {
   try {
     // ⚡ PERFORMANCE : `ping` et `getAll` (servi par le cache) répondent SANS ouvrir le
     // classeur — SpreadsheetApp.openById() coûte à lui seul ~0,5 s. Or getAll est l'appel
-    // MASSIF (page publique, milliers de spectateurs) : servi du cache, il doit répondre en
-    // quelques millisecondes. Plus chaque requête est courte, plus le plafond Apps Script
-    // (~30 exécutions simultanées) se libère vite → la même Web App encaisse bien plus de monde.
+    // MASSIF (page publique, milliers de spectateurs) : servi du cache, il économise cette
+    // ouverture. ⚠️ MESURÉ (journal « Exécutions », 2026-08-05, 128 appels réels) : l'appel occupe
+    // malgré tout le serveur ~1,65 s, dont ~1,59 s de démarrage Apps Script INCOMPRESSIBLE — le
+    // cache ne coûte donc que ~0,06 s, mais « quelques millisecondes » serait FAUX. Plus chaque
+    // requête est courte, plus le plafond Apps Script (~30 exécutions simultanées) se libère
+    // vite → la même Web App encaisse bien plus de monde.
     if (action === 'ping') return repondreJson({ ok: true, message: 'API Tournoi R92 en ligne' });
     // getAll : copie mise en cache ~10 s. Un seul lecteur relit le Sheet par tranche, les
     // autres reçoivent la copie instantanément. Le cache est rafraîchi à chaque écriture.
@@ -436,7 +442,11 @@ function lireSponsorsPublics(classeur) {
  * Renvoie directement la CHAÎNE JSON (pas de re-sérialisation).
  *
  * Le classeur n'est ouvert (openById ≈ 0,5 s) QUE si le cache est vide : le cas courant
- * (cache chaud) répond en quelques millisecondes sans toucher au Sheet.
+ * (cache chaud) sert la copie sans toucher au Sheet. ⚠️ Ce que ça NE veut PAS dire : mesuré
+ * le 2026-08-05 (journal « Exécutions »), un appel cache chaud occupe quand même le serveur
+ * ~1,65 s, contre ~1,59 s pour `ping` qui n'exécute RIEN. Le cache est excellent (~0,06 s pour
+ * servir tout le tournoi), mais le démarrage Apps Script est INCOMPRESSIBLE : la capacité se
+ * compte en dizaines/centaines de lecteurs simultanés, pas en milliers.
  *
  * ANTI-POINTE (« cache stampede ») : à l'expiration du cache, des DIZAINES de spectateurs
  * pourraient relire le Sheet en même temps et saturer d'un coup le plafond d'exécutions
@@ -7069,8 +7079,10 @@ function calculerPlanning(config, equipes, melange, affectationImposee) {
     var s = contexteScfCategorie(c);
     if (s.estScf) scfParCat[c.categorie] = s.phase;
   });
-  // Phase 3 : le socle multi-journées (samedi 4 poules → dimanche brassage E/F/G) n'est pas encore
-  // branché (prévu PR B/C). En attendant, on génère la journée de triangulaires en 2×11 et on le DIT.
+  // Phase 3 : le brassage du dimanche EST branché — `genererDimancheScf`, avec son action serveur et
+  // son bouton « Générer le dimanche (brassage) ». Cette génération-ci ne produit QUE le SAMEDI
+  // (triangulaires 2×11) : la 2ᵉ journée se déclenche à part, une fois les scores du samedi saisis —
+  // et on le DIT ci-dessous.
   Object.keys(scfParCat).forEach(function (c) {
     if (scfParCat[c] === 'P3') {
       avert.push('Catégorie ' + c + ' (Super Challenge — Phase 3) : ceci génère les rencontres du ' +

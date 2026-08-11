@@ -20,6 +20,7 @@
 - [7. Ordre de travail (6 étapes)](#7-ordre-de-travail-6-étapes)
 - [8. Règle de non-régression](#8-règle-de-non-régression)
 - [8 bis. Règle de la carte à jour](#8-bis-règle-de-la-carte-à-jour)
+- [8 ter. Règle du commentaire à jour](#8-ter-règle-du-commentaire-à-jour)
 - [9. Règle de transparence](#9-règle-de-transparence)
 - [10. Règle de prudence](#10-règle-de-prudence)
 - [11. Objectif final](#11-objectif-final)
@@ -509,6 +510,51 @@ la seule à savoir exactement ce qu'elle fait.
 - ❌ **Pas** de documenter le fonctionnement interne d'une fonction *(c'est le rôle des commentaires
   dans le code, et ils sont bons)* ;
 - ✅ **Seulement** ceci : *ce qui existe est-il listé là où on va le chercher ?*
+
+---
+
+## 8 ter. RÈGLE DU COMMENTAIRE À JOUR
+
+> ⚠️ **Cette règle s'applique à TOUTES les sessions du projet.** Elle est le **pendant de §8 bis
+> pour l'intérieur du code**, et elle est née du chantier **C-008** (problème **R-083**).
+
+**La règle, en une phrase :**
+
+> **Une session qui branche ce qu'une session précédente annonçait « pas encore branché » efface la
+> phrase DANS LE MÊME LOT.**
+
+### Pourquoi cette règle existe
+
+Parce que **six commentaires en étaient arrivés à annoncer l'inverse de ce que fait la ligne
+d'en dessous**. Trois affirmaient que le Super Challenge n'était *« pas encore branché »* — il
+l'était depuis des mois, avec son bouton. Deux annonçaient une réponse *« en quelques
+millisecondes »* là où la mesure réelle donne **1,65 s**. Et le sixième donnait une condition
+d'éligibilité fausse, contredite par un autre commentaire du même fichier — **c'est le faux qui a
+été corrigé, pas celui qui disait vrai**.
+
+Le mécanisme n'accuse personne, et c'est bien le problème — il est **automatique** : une session
+écrit *« pas encore branché, prévu à la suivante »*, la session suivante branche, et **ne relit pas
+le commentaire de la précédente.**
+
+> **Ce n'est pas un détail de propreté.** Un commentaire faux fait perdre **plus** de temps qu'un
+> commentaire absent : il **décourage de chercher**. Quelqu'un qui trouve la page lente et lit
+> *« répond en quelques millisecondes »* conclut que le problème est ailleurs. Le domaine F a mis
+> **une session entière** à établir le contraire.
+
+### Le repérage, et il est mécanique
+
+Chercher dans les fichiers qu'on vient de toucher : `pas encore`, `prévu session`, `prévu PR`,
+`provisoire`, `TODO`, `FIXME`.
+
+> ⚠️ **La plupart de ces occurrences sont LÉGITIMES**, et il ne faut pas les effacer : sur les 48
+> trouvées lors de l'audit, **45 décrivaient l'application en marche** (*« pas encore enregistrée »*,
+> *« pas encore terminé »*). **Seules celles qui parlent d'une version FUTURE DU CODE sont visées.**
+
+### Ce que la règle ne demande PAS
+
+- ❌ **Pas** de relire tous les commentaires du projet à chaque commit ;
+- ❌ **Pas** de commenter davantage — les commentaires de ce projet sont **bons** ;
+- ✅ **Seulement** ceci : *ce que j'écris ici est-il encore vrai maintenant que j'ai branché ?*
 
 ---
 

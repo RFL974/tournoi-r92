@@ -498,8 +498,9 @@ function blocFormatApresMidi(cat) {
 }
 
 /**
- * Bloc « Contexte du tournoi (U14) » — session 13 (DÉCLARATIF). Rendu UNIQUEMENT pour la catégorie
- * U14 (au sens FFR M14) ; chaîne vide pour toutes les autres, qui restent strictement inchangées.
+ * Bloc « Contexte du tournoi (U14) » — introduit en session 13, BRANCHÉ depuis la session 14. Rendu
+ * UNIQUEMENT pour la catégorie U14 (au sens FFR M14) ; chaîne vide pour toutes les autres, qui
+ * restent strictement inchangées.
  *
  * Deux cartes-radio : « Tournoi ordinaire » (LAMBDA, défaut historique) ou « Super Challenge de
  * France » (SCF). En SCF, un panneau révèle la forme (Jeu à XV 15×15, figée) et le choix de la
@@ -508,9 +509,10 @@ function blocFormatApresMidi(cat) {
  * data-contexte (sur le formulaire) et data-phase (sur le panneau) — voir onReglagesChange —,
  * sans :has(), pour rester compatible tous téléphones.
  *
- * IMPORTANT (honnêteté) : ce bloc ne fait que DÉCLARER le cadre. La génération du planning et
- * l'application des temps du Super Challenge ne le consomment pas encore (prévu session 14) : le
- * récapitulatif est informatif. Prudent par construction : vide/Lambda ⇒ comportement d'aujourd'hui.
+ * IMPORTANT (honnêteté) : ce que ce bloc enregistre est RÉELLEMENT CONSOMMÉ par la génération. Le
+ * serveur regroupe en triangulaires/quadrangulaires et IMPOSE la durée de match — 2×15 en P2, 2×11
+ * en P3 (dureeMatchScf) — donc le récapitulatif des temps décrit ce qui sera JOUÉ, pas une simple
+ * intention. Prudent par construction : vide/Lambda ⇒ comportement d'aujourd'hui.
  */
 function blocContexteU14(cat) {
   const nom = (cat && cat.categorie != null) ? cat.categorie : '';
