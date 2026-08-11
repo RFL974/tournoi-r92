@@ -528,8 +528,9 @@ la seule à savoir exactement ce qu'elle fait.
 Parce que **six commentaires en étaient arrivés à annoncer l'inverse de ce que fait la ligne
 d'en dessous**. Trois affirmaient que le Super Challenge n'était *« pas encore branché »* — il
 l'était depuis des mois, avec son bouton. Deux annonçaient une réponse *« en quelques
-millisecondes »* là où la mesure réelle donne **1,65 s**. Et deux commentaires du même fichier se
-contredisaient sur une condition d'éligibilité.
+millisecondes »* là où la mesure réelle donne **1,65 s**. Et le sixième donnait une condition
+d'éligibilité fausse, contredite par un autre commentaire du même fichier — **c'est le faux qui a
+été corrigé, pas celui qui disait vrai**.
 
 Le mécanisme n'accuse personne, et c'est bien le problème — il est **automatique** : une session
 écrit *« pas encore branché, prévu à la suivante »*, la session suivante branche, et **ne relit pas
