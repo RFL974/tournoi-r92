@@ -9,11 +9,12 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-09 (**🏁 CINQ CHANTIERS CLÔTURÉS** — C-011 et C-013 *(TESTÉS
-chez Google)*, **C-005 et C-006** côté travail documentaire le 2026-08-06, et **🆕 C-007 LIVRÉ** le
-2026-08-09 : **la carte du projet décrit enfin le projet** — 65 actions, 8 pages, 26 fichiers,
-**12 onglets**, 4 bibliothèques. ⚠️ **Les problèmes qui dépendent d'un changement de comportement restent
-OUVERTS** : R-028, R-030 *(part outillage)*, R-031, R-033.)
+**Dernière mise à jour** : 2026-08-11 (**🏁 SIX CHANTIERS CLÔTURÉS** — C-011 et C-013 *(TESTÉS
+chez Google)*, **C-005 et C-006** côté travail documentaire le 2026-08-06, **C-007** le 2026-08-09,
+et **🆕 C-008 LIVRÉ** le 2026-08-11 : **les 6 commentaires qui disaient le contraire du code sont
+réécrits**, et la règle qui empêche le défaut de revenir est posée — `CLAUDE.md` **§8 ter**.
+⚠️ **Les problèmes qui dépendent d'un changement de comportement restent OUVERTS** : R-028,
+R-030 *(part outillage)*, R-031, R-033.)
 
 *Rappel de la mise à jour précédente — 2026-08-06* : (**🏁 C-011 et C-013 DÉFINITIVEMENT CLÔTURÉS et TESTÉS** —
 deux P1 refermés **sans changer une ligne du comportement de l'application** · `R92 — 616/616 OK,
@@ -70,8 +71,8 @@ VALIDATION (ÉTAPE 4)**, chantier par chantier.
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
 | 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
 | 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers** (C-001 → C-030), **91 problèmes placés sur 91**, **0 sans place** |
-| 4 | **ÉTAPE 4 — Validation par Romain** | 🚧 **EN COURS** — 🏁 **5 chantiers validés et clôturés** : C-011, C-013, C-005, C-006 et **C-007** · ordre retenu : *« d'abord ce qui ne peut rien casser »* — **il est désormais épuisé** |
-| 5 | **ÉTAPE 5 — Implémentation par petites unités** | 🚧 **EN COURS** — **2 chantiers TESTÉS chez Google** : C-011 (PR #181) · C-013 (PR #182) · **3 chantiers documentaires livrés** : C-005, C-006, **C-007** |
+| 4 | **ÉTAPE 4 — Validation par Romain** | 🚧 **EN COURS** — 🏁 **6 chantiers validés et clôturés** : C-011, C-013, C-005, C-006, C-007 et **C-008** · ordre retenu : *« d'abord ce qui ne peut rien casser »* — **il est désormais épuisé** |
+| 5 | **ÉTAPE 5 — Implémentation par petites unités** | 🚧 **EN COURS** — **2 chantiers TESTÉS chez Google** : C-011 (PR #181) · C-013 (PR #182) · **3 chantiers documentaires livrés** : C-005, C-006, C-007 · **1 chantier de commentaires livré** : **C-008** *(fichiers source ouverts, **zéro ligne exécutable**)* |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
 
 ---
@@ -252,9 +253,10 @@ réordonner les chantiers, **un par un**. Rien ne sera touché dans l'applicatio
 
 ## 5. CORRECTIONS DÉJÀ RÉALISÉES DANS CE CADRE
 
-**Six désormais** — le P0 de sécurité *(session 6)*, puis **cinq chantiers** validés et livrés :
-deux avec preuve d'exécution chez Google *(C-011, C-013)* et **trois purement documentaires**
-*(C-005, C-006 le 2026-08-06 ; **C-007** le 2026-08-09)* :
+**Sept désormais** — le P0 de sécurité *(session 6)*, puis **six chantiers** validés et livrés :
+deux avec preuve d'exécution chez Google *(C-011, C-013)*, **trois purement documentaires**
+*(C-005, C-006 le 2026-08-06 ; C-007 le 2026-08-09)*, et **un qui ouvre des fichiers source sans
+toucher une ligne exécutable** *(**C-008**, le 2026-08-11)* :
 
 | Chantier | Ce qu'il referme | Statut |
 |---|---|---|
@@ -263,6 +265,7 @@ deux avec preuve d'exécution chez Google *(C-011, C-013)* et **trois purement d
 | **C-005** — les trois textes d'information | **R-028** (P1), R-038 | 🏁 **Travail documentaire TERMINÉ** — `docs/textes-information-donnees.md`. ⚠️ **R-028 reste OUVERT : rien n'est en ligne** |
 | **C-006** — la politique de conservation | **R-030** (P1), R-031, R-033, R-034 | 🏁 **Travail documentaire TERMINÉ** — `docs/conservation-donnees.md`, **5 gestes sur 7 vérifiés dans le code**. ⚠️ **R-030 *(part outillage)*, R-031 et R-033 restent OUVERTS** |
 | **C-007** — remettre la carte du projet en face du projet | **R-073** (P1), **R-072** (P1, reliquat), R-024 | 🏁 **LIVRÉ le 2026-08-09 — les 3 problèmes sont REFERMÉS.** `docs/architecture.md` réécrit, `docs/dependances-externes.md` créé, `README.md` / `backend/README.md` / `passation.md` corrigés. **Vérification automatique : 65/65 actions, 26/26 fichiers, 8/8 pages, 12/12 onglets, 4/4 bibliothèques** |
+| **C-008** — les commentaires qui disaient le contraire du code | **R-083** *(6 cas)* | 🏁 **LIVRÉ le 2026-08-11 — R-083 est REFERMÉ.** Les 6 commentaires réécrits *(5 dans `Code.gs`, 1 dans `admin-reglages.js`)* + **la règle posée : `CLAUDE.md` §8 ter**. **Preuve : les fichiers, commentaires retirés, sont identiques au caractère près** *(`diff` vide — 5 816 et 565 lignes de code)*. ⚠️ **PAS redéployé chez Google** *(décision)* : l'éditeur Apps Script garde les anciennes phrases jusqu'au **prochain redéploiement utile** |
 
 > ⚠️ **Ce que C-005 et C-006 ne referment pas, et pourquoi c'est écrit ici.** Ces deux chantiers
 > **produisent des textes** ; ils ne changent **rien** au comportement de l'application. Un texte
@@ -343,8 +346,20 @@ preuves, telles qu'inscrites au départ :
 
 ## 6. PROBLÈMES RESTANT À TRAITER
 
-**91 problèmes — 1 corrigé, 90 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
+**91 problèmes — 2 corrigés, 89 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
 le registre et `AUDIT.md` pour l'explication de chacun.
+
+> ⚡ **Le second corrigé est R-083** *(C-008, 2026-08-11)* — les commentaires qui annonçaient
+> l'inverse du code. C'est le **premier problème refermé dans des fichiers source** depuis le P0 de
+> sécurité. ⚠️ **Il est refermé dans le dépôt, pas chez Google** : le serveur n'a pas été recollé.
+>
+> 🚨 **UN SUJET EN ATTENTE DE TA DÉCISION, trouvé pendant C-008 et NON corrigé** *(2026-08-11)* :
+> **la pause échelonnée et le Super Challenge se marchent dessus.** Dans `calculerPlanning`, la
+> branche de la pause échelonnée **sort de la fonction avant** le regroupement Super Challenge, et
+> **aucune garde ne l'en empêche**. Une catégorie U14 en SCF, pause échelonnée globale cochée et
+> ≥ 4 équipes, serait donc planifiée **ni en triangulaires, ni en 2×15/2×11** — alors que l'écran
+> annonce ces temps. **Statut : PROBABLE** *(lu dans le code, jamais exécuté)*. Il touche **C-004**
+> et **C-023**. **Faut-il l'inscrire au registre ?** → détail en `SESSIONS.md`, section C-008 §5.
 
 > ⚡ **88 ou 89 ? Les deux chiffres sont vrais, et ils ne disent pas la même chose.**
 > **88** = ce que **l'audit** a trouvé. Ce chiffre ne bougera plus : c'est celui de
@@ -360,7 +375,7 @@ le registre et `AUDIT.md` pour l'explication de chacun.
 |---|---|---|---|---|---|---|---|---|---|
 | **P0** | **1** | — | ✅ **R-014** porte ouverte sans limite — **TESTÉ, en service** *(une preuve remplacée, voir §5)* | — | — | — | — | — | — |
 | **P1** | **24** | R-001 forfait ✅ · R-002 blocage après-midi · R-003 planning figé ✅ · R-004 départage ✅ · R-005 score aberrant ✅ · ⚡ **R-089 tournoi suspendu / annulé** ✅ *(hors audit — D-030)* | R-015 scores effacés · R-016 réinitialisation · R-017 mots de passe partagés · R-018 liens des clubs · **R-019 clés devinables** *(monté de P2)* | R-028 personne n'est informé · **R-029 mesure des spectateurs** *(SUSPENDU — partenaires désactivés le 2026-08-05)* · R-030 rien ne s'efface | **R-041 classement/départage non testés** · **R-042 saisie du score non testée** · **R-043 le navigateur part en ligne sans contrôle** · **R-044 règles écrites en double** *(⚠️ **requalifié par le domaine H** : les deux copies sont d'accord — 179 comparaisons, 0 écart. Dette à surveiller, plus défaut possible)* | **R-051 « Rafraîchir » échoue en silence** · **R-052 « Failed to fetch » affiché au bénévole** | **R-061 le relais anti-affluence est éteint** · **R-062 le cache s'éteint tout seul vers 165 matchs** | **R-072 la procédure de redéploiement décrit la moitié du geste** *(le mécanisme même de M-04)* · **R-073 la carte du projet décrit une autre application** | **aucun** |
-| **P2** | 55 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 | R-063 → R-069 | R-074 → R-080 | R-082 → R-086 |
+| **P2** | 55 | R-006 → R-010 · **R-012** ✅ · **R-013** ✅ | R-020 → R-025 | R-031 → R-039 | R-045 → R-049 | R-053 → R-059 | R-063 → R-069 | R-074 → R-080 | R-082 · ✅ **R-083 CORRIGÉ** *(C-008)* · R-084 → R-086 |
 | **P3** | 11 | R-011 | R-026 · R-027 | R-040 | R-050 | R-060 | R-070 · R-071 | R-081 | R-087 · R-088 |
 
 **Risques de méthode** : M-01 · M-02 · M-03 *(largement levé en session 8)* · M-04 *(traité en

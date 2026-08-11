@@ -4079,3 +4079,139 @@ fautifs.
 
 **R-029, R-080, C-031, C-009 : intacts.** `docs/relais-cdn.md` : **non touché**, hors périmètre par
 décision de Romain. Aucun chantier lancé.
+
+---
+
+# 🏁 C-008 — **LIVRÉ** : les commentaires qui disaient le contraire du code *(2026-08-11)*
+
+> **Objectif de la séance** : ÉTAPE 5 de **C-008** — réécrire les **6 commentaires** qui annoncent
+> l'inverse de ce que fait le code, et **poser la règle** qui empêche le défaut de revenir.
+>
+> **Validation de Romain, mot pour mot** : *« Je valide C-008 dans le périmètre complet : les 6 cas,
+> y compris les 3 cas SCF. »* — avec : aucune modification de comportement · **aucun redéploiement
+> Apps Script** · PR obligatoire · vérification stricte qu'aucune ligne exécutable ne bouge ·
+> chiffre 589 → 616 corrigé · **C-023 reste distinct et n'est pas anticipé**.
+
+## 0. Mise à jour avant lecture — ⚠️ **et elle a servi**
+
+`git fetch` + `git status -sb` → **`## main...origin/main [derrière 5]`**.
+
+**La copie locale était en retard de 5 commits** : tout **C-007** manquait. `git status` seul aurait
+répondu « propre » — c'est exactement le piège documenté en `CLAUDE.md` §12.3, et **il s'est
+re-déclenché**. Mise à jour en **avance rapide** (aucune modification locale à préserver) **avant**
+d'ouvrir le moindre fichier de suivi.
+
+> 🎯 **Troisième déclenchement du même piège** *(sessions 6, 8, puis celle-ci)*. La règle a tenu :
+> elle a été appliquée avant lecture, donc elle n'a rien coûté cette fois.
+
+## 1. Les 6 cas, vérifiés dans le code avant d'être touchés
+
+**Aucune affirmation de la fiche n'a été reprise telle quelle** — chaque ligne a été ouverte, et les
+numéros de ligne avaient bougé depuis la session 12.
+
+| # | Où | Ce qui était écrit | Vérification |
+|---|---|---|---|
+| 1 | `Code.gs:281` | *« ne consomment pas encore ces colonnes (prévu session 14) »* | ❌ Faux — `contexteScfCategorie` lu dans `calculerPlanning`, durée imposée par `dureeMatchScf` |
+| 2 | `Code.gs:285` | *« Éligible si effectif **pair** ≥ 4 »* | ❌ Faux — le code teste `eqCat.length >= 4`, **sans parité** |
+| 3 | `Code.gs:320` | *« doit répondre en quelques millisecondes »* | ❌ Faux — **1,65 s** mesuré *(I-18)* |
+| 4 | `Code.gs:439` | *« répond en quelques millisecondes »* | ❌ Faux — idem |
+| 5 | `Code.gs:7072` | *« socle multi-journées pas encore branché (prévu PR B/C) »* | ❌ Faux — `genererDimancheScf` existe, est routée **et a son bouton** |
+| 6 | `admin-reglages.js:511` | *« ne fait que DÉCLARER le cadre […] informatif »* | ❌ Faux — les temps sont réellement appliqués |
+
+**Une précision trouvée en vérifiant, et elle est entrée dans le commentaire** : `dureeMatchScf`
+impose bien 2×15 / 2×11, **mais conserve `pause_mi_temps_min`**. Le nouveau commentaire le dit —
+l'ancien laissait croire que la colonne n'était pas lue du tout.
+
+**Le cas 2 avait déjà sa version vraie dans le même fichier**, 6 700 lignes plus bas
+*(« éligible dès 4 équipes, les vagues inégales sont gérées par un bye »)*. **Celle-là n'a pas été
+touchée** : c'est la fausse qui a été alignée sur elle.
+
+## 2. La preuve qu'aucune ligne exécutable n'a bougé
+
+C'était **la** condition posée par Romain. Trois contrôles, du plus faible au plus fort :
+
+| Contrôle | Résultat |
+|---|---|
+| Syntaxe relue avant **et** après *(`node --check`)* | ✅ les 3 fichiers |
+| **Chaque ligne du diff est-elle un commentaire ?** *(automatique)* | ✅ **oui, les 42** |
+| ⭐ **Les fichiers, commentaires retirés, sont-ils identiques ?** | ✅ **`diff` VIDE** — 5 816 et 565 lignes de code, au caractère près |
+
+> 🎯 **Le troisième contrôle est le seul qui prouve vraiment quelque chose.** Les deux premiers
+> disent « je n'ai pas vu d'erreur » ; celui-ci dit **« le code est le même »**. C'est une preuve,
+> pas une relecture.
+
+> ⚠️ **Ce qui n'a PAS servi de preuve, et il faut le dire** : les **616 tests**. Ils tournent chez
+> Google, on a décidé de ne pas redéployer — et surtout **ils ne peuvent rien prouver sur du
+> texte**. La fiche les réclamait ; c'était une exigence mal calibrée, corrigée dans la fiche.
+
+## 3. La règle posée — `CLAUDE.md` **§8 ter**
+
+> *Une session qui branche ce qu'une session précédente annonçait « pas encore branché » efface la
+> phrase DANS LE MÊME LOT.*
+
+C'est le **pendant de §8 bis pour l'intérieur du code** : §8 bis protège la carte, §8 ter protège les
+commentaires. La règle **dit aussi ce qu'elle ne demande pas** — sur les 48 occurrences de
+*« pas encore »* du projet, **45 sont légitimes** et ne doivent pas être effacées.
+
+**Balayage refait après correction** : plus **aucune** occurrence annonçant une version future du
+code. *(La seule occurrence restante de « quelques millisecondes » est la phrase qui explique que ce
+serait faux.)*
+
+## 4. Ce qui a été signalé à Romain **sans être corrigé**
+
+Conformément à sa consigne — *« si tu découvres un problème qui dépasse le périmètre, tu t'arrêtes
+et tu me le signales au lieu de l'intégrer »* :
+
+1. ⚠️ **Contradiction entre deux fiches du plan** — C-008 disait *« Dépendances : aucune »*, C-023
+   disait *« à faire avec la part SCF de C-008 : même endroit, même lot »*. **Tranché par Romain
+   avant le début** : les 6 cas ici, C-023 distinct ;
+2. ⚠️ **`Code.gs:283-285` décrit la colonne `pause_echelonnee` par catégorie comme active** — or
+   **rien ne la lit** *(c'est **R-084**, chantier **C-009**)*. **Seule la parité a été corrigée** ;
+   la formulation retenue ne dit rien de plus sur l'activité de la colonne, pour ne pas empiéter ;
+3. ⚠️ **`Code.gs:320` parle de *« milliers de spectateurs »*** — or **I-18** donne une capacité de
+   **150 à 300**, et **I-19** *(combien de spectateurs viennent vraiment ?)* **n'est pas tranchée**.
+   La phrase a été **conservée mot pour mot** : hors périmètre de R-083 ;
+4. 🚨 **UN SUJET NOUVEAU, trouvé en vérifiant ma propre rédaction — voir §5.**
+
+## 5. 🚨 Un sujet à ouvrir : **pause échelonnée + Super Challenge se marchent dessus**
+
+**Comment il a été trouvé** : j'allais écrire *« duree_mi_temps_min est ignorée tant que
+contexte_tournoi = SCF »*. Avant de l'écrire, j'ai listé **tous** les appels à `dureeMatch` et
+`dureeMatchScf` — pour ne pas remplacer un commentaire faux par un autre. **C'est là que le cas est
+apparu.**
+
+**Ce qui a été CONSTATÉ dans le code** *(pas déduit)* :
+
+- dans `calculerPlanning`, étape « 1) Poules + affectation », la branche `if (echGlobal)` marque la
+  catégorie `echelonneParCat` puis fait `return` — **avant** le regroupement Super Challenge
+  *(triangulaires/quadrangulaires)* qui vient plus bas ;
+- **il n'y a aucune garde `estScf` avant cette branche** *(les gardes `estScf` du fichier sont
+  ailleurs : `genererApresMidi`, et deux autres fonctions)* ;
+- la planification échelonnée utilise **`dureeMatch(cat)`** — donc `duree_mi_temps_min` — et
+  **jamais `dureeMatchScf`**.
+
+**Ce que ça donnerait, si les deux réglages sont actifs en même temps** : une catégorie U14 en Super
+Challenge, avec la pause échelonnée **globale** cochée et **≥ 4 équipes**, serait planifiée en
+round-robin échelonné — **ni triangulaires, ni 2×15/2×11**, alors que l'écran d'administration
+annonce ces temps.
+
+| | |
+|---|---|
+| **Statut** | 🔶 **PROBABLE** — lu dans le code, **jamais exécuté ni testé**. Il faut le vérifier avant d'en faire un problème |
+| **Déclencheur** | Les **deux** réglages actifs ensemble. Ni l'un ni l'autre n'est le cas courant |
+| **Ce qui a été fait** | ✅ **Rien** — c'est un **changement de comportement**, hors périmètre de C-008 |
+| **Ce qui a été fait à la place** | La phrase du commentaire a été **rendue prudente** : *« Là où `dureeMatchScf` s'applique, duree_mi_temps_min n'est PAS lue »* — vrai, et qui **n'affirme rien** sur le cas échelonné |
+
+> 🎯 **C'est la règle de travail de Romain qui a fonctionné** : *« si tu découvres un problème qui
+> nécessite un chantier distinct, arrête-toi sur ce point et inscris-le comme sujet séparé. »*
+> **Décision à prendre par Romain** : ouvrir un problème au registre *(il toucherait **C-004**, la
+> pause échelonnée, et **C-023**, le Super Challenge)* — ou constater qu'il ne se produira jamais.
+
+## 6. Ce qui n'a **PAS** été fait
+
+- ❌ **Aucun redéploiement Apps Script** — décision de Romain. ⚠️ **Conséquence à retenir : le code
+  lu dans l'éditeur Google garde les anciennes phrases** jusqu'au prochain redéploiement utile ;
+- ❌ **Aucune ligne exécutable modifiée** — prouvé, §2 ;
+- ❌ **C-023 non anticipé**, `Code.gs:7002` non touché, R-084 non traité ;
+- ❌ **aucun chantier suivant lancé** ;
+- ❌ **le sujet du §5 n'a PAS été corrigé** — signalé, pas intégré.

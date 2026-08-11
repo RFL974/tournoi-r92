@@ -813,14 +813,20 @@ l'application bouge pendant qu'on l'audite, et **M-06** qu'un chiffre sans méth
 - **Risque de la correction** : 🟡 **faible mais réel** — on ouvre `Code.gs` et des fichiers du
   navigateur. Le risque n'est pas de changer le comportement *(on ne touche que des commentaires)*,
   c'est la **faute de frappe** qui casse une accolade ou un `*/`.
-- **Vérification** : les **589 tests** doivent passer **à l'identique**, et le nombre de lignes
-  changer **uniquement** dans les blocs de commentaires modifiés.
+- **Vérification** : le nombre de lignes doit changer **uniquement** dans les blocs de commentaires
+  modifiés. ⚠️ **Chiffre corrigé le 2026-08-11** : la fiche annonçait *« les **589** tests »* — c'est
+  **616** depuis **C-011**. *(Et voir ci-dessous : ces tests n'ont finalement PAS servi de preuve.)*
 - ⭐ **Ce chantier doit poser une règle en même temps qu'il corrige** : `CLAUDE.md` **§8 bis**
   protège la **documentation** ; **il lui manque son pendant pour les commentaires** — *une session
   qui branche ce qu'une précédente annonçait « pas encore branché » efface la phrase dans le même
-  lot.* **Sans cette règle, ce chantier sera à refaire.**
-- **Dépendances** : aucune.
-- **Statut** : **PLANIFIÉ** · **Validation de Romain** : ⏳ **à donner** *(ÉTAPE 4)*
+  lot.* **Sans cette règle, ce chantier sera à refaire.** → ✅ **FAIT : `CLAUDE.md` §8 ter.**
+- **Dépendances** : aucune. ⚠️ **Contradiction de plan relevée le 2026-08-11, et tranchée par
+  Romain** : la fiche **C-023** annonçait *« à faire avec la part SCF de C-008 : même endroit, même
+  lot »*. **Décision : les 6 cas sont traités ici**, C-023 reste un chantier **distinct** et n'est
+  **pas** anticipé — C-023 change du *code*, C-008 du *texte* ; les mélanger irait contre *« un
+  commit = un seul sujet »*.
+- **Statut** : ✅ **LIVRÉ le 2026-08-11** *(branche `chantier/c-008-commentaires-faux`)* ·
+  **Validation de Romain** : ✅ **DONNÉE** *(périmètre complet, les 6 cas)*
 
 ---
 
