@@ -4215,3 +4215,146 @@ annonce ces temps.
 - ❌ **C-023 non anticipé**, `Code.gs:7002` non touché, R-084 non traité ;
 - ❌ **aucun chantier suivant lancé** ;
 - ❌ **le sujet du §5 n'a PAS été corrigé** — signalé, pas intégré.
+
+---
+
+# 📐 C-012 — **OUVERT, CARTOGRAPHIÉ, SPÉCIFIÉ ET VALIDÉ** *(2026-08-16)*
+
+> **Trois sessions en une journée**, et il faut les distinguer pour comprendre la suite :
+> **(1)** un démarrage qui s'est arrêté net · **(2)** la spécification écrite depuis le code réel ·
+> **(3)** la validation des quatre décisions par Romain.
+>
+> ⚠️ **Aucune ligne de code n'a été écrite. C-012 n'est PAS implémenté.**
+
+## 0. ⚠️ Le démarrage : trois sessions annoncées qui n'existaient pas
+
+Romain a demandé de *« reprendre C-012 après une interruption »* et de relire *« le compte rendu de
+C-012 Session 3 »*.
+
+**Les six vérifications Git ont été faites d'abord** — `main` propre, à jour, `4af5003`, C-008 bien
+fusionné. Puis la recherche : **aucune branche, aucun commit, aucun fichier, aucune ligne de
+`SESSIONS.md` ne portait la moindre trace de C-012.** Son statut dans `PLAN.md` était encore
+`PLANIFIÉ`, sa validation **jamais demandée**.
+
+**Ce qui a été fait** : ❌ **rien inventé**. La session s'est arrêtée pour poser la question.
+
+> 🎯 **La leçon, et elle vaut plus que la session perdue** : soit trois sessions de travail se sont
+> évaporées **faute d'avoir été écrites dans `docs/industrialisation/` au fil de l'eau**, soit il y
+> avait confusion avec le chantier FFR *(qui a sa propre numérotation et a lui aussi touché la
+> saisie du score, en « session 12 » et « session 13 »)*. **C'est exactement le cas que §12.1 du
+> cadre prévoit** : *la conversation n'est jamais la mémoire du projet.*
+>
+> **Réponse de Romain** : *« le dépôt ne contient aucune trace exploitable des prétendues Sessions 1
+> à 3 de C-012. Nous ne devons rien inventer. »* → **repartir proprement.**
+
+## 1. Ouverture officielle du chantier
+
+**Validation de Romain, mot pour mot** : *« Je valide officiellement l'ouverture du chantier C-012.
+Cette validation signifie uniquement que le chantier peut maintenant être étudié et spécifié. Elle
+n'autorise PAS encore la modification du code applicatif. »*
+
+## 2. Ce que la cartographie du code réel a établi
+
+**Lu ligne à ligne** : `enregistrerScore`, **`backend/Code.gs` 5548 → 5658 (111 lignes)**, plus ses
+9 fonctions appelées, plus ses **deux** appelants *(`doPost` et l'écran de saisie)*, plus le
+recensement dans **tout le dépôt** de qui appelle quoi.
+
+**Cinq comportements fins ont été trouvés, qui ne se voient pas à la lecture rapide** :
+
+| # | Le comportement | Pourquoi il compte |
+|---|---|---|
+| 1 | Les scores sont validés **AVANT** que le match soit cherché | l'ordre porte du sens |
+| 2 | ⚠️ **Une fonctionnalité cachée en dépend** : `api.js:177` vérifie la clé « scores » en envoyant un **vrai** enregistrement avec l'identifiant bidon `__verif_cle__` | le casser = **plus personne ne peut se connecter à l'écran de saisie** |
+| 3 | La lecture du match suivant est **paresseuse** *(cas ④ seulement)* | elle a lieu **sous le verrou d'écriture** : la rendre systématique ralentirait chaque saisie |
+| 4 | `vainqueur` est renvoyé même hors Coupe, mais **jamais écrit** | à préserver tel quel |
+| 5 | Archivage et propagation sont sous `try/catch` : ils **ne bloquent jamais** la saisie | délibéré, et bien : le geste du bénévole passe avant le journal de saison |
+
+> ⭐ **Le n° 2 est la vraie trouvaille de la cartographie.** Personne ne l'aurait deviné en lisant
+> `enregistrerScore` seule : c'est le **frontend** qui s'en sert. Sans ce recensement des appelants,
+> un déménagement « propre » aurait pu casser la connexion à l'écran de saisie **sans qu'aucun test
+> ne le voie**.
+
+## 3. La conception retenue : **deux cœurs, pas un**
+
+`litSaisieScore` *(ce que le bénévole a envoyé est-il lisible ?)* → puis l'I/O lit le match → puis
+`deciderEnregistrementScore` *(les six garde-fous)* → qui rend **un refus motivé, ou un plan
+d'écriture**. Plus un prédicat pur `cascadeAVerifier`.
+
+**Pourquoi deux et pas un — c'est la raison d'être du découpage** : un cœur unique obligerait à lire
+le match **avant** de valider les scores, donc à déclencher la migration des colonnes même sur un
+score invalide. **Minuscule, inoffensif — et quand même un changement de comportement.** Deux cœurs
+le rendent impossible.
+
+**La correction en cascade est résolue sans donner au cœur accès au classeur** : on ne lui fait pas
+chercher le match suivant, **on le lui apporte** — et seulement quand `cascadeAVerifier` dit que ça
+vaut la lecture.
+
+## 4. Les quatre décisions de Romain — et **pourquoi** elles ont été prises
+
+| # | Décision | Le raisonnement de Romain |
+|---|---|---|
+| **D-C012-1** | ✅ **OPTION A** — la propagation reste **hors** du cœur | *« C-012 doit isoler les décisions métier nécessaires à la validation du score, mais ne doit pas transformer la mécanique du bracket en nouveau moteur métier. »* → fidèle au plan : **déménagement, pas réécriture** |
+| **D-C012-2** | ✅ **Problème distinct → R-092, NON corrigé** | *« Inscris-le avec les preuves disponibles ; statut indiquant clairement qu'il est découvert mais non corrigé ; ne modifie aucun code. Si le registre ne permet pas de lui attribuer proprement une priorité sans analyse supplémentaire, indique-le au lieu d'inventer. »* |
+| **D-C012-3** | ✅ **Comportement actuel conservé** *(détail partiel ⇒ l'autre côté à 0)* | *« C-012 ne change aucune règle. Ne transforme pas cela en nouvelle validation métier. »* |
+| **D-C012-4** | ✅ **17 tests** *(au lieu des 8 annoncés)* | *« Ils doivent être conservés dans la spécification comme filet de non-régression prévu pour C-012. »* |
+
+> 🧠 **Le fil commun aux quatre, et il mérite d'être nommé** : **trois d'entre elles disent « ne
+> change rien »**, et la quatrième dit **« prouve-le mieux »**. C'est la définition même d'un
+> déménagement réussi. Un chantier qui aurait, au passage, corrigé R-092 et durci le détail partiel
+> aurait été *« meilleur »* en apparence — et **aurait rendu impossible de prouver que rien n'avait
+> changé**. C'est la leçon de C-008, appliquée avant d'écrire une ligne.
+
+## 5. ⚡ R-092 — le problème trouvé en chemin
+
+**Le détail du score n'est effacé nulle part.** Les 8 colonnes `essais_*`, `transfo_*`, `pen_*`,
+`drop_*` sont écrites en mode détaillé, mais **aucune ligne ne les remet à vide** : ni une correction
+repassée en mode simple *(5625, `if (modeDetail)` sans `else`)*, ni une réinitialisation en cascade
+*(`invaliderMatchAval`, 5816)*, ni la remise à zéro de la petite finale *(5800)*.
+
+**Deux consommateurs les relisent** : l'écran de saisie **pré-remplit ses compteurs depuis ces
+colonnes** *(`blocSaisieDetail`, `saisie.js:465`)*, et l'alerte des 5 essais leur fait confiance **en
+priorité** *(`essaisConnusEquipe`, `Code.gs:1453`)*.
+
+### ⚠️ Sa priorité n'a **pas** été fixée — et c'est volontaire
+
+**Elle ne peut pas l'être depuis le dépôt.** Le scénario grave suppose une catégorie **à la fois** en
+mode détaillé *(tir au but)* **et** dans un **tableau de Coupe**. Or `RefFFR_Regles.tir_au_but` vit
+**dans le classeur Google, pas dans le dépôt** *(cadre §13.6)*.
+
+- combinaison **impossible** → **P2** *(chiffres morts + alerte informative faussée ; le classement
+  n'est pas touché, il lit `score_A`/`score_B` qui sont bien écrasés)* ;
+- combinaison **possible** → **P1 à instruire** *(un bénévole pourrait valider un score pré-rempli
+  qui n'est plus le sien)*.
+
+➡️ **Une seule vérification tranche** : une catégorie `tir_au_but = OUI` peut-elle recevoir le format
+**COUPE_PLATEAU** ? **Statut en attendant : À CONFIRMER.**
+
+> 🎯 **C'est la consigne de Romain qui a produit ce résultat** — *« indique-le au lieu d'inventer »*.
+> Sans elle, la ligne aurait reçu un **P2** confortable et faux.
+
+## 6. Fichiers touchés — et **rien d'autre**
+
+| Fichier | Ce qui a changé |
+|---|---|
+| `docs/industrialisation/C-012-SPECIFICATION.md` | **créé** *(session 2)*, puis **les 4 décisions y sont inscrites comme tranchées** *(session 3)* |
+| `docs/industrialisation/RISQUES.md` | ⚡ **R-092 inscrit** — IDENTIFIÉ, **NON CORRIGÉ**, priorité **À CONFIRMER** · ligne « Dernière mise à jour » |
+| `docs/industrialisation/SESSIONS.md` | la présente entrée |
+
+## 7. Ce qui n'a **PAS** été fait
+
+- ❌ **aucun fichier applicatif modifié** — `backend/`, `frontend/`, `.github/` : `git diff` **vide** ;
+- ❌ **aucun test modifié** — `backend/Tests.gs` intact, toujours **616 tests** ;
+- ❌ **aucune fonction créée**, aucune règle métier ajoutée ou changée ;
+- ❌ **R-092 non corrigé** — signalé, inscrit, **pas touché** ;
+- ❌ **aucune PR d'implémentation**, aucune branche ;
+- ❌ **aucun autre chantier ouvert** ;
+- ❌ **aucun redéploiement Apps Script** — il n'y avait rien à déployer.
+
+## 8. Statut à la fin de la journée
+
+| | |
+|---|---|
+| **C-012** | ✅ **OUVERT** *(2026-08-16)* · ✅ **SPÉCIFIÉ** · ✅ **VALIDÉ (conception)** · ⏳ **implémentation NON commencée, NON autorisée** |
+| **R-042** | **IDENTIFIÉ** — inchangé. Il ne bougera qu'avec les tests de l'étape 3 |
+| **R-092** | 🔴 **IDENTIFIÉ — NON CORRIGÉ** · priorité **À CONFIRMER** |
+| **Prochaine étape** | **étape 1 du §10** de la spécification — extraire `litSaisieScore` + tests **T-1 à T-5**. ⛔ **Attend une autorisation explicite de Romain.** |

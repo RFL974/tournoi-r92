@@ -9,7 +9,7 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-06 (**ÉTAPE 4 — C-011 (PR #181) et C-013 (PR #182) validés, écrits, en attente de fusion**) · *2026-08-05 (**session 13 — ÉTAPE 3, volet ①*** : R-028, R-029, R-030 et R-041 ne sont **plus bloqués par une décision en attente** · ⚡ **addendums : R-089, R-090 et R-091 inscrits** — le tournoi suspendu / annulé (**D-030**), un réglage de pause ignoré sans le dire, et deux modes de pause qui coexistent (**D-032**))
+**Dernière mise à jour** : 2026-08-16 (⚡ **R-092 inscrit — le détail du score n'est effacé nulle part.** Trouvé en spécifiant **C-012**, **NON CORRIGÉ**, et **délibérément hors de C-012** (**D-C012-2**). ⚠️ **Sa priorité n'est PAS tranchée** : elle dépend d'une combinaison vérifiable **uniquement dans le classeur Google**, pas dans le dépôt) · *2026-08-06 (**ÉTAPE 4 — C-011 (PR #181) et C-013 (PR #182) validés, écrits, en attente de fusion**)* · *2026-08-05 (**session 13 — ÉTAPE 3, volet ①*** : R-028, R-029, R-030 et R-041 ne sont **plus bloqués par une décision en attente** · ⚡ **addendums : R-089, R-090 et R-091 inscrits** — le tournoi suspendu / annulé (**D-030**), un réglage de pause ignoré sans le dire, et deux modes de pause qui coexistent (**D-032**))
 **Audits réalisés** : 🏁 **les 8 domaines** — A (métier), C (sécurité), B (RGPD), D (QA / tests), E (UX / accessibilité), F (performance), G (architecture) et **H (qualité du code)**. **Aucun domaine ne reste à auditer.**
 **Correction réalisée** : R-014 (le P0), par exception validée — voir D-016. ⚠️ Une de ses trois preuves est tombée en session 8, ✅ **et a été refaite correctement le jour même** (`589/589 OK` chez Google) — voir la note sous le tableau de synthèse, `AUDIT.md` §D.8 et **M-04**.
 
@@ -71,27 +71,37 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 > **R-043** *(le contrôle avant publication)* passe à **EN COURS** — sa **moitié (a) est refermée et
 > prouvée**, sa moitié **(b)** *(harnais du navigateur)* reste entière.
 
-**Total : 91 problèmes** — **88 issus des 8 domaines d'audit** [domaine A (13) + domaine C (14) +
+**Total : 92 problèmes** — **88 issus des 8 domaines d'audit** [domaine A (13) + domaine C (14) +
 domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (10) + **domaine H
-(7)**] **+ 3 ajoutés après la clôture de l'audit**, tous le **2026-08-05**, tous autour de **D-030** :
+(7)**] **+ 4 ajoutés après la clôture de l'audit** — les trois premiers le **2026-08-05** autour de
+**D-030**, le quatrième le **2026-08-16** en spécifiant **C-012** :
 
 | Réf | Quoi | D'où il vient |
 |---|---|---|
 | ⚡ **R-089** (P1) | Tournoi suspendu / annulé pour force majeure | **Apporté par Romain** — connaissance du terrain |
 | ⚡ **R-090** (P2) | Le champ « Pause déjeuner — durée » est ignoré en mode échelonné | **Trouvé en répondant à une question de Romain** |
 | ⚡ **R-091** (P2) | Les deux modes de pause coexistent dans le même tournoi | **Trouvé en vérifiant** une règle posée par Romain (**D-032**) |
+| ⚡ **R-092** *(priorité **À CONFIRMER**)* | Le détail du score n'est effacé nulle part | **Trouvé en cartographiant `enregistrerScore`** pour spécifier C-012 |
 
-> 💡 **Ce que ces trois lignes disent de la méthode** : **les questions de Romain trouvent des
-> défauts que huit domaines d'audit n'ont pas vus.** Deux des trois n'existent pas parce qu'on a
-> relu du code, mais parce qu'on a **confronté le code à ce que l'organisateur croit qu'il fait**.
+> 💡 **Ce que ces quatre lignes disent de la méthode** : **les questions de Romain, et le fait de
+> lire vraiment le code avant d'y toucher, trouvent des défauts que huit domaines d'audit n'ont pas
+> vus.** Deux des quatre n'existent pas parce qu'on a relu du code, mais parce qu'on a **confronté le
+> code à ce que l'organisateur croit qu'il fait**. Le quatrième, lui, est apparu **parce qu'on a
+> cartographié une fonction avant de la déplacer** — ce que l'audit n'avait pas eu à faire.
 
 > ✅ **L'ÉTAPE 2 EST TERMINÉE : les 8 domaines sont audités** (session 12, 2026-08-05).
 
-> ⚡ **Pourquoi 91 et non 88, et pourquoi les deux chiffres sont vrais.** **88** est le résultat de
-> l'audit — il ne bougera plus, et c'est le chiffre de `RAPPORT-AUDIT.md`. **91** est l'état du
-> **registre de suivi**, qui continue de vivre : **R-089, R-090 et R-091** n'ont été trouvés par
-> aucun domaine. Confondre les deux, ce serait laisser croire que l'audit avait vu ce qu'il n'a pas
-> vu — l'erreur exacte que **M-06** cherche à empêcher.
+> ⚡ **Pourquoi 92 et non 88, et pourquoi les deux chiffres sont vrais.** **88** est le résultat de
+> l'audit — il ne bougera plus, et c'est le chiffre de `RAPPORT-AUDIT.md`. **92** est l'état du
+> **registre de suivi**, qui continue de vivre : **R-089, R-090, R-091 et R-092** n'ont été trouvés
+> par aucun domaine. Confondre les deux, ce serait laisser croire que l'audit avait vu ce qu'il n'a
+> pas vu — l'erreur exacte que **M-06** cherche à empêcher.
+>
+> ⚠️ **Conséquence à ne pas laisser filer** : `PLAN.md` affirme que **« 91 sur 91 sont placés, 0 sans
+> place »**. Avec R-092, **cette phrase n'est plus exacte** — R-092 **n'est rattaché à aucun
+> chantier**, et c'est délibéré *(D-C012-2)*. `PLAN.md` n'a **pas** été modifié dans cette session
+> *(hors périmètre autorisé)* : **l'écart est signalé ici pour être repris à la prochaine session de
+> plan.**
 
 > ⚠️ **Le domaine H n'a produit NI P0 NI P1, et il faut dire pourquoi.** Un P0 supposerait un code
 > qui **perd des données**, **fausse un résultat sportif** ou **rend l'application inutilisable** ;
@@ -262,6 +272,40 @@ domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (1
 > ⚠️ **Ce n'est pas un défaut de l'application, et ce n'est donc pas un nouveau problème du
 > registre.** C'est un **point à porter au bureau**, et il ne concerne le projet que le jour où des
 > équipes étrangères participent. **Inscrit ici pour ne pas être perdu.**
+
+| ⚡ **R-092** | **Le détail du score n'est effacé nulle part.** Les 8 colonnes `essais_A/B`, `transfo_A/B`, `pen_A/B`, `drop_A/B` sont **écrites** en mode détaillé, mais **aucune ligne du code ne les remet à vide** : ni une correction repassée en **mode simple** *(`enregistrerScore`, ligne 5625 : `if (modeDetail)` sans branche `else`)*, ni une **réinitialisation en cascade** *(`invaliderMatchAval`, ligne 5816 — efface score, statut et vainqueur, pas le détail)*, ni la remise à zéro de la **petite finale** *(ligne 5800)*. Des compteurs **périmés** survivent donc à un score qui, lui, a disparu. Deux consommateurs les relisent : l'écran de saisie **pré-remplit les compteurs depuis ces colonnes** *(`blocSaisieDetail`, `saisie.js:465`)*, et l'**alerte des 5 essais d'écart** leur fait confiance **en priorité** *(`essaisConnusEquipe`, `Code.gs:1453`)* | ⚠️ **À CONFIRMER — aucune priorité attribuée** *(décision de Romain, 2026-08-16 : le dépôt ne permet pas de l'établir ; voir la note ci-dessous)* | **CERTAIN** *(lu dans le code, jamais exécuté)* | 🔴 **IDENTIFIÉ — NON CORRIGÉ.** ⛔ **Volontairement exclu de C-012** *(décision de Romain, 2026-08-16, **D-C012-2**)* : C-012 est un déménagement, il **reproduira ce comportement à l'identique**. **Aucun code modifié pour ce problème.** Aucun chantier ne le porte à ce jour | `C-012-SPECIFICATION.md` **§11 / D-C012-2** |
+
+> ⚡ **R-092 ne vient pas de l'audit.** Il a été trouvé le **2026-08-16**, en cartographiant
+> `enregistrerScore` pour spécifier **C-012**. Comme R-089 à R-091, son numéro suit la série pour
+> rester traçable, mais **sa source est différente** — il est postérieur à la clôture de l'ÉTAPE 2.
+>
+> ### ⚠️ Pourquoi la priorité n'est PAS tranchée ici
+>
+> **Elle ne peut pas l'être depuis le dépôt seul, et l'inventer serait pire que l'écrire.**
+>
+> Ce qui est **établi** *(CERTAIN, lu dans le code)* :
+> - les colonnes ne sont jamais effacées ;
+> - l'écran de saisie **pré-remplit** ses compteurs à partir d'elles ;
+> - l'alerte des 5 essais les lit **avant** le score.
+>
+> Ce qui **manque pour conclure** : le scénario grave — un match de Coupe réinitialisé en cascade
+> qui **rouvre pré-rempli avec les compteurs de l'ancien match**, exposant le bénévole à valider un
+> score qui n'est plus le sien — suppose une catégorie **à la fois** en mode détaillé *(tir au but)*
+> **et** placée dans un **tableau de Coupe**. Or le mode détaillé dépend de la colonne
+> `RefFFR_Regles.tir_au_but`, qui vit **dans le classeur Google, pas dans le dépôt** *(cadre
+> §13.6)*. **Cette combinaison n'a donc pas pu être vérifiée.**
+>
+> | Si la combinaison est **impossible** | Si elle est **possible** |
+> |---|---|
+> | **P2** — les compteurs périmés faussent une **alerte informative** et laissent des chiffres morts dans le classeur. Rien de sportif n'est faussé : le classement lit `score_A`/`score_B`, qui sont bien écrasés | **P1, à instruire** — un bénévole pourrait **valider un score pré-rempli qui n'est plus le sien**. La définition P0 parle de *« résultats sportifs incorrects »* : il faudrait alors regarder de plus près |
+>
+> ➡️ **Ce qu'il faut faire pour trancher, et c'est court** : vérifier dans le classeur Google si une
+> catégorie ayant `tir_au_but = OUI` peut recevoir le format d'après-midi **COUPE_PLATEAU**. **Une
+> seule réponse suffit à fixer la priorité.** Tant qu'elle n'est pas donnée, ce risque reste
+> **À CONFIRMER**.
+>
+> 🔗 **Il appartient au fil rouge du domaine H** — *ce n'est pas le code qui se trompe, c'est ce que
+> le code raconte*. Ici, ce sont **des chiffres qui survivent à leur match**.
 
 
 ### État des décisions métier
