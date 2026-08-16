@@ -66,8 +66,10 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > exécutée : « 573/573 OK » était un vrai résultat sur un faux fichier. Le nombre de lignes est ce
 > qui identifie le fichier. **Les deux ensemble prouvent ce qu'un seul laisse croire.**
 
-> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-06**
-> *(chantier **C-011** : +27 vérifications sur le barème et le départage)*.
+> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-16**
+> *(chantier **C-012, étape 2** : +12 vérifications sur la condition de la correction en cascade)*.
+> **Elles doivent toujours correspondre au bilan réellement obtenu et à la dernière ligne réelle de
+> `backend/Tests.gs`** — un repère qui ne correspond plus ne prouve plus rien.
 > Les valeurs de référence à jour se lisent toujours dans le dépôt :
 > `wc -l backend/Tests.gs` pour le nombre de lignes, et
 > `docs/industrialisation/ETAT.md` §9 pour le total attendu.
