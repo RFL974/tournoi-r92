@@ -4358,3 +4358,166 @@ mode détaillé *(tir au but)* **et** dans un **tableau de Coupe**. Or `RefFFR_R
 | **R-042** | **IDENTIFIÉ** — inchangé. Il ne bougera qu'avec les tests de l'étape 3 |
 | **R-092** | 🔴 **IDENTIFIÉ — NON CORRIGÉ** · priorité **À CONFIRMER** |
 | **Prochaine étape** | **étape 1 du §10** de la spécification — extraire `litSaisieScore` + tests **T-1 à T-5**. ⛔ **Attend une autorisation explicite de Romain.** |
+
+---
+
+# 🚧 C-012 — **CONCEPTION VALIDÉE, ÉTAPES 1 ET 2 FUSIONNÉES** *(2026-08-16)*
+
+> ⚠️ **C-012 n'est PAS terminé, et R-042 reste OUVERT.** Cette entrée couvre **une journée** et
+> **six sessions** : le démarrage arrêté, la spécification, sa validation, l'étape 1, l'étape 2, et
+> les vérifications post-fusion de chacune.
+>
+> **Ce qui a été livré** : la **lecture de la saisie** et la **condition de la cascade** sont sorties
+> dans deux fonctions pures et testées. **Les six garde-fous, eux, sont toujours dans le code qui
+> lit le classeur** — c'est l'objet de l'**étape 3**, non commencée.
+
+## 1. Le fil de la journée
+
+| # | Ce qui s'est passé | Résultat |
+|---|---|---|
+| **0** | Romain demande de *« reprendre C-012 »* et de relire *« le compte rendu de la Session 3 »* | ⛔ **Arrêt** : aucune trace de C-012 nulle part |
+| **1** | Ouverture officielle du chantier, et **cartographie du code réel** | `C-012-SPECIFICATION.md` écrite |
+| **2** | Les **4 décisions** ouvertes sont tranchées par Romain | **PR #186 fusionnée** |
+| **3** | **Étape 1** — `litSaisieScore` + T-1 à T-5 | **PR #187 fusionnée** · `649/649` |
+| **4** | **Étape 2** — `cascadeAVerifier` + T-14 | **PR #188 fusionnée** · `661/661` |
+| **5** | Vérification post-fusion après chacune | ✅ conformes |
+
+## 2. ⚠️ Le démarrage : trois sessions annoncées qui n'existaient pas
+
+Romain demandait de reprendre à *« C-012 Session 3 »*. Les six vérifications Git ont été faites
+d'abord — puis la recherche : **aucune branche, aucun commit, aucun fichier, aucune ligne de ce
+journal ne portait la moindre trace de C-012.** Son statut dans `PLAN.md` était encore `PLANIFIÉ`,
+sa validation **jamais demandée**.
+
+**Rien n'a été inventé.** La session s'est arrêtée pour poser la question.
+
+> **Réponse de Romain** : *« le dépôt ne contient aucune trace exploitable des prétendues Sessions 1
+> à 3 de C-012. Nous ne devons rien inventer. »* → **on repart proprement.**
+>
+> 🎯 **C'est §12.1 du cadre en action** : *la conversation n'est jamais la mémoire du projet.*
+
+## 3. La conception — et ce que la cartographie a trouvé
+
+**Lu ligne à ligne** : les **111 lignes** de `enregistrerScore`, ses 9 fonctions appelées, et ses
+**deux appelants**. Découpage retenu : **deux cœurs purs, pas un** — un cœur unique aurait obligé à
+lire le match avant de valider les scores, donc à migrer les colonnes même sur un score invalide.
+Minuscule, inoffensif, **et quand même un changement de comportement**.
+
+> ⭐ **La trouvaille de la cartographie** : `frontend/js/api.js` vérifie la clé « scores » en
+> envoyant **un vrai enregistrement** avec l'identifiant bidon `__verif_cle__`, et attend
+> « Match introuvable » **sans aucune écriture**. Personne ne l'aurait deviné en lisant
+> `enregistrerScore` seule. **Sans ce recensement des appelants, un déménagement « propre » aurait
+> pu casser la connexion à l'écran de saisie sans qu'aucun test ne le voie.**
+
+## 4. Les 4 décisions de Romain *(détail : `C-012-SPECIFICATION.md` §11)*
+
+| # | Décision |
+|---|---|
+| **D-C012-1** | **Option A** — la propagation reste **hors** du cœur : *« ne pas transformer la mécanique du bracket en nouveau moteur métier »* |
+| **D-C012-2** | Le détail du score jamais effacé devient **R-092** — inscrit, **NON corrigé** |
+| **D-C012-3** | Détail partiel ⇒ l'autre côté à zéro : **comportement conservé** |
+| **D-C012-4** | **17 tests** au lieu des 8 annoncés |
+
+> 🧠 **Trois de ces quatre décisions disent « ne change rien », la quatrième dit « prouve-le
+> mieux ».** C'est la définition d'un déménagement réussi. Un chantier qui aurait corrigé R-092 au
+> passage aurait paru meilleur — et **aurait rendu impossible de prouver que rien n'avait changé.**
+
+## 5. Étape 1 — `litSaisieScore` *(PR #187)*
+
+`litSaisieScore(data)` : lit ce que le bénévole a envoyé, rend `{ error }` ou
+`{ id, score_A, score_B, modeDetail, detA, detB }`.
+
+**Preuve du déménagement** : sur les **5 170 lignes exécutables** de `Code.gs`, le diff en montre
+**10** — celles de l'extraction. Et le bloc déplacé est **identique caractère pour caractère** sur
+ses 20 lignes *(seuls s'ajoutent le `return` et l'accolade)*.
+
+**33 vérifications** *(T-1 à T-5)* → **`R92 — 649/649 OK, 0 FAIL`**.
+
+⚠️ **Un défaut introduit puis corrigé** : l'insertion avait laissé le commentaire d'en-tête de
+`enregistrerScore` au-dessus de `litSaisieScore`, laissant `enregistrerScore` sans documentation —
+**exactement ce que §8 ter interdit**. Repéré **à la relecture du diff**, corrigé, tout relancé.
+
+## 6. Étape 2 — `cascadeAVerifier` *(PR #188)*
+
+**Deux lignes exécutables touchées dans tout `Code.gs`** : la fonction ajoutée, et la condition du
+garde-fou ④ remplacée par son appel.
+
+> ⚡ **Ce qu'elle protège** : la lecture du match suivant coûte **un balayage complet de l'onglet
+> `Matchs`**, **sous le verrou d'écriture** — donc pendant que les autres marqueurs attendent. Cette
+> condition n'avait **aucun nom et aucun test** : la rendre systématique par mégarde aurait ralenti
+> **chaque score saisi de la journée**, sans que rien ne le signale.
+
+**12 vérifications** *(T-14)* → **`R92 — 661/661 OK, 0 FAIL`**. Le compte se referme :
+**616 + 33 + 12 = 661**.
+
+## 7. Les preuves, et elles vont plus loin que le harnais
+
+Pour chaque étape, `enregistrerScore` a été exécutée **dans les deux versions** sur le **même faux
+classeur**, en comparant **l'objet renvoyé**, **la suite exacte des opérations sur le classeur** et
+**le nombre d'appels à `lireMatchParId`** :
+
+> **22 cas identiques, 0 différent** — refus de saisie, sonde `__verif_cle__`, mode simple, mode
+> détail, détail partiel, garde-fous ① ② ③ ④ *(cascade refusée **et** forcée)*, statut « terminé »
+> en **é décomposé**, match introuvable, `vainqueur` hors Coupe.
+
+**Et la lecture paresseuse, mesurée** — appels réels comptés **avant la première écriture**, pour ne
+pas les confondre avec ceux de la propagation *(qui lit **après**)* :
+
+| Situation | Avant | Après |
+|---|---|---|
+| Les 4 conditions réunies | **2** | **2** |
+| Chacune des 4 manquant, une à une | **1** | **1** |
+
+⚠️ **Une attente de ce test était fausse au premier essai, et elle n'a pas été masquée** : la 2ᵉ
+lecture observée venait de la **propagation**, pas du garde-fou — **les deux versions donnaient le
+même chiffre**. C'est la **mesure** qui a été corrigée, pas le code.
+
+## 8. ⚠️ Deux erreurs de lecture, des deux côtés — et c'est instructif
+
+| Qui | Quoi | Issue |
+|---|---|---|
+| **Moi** | J'ai annoncé `Tests.gs` à **4034 lignes** — une **estimation**, pas une mesure. Le réel est **4038** | Corrigé avant d'écrire le repère : écrire 4034 aurait mis un chiffre **faux** dans le document de déploiement |
+| **Romain** | Deux « défauts » relevés dans le diff GitHub *(ancien prédicat conservé, deux générations de repères)* | **Aucun des deux n'existait** : le diff affiche les lignes supprimées **en rouge**. Vérifié dans le contenu réel, **rien n'a été modifié** |
+
+> 🎯 **La leçon commune** : **un diff n'est pas un fichier.** Dans les deux cas, la vérification a
+> porté sur le **contenu réel** — et dans les deux cas elle a évité une correction qui aurait cassé
+> quelque chose. Appliquer le « correctif » du prédicat aurait **vidé `cascadeAVerifier` de sa
+> substance**.
+
+## 9. ⚡ R-092 — trouvé en chemin, **non corrigé**
+
+**Le détail du score n'est effacé nulle part** : ni une correction repassée en mode simple, ni une
+réinitialisation en cascade, ni la remise à zéro de la petite finale. Deux consommateurs relisent
+ces colonnes — l'écran de saisie **pré-remplit ses compteurs** depuis elles, et l'alerte des 5
+essais leur fait **confiance en priorité**.
+
+**Sa priorité n'a pas été attribuée**, et c'est la consigne de Romain qui l'a voulu :
+*« indique-le au lieu d'inventer »*. Le scénario grave suppose une catégorie **à la fois** en tir au
+but **et** dans un tableau de Coupe — or `RefFFR_Regles.tir_au_but` vit **dans le classeur Google,
+pas dans le dépôt**.
+
+➡️ **Une seule question tranche** : une catégorie `tir_au_but = OUI` peut-elle recevoir le format
+**COUPE_PLATEAU** ? **Tant qu'elle est sans réponse, R-092 reste `À CONFIRMER`.**
+
+## 10. Ce qui n'a **PAS** été fait
+
+- ❌ **Étape 3 non commencée** — `deciderEnregistrementScore` n'existe pas *(0 occurrence)*, et les
+  **six garde-fous restent sans test** : **R-042 est toujours OUVERT** ;
+- ❌ **aucun redéploiement Apps Script** — `661/661` vient d'une exécution **hors d'Apps Script** ;
+  le comportement en production reste **INCONNU** *(cadre §13.6)* ;
+- ❌ **la propagation n'a pas bougé** — `propagerVainqueurBracket`, `invaliderMatchAval`,
+  `majPetiteFinale`, `vainqueurPerdantCoupe` : empreintes identiques ;
+- ❌ **R-092 non corrigé** ;
+- ❌ **les 12 vérifications manuelles du §8** de la spécification n'ont **pas** été faites —
+  ⚠️ **V-10 *(la cascade)* est la seule preuve prévue** pour la partie que les tests ne couvrent pas.
+
+## 11. État à la fin de la journée
+
+| | |
+|---|---|
+| **`main`** | `ad2fb9f` — merge de la PR #188 |
+| **Suite** | **`R92 — 661/661 OK, 0 FAIL`** *(616 + 33 + 12)*, `backend/Tests.gs` = **4 038 lignes** |
+| **C-012** | 🚧 **EN COURS — 2 étapes sur 3** |
+| **R-042** | ⛔ **OUVERT** — il ne se refermera qu'avec l'étape 3 |
+| **R-092** | 🔴 **IDENTIFIÉ — NON CORRIGÉ**, priorité **À CONFIRMER** |
+| **Prochaine étape** | **étape 3 du §10** — `deciderEnregistrementScore` et les 6 garde-fous. ⛔ **Attend une autorisation explicite de Romain.** |

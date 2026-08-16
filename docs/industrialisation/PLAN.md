@@ -988,7 +988,21 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 - **Non-régression** : ⭐ **une saisie de score de bout en bout donne exactement le même résultat
   qu'avant**, y compris la saisie détaillée U14 *(essais / transformations / pénalités / drops)* et
   l'alerte des 5 essais d'écart.
-- **Statut** : **PLANIFIÉ** · **Validation** : ⏳ **à donner**
+- 📐 **Conception** : ✅ **VALIDÉE le 2026-08-16** — `C-012-SPECIFICATION.md`, PR #186 fusionnée.
+  Les 4 décisions ouvertes y sont tranchées *(D-C012-1 à D-C012-4)*. **Découpage retenu : 3 étapes.**
+- **Statut** : 🚧 **EN COURS — 2 étapes sur 3 fusionnées** *(au 2026-08-16)* :
+
+  | Étape | Ce qu'elle fait | État |
+  |---|---|---|
+  | **1** | `litSaisieScore` extrait *(la lecture de ce que le bénévole a envoyé)* · **T-1 à T-5** | ✅ **FUSIONNÉE** — PR **#187** |
+  | **2** | `cascadeAVerifier` extrait *(faut-il lire le match suivant ?)* · **T-14** | ✅ **FUSIONNÉE** — PR **#188** |
+  | **3** | `deciderEnregistrementScore` — **les 6 garde-fous** · T-6 à T-13, T-15 à T-17 | ⏳ **NON COMMENCÉE** |
+
+  ⚠️ **Le chantier n'est donc PAS terminé, et R-042 reste OUVERT** : les six garde-fous de la saisie
+  ne sont toujours pas sous test — c'est précisément l'objet de l'étape 3.
+  Suite actuelle : **`R92 — 661/661 OK, 0 FAIL`** *(616 + 33 + 12)*, **hors d'Apps Script**.
+  ⛔ **Backend PAS redéployé** — l'étape 4 du §10 de la spécification *(exécution chez Google)* et
+  l'étape 5 *(les 12 vérifications manuelles)* restent entières.
 
 ---
 

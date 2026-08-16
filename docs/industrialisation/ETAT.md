@@ -9,7 +9,14 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-11 (**🏁 SIX CHANTIERS CLÔTURÉS** — C-011 et C-013 *(TESTÉS
+**Dernière mise à jour** : 2026-08-16 (⚡ **C-012 EN COURS — le premier chantier qui modifie
+vraiment du code.** Conception **validée** *(PR #186)*, **étape 1 fusionnée** *(PR #187 —
+`litSaisieScore` + T-1 à T-5)*, **étape 2 fusionnée** *(PR #188 — `cascadeAVerifier` + T-14)*.
+Suite : **`R92 — 661/661 OK, 0 FAIL`**, `backend/Tests.gs` = **4 038 lignes**. ⏳ **Étape 3 NON
+commencée** — **R-042 reste OUVERT**. ⛔ **Backend PAS redéployé.** ⚡ **R-092 inscrit au registre**,
+**NON corrigé**, priorité **À CONFIRMER**.)
+
+*Rappel de la mise à jour précédente — 2026-08-11* : (**🏁 SIX CHANTIERS CLÔTURÉS** — C-011 et C-013 *(TESTÉS
 chez Google)*, **C-005 et C-006** côté travail documentaire le 2026-08-06, **C-007** le 2026-08-09,
 et **🆕 C-008 LIVRÉ** le 2026-08-11 : **les 6 commentaires qui disaient le contraire du code sont
 réécrits**, et la règle qui empêche le défaut de revenir est posée — `CLAUDE.md` **§8 ter**.
@@ -253,10 +260,13 @@ réordonner les chantiers, **un par un**. Rien ne sera touché dans l'applicatio
 
 ## 5. CORRECTIONS DÉJÀ RÉALISÉES DANS CE CADRE
 
-**Sept désormais** — le P0 de sécurité *(session 6)*, puis **six chantiers** validés et livrés :
+**Sept livrés** — le P0 de sécurité *(session 6)*, puis **six chantiers** validés et livrés :
 deux avec preuve d'exécution chez Google *(C-011, C-013)*, **trois purement documentaires**
 *(C-005, C-006 le 2026-08-06 ; C-007 le 2026-08-09)*, et **un qui ouvre des fichiers source sans
-toucher une ligne exécutable** *(**C-008**, le 2026-08-11)* :
+toucher une ligne exécutable** *(**C-008**, le 2026-08-11)*.
+
+⚡ **Et un huitième EN COURS, le premier à modifier vraiment du code : C-012** *(2026-08-16)*.
+Il figure dans le tableau ci-dessous avec son état réel — **2 étapes sur 3** :
 
 | Chantier | Ce qu'il referme | Statut |
 |---|---|---|
@@ -265,6 +275,7 @@ toucher une ligne exécutable** *(**C-008**, le 2026-08-11)* :
 | **C-005** — les trois textes d'information | **R-028** (P1), R-038 | 🏁 **Travail documentaire TERMINÉ** — `docs/textes-information-donnees.md`. ⚠️ **R-028 reste OUVERT : rien n'est en ligne** |
 | **C-006** — la politique de conservation | **R-030** (P1), R-031, R-033, R-034 | 🏁 **Travail documentaire TERMINÉ** — `docs/conservation-donnees.md`, **5 gestes sur 7 vérifiés dans le code**. ⚠️ **R-030 *(part outillage)*, R-031 et R-033 restent OUVERTS** |
 | **C-007** — remettre la carte du projet en face du projet | **R-073** (P1), **R-072** (P1, reliquat), R-024 | 🏁 **LIVRÉ le 2026-08-09 — les 3 problèmes sont REFERMÉS.** `docs/architecture.md` réécrit, `docs/dependances-externes.md` créé, `README.md` / `backend/README.md` / `passation.md` corrigés. **Vérification automatique : 65/65 actions, 26/26 fichiers, 8/8 pages, 12/12 onglets, 4/4 bibliothèques** |
+| ⚡ **C-012** — séparer le cœur de la saisie du score de son écriture | **R-042** (P1) — ⛔ **TOUJOURS OUVERT** | 🚧 **EN COURS — 2 étapes sur 3.** 📐 Conception **VALIDÉE** *(PR #186)*. ✅ **Étape 1 FUSIONNÉE** *(PR #187)* : `litSaisieScore` extrait + **T-1 à T-5** *(33 vérifications)*. ✅ **Étape 2 FUSIONNÉE** *(PR #188)* : `cascadeAVerifier` extrait + **T-14** *(12 vérifications)*. ⏳ **Étape 3 NON COMMENCÉE** : `deciderEnregistrementScore` et **les 6 garde-fous** — c'est elle qui refermera R-042. Suite : **`R92 — 661/661 OK, 0 FAIL`** *(616 + 33 + 12)*, **hors d'Apps Script**. ⛔ **PAS redéployé chez Google**. ⚡ **A fait apparaître R-092** *(le détail du score n'est effacé nulle part)* — **NON corrigé**, priorité **À CONFIRMER** |
 | **C-008** — les commentaires qui disaient le contraire du code | **R-083** *(6 cas)* | 🏁 **LIVRÉ le 2026-08-11 — R-083 est REFERMÉ.** Les 6 commentaires réécrits *(5 dans `Code.gs`, 1 dans `admin-reglages.js`)* + **la règle posée : `CLAUDE.md` §8 ter**. **Preuve : les fichiers, commentaires retirés, sont identiques au caractère près** *(`diff` vide — 5 816 et 565 lignes de code)*. ⚠️ **PAS redéployé chez Google** *(décision)* : l'éditeur Apps Script garde les anciennes phrases jusqu'au **prochain redéploiement utile** |
 
 > ⚠️ **Ce que C-005 et C-006 ne referment pas, et pourquoi c'est écrit ici.** Ces deux chantiers
@@ -793,8 +804,8 @@ vérification supplémentaire.
 
 | Élément | Constat |
 |---|---|
-| `backend/Code.gs` | **8 147 lignes, 277 fonctions**, un seul fichier |
-| `backend/Tests.gs` | **3 711 lignes** — **278 tests, 589 vérifications, 0 échec**. ✅ **Exécutables hors d'Apps Script** (démontré en session 8, ~1 s, avec une vingtaine de lignes de doublures) |
+| `backend/Code.gs` | **8 211 lignes, 279 fonctions**, un seul fichier *(mesuré le 2026-08-16, après C-012 étapes 1 et 2)* |
+| `backend/Tests.gs` | ⭐ **4 038 lignes** — **289 fonctions de test, 661 vérifications, 0 échec** *(mesuré le 2026-08-16, après C-012 étapes 1 et 2 : 616 + 33 + 12)*. ✅ **Exécutables hors d'Apps Script** (démontré en session 8, ~1 s, avec une vingtaine de lignes de doublures). ⛔ **Ce total n'a PAS été obtenu chez Google** — le backend n'est pas redéployé depuis. *(Repère précédent, historique : 3 711 lignes / 589 vérifications, session 8.)* |
 | **Couverture mesurée** (session 8) | **104 fonctions sur 277 traversées = 38 %** · 173 jamais exécutées · **110** reçoivent le classeur (hors de portée par construction) · **85 pures et non testées** = testables aujourd'hui sans rien changer |
 | Points d'entrée backend | `doGet` (ligne 313) = **15 actions de lecture** · `doPost` (ligne 2801) = **50 actions** |
 | Onglets du Google Sheet | jusqu'à **12** (7 créés par `setupSheet`, `Mesures` à la demande, 4 `RefFFR_*` remplis à la main) |
