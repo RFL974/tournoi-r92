@@ -5576,6 +5576,30 @@ function litSaisieScore(data) {
 }
 
 /**
+ * FAUT-IL ALLER LIRE LE MATCH SUIVANT ? (chantier C-012, étape 2). Prédicat PUR : ne lit AUCUN
+ * classeur, ne lit pas le match suivant, et ne décide PAS du refus — il dit seulement s'il faut
+ * aller le chercher pour pouvoir en décider. Testable sans Sheet (backend/Tests.gs, T-14).
+ *
+ * ⚡ POURQUOI CETTE FONCTION EXISTE : la lecture du match suivant coûte un balayage complet de
+ * l'onglet Matchs, et elle a lieu PENDANT que le verrou d'écriture est tenu — donc pendant que les
+ * autres marqueurs attendent. Elle doit rester PARESSEUSE : on ne la dépense que dans le cas ④,
+ * qui est rare. La rendre systématique ralentirait chaque score saisi de la journée.
+ *
+ * Vrai seulement si les QUATRE conditions sont réunies : match de Coupe, déjà terminé, correction
+ * explicite (modification === true), et un match suivant renseigné. C'est la condition exacte du
+ * garde-fou ④ avant l'extraction — elle est simplement rendue nommable et testable.
+ *
+ * @param m    le match tel qu'il est dans le classeur (objet simple)
+ * @param data la requête reçue, pour le drapeau `modification`
+ * @return {boolean}
+ */
+function cascadeAVerifier(m, data) {
+  var estCoupe = String(m.sous_tableau).toUpperCase() === 'COUPE';
+  var dejaTermine = estTermineServeur(m.statut);
+  return !!(estCoupe && dejaTermine && data.modification === true && m.match_suivant);
+}
+
+/**
  * Enregistre le score d'un match et le passe en "terminé".
  * Attend { id_match, score_A, score_B } et, pour les matchs de Coupe : éventuellement
  * { vainqueur } (départage en cas d'égalité) et { forcerCascade } (correction en cascade).
@@ -5635,7 +5659,8 @@ function enregistrerScore(classeur, data) {
 
   // 4) Correction en cascade : modifier un match de Coupe déjà propagé, dont le match suivant a
   //    lui-même un score, est bloqué sauf confirmation (forcerCascade).
-  if (estCoupe && dejaTermine && data.modification === true && m.match_suivant) {
+  //    ⚡ La lecture reste PARESSEUSE : elle n'a lieu que si cascadeAVerifier le demande.
+  if (cascadeAVerifier(m, data)) {
     var suivInfo = lireMatchParId(onglet, m.match_suivant);
     if (suivInfo && estTermineServeur(suivInfo.obj.statut) && data.forcerCascade !== true) {
       return { error: 'Ce résultat a déjà été propagé vers ' + libelleMatchCourt(suivInfo.obj)

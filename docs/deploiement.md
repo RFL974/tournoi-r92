@@ -59,8 +59,8 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 
 | Ce qu'on vérifie | Valeur attendue **aujourd'hui** | Ce qu'un écart signifie |
 |---|---|---|
-| **Le bilan** affiché en fin de journal | **`R92 — 649/649 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
-| **La dernière ligne** du fichier collé chez Google | **3981** | Le fichier collé n'est pas celui du dépôt |
+| **Le bilan** affiché en fin de journal | **`R92 — 661/661 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
+| **La dernière ligne** du fichier collé chez Google | **4038** | Le fichier collé n'est pas celui du dépôt |
 
 > 🎯 **Pourquoi deux nombres et pas un.** Le bilan seul ne dit **jamais quelle version** a été
 > exécutée : « 573/573 OK » était un vrai résultat sur un faux fichier. Le nombre de lignes est ce

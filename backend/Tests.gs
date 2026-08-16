@@ -367,6 +367,7 @@ function lancerTestsFFR() {
   testSaisieScore_modeSimpleReprisTelQuel(etat);
   testSaisieScore_modeDetailCalculeEtIgnoreLeScoreEnvoye(etat);
   testSaisieScore_detailUnSeulCoteLautreVautZero(etat);
+  testSaisieScore_cascadeAVerifierQuatreConditions(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -3978,4 +3979,60 @@ function testSaisieScore_detailUnSeulCoteLautreVautZero(etat) {
   var inverse = litSaisieScore({ id_match: 'M-6', pen_B: '1' });
   _ffrAssert(etat, inverse.score_A === 0 && inverse.score_B === 3 && inverse.detA.points === 0,
     'T-5 : symétrique — détail côté B seul, A vaut 0');
+}
+
+/* --------------------------------------------------------------------------
+   C-012 — étape 2 : le prédicat pur `cascadeAVerifier` (T-14)
+
+   Ce que ce test protège : la LECTURE PARESSEUSE du match suivant. Cette
+   lecture balaye tout l'onglet Matchs, PENDANT que le verrou d'écriture est
+   tenu — donc pendant que les autres marqueurs attendent. Si l'une des quatre
+   conditions cessait d'être exigée, la lecture deviendrait systématique et
+   chaque score saisi de la journée ralentirait (risque N-3 de la conception).
+
+   Portée assumée : ce test vérifie la DÉCISION (faut-il lire ?), pas le fait
+   que `lireMatchParId` soit réellement épargnée — cela demande un classeur, et
+   c'est établi par la preuve différentielle du chantier, hors harnais.
+   -------------------------------------------------------------------------- */
+
+/** T-14 — les 4 conditions de la cascade, une à une : il en manque une ⇒ aucune lecture. */
+function testSaisieScore_cascadeAVerifierQuatreConditions(etat) {
+  // Le cas où la lecture EST justifiée : les quatre conditions réunies.
+  var coupe = { sous_tableau: 'COUPE', statut: 'terminé', match_suivant: 'M-9' };
+  _ffrAssert(etat, cascadeAVerifier(coupe, { modification: true }) === true,
+    'T-14 : Coupe + terminé + correction + match suivant ⇒ il faut lire le match suivant');
+
+  // 1) pas un match de Coupe → jamais de cascade (une poule ne propage rien).
+  _ffrAssert(etat, cascadeAVerifier({ sous_tableau: '', statut: 'terminé', match_suivant: 'M-9' },
+    { modification: true }) === false, 'T-14 : hors Coupe ⇒ aucune lecture');
+  _ffrAssert(etat, cascadeAVerifier({ sous_tableau: 'PLATEAU', statut: 'terminé', match_suivant: 'M-9' },
+    { modification: true }) === false, 'T-14 : Plateau ⇒ aucune lecture');
+
+  // 2) match pas encore terminé → rien n'a pu être propagé.
+  _ffrAssert(etat, cascadeAVerifier({ sous_tableau: 'COUPE', statut: 'à venir', match_suivant: 'M-9' },
+    { modification: true }) === false, 'T-14 : match pas terminé ⇒ aucune lecture');
+
+  // 3) ce n'est pas une correction explicite → le garde-fou ② a déjà refusé plus haut.
+  _ffrAssert(etat, cascadeAVerifier(coupe, {}) === false,
+    'T-14 : `modification` absent ⇒ aucune lecture');
+  _ffrAssert(etat, cascadeAVerifier(coupe, { modification: false }) === false,
+    'T-14 : modification = false ⇒ aucune lecture');
+  _ffrAssert(etat, cascadeAVerifier(coupe, { modification: 'true' }) === false,
+    'T-14 : modification = « true » (texte) ⇒ aucune lecture — l\'égalité est STRICTE');
+
+  // 4) aucun match suivant → il n'y a rien à aller lire.
+  _ffrAssert(etat, cascadeAVerifier({ sous_tableau: 'COUPE', statut: 'terminé', match_suivant: '' },
+    { modification: true }) === false, 'T-14 : pas de match suivant ⇒ aucune lecture');
+  _ffrAssert(etat, cascadeAVerifier({ sous_tableau: 'COUPE', statut: 'terminé' },
+    { modification: true }) === false, 'T-14 : champ match_suivant absent ⇒ aucune lecture');
+
+  // Pièges déjà payés par ce projet : le « é » décomposé (NFD) et la casse du sous-tableau.
+  _ffrAssert(etat, cascadeAVerifier({ sous_tableau: 'COUPE', statut: 'terminé', match_suivant: 'M-9' },
+    { modification: true }) === true, 'T-14 : statut « terminé » en é DÉCOMPOSÉ ⇒ reconnu terminé');
+  _ffrAssert(etat, cascadeAVerifier({ sous_tableau: 'coupe', statut: 'terminé', match_suivant: 'M-9' },
+    { modification: true }) === true, 'T-14 : sous_tableau en minuscules ⇒ reconnu Coupe');
+
+  // La réponse est un VRAI booléen, jamais l'identifiant du match suivant.
+  _ffrAssert(etat, cascadeAVerifier(coupe, { modification: true }) !== 'M-9',
+    'T-14 : la réponse est un booléen, pas l\'identifiant du match suivant');
 }
