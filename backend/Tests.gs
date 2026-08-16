@@ -361,6 +361,13 @@ function lancerTestsFFR() {
   testClassement_departageParLaDifference(etat);
   testClassement_departageParLesPointsMarquesEtOrdreStable(etat);
 
+  // Industrialisation — chantier C-012, étape 1 : le cœur pur litSaisieScore (R-042). T-1 à T-5.
+  testSaisieScore_identifiantManquant(etat);
+  testSaisieScore_scoreSimpleInvalide(etat);
+  testSaisieScore_modeSimpleReprisTelQuel(etat);
+  testSaisieScore_modeDetailCalculeEtIgnoreLeScoreEnvoye(etat);
+  testSaisieScore_detailUnSeulCoteLautreVautZero(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -3856,4 +3863,119 @@ function testClassement_departageParLesPointsMarquesEtOrdreStable(etat) {
     'C-011 : tri complet — puis les points marqués départagent');
   _ffrAssert(etat, ordre.length === 4,
     'C-011 : le tri ne perd aucune équipe');
+}
+
+/* ==========================================================================
+   CHANTIER C-012 — étape 1 : le cœur pur `litSaisieScore` (problème R-042)
+   ==========================================================================
+   Ce que ces 5 tests couvrent : la LECTURE de ce que le bénévole a envoyé —
+   l'identifiant, les scores simples, et le score détaillé (tir au but).
+
+   Ce qu'ils NE couvrent PAS, et il faut le dire : les six garde-fous de la
+   saisie (Coupe en attente, score déjà validé, départage, cascade) sont
+   encore DANS `enregistrerScore`, qui lit le classeur. Ils viendront aux
+   étapes 2 et 3 de C-012. Voir docs/industrialisation/C-012-SPECIFICATION.md.
+
+   NOMMAGE : par SUJET (`testSaisieScore_…`), comme C-011 — R-076 a montré
+   que 27 préfixes sur 31 sont des numéros de session, ce qui ne dit pas de
+   quoi le test parle. On n'aggrave pas le compte.
+
+   ⚠️ Ces tests FIGENT le comportement existant, ils ne le jugent pas. Le
+   détail partiel (T-5) est conservé tel quel par décision D-C012-3.
+   -------------------------------------------------------------------------- */
+
+/** T-1 — identifiant vide : refus explicite, et AVANT tout le reste (l'ordre porte du sens). */
+function testSaisieScore_identifiantManquant(etat) {
+  var vide = litSaisieScore({ score_A: '5', score_B: '3' });
+  _ffrAssert(etat, vide.error === 'Identifiant de match manquant.',
+    'T-1 : id_match absent ⇒ « Identifiant de match manquant. »');
+  _ffrAssert(etat, litSaisieScore({ id_match: '   ', score_A: '5' }).error === 'Identifiant de match manquant.',
+    'T-1 : id_match fait d\'espaces ⇒ même refus (il est nettoyé avant d\'être jugé)');
+  // L'identifiant est jugé AVANT les scores : un id vide + un score invalide donne le refus de l'id.
+  _ffrAssert(etat, litSaisieScore({ id_match: '', score_A: 'abc' }).error === 'Identifiant de match manquant.',
+    'T-1 : id vide + score invalide ⇒ c\'est l\'identifiant qui est signalé (ordre préservé)');
+  _ffrAssert(etat, litSaisieScore({ id_match: '  M-12  ', score_A: '0', score_B: '0' }).id === 'M-12',
+    'T-1 : un identifiant valide est nettoyé de ses espaces');
+}
+
+/** T-2 — score simple invalide : refus, JAMAIS un score fabriqué. */
+function testSaisieScore_scoreSimpleInvalide(etat) {
+  var base = { id_match: 'M-1' };
+  var texte = litSaisieScore({ id_match: 'M-1', score_A: 'abc', score_B: '3' });
+  _ffrAssert(etat, texte.error === 'Score A invalide (entier ≥ 0 attendu).',
+    'T-2 : score_A = « abc » ⇒ refus, message exact');
+  _ffrAssert(etat, texte.score_A === undefined && texte.id === undefined,
+    'T-2 : un refus ne transporte QUE le message — aucun score, aucun identifiant');
+
+  _ffrAssert(etat, litSaisieScore({ id_match: 'M-1', score_A: '-1', score_B: '3' }).error
+      === 'Score A invalide (entier ≥ 0 attendu).', 'T-2 : score négatif ⇒ refus');
+  _ffrAssert(etat, litSaisieScore({ id_match: 'M-1', score_A: '2.5', score_B: '3' }).error
+      === 'Score A invalide (entier ≥ 0 attendu).', 'T-2 : score décimal ⇒ refus');
+  _ffrAssert(etat, litSaisieScore({ id_match: 'M-1', score_A: '', score_B: '3' }).error
+      === 'Score A invalide (entier ≥ 0 attendu).', 'T-2 : score vide ⇒ refus');
+  _ffrAssert(etat, litSaisieScore(base).error === 'Score A invalide (entier ≥ 0 attendu).',
+    'T-2 : aucun score envoyé ⇒ refus (jamais un 0 supposé)');
+
+  // L'équipe B est jugée APRÈS l'équipe A : A valide + B invalide ⇒ c'est B qui est signalée.
+  _ffrAssert(etat, litSaisieScore({ id_match: 'M-1', score_A: '12', score_B: 'x' }).error
+      === 'Score B invalide (entier ≥ 0 attendu).', 'T-2 : score_B seul invalide ⇒ message B');
+
+  // Détail invalide : refusé AVANT les scores simples, avec le message de litDetailEquipe.
+  var det = litSaisieScore({ id_match: 'M-1', essais_A: 'x', score_A: '12', score_B: '7' });
+  _ffrAssert(etat, typeof det.error === 'string' && det.error.indexOf('Détail du score invalide') === 0,
+    'T-2 : détail invalide ⇒ refus du détail, et non des scores simples');
+}
+
+/** T-3 — mode simple : les scores saisis sont repris TELS QUELS, aucun détail. */
+function testSaisieScore_modeSimpleReprisTelQuel(etat) {
+  var r = litSaisieScore({ id_match: 'M-7', score_A: '12', score_B: '7' });
+  _ffrAssert(etat, r.error === undefined, 'T-3 : 12 / 7 est accepté');
+  _ffrAssert(etat, r.score_A === 12 && r.score_B === 7,
+    'T-3 : les scores sont repris tels quels, et convertis en nombres');
+  _ffrAssert(etat, r.modeDetail === false, 'T-3 : aucun champ de détail ⇒ mode simple');
+  _ffrAssert(etat, r.detA === null && r.detB === null,
+    'T-3 : en mode simple, detA et detB valent null (rien à écrire dans les 8 colonnes)');
+  _ffrAssert(etat, r.id === 'M-7', 'T-3 : l\'identifiant est renvoyé');
+
+  var zero = litSaisieScore({ id_match: 'M-8', score_A: '0', score_B: '0' });
+  _ffrAssert(etat, zero.error === undefined && zero.score_A === 0 && zero.score_B === 0,
+    'T-3 : 0 / 0 est un score valide (et non « vide »)');
+  var nombres = litSaisieScore({ id_match: 'M-9', score_A: 5, score_B: 3 });
+  _ffrAssert(etat, nombres.score_A === 5 && nombres.score_B === 3,
+    'T-3 : des nombres (et non du texte) sont acceptés à l\'identique');
+}
+
+/** T-4 — mode détail : le score est CALCULÉ, et score_A/score_B envoyés sont IGNORÉS. */
+function testSaisieScore_modeDetailCalculeEtIgnoreLeScoreEnvoye(etat) {
+  var r = litSaisieScore({ id_match: 'M-3', essais_A: '3', transfo_A: '2', pen_A: '1',
+                           essais_B: '1', score_A: '999', score_B: '999' });
+  _ffrAssert(etat, r.error === undefined, 'T-4 : un détail complet est accepté');
+  _ffrAssert(etat, r.modeDetail === true, 'T-4 : la présence d\'un champ de détail bascule en mode détaillé');
+  _ffrAssert(etat, r.score_A === (3 * 5 + 2 * 2 + 1 * 3),
+    'T-4 : 3 essais + 2 transfo + 1 pénalité = 22 pts, CALCULÉ');
+  _ffrAssert(etat, r.score_A !== 999 && r.score_B !== 999,
+    'T-4 : ⭐ le score_A/score_B envoyé est IGNORÉ — le détail fait foi');
+  _ffrAssert(etat, r.score_B === 5, 'T-4 : 1 essai côté B = 5 pts');
+  _ffrAssert(etat, r.detA.essais === 3 && r.detA.transfo === 2 && r.detA.pen === 1 && r.detA.drop === 0,
+    'T-4 : les 4 compteurs de A sont renvoyés (les absents valent 0)');
+  _ffrAssert(etat, r.detB.essais === 1, 'T-4 : les compteurs de B sont renvoyés');
+
+  var drop = litSaisieScore({ id_match: 'M-4', drop_A: '2', essais_B: '0' });
+  _ffrAssert(etat, drop.modeDetail === true && drop.score_A === 6,
+    'T-4 : 2 drops = 6 pts (un seul champ suffit à basculer en mode détaillé)');
+}
+
+/** T-5 — détail d'un seul côté : l'autre équipe vaut ZÉRO. Comportement CONSERVÉ (D-C012-3). */
+function testSaisieScore_detailUnSeulCoteLautreVautZero(etat) {
+  var r = litSaisieScore({ id_match: 'M-5', essais_A: '4' });
+  _ffrAssert(etat, r.error === undefined, 'T-5 : un détail d\'un seul côté est accepté (pas de refus)');
+  _ffrAssert(etat, r.modeDetail === true, 'T-5 : mode détaillé malgré l\'absence de l\'autre côté');
+  _ffrAssert(etat, r.score_A === 20, 'T-5 : 4 essais côté A = 20 pts');
+  _ffrAssert(etat, r.score_B === 0, 'T-5 : ⚠️ l\'équipe B, muette, vaut 0 — comportement conservé (D-C012-3)');
+  _ffrAssert(etat, r.detB !== null && r.detB.essais === 0 && r.detB.transfo === 0
+      && r.detB.pen === 0 && r.detB.drop === 0 && r.detB.points === 0,
+    'T-5 : detB est un objet à zéros (et non null) — les 8 colonnes seront donc écrites');
+  var inverse = litSaisieScore({ id_match: 'M-6', pen_B: '1' });
+  _ffrAssert(etat, inverse.score_A === 0 && inverse.score_B === 3 && inverse.detA.points === 0,
+    'T-5 : symétrique — détail côté B seul, A vaut 0');
 }

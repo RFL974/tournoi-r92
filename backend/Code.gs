@@ -5534,24 +5534,27 @@ function supprimerCategorie(classeur, nom) {
 
 /* ===================== SAISIE DES SCORES ===================== */
 /**
- * Enregistre le score d'un match et le passe en "terminé".
- * Attend { id_match, score_A, score_B } et, pour les matchs de Coupe : éventuellement
- * { vainqueur } (départage en cas d'égalité) et { forcerCascade } (correction en cascade).
- * Les scores doivent être des entiers >= 0.
+ * CŒUR PUR n° 1 de la saisie du score (chantier C-012, étape 1) : lit CE QUE LE BÉNÉVOLE A ENVOYÉ
+ * et dit s'il est recevable. Ne lit AUCUN classeur — testable sans Sheet (backend/Tests.gs,
+ * T-1 à T-5). Extrait tel quel de enregistrerScore : aucun comportement ne change.
  *
- * En COUPE_PLATEAU (sous_tableau = COUPE) :
- *  - un match dont une équipe n'est pas encore connue est REFUSÉ (« en attente ») ;
- *  - une ÉGALITÉ exige un vainqueur désigné (élimination directe : pas de match nul) ;
- *  - après enregistrement, le vainqueur est PROPAGÉ immédiatement dans le match suivant ;
- *  - corriger un score déjà propagé vers un match lui-même joué est bloqué sauf forcerCascade.
+ * PILOTÉ PAR LA DONNÉE (session 12, tir au but) : c'est la PRÉSENCE d'au moins un champ de détail
+ * qui bascule en mode détaillé — jamais la catégorie ni un réglage. En mode détaillé, le score qui
+ * sert au classement est CALCULÉ (essai 5, transfo 2, pénalité 3, drop 3) et score_A/score_B sont
+ * IGNORÉS ; sinon, comportement historique inchangé (score_A/score_B saisi fait foi).
+ *
+ * ⚠️ L'ORDRE des contrôles porte du sens et ne doit pas bouger : l'identifiant, puis le détail,
+ * puis les scores — le tout AVANT que le classeur soit ouvert par l'appelant. La vérification de
+ * la clé « scores » du frontend (frontend/js/api.js, sonde `__verif_cle__`) en dépend.
+ *
+ * @param data la requête reçue { id_match, score_A, score_B, essais_A…drop_B }
+ * @return { error } si la saisie est refusée, sinon
+ *         { id, score_A, score_B, modeDetail, detA, detB } — detA/detB valent null hors mode détail
  */
-function enregistrerScore(classeur, data) {
+function litSaisieScore(data) {
   var id = (data.id_match || '').toString().trim();
   if (!id) return { error: 'Identifiant de match manquant.' };
 
-  // Détail du score (session 12, tir au but) : PILOTÉ PAR LA DONNÉE. Si le détail est fourni, le
-  // score qui sert au classement est CALCULÉ (essai 5, transfo 2, pénalité 3, drop 3) ; sinon,
-  // comportement historique strictement inchangé (score_A/score_B saisi directement fait foi).
   var detA = litDetailEquipe(data, 'A');
   var detB = litDetailEquipe(data, 'B');
   if (detA && detA.error) return { error: detA.error };
@@ -5569,6 +5572,30 @@ function enregistrerScore(classeur, data) {
     if (sa === null) return { error: 'Score A invalide (entier ≥ 0 attendu).' };
     if (sb === null) return { error: 'Score B invalide (entier ≥ 0 attendu).' };
   }
+  return { id: id, score_A: sa, score_B: sb, modeDetail: modeDetail, detA: detA, detB: detB };
+}
+
+/**
+ * Enregistre le score d'un match et le passe en "terminé".
+ * Attend { id_match, score_A, score_B } et, pour les matchs de Coupe : éventuellement
+ * { vainqueur } (départage en cas d'égalité) et { forcerCascade } (correction en cascade).
+ * Les scores doivent être des entiers >= 0.
+ *
+ * En COUPE_PLATEAU (sous_tableau = COUPE) :
+ *  - un match dont une équipe n'est pas encore connue est REFUSÉ (« en attente ») ;
+ *  - une ÉGALITÉ exige un vainqueur désigné (élimination directe : pas de match nul) ;
+ *  - après enregistrement, le vainqueur est PROPAGÉ immédiatement dans le match suivant ;
+ *  - corriger un score déjà propagé vers un match lui-même joué est bloqué sauf forcerCascade.
+ */
+function enregistrerScore(classeur, data) {
+  // 0) Lecture de la saisie — déléguée au cœur pur litSaisieScore (C-012 étape 1). L'ordre est
+  //    INCHANGÉ : tout ce qui vient du bénévole est validé AVANT d'ouvrir le classeur.
+  var saisie = litSaisieScore(data);
+  if (saisie.error) return { error: saisie.error };
+  var id = saisie.id;
+  var detA = saisie.detA, detB = saisie.detB;
+  var modeDetail = saisie.modeDetail;
+  var sa = saisie.score_A, sb = saisie.score_B;
 
   var onglet = classeur.getSheetByName('Matchs');
   assurerColonnesMatchs(onglet); // sécurité : colonnes bracket présentes même sans régénération
