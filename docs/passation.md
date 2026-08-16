@@ -67,7 +67,10 @@ nouveaux comptes.**
 Même après transfert, il faut **re-déployer** pour que le web app s'exécute sous le compte asso :
 1. Google Sheet (compte asso) → **Extensions → Apps Script**.
 2. Vérifier que `SHEET_ID` (en tête de `Code.gs`) correspond bien au Sheet de l'asso.
-   ⚠️ **Coller aussi `Tests.gs`**, puis lancer `lancerTestsFFR` → **`R92 — 616/616 OK, 0 FAIL`**.
+   ⚠️ **Coller aussi `Tests.gs`**, puis lancer `lancerTestsFFR` → le bilan doit correspondre aux
+   **deux nombres de contrôle de [`deploiement.md`](deploiement.md)** *(le bilan attendu **et** la
+   dernière ligne du fichier)*. ⚠️ **Ces deux nombres changent à chaque fois que les tests évoluent :
+   ils ne sont donnés qu'à un seul endroit, pour qu'ils ne puissent pas se contredire.**
 3. **Déployer → Nouveau déploiement → Type : Application Web**, « Exécuter en tant que : moi »,
    « Accès : tout le monde » → **Déployer**. **Copier la nouvelle URL `/exec`.**
 4. Reporter cette URL dans `frontend/js/config.js` → `API_URL = "…/exec"`, puis pousser sur GitHub.
