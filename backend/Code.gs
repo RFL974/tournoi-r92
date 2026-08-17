@@ -5600,32 +5600,35 @@ function cascadeAVerifier(m, data) {
 }
 
 /**
- * Enregistre le score d'un match et le passe en "terminé".
- * Attend { id_match, score_A, score_B } et, pour les matchs de Coupe : éventuellement
- * { vainqueur } (départage en cas d'égalité) et { forcerCascade } (correction en cascade).
- * Les scores doivent être des entiers >= 0.
+ * CŒUR PUR n° 2 de la saisie du score (chantier C-012, étape 3) : porte les SIX garde-fous et,
+ * s'ils passent tous, rend un PLAN D'ÉCRITURE. Ne lit AUCUN classeur, n'écrit rien — testable sans
+ * Sheet (backend/Tests.gs, T-6 à T-13 et T-15 à T-17). C'est ce cœur qui referme R-042.
  *
- * En COUPE_PLATEAU (sous_tableau = COUPE) :
- *  - un match dont une équipe n'est pas encore connue est REFUSÉ (« en attente ») ;
- *  - une ÉGALITÉ exige un vainqueur désigné (élimination directe : pas de match nul) ;
- *  - après enregistrement, le vainqueur est PROPAGÉ immédiatement dans le match suivant ;
- *  - corriger un score déjà propagé vers un match lui-même joué est bloqué sauf forcerCascade.
+ * ⚠️ L'ORDRE des garde-fous est celui d'avant l'extraction, et il ne doit pas bouger :
+ *   match introuvable → ① Coupe en attente → ② score déjà validé → ③ départage → ④ cascade.
+ *
+ * ⚡ LECTURE PARESSEUSE — pourquoi cette fonction se rappelle deux fois. Seul le garde-fou ④ a
+ * besoin du match suivant, et l'aller le chercher coûte un balayage complet de l'onglet Matchs,
+ * SOUS le verrou d'écriture. Avant l'extraction, cette lecture n'avait lieu qu'APRÈS ① ② ③ : un
+ * refus antérieur ne la payait jamais. Pour garder exactement cela sans que l'appelant ait à
+ * refaire le raisonnement des garde-fous, le cœur le DIT :
+ *   1er appel, sans `suivant`  → { besoin_suivant: <id> } si et seulement si ① ② ③ sont passés
+ *                                 et que la cascade doit être vérifiée ;
+ *   2e appel, avec `suivant`   → le verdict final.
+ * Le 2e appel réévalue ① ② ③ à l'identique (fonction pure, mêmes entrées) : aucun coût, aucun écart.
+ *
+ * @param m       le match tel qu'il est dans le classeur — `null` = introuvable
+ * @param saisie  la sortie ACCEPTÉE de litSaisieScore
+ * @param data    la requête reçue, pour `modification`, `forcerCascade` et `vainqueur`
+ * @param suivant le match suivant. ⚠️ TROIS valeurs distinctes, à ne pas confondre :
+ *                `undefined` = PAS ENCORE LU (le cœur le réclamera) · `null` = lu, INTROUVABLE ·
+ *                un objet = lu et trouvé. `null` ne bloque jamais, comme avant l'extraction.
+ * @return { error, …drapeaux } · { besoin_suivant } · ou le plan { ok:true, … }
  */
-function enregistrerScore(classeur, data) {
-  // 0) Lecture de la saisie — déléguée au cœur pur litSaisieScore (C-012 étape 1). L'ordre est
-  //    INCHANGÉ : tout ce qui vient du bénévole est validé AVANT d'ouvrir le classeur.
-  var saisie = litSaisieScore(data);
-  if (saisie.error) return { error: saisie.error };
-  var id = saisie.id;
-  var detA = saisie.detA, detB = saisie.detB;
-  var modeDetail = saisie.modeDetail;
-  var sa = saisie.score_A, sb = saisie.score_B;
+function deciderEnregistrementScore(m, saisie, data, suivant) {
+  if (!m) return { error: 'Match introuvable : ' + saisie.id };
 
-  var onglet = classeur.getSheetByName('Matchs');
-  assurerColonnesMatchs(onglet); // sécurité : colonnes bracket présentes même sans régénération
-  var info = lireMatchParId(onglet, id);
-  if (!info) return { error: 'Match introuvable : ' + id };
-  var ligne = info.ligne, m = info.obj;
+  var sa = saisie.score_A, sb = saisie.score_B;
   var estCoupe = String(m.sous_tableau).toUpperCase() === 'COUPE';
   var dejaTermine = estTermineServeur(m.statut);
 
@@ -5659,54 +5662,117 @@ function enregistrerScore(classeur, data) {
 
   // 4) Correction en cascade : modifier un match de Coupe déjà propagé, dont le match suivant a
   //    lui-même un score, est bloqué sauf confirmation (forcerCascade).
-  //    ⚡ La lecture reste PARESSEUSE : elle n'a lieu que si cascadeAVerifier le demande.
   if (cascadeAVerifier(m, data)) {
-    var suivInfo = lireMatchParId(onglet, m.match_suivant);
-    if (suivInfo && estTermineServeur(suivInfo.obj.statut) && data.forcerCascade !== true) {
-      return { error: 'Ce résultat a déjà été propagé vers ' + libelleMatchCourt(suivInfo.obj)
+    if (suivant === undefined) return { besoin_suivant: m.match_suivant }; // ⚡ on ne lit qu'ici
+    if (suivant && estTermineServeur(suivant.statut) && data.forcerCascade !== true) {
+      return { error: 'Ce résultat a déjà été propagé vers ' + libelleMatchCourt(suivant)
                + ', qui a lui-même un score enregistré. Modifier ce score va réinitialiser la suite du tableau.',
                cascade_requise: true, match_suivant: m.match_suivant };
     }
   }
 
-  // 5) Écriture du score (colonnes 9=score_A, 10=score_B, 11=statut) + vainqueur (Coupe).
-  onglet.getRange(ligne, colMatchs('score_A'), 1, 3).setValues([[sa, sb, 'terminé']]);
-  if (estCoupe) onglet.getRange(ligne, colMatchs('vainqueur')).setValue(vainqueur);
-  // 5 bis) Détail du score : écrit SEULEMENT en mode détail (8 colonnes contiguës essais_A…drop_B),
-  //        dans l'ordre exact de ENTETES.Matchs. En mode simple, on n'y touche pas (migration douce).
-  if (modeDetail) {
-    onglet.getRange(ligne, colMatchs('essais_A'), 1, 8).setValues([[
-      detA.essais, detB.essais, detA.transfo, detB.transfo, detA.pen, detB.pen, detA.drop, detB.drop
-    ]]);
-  }
+  // Tous les garde-fous sont passés → le PLAN. Le cœur ne dit pas « j'ai écrit », il dit « voici
+  // ce qu'il faut écrire ». `propagation` n'y figure pas : elle n'est connue qu'après exécution.
+  var detA = saisie.detA, detB = saisie.detB, modeDetail = saisie.modeDetail;
 
-  // 6) Journal de saison : archive (ou actualise) ce résultat. Ne doit JAMAIS bloquer la saisie.
-  try {
-    archiverResultat(classeur, {
-      id_match: m.id_match, categorie: m.categorie, phase: m.phase,
-      equipe_A: m.equipe_A, equipe_B: m.equipe_B, score_A: sa, score_B: sb
-    });
-  } catch (errArchive) { Logger.log('Archivage historique ignoré : ' + errArchive); }
+  var matchApresEcriture = objetCopieSimple(m);
+  matchApresEcriture.score_A = sa; matchApresEcriture.score_B = sb;
+  matchApresEcriture.statut = 'terminé'; matchApresEcriture.vainqueur = vainqueur;
 
-  // 7) Propagation du vainqueur dans le tableau (immédiate, dans la même action).
-  //    ⚡ On met à jour l'objet DÉJÀ EN MÉMOIRE (mêmes valeurs que celles écrites à
-  //    l'étape 5) au lieu de relire la ligne dans le Sheet : un aller-retour de moins
-  //    pendant que le verrou d'écriture est tenu.
-  var propagation = null;
-  if (estCoupe) {
-    m.score_A = sa; m.score_B = sb; m.statut = 'terminé'; m.vainqueur = vainqueur;
-    try { propagation = propagerVainqueurBracket(onglet, m); }
-    catch (errProp) { Logger.log('Propagation bracket ignorée : ' + errProp); }
-  }
-
-  var matchOut = { id_match: id, score_A: sa, score_B: sb, statut: 'terminé', vainqueur: vainqueur };
+  var matchOut = { id_match: saisie.id, score_A: sa, score_B: sb, statut: 'terminé', vainqueur: vainqueur };
   if (modeDetail) {
     matchOut.essais_A = detA.essais; matchOut.essais_B = detB.essais;
     matchOut.transfo_A = detA.transfo; matchOut.transfo_B = detB.transfo;
     matchOut.pen_A = detA.pen; matchOut.pen_B = detB.pen;
     matchOut.drop_A = detA.drop; matchOut.drop_B = detB.drop;
   }
-  return { ok: true, propagation: propagation, detail: modeDetail, match: matchOut };
+
+  return {
+    ok: true,
+    estCoupe: estCoupe,
+    ecriture: { score_A: sa, score_B: sb, statut: 'terminé' },
+    vainqueur: vainqueur,
+    detail: modeDetail,
+    compteurs: modeDetail ? [detA.essais, detB.essais, detA.transfo, detB.transfo,
+                             detA.pen, detB.pen, detA.drop, detB.drop] : null,
+    archive: { id_match: m.id_match, categorie: m.categorie, phase: m.phase,
+               equipe_A: m.equipe_A, equipe_B: m.equipe_B, score_A: sa, score_B: sb },
+    matchApresEcriture: matchApresEcriture,
+    reponse: { ok: true, propagation: null, detail: modeDetail, match: matchOut }
+  };
+}
+
+/** Copie de surface d'un objet match (le plan ne modifie jamais l'objet reçu). Pur. */
+function objetCopieSimple(o) {
+  var c = {};
+  for (var k in o) { if (Object.prototype.hasOwnProperty.call(o, k)) c[k] = o[k]; }
+  return c;
+}
+
+/**
+ * Enregistre le score d'un match et le passe en "terminé".
+ * Attend { id_match, score_A, score_B } et, pour les matchs de Coupe : éventuellement
+ * { vainqueur } (départage en cas d'égalité) et { forcerCascade } (correction en cascade).
+ * Les scores doivent être des entiers >= 0.
+ *
+ * En COUPE_PLATEAU (sous_tableau = COUPE) :
+ *  - un match dont une équipe n'est pas encore connue est REFUSÉ (« en attente ») ;
+ *  - une ÉGALITÉ exige un vainqueur désigné (élimination directe : pas de match nul) ;
+ *  - après enregistrement, le vainqueur est PROPAGÉ immédiatement dans le match suivant ;
+ *  - corriger un score déjà propagé vers un match lui-même joué est bloqué sauf forcerCascade.
+ */
+function enregistrerScore(classeur, data) {
+  // 0) Lecture de la saisie — déléguée au cœur pur litSaisieScore (C-012 étape 1). L'ordre est
+  //    INCHANGÉ : tout ce qui vient du bénévole est validé AVANT d'ouvrir le classeur.
+  var saisie = litSaisieScore(data);
+  if (saisie.error) return { error: saisie.error };
+  var id = saisie.id;
+  var detA = saisie.detA, detB = saisie.detB;
+  var modeDetail = saisie.modeDetail;
+  var sa = saisie.score_A, sb = saisie.score_B;
+
+  var onglet = classeur.getSheetByName('Matchs');
+  assurerColonnesMatchs(onglet); // sécurité : colonnes bracket présentes même sans régénération
+  var info = lireMatchParId(onglet, id);
+  var m = info ? info.obj : null;
+
+  // 1) LES SIX GARDE-FOUS — déléguées au cœur pur deciderEnregistrementScore (C-012 étape 3).
+  //    ⚡ La lecture du match suivant reste PARESSEUSE et à la MÊME place qu'avant : le cœur ne la
+  //    réclame (`besoin_suivant`) qu'une fois ① ② ③ passés. Un refus antérieur ne la paie jamais.
+  var plan = deciderEnregistrementScore(m, saisie, data);
+  if (plan.besoin_suivant) {
+    var suivInfo = lireMatchParId(onglet, plan.besoin_suivant);
+    plan = deciderEnregistrementScore(m, saisie, data, suivInfo ? suivInfo.obj : null);
+  }
+  if (plan.error) return plan;
+  var ligne = info.ligne;
+
+  // 2) Écriture du score (colonnes 9=score_A, 10=score_B, 11=statut) + vainqueur (Coupe).
+  onglet.getRange(ligne, colMatchs('score_A'), 1, 3)
+    .setValues([[plan.ecriture.score_A, plan.ecriture.score_B, plan.ecriture.statut]]);
+  if (plan.estCoupe) onglet.getRange(ligne, colMatchs('vainqueur')).setValue(plan.vainqueur);
+  // 2 bis) Détail du score : écrit SEULEMENT en mode détail (8 colonnes contiguës essais_A…drop_B),
+  //        dans l'ordre exact de ENTETES.Matchs. En mode simple, on n'y touche pas (migration douce).
+  if (plan.detail) {
+    onglet.getRange(ligne, colMatchs('essais_A'), 1, 8).setValues([plan.compteurs]);
+  }
+
+  // 3) Journal de saison : archive (ou actualise) ce résultat. Ne doit JAMAIS bloquer la saisie.
+  try {
+    archiverResultat(classeur, plan.archive);
+  } catch (errArchive) { Logger.log('Archivage historique ignoré : ' + errArchive); }
+
+  // 4) Propagation du vainqueur dans le tableau (immédiate, dans la même action).
+  //    ⚡ On propage l'objet DÉJÀ EN MÉMOIRE, à jour des valeurs écrites à l'étape 2, au lieu de
+  //    relire la ligne dans le Sheet : un aller-retour de moins pendant que le verrou est tenu.
+  var propagation = null;
+  if (plan.estCoupe) {
+    try { propagation = propagerVainqueurBracket(onglet, plan.matchApresEcriture); }
+    catch (errProp) { Logger.log('Propagation bracket ignorée : ' + errProp); }
+  }
+
+  plan.reponse.propagation = propagation;
+  return plan.reponse;
 }
 
 /* ===================== PROPAGATION EN BRACKET (COUPE) ===================== */
