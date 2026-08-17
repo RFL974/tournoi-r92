@@ -197,12 +197,20 @@ bénévole a envoyé) et qui répond (accepté / refusé, et pourquoi) — sans 
    ▼  📖 I/O                                                        │
  onglet Matchs · assurerColonnesMatchs · lireMatchParId             │
    │                                                                │
-   ▼  🧠 prédicat pur : cascadeAVerifier(m, data)                   │
-   └─ si vrai SEULEMENT → 📖 lireMatchParId(match suivant)          │
+   ▼  🧠 CŒUR 2 — 1er appel, sans `suivant`                         │
+ deciderEnregistrementScore(m, saisie, data)                        │
+   « les six garde-fous », dans l'ordre ① ② ③ ④                     │
+   ├─ un garde-fou refuse        → refus motivé  ⚡ AUCUNE lecture   │
+   ├─ tout passe, pas de cascade → un PLAN d'écriture               │
+   └─ il atteint ④ et lui manque le match suivant                   │
+              → { besoin_suivant: <id> }                            │
    │                                                                │
-   ▼  🧠 CŒUR 2                                                     │
+   ▼  📖 I/O — la lecture, ET SEULEMENT ICI                         │
+ lireMatchParId(match suivant)                                      │
+   │                                                                │
+   ▼  🧠 CŒUR 2 — 2e appel, avec `suivant`                          │
  deciderEnregistrementScore(m, saisie, data, suivant)               │
-   « les six garde-fous » → refus motivé, OU un PLAN d'écriture     │
+   → refus « cascade_requise », OU un PLAN d'écriture               │
    │                                                                │
    ▼  ✍️ I/O — applique le plan, sans rien décider                  │
  écriture ligne · détail · archivage · propagation                  │
@@ -231,7 +239,7 @@ mot pour mot celui d'aujourd'hui.
 | 5576 match introuvable | **Cœur 2** *(`m` vaut `null`)* | c'est un **verdict** |
 | 5577-5579 `estCoupe`, `dejaTermine` | **Cœur 2** | déduction pure |
 | 5582-5618 **garde-fous ① à ④** | **Cœur 2** | ⭐ **le cœur du chantier** |
-| lecture du match suivant *(5612)* | **I/O**, déclenchée par `cascadeAVerifier` | une lecture reste une lecture |
+| lecture du match suivant *(5612)* | **I/O**, déclenchée par la **demande explicite du cœur** *(`besoin_suivant`)* | une lecture reste une lecture — et elle reste chez celui qui a le droit de lire |
 | 5621-5629 écritures | **I/O** | applique le plan |
 | 5632-5637 archivage ⑥ | **I/O** *(le **contenu** archivé est décidé par le Cœur 2)* | écriture + `try/catch` |
 | 5643-5648 propagation | **I/O — inchangée** *(voir §6 et **décision D-C012-1**)* | zone la plus délicate |
@@ -277,22 +285,43 @@ mot pour mot celui d'aujourd'hui.
 | `m` | **le match tel qu'il est aujourd'hui dans le classeur**, en objet simple *(`{ id_match, categorie, equipe_A, equipe_B, score_A, score_B, statut, sous_tableau, tour, match_suivant, place_suivant, vainqueur, … }`)* | **`null` = match introuvable** |
 | `saisie` | la sortie **acceptée** du Cœur 1 | — |
 | `data` | la requête brute, pour les **trois drapeaux d'intention** : `modification`, `forcerCascade`, `vainqueur` | — |
-| `suivant` | **le match suivant**, même forme que `m` | **`null` = non lu ou inexistant** — ⚠️ voir §6 |
+| `suivant` | **le match suivant**, même forme que `m` | ⚠️ **TROIS valeurs distinctes** — voir juste en dessous |
+
+> ⚠️ **`suivant` a TROIS valeurs, et les confondre casserait la lecture paresseuse.** Ce n'est pas
+> un détail d'écriture : c'est **ce qui permet au cœur de savoir s'il doit réclamer** *(§6.3)*.
+>
+> | Valeur | Sens | Ce que fait le cœur |
+> |---|---|---|
+> | `undefined` | **le match suivant n'a pas encore été lu** | il le **réclame** : `{ besoin_suivant }` |
+> | `null` | **il a été lu, et il est introuvable** | il **ne bloque pas** — comme avant l'extraction |
+> | un objet | il a été lu et trouvé | il **tranche** *(refus `cascade_requise`, ou le plan)* |
+>
+> ⛔ **`null` ne veut PAS dire « pas lu ».** Passer `null` au premier appel ferait croire au cœur que
+> la lecture a eu lieu : il conclurait « rien à réinitialiser » et **le garde-fou ④ ne se
+> déclencherait jamais**. C'est le seul point subtil du contrat — il est couvert par **T-15**.
 
 **Ce que le cœur n'a PAS le droit de recevoir** : le classeur, un onglet, une fonction qui lit, une
 date, une horloge. *(La date d'archivage et `tournoi_id` restent du ressort de l'I/O — ils ne
 participent à aucune décision.)*
 
-### 4.3 — Le prédicat auxiliaire : `cascadeAVerifier(m, data)`
+### 4.3 — Le prédicat du garde-fou ④ : `cascadeAVerifier(m, data)`
 
 Une fonction pure, minuscule, qui répond à **une seule question** :
 
-> *« Faut-il dépenser une lecture du classeur pour vérifier le match suivant ? »*
+> *« La cascade doit-elle être vérifiée pour ce match ? »*
 
 Vrai **seulement si** : match de Coupe **et** déjà terminé **et** `modification === true` **et**
-`m.match_suivant` renseigné. **C'est la condition exacte de la ligne 5611 d'aujourd'hui** — elle est
-simplement rendue nommable et testable. Elle existe pour que la lecture reste **paresseuse**
-*(§2.4-3)*.
+`m.match_suivant` renseigné. **C'est la condition exacte de la ligne 5611 d'avant l'extraction** —
+elle est simplement rendue nommable et testable *(T-14)*.
+
+> 📌 **Elle est appelée PAR LE CŒUR, pas par la couche d'écriture.** C'est le cœur qui l'évalue, au
+> garde-fou ④, **une fois ① ② ③ passés** — et c'est de là que naît la demande `besoin_suivant`. La
+> couche d'écriture, elle, ne consulte aucun prédicat : elle **obéit** à la demande du cœur.
+>
+> ⚡ **C'est ce qui préserve la lecture paresseuse** *(§2.4-3)*. Si la couche d'écriture évaluait
+> elle-même ce prédicat pour décider de lire **avant** d'appeler le cœur, elle paierait une lecture
+> dans les cas où ① ② ③ refusent — ce qui **n'arrive pas aujourd'hui**. Le détail, mesuré, est en
+> **§6.3**.
 
 ---
 
@@ -378,28 +407,78 @@ session.
 **Pour prendre cette décision, il faut savoir si le match SUIVANT a un score.** Or cette information
 est dans le classeur — et **le cœur n'a pas le droit d'y toucher**.
 
-### 6.3 — La solution proposée : **on lit avant, on décide après**
+### 6.3 — La solution retenue : **le cœur réclame, l'I/O lit, le cœur tranche**
 
-**Le cœur ne va pas chercher le match suivant : on le lui apporte.**
+> 📌 **Ce paragraphe a été réaligné le 2026-08-17, après l'implémentation de l'étape 3.** Il
+> décrivait un protocole qui ne tenait pas la promesse de lecture paresseuse — voir l'encadré
+> « Pourquoi ce protocole, et pas le plus simple » plus bas. **Ce n'est pas une règle métier
+> nouvelle** : c'est la conséquence d'extraire le cœur de décision **sans changer le comportement
+> existant**.
+
+**Le cœur ne va pas chercher le match suivant. Il dit quand il en a besoin.**
 
 ```
-I/O :   cascadeAVerifier(m, data) ?
-          ├─ NON  (le cas courant) → suivant = null,  AUCUNE lecture  ⚡
-          └─ OUI  (cas rare)       → 📖 lireMatchParId(match_suivant) → suivant = l'objet
-                                              │
-Cœur :  deciderEnregistrementScore(…, suivant)
-          └─ suivant est terminé ET forcerCascade ≠ true  →  REFUS « cascade_requise »
+I/O :   deciderEnregistrementScore(m, saisie, data)          ← appelé avec ce qu'on a déjà
+          │
+Cœur :   ① Coupe en attente ?   → REFUS
+          ② déjà validé ?        → REFUS
+          ③ départage manquant ? → REFUS
+          ④ cascade à vérifier ET match suivant pas encore lu ?
+                  └─ → { besoin_suivant: <id> }        ⚡ AUCUNE lecture n'a eu lieu jusqu'ici
+          │
+I/O :   📖 lireMatchParId(match_suivant)   ← la lecture, ET SEULEMENT ICI
+          │
+I/O :   deciderEnregistrementScore(m, saisie, data, suivant)  ← mêmes m / saisie / data
+          │
+Cœur :   ① ② ③ réévalués à l'identique (fonction pure, mêmes entrées) puis
+          ④ suivant terminé ET forcerCascade ≠ true → REFUS « cascade_requise »
+          sinon → LE PLAN
 ```
 
-**Trois propriétés à retenir** :
+**Quatre propriétés à retenir** :
 
-1. ⚡ **la lecture reste paresseuse** — aucun coût ajouté sur le geste courant, sous le verrou ;
-2. 🧠 **le cœur reste pur** — il reçoit un objet ordinaire, ou `null` ;
-3. 🧪 **la décision devient testable** — il suffit de **fabriquer** un match suivant en mémoire.
+1. ⚡ **la lecture reste paresseuse, et exactement comme avant** — **aucun `match_suivant` n'est lu
+   lorsqu'un garde-fou antérieur suffit à refuser l'enregistrement** ;
+2. 🧠 **le cœur reste pur** — il ne reçoit ni classeur, ni onglet, ni fonction qui lit ;
+3. 🧪 **la décision devient testable** — il suffit de **fabriquer** un match suivant en mémoire ;
+4. 🔁 **le second appel ne coûte rien et ne change rien** — le cœur est pur, donc ① ② ③ rendent le
+   même verdict qu'au premier appel.
 
-> ⚠️ **`suivant = null` doit rester ambigu — et c'est voulu.** `null` signifie *« pas lu »* **ou**
-> *« inexistant »*. Dans les deux cas le comportement d'aujourd'hui est le même : **on ne bloque
-> pas**. Le cœur doit donc traiter `null` par « pas de blocage », **jamais** par une erreur.
+> ⚠️ **`suivant` a TROIS valeurs, et les confondre casserait la paresse** :
+>
+> | Valeur | Sens | Ce que fait le cœur |
+> |---|---|---|
+> | `undefined` | **pas encore lu** | il réclame : `{ besoin_suivant }` |
+> | `null` | **lu, introuvable** | il **ne bloque pas** — comme avant l'extraction |
+> | un objet | lu et trouvé | il tranche |
+>
+> C'est le seul point subtil du contrat. Il est **couvert par T-15**.
+
+#### ⚠️ Pourquoi ce protocole, et pas le plus simple
+
+La première rédaction de ce paragraphe prévoyait que **l'I/O lise le match suivant AVANT d'appeler
+le cœur**, dès que `cascadeAVerifier` était vrai. C'était plus simple — et **c'était faux**.
+
+**Mesuré avant d'écrire une ligne** *(maquette hors dépôt, harnais différentiel)* : ce protocole
+ajoutait **une lecture complète de l'onglet `Matchs`, sous le verrou d'écriture**, dans un cas réel
+et atteignable — **corriger un match de Coupe vers une égalité sans désigner de vainqueur**. Le
+garde-fou ③ refuse, et **avant l'extraction ce refus ne payait aucune lecture**.
+
+| | Protocole « on lit avant » | Protocole retenu |
+|---|---|---|
+| Cas `③ + cascade` | **1 lecture → 2** | **1 → 1** ✅ |
+| Les 22 autres cas | identiques | identiques |
+| Résultat renvoyé | identique | identique |
+
+> 🎯 **Ce que ça illustre, et qui vaut au-delà de C-012** : la conception validée était bonne dans
+> son principe *(un cœur pur, à qui l'on apporte les données)* et **fausse dans un détail que seule
+> la mesure pouvait révéler**. La règle du chantier — *extraire sans changer le comportement* — a
+> primé sur la lettre du document, et **le document a été corrigé pour dire ce que le code fait**.
+> C'est `CLAUDE.md` **§8 bis** et **§8 ter** appliqués à une spécification.
+>
+> ⛔ **Ce n'est pas une nouvelle règle métier.** Aucune décision de la saisie ne change : mêmes
+> refus, mêmes messages, mêmes drapeaux. Seul change **le moment où l'on paie une lecture** — et il
+> ne change pas : il est **préservé**.
 
 ### 6.4 — Ce qui reste dehors, et pourquoi
 

@@ -368,6 +368,17 @@ function lancerTestsFFR() {
   testSaisieScore_modeDetailCalculeEtIgnoreLeScoreEnvoye(etat);
   testSaisieScore_detailUnSeulCoteLautreVautZero(etat);
   testSaisieScore_cascadeAVerifierQuatreConditions(etat);
+  testDecisionScore_matchIntrouvable(etat);
+  testDecisionScore_coupeEnAttente(etat);
+  testDecisionScore_scoreDejaValide(etat);
+  testDecisionScore_statutNfdRefuseQuandMeme(etat);
+  testDecisionScore_egaliteExigeUnVainqueur(etat);
+  testDecisionScore_vainqueurEtranger(etat);
+  testDecisionScore_leScoreImposeLeVainqueur(etat);
+  testDecisionScore_sondeVerifCle(etat);
+  testDecisionScore_cascadeLecturesParesseuses(etat);
+  testDecisionScore_vainqueurHorsCoupe(etat);
+  testDecisionScore_modeSimpleNeTouchePasAuDetail(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -4035,4 +4046,199 @@ function testSaisieScore_cascadeAVerifierQuatreConditions(etat) {
   // La réponse est un VRAI booléen, jamais l'identifiant du match suivant.
   _ffrAssert(etat, cascadeAVerifier(coupe, { modification: true }) !== 'M-9',
     'T-14 : la réponse est un booléen, pas l\'identifiant du match suivant');
+}
+
+/* ==========================================================================
+   CHANTIER C-012 — étape 3 : le cœur pur `deciderEnregistrementScore`
+   ==========================================================================
+   ⭐ C'est CE bloc qui referme R-042 : les six garde-fous du geste le plus
+   répété de la journée sont enfin exécutés par le harnais.
+
+   Ce que ces tests exercent : la DÉCISION (accepter / refuser, et pourquoi),
+   et le PLAN d'écriture qu'elle produit. Ils n'écrivent rien : aucun classeur
+   n'est nécessaire, tout est fabriqué à la main.
+
+   Ce qu'ils NE couvrent PAS, et il faut le dire : l'écriture réelle dans le
+   Sheet, l'archivage, et l'EXÉCUTION de la propagation — laissée hors du cœur
+   par la décision D-C012-1 (option A). Seule la vérification manuelle V-10 la
+   couvre. Voir docs/industrialisation/C-012-SPECIFICATION.md §3.5.
+   -------------------------------------------------------------------------- */
+
+/** Un match de poule ordinaire, prêt à recevoir un score. */
+function _dsMatch(sur) {
+  var m = { id_match: 'M-1', categorie: 'U12', poule: 'A', phase: 'POULE',
+            equipe_A: 'E1', equipe_B: 'E2', score_A: '', score_B: '', statut: 'à venir',
+            sous_tableau: '', tour: '', match_suivant: '', place_suivant: '', vainqueur: '' };
+  for (var k in (sur || {})) { if (Object.prototype.hasOwnProperty.call(sur, k)) m[k] = sur[k]; }
+  return m;
+}
+/** La saisie ACCEPTÉE que litSaisieScore aurait produite (mode simple par défaut). */
+function _dsSaisie(sa, sb, sur) {
+  var s = { id: 'M-1', score_A: sa, score_B: sb, modeDetail: false, detA: null, detB: null };
+  for (var k in (sur || {})) { if (Object.prototype.hasOwnProperty.call(sur, k)) s[k] = sur[k]; }
+  return s;
+}
+
+/** T-6 — match introuvable : refus, et AUCUN plan d'écriture. */
+function testDecisionScore_matchIntrouvable(etat) {
+  var r = deciderEnregistrementScore(null, _dsSaisie(3, 1), {});
+  _ffrAssert(etat, r.error === 'Match introuvable : M-1', 'T-6 : m = null ⇒ « Match introuvable : M-1 »');
+  _ffrAssert(etat, r.ok === undefined && r.ecriture === undefined,
+    'T-6 : aucun plan d\'écriture — rien ne sera écrit');
+  _ffrAssert(etat, r.besoin_suivant === undefined, 'T-6 : et aucune lecture réclamée');
+}
+
+/** T-7 — Coupe dont une équipe n'est pas connue : refus + drapeau `en_attente`. */
+function testDecisionScore_coupeEnAttente(etat) {
+  var m = _dsMatch({ sous_tableau: 'COUPE', tour: 'FINALE', equipe_B: '' });
+  var r = deciderEnregistrementScore(m, _dsSaisie(3, 1), {});
+  _ffrAssert(etat, r.en_attente === true, 'T-7 : équipe B inconnue ⇒ drapeau en_attente');
+  _ffrAssert(etat, typeof r.error === 'string' && r.error.indexOf('en attente') > 0,
+    'T-7 : le message explique que les équipes ne sont pas connues');
+  _ffrAssert(etat, r.ok === undefined, 'T-7 : aucun plan d\'écriture');
+  // Une poule à qui il manque une équipe n'est PAS concernée : le garde-fou ne vaut qu'en Coupe.
+  var poule = deciderEnregistrementScore(_dsMatch({ equipe_B: '' }), _dsSaisie(3, 1), {});
+  _ffrAssert(etat, poule.ok === true, 'T-7 : hors Coupe, une équipe vide ne bloque pas (inchangé)');
+}
+
+/** T-8 — score déjà validé : refus + drapeau `deja_valide`, sauf correction explicite. */
+function testDecisionScore_scoreDejaValide(etat) {
+  var m = _dsMatch({ statut: 'terminé', score_A: 10, score_B: 3 });
+  var r = deciderEnregistrementScore(m, _dsSaisie(5, 5), {});
+  _ffrAssert(etat, r.deja_valide === true, 'T-8 : `modification` absent ⇒ drapeau deja_valide');
+  _ffrAssert(etat, r.error.indexOf('Corriger') > 0, 'T-8 : le message renvoie vers « Corriger »');
+  _ffrAssert(etat, deciderEnregistrementScore(m, _dsSaisie(5, 5), { modification: false }).deja_valide === true,
+    'T-8 : modification = false ⇒ refus aussi');
+  _ffrAssert(etat, deciderEnregistrementScore(m, _dsSaisie(5, 5), { modification: 'true' }).deja_valide === true,
+    'T-8 : modification = « true » (texte) ⇒ refus — l\'égalité est STRICTE');
+  var corr = deciderEnregistrementScore(m, _dsSaisie(7, 2), { modification: true });
+  _ffrAssert(etat, corr.ok === true && corr.ecriture.score_A === 7,
+    'T-8 : modification = true ⇒ la correction est acceptée');
+}
+
+/** T-9 — ⚠️ statut « terminé » en é DÉCOMPOSÉ (NFD), tel que le Sheet le renvoie parfois. */
+function testDecisionScore_statutNfdRefuseQuandMeme(etat) {
+  var m = _dsMatch({ statut: 'terminé', score_A: 4, score_B: 2 }); // é décomposé
+  var r = deciderEnregistrementScore(m, _dsSaisie(9, 1), {});
+  _ffrAssert(etat, r.deja_valide === true,
+    'T-9 : statut en é DÉCOMPOSÉ ⇒ reconnu terminé, le refus fonctionne quand même');
+}
+
+/** T-10 — Coupe, égalité au score : un vainqueur est OBLIGATOIRE. */
+function testDecisionScore_egaliteExigeUnVainqueur(etat) {
+  var m = _dsMatch({ sous_tableau: 'COUPE', tour: 'DEMI_FINALE' });
+  var r = deciderEnregistrementScore(m, _dsSaisie(10, 10), {});
+  _ffrAssert(etat, r.departage_requis === true, 'T-10 : 10-10 en Coupe sans vainqueur ⇒ departage_requis');
+  _ffrAssert(etat, r.equipe_A === 'E1' && r.equipe_B === 'E2',
+    'T-10 : les deux équipes sont renvoyées, pour que l\'écran propose le choix');
+  _ffrAssert(etat, r.ok === undefined, 'T-10 : rien n\'est écrit tant que le vainqueur manque');
+  var avec = deciderEnregistrementScore(m, _dsSaisie(10, 10), { vainqueur: 'E2' });
+  _ffrAssert(etat, avec.ok === true && avec.vainqueur === 'E2',
+    'T-10 : vainqueur désigné ⇒ accepté, et c\'est lui qui sera écrit');
+  // En POULE, une égalité est un match nul parfaitement normal.
+  _ffrAssert(etat, deciderEnregistrementScore(_dsMatch({}), _dsSaisie(10, 10), {}).ok === true,
+    'T-10 : hors Coupe, 10-10 est un nul accepté sans vainqueur');
+}
+
+/** T-11 — le vainqueur désigné doit être l'une des deux équipes du match. */
+function testDecisionScore_vainqueurEtranger(etat) {
+  var m = _dsMatch({ sous_tableau: 'COUPE', tour: 'FINALE' });
+  var r = deciderEnregistrementScore(m, _dsSaisie(5, 5), { vainqueur: 'E9' });
+  _ffrAssert(etat, r.error === 'Le vainqueur désigné ne correspond à aucune des deux équipes.',
+    'T-11 : vainqueur étranger ⇒ refus, message exact');
+  _ffrAssert(etat, r.departage_requis === undefined,
+    'T-11 : ce refus n\'a PAS de drapeau — l\'écran ne doit pas reproposer le même choix');
+}
+
+/** T-12 — ⭐ quand le score départage, c'est LUI qui impose le vainqueur. */
+function testDecisionScore_leScoreImposeLeVainqueur(etat) {
+  var m = _dsMatch({ sous_tableau: 'COUPE', tour: 'FINALE' });
+  var r = deciderEnregistrementScore(m, _dsSaisie(14, 7), { vainqueur: 'E2' });
+  _ffrAssert(etat, r.ok === true, 'T-12 : 14-7 est accepté');
+  _ffrAssert(etat, r.vainqueur === 'E1',
+    'T-12 : ⭐ le score l\'emporte sur le vainqueur envoyé — E1 gagne 14-7, pas E2');
+  var inverse = deciderEnregistrementScore(m, _dsSaisie(7, 14), { vainqueur: 'E1' });
+  _ffrAssert(etat, inverse.vainqueur === 'E2', 'T-12 : symétrique — 7-14 ⇒ E2');
+}
+
+/** T-13 — ⚠️ la sonde qui vérifie la clé « scores » (frontend/js/api.js) doit rester possible. */
+function testDecisionScore_sondeVerifCle(etat) {
+  var r = deciderEnregistrementScore(null, { id: '__verif_cle__', score_A: 0, score_B: 0,
+                                             modeDetail: false, detA: null, detB: null }, {});
+  _ffrAssert(etat, r.error === 'Match introuvable : __verif_cle__',
+    'T-13 : la sonde reçoit « Match introuvable », une erreur qui n\'est PAS un refus de clé');
+  _ffrAssert(etat, !/incorrecte|non\s*configur/i.test(r.error),
+    'T-13 : ⚠️ le message ne ressemble pas à un refus de clé — sinon la connexion à la saisie casse');
+  _ffrAssert(etat, r.ok === undefined && r.ecriture === undefined,
+    'T-13 : et la sonde n\'écrit RIEN');
+}
+
+/** T-15 — cascade : le cœur réclame le match suivant, puis tranche. */
+function testDecisionScore_cascadeLecturesParesseuses(etat) {
+  var m = _dsMatch({ sous_tableau: 'COUPE', tour: 'DEMI_FINALE', statut: 'terminé',
+                     score_A: 5, score_B: 2, match_suivant: 'M-9', place_suivant: 'A' });
+  var d = { modification: true };
+
+  // 1er appel, sans `suivant` : le cœur dit qu'il en a besoin — il ne devine pas.
+  var appel1 = deciderEnregistrementScore(m, _dsSaisie(9, 1), d);
+  _ffrAssert(etat, appel1.besoin_suivant === 'M-9',
+    'T-15 : les 4 conditions réunies ⇒ le cœur RÉCLAME le match suivant (M-9)');
+  _ffrAssert(etat, appel1.ok === undefined && appel1.error === undefined,
+    'T-15 : réclamer n\'est ni accepter ni refuser');
+
+  // Le match suivant est joué → refus, sauf confirmation.
+  var suivantJoue = _dsMatch({ id_match: 'M-9', sous_tableau: 'COUPE', tour: 'FINALE',
+                               statut: 'terminé', score_A: 8, score_B: 1 });
+  var refus = deciderEnregistrementScore(m, _dsSaisie(9, 1), d, suivantJoue);
+  _ffrAssert(etat, refus.cascade_requise === true && refus.match_suivant === 'M-9',
+    'T-15 : match suivant déjà joué ⇒ cascade_requise, avec son identifiant');
+  _ffrAssert(etat, refus.error.indexOf('réinitialiser la suite du tableau') > 0,
+    'T-15 : le message prévient que la suite du tableau sera réinitialisée');
+
+  var force = deciderEnregistrementScore(m, _dsSaisie(9, 1), { modification: true, forcerCascade: true }, suivantJoue);
+  _ffrAssert(etat, force.ok === true, 'T-15 : forcerCascade ⇒ accepté');
+
+  // `null` = lu mais introuvable ⇒ on ne bloque pas (comportement d'avant l'extraction).
+  _ffrAssert(etat, deciderEnregistrementScore(m, _dsSaisie(9, 1), d, null).ok === true,
+    'T-15 : match suivant introuvable (null) ⇒ accepté, jamais un blocage');
+  // Match suivant pas encore joué ⇒ rien à réinitialiser.
+  var suivantAVenir = _dsMatch({ id_match: 'M-9', sous_tableau: 'COUPE', statut: 'à venir' });
+  _ffrAssert(etat, deciderEnregistrementScore(m, _dsSaisie(9, 1), d, suivantAVenir).ok === true,
+    'T-15 : match suivant pas terminé ⇒ accepté');
+
+  // ⚡ Et le cœur ne réclame RIEN quand un garde-fou antérieur refuse : la lecture reste paresseuse.
+  var egalite = deciderEnregistrementScore(m, _dsSaisie(7, 7), d);
+  _ffrAssert(etat, egalite.departage_requis === true && egalite.besoin_suivant === undefined,
+    'T-15 : ⚡ ③ refuse AVANT ④ ⇒ aucune lecture réclamée (lecture paresseuse préservée)');
+}
+
+/** T-16 — hors Coupe, un `vainqueur` envoyé est renvoyé mais JAMAIS écrit. */
+function testDecisionScore_vainqueurHorsCoupe(etat) {
+  var r = deciderEnregistrementScore(_dsMatch({}), _dsSaisie(4, 2), { vainqueur: 'E1' });
+  _ffrAssert(etat, r.ok === true && r.estCoupe === false, 'T-16 : match de poule accepté');
+  _ffrAssert(etat, r.reponse.match.vainqueur === 'E1',
+    'T-16 : le vainqueur envoyé est RENVOYÉ tel quel dans la réponse (comportement conservé)');
+  _ffrAssert(etat, r.estCoupe === false,
+    'T-16 : mais estCoupe = false ⇒ l\'appelant ne l\'écrira pas dans le classeur');
+}
+
+/** T-17 — mode simple : le plan ne touche JAMAIS aux 8 colonnes de détail (migration douce). */
+function testDecisionScore_modeSimpleNeTouchePasAuDetail(etat) {
+  var simple = deciderEnregistrementScore(_dsMatch({}), _dsSaisie(12, 7), {});
+  _ffrAssert(etat, simple.detail === false && simple.compteurs === null,
+    'T-17 : mode simple ⇒ aucun compteur dans le plan — les 8 colonnes ne seront pas écrites');
+  _ffrAssert(etat, simple.reponse.match.essais_A === undefined,
+    'T-17 : et la réponse ne fabrique aucun compteur');
+
+  var det = { essais: 3, transfo: 2, pen: 1, drop: 0, points: 22 };
+  var detB = { essais: 1, transfo: 0, pen: 0, drop: 0, points: 5 };
+  var detaille = deciderEnregistrementScore(_dsMatch({}),
+    _dsSaisie(22, 5, { modeDetail: true, detA: det, detB: detB }), {});
+  _ffrAssert(etat, detaille.detail === true && detaille.compteurs.length === 8,
+    'T-17 : mode détail ⇒ 8 compteurs, prêts pour une écriture contiguë');
+  _ffrAssert(etat, detaille.compteurs[0] === 3 && detaille.compteurs[1] === 1
+      && detaille.compteurs[2] === 2 && detaille.compteurs[3] === 0,
+    'T-17 : ⚠️ l\'ordre est celui de ENTETES.Matchs — essais_A, essais_B, transfo_A, transfo_B…');
+  _ffrAssert(etat, detaille.reponse.match.essais_A === 3 && detaille.reponse.match.essais_B === 1,
+    'T-17 : la réponse renvoie le détail recalculé');
 }
