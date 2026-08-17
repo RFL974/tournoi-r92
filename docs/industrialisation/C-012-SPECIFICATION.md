@@ -378,28 +378,78 @@ session.
 **Pour prendre cette décision, il faut savoir si le match SUIVANT a un score.** Or cette information
 est dans le classeur — et **le cœur n'a pas le droit d'y toucher**.
 
-### 6.3 — La solution proposée : **on lit avant, on décide après**
+### 6.3 — La solution retenue : **le cœur réclame, l'I/O lit, le cœur tranche**
 
-**Le cœur ne va pas chercher le match suivant : on le lui apporte.**
+> 📌 **Ce paragraphe a été réaligné le 2026-08-17, après l'implémentation de l'étape 3.** Il
+> décrivait un protocole qui ne tenait pas la promesse de lecture paresseuse — voir l'encadré
+> « Pourquoi ce protocole, et pas le plus simple » plus bas. **Ce n'est pas une règle métier
+> nouvelle** : c'est la conséquence d'extraire le cœur de décision **sans changer le comportement
+> existant**.
+
+**Le cœur ne va pas chercher le match suivant. Il dit quand il en a besoin.**
 
 ```
-I/O :   cascadeAVerifier(m, data) ?
-          ├─ NON  (le cas courant) → suivant = null,  AUCUNE lecture  ⚡
-          └─ OUI  (cas rare)       → 📖 lireMatchParId(match_suivant) → suivant = l'objet
-                                              │
-Cœur :  deciderEnregistrementScore(…, suivant)
-          └─ suivant est terminé ET forcerCascade ≠ true  →  REFUS « cascade_requise »
+I/O :   deciderEnregistrementScore(m, saisie, data)          ← appelé avec ce qu'on a déjà
+          │
+Cœur :   ① Coupe en attente ?   → REFUS
+          ② déjà validé ?        → REFUS
+          ③ départage manquant ? → REFUS
+          ④ cascade à vérifier ET match suivant pas encore lu ?
+                  └─ → { besoin_suivant: <id> }        ⚡ AUCUNE lecture n'a eu lieu jusqu'ici
+          │
+I/O :   📖 lireMatchParId(match_suivant)   ← la lecture, ET SEULEMENT ICI
+          │
+I/O :   deciderEnregistrementScore(m, saisie, data, suivant)  ← mêmes m / saisie / data
+          │
+Cœur :   ① ② ③ réévalués à l'identique (fonction pure, mêmes entrées) puis
+          ④ suivant terminé ET forcerCascade ≠ true → REFUS « cascade_requise »
+          sinon → LE PLAN
 ```
 
-**Trois propriétés à retenir** :
+**Quatre propriétés à retenir** :
 
-1. ⚡ **la lecture reste paresseuse** — aucun coût ajouté sur le geste courant, sous le verrou ;
-2. 🧠 **le cœur reste pur** — il reçoit un objet ordinaire, ou `null` ;
-3. 🧪 **la décision devient testable** — il suffit de **fabriquer** un match suivant en mémoire.
+1. ⚡ **la lecture reste paresseuse, et exactement comme avant** — **aucun `match_suivant` n'est lu
+   lorsqu'un garde-fou antérieur suffit à refuser l'enregistrement** ;
+2. 🧠 **le cœur reste pur** — il ne reçoit ni classeur, ni onglet, ni fonction qui lit ;
+3. 🧪 **la décision devient testable** — il suffit de **fabriquer** un match suivant en mémoire ;
+4. 🔁 **le second appel ne coûte rien et ne change rien** — le cœur est pur, donc ① ② ③ rendent le
+   même verdict qu'au premier appel.
 
-> ⚠️ **`suivant = null` doit rester ambigu — et c'est voulu.** `null` signifie *« pas lu »* **ou**
-> *« inexistant »*. Dans les deux cas le comportement d'aujourd'hui est le même : **on ne bloque
-> pas**. Le cœur doit donc traiter `null` par « pas de blocage », **jamais** par une erreur.
+> ⚠️ **`suivant` a TROIS valeurs, et les confondre casserait la paresse** :
+>
+> | Valeur | Sens | Ce que fait le cœur |
+> |---|---|---|
+> | `undefined` | **pas encore lu** | il réclame : `{ besoin_suivant }` |
+> | `null` | **lu, introuvable** | il **ne bloque pas** — comme avant l'extraction |
+> | un objet | lu et trouvé | il tranche |
+>
+> C'est le seul point subtil du contrat. Il est **couvert par T-15**.
+
+#### ⚠️ Pourquoi ce protocole, et pas le plus simple
+
+La première rédaction de ce paragraphe prévoyait que **l'I/O lise le match suivant AVANT d'appeler
+le cœur**, dès que `cascadeAVerifier` était vrai. C'était plus simple — et **c'était faux**.
+
+**Mesuré avant d'écrire une ligne** *(maquette hors dépôt, harnais différentiel)* : ce protocole
+ajoutait **une lecture complète de l'onglet `Matchs`, sous le verrou d'écriture**, dans un cas réel
+et atteignable — **corriger un match de Coupe vers une égalité sans désigner de vainqueur**. Le
+garde-fou ③ refuse, et **avant l'extraction ce refus ne payait aucune lecture**.
+
+| | Protocole « on lit avant » | Protocole retenu |
+|---|---|---|
+| Cas `③ + cascade` | **1 lecture → 2** | **1 → 1** ✅ |
+| Les 22 autres cas | identiques | identiques |
+| Résultat renvoyé | identique | identique |
+
+> 🎯 **Ce que ça illustre, et qui vaut au-delà de C-012** : la conception validée était bonne dans
+> son principe *(un cœur pur, à qui l'on apporte les données)* et **fausse dans un détail que seule
+> la mesure pouvait révéler**. La règle du chantier — *extraire sans changer le comportement* — a
+> primé sur la lettre du document, et **le document a été corrigé pour dire ce que le code fait**.
+> C'est `CLAUDE.md` **§8 bis** et **§8 ter** appliqués à une spécification.
+>
+> ⛔ **Ce n'est pas une nouvelle règle métier.** Aucune décision de la saisie ne change : mêmes
+> refus, mêmes messages, mêmes drapeaux. Seul change **le moment où l'on paie une lecture** — et il
+> ne change pas : il est **préservé**.
 
 ### 6.4 — Ce qui reste dehors, et pourquoi
 
