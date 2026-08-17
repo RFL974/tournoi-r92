@@ -5727,9 +5727,6 @@ function enregistrerScore(classeur, data) {
   var saisie = litSaisieScore(data);
   if (saisie.error) return { error: saisie.error };
   var id = saisie.id;
-  var detA = saisie.detA, detB = saisie.detB;
-  var modeDetail = saisie.modeDetail;
-  var sa = saisie.score_A, sb = saisie.score_B;
 
   var onglet = classeur.getSheetByName('Matchs');
   assurerColonnesMatchs(onglet); // sécurité : colonnes bracket présentes même sans régénération
