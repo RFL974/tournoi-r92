@@ -4521,3 +4521,84 @@ pas dans le dépôt**.
 | **R-042** | ⛔ **OUVERT** — il ne se refermera qu'avec l'étape 3 |
 | **R-092** | 🔴 **IDENTIFIÉ — NON CORRIGÉ**, priorité **À CONFIRMER** |
 | **Prochaine étape** | **étape 3 du §10** — `deciderEnregistrementScore` et les 6 garde-fous. ⛔ **Attend une autorisation explicite de Romain.** |
+
+---
+
+# ⭐ C-012 — **ÉTAPE 3 FUSIONNÉE : les six garde-fous passent sous test** *(2026-08-17)*
+
+> **C'est l'étape que tout le chantier visait.** Les étapes 1 et 2 avaient sorti ce qui *entoure*
+> les décisions ; celle-ci sort **les décisions elles-mêmes**.
+>
+> ⛔ **Et pourtant C-012 n'est pas terminé, ni R-042 refermé** : rien n'a encore tourné chez Google.
+
+## 1. Ce qui a été livré — **PR #189, fusionnée** *(`2a3477f`)*
+
+`deciderEnregistrementScore(m, saisie, data, suivant)` : reçoit le match tel qu'il est et ce que le
+bénévole a envoyé, rend **soit un refus motivé, soit un plan d'écriture**. Elle ne lit ni n'écrit
+aucun classeur.
+
+`enregistrerScore` devient de la plomberie — elle applique le plan, archive, propage, répond :
+
+| | |
+|---|---|
+| **111 lignes** | au début du chantier |
+| **97** | après l'étape 1 |
+| **50** | aujourd'hui |
+
+**11 tests, 42 vérifications** *(T-6 à T-13, T-15 à T-17)* → **`R92 — 703/703 OK, 0 FAIL`**.
+Le compte se referme : **616 + 33 + 12 + 42 = 703**.
+
+## 2. ⚡ Le point délicat : la conception validée était fausse sur un détail
+
+La spécification *(§6.3)* prévoyait que la couche d'écriture lise le match suivant **avant**
+d'appeler le cœur. **Mesuré avant d'écrire une ligne**, sur une maquette hors dépôt : cela ajoutait
+**une lecture complète de l'onglet `Matchs`, sous le verrou d'écriture**, dans un cas réel et
+atteignable — *corriger un match de Coupe vers une égalité sans désigner de vainqueur*. Le garde-fou
+③ refuse, et ce refus ne payait **aucune** lecture jusque-là.
+
+**Décision de Romain : préserver l'ordre.** Le cœur **réclame** donc le match suivant
+*(`besoin_suivant`)*, la couche d'écriture lit, et rappelle. Le second appel réévalue ① ② ③ à
+l'identique — fonction pure, mêmes entrées.
+
+> 🎯 **Ce que ça illustre, et qui vaut au-delà de C-012** : la conception était bonne dans son
+> principe et **fausse dans un détail que seule la mesure pouvait révéler**. La règle du chantier —
+> *extraire sans changer le comportement* — a primé sur la lettre du document, et **c'est le
+> document qui a été corrigé pour dire ce que le code fait** *(§6.3, puis §3.2, §3.4, §4.2, §4.3)*.
+
+## 3. Les preuves
+
+- **23 cas différentiels contre `de97cf0`, 0 différent** — objet renvoyé, **suite exacte des
+  opérations sur le classeur** et **nombre d'appels à `lireMatchParId`** ;
+- **lecture paresseuse : 7 situations, mêmes comptes avant et après** — 2 lectures quand les quatre
+  conditions sont réunies, **1 seule partout ailleurs** ;
+- **propagation intacte** : `propagerVainqueurBracket`, `invaliderMatchAval`, `majPetiteFinale`,
+  `vainqueurPerdantCoupe` — empreintes identiques *(D-C012-1 option A respectée)*.
+
+## 4. ⚠️ Deux erreurs de lecture, des deux côtés — et elles ont servi
+
+| Qui | Quoi | Issue |
+|---|---|---|
+| **Moi** | L'extraction avait laissé **cinq variables mortes** dans `enregistrerScore` | Repérées par Romain à la relecture du diff, **confirmées par contre-vérification sur le contenu poussé**, retirées *(4ᵉ commit)* |
+| **Nous deux** | La page GitHub de la PR affichait 3 commits au lieu de 4 | **Panne partielle de GitHub** *(GraphQL en 503, API REST et protocole Git corrects)* — vérifié par trois sources indépendantes. **Rien n'a été corrigé à tort** |
+
+> 🎯 **La leçon commune** : **un diff n'est pas un fichier, et une page web n'est pas un dépôt.**
+> Dans les deux cas, la vérification a porté sur le **contenu réel** — et dans les deux cas elle a
+> évité une correction qui aurait cassé quelque chose.
+
+## 5. Ce qui reste — et ce qui n'est **PAS** autorisé
+
+| Étape | État |
+|---|---|
+| **4** — redéploiement chez Google *(`Code.gs` **ET** `Tests.gs`)* + `lancerTestsFFR` là-bas | ⏳ **À FAIRE — NON AUTORISÉE** |
+| **5** — les **12 vérifications manuelles** du §8, **V-10 obligatoire** | ⏳ **À FAIRE** |
+| **R-042** | ⛔ **OUVERT** — il ne passera à `TESTÉ` qu'après les étapes 4 et 5 |
+| **R-092** | 🔴 **IDENTIFIÉ — NON CORRIGÉ**, priorité **À CONFIRMER** |
+
+## 6. État à la fin de la journée
+
+| | |
+|---|---|
+| **`main`** | `2a3477f` — merge de la PR #189 |
+| **Suite** | **`R92 — 703/703 OK, 0 FAIL`**, `backend/Tests.gs` = **4 244 lignes** |
+| **C-012** | 🚧 **EN COURS — les 3 étapes de code fusionnées, les étapes 4 et 5 restent** |
+| **Prochaine étape** | **étape 4 du §10** — redéploiement chez Google. ⛔ **Attend une autorisation explicite de Romain.** |

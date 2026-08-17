@@ -990,19 +990,22 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   l'alerte des 5 essais d'écart.
 - 📐 **Conception** : ✅ **VALIDÉE le 2026-08-16** — `C-012-SPECIFICATION.md`, PR #186 fusionnée.
   Les 4 décisions ouvertes y sont tranchées *(D-C012-1 à D-C012-4)*. **Découpage retenu : 3 étapes.**
-- **Statut** : 🚧 **EN COURS — 2 étapes sur 3 fusionnées** *(au 2026-08-16)* :
+- **Statut** : 🚧 **EN COURS — les 3 étapes de CODE sont fusionnées** *(au 2026-08-17)* :
 
   | Étape | Ce qu'elle fait | État |
   |---|---|---|
   | **1** | `litSaisieScore` extrait *(la lecture de ce que le bénévole a envoyé)* · **T-1 à T-5** | ✅ **FUSIONNÉE** — PR **#187** |
   | **2** | `cascadeAVerifier` extrait *(faut-il lire le match suivant ?)* · **T-14** | ✅ **FUSIONNÉE** — PR **#188** |
-  | **3** | `deciderEnregistrementScore` — **les 6 garde-fous** · T-6 à T-13, T-15 à T-17 | ⏳ **NON COMMENCÉE** |
+  | **3** | `deciderEnregistrementScore` — **les 6 garde-fous** · T-6 à T-13, T-15 à T-17 | ✅ **FUSIONNÉE** — PR **#189** |
+  | **4** | **Redéploiement chez Google** + `lancerTestsFFR` exécuté là-bas | ⏳ **À FAIRE — non autorisée** |
+  | **5** | Les **12 vérifications manuelles** du §8, **V-10 obligatoire** | ⏳ **À FAIRE** |
 
-  ⚠️ **Le chantier n'est donc PAS terminé, et R-042 reste OUVERT** : les six garde-fous de la saisie
-  ne sont toujours pas sous test — c'est précisément l'objet de l'étape 3.
-  Suite actuelle : **`R92 — 661/661 OK, 0 FAIL`** *(616 + 33 + 12)*, **hors d'Apps Script**.
-  ⛔ **Backend PAS redéployé** — l'étape 4 du §10 de la spécification *(exécution chez Google)* et
-  l'étape 5 *(les 12 vérifications manuelles)* restent entières.
+  Suite actuelle : **`R92 — 703/703 OK, 0 FAIL`** *(616 + 33 + 12 + 42)*, **hors d'Apps Script**.
+
+  ⚠️ **Le chantier n'est PAS terminé, et R-042 reste OUVERT.** Les six garde-fous sont désormais
+  **sous test** — mais un test qui n'a jamais tourné chez Google ne prouve rien de l'application en
+  service. ⛔ **Backend PAS redéployé** : les étapes **4** et **5** du §10 de la spécification restent
+  entières, et **R-042 ne passera à `TESTÉ` qu'après elles**.
 
 ---
 

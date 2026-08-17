@@ -3,9 +3,12 @@
 > **Statut de ce document** : ✅ **SPÉCIFICATION VALIDÉE PAR ROMAIN le 2026-08-16.**
 > Écrite le 2026-08-16, validée le jour même. **Les quatre décisions ouvertes sont tranchées** — voir
 > **§11**.
-> 🚧 **Mise à jour du 2026-08-16 — l'implémentation a commencé, et elle n'est pas finie** :
-> **étape 1 fusionnée** *(PR #187, `litSaisieScore` + T-1 à T-5)* · **étape 2 fusionnée**
-> *(PR #188, `cascadeAVerifier` + T-14)* · **étape 3 NON commencée**. Voir le **§10**.
+> 🚧 **Mise à jour du 2026-08-17 — les TROIS étapes de code sont fusionnées, le chantier n'est pas
+> fini pour autant** : **étape 1** *(PR #187, `litSaisieScore` + T-1 à T-5)* · **étape 2**
+> *(PR #188, `cascadeAVerifier` + T-14)* · **étape 3** *(PR #189, `deciderEnregistrementScore` +
+> T-6 à T-13 et T-15 à T-17)*. Suite : **`R92 — 703/703 OK, 0 FAIL`**. Voir le **§10**.
+> ⏳ **Restent l'étape 4** *(redéploiement chez Google)* **et l'étape 5** *(les 12 vérifications
+> manuelles)* — ⚠️ **l'étape 4 n'est PAS autorisée à ce jour**.
 > ⛔ **R-042 reste OUVERT**, et **rien n'a été vérifié chez Google** *(backend non redéployé)*.
 >
 > **Chantier** : `PLAN.md` → **C-012** · **Problème couvert** : **R-042** *(P1)* · **Explication du
@@ -622,25 +625,25 @@ Pour C-012, cette preuve prend **trois formes cumulatives** :
 | Étape | Ce qu'on fait | Commit | Prouvé par |
 |---|---|---|---|
 | **0** | ✅ **FAIT le 2026-08-16** — ce document est **validé par Romain**, les 4 décisions sont tranchées *(§11)* | *(le présent document)* | — |
-| **0 bis** | ✅ **Autorisation d'implémenter donnée le 2026-08-16 — étape par étape.** Chaque étape a reçu son autorisation séparément ; **l'étape 3 n'a pas encore la sienne** | — | — |
+| **0 bis** | ✅ **Autorisation d'implémenter donnée le 2026-08-16 — étape par étape.** Chaque étape reçoit son autorisation séparément ; **l'étape 4 n'a pas encore la sienne** | — | — |
 | **1** | ✅ **FAIT — PR #187 fusionnée le 2026-08-16.** **Cœur 1** `litSaisieScore` extrait · `enregistrerScore` l'appelle · **T-1 à T-5** | `refactor(scores): C-012 étape 1 — extraire litSaisieScore, et T-1 à T-5 (R-042)` | **616 + 33 = 649** verts |
 | **2** | ✅ **FAIT — PR #188 fusionnée le 2026-08-16.** **`cascadeAVerifier`** extrait · **T-14** | `refactor(scores): C-012 étape 2 — extraire cascadeAVerifier et ajouter T-14` | **649 + 12 = 661** verts |
-| **3** | ⏳ **NON COMMENCÉE, NON AUTORISÉE.** ⭐ **Cœur 2** `deciderEnregistrementScore` — les 6 garde-fous · **T-6 à T-13, T-15 à T-17** | `refactor(scores): séparer les décisions de l'écriture (R-042)` | à mesurer |
-| **4** | ⏳ **À FAIRE** — **redéploiement chez Google** + `lancerTestsFFR` exécuté | *(pas de commit)* | le total du moment, **chez Google** |
+| **3** | ✅ **FAIT — PR #189 fusionnée le 2026-08-17.** ⭐ **Cœur 2** `deciderEnregistrementScore` — les 6 garde-fous · **T-6 à T-13, T-15 à T-17** | `refactor(scores): C-012 étape 3 — les six garde-fous passent sous test (R-042)` | **661 + 42 = 703** verts |
+| **4** | ⏳ **À FAIRE — ET NON AUTORISÉE.** **Redéploiement chez Google** *(`Code.gs` **ET** `Tests.gs`)* + `lancerTestsFFR` exécuté | *(pas de commit)* | **`R92 — 703/703 OK, 0 FAIL` obtenu CHEZ GOOGLE** |
 | **5** | ⏳ **À FAIRE** — **les 12 vérifications manuelles** du §8, avec **V-10 obligatoire** | `docs(industrialisation): C-012 livré` | la liste cochée |
 
 > ⚠️ **Le compte annoncé au §7 était faux, et il faut le dire.** Ce document estimait *« 616 + 5 »*
 > pour l'étape 1 et *« ~633 »* pour l'ensemble : il **comptait les fonctions de test**, alors que le
-> harnais compte les **vérifications**. Le réel est **616 + 33 + 12 = 661** après deux étapes, et le
-> total final de C-012 sera donc **nettement supérieur à 633**. **Il ne sera connu qu'après l'étape
-> 3** — il n'est pas ré-estimé ici, il sera **mesuré**.
+> harnais compte les **vérifications**. Le réel est **616 + 33 + 12 + 42 = 703**, et le total
+> annoncé était donc **très en dessous**. ✅ **Il est désormais MESURÉ, plus estimé.**
 >
-> ⛔ **R-042 reste OUVERT.** Les six garde-fous de la saisie ne sont **toujours pas sous test** :
-> c'est l'objet de l'étape 3. Les étapes 1 et 2 ont sorti la **lecture de la saisie** et la
-> **condition de la cascade**, pas les décisions elles-mêmes.
+> ⛔ **R-042 n'est PAS refermé pour autant.** Les six garde-fous sont **sous test** depuis l'étape 3,
+> mais un test qui n'a jamais tourné chez Google ne prouve rien de l'application en service. **Le
+> risque ne passera à `TESTÉ` qu'après les étapes 4 et 5.**
 >
-> ⛔ **Rien n'a été vérifié chez Google.** `661/661` vient d'une exécution **hors d'Apps Script**,
-> sur les fichiers réels du dépôt. **Le backend n'est pas redéployé** *(étape 4)*.
+> ⛔ **Rien n'a été vérifié chez Google.** `703/703` vient d'une exécution **hors d'Apps Script**,
+> sur les fichiers réels du dépôt. **Le backend n'est pas redéployé** — c'est l'**étape 4**, et
+> ⚠️ **elle attend une autorisation explicite de Romain, comme chacune des trois précédentes.**
 
 **Trois règles pour ces étapes** :
 
