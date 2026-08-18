@@ -11,10 +11,12 @@
 > jour même)* : le backend est **redéployé chez Google** *(`Code.gs` **et** `Tests.gs`)*, une
 > **nouvelle version du MÊME déploiement** est publiée, et `lancerTestsFFR` y donne
 > **`R92 — 703/703 OK, 0 FAIL`**. Les preuves complètes sont au **§10**.
-> ⏳ **Reste l'étape 5** *(les 12 vérifications manuelles, **V-10 obligatoire**)* — ⚠️ **elle n'est
-> PAS autorisée à ce jour**.
-> ⛔ **R-042 reste OUVERT.** Les tests tournent désormais **chez Google**, mais **aucune des 12
-> vérifications manuelles n'a été faite** : le risque ne passera à `TESTÉ` qu'après l'étape 5.
+> 🚧 **Mise à jour du 2026-08-18 — l'ÉTAPE 5 est OUVERTE et partiellement exécutée : 7 sur 12.**
+> ✅ **V-1, V-2, V-3, V-6, V-9, V-11 RÉUSSIES** · 🟠 **V-12 NON CONCLUANTE** · ⛔ **V-4, V-5, V-7,
+> V-8 et V-10 NON EXÉCUTÉES**, faute de catégorie U14 et de tableau final dans les données de test.
+> ⭐ **V-10, déclarée obligatoire, n'est pas faite.** Résultats et preuves : **§8 bis**.
+> ⛔ **R-042 reste OUVERT** : le risque ne passera à `TESTÉ` qu'après l'étape 5 **complète**.
+> ⚠️ **Aucune ligne de code, aucun test et aucun déploiement n'ont été touchés par l'étape 5.**
 >
 > **Chantier** : `PLAN.md` → **C-012** · **Problème couvert** : **R-042** *(P1)* · **Explication du
 > problème** : `AUDIT.md` **§D.3**
@@ -561,23 +563,82 @@ aujourd'hui**. **Aucun classeur requis** : tous les objets sont fabriqués à la
 
 **Condition préalable** : `Code.gs` **redéployé** chez Google, `lancerTestsFFR` exécuté et vert.
 
-| # | À faire | Ce qu'on doit voir |
-|---|---|---|
-| **V-1** | Saisir un score de poule ordinaire *(ex. 12-7)*, valider | ✅ écrit, carte verrouillée, **classement mis à jour**, page publique à jour en ~10 s |
-| **V-2** | Recliquer « Valider » sur ce même match | ✅ refus *« déjà validé »* + la clé est redemandée par « Corriger » |
-| **V-3** | Corriger le score *(clé scores)* et valider | ✅ nouveau score écrit, classement recalculé |
-| **V-4** | Catégorie **U14 en tir au but** : saisir un score **détaillé** | ✅ total en points juste, **8 compteurs écrits** dans le Sheet |
-| **V-5** | Vérifier l'**alerte des 5 essais d'écart** | ✅ comportement identique à avant |
-| **V-6** | Ouvrir l'onglet **`Historique`** | ✅ une ligne par match, **une correction met à jour la MÊME ligne** |
-| **V-7** | **Coupe** : saisir une **égalité** en demi-finale | ✅ l'application **exige** un vainqueur |
-| **V-8** | **Coupe** : le vainqueur apparaît **tout de suite** dans le match suivant · les **perdants** des 2 demies alimentent la **petite finale** | ✅ propagation intacte |
-| **V-9** | ⚠️ **Se déconnecter, rouvrir la page de saisie, entrer la clé** | ✅ **la clé est acceptée** *(c'est la sonde `__verif_cle__` — §2.4-2)* · et **aucune ligne parasite** n'apparaît dans `Matchs` |
-| **V-10** | ⭐ **Cascade** : corriger un quart déjà propagé vers une demi **jouée** | ✅ l'avertissement s'affiche · « Annuler » ne change **rien** · « Modifier quand même » **réinitialise la suite du tableau** |
-| **V-11** | Sheet **sans** les colonnes de détail *(migration douce)* | ✅ les colonnes sont ajoutées, la saisie simple fonctionne |
-| **V-12** | Chronométrer une validation *(onglet « Exécutions »)* | ✅ **pas plus lente qu'avant** *(rappel : plancher ~1,6 s)* |
+| # | À faire | Ce qu'on doit voir | **Résultat — 2026-08-18** |
+|---|---|---|---|
+| **V-1** | Saisir un score de poule ordinaire *(ex. 12-7)*, valider | ✅ écrit, carte verrouillée, **classement mis à jour**, page publique à jour en ~10 s | ✅ **RÉUSSIE** |
+| **V-2** | Recliquer « Valider » sur ce même match | ✅ refus *« déjà validé »* + la clé est redemandée par « Corriger » | ✅ **RÉUSSIE** |
+| **V-3** | Corriger le score *(clé scores)* et valider | ✅ nouveau score écrit, classement recalculé | ✅ **RÉUSSIE** |
+| **V-4** | Catégorie **U14 en tir au but** : saisir un score **détaillé** | ✅ total en points juste, **8 compteurs écrits** dans le Sheet | ⛔ **NON EXÉCUTÉE** — aucune catégorie U14 dans les données de test |
+| **V-5** | Vérifier l'**alerte des 5 essais d'écart** | ✅ comportement identique à avant | ⛔ **NON EXÉCUTÉE** — même cause que V-4 |
+| **V-6** | Ouvrir l'onglet **`Historique`** | ✅ une ligne par match, **une correction met à jour la MÊME ligne** | ✅ **RÉUSSIE** |
+| **V-7** | **Coupe** : saisir une **égalité** en demi-finale | ✅ l'application **exige** un vainqueur | ⛔ **NON EXÉCUTÉE** — aucun match de Coupe dans les données de test |
+| **V-8** | **Coupe** : le vainqueur apparaît **tout de suite** dans le match suivant · les **perdants** des 2 demies alimentent la **petite finale** | ✅ propagation intacte | ⛔ **NON EXÉCUTÉE** — même cause que V-7 |
+| **V-9** | ⚠️ **Se déconnecter, rouvrir la page de saisie, entrer la clé** | ✅ **la clé est acceptée** *(c'est la sonde `__verif_cle__` — §2.4-2)* · et **aucune ligne parasite** n'apparaît dans `Matchs` | ✅ **RÉUSSIE** |
+| **V-10** | ⭐ **Cascade** : corriger un quart déjà propagé vers une demi **jouée** | ✅ l'avertissement s'affiche · « Annuler » ne change **rien** · « Modifier quand même » **réinitialise la suite du tableau** | ⛔ **NON EXÉCUTÉE** — même cause que V-7 · ⚠️ **déclarée obligatoire** |
+| **V-11** | Sheet **sans** les colonnes de détail *(migration douce)* | ✅ les colonnes sont ajoutées, la saisie simple fonctionne | ✅ **RÉUSSIE** |
+| **V-12** | Chronométrer une validation *(onglet « Exécutions »)* | ✅ **pas plus lente qu'avant** *(rappel : plancher ~1,6 s)* | 🟠 **NON CONCLUANTE** *(voir l'encadré ci-dessous)* |
 
 > 🔴 **V-10 est le scénario à ne jamais sauter** : c'est le seul qui exerce la partie **non couverte
 > par les tests** *(§3.5)*.
+
+### 8 bis — RÉSULTATS DE L'ÉTAPE 5 *(exécutée le 2026-08-18)*
+
+**7 vérifications sur 12 ont été exécutées** — 6 réussies, 1 non concluante. **5 n'ont pas pu
+l'être**, faute de matière dans les données de test *(ni catégorie U14, ni tableau final de Coupe)*.
+
+> ⛔ **L'étape 5 reste donc OUVERTE, et R-042 reste OUVERT.** ⭐ **V-10, déclarée obligatoire, n'a
+> pas été exécutée.**
+
+**Environnement** : toutes les vérifications ont été faites sur une **copie de test** du classeur
+*(`Tournoi R92 — COPIE DE TEST C-012`)*, la propriété de script `SHEET_ID` ayant été basculée
+temporairement vers cette copie. **Aucune écriture n'a touché le classeur de production.** Le
+routage a été prouvé par contraste `getConfig` **avant / après** bascule, et ⭐ **`SHEET_ID` a été
+restaurée en fin de session** *(propriété supprimée : elle n'existait pas avant)* — la réponse
+publique est redevenue **identique octet pour octet** à celle d'avant bascule, et la production a
+été vérifiée **intacte** *(3 matchs terminés, 211 lignes d'historique — inchangés)*. Détail et
+preuves : `SESSIONS.md` **§2 et §9**.
+
+#### Ce que chaque vérification réussie a établi
+
+| # | Preuve retenue |
+|---|---|
+| **V-1** | M001 écrit **12-7**, statut `terminé`, carte verrouillée, classement recalculé, score servi par l'adresse publique |
+| **V-2** | **deux moitiés vérifiées** — *(a)* la clé est redemandée par « Corriger », « Annuler » n'écrit **rien** ; *(b)* depuis un écran périmé, le serveur refuse avec le message **conforme au code au caractère près**, et un score concurrent *(8-6)* est **rejeté sans laisser de trace**. ⭐ **Parade du risque N-1 vérifiée en conditions réelles** |
+| **V-3** | M001 corrigé en **10-14**, classement **réordonné** *(MEUDON 1→3 pts, VERSAILLES-1 3→1 pt)* |
+| **V-6** | `Historique` : **une seule ligne** pour M001, portant le score **corrigé** — la correction a **réécrit la ligne**, pas ajouté une seconde. **0 doublon** sur 213 lignes |
+| **V-9** | Reconnexion + clé : **aucune ligne `__verif_cle__`**, 51 matchs avant et après, `Historique` identique. ⭐ **Parade du risque N-2 vérifiée** |
+| **V-11** | Les 8 colonnes de détail supprimées à la main sont **toutes recréées** *(à droite : `arbitre` remonte en 19ᵉ position — comportement normal, les colonnes sont retrouvées par leur **nom**)*, la saisie simple fonctionne, et **n'écrit rien** dans les colonnes de détail. ⭐ **Parade du risque N-4 vérifiée dans ses deux sens** |
+
+#### ⭐ V-12 — 🟠 **NON CONCLUANTE**
+
+> **V-12 — NON CONCLUANTE.** La validation de M007 a duré **7,099 s** *(journal « Exécutions »,
+> 2026-08-18 à 14:30:30, déploiement « Version 151 » — **rapporté par Romain**, non vérifiable
+> depuis le dépôt : `CLAUDE.md` §13.6)*, au-dessus de l'enveloppe opérationnelle de **7 s** retenue
+> comme **critère de substitution** *(D-C012-5)*. Les lectures `doGet` **contemporaines** sont
+> restées **majoritairement dans leur plage habituelle** *(1,6 à 4,8 s ; médiane des 14 lectures
+> suivantes : **2,218 s**, contre **2,07 s** de repère historique)* — **aucun signe de dégradation
+> générale de la plateforme au même moment**. **La cause de cette durée reste INDÉTERMINÉE**, et
+> **la responsabilité de C-012 n'est pas établie**. L'absence de mesure homogène d'une validation
+> **avant** C-012 demeure une **limite méthodologique définitive**.
+
+**Contexte statistique — faits nus, sans lien de cause :**
+
+| Série | Valeurs |
+|---|---|
+| Validations réelles observées **sur le code actuel** | **4,408 · 4,667 · 4,968 · 5,243 · 6,887 · 7,099 s** |
+| Série V-12 antérieure *(3 validations consécutives)* | **7,079 · 11,592 · 9,216 s** |
+| Écart client / serveur relevé sur **une** lecture | **17,027 s côté client** pour **≈ 2,145 s côté serveur** ⚠️ *observation d'écart, **à ne pas** utiliser pour expliquer les `doPost`* |
+
+⚠️ **Ce qui n'est PAS écrit ici, et ne doit pas l'être** : aucune cause n'est désignée — ni C-012,
+ni la plateforme, ni le relais, ni la reconstruction de l'instantané. **Rien de tout cela n'est
+démontré.**
+
+#### Les 5 vérifications non exécutées, et ce qui les bloque
+
+| # | Ce qui manque |
+|---|---|
+| **V-4**, **V-5** | **Aucune catégorie U14** dans les données de test *(seules U8 et U10)*, et `getCapacitesCategories` renvoie `tir_au_but: false` pour les deux → l'écran de saisie n'affiche jamais les compteurs de détail |
+| **V-7**, **V-8**, ⭐ **V-10** | **Aucun match de Coupe** : `sous_tableau` vide sur les 51 matchs, `match_suivant` renseigné **0 fois**. Les garde-fous ①, ③ et ④ ne peuvent pas se déclencher. ⚠️ Le format `COUPE_PLATEAU` n'est **plus proposé par l'interface** *(interdit EDR — `frontend/js/admin-reglages.js:442`)* : le produire demanderait de l'écrire directement dans l'onglet `Config` |
 
 ---
 
@@ -602,10 +663,31 @@ aujourd'hui**. **Aucun classeur requis** : tous les objets sont fabriqués à la
 |---|---|---|---|
 | **N-1** | **Un message d'erreur ou un drapeau change** *(une virgule, un accent)* → l'écran de saisie ne réagit plus | 🔴 **élevé** | Les 6 messages et les 5 drapeaux sont **recopiés à l'identique** (§5.2) ; **T-7 à T-15** les vérifient ; **V-2, V-7, V-10** les voient en vrai |
 | **N-2** | **L'ordre des contrôles change** → la sonde de clé casse, ou la migration s'exécute trop tôt | 🔴 **élevé** | **Deux cœurs** au lieu d'un (§3.3) ; **T-13** ; **V-9** |
-| **N-3** | **La lecture du match suivant devient systématique** → chaque saisie ralentit, sous le verrou | 🟠 moyen | `cascadeAVerifier` (§4.3) ; **T-14** ; **V-12** |
+| **N-3** | **La lecture du match suivant devient systématique** → chaque saisie ralentit, sous le verrou | 🟠 moyen | `cascadeAVerifier` (§4.3) ; **T-14** ; **V-12** — 🟠 **NON CONCLUANT au 2026-08-18** *(voir sous le tableau)* |
 | **N-4** | **Les 8 colonnes de détail sont écrites en mode simple** *(ou l'inverse)* → migration douce cassée, détail écrasé | 🟠 moyen | **T-17** ; **V-4** et **V-11** |
 | **N-5** | **L'archivage ou la propagation redevient bloquant** → un journal en erreur **empêcherait d'enregistrer un score** le jour J | 🔴 **élevé** | Les deux `try/catch` sont **transportés tels quels** ; **V-6**, **V-8** |
 | **N-6** | **L'objet passé à la propagation n'est plus à jour** *(l'optimisation « en mémoire », §2.4-5)* → **le mauvais vainqueur propagé** | 🔴 **élevé** | `matchApresEcriture` est **explicitement dans le plan** (§5.2b) ; **V-8** et **V-10** |
+
+> ### ⭐ Où en sont les six risques, au 2026-08-18
+>
+> | # | État | Établi par |
+> |---|---|---|
+> | **N-1** *(messages et drapeaux)* | ✅ **ÉCARTÉ en conditions réelles** | **V-2b** — message serveur conforme **au caractère près** |
+> | **N-2** *(ordre des contrôles / sonde de clé)* | ✅ **ÉCARTÉ en conditions réelles** | **V-9** — aucune ligne `__verif_cle__` |
+> | **N-3** *(lecture systématique du match suivant)* | 🟠 **NON CONCLUANT** | voir ci-dessous |
+> | **N-4** *(colonnes de détail)* | ✅ **ÉCARTÉ dans ses deux sens** | **V-11** |
+> | **N-5** *(archivage / propagation bloquants)* | 🟡 **partiellement écarté** — le journal n'a jamais bloqué une saisie *(V-1, V-3, V-6)* ; **la propagation n'a pas été exercée** *(V-8 non exécutée)* | — |
+> | **N-6** *(mauvais vainqueur propagé)* | ⛔ **NON VÉRIFIÉ** | V-8 et V-10 non exécutées |
+>
+> **N-3 — 🟠 NON CONCLUANT.** Le chemin fonctionnel `match_suivant` **n'a jamais été exécuté** lors
+> des validations disponibles, **faute de match de Coupe dans les données de test** *(0 match avec
+> `sous_tableau = COUPE`, 0 `match_suivant` renseigné)*. **Aucun résultat, positif ou négatif, ne
+> peut donc être attribué à ce scénario.**
+>
+> ⚠️ **V-12 ne teste pas N-3, et n'a pas été utilisée pour en conclure quoi que ce soit** : les
+> validations mesurées portaient toutes sur des matchs de **poule**.
+
+---
 
 ### 9.3 — La preuve à produire, et elle est exigeante
 
@@ -635,7 +717,7 @@ Pour C-012, cette preuve prend **trois formes cumulatives** :
 | **2** | ✅ **FAIT — PR #188 fusionnée le 2026-08-16.** **`cascadeAVerifier`** extrait · **T-14** | `refactor(scores): C-012 étape 2 — extraire cascadeAVerifier et ajouter T-14` | **649 + 12 = 661** verts |
 | **3** | ✅ **FAIT — PR #189 fusionnée le 2026-08-17.** ⭐ **Cœur 2** `deciderEnregistrementScore` — les 6 garde-fous · **T-6 à T-13, T-15 à T-17** | `refactor(scores): C-012 étape 3 — les six garde-fous passent sous test (R-042)` | **661 + 42 = 703** verts |
 | **4** | ✅ **FAIT le 2026-08-18** — **redéploiement chez Google** *(`Code.gs` **ET** `Tests.gs` → `Test.gs`)* · **nouvelle version du MÊME déploiement** publiée · `lancerTestsFFR` exécuté là-bas | *(pas de commit de code — seulement celui-ci, documentaire)* | ⭐ **`R92 — 703/703 OK, 0 FAIL` obtenu CHEZ GOOGLE** · **dernière ligne de `Test.gs` = 4244** · `?action=ping` **OK** · `?action=getConfig` **OK** *(les 5 preuves sont détaillées sous le tableau)* |
-| **5** | ⏳ **À FAIRE** — **les 12 vérifications manuelles** du §8, avec **V-10 obligatoire** | `docs(industrialisation): C-012 livré` | la liste cochée |
+| **5** | 🚧 **EN COURS depuis le 2026-08-18 — 7 vérifications sur 12.** ✅ **V-1, V-2, V-3, V-6, V-9, V-11 RÉUSSIES** · 🟠 **V-12 NON CONCLUANTE** · ⛔ **V-4, V-5, V-7, V-8 et V-10 NON EXÉCUTÉES** *(données de test sans catégorie U14 ni tableau final)*. ⭐ **V-10, obligatoire, n'est pas faite** | *(le présent lot, documentaire)* | **§8 bis** — résultats et preuves |
 
 > ⚠️ **Le compte annoncé au §7 était faux, et il faut le dire.** Ce document estimait *« 616 + 5 »*
 > pour l'étape 1 et *« ~633 »* pour l'ensemble : il **comptait les fonctions de test**, alors que le
@@ -644,7 +726,13 @@ Pour C-012, cette preuve prend **trois formes cumulatives** :
 >
 > ⛔ **R-042 n'est PAS refermé pour autant.** Les six garde-fous sont **sous test** depuis l'étape 3,
 > et ces tests tournent **chez Google** depuis l'étape 4 — mais **les 12 vérifications manuelles du
-> §8 n'ont pas été faites**. **Le risque ne passera à `TESTÉ` qu'après l'étape 5.**
+> §8 ne sont faites qu'à 7 sur 12**. **Le risque ne passera à `TESTÉ` qu'après l'étape 5 complète.**
+>
+> ⚠️ **Mise à jour du 2026-08-18** : l'étape 5 a été **ouverte et partiellement exécutée**. Elle
+> **reste OUVERTE**. Les 5 vérifications manquantes — dont ⭐ **V-10, déclarée obligatoire** —
+> exigent une matière absente des données de test : une **catégorie U14 en tir au but** *(V-4, V-5)*
+> et un **tableau final de Coupe** *(V-7, V-8, V-10)*. **Aucune ligne de code n'a été modifiée
+> pendant l'étape 5**, et aucun redéploiement n'a eu lieu.
 
 ### ⭐ Étape 4 — les preuves obtenues le 2026-08-18
 
@@ -691,6 +779,42 @@ Pour C-012, cette preuve prend **trois formes cumulatives** :
 | **D-C012-2** | Détail du score jamais effacé | ✅ **Problème distinct — inscrit R-092, NON corrigé** |
 | **D-C012-3** | Détail partiel ⇒ l'autre côté à zéro | ✅ **Comportement actuel conservé** |
 | **D-C012-4** | Nombre de tests | ✅ **17 tests validés** |
+| ⚡ **D-C012-5** | **Critère de V-12**, faute de mesure « avant » | ✅ **Critère de substitution accepté le 2026-08-18** *(voir ci-dessous)* |
+
+---
+
+### ⚡ D-C012-5 — Critère de substitution pour V-12 *(accepté par Romain le 2026-08-18)*
+
+**Le problème.** Le §8 demandait pour V-12 une validation *« pas plus lente qu'avant »*. Or
+**aucune mesure homogène d'une validation de score avant C-012 n'existe** — l'audit du domaine F
+l'écrit lui-même : *« Aucune écriture réelle n'a été chronométrée »* *(`AUDIT.md` §F.7 ; la
+fourchette « 3 à 8 s » y est une **reconstitution par calcul**, pas une mesure)*. Le repère
+**2,67 s** souvent cité est la **médiane de 43 écritures toutes catégories confondues** —
+publications, horaires, équipes — et **non** de validations de score. Et l'ancien code n'étant plus
+en service, **cette mesure ne peut plus être obtenue**.
+
+**Le critère retenu à la place** :
+
+> *« La validation reste dans l'enveloppe des validations mesurées sur le code actuellement
+> déployé, et aucune opération ajoutée par C-012 n'intervient sur ce chemin. »*
+
+⚠️ **Les trois réserves posées par Romain, conservées telles quelles** :
+
+1. ce critère permet de statuer **opérationnellement** sur V-12 ;
+2. il **ne constitue pas** une preuve historique que la validation est aussi rapide qu'avant C-012 ;
+3. **l'absence de mesure réelle avant C-012 reste documentée comme une limite méthodologique.**
+
+**Application à M007** *(les seuils ont été fixés **avant** le geste)* :
+
+| Condition | Seuil | Observé | Verdict |
+|---|---|---|---|
+| Rester dans l'enveloppe | **≤ 7 s** | **7,099 s** | ❌ **non satisfaite** |
+| Aucune opération C-012 sur ce chemin | — | `litSaisieScore` et `deciderEnregistrementScore` sont **pures** ; la lecture conditionnelle du match suivant **n'a pas été franchie** *(aucun match de Coupe)* | ✅ **établie** |
+
+**Le critère n'est donc rempli qu'à moitié → V-12 est `NON CONCLUANTE`.** Ce n'est **pas** un
+échec : un échec supposerait de démontrer que C-012 a ralenti la validation, ce qui exigerait soit
+une mesure d'avant *(inexistante et désormais impossible)*, soit un mécanisme identifié dans le code
+ajouté *(il n'y en a pas)*.
 
 ---
 

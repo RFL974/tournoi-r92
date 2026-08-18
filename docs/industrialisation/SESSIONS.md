@@ -4718,3 +4718,319 @@ corrigées, rien d'autre touché dans le fichier.
 | **R-042** | ⛔ **OUVERT** — il ne passera à `TESTÉ` qu'après l'étape 5 |
 | **R-092** | 🔴 **IDENTIFIÉ — NON CORRIGÉ**, priorité **À CONFIRMER** |
 | **Prochaine étape** | **étape 5 du §10** — les **12 vérifications manuelles**, **V-10 obligatoire** *(la cascade du tableau final : la seule preuve prévue pour ce que les tests ne couvrent pas)*. ⛔ **Attend une autorisation explicite de Romain.** |
+
+---
+
+# 🚧 C-012 — **ÉTAPE 5 : LES VÉRIFICATIONS MANUELLES — 7 SUR 12** *(2026-08-18, soir)*
+
+> **Objectif de la session** : exécuter les 12 vérifications manuelles du **§8** de
+> `C-012-SPECIFICATION.md`, sur autorisation explicite de Romain.
+> **Résultat** : **7 exécutées** — 6 réussies, 1 non concluante. **5 bloquées** faute de matière
+> dans les données de test. ⛔ **L'étape 5 reste OUVERTE, et R-042 reste OUVERT.**
+
+## 0. Mise à jour avant lecture (`CLAUDE.md` §12.3)
+
+`git fetch origin` puis `git status -sb` : **`## main...origin/main`** — ni en avance ni en retard,
+arbre de travail vide. **`HEAD` = `ffe4463`**, identique à `origin/main`. Vérifié **au début et à la
+fin** de la session : **inchangé**.
+
+## 1. L'audit préalable en lecture seule
+
+Demandé par Romain avant toute action, et concordant sur les six points : `main` synchronisée ·
+`ffe4463` · étapes 1 à 4 documentées comme terminées dans **quatre** documents sans contradiction ·
+étape 5 « à faire / non autorisée » · **R-042 OUVERT** · **aucune** trace de travail d'étape 5.
+
+Contrôles supplémentaires : les trois fonctions extraites existent bien dans `backend/Code.gs`
+(`litSaisieScore` l. 5554, `cascadeAVerifier` l. 5596, `deciderEnregistrementScore` l. 5628), et
+`backend/Tests.gs` fait **exactement 4 244 lignes** — ce qui concorde avec la seconde preuve de
+l'étape 4.
+
+> ⚠️ **Écart mineur signalé, non corrigé** : `RISQUES.md` affiche R-042 au statut `IDENTIFIÉ` alors
+> que le chantier est **en cours**. C'est délibéré *(le fichier n'a pas été touché, sur consigne)*
+> et le fond reste juste — R-042 **est** ouvert.
+
+## 2. ⭐ L'environnement de test — et le piège qui a failli tout fausser
+
+Romain a exigé que les vérifications se fassent sur une **copie de test**, jamais sur la production.
+
+**Le piège** : le serveur n'ouvre pas « le classeur où il est rangé », il ouvre **un classeur désigné
+par son identifiant** (`SHEET_ID_DEFAUT`, `backend/Code.gs:15`). **Copier le classeur ne suffit
+donc pas** — le serveur aurait continué d'écrire en production.
+
+**Et le piège s'est refermé une première fois.** Le projet Apps Script est **logé dans le classeur**
+(`onOpen`, `Code.gs:2958` ; `docs/deploiement.md:19`) : copier le classeur a **copié le programme
+avec lui**. Le premier réglage de `SHEET_ID` a été posé sur ce **sosie**, que rien n'appelle.
+
+**Ce qui l'a révélé** : `?action=getConfig` renvoyait toujours `CHALLENGE MARC CHEVALIER`, **sans le
+témoin**. Ce n'était pas un effet de cache — `getConfig` **n'est pas mis en cache** et ouvre le
+classeur à chaque appel (`Code.gs:340`). L'empreinte de la réponse était **identique au bit près**.
+
+> 🎯 **L'indice qui a tranché** : Romain avait constaté `SHEET_ID` **absente**. Or le projet de
+> production contient forcément `CLE_ADMIN` et `CLE_SCORES`. Une liste de propriétés sans elles =
+> **mauvais projet**. Vérification faite : c'était bien le cas.
+
+**La chaîne de preuve du routage, par contraste :**
+
+| Moment | `global.tournoi_nom` | Empreinte SHA-256 |
+|---|---|---|
+| **Avant bascule** | `CHALLENGE MARC CHEVALIER` | `6b9189c6e40f0cdc…` |
+| Après bascule sur le **sosie** | `CHALLENGE MARC CHEVALIER` *(inchangé)* | `6b9189c6e40f0cdc…` — **identique** |
+| ⭐ **Après bascule sur le bon projet** | ⭐ **`CHALLENGE MARC CHEVALIER — COPIE DE TEST`** | `0534a851d8357f59…` |
+
+Contrôle complémentaire : sur les **21 réglages** de la configuration, **un seul** diffère entre la
+production et la copie — `tournoi_nom`, le témoin lui-même. La copie est donc **fidèle**.
+
+> 📌 **`SHEET_ID` n'existait PAS avant** dans le projet de production. La restaurer signifie
+> **supprimer la ligne entière**, et non la vider ni y remettre l'identifiant de production.
+
+## 3. Inventaire de la copie — ce qui a décidé du périmètre réel
+
+Relevé **en lecture seule**, par `getMatchs`, `getEquipes`, `getPoules`, `getHistorique`,
+`getCapacitesCategories` et `getConfig`. *(`getAll` a été volontairement écarté : c'est le seul
+servi par un cache de secours de 6 h, il aurait pu montrer un reste de la production.)*
+
+| Constat | Valeur | Conséquence |
+|---|---|---|
+| Matchs | **51**, tous en phase `poule` — 48 non joués | V-1, V-2, V-3, V-6, V-9, V-11, V-12 **possibles** |
+| Catégories | **U8 et U10 seulement** — `tir_au_but: false` pour les deux | ⛔ **V-4 et V-5 impossibles** |
+| Tableau final | **aucun** — `sous_tableau` vide sur les 51 matchs, `match_suivant` renseigné **0 fois** | ⛔ **V-7, V-8 et ⭐ V-10 impossibles** |
+
+> ⚠️ **Obstacle à connaître pour la suite** : le seul format produisant un tableau à élimination est
+> **`COUPE_PLATEAU`**, et il **n'est plus proposé par l'interface** — *« INTERDIT en EDR »*
+> (`frontend/js/admin-reglages.js:442`). Le produire demanderait de l'écrire directement dans
+> l'onglet `Config`. **Rien n'a été créé : le manque a été signalé, comme demandé.**
+
+## 4. Les 7 vérifications exécutées
+
+**Répartition des rôles** : Romain a fait **tous** les gestes exigeant la clé scores ou l'interface ;
+Claude n'a fait que des **lectures** et les relevés avant/après. **Aucune clé n'a été saisie par
+Claude.**
+
+### ✅ V-1 — saisie ordinaire — **RÉUSSIE**
+
+M001 *(U8, poule A, VERSAILLES-1 vs MEUDON)* saisi **12-7**. Observé à l'écran : `✔️ terminé`,
+champs grisés, bouton devenu `CORRIGER`, message `Score enregistré ✓`, compteur passé de 28 à 27.
+Vérifié dans le classeur : `score_A = 12`, `score_B = 7`, `statut = terminé`, `vainqueur` vide
+*(correct hors Coupe)*, **les 8 colonnes de détail restées vides**, 51 lignes avant et après.
+Classement recalculé : VERSAILLES-1 **3 pts (+5)**, MEUDON **1 pt (−5)**, les deux autres équipes
+inchangées. Score servi par l'adresse publique.
+
+> ⚠️ **Le délai d'apparition publique n'a PAS été chronométré** — relevé trop tardif. Consigné comme
+> **non mesuré**, jamais reconstitué.
+
+### ✅ V-2 — refus d'une revalidation — **RÉUSSIE** *(deux moitiés)*
+
+La spécification attend **deux** choses. Elles ne s'obtiennent pas par le même chemin, et c'est un
+constat de méthode utile pour la suite.
+
+- **V-2a** — clic sur `CORRIGER` (M001) puis « Annuler » : la clé **est redemandée**, et le
+  renoncement **n'écrit rien**. Vérifié exhaustivement : **aucun champ modifié** sur les 51 matchs
+  *(27 colonnes × 51 lignes comparées)*, `Historique` **identique au caractère près**, classement
+  **identique au bit près**.
+- **V-2b** — validation depuis un **second onglet non rafraîchi** (M002) : le serveur refuse avec
+  ⭐ **`Ce score est déjà validé (définitif). Utilise « Corriger » pour le modifier.`** — **identique
+  au caractère près** au message de `backend/Code.gs:5643`, guillemets français compris.
+  **Preuve complémentaire** : la tentative refusée portait un score **différent (8-6)**, et **aucune
+  trace de 8-6** n'existe dans `Matchs`, dans `Historique` ni dans le classement.
+
+> ⭐ **Parade du risque N-1 vérifiée en conditions réelles.** L'écran protège si bien en amont que le
+> refus serveur n'est atteignable **que** par un écran périmé — soit le scénario réel du jour J :
+> deux bénévoles, deux téléphones, le même match.
+
+### ✅ V-3 — correction avec la clé — **RÉUSSIE**
+
+M001 corrigé de **12-7** en **10-14**. **Seuls `score_A` et `score_B` ont changé** sur les 51 matchs.
+Classement **réordonné**, conformément à la prédiction faite **avant** le geste : MEUDON **1 → 3 pts**
+*(diff +4)*, VERSAILLES-1 **3 → 1 pt** *(diff −4)*, MASSY-1 prend la tête *(3 pts, +5)*. Le départage
+se fait bien à la différence de points — constaté, non supposé.
+
+**Délai public** : sonde de 27 interrogations, ancien score encore présent à **13:28:25**, nouveau à
+**13:28:27**. Consigné comme **« quasi immédiat, apparition constatée à 13:28:27 »**, avec **l'heure
+du clic non relevée** — le délai chiffré ne sera donc jamais établi pour V-3.
+
+### ✅ V-6 — journal de saison — **RÉUSSIE**
+
+Onglet `Historique`, **ligne 213** : `2026-08-18 | 2026-08-04 14:17:43 | M001 | U8 | poule |
+VERSAILLES-1 | MEUDON | 10 | 14`. ⭐ **Le score est celui de la correction, et il n'existe qu'une
+seule ligne M001 pour ce tournoi** : la correction a **réécrit la ligne**, pas ajouté une seconde.
+**213 lignes avant et après la correction**, **0 doublon** `(tournoi_id, id_match)`.
+
+> **Piège écarté** : cinq lignes portent `M001` dans l'onglet, mais elles appartiennent à **cinq
+> tournois différents**. Ce n'est pas un doublon — l'identité d'une ligne est le **couple**
+> `tournoi_id` + `id_match`.
+
+### ✅ V-9 — la sonde de vérification de clé — **RÉUSSIE**
+
+Tous les onglets fermés, page rouverte, clé saisie. **Aucune ligne `__verif_cle__`** dans `Matchs`
+*(51 → 51, dernier identifiant `M051`, ligne 53 du Sheet vide — vérifié à l'écran par Romain)*,
+**aucun champ modifié**, `Historique` **identique**.
+
+> ⭐ **Parade du risque N-2 vérifiée.** La page teste la clé en **feignant** d'enregistrer un score
+> sur un match inexistant (`frontend/js/api.js:175`). L'astuce ne tient que si le serveur vérifie
+> l'existence du match **avant** toute écriture. **L'ordre des contrôles a survécu au déménagement
+> de C-012.** Sans cela, chaque connexion de bénévole aurait laissé une ligne fantôme, toute la
+> journée, sans que rien ne le signale.
+
+### ✅ V-11 — migration douce des colonnes — **RÉUSSIE**
+
+Les 8 colonnes de détail *(S à Z)* supprimées à la main dans la copie, puis M003 saisi **6-3**.
+**Les 8 colonnes sont toutes revenues**, aux bons noms, et le total est à nouveau de **27 colonnes**.
+
+⭐ **L'ordre a changé, et c'est normal** : `assurerColonnesMatchs` ajoute les colonnes manquantes
+**à droite** (`Code.gs:6778`). `arbitre` remonte donc en 19ᵉ position, suivi de `essais_A` … `drop_B`.
+**Le serveur retrouve ses colonnes par leur NOM, jamais par leur position** — ce changement d'ordre
+avait été **annoncé avant le geste**, précisément pour qu'il ne soit pas pris pour une anomalie.
+
+**Seconde moitié, aussi importante** : les 8 valeurs de détail de M003 sont restées **vides**. Une
+saisie simple **recrée** les colonnes mais **ne les remplit pas**.
+
+> ⭐ **Parade du risque N-4 vérifiée dans ses deux sens.**
+
+### 🟠 V-12 — chronométrage — **NON CONCLUANTE**
+
+**Trois validations** (M004, M005, M006) ont donné **7,079 s · 11,592 s · 9,216 s** *(médiane
+9,216 s)*. **Une faute de méthode a été commise et elle est assumée** : Claude s'était abstenu de
+toute lecture pendant ces saisies « pour ne pas ajouter de charge parasite », **supprimant du même
+coup le témoin** qui aurait dit si la plateforme était lente au même moment.
+
+**Un test complémentaire a donc été décidé**, avec des lectures témoins **contemporaines** :
+
+| Élément | Valeur |
+|---|---|
+| Match | **M007** — U8, poule D, CLAMART-2 vs CHATENAY-MALABRY |
+| ⚠️ Score saisi | **2-4** — le protocole prévoyait **8-4**. **Erreur de saisie**, confirmée par Romain. **Sans incidence** : la durée d'une validation ne dépend pas de la valeur du score |
+| ⭐ **`doPost`** | **2026-08-18 à 14:30:30 — 7,099 s — Terminée** *(déploiement « Version 151 »)* |
+| Lectures témoins | **1,6 à 4,8 s** ; médiane des 14 lectures suivantes : **2,218 s** *(repère historique : 2,07 s)* |
+
+> **V-12 — NON CONCLUANTE.** La validation de M007 a duré **7,099 s**, au-dessus de l'enveloppe
+> opérationnelle de **7 s** retenue comme critère de substitution *(D-C012-5)*. Les lectures `doGet`
+> **contemporaines** sont restées **majoritairement dans leur plage habituelle**, sans signe de
+> dégradation générale de la plateforme au même moment. **La cause de cette durée reste
+> INDÉTERMINÉE**, et **la responsabilité de C-012 n'est pas établie**. L'absence de mesure homogène
+> d'une validation **avant** C-012 demeure une **limite méthodologique définitive**.
+
+**Cohérence horaire vérifiée** *(et ce n'est pas une contradiction)* : le `doPost` démarre à 14:30:30
+et dure 7,099 s — fin à 14:30:37 — alors que la sonde voyait déjà `2-4` vers 14:30:36. Les cellules
+sont écrites **tôt** dans l'exécution, avant la reconstruction de l'instantané et l'envoi au relais.
+
+**Contexte statistique — faits nus, sans lien de cause :**
+
+| Série | Valeurs |
+|---|---|
+| Validations réelles observées **sur le code actuel** | **4,408 · 4,667 · 4,968 · 5,243 · 6,887 · 7,099 s** |
+| Série V-12 antérieure | **7,079 · 11,592 · 9,216 s** |
+| Écart client / serveur sur **une** lecture | **17,027 s côté client** pour **≈ 2,145 s côté serveur** |
+
+> ⚠️ **Ce dernier écart montre que le journal « Exécutions » sous-estime le temps réellement subi**
+> *(il chronomètre à partir du début du travail serveur, pas de la réception de la requête)*. Il
+> **ne doit pas** servir à expliquer les `doPost`, qui sont des durées de travail effectif.
+>
+> ⛔ **Aucune cause n'est désignée** — ni C-012, ni la plateforme, ni le relais, ni la reconstruction
+> de l'instantané. **Rien de tout cela n'est démontré.**
+
+## 5. Les 5 vérifications NON exécutées
+
+| # | Bloquée par |
+|---|---|
+| **V-4**, **V-5** | Aucune catégorie **U14** dans les données de test |
+| **V-7**, **V-8**, ⭐ **V-10** | Aucun **tableau final de Coupe** |
+
+⭐ **V-10 est déclarée obligatoire** par le §8 : c'est *« le seul scénario qui exerce la partie non
+couverte par les tests »* (§3.5). **Sans elle, l'étape 5 ne peut pas aboutir.**
+
+## 6. Où en sont les six risques de non-régression
+
+| # | État |
+|---|---|
+| **N-1** *(messages et drapeaux)* | ✅ **ÉCARTÉ en conditions réelles** — V-2b |
+| **N-2** *(ordre des contrôles)* | ✅ **ÉCARTÉ en conditions réelles** — V-9 |
+| **N-3** *(lecture du match suivant)* | 🟠 **NON CONCLUANT** |
+| **N-4** *(colonnes de détail)* | ✅ **ÉCARTÉ dans ses deux sens** — V-11 |
+| **N-5** *(archivage bloquant)* | 🟡 **partiellement** — le journal n'a jamais bloqué une saisie ; la propagation n'a pas été exercée |
+| **N-6** *(mauvais vainqueur propagé)* | ⛔ **NON VÉRIFIÉ** — V-8 et V-10 non exécutées |
+
+> **N-3 — NON CONCLUANT.** Le chemin fonctionnel `match_suivant` **n'a jamais été exécuté** lors des
+> validations disponibles, **faute de match de Coupe dans les données de test**. **Aucun résultat,
+> positif ou négatif, ne peut être attribué à ce scénario.** ⚠️ **V-12 ne teste pas N-3** et n'a pas
+> été utilisée pour en conclure quoi que ce soit : toutes les validations portaient sur des matchs
+> de **poule**.
+
+## 7. Ce qui a été VÉRIFIÉ, et comment — la ligne de partage
+
+- ✅ **CERTAIN, vérifié directement** : l'état du dépôt · le routage vers la copie *(contraste
+  `getConfig` avec empreintes)* · **tous** les états avant/après du classeur *(matchs, historique,
+  classement, en-têtes)* · les messages serveur comparés au code · l'absence de ligne parasite ·
+  l'absence de doublon.
+- 🟠 **RAPPORTÉ PAR ROMAIN**, non vérifiable depuis le dépôt *(cadre §13.6)* : ce qui s'affiche à
+  l'écran de saisie *(verrouillage, boutons, messages)* · **toutes les durées du journal
+  « Exécutions »**, dont les **7,099 s** · le déploiement « Version 151 » · l'état des Propriétés du
+  script.
+- ⛔ **NON VÉRIFIÉ** : **la cascade réelle du tableau final** *(V-10)* · **la propagation du
+  vainqueur** *(V-8)* · **le score détaillé** *(V-4, V-5)* · **la cause de la durée de 7,099 s**.
+
+## 8. Ce qui n'a **PAS** été fait
+
+- ❌ **aucune ligne de code modifiée** — `git status` est resté vide du début à la fin ;
+- ❌ **aucun test ajouté ni modifié** ;
+- ❌ **aucun déploiement** ;
+- ❌ **aucune écriture dans le classeur de production** — les **8 écritures** portant sur **7 matchs**
+  *(M001 saisi puis corrigé, M002, M003, M004, M005, M006, M007)* ont **toutes** eu lieu dans la
+  **copie de test** ;
+- ❌ **`RISQUES.md` non touché** : **R-042 reste OUVERT**, et le phénomène de performance est déjà
+  couvert par **R-067** *(le verrou tenu pendant la reconstruction de l'instantané)* — **aucun
+  nouveau risque n'a été créé**, et rien n'a été ajouté à R-067, car cela reviendrait à lui
+  **attribuer** les 7,099 s, ce qui n'est pas démontré ;
+- ❌ **`DECISIONS.md` et `docs/passation.md` non touchés** — les décisions de C-012 vivent dans sa
+  spécification *(§11)*, et `passation.md` ne mentionne ni C-012 ni R-042.
+
+## 9. ⭐ Retour à la production — le routage est restauré, et la production est INTACTE
+
+`SHEET_ID` a été **supprimée** des Propriétés du script de production *(et non vidée : elle
+**n'existait pas** avant l'étape 5 — la remettre à l'état initial, c'est la faire disparaître)*.
+
+**La chaîne de preuve complète, du début à la fin :**
+
+| Moment | `global.tournoi_nom` | Empreinte SHA-256 |
+|---|---|---|
+| **Avant bascule** *(12:2x)* | `CHALLENGE MARC CHEVALIER` | `6b9189c6e40f0cdc…` |
+| **Pendant l'étape 5** | `CHALLENGE MARC CHEVALIER — COPIE DE TEST` | `0534a851d8357f59…` |
+| ⭐ **Après restauration** *(14:54:41)* | ⭐ **`CHALLENGE MARC CHEVALIER`** | ⭐ **`6b9189c6e40f0cdc…`** |
+
+> ⭐ **La réponse d'après restauration est identique OCTET POUR OCTET à celle d'avant bascule.**
+> Même empreinte, même taille *(2 398 octets)*. Le routage est revenu **exactement** à son état
+> initial — ce n'est pas « à peu près pareil », c'est le même contenu, au bit près.
+
+### La production n'a rien reçu — vérifié, pas supposé
+
+| Contrôle sur la **production**, après restauration | Valeur | Attendu |
+|---|---|---|
+| Lignes dans `Matchs` | **51** | 51 |
+| Matchs terminés | ⭐ **3** — `M010`, `M019`, `M031` | les 3 d'origine |
+| **M001 → M007** *(les 7 matchs saisis pendant les tests)* | ⭐ **tous vides, tous `à venir`** | intacts |
+| Lignes dans `Historique` | ⭐ **211** | 211 |
+| `Historique` — tournoi courant | ⭐ **3 lignes** : `M010`, `M019`, `M031` | 3 |
+
+> 🎯 **La copie de test, elle, est passée de 211 à 214 lignes d'historique** et compte 7 matchs
+> terminés de plus. **Les deux classeurs se sont séparés au moment de la bascule, et la production
+> n'a pas bougé d'une ligne.** Les 8 écritures de l'étape 5 sont **toutes** restées dans la copie.
+
+### Ce qui reste, et qui n'est pas un problème
+
+La **copie de test** existe toujours, avec ses 7 matchs saisis et ses colonnes de détail dans un
+ordre différent *(conséquence de V-11)*. Elle **n'est plus reliée à rien** — plus aucun programme ne
+l'ouvre. Elle reste **disponible** si l'étape 5 doit être reprise pour les 5 vérifications
+manquantes ; sinon elle peut être supprimée sans conséquence.
+
+## 10. État à la fin de la session
+
+| | |
+|---|---|
+| **`main`** | `ffe4463` — **inchangé** *(vérifié en début et en fin de session)* |
+| **C-012** | 🚧 **étape 5 OUVERTE — 7 vérifications sur 12** |
+| **R-042** | ⛔ **OUVERT** — il ne passera à `TESTÉ` qu'après l'étape 5 **complète** |
+| **N-3** | 🟠 **NON CONCLUANT** |
+| **Régression C-012** | ❌ **NON DÉMONTRÉE** |
+| **Routage** | ✅ **RESTAURÉ** — `SHEET_ID` supprimée, l'adresse publique ressert la **production** *(réponse identique **octet pour octet** à celle d'avant bascule)* |
+| **Production** | ✅ **INTACTE** — 3 matchs terminés, 211 lignes d'historique, les 7 matchs de test **vides et « à venir »** |
+| **Copie de test** | conservée, **plus reliée à rien** — utile si l'étape 5 doit être reprise |
+| **Prochaine étape** | ⛔ **Attend une décision de Romain** : préparer la matière manquante — une **catégorie U14 en tir au but** *(V-4, V-5)* et un **tableau final de Coupe** *(V-7, V-8, ⭐ V-10)* — sans laquelle l'étape 5 ne peut pas aboutir |

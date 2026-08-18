@@ -998,17 +998,35 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   | **2** | `cascadeAVerifier` extrait *(faut-il lire le match suivant ?)* · **T-14** | ✅ **FUSIONNÉE** — PR **#188** |
   | **3** | `deciderEnregistrementScore` — **les 6 garde-fous** · T-6 à T-13, T-15 à T-17 | ✅ **FUSIONNÉE** — PR **#189** |
   | **4** | **Redéploiement chez Google** + `lancerTestsFFR` exécuté là-bas | ✅ **FAIT le 2026-08-18** — `Code.gs` **et** `Tests.gs` collés, **nouvelle version du MÊME déploiement** publiée |
-  | **5** | Les **12 vérifications manuelles** du §8, **V-10 obligatoire** | ⏳ **À FAIRE** |
+  | **5** | Les **12 vérifications manuelles** du §8, **V-10 obligatoire** | 🚧 **EN COURS — 7 sur 12** *(2026-08-18)* : ✅ V-1, V-2, V-3, V-6, V-9, V-11 · 🟠 **V-12 NON CONCLUANTE** · ⛔ V-4, V-5, V-7, V-8, ⭐ **V-10** |
 
   Suite actuelle : ⭐ **`R92 — 703/703 OK, 0 FAIL`** *(616 + 33 + 12 + 42)*, **obtenue CHEZ GOOGLE**
   le 2026-08-18, avec la **dernière ligne de `Test.gs` = 4244** comme seconde preuve, et l'adresse
   publique vérifiée *(`ping` OK, `getConfig` OK)*.
 
-  ⚠️ **Le chantier n'est PAS terminé pour autant, et R-042 reste OUVERT.** Les six garde-fous sont
-  **sous test** et ces tests tournent **chez Google** — mais 703 tests verts prouvent qu'ils
-  **raisonnent** juste, **pas** qu'une saisie de score **fonctionne en vrai**. ⏳ **L'étape 5** du §10
-  de la spécification *(les 12 vérifications manuelles, **V-10 obligatoire**)* reste **entière et
-  NON AUTORISÉE**, et **R-042 ne passera à `TESTÉ` qu'après elle**.
+  ⚠️ **Le chantier n'est PAS terminé, et R-042 reste OUVERT.** Les six garde-fous sont **sous test**
+  et ces tests tournent **chez Google** — mais 703 tests verts prouvent qu'ils **raisonnent** juste,
+  **pas** qu'une saisie de score **fonctionne en vrai**.
+
+  🚧 **Mise à jour du 2026-08-18 — l'étape 5 a été autorisée et partiellement exécutée : 7 sur 12.**
+
+  - ✅ **RÉUSSIES** : **V-1** *(saisie ordinaire)*, **V-2** *(refus d'une revalidation, dans ses deux
+    formes)*, **V-3** *(correction avec la clé)*, **V-6** *(journal de saison : une correction
+    réécrit LA MÊME ligne)*, **V-9** *(la vérification de clé n'écrit aucune ligne parasite)*,
+    **V-11** *(migration douce des 8 colonnes de détail)* ;
+  - 🟠 **V-12 NON CONCLUANTE** : validation mesurée à **7,099 s**, au-dessus de l'enveloppe de **7 s**
+    du critère de substitution *(D-C012-5)* ; les lectures **contemporaines** sont restées dans leur
+    plage habituelle ; **la cause reste INDÉTERMINÉE** et **aucune régression C-012 n'est démontrée**.
+    ⚠️ **Aucune mesure homogène d'une validation avant C-012 n'existe ni ne peut plus être obtenue** ;
+  - ⛔ **NON EXÉCUTÉES : V-4, V-5, V-7, V-8 et ⭐ V-10.** Les données de test ne contiennent **ni
+    catégorie U14 en tir au but** *(V-4, V-5)*, **ni tableau final de Coupe** *(V-7, V-8, V-10)*.
+    ⭐ **V-10 est déclarée obligatoire par la spécification** : sans elle, l'étape 5 ne peut aboutir ;
+  - 🟠 **N-3 reste NON CONCLUANT** — le chemin `match_suivant` n'a jamais été exécuté. **V-12 ne le
+    teste pas.**
+
+  ✅ **Aucune ligne de code, aucun test, aucun déploiement n'ont été touchés par l'étape 5.**
+  Les vérifications se sont faites sur une **copie de test** du classeur, jamais sur la production.
+  **R-042 ne passera à `TESTÉ` qu'après l'étape 5 complète.**
 
 ---
 
