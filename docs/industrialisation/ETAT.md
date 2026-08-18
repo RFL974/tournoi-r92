@@ -9,7 +9,20 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-18 *(soir)* — 🚧 **C-012 — SON ÉTAPE 5 EST OUVERTE : 7 des 12
+**Dernière mise à jour** : 2026-08-18 *(nuit)* — 🚧 **C-012 — SON ÉTAPE 5 EST OUVERTE : 9 des 12
+vérifications manuelles sont faites.** ✅ **RÉUSSIES : V-1, V-2, V-3, V-4, V-5, V-6, V-9, V-11.**
+🟠 **V-12 NON CONCLUANTE.** ⛔ **NON EXÉCUTÉES : V-7, V-8 et ⭐ V-10** — il manque un **tableau final
+de Coupe**. ⭐ **V-10 est obligatoire : sans elle, l'étape 5 ne peut pas aboutir.** ⛔ **R-042 reste
+OUVERT.** ⚡ **UN NOUVEAU PROBLÈME EST ENTRÉ AU REGISTRE : R-093** *(P2)* — **le serveur ÉCRIT les
+colonnes par leur POSITION, mais les LIT par leur NOM** ; constaté **en vrai** pendant **V-4** *(les
+8 compteurs du score détaillé décalés d'une colonne, `arbitre` **écrasée**, `drop_B` **perdue** —
+**sans aucun message**)*. ⛔ **NON imputable à C-012** *(la ligne existait avant le chantier —
+vérifié par `git blame`)*, **NON CORRIGÉ**. 🎯 **Les 703 tests automatiques n'auraient jamais pu le
+trouver** : ils ne touchent aucun classeur. **C'est la première fois que les vérifications manuelles
+attrapent ce que les tests ne voient pas.** ✅ **Aucun code, aucun test, aucun déploiement.**
+Détail : `C-012-SPECIFICATION.md` **§8 ter**.
+
+*Rappel de la mise à jour précédente — 2026-08-18 (soir)* : 🚧 **C-012 — son étape 5 était OUVERTE : 7 des 12
 vérifications manuelles sont faites.** *(⚠️ Il s'agit de l'**étape 5 du chantier C-012** — les
 vérifications manuelles de sa spécification, §10 — **à ne pas confondre** avec l'**ÉTAPE 5 du
 cadre** `CLAUDE.md`, qui est la phase d'implémentation.)* ✅ **RÉUSSIES : V-1, V-2, V-3, V-6, V-9, V-11.** 🟠 **V-12
@@ -307,8 +320,8 @@ toucher une ligne exécutable** *(**C-008**, le 2026-08-11)*.
 
 ⚡ **Et un huitième EN COURS, le premier à modifier vraiment du code : C-012** *(2026-08-18)*.
 Il figure dans le tableau ci-dessous avec son état réel — **les 3 étapes de code sont fusionnées, le
-backend est redéployé chez Google** *(étape 4 ✅)*, et **son étape 5 est OUVERTE : 7 des 12
-vérifications manuelles sont faites** *(2026-08-18, soir)* :
+backend est redéployé chez Google** *(étape 4 ✅)*, et **son étape 5 est OUVERTE : 9 des 12
+vérifications manuelles sont faites** *(2026-08-18)* :
 
 | Chantier | Ce qu'il referme | Statut |
 |---|---|---|
@@ -317,7 +330,7 @@ vérifications manuelles sont faites** *(2026-08-18, soir)* :
 | **C-005** — les trois textes d'information | **R-028** (P1), R-038 | 🏁 **Travail documentaire TERMINÉ** — `docs/textes-information-donnees.md`. ⚠️ **R-028 reste OUVERT : rien n'est en ligne** |
 | **C-006** — la politique de conservation | **R-030** (P1), R-031, R-033, R-034 | 🏁 **Travail documentaire TERMINÉ** — `docs/conservation-donnees.md`, **5 gestes sur 7 vérifiés dans le code**. ⚠️ **R-030 *(part outillage)*, R-031 et R-033 restent OUVERTS** |
 | **C-007** — remettre la carte du projet en face du projet | **R-073** (P1), **R-072** (P1, reliquat), R-024 | 🏁 **LIVRÉ le 2026-08-09 — les 3 problèmes sont REFERMÉS.** `docs/architecture.md` réécrit, `docs/dependances-externes.md` créé, `README.md` / `backend/README.md` / `passation.md` corrigés. **Vérification automatique : 65/65 actions, 26/26 fichiers, 8/8 pages, 12/12 onglets, 4/4 bibliothèques** |
-| ⚡ **C-012** — séparer le cœur de la saisie du score de son écriture | **R-042** (P1) — ⛔ **TOUJOURS OUVERT** | 🚧 **EN COURS — étape 5 ouverte, 7 vérifications sur 12** *(2026-08-18 soir)* : ✅ V-1, V-2, V-3, V-6, V-9, V-11 · 🟠 **V-12 NON CONCLUANTE** *(7,099 s ; cause indéterminée ; aucune régression démontrée)* · ⛔ V-4, V-5, V-7, V-8 et ⭐ **V-10** non exécutées *(ni U14 ni tableau final dans les données de test)*. 🟠 **N-3 NON CONCLUANT.** Détail : **§8 bis** de la spécification. *(Historique des étapes 1 à 4 ci-après.)* **EN COURS — 4 étapes sur 5.** 📐 Conception **VALIDÉE** *(PR #186)*. ✅ **Étape 1** *(PR #187)* : `litSaisieScore` + **T-1 à T-5** *(33 vérifications)*. ✅ **Étape 2** *(PR #188)* : `cascadeAVerifier` + **T-14** *(12 vérifications)*. ✅ **Étape 3** *(PR #189)* : `deciderEnregistrementScore` et **les 6 garde-fous** + **T-6 à T-13, T-15 à T-17** *(42 vérifications)* — `enregistrerScore` passe de **111 à 50 lignes**. ⭐ **Étape 4 FAITE le 2026-08-18 — backend REDÉPLOYÉ chez Google** *(`Code.gs` **et** `Tests.gs`, nouvelle version du MÊME déploiement)* : **`R92 — 703/703 OK, 0 FAIL` obtenu CHEZ GOOGLE** *(616 + 33 + 12 + 42)*, **dernière ligne de `Test.gs` = 4244**, `ping` **OK**, `getConfig` **OK**. ⛔ **R-042 ne se refermera qu'après l'étape 5 complète** : 703 tests verts prouvent que les garde-fous **raisonnent** juste, pas qu'une saisie de score **fonctionne en vrai**. ⚡ **A fait apparaître R-092** *(le détail du score n'est effacé nulle part)* — **NON corrigé**, priorité **À CONFIRMER** |
+| ⚡ **C-012** — séparer le cœur de la saisie du score de son écriture | **R-042** (P1) — ⛔ **TOUJOURS OUVERT** | 🚧 **EN COURS — étape 5 ouverte, 9 vérifications sur 12** *(2026-08-18)* : ✅ V-1, V-2, V-3, **V-4**, **V-5**, V-6, V-9, V-11 · 🟠 **V-12 NON CONCLUANTE** *(7,099 s ; cause indéterminée ; aucune régression démontrée)* · ⛔ V-7, V-8 et ⭐ **V-10** non exécutées *(pas de tableau final de Coupe)*. 🟠 **N-3 NON CONCLUANT.** ⚡ **V-4 a fait entrer R-093 au registre** *(P2, non imputable à C-012)*. Détail : **§8 bis** et **§8 ter** de la spécification. *(Historique des étapes 1 à 4 ci-après.)* **EN COURS — 4 étapes sur 5.** 📐 Conception **VALIDÉE** *(PR #186)*. ✅ **Étape 1** *(PR #187)* : `litSaisieScore` + **T-1 à T-5** *(33 vérifications)*. ✅ **Étape 2** *(PR #188)* : `cascadeAVerifier` + **T-14** *(12 vérifications)*. ✅ **Étape 3** *(PR #189)* : `deciderEnregistrementScore` et **les 6 garde-fous** + **T-6 à T-13, T-15 à T-17** *(42 vérifications)* — `enregistrerScore` passe de **111 à 50 lignes**. ⭐ **Étape 4 FAITE le 2026-08-18 — backend REDÉPLOYÉ chez Google** *(`Code.gs` **et** `Tests.gs`, nouvelle version du MÊME déploiement)* : **`R92 — 703/703 OK, 0 FAIL` obtenu CHEZ GOOGLE** *(616 + 33 + 12 + 42)*, **dernière ligne de `Test.gs` = 4244**, `ping` **OK**, `getConfig` **OK**. ⛔ **R-042 ne se refermera qu'après l'étape 5 complète** : 703 tests verts prouvent que les garde-fous **raisonnent** juste, pas qu'une saisie de score **fonctionne en vrai**. ⚡ **A fait apparaître R-092** *(le détail du score n'est effacé nulle part)* — **NON corrigé**, priorité **À CONFIRMER** |
 | **C-008** — les commentaires qui disaient le contraire du code | **R-083** *(6 cas)* | 🏁 **LIVRÉ le 2026-08-11 — R-083 est REFERMÉ.** Les 6 commentaires réécrits *(5 dans `Code.gs`, 1 dans `admin-reglages.js`)* + **la règle posée : `CLAUDE.md` §8 ter**. **Preuve : les fichiers, commentaires retirés, sont identiques au caractère près** *(`diff` vide — 5 816 et 565 lignes de code)*. ✅ **Parvenu chez Google le 2026-08-18** : ce « prochain redéploiement utile » a eu lieu — c'est l'**étape 4 de C-012**, qui a recollé `Code.gs`. L'éditeur Apps Script ne contient plus les anciennes phrases |
 
 > ⚠️ **Ce que C-005 et C-006 ne referment pas, et pourquoi c'est écrit ici.** Ces deux chantiers

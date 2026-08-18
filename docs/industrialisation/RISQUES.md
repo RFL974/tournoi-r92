@@ -9,7 +9,13 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-16 (⚡ **R-092 inscrit — le détail du score n'est effacé nulle part.** Trouvé en spécifiant **C-012**, **NON CORRIGÉ**, et **délibérément hors de C-012** (**D-C012-2**). ⚠️ **Sa priorité n'est PAS tranchée** : elle dépend d'une combinaison vérifiable **uniquement dans le classeur Google**, pas dans le dépôt) · *2026-08-06 (**ÉTAPE 4 — C-011 (PR #181) et C-013 (PR #182) validés, écrits, en attente de fusion**)* · *2026-08-05 (**session 13 — ÉTAPE 3, volet ①*** : R-028, R-029, R-030 et R-041 ne sont **plus bloqués par une décision en attente** · ⚡ **addendums : R-089, R-090 et R-091 inscrits** — le tournoi suspendu / annulé (**D-030**), un réglage de pause ignoré sans le dire, et deux modes de pause qui coexistent (**D-032**))
+**Dernière mise à jour** : 2026-08-18 (⚡ **R-093 inscrit — le serveur ÉCRIT les colonnes par leur
+POSITION, mais les LIT par leur NOM.** Constaté **en vrai** pendant **V-4 de C-012** : les 8
+compteurs du score détaillé écrits **une colonne trop à gauche**, la colonne `arbitre` **écrasée**,
+`drop_B` **perdue** — **sans aucun message**. **P2**, **CERTAIN**, ⛔ **NON imputable à C-012**
+*(la ligne existait au point de départ du chantier — vérifié par `git blame`)*. **NON CORRIGÉ.**)
+
+*Rappel de la mise à jour précédente — 2026-08-16* : (⚡ **R-092 inscrit — le détail du score n'est effacé nulle part.** Trouvé en spécifiant **C-012**, **NON CORRIGÉ**, et **délibérément hors de C-012** (**D-C012-2**). ⚠️ **Sa priorité n'est PAS tranchée** : elle dépend d'une combinaison vérifiable **uniquement dans le classeur Google**, pas dans le dépôt) · *2026-08-06 (**ÉTAPE 4 — C-011 (PR #181) et C-013 (PR #182) validés, écrits, en attente de fusion**)* · *2026-08-05 (**session 13 — ÉTAPE 3, volet ①*** : R-028, R-029, R-030 et R-041 ne sont **plus bloqués par une décision en attente** · ⚡ **addendums : R-089, R-090 et R-091 inscrits** — le tournoi suspendu / annulé (**D-030**), un réglage de pause ignoré sans le dire, et deux modes de pause qui coexistent (**D-032**))
 **Audits réalisés** : 🏁 **les 8 domaines** — A (métier), C (sécurité), B (RGPD), D (QA / tests), E (UX / accessibilité), F (performance), G (architecture) et **H (qualité du code)**. **Aucun domaine ne reste à auditer.**
 **Correction réalisée** : R-014 (le P0), par exception validée — voir D-016. ⚠️ Une de ses trois preuves est tombée en session 8, ✅ **et a été refaite correctement le jour même** (`589/589 OK` chez Google) — voir la note sous le tableau de synthèse, `AUDIT.md` §D.8 et **M-04**.
 
@@ -82,6 +88,7 @@ domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (1
 | ⚡ **R-090** (P2) | Le champ « Pause déjeuner — durée » est ignoré en mode échelonné | **Trouvé en répondant à une question de Romain** |
 | ⚡ **R-091** (P2) | Les deux modes de pause coexistent dans le même tournoi | **Trouvé en vérifiant** une règle posée par Romain (**D-032**) |
 | ⚡ **R-092** *(priorité **À CONFIRMER**)* | Le détail du score n'est effacé nulle part | **Trouvé en cartographiant `enregistrerScore`** pour spécifier C-012 |
+| ⚡ **R-093** *(**P2**)* | Le serveur **écrit** les colonnes par leur **position**, mais les **lit** par leur **nom** | **Trouvé en EXÉCUTANT V-4** de C-012 — l'anomalie s'est produite pour de bon |
 
 > 💡 **Ce que ces quatre lignes disent de la méthode** : **les questions de Romain, et le fait de
 > lire vraiment le code avant d'y toucher, trouvent des défauts que huit domaines d'audit n'ont pas
@@ -91,17 +98,18 @@ domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (1
 
 > ✅ **L'ÉTAPE 2 EST TERMINÉE : les 8 domaines sont audités** (session 12, 2026-08-05).
 
-> ⚡ **Pourquoi 92 et non 88, et pourquoi les deux chiffres sont vrais.** **88** est le résultat de
-> l'audit — il ne bougera plus, et c'est le chiffre de `RAPPORT-AUDIT.md`. **92** est l'état du
-> **registre de suivi**, qui continue de vivre : **R-089, R-090, R-091 et R-092** n'ont été trouvés
-> par aucun domaine. Confondre les deux, ce serait laisser croire que l'audit avait vu ce qu'il n'a
-> pas vu — l'erreur exacte que **M-06** cherche à empêcher.
+> ⚡ **Pourquoi 93 et non 88, et pourquoi les deux chiffres sont vrais.** **88** est le résultat de
+> l'audit — il ne bougera plus, et c'est le chiffre de `RAPPORT-AUDIT.md`. **93** est l'état du
+> **registre de suivi**, qui continue de vivre : **R-089 à R-093** n'ont été trouvés par aucun
+> domaine. Confondre les deux, ce serait laisser croire que l'audit avait vu ce qu'il n'a pas vu —
+> l'erreur exacte que **M-06** cherche à empêcher. *(Le compteur est passé de 92 à 93 le
+> **2026-08-18**, avec R-093.)*
 >
 > ⚠️ **Conséquence à ne pas laisser filer** : `PLAN.md` affirme que **« 91 sur 91 sont placés, 0 sans
-> place »**. Avec R-092, **cette phrase n'est plus exacte** — R-092 **n'est rattaché à aucun
-> chantier**, et c'est délibéré *(D-C012-2)*. `PLAN.md` n'a **pas** été modifié dans cette session
-> *(hors périmètre autorisé)* : **l'écart est signalé ici pour être repris à la prochaine session de
-> plan.**
+> place »**. Avec **R-092 et R-093**, **cette phrase n'est plus exacte** — ⚠️ **aucun des deux n'est
+> rattaché à un chantier**. Pour R-092 c'est délibéré *(D-C012-2)* ; pour **R-093, la question n'est
+> pas tranchée** *(il est **NON CORRIGÉ**, et sa correction n'a été ni décidée ni planifiée)*.
+> **L'écart est signalé ici pour être repris à la prochaine session de plan.**
 
 > ⚠️ **Le domaine H n'a produit NI P0 NI P1, et il faut dire pourquoi.** Un P0 supposerait un code
 > qui **perd des données**, **fausse un résultat sportif** ou **rend l'application inutilisable** ;
@@ -278,6 +286,21 @@ domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (1
 > ⚡ **R-092 ne vient pas de l'audit.** Il a été trouvé le **2026-08-16**, en cartographiant
 > `enregistrerScore` pour spécifier **C-012**. Comme R-089 à R-091, son numéro suit la série pour
 > rester traçable, mais **sa source est différente** — il est postérieur à la clôture de l'ÉTAPE 2.
+
+| ⚡ **R-093** | **Le serveur ÉCRIT les colonnes par leur POSITION, mais les LIT par leur NOM.** `lireOngletSimple` associe chaque valeur à l'en-tête **réellement présent** dans le classeur — la lecture est donc juste quel que soit l'ordre. Les **écritures**, elles, passent par `colMatchs()`, qui renvoie la position de la colonne **dans la constante `ENTETES.Matchs` du code**. Les deux ne s'accordent **que si l'ordre réel du classeur est identique à celui du code**. ⚠️ **Et le code organise lui-même leur désaccord** : `assurerColonnesMatchs` ajoute les colonnes manquantes **à droite**, dans l'ordre de `ENTETES` — une colonne du milieu qui manque revient donc **en fin de tableau**, après quoi **toute écriture par position est décalée d'un cran**. ⭐ **Constaté EN VRAI le 2026-08-18** *(C-012, étape 5, **V-4**)* : les 8 compteurs du score détaillé écrits **une colonne trop à gauche**, la colonne métier **`arbitre` écrasée** par un nombre d'essais, **`drop_B` perdue**. Le **score**, le **statut** et l'**`Historique`** restaient **justes** *(le serveur calcule le score avant d'écrire)* — **et l'application n'a rien signalé**. **Portée : 8 écritures par position** dans `Code.gs` *(score+statut, vainqueur, les 8 compteurs, équipes de la petite finale, réinitialisations en cascade)* ; **un décalage survenant plus tôt dans le tableau atteindrait le score lui-même** | **P2** | ✅ **CERTAIN** *(mécanisme démontré case par case, **puis reproduit à l'inverse** : ordre canonique rétabli → défaut disparu, V-4 conforme)* | IDENTIFIÉ — **NON CORRIGÉ**. ⛔ **NON imputable à C-012** *(vérifié : la ligne d'écriture existait au point de départ `4af5003` ; `colMatchs` date du 2026-07-24, `assurerColonnesMatchs` du 2026-07-19)*. ⚠️ **Non atteignable en production aujourd'hui** — l'ordre y est canonique, les 8 colonnes ayant été ajoutées **avant** `arbitre`. **Déclencheur : V-11**, qui a légitimement réordonné les colonnes de la copie de test | `C-012-SPECIFICATION.md` **§8 ter** |
+
+> ⚡ **R-093 ne vient pas non plus de l'audit — et sa source est encore différente des précédentes.**
+> R-089 vient de Romain, R-090 et R-091 d'une question posée, R-092 d'une **lecture** de code.
+> **R-093, lui, vient d'une EXÉCUTION** : aucune relecture ne l'avait vu, et l'anomalie s'est
+> produite **pour de bon**, dans un vrai classeur, sous les yeux.
+>
+> 🎯 **Ce que cela dit de la méthode, et il faut l'écrire** : les 703 tests automatiques n'auraient
+> **jamais** pu le trouver — ils ne touchent aucun classeur. **C'est exactement ce que l'étape 5 des
+> vérifications manuelles est censée attraper**, et c'est la première fois qu'elle le prouve.
+>
+> ⚠️ **Deux contradictions internes au code, à ne pas perdre de vue** : `assurerColonnesMatchs`
+> suppose que **l'ordre peut varier** ; `colMatchs` suppose qu'il **est fixe**. Les deux ne peuvent
+> pas être vrais en même temps.
 >
 > ### ⚠️ Pourquoi la priorité n'est PAS tranchée ici
 >

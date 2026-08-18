@@ -5034,3 +5034,180 @@ manquantes ; sinon elle peut être supprimée sans conséquence.
 | **Production** | ✅ **INTACTE** — 3 matchs terminés, 211 lignes d'historique, les 7 matchs de test **vides et « à venir »** |
 | **Copie de test** | conservée, **plus reliée à rien** — utile si l'étape 5 doit être reprise |
 | **Prochaine étape** | ⛔ **Attend une décision de Romain** : préparer la matière manquante — une **catégorie U14 en tir au but** *(V-4, V-5)* et un **tableau final de Coupe** *(V-7, V-8, ⭐ V-10)* — sans laquelle l'étape 5 ne peut pas aboutir |
+
+---
+
+# ⚡ C-012 — **ÉTAPE 5 (suite) : PRÉPARATION, V-4 ET V-5 — 9 SUR 12** *(2026-08-18, soir)*
+
+> **Objectif** : débloquer puis exécuter **V-4** et **V-5**, restées impossibles faute de catégorie
+> U14 dans les données de test.
+> **Résultat** : ✅ **les deux sont RÉUSSIES** — et ⚡ **V-4 a fait entrer un nouveau problème au
+> registre : R-093**, un défaut **antérieur à C-012** qu'aucun test automatique ne pouvait voir.
+
+## 1. Ce qui a été préparé — dans la copie de test uniquement
+
+`SHEET_ID` a été **rebasculée** vers la copie *(elle avait été supprimée en fin de session
+précédente)*. Routage prouvé par contraste `getConfig` : `CHALLENGE MARC CHEVALIER — COPIE DE TEST`,
+empreinte `0534a851d8357f59…`.
+
+| Élément | Valeur |
+|---|---|
+| Catégorie **U14** | présente · ⭐ **`forme_jeu = RE — 15x15`** · mi-temps **15** · contexte `LAMBDA` · après-midi `POULES_NIVEAU` |
+| Équipes | **3** — `TEST U14-1/2/3` *(minimum FFR : les matchs secs sont interdits)* |
+| U10 | ⏳ **laissé en `POULES_NIVEAU`** — le passage en `COUPE_PLATEAU` a été **reporté après la génération**, pour choisir `nbQualifiesCoupe` en connaissance du nombre réel de poules |
+| Génération | ⭐ **une seule fois** → **11 poules**, **54 matchs**, fin du matin **11:51** |
+
+> ⭐ **Le référentiel FFR n'a eu besoin d'AUCUNE préparation.** `RefFFR_Regles` portait déjà
+> `tir_au_but = OUI` pour **M14 / RE / 15x15** — la seule des 15 lignes à l'avoir. La mémoire du
+> projet laissait croire qu'il faudrait créer et remplir cette colonne : **c'était faux**.
+>
+> ⚠️ **Le réglage qui décide de tout** : mars 2027 propose **deux** formes pour M14 *(RE 10x10 et
+> RE 15x15)*, et le code exige que **toutes** portent `OUI` (`regles.every`). Sans
+> `Config.forme_jeu = RE — 15x15`, la capacité serait restée à `false` et **V-4 aurait été
+> impossible** — non pas par défaut du code, mais par ambiguïté réglementaire non levée.
+
+**Contrôle avant l'opération irréversible** : les deux garde-fous de génération franchis pour les
+trois catégories *(≥ 3 équipes ; durée de mi-temps > 0)*, présenté à Romain **avant** son accord.
+
+## 2. ⚠️ V-4, PREMIÈRE TENTATIVE — ÉCHEC
+
+Saisie détaillée sur **M052**, dans un classeur dont **V-11 venait de réordonner les colonnes**
+*(`arbitre` remonté en 19ᵉ position, les 8 colonnes de détail décalées d'un cran)*.
+
+Le serveur écrit les compteurs à partir de `colMatchs('essais_A')` = **19** — la position dans le
+**code** — soit `arbitre` dans le **classeur réel** :
+
+| Valeur envoyée | Colonne visée | Colonne **réelle** | Observé |
+|---|---|---|---|
+| `essais_A` = 3 | 19 | ⚠️ **`arbitre`** | **3** — colonne métier **écrasée** |
+| `essais_B` = 1 | 20 | `essais_A` | 1 |
+| `transfo_A` = 2 | 21 | `essais_B` | 2 |
+| `transfo_B` = 1 | 22 | `transfo_A` | 1 |
+| `pen_A` = 1 | 23 | `transfo_B` | 1 |
+| `pen_B` = 2 | 24 | `pen_A` | 2 |
+| `drop_A` = 1 | 25 | `pen_B` | 1 |
+| `drop_B` = 1 | 26 | `drop_A` | 1 |
+| *(rien)* | — | `drop_B` | ⚠️ **vide — valeur perdue** |
+
+**Les neuf cases correspondent, une à une**, au relevé fait par Romain dans le Sheet.
+
+**Le score (25-16), le statut et l'`Historique` étaient JUSTES** — le serveur calcule le score à
+partir du détail **avant** d'écrire. **Et l'application n'a rien signalé.**
+
+> ⛔ **Vérification de responsabilité, faite avant toute conclusion** : la ligne d'écriture existait
+> **déjà au point de départ de C-012** (`4af5003`) ; `colMatchs` date du **2026-07-24**,
+> `assurerColonnesMatchs` du **2026-07-19**. C-012 n'a fait que remplacer des valeurs écrites en dur
+> par `plan.compteurs`. ⛔ **AUCUNE RÉGRESSION C-012.**
+
+⚡ **Inscrit au registre : R-093** *(P2, CERTAIN, NON CORRIGÉ)*.
+
+## 3. ⚠️ Une erreur d'appréciation de Claude, et il faut la nommer
+
+Au compte rendu de **V-11**, Claude avait écrit :
+
+> *« L'ordre des colonnes de la copie de test diffère maintenant de celui de la production.
+> **C'est sans conséquence sur le fonctionnement** »*
+
+**C'était faux.** L'affirmation venait d'un raisonnement à moitié fait : la **lecture** se fait bien
+par nom *(vrai)*, mais l'**écriture** se fait par position *(non vérifié à ce moment-là)*. **C'est
+cette phrase qui a laissé la voie libre à l'anomalie.**
+
+**Conséquence sur V-11** : son verdict **ne change pas** — les colonnes sont bien recréées et la
+saisie simple fonctionne, son périmètre est rempli. Mais **une réserve est ajoutée** : V-11 a créé
+une condition qu'elle n'a pas testée, la saisie **détaillée** après migration.
+
+## 4. La remise en ordre, puis la reprise
+
+La colonne `arbitre` a été **remise en dernière position** dans la copie *(la valeur parasite `3` l'a
+suivie — c'est voulu, elle reste la trace de l'anomalie)*.
+
+**Contrôle avant toute nouvelle saisie** : les **27 colonnes** correspondent alors **une à une** à
+`ENTETES.Matchs`, et **aucune valeur n'a bougé** *(54 lignes × 27 colonnes comparées : **0 écart**)*.
+
+## 5. ✅ V-4 — RÉUSSIE *(sur M053)*
+
+⚠️ **Une erreur de sélection de Romain a fait valider M053 au lieu de M054.** Sans conséquence : le
+match importe peu, seule compte la conformité de l'écriture. **Les rôles ont simplement été
+intervertis**, et aucune preuve n'a été détruite.
+
+| Contrôle | Résultat |
+|---|---|
+| Score | **25-16** — ⭐ recalcul indépendant du barème *(3×5+2×2+1×3+1×3 = 25 ; 1×5+1×2+2×3+1×3 = 16)* : **conforme** |
+| ⭐ Les 8 compteurs | ⭐ **`3, 1, 2, 1, 1, 2, 1, 1` — chacun dans SA colonne** |
+| ⭐ `arbitre` | ⭐ **vide** — plus d'écrasement |
+| `drop_B` | **écrit** — la valeur n'est plus perdue |
+| Intégrité | **11 champs modifiés, tous sur M053** · M052 intact |
+
+> 🎯 **La cause a été supprimée, l'effet a disparu.** C'est la démonstration inverse — la plus forte
+> qu'on puisse produire sans instrumenter le code.
+
+## 6. ✅ V-5 — RÉUSSIE *(sur M054)*
+
+| Contrôle | Résultat |
+|---|---|
+| Score | **38-7** — recalcul : 6×5+4×2 = 38 · 1×5+1×2 = 7 ✅ |
+| Les 8 compteurs | **`6, 1, 4, 1, 0, 0, 0, 0`** — ⭐ **les zéros sont ÉCRITS**, pas laissés vides |
+| Écart d'essais | ⭐ **exactement 5** — le seuil du code (`if (ecart >= 5)`), volontairement testé **au bord** |
+| ⭐ **Bandeau** | ⭐ **AFFICHÉ** — `⚠️ 5 essais d'écart — pense au rééquilibrage (règle des 5 essais).` **conforme au code au caractère près** *(`saisie.js:564`)* |
+| `Historique` | 220 → **221**, une seule ligne, **0 doublon** |
+
+*(Détail : le « 5 » du début est l'**écart calculé**, pas le seuil — avec 7 d'écart, le bandeau
+aurait affiché « 7 essais d'écart ». Le « 5 » de la fin, lui, est bien le seuil.)*
+
+## 7. ⭐ Les trois matchs U14 sont trois preuves parallèles
+
+| Match | Score | Compteurs `essais_A`…`drop_B` | `arbitre` | Ce qu'il prouve |
+|---|---|---|---|---|
+| **M052** | 25-16 | `1, 2, 1, 1, 2, 1, 1, (vide)` | ⚠️ **3** | 🔒 **R-093** — le décalage, en vrai |
+| **M053** | 25-16 | ⭐ `3, 1, 2, 1, 1, 2, 1, 1` | vide | ✅ **V-4** |
+| **M054** | 38-7 | ⭐ `6, 1, 4, 1, 0, 0, 0, 0` | vide | ✅ **V-5** |
+
+⚠️ **M052 est VOLONTAIREMENT laissé en l'état.** Ses données sont incohérentes — c'est ce qui en
+fait une preuve. **Ne pas le « réparer ».**
+
+⚠️ **Il ne reste plus aucun match U14 vierge.** Une reprise de V-4 ou V-5 exigerait d'abîmer une
+preuve ou d'ajouter des équipes.
+
+## 8. Ce que cette session dit de la méthode
+
+> 🎯 **Les 703 tests automatiques n'auraient JAMAIS pu trouver R-093** : ils ne touchent aucun
+> classeur, et le défaut n'existe que dans la rencontre entre le code et la disposition réelle des
+> colonnes.
+>
+> **C'est exactement ce que l'étape 5 est censée attraper — et c'est la première fois qu'elle le
+> prouve.** La spécification l'annonçait au §8 : *« un test vérifie une décision ; il ne prouve rien
+> sur l'écriture réelle dans Google Sheets »*. On en a maintenant la démonstration.
+
+## 9. Ce qui a été VÉRIFIÉ, et comment
+
+- ✅ **CERTAIN, vérifié directement** : le routage · l'état de la copie avant et après chaque geste ·
+  les 8 compteurs et `arbitre` de chaque match · le barème recalculé indépendamment · l'ordre des 27
+  colonnes avant et après remise en ordre · l'intégrité des 54 matchs · l'`Historique` · la
+  datation du code fautif (`git blame`, état à `4af5003`) · le contenu du référentiel FFR.
+- 🟠 **RAPPORTÉ PAR ROMAIN**, non vérifiable depuis le dépôt *(cadre §13.6)* : ce qui s'affiche à
+  l'écran de saisie — les totaux avant validation, le verrouillage des cartes, et ⭐ **la présence du
+  bandeau d'alerte de V-5**, qui **ne laisse aucune trace dans le classeur**.
+- ⛔ **NON VÉRIFIÉ** : **la cascade du tableau final** *(V-10)* · **la propagation du vainqueur**
+  *(V-8)* · **le refus de l'égalité en Coupe** *(V-7)*.
+
+## 10. Ce qui n'a **PAS** été fait
+
+- ❌ **aucune ligne de code, aucun test, aucune configuration modifiés** ;
+- ❌ **aucun déploiement** ;
+- ❌ **aucune écriture dans le classeur de production** — le routage pointait sur la copie ;
+- ❌ **V-7, V-8 et V-10 non lancées** ;
+- ❌ **`format_apresmidi` et `param_format` de U10 non renseignés** — l'étape reste à faire ;
+- ❌ **M052 non « réparé »**, délibérément.
+
+## 11. État à la fin de la session
+
+| | |
+|---|---|
+| **`main`** | `09994e0` au départ — ce lot est le suivant |
+| **C-012** | 🚧 **étape 5 OUVERTE — 9 vérifications sur 12** |
+| **R-042** | ⛔ **OUVERT** |
+| ⚡ **R-093** | 🔴 **INSCRIT — P2, CERTAIN, NON CORRIGÉ**, non imputable à C-012 |
+| **V-11** | ✅ **RÉUSSIE, avec réserve** |
+| **N-3** | 🟠 **NON CONCLUANT** *(inchangé)* |
+| **Routage** | ⚠️ **pointe encore sur la COPIE DE TEST** — `SHEET_ID` à supprimer en fin de travaux |
+| **Prochaine étape** | **V-7, V-8 et ⭐ V-10** — elles exigent de passer U10 en `COUPE_PLATEAU` avec ⭐ **`{"nbQualifiesCoupe":1}`** *(valeur calculée sur les 5 poules réelles : bracket de 8, **1 quart alimentant une demi**, 2 demies, finale, petite finale — **2 saisies suffisent** pour installer V-10)*, puis à générer l'après-midi |

@@ -998,7 +998,7 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   | **2** | `cascadeAVerifier` extrait *(faut-il lire le match suivant ?)* · **T-14** | ✅ **FUSIONNÉE** — PR **#188** |
   | **3** | `deciderEnregistrementScore` — **les 6 garde-fous** · T-6 à T-13, T-15 à T-17 | ✅ **FUSIONNÉE** — PR **#189** |
   | **4** | **Redéploiement chez Google** + `lancerTestsFFR` exécuté là-bas | ✅ **FAIT le 2026-08-18** — `Code.gs` **et** `Tests.gs` collés, **nouvelle version du MÊME déploiement** publiée |
-  | **5** | Les **12 vérifications manuelles** du §8, **V-10 obligatoire** | 🚧 **EN COURS — 7 sur 12** *(2026-08-18)* : ✅ V-1, V-2, V-3, V-6, V-9, V-11 · 🟠 **V-12 NON CONCLUANTE** · ⛔ V-4, V-5, V-7, V-8, ⭐ **V-10** |
+  | **5** | Les **12 vérifications manuelles** du §8, **V-10 obligatoire** | 🚧 **EN COURS — 9 sur 12** *(2026-08-18)* : ✅ V-1, V-2, V-3, **V-4**, **V-5**, V-6, V-9, V-11 · 🟠 **V-12 NON CONCLUANTE** · ⛔ V-7, V-8, ⭐ **V-10** |
 
   Suite actuelle : ⭐ **`R92 — 703/703 OK, 0 FAIL`** *(616 + 33 + 12 + 42)*, **obtenue CHEZ GOOGLE**
   le 2026-08-18, avec la **dernière ligne de `Test.gs` = 4244** comme seconde preuve, et l'adresse
@@ -1008,7 +1008,7 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   et ces tests tournent **chez Google** — mais 703 tests verts prouvent qu'ils **raisonnent** juste,
   **pas** qu'une saisie de score **fonctionne en vrai**.
 
-  🚧 **Mise à jour du 2026-08-18 — l'étape 5 a été autorisée et partiellement exécutée : 7 sur 12.**
+  🚧 **Mise à jour du 2026-08-18 — l'étape 5 a été autorisée et partiellement exécutée : 9 sur 12.**
 
   - ✅ **RÉUSSIES** : **V-1** *(saisie ordinaire)*, **V-2** *(refus d'une revalidation, dans ses deux
     formes)*, **V-3** *(correction avec la clé)*, **V-6** *(journal de saison : une correction
@@ -1018,9 +1018,12 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
     du critère de substitution *(D-C012-5)* ; les lectures **contemporaines** sont restées dans leur
     plage habituelle ; **la cause reste INDÉTERMINÉE** et **aucune régression C-012 n'est démontrée**.
     ⚠️ **Aucune mesure homogène d'une validation avant C-012 n'existe ni ne peut plus être obtenue** ;
-  - ⛔ **NON EXÉCUTÉES : V-4, V-5, V-7, V-8 et ⭐ V-10.** Les données de test ne contiennent **ni
-    catégorie U14 en tir au but** *(V-4, V-5)*, **ni tableau final de Coupe** *(V-7, V-8, V-10)*.
-    ⭐ **V-10 est déclarée obligatoire par la spécification** : sans elle, l'étape 5 ne peut aboutir ;
+  - ✅ **V-4 et V-5 RÉUSSIES le 2026-08-18**, après préparation d'une catégorie **U14** dans la copie
+    de test *(3 équipes, `forme_jeu = RE — 15x15`, une seule régénération)*. ⚡ **V-4 a révélé un
+    défaut ANTÉRIEUR à C-012** — l'écriture des colonnes par **position** alors que la lecture se
+    fait par **nom** : **R-093** *(P2, NON CORRIGÉ)*. **Aucune régression C-012** ;
+  - ⛔ **NON EXÉCUTÉES : V-7, V-8 et ⭐ V-10.** Les données de test ne contiennent **aucun tableau
+    final de Coupe**. ⭐ **V-10 est déclarée obligatoire** : sans elle, l'étape 5 ne peut aboutir ;
   - 🟠 **N-3 reste NON CONCLUANT** — le chemin `match_suivant` n'a jamais été exécuté. **V-12 ne le
     teste pas.**
 
