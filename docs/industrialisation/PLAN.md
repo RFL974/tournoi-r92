@@ -990,22 +990,25 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   l'alerte des 5 essais d'écart.
 - 📐 **Conception** : ✅ **VALIDÉE le 2026-08-16** — `C-012-SPECIFICATION.md`, PR #186 fusionnée.
   Les 4 décisions ouvertes y sont tranchées *(D-C012-1 à D-C012-4)*. **Découpage retenu : 3 étapes.**
-- **Statut** : 🚧 **EN COURS — les 3 étapes de CODE sont fusionnées** *(au 2026-08-17)* :
+- **Statut** : 🚧 **EN COURS — 4 étapes sur 5** *(au 2026-08-18)* :
 
   | Étape | Ce qu'elle fait | État |
   |---|---|---|
   | **1** | `litSaisieScore` extrait *(la lecture de ce que le bénévole a envoyé)* · **T-1 à T-5** | ✅ **FUSIONNÉE** — PR **#187** |
   | **2** | `cascadeAVerifier` extrait *(faut-il lire le match suivant ?)* · **T-14** | ✅ **FUSIONNÉE** — PR **#188** |
   | **3** | `deciderEnregistrementScore` — **les 6 garde-fous** · T-6 à T-13, T-15 à T-17 | ✅ **FUSIONNÉE** — PR **#189** |
-  | **4** | **Redéploiement chez Google** + `lancerTestsFFR` exécuté là-bas | ⏳ **À FAIRE — non autorisée** |
+  | **4** | **Redéploiement chez Google** + `lancerTestsFFR` exécuté là-bas | ✅ **FAIT le 2026-08-18** — `Code.gs` **et** `Tests.gs` collés, **nouvelle version du MÊME déploiement** publiée |
   | **5** | Les **12 vérifications manuelles** du §8, **V-10 obligatoire** | ⏳ **À FAIRE** |
 
-  Suite actuelle : **`R92 — 703/703 OK, 0 FAIL`** *(616 + 33 + 12 + 42)*, **hors d'Apps Script**.
+  Suite actuelle : ⭐ **`R92 — 703/703 OK, 0 FAIL`** *(616 + 33 + 12 + 42)*, **obtenue CHEZ GOOGLE**
+  le 2026-08-18, avec la **dernière ligne de `Test.gs` = 4244** comme seconde preuve, et l'adresse
+  publique vérifiée *(`ping` OK, `getConfig` OK)*.
 
-  ⚠️ **Le chantier n'est PAS terminé, et R-042 reste OUVERT.** Les six garde-fous sont désormais
-  **sous test** — mais un test qui n'a jamais tourné chez Google ne prouve rien de l'application en
-  service. ⛔ **Backend PAS redéployé** : les étapes **4** et **5** du §10 de la spécification restent
-  entières, et **R-042 ne passera à `TESTÉ` qu'après elles**.
+  ⚠️ **Le chantier n'est PAS terminé pour autant, et R-042 reste OUVERT.** Les six garde-fous sont
+  **sous test** et ces tests tournent **chez Google** — mais 703 tests verts prouvent qu'ils
+  **raisonnent** juste, **pas** qu'une saisie de score **fonctionne en vrai**. ⏳ **L'étape 5** du §10
+  de la spécification *(les 12 vérifications manuelles, **V-10 obligatoire**)* reste **entière et
+  NON AUTORISÉE**, et **R-042 ne passera à `TESTÉ` qu'après elle**.
 
 ---
 

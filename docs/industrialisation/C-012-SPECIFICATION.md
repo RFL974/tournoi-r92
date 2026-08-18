@@ -7,9 +7,14 @@
 > fini pour autant** : **étape 1** *(PR #187, `litSaisieScore` + T-1 à T-5)* · **étape 2**
 > *(PR #188, `cascadeAVerifier` + T-14)* · **étape 3** *(PR #189, `deciderEnregistrementScore` +
 > T-6 à T-13 et T-15 à T-17)*. Suite : **`R92 — 703/703 OK, 0 FAIL`**. Voir le **§10**.
-> ⏳ **Restent l'étape 4** *(redéploiement chez Google)* **et l'étape 5** *(les 12 vérifications
-> manuelles)* — ⚠️ **l'étape 4 n'est PAS autorisée à ce jour**.
-> ⛔ **R-042 reste OUVERT**, et **rien n'a été vérifié chez Google** *(backend non redéployé)*.
+> ✅ **Mise à jour du 2026-08-18 — l'ÉTAPE 4 est TERMINÉE** *(autorisée par Romain, puis exécutée le
+> jour même)* : le backend est **redéployé chez Google** *(`Code.gs` **et** `Tests.gs`)*, une
+> **nouvelle version du MÊME déploiement** est publiée, et `lancerTestsFFR` y donne
+> **`R92 — 703/703 OK, 0 FAIL`**. Les preuves complètes sont au **§10**.
+> ⏳ **Reste l'étape 5** *(les 12 vérifications manuelles, **V-10 obligatoire**)* — ⚠️ **elle n'est
+> PAS autorisée à ce jour**.
+> ⛔ **R-042 reste OUVERT.** Les tests tournent désormais **chez Google**, mais **aucune des 12
+> vérifications manuelles n'a été faite** : le risque ne passera à `TESTÉ` qu'après l'étape 5.
 >
 > **Chantier** : `PLAN.md` → **C-012** · **Problème couvert** : **R-042** *(P1)* · **Explication du
 > problème** : `AUDIT.md` **§D.3**
@@ -625,11 +630,11 @@ Pour C-012, cette preuve prend **trois formes cumulatives** :
 | Étape | Ce qu'on fait | Commit | Prouvé par |
 |---|---|---|---|
 | **0** | ✅ **FAIT le 2026-08-16** — ce document est **validé par Romain**, les 4 décisions sont tranchées *(§11)* | *(le présent document)* | — |
-| **0 bis** | ✅ **Autorisation d'implémenter donnée le 2026-08-16 — étape par étape.** Chaque étape reçoit son autorisation séparément ; **l'étape 4 n'a pas encore la sienne** | — | — |
+| **0 bis** | ✅ **Autorisation d'implémenter donnée le 2026-08-16 — étape par étape.** Chaque étape reçoit son autorisation séparément ; **l'étape 4 a reçu la sienne le 2026-08-18**, **l'étape 5 n'a pas encore la sienne** | — | — |
 | **1** | ✅ **FAIT — PR #187 fusionnée le 2026-08-16.** **Cœur 1** `litSaisieScore` extrait · `enregistrerScore` l'appelle · **T-1 à T-5** | `refactor(scores): C-012 étape 1 — extraire litSaisieScore, et T-1 à T-5 (R-042)` | **616 + 33 = 649** verts |
 | **2** | ✅ **FAIT — PR #188 fusionnée le 2026-08-16.** **`cascadeAVerifier`** extrait · **T-14** | `refactor(scores): C-012 étape 2 — extraire cascadeAVerifier et ajouter T-14` | **649 + 12 = 661** verts |
 | **3** | ✅ **FAIT — PR #189 fusionnée le 2026-08-17.** ⭐ **Cœur 2** `deciderEnregistrementScore` — les 6 garde-fous · **T-6 à T-13, T-15 à T-17** | `refactor(scores): C-012 étape 3 — les six garde-fous passent sous test (R-042)` | **661 + 42 = 703** verts |
-| **4** | ⏳ **À FAIRE — ET NON AUTORISÉE.** **Redéploiement chez Google** *(`Code.gs` **ET** `Tests.gs`)* + `lancerTestsFFR` exécuté | *(pas de commit)* | **`R92 — 703/703 OK, 0 FAIL` obtenu CHEZ GOOGLE** |
+| **4** | ✅ **FAIT le 2026-08-18** — **redéploiement chez Google** *(`Code.gs` **ET** `Tests.gs` → `Test.gs`)* · **nouvelle version du MÊME déploiement** publiée · `lancerTestsFFR` exécuté là-bas | *(pas de commit de code — seulement celui-ci, documentaire)* | ⭐ **`R92 — 703/703 OK, 0 FAIL` obtenu CHEZ GOOGLE** · **dernière ligne de `Test.gs` = 4244** · `?action=ping` **OK** · `?action=getConfig` **OK** *(les 5 preuves sont détaillées sous le tableau)* |
 | **5** | ⏳ **À FAIRE** — **les 12 vérifications manuelles** du §8, avec **V-10 obligatoire** | `docs(industrialisation): C-012 livré` | la liste cochée |
 
 > ⚠️ **Le compte annoncé au §7 était faux, et il faut le dire.** Ce document estimait *« 616 + 5 »*
@@ -638,12 +643,31 @@ Pour C-012, cette preuve prend **trois formes cumulatives** :
 > annoncé était donc **très en dessous**. ✅ **Il est désormais MESURÉ, plus estimé.**
 >
 > ⛔ **R-042 n'est PAS refermé pour autant.** Les six garde-fous sont **sous test** depuis l'étape 3,
-> mais un test qui n'a jamais tourné chez Google ne prouve rien de l'application en service. **Le
-> risque ne passera à `TESTÉ` qu'après les étapes 4 et 5.**
+> et ces tests tournent **chez Google** depuis l'étape 4 — mais **les 12 vérifications manuelles du
+> §8 n'ont pas été faites**. **Le risque ne passera à `TESTÉ` qu'après l'étape 5.**
+
+### ⭐ Étape 4 — les preuves obtenues le 2026-08-18
+
+| # | Preuve | Résultat | Qui l'a constatée |
+|---|---|---|---|
+| **1** | `lancerTestsFFR` exécuté **chez Google** | **`R92 — 703/703 OK, 0 FAIL`** | **Romain**, dans l'éditeur Apps Script |
+| **2** | **Dernière ligne** de `Test.gs` **chez Google** | **4244** — soit exactement `wc -l backend/Tests.gs` | **Romain**, dans l'éditeur Apps Script |
+| **3** | **Nouvelle version du MÊME déploiement** publiée *(et non un « Nouveau déploiement »)* | **OK** — l'URL publique est inchangée | **Romain** |
+| **4** | `…/exec?action=ping` | **OK** — `{"ok":true,"message":"API Tournoi R92 en ligne"}` | **vérifié directement**, appel réel |
+| **5** | `…/exec?action=getConfig` | **OK** — **contenu réel du tournoi renvoyé** *(« CHALLENGE MARC CHEVALIER »)* : l'adresse ne fait pas que répondre, elle **sert la donnée** | **vérifié directement**, appel réel |
+
+> 🎯 **Pourquoi les preuves 1 et 2 vont ensemble, et jamais l'une sans l'autre.** Le **bilan** dit
+> *combien* de vérifications passent ; la **dernière ligne** dit **quel fichier** les a produites.
+> Le 2026-08-04, un « 573/573 OK » **vrai** portait sur l'**ancien** `Tests.gs` — une preuve fausse
+> restée quatre jours au dossier *(`RISQUES.md` **M-04**)*. Ici le passage de **661 à 703** est la
+> signature des 42 vérifications de l'étape 3 : c'est bien le **bon** fichier qui a tourné.
 >
-> ⛔ **Rien n'a été vérifié chez Google.** `703/703` vient d'une exécution **hors d'Apps Script**,
-> sur les fichiers réels du dépôt. **Le backend n'est pas redéployé** — c'est l'**étape 4**, et
-> ⚠️ **elle attend une autorisation explicite de Romain, comme chacune des trois précédentes.**
+> ⚠️ **Portée exacte, et il faut la connaître.** Les preuves 1 et 2 ont été constatées **par Romain**
+> dans l'éditeur Apps Script — elles ne sont pas vérifiables depuis le dépôt *(cadre §13.6)*. Les
+> preuves 4 et 5 l'ont été **directement**, par appel réel. Et surtout : **703 tests verts ne
+> prouvent pas qu'une saisie de score fonctionne en vrai** — ils prouvent que les six garde-fous
+> **raisonnent** juste, isolés. Ni le classeur, ni l'écran de saisie, ni la cascade du tableau final
+> ne sont traversés. **C'est exactement l'objet de l'étape 5, et de V-10 en particulier.**
 
 **Trois règles pour ces étapes** :
 

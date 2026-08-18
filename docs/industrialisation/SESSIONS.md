@@ -4602,3 +4602,119 @@ l'identique — fonction pure, mêmes entrées.
 | **Suite** | **`R92 — 703/703 OK, 0 FAIL`**, `backend/Tests.gs` = **4 244 lignes** |
 | **C-012** | 🚧 **EN COURS — les 3 étapes de code fusionnées, les étapes 4 et 5 restent** |
 | **Prochaine étape** | **étape 4 du §10** — redéploiement chez Google. ⛔ **Attend une autorisation explicite de Romain.** |
+
+---
+
+# ⭐ C-012 — **ÉTAPE 4 : LE BACKEND EST REDÉPLOYÉ CHEZ GOOGLE** *(2026-08-18)*
+
+> **Objectif unique de la session, et rien d'autre** : déployer chez Google exactement le `Code.gs`
+> et le `Tests.gs` du `main` actuel, publier une **nouvelle version du MÊME déploiement**, exécuter
+> `lancerTestsFFR` là-bas, et vérifier que l'adresse publique sert bien cette version.
+>
+> ⚠️ **L'étape 5 n'a PAS été commencée**, et **R-042 reste OUVERT**.
+
+## 0. Mise à jour avant lecture (`CLAUDE.md` §12.3)
+
+`git fetch origin` puis `git status -sb` → `## main...origin/main`, **aucun mot « retard »**, arbre
+de travail **propre**. `main` local et `origin/main` sur le même commit **`2a49777`**.
+
+## 1. L'audit préalable, en lecture seule — ce qu'il a établi
+
+| Contrôle | Résultat |
+|---|---|
+| `backend/Code.gs` | **8 274 lignes** · SHA-256 `45727fe5…` |
+| `backend/Tests.gs` | **4 244 lignes** · SHA-256 `f7ba5827…` |
+| ⭐ **Les mêmes fichiers téléchargés depuis GitHub** *(`raw.githubusercontent.com`, branche `main`)* | **empreintes identiques** — copier depuis le disque ou depuis GitHub revient au même |
+| Suite de tests **rejouée** hors d'Apps Script sur ces fichiers exacts | **`R92 — 703/703 OK, 0 FAIL`** |
+| `?action=ping` **avant** intervention | déjà **OK** — sert de point de comparaison |
+
+> 🎯 **Le chiffre de 703 n'a pas été recopié : il a été refait.** Le harnais a été relancé dans un
+> bac à sable *(les fichiers réels du dépôt, doublures pour les services Google)*, **hors du dépôt**
+> — aucun fichier du projet touché.
+
+**Constat opérationnel** : `clasp` *(l'outil en ligne de commande de Google Apps Script)* **n'est ni
+installé ni authentifié** sur cette machine, et le dépôt ne contient aucune configuration `clasp`.
+⛔ **Le collage et la publication de version ne peuvent donc être faits qu'à la main, par Romain.**
+La session s'est **arrêtée exactement avant** cette intervention, instructions à l'appui.
+
+## 2. Ce que Romain a fait chez Google
+
+1. collé `backend/Code.gs` dans **`Code.gs`** ;
+2. collé `backend/Tests.gs` dans **`Test.gs`** *(au singulier chez Google — **le fichier qu'on
+   oublie**, cf. `docs/deploiement.md`)* ;
+3. **Déployer → Gérer les déploiements → crayon → Version : « Nouvelle version » → Déployer** —
+   et **non** « Nouveau déploiement », qui aurait changé l'URL ;
+4. exécuté **`lancerTestsFFR`**.
+
+## 3. Les preuves — les cinq, telles qu'obtenues
+
+| # | Preuve | Résultat | Constatée par |
+|---|---|---|---|
+| **1** | `lancerTestsFFR` **chez Google** | ⭐ **`R92 — 703/703 OK, 0 FAIL`** | **Romain**, éditeur Apps Script |
+| **2** | **Dernière ligne de `Test.gs`** chez Google | **4244** | **Romain**, éditeur Apps Script |
+| **3** | **Nouvelle version du MÊME déploiement** publiée | **OK** — URL publique inchangée | **Romain** |
+| **4** | `…/exec?action=ping` | **OK** — `{"ok":true,"message":"API Tournoi R92 en ligne"}` | **appel réel, vérifié directement** |
+| **5** | `…/exec?action=getConfig` | **OK** — **contenu réel du tournoi** renvoyé *(« CHALLENGE MARC CHEVALIER »)* | **appel réel, vérifié directement** |
+
+> 🎯 **Pourquoi la preuve 5 a été ajoutée aux quatre attendues.** Un `ping` dit seulement *« le
+> serveur est allumé »*. Le `getConfig` montre que l'adresse **lit le classeur et sert la donnée** —
+> elle n'est pas en erreur silencieuse.
+>
+> ⭐ **Pourquoi 1 et 2 vont ensemble, toujours.** Le bilan dit *combien* de vérifications passent ;
+> la dernière ligne dit **quel fichier** les a produites. Le 2026-08-04, un « 573/573 OK » **vrai**
+> portait sur l'**ancien** fichier de tests — preuve fausse restée quatre jours au dossier
+> *(**M-04**)*. Ici, le passage de **661 à 703** est la signature des 42 vérifications de l'étape 3.
+
+## 4. Ce qui a été VÉRIFIÉ, et comment — la ligne de partage
+
+- ✅ **CERTAIN, vérifié directement** : l'état du dépôt *(`2a49777`, propre, synchronisé)*, les
+  empreintes des deux fichiers, l'égalité disque ↔ GitHub, `703/703` hors d'Apps Script, `ping`,
+  `getConfig`.
+- 🟠 **RAPPORTÉ PAR ROMAIN**, non vérifiable depuis le dépôt *(cadre §13.6)* : le `703/703` **chez
+  Google**, la **dernière ligne 4244**, et le fait que la publication soit une **nouvelle version du
+  même déploiement**. C'est la procédure normale du projet — c'est écrit ainsi plutôt que « vérifié ».
+- ⛔ **NON VÉRIFIÉ** : **qu'une saisie de score fonctionne en vrai.** Les 703 tests prouvent que les
+  six garde-fous **raisonnent** juste, **isolés** — ils ne touchent ni le classeur, ni l'écran de
+  saisie, ni la cascade du tableau final.
+
+## 5. Ce qui n'a **PAS** été fait
+
+- ❌ **aucune des 12 vérifications manuelles V-1 à V-12** — l'étape 5 n'est **pas commencée**, et
+  **pas autorisée** ;
+- ❌ **aucun fichier de code modifié** — `git status` est resté vide pendant toute l'opération ;
+- ❌ **`RISQUES.md` non touché**, sur consigne explicite : **R-042 reste OUVERT**, **R-092** reste
+  **NON corrigé**, priorité **À CONFIRMER** ;
+- ❌ **aucun déploiement supplémentaire**.
+
+## 6. ⚡ Un effet de bord attendu : **C-008 est enfin parvenu chez Google**
+
+`C-008` *(les 6 commentaires qui disaient le contraire du code, livrés le 2026-08-11)* était marqué
+**« PAS redéployé chez Google — jusqu'au prochain redéploiement utile »**. ⭐ **Ce redéploiement
+utile, c'est celui-ci** : recoller `Code.gs` a emporté les 6 commentaires réécrits. `ETAT.md` a été
+réaligné en conséquence, dans le même lot *(règle **§8 ter**)*.
+
+## 7. ⚠️ Une contradiction repérée à l'audit — et corrigée dans le MÊME lot
+
+`PLAN.md` *(fiche **C-012**)* affichait encore, pour l'étape 4 : **« ⏳ À FAIRE — non autorisée »**,
+et plus bas **« ⛔ Backend PAS redéployé »**. C'était devenu **faux**.
+
+Le fichier n'était pas dans le périmètre initialement autorisé ; la contradiction a donc été
+**signalée à Romain avant le commit**, qui a **étendu l'autorisation à `PLAN.md`**. **3 lignes**
+corrigées, rien d'autre touché dans le fichier.
+
+> 🎯 **Pourquoi ça comptait.** `PLAN.md` est le document qui répond à *« qu'est-ce qu'on corrige, et
+> dans quel ordre ? »*. Y laisser « backend PAS redéployé » aurait fait exactement ce que la règle
+> **§8 bis** cherche à empêcher : un écart qui se creuse **fonctionnalité après fonctionnalité**,
+> sans que personne ne le décide.
+
+## 8. État à la fin de la journée
+
+| | |
+|---|---|
+| **`main`** | `2a49777` — inchangé par l'étape 4 *(aucun code modifié)* |
+| **Suite** | ⭐ **`R92 — 703/703 OK, 0 FAIL` — obtenu CHEZ GOOGLE**, `Test.gs` = **4244** lignes |
+| **Adresse publique** | ✅ **sert la nouvelle version** — même URL, `ping` et `getConfig` OK |
+| **C-012** | 🚧 **EN COURS — 4 étapes sur 5** |
+| **R-042** | ⛔ **OUVERT** — il ne passera à `TESTÉ` qu'après l'étape 5 |
+| **R-092** | 🔴 **IDENTIFIÉ — NON CORRIGÉ**, priorité **À CONFIRMER** |
+| **Prochaine étape** | **étape 5 du §10** — les **12 vérifications manuelles**, **V-10 obligatoire** *(la cascade du tableau final : la seule preuve prévue pour ce que les tests ne couvrent pas)*. ⛔ **Attend une autorisation explicite de Romain.** |
