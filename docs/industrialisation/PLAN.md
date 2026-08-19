@@ -10,7 +10,10 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
-**Dernière mise à jour** : 2026-08-06 (**session 16 — 🏁 L'ÉTAPE 3 EST TERMINÉE** : vague 2 écrite,
+**Dernière mise à jour** : 2026-08-19 (🏁 ⭐ **C-012 EST TERMINÉ — son étape 5 est CLOSE, et
+R-042 passe à `TESTÉ`**, avec la réserve **V-12 / N-3 non concluante** conservée. Voir **§10,
+fiche C-012**. ⚠️ Cela **lève la dépendance** `C-011 → C-012 → C-015`.)
+Rappel du 2026-08-06 : (**session 16 — 🏁 L'ÉTAPE 3 EST TERMINÉE** : vague 2 écrite,
 **C-017 → C-030**, voir **§10**, et **la couverture des 91 problèmes est prouvée** — **§12**).
 Sessions 13-15 : volets ①, ② et vague 1 du ③. Rappel du 2026-08-05 : volet ① terminé, D-030/031/032
 inscrites, I-21 levée, fiches **C-002 / C-003 / C-004** — voir **§6**.
@@ -990,7 +993,7 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   l'alerte des 5 essais d'écart.
 - 📐 **Conception** : ✅ **VALIDÉE le 2026-08-16** — `C-012-SPECIFICATION.md`, PR #186 fusionnée.
   Les 4 décisions ouvertes y sont tranchées *(D-C012-1 à D-C012-4)*. **Découpage retenu : 3 étapes.**
-- **Statut** : 🚧 **EN COURS — 4 étapes sur 5** *(au 2026-08-18)* :
+- **Statut** : 🏁 ⭐ **TERMINÉ — 5 étapes sur 5** *(clos le 2026-08-19)* :
 
   | Étape | Ce qu'elle fait | État |
   |---|---|---|
@@ -998,15 +1001,14 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   | **2** | `cascadeAVerifier` extrait *(faut-il lire le match suivant ?)* · **T-14** | ✅ **FUSIONNÉE** — PR **#188** |
   | **3** | `deciderEnregistrementScore` — **les 6 garde-fous** · T-6 à T-13, T-15 à T-17 | ✅ **FUSIONNÉE** — PR **#189** |
   | **4** | **Redéploiement chez Google** + `lancerTestsFFR` exécuté là-bas | ✅ **FAIT le 2026-08-18** — `Code.gs` **et** `Tests.gs` collés, **nouvelle version du MÊME déploiement** publiée |
-  | **5** | Les **12 vérifications manuelles** du §8, **V-10 obligatoire** | 🚧 **EN COURS — 9 sur 12** *(2026-08-18)* : ✅ V-1, V-2, V-3, **V-4**, **V-5**, V-6, V-9, V-11 · 🟠 **V-12 NON CONCLUANTE** · ⛔ V-7, V-8, ⭐ **V-10** |
+  | **5** | Les **12 vérifications manuelles** du §8, **V-10 obligatoire** | 🏁 ⭐ **CLOSE — 11 sur 12** *(2026-08-19)* : ✅ V-1 à V-11 *(V-11 avec réserve)*, dont ⭐ **V-7, V-8 et V-10** · 🟠 **V-12 NON CONCLUANTE** *(réserve conservée)* |
 
   Suite actuelle : ⭐ **`R92 — 703/703 OK, 0 FAIL`** *(616 + 33 + 12 + 42)*, **obtenue CHEZ GOOGLE**
   le 2026-08-18, avec la **dernière ligne de `Test.gs` = 4244** comme seconde preuve, et l'adresse
   publique vérifiée *(`ping` OK, `getConfig` OK)*.
 
-  ⚠️ **Le chantier n'est PAS terminé, et R-042 reste OUVERT.** Les six garde-fous sont **sous test**
-  et ces tests tournent **chez Google** — mais 703 tests verts prouvent qu'ils **raisonnent** juste,
-  **pas** qu'une saisie de score **fonctionne en vrai**.
+  ✅ **Ce que les 703 tests ne prouvaient pas — qu'une saisie de score fonctionne en vrai — est
+  désormais établi par les vérifications manuelles.**
 
   🚧 **Mise à jour du 2026-08-18 — l'étape 5 a été autorisée et partiellement exécutée : 9 sur 12.**
 
@@ -1027,9 +1029,31 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   - 🟠 **N-3 reste NON CONCLUANT** — le chemin `match_suivant` n'a jamais été exécuté. **V-12 ne le
     teste pas.**
 
-  ✅ **Aucune ligne de code, aucun test, aucun déploiement n'ont été touchés par l'étape 5.**
-  Les vérifications se sont faites sur une **copie de test** du classeur, jamais sur la production.
-  **R-042 ne passera à `TESTÉ` qu'après l'étape 5 complète.**
+  🏁 ⭐ **Mise à jour du 2026-08-19 — L'ÉTAPE 5 EST CLOSE, ET LE CHANTIER EST TERMINÉ.**
+
+  - ✅ **V-7 RÉUSSIE** — l'égalité en élimination directe est refusée, message **identique au code
+    au caractère près** *(72/72)*, et ⭐ **le refus n'écrit aucune cellule** ;
+  - ✅ **V-8 RÉUSSIE, ses deux volets** — le vainqueur arrive **aussitôt** dans le match suivant, et
+    la petite finale est **recalculée** *(un perdant s'y déplace de A vers B — annoncé avant le
+    geste, constaté après)* ;
+  - ✅ ⭐ **V-10 RÉUSSIE, dans ses DEUX branches** : « Annuler » ne modifie **aucune des 4 536
+    cellules** ; « Modifier quand même » réinitialise la suite du tableau **exactement comme prédit**
+    *(4 matchs, 11 cellules)*, ⭐ **sans déborder sur l'autre moitié du tableau** ;
+  - ⭐ **N-5 et N-6 sont ÉCARTÉS** — dont **N-6, « le mauvais vainqueur propagé »**, dernier risque
+    encore ⛔ NON VÉRIFIÉ. **La limite assumée par D-C012-1 est couverte** ;
+  - ⚠️ **RÉSERVE CONSERVÉE : 🟠 V-12 / N-3 reste NON CONCLUANTE** *(D-C012-5)*.
+
+  ⚡ **Ce qui bloquait V-7/V-8/V-10 n'était pas technique** : `COUPE_PLATEAU` était réputé
+  **supprimé** — il n'avait été que **masqué de l'interface** *(`21a4f2b`, **aucun fichier backend
+  touché**)*. Il a été réactivé **dans la copie de test uniquement**, sur décision explicite de
+  Romain, *sans* redevenir une fonctionnalité de l'application.
+
+  ✅ **Aucune ligne de code, aucun test, aucune configuration de l'application n'ont été touchés par
+  l'étape 5**, et **aucun redéploiement.** Les vérifications se sont faites sur une **copie de
+  test** ; ✅ **le routage a été rétabli sur la production et vérifié** *(4 tests concordants)*, et
+  ✅ **la production vérifiée NON CONTAMINÉE**.
+
+  ⭐ **R-042 est passé à `TESTÉ` le 2026-08-19**, avec la réserve ci-dessus.
 
 ---
 

@@ -11,13 +11,17 @@
 > jour même)* : le backend est **redéployé chez Google** *(`Code.gs` **et** `Tests.gs`)*, une
 > **nouvelle version du MÊME déploiement** est publiée, et `lancerTestsFFR` y donne
 > **`R92 — 703/703 OK, 0 FAIL`**. Les preuves complètes sont au **§10**.
-> 🚧 **Mise à jour du 2026-08-18 (soir) — l'ÉTAPE 5 est OUVERTE et partiellement exécutée : 9 sur 12.**
-> ✅ **V-1, V-2, V-3, V-4, V-5, V-6, V-9, V-11 RÉUSSIES** · 🟠 **V-12 NON CONCLUANTE** ·
-> ⛔ **V-7, V-8 et V-10 NON EXÉCUTÉES**, faute de **tableau final de Coupe** dans les données de test.
-> ⭐ **V-10, déclarée obligatoire, n'est pas faite.** Résultats et preuves : **§8 bis** et **§8 ter**.
+> 🏁 **Mise à jour du 2026-08-19 — l'ÉTAPE 5 est CLOSE : 11 vérifications sur 12, et C-012 est
+> TERMINÉ.** ✅ **V-1 à V-11 RÉUSSIES** *(V-11 avec réserve)*, dont ⭐ **V-7, V-8 et V-10, exécutées
+> ce jour** · 🟠 **V-12 NON CONCLUANTE**. Résultats et preuves : **§8 bis**, **§8 ter** et **§8 quater**.
+> ⭐ **R-042 est passé à `TESTÉ`** *(décision de Romain, 2026-08-19)*, **avec une réserve
+> explicitement conservée : V-12 / N-3 demeure non concluante**, sous le critère de substitution
+> **D-C012-5** déjà accepté.
 > ⚡ **V-4 a révélé un défaut ANTÉRIEUR à C-012** — l'écriture des colonnes par position alors que la
-> lecture se fait par nom : inscrit au registre sous **R-093** *(P2)*. **Aucune régression C-012.**
-> ⛔ **R-042 reste OUVERT** : le risque ne passera à `TESTÉ` qu'après l'étape 5 **complète**.
+> lecture se fait par nom : inscrit au registre sous **R-093** *(P2, NON CORRIGÉ)*. **Aucune
+> régression C-012.**
+> ✅ **Routage rétabli sur la PRODUCTION et vérifié** *(4 tests concordants)* · ✅ **production
+> NON CONTAMINÉE**.
 > ⚠️ **Aucune ligne de code, aucun test et aucun déploiement n'ont été touchés par l'étape 5.**
 >
 > **Chantier** : `PLAN.md` → **C-012** · **Problème couvert** : **R-042** *(P1)* · **Explication du
@@ -573,15 +577,15 @@ aujourd'hui**. **Aucun classeur requis** : tous les objets sont fabriqués à la
 | **V-4** | Catégorie **U14 en tir au but** : saisir un score **détaillé** | ✅ total en points juste, **8 compteurs écrits** dans le Sheet | ✅ **RÉUSSIE** *(2ᵉ tentative — voir §8 ter)* |
 | **V-5** | Vérifier l'**alerte des 5 essais d'écart** | ✅ comportement identique à avant | ✅ **RÉUSSIE** |
 | **V-6** | Ouvrir l'onglet **`Historique`** | ✅ une ligne par match, **une correction met à jour la MÊME ligne** | ✅ **RÉUSSIE** |
-| **V-7** | **Coupe** : saisir une **égalité** en demi-finale | ✅ l'application **exige** un vainqueur | ⛔ **NON EXÉCUTÉE** — aucun match de Coupe dans les données de test |
-| **V-8** | **Coupe** : le vainqueur apparaît **tout de suite** dans le match suivant · les **perdants** des 2 demies alimentent la **petite finale** | ✅ propagation intacte | ⛔ **NON EXÉCUTÉE** — même cause que V-7 |
+| **V-7** | **Coupe** : saisir une **égalité** en demi-finale | ✅ l'application **exige** un vainqueur | ✅ **RÉUSSIE** *(2026-08-19 — §8 quater)* |
+| **V-8** | **Coupe** : le vainqueur apparaît **tout de suite** dans le match suivant · les **perdants** des 2 demies alimentent la **petite finale** | ✅ propagation intacte | ✅ **RÉUSSIE** *(les deux volets — §8 quater)* |
 | **V-9** | ⚠️ **Se déconnecter, rouvrir la page de saisie, entrer la clé** | ✅ **la clé est acceptée** *(c'est la sonde `__verif_cle__` — §2.4-2)* · et **aucune ligne parasite** n'apparaît dans `Matchs` | ✅ **RÉUSSIE** |
-| **V-10** | ⭐ **Cascade** : corriger un quart déjà propagé vers une demi **jouée** | ✅ l'avertissement s'affiche · « Annuler » ne change **rien** · « Modifier quand même » **réinitialise la suite du tableau** | ⛔ **NON EXÉCUTÉE** — même cause que V-7 · ⚠️ **déclarée obligatoire** |
+| **V-10** | ⭐ **Cascade** : corriger un quart déjà propagé vers une demi **jouée** | ✅ l'avertissement s'affiche · « Annuler » ne change **rien** · « Modifier quand même » **réinitialise la suite du tableau** | ✅ ⭐ **RÉUSSIE — les DEUX branches** *(§8 quater)* |
 | **V-11** | Sheet **sans** les colonnes de détail *(migration douce)* | ✅ les colonnes sont ajoutées, la saisie simple fonctionne | ✅ **RÉUSSIE — avec réserve** *(voir §8 bis et **R-093**)* |
 | **V-12** | Chronométrer une validation *(onglet « Exécutions »)* | ✅ **pas plus lente qu'avant** *(rappel : plancher ~1,6 s)* | 🟠 **NON CONCLUANTE** *(voir l'encadré ci-dessous)* |
 
-> 🔴 **V-10 est le scénario à ne jamais sauter** : c'est le seul qui exerce la partie **non couverte
-> par les tests** *(§3.5)*.
+> 🔴 **V-10 était le scénario à ne jamais sauter** : c'est le seul qui exerce la partie **non
+> couverte par les tests** *(§3.5)*. ✅ **Elle a été exécutée le 2026-08-19 — voir §8 quater.**
 
 ### 8 bis — RÉSULTATS DE L'ÉTAPE 5 *(exécutée le 2026-08-18)*
 
@@ -589,8 +593,9 @@ aujourd'hui**. **Aucun classeur requis** : tous les objets sont fabriqués à la
 *(Le premier relevé, plus haut dans la journée, en comptait 7 : la matière manquante pour **V-4** et
 **V-5** a été préparée depuis — voir **§8 ter**.)*
 
-> ⛔ **L'étape 5 reste OUVERTE, et R-042 reste OUVERT.** ⭐ **V-10, déclarée obligatoire, n'a
-> toujours pas été exécutée** — comme V-7 et V-8, elle attend un **tableau final de Coupe**.
+> ⚠️ **Cette section décrit l'état au 2026-08-18.** Elle est conservée telle quelle comme trace.
+> ✅ **V-7, V-8 et V-10 ont été exécutées et réussies le 2026-08-19 — voir §8 quater**, qui clôt
+> l'étape 5.
 
 **Environnement** : toutes les vérifications ont été faites sur une **copie de test** du classeur
 *(`Tournoi R92 — COPIE DE TEST C-012`)*, la propriété de script `SHEET_ID` ayant été basculée
@@ -731,6 +736,91 @@ preuve ou d'ajouter des équipes.
 
 ---
 
+### 8 quater — ⭐ V-7, V-8 ET V-10 : L'ÉTAPE 5 EST CLOSE *(2026-08-19)*
+
+> 🏁 **Les trois vérifications qui manquaient sont faites, et les trois sont RÉUSSIES.**
+> **R-042 passe à `TESTÉ`** *(décision de Romain le 2026-08-19)*, **avec la réserve V-12 / N-3
+> explicitement conservée**.
+
+#### Ce qui bloquait : une croyance fausse, pas une limite technique
+
+V-7, V-8 et V-10 attendaient un **tableau final de Coupe**. Or le format `COUPE_PLATEAU` était
+réputé **supprimé**. **Il ne l'a jamais été.** Établi en lecture seule :
+
+- **50 occurrences** de `COUPE_PLATEAU` dans le code exécutable, sur **10 fichiers** ;
+- le commit qui l'a retiré — **`21a4f2b`** *(2026-07-27)* — ne touche que **3 fichiers frontend** et
+  ⭐ **AUCUN fichier backend**. Son propre message le dit : *« La CAPACITÉ reste entière »* ;
+- `git log -S"COUPE_PLATEAU"` : **12 commits, aucune suppression**.
+
+⭐ **Et une découverte qui justifie rétroactivement D-C012-1** : `propagerVainqueurBracket`,
+`invaliderMatchAval`, `majPetiteFinale`, `construireBracketCoupe` et `fixturesApresMidiCoupePlateau`
+**ne sont nommées nulle part dans `backend/Tests.gs`**. Sur 703 tests, **zéro** ne touche la
+propagation. V-10 était bien **le seul filet**.
+
+> ⚠️ **Le Super Challenge n'a rien à voir** : `genererDimancheScf` écrit `sous_tableau: ''` et
+> `match_suivant: ''` **en dur** *(`Code.gs:8066`)*, et une catégorie SCF est **sautée** par le
+> générateur d'après-midi *(`Code.gs:6199`)*. Il ne peut pas armer les garde-fous ①, ③ et ④.
+
+#### La préparation, et son coût réel
+
+| Obstacle | Fait |
+|---|---|
+| **51 matchs du matin non terminés** — `genererApresMidi` refuse de démarrer *(`Code.gs:6182`)* | scores `15 – 5` collés dans les seules colonnes `score_A`, `score_B`, `statut` *(plage `I2:K52`)*. **Diff : 153 cellules = 51 × 3, exactement. 0 ailleurs** |
+| Aucun tableau de Coupe | U10 passée en `COUPE_PLATEAU` + `{"nbQualifiesCoupe":1}` — ⚠️ **copie de test uniquement**, sur décision explicite de Romain, *sans* que le format redevienne une fonctionnalité de l'application |
+
+**Génération : 114 matchs**, conforme à la prédiction. Le tableau obtenu est **identique, match pour
+match**, à celui simulé depuis `ordreSeeds` et `construireBracketCoupe` — ce qui **prouve
+indirectement** que `nbQualifiesCoupe` valait 1 *(sinon : 10 matchs et des huitièmes)*.
+⛔ **`param_format` n'a jamais pu être relu** : il n'est exposé par aucune lecture publique.
+
+#### Les résultats
+
+| | Geste | Preuve |
+|---|---|---|
+| ✅ **V-7** | égalité `10 – 10` en demi-finale, sans vainqueur | message **identique au code, 72 / 72 caractères** · ⭐ **0 cellule modifiée** sur 168 × 27. Le garde-fou ③ refuse **avant toute écriture, et sans payer de lecture** |
+| ✅ **V-8 (a)** | saisie du quart | `M102.equipe_B` passe de vide à **ANTONY** — **5 cellules, 2 matchs**. M111 **ne bouge pas** *(correct : un quart n'appelle pas `majPetiteFinale`)* |
+| ✅ **V-8 (b)** | saisie de la 2ᵉ demie | la petite finale est **recalculée** : STADE FRANÇAIS **se déplace de A vers B** — annoncé avant le geste, constaté après. Une fonction qui aurait « rempli le trou » aurait rangé les perdants **dans le mauvais ordre** |
+| ✅ ⭐ **V-10 · branche « Annuler »** | correction refusée | message **identique au code, 152 / 152 caractères** · ⭐ **0 cellule modifiée** sur 4 536. ⚠️ L'écran affichait encore le nouveau score : **la preuve est la relecture du classeur, pas l'affichage** |
+| ✅ ⭐ **V-10 · branche « Modifier quand même »** | cascade forcée | **prédiction annoncée avant le clic : 4 matchs, 11 cellules — constaté : les mêmes**. La demi-finale perd son score, la finale perd son finaliste, la petite finale revient en arrière. ⭐ **L'autre demi-finale est INTACTE : la cascade n'a pas débordé** |
+
+**Aucun match hors Coupe touché à aucune étape. M052 / M053 / M054 intacts de bout en bout.**
+
+#### Où en sont les six risques, au 2026-08-19
+
+| # | État | Établi par |
+|---|---|---|
+| **N-1** | ✅ **ÉCARTÉ** — désormais sur **deux** messages vérifiés **caractère par caractère** *(72 et 152 signes)* | V-2b, **V-7**, **V-10** |
+| **N-2** | ✅ **ÉCARTÉ** | V-9 |
+| **N-3** | 🟠 **TOUJOURS NON CONCLUANT** — ⚠️ **réserve conservée au moment de passer R-042 à `TESTÉ`** | V-12 |
+| **N-4** | ✅ **ÉCARTÉ pour C-012** *(R-093 reste ouvert, et lui est antérieur)* | V-4, V-11 |
+| **N-5** | ✅ ⭐ **ÉCARTÉ** *(était 🟡 partiel)* — la propagation a tourné **5 fois** sans jamais gêner un enregistrement | V-6, **V-8** |
+| **N-6** | ✅ ⭐ **ÉCARTÉ** *(était ⛔ NON VÉRIFIÉ)* — **le vainqueur propagé est le bon** | **V-8**, **V-10** |
+
+> ⭐ **La limite assumée par D-C012-1 est couverte.** Les trois fonctions laissées hors du
+> refactoring **et** hors des 703 tests ont tourné en conditions réelles et ont fait exactement ce
+> que le code annonce.
+
+#### Remise en état, et preuve que la production n'a rien vu
+
+| # | Geste | Contrôle |
+|---|---|---|
+| 1 | `format_apresmidi` U10 → `POULES_NIVEAU` | ✅ vérifié |
+| 2 | `param_format` U10 vidé | ⛔ **NON VÉRIFIÉ** *(hors liste blanche — l'observation de Romain fait foi)* |
+| 3 | `heure_fin` → `17:18` | ✅ vérifié |
+| 4 | ⭐ `SHEET_ID` supprimée | ✅ **vérifié — contrôle renforcé** |
+
+**Routage production — 4 tests concordants** : `tournoi_nom` sans « COPIE DE TEST » · ⭐ **M095
+ABSENT et 0 ligne `sous_tableau = COUPE`** *(la copie en avait 5)* · **51 matchs** *(la copie : 168)*
+· horaires et catégories différents *(pas d'U14 en production)*.
+
+> 💡 **Le test négatif est le plus solide** : un quart de finale U10 opposant ANTONY à CLAMART sur
+> `7 – 12` **n'existe que dans la copie de test — parce que nous venons de le créer**.
+
+✅ **Production vérifiée NON CONTAMINÉE** : aucun `COUPE_PLATEAU`, aucun `sous_tableau`, aucun
+`match_suivant`, aucun match d'après-midi, aucune trace des scores collés.
+
+---
+
 ## 9 — RISQUES DE NON-RÉGRESSION
 
 ### 9.1 — Ce qui doit être vérifié après la modification *(cadre §8)*
@@ -758,6 +848,9 @@ preuve ou d'ajouter des équipes.
 | **N-6** | **L'objet passé à la propagation n'est plus à jour** *(l'optimisation « en mémoire », §2.4-5)* → **le mauvais vainqueur propagé** | 🔴 **élevé** | `matchApresEcriture` est **explicitement dans le plan** (§5.2b) ; **V-8** et **V-10** |
 
 > ### ⭐ Où en sont les six risques, au 2026-08-18
+>
+> ⚠️ **Tableau conservé comme trace. L'état À JOUR est au §8 quater** *(2026-08-19)* : **N-5 et
+> N-6 sont désormais ÉCARTÉS**.
 >
 > | # | État | Établi par |
 > |---|---|---|
@@ -801,27 +894,32 @@ Pour C-012, cette preuve prend **trois formes cumulatives** :
 | Étape | Ce qu'on fait | Commit | Prouvé par |
 |---|---|---|---|
 | **0** | ✅ **FAIT le 2026-08-16** — ce document est **validé par Romain**, les 4 décisions sont tranchées *(§11)* | *(le présent document)* | — |
-| **0 bis** | ✅ **Autorisation d'implémenter donnée le 2026-08-16 — étape par étape.** Chaque étape reçoit son autorisation séparément ; **l'étape 4 a reçu la sienne le 2026-08-18**, **l'étape 5 n'a pas encore la sienne** | — | — |
+| **0 bis** | ✅ **Autorisation d'implémenter donnée le 2026-08-16 — étape par étape.** Chaque étape a reçu la sienne séparément ; **l'étape 4 le 2026-08-18**, **l'étape 5 les 2026-08-18 et 2026-08-19** | — | — |
 | **1** | ✅ **FAIT — PR #187 fusionnée le 2026-08-16.** **Cœur 1** `litSaisieScore` extrait · `enregistrerScore` l'appelle · **T-1 à T-5** | `refactor(scores): C-012 étape 1 — extraire litSaisieScore, et T-1 à T-5 (R-042)` | **616 + 33 = 649** verts |
 | **2** | ✅ **FAIT — PR #188 fusionnée le 2026-08-16.** **`cascadeAVerifier`** extrait · **T-14** | `refactor(scores): C-012 étape 2 — extraire cascadeAVerifier et ajouter T-14` | **649 + 12 = 661** verts |
 | **3** | ✅ **FAIT — PR #189 fusionnée le 2026-08-17.** ⭐ **Cœur 2** `deciderEnregistrementScore` — les 6 garde-fous · **T-6 à T-13, T-15 à T-17** | `refactor(scores): C-012 étape 3 — les six garde-fous passent sous test (R-042)` | **661 + 42 = 703** verts |
 | **4** | ✅ **FAIT le 2026-08-18** — **redéploiement chez Google** *(`Code.gs` **ET** `Tests.gs` → `Test.gs`)* · **nouvelle version du MÊME déploiement** publiée · `lancerTestsFFR` exécuté là-bas | *(pas de commit de code — seulement celui-ci, documentaire)* | ⭐ **`R92 — 703/703 OK, 0 FAIL` obtenu CHEZ GOOGLE** · **dernière ligne de `Test.gs` = 4244** · `?action=ping` **OK** · `?action=getConfig` **OK** *(les 5 preuves sont détaillées sous le tableau)* |
-| **5** | 🚧 **EN COURS depuis le 2026-08-18 — 9 vérifications sur 12.** ✅ **V-1, V-2, V-3, V-4, V-5, V-6, V-9, V-11 RÉUSSIES** · 🟠 **V-12 NON CONCLUANTE** · ⛔ **V-7, V-8 et V-10 NON EXÉCUTÉES** *(pas de tableau final de Coupe dans les données de test)*. ⭐ **V-10, obligatoire, n'est pas faite** | *(lots documentaires)* | **§8 bis** et **§8 ter** — résultats et preuves |
+| **5** | 🏁 **CLOSE le 2026-08-19 — 11 vérifications sur 12.** ✅ **V-1 à V-11 RÉUSSIES** *(V-11 avec réserve)*, dont ⭐ **V-7, V-8 et V-10** · 🟠 **V-12 NON CONCLUANTE** *(réserve conservée)*. ✅ **Routage production rétabli et vérifié**, ✅ **production non contaminée** | *(lots documentaires)* | **§8 bis**, **§8 ter** et ⭐ **§8 quater** — résultats et preuves |
 
 > ⚠️ **Le compte annoncé au §7 était faux, et il faut le dire.** Ce document estimait *« 616 + 5 »*
 > pour l'étape 1 et *« ~633 »* pour l'ensemble : il **comptait les fonctions de test**, alors que le
 > harnais compte les **vérifications**. Le réel est **616 + 33 + 12 + 42 = 703**, et le total
 > annoncé était donc **très en dessous**. ✅ **Il est désormais MESURÉ, plus estimé.**
 >
-> ⛔ **R-042 n'est PAS refermé pour autant.** Les six garde-fous sont **sous test** depuis l'étape 3,
-> et ces tests tournent **chez Google** depuis l'étape 4 — mais **les 12 vérifications manuelles du
-> §8 ne sont faites qu'à **9 sur 12**. **Le risque ne passera à `TESTÉ` qu'après l'étape 5 complète.**
+> 🏁 **Mise à jour du 2026-08-19 — L'ÉTAPE 5 EST CLOSE, ET C-012 EST TERMINÉ.** Les **3
+> vérifications restantes** ont été exécutées : ⭐ **V-7, V-8 et V-10 sont RÉUSSIES** — V-10 dans
+> ses **deux branches**, aucune sautée *(§8 quater)*.
 >
-> ⚠️ **Mise à jour du 2026-08-18 (soir)** : l'étape 5 est **ouverte, 9 sur 12**. Elle **reste
-> OUVERTE**. La matière manquante pour **V-4 et V-5** a été préparée *(§8 ter)* et les deux sont
-> **réussies**. Les **3 vérifications restantes** — **V-7**, **V-8** et ⭐ **V-10, déclarée
-> obligatoire** — exigent un **tableau final de Coupe**, absent des données de test.
-> **Aucune ligne de code n'a été modifiée pendant l'étape 5**, et aucun redéploiement n'a eu lieu.
+> ⭐ **R-042 est passé à `TESTÉ`** *(décision de Romain, 2026-08-19)*, **avec une réserve
+> explicitement conservée** : 🟠 **V-12 / N-3 demeure NON CONCLUANTE**, sous le critère de
+> substitution **D-C012-5** déjà accepté. Cette réserve n'est pas un détail de forme — elle dit
+> précisément ce que le chantier **ne prouve pas** : que la lecture du match suivant n'est pas
+> devenue systématique.
+>
+> ✅ **Aucune ligne de code, aucun test, aucune configuration de l'application n'ont été modifiés
+> pendant toute l'étape 5**, et **aucun redéploiement n'a eu lieu.** Les vérifications se sont faites
+> sur une **copie de test**, et le **routage a été rétabli sur la production**, vérifiée
+> **non contaminée** *(4 tests concordants — §8 quater)*.
 
 ### ⭐ Étape 4 — les preuves obtenues le 2026-08-18
 

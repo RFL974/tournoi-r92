@@ -5211,3 +5211,315 @@ preuve ou d'ajouter des équipes.
 | **N-3** | 🟠 **NON CONCLUANT** *(inchangé)* |
 | **Routage** | ⚠️ **pointe encore sur la COPIE DE TEST** — `SHEET_ID` à supprimer en fin de travaux |
 | **Prochaine étape** | **V-7, V-8 et ⭐ V-10** — elles exigent de passer U10 en `COUPE_PLATEAU` avec ⭐ **`{"nbQualifiesCoupe":1}`** *(valeur calculée sur les 5 poules réelles : bracket de 8, **1 quart alimentant une demi**, 2 demies, finale, petite finale — **2 saisies suffisent** pour installer V-10)*, puis à générer l'après-midi |
+
+---
+
+# 🏁 C-012 — **ÉTAPE 5 CLOSE : V-7, V-8 ET V-10 RÉUSSIES — LE CHANTIER EST TERMINÉ** *(2026-08-19)*
+
+> **Objectif de la session** : exécuter les **3 vérifications manquantes** — V-7, V-8 et
+> ⭐ **V-10, déclarée obligatoire** — puis remettre l'environnement de test en état.
+> **Résultat** : ✅ **les trois sont réussies**, ⭐ **R-042 passe à `TESTÉ`**, **l'étape 5 est close**
+> et **C-012 est terminé**. Le routage est revenu sur la **production**, vérifiée **non contaminée**.
+
+**Point de départ** : `main` = `origin/main` = **`d5653a9`**, arbre propre.
+**Aucune ligne de code, aucun test, aucune configuration de l'application n'a été modifiée.**
+
+---
+
+## 1. Ce qui bloquait, et pourquoi ce n'était pas ce qu'on croyait
+
+La session s'ouvre sur une question de Romain : *le « bloc Coupe » que testent V-7/V-8/V-10, est-ce
+le **Super Challenge**, ou un **ancien mode Coupe éliminatoire supprimé** ?*
+
+⚠️ **La prémisse était fausse sur un point, et c'est le point qui débloquait tout.**
+
+| Ce qu'on croyait | Ce que dit le dépôt |
+|---|---|
+| Le mode Coupe a été **supprimé** | ❌ Il a été **MASQUÉ de l'interface**, jamais supprimé |
+
+**Preuves relevées en lecture seule** :
+
+- **50 occurrences** de `COUPE_PLATEAU` dans le code exécutable, sur **10 fichiers** ;
+- le commit qui l'a retiré — **`21a4f2b`** *(2026-07-27, « masque COUPE_PLATEAU (interdit EDR), sans
+  réécrire la donnée »)* — ne touche que **3 fichiers frontend** et ⭐ **AUCUN fichier backend** ;
+- `git log -S"COUPE_PLATEAU"` sur tout l'historique : **12 commits, aucune suppression** ;
+- les **5 fonctions** du mécanisme sont intactes : `fixturesApresMidiCoupePlateau`,
+  `construireBracketCoupe`, `propagerVainqueurBracket`, `invaliderMatchAval`, `majPetiteFinale`.
+
+> ⭐ **Découverte à retenir** : **aucune de ces 5 fonctions n'est nommée une seule fois dans
+> `backend/Tests.gs`.** Sur 703 tests automatiques, **zéro** ne touche la propagation des vainqueurs.
+> C'est exactement la limite que **D-C012-1** avait assumée — et c'est pourquoi V-10 était obligatoire.
+
+**Et le Super Challenge est techniquement étranger à tout cela** : `genererDimancheScf` écrit
+`sous_tableau: ''` et `match_suivant: ''` **en dur** *(`Code.gs:8066`)*, et une catégorie SCF est
+**sautée** par le générateur d'après-midi *(`Code.gs:6199`)*. Il ne peut **structurellement pas**
+armer les garde-fous ①, ③ et ④.
+
+**Chaîne de dépendance établie** : V-7/V-8/V-10 → garde-fous ① ③ ④ → `sous_tableau = 'COUPE'` →
+`construireBracketCoupe` *(seul producteur, `Code.gs:6588` et `6602`)* → `format_apresmidi =
+COUPE_PLATEAU`. **Aucun autre chemin n'existe.**
+
+---
+
+## 2. L'obstacle que personne n'avait vu : 51 scores manquants
+
+Le contrôle préalable de l'onglet `Matchs` *(lecture seule, autorisée par Romain)* révèle un
+blocage qui **ne figurait dans aucun document** :
+
+| Mesure | Valeur |
+|---|---|
+| Matchs | **54** |
+| Matchs de phase `classement` | ⭐ **0** — l'après-midi n'avait **jamais** été généré |
+| Matchs **non terminés** | 🔴 **51** *(30 U8 + 21 U10)* |
+
+Or `genererApresMidi` refuse de démarrer si **un seul** match du matin n'est pas terminé
+*(`Code.gs:6182`)*. **Aucune fonction d'aide au remplissage n'existe** dans `Code.gs` ni `Tests.gs`.
+
+✅ **Bonne nouvelle du même contrôle** : les **3 preuves de V-4/V-5** *(M052, M053, M054)* sont en
+phase `poule` et occupent les **3 dernières lignes** (53-55). La génération les **conserve**, et les
+51 lignes à remplir sont **contiguës** (2 à 52) : aucune ligne à préserver au milieu de la plage.
+
+---
+
+## 3. Le remplissage — voie **A-2**, validée par Romain
+
+**2 cellules d'écart avec le geste minimal**, mais 51 lignes à faire exister. Romain a choisi le
+**collage direct dans le Sheet** plutôt que 51 saisies écran.
+
+- **Colonnes touchées** : `score_A`, `score_B`, `statut` — **et elles seules** *(plage `I2:K52`)* ;
+- **Motif** : `15 – 5`, vainqueur = l'équipe apparaissant **en premier** dans le calendrier de sa
+  poule. ⭐ **Règle transitive par construction** : aucun cycle possible, donc **aucun ex æquo**.
+
+**Vérification des classements avant écriture** *(simulation avec le barème réel V=3 N=2 D=1 et
+`comparerClassement`)* : les 5 poules U10 ressortent **strictement ordonnées par les points seuls**
+— 9/7/5/3 et 6/4/2. **Le départage n'a jamais besoin d'intervenir.**
+
+**Contrôle après collage — diff exhaustif sur 54 × 27 = 1 458 cellules** :
+
+```
+cellules modifiées : 153  =  51 lignes × 3 colonnes, exactement
+cellules modifiées hors score_A/score_B/statut : 0
+cellules modifiées sur M052/M053/M054          : 0
+```
+
+---
+
+## 4. Réactivation de `COUPE_PLATEAU` — copie de test uniquement
+
+Décision explicite de Romain : *« Cela ne signifie pas que ce format doit redevenir une
+fonctionnalité utilisable dans l'application. »*
+
+**2 cellules**, ligne U10 de `Config` : `format_apresmidi = COUPE_PLATEAU` et
+`param_format = {"nbQualifiesCoupe":1}`.
+
+⚠️ **`param_format` n'est exposé par aucune lecture publique** — il n'a donc **jamais pu être
+relu**. Sa valeur a été établie **indirectement**, par la structure produite à la génération.
+
+**Génération** : ✅ **114 matchs d'après-midi**, conforme à la prédiction faite avant le clic
+*(U10 : 5 Coupe + 66 Plateau · U8 : 40 · U14 : 3)*. Les 54 matchs du matin : **0 cellule modifiée**.
+
+⭐ **La structure obtenue est identique, match pour match, à celle prédite en simulant `ordreSeeds`
+et `construireBracketCoupe`** — ce qui **prouve indirectement** que `nbQualifiesCoupe` valait bien
+**1** *(sinon : 10 matchs et des huitièmes)* :
+
+```
+M095  QUART_DE_FINALE   ANTONY vs CLAMART          → M102 (place B)
+M102  DEMI_FINALE       LE PUC-2 vs (vainqueur)    → M110 (place A)
+M103  DEMI_FINALE       LE PUC-1 vs STADE FRANÇAIS → M110 (place B)
+M110  FINALE
+M111  PETITE_FINALE
+```
+
+**Têtes de série confirmées par `getClassement`** *(le serveur, pas la simulation)* :
+E38 · E37 · E07 · E17 · E08 — **identiques à la prédiction**.
+
+---
+
+## 5. ✅ V-7 — le refus n'écrit rien
+
+**Geste** : égalité `10 – 10` sur M103 **sans désigner de vainqueur**.
+
+| Contrôle | Résultat |
+|---|---|
+| Message affiché | ⭐ **identique au code, octet pour octet — 72 / 72 caractères** |
+| ⭐ Cellules modifiées | **0** sur 168 × 27 |
+| Ligne parasite `__verif_cle__` | aucune |
+
+> **Le garde-fou ③ refuse AVANT toute écriture** — et **sans payer de lecture** : le refus ③
+> intervient avant le garde-fou ④, donc la lecture paresseuse du §6.3 est préservée **en réel**.
+
+---
+
+## 6. ✅ V-8 — la propagation, en deux temps
+
+**(a) Le vainqueur arrive dans le match suivant.** Saisie de M095 *(`ANTONY 12 – 7 CLAMART`)* :
+
+```
+M095   score_A '' → '12' · score_B '' → '7' · statut → 'terminé' · vainqueur → E17 [ANTONY]
+M102   equipe_B '' → 'E17' [ANTONY]        ⭐ la propagation
+```
+
+**5 cellules, 2 matchs.** M111 **n'a pas bougé** — correct : M095 est un **quart**, et
+`majPetiteFinale` n'est appelée que pour une `DEMI_FINALE`.
+
+**(b) Les perdants alimentent la petite finale.** Saisie de M102 *(`LE PUC-2 15 – 5 ANTONY`)* :
+
+```
+M102   score 15-5 · terminé · vainqueur E38 [LE PUC-2]
+M110   equipe_A '' → 'E38' [LE PUC-2]
+M111   equipe_A  E07 [STADE FRANÇAIS] → E17 [ANTONY]     ⭐ recalcul
+M111   equipe_B  ''  → E07 [STADE FRANÇAIS]              ⭐ recalcul
+```
+
+> ⭐ **STADE FRANÇAIS s'est déplacé de A vers B — annoncé avant le geste, constaté après.**
+> `majPetiteFinale` ne complète pas une case vide : elle **recalcule les deux emplacements** à
+> partir des demies terminées. Une fonction qui aurait « rempli le trou » aurait rangé les perdants
+> **dans le mauvais ordre**.
+
+**Verdict V-8 : ✅ RÉUSSIE** *(les deux volets)*.
+
+---
+
+## 7. ⭐ V-10 — les DEUX branches, aucune sautée
+
+Romain a exigé de tester **les deux boutons**, dans l'ordre.
+
+### Branche 1 — « Annuler »
+
+Correction de M095 vers `7 – 12` *(on inverse le vainqueur — sans quoi la cascade ne se déclenche
+pas : `propagerVainqueurBracket` ne réagit que si le vainqueur **change**, `Code.gs:5869`)*.
+
+**Message affiché** : ⭐ **identique au code, 152 / 152 caractères**, tiret cadratin compris.
+
+| Contrôle | Résultat |
+|---|---|
+| ⭐ **Cellules modifiées** | **0** sur 4 536 |
+
+> ⚠️ **Romain a explicitement refusé de conclure depuis l'écran** — l'interface affichait encore
+> `7 – 12` dans ses champs. **La preuve est la relecture du classeur, pas l'affichage.**
+
+### Branche 2 — « Modifier quand même »
+
+**Prédiction annoncée avant le clic : 4 matchs, 11 cellules. Constaté : 4 matchs, 11 cellules —
+les mêmes.**
+
+```
+M095   score 12-7 → 7-12 · vainqueur ANTONY → CLAMART
+M102   equipe_B ANTONY → CLAMART · score 15-5 EFFACÉ · statut 'terminé' → 'à venir' · vainqueur effacé
+M110   equipe_A LE PUC-2 → (vide)
+M111   equipe_A ANTONY → STADE FRANÇAIS · equipe_B STADE FRANÇAIS → (vide)
+```
+
+| Contrôle | Résultat |
+|---|---|
+| ⭐ **M103** *(l'autre moitié du tableau)* | ✅ **INTACTE** — la cascade n'a pas débordé |
+| Matchs hors Coupe modifiés | **aucun** |
+| M052 / M053 / M054 | ✅ intacts |
+
+**Confirmation croisée par l'interface** : le compteur est passé de **68/71 à 69/71** — c'est-à-dire
+*« 69 à saisir sur 71 »* *(`saisie.js:258`)*. Il **augmente** parce que la demi-finale **a perdu son
+score**. Les données concordent : **2** matchs U10 d'après-midi terminés, contre 3 avant.
+
+**Verdict V-10 : ✅ RÉUSSIE.**
+
+---
+
+## 8. Ce que l'étape 5 établit sur les risques
+
+| Risque | Avant | Après |
+|---|---|---|
+| **N-1** *(un message change)* | mesuré par tests | ✅ **écarté en réel** — 2 messages vérifiés **caractère par caractère** *(72 et 152 signes)* |
+| **N-2** *(ordre des contrôles)* | ✅ écarté *(V-9)* | inchangé |
+| **N-3** *(lecture systématique)* | 🟠 non concluant | 🟠 **TOUJOURS NON CONCLUANT** *(V-12)* |
+| **N-4** *(colonnes de détail)* | ✅ écarté | inchangé *(R-093 reste ouvert)* |
+| **N-5** *(propagation bloquante)* | 🟡 partiel | ✅ **ÉCARTÉ** — la propagation a tourné 5 fois sans jamais gêner un enregistrement |
+| ⭐ **N-6** *(mauvais vainqueur propagé)* | ⛔ **NON VÉRIFIÉ** | ✅ ⭐ **ÉCARTÉ** |
+
+> ⭐ **La limite assumée par D-C012-1 est désormais couverte.** Les trois fonctions laissées hors du
+> refactoring et hors des 703 tests — `propagerVainqueurBracket`, `invaliderMatchAval`,
+> `majPetiteFinale` — ont tourné en conditions réelles et ont fait exactement ce que le code annonce.
+
+---
+
+## 9. Remise en état de l'environnement
+
+| # | Geste | Contrôle |
+|---|---|---|
+| 1 | `format_apresmidi` U10 → `POULES_NIVEAU` | ✅ **vérifié** — 1 seule valeur changée |
+| 2 | `param_format` U10 vidé | ⛔ **NON VÉRIFIÉ** *(hors liste blanche — l'observation de Romain fait foi)* |
+| 3 | `heure_fin` → `17:18` *(la génération l'avait réécrite à `22:26`)* | ✅ **vérifié** |
+| 4 | ⭐ **Propriété `SHEET_ID` supprimée** | ✅ **vérifié — contrôle renforcé** |
+
+**Bilan du nettoyage, contre la référence figée** : exactement **2 changements** dans la
+configuration lisible — `heure_fin` et `U10.format_apresmidi`.
+
+### ⭐ Le contrôle renforcé du routage — 4 tests concordants
+
+| # | Test | Résultat |
+|---|---|---|
+| 1 | `tournoi_nom` | `CHALLENGE MARC CHEVALIER` — **plus de « COPIE DE TEST »** |
+| 2 | ⭐ **Test négatif** — la signature de nos vérifications | **M095 ABSENT** · **0 ligne `sous_tableau = COUPE`** *(la copie en avait 5)* |
+| 3 | Volume | **51** matchs *(la copie : 168)* |
+| 4 | Contraste | `heure_debut` 10:00 *(vs 09:30)* · `heure_fin` 16:35 *(vs 17:18)* · **U8 + U10 seulement, pas d'U14** |
+
+> 💡 **Le test n° 2 est le plus solide** : un quart de finale U10 opposant ANTONY à CLAMART sur
+> `7 – 12` **n'existe que dans la copie de test — parce que nous venons de le créer**.
+
+### ✅ Production non contaminée *(vérification supplémentaire, non promise)*
+
+```
+U8, U10 : format_apresmidi = POULES_NIVEAU   ← aucun COUPE_PLATEAU
+51 matchs, phase 'poule' uniquement, 48 à venir / 3 terminés
+sous_tableau non vide : 0   ·   match_suivant non vide : 0
+```
+
+**Aucune trace des scores collés, du tableau de Coupe ni des 114 matchs générés.**
+⭐ **La production est strictement dans l'état où elle était avant la session.**
+
+---
+
+## 10. Ce qui n'a PAS été fait, et c'est volontaire
+
+- ❌ **aucune ligne de code, aucun test, aucune configuration de l'application modifiés** ;
+- ❌ **aucun déploiement** ;
+- ❌ **V-12 non rejouée** — elle reste **non concluante**, réserve **explicitement conservée** par
+  Romain au moment de valider `TESTÉ` ;
+- ❌ **R-093 non corrigé** *(P2, antérieur à C-012)* · **R-092 non corrigé** ;
+- ❌ **`param_format` non relu** — impossible par les lectures publiques ;
+- ❌ **la copie de test n'est pas remise à zéro** : les 51 scores du matin, les 114 matchs
+  d'après-midi et le tableau de Coupe y demeurent. **Signalé à Romain, sans conséquence sur la
+  production** *(établi par les 4 tests ci-dessus)*.
+
+---
+
+## 11. Leçon de méthode
+
+> ⭐ **Deux vérifications ont été bloquées pendant une session entière par une croyance fausse :
+> « ce mode a été supprimé ».** Il avait seulement été **retiré de l'interface**. Le commit qui l'a
+> fait le disait pourtant explicitement — *« La CAPACITÉ reste entière »* — et **ne touchait aucun
+> fichier backend**.
+>
+> **Ce qui a débloqué la session, ce n'est pas une idée : c'est `git log -S` et un `grep` exhaustif.**
+> **Masqué n'est pas supprimé**, et seul le dépôt peut trancher entre les deux.
+
+Second enseignement, plus discret : **chaque geste a été précédé d'une prédiction chiffrée**
+*(« 153 cellules », « 11 cellules », « E07 va passer de A à B »)*, puis confronté à un **diff
+exhaustif**. Une prédiction juste vaut vérification ; **une prédiction fausse aurait été le signal**.
+C'est ce qui a permis d'affirmer *« la cascade n'a pas débordé »* — plutôt que de l'espérer.
+
+---
+
+## 12. État à la fin de la session
+
+| | |
+|---|---|
+| **`main`** | `d5653a9` au départ — ce lot est le suivant |
+| ⭐ **C-012** | 🏁 **TERMINÉ — étape 5 CLOSE, 5 étapes sur 5** |
+| ⭐ **R-042** | ✅ **`IDENTIFIÉ` → `TESTÉ`** — avec la réserve **V-12 / N-3 non concluante** *(D-C012-5)*. ⚡ **Au passage, l'écart signalé le 2026-08-18 est résorbé** : le registre affichait encore `IDENTIFIÉ` alors que le chantier était en cours *(§8 de l'entrée précédente — « écart mineur signalé, non corrigé »)*. **R-042 n'est jamais passé par `CORRIGÉ`** : il saute de `IDENTIFIÉ` à `TESTÉ`, le registre n'ayant pas été touché pendant les étapes 1 à 4 |
+| **V-7 · V-8 · V-10** | ✅ **RÉUSSIES** |
+| **V-12 / N-3** | 🟠 **NON CONCLUANTE** — réserve conservée |
+| **R-093** | 🔴 **P2, CERTAIN, NON CORRIGÉ** *(antérieur à C-012)* |
+| **R-092** | ⚠️ **NON CORRIGÉ**, priorité **À CONFIRMER** |
+| ⭐ **Routage** | ✅ **PRODUCTION — rétabli et vérifié** *(4 tests concordants)* |
+| ⭐ **Production** | ✅ **NON CONTAMINÉE** |
+| **Prochaine session recommandée** | **C-015** *(dépendances `C-011 → C-012 → C-015`, désormais levées)*, ou l'arbitrage de la **priorité de R-092** et du **traitement de R-093** |
