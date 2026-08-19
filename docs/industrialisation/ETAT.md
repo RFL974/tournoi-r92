@@ -9,7 +9,22 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-19 *(nuit)* — 🛡️ **UN CHANTIER EST OUVERT, ET CE N'EST PAS
+**Dernière mise à jour** : 2026-08-19 *(nuit, suite)* — 📋 **CF-2 A PRODUIT SON DOSSIER, et
+⛔ AUCUNE DÉCISION N'A ÉTÉ PRISE.** Le livrable est
+`CF-2-RESPONSABLE-TRAITEMENT.md` : la question, les **3 configurations**, **17 conséquences
+comparées**, les **4 rôles possibles de Romain**, **11 questions** pour trancher, et 🔲 **une case de
+décision volontairement VIDE**. ⭐ **Deux référentiels sont entrés** — **[R20]** *(CEPD, lignes
+directrices 07/2020)* et **[R21]** *(fiche CNIL)* — et le premier apporte le point qui manquait :
+la distinction **moyens ESSENTIELS / NON ESSENTIELS**. ⚠️ **Et [R21] en pose aussitôt la limite** :
+concevoir ou choisir un logiciel **ne suffit pas à soi seul** à déterminer la responsabilité, mais
+*« même si un acteur choisit un traitement sur étagère, il peut être considéré comme responsable dès
+lors qu'il effectue ce choix au regard de ses besoins »*. ⭐ **Ce n'est pas l'outil qui décide, c'est
+l'usage qu'on décide d'en faire.** ⚠️ **Une question de fait reste ouverte** : quelle **entité
+juridique porte** l'École de Rugby ? — ⛔ **et ce n'est PAS un motif d'exclusion** : [R1] vise aussi
+*« un autre organisme »*.
+⛔ **Aucune structure contactée, aucune option retenue, aucun compte créé.**
+
+*Rappel de la mise à jour précédente — 2026-08-19 (nuit)* : 🛡️ **UN CHANTIER EST OUVERT, ET CE N'EST PAS
 C-015** : Romain a **mis C-015 en pause** et ouvert le chantier **CONFIANCE** *(cybersécurité +
 juridique de l'existant)*, **hors du plan d'audit** — sa fiche est en `PLAN.md` **§14**, sa décision
 fondatrice est **D-038**.
@@ -259,16 +274,18 @@ ne provient pas des huit domaines d'audit.
 | Étape | Objet | État |
 |---|---|---|
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
-| **CF-1** | Le cadre documentaire | ✅ **TERMINÉE** — 🆕 `REFERENTIELS.md`, `CLAUDE.md` **§8 quinquies**, `PLAN.md` **§14** |
-| **CF-2 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
+| **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
+| **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
+| **CF-3 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 
-**La prochaine étape recommandée** est **CF-2** *(préparer le dossier de détermination du
-responsable du traitement)*, ⚠️ **parce qu'elle conditionne le CONTENU de CF-4, CF-5, CF-6 et
-CF-3** — et non parce qu'elle serait urgente.
+**La prochaine étape recommandée** est **CF-4** *(mentions légales)* : ⭐ **c'est le seul écart réel
+et actuel du chantier**, et il ne dépend d'aucune donnée personnelle. ⚠️ **CF-3 reste suspendue** à
+la décision préparée par CF-2.
 
-> ⚠️ **CF-2 ne bloque pas le reste** : **CF-7, CF-8, CF-9, CF-10, CF-11, CF-12 et CF-13 n'ont
-> aucune dépendance.** Et le dossier de CF-2 ne sera présenté aux structures **qu'au moment de la
-> présentation de Maxilou** — ⛔ pas avant : elles n'ont rien étudié.
+> ⚠️ **CF-2 ne bloque pas le reste** : **CF-7 à CF-13 n'ont aucune dépendance**, et **CF-4, CF-5 et
+> CF-6 se préparent avec l'organisation laissée entre crochets** — la forme déjà retenue par C-005.
+> Le dossier CF-2 ne sera présenté aux structures **qu'au moment de la présentation de Maxilou** —
+> ⛔ pas avant : **elles n'ont rien étudié**.
 
 **Ce qui est mis en pause, et reste entier :**
 

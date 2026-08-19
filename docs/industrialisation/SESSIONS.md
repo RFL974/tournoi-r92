@@ -6034,3 +6034,166 @@ vérifier avant **CF-13**.
 >
 > ⏳ **`docs/passation.md` sera concerné par CF-3**, quand l'architecture de compte changera
 > réellement — ⛔ **pas avant** : rien n'a bougé.
+
+---
+
+# 📋 CF-2 — LE DOSSIER DU RESPONSABLE DU TRAITEMENT *(2026-08-19, nuit)*
+
+> **Objectif de la session** : produire un **dossier de décision** permettant, le moment venu, à
+> l'EDR du Racing Club de France et/ou à l'association Génération R92 de comprendre **qui devra
+> décider de l'usage des données** — et ce que chaque configuration implique.
+> **Résultat** : ✅ **dossier produit** *(`CF-2-RESPONSABLE-TRAITEMENT.md`)* · ⭐ **2 référentiels
+> ajoutés** *(**R20**, **R21**)* · ⛔ **aucune décision prise, aucune structure contactée**.
+
+**Point de départ** : `main` = `origin/main` = **`2cb0b12`**, arbre propre.
+⛔ **Aucune ligne de code. Aucun compte créé. Aucune démarche engagée. CF-3 non lancée.**
+
+---
+
+## 1. Le référentiel qui manquait, et ce qu'il a changé
+
+Le RGPD **[R1]** dit *« qui détermine les finalités et les **moyens** »*. ⚠️ **Mais il ne définit
+nulle part ce qu'est un « moyen »** — or c'est exactement la question posée par Romain : *où passe
+la frontière entre concevoir, administrer, saisir, et décider ?*
+
+⭐ **La réponse est dans [R20]** — lignes directrices **07/2020** du **CEPD**, version **2.0** du
+**7 juillet 2021**, qui coupe les moyens en deux :
+
+| | Exemples **donnés par le texte** | Qui décide |
+|---|---|---|
+| **Moyens ESSENTIELS** | **quelles données** · **combien de temps** · **qui y a accès** · **de qui** | 🔴 Réservés au responsable |
+| **Moyens NON ESSENTIELS** | ⭐ **le choix d'un logiciel ou d'un matériel** · les mesures de sécurité détaillées | ✅ Peuvent être laissés à un prestataire |
+
+> ⚠️ **Mais la première rédaction en avait tiré une conclusion trop large**, et Romain l'a arrêtée
+> avant le commit : *« concevoir Maxilou — ou choisir de l'utiliser — ne rend responsable de rien »*.
+> ⛔ **C'était faux dans sa seconde moitié**, et **[R21]** le dit littéralement :
+>
+> > *« Même si un acteur choisit un **"traitement sur étagère"**, défini à l'avance, **il peut être
+> > considéré comme responsable du traitement dès lors qu'il effectue ce choix au regard de ses
+> > besoins**. »*
+>
+> ⭐ **La formulation retenue tient les deux bouts** : concevoir techniquement ou choisir un logiciel
+> **ne suffit pas à soi seul** ; **décider de l'utiliser pour ses propres finalités**, si.
+
+**[R20]** apporte deux autres appuis décisifs : *« le rôle ne découle pas de la nature d'une entité
+mais de ses **activités concrètes** »*, et — conformément à l'**art. 29** — les personnes qui
+accèdent aux données **au sein** d'un organisme **ne sont ni responsable ni sous-traitant**.
+
+**[R21]** *(fiche CNIL)* complète par des **questions pratiques** formulées pour des non-juristes,
+et par une exigence que le dossier applique : ⭐ *« tracer le raisonnement et la justification »* de
+la qualification.
+
+---
+
+## 2. ⚠️ Un point de fait que l'analyse a mis au jour
+
+En appliquant la grille des **moyens essentiels**, un constat s'impose : **plusieurs d'entre eux ont
+déjà été arrêtés pendant le développement, par Romain seul.**
+
+| Moyen essentiel | Où il est déjà tranché |
+|---|---|
+| **Quelles données** sont demandées à un club | Structure du classeur |
+| **Combien de temps** on les garde | **D-020** · `conservation-donnees.md` |
+| **Qui y a accès** | Liste blanche des vues publiques · jeton par club |
+| **De qui** — des adultes, ⭐ **aucune donnée nominative d'enfant** | `textes-information-donnees.md` §2 |
+
+> ⛔ **Ce que ce constat NE dit PAS** : il ne fait de Romain le responsable de rien. **Aucun
+> traitement de données réelles n'existe** *(I-03, I-04)* — on ne peut pas être responsable d'un
+> traitement qui n'a pas commencé. Ce sont des **choix de conception sur données fictives**.
+>
+> ⭐ **Ce qu'il dit, et c'est utile** : ces choix **redeviendront des décisions au sens du RGPD** le
+> jour où de vraies données entreront. Une structure devra alors **les reprendre à son compte, ou
+> les changer**. ✅ **Ils sont tous écrits, donc tous révisables** — c'est précisément ce que le
+> travail documentaire des chantiers précédents rend possible.
+
+---
+
+## 3. Une question de fait ouverte — et une conclusion hâtive écartée
+
+La première rédaction affirmait : *« [R1] exige une personne physique ou morale ; si l'EDR n'a pas de
+personnalité morale, le responsable serait le club »*. ⛔ **Romain a demandé de la réexaminer, et
+elle était fausse.**
+
+**Ce que le texte dit réellement** : l'**art. 4(7)** vise *« la personne physique ou morale,
+l'autorité publique, **le service ou un autre organisme** »*, et **[R20]** en tire qu'*« en principe,
+il n'existe **aucune limitation quant au type d'entité** »* pouvant être responsable. ⚠️ *(La portée
+du mot « organisme » pour une entité sans personnalité juridique a été soulevée en consultation
+publique du CEPD et **reste discutée**.)*
+
+✅ **La réserve juste, et elle est pratique** : ⭐ **l'entité juridique qui porte l'École de Rugby
+doit être identifiée avant toute qualification définitive** — parce qu'il faudra pouvoir **signer**,
+**ouvrir un compte** et **répondre**. ❓ **INDÉTERMINÉ** — question **Q-I**.
+
+## 3 bis. La troisième nuance : « saisir sur instruction » n'est pas un blanc-seing
+
+La première rédaction posait : *« saisir sur instruction → rien, art. 29 »*. ⚠️ **Vrai seulement si
+l'intervention est INTERNE.** **[R21]** vise nommément le cas inverse :
+
+> *« Le **développeur d'une application** doit être qualifié de **sous-traitant** lorsqu'il réalise
+> des opérations sur des données […] à des fins de **maintenance ou d'infogérance**. »*
+
+Et il donne le contre-exemple qui borne l'autre côté : *« les **fabricants** de matériels
+(**logiciels**…) **ne sont pas des sous-traitants** puisqu'ils **n'ont pas accès** »*.
+
+⭐ **Le §6 du dossier a donc été refait** : il compte désormais **cinq rôles** — le cinquième,
+**responsable ou responsable conjoint**, manquait alors que **§3.3 en posait le fait déclencheur**.
+⚠️ **Et sa conclusion contenait une erreur de comptage** : *« trois des quatre rôles ne font ni
+responsable ni sous-traitant »*. **C'est deux sur cinq.**
+
+---
+
+## 4. Ce que le dossier contient
+
+📋 **[`CF-2-RESPONSABLE-TRAITEMENT.md`](CF-2-RESPONSABLE-TRAITEMENT.md)**, en 9 sections :
+
+| § | Contenu |
+|---|---|
+| **0** | L'état réel — développement personnel, données fictives, **aucune adoption** |
+| **1** | La question, en une phrase |
+| **2** | Pourquoi elle existe, et pourquoi il faut y répondre **avant** le premier vrai tournoi |
+| **3** | ⭐ **La frontière** : les 4 gestes *(concevoir · administrer · saisir · décider)* et ce que chacun emporte |
+| **4** | Les 3 configurations, une fiche chacune |
+| **5** | **17 conséquences comparées** en un tableau |
+| **6** | Les **4 rôles possibles de Romain**, chacun avec ses **conditions**, ce qui est **vérifié**, et ce qui **dépend d'une décision future** |
+| **7** | **Ce qui ne change pas** — 5 choses qui ne décident rien, 5 qui restent vraies |
+| **8** | **11 questions** pour trancher, construites depuis **[R20]** et **[R21]** |
+| **9** | 🔲 **La case de décision — VIDE, et elle doit le rester** |
+
+⭐ **Une quatrième option a été ajoutée à la case** : *« Aucune des deux ne souhaite utiliser
+Maxilou »*. **C'est une réponse possible, et le dossier le dit** — ne pas l'offrir serait présumer
+de l'adoption.
+
+---
+
+## 5. ⛔ Ce que cette session NE fait PAS
+
+> - ❌ **Elle ne décide pas** qui sera responsable — la case du §9 est **vide** ;
+> - ❌ **Elle ne contacte aucune structure**, et ⛔ **n'attribue aucune décision à l'EDR ou à
+>   Génération R92** ;
+> - ❌ **Elle ne qualifie pas définitivement le rôle de Romain** : les 4 possibilités sont
+>   présentées **avec leurs conditions**, et trois d'entre elles dépendent d'une organisation qui
+>   n'existe pas encore ;
+> - ❌ **Aucun compte créé, aucune démarche Google engagée, aucune ressource transférée** ;
+> - ❌ **Aucune ligne de code, aucune configuration, aucun déploiement** ;
+> - ❌ **CF-3 n'est pas lancée.**
+
+---
+
+## 6. État à la fin de la session
+
+| | |
+|---|---|
+| **Documents modifiés** | 🆕 `CF-2-RESPONSABLE-TRAITEMENT.md` *(créé)* · `REFERENTIELS.md` · `PLAN.md` · `ETAT.md` · `SESSIONS.md` |
+| ⛔ **Documents volontairement NON touchés** | **`DECISIONS.md`** — ⭐ **CF-2 ne décide rien**, y ajouter une entrée laisserait croire le contraire · **`CLAUDE.md`** — le nouveau document est un **livrable de chantier**, pas un fichier de suivi *(même statut que `C-012-SPECIFICATION.md`, qui n'est pas non plus en §12.2)* |
+| **Référentiels ajoutés** | **R20** *(CEPD, LD 07/2020 v2.0)* · **R21** *(fiche CNIL)* — vérifiés à leur source et journalisés |
+| **Preuve de clôture CF-1** | ✅ **Complétée avec le SHA `2cb0b12`** dans la table §7 de `REFERENTIELS.md` — sans micro-commit dédié, comme demandé |
+| **Décision obtenue** | ⛔ **AUCUNE — et c'est le résultat attendu** |
+| **Prochaine session recommandée** | **CF-4** *(mentions légales)* — ⭐ **le seul écart réel et actuel**, et il ne dépend d'aucune donnée personnelle |
+
+> ⚠️ **Documents ACTIFS vérifiés** *(`CLAUDE.md` §12.4, point 2)* : **aucun ne devient faux.**
+> `README.md`, `CHANGELOG.md`, `docs/architecture.md`, `backend/README.md` et `docs/passation.md`
+> décrivent le produit et son exploitation ; cette session n'a touché ni comportement, ni écran, ni
+> action serveur, ni compte, ni état de déploiement.
+>
+> ⏳ **`docs/passation.md` sera concerné par CF-3**, quand l'architecture de compte changera
+> réellement — ⛔ **et CF-3 est suspendue à une décision qui n'est pas prise.**

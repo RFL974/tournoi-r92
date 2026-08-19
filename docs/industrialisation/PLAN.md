@@ -2090,17 +2090,22 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 | **Référentiel** | — *(étape de méthode)* |
 | **Touche du code** | ❌ **Aucune ligne** |
 
-#### ⬜ CF-2 — Déterminer le responsable du traitement
+#### 🚧 CF-2 — Déterminer le responsable du traitement · **dossier produit le 2026-08-19**
 
 | | |
 |---|---|
-| **Référentiel** | **[R1]** art. 4(7), 26, 29 |
+| **Référentiel** | **[R1]** art. 4(7), 4(8), 26, 29 · 🆕 **[R20]** *(CEPD, LD 07/2020)* · 🆕 **[R21]** *(fiche CNIL)* |
 | **Exigences** | **[O1] [O2] [O5] [O7]** en dépendent pour leur **contenu** |
 | **Constat** | Le critère légal est *« qui **détermine les finalités et les moyens** »* — jamais qui code ni qui saisit |
 | **Nature** | ⛔ **DÉCISION ORGANISATIONNELLE** — hors de portée de ce chantier |
-| **Ce que l'étape produit** | ⚠️ **Un dossier de décision, pas une décision.** Il présentera les trois configurations possibles *(une structure seule · l'autre seule · les deux, ce qui déclenche l'accord obligatoire de l'**art. 26**)*, et ce que chacune implique |
+| ✅ **Livrable** | 📋 **[`CF-2-RESPONSABLE-TRAITEMENT.md`](CF-2-RESPONSABLE-TRAITEMENT.md)** — un dossier de décision présentable, en 9 sections : la question · pourquoi elle existe · **la frontière concevoir/administrer/saisir/décider** · les 3 configurations · **17 conséquences comparées** · les 4 rôles possibles de Romain · ce qui ne change pas · **11 questions pour trancher** · 🔲 **la case NON DÉCIDÉE** |
+| ⭐ **Ce que [R20] et [R21] ont apporté** | **[R20]** : la distinction **moyens ESSENTIELS / NON ESSENTIELS**, où *« le choix d'un logiciel »* est **NON essentiel**. ⚠️ **[R21] en pose la limite** : *« même si un acteur choisit un traitement sur étagère, il peut être considéré comme responsable dès lors qu'il effectue ce choix au regard de ses besoins »*. ➡️ ⭐ **Concevoir ou choisir un logiciel ne suffit pas à soi seul ; décider de l'utiliser POUR SES FINALITÉS, si** |
+| ⚠️ **Ce que [R21] a aussi tranché** | Le **développeur qui intervient sur les données pour la maintenance ou l'infogérance** est **sous-traitant** — alors que le simple fournisseur **sans accès** ne l'est pas. ⭐ **C'est l'ACCÈS et le CADRE qui départagent, jamais le métier** |
+| ⚠️ **Un point de fait relevé** | Plusieurs **moyens essentiels** ont déjà été arrêtés pendant le développement *(quelles données, quelles durées, quels accès)*. ⛔ **Cela ne qualifie personne** — aucun traitement réel n'existe — mais ces choix **redeviendront des décisions** le jour venu. ✅ **Ils sont tous écrits, donc tous révisables** |
+| ⚠️ **Question de fait ouverte** | ❓ **Quelle entité juridique porte l'École de Rugby ?** ⛔ **Ce n'est PAS un motif d'exclusion** : **[R1]** vise aussi *« le service ou un autre organisme »*, et **[R20]** pose qu'*« il n'existe aucune limitation quant au type d'entité »*. ⭐ **Mais il faut une entité capable de signer, d'ouvrir un compte et de répondre.** **INDÉTERMINÉ** — question **Q-I** |
 | **Quand le présenter** | ⭐ **Au moment de la présentation de Maxilou (étape ③ du parcours)** — ⛔ **pas avant**. Les structures n'ont rien étudié : leur poser la question aujourd'hui serait leur demander de décider d'un logiciel qu'elles n'ont pas vu |
-| ⚠️ **Non bloquant** | **Cette étape ne doit PAS bloquer artificiellement les travaux réalisables sans connaître l'entité.** CF-4, CF-5 et CF-6 se préparent **avec des champs à compléter** — c'est déjà la forme retenue par le chantier **C-005** |
+| ⚠️ **Non bloquant** | **Cette étape ne bloque PAS les travaux réalisables sans connaître l'entité.** CF-4, CF-5 et CF-6 se préparent **avec des champs à compléter** — c'est déjà la forme retenue par le chantier **C-005** |
+| ⛔ **Ce que l'étape N'A PAS fait** | Aucune structure contactée · aucune option retenue · aucun compte créé · aucune démarche engagée · **la case du §9 reste vide** |
 
 #### ⬜ CF-3 — L'architecture de compte institutionnelle
 

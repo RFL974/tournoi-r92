@@ -16,7 +16,7 @@
 - [0. Ce que ce document n'est PAS](#0-ce-que-ce-document-nest-pas)
 - [0 bis. ⭐ Où en est réellement Maxilou — à lire en premier](#0-bis--où-en-est-réellement-maxilou--à-lire-en-premier)
 - [1. Comment lire une fiche, et les 6 qualifications](#1-comment-lire-une-fiche-et-les-6-qualifications)
-- [2. Les référentiels applicables (R1 → R16)](#2-les-référentiels-applicables-r1--r16)
+- [2. Les référentiels applicables (R1 → R16, R20, R21)](#2-les-référentiels-applicables-r1--r16-r20-r21)
 - [3. Les textes ÉCARTÉS, et pourquoi (R17 → R19)](#3-les-textes-écartés-et-pourquoi-r17--r19)
 - [4. Les obligations établies (O1 → O7)](#4-les-obligations-établies-o1--o7)
 - [5. Les recommandations officielles établies (RC1 → RC5)](#5-les-recommandations-officielles-établies-rc1--rc5)
@@ -147,7 +147,7 @@ d'une structure. Ce qu'il fait, et rien d'autre :
 
 ---
 
-## 2. LES RÉFÉRENTIELS APPLICABLES (R1 → R16)
+## 2. LES RÉFÉRENTIELS APPLICABLES (R1 → R16, R20, R21)
 
 ### 🔴 R1 — RGPD (Règlement (UE) 2016/679)
 
@@ -599,6 +599,130 @@ logged and stored for security purposes. »*
 
 ---
 
+### 🟠 R20 — CEPD : Lignes directrices 07/2020 — notions de responsable du traitement et de sous-traitant
+
+| | |
+|---|---|
+| **Autorité** | **Comité européen de la protection des données (CEPD / EDPB)** |
+| **Version** | **Version 2.0, adoptée le 7 juillet 2021** *(remplace l'avis 1/2010 du G29)* |
+| **Source** | [EDPB — page officielle](https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-072020-concepts-controller-and-processor-gdpr_en) · [texte intégral français (PDF)](https://www.edpb.europa.eu/system/files/2023-10/edpb_guidelines_202007_controllerprocessor_final_fr.pdf) |
+| **Qualification** | 🟠 **Lignes directrices européennes — droit souple opposable** *(l'autorité de référence pour interpréter les art. 4(7), 4(8), 26 et 28)* |
+| **Applicabilité** | ✅ **OUI — indispensable dès qu'il faut dire QUI est responsable** |
+| **Ajouté le** | **2026-08-19**, étape **CF-2** |
+
+**Ce qu'elles disent d'utile ici — et c'est le cœur du sujet :**
+
+> ⭐ **Notions FONCTIONNELLES et AUTONOMES.** Elles *« visent à répartir les responsabilités en
+> fonction des **rôles réels joués par les parties** »*. ⛔ **Ni un contrat, ni un titre, ni la
+> propriété d'un logiciel ne suffisent à qualifier qui que ce soit.**
+
+**Quel TYPE d'entité peut être responsable — et la réponse est très large :**
+
+> Le responsable peut être *« une personne physique ou morale, une **autorité publique**, un
+> **service** ou un **autre organisme** »* — ce qui signifie qu'**« en principe, il n'existe aucune
+> limitation quant au type d'entité »** pouvant assumer ce rôle.
+>
+> En pratique, c'est *« **l'organisation en tant que telle**, et non une personne en son sein »*
+> *(un dirigeant, un salarié, un membre du bureau)* qui est responsable.
+
+> ⛔ **Ce qu'il ne faut donc PAS en conclure** : que l'absence de personnalité morale **propre**
+> ferme la qualification. **Le texte ne dit pas cela.** ⚠️ La portée exacte du mot *« organisme »*
+> pour des entités sans personnalité juridique **a été soulevée en consultation publique et reste
+> discutée** — c'est un point à traiter au cas par cas, **jamais par présomption**.
+
+**La distinction décisive — moyens ESSENTIELS / NON ESSENTIELS :**
+
+| | Ce que c'est | Les exemples donnés par le texte |
+|---|---|---|
+| ⭐ **Moyens ESSENTIELS** | *« étroitement liés à la finalité et à la portée du traitement »*, **réservés par nature au responsable** | le **type de données** traitées *(« quelles données ? »)* · la **durée** du traitement *(« combien de temps ? »)* · les **catégories de destinataires** *(« qui y a accès ? »)* · les **catégories de personnes concernées** *(« de qui ? »)* |
+| **Moyens NON ESSENTIELS** | Les *« aspects plus pratiques de la mise en œuvre »*, **qui peuvent être laissés au sous-traitant** | le **choix d'un matériel ou d'un logiciel** particulier · les **mesures de sécurité détaillées** |
+
+**Deux autres apports, tout aussi utiles :**
+
+- **Le rôle ne découle pas de la nature de l'entité** : *« le rôle de sous-traitant ne découle pas de
+  la nature d'une entité qui traite des données mais de ses **activités concrètes dans un contexte
+  spécifique** »* ;
+- **Prestataire informatique** : il devient sous-traitant lorsque, la finalité du service n'étant pas
+  de traiter des données personnelles, il **y a néanmoins systématiquement accès** pour fournir sa
+  prestation ;
+- **Employés et personnes internes** : conformément à l'**art. 29**, les personnes qui ont accès aux
+  données **au sein** d'un organisme **ne sont ni responsable ni sous-traitant** — elles *« agissent
+  sous l'autorité »* du responsable.
+
+**Zones** : Z1 → **[O1] [O2] [O7]**
+
+---
+
+### 🟡 R21 — CNIL : « Responsable de traitement, sous-traitants — comment bien identifier son rôle ? »
+
+| | |
+|---|---|
+| **Autorité** | CNIL |
+| **Version** | Fiches en ligne, consultées le **2026-08-19** |
+| **Sources** | <https://www.cnil.fr/fr/rgpd-comment-bien-identifier-son-role> · <https://www.cnil.fr/fr/cnil-direct/question/reglement-europeen-un-sous-traitant-de-donnees-personnelles-cest-quoi> |
+| **Qualification** | 🟡 **Doctrine CNIL** *(application française de **[R20]**)* |
+| **Applicabilité** | ✅ OUI |
+| **Ajouté le** | **2026-08-19**, étape **CF-2** |
+
+**Ce qu'elle apporte de plus que [R20]** — des **questions concrètes**, formulées pour des
+non-juristes, et une règle de preuve :
+
+- *« Qui a décidé **pourquoi** ces données sont traitées ? »* · *« Qui a choisi **quelles** données
+  collecter ? »* · *« Qui a fixé la **durée de conservation** ? »* · *« Le traitement pourrait-il
+  avoir lieu **sans la participation active** de toutes les parties ? »* ;
+- ⚠️ **la qualification s'apprécie sur les pratiques réelles, pas sur les étiquettes** : la CNIL peut
+  **requalifier** un acteur ;
+- ⭐ **et une obligation pratique** : *« tracer le raisonnement et la justification »* qui ont conduit
+  à la qualification, et pouvoir la justifier.
+
+### ⭐ Trois précisions décisives, citées mot pour mot
+
+> ⚠️ **Elles corrigent trois raccourcis intuitifs**, et c'est la raison pour laquelle cette fiche
+> pèse autant que **[R20]** dans le dossier **CF-2**.
+
+**① Choisir un outil déjà fait n'exonère de rien :**
+
+> *« Même si un acteur choisit un **"traitement sur étagère"**, défini à l'avance, **il peut être
+> considéré comme responsable du traitement dès lors qu'il effectue ce choix au regard de ses
+> besoins**. »*
+
+⛔ **Donc : « le choix d'un logiciel est un moyen non essentiel » (au sens de [R20]) ne signifie
+JAMAIS que celui qui choisit d'utiliser un logiciel pour ses propres finalités échappe à la
+responsabilité.** Les deux affirmations portent sur des questions différentes : **[R20]** dit que
+les **modalités techniques** sont délégables ; **[R21]** dit que **la décision d'y recourir pour
+ses besoins**, elle, engage.
+
+**② Le développeur qui intervient sur les données devient sous-traitant :**
+
+> *« Le **développeur d'une application** mobile doit être qualifié de **sous-traitant** lorsqu'il
+> réalise des opérations sur des données hébergées sur le serveur de l'application à des fins de
+> **maintenance ou d'infogérance**. »*
+
+**③ Mais celui qui n'accède pas aux données ne l'est pas :**
+
+> *« Les **fabricants** de matériels (**logiciels**, badgeuses, matériel biométrique, etc.) **ne sont
+> pas des sous-traitants** puisqu'ils **n'ont pas accès** et ne traitent pas de données
+> personnelles. »*
+
+> 🎯 **Ce que ② et ③ donnent ensemble** : ⭐ **c'est l'ACCÈS EFFECTIF aux données, et non le métier
+> ni le titre, qui départage.** Le même développeur est hors champ tant qu'il livre un outil, et
+> devient sous-traitant dès qu'il intervient sur les données pour le compte d'autrui.
+
+> 🎯 **Et une obligation qui s'applique à ce chantier lui-même** : *« tracer le raisonnement et la
+> justification »*. **C'est précisément ce que le dossier CF-2 fait** — tracer le raisonnement
+> **avant** que la question ne se pose en vrai.
+
+**Zones** : Z1
+
+---
+
+> 📐 **Note sur la numérotation.** Les identifiants `[Rn]` sont attribués **dans l'ordre d'entrée**
+> et **ne changent jamais** — comme les `R-0XX` du registre des risques. ⛔ **Un numéro n'est donc
+> pas un classement** : R20 et R21 sont entrés après R17-R19 *(écartés, §3)* et vivent pourtant dans
+> cette section. **Renuméroter casserait tous les renvois du dépôt.**
+
+---
+
 ## 3. LES TEXTES ÉCARTÉS, ET POURQUOI (R17 → R19)
 
 > ⭐ **Écarter est un résultat, pas un vide.** Chacun de ces trois textes aurait pu imposer des
@@ -761,8 +885,8 @@ que les entreprises.
 | Étape | Objet | Référentiel | Exigence | Nature | Preuve de clôture |
 |---|---|---|---|---|---|
 | **CF-0** | Vérification des référentiels | — | — | — | ✅ **Terminée le 2026-08-19** — 18 sources primaires consultées, 9 corrections, 3 textes écartés |
-| **CF-1** | Poser le cadre documentaire | — | — | — | *(cette session)* |
-| **CF-2** | Déterminer le responsable du traitement | [R1] art. 4(7), 26, 29 | **[O1] [O2] [O5] [O7]** | ⛔ **Décision organisationnelle** | ⬜ |
+| **CF-1** | Poser le cadre documentaire | — | — | — | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié sur `origin/main` *(6 fichiers, 0 fichier de code, aucun déploiement applicatif déclenché)* |
+| **CF-2** | Déterminer le responsable du traitement | [R1] art. 4(7), 4(8), 26, 29 · **[R20]** · **[R21]** | **[O1] [O2] [O5] [O7]** | ⛔ **Décision organisationnelle** | 🚧 **Dossier produit** — [`CF-2-RESPONSABLE-TRAITEMENT.md`](CF-2-RESPONSABLE-TRAITEMENT.md). ⛔ **La décision elle-même reste NON PRISE** |
 | **CF-3** | Architecture de compte institutionnelle | [R13] · [R14] | **[O7]** | 🔵 Doc fournisseur | ⬜ |
 | **CF-4** | Mentions légales | **[R10]** | **[O5]** | 🔴 **Obligation — écart ACTUEL** | ⬜ |
 | **CF-5** | Information des personnes | [R1] art. 13-14 · [R6] | **[O1]** | 🔴 Obligation *(prérequis)* | ⬜ |
@@ -800,14 +924,19 @@ que les entreprises.
 | **2026-08-19** | **CF-1** | — | Report intégral des constats de CF-0 dans ce document. **Aucune source nouvelle consultée** à ce stade |
 | **2026-08-19** | **CF-1** *(correction)* | **R11** | ⚡ **Dette de source DÉTECTÉE puis SOLDÉE avant le premier commit.** La fiche s'appuyait sur un **média spécialisé** *(IAPP)*. Remplacé par **trois sources primaires** : l'arrêt sur EUR-Lex *(`ECLI:EU:T:2025:831`, CELEX 62023TJ0553)*, la communication du pourvoi au JOUE *(CELEX 62025CN0703)*, et la déclaration du fournisseur. ⭐ **Le lien IAPP est supprimé** — il n'apportait rien que les sources primaires ne donnent. Ajout du **communiqué CJUE n° 106/25** comme source d'appoint, **explicitement qualifiée**. ⚠️ **Une limite subsiste et elle est écrite dans la fiche** : l'**issue** du pourvoi n'a pas pu être confirmée à sa source *(InfoCuria est une page dynamique)* |
 
+| **2026-08-19** | **CF-2** | 🆕 **R20** *(CEPD, LD 07/2020, v2.0 du 07/07/2021)* · 🆕 **R21** *(fiche CNIL)* | **Deux référentiels AJOUTÉS**, vérifiés à leur source. ⭐ **Ils apportent ce que le RGPD seul ne dit pas** : la distinction **moyens essentiels / non essentiels**, et le principe que le rôle *« ne découle pas de la nature d'une entité mais de ses activités concrètes »*. ⚠️ **Le texte intégral du PDF du CEPD n'a pas pu être extrait directement** *(fichier volumineux)* : les citations proviennent de la **page officielle du CEPD** et de ses **extraits indexés**. La référence, la version et la date sont **certaines** ; ⛔ **une lecture du PDF complet reste souhaitable avant toute qualification définitive d'un acteur** |
+
 > ✅ **Aucune dette de source ouverte à ce jour.** Toutes les fiches reposent sur une source
 > **primaire** — texte officiel, décision d'une juridiction, autorité publique, ou documentation du
 > fournisseur réellement utilisé.
 >
-> ⚠️ **Une limite de vérification subsiste, et ce n'est pas la même chose qu'une dette** : l'**état
-> procédural** du pourvoi **C-703/25 P** *(fiche **[R11]**)* n'a pas pu être lu à sa source. Le fait
-> **sourcé** est que le pourvoi a été **formé le 31 octobre 2025** ; son **issue** est **INCONNUE**
-> et doit être vérifiée avant **CF-13**.
+> ⚠️ **Deux limites de vérification subsistent, et ce n'est pas la même chose qu'une dette** — dans
+> les deux cas la **source est la bonne**, c'est son **exhaustivité** qui n'est pas atteinte :
+>
+> | Fiche | Ce qui est certain | Ce qui ne l'est pas | À lever avant |
+> |---|---|---|---|
+> | **[R11]** | Le pourvoi **C-703/25 P** a été **formé le 31 octobre 2025** | Son **issue** — la fiche InfoCuria est une page dynamique | **CF-13** |
+> | **[R20]** | La **référence, la version (2.0) et la date (07/07/2021)** | Le **texte intégral** n'a pas été lu ligne à ligne *(PDF volumineux)* | ⛔ **Toute qualification DÉFINITIVE d'un acteur** |
 
 ### Les 9 corrections de CF-0 — à conserver, elles expliquent la méthode
 
