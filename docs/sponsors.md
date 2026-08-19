@@ -395,11 +395,11 @@ démonstration — le retour en arrière prend une seconde.
 
 | Fichier | Rôle |
 |---|---|
-| `frontend/js/sponsors.js` | **Le moteur.** Roue équitable, rendu des 5 emplacements, plein écran accessible, mesure locale, mode démo. Partagé public/admin. |
+| `frontend/js/sponsors.js` | **Le moteur.** Roue équitable, rendu des 5 emplacements, plein écran accessible, **mesure de visibilité et sa remontée au serveur** *(voir « La remontée » plus haut)*, mode démo. Partagé public/admin. |
 | `frontend/js/tournoi.js` | `appliquerSponsors()`, `encartFil()`, insertion dans les deux vues. |
-| `frontend/css/tournoi-public.css` | Section 19 — styles des emplacements A à E. |
+| `frontend/css/sponsors.css` | **Tous** les encarts partenaires — A à F, **bandeau du dossier club compris**. Chargée par `tournoi.html`, `admin.html` et `dossier-club.html` : un emplacement, une feuille, quelle que soit la page qui l'affiche. |
 | `frontend/js/dossier.js` | `bandeauPartenaires()` — l'emplacement F, en tête du dossier club. |
-| `frontend/css/dossier.css` | Styles du bandeau F, écran **et** impression. |
+| `frontend/css/dossier.css` | Mise en page du dossier club — **les styles du bandeau F n'y sont plus** : ils ont rejoint `sponsors.css` le 2026-08-04, pour que l'aperçu de l'admin ne puisse pas diverger du résultat. |
 | `frontend/js/admin-sponsors.js` | Écran admin : réglages, fiches, fiche de visibilité. |
 | `frontend/css/theme-r92.css` | Styles de l'écran admin + règles d'impression de la fiche. |
 | `backend/Code.gs` | Onglet `Sponsors`, `lireSponsorsPublics`, CRUD, réglages, liste blanche `live`. |
@@ -418,10 +418,17 @@ respectent `prefers-reduced-motion`.
 
 | Ce qui manque | Pourquoi | Ce qu'il faudrait |
 |---|---|---|
-| **Consolidation entre appareils** | Le prototype démontre la mécanique, pas l'échelle. | Un petit collecteur Apps Script **déployé séparément** de l'API des scores (pour ne pas partager son verrou), écrivant dans un onglet `Mesures` ; la page enverrait un relevé unique par visite via `sendBeacon`. Une soixantaine de lignes, gratuit. |
-| **Compteur en direct dans l'admin** | Sans consolidation, il n'afficherait que l'appareil qui regarde. | Découle du point précédent. |
 | **Ciblage** (par catégorie, par créneau) | Aucun besoin exprimé. | Colonnes supplémentaires dans l'onglet `Sponsors`. |
 | **Tout service payant** | Contrainte explicite du projet. | — |
+
+> ✅ **Deux points ont quitté ce tableau, parce qu'ils ont été CONSTRUITS depuis** — ils y figuraient
+> comme manquants, et ce n'était plus vrai :
+> **la consolidation entre appareils** *(action `mesureSponsors` en écriture, `lireMesuresSponsors`
+> en lecture, onglet `Mesures` — décrite au §« La remontée » plus haut)* et **le compteur dans
+> l'admin** *(écran Partenaires, bouton de rafraîchissement du bilan)*.
+> ⚠️ **La réalisation ne suit pas ce qui avait été imaginé ici** : pas de collecteur déployé
+> séparément, et pas de `sendBeacon` — c'est l'API existante, avec un envoi `fetch` en `keepalive`,
+> plafonné en débit et en volume, et qui **ne prend pas le verrou d'écriture**.
 
 ## 9. Mise en service
 

@@ -272,9 +272,14 @@ affiché (⚠️ si écart > 1). En cliquant **Enregistrer et recalculer**, les 
 recalculés** d'après ta répartition. ⚠️ Impossible **une fois qu'un score du matin est saisi** (les
 matchs ne peuvent plus changer). Ne touche pas à l'après-midi (qui, lui, reflète le niveau réel).
 
-### 1.6 Phase après-midi (classement croisé)
-Le bouton **🏉 Générer l'après-midi**. Principe : les équipes de **même rang de poule** jouent
-ensemble l'après-midi (les 1ᵉʳ de poule entre eux → **Niveau 1**, les 2ᵉ → **Niveau 2**, etc.).
+### 1.6 Phase après-midi
+Le bouton **🏉 Générer l'après-midi**. **Chaque catégorie est générée selon le format que tu as
+choisi pour elle** — les cinq formats sont décrits dans
+[`formats-apres-midi.md`](formats-apres-midi.md).
+
+Le principe ci-dessous est celui du **classement croisé**, le format par défaut : les équipes de
+**même rang de poule** jouent ensemble l'après-midi (les 1ᵉʳ de poule entre eux → **Niveau 1**, les
+2ᵉ → **Niveau 2**, etc.). Les autres formats changent la composition des groupes, pas le geste.
 
 - Une **ligne d'état** au-dessus du bouton indique l'avancement des scores du matin
   (ex. « ✅ 12/12 saisis — prêt à générer » ou « ⏳ 8/12 saisis »). Le **bouton reste désactivé**

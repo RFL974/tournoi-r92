@@ -71,7 +71,9 @@ tournoi-r92/
 │   ├── textes-information-donnees.md → ce qu'on dit aux gens sur leurs données
 │   ├── relais-cdn.md            → montée en charge (cache serveur + relais CDN Cloudflare)
 │   ├── phases-tournoi.md        → note de conception (matin / après-midi)
-│   ├── formats-apres-midi.md    → formats d'après-midi par catégorie (croisé / libre / coupe+plateau)
+│   ├── formats-apres-midi.md    → les 5 formats d'après-midi par catégorie
+│   ├── regles-classement.md     → la spécification unique du barème et du départage
+│   ├── pause-echelonnee.md      → la pause méridienne en deux vagues (peu de terrains)
 │   ├── sponsors.md              → partenaires sur la page publique + fiche de visibilité
 │   └── industrialisation/       → le chantier d'industrialisation (état, plan, risques, décisions)
 │
@@ -96,8 +98,12 @@ tournoi-r92/
     ├── modeles/             → 1 modèle PDF (demande d'autorisation FFR)
     ├── img/                 → 5 images (blasons, logos, icônes)
     ├── README.md            → le détail de chaque page du frontend
-    ├── css/
+    ├── css/                 → 6 feuilles
     │   ├── styles.css           → thème sombre (admin / saisie / perfs)
+    │   ├── theme-r92.css        → habillage navy/blanc/ciel de l'admin (chargé après styles.css)
+    │   ├── ecrans.css           → mode « écrans » à onglets (grand écran)
+    │   ├── sponsors.css         → tous les encarts partenaires (A→F), 3 pages la chargent
+    │   ├── dossier.css          → les 3 pages « document » du parcours club (écran + impression)
     │   └── tournoi-public.css   → thème clair de la page publique (charte du site vitrine)
     └── js/                  → 26 fichiers
         │  — le socle, chargé par presque toutes les pages —
@@ -199,8 +205,10 @@ et intégration au site vitrine boutique-r92.
   d'arbitrage** (heure de fin dépassée **ou** forçage du nombre de poules qui rallonge la journée).
 - ✅ **Saisie des scores** (`saisie.html`) : score validé = **définitif/verrouillé** (correction via
   bouton « Corriger », qui redemande la clé scores).
-- ✅ **Phase après-midi** (classement croisé) : `genererApresMidi` + bouton admin — génère l'après-midi
-  depuis le classement du matin, planifié après le déjeuner, sans effacer le matin.
+- ✅ **Phase après-midi** (5 formats, au choix par catégorie) : `genererApresMidi` + bouton admin —
+  génère l'après-midi depuis le classement du matin, planifié après le déjeuner, sans effacer le
+  matin. Le format retenu pilote la génération ; voir la fonctionnalité 4 ci-dessus et
+  [`docs/formats-apres-midi.md`](docs/formats-apres-midi.md).
 - ✅ **Page publique unique** (`tournoi.html`) — fusionne les anciennes pages *live / mon planning /
   classement* en **2 onglets** :
   - **Mon équipe** : le visiteur choisit son équipe → ses matchs (matin + après-midi, résultats
