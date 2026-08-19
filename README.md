@@ -16,7 +16,7 @@ puis de suivre les scores et classements en direct — et de garder un **histori
 | 1 | **Page admin** : équipes, réglages par catégorie et horaires globaux, **nombre de poules Auto ou forcé**, génération automatique des poules et du planning | ✅ Fait, déployé |
 | 2 | **Génération poules + planning** sans conflit, avec **assistant d'arbitrage** (pistes si l'heure de fin est dépassée ou si un forçage rallonge la journée) | ✅ Fait, déployé |
 | 3 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider), scores définitifs verrouillés | ✅ Fait, déployé |
-| 4 | **Phase après-midi (format par catégorie)** : **poules de niveau** (tranches de 4-5 en round-robin complet, conforme EDR), classement **croisé** (niveaux), croisé **diagonal**, **matchs libres**, ou **Coupe + Plateau** (élimination directe + petite finale, propagation auto du vainqueur). *(Coupe + Plateau comporte des phases finales, non conformes au cadre École de Rugby : la carte est signalée et une confirmation est demandée avant de l'appliquer.)* Voir [`docs/formats-apres-midi.md`](docs/formats-apres-midi.md) | ✅ Fait *(à déployer)* |
+| 4 | **Phase après-midi (format par catégorie)** : **poules de niveau** (tranches de 4-5 en round-robin complet, conforme EDR), classement **croisé** (niveaux), croisé **diagonal**, **matchs libres**, ou **Coupe + Plateau** (élimination directe + petite finale, propagation auto du vainqueur). *(Coupe + Plateau comporte des phases finales, non conformes au cadre École de Rugby : la carte est signalée et une confirmation est demandée avant de l'appliquer.)* Voir [`docs/formats-apres-midi.md`](docs/formats-apres-midi.md) | ✅ Fait, déployé |
 | 5 | **Page publique** `tournoi.html` (thème clair, charte du site vitrine) : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, **podium certain**, bandeau de don vers la page « Faire un don » du site | ✅ Fait, **en ligne** (GitHub Pages) |
 | 6 | **Publication du tournoi** : bouton admin « Générer le tournoi » (publier / masquer) — la page publique reste un écran « à venir » tant que le tournoi n'est pas publié | ✅ Fait, déployé |
 | 7 | **Infos du tournoi + affiche** : nom, date, lieu, description + **chargeur d'affiche** (stockée dans Google Drive). Enregistrés + publiés d'un clic (« Générer le tournoi ») | ✅ Fait, déployé |
@@ -179,7 +179,14 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 
 ## 📌 Statut d'avancement
 
-**Au 2026-07-14 : l'application est complète, EN LIGNE et fonctionnelle** (backend Apps Script + frontend GitHub Pages + intégration au site vitrine boutique-r92).
+**L'application est complète, EN LIGNE et fonctionnelle** — backend Apps Script, frontend GitHub Pages,
+et intégration au site vitrine boutique-r92.
+
+> 📡 **Vérifié le 2026-08-19**, et c'est reproductible en trois commandes : le backend répond
+> (`…/exec?action=ping` → `{"ok":true,…}`), les quatre pages du frontend répondent (`tournoi.html`,
+> `admin.html`, `saisie.html`, `perfs.html`), et le site vitrine répond.
+> ⚠️ **Ce relevé porte sur « le service répond », pas sur chacune des lignes ci-dessous** : celles-ci
+> décrivent des fonctionnalités, et chacune porte son propre état dans le tableau du haut.
 
 - ✅ **Base de données** Google Sheets : **8 onglets de travail** créés automatiquement
   (`setupSheet()` en crée 7, `Mesures` apparaît au premier relevé) **+ 4 onglets de référence FFR**
