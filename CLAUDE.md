@@ -21,6 +21,7 @@
 - [8. Règle de non-régression](#8-règle-de-non-régression)
 - [8 bis. Règle de la carte à jour](#8-bis-règle-de-la-carte-à-jour)
 - [8 ter. Règle du commentaire à jour](#8-ter-règle-du-commentaire-à-jour)
+- [8 quater. Règle de la source unique](#8-quater-règle-de-la-source-unique)
 - [9. Règle de transparence](#9-règle-de-transparence)
 - [10. Règle de prudence](#10-règle-de-prudence)
 - [11. Objectif final](#11-objectif-final)
@@ -471,9 +472,29 @@ Si une fonctionnalité ne peut pas être vérifiée, l'indiquer clairement :
 
 **La règle, en une phrase :**
 
-> **Une session qui ajoute un écran, une action serveur ou un onglet met la carte à jour DANS LE
-> MÊME LOT — pas plus tard. Et si le changement se voit, ou change la fiabilité, elle l'inscrit
-> AUSSI au journal.**
+> **Une session qui change ce que l'application FAIT, ce qu'elle MONTRE, ou CE SUR QUOI ON PEUT
+> COMPTER vérifie la carte DANS LE MÊME LOT — pas plus tard. Et si le changement se voit, ou change
+> la fiabilité, elle l'inscrit AUSSI au journal.**
+
+**Ce que « change ce que l'application fait » recouvre**, et la liste est volontairement large :
+
+| | |
+|---|---|
+| ce qu'elle **fait** | un **comportement**, une **règle métier**, un **format**, une action serveur |
+| ce qu'elle **montre** | un **écran**, un onglet, un libellé qui décrit une fonctionnalité |
+| ce sur quoi on peut **compter** | un **état de déploiement**, un **workflow**, un **repère de test**, une **décision produit** |
+
+> ⚡ **Pourquoi cette liste a été élargie le 2026-08-19.** L'ancienne formulation nommait trois
+> déclencheurs — *écran, action serveur, onglet*. **Elle a laissé passer quatre décrochages, dont
+> deux alors que la règle existait déjà** : le format `POULES_NIVEAU` *(livré le 2026-08-01,
+> invisible de la documentation pendant trois semaines)* ; le bilan de tests de `backend/README.md`
+> *(resté à `616/616` quatorze jours après que C-012 l'eut porté à 703 — sur un document pourtant
+> NOMMÉ dans la carte)* ; un *« à déployer »* de 2026-07-19 jamais levé ; et un compte de lignes
+> faussé par trois lignes de commentaire.
+>
+> **Aucun de ces quatre n'était un écran, une action serveur ni un onglet.** Le défaut n'était pas
+> la discipline : c'était **le périmètre du déclencheur**. D'où une règle qui pose une **question**
+> plutôt qu'une liste fermée.
 
 ### Ce qu'on appelle « la carte »
 
@@ -525,6 +546,9 @@ la seule à savoir exactement ce qu'elle fait.
 - ❌ **Pas** de réécrire toute la documentation à chaque commit ;
 - ❌ **Pas** de documenter le fonctionnement interne d'une fonction *(c'est le rôle des commentaires
   dans le code, et ils sont bons)* ;
+- ⚡ ❌ **Pas** de modifier un document pour prouver qu'on a lu la règle. **Le déclencheur large
+  demande de VÉRIFIER, pas de MODIFIER** — et *« vérifié, rien à changer »* est une réponse
+  parfaitement valable. Elle doit seulement être **dite**, et c'est l'objet de **§12.4** ;
 - ✅ **Seulement** ceci : *ce qui existe est-il listé là où on va le chercher ?*
 
 ---
@@ -571,6 +595,63 @@ Chercher dans les fichiers qu'on vient de toucher : `pas encore`, `prévu sessio
 - ❌ **Pas** de relire tous les commentaires du projet à chaque commit ;
 - ❌ **Pas** de commenter davantage — les commentaires de ce projet sont **bons** ;
 - ✅ **Seulement** ceci : *ce que j'écris ici est-il encore vrai maintenant que j'ai branché ?*
+
+---
+
+## 8 quater. RÈGLE DE LA SOURCE UNIQUE
+
+> ⚠️ **Cette règle s'applique à TOUTES les sessions du projet.** Elle complète **§8 bis** *(la carte
+> à jour)* et **§8 ter** *(le commentaire à jour)* : celles-ci disent **quand** mettre à jour ;
+> celle-ci dit **où l'information doit vivre pour ne pas se contredire**. Posée le 2026-08-19, à la
+> clôture de la remise à niveau documentaire.
+
+**La règle, en deux phrases :**
+
+> **Une affirmation se vérifie à SA SOURCE, jamais par recopie d'un document à l'autre.**
+>
+> **Un repère volatil n'a qu'UNE SEULE adresse de référence ; ailleurs, on renvoie vers cette
+> source plutôt que de le recopier — chaque fois que c'est possible.**
+
+### Les sources déjà établies
+
+| Ce qu'on cherche | Sa source |
+|---|---|
+| **Comptes structurels** — pages, fichiers JS, actions du serveur, onglets, bibliothèques | `docs/architecture.md` **§7**, qui écrit **la méthode de comptage de chacun** |
+| **Repères opérationnels / de redéploiement** — bilan de tests attendu, dernière ligne du fichier collé chez Google | `docs/deploiement.md` |
+
+*(Une source, c'est le **code**, un **test**, un **workflow**, la **configuration**, la
+**production**, une **commande de mesure**, ou une **décision enregistrée**. Un document n'est
+jamais la preuve d'un autre document.)*
+
+### Pourquoi cette règle existe
+
+Parce que **c'est le mécanisme qui a produit le plus d'erreurs de ce projet**, et il est toujours
+le même : un chiffre juste est recopié quelque part, la source bouge, la copie reste.
+
+- `backend/README.md` a annoncé **`616/616`** quand le vrai bilan était **`703/703`**. Le piège est
+  le **sens** de l'écart : `deploiement.md` enseigne qu'un nombre **plus petit** signifie que
+  l'ancien fichier de tests a tourné. Quelqu'un obtenant le **bon** résultat aurait donc conclu à
+  une panne ;
+- un chiffre non sourcé recopié dans deux documents *(« ~1000-1300 spectateurs »)* a déjà conduit
+  **un audit entier à une conclusion fausse** ;
+- et le compte des onglets, établi à **8** par une méthode qui semblait raisonnable, était faux :
+  seul le **contrôle croisé** entre documents l'a révélé.
+
+> 🎯 **La leçon, et elle vaut plus que les chiffres.** *Un chiffre juste ne prouve pas une méthode
+> juste ; seule une méthode écrite peut être prise en défaut.* C'est exactement à cela que sert le
+> **§7** de `docs/architecture.md`.
+
+### Ce que la règle ne demande PAS
+
+- ❌ **Pas** de traquer les recopies existantes : elles sont un **constat**, pas un chantier. On
+  applique la règle **à ce qu'on écrit**, pas rétroactivement à tout le dépôt ;
+- ❌ **Pas** d'interdire tout chiffre hors de sa source — un document a le droit de **situer** son
+  lecteur. Mais alors il le **date** *(« relevé le … »)* ou dit **où lire la valeur du jour** ;
+- ❌ **Pas** de toucher aux **traces historiques** : `AUDIT.md`, `SESSIONS.md`, `RAPPORT-AUDIT.md`,
+  les entrées passées du `CHANGELOG` portent des chiffres **vrais à leur date**, et c'est leur rôle.
+  ⚠️ **Un remplacement de masse les détruirait** — le dépôt en contient une vingtaine ;
+- ✅ **Seulement** ceci : *ce chiffre que je m'apprête à écrire, ai-je vérifié sa source — et
+  existe-t-il déjà ailleurs un endroit qui devrait faire foi ?*
 
 ---
 
@@ -729,14 +810,31 @@ moindre fichier de suivi, et le **dire à Romain**.
 
 Chaque session a un **objectif précis**. Lorsque cet objectif est terminé :
 
-1. mettre à jour la documentation de suivi ;
-2. vérifier l'état Git ;
-3. créer un commit si nécessaire et si des modifications cohérentes ont été réalisées ;
-4. produire un **rapport de fin de session** ;
-5. indiquer la **prochaine session recommandée** ;
-6. **S'ARRÊTER.**
+1. mettre à jour la documentation **de suivi** ;
+2. ⚡ **dire quels documents ACTIFS deviennent faux ou incomplets à cause du changement — et si
+   aucun n'a besoin d'être modifié, l'ÉCRIRE** ;
+3. vérifier l'état Git ;
+4. créer un commit si nécessaire et si des modifications cohérentes ont été réalisées ;
+5. produire un **rapport de fin de session** ;
+6. indiquer la **prochaine session recommandée** ;
+7. **S'ARRÊTER.**
 
 > **Ne jamais commencer automatiquement la session suivante.**
+
+> ⚡ **Le point 2, et pourquoi il ne coûte qu'une phrase** *(ajouté le 2026-08-19)*
+>
+> Le point **1** porte sur la documentation **de suivi** — `docs/industrialisation/`. Le point
+> **2** porte sur la documentation **ACTIVE** : `README.md`, `docs/architecture.md`,
+> `backend/README.md`, `CHANGELOG.md` *(la « carte » de **§8 bis**)*, et tout autre document
+> courant que le changement rend faux.
+>
+> 🎯 **Ce qu'il ferme, et c'est le trou le plus silencieux du dispositif** : sans lui, **une session
+> qui a vérifié et n'avait rien à changer laisse exactement la même trace qu'une session qui a
+> oublié d'y penser — aucune.** Une phrase suffit à les distinguer :
+> *« Documents actifs vérifiés : aucun ne devient faux. »*
+>
+> ⚠️ **Ce n'est PAS une invitation à modifier quelque chose.** Voir le garde-fou de **§8 bis** :
+> le déclencheur demande de **vérifier**, pas de **modifier**.
 
 ## 12.5 — Statuts d'un problème
 
