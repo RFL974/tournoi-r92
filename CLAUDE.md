@@ -472,19 +472,35 @@ Si une fonctionnalité ne peut pas être vérifiée, l'indiquer clairement :
 **La règle, en une phrase :**
 
 > **Une session qui ajoute un écran, une action serveur ou un onglet met la carte à jour DANS LE
-> MÊME LOT — pas plus tard.**
+> MÊME LOT — pas plus tard. Et si le changement se voit, ou change la fiabilité, elle l'inscrit
+> AUSSI au journal.**
 
 ### Ce qu'on appelle « la carte »
 
-Les trois documents qu'on ouvre en premier pour comprendre ce projet :
+Les **quatre** documents qu'on ouvre en premier pour comprendre ce projet :
 
 | Document | Ce qu'il doit toujours refléter |
 |---|---|
 | `README.md` | la **structure** : pages, fichiers, onglets, documents |
 | `docs/architecture.md` | les **actions** du serveur et **comment les morceaux se parlent** |
 | `backend/README.md` | ce que fait le serveur, et ses utilitaires |
+| ⚡ `CHANGELOG.md` | **ce qui a changé, et quand** — les évolutions **visibles** du produit et celles qui changent **réellement la fiabilité** *(ajouté le 2026-08-19)* |
 
 *(`frontend/README.md` a toujours été tenu à jour : c'est le modèle à suivre.)*
+
+> ⚡ **Pourquoi le CHANGELOG a été ajouté à cette liste**, et c'est une leçon à part entière : la
+> règle ne nommait que trois documents, et **le journal a décroché exactement là où la règle ne
+> regardait pas** — **15 jours et 12 enregistrements** sans une ligne, alors que le contrôle avant
+> publication et 87 vérifications nouvelles étaient arrivés entre-temps. Le retard n'était pas un
+> défaut de discipline : c'était un **défaut de périmètre**. Un document qu'aucune règle ne garde
+> finit toujours par sortir du champ.
+>
+> ⚠️ **Ce que le journal ne demande PAS.** Il ne réclame **pas** une entrée par commit, ni une ligne
+> pour un travail purement documentaire, ni pour une reformulation de commentaires sans effet sur
+> le comportement. Le détail de chaque session d'industrialisation vit dans `SESSIONS.md` — deux
+> journaux, deux lecteurs. Le critère du `CHANGELOG.md` tient en une question : **est-ce que
+> quelqu'un qui utilise l'application le remarquerait, ou est-ce que cela change ce sur quoi on peut
+> compter ?**
 
 ### Pourquoi cette règle existe
 

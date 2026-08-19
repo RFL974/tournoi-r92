@@ -5,8 +5,9 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-19 (⚡ **D-034** — `COUPE_PLATEAU` reste **proposé mais signalé** ;
-elle **remplace** la doctrine « non proposé, conservé pour l'existant », qui est **périmée**)
+**Dernière mise à jour** : 2026-08-19 (⚡ **D-035** — le `CHANGELOG` rejoint la règle de la carte
+**§8 bis** ; ⚡ **D-034** — `COUPE_PLATEAU` reste **proposé mais signalé**, ce qui **remplace** la
+doctrine « non proposé, conservé pour l'existant », désormais **périmée**)
 
 ---
 
@@ -2109,3 +2110,54 @@ s'engage à tenir.
 > `frontend/css/styles.css` + `frontend/css/theme-r92.css` *(les DEUX feuilles — voir le piège
 > connu du thème clair)* · `docs/formats-apres-midi.md` · `README.md` ·
 > `docs/guide-utilisateur.md` · `docs/architecture.md`.
+
+---
+
+### D-035 — Le `CHANGELOG` raconte le produit et la fiabilité, et il entre dans la règle de la carte
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-19 |
+| **Chantier** | Remise à niveau documentaire, **lot 3** |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Couvre** | `CHANGELOG.md` — son critère de contenu, et sa tenue à jour |
+| **Étend** | **D-029** *(règle de la carte à jour, `CLAUDE.md` §8 bis)* — la liste passe de **3** à **4** documents |
+
+**Le problème constaté, chiffré**
+
+> `CHANGELOG.md` — **2 406 lignes**, tenu sans interruption pendant des mois — **s'est arrêté au
+> 2026-08-04**. Entre cette date et le 2026-08-19, **12 enregistrements** ont touché le code, les
+> tests ou l'automatisation **sans qu'une seule ligne y soit ajoutée**. Y figuraient pourtant les
+> deux améliorations de fiabilité les plus notables de l'été : le **contrôle avant publication**
+> *(C-013)* et **+114 vérifications** *(C-011 et C-012, 589 → 703)*.
+
+**La cause, et elle n'est pas humaine**
+
+> **`CLAUDE.md` §8 bis nommait trois documents. Le `CHANGELOG` n'en faisait pas partie.** Les
+> sessions d'industrialisation journalisaient dans `SESSIONS.md`, qui n'a ni la même fonction ni le
+> même lecteur. **Le journal a décroché exactement là où la règle ne regardait pas** : un défaut de
+> **périmètre**, pas de discipline.
+
+**Décision retenue**
+
+> ✅ **Critère de contenu** *(option (b) retenue par Romain)* : le `CHANGELOG` raconte les
+> **évolutions produit visibles** *et* les **évolutions techniques significatives qui changent
+> réellement la fiabilité ou le fonctionnement**.
+>
+> ⛔ Il ne réclame **pas** une entrée par commit, ni pour un travail purement documentaire, ni pour
+> une reformulation de commentaires sans effet sur le comportement.
+>
+> ✅ **Le `CHANGELOG` rejoint la « carte » de `CLAUDE.md` §8 bis**, pour que le décrochage ne puisse
+> pas se reproduire — *« au moment approprié »*, c'est-à-dire au moment même où on le rouvre.
+
+**Ce que cela ne change pas**
+
+> **`SESSIONS.md` reste le journal exhaustif du chantier d'industrialisation.** Deux journaux, deux
+> lecteurs : l'un pour qui utilise l'application, l'autre pour qui reprend le chantier. Le
+> `CHANGELOG` renvoie explicitement vers lui.
+
+**⚠️ Ce que cette décision ne referme PAS**
+
+> **R-075 reste entier.** *« Rien ne permet de dire quelle version tourne »* : toutes les entrées du
+> `CHANGELOG` restent sous `## [Non publié]`, et `git tag` ne renvoie toujours rien. Rouvrir le
+> journal **n'est pas** publier des versions — ne pas confondre les deux.

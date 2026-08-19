@@ -5,6 +5,82 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ## [Non publié]
 
+> 🧭 **Ce que ce journal raconte, et ce qu'il ne raconte pas.** Les **évolutions du produit
+> visibles** par un organisateur, un marqueur ou un spectateur — et les **évolutions techniques qui
+> changent réellement la fiabilité ou le fonctionnement**. Un travail purement documentaire, ou une
+> reformulation de commentaires sans effet sur le comportement, n'y figure pas : le détail
+> exhaustif de chaque session d'industrialisation vit dans
+> [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
+
+### Coupe + Plateau redevient proposé, mais on est prévenu avant de le choisir — 2026-08-19
+Ce format avait disparu des cartes de l'administration : il comporte des **phases finales**
+(quarts, demies, finale), et celles-ci ne sont pas conformes au cadre des rencontres École de
+Rugby. Le retirer réglait le problème d'un côté et en créait un autre : **tous les événements ne
+relèvent pas de ce cadre**, et c'est à l'organisateur — pas au logiciel — de savoir quel règlement
+s'applique au sien.
+
+Il est donc **de nouveau proposé**, et il est **signalé** :
+
+- la carte porte le titre **« ⚠️ Coupe + Plateau — hors cadre École de Rugby »**, un liseré ambre,
+  et une description qui explique les phases finales ;
+- au moment où on le coche, une **confirmation** s'ouvre — *« Vous choisissez un format comportant
+  des phases finales… Vérifiez qu'elles correspondent bien au règlement applicable à votre
+  événement. »* — avec **Annuler** ou **Continuer avec Coupe + Plateau** ;
+- **Annuler ne change rien** : le format précédent est remis, bouton compris ;
+- tant que la catégorie retient ce format, un **encart de rappel** reste sur sa fiche.
+
+Rien de la mécanique existante n'a bougé : le tableau à élimination, la propagation du vainqueur,
+la petite finale, le départage obligatoire et la correction en cascade fonctionnent comme avant.
+Et dans la **demande d'autorisation FFR**, le format continue d'être rendu **« manquant »** avec le
+motif *« hors périmètre École de Rugby »* — ce formulaire-là est spécifiquement celui de l'École de
+Rugby, l'application n'y déclare donc jamais un format que ce cadre interdit.
+
+Décision **D-034** *(voir `docs/industrialisation/DECISIONS.md`)*. **Aucun redéploiement backend
+nécessaire** : côté serveur, seul un commentaire a changé.
+
+### Les six garde-fous de la saisie du score passent enfin sous test — 2026-08-17
+`enregistrerScore` est le geste le plus répété de la journée, et il porte **six garde-fous** :
+Coupe en attente, score déjà validé, vainqueur obligatoire en élimination, correction en cascade,
+score détaillé, archivage. **Aucun n'était exécuté par le moindre test.**
+
+Le cœur de la fonction a été séparé de son écriture, en trois temps — `litSaisieScore`,
+`cascadeAVerifier`, puis `deciderEnregistrementScore` — ce qui a permis de les mettre à l'épreuve
+sans toucher au comportement. **+87 vérifications** (33, puis 12, puis 42) : le harnais passe de
+**616** à **703**.
+
+Backend **redéployé** le 2026-08-18, avec les deux preuves exigées : `R92 — 703/703 OK, 0 FAIL`
+obtenu **chez Google**, et dernière ligne de `Test.gs` = **4244**. Puis **11 vérifications
+manuelles sur 12** en conditions réelles.
+
+Deux réserves, écrites parce qu'elles sont vraies : la 12ᵉ vérification (une mesure de durée)
+**n'est pas concluante**, et deux problèmes **antérieurs** au chantier sont entrés au registre sans
+être corrigés — **R-092** *(le détail d'un score n'est effacé nulle part)* et **R-093** *(le serveur
+écrit les colonnes par leur position mais les lit par leur nom)*.
+
+### Rien ne part en ligne sans avoir été relu par la machine — 2026-08-06
+Jusqu'ici, **tout envoi sur `main` publiait le site**, sans le moindre contrôle. Une parenthèse
+oubliée dans un fichier JavaScript partait en ligne telle quelle — et le jour du tournoi, la page
+des scores serait restée blanche.
+
+Le workflow de publication porte désormais **deux travaux** : le contrôle s'exécute **d'abord**, la
+publication **en dépend**. Si un fichier ne se lit pas, **la publication n'a pas lieu du tout** et
+**le site déjà en ligne reste intact**. Le contrôle porte sur les **30 fichiers JavaScript** de
+`frontend/`, bibliothèques extérieures comprises — elles sont déposées à la main, donc elles
+peuvent arriver tronquées.
+
+Il vérifie **la syntaxe, et rien d'autre** : ni le style, ni les conventions. C'est délibéré — un
+contrôle trop exigeant, qui refuserait de publier une correction urgente **le jour du tournoi**,
+serait pire que pas de contrôle du tout. Il tourne aussi sur chaque proposition de fusion, où la
+publication est neutralisée.
+
+### Le calcul qui désigne le vainqueur est enfin vérifié — 2026-08-06
+Le barème **Victoire 3 / Nul 2 / Défaite 1** et l'ordre de départage — points, puis différence,
+puis points marqués — décident du classement et du podium. **Aucun test ne les mettait à
+l'épreuve** ; en particulier, ni le 2ᵉ ni le 3ᵉ critère de départage n'étaient jamais exercés.
+
+**5 tests, 27 vérifications** ajoutés, et **aucune ligne du serveur modifiée** : le harnais passe de
+**589** à **616**, bilan obtenu **chez Google**.
+
 ### Le bandeau du dossier club écrasait son accroche — 2026-08-04
 Enfin le vrai coupable, et il n'était pas là où trois allers-retours l'avaient cherché : les
 réglages **s'appliquaient bien**. C'est l'encart qui était trop étroit pour eux.
