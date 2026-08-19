@@ -1,19 +1,26 @@
 # Formats d'après-midi (par catégorie)
 
-> ⚠️ **`COUPE_PLATEAU` est interdit en École de Rugby.** Les phases finales (quart, demi, finale)
-> sont interdites sur les tournois ou plateaux Écoles de Rugby.
-> Source : *Formulaire de demande d'autorisation — organisation de tournoi École de Rugby*, FFR,
-> grille 2026-2027, « Rappel des principes généraux » : « Les phases finales (1/4, demi finale et
-> finale) sont interdites sur les tournois ou plateaux Ecoles de Rugby. »
+> ⚠️ **`COUPE_PLATEAU` comporte des phases finales, qui ne sont pas conformes au cadre École de
+> Rugby.** Source : *Formulaire de demande d'autorisation — organisation de tournoi École de
+> Rugby*, FFR, grille 2026-2027, « Rappel des principes généraux » : « Les phases finales (1/4,
+> demi finale et finale) sont interdites sur les tournois ou plateaux Ecoles de Rugby. »
 >
-> Ce format **n'est donc plus proposé** dans l'administration. Il n'est **conservé que pour la
-> rétrocompatibilité** : un classeur déjà configuré ainsi continue d'être généré, affiché et saisi
-> sans erreur, et l'admin affiche alors un encart invitant à choisir un format conforme
-> (`CROISE`, `CROISE_DIAGONAL` ou `LIBRE`).
+> **Ce format reste néanmoins PROPOSÉ** dans l'administration — parce qu'un événement peut relever
+> d'un autre règlement, et que **l'application n'a pas à trancher lequel s'applique** *(principe
+> **D-031**)*. Ce qu'elle fait, c'est **empêcher qu'on le choisisse sans le savoir** : la carte est
+> signalée, et une **confirmation** est demandée avant que le choix soit appliqué.
+>
+> 👉 **Les trois choses à ne pas confondre**, et ce document les distingue partout :
+>
+> | | |
+> |---|---|
+> | **Ce que la règle FFR interdit** | Les phases finales, **sur un tournoi ou plateau École de Rugby** — c'est la citation ci-dessus |
+> | **Ce que l'interface fait** | Elle **propose** le format, le **signale** (⚠️ dans le titre de la carte, liseré ambre) et **demande confirmation** avant de l'appliquer |
+> | **Ce que l'application ne fait PAS** | Elle ne dit **pas** que le format est interdit partout, et elle ne **détermine pas** quel règlement s'applique à ton événement. Elle informe ; **tu décides** |
 
 Depuis cette évolution, **chaque catégorie choisit son propre format d'après-midi** — dans le
 même tournoi, les M8 peuvent jouer en « Matchs libres » pendant que les M12 jouent en
-« Coupe + Plateau ». Le choix se fait **au paramétrage** (page Administration), avant le jour J,
+« Poules de niveau ». Le choix se fait **au paramétrage** (page Administration), avant le jour J,
 pour pouvoir l'expliquer aux équipes à l'avance.
 
 > 🧭 Le **matin** ne change pas : il reste une phase de **poules** (round-robin) pour toutes les
@@ -29,7 +36,8 @@ n'a **rien** d'un « matin en poules + après-midi configurable ». Pour ne pas 
 mondes, la fiche d'une catégorie **U14** (et elle seule) affiche un choix de **contexte** :
 
 - **Tournoi ordinaire** *(défaut)* — comportement inchangé : matin en poules, après-midi selon le
-  format choisi (Croisé / Diagonal / Libre). Les 4 cartes de format restent visibles.
+  format choisi (Poules de niveau / Croisé / Diagonal / Libre / ⚠️ Coupe + Plateau). Les 5 cartes
+  de format restent visibles.
 - **Super Challenge de France** — le plateau suit le **règlement du Super Challenge** en
   **Jeu à XV (15×15)**. Les cartes « format d'après-midi » sont alors **masquées** (sans objet) et
   un panneau récapitule la structure selon la **phase** retenue :
@@ -84,9 +92,50 @@ mondes, la fiche d'une catégorie **U14** (et elle seule) affiche un choix de **
 
 ---
 
-## Les 4 formats disponibles
+## Les 5 formats proposés
 
-### 1. Classement croisé (`CROISE`) — *format historique, par défaut*
+> Ils sont présentés ici **dans l'ordre où les cartes apparaissent** dans l'administration.
+> Les **quatre premiers** se choisissent sans rien de particulier. Le **cinquième**,
+> `COUPE_PLATEAU`, est proposé lui aussi mais **porte un avertissement réglementaire** — il a sa
+> propre section, [plus bas](#le-format-signalé--coupe--plateau-coupe_plateau).
+
+### 1. Poules de niveau (`POULES_NIVEAU`)
+
+Le **classement de midi, toutes poules confondues**, est découpé en **tranches de 4 à 5 équipes** :
+la **poule haute** (les meilleurs), puis le niveau 2, etc. Chaque tranche joue ensuite un
+**round-robin COMPLET** — chacun rencontre chacun **dans sa tranche**.
+
+Le **1ᵉʳ de la poule haute remporte le tournoi**, **sans finale ni match sec** : c'est ce qui rend
+ce format **conforme École de Rugby** tout en désignant quand même un vainqueur.
+
+**Pourquoi il existe.** Le croisé classique donne peu de jeu quand le matin ne compte que 2 ou
+3 poules : un niveau à 2 équipes, c'est **1 seul match** l'après-midi. Ici, une poule haute de 4
+donne **3 matchs à chacun**. C'est le format **recommandé à 2-3 poules le matin**.
+
+- **Comment le classement de midi est établi** : d'abord **tous les 1ᵉʳˢ** de poule, puis tous les
+  2ᵉˢ, etc. ; **à rang égal**, on départage aux **points du matin** (points, puis différence, puis
+  points marqués — le barème habituel).
+- **Comment les tranches sont taillées** : le nombre de tranches est `arrondi_supérieur(équipes ÷ 5)`,
+  et **le reste va aux tranches DU BAS**. C'est **voulu** : à effectif inégal, **c'est le bas du
+  classement qui joue le plus**. Exemple : **9 équipes → une poule haute de 4 et une poule basse
+  de 5**.
+- **Fonctionne dès 1 poule le matin** (il lui faut seulement **2 équipes classées**).
+- **Paramètre** : aucun.
+- **Affichage public** : tableaux **par poule de niveau**, puis le **classement général** et le
+  **podium** — exactement comme le croisé, dont il réutilise le calcul.
+- **Vocabulaire à l'écran** : les trois écrans (admin, saisie, page publique) disent
+  **« Poule haute »**, **« Poule basse »**, **« Poule niveau k »** au milieu, et **« Poule de
+  classement »** s'il n'y en a qu'une — au lieu du générique « Niveau N1 ».
+
+| Équipes classées | Tranches obtenues | Matchs de l'après-midi |
+|---|---|---|
+| 6 | 3 + 3 | 6 |
+| 8 | 4 + 4 | 12 |
+| **9** | **4 + 5** *(le bas joue plus)* | 16 |
+| 12 | 4 + 4 + 4 | 18 |
+| 15 | 5 + 5 + 5 | 30 |
+
+### 2. Classement croisé (`CROISE`) — *format historique, par défaut*
 Les équipes sont **reclassées par niveau** après les poules du matin (tous les 1ᵉʳˢ de poule
 ensemble = Niveau 1, tous les 2ᵉˢ = Niveau 2, etc.), puis chaque niveau joue en **round-robin**.
 Un **classement général** et un **podium** sont désignés : le **vainqueur du Niveau 1** (le groupe
@@ -98,7 +147,7 @@ des premiers de poule) **remporte le tournoi**. C'est le comportement décrit da
   Le podium 🥇🥈🥉 s'affiche dès qu'il est **mathématiquement certain** ; avant, le classement
   général montre l'équipe **en tête** (provisoire).
 
-### 2. Classement croisé **diagonal** (`CROISE_DIAGONAL`)
+### 3. Classement croisé **diagonal** (`CROISE_DIAGONAL`)
 
 > ⚠️ **À ne pas confondre avec le croisé classique ci-dessus.** La différence tient en une phrase :
 > - **Croisé** (`CROISE`) : les équipes de **même rang** s'affrontent — **1ᵉʳ contre 1ᵉʳ**, 2ᵉ contre 2ᵉ…
@@ -122,7 +171,7 @@ Niveau 2 = 3ᵉˢ + 4ᵉˢ, etc.
 - **Affichage public** : **identique au croisé** (tableaux par niveau + classement général + podium).
   Techniquement, ce format réutilise exactement l'affichage et le calcul de classement du croisé.
 
-### 3. Matchs libres (`LIBRE`)
+### 4. Matchs libres (`LIBRE`)
 Des **matchs amicaux tournants**, **sans classement ni podium** — juste du temps de jeu. On génère un
 round-robin (chacun rencontre chacun une fois) sur toutes les équipes de la catégorie. Recommandé
 pour les plus jeunes (M6–M8), où l'on ne veut **aucune hiérarchie ni pression**.
@@ -132,7 +181,34 @@ pour les plus jeunes (M6–M8), où l'on ne veut **aucune hiérarchie ni pressio
 - **Saisie** : un bandeau « 🎈 Match amical — sans classement » rappelle au bénévole que rien ne bouge
   dans un classement après validation (c'est normal).
 
-### 4. Coupe + Plateau (`COUPE_PLATEAU`)
+---
+
+## Le format signalé : Coupe + Plateau (`COUPE_PLATEAU`)
+
+> ⚠️ **Ce format est proposé comme les autres, mais il est SIGNALÉ.** Il comporte des **phases
+> finales** (quarts, demies, finale), qui **ne sont pas conformes au cadre des rencontres École de
+> Rugby** *(voir le rappel en tête de document)*.
+>
+> **Pourquoi on ne l'a pas retiré.** Tous les événements ne relèvent pas du cadre École de Rugby.
+> Un organisateur qui sait que le règlement applicable à son événement autorise les phases finales
+> doit pouvoir choisir ce format. **Ce qu'il ne faut pas, c'est qu'on le choisisse sans connaître
+> la règle** — d'où l'avertissement, et non le retrait. C'est le principe **D-031** : *la
+> réglementation appartient au responsable du tournoi, pas à l'application*.
+>
+> **Ce que fait concrètement l'interface** *(vérifié dans le code)* :
+>
+> | Quand | Ce qui se passe |
+> |---|---|
+> | **Sur la carte de choix** | Titre **« ⚠️ Coupe + Plateau — hors cadre École de Rugby »**, liseré ambre, et une description qui explique les phases finales |
+> | **Au moment où on le coche** | Une **confirmation** s'ouvre : *« Vous choisissez un format comportant des phases finales… Vérifiez qu'elles correspondent bien au règlement applicable à votre événement. »* — **Annuler** / **Continuer avec Coupe + Plateau** |
+> | **Si on annule** | **Rien n'est changé** : le format précédent est remis, bouton compris |
+> | **Si on continue** | Le format est appliqué normalement, et le champ « qualifiés en Coupe » apparaît |
+> | **Tant que la catégorie le retient** | Un **encart de rappel** reste affiché sur la fiche — l'information est là à chaque ouverture, pas seulement au moment du choix |
+> | **Dans la demande d'autorisation FFR** | Le format sportif est rendu **« manquant »**, motif *« hors périmètre École de Rugby »*. ⚠️ **C'est délibéré et cela ne change pas** : ce formulaire-là est **spécifiquement** celui de l'École de Rugby, donc l'app n'y déclare jamais un format que ce cadre interdit |
+>
+> ✅ **Toute la mécanique décrite ci-dessous est ACTIVE** — génération, propagation, saisie,
+> affichage public, podium. Rien n'a été retiré, ni mis en sommeil.
+
 Les **X premiers de chaque poule** partent en **Coupe** : un **tableau à élimination directe**
 jusqu'à une **finale** (un vainqueur du tournoi est désigné), avec une **petite finale** pour la
 3ᵉ place. Toutes les **autres équipes** jouent un **Plateau** : des matchs supplémentaires **sans
@@ -189,12 +265,16 @@ un score validé déclenche des **actions automatiques** :
 
 ### Côté organisateur (Administration) — choisir le format
 1. Dans la fiche d'une **catégorie**, sous les réglages habituels, une zone **« Format de
-   l'après-midi »** propose **4 cartes** (Classement croisé / Classement croisé diagonal /
-   Matchs libres / Coupe + Plateau), chacune avec une explication.
-2. Si tu choisis **Coupe + Plateau**, un champ **« Qualifiés en Coupe (par poule) »** apparaît :
+   l'après-midi »** propose **5 cartes** (Poules de niveau / Classement croisé / Classement croisé
+   diagonal / Matchs libres / ⚠️ Coupe + Plateau), chacune avec une explication.
+2. Si tu choisis **⚠️ Coupe + Plateau**, une **confirmation** s'ouvre avant que le choix soit
+   appliqué : elle rappelle que ce format comporte des **phases finales**, non conformes au cadre
+   École de Rugby, et invite à vérifier le règlement de ton événement. **Annuler** ne change rien ;
+   **Continuer avec Coupe + Plateau** applique le choix.
+3. Une fois Coupe + Plateau retenu, un champ **« Qualifiés en Coupe (par poule) »** apparaît :
    indique combien d'équipes de chaque poule partent en Coupe.
-3. Un **récapitulatif** confirme le choix (« Après-midi : Coupe + Plateau — … »).
-4. Clique **Enregistrer** sur la catégorie. *(Les colonnes `format_apresmidi` / `param_format` de
+4. Un **récapitulatif** confirme le choix (« Après-midi : poules de niveau — … »).
+5. Clique **Enregistrer** sur la catégorie. *(Les colonnes `format_apresmidi` / `param_format` de
    l'onglet Config sont créées automatiquement dès ce premier enregistrement.)*
 
 Le jour J, une fois **tous les scores du matin saisis**, clique **« Générer l'après-midi »** comme
@@ -212,15 +292,17 @@ l'indique au lieu d'un plantage silencieux.
 - Pour **corriger** un résultat déjà propagé, suis l'avertissement de **cascade** (confirmation).
 
 ### Côté spectateur (page publique)
-- **Coupe** → un **arbre** (une colonne par tour : 8èmes / quarts / demies / finale) + une **petite
-  finale** ; le **gagnant** de chaque match est mis en avant.
-- **Plateau** → une liste de matchs sous « 🛡️ Tableau Plateau ».
-- **Libre** → une liste de matchs amicaux (sans classement).
+- **Poules de niveau** → tableaux par **poule haute / niveau k / poule basse** + classement général.
 - **Croisé** *(classique ou diagonal)* → tableaux par niveau + classement général, comme avant.
+- **Libre** → une liste de matchs amicaux (sans classement).
+- **Coupe** → un **arbre** (une colonne par tour : 8èmes / quarts / demies / finale) + une
+  **petite finale** ; le **gagnant** de chaque match est mis en avant.
+- **Plateau** → une liste de matchs sous « 🛡️ Tableau Plateau ».
 
 **Un podium 🥇🥈🥉** est affiché en haut de page dès qu'il est **décidé** — **sauf en Libre**
 (volontairement, pour ne pas classer les plus jeunes) :
-- **Croisé** → top 3 du classement général (quand il est mathématiquement verrouillé).
+- **Poules de niveau** et **croisé** → top 3 du classement général (quand il est mathématiquement
+  verrouillé) — c'est le **même calcul** pour les deux.
 - **Coupe** → 🥇 vainqueur de la finale, 🥈 finaliste, 🥉 vainqueur de la petite finale.
 - **Libre** → **pas de podium**.
 
@@ -230,15 +312,19 @@ l'indique au lieu d'un plantage silencieux.
 
 Voir [`structure-google-sheet.md`](structure-google-sheet.md) pour le détail des colonnes.
 
-- **Config (par catégorie)** : `format_apresmidi` (`CROISE`/`CROISE_DIAGONAL`/`LIBRE`/`COUPE_PLATEAU`,
-  vide = CROISE) et `param_format` (JSON, ex. `{"nbQualifiesCoupe":2}` ; inutile pour le diagonal).
+- **Config (par catégorie)** : `format_apresmidi` — **cinq valeurs, toutes proposées au choix** :
+  `POULES_NIVEAU` / `CROISE` / `CROISE_DIAGONAL` / `LIBRE`, plus `COUPE_PLATEAU` *(qui demande une
+  confirmation avant d'être appliqué)* ; **vide = CROISE** (défaut historique).
+  Et `param_format` (JSON, ex. `{"nbQualifiesCoupe":2}` ; utile au seul Coupe + Plateau).
 - **Matchs** : `format`, `sous_tableau` (`COUPE`/`PLATEAU`), `tour` (`FINALE`, `DEMI_FINALE`,
   `PETITE_FINALE`, `QUART_DE_FINALE`, `HUITIEME_DE_FINALE`…), `match_suivant` + `place_suivant`
   (où placer le vainqueur), `vainqueur` (équipe désignée en cas d'égalité).
 
 Côté backend ([`../backend/Code.gs`](../backend/Code.gs)) : un **répartiteur** `genererApresMidi`
-lit le format de chaque catégorie et appelle `fixturesApresMidiCroise` / `…CroiseDiagonal` /
-`…Libre` / `…CoupePlateau` ; la propagation (Coupe uniquement) est gérée par
+lit le format de chaque catégorie et appelle `fixturesApresMidiPoulesNiveau` / `…Croise` /
+`…CroiseDiagonal` / `…Libre` / `…CoupePlateau` ; la propagation (Coupe uniquement) est gérée par
 `propagerVainqueurBracket` (appelée directement depuis `enregistrerScore`). Le croisé diagonal
-étiquette ses matchs par niveau (`N1`, `N2`…) exactement comme le croisé, si bien que le calcul
-du classement général et du podium est **partagé, sans code d'affichage dédié**.
+**et les poules de niveau** étiquettent leurs matchs par niveau (`N1`, `N2`…) exactement comme le
+croisé, si bien que le calcul du classement général et du podium est **partagé, sans code
+d'affichage dédié**. Les tranches des poules de niveau sont calculées par `taillesPoulesNiveau`,
+à partir du classement de midi ordonné par `ordonnerClassementMidi`.

@@ -435,19 +435,25 @@ function verifierTerrainsBloc(bloc) {
  * visible, champ « qualifiés en Coupe » (affiché seulement pour COUPE_PLATEAU) et récapitulatif.
  * L'affichage conditionnel est piloté par l'attribut data-format du bloc (voir onReglagesChange) :
  * pas besoin de :has(), ça marche sur tous les téléphones.
+ *
+ * Les CINQ formats sont proposés. Celui qui porte `horsCadreEdr` (COUPE_PLATEAU) est simplement
+ * SIGNALÉ — carte marquée, encart de rappel tant qu'il est retenu, et confirmation à la sélection
+ * (onReglagesChange). Il n'est ni masqué, ni désactivé : le règlement applicable à l'événement
+ * appartient à l'organisateur, pas au logiciel.
  */
 function blocFormatApresMidi(cat) {
   const fmt = formatApresMidiDe(cat);
   const nbQ = nbQualifiesCoupeDe(cat);
-  // COUPE_PLATEAU est INTERDIT en EDR : il n'est plus proposé dans les cartes. Une catégorie
-  // déjà configurée ainsi (classeur existant) reste fonctionnelle ; on affiche un encart qui
-  // invite à choisir un format conforme, SANS réécrire la valeur stockée tant qu'aucun nouveau
-  // choix n'est validé (voir onEnregistrerCategorie).
-  const dejaCoupe = (fmt === 'COUPE_PLATEAU');
-  const encartInterdit = dejaCoupe
-    ? '<p class="format-interdit-edr">⚠️ <b>Format non conforme École de Rugby</b> — les phases ' +
-      'finales (quart, demi, finale) sont interdites en tournoi EDR. Choisissez un autre format ' +
-      'd\'après-midi.</p>'
+  // Format retenu HORS CADRE École de Rugby (aujourd'hui : COUPE_PLATEAU) : il est bel et bien
+  // PROPOSABLE, mais on rappelle la règle tant qu'il est retenu — l'organisateur voit donc
+  // l'information à chaque ouverture de la fiche, et pas seulement au moment de son choix.
+  // L'encart INFORME : il ne réclame pas de changer de format, et rien n'est réécrit ici.
+  const dejaHorsCadre = formatHorsCadreEdr(fmt);
+  const encartInterdit = dejaHorsCadre
+    ? '<p class="format-interdit-edr">⚠️ <b>Format hors cadre École de Rugby</b> — ce format ' +
+      'comporte des phases finales (quart, demi, finale), qui ne sont pas conformes au cadre des ' +
+      'rencontres École de Rugby. Vérifie qu\'elles correspondent au règlement applicable à ton ' +
+      'événement.</p>'
     : '';
 
   // Session 10 : format_apresmidi VIDE. La génération applique CROISE par défaut (historique) — on le
@@ -462,8 +468,11 @@ function blocFormatApresMidi(cat) {
 
   const cartes = FORMATS_APRESMIDI.map(function (f) {
     const choisi = (f.cle === fmt);
+    // `est-hors-cadre` distingue visuellement la carte signalée des autres, SANS la désactiver :
+    // elle reste cochable, c'est la confirmation (onReglagesChange) qui sécurise le choix.
     return (
-      '<label class="format-carte f-' + f.cle + (choisi ? ' est-choisi' : '') + '">' +
+      '<label class="format-carte f-' + f.cle + (choisi ? ' est-choisi' : '') +
+        (f.horsCadreEdr ? ' est-hors-cadre' : '') + '">' +
         '<input type="radio" name="format_apresmidi" value="' + f.cle + '"' + (choisi ? ' checked' : '') + '>' +
         '<span class="f-corps">' +
           '<span class="f-titre">' + echapper(f.titre) + '</span>' +
@@ -479,7 +488,7 @@ function blocFormatApresMidi(cat) {
     '<span class="format-recap r-CROISE">Après-midi : <b>classement croisé</b> — matchs équilibrés par niveau ; le vainqueur du Niveau 1 remporte le tournoi (classement général + podium).</span>' +
     '<span class="format-recap r-CROISE_DIAGONAL">Après-midi : <b>classement croisé DIAGONAL</b> — le 1ᵉʳ d\'une poule affronte le 2ᵉ d\'une AUTRE poule (croisement en diagonale, à ne pas confondre avec le croisé simple 1ᵉʳ-contre-1ᵉʳ). Résultats cumulés au classement général + podium.</span>' +
     '<span class="format-recap r-LIBRE">Après-midi : <b>matchs libres</b> — amicaux, sans classement ni podium (idéal pour les plus jeunes).</span>' +
-    '<span class="format-recap r-COUPE_PLATEAU">Après-midi : <b>Coupe + Plateau</b> — les premiers de chaque poule en élimination directe (finale + petite finale), les autres en plateau.</span>';
+    '<span class="format-recap r-COUPE_PLATEAU">Après-midi : <b>Coupe + Plateau</b> — les premiers de chaque poule en élimination directe (finale + petite finale), les autres en plateau. ⚠️ Ces phases finales ne sont pas conformes au cadre École de Rugby.</span>';
 
   return (
     '<div class="bloc-format" data-format="' + fmt + '">' +
@@ -628,11 +637,11 @@ async function onEnregistrerCategorie(evenement) {
   data.terrains_auto = (form.terrains_auto && form.terrains_auto.value === 'non') ? 'non' : 'oui';
 
   // Format d'après-midi + son paramètre JSON (nbQualifiesCoupe seulement pour COUPE_PLATEAU).
-  // COUPE_PLATEAU n'est plus proposé dans les cartes (interdit EDR) : le groupe de radios ne
-  // contient donc que des formats conformes. Si AUCUN n'est coché ET que la catégorie était
-  // déjà en COUPE_PLATEAU (classeur existant), on PRÉSERVE la valeur stockée — on ne réécrit
-  // jamais silencieusement la donnée d'un tournoi déjà configuré. La valeur ne change que si
-  // l'organisateur choisit explicitement un format conforme.
+  // COUPE_PLATEAU figure parmi les cartes : un choix explicite suffit donc à le retenir comme à
+  // le quitter. Le repli ci-dessous reste un GARDE-FOU pour le cas où aucun bouton n'est coché
+  // (groupe de radios absent du formulaire — par exemple une fiche rendue sans les cartes) : on
+  // PRÉSERVE alors la valeur stockée au lieu de la remplacer par le défaut CROISE. On ne réécrit
+  // jamais silencieusement la donnée d'un tournoi déjà configuré.
   const choisi = (form.format_apresmidi && form.format_apresmidi.value) ? form.format_apresmidi.value : '';
   const catStockee = configCourante.categories.find(function (c) { return c.categorie === nom; });
   const fmtStocke = catStockee ? formatApresMidiDe(catStockee) : 'CROISE';

@@ -33,7 +33,8 @@ joué rapporte toujours au moins 1 point). **Départage** en cas d'égalité de 
 
 **Déroulé type d'une journée** :
 1. (Avant) L'organisateur règle les horaires, les catégories (**dont le format d'après-midi** de
-   chacune : croisé / croisé diagonal / libre / coupe + plateau), et saisit les équipes.
+   chacune : poules de niveau / croisé / croisé diagonal / libre / ⚠️ coupe + plateau), et
+   saisit les équipes.
 2. L'organisateur **génère les poules et le planning du matin**.
 3. Il **publie** le tournoi (il devient visible du public).
 4. Le matin, les marqueurs **saisissent les scores** des matchs de poule.
@@ -43,9 +44,13 @@ joué rapporte toujours au moins 1 point). **Départage** en cas d'égalité de 
 7. Le **classement général** / **podium** (croisé) ou l'**arbre de Coupe** se mettent à jour en
    direct sur la page publique.
 
-> 🆕 **Formats d'après-midi par catégorie.** L'après-midi peut prendre 3 formes selon la catégorie
-> (classement croisé, matchs libres, ou Coupe + Plateau à élimination directe). Le choix se fait au
-> **paramétrage**. Tout est expliqué dans le guide dédié : [`formats-apres-midi.md`](formats-apres-midi.md).
+> 🆕 **Formats d'après-midi par catégorie.** L'après-midi peut prendre **5 formes** selon la
+> catégorie : **poules de niveau**, classement **croisé**, croisé **diagonal**, **matchs libres**,
+> ou **Coupe + Plateau**. Le choix se fait au **paramétrage**. *(⚠️ Coupe + Plateau comporte des
+> phases finales, qui ne sont pas conformes au cadre École de Rugby : sa carte est signalée et une
+> confirmation est demandée avant que le choix soit appliqué. À réserver aux événements dont le
+> règlement les autorise.)* Tout est expliqué dans le guide dédié :
+> [`formats-apres-midi.md`](formats-apres-midi.md).
 
 > 🆕 **Répartition automatique des terrains.** À partir de tes grands terrains réels (foot / rugby),
 > l'appli calcule combien de petits terrains y tiennent et les **attribue automatiquement** aux

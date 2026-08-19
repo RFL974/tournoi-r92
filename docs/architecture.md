@@ -192,7 +192,7 @@ en tête de fichier le pilotent : `ACTIONS_SCORES`, `ACTIONS_TOKEN` et `ACTIONS_
 | `genererPoulesEtPlanning` | 🔐 | POST | Tire les poules et calcule le planning du matin. **Bloque à moins de 3 équipes dans une catégorie** (règle FFR : les matchs secs ne sont pas autorisés à l'école de rugby). Renvoie les **arbitrages** chiffrés en cas de dépassement |
 | `reorganiserPoulesMatin` | 🔐 | POST | Refait les poules **à la main** selon une répartition fournie, puis recalcule matchs et horaires. **Refuse si un score du matin est déjà saisi** |
 | `recalculerHoraires` | 🔐 | POST | Recalcule heures et terrains **sans retirer au sort** : même composition de poules, scores déjà saisis réinjectés. Refuse si l'après-midi est déjà généré |
-| `genererApresMidi` | 🔐 | POST | Fabrique la phase de l'après-midi selon le format de **chaque** catégorie (croisé / libre / coupe-plateau) et la planifie après la pause. **Ajoute sans effacer le matin** |
+| `genererApresMidi` | 🔐 | POST | Fabrique la phase de l'après-midi selon le format de **chaque** catégorie (poules de niveau / croisé / croisé diagonal / libre / coupe-plateau) et la planifie après la pause. **Ajoute sans effacer le matin** |
 | `genererDimancheScf` | 🔐 | POST | Super Challenge : le brassage du **dimanche**, groupes de niveau formés d'après les scores du samedi |
 
 #### G. La saisie des scores — 1 action

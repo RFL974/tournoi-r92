@@ -525,6 +525,11 @@ body.theme-clair {
   border-color: var(--r92-accent);
   box-shadow: 0 0 0 2px rgba(62, 143, 214, 0.35);
 }
+/* Format signalé « hors cadre École de Rugby » (COUPE_PLATEAU). Le pendant clair de la règle de
+   styles.css : ici la carte est NAVY, donc le titre reste en ambre CLAIR — un ambre foncé y
+   serait illisible. La carte demeure cochable ; seul son liseré la distingue. */
+.theme-clair .format-carte.est-hors-cadre { border-color: #d9a047; }
+.theme-clair .format-carte.est-hors-cadre .f-titre { color: #ffd98a; }
 /* Choix Auto / Manuel des terrains (chips radio) */
 .theme-clair .terr-choix { background: var(--r92-navy); border-color: var(--r92-navy); color: #E7EEF7; }
 /* Éditeur de poules du matin : conteneur navy, poules blanches, équipes navy clair */

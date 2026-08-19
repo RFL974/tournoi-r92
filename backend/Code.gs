@@ -2292,7 +2292,10 @@ function formatSportifCategorie(matchsCat, cfgCat) {
   }
   if (fmt === 'COUPE_PLATEAU') {
     // Format à élimination : les phases finales (quarts, demies, finale) sont INTERDITES en tournoi/
-    // plateau École de Rugby — raison pour laquelle COUPE_PLATEAU est masqué dans l'UI (session 2).
+    // plateau École de Rugby. Le format reste PROPOSÉ dans l'admin — signalé, et confirmé avant
+    // d'être retenu —, parce qu'un événement peut relever d'un autre règlement. Mais CE document-ci
+    // est la demande d'autorisation École de Rugby : on n'y déclare donc jamais un format que son
+    // cadre interdit. D'où « manquant » plutôt qu'un nombre de phases, et c'est délibéré.
     return { statut: 'manquant', deuxPhases: false, coupePlateau: true,
              motif: 'format COUPE_PLATEAU — hors périmètre École de Rugby' };
   }

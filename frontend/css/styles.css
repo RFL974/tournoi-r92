@@ -195,8 +195,15 @@ select.r-input { cursor: pointer; }
   background: rgba(46, 143, 224, 0.12);
 }
 
-/* Encart « format interdit EDR » : affiché seulement pour une catégorie déjà en COUPE_PLATEAU
-   (format retiré des choix, conservé pour la rétrocompatibilité). */
+/* Carte d'un format SIGNALÉ « hors cadre École de Rugby » (COUPE_PLATEAU) : elle reste cochable
+   comme les autres — seul son liseré ambre la distingue, pour qu'on la reconnaisse sans la fuir.
+   L'ambre est le même que celui de l'encart ci-dessous : une information, pas une alarme.
+   ⚠️ Le thème clair est traité dans theme-r92.css, qui est chargée APRÈS celle-ci et repeint les
+   cartes en navy — un titre sombre y serait illisible. Les deux feuilles vont ensemble. */
+.format-carte.est-hors-cadre { border-color: rgba(224, 158, 46, 0.55); }
+.format-carte.est-hors-cadre .f-titre { color: #ffe6b0; }
+
+/* Encart de rappel, affiché tant qu'une catégorie retient un format hors cadre EDR. */
 .format-interdit-edr {
   margin: 0 0 10px;
   font-size: 0.9rem; line-height: 1.4;

@@ -59,21 +59,46 @@ const FORMATS_APRESMIDI = [
     cle: 'LIBRE', titre: 'Matchs libres',
     desc: "Pas de classement l'après-midi : les équipes jouent simplement plusieurs matchs amicaux "
         + "supplémentaires, sans enjeu ni hiérarchie (pas de podium). Recommandé pour les plus jeunes (M6–M8)."
+  },
+  /* Format PROPOSÉ, mais SIGNALÉ : il comporte des phases finales, qui ne sont pas conformes au
+   * cadre des rencontres École de Rugby (Formulaire de demande d'autorisation FFR, grille
+   * 2026-2027, « Rappel des principes généraux » : « Les phases finales (1/4, demi finale et
+   * finale) sont interdites sur les tournois ou plateaux Ecoles de Rugby »).
+   *
+   * On ne le RETIRE pas : un organisateur dont l'événement relève d'un autre règlement doit
+   * pouvoir le choisir. Mais on ne le laisse pas non plus choisir SANS SAVOIR — d'où le drapeau
+   * `horsCadreEdr`, qui déclenche à la fois le marquage visuel de la carte et la confirmation
+   * (voir CONFIRMATION_HORS_CADRE_EDR et onReglagesChange). L'app INFORME, elle ne tranche pas :
+   * quel règlement s'applique à l'événement n'appartient pas au logiciel. */
+  {
+    cle: 'COUPE_PLATEAU', titre: '⚠️ Coupe + Plateau — hors cadre École de Rugby',
+    horsCadreEdr: true,
+    desc: "Les premiers de chaque poule s'affrontent en élimination directe jusqu'à une finale "
+        + "(un vainqueur du tournoi est désigné). Les autres équipes jouent un plateau, sans élimination. "
+        + "⚠️ Ce format comporte des PHASES FINALES (quarts, demies, finale) : elles ne sont pas conformes "
+        + "au cadre des rencontres École de Rugby. À réserver aux événements dont le règlement les "
+        + "autorise. Il demande aussi une saisie de score plus rigoureuse côté bénévoles."
   }
 ];
 
-/* Format INTERDIT en École de Rugby — conservé pour la rétrocompatibilité de l'AFFICHAGE.
- * Les phases finales (1/4, demi, finale) sont interdites sur les tournois/plateaux EDR
- * (Formulaire de demande d'autorisation FFR, grille 2026-2027, « Rappel des principes généraux »).
- * Il ne figure PLUS dans FORMATS_APRESMIDI : on ne le propose donc jamais comme CHOIX. Mais la
- * CAPACITÉ reste entière (génération, affichage, saisie) : un classeur déjà configuré ainsi doit
- * continuer de fonctionner. On garde donc son titre « Coupe + Plateau » disponible ici. */
-const FORMAT_COUPE_PLATEAU_LEGACY = {
-  cle: 'COUPE_PLATEAU', titre: 'Coupe + Plateau',
-  desc: "Les premiers de chaque poule s'affrontent en élimination directe jusqu'à une finale "
-      + "(un vainqueur du tournoi est désigné). Les autres équipes jouent un plateau, sans élimination. "
-      + "⚠️ Ce format demande une saisie de score plus rigoureuse côté bénévoles."
-};
+/* Texte de la confirmation demandée AVANT d'appliquer un format marqué `horsCadreEdr`.
+ * Il SIGNALE une règle et invite à vérifier ; il ne déclare pas le choix interdit, et il ne
+ * prétend pas dire quel règlement s'applique — c'est à l'organisateur de le savoir. */
+const CONFIRMATION_HORS_CADRE_EDR =
+  'Vous choisissez un format comportant des phases finales (quarts, demies, finale).\n\n' +
+  'Ces phases finales ne sont pas conformes au cadre des rencontres École de Rugby. ' +
+  'Vérifiez qu\'elles correspondent bien au règlement applicable à votre événement.';
+
+/** Définition d'un format d'après-midi, par sa clé (ou null si la clé est inconnue). */
+function definitionFormatApresMidi(cle) {
+  return FORMATS_APRESMIDI.find(function (f) { return f.cle === cle; }) || null;
+}
+
+/** Un format demande-t-il l'avertissement « hors cadre École de Rugby » ? (défaut : non) */
+function formatHorsCadreEdr(cle) {
+  const def = definitionFormatApresMidi(cle);
+  return !!(def && def.horsCadreEdr);
+}
 
 /** Format d'après-midi retenu pour une catégorie (défaut = CROISE, comportement historique). */
 function formatApresMidiDe(cat) {
@@ -667,6 +692,28 @@ async function onReinitialiser() {
 }
 
 /**
+ * Applique un format d'après-midi DANS L'INTERFACE d'un bloc `.bloc-format` : `data-format` (qui
+ * révèle en CSS le champ « qualifiés en Coupe » et le bon récapitulatif), le bouton radio coché,
+ * et la mise en avant de la carte. N'écrit RIEN dans le classeur — l'enregistrement reste le
+ * travail du bouton « Enregistrer » de la catégorie.
+ *
+ * Sert aussi de RETOUR EN ARRIÈRE : appelée avec le format précédent, elle décoche le format
+ * refusé et remet l'interface exactement dans son état d'avant le clic.
+ *
+ * La portée est le bloc, jamais la page : chaque catégorie a son propre formulaire, donc son
+ * propre groupe de boutons `format_apresmidi`.
+ */
+function appliquerFormatApresMidi(bloc, cle) {
+  bloc.setAttribute('data-format', cle);
+  bloc.querySelectorAll('.format-carte').forEach(function (carte) {
+    const radio = carte.querySelector('input[name="format_apresmidi"]');
+    if (!radio) return;
+    radio.checked = (radio.value === cle);
+    carte.classList.toggle('est-choisi', radio.value === cle);
+  });
+}
+
+/**
  * Réagit aux changements dans la zone réglages (case « heure de fin auto »).
  */
 function onReglagesChange(evenement) {
@@ -694,13 +741,25 @@ function onReglagesChange(evenement) {
   }
   // Choix d'un format d'après-midi : on pilote l'affichage conditionnel via data-format
   // (carte sélectionnée mise en avant, champ « qualifiés » et bon récap révélés en CSS).
+  //
+  // Cas particulier des formats marqués `horsCadreEdr` : le navigateur a DÉJÀ coché le bouton
+  // quand cet événement arrive, mais le choix n'est pas encore APPLIQUÉ (data-format porte encore
+  // le format précédent, et rien n'est enregistré). On demande donc la confirmation ici — bien
+  // avant le bouton « Enregistrer » — et on remet l'ancien format si l'organisateur annule.
   if (evenement.target.name === 'format_apresmidi') {
     const bloc = evenement.target.closest('.bloc-format');
     if (bloc) {
-      bloc.setAttribute('data-format', evenement.target.value); // révèle champ Coupe + bon récap (CSS)
-      bloc.querySelectorAll('.format-carte').forEach(function (c) { c.classList.remove('est-choisi'); });
-      const carteChoisie = evenement.target.closest('.format-carte');
-      if (carteChoisie) carteChoisie.classList.add('est-choisi'); // met en avant la carte sélectionnée
+      const precedent = bloc.getAttribute('data-format');
+      const choisi = evenement.target.value;
+      if (formatHorsCadreEdr(choisi) && choisi !== precedent) {
+        dialogConfirmer(CONFIRMATION_HORS_CADRE_EDR, {
+          ok: 'Continuer avec Coupe + Plateau', annuler: 'Annuler'
+        }).then(function (accepte) {
+          appliquerFormatApresMidi(bloc, accepte ? choisi : precedent);
+        });
+      } else {
+        appliquerFormatApresMidi(bloc, choisi);
+      }
     }
   }
   // Bascule Auto / Manuel des terrains : on révèle le champ de saisie (Manuel) ou l'info (Auto),

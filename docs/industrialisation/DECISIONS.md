@@ -5,7 +5,8 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-05 (session 11 — **D-028 validée**)
+**Dernière mise à jour** : 2026-08-19 (⚡ **D-034** — `COUPE_PLATEAU` reste **proposé mais signalé** ;
+elle **remplace** la doctrine « non proposé, conservé pour l'existant », qui est **périmée**)
 
 ---
 
@@ -2042,3 +2043,69 @@ l'avertissement doit continuer d'exister — **son texte change**, pas sa prése
 **Compatibilité** : ✅ aucune contradiction. **D-020** est appliquée, pas modifiée. **D-027**
 *(un message ne ment jamais)* est respecté : le texte public annonce une durée que quelqu'un
 s'engage à tenir.
+
+---
+
+### D-034 — `COUPE_PLATEAU` reste **proposé**, mais **signalé** : l'application informe, elle n'interdit pas
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-19 |
+| **Chantier** | Remise à niveau documentaire, **lot 2** *(décision produit prise pendant le lot)* |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Remplace** | ⛔ La doctrine précédente du même lot : *« interdit en EDR, non proposé dans l'interface, conservé pour l'existant »*. **Cette formulation-là est PÉRIMÉE et ne doit plus être reprise.** |
+| **Couvre** | Le format d'après-midi `COUPE_PLATEAU` — code, interface et documentation |
+
+**Décision, dans les mots de Romain**
+
+> *« `COUPE_PLATEAU` reste disponible et sélectionnable dans Maxilou, mais doit être explicitement
+> signalé comme comportant des phases finales qui ne sont pas conformes au cadre École de Rugby.
+> L'utilisateur doit être averti avant de l'utiliser. Maxilou informe et sécurise le choix sans
+> supprimer techniquement cette possibilité. »*
+
+**Ce que la décision vise — et ce qu'elle ne vise pas**
+
+> ✅ **Permettre** l'usage du format à un organisateur qui **sait** que le cadre applicable à son
+> événement l'autorise, ou qui se situe **hors** du cadre École de Rugby.
+>
+> ✅ **Empêcher** qu'on le sélectionne **par méconnaissance de la règle**.
+>
+> ⛔ **Ne PAS** présenter le format comme conforme École de Rugby.
+> ⛔ **Ne PAS** présenter son usage comme interdit dans tout contexte.
+> ⛔ **Ne PAS** prétendre déterminer quel règlement s'applique à l'événement.
+
+**Pourquoi c'est cohérent avec le reste du dossier**
+
+> C'est **D-031 appliquée à la lettre** : *« l'application ne porte pas la réglementation ; le
+> responsable la renseigne »*. Retirer le format aurait été une décision **réglementaire prise par
+> le logiciel** — exactement ce que D-031 refuse. Le signaler, c'est **informer sans décider**.
+
+**Ce que l'interface fait, concrètement**
+
+| Quand | Ce qui se passe |
+|---|---|
+| Carte de choix | Titre **« ⚠️ Coupe + Plateau — hors cadre École de Rugby »**, liseré ambre, description qui explique les phases finales |
+| À la sélection | **Confirmation** : *« Vous choisissez un format comportant des phases finales… Vérifiez qu'elles correspondent bien au règlement applicable à votre événement. »* — **Annuler** / **Continuer avec Coupe + Plateau** |
+| Annuler | **Rien n'est changé** — le format précédent est remis, bouton compris |
+| Tant qu'il est retenu | Un **encart de rappel** reste affiché sur la fiche de la catégorie |
+
+**🚧 Ce que la décision NE change PAS — garde-fou explicite**
+
+> ⚠️ Dans la **demande d'autorisation FFR**, `COUPE_PLATEAU` continue de produire un statut
+> **« manquant »** avec le motif *« hors périmètre École de Rugby »*. **C'est délibéré, et ce
+> n'était pas un effet de l'ancienne doctrine** : ce formulaire est **spécifiquement** celui de
+> l'École de Rugby. Y déclarer un format que ce cadre interdit reviendrait à faire dire à
+> l'application le contraire de la règle qu'elle cite. Le comportement serveur est donc
+> **inchangé**, et le test qui le vérifie l'est aussi.
+>
+> ⚠️ **Aucune mécanique métier n'est touchée** : générateur Coupe + Plateau, propagation du
+> vainqueur, petite finale, départage obligatoire, match en attente, correction en cascade — tout
+> fonctionnait déjà et **n'a pas été réécrit**.
+
+**Où cette décision est appliquée**
+
+> `frontend/js/admin.js` *(table des formats, drapeau `horsCadreEdr`, confirmation)* ·
+> `frontend/js/admin-reglages.js` *(carte signalée, encart de rappel)* ·
+> `frontend/css/styles.css` + `frontend/css/theme-r92.css` *(les DEUX feuilles — voir le piège
+> connu du thème clair)* · `docs/formats-apres-midi.md` · `README.md` ·
+> `docs/guide-utilisateur.md` · `docs/architecture.md`.
