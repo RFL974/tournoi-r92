@@ -40,10 +40,10 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
   Ouverte depuis l'admin (« Aperçu du dossier de … », qui ouvre le dossier d'un club réel).
 
   > L'**autorisation de droit à l'image** (génération d'un `.docx` côté client) a été **retirée
-  > du dossier** le 2026-08-03, à la demande du club. Le modèle
-  > `assets/autorisation-droit-image-template.docx` et les librairies `js/vendor/pizzip.min.js`
-  > + `js/vendor/docxtemplater.min.js` restent dans le dépôt : plus rien ne les charge, mais
-  > tout est là si la fonction revient.
+  > du dossier** le 2026-08-03. Son modèle a été **supprimé du dépôt le 2026-08-19** : il
+  > désignait nommément une structure comme destinataire de droits sur l'image de mineurs, alors
+  > qu'aucune structure n'a adopté l'application. Les librairies `js/vendor/pizzip.min.js` et
+  > `js/vendor/docxtemplater.min.js` restent dans le dépôt : plus rien ne les charge.
 - **`index.html`** — redirige la racine vers `tournoi.html`.
 
 **Fichiers partagés** :

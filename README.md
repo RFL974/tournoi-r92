@@ -94,7 +94,6 @@ tournoi-r92/
     ├── reponse-invitation.html → Phase 1 : le club accepte ou décline lui-même (jeton)
     ├── dossier-club.html    → Phase 2 : le dossier complet du club accepté (jeton)
     ├── perfs.html           → « Perfs Racing » (page interne, non liée)
-    ├── assets/              → 1 modèle .docx (autorisation de droit à l'image — plus utilisé)
     ├── modeles/             → 1 modèle PDF (demande d'autorisation FFR)
     ├── img/                 → 5 images (blasons, logos, icônes)
     ├── README.md            → le détail de chaque page du frontend
