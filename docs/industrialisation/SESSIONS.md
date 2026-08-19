@@ -5523,3 +5523,195 @@ C'est ce qui a permis d'affirmer *« la cascade n'a pas débordé »* — plutô
 | ⭐ **Routage** | ✅ **PRODUCTION — rétabli et vérifié** *(4 tests concordants)* |
 | ⭐ **Production** | ✅ **NON CONTAMINÉE** |
 | **Prochaine session recommandée** | **C-015** *(dépendances `C-011 → C-012 → C-015`, désormais levées)*, ou l'arbitrage de la **priorité de R-092** et du **traitement de R-093** |
+
+---
+
+# 📄 REMISE À NIVEAU DOCUMENTAIRE — **LES 6 LOTS SONT FAITS ET PUBLIÉS** *(2026-08-19, après-midi)*
+
+> **Objectif de la session** : la documentation du dépôt avait **décroché de l'état réel du
+> logiciel**. Remettre la documentation **active** en face de ce que le dépôt contient — **sans**
+> toucher au produit, et **sans** réécrire les documents historiques.
+> **Résultat** : 🏁 **les 6 lots sont terminés et publiés**, le chantier est **clos**, et **trois
+> décisions** en sont nées — **D-034**, **D-035**, **D-036**.
+
+**Point de départ** : `main` = `origin/main` = **`60d93dd`** *(la clôture de C-012, le matin même)*,
+arbre propre.
+
+> ⚠️ **Ce chantier n'est PAS issu de l'audit de l'ÉTAPE 2.** Il n'a **pas** de numéro `C-0XX`, ne
+> figure **pas** au tableau des chantiers de `PLAN.md` §3, et a été **ouvert par Romain hors plan**,
+> après C-012. Sa fiche complète — objectifs, critères de fin, méthode, ce qu'il ne devait **pas**
+> faire — vit dans **`PLAN.md` §13**, et n'est pas recopiée ici.
+
+---
+
+## 1. Pourquoi ce chantier a été ouvert — le constat d'entrée, chiffré
+
+| Ce qui avait décroché | L'écart |
+|---|---|
+| **`backend/README.md`** | Annonçait un bilan de tests **`616/616`** quand le vrai bilan est **`703/703`** |
+| **`frontend/README.md`** | Disait de la mesure des partenaires qu'elle est *« locale (rien n'est envoyé) »* — **le code envoie les relevés au serveur**. ⚠️ Seul écart touchant des **données personnelles** |
+| **Le format `POULES_NIVEAU`** | Livré le **2026-08-01**, **proposé en premier** dans l'administration, et documenté dans **aucun** document destiné à l'organisateur |
+| **`CHANGELOG.md`** | **Arrêté au 2026-08-04** : **12 enregistrements** touchant le code, les tests ou l'automatisation, sans une ligne de journal |
+
+> 🎯 **Le piège du premier écart, et c'est lui qui a fixé l'ordre des lots.** `deploiement.md`
+> enseigne qu'un bilan **plus petit** signifie que l'**ancien** fichier de tests a tourné. Un
+> `README` bloqué sur `616` faisait donc qu'une personne obtenant le **bon** résultat — `703` —
+> aurait conclu à une **panne**. Un repère faux ne se contente pas d'être faux : **il inverse la
+> conclusion.**
+
+> 🎯 **Le diagnostic, et il commande tout le chantier.** Ces écarts ne venaient **pas** d'un défaut
+> de discipline. Neuf contradictions sur dix opposaient un document **récent et exact** à un
+> document **plus ancien qu'on n'avait pas relu quand la valeur avait changé**. Le problème est
+> celui de la **propagation** — et, pour le `CHANGELOG`, celui du **périmètre** de la règle
+> `CLAUDE.md` **§8 bis**, qui ne le nommait pas.
+
+---
+
+## 2. Le principe de travail : un lot = un sujet = un commit
+
+Chaque lot a été relu, contrôlé et validé **avant** le suivant ; le suivant n'a jamais démarré
+automatiquement. **Deux règles ont tenu du premier au dernier lot** :
+
+1. ⛔ **Aucun remplacement de masse.** Le dépôt contient **~20 traces historiques légitimes**
+   portant d'anciens chiffres *(« 8 147 lignes »…)*. Un `sed` global les aurait **détruites** pour
+   corriger **un** repère utile ;
+2. ⛔ **Une affirmation se vérifie à SA SOURCE**, jamais par recopie d'un document à l'autre — code,
+   tests, workflow, configuration, ou décision enregistrée.
+
+---
+
+## 3. Les six lots, et ce que chacun a réglé
+
+| # | Lot | Commit | Ce qui a été fait |
+|---|---|---|---|
+| **1** | Les repères qui pouvaient tromper | [`8e08552`](https://github.com/RFL974/tournoi-r92/commit/8e08552) | 8 147 → **8 274** · 3 859 → **4 244** · ⭐ **le bilan de tests n'est plus RECOPIÉ** : il renvoie à `deploiement.md`, **seule adresse**. Le *« rien n'est envoyé »* remplacé par le comportement réel, **écrit depuis le code** |
+| **2** | Le format que personne ne pouvait découvrir | [`969e673`](https://github.com/RFL974/tournoi-r92/commit/969e673) | Les formats du code = ceux documentés, **même ordre**. ⚠️ **Ce lot a touché du CODE** — voir **D-034** ci-dessous |
+| **3** | Rouvrir le journal des évolutions | [`b91cbfe`](https://github.com/RFL974/tournoi-r92/commit/b91cbfe) | **+76 lignes** au `CHANGELOG`, chaque chiffre vérifié à sa source, **aucune entrée existante modifiée** · et **la cause fermée** : le `CHANGELOG` entre dans `CLAUDE.md` §8 bis — voir **D-035** |
+| **4** | Statuts de déploiement et repères opérationnels | [`22d2186`](https://github.com/RFL974/tournoi-r92/commit/22d2186) | **3 corrections**, chacune vérifiée à sa source *(dont `Code.gs` **8 274 → 8 277**, les 3 lignes de commentaire du lot 2)*. ⭐ **9 documents examinés et LAISSÉS INTACTS parce qu'exacts** · **aucun état historique daté réécrit** |
+| **5** | Pilotage documentaire du chantier | [`eadb61a`](https://github.com/RFL974/tournoi-r92/commit/eadb61a) **+** [`934b87d`](https://github.com/RFL974/tournoi-r92/commit/934b87d) | `PLAN.md` **§13** et **D-036**. ⚡ **Le problème qu'il referme** : le découpage n'existait **dans aucun document** — voir §4 |
+| **6** | Relecture finale et cohérence globale | [`3af61f2`](https://github.com/RFL974/tournoi-r92/commit/3af61f2) | **24 documents actifs balayés** · ⭐ **87 liens internes contrôlés, ZÉRO cassé** · les 3 points connus traités, **+ 3 écarts que personne n'avait vus** *(`sponsors.md` renvoyait à des styles déménagés ; il listait comme manquantes **deux fonctions construites** ; l'arborescence du `README` ignorait **4 feuilles de style sur 6**)* |
+
+**Clôture du chantier** : [`217f39f`](https://github.com/RFL974/tournoi-r92/commit/217f39f) — `PLAN.md`
+§13.5, le critère de fin déclaré **atteint**.
+
+> 🔁 **Pourquoi le lot 5 porte deux commits.** Un lot qui documente **son propre achèvement** ne peut
+> pas connaître le numéro du commit qui l'achève : Git ne le calcule qu'**au moment** où le commit
+> est créé, à partir du contenu. L'inventer serait pire que l'omettre. Le document le dit lui-même
+> *(`PLAN.md` §13.6)*, et donne la commande pour le retrouver : `git log --grep="lot 5"`.
+
+---
+
+## 4. Les trois décisions nées du chantier
+
+| Décision | Ce qu'elle fixe | Lot |
+|---|---|---|
+| **D-034** | ⚡ **`COUPE_PLATEAU` reste PROPOSÉ, mais SIGNALÉ.** *« Il reste disponible et sélectionnable, mais doit être explicitement signalé comme comportant des phases finales qui ne sont pas conformes au cadre École de Rugby. L'utilisateur doit être averti avant de l'utiliser. »* L'application **informe et sécurise le choix** ; elle **ne supprime pas** la possibilité — **D-031 appliquée à la lettre**. ⛔ **REMPLACE** la doctrine du même lot *(« interdit en EDR, non proposé dans l'interface »)*, **jamais publiée**, et **à ne plus reprendre** | 2 |
+| **D-035** | ⚡ **Le `CHANGELOG` raconte le produit et la fiabilité, et il entre dans la règle de la carte** — `CLAUDE.md` §8 bis passe de **3 à 4** documents. ⚠️ **Ne demande PAS** une entrée par commit : le critère est *« quelqu'un qui utilise l'application le remarquerait-il, ou cela change-t-il ce sur quoi on peut compter ? »* | 3 |
+| 🏛️ **D-036** | **Le découpage en 6 lots lui-même** : ordre, périmètre, critères de fin. ⚠️ **Deux registres, jamais mélangés** — 🧾 **constat** pour les lots 1 à 3 *(vérifiables dans le dépôt)*, 🏛️ **décision du propriétaire** pour les lots 4 à 6, **dont la définition n'existait nulle part**. Ce n'est **pas** une reconstitution | 5 |
+
+> ⚡ **Ce que la recherche du lot 3 a établi, et c'est ce qui a rendu D-036 nécessaire.** Le
+> découpage complet en 6 lots **n'existait dans AUCUN document** du dépôt. Cherché de façon
+> exhaustive : tous les fichiers suivis, **l'historique complet toutes branches**
+> *(`git log --all -S`, 8 variantes de casse)*, **103 branches locales**, **44 distantes**, les
+> `notes`, le `stash`, les **étiquettes**, et les **27 objets orphelins**. **Zéro définition.**
+> Sans D-036, une session neuve n'aurait pas pu reprendre le chantier.
+
+---
+
+## 5. ⚠️ L'exception assumée : un chantier documentaire qui a touché du code
+
+**Le lot 2 est le seul**, et c'est **D-034** qui l'a imposé — la documentation seule ne pouvait pas
+porter une décision produit.
+
+| Fichier | Ce qui a changé |
+|---|---|
+| `frontend/js/admin.js` | `COUPE_PLATEAU` revient dans les formats proposés, en **5ᵉ carte**, avec un drapeau `horsCadreEdr` · **confirmation demandée AVANT application** *(mécanisme `dialogConfirmer` existant, aucun composant nouveau)* · ⭐ **le tableau `FORMAT_COUPE_PLATEAU_LEGACY` disparaît : il était déclaré, mais consommé nulle part — du code mort** |
+| `frontend/js/admin-reglages.js` | La carte signalée · l'encart passe de *« Choisissez un autre format »* à un **rappel informatif** · ⚡ **3 commentaires devenus faux réécrits** *(`CLAUDE.md` §8 ter)* |
+| `frontend/css/styles.css` **et** `theme-r92.css` | Le liseré ambre — dans **LES DEUX** feuilles, à cause du **piège connu du projet** : en thème clair, `theme-r92.css` repeint la carte en navy, où un titre ambre foncé aurait été **illisible** |
+| `backend/Code.gs` | ⭐ **UN COMMENTAIRE, ET RIEN D'AUTRE.** La demande d'autorisation FFR continue de rendre `COUPE_PLATEAU` *« manquant »* : ce formulaire est **spécifiquement** celui de l'École de Rugby, et y déclarer un format que ce cadre interdit ferait dire à l'application **le contraire de la règle qu'elle cite** |
+
+**Vérifications rapportées par le commit `969e673`** : preuve *« zéro ligne exécutable »* côté
+serveur — commentaires retirés, `Code.gs` **identique avant/après sur 5 192 lignes** · harnais
+**703/703 OK, 0 FAIL** *(exécuté sous Node)* · les fonctions `fixturesApresMidiCoupePlateau`,
+`propagerVainqueurBracket` et `construireBracket` : **0 ligne modifiée** · scénario complet joué
+**dans le navigateur** sur la vraie page d'administration.
+
+> ⚠️ **Conséquence de déploiement, à connaître.** `backend/Code.gs` compte **8 277** lignes dans le
+> dépôt ; la version collée chez Google date du **2026-08-18** et en compte **8 274**. **L'écart est
+> exactement ces 3 commentaires** — **aucun effet sur le comportement**, et **aucun faux signal
+> possible** : les deux repères de contrôle de `deploiement.md` portent sur `Tests.gs`
+> *(**703/703**, dernière ligne **4244**)*, **inchangé**. Le frontend, lui, est **publié**
+> automatiquement — l'exécution GitHub Pages de `969e673` est **réussie**.
+
+---
+
+## 6. Après la clôture — la micro-correction préventive de `CLAUDE.md` *(`2706813`)*
+
+⚠️ **Elle ne rouvre PAS le chantier**, terminé et publié à `217f39f` : c'est une mesure **de
+règles**, prise à la suite du diagnostic qui a suivi.
+
+**Le diagnostic, en une phrase** : le principe existait et sa liste de documents était juste — c'est
+son **déclencheur** qui ne se déclenchait pas. **§8 bis nommait trois cas** *(écran, action serveur,
+onglet)* et **a laissé passer quatre décrochages, dont DEUX alors que la règle existait déjà**.
+Aucun n'était un écran, une action serveur ni un onglet.
+
+| Mesure | Ce qu'elle change |
+|---|---|
+| **§8 bis** | Le déclencheur devient une **QUESTION** au lieu d'une liste fermée : *« une session qui change ce que l'application **fait**, ce qu'elle **montre**, ou **ce sur quoi on peut compter** vérifie la carte dans le même lot »*. ⚠️ **Garde-fou ajouté** : le déclencheur demande de **VÉRIFIER**, **pas de MODIFIER** — *« vérifié, rien à changer »* est une réponse valable |
+| **§12.4** | Un **point 2** avant la clôture : dire quels documents **ACTIFS** deviennent faux — **et si aucun, l'écrire**. 🎯 **Le trou le plus silencieux** : sans lui, une session qui a vérifié sans rien trouver et une session qui a **oublié d'y penser** laissaient **la même trace — aucune** |
+| **§8 quater** *(nouvelle)* | **La règle de la source unique**, remontée depuis `PLAN.md` §13.2 où elle vivait dans la section d'un chantier **clos** — donc là où une session future ne l'aurait pas lue |
+
+---
+
+## 7. ⛔ Ce que ce chantier NE referme PAS
+
+Le critère de fin atteint est celui du **lot 6**, et il porte sur la documentation **active** :
+*« un lecteur qui parcourt aujourd'hui la documentation active ne rencontre plus de contradiction
+connue, de lien interne cassé connu, de formulation obsolète non volontaire, ni d'écart manifeste
+avec l'état actuel du dépôt. »* **Rien de plus.**
+
+- ❌ **Pas** que le projet soit fonctionnellement parfait ;
+- ❌ **Pas** que les risques d'industrialisation soient résolus : **R-075** *(aucune version publiée,
+  `git tag` vide — **rouvrir un journal n'est pas publier des versions**)*, **R-092** et **R-093**
+  **restent ouverts au registre** ;
+- ❌ **Pas** que les documents **historiques datés** aient été réécrits — `AUDIT.md`, `SESSIONS.md`,
+  `RAPPORT-AUDIT.md`, les entrées passées du `CHANGELOG`, les bandeaux *« Rappel de la mise à jour
+  précédente »* de `ETAT.md` : **aucun ne l'a été**, et c'est leur rôle de décrire un état ancien.
+
+---
+
+## 8. État à la fin de la session
+
+| | |
+|---|---|
+| **`main`** | `2706813` — publié, `origin/main` au même enregistrement, arbre **propre** |
+| 📄 **Remise à niveau documentaire** | 🏁 **TERMINÉE — 6 lots sur 6** *(`PLAN.md` §13.5)* |
+| **Décisions nées** | **D-034**, **D-035**, **D-036** — toutes **validées** |
+| **Code touché** | ⚠️ **Le lot 2 seul** *(D-034)* — frontend + **un commentaire** côté serveur |
+| **Backend chez Google** | ⚠️ **Version du 2026-08-18** : **3 lignes de commentaire** de retard, **aucun effet fonctionnel** |
+| **Frontend** | ✅ **Publié** — exécution GitHub Pages de `969e673` **réussie** |
+| **R-075 · R-092 · R-093** | ⛔ **Toujours ouverts** — aucun n'était dans le périmètre |
+| **Chantier ouvert** | ✅ **Aucun** |
+| **Prochaine session recommandée** | Inchangée depuis la clôture de C-012 : **C-015** *(dépendances `C-011 → C-012 → C-015` levées)*, **ou** l'arbitrage de la **priorité de R-092** et du **traitement de R-093**. ⛔ **Ni l'un ni l'autre n'est lancé** — condition de démarrage : **instruction explicite de Romain** |
+
+> 🧭 **Ce qui empêche le retour en arrière** — trois règles restent en vigueur : `CLAUDE.md`
+> **§8 bis** *(la carte, désormais **4** documents)*, **§8 ter** *(le commentaire à jour)*, et
+> **§8 quater** *(une affirmation se vérifie à sa source, jamais par recopie)*.
+
+---
+
+## 9. ⚠️ Note de traçabilité — cette entrée a été écrite APRÈS COUP
+
+**Elle a été rédigée le 2026-08-19 en fin de journée**, à la suite d'un diagnostic d'état de dépôt
+qui a constaté que **`ETAT.md` et `SESSIONS.md` s'étaient arrêtés à la clôture de C-012**, alors que
+les 6 lots avaient eu lieu et étaient **déjà publiés**.
+
+**Aucun fait n'a été reconstruit de mémoire.** Chaque affirmation ci-dessus provient de **sources
+déjà publiées** : l'historique Git *(commits, statistiques de fichiers, messages)*, **`PLAN.md`
+§13**, **`DECISIONS.md`** *(D-034, D-035, D-036)*, et — pour les points recoupés dans le code —
+`backend/Code.gs`, `frontend/js/admin.js` et `git tag`.
+
+> 🎯 **La leçon, et elle est la même que celle du chantier qu'elle raconte** : le journal a décroché
+> **là où la règle ne regardait pas**. `PLAN.md` et `DECISIONS.md` ont été tenus lot après lot ;
+> **`ETAT.md` et `SESSIONS.md` ne l'ont pas été** — alors que `CLAUDE.md` **§12.4** point 1 le
+> demande à **chaque** fin de session. C'est exactement le **défaut de propagation** décrit au §1.

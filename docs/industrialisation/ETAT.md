@@ -9,7 +9,20 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-19 — 🏁 ⭐ **C-012 EST TERMINÉ : son étape 5 est CLOSE, et
+**Dernière mise à jour** : 2026-08-19 *(fin de journée)* — 🏁 **DEUX CHANTIERS SE SONT SUCCÉDÉ
+AUJOURD'HUI, ET LES DEUX SONT TERMINÉS** : **C-012** le matin *(voir le rappel ci-dessous)*, puis
+⚡ **une REMISE À NIVEAU DOCUMENTAIRE en 6 lots**, ouverte par Romain **hors du plan d'audit** —
+elle n'a **pas** de numéro `C-0XX`. **Les 6 lots sont faits et publiés** ; ⚠️ **l'un d'eux a touché
+du code**, par exception assumée, pour porter **D-034**. *(Détail et preuves : `PLAN.md` **§13** ·
+historique : `SESSIONS.md` · décisions **D-034 à D-036** : `DECISIONS.md`.)* Après la clôture, une
+**micro-correction préventive de `CLAUDE.md`** *(`2706813`)* a élargi **§8 bis**, complété **§12.4**
+et ajouté **§8 quater**.
+✅ **AUCUN CHANTIER N'EST OUVERT À CE JOUR.**
+⚠️ **Ce que rien de tout cela ne referme**, et il faut le lire avant d'ouvrir le suivant : la
+réserve 🟠 **V-12 / N-3** de C-012 · **R-092** et **R-093**, **NON CORRIGÉS** et **rattachés à aucun
+chantier** · **R-075** *(aucune version publiée)*. **Leur état vit dans `RISQUES.md`.**
+
+*Rappel de la mise à jour précédente — 2026-08-19 (matin)* : 🏁 ⭐ **C-012 EST TERMINÉ : son étape 5 est CLOSE, et
 R-042 passe à `TESTÉ`.** Les **3 vérifications qui manquaient sont faites et RÉUSSIES** :
 ✅ **V-7** *(l'égalité en élimination directe est refusée — et le refus **n'écrit rien**)*,
 ✅ **V-8** *(le vainqueur arrive **aussitôt** dans le match suivant · les perdants des 2 demies
@@ -118,16 +131,25 @@ registre : R-090, R-091**)
 
 ## 1. EN UNE PHRASE
 
-🏁 **L'ÉTAPE 3 EST TERMINÉE.** **30 chantiers ont une fiche** (C-001 → C-030), et surtout : **les
-91 problèmes du registre sont TOUS placés — 88 dans un chantier, 3 explicitement écartés, 0 sans
-place** *(`PLAN.md` §12, tableau vérifiable)*. C'était la condition posée par Romain : *« je préfère
-qu'on ait la vision complète plutôt que commencer un chantier pour ensuite devoir repasser dessus »*
-— **elle est remplie.** L'ordre est établi de bout en bout, et **la prochaine étape est la
-VALIDATION (ÉTAPE 4)**, chantier par chantier.
+🏁 **L'ÉTAPE 3 EST TERMINÉE, et AUCUN CHANTIER N'EST OUVERT** : **C-012** et la **remise à niveau
+documentaire** *(6 lots, hors plan d'audit — `PLAN.md` §13)* sont **tous deux clos le 2026-08-19**.
+**30 chantiers ont une fiche** (C-001 → C-030), et la couverture prouvée à l'ÉTAPE 3 vaut toujours
+pour les **91 problèmes qu'elle a couverts** — 88 dans un chantier, 3 explicitement écartés
+*(`PLAN.md` §12, tableau vérifiable)*. C'était la condition posée par Romain : *« je préfère qu'on
+ait la vision complète plutôt que commencer un chantier pour ensuite devoir repasser dessus »* —
+**elle a été remplie.**
+
+> ⚠️ **La phrase « 91 sur 91 placés, 0 sans place » n'est plus exacte.** **R-092** et **R-093**,
+> entrés au registre depuis, ne sont **rattachés à aucun chantier** — **délibéré** pour R-092,
+> **non tranché** pour R-093. L'écart est inscrit dans **`RISQUES.md`**, sa source, pour être repris
+> à la prochaine session de plan.
+
+L'ordre est établi de bout en bout, et la suite reste la **VALIDATION (ÉTAPE 4)**, chantier par
+chantier.
 
 ---
 
-## 1 bis. CE QUI A MENÉ LÀ, EN QUATRE LIGNES
+## 1 bis. CE QUI A MENÉ LÀ
 
 > *Ce fichier doit rester court. Le détail de chaque étape vit dans `SESSIONS.md` ; la vue
 > d'ensemble de l'audit dans `RAPPORT-AUDIT.md` ; les chantiers dans `PLAN.md`.*
@@ -139,6 +161,9 @@ VALIDATION (ÉTAPE 4)**, chantier par chantier.
 | Session **13** | **ÉTAPE 3, volet ①.** Les **6 dernières décisions tranchées**, plus aucune inconnue bloquante. ⚡ **D-030/031/032** entrent le même jour, et **3 problèmes hors audit** : R-089, R-090, R-091 |
 | Session **14** | **ÉTAPE 3, volet ②** — 6 fiches **sans code** (C-005 → C-010). Correction : **2 des 6 touchent des fichiers source** |
 | Sessions **15-16** | **ÉTAPE 3, volet ③** — 20 fiches **avec code** (C-011 → C-030), en 2 vagues, puis **la couverture prouvée** |
+| **2026-08-06 → 08-11** | **ÉTAPES 4 et 5 ouvertes.** 6 chantiers validés **et livrés** : **C-011** et **C-013** *(testés chez Google)*, **C-005**, **C-006**, **C-007** *(documentaires)*, **C-008** *(commentaires)* |
+| **2026-08-16 → 08-19** | 🏁 **C-012** — le **premier chantier à modifier vraiment du code** : 3 PR *(#187, #188, #189)*, redéploiement chez Google, **11 vérifications manuelles sur 12**. **R-042 → `TESTÉ`**, ⚠️ **avec réserve** |
+| **2026-08-19** *(après-midi)* | ⚡ **Remise à niveau documentaire — 6 lots**, **hors plan d'audit**, ouverte par Romain. **D-034**, **D-035**, **D-036**. Détail : `PLAN.md` **§13** |
 
 ---
 
@@ -149,10 +174,14 @@ VALIDATION (ÉTAPE 4)**, chantier par chantier.
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
 | 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
-| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers** (C-001 → C-030), **91 problèmes placés sur 91**, **0 sans place** |
-| 4 | **ÉTAPE 4 — Validation par Romain** | 🚧 **EN COURS** — 🏁 **6 chantiers validés et clôturés** : C-011, C-013, C-005, C-006, C-007 et **C-008** · ordre retenu : *« d'abord ce qui ne peut rien casser »* — **il est désormais épuisé** |
-| 5 | **ÉTAPE 5 — Implémentation par petites unités** | 🚧 **EN COURS** — **2 chantiers TESTÉS chez Google** : C-011 (PR #181) · C-013 (PR #182) · **3 chantiers documentaires livrés** : C-005, C-006, C-007 · **1 chantier de commentaires livré** : **C-008** *(fichiers source ouverts, **zéro ligne exécutable**)* |
+| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers** (C-001 → C-030), **91 problèmes placés sur les 91 connus alors**. ⚠️ **Le registre en compte 93 depuis** : **R-092** et **R-093** ne sont rattachés à **aucun** chantier *(voir §1)* |
+| 4 | **ÉTAPE 4 — Validation par Romain** | 🚧 **EN COURS** — 🏁 **7 chantiers validés et clôturés** : C-011, C-013, C-005, C-006, C-007, C-008 et 🏁 **C-012** *(clos le 2026-08-19)* · ordre retenu : *« d'abord ce qui ne peut rien casser »* — **épuisé depuis C-008**, et **C-012 était le premier à en sortir** |
+| 5 | **ÉTAPE 5 — Implémentation par petites unités** | 🚧 **EN COURS** — **3 chantiers TESTÉS chez Google** : C-011 (PR #181) · C-013 (PR #182) · 🏁 **C-012** (PR #187, #188, #189 — backend redéployé le 2026-08-18, **`R92 — 703/703 OK, 0 FAIL`**) · **3 chantiers documentaires livrés** : C-005, C-006, C-007 · **1 chantier de commentaires livré** : **C-008** *(fichiers source ouverts, **zéro ligne exécutable**)* |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
+
+> ⚡ **Un chantier ne figure PAS dans ce tableau, et c'est volontaire** : la **remise à niveau
+> documentaire** du 2026-08-19 *(6 lots, terminée)*. Elle n'est **pas issue de l'audit**, et l'y
+> ranger laisserait croire le contraire. Son adresse : **`PLAN.md` §13**.
 
 ---
 
@@ -178,6 +207,19 @@ VALIDATION (ÉTAPE 4)**, chantier par chantier.
 ---
 
 ## 4. PROCHAINE ÉTAPE
+
+### 🧭 Où on en est **au 2026-08-19, fin de journée**
+
+**Aucun chantier n'est ouvert.** Deux orientations sont **déjà écrites** — inscrites ici comme des
+**propositions**, ⛔ **pas** comme un chantier lancé :
+
+| Orientation | D'où elle vient | État |
+|---|---|---|
+| **C-015 — les règles du jour J** | Fin de `SESSIONS.md` — la chaîne `C-011 → C-012 → C-015` est **levée** · fiche : `PLAN.md` | ⬜ **NON lancé** |
+| **Arbitrer R-092 et R-093** | `RISQUES.md` — aucun des deux n'est rattaché à un chantier | ⬜ **NON lancé** — c'est une **décision** |
+
+> ⛔ **Condition de démarrage inchangée** *(`CLAUDE.md` §12.3)* : **instruction explicite de
+> Romain**.
 
 ### Ce qui n'appartient qu'à Romain, et qu'aucune session ne peut faire à sa place
 
@@ -280,13 +322,17 @@ dépendances, comment on prouve que c'est fait.
 
 ### 🏁 L'ÉTAPE 3 EST TERMINÉE — sessions 13 à 16
 
-**30 chantiers ont une fiche** (C-001 → C-030) et **les 91 problèmes sont tous placés** :
+**30 chantiers ont une fiche** (C-001 → C-030) et **les 91 problèmes connus alors étaient tous
+placés** — état **au 2026-08-06**, à la clôture de l'ÉTAPE 3 :
 
 | | |
 |---|---|
 | Placés dans un chantier | **88** |
 | Explicitement écartés, avec la raison écrite | **3** — R-011, R-019 *(= l'action D-017)*, R-040 |
-| **Sans place** | ✅ **0** |
+| **Sans place** | ✅ **0** *(à cette date)* |
+
+> ⚠️ **Ce tableau décrit le 2026-08-06, pas aujourd'hui** : **R-092** et **R-093** sont entrés
+> après, et ne sont rattachés à aucun chantier. **Voir §1.**
 
 > 🎯 **C'était la condition posée par Romain** : *« je préfère qu'on ait la vision complète plutôt
 > que commencer un chantier pour ensuite devoir repasser dessus parce qu'une session ultérieure
@@ -339,8 +385,8 @@ toucher une ligne exécutable** *(**C-008**, le 2026-08-11)*.
 
 🏁 ⭐ **Et un huitième TERMINÉ, le premier à avoir vraiment modifié du code : C-012** *(clos le 2026-08-19)* — **R-042 est `TESTÉ`**, avec la réserve **V-12 / N-3**.
 Il figure dans le tableau ci-dessous avec son état réel — **les 3 étapes de code sont fusionnées, le
-backend est redéployé chez Google** *(étape 4 ✅)*, et **son étape 5 est OUVERTE : 9 des 12
-vérifications manuelles sont faites** *(2026-08-18)* :
+backend est redéployé chez Google** *(étape 4 ✅)*, et 🏁 **son étape 5 est CLOSE : 11 des 12
+vérifications manuelles sont réussies** *(2026-08-19)*, la douzième restant 🟠 **non concluante** :
 
 | Chantier | Ce qu'il referme | Statut |
 |---|---|---|
@@ -351,6 +397,18 @@ vérifications manuelles sont faites** *(2026-08-18)* :
 | **C-007** — remettre la carte du projet en face du projet | **R-073** (P1), **R-072** (P1, reliquat), R-024 | 🏁 **LIVRÉ le 2026-08-09 — les 3 problèmes sont REFERMÉS.** `docs/architecture.md` réécrit, `docs/dependances-externes.md` créé, `README.md` / `backend/README.md` / `passation.md` corrigés. **Vérification automatique : 65/65 actions, 26/26 fichiers, 8/8 pages, 12/12 onglets, 4/4 bibliothèques** |
 | 🏁 ⭐ **C-012** — séparer le cœur de la saisie du score de son écriture | **R-042** (P1) — ✅ ⭐ **`TESTÉ` le 2026-08-19, AVEC RÉSERVE** | 🏁 **TERMINÉ — 5 étapes sur 5.** 📐 Conception **VALIDÉE** *(PR #186)*. ✅ **Étape 1** *(PR #187)* : `litSaisieScore` + **T-1 à T-5**. ✅ **Étape 2** *(PR #188)* : `cascadeAVerifier` + **T-14**. ✅ **Étape 3** *(PR #189)* : `deciderEnregistrementScore` et **les 6 garde-fous** + **T-6 à T-13, T-15 à T-17** — `enregistrerScore` passe de **111 à 50 lignes**. ✅ **Étape 4** *(2026-08-18)* : backend **REDÉPLOYÉ chez Google**, ⭐ **`R92 — 703/703 OK, 0 FAIL`**. 🏁 ⭐ **Étape 5 CLOSE le 2026-08-19 — 11 vérifications sur 12** : ✅ V-1 à V-11 *(V-11 avec réserve)*, dont ⭐ **V-7, V-8 et V-10** — cette dernière **dans ses DEUX branches**, « Annuler » comme « Modifier quand même ». **5 des 6 risques de non-régression écartés**, dont ⭐ **N-6 (« le mauvais vainqueur propagé »)** et **N-5**. ⚠️ 🟠 **V-12 / N-3 reste NON CONCLUANTE — réserve conservée** *(D-C012-5)*. ⚡ **Ce qui bloquait V-7/V-8/V-10 était une croyance fausse** : `COUPE_PLATEAU` **masqué**, jamais supprimé *(`21a4f2b`, aucun fichier backend touché)* ; et ⭐ **aucune des 5 fonctions du mécanisme n'est couverte par les 703 tests**. ✅ **Routage production rétabli et vérifié** · ✅ **production non contaminée**. ⚡ A fait entrer **R-092** et **R-093** au registre — **tous deux NON CORRIGÉS**. Détail : **§8 quater** de la spécification |
 | **C-008** — les commentaires qui disaient le contraire du code | **R-083** *(6 cas)* | 🏁 **LIVRÉ le 2026-08-11 — R-083 est REFERMÉ.** Les 6 commentaires réécrits *(5 dans `Code.gs`, 1 dans `admin-reglages.js`)* + **la règle posée : `CLAUDE.md` §8 ter**. **Preuve : les fichiers, commentaires retirés, sont identiques au caractère près** *(`diff` vide — 5 816 et 565 lignes de code)*. ✅ **Parvenu chez Google le 2026-08-18** : ce « prochain redéploiement utile » a eu lieu — c'est l'**étape 4 de C-012**, qui a recollé `Code.gs`. L'éditeur Apps Script ne contient plus les anciennes phrases |
+
+> ⚡ **Et un travail de plus, qui n'est PAS un chantier de ce tableau : la remise à niveau
+> documentaire du 2026-08-19.** 🏁 **Terminée en 6 lots.** Elle n'a pas de numéro `C-0XX` parce
+> qu'elle **ne vient pas de l'audit** : Romain l'a ouverte hors plan, après C-012. Ce qu'elle a
+> fait, en une ligne : **la documentation active affirme de nouveau ce que le dépôt contient.**
+>
+> **Détail des 6 lots, critères de fin et preuves : `PLAN.md` §13** · **historique : `SESSIONS.md`**
+> · **décisions : `DECISIONS.md` D-034 à D-036.**
+>
+> ⛔ **Ce que « terminé » ne veut pas dire** : ni que le projet soit parfait, ni que les risques
+> d'industrialisation soient résolus — **R-075**, **R-092** et **R-093** restent **ouverts au
+> registre**.
 
 > ⚠️ **Ce que C-005 et C-006 ne referment pas, et pourquoi c'est écrit ici.** Ces deux chantiers
 > **produisent des textes** ; ils ne changent **rien** au comportement de l'application. Un texte
@@ -431,12 +489,20 @@ preuves, telles qu'inscrites au départ :
 
 ## 6. PROBLÈMES RESTANT À TRAITER
 
-**91 problèmes — 2 corrigés, 89 au statut IDENTIFIÉ** (vus, pas corrigés) — voir `RISQUES.md` pour
-le registre et `AUDIT.md` pour l'explication de chacun.
+**93 problèmes au registre** (R-001 → R-093) — voir **`RISQUES.md`** pour **l'état de chacun**, et
+`AUDIT.md` pour l'explication.
 
-> ⚡ **Le second corrigé est R-083** *(C-008, 2026-08-11)* — les commentaires qui annonçaient
+> 📌 **Le décompte par statut n'est PAS recopié ici** *(`CLAUDE.md` §8 quater)* : il change à
+> chaque chantier. **`RISQUES.md` est la seule adresse.** ⚠️ **93 n'est pas 88** : **88** est le
+> résultat de **l'audit** *(figé)*, **93** l'état du **registre de suivi**, qui continue de vivre.
+
+> ⚡ **Le second problème refermé — après le P0 de sécurité, et à sa date — est R-083** *(C-008,
+> 2026-08-11)* — les commentaires qui annonçaient
 > l'inverse du code. C'est le **premier problème refermé dans des fichiers source** depuis le P0 de
-> sécurité. ⚠️ **Il est refermé dans le dépôt, pas chez Google** : le serveur n'a pas été recollé.
+> sécurité. ✅ **Et il est désormais refermé chez Google aussi** *(2026-08-18)* : le redéploiement de
+> l'**étape 4 de C-012** a recollé `Code.gs`, donc l'éditeur Apps Script ne contient plus les
+> anciennes phrases. *(Cette ligne annonçait le contraire jusqu'au 2026-08-19 : elle datait d'avant
+> le redéploiement, et `§5` disait déjà l'inverse dans le même fichier.)*
 >
 > 🚨 **UN SUJET EN ATTENTE DE TA DÉCISION, trouvé pendant C-008 et NON corrigé** *(2026-08-11)* :
 > **la pause échelonnée et le Super Challenge se marchent dessus.** Dans `calculerPlanning`, la
@@ -801,6 +867,16 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | **D-032** | ⚡ **Les deux pauses méridiennes ne coexistent jamais.** *« Quand la pause échelonnée est cochée, la pause classique ne s'applique pas, et inversement. »* ⚠️ **Le code d'aujourd'hui ne respecte pas cette règle** : sous 4 équipes, une catégorie retombe en pause classique (**R-091**). ✅ **Comportement retenu** : la petite catégorie **garde une pause, mais la sienne** — durée = le repos minimal configuré ; la pause classique globale ne s'applique alors **nulle part**. *Garantit qu'aucun mode ne coexiste **et** qu'aucun enfant n'est sans coupure.* Planifié dans **C-004** | ✅ **Validée (session 13, addendum n° 4)** — **couvre R-091** |
 | **D-030** | **Tournoi SUSPENDU / Tournoi ANNULÉ (force majeure)** — deux états au niveau du **tournoi**, un cran au-dessus du match annulé de D-015. **SUSPENDU** : tout est figé, le match en cours est verrouillé et **son score validé à l'instant de la suspension**, la reprise ne le rejoue pas, et le moteur **propose** des scénarios de rattrapage sans jamais **décider** seul d'une modification réglementaire. **ANNULÉ** : définitif pour la journée, matchs à venir grisés et inaccessibles, **aucun classement final** pour un tournoi EDR classique, résultats déjà validés **conservés** comme historique. **Dans les deux cas** : clé administrateur à l'activation **et** à la reprise, état visible en administration, **bandeau public au texte personnalisable**. ⚠️ **Spécification conservée — aucun code écrit.** Implémentation **volet ③**, en **2 niveaux**, après le lot ① des tests et après R-042. ⚡ **I-21 levée le même jour** : la reprise avec **adaptation du format et de la durée est autorisée**, sous réserve du **temps de jeu maximal** et de **l'interdiction des phases finales** → le **niveau 2 est débloqué**. ⚡ **Cadre de la reprise précisé par Romain le même jour** (**D-030 §9**) : **6 contraintes** que le moteur ne franchit jamais *(dont la règle d'équité « jamais une équipe reposée contre une équipe qui ne l'est pas »)*, **8 leviers** ordonnés du moins au plus intrusif, et **5 principes** — dont le plus important : **le moteur n'a pas le droit de conclure « impossible » avant d'avoir parcouru les huit leviers**, et **il ne modifie jamais seul une valeur configurable**. **Trois fiches de chantier écrites** : `PLAN.md` **C-002**, **C-003**, **C-004** | ✅ **Validée (session 13, addendums)** — **couvre R-089** |
 
+### ⚡ Nées de la **remise à niveau documentaire** — **2026-08-19** *(hors plan d'audit)*
+
+> 📌 **Leur spécification vit dans `DECISIONS.md`**, sa source. Ci-dessous, l'objet en une phrase.
+
+| Réf | Objet | Statut |
+|---|---|---|
+| **D-034** | **`COUPE_PLATEAU` reste PROPOSÉ, mais SIGNALÉ** et **confirmé avant application** : l'application informe, elle n'interdit pas. ⛔ **Remplace** la doctrine *« interdit en EDR, non proposé »*, **jamais publiée**. ⚠️ **Seule décision du chantier à avoir touché du code** | ✅ **Validée (2026-08-19)** — décision **produit** de Romain |
+| **D-035** | **Le `CHANGELOG` entre dans la règle de la carte** : `CLAUDE.md` §8 bis passe de **3 à 4** documents | ✅ **Validée (2026-08-19)** — **étend D-029** |
+| 🏛️ **D-036** | **Le découpage de la remise à niveau en 6 lots**, inscrit dans `PLAN.md` §13 — **constat** pour les lots 1 à 3, **décision du propriétaire** pour les lots 4 à 6 | ✅ **Validée (2026-08-19)** |
+
 **En attente** (voir `DECISIONS.md`) :
 
 > 🏁 **Le registre des décisions en attente est VIDE.** Les six dernières ont été tranchées au
@@ -878,7 +954,7 @@ vérification supplémentaire.
 
 | Élément | Constat |
 |---|---|
-| `backend/Code.gs` | **8 274 lignes, 281 fonctions**, un seul fichier *(mesuré le 2026-08-17, après C-012 étapes 1 à 3)* |
+| `backend/Code.gs` | **8 277 lignes** *(relevé le 2026-08-19)*, **281 fonctions** *(compté le 2026-08-17)*, un seul fichier. 📐 **Valeur du jour : `wc -l backend/Code.gs`** |
 | `backend/Tests.gs` | ⭐ **4 244 lignes** — **300 fonctions de test, 703 vérifications, 0 échec** *(mesuré le 2026-08-17, après C-012 étapes 1 à 3 : 616 + 33 + 12 + 42)*. ✅ **Exécutables hors d'Apps Script** (démontré en session 8, ~1 s, avec une vingtaine de lignes de doublures). ⭐ **Ce total est CONFIRMÉ CHEZ GOOGLE le 2026-08-18** *(C-012 étape 4)* : `lancerTestsFFR` y donne **`R92 — 703/703 OK, 0 FAIL`**, avec la **dernière ligne de `Test.gs` = 4244** comme seconde preuve. *(Repères précédents, historiques : 4 038 lignes / 661 vérifications au 2026-08-16 ; 3 711 lignes / 589 vérifications, session 8.)* |
 | **Couverture mesurée** (session 8) | **104 fonctions sur 277 traversées = 38 %** · 173 jamais exécutées · **110** reçoivent le classeur (hors de portée par construction) · **85 pures et non testées** = testables aujourd'hui sans rien changer |
 | Points d'entrée backend | `doGet` (ligne 313) = **15 actions de lecture** · `doPost` (ligne 2801) = **50 actions** |
@@ -891,7 +967,7 @@ vérification supplémentaire.
 | Backend — couplage au classeur | ✅ `SpreadsheetApp.openById` **8 fois** en 8 147 lignes · **92 fonctions** reçoivent le classeur en paramètre · `calculerPlanning` (224 l., le cœur métier) **n'y touche pas du tout** |
 | Backend — rangement | **26 bandeaux de section** dans `Code.gs` · `Tests.gs` : **277 groupes de tests**, **31 préfixes dont 27 sont des n° de session** (**R-076**) |
 | Documentation — état | `architecture.md` documente **21 des 65 actions** (**68 % d'invisible**) et 4 pages sur 8 · `README.md` : 6 fichiers JS sur 26 · **`Tests.gs` cité par 0 document sur 6** (**R-072**, **R-073**) |
-| Versions | **aucune** : `CHANGELOG.md` (2 406 lignes) est **intégralement** sous `## [Non publié]`, et **`git tag` ne renvoie rien** (**R-075**) |
+| Versions | **aucune** : `CHANGELOG.md` est **intégralement** sous `## [Non publié]`, et **`git tag` ne renvoie rien** — **revérifié le 2026-08-19**, après le lot 3 qui a rouvert le journal. ⚠️ **R-075 est donc ENTIER** : *rouvrir un journal n'est pas publier des versions* |
 | Outillage | **aucun** `package.json`, aucune étape de construction, aucune vérification automatique, **aucun dépôt automatisé du serveur** (**R-081**) |
 | Publication du frontend | `.github/workflows/pages.yml` publie `frontend/` sur Internet **à chaque envoi sur `main`** — **sans lancer aucun test, pas même un contrôle de syntaxe** (R-043) |
 | Règles écrites **en double** (serveur + navigateur) | **29 mentions de « miroir »** dans le frontend, dont le **barème et le départage**. Rien ne vérifie qu'elles disent la même chose (R-044) |
