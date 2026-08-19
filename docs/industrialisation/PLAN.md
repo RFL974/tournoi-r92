@@ -10,10 +10,11 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
-**Dernière mise à jour** : 2026-08-19 (🏛️ **§13 — REMISE À NIVEAU DOCUMENTAIRE, 6 lots** : chantier
-hors audit ouvert le 2026-08-19, défini par **D-036**. ⭐ **Les lots 1 à 5 sont TERMINÉS** — 1 à 4
-publiés *(`8e08552`, `969e673`, `b91cbfe`, `22d2186`)*. **Reste le LOT 6**, la relecture finale ;
-son critère de fin clôt le chantier entier — voir **§13.5**.)
+**Dernière mise à jour** : 2026-08-19 (🏁 ⭐ **§13 — LA REMISE À NIVEAU DOCUMENTAIRE EST TERMINÉE** :
+chantier hors audit ouvert et clos le 2026-08-19, défini par **D-036**. **Les 6 lots sont terminés et
+publiés** — `8e08552`, `969e673`, `b91cbfe`, `22d2186`, `eadb61a` + le commit de clôture du lot 5, et
+`3af61f2`. **Son critère de fin est ATTEINT** — voir **§13.5**, qui dit aussi ce que « terminé » ne
+veut PAS dire.)
 Rappel du même jour : (🏁 ⭐ **C-012 EST TERMINÉ — son étape 5 est CLOSE, et
 R-042 passe à `TESTÉ`**, avec la réserve **V-12 / N-3 non concluante** conservée. Voir **§10,
 fiche C-012**. ⚠️ Cela **lève la dépendance** `C-011 → C-012 → C-015`.)
@@ -1620,6 +1621,9 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 
 ## 13. 📄 REMISE À NIVEAU DOCUMENTAIRE — **6 lots**
 
+> 🏁 **CHANTIER TERMINÉ le 2026-08-19** — les 6 lots sont faits et publiés. Voir **§13.5** pour le
+> critère de fin atteint, **et pour ce que « terminé » ne veut pas dire**.
+>
 > ⚠️ **Ce chantier n'est PAS issu de l'audit de l'ÉTAPE 2.** Il n'a pas de numéro `C-0XX`, et il ne
 > figure pas au tableau des chantiers du **§3** : il a été **ouvert par Romain le 2026-08-19**,
 > hors plan, après le chantier **C-012**.
@@ -1675,7 +1679,7 @@ suivant ne commence jamais automatiquement. Deux règles ont tenu du début à l
 | **3** | Rouvrir le journal des évolutions | 🧾 ✅ **terminé et publié** | [`b91cbfe`](https://github.com/RFL974/tournoi-r92/commit/b91cbfe) | **D-035** |
 | **4** | Statuts de déploiement et repères opérationnels | 🏛️ ✅ **terminé et publié** | [`22d2186`](https://github.com/RFL974/tournoi-r92/commit/22d2186) | — |
 | **5** | Pilotage documentaire du chantier | 🏛️ ✅ **terminé** | [`eadb61a`](https://github.com/RFL974/tournoi-r92/commit/eadb61a) **+ le commit de clôture** *(voir §13.6)* | **D-036** |
-| **6** | Relecture finale et cohérence globale | 🏛️ ⏳ **à faire** | — | — |
+| **6** | Relecture finale et cohérence globale | 🏛️ ✅ **terminé et publié** | [`3af61f2`](https://github.com/RFL974/tournoi-r92/commit/3af61f2) | — |
 
 **L'ordre est contraint, il n'est pas arbitraire** : `1 → 2 → 3 → 4 → 5 → 6`.
 
@@ -1740,7 +1744,7 @@ suivant ne commence jamais automatiquement. Deux règles ont tenu du début à l
 | **Critères de fin** | Une session neuve retrouve les 6 lots sans conversation externe · chaque lot a un objectif compréhensible · les états terminé / en cours / à faire sont exacts · les commits sont vérifiés · **D-034** et **D-035** correctement rattachées · **la source propriétaire des LOT 4 à 6 est explicitement indiquée** · aucune information spéculative présentée comme historique · aucun code, test ou workflow modifié · **commit local, arrêt avant push** |
 | **✅ Fait — en deux temps** | **①** `eadb61a` *(2026-08-19)* : la section **§13** et la décision **D-036**, écrites **en avance sur le LOT 4** parce que le plan devait exister pour poursuivre. **②** Le **commit de clôture** *(voir §13.6)* : état et commit du LOT 4 inscrits, dépendance du LOT 6 rendue explicite, **critère de fin du chantier ajouté (§13.5)**, et les **critères de fin ci-dessus repassés un par un** — les **12 questions** d'une session neuve testées **sur les documents eux-mêmes** |
 
-#### 🏛️ LOT 6 — Relecture finale et cohérence globale · ⏳ **à faire**
+#### 🏛️ LOT 6 — Relecture finale et cohérence globale · ✅ **terminé et publié** · [`3af61f2`](https://github.com/RFL974/tournoi-r92/commit/3af61f2)
 
 > 🏛️ Définition fixée par **décision du propriétaire, 2026-08-19** *(**D-036**)*.
 
@@ -1754,6 +1758,7 @@ suivant ne commence jamais automatiquement. Deux règles ont tenu du début à l
 | **⛔ Ne doit PAS** | Rouvrir **D-034** · rouvrir **D-035** · modifier le comportement métier · refaire l'architecture documentaire · corriger un document **explicitement historique** au seul motif qu'il décrit un ancien état · transformer une amélioration de style en chantier · créer du code ou des tests |
 | **Méthode** | ① balayer les documents actifs · ② chercher les incohérences connues · ③ contrôler les liens internes · ④ chercher les contradictions entre `README`, guide, architecture, formats, sponsors, déploiement, `CHANGELOG` et documents d'industrialisation actifs · ⑤ **distinguer soigneusement** document actif / document historique daté / décision en vigueur / ancien état conservé pour mémoire · ⑥ **corriger uniquement ce qui est objectivement faux, cassé ou trompeur aujourd'hui** |
 | **Critères de fin** | Liens internes de **tout** le dépôt contrôlés · aucune nouvelle rupture · les liens cassés connus **corrigés ou explicitement justifiés** s'ils doivent rester · aucune contradiction connue entre documents actifs · `README`, guide, architecture, formats, sponsors, déploiement, `CHANGELOG`, `PLAN` et décisions actives vérifiés · aucune réécriture abusive des documents historiques · aucun code, test ou workflow modifié · diff inspecté · **commit local, rapport avant push** |
+| **✅ Fait** *(2026-08-19)* | **24 documents actifs balayés** · ⭐ **87 liens internes contrôlés, ZÉRO cassé**. Les **3 points connus** traités : le lien d'`AUDIT-TOURNOI-R92.md` *(coquille d'origine — seuls les 3 caractères `../` retirés, sur une ligne de 1 038)*, le *« mesure locale »* de `sponsors.md`, et les **deux** occurrences de *« (classement croisé) »*. ⚡ **Et trois écarts que personne n'avait vus** : `sponsors.md` §7 renvoyait vers des styles **déménagés** *(la « Section 19 » n'existe plus ; `sponsors.css`, qui porte les 91 règles, n'était pas citée)* · `sponsors.md` §8 listait comme **manquantes deux fonctions CONSTRUITES** *(consolidation entre appareils, compteur admin)* · l'arborescence du `README` ignorait **4 feuilles de style sur 6** et 2 documents. **Laissé intact volontairement** : `phases-tournoi.md`, note de conception **datée** qui renvoie déjà à la source courante |
 
 ### 13.4 — Les décisions nées de ce chantier
 
@@ -1763,26 +1768,36 @@ suivant ne commence jamais automatiquement. Deux règles ont tenu du début à l
 | **D-035** | Le `CHANGELOG` raconte le produit et la fiabilité, **et il entre dans la règle de la carte** *(§8 bis passe à 4 documents)* | 3 |
 | **D-036** | **Le découpage en 6 lots** — constat pour les LOT 1 à 3, **décision propriétaire** pour les LOT 4 à 6 | 5 |
 
-### 13.5 — Ce qui reste à faire, et quand le chantier sera terminé
+### 13.5 — 🏁 Le chantier est TERMINÉ
 
-**Il reste un seul lot : le LOT 6** — la relecture finale et la cohérence globale *(sa fiche est
-ci-dessus)*. Les lots 1 à 5 sont terminés.
+**Il ne reste aucun lot.** Les **six** sont terminés et publiés — la remise à niveau documentaire
+est close le **2026-08-19**.
 
-> 🏁 **Le chantier entier sera terminé quand le LOT 6 sera terminé**, c'est-à-dire quand son
-> critère de fin sera atteint :
+> 🏁 **Le critère de fin est ATTEINT**, et c'était celui du LOT 6 :
 >
 > **« Un lecteur qui parcourt aujourd'hui la documentation active ne rencontre plus de
 > contradiction connue, de lien interne cassé connu, de formulation obsolète non volontaire, ni
 > d'écart manifeste avec l'état actuel du dépôt. »**
 >
-> ⚠️ **Ce critère porte sur la documentation ACTIVE.** Il ne demande **pas** que les documents
+> ⚠️ **Ce critère porte sur la documentation ACTIVE.** Il ne demandait **pas** que les documents
 > **historiques datés** *(`AUDIT.md`, `SESSIONS.md`, `RAPPORT-AUDIT.md`, les entrées passées du
 > `CHANGELOG`, les bandeaux « Rappel de la mise à jour précédente » de `ETAT.md`)* soient réécrits :
-> ils décrivent un état ancien, et c'est leur rôle.
->
-> 📌 **Deux points sont déjà nommés pour le LOT 6** — ils ont été trouvés pendant les lots
-> précédents et **délibérément laissés** : le lien cassé d'`AUDIT-TOURNOI-R92.md`, et la mention
-> *« Phase après-midi (classement croisé) »* du `README.md`, qui ne nomme qu'un des cinq formats.
+> ils décrivent un état ancien, et c'est leur rôle. **Aucun ne l'a été.**
+
+**⚠️ Ce que « terminé » ne veut PAS dire.** Le chantier est clos **dans le périmètre de ce §13**, et
+rien de plus :
+
+- ❌ **pas** que le projet soit fonctionnellement parfait ;
+- ❌ **pas** que les risques d'industrialisation soient résolus — **R-075** *(aucune version publiée,
+  `git tag` vide)*, **R-092** et **R-093** restent ouverts au registre ;
+- ❌ **pas** qu'aucune amélioration éditoriale ne soit imaginable ;
+- ✅ **seulement** ceci : *ce que la documentation active affirme aujourd'hui correspond à ce que le
+  dépôt contient.*
+
+> 🧭 **Ce qui empêche le retour en arrière.** Trois règles nées de ce chantier restent en vigueur —
+> `CLAUDE.md` **§8 bis** *(la carte, désormais **4** documents, `CHANGELOG` compris — **D-035**)*,
+> **§8 ter** *(le commentaire à jour)*, et le principe qui a tenu du premier au dernier lot :
+> **une affirmation se vérifie à sa source, jamais par recopie.**
 
 ### 13.6 — Pourquoi le LOT 5 cite deux commits, dont un sans identifiant
 
