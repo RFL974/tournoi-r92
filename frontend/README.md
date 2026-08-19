@@ -64,8 +64,16 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
 - `js/api.js` — `apiGet` / `apiPost` / `apiPostProtege` + gestion des clés (session).
 - `js/admin.js`, `js/saisie.js`, `js/tournoi.js`, `js/perfs.js` — logique de chaque page.
 - `js/sponsors.js` — **partenaires** : roue de rotation équitable, rendu des 5 emplacements,
-  message plein écran accessible, mesure de visibilité **locale** (rien n'est envoyé). Partagé
-  entre la page publique et l'admin. Voir [`../docs/sponsors.md`](../docs/sponsors.md).
+  message plein écran accessible, **mesure de visibilité**. Partagé entre la page publique,
+  l'admin et le dossier club. Voir [`../docs/sponsors.md`](../docs/sponsors.md).
+
+  > ⚠️ **La mesure n'est PAS locale — elle remonte au serveur.** Quand des partenaires sont
+  > réellement à l'écran, la page range un **identifiant d'appareil** dans la mémoire du
+  > navigateur (`localStorage`, renouvelé **chaque jour**) et **envoie les relevés au serveur**
+  > *(action `mesureSponsors`)* : un premier envoi à **20 s**, puis toutes les **10 min**, un
+  > dernier quand la page se ferme, et un **immédiat** au clic sur un partenaire. La remontée
+  > n'est armée **que** si des partenaires sont affichés — interrupteur des partenaires sur
+  > « non » ⇒ **rien n'est envoyé**. Ce que le serveur en fait : `../docs/sponsors.md`.
 - `js/admin-sponsors.js` — écran admin « Partenaires » : réglages, fiches, fiche de visibilité.
 
 **Présentation de la page admin** (surcouches, la logique reste dans `admin.js`) :

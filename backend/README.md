@@ -8,10 +8,19 @@ Code **Google Apps Script** du projet, déployé en **Web App**.
 > [`../docs/deploiement.md`](../docs/deploiement.md), qui donne les **deux nombres de contrôle** à
 > vérifier après chaque collage.
 
-| Fichier | Lignes | Rôle |
+| Fichier | Lignes *(relevé le 2026-08-19)* | Rôle |
 |---|---|---|
-| **`Code.gs`** | 8 147 | **Le serveur** : les 65 actions, la sécurité, la génération, le classement |
-| **`Tests.gs`** | 3 859 | **Le harnais de tests** : à coller chez Google **lui aussi**, et à lancer par `lancerTestsFFR` — bilan attendu `R92 — 616/616 OK, 0 FAIL` |
+| **`Code.gs`** | 8 274 | **Le serveur** : les 65 actions, la sécurité, la génération, le classement |
+| **`Tests.gs`** | 4 244 | **Le harnais de tests** : à coller chez Google **lui aussi**, et à lancer par `lancerTestsFFR` |
+
+> 📐 **Ces deux nombres bougent à chaque session qui touche au serveur.** Pour les revérifier :
+> `wc -l backend/Code.gs backend/Tests.gs`.
+>
+> ⚠️ **Le bilan attendu des tests n'est volontairement PAS recopié ici.** C'est un **repère de
+> vérification** : recopié à deux endroits, il finit par contredire l'autre — et c'est un repère
+> périmé qui fait conclure à une panne alors que tout va bien. Il n'a donc **qu'une seule adresse** :
+> [`../docs/deploiement.md`](../docs/deploiement.md), qui renvoie lui-même à
+> `docs/industrialisation/ETAT.md` §9 pour la valeur du jour.
 
 ---
 
@@ -87,7 +96,7 @@ Cache serveur + **relais CDN** optionnel (`pousserSnapshot` / `configurerRelais`
 | `configurerCles()` | Définit les deux clés. À lancer **depuis le menu « Tournoi R92 » du classeur**, pas depuis le bouton ▶ de l'éditeur — les fenêtres de saisie ne s'affichent pas depuis l'éditeur |
 | `autoriserDrive()` | Donne au script l'autorisation Google Drive, nécessaire pour l'affiche **et** la photo du parking |
 | `configurerRelais(...)` | Renseigne le relais CDN (optionnel, dormant par défaut) |
-| `lancerTestsFFR()` | Lance le harnais de `Tests.gs`. Bilan attendu : **`R92 — 616/616 OK, 0 FAIL`** |
+| `lancerTestsFFR()` | Lance le harnais de `Tests.gs`. **Le bilan attendu se lit dans [`../docs/deploiement.md`](../docs/deploiement.md)** — et ce qu'il faut retenir : un nombre **plus petit** que celui annoncé signifie que c'est l'**ancien** `Tests.gs` qui a tourné, donc que le collage des deux fichiers n'a pas été fait |
 
 ---
 
