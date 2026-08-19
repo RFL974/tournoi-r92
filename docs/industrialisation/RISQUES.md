@@ -95,8 +95,8 @@ domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (1
 | ⚡ **R-089** (P1) | Tournoi suspendu / annulé pour force majeure | **Apporté par Romain** — connaissance du terrain |
 | ⚡ **R-090** (P2) | Le champ « Pause déjeuner — durée » est ignoré en mode échelonné | **Trouvé en répondant à une question de Romain** |
 | ⚡ **R-091** (P2) | Les deux modes de pause coexistent dans le même tournoi | **Trouvé en vérifiant** une règle posée par Romain (**D-032**) |
-| ⚡ **R-092** *(priorité **À CONFIRMER**)* | Le détail du score n'est effacé nulle part | **Trouvé en cartographiant `enregistrerScore`** pour spécifier C-012 |
-| ⚡ **R-093** *(**P2**)* | Le serveur **écrit** les colonnes par leur **position**, mais les **lit** par leur **nom** | **Trouvé en EXÉCUTANT V-4** de C-012 — l'anomalie s'est produite pour de bon |
+| ⚡ **R-092** *(priorité **À CONFIRMER**)* | Le détail du score n'est effacé par **aucun chemin d'invalidation d'un résultat** *(défaut **intra-tournoi**)* — ✅ **rattaché à C-015** *(D-037)* | **Trouvé en cartographiant `enregistrerScore`** pour spécifier C-012 |
+| ⚡ **R-093** *(**P2**)* | Le serveur **écrit** les colonnes par leur **position**, mais les **lit** par leur **nom** — ✅ **devient le chantier C-031** *(D-037)* | **Trouvé en EXÉCUTANT V-4** de C-012 — l'anomalie s'est produite pour de bon |
 
 > 💡 **Ce que ces quatre lignes disent de la méthode** : **les questions de Romain, et le fait de
 > lire vraiment le code avant d'y toucher, trouvent des défauts que huit domaines d'audit n'ont pas
@@ -113,11 +113,17 @@ domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (1
 > l'erreur exacte que **M-06** cherche à empêcher. *(Le compteur est passé de 92 à 93 le
 > **2026-08-18**, avec R-093.)*
 >
-> ⚠️ **Conséquence à ne pas laisser filer** : `PLAN.md` affirme que **« 91 sur 91 sont placés, 0 sans
-> place »**. Avec **R-092 et R-093**, **cette phrase n'est plus exacte** — ⚠️ **aucun des deux n'est
-> rattaché à un chantier**. Pour R-092 c'est délibéré *(D-C012-2)* ; pour **R-093, la question n'est
-> pas tranchée** *(il est **NON CORRIGÉ**, et sa correction n'a été ni décidée ni planifiée)*.
-> **L'écart est signalé ici pour être repris à la prochaine session de plan.**
+> ✅ **L'ÉCART EST REFERMÉ LE 2026-08-19** *(**D-037**)*, et il avait été signalé ici pour cela.
+> `PLAN.md` affirmait *« 91 sur 91 placés, 0 sans place »* — devenu faux avec **R-092** et
+> **R-093**, qu'aucun chantier ne portait. Après arbitrage : **R-092 rejoint C-015**, **R-093
+> devient le chantier C-031**, et `PLAN.md` **§12** est corrigé — **93 problèmes, aucun sans
+> situation connue**.
+>
+> 🎯 **Ce que cet épisode démontre, et qui vaut plus que sa correction** : le registre a **tenu son
+> rôle**. Deux problèmes trouvés par un chantier en cours, **après** la clôture de l'audit, ont été
+> inscrits, signalés comme non rattachés, **et repris** — au lieu de disparaître entre deux
+> sessions. ⚠️ La phrase précédente n'était pas fausse par négligence : elle était **vraie à sa
+> date**, et c'est le registre qui a permis de le voir.
 
 > ⚠️ **Le domaine H n'a produit NI P0 NI P1, et il faut dire pourquoi.** Un P0 supposerait un code
 > qui **perd des données**, **fausse un résultat sportif** ou **rend l'application inutilisable** ;
@@ -289,18 +295,81 @@ domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (1
 > registre.** C'est un **point à porter au bureau**, et il ne concerne le projet que le jour où des
 > équipes étrangères participent. **Inscrit ici pour ne pas être perdu.**
 
-| ⚡ **R-092** | **Le détail du score n'est effacé nulle part.** Les 8 colonnes `essais_A/B`, `transfo_A/B`, `pen_A/B`, `drop_A/B` sont **écrites** en mode détaillé, mais **aucune ligne du code ne les remet à vide** : ni une correction repassée en **mode simple** *(`enregistrerScore`, ligne 5625 : `if (modeDetail)` sans branche `else`)*, ni une **réinitialisation en cascade** *(`invaliderMatchAval`, ligne 5816 — efface score, statut et vainqueur, pas le détail)*, ni la remise à zéro de la **petite finale** *(ligne 5800)*. Des compteurs **périmés** survivent donc à un score qui, lui, a disparu. Deux consommateurs les relisent : l'écran de saisie **pré-remplit les compteurs depuis ces colonnes** *(`blocSaisieDetail`, `saisie.js:465`)*, et l'**alerte des 5 essais d'écart** leur fait confiance **en priorité** *(`essaisConnusEquipe`, `Code.gs:1453`)* | ⚠️ **À CONFIRMER — aucune priorité attribuée** *(décision de Romain, 2026-08-16 : le dépôt ne permet pas de l'établir ; voir la note ci-dessous)* | **CERTAIN** *(lu dans le code, jamais exécuté)* | 🔴 **IDENTIFIÉ — NON CORRIGÉ.** ⛔ **Volontairement exclu de C-012** *(décision de Romain, 2026-08-16, **D-C012-2**)* : C-012 est un déménagement, il **reproduira ce comportement à l'identique**. **Aucun code modifié pour ce problème.** Aucun chantier ne le porte à ce jour | `C-012-SPECIFICATION.md` **§11 / D-C012-2** |
+| ⚡ **R-092** | ⚡ **Le détail du score n'est effacé par AUCUN des chemins qui INVALIDENT un résultat** *(formulation resserrée le 2026-08-19 — voir l'encadré de périmètre ci-dessous)*. Les 8 colonnes `essais_A/B`, `transfo_A/B`, `pen_A/B`, `drop_A/B` sont **écrites** en mode détaillé, mais **aucune des trois remises à zéro connues ne les vide** : ni une correction repassée en **mode simple** *(`enregistrerScore` : `if (modeDetail)` sans branche `else`)*, ni une **réinitialisation en cascade** *(`invaliderMatchAval` — efface score, statut et vainqueur, pas le détail)*, ni la remise à zéro de la **petite finale** *(`majPetiteFinale`)*. Des compteurs **périmés** survivent donc à un score qui, lui, a disparu. ⚡ **Le consommateur, vérifié le 2026-08-19, est côté NAVIGATEUR** : l'écran de saisie **pré-remplit les compteurs depuis ces colonnes** *(`blocSaisieDetail`, `saisie.js`)*, et l'**alerte des 5 essais d'écart** leur fait confiance **en priorité** *(`essaisConnus`, `saisie.js`)* | ⚠️ **À CONFIRMER — priorité toujours non attribuée**, mais ⚡ **la question a été RÉDUITE le 2026-08-19** *(voir la note ci-dessous)*. ✅ **Ce n'est plus bloquant** : rattaché à **C-015**, qui est **P1**, R-092 en suit le calendrier | **CERTAIN** *(lu dans le code, jamais exécuté)* | ✅ ⚡ **PLANIFIÉ le 2026-08-19 — RATTACHÉ À C-015** *(**D-037**)*. Exigence portée : *« toute invalidation d'un résultat efface également les données détaillées devenues périmées »*. **Toujours NON CORRIGÉ** — aucune ligne de code n'a été écrite. *(Auparavant : volontairement exclu de C-012 par **D-C012-2** — C-012 était un déménagement, il a reproduit le comportement à l'identique.)* | `C-012-SPECIFICATION.md` **§11 / D-C012-2** · `PLAN.md` **C-015** |
 
 > ⚡ **R-092 ne vient pas de l'audit.** Il a été trouvé le **2026-08-16**, en cartographiant
 > `enregistrerScore` pour spécifier **C-012**. Comme R-089 à R-091, son numéro suit la série pour
 > rester traçable, mais **sa source est différente** — il est postérieur à la clôture de l'ÉTAPE 2.
 
-| ⚡ **R-093** | **Le serveur ÉCRIT les colonnes par leur POSITION, mais les LIT par leur NOM.** `lireOngletSimple` associe chaque valeur à l'en-tête **réellement présent** dans le classeur — la lecture est donc juste quel que soit l'ordre. Les **écritures**, elles, passent par `colMatchs()`, qui renvoie la position de la colonne **dans la constante `ENTETES.Matchs` du code**. Les deux ne s'accordent **que si l'ordre réel du classeur est identique à celui du code**. ⚠️ **Et le code organise lui-même leur désaccord** : `assurerColonnesMatchs` ajoute les colonnes manquantes **à droite**, dans l'ordre de `ENTETES` — une colonne du milieu qui manque revient donc **en fin de tableau**, après quoi **toute écriture par position est décalée d'un cran**. ⭐ **Constaté EN VRAI le 2026-08-18** *(C-012, étape 5, **V-4**)* : les 8 compteurs du score détaillé écrits **une colonne trop à gauche**, la colonne métier **`arbitre` écrasée** par un nombre d'essais, **`drop_B` perdue**. Le **score**, le **statut** et l'**`Historique`** restaient **justes** *(le serveur calcule le score avant d'écrire)* — **et l'application n'a rien signalé**. **Portée : 8 écritures par position** dans `Code.gs` *(score+statut, vainqueur, les 8 compteurs, équipes de la petite finale, réinitialisations en cascade)* ; **un décalage survenant plus tôt dans le tableau atteindrait le score lui-même** | **P2** | ✅ **CERTAIN** *(mécanisme démontré case par case, **puis reproduit à l'inverse** : ordre canonique rétabli → défaut disparu, V-4 conforme)* | IDENTIFIÉ — **NON CORRIGÉ**. ⛔ **NON imputable à C-012** *(vérifié : la ligne d'écriture existait au point de départ `4af5003` ; `colMatchs` date du 2026-07-24, `assurerColonnesMatchs` du 2026-07-19)*. ⚠️ **Non atteignable en production aujourd'hui** — l'ordre y est canonique, les 8 colonnes ayant été ajoutées **avant** `arbitre`. **Déclencheur : V-11**, qui a légitimement réordonné les colonnes de la copie de test | `C-012-SPECIFICATION.md` **§8 ter** |
+> ⚠️ **DEUX RECTIFICATIONS DE LA FICHE, établies le 2026-08-19 en relisant le code.** Elles ne
+> changent ni la nature du problème ni son rattachement — elles corrigent **deux affirmations de
+> cette fiche qui étaient devenues, ou avaient toujours été, inexactes** :
+>
+> | Ce que la fiche affirmait | Ce que le code dit |
+> |---|---|
+> | *« le détail n'est effacé **nulle part** »* | ❌ **Trop large.** 🟢 **La réinitialisation générale du tournoi EFFACE bien les 8 compteurs** — `viderDonnees` vide **toute la largeur** de l'onglet `Matchs`. Le défaut est **INTRA-TOURNOI** : il ne concerne que les **trois chemins d'invalidation** d'un résultat *(mode simple, cascade de bracket, petite finale)*. **La formulation a été resserrée en conséquence** |
+> | *« l'alerte des 5 essais leur fait confiance en priorité — `essaisConnusEquipe`, `Code.gs` »* | ❌ **Mauvaise localisation.** 🟢 **`essaisConnusEquipe` n'est appelée NULLE PART côté serveur** : elle est **définie** *(1 occurrence dans `Code.gs`)* et **testée** *(9 occurrences dans `Tests.gs`)*, mais **jamais branchée**. ⚡ **Le consommateur réel est son MIROIR NAVIGATEUR**, `essaisConnus` *(`saisie.js`)*, qui applique la même logique — le problème est donc **réel, mais il vit dans l'écran de saisie**, pas dans le serveur |
+>
+> 🎯 **Pourquoi ces deux points comptent malgré leur air anodin** : une fiche de référence qui
+> **surestime** un défaut *(« nulle part »)* ou qui **désigne le mauvais fichier** envoie le
+> chantier au mauvais endroit. ⚠️ **Et la seconde était fausse dès l'inscription** — elle vient
+> d'une lecture, jamais d'une exécution : `essaisConnusEquipe` **existe et passe ses tests**, ce qui
+> suffit à faire croire qu'elle sert.
+>
+> ✅ **Ce qui ne change pas** : le problème est **réel**, il reste **NON CORRIGÉ**, et son
+> rattachement à **C-015** *(D-037)* tient — les trois chemins visés sont **exactement** ceux que
+> C-015 construit.
+
+> ⚡ **SA PRIORITÉ, LE 2026-08-19 : toujours « à confirmer », mais la question s'est RÉDUITE de
+> moitié — et il faut dire exactement ce qui a bougé.**
+>
+> **D-C012-2** avait posé le critère : **P2** si la combinaison *« catégorie en tir au but **ET**
+> placée dans un tableau de Coupe »* est **impossible** ; **P1, à instruire**, si elle est
+> **possible**. La question était alors indécidable depuis le dépôt.
+>
+> **Ce qui est établi depuis** *(analyse du 2026-08-19, vérifiée dans le code)* :
+>
+> | Volet de la question | État |
+> |---|---|
+> | Le mode de saisie détaillée exclut-il un tableau de Coupe ? | 🟢 **NON — vérifié** : `saisie.js` choisit le mode **d'après la seule catégorie** *(`tireAuBut(m.categorie)`)*, jamais d'après le format d'après-midi. **Aucune exclusion dans le code** |
+> | Le format Coupe est-il atteignable ? | 🟢 **OUI, DEPUIS LE 2026-08-19** — ⚡ **D-034** l'a rendu de nouveau **proposé** *(avec avertissement et confirmation)*. Il était **masqué de l'interface** le 2026-08-16, jour où D-C012-2 a été prise |
+> | Une catégorie réelle a-t-elle `tir_au_but = OUI` ? | 🔵 **INCONNU** — cette colonne vit dans `RefFFR_Regles`, **dans le classeur Google, pas dans le dépôt** *(cadre §13.6)* |
+>
+> 🎯 **Ce qui a changé, en une phrase** : la priorité n'est plus *« indéterminable depuis le
+> dépôt »*, elle est **déterminable par une vérification de cinq minutes dans le classeur** — *une
+> catégorie a-t-elle `tir_au_but = OUI` ?* Non ⇒ **P2**. Oui ⇒ **P1, à instruire**.
+>
+> ⚠️ **Et une leçon de méthode qui dépasse ce problème** : *la question laissée ouverte par un
+> chantier a reçu la moitié de sa réponse d'un AUTRE chantier, trois jours plus tard, sans que
+> personne l'ait cherché.* **D-034 a déplacé une barrière dont R-092 dépendait.** C'est exactement
+> ce qu'un registre est censé attraper — et il l'a attrapé.
+>
+> ✅ **Pourquoi ce n'est plus bloquant** : depuis **D-037**, R-092 est **rattaché à C-015**, qui est
+> **P1**. Sa priorité propre ne décide donc plus de son rang dans la file — elle ne servira qu'à
+> **doser l'effort de vérification** au moment de le corriger.
+
+| ⚡ **R-093** | **Le serveur ÉCRIT les colonnes par leur POSITION, mais les LIT par leur NOM.** `lireOngletSimple` associe chaque valeur à l'en-tête **réellement présent** dans le classeur — la lecture est donc juste quel que soit l'ordre. Les **écritures**, elles, passent par `colMatchs()`, qui renvoie la position de la colonne **dans la constante `ENTETES.Matchs` du code**. Les deux ne s'accordent **que si l'ordre réel du classeur est identique à celui du code**. ⚠️ **Et le code organise lui-même leur désaccord** : `assurerColonnesMatchs` ajoute les colonnes manquantes **à droite**, dans l'ordre de `ENTETES` — une colonne du milieu qui manque revient donc **en fin de tableau**, après quoi **toute écriture par position est décalée d'un cran**. ⭐ **Constaté EN VRAI le 2026-08-18** *(C-012, étape 5, **V-4**)* : les 8 compteurs du score détaillé écrits **une colonne trop à gauche**, la colonne métier **`arbitre` écrasée** par un nombre d'essais, **`drop_B` perdue**. Le **score**, le **statut** et l'**`Historique`** restaient **justes** *(le serveur calcule le score avant d'écrire)* — **et l'application n'a rien signalé**. **Portée : 8 écritures par position** dans `Code.gs` *(score+statut, vainqueur, les 8 compteurs, équipes de la petite finale, réinitialisations en cascade)* ; **un décalage survenant plus tôt dans le tableau atteindrait le score lui-même** | **P2** | ✅ **CERTAIN** *(mécanisme démontré case par case, **puis reproduit à l'inverse** : ordre canonique rétabli → défaut disparu, V-4 conforme)* | ✅ ⚡ **PLANIFIÉ le 2026-08-19 — IL DEVIENT LE CHANTIER `C-031`** *(**D-037**)*, *« les colonnes du classeur : une seule façon de les désigner »*. ⚠️ **Toujours NON CORRIGÉ**, et **sa solution technique n'est pas conçue**. ⛔ **NON imputable à C-012** *(vérifié : la ligne d'écriture existait au point de départ `4af5003` ; ⚡ **13 usages de `colMatchs` avant le chantier comme après** — il n'a ni créé ni étendu le mécanisme)*. ⚠️ **Non atteignable en production aujourd'hui** — l'ordre y est canonique, les 8 compteurs ayant été ajoutés le 2026-07-31 à **12 h 51** et `arbitre`, **en dernière position**, à **16 h 31**. **Déclencheur : V-11**, qui a légitimement réordonné les colonnes de la copie de test | `C-012-SPECIFICATION.md` **§8 ter** · `PLAN.md` **C-031** |
 
 > ⚡ **R-093 ne vient pas non plus de l'audit — et sa source est encore différente des précédentes.**
 > R-089 vient de Romain, R-090 et R-091 d'une question posée, R-092 d'une **lecture** de code.
 > **R-093, lui, vient d'une EXÉCUTION** : aucune relecture ne l'avait vu, et l'anomalie s'est
 > produite **pour de bon**, dans un vrai classeur, sous les yeux.
+
+> ⚡ **SA PORTÉE EST PLUS LARGE QUE `Matchs` — établi le 2026-08-19**, et c'est ce qui a motivé un
+> chantier autonome plutôt qu'un rattachement :
+>
+> | Ce qui a été vérifié dans le code | |
+> |---|---|
+> | **`Equipes` porte le même schéma** | Le commentaire de `assurerColonnesEquipes` le dit lui-même : *« les colonnes manquantes sont AJOUTÉES à la suite, dans l'ordre de `ENTETES.Equipes` — `ecrireNouvelleEquipe` écrit positionnellement »* |
+> | ⚡ **Le chemin d'écriture du score LIT AUSSI par position** | `objetDepuisLigneMatch` reconstruit l'objet match **dans l'ordre du code**, et c'est lui qui alimente les **six garde-fous** de `enregistrerScore`. L'énoncé *« le serveur lit par nom »* n'est donc vrai **que des lectures publiques** *(`lireOngletSimple`)* |
+> | **Les écritures de lignes entières aussi** | `matchObjToRowComplet` mappe `ENTETES.Matchs` dans l'ordre du code |
+>
+> ⛔ **La liste n'est pas déclarée close** : ces trois points sont **constatés**, pas exhaustifs.
+> **`C-031` commence par un relevé**, pas par une correction.
+>
+> 🛡️ **En attendant, une règle provisoire protège le prochain chantier** *(inscrite dans `PLAN.md`
+> **C-015**, décidée par **D-037**)* : **toute colonne nouvelle s'ajoute à la FIN de la structure,
+> jamais au milieu.** ⚠️ **Elle protège C-015 par la vigilance — elle ne referme pas R-093.**
 >
 > 🎯 **Ce que cela dit de la méthode, et il faut l'écrire** : les 703 tests automatiques n'auraient
 > **jamais** pu le trouver — ils ne touchent aucun classeur. **C'est exactement ce que l'étape 5 des

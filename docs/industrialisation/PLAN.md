@@ -10,7 +10,16 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
-**Dernière mise à jour** : 2026-08-19 (🏁 ⭐ **§13 — LA REMISE À NIVEAU DOCUMENTAIRE EST TERMINÉE** :
+**Dernière mise à jour** : 2026-08-19 *(soir)* — ⚡ **ARBITRAGE DE R-092 ET R-093** *(**D-037**)* :
+**R-092 rejoint C-015** *(toute invalidation d'un résultat doit effacer le détail périmé)* · ⚡ **R-093
+devient le chantier C-031**, *« les colonnes du classeur : une seule façon de les désigner »*, dont le
+périmètre couvre **au minimum `Matchs` ET `Equipes`** · 🛡️ une **règle de protection provisoire** est
+inscrite dans **C-015** *(toute colonne nouvelle s'ajoute **à la fin**)*, qui protège ce chantier
+**sans refermer R-093** · ✅ **§12 corrigé** : *« 91 sur 91 placés »* était devenu faux — le registre
+compte **93 problèmes**, et **aucun n'est désormais sans situation connue**. ⏳ **C-015 reste le
+prochain chantier à ouvrir**, sa conception n'est **pas** commencée.
+
+*Rappel de la mise à jour précédente — 2026-08-19* : (🏁 ⭐ **§13 — LA REMISE À NIVEAU DOCUMENTAIRE EST TERMINÉE** :
 chantier hors audit ouvert et clos le 2026-08-19, défini par **D-036**. **Les 6 lots sont terminés et
 publiés** — `8e08552`, `969e673`, `b91cbfe`, `22d2186`, `eadb61a` + le commit de clôture du lot 5, et
 `3af61f2`. **Son critère de fin est ATTEINT** — voir **§13.5**, qui dit aussi ce que « terminé » ne
@@ -77,7 +86,7 @@ Elles s'imposeront au volet ③ et à l'ÉTAPE 5 :
 | 0 | Mise en place du suivi | `CLAUDE.md` + `docs/industrialisation/` | ✅ TERMINÉE |
 | 1 | **Cartographie** | Comprendre le projet, en langage simple. Aucune modification. → `CARTOGRAPHIE.md` | ✅ **TERMINÉE** (volets A, B et C) |
 | 2 | **Audit global** | Rapport des 8 domaines, problèmes classés P0/P1/P2/P3. Aucune modification. → `AUDIT.md` + `RISQUES.md` | ✅ **TERMINÉE** — **8 sur 8**, sessions 5 à 12, **88 problèmes** |
-| 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers**, **91 problèmes placés sur 91** |
+| 3 | **Plan priorisé** | Le tableau des chantiers ci-dessous, rempli | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers**, **91 problèmes placés sur les 91 connus alors**. ⚡ **31 chantiers et 93 problèmes depuis le 2026-08-19** *(D-037)* — voir **§12** |
 | 4 | **Validation** | Accord explicite de Romain, chantier par chantier | 🚧 **EN COURS** — ✅ **C-011 validé** (2026-08-06) |
 | 5 | **Implémentation** | Une modification cohérente à la fois | 🚧 **DÉMARRÉE** — **C-011**, PR #181 |
 | 6 | **Commit** | Un commit atomique par chantier validé | ⬜ À faire |
@@ -1140,7 +1149,7 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   parfaite : elles sont classées **dans l'ordre du tableur**. Un score de 150 au lieu de 15 est
   accepté **sans un mot**.
 - **Risques couverts** : **R-001** *(P1)* · **R-003** *(P1)* · **R-004** *(P1)* · **R-005** *(P1)* ·
-  **R-013**
+  **R-013** · ⚡ **R-092** *(priorité **à confirmer** — rattaché ici le 2026-08-19 par **D-037**)*
 - **Priorité** : **P1** — **quatre P1 dans un seul chantier**, et ce sont **les quatre du fil rouge
   métier** : ils apparaissent **tous le jour J**, quand la réalité s'écarte du plan.
 - ✅ **Toutes les règles sont DÉJÀ décidées** — **D-011** *(forfait : absent 0 point, présent gagne,
@@ -1162,6 +1171,52 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
   **identique au caractère près** · les 4 formats d'après-midi · le Super Challenge.
 - **Statut** : **PLANIFIÉ** · **Validation** : ✅ **D-011 → D-015** *(les règles)* · ⏳ **le lot reste
   à valider**
+
+> ⚡ **R-092 REJOINT CE CHANTIER** *(**D-037**, 2026-08-19)* — **le détail du score n'est effacé par
+> aucun des chemins d'INVALIDATION d'un résultat.** Quand une catégorie joue au tir au but, le
+> résultat est rangé dans **8 compteurs** *(essais, transformations, pénalités, drops)*. Le score,
+> lui, est effacé quand un résultat est invalidé — **les compteurs, non**. L'écran de saisie rouvre
+> alors la carte **pré-remplie avec les chiffres du match précédent**, qui n'existe plus.
+>
+> ⚠️ **Le périmètre exact, et il est plus étroit que la formulation d'origine** *(vérifié le
+> 2026-08-19)* : le défaut est **INTRA-TOURNOI**. 🟢 **La réinitialisation générale du tournoi,
+> elle, EFFACE bien les 8 compteurs** — `viderDonnees` vide toute la largeur de l'onglet. Dire
+> *« le détail n'est effacé nulle part »* serait donc **faux aujourd'hui**.
+>
+> 🎯 **Pourquoi ici, et pas ailleurs** : C-015 construit **l'annulation** *(D-015)*, le **forfait**
+> *(D-011)* et la **correction de score** *(D-012)* — c'est-à-dire **exactement les trois gestes qui
+> invalident un résultat**. R-092 est le trou dans ces gestes. ⚠️ **Et sans lui, C-015 créerait un
+> chemin d'invalidation de plus qui reproduirait le défaut.**
+>
+> **Exigence portée par la décision** *(mot pour mot)* : *« toute invalidation d'un résultat efface
+> également les données détaillées devenues périmées »*. Les trois chemins connus au 2026-08-19 :
+> une correction repassée en **mode simple** *(`enregistrerScore` — pas de branche « sinon »)*, la
+> **réinitialisation en cascade** d'un bracket *(`invaliderMatchAval`)*, et la remise à zéro de la
+> **petite finale** *(`majPetiteFinale`)*.
+>
+> ⚠️ **Sa priorité reste « À CONFIRMER »**, et ce n'est plus bloquant : rattaché ici, R-092 suit le
+> calendrier de C-015, qui est **P1**. Détail de ce qui reste à vérifier : `RISQUES.md`.
+
+> 🛡️ **RÈGLE DE PROTECTION PROVISOIRE — à respecter par ce chantier** *(**D-037**, 2026-08-19)*
+>
+> **Aucune colonne nouvelle utilisée par un mécanisme d'écriture positionnelle ne doit être insérée
+> AU MILIEU de la structure existante. Si `Matchs` a besoin d'une colonne, elle s'ajoute À LA FIN de
+> `ENTETES.Matchs`.**
+>
+> **Pourquoi** : `assurerColonnesMatchs` ajoute les colonnes manquantes **à droite**. Une colonne
+> insérée au milieu de la constante ferait donc diverger l'ordre du **code** et celui du
+> **classeur** — et **toute écriture par rang partirait d'un cran à côté, en silence**. C'est
+> **R-093**, et une colonne `forfait` posée « à côté des scores » **par souci de lisibilité** serait
+> exactement le geste qui le déclenche.
+>
+> 🟢 **Cette règle suffit à C-015, et elle ne coûte rien** : l'analyse du 2026-08-19 a établi que
+> **trois de ses cinq fonctionnalités ne persistent aucune donnée nouvelle** *(plafond de score,
+> départage, déplacement de match)*, et que **le forfait et l'annulation peuvent se passer d'une
+> colonne** — l'état peut tenir dans `statut`, ou dans une colonne ajoutée en fin. **Aucune décision
+> D-011 → D-015 n'impose de colonne.**
+>
+> ⛔ **Elle ne referme PAS R-093** : elle protège **ce chantier**, par la vigilance. Le problème
+> structurel appartient à **C-031**.
 
 ---
 
@@ -1483,6 +1538,82 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 
 ---
 
+### C-031 — 🏛️ Les colonnes du classeur : **une seule façon de les désigner**
+
+> 🏛️ **Chantier créé le 2026-08-19, hors ÉTAPE 3**, par **décision de Romain** *(**D-037**)*. Il ne
+> vient pas de l'audit des 8 domaines : il porte **R-093**, entré au registre le 2026-08-18 par les
+> vérifications manuelles de C-012. ⚠️ **Sa solution technique n'est PAS conçue** — cette fiche
+> cadre le problème et son périmètre, rien de plus.
+
+- **Problème** (en langage simple) : **l'application désigne les colonnes du classeur de deux façons
+  différentes, et rien ne garantit qu'elles parlent de la même chose.** Pour *lire* les données
+  publiques, elle va chercher la colonne **par son titre** — méthode juste quel que soit l'ordre.
+  Pour *écrire*, elle compte les colonnes **par leur rang** — « la 19ᵉ » — d'après l'ordre inscrit
+  dans le code, **pas d'après le classeur**. Tant que les deux ordres coïncident, tout va bien. Le
+  jour où ils divergent, l'application **écrit à côté, sans rien signaler**.
+- **Risques couverts** : **R-093** *(P2)*
+- **Priorité** : **P2** — ⚠️ mais lire la nuance ci-dessous : la priorité décrit **la probabilité
+  aujourd'hui**, pas la gravité du jour où cela se produirait.
+- 🏉 **L'image qui dit tout** : les dossards sont rangés dans un vestiaire. Pour les **prendre**, on
+  lit le nom écrit sur chacun. Pour les **ranger**, on compte les casiers depuis la porte, d'après
+  un plan affiché ailleurs. Tant que le vestiaire correspond au plan, personne ne voit rien. Le jour
+  où un casier a été ajouté au mauvais endroit, **chaque maillot part chez le voisin** — et le plan,
+  lui, continue d'avoir l'air juste.
+- ⚠️ **Ce n'est pas théorique** : **constaté en vrai le 2026-08-18** *(C-012, vérification V-4)* —
+  les 8 compteurs du score détaillé écrits **une colonne trop à gauche**, la colonne `arbitre`
+  **écrasée** par un nombre d'essais, `drop_B` **perdue**. Le score et le statut restaient justes,
+  et ⭐ **l'application n'a rien signalé du tout**.
+- 🎯 **Le périmètre couvre AU MINIMUM DEUX onglets** *(exigence de **D-037**)* :
+
+  | Onglet | Ce qui a été constaté |
+  |---|---|
+  | **`Matchs`** | `colMatchs()` calcule le rang depuis `ENTETES.Matchs` *(la constante du **code**)*, et `assurerColonnesMatchs` ajoute les colonnes manquantes **à droite** — une colonne du milieu qui manque revient donc **en queue**, et tout ce qui suit est décalé. ⚡ **Et le chemin d'écriture du score LIT AUSSI par rang** *(`objetDepuisLigneMatch`)* : les six garde-fous décident alors sur des valeurs mal étiquetées |
+  | **`Equipes`** | **Même schéma**, et le code le dit lui-même : *« les colonnes manquantes sont AJOUTÉES à la suite, dans l'ordre de `ENTETES.Equipes` — `ecrireNouvelleEquipe` écrit positionnellement »* *(`assurerColonnesEquipes`)* |
+
+  ⚠️ **Le chantier commence donc par un relevé**, pas par une correction : *quels onglets, quelles
+  écritures, quelles lectures* — les deux ci-dessus sont **constatés**, la liste n'est pas déclarée
+  close.
+- 💡 **Le remède existe déjà dans le projet, appliqué à un AUTRE onglet** : `assurerOngletSponsors`
+  compare les en-têtes **rang par rang** et réécrit la ligne si l'ordre diverge. Son commentaire
+  nomme le risque exact : *« la valeur partirait dans le Sheet pour n'être jamais relue, en
+  silence »*.
+  🔴 **Mais il ne doit PAS être recopié tel quel** : il **renomme les en-têtes sans déplacer les
+  données**. Sans danger sur `Sponsors` ; sur un `Matchs` réellement désordonné **contenant des
+  scores**, il transformerait un décalage en **corruption définitive**. ⭐ **C'est la contrainte
+  numéro un de la conception.**
+- **Risque de la correction** : 🟠 **élevé si mal conçue, faible si bien conçue.** Le chantier touche
+  **la façon dont l'application écrit dans le classeur** — donc tout. Trois exigences se dégagent
+  déjà : ① **ne jamais réécrire une ligne d'en-tête sur un classeur contenant des données** sans
+  avoir traité leur déplacement ; ② **savoir dire** que l'ordre diverge, plutôt que de corriger en
+  silence ; ③ **ne rien changer** au comportement quand l'ordre est correct — ce qui est le cas
+  partout aujourd'hui.
+- **Fichiers concernés** : `backend/Code.gs` · `backend/Tests.gs`
+- **Dépendances** : **aucune** — ⚠️ mais lire l'encadré ci-dessous, qui est la raison d'être de sa
+  date de création.
+- **Stratégie de test** *(piste, non arrêtée)* : le défaut est **hors de portée du harnais actuel** —
+  ⭐ **les 703 vérifications ne touchent aucun classeur**, et c'est précisément pourquoi elles ne
+  l'ont jamais vu. C'est **une vérification manuelle** qui l'a trouvé. Toute solution devra dire
+  **comment elle se prouve**.
+- **Non-régression** : un classeur dont l'ordre est **canonique** — c'est-à-dire tous ceux en service
+  aujourd'hui — doit se comporter **exactement** comme avant.
+- **Statut** : **IDENTIFIÉ** · **Validation** : ✅ **création du chantier validée (D-037)** · ⏳ **le
+  contenu reste à concevoir ET à valider**
+
+> ⚠️ **CE QUE CE CHANTIER NE FAIT PAS, et c'est important pour ne pas se croire protégé.**
+> La règle provisoire inscrite dans **C-015** *(toute colonne nouvelle s'ajoute **à la fin**)*
+> **protège C-015, elle ne referme pas R-093.** Elle repose sur la vigilance de chaque session ;
+> **C-031 existe pour que le dépôt cesse d'en dépendre.**
+>
+> 🟢 **Pourquoi le problème n'est pas atteignable en production aujourd'hui** *(vérifié le
+> 2026-08-19, et c'est ce qui autorise à ne pas en faire un préalable bloquant)* : toutes les
+> colonnes ajoutées après coup l'ont été **en fin de `ENTETES`**, et dans cet ordre — les 8
+> compteurs le 2026-07-31 à 12 h 51, `arbitre` **en dernière position** le même jour à 16 h 31.
+> `assurerColonnesMatchs`, qui ajoute à droite, a donc **reproduit l'ordre canonique**.
+> ⚠️ **C'est un heureux enchaînement, pas une garantie** : il tient tant que personne n'insère une
+> colonne au milieu.
+
+---
+
 ## 11. ⛔ CE QU'ON NE FAIT PAS — et pourquoi
 
 > **Trois problèmes du registre n'auront pas de fiche**, et c'est une décision, pas un oubli.
@@ -1495,7 +1626,7 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 
 ---
 
-## 12. 🎯 LA COUVERTURE — **les 91 problèmes sont tous placés**
+## 12. 🎯 LA COUVERTURE — **les 93 problèmes ont tous une situation connue**
 
 > **C'est la pièce qui clôt l'ÉTAPE 3**, et la raison pour laquelle Romain a voulu la vision
 > complète avant de commencer : *« plutôt que commencer un chantier pour ensuite devoir repasser
@@ -1503,13 +1634,26 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 >
 > **Ce tableau est vérifiable** : il a été produit en relisant les fiches, pas de mémoire.
 
+> ⚡ **MISE À JOUR DU 2026-08-19 — ce titre disait « les 91 problèmes sont tous placés », et cette
+> phrase était devenue fausse.** Deux problèmes sont entrés au registre **après** la clôture de
+> l'ÉTAPE 3, trouvés par le chantier **C-012** : **R-092** *(2026-08-16)* et **R-093**
+> *(2026-08-18)*. Ni l'un ni l'autre n'était rattaché à un chantier — l'écart était **signalé dans
+> `RISQUES.md`**, en attente d'un arbitrage.
+>
+> ✅ **Il a eu lieu le 2026-08-19** *(**D-037**)* : **R-092 rejoint C-015**, **R-093 devient
+> C-031**. **Le registre n'a de nouveau aucun problème sans situation connue.**
+
 | | |
 |---|---|
-| **Problèmes au registre** | **91** *(88 de l'audit + 3 post-clôture)* |
-| **Placés dans un chantier** | **88** |
+| **Problèmes au registre** | **93** *(88 de l'audit + 5 post-clôture)* |
+| **Placés dans un chantier** | **90** |
 | **Explicitement hors chantier** | **3** *(R-011, R-019, R-040 — voir §11)* |
 | **Sans place** | ✅ **0** |
-| **Chantiers écrits** | **30** *(C-001 → C-030)* |
+| **Chantiers écrits** | **31** *(C-001 → C-031)* |
+
+> 📌 **93 n'est pas 88, et il ne faut pas confondre les deux** : **88** est le résultat de
+> **l'audit**, figé, celui de `RAPPORT-AUDIT.md` ; **93** est l'état du **registre de suivi**, qui
+> continue de vivre. **R-089 → R-093 n'ont été trouvés par aucun domaine d'audit.**
 
 ### 12.1 — Le tableau complet
 
@@ -1606,6 +1750,9 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 | **R-089** | P1 | C-002 + C-003 |
 | **R-090** | P2 | C-004 |
 | **R-091** | P2 | C-004 |
+| ⚡ **R-092** | *à confirmer* | **C-015** *(D-037)* |
+| ⚡ **R-093** | P2 | **C-031** *(D-037)* |
+
 ### 12.2 — Ce que ce tableau permet, et qui n'était pas possible avant
 
 1. **Aucun chantier ne sera à refaire** parce qu'un problème oublié aurait forcé à rouvrir le même
@@ -1613,9 +1760,14 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 2. **L'ordre est établi de bout en bout** : on sait ce qui doit passer avant quoi, et **pourquoi** ;
 3. **L'ÉTAPE 3 est terminée.** La suivante est l'**ÉTAPE 4** — la validation, chantier par chantier.
 
-> ⚠️ **Ce que ce tableau ne prouve PAS** : que les 91 problèmes seront corrigés. Il prouve que
+> ⚠️ **Ce que ce tableau ne prouve PAS** : que les 93 problèmes seront corrigés. Il prouve que
 > **chacun a une place et une décision** — y compris *« on ne le fait pas, et voici pourquoi »*.
 > Trois sont dans ce cas, et c'est écrit.
+>
+> ⚡ **Et il ne prouve pas non plus que la liste est close.** Elle ne l'est pas : **R-092 et R-093
+> sont entrés après la clôture de l'ÉTAPE 3**, trouvés par un chantier en cours. 🎯 **La leçon vaut
+> pour la suite** — *un chantier qui travaille vraiment trouve des problèmes que l'audit n'avait pas
+> vus*, et le tableau doit alors être **rouvert**, pas défendu.
 
 ---
 

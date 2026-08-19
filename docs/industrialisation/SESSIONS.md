@@ -5715,3 +5715,118 @@ déjà publiées** : l'historique Git *(commits, statistiques de fichiers, messa
 > **là où la règle ne regardait pas**. `PLAN.md` et `DECISIONS.md` ont été tenus lot après lot ;
 > **`ETAT.md` et `SESSIONS.md` ne l'ont pas été** — alors que `CLAUDE.md` **§12.4** point 1 le
 > demande à **chaque** fin de session. C'est exactement le **défaut de propagation** décrit au §1.
+
+
+---
+
+# ⚖️ ARBITRAGE DE **R-092** ET **R-093** — les deux derniers problèmes sans rattachement *(2026-08-19, soir)*
+
+> **Objectif de la session** : avant d'ouvrir le chantier suivant, **résoudre proprement la situation
+> des deux problèmes du registre qu'aucun chantier ne portait**. Analyse en lecture seule, puis
+> arbitrage, puis formalisation.
+> **Résultat** : ✅ **R-092 rejoint C-015** · ✅ **R-093 devient le chantier C-031** · 🛡️ une **règle
+> de protection provisoire** entre dans C-015 · ✅ **`PLAN.md` §12 corrigé**. **Décision : D-037.**
+
+**Point de départ** : `main` = `origin/main` = **`74ef231`**, arbre propre.
+⚠️ **Aucune ligne de code, aucun test, aucune colonne. R-092 et R-093 restent NON CORRIGÉS.**
+
+---
+
+## 1. Ce que l'analyse a vérifié dans le code — et non repris de `RISQUES.md`
+
+**R-093 — l'affirmation « écrit par position, lit par nom »** :
+
+| Vérification | Résultat |
+|---|---|
+| La lecture publique se fait bien par nom | 🟢 **OUI** — `lireOngletSimple` associe chaque valeur à **l'en-tête réel du classeur** |
+| L'écriture se fait bien par rang | 🟢 **OUI** — `colMatchs()` → `ENTETES.Matchs.indexOf(nom) + 1`, **l'ordre du code**, 13 usages |
+| Le code organise-t-il leur désaccord ? | 🟢 **OUI** — `assurerColonnesMatchs` ajoute les colonnes manquantes **à droite** |
+| ⚡ **Le chemin d'écriture du score lit-il par nom ?** | 🔴 **NON — il lit AUSSI par rang** *(`objetDepuisLigneMatch`)*, et c'est lui qui alimente **les six garde-fous**. L'énoncé de la fiche n'est vrai **que des lectures publiques** |
+| Portée réelle | ⚡ **plus large que `Matchs`** : `assurerColonnesEquipes` porte **le même schéma**, son commentaire le dit |
+| C-012 en est-il la cause ? | 🟢 **NON — révélateur, pas créateur** : les écritures existaient au point de départ `4af5003`, et **13 usages avant comme après** |
+| Atteignable en production ? | 🟢 **NON aujourd'hui** — les 8 compteurs ajoutés le 2026-07-31 à **12 h 51**, `arbitre` **en dernier** à **16 h 31** : l'ordre canonique a été **reproduit** |
+| Erreur détectable ? | 🔴 **NON — silencieuse.** L'écriture réussit, la relecture par nom renvoie la valeur sous un autre nom. **Aucune exception** |
+
+> 💡 **Le remède existe déjà dans le projet, sur un AUTRE onglet** : `assurerOngletSponsors` compare
+> les en-têtes **rang par rang** et réécrit la ligne si l'ordre diverge.
+> 🔴 **Mais il ne doit pas être recopié tel quel** : il **renomme sans déplacer les données**. Sur un
+> `Matchs` désordonné **contenant des scores**, il changerait un décalage en **corruption
+> définitive**. C'est la contrainte n° 1 de C-031.
+
+**R-092 — les trois chemins d'invalidation** : 🟢 confirmés *(pas de branche « sinon » dans
+`enregistrerScore` · `invaliderMatchAval` · `majPetiteFinale`)*. ⚡ **Deux nuances trouvées** :
+la réinitialisation **générale** du tournoi, elle, **efface bien** le détail *(`viderDonnees`)* ; et
+le consommateur cité par la fiche côté serveur, `essaisConnusEquipe`, est **défini et testé mais
+jamais appelé** — le vrai consommateur est son **miroir dans le navigateur**.
+
+---
+
+## 2. La question qui décidait de l'ordre : C-015 doit-il ajouter une colonne ?
+
+**Réponse : AUCUNE COLONNE NOUVELLE N'EST IMPOSÉE PAR C-015 — mais le choix de conception du
+forfait reste à faire.** ⚠️ C'est une nuance, pas une formule de prudence : *« aucune n'est
+imposée »* n'est **pas** *« il n'y en aura pas »*. **Trois** des cinq fonctionnalités ne peuvent
+structurellement pas en créer ; pour le **forfait** et l'**annulation**, une colonne dédiée reste
+une **option de conception ouverte** — c'est précisément ce que la règle 🛡️ encadre.
+
+| Fonctionnalité | Donnée nouvelle ? | Colonne ? |
+|---|---|---|
+| Plafond de score *(D-012)* | 🟢 aucune — c'est une **validation** | 🟢 **non**, certain |
+| Départage *(D-014)* | 🟢 aucune — **calculé**, jamais stocké | 🟢 **non**, certain |
+| Déplacement de match *(D-013)* | 🟢 aucune — on **modifie** `heure_debut`, `heure_fin`, `terrain` | 🟢 **non**, certain |
+| **Forfait** *(D-011)* | **oui** : l'état + **quelle équipe** | 🔵 **non établi** — `statut` peut le porter |
+| **Annulation** *(D-015)* | oui : une valeur de plus | 🔵 **non** — *« deux libellés, un seul mécanisme »* |
+
+> 🟢 **Pourquoi une donnée nouvelle est bien nécessaire pour le forfait** : `calculerClassement`
+> déduit victoire/nul/défaite **de la seule comparaison des scores**, et ignore tout match sans
+> score. Or D-011, amendée par Romain, supprime le score. **C'est l'état qui doit porter la
+> victoire** — la décision l'avait annoncé.
+>
+> ⚡ **Le vrai risque n'est donc pas « une colonne nouvelle », c'est « une colonne AU MILIEU »** —
+> par exemple `forfait` placée à côté des scores **par souci de lisibilité**. D'où la règle
+> provisoire : elle **n'interdit pas** d'ajouter une colonne, elle impose **où** la mettre. ⛔ **Le
+> choix du support de l'état forfait — `statut` enrichi, colonne dédiée, ou autre — n'est PAS
+> tranché**, et il appartient à la conception de C-015.
+
+---
+
+## 3. Les décisions de Romain — **D-037**
+
+| | Décision |
+|---|---|
+| **R-092** | **Rattaché à C-015** — *« toute invalidation d'un résultat efface également les données détaillées devenues périmées »* |
+| **R-093** | **Chantier autonome C-031** — périmètre **non limité à `Matchs`** : `Equipes` porte le même schéma |
+| **Ordre** | **C-015 reste le prochain chantier à ouvrir** ; R-093 **n'est pas** un préalable bloquant |
+| **La règle** | Aucune colonne nouvelle **au milieu** ; si `Matchs` en a besoin, **à la fin de `ENTETES.Matchs`** |
+| **La limite** | ⛔ *« Cette règle protège C-015 mais ne referme pas R-093. »* |
+
+**Sur la priorité de R-092** : ⚠️ **elle reste « à confirmer », et elle n'a pas été inventée.** Le
+critère de **D-C012-2** *(P2 si la combinaison « tir au but + Coupe » est impossible, P1 sinon)* a
+reçu **la moitié de sa réponse** : 🟢 le code **n'exclut pas** la combinaison, et ⚡ **D-034 a rendu
+le format Coupe de nouveau proposé** le 2026-08-19 — il était **masqué** le jour où D-C012-2 a été
+prise. 🔵 **Reste inconnu** : si une catégorie a réellement `tir_au_but = OUI`, donnée qui vit
+**dans le classeur, pas dans le dépôt**. ✅ **Ce n'est plus bloquant** : rattaché à C-015 *(P1)*,
+R-092 en suit le calendrier.
+
+> 🎯 **La leçon de méthode de cette session** : *une question laissée ouverte par un chantier a reçu
+> la moitié de sa réponse d'un AUTRE chantier, trois jours plus tard, sans que personne l'ait
+> cherché.* **D-034 a déplacé une barrière dont R-092 dépendait.** C'est ce qu'un registre est censé
+> attraper — et il l'a attrapé.
+
+---
+
+## 4. État à la fin de la session
+
+| | |
+|---|---|
+| **Documents modifiés** | `PLAN.md` · `RISQUES.md` · `DECISIONS.md` · `ETAT.md` · `SESSIONS.md` — **documentation de suivi uniquement** |
+| **Nouveau chantier** | **C-031** — *« les colonnes du classeur : une seule façon de les désigner »*, **IDENTIFIÉ**, solution **non conçue** |
+| **Couverture du plan** | ✅ **31 chantiers, 93 problèmes, aucun sans situation connue** |
+| **R-092 · R-093** | ⛔ **NON CORRIGÉS** — seul leur **rattachement** a changé |
+| **Prochaine session** | **C-015**, dont la **conception n'est pas commencée**. ⚠️ Elle devra respecter la règle 🛡️ et traiter **R-092** dans le même lot |
+
+> ⚠️ **Documents ACTIFS vérifiés** *(`CLAUDE.md` §12.4, point 2)* : **aucun ne devient faux.**
+> `README.md`, `docs/architecture.md`, `backend/README.md` et `CHANGELOG.md` décrivent le produit ;
+> cette session n'a touché ni comportement, ni écran, ni action serveur, ni état de déploiement.
+> **Aucune entrée de `CHANGELOG` n'est requise** : personne qui utilise l'application ne le
+> remarquerait.

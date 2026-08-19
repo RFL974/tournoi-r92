@@ -5,7 +5,12 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-19 (🏛️ **D-036** — le **découpage en 6 lots** de la remise à
+**Dernière mise à jour** : 2026-08-19 *(soir)* — ⚡ **D-037** : **l'arbitrage de R-092 et R-093**,
+les deux derniers problèmes du registre sans rattachement. **R-092 rejoint C-015** · **R-093 devient
+le chantier C-031** *(périmètre : au minimum `Matchs` **et** `Equipes`)* · une **règle de protection
+provisoire** est inscrite dans C-015 · **C-015 reste le prochain chantier à ouvrir**.
+
+*Rappel de la mise à jour précédente — 2026-08-19* : (🏛️ **D-036** — le **découpage en 6 lots** de la remise à
 niveau documentaire : les lots 1 à 3 **constatés**, les lots 4 à 6 **décidés par le propriétaire** ;
 inscrit dans `PLAN.md` **§13**. ⚡ **D-035** — le `CHANGELOG` rejoint la règle de la carte **§8 bis**.
 ⚡ **D-034** — `COUPE_PLATEAU` reste **proposé mais signalé**, ce qui **remplace** la doctrine
@@ -2231,3 +2236,90 @@ s'engage à tenir.
 > existe, son principe, les 6 lots, leur ordre, leur état, leurs dépendances, leurs commits, les
 > décisions associées, les critères de fin, et ce qui reste. **Aucune conversation n'est
 > nécessaire.**
+
+
+---
+
+### D-037 — L'arbitrage de **R-092** et **R-093** : les deux derniers problèmes sans rattachement
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-19 |
+| **Chantier** | Aucun — **arbitrage préparatoire**, avant l'ouverture du chantier suivant |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Couvre** | **R-092** · **R-093** · la couverture du plan *(`PLAN.md` §12)* |
+| **Voisines** | **D-C012-2** *(qui avait laissé R-092 délibérément sans priorité)* · **D-034** *(qui a déplacé une barrière dont R-092 dépendait, sans que ce soit son objet)* |
+
+**Le problème posé**
+
+> Deux problèmes étaient entrés au registre **après la clôture de l'ÉTAPE 3**, trouvés par le
+> chantier **C-012** : **R-092** *(2026-08-16)* et **R-093** *(2026-08-18)*. **Aucun des deux
+> n'était rattaché à un chantier.** Tant qu'ils ne l'étaient pas, l'affirmation de `PLAN.md`
+> *« 91 sur 91 placés, 0 sans place »* restait fausse, et **on ne pouvait pas ouvrir le chantier
+> suivant en sachant ce qu'on laissait derrière soi**.
+
+**Les quatre décisions, dans les mots de Romain**
+
+> **1.** *« R-092 est rattaché à C-015. Sa correction doit être conçue avec les mécanismes de
+> correction, forfait et annulation de match afin que toute invalidation d'un résultat efface
+> également les données détaillées devenues périmées. »*
+>
+> **2.** *« R-093 devient un chantier autonome d'industrialisation. Son périmètre ne doit pas être
+> limité à `Matchs` : l'analyse a montré que `Equipes` utilise également un schéma d'écriture
+> positionnelle associé à l'ajout de colonnes en fin de tableau. »*
+>
+> **3.** *« C-015 reste le prochain chantier à ouvrir. R-093 n'est pas un préalable bloquant à
+> condition que C-015 respecte la règle suivante : aucune nouvelle colonne utilisée par un mécanisme
+> d'écriture positionnelle ne doit être insérée au milieu de la structure existante ; si une
+> nouvelle colonne est nécessaire dans `Matchs`, elle doit être ajoutée à la fin de
+> `ENTETES.Matchs`. »*
+>
+> **4.** *« Cette règle protège C-015 mais ne referme pas R-093. Le futur chantier R-093 devra
+> traiter le problème structurel proprement. »*
+
+**Ce que cela fixe, et où c'est inscrit**
+
+| | Ce qui est décidé | Où c'est écrit |
+|---|---|---|
+| **R-092** | Rattaché à **C-015** — l'exigence est que **toute invalidation d'un résultat efface le détail périmé** | `PLAN.md` **C-015** · `RISQUES.md` |
+| **R-093** | Devient **C-031**, *« les colonnes du classeur : une seule façon de les désigner »* — ⚠️ **périmètre : au minimum `Matchs` ET `Equipes`** | `PLAN.md` **C-031** · `RISQUES.md` |
+| **La règle provisoire** | Toute colonne nouvelle s'ajoute **à la fin** de la structure, **jamais au milieu** | `PLAN.md` **C-015**, encadré 🛡️ |
+| **L'ordre** | **C-015 reste le prochain chantier à ouvrir** ; R-093 **n'est pas** un préalable bloquant | `PLAN.md` **C-015** et **C-031** |
+
+**Pourquoi C-015 pour R-092, et pas un chantier à part**
+
+> Parce que C-015 construit **l'annulation** *(D-015)*, le **forfait** *(D-011)* et la **correction
+> de score** *(D-012)* — **les trois gestes qui invalident un résultat**. R-092 **est** le trou dans
+> ces gestes. ⚠️ **Et le traiter ailleurs coûterait deux fois** : il faudrait rouvrir les mêmes
+> fonctions, et faire relire deux fois le même risque de régression sur **le geste le plus répété de
+> la journée**. Enfin, sans lui, **C-015 ajouterait un chemin d'invalidation de plus qui
+> reproduirait le défaut**.
+
+**Pourquoi un chantier autonome pour R-093, et pas un rattachement**
+
+> Parce qu'**aucun des 30 chantiers ne porte l'intégrité des écritures dans le classeur**. C-016
+> protège contre les *gestes destructeurs* — c'est du contrôle d'accès ; C-027 ajoute des *tests de
+> bout en bout*. R-093 n'est ni l'un ni l'autre : c'est une **convention de désignation des
+> colonnes** que **rien ne vérifie**. L'insérer dans un chantier voisin le rendrait **invisible** —
+> et c'est exactement le mécanisme qui a produit les décrochages documentaires de ce projet.
+
+**Pourquoi la règle provisoire suffit à C-015 — et pourquoi elle ne suffit à rien d'autre**
+
+> ✅ **Elle suffit à C-015**, parce que l'analyse du 2026-08-19 a établi, en lisant le code, que
+> **trois de ses cinq fonctionnalités ne persistent aucune donnée nouvelle** *(plafond de score,
+> départage, déplacement de match)*, que **le forfait et l'annulation peuvent se passer d'une
+> colonne**, et qu'**aucune décision D-011 → D-015 n'en impose une**.
+>
+> ⛔ **Elle ne suffit à rien d'autre**, parce qu'elle **repose sur la vigilance d'une session**. Le
+> jour où quelqu'un place une colonne au milieu par souci de lisibilité — *« mettons `forfait` à
+> côté des scores »* — le décalage revient, **en silence**. 🎯 **C'est précisément la différence
+> entre une règle et une garantie**, et c'est la raison d'être de **C-031**.
+
+**⚠️ Ce que cette décision NE fait PAS**
+
+> - ❌ Elle **ne corrige** ni R-092 ni R-093 — **aucune ligne de code n'a été écrite** ;
+> - ❌ Elle **ne conçoit pas** la solution technique de C-031, ni la conception détaillée de C-015 ;
+> - ❌ Elle **ne tranche pas la priorité de R-092** *(voir `RISQUES.md` : elle reste « à confirmer »,
+>   et la vérification qui la trancherait est nommée)* ;
+> - ❌ Elle **ne crée aucune colonne** et **ne change aucune règle métier** — D-011 à D-015 sont
+>   inchangées.

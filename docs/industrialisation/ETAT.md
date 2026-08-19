@@ -9,7 +9,19 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-19 *(fin de journée)* — 🏁 **DEUX CHANTIERS SE SONT SUCCÉDÉ
+**Dernière mise à jour** : 2026-08-19 *(soir)* — ⚡ **LES DEUX DERNIERS PROBLÈMES SANS
+RATTACHEMENT SONT ARBITRÉS** *(**D-037**)*, et le registre n'en compte plus aucun :
+**R-092 rejoint C-015** *(toute invalidation d'un résultat devra effacer le détail périmé)* ·
+⚡ **R-093 devient le chantier C-031**, *« les colonnes du classeur : une seule façon de les
+désigner »*, dont le périmètre couvre **au minimum `Matchs` ET `Equipes`** · 🛡️ une **règle de
+protection provisoire** entre dans **C-015** *(toute colonne nouvelle s'ajoute **à la fin**)* —
+⛔ **elle protège ce chantier, elle ne referme PAS R-093**. ✅ **`PLAN.md` §12 corrigé** : *« 91 sur
+91 placés »* était devenu faux — **31 chantiers, 93 problèmes, aucun sans situation connue**.
+⏳ **C-015 reste le prochain chantier à ouvrir** : sa conception n'est **pas** commencée.
+⚠️ **Aucune ligne de code, aucun test, aucune colonne** — et **R-092 comme R-093 restent NON
+CORRIGÉS**.
+
+*Rappel de la mise à jour précédente — 2026-08-19 (fin de journée)* : 🏁 **DEUX CHANTIERS SE SONT SUCCÉDÉ
 AUJOURD'HUI, ET LES DEUX SONT TERMINÉS** : **C-012** le matin *(voir le rappel ci-dessous)*, puis
 ⚡ **une REMISE À NIVEAU DOCUMENTAIRE en 6 lots**, ouverte par Romain **hors du plan d'audit** —
 elle n'a **pas** de numéro `C-0XX`. **Les 6 lots sont faits et publiés** ; ⚠️ **l'un d'eux a touché
@@ -133,16 +145,15 @@ registre : R-090, R-091**)
 
 🏁 **L'ÉTAPE 3 EST TERMINÉE, et AUCUN CHANTIER N'EST OUVERT** : **C-012** et la **remise à niveau
 documentaire** *(6 lots, hors plan d'audit — `PLAN.md` §13)* sont **tous deux clos le 2026-08-19**.
-**30 chantiers ont une fiche** (C-001 → C-030), et la couverture prouvée à l'ÉTAPE 3 vaut toujours
-pour les **91 problèmes qu'elle a couverts** — 88 dans un chantier, 3 explicitement écartés
-*(`PLAN.md` §12, tableau vérifiable)*. C'était la condition posée par Romain : *« je préfère qu'on
+⚡ **31 chantiers ont une fiche** (C-001 → **C-031**), et **les 93 problèmes du registre ont tous une
+situation connue** — 90 dans un chantier, 3 explicitement écartés *(`PLAN.md` §12, tableau
+vérifiable)*. C'était la condition posée par Romain : *« je préfère qu'on
 ait la vision complète plutôt que commencer un chantier pour ensuite devoir repasser dessus »* —
 **elle a été remplie.**
 
-> ⚠️ **La phrase « 91 sur 91 placés, 0 sans place » n'est plus exacte.** **R-092** et **R-093**,
-> entrés au registre depuis, ne sont **rattachés à aucun chantier** — **délibéré** pour R-092,
-> **non tranché** pour R-093. L'écart est inscrit dans **`RISQUES.md`**, sa source, pour être repris
-> à la prochaine session de plan.
+> ✅ **L'écart des deux problèmes sans rattachement est REFERMÉ le 2026-08-19** *(**D-037**)* :
+> **R-092 rejoint C-015**, **R-093 devient le chantier C-031**. `PLAN.md` §12 est corrigé —
+> l'ancienne phrase *« 91 sur 91 placés »* était devenue fausse.
 
 L'ordre est établi de bout en bout, et la suite reste la **VALIDATION (ÉTAPE 4)**, chantier par
 chantier.
@@ -174,7 +185,7 @@ chantier.
 | 0 | Mise en place du système de suivi | ✅ **TERMINÉE** (session 1) |
 | 1 | **ÉTAPE 1 — Cartographie** (comprendre le projet, ne rien modifier) | ✅ **TERMINÉE** (sessions 2, 3 et 4) |
 | 2 | **ÉTAPE 2 — Audit global** (8 domaines, P0→P3) | ✅ **TERMINÉE** (sessions 5 à 12) — A, C, B, D, E, F, G et **H** |
-| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | ✅ **TERMINÉE** (sessions 13 → 16) — **30 chantiers** (C-001 → C-030), **91 problèmes placés sur les 91 connus alors**. ⚠️ **Le registre en compte 93 depuis** : **R-092** et **R-093** ne sont rattachés à **aucun** chantier *(voir §1)* |
+| 3 | **ÉTAPE 3 — Plan d'industrialisation priorisé** | ✅ **TERMINÉE** (sessions 13 → 16) — 30 chantiers alors, **91 problèmes placés sur les 91 connus**. ⚡ **Depuis le 2026-08-19 : 31 chantiers** (C-001 → **C-031**) et **93 problèmes, tous avec une situation connue** *(D-037)* |
 | 4 | **ÉTAPE 4 — Validation par Romain** | 🚧 **EN COURS** — 🏁 **7 chantiers validés et clôturés** : C-011, C-013, C-005, C-006, C-007, C-008 et 🏁 **C-012** *(clos le 2026-08-19)* · ordre retenu : *« d'abord ce qui ne peut rien casser »* — **épuisé depuis C-008**, et **C-012 était le premier à en sortir** |
 | 5 | **ÉTAPE 5 — Implémentation par petites unités** | 🚧 **EN COURS** — **3 chantiers TESTÉS chez Google** : C-011 (PR #181) · C-013 (PR #182) · 🏁 **C-012** (PR #187, #188, #189 — backend redéployé le 2026-08-18, **`R92 — 703/703 OK, 0 FAIL`**) · **3 chantiers documentaires livrés** : C-005, C-006, C-007 · **1 chantier de commentaires livré** : **C-008** *(fichiers source ouverts, **zéro ligne exécutable**)* |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
@@ -216,7 +227,7 @@ chantier.
 | Orientation | D'où elle vient | État |
 |---|---|---|
 | **C-015 — les règles du jour J** | Fin de `SESSIONS.md` — la chaîne `C-011 → C-012 → C-015` est **levée** · fiche : `PLAN.md` | ⬜ **NON lancé** |
-| **Arbitrer R-092 et R-093** | `RISQUES.md` — aucun des deux n'est rattaché à un chantier | ⬜ **NON lancé** — c'est une **décision** |
+| ~~**Arbitrer R-092 et R-093**~~ | `RISQUES.md` — aucun des deux n'était rattaché | ✅ **FAIT le 2026-08-19** *(**D-037**)* — R-092 → **C-015**, R-093 → **C-031** |
 
 > ⛔ **Condition de démarrage inchangée** *(`CLAUDE.md` §12.3)* : **instruction explicite de
 > Romain**.
@@ -322,7 +333,7 @@ dépendances, comment on prouve que c'est fait.
 
 ### 🏁 L'ÉTAPE 3 EST TERMINÉE — sessions 13 à 16
 
-**30 chantiers ont une fiche** (C-001 → C-030) et **les 91 problèmes connus alors étaient tous
+**30 chantiers avaient une fiche** (C-001 → C-030) et **les 91 problèmes connus alors étaient tous
 placés** — état **au 2026-08-06**, à la clôture de l'ÉTAPE 3 :
 
 | | |
@@ -331,8 +342,9 @@ placés** — état **au 2026-08-06**, à la clôture de l'ÉTAPE 3 :
 | Explicitement écartés, avec la raison écrite | **3** — R-011, R-019 *(= l'action D-017)*, R-040 |
 | **Sans place** | ✅ **0** *(à cette date)* |
 
-> ⚠️ **Ce tableau décrit le 2026-08-06, pas aujourd'hui** : **R-092** et **R-093** sont entrés
-> après, et ne sont rattachés à aucun chantier. **Voir §1.**
+> ⚠️ **Ce tableau décrit le 2026-08-06, pas aujourd'hui** : **R-092** et **R-093** sont entrés après,
+> et ont reçu leur rattachement le **2026-08-19** *(D-037)* — le plan compte désormais **31
+> chantiers** et **93 problèmes**. **Voir §1.**
 
 > 🎯 **C'était la condition posée par Romain** : *« je préfère qu'on ait la vision complète plutôt
 > que commencer un chantier pour ensuite devoir repasser dessus parce qu'une session ultérieure
@@ -876,6 +888,12 @@ derrière elle des effectifs d'enfants et des contacts de dirigeants, sans que c
 | **D-034** | **`COUPE_PLATEAU` reste PROPOSÉ, mais SIGNALÉ** et **confirmé avant application** : l'application informe, elle n'interdit pas. ⛔ **Remplace** la doctrine *« interdit en EDR, non proposé »*, **jamais publiée**. ⚠️ **Seule décision du chantier à avoir touché du code** | ✅ **Validée (2026-08-19)** — décision **produit** de Romain |
 | **D-035** | **Le `CHANGELOG` entre dans la règle de la carte** : `CLAUDE.md` §8 bis passe de **3 à 4** documents | ✅ **Validée (2026-08-19)** — **étend D-029** |
 | 🏛️ **D-036** | **Le découpage de la remise à niveau en 6 lots**, inscrit dans `PLAN.md` §13 — **constat** pour les lots 1 à 3, **décision du propriétaire** pour les lots 4 à 6 | ✅ **Validée (2026-08-19)** |
+
+### ⚡ Arbitrage préparatoire, avant l'ouverture du chantier suivant — **2026-08-19**
+
+| Réf | Objet | Statut |
+|---|---|---|
+| **D-037** | **L'arbitrage de R-092 et R-093**, les deux derniers problèmes du registre sans rattachement. **R-092 → C-015** *(toute invalidation d'un résultat doit effacer le détail périmé)* · **R-093 → nouveau chantier C-031** *(périmètre : au minimum `Matchs` **et** `Equipes`)* · 🛡️ **règle de protection provisoire** dans C-015 : toute colonne nouvelle s'ajoute **à la fin**, jamais au milieu — ⛔ **elle protège C-015, elle ne referme pas R-093** · **C-015 reste le prochain chantier à ouvrir**. ⚠️ **Aucun code écrit, aucune priorité inventée** | ✅ **Validée (2026-08-19)** |
 
 **En attente** (voir `DECISIONS.md`) :
 
