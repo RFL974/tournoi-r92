@@ -5,9 +5,11 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-19 (⚡ **D-035** — le `CHANGELOG` rejoint la règle de la carte
-**§8 bis** ; ⚡ **D-034** — `COUPE_PLATEAU` reste **proposé mais signalé**, ce qui **remplace** la
-doctrine « non proposé, conservé pour l'existant », désormais **périmée**)
+**Dernière mise à jour** : 2026-08-19 (🏛️ **D-036** — le **découpage en 6 lots** de la remise à
+niveau documentaire : les lots 1 à 3 **constatés**, les lots 4 à 6 **décidés par le propriétaire** ;
+inscrit dans `PLAN.md` **§13**. ⚡ **D-035** — le `CHANGELOG` rejoint la règle de la carte **§8 bis**.
+⚡ **D-034** — `COUPE_PLATEAU` reste **proposé mais signalé**, ce qui **remplace** la doctrine
+« non proposé, conservé pour l'existant », désormais **périmée**)
 
 ---
 
@@ -2161,3 +2163,71 @@ s'engage à tenir.
 > **R-075 reste entier.** *« Rien ne permet de dire quelle version tourne »* : toutes les entrées du
 > `CHANGELOG` restent sous `## [Non publié]`, et `git tag` ne renvoie toujours rien. Rouvrir le
 > journal **n'est pas** publier des versions — ne pas confondre les deux.
+
+---
+
+### D-036 — Le découpage de la remise à niveau documentaire en **6 lots**
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-19 |
+| **Chantier** | Remise à niveau documentaire — **le chantier lui-même** |
+| **Statut** | ✅ **VALIDÉE — décision du propriétaire du projet** |
+| **Couvre** | Le pilotage du chantier : ses 6 lots, leur ordre, leur périmètre et leurs critères de fin |
+| **Inscrite dans** | `PLAN.md` **§13** — *« Remise à niveau documentaire — 6 lots »* |
+| **Voisines** | **D-034** *(lot 2)* · **D-035** *(lot 3)* |
+
+**Le problème que cette décision referme**
+
+> ⚡ **Le découpage complet en 6 lots n'existait PAS dans le dépôt.** Constaté pendant le **lot 3**,
+> par une recherche exhaustive : tous les fichiers suivis, **l'historique complet toutes branches**
+> *(`git log --all -S`, 8 variantes de casse)*, **103 branches locales**, **44 distantes**, les
+> `notes`, le `stash`, les **étiquettes**, et les **27 objets orphelins** du dépôt.
+>
+> **Résultat : zéro définition des LOT 4, 5 et 6.** L'unique occurrence du mot *« lot 4 »* se
+> trouvait dans un **commit abandonné** *(`89ab0ce`, objet orphelin)*, et elle ne faisait que
+> **nommer** le lot sans le définir — elle n'a d'ailleurs pas survécu au commit publié.
+>
+> **Conséquence** : le chantier n'était **pas reprenable** sans la conversation d'origine. C'est
+> exactement le défaut que ce chantier corrige, appliqué au chantier lui-même.
+
+**Décision retenue**
+
+> ✅ **Les LOT 1 à 3 sont CONSTATÉS A POSTERIORI**, à partir de faits que le dépôt prouve seul —
+> leurs commits, leurs fichiers, leurs décisions :
+>
+> | Lot | Commit | Décision |
+> |---|---|---|
+> | **LOT 1** — les repères qui pouvaient tromper | `8e08552` | — |
+> | **LOT 2** — le format que personne ne pouvait découvrir | `969e673` | **D-034** |
+> | **LOT 3** — rouvrir le journal des évolutions | `b91cbfe` | **D-035** |
+>
+> 🏛️ **Les LOT 4, 5 et 6 sont DÉFINIS OFFICIELLEMENT le 2026-08-19 par le propriétaire du
+> projet.** Leur définition — objectif, fichiers, dépendances, méthode, critères de fin — est
+> reproduite intégralement dans `PLAN.md` **§13**.
+>
+> ⭐ **Cette décision est désormais LA SOURCE DE VÉRITÉ pour la suite du chantier.**
+
+**⚠️ Ce que cette décision NE dit PAS, et il faut le lire**
+
+> Les LOT 4 à 6 **ne sont pas une reconstitution** de quelque chose qui aurait existé. Ils
+> **n'étaient inscrits nulle part** : leur définition **naît ici**. Les présenter comme retrouvés
+> serait faire passer une décision pour un fait historique — précisément l'erreur que **M-06**
+> cherche à empêcher.
+>
+> C'est pourquoi `PLAN.md` **§13 sépare visuellement les deux registres** : 🧾 **constaté** pour les
+> lots 1 à 3, 🏛️ **décidé** pour les lots 4 à 6.
+
+**Pourquoi la décision a été prise à ce moment-là**
+
+> Parce que le **lot 3 a buté dessus**. Faute de plan écrit, le périmètre du lot 3 a dû être
+> reconstitué à partir des seuls faits du dépôt — ce qui a marché, mais **par chance** : rien ne
+> garantissait qu'un autre lecteur arrive à la même conclusion. La session suivante aurait pu
+> **inventer** un périmètre et le croire officiel.
+
+**Ce que cela change pour les sessions futures**
+
+> Une session qui reprend ce chantier ouvre `PLAN.md` **§13** et y trouve : pourquoi le chantier
+> existe, son principe, les 6 lots, leur ordre, leur état, leurs dépendances, leurs commits, les
+> décisions associées, les critères de fin, et ce qui reste. **Aucune conversation n'est
+> nécessaire.**

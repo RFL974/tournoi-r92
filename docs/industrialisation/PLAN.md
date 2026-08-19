@@ -10,7 +10,10 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
-**Dernière mise à jour** : 2026-08-19 (🏁 ⭐ **C-012 EST TERMINÉ — son étape 5 est CLOSE, et
+**Dernière mise à jour** : 2026-08-19 (🏛️ **§13 — REMISE À NIVEAU DOCUMENTAIRE, 6 lots** : chantier
+hors audit ouvert le 2026-08-19 ; **lots 1 à 3 terminés et publiés**, **lots 4 à 6 définis par
+décision du propriétaire** — **D-036**.)
+Rappel du même jour : (🏁 ⭐ **C-012 EST TERMINÉ — son étape 5 est CLOSE, et
 R-042 passe à `TESTÉ`**, avec la réserve **V-12 / N-3 non concluante** conservée. Voir **§10,
 fiche C-012**. ⚠️ Cela **lève la dépendance** `C-011 → C-012 → C-015`.)
 Rappel du 2026-08-06 : (**session 16 — 🏁 L'ÉTAPE 3 EST TERMINÉE** : vague 2 écrite,
@@ -1611,3 +1614,160 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 > ⚠️ **Ce que ce tableau ne prouve PAS** : que les 91 problèmes seront corrigés. Il prouve que
 > **chacun a une place et une décision** — y compris *« on ne le fait pas, et voici pourquoi »*.
 > Trois sont dans ce cas, et c'est écrit.
+
+---
+
+## 13. 📄 REMISE À NIVEAU DOCUMENTAIRE — **6 lots**
+
+> ⚠️ **Ce chantier n'est PAS issu de l'audit de l'ÉTAPE 2.** Il n'a pas de numéro `C-0XX`, et il ne
+> figure pas au tableau des chantiers du **§3** : il a été **ouvert par Romain le 2026-08-19**,
+> hors plan, après le chantier **C-012**.
+>
+> 📌 **Comment lire cette section.** Elle mélange deux registres, et ils sont **signalés
+> séparément partout** :
+>
+> | | |
+> |---|---|
+> | 🧾 **Constaté** | Les **LOT 1 à 3** : ils sont **faits**, et chaque affirmation est vérifiable dans le dépôt *(commit, fichiers, décision)* |
+> | 🏛️ **Décidé** | Les **LOT 4 à 6** : leur définition **n'existait nulle part** dans le dépôt. Elle est fixée par **décision du propriétaire du projet, le 2026-08-19** — voir **D-036**. Ce n'est pas une reconstitution : c'est une décision |
+
+### 13.1 — Pourquoi ce chantier existe
+
+La documentation du dépôt avait **décroché de l'état réel du logiciel** — pas d'un coup, mais
+fonctionnalité après fonctionnalité. Le constat d'entrée, chiffré et vérifiable :
+
+- **`backend/README.md`** annonçait un bilan de tests **`616/616`** alors que le vrai bilan est
+  **`703/703`**. Le sens de l'écart est le piège : `deploiement.md` enseigne qu'un nombre **plus
+  petit** signifie que l'**ancien** fichier de tests a tourné. Quelqu'un obtenant le **bon**
+  résultat aurait donc conclu à une panne ;
+- **`frontend/README.md`** affirmait de la mesure des partenaires qu'elle est *« locale (rien n'est
+  envoyé) »* — **le code envoie les relevés au serveur**. Seul écart touchant les **données
+  personnelles** ;
+- **le format d'après-midi `POULES_NIVEAU`**, livré le 2026-08-01 et **proposé en premier** dans
+  l'administration, n'était documenté dans **aucun** document destiné à l'organisateur ;
+- **`CHANGELOG.md`** s'était **arrêté au 2026-08-04** : **12 enregistrements** touchant le code, les
+  tests ou l'automatisation, sans une ligne de journal.
+
+> 🎯 **Le diagnostic, et il commande tout le chantier.** Ces écarts ne venaient **pas** d'un défaut
+> de discipline. Neuf contradictions sur dix opposaient un document **récent et exact** à un
+> document **plus ancien qu'on n'avait pas relu quand la valeur avait changé**. Le problème est
+> celui de la **propagation**, et — pour le `CHANGELOG` — celui du **périmètre** de la règle
+> `CLAUDE.md` **§8 bis**, qui ne le nommait pas.
+
+### 13.2 — Le principe
+
+**Un lot = un sujet = un commit.** Chaque lot est relu, contrôlé et validé **avant** le suivant ; le
+suivant ne commence jamais automatiquement. Deux règles ont tenu du début à la fin :
+
+1. ⛔ **Aucun remplacement de masse.** Le dépôt contient ~20 traces historiques légitimes portant
+   d'anciens chiffres *(« 8 147 lignes »…)*. Un `sed` global les aurait détruites pour corriger
+   **un** repère utile. **Toute correction est ciblée, et chaque passage est relu avant.**
+2. ⛔ **Une affirmation se vérifie à sa source**, jamais par recopie d'un document à l'autre — code,
+   tests, workflow, configuration, ou décision enregistrée.
+
+### 13.3 — Les six lots, leur ordre et leur état
+
+| # | Lot | État | Commit | Décision |
+|---|---|---|---|---|
+| **1** | Les repères qui pouvaient tromper | 🧾 ✅ **terminé et publié** | [`8e08552`](https://github.com/RFL974/tournoi-r92/commit/8e08552) | — |
+| **2** | Le format que personne ne pouvait découvrir | 🧾 ✅ **terminé et publié** | [`969e673`](https://github.com/RFL974/tournoi-r92/commit/969e673) | **D-034** |
+| **3** | Rouvrir le journal des évolutions | 🧾 ✅ **terminé et publié** | [`b91cbfe`](https://github.com/RFL974/tournoi-r92/commit/b91cbfe) | **D-035** |
+| **4** | Statuts de déploiement et repères opérationnels | 🏛️ ⏳ **à faire** | — | — |
+| **5** | Pilotage documentaire du chantier | 🏛️ 🚧 **partiellement fait** *(voir §13.5)* | — | **D-036** |
+| **6** | Relecture finale et cohérence globale | 🏛️ ⏳ **à faire** | — | — |
+
+**L'ordre est contraint, il n'est pas arbitraire** : `1 → 2 → 3 → 4 → 5 → 6`.
+
+---
+
+#### 🧾 LOT 1 — Les repères qui pouvaient tromper · ✅ `8e08552`
+
+| | |
+|---|---|
+| **Objectif** | Supprimer les deux seules affirmations du dépôt capables de faire prendre une **décision fausse** |
+| **Fichiers** | `backend/README.md` · `frontend/README.md` |
+| **Dépendances** | Aucune — il pouvait partir immédiatement |
+| **Critère de fin** *(atteint)* | Les chiffres concordent avec `wc -l` et `ETAT.md` §9 · plus aucun `616/616` opérationnel · les 3 documents parlant de la mesure des partenaires disent la même chose · liens vérifiés |
+| **Fait** | 8 147 → **8 274** · 3 859 → **4 244** · le bilan de tests **n'est plus recopié** : il renvoie à `deploiement.md`, seule adresse. L'affirmation *« rien n'est envoyé »* est remplacée par le comportement réel, écrit depuis le code |
+
+#### 🧾 LOT 2 — Le format que personne ne pouvait découvrir · ✅ `969e673` · **D-034**
+
+| | |
+|---|---|
+| **Objectif** | Qu'un organisateur sache quels formats d'après-midi existent réellement |
+| **Fichiers** | `docs/formats-apres-midi.md` · `README.md` · `docs/guide-utilisateur.md` · `docs/architecture.md` — **plus**, par exception, du code |
+| **Dépendances** | Après le LOT 1 |
+| **Critère de fin** *(atteint)* | Les formats du code = ceux documentés, même ordre · aucune formulation de l'ancienne doctrine · `COUPE_PLATEAU` jamais présenté comme conforme EDR · sa mécanique métier intacte |
+| **⚠️ Exception assumée** | **Ce lot a touché du code**, alors que le chantier est documentaire. **D-034** — décision produit prise *pendant* le lot — a rendu `COUPE_PLATEAU` de nouveau sélectionnable, **signalé** et **confirmé avant application**. La documentation seule ne pouvait pas la porter |
+
+#### 🧾 LOT 3 — Rouvrir le journal des évolutions · ✅ `b91cbfe` · **D-035**
+
+| | |
+|---|---|
+| **Objectif** | Que le journal couvre à nouveau l'état réel, **et** que la cause du décrochage soit fermée |
+| **Fichiers** | `CHANGELOG.md` · `CLAUDE.md` *(§8 bis)* · `DECISIONS.md` |
+| **Dépendances** | Après le LOT 2 — l'entrée sur `COUPE_PLATEAU` en dépend |
+| **Critère de fin** *(atteint)* | Chaque chiffre vérifié à sa source · ordre chronologique · aucune entrée existante modifiée · `CHANGELOG` inscrit à la règle **§8 bis** |
+| **⚠️ Ne referme PAS** | **R-075** reste entier : tout demeure sous `## [Non publié]` et `git tag` ne renvoie rien. **Rouvrir un journal n'est pas publier des versions** |
+
+---
+
+#### 🏛️ LOT 4 — Statuts de déploiement et repères opérationnels · ⏳ **à faire**
+
+> 🏛️ Définition fixée par **décision du propriétaire, 2026-08-19** *(**D-036**)*.
+
+| | |
+|---|---|
+| **Objectif** | Remettre en cohérence **toutes** les affirmations documentaires décrivant l'état réel de **déploiement ou de publication**. Certains documents décrivent encore des fonctionnalités comme *« à déployer »*, *« non déployées »* ou *« en attente de publication »*, alors que le dépôt, GitHub Pages ou le backend ont évolué depuis |
+| **⛔ Ne doit PAS** | Modifier le produit. **Uniquement** faire correspondre les statuts documentaires à l'état réel vérifiable |
+| **Fichiers** | **À déterminer par recherche dans le dépôt.** Au minimum les documents contenant `à déployer`, `déployé`, `non déployé`, `publié`, `en production`, `à publier`, ou toute formulation équivalente. ⚠️ **Cas connu** : `README.md` porte `✅ Fait (à déployer)` — **la recherche ne doit pas s'y limiter** |
+| **Dépendances** | Après **LOT 1** *(les README sont corrigés)*, **LOT 2** *(D-034 a changé l'état réellement publié)* et **LOT 3** *(le CHANGELOG est à niveau et sa règle fixée)* |
+| **Méthode** | Pour chaque statut : ① relever le texte · ② identifier ce qu'il prétend · ③ **vérifier l'état réel** *(dépôt, commit publié, GitHub Pages, workflow, backend Apps Script si nécessaire, décision ou test)* · ④ **corriger uniquement si l'affirmation est réellement fausse ou périmée**. ⚠️ **Ne jamais transformer un statut historique daté en statut actuel** |
+| **Critères de fin** | Aucune mention actuelle de type *« à déployer »* si la fonctionnalité l'est réellement · aucune fonctionnalité non déployée présentée comme déployée · **états frontend et backend distingués** si nécessaire · aucune trace historique datée réécrite · aucun code, test ou workflow modifié · liens vérifiés · diff inspecté · **commit local, arrêt avant push** |
+
+#### 🏛️ LOT 5 — Pilotage documentaire du chantier · 🚧 **partiellement fait** · **D-036**
+
+> 🏛️ Définition fixée par **décision du propriétaire, 2026-08-19** *(**D-036**)*.
+
+| | |
+|---|---|
+| **Objectif** | Qu'une **nouvelle session** puisse comprendre et reprendre ce chantier **sans accès à la conversation d'origine** |
+| **Le problème** | Découvert pendant le **LOT 3** : le chantier n'était documenté **nulle part** comme un chantier cohérent de 6 lots. Recherche exhaustive — fichiers suivis, historique complet, 103 branches locales, 44 distantes, `stash`, notes, **27 objets orphelins** : **zéro définition** des LOT 4 à 6 |
+| **Fichiers** | Principalement `PLAN.md` · et `DECISIONS.md` pour la décision propriétaire · éventuellement un document d'état **si les conventions du dépôt l'imposent**. ⛔ **Ne pas créer de nouveau document** si les existants suffisent |
+| **Dépendances** | **Après le LOT 4**, pour que le plan reflète un état documentaire déjà réaligné · **avant le LOT 6**, qui s'appuie sur un plan complet |
+| **Critères de fin** | Une session neuve retrouve les 6 lots sans conversation externe · chaque lot a un objectif compréhensible · les états terminé / en cours / à faire sont exacts · les commits sont vérifiés · **D-034** et **D-035** correctement rattachées · **la source propriétaire des LOT 4 à 6 est explicitement indiquée** · aucune information spéculative présentée comme historique · aucun code, test ou workflow modifié · **commit local, arrêt avant push** |
+| **🚧 Ce qui est déjà fait** | **La présente section §13 et la décision D-036**, écrites le **2026-08-19, en avance sur le LOT 4** — le plan devait exister avant de poursuivre |
+| **⏳ Ce qui reste** | Reprendre cette section **après le LOT 4** : mettre à jour l'état du LOT 4, y inscrire son commit, et **repasser les critères de fin ci-dessus un par un** |
+
+#### 🏛️ LOT 6 — Relecture finale et cohérence globale · ⏳ **à faire**
+
+> 🏛️ Définition fixée par **décision du propriétaire, 2026-08-19** *(**D-036**)*.
+
+| | |
+|---|---|
+| **Objectif** | Le balayage **final** de cohérence, après les LOT 1 à 5. Éliminer les **résidus** documentaires que les corrections ciblées ont laissés |
+| **Critère de fin** | **Un lecteur qui parcourt aujourd'hui la documentation active ne rencontre plus** : de contradiction connue · de lien interne cassé connu · de formulation obsolète non volontaire · d'écart manifeste avec l'état actuel du dépôt |
+| **Fichiers** | Tous les documents **actifs** peuvent être **inspectés** — mais les **modifications** restent limitées aux écarts **réellement démontrés** |
+| **Points connus à RÉÉVALUER** *(à vérifier, pas à corriger d'office)* | ① le lien cassé de `AUDIT-TOURNOI-R92.md` vers `../backend/Code.gs` · ② la formulation résiduelle signalée dans `docs/sponsors.md` · ③ le **§1.6** de `docs/guide-utilisateur.md`, *« Phase après-midi (classement croisé) »*, **si après les autres lots** il reste trompeur ou incomplet · ④ tout autre résidu trouvé au contrôle global |
+| **⛔ Ne doit PAS** | Rouvrir **D-034** · rouvrir **D-035** · modifier le comportement métier · refaire l'architecture documentaire · corriger un document **explicitement historique** au seul motif qu'il décrit un ancien état · transformer une amélioration de style en chantier · créer du code ou des tests |
+| **Méthode** | ① balayer les documents actifs · ② chercher les incohérences connues · ③ contrôler les liens internes · ④ chercher les contradictions entre `README`, guide, architecture, formats, sponsors, déploiement, `CHANGELOG` et documents d'industrialisation actifs · ⑤ **distinguer soigneusement** document actif / document historique daté / décision en vigueur / ancien état conservé pour mémoire · ⑥ **corriger uniquement ce qui est objectivement faux, cassé ou trompeur aujourd'hui** |
+| **Critères de fin** | Liens internes de **tout** le dépôt contrôlés · aucune nouvelle rupture · les liens cassés connus **corrigés ou explicitement justifiés** s'ils doivent rester · aucune contradiction connue entre documents actifs · `README`, guide, architecture, formats, sponsors, déploiement, `CHANGELOG`, `PLAN` et décisions actives vérifiés · aucune réécriture abusive des documents historiques · aucun code, test ou workflow modifié · diff inspecté · **commit local, rapport avant push** |
+
+### 13.4 — Les décisions nées de ce chantier
+
+| Décision | Objet | Lot |
+|---|---|---|
+| **D-034** | `COUPE_PLATEAU` reste **proposé**, mais **signalé** : l'application informe, elle n'interdit pas | 2 |
+| **D-035** | Le `CHANGELOG` raconte le produit et la fiabilité, **et il entre dans la règle de la carte** *(§8 bis passe à 4 documents)* | 3 |
+| **D-036** | **Le découpage en 6 lots** — constat pour les LOT 1 à 3, **décision propriétaire** pour les LOT 4 à 6 | 5 |
+
+### 13.5 — Ce qui reste à faire
+
+1. **LOT 4** — les statuts de déploiement *(prochain)* ;
+2. **LOT 5** — reprendre §13 après le LOT 4 et repasser ses critères de fin ;
+3. **LOT 6** — la relecture finale.
+
+> ⚠️ **Une session qui reprend ce chantier lit d'abord §13.1** *(pourquoi)* **puis §13.2**
+> *(le principe)*. Les deux règles du §13.2 — **aucun remplacement de masse**, **une affirmation se
+> vérifie à sa source** — sont ce qui a évité, à chaque lot, de détruire des traces historiques
+> légitimes en croyant corriger une erreur.
