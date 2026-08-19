@@ -6197,3 +6197,125 @@ de l'adoption.
 >
 > ⏳ **`docs/passation.md` sera concerné par CF-3**, quand l'architecture de compte changera
 > réellement — ⛔ **et CF-3 est suspendue à une décision qui n'est pas prise.**
+
+---
+
+# Session — CF-4b : la neutralisation institutionnelle (cadre et premier lot)
+
+**Date** : 2026-08-19 *(nuit, 3)* · **Point de départ** : `5907bce` · **Point d'arrivée** : voir §7
+
+## 1. Ce qui a ouvert cette session
+
+La session précédente avait clos **CF-2** et recommandé **CF-4** *(mentions légales)*. En
+l'instruisant, deux objets distincts sont apparus sous un seul numéro :
+
+| | |
+|---|---|
+| **Ce qu'il faut publier** | Les mentions légales, au titre de **[R10]** → devient **CF-4a** |
+| **Ce qu'il faut cesser d'affirmer** | Les attributions institutionnelles → devient **CF-4b** |
+
+⭐ **Et l'ordre s'est imposé de lui-même** : on ne peut pas rédiger des mentions légales exactes sur
+un site qui s'attribue par ailleurs à une structure n'ayant rien décidé. **CF-4b passe d'abord.**
+
+## 2. Ce que la cartographie a trouvé
+
+**Deux surfaces**, et la seconde a dû être ajoutée après coup — la première passe ne regardait que
+l'application :
+
+| Surface | Volume |
+|---|---|
+| ① **L'application publiée** | **107 points de code**, 8 ressources graphiques, 9 liens institutionnels |
+| ② **Le dépôt GitHub public actif** | **~46 points**, 7 documents |
+
+✅ **Les paramètres du dépôt sont vierges** — description, site, sujets, licence, wiki, tickets,
+versions : tous vides ou absents. **Rien à neutraliser dans la vitrine GitHub elle-même.**
+
+✅ **Le nom « Maxilou » est absent** du code et de la documentation active *(82 occurrences, toutes
+dans les fichiers de suivi)*. **Rien à faire.**
+
+### 🔴 Ce que la cartographie n'aurait pas dû rater — et qui n'était visible dans aucun texte
+
+`frontend/assets/autorisation-droit-image-template.docx` est un **fichier binaire zippé** :
+**aucune recherche textuelle ne pouvait l'atteindre**. Il a fallu l'ouvrir pour découvrir qu'il ne
+s'agissait pas d'un modèle inerte mais d'un **document juridique en quatre articles** :
+
+- il désignait une association comme **organisatrice** du tournoi ;
+- il lui faisait **céder par les clubs des droits sur l'image de joueurs mineurs** ;
+- il lui confiait le **traitement des demandes de retrait** ;
+- et il était **téléchargeable par n'importe qui**, sans clé, sur GitHub Pages.
+
+⚠️ **Trois attributions de décisions non prises**, dans un document public. C'est ce qui a fait de
+sa suppression le **lot L1**, isolé et prioritaire.
+
+## 3. ⚡ La découverte de méthode — un « 0 occurrence » qui était faux
+
+En cherchant un prénom dans le dépôt, la commande a répondu **0**. Le prénom y figurait **10 fois**.
+
+```
+locale absente          : grep -niE "j[ée]r[ée]my"  →  0   ❌
+LC_ALL=en_US.UTF-8      : idem                      →  10  ✅
+```
+
+**Sans locale UTF-8, `grep` sur une classe de caractères accentués renvoie un résultat vide au lieu
+d'échouer.** Un faux négatif **parfaitement silencieux**.
+
+> 🎯 **Pourquoi c'est grave ici.** Le contrôle final de CF-4b repose **entièrement** sur des
+> recherches. Une recherche qui répond « 0 » parce que la locale est mal réglée produit **exactement
+> le même résultat visuel** qu'un dépôt réellement propre. ⛔ **CF-4b aurait pu être déclarée
+> terminée sur une preuve vide** — même mécanisme que le piège `616/616` de `deploiement.md`.
+
+Toutes les recherches ont été refaites. **Quatre occurrences institutionnelles réelles avaient été
+manquées**, dont ⭐ `frontend/js/tournoi.js:394`, qui **réécrit le titre de la page publique après
+le chargement** : corriger le HTML sans corriger cette ligne n'aurait **rien changé de visible**.
+
+## 4. Les décisions obtenues
+
+**D-039**, quinze arbitrages. *(Le détail vit dans `DECISIONS.md` — il n'est pas recopié ici.)*
+
+Trois méritent d'être rappelées, parce qu'elles **limitent** le chantier :
+
+| | |
+|---|---|
+| ⏸️ **Le nom du dépôt `tournoi-r92`** | **Conservé.** Le renommer casserait les liens à jeton déjà envoyés. **Réserve d'infrastructure assumée — n'empêche pas CF-4b de fermer** |
+| ⏸️ **Les identifiants CSS `--r92-*`** *(~130)* | **Conservés.** Invisibles pour l'utilisateur ; les renommer serait un risque de régression sans bénéfice |
+| 🔧 **M1** | Les valeurs institutionnelles du **classeur** *(`url_site_association`, `url_instagram`)* — ⚠️ **le code est déjà neutre**, seules les données pointent quelque part. **Opération manuelle, hors Git, sur autorisation explicite** |
+
+## 5. ⚠️ Une contrainte technique enregistrée pour plus tard
+
+`frontend/js/tournoi.js:216` fait `document.getElementById('don-lien').hidden = !pub;` **sans test
+d'existence**. ⛔ **Retirer le seul HTML du bandeau de don casserait la page publique au
+chargement** — et `node --check` **ne le verrait pas** : il vérifie la syntaxe, jamais l'exécution.
+**Le lot L3 exigera un contrôle d'exécution ciblé.**
+
+## 6. Vérification demandée : « retrait décidé par le club »
+
+`RISQUES.md` **R-036** affirme un *« retrait décidé par le club le 2026-08-03 »*. Cette attribution
+a été **remontée à sa source primaire**, sans se fier à la mémoire :
+
+| | |
+|---|---|
+| **Source** | Commit **`2c52b15`** *(2026-08-03 14:35, PR #153)* |
+| **Ce qu'il dit** | *« Demande du club : "on enlève pour le moment tout ce qui concerne le droit à l'image". »* |
+| **Corroboration** | Entrée `CHANGELOG.md` du même jour : *« Sur décision du club »* |
+| **Verdict** | ✅ **DÉMONTRABLE — formulation conservée** |
+| ⭐ **Et un point en sa faveur** | La source **ne nomme aucune structure**. *« Le club »* n'est ni « Génération R92 » ni « l'École de Rugby » : **aucune décision n'est attribuée à une entité identifiée**, donc **D-038 n'est pas en cause** |
+
+## 7. État à la fin de la session
+
+| | |
+|---|---|
+| **Lots faits** | **L0** *(ce cadre)* et **L1** *(suppression du modèle)* — **2 sur 8** |
+| **Documents modifiés** | **L1** : `README.md` · `frontend/README.md` · `RISQUES.md` — **L0** : `PLAN.md` · `DECISIONS.md` · `ETAT.md` · `REFERENTIELS.md` · `SESSIONS.md` |
+| ⛔ **Document volontairement NON touché** | **`CLAUDE.md`** — L0 ne crée **aucun** fichier de suivi nouveau *(D-039 entre dans `DECISIONS.md`, CF-4b dans `PLAN.md`)*. Sa carte **§12.2** reste **exacte à 9 fichiers** |
+| **Code, tests, configuration, déploiement** | ⛔ **Aucun** |
+| **Emails, classeur, paramètres GitHub ou Google** | ⛔ **Aucun** |
+| **Prochaine étape recommandée** | **L6** — la réécriture générique de `../passation.md` : le seul lot restant qui touche un **tiers réel aujourd'hui** |
+
+> ⚠️ **Documents ACTIFS vérifiés** *(`CLAUDE.md` §12.4, point 2)* : pour **L0**, **aucun ne devient
+> faux** — il est strictement documentaire et interne au suivi. Pour **L1**, deux le devenaient et
+> ont été corrigés **dans le même lot** : `README.md` *(la carte listait un dossier disparu)* et
+> `frontend/README.md` *(il décrivait le modèle comme présent)*.
+>
+> ⏳ **`CHANGELOG.md` sera concerné par L7**, quand les changements visibles par un utilisateur
+> auront réellement eu lieu — ⛔ **L0 et L1 n'en produisent aucun** : le fichier supprimé n'était
+> chargé par aucune page.

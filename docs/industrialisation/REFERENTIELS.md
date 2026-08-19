@@ -888,7 +888,9 @@ que les entreprises.
 | **CF-1** | Poser le cadre documentaire | — | — | — | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié sur `origin/main` *(6 fichiers, 0 fichier de code, aucun déploiement applicatif déclenché)* |
 | **CF-2** | Déterminer le responsable du traitement | [R1] art. 4(7), 4(8), 26, 29 · **[R20]** · **[R21]** | **[O1] [O2] [O5] [O7]** | ⛔ **Décision organisationnelle** | 🚧 **Dossier produit** — [`CF-2-RESPONSABLE-TRAITEMENT.md`](CF-2-RESPONSABLE-TRAITEMENT.md). ⛔ **La décision elle-même reste NON PRISE** |
 | **CF-3** | Architecture de compte institutionnelle | [R13] · [R14] | **[O7]** | 🔵 Doc fournisseur | ⬜ |
-| **CF-4** | Mentions légales | **[R10]** | **[O5]** | 🔴 **Obligation — écart ACTUEL** | ⬜ |
+| **CF-4a** | Mentions légales | **[R10]** | **[O5]** | 🔴 **Obligation — écart ACTUEL** | ⏸️ **À REPRENDRE après CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de la dérogation **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE** |
+| **CF-4b** | Neutralisation institutionnelle | ⚠️ **aucun texte extérieur** — fondement **D-038** / `PLAN.md` §14.1 | — | 🔴 **Règle interne du chantier** | 🚧 **EN COURS** — **L0** *(ce cadre)* et **L1** *(commit `3375061`)* faits · **L2 → L8** à faire · opération manuelle **M1** en attente |
+| **CF-14** | Adoption institutionnelle | — *(recueil de décisions)* | — | ⛔ **Décision organisationnelle** | ⬜ **Inscrite, non rédigée** |
 | **CF-5** | Information des personnes | [R1] art. 13-14 · [R6] | **[O1]** | 🔴 Obligation *(prérequis)* | ⬜ |
 | **CF-6** | Registre des traitements | [R1] art. 30 · [R7] | **[O2]** | 🔴 Obligation *(prérequis)* | ⬜ |
 | **CF-7** | Mesure de visibilité des partenaires | [R2] · [R3] · [R5] · [R12] | **[O4]** | 🔴 Obligation *(prérequis)* | ⬜ |
@@ -898,6 +900,13 @@ que les entreprises.
 | **CF-11** | Durcir GitHub + ménage des bibliothèques | [R15] | — | 🟢 Bonne pratique | ⬜ |
 | **CF-12** | Durcissements de cohérence *(CSP, referrer, `innerHTML`)* | [R16] | — | ⚪ **Durcissement volontaire** | ⬜ |
 | **CF-13** | Polices d'écriture auto-hébergées | [R11] | — | ⚪ **Durcissement volontaire** | ⬜ |
+
+> ⚠️ **Pourquoi deux lignes n'ont pas de référentiel extérieur, et ce n'est pas un oubli.**
+> **CF-4b** et **CF-14** ne découlent d'aucun texte officiel : elles découlent d'une **règle
+> que le projet s'est donnée** — l'interdiction d'attribuer à une structure une décision
+> qu'elle n'a pas prise *(**D-038**, `PLAN.md` §14.1)*. ⭐ **Le contrôle ① de `CLAUDE.md`
+> §8 quinquies est donc satisfait par une décision enregistrée**, qui est l'une des sources
+> admises — au même titre qu'un texte, un test ou la production.
 
 ---
 

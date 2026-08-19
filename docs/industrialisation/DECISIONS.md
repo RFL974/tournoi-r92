@@ -2514,3 +2514,99 @@ l'identifiant `[Rn]`, **jamais le contenu**.
 > - ❌ Elle **ne tranche pas** le sort de la mesure de visibilité — seulement son **unité de mesure
 >   acceptable** ;
 > - ❌ Elle **ne crée aucun compte** et **n'engage aucune démarche** auprès d'un fournisseur.
+
+---
+
+### D-039 — La **neutralité institutionnelle** : l'application et le dépôt public ne s'attribuent à personne
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-19 |
+| **Chantier** | 🛡️ **Confiance** — étape **CF-4b** *(`PLAN.md` §14.3)* |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Couvre** | Le **principe** de neutralité · les **deux surfaces** · les **quinze arbitraires d'exécution** ci-dessous |
+| **Voisines** | **D-038** *(ouverture du chantier Confiance — c'est son fondement direct)* · **D-005** *(périmètre fermé du site)* |
+
+**Le problème posé**
+
+> **D-038** avait posé l'interdiction : *« aucune fiche, aucune session, aucun document ne doit leur
+> attribuer une décision qu'elles n'ont pas prise »*. ⚡ **Mais elle visait les documents de
+> suivi.** Personne n'avait regardé **l'application elle-même**.
+>
+> Le contrôle a trouvé qu'elle s'attribue à des structures dans ses **pages**, ses **emails**, ses
+> **métadonnées**, ses **logos**, ses **liens** — et jusque dans un **document juridique**
+> téléchargeable qui faisait signer aux clubs une cession de droits sur l'image de **mineurs** au
+> profit d'une association qui n'a rien décidé.
+>
+> 🎯 **Et le dépôt GitHub public dit la même chose** : sa première phrase annonçait un logiciel
+> *« pour l'association … »*, et sa documentation de passation planifiait un transfert vers un
+> domaine, un compte de messagerie et **une personne physique nommée** — aucun des trois n'ayant
+> rien accepté.
+
+---
+
+#### 1. Le principe
+
+> ⭐ **Aucune organisation réelle ne doit être présentée par l'application comme son éditeur, son
+> propriétaire, son organisateur, son expéditeur, son responsable ou son porteur tant qu'elle ne
+> l'a pas décidé explicitement.**
+
+**Il s'applique à DEUX surfaces**, et la seconde a dû être ajoutée après la première cartographie :
+
+| | |
+|---|---|
+| ① | **L'application publiée** — pages, emails, documents générés, métadonnées |
+| ② | **Le dépôt GitHub public actif** — `README.md` et documentation active |
+
+⚠️ **Ce que la neutralité SIGNIFIE** : *aucune attribution institutionnelle **active au présent***.
+⛔ **Ce qu'elle ne signifie PAS** : *aucune occurrence textuelle historique*. L'historique Git, les
+entrées datées du `CHANGELOG`, les audits et les documents de suivi **restent intacts** — ils
+racontent un état vrai à leur date, ou expliquent l'interdiction elle-même.
+
+---
+
+#### 2. Ce que Romain a arbitré — quinze points
+
+| # | Arbitrage |
+|---|---|
+| 1 | **Neutralité institutionnelle de l'application** |
+| 2 | **Neutralité institutionnelle du dépôt GitHub public actif** |
+| 3 | ⛔ **Le nom « Maxilou » n'apparaît PAS publiquement** pour le moment — il reste la vision interne du projet, pas une marque. *(Constat : il est **absent** du code et de la documentation active ; il ne vit que dans les fichiers de suivi. **Rien à faire.**)* |
+| 4 | 🔴 **Suppression pure et simple** du modèle d'autorisation de droit à l'image — ⛔ ni neutralisation, ni déplacement, ni remplaçant |
+| 5 | 🔴 **Suppression complète du bandeau de don** : texte, bouton, lien, style — ⛔ **et pas de don générique à la place** |
+| 6 | 🟠 **Remplacement des logos institutionnels par une identité neutre** — forme géométrique simple, sans blason, animal, couronne, chiffre, lettre ni nom de produit |
+| 7 | 🟠 **Neutralisation des liens institutionnels**, ✅ **conservation des liens fonctionnels** — ⭐ un bouton qui ouvre réellement la page d'un tournoi, d'une invitation, d'un dossier ou d'une réponse **continue de fonctionner** |
+| 8 | ⚙️ **`org_club_nom` sans valeur par défaut nommant un club** — le mécanisme reste, son état initial devient neutre |
+| 9 | ⚙️ **Neutralisation de `MOT_CLE_CLUB = 'racing'`**, en réutilisant une configuration générique existante si possible |
+| 10 | ✅ **Conservation du mécanisme** `url_site_association` / `url_instagram` — ⛔ **on ne retire pas un réglage parce que sa valeur du jour pointe quelque part**. Les **valeurs** du classeur seront vidées par **M1** |
+| 11 | **Neutralisation de « Perfs Racing »** — la fonctionnalité reste, son identité devient générique |
+| 12 | **Réécriture d'ensemble de `docs/passation.md`** — la procédure est bonne, c'est son **destinataire** qui change |
+| 13 | ⏸️ **Le nom du dépôt `tournoi-r92` est conservé** — **réserve d'infrastructure assumée**, qui **n'empêche pas CF-4b de fermer** |
+| 14 | ⏸️ **Les identifiants CSS `--r92-*` sont conservés** — identifiants techniques **invisibles**, hors périmètre assumé |
+| 15 | 🆕 **Création future de `CF-14 — Adoption institutionnelle`** — inscrite au plan, **non rédigée** |
+
+---
+
+#### 3. ⚠️ Deux points de méthode que cette décision fixe
+
+**a) Toute recherche de contrôle fixe une locale UTF-8.** Constaté pendant la cartographie : sans
+locale, une recherche sur des caractères accentués a répondu **« 0 occurrence »** là où il y en
+avait **10**. ⛔ **Ne jamais conclure « 0 occurrence » sans avoir vérifié que la recherche gère les
+accents.** *(Même famille que le piège `616/616` : un résultat juste en apparence, faux en réalité.)*
+
+**b) Le contrôle final porte sur le dépôt PUBLIÉ**, depuis un clone neuf — jamais sur la seule copie
+locale — **et** sur le site réellement servi par GitHub Pages, qui peut différer du dépôt.
+
+---
+
+#### 4. ⛔ Ce que D-039 ne fait PAS
+
+> - ❌ Elle **ne détermine pas** le responsable du traitement — c'est **CF-2**, et la décision
+>   reste **NON PRISE** ;
+> - ❌ Elle **n'engage aucune structure**, et **ne présume d'aucune adoption future** ;
+> - ❌ Elle **ne renomme** ni le dépôt, ni les identifiants techniques ;
+> - ❌ Elle **ne touche** ni les clés, ni une protection, ni le classeur, ni un déploiement ;
+> - ❌ Elle **n'abandonne aucune** des questions ouvertes de **CF-4a** *(LCEN, GitHub, droit de
+>   réponse)* — elle les **ordonne**, elle ne les ferme pas ;
+> - ❌ Elle **ne réécrit pas l'histoire** : traces datées, audits et historique Git sont hors
+>   d'atteinte.

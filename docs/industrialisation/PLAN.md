@@ -2104,7 +2104,7 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 | ⚠️ **Un point de fait relevé** | Plusieurs **moyens essentiels** ont déjà été arrêtés pendant le développement *(quelles données, quelles durées, quels accès)*. ⛔ **Cela ne qualifie personne** — aucun traitement réel n'existe — mais ces choix **redeviendront des décisions** le jour venu. ✅ **Ils sont tous écrits, donc tous révisables** |
 | ⚠️ **Question de fait ouverte** | ❓ **Quelle entité juridique porte l'École de Rugby ?** ⛔ **Ce n'est PAS un motif d'exclusion** : **[R1]** vise aussi *« le service ou un autre organisme »*, et **[R20]** pose qu'*« il n'existe aucune limitation quant au type d'entité »*. ⭐ **Mais il faut une entité capable de signer, d'ouvrir un compte et de répondre.** **INDÉTERMINÉ** — question **Q-I** |
 | **Quand le présenter** | ⭐ **Au moment de la présentation de Maxilou (étape ③ du parcours)** — ⛔ **pas avant**. Les structures n'ont rien étudié : leur poser la question aujourd'hui serait leur demander de décider d'un logiciel qu'elles n'ont pas vu |
-| ⚠️ **Non bloquant** | **Cette étape ne bloque PAS les travaux réalisables sans connaître l'entité.** CF-4, CF-5 et CF-6 se préparent **avec des champs à compléter** — c'est déjà la forme retenue par le chantier **C-005** |
+| ⚠️ **Non bloquant** | **Cette étape ne bloque PAS les travaux réalisables sans connaître l'entité.** **CF-4a**, CF-5 et CF-6 se préparent **avec des champs à compléter** — c'est déjà la forme retenue par le chantier **C-005** |
 | ⛔ **Ce que l'étape N'A PAS fait** | Aucune structure contactée · aucune option retenue · aucun compte créé · aucune démarche engagée · **la case du §9 reste vide** |
 
 #### ⬜ CF-3 — L'architecture de compte institutionnelle
@@ -2119,7 +2119,13 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 | **Déjà écrit** | ⭐ La procédure de transfert existe **déjà**, pas à pas, dans [`../passation.md`](../passation.md) |
 | ⛔ **Interdit à ce stade** | Créer un compte · engager une démarche d'éligibilité · migrer quoi que ce soit |
 
-#### ⬜ CF-4 — Mentions légales
+#### ⏸️ CF-4a — Mentions légales
+
+> ⚡ **L'ancienne étape « CF-4 » s'est scindée en deux le 2026-08-19** *(**D-039**)*. Le travail
+> d'instruction a fait apparaître deux objets distincts : **ce qu'il faut publier** *(ci-dessous)*
+> et **ce qu'il faut cesser d'affirmer** *(**CF-4b**)*. ⭐ **CF-4b passe d'abord** : on ne peut pas
+> rédiger des mentions légales exactes sur un site qui s'attribue par ailleurs à une structure
+> n'ayant rien décidé.
 
 | | |
 |---|---|
@@ -2127,8 +2133,75 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 | **Exigence** | **[O5]** |
 | **Constat** | Les pages **sont publiées** ; aucune mention légale n'existe dans ce dépôt |
 | **Écart** | 🔴 **RÉEL ET ACTUEL — le seul de tout le chantier.** Cette obligation **ne dépend d'aucune donnée personnelle** : elle naît de la seule publication d'un service en ligne |
-| **Piste proportionnée** | ⭐ L'édition étant aujourd'hui le fait d'une personne **à titre non professionnel**, l'art. 1-1 permet de **ne publier que le nom et l'adresse de l'hébergeur**, à condition d'avoir communiqué son identité à celui-ci. **À instruire** |
-| **Dépend de** | Rien pour la forme minimale ; **CF-2** pour la forme « personne morale » |
+| **Piste proportionnée** | ⭐ L'édition étant aujourd'hui le fait d'une personne **à titre non professionnel**, l'art. 1-1 permet de **ne publier que le nom et l'adresse de l'hébergeur**, à condition d'avoir communiqué son identité à celui-ci |
+| **Statut** | ⏸️ **À REPRENDRE après CF-4b** — ⛔ **aucune de ses questions n'est abandonnée** |
+| ⚠️ **Ce qui reste ouvert, et qui n'est PAS tranché** | ① la dérogation **[R10] II** est-elle **praticable** sur GitHub Pages ? → **INDÉTERMINÉ / NON DÉMONTRÉ** · ② par quel **canal** communiquer son identité à l'hébergeur ? · ③ GitHub **confirme-t-il** l'enregistrement ? · ④ GitHub reçoit-il et transmet-il les demandes de **droit de réponse** ? · ⑤ quel **numéro de téléphone** de GitHub, Inc. publier ? |
+| **Ce qui est déjà établi** | Vérification manuelle du compte GitHub par Romain : **aucune adresse postale** dans *Billing → Payment information* *(vide)* · **aucun téléphone** *(2FA SMS non activée)*. ⛔ **Aucun paramètre GitHub n'a été modifié** — et il est **interdit** de remplir Billing ou d'activer un SMS dans le seul but de satisfaire artificiellement la LCEN |
+| **Prochaine action** | Une demande écrite au support GitHub est **rédigée** et **prête à envoyer** ; ⛔ **elle sera envoyée par Romain lui-même** |
+| **Dépend de** | **CF-4b** *(l'ordre)* · **CF-2** pour la forme « personne morale » |
+
+#### 🚧 CF-4b — Neutralisation institutionnelle · **ouverte le 2026-08-19**
+
+| | |
+|---|---|
+| **Fondement** | ⚠️ **Pas un texte extérieur** : **D-038** et le **§14.1** ci-dessus — *« aucun document ne doit leur attribuer une décision qu'elles n'ont pas prise »*. Décision d'exécution : **D-039** |
+| **Objet** | Rendre **l'application** ET **le dépôt GitHub public actif** institutionnellement neutres **tant qu'aucune structure n'a explicitement décidé d'adopter le logiciel** |
+| ⭐ **Deux surfaces, et c'est le point** | **①  l'application publiée** *(pages, emails, documents générés)* · **②  le dépôt GitHub public lui-même** *(README, documentation active)*. ⚠️ La seconde a été ajoutée après coup : la première cartographie ne regardait que l'application |
+| **Volume constaté** | **107 points de code** · **~46 points de documentation** · **31 fichiers distincts** · **8 ressources graphiques** · **9 liens institutionnels** |
+| ✅ **Paramètres du dépôt** | Vérifiés : description, site, sujets, licence, wiki, tickets, versions — **tous vides ou absents**. ⭐ **Rien à neutraliser** dans la vitrine GitHub elle-même |
+| **Touche du code** | ✅ **Oui** — L2 à L5 et L8 · ⚠️ **L5 et L8 exigent un redéploiement chez Google** |
+
+**Les huit lots, et leur ordre :**
+
+| Lot | Objet | État |
+|---|---|---|
+| **L0** | Inscrire CF-4b et les arbitrages dans le suivi *(ce texte, **D-039**)* | 🚧 **en cours** |
+| **L1** | 🔴 Retirer le modèle d'autorisation de droit à l'image du dépôt public | ✅ **FAIT** — commit **`3375061`**, publié et vérifié |
+| **L6** | Réécriture générique de [`../passation.md`](../passation.md) | ⬜ |
+| **L2** | Textes de l'application — titres, métadonnées, signatures, valeurs de repli, `.ics`, commentaires devenus faux | ⬜ **45 points** |
+| **L3** | Liens institutionnels — `LIENS_ASSOCIATION`, retours vitrine, **bandeau de don supprimé** | ⬜ **19 points** |
+| **L4** | Identité graphique — logo neutre, favicon, retrait des blasons | ⬜ **23 points** |
+| **L7** | Reste de la documentation active du dépôt public | ⬜ **16 points** |
+| **L5** | Backend — nom affiché de l'expéditeur ⚠️ **redéploiement** | ⬜ **4 points** |
+| **L8** | Neutralisation fonctionnelle du club — `org_club_nom`, `MOT_CLE_CLUB`, **tests** ⚠️ **redéploiement** | ⬜ **16 points** |
+
+> ⭐ **Pourquoi L1 puis L6 avant tout le reste** : ce sont les deux seuls lots qui engagent des
+> **tiers réels aujourd'hui** — une association pour le document supprimé, **une personne physique
+> nommée** pour `passation.md`.
+
+**Opération manuelle associée — hors Git :**
+
+| | |
+|---|---|
+| 🔧 **M1** | **Neutralisation de la configuration institutionnelle du classeur fictif** — les valeurs `url_site_association` et `url_instagram` de l'onglet `Config`. ⚠️ **Ce n'est PAS un lot Git** : le code est déjà neutre *(il gère la valeur vide)*, seules les **données** pointent vers une structure. À traiter **avant la clôture de CF-4b**, avec **autorisation explicite** et une trace avant/après. ⛔ **Ne jamais la mélanger à un commit** |
+
+**Réserves explicitement conservées — ⚠️ ce ne sont PAS des oublis :**
+
+| Réserve | Volume | Pourquoi elle est assumée |
+|---|---|---|
+| **Le nom du dépôt `tournoi-r92`** | 1 | Le renommer changerait l'URL du dépôt, l'adresse GitHub Pages, **les liens à jeton déjà envoyés**, les liens croisés et `API_URL`. ➡️ **RÉSERVE ASSUMÉE — hébergement / migration institutionnelle, à traiter séparément.** ⛔ **N'empêche pas CF-4b de fermer** |
+| **Les identifiants CSS `--r92-*`, `.r92-*`, `theme-r92.css`** | ~130 | **Identifiants techniques invisibles** pour l'utilisateur. Les renommer ne neutraliserait **aucune attribution visible**, toucherait 6 feuilles de style et 8 pages, et créerait un risque de régression sans bénéfice proportionné |
+| **L'historique Git, le `CHANGELOG` ancien, les audits et les documents de suivi** | ~350 | Ils racontent un état **vrai à leur date**, ou expliquent l'interdiction elle-même |
+
+> 🎯 **La définition de la neutralité retenue, et il faut la lire avant tout contrôle final :**
+> **aucune attribution institutionnelle ACTIVE au présent.** ⛔ **Pas** *« aucune occurrence
+> textuelle »*. Après CF-4b, le dépôt contiendra toujours des centaines de mentions — dans son
+> histoire. **C'est voulu.** Ce qui change, c'est que **plus aucun document ne l'affirmera au
+> présent.**
+
+**⚠️ Contrainte technique enregistrée pour L3** — `frontend/js/tournoi.js:216` fait
+`document.getElementById('don-lien').hidden = !pub;` **sans test d'existence**. ⛔ **Retirer le seul
+HTML du bandeau de don casserait la page publique**, et `node --check` **ne le verrait pas** : il
+vérifie la syntaxe, jamais l'exécution. **L3 exige un contrôle d'exécution ciblé avant publication.**
+
+**La méthode de contrôle, et une précaution qui n'est pas cosmétique :**
+
+> ⚠️ **Toute recherche de contrôle doit fixer une locale UTF-8** *(`LC_ALL=en_US.UTF-8`)*.
+> **Constaté le 2026-08-19** : sans locale, `grep -i` sur une classe de caractères accentués a
+> répondu **« 0 occurrence »** là où il y en avait **10**. ⛔ **Ne jamais conclure « 0 occurrence »
+> sans avoir vérifié que la recherche gère les accents** — sinon CF-4b se clôt sur une preuve vide.
+> *(C'est le même mécanisme que le piège `616/616` de [`../deploiement.md`](../deploiement.md) : un
+> résultat juste en apparence, faux en réalité.)*
 
 #### ⬜ CF-5 — Information des personnes
 
@@ -2220,6 +2293,17 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 | ⚠️ **Requalification issue de CF-0** | ⛔ **Ce n'est PAS une mise en conformité.** Le transfert est **licite** : Google LLC est certifié au cadre d'adéquation. C'est un durcissement qui **supprime par avance un risque**, la décision d'adéquation ayant fait l'objet d'un **pourvoi** dont **l'issue est INCONNUE** — ⚠️ **[R11] impose de la vérifier sur CURIA AVANT d'ouvrir cette étape** |
 | **Effet** | Supprime les 7 transferts d'un coup, sur les 7 pages concernées |
 
+#### ⬜ CF-14 — Adoption institutionnelle · **inscrite le 2026-08-19, non commencée**
+
+| | |
+|---|---|
+| **Objet** | Recueillir les décisions d'une structure **si elle souhaite réellement utiliser le logiciel** — ⛔ **et seulement à ce moment-là** |
+| **À trancher AVANT** | le transfert de l'infrastructure · l'utilisation de son identité · l'attribution de responsabilités · ⭐ **le passage aux données réelles** *(jalon ⑧ du parcours de §14.1)* |
+| **Prolonge** | **CF-2**, qui a préparé la question du responsable du traitement sans la trancher |
+| **En dépendent** | **CF-3**, **CF-5**, **CF-6** *(pour leur contenu)* · **CF-4a** *(forme « personne morale »)* · les réserves de **CF-4b** *(nom du dépôt, hébergement)* |
+| **Bloc** | 🔴 **Avant tout passage aux données réelles** |
+| ⛔ **État** | **Son dossier n'est PAS rédigé** — seuls son existence et son objectif sont inscrits. ⚠️ **Aucune structure n'est contactée, aucune adoption n'est présumée** |
+
 ---
 
 ### 14.4 — Ordre et dépendances
@@ -2229,7 +2313,7 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 
 | Bloc | Étapes | Pourquoi ce bloc |
 |---|---|---|
-| 🔴 **Avant tout passage aux données réelles** | CF-2 · CF-3 · CF-4 · CF-5 · CF-6 · CF-7 · CF-8 | Le cadre juridique et les secrets |
+| 🔴 **Avant tout passage aux données réelles** | CF-2 · CF-3 · **CF-4b** · **CF-4a** · CF-5 · CF-6 · CF-7 · CF-8 · **CF-14** | Le cadre juridique et les secrets |
 | 🟢 **Peut suivre** | CF-9 · CF-10 · CF-11 · CF-12 · CF-13 | Durcissements et prévention |
 
 **Dépendances réelles** *(et elles sont peu nombreuses)* :
@@ -2237,12 +2321,15 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 ```
 CF-1 ──▶ toutes les autres (le cadre)
 CF-2 ──▶ CF-3   (au nom de quelle structure ?)
-     └──▶ CF-4, CF-5, CF-6   ⚠️ pour le CONTENU seulement — la rédaction se prépare avant
+     └──▶ CF-4a, CF-5, CF-6   ⚠️ pour le CONTENU seulement — la rédaction se prépare avant
+     └──▶ CF-14  (elle prolonge la question que CF-2 a préparée sans la trancher)
+CF-4b ──▶ CF-4a  ⭐ on ne rédige pas des mentions exactes sur un site qui s'attribue ailleurs
 CF-7, CF-8, CF-9, CF-10, CF-11, CF-12, CF-13 : ⭐ AUCUNE dépendance
+⭐ CF-4b : AUCUNE dépendance non plus — c'est pourquoi elle a pu démarrer
 ```
 
 > ⚠️ **Ce qui a changé par rapport à la première proposition du 2026-08-19**, et il faut le savoir :
 > **CF-8 (les clés) était initialement la première étape.** La vérification a établi qu'**aucun
 > compte n'a de données de tiers à protéger aujourd'hui** : le geste reste de cinq minutes, mais il
-> **n'est plus le point de départ**. À l'inverse, **CF-4 (mentions légales) est remonté** — c'est
+> **n'est plus le point de départ**. À l'inverse, **CF-4a (mentions légales) est remonté** — c'est
 > le seul écart réel et actuel.

@@ -9,7 +9,29 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-19 *(nuit, suite)* — 📋 **CF-2 A PRODUIT SON DOSSIER, et
+**Dernière mise à jour** : 2026-08-19 *(nuit, 3)* — 🧭 **UNE ÉTAPE S'EST SCINDÉE EN DEUX, ET LA
+SECONDE EST OUVERTE.** L'ancienne **CF-4** *(mentions légales)* devient **CF-4a** — ⏸️ **suspendue,
+aucune de ses questions abandonnée** — et **CF-4b, la NEUTRALISATION INSTITUTIONNELLE**, prend sa
+place en tête. 🎯 **Le motif est simple** : on ne peut pas rédiger des mentions légales exactes sur
+un site qui s'attribue par ailleurs à une structure n'ayant rien décidé. Décision : **D-039**,
+quinze arbitrages.
+⭐ **CF-4b porte DEUX surfaces** — l'**application publiée** et le **dépôt GitHub public actif** ;
+la seconde a dû être ajoutée après la première cartographie, qui ne regardait que l'application.
+**Volume : 107 points de code · ~46 de documentation · 31 fichiers · 8 logos · 9 liens.**
+✅ **Deux lots sur huit sont faits** : **L0** *(ce cadre)* et ⭐ **L1** — le **modèle d'autorisation
+de droit à l'image est SUPPRIMÉ du dépôt public** *(commit **`3375061`**)*. ⚠️ **Ce n'était pas un
+fichier inerte** : un document juridique **téléchargeable sans clé** qui faisait céder aux clubs des
+droits sur l'image de **mineurs** au profit d'une association qui n'a rien décidé. **404 vérifié**
+sur GitHub Pages, **absence vérifiée** sur un clone neuf.
+⚡ **Une découverte de méthode, et elle vaut pour tout le chantier** : sans locale UTF-8, `grep` a
+répondu **« 0 occurrence »** là où il y en avait **10**. ⛔ **Ne jamais conclure « 0 occurrence »
+sans avoir vérifié que la recherche gère les accents** — CF-4b aurait pu se clore sur une preuve
+vide.
+🆕 **`CF-14 — Adoption institutionnelle` est INSCRITE au plan, non rédigée.**
+⛔ **Aucun code, aucun test, aucune configuration, aucun déploiement, aucun email.** ⛔ **L'EDR et
+Génération R92 n'ont toujours ni commandé, ni étudié, ni validé, ni adopté ce logiciel.**
+
+*Rappel de la mise à jour précédente — 2026-08-19 (nuit, suite)* : 📋 **CF-2 A PRODUIT SON DOSSIER, et
 ⛔ AUCUNE DÉCISION N'A ÉTÉ PRISE.** Le livrable est
 `CF-2-RESPONSABLE-TRAITEMENT.md` : la question, les **3 configurations**, **17 conséquences
 comparées**, les **4 rôles possibles de Romain**, **11 questions** pour trancher, et 🔲 **une case de
@@ -179,8 +201,10 @@ registre : R-090, R-091**)
 
 🛡️ **LE CHANTIER CONFIANCE EST OUVERT — cybersécurité et juridique de l'existant.** Il est **hors du
 plan d'audit** *(`PLAN.md` **§14**, décision **D-038**)*, et **C-015 est en pause**. **CF-0**
-*(vérification des référentiels)* et **CF-1** *(le cadre documentaire)* sont **faits** ; **CF-2 à
-CF-13 ne sont pas commencés**.
+*(vérification des référentiels)*, **CF-1** *(le cadre documentaire)* et **CF-2** *(le dossier du
+responsable du traitement — ⛔ **décision NON PRISE**)* sont **faits**. 🚧 **CF-4b
+*(neutralisation institutionnelle)* est OUVERTE** : **2 lots sur 8**. ⏸️ **CF-4a** *(mentions
+légales)* est **suspendue derrière elle**. **CF-3, CF-5 à CF-13 et CF-14 ne sont pas commencées.**
 
 > ⭐ **Ce que ce chantier prépare — et ce qu'il ne fait pas semblant de croire.** Maxilou est en
 > **développement personnel**, sur **données fictives**, et **n'a jamais servi de tournoi réel**
@@ -276,13 +300,19 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| **CF-3 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS — 2 lots sur 8.** ✅ **L0** *(cadre, `D-039`)* · ✅ **L1** *(commit `3375061`)* · ⬜ **L6, L2, L3, L4, L7, L5, L8** · 🔧 **M1** *(classeur, hors Git)* en attente d'autorisation |
+| 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
+| **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
+| 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |
 
-**La prochaine étape recommandée** est **CF-4** *(mentions légales)* : ⭐ **c'est le seul écart réel
-et actuel du chantier**, et il ne dépend d'aucune donnée personnelle. ⚠️ **CF-3 reste suspendue** à
-la décision préparée par CF-2.
+**La prochaine étape** est le **lot L6 de CF-4b** — la réécriture générique de
+[`../passation.md`](../passation.md). ⭐ **Pourquoi lui, et pas un autre** : c'est le seul lot
+restant qui touche un **tiers réel aujourd'hui**, une **personne physique nommée** à qui le document
+public attribue un rôle d'administrateur futur qu'elle n'a pas accepté. ⚠️ **CF-4a**
+*(mentions légales)* reste **le seul écart au regard d'un texte extérieur**, et **CF-3** reste
+suspendue à la décision préparée par CF-2.
 
-> ⚠️ **CF-2 ne bloque pas le reste** : **CF-7 à CF-13 n'ont aucune dépendance**, et **CF-4, CF-5 et
+> ⚠️ **CF-2 ne bloque pas le reste** : **CF-7 à CF-13 n'ont aucune dépendance**, et **CF-4a, CF-5 et
 > CF-6 se préparent avec l'organisation laissée entre crochets** — la forme déjà retenue par C-005.
 > Le dossier CF-2 ne sera présenté aux structures **qu'au moment de la présentation de Maxilou** —
 > ⛔ pas avant : **elles n'ont rien étudié**.
@@ -298,7 +328,7 @@ la décision préparée par CF-2.
 > Romain**.
 
 > ⚡ **Un écart RÉEL et ACTUEL a été trouvé, et il n'en existe qu'un** : les **mentions légales**
-> *(`PLAN.md` §14, **CF-4**)*. ⭐ Il ne dépend d'**aucune** donnée personnelle — il naît de la seule
+> *(`PLAN.md` §14, **CF-4a**)*. ⭐ Il ne dépend d'**aucune** donnée personnelle — il naît de la seule
 > publication d'un service en ligne, et les pages **sont publiées**. **Tous les autres sujets du
 > chantier sont des prérequis avant une utilisation réelle qui n'a aucune date.**
 
