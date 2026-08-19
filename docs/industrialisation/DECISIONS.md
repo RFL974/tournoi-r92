@@ -2323,3 +2323,194 @@ s'engage à tenir.
 >   et la vérification qui la trancherait est nommée)* ;
 > - ❌ Elle **ne crée aucune colonne** et **ne change aucune règle métier** — D-011 à D-015 sont
 >   inchangées.
+
+---
+
+### D-038 — L'ouverture du chantier **Confiance**, sa méthode, et ses trois réponses fondatrices
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-19 |
+| **Chantier** | 🛡️ **Confiance** — cybersécurité et juridique de l'existant *(`PLAN.md` §14)* |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Couvre** | L'ouverture du chantier · la règle `CLAUDE.md` **§8 quinquies** · la chaîne de clôture · la source unique `REFERENTIELS.md` · les réponses **Q1**, **Q2**, **Q3** |
+| **Voisines** | **D-005** *(périmètre fermé du site)* · **D-016 à D-020** *(sécurité et données, issues des domaines B et C)* · **D-033** *(les durées sont tenues par un rappel manuel)* · **D-035** *(le `CHANGELOG` entre dans la règle de la carte)* |
+
+**Le problème posé**
+
+> L'audit avait déjà identifié **27 problèmes** de sécurité et de protection des données
+> *(R-014 → R-040)*. Ils sont sérieux et chiffrés. ⚡ **Mais aucun n'est rattaché à un texte
+> officiel** : recherche faite dans tout le dépôt, les mots *CNIL*, *ANSSI*, *article 82* ou
+> *RGPD article* n'apparaissaient **nulle part** hors des fichiers de suivi qui les citent en
+> passant.
+>
+> 🎯 **Conséquence pratique** : on savait ce qui n'allait pas, mais on ne pouvait **pas** écrire
+> *« nous l'avons corrigé au titre de tel texte »*. Une correction indéfendable devant un tiers,
+> même excellente techniquement.
+
+---
+
+#### 1. Ce que Romain a décidé — la méthode
+
+> ✅ **Le chantier ne re-auditera pas. Il adosse l'audit existant à des référentiels, puis corrige.**
+
+**La chaîne de preuve, imposée dès le lancement**, et qui doit pouvoir être reconstruite pour chaque
+sujet : *référentiel officiel → applicabilité → état réel de Maxilou → écart → qualification →
+solution proportionnée → validation → exécution → contrôle après exécution → contrôle Git →
+contrôle du dépôt publié.*
+
+⚡ **Et elle a payé dès la première étape.** **CF-0** a établi que **6 référentiels sur 15**, cités
+de mémoire, étaient **faux, périmés ou mal calibrés** — dont une position de la CNIL **qui n'existe
+pas**, une recommandation modifiée en **décembre 2025**, et un article de loi déplacé en **mai
+2024**. ⛔ **Sans vérification, Maxilou aurait été corrigé contre des textes inexistants.**
+
+---
+
+#### 2. ⭐ Ce que le chantier ne doit JAMAIS faire semblant de croire
+
+> **Principe posé par Romain, et permanent** : *« Le chantier Confiance doit préparer Maxilou à une
+> utilisation réelle sans faire semblant que cette utilisation a déjà commencé. »*
+
+| | Ce qui est vrai |
+|---|---|
+| 🔵 **ÉTAT ACTUEL** | Développement personnel, **de la propre initiative de Romain**. Données **fictives**. ⛔ **Aucune exploitation réelle**, ⛔ **aucune adoption** |
+| 🟡 **PRÉREQUIS** | Ce qu'on prépare dès maintenant |
+| ⛔ **DÉCISIONS FUTURES** | Ce qu'aucune session ne peut décider à la place des structures |
+
+⛔ **Interdiction permanente** : ne jamais écrire que l'EDR du Racing Club de France ou Génération
+R92 ont **commandé**, **étudié**, **validé** ou **adopté** Maxilou. **Aucune ne l'a fait.** Elles
+pourront accepter, demander des modifications, **ou ne pas souhaiter utiliser la solution**.
+
+⭐ **Aucune échéance n'existe** : ni date de tournoi réel, ni date de première invitation, ni date de
+mise en production. **La priorité est la qualité et la démonstration, pas la vitesse.**
+
+---
+
+#### 3. Q1 — Le responsable du traitement **n'est pas déterminé**, et ce n'est pas à ce chantier de le faire
+
+**Ce que Romain a précisé** : il édite personnellement Maxilou **aujourd'hui**, mais les données
+réelles seront un jour traitées pour les besoins de **l'EDR du Racing Club de France**, de
+**Génération R92**, ou **des deux**. ⚠️ **La répartition n'est pas définie**, et il ne sera pas
+personnellement à l'origine de la décision de traiter ces données pour son propre compte.
+
+**Ce que le texte confirme** — **[R1]** art. 4(7) : le responsable est celui *« qui **détermine les
+finalités et les moyens** »*. ⭐ **Le critère est QUI DÉCIDE — jamais qui code, jamais qui saisit.**
+
+| Configuration future | Qualification | Ce qu'elle ajoute |
+|---|---|---|
+| Une structure décide seule | Elle est **responsable** | Un seul jeu d'obligations |
+| ⚠️ **Les deux décident ensemble** | **Responsables conjoints** *(art. 26)* | 🔴 **Un accord écrit entre elles devient obligatoire** |
+| Romain saisit à leur demande | **Personne agissant sous l'autorité du responsable** *(art. 29)* | ⭐ **Il n'est pas responsable du traitement** |
+
+✅ **DÉCIDÉ** : ⛔ **ne jamais conclure que Romain est personnellement responsable du traitement du
+seul fait qu'il développe et publie Maxilou.** La détermination est une **décision
+organisationnelle**, à préparer *(CF-2)* et à présenter **au moment de la présentation de Maxilou**
+— ⛔ **pas avant**, les structures n'ayant rien étudié.
+
+⚠️ **Et elle ne doit pas devenir artificiellement bloquante** : CF-4, CF-5 et CF-6 se préparent avec
+des **champs à compléter**, comme le chantier **C-005** l'a déjà fait.
+
+##### ⚠️ Une tension à connaître, révélée par le contrôle de cohérence de CF-1
+
+> **Le chantier C-005** *(`PLAN.md`, volet ②)* écrit, à propos de ce qui l'a débloqué :
+> *« les deux informations qui manquaient sont trouvées — **responsable : Génération R92** ·
+> contact : `generationr92@gmail.com` »*. Et **D-018** reprend la même désignation.
+>
+> 🎯 **Ce n'est pas une contradiction, mais il faut savoir la lire.** Ces deux mentions constatent
+> ce que la page RGPD **du site vitrine** affiche déjà — **le responsable de CE SITE**. Elles ne
+> déterminent **pas** le responsable du traitement **de Maxilou**, qui n'existe pas encore.
+> D'ailleurs C-005 ajoute lui-même la réserve : *« l'association est déclarée "déclaration en
+> cours". **Aujourd'hui, c'est Romain qui porte ces données de fait** »* *(D-021)*.
+>
+> ⭐ **Et le livrable réel ne nomme personne** : [`../textes-information-donnees.md`](../textes-information-donnees.md)
+> écrit **`[ASSOCIATION ORGANISATRICE]` entre crochets**, et désigne le responsable **par son
+> rôle** — précisément pour que le nom puisse être posé **une fois qu'il sera déterminé**.
+>
+> ✅ **Donc : rien à corriger dans C-005 ni dans D-018** — ce sont des constats **vrais à leur
+> date**, et la règle interdit de réécrire les traces passées. ⛔ **Mais aucune session ne doit
+> lire ces mentions comme une détermination du responsable du traitement.** **C'est la présente
+> décision qui fait foi sur ce point**, et elle dit : **non déterminé**.
+
+---
+
+#### 4. Q2 — Le compte Google : ne pas pérenniser le Gmail personnel
+
+**Ce que Romain a précisé** : le compte actuel est bien un **Gmail personnel gratuit**, mais **ce
+n'est pas l'architecture cible**. Comme `passation.md` le prévoit déjà, les ressources ne devront
+plus dépendre de son identité personnelle.
+
+> *« Je ne souhaite pas que nous cherchions à pérenniser juridiquement une architecture reposant sur
+> mon Gmail personnel si la bonne solution consiste à préparer correctement cette sortie. »*
+
+**Ce que CF-0 a établi** :
+
+- **[R13]** — le CDPA couvre **Google Workspace, toutes éditions**, pose *« Google is a processor
+  and Customer is a controller »*, et **s'incorpore automatiquement**. ⚠️ **Mais il vise un
+  « Customer » Workspace ou Cloud — un compte grand public n'entre pas dans ce cadre** ;
+- **[R14]** — ⭐ **Google Workspace for Nonprofits est gratuit**, et l'éligibilité en France suppose
+  une association inscrite au **Journal Officiel des Associations**, validée par un tiers.
+
+✅ **DÉCIDÉ** : l'architecture cible est un **compte institutionnel**, ouvert au nom de la structure
+qui sera désignée responsable, propriétaire du classeur, du script, du Drive et de la boîte d'envoi.
+**La piste gratuite doit être instruite en premier** *(CF-3)*.
+
+⛔ **Aucune migration, aucun compte créé, aucune démarche engagée, aucune configuration modifiée.**
+
+---
+
+#### 5. Q3 — La mesure de visibilité : garder la valeur, pas le mécanisme
+
+**Ce que Romain a décidé** : la **valeur fonctionnelle** est à conserver — fournir aux partenaires
+une mesure utile de leur visibilité. ⭐ **Mais il n'est pas attaché au mécanisme actuel.**
+
+> *« Ne cherche pas à sauver le code actuel. Cherche d'abord la manière juridiquement et
+> techniquement la plus simple d'obtenir le résultat métier recherché. »*
+
+✅ **Réponse à la question de l'unité de mesure** : **« nombre de visites » peut remplacer « nombre
+de personnes »** si cela permet de supprimer la persistance sur le terminal.
+
+> *« Je préfère une mesure honnêtement qualifiée de "visites" à une mesure présentée comme
+> "personnes" si cette dernière nécessite une identification ou une persistance supplémentaire. »*
+
+**Ce que CF-0 a apporté à cette question** :
+
+- **[R5]** — Maxilou tient **4 conditions sur 7** de l'exemption. C'est **la finalité** qui bloque ;
+- **[R2]** — le texte vise *« accéder à des informations **déjà stockées** »* ou *« **inscrire** des
+  informations »* : ⭐ **une variable en mémoire de page n'est ni l'un ni l'autre** ;
+- **[R12]** — ⭐ **Apps Script ne voit ni l'adresse IP du visiteur, ni les en-têtes HTTP.**
+
+⛔ **Ce qui n'est PAS décidé** : ni la suppression de la fonctionnalité, ni la conservation de son
+implémentation, ni l'ajout d'un mécanisme de consentement. **CF-7 devra étudier et démontrer
+formellement la solution avant toute exécution.** La suppression ne sera envisagée **qu'après**
+avoir établi qu'aucune solution proportionnée ne conserve la valeur.
+
+---
+
+#### 6. La gouvernance documentaire — **`CLAUDE.md` §8 quinquies**
+
+✅ **VALIDÉ** : *une mesure Confiance n'est terminée que lorsque le code, les preuves, le référentiel
+applicable, la documentation active et le dépôt publié décrivent tous le même état.*
+
+✅ **VALIDÉ — la source unique** : **`REFERENTIELS.md`** porte les textes ; ailleurs on écrit
+l'identifiant `[Rn]`, **jamais le contenu**.
+
+> *« Je ne veux pas que les références juridiques ou cyber soient recopiées dans de multiples
+> documents au risque de devenir divergentes ou périmées. »*
+
+✅ **VALIDÉ — la chaîne de clôture** : **16 contrôles logiques**, regroupés en **4 traces**
+*(fiche · décision · commit · clôture)*.
+
+> ⭐ **La proportionnalité est une règle permanente, pas une tolérance.** Les 16 contrôles restent
+> obligatoires **lorsqu'ils sont applicables**, mais ⛔ **ils ne doivent pas générer artificiellement
+> 16 livrables**. Le **contrôle ⑯** est le contrôle final de clôture.
+
+---
+
+**⚠️ Ce que cette décision NE fait PAS**
+
+> - ❌ Elle **ne corrige** aucun problème — **aucune ligne de code n'a été écrite** ;
+> - ❌ Elle **ne change** ni les clés, ni une protection, ni une configuration, ni un déploiement ;
+> - ❌ Elle **ne détermine pas** le responsable du traitement, et **n'engage aucune structure** ;
+> - ❌ Elle **ne tranche pas** le sort de la mesure de visibilité — seulement son **unité de mesure
+>   acceptable** ;
+> - ❌ Elle **ne crée aucun compte** et **n'engage aucune démarche** auprès d'un fournisseur.

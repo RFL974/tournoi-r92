@@ -5830,3 +5830,207 @@ R-092 en suit le calendrier.
 > cette session n'a touché ni comportement, ni écran, ni action serveur, ni état de déploiement.
 > **Aucune entrée de `CHANGELOG` n'est requise** : personne qui utilise l'application ne le
 > remarquerait.
+
+---
+
+# 🛡️ OUVERTURE DU CHANTIER **CONFIANCE** — CF-0 et CF-1 *(2026-08-19, nuit)*
+
+> **Objectif de la session** : Romain **met C-015 en pause** et ouvre un chantier prioritaire —
+> **Confiance : cybersécurité + juridique de l'existant**. Deux étapes ont été autorisées, l'une
+> après l'autre : **CF-0** *(vérifier les référentiels à leur source)* puis **CF-1** *(poser le
+> cadre documentaire)*.
+> **Résultat** : ✅ **CF-0 terminée** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes
+> **formellement écartés** · ✅ **CF-1 terminée** — 🆕 `REFERENTIELS.md`, `CLAUDE.md` **§8
+> quinquies**, `PLAN.md` **§14**. **Décision : D-038.**
+
+**Point de départ** : `main` = `origin/main` = **`d5a6c64`**, arbre propre *(vérifié deux fois : au
+lancement, puis à nouveau avant la première écriture)*.
+⛔ **Aucune ligne de code, aucun test, aucune configuration, aucun déploiement.**
+
+---
+
+## 1. La méthode imposée par Romain, et pourquoi elle a payé dès le premier jour
+
+Romain a posé, **avant toute analyse**, une **chaîne de preuve** en dix points : *référentiel
+officiel → applicabilité → état réel → écart → qualification → solution proportionnée → exécution →
+contrôle après exécution → contrôle Git → contrôle du dépôt publié.*
+
+La session s'est déroulée en **trois temps**, chacun autorisé séparément :
+
+| Temps | Ce qui était autorisé | Ce qui en est sorti |
+|---|---|---|
+| **Reconnaissance** | **Lecture seule**, aucune modification | Cartographie cyber et données · 15 référentiels **proposés de mémoire** |
+| **CF-0** | Consulter les sources, **rien modifier** | ⚡ **6 des 15 référentiels étaient faux, périmés ou mal calibrés** |
+| **CF-1** | Documentaire uniquement | Le cadre : source unique, règle, fiches |
+
+> 🎯 **La leçon de la session, et elle vaut plus que son contenu.** La reconnaissance avait produit
+> une liste de référentiels **d'apparence sérieuse**. En allant les lire, **un tiers était
+> inutilisable**. ⛔ **Sans CF-0, Maxilou aurait été corrigé contre des textes inexistants** — et le
+> travail aurait été **indéfendable devant un tiers**, quelle qu'en soit la qualité technique.
+
+---
+
+## 2. CF-0 — ce que la lecture des textes a corrigé
+
+**18 sources primaires consultées** *(Légifrance, CNIL, EUR-Lex, ANSSI, documentation Google et
+GitHub, OWASP)*. Le détail complet vit dans **[`REFERENTIELS.md`](REFERENTIELS.md) §8** ; voici les
+corrections les plus lourdes :
+
+| Hypothèse de la reconnaissance | Ce que le texte réel a montré |
+|---|---|
+| *« Position de la CNIL sur Google Fonts »* | 🔴 **Elle n'existe pas.** Aucun document de la CNIL ne traite du sujet ; la jurisprudence connue est **allemande**. ⚠️ **Une source avait été inventée** |
+| *« Recommandation CNIL 2020-092 »* | ⚡ **Périmée** — modifiée par la **délibération 2025-131 du 18/12/2025** |
+| *« LCEN art. 6-III »* | ⚡ **Périmée** — les mentions légales sont à l'**art. 1-1** depuis le **23/05/2024**. L'art. 6-III parle aujourd'hui de **contrôle parental et de tabac** |
+| *« Guide d'hygiène ANSSI, 42 mesures »* | ⚠️ **Mal calibré** *(conçu pour des SI d'entreprise)* ; et le guide ANSSI/CPME envisagé en remplacement est **marqué obsolète par l'ANSSI** |
+| *« Moins de 250 personnes ⇒ pas de registre »* | 🔴 **Faux** — l'exemption tombe si le traitement **n'est pas occasionnel** |
+| *« ASVS niveau 1 »* | ⚡ Version **5.0.0** ; **le niveau 1 ne prouve aucune conformité** |
+
+**Deux référentiels manquaient**, et le second était le mieux calibré de tous :
+
+- ⭐ **CNIL — dispositif « Sport amateur (hors contrat) et RGPD »** : il vise *« les structures du
+  sport amateur, essentiellement des associations »* et traite nommément des données des
+  *« sportifs **d'une équipe adverse** »*. 🏉 **C'est exactement la situation de Maxilou** ;
+- **Documentation GitHub Pages** : elle **interdit expressément** l'usage en SaaS commercial — sans
+  effet aujourd'hui, mais c'est une contrainte réelle sur la vision future.
+
+**Trois textes formellement écartés**, avec leur démonstration : **NIS 2** *(hors annexes, hors
+seuils, et **loi de transposition française non promulguée**)* · **Cyber Resilience Act** *(Maxilou
+n'est **pas mis sur le marché**)* · **RGAA** *(l'art. 47 **exclut expressément** les organismes de
+droit privé à but non lucratif)*.
+
+---
+
+## 3. ⭐ Le constat qui a réorganisé tout le chantier
+
+En cherchant à établir qui était responsable du traitement, la session a relu ce que le dépôt
+disait déjà des données réellement présentes :
+
+| Ce qui est établi | Où |
+|---|---|
+| **Le tournoi en base est fictif** — vrais noms de clubs, engagements inventés | `ETAT.md` **I-04**, levé le 2026-08-04 |
+| **Le classeur ne contient aucune donnée personnelle de tiers** *(seules adresses : Romain et son épouse, pour tester)* | `ETAT.md` **I-03 + I-04** |
+| **Aucune journée réelle n'a jamais été jouée** | `RAPPORT-AUDIT.md` §7 |
+
+➡️ **Conséquence** : le traitement que le chantier doit protéger **n'a pas encore commencé**. La
+formule était déjà écrite dans `ETAT.md` depuis le 2026-08-04 — *« la question n'est pas "faut-il
+réparer", mais "faut-il préparer" »*.
+
+⚡ **Trois « obligations » présentées comme des manquements dans la reconnaissance sont en réalité
+des PRÉREQUIS** *(information des personnes, registre, mesure de visibilité)*. **Un seul écart est
+réel et actuel** : les **mentions légales** — parce qu'elles ne dépendent d'aucune donnée
+personnelle, mais de la seule **publication** d'un service en ligne.
+
+---
+
+## 4. Les réponses de Romain — **D-038**
+
+| Question | Sa réponse, et ce qu'elle change |
+|---|---|
+| **Q1 — responsable du traitement** | ⛔ **Ne pas conclure qu'il l'est** parce qu'il développe et publie. Les données réelles seront traitées pour l'**EDR**, **Génération R92**, **ou les deux** — répartition **non définie**. ⭐ **[R1] art. 4(7) le confirme** : le critère est *« qui détermine les finalités et les moyens »* |
+| **Q2 — compte Google** | Gmail **personnel gratuit** aujourd'hui, ⭐ **mais ce n'est pas l'architecture cible**. Piste établie : **Google Workspace for Nonprofits, gratuit**, couvert par le **CDPA** |
+| **Q3 — mesure de visibilité** | Garder la **valeur métier**, pas le mécanisme. ✅ **« Visites » peut remplacer « personnes »** si cela supprime la persistance sur le terminal |
+
+⚡ **Un point de contexte décisif, apporté par Romain** : *« je développe actuellement Maxilou de ma
+propre initiative. L'EDR et Génération R92 ne m'ont pas commandé ce logiciel. »* Il n'existe **aucune
+échéance** : ni tournoi réel, ni invitation, ni mise en production.
+➡️ **Ce fait est devenu une interdiction permanente** *(`CLAUDE.md` §8 quinquies)* : ⛔ **ne jamais
+attribuer à ces structures une décision qu'elles n'ont pas prise.**
+
+---
+
+## 5. CF-1 — ce qui a été écrit
+
+| Fichier | Ce qui a changé |
+|---|---|
+| 🆕 **`REFERENTIELS.md`** | **Créé** — la source unique : 16 référentiels applicables, 3 écartés, 7 obligations, 5 recommandations, bonnes pratiques et durcissements **séparés**, la table **mesure ↔ référentiel**, et le **journal des vérifications** |
+| **`CLAUDE.md`** | **§8 quinquies** *(règle de la mesure complète)* · sommaire · **§12.2 : 8 → 9 fichiers de suivi** · une ligne au tableau *« lequel ouvrir »* |
+| **`PLAN.md`** | **§14** — le chantier, ses 11 zones, les fiches **CF-0 → CF-13**, l'ordre et les dépendances |
+| **`ETAT.md`** | En-tête · §1 · §2 *(la note des chantiers hors audit)* · §4 |
+| **`DECISIONS.md`** | **D-038** |
+| **`SESSIONS.md`** | Cette entrée |
+
+**Le choix d'architecture, et sa raison** : ⭐ **un seul document nouveau.** Le dépôt possédait déjà
+8 fichiers de suivi qui font exactement ce travail — état, plan, risques, décisions, journal. **Les
+dupliquer aurait été précisément l'erreur que la règle de la source unique interdit.** Le chantier
+Confiance n'avait besoin que d'une chose inexistante : **le lien entre une mesure et le texte qui la
+fonde**.
+
+### ⚡ Ce que le contrôle de cohérence a trouvé — et il a servi dès sa première application
+
+Le contrôle des documents actifs entre eux *(contrôle ⑫ de la chaîne)* a relevé une **tension de
+lecture** que rien n'avait signalée jusque-là :
+
+> **C-005** *(`PLAN.md`)* et **D-018** écrivent *« responsable : **Génération R92** »*. **D-038**
+> écrit que le responsable du traitement **n'est pas déterminé**.
+
+🎯 **Ce n'est pas une contradiction**, et la vérification l'a établi : ces deux mentions constatent
+ce que la page RGPD **du site vitrine** affiche déjà — le responsable **de ce site**, pas celui du
+traitement de Maxilou. C-005 porte d'ailleurs lui-même la réserve *(« déclaration en cours »,
+D-021)*. ⭐ **Et le livrable réel, `textes-information-donnees.md`, ne nomme personne** : il écrit
+`[ASSOCIATION ORGANISATRICE]` **entre crochets** et désigne le responsable **par son rôle**.
+
+✅ **Action retenue, et elle est proportionnée** : ⛔ **ne rien modifier dans C-005 ni D-018** — ce
+sont des constats **vrais à leur date**, et la règle interdit de réécrire les traces passées.
+L'écart est **inscrit dans D-038**, qui fait foi sur ce point. **Une source, une adresse.**
+
+### ⚡ Une dette de source détectée — et **soldée avant le premier commit**
+
+Le contrôle des sources *(contrôle ④ de la chaîne)* a relevé que la fiche **[R11]** *(transferts
+hors UE)* s'appuyait, pour l'arrêt *Latombe*, sur un **média spécialisé** — ⛔ **exactement ce que
+la hiérarchie des sources du chantier interdit** lorsqu'une source primaire existe.
+
+⚠️ **Romain a refusé le commit tant que cette dette n'était pas soldée**, et il a eu raison : la
+recherche a livré **davantage** que le lien manquant.
+
+| Ce qui a remplacé la source secondaire | Nature |
+|---|---|
+| **L'arrêt lui-même** — Tribunal *(dixième chambre élargie)*, 3 septembre 2025, **T-553/23**, **`ECLI:EU:T:2025:831`** *(EUR-Lex, CELEX 62023TJ0553)* | ⭐ **Source primaire** |
+| **La communication du pourvoi au JOUE** — **C-703/25 P**, formé le **31 octobre 2025**, 4 moyens *(CELEX 62025CN0703)* | ⭐ **Source primaire** |
+| **Le communiqué CJUE n° 106/25** du 3 septembre 2025 | Source d'appoint, ⚠️ **qualifiée comme telle** : elle porte elle-même la mention *« Document non officiel à l'usage des médias »* |
+
+⭐ **Le lien IAPP a été SUPPRIMÉ** : il n'apportait rien que les sources primaires ne donnent.
+
+🎯 **Et la lecture du texte a apporté une nuance que le média n'avait pas** : le Tribunal confirme
+l'adéquation **« à la date d'adoption de la décision attaquée »**, et rappelle que la Commission
+doit suivre le cadre **en permanence**, avec le pouvoir de *« suspendre, modifier ou abroger »* sa
+décision. ⛔ **Ce n'est pas un blanc-seing définitif** — ce qui renforce le classement de **CF-13**
+en durcissement **de prudence**.
+
+⚠️ **Ce qui reste, et ce n'est pas une dette de source** : **l'issue** du pourvoi n'a pas pu être
+lue à sa source *(la fiche procédurale d'InfoCuria est une page dynamique)*. Le fait **sourcé** est
+que le pourvoi **a été formé** ; son issue est **INCONNUE**, et la fiche **[R11]** le dit — à
+vérifier avant **CF-13**.
+
+---
+
+## 6. ⛔ Ce que cette session NE fait PAS
+
+> - ❌ **Aucune ligne de code**, aucun test, aucune configuration, aucun déploiement ;
+> - ❌ **Aucune clé changée** — ⚠️ **CF-8 était initialement proposée en première étape ; Romain l'a
+>   refusée** tant que sa chaîne de preuve n'est pas constituée. ⭐ *« Même si une correction te
+>   paraît évidente ou réalisable en cinq minutes, elle attendra »* ;
+> - ❌ **Aucun compte créé**, aucune démarche engagée auprès d'un fournisseur ;
+> - ❌ **Aucun problème corrigé** — R-014 → R-040 restent dans l'état où l'audit les a laissés ;
+> - ❌ **Aucune décision attribuée** à l'EDR ou à Génération R92 ;
+> - ❌ **C-015 n'est ni poursuivi, ni modifié, ni anticipé.**
+
+---
+
+## 7. État à la fin de la session
+
+| | |
+|---|---|
+| **Documents modifiés** | `REFERENTIELS.md` *(créé)* · `CLAUDE.md` · `PLAN.md` · `ETAT.md` · `DECISIONS.md` · `SESSIONS.md` — **documentation uniquement** |
+| **Nouveau chantier** | 🛡️ **Confiance**, hors plan d'audit — **CF-0 et CF-1 terminées**, **CF-2 → CF-13 non lancées** |
+| **Nouveau fichier de suivi** | **9ᵉ** — `REFERENTIELS.md`, inscrit à `CLAUDE.md` **§12.2** |
+| **Écart réel et actuel trouvé** | ⚡ **Un seul** : les **mentions légales** *(CF-4)*. Tout le reste est un **prérequis** |
+| **Prochaine session recommandée** | **CF-2** — préparer le **dossier** de détermination du responsable du traitement. ⚠️ **Un dossier, pas une décision**, et à ne présenter qu'au moment de la présentation de Maxilou |
+
+> ⚠️ **Documents ACTIFS vérifiés** *(`CLAUDE.md` §12.4, point 2)* : **aucun ne devient faux.**
+> `README.md`, `CHANGELOG.md`, `docs/architecture.md`, `backend/README.md` et `docs/passation.md`
+> décrivent le produit et son exploitation ; cette session n'a touché ni comportement, ni écran, ni
+> action serveur, ni état de déploiement, ni compte. **Aucune entrée de `CHANGELOG` n'est requise** :
+> personne qui utilise l'application ne le remarquerait.
+>
+> ⏳ **`docs/passation.md` sera concerné par CF-3**, quand l'architecture de compte changera
+> réellement — ⛔ **pas avant** : rien n'a bougé.

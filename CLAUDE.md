@@ -22,6 +22,7 @@
 - [8 bis. Règle de la carte à jour](#8-bis-règle-de-la-carte-à-jour)
 - [8 ter. Règle du commentaire à jour](#8-ter-règle-du-commentaire-à-jour)
 - [8 quater. Règle de la source unique](#8-quater-règle-de-la-source-unique)
+- [8 quinquies. Règle de la mesure complète](#8-quinquies-règle-de-la-mesure-complète)
 - [9. Règle de transparence](#9-règle-de-transparence)
 - [10. Règle de prudence](#10-règle-de-prudence)
 - [11. Objectif final](#11-objectif-final)
@@ -655,6 +656,127 @@ le même : un chiffre juste est recopié quelque part, la source bouge, la copie
 
 ---
 
+## 8 quinquies. RÈGLE DE LA MESURE COMPLÈTE
+
+> ⚠️ **Cette règle s'applique à TOUTES les sessions du projet.** Elle est née du chantier
+> **Confiance** *(étape CF-0, 2026-08-19)* et validée par Romain le même jour — **D-038**.
+>
+> Elle complète les trois précédentes : **§8 bis** dit *quand* mettre à jour la carte, **§8 ter**
+> *quand* corriger un commentaire, **§8 quater** *où* l'information doit vivre. Celle-ci dit
+> **quand une mesure a le droit d'être déclarée TERMINÉE**.
+
+**La règle, en une phrase :**
+
+> **Une mesure de sécurité ou de protection des données n'est jamais terminée parce que le code est
+> corrigé et que les tests passent. Elle est terminée quand le code, les preuves, le référentiel,
+> la documentation active et le dépôt publié décrivent tous le MÊME état.**
+
+### Pourquoi cette règle existe
+
+Le dépôt en porte déjà la preuve : `backend/README.md` a annoncé **`616/616`** quand le vrai bilan
+était **`703/703`**. Un chiffre **juste** est devenu **faux** sans que personne ne modifie rien. Un
+document qu'on ne tient pas ne devient pas vide : **il devient faux**, et c'est pire.
+
+⚡ **Ce que le chantier Confiance ajoute à ce constat.** Une mesure de sécurité ou de données a une
+propriété que n'ont pas les autres travaux : **elle doit pouvoir être expliquée à quelqu'un
+d'extérieur**. Une correction dont personne ne peut dire *« nous l'avons faite au titre de tel
+texte »* est **indéfendable**, même si le code est excellent.
+
+### 1) La source unique du lien « mesure ↔ référentiel »
+
+> 🆕 **`docs/industrialisation/REFERENTIELS.md`** porte les textes officiels : nom exact, autorité,
+> **version en vigueur**, adresse, qualification, applicabilité.
+>
+> **Ailleurs dans le dépôt, on écrit l'identifiant — jamais le contenu.**
+
+| ✅ Correct, ailleurs | ❌ Interdit, ailleurs |
+|---|---|
+| *« Écart au regard de **[R2]**, exigence **[O4]**. »* | *« Écart au regard de l'article 82 de la loi 78-17… »* |
+| *« Durcissement volontaire, voir **[R16]**. »* | *« Selon OWASP ASVS niveau 1… »* |
+
+🎯 **Pourquoi ce n'est pas du formalisme, et CF-0 l'a prouvé** : sur 15 référentiels cités de
+mémoire, **6 étaient faux, périmés ou mal calibrés**. Recopiés dans cinq documents, il aurait fallu
+cinq corrections — **et une aurait été oubliée.** Avec un identifiant, on corrige **une fois**.
+
+### 2) Les trois états, à ne jamais confondre
+
+Le chantier Confiance **prépare** Maxilou à une utilisation réelle **sans faire semblant que cette
+utilisation a commencé**. Toute session doit donc distinguer :
+
+| | Ce que c'est |
+|---|---|
+| 🔵 **ÉTAT ACTUEL** | Développement personnel, données **fictives**, ⛔ **aucune exploitation réelle**, ⛔ **aucune adoption par l'EDR ou Génération R92** |
+| 🟡 **PRÉREQUIS AVANT UTILISATION RÉELLE** | Ce qu'on peut préparer dès maintenant |
+| ⛔ **DÉCISIONS FUTURES DES STRUCTURES** | Ce qu'aucune session **ne peut décider à leur place** |
+
+> ⛔ **Interdiction permanente** : ne **jamais** écrire qu'une structure a commandé, étudié, validé
+> ou adopté Maxilou. **Aucune ne l'a fait.** Ne jamais présumer de leur adoption future.
+
+### 3) La chaîne de clôture — 16 contrôles, 4 traces
+
+**Les 16 contrôles sont obligatoires lorsqu'ils sont applicables. Ils ne produisent PAS 16
+livrables.**
+
+| Trace | Contrôles portés | Où elle vit |
+|---|---|---|
+| **A — fiche de mesure** | ① référentiel · ② applicabilité · ③ constat *(`fichier:ligne`)* · ④ écart · ⑤ qualification · ⑥ solution | `PLAN.md`, fiche de l'étape, avec renvois `[Rn]` |
+| **B — décision** | ⑦ validation de Romain | `DECISIONS.md` |
+| **C — commit** | ⑧ exécution · ⑨ tests et preuves · ⑬ contrôle du diff · ⑭ commit atomique | Le message de commit et le diff **sont** la preuve |
+| **D — clôture** | ⑩ **recontrôle au référentiel** · ⑪ documentation ciblée · ⑫ cohérence des documents actifs · ⑮ dépôt publié · ⑯ preuve finale | Rapport de fin de session + `ETAT.md` |
+
+**Trois échelles, selon la mesure :**
+
+| Nature | Traces produites |
+|---|---|
+| **Constat sans écart** *(la chaîne s'arrête au contrôle ④)* | **A seule**, trois lignes |
+| **Mesure documentaire** | **A + D** |
+| **Mesure de code** | **A + B + C + D** |
+
+> ⚠️ **Le contrôle ⑩ n'est pas le contrôle ⑨, et c'est tout l'objet de la règle.** Le ⑨ répond à
+> *« est-ce que ça marche ? »* ; le ⑩ répond à *« est-ce que ça répond à l'exigence ? »*.
+> **Un test peut passer sur une mesure qui rate complètement son texte.**
+
+**Le contrôle ⑯ est le contrôle de tous les autres** — c'est lui qui permet de regrouper sans rien
+perdre, parce que **la phrase est impossible à écrire si un maillon a sauté** :
+
+> *« Exigence **[Rn]**, version [X] · écart constaté à `fichier:ligne` · qualifié [catégorie] ·
+> solution [Y] validée le [date] · testée par [preuve] · **recontrôlée au regard de [Rn]** ·
+> documents actifs vérifiés · commit `sha` · présent dans le dépôt publié. »*
+
+⛔ **Si cette phrase ne peut pas être écrite, la mesure n'est pas terminée.**
+
+### 4) Identifier les documents RÉELLEMENT impactés
+
+⛔ **Ne pas ouvrir mécaniquement les douze documents.** La question est : *« lequel deviendrait FAUX
+si je ne le touchais pas ? »*
+
+| Si le changement porte sur… | Le document à ouvrir |
+|---|---|
+| une action serveur, un accès, un flux | `docs/architecture.md` |
+| une page, un fichier, un onglet | `README.md` |
+| un utilitaire ou une garantie du serveur | `backend/README.md` |
+| un repère de déploiement, un bilan de tests | `docs/deploiement.md` |
+| une donnée, une durée, un geste d'effacement | `docs/conservation-donnees.md` · `docs/textes-information-donnees.md` |
+| une bibliothèque extérieure | `docs/dependances-externes.md` |
+| un compte, un service, une clé | `docs/passation.md` |
+| **ce qu'un utilisateur remarquerait, ou la fiabilité** | `CHANGELOG.md` |
+| **un texte officiel, sa version, sa qualification** | 🆕 `docs/industrialisation/REFERENTIELS.md` |
+
+### Ce que la règle ne demande PAS
+
+- ❌ **Pas** de produire seize livrables pour une mesure simple — **la proportionnalité est une règle
+  permanente**, pas une tolérance ;
+- ❌ **Pas** de recopier un référentiel dans chaque document concerné : **c'est exactement ce qu'elle
+  interdit** ;
+- ❌ **Pas** de passe de rattrapage sur les documents anciens — on applique la règle **à ce qu'on
+  écrit** *(comme §8 quater)* ;
+- ❌ **Pas** de toucher aux **traces historiques** : `AUDIT.md`, `SESSIONS.md`, `RAPPORT-AUDIT.md` et
+  les entrées passées du `CHANGELOG` portent des faits **vrais à leur date** ;
+- ✅ **Seulement** ceci : *sur quel texte repose ce que je viens de faire, et puis-je écrire la
+  phrase du contrôle ⑯ ?*
+
+---
+
 ## 9. RÈGLE DE TRANSPARENCE
 
 Distinguer clairement :
@@ -723,7 +845,7 @@ CLAUDE.md                    (ce fichier — les règles)
 docs/industrialisation/      (l'état réel du chantier)
 ```
 
-## 12.2 — Les 8 fichiers de suivi
+## 12.2 — Les 9 fichiers de suivi
 
 | Fichier | Rôle |
 |---|---|
@@ -735,11 +857,12 @@ docs/industrialisation/      (l'état réel du chantier)
 | `docs/industrialisation/CARTOGRAPHIE.md` | Le produit de l'**ÉTAPE 1** : comment l'application est faite (créé en session 2) |
 | `docs/industrialisation/AUDIT.md` | Le produit de l'**ÉTAPE 2** : l'**explication** de chaque problème, domaine par domaine (créé en session 5). `RISQUES.md` **suit**, `AUDIT.md` **explique** |
 | `docs/industrialisation/RAPPORT-AUDIT.md` | La **synthèse close de l'ÉTAPE 2** (créée en session 12) : les 8 domaines, les **88 problèmes** (R-001 → R-088), les **6 risques de méthode** (M-01 → M-06), ce qui a été vérifié et s'est révélé **sain**, ce qui reste à décider, l'ordre proposé, et les **limites** de l'audit. C'est **le document d'entrée** pour qui découvre le chantier — et la **seule vue transversale** aux huit domaines |
+| 🆕 `docs/industrialisation/REFERENTIELS.md` | La **source unique des textes officiels** du chantier **Confiance** (créée en 2026-08-19, étape CF-1) : quel texte, quelle **version**, quelle autorité, **applicable ou écarté et pourquoi**, et sous quelle **qualification** — obligation, recommandation, documentation fournisseur, bonne pratique ou durcissement volontaire. Il porte aussi la **table mesure ↔ référentiel** et le **journal des vérifications**. ⚠️ **Ailleurs, on cite son identifiant `[Rn]`, jamais son contenu** *(voir **§8 quinquies**)* |
 
 > ⚠️ **Cette liste doit être tenue à jour : une session qui croit qu'il n'existe que 5 fichiers ne
-> lira jamais les trois autres.** *(Elle est passée de 5 à 7 puis à 8 — chaque ajout a dû être
-> inscrit ici, sans quoi le document nouveau serait resté invisible. C'est la même discipline que
-> **§8 bis**, appliquée aux documents de suivi eux-mêmes.)*
+> lira jamais les quatre autres.** *(Elle est passée de 5 à 7, puis à 8, puis à **9** — chaque ajout
+> a dû être inscrit ici, sans quoi le document nouveau serait resté invisible. C'est la même
+> discipline que **§8 bis**, appliquée aux documents de suivi eux-mêmes.)*
 
 ### Lequel ouvrir, selon ce qu'on cherche
 
@@ -753,6 +876,7 @@ docs/industrialisation/      (l'état réel du chantier)
 | *« Qu'a-t-on fait à la session N ? »* | `SESSIONS.md` |
 | *« Comment l'application est-elle faite ? »* | `CARTOGRAPHIE.md` |
 | *« Qu'est-ce qu'on corrige, et dans quel ordre ? »* | `PLAN.md` |
+| 🆕 *« Sur quel texte officiel repose cette exigence — et s'applique-t-il vraiment ? »* | **`REFERENTIELS.md`** |
 
 ## 12.3 — Démarrage d'une session
 

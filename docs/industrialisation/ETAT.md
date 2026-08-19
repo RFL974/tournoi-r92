@@ -9,7 +9,26 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-19 *(soir)* — ⚡ **LES DEUX DERNIERS PROBLÈMES SANS
+**Dernière mise à jour** : 2026-08-19 *(nuit)* — 🛡️ **UN CHANTIER EST OUVERT, ET CE N'EST PAS
+C-015** : Romain a **mis C-015 en pause** et ouvert le chantier **CONFIANCE** *(cybersécurité +
+juridique de l'existant)*, **hors du plan d'audit** — sa fiche est en `PLAN.md` **§14**, sa décision
+fondatrice est **D-038**.
+⭐ **Deux étapes sont faites : CF-0 et CF-1.** **CF-0** a vérifié les référentiels **à leur source**
+*(18 sources primaires)* et **corrigé 9 hypothèses** : ⚡ **6 référentiels sur 15 étaient faux,
+périmés ou mal calibrés** — dont une position de la CNIL **qui n'existe pas**. **3 textes sont
+formellement écartés** *(NIS 2, Cyber Resilience Act, RGAA)*. **CF-1** pose le cadre :
+🆕 **`REFERENTIELS.md`** *(9ᵉ fichier de suivi)*, la règle **`CLAUDE.md` §8 quinquies**, et le §14 du
+plan.
+🎯 **Le constat qui commande tout le chantier, et il était déjà dans ce fichier** *(I-03, I-04)* :
+**le classeur ne contient aucune donnée personnelle de tiers**, le tournoi en base est **fictif**, et
+**aucune journée réelle n'a jamais été jouée**. ➡️ *« La question n'est pas "faut-il réparer", mais
+"faut-il préparer". »* ⚡ **Un seul écart est RÉEL et ACTUEL** : les **mentions légales** *(le site
+est publié, [R10])*. **Tout le reste est un prérequis.**
+⛔ **Aucune ligne de code, aucun test, aucune configuration, aucun déploiement.** ⛔ **L'EDR et
+Génération R92 n'ont ni commandé, ni étudié, ni validé, ni adopté Maxilou** — aucune décision ne leur
+est attribuée.
+
+*Rappel de la mise à jour précédente — 2026-08-19 (soir)* : ⚡ **LES DEUX DERNIERS PROBLÈMES SANS
 RATTACHEMENT SONT ARBITRÉS** *(**D-037**)*, et le registre n'en compte plus aucun :
 **R-092 rejoint C-015** *(toute invalidation d'un résultat devra effacer le détail périmé)* ·
 ⚡ **R-093 devient le chantier C-031**, *« les colonnes du classeur : une seule façon de les
@@ -143,8 +162,20 @@ registre : R-090, R-091**)
 
 ## 1. EN UNE PHRASE
 
-🏁 **L'ÉTAPE 3 EST TERMINÉE, et AUCUN CHANTIER N'EST OUVERT** : **C-012** et la **remise à niveau
-documentaire** *(6 lots, hors plan d'audit — `PLAN.md` §13)* sont **tous deux clos le 2026-08-19**.
+🛡️ **LE CHANTIER CONFIANCE EST OUVERT — cybersécurité et juridique de l'existant.** Il est **hors du
+plan d'audit** *(`PLAN.md` **§14**, décision **D-038**)*, et **C-015 est en pause**. **CF-0**
+*(vérification des référentiels)* et **CF-1** *(le cadre documentaire)* sont **faits** ; **CF-2 à
+CF-13 ne sont pas commencés**.
+
+> ⭐ **Ce que ce chantier prépare — et ce qu'il ne fait pas semblant de croire.** Maxilou est en
+> **développement personnel**, sur **données fictives**, et **n'a jamais servi de tournoi réel**
+> *(I-03, I-04)*. ⛔ **L'EDR du Racing Club de France et Génération R92 n'ont ni commandé, ni
+> étudié, ni validé, ni adopté Maxilou.** Le chantier **prépare** une utilisation réelle **sans
+> faire semblant qu'elle a commencé**.
+
+*Ce qui restait vrai avant cette ouverture* : 🏁 **l'ÉTAPE 3 est terminée** — **C-012** et la
+**remise à niveau documentaire** *(6 lots, hors plan d'audit — `PLAN.md` §13)* sont **tous deux clos
+le 2026-08-19**.
 ⚡ **31 chantiers ont une fiche** (C-001 → **C-031**), et **les 93 problèmes du registre ont tous une
 situation connue** — 90 dans un chantier, 3 explicitement écartés *(`PLAN.md` §12, tableau
 vérifiable)*. C'était la condition posée par Romain : *« je préfère qu'on
@@ -156,7 +187,8 @@ ait la vision complète plutôt que commencer un chantier pour ensuite devoir re
 > l'ancienne phrase *« 91 sur 91 placés »* était devenue fausse.
 
 L'ordre est établi de bout en bout, et la suite reste la **VALIDATION (ÉTAPE 4)**, chantier par
-chantier.
+chantier — ⚠️ **mais le chantier ouvert aujourd'hui n'en fait pas partie** : le chantier Confiance
+ne provient pas des huit domaines d'audit.
 
 ---
 
@@ -190,9 +222,10 @@ chantier.
 | 5 | **ÉTAPE 5 — Implémentation par petites unités** | 🚧 **EN COURS** — **3 chantiers TESTÉS chez Google** : C-011 (PR #181) · C-013 (PR #182) · 🏁 **C-012** (PR #187, #188, #189 — backend redéployé le 2026-08-18, **`R92 — 703/703 OK, 0 FAIL`**) · **3 chantiers documentaires livrés** : C-005, C-006, C-007 · **1 chantier de commentaires livré** : **C-008** *(fichiers source ouverts, **zéro ligne exécutable**)* |
 | 6 | ÉTAPE 6 — Commits atomiques | ⬜ À faire |
 
-> ⚡ **Un chantier ne figure PAS dans ce tableau, et c'est volontaire** : la **remise à niveau
-> documentaire** du 2026-08-19 *(6 lots, terminée)*. Elle n'est **pas issue de l'audit**, et l'y
-> ranger laisserait croire le contraire. Son adresse : **`PLAN.md` §13**.
+> ⚡ **Deux chantiers ne figurent PAS dans ce tableau, et c'est volontaire** : la **remise à niveau
+> documentaire** du 2026-08-19 *(6 lots, terminée — **`PLAN.md` §13**)* et 🛡️ le **chantier
+> CONFIANCE** *(ouvert le 2026-08-19 — **`PLAN.md` §14**)*. **Aucun des deux n'est issu de
+> l'audit**, et les y ranger laisserait croire le contraire.
 
 ---
 
@@ -219,18 +252,38 @@ chantier.
 
 ## 4. PROCHAINE ÉTAPE
 
-### 🧭 Où on en est **au 2026-08-19, fin de journée**
+### 🧭 Où on en est **au 2026-08-19, nuit**
 
-**Aucun chantier n'est ouvert.** Deux orientations sont **déjà écrites** — inscrites ici comme des
-**propositions**, ⛔ **pas** comme un chantier lancé :
+🛡️ **Le chantier CONFIANCE est ouvert**, et **C-015 est en pause** *(décision de Romain, **D-038**)*.
 
-| Orientation | D'où elle vient | État |
+| Étape | Objet | État |
 |---|---|---|
-| **C-015 — les règles du jour J** | Fin de `SESSIONS.md` — la chaîne `C-011 → C-012 → C-015` est **levée** · fiche : `PLAN.md` | ⬜ **NON lancé** |
-| ~~**Arbitrer R-092 et R-093**~~ | `RISQUES.md` — aucun des deux n'était rattaché | ✅ **FAIT le 2026-08-19** *(**D-037**)* — R-092 → **C-015**, R-093 → **C-031** |
+| **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
+| **CF-1** | Le cadre documentaire | ✅ **TERMINÉE** — 🆕 `REFERENTIELS.md`, `CLAUDE.md` **§8 quinquies**, `PLAN.md` **§14** |
+| **CF-2 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
+
+**La prochaine étape recommandée** est **CF-2** *(préparer le dossier de détermination du
+responsable du traitement)*, ⚠️ **parce qu'elle conditionne le CONTENU de CF-4, CF-5, CF-6 et
+CF-3** — et non parce qu'elle serait urgente.
+
+> ⚠️ **CF-2 ne bloque pas le reste** : **CF-7, CF-8, CF-9, CF-10, CF-11, CF-12 et CF-13 n'ont
+> aucune dépendance.** Et le dossier de CF-2 ne sera présenté aux structures **qu'au moment de la
+> présentation de Maxilou** — ⛔ pas avant : elles n'ont rien étudié.
+
+**Ce qui est mis en pause, et reste entier :**
+
+| Orientation | État |
+|---|---|
+| **C-015 — les règles du jour J** *(porte **R-092**)* | ⏸️ **EN PAUSE** — conception **non commencée**. ⛔ Ni poursuivie, ni modifiée, ni anticipée |
+| **C-031 — les colonnes du classeur** *(porte **R-093**)* | ⬜ **NON lancé** |
 
 > ⛔ **Condition de démarrage inchangée** *(`CLAUDE.md` §12.3)* : **instruction explicite de
 > Romain**.
+
+> ⚡ **Un écart RÉEL et ACTUEL a été trouvé, et il n'en existe qu'un** : les **mentions légales**
+> *(`PLAN.md` §14, **CF-4**)*. ⭐ Il ne dépend d'**aucune** donnée personnelle — il naît de la seule
+> publication d'un service en ligne, et les pages **sont publiées**. **Tous les autres sujets du
+> chantier sont des prérequis avant une utilisation réelle qui n'a aucune date.**
 
 ### Ce qui n'appartient qu'à Romain, et qu'aucune session ne peut faire à sa place
 

@@ -1981,3 +1981,263 @@ rien de plus :
 > *(le principe)*. Les deux règles du §13.2 — **aucun remplacement de masse**, **une affirmation se
 > vérifie à sa source** — sont ce qui a évité, à chaque lot, de détruire des traces historiques
 > légitimes en croyant corriger une erreur.
+
+---
+
+## 14. 🛡️ CHANTIER CONFIANCE — cybersécurité et juridique de l'existant
+
+> ⚡ **Ouvert par Romain le 2026-08-19, HORS du plan d'audit** — exactement comme la remise à niveau
+> documentaire du **§13**. Il **n'a pas** de numéro `C-0XX`, et le §12 *(31 chantiers, 93 problèmes)*
+> **reste inchangé** : ce chantier ne provient pas des huit domaines.
+>
+> 📕 **Sa source de vérité pour les textes officiels est [`REFERENTIELS.md`](REFERENTIELS.md).**
+> Les fiches ci-dessous citent des identifiants `[Rn]`, `[On]`, `[RCn]` — ⛔ **jamais le contenu
+> d'un texte** *(règle `CLAUDE.md` **§8 quinquies**)*.
+>
+> 🎯 **Décision fondatrice : [`DECISIONS.md`](DECISIONS.md) **D-038**.**
+
+---
+
+### 14.1 — ⭐ CE QUE CE CHANTIER PRÉPARE, ET CE QU'IL NE FAIT PAS SEMBLANT DE FAIRE
+
+> ⚠️ **À lire avant toute fiche.** Sans cette section, chaque « obligation » ci-dessous se lit comme
+> un manquement — alors que **presque toutes sont des préalables**.
+
+| | Ce que c'est | Ce qui est vrai |
+|---|---|---|
+| 🔵 **ÉTAT ACTUEL** | Ce que Maxilou **est** | **Développement personnel**, mené par Romain **de sa propre initiative**. **Données fictives.** ⛔ **Aucune exploitation réelle n'a jamais eu lieu** |
+| 🟡 **PRÉREQUIS AVANT UTILISATION RÉELLE** | Ce qu'on prépare dès maintenant | La quasi-totalité des étapes ci-dessous |
+| ⛔ **DÉCISIONS FUTURES DES STRUCTURES** | Ce que ce chantier **ne peut pas décider** | Tout ce qui suppose qu'une structure ait tranché |
+
+**Ce qui est établi, et vérifié dans ce dépôt** *(`ETAT.md` I-03 et I-04, levés le 2026-08-04 ·
+`RAPPORT-AUDIT.md` §7)* :
+
+- **le tournoi en base est fictif** — de vrais noms de clubs, des engagements inventés ;
+- **le classeur ne contient aucune donnée personnelle de tiers** : les seules adresses présentes sont
+  celles de Romain et de son épouse, saisies pour tester les envois ;
+- **aucune journée réelle n'a jamais été jouée** avec cette application.
+
+➡️ **D'où la phrase que `ETAT.md` porte depuis le 2026-08-04** :
+> **« La question n'est donc pas "faut-il réparer", mais "faut-il préparer". »**
+
+> ⛔ **INTERDICTION PERMANENTE.** L'École de Rugby du Racing Club de France et l'association
+> Génération R92 **n'ont ni commandé, ni étudié, ni validé, ni adopté Maxilou**. ⚠️ **Aucune fiche,
+> aucune session, aucun document ne doit leur attribuer une décision qu'elles n'ont pas prise**, ni
+> présumer de leur adoption future : elles pourront accepter, demander des modifications, **ou ne
+> pas souhaiter utiliser la solution**.
+
+**Le parcours réel, et le jalon qui compte :**
+
+```
+ ① construire et fiabiliser  ← 🔵 NOUS SOMMES ICI (données fictives)
+ ② atteindre un état jugé suffisamment propre
+ ③ présenter à l'EDR et/ou à Génération R92    ⚠️ démonstration, données fictives
+ ④ recueillir validation et retours            ⛔ elles peuvent refuser
+ ⑤ implémenter les retours validés             (toujours données fictives)
+ ⑥ retester
+ ⑦ ⚠️ RECONTRÔLER LA CONFIANCE si les retours changent données, finalités, utilisateurs,
+      accès, architecture ou services tiers
+ ⑧ 🔴 JALON EXPLICITE : passage aux données réelles — jamais une conséquence automatique
+```
+
+⭐ **Il n'existe AUCUNE échéance** : ni date de tournoi réel, ni date de première invitation, ni date
+de mise en production. **La priorité est la qualité, jamais la vitesse.**
+
+---
+
+### 14.2 — Les zones de confiance
+
+Établies par la reconnaissance du 2026-08-19. Chaque fiche renvoie à une ou plusieurs zones.
+
+| Zone | Ce qu'elle couvre |
+|---|---|
+| **Z1** | Le cadre juridique : responsable du traitement, contrat d'hébergement, information des personnes |
+| **Z2** | La mesure de visibilité des partenaires |
+| **Z3** | Les deux clés d'écriture partagées |
+| **Z4** | La sortie brute des onglets `Equipes`, `Poules`, `Matchs`, `Historique` |
+| **Z5** | Les polices d'écriture chargées chez un tiers |
+| **Z6** | La configuration du dépôt GitHub |
+| **Z7** | Les jetons de club |
+| **Z8** | L'écart entre le dépôt et le code réellement en service *(déploiement manuel)* |
+| **Z9** | Les usages de `innerHTML` dans le frontend — ⚠️ **NON VÉRIFIÉS** |
+| **Z10** | Les images rendues publiques par lien dans Drive |
+| **Z11** | **Sauvegarde et restauration — aucun mécanisme trouvé** |
+
+---
+
+### 14.3 — Les étapes, et leur trace
+
+**Chaque fiche est la trace A de la chaîne de clôture** *(`CLAUDE.md` §8 quinquies)* : elle porte
+les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécution.
+
+> ⛔ **Aucune étape ne démarre sans instruction explicite de Romain** *(`CLAUDE.md` §12.3)*.
+
+#### ✅ CF-0 — Vérification des référentiels · **TERMINÉE le 2026-08-19**
+
+| | |
+|---|---|
+| **Objet** | Établir quels textes officiels s'appliquent réellement, et sous quelle qualification |
+| **Résultat** | **18 sources primaires consultées** · **9 hypothèses corrigées** · **3 textes formellement écartés** *(NIS 2, Cyber Resilience Act, RGAA)* · **2 référentiels manquants trouvés** |
+| **Livrable** | [`REFERENTIELS.md`](REFERENTIELS.md) |
+| **Ce qu'elle a changé** | ⚡ **6 référentiels sur 15 étaient faux, périmés ou mal calibrés.** Sans cette étape, Maxilou aurait été corrigé contre des textes inexistants |
+
+#### 🚧 CF-1 — Poser le cadre documentaire
+
+| | |
+|---|---|
+| **Objet** | Créer la source unique, inscrire la règle, ouvrir le chantier dans le suivi |
+| **Livrables** | `REFERENTIELS.md` · `CLAUDE.md` **§8 quinquies** et **§12.2** *(8 → 9 fichiers)* · ce **§14** · `ETAT.md` · `DECISIONS.md` **D-038** · `SESSIONS.md` |
+| **Référentiel** | — *(étape de méthode)* |
+| **Touche du code** | ❌ **Aucune ligne** |
+
+#### ⬜ CF-2 — Déterminer le responsable du traitement
+
+| | |
+|---|---|
+| **Référentiel** | **[R1]** art. 4(7), 26, 29 |
+| **Exigences** | **[O1] [O2] [O5] [O7]** en dépendent pour leur **contenu** |
+| **Constat** | Le critère légal est *« qui **détermine les finalités et les moyens** »* — jamais qui code ni qui saisit |
+| **Nature** | ⛔ **DÉCISION ORGANISATIONNELLE** — hors de portée de ce chantier |
+| **Ce que l'étape produit** | ⚠️ **Un dossier de décision, pas une décision.** Il présentera les trois configurations possibles *(une structure seule · l'autre seule · les deux, ce qui déclenche l'accord obligatoire de l'**art. 26**)*, et ce que chacune implique |
+| **Quand le présenter** | ⭐ **Au moment de la présentation de Maxilou (étape ③ du parcours)** — ⛔ **pas avant**. Les structures n'ont rien étudié : leur poser la question aujourd'hui serait leur demander de décider d'un logiciel qu'elles n'ont pas vu |
+| ⚠️ **Non bloquant** | **Cette étape ne doit PAS bloquer artificiellement les travaux réalisables sans connaître l'entité.** CF-4, CF-5 et CF-6 se préparent **avec des champs à compléter** — c'est déjà la forme retenue par le chantier **C-005** |
+
+#### ⬜ CF-3 — L'architecture de compte institutionnelle
+
+| | |
+|---|---|
+| **Référentiel** | **[R13]** *(CDPA)* · **[R14]** *(Workspace for Nonprofits)* |
+| **Exigence** | **[O7]** — contrat de sous-traitance |
+| **Constat** | Le compte actuel est un **Gmail personnel gratuit** : hors du champ du CDPA, donc **sans contrat de sous-traitance**. ⚠️ **Sans conséquence aujourd'hui** — aucune donnée de tiers n'est traitée |
+| **Piste** | ⭐ **Google Workspace for Nonprofits, gratuit**, couvert par le CDPA. ⚠️ **L'éligibilité n'est pas acquise : elle se demande** |
+| **Dépend de** | **CF-2** *(au nom de quelle structure ?)* |
+| **Déjà écrit** | ⭐ La procédure de transfert existe **déjà**, pas à pas, dans [`../passation.md`](../passation.md) |
+| ⛔ **Interdit à ce stade** | Créer un compte · engager une démarche d'éligibilité · migrer quoi que ce soit |
+
+#### ⬜ CF-4 — Mentions légales
+
+| | |
+|---|---|
+| **Référentiel** | **[R10]** — LCEN **art. 1-1**, en vigueur depuis le **23/05/2024** |
+| **Exigence** | **[O5]** |
+| **Constat** | Les pages **sont publiées** ; aucune mention légale n'existe dans ce dépôt |
+| **Écart** | 🔴 **RÉEL ET ACTUEL — le seul de tout le chantier.** Cette obligation **ne dépend d'aucune donnée personnelle** : elle naît de la seule publication d'un service en ligne |
+| **Piste proportionnée** | ⭐ L'édition étant aujourd'hui le fait d'une personne **à titre non professionnel**, l'art. 1-1 permet de **ne publier que le nom et l'adresse de l'hébergeur**, à condition d'avoir communiqué son identité à celui-ci. **À instruire** |
+| **Dépend de** | Rien pour la forme minimale ; **CF-2** pour la forme « personne morale » |
+
+#### ⬜ CF-5 — Information des personnes
+
+| | |
+|---|---|
+| **Référentiel** | **[R1]** art. 13-14 · **[R6]** |
+| **Exigence** | **[O1]** |
+| **Constat** | 🟡 **PRÉREQUIS** — aucune personne à informer aujourd'hui. Les trois textes sont **rédigés** *(chantier **C-005**, [`../textes-information-donnees.md`](../textes-information-donnees.md))*, **non publiés**, avec leurs champs entre crochets |
+| **Dépend de** | **CF-2** pour remplir les crochets — ⭐ **mais le travail de rédaction est déjà fait** |
+
+#### ⬜ CF-6 — Registre des traitements
+
+| | |
+|---|---|
+| **Référentiel** | **[R1]** art. 30 · **[R7]** |
+| **Exigence** | **[O2]** |
+| **Constat** | ⚠️ **L'exemption « moins de 250 personnes » ne joue pas** : elle tombe si le traitement *« n'est pas occasionnel »*, et le carnet des clubs serait **conservé d'une édition à l'autre** *(D-020)* |
+| **Dépend de** | **CF-2** *(tenu par qui ?)* |
+
+#### ⬜ CF-7 — La mesure de visibilité des partenaires
+
+| | |
+|---|---|
+| **Référentiel** | **[R2]** art. 82 · **[R3]** · **[R5]** · **[R12]** |
+| **Exigence** | **[O4]** |
+| **Constat** | 🟡 **PRÉREQUIS** — fonction **désactivée** ; les relevés existants viennent des appareils de Romain. Grille **[R5]** : **4 conditions sur 7** tenues ; c'est **la finalité** qui bloque |
+| **Valeur métier à conserver** | ⭐ **Décision de Romain, 2026-08-19** : fournir au partenaire une mesure **utile** de sa visibilité. ✅ **« Nombre de visites » peut remplacer « nombre de personnes »** si cela supprime la persistance sur le terminal — *« je préfère une mesure honnêtement qualifiée de visites »* |
+| **Les 4 options à étudier** | **A** statu quo · ⭐ **B zéro persistance** *(tout en mémoire vive)* · **C** mesure serveur seule · **D** part calculée |
+| **Pourquoi B mérite d'être étudiée d'abord** | Elle **ne supprime pas la fonctionnalité, seulement sa mémoire**. **[R2]** vise *« accéder à des informations **déjà stockées** »* ou *« **inscrire** des informations »* : une variable en mémoire de page n'est ni l'un ni l'autre ⇒ **hors champ**, donc plus d'exemption à démontrer. Et **[R12]** établit qu'Apps Script **ne voit ni l'IP ni les en-têtes** |
+| **Ce qu'on perdrait** | La **portée par personne**. On dirait *« 4 h 20 d'affichage sur 512 visites »* au lieu de *« vu par 340 personnes »* |
+| ⛔ **Réserve de Romain** | **L'étude et la démonstration formelle précèdent toute modification.** Aucune autorisation de toucher à l'implémentation |
+
+#### ⬜ CF-8 — Les deux clés d'écriture
+
+| | |
+|---|---|
+| **Référentiel** | **[R8]** — délibération CNIL 2022-100 |
+| **Exigence** | **[RC2]** |
+| **Constat** | Les deux clés sont **des mots choisis** *(R-019)*. Le garde-fou tolère environ 8 600 essais par jour |
+| **Cadrage apporté par CF-0** | ⭐ Maxilou relève du **cas n° 2** : l'anti-force-brute existant **est** la mesure complémentaire attendue ⇒ le seuil est **50 bits**, non 80. ⚠️ **Limite du texte** : il ne traite **pas** le partage d'un secret **entre plusieurs personnes** |
+| **Solution** | Remplacer les deux clés par des suites aléatoires — menu **« Tournoi R92 → Configurer les clés »** |
+| **Effort** | ⭐ **Cinq minutes, à la main, par Romain. Aucune ligne de code** |
+
+#### ⬜ CF-9 — Liste blanche des onglets exposés
+
+| | |
+|---|---|
+| **Référentiel** | **[R1]** art. 32 |
+| **Exigence** | **[O3]**, part préventive |
+| **Constat** | `lireOngletSimple` renvoie **toutes les colonnes** sans filtre ; `Equipes`, `Poules`, `Matchs` et `Historique` sortent en entier, sans clé *(R-021, R-032)* |
+| **Enjeu réel** | ⚠️ Moins ce qui sort aujourd'hui *(des nombres)* que ceci : **toute colonne ajoutée demain sera publique sans décision** |
+| **Modèle à suivre** | ⭐ La doctrine **opt-in** déjà exemplaire de `CONFIG_PUBLIQUE_VUES` |
+| **Touche du code** | ✅ **Backend + tests + redéploiement** |
+
+#### ⬜ CF-10 — Sauvegarde et restauration
+
+| | |
+|---|---|
+| **Référentiel** | **[R9]** |
+| **Exigence** | **[RC3]** |
+| **Constat** | ⚠️ **Aucun mécanisme de sauvegarde n'a été trouvé** — et la réinitialisation du tournoi est **irréversible** |
+| **Nature attendue** | Probablement **documentaire** *(une procédure vérifiée)*, pas du code |
+
+#### ⬜ CF-11 — Durcir GitHub, et retirer les bibliothèques inutilisées
+
+| | |
+|---|---|
+| **Référentiel** | **[R15]** |
+| **Constat** | Dépôt **public**, sans licence, `main` **non protégée**, secret scanning **désactivé**. Deux bibliothèques *(`docxtemplater`, `pizzip`)* ne sont **chargées par aucune page** mais restent publiées |
+| **Nature** | 🟢 **Bonne pratique** — aucun texte ne l'impose |
+| ⚠️ **Ce qu'il ne faut PAS faire** | **Activer Dependabot** : le projet n'a **aucun manifeste de dépendances**. **Ce serait une mesure de façade** |
+
+#### ⬜ CF-12 — Durcissements de cohérence
+
+| | |
+|---|---|
+| **Référentiel** | **[R16]** — OWASP ASVS **5.0.0** |
+| **Contenu** | `no-referrer` sur `dossier-club.html` · politique de sécurité du contenu *(CSP)* · revue des usages de `innerHTML` |
+| **Nature** | ⚪ **DURCISSEMENT VOLONTAIRE** — ⛔ aucun texte ne le demande |
+| ⚠️ **Honnêteté requise** | Les navigateurs modernes n'envoient **déjà pas** la partie `?token=` vers un tiers : c'est de la **cohérence**, pas une correction. Et **[R16]** précise que **le niveau 1 ne prouve aucune conformité** |
+| **Zone Z9** | ⚠️ **NON VÉRIFIÉE** — les usages de `innerHTML` n'ont **jamais** été relus un par un |
+
+#### ⬜ CF-13 — Polices d'écriture auto-hébergées
+
+| | |
+|---|---|
+| **Référentiel** | **[R11]** |
+| **Nature** | ⚪ **DURCISSEMENT VOLONTAIRE** |
+| ⚠️ **Requalification issue de CF-0** | ⛔ **Ce n'est PAS une mise en conformité.** Le transfert est **licite** : Google LLC est certifié au cadre d'adéquation. C'est un durcissement qui **supprime par avance un risque**, la décision d'adéquation ayant fait l'objet d'un **pourvoi** dont **l'issue est INCONNUE** — ⚠️ **[R11] impose de la vérifier sur CURIA AVANT d'ouvrir cette étape** |
+| **Effet** | Supprime les 7 transferts d'un coup, sur les 7 pages concernées |
+
+---
+
+### 14.4 — Ordre et dépendances
+
+> ⭐ **Le critère d'ordonnancement n'est pas la gravité, c'est le jalon** : *avant ou après le
+> passage aux données réelles ?* ⚠️ **Et ce jalon n'a aucune date.**
+
+| Bloc | Étapes | Pourquoi ce bloc |
+|---|---|---|
+| 🔴 **Avant tout passage aux données réelles** | CF-2 · CF-3 · CF-4 · CF-5 · CF-6 · CF-7 · CF-8 | Le cadre juridique et les secrets |
+| 🟢 **Peut suivre** | CF-9 · CF-10 · CF-11 · CF-12 · CF-13 | Durcissements et prévention |
+
+**Dépendances réelles** *(et elles sont peu nombreuses)* :
+
+```
+CF-1 ──▶ toutes les autres (le cadre)
+CF-2 ──▶ CF-3   (au nom de quelle structure ?)
+     └──▶ CF-4, CF-5, CF-6   ⚠️ pour le CONTENU seulement — la rédaction se prépare avant
+CF-7, CF-8, CF-9, CF-10, CF-11, CF-12, CF-13 : ⭐ AUCUNE dépendance
+```
+
+> ⚠️ **Ce qui a changé par rapport à la première proposition du 2026-08-19**, et il faut le savoir :
+> **CF-8 (les clés) était initialement la première étape.** La vérification a établi qu'**aucun
+> compte n'a de données de tiers à protéger aujourd'hui** : le geste reste de cinq minutes, mais il
+> **n'est plus le point de départ**. À l'inverse, **CF-4 (mentions légales) est remonté** — c'est
+> le seul écart réel et actuel.
