@@ -9,7 +9,23 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-19 *(nuit, 3)* — 🧭 **UNE ÉTAPE S'EST SCINDÉE EN DEUX, ET LA
+**Dernière mise à jour** : 2026-08-19 *(nuit, 4)* — 🧑 **LA PERSONNE PHYSIQUE A QUITTÉ LE DÉPÔT
+PUBLIC.** Le lot **L6** de CF-4b a réécrit [`../passation.md`](../passation.md) : le document
+planifiait un transfert vers un domaine, une adresse de messagerie et **une personne nommée**
+— ⛔ **aucun des trois n'ayant rien accepté**, et le prénom étant une **donnée personnelle publiée**
+sans base légale. ✅ **Zéro occurrence institutionnelle restante** *(contrôle en locale UTF-8)*.
+⭐ **Et la procédure n'a rien perdu** : structure identique *(§1 à §11.4)*, **25 repères techniques
+vérifiés un par un, tous présents** — `SHEET_ID`, `API_URL`, `configurerCles`, les deux nombres de
+contrôle, DNS, `CNAME`, alias Gmail… Le document a **grandi** *(277 → 408 lignes)* : il gagne un
+**§0 de prérequis** qui le rend **inapplicable tant que CF-14 n'a pas eu lieu**, un
+**administrateur décrit et non désigné**, et trois garde-fous qui manquaient — **sauvegarde avant
+transfert**, **révocation des anciens accès**, **retour arrière**.
+✅ **3 lots sur 8** : **L0**, **L1**, **L6**. ⭐ **Les deux lots qui touchaient un tiers réel sont
+faits** ; les six restants ne concernent plus personne d'identifié.
+⛔ **Aucun code, aucun test, aucune configuration, aucun déploiement, aucun email, aucune opération
+sur le classeur.**
+
+*Rappel de la mise à jour précédente — 2026-08-19 (nuit, 3)* : 🧭 **UNE ÉTAPE S'EST SCINDÉE EN DEUX, ET LA
 SECONDE EST OUVERTE.** L'ancienne **CF-4** *(mentions légales)* devient **CF-4a** — ⏸️ **suspendue,
 aucune de ses questions abandonnée** — et **CF-4b, la NEUTRALISATION INSTITUTIONNELLE**, prend sa
 place en tête. 🎯 **Le motif est simple** : on ne peut pas rédiger des mentions légales exactes sur
@@ -300,15 +316,16 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS — 2 lots sur 8.** ✅ **L0** *(cadre, `D-039`)* · ✅ **L1** *(commit `3375061`)* · ⬜ **L6, L2, L3, L4, L7, L5, L8** · 🔧 **M1** *(classeur, hors Git)* en attente d'autorisation |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS — 3 lots sur 8.** ✅ **L0** *(cadre, `D-039`)* · ✅ **L1** *(commit `3375061`)* · ✅ ⭐ **L6** *(`passation.md`)* · ⬜ **L2, L3, L4, L7, L5, L8** · 🔧 **M1** *(classeur, hors Git)* en attente d'autorisation |
 | 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
 | **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 | 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |
 
-**La prochaine étape** est le **lot L6 de CF-4b** — la réécriture générique de
-[`../passation.md`](../passation.md). ⭐ **Pourquoi lui, et pas un autre** : c'est le seul lot
-restant qui touche un **tiers réel aujourd'hui**, une **personne physique nommée** à qui le document
-public attribue un rôle d'administrateur futur qu'elle n'a pas accepté. ⚠️ **CF-4a**
+**La prochaine étape** est le **lot L2 de CF-4b** — les **45 points de texte** de l'application :
+titres, métadonnées de partage, signatures d'emails, valeurs de repli, fichier calendrier, page
+Perfs, et les commentaires devenus faux. ⚠️ **Un piège y est déjà connu** : `tournoi.js:394`
+**réécrit le titre de la page publique après le chargement** — corriger le HTML sans cette ligne ne
+changerait rien de visible. ⚠️ **CF-4a**
 *(mentions légales)* reste **le seul écart au regard d'un texte extérieur**, et **CF-3** reste
 suspendue à la décision préparée par CF-2.
 

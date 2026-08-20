@@ -2157,17 +2157,18 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 |---|---|---|
 | **L0** | Inscrire CF-4b et les arbitrages dans le suivi *(ce texte, **D-039**)* | 🚧 **en cours** |
 | **L1** | 🔴 Retirer le modèle d'autorisation de droit à l'image du dépôt public | ✅ **FAIT** — commit **`3375061`**, publié et vérifié |
-| **L6** | Réécriture générique de [`../passation.md`](../passation.md) | ⬜ |
+| **L6** | Réécriture générique de [`../passation.md`](../passation.md) | ✅ **FAIT** — ⏳ *SHA inscrit au lot suivant, comme pour CF-1 : un commit ne peut pas porter le sien.* ⭐ **Structure et procédure intégralement conservées** *(§1 à §11.4)*, **§0 ajouté** : sept prérequis, l'administrateur **décrit et non désigné**, et ce que le document **ne décide pas**. ⛔ **Plus aucune organisation, adresse, domaine ni personne nommée** |
 | **L2** | Textes de l'application — titres, métadonnées, signatures, valeurs de repli, `.ics`, commentaires devenus faux | ⬜ **45 points** |
 | **L3** | Liens institutionnels — `LIENS_ASSOCIATION`, retours vitrine, **bandeau de don supprimé** | ⬜ **19 points** |
 | **L4** | Identité graphique — logo neutre, favicon, retrait des blasons | ⬜ **23 points** |
-| **L7** | Reste de la documentation active du dépôt public | ⬜ **16 points** |
+| **L7** | Reste de la documentation active du dépôt public | ⬜ **16 points** · ⚡ **+ 4 références `CF-4` → `CF-4a`** dans [`CF-2-RESPONSABLE-TRAITEMENT.md`](CF-2-RESPONSABLE-TRAITEMENT.md) *(l. 111, 308, 546, 551)* — dette relevée pendant L0 |
 | **L5** | Backend — nom affiché de l'expéditeur ⚠️ **redéploiement** | ⬜ **4 points** |
 | **L8** | Neutralisation fonctionnelle du club — `org_club_nom`, `MOT_CLE_CLUB`, **tests** ⚠️ **redéploiement** | ⬜ **16 points** |
 
 > ⭐ **Pourquoi L1 puis L6 avant tout le reste** : ce sont les deux seuls lots qui engagent des
 > **tiers réels aujourd'hui** — une association pour le document supprimé, **une personne physique
-> nommée** pour `passation.md`.
+> nommée** pour `passation.md`. ✅ **Les deux sont faits.** Les lots restants — **L2, L3, L4, L7,
+> L5, L8** — ne touchent plus aucun tiers identifié.
 
 **Opération manuelle associée — hors Git :**
 

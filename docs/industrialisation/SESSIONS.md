@@ -6319,3 +6319,70 @@ a été **remontée à sa source primaire**, sans se fier à la mémoire :
 > ⏳ **`CHANGELOG.md` sera concerné par L7**, quand les changements visibles par un utilisateur
 > auront réellement eu lieu — ⛔ **L0 et L1 n'en produisent aucun** : le fichier supprimé n'était
 > chargé par aucune page.
+
+---
+
+## 8. Lot L6 — la réécriture de `passation.md`
+
+**Le problème, et il n'était pas seulement institutionnel.** Le document ne contenait pas quelques
+attributions à corriger : **il était entièrement construit sur une adoption présumée** — *« pour que
+l'outil […] devienne 100 % propriété de l'association »*, un domaine cible, une adresse de
+messagerie cible, et ⭐ **une personne physique nommée quatre fois**, à qui il attribuait un rôle
+d'administrateur futur *(« compte géré par … », « nécessite l'accès de … », « une action de … est
+requise »)*.
+
+> 🔴 **Trois problèmes cumulés sur ce seul prénom** : une **décision attribuée** à quelqu'un qui ne
+> l'a pas prise · une **donnée personnelle publiée** sur Internet sans base légale ni information de
+> l'intéressé *(cela relève autant de **CF-5** que de CF-4b)* · et **invisible de toute recherche
+> institutionnelle**, puisqu'un prénom ne contient ni « Racing » ni « R92 ». ⚠️ **Sans la correction
+> de locale trouvée pendant la cartographie, il ne serait jamais apparu.**
+
+**La méthode : réécriture d'ensemble, pas remplacement mot à mot** *(arbitrage de Romain)*. Sur ~30
+points dans un document de 277 lignes dont c'était le sujet même, le remplacement mécanique aurait
+produit un texte incohérent.
+
+### Ce que le document a gagné
+
+| | |
+|---|---|
+| 🆕 **§0 — Prérequis** | **Sept conditions** avant d'ouvrir le §1, dont ⭐ **la validation du jalon CF-14**. ➡️ **La procédure est désormais inapplicable tant que CF-14 n'a pas eu lieu** — et le document le dit lui-même |
+| 🆕 **§0.1 — L'administrateur désigné** | Le rôle est **décrit** *(cinq accès nécessaires, en tableau)* et ⛔ **jamais attribué**. Il peut être tenu par plusieurs personnes |
+| 🆕 **§0.2 — Ce que ce document ne décide PAS** | Nom du dépôt, GitHub Pages, domaine, Apps Script : ⏸️ **quatre points explicitement laissés à l'organisation** |
+| 🆕 **Trois garde-fous qui manquaient** | 🛟 **sauvegarde du Sheet avant transfert** · 🔒 **révocation des anciens accès** *(avec le rappel que les anciennes clés restent valides tant qu'on ne les a pas remplacées)* · 🛟 **retour arrière** tant que la recette n'est pas close |
+| 🔴 **Un avertissement neuf** | **Les liens à jeton déjà envoyés aux clubs contiennent l'URL de base : tout changement d'URL les casse.** Rien ne le disait |
+| ⚠️ **Une mise en garde sur l'option B** | Elle laisse le script s'exécuter sous un compte **personnel** en affichant une adresse **institutionnelle** : l'organisation n'a alors la maîtrise **ni du script, ni des données** |
+
+### Ce qu'il n'a pas perdu — vérifié, pas supposé
+
+**25 repères techniques comptés avant/après**, un par un : `SHEET_ID`, `API_URL`, `SNAPSHOT_URL`,
+`CLE_ADMIN`, `CLE_SCORES`, `configurerCles`, `configurerRelais`, `autoriserDrive`,
+`autoriserEnvoiEmail`, `lancerTestsFFR`, `email_expediteur`, `tournoi_affiche_id`,
+*Transfer ownership*, *Enforce HTTPS*, `CNAME`, `MailApp.sendEmail`, `GmailApp.sendEmail`,
+`pages.yml`, `worker-tournoi.js`, `SNAPSHOT_KEY`, `Tests.gs`, `Code.gs`, les renvois vers
+`deploiement.md` et `relais-cdn.md`, le partage *Restreint*. ✅ **Aucun perdu.** La structure §1 à
+§11.4 est **identique**.
+
+### Ce qui reste dans le document, et pourquoi
+
+| Ce qui reste | Justification |
+|---|---|
+| `RFL974`, `rfl974.github.io`, `tournoi-r92`, `boutique-r92` | ⭐ **Ce sont les SOURCES du transfert et les chaînes exactes à rechercher dans le code** *(§6)*. Les retirer rendrait la procédure **inexécutable**. Le §1 les étiquette *« source »*, face à des destinations *« à déterminer »* |
+| `tournoi-r92` en §0.2 | Y figure **comme réserve assumée**, pas comme choix |
+
+⛔ **Retiré, en revanche : l'adresse de messagerie personnelle du développeur.** Elle n'était
+**pas nécessaire** à l'exécution — *« un compte Gmail personnel de développement »* suffit, et le
+document reste vrai si le compte change.
+
+### Contrôles
+
+| Contrôle | Résultat |
+|---|---|
+| **Institutionnel** *(locale UTF-8)* | ✅ **0** pour chacun : nom d'association, « Racing », « École de Rugby », domaine, adresse Gmail, prénom, « l'asso », « compte asso » |
+| **Fonctionnel** | ✅ 25 repères sur 25 conservés · structure identique |
+| **D-039** | ✅ aucune adoption, aucun administrateur, aucun compte, aucun domaine, aucune responsabilité attribués |
+| **CF-14** | ✅ la passation est **conditionnée** au jalon d'adoption, et le document rappelle que **CF-14 n'est pas réalisée** |
+
+> ⚠️ **Documents ACTIFS vérifiés** : **aucun ne devient faux.** `README.md` ne décrit `passation.md`
+> que par son rôle *(« portabilité : tout transférer »)*, pas par son contenu — vérifié.
+> ⛔ **`CHANGELOG.md` non touché** : L6 ne change rien de ce qu'un utilisateur remarquerait.
+> ⛔ **`DECISIONS.md` non touché** : L6 **exécute** D-039, il ne décide rien de neuf.
