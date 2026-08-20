@@ -6730,3 +6730,159 @@ serait faux.
 > conserve ses deux repères *(`703/703` et `4244`)* — ils restent **exacts**, aucun test n'ayant
 > bougé. ⛔ **Il n'a pas été transformé en journal de L5.** `README.md`, `docs/architecture.md` et
 > `backend/README.md` ne décrivent ni ces fonctions bas niveau ni le nom d'expéditeur.
+
+---
+
+## 13. Lot L5, phase B — le serveur, et ce qu'un email a prouvé
+
+### ⚠️ D'abord, ce qui s'est mal passé — parce que c'est le plus instructif
+
+Une première tentative de L5-B a eu lieu le matin du **2026-08-20**. Elle a été **déclarée faite**,
+sur la foi de trois signaux :
+
+| Signal obtenu | Pourquoi il ne prouvait rien **sur la modification du jour** |
+|---|---|
+| **`R92 — 703/703 OK, 0 FAIL`** | ⭐ **Un bilan vert et sincère** : ces vérifications **s'exécutent bien contre le `Code.gs` du projet**, et **détecteraient** une régression sur un comportement qu'elles couvrent. ⛔ **Mais aucune ne touche le nom d'expéditeur** — le bilan était donc **muet sur ce qui avait changé** |
+| **Dernière ligne `4244`** | Ce repère atteste l'**identité du fichier de tests** collé — **4244, c'est `Tests.gs`** *(`Code.gs` en fait **8277**)*. Il était **juste**, et il parlait **de l'autre fichier** |
+| **`ping` conforme** | Sa réponse est **identique avant et après** L5-A : elle ne discrimine **rien** |
+
+⛔ **Les trois voyants étaient verts, et l'ancien `Code.gs` était toujours présent chez Google.** La
+preuve en est venue d'ailleurs : un email réel, envoyé pendant le diagnostic, portait encore
+`From: "Génération R92" <romain.rifleu@gmail.com>` — puis une recherche en lecture seule dans
+l'éditeur Apps Script a donné **`Génération R92` → 4 sur 4** et **`organisation du tournoi` → 0**.
+
+> ⛔ **Ce qui n'a PAS été établi, et ne le sera pas** : **quel geste avait manqué.** Collage non
+> effectué, collage incomplet, ou état non enregistré — **les trois restent possibles**. Le constat
+> démontré est **l'absence du contenu attendu chez Google**, rien de plus. ⚠️ **Aucune des mesures
+> prises ensuite ne doit être présentée comme la correction d'une cause connue** : ce sont des
+> **garde-fous**, et ils couvrent les trois cas.
+
+> 🎯 **Le défaut n'était pas la rigueur, c'était le PÉRIMÈTRE du contrôle.** La procédure portait
+> **deux repères sur `Tests.gs`** et **aucun sur `Code.gs`**. ➡️ **D-040**.
+
+### La chaîne de preuve reconstruite
+
+```
+SOURCE PUBLIÉE  →  identité Git  →  empreinte du presse-papiers  →  collage  →  ENREGISTREMENT
+   →  témoins discriminants DANS L'ÉDITEUR  →  redéploiement  →  tests  →  ping  →  PREUVE MÉTIER
+```
+
+**Les valeurs réellement obtenues, à chaque maillon :**
+
+| Maillon | `backend/Code.gs` | `backend/Tests.gs` |
+|---|---|---|
+| **Identique au commit publié `5649f83`** | ✅ blob `7924e2f8…` | ✅ blob `3f098ba8…` |
+| **Empreinte SHA-256 du presse-papiers** | `eb511f735f5df0b73a1138b562a7d9108de9c01157b7ac7caf75dcaf0dd103c9` | `f7ba5827e00fc94116ae2cc94b3c2b489c871b2ebcbb19186b2d568ee583f48e` |
+| **= empreinte du fichier source ?** | ✅ **oui**, saut de ligne final inclus | ✅ **oui** |
+| **Lignes** | **8277** | **4244** |
+| **Ancre de fin** | `viderDonnees` en **8272** | `testDecisionScore_modeSimpleNeTouchePasAuDetail` en **4226** |
+| **Témoin** | ⭐ `organisation du tournoi` → **4** *(était **0**)* | `T-17` → **6** *(était **0**)* · `deciderEnregistrementScore` → **25** *(était **0**)* |
+| **Contre-témoin** | `Génération R92` → **0** *(était **4**)* | — |
+
+⭐ **Tous ces repères ont été fixés AVANT le collage**, jamais après : ils ne pouvaient donc pas être
+ajustés au résultat.
+
+> 🚨 **Le piège de l'échappement, et il aurait fait conclure à un échec.** Dans le code, le texte
+> s'écrit **`L\'organisation du tournoi`** — la barre oblique inversée permet de mettre une
+> apostrophe **à l'intérieur** d'un texte lui-même délimité par des apostrophes. **Conséquence
+> mesurée** : chercher `L'organisation du tournoi` dans un fichier **parfaitement collé** donne
+> **0 résultat**. ➡️ **Le témoin est `organisation du tournoi`, sans le `L'`.**
+
+### Le déploiement
+
+Les deux fichiers collés *(⌘A / ⌘V / **⌘S**)*, puis **une nouvelle version du MÊME déploiement**
+*(l'URL publique ne change pas)*, puis :
+
+- ✅ `lancerTestsFFR` → **`R92 — 703/703 OK, 0 FAIL`**, exécution terminée normalement ;
+- ✅ `?action=ping` → `{"ok":true,"message":"API Tournoi R92 en ligne"}`.
+
+> ⚠️ **Une réserve de traçabilité, à dire plutôt qu'à masquer** : le second nombre du geste 4 de
+> [`../deploiement.md`](../deploiement.md) — la **dernière ligne du fichier collé** — **n'a pas été
+> relevé** cette fois. Il a été **remplacé par des contrôles plus forts** *(`T-17` → 6,
+> `deciderEnregistrementScore` → 25, dernière fonction en 4226, fin conforme à 4244)*, qui sont
+> **discriminants** là où le nombre `4244` seul ne l'est pas. **Le geste est satisfait par des
+> moyens supérieurs — ce n'est pas la même chose que « satisfait tel qu'écrit ».**
+
+### ⭐ La preuve métier — un email réel
+
+| | |
+|---|---|
+| **Club fictif** | *LE TEST RUGBY CLUB* |
+| **Destinataire** | `rifleu@hotmail.com` |
+| **Chemin** | ⭐ **icône d'envoi INDIVIDUELLE** de ce club uniquement. ⛔ **Aucun envoi groupé.** Boîte de confirmation affichée : *« Envoyer l'invitation à « LE TEST RUGBY CLUB » (rifleu@hotmail.com) ? »* |
+| **Configuration constatée avant l'envoi** | `email_expediteur` **VIDE** *(le texte gris « Vide = adresse du compte exécutant le script » n'est qu'une aide de saisie)* ⇒ branche **`MailApp`** |
+
+**L'en-tête brut reçu :**
+
+```
+From: "L'organisation du tournoi" <romain.rifleu@gmail.com>
+To: rifleu@hotmail.com
+Date: Thu, 20 Aug 2026 17:08:34 +0000
+```
+
+**Le témoin avant/après, dans la MÊME boîte de réception :**
+
+| | Nom affiché | Adresse d'envoi |
+|---|---|---|
+| **Message du matin** *(ancien code en service)* | `"Génération R92"` | `romain.rifleu@gmail.com` |
+| **Message de 17:08** *(après redéploiement)* | ⭐ `"L'organisation du tournoi"` | `romain.rifleu@gmail.com` |
+
+> ⭐ **Ce que cette symétrie élimine, et c'est ce qui rend la preuve solide** : les deux messages
+> viennent de **la même adresse** et affichent **des noms différents**. Si Outlook tirait ce nom de
+> son **carnet d'adresses** — l'explication la plus banale — il afficherait **le même nom pour les
+> deux**. Le nom lu vient donc bien **de l'en-tête du message**, c'est-à-dire **du serveur**.
+
+**SPF, DKIM et DMARC : `pass` — ce qu'ils prouvent, et ce qu'ils ne prouvent pas.**
+
+| ✅ Ils établissent | ⛔ Ils n'établissent PAS |
+|---|---|
+| Le message vient réellement de l'infrastructure d'envoi autorisée pour cette adresse — **ce n'est pas un message falsifié** | **Quelle ligne du code** a produit ce nom |
+| La signature **DKIM** couvre les en-têtes, `From:` compris : le nom lu est bien **celui émis au départ**, non modifié en route | Quoi que ce soit sur les **autres branches** du code |
+| — | Une quelconque **légitimité juridique** du nom affiché — ce sont des contrôles **techniques** |
+
+### 🎯 Portée exacte de L5 — le tableau à ne jamais élargir
+
+| Ligne de `backend/Code.gs` | Fonction / branche | Statut |
+|---|---|---|
+| ⭐ **5086** | `envoyerEmailHtml` — branche **`MailApp`** | ✅ **CERTAIN — exercée en conditions réelles**, prouvée par l'en-tête reçu |
+| **5082** | `envoyerEmailHtml` — branche **`GmailApp`** *(alias configuré)* | ⚠️ **CERTAIN dans le code · ⛔ NON TESTÉ EN RÉEL** |
+| **5067** | `envoyerEmailAvec` — branche **`GmailApp`** | ⚠️ **CERTAIN dans le code · ⛔ NON TESTÉ EN RÉEL** |
+| **5069** | `envoyerEmailAvec` — branche **`MailApp`** | ⚠️ **CERTAIN dans le code · ⛔ NON TESTÉ EN RÉEL** |
+
+> ⛔ **Ce qu'il ne faut JAMAIS écrire** : *« les quatre lignes sont testées en réel »*. **Une l'est.**
+> Les trois autres sont **corrigées, lues et vérifiées dans le code** — pas à l'usage. Les atteindre
+> demanderait un **envoi de dossier Phase 2** *(repli texte)* et un **alias Gmail configuré**,
+> c'est-à-dire **deux envois réels de plus**, pour un bénéfice de preuve faible : la chaîne de
+> caractères est **littéralement la même** aux quatre endroits.
+
+### 🔧 Un constat annexe, inscrit et NON corrigé — l'affiche
+
+Pendant le contrôle de l'aperçu de l'email, l'interface affichait bien le **repère visuel neutre
+« T »** *(L4)* — mais **l'affiche du tournoi enregistrée dans le classeur** porte, elle, encore des
+éléments **Racing / Génération R92**.
+
+⚠️ **Ce n'est pas un défaut de L5**, et **pas un lot Git** : le code gère parfaitement une affiche
+absente ou neutre. C'est une **donnée du classeur**, comme `url_instagram` — donc **M1**, où le
+constat a été inscrit *(`PLAN.md` §CF-4b)*. ⛔ **Aucune affiche supprimée, aucune donnée modifiée**
+— conformément à **D-039 §4**.
+
+### ⛔ Ce que cette phase n'a pas fait
+
+Aucun code applicatif modifié · aucun test ajouté ou modifié · aucune donnée du classeur touchée ·
+aucune suppression · **un seul email**, individuel, vers une adresse de test, avec un club fictif.
+
+### ⚠️ Documents ACTIFS vérifiés
+
+- ✅ [`../deploiement.md`](../deploiement.md) — **devenait insuffisant** : renforcé *(D-040)*. Ses
+  repères **`703/703`** et **`4244`** restent **exacts**, `backend/Tests.gs` n'ayant pas bougé ;
+- ✅ [`../../CHANGELOG.md`](../../CHANGELOG.md) — **une entrée devenait due** : L5-A s'en était
+  abstenue au motif que *« annoncer un changement qui n'est pas en service serait faux »*. **Ce
+  motif a disparu** ;
+- ✅ `README.md`, `docs/architecture.md`, `backend/README.md` — **aucun ne devient faux** : ils ne
+  décrivent ni ces fonctions bas niveau, ni le nom d'expéditeur ;
+- ⚡ ✅ [`REFERENTIELS.md`](REFERENTIELS.md) — **était DÉJÀ faux, et pas à cause de L5** : il
+  recopiait *« L2 → L8 à faire »* alors que L2, L3, L4 et L6 étaient publiés. La recopie a été
+  **remplacée par un renvoi** vers `PLAN.md` §CF-4b *(**§8 quater** — un repère volatil n'a qu'une
+  seule adresse)*. 📌 **Troisième occurrence du même mécanisme** après `architecture.md` et le
+  `CHANGELOG` : la question de faire entrer ce document dans la carte de **§8 bis** est **posée à
+  Romain**, et **volontairement non tranchée ici**.

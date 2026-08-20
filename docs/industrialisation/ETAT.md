@@ -9,7 +9,41 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-20 *(suite 3)* — 📤 **LE DÉPÔT NE DEMANDE PLUS D'ENVOYER AU NOM
+**Dernière mise à jour** : 2026-08-20 *(suite 4)* — 📬 **UN EMAIL REÇU LE PROUVE : LE NOM DE
+L'EXPÉDITEUR N'EST PLUS CELUI D'UNE ASSOCIATION.** Le lot **L5** est **TERMINÉ**, ses deux phases
+faites — et, pour la première fois du chantier, la preuve finale ne vient **ni du code, ni d'un
+test**, mais d'une **boîte de réception**.
+✅ **L5-B** : `Code.gs` et `Tests.gs` **recopiés chez Google, enregistrés et contrôlés dans
+l'éditeur** *(témoins fixés AVANT le collage)*, **nouvelle version du même déploiement**,
+**`R92 — 703/703 OK, 0 FAIL`**, ping conforme.
+⭐ **La preuve, et elle est discriminante** : un email réel envoyé au club fictif *LE TEST RUGBY
+CLUB* porte l'en-tête brut `From: "L'organisation du tournoi" <romain.rifleu@gmail.com>`
+*(20/08/2026, 17:08 UTC)*, là où un message reçu **le matin même**, dans la **même boîte** et depuis
+la **même adresse**, portait `From: "Génération R92"`.
+⚠️ **La portée exacte, et elle doit être lue** : **une seule des quatre lignes corrigées a été
+exercée en réel** — celle de `MailApp` dans `envoyerEmailHtml`. Les **trois autres** *(repli texte,
+et la branche `GmailApp` avec alias)* sont **corrigées et vérifiées dans le code**, ⛔ **jamais à la
+réception**.
+🔴 **Une leçon de méthode en est sortie, et elle vaut au-delà de CF-4b** *(**D-040**)* : le matin,
+une version avait été publiée **avec l'ancien `Code.gs`**, ping **vert** et tests **verts** — le
+ping parce qu'**un contrôle de vie n'est pas un contrôle de version**, les tests parce qu'⛔ **aucun
+d'eux ne couvre le nom d'expéditeur** *(leur bilan était vert et sincère, simplement sans rapport
+avec la modification)*. ⛔ **Quel geste avait manqué chez Google n'a PAS été établi** — seule
+l'absence du contenu attendu l'est.
+🔧 **M1 s'élargit** : l'**affiche du tournoi** enregistrée dans le classeur porte encore des
+éléments institutionnels. ⛔ **Aucune donnée n'a été touchée** — c'est un constat inscrit, pas une
+correction.
+📊 **L0** = préalable · **6 lots d'exécution sur 8 terminés** · ⬜ **L7, L8** · 🔧 **M1** en attente
+d'autorisation. **La prochaine étape est L7.**
+⛔ **Aucun test modifié, aucun code applicatif touché, aucune donnée du classeur modifiée.**
+
+> ⚠️ **Le rappel ci-dessous décrit l'état à 13 h, et RIEN D'AUTRE.** **Plusieurs de ses
+> affirmations ont été dépassées plus tard le même jour** — pas seulement celle sur L5-B : il
+> annonce aussi que [`../deploiement.md`](../deploiement.md) *« n'a pas été modifié »*, ce qui a
+> cessé d'être vrai avec **D-040**. ⭐ **Il est conservé INTACT comme trace historique** : on ne
+> réécrit pas une trace datée.
+
+*Rappel de la mise à jour précédente — 2026-08-20 (suite 3)* : 📤 **LE DÉPÔT NE DEMANDE PLUS D'ENVOYER AU NOM
 D'UNE ASSOCIATION — MAIS LE SERVEUR EN SERVICE, LUI, N'A PAS ENCORE CHANGÉ.** Le lot **L5** est
 découpé en deux phases, et **seule la première est faite**.
 ✅ **L5-A** : **4 substitutions littérales** dans `backend/Code.gs` — `name: 'Génération R92'`
@@ -395,16 +429,16 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · 🚧 ⭐ **L5** — **phase A faite** *(dépôt)*, ⛔ **phase B à faire** *(redéploiement Google)* · ⬜ **L7, L8** · 🔧 **M1** en attente d'autorisation |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · ✅ ⭐ **L5** — **les DEUX phases faites** : dépôt *(`5649f83`)* **et** redéploiement Google, ⭐ **prouvé par un email reçu** *(en-tête brut `From: "L'organisation du tournoi"`, 20/08/2026 17:08 UTC)*. ⚠️ **Une seule des 4 lignes exercée en réel** *(branche `MailApp`)* · ⬜ **L7, L8** · 🔧 **M1** *(élargie à l'affiche)* en attente d'autorisation |
 | 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
 | **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 | 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |
 
-**La prochaine étape** est la **phase B de L5** — le **redéploiement du backend chez Google**, à
-faire **à la main** selon [`../deploiement.md`](../deploiement.md) : coller `Code.gs`, ⚠️ **coller
-aussi `Tests.gs` dans `Test.gs`** *(le fichier qu'on oublie)*, publier une **nouvelle version du même
-déploiement**, puis vérifier les **deux nombres** — **`703/703 OK, 0 FAIL`** et **dernière ligne
-`4244`** — et `?action=ping`. ⚠️ **CF-4a**
+**La prochaine étape** est le lot **L7** — le **reste de la documentation active du dépôt public**
+*(16 points, + 4 références `CF-4` → `CF-4a`)*. ⛔ **Il ne touche ni le code, ni Google** : aucun
+redéploiement. ⚡ **L5 est terminé** *(les deux phases, voir l'en-tête)*, et le **renforcement de
+[`../deploiement.md`](../deploiement.md)** qu'il a rendu nécessaire est inscrit en **D-040** — il
+servira dès **L8**, le second lot qui exige un redéploiement. ⚠️ **CF-4a**
 *(mentions légales)* reste **le seul écart au regard d'un texte extérieur**, et **CF-3** reste
 suspendue à la décision préparée par CF-2.
 

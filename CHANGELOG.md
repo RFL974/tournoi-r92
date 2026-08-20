@@ -12,6 +12,27 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Les emails ne partent plus au nom d'une association — 2026-08-20
+
+Dernière surface à porter une identité qui n'est pas la sienne : le **nom de l'expéditeur**, celui
+qui s'affiche dans la boîte de réception d'un club **avant même qu'il ouvre le message**. Les
+invitations, le dossier final et la feuille de journée s'y annonçaient sous le nom d'une association
+**qui n'a pas décidé d'utiliser ce logiciel**.
+
+Ils s'annoncent désormais sous **« L'organisation du tournoi »**.
+
+⚠️ **L'adresse d'envoi, elle, ne change pas** : c'est toujours celle du compte qui fait tourner le
+service. Seul le **nom affiché à côté** devient neutre.
+
+⭐ **Le changement a été vérifié sur un vrai message reçu**, pas seulement dans le code : c'est la
+seule façon de l'établir — ce nom n'apparaît nulle part ailleurs que dans une boîte de réception.
+⚠️ **Ce message était une invitation** : c'est donc l'envoi d'invitation qui est vérifié **à la
+réception**. Pour le dossier final et la feuille de journée, le nom neutre est **en place dans le
+code déployé**, mais **aucun message n'a été reçu pour le constater**.
+
+⏳ **Ce qui reste** : l'**affiche du tournoi** enregistrée dans l'administration porte encore des
+éléments d'une association. Elle voyage dans les emails : il faudra la remplacer.
+
 ### Un repère visuel neutre remplace les logos, et toutes les pages ont enfin une icône — 2026-08-20
 
 Dernière surface visible à porter une identité qui n'est pas la sienne : les **images**. Les pages

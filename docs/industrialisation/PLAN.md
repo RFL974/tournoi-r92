@@ -2162,7 +2162,7 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 | **L3** | Liens institutionnels — `LIENS_ASSOCIATION`, retours vitrine, **bandeau de don supprimé** | ✅ **FAIT** — commit **`6c04f10`**. **21 points** *(19 attendus + 2 commentaires CSS devenus faux)*. ⭐ **Le piège `tournoi.js:216` est démontré par comparaison** : la version d'avant lève `Cannot set properties of null`, celle d'après ne lève rien. ⚠️ **Les 4 liens ont été SUPPRIMÉS, pas remplacés** — ni `#`, ni faux lien générique |
 | **L4** | Identité graphique — logo neutre, favicon, retrait des blasons | ✅ **FAIT** — commits **`4bf3e62`** *(réalisation)* et **`20cba62`** *(correction du contraste, trouvée par le contrôle visuel).* **26 points.** 🆕 **3 assets créés** *(`logo-tournoi.svg`, `logo-tournoi.png`, `grain.svg`)*, **3 supprimés** *(224 Ko)*. ⭐ **La favicon est POSÉE sur les 8 pages** — 7 n'en avaient aucune. ⛔ **Plus aucune ressource graphique distante.** ⚠️ **2 adaptations CSS minimales** : l'ancien logo était un **bandeau large**, le nouveau est **carré** — `width:100%` l'aurait étiré à 260 px de côté |
 | **L7** | Reste de la documentation active du dépôt public | ⬜ **16 points** · ⚡ **+ 4 références `CF-4` → `CF-4a`** dans [`CF-2-RESPONSABLE-TRAITEMENT.md`](CF-2-RESPONSABLE-TRAITEMENT.md) *(l. 111, 308, 546, 551)* — dette relevée pendant L0 |
-| **L5** | Backend — nom affiché de l'expéditeur ⚠️ **redéploiement** | 🚧 **EN COURS — 2 phases.** ✅ **L5-A** *(dépôt Git)* : **4 substitutions littérales**, ⏳ SHA au lot suivant · ⬜ **L5-B** *(redéploiement chez Google)* — **non fait**. ⛔ **Tant que L5-B n'a pas eu lieu, le serveur EN SERVICE envoie toujours sous l'ancien nom** |
+| **L5** | Backend — nom affiché de l'expéditeur ⚠️ **redéploiement** | ✅ **FAIT — 2 phases.** ✅ **L5-A** *(dépôt Git)* : **4 substitutions littérales**, commit **`5649f83`** · ✅ **L5-B** *(chez Google)* : `Code.gs` et `Tests.gs` recopiés, **enregistrés**, contrôlés dans l'éditeur par des **témoins fixés AVANT le collage**, **nouvelle version du même déploiement**, **`703/703 OK, 0 FAIL`**, ping conforme. ⭐ **Preuve finale à la réception** : `From: "L'organisation du tournoi" <…>` *(20/08/2026 17:08 UTC)*, contre `From: "Génération R92"` le matin même, **même boîte, même adresse d'envoi**. ⚠️ **PORTÉE — à ne jamais élargir** : **une seule des 4 lignes exercée en réel** *(`MailApp` dans `envoyerEmailHtml`, `Code.gs:5086`)* ; les **3 autres** *(`Code.gs:5067`, `5069`, `5082`)* sont **CERTAINES dans le code**, ⛔ **NON TESTÉES EN RÉEL**. 🔴 A produit **D-040** |
 | **L8** | Neutralisation fonctionnelle du club — `org_club_nom`, `MOT_CLE_CLUB`, **tests** ⚠️ **redéploiement** | ⬜ **16 points** |
 
 > ⭐ **Pourquoi L1 puis L6 avant tout le reste** : ce sont les deux seuls lots qui engagent des
@@ -2171,13 +2171,23 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 >
 > ⚠️ **Comptage, et il faut le lire ainsi** : **L0 est un préalable documentaire**, ajouté après
 > coup — il ne fait pas partie des huit. **Les lots d'exécution sont L1 → L8.** À ce jour :
-> ✅ **5 sur 8 terminés** *(L1, L6, L2, L3, L4)* · 🚧 **L5 EN COURS** *(phase A faite, phase B à
-> faire)* · ⬜ **2 non commencés** *(L7, L8)*.
+> ✅ **6 sur 8 terminés** *(L1, L6, L2, L3, L4, L5)* · ⬜ **2 non commencés** *(L7, L8)*.
 >
-> ⭐ **Pourquoi L5 ne compte pas comme terminé** : le dépôt et le serveur réellement en service
-> chez Google sont **deux choses différentes**. Le code publié demande le nouveau nom ; **le serveur
-> qui envoie les messages, lui, n'a pas changé.** C'est la limite permanente rappelée par
-> `CLAUDE.md` **§13.6**.
+> ⭐ **Pourquoi L5 a compté DEUX phases — et pourquoi la leçon vaut d'être gardée** : le dépôt et le
+> serveur réellement en service chez Google sont **deux choses différentes**. Publier le code ne
+> change **rien** à ce que le serveur envoie tant qu'on ne l'a pas recopié chez Google *(limite
+> permanente, `CLAUDE.md` **§13.6**)*. D'où le découpage **L5-A** *(dépôt)* / **L5-B** *(Google)*,
+> et le refus de compter le lot comme terminé à mi-chemin.
+>
+> ⚡ **Ce découpage s'est révélé plus utile encore que prévu** : la première tentative de L5-B a
+> publié une version **avec l'ancien `Code.gs`** — ping vert, tests verts *(aucun ne couvrait le
+> nom)*, et **le mauvais code en service**. Sans la séparation des deux phases, l'erreur aurait été
+> absorbée dans un lot déclaré « fait ». ➡️ **D-040** en est né.
+>
+> ⭐ **Et une seconde leçon, propre à L5** : ce lot est **le seul du chantier dont la preuve finale
+> ne pouvait venir ni du code, ni d'un test** — le nom d'expéditeur **n'apparaît nulle part
+> ailleurs que dans un message reçu**. Un lot dont l'effet n'est observable que **hors du dépôt**
+> exige une preuve **hors du dépôt**.
 >
 > ⏸️ **Réserve technique constatée en L4** : `frontend/img/icone-instagram.png` et
 > `icone-site.png` **restent** — ce ne sont **pas** des images institutionnelles *(pictogrammes
@@ -2189,7 +2199,17 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 
 | | |
 |---|---|
-| 🔧 **M1** | **Neutralisation de la configuration institutionnelle du classeur fictif** — les valeurs `url_site_association` et `url_instagram` de l'onglet `Config`. ⚠️ **Ce n'est PAS un lot Git** : le code est déjà neutre *(il gère la valeur vide)*, seules les **données** pointent vers une structure. À traiter **avant la clôture de CF-4b**, avec **autorisation explicite** et une trace avant/après. ⛔ **Ne jamais la mélanger à un commit** |
+| 🔧 **M1** | **Neutralisation de la configuration institutionnelle du classeur fictif** — ① les valeurs `url_site_association` et `url_instagram` de l'onglet `Config` · ⚡ ② **l'AFFICHE du tournoi**, le fichier Drive désigné par `tournoi_affiche_id` : **constaté le 2026-08-20** pendant le contrôle de l'aperçu de L5, elle porte **encore des éléments Racing / Génération R92**. ⚠️ **Ce n'est PAS un lot Git** : le code est déjà neutre *(il gère la valeur vide et l'affiche absente)*, seules les **données** pointent vers une structure. À traiter **avant la clôture de CF-4b**, avec **autorisation explicite** et une trace avant/après. ⛔ **Ne jamais la mélanger à un commit** |
+
+> 🔴 **Pourquoi le point ② de M1 n'est pas un détail, et pourquoi il bloque la clôture de CF-4b** :
+> l'affiche **voyage dans les emails** *(image intégrée `cid:affiche`, `Code.gs:5155`)* et s'affiche
+> dans le dossier des clubs. Sans lui, CF-4b pourrait être déclarée close alors qu'un club
+> recevrait **un message parfaitement neutre portant une affiche siglée** — l'attribution que tout
+> le chantier cherche à retirer, rétablie par une image.
+>
+> ⛔ **Aucune donnée n'a été modifiée, aucune affiche supprimée** : c'est un **constat inscrit**,
+> conformément à **D-039 §4** *(« elle ne touche ni les clés, ni une protection, ni le classeur, ni
+> un déploiement »)*.
 
 **Réserves explicitement conservées — ⚠️ ce ne sont PAS des oublis :**
 
