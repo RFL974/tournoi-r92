@@ -12,6 +12,34 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Les textes de l'application ne nomment plus aucune association — 2026-08-20
+
+Jusqu'ici, l'application se présentait comme celle d'une association nommée : dans l'onglet du
+navigateur, dans le pied de la page publique, dans les en-têtes et signatures des emails envoyés aux
+clubs, dans les pages qu'ils ouvrent ensuite, et jusque dans le fichier d'agenda qu'ils
+téléchargent. **Aucune structure n'a pourtant décidé d'utiliser ce logiciel**, et lui attribuer ce
+rôle revenait à décider à sa place.
+
+Ce qui change, concrètement :
+
+- **les onglets du navigateur** portent le nom de la page (« Le tournoi », « Saisie des scores »,
+  « Administration du tournoi »…) sans suffixe ;
+- **le titre de la page publique** affiche le nom réel du tournoi quand il est saisi dans
+  l'administration — et « Le tournoi » quand il ne l'est pas ;
+- **les emails d'invitation et de dossier** sont signés *« L'organisation du tournoi »*, et leur
+  en-tête dit *« Vous êtes invités »* ou *« Votre dossier pour la journée »* ;
+- **les pages que les clubs ouvrent** — invitation, réponse, dossier — disent la même chose que
+  l'email qui y mène : plus de décalage entre les deux ;
+- **le fichier d'agenda** *(`.ics`)* n'inscrit plus de nom d'association dans ses champs techniques ;
+- **la page Perfs** s'intitule « Perfs du club ».
+
+⚠️ **Quand le tournoi a un nom**, c'est ce nom qui s'affiche partout, comme avant. Seul le nom de
+repli — utilisé quand le champ est vide — devient générique.
+
+⚠️ **Ce lot ne traite que les textes.** Les logos, les liens vers les réseaux sociaux, le bandeau de
+don et le nom affiché de l'expéditeur des emails **n'ont pas encore changé** : ils suivront. Un
+email reste donc, pour l'instant, partiellement identifié par son en-tête et son expéditeur.
+
 ### Coupe + Plateau redevient proposé, mais on est prévenu avant de le choisir — 2026-08-19
 Ce format avait disparu des cartes de l'administration : il comporte des **phases finales**
 (quarts, demies, finale), et celles-ci ne sont pas conformes au cadre des rencontres École de

@@ -138,7 +138,7 @@ function accueilPersonnalise(g, club) {
   if (!club) return '';
   const prenom = txt(club.club_contact_prenom);
   const nomClub = txt(club.club_nom);
-  const nomTournoi = txt(g.tournoi_nom) || 'Tournoi Génération R92';
+  const nomTournoi = txt(g.tournoi_nom) || 'Le tournoi';
   const bonjour = prenom ? 'Bonjour ' + echapper(prenom) + ',' : 'Bonjour,';
   return '<p class="d-accueil">' + bonjour +
     ' nous avons bien reçu votre retour concernant votre souhait de participer au '
@@ -269,13 +269,13 @@ function construireICS(g) {
   const horodatage = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   return ['BEGIN:VCALENDAR',
           'VERSION:2.0',
-          'PRODID:-//Generation R92//Tournoi//FR',
+          'PRODID:-//Tournoi//Calendrier//FR',
           'BEGIN:VEVENT',
-          'UID:tournoi-r92-' + date + '@generation-r92',
+          'UID:tournoi-' + date + '@tournoi.local',
           'DTSTAMP:' + horodatage,
           'DTSTART:' + dtStart,
           'DTEND:' + dtEnd,
-          'SUMMARY:' + icsEchapper(txt(g.tournoi_nom) || 'Tournoi Génération R92'),
+          'SUMMARY:' + icsEchapper(txt(g.tournoi_nom) || 'Le tournoi'),
           'LOCATION:' + icsEchapper(adresseItineraire(g)),
           'DESCRIPTION:' + icsEchapper(prog.join(' · ')),
           'END:VEVENT',
@@ -389,7 +389,7 @@ function enteteDossier(g, club, catsEngagees) {
     }
   }
   return heroDocument(g, {
-    surtitre: 'École de Rugby du Racing Club de France<br>votre dossier pour la journée',
+    surtitre: 'Votre dossier pour la journée',
     mention: mention,
     afficheCompacte: true,
     sansPresentation: true   // le descriptif du tournoi a été lu à l'invitation (décision Romain)
@@ -423,7 +423,7 @@ function lienPartageDossier(g, ctx) {
 function barrePartage(g, ctx) {
   if (!ctx.club || !ctx.token) return '';
   const lien = lienPartageDossier(g, ctx);
-  const nom = txt(g.tournoi_nom) || 'Tournoi Génération R92';
+  const nom = txt(g.tournoi_nom) || 'Le tournoi';
   const quand = txt(g.tournoi_date) ? ' du ' + dateLongueFr(g.tournoi_date) : '';
   const texte = 'Dossier du ' + nom + quand + ' : horaires, accès, contacts et planning de nos ' +
     'équipes.\n' + lien;
@@ -822,7 +822,7 @@ function bandeauActions(g) {
   if (txt(g.url_site_association)) {
     boutons.push('<a class="d-action" href="' + echapper(txt(g.url_site_association)) + '" target="_blank" rel="noopener">🌐 Site de l\'association</a>');
   }
-  // « Relayer sur les réseaux » pointe directement vers le compte Instagram Génération R92.
+  // « Relayer sur les réseaux » pointe vers le compte configuré dans `url_instagram`.
   if (txt(g.url_instagram)) {
     boutons.push('<a class="d-action" href="' + echapper(txt(g.url_instagram)) + '" target="_blank" rel="noopener">📣 Relayer sur les réseaux</a>');
   }

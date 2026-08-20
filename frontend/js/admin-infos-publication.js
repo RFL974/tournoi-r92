@@ -106,7 +106,7 @@ function majApercuTournoi() {
   const dateSaisie = champDate ? champDate.value : '';
 
   // Mêmes valeurs de repli que le site vitrine (actuTournoi, main.js).
-  const nom = form.tournoi_nom.value.trim() || 'Tournoi Génération R92';
+  const nom = form.tournoi_nom.value.trim() || 'Le tournoi';
   const dateISO = dateSaisie || new Date().toISOString().slice(0, 10);
   const extrait = extraitCourt(form.tournoi_description.value, 160) ||
     'Le tournoi est ouvert ! Poules, planning et scores en direct.';

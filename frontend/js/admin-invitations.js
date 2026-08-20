@@ -81,7 +81,7 @@ function globalInvitation() {
 
 /** Objet de l'email d'invitation. */
 function sujetInvitation(g) {
-  return 'Invitation — ' + (String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
+  return 'Invitation — ' + (String(g.tournoi_nom || '').trim() || 'Le tournoi');
 }
 
 /** Phrase d'INTRODUCTION courte (après la salutation), éditable. Réactive au nom du tournoi. */
@@ -354,7 +354,7 @@ function reperesFFREmail(cats, A) {
  */
 function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse, lienInvitation) {
   const A = 'font-family:Arial,Helvetica,sans-serif;';
-  const nom = echapper(String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
+  const nom = echapper(String(g.tournoi_nom || '').trim() || 'Le tournoi');
   const date = String(g.tournoi_date || '').trim() ? echapper(formaterDateFr(g.tournoi_date)) : '';
   const lieu = echapper(String(g.tournoi_lieu || '').trim());
   const lienInv = lienInvitation ? echapper(lienInvitation) : echapper(lienInvitationPublique());
@@ -364,7 +364,7 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
     + '<img src="' + echapper(urlBlasonEmail()) + '" alt="Racing 92" width="110" '
     + 'style="display:block;width:110px;height:auto;margin:0 auto 10px;">'
     + '<p style="margin:0;' + A + 'text-transform:uppercase;letter-spacing:2px;font-size:12px;line-height:1.5;color:' + EMAIL_BLEU + ';">'
-    + 'L\'École de Rugby du Racing Club de France<br>a le plaisir de vous inviter</p>'
+    + 'Vous êtes invités</p>'
     + '<h1 style="margin:8px 0 2px;' + A + 'font-size:27px;line-height:1.1;color:' + EMAIL_NAVY + ';">' + nom + '</h1>'
     + ((date || lieu) ? '<p style="margin:4px 0 0;' + A + 'font-weight:bold;font-size:15px;color:' + EMAIL_NAVY + ';">'
       + [date, lieu].filter(Boolean).join('<span style="color:' + EMAIL_BLEU + ';"> · </span>') + '</p>' : '')
@@ -469,7 +469,7 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
   // mention (même entité que la vitrine) + lien de secours vers la page en ligne.
   const pied = barreLiensEmail(A)
     + '<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ' + EMAIL_FILET + ';' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';text-align:center;">'
-    + 'Génération R92 · École de Rugby du Racing Club de France<br>'
+    + 'L\'organisation du tournoi<br>'
     + '<a href="' + lienInv + '" style="color:' + EMAIL_BLEU + ';">Voir la version en ligne</a></p>';
 
   // Ordre VITRINE : en-tête, affiche, salutation, bouton, descriptif complet, journée,
@@ -487,7 +487,7 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
  *  sont des jetons à l'envoi ({{SALUTATION}}, {{LIEN_REPONSE}}, {{LIEN_INVITATION}}) ou des
  *  exemples pour l'aperçu. */
 function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse, lienInvitation) {
-  const nom = String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92';
+  const nom = String(g.tournoi_nom || '').trim() || 'Le tournoi';
   const L = [];
   L.push(salutationTexte);
   L.push('');
@@ -567,7 +567,7 @@ function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse, lien
   });
   L.push('');
   L.push('Au plaisir de vous accueillir,');
-  L.push('Génération R92 · École de Rugby du Racing Club de France');
+  L.push('L\'organisation du tournoi');
   return L.join('\n');
 }
 
@@ -1529,7 +1529,7 @@ async function renouvelerLienSiDemande(club) {
 
 /** Objet par défaut de l'email de dossier final. */
 function sujetDossier(g) {
-  return 'Votre dossier complet — ' + (String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
+  return 'Votre dossier complet — ' + (String(g.tournoi_nom || '').trim() || 'Le tournoi');
 }
 
 /** Phrase d'introduction par défaut (après la salutation), éditable. */
@@ -1550,7 +1550,7 @@ function introDossierDefaut(g, club) {
  */
 function emailHtmlDossier(g, club, imgSrc, salutationHtml, intro, lienDossier) {
   const A = 'font-family:Arial,Helvetica,sans-serif;';
-  const nom = echapper(String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92');
+  const nom = echapper(String(g.tournoi_nom || '').trim() || 'Le tournoi');
   const date = String(g.tournoi_date || '').trim() ? echapper(formaterDateFr(g.tournoi_date)) : '';
   const lieu = echapper(String(g.tournoi_lieu || '').trim());
   const nomClub = echapper(String((club && club.club_nom) || '').trim());
@@ -1568,7 +1568,7 @@ function emailHtmlDossier(g, club, imgSrc, salutationHtml, intro, lienDossier) {
     + '<img src="' + echapper(urlBlasonEmail()) + '" alt="Racing 92" width="110" '
     + 'style="display:block;width:110px;height:auto;margin:0 auto 10px;">'
     + '<p style="margin:0;' + A + 'text-transform:uppercase;letter-spacing:2px;font-size:12px;line-height:1.5;color:' + EMAIL_BLEU + ';">'
-    + 'École de Rugby du Racing Club de France<br>votre dossier pour la journée</p>'
+    + 'Votre dossier pour la journée</p>'
     + '<h1 style="margin:8px 0 2px;' + A + 'font-size:27px;line-height:1.1;color:' + EMAIL_NAVY + ';">' + nom + '</h1>'
     + ((date || lieu) ? '<p style="margin:4px 0 0;' + A + 'font-weight:bold;font-size:15px;color:' + EMAIL_NAVY + ';">'
       + [date, lieu].filter(Boolean).join('<span style="color:' + EMAIL_BLEU + ';"> · </span>') + '</p>' : '')
@@ -1668,7 +1668,7 @@ function emailHtmlDossier(g, club, imgSrc, salutationHtml, intro, lienDossier) {
 
   const pied = barreLiensEmail(A)
     + '<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ' + EMAIL_FILET + ';' + A + 'font-size:12px;color:' + EMAIL_GRIS + ';text-align:center;">'
-    + 'Génération R92 · École de Rugby du Racing Club de France'
+    + 'L\'organisation du tournoi'
     + (lien ? '<br><a href="' + lien + '" style="color:' + EMAIL_BLEU + ';">Voir la version en ligne</a>' : '')
     + '</p>';
 
@@ -1688,7 +1688,7 @@ function emailHtmlDossier(g, club, imgSrc, salutationHtml, intro, lienDossier) {
  *  Même contenu, même ordre : le jour J, le rappel sportif, l'administratif, puis le lien. */
 function emailTexteDossier(g, club, salutationTexte, intro, lienDossier) {
   const L = [];
-  const nom = String(g.tournoi_nom || '').trim() || 'Tournoi Génération R92';
+  const nom = String(g.tournoi_nom || '').trim() || 'Le tournoi';
   const engagees = parseCatsEngagees(club && club.categories_engagees);
   const toutes = catsInvitationTriees();
   const cats = engagees.length
@@ -1764,7 +1764,7 @@ function emailTexteDossier(g, club, salutationTexte, intro, lienDossier) {
     L.push('');
   }
   L.push('À très bientôt,');
-  L.push('Génération R92');
+  L.push('L\'organisation du tournoi');
   return L.join('\n');
 }
 

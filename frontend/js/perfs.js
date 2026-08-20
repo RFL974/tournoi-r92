@@ -11,7 +11,7 @@
  *       équipes plusieurs fois dans l'année).
  *  Tout est classé par catégorie (U8, U10, …).
  *
- *  Repérage des équipes du Racing : leur NOM contient le mot-clé ci-dessous
+ *  Repérage des équipes du club : leur NOM contient le mot-clé ci-dessous
  *  (insensible à la casse). Change simplement MOT_CLE_CLUB si un jour le club
  *  est nommé autrement dans le Sheet (ex : "R92").
  *
@@ -228,12 +228,12 @@ function listeAdversaires(vues) {
 function afficherSaison() {
   const zone = document.getElementById('vue-saison');
 
-  // Chaque ligne d'historique concernant le club, vue côté Racing.
+  // Chaque ligne d'historique concernant le club, vue de son côté.
   const vues = [];
   historique.forEach(function (h) {
     const aClub = estDuClub(h.equipe_A), bClub = estDuClub(h.equipe_B);
     if (!aClub && !bClub) return;
-    if (aClub && bClub) return; // Racing vs Racing : on l'écarte du « contre qui »
+    if (aClub && bClub) return; // club contre lui-même : on l'écarte du « contre qui »
     const estA = aClub;
     const pour = Number(estA ? h.score_A : h.score_B);
     const contre = Number(estA ? h.score_B : h.score_A);

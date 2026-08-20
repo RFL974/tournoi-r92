@@ -53,7 +53,7 @@ function messageErreur(texte) {
 function construirePage(data) {
   const t = data.tournoi || {};
   const club = data.club || {};
-  const nom = txt(t.nom) || 'Tournoi Génération R92';
+  const nom = txt(t.nom) || 'Le tournoi';
   const prenom = txt(club.club_contact_prenom);
   const dejaRepondu = !!txt(club.date_reponse);
 
@@ -67,7 +67,7 @@ function construirePage(data) {
   if (txt(t.lieu)) quand.push('<span>' + echapper(txt(t.lieu)) + '</span>');
   html += '<header class="inv-hero">' +
     '<img class="inv-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
-    '<p class="inv-surtitre">L\'École de Rugby du Racing Club de France<br>a le plaisir de vous inviter</p>' +
+    '<p class="inv-surtitre">Vous êtes invités</p>' +
     '<h1 class="inv-titre">' + echapper(nom) + '</h1>' +
     (quand.length ? '<p class="inv-quand">' + quand.join('<span class="inv-quand-sep"> · </span>') + '</p>' : '') +
   '</header>';
@@ -95,7 +95,7 @@ function construirePage(data) {
         ? 'Pour toute modification de dernière minute, écrivez à <a href="mailto:' + echapper(email) + '">'
           + echapper(email) + '</a>.'
         : 'Pour toute modification de dernière minute, contactez l\'organisateur.') + '</p>';
-    html += '<footer class="d-pied"><span>École de Rugby du Racing Club de France</span></footer>';
+    html += '<footer class="d-pied"><span>L\'organisation du tournoi</span></footer>';
     return html;
   }
 
@@ -127,7 +127,7 @@ function construirePage(data) {
   html += '<div id="rep-message-final"></div>';
 
   // Pied.
-  html += '<footer class="d-pied"><span>École de Rugby du Racing Club de France</span></footer>';
+  html += '<footer class="d-pied"><span>L\'organisation du tournoi</span></footer>';
   return html;
 }
 

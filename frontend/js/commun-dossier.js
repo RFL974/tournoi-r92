@@ -239,7 +239,7 @@ function tempsDeJeuDe(cat) {
  */
 function heroDocument(g, opts) {
   opts = opts || {};
-  const nom = txt(g.tournoi_nom) || 'Tournoi Génération R92';
+  const nom = txt(g.tournoi_nom) || 'Le tournoi';
 
   // Date · lieu sur une même ligne (chaque morceau est omis s'il manque).
   const quand = [];
@@ -247,7 +247,7 @@ function heroDocument(g, opts) {
   if (txt(g.tournoi_lieu)) quand.push('<span>' + echapper(txt(g.tournoi_lieu)) + '</span>');
 
   let html = '<header class="inv-hero">' +
-    // Blason du club centré, en GRAND : c'est l'École de Rugby qui reçoit.
+    // Blason du club centré, en GRAND : c'est l'organisation du tournoi qui reçoit.
     '<img class="inv-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
     (opts.surtitre ? '<p class="inv-surtitre">' + opts.surtitre + '</p>' : '') +
     '<h1 class="inv-titre">' + echapper(nom) + '</h1>' +
@@ -503,7 +503,7 @@ function piedDocument(g, avecLiens) {
   }
   return '<footer class="d-pied inv-pied">' +
     '<img class="d-pied-logo" src="img/blason-racing92.svg" alt="" onerror="this.style.display=\'none\'">' +
-    '<span class="inv-pied-nom">École de Rugby du Racing Club de France</span>' +
+    '<span class="inv-pied-nom">L\'organisation du tournoi</span>' +
     (liens.length ? '<span class="inv-pied-liens">' + liens.join('') + '</span>' : '') +
   '</footer>';
 }

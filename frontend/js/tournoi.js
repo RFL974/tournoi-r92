@@ -391,7 +391,7 @@ function majTitre() {
   const nom = (config.global && config.global.tournoi_nom || '').toString().trim();
   const h1 = document.getElementById('titre-tournoi');
   if (h1) h1.textContent = nom || 'Le tournoi';
-  document.title = (nom || 'Le tournoi') + ' — Génération R92';
+  document.title = nom || 'Le tournoi';
 }
 
 /* ==========================================================================

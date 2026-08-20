@@ -2157,8 +2157,8 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 |---|---|---|
 | **L0** | Inscrire CF-4b et les arbitrages dans le suivi *(ce texte, **D-039**)* | 🚧 **en cours** |
 | **L1** | 🔴 Retirer le modèle d'autorisation de droit à l'image du dépôt public | ✅ **FAIT** — commit **`3375061`**, publié et vérifié |
-| **L6** | Réécriture générique de [`../passation.md`](../passation.md) | ✅ **FAIT** — ⏳ *SHA inscrit au lot suivant, comme pour CF-1 : un commit ne peut pas porter le sien.* ⭐ **Structure et procédure intégralement conservées** *(§1 à §11.4)*, **§0 ajouté** : sept prérequis, l'administrateur **décrit et non désigné**, et ce que le document **ne décide pas**. ⛔ **Plus aucune organisation, adresse, domaine ni personne nommée** |
-| **L2** | Textes de l'application — titres, métadonnées, signatures, valeurs de repli, `.ics`, commentaires devenus faux | ⬜ **45 points** |
+| **L6** | Réécriture générique de [`../passation.md`](../passation.md) | ✅ **FAIT** — commit **`eac23ad`**. ⭐ **Structure et procédure intégralement conservées** *(§1 à §11.4)*, **§0 ajouté** : sept prérequis, l'administrateur **décrit et non désigné**, et ce que le document **ne décide pas**. ⛔ **Plus aucune organisation, adresse, domaine ni personne nommée** |
+| **L2** | Textes de l'application — titres, métadonnées, signatures, valeurs de repli, `.ics`, commentaires devenus faux | ✅ **FAIT** — ⏳ *SHA au lot suivant.* ⚡ **50 points, et non 45** : le recomptage a trouvé **3 commentaires** que la première regex manquait, et ⭐ **l'`UID` du fichier calendrier**, qui portait `@generation-r92` — invisible d'une recherche sur « Génération R92 ». ⚠️ **Dette temporaire assumée** : la page Perfs est **textuellement générique**, mais son filtre reste `MOT_CLE_CLUB = 'racing'` **jusqu'à L8** |
 | **L3** | Liens institutionnels — `LIENS_ASSOCIATION`, retours vitrine, **bandeau de don supprimé** | ⬜ **19 points** |
 | **L4** | Identité graphique — logo neutre, favicon, retrait des blasons | ⬜ **23 points** |
 | **L7** | Reste de la documentation active du dépôt public | ⬜ **16 points** · ⚡ **+ 4 références `CF-4` → `CF-4a`** dans [`CF-2-RESPONSABLE-TRAITEMENT.md`](CF-2-RESPONSABLE-TRAITEMENT.md) *(l. 111, 308, 546, 551)* — dette relevée pendant L0 |
@@ -2167,8 +2167,11 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 
 > ⭐ **Pourquoi L1 puis L6 avant tout le reste** : ce sont les deux seuls lots qui engagent des
 > **tiers réels aujourd'hui** — une association pour le document supprimé, **une personne physique
-> nommée** pour `passation.md`. ✅ **Les deux sont faits.** Les lots restants — **L2, L3, L4, L7,
-> L5, L8** — ne touchent plus aucun tiers identifié.
+> nommée** pour `passation.md`. ✅ **Les deux sont faits.**
+>
+> ⚠️ **Comptage, et il faut le lire ainsi** : **L0 est un préalable documentaire**, ajouté après
+> coup — il ne fait pas partie des huit. **Les lots d'exécution sont L1 → L8.** À ce jour :
+> ✅ **3 sur 8 terminés** *(L1, L6, L2)* · ⬜ **5 restants** *(L3, L4, L5, L7, L8)*.
 
 **Opération manuelle associée — hors Git :**
 

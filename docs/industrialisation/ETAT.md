@@ -9,7 +9,26 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-19 *(nuit, 4)* — 🧑 **LA PERSONNE PHYSIQUE A QUITTÉ LE DÉPÔT
+**Dernière mise à jour** : 2026-08-20 — ✍️ **L'APPLICATION NE SE PRÉSENTE PLUS COMME CELLE D'UNE
+ASSOCIATION.** Le lot **L2** de CF-4b a neutralisé **50 points de texte** : onglets du navigateur,
+métadonnées de partage, en-têtes et signatures des **deux emails** *(HTML **et** texte)*, **pages
+publiques miroirs**, fichier d'agenda, page Perfs, et **4 commentaires** devenus faux.
+⭐ **Le piège annoncé était réel et a été traité** : `tournoi.js:394` **réécrivait le titre après le
+chargement** — corriger le HTML seul n'aurait rien changé de visible. ✅ **Vérifié par exécution
+réelle de `majTitre()`** : nom configuré → le vrai nom · champ vide → *« Le tournoi »*.
+⚡ **Le recomptage a donné 50 et non 45** : **3 commentaires** manquaient, et surtout ⭐ **l'`UID` du
+fichier `.ics` portait `@generation-r92`** — introuvable par une recherche sur « Génération R92 ».
+**Signalé, rattaché à L2 comme relevant du même périmètre textuel.**
+✅ **`node --check` sur 30 fichiers, 0 erreur** · **50 insertions / 50 suppressions** — ⛔ **aucune
+URL, aucune classe, aucune structure modifiée**.
+⚠️ **Dette temporaire assumée** : la page Perfs est textuellement générique, mais **son filtre reste
+`'racing'` jusqu'à L8**.
+📊 **Comptage exact** : **L0** = préalable documentaire · **3 lots d'exécution sur 8 terminés**
+*(L1, L6, L2)* · **5 restants** *(L3, L4, L5, L7, L8)*.
+⛔ **Aucun backend, aucun test, aucun déploiement Google, aucun email, aucune opération sur le
+classeur.**
+
+*Rappel de la mise à jour précédente — 2026-08-19 (nuit, 4)* : 🧑 **LA PERSONNE PHYSIQUE A QUITTÉ LE DÉPÔT
 PUBLIC.** Le lot **L6** de CF-4b a réécrit [`../passation.md`](../passation.md) : le document
 planifiait un transfert vers un domaine, une adresse de messagerie et **une personne nommée**
 — ⛔ **aucun des trois n'ayant rien accepté**, et le prénom étant une **donnée personnelle publiée**
@@ -316,16 +335,17 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS — 3 lots sur 8.** ✅ **L0** *(cadre, `D-039`)* · ✅ **L1** *(commit `3375061`)* · ✅ ⭐ **L6** *(`passation.md`)* · ⬜ **L2, L3, L4, L7, L5, L8** · 🔧 **M1** *(classeur, hors Git)* en attente d'autorisation |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS — 3 lots d'exécution sur 8.** ✅ **L0** *(préalable documentaire, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ ⭐ **L2** *(50 points de texte)* · ⬜ **L3, L4, L5, L7, L8** · 🔧 **M1** *(classeur, hors Git)* en attente d'autorisation |
 | 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
 | **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 | 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |
 
-**La prochaine étape** est le **lot L2 de CF-4b** — les **45 points de texte** de l'application :
-titres, métadonnées de partage, signatures d'emails, valeurs de repli, fichier calendrier, page
-Perfs, et les commentaires devenus faux. ⚠️ **Un piège y est déjà connu** : `tournoi.js:394`
-**réécrit le titre de la page publique après le chargement** — corriger le HTML sans cette ligne ne
-changerait rien de visible. ⚠️ **CF-4a**
+**La prochaine étape** est le **lot L3 de CF-4b** — les **19 points de liens institutionnels** :
+`LIENS_ASSOCIATION`, les retours vers la vitrine, et la **suppression complète du bandeau de don**.
+🔴 **Un piège y est déjà enregistré** : `tournoi.js:216` fait
+`document.getElementById('don-lien').hidden = !pub;` **sans test d'existence** — retirer le seul HTML
+casserait la page publique, et `node --check` **ne le verrait pas**. **L3 exige un contrôle
+d'exécution ciblé.** ⚠️ **CF-4a**
 *(mentions légales)* reste **le seul écart au regard d'un texte extérieur**, et **CF-3** reste
 suspendue à la décision préparée par CF-2.
 

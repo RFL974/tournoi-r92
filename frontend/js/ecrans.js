@@ -133,7 +133,7 @@ function construireEcrans() {
   let h = '<div class="ecr-marque">' +
             '<img class="ecr-logo" src="img/logo-r92.png" alt="" onerror="this.style.display=\'none\'">' +
             '<span class="ecr-marque-titre">Administration</span>' +
-            '<span class="ecr-marque-sous">Tournoi R92</span>' +
+            '<span class="ecr-marque-sous">Le tournoi</span>' +
           '</div>' +
           // Pourquoi une étape est inaccessible : affiché NOIR SUR BLANC au clic sur un onglet
           // grisé, EN HAUT de la barre pour rester visible quelle que soit sa longueur. Avant,

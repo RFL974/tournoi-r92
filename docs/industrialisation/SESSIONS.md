@@ -6386,3 +6386,84 @@ document reste vrai si le compte change.
 > que par son rôle *(« portabilité : tout transférer »)*, pas par son contenu — vérifié.
 > ⛔ **`CHANGELOG.md` non touché** : L6 ne change rien de ce qu'un utilisateur remarquerait.
 > ⛔ **`DECISIONS.md` non touché** : L6 **exécute** D-039, il ne décide rien de neuf.
+
+---
+
+## 9. Lot L2 — les textes de l'application
+
+### ⚡ Le recomptage : 50 points, et non 45
+
+Le repère de cartographie annonçait **45**. Le recomptage exhaustif *(locale UTF-8)* en a trouvé
+**50**. **Deux causes, et la seconde vaut d'être retenue :**
+
+| Cause | Ce qui manquait |
+|---|---|
+| **3 commentaires** | `commun-dossier.js:250`, `invitation.js:12`, `perfs.js:14` — la première regex cherchait *« École de Rugby **du Racing** »*, or ces commentaires disent seulement *« l'École de Rugby »* |
+| 🔴 **2 champs du fichier `.ics`** | `PRODID` portait `Generation R92` *(déjà repéré)*, mais surtout ⭐ **`UID` portait `@generation-r92`** — ⛔ **introuvable par toute recherche sur « Génération R92 »**, à cause du tiret et de la minuscule |
+
+> 🎯 **La leçon est la même que celle de la locale, sous une autre forme** : *une recherche ne trouve
+> que ce que sa formulation permet de trouver.* L'`UID` voyage dans l'agenda de chaque club qui
+> importe l'événement — un endroit que personne ne regarde jamais.
+>
+> ⚠️ **Il a été signalé avant d'être traité**, et rattaché à L2 parce qu'il relève **manifestement du
+> même périmètre textuel** *(le fichier calendrier, explicitement dans L2)* — aucune décision
+> nouvelle n'était en jeu.
+
+### ⭐ Le piège du titre dynamique — confirmé et traité
+
+`frontend/js/tournoi.js:394` faisait `document.title = (nom || 'Le tournoi') + ' — Génération R92';`.
+**Corriger `tournoi.html:6` seul n'aurait rien changé** : le JavaScript réécrit le titre deux
+secondes après le chargement.
+
+**Vérifié par exécution réelle de `majTitre()`** *(la vraie fonction, extraite et lancée dans Node
+avec un `document` factice)* :
+
+| Cas | `document.title` obtenu |
+|---|---|
+| Nom configuré « Tournoi de Colombes » | `"Tournoi de Colombes"` ✅ **le vrai nom est préservé** |
+| Champ vide | `"Le tournoi"` ✅ |
+| Champ absent | `"Le tournoi"` ✅ |
+
+### Ce qui a été neutralisé
+
+| Catégorie | Points |
+|---|---|
+| Titres HTML *(8 pages)* + métadonnées `description` *(4)* + sous-titres *(2)* + pied public *(1)* | **15** |
+| Valeurs de repli du nom du tournoi | **12** |
+| Titre dynamique | **1** |
+| En-têtes et signatures des emails — HTML **et** texte | **8** |
+| Pages publiques miroirs — surtitres et pieds | **6** |
+| Fichier calendrier `.ics` — `PRODID`, `UID`, `SUMMARY` | **3** |
+| Sous-titre de la barre latérale admin | **1** |
+| Commentaires devenus faux *(§8 ter)* | **4** |
+| **Total** | **50** |
+
+### Contrôles
+
+| | |
+|---|---|
+| **Syntaxe** | ✅ `node --check` sur **30 fichiers JS**, 0 erreur *(le même contrôle que le workflow)* |
+| **Recherches UTF-8** | ✅ **0** pour *Generation R92*, *École de Rugby du Racing*, *Tournoi Génération R92*, *Tournoi R92*, *generation-r92* |
+| **Non-régression** | ✅ **50 insertions / 50 suppressions** — substitutions ligne à ligne. ⛔ **Aucune URL modifiée**, aucune classe, aucun style, aucune balise |
+| **Titre dynamique** | ✅ exécution réelle, 3 cas |
+| **Sorties texte** | ✅ les deux signatures d'email texte vérifiées par extrait — ⚠️ **elles n'apparaissent dans aucun aperçu**, c'est pourquoi le contrôle est explicite |
+
+### ⚠️ Ce qui reste volontairement, et à quel lot
+
+| Ce qui reste | Où | Lot |
+|---|---|---|
+| `LIENS_ASSOCIATION` *(2 libellés)* | `commun.js:306,308` | **L3** |
+| Bandeau de don | `tournoi.html:75` | **L3** |
+| `alt` et commentaire du logo | `admin.html:30,32` · `tournoi.html:35,144` | **L4** |
+| « Perfs Racing » | `frontend/README.md:12` | **L7** |
+
+> ⚠️ **Une dette temporaire, à dire clairement** : la page **Perfs** est désormais *textuellement*
+> générique — « Perfs du club », « Perfs des équipes du club » — mais **son filtre reste
+> `MOT_CLE_CLUB = 'racing'` jusqu'à L8**. ⭐ **Les commentaires ont été reformulés en termes qui
+> restent vrais dans les deux états** *(« les équipes du club », « vue de son côté »)*, conformément
+> à §8 ter : un commentaire ne doit jamais annoncer autre chose que ce que fait la ligne d'en
+> dessous.
+
+> ⚠️ **Documents ACTIFS** : **`CHANGELOG.md` mis à jour** — c'est le premier lot de CF-4b qu'un
+> utilisateur remarque. ✅ **Aucune entrée datée modifiée.** `README.md`, `docs/architecture.md` et
+> `backend/README.md` vérifiés : ils ne décrivent **aucun** des textes touchés.

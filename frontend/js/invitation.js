@@ -9,7 +9,7 @@
  *
  *  REFONTE VITRINE : l'invitation est le premier contact des clubs avec le tournoi.
  *  Elle se lit de haut en bas comme un carton d'invitation :
- *    1. blason du club en grand, centré — c'est l'École de Rugby qui invite ;
+ *    1. blason du club en grand, centré — c'est l'organisation du tournoi qui invite ;
  *    2. l'affiche du tournoi en héros ;
  *    3. le descriptif complet ;
  *    4. la journée en un coup d'œil (frise horaire) ;
@@ -68,7 +68,7 @@ function construireInvitation(g, categories) {
   // 1-3) EN-TÊTE VITRINE : blason centré en grand, titre, date · lieu, affiche en héros,
   //      puis le descriptif COMPLET du tournoi (plus de troncature : c'est la vitrine).
   html += heroDocument(g, {
-    surtitre: 'L\'École de Rugby du Racing Club de France<br>a le plaisir de vous inviter',
+    surtitre: 'Vous êtes invités',
     presentationDefaut: 'Nous serions ravis de vous compter parmi les clubs invités de cette journée.'
   });
 
