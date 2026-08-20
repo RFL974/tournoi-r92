@@ -1572,15 +1572,15 @@ body.theme-clair {
 .theme-clair .vide { color: #8a97a6; }
 .theme-clair .apercu-affiche img { border-color: #e6edf5; }
 
-/* ---- Logo dans l'en-tête navy ---- */
+/* ---- Repère visuel dans l'en-tête navy ----
+   Largeur adaptée à un symbole CARRÉ (l'ancienne image était un bandeau large :
+   `width:100%` l'aurait étiré à 260 px de côté). */
 .entete .logo {
   display: block;
-  width: 100%;
-  max-width: 260px;
+  width: 64px;
   height: auto;
   margin: 0 auto 10px;
 }
-@media (min-width: 700px) { .entete .logo { max-width: 320px; } }
 
 /* ==========================================================================
    TERRAINS PHYSIQUES & RÉPARTITION (carte admin #bloc-terrains)

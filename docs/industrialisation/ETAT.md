@@ -9,7 +9,31 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-20 *(suite)* — 🔗 **L'APPLICATION NE RENVOIE PLUS VERS UNE
+**Dernière mise à jour** : 2026-08-20 *(suite 2)* — 🛡️ **L'APPLICATION N'AFFICHE PLUS AUCUN LOGO
+QUI NE SOIT PAS LE SIEN.** Le lot **L4** a remplacé les logos et blasons par un **repère visuel
+neutre et temporaire** — un écusson géométrique portant la seule lettre **T**. ⛔ **Ni ballon, ni 92,
+ni R, ni M, ni couronne, ni nom de produit** : ⭐ **le nom « Maxilou » n'apparaît toujours nulle
+part.**
+🆕 **3 ressources créées, toutes locales** : `logo-tournoi.svg` *(620 o)*, `logo-tournoi.png`
+*(1,2 Ko — les clients de messagerie n'affichent pas le SVG)* et `grain.svg`. ⚡ **Le PNG a été
+fabriqué sans aucune dépendance** *(zlib + struct)* : aucun convertisseur n'est installé, et le
+projet refuse d'en ajouter *(`CLAUDE.md` §10)*.
+🗑️ **3 assets institutionnels supprimés — 224 Ko**, après vérification qu'aucun consommateur ne
+subsistait.
+⭐ **La favicon est posée sur les 8 pages** : **7 n'en avaient aucune** et s'affichaient avec l'icône
+par défaut du navigateur. ⛔ **Plus aucune image ne vient d'un site extérieur** — le grain de fond
+était encore téléchargé chez la vitrine.
+⚠️ **Deux adaptations CSS minimales, et elles étaient nécessaires** : l'ancien logo était un
+**bandeau large**, le nouveau est **carré** — `width:100%` l'aurait étiré à **260 px de côté** dans
+l'en-tête d'administration.
+⏸️ **Une réserve constatée** : les deux **icônes de liens** *(Instagram, site)* **restent** — ce ne
+sont pas des images institutionnelles, et elles outillent le mécanisme que **D-039 #7 demande de
+conserver**.
+📊 **L0** = préalable · **5 lots d'exécution sur 8 terminés** *(L1, L6, L2, L3, L4)* · **3 restants**
+*(L5, L7, L8)*.
+⛔ **Aucun backend, aucun test, aucun déploiement Google, aucun email.**
+
+*Rappel de la mise à jour précédente — 2026-08-20 (suite)* : 🔗 **L'APPLICATION NE RENVOIE PLUS VERS UNE
 ASSOCIATION.** Le lot **L3** a retiré **21 points** : les **4 destinations institutionnelles codées
 en dur** *(deux comptes Instagram, deux sites)*, le **retour vers la vitrine**, les liens **« Site de
 l'association »** et **« Contact »** du pied, et ⭐ **le bandeau de don, entièrement** — texte, lien,
@@ -352,15 +376,17 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS — 4 lots d'exécution sur 8.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`, 50 points)* · ✅ ⭐ **L3** *(21 points, liens et don)* · ⬜ **L4, L5, L7, L8** · 🔧 **M1** *(classeur, hors Git)* en attente d'autorisation |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS — 5 lots d'exécution sur 8.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ ⭐ **L4** *(26 points, identité graphique neutre)* · ⬜ **L5, L7, L8** · 🔧 **M1** *(classeur, hors Git)* en attente d'autorisation |
 | 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
 | **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 | 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |
 
-**La prochaine étape** est le **lot L4 de CF-4b** — l'**identité graphique** : un logo neutre à
-créer, la **favicon à poser sur les 7 pages qui n'en ont aucune**, et le retrait des blasons.
-⚠️ **Deux formats seront nécessaires** *(SVG pour le web, PNG pour les emails, qui n'affichent pas le
-SVG)*, et **trois ressources sont hébergées chez la vitrine**, pas dans ce dépôt. ⚠️ **CF-4a**
+**La prochaine étape** est le **lot L5 de CF-4b** — le **nom affiché de l'expéditeur** des emails,
+**4 lignes** de `backend/Code.gs`. ⚠️ **C'est le premier lot qui touche le serveur** : il exige un
+**redéploiement chez Google** selon [`../deploiement.md`](../deploiement.md), avec ses **deux nombres
+de contrôle** *(inchangés : aucun test n'est modifié)*. ⭐ **Et c'est le seul point de tout le
+chantier qu'aucun aperçu ne peut prouver** : le nom d'expéditeur n'apparaît que dans un message
+**reçu**. ⛔ **Aucun envoi réel sans autorisation explicite.** ⚠️ **CF-4a**
 *(mentions légales)* reste **le seul écart au regard d'un texte extérieur**, et **CF-3** reste
 suspendue à la décision préparée par CF-2.
 

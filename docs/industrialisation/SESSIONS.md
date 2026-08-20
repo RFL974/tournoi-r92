@@ -6549,3 +6549,111 @@ périmètre.
 > que liens et don « n'ont pas encore changé » a été rendue exacte**, car elle datait du même jour et
 > devenait fausse en quelques heures. ⛔ **Aucune entrée publiée n'a été réécrite.** `README.md`,
 > `docs/architecture.md` et `backend/README.md` vérifiés : aucun ne décrit ces liens.
+
+---
+
+## 11. Lot L4 — l'identité graphique
+
+### Le symbole créé, et ce qu'il n'est pas
+
+Un **écusson géométrique simplifié, non héraldique**, portant la seule lettre **T** *(Tournoi)*.
+Deux formes, deux couleurs reprises de la charte existante *(`#0C1C2E` navy, `#B8D8F8` ciel)*.
+
+⛔ **Ce qu'il ne contient pas, et c'était la contrainte** : aucun ballon, aucun 92, aucune lettre R
+ou M, aucune couronne, aucun slogan, aucune référence à un club, ⭐ **et aucun nom de produit — le
+nom « Maxilou » n'apparaît toujours nulle part dans l'application**.
+
+> 🎯 **Il est temporaire, et fait pour se voir comme tel.** L4 **ne crée pas une marque** : il donne
+> à l'application un repère cohérent en attendant une décision qui n'est pas prise.
+
+### ⚡ Le PNG a dû être fabriqué à la main
+
+Les clients de messagerie **n'affichent pas le SVG** : il fallait un PNG du même dessin. Or
+**aucun convertisseur n'est installé** *(ni `rsvg-convert`, ni Inkscape, ni ImageMagick, ni Pillow)*,
+et `CLAUDE.md` §10 interdit d'ajouter une dépendance pour cela.
+
+➡️ **Le PNG a donc été généré par un court script `zlib` + `struct`** : même géométrie que le SVG,
+suréchantillonnage 4×4 pour lisser les bords, fond transparent. **1 249 octets.**
+
+### Les ressources
+
+| | Fichier | Taille | Rôle |
+|---|---|---|---|
+| 🆕 | `frontend/assets/logo-tournoi.svg` | 620 o | Pages web **et** favicon des 8 pages |
+| 🆕 | `frontend/assets/logo-tournoi.png` | 1,2 Ko | Emails |
+| 🆕 | `frontend/assets/grain.svg` | 648 o | Grain de fond, **produit par le navigateur** *(`feTurbulence`)* — aucune image téléchargée |
+| 🗑️ | `frontend/img/logo-r92.png` | 164 Ko | supprimé |
+| 🗑️ | `frontend/img/blason-racing92.png` | 20 Ko | supprimé |
+| 🗑️ | `frontend/img/blason-racing92.svg` | 40 Ko | supprimé |
+
+⭐ **224 Ko retirés, 2,5 Ko ajoutés.**
+
+### ⚠️ Deux adaptations CSS, et elles n'étaient pas cosmétiques
+
+L'ancien logo était un **bandeau large** ; le nouveau est **carré**. Les règles écrites pour le
+premier maltraitaient le second :
+
+| Règle | Avant | Après | Sans quoi |
+|---|---|---|---|
+| `.entete .logo` | `width:100%; max-width:260px` *(320 px au-delà de 700 px)* | `width:64px` | Le symbole se serait affiché en **260 px de côté** dans l'en-tête d'administration |
+| `.ecr-logo` | `max-width:110px` | `width:56px` | Disproportionné dans la barre latérale |
+
+⛔ **Rien d'autre n'a été touché** : ni palette, ni typographie, ni espacements, ni disposition.
+`.logo img` *(48 px)*, `.pied-logo` *(52 px)*, `.inv-blason` *(150 px)* et `.d-pied-logo` *(34 px)*
+conviennent déjà à un carré et sont **inchangées**.
+
+### `noise.svg` — option B retenue, et pourquoi
+
+Le grain était chargé depuis la vitrine. Rôle constaté : décoratif, `opacity: 0.04`,
+`mix-blend-mode: soft-light`, sur tout le fond de la page publique.
+
+⭐ **Une ressource locale a été créée plutôt que l'usage supprimé** : `CLAUDE.md` §15 de la consigne
+demande de ne pas modifier le rendu, et supprimer le grain l'aurait fait — légèrement, mais
+réellement, sur les grands aplats. ⛔ **Aucun asset de la vitrine n'a été copié** : `grain.svg`
+utilise `feTurbulence`, un bruit **calculé par le navigateur**. **Rien n'est téléchargé.**
+
+### ⏸️ Les deux icônes de liens — conservées, et c'est motivé
+
+`icone-instagram.png` et `icone-site.png` étaient annoncées orphelines après L3. **Le contrôle a
+montré qu'une référence subsiste** : `urlIconeEmail()`, qui construit `img/icone-<nom>.png`.
+
+⛔ **Elles n'ont donc pas été supprimées**, pour trois raisons :
+
+- **elles ne sont pas institutionnelles** — ce sont des pictogrammes génériques *(appareil photo,
+  globe)*, sans marque ;
+- **elles outillent le mécanisme `LIENS_ASSOCIATION`**, que **D-039 #7 demande de conserver** ;
+- ⭐ **les supprimer casserait ce mécanisme** le jour où une organisation y mettrait ses liens.
+
+*(La consigne du lot posait la suppression sous condition — « si aucune référence active ne
+subsiste ». La condition n'est pas remplie.)*
+
+### Les commentaires signalés en L3
+
+| Fichier | Traitement |
+|---|---|
+| `tournoi-public.css:5` | *« charte du site vitrine (boutique-r92) »* → *« charte de la page publique »* |
+| `tournoi-public.css:55` | *« comme sur le site vitrine »* → *« sur toute la page. Ressource LOCALE. »* |
+| `theme-r92.css:409` | La référence à la feuille de style d'un site extérieur retirée |
+| `tournoi.html:16` | *« calqué sur boutique-r92 »* retiré |
+| `admin.html:30` | *« Logo Génération R92 »* → *« Repère visuel neutre et temporaire »* |
+
+⚠️ **`theme-r92.css` n'est PAS renommé** — identifiant technique, même statut que `--r92-*` :
+réserve assumée.
+
+### Contrôles
+
+| | |
+|---|---|
+| **Recherche finale** *(locale UTF-8)* | ✅ **0** pour `boutique-r92`, `logo-r92`, `blason-racing`, `noise.svg`, `Génération R92`, `Racing 92`, `favicon.svg` |
+| **Syntaxe** | ✅ `node --check`, 30 fichiers, 0 erreur |
+| **Assets** | ✅ PNG valide *(220×220 RGBA)*, SVG valides, **aucune dépendance externe** |
+| **Accessibilité** | ✅ Les logos sont **décoratifs** *(le nom du tournoi est déjà en texte à côté)* ⇒ `alt=""` partout, plutôt qu'un texte redondant pour les lecteurs d'écran |
+
+> ⚠️ **Documents ACTIFS** : `CHANGELOG.md` mis à jour — **et la phrase de l'entrée L3 annonçant que
+> les logos « n'ont pas encore changé » a été rendue exacte**, comme pour L2 la veille. Ces deux
+> entrées datent du **même jour** et n'ont jamais été publiées ailleurs. ⛔ **Aucune entrée
+> historique réécrite.**
+>
+> ⚠️ **`README.md` : sa carte de structure annonce `img/ → 5 images (blasons, logos, icônes)`** —
+> devenu faux *(il en reste 2, et `assets/` est réapparu)*. ⭐ **Corrigé dans ce lot** *(§8 bis :
+> la carte se vérifie dans le même lot)*.

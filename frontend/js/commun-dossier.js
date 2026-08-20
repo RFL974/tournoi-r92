@@ -247,8 +247,8 @@ function heroDocument(g, opts) {
   if (txt(g.tournoi_lieu)) quand.push('<span>' + echapper(txt(g.tournoi_lieu)) + '</span>');
 
   let html = '<header class="inv-hero">' +
-    // Blason du club centré, en GRAND : c'est l'organisation du tournoi qui reçoit.
-    '<img class="inv-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
+    // Repère visuel centré, en GRAND : c'est l'organisation du tournoi qui reçoit.
+    '<img class="inv-blason" src="assets/logo-tournoi.svg" alt="" onerror="this.style.display=\'none\'">' +
     (opts.surtitre ? '<p class="inv-surtitre">' + opts.surtitre + '</p>' : '') +
     '<h1 class="inv-titre">' + echapper(nom) + '</h1>' +
     (quand.length ? '<p class="inv-quand">' + quand.join('<span class="inv-quand-sep"> · </span>') + '</p>' : '') +
@@ -502,7 +502,7 @@ function piedDocument(g, avecLiens) {
     if (site) liens.push(site);
   }
   return '<footer class="d-pied inv-pied">' +
-    '<img class="d-pied-logo" src="img/blason-racing92.svg" alt="" onerror="this.style.display=\'none\'">' +
+    '<img class="d-pied-logo" src="assets/logo-tournoi.svg" alt="" onerror="this.style.display=\'none\'">' +
     '<span class="inv-pied-nom">L\'organisation du tournoi</span>' +
     (liens.length ? '<span class="inv-pied-liens">' + liens.join('') + '</span>' : '') +
   '</footer>';

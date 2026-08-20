@@ -36,7 +36,7 @@ function lienInvitationPublique() {
 
 /** URL absolue du blason en PNG (les clients mail n'affichent pas le SVG). */
 function urlBlasonEmail() {
-  return new URL('img/blason-racing92.png', window.location.href).toString();
+  return new URL('assets/logo-tournoi.png', window.location.href).toString();
 }
 
 /** URL absolue d'une icône de lien (img/icone-instagram.png, img/icone-site.png). */
@@ -363,8 +363,8 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
 
   // En-tête VITRINE : blason centré, surtitre, grand titre, date · lieu, filet d'accent.
   let entete = '<div style="text-align:center;">'
-    + '<img src="' + echapper(urlBlasonEmail()) + '" alt="Racing 92" width="110" '
-    + 'style="display:block;width:110px;height:auto;margin:0 auto 10px;">'
+    + '<img src="' + echapper(urlBlasonEmail()) + '" alt="" width="72" '
+    + 'style="display:block;width:72px;height:auto;margin:0 auto 10px;">'
     + '<p style="margin:0;' + A + 'text-transform:uppercase;letter-spacing:2px;font-size:12px;line-height:1.5;color:' + EMAIL_BLEU + ';">'
     + 'Vous êtes invités</p>'
     + '<h1 style="margin:8px 0 2px;' + A + 'font-size:27px;line-height:1.1;color:' + EMAIL_NAVY + ';">' + nom + '</h1>'
@@ -1570,8 +1570,8 @@ function emailHtmlDossier(g, club, imgSrc, salutationHtml, intro, lienDossier) {
 
   /* --- 1) EN-TÊTE : blason, « votre dossier », titre, date · lieu, NOM DU CLUB --- */
   let entete = '<div style="text-align:center;">'
-    + '<img src="' + echapper(urlBlasonEmail()) + '" alt="Racing 92" width="110" '
-    + 'style="display:block;width:110px;height:auto;margin:0 auto 10px;">'
+    + '<img src="' + echapper(urlBlasonEmail()) + '" alt="" width="72" '
+    + 'style="display:block;width:72px;height:auto;margin:0 auto 10px;">'
     + '<p style="margin:0;' + A + 'text-transform:uppercase;letter-spacing:2px;font-size:12px;line-height:1.5;color:' + EMAIL_BLEU + ';">'
     + 'Votre dossier pour la journée</p>'
     + '<h1 style="margin:8px 0 2px;' + A + 'font-size:27px;line-height:1.1;color:' + EMAIL_NAVY + ';">' + nom + '</h1>'

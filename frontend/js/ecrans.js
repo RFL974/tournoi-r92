@@ -131,7 +131,7 @@ function construireEcrans() {
   nav.id = 'ecr-nav';
   nav.setAttribute('aria-label', "Étapes de l'administration");
   let h = '<div class="ecr-marque">' +
-            '<img class="ecr-logo" src="img/logo-r92.png" alt="" onerror="this.style.display=\'none\'">' +
+            '<img class="ecr-logo" src="assets/logo-tournoi.svg" alt="" onerror="this.style.display=\'none\'">' +
             '<span class="ecr-marque-titre">Administration</span>' +
             '<span class="ecr-marque-sous">Le tournoi</span>' +
           '</div>' +

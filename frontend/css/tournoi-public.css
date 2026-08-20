@@ -2,7 +2,7 @@
    LE TOURNOI — page publique
    ---------------------------------------------------------
    Feuille de style DÉDIÉE à tournoi.html, calquée sur la
-   charte du site vitrine (boutique-r92) : navy / bleu ciel /
+   charte de la page publique : navy / bleu ciel /
    bleu vif, polices Barlow. Les pages admin/saisie/perfs
    gardent, elles, leur feuille styles.css (thème sombre).
    Pensé "mobile d'abord".
@@ -42,7 +42,7 @@ body {
   line-height: 1.6;
   overflow-wrap: break-word;
 }
-/* Grain très subtil, comme sur le site vitrine (n'attrape aucun clic) */
+/* Grain très subtil sur toute la page (n'attrape aucun clic). Ressource LOCALE. */
 body::before {
   content: "";
   position: fixed;
@@ -51,7 +51,7 @@ body::before {
   pointer-events: none;
   opacity: 0.04;
   mix-blend-mode: soft-light;
-  background: url('https://rfl974.github.io/boutique-r92/assets/img/noise.svg') repeat;
+  background: url('../assets/grain.svg') repeat;
   background-size: 200px 200px;
 }
 a { color: var(--bleu-vif); text-decoration: none; }

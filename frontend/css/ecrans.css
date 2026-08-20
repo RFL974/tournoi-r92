@@ -77,7 +77,8 @@ body.avec-ecrans .ecran[hidden] { display: none !important; }
     margin-bottom: 14px;
     text-align: center;
   }
-  .ecr-logo { max-width: 110px; height: auto; margin-bottom: 8px; }
+  /* Symbole carré : 110 px (taille de l'ancien bandeau) serait disproportionné ici. */
+  .ecr-logo { width: 56px; height: auto; margin-bottom: 8px; }
   .ecr-marque-titre {
     font-family: 'Fraunces', Georgia, serif;
     font-weight: 500;

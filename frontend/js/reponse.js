@@ -66,7 +66,7 @@ function construirePage(data) {
   if (txt(t.date)) quand.push('<span class="inv-quand-date">' + echapper(dateLongueFr(t.date)) + '</span>');
   if (txt(t.lieu)) quand.push('<span>' + echapper(txt(t.lieu)) + '</span>');
   html += '<header class="inv-hero">' +
-    '<img class="inv-blason" src="img/blason-racing92.svg" alt="Racing 92" onerror="this.style.display=\'none\'">' +
+    '<img class="inv-blason" src="assets/logo-tournoi.svg" alt="" onerror="this.style.display=\'none\'">' +
     '<p class="inv-surtitre">Vous êtes invités</p>' +
     '<h1 class="inv-titre">' + echapper(nom) + '</h1>' +
     (quand.length ? '<p class="inv-quand">' + quand.join('<span class="inv-quand-sep"> · </span>') + '</p>' : '') +

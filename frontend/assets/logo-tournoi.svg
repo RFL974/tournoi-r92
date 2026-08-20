@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tournoi">
+  <title>Tournoi</title>
+  <!-- Repère visuel NEUTRE et TEMPORAIRE (chantier Confiance, CF-4b — décision D-039).
+       Écusson géométrique simplifié, non héraldique, portant la seule lettre T (Tournoi).
+       Aucune référence à un club, aucune marque, aucun nom de produit.
+       Il sera remplacé si une identité définitive est un jour décidée. -->
+  <path d="M8 6h48v28c0 12.5-10.6 20.3-24 24C18.6 54.3 8 46.5 8 34Z" fill="#0C1C2E"/>
+  <path d="M20 20h24v6.5h-8.6V45h-6.8V26.5H20Z" fill="#B8D8F8"/>
+</svg>

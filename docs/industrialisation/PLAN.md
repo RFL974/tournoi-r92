@@ -2159,8 +2159,8 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 | **L1** | 🔴 Retirer le modèle d'autorisation de droit à l'image du dépôt public | ✅ **FAIT** — commit **`3375061`**, publié et vérifié |
 | **L6** | Réécriture générique de [`../passation.md`](../passation.md) | ✅ **FAIT** — commit **`eac23ad`**. ⭐ **Structure et procédure intégralement conservées** *(§1 à §11.4)*, **§0 ajouté** : sept prérequis, l'administrateur **décrit et non désigné**, et ce que le document **ne décide pas**. ⛔ **Plus aucune organisation, adresse, domaine ni personne nommée** |
 | **L2** | Textes de l'application — titres, métadonnées, signatures, valeurs de repli, `.ics`, commentaires devenus faux | ✅ **FAIT** — commit **`5bff881`**. ⚡ **50 points, et non 45** : le recomptage a trouvé **3 commentaires** que la première regex manquait, et ⭐ **l'`UID` du fichier calendrier**, qui portait `@generation-r92` — invisible d'une recherche sur « Génération R92 ». ⚠️ **Dette temporaire assumée** : la page Perfs est **textuellement générique**, mais son filtre reste `MOT_CLE_CLUB = 'racing'` **jusqu'à L8** |
-| **L3** | Liens institutionnels — `LIENS_ASSOCIATION`, retours vitrine, **bandeau de don supprimé** | ✅ **FAIT** — ⏳ *SHA au lot suivant.* **21 points** *(19 attendus + 2 commentaires CSS devenus faux)*. ⭐ **Le piège `tournoi.js:216` est démontré par comparaison** : la version d'avant lève `Cannot set properties of null`, celle d'après ne lève rien. ⚠️ **Les 4 liens ont été SUPPRIMÉS, pas remplacés** — ni `#`, ni faux lien générique |
-| **L4** | Identité graphique — logo neutre, favicon, retrait des blasons | ⬜ **23 points** |
+| **L3** | Liens institutionnels — `LIENS_ASSOCIATION`, retours vitrine, **bandeau de don supprimé** | ✅ **FAIT** — commit **`6c04f10`**. **21 points** *(19 attendus + 2 commentaires CSS devenus faux)*. ⭐ **Le piège `tournoi.js:216` est démontré par comparaison** : la version d'avant lève `Cannot set properties of null`, celle d'après ne lève rien. ⚠️ **Les 4 liens ont été SUPPRIMÉS, pas remplacés** — ni `#`, ni faux lien générique |
+| **L4** | Identité graphique — logo neutre, favicon, retrait des blasons | ✅ **FAIT** — ⏳ *SHA au lot suivant.* **26 points.** 🆕 **3 assets créés** *(`logo-tournoi.svg`, `logo-tournoi.png`, `grain.svg`)*, **3 supprimés** *(224 Ko)*. ⭐ **La favicon est POSÉE sur les 8 pages** — 7 n'en avaient aucune. ⛔ **Plus aucune ressource graphique distante.** ⚠️ **2 adaptations CSS minimales** : l'ancien logo était un **bandeau large**, le nouveau est **carré** — `width:100%` l'aurait étiré à 260 px de côté |
 | **L7** | Reste de la documentation active du dépôt public | ⬜ **16 points** · ⚡ **+ 4 références `CF-4` → `CF-4a`** dans [`CF-2-RESPONSABLE-TRAITEMENT.md`](CF-2-RESPONSABLE-TRAITEMENT.md) *(l. 111, 308, 546, 551)* — dette relevée pendant L0 |
 | **L5** | Backend — nom affiché de l'expéditeur ⚠️ **redéploiement** | ⬜ **4 points** |
 | **L8** | Neutralisation fonctionnelle du club — `org_club_nom`, `MOT_CLE_CLUB`, **tests** ⚠️ **redéploiement** | ⬜ **16 points** |
@@ -2171,7 +2171,13 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 >
 > ⚠️ **Comptage, et il faut le lire ainsi** : **L0 est un préalable documentaire**, ajouté après
 > coup — il ne fait pas partie des huit. **Les lots d'exécution sont L1 → L8.** À ce jour :
-> ✅ **4 sur 8 terminés** *(L1, L6, L2, L3)* · ⬜ **4 restants** *(L4, L5, L7, L8)*.
+> ✅ **5 sur 8 terminés** *(L1, L6, L2, L3, L4)* · ⬜ **3 restants** *(L5, L7, L8)*.
+>
+> ⏸️ **Réserve technique constatée en L4** : `frontend/img/icone-instagram.png` et
+> `icone-site.png` **restent** — ce ne sont **pas** des images institutionnelles *(pictogrammes
+> génériques)*, et elles sont **encore référencées** par `urlIconeEmail`, l'outillage du mécanisme
+> `LIENS_ASSOCIATION` que **D-039 #7 demande de conserver**. Les supprimer casserait ce mécanisme
+> le jour où une organisation y mettrait ses propres liens.
 
 **Opération manuelle associée — hors Git :**
 

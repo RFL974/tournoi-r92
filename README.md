@@ -95,7 +95,8 @@ tournoi-r92/
     ├── dossier-club.html    → Phase 2 : le dossier complet du club accepté (jeton)
     ├── perfs.html           → « Perfs Racing » (page interne, non liée)
     ├── modeles/             → 1 modèle PDF (demande d'autorisation FFR)
-    ├── img/                 → 5 images (blasons, logos, icônes)
+    ├── assets/              → repère visuel neutre (SVG + PNG) et grain de fond
+    ├── img/                 → 2 icônes de liens (utilisées par les emails)
     ├── README.md            → le détail de chaque page du frontend
     ├── css/                 → 6 feuilles
     │   ├── styles.css           → thème sombre (admin / saisie / perfs)

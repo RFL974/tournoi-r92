@@ -12,6 +12,27 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Un repère visuel neutre remplace les logos, et toutes les pages ont enfin une icône — 2026-08-20
+
+Dernière surface visible à porter une identité qui n'est pas la sienne : les **images**. Les pages
+et les emails affichaient le logo d'une association et un blason de club, et l'icône d'onglet de la
+page publique était chargée depuis un site extérieur.
+
+Ce qui change :
+
+- un **repère visuel neutre** — un écusson géométrique très simple portant la lettre **T** — prend
+  la place des logos et blasons, sur les pages comme dans les emails ;
+- **les huit pages ont désormais une icône d'onglet**, la même. Sept n'en avaient aucune : elles
+  s'affichaient avec l'icône par défaut du navigateur ;
+- le **grain de fond** de la page publique, jusqu'ici téléchargé depuis un autre site, est
+  maintenant produit sur place. **Plus aucune image ne vient de l'extérieur.**
+
+⚠️ **Ce symbole est temporaire, et il est fait pour se voir comme tel.** Aucun nom, aucune marque et
+aucune identité définitive n'ont été choisis : ce sera une décision à prendre plus tard. Il sert
+uniquement à ce que l'application ait un repère cohérent en attendant.
+
+⏳ **Ce qui reste** : le **nom affiché de l'expéditeur** des emails, qui vit sur le serveur.
+
 ### Les liens vers l'association et le bandeau de don disparaissent — 2026-08-20
 
 Suite du même travail : après les textes, les **liens**. L'application ne renvoyait pas seulement
@@ -34,8 +55,8 @@ Ce qui disparaît des emails envoyés aux clubs :
 « Ouvrir mon espace », « Voir la version en ligne », l'itinéraire, le partage, l'agenda. Un club
 reçoit son invitation et ouvre son dossier exactement comme avant.
 
-⚠️ **Ce qui n'a pas encore changé** : les **logos** en haut des pages et des emails, et le **nom
-affiché de l'expéditeur** des messages. Ils suivront.
+⚠️ **Ce qui n'avait pas encore changé à ce stade** : les **logos** — traités le même jour *(voir
+l'entrée ci-dessus)* — et le **nom affiché de l'expéditeur** des messages, qui reste à venir.
 
 ### Les textes de l'application ne nomment plus aucune association — 2026-08-20
 

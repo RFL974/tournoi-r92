@@ -5,6 +5,7 @@
   <!-- "viewport" = indispensable pour un affichage correct sur téléphone (mobile-first) -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Administration du tournoi</title>
+  <link rel="icon" type="image/svg+xml" href="assets/logo-tournoi.svg">
 
   <!-- Polices de la charte (Bebas Neue, Barlow Condensed, Barlow) via Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,9 +28,9 @@
   <div class="conteneur">
 
     <header class="entete">
-      <!-- Logo Génération R92 (déposer le fichier dans frontend/img/logo-r92.png).
-           onerror : tant que le fichier n'est pas là, on masque l'image (pas d'icône cassée). -->
-      <img class="logo" src="img/logo-r92.png" alt="Génération R92 — Ciel &amp; Blanc"
+      <!-- Repère visuel neutre et temporaire (voir frontend/assets/logo-tournoi.svg).
+           onerror : si le fichier manquait, on masque l'image plutôt qu'une icône cassée. -->
+      <img class="logo" src="assets/logo-tournoi.svg" alt=""
            onerror="this.style.display='none'">
       <h1>Administration du tournoi</h1>
     </header>
