@@ -38,16 +38,80 @@ Ouvrir l'URL dans un navigateur en ajoutant un paramètre `action` :
 
 ### ⚠️ REDÉPLOYER LE SERVEUR — la fiche complète
 
-> **À suivre en entier, à chaque fois.** Les gestes 2 et 4 sont ceux qu'on oublie, et ce sont
-> précisément ceux qui font la différence entre une preuve et une illusion de preuve.
+> **À suivre en entier, à chaque fois.** Les gestes **1, 2 et 4** comportent chacun des contrôles :
+> ⛔ **aucun ne doit être tenu pour acquis sans avoir été effectué.** C'est là que se joue la
+> différence entre une preuve et une illusion de preuve.
 
-**1. Coller `Code.gs`**
-Copier tout [`backend/Code.gs`](../backend/Code.gs) → coller dans le fichier `Code.gs` de l'éditeur
-Apps Script.
+> 🔴 **UN CONTRÔLE DE VIE N'EST PAS UN CONTRÔLE DE VERSION** *(D-040, 2026-08-20)*
+>
+> Le `ping` prouve que le serveur **répond**. Il ne dit **jamais quelle version** il sert : sa
+> réponse est **la même avant et après** n'importe quelle modification.
+>
+> ⭐ **La règle générale, et elle vaut pour tout contrôle** : *un contrôle qui donne le **même
+> résultat avant et après** ne prouve **rien** sur la version.* Une preuve de version doit être
+> **discriminante**.
+>
+> ⚠️ **Ce n'est pas une précaution théorique — c'est arrivé.** Le **2026-08-20**, une version a été
+> publiée en croyant `Code.gs` recopié : le `ping` était **vert**, les tests donnaient
+> **`703/703 OK, 0 FAIL`**, et **l'ancien `Code.gs` était toujours présent chez Google**.
+>
+> ⭐ **Pourquoi aucun des deux voyants ne pouvait le voir, et la nuance est importante :**
+>
+> - le **`ping`** rend **la même réponse** quelle que soit la version ⇒ il ne discrimine **rien** ;
+> - les **703 vérifications**, elles, **s'exécutent bel et bien contre le `Code.gs` du projet** et
+>   **détecteraient** une régression sur un comportement qu'elles couvrent. ⛔ **Mais elles ne
+>   couvraient pas la modification en cause** — le nom d'expéditeur n'est touché par **aucun**
+>   test. Le bilan était donc **vert et sincère**, et **muet sur ce qui avait changé**.
+>
+> ➡️ **La leçon** : un bilan de tests prouve **une non-régression sur ce qu'il couvre**. Il ne
+> devient une preuve de version **que si au moins une vérification échoue sur l'ancien code** —
+> autrement dit **que si elle est discriminante pour la modification du jour**. *(Le second repère
+> du geste 4, le **nombre de lignes**, relève d'autre chose : il atteste l'**identité du fichier de
+> tests** collé, pas celle de `Code.gs`.)*
+>
+> **Il a fallu un contrôle discriminant dans l'éditeur pour voir l'erreur.**
+>
+> **Les quatre états à ne jamais confondre :**
+>
+> ```
+>   SOURCE            →   ÉDITEUR           →   VERSION DÉPLOYÉE   →   COMPORTEMENT OBSERVÉ
+>   (le dépôt Git)        (geste 1 et 2)        (geste 3)              (ce que voit l'utilisateur)
+>   prouvé par            prouvé par les        prouvé par le          prouvé SEULEMENT par
+>   git / une empreinte   témoins discriminants geste 3, et lui seul   un résultat constaté
+> ```
+>
+> ⛔ **Aucun de ces quatre états ne prouve le suivant.** Un lot dont l'effet ne s'observe que **hors
+> du dépôt** *(un email reçu, une page servie)* exige une preuve **hors du dépôt**.
+
+**1. Coller `Code.gs` — puis ENREGISTRER, puis VÉRIFIER**
+Copier tout [`backend/Code.gs`](../backend/Code.gs) → **⌘A** dans le fichier `Code.gs` de l'éditeur
+Apps Script *(tout sélectionner : coller sans sélectionner laisserait l'ancien code en dessous)* →
+**⌘V** → ⚠️ **⌘S**.
+
+> ⚠️ **Enregistrer explicitement avant de poursuivre.** Ne jamais considérer qu'un collage est
+> acquis parce qu'il a été fait : **on enregistre, puis on vérifie ce qui est réellement là.**
+>
+> ⛔ **Ce garde-fou ne repose pas sur une cause démontrée.** L'incident du **2026-08-20** a établi
+> **qu'un contenu attendu n'était pas présent chez Google** ; il n'a **pas** permis d'établir
+> **quel geste** avait manqué — collage non fait, collage incomplet, ou état non enregistré. **Le
+> contrôle qui suit vaut donc pour les trois cas.**
+
+Puis **trois contrôles dans l'éditeur**, avant d'aller plus loin :
+
+| Ce qu'on vérifie | Comment |
+|---|---|
+| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs`. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* |
+| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne |
+| ⭐ **Une chaîne témoin introduite par le lot** | Une recherche qui donne **un résultat DIFFÉRENT avant et après** la modification — et, quand c'est possible, **son contraire** *(l'ancienne chaîne, attendue à 0)* |
+
+> ⚠️ **Le piège des caractères échappés, et il a failli faire conclure à un échec.** Une apostrophe
+> dans une chaîne du code s'écrit `\'` : chercher `L'organisation du tournoi` renvoie **0** sur un
+> fichier **parfaitement collé**. ➡️ **Choisir un témoin sans apostrophe, sans accent et sans
+> guillemet** — ici `organisation du tournoi`.
 
 **2. Coller `Tests.gs` — LE FICHIER QU'ON OUBLIE**
-Copier tout [`backend/Tests.gs`](../backend/Tests.gs) → coller dans le fichier `Test.gs`
-*(singulier chez Google)*.
+Copier tout [`backend/Tests.gs`](../backend/Tests.gs) → **⌘A**, **⌘V**, ⚠️ **⌘S** dans le fichier
+`Test.gs` *(singulier chez Google)*. Son identité, elle, est prouvée au **geste 4**.
 
 **3. Publier une nouvelle version du MÊME déploiement**
 Sinon l'URL change et il faudrait la remettre à jour dans `config.js`. Pour garder la même URL :

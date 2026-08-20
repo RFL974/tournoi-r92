@@ -2610,3 +2610,75 @@ locale — **et** sur le site réellement servi par GitHub Pages, qui peut diff�
 >   réponse)* — elle les **ordonne**, elle ne les ferme pas ;
 > - ❌ Elle **ne réécrit pas l'histoire** : traces datées, audits et historique Git sont hors
 >   d'atteinte.
+
+---
+
+### D-040 — Une preuve de version doit être **discriminante**, et l'enregistrement fait partie du geste
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-20 |
+| **Chantier** | 🛡️ **Confiance** — née du lot **CF-4b / L5**, mais ⭐ **de portée permanente** |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Couvre** | Le renforcement de [`../deploiement.md`](../deploiement.md) : ① l'**enregistrement** explicite après collage · ② un **contrôle discriminant de `Code.gs`** avant publication · ③ la distinction **SOURCE → ÉDITEUR → VERSION DÉPLOYÉE → COMPORTEMENT OBSERVÉ** |
+| **Voisines** | **D-035** *(le `CHANGELOG` entre dans la règle de la carte)* · `CLAUDE.md` **§8 quater** *(source unique)* et **§13.6** *(ce qui ne se vérifie pas depuis le dépôt)* |
+
+**Le problème posé — et il s'est produit, il n'est pas théorique**
+
+> Le **2026-08-20**, une version Apps Script a été publiée en croyant `backend/Code.gs` recopié
+> chez Google. **Trois voyants étaient au vert** : le `ping` répondait, les tests donnaient
+> **`703/703 OK, 0 FAIL`**, et une nouvelle version avait bien été publiée. ⛔ **L'ancien `Code.gs`
+> était pourtant toujours présent chez Google** — un email réel, envoyé ensuite, portait encore
+> l'ancien nom d'expéditeur.
+>
+> ⛔ **Ce qui n'a PAS été établi, et ne doit pas être présenté comme tel** : **quel geste avait
+> manqué**. Collage non effectué, collage incomplet, ou état non enregistré — **les trois restent
+> possibles**. Ce qui est démontré, c'est **l'absence du contenu attendu chez Google**, rien de
+> plus.
+>
+> 🎯 **Le défaut n'était ni de l'étourderie, ni un manque de rigueur : c'était une ASYMÉTRIE de la
+> procédure.** Elle portait **deux repères sur `Tests.gs`** — un bilan et un nombre de lignes — et
+> **aucun contrôle sur `Code.gs`** : le geste 1 était le seul des cinq à n'être suivi de rien.
+>
+> ⚠️ **Et une nuance qu'il faut écrire, sous peine de mal accuser les tests** : les 703
+> vérifications **s'exécutent contre le `Code.gs` du projet** et **détecteraient** une régression
+> sur un comportement qu'elles couvrent. Leur silence ce jour-là n'était pas une faiblesse : ⛔
+> **aucune d'elles ne touche le nom d'expéditeur.** Le bilan était **vert, sincère, et sans rapport
+> avec la modification du jour**. *(Le second repère, le **nombre de lignes**, atteste bien, lui,
+> l'identité du fichier de tests collé — pas celle de `Code.gs`.)*
+
+**Ce qui est décidé**
+
+> ⭐ **La règle, en une phrase :**
+>
+> > **Un contrôle qui donne le MÊME résultat avant et après une modification ne prouve RIEN sur la
+> > version. Une preuve de version doit être discriminante.**
+>
+> **Trois conséquences pratiques, inscrites dans la fiche de redéploiement :**
+>
+> | | |
+> |---|---|
+> | **① L'enregistrement est un geste, pas un réflexe supposé** | Après collage, **enregistrer explicitement avant de poursuivre** — la fiche ne le demandait **nulle part**. ⛔ **Ce n'est pas la cause démontrée de l'incident** *(elle reste inconnue)* : c'est un **garde-fou**, qui couvre aussi bien un collage manqué qu'un état non enregistré |
+> | **② `Code.gs` doit être contrôlé avant publication** | Nombre de lignes · dernière fonction déclarée · ⭐ **une chaîne témoin introduite par le lot**, avec **son contraire** quand il existe *(l'ancienne chaîne, attendue à 0)* |
+> | **③ Quatre états, jamais confondus** | **SOURCE** *(le dépôt)* → **ÉDITEUR** *(collé et enregistré)* → **VERSION DÉPLOYÉE** *(le geste 3, et lui seul)* → **COMPORTEMENT OBSERVÉ**. ⛔ **Aucun ne prouve le suivant** |
+>
+> ⚠️ **Et un piège à connaître, découvert le jour même** : une apostrophe dans une chaîne du code
+> s'écrit `\'`. Chercher `L'organisation du tournoi` renvoie **0** sur un fichier **parfaitement
+> collé**. ➡️ **Un témoin se choisit sans apostrophe, sans accent et sans guillemet.**
+
+**Ce que la décision NE demande PAS**
+
+> - ❌ **Pas** une sixième étape dans la fiche : elle se lit **debout, dans l'urgence**, et
+>   l'alourdir la rendrait **moins suivie, pas plus sûre**. Les trois ajouts se logent **dans les
+>   gestes existants** ;
+> - ❌ **Pas** d'abandonner les deux nombres de `Tests.gs` — ils **restent** la preuve d'identité de
+>   ce fichier ;
+> - ❌ **Pas** d'outillage nouveau : `clasp` n'est **pas installé**, et l'installer pour recalculer
+>   une empreinte chez Google serait **disproportionné** *(`CLAUDE.md` §10)* ;
+> - ❌ **Pas** de passe rétroactive sur les déploiements passés — on applique la règle **à ce qu'on
+>   fait**, comme **§8 quater**.
+
+**Portée**
+
+> ⭐ **Permanente, et elle servira avant la fin de CF-4b** : le lot **L8** exige lui aussi un
+> redéploiement. La règle vaut ensuite pour **tout chantier** touchant le serveur.
