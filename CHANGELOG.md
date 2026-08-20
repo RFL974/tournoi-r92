@@ -12,6 +12,31 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Les liens vers l'association et le bandeau de don disparaissent — 2026-08-20
+
+Suite du même travail : après les textes, les **liens**. L'application ne renvoyait pas seulement
+vers un tournoi — elle renvoyait vers le site, les réseaux sociaux, la page de contact et la page de
+don d'une association qui **n'a pas décidé d'utiliser ce logiciel**.
+
+Ce qui disparaît de la page publique :
+
+- le **bandeau bleu « Soutenez l'association — Je fais un don »**, entièrement : le texte, le lien,
+  le bouton et sa mise en forme ;
+- le lien **« ← Retour au site »** de l'en-tête, et le fait que le logo était cliquable ;
+- les liens **« Site de l'association »** et **« Contact »** du pied de page.
+
+Ce qui disparaît des emails envoyés aux clubs :
+
+- la **barre d'icônes** du pied *(deux comptes Instagram et deux sites)*, dans la version HTML
+  comme dans la version texte. Le pied ne montre plus aucune icône, sans laisser d'espace vide.
+
+⭐ **Tous les liens qui servent au tournoi sont intacts** : « Répondre à l'invitation »,
+« Ouvrir mon espace », « Voir la version en ligne », l'itinéraire, le partage, l'agenda. Un club
+reçoit son invitation et ouvre son dossier exactement comme avant.
+
+⚠️ **Ce qui n'a pas encore changé** : les **logos** en haut des pages et des emails, et le **nom
+affiché de l'expéditeur** des messages. Ils suivront.
+
 ### Les textes de l'application ne nomment plus aucune association — 2026-08-20
 
 Jusqu'ici, l'application se présentait comme celle d'une association nommée : dans l'onglet du
@@ -36,9 +61,9 @@ Ce qui change, concrètement :
 ⚠️ **Quand le tournoi a un nom**, c'est ce nom qui s'affiche partout, comme avant. Seul le nom de
 repli — utilisé quand le champ est vide — devient générique.
 
-⚠️ **Ce lot ne traite que les textes.** Les logos, les liens vers les réseaux sociaux, le bandeau de
-don et le nom affiché de l'expéditeur des emails **n'ont pas encore changé** : ils suivront. Un
-email reste donc, pour l'instant, partiellement identifié par son en-tête et son expéditeur.
+⚠️ **Ce lot ne traitait que les textes.** Les liens et le bandeau de don ont suivi le même jour
+*(voir l'entrée ci-dessus)* ; **les logos et le nom affiché de l'expéditeur des emails n'ont pas
+encore changé.**
 
 ### Coupe + Plateau redevient proposé, mais on est prévenu avant de le choisir — 2026-08-19
 Ce format avait disparu des cartes de l'administration : il comporte des **phases finales**

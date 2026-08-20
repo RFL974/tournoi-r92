@@ -213,7 +213,6 @@ function estPublie() {
 function appliquerPublication() {
   const pub = estPublie();
   document.getElementById('tournoi-avenir').hidden = pub;
-  document.getElementById('don-lien').hidden = !pub;
   document.querySelector('.live-barre').hidden = !pub;
   document.querySelector('.onglets').hidden = !pub;
   document.getElementById('vues').hidden = !pub;
@@ -245,7 +244,6 @@ function appliquerSponsors(premier) {
   const zoneRail = document.getElementById('sp-rail');
   const zoneBarre = document.getElementById('sp-barre');
   const zoneMur = document.getElementById('sp-mur');
-  const don = document.getElementById('don-lien');
   if (!zoneBandeau) return;
 
   const montrer = !!(sponsorsReg && sponsorsReg.actifs && sponsors.length && estPublie());
@@ -254,7 +252,6 @@ function appliquerSponsors(premier) {
       if (z) { z.hidden = true; z.innerHTML = ''; }
     });
     document.body.classList.remove('sp-barre-active');
-    if (don) don.classList.remove('don-bandeau-bas');
     sponsorsSignature = '';
     return;
   }
@@ -270,8 +267,6 @@ function appliquerSponsors(premier) {
     const htmlBandeau = sponsorsRendreBandeau(sponsors);
     zoneBandeau.innerHTML = htmlBandeau;
     zoneBandeau.hidden = !htmlBandeau;
-    // Arbitrage : un seul appel commercial au-dessus du contenu. Le bandeau de don descend.
-    if (don) don.classList.toggle('don-bandeau-bas', !!htmlBandeau);
 
     // B — rail (ordinateur) et barre basse (téléphone) : même contenu, deux rendus.
     const htmlRail = sponsorsRendreRail(sponsors);

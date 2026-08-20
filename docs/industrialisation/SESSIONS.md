@@ -6467,3 +6467,85 @@ avec un `document` factice)* :
 > ⚠️ **Documents ACTIFS** : **`CHANGELOG.md` mis à jour** — c'est le premier lot de CF-4b qu'un
 > utilisateur remarque. ✅ **Aucune entrée datée modifiée.** `README.md`, `docs/architecture.md` et
 > `backend/README.md` vérifiés : ils ne décrivent **aucun** des textes touchés.
+
+---
+
+## 10. Lot L3 — les liens institutionnels et le bandeau de don
+
+### ⭐ Le piège annoncé, démontré par comparaison
+
+`tournoi.js:216` faisait `document.getElementById('don-lien').hidden = !pub;` **sans test
+d'existence**. Retirer le seul HTML aurait cassé la page publique **au chargement**, et
+`node --check` **ne l'aurait pas vu** — il vérifie la syntaxe, jamais l'exécution.
+
+**Le même test d'exécution, lancé sur les deux versions** *(la vraie fonction `appliquerPublication`,
+dans un DOM où `#don-lien` renvoie `null`)* :
+
+| Version | Résultat |
+|---|---|
+| **Avant L3** | ❌ `TypeError: Cannot set properties of null (setting 'hidden')` |
+| **Après L3** | ✅ aucune erreur — dans les **deux** états, tournoi publié et non publié |
+
+> 🎯 **C'est la différence entre « je crois » et « je montre ».** Le piège était réel : la preuve
+> n'est pas que le code marche, c'est que **l'ancien code, lui, cassait**.
+
+⚠️ **Traitement retenu : suppression, pas garde.** Le bandeau disparaît définitivement dans l'état
+neutre — ajouter un `if (don)` aurait conservé du code mort. **Les 4 références ont donc été
+retirées**, et la ligne `pub` qui sert à cinq autres éléments a été **laissée intacte** : elle est
+utilisée ailleurs.
+
+### Le comptage : 21 points, et non 19
+
+| Ce qui s'ajoutait aux 19 | Pourquoi |
+|---|---|
+| `tournoi-public.css:156` | Le commentaire de `.carte-app` expliquait la colonne flex **par le réordonnancement du bandeau de don** — devenu faux *(§8 ter)*. ⚠️ **La colonne flex elle-même a été conservée** : les autres `order:` en dépendent |
+| `sponsors.css:148` | Même chose, pour `.don-bandeau-bas` |
+
+### ⚠️ Deux pièges de rendu évités
+
+| | |
+|---|---|
+| **Le logo aurait grossi** | `<a class="logo">` enveloppait l'image, et **c'est la règle `.logo img` qui lui donne ses 48 px**. Retirer la balise aurait affiché l'image en **700 px**. ➡️ Le lien devient une `<div class="logo">` : la classe survit, la destination disparaît |
+| **Le pied d'email aurait gardé une marge** | `barreLiensEmail()` avec une liste vide produisait `<table style="margin:16px auto 0;"><tr></tr></table>`. ➡️ Elle renvoie désormais **chaîne vide**. Même correction côté texte : le bloc est conditionnel, sinon deux lignes vides se suivaient |
+
+### Ce qui a été supprimé, jamais remplacé
+
+⛔ **Aucun lien n'a été remplacé par `#` ni par un faux lien générique** — un bouton mort est pire
+qu'un bouton absent. **Les éléments ont été retirés :** bandeau de don *(texte, lien, conteneur,
+commentaire)* · « ← Retour au site » · le paragraphe `.pied-liens` en entier · les 4 destinations de
+`LIENS_ASSOCIATION`.
+
+⭐ **Le mécanisme, lui, est conservé** : `LIENS_ASSOCIATION` reste déclaré, **vide**, avec un
+commentaire qui dit pourquoi. ⛔ **Aucun nouveau système de configuration n'a été créé** — ce serait
+à l'organisation adoptante d'en décider, le jour venu *(CF-14)*.
+
+### CSS retiré — orphelin uniquement
+
+`.don-bandeau` *(section 9 entière, 3 règles)* · `.don-bandeau { order: 20; }` ·
+`.don-bandeau.don-bandeau-bas` · `.lien-retour` *(2 règles)* · `.pied-liens` et `.pied-sep`
+*(4 règles)*. ⛔ **Aucun nettoyage opportuniste** : `.logo img` conservé, `.carte-app` conservée,
+`.inv-pied-liens` *(dossier, mécanisme configurable)* **non touchée**, variables `--r92-*` hors
+périmètre.
+
+### Contrôles
+
+| | |
+|---|---|
+| **Syntaxe** | ✅ `node --check`, 30 fichiers, 0 erreur |
+| **Exécution** | ✅ `appliquerPublication()` sans `#don-lien`, deux états — **et le témoin d'avant échoue** |
+| **Emails** | ✅ `barreLiensEmail()` exécutée : renvoie `""`, **aucune URL** · version texte : **0 ligne de liens** |
+| **Liens fonctionnels** | ✅ « Répondre à l'invitation », « Ouvrir mon espace », « Voir la version en ligne », itinéraire, agenda — **tous présents** |
+| **Recherches UTF-8** | ✅ **0** pour `generationr92`, `racing92.fr`, `instagram.com`, `don-lien`, `don-bandeau`, `faire-un-don` |
+
+### ⚠️ Ce qui reste, et à quel lot
+
+| Ce qui reste | Où | Lot |
+|---|---|---|
+| Logo, `alt`, favicon, `noise.svg` | `tournoi.html:9,35,135` · `admin.html:30,32` · `tournoi-public.css:54` | **L4** |
+| Nom d'expéditeur | `Code.gs` | **L5** |
+| 🟡 **3 commentaires de style** nommant la vitrine | `theme-r92.css:409` · `tournoi-public.css:5` · `tournoi.html:16` | ⚠️ **Signalés, non rattachés** — ce sont des commentaires décrivant l'**origine d'une charte graphique**, ni liens actifs ni attributions. **À trancher avec L4**, qui traite l'identité visuelle |
+
+> ⚠️ **Documents ACTIFS** : `CHANGELOG.md` mis à jour — **et la phrase de l'entrée L2 qui annonçait
+> que liens et don « n'ont pas encore changé » a été rendue exacte**, car elle datait du même jour et
+> devenait fausse en quelques heures. ⛔ **Aucune entrée publiée n'a été réécrite.** `README.md`,
+> `docs/architecture.md` et `backend/README.md` vérifiés : aucun ne décrit ces liens.

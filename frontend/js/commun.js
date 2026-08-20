@@ -299,11 +299,8 @@ const FFR_POURQUOI_FORMAT = 'Il suit la doctrine FFR de l\'École de Rugby : un 
   + 'départage. En cas d\'effectif impair, l\'équipe supplémentaire rejoint la poule basse : '
   + 'les enfants qui ont le plus besoin de jouer jouent plus.';
 
-/* Liens OFFICIELS du club et de l'association (validés par Romain, 2026-08-02) — affichés en
-   ICÔNES (jamais en lien brut) dans le pied de l'email d'invitation ; réutilisables ailleurs. */
-const LIENS_ASSOCIATION = [
-  { icone: 'instagram', libelle: 'Racing Club de France', url: 'https://www.instagram.com/racingclubdefrancerugby?igsh=cWxtNTM0YXduN3Qy' },
-  { icone: 'instagram', libelle: 'Génération R92', url: 'https://www.instagram.com/generationr92?igsh=MWNlMnFqaDZhOGMwNg==' },
-  { icone: 'site', libelle: 'Site du Racing', url: 'https://www.racing92.fr' },
-  { icone: 'site', libelle: 'Site Génération R92', url: 'https://rfl974.github.io/boutique-r92/index.html' }
-];
+/* Liens officiels affichés en ICÔNES (jamais en lien brut) dans le pied des emails.
+   ⚠️ VOLONTAIREMENT VIDE : aucune destination institutionnelle n'est codée en dur tant qu'aucune
+   organisation n'a décidé d'adopter l'application (chantier Confiance, CF-4b — décision D-039).
+   Le rendu gère la liste vide : le pied de l'email n'affiche alors simplement aucune icône. */
+const LIENS_ASSOCIATION = [];

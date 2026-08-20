@@ -102,15 +102,6 @@ a:hover { text-decoration: underline; }
   padding-bottom: 12px;
 }
 .logo img { height: 48px; width: auto; display: block; }
-.lien-retour {
-  color: var(--ciel);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  padding: 8px 12px;
-  border-radius: 6px;
-}
-.lien-retour:hover { background: var(--navy-clair); color: var(--blanc); text-decoration: none; }
 
 /* ---------------------------------------------------------
    4. BANDEAU DE TITRE (dégradé navy + fine barre bleue)
@@ -153,9 +144,8 @@ a:hover { text-decoration: underline; }
    5. ZONE DE CONTENU + CARTE
    --------------------------------------------------------- */
 .section { padding: 32px 0 48px; }
-/* Colonne souple : permet de RÉORDONNER le bandeau de don quand un bandeau partenaire
-   occupe le haut de page (voir .don-bandeau-bas). Sans partenaire, l'ordre naturel est
-   conservé au pixel près — la page reste exactement celle d'avant. */
+/* Colonne souple : l'ordre d'affichage des blocs est piloté par les `order:` ci-dessous,
+   indépendamment de leur position dans le HTML. */
 .carte-app {
   background: var(--blanc);
   border: 1px solid var(--bordure);
@@ -166,7 +156,6 @@ a:hover { text-decoration: underline; }
   flex-direction: column;
 }
 #tournoi-avenir { order: 10; }
-.don-bandeau    { order: 20; }
 .tete-live      { order: 30; }
 #vues           { order: 40; }
 #sp-mur         { order: 50; }
@@ -300,32 +289,6 @@ a:hover { text-decoration: underline; }
 @media (max-width: 720px) {
   .tete-live { flex-direction: column; }
   .tete-cote { width: 100%; }
-}
-
-/* ---------------------------------------------------------
-   9. BANDEAU DE DON (bleu vif de la charte, ressort comme un CTA)
-   --------------------------------------------------------- */
-.don-bandeau {
-  display: block;
-  text-align: center;
-  background: linear-gradient(90deg, var(--bleu-vif), #1f79c6);
-  color: var(--blanc);
-  text-decoration: none;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: 0.3px;
-  padding: 11px 14px;
-  border-radius: 10px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 14px rgba(46, 143, 224, 0.25);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.don-bandeau strong { text-decoration: underline; text-underline-offset: 3px; }
-.don-bandeau:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(46, 143, 224, 0.35);
-  text-decoration: none;
 }
 
 /* ---------------------------------------------------------
@@ -611,10 +574,6 @@ tr.cl-vainqueur .col-equipe { font-weight: 700; color: var(--navy); }
   clip-path: polygon(0 24px, 100% 0, 100% 100%, 0 100%);
 }
 .pied-logo { height: 52px; width: auto; margin: 0 auto 14px; }
-.pied-liens { margin: 6px 0 14px; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; }
-.pied-liens a { color: var(--ciel); font-weight: 600; }
-.pied-liens a:hover { color: var(--blanc); }
-.pied-sep { margin: 0 10px; color: #7f9bb8; }
 .pied p { font-size: 0.85rem; color: #7f9bb8; }
 
 /* ---------------------------------------------------------

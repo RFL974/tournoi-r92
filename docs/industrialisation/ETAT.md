@@ -9,7 +9,24 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-20 — ✍️ **L'APPLICATION NE SE PRÉSENTE PLUS COMME CELLE D'UNE
+**Dernière mise à jour** : 2026-08-20 *(suite)* — 🔗 **L'APPLICATION NE RENVOIE PLUS VERS UNE
+ASSOCIATION.** Le lot **L3** a retiré **21 points** : les **4 destinations institutionnelles codées
+en dur** *(deux comptes Instagram, deux sites)*, le **retour vers la vitrine**, les liens **« Site de
+l'association »** et **« Contact »** du pied, et ⭐ **le bandeau de don, entièrement** — texte, lien,
+conteneur, 4 références JavaScript et 5 règles CSS devenues orphelines.
+⭐ **Le piège annoncé est démontré, pas supposé** : le même test d'exécution lève
+`Cannot set properties of null` sur la version **d'avant** et **rien** sur celle d'après.
+⚠️ **Les liens ont été SUPPRIMÉS, jamais remplacés** — ni `#`, ni faux lien générique : un bouton
+mort aurait été pire que pas de bouton. ✅ **Les liens fonctionnels sont intacts** *(répondre,
+ouvrir son espace, voir en ligne, itinéraire, agenda)*.
+⚠️ **Ce qui reste, et c'est attendu** : les **logos** *(L4)* et le **nom d'expéditeur** *(L5)*. Un
+email n'est donc pas encore neutre **visuellement**.
+📊 **L0** = préalable · **4 lots d'exécution sur 8 terminés** *(L1, L6, L2, L3)* · **4 restants**
+*(L4, L5, L7, L8)*.
+⛔ **Aucun backend, aucun test, aucun déploiement Google, aucun email, aucune opération sur le
+classeur.**
+
+*Rappel de la mise à jour précédente — 2026-08-20* : ✍️ **L'APPLICATION NE SE PRÉSENTE PLUS COMME CELLE D'UNE
 ASSOCIATION.** Le lot **L2** de CF-4b a neutralisé **50 points de texte** : onglets du navigateur,
 métadonnées de partage, en-têtes et signatures des **deux emails** *(HTML **et** texte)*, **pages
 publiques miroirs**, fichier d'agenda, page Perfs, et **4 commentaires** devenus faux.
@@ -335,17 +352,15 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS — 3 lots d'exécution sur 8.** ✅ **L0** *(préalable documentaire, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ ⭐ **L2** *(50 points de texte)* · ⬜ **L3, L4, L5, L7, L8** · 🔧 **M1** *(classeur, hors Git)* en attente d'autorisation |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS — 4 lots d'exécution sur 8.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`, 50 points)* · ✅ ⭐ **L3** *(21 points, liens et don)* · ⬜ **L4, L5, L7, L8** · 🔧 **M1** *(classeur, hors Git)* en attente d'autorisation |
 | 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
 | **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 | 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |
 
-**La prochaine étape** est le **lot L3 de CF-4b** — les **19 points de liens institutionnels** :
-`LIENS_ASSOCIATION`, les retours vers la vitrine, et la **suppression complète du bandeau de don**.
-🔴 **Un piège y est déjà enregistré** : `tournoi.js:216` fait
-`document.getElementById('don-lien').hidden = !pub;` **sans test d'existence** — retirer le seul HTML
-casserait la page publique, et `node --check` **ne le verrait pas**. **L3 exige un contrôle
-d'exécution ciblé.** ⚠️ **CF-4a**
+**La prochaine étape** est le **lot L4 de CF-4b** — l'**identité graphique** : un logo neutre à
+créer, la **favicon à poser sur les 7 pages qui n'en ont aucune**, et le retrait des blasons.
+⚠️ **Deux formats seront nécessaires** *(SVG pour le web, PNG pour les emails, qui n'affichent pas le
+SVG)*, et **trois ressources sont hébergées chez la vitrine**, pas dans ce dépôt. ⚠️ **CF-4a**
 *(mentions légales)* reste **le seul écart au regard d'un texte extérieur**, et **CF-3** reste
 suspendue à la décision préparée par CF-2.
 

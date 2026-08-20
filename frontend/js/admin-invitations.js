@@ -45,8 +45,10 @@ function urlIconeEmail(nom) {
 }
 
 /** Barre des liens officiels (LIENS_ASSOCIATION, commun.js) : une ICÔNE cliquable + son
- *  libellé sous chacune — jamais de lien brut (décision Romain). Centrée dans le pied. */
+ *  libellé sous chacune — jamais de lien brut (décision Romain). Centrée dans le pied.
+ *  Liste vide (cas actuel) ⇒ chaîne vide : aucun tableau, aucune marge résiduelle. */
 function barreLiensEmail(A) {
+  if (!LIENS_ASSOCIATION.length) return '';
   const cellules = LIENS_ASSOCIATION.map(function (l) {
     return '<td align="center" style="padding:0 12px;">'
       + '<a href="' + echapper(l.url) + '" style="text-decoration:none;">'
@@ -560,11 +562,14 @@ function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse, lien
   if (c2.length) L.push('Contact : ' + c2.join(' · '));
   L.push('');
   L.push('Voir la version en ligne : ' + (lienInvitation || lienInvitationPublique()));
-  L.push('');
   // Liens officiels (icônes dans l'email HTML ; en texte, l'URL est le seul véhicule possible).
-  LIENS_ASSOCIATION.forEach(function (l) {
-    L.push((l.icone === 'instagram' ? 'Instagram ' : '') + l.libelle + ' : ' + l.url);
-  });
+  // Liste vide (cas actuel) ⇒ aucun bloc, et pas de ligne vide en trop.
+  if (LIENS_ASSOCIATION.length) {
+    L.push('');
+    LIENS_ASSOCIATION.forEach(function (l) {
+      L.push((l.icone === 'instagram' ? 'Instagram ' : '') + l.libelle + ' : ' + l.url);
+    });
+  }
   L.push('');
   L.push('Au plaisir de vous accueillir,');
   L.push('L\'organisation du tournoi');
