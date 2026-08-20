@@ -5064,9 +5064,9 @@ function modifierClubInvite(classeur, data) {
  */
 function envoyerEmailAvec(destinataire, sujet, corps, expediteur) {
   if (expediteur) {
-    GmailApp.sendEmail(destinataire, sujet, corps, { name: 'Génération R92', from: expediteur });
+    GmailApp.sendEmail(destinataire, sujet, corps, { name: 'L\'organisation du tournoi', from: expediteur });
   } else {
-    MailApp.sendEmail({ to: destinataire, subject: sujet, body: corps, name: 'Génération R92' });
+    MailApp.sendEmail({ to: destinataire, subject: sujet, body: corps, name: 'L\'organisation du tournoi' });
   }
 }
 
@@ -5079,11 +5079,11 @@ function envoyerEmailAvec(destinataire, sujet, corps, expediteur) {
  */
 function envoyerEmailHtml(destinataire, sujet, html, texte, afficheBlob, expediteur) {
   if (expediteur) {
-    var opt = { htmlBody: html, name: 'Génération R92', from: expediteur };
+    var opt = { htmlBody: html, name: 'L\'organisation du tournoi', from: expediteur };
     if (afficheBlob) opt.inlineImages = { affiche: afficheBlob };
     GmailApp.sendEmail(destinataire, sujet, texte, opt);
   } else {
-    var msg = { to: destinataire, subject: sujet, body: texte, htmlBody: html, name: 'Génération R92' };
+    var msg = { to: destinataire, subject: sujet, body: texte, htmlBody: html, name: 'L\'organisation du tournoi' };
     if (afficheBlob) msg.inlineImages = { affiche: afficheBlob };
     MailApp.sendEmail(msg);
   }

@@ -9,7 +9,26 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-20 *(suite 2)* — 🛡️ **L'APPLICATION N'AFFICHE PLUS AUCUN LOGO
+**Dernière mise à jour** : 2026-08-20 *(suite 3)* — 📤 **LE DÉPÔT NE DEMANDE PLUS D'ENVOYER AU NOM
+D'UNE ASSOCIATION — MAIS LE SERVEUR EN SERVICE, LUI, N'A PAS ENCORE CHANGÉ.** Le lot **L5** est
+découpé en deux phases, et **seule la première est faite**.
+✅ **L5-A** : **4 substitutions littérales** dans `backend/Code.gs` — `name: 'Génération R92'`
+devient `name: 'L\'organisation du tournoi'` dans `envoyerEmailAvec` et `envoyerEmailHtml`.
+⭐ **Quatre actions serveur en héritent** : `envoyerInvitationClub`, `envoyerInvitationsGroupe`,
+`envoyerDossierEmail` et `envoyerFeuilleJour`.
+✅ **`backend/Tests.gs` est INTACT** — re-vérifié : **aucun des 703 tests ne couvre le nom
+d'expéditeur**. Les deux repères de [`../deploiement.md`](../deploiement.md) restent donc
+**`703/703`** et **`4244`**, et ce document n'a pas été modifié.
+⛔ **L5-B N'EST PAS FAITE** : le backend **n'a pas été redéployé**. ⚠️ **Un email envoyé aujourd'hui
+partirait toujours sous l'ancien nom.**
+🎯 **Et même après redéploiement, le code ne prouvera rien du nom réellement affiché** : seul un
+message **reçu** peut l'établir. ⛔ **Aucun envoi n'a eu lieu, et aucun n'aura lieu sans autorisation
+explicite.**
+📊 **L0** = préalable · **5 lots d'exécution sur 8 terminés** · 🚧 **L5 EN COURS** · ⬜ **L7, L8**.
+⛔ **Aucun test modifié, aucun frontend touché, aucune configuration, aucun déploiement, aucun
+email.**
+
+*Rappel de la mise à jour précédente — 2026-08-20 (suite 2)* : 🛡️ **L'APPLICATION N'AFFICHE PLUS AUCUN LOGO
 QUI NE SOIT PAS LE SIEN.** Le lot **L4** a remplacé les logos et blasons par un **repère visuel
 neutre et temporaire** — un écusson géométrique portant la seule lettre **T**. ⛔ **Ni ballon, ni 92,
 ni R, ni M, ni couronne, ni nom de produit** : ⭐ **le nom « Maxilou » n'apparaît toujours nulle
@@ -376,17 +395,16 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS — 5 lots d'exécution sur 8.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ ⭐ **L4** *(26 points, identité graphique neutre)* · ⬜ **L5, L7, L8** · 🔧 **M1** *(classeur, hors Git)* en attente d'autorisation |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · 🚧 ⭐ **L5** — **phase A faite** *(dépôt)*, ⛔ **phase B à faire** *(redéploiement Google)* · ⬜ **L7, L8** · 🔧 **M1** en attente d'autorisation |
 | 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
 | **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 | 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |
 
-**La prochaine étape** est le **lot L5 de CF-4b** — le **nom affiché de l'expéditeur** des emails,
-**4 lignes** de `backend/Code.gs`. ⚠️ **C'est le premier lot qui touche le serveur** : il exige un
-**redéploiement chez Google** selon [`../deploiement.md`](../deploiement.md), avec ses **deux nombres
-de contrôle** *(inchangés : aucun test n'est modifié)*. ⭐ **Et c'est le seul point de tout le
-chantier qu'aucun aperçu ne peut prouver** : le nom d'expéditeur n'apparaît que dans un message
-**reçu**. ⛔ **Aucun envoi réel sans autorisation explicite.** ⚠️ **CF-4a**
+**La prochaine étape** est la **phase B de L5** — le **redéploiement du backend chez Google**, à
+faire **à la main** selon [`../deploiement.md`](../deploiement.md) : coller `Code.gs`, ⚠️ **coller
+aussi `Tests.gs` dans `Test.gs`** *(le fichier qu'on oublie)*, publier une **nouvelle version du même
+déploiement**, puis vérifier les **deux nombres** — **`703/703 OK, 0 FAIL`** et **dernière ligne
+`4244`** — et `?action=ping`. ⚠️ **CF-4a**
 *(mentions légales)* reste **le seul écart au regard d'un texte extérieur**, et **CF-3** reste
 suspendue à la décision préparée par CF-2.
 

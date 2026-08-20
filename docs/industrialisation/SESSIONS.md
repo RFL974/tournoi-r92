@@ -6657,3 +6657,76 @@ réserve assumée.
 > ⚠️ **`README.md` : sa carte de structure annonce `img/ → 5 images (blasons, logos, icônes)`** —
 > devenu faux *(il en reste 2, et `assets/` est réapparu)*. ⭐ **Corrigé dans ce lot** *(§8 bis :
 > la carte se vérifie dans le même lot)*.
+
+---
+
+## 12. Lot L5, phase A — le nom d'expéditeur, côté dépôt
+
+### ⚠️ Pourquoi ce lot est le seul à être coupé en deux
+
+Tous les lots précédents étaient prouvés dès leur publication : une page servie, une recherche sur
+un clone neuf, un rendu dans un navigateur. **L5 ne peut pas l'être**, pour deux raisons qui
+s'ajoutent :
+
+| | |
+|---|---|
+| **① Le serveur est déposé à la main** | Le dépôt contient une **copie** du code ; le serveur qui envoie réellement les messages vit chez Google. **Rien ne garantit qu'ils soient identiques** — c'est la limite permanente de `CLAUDE.md` **§13.6** |
+| **② Le nom d'expéditeur ne s'affiche nulle part ailleurs** | Ni écran, ni aperçu, ni test, ni fonction ne l'expose. ⭐ **Il n'apparaît que dans l'en-tête d'un message reçu** |
+
+➡️ D'où le découpage : **L5-A** *(dépôt)* ici, **L5-B** *(redéploiement)* ensuite, et un envoi réel
+**seulement sur autorisation**.
+
+### La modification
+
+**4 substitutions littérales**, recomptées et confirmées : `name: 'Génération R92'` →
+`name: 'L\'organisation du tournoi'`, dans `envoyerEmailAvec` *(lignes 5067, 5069)* et
+`envoyerEmailHtml` *(5082, 5086)*.
+
+⛔ **Aucune constante créée, aucune fonction refactorée, aucune signature changée** — décision déjà
+prise lors de la cartographie : c'est une correction juridique, pas un travail de style.
+
+### Ce qui hérite du nouveau nom — chaîne d'appel tracée
+
+```
+envoyerEmailAvec  ←── envoyerDossierEmail (repli texte)
+envoyerEmailHtml  ←── envoyerDossierEmail
+                  ←── envoyerFeuilleJour
+                  ←── envoyerInvitationEmail ←── envoyerInvitationClub
+                                             └── envoyerInvitationsGroupe
+```
+
+⭐ **Quatre actions serveur**, donc **trois types de messages** : l'invitation *(unitaire et
+groupée)*, le dossier final, et **la feuille de journée** — cette dernière n'a aucune signature dans
+son corps : c'est le seul endroit où elle était identifiée.
+
+### Contrôles
+
+| | |
+|---|---|
+| **Syntaxe** | ✅ `node --check` sur `Code.gs` **et** `Tests.gs` — 0 erreur. ⚠️ *`node --check` refuse l'extension `.gs` : les fichiers sont copiés en `.js` dans un dossier temporaire, hors dépôt* |
+| **Exécution** | ✅ `envoyerEmailAvec` lancée avec des doublures : les deux branches produisent bien `name = "L'organisation du tournoi"`, et `from`, `to`, `subject` sont **inchangés** |
+| **Non-régression** | ✅ Comparaison ligne à ligne du diff : en retirant la seule clé `name:`, **les 4 lignes sont identiques avant/après** |
+| **Recherche** | ✅ `Génération R92` → **0** dans `Code.gs` · les 4 `name:` neutres présents |
+| **`Tests.gs`** | ✅ **INTACT** — 0 modification, **4 244 lignes**. Re-vérifié : **aucun des 703 tests ne touche le nom d'expéditeur** |
+
+### ⭐ Ce que L5-A prouve — et ce qu'elle ne prouve pas
+
+| ✅ **Prouvé** | ⛔ **NON prouvé** |
+|---|---|
+| Le code **publié** demande à GmailApp et MailApp d'utiliser *« L'organisation du tournoi »* | Que le serveur **en service** le fasse — il n'a pas été redéployé |
+| Les 4 substitutions sont exactes, et rien d'autre n'a bougé | Que le nom **réellement affiché** dans une boîte de réception ait changé |
+
+> ⚠️ **À dire tel quel** : **un email envoyé aujourd'hui partirait toujours sous l'ancien nom.**
+> Et même après L5-B, seul un **message reçu** pourra établir ce que le service d'envoi affiche —
+> aucun test, aucun aperçu ne le fera à sa place.
+
+### ⛔ Ce que cette phase n'a pas fait
+
+Aucun redéploiement · aucun email · aucun test ajouté ou modifié · aucun frontend touché · aucune
+configuration · ⛔ **aucune entrée `CHANGELOG`** : annoncer un changement qui n'est pas en service
+serait faux.
+
+> ⚠️ **Documents ACTIFS vérifiés** : **aucun ne devient faux.** [`../deploiement.md`](../deploiement.md)
+> conserve ses deux repères *(`703/703` et `4244`)* — ils restent **exacts**, aucun test n'ayant
+> bougé. ⛔ **Il n'a pas été transformé en journal de L5.** `README.md`, `docs/architecture.md` et
+> `backend/README.md` ne décrivent ni ces fonctions bas niveau ni le nom d'expéditeur.
