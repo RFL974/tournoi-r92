@@ -387,3 +387,70 @@ async function rechargerEquipes() {
   afficherEquipes(equipes);
   majTableauBord(); // le nombre d'équipes a changé
 }
+
+/* --------------------------------------------------------------------------
+   RÉGLAGE « Identifier mes équipes dans Perfs » (paramètre `perfs_mot_cle_club`)
+
+   Il vit dans la carte ÉQUIPES parce que la valeur attendue est un morceau du
+   NOM des équipes — l'organisateur les a sous les yeux au moment de le choisir.
+   Écriture : action existante `enregistrerInfosTournoi`, en envoi PARTIEL (le
+   backend n'écrit que les champs reçus) ⇒ aucune action serveur nouvelle, et la
+   ligne de Config est créée automatiquement si elle n'existe pas encore.
+   -------------------------------------------------------------------------- */
+
+/** Longueur MINIMALE du mot-clé, une fois normalisé (voir perfs.js). */
+const MOT_CLE_LONGUEUR_MIN = 3;
+
+/** Normalisation IDENTIQUE à celle de perfs.js — les deux doivent juger pareil. */
+function normaliserMotCleClub(valeur) {
+  return String(valeur == null ? '' : valeur).trim().toLowerCase();
+}
+
+/** (Re)remplit le champ depuis la configuration chargée. */
+function majPerfsMotCleClub() {
+  const form = document.getElementById('form-perfs-club');
+  if (!form || !form.perfs_mot_cle_club) return;
+  form.perfs_mot_cle_club.value = (configCourante.global || {}).perfs_mot_cle_club || '';
+  if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
+}
+
+/**
+ * Enregistre le mot-clé. Trois issues, et elles sont distinctes :
+ *   • vide            ⇒ accepté — c'est la désactivation volontaire de la page Perfs ;
+ *   • 1 ou 2 signes   ⇒ REFUSÉ — trop court pour distinguer un club d'un autre ;
+ *   • 3 signes ou +   ⇒ enregistré (en minuscules, sans espaces de bord).
+ */
+async function onEnregistrerPerfsMotCle() {
+  const form = document.getElementById('form-perfs-club');
+  const message = document.getElementById('message-perfs-club');
+  const bouton = document.getElementById('bouton-enregistrer-perfs-club');
+  const valeur = normaliserMotCleClub(form.perfs_mot_cle_club.value);
+
+  if (valeur !== '' && valeur.length < MOT_CLE_LONGUEUR_MIN) {
+    afficherMessage(message, '⚠️ Trop court : il faut au moins ' + MOT_CLE_LONGUEUR_MIN +
+      ' caractères. Avec moins, des équipes adverses risqueraient d\'être comptées comme les tiennes. ' +
+      'Laisse vide si tu préfères ne pas utiliser la page Perfs.', 'ko');
+    return;
+  }
+
+  await avecBoutonOccupe(bouton, message, async function () {
+    afficherMessage(message, 'Enregistrement…', 'ok');
+    await ecrireAdmin('enregistrerInfosTournoi', { perfs_mot_cle_club: valeur });
+    configCourante = await lireConfigAdmin();
+    majPerfsMotCleClub();
+
+    // ⚠️ On RELIT avant d'annoncer le succès. Sans cette comparaison, un serveur pas encore
+    // redéployé (qui ignore ce paramètre) produirait une écriture sans effet — et un message
+    // vert affirmant le contraire. On ne dit « enregistré » que si le classeur le confirme.
+    const relu = normaliserMotCleClub((configCourante.global || {}).perfs_mot_cle_club);
+    if (relu !== valeur) {
+      afficherMessage(message, '⚠️ La valeur n\'a pas été enregistrée : le serveur a répondu « ' +
+        (relu || '(vide)') +' ». Si le serveur vient d\'être modifié, il n\'a peut-être pas encore ' +
+        'été redéployé — voir docs/deploiement.md.', 'ko');
+      return;
+    }
+    afficherMessage(message, valeur === ''
+      ? '✅ Réglage effacé : la page Perfs n\'affichera aucun bilan.'
+      : '✅ Enregistré : les équipes dont le nom contient « ' + valeur + ' » sont les tiennes.', 'ok');
+  });
+}

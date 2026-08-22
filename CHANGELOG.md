@@ -12,6 +12,32 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Plus aucun club n'est nommé par défaut, et la page Perfs se règle — 2026-08-22
+
+Dernière surface institutionnelle du logiciel : celle qui ne se voyait pas dans un texte, mais
+**dans un comportement**.
+
+**Ce qu'un club voit changer.** La pastille « 🛍️ **Boutique R92** » de l'invitation devient
+« 🛍️ **Boutique** » — le service reste exactement le même, il ne porte plus le nom d'un club. Et le
+fichier d'agenda téléchargé s'appelle désormais `tournoi-<date>.ics`.
+
+**Ce qu'un organisateur voit changer.**
+
+- La **demande d'autorisation FFR** ne pré-remplit plus le nom d'un club. Le champ part **vide et
+  signalé « manquant »**, et il reste **modifiable dans le PDF officiel**. ⭐ C'est un progrès de
+  justesse, pas une perte : jusqu'ici, tout organisateur obtenait un formulaire pré-rempli au nom
+  d'un club qui n'était pas le sien. Si ton classeur porte déjà un nom, **il est conservé**.
+- Le pied de la feuille d'autorisation dit maintenant *« à la charge du club organisateur »*.
+- 🆕 La page interne **Perfs du club** a désormais un réglage, dans l'administration, carte
+  **Équipes** : **« Identifier mes équipes dans Perfs »**. Tu y indiques un morceau de nom commun à
+  toutes tes équipes — `ABC` pour `ABC-1` et `ABC-2`. ⭐ **Rien à saisir dans le Google Sheet.**
+  ⛔ **Vide, ou moins de 3 caractères : la page ne calcule rien et l'explique.** C'est délibéré — un
+  repère vide aurait correspondu à *toutes* les équipes du tournoi, un repère trop court à trop
+  d'entre elles, et le bilan aurait été **crédible et faux**.
+
+**Ce qui ne change pas.** Le réglage « boutique sur place » que tu as déjà coché : le paramètre a
+été renommé, mais **sa valeur est reprise automatiquement**. Rien à faire, rien à re-cocher.
+
 ### Les emails ne partent plus au nom d'une association — 2026-08-20
 
 Dernière surface à porter une identité qui n'est pas la sienne : le **nom de l'expéditeur**, celui

@@ -32,7 +32,7 @@
 
 ### Tester l'API
 Ouvrir l'URL dans un navigateur en ajoutant un paramètre `action` :
-- `…/exec?action=ping` → `{"ok":true,"message":"API Tournoi R92 en ligne"}`
+- `…/exec?action=ping` → `{"ok":true,"message":"API tournoi en ligne"}`
 - `…/exec?action=getConfig` → réglages globaux + catégories
 - `…/exec?action=getAll` → tout (config, equipes, poules, matchs)
 
@@ -100,9 +100,26 @@ Puis **trois contrôles dans l'éditeur**, avant d'aller plus loin :
 
 | Ce qu'on vérifie | Comment |
 |---|---|
-| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs`. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* |
-| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne |
+| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs` — **8342** aujourd'hui. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* |
+| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne — **`viderDonnees`, ligne 8337** aujourd'hui |
 | ⭐ **Une chaîne témoin introduite par le lot** | Une recherche qui donne **un résultat DIFFÉRENT avant et après** la modification — et, quand c'est possible, **son contraire** *(l'ancienne chaîne, attendue à 0)* |
+
+> ⭐ **Le témoin du lot en cours (CF-4b / L8)** — à chercher dans l'éditeur, **les quatre mots** :
+>
+> | Chercher | Attendu |
+> |---|---|
+> | `API tournoi en ligne` | **1** |
+> | `API Tournoi R92 en ligne` *(l'ancienne)* | **0** |
+> | `Racing Club de France Rugby` *(l'ancien défaut)* | **0** |
+>
+> 🔴 **Ne JAMAIS raccourcir à `API tournoi`** : la recherche de l'éditeur est **insensible à la
+> casse**, donc ces deux mots trouvent aussi l'**ancienne** chaîne `API **Tournoi** R92 en ligne`.
+> Un témoin tronqué répondrait « 1 » sur un fichier **non collé**. ⚠️ Même famille de piège que
+> l'apostrophe ci-dessous : *un témoin ne vaut que tapé en entier.*
+>
+> ⭐ **Et celui-ci a une propriété rare** : il est aussi **observable de l'extérieur**, au geste 5.
+> C'est le seul des quatre états — le **comportement observé** — qu'aucun contrôle de l'éditeur
+> n'atteint.
 
 > ⚠️ **Le piège des caractères échappés, et il a failli faire conclure à un échec.** Une apostrophe
 > dans une chaîne du code s'écrit `\'` : chercher `L'organisation du tournoi` renvoie **0** sur un
@@ -123,8 +140,8 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 
 | Ce qu'on vérifie | Valeur attendue **aujourd'hui** | Ce qu'un écart signifie |
 |---|---|---|
-| **Le bilan** affiché en fin de journal | **`R92 — 703/703 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
-| **La dernière ligne** du fichier collé chez Google | **4244** | Le fichier collé n'est pas celui du dépôt |
+| **Le bilan** affiché en fin de journal | **`R92 — 715/715 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
+| **La dernière ligne** du fichier collé chez Google | **4314** | Le fichier collé n'est pas celui du dépôt |
 
 > 🎯 **Pourquoi deux nombres et pas un.** Le bilan seul ne dit **jamais quelle version** a été
 > exécutée : « 573/573 OK » était un vrai résultat sur un faux fichier. Le nombre de lignes est ce
@@ -139,7 +156,7 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > `docs/industrialisation/ETAT.md` §9 pour le total attendu.
 
 **5. Vérifier que l'adresse publique répond**
-`…/exec?action=ping` → `{"ok":true,"message":"API Tournoi R92 en ligne"}`
+`…/exec?action=ping` → `{"ok":true,"message":"API tournoi en ligne"}`
 
 > ⚠️ **Portée exacte de ce contrôle, et il faut la connaître** : les tests tournent dans
 > l'**éditeur**, donc contre le code **enregistré dans le projet**. Ils ne prouvent pas à eux seuls

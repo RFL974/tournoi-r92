@@ -74,7 +74,7 @@ function globalInvitation() {
   if (fs) {
     g.buvette_disponible = fs.buvette_disponible.checked ? 'oui' : 'non';
     g.espace_sandwich_disponible = fs.espace_sandwich_disponible.checked ? 'oui' : 'non';
-    g.boutique_r92_disponible = fs.boutique_r92_disponible.checked ? 'oui' : 'non';
+    g.boutique_disponible = fs.boutique_disponible.checked ? 'oui' : 'non';
   }
   const fr = document.getElementById('form-reponse');
   if (fr) g.date_limite_reponse = fr.date_limite_reponse.value;
@@ -428,7 +428,7 @@ function emailHtmlInvitation(g, cats, imgSrc, salutationHtml, intro, lienReponse
   const pastilles = [];
   if (estOui(g.buvette_disponible)) pastilles.push('🥤 Buvette');
   if (estOui(g.espace_sandwich_disponible)) pastilles.push('🥪 Espace sandwich');
-  if (estOui(g.boutique_r92_disponible)) pastilles.push('🛍️ Boutique R92');
+  if (estOui(g.boutique_disponible)) pastilles.push('🛍️ Boutique');
   let surPlace = '';
   if (pastilles.length || (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim())) {
     surPlace = emailTitreSection('Sur place');
@@ -546,7 +546,7 @@ function emailTexteInvitation(g, cats, salutationTexte, intro, lienReponse, lien
   const services = [];
   if (estOui(g.buvette_disponible)) services.push('buvette');
   if (estOui(g.espace_sandwich_disponible)) services.push('espace sandwich');
-  if (estOui(g.boutique_r92_disponible)) services.push('boutique R92');
+  if (estOui(g.boutique_disponible)) services.push('boutique');
   if (services.length) L.push('Sur place : ' + services.join(', ') + '.');
   if (estOui(g.tarif_engagement_oui) && String(g.tarif_engagement_montant || '').trim()) {
     L.push('Tarif d\'engagement : ' + String(g.tarif_engagement_montant).trim());

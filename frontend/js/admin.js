@@ -300,6 +300,7 @@ async function initAdmin() {
       majInfosTournoi();
       majContactsSecurite();
       majInvitation();
+      majPerfsMotCleClub();
       majSurPlace();
       majReponse();
       majApercuInvitation();
@@ -338,6 +339,18 @@ async function initAdmin() {
   // On branche le formulaire d'ajout et les boutons de suppression (équipes).
   document.getElementById('form-equipe').addEventListener('submit', onAjouterEquipe);
   document.getElementById('liste-equipes').addEventListener('click', onClicListe);
+  // Réglage « Identifier mes équipes dans Perfs » (même carte : la valeur est un bout de nom d'équipe).
+  document.getElementById('bouton-enregistrer-perfs-club')
+    .addEventListener('click', onEnregistrerPerfsMotCle);
+  // ⚠️ Garde OBLIGATOIRE, comme les 10 autres formulaires de cette page. Un formulaire à champ
+  // unique se soumet TOUT SEUL sur la touche Entrée, même sans bouton `submit` : sans cette
+  // ligne, la page se rechargerait et la saisie serait perdue SANS message — au pire, un champ
+  // vidé pour désactiver Perfs réafficherait l'ancienne valeur, laissant croire à une
+  // désactivation qui n'a pas eu lieu. Ici, Entrée enregistre, comme le bouton.
+  document.getElementById('form-perfs-club').addEventListener('submit', function (e) {
+    e.preventDefault();
+    onEnregistrerPerfsMotCle();
+  });
 
   // Réglages (horaires + catégories) : écouteurs "délégués" posés sur le DOCUMENT
   // (et non sur #reglages) : le mode écrans DÉPLACE zone-horaires/zone-categories
@@ -546,7 +559,7 @@ async function rechargerEtRendre(opt) {
   majFeuilleJour();
   majPublicationPlanning(); // le verrou « visible par les clubs » suit chaque génération
 
-  if (opt.infos)       { majInfosTournoi(); majContactsSecurite(); majInvitation(); }
+  if (opt.infos)       { majInfosTournoi(); majContactsSecurite(); majInvitation(); majPerfsMotCleClub(); }
   if (opt.publication) majPublication();
   majDossier(); // la config vient d'être rechargée : l'état du dossier suit
   majTableauBord();

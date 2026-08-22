@@ -379,7 +379,7 @@ async function onEnregistrerContacts() {
 }
 
 /* --------------------------------------------------------------------------
-   PHASE 1 — carte « Sur place » (buvette / sandwich / boutique R92)
+   PHASE 1 — carte « Sur place » (buvette / sandwich / boutique)
    et carte « Réponse à l'invitation » (date limite + contact référent).
    -------------------------------------------------------------------------- */
 
@@ -390,7 +390,7 @@ function majSurPlace() {
   const g = configCourante.global || {};
   form.buvette_disponible.checked = estOui(g.buvette_disponible);
   form.espace_sandwich_disponible.checked = estOui(g.espace_sandwich_disponible);
-  form.boutique_r92_disponible.checked = estOui(g.boutique_r92_disponible);
+  form.boutique_disponible.checked = estOui(g.boutique_disponible);
   if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
 }
 
@@ -402,7 +402,7 @@ async function onEnregistrerSurPlace() {
   const data = {
     buvette_disponible:         form.buvette_disponible.checked ? 'oui' : 'non',
     espace_sandwich_disponible: form.espace_sandwich_disponible.checked ? 'oui' : 'non',
-    boutique_r92_disponible:    form.boutique_r92_disponible.checked ? 'oui' : 'non'
+    boutique_disponible:        form.boutique_disponible.checked ? 'oui' : 'non'
   };
   await avecBoutonOccupe(bouton, message, async function () {
     await ecrireAdmin('enregistrerSurPlace', data);

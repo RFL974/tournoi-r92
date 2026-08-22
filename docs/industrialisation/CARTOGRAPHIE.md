@@ -922,9 +922,9 @@ Le bilan de **tous** les matchs dans l'ordre de l'horloge, avec leur score. Troi
 l'écran, en **PDF fabriqué entièrement dans le navigateur** (aucun appel serveur), et **envoyé par
 courriel** aux clubs qui ont accepté. Rien n'est inventé : un match sans score affiche « — ».
 
-### La page « Perfs Racing »
+### La page « Perfs du club »
 
-Page interne, en lecture seule, non liée depuis le reste du site : le bilan des équipes du Racing
+Page interne, en lecture seule, non liée depuis le reste du site : le bilan des équipes du club
 sur le tournoi en cours (contre qui on gagne, à quel moment de la journée) et le **cumul de la
 saison** lu dans le journal `Historique`.
 

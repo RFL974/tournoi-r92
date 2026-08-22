@@ -441,6 +441,31 @@
 
         <!-- La liste des équipes, groupée par catégorie -->
         <div id="liste-equipes"></div>
+
+        <!-- Réglage interne : comment reconnaître MES équipes parmi toutes celles du tournoi.
+             Placé ici, avec les équipes, parce que la valeur attendue est un morceau de LEUR NOM.
+             Enregistré par `enregistrerInfosTournoi` (écriture partielle : le backend n'écrit que
+             les champs envoyés), sans nouvelle action serveur. -->
+        <form id="form-perfs-club" class="form-perfs-club">
+          <label class="reglage"><span class="r-libelle">Identifier mes équipes dans Perfs</span>
+            <input class="r-input" type="text" name="perfs_mot_cle_club" autocomplete="off"
+                   placeholder="Ex : ABC" aria-describedby="aide-perfs-club">
+          </label>
+          <p class="note-generation" id="aide-perfs-club">
+            Indiquez <strong>au moins 3 caractères</strong> présents dans le nom de
+            <strong>toutes</strong> les équipes de votre club. Par exemple, <code>ABC</code>
+            reconnaîtra <code>ABC-1</code> et <code>ABC-2</code>. Choisissez un morceau
+            <strong>bien distinctif</strong> : s'il apparaît aussi dans le nom d'un adversaire,
+            ses résultats seraient comptés comme les vôtres — et vos rencontres contre lui
+            <strong>disparaîtraient</strong> du cumul de saison, l'application les prenant pour
+            des matchs entre deux de vos équipes. Laissez vide pour désactiver la page
+            <strong>Perfs</strong> — elle préfère ne rien afficher plutôt qu'un bilan faux.
+          </p>
+          <div class="ligne-action">
+            <button type="button" class="bouton" id="bouton-enregistrer-perfs-club">Enregistrer</button>
+          </div>
+          <div id="message-perfs-club" class="message-form"></div>
+        </form>
       </section>
 
       <!-- 2 bis) Terrains physiques & répartition automatique des mini-terrains.
@@ -605,8 +630,8 @@
           <label class="reglage"><span class="r-libelle">Espace sandwich</span>
             <span class="mini-toggle"><input type="checkbox" name="espace_sandwich_disponible"> Espace sandwich sur place</span>
           </label>
-          <label class="reglage"><span class="r-libelle">Boutique R92</span>
-            <span class="mini-toggle"><input type="checkbox" name="boutique_r92_disponible"> Boutique R92 sur place</span>
+          <label class="reglage"><span class="r-libelle">Boutique</span>
+            <span class="mini-toggle"><input type="checkbox" name="boutique_disponible"> Boutique sur place</span>
           </label>
           <div class="ligne-action">
             <button type="button" class="bouton" id="bouton-enregistrer-surplace">Enregistrer « Sur place »</button>

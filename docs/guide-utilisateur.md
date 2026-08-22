@@ -393,6 +393,25 @@ Non liée dans les menus (accès par l'URL), **lecture seule**. Deux onglets :
 - **Saison** : cumul des rencontres par adversaire sur toute la saison (lu dans l'onglet
   **Historique** du Sheet, jamais effacé par une génération).
 
+> ⚙️ **Un réglage à faire une fois, sans quoi la page reste vide — et c'est voulu.**
+>
+> Cette page doit savoir **quelles équipes sont les tiennes**. Elle le devine à partir de leur
+> **nom**, et tu lui dis comment : dans l'administration, carte **Équipes**, champ
+> **« Identifier mes équipes dans Perfs »**. Indique un morceau de nom commun à toutes tes équipes
+> — par exemple `ABC` si elles s'appellent `ABC-1` et `ABC-2`. La casse n'a pas d'importance.
+>
+> **Trois règles, et elles ont chacune leur raison :**
+>
+> | | |
+> |---|---|
+> | **Au moins 3 caractères** | En dessous, le repère serait trop banal : des équipes adverses seraient prises pour les tiennes |
+> | **Aussi distinctif que possible** | 3 caractères suffisent à la machine, pas forcément à la réalité. Si ton repère apparaît aussi dans le nom d'un adversaire, ses résultats seront comptés comme les tiens — et dans l'onglet *Saison*, une victoire peut devenir une défaite |
+> | **Vide = page désactivée** | ⛔ **Ce n'est pas une panne.** Sans repère, la page ne peut pas distinguer tes équipes des autres : plutôt qu'un bilan crédible et faux, elle préfère ne rien afficher et te le dire |
+>
+> 💡 **Trois messages différents** t'attendent selon le cas : *rien n'est réglé*, *le repère est trop
+> court*, ou *le repère est bon mais aucune équipe ne correspond* — ce dernier veut dire qu'il faut
+> regarder le **nom de tes équipes**, pas le réglage.
+
 ---
 
 ## 5. Les clés (sécurité des écritures)

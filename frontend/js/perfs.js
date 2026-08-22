@@ -1,26 +1,86 @@
 /**
  * ============================================================================
- *  PERFS RACING — page interne (lecture seule, « juste pour nous »)
+ *  PERFS DU CLUB — page interne (lecture seule, « juste pour nous »)
  * ============================================================================
  *
  *  Deux onglets :
- *   • « Ce tournoi » — les équipes DU RACING sur le tournoi EN COURS :
+ *   • « Ce tournoi » — les équipes DU CLUB ORGANISATEUR sur le tournoi EN COURS :
  *       bilan chiffré, CONTRE QUI on gagne/perd, et À QUEL MOMENT (frise horaire).
  *   • « Saison » — le CUMUL de la saison lu dans l'onglet Historique : pour chaque
  *       adversaire, toutes les rencontres additionnées (on croise souvent les mêmes
  *       équipes plusieurs fois dans l'année).
  *  Tout est classé par catégorie (U8, U10, …).
  *
- *  Repérage des équipes du club : leur NOM contient le mot-clé ci-dessous
- *  (insensible à la casse). Change simplement MOT_CLE_CLUB si un jour le club
- *  est nommé autrement dans le Sheet (ex : "R92").
+ *  ⚙️ Repérage des équipes du club : leur NOM doit contenir le mot-clé réglé dans
+ *  l'onglet `Config` du Sheet, paramètre `perfs_mot_cle_club` — par exemple
+ *  « massy » si les équipes s'appellent « MASSY-1 » et « MASSY-2 ». Il arrive par
+ *  `getAll` (vue publique `live`), donc SANS appel réseau supplémentaire.
+ *
+ *  ⛔ TANT QUE CE PARAMÈTRE EST VIDE OU TROP COURT, LA PAGE NE CALCULE RIEN.
+ *  C'est délibéré, et pour deux raisons distinctes :
+ *   • vide → une recherche de sous-chaîne vide correspond à TOUTES les équipes
+ *     (`indexOf('')` vaut 0) : le bilan serait plausible et entièrement faux ;
+ *   • moins de 3 signes → trop peu pour distinguer un club d'un autre. Un faux
+ *     positif ne se contente pas d'ajouter une équipe : dans l'onglet Saison, il
+ *     INVERSE le score (le « pour » et le « contre » se déduisent du même test), et fait
+ *     DISPARAÎTRE du cumul de saison les rencontres contre cet adversaire — vues comme un
+ *     match du club contre lui-même, donc écartées.
+ *  Mieux vaut ne rien dire que dire faux.
  *
  *  Nécessite (chargés AVANT ce fichier) : config.js puis api.js.
  * ============================================================================
  */
 
-/** 🔧 Mot-clé qui identifie une équipe du club dans son nom (casse ignorée). */
-const MOT_CLE_CLUB = 'racing';
+/**
+ * 🔧 Mot-clé qui identifie une équipe du club dans son nom (casse ignorée, espaces de début et de fin retirés).
+ * Alimenté par `Config.perfs_mot_cle_club` à chaque chargement ; vide = non configuré.
+ */
+let motCleClub = '';
+
+/** Longueur MINIMALE du mot-clé une fois normalisé. Voir le commentaire d'en-tête. */
+const MOT_CLE_LONGUEUR_MIN = 3;
+
+/** Normalise un mot-clé ou un nom d'équipe pour la comparaison : texte, sans marges, minuscules. */
+function normaliserPourClub(valeur) {
+  return String(valeur == null ? '' : valeur).trim().toLowerCase();
+}
+
+/**
+ * L'état de la configuration, en TROIS valeurs qu'il ne faut jamais confondre :
+ *   'absent'  — rien n'est réglé (clé absente, vide, ou espaces seuls) ;
+ *   'court'   — réglé mais INEXPLOITABLE (1 ou 2 signes) ;
+ *   'ok'      — exploitable.
+ * Les deux premiers interdisent tout calcul : mieux vaut ne rien dire que dire faux.
+ */
+function etatMotCleClub() {
+  if (motCleClub === '') return 'absent';
+  if (motCleClub.length < MOT_CLE_LONGUEUR_MIN) return 'court';
+  return 'ok';
+}
+
+/** Vrai si le mot-clé du club est EXPLOITABLE (⇒ la page peut calculer quelque chose). */
+function clubConfigure() {
+  return etatMotCleClub() === 'ok';
+}
+
+/**
+ * Bloc affiché quand la configuration ne permet AUCUN calcul. Deux textes distincts : dire
+ * « non réglé » à quelqu'un qui a réglé deux lettres l'enverrait chercher au mauvais endroit.
+ */
+function messageNonConfigure() {
+  if (etatMotCleClub() === 'court') {
+    return '<p class="vide">Le repère saisi pour reconnaître tes équipes est <strong>trop court</strong> ' +
+      '(« ' + echapper(motCleClub) + ' »). Il faut <strong>au moins ' + MOT_CLE_LONGUEUR_MIN +
+      ' caractères</strong> : avec moins, des équipes adverses seraient comptées comme les tiennes. ' +
+      'Corrige-le dans l\'administration, carte <strong>Équipes</strong> → ' +
+      '« Identifier mes équipes dans Perfs ». Aucun bilan n\'est calculé en attendant.</p>';
+  }
+  return '<p class="vide">Cette page a besoin de savoir quelles équipes sont celles du club. ' +
+    'Renseigne-le dans l\'administration, carte <strong>Équipes</strong> → ' +
+    '« Identifier mes équipes dans Perfs » : au moins 3 caractères présents dans le nom de toutes ' +
+    'tes équipes. Tant que c\'est vide, aucun bilan n\'est calculé — mieux vaut ne rien afficher ' +
+    'qu\'un bilan faux.</p>';
+}
 
 let equipes = [];
 let nomParEquipe = {};          // index id_equipe → nom (reconstruit à chaque chargement)
@@ -83,7 +143,14 @@ async function charger(premier) {
       apiGet('getHistorique').catch(function () { return []; })
     ]);
 
-    const signature = JSON.stringify(data.matchs) + '|' + JSON.stringify(data.equipes) + '|' + JSON.stringify(hist);
+    // Le mot-clé du club voyage DÉJÀ dans getAll (vue `live`) : aucun appel réseau de plus.
+    const globalConfig = (data.config && data.config.global) || {};
+    motCleClub = normaliserPourClub(globalConfig.perfs_mot_cle_club);
+
+    // Le mot-clé entre dans la signature : le régler dans Config doit réafficher la page,
+    // même quand aucun match n'a bougé (sinon le changement resterait invisible ~1 min).
+    const signature = JSON.stringify(data.matchs) + '|' + JSON.stringify(data.equipes) +
+      '|' + JSON.stringify(hist) + '|' + motCleClub;
     equipes = data.equipes || [];
     nomParEquipe = indexerNoms(equipes); // index id → nom (O(1))
     matchs = data.matchs || [];
@@ -113,9 +180,14 @@ function majHeure() {
     ':' + String(d.getSeconds()).padStart(2, '0');
 }
 
-/** Vrai si un nom d'équipe appartient au club recherché. */
+/**
+ * Vrai si un nom d'équipe appartient au club recherché.
+ * ⛔ Mot-clé vide ⇒ TOUJOURS faux : sans cette garde, `indexOf('')` renvoie 0 et
+ * chaque équipe du tournoi serait comptée comme une équipe du club.
+ */
 function estDuClub(nom) {
-  return String(nom).toLowerCase().indexOf(MOT_CLE_CLUB) >= 0;
+  if (!clubConfigure()) return false;
+  return normaliserPourClub(nom).indexOf(motCleClub) >= 0;
 }
 
 /** Nom d'une équipe à partir de son identifiant (lecture O(1) dans l'index). */
@@ -129,11 +201,17 @@ function nomEquipe(id) {
 
 function afficherTournoi() {
   const zone = document.getElementById('vue-tournoi');
+
+  // CAS 1 — mot-clé non configuré : on ne calcule RIEN. Distinct du cas 2 ci-dessous.
+  if (!clubConfigure()) { zone.innerHTML = messageNonConfigure(); return; }
+
   const nôtres = equipes.filter(function (e) { return estDuClub(e.nom_equipe); });
 
+  // CAS 2 — mot-clé configuré, mais aucune équipe ne correspond : c'est un problème de NOMS.
   if (!nôtres.length) {
-    zone.innerHTML = '<p class="vide">Aucune équipe « ' + echapper(MOT_CLE_CLUB) +
-      ' » dans ce tournoi. Vérifie le nom des équipes (ou le mot-clé en haut de perfs.js).</p>';
+    zone.innerHTML = '<p class="vide">Aucune équipe dont le nom contient « ' + echapper(motCleClub) +
+      ' » dans ce tournoi. Vérifie le nom des équipes, ou le paramètre ' +
+      '<strong>perfs_mot_cle_club</strong> de l\'onglet <strong>Config</strong>.</p>';
     return;
   }
 
@@ -227,6 +305,10 @@ function listeAdversaires(vues) {
 
 function afficherSaison() {
   const zone = document.getElementById('vue-saison');
+
+  // CAS 1 — mot-clé non configuré : aucun cumul n'est calculé, et on ne laisse SURTOUT pas
+  // le message « aucun résultat dans l'historique » accuser les données à la place du réglage.
+  if (!clubConfigure()) { zone.innerHTML = messageNonConfigure(); return; }
 
   // Chaque ligne d'historique concernant le club, vue de son côté.
   const vues = [];

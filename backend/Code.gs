@@ -209,7 +209,11 @@ function creerOngletConfig(classeur) {
     // Phase 1 (invitation légère) — « Sur place » : pastilles affichées seulement si 'oui'.
     ['buvette_disponible', 'non'],
     ['espace_sandwich_disponible', 'non'],
-    ['boutique_r92_disponible', 'non'],
+    ['boutique_disponible', 'non'],
+    // Page interne « Perfs du club » : mot-clé qui identifie une équipe du club ORGANISATEUR
+    // dans son nom (casse ignorée, espaces de début et de fin retirés). VIDE par défaut, et c'est délibéré : l'app ne
+    // présume d'aucun club. Tant qu'il est vide, la page Perfs ne calcule RIEN et le dit.
+    ['perfs_mot_cle_club', ''],
     // Phase 1 — « Réponse à l'invitation » : date limite de RÉPONSE (distincte de
     // date_limite_confirmation, propre aux effectifs de la Phase 2) + contact référent.
     ['date_limite_reponse', ''],
@@ -230,10 +234,11 @@ function creerOngletConfig(classeur) {
     // ── Demande d'autorisation de tournoi EDR (session 7) — feuille de report du formulaire FFR.
     // Données PERSONNELLES (noms/tels/mails du représentant et du président) : PRIVÉES par défaut
     // (jamais dans CONFIG_PUBLIQUE_VUES). N'inventer AUCUNE valeur : un champ vide reste « manquant ».
-    // A.1 Organisateur — le club affilié détenteur du label EDR est « Racing Club de France Rugby »
-    // (branche pro = Racing 92 ; voir audit Session 7). Représentant, président et référent jour J
-    // sont TROIS rôles distincts : ne pas réutiliser referent_nom ici.
-    ['org_club_nom', 'Racing Club de France Rugby'], ['org_code_club', ''],
+    // A.1 Organisateur — le club affilié détenteur du label EDR se SAISIT ; l'app n'en présume
+    // aucun. Vide ⇒ le champ reste « manquant » sur la feuille de report, et le champ du PDF
+    // fédéral reste éditable. Représentant, président et référent jour J sont TROIS rôles
+    // distincts : ne pas réutiliser referent_nom ici.
+    ['org_club_nom', ''], ['org_code_club', ''],
     ['org_representant_nom', ''], ['org_representant_tel', ''], ['org_representant_mail', ''],
     ['org_president_nom', ''], ['org_president_tel', ''], ['org_president_mail', ''],
     ['org_label_edr', 'oui'], ['org_label_date', ''],
@@ -325,7 +330,7 @@ function doGet(e) {
     // cache ne coûte donc que ~0,06 s, mais « quelques millisecondes » serait FAUX. Plus chaque
     // requête est courte, plus le plafond Apps Script (~30 exécutions simultanées) se libère
     // vite → la même Web App encaisse bien plus de monde.
-    if (action === 'ping') return repondreJson({ ok: true, message: 'API Tournoi R92 en ligne' });
+    if (action === 'ping') return repondreJson({ ok: true, message: 'API tournoi en ligne' });
     // getAll : copie mise en cache ~10 s. Un seul lecteur relit le Sheet par tranche, les
     // autres reçoivent la copie instantanément. Le cache est rafraîchi à chaque écriture.
     if (action === 'getAll') {
@@ -455,16 +460,19 @@ function lireSponsorsPublics(classeur) {
  * données, gardées plus longtemps — au pire ~10 s de retard, invisible pour du live).
  */
 function snapshotJsonCache() {
-  // Clés VERSIONNÉES (`_v2`) : le contenu de getAll a changé (config désormais filtrée en vue
-  // LIVE). Sans nouvelle clé, la copie de SECOURS gardée 6 h aurait continué à servir l'ancien
-  // snapshot (config complète, contacts inclus) jusqu'à 6 h APRÈS le déploiement. Le versionnement
-  // rend l'ancien cache inaccessible : dès le déploiement, seule la nouvelle vue est servie.
+  // Clés VERSIONNÉES (`_v3`) : le contenu de getAll change à chaque évolution de la vue LIVE.
+  // Sans nouvelle clé, la copie de SECOURS gardée 6 h continuerait à servir l'ANCIEN snapshot
+  // jusqu'à 6 h APRÈS le déploiement. Le versionnement rend l'ancien cache inaccessible : dès
+  // le déploiement, seule la nouvelle vue est servie.
+  //   `_v2` (2026) : la config est passée en vue LIVE filtrée (contacts retirés).
+  //   `_v3` (2026-08-22) : ajout de `perfs_mot_cle_club` — sans ce saut, la page Perfs aurait
+  //                        conclu « mot-clé non configuré » pendant 6 h après le redéploiement.
   var cache = CacheService.getScriptCache();
-  var s = cache.get('snapshot_json_v2');
+  var s = cache.get('snapshot_json_v3');
   if (s) return s;
 
   // Cache expiré. Quelqu'un reconstruit déjà ? → on sert la copie de secours sans attendre.
-  var secours = cache.get('snapshot_json_secours_v2');
+  var secours = cache.get('snapshot_json_secours_v3');
   if (secours && cache.get('snapshot_regen')) return secours;
 
   // On devient LE reconstructeur : jeton posé ~15 s (filet si la reconstruction échoue).
@@ -489,8 +497,8 @@ function mettreEnCacheSnapshot(cache, json) {
     // silence → cache jamais rempli → chaque getAll relisait le Sheet (saturation).
     var octets = Utilities.newBlob(json).getBytes().length;
     if (octets < 95000) {
-      cache.put('snapshot_json_v2', json, 10);             // copie fraîche (10 s)
-      cache.put('snapshot_json_secours_v2', json, 21600);  // copie de secours (6 h, le max)
+      cache.put('snapshot_json_v3', json, 10);             // copie fraîche (10 s)
+      cache.put('snapshot_json_secours_v3', json, 21600);  // copie de secours (6 h, le max)
     }
   } catch (e) { /* cache indisponible : on ignore, getAll relira le Sheet */ }
 }
@@ -585,6 +593,40 @@ function indexEnteteCategories(donnees) {
   return -1;
 }
 
+/* Paramètres RENOMMÉS : ancienne clé du classeur → clé canonique d'aujourd'hui.
+ * Une seule entrée à ce jour ; la table existe pour que le mécanisme soit lisible et testable. */
+var ALIAS_CONFIG_LEGACY = { boutique_disponible: 'boutique_r92_disponible' };
+
+/**
+ * MIGRATION DOUCE d'un paramètre RENOMMÉ, appliquée à la LECTURE — pas à l'écriture.
+ *
+ * ⚠️ Pourquoi ce mécanisme existe, et pourquoi il est indispensable : renommer un paramètre
+ * ne renomme PAS la ligne déjà présente dans l'onglet Config d'un classeur en service. Sans
+ * cette reprise, la nouvelle clé serait absente, `estOui(undefined)` vaudrait faux, et le
+ * réglage de l'organisateur disparaîtrait SANS AUCUN MESSAGE — une perte silencieuse.
+ *
+ * Règle : la clé canonique gagne TOUJOURS dès qu'elle porte une valeur. L'ancienne n'est lue
+ * qu'en repli, et n'est JAMAIS réécrite : au premier enregistrement, `ecrireParamsGlobaux`
+ * crée la ligne canonique et l'ancienne devient une simple donnée dormante.
+ *
+ * ⛔ Ne sert PAS à exposer l'ancienne clé : elle ne figure dans aucune liste blanche publique.
+ * PUR (aucun accès au classeur) : testable. Modifie `global` sur place et le renvoie.
+ */
+function appliquerAliasConfig(global) {
+  global = global || {};
+  Object.keys(ALIAS_CONFIG_LEGACY).forEach(function (canonique) {
+    var ancienne = ALIAS_CONFIG_LEGACY[canonique];
+    // ⚠️ PRÉSENTE fait foi, MÊME VIDE — et cette nuance n'est pas un détail : une ligne canonique
+    // vide est une valeur EFFACÉE (réinitialisation d'un tournoi), pas une valeur absente. Sans
+    // cette distinction, la réinitialisation serait annulée par le repli et le réglage
+    // ressusciterait à l'édition suivante. Seule l'ABSENCE de ligne déclenche la reprise.
+    if (Object.prototype.hasOwnProperty.call(global, canonique)) return;
+    if (!Object.prototype.hasOwnProperty.call(global, ancienne)) return;    // rien à reprendre
+    global[canonique] = global[ancienne];
+  });
+  return global;
+}
+
 /**
  * ⚠️ USAGE INTERNE UNIQUEMENT (actions protégées par la clé admin). NE JAMAIS renvoyer ce
  * résultat à un appelant NON AUTHENTIFIÉ : la zone A de Config contient des données personnelles
@@ -604,6 +646,7 @@ function lireConfig(classeur) {
     if (String(param).charAt(0) === '—') continue;
     global[param] = donnees[r][1];
   }
+  appliquerAliasConfig(global);
   var categories = [];
   if (hdr !== -1) {
     var entetesCat = donnees[hdr];
@@ -658,7 +701,10 @@ var CONFIG_PUBLIQUE_VUES = {
     // aucune donnée personnelle — la page publique en a besoin pour rendre les emplacements.
     // Ils DOIVENT figurer ici : la config publique est en opt-in strict, un paramètre non
     // nommé ne sort pas et la page conclurait « sponsors désactivés » en silence.
-    global: ['tournoi_publie', 'tournoi_nom', 'repartition_grands_terrains',
+    // perfs_mot_cle_club : simple mot-clé de nommage, AUCUNE donnée personnelle. Il DOIT être
+    // ici — la page interne « Perfs du club » ne lit que getAll (vue live) et n'a pas de clé ;
+    // absent de cette liste, il ne sortirait jamais et la page se dirait « non configurée ».
+    global: ['tournoi_publie', 'tournoi_nom', 'repartition_grands_terrains', 'perfs_mot_cle_club',
              'sponsors_actifs', 'sponsors_mur_actif', 'sponsor_barre_mobile',
              'sponsor_rotation_s', 'sponsor_interstitiel_actif', 'sponsor_interstitiel_duree_s',
              'sponsor_interstitiel_skip_s', 'sponsor_interstitiel_repos_min',
@@ -684,7 +730,7 @@ var CONFIG_PUBLIQUE_VUES = {
              'tournoi_nom', 'tournoi_description', 'tournoi_affiche_id', 'tournoi_date', 'tournoi_lieu',
              'heure_rdv', 'heure_debut', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
              'heure_fin', 'heure_fin_communiquee', 'marge_fin_communiquee_min',
-             'buvette_disponible', 'espace_sandwich_disponible', 'boutique_r92_disponible',
+             'buvette_disponible', 'espace_sandwich_disponible', 'boutique_disponible',
              'tarif_engagement_oui', 'tarif_engagement_montant', 'date_limite_reponse',
              'url_instagram', 'url_site_association',
              'contact_reponse_nom', 'contact_reponse_email'],
@@ -1920,10 +1966,13 @@ var CHAMPS_AUTORISATION = ['org_club_nom', 'org_code_club', 'org_representant_no
   'org_repas_oui', 'org_repas_fournisseur', 'org_repas_prix', 'org_gouters_oui', 'org_gouters_fournisseur',
   'org_gouters_prix'];
 
-/* Défauts DOCUMENTÉS (pas des devinettes) : nom du club affilié, hypothèse de label EDR, absence
- * d'équipes étrangères. Tout le reste est vide (⇒ « manquant ») tant que l'organisateur n'a rien saisi. */
+/* Défauts DOCUMENTÉS (pas des devinettes) : hypothèse de label EDR, absence d'équipes étrangères.
+ * Tout le reste est vide (⇒ « manquant ») tant que l'organisateur n'a rien saisi.
+ * ⛔ `org_club_nom` n'a PLUS de défaut, et c'est délibéré : l'application ne nomme aucun club à la
+ * place de l'organisateur. Un classeur qui porte déjà une valeur la conserve (elle est lue AVANT
+ * cette table, état « saisi »). Vide ⇒ « manquant », et le champ du PDF fédéral reste éditable. */
 var DEFAUTS_AUTORISATION = {
-  org_club_nom: 'Racing Club de France Rugby', org_label_edr: 'oui', org_equipes_etrangeres: 'non'
+  org_label_edr: 'oui', org_equipes_etrangeres: 'non'
 };
 
 /* Champ ouvert → question fermée Oui/Non qui le pilote. Quand la question vaut « non » (valeur
@@ -3246,8 +3295,12 @@ function enregistrerHoraires(classeur, data) {
  */
 function enregistrerInfosTournoi(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
+  // ⚠️ Écriture PARTIELLE : `ecrireChampsConfig` n'écrit que les champs REÇUS. Chaque carte de
+  // l'admin envoie donc les siens sans écraser ceux des autres — c'est ce qui permet à cette
+  // action de porter aussi `zone_vacances` (carte « Date & conformité FFR ») et
+  // `perfs_mot_cle_club` (carte « Équipes »), sans action serveur dédiée.
   var champs = ['tournoi_nom', 'tournoi_date', 'tournoi_lieu', 'tournoi_adresse', 'tournoi_description',
-    'zone_vacances'];
+    'zone_vacances', 'perfs_mot_cle_club'];
   ecrireChampsConfig(onglet, data, champs);
   return { ok: true };
 }
@@ -3942,7 +3995,7 @@ function enregistrerInvitation(classeur, data) {
 /* ===================== PHASE 1 — INVITATION LÉGÈRE ===================== */
 
 /* « Sur place » (Phase 1) : pastilles affichées sur invitation-club.html seulement si 'oui'. */
-var CHAMPS_SURPLACE = ['buvette_disponible', 'espace_sandwich_disponible', 'boutique_r92_disponible'];
+var CHAMPS_SURPLACE = ['buvette_disponible', 'espace_sandwich_disponible', 'boutique_disponible'];
 
 /* « Réponse à l'invitation » (Phase 1). email_expediteur = alias « Envoyer en tant que »
    (config d'infrastructure) : NON effacé par une réinitialisation, contrairement aux autres. */
@@ -7432,8 +7485,20 @@ function reinitialiserTournoi(classeur) {
   //   propres à l'édition → effacés. email_expediteur (alias Gmail, config d'infrastructure) est
   //   CONSERVÉ, comme les clés. Côté clubs invités, on remet à zéro les colonnes PAR ÉDITION
   //   (categories_engagees + dossier_envoye) sans toucher au carnet d'adresses (noms/contacts/statuts).
+  // ⭐ `perfs_mot_cle_club` est DÉLIBÉRÉMENT CONSERVÉ, comme les clés et `email_expediteur` :
+  //   il décrit le CLUB ORGANISATEUR, pas l'édition. Le club ne change pas d'un tournoi à
+  //   l'autre, et l'effacer obligerait à le ressaisir chaque année — avec, entre-temps, une page
+  //   Perfs muette dont personne ne comprendrait la cause. ⛔ Ce n'est pas un oubli.
+  // ⚠️ On efface AUSSI les anciens noms des paramètres renommés (ALIAS_CONFIG_LEGACY) : sur un
+  // classeur qui n'a pas encore été réenregistré, la ligne canonique n'existe pas, et effacer
+  // elle seule ne ferait RIEN — la valeur de l'ancienne ligne serait reprise à la lecture et le
+  // réglage réapparaîtrait à l'édition suivante, sans que personne ne l'ait coché.
   CHAMPS_SURPLACE.concat(['date_limite_reponse', 'contact_reponse_nom', 'contact_reponse_tel', 'contact_reponse_email'])
-    .forEach(function (champ) { effacerParamGlobal(ongletConfig, champ); });
+    .forEach(function (champ) {
+      effacerParamGlobal(ongletConfig, champ);
+      var ancienne = ALIAS_CONFIG_LEGACY[champ];
+      if (ancienne) effacerParamGlobal(ongletConfig, ancienne);
+    });
   reinitialiserPhase2Clubs(classeur);
 
   // 4) Le tournoi redevient masqué pour le public.

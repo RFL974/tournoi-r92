@@ -289,7 +289,7 @@ function telechargerICS(g) {
   const blob = new Blob([contenu], { type: 'text/calendar;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'tournoi-r92-' + (txt(g.tournoi_date) || 'agenda') + '.ics';
+  a.download = 'tournoi-' + (txt(g.tournoi_date) || 'agenda') + '.ics';
   document.body.appendChild(a);
   a.click();
   setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);

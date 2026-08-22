@@ -44,6 +44,8 @@ function lancerTestsFFR() {
   testCfg_categoriesFiltrees(etat);
   testCfg_invitationVitrineCadreSportif(etat);
   testCfg_vitrineVoitTournoiPublie(etat);
+  testCfg_aliasLegacyBoutique(etat);
+  testCfg_motCleClubEnVueLive(etat);
   testCfg_liensPersonnalisesEmail(etat);
   testClubs_planSyncEquipes(etat);
   testClubs_colonneSelectionEnregistree(etat);
@@ -754,6 +756,67 @@ function testCfg_vitrineVoitTournoiPublie(etat) {
     'vitrine : ouvrir tournoi_publie n\'ouvre rien d\'autre (téléphone toujours exclu)');
 }
 
+/** MIGRATION DOUCE d'un paramètre RENOMMÉ (appliquerAliasConfig) — le mécanisme le plus risqué
+ *  du lot L8, parce que son échec est SILENCIEUX : sur un classeur en service, la ligne porte
+ *  encore l'ancien nom, et sans reprise le réglage de l'organisateur disparaîtrait sans message.
+ *  Quatre garanties : la clé canonique prime · l'ancienne sert de repli · une canonique VIDE
+ *  n'écrase pas l'ancienne · et l'ancienne clé ne sort d'AUCUNE vue publique. */
+function testCfg_aliasLegacyBoutique(etat) {
+  // 1) Classeur ANCIEN : seule l'ancienne ligne existe ⇒ la valeur est reprise.
+  var ancien = appliquerAliasConfig({ boutique_r92_disponible: 'oui' });
+  _ffrAssert(etat, ancien.boutique_disponible === 'oui',
+    'alias : ancienne clé seule ⇒ valeur reprise sur la clé canonique');
+
+  // 2) Classeur NEUF : la canonique prime, même si l'ancienne dit le contraire.
+  var neuf = appliquerAliasConfig({ boutique_disponible: 'non', boutique_r92_disponible: 'oui' });
+  _ffrAssert(etat, neuf.boutique_disponible === 'non',
+    'alias : la clé canonique prime toujours sur l\'ancienne');
+
+  // 3) 🔴 Canonique PRÉSENTE mais VIDE ⇒ elle fait foi, AUCUN repli. C'est l'état que laisse la
+  //    réinitialisation d'un tournoi : si le repli jouait ici, le réglage effacé ressusciterait
+  //    à l'édition suivante. « Présente et vide » est une valeur, « absente » est un manque.
+  var vide = appliquerAliasConfig({ boutique_disponible: '', boutique_r92_disponible: 'oui' });
+  _ffrAssert(etat, vide.boutique_disponible === '',
+    'alias : canonique présente mais vide ⇒ elle fait foi (une valeur effacée reste effacée)');
+
+  // 4) Aucune des deux ⇒ rien n'est inventé.
+  var rien = appliquerAliasConfig({});
+  _ffrAssert(etat, !('boutique_disponible' in rien),
+    'alias : aucune des deux clés ⇒ aucune valeur inventée');
+
+  // 4 bis) 🔴 RÉINITIALISATION d'un tournoi, les DEUX classeurs possibles. La remise à zéro écrit
+  //   '' (elle ne supprime pas la ligne) et doit vider l'ancien nom AUSSI — sans quoi le réglage
+  //   « boutique » réapparaîtrait tout seul à l'édition suivante.
+  var reinitMigre = appliquerAliasConfig({ boutique_disponible: '', boutique_r92_disponible: '' });
+  _ffrAssert(etat, reinitMigre.boutique_disponible === '',
+    'alias : après réinitialisation (classeur migré) le réglage reste effacé');
+  var reinitLegacy = appliquerAliasConfig({ boutique_r92_disponible: '' });
+  _ffrAssert(etat, reinitLegacy.boutique_disponible === '',
+    'alias : après réinitialisation (classeur jamais réenregistré) le réglage reste effacé');
+  // Et la réinitialisation vise bien les DEUX noms : l'ancien est déclaré dans la table d'alias.
+  _ffrAssert(etat, ALIAS_CONFIG_LEGACY.boutique_disponible === 'boutique_r92_disponible',
+    'alias : l\'ancien nom est déclaré, donc atteint par la réinitialisation');
+
+  // 5) ⛔ L'ancienne clé ne sort d'AUCUNE vue publique — c'est l'objet même du renommage.
+  var cfg = { global: { boutique_disponible: 'oui', boutique_r92_disponible: 'oui' }, categories: [] };
+  var fuite = ['live', 'invitation', 'club'].some(function (vue) {
+    return 'boutique_r92_disponible' in filtrerConfigPublique(cfg, vue).global;
+  });
+  _ffrAssert(etat, !fuite, 'alias : l\'ancienne clé ne sort d\'aucune vue publique');
+  _ffrAssert(etat, filtrerConfigPublique(cfg, 'invitation').global.boutique_disponible === 'oui',
+    'alias : la clé canonique sort bien en vue invitation');
+}
+
+/** Le mot-clé de la page Perfs sort en vue LIVE, et NULLE PART ailleurs. Sans cette sortie,
+ *  la page (qui n'a pas de clé et ne lit que getAll) se dirait « non configurée » en silence. */
+function testCfg_motCleClubEnVueLive(etat) {
+  var cfg = { global: { perfs_mot_cle_club: 'massy' }, categories: [] };
+  _ffrAssert(etat, filtrerConfigPublique(cfg, 'live').global.perfs_mot_cle_club === 'massy',
+    'perfsMotCle : exposé en vue live (sinon la page Perfs ne peut rien calculer)');
+  _ffrAssert(etat, !('perfs_mot_cle_club' in filtrerConfigPublique(cfg, 'invitation').global),
+    'perfsMotCle : absent de la vue invitation (rien n\'y a besoin de lui)');
+}
+
 /** Personnalisation des emails d'invitation : les TROIS jetons ({{SALUTATION}}, {{LIEN_REPONSE}},
  *  {{LIEN_INVITATION}}) sont remplacés par club — liens échappés en HTML, bruts en texte ; un
  *  modèle sans jeton reste inchangé ; le lien d'invitation retombe sur la page GÉNÉRIQUE quand le
@@ -917,7 +980,7 @@ function testDossier_equipesDuClub(etat) {
     _eqFactice('PUC', 'U8', 'C'),
     _eqFactice('PUC-2', 'U8', 'A')            // = un AUTRE club invité
   ];
-  var r = dossierClubPur(club, equipes, ['PUC-2'], false, 'contact@r92.fr');
+  var r = dossierClubPur(club, equipes, ['PUC-2'], false, 'contact@example.org');
 
   var noms = r.equipes.map(function (e) { return e.nom_equipe; }).join(',');
   _ffrAssert(etat, noms === 'PUC,PUC-1,PUC-3',
@@ -944,12 +1007,12 @@ function testDossier_declareEtGel(etat) {
     categories_engagees: 'U8,U10', nb_equipes_par_categorie: '{"U8":2,"U10":1}',
     nb_joueurs_total: '31', nb_educateurs_total: '6', detail_effectifs: '{"MASSY-1":12}'
   };
-  var r = dossierClubPur(club, [], [], true, 'contact@r92.fr');
+  var r = dossierClubPur(club, [], [], true, 'contact@example.org');
 
   _ffrAssert(etat, r.club.nb_equipes_par_categorie === '{"U8":2,"U10":1}' &&
                    r.club.nb_joueurs_total === '31' && r.club.nb_educateurs_total === '6',
     'dossier : les chiffres déclarés sont rendus tels quels');
-  _ffrAssert(etat, r.reponses_gelees === true && r.contact_email === 'contact@r92.fr',
+  _ffrAssert(etat, r.reponses_gelees === true && r.contact_email === 'contact@example.org',
     'dossier : gel J-16 et contact du tournoi accompagnent la réponse');
   _ffrAssert(etat, JSON.stringify(r).indexOf('secret@massy.fr') === -1,
     'dossier : l\'email du club ne sort JAMAIS');
@@ -1526,11 +1589,18 @@ function testS7_orgNonPublic(etat) {
   _ffrAssert(etat, !fuite, 'orgNonPublic : aucun org_* dans live/invitation/club');
 }
 
-/** Le défaut du nom de club est « Racing Club de France Rugby ». */
+/** Le nom du club n'a AUCUN défaut : non saisi ⇒ « manquant », jamais un nom inventé.
+ *  Et une valeur saisie dans Config est bien reprise telle quelle (état « saisi »). */
 function testS7_defautNomClub(etat) {
   var d = assemblerDossierAutorisation({}, { global: {}, categories: [] }, { formes: [] });
   var nom = _autoChamp(d, 'Nom du club');
-  _ffrAssert(etat, nom && nom.valeur === 'Racing Club de France Rugby', 'defautClub : Racing Club de France Rugby');
+  _ffrAssert(etat, nom && nom.valeur === '' && nom.etat === 'manquant',
+    'defautClub : aucun nom de club inventé — non saisi ⇒ manquant');
+  var saisi = assemblerDossierAutorisation({},
+    { global: { org_club_nom: 'US Exemple' }, categories: [] }, { formes: [] });
+  var nomSaisi = _autoChamp(saisi, 'Nom du club');
+  _ffrAssert(etat, nomSaisi && nomSaisi.valeur === 'US Exemple' && nomSaisi.etat === 'saisi',
+    'defautClub : une valeur saisie dans Config est conservée');
 }
 
 /* -------------------------------------------------------------------------- */
@@ -3286,7 +3356,7 @@ function testS25_naturePartielleSignalee(etat) {
 /*  ancien total manuel ignoré est SIGNALÉ, jamais soustrait ni redistribué.   */
 /* -------------------------------------------------------------------------- */
 
-/** Le total ADDITIONNE les deux sources (7 déclarés + 17 du Racing = 24). */
+/** Le total ADDITIONNE les deux sources (7 déclarés + 17 du club organisateur = 24). */
 function testS26_totalAdditionneLesDeuxSources(etat) {
   var d = assemblerDossierAutorisation({ participants: { nbEducateurs: 7 } },
     _cfgAutorisation([], { org_nb_educateurs_club: '17' }), { formes: [] });

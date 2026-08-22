@@ -9,7 +9,34 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-22 — 📖 **LA DOCUMENTATION DU DÉPÔT PUBLIC NE S'ATTRIBUE PLUS
+**Dernière mise à jour** : 2026-08-22 *(suite)* — ⚙️ **L'APPLICATION NE NOMME PLUS AUCUN CLUB PAR
+DÉFAUT.** Le lot **L8** est **appliqué localement**, ⛔ **non commité, non redéployé** — Romain doit
+valider le diff. **20 fichiers** — **15** de code et de documentation active, **5** de suivi —
+deux sous-lots contrôlés, **un seul commit** prévu.
+⭐ **Audité par QUATRE agents indépendants** avant écriture, et **trois arbitrages ont été rouverts**
+parce que leurs constats ont démontré des prémisses fausses *(**D-041**)* :
+🔴 **① `boutique_r92_disponible` n'était PAS un identifiant interne** — `getConfig` est **public**
+et recopie les **noms de clés verbatim** : le nom sortait dans une réponse lisible par n'importe qui.
+Il devient `boutique_disponible`, avec une **migration douce à la lecture** — ⛔ **aucune
+manipulation du classeur, aucune perte du réglage déjà coché**.
+🔴 **② « vide par défaut » était l'état le plus DANGEREUX**, pas le plus neutre : `indexOf('')`
+renvoie `0`, donc **toutes** les équipes auraient été comptées comme celles du club. ⭐ **Démontré
+par exécution** : l'ancienne logique retenait **5 équipes sur 5** avec un mot-clé vide ; la
+nouvelle en retient **0** et le dit.
+⏸️ **③ Le préfixe `R92 — ` et le menu du classeur sont CONSERVÉS** — invisibles de l'utilisateur, et
+le préfixe **est** le repère de preuve de D-040.
+⭐ **Une découverte de méthode, et elle dépasse ce lot** : les **703 vérifications ont pu être
+exécutées hors Apps Script**, avec des doublures. Le harnais **reproduit exactement `703/703` sur
+l'état d'avant** — il est donc validé — et donne **`715/715 OK, 0 FAIL`** après le lot. Le projet
+croyait cette exécution impossible.
+📐 **Repères D-040 REMESURÉS, jamais recopiés** *(N-3)* : `Code.gs` **8342** lignes *(était 8277)* ·
+`Tests.gs` **4314** *(était 4244)* · bilan **715/715** *(était 703/703)* · témoin
+`API tournoi en ligne`.
+🔧 **M1 reste entier et bloquant.**
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-22* : 📖 **LA DOCUMENTATION DU DÉPÔT PUBLIC NE S'ATTRIBUE PLUS
 À UNE ASSOCIATION.** Le lot **L7** est **TERMINÉ** : **26 points, 8 fichiers**, ⛔ **aucun code,
 aucun test, aucun déploiement, aucune donnée du classeur**.
 ⭐ **Le point le plus visible du chantier tout entier** : la **première phrase du `README.md`**
@@ -460,12 +487,12 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · ✅ ⭐ **L5** — **les DEUX phases faites** : dépôt *(`5649f83`)* **et** redéploiement Google, ⭐ **prouvé par un email reçu** *(en-tête brut `From: "L'organisation du tournoi"`, 20/08/2026 17:08 UTC)*. ⚠️ **Une seule des 4 lignes exercée en réel** *(branche `MailApp`)* · ✅ **L7** — **26 points, 8 fichiers**, dont ⭐ la première phrase du `README.md` et **6 descriptions du bandeau de don devenu inexistant** · ⬜ **L8** *(élargi : « Boutique R92 » et `contact@r92.fr`)* · 🔧 **M1** *(élargie à l'affiche)* en attente d'autorisation |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · ✅ ⭐ **L5** — **les DEUX phases faites** : dépôt *(`5649f83`)* **et** redéploiement Google, ⭐ **prouvé par un email reçu** *(en-tête brut `From: "L'organisation du tournoi"`, 20/08/2026 17:08 UTC)*. ⚠️ **Une seule des 4 lignes exercée en réel** *(branche `MailApp`)* · ✅ **L7** — **26 points, 8 fichiers**, dont ⭐ la première phrase du `README.md` et **6 descriptions du bandeau de don devenu inexistant** · 🚧 **L8** — **patch appliqué, non commité** : `perfs_mot_cle_club` *(nouvelle clé, garde-fous)* · `boutique_disponible` *(migration douce)* · `org_club_nom` sans défaut · témoin D-040 `API tournoi en ligne` · **715/715** mesuré · 🔧 **M1** *(élargie à l'affiche)* en attente d'autorisation |
 | 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
 | **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 | 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |
 
-**La prochaine étape** est le lot **L8** — la **neutralisation fonctionnelle du club**. ⚠️ **C'est
+**La prochaine étape** est la **validation du diff L8 par Romain**, puis son commit et son **redéploiement chez Google** *(D-040)*. ⚠️ **C'est
 le second lot du chantier qui exige un redéploiement chez Google**, et **D-040** y servira
 directement : une preuve de version doit être **discriminante**. ⚡ **Son périmètre s'est élargi
 pendant L7** — voir `PLAN.md` §CF-4b. ⚠️ **CF-4a**

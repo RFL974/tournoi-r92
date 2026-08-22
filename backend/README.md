@@ -8,10 +8,10 @@ Code **Google Apps Script** du projet, déployé en **Web App**.
 > [`../docs/deploiement.md`](../docs/deploiement.md), qui donne les **deux nombres de contrôle** à
 > vérifier après chaque collage.
 
-| Fichier | Lignes *(relevé le 2026-08-19)* | Rôle |
+| Fichier | Lignes *(relevé le 2026-08-22)* | Rôle |
 |---|---|---|
-| **`Code.gs`** | 8 277 | **Le serveur** : les 65 actions, la sécurité, la génération, le classement |
-| **`Tests.gs`** | 4 244 | **Le harnais de tests** : à coller chez Google **lui aussi**, et à lancer par `lancerTestsFFR` |
+| **`Code.gs`** | 8 342 | **Le serveur** : les 65 actions, la sécurité, la génération, le classement |
+| **`Tests.gs`** | 4 314 | **Le harnais de tests** : à coller chez Google **lui aussi**, et à lancer par `lancerTestsFFR` |
 
 > 📐 **Ces deux nombres bougent à chaque session qui touche au serveur.** Pour les revérifier :
 > `wc -l backend/Code.gs backend/Tests.gs`.

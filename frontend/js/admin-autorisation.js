@@ -269,7 +269,7 @@ function rendreFeuilleAutorisation(dossier) {
     html += '</tbody></table></div>';
   });
 
-  html += '<p class="autorisation-pied">Circuit de dépôt (à la charge du Racing) : ' +
+  html += '<p class="autorisation-pied">Circuit de dépôt (à la charge du club organisateur) : ' +
     '<strong>Club demandeur → Comité Départemental → Ligue Régionale</strong>. ' +
     'Adresse et modalités de dépôt : à confirmer (audit Q2). Avis et signatures : hors de cette feuille.</p>';
   return html + '</div>';
@@ -666,7 +666,8 @@ function remplirFormatSportifAut(categories, matchsParCat, setT) {
  * PUR : ne lit ni DOM ni classeur. `g` = paramètres globaux (Config) ; nbClubs/nbEquipes/
  * nbParticipants = comptes (cascade calculée par l'appelant) ; `matchsParCat` = matchs groupés par
  * catégorie (pour le format sportif). Applique les MÊMES défauts et la MÊME doctrine que la
- * feuille de report backend (club affilié, label, étrangères, phases, cascades).
+ * feuille de report backend (label, étrangères, phases, cascades). ⛔ AUCUN nom de club
+ * n'est pré-rempli : non saisi ⇒ le champ reste vide et ÉDITABLE dans le PDF fédéral.
  */
 function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsParCat, nbParticipants, nbEducateurs) {
   g = g || {};
@@ -679,8 +680,9 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsPa
   }
   function choix(val, map) { if (map[val]) cases.push(map[val]); }
 
-  // A.1 Organisateur (défauts alignés sur la feuille de report backend).
-  setT('Texte1', v('org_club_nom') || 'Racing Club de France Rugby');
+  // A.1 Organisateur (défauts alignés sur la feuille de report backend : AUCUN nom de club
+  // n'est inventé — vide ⇒ setT n'écrit rien ⇒ le champ reste ÉDITABLE dans le PDF).
+  setT('Texte1', v('org_club_nom'));
   setT('Texte2', v('org_code_club'));
   setT('Texte3', v('org_representant_nom'));
   setT('Texte5', v('org_representant_tel'));
@@ -778,7 +780,7 @@ function planRemplissageAutorisation(g, nbClubs, nbEquipes, categories, matchsPa
   cocherFormesCategories(categories, cases);
 
   // Page signatures — club demandeur.
-  setT('Club demandeurRow1', v('org_club_nom') || 'Racing Club de France Rugby');
+  setT('Club demandeurRow1', v('org_club_nom'));
   return { textes: textes, cases: cases };
 }
 

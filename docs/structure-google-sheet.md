@@ -106,11 +106,12 @@ Paramètres **Phase 1** (invitation légère `frontend/invitation-club.html`). C
 |---|---|---|
 | `buvette_disponible` | `non` | `oui` = pastille « 🥤 Buvette » sur l'invitation (défaut `non` : aucune ligne si décoché) |
 | `espace_sandwich_disponible` | `non` | `oui` = pastille « 🥪 Espace sandwich » |
-| `boutique_r92_disponible` | `non` | `oui` = pastille « 🛍️ Boutique R92 » |
+| `boutique_disponible` | `non` | `oui` = pastille « 🛍️ Boutique ». ⚠️ **Renommé le 2026-08-22** *(anciennement `boutique_r92_disponible`)* : un classeur qui porte encore l'ancienne ligne **garde son réglage**, repris automatiquement à la lecture ; le premier enregistrement écrit la nouvelle ligne, et l'ancienne devient une donnée dormante qu'on peut supprimer à la main |
+| `perfs_mot_cle_club` | *(vide)* | ⚙️ Mot qui identifie une équipe **du club organisateur** dans son nom, pour la page interne « Perfs du club » *(casse ignorée, espaces de début et de fin retirés ; ex. `massy` pour « MASSY-1 » et « MASSY-2 »)*. ⚠️ **Minimum 3 caractères** une fois normalisé. ⛔ **Vide OU plus court : la page ne calcule RIEN et le dit** — un mot vide correspondrait à **toutes** les équipes, un mot trop court à trop d'entre elles, et le bilan serait faux mais plausible. ⭐ **Se règle depuis l'administration** *(carte « Équipes » → « Identifier mes équipes dans Perfs »)*, écrit par l'action `enregistrerInfosTournoi` : **aucune saisie manuelle dans le classeur n'est nécessaire**, la ligne est créée au premier enregistrement |
 | `date_limite_reponse` | `2026-09-15` | Date limite de **réponse** à l'invitation (Phase 1). **Distincte** de `date_limite_confirmation` (effectifs, Phase 2) |
 | `contact_reponse_nom` | `Camille Dupont` | Nom du contact référent (section « Réponse attendue » de l'invitation) |
 | `contact_reponse_tel` | `0612345678` | Téléphone du contact (10 chiffres, normalisé). **Au moins un** de `contact_reponse_tel` / `contact_reponse_email` est **obligatoire** (validation croisée à l'enregistrement) |
-| `contact_reponse_email` | `contact@r92.fr` | Email du contact (format vérifié). Voir validation croisée ci-dessus |
+| `contact_reponse_email` | `contact@example.org` | Email du contact (format vérifié). Voir validation croisée ci-dessus |
 | `email_expediteur` | *(vide)* | Adresse « Envoyer en tant que » (alias Gmail du compte exécutant). **Vide = l'email part de l'adresse du compte exécutant le script** (`romain.rifleu@gmail.com` en phase de test). Purement informatif : ne bloque rien si vide. **Conservé** par une réinitialisation (config d'infrastructure). Voir `docs/passation.md` §11 |
 
 Paramètres **optionnels lus par le dossier club** (`frontend/dossier-club.html`). Aucun

@@ -7026,3 +7026,110 @@ siglée rétablirait par l'image l'attribution que tout le chantier retire.**
 **Lot L8 — la neutralisation fonctionnelle du club.** ⚠️ **Second lot du chantier à exiger un
 redéploiement chez Google** : **D-040** s'y applique directement — *une preuve de version doit être
 discriminante*, et le témoin se choisit **sans apostrophe, sans accent et sans guillemet**.
+
+---
+
+## 15. Lot L8 — la neutralisation fonctionnelle du club
+
+**2026-08-22** · ⛔ **patch appliqué localement, NON commité, NON redéployé.**
+
+### 1. Ce qui rend cette session différente : quatre regards avant une seule main
+
+**Méthode retenue par Romain** : trois audits **indépendants et parallèles**, en **lecture seule**
+*(l'outillage lui-même les privait de toute écriture)*, puis **un seul intégrateur**, puis un
+**contre-audit** sur le diff — sans lui donner le raisonnement qui l'avait produit.
+
+| | Périmètre | Ce qu'il a rapporté |
+|---|---|---|
+| **A** | Perfs, architecture | 🔴 **Le piège du mot-clé vide** · le coût réseau réel · le rejet argumenté de trois solutions alternatives |
+| **B** | Surfaces visibles | 🔴 **La clé boutique sort publiquement** · preuve **binaire** du faux positif `Case à cocher92` |
+| **C** | Backend, tests, D-040 | ⛔ **Rejet du témoin proposé pour `Tests.gs`** · 🔴 **le risque N-3**, que personne n'avait demandé de chercher |
+| **D** | Contre-audit du diff | *(voir §7)* |
+
+🎯 **Ce que le dispositif a réellement produit, et c'est le point de la session** : **trois
+arbitrages déjà validés ont dû être rouverts**, parce que les agents ont démontré que leurs
+prémisses étaient **fausses**. ⛔ **Aucune relecture textuelle n'aurait pu le voir** — il fallait
+lire ce que le code **fait**, pas ce qu'il dit.
+
+### 2. 🔴 Les deux prémisses fausses, et comment elles ont été prises en défaut
+
+**a) « `boutique_r92_disponible` est un identifiant interne. »** — **Faux.**
+
+```
+Code.gs:345   // getConfig est PUBLIC (page vitrine) → vue INVITATION filtrée
+Code.gs:736   v.global.forEach(function (k) { ... gOut[k] = gIn[k]; });   ← les NOMS, verbatim
+config.js:20  const API_URL = "https://script.google.com/.../exec"        ← fichier public
+```
+
+Ouvrir cette adresse renvoyait littéralement `"boutique_r92_disponible": "oui"`. ⭐ **La réserve des
+identifiants CSS ne s'appliquait pas** : `--r92-navy` ne quitte jamais la feuille de style ; ce
+nom-là était **publié par une API publique**.
+
+**b) « Vide par défaut = état neutre. »** — **C'était l'état le plus dangereux.**
+
+`String(nom).toLowerCase().indexOf('')` renvoie **0**, et `0 >= 0` est **vrai**. Démontré **par
+exécution**, sur les deux versions du vrai fichier :
+
+| Mot-clé vide, 5 équipes de test | Équipes retenues |
+|---|---|
+| **Ancienne logique** | 🔴 **5 sur 5** — bilan ≈ 50 % de victoires, plausible et faux |
+| **Nouvelle logique** | ✅ **0** — et la page dit *« mot-clé non configuré »* |
+
+### 3. La migration douce de la clé, et pourquoi elle tient en une fonction
+
+⛔ **Renommer un paramètre ne renomme pas la ligne du classeur.** Sans reprise, le réglage de
+l'organisateur disparaissait **sans un mot**.
+
+⭐ **Ce qui a rendu la solution petite** : `lireConfig` est le **point de lecture UNIQUE** du
+classeur — **20 appelants** y passent. Une seule fonction `appliquerAliasConfig`, **pure et
+testable**, insérée là, couvre la vue publique, l'admin, les emails et les documents.
+
+**Règle** : la clé canonique gagne dès qu'elle porte une valeur · l'ancienne n'est lue qu'en repli ·
+elle n'est **jamais réécrite** · elle ne figure dans **aucune** liste blanche publique.
+⛔ **Aucune manipulation du classeur n'a été faite ni n'est nécessaire.**
+
+### 4. ⭐ Une découverte de méthode qui dépasse le lot
+
+**Les 703 vérifications ont pu être exécutées hors d'Apps Script**, avec des doublures
+*(`Logger`, `SpreadsheetApp`, `CacheService`…)*. Le harnais **reproduit exactement `703/703 OK,
+0 FAIL` sur le commit `0f3dadb`** — c'est ce qui le valide — et donne **`715/715 OK, 0 FAIL`** après
+le lot.
+
+> 🎯 **Le projet tenait cette exécution pour impossible** *(« les tests ne tournent que dans
+> l'éditeur »)*. Elle ne remplace pas le contrôle chez Google — `CLAUDE.md` **§13.6** reste entier,
+> et **seule l'exécution réelle fait foi** — mais elle transforme un chiffre **supposé** en chiffre
+> **mesuré avant le collage**. ⚠️ **À confirmer sur d'autres lots avant d'en faire une pratique.**
+
+### 5. Ce qui a été CONSERVÉ, et pourquoi ce n'est pas un renoncement
+
+| Conservé | Motif |
+|---|---|
+| Préfixe `R92 — ` du bilan | Invisible de l'utilisateur, et **c'est le repère de preuve de D-040** |
+| Menu « Tournoi R92 » du classeur | Même réserve · ⚠️ `onOpen` n'est **pas** rechargé par un redéploiement |
+| `92350 Le Plessis-Robinson` · « associations du 92 » | Un **code postal** et un **département** |
+| `Case à cocher91/92` | **Identifiants Adobe** du formulaire fédéral — preuve binaire d'Agent B |
+| `--r92-*`, `.r92-*`, `theme-r92.css`, `r92_*`, nom du dépôt | Réserves **D-039 #13/#14** |
+
+### 6. ⚠️ Le risque que personne n'avait demandé de chercher — N-3
+
+Agent C a relevé que **`docs/deploiement.md` porte deux nombres volatils** *(bilan et nombre de
+lignes)* et que `backend/README.md` **en recopie un**. Une seule ligne reformatée les rendait faux
+— *« un repère qui ne correspond plus ne prouve plus rien »*. ➡️ **Tous remesurés**, jamais
+recopiés : `Code.gs` **8342**, `Tests.gs` **4314**, bilan **715/715**.
+
+### 7. ⚠️ Documents ACTIFS vérifiés *(`CLAUDE.md` §12.4 point 2)*
+
+- ✅ **Corrigés dans le lot** : `docs/deploiement.md` *(ping ×2, les deux repères, le témoin du lot)*
+  · `backend/README.md` *(le nombre de lignes recopié)* · `docs/structure-google-sheet.md`
+  *(les deux clés, le contact)* · `docs/guide-utilisateur.md` *(le réglage Perfs)* ·
+  `CHANGELOG.md` *(un club voit changer la pastille et le fichier d'agenda)* ;
+- ✅ **Vérifiés, ne deviennent PAS faux** : `README.md` et `docs/architecture.md` — ils décrivent la
+  page Perfs sous son nom générique et ne mentionnent ni la clé boutique, ni le mot-clé du club ;
+- ⚡ **`PLAN.md` corrigé** : son affirmation *« la page Perfs est textuellement générique »* était
+  **inexacte**. ⛔ **L'histoire n'est pas réécrite** — la correction dit ce que L2 avait bien
+  neutralisé *(le HTML)*, ce qui lui avait échappé *(le JS)*, et qui l'a trouvé.
+
+### 8. ⛔ Ce que ce lot n'a PAS fait
+
+Aucun commit · aucun push · **aucun redéploiement** · aucune modification du classeur ·
+⛔ **l'affiche n'a pas été touchée**. 🔧 **M1 reste entier et BLOQUANT pour la clôture de CF-4b.**

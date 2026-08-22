@@ -105,7 +105,7 @@ function blocSurPlace(g) {
   const pastilles = [];
   if (oui(g.buvette_disponible)) pastilles.push('🥤 Buvette');
   if (oui(g.espace_sandwich_disponible)) pastilles.push('🥪 Espace sandwich');
-  if (oui(g.boutique_r92_disponible)) pastilles.push('🛍️ Boutique R92');
+  if (oui(g.boutique_disponible)) pastilles.push('🛍️ Boutique');
 
   let html = '';
   if (pastilles.length) {

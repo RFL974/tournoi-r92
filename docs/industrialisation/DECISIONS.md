@@ -2682,3 +2682,71 @@ locale — **et** sur le site réellement servi par GitHub Pages, qui peut diff�
 
 > ⭐ **Permanente, et elle servira avant la fin de CF-4b** : le lot **L8** exige lui aussi un
 > redéploiement. La règle vaut ensuite pour **tout chantier** touchant le serveur.
+
+---
+
+### D-041 — La neutralisation **fonctionnelle** : ce qui est visible se neutralise, ce qui est technique se réserve
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-22 |
+| **Chantier** | 🛡️ **Confiance** — étape **CF-4b**, lot **L8** |
+| **Statut** | ✅ **VALIDÉE — décision de Romain**, après un audit à **quatre agents indépendants** |
+| **Couvre** | Les **cinq arbitrages** A-1 → A-5 · les **garde-fous obligatoires** issus des constats N-1 → N-8 |
+| **Voisines** | **D-039** *(le principe de neutralité)* · **D-040** *(preuve de version discriminante)* · `CLAUDE.md` **§8 quater** |
+
+**Le problème posé — et il n'a pas été trouvé par une relecture**
+
+> Trois des arbitrages initialement validés pour L8 reposaient sur des **prémisses fausses**, et
+> aucun contrôle textuel ne pouvait le montrer. Il a fallu **lire ce que le code FAIT** :
+>
+> - `boutique_r92_disponible` était classé *« identifiant interne »*. ⛔ **Il ne l'est pas** :
+>   `getConfig` est **public** *(`Code.gs:345`)*, `filtrerConfigPublique` recopie les **noms de
+>   clés verbatim** *(`Code.gs:736`)*, et l'adresse de l'API est **en clair** dans un fichier servi
+>   par GitHub Pages. Le nom sortait donc dans une réponse **lisible par n'importe qui** ;
+> - *« vide par défaut »* était présenté comme l'état **neutre** du futur mot-clé Perfs. ⛔ **C'est
+>   l'état le plus DANGEREUX** : `indexOf('')` renvoie `0`, donc **toutes** les équipes auraient été
+>   comptées comme celles du club — avec un bilan ≈ 50 % de victoires, **plausible et faux** ;
+> - le préfixe de bilan `'R92 — '` était inscrit au périmètre. ⛔ **Il n'est visible que de
+>   l'administrateur** et c'est **le repère de preuve de D-040** : le changer aurait créé plus de
+>   risque que de bénéfice.
+
+---
+
+#### 1. Les cinq arbitrages
+
+| # | Arbitrage | Motif |
+|---|---|---|
+| **A-1** | 🔄 **`boutique_r92_disponible` → `boutique_disponible`**, avec une **migration douce à la LECTURE** | Le nom sortait publiquement. ⛔ **Aucune migration manuelle du classeur** : la reprise est automatique, la valeur existante est conservée |
+| **A-2** | ⏸️ **Le préfixe `'R92 — '` est CONSERVÉ** — réserve technique | Invisible de l'utilisateur · **repère de preuve de D-040** · même famille que le nom technique du projet |
+| **A-3** | ⏸️ **Le menu « Tournoi R92 » du classeur est CONSERVÉ** | Même réserve. ⚠️ Et `onOpen` n'est **pas** rechargé par un redéploiement : le changer ferait croire à un collage manqué **au moment où l'on configure les clés** |
+| **A-4** | ⏸️ **`92350 Le Plessis-Robinson` et « associations du 92 » CONSERVÉS** | ⭐ Un **code postal** et un **numéro de département**. ⛔ Ni Racing 92, ni Génération R92 |
+| **A-5** | **Deux sous-lots de contrôle, UN SEUL commit** | Frontend et backend passent par **deux canaux de publication différents** ; le geste risqué reste le collage chez Google, qu'on ne répète pas |
+
+> ⚠️ **A-2, A-3 et A-4 ne sont PAS une autorisation générale de conserver « R92 ».** Chaque
+> occurrence se qualifie **une par une**, sur un seul critère : *est-elle visible, au présent, par
+> quelqu'un d'autre que l'administrateur ?*
+
+---
+
+#### 2. Les garde-fous rendus OBLIGATOIRES
+
+| | |
+|---|---|
+| 🔴 **Mot-clé vide ⇒ `estDuClub()` renvoie `false`** | ⛔ Interdiction formelle de laisser `indexOf('') >= 0` valoir `true` |
+| 🔴 **Deux messages DISTINCTS** | *« mot-clé non configuré »* ≠ *« aucune équipe correspondante »*. ⛔ **Aucun chiffre n'est calculé** quand la configuration manque : un message qui accuse les données à la place du réglage envoie chercher au mauvais endroit |
+| **Normalisation des deux côtés** | `trim()` + `toLowerCase()` sur le mot-clé **et** sur le nom d'équipe — l'ancien code ne normalisait que le nom |
+| **Exposition en vue `live` uniquement** | ⭐ `getAll` transporte **déjà** la config : **zéro appel réseau supplémentaire**. ⛔ Pas dans `invitation`, rien n'y en a besoin |
+| **Cache versionné `_v2` → `_v3`** | Sans ce saut, la copie de secours **de 6 h** aurait masqué la nouvelle configuration après le redéploiement. ⛔ **Aucune infrastructure nouvelle** : le mécanisme existait |
+| ⭐ **Un repère volatil se REMESURE** | Les nombres de lignes et le bilan de tests ne se recopient **jamais** : ils se mesurent après le lot *(**§8 quater**, et c'est le mécanisme du `616/616`)* |
+
+---
+
+#### 3. ⛔ Ce que D-041 ne fait PAS
+
+> - ❌ Elle **ne renomme** ni le dépôt, ni les identifiants CSS, ni les clés de stockage local ;
+> - ❌ Elle **ne touche pas** aux champs du **PDF fédéral** *(`Case à cocher92` est un identifiant
+>   Adobe — le renommer produirait un formulaire officiel incomplet, sans la moindre erreur)* ;
+> - ❌ Elle **ne présume d'aucune adoption** : elle **retire** un nom de club, elle n'en met aucun ;
+> - ❌ Elle **ne clôt pas CF-4b** — **M1** *(les valeurs du classeur et l'**affiche**)* reste entier
+>   et **bloquant**.
