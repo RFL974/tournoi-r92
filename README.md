@@ -1,7 +1,6 @@
 # Tournoi R92 — Gestion de tournois de rugby
 
-Mini-logiciel interne de gestion de tournois de rugby pour l'association **Génération R92**
-(École de Rugby, Hauts-de-Seine).
+Mini-logiciel de gestion de tournois de rugby à l'échelle d'une école de rugby.
 
 Il permet d'organiser une journée de tournoi comportant **plusieurs catégories** (ex : U8 + U10 + U12 + U14),
 de répartir automatiquement les équipes en poules, de générer le planning horaire sans conflit,
@@ -17,11 +16,11 @@ puis de suivre les scores et classements en direct — et de garder un **histori
 | 2 | **Génération poules + planning** sans conflit, avec **assistant d'arbitrage** (pistes si l'heure de fin est dépassée ou si un forçage rallonge la journée) | ✅ Fait, déployé |
 | 3 | **Saisie des scores** : page `saisie.html`, un match par carte (score A / score B + Valider), scores définitifs verrouillés | ✅ Fait, déployé |
 | 4 | **Phase après-midi (format par catégorie)** : **poules de niveau** (tranches de 4-5 en round-robin complet, conforme EDR), classement **croisé** (niveaux), croisé **diagonal**, **matchs libres**, ou **Coupe + Plateau** (élimination directe + petite finale, propagation auto du vainqueur). *(Coupe + Plateau comporte des phases finales, non conformes au cadre École de Rugby : la carte est signalée et une confirmation est demandée avant de l'appliquer.)* Voir [`docs/formats-apres-midi.md`](docs/formats-apres-midi.md) | ✅ Fait, déployé |
-| 5 | **Page publique** `tournoi.html` (thème clair, charte du site vitrine) : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, **podium certain**, bandeau de don vers la page « Faire un don » du site | ✅ Fait, **en ligne** (GitHub Pages) |
+| 5 | **Page publique** `tournoi.html` (thème clair, charte du site vitrine) : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, **podium certain** | ✅ Fait, **en ligne** (GitHub Pages) |
 | 6 | **Publication du tournoi** : bouton admin « Générer le tournoi » (publier / masquer) — la page publique reste un écran « à venir » tant que le tournoi n'est pas publié | ✅ Fait, déployé |
 | 7 | **Infos du tournoi + affiche** : nom, date, lieu, description + **chargeur d'affiche** (stockée dans Google Drive). Enregistrés + publiés d'un clic (« Générer le tournoi ») | ✅ Fait, déployé |
 | 8 | **Intégration au site vitrine** [boutique-r92](https://rfl974.github.io/boutique-r92/) : carte d'actu dynamique (nom + affiche) + **page d'article** (agenda .ics 2 rappels + itinéraire) quand le tournoi est publié | ✅ Fait, en ligne |
-| 9 | **Perfs Racing** (`perfs.html`) : page interne, bilan du tournoi + **cumul de saison** par adversaire | ✅ Fait, en ligne |
+| 9 | **Perfs du club** (`perfs.html`) : page interne, bilan du tournoi + **cumul de saison** par adversaire | ✅ Fait, en ligne |
 | 10 | **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé (jamais effacé par une génération) | ✅ Fait, déployé |
 | 11 | **Sécurité écriture** : lectures publiques, écritures protégées par 2 clés (admin / scores) ; « connexion » demandée une fois par session | ✅ Fait, déployé + clés configurées |
 
@@ -62,7 +61,7 @@ tournoi-r92/
 │
 ├── docs/                    → documentation détaillée
 │   ├── guide-utilisateur.md     → ⭐ mode d'emploi complet (organisateur / saisie / visiteur)
-│   ├── passation.md             → ⭐ portabilité : tout transférer vers les comptes de l'asso
+│   ├── passation.md             → ⭐ portabilité : tout transférer vers les comptes d'une organisation
 │   ├── architecture.md          → ⭐ LA CARTE : les 65 actions, les 8 pages, les 26 fichiers JS
 │   ├── structure-google-sheet.md→ colonnes de chaque onglet du Sheet
 │   ├── deploiement.md           → déploiement backend + mise en ligne frontend
@@ -93,7 +92,7 @@ tournoi-r92/
     ├── invitation-club.html → Phase 1 : l'invitation envoyée au club
     ├── reponse-invitation.html → Phase 1 : le club accepte ou décline lui-même (jeton)
     ├── dossier-club.html    → Phase 2 : le dossier complet du club accepté (jeton)
-    ├── perfs.html           → « Perfs Racing » (page interne, non liée)
+    ├── perfs.html           → « Perfs du club » (page interne, non liée)
     ├── modeles/             → 1 modèle PDF (demande d'autorisation FFR)
     ├── assets/              → repère visuel neutre (SVG + PNG) et grain de fond
     ├── img/                 → 2 icônes de liens (utilisées par les emails)
@@ -115,7 +114,7 @@ tournoi-r92/
         │  — les pages —
         ├── tournoi.js       → la page publique
         ├── saisie.js        → la saisie des scores
-        ├── perfs.js         → Perfs Racing
+        ├── perfs.js         → Perfs du club
         ├── invitation.js    → l'invitation Phase 1
         ├── reponse.js       → la réponse du club
         ├── dossier.js       → le dossier Phase 2
@@ -216,8 +215,7 @@ et intégration au site vitrine boutique-r92.
   - **Classements** : derniers scores du tournoi, puis poules du matin (A/B/C) + niveaux croisés (N1-N4) ;
   - un **filtre catégorie** global (masqué s'il n'y a qu'une catégorie) adapte les deux onglets ;
   - un **podium** (top 3) s'affiche dès qu'il est mathématiquement certain (par catégorie) ;
-  - rafraîchissement automatique **~15 s** (avec étalement, cf. montée en charge). Le bandeau de don
-    pointe vers la page **« Faire un don »** du site vitrine.
+  - rafraîchissement automatique **~15 s** (avec étalement, cf. montée en charge).
 - ✅ **Publication du tournoi** : dans l'admin, bouton **« Générer le tournoi »** — distinct de la
   génération des poules. Il **enregistre les infos (nom, date, lieu, description) + l'affiche, puis
   publie**. Tant que le tournoi n'est pas publié, la page publique affiche un écran **« à venir »**.
@@ -227,7 +225,7 @@ et intégration au site vitrine boutique-r92.
   **page d'article** (`boutique-r92/tournoi.html`) apparaissent dans les Actualités du site vitrine ;
   l'article contient un bouton vers le tournoi en direct, un **agenda .ics (2 rappels : veille + 2 h)**
   et un bouton **itinéraire « On y va »**.
-- ✅ **Perfs Racing** (`perfs.html`) : page **interne** (non liée dans le menu), 2 onglets *Ce tournoi*
+- ✅ **Perfs du club** (`perfs.html`) : page **interne** (non liée dans le menu), 2 onglets *Ce tournoi*
   et *Saison* (cumul des rencontres par adversaire, via l'historique).
 - ✅ **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé,
   **jamais effacé** par une génération (permet le cumul saison des Perfs).

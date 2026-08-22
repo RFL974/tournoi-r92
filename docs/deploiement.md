@@ -228,8 +228,7 @@ Adresses (base `https://rfl974.github.io/tournoi-r92/`) :
 
 **Intégration au site vitrine [boutique-r92](https://rfl974.github.io/boutique-r92/)** (dépôt séparé) :
 quand le tournoi est publié, une carte d'actualité et une page d'article y apparaissent (elles
-interrogent le même backend). Le bandeau de don de la page publique pointe vers la page « Faire un
-don » du site vitrine.
+interrogent le même backend).
 
 > **Changer l'URL publique** (nouveau compte GitHub ou **nom de domaine**) : voir la procédure
 > complète dans [`passation.md`](passation.md) (DNS, domaine personnalisé, liens croisés à mettre à jour).

@@ -9,7 +9,38 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-20 *(suite 4)* — 📬 **UN EMAIL REÇU LE PROUVE : LE NOM DE
+**Dernière mise à jour** : 2026-08-22 — 📖 **LA DOCUMENTATION DU DÉPÔT PUBLIC NE S'ATTRIBUE PLUS
+À UNE ASSOCIATION.** Le lot **L7** est **TERMINÉ** : **26 points, 8 fichiers**, ⛔ **aucun code,
+aucun test, aucun déploiement, aucune donnée du classeur**.
+⭐ **Le point le plus visible du chantier tout entier** : la **première phrase du `README.md`**
+annonçait encore *« Mini-logiciel […] pour l'association … »*. C'est **la ligne que D-039 citait
+nommément**, et elle avait survécu à six lots.
+⚡ **Le lot a compté 26 points, et non les 16 annoncés — et l'écart est instructif.** Le plan
+annonçait 16 points **sans jamais les énumérer**. Le compte réel se décompose ainsi : **14**
+attributions institutionnelles *(le compte annoncé, moins `contact@r92.fr` reporté à L8 et moins les
+2 exemples réels conservés)* · **+ 4** références `CF-4` → `CF-4a` · **+ 2** descriptions
+*« blason »*, fausses depuis **L4** · et surtout **+ 6 que L0 ne pouvait pas connaître** : le
+**bandeau de don**, supprimé par **L3** le 2026-08-20, était encore décrit comme **existant** dans
+six documents actifs. 🎯 **Ce ne sont pas des oublis de L3 : ce sont des documents devenus faux
+APRÈS son passage.** Les lots qui **retirent** quelque chose de l'application **créent** de la dette
+documentaire — et elle atterrit dans le lot suivant sans que personne ne l'y mette.
+🔴 **Une découverte reportée à L8, et elle est VISIBLE par un club** : le libellé **« Boutique
+R92 »** subsiste dans l'écran organisateur *(`admin.html`)* et dans la **pastille de l'invitation
+envoyée aux clubs**. **L2 l'avait manqué** parce que le mot est collé au nom du réglage
+`boutique_r92_disponible`. ⛔ **Non corrigé ici** *(code + configuration ⇒ L8)*, mais **désormais
+inscrit au périmètre de L8**, avec `contact@r92.fr` *(document ET tests, à changer ensemble)*.
+⏸️ **Quatre réserves confirmées par Romain** : les titres *« Tournoi R92 »* rejoignent la réserve du
+**nom du dépôt** *(D-039 #13)* · les exemples réels *« RACING 92 »* / *« Racing 92 »* sont **des
+équipes qui jouent**, pas une attribution · `contact@r92.fr` **reporté à L8** · le mot *« blason »*
+**corrigé** en *« repère visuel »* *(faux depuis L4)*, ⛔ **sans toucher la classe `.inv-blason`**.
+🔧 **M1 reste entier, et reste bloquant** : les valeurs du classeur et surtout **l'affiche du
+tournoi**. **CF-4b ne peut pas être close sans lui.**
+📊 **L0** = préalable · **7 lots d'exécution sur 8 terminés** · ⬜ **L8** · 🔧 **M1** en attente
+d'autorisation. **La prochaine étape est L8.**
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-20 (suite 4)* : 📬 **UN EMAIL REÇU LE PROUVE : LE NOM DE
 L'EXPÉDITEUR N'EST PLUS CELUI D'UNE ASSOCIATION.** Le lot **L5** est **TERMINÉ**, ses deux phases
 faites — et, pour la première fois du chantier, la preuve finale ne vient **ni du code, ni d'un
 test**, mais d'une **boîte de réception**.
@@ -429,16 +460,15 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · ✅ ⭐ **L5** — **les DEUX phases faites** : dépôt *(`5649f83`)* **et** redéploiement Google, ⭐ **prouvé par un email reçu** *(en-tête brut `From: "L'organisation du tournoi"`, 20/08/2026 17:08 UTC)*. ⚠️ **Une seule des 4 lignes exercée en réel** *(branche `MailApp`)* · ⬜ **L7, L8** · 🔧 **M1** *(élargie à l'affiche)* en attente d'autorisation |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · ✅ ⭐ **L5** — **les DEUX phases faites** : dépôt *(`5649f83`)* **et** redéploiement Google, ⭐ **prouvé par un email reçu** *(en-tête brut `From: "L'organisation du tournoi"`, 20/08/2026 17:08 UTC)*. ⚠️ **Une seule des 4 lignes exercée en réel** *(branche `MailApp`)* · ✅ **L7** — **26 points, 8 fichiers**, dont ⭐ la première phrase du `README.md` et **6 descriptions du bandeau de don devenu inexistant** · ⬜ **L8** *(élargi : « Boutique R92 » et `contact@r92.fr`)* · 🔧 **M1** *(élargie à l'affiche)* en attente d'autorisation |
 | 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
 | **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 | 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |
 
-**La prochaine étape** est le lot **L7** — le **reste de la documentation active du dépôt public**
-*(16 points, + 4 références `CF-4` → `CF-4a`)*. ⛔ **Il ne touche ni le code, ni Google** : aucun
-redéploiement. ⚡ **L5 est terminé** *(les deux phases, voir l'en-tête)*, et le **renforcement de
-[`../deploiement.md`](../deploiement.md)** qu'il a rendu nécessaire est inscrit en **D-040** — il
-servira dès **L8**, le second lot qui exige un redéploiement. ⚠️ **CF-4a**
+**La prochaine étape** est le lot **L8** — la **neutralisation fonctionnelle du club**. ⚠️ **C'est
+le second lot du chantier qui exige un redéploiement chez Google**, et **D-040** y servira
+directement : une preuve de version doit être **discriminante**. ⚡ **Son périmètre s'est élargi
+pendant L7** — voir `PLAN.md` §CF-4b. ⚠️ **CF-4a**
 *(mentions légales)* reste **le seul écart au regard d'un texte extérieur**, et **CF-3** reste
 suspendue à la décision préparée par CF-2.
 

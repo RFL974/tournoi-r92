@@ -17,7 +17,7 @@ Google Apps Script relié à un **Google Sheet** (la base de données).
 | 🛠️ Administration | `admin.html` | l'organisateur | **clé admin** |
 | 📝 Saisie des scores | `saisie.html` | les marqueurs (par terrain) | **clé scores** |
 | 🏉 Le tournoi (public) | `tournoi.html` | les spectateurs | lecture seule |
-| 📊 Perfs Racing | `perfs.html` | le club (interne, non lié) | lecture seule |
+| 📊 Perfs du club | `perfs.html` | le club (interne, non lié) | lecture seule |
 
 Adresses en ligne (base `https://rfl974.github.io/tournoi-r92/`) : `admin.html`, `saisie.html`,
 `tournoi.html`, `perfs.html`.
@@ -357,8 +357,8 @@ Pensée pour le **téléphone**, un marqueur par terrain. À l'ouverture, elle d
 ## 3. Page publique « Le tournoi » (`tournoi.html`)
 
 Aux couleurs du site vitrine. Le bandeau de titre prend le **nom de l'événement** (saisi dans
-l'admin). Un **bandeau de don** mène à la page « Faire un don » du site. Bouton **Rafraîchir** +
-heure de dernière mise à jour ; la page se **rafraîchit toute seule** (~15 s, avec un léger
+l'admin). Bouton **Rafraîchir** + heure de dernière mise à jour ; la page se
+**rafraîchit toute seule** (~15 s, avec un léger
 étalement aléatoire pour la montée en charge — voir `montee-en-charge`/`relais-cdn.md`).
 
 - **Filtre catégorie** (en haut) : restreint tout l'affichage à une catégorie ; masqué s'il n'y en
@@ -386,7 +386,7 @@ restants** ne peut changer les 3 premières places **ni leur ordre**.
 
 ---
 
-## 4. Page Perfs Racing (`perfs.html`) — interne
+## 4. Page Perfs du club (`perfs.html`) — interne
 
 Non liée dans les menus (accès par l'URL), **lecture seule**. Deux onglets :
 - **Ce tournoi** : bilan et frise horaire des équipes du club sur le tournoi en cours.

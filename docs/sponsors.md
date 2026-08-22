@@ -69,9 +69,8 @@ Concrètement, dans le code :
 - **La barre basse ne recouvre rien** : `body.sp-barre-active` réserve sa hauteur en bas de page.
 - **Le plein écran ne s'ouvre qu'à l'arrivée**, jamais sur un rafraîchissement automatique
   (`sponsorPleinFait` dans `tournoi.js`), et jamais si le tournoi n'est pas publié.
-- **Un seul appel commercial au-dessus du contenu** : quand le bandeau partenaire (A) est
-  présent, le bandeau de don **descend** sous les contrôles (classe `don-bandeau-bas`, jouée
-  par l'ordre flex de `.carte-app`).
+- **Un seul appel commercial au-dessus du contenu** : le bandeau partenaire (A), sous le titre,
+  est le **seul** élément de ce type placé avant les scores.
 
 ---
 

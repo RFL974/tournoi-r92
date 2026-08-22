@@ -108,7 +108,7 @@ Quatre choses **dépendent de cette réponse**, et aucune ne peut être écrite 
 |---|---|
 | **Le texte d'information des clubs** *(chantier **CF-5**)* | Il doit **nommer** l'organisation responsable et donner **son** adresse de contact |
 | **Le registre des traitements** *(**CF-6**)* | C'est le responsable qui le tient |
-| **Les mentions légales** *(**CF-4**)* | Elles nomment l'éditeur |
+| **Les mentions légales** *(**CF-4a**)* | Elles nomment l'éditeur |
 | **Le compte Google institutionnel** *(**CF-3**)* | Il doit être ouvert **au nom** de l'organisation responsable |
 
 > ✅ **La bonne nouvelle** : les textes de **CF-5** sont **déjà rédigés**
@@ -305,7 +305,7 @@ leur sont demandées, Génération R92 décide de la conservation du carnet et r
 | **Propriété du Drive** *(affiches, photos)* | Suit le compte | Suit le compte | Suit le compte |
 | **Propriété et déploiement Apps Script** | Suit le compte ; ⚠️ **qui a le droit de redéployer doit être écrit** | idem | idem, **désigné dans l'accord** |
 | **Boîte d'envoi des courriels** | Adresse de l'EDR | Adresse de G-R92 | ⚠️ **Une seule adresse d'envoi** — les clubs doivent savoir qui leur écrit |
-| **Mentions légales** *(**CF-4**)* | Éditeur = EDR | Éditeur = G-R92 | ⚠️ **À trancher : un éditeur, ou les deux ?** |
+| **Mentions légales** *(**CF-4a**)* | Éditeur = EDR | Éditeur = G-R92 | ⚠️ **À trancher : un éditeur, ou les deux ?** |
 | **Documentation de passation** | `passation.md` : cible = EDR | cible = G-R92 | cible = structure désignée |
 | **Données partenaires** *(si la mesure est conservée — **CF-7**)* | L'EDR décide de la finalité et du destinataire de la fiche | G-R92 décide | ⚠️ **À désigner dans l'accord** — c'est une finalité **distincte** de l'organisation du tournoi |
 | **En cas de désaccord entre les structures** | *(sans objet)* | *(sans objet)* | ⚠️ **L'accord devrait prévoir comment on tranche** — sinon le blocage est possible |
@@ -543,12 +543,12 @@ leur sont demandées, Génération R92 décide de la conservation du carnet et r
 > l'étape ③.
 
 ⚠️ **Elle n'est pas urgente** : aucune date de mise en service n'existe. ⭐ **Mais elle conditionne
-quatre chantiers** — **CF-3** *(compte Google)*, **CF-4** *(mentions légales)*, **CF-5**
+quatre chantiers** — **CF-3** *(compte Google)*, **CF-4a** *(mentions légales)*, **CF-5**
 *(information des personnes)*, **CF-6** *(registre)*.
 
 ### Ce qui peut avancer sans elle
 
-✅ **CF-4, CF-5 et CF-6 se préparent dès maintenant, avec l'organisation laissée entre crochets** —
+✅ **CF-4a, CF-5 et CF-6 se préparent dès maintenant, avec l'organisation laissée entre crochets** —
 c'est la forme déjà retenue par le chantier **C-005**. ⭐ **Le jour où la case est cochée, on remplit
 les crochets ; on ne réécrit rien.**
 

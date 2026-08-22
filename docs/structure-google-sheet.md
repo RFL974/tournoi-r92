@@ -123,10 +123,10 @@ est simplement masqué dans le dossier :
 | `logistique_parking` | `Parking gratuit rue des Sports` | Ligne « Parking » des Infos pratiques |
 | `logistique_buvette` | `Buvette et restauration sur place` | Ligne « Buvette / restauration » |
 | `logistique_vestiaires` | `4 vestiaires, bâtiment B` | Ligne « Vestiaires » |
-| `table_marque_organisation` | `Tenue par les bénévoles R92` | Ligne « Table de marque » (Suivi & organisation) |
+| `table_marque_organisation` | `Tenue par les bénévoles du club` | Ligne « Table de marque » (Suivi & organisation) |
 | `url_tournoi_public` | `https://rfl974.github.io/tournoi-r92/tournoi.html` | Lien + QR code « Scores en direct » (défaut : la page `tournoi.html` publiée à côté du dossier) |
 | `url_site_association` | `https://…` | Bouton « Site de l'association » |
-| `url_instagram` | `https://instagram.com/…` | Bouton « 📣 Relayer sur les réseaux » (pointe directement vers le compte Instagram Génération R92) |
+| `url_instagram` | `https://instagram.com/…` | Bouton « 📣 Relayer sur les réseaux » (pointe vers le compte configuré ici ; vide ⇒ pas de bouton) |
 
 ### Zone B — Réglages par catégorie
 
@@ -253,7 +253,7 @@ Pour les matchs de l'**après-midi** (`phase = classement`), la lecture de la li
 
 Cet onglet **n'est jamais effacé** par « Générer poules et planning » (qui, lui, vide
 l'onglet `Matchs`). Il **accumule tous les matchs terminés de la saison**, tournoi après
-tournoi. La page interne **Perfs Racing** (`frontend/perfs.html`, onglet « Saison ») s'en
+tournoi. La page interne **Perfs du club** (`frontend/perfs.html`, onglet « Saison ») s'en
 sert pour cumuler les rencontres — utile quand le club croise plusieurs fois la même équipe.
 
 **Alimentation automatique :** dès qu'un score est validé (page saisie), le match est recopié

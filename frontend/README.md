@@ -9,9 +9,9 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
 - **`admin.html`** — organisateur (réglages, équipes, génération, publication) ; clé admin.
 - **`saisie.html`** — saisie des scores (table de marque, filtres catégorie + grand terrain,
   accordéons) ; clé scores.
-- **`perfs.html`** — « Perfs Racing », page interne (non liée), lecture seule.
+- **`perfs.html`** — « Perfs du club », page interne (non liée), lecture seule.
 - **`invitation-club.html`** — **invitation vitrine** (Phase 1, générique) : carton d'invitation
-  envoyé aux clubs AVANT leur réponse — blason centré, affiche en héros, descriptif, frise horaire
+  envoyé aux clubs AVANT leur réponse — repère visuel centré, affiche en héros, descriptif, frise horaire
   de la journée, une carte détaillée par catégorie (forme de jeu FFR, temps de jeu, pauses,
   récupération, effectifs, arbitrage, règlement), repères FFR ; export PDF via l'impression
   (`css/dossier.css`, `js/invitation.js`). Les données viennent de la vue publique `invitation`
@@ -58,7 +58,7 @@ Pages web (HTML / CSS / JS), **mobile-first**, sans framework — **en ligne sur
 - `js/commun-dossier.js` — le socle des pages « document » (invitation, réponse, dossier) :
   helpers de mise en forme (`txt`, `dateLongueFr`, `section`, `ligne`…), résumés sportifs
   (`resumeMiTemps`, `resumeEffectif`, `resumeReglement`…) et surtout les **blocs de page
-  partagés** — `heroDocument` (blason + affiche + descriptif), `friseJournee`,
+  partagés** — `heroDocument` (repère visuel + affiche + descriptif), `friseJournee`,
   `cartesCategories`, `piedDocument`. L'invitation et le dossier affichent ainsi les MÊMES
   blocs : corriger une formulation les corrige tous les deux.
 - `js/api.js` — `apiGet` / `apiPost` / `apiPostProtege` + gestion des clés (session).

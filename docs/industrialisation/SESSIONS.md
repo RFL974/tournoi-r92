@@ -6886,3 +6886,143 @@ aucune suppression · **un seul email**, individuel, vers une adresse de test, a
   seule adresse)*. 📌 **Troisième occurrence du même mécanisme** après `architecture.md` et le
   `CHANGELOG` : la question de faire entrer ce document dans la carte de **§8 bis** est **posée à
   Romain**, et **volontairement non tranchée ici**.
+
+---
+
+## 14. Lot L7 — le reste de la documentation active du dépôt public
+
+**2026-08-22** · commit à venir · ⛔ **aucun code, aucun test, aucun déploiement, aucune donnée du
+classeur.**
+
+### 1. Ce que le lot a corrigé — 26 points, 8 fichiers
+
+| Bloc | Points | Ce qui a changé |
+|---|---|---|
+| 🔴 **L'attribution du `README`** | 1 | *« Mini-logiciel **interne** […] pour l'association **Génération R92** (École de Rugby, Hauts-de-Seine) »* devient *« Mini-logiciel de gestion de tournois de rugby à l'échelle d'une école de rugby »* |
+| **« Perfs Racing » → « Perfs du club »** | 10 | `README.md` *(4)* · `frontend/README.md` *(1)* · `../architecture.md` *(2)* · `../guide-utilisateur.md` *(2)* · `../structure-google-sheet.md` *(1)* |
+| ⚡ **Le bandeau de don, qui n'existe plus** | 6 | `README.md` *(2)* · `../architecture.md` · `../deploiement.md` · `../guide-utilisateur.md` · `../sponsors.md` |
+| **La carte du `README` sur `passation.md`** | 1 | *« vers les comptes de **l'asso** »* → *« vers les comptes **d'une organisation** »* |
+| **Exemples institutionnels du classeur** | 2 | *« Tenue par les bénévoles **R92** »* → *« du club »* · *« pointe directement vers le compte Instagram **Génération R92** »* → *« pointe vers le compte configuré ici ; vide ⇒ pas de bouton »* |
+| **Le mot « blason », faux depuis L4** | 2 | `frontend/README.md` — *« blason centré »* → *« repère visuel centré »* ; `heroDocument (blason + …)` → `heroDocument (repère visuel + …)` |
+| **`CF-4` → `CF-4a`** | 4 | `CF-2-RESPONSABLE-TRAITEMENT.md` l. 111, 308, 546, 551 — ⛔ **aucune ne devient `CF-4b`** : les quatre parlent de **mentions légales** |
+| **TOTAL** | **26** | ⭐ **Vérifié au diff** : `git diff -U0` sur les 8 documents donne **exactement 26 blocs de modification** — 8 dans `README.md`, 3 dans `frontend/README.md`, 3 dans `../architecture.md`, 3 dans `../guide-utilisateur.md`, 1 dans `../deploiement.md`, 1 dans `../sponsors.md`, 3 dans `../structure-google-sheet.md`, 4 dans `CF-2-…` |
+
+⭐ **La ligne du `README` mérite d'être soulignée** : c'est **celle que D-039 citait nommément**
+*(« sa première phrase annonçait un logiciel "pour l'association …" »)*. Elle a survécu à **six
+lots** — parce que L1 n'avait retiré que le document Word, et que personne n'était revenu à la
+phrase d'accueil.
+
+### 2. ⚡ Pourquoi 26 et non 16 — et c'est la leçon du lot
+
+Le plan annonçait **16 points**. Il ne les a **jamais énumérés**. Le compte réel se décompose ainsi :
+
+| | | |
+|---|---|---|
+| **14** | attributions institutionnelles traitées | ⭐ **C'est bien le compte annoncé** : la passe d'analyse en avait relevé **15 fermes**, dont **`contact@r92.fr` reporté à L8** *(arbitrage 3)* ; les **2 exemples réels** *(« RACING 92 », « Racing 92 »)* sont restés en réserve *(arbitrage 2)* |
+| **+ 4** | références `CF-4` → `CF-4a` | Annoncées **séparément** par le plan, en plus des 16 |
+| **+ 2** | descriptions *« blason »* | ⚡ **Ajoutées par l'arbitrage 4** : elles ne nomment aucune structure, elles étaient simplement **fausses depuis L4** |
+| ⚡ **+ 6** | descriptions du **bandeau de don** | ⛔ **L0 ne pouvait PAS les compter** — voir ci-dessous |
+| **= 26** | | |
+
+> ⚠️ **Une erreur d'arithmétique a été commise pendant ce lot, et elle est notée ici plutôt que
+> corrigée en silence.** Le rapport de fin de patch a d'abord annoncé **25 points** — un chiffre
+> **repris de la proposition rédigée AVANT les arbitrages**, où `contact@r92.fr` était encore
+> compté *(−1)* et où les deux *« blason »* ne l'étaient pas encore *(+2)*. **25 − 1 + 2 = 26.**
+> ⛔ **Aucune ligne n'avait été comptée deux fois, et aucune retouche de forme n'avait été comptée
+> comme un point** : le total du tableau était juste, c'est **l'en-tête qui était périmé**. 🎯 **Un
+> chiffre juste devenu faux parce que la décision a bougé sous lui** — exactement le mécanisme de
+> **§8 quater**, cette fois à l'échelle d'une seule session.
+
+> 🎯 **Le mécanisme, et il n'accuse personne.** **L3** a supprimé le bandeau de don le 2026-08-20.
+> Six documents actifs continuaient de le décrire comme **présent** — non par négligence de L3, mais
+> parce qu'**un lot qui RETIRE quelque chose de l'application rend faux tout ce qui le décrivait**.
+> Cette dette n'existait pas quand L7 a été dimensionné : **elle a été créée entre-temps, par les
+> lots intermédiaires eux-mêmes.**
+>
+> ⭐ **C'est la même famille que l'élargissement de §8 bis** : le déclencheur regardait *« ce qui
+> nomme une structure »*, jamais *« ce qui est devenu faux »*. ⚠️ **Et ce n'est pas une invitation à
+> la refonte documentaire** : L7 a corrigé **l'état réel constaté**, rien de plus.
+
+**Preuve que le bandeau n'existe plus** : `grep -rn "don-bandeau\|don-lien\|Je fais un don\|Soutenez"
+frontend` → **0**. Six documents décrivaient donc une fonctionnalité absente du code.
+
+### 3. Les quatre arbitrages de Romain
+
+| Arbitrage | Décision | Pourquoi |
+|---|---|---|
+| **Titres « Tournoi R92 »** | ⏸️ **CONSERVÉS** — rejoignent la réserve du **nom du dépôt** *(D-039 #13)* | Neutraliser le titre sans renommer le dépôt afficherait un nom neutre **au-dessus d'une URL `tournoi-r92`**. ⚠️ **Ce n'est PAS une autorisation générale de garder « R92 »** |
+| **Exemples « RACING 92 » / « Racing 92 »** | ⏸️ **CONSERVÉS** | Ce sont **des équipes qui jouent**, comme `MASSY` et `PUC-2` à côté — ⛔ pas une attribution. Et l'exemple **enseigne une vraie règle de nommage** |
+| **`contact@r92.fr`** | ⏭️ **REPORTÉ À L8** | ⭐ Il vit **deux fois** : dans `../structure-google-sheet.md:113` **et** comme donnée de test dans `Tests.gs:920,947,952`. Les changer séparément créerait **deux vérités différentes** entre un document et le test qu'il décrit |
+| **Le mot « blason »** | ✅ **CORRIGÉ** | Depuis **L4**, l'image est un repère neutre : le mot était devenu **faux**. ⛔ **La classe `.inv-blason` n'a PAS été touchée** — identifiant technique, réserve #14 |
+
+### 4. 🔴 La découverte du lot : « Boutique R92 » est encore VISIBLE
+
+```
+frontend/admin.html:608,609            « Boutique R92 » (écran organisateur)
+frontend/js/admin-invitations.js:431   pastille « 🛍️ Boutique R92 »
+frontend/js/admin-invitations.js:549   service « boutique R92 »
+frontend/js/invitation.js:108          pastille « 🛍️ Boutique R92 »
+```
+
+⚠️ **La pastille figure dans l'INVITATION envoyée aux clubs** — c'est donc une attribution
+institutionnelle **vue par un tiers**, exactement du type que **L2** avait pour mission de retirer.
+
+🎯 **Pourquoi L2 l'a manquée, et c'est instructif** : le mot est **collé au nom du réglage**
+(`boutique_r92_disponible`). Une recherche sur *« R92 »* isolé, ou sur *« Génération R92 »*, ne le
+voit pas. **C'est le même mécanisme que l'`UID` `@generation-r92` du fichier calendrier**, trouvé de
+justesse pendant L2.
+
+⛔ **NON corrigé ici** — c'est du **code et une clé de configuration**, donc **L8**. ✅ **Inscrit au
+périmètre de L8** dans `PLAN.md` §CF-4b, avec `contact@r92.fr` et les chaînes serveur à qualifier
+une par une. ⚠️ **Le périmètre est inscrit, PAS la solution** : L8 aura sa propre analyse.
+
+### 5. Contrôles
+
+Toutes les recherches en **`LC_ALL=C.UTF-8`** *(D-039 §3a)*, avec un garde-fou vérifiant que les
+accents sont bien vus **avant** de conclure quoi que ce soit.
+
+| Contrôle | Résultat |
+|---|---|
+| `Perfs Racing`, `Génération R92`, `bandeau de don`, `Faire un don`, `comptes de l'asso`, `bénévoles R92`, `blason` — dans les **7 documents actifs traités** | ✅ **0** |
+| `CF-4` non suivi de `a`/`b` dans `CF-2-…` | ✅ **0** · `CF-4a` = **4** · `CF-4b` = **0** |
+| ⭐ **Réserves, qui doivent SURVIVRE** : `tournoi-r92` **53** · `boutique-r92` **40** · `theme-r92` **18** · `--r92-`/`.r92-` **124** · `.inv-blason` **5** | ✅ **toutes inchangées, avant et après** |
+| Fichiers applicatifs modifiés *(`frontend/js`, `frontend/css`, `*.html`, `backend/*.gs`, `cloudflare/`, `.github/`)* | ✅ **aucun** |
+| Formulations retenues, vraies dans l'état actuel du produit | ✅ *« Perfs du club »* est **déjà** le titre réel de la page *(`perfs.html:6` et `:26`, depuis L2)* — le lot **aligne la documentation sur le produit**, il n'invente aucun nom |
+
+> ⚠️ **Le critère n'était PAS « zéro occurrence de Racing/R92 dans le dépôt », et il ne le sera
+> jamais** *(`PLAN.md`, définition de la neutralité)*. Le critère est : **aucune attribution
+> institutionnelle ACTIVE au présent dans le périmètre traité**. Les réserves techniques et
+> l'historique **doivent** rester — et ils sont là, au compte près.
+
+### 6. ⚠️ Documents ACTIFS vérifiés *(`CLAUDE.md` §12.4 point 2)*
+
+- ✅ `README.md`, [`../architecture.md`](../architecture.md), `frontend/README.md`,
+  [`../guide-utilisateur.md`](../guide-utilisateur.md), [`../deploiement.md`](../deploiement.md),
+  [`../sponsors.md`](../sponsors.md), [`../structure-google-sheet.md`](../structure-google-sheet.md)
+  — **ils SONT le patch**, corrigés dans le même lot ;
+- ✅ [`../../backend/README.md`](../../backend/README.md) — **vérifié : ne devient pas faux.** Sa
+  seule mention *(menu « Tournoi R92 »)* est un repère de **L8** ;
+- ✅ [`../../CHANGELOG.md`](../../CHANGELOG.md) — **vérifié : aucune entrée à ajouter.** L7 est
+  **strictement documentaire** : ⛔ un utilisateur ne remarquerait **rien**, et rien ne change dans
+  ce sur quoi on peut compter *(critère de **D-035**)*. Le seul changement produit visible — la
+  suppression du bandeau de don — **y figure déjà, daté du 2026-08-20** ;
+- ✅ [`REFERENTIELS.md`](REFERENTIELS.md) — **vérifié : rien à changer.** L7 ne repose sur **aucun
+  texte extérieur**, mais sur **D-038 / D-039**, fondement interne ;
+- ✅ `CLAUDE.md` — **volontairement NON touché** : c'est le cadre de travail, pas la vitrine du
+  produit ; sa seule mention institutionnelle *(§8 quinquies)* **est l'interdiction elle-même**.
+
+### 7. ⛔ Ce que ce lot n'a pas fait
+
+Aucun fichier de code, de style, de test, de workflow ni de configuration · aucun déploiement Apps
+Script · aucune valeur du classeur · ⛔ **l'affiche du tournoi n'a pas été touchée**.
+
+🔧 **M1 reste entier et reste BLOQUANT pour la clôture de CF-4b** : les valeurs
+`url_site_association` / `url_instagram` du classeur, et surtout **l'affiche**, qui **voyage dans les
+emails** *(image intégrée `cid:affiche`)*. ⚠️ **Un message parfaitement neutre portant une affiche
+siglée rétablirait par l'image l'attribution que tout le chantier retire.**
+
+### 8. Prochaine session recommandée
+
+**Lot L8 — la neutralisation fonctionnelle du club.** ⚠️ **Second lot du chantier à exiger un
+redéploiement chez Google** : **D-040** s'y applique directement — *une preuve de version doit être
+discriminante*, et le témoin se choisit **sans apostrophe, sans accent et sans guillemet**.

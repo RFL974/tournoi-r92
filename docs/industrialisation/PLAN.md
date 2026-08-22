@@ -2155,15 +2155,15 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 
 | Lot | Objet | État |
 |---|---|---|
-| **L0** | Inscrire CF-4b et les arbitrages dans le suivi *(ce texte, **D-039**)* | 🚧 **en cours** |
+| **L0** | Inscrire CF-4b et les arbitrages dans le suivi *(ce texte, **D-039**)* | ✅ **FAIT** — commit **`77d4ae7`** |
 | **L1** | 🔴 Retirer le modèle d'autorisation de droit à l'image du dépôt public | ✅ **FAIT** — commit **`3375061`**, publié et vérifié |
 | **L6** | Réécriture générique de [`../passation.md`](../passation.md) | ✅ **FAIT** — commit **`eac23ad`**. ⭐ **Structure et procédure intégralement conservées** *(§1 à §11.4)*, **§0 ajouté** : sept prérequis, l'administrateur **décrit et non désigné**, et ce que le document **ne décide pas**. ⛔ **Plus aucune organisation, adresse, domaine ni personne nommée** |
 | **L2** | Textes de l'application — titres, métadonnées, signatures, valeurs de repli, `.ics`, commentaires devenus faux | ✅ **FAIT** — commit **`5bff881`**. ⚡ **50 points, et non 45** : le recomptage a trouvé **3 commentaires** que la première regex manquait, et ⭐ **l'`UID` du fichier calendrier**, qui portait `@generation-r92` — invisible d'une recherche sur « Génération R92 ». ⚠️ **Dette temporaire assumée** : la page Perfs est **textuellement générique**, mais son filtre reste `MOT_CLE_CLUB = 'racing'` **jusqu'à L8** |
 | **L3** | Liens institutionnels — `LIENS_ASSOCIATION`, retours vitrine, **bandeau de don supprimé** | ✅ **FAIT** — commit **`6c04f10`**. **21 points** *(19 attendus + 2 commentaires CSS devenus faux)*. ⭐ **Le piège `tournoi.js:216` est démontré par comparaison** : la version d'avant lève `Cannot set properties of null`, celle d'après ne lève rien. ⚠️ **Les 4 liens ont été SUPPRIMÉS, pas remplacés** — ni `#`, ni faux lien générique |
 | **L4** | Identité graphique — logo neutre, favicon, retrait des blasons | ✅ **FAIT** — commits **`4bf3e62`** *(réalisation)* et **`20cba62`** *(correction du contraste, trouvée par le contrôle visuel).* **26 points.** 🆕 **3 assets créés** *(`logo-tournoi.svg`, `logo-tournoi.png`, `grain.svg`)*, **3 supprimés** *(224 Ko)*. ⭐ **La favicon est POSÉE sur les 8 pages** — 7 n'en avaient aucune. ⛔ **Plus aucune ressource graphique distante.** ⚠️ **2 adaptations CSS minimales** : l'ancien logo était un **bandeau large**, le nouveau est **carré** — `width:100%` l'aurait étiré à 260 px de côté |
-| **L7** | Reste de la documentation active du dépôt public | ⬜ **16 points** · ⚡ **+ 4 références `CF-4` → `CF-4a`** dans [`CF-2-RESPONSABLE-TRAITEMENT.md`](CF-2-RESPONSABLE-TRAITEMENT.md) *(l. 111, 308, 546, 551)* — dette relevée pendant L0 |
+| **L7** | Reste de la documentation active du dépôt public | ✅ **FAIT** — **26 points, 8 fichiers** *(= 26 modifications unitaires au diff)*. ⚡ **26 et non 16, et l'écart est une leçon** : **14** attributions institutionnelles *(dont ⭐ la première phrase du `README.md`, celle que **D-039** citait nommément)* — c'est le compte annoncé, **moins `contact@r92.fr` reporté à L8** et **moins les 2 exemples réels conservés en réserve** ; **+ 4** références `CF-4` → `CF-4a` ; **+ 6** que L0 ne pouvait PAS connaître — le **bandeau de don**, supprimé par **L3**, encore décrit comme **existant** dans six documents actifs ; **+ 2** descriptions *« blason »*, fausses depuis **L4**. ⛔ **Aucun code, aucun test, aucun déploiement, aucune donnée du classeur** |
 | **L5** | Backend — nom affiché de l'expéditeur ⚠️ **redéploiement** | ✅ **FAIT — 2 phases.** ✅ **L5-A** *(dépôt Git)* : **4 substitutions littérales**, commit **`5649f83`** · ✅ **L5-B** *(chez Google)* : `Code.gs` et `Tests.gs` recopiés, **enregistrés**, contrôlés dans l'éditeur par des **témoins fixés AVANT le collage**, **nouvelle version du même déploiement**, **`703/703 OK, 0 FAIL`**, ping conforme. ⭐ **Preuve finale à la réception** : `From: "L'organisation du tournoi" <…>` *(20/08/2026 17:08 UTC)*, contre `From: "Génération R92"` le matin même, **même boîte, même adresse d'envoi**. ⚠️ **PORTÉE — à ne jamais élargir** : **une seule des 4 lignes exercée en réel** *(`MailApp` dans `envoyerEmailHtml`, `Code.gs:5086`)* ; les **3 autres** *(`Code.gs:5067`, `5069`, `5082`)* sont **CERTAINES dans le code**, ⛔ **NON TESTÉES EN RÉEL**. 🔴 A produit **D-040** |
-| **L8** | Neutralisation fonctionnelle du club — `org_club_nom`, `MOT_CLE_CLUB`, **tests** ⚠️ **redéploiement** | ⬜ **16 points** |
+| **L8** | Neutralisation fonctionnelle du club — `org_club_nom`, `MOT_CLE_CLUB`, **tests** ⚠️ **redéploiement** | ⬜ **16 points** · ⚡ **périmètre ÉLARGI pendant L7**, voir le tableau ci-dessous |
 
 > ⭐ **Pourquoi L1 puis L6 avant tout le reste** : ce sont les deux seuls lots qui engagent des
 > **tiers réels aujourd'hui** — une association pour le document supprimé, **une personne physique
@@ -2171,7 +2171,7 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 >
 > ⚠️ **Comptage, et il faut le lire ainsi** : **L0 est un préalable documentaire**, ajouté après
 > coup — il ne fait pas partie des huit. **Les lots d'exécution sont L1 → L8.** À ce jour :
-> ✅ **6 sur 8 terminés** *(L1, L6, L2, L3, L4, L5)* · ⬜ **2 non commencés** *(L7, L8)*.
+> ✅ **7 sur 8 terminés** *(L1, L6, L2, L3, L4, L5, L7)* · ⬜ **1 non commencé** *(L8)*.
 >
 > ⭐ **Pourquoi L5 a compté DEUX phases — et pourquoi la leçon vaut d'être gardée** : le dépôt et le
 > serveur réellement en service chez Google sont **deux choses différentes**. Publier le code ne
@@ -2195,6 +2195,23 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 > `LIENS_ASSOCIATION` que **D-039 #7 demande de conserver**. Les supprimer casserait ce mécanisme
 > le jour où une organisation y mettrait ses propres liens.
 
+**⚡ Périmètre de L8, élargi par les constats de L7** *(2026-08-22)* — ⛔ **c'est un CONSTAT et un
+périmètre, PAS une solution** : L8 aura sa propre analyse avant toute modification.
+
+| À examiner en L8 | Où | Pourquoi c'est là |
+|---|---|---|
+| `MOT_CLE_CLUB = 'racing'` | `frontend/js/perfs.js:23` | Le filtre de la page Perfs — **le cœur du lot**, déjà prévu *(D-039 #9)* |
+| `org_club_nom` et ses valeurs de repli `'Racing Club de France Rugby'` | `backend/Code.gs:236,1926` · `frontend/js/admin-autorisation.js:683,781` | Déjà prévu *(D-039 #8)* |
+| 🆕 🔴 **Les libellés visibles « Boutique R92 »** | `frontend/admin.html:608,609` · `js/admin-invitations.js:431,549` · `js/invitation.js:108` | **Découvert pendant L7.** ⚠️ **Visible par un club** : la pastille figure dans **l'invitation envoyée**. **L2 l'avait manqué** — le mot est **collé au nom du réglage**, donc invisible d'une recherche sur « R92 » isolé |
+| 🆕 `boutique_r92_disponible` *(clé de configuration)* | `backend/Code.gs:212,687,3945` · 4 fichiers JS · `Config` du classeur | Porte le libellé ci-dessus. ⚠️ **Renommer une clé touche AUSSI le classeur** — à ne pas décider ici |
+| 🆕 `contact@r92.fr` — **document ET tests, ensemble** | `docs/structure-google-sheet.md:113` · `backend/Tests.gs:920,947,952` | ⭐ **Volontairement REPORTÉ de L7** *(arbitrage de Romain, 2026-08-22)* : les corriger séparément créerait **deux vérités différentes** entre la documentation et le test qu'elle décrit |
+| **Les tests correspondants** | `backend/Tests.gs:1529,1533,3289` | Ils **vérifient** les valeurs par défaut ci-dessus : ils bougent **avec** elles |
+| **Les chaînes serveur** dont la neutralisation est réellement nécessaire | `'API Tournoi R92 en ligne'` *(`Code.gs:328`)* · menu `« Tournoi R92 »` *(`Code.gs:2958,2963,2969`)* · bilan `'R92 — '` *(`Tests.gs:383`)* | ⚠️ **À qualifier une par une, pas en bloc** : le bilan `R92 — 703/703` est **un repère de redéploiement** dont [`../deploiement.md`](../deploiement.md) est **la source unique** *(§8 quater)* — le changer sans changer sa source **casserait le contrôle de version de D-040** |
+
+> ⚠️ **Documents qui suivront L8, et qu'il ne faudra pas oublier** : `backend/README.md:96` et
+> [`../deploiement.md`](../deploiement.md) *(l. 35, 126, 142, 175)* **citent** ces chaînes. Ils
+> deviennent faux **le jour où le code change**, pas avant — c'est exactement **§8 bis**.
+
 **Opération manuelle associée — hors Git :**
 
 | | |
@@ -2216,6 +2233,8 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 | Réserve | Volume | Pourquoi elle est assumée |
 |---|---|---|
 | **Le nom du dépôt `tournoi-r92`** | 1 | Le renommer changerait l'URL du dépôt, l'adresse GitHub Pages, **les liens à jeton déjà envoyés**, les liens croisés et `API_URL`. ➡️ **RÉSERVE ASSUMÉE — hébergement / migration institutionnelle, à traiter séparément.** ⛔ **N'empêche pas CF-4b de fermer** |
+| 🆕 **Les titres « Tournoi R92 »** *(`README.md:1`, `guide-utilisateur.md:1`, pieds de `conservation-donnees.md` et `textes-information-donnees.md`, commentaires de `worker-tournoi.js` et `styles.css`)* | ~8 | ⭐ **Décision de Romain, 2026-08-22** : ils **découlent** du nom du dépôt et rejoignent **la même réserve (#13)**. Neutraliser le titre sans renommer le dépôt afficherait un nom neutre **au-dessus d'une URL `tournoi-r92`** — une incohérence visible, pour un gain nul. ⚠️ **Ce n'est PAS une autorisation générale de conserver « R92 »** : la réserve porte sur **le nom technique du projet**, rien d'autre |
+| 🆕 **Les exemples réels « RACING 92 » / « Racing 92 »** *(`guide-utilisateur.md:159`, `structure-google-sheet.md:270`)* | 2 | ⭐ **Décision de Romain, 2026-08-22** : ce sont **des équipes qui jouent**, au même titre que `MASSY` ou `PUC-2` dans le tableau voisin — ⛔ **pas une attribution de l'application à une structure**. Et l'exemple **enseigne une vraie règle** *(un chiffre collé au nom n'est pas un suffixe d'équipe)* : le remplacer par un club fictif l'affaiblirait |
 | **Les identifiants CSS `--r92-*`, `.r92-*`, `theme-r92.css`** | ~130 | **Identifiants techniques invisibles** pour l'utilisateur. Les renommer ne neutraliserait **aucune attribution visible**, toucherait 6 feuilles de style et 8 pages, et créerait un risque de régression sans bénéfice proportionné |
 | **L'historique Git, le `CHANGELOG` ancien, les audits et les documents de suivi** | ~350 | Ils racontent un état **vrai à leur date**, ou expliquent l'interdiction elle-même |
 

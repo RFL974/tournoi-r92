@@ -298,13 +298,13 @@ Pages statiques (HTML/CSS/JS), **mobile-first**, publiées par GitHub Pages.
 | Page | Public visé | Rôle |
 |---|---|---|
 | `index.html` | tout le monde | **Redirection immédiate** vers `tournoi.html` (12 lignes, aucun script) |
-| `tournoi.html` | les spectateurs | **La page publique.** 2 onglets — 📋 *Mon équipe* et 🏆 *Classements* — filtre catégorie global, derniers scores, **podium affiché dès qu'il est mathématiquement certain**, bandeau de don. Un seul appel `getAll`, rafraîchi ~15 s avec décalage aléatoire |
+| `tournoi.html` | les spectateurs | **La page publique.** 2 onglets — 📋 *Mon équipe* et 🏆 *Classements* — filtre catégorie global, derniers scores, **podium affiché dès qu'il est mathématiquement certain**. Un seul appel `getAll`, rafraîchi ~15 s avec décalage aléatoire |
 | `saisie.html` | les marqueurs, sur le terrain | Saisie des scores match par match, sur téléphone. **Clé SCORES** |
 | `admin.html` | l'organisateur | **L'écran de pilotage** : équipes, réglages, génération, terrains, invitations, partenaires, autorisation FFR, feuille de journée. **Clé ADMIN**. 870 lignes de HTML, 20 scripts |
 | `invitation-club.html` | un club, avant sa réponse | **Phase 1** — l'invitation légère, présentée comme un document |
 | `reponse-invitation.html` | un club | **Phase 1** — le club accepte ou décline **lui-même**. Protégée par **jeton** |
 | `dossier-club.html` | un club accepté | **Phase 2** — le dossier complet et personnalisé. Protégée par **jeton** |
-| `perfs.html` | interne | Page « Perfs Racing », **non liée dans le menu** : lecture seule, 2 onglets |
+| `perfs.html` | interne | Page « Perfs du club », **non liée dans le menu** : lecture seule, 2 onglets |
 
 ### Les 26 fichiers JavaScript
 
@@ -324,7 +324,7 @@ Pages statiques (HTML/CSS/JS), **mobile-first**, publiées par GitHub Pages.
 |---|---|---|
 | `tournoi.js` | 1 115 | Toute la page publique |
 | `saisie.js` | 745 | Toute la saisie des scores |
-| `perfs.js` | 410 | La page interne Perfs Racing |
+| `perfs.js` | 410 | La page interne Perfs du club |
 
 **Le parcours des clubs (3)**
 
