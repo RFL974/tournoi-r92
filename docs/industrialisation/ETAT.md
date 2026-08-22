@@ -9,10 +9,39 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-22 *(suite)* — ⚙️ **L'APPLICATION NE NOMME PLUS AUCUN CLUB PAR
-DÉFAUT.** Le lot **L8** est **appliqué localement**, ⛔ **non commité, non redéployé** — Romain doit
-valider le diff. **20 fichiers** — **15** de code et de documentation active, **5** de suivi —
-deux sous-lots contrôlés, **un seul commit** prévu.
+**Dernière mise à jour** : 2026-08-22 *(suite)* — 🗓️ **LA DATE DU TOURNOI NE DÉPEND PLUS DU
+TÉLÉPHONE QUI LA REGARDE.** Lot correctif **R-094**, ⛔ **hors CF-4b** : ce n'est pas une
+neutralisation, c'est une **correction de fiabilité P1** ouverte séparément pour ne pas se mélanger
+au chantier institutionnel. **Appliqué localement**, ⛔ **non commité, non redéployé.**
+**9 fichiers** — **3** de code, **2** de documentation active, **1** de règles permanentes
+*(`CLAUDE.md`)*, **3** de suivi. *(Chiffre issu de `git diff --name-only`, pas d'une estimation.)*
+🔴 **Une date configurée au 13/03/2027 s'affichait « 12 mars 2027 »** dans le dossier du club et
+dans l'email — découvert par un **test réel depuis `America/New_York` (EDT, UTC−4)**.
+⚡ **Ce défaut est INVISIBLE depuis la France** : il ne se manifeste qu'à l'ouest de Greenwich.
+Aucune relecture faite en métropole ne l'aurait vu.
+⛔ **Le premier diagnostic était faux** — le correctif demandé *(« le nom du fichier `.ics` »)*
+aurait aggravé le défaut : le fichier d'agenda était **sain**, `DTSTART` portait bien le 13.
+⭐ **Cause** : `tournoi_date` est une **date civile**, pas un **instant** — devenu le garde-fou
+permanent **`CLAUDE.md` §8 sexies**. Corrigé en **un seul point commun**, `dateLocaleDepuisISO`
+dans `commun.js`, chargé en rang 1 sur les 4 pages concernées.
+🔴 **Le contre-audit a rattrapé une inversion** : sans motif **ancré**, une chaîne horodatée aurait
+été tronquée à sa date UTC — le correctif aurait retourné le défaut **contre la France**.
+📐 Preuves : **6 fuseaux**, 1 seule valeur par date civile · **12/12 instants identiques** à
+l'ancien code · 26 fichiers JS `node --check` sans erreur. ⛔ **Aucun fichier `backend/` touché,
+aucune donnée du classeur.**
+⚠️ **Dette consignée, non traitée** : le dépôt **séparé** `boutique-r92` porte le même défaut.
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-22* : ⚙️ **L'APPLICATION NE NOMME PLUS AUCUN CLUB PAR
+DÉFAUT.** Le lot **L8** est **commité** *(`be57f97`)* et **poussé sur `origin/main`**,
+⛔ **mais NON redéployé chez Google** — le serveur en service ignore encore ce lot.
+**22 fichiers** — **17** de code et de documentation active, **5** de suivi —
+deux sous-lots contrôlés, **un seul commit**.
+⚠️ **Cette ligne annonçait « 20 fichiers — 15 + 5 »** : le décompte avait été figé **avant** les
+corrections du contre-audit, qui ont ajouté deux fichiers. ⛔ **Le chiffre n'a pas été recalé en
+silence** — c'est le **diff réel** *(`git show --stat be57f97`)* qui fait foi, jamais une annonce
+antérieure.
 ⭐ **Audité par QUATRE agents indépendants** avant écriture, et **trois arbitrages ont été rouverts**
 parce que leurs constats ont démontré des prémisses fausses *(**D-041**)* :
 🔴 **① `boutique_r92_disponible` n'était PAS un identifiant interne** — `getConfig` est **public**

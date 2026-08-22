@@ -320,8 +320,11 @@ score : `litDetailEquipe`, `tirAuButCategorieFFR`, `essaisConnusEquipe`, levée 
 - **Contrainte de vestiaires — non contrôlée** : `org_nb_vestiaires` est **collecté** (saisi, session 7)
   et **reporté** sur la feuille d'autorisation, mais l'app ne vérifie **aucun** ratio
   vestiaires/équipes ni exigence FFR. Report, pas contrôle — à instruire quand la règle sera sourcée.
-- **Décalage d'un jour entre le champ date et l'aperçu public** : défaut connu et **non traité**
-  (fuseau/parse de date à l'affichage). Volontairement hors périmètre de la session 8, à corriger à part.
+- ~~**Décalage d'un jour entre le champ date et l'aperçu public**~~ : ✅ **CORRIGÉ le 2026-08-22.**
+  La cause était bien celle qui était pressentie — `new Date('AAAA-MM-JJ')` vaut minuit **UTC**, donc
+  l'affichage reculait d'un jour sur tout appareil **en retard sur UTC**. ⚠️ **Il ne touchait pas que
+  l'aperçu** : le dossier club et les **emails envoyés aux clubs** étaient concernés. Constaté en
+  réel depuis `America/New_York`. Corrigé dans les deux helpers partagés.
 
 **Dette identifiée** :
 1. `normaliserCategorie` (backend) a un miroir `normaliserCategorieFFR` (frontend). Deux

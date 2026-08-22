@@ -23,6 +23,7 @@
 - [8 ter. Règle du commentaire à jour](#8-ter-règle-du-commentaire-à-jour)
 - [8 quater. Règle de la source unique](#8-quater-règle-de-la-source-unique)
 - [8 quinquies. Règle de la mesure complète](#8-quinquies-règle-de-la-mesure-complète)
+- [8 sexies. Règle de la date civile](#8-sexies-règle-de-la-date-civile)
 - [9. Règle de transparence](#9-règle-de-transparence)
 - [10. Règle de prudence](#10-règle-de-prudence)
 - [11. Objectif final](#11-objectif-final)
@@ -774,6 +775,50 @@ si je ne le touchais pas ? »*
   les entrées passées du `CHANGELOG` portent des faits **vrais à leur date** ;
 - ✅ **Seulement** ceci : *sur quel texte repose ce que je viens de faire, et puis-je écrire la
   phrase du contrôle ⑯ ?*
+
+---
+
+## 8 sexies. RÈGLE DE LA DATE CIVILE
+
+> ⚠️ **Cette règle s'applique à TOUTES les sessions du projet.** Elle est née d'un défaut **constaté
+> en conditions réelles** le 2026-08-22, et validée par Romain le même jour.
+
+**La règle, en une phrase :**
+
+> **Une date civile n'est pas un instant. Une donnée métier au format `AAAA-MM-JJ`, sans heure ni
+> fuseau, se traite comme un JOUR DU CALENDRIER — jamais comme un point sur la ligne du temps.**
+
+⛔ **Interdit pour l'afficher** : `new Date('AAAA-MM-JJ')`. Cette écriture vaut **minuit UTC**, et le
+réaffichage dans le fuseau du navigateur peut **décaler le jour**.
+✅ **À utiliser** : un formatage **par composants**, ou le helper dédié — `dateLocaleDepuisISO`
+*(`frontend/js/commun.js`)*.
+
+### Pourquoi cette règle existe
+
+Parce que le défaut a vécu **des mois sans être vu**, et que la raison de cet aveuglement est ce
+qu'il faut retenir : **il est invisible depuis la France.** Paris *(UTC+1/+2)* et La Réunion
+*(UTC+4)* affichaient la bonne date. Il n'est apparu que lors d'un contrôle depuis
+**`America/New_York` (UTC−4)** : une date réglée au **13 mars 2027** s'affichait
+**« vendredi 12 mars 2027 »** — dans le dossier des clubs **et dans les emails partis**.
+
+> 🎯 **Un défaut qu'aucun test local ne pouvait révéler.** Le générateur de fichier calendrier
+> `.ics`, lui, était **juste** : il travaille par manipulation de chaîne. C'est **l'écart entre les
+> deux** qui a permis de localiser la cause — et c'est aussi ce qui prouve la règle : le code qui ne
+> convertissait pas était le code qui avait raison.
+
+### Le corollaire, tout aussi important
+
+⭐ **L'inverse est vrai aussi** : une chaîne qui porte une **heure** *(`…T10:00:00Z`)* **est** un
+instant, et le fuseau y est **légitime**. ⛔ Ne pas la traiter comme une date civile — la tronquer
+pour n'en garder que le jour retournerait le défaut contre l'autre moitié du monde.
+
+### Ce que la règle ne demande PAS
+
+- ❌ **Pas** de toucher aux fonctions qui formatent déjà **par manipulation de chaîne** : elles sont
+  insensibles au fuseau **par construction**, c'est-à-dire déjà justes ;
+- ❌ **Pas** de proscrire `new Date()` **sans argument** : un horodatage *(« mis à jour à… »)* est un
+  **vrai instant**, et cet usage reste correct ;
+- ✅ **Seulement** ceci : *cette date que j'affiche, est-ce un JOUR ou un INSTANT ?*
 
 ---
 

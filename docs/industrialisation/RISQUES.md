@@ -1051,3 +1051,61 @@ niveaux d'imbrication pour `doPost` ; recomptée sur les accolades, la vraie val
    fonction de 338 lignes dans un fichier qui en compte 811 aurait dû appeler cette vérification.
 3. **Un chiffre non reproductible se retire**, il ne se corrige pas en silence — c'est ce que fait
    la présente fiche.
+
+---
+
+## R-094 — La date du tournoi dépendait du fuseau horaire de l'appareil qui la regarde
+
+| | |
+|---|---|
+| **Priorité** | 🔴 **P1** — une date **communiquée à des tiers par email** |
+| **Domaine** | **D — QA / tests** *(cas limite non couvert)* · **H — code quality** |
+| **Statut** | ✅ **CORRIGÉ** — 2026-08-22 |
+| **Découvert** | ⭐ **En conditions réelles**, pas par relecture : test du fichier calendrier depuis un appareil réglé sur **`America/New_York` (EDT, UTC−4)** |
+| **Hors chantier** | ⚠️ **Ce défaut PRÉEXISTE à CF-4b.** Il n'a rien à voir avec la neutralisation institutionnelle — il a seulement été **rencontré** pendant le contrôle de L8, et traité dans un lot distinct |
+
+**Le constat, chiffré**
+
+Une date réglée à **`2027-03-13`** s'affichait **« vendredi 12 mars 2027 »** dans le dossier des
+clubs **et dans les emails envoyés aux clubs**. Le fichier calendrier `.ics`, lui, portait la
+**bonne** date.
+
+> 🎯 **C'est cet écart qui a permis de trouver la cause**, et il mérite d'être noté comme méthode :
+> le générateur `.ics` travaille par **manipulation de chaîne** et ne convertit rien — il était donc
+> juste. **Le code qui ne convertissait pas était le code qui avait raison.**
+
+**La cause exacte**
+
+`new Date('2027-03-13')` — une chaîne ISO **sans heure** — est interprétée par JavaScript comme
+**minuit UTC**, jamais comme minuit local. `toLocaleDateString` réaffiche ensuite cet instant dans
+le fuseau **de l'appareil**. Sur un appareil **en retard sur UTC**, minuit UTC tombe la veille au
+soir : la date **recule d'un jour**.
+
+⚠️ **Pourquoi il a survécu si longtemps** : il est **invisible depuis la France**. Paris *(UTC+1/+2)*
+et La Réunion *(UTC+4)* affichaient la bonne date. Seul un fuseau **négatif** le déclenche.
+
+**Surfaces touchées** — deux helpers partagés, ~25 points d'appel : les **trois pages « document »**
+*(invitation, réponse, dossier club)*, les **emails d'invitation et de dossier** *(HTML et texte)*,
+les dates limites, l'aperçu de publication et la recherche de dates compatibles FFR.
+
+**Correction appliquée**
+
+Un helper unique, `dateLocaleDepuisISO` *(`frontend/js/commun.js`)*, construit la date **à partir des
+trois nombres** — donc à minuit **local**. Les deux fonctions fautives l'utilisent. ⛔ **Les trois
+fonctions qui formataient déjà par regex n'ont PAS été touchées** : elles étaient déjà justes.
+
+⭐ **Deux garde-fous que le contre-audit a rendus nécessaires**, et qui valent d'être retenus :
+
+1. **Contrôle de retour** — `new Date(2027, 12, 45)` ne proteste pas, il **déborde** sur février 2028.
+   Une date impossible est désormais **rejetée** *(la valeur brute est réaffichée)* au lieu de
+   devenir une date **plausible et fausse** ;
+2. 🔴 **Distinction date civile / instant** — une première version du correctif acceptait une chaîne
+   **horodatée** et n'en gardait que le jour **UTC**. Elle aurait **retourné le défaut contre la
+   France**, là où il était juste. Une chaîne portant une heure est désormais traitée comme un
+   **instant**, avec son fuseau, exactement comme avant.
+
+**Règle permanente qui en découle** : `CLAUDE.md` **§8 sexies — Règle de la date civile**.
+
+⏳ **Dette séparée, à traiter dans son propre lot** : le dépôt **`boutique-r92`** *(site vitrine)*
+porte le **même anti-pattern** dans `assets/js/main.js`. ⛔ **Non touché ici** — dépôt distinct, état
+Git distinct, preuves distinctes.

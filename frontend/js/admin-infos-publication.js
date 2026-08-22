@@ -73,10 +73,14 @@ function majInfosTournoi() {
    direct pendant la saisie (écouteur input posé dans initAdmin).
    -------------------------------------------------------------------------- */
 
-/** Date « 22 juillet 2026 » — même formatage que le site vitrine (formaterDate). */
+/** Date « 22 juillet 2026 » — même formatage que le site vitrine (formaterDate).
+ *  ⚠️ Passe par `dateLocaleDepuisISO` (commun.js) : une date de tournoi est une date
+ *  CIVILE. `new Date('AAAA-MM-JJ')` vaudrait minuit UTC et reculerait d'un jour sur tout
+ *  appareil en retard sur UTC — y compris dans les emails DÉJÀ ENVOYÉS aux clubs.
+ *  ⏳ Le site vitrine (dépôt séparé `boutique-r92`) porte encore le même défaut. */
 function formaterDateFr(dateISO) {
-  const d = new Date(dateISO);
-  if (isNaN(d)) return dateISO;
+  const d = dateLocaleDepuisISO(dateISO);
+  if (!d || isNaN(d)) return String(dateISO == null ? '' : dateISO);
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 

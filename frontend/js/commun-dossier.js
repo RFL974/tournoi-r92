@@ -87,10 +87,13 @@ function oui(v) { return String(v || '').toLowerCase() === 'oui'; }
 /** Vraie si la catégorie est présente sur cette édition. */
 function catPresente(cat) { return String(cat && cat.presente).toLowerCase() === 'oui'; }
 
-/** Date « mercredi 11 novembre 2026 » (document daté, on met le jour). */
+/** Date « mercredi 11 novembre 2026 » (document daté, on met le jour).
+ *  ⚠️ Passe par `dateLocaleDepuisISO` (commun.js) : une date de tournoi est une date
+ *  CIVILE. `new Date('AAAA-MM-JJ')` vaudrait minuit UTC et reculerait d'un jour sur
+ *  tout appareil en retard sur UTC — invisible depuis la France, faux ailleurs. */
 function dateLongueFr(iso) {
-  const d = new Date(iso);
-  if (isNaN(d)) return txt(iso);
+  const d = dateLocaleDepuisISO(iso);
+  if (!d || isNaN(d)) return txt(iso);
   return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 

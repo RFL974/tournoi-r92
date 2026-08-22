@@ -7133,3 +7133,102 @@ recopiés : `Code.gs` **8342**, `Tests.gs` **4314**, bilan **715/715**.
 
 Aucun commit · aucun push · **aucun redéploiement** · aucune modification du classeur ·
 ⛔ **l'affiche n'a pas été touchée**. 🔧 **M1 reste entier et BLOQUANT pour la clôture de CF-4b.**
+
+---
+
+## 16. Lot correctif R-094 — la date civile
+
+**2026-08-22** · ⛔ **patch appliqué localement, NON commité, NON redéployé.**
+🔖 **Hors CF-4b** — ce lot ne neutralise rien : c'est une **correction de fiabilité P1**, ouverte
+séparément à la demande de Romain pour ne pas la mélanger au chantier institutionnel.
+
+### 1. Comment le défaut a été découvert, et pourquoi c'est l'essentiel
+
+Romain a testé le parcours réel d'un club **depuis l'aéroport JFK, fuseau `America/New_York`
+(EDT, UTC−4)**, pendant une rotation. La date du tournoi configurée à l'administration était
+**13/03/2027**. Le dossier du club et l'email affichaient **« 12 mars 2027 »**.
+
+> 🎯 **Ce défaut est INVISIBLE depuis la France.** À Paris, `new Date('2027-03-13')` donne bien le
+> 13 mars — parce que l'heure locale y est **en avance** sur l'heure de référence mondiale. Il ne
+> se manifeste qu'à l'**ouest** de Greenwich. Aucune relecture de code faite en métropole ne
+> l'aurait vu ; **seul un test réel en déplacement l'a fait apparaître.**
+
+### 2. ⚠️ Le premier diagnostic était FAUX, et il venait du rapport initial
+
+Le signalement disait : *« le fichier est nommé `tournoi-2027-03-13.ics` alors que l'événement est
+le 12/03 — à corriger côté nom de fichier. »*
+
+⛔ **La correction demandée aurait aggravé le défaut.** Le nom du fichier et la date de l'événement
+sont fabriqués **à partir de la même chaîne**, côté serveur : ils ne *peuvent pas* se contredire.
+Lecture faite du `.ics` téléchargé, `DTSTART` portait bien **le 13** — **le fichier d'agenda était
+sain**. Le décalage était **ailleurs** : à l'**affichage** du dossier et de l'email.
+
+> ⭐ **La leçon de méthode** : ne pas corriger ce qui est *rapporté*, corriger ce qui est *établi*.
+> Le seul geste utile a été de demander à lire la ligne `DTSTART` du fichier réel.
+
+### 3. La cause exacte, en une ligne de langage courant
+
+**`tournoi_date` est une DATE CIVILE — « le 13 mars » — pas un INSTANT.** Or l'application la
+donnait à lire à une fonction qui, devant `'2027-03-13'`, comprend **« minuit à l'heure de
+Greenwich »**. Ramenée à l'heure de New York, ce minuit devient **19 h la veille** : le 12.
+
+| Surface | Fichier | Avant | Après |
+|---|---|---|---|
+| Dossier du club, email | `frontend/js/commun-dossier.js:91` `dateLongueFr` | 🔴 décalée | ✅ |
+| Bandeau d'administration | `frontend/js/admin-infos-publication.js:77` `formaterDateFr` | 🔴 décalée | ✅ |
+| Fichier d'agenda `.ics` | `backend/Code.gs` | ✅ **déjà sain** | inchangé |
+| Trois autres formateurs | `admin-conformite-ffr.js` · `admin-autorisation.js` · `perfs.js` | ✅ déjà sains *(découpage de la chaîne, sans conversion)* | inchangés |
+
+### 4. La correction : **un seul** point commun, pas trois rustines
+
+Un helper unique **`dateLocaleDepuisISO`** est posé dans `frontend/js/commun.js` — vérifié **chargé
+en rang 1** sur les **4** pages qui consomment un formateur. Il distingue **deux natures** :
+
+- une **date civile** `AAAA-MM-JJ` *(motif **ancré aux deux bouts**)* → construite **jour par jour**
+  dans le fuseau du lecteur : le 13 reste le 13, partout ;
+- un **instant** *(la chaîne porte une heure, `…T…`)* → laissé à l'interprétation native,
+  **exactement comme avant**.
+
+⚠️ **Contrôle de retour obligatoire** : `new Date(2027, 12, 45)` ne proteste pas, il **déborde** sur
+février 2028. Sans relecture des trois composants, `2027-13-45` se serait affiché
+*« lundi 14 février 2028 »* — **une date fausse mais plausible**, pire que la chaîne brute.
+C'est un **test qui l'a attrapé**, pas une relecture.
+
+### 5. Ce que le contre-audit indépendant a corrigé — et il avait raison
+
+| | Ce qu'il a établi |
+|---|---|
+| 🔴 **Motif non ancré** | Sans ancrage, `'2027-03-12T23:00:00.000Z'` aurait été **tronqué** à sa date UTC : *« vendredi 12 mars »* à Paris, là où l'ancien code affichait correctement *« samedi 13 »*. ➡️ **Le correctif aurait inversé le défaut contre la France.** Ancrage + `.trim()` + branche « instant » ajoutés. |
+| ✅ **Aucune régression d'entrée réelle** | Les **7 surfaces** reçoivent toutes du `AAAA-MM-JJ` **strict** — garanti soit par un motif ancré côté serveur *(`Code.gs:4031-4033`, `3982-3984`)*, soit par `Utilities.formatDate('yyyy-MM-dd')`, soit par concaténation *(`Code.gs:1809`)*. |
+| ⚠️ **Deux documents obligatoires** | `AUDIT-TOURNOI-R92.md` classait ce défaut *« connu et non traité »* — **devenu faux** · `CHANGELOG.md` — un club **remarque** la date de son tournoi. |
+
+### 6. Preuves exécutées *(6 fuseaux, `Europe/Paris` → `Pacific/Kiritimati`)*
+
+- **Dates civiles** *(`2027-03-13`, `2027-01-01`, `2027-12-31`, `2028-02-29`)* : **1 seule valeur**
+  sur les 6 fuseaux. Avant : `2027-03-13` donnait *« vendredi 12 mars »* à New York et Honolulu ;
+- **Instants** *(12 comparaisons avant/après)* : **12 IDENTIQUE / 12** ;
+- **Entrées invalides** *(`2027-02-30`, `2027-13-45`, vide, `null`, `abc`)* : chaîne brute, stable ;
+- **26 fichiers JS** : `node --check`, 0 erreur.
+
+> ⚡ **Seule différence à Paris** : `2027-02-30` n'affiche plus *« mardi 2 mars 2027 »* mais la
+> chaîne brute. **C'est une amélioration** — une date inexistante ne doit pas devenir plausible.
+
+### 7. ⚠️ Dette consignée, NON traitée : le dépôt `boutique-r92`
+
+`assets/js/main.js:12-14` du dépôt **séparé** `boutique-r92` porte **le même défaut**.
+⛔ **Volontairement non corrigé ici** : autre dépôt, autre lot. Consigné à **R-094**.
+
+### 8. Documents ACTIFS vérifiés *(`CLAUDE.md` §12.4 point 2)*
+
+- ✅ **Corrigés dans le lot** : `CHANGELOG.md` · `AUDIT-TOURNOI-R92.md` ·
+  🆕 `CLAUDE.md` **§8 sexies — règle de la date civile** *(garde-fou permanent validé par Romain)* ;
+- ✅ **Vérifiés, ne deviennent PAS faux** : `README.md` · `docs/architecture.md` ·
+  `backend/README.md` · `docs/deploiement.md` — **aucun fichier serveur n'est touché**, donc aucun
+  repère de redéploiement ni bilan de tests ne bouge · `docs/guide-utilisateur.md` — la date
+  s'affiche au même endroit, seule sa **valeur** cesse d'être fausse.
+
+### 9. ⛔ Ce que ce lot n'a PAS fait
+
+Aucun commit · aucun push · **aucun redéploiement** · **aucun fichier `backend/` touché** · aucune
+modification du classeur · ⛔ **le dépôt `boutique-r92` n'a pas été ouvert en écriture**.
+🔧 **M1 et le redéploiement de L8 restent entiers.**

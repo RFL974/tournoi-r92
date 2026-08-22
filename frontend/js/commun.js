@@ -27,6 +27,63 @@ function echapper(texte) {
 }
 
 /**
+ * 📅 'AAAA-MM-JJ' → objet `Date` à minuit LOCAL, construit à partir des trois NOMBRES.
+ * Renvoie `null` si le format n'est pas reconnu (vide, illisible…).
+ *
+ * 🔴 POURQUOI CETTE FONCTION EXISTE — et pourquoi il ne faut JAMAIS écrire
+ * `new Date('2027-03-13')` pour afficher une date métier :
+ *
+ *   ⭐ **Une date de tournoi est une date CIVILE, pas un instant.** « Le 13 mars 2027 »
+ *   désigne un jour du calendrier, pas un point précis sur la ligne du temps mondiale.
+ *
+ *   Or JavaScript interprète une chaîne ISO SANS heure comme **minuit UTC** :
+ *       new Date('2027-03-13')  →  2027-03-13T00:00:00Z
+ *   `toLocaleDateString` réaffiche ensuite cet instant dans le fuseau de l'APPAREIL.
+ *   Sur un appareil **en retard sur UTC**, minuit UTC tombe la veille au soir, et la
+ *   date affichée RECULE D'UN JOUR.
+ *
+ *   ⚠️ Le piège est qu'il est INVISIBLE depuis la France : Paris (UTC+1/+2) et
+ *   La Réunion (UTC+4) affichent la bonne date. Constaté le 2026-08-22 sur un
+ *   appareil réglé sur **America/New_York (UTC−4)** : `2027-03-13` s'affichait
+ *   « vendredi 12 mars 2027 » dans le dossier club ET dans les emails envoyés aux
+ *   clubs — donc dans un message parti, irrattrapable.
+ *
+ *   ✅ Construire la date à partir des composants donne minuit LOCAL : le jour, le mois
+ *   et l'année sont alors ceux qu'on a écrits, dans tous les fuseaux.
+ *
+ * ⛔ N'UTILISER QUE POUR L'AFFICHAGE d'une date civile. Pour un vrai instant
+ * (horodatage, « mis à jour à… »), `new Date()` reste correct.
+ */
+function dateLocaleDepuisISO(iso) {
+  const s = String(iso == null ? '' : iso).trim();
+
+  // ① DATE CIVILE — 'AAAA-MM-JJ' et RIEN d'autre (motif ANCRÉ aux deux bouts).
+  const civile = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (civile) {
+    const annee = Number(civile[1]), mois = Number(civile[2]) - 1, jour = Number(civile[3]);
+    const d = new Date(annee, mois, jour);
+    // ⚠️ CONTRÔLE DE RETOUR, et il n'est pas décoratif : `new Date(2027, 12, 45)` ne
+    // proteste pas, il DÉBORDE sur février 2028. Une date impossible doit être rejetée
+    // (l'appelant réaffiche alors la valeur brute), jamais transformée en une date
+    // plausible et fausse. On vérifie donc que les trois composants ont survécu.
+    return (d.getFullYear() === annee && d.getMonth() === mois && d.getDate() === jour) ? d : null;
+  }
+
+  // ② INSTANT — la chaîne porte une HEURE ('…T…'). Ce n'est PAS une date civile : c'est un
+  // point précis sur la ligne du temps, et le fuseau y est alors LÉGITIME. On le laisse donc
+  // à l'interprétation native, exactement comme avant ce correctif.
+  // 🔴 Sans cette branche, un ancrage strict aurait rejeté ces valeurs, et un motif NON ancré
+  // aurait été pire encore : il aurait tronqué l'heure et retenu le jour UTC — retournant le
+  // bug contre la France, là où il était juste. Les deux formes existent, on les distingue.
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    const d = new Date(s);
+    return isNaN(d) ? null : d;
+  }
+
+  return null;
+}
+
+/**
  * Vrai si le statut d'un match vaut « terminé » (score saisi), quelle que soit
  * la forme du « é » (NFC/NFD) : le Sheet renvoie parfois un « é » décomposé,
  * on teste donc simplement le préfixe ASCII « termin ».

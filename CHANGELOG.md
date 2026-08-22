@@ -12,6 +12,24 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### La date du tournoi ne dépend plus du téléphone qui la regarde — 2026-08-22
+
+**Ce qui se passait.** Une date réglée au **13 mars 2027** pouvait s'afficher **« 12 mars 2027 »** —
+dans le dossier des clubs **et dans les emails qui leur sont envoyés**. Le fichier d'agenda `.ics`,
+lui, portait la bonne date : c'est ce décalage entre les deux qui a permis de trouver la cause.
+
+**Pourquoi c'était si difficile à voir.** Le défaut ne se déclenche que sur un appareil réglé sur un
+fuseau horaire **en retard sur l'Europe**. Depuis la France ou La Réunion, la date était **toujours
+juste**. Il a été découvert lors d'un test depuis **New York**.
+
+⭐ **En mots simples** : une date de tournoi est un **jour du calendrier**, pas un instant précis.
+L'application la transformait en « minuit, heure de Greenwich », puis la réaffichait à l'heure de
+l'appareil — et minuit reculait de l'autre côté de l'Atlantique. Désormais, le 13 mars reste le
+13 mars, où qu'on soit.
+
+⏳ **Ce qui reste** : le **site vitrine** est un projet séparé et porte encore le même défaut sur sa
+carte d'actualité. Il sera corrigé de son côté.
+
 ### Plus aucun club n'est nommé par défaut, et la page Perfs se règle — 2026-08-22
 
 Dernière surface institutionnelle du logiciel : celle qui ne se voyait pas dans un texte, mais
