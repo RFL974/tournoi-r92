@@ -9,10 +9,60 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-22 *(suite)* — 🗓️ **LA DATE DU TOURNOI NE DÉPEND PLUS DU
+**Dernière mise à jour** : 2026-08-24 — 🏛️ **LE CHANTIER M1 EST OUVERT, ET SON ÉTAPE M1-A EST
+ÉCRITE.** ⛔ **Non commitée, non poussée** — en attente de la validation de Romain.
+
+⚡ **M1 a changé de nature.** Ce n'était qu'une opération manuelle *(vider deux URL, remplacer une
+affiche)* ; c'est désormais **l'externalisation progressive des données propres à l'organisation**,
+en **6 étapes M1-A → M1-F** *(`PLAN.md` **§15**)*. 🎯 **Le motif, et il tient en une phrase** : les
+deux URL étaient **le symptôme, pas la cause** — la cause est que **l'application n'a aucun endroit
+où un club se décrit**.
+
+🔴 **Le défaut que l'audit a trouvé, et il est métier.** `reinitialiserTournoi` efface **40
+paramètres** — ⛔ **et aucun n'est un `org_*` : les 36 sur 36 survivent**, dont **26 purement
+événementiels**. Un tournoi neuf rouvre donc la demande d'autorisation **déjà remplie** avec les
+valeurs de l'édition passée, marquées *« saisi »*, et le compteur annonce **0 champ manquant**.
+⚠️ **Ce n'est pas un problème neuf mais un périmètre sous-estimé** : **R-033** le décrivait depuis
+le 2026-08-06 comme *« les contacts de la demande FFR »*. **Sa fiche est élargie, aucun doublon
+créé.** Cible fixée par **D-043** ; correction en **M1-B**, ⛔ **NON FAITE**.
+
+⭐ **Quatre décisions fondatrices** : **D-042** *(principe, 7 familles, et le **cycle de vie A/B/C**
+— permanente ⇒ lecture directe · proposée ⇒ **copie volontaire, aucun lien vivant** · événementielle
+⇒ aucun lien)* · **D-043** *(10 conservés / 26 vidés)* · **D-044** *(profil ≠ répertoire de tiers,
+logo ≠ charte graphique)* · **D-045** *(**fidélité aux libellés officiels**, nom officiel ≠ nom
+d'usage)*.
+
+🆕 **Un document neuf** : `M1-LIBELLES-OFFICIELS.md`, la table de correspondance **clé technique ↔
+libellé officiel FFR ↔ usage**, ⭐ **décodée depuis le PDF du dépôt** *(26 tables `ToUnicode`, 7
+flux de page, page par page et police par police — la page 5 en utilise **six**)*. **21 libellés de
+Maxilou s'écartent du vocabulaire officiel** : *« Nombre de vestiaires »* là où le formulaire dit
+*« Nombre de vestiaires **utilisés** »* — **le mot manquant change la réponse**.
+
+⛔ **Ce que M1-A n'a PAS pu faire, et ce n'est pas un choix** : la **lecture seule** autorisée de
+`url_site_association` et `url_instagram` **est impossible depuis cette session** — la politique
+réseau de l'environnement refuse `script.google.com` *(403 au CONNECT)*. ⛔ **Aucune valeur du
+classeur n'a donc été lue, ni modifiée.**
+
+📐 **Remesures réelles** *(jamais recopiées — §8 quater)* : `Code.gs` **8342** l. · `Tests.gs`
+**4314** l. · **65** actions · **8** pages · **26** fichiers JS · **12** onglets — **tous les comptes
+structurels inchangés**. ⚠️ **En revanche 11 comptes de LIGNES de `architecture.md` étaient périmés**
+— ⭐ **et ils n'étaient pas FAUX : ils étaient DATÉS**, le document le disait. `admin-autorisation.js`
+annonçait **1 011**, exact au 2026-08-09 *(vérifié par `git show`)*, **1013** aujourd'hui. **Le
+tableau entier a été remesuré et redaté** : corriger une seule ligne d'un relevé daté l'aurait rendu
+**plus trompeur qu'avant**.
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-22 (suite)* : 🗓️ **LA DATE DU TOURNOI NE DÉPEND PLUS DU
 TÉLÉPHONE QUI LA REGARDE.** Lot correctif **R-094**, ⛔ **hors CF-4b** : ce n'est pas une
 neutralisation, c'est une **correction de fiabilité P1** ouverte séparément pour ne pas se mélanger
-au chantier institutionnel. **Appliqué localement**, ⛔ **non commité, non redéployé.**
+au chantier institutionnel.
+✅ **CORRECTION D'ÉTAT, apportée le 2026-08-24** : cette ligne annonçait *« appliqué localement,
+non commité »*. **C'est faux depuis le 2026-08-22 à 17 h 04** — le travail **est** le commit
+**`94cd6a2`**, et il **est sur `origin/main`**. ⚠️ **La mention « non redéployé » reste vraie**, et
+elle vaut aussi pour **CF-4b/L8** : le serveur en service ignore encore les deux.
+⭐ **Ce que ce décalage enseigne** : l'état d'un lot avait été écrit **avant** son commit et jamais
+relu après — c'est **§12.4** appliqué à moitié. Le premier redéploiement de **M1-B** emportera L8.
 **9 fichiers** — **3** de code, **2** de documentation active, **1** de règles permanentes
 *(`CLAUDE.md`)*, **3** de suivi. *(Chiffre issu de `git diff --name-only`, pas d'une estimation.)*
 🔴 **Une date configurée au 13/03/2027 s'affichait « 12 mars 2027 »** dans le dossier du club et
@@ -419,8 +469,20 @@ registre : R-090, R-091**)
 plan d'audit** *(`PLAN.md` **§14**, décision **D-038**)*, et **C-015 est en pause**. **CF-0**
 *(vérification des référentiels)*, **CF-1** *(le cadre documentaire)* et **CF-2** *(le dossier du
 responsable du traitement — ⛔ **décision NON PRISE**)* sont **faits**. 🚧 **CF-4b
-*(neutralisation institutionnelle)* est OUVERTE** : **2 lots sur 8**. ⏸️ **CF-4a** *(mentions
-légales)* est **suspendue derrière elle**. **CF-3, CF-5 à CF-13 et CF-14 ne sont pas commencées.**
+*(neutralisation institutionnelle)* est OUVERTE** : ✅ **ses 8 lots de code et de documentation sont
+TERMINÉS** *(L1 → L8)*, ⛔ **mais elle N'EST PAS CLOSE** — il lui manque le redéploiement chez
+Google *(L5 et L8 ne sont pas en service)* et **le chantier M1**. ⏸️ **CF-4a** *(mentions légales)*
+est **suspendue derrière elle**. **CF-3, CF-5 à CF-13 et CF-14 ne sont pas commencées.**
+
+🏛️ **ET UN CHANTIER DE PLUS EST OUVERT DEPUIS LE 2026-08-24 : M1 — le profil du club**
+*(`PLAN.md` **§15**)*. Il n'appartient ni au plan d'audit ni au chantier Confiance : il en **sort**,
+puisque c'est lui qui permettra de clore CF-4b. 🚧 **Son étape M1-A est écrite**, ⛔ **non commitée**.
+**M1-B → M1-F ne démarrent pas automatiquement.**
+
+> ⚠️ **Cette ligne annonçait « 2 lots sur 8 », et c'était devenu faux.** Le chiffre datait du jour
+> de l'ouverture de CF-4b ; les six lots suivants ont été livrés sans que la phrase d'en-tête soit
+> relue. ⭐ **Corrigé le 2026-08-24** — et c'est exactement le mécanisme que **§8 quater** décrit :
+> *un chiffre juste est recopié, la source bouge, la copie reste.*
 
 > ⭐ **Ce que ce chantier prépare — et ce qu'il ne fait pas semblant de croire.** Maxilou est en
 > **développement personnel**, sur **données fictives**, et **n'a jamais servi de tournoi réel**

@@ -129,6 +129,128 @@ est simplement masqué dans le dossier :
 | `url_site_association` | `https://…` | Bouton « Site de l'association » |
 | `url_instagram` | `https://instagram.com/…` | Bouton « 📣 Relayer sur les réseaux » (pointe vers le compte configuré ici ; vide ⇒ pas de bouton) |
 
+Paramètres de **conformité et repères internes** (aucune carte admin dédiée — `zone_vacances` est
+écrite par la carte « Date & conformité FFR » via `enregistrerInfosTournoi` ; les deux signatures
+sont posées automatiquement) :
+
+| parametre | valeur (exemple) | Signification |
+|---|---|---|
+| `zone_vacances` | `C` | Zone de vacances scolaires, pour le **contrôle de conformité FFR** (conflits de calendrier). **Vide/absent = `C`** (Île-de-France). ⭐ Décrit le **club**, pas l'édition : **conservé** par une réinitialisation |
+| `nb_demi_journees` | `2` | Nombre de demi-journées du tournoi — c'est une **clé de la grille de temps FFR** (`RefFFR_Temps`). **Vide/absent = `2`**. ⚠️ **Aucun écran ne l'écrit** : la ligne se saisit à la main dans la Zone A |
+| `signature_generation` | *(empreinte)* | Résumé des réglages qui influent sur les horaires, posé à chaque génération. L'admin le recalcule pour afficher « à recalculer ». **Effacé** par une réinitialisation |
+| `signature_structure` | *(empreinte)* | Résumé de la composition (équipes, poules), pour « Recalculer les horaires ». ⚠️ **Non effacé** par une réinitialisation — sans effet : `recalculerHoraires` s'arrête avant, faute de matchs |
+
+### Zone A *bis* — Les 36 paramètres `org_*` de la demande d'autorisation FFR
+
+> 🗓️ **Ajoutés à ce document le 2026-08-24** *(chantier **M1**, étape **M1-A**)*. ⚠️ **Ils
+> existaient depuis la session 7** : ce document, qui décrit l'onglet `Config`, **n'en mentionnait
+> aucun** — y compris ceux qui portent **les données personnelles les plus sensibles du projet**.
+> C'est exactement le défaut de périmètre que décrit `CLAUDE.md` **§8 bis**.
+
+Ces paramètres alimentent la **feuille de report** et le **PDF pré-rempli** de la demande
+d'autorisation de tournoi École de Rugby. Ils vivent dans la **Zone A**, comme les autres, et sont
+créés par `setupSheet()`.
+
+> 🔒 **Confidentialité.** Plusieurs de ces lignes sont des **données personnelles** (noms,
+> téléphones, adresses électroniques du président, du représentant, du médecin, de l'antenne de
+> secours). ✅ **Aucune d'elles ne figure dans `CONFIG_PUBLIQUE_VUES`** : elles ne sortent que par
+> l'action `getDossierAutorisation` (`doPost` + **clé admin**), jamais en public.
+
+> 📖 **Le libellé officiel de chaque champ** — celui qu'emploie le formulaire fédéral — est dans
+> [`industrialisation/M1-LIBELLES-OFFICIELS.md`](industrialisation/M1-LIBELLES-OFFICIELS.md).
+
+**Colonne « Réinit. »** : comportement **attendu** après la décision **D-043**.
+⚠️ **`À VIDER` décrit la CIBLE, pas l'état actuel** — aujourd'hui, **les 36 survivent** (voir
+**R-033**). La correction est le lot **M1-B**, ⛔ **non fait à ce jour**.
+
+**Familles** *(D-042)* : 🏛️ permanente du club · 🗓️ événementielle · ⚙️ propre à Maxilou.
+
+#### A.1 — Organisateur *(les 10 permanents)*
+
+| parametre | valeur (exemple) | Signification | Famille | 🔒 | Réinit. |
+|---|---|---|---|---|---|
+| `org_club_nom` | `AS Exemple` | Nom du club ou de la structure organisatrice | 🏛️ | — | ✅ **CONSERVER** |
+| `org_code_club` | `1234567` | Code club FFR | 🏛️ | — | ✅ **CONSERVER** |
+| `org_representant_nom` | `Camille Dupont` | Représentant du club (M. ou Mme) | 🏛️ | 🔒 | ✅ **CONSERVER** |
+| `org_representant_tel` | `0612345678` | Téléphone du représentant | 🏛️ | 🔒 | ✅ **CONSERVER** |
+| `org_representant_mail` | `contact@example.org` | Adresse électronique du représentant | 🏛️ | 🔒 | ✅ **CONSERVER** |
+| `org_president_nom` | `Dominique Martin` | Président du club | 🏛️ | 🔒 | ✅ **CONSERVER** |
+| `org_president_tel` | `0698765432` | Téléphone du président | 🏛️ | 🔒 | ✅ **CONSERVER** |
+| `org_president_mail` | `president@example.org` | Adresse électronique du président | 🏛️ | 🔒 | ✅ **CONSERVER** |
+| `org_label_edr` | `oui` | École de rugby labellisée. **Vide = `oui`** (défaut documenté) | 🏛️ | — | ✅ **CONSERVER** |
+| `org_label_date` | `12/03/2026` | Date du dernier label (JJ/MM/AAAA) | 🏛️ | — | ✅ **CONSERVER** |
+
+#### A.2 / A.4 — Tournoi et participants
+
+| parametre | valeur (exemple) | Signification | Famille | 🔒 | Réinit. |
+|---|---|---|---|---|---|
+| `org_niveau_tournoi` | `Départemental` | Niveau du tournoi (liste fermée : International / National / Territorial / Départemental) | 🗓️ | — | ❌ **À VIDER** |
+| `org_equipes_etrangeres` | `non` | Le tournoi accueille-t-il des équipes étrangères ? **Vide = `non`** (défaut documenté) | 🗓️ | — | ❌ **À VIDER** |
+| `org_equipes_etrangeres_liste` | `Club Exemple (Belgique)` | Liste des équipes étrangères (nom du club, pays) | 🗓️ | — | ❌ **À VIDER** |
+| `org_nb_participants` | `240` | Nombre de participants — ⚙️ **repli** : utilisé **uniquement** si aucun club n'a déclaré ses effectifs | ⚙️ 🗓️ | — | ❌ **À VIDER** |
+
+#### B.1 — Installations sportives
+
+| parametre | valeur (exemple) | Signification | Famille | 🔒 | Réinit. |
+|---|---|---|---|---|---|
+| `org_type_terrain` | `Synthétique` | Type de terrain **réellement utilisé** (Gazon / Synthétique / Sable / Neige / Argile). ⚠️ **Repli** : la nature déclarée dans `terrains_physiques` prime | 🗓️ | — | ❌ **À VIDER** *(A1)* |
+| `org_nb_vestiaires` | `4` | Nombre de vestiaires **utilisés** ce jour-là | 🗓️ | — | ❌ **À VIDER** *(A1)* |
+
+#### B.2 — Récompenses *(clés dynamiques)*
+
+| parametre | valeur (exemple) | Signification | Famille | 🔒 | Réinit. |
+|---|---|---|---|---|---|
+| `org_recompenses_<CAT>` | `org_recompenses_U8` = `oui` | Récompenses prévues pour la catégorie. ⚠️ **Une clé par catégorie présente**, créée à l'enregistrement — leur nombre varie | 🗓️ | — | ❌ **À VIDER** *(A3)* |
+
+> ⚠️ **Ces clés deviennent orphelines.** Une réinitialisation **supprime toutes les catégories**
+> (Zone B) mais laisse `org_recompenses_U8`, `org_recompenses_U10`… dans la Zone A. Leur effacement
+> ne peut pas passer par une liste fixe : il faut **énumérer les clés existantes** et filtrer sur le
+> préfixe.
+
+#### B.3 — Arbitrage
+
+| parametre | valeur (exemple) | Signification | Famille | 🔒 | Réinit. |
+|---|---|---|---|---|---|
+| `org_nb_arbitres` | `6` | Nombre d'arbitres prévus | 🗓️ | — | ❌ **À VIDER** |
+| `org_nb_educateurs` | `30` | Total d'éducateurs accompagnants — ⚙️ **repli** : utilisé si aucune des deux sources de la cascade n'est connue | ⚙️ 🗓️ | — | ❌ **À VIDER** |
+| `org_nb_educateurs_club` | `8` | Éducateurs **du club organisateur**. ⚙️ **Champ propre à Maxilou** : il n'existe pas au formulaire. Le club organisateur ne s'invitant pas lui-même, ses éducateurs ne sont dans aucune réponse d'invitation — ce nombre **s'ajoute** à la somme déclarée par les clubs | ⚙️ 🗓️ | — | ❌ **À VIDER** *(A2)* |
+| `org_nb_doublettes` | `2` | Nombre de doublettes de jeunes arbitres prévues | 🗓️ | — | ❌ **À VIDER** |
+
+#### B.4 — Sécurité
+
+| parametre | valeur (exemple) | Signification | Famille | 🔒 | Réinit. |
+|---|---|---|---|---|---|
+| `org_medecin_oui` | `non` | Un médecin est-il présent ? | 🗓️ | — | ❌ **À VIDER** |
+| `org_medecin_nom` | `Dr Exemple` | Nom du médecin (sans objet si `org_medecin_oui = non`) | 🗓️ | 🔒 | ❌ **À VIDER** |
+| `org_medecin_tel` | `0612345678` | Téléphone du médecin | 🗓️ | 🔒 | ❌ **À VIDER** |
+| `org_secours_nom` | `Association de secours Exemple` | Nom de l'antenne de secours. ⚠️ Distinct de `securite_secours_oui` / `_precisions` (dossier club) | 🗓️ | 🔒 | ❌ **À VIDER** |
+| `org_secours_tel` | `0612345678` | Téléphone de l'antenne de secours | 🗓️ | 🔒 | ❌ **À VIDER** |
+| `org_ambulance` | `non` | Une ambulance est-elle prévue ? | 🗓️ | — | ❌ **À VIDER** |
+
+#### B.5 — Logistique
+
+| parametre | valeur (exemple) | Signification | Famille | 🔒 | Réinit. |
+|---|---|---|---|---|---|
+| `org_droits_oui` | `oui` | Des droits d'inscription sont-ils demandés ? ⚠️ **Repli** : vide, le tarif d'engagement des modalités d'inscription est repris | 🗓️ | — | ❌ **À VIDER** |
+| `org_droits_montant` | `50` | Montant par équipe | 🗓️ | — | ❌ **À VIDER** |
+| `org_hebergement_oui` | `non` | Un hébergement est-il proposé ? | 🗓️ | — | ❌ **À VIDER** |
+| `org_hebergement_structure` | `Gîte Exemple` | Structure d'accueil | 🗓️ | — | ❌ **À VIDER** |
+| `org_repas_oui` | `oui` | Des repas sont-ils proposés ? | 🗓️ | — | ❌ **À VIDER** |
+| `org_repas_fournisseur` | `Traiteur Exemple` | Fournisseur des repas | 🗓️ | — | ❌ **À VIDER** |
+| `org_repas_prix` | `7` | Prix par personne | 🗓️ | — | ❌ **À VIDER** |
+| `org_gouters_oui` | `oui` | Des goûters sont-ils proposés ? | 🗓️ | — | ❌ **À VIDER** |
+| `org_gouters_fournisseur` | `Boulangerie Exemple` | Fournisseur des goûters | 🗓️ | — | ❌ **À VIDER** |
+| `org_gouters_prix` | `2` | Prix par personne | 🗓️ | — | ❌ **À VIDER** |
+
+**Compte : 10 à conserver + 26 à vider = 36**, plus les clés dynamiques `org_recompenses_*`.
+
+> 📐 **Comment revérifier ce compte** *(§8 quater — un chiffre sans sa méthode est un piège)* :
+> les 36 clés sont créées par `creerOngletConfig()` dans
+> [`../backend/Code.gs`](../backend/Code.gs) et reprises **à l'identique** par la constante
+> `CHAMPS_AUTORISATION` (écriture) et par `AUTORISATION_SAISIE`
+> ([`../frontend/js/admin-autorisation.js`](../frontend/js/admin-autorisation.js), affichage).
+> **Les trois listes ont été comparées le 2026-08-24 : 36 = 36 = 36, aucun écart.**
+
 ### Zone B — Réglages par catégorie
 
 Un tableau, **une ligne par catégorie**. En-têtes :

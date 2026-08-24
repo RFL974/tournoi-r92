@@ -9,7 +9,24 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-19 (⭐ **R-042 passe à `TESTÉ` — AVEC RÉSERVE.** Le chantier
+**Dernière mise à jour** : 2026-08-24 *(chantier **M1**, étape **M1-A**)* — ⚡ **DEUX PROBLÈMES
+NOUVEAUX, ET UN TROISIÈME DONT LE PÉRIMÈTRE ÉTAIT SOUS-ESTIMÉ.**
+🆕 **R-095** *(P2)* — **le nom du stade disparaît du document déposé à la Ligue** : le formulaire
+fédéral demande *« Adresse du tournoi (stade, ville, cp) »* en **un seul champ**, et
+`admin-autorisation.js:698` écrit l'adresse **OU** le stade, jamais les deux. ⛔ **HORS M1**
+*(arbitrage H13)*.
+🆕 **R-096** *(P2)* — **douze réglages n'ont aucun écran** et s'écrivent à la main dans le classeur,
+dont `nb_demi_journees`, **clé de la grille de temps FFR**.
+⚡ **R-033 — périmètre élargi, et sa nature change** : ce n'était pas *« les contacts de la demande
+FFR »* mais **les 36 `org_*` sur 36**, dont **26 purement événementiels**. ⭐ **La conséquence n'est
+pas seulement RGPD, elle est MÉTIER** : une demande d'autorisation rouverte après réinitialisation
+s'affiche **déjà remplie** avec les valeurs de l'édition passée et annonce **0 champ manquant**.
+✅ **Cible fixée par D-043**, correction planifiée en **M1-B** — ⛔ **non faite**.
+⛔ **Aucun risque nouveau n'a été créé là où le registre couvrait déjà** : les miroirs
+serveur/navigateur restent **R-044** et **R-082**, les bibliothèques orphelines **R-080**, la
+destructivité de la réinitialisation **R-016**.
+
+*Rappel de la mise à jour précédente — 2026-08-19* : (⭐ **R-042 passe à `TESTÉ` — AVEC RÉSERVE.** Le chantier
 **C-012** est **terminé** : son étape 5 est close à **11 vérifications sur 12**, ⭐ **V-7, V-8 et
 V-10 réussies** *(V-10 dans ses **deux branches**)*. **N-5 et N-6 sont écartés** — dont ⭐ **N-6,
 « le mauvais vainqueur propagé »**, qui était le dernier ⛔ NON VÉRIFIÉ. ⚠️ **La réserve est
@@ -503,7 +520,7 @@ D-030** (tournoi suspendu / annulé).
 | **R-030** | **Aucune durée de conservation, aucune purge, nulle part.** Le carnet d'adresses est conservé **délibérément** d'une édition à l'autre, les copies de courriels restent dans Gmail, les contacts FFR et les effectifs passés traversent les réinitialisations. Rien n'expire | **P1** | CERTAIN | IDENTIFIÉ · ✅ **D-020 TRANCHÉE (session 13)** — le **tableau des 7 durées est adopté tel quel** (carnet des clubs = 3 éditions · effectifs = effacés à la réinitialisation · contacts FFR = 1 an · champ « équipes étrangères » = effacé après envoi · relevés de visibilité = effacés après remise de la fiche · `Historique` = conservé · courriels Gmail = 1 an). Met **R-031, R-033, R-034** en ordre de marche. ✅ **2026-08-06 — les durées sont ÉCRITES** (livrable **C-005**) **et OPÉRATIONNALISÉES** (livrable **C-006** : 5 gestes vérifiés dans le code, 2 marqués « à confirmer » plutôt qu'inventés). ⚠️ **R-030 RESTE OUVERT** : sa part **outillage** — rien ne signale ce qui est périmé — dépend d'un changement de comportement de l'application, et **D-033** fixe comment elles seront tenues : **un rappel manuel**, tant qu'aucun outil ne les applique. ⚠️ **Aucun effacement automatique** : toute suppression restera **déclenchée par un humain** | `AUDIT.md` §B.4 |
 | **R-031** | **Le droit d'effacement est partiel et parfois bloqué** : `supprimerClubInvite` est **refusé** tant qu'une équipe du club figure dans un match, il n'existe aucun moyen d'effacer le seul contact en gardant le club, et les copies Gmail restent hors de portée | P2 | **CERTAIN — motifs de refus lus dans le code le 2026-08-06** *(« créée à la main » · « déjà placée en poule X » · « présente dans des matchs générés »)* | ⚙️ **DOCUMENTÉ, PAS CORRIGÉ** — **C-006** décrit le contournement *(supprimer **juste après une réinitialisation**, quand aucun motif ne peut se déclencher)*. ⚠️ **Ce n'est pas une correction** : une demande de retrait au mauvais moment de la saison reste **impossible à satisfaire**. Correction = chantier de code | `AUDIT.md` §B.5 |
 | **R-032** | **Les effectifs d'enfants (`nb_joueurs`, `nb_educateurs`) sortent sans aucune clé**, et surtout : toute colonne ajoutée demain à ces onglets sera publique **sans décision**. Se referme en traitant **R-021** | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
-| **R-033** | **La réinitialisation conserve des données personnelles sans raison écrite** : `detail_effectifs` et le total d'éducateurs de l'édition passée, et **tous** les contacts de la demande FFR — représentant, président, **médecin**, antenne de secours | P2 | **CERTAIN — reconfirmé par lecture du code le 2026-08-06** *(les huit colonnes remises à zéro sont connues ; ces deux-là n'en font pas partie, et `CHAMPS_AUTORISATION` n'est utilisé qu'en écriture, jamais en effacement)* | ⚙️ **DOCUMENTÉ, PAS CORRIGÉ** — le chantier **C-006** décrit le geste manuel de remplacement pour les contacts fédéraux *(✅ vérifié)*, mais **aucun geste vérifié n'existe** pour `detail_effectifs` et `nb_educateurs_total` : aucun écran ne les modifie, et elles sont **lues** par le calcul des effectifs. ⚠️ **La règle décidée (D-020) et le code divergent** — correction à faire au volet ③ | `AUDIT.md` §B.5 |
+| **R-033** | **La réinitialisation conserve des données personnelles sans raison écrite** : `detail_effectifs` et le total d'éducateurs de l'édition passée, et **tous** les contacts de la demande FFR — représentant, président, **médecin**, antenne de secours | P2 | **CERTAIN — reconfirmé par lecture du code le 2026-08-06** *(les huit colonnes remises à zéro sont connues ; ces deux-là n'en font pas partie, et `CHAMPS_AUTORISATION` n'est utilisé qu'en écriture, jamais en effacement)* | ⚙️ **DOCUMENTÉ, PAS CORRIGÉ** — le chantier **C-006** décrit le geste manuel de remplacement pour les contacts fédéraux *(✅ vérifié)*, mais **aucun geste vérifié n'existe** pour `detail_effectifs` et `nb_educateurs_total` : aucun écran ne les modifie, et elles sont **lues** par le calcul des effectifs. ⚠️ **La règle décidée (D-020) et le code divergent** — correction à faire au volet ③. ⚡ **PÉRIMÈTRE ÉLARGI ET RATTACHÉ À UN CHANTIER le 2026-08-24 *(M1-A)*** : ① **l'étendue réelle est bien plus large que « les contacts »** — le recomptage ligne à ligne de `reinitialiserTournoi` *(`Code.gs:7437-7512`)* montre que **les 36 `org_*` sur 36 survivent**, dont **26 sont purement événementiels** *(niveau du tournoi, arbitres, doublettes, type de terrain et vestiaires utilisés, récompenses, fournisseurs, prix des repas et des goûters, hébergement, droits d'inscription)* ; ⚡ ② **la conséquence n'est donc pas seulement « données personnelles » mais MÉTIER** — un tournoi neuf rouvre la demande d'autorisation **déjà remplie** avec les valeurs de l'édition passée, marquées *« saisi »*, et le compteur annonce **0 champ manquant** : le dossier peut partir à la Ligue avec un médecin absent et un prix périmé, **sans aucun signalement** ; ③ **s'y ajoutent les clés `org_recompenses_*`, devenues ORPHELINES** *(la réinitialisation supprime toutes les catégories mais laisse leurs lignes)*. ✅ **Cible désormais FIXÉE par D-043** *(10 conservés / 26 vidés / récompenses vidées)* et **correction planifiée en M1-B**, ⛔ **NON FAITE à ce jour** | `AUDIT.md` §B.5 · **D-043** · `PLAN.md` **§15** |
 | **R-034** | ⚠️ **REQUALIFIÉ le 2026-08-06 — le constat d'origine était FAUX.** Le champ « Liste des équipes étrangères » **ne demande pas** de noms d'enfants : le formulaire fédéral dit *« Précisez ci-dessous les équipes étrangères (**nom du club, pays**) »*. **Ce qui reste vrai** : c'est une **zone de texte libre**, donc rien n'empêche techniquement d'y écrire autre chose. **Ce qui était faux** : qu'elle « invite explicitement » à saisir des noms d'enfants. ⚡ **Et la vérification a fait apparaître un point que l'audit n'avait pas vu** : le formulaire fédéral **exige par ailleurs**, dans ses **pièces à fournir**, les *noms, prénoms et dates de naissance des joueurs et dirigeants étrangers*. **Cette liste existe donc dans le dossier de l'association — hors de l'application.** Voir la note ci-dessous | **P2** *(et non plus « P1 le jour où il sert »)* | **CERTAIN** — confirmé par Romain sur le formulaire officiel, 2026-08-06 | ✅ **CLARIFIÉ** — l'engagement du livrable C-005 est **maintenu**, il n'est pas fondé sur une hypothèse de saisie de noms d'enfants | `AUDIT.md` §B.5 |
 | **R-035** | **Toute image déposée est rendue publique en lecture et ne disparaît pas vraiment** (corbeille Drive ~30 j, I-08). Rien n'avertit qu'une photo de parking peut montrer plaques et visages — le code contrôle format et poids, jamais le contenu | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
 | **R-036** | **Le droit à l'image n'est plus outillé** : plus rien ne le charge depuis le **retrait décidé par le club** le 2026-08-03, et le modèle `autorisation-droit-image-template.docx` a été **supprimé du dépôt le 2026-08-19** *(chantier Confiance, CF-4b lot L1)*. Rien n'écrit ce qui l'a remplacé | P2 | CERTAIN | IDENTIFIÉ · **question au club (I-15)** — ⚠️ l'outil n'existe plus, le besoin métier reste entier | `AUDIT.md` §B.5 |
@@ -1109,3 +1126,106 @@ fonctions qui formataient déjà par regex n'ont PAS été touchées** : elles �
 ⏳ **Dette séparée, à traiter dans son propre lot** : le dépôt **`boutique-r92`** *(site vitrine)*
 porte le **même anti-pattern** dans `assets/js/main.js`. ⛔ **Non touché ici** — dépôt distinct, état
 Git distinct, preuves distinctes.
+
+---
+
+## R-095 — Le nom du stade disparaît du document déposé à la Ligue
+
+| | |
+|---|---|
+| **Priorité** | **P2** |
+| **Domaine** | **A — métier** *(conformité d'un document administratif)* |
+| **Statut** | **IDENTIFIÉ** — ⛔ **NON CORRIGÉ** |
+| **Découvert** | 2026-08-24, chantier **M1**, étape **M1-A** — ⭐ **en décodant le formulaire officiel du dépôt**, pas en relisant le code |
+| **Rattachement** | ⛔ **HORS M1** *(arbitrage **H13**, Romain, 2026-08-24)* — micro-lot séparé, à programmer |
+
+**Le constat**
+
+Le formulaire fédéral demande l'adresse en **un seul champ** :
+**« Adresse du tournoi (stade, ville, cp) »** *(page 2, champ `Texte12`)*.
+
+Maxilou en a **deux** — `tournoi_lieu` *(le stade)* et `tournoi_adresse` *(l'adresse postale)* — et
+`frontend/js/admin-autorisation.js:698` écrit :
+
+```js
+setT('Texte12', v('tournoi_adresse') || v('tournoi_lieu'));
+```
+
+➡️ **L'un OU l'autre, jamais les deux.** Dès que l'adresse est renseignée — c'est le cas normal —
+**le nom du stade n'est pas transmis à la Ligue**, alors que le libellé officiel le demande
+explicitement.
+
+> ✅ **La feuille de report, elle, est correcte** : elle affiche deux lignes distinctes,
+> *« Lieu (stade) »* et *« Adresse (ville, code postal) »*. ⚠️ **L'organisateur voit donc à l'écran
+> une information qui n'ira pas sur le papier** — et rien ne l'en avertit.
+
+**Pourquoi ce n'est pas grave au point d'être P1**
+
+Le document reste **recevable** : l'adresse postale permet de situer le tournoi. C'est une
+**incomplétude**, pas une fausseté. ⚠️ **Mais elle est silencieuse**, et c'est ce qui la rend
+irritante : le compteur de champs manquants annonce **0**.
+
+**Pourquoi il est délibérément SORTI de M1**
+
+> Le critère de validation de **M1-E1** est *« le PDF est strictement identique avant et après »* —
+> on y prouve qu'on a changé **la provenance** d'une valeur sans changer **la valeur**. Corriger
+> R-095 dans le même lot rendrait ce critère **inapplicable** et masquerait l'un des deux
+> changements. **Il lui faut son propre avant/après.**
+
+**Piste de correction** *(non validée)* : joindre les deux valeurs quand elles existent toutes deux,
+en respectant l'ordre du libellé — stade, puis ville et code postal.
+
+**Voir aussi** : [`M1-LIBELLES-OFFICIELS.md`](M1-LIBELLES-OFFICIELS.md) §7 *(écart **É-3**)* ·
+**D-045** *(arbitrage **L2** : Maxilou garde ses deux champs)*.
+
+---
+
+## R-096 — Douze réglages n'ont aucun écran et s'écrivent à la main dans le classeur
+
+| | |
+|---|---|
+| **Priorité** | **P2** |
+| **Domaine** | **E — UX / accessibilité** · **G — architecture** |
+| **Statut** | **IDENTIFIÉ** — ⛔ **NON CORRIGÉ** |
+| **Découvert** | 2026-08-24, chantier **M1**, étape **M1-A** |
+| **Rattachement** | ✅ **M1-D** *(l'écran « Mon club »)* pour la part qui relève du club |
+
+**Le constat**
+
+Douze paramètres de la zone A sont **lus** par l'application mais **écrits par aucun formulaire**.
+`docs/structure-google-sheet.md` l'écrit noir sur blanc : *« Aucun formulaire admin ne les écrit
+encore : pour les utiliser, **ajouter la ligne à la main** dans la Zone A. »*
+
+| Paramètre | Ce qu'il pilote |
+|---|---|
+| `logistique_parking` · `logistique_buvette` · `logistique_vestiaires` | Les Infos pratiques du dossier du club |
+| `table_marque_organisation` | La ligne « Table de marque » du dossier |
+| `url_tournoi_public` | Le lien et le QR code « Scores en direct » |
+| `url_site_association` · `url_instagram` | Les deux boutons du pied de page |
+| `nb_demi_journees` | ⚠️ **Une clé de la grille de temps FFR** — donc du **contrôle de conformité** |
+| `zone_vacances` | Écrit **indirectement**, par la carte « Date & conformité FFR » |
+| `signature_generation` · `signature_structure` · `tournoi_id` | Repères internes, **posés automatiquement** — ✅ normal qu'aucun écran ne les propose |
+
+**Pourquoi c'est un problème, et pas seulement un inconfort**
+
+⛔ **Un organisateur ne doit pas avoir à comprendre la structure technique du classeur pour
+administrer ses propres informations** *(exigence posée par Romain, 2026-08-24 — voir **D-042 §4**,
+« le profil est un référentiel vivant »)*.
+
+En l'état, **une fonctionnalité livrée est invisible** : le bouton « Parking » du dossier existe,
+son texte existe, et **rien dans l'interface ne dit comment le remplir**. C'est le même mécanisme
+que celui de **R-073** — *une carte qui n'indique pas un chemin équivaut à un chemin qui n'existe
+pas.*
+
+⚠️ **`nb_demi_journees` mérite une mention à part** : il ne s'agit pas d'un confort d'affichage mais
+d'une **entrée du contrôle de conformité FFR**. Sa valeur par défaut *(2)* est documentée et
+raisonnable — mais **un tournoi sur 3 demi-journées ne peut être déclaré qu'en éditant le classeur
+à la main.**
+
+**Périmètre de la correction**
+
+| Part | Traitée par |
+|---|---|
+| Les 4 « infos pratiques » du site + les 3 liens | ✅ **M1-D** — ils relèvent du **profil du club** *(famille 🏟️)* |
+| `nb_demi_journees` | ⛔ **HORS M1** — c'est une donnée **de l'édition** et une clé **réglementaire** *(famille 📜)*, elle n'a rien à faire dans « Mon club » |
+| Les repères internes | ⛔ **Rien à faire** — leur absence d'écran est normale |

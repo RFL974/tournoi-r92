@@ -300,7 +300,7 @@ Pages statiques (HTML/CSS/JS), **mobile-first**, publiées par GitHub Pages.
 | `index.html` | tout le monde | **Redirection immédiate** vers `tournoi.html` (12 lignes, aucun script) |
 | `tournoi.html` | les spectateurs | **La page publique.** 2 onglets — 📋 *Mon équipe* et 🏆 *Classements* — filtre catégorie global, derniers scores, **podium affiché dès qu'il est mathématiquement certain**. Un seul appel `getAll`, rafraîchi ~15 s avec décalage aléatoire |
 | `saisie.html` | les marqueurs, sur le terrain | Saisie des scores match par match, sur téléphone. **Clé SCORES** |
-| `admin.html` | l'organisateur | **L'écran de pilotage** : équipes, réglages, génération, terrains, invitations, partenaires, autorisation FFR, feuille de journée. **Clé ADMIN**. 870 lignes de HTML, 20 scripts |
+| `admin.html` | l'organisateur | **L'écran de pilotage** : équipes, réglages, génération, terrains, invitations, partenaires, autorisation FFR, feuille de journée. **Clé ADMIN**. 896 lignes de HTML, 20 scripts |
 | `invitation-club.html` | un club, avant sa réponse | **Phase 1** — l'invitation légère, présentée comme un document |
 | `reponse-invitation.html` | un club | **Phase 1** — le club accepte ou décline **lui-même**. Protégée par **jeton** |
 | `dossier-club.html` | un club accepté | **Phase 2** — le dossier complet et personnalisé. Protégée par **jeton** |
@@ -313,18 +313,18 @@ Pages statiques (HTML/CSS/JS), **mobile-first**, publiées par GitHub Pages.
 | Fichier | Lignes | Rôle |
 |---|---|---|
 | `config.js` | 30 | **L'URL de la Web App** et les constantes partagées. Le **seul** fichier à modifier si l'adresse du backend change |
-| `commun.js` | 309 | Les utilitaires communs à **toutes** les pages (échappement du texte, libellés, comparaison de catégories) — écrits une fois au lieu d'être recopiés |
+| `commun.js` | 363 | Les utilitaires communs à **toutes** les pages (échappement du texte, libellés, comparaison de catégories) — écrits une fois au lieu d'être recopiés |
 | `api.js` | 218 | Les appels `fetch()` vers le backend. **Le seul endroit qui parle au serveur** |
 | `dialog.js` | 177 | Les fenêtres de confirmation « maison », qui remplacent `confirm` / `prompt` / `alert` du navigateur |
-| `commun-dossier.js` | 522 | Les utilitaires partagés par les trois pages « document » du parcours club |
+| `commun-dossier.js` | 525 | Les utilitaires partagés par les trois pages « document » du parcours club |
 
 **La page publique et la saisie (3)**
 
 | Fichier | Lignes | Rôle |
 |---|---|---|
-| `tournoi.js` | 1 115 | Toute la page publique |
+| `tournoi.js` | 1 110 | Toute la page publique |
 | `saisie.js` | 745 | Toute la saisie des scores |
-| `perfs.js` | 410 | La page interne Perfs du club |
+| `perfs.js` | 492 | La page interne Perfs du club |
 
 **Le parcours des clubs (3)**
 
@@ -344,16 +344,16 @@ Pages statiques (HTML/CSS/JS), **mobile-first**, publiées par GitHub Pages.
 
 | Fichier | Lignes | Rôle |
 |---|---|---|
-| `admin.js` | 811 | Le noyau : chargement, navigation, orchestration des autres |
+| `admin.js` | 883 | Le noyau : chargement, navigation, orchestration des autres |
 | `admin-tableau-bord.js` | 356 | Le récapitulatif d'état et le fil « Où en suis-je ? » |
-| `admin-equipes.js` | 389 | Les équipes : liste, ajout, suppression |
-| `admin-reglages.js` | 756 | Les horaires et les catégories |
+| `admin-equipes.js` | 456 | Les équipes : liste, ajout, suppression |
+| `admin-reglages.js` | 767 | Les horaires et les catégories |
 | `admin-generation.js` | 742 | La génération des poules et du planning, et l'assistant d'arbitrage |
 | `admin-terrains.js` | 1 601 | Le découpage géométrique des grands terrains en mini-terrains |
-| `admin-invitations.js` | 1 874 | **Le plus gros fichier du frontend** : tout le sous-système d'invitation et de clubs invités |
-| `admin-infos-publication.js` | 660 | Les contenus publics du tournoi et la publication |
+| `admin-invitations.js` | 1 879 | **Le plus gros fichier du frontend** : tout le sous-système d'invitation et de clubs invités |
+| `admin-infos-publication.js` | 664 | Les contenus publics du tournoi et la publication |
 | `admin-conformite-ffr.js` | 905 | La conformité FFR — **informative, n'empêche jamais de sauvegarder** |
-| `admin-autorisation.js` | 1 011 | La demande d'autorisation FFR et sa feuille de report |
+| `admin-autorisation.js` | 1 013 | La demande d'autorisation FFR et sa feuille de report |
 | `admin-feuille-jour.js` | 339 | La feuille de fin de journée |
 | `admin-sponsors.js` | 1 126 | L'écran Partenaires |
 | `ecrans.js` | 446 | Le mode « écrans » : sur ordinateur (≥ 1024 px), la longue page devient une interface à onglets |
@@ -430,7 +430,21 @@ Détails et activation : [`relais-cdn.md`](relais-cdn.md).
 > chiffre qu'on ne peut pas revérifier finit par être recopié faux. C'est arrivé sur ce projet
 > (leçon **M-06**). Chaque compte ci-dessous est donc **reproductible**.
 
-**Relevé du 2026-08-09**, sur le dépôt à cette date.
+**Relevé du 2026-08-24**, sur le dépôt à cette date *(commit `94cd6a2`)*.
+
+> 🗓️ **Ce que la remesure du 2026-08-24 a changé — et ce qu'elle n'a PAS changé** *(chantier M1,
+> étape M1-A)*. **Aucun compte STRUCTUREL n'a bougé** : toujours **65** actions, **8** pages,
+> **26** fichiers JS, **4** bibliothèques, **12** onglets, **20** scripts sur `admin.html`.
+> Seuls **11 comptes de LIGNES** ont été remis à jour *(`commun.js`, `commun-dossier.js`,
+> `tournoi.js`, `perfs.js`, `admin.js`, `admin-equipes.js`, `admin-reglages.js`,
+> `admin-invitations.js`, `admin-infos-publication.js`, `admin-autorisation.js`, et le nombre de
+> lignes d'`admin.html`)*.
+>
+> ⚠️ **Les anciennes valeurs n'étaient pas FAUSSES : elles étaient DATÉES**, et ce document le
+> disait. `admin-autorisation.js` annonçait **1 011** — c'était **exact au 2026-08-09**, vérifié
+> par `git show`. Le fichier a grandi depuis *(lot CF-4b/L8)*. ⭐ **La leçon** : un tableau daté
+> dont on corrigerait **une seule ligne** deviendrait plus trompeur qu'avant — un chiffre frais
+> parmi des anciens, sans qu'on puisse dire lesquels. **On remesure tout, ou on ne touche à rien.**
 
 | Compte | Résultat | Comment le refaire |
 |---|---|---|

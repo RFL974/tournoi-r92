@@ -10,7 +10,18 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
-**Dernière mise à jour** : 2026-08-19 *(soir)* — ⚡ **ARBITRAGE DE R-092 ET R-093** *(**D-037**)* :
+**Dernière mise à jour** : 2026-08-24 — 🏛️ **LE CHANTIER M1 EST OUVERT, ET IL A CHANGÉ DE NATURE**
+*(nouveau **§15**)*. Ce n'était qu'une opération manuelle de deux valeurs et d'une affiche ; c'est
+désormais **l'externalisation progressive des données propres à l'organisation**, en **6 étapes
+M1-A → M1-F**. 🎯 **Le motif** : les deux URL étaient **le symptôme, pas la cause** — la cause est
+que **l'application n'a aucun endroit où un club se décrit**. Décisions fondatrices : **D-042** à
+**D-045**. ⚠️ **L'ancienne fiche est conservée au §14.3** comme trace de son périmètre d'origine.
+🚧 **M1-A est en cours** *(documentaire)* ; ⛔ **M1-B → M1-F ne démarrent pas automatiquement**.
+⚡ **Deux problèmes nouveaux au registre** : **R-095** *(le nom du stade disparaît du document
+fédéral — ⛔ **hors M1**)* et **R-096** *(douze réglages sans écran)* ; **R-033 voit son périmètre
+élargi** de « les contacts FFR » à **36 `org_*` sur 36**.
+
+*Rappel de la mise à jour précédente — 2026-08-19 (soir)* : ⚡ **ARBITRAGE DE R-092 ET R-093** *(**D-037**)* :
 **R-092 rejoint C-015** *(toute invalidation d'un résultat doit effacer le détail périmé)* · ⚡ **R-093
 devient le chantier C-031**, *« les colonnes du classeur : une seule façon de les désigner »*, dont le
 périmètre couvre **au minimum `Matchs` ET `Equipes`** · 🛡️ une **règle de protection provisoire** est
@@ -2220,9 +2231,22 @@ périmètre, PAS une solution** : L8 aura sa propre analyse avant toute modifica
 
 **Opération manuelle associée — hors Git :**
 
+> ⚡ **M1 A CHANGÉ DE NATURE LE 2026-08-24, et la fiche ci-dessous est conservée comme trace de son
+> périmètre d'origine.** Ce n'est plus une opération manuelle de deux valeurs : c'est un **chantier
+> d'externalisation progressive des données propres à l'organisation**, en **6 étapes M1-A → M1-F**.
+> ➡️ **Sa fiche à jour est au [§15](#15--chantier-m1--le-profil-du-club)** ; les décisions
+> fondatrices sont **D-042 à D-045**.
+>
+> 🎯 **Pourquoi ce changement.** L'audit du 2026-08-24 a établi que les deux URL et l'affiche sont
+> **le symptôme, pas la cause** : la cause est que **l'application n'a aucun endroit où un club se
+> décrit**. Les vider retire l'attribution résiduelle ; cela ne donne à aucun club le moyen de
+> mettre la sienne. ⭐ **Décision de Romain** : *« je préfère que la neutralisation finale soit la
+> conséquence de la bonne architecture plutôt qu'une modification temporaire que nous devrions
+> reprendre ensuite. »*
+
 | | |
 |---|---|
-| 🔧 **M1** | **Neutralisation de la configuration institutionnelle du classeur fictif** — ① les valeurs `url_site_association` et `url_instagram` de l'onglet `Config` · ⚡ ② **l'AFFICHE du tournoi**, le fichier Drive désigné par `tournoi_affiche_id` : **constaté le 2026-08-20** pendant le contrôle de l'aperçu de L5, elle porte **encore des éléments Racing / Génération R92**. ⚠️ **Ce n'est PAS un lot Git** : le code est déjà neutre *(il gère la valeur vide et l'affiche absente)*, seules les **données** pointent vers une structure. À traiter **avant la clôture de CF-4b**, avec **autorisation explicite** et une trace avant/après. ⛔ **Ne jamais la mélanger à un commit** |
+| 🔧 **M1** *(périmètre d'ORIGINE — conservé comme trace)* | **Neutralisation de la configuration institutionnelle du classeur fictif** — ① les valeurs `url_site_association` et `url_instagram` de l'onglet `Config` · ⚡ ② **l'AFFICHE du tournoi**, le fichier Drive désigné par `tournoi_affiche_id` : **constaté le 2026-08-20** pendant le contrôle de l'aperçu de L5, elle porte **encore des éléments Racing / Génération R92**. ⚠️ **Ce n'est PAS un lot Git** : le code est déjà neutre *(il gère la valeur vide et l'affiche absente)*, seules les **données** pointent vers une structure. À traiter **avant la clôture de CF-4b**, avec **autorisation explicite** et une trace avant/après. ⛔ **Ne jamais la mélanger à un commit** |
 
 > 🔴 **Pourquoi le point ② de M1 n'est pas un détail, et pourquoi il bloque la clôture de CF-4b** :
 > l'affiche **voyage dans les emails** *(image intégrée `cid:affiche`, `Code.gs:5155`)* et s'affiche
@@ -2394,3 +2418,223 @@ CF-7, CF-8, CF-9, CF-10, CF-11, CF-12, CF-13 : ⭐ AUCUNE dépendance
 > compte n'a de données de tiers à protéger aujourd'hui** : le geste reste de cinq minutes, mais il
 > **n'est plus le point de départ**. À l'inverse, **CF-4a (mentions légales) est remonté** — c'est
 > le seul écart réel et actuel.
+
+---
+
+## 15. 🏛️ CHANTIER M1 — LE PROFIL DU CLUB
+
+> 🗓️ **Ouvert le 2026-08-24.** Décisions fondatrices : **D-042** *(principe, familles, cycle de
+> vie)* · **D-043** *(les 36 `org_*`)* · **D-044** *(profil ≠ répertoire, logo ≠ charte)* ·
+> **D-045** *(libellés officiels, nom officiel ≠ nom d'usage)*.
+>
+> ⚠️ **M1 remplace l'opération manuelle décrite au §14.3**, conservée là-bas comme trace de son
+> périmètre d'origine.
+
+### 15.1 — Ce que M1 fait, et ce qu'il ne fait pas
+
+**En une phrase :**
+
+> **Le cœur de l'application ne doit pas connaître en dur l'identité ni les caractéristiques
+> permanentes du club qui l'utilise.**
+
+⛔ **Ce que M1 ne construit PAS** : ni plateforme multi-clubs, ni gestion de comptes, ni logiciel
+loué en ligne, ni parcours de première configuration complet, ni répertoire de tiers.
+**Une installation / un classeur = une organisation utilisatrice.**
+
+### 15.2 — Le découpage, 6 étapes
+
+| Étape | Objectif | Nature | Redéploiement | Bloque la clôture ? |
+|---|---|---|---|---|
+| **M1-A** | Mise à plat documentaire, **cycle de vie**, **libellés officiels**, décisions | Documentaire | ⛔ non | oui *(prérequis)* |
+| **M1-B** | **Sécurisation de la réinitialisation** — 10 conservés, 26 vidés, récompenses vidées | Backend, petit, très testé | ✅ **oui** — ⭐ emporte **CF-4b/L8** | oui |
+| **M1-C1** | Le **profil club** : lecture **et** écriture | Backend + frontend, pur | ✅ oui | oui |
+| **M1-C2** | Le **modèle de doctrine sportive** | Backend | ✅ oui | ⏸️ **NON — REPORTABLE** |
+| **M1-D** | L'écran **« Mon club »**, référentiel **vivant** | Frontend + 1 action | ✅ oui | oui |
+| **M1-E** | **Branchement progressif** des consommateurs *(E1 → E6)* | Mixte | E1, E3 : ✅ · E2, E4, E5, E6 : ⛔ | E2/E3/E4 oui |
+| **M1-F** | **Neutralisation et validation finale** — clôture de **CF-4b** | Données + logo + preuves | ⚠️ probablement non | **c'est la clôture** |
+
+> ⛔ **AUCUNE ÉTAPE NE DÉMARRE AUTOMATIQUEMENT.** Chaque étape est présentée, validée par Romain,
+> puis exécutée — **M1-B compris**. *(Cadre `CLAUDE.md` **§12.4** : « ne jamais commencer
+> automatiquement la session suivante ».)*
+
+#### M1-A — Mise à plat documentaire, cycle de vie et décisions
+
+| | |
+|---|---|
+| **Objectif** | Que la carte dise vrai, et que les arbitrages soient écrits **avant** la première ligne de code |
+| **Fichiers** | `structure-google-sheet.md` *(les 36 `org_*` + 4 paramètres non documentés)* · `ETAT.md` · `architecture.md` *(11 comptes de lignes remesurés, relevé redaté)* · `DECISIONS.md` *(D-042 → D-045)* · `PLAN.md` *(ce §15)* · `RISQUES.md` *(R-095, R-096, R-033 élargi)* · 🆕 `M1-LIBELLES-OFFICIELS.md` |
+| **Risques** | Écrire une liste fausse ➡️ elle est **issue du code**, contrôlée par comparaison · recopier un libellé de mémoire ➡️ ⛔ **la source est le PDF du dépôt**, et la méthode d'extraction est écrite |
+| **Tests** | Aucun *(lot documentaire)*. **Contrôles croisés** : 36 documentés = 36 de `CHAMPS_AUTORISATION` = 36 de `AUTORISATION_SAISIE` · chaque libellé retrouvé dans le texte décodé du PDF |
+| **Dépendances** | ⛔ **Aucune** — c'est le point d'entrée |
+| **Redéploiement** | ⛔ **NON** |
+| **Validation** | Les 36 sont documentés avec famille, caractère personnel et comportement attendu à la réinitialisation · `ETAT.md` ne dit plus « non commité » · la table des libellés couvre le formulaire · les 4 décisions sont écrites |
+
+> 🔧 **Opération manuelle associée, hors Git — autorisée par Romain le 2026-08-24 :** lecture
+> **seule** de `url_site_association` et `url_instagram` *(elles sortent par `getConfig`, vue
+> `invitation`, sans clé)*, puis **vidage UNIQUEMENT** si elles portent encore une attribution
+> institutionnelle réelle, avec relevé avant/après. ⛔ **Rien d'autre du classeur n'est touché — ni
+> l'affiche, ni `tournoi_affiche_id`, ni le logo, ni un `org_*`, ni une donnée de tournoi.**
+
+#### M1-B — Sécurisation de la réinitialisation
+
+| | |
+|---|---|
+| **Objectif** | Appliquer **D-043** : 10 conservés, 26 vidés, **toutes** les clés `org_recompenses_*` vidées |
+| **Fichiers** | `backend/Code.gs` *(`reinitialiserTournoi` + une constante `CHAMPS_AUTORISATION_EDITION`)* · `backend/Tests.gs` · `../deploiement.md` *(les 2 repères **remesurés**)* · `CHANGELOG.md` *(la fiabilité change — §8 bis)* |
+| **Risques** | **R-B1** effacer un champ non décidé *(**P0**)* ➡️ la liste vient de **D-043**, jamais du code écrit à la volée · **R-B2** la boucle `org_recompenses_*` attrape une clé voisine ➡️ **test négatif obligatoire** · **R-B3** perte de saisie non annoncée ➡️ le message de confirmation **énumère** ce qui part · **R-B4** le redéploiement emporte **L8** sans qu'on le sache ➡️ témoin **fixé AVANT** le collage *(D-040)* · **R-B5** friction temporaire **assumée** *(N2)* |
+| **Tests** | ① les 10 survivent · ② les 26 sont vides · ③ récompenses vidées, y compris pour une catégorie disparue · ④ **négatif** : `org_representant_nom` n'est pas emporté par la boucle · ⑤ `org_equipes_etrangeres` vidé ⇒ la feuille affiche `non` *(défaut documenté)* · ⑥ aucune régression sur les **40** effacements existants. **Manuel** : réinitialisation sur une **copie**, relevé des 36 lignes avant/après — ⛔ **jamais la production** |
+| **Dépendances** | **M1-A** |
+| **Redéploiement** | ✅ **OUI** — ⭐ et il met **L8** en service |
+| **Validation** | Bilan **au-dessus de 715**, zéro `FAIL` · sur la copie : 10 présents / 26 vides · une demande d'autorisation neuve affiche un **compteur de manquants NON NUL** |
+
+#### M1-C1 — Le profil du club : lecture **et** écriture
+
+| | |
+|---|---|
+| **Objectif** | Une source logique unique, **consultable et modifiable** |
+| **Lecture** | `lireProfilClub(config)` — **pure**, sans classeur, testable *(modèle : `filtrerConfigPublique`)*. Renvoie un **objet plat et copiable** *(prépare un futur instantané sans le construire)*. ⛔ **Aucun renommage** : elle lit les `org_*` existants ; seules les valeurs **qui n'existent pas** reçoivent une clé neuve préfixée `club_` |
+| **Écriture** | `enregistrerProfilClub` — **7 contraintes fermes** : ① écriture **partielle**, bâtie sur `ecrireChampsConfig` *(⛔ aucun mécanisme d'écriture nouveau)* · ② un champ absent **n'est jamais effacé** · ③ **validation avant écriture** *(téléphones à 10 chiffres, emails, date de label)* · ④ ⛔ **liste blanche stricte** — tout champ hors liste est **refusé**, pas ignoré · ⑤ ⛔ aucune écriture vers un rôle événementiel · ⑥ ⛔ aucune publication implicite · ⑦ ⛔ aucune propagation vers un tournoi déjà renseigné |
+| ⭐ **Architecture** | **Deux régimes, jamais mélangés** *(D-042 §3)* : 🏛️ identité ⇒ **lecture directe** · 🏟️ valeur par défaut ⇒ **copie volontaire**, puis ⛔ **aucun lien vivant**. ⚠️ **Conséquence de conception** : il n'existe **aucun moment « création de tournoi »** dans l'application — la copie doit donc être **un bouton, carte par carte**, jamais un geste global |
+| **Fichiers** | `backend/Code.gs` · `frontend/js/commun.js` *(miroir de lecture seule)* · `backend/Tests.gs` · `../architecture.md` · `../structure-google-sheet.md` |
+| **Risques** | **R-C1** une clé `club_*` sort en public *(**P1**)* ➡️ ⛔ aucun ajout à `CONFIG_PUBLIQUE_VUES` · **R-C2** une donnée personnelle change de porte *(**P1**)* ➡️ test par vue · **R-C3** le miroir frontend diverge *(**P2** — ⚠️ le projet en porte déjà 9, voir **R-044**)* ➡️ fonction **minuscule**, aucune règle métier · **R-C4** ⚠️ **le piège du préfixe** : `org_president_nom` et `org_medecin_nom` se ressemblent ➡️ **test négatif** · **R-C5** le nom d'usage atteint le PDF fédéral *(**P1**)* ➡️ **test négatif** |
+| **Tests** | `club_*` seule · `org_*` seule · les deux · aucune ⇒ **vide, jamais d'invention** · aucune clé du profil dans les 3 vues · président et représentant absents des 3 vues · écriture partielle · **refus** d'un champ hors liste · **refus** d'un champ événementiel · le nom d'usage n'atteint aucun champ officiel |
+| **Dépendances** | **M1-B** |
+| **Redéploiement** | ✅ **OUI** |
+| **Validation** | Les tests passent **et le comportement visible de l'application est strictement inchangé** — cette étape ne branche rien |
+
+#### M1-C2 — Le modèle de doctrine sportive ⏸️ **REPORTABLE**
+
+| | |
+|---|---|
+| **Objectif** | Conserver les réglages de catégorie comme **modèle proposé et confirmé** |
+| **Pourquoi il existe** | Une réinitialisation **supprime toutes les catégories** *(`supprimerToutesCategories`)* : les 15 réglages de chacune sont **détruits**, et tout est ressaisi |
+| **Fichiers** | `backend/Code.gs` *(`club_modele_categories`, JSON)* · `backend/Tests.gs` · `../structure-google-sheet.md` |
+| **Risques** | **R-C6** le modèle s'applique en silence *(**P1**)* ➡️ ⛔ il **remplit un formulaire**, l'organisateur **enregistre** — deux gestes, jamais un |
+| **Tests** | Aucune écriture sans enregistrement · catégorie absente du modèle ⇒ vide · le modèle survit à la réinitialisation · **négatif** : réinitialiser puis générer **sans le modèle** ⇒ comportement d'aujourd'hui à l'identique |
+| **Dépendances** | **M1-C1**. ⛔ **Ne bloque ni M1-D, ni M1-E, ni M1-F, ni la clôture** |
+| **Redéploiement** | ✅ OUI |
+| **Validation** | Le modèle est proposé ; **tant qu'on ne clique pas, rien n'est écrit** |
+
+#### M1-D — L'écran « Mon club », référentiel **vivant**
+
+| | |
+|---|---|
+| **Objectif** | ⛔ **Pas un assistant de première configuration** — un **écran permanent de gestion** |
+| **Les 6 gestes exigés** | ① **consulter** l'état actuel · ② **repérer ce qui manque** *(un compteur, comme la feuille de report)* · ③ **modifier** une valeur · ④ **enregistrer** · ⑤ **comprendre** ce qui relève du club · ⑥ **distinguer** 🏛️ *« valeur du club »* de 🏟️ *« valeur habituelle, seulement proposée »* |
+| **Contenu** | 🏛️ identité *(les 10 `org_*` permanents + nom d'usage + contact données + logo **inactif** jusqu'à M1-F)* · 🏟️ site habituel + géométrie du stade + les 4 « infos pratiques » de **R-096** · 🏛️ liens. ⛔ **Rien d'événementiel, rien de calculable, rien de réglementaire** |
+| **Libellés** | ⭐ **D-045** : chaque champ issu du formulaire porte le **libellé officiel**, l'explication va **sous** le champ ; les champs propres à Maxilou sont **identifiés comme tels** |
+| **Un assistant, plus tard** | ⭐ **Même écran, même action serveur, même stockage.** ⛔ **Aucune architecture parallèle pour l'onboarding** |
+| **Fichiers** | `frontend/admin.html` · 🆕 `frontend/js/admin-profil-club.js` · `frontend/js/ecrans.js` · `backend/Code.gs` · `backend/Tests.gs` · `../../README.md` · `../architecture.md` |
+| **Risques** | **R-D1** deux écrans écrivent le même champ *(**P1**)* ➡️ écriture partielle + test sur les champs partagés · **R-D2** le PDF change sans qu'on le voie *(**P1**)* ➡️ même config, PDF avant/après, champ par champ · **R-D3** l'écran laisse croire que le profil est branché partout ➡️ une phrase honnête tant que M1-E n'est pas fait · **R-D4** ⚠️ changer un libellé **se voit** ➡️ entrée au `CHANGELOG` · **R-D5** l'utilisateur croit que modifier le site habituel corrige son tournoi ➡️ **la carte le dit** |
+| **Tests** | Écriture partielle · aucun champ événementiel · téléphones et emails validés comme ailleurs · PDF identique · **négatif** : modifier le site habituel ne change **aucune** valeur du tournoi en cours |
+| **Dépendances** | **M1-C1** · ⭐ **M1-A pour la table des libellés** — l'écran ne peut pas s'écrire sans elle |
+| **Redéploiement** | ✅ **OUI** |
+| **Validation** | Les 4 paramètres qui exigeaient une saisie dans le classeur ont un champ · les libellés sont fidèles · le compteur de manquants fonctionne · **une modification est possible et enregistrée** · le PDF est identique |
+
+#### M1-F — Neutralisation et validation finale
+
+| | |
+|---|---|
+| **Objectif** | Retirer les dernières valeurs institutionnelles **une fois que le club a où mettre les siennes**, brancher le logo, clore CF-4b |
+| **Contenu** | **Données** : l'**affiche** *(`tournoi_affiche_id`)* · le logo du club. **Code** : le logo lu depuis le profil sur les 8 pages + l'email, ⛔ **repli sur le repère neutre actuel**. **Docs** : `ETAT.md`, `PLAN.md`, `CHANGELOG.md`, `REFERENTIELS.md` |
+| ⛔ **Interdiction** | **Ne fabriquer AUCUN visuel temporaire** pour neutraliser l'affiche avant que le système cible ne soit prêt *(arbitrage de Romain, 2026-08-24)*. L'affiche est **remplacée par celle du club** ou **retirée** — jamais par un ersatz |
+| **Risques** | **R-F1** le logo rouvre une attribution ➡️ profil vide ⇒ repère neutre inchangé · **R-F2** l'affiche siglée voyage encore dans un email *(`cid:affiche`, `Code.gs:5155`)* *(**P1**)* ➡️ **vérification sur un email reçu**, pas sur le code · **R-F3** déclarer CF-4b close sans avoir tout regardé ➡️ **la phrase du contrôle ⑯** doit pouvoir s'écrire |
+| **Tests** | Recherche d'occurrences **en locale UTF-8** ⚠️ *(sans elle, `grep` a déjà répondu « 0 » là où il y en avait 10)* · les 3 vues publiques relues · **1 email réellement reçu** · le PDF · le dossier d'un club de test · l'affiche à l'œil · ⭐ **le scénario `S-M1` (§15.4)** |
+| **Dépendances** | **M1-D** + **E2, E3, E4** |
+| **Redéploiement** | ⚠️ **Probablement NON** — sauf si une correction backend émerge |
+| **Validation** | ⛔ Plus aucune attribution : ni dans les vues publiques, ni dans un email reçu, ni sur l'affiche, ni dans les liens, ni dans le PDF |
+
+### 15.3 — Les six branchements de M1-E
+
+| | Consommateur | Ce qu'il lit | Redépl. | Critère de validation |
+|---|---|---|---|---|
+| **E1** | Formulaire FFR *(feuille + PDF)* | 🏛️ **nom OFFICIEL**, code, label, président, représentant | ✅ | ⛔ **PDF strictement identique** — on change la provenance, pas la valeur. **+ test négatif : le nom d'usage n'y entre pas** |
+| **E2** | Signature des documents *(7 points)* | 🏛️ nom d'usage, **sinon** nom officiel | ⛔ | Profil vide ⇒ *« L'organisation du tournoi »*, **au caractère près** |
+| **E3** | Nom d'expéditeur *(4 points)* | 🏛️ idem E2 | ✅ | ⚠️ **Seul un email REÇU le prouve** *(leçon L5)* |
+| **E4** | Liens site / Instagram / page publique | 🏛️ | ⛔ | Vide ⇒ **pas de bouton** *(jamais de lien mort — règle L3)* |
+| **E5** | Page Perfs | 🏛️ mot-clé **proposé** depuis le nom | ⛔ | Proposé, **modifiable** ; vide ou < 3 caractères ⇒ la page ne calcule rien et le dit |
+| **E6** | Lieu, type de terrain, vestiaires du tournoi | 🏟️ **copie volontaire** | ⛔ | ⭐ Après copie, **modifier le profil ne change plus le tournoi** |
+
+### 15.4 — ⭐ Le scénario obligatoire `S-M1`
+
+**« Le profil vit, le tournoi ne bouge pas. »** Sur une **copie de test**, ⛔ jamais la production.
+
+1. renseigner un profil **fictif** *(club, code, président, représentant, site habituel « Stade A »)* ;
+2. renseigner un tournoi en **copiant** le site habituel *(bouton E6)* ;
+3. enregistrer le tournoi ;
+4. modifier le profil : **nouveau président**, **nouveau nom d'usage**, **site → « Stade B »**, **nouveau lien Instagram** ;
+5. contrôler **six points** :
+
+| # | Contrôle | Attendu |
+|---|---|---|
+| ① | Consommateurs de données **permanentes** | Le PDF et la feuille portent **le NOUVEAU président** |
+| ② | Valeurs **déjà copiées** | Le tournoi porte **toujours « Stade A »** — ⛔ aucune trace de « Stade B » |
+| ③ | Données **événementielles** | Médecin, secours, référent, contact publié, récompenses : **inchangés** |
+| ④ | Frontière **public / privé** | Les 3 vues publiques : **exactement le même jeu de clés qu'avant** |
+| ⑤ | **Aucun écrasement** | Les champs du profil non modifiés à l'étape 4 ont **exactement** leur valeur de l'étape 1 |
+| ⑥ | **Nom d'usage** | Présent dans la **signature** · ⛔ **ABSENT** du PDF fédéral, qui porte le **nom officiel** |
+
+> 🎯 **Pourquoi ce scénario vaut plus que les tests qui l'entourent** : chacun d'eux vérifie une
+> fonction. **Celui-ci vérifie une frontière** — et une frontière ne se voit que lorsqu'on la
+> traverse.
+>
+> ⚠️ Il ne peut être joué qu'**après M1-E6**. Il appartient donc au **critère de clôture de M1**,
+> pas à celui d'une étape.
+
+### 15.5 — Critère de clôture de M1
+
+M1 est terminé quand **les huit conditions** sont réunies :
+
+1. **M1-A → M1-D** faits et publiés, plus **E1 à E6** *(**M1-C2** ⏸️ reportable, sans effet)* ;
+2. backend **redéployé chez Google**, les trois repères de [`../deploiement.md`](../deploiement.md)
+   **REMESURÉS** *(jamais recopiés — §8 quater)* ;
+3. réinitialisation **prouvée sur une copie** : 10 conservés, 26 + récompenses vidés ;
+4. l'écran « Mon club » **consulte, signale ce qui manque, modifie et enregistre** — les quatre
+   gestes, pas seulement le premier ;
+5. les **libellés officiels** sont fidèles, et les champs propres à Maxilou sont **identifiés** ;
+6. ⭐ le scénario **`S-M1`** est joué, ses **6 contrôles** passent ;
+7. les **trois frontières** tiennent : aucune donnée personnelle nouvelle en public · aucun champ
+   événementiel écrit par le profil · aucun nom d'usage dans une démarche officielle ;
+8. la **phrase du contrôle ⑯** *(`CLAUDE.md` §8 quinquies)* s'écrit en entier.
+
+### 15.6 — Quand CF-4b pourra être clos
+
+**À la fin de M1-F.**
+
+| Condition de clôture CF-4b | Où elle est satisfaite |
+|---|---|
+| Plus aucune attribution dans les **textes** | ✅ fait *(L2, L7)* |
+| Plus aucun **lien** institutionnel | ✅ code fait *(L3)* · **valeurs du classeur : M1-A ou M1-F** |
+| Plus aucun **logo** institutionnel | ✅ fait *(L4)* · **logo du club : M1-F** |
+| **Nom d'expéditeur** neutre | ✅ code fait *(L5)* · ⛔ **pas en service** — attend le redéploiement de **M1-B** |
+| **Couplage fonctionnel** au club retiré | ✅ fait *(L8)* · ⛔ **pas en service** — idem |
+| **L'affiche** | 🔧 **M1-F** |
+| **Preuves finales** *(email reçu, vues publiques, PDF, dossier)* | 🔧 **M1-F** |
+
+> ⚠️ **Le coût de ce séquençage, et il doit être écrit.** **CF-4a — les mentions légales — reste
+> suspendue derrière CF-4b**, or CF-0 a établi que c'est **le seul écart RÉEL et ACTUEL** du projet
+> *([R10] : le site est publié)*. **Allonger CF-4b retarde donc le seul point qui n'est pas un
+> prérequis.** ⭐ **C'est un coût assumé, pas un oubli** — et il est réduit si les deux URL sont
+> vidées dès **M1-A**.
+
+### 15.7 — ⛔ Ce qui est enregistré mais reste HORS M1
+
+| Sujet | Où il vit |
+|---|---|
+| 🔴 **Le nom du stade disparaît du document fédéral** | **R-095** — micro-lot séparé *(arbitrage **H13**)*. ⚠️ **Volontairement hors M1-E1**, dont le critère *« PDF identique »* le masquerait |
+| Les **9 fonctions du serveur réimplémentées dans le navigateur** | **R-044** *(général)* et **R-082** *(le cas démontré)* — ⛔ **déjà au registre, aucun doublon créé** |
+| `nb_demi_journees` sans écran | **R-096**, part **hors M1** — donnée **de l'édition** et clé **réglementaire** |
+| **Charte graphique** configurable | ⏸️ **D-044** — décision **non acquise**, à ne pas glisser derrière le logo |
+| **Répertoires** *(secours, fournisseurs, partenaires)* | ⏸️ **D-044** — ⛔ aucun répertoire en M1 |
+| **Modèle de doctrine sportive** | ⏸️ **M1-C2**, reportable — inscrit ici, **non bloquant** |
+| Bibliothèques orphelines *(`docxtemplater`, `pizzip`)* | **R-080** — ⛔ déjà au registre |
+| Destructivité de la réinitialisation *(pas de sauvegarde, pas de retour arrière)* | **R-016** — ⛔ déjà au registre |
+| Effacement des personnes permanentes au départ d'un titulaire | ⏸️ **chantier Confiance**, pas M1 |
+| `boutique-r92` porte le même défaut de date civile | **R-094**, dette séparée |
+
+### 15.8 — État d'avancement
+
+| Étape | État |
+|---|---|
+| **M1-A** | 🚧 **EN COURS** — documents écrits, ⛔ **non commité, en attente de validation de Romain** |
+| **M1-B → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite** |

@@ -5,7 +5,17 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-19 *(soir)* — ⚡ **D-037** : **l'arbitrage de R-092 et R-093**,
+**Dernière mise à jour** : 2026-08-24 — 🏛️ **QUATRE DÉCISIONS OUVRENT LE CHANTIER M1** *(étape
+**M1-A**)*. **D-042** — le **profil du club** : principe directeur, **7 familles**, et surtout le
+**cycle de vie A/B/C** *(permanente ⇒ **lecture directe** · proposée ⇒ **copie volontaire, aucun lien
+vivant** · événementielle ⇒ **aucun lien**)*, plus la règle qui interdit de fusionner un rôle
+institutionnel et un rôle événementiel. **D-043** — les **36 `org_*`** : **10 survivent, 26 sont
+vidés** *(+ les récompenses)* ; ⚠️ **la réinitialisation les conserve TOUS aujourd'hui** — correction
+en **M1-B**, ⛔ **non faite**. **D-044** — profil ≠ **répertoire de tiers**, logo ≠ **charte
+graphique**. **D-045** — **fidélité aux libellés officiels** du formulaire FFR, et **nom officiel ≠
+nom d'usage** *(⛔ interdiction absolue du nom d'usage dans une démarche réglementaire)*.
+
+*Rappel de la mise à jour précédente — 2026-08-19 (soir)* : ⚡ **D-037** : **l'arbitrage de R-092 et R-093**,
 les deux derniers problèmes du registre sans rattachement. **R-092 rejoint C-015** · **R-093 devient
 le chantier C-031** *(périmètre : au minimum `Matchs` **et** `Equipes`)* · une **règle de protection
 provisoire** est inscrite dans C-015 · **C-015 reste le prochain chantier à ouvrir**.
@@ -2750,3 +2760,284 @@ locale — **et** sur le site réellement servi par GitHub Pages, qui peut diff�
 > - ❌ Elle **ne présume d'aucune adoption** : elle **retire** un nom de club, elle n'en met aucun ;
 > - ❌ Elle **ne clôt pas CF-4b** — **M1** *(les valeurs du classeur et l'**affiche**)* reste entier
 >   et **bloquant**.
+
+---
+
+### D-042 — Le **profil du club** : principe directeur, familles de données, et cycle de vie
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-24 |
+| **Session** | Chantier **M1**, étape **M1-A** |
+| **Statut** | **VALIDÉE** |
+| **Décidée par** | Romain |
+
+**Problème posé**
+
+> L'application ne dispose d'**aucun endroit où un club se décrit**. Son identité, ses responsables
+> et ses habitudes sont dispersés : certains dans l'onglet `Config`, d'autres **en dur dans le
+> code** *(7 signatures de documents, 4 noms d'expéditeur, 1 repère visuel sur 8 pages)*, d'autres
+> encore nulle part. Conséquence : **le cœur du logiciel connaît, ou ignore, le club au hasard des
+> fichiers.**
+
+**Décision prise**
+
+> **① Le principe directeur.**
+> **Le cœur de l'application ne doit pas connaître en dur l'identité ni les caractéristiques
+> permanentes du club qui l'utilise.** Les données réellement permanentes sont centralisées, puis
+> utilisées aux bons endroits.
+>
+> ⚠️ **Et son garde-fou, tout aussi important** : *une donnée n'est permanente au niveau du club que
+> si elle reste vraie **indépendamment de l'organisation d'un tournoi particulier**.* Une habitude,
+> un prestataire souvent retenu, un partenaire régulier ou une pratique fréquente **ne suffisent
+> pas**. ⛔ **On ne transforme pas des habitudes en vérités automatiques.**
+>
+> **② Les sept familles.**
+>
+> | Famille | Ce qu'elle contient |
+> |---|---|
+> | 🏛️ **P — Identité permanente du club** | Nom, code club, label EDR et sa date, président, représentant, zone de vacances, mot-clé Perfs, liens, logo, adresse de contact « données » |
+> | 🏟️ **D — Valeur proposée par défaut** | Site habituel *(nom, adresse, type de terrain, vestiaires)*, géométrie du stade, infos pratiques, doctrine sportive, encadrement |
+> | 🗓️ **E — Donnée de l'événement** | Tout `tournoi_*`, horaires, dates limites, référents du jour, médecin, secours, fournisseurs, prix, récompenses, effectifs |
+> | 🧮 **C — Donnée calculable** | Nombres de clubs, d'équipes, de participants, d'éducateurs, de terrains ; formes de jeu ; format sportif ; responsable sécurité ; droits d'inscription |
+> | 📜 **R — Référentiel réglementaire** | `RefFFR_*`, formulaire officiel, mentions FDM EDR, circuit de dépôt, barème, grilles de temps |
+> | 🔒 **Transversal — données personnelles** | Voir **D-043** |
+> | ⚙️ **Transversal — champs propres à Maxilou** | Voir **D-045** |
+>
+> ⛔ **Deux interdictions permanentes attachées aux familles :**
+> **C** — une donnée que le logiciel sait calculer **ne se stocke jamais** dans une configuration
+> permanente ; elle se recalcule *(sinon on reproduit le mécanisme du `616/616` : un chiffre juste
+> recopié, la source bouge, la copie reste — **§8 quater**)*.
+> **R** — une règle FFR, un formulaire officiel, un barème ou un circuit réglementaire **ne devient
+> jamais un réglage propre au club**. Un club qui pourrait changer la règle ne serait plus conforme.
+>
+> **③ Le cycle de vie — ce qui se passe quand on MODIFIE une donnée.**
+>
+> | Famille | Effet d'une modification | Mécanisme |
+> |---|---|---|
+> | 🏛️ **A — permanente** | La nouvelle valeur devient **la valeur courante de référence du club**. Tous les consommateurs qui représentent **l'état actuel** l'utilisent | **LECTURE DIRECTE** |
+> | 🏟️ **B — proposée par défaut** | Elle devient la **nouvelle proposition** pour l'avenir. ⛔ **Aucun effet** sur un tournoi déjà renseigné | **COPIE VOLONTAIRE**, puis ⛔ **aucun lien vivant** |
+> | 🗓️ **C — événementielle** | Se modifie **dans le tournoi**, et nulle part ailleurs. Une modification du profil n'a **aucun effet** | ⛔ **aucun lien** |
+>
+> **④ Le profil est un référentiel VIVANT.**
+> ⛔ Ce n'est **pas** un formulaire rempli une fois à l'installation. Toute information du club doit
+> pouvoir être **consultée, complétée et modifiée** plus tard, depuis l'application — changement de
+> président, de représentant, de coordonnées, de site, de compte Instagram, de labellisation, de
+> stade habituel, de logo. Une modification suit ensuite le régime A/B/C de sa donnée.
+
+**Raison**
+
+> **Une image, pour tenir la règle en tête.** Le profil du club est un **carnet d'identité**. Un
+> tournoi est une **photo**. Corriger le carnet — nouveau président, nouveau stade habituel — **ne
+> retouche aucune photo déjà prise** : elles montrent ce qui était vrai ce jour-là. Mais le **nom du
+> club** n'est pas photographié : c'est le club lui-même. S'il change, il change **partout où l'on
+> parle du club aujourd'hui**.
+>
+> ⚠️ **Un fait de structure à connaître** *(vérifié le 2026-08-24)* : **le classeur ne conserve la
+> configuration que d'UN SEUL tournoi**. L'onglet `Historique` garde les matchs terminés, ⛔ **aucun
+> réglage**. Le risque que le régime **B** écarte ne peut donc concerner que **le tournoi en
+> cours** — ce qui suffit largement à le justifier.
+
+**Ce que D-042 ne fait PAS**
+
+> - ❌ Elle **n'ouvre pas** une plateforme multi-clubs, un système loué en ligne, ni une gestion de
+>   comptes. **Une installation / un classeur = une organisation utilisatrice** ;
+> - ❌ Elle **ne renomme aucun paramètre existant** — le profil est une **couche au-dessus** ;
+> - ❌ Elle **ne construit pas** l'assistant de première configuration.
+
+---
+
+### D-043 — Ce qui survit à une réinitialisation, et ce qui doit être vidé
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-24 |
+| **Session** | Chantier **M1**, étape **M1-A** |
+| **Statut** | **VALIDÉE** — ⛔ **appliquée par M1-B, NON FAITE à ce jour** |
+| **Décidée par** | Romain |
+
+**Problème posé**
+
+> ⚠️ **Constaté dans le code le 2026-08-24, et vérifié ligne à ligne** : `reinitialiserTournoi`
+> *(`Code.gs:7437-7512`)* efface **40 paramètres** de la zone A — ⛔ **et aucun n'est un `org_*`.
+> Les 36 sur 36 survivent.**
+>
+> **Ce n'est pas une décision** : le fichier justifie systématiquement ce qu'il conserve
+> *(`perfs_mot_cle_club` : « DÉLIBÉRÉMENT CONSERVÉ […] ⛔ ce n'est pas un oubli » ; `email_expediteur`
+> : « config d'infrastructure »)*. ⭐ **Pour les 36 `org_*`, aucune justification n'existe** — et
+> cette absence, dans un fichier qui en écrit partout, est l'indice que c'est un **effet de bord**.
+>
+> **Ce que ça produit, concrètement.** Un club joue en novembre : médecin, association de secours,
+> repas à 7 € chez un traiteur, 6 arbitres. Il réinitialise en février et rouvre la demande
+> d'autorisation : **tout est déjà rempli**, avec les valeurs de novembre, marquées *« saisi »*, et
+> le compteur annonce **0 champ manquant**. Le dossier part à la Ligue avec un médecin qui ne sera
+> pas là et un prix qui n'est plus le bon. **Rien ne le signale.**
+
+**Décision prise**
+
+> **✅ DOIVENT SURVIVRE — 10 champs** *(les seuls vrais permanents)*
+> `org_club_nom` · `org_code_club` · `org_label_edr` · `org_label_date` ·
+> `org_president_nom` 🔒 · `org_president_tel` 🔒 · `org_president_mail` 🔒 ·
+> `org_representant_nom` 🔒 · `org_representant_tel` 🔒 · `org_representant_mail` 🔒
+>
+> **❌ DOIVENT ÊTRE VIDÉS — 26 champs**, plus **toutes** les clés `org_recompenses_*`
+>
+> | Groupe | Champs | Fondement |
+> |---|---|---|
+> | Tournoi | `org_niveau_tournoi` · `org_equipes_etrangeres` · `org_equipes_etrangeres_liste` · `org_nb_participants` | Édition |
+> | Installations | `org_type_terrain` · `org_nb_vestiaires` | ⭐ **A1** — elles décrivent le **lieu réellement utilisé**, qui peut changer |
+> | Arbitrage | `org_nb_arbitres` · `org_nb_educateurs` · `org_nb_educateurs_club` · `org_nb_doublettes` | Édition · ⭐ **A2** pour le troisième |
+> | Santé 🔒 | `org_medecin_oui` · `org_medecin_nom` · `org_medecin_tel` | ⭐ **Q4** |
+> | Secours 🔒 | `org_secours_nom` · `org_secours_tel` · `org_ambulance` | ⭐ **Q5** |
+> | Logistique | `org_droits_oui` · `org_droits_montant` · `org_hebergement_oui` · `org_hebergement_structure` · `org_repas_oui` · `org_repas_fournisseur` · `org_repas_prix` · `org_gouters_oui` · `org_gouters_fournisseur` · `org_gouters_prix` | ⭐ **Q6** |
+> | Récompenses | **toutes** les clés `org_recompenses_*` *(nombre variable)* | ⭐ **A3** |
+>
+> **10 + 26 = 36.** ⛔ **Aucun cas ambigu ne subsiste.**
+
+**Raison**
+
+> **Les quatre arbitrages qui ont tranché, et pourquoi ils vont tous dans le même sens.**
+>
+> | | Ce que Romain a tranché |
+> |---|---|
+> | **Q4 — médecin** | Même si la même personne intervient souvent, ⛔ **l'application ne présume jamais de sa présence** à l'édition suivante |
+> | **Q5 — secours** | ⭐ **La proposition initiale de Claude — « rattachée au stade » — a été ÉCARTÉE.** Un club peut travailler avec une association cette année, une autre l'an prochain : **la disponibilité d'un prestataire ne dépend pas du club** |
+> | **Q6 — fournisseurs** | Même principe : un fournisseur peut ne pas être disponible ou ne pas être retenu l'année suivante |
+> | **A1 / A2** | Type de terrain, vestiaires **utilisés** et éducateurs **présents** décrivent une journée, pas un patrimoine |
+>
+> 🎯 **Le fil commun, et il vaut au-delà de ces champs** : *ce n'est pas parce qu'une valeur se
+> répète qu'elle est vraie d'avance.*
+
+**Trois points d'application, à ne pas découvrir pendant M1-B**
+
+> - **`effacerParamGlobal` VIDE la valeur, ne supprime pas la ligne.** C'est le comportement de tous
+>   les autres effacements — on le conserve. Une ligne vide est comptée « manquant », et le champ du
+>   PDF reste éditable. ⛔ Supprimer des lignes obligerait à manipuler des index : risque
+>   disproportionné ;
+> - **Les récompenses ont des noms DYNAMIQUES.** Une liste fixe ne peut pas les attraper : il faut
+>   **énumérer les clés existantes** et filtrer sur le préfixe — ⚠️ avec un **test négatif**, car
+>   `org_representant_nom` ne doit surtout pas être emporté ;
+> - **Vider `org_equipes_etrangeres` est sûr** : `DEFAUTS_AUTORISATION` restitue `non`.
+
+**Friction temporaire assumée** *(arbitrage **N2**, Romain, 2026-08-24)*
+
+> Les trois champs de **A1/A2** sont vidés dès **M1-B**, **avant** que **M1-D** n'offre la valeur
+> proposée. Entre les deux étapes, l'organisateur les ressaisit. ⭐ **C'est accepté** : un chiffre
+> faux sur un document fédéral est plus grave qu'une ressaisie.
+
+---
+
+### D-044 — Le profil du club n'est ni un répertoire de tiers, ni une charte graphique
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-24 |
+| **Session** | Chantier **M1**, étape **M1-A** |
+| **Statut** | **VALIDÉE** |
+| **Décidée par** | Romain |
+
+**Problème posé**
+
+> Deux confusions guettent le profil, et toutes deux le feraient grossir jusqu'à perdre son sens.
+
+**Décision prise**
+
+> **① Profil ≠ répertoire de tiers.**
+>
+> | | Ce que c'est |
+> |---|---|
+> | **Le profil** | Il décrit **le club lui-même** |
+> | **Un répertoire** | Il décrit **des tiers** que le club connaît ou avec lesquels il a déjà travaillé — associations de secours, fournisseurs, partenaires, contacts de clubs |
+>
+> ⛔ **M1 ne construit AUCUN répertoire.** Il doit seulement **ne pas concevoir le profil d'une façon
+> qui empêcherait cette évolution**.
+> ⚠️ **Et la règle qui les sépare vraiment** : *un répertoire propose une SÉLECTION ; il n'applique
+> jamais une valeur au seul motif qu'elle a déjà servi.* **Historique ≠ valeur par défaut.**
+>
+> ⭐ **Le modèle existe déjà, deux fois, et il fonctionne** : `ClubsInvites` *(le carnet d'adresses
+> survit, les colonnes de l'édition sont remises à zéro)* et `Sponsors` *(les fiches survivent, la
+> colonne `actif` est la sélection de l'édition)*.
+>
+> **② Logo ≠ charte graphique.**
+>
+> | | Décision |
+> |---|---|
+> | **Le logo du club** | ✅ **Candidat clair.** Prévu au modèle du profil dès **M1-C1**, ⛔ **branché seulement en M1-F**, après la clôture de CF-4b |
+> | **La charte complète de Maxilou** *(couleurs, polices)* | ⏸️ **NON ACQUISE — décision ultérieure.** ⛔ Ne pas la glisser derrière le logo |
+
+**Raison**
+
+> Le logo répond à *« à qui est ce document ? »*. La charte répond à *« à quoi ressemble le
+> logiciel ? »*. **Ce ne sont pas les mêmes questions**, et rien n'oblige un outil à se déguiser aux
+> couleurs de chacun de ses utilisateurs.
+>
+> Pour le répertoire : un club a le droit de changer d'association de secours ou de traiteur sans
+> que son **identité** ait changé. Les ranger au même endroit reviendrait à dire que le club **est**
+> ses prestataires.
+
+---
+
+### D-045 — Fidélité aux libellés officiels, et nom officiel ≠ nom d'usage
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-24 |
+| **Session** | Chantier **M1**, étape **M1-A** |
+| **Statut** | **VALIDÉE** |
+| **Décidée par** | Romain |
+
+**Problème posé**
+
+> Quand un organisateur remplit une case dans Maxilou, il la retrouve ensuite **sur un document
+> déposé à sa Ligue**. Si les deux ne portent pas le même nom, il doit **deviner** la
+> correspondance — et une devinette, sur un dossier administratif, finit par une erreur.
+>
+> **Exemple réel, relevé le 2026-08-24** : Maxilou demande *« Nombre de vestiaires »* ; le
+> formulaire demande *« Nombre de vestiaires **utilisés** »*. Un stade peut **avoir** six vestiaires
+> et n'en **utiliser** que quatre. **Le mot manquant changeait la réponse.**
+
+**Décision prise**
+
+> **① La règle.** Lorsqu'un champ correspond à une information du formulaire officiel FFR présent
+> dans le dépôt, **le libellé visible reprend le vocabulaire de la source**. Les clés techniques
+> internes gardent leur nom *(`org_code_club` reste `org_code_club` — personne ne le voit)*. Une
+> explication UX peut être placée **sous** le champ ; ⛔ **elle ne remplace jamais le libellé.**
+>
+> **② Les champs propres à Maxilou sont identifiés comme tels**, explicitement, pour qu'aucun
+> organisateur ne les cherche en vain sur le papier. Ils sont **six** à ce jour :
+> `org_nb_educateurs_club`, `org_nb_participants` *(repli)*, `org_nb_educateurs` *(repli)*,
+> `perfs_mot_cle_club`, `zone_vacances`, et le futur `club_nom_usage`.
+>
+> **③ Nom officiel et nom d'usage sont deux choses différentes.**
+>
+> | | Nom **officiel** *(`org_club_nom`)* | Nom **d'usage** *(`club_nom_usage`, à créer)* |
+> |---|---|---|
+> | Où il sert | ⭐ **Toute démarche réglementaire** | Signatures, emails, communication, interface |
+> | Obligatoire ? | Oui, pour déposer | Non |
+> | Absent ⇒ | « manquant », champ du PDF **éditable** — ⛔ l'application n'invente aucun nom *(D-039)* | ⭐ **repli sur le nom officiel** |
+>
+> ⛔ **INTERDICTION ABSOLUE, à couvrir par un test négatif** : **le nom d'usage n'entre jamais, par
+> aucun chemin, dans un formulaire réglementaire.** `planRemplissageAutorisation` et
+> `assemblerDossierAutorisation` lisent `org_club_nom`, et rien d'autre.
+>
+> **④ La source de vérité** est [`../../frontend/modeles/demande-autorisation-ffr.pdf`](../../frontend/modeles/demande-autorisation-ffr.pdf).
+> La table complète vit dans [`M1-LIBELLES-OFFICIELS.md`](M1-LIBELLES-OFFICIELS.md), **avec la
+> méthode d'extraction** — sans quoi personne ne pourrait la revérifier *(§8 quater)*.
+
+**Deux arbitrages d'application** *(Romain, 2026-08-24)*
+
+> - **L1 — l'accentuation est normalisée.** L'original écrit *« Ecole »* et *« SECURITE »* sans
+>   accents : c'est un **artefact de saisie**, pas un terme. On reprend **le mot**, pas la coquille ;
+> - **L2 — Maxilou garde deux champs d'adresse.** Le formulaire n'en a qu'un,
+>   *« Adresse du tournoi (stade, ville, cp) »* ; Maxilou sépare `tournoi_lieu` et `tournoi_adresse`
+>   parce que le dossier du club, l'itinéraire et le fichier d'agenda ont besoin du **nom du stade
+>   seul**. ➡️ **La fidélité s'applique alors au GROUPE** : les deux champs sont présentés sous le
+>   libellé officiel, avec une aide qui explique la séparation.
+
+**Raison**
+
+> ⭐ **Un mot de travers sur un écran devient une erreur sur un document officiel** — et cette
+> erreur-là, personne ne la voit passer : le formulaire est **complet**, il est simplement **faux**.
+>
+> Pour le nom d'usage, l'image tient en une phrase : *sur une carte d'identité on lit
+> « Jean-Baptiste » ; ses amis l'appellent « JB » — mais on ne signe pas un acte notarié « JB ».*
