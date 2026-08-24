@@ -25,20 +25,20 @@
 > ⏳ **Ce repère ne se retire QUE lorsqu'un nouveau jeu aura effectivement été recréé** — et il
 > devra alors dire **par quoi** il a été remplacé.
 
-**Dernière mise à jour** : 2026-08-24 *(soir, suite 5)* — ✅ **PUB-2 EST COMMITÉ ET POUSSÉ SUR SA
-BRANCHE**, ⛔ **NI FUSIONNÉ DANS `main`, NI PUBLIÉ, NI VÉRIFIÉ EN RÉEL.**
+**Dernière mise à jour** : 2026-08-24 *(soir, suite 6)* — ✅ **PUB-2 EST FUSIONNÉ DANS `main` ET
+PUBLIÉ SUR GITHUB PAGES**, ⛔ **MAIS TOUJOURS PAS VÉRIFIÉ EN RÉEL.**
 
 | | |
 |---|---|
-| ✅ **PUB-2 — état CONSTATÉ** | ⚡ **CORRIGÉ après le geste : cette ligne annonçait « NON COMMITÉ · NON POUSSÉ », vrai jusqu'au commit du 2026-08-24** *(`CLAUDE.md` §8 septies)*. **Validé par Romain, puis commité `f62b322`** *(parent **`ec1f486`**, ⛔ **pas une fusion — 1 seul parent**, 13 fichiers, 637 insertions)* **et poussé sur `origin/claude/pub-2-acces-autonome-vk0uzt`** — 🔬 **local = distant, écart 0/0**. ⛔ **NON FUSIONNÉ dans `main`** *(`origin/main` toujours sur **`ec1f486`** ; `git branch -r --contains f62b322` ne renvoie **que** la branche PUB-2)* · ⛔ **NON PUBLIÉ** · ⛔ **NON VÉRIFIÉ EN RÉEL** |
-| 🔬 **Aucune publication déclenchée** | **Constaté, pas déduit** : le workflow `pages.yml` ne se déclenche que sur `push` vers **`main`** *(et sur `pull_request`, où `deploy` est neutralisé par `if: github.event_name != 'pull_request'`)*. **0 exécution sur `f62b322`, 0 sur la branche PUB-2, 0 pull request ouverte** — la dernière exécution Pages reste **#219** *(2026-08-24 09:32 UTC, `8dfd28a`)*, **antérieure à ce lot** |
+| ✅ **PUB-2 — état CONSTATÉ** | ⚡ **CORRIGÉ après le geste : cette ligne annonçait « ⛔ NON FUSIONNÉ dans `main` · ⛔ NON PUBLIÉ », vrai jusqu'à la fusion du 2026-08-24 (soir)** *(`CLAUDE.md` §8 septies)*. ✅ **FUSIONNÉ dans `main` en FAST-FORWARD STRICT** *(`git merge --ff-only`)* — ⛔ **aucun commit de fusion, aucun SHA réécrit** : `origin/main` **`ec1f486` → `b002a57`**, les **deux seuls** commits ajoutés étant **`f62b322`** *(le contenu)* et **`b002a57`** *(la trace post-geste)*. 🔬 **Poussée constatée** : `git ls-remote origin refs/heads/main` = **`b002a57`** = `HEAD`, écart **0/0**. ✅ **PUBLIÉ sur GitHub Pages** *(run **#220**, voir ligne suivante)*. ⛔ **TOUJOURS PAS VÉRIFIÉ EN RÉEL** |
+| ✅ **Publication GitHub Pages — CONSTATÉE** | ⚡ **CORRIGÉ après le geste : cette ligne annonçait « 🔬 Aucune publication déclenchée », vrai tant que rien n'était fusionné.** 🔬 **Run **#220*** *(id `32749980036`)*, événement **`push`**, branche **`main`**, `head_sha` **`b002a57`**, conclusion **`success`** *(2026-08-24 16:17:35 → 16:18:02 UTC)*. **Job `verifier` : `success`** — journal : **« 30 fichiers JavaScript vérifiés, aucun cassé »**, dont les **4 fichiers JS de PUB-2** *(`commun.js`, `admin.js`, `admin-infos-publication.js`, `dossier.js`)*. **Job `deploy` : `success`** *(les 5 étapes, dont « Déployer sur GitHub Pages »)*. ⚠️ **Publié ≠ validé** : voir la ligne « NON VÉRIFIÉ » |
 | 📄 **Ce que PUB-2 fait** | Dans la carte « Publier le tournoi » : ① l'**adresse** de la page publique, ② **Copier l'adresse**, ③ **Ouvrir la page**, ④ l'état publié / non publié *(qui existait déjà)*. Ordre visuel : **État → Adresse → Copier/Ouvrir → Publier/Masquer**. ⭐ La note affichée dit **« publier ou masquer ne change pas cette adresse »** — ⛔ **jamais « elle ne change jamais »** |
 | ⭐ **Ce que PUB-2 n'invente PAS** | 🔬 **L'adresse publique existait déjà et les clubs la recevaient** — lien « Scores en direct » **et QR code** du dossier club. PUB-2 rend **le même accès** disponible pour l'organisateur, ⛔ **il ne crée pas un second mécanisme** |
 | ⛔ **UN tournoi, pas un club** | ⭐ **Maxilou organise volontairement un tournoi à la fois, et PUB-2 reste dans ce modèle** — ⛔ **aucun `tournoi_id`, aucun sélecteur, aucun multi-tournois, aucune table, aucune route, aucun backend**. ⚠️ Le **vocabulaire** dit *« la page publique **du tournoi** »*, ⛔ **jamais *« du club »*** : un même club en organisera un jour plusieurs *(U10 samedi, U8 dimanche)*, chacun avec son adresse *(**D-049**)* |
 | 🆕 **D-049** | ⭐ *« Consommer une valeur existante n'est pas administrer cette valeur. »* `url_tournoi_public` est **lu** par PUB-2 ; ⛔ **sa CONFIGURATION reste rattachée à R-096 / M1-D**, et **R-096 reste OUVERT et INCHANGÉ** |
 | 🔬 **Source unique** | La règle de résolution vit dans **`urlPagePublique` (`frontend/js/commun.js`)** et **nulle part ailleurs** — **contrôlé** : une seule construction de `tournoi.html` et une seule lecture de `url_tournoi_public` dans tout le frontend |
-| ⛔ **Aucun backend** | 🔬 **Aucun fichier `backend/` modifié** ⇒ ⛔ **AUCUN redéploiement Apps Script.** ⚠️ **Publication frontend GitHub Pages : OUI** — mais **seulement à la fusion dans `main`**, qui **n'a pas eu lieu** |
-| ⚠️ **NON VÉRIFIÉ** | ⛔ **Ce dépôt n'a aucun harnais de test frontend** : le comportement de PUB-2 **ne peut pas** être couvert par un test automatisé. Seuls s'appliquent le `node --check` du workflow Pages *(**30/30 OK** en local)* et le **contrôle manuel après publication** |
+| ⛔ **Aucun backend** | 🔬 **Aucun fichier `backend/` modifié** — **recontrôlé avant fusion** : `backend/Code.gs` est **strictement identique** entre `ec1f486` et `b002a57` *(diff vide)* ⇒ ⛔ **AUCUN redéploiement Apps Script.** ⚡ *(Cette case annonçait que la publication frontend n'aurait lieu qu'« à la fusion dans `main`, qui n'a pas eu lieu » : la fusion **a eu lieu**, et la publication **aussi** — ligne « Publication GitHub Pages ».)* |
+| ⚠️ **NON VÉRIFIÉ EN RÉEL — c'est ce qui reste** | ⛔ **Ce dépôt n'a aucun harnais de test frontend** : le comportement de PUB-2 **ne peut pas** être couvert par un test automatisé. Le `node --check` du workflow Pages *(**30/30 OK**, run #220)* répond à *« ces fichiers se lisent-ils ? »*, ⛔ **jamais à *« les 4 gestes marchent-ils ? »***. ⭐ **Le contrôle manuel sur le site publié reste ENTIER** — sa liste est en `SESSIONS.md` **§21.10 ter** |
 | ⛔ **M1-PUB** | **TOUJOURS PAS TERMINÉ** — son critère de clôture exige **les cinq lots** |
 | ⛔ **R-097** | **RESTE OUVERT** — ⭐ **PUB-2 n'y touche pas** : la vitrine **lit toujours** `tournoi_publie`. La coupure appartient à **PUB-3** puis **PUB-4** |
 | ⛔ **PUB-3 / PUB-4 / PUB-5** | **NON COMMENCÉS et NON ANTICIPÉS** — ⭐ le **faux aperçu** *(PUB-5)* est **intact**, et c'est voulu : tant que le couplage existe, il décrit encore quelque chose de vrai |
@@ -702,8 +702,9 @@ exactement le mécanisme de `CLAUDE.md` §8 septies** : un état écrit **avant*
 
 🌐 **ET UN CHANTIER INTERMÉDIAIRE S'INTERCALE : M1-PUB *(= M1-E7)***, à traiter **avant M1-F**
 *(`PLAN.md` **§15.3 bis**)*. ✅ **Son micro-lot PUB-1 est TERMINÉ ET FUSIONNÉ dans `main`**
-*(`56dabd3`, `6fdffd8`)* ; ✅ **PUB-2 est COMMITÉ (`f62b322`) et POUSSÉ sur sa branche —
-⛔ mais NON FUSIONNÉ dans `main`, NON PUBLIÉ et NON VÉRIFIÉ EN RÉEL** ; ⛔ **PUB-3, PUB-4 et PUB-5 non commencés** ;
+*(`56dabd3`, `6fdffd8`)* ; ✅ **PUB-2 est FUSIONNÉ dans `main` en fast-forward (`f62b322`, `b002a57`)
+et PUBLIÉ sur GitHub Pages *(run #220, `success`)* — ⛔ mais TOUJOURS PAS VÉRIFIÉ EN RÉEL** ;
+⛔ **PUB-3, PUB-4 et PUB-5 non commencés** ;
 ⛔ **M1-PUB n'est pas terminé et R-097 reste OUVERT**. ⏸️ **M1-C1 est SUSPENDUE JUSQU'À LA CLÔTURE
 COMPLÈTE DE M1-PUB.** ⛔ **M1-C → M1-F ne démarrent pas automatiquement.**
 

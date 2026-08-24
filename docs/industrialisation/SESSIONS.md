@@ -8451,6 +8451,111 @@ des deux côtés »* : ⛔ **« la même » n'est pas « une seule, pour toujour
 | **M1-C1** | ⏸️ **SUSPENDUE** |
 | **R-096** | ⛔ **OUVERT et INCHANGÉ** |
 
+### 21.10 bis — ⚡ ADDENDUM APRÈS LA FUSION ET LA PUBLICATION — ce qui a été CONSTATÉ *(2026-08-24, soir)*
+
+> ⛔ **Ni §21.8 ni §21.10 ne sont réécrits.** Ils disaient vrai à leur date — §21.10 constatait
+> *« ⛔ AUCUNE fusion, ⛔ AUCUNE publication »*, et c'était exact tant que rien n'avait été fusionné.
+> ⭐ **Le nouvel état s'AJOUTE ici** *(`CLAUDE.md` §8 septies)*.
+
+**Le contexte, dit simplement.** Une **coupure de connexion** a interrompu la session précédente.
+La reprise a donc commencé par **tout revérifier depuis GitHub avant le moindre geste**, plutôt que
+de faire confiance à ce que les documents annonçaient.
+
+> ⚠️ **Un point de traçabilité, et il ne doit pas grossir.** **Le commit A existait déjà lors de la
+> reprise après la coupure de connexion. Son contenu a été recontrôlé avant fusion.** ⛔ **La cause
+> exacte de sa création pendant la coupure n'est pas démontrable depuis GitHub** — §21.10 en garde
+> le récit tel qu'il a été écrit, ⛔ **et ce récit ne devient pas pour autant une certitude.**
+> ⛔ **Aucun chantier n'est ouvert pour ce point.**
+
+**① Ce qui a été recontrôlé AVANT de fusionner** *(⛔ arrêt prévu au moindre écart — aucun n'est survenu)*
+
+| Contrôle | ✅ Constat |
+|---|---|
+| **État de départ** | `origin/main` = **`ec1f486`** · branche PUB-2 distante = **`b002a57`** *(relevés par `git ls-remote`, la source distante brute)* · arbre de travail **propre**, ⛔ **0 fichier inattendu** |
+| **Linéarité** | **`ec1f486` → `f62b322` → `b002a57`**, ⭐ **chaque commit à UN SEUL parent** · `merge-base` = `ec1f486` · comptage **0 / 2** ⇒ **fast-forward strict possible** |
+| **Commit A — périmètre** | **13 fichiers** = **6 frontend** *(`admin.html`, `styles.css`, `admin-infos-publication.js`, `admin.js`, `commun.js`, `dossier.js`)* + **7 documentaires**. ⛔ **0 fichier `backend/`** |
+| **Commit A — non-régression** | 🔬 **`onPublier()` STRICTEMENT identique** entre `ec1f486` et `f62b322` *(extraction des 39 lignes, diff vide)* · 🔬 **`backend/Code.gs` STRICTEMENT identique** ⇒ **`publierTournoi()` intact par construction** |
+| **Commit A — interdits** | ⛔ **0** mention de PUB-3 / PUB-4 / PUB-5 · ⛔ **0** `tournoi_id`, aucun multi-tournois · ⛔ **0 écriture** de `url_tournoi_public` *(4 occurrences : **3 en commentaire**, **1 en LECTURE** — `const brut = global && global.url_tournoi_public`)* · ⛔ **0** appel serveur ajouté *(`appelApi`, `google.script`, `fetch`, `setConfig` : aucun)* · ⛔ **0** recréation de données |
+| **Commit B — périmètre** | **3 fichiers**, **`docs/` uniquement** · ⛔ **0 frontend**, ⛔ **0 backend** |
+| **Syntaxe** | `node --check` sur **tous** les `.js` de `frontend/` au contenu de `b002a57` : **30 contrôlés, 30 valides, 0 en échec** |
+| **Propreté du diff** | `git diff --check ec1f486..b002a57` : **propre** — ⛔ aucun espace parasite, aucun marqueur de conflit |
+| **Aucune fusion antérieure** | `git branch -r --contains f62b322` ne renvoyait **que** la branche PUB-2 · ⛔ **aucune pull request PUB-2** *(la plus récente du dépôt est **#189**, du 2026-08-17)* |
+
+**② Les gestes, et l'observation qui CONSTATE chacun**
+
+| Geste | ✅ Ce qui le CONSTATE — l'observation, pas le document |
+|---|---|
+| **Fusion** | `git merge --ff-only b002a57` → *« Updating ec1f486..b002a57 — Fast-forward »*. ⭐ **AUCUN commit de fusion** *(`git log --merges origin/main..HEAD` : **vide**)* · ⭐ **AUCUN SHA réécrit** *(`main` et `origin/claude/pub-2-acces-autonome-vk0uzt` pointent **le même objet**)* · **exactement 2 commits ajoutés** : `f62b322`, `b002a57` |
+| **Périmètre réellement publié** | 🔬 **Relevé AVANT la poussée** *(`git diff --name-status origin/main..HEAD`)*, et non déduit de ce que le fast-forward affiche : **13 fichiers**, ⛔ **0 sous `backend/`** |
+| **Poussée** | `git push -u origin main` → `ec1f486..b002a57  main -> main`. **Constaté ensuite côté GitHub** : `git ls-remote origin refs/heads/main` = **`b002a57`** = `HEAD` local · écart **0 / 0** · arbre **propre** |
+| **Publication GitHub Pages** | 🔬 **Interrogation directe de l'API**, ⛔ **pas déduite du push** : run **#220** *(id `32749980036`)*, événement **`push`**, branche **`main`**, `head_sha` **`b002a57`**, conclusion **`success`** *(16:17:35 → 16:18:02 UTC)*. **Job `verifier` : `success`** — journal : **« 30 fichiers JavaScript vérifiés, aucun cassé »**, ⭐ **les 4 fichiers JS de PUB-2 y figurent nommément** · **Job `deploy` : `success`** *(5 étapes, dont « Déployer sur GitHub Pages »)*. ⭐ Le verrou de **C-013** a donc bien tourné **avant** la mise en ligne |
+| **Redéploiement Apps Script** | ⛔ **SANS OBJET** — 🔬 `backend/Code.gs` strictement identique entre `ec1f486` et `b002a57` |
+| **Comportement en production** | ⛔ **NON CONSTATÉ, et il ne peut pas l'être depuis le dépôt** *(`CLAUDE.md` §13.6)*. ⭐ **C'est l'objet de §21.10 ter** |
+
+> 🎯 **Ce que « publié » veut dire, et ce qu'il ne veut PAS dire.** ⭐ **Publié = les fichiers sont
+> en ligne.** ⛔ **Publié ≠ ça marche.** `node --check` répond à *« ce fichier se lit-il ? »* — il ne
+> dit **rien** de ce que font les quatre gestes de PUB-2. **Un fichier parfaitement lisible peut
+> afficher la mauvaise adresse.**
+
+### 21.10 ter — ⛔ Ce qui reste à Romain : les contrôles manuels sur le site publié
+
+> ⚠️ **Aucun de ces contrôles n'a été fait.** Ils sont **la seule preuve possible** de PUB-2, ce
+> dépôt n'ayant **aucun harnais de test frontend** *(⛔ en créer un serait un chantier à part
+> entière — hors PUB-2)*.
+
+**Administration** — page `admin.html`, carte **« Publier le tournoi »**
+
+| # | Ce qui doit être constaté |
+|---|---|
+| **1** | Tournoi **non publié** → l'**adresse** de la page publique est **visible** |
+| **2** | Bouton **« Copier l'adresse » ACTIF** *(⛔ pas grisé)* |
+| **3** | Bouton **« Ouvrir la page » ACTIF** *(⛔ pas grisé)* |
+| **4** | **Ouvrir** → la page publique s'ouvre sur l'écran **« à venir »** |
+| **5** | **Copier**, puis **coller** dans un autre onglet → **la même page** |
+| **6** | **Publier** → l'état passe au **vert**, et ⭐ **l'adresse est la MÊME qu'avant** |
+| **7** | **Copier** et **Ouvrir** ⛔ **ne changent pas** l'état publié / non publié |
+| **8** | **Masquer** → ⭐ **la même adresse**, et la page revient à l'écran **« à venir »** |
+
+**Dossier club** — page `dossier-club.html`, ouverte par un **lien personnel de club** *(`?club=…&token=…`)*
+
+| # | Ce qui doit être constaté |
+|---|---|
+| **9** | La section **« Suivi des scores & organisation »** est **toujours présente** |
+| **10** | Le lien **« Scores en direct »** est **toujours présent** |
+| **11** | ⭐ Ce lien pointe vers **exactement la même adresse** que celle de l'administration |
+| **12** | Le **QR code** est **toujours présent**, et vise **cette même adresse** |
+
+> ⭐ **Les contrôles 9 à 12 sont les plus importants du lot, et voici pourquoi.** PUB-2 a **déplacé**
+> la règle de calcul de l'adresse : elle vivait dans `dossier.js`, elle vit désormais dans
+> `commun.js` *(`urlPagePublique`)*, et le dossier club **l'appelle**. ⚠️ **Si cette règle avait
+> changé de sens, rien ne casserait à l'écran** — le dossier afficherait simplement une **autre**
+> adresse, et **les clubs recevraient un lien différent de celui que l'organisateur communique.**
+> **C'est un défaut SILENCIEUX** : c'est le contrôle **11** qui l'attrape, et lui seul.
+
+**⚠️ Le repère « 🔴 DONNÉES DE TOURNOI À RECRÉER » et ces douze contrôles**
+
+> ✅ **Bonne nouvelle : les 12 contrôles sont réalisables SANS recréer quoi que ce soit**, et ce
+> n'est pas une supposition — 🔬 **la réinitialisation de M1-B a effacé 2 catégories, 38 équipes,
+> 10 poules et 51 matchs, et PUB-2 ne dépend d'AUCUN des quatre.** L'adresse publique se calcule
+> à partir de la **configuration** *(`url_tournoi_public`, sinon la page voisine)*, ⛔ **jamais à
+> partir des équipes ou des matchs.**
+>
+> Deux points constatés dans le code, à connaître avant de commencer :
+> - 🔬 **`reinitialiserTournoi` CONSERVE volontairement la liste des clubs invités**
+>   *(onglet `ClubsInvites` — le code le dit explicitement)* : un **lien personnel de dossier
+>   club** devrait donc encore fonctionner, ce qui rend les contrôles **9 à 12** possibles ;
+> - 🔬 **`onPublier()` n'impose AUCUN garde-fou** exigeant des catégories, des poules ou des
+>   matchs : le contrôle **6** *(publier)* est donc faisable sur un classeur vide.
+>
+> ⚠️ **Ces deux points sont CERTAINS dans le code, PROBABLES en production** *(`CLAUDE.md` §9 et
+> §13.6)* : l'état réel du classeur ⛔ **ne se constate pas depuis le dépôt**. ⭐ **Si aucun lien
+> personnel de club ne fonctionne plus, alors — et seulement alors — les contrôles 9 à 12 sont
+> impossibles aujourd'hui**, et il faut le **dire** plutôt que de recréer des données pour les
+> forcer.
+>
+> ⛔ **NE RECRÉER AUCUNE DONNÉE uniquement pour faire ces tests.** Le repère
+> *« DONNÉES DE TOURNOI À RECRÉER »* **reste ACTIF** et ⛔ **n'est pas levé par ce lot**.
+
 ### 21.11 — Prochaine session recommandée
 
 ⏸️ **PUB-3 — Plan technique et preuve du découplage** *(📄 documentaire, ⛔ aucune coupure)*.

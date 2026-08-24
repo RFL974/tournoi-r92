@@ -30,9 +30,12 @@ M1-F**. Doctrine fondatrice : **D-048** — *« Publier ouvre une page. Publier 
 personne. »* ; dette enregistrée : **R-097** *(P2)*. ⏸️ **M1-C1 reste SUSPENDUE JUSQU'À LA
 CLÔTURE COMPLÈTE DE M1-PUB** — ⛔ **pas seulement jusqu'à son cadrage**.
 ✅ **PUB-1 est TERMINÉ et FUSIONNÉ dans `main`** *(`56dabd3`, `6fdffd8` — **fast-forward**)* ;
-✅ **PUB-2 est COMMITÉ (`f62b322`) et POUSSÉ sur sa branche** — ⛔ **NON FUSIONNÉ dans `main`, NON
-PUBLIÉ, NON VÉRIFIÉ EN RÉEL**. ⚡ *(Cette ligne annonçait « non commité, non poussé » : vrai jusqu'au
-commit du 2026-08-24, relu et corrigé après le geste — `CLAUDE.md` §8 septies.)* ;
+✅ **PUB-2 est FUSIONNÉ dans `main` en FAST-FORWARD** *(`f62b322` le contenu · `b002a57` la trace
+post-geste — ⛔ aucun commit de fusion, aucun SHA réécrit)* **et PUBLIÉ sur GitHub Pages** *(run
+**#220**, `verifier` **`success`** — « 30 fichiers JavaScript vérifiés, aucun cassé » — et `deploy`
+**`success`**)* — ⛔ **TOUJOURS PAS VÉRIFIÉ EN RÉEL**. ⚡ *(Cette ligne annonçait « NON FUSIONNÉ dans
+`main`, NON PUBLIÉ » : vrai jusqu'à la fusion du 2026-08-24 au soir, relue et corrigée après le
+geste — `CLAUDE.md` §8 septies. Elle avait déjà annoncé « non commité, non poussé » avant cela.)* ;
 ⛔ **PUB-3, PUB-4 et PUB-5 non commencés**.
 ⛔ **M1-PUB N'EST PAS TERMINÉ pour autant, et R-097 reste OUVERT** *(**§15.8**)*.
 ⭐ **Arbitrage rendu par PUB-2 : D-049** — `url_tournoi_public` est **consommé** par M1-PUB mais sa
@@ -2694,7 +2697,7 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **Validation** | La doctrine est écrite **une seule fois**, à **une seule adresse** *(D-048)* · le risque a un identifiant, une priorité et un statut *(R-097)* · **l'ordre général** du découplage est écrit **avant** toute coupure · le **critère de clôture de M1-PUB** est écrit · ⭐ **chaque affirmation porte son niveau de preuve** *(🔬 / 📄 / 🕗 / ⛔)* |
 | 🏁 **État CONSTATÉ** | ✅ **TERMINÉ, FUSIONNÉ ET PUBLIÉ dans `main`** le 2026-08-24, en **fast-forward** — ⛔ **aucun SHA réécrit, aucun commit de fusion créé**. **Deux commits** : **`56dabd3`** *(le contenu — 6 fichiers, 625 insertions)* · **`6fdffd8`** *(la trace post-geste — `SESSIONS.md` seul)*. `origin/main` : **`ebf1b07` → `6fdffd8`**. ⛔ **Aucun run GitHub Actions déclenché** *(aucun `frontend/`)* · ⛔ **aucun redéploiement backend** *(aucun `backend/`)*. Détail des observations : `SESSIONS.md` **§20.8** |
 
-##### PUB-2 — Accès autonome à la page publique  ✅ **COMMITÉ ET POUSSÉ SUR SA BRANCHE** — ⛔ **ni fusionné, ni publié, ni vérifié en réel**
+##### PUB-2 — Accès autonome à la page publique  ✅ **FUSIONNÉ ET PUBLIÉ** — ⛔ **PAS ENCORE VÉRIFIÉ EN RÉEL**
 
 | | |
 |---|---|
@@ -2706,6 +2709,7 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **Dépendances** | **PUB-1** |
 | **Redéploiement** | ⚠️ **À DISTINGUER** : **publication frontend GitHub Pages ✅ OUI** *(automatique à la fusion dans `main`)* · **redéploiement Apps Script ⛔ NON** — 🔬 **aucun fichier `backend/` n'est touché** |
 | ⛔ **Hors de ce lot** | ⛔ **Aucune implémentation dans PUB-1** |
+| 🏁 **État CONSTATÉ** | ✅ **FUSIONNÉ dans `main` le 2026-08-24, en FAST-FORWARD STRICT** *(`git merge --ff-only`)* — ⛔ **aucun commit de fusion créé, aucun SHA réécrit** *(`main` et la branche PUB-2 pointent le même objet)*. **Deux commits, et deux seulement** : **`f62b322`** *(le contenu — 13 fichiers = **6 frontend** + **7 documentaires**, ⛔ **0 backend**)* · **`b002a57`** *(la trace post-geste — 3 fichiers, `docs/` seuls)*. `origin/main` : **`ec1f486` → `b002a57`**, écart local/distant **0/0**. ✅ **PUBLIÉ** — run Pages **#220** *(`push`, `main`, `b002a57`)* : `verifier` **`success`** *(« 30 fichiers JavaScript vérifiés, aucun cassé »)*, `deploy` **`success`**. ⛔ **Aucun redéploiement Apps Script** *(`backend/Code.gs` strictement identique)*. ⛔ **NON VÉRIFIÉ EN RÉEL** — ⭐ **c'est le seul état qui manque à ce lot**. Détail des observations : `SESSIONS.md` **§21.10 bis** |
 
 **⭐ Le constat qui a dimensionné ce lot : l'adresse publique existait DÉJÀ, et les clubs la recevaient**
 
@@ -2982,7 +2986,7 @@ M1 est terminé quand **les huit conditions** sont réunies :
 | **M1-A** | 🏁 **TERMINÉE, FUSIONNÉE, PUBLIÉE dans `main`, et CLÔTURÉE** le 2026-08-24 — **fast-forward**, ⛔ **sans réécrire un seul commit ni créer de commit de fusion** : **`9abaebc`** *(les 7 documents)* · **`b65a6b0`** *(journal §17)* · **`aff6d5f`** *(correctif de statut et de déploiement)*. ⛔ **Plus rien n'est ouvert dans cette étape** |
 | **M1-B** | 🏁 **TERMINÉE — les SEPT états sont atteints.** Backend *(Apps Script v156)* et frontend *(Pages `success` sur `8dfd28a`)* en service, fusionnée dans `main` en **fast-forward**, **796/796 chez Google**, et ⭐ **vérifiée par une RÉINITIALISATION RÉELLE le 2026-08-24** : **10/10 conservés · 26/26 effacés · 2/2 récompenses effacées** |
 | **M1-C → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite**. ⏸️ **M1-C1 est de plus SUSPENDUE jusqu'à la CLÔTURE COMPLÈTE de M1-PUB** — ⛔ pas seulement jusqu'à son cadrage |
-| 🌐 **M1-PUB** *(M1-E7)* | 🚧 **OUVERTE le 2026-08-24** *(**§15.3 bis**)*, ⛔ **et TOUJOURS OUVERTE** : ✅ **PUB-1 est TERMINÉ et FUSIONNÉ dans `main`** *(**`56dabd3`** le contenu · **`6fdffd8`** la trace post-geste — **fast-forward**, ⛔ sans réécrire un SHA ni créer de commit de fusion)* ; ⏭️ **PUB-2 est le prochain micro-lot, ⛔ NON COMMENCÉ** ; ⛔ **PUB-3, PUB-4, PUB-5 NON COMMENCÉS**. S'intercale **avant M1-F** |
+| 🌐 **M1-PUB** *(M1-E7)* | 🚧 **OUVERTE le 2026-08-24** *(**§15.3 bis**)*, ⛔ **et TOUJOURS OUVERTE** : ✅ **PUB-1 est TERMINÉ et FUSIONNÉ dans `main`** *(**`56dabd3`** le contenu · **`6fdffd8`** la trace post-geste — **fast-forward**, ⛔ sans réécrire un SHA ni créer de commit de fusion)* ; ✅ ⚡ **PUB-2 est FUSIONNÉ dans `main` et PUBLIÉ** *(**`f62b322`** le contenu · **`b002a57`** la trace post-geste — **fast-forward**, ⛔ sans réécrire un SHA ni créer de commit de fusion ; run Pages **#220** `success`)*, ⛔ **mais NON VÉRIFIÉ EN RÉEL**. ⚡ *(Cette case annonçait « PUB-2 est le prochain micro-lot, ⛔ NON COMMENCÉ » — vrai à l'ouverture du chantier, faux depuis le commit `f62b322` du 2026-08-24, et non relu depuis : `CLAUDE.md` §8 septies.)* ; ⛔ **PUB-3, PUB-4, PUB-5 NON COMMENCÉS**. S'intercale **avant M1-F** |
 
 > ⛔ **M1-PUB n'est PAS terminé, et PUB-1 ne le termine pas.** Son critère de clôture *(§15.3 bis)*
 > exige **les cinq lots**, **le découplage réellement prouvé** et **PUB-5 livré**. ⭐ **PUB-1 a
