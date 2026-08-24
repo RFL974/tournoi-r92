@@ -30,8 +30,9 @@ M1-F**. Doctrine fondatrice : **D-048** — *« Publier ouvre une page. Publier 
 personne. »* ; dette enregistrée : **R-097** *(P2)*. ⏸️ **M1-C1 reste SUSPENDUE JUSQU'À LA
 CLÔTURE COMPLÈTE DE M1-PUB** — ⛔ **pas seulement jusqu'à son cadrage**.
 ✅ **PUB-1 est TERMINÉ et FUSIONNÉ dans `main`** *(`56dabd3`, `6fdffd8` — **fast-forward**)* ;
-🔨 **PUB-2 est IMPLÉMENTÉ sur sa branche et EN ATTENTE DE VALIDATION** — ⛔ **non commité, non
-poussé, non fusionné, non publié** *(état à relire après le geste — `CLAUDE.md` §8 septies)* ;
+✅ **PUB-2 est COMMITÉ (`f62b322`) et POUSSÉ sur sa branche** — ⛔ **NON FUSIONNÉ dans `main`, NON
+PUBLIÉ, NON VÉRIFIÉ EN RÉEL**. ⚡ *(Cette ligne annonçait « non commité, non poussé » : vrai jusqu'au
+commit du 2026-08-24, relu et corrigé après le geste — `CLAUDE.md` §8 septies.)* ;
 ⛔ **PUB-3, PUB-4 et PUB-5 non commencés**.
 ⛔ **M1-PUB N'EST PAS TERMINÉ pour autant, et R-097 reste OUVERT** *(**§15.8**)*.
 ⭐ **Arbitrage rendu par PUB-2 : D-049** — `url_tournoi_public` est **consommé** par M1-PUB mais sa
@@ -2693,7 +2694,7 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **Validation** | La doctrine est écrite **une seule fois**, à **une seule adresse** *(D-048)* · le risque a un identifiant, une priorité et un statut *(R-097)* · **l'ordre général** du découplage est écrit **avant** toute coupure · le **critère de clôture de M1-PUB** est écrit · ⭐ **chaque affirmation porte son niveau de preuve** *(🔬 / 📄 / 🕗 / ⛔)* |
 | 🏁 **État CONSTATÉ** | ✅ **TERMINÉ, FUSIONNÉ ET PUBLIÉ dans `main`** le 2026-08-24, en **fast-forward** — ⛔ **aucun SHA réécrit, aucun commit de fusion créé**. **Deux commits** : **`56dabd3`** *(le contenu — 6 fichiers, 625 insertions)* · **`6fdffd8`** *(la trace post-geste — `SESSIONS.md` seul)*. `origin/main` : **`ebf1b07` → `6fdffd8`**. ⛔ **Aucun run GitHub Actions déclenché** *(aucun `frontend/`)* · ⛔ **aucun redéploiement backend** *(aucun `backend/`)*. Détail des observations : `SESSIONS.md` **§20.8** |
 
-##### PUB-2 — Accès autonome à la page publique  🔨 **IMPLÉMENTÉ, EN ATTENTE DE VALIDATION**
+##### PUB-2 — Accès autonome à la page publique  ✅ **COMMITÉ ET POUSSÉ SUR SA BRANCHE** — ⛔ **ni fusionné, ni publié, ni vérifié en réel**
 
 | | |
 |---|---|

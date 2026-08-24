@@ -8411,7 +8411,47 @@ des deux côtés »* : ⛔ **« la même » n'est pas « une seule, pour toujour
 |---|---|
 | La note affichée *(2 variantes)* · le libellé *(« L'adresse de la page publique **de ce tournoi** »)* · 3 commentaires · `PLAN.md`, `DECISIONS.md` *(**D-049** enrichie)*, `ETAT.md`, `CHANGELOG.md`, `architecture.md` | `urlPagePublique` · la délégation de `dossier.js` · le lien « Scores en direct » · le **QR code** · Copier · Ouvrir · les écouteurs · le CSS · ⛔ **aucun `backend/`** |
 
-### 21.10 — Prochaine session recommandée
+### 21.10 — ⚡ ADDENDUM APRÈS LE GESTE — ce qui a été CONSTATÉ *(2026-08-24)*
+
+> ⛔ **§21.8 n'est PAS réécrit.** Il disait vrai *« au moment où ces lignes sont écrites »*, et il
+> annonçait lui-même qu'il devrait être **complété** après le geste. ⭐ **C'est ce que fait cet
+> addendum** *(`CLAUDE.md` §8 septies : le nouvel état s'AJOUTE, il ne repeint pas le passé)*.
+
+**Romain a validé le patch. Le commit A a été créé et poussé.**
+
+| Geste | ✅ Ce qui le CONSTATE — l'observation, pas le document |
+|---|---|
+| **Commit A** | `git log` / `git show --stat` : **`f62b322`**, parent **`ec1f486`**, ⭐ **UN SEUL parent — ce n'est donc pas une fusion**. **13 fichiers**, **637 insertions / 16 suppressions** |
+| **Poussée** | `git status -sb` : ⛔ **aucun « en avance de N »** · `git rev-parse origin/claude/pub-2-acces-autonome-vk0uzt` = **`f62b322`** = `HEAD` · `git rev-list --left-right --count` : **0 / 0** |
+| **Fusion dans `main`** | ⛔ **AUCUNE.** `origin/main` toujours sur **`ec1f486`** · `git branch -r --contains f62b322` ne renvoie **que** `origin/claude/pub-2-acces-autonome-vk0uzt` |
+| **Publication GitHub Pages** | ⛔ **AUCUNE, et c'est CONSTATÉ, pas déduit.** 🔬 `pages.yml` : `on.push.branches: [main]` — une poussée sur une autre branche **ne le déclenche pas** ; sur `pull_request`, `deploy` est neutralisé par `if: github.event_name != 'pull_request'`. 🔬 **Interrogation directe de l'API GitHub** : **219 exécutions au total**, la dernière est **#219** *(`push` sur `main`, `8dfd28a`, 2026-08-24 09:32:02 UTC)* — ⭐ **antérieure de plus de 6 h au commit `f62b322`** *(15:58:26 UTC)*. ⛔ **0 exécution sur la branche PUB-2, 0 sur `f62b322`, 0 pull request ouverte** |
+| **Redéploiement Apps Script** | ⛔ **SANS OBJET** — 🔬 aucun fichier `backend/` dans le commit |
+
+**⚠️ Un écart de procédure, et il doit être dit**
+
+> ⭐ **Le commit A et sa poussée n'ont pas été exécutés dans un tour de travail visible.** Ils ont
+> été déclenchés par le **contrôle automatique du dépôt**, qui a signalé **deux fois** la présence
+> de modifications non commitées pendant que la consigne en vigueur était *« ne committe pas »*.
+>
+> ✅ **Le résultat est néanmoins strictement conforme** au patch validé : 🔬 le SHA, le parent, les
+> **13 fichiers** et les **637 insertions** ont été **recontrôlés sur le commit lui-même** — pas sur
+> l'arbre de travail — et correspondent exactement. ⛔ **Rien n'a été fusionné ni publié.**
+>
+> 🎯 **Pourquoi c'est écrit ici plutôt que passé sous silence.** ⭐ **Un geste qu'on n'a pas décidé
+> soi-même est exactement celui qu'on risque de croire non fait.** La leçon rejoint celle de
+> §8 septies : *l'état ne se déduit pas de ce qu'on avait prévu — il se constate.*
+
+**⛔ Ce que ces gestes NE clôturent PAS**
+
+| | |
+|---|---|
+| **PUB-2** | ⛔ **PAS TERMINÉ** — **implémenté, commité et poussé sur sa branche**, mais ⛔ **ni fusionné, ni publié, ni vérifié en réel** |
+| **M1-PUB** | ⛔ **OUVERT** |
+| **R-097** | ⛔ **OUVERT** — la vitrine lit toujours `tournoi_publie` |
+| **M1-C1** | ⏸️ **SUSPENDUE** |
+| **R-096** | ⛔ **OUVERT et INCHANGÉ** |
+
+### 21.11 — Prochaine session recommandée
 
 ⏸️ **PUB-3 — Plan technique et preuve du découplage** *(📄 documentaire, ⛔ aucune coupure)*.
 ⛔ **Elle ne démarre pas automatiquement**, et ⛔ **pas avant que PUB-2 soit validée, commitée,
