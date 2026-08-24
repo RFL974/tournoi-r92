@@ -2654,7 +2654,7 @@ M1 est terminé quand **les huit conditions** sont réunies :
 | Étape | État |
 |---|---|
 | **M1-A** | 🏁 **TERMINÉE, FUSIONNÉE, PUBLIÉE dans `main`, et CLÔTURÉE** le 2026-08-24 — **fast-forward**, ⛔ **sans réécrire un seul commit ni créer de commit de fusion** : **`9abaebc`** *(les 7 documents)* · **`b65a6b0`** *(journal §17)* · **`aff6d5f`** *(correctif de statut et de déploiement)*. ⛔ **Plus rien n'est ouvert dans cette étape** |
-| **M1-B** | 🚧 **EN COURS — le BACKEND est EN SERVICE** *(version Apps Script **156**, 2026-08-24 11:13)*, code commité et poussé sur sa branche *(`dc03488`)*, tests **796/796 constatés chez Google**. ⛔ **Le FRONTEND n'est PAS publié** et ⛔ **aucune réinitialisation réelle n'a été jouée** : voir les sept états ci-dessous |
+| **M1-B** | ✅ **LIVRÉE ET EN SERVICE SUR LES DEUX SURFACES** — **backend** *(Apps Script v156, 24/08 11:13)* **et frontend** *(Pages `success` sur `8dfd28a`)*, fusionnée dans `main` en **fast-forward**, tests **796/796 constatés chez Google**. ⛔ **MAIS PAS « vérifiée en réel »** : aucune réinitialisation n'a été jouée, sur aucune donnée. Voir les sept états ci-dessous |
 | **M1-C → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite** |
 
 > ⭐ **Les sept états de M1-B, et ils ne se déduisent pas les uns des autres** *(`CLAUDE.md` §8 septies)* :
@@ -2664,8 +2664,8 @@ M1 est terminé quand **les huit conditions** sont réunies :
 > | **① Implémentée** | ✅ **oui** — allowlist des 26, récompenses par préfixe, branchement dans `reinitialiserTournoi`, message de confirmation |
 > | **② Testée** | ✅ **oui, ET CONSTATÉ CHEZ GOOGLE** le 2026-08-24 — **`R92 — 796/796 OK, 0 FAIL`** dans le journal Apps Script, `Test.gs` à **4645** lignes. *(La valeur avait d'abord été prédite hors ligne ; elle est désormais mesurée là où elle compte.)* |
 > | **③ Commitée** | ✅ **oui** — **`dc03488`**, 9 fichiers |
-> | **④ Poussée** | ✅ **oui** — sur **la branche `claude/m1b-reinitialisation-cycle-de-vie` UNIQUEMENT**. ⛔ Aucune exécution GitHub Actions déclenchée *(constaté ; le workflow Pages n'écoute que `main`)* |
-> | **⑤ Frontend publié** *(GitHub Pages)* | ⛔ **NON** — ⚠️ **et c'est volontaire** : le serveur efface déjà, l'ancien dialogue ne l'annonce pas encore. ⛔ **Aucune réinitialisation réelle ne doit être lancée tant que cette fenêtre est ouverte** |
+> | **④ Poussée, puis FUSIONNÉE** | ✅ **oui** — ⚡ **cette case disait « sur la branche UNIQUEMENT, aucune Action déclenchée »**, vrai jusqu'à la fusion du 2026-08-24. Les **3 commits** sont dans `main` par **fast-forward** *(`1c5cd4f` → `8dfd28a`)*, ⛔ sans réécrire un SHA ni créer de commit de fusion |
+> | **⑤ Frontend publié** *(GitHub Pages)* | ✅ **OUI** — run **32712062024** sur **`8dfd28a`**, **`success`**, ses **deux jobs** compris *(vérification de syntaxe, puis publication)*, 2026-08-24 09:32 UTC. ⭐ **La fenêtre backend-nouveau / frontend-ancien est donc FERMÉE.** ⚠️ **Non observé** : la page réellement servie *(accès `github.io` refusé depuis l'environnement de travail)* |
 > | **⑥ Backend redéployé** *(collage Apps Script)* | ✅ **OUI — version 156, 2026-08-24 à 11:13** *(la 155 datait du 22/08 à 17:31)*. **Même déploiement, même adresse.** Témoins après collage : **3** et **2** ; fichier **8423** lignes, `viderDonnees` ligne **8418** ; `Test.gs` **4645** lignes. ⚡ **Ce redéploiement n'a PAS mis L8 en service, contrairement à ce qui était annoncé ici** : le relevé d'avant collage a montré qu'elle y était déjà |
 > | **⑦ Vérifiée en réel** *(réinitialisation sur une copie)* | ⛔ **NON — et il ne faut pas confondre.** Les tests passent chez Google et la Web App répond, ⛔ **mais aucune réinitialisation n'a été jouée** : l'effet destructif de M1-B n'est **constaté sur aucune donnée**. ⭐ **Un test vert prouve que le code fait ce qu'il dit ; il ne prouve pas qu'on l'ait fait tourner sur un vrai classeur** |
 

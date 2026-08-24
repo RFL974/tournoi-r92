@@ -7776,3 +7776,36 @@ prouvent pas qu'on l'ait exercé sur un vrai classeur.**
 nouveaux effacements. ⚠️ **Tant que cette fenêtre est ouverte, aucune réinitialisation réelle ne
 doit être déclenchée.**
 ⛔ **Aucune donnée du classeur n'a été volontairement modifiée**, ⛔ aucune fusion vers `main`.
+
+### 19.11 — ⚡ Addendum du 2026-08-24 — M1-B est fusionnée et le frontend est publié
+
+> ⛔ **Les §19.8 à §19.10 ne sont pas réécrits.** Ils disaient vrai à leur date, y compris §19.10 qui
+> annonçait *« le frontend n'est pas publié »* et demandait de ne lancer aucune réinitialisation
+> **tant que la fenêtre est ouverte**. ⭐ **Cette fenêtre est désormais FERMÉE**, et c'est l'objet de
+> cet addendum.
+
+| | Constaté |
+|---|---|
+| **Fusion** | **Fast-forward** `1c5cd4f` → **`8dfd28a`** — ⛔ aucun SHA réécrit, ⛔ aucun commit de fusion. Les 3 commits *(`dc03488`, `e515fd7`, `8dfd28a`)* sont ancêtres de `origin/main`, vérifié un par un |
+| **Périmètre publié** | **10 fichiers**, contrôlés **avant** la poussée par `git diff origin/main..HEAD` — dont `backend/Code.gs`, `backend/Tests.gs` et `frontend/js/admin.js` |
+| **Push** | `1c5cd4f..8dfd28a  main -> main` · après coup : `HEAD` = `origin/main`, écart **0/0**, working tree propre |
+| ⭐ **GitHub Pages** | Run **32712062024** sur **`8dfd28a`**, **`success`** — **les deux jobs** : *« Vérifier la syntaxe des fichiers publiés »* ✅ *(3 s)* et *« Publier sur GitHub Pages »* ✅. 2026-08-24, 09:32:02 → 09:32:35 UTC |
+| **Fenêtre backend-nouveau / frontend-ancien** | ✅ **FERMÉE** — ouverte à 11:13 *(v156)*, refermée par la publication |
+
+⚠️ **Ce qui N'A PAS pu être vérifié, et il faut le dire plutôt que de le supposer** : **la page
+réellement servie n'a pas été observée.** L'environnement de travail refuse `github.io` *(403 au
+tunnel, comme `script.google.com`)*. ⭐ **Ce qui est prouvé est donc le DÉPLOIEMENT, pas
+l'AFFICHAGE** — la distinction est exactement celle des quatre états de `deploiement.md`, et
+**§13.6** la pose comme limite permanente.
+
+**Ce qui a pu être vérifié en revanche** : le contenu de `frontend/js/admin.js` **dans `origin/main`**
+— c'est-à-dire la source exacte de l'artefact empaqueté par le job de publication. Le message y
+annonce bien ce qui part *(catégories, équipes, poules, matchs · infos et horaires · données de
+participation des clubs invités · médecin, secours, arbitrage, installations utilisées, hébergement,
+repas, goûters, récompenses)* et ce qui reste *(informations permanentes du club · historique de
+saison · carnet des clubs avec noms, contacts et statut · partenaires)*. ⛔ **L'ancienne phrase
+« Seul l'historique de saison est conservé » n'y figure plus.**
+
+⛔ **Le point ⑦ reste NON.** Aucune réinitialisation n'a été jouée — ni en production, ni sur une
+copie. ⭐ **Que les deux surfaces soient en service ne prouve toujours pas l'effet destructif** :
+cela reste à établir par un geste réel, organisé séparément.
