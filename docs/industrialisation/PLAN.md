@@ -30,8 +30,12 @@ M1-F**. Doctrine fondatrice : **D-048** — *« Publier ouvre une page. Publier 
 personne. »* ; dette enregistrée : **R-097** *(P2)*. ⏸️ **M1-C1 reste SUSPENDUE JUSQU'À LA
 CLÔTURE COMPLÈTE DE M1-PUB** — ⛔ **pas seulement jusqu'à son cadrage**.
 ✅ **PUB-1 est TERMINÉ et FUSIONNÉ dans `main`** *(`56dabd3`, `6fdffd8` — **fast-forward**)* ;
-⏭️ **PUB-2 est le prochain micro-lot, ⛔ NON COMMENCÉ** ; ⛔ **PUB-3, PUB-4 et PUB-5 non commencés**.
+🔨 **PUB-2 est IMPLÉMENTÉ sur sa branche et EN ATTENTE DE VALIDATION** — ⛔ **non commité, non
+poussé, non fusionné, non publié** *(état à relire après le geste — `CLAUDE.md` §8 septies)* ;
+⛔ **PUB-3, PUB-4 et PUB-5 non commencés**.
 ⛔ **M1-PUB N'EST PAS TERMINÉ pour autant, et R-097 reste OUVERT** *(**§15.8**)*.
+⭐ **Arbitrage rendu par PUB-2 : D-049** — `url_tournoi_public` est **consommé** par M1-PUB mais sa
+**configuration reste rattachée à R-096 / M1-D**.
 
 *Rappel de la mise à jour précédente — 2026-08-19 (soir)* : ⚡ **ARBITRAGE DE R-092 ET R-093** *(**D-037**)* :
 **R-092 rejoint C-015** *(toute invalidation d'un résultat doit effacer le détail périmé)* · ⚡ **R-093
@@ -2689,18 +2693,98 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **Validation** | La doctrine est écrite **une seule fois**, à **une seule adresse** *(D-048)* · le risque a un identifiant, une priorité et un statut *(R-097)* · **l'ordre général** du découplage est écrit **avant** toute coupure · le **critère de clôture de M1-PUB** est écrit · ⭐ **chaque affirmation porte son niveau de preuve** *(🔬 / 📄 / 🕗 / ⛔)* |
 | 🏁 **État CONSTATÉ** | ✅ **TERMINÉ, FUSIONNÉ ET PUBLIÉ dans `main`** le 2026-08-24, en **fast-forward** — ⛔ **aucun SHA réécrit, aucun commit de fusion créé**. **Deux commits** : **`56dabd3`** *(le contenu — 6 fichiers, 625 insertions)* · **`6fdffd8`** *(la trace post-geste — `SESSIONS.md` seul)*. `origin/main` : **`ebf1b07` → `6fdffd8`**. ⛔ **Aucun run GitHub Actions déclenché** *(aucun `frontend/`)* · ⛔ **aucun redéploiement backend** *(aucun `backend/`)*. Détail des observations : `SESSIONS.md` **§20.8** |
 
-##### PUB-2 — Accès autonome à la page publique  ⏭️ **PROCHAIN MICRO-LOT — ⛔ NON COMMENCÉ**
+##### PUB-2 — Accès autonome à la page publique  🔨 **IMPLÉMENTÉ, EN ATTENTE DE VALIDATION**
 
 | | |
 |---|---|
 | **Objectif** | Que l'organisateur puisse **atteindre et donner** l'adresse de sa page publique **sans passer par un site tiers** |
 | **Les 4 gestes exigés** | ① **voir l'adresse** de la page publique · ② un bouton **Copier** · ③ un bouton **Ouvrir** · ④ l'état **publié / non publié** clairement visible |
 | ⭐ **Contrainte de conception** | **L'adresse publique doit pouvoir exister INDÉPENDAMMENT de l'état publié.** Une adresse n'est pas une autorisation : elle existe avant la publication et après le masquage |
-| **Point d'appui existant** | ⭐ Le paramètre **`url_tournoi_public`** existe déjà, avec un **repli automatique** vers la page voisine *(🔬 `frontend/js/dossier.js:217-220`, `../structure-google-sheet.md`)*. ⚠️ Il n'a **aucun écran** |
-| ⏸️ **Point à arbitrer EN PUB-2** | `url_tournoi_public` est aujourd'hui rattaché à **R-096 / M1-D** *(les douze réglages sans écran)*. **PUB-2 arbitrera** s'il rejoint M1-PUB ou reste en M1-D. ⛔ **PUB-1 ne change RIEN à R-096** — le chevauchement est **signalé, pas tranché** |
+| **Point d'appui existant** | ⭐ Le paramètre **`url_tournoi_public`** existe déjà, avec un **repli automatique** vers la page voisine *(🔬 `frontend/js/dossier.js`, `../structure-google-sheet.md`)*. ⚠️ Il n'a **aucun écran** |
+| ✅ **Point arbitré EN PUB-2** | ⭐ **`url_tournoi_public` reste rattaché à R-096 / M1-D pour sa CONFIGURATION** ; PUB-2 se contente de le **consommer**. Décision **D-049** : *« consommer une valeur existante n'est pas administrer cette valeur »*. ⛔ **R-096 reste OUVERT et INCHANGÉ** |
 | **Dépendances** | **PUB-1** |
-| **Redéploiement** | ✅ **OUI** |
+| **Redéploiement** | ⚠️ **À DISTINGUER** : **publication frontend GitHub Pages ✅ OUI** *(automatique à la fusion dans `main`)* · **redéploiement Apps Script ⛔ NON** — 🔬 **aucun fichier `backend/` n'est touché** |
 | ⛔ **Hors de ce lot** | ⛔ **Aucune implémentation dans PUB-1** |
+
+**⭐ Le constat qui a dimensionné ce lot : l'adresse publique existait DÉJÀ, et les clubs la recevaient**
+
+> 🔬 **Vérifié avant toute modification.** Le **dossier club** affiche cette adresse depuis
+> longtemps, dans sa section *« Suivi des scores & organisation »* : un lien intitulé **« Scores en
+> direct »** *(dont le texte EST l'URL)* **et un QR code** qui pointe sur la même adresse
+> *(`frontend/js/dossier.js`, `sectionSuivi` → `urlSuiviPublic`, QR rendu par `dessinerQR`)*.
+>
+> 🎯 **PUB-2 ne crée donc AUCUN nouveau concept de lien public.** Il rend **le même accès, déjà
+> utilisé par le dossier club**, disponible directement pour l'organisateur dans l'administration.
+> ⭐ Ce fonctionnement existant devient un **invariant de non-régression** du lot.
+>
+> ⚠️ **Le mécanisme de partage du dossier** *(`lienPartageDossier`, bouton « Partager le dossier »)*
+> ⛔ **n'utilise PAS cette adresse** — il partage le **dossier**. Il n'est pas concerné.
+
+**Ce qui a été fait — 6 fichiers, ⛔ aucun `backend/`**
+
+| Fichier | Ce qui change |
+|---|---|
+| `frontend/js/commun.js` | 🆕 **`urlPagePublique(global)`** — **la source unique** de la règle : ① `url_tournoi_public` si renseignée ② sinon `tournoi.html` voisine |
+| `frontend/js/dossier.js` | **UNE ligne** : `urlSuiviPublic` **délègue** à `urlPagePublique`. ⛔ `sectionSuivi`, le lien, le QR : **intacts** |
+| `frontend/admin.html` | Le bloc d'accès dans la carte `#bloc-publication` — **entre l'état et le bouton** |
+| `frontend/js/admin-infos-publication.js` | `majPublication` appelle 🆕 `majAccesPublic` ; 🆕 `onCopierAdressePublique` · 🆕 `onOuvrirPagePublique` |
+| `frontend/js/admin.js` | **2 lignes** — les deux écouteurs, au motif des boutons statiques de la page |
+| `frontend/css/styles.css` | L'encadré, près de `.publication-etat`. ⛔ **Aucune règle `.theme-clair` nécessaire** : seules les variables globales sont utilisées |
+
+**Ordre visuel retenu — et ce n'est pas cosmétique**
+
+> **État → Adresse → Copier / Ouvrir → Publier / Masquer.**
+>
+> 🎯 L'adresse **ne dépend pas du bouton** ; le bouton est un **geste**. Dans cet ordre, l'écran
+> dit ce qui est vrai : *l'adresse existe d'abord ; publier décide seulement de ce que le visiteur y
+> voit*. ⛔ **Placée après le bouton, elle se lirait comme une CONSÉQUENCE de la publication** —
+> exactement le contresens que **D-048** supprime.
+>
+> ⭐ **Les deux boutons restent ACTIFS quand le tournoi n'est pas publié.** Les griser ferait croire
+> que l'adresse n'existe pas encore. Seule la **note explicative** change d'un état à l'autre.
+
+**⛔ Ce que PUB-2 se garde bien de graver — un tournoi, pas un club** *(précision de Romain, 2026-08-24)*
+
+> ⭐ **Maxilou organise volontairement UN tournoi à la fois**, et PUB-2 **reste dans ce modèle**.
+> ⛔ **Aucun `tournoi_id`, aucun sélecteur, aucune gestion multi-tournois, aucune table, aucune
+> route, aucun backend** n'a été créé — et il n'en est pas demandé.
+>
+> ⚠️ **Mais le vocabulaire, lui, engage l'avenir.** À terme, un même club organisera **plusieurs
+> tournois distincts** — *U10 le samedi, U8 le dimanche* — qui devront avoir **des adresses et des
+> QR codes distincts**. Une interface qui aurait écrit *« la page publique du club »* aurait gravé
+> une règle conceptuelle **fausse** : ⛔ **un club ≠ une URL.**
+>
+> ✅ **On dit donc** : *« la page publique **du tournoi** »*, *« l'adresse **de ce tournoi** »*.
+> ⛔ **Jamais** : *« la page publique du club »*, *« l'URL du club »*.
+>
+> 🎯 **Ce n'est pas du purisme.** Le vocabulaire d'une interface **survit** au code qui l'a produit :
+> il est recopié dans les documents, dans les emails, dans les habitudes. Une mauvaise règle
+> conceptuelle écrite aujourd'hui coûte, le jour du multi-tournois, **bien plus qu'une phrase à
+> corriger**.
+
+**⛔ Et ce que la note de l'interface se garde d'affirmer**
+
+> ⚠️ La note affichée dit **« Publier ou masquer le tournoi ne change pas cette adresse »** — la
+> garantie **réelle** de PUB-2, qui porte sur le **bouton**.
+> ⛔ **Elle ne dit PAS « cette adresse ne change jamais »** : `url_tournoi_public` **peut** être
+> modifié, et le multi-tournois amènera **plusieurs** adresses. ⭐ *Une interface ne promet que ce
+> que le code garantit.*
+
+**Les invariants tenus — 🔬 contrôlés, pas déduits**
+
+| Invariant | Comment il a été établi |
+|---|---|
+| Le dossier club obtient **exactement** la même adresse qu'avant | **11 cas** comparés entre l'ancienne règle et la nouvelle *(clé absente, vide, espaces, `null`, URL, nombre, booléen…)* — **0 divergence**. ⚠️ Le test `== null` de `txt()` a été **conservé volontairement** : un `|| ''` aurait fait basculer un `0` vers le repli |
+| Administration et dossier club résolvent la **même** adresse | La **vraie** fonction de `commun.js` exécutée depuis les deux pages, sur 3 configurations — **identiques** |
+| ⛔ Aucune écriture serveur depuis Copier / Ouvrir | Aucun `ecrireAdmin` / `apiPost` / `apiGet` / `fetch` dans les fonctions ajoutées |
+| ⛔ Une seule règle de résolution dans tout le frontend | **Une seule** construction de `tournoi.html` en JS, **une seule** lecture de `url_tournoi_public` |
+| ⛔ `publierTournoi` et `onPublier` inchangés | Absents du diff |
+
+> ⚠️ **NON VÉRIFIÉ — et ce n'est pas une négligence.** ⛔ **Ce dépôt n'a aucun harnais de test
+> frontend** *(les 315 vérifications de `backend/Tests.gs` s'exécutent dans Apps Script)*. PUB-2
+> étant **entièrement frontend**, son comportement **ne peut pas être couvert par un test
+> automatisé**. Seuls s'appliquent le `node --check` du workflow Pages et le **contrôle manuel**.
+> ⛔ **Créer un harnais frontend serait un chantier à part entière — hors PUB-2.**
 
 ##### PUB-3 — Plan technique et preuve du découplage
 

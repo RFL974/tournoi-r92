@@ -395,6 +395,11 @@ async function initAdmin() {
   // Bouton publier / masquer le tournoi.
   document.getElementById('bouton-publier').addEventListener('click', onPublier);
 
+  // Accès à la page publique : deux boutons STATIQUES (jamais reconstruits) → écouteurs directs,
+  // comme le bouton ci-dessus. ⛔ Ni l'un ni l'autre ne publie, ne masque, ni n'écrit sur le serveur.
+  document.getElementById('bouton-copier-adresse-publique').addEventListener('click', onCopierAdressePublique);
+  document.getElementById('bouton-ouvrir-page-publique').addEventListener('click', onOuvrirPagePublique);
+
   // Bouton de réinitialisation complète du tournoi (zone de danger).
   document.getElementById('bouton-reinitialiser').addEventListener('click', onReinitialiser);
 

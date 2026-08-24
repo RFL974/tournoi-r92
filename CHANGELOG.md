@@ -12,6 +12,30 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### L'adresse de la page publique est enfin visible depuis l'administration — 2026-08-24
+
+**Ce qui manquait.** Pour donner l'adresse de sa page de scores en direct, l'organisateur devait
+aller la chercher **ailleurs** — sur le site vitrine, ou dans le dossier d'un club. ⛔ **Nulle part
+dans l'administration l'adresse de sa propre page publique n'était écrite.**
+
+**Ce qui change.** La carte **« Publier le tournoi »** affiche désormais cette adresse, avec deux
+boutons : **Copier l'adresse** et **Ouvrir la page**.
+
+**Ce qu'il faut comprendre, et c'est le point important.** ⭐ **Publier ou masquer le tournoi ne
+change pas cette adresse.** Elle est affichée, copiable et ouvrable **avant** d'avoir publié comme
+**après** avoir masqué — la page s'affiche alors avec son écran *« à venir »*. Le bouton **Publier /
+Masquer** décide de **ce que le visiteur y voit**, ⛔ **il ne crée pas l'adresse**. Les deux nouveaux
+boutons **ne publient rien et ne masquent rien**.
+
+⚠️ **C'est bien l'adresse DU TOURNOI**, celui que Maxilou gère actuellement — ⛔ **pas « l'adresse du
+club »**. Maxilou organise volontairement **un tournoi à la fois**, et le jour où un même club en
+organisera plusieurs *(U10 le samedi, U8 le dimanche)*, **chacun aura la sienne**.
+
+**Ce n'est pas une deuxième adresse.** ⭐ C'est **exactement** celle que les clubs reçoivent déjà
+dans leur dossier — le lien *« Scores en direct »* et son **QR code**. La règle qui la calcule est
+désormais écrite **une seule fois**, pour que l'organisateur et les clubs ne puissent jamais avoir
+deux adresses différentes.
+
 ### Réinitialiser un tournoi n'emporte plus les infos du club — mais efface enfin celles de l'édition passée — 2026-08-24
 
 **Ce qui se passait.** En réinitialisant pour préparer l'édition suivante, **toute la demande

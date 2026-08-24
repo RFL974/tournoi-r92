@@ -5,7 +5,16 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-24 *(soir)* — 📏 **DEUX DÉCISIONS DE MÉTHODE, ENTRE M1-A ET
+**Dernière mise à jour** : 2026-08-24 *(soir, suite 4)* — 🌐 **D-049 — « CONSOMMER UNE VALEUR
+EXISTANTE N'EST PAS ADMINISTRER CETTE VALEUR »**, prise à l'ouverture du micro-lot **PUB-2**. Elle
+tranche le chevauchement signalé par PUB-1 : ✅ **PUB-2 LIT `url_tournoi_public`** pour afficher,
+copier et ouvrir l'adresse de la page publique ; ⛔ **il ne l'ÉCRIT PAS** — aucun champ, aucun écran
+— et sa **configuration reste rattachée à R-096 / M1-D**. Elle pose aussi l'**invariant de la source
+unique** : la règle de résolution vit dans **`urlPagePublique` (`frontend/js/commun.js`)**, et
+**nulle part ailleurs**, parce que **deux** endroits présentent la **même** adresse — le **dossier
+club** *(lien « Scores en direct » + QR code, usage antérieur à PUB-2)* et l'**administration**.
+
+*Rappel de la mise à jour précédente — 2026-08-24 (soir)* : 📏 **DEUX DÉCISIONS DE MÉTHODE, ENTRE M1-A ET
 M1-B.** **D-046** — ⭐ **un état ne devient vrai qu'APRÈS le geste** *(commit, fusion, poussée,
 publication, redéploiement)*, et ⛔ **une trace historique ne se réécrit jamais** pour la rendre
 conforme au présent : c'est la règle permanente **`CLAUDE.md` §8 septies**, née de **quatre états
@@ -3267,3 +3276,93 @@ locale — **et** sur le site réellement servi par GitHub Pages, qui peut diff�
 >   code consomme `tournoi_publie` via la vue `live`** *(🔬 `frontend/js/tournoi.js:206`,
 >   `backend/Code.gs:707`)*. Ce qui manque est **un accès explicite et autonome pour
 >   l'organisateur depuis Maxilou** *(PUB-2)*.
+
+---
+
+### D-049 — Consommer une valeur existante n'est pas administrer cette valeur
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-24 |
+| **Session** | Chantier **M1-PUB**, micro-lot **PUB-2** |
+| **Statut** | ✅ **VALIDÉE — décision de Romain**, avant implémentation |
+| **Décidée par** | Romain |
+| **Couvre** | `PLAN.md` **§15.3 bis** *(PUB-2)* · `RISQUES.md` **R-096** · `../architecture.md` **§2.H** |
+
+**Le problème posé**
+
+> `url_tournoi_public` — le paramètre qui porte l'adresse de la page publique — appartient aux
+> **douze réglages sans écran** de **R-096**, rattachés au chantier **M1-D**. Or **PUB-2** a besoin
+> de cette valeur pour afficher l'adresse à l'organisateur.
+>
+> ⚠️ **Le risque était de « régler le problème en passant »** : ajouter un champ de saisie dans la
+> carte Publication. Cela aurait déplacé un morceau de M1-D dans M1-PUB **sans que personne ne le
+> décide** — exactement la façon dont un chantier en avale un autre.
+
+**Ce qui est décidé**
+
+> | | |
+> |---|---|
+> | ✅ **PUB-2 LIT** `url_tournoi_public` | pour afficher, copier et ouvrir l'adresse |
+> | ⛔ **PUB-2 n'ÉCRIT PAS** `url_tournoi_public` | aucun champ, aucun écran, aucune action serveur |
+> | ⛔ **La CONFIGURATION reste R-096 / M1-D** | ce que PUB-2 ne change en rien |
+>
+> 🎯 **La formule à conserver :**
+>
+> > **« Consommer une valeur existante n'est pas administrer cette valeur. »**
+
+**La règle de résolution, et elle vit à UN SEUL ENDROIT**
+
+> ① `url_tournoi_public` si renseignée · ② sinon `tournoi.html` **voisine de la page courante**.
+>
+> ⭐ Cette règle est écrite dans **`urlPagePublique`** *(`frontend/js/commun.js`)*, et **nulle part
+> ailleurs**. Elle sert **deux** présentations de la **même** adresse :
+> le **dossier club** *(lien « Scores en direct » + QR code — l'usage le plus ancien, antérieur à
+> PUB-2)* et l'**administration** *(carte « Publier le tournoi »)*.
+>
+> ⚠️ **L'invariant qui en découle, et c'est lui qui compte** : *à configuration identique,
+> l'administration et le dossier club affichent la MÊME adresse.* Deux règles séparées auraient
+> divergé **en silence** — les deux pages se seraient affichées normalement, et l'organisateur
+> aurait communiqué une adresse que les clubs n'avaient pas reçue.
+
+**⭐ Le vocabulaire, et il engage l'avenir : l'adresse est celle du TOURNOI, jamais celle du CLUB**
+*(précision de Romain, 2026-08-24, avant le figeage de PUB-2)*
+
+> **L'état actuel, et il est volontaire** : ⭐ **Maxilou organise UN tournoi à la fois.** PUB-2
+> **reste strictement dans ce modèle** — ⛔ **aucun `tournoi_id`, aucun sélecteur, aucune gestion
+> multi-tournois, aucune table, aucune route, aucune modification backend** n'a été créé, et il
+> n'en est pas demandé.
+>
+> **Le besoin futur, ⛔ HORS PÉRIMÈTRE** : un même club organisera un jour **plusieurs tournois
+> distincts** — *U10 le samedi, U8 le dimanche* — qui devront porter des **liens et des QR codes
+> distincts**.
+>
+> | ✅ On écrit | ⛔ On n'écrit JAMAIS |
+> |---|---|
+> | « la page publique **du tournoi** » | « la page publique du club » |
+> | « l'adresse **de ce tournoi** » · « du tournoi actuellement géré » | « l'URL du club » · « l'adresse du club » |
+>
+> 🎯 **Pourquoi cette précision est une DÉCISION et pas une coquetterie.** ⭐ **Le vocabulaire d'une
+> interface survit au code qui l'a produit** : il est recopié dans les documents, dans les emails,
+> dans les habitudes de celui qui s'en sert. Écrire aujourd'hui *« la page publique du club »*
+> graverait la règle conceptuelle **`un club = une URL`** — fausse, et **coûteuse à défaire le jour
+> du multi-tournois**, bien au-delà d'une phrase à corriger.
+>
+> ⚠️ **La conséquence directe sur la note affichée.** Elle dit **« Publier ou masquer le tournoi ne
+> change pas cette adresse »** — la garantie **réelle** de PUB-2, qui porte sur le **bouton**.
+> ⛔ Elle ne dit **PAS** *« cette adresse ne change jamais »* : `url_tournoi_public` **peut** être
+> modifié, et le multi-tournois amènera **plusieurs** adresses. ⭐ *Une interface ne promet que ce
+> que le code garantit.*
+
+**Ce que cette décision ne dit PAS**
+
+> - ❌ **Pas** que le multi-tournois est décidé, planifié ou préparé : ⛔ **il est seulement
+>   SIGNALÉ**, pour que PUB-2 ne grave pas une règle qui lui barrerait la route ;
+> - ❌ **Pas** que `url_tournoi_public` est bien administré : ⛔ **il n'a toujours aucun écran**, et
+>   **R-096 reste OUVERT**. PUB-2 ne referme rien de M1-D ;
+> - ❌ **Pas** que l'adresse dépend de la publication — ⭐ elle existe **avant** et **après**
+>   *(D-048)*. « Copier » et « Ouvrir » restent **actifs** quand le tournoi n'est pas publié ;
+> - ❌ **Pas** que le dossier club change : ⭐ **son comportement est strictement conservé**. Une
+>   seule ligne de `dossier.js` a bougé — elle **délègue** la résolution, elle ne la modifie pas ;
+> - ❌ **Pas** que R-097 avance : ⛔ la vitrine externe **lit toujours** `tournoi_publie`. La
+>   coupure appartient à **PUB-3** puis **PUB-4**.

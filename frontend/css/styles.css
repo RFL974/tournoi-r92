@@ -1203,6 +1203,42 @@ button .ic { margin-right: 0.45em; }
 /* État de publication dans l'admin */
 .publication-etat { color: var(--bleu-ciel); margin: 4px 0 10px; }
 
+/* Accès à la page publique du tournoi (carte « Publier le tournoi »).
+   Encadré discret : l'adresse ne dépend PAS du bouton Publier/Masquer — le cadre le montre à
+   l'œil, en la distinguant du geste, sans crier plus fort que lui.
+   N'utilise que les variables globales (--accent, --texte, --bleu-ciel), que le thème
+   clair réaligne déjà : aucune règle .theme-clair n'est nécessaire. */
+.publication-acces {
+  border: 1px solid rgba(46, 143, 224, 0.35);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0 0 14px;
+}
+.publication-acces-lib {
+  color: var(--bleu-ciel);
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+}
+/* L'adresse peut être longue : sur smartphone elle DOIT se couper plutôt que déborder
+   (la carte est consultée debout, sur le terrain). */
+.publication-acces-url {
+  margin: 0 0 10px;
+  overflow-wrap: anywhere;
+}
+.publication-acces-url a { color: var(--accent); }
+/* Les deux boutons passent à la ligne sur petit écran plutôt que de se serrer. */
+.publication-acces-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.publication-acces-note {
+  color: var(--bleu-ciel);
+  margin: 10px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
 /* État de préparation de la phase après-midi (scores du matin saisis) */
 .apresmidi-etat { color: var(--bleu-ciel); margin: 4px 0 10px; }
 

@@ -8252,3 +8252,167 @@ jour. C'est le mécanisme de **§8 septies** : un état écrit **avant** le gest
 
 ⏸️ **PUB-2 — Accès autonome à la page publique.** ⛔ **Elle ne démarre pas automatiquement.**
 Elle devra aussi **arbitrer le rattachement de `url_tournoi_public`** *(§20.7, point 1)*.
+
+---
+
+## Session 21 — 2026-08-24 *(soir, suite 4)* — 🌐 M1-PUB / **PUB-2** : l'accès autonome à la page publique
+
+> **Objectif** : que l'organisateur puisse **atteindre et communiquer** l'adresse de sa page
+> publique **depuis l'administration**, sans passer par un site tiers.
+>
+> ⛔ **Cette session s'arrête AVANT le commit** : Romain valide le patch avant toute publication.
+
+### 21.1 — La cartographie faite AVANT de toucher au code
+
+⭐ **La consigne de Romain a changé le dimensionnement du lot**, et c'est le fait marquant de cette
+session : *le dossier club possède déjà un accès à la page publique.* Vérifié, point par point :
+
+| Question posée | Réponse 🔬 |
+|---|---|
+| **Où** le lien est-il affiché ? | Dossier club, section **« Suivi des scores & organisation »** *(`dossier.js`, `sectionSuivi`)* |
+| **Quel libellé** l'utilisateur voit-il ? | **« Scores en direct »** — et le **texte du lien est l'URL elle-même**, ouverte en nouvel onglet *(`rel="noopener"`)* |
+| **Quelles fonctions** appellent `urlSuiviPublic()` ? | ⭐ **UNE SEULE** : `sectionSuivi`. Elle en tire **deux** usages |
+| **Le QR code** dépend-il de cette URL ? | ✅ **OUI** — `#d-qr` porte l'URL en `data-url`, et `dessinerQR()` la transforme en SVG **localement** *(vendor/qrcode.js, aucun appel externe)* |
+| Le **partage du dossier** en dépend-il ? | ⛔ **NON** — `lienPartageDossier` partage le **dossier**, pas la page live. Sans rapport |
+| D'**autres endroits** du frontend visent-ils la même destination ? | ⛔ **Aucun autre en JS.** Seul `frontend/index.html` porte une redirection statique vers `tournoi.html` — **hors périmètre** *(aucun JS, aucune config)* |
+
+> 🎯 **Ce que cette cartographie a évité.** Sans elle, PUB-2 aurait écrit **une deuxième** règle
+> d'adresse à côté de celle du dossier club. Les deux auraient donné le même résultat **le premier
+> jour** — et le défaut ne serait apparu que le jour où l'une des deux aurait changé.
+> ⭐ **Ce fonctionnement existant est devenu un invariant de non-régression du lot.**
+
+### 21.2 — Le backend n'était pas nécessaire, et voici la preuve
+
+🔬 `getConfigAdmin` renvoie `lireConfig(classeur)` *(`backend/Code.gs`)*, qui parcourt **toute la
+zone A de `Config` sans liste blanche**. Les vues `CONFIG_PUBLIQUE_VUES` ne filtrent que les
+lectures **publiques**.
+
+⭐ **`url_tournoi_public` était donc DÉJÀ disponible dans l'administration**, sans une ligne de
+serveur. ⛔ **Aucune action ajoutée, aucune vue modifiée, aucun redéploiement Apps Script.**
+
+### 21.3 — Les décisions prises
+
+| | |
+|---|---|
+| 🆕 **D-049** | ⭐ *« Consommer une valeur existante n'est pas administrer cette valeur. »* PUB-2 **lit** `url_tournoi_public` ; ⛔ **sa configuration reste R-096 / M1-D** |
+| **Option B retenue** *(validée par Romain)* | La règle de résolution vit dans **`urlPagePublique`** *(`frontend/js/commun.js`)*, **le seul fichier chargé par `admin.html` ET `dossier-club.html`* |
+| **Ordre visuel** | **État → Adresse → Copier/Ouvrir → Publier/Masquer** — l'adresse **avant** le bouton, pour qu'elle ne se lise pas comme une conséquence de la publication |
+| **Boutons jamais grisés** | ⛔ Les griser hors publication ferait croire que l'adresse n'existe pas encore. **Seule la note change** |
+
+### 21.4 — Un point de rigueur qui a failli passer inaperçu
+
+⚠️ La première écriture du helper utilisait `String(… || '').trim()`. **Ce n'était PAS la sémantique
+de `txt()`**, que le dossier club appliquait : sur une cellule contenant le **nombre `0`** ou le
+**booléen `false`**, `|| ''` bascule vers le repli, là où `txt()` conservait la valeur.
+
+⭐ **Corrigé avant tout contrôle** : le helper teste `== null`, exactement comme `txt()`.
+
+> 🎯 **La leçon.** *« Déléguer » n'est pas neutre par nature : ça ne l'est que si l'on a comparé les
+> deux règles cas par cas.* Les valeurs concernées sont absurdes pour une URL — **c'est précisément
+> pourquoi personne ne les aurait testées**, et pourquoi l'écart serait resté invisible.
+
+### 21.5 — Les contrôles exécutés
+
+| # | Contrôle | Résultat |
+|---|---|---|
+| ① | `node --check` sur **tous** les `.js` de `frontend/` *(comme le workflow Pages)* | ✅ **30/30** |
+| ② | Aucun fichier `backend/` modifié | ✅ **confirmé** |
+| ③ | Ancienne règle vs nouvelle, **11 cas** *(absent, vide, espaces, `null`, URL, `0`, `false`, `true`, nombre…)* | ✅ **0 divergence** |
+| ④ | Administration et dossier club, **même config ⇒ même adresse** *(vraie fonction du dépôt, 3 configs)* | ✅ **identiques** |
+| ⑤ | Une seule règle dans tout le frontend | ✅ **1** construction de `tournoi.html`, **1** lecture de `url_tournoi_public` |
+| ⑥ | Copier / Ouvrir : aucune écriture serveur | ✅ aucun `ecrireAdmin` / `apiPost` / `apiGet` / `fetch` |
+| ⑦ | `publierTournoi` · `onPublier` · `sectionSuivi` · le faux aperçu | ✅ **absents du diff** |
+
+⚠️ **NON VÉRIFIÉ, et dit clairement** : ⛔ **ce dépôt n'a aucun harnais de test frontend**. PUB-2
+étant entièrement frontend, **son comportement ne peut pas être couvert par un test automatisé**.
+⛔ **Créer ce harnais serait un chantier à part — hors PUB-2.**
+
+### 21.6 — Ce qui a été volontairement laissé intact
+
+| | |
+|---|---|
+| ⛔ **Le faux aperçu vitrine** *(PUB-5)* | ⭐ **Voulu** : tant que le couplage existe, il décrit encore quelque chose de vrai |
+| ⛔ **`tournoi_publie` dans la vue `invitation`** *(PUB-4)* | La vitrine **lit toujours** le témoin. **R-097 reste OUVERT** |
+| ⛔ **Les 2 tests `Tests.gs` du voisinage** | `testCfg_vueLiveMinimale`, `testCfg_vitrineVoitTournoiPublie` — ils concernent **PUB-4**, pas PUB-2 |
+| ⛔ **Le design et le fonctionnement du dossier club** | **Une seule ligne** de `dossier.js` a bougé, et elle **délègue** |
+| ⛔ **`frontend/index.html`** | Sa redirection statique vers `tournoi.html` n'est ni une config ni du JS |
+
+### 21.7 — Un décrochage constaté au passage, et corrigé
+
+⚠️ `docs/architecture.md` annonçait **`admin.js` = 883 lignes**. Le fichier en comptait **902
+AVANT** cette session — le compte était donc **déjà faux**, indépendamment de PUB-2. Les quatre
+comptes des fichiers touchés ont été remis à la **mesure réelle** *(`wc -l`)* : `commun.js` **401**,
+`dossier.js` **861**, `admin.js` **907**, `admin-infos-publication.js` **724**.
+
+> ⭐ **Aucune passe rétroactive sur les autres fichiers** : **§8 quater** demande d'appliquer la
+> règle **à ce qu'on écrit**, pas de traquer les recopies existantes.
+
+### 21.8 — État des gestes
+
+> ⛔ **RIEN N'A ÉTÉ COMMITÉ, POUSSÉ, FUSIONNÉ NI PUBLIÉ.** Romain valide le patch d'abord.
+>
+> ⚠️ **Ce paragraphe décrit donc une INTENTION, pas un état constaté** — et il **devra être relu et
+> complété APRÈS** le commit, la poussée et la fusion *(`CLAUDE.md` §8 septies, `§12.4` point 5)*.
+
+| Geste | État au moment où ces lignes sont écrites |
+|---|---|
+| **Commit** | ⛔ **NON FAIT** — 6 fichiers de code + 7 documents en modification dans l'arbre de travail |
+| **Poussée** | ⛔ **NON FAITE** |
+| **Fusion dans `main`** | ⛔ **NON FAITE** |
+| **Publication GitHub Pages** | ⛔ **NON DÉCLENCHÉE** — elle ne part **qu'à la fusion dans `main`** |
+| **Redéploiement Apps Script** | ⛔ **SANS OBJET** — 🔬 aucun fichier `backend/` touché |
+
+### 21.9 bis — ⚡ Correction demandée par Romain AVANT le figeage — le vocabulaire
+
+Romain a relu le patch et posé une **précision métier** qui n'était pas dans la consigne initiale.
+⭐ **Elle n'a rien changé au code fonctionnel — seulement à ce que l'écran AFFIRME.**
+
+**① La note affichée promettait plus que ce que le code garantit**
+
+| Avant | ⛔ Le défaut |
+|---|---|
+| *« Cette adresse ne change jamais. »* | **Trop absolu.** `url_tournoi_public` **peut** être modifié, et le multi-tournois amènera **plusieurs** adresses |
+
+| Après | ✅ La garantie RÉELLE |
+|---|---|
+| *« Publier ou masquer le tournoi ne change pas cette adresse. Tu peux la communiquer dès maintenant. Tant que le tournoi n'est pas publié, les visiteurs y voient l'écran “à venir”. »* | Elle porte sur le **bouton**, et **uniquement** sur lui |
+
+> 🎯 ⭐ **Une interface ne promet que ce que le code garantit.** Une promesse trop large ne se voit
+> pas le jour où on l'écrit : elle se paie le jour où elle devient fausse, et **personne ne se
+> souvient alors qu'elle n'avait jamais été vérifiée.**
+
+**② Le vocabulaire ne devait pas graver « un club = une URL »**
+
+⭐ **Maxilou organise volontairement UN tournoi à la fois**, et PUB-2 **reste dans ce modèle** :
+⛔ **aucun `tournoi_id`, aucun sélecteur, aucune gestion multi-tournois, aucune table, aucune route,
+aucune modification backend.** ⛔ **Le besoin futur est SIGNALÉ, pas préparé.**
+
+⚠️ Mais un même club organisera un jour **plusieurs tournois** — *U10 le samedi, U8 le dimanche* —
+avec des **liens et QR codes distincts**. Le vocabulaire dit donc *« la page publique **du
+tournoi** »*, ⛔ **jamais *« du club »***.
+
+> 🎯 **Pourquoi c'était une vraie correction, et pas du purisme.** ⭐ **Le vocabulaire d'une
+> interface survit au code qui l'a produit** : il est recopié dans les documents, les emails, les
+> habitudes. Une règle conceptuelle fausse écrite aujourd'hui coûte, le jour venu, **bien plus
+> qu'une phrase à corriger.**
+
+**③ Le mot « permanente » est tombé avec, et il n'était pas visé**
+
+⚠️ L'audit a trouvé **4 occurrences de « information PERMANENTE »** *(HTML, CSS, `PLAN.md` ×2)*.
+Elles voulaient dire *« qui ne dépend pas du bouton »* — mais ⛔ **elles se lisaient « qui ne change
+jamais »**, exactement le sens que Romain retirait. Remplacées par **« ne dépend pas du bouton »**.
+
+⚠️ De même, *« une seule règle, donc **une seule adresse** »* est devenu *« …donc **LA MÊME** adresse
+des deux côtés »* : ⛔ **« la même » n'est pas « une seule, pour toujours ».**
+
+**Ce qui a changé, et ce qui n'a PAS changé**
+
+| ✅ Modifié — **texte seulement** | ⛔ Inchangé — **tout le fonctionnel** |
+|---|---|
+| La note affichée *(2 variantes)* · le libellé *(« L'adresse de la page publique **de ce tournoi** »)* · 3 commentaires · `PLAN.md`, `DECISIONS.md` *(**D-049** enrichie)*, `ETAT.md`, `CHANGELOG.md`, `architecture.md` | `urlPagePublique` · la délégation de `dossier.js` · le lien « Scores en direct » · le **QR code** · Copier · Ouvrir · les écouteurs · le CSS · ⛔ **aucun `backend/`** |
+
+### 21.10 — Prochaine session recommandée
+
+⏸️ **PUB-3 — Plan technique et preuve du découplage** *(📄 documentaire, ⛔ aucune coupure)*.
+⛔ **Elle ne démarre pas automatiquement**, et ⛔ **pas avant que PUB-2 soit validée, commitée,
+fusionnée et contrôlée en réel.**

@@ -215,9 +215,15 @@ function referentSecurite(g) {
    -------------------------------------------------------------------------- */
 
 /** URL de la page publique de suivi : paramètre `url_tournoi_public` si présent
- *  dans Config, sinon la page tournoi.html qui vit à côté de ce dossier. */
+ *  dans Config, sinon la page tournoi.html qui vit à côté de ce dossier.
+ *
+ *  ⭐ La RÈGLE elle-même vit désormais dans `commun.js` (`urlPagePublique`), parce que
+ *  l'administration présente EXACTEMENT la même adresse à l'organisateur (carte
+ *  « Publier le tournoi »). Ce dossier reste le premier usage, et le plus ancien :
+ *  c'est cette adresse-là que les clubs reçoivent, en lien et en QR code. Le
+ *  comportement est INCHANGÉ — seule l'adresse de la règle a bougé. */
 function urlSuiviPublic(g) {
-  return txt(g.url_tournoi_public) || new URL('tournoi.html', window.location.href).toString();
+  return urlPagePublique(g);
 }
 
 /** Adresse à utiliser pour l'itinéraire et l'agenda (repli : lieu). */

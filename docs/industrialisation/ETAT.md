@@ -25,7 +25,28 @@
 > ⏳ **Ce repère ne se retire QUE lorsqu'un nouveau jeu aura effectivement été recréé** — et il
 > devra alors dire **par quoi** il a été remplacé.
 
-**Dernière mise à jour** : 2026-08-24 *(soir, suite 3)* — ✅ **PUB-1 EST TERMINÉ ET FUSIONNÉ DANS
+**Dernière mise à jour** : 2026-08-24 *(soir, suite 4)* — 🔨 **PUB-2 EST IMPLÉMENTÉ, ⛔ RIEN N'EST
+ENCORE COMMITÉ NI PUBLIÉ.**
+
+| | |
+|---|---|
+| 🔨 **PUB-2** | **IMPLÉMENTÉ sur la branche `claude/pub-2-acces-autonome-vk0uzt`, EN ATTENTE DE VALIDATION DE ROMAIN.** ⛔ **NON COMMITÉ · NON POUSSÉ · NON FUSIONNÉ · NON PUBLIÉ** — ⚠️ **cette ligne décrit un geste qui n'a PAS eu lieu : elle DOIT être relue et corrigée après le commit et la fusion** *(`CLAUDE.md` §8 septies)* |
+| 📄 **Ce que PUB-2 fait** | Dans la carte « Publier le tournoi » : ① l'**adresse** de la page publique, ② **Copier l'adresse**, ③ **Ouvrir la page**, ④ l'état publié / non publié *(qui existait déjà)*. Ordre visuel : **État → Adresse → Copier/Ouvrir → Publier/Masquer**. ⭐ La note affichée dit **« publier ou masquer ne change pas cette adresse »** — ⛔ **jamais « elle ne change jamais »** |
+| ⭐ **Ce que PUB-2 n'invente PAS** | 🔬 **L'adresse publique existait déjà et les clubs la recevaient** — lien « Scores en direct » **et QR code** du dossier club. PUB-2 rend **le même accès** disponible pour l'organisateur, ⛔ **il ne crée pas un second mécanisme** |
+| ⛔ **UN tournoi, pas un club** | ⭐ **Maxilou organise volontairement un tournoi à la fois, et PUB-2 reste dans ce modèle** — ⛔ **aucun `tournoi_id`, aucun sélecteur, aucun multi-tournois, aucune table, aucune route, aucun backend**. ⚠️ Le **vocabulaire** dit *« la page publique **du tournoi** »*, ⛔ **jamais *« du club »*** : un même club en organisera un jour plusieurs *(U10 samedi, U8 dimanche)*, chacun avec son adresse *(**D-049**)* |
+| 🆕 **D-049** | ⭐ *« Consommer une valeur existante n'est pas administrer cette valeur. »* `url_tournoi_public` est **lu** par PUB-2 ; ⛔ **sa CONFIGURATION reste rattachée à R-096 / M1-D**, et **R-096 reste OUVERT et INCHANGÉ** |
+| 🔬 **Source unique** | La règle de résolution vit dans **`urlPagePublique` (`frontend/js/commun.js`)** et **nulle part ailleurs** — **contrôlé** : une seule construction de `tournoi.html` et une seule lecture de `url_tournoi_public` dans tout le frontend |
+| ⛔ **Aucun backend** | 🔬 **Aucun fichier `backend/` modifié** ⇒ ⛔ **AUCUN redéploiement Apps Script.** ⚠️ **Publication frontend GitHub Pages : OUI** — mais **seulement à la fusion dans `main`**, qui **n'a pas eu lieu** |
+| ⚠️ **NON VÉRIFIÉ** | ⛔ **Ce dépôt n'a aucun harnais de test frontend** : le comportement de PUB-2 **ne peut pas** être couvert par un test automatisé. Seuls s'appliquent le `node --check` du workflow Pages *(**30/30 OK** en local)* et le **contrôle manuel après publication** |
+| ⛔ **M1-PUB** | **TOUJOURS PAS TERMINÉ** — son critère de clôture exige **les cinq lots** |
+| ⛔ **R-097** | **RESTE OUVERT** — ⭐ **PUB-2 n'y touche pas** : la vitrine **lit toujours** `tournoi_publie`. La coupure appartient à **PUB-3** puis **PUB-4** |
+| ⛔ **PUB-3 / PUB-4 / PUB-5** | **NON COMMENCÉS et NON ANTICIPÉS** — ⭐ le **faux aperçu** *(PUB-5)* est **intact**, et c'est voulu : tant que le couplage existe, il décrit encore quelque chose de vrai |
+| ⏸️ **M1-C1** | **TOUJOURS SUSPENDUE jusqu'à la CLÔTURE COMPLÈTE de M1-PUB** |
+| 🔴 **Le repère « données à recréer »** | **TOUJOURS ACTIF** — ⛔ **aucune donnée de tournoi n'a été recréée** |
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-24 (soir, suite 3)* : ✅ **PUB-1 EST TERMINÉ ET FUSIONNÉ DANS
 `main`.**
 
 | | |
@@ -680,9 +701,15 @@ exactement le mécanisme de `CLAUDE.md` §8 septies** : un état écrit **avant*
 
 🌐 **ET UN CHANTIER INTERMÉDIAIRE S'INTERCALE : M1-PUB *(= M1-E7)***, à traiter **avant M1-F**
 *(`PLAN.md` **§15.3 bis**)*. ✅ **Son micro-lot PUB-1 est TERMINÉ ET FUSIONNÉ dans `main`**
-*(`56dabd3`, `6fdffd8`)* ; ⏭️ **PUB-2 est le prochain, ⛔ NON COMMENCÉE** ; ⛔ **M1-PUB n'est pas
-terminé et R-097 reste OUVERT**. ⏸️ **M1-C1 est SUSPENDUE JUSQU'À LA CLÔTURE COMPLÈTE DE M1-PUB.**
-⛔ **M1-C → M1-F ne démarrent pas automatiquement.**
+*(`56dabd3`, `6fdffd8`)* ; 🔨 **PUB-2 est IMPLÉMENTÉ sur sa branche et EN ATTENTE DE VALIDATION —
+⛔ non commité, non poussé, non fusionné, non publié** ; ⛔ **PUB-3, PUB-4 et PUB-5 non commencés** ;
+⛔ **M1-PUB n'est pas terminé et R-097 reste OUVERT**. ⏸️ **M1-C1 est SUSPENDUE JUSQU'À LA CLÔTURE
+COMPLÈTE DE M1-PUB.** ⛔ **M1-C → M1-F ne démarrent pas automatiquement.**
+
+> ⚠️ **Cette ligne annonçait « PUB-2 est le prochain, NON COMMENCÉE ».** C'était vrai jusqu'à
+> l'implémentation de PUB-2, le 2026-08-24. ⭐ **Relue et corrigée dans le même lot** — c'est
+> précisément le paragraphe qui avait déjà décroché une fois *(voir l'encadré ci-dessus)*, et
+> **§8 septies** demande de le relire **après** le geste, pas plus tard.
 
 > ⚠️ **Cette ligne annonçait « 2 lots sur 8 », et c'était devenu faux.** Le chiffre datait du jour
 > de l'ouverture de CF-4b ; les six lots suivants ont été livrés sans que la phrase d'en-tête soit

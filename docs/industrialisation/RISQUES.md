@@ -1259,6 +1259,21 @@ raisonnable — mais **un tournoi sur 3 demi-journées ne peut être déclaré q
 | `nb_demi_journees` | ⛔ **HORS M1** — c'est une donnée **de l'édition** et une clé **réglementaire** *(famille 📜)*, elle n'a rien à faire dans « Mon club » |
 | Les repères internes | ⛔ **Rien à faire** — leur absence d'écran est normale |
 
+> 🌐 **Précision du 2026-08-24 — `url_tournoi_public` et le micro-lot PUB-2** *(décision **D-049**)*
+>
+> **PUB-2 a LU ce paramètre, il ne l'a pas administré.** L'administration affiche désormais
+> l'adresse de la page publique *(carte « Publier le tournoi » : voir · Copier · Ouvrir)*, en
+> appliquant la règle ① `url_tournoi_public` si renseignée ② sinon `tournoi.html` voisine.
+>
+> ⛔ **Ce paramètre n'a toujours AUCUN écran, et R-096 reste OUVERT et INCHANGÉ.** Aucun champ de
+> saisie n'a été créé, aucune écriture n'a été ajoutée : **sa configuration reste rattachée à
+> M1-D**, exactement comme avant. ⭐ *Consommer une valeur existante n'est pas administrer cette
+> valeur.*
+>
+> ⚠️ **Ce que cela change tout de même, et c'est utile à savoir pour M1-D** : quand M1-D donnera
+> enfin un écran à ce paramètre, il n'y aura **qu'une seule règle de résolution à respecter** —
+> `urlPagePublique` *(`frontend/js/commun.js`)* — partagée par le dossier club et l'administration.
+
 ---
 
 ### R-097 — Le témoin de publication sert de signal implicite à un système extérieur

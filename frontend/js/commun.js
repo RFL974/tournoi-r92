@@ -92,6 +92,49 @@ function estTermine(statut) {
   return /^\s*termin/i.test(String(statut));
 }
 
+/**
+ * 🌐 L'ADRESSE DE LA PAGE PUBLIQUE DU TOURNOI — la règle vit ICI, et nulle part ailleurs.
+ *
+ * Deux temps, et cet ordre est la règle :
+ *   ① le paramètre `url_tournoi_public` de Config s'il est renseigné ;
+ *   ② sinon la page `tournoi.html` qui vit À CÔTÉ de la page courante.
+ *
+ * ⭐ POURQUOI CETTE FONCTION EST DANS `commun.js` ET PAS DANS UN SEUL DES DEUX APPELANTS.
+ *   Deux endroits présentent cette même adresse à deux personnes différentes :
+ *     - le DOSSIER CLUB : lien « Scores en direct » + QR code (dossier.js, sectionSuivi) —
+ *       c'est ce que les clubs reçoivent, et cela existait AVANT ce helper ;
+ *     - l'ADMINISTRATION : carte « Publier le tournoi » — l'accès autonome de l'organisateur.
+ *   Écrite deux fois, la règle finirait par diverger : l'organisateur copierait une adresse
+ *   et les clubs en auraient reçu une autre. Le défaut serait SILENCIEUX — les deux pages
+ *   s'afficheraient normalement. Une seule règle, donc LA MÊME adresse des deux côtés.
+ *
+ * ⛔ « La même » ne veut PAS dire « une seule, pour toujours » : cette adresse est celle DU
+ * TOURNOI actuellement géré. Maxilou en gère un à la fois — mais un même club en organisera un
+ * jour plusieurs (U10 samedi, U8 dimanche), chacun avec la sienne. ⛔ Ne jamais raisonner ni
+ * écrire « un club = une URL ».
+ *
+ * ⛔ CETTE FONCTION NE FAIT QUE LIRE. Elle n'écrit jamais `url_tournoi_public` : la
+ * CONFIGURATION de ce paramètre reste ailleurs (registre : R-096). Consommer une valeur
+ * existante n'est pas administrer cette valeur.
+ *
+ * ⚠️ L'adresse ne dépend PAS de l'état publié : elle existe avant la publication et après
+ * le masquage (doctrine D-048 — « Publier ouvre une page. Publier ne parle à personne. »).
+ * C'est `tournoi.html` qui décide de ce qu'on y voit, pas cette fonction.
+ *
+ * @param {Object} global  Le bloc `global` de la config (Config, zone A).
+ * @return {string} Une URL absolue, toujours — jamais une chaîne vide.
+ */
+function urlPagePublique(global) {
+  // ⚠️ Le test est `== null` (vide ou absent), PAS `|| ''` : c'est exactement la règle du
+  // helper `txt()` que le dossier club appliquait avant ce regroupement. Un classeur peut
+  // renvoyer un NOMBRE ou un BOOLÉEN (une cellule n'est pas toujours du texte) ; `|| ''`
+  // ferait basculer un `0` vers le repli alors que `txt()` le conservait. Sémantique
+  // strictement conservée : le dossier club doit obtenir la MÊME adresse qu'avant.
+  const brut = global && global.url_tournoi_public;
+  const configuree = (brut == null) ? '' : String(brut).trim();
+  return configuree || new URL('tournoi.html', window.location.href).toString();
+}
+
 /* ---------------------------------------------------------------------------
    ÉTIQUETTES SUPER CHALLENGE (affichage partagé admin / saisie / public)
    Toutes ces fonctions renvoient `null` pour une catégorie NON Super Challenge :

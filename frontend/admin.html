@@ -820,6 +820,28 @@
           Indépendant de la génération des poules : prépare d'abord tout, publie quand c'est prêt.
         </p>
         <p class="publication-etat">État : <strong id="etat-publication">…</strong></p>
+
+        <!-- Accès à la page publique DU TOURNOI actuellement géré. Placé AVANT le bouton, et ce
+             n'est pas cosmétique : l'adresse ne dépend PAS du bouton, alors que le bouton est un
+             geste. Dans cet ordre, l'écran dit ce qui est vrai — l'adresse existe d'abord, publier
+             décide seulement de ce que le visiteur y voit. Placée après le bouton, elle se lirait
+             comme une CONSÉQUENCE de la publication, ce qui est faux.
+             ⛔ « Copier » et « Ouvrir » ne publient rien et n'écrivent rien sur le serveur.
+             ⛔ Cette adresse est celle DU TOURNOI, pas « celle du club » : Maxilou gère un tournoi
+             à la fois, et un même club en organisera un jour plusieurs (U10 samedi, U8 dimanche),
+             chacun avec son adresse. Ne rien écrire ici qui grave « un club = une URL ». -->
+        <div class="publication-acces">
+          <p class="publication-acces-lib">L'adresse de la page publique de ce tournoi</p>
+          <p class="publication-acces-url"><a id="acces-public-lien" href="#" target="_blank"
+             rel="noopener">…</a></p>
+          <div class="publication-acces-actions">
+            <button type="button" class="bouton" id="bouton-copier-adresse-publique">Copier l'adresse</button>
+            <button type="button" class="bouton" id="bouton-ouvrir-page-publique">Ouvrir la page</button>
+          </div>
+          <p class="publication-acces-note" id="acces-public-note">…</p>
+          <div id="message-acces-public" class="message-form" role="status" aria-live="polite"></div>
+        </div>
+
         <button id="bouton-publier" class="bouton">…</button>
         <div id="message-publication" class="message-form"></div>
       </section>

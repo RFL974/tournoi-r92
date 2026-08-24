@@ -238,10 +238,40 @@ en tête de fichier le pilotent : `ACTIONS_SCORES`, `ACTIONS_TOKEN` et `ACTIONS_
 > consomme `tournoi_publie` via la vue `live`**, mais couper dans le désordre supprimerait l'ancien
 > chemin de diffusion **avant** que l'organisateur dispose, dans Maxilou, d'un **accès explicite et
 > autonome** à sa page publique.
+> ⭐ **C'est précisément ce qu'apporte PUB-2** *(l'encadré ci-dessous)*. ⛔ **Cela ne referme pas
+> R-097** : la vitrine continue de lire `tournoi_publie` — la coupure appartient à PUB-3 puis PUB-4.
 >
 > ⚠️ **« Accessible » veut dire ici : le CONTENU public du tournoi devient visible.** ⭐ L'adresse de
 > la page, elle, **peut exister et être ouverte avant la publication ou après le masquage** — elle
 > présente alors son **état non publié**. **Une adresse n'est pas une autorisation.**
+
+##### 🌐 L'adresse de la page publique — une seule règle, deux endroits qui la présentent
+
+> ⭐ **L'adresse ne vient d'AUCUNE action serveur.** C'est l'adresse **du TOURNOI actuellement
+> géré** — ⛔ **pas « celle du club »** *(Maxilou en gère un à la fois ; plusieurs tournois d'un
+> même club auront un jour chacun la leur)*. Elle est **calculée côté navigateur**, par
+> `urlPagePublique` *(`frontend/js/commun.js`)*, en deux temps :
+> ① le paramètre `url_tournoi_public` de `Config` s'il est renseigné ; ② sinon la page
+> `tournoi.html` **voisine de la page courante**.
+>
+> | Qui la présente | À qui | Depuis |
+> |---|---|---|
+> | Le **dossier club** — lien « Scores en direct » **et QR code** *(`dossier.js`, `sectionSuivi`)* | aux **clubs invités** | l'usage **le plus ancien** |
+> | L'**administration** — carte « Publier le tournoi » : voir · **Copier** · **Ouvrir** | à l'**organisateur** | **PUB-2** |
+>
+> 🎯 **Pourquoi la règle est écrite dans `commun.js` et pas dans chacun des deux.** Écrite deux
+> fois, elle finirait par diverger : l'organisateur copierait une adresse pendant que les clubs en
+> auraient reçu une autre — et **rien ne s'allumerait**, les deux pages s'afficheraient
+> normalement. **Une seule règle, donc LA MÊME adresse des deux côtés** — ⛔ *« la même » n'est pas
+> « une seule, pour toujours » : c'est l'adresse du tournoi actuellement géré.*
+>
+> ⛔ **Cette règle ne fait que LIRE `url_tournoi_public`.** Sa **configuration** n'a toujours aucun
+> écran et reste rattachée à **R-096 / M1-D** : ⭐ **consommer une valeur existante n'est pas
+> administrer cette valeur.**
+>
+> ⛔ **« Copier » et « Ouvrir » n'écrivent rien** : aucun appel serveur, aucun effet sur
+> `tournoi_publie`. Les deux restent **actifs même quand le tournoi n'est pas publié** — c'est la
+> doctrine, pas une tolérance.
 
 #### I. Le dossier d'invitation et les clubs invités — 15 actions
 
@@ -339,7 +369,7 @@ Pages statiques (HTML/CSS/JS), **mobile-first**, publiées par GitHub Pages.
 | Fichier | Lignes | Rôle |
 |---|---|---|
 | `config.js` | 30 | **L'URL de la Web App** et les constantes partagées. Le **seul** fichier à modifier si l'adresse du backend change |
-| `commun.js` | 363 | Les utilitaires communs à **toutes** les pages (échappement du texte, libellés, comparaison de catégories) — écrits une fois au lieu d'être recopiés |
+| `commun.js` | 401 | Les utilitaires communs à **toutes** les pages (échappement du texte, libellés, comparaison de catégories) — écrits une fois au lieu d'être recopiés |
 | `api.js` | 218 | Les appels `fetch()` vers le backend. **Le seul endroit qui parle au serveur** |
 | `dialog.js` | 177 | Les fenêtres de confirmation « maison », qui remplacent `confirm` / `prompt` / `alert` du navigateur |
 | `commun-dossier.js` | 525 | Les utilitaires partagés par les trois pages « document » du parcours club |
@@ -358,7 +388,7 @@ Pages statiques (HTML/CSS/JS), **mobile-first**, publiées par GitHub Pages.
 |---|---|---|
 | `invitation.js` | 179 | L'invitation Phase 1 |
 | `reponse.js` | 453 | La réponse en libre-service du club |
-| `dossier.js` | 855 | Le dossier Phase 2, personnalisé par club |
+| `dossier.js` | 861 | Le dossier Phase 2, personnalisé par club |
 
 **Les partenaires (1)**
 
@@ -370,14 +400,14 @@ Pages statiques (HTML/CSS/JS), **mobile-first**, publiées par GitHub Pages.
 
 | Fichier | Lignes | Rôle |
 |---|---|---|
-| `admin.js` | 883 | Le noyau : chargement, navigation, orchestration des autres |
+| `admin.js` | 907 | Le noyau : chargement, navigation, orchestration des autres |
 | `admin-tableau-bord.js` | 356 | Le récapitulatif d'état et le fil « Où en suis-je ? » |
 | `admin-equipes.js` | 456 | Les équipes : liste, ajout, suppression |
 | `admin-reglages.js` | 767 | Les horaires et les catégories |
 | `admin-generation.js` | 742 | La génération des poules et du planning, et l'assistant d'arbitrage |
 | `admin-terrains.js` | 1 601 | Le découpage géométrique des grands terrains en mini-terrains |
 | `admin-invitations.js` | 1 879 | **Le plus gros fichier du frontend** : tout le sous-système d'invitation et de clubs invités |
-| `admin-infos-publication.js` | 664 | Les contenus publics du tournoi et la publication |
+| `admin-infos-publication.js` | 724 | Les contenus publics du tournoi et la publication |
 | `admin-conformite-ffr.js` | 905 | La conformité FFR — **informative, n'empêche jamais de sauvegarder** |
 | `admin-autorisation.js` | 1 013 | La demande d'autorisation FFR et sa feuille de report |
 | `admin-feuille-jour.js` | 339 | La feuille de fin de journée |

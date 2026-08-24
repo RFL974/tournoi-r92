@@ -615,7 +615,73 @@ function majPublication() {
     etat.textContent = '⚪️ Non publié (les visiteurs voient « à venir »)';
     bouton.innerHTML = svgIcone('monde') + 'Publier le tournoi';
   }
+  majAccesPublic();   // l'adresse, elle, ne dépend pas de l'état : seule la NOTE change
   majApercuTournoi(); // la légende de l'aperçu (publié / non publié) suit
+}
+
+/**
+ * Affiche l'ADRESSE de la page publique, et la note qui explique ce qu'on y verra.
+ *
+ * ⭐ L'adresse est la MÊME dans les deux états, et les deux boutons restent ACTIFS dans les
+ * deux états. Ce n'est pas une tolérance, c'est la doctrine : une adresse n'est pas une
+ * autorisation. La page existe avant la publication et après le masquage — elle affiche
+ * alors son écran « à venir » (frontend/js/tournoi.js, appliquerPublication).
+ * ⛔ Griser les boutons quand le tournoi n'est pas publié ferait croire l'inverse.
+ *
+ * ⚠️ C'est EXACTEMENT l'adresse que les clubs reçoivent dans leur dossier (lien
+ * « Scores en direct » + QR code) : la règle est écrite une seule fois, dans
+ * `urlPagePublique` (commun.js). Deux règles auraient fini par diverger.
+ */
+function majAccesPublic() {
+  const lien = document.getElementById('acces-public-lien');
+  const note = document.getElementById('acces-public-note');
+  if (!lien) return;
+  const url = urlPagePublique(configCourante.global || {});
+  lien.href = url;
+  lien.textContent = url;
+  if (note) {
+    // ⚠️ La note dit ce que PUB-2 GARANTIT — « publier ou masquer ne touche pas à cette
+    // adresse » — et RIEN de plus. ⛔ Ne pas écrire qu'elle « ne change jamais » : le
+    // paramètre `url_tournoi_public` peut être modifié, et un même club organisera un jour
+    // plusieurs tournois, donc plusieurs adresses. La garantie porte sur le BOUTON, pas sur
+    // l'éternité de l'URL.
+    note.textContent = estPublie()
+      ? 'Publier ou masquer le tournoi ne change pas cette adresse. Le tournoi étant publié, ' +
+        'les visiteurs y voient le tournoi en direct.'
+      : 'Publier ou masquer le tournoi ne change pas cette adresse. Tu peux la communiquer dès ' +
+        'maintenant. Tant que le tournoi n\'est pas publié, les visiteurs y voient l\'écran « à venir ».';
+  }
+  const msg = document.getElementById('message-acces-public');
+  if (msg) afficherMessage(msg, '', 'ok'); // efface un « adresse copiée » devenu obsolète
+}
+
+/**
+ * « Copier l'adresse ». Presse-papiers du navigateur, avec le repli déjà éprouvé ailleurs
+ * dans l'app (admin-invitations.js) : une petite fenêtre affiche l'adresse à copier à la main.
+ * Le presse-papiers échoue légitimement (page non sécurisée, permission refusée, vieux
+ * navigateur) — ce n'est pas une panne, et l'organisateur ne doit jamais rester bloqué.
+ *
+ * ⛔ AUCUNE écriture serveur, AUCUN appel réseau, AUCUN effet sur l'état de publication —
+ * ni dans le cas qui marche, ni dans le repli.
+ */
+async function onCopierAdressePublique() {
+  const message = document.getElementById('message-acces-public');
+  const url = urlPagePublique(configCourante.global || {});
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) throw new Error('presse-papiers indisponible');
+    await navigator.clipboard.writeText(url);
+    afficherMessage(message, '✅ Adresse copiée — tu peux la coller où tu veux.', 'ok');
+  } catch (e) {
+    afficherMessage(message, '', 'ok'); // pas d'échec affiché : on propose la copie manuelle
+    await dialogDemander('Copie automatique impossible sur cet appareil.\nSélectionne l\'adresse ci-dessous et copie-la :',
+      url, { ok: 'Fermer' });
+  }
+}
+
+/** « Ouvrir la page » : nouvel onglet, sans lien de contexte avec l'admin (noopener).
+ *  ⛔ AUCUNE écriture serveur, AUCUN effet sur l'état de publication. */
+function onOuvrirPagePublique() {
+  window.open(urlPagePublique(configCourante.global || {}), '_blank', 'noopener');
 }
 
 /**
