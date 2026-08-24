@@ -7809,3 +7809,68 @@ saison · carnet des clubs avec noms, contacts et statut · partenaires)*. ⛔ *
 ⛔ **Le point ⑦ reste NON.** Aucune réinitialisation n'a été jouée — ni en production, ni sur une
 copie. ⭐ **Que les deux surfaces soient en service ne prouve toujours pas l'effet destructif** :
 cela reste à établir par un geste réel, organisé séparément.
+
+### 19.12 — ⚡ Addendum du 2026-08-24 — la vérification visuelle a finalement été faite
+
+> ⛔ **Le §19.11 n'est pas réécrit.** Il disait que *« la page réellement servie n'a pas été
+> observée »*, et c'était vrai : l'environnement de travail refuse `github.io`. ⭐ **Ce que cet
+> addendum ajoute, c'est que la limite n'était pas celle du projet — c'était celle de l'outil. Un
+> humain devant un navigateur l'a levée en deux minutes.**
+
+**Contrôle manuel, mené par Romain sur `https://rfl974.github.io/tournoi-r92/admin.html` :**
+
+| Étape | Constaté |
+|---|---|
+| Rubrique **Réinitialiser**, bouton *« Réinitialiser le tournoi »* | Le **premier dialogue** s'affiche |
+| Son contenu | ✅ **le nouveau texte M1-B** — les quatre lignes de « CE QUI EST SUPPRIMÉ » *(dont les données de la demande d'autorisation : médecin, secours, arbitrage, terrain et vestiaires utilisés, hébergement, repas, goûters, récompenses)* et celles de « CE QUI EST CONSERVÉ » |
+| Ses deux choix | **`ANNULER`** et **`CONTINUER`** |
+| Geste effectué | ⭐ **`ANNULER` uniquement.** ⛔ **`CONTINUER` n'a JAMAIS été cliqué** |
+| État après annulation | **2 catégories, 38 équipes, planning matin toujours « Validé »** — la page a retrouvé son état |
+
+**Ce que cette observation établit — et c'est plus que « la page est à jour » :**
+
+| | |
+|---|---|
+| ✅ **Frontend déployé** | workflow Pages `success` |
+| ✅ **Frontend réellement observé** | ⭐ dans un navigateur, sur l'adresse publique |
+| ✅ **Le garde-fou s'affiche AVANT toute opération** | l'ordre est le bon : on prévient, puis on agit |
+| ✅ **L'annulation ne déclenche aucune réinitialisation observable** | ⚠️ **preuve d'OBSERVATION** : l'état visible est resté inchangé *(2 catégories, 38 équipes, planning matin « Validé »)*. ⛔ **Les compteurs visibles ne prouvent pas, à eux seuls, l'intégrité de TOUTES les données** — voir la preuve de code ci-dessous |
+| ⛔ **Le comportement destructif** | **PAS testé** |
+
+> 🎯 **Pourquoi le point ⑦ reste NON, et la nuance est exactement celle qui compte** : ce contrôle
+> prouve **la moitié rassurante** — celle où l'on ne casse rien. ⛔ **Il ne prouve rien de la moitié
+> qui fait peur** : que les 26 champs et les récompenses soient réellement vidés, et que les 10
+> permanents survivent réellement. **`CONTINUER` n'a pas été cliqué, et c'était le bon choix** :
+> ⛔ cela ne se teste pas sur des données en service.
+>
+> ⭐ **Un garde-fou vérifié n'est pas un effet vérifié.** La suite est de décider **comment** exercer
+> le geste destructif sur une **copie sécurisée** du classeur — jamais sur la production.
+
+#### 19.12 bis — ⭐ Deux preuves de nature différente, et il ne faut pas les confondre
+
+> ⚠️ **Une première rédaction écrivait *« ANNULER n'efface rien — vérifié sur les compteurs
+> réels »*.** ⛔ **C'était plus fort que l'observation** : trois compteurs à l'écran ne disent rien
+> des **36 `org_*`**, des récompenses, ni du reste du classeur. **La formulation a été ramenée à ce
+> qui a réellement été vu**, et la partie forte a été cherchée là où elle pouvait être **établie** :
+> dans le code.
+
+| | Ce qu'elle établit | Ce qu'elle n'établit PAS |
+|---|---|---|
+| **① Observation au navigateur** | L'annulation **n'a déclenché aucune réinitialisation observable** ; l'état visible est resté inchangé *(2 catégories, 38 équipes, planning matin « Validé »)* | ⛔ **rien** sur les données non affichées |
+| **② Lecture du code PUBLIÉ** *(`origin/main`)* | ⭐ **Aucun appel serveur n'est atteignable avant la double confirmation** | ⛔ rien sur ce qui se passe **après** `CONTINUER` |
+
+**Le détail de la preuve ②, vérifiable ligne à ligne dans `origin/main` :**
+
+- `onReinitialiser` *(`frontend/js/admin.js:664`)* n'exécute, avant sa première confirmation, que
+  **deux lectures du DOM** *(`getElementById`)* — ⛔ **aucun appel réseau** ;
+- `dialogConfirmer` *(`frontend/js/dialog.js`)* ne contient **ni `fetch`, ni `XMLHttpRequest`, ni
+  `ecrireAdmin`, ni écriture persistante** : il construit un panneau, attend, puis rend une valeur.
+  À l'annulation *(bouton, `Échap`, ou clic hors du panneau)*, il rend **`false`** ;
+- `if (!await dialogConfirmer(…)) return;` ➡️ la fonction **sort à la ligne 692** ;
+- le **seul** appel d'écriture, `ecrireAdmin('reinitialiserTournoi', {})`, est à la **ligne 702**,
+  ⭐ **après une SECONDE confirmation**.
+
+> 🎯 **Ce que la distinction protège** : si l'on avait écrit *« Annuler n'efface rien »* sur la foi
+> de trois compteurs, on aurait fabriqué **une preuve d'apparence** — exactement le mécanisme du
+> `ping` vert de **D-040**, qui répondait pareil avant et après. ⭐ *Une observation prouve ce
+> qu'elle montre ; c'est le code qui dit ce qui est atteignable.*
