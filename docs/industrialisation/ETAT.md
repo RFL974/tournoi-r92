@@ -9,8 +9,29 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-24 *(fin de journée)* — 🏁 **M1-A EST TERMINÉE, FUSIONNÉE ET
-PUBLIÉE DANS `main`.**
+**Dernière mise à jour** : 2026-08-24 *(soir)* — 📏 **UNE RÈGLE PERMANENTE DE PLUS, ET M1-A EST
+CLÔTURÉE SANS RELIQUAT INTERNE.**
+
+Micro-lot **méthodologique et documentaire**. ⛔ **Aucun changement fonctionnel : aucun fichier
+`backend/`, aucun fichier `frontend/`, aucun test, aucune donnée du classeur, aucun déploiement.**
+
+| | |
+|---|---|
+| 📏 🆕 **`CLAUDE.md` §8 septies** | **« Règle de l'état constaté APRÈS le geste »** — un état qui décrit un commit, une fusion, une poussée, une publication ou un redéploiement se **contrôle après** l'exécution du geste ; un état écrit avant est **une intention, pas un état**. Elle protège explicitement les **traces historiques** : ce qui était vrai à sa date **ne se réécrit pas** |
+| 📏 **`CLAUDE.md` §12.4** | un **point 5 neuf** dans la règle d'arrêt — relire, **après** le geste, ce que les documents d'état en affirment *(les anciens 5, 6 et 7 deviennent 6, 7 et 8 ; ⛔ **les points 1 et 2, les seuls cités ailleurs, ne bougent pas**)*. Et **§12.4 bis** : le rapport de fin de session dit ce qui a été **constaté**, pas ce qui va l'être |
+| 🏁 **M1-A** | **CLÔTURÉE, et sans ambiguïté** : la lecture des deux URL en **sort** et devient un **reliquat EXTERNE non bloquant** *(détail plus bas)* |
+| ⛔ **M1-B** | **toujours PAS commencée** — et ce reliquat ne la déclenche pas |
+
+> 🎯 **Pourquoi cette règle, et pourquoi maintenant** : **quatre états faux en trois jours**, tous du
+> même type — **R-094**, le *« 2 lots sur 8 »* de CF-4b, **L8**, puis **M1-A annoncée non fusionnée
+> après sa fusion**. Chacun était **vrai le jour où il a été écrit**, et faux dès le geste suivant.
+> ⭐ **Quatre répétitions ne sont plus une inattention : c'est un défaut de méthode**, et il se
+> corrige par une règle, pas par un effort d'attention.
+
+---
+
+*Ce qui reste vrai depuis la mise à jour du même jour (fin de journée)* : 🏁 **M1-A EST TERMINÉE,
+FUSIONNÉE ET PUBLIÉE DANS `main`.**
 
 **Ses trois commits sont dans l'historique de `main`**, par **fast-forward** — ⛔ **aucun n'a été
 réécrit, aucun commit de fusion créé** :
@@ -21,15 +42,17 @@ réécrit, aucun commit de fusion créé** :
 | **`b65a6b0`** | Le journal de session — `SESSIONS.md` **§17** |
 | **`aff6d5f`** | Le correctif : statut de M1-A, et **L5 était bien déployé** |
 
-`origin/main` : **`94cd6a2` → `aff6d5f`**.
+`origin/main` : **`94cd6a2` → `aff6d5f`** *(effet de CETTE fusion)*. ⚠️ **`origin/main` a avancé
+depuis** — l'état publié **du jour** ne se recopie pas ici, il se lit avec `git rev-parse origin/main`
+*(§8 quater : un repère volatil n'a qu'une source, et c'est le dépôt lui-même)*.
 
 **L'état exact au terme de M1-A** *(chaque ligne est vérifiée, aucune n'est déduite)* :
 
 | | |
 |---|---|
-| ✅ **M1-A** | **terminée, fusionnée, publiée** |
+| ✅ **M1-A** | 🏁 **TERMINÉE, FUSIONNÉE, PUBLIÉE — et CLÔTURÉE.** ⛔ **Plus rien n'y est ouvert** |
 | ⛔ **M1-B** | **PAS commencée** — et elle ne démarre pas sans autorisation explicite |
-| ⛔ **Les deux URL du classeur** | **toujours PAS LUES** — la politique réseau de l'environnement refuse `script.google.com` *(403 au `CONNECT`)*. ⏳ **Reste en attente** |
+| 🔻 **Les deux URL du classeur** | **toujours PAS LUES** — la politique réseau de l'environnement refuse `script.google.com` *(403 au `CONNECT`)*. ⭐ **RELIQUAT EXTERNE, NON BLOQUANT** : il est **sorti de M1-A** *(qui est close)* et **tracé au `PLAN.md` §15.8**. ⛔ **Il ne conditionne le statut d'aucune étape** |
 | ⛔ **Données du classeur** | **aucune modifiée**, aucune lue |
 | ⛔ **Backend M1** | **aucun redéploiement** — M1-A ne touche **aucun** fichier `backend/` |
 | ⚠️ **CF-4b/L8** | sa **part backend** reste **NON redéployée** *(sa part frontend, elle, est publiée)* |
@@ -44,8 +67,11 @@ réécrit, aucun commit de fusion créé** :
 >
 > 🎯 **Ce que quatre répétitions démontrent** : ce n'est plus une inattention, c'est **un défaut de
 > séquence**. La documentation de suivi devrait être écrite **après** le commit, pas avant — ou
-> alors relue juste après. ⏳ **À arbitrer avec Romain** : cela mériterait peut-être une règle
-> permanente, au même titre que **§8 bis** et **§8 ter**.
+> alors relue juste après.
+>
+> ✅ **ARBITRÉ ET FERMÉ le 2026-08-24** : ce défaut est devenu une **règle permanente**,
+> **`CLAUDE.md` §8 septies** *(« règle de l'état constaté APRÈS le geste »)*, avec un **point 5
+> neuf** dans la règle d'arrêt **§12.4** — la relecture après le geste. Décision **D-046**.
 
 ⚡ **M1 a changé de nature.** Ce n'était qu'une opération manuelle *(vider deux URL, remplacer une
 affiche)* ; c'est désormais **l'externalisation progressive des données propres à l'organisation**,
@@ -77,6 +103,19 @@ Maxilou s'écartent du vocabulaire officiel** : *« Nombre de vestiaires »* là
 `url_site_association` et `url_instagram` **est impossible depuis cette session** — la politique
 réseau de l'environnement refuse `script.google.com` *(403 au CONNECT)*. ⛔ **Aucune valeur du
 classeur n'a donc été lue, ni modifiée.**
+
+> 🔻 **CE POINT EST TRANCHÉ le 2026-08-24 *(soir)* — décision `D-047`**, et il faut le lire en
+> entier : il a été présenté comme *« une chose reste en attente dans M1-A »*, ce qui rendait la
+> clôture de l'étape ambiguë.
+>
+> | | |
+> |---|---|
+> | **M1-A** | 🏁 **DÉFINITIVEMENT CLÔTURÉE.** ⛔ **Son statut ne dépend plus de rien** |
+> | **La lecture des deux URL** | 🔻 **RELIQUAT EXTERNE**, ⛔ **non bloquant**. Il **sort** du périmètre de M1-A |
+> | **Pourquoi « externe »** | Le geste n'est pas empêché par le projet mais par **l'environnement d'exécution** *(blocage réseau vers `script.google.com`)*. **Aucune session ne peut le lever depuis ici** |
+> | **Il reste tracé où ?** | `PLAN.md` **§15.8**, ligne dédiée — ⛔ **et il ne doit pas être oublié** |
+> | **Quand sera-t-il fait ?** | **Dès qu'un environnement autorisant cette lecture sera disponible** ; à défaut, il est **repris par M1-F**, qui traite déjà les valeurs du classeur |
+> | ⛔ **Ce qu'il ne déclenche PAS** | **M1-B ne démarre pas pour autant** — aucune étape ne démarre sans validation explicite *(`PLAN.md` §15.2)* |
 
 📐 **Remesures réelles** *(jamais recopiées — §8 quater)* : `Code.gs` **8342** l. · `Tests.gs`
 **4314** l. · **65** actions · **8** pages · **26** fichiers JS · **12** onglets — **tous les comptes

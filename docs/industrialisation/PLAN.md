@@ -16,7 +16,10 @@ désormais **l'externalisation progressive des données propres à l'organisatio
 M1-A → M1-F**. 🎯 **Le motif** : les deux URL étaient **le symptôme, pas la cause** — la cause est
 que **l'application n'a aucun endroit où un club se décrit**. Décisions fondatrices : **D-042** à
 **D-045**. ⚠️ **L'ancienne fiche est conservée au §14.3** comme trace de son périmètre d'origine.
-🚧 **M1-A est en cours** *(documentaire)* ; ⛔ **M1-B → M1-F ne démarrent pas automatiquement**.
+🏁 **M1-A est TERMINÉE, FUSIONNÉE ET CLÔTURÉE** *(voir **§15.8**)* ; ⛔ **M1-B → M1-F ne démarrent
+pas automatiquement**. ⚡ **Corrigé le 2026-08-24 *(soir)*** : cette ligne annonçait *« M1-A est en
+cours »*, **faux depuis sa fusion le jour même** — c'est le cas d'école de **`CLAUDE.md` §8 septies**,
+un état écrit **avant** le geste et jamais relu **après**.
 ⚡ **Deux problèmes nouveaux au registre** : **R-095** *(le nom du stade disparaît du document
 fédéral — ⛔ **hors M1**)* et **R-096** *(douze réglages sans écran)* ; **R-033 voit son périmètre
 élargi** de « les contacts FFR » à **36 `org_*` sur 36**.
@@ -2477,6 +2480,12 @@ loué en ligne, ni parcours de première configuration complet, ni répertoire d
 > `invitation`, sans clé)*, puis **vidage UNIQUEMENT** si elles portent encore une attribution
 > institutionnelle réelle, avec relevé avant/après. ⛔ **Rien d'autre du classeur n'est touché — ni
 > l'affiche, ni `tournoi_affiche_id`, ni le logo, ni un `org_*`, ni une donnée de tournoi.**
+>
+> 🔻 **CETTE OPÉRATION N'A PAS PU ÊTRE FAITE, ET ELLE NE FAIT PLUS PARTIE DE M1-A** *(tranché le
+> 2026-08-24, soir)*. La politique réseau de l'environnement refuse `script.google.com` *(403 au
+> `CONNECT`)* : ⛔ **aucune session ne peut lever ce blocage depuis ici**. L'autorisation de Romain
+> **reste valable** ; l'opération devient un **reliquat externe non bloquant**, suivi à **§15.8**.
+> ⭐ **M1-A est CLÔTURÉE sans lui** — son objectif était documentaire, et il est atteint.
 
 #### M1-B — Sécurisation de la réinitialisation
 
@@ -2539,7 +2548,7 @@ loué en ligne, ni parcours de première configuration complet, ni répertoire d
 | | |
 |---|---|
 | **Objectif** | Retirer les dernières valeurs institutionnelles **une fois que le club a où mettre les siennes**, brancher le logo, clore CF-4b |
-| **Contenu** | **Données** : l'**affiche** *(`tournoi_affiche_id`)* · le logo du club. **Code** : le logo lu depuis le profil sur les 8 pages + l'email, ⛔ **repli sur le repère neutre actuel**. **Docs** : `ETAT.md`, `PLAN.md`, `CHANGELOG.md`, `REFERENTIELS.md` |
+| **Contenu** | **Données** : l'**affiche** *(`tournoi_affiche_id`)* · le logo du club · 🔻 **les deux URL du classeur si le reliquat externe n'a pas pu être traité avant** *(**§15.8**, **D-047**)*. **Code** : le logo lu depuis le profil sur les 8 pages + l'email, ⛔ **repli sur le repère neutre actuel**. **Docs** : `ETAT.md`, `PLAN.md`, `CHANGELOG.md`, `REFERENTIELS.md` |
 | ⛔ **Interdiction** | **Ne fabriquer AUCUN visuel temporaire** pour neutraliser l'affiche avant que le système cible ne soit prêt *(arbitrage de Romain, 2026-08-24)*. L'affiche est **remplacée par celle du club** ou **retirée** — jamais par un ersatz |
 | **Risques** | **R-F1** le logo rouvre une attribution ➡️ profil vide ⇒ repère neutre inchangé · **R-F2** l'affiche siglée voyage encore dans un email *(`cid:affiche`, `Code.gs:5155`)* *(**P1**)* ➡️ **vérification sur un email reçu**, pas sur le code · **R-F3** déclarer CF-4b close sans avoir tout regardé ➡️ **la phrase du contrôle ⑯** doit pouvoir s'écrire |
 | **Tests** | Recherche d'occurrences **en locale UTF-8** ⚠️ *(sans elle, `grep` a déjà répondu « 0 » là où il y en avait 10)* · les 3 vues publiques relues · **1 email réellement reçu** · le PDF · le dossier d'un club de test · l'affiche à l'œil · ⭐ **le scénario `S-M1` (§15.4)** |
@@ -2607,7 +2616,7 @@ M1 est terminé quand **les huit conditions** sont réunies :
 | Condition de clôture CF-4b | Où elle est satisfaite |
 |---|---|
 | Plus aucune attribution dans les **textes** | ✅ fait *(L2, L7)* |
-| Plus aucun **lien** institutionnel | ✅ code fait *(L3)* · **valeurs du classeur : M1-A ou M1-F** |
+| Plus aucun **lien** institutionnel | ✅ code fait *(L3)* · **valeurs du classeur : 🔻 reliquat externe *(§15.8)*, sinon M1-F** — ⚠️ **plus M1-A, qui est close** |
 | Plus aucun **logo** institutionnel | ✅ fait *(L4)* · **logo du club : M1-F** |
 | **Nom d'expéditeur** neutre | ✅ **FAIT ET EN SERVICE** — code *(L5-A, `5649f83`)* **et** redéploiement Google *(L5-B)*, ⭐ **prouvé par un email réellement reçu**. ⚠️ **Une seule des 4 lignes exercée en réel** |
 | **Couplage fonctionnel** au club retiré | ✅ code fait *(L8, `be57f97`)* · ✅ **part frontend PUBLIÉE** *(Pages `success`)* · ⛔ **part backend PAS en service** — attend le redéploiement de **M1-B** |
@@ -2617,8 +2626,10 @@ M1 est terminé quand **les huit conditions** sont réunies :
 > ⚠️ **Le coût de ce séquençage, et il doit être écrit.** **CF-4a — les mentions légales — reste
 > suspendue derrière CF-4b**, or CF-0 a établi que c'est **le seul écart RÉEL et ACTUEL** du projet
 > *([R10] : le site est publié)*. **Allonger CF-4b retarde donc le seul point qui n'est pas un
-> prérequis.** ⭐ **C'est un coût assumé, pas un oubli** — et il est réduit si les deux URL sont
-> vidées dès **M1-A**.
+> prérequis.** ⭐ **C'est un coût assumé, pas un oubli** — et il serait réduit si les deux URL
+> pouvaient être vidées tôt. ⚠️ **Corrigé le 2026-08-24 *(soir)*** : cette phrase disait *« dès
+> M1-A »*, ce qui n'est plus possible — **M1-A est close** et la lecture des deux URL est devenue un
+> **reliquat externe** *(§15.8)*, empêché par la politique réseau de l'environnement.
 
 ### 15.7 — ⛔ Ce qui est enregistré mais reste HORS M1
 
@@ -2639,5 +2650,21 @@ M1 est terminé quand **les huit conditions** sont réunies :
 
 | Étape | État |
 |---|---|
-| **M1-A** | 🏁 **TERMINÉE, FUSIONNÉE ET PUBLIÉE dans `main`** le 2026-08-24 — **fast-forward**, ⛔ **sans réécrire un seul commit ni créer de commit de fusion** : **`9abaebc`** *(les 7 documents)* · **`b65a6b0`** *(journal §17)* · **`aff6d5f`** *(correctif de statut et de déploiement)*. ⏳ **Une seule chose reste en attente dans M1-A** : la lecture des deux URL du classeur, **bloquée par la politique réseau** de l'environnement *(403 sur `script.google.com`)* — ⛔ **ce n'est pas un oubli, et cela ne bloque pas M1-B** |
+| **M1-A** | 🏁 **TERMINÉE, FUSIONNÉE, PUBLIÉE dans `main`, et CLÔTURÉE** le 2026-08-24 — **fast-forward**, ⛔ **sans réécrire un seul commit ni créer de commit de fusion** : **`9abaebc`** *(les 7 documents)* · **`b65a6b0`** *(journal §17)* · **`aff6d5f`** *(correctif de statut et de déploiement)*. ⛔ **Plus rien n'est ouvert dans cette étape** |
 | **M1-B → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite** |
+
+> ⚡ **Levée d'ambiguïté, 2026-08-24 *(soir)*.** Cette case annonçait *« TERMINÉE »* **et**
+> *« une seule chose reste en attente dans M1-A »* : les deux ensemble rendaient la clôture
+> incertaine — une étape dont quelque chose *« reste en attente »* n'est pas close. ⭐ **Le geste
+> concerné n'a pas disparu : il a changé de nature**, et il est suivi ci-dessous.
+
+#### 🔻 Reliquat EXTERNE — hors étapes, non bloquant *(décision **D-047**)*
+
+| | |
+|---|---|
+| **Ce que c'est** | La **lecture seule** de `url_site_association` et `url_instagram` dans l'onglet `Config`, puis leur **vidage** si elles portent encore une attribution institutionnelle réelle *(autorisation de Romain du 2026-08-24, relevé avant/après — fiche **M1-A** ci-dessus)* |
+| **Pourquoi il n'est pas fait** | ⛔ **Empêchement d'ENVIRONNEMENT, pas de projet** : la politique réseau refuse `script.google.com` *(403 au `CONNECT`)*. **Aucune session ne peut le lever depuis ici** |
+| **Bloque-t-il quelque chose ?** | ⛔ **NON** — ni le statut de **M1-A** *(close)*, ni **M1-B**, ni aucune autre étape |
+| **Déclenche-t-il quelque chose ?** | ⛔ **NON.** ⚠️ **M1-B ne démarre pas parce que ce reliquat existe** — aucune étape ne démarre sans validation explicite *(§15.2)* |
+| **Quand sera-t-il fait ?** | **Dès qu'un environnement autorisant cette lecture sera disponible** *(un accès direct au classeur suffit)*. À défaut, il est **repris par M1-F**, qui traite déjà les valeurs institutionnelles du classeur |
+| **Ce qu'il ne faut PAS faire** | ⛔ **L'oublier** — c'est la raison d'être de cette ligne · ⛔ **le transformer en blocage** — il n'en est pas un · ⛔ **le mélanger à un commit** : il ne touche **aucun fichier du dépôt** |

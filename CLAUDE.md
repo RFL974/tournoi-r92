@@ -24,6 +24,7 @@
 - [8 quater. Règle de la source unique](#8-quater-règle-de-la-source-unique)
 - [8 quinquies. Règle de la mesure complète](#8-quinquies-règle-de-la-mesure-complète)
 - [8 sexies. Règle de la date civile](#8-sexies-règle-de-la-date-civile)
+- [8 septies. Règle de l'état constaté après le geste](#8-septies-règle-de-létat-constaté-après-le-geste)
 - [9. Règle de transparence](#9-règle-de-transparence)
 - [10. Règle de prudence](#10-règle-de-prudence)
 - [11. Objectif final](#11-objectif-final)
@@ -822,6 +823,112 @@ pour n'en garder que le jour retournerait le défaut contre l'autre moitié du m
 
 ---
 
+## 8 septies. RÈGLE DE L'ÉTAT CONSTATÉ APRÈS LE GESTE
+
+> ⚠️ **Cette règle s'applique à TOUTES les sessions du projet.** Elle est née de **quatre
+> décrochages du même type en trois jours** *(2026-08-22 → 2026-08-24)*, et validée par Romain le
+> 2026-08-24 — **D-046**.
+>
+> Elle est le **pendant de §8 bis pour les documents de SUIVI** : **§8 bis** garde à jour la carte de
+> ce que l'application **fait** ; celle-ci garde vraie la description de ce que le chantier **a
+> réellement fait**.
+
+**La règle, en deux phrases :**
+
+> **Un état qui décrit un geste — commit, fusion, poussée vers GitHub, publication, redéploiement,
+> opération manuelle sur le classeur — se contrôle APRÈS l'exécution effective de ce geste. Un état
+> écrit avant n'est jamais l'état final : c'est une intention.**
+>
+> **Avant la clôture d'un lot ou d'une session, les documents d'état concernés sont relus contre ce
+> qui est CONSTATÉ — jamais contre ce qui était prévu.**
+
+### Pourquoi cette règle existe
+
+Parce que le même décrochage s'est produit **quatre fois en trois jours**, et qu'il ne s'agit plus
+d'une inattention :
+
+| Ce que le document annonçait | Ce qui était vrai au même moment |
+|---|---|
+| **R-094** *« appliqué localement, non commité »* | commit **`94cd6a2`**, poussé, et **publié par GitHub Pages** |
+| **CF-4b** *« 2 lots sur 8 »* | les **8 lots** étaient livrés — le chiffre datait de l'ouverture du chantier |
+| **CF-4b / L8** *« patch appliqué, non commité »* | commité **`be57f97`**, poussé, part frontend **publiée** |
+| **M1-A** *« NON FUSIONNÉE dans `main` »* | fusionnée en **fast-forward** le jour même |
+
+⭐ **Chacune de ces phrases était VRAIE le jour où elle a été écrite.** Aucune n'était un mensonge,
+aucune n'était une négligence de rédaction : **elles ont simplement été écrites AVANT le geste, et
+jamais relues APRÈS.**
+
+> 🎯 **Le mécanisme, et il est automatique** : la **§12.4** demande de mettre à jour la documentation
+> de suivi *(point 1)* **puis** de créer le commit *(point 4)*. Suivie à la lettre, elle produit donc
+> un état rédigé **avant** le geste qu'il décrit — et rien, ensuite, ne demandait de le relire.
+> **Le défaut n'était pas la discipline : c'était l'ORDRE.**
+>
+> ⚠️ **Ce n'est pas de la paperasse.** Un état faux dans ce sens-là est **particulièrement
+> trompeur** : il annonce qu'il **reste** du travail là où il n'en reste pas. Une session suivante
+> refait un geste déjà fait, ou pire — croyant un lot non publié, elle le republie, le réécrit, ou
+> retarde ce qui en dépendait.
+
+### Le geste, et ce qui le CONSTATE
+
+⛔ **Un document ne constate jamais un geste.** Seule une **observation** le fait :
+
+| Le geste | Ce qui le constate |
+|---|---|
+| **Commit** | `git log` / `git show --stat` : le SHA existe, **et son contenu est celui annoncé** |
+| **Poussée** | `git status -sb` *(plus d'« en avance de N »)* et `git rev-parse origin/<branche>` = `HEAD` |
+| **Fusion** | le SHA de `origin/main` **après** coup. ⚠️ Et pour le **périmètre réellement publié** : `git diff origin/main..HEAD` **avant** la poussée — *ce qu'un fast-forward affiche n'est pas ce qu'il publie* |
+| **Publication du frontend** | l'exécution du workflow Pages : **`success`**, ⭐ **sur CE commit** |
+| **Redéploiement du serveur** | ⭐ **D-040** : un témoin **discriminant**. ⛔ Ni un `ping`, ni un bilan de tests vert |
+| **Opération manuelle sur le classeur** | un relevé **avant / après** |
+| **Comportement en production** | ⛔ **ne se constate pas depuis le dépôt** *(**§13.6**)* — il faut un email **reçu**, une page **ouverte**, un PDF **produit** |
+
+### Les trois temps — et c'est le troisième qu'on saute
+
+| | |
+|---|---|
+| **① AVANT** | Rédiger, préparer, annoncer. ✅ **Utile, et non interdit** |
+| **② LE GESTE** | Commit, poussée, fusion, publication, redéploiement, opération manuelle |
+| **③ APRÈS** | ⭐ **Relire ce que les documents affirment DU GESTE, et corriger.** ⛔ **Ce temps n'est pas facultatif** |
+
+**Le repérage est mécanique.** Dans ce qu'on vient d'écrire, chercher les formulations qui parlent
+d'un geste : `non commité`, `non poussé`, `non fusionné`, `reste à`, `à commiter`, `prêt à`,
+`non déployé`, `non publié`, `en cours`, `en attente de`.
+
+> Chacune se relit après le geste. **Soit elle est encore vraie, soit elle est fausse — il n'y a pas
+> de troisième possibilité.**
+
+### ⛔ Ce qui ne se réécrit JAMAIS : la trace historique
+
+| ✅ **Sources d'état COURANT** — se corrigent | ⛔ **Traces HISTORIQUES** — ne se réécrivent pas |
+|---|---|
+| le bloc de tête *« Dernière mise à jour »* de `ETAT.md`, `PLAN.md`, `RISQUES.md`, `DECISIONS.md` · les **tableaux d'avancement** · les **statuts** de `RISQUES.md` · les **fiches de chantier** de `PLAN.md` · la « carte » de **§8 bis** | `SESSIONS.md` · `AUDIT.md` · `RAPPORT-AUDIT.md` · les entrées **passées** du `CHANGELOG.md` · les blocs *« Rappel de la mise à jour précédente »* · les fiches de décision **déjà validées** |
+
+> ⭐ **Une phrase vraie à sa date reste écrite telle quelle.** Le nouvel état s'**ajoute** — un
+> addendum daté — ou bien c'est la **source d'état courant** qui est corrigée. ⛔ **On ne repeint
+> jamais le passé pour qu'il ressemble au présent** : un journal réécrit perd la seule chose qu'il
+> apporte — **ce qu'on savait, et quand.**
+
+⭐ **Et lorsqu'on corrige une source d'état courant, on dit ce qu'elle annonçait** — *« cette ligne
+annonçait X, faux depuis telle date »* — dès lors que l'écart a duré ou a pu tromper quelqu'un.
+**Ce n'est pas de l'auto-flagellation** : c'est ce qui permet à la session suivante de savoir que la
+valeur a bougé, au lieu de la croire stable depuis toujours *(c'est déjà l'usage du dépôt)*.
+
+### Ce que la règle ne demande PAS
+
+- ❌ **Pas** d'interdire d'écrire la documentation avant le geste : **préparer est utile**. Seul le
+  **contrôle après** est obligatoire ;
+- ❌ **Pas** de recopier un SHA ou un état de publication dans dix documents — **§8 quater** l'interdit
+  déjà : cela vit dans la **source d'état courant**, ailleurs on y renvoie ;
+- ❌ **Pas** de passe rétroactive sur les documents anciens — on applique la règle **à ce qu'on
+  écrit** *(comme §8 quater et §8 quinquies)* ;
+- ❌ **Pas** d'attendre la fin de la session : un geste contrôlé **tout de suite** coûte une minute ;
+  le même écart retrouvé trois jours plus tard coûte une **enquête** — les quatre cas ci-dessus en
+  sont la démonstration ;
+- ✅ **Seulement** ceci : *ce que ce document affirme du geste que je viens de faire, est-ce encore
+  vrai — l'ai-je CONSTATÉ, ou seulement prévu ?*
+
+---
+
 ## 9. RÈGLE DE TRANSPARENCE
 
 Distinguer clairement :
@@ -984,9 +1091,12 @@ Chaque session a un **objectif précis**. Lorsque cet objectif est terminé :
    aucun n'a besoin d'être modifié, l'ÉCRIRE** ;
 3. vérifier l'état Git ;
 4. créer un commit si nécessaire et si des modifications cohérentes ont été réalisées ;
-5. produire un **rapport de fin de session** ;
-6. indiquer la **prochaine session recommandée** ;
-7. **S'ARRÊTER.**
+5. ⚡ **APRÈS le commit — et après la poussée, la fusion ou la publication si elles ont lieu —
+   RELIRE ce que les documents d'état affirment de ce geste, et les corriger contre l'état
+   CONSTATÉ** *(**§8 septies**)* ;
+6. produire un **rapport de fin de session** ;
+7. indiquer la **prochaine session recommandée** ;
+8. **S'ARRÊTER.**
 
 > **Ne jamais commencer automatiquement la session suivante.**
 
@@ -1004,6 +1114,27 @@ Chaque session a un **objectif précis**. Lorsque cet objectif est terminé :
 >
 > ⚠️ **Ce n'est PAS une invitation à modifier quelque chose.** Voir le garde-fou de **§8 bis** :
 > le déclencheur demande de **vérifier**, pas de **modifier**.
+
+> ⚡ **Le point 5 est NOUVEAU, et voici pourquoi il s'insère LÀ** *(ajouté le 2026-08-24)*
+>
+> Les points 1 et 2 s'exécutent **avant** le point 4 : suivis à la lettre, ils produisent donc un
+> état écrit **avant** le geste qu'il décrit. C'est exactement ce qui a produit **quatre états faux
+> en trois jours** *(**§8 septies**)*. ⛔ **L'ordre n'est pas changé** — écrire d'abord reste utile
+> — **une relecture est simplement ajoutée après le geste.**
+>
+> ⚠️ **La numérotation a bougé** : l'ancien point 5 *(rapport de fin de session)* devient le **6**,
+> l'ancien 6 le **7**, l'ancien 7 le **8**. ⛔ **Les points 1 et 2 sont inchangés** — ce sont les
+> seuls que le dépôt cite nommément.
+
+## 12.4 bis — Le rapport de fin de session dit ce qui a été CONSTATÉ
+
+Le **rapport de fin de session** *(point 6)* est lui-même une source d'état : il est rédigé, ou
+relu, **après** les gestes qu'il décrit. Chaque affirmation portant sur un commit, une poussée, une
+fusion, une publication ou un redéploiement doit pouvoir désigner **l'observation** qui l'établit
+*(voir le tableau de **§8 septies**)*.
+
+> ⛔ **« Je vais commiter » n'est pas « c'est commité ».** Si le geste n'a pas encore eu lieu au
+> moment où le rapport s'écrit, le rapport le dit **au futur** — et il est **complété après**.
 
 ## 12.5 — Statuts d'un problème
 

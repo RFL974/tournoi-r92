@@ -5,7 +5,15 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-24 — 🏛️ **QUATRE DÉCISIONS OUVRENT LE CHANTIER M1** *(étape
+**Dernière mise à jour** : 2026-08-24 *(soir)* — 📏 **DEUX DÉCISIONS DE MÉTHODE, ENTRE M1-A ET
+M1-B.** **D-046** — ⭐ **un état ne devient vrai qu'APRÈS le geste** *(commit, fusion, poussée,
+publication, redéploiement)*, et ⛔ **une trace historique ne se réécrit jamais** pour la rendre
+conforme au présent : c'est la règle permanente **`CLAUDE.md` §8 septies**, née de **quatre états
+faux en trois jours**. **D-047** — **M1-A est DÉFINITIVEMENT CLÔTURÉE** ; la lecture des deux URL du
+classeur devient un **reliquat EXTERNE non bloquant**, tracé au `PLAN.md` **§15.8**, ⛔ **qui ne
+déclenche pas M1-B**.
+
+*Rappel de la mise à jour précédente — 2026-08-24* : 🏛️ **QUATRE DÉCISIONS OUVRENT LE CHANTIER M1** *(étape
 **M1-A**)*. **D-042** — le **profil du club** : principe directeur, **7 familles**, et surtout le
 **cycle de vie A/B/C** *(permanente ⇒ **lecture directe** · proposée ⇒ **copie volontaire, aucun lien
 vivant** · événementielle ⇒ **aucun lien**)*, plus la règle qui interdit de fusionner un rôle
@@ -3041,3 +3049,155 @@ locale — **et** sur le site réellement servi par GitHub Pages, qui peut diff�
 >
 > Pour le nom d'usage, l'image tient en une phrase : *sur une carte d'identité on lit
 > « Jean-Baptiste » ; ses amis l'appellent « JB » — mais on ne signe pas un acte notarié « JB ».*
+
+---
+
+### D-046 — Un état ne devient vrai qu'APRÈS le geste, et une trace historique ne se réécrit pas
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-24 *(soir)* |
+| **Session** | Micro-lot **méthodologique**, entre **M1-A** *(close)* et **M1-B** *(non commencée)* |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Décidée par** | Romain |
+| **Couvre** | La règle permanente **`CLAUDE.md` §8 septies** · le **point 5 neuf** de la règle d'arrêt **§12.4** · la **§12.4 bis** *(le rapport de fin de session dit ce qui a été constaté)* |
+| **Voisines** | **§8 bis** *(la carte à jour)* · **§8 ter** *(le commentaire à jour)* · **§8 quater** *(la source unique)* · **D-040** *(une preuve de version doit être discriminante)* |
+
+**Le problème posé — et il s'est produit quatre fois, il n'est pas théorique**
+
+> Entre le 2026-08-22 et le 2026-08-24, **quatre états de suivi ont annoncé qu'un travail restait à
+> faire alors qu'il était fait** :
+>
+> | Ce que le document annonçait | Ce qui était vrai au même moment |
+> |---|---|
+> | **R-094** *« appliqué localement, non commité »* | commit `94cd6a2`, poussé, **publié** par GitHub Pages |
+> | **CF-4b** *« 2 lots sur 8 »* | **8 lots sur 8** livrés |
+> | **CF-4b / L8** *« patch appliqué, non commité »* | commité `be57f97`, poussé, part frontend **publiée** |
+> | **M1-A** *« NON FUSIONNÉE dans `main` »* | **fusionnée** en fast-forward le jour même |
+>
+> ⭐ **Aucune de ces phrases n'était fausse quand elle a été écrite.** Elles décrivaient toutes une
+> intention correcte **au moment de la rédaction**, et sont devenues fausses **au geste suivant**.
+>
+> 🎯 **La cause n'est pas l'attention, c'est l'ORDRE.** La règle d'arrêt **§12.4** demandait de
+> mettre à jour la documentation de suivi *(point 1)* **avant** de créer le commit *(point 4)*, et
+> **rien ne demandait de la relire ensuite**. Une méthode suivie correctement produisait donc un
+> document faux : ⛔ **c'est un défaut de méthode, pas de rigueur.**
+>
+> ⚠️ **Et c'est le sens de l'erreur qui la rend coûteuse** : un état qui annonce du travail
+> **restant** là où il n'en reste pas conduit la session suivante à **refaire un geste déjà fait** —
+> republier, réécrire, ou retarder ce qui en dépendait.
+
+**Ce qui est décidé**
+
+> **① Une règle permanente, `CLAUDE.md` §8 septies :** *un état qui décrit un geste — commit,
+> fusion, poussée, publication, redéploiement, opération manuelle sur le classeur — se contrôle
+> **après** l'exécution effective du geste ; un état écrit avant est **une intention, pas un
+> état**.* Avant de clore un lot ou une session, les documents d'état concernés sont **relus contre
+> ce qui est constaté**.
+>
+> **② Un tableau « geste ➡️ ce qui le constate »**, pour que la règle soit **opérationnelle** et non
+> une recommandation : ⛔ **un document ne constate jamais un geste**. Le commit se constate par
+> `git log`, la poussée par `git rev-parse origin/<branche>`, la publication du frontend par
+> l'exécution **`success`** du workflow Pages **sur ce commit**, le redéploiement du serveur par un
+> **témoin discriminant** *(**D-040**)*, une opération sur le classeur par un **relevé avant/après**,
+> et le comportement en production **ne se constate pas depuis le dépôt** *(§13.6)*.
+>
+> **③ La protection explicite des traces historiques** — et c'est la moitié de la décision :
+>
+> > **Une phrase vraie à sa date reste écrite telle quelle.** On **ajoute** le nouvel état, ou on
+> > corrige la **source d'état courant**. ⛔ **On ne réécrit jamais une trace historique pour la
+> > rendre conforme au présent.**
+>
+> `CLAUDE.md` **§8 septies** nomme les deux colonnes : d'un côté les **sources d'état courant** *(les
+> blocs de tête, les tableaux d'avancement, les statuts de `RISQUES.md`, les fiches de `PLAN.md`, la
+> carte de §8 bis)*, qui **se corrigent** ; de l'autre les **traces historiques** *(`SESSIONS.md`,
+> `AUDIT.md`, `RAPPORT-AUDIT.md`, les entrées passées du `CHANGELOG`, les « rappels », les fiches de
+> décision déjà validées)*, qui **ne se réécrivent pas**.
+>
+> **④ Un point 5 neuf dans §12.4**, placé **après** la création du commit : relire ce que les
+> documents d'état affirment du geste. ⛔ **L'ordre existant n'est pas modifié** — écrire d'abord
+> reste utile ; **une relecture est simplement ajoutée après**. *(Les anciens points 5, 6 et 7
+> deviennent 6, 7 et 8 ; ⛔ **les points 1 et 2 — les seuls cités ailleurs dans le dépôt — sont
+> inchangés**.)*
+>
+> **⑤ Une §12.4 bis** : le **rapport de fin de session** est lui aussi une source d'état.
+> *« Je vais commiter »* n'est pas *« c'est commité »*.
+
+**Raison, en langage simple**
+
+> C'est la différence entre **une liste de courses et un ticket de caisse**. La liste dit ce qu'on
+> *comptait* prendre ; le ticket dit ce qu'on a *réellement* pris. Les deux sont utiles — mais si on
+> range la liste en croyant que c'est le ticket, on repart au magasin acheter ce qu'on a déjà dans
+> le coffre.
+>
+> ⭐ **Et le vieux ticket ne se corrige pas au stylo** : il raconte ce qui s'est passé **ce jour-là**,
+> et c'est précisément ce qu'on lui demande.
+
+**Ce que la décision NE demande PAS**
+
+> - ❌ **Pas** d'interdire d'écrire la documentation avant le geste — **préparer est utile** ;
+> - ❌ **Pas** de recopier un SHA ou un état de publication dans plusieurs documents : **§8 quater**
+>   l'interdit déjà ;
+> - ❌ **Pas** de passe rétroactive sur les documents anciens ;
+> - ❌ **Pas** d'outil, de script ni de contrôle automatique : la relecture coûte **une minute**, et
+>   un outil de plus serait disproportionné *(`CLAUDE.md` §10)*.
+
+**Portée**
+
+> ⭐ **Permanente, et elle servira dès M1-B** — qui comporte un **commit**, une **poussée** et un
+> **redéploiement chez Google**, c'est-à-dire les trois gestes que la règle vise.
+
+---
+
+### D-047 — M1-A est close ; la lecture des deux URL devient un reliquat EXTERNE non bloquant
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-24 *(soir)* |
+| **Session** | Micro-lot **méthodologique**, entre **M1-A** et **M1-B** |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Décidée par** | Romain |
+| **Couvre** | `ETAT.md` *(bloc de tête et fiche M1-A)* · `PLAN.md` **§15.6** et **§15.8** |
+
+**Le problème posé**
+
+> Les documents d'état disaient **deux choses incompatibles** : **M1-A est TERMINÉE** — et
+> *« une seule chose reste en attente dans M1-A »*, la lecture de `url_site_association` et
+> `url_instagram` dans le classeur.
+>
+> ⚠️ **Une étape dont quelque chose « reste en attente » n'est pas close.** La formulation laissait
+> donc croire que le statut de M1-A pouvait encore bouger, et qu'il fallait peut-être **attendre**
+> ce geste avant la suite.
+
+**Ce qui est décidé**
+
+> | | |
+> |---|---|
+> | **M1-A** | 🏁 **DÉFINITIVEMENT CLÔTURÉE.** Son objectif était **documentaire**, et il est atteint |
+> | **La lecture des deux URL** | 🔻 **RELIQUAT EXTERNE**, ⛔ **non bloquant**, **sorti du périmètre de M1-A** |
+> | **Pourquoi « externe »** | ⛔ Le geste n'est pas empêché par le projet mais par **l'environnement d'exécution** : la politique réseau refuse `script.google.com` *(403 au `CONNECT`)*. **Aucune session ne peut le lever depuis ici** |
+> | **Où il est tracé** | `PLAN.md` **§15.8**, sous-section dédiée — ⛔ **et il ne doit pas être oublié** |
+> | **Quand** | **Dès qu'un environnement autorisant cette lecture sera disponible** ; à défaut, **repris par M1-F**, qui traite déjà les valeurs institutionnelles du classeur |
+> | ⛔ **Ce qu'il ne déclenche pas** | **M1-B ne démarre pas pour autant.** Aucune étape ne démarre sans validation explicite *(`PLAN.md` §15.2)* |
+>
+> ⚠️ **L'autorisation donnée par Romain le 2026-08-24 reste valable** — lecture seule, vidage
+> **uniquement** si une attribution institutionnelle réelle subsiste, relevé avant/après, ⛔ **rien
+> d'autre du classeur**.
+
+**Raison**
+
+> Un chantier a besoin de **statuts qui tranchent**. *« Terminé sauf une chose »* n'est pas un
+> statut : c'est une question laissée ouverte, que la session suivante devra rouvrir pour savoir si
+> elle a le droit d'avancer.
+>
+> ⭐ **Ce qui compte ici, c'est la distinction entre ce que le projet doit faire et ce que
+> l'environnement lui interdit.** Le premier est un travail ; le second est une **contrainte
+> extérieure**. Les confondre bloque un chantier entier au nom d'un geste que personne, ici, n'a le
+> pouvoir d'accomplir.
+
+**Ce que la décision NE demande PAS**
+
+> - ❌ **Pas** d'abandonner le geste : il **reste tracé**, et c'est tout l'objet de la ligne dédiée ;
+> - ❌ **Pas** de le déclarer fait, ni de supposer ce que contiennent les deux valeurs — ⛔ **elles
+>   n'ont jamais été lues** *(§9 : c'est un **INCONNU**, pas un probable)* ;
+> - ❌ **Pas** de démarrer **M1-B** au motif que M1-A est close.
