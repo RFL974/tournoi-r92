@@ -7719,3 +7719,60 @@ nouveau texte distingue **ce qui part** et **ce qui reste**, ⛔ **sans prétend
   réelle, **frontend ensuite** — sinon la page publiée annoncerait un effacement que le serveur ne
   ferait pas encore. ⭐ **Et ce redéploiement mettra DEUX lots en service** : M1-B **et** la part
   backend de **CF-4b/L8**, jamais collée.
+
+### 19.8 — ⚡ Addendum du 2026-08-24 — le backend est redéployé, et une doctrine tombe
+
+> ⛔ **Les §19.1 à §19.7 ci-dessus ne sont PAS réécrits.** Ils disaient vrai à leur date — y compris
+> §19.7, qui annonçait que le redéploiement *« mettra DEUX lots en service : M1-B et la part backend
+> de CF-4b/L8, jamais collée »*. **La seconde moitié de cette phrase s'est révélée fausse**, et
+> c'est l'objet de cet addendum. **Le nouvel état s'ajoute, il ne remplace pas.**
+
+**Le redéploiement a eu lieu**, exécuté à la main par Romain dans Apps Script.
+
+| | Constaté |
+|---|---|
+| **Avant collage — M1-B** | `CHAMPS_AUTORISATION_A_REINITIALISER` **0** · `reinitialiserDonneesAutorisationTournoi` **0** ➡️ ✅ M1-B n'était bien pas dans l'éditeur |
+| **Après collage — `Code.gs`** | **8423** lignes · `viderDonnees` ligne **8418** · témoins **3** et **2** · `API tournoi en ligne` **1** · anciennes chaînes **0** |
+| **Après collage — `Test.gs`** | **4645** lignes |
+| ⭐ **Tests CHEZ GOOGLE** | **`R92 — 796/796 OK, 0 FAIL`** — ⛔ ce n'est plus une prédiction hors ligne |
+| **Publication** | **Version 156, 2026-08-24 à 11:13** *(la précédente : 155, du 22/08 à 17:31)* — **même déploiement, même adresse**, ⛔ aucune Web App nouvelle |
+| **Ping public après v156** | `{"ok":true,"message":"API tournoi en ligne"}` |
+
+### 19.9 — 🔴 La découverte : L8 backend était DÉJÀ en service
+
+**Le relevé d'avant collage — celui que la fiche de redéploiement impose depuis D-040 — a démenti
+une affirmation que le dépôt portait en cinq endroits depuis le 2026-08-22.**
+
+| Ce que la documentation affirmait | Ce qui a été relevé le 2026-08-24, avant tout collage |
+|---|---|
+| *« la part backend de CF-4b/L8 n'a JAMAIS été redéployée »* | `API tournoi en ligne` = **1** dans l'éditeur · ancienne chaîne = **0** · et l'URL publique servait **déjà** la nouvelle réponse |
+
+⛔ **La date et le geste de cette mise en service ne sont pas établis, et rien n'est supposé ici.**
+`be57f97` (2026-08-22) est le **premier commit publié** du dépôt portant la chaîne témoin, ⛔ **mais
+il ne permet PAS de dater le déploiement chez Google** : un état **local**, non encore commité, peut
+parfaitement être collé dans l'éditeur — ⭐ **ce projet en porte l'exemple**, la fiche de L5 ayant
+parlé d'un *« patch appliqué, non commité »*.
+
+> 🎯 **Et cette nuance vaut d'être gardée, car elle a failli passer** : une première rédaction
+> concluait que la mise en service était *« nécessairement postérieure au 22/08 »*. **La conclusion
+> dépassait la preuve** — Git atteste ce qui entre dans le dépôt, ⛔ **jamais ce qui est collé chez
+> Google.** *(`CLAUDE.md` §9 : ne jamais présenter une déduction comme un fait.)*
+
+> 🎯 **Ce que cet épisode démontre, et il faut le lire à l'endroit** : ce n'est **pas** un contrôle
+> qui a échoué, c'est un contrôle qui a **fonctionné**. Sans le relevé d'avant collage, nous
+> aurions écrit que M1-B avait mis L8 en service — **une phrase fausse, et flatteuse pour notre
+> propre lot**. ⭐ *Un état qu'on n'a pas relevé soi-même n'est pas un état : c'est une croyance.*
+>
+> ⚠️ **Et la leçon rejoint §8 septies par l'autre bout** : la règle protège contre l'état écrit
+> **avant** son geste. Ici, l'erreur venait d'un geste **qu'aucune session n'avait vu se produire**.
+> **Un document ne constate jamais un geste — même son absence.**
+
+### 19.10 — Ce que cet addendum ne dit PAS
+
+⛔ **M1-B n'est pas « vérifiée en réel »** : aucune réinitialisation n'a été lancée, ni sur la
+production, ni sur une copie. Les tests prouvent que le code fait ce qu'il annonce ; ⛔ **ils ne
+prouvent pas qu'on l'ait exercé sur un vrai classeur.**
+⛔ **Le frontend n'est pas publié** : le dialogue en ligne est encore l'ancien, qui n'annonce pas les
+nouveaux effacements. ⚠️ **Tant que cette fenêtre est ouverte, aucune réinitialisation réelle ne
+doit être déclenchée.**
+⛔ **Aucune donnée du classeur n'a été volontairement modifiée**, ⛔ aucune fusion vers `main`.

@@ -114,9 +114,22 @@ Puis **trois contrôles dans l'éditeur**, avant d'aller plus loin :
 > | `API Tournoi R92 en ligne` *(l'ancienne)* | **0** | CF-4b / L8 |
 > | `Racing Club de France Rugby` *(l'ancien défaut)* | **0** | CF-4b / L8 |
 >
-> 🔴 **Les témoins de L8 restent à vérifier, et ce n'est pas un reliquat : la part BACKEND de L8
-> n'a JAMAIS été collée chez Google.** Le prochain redéploiement met donc **deux lots** en service
-> d'un coup — M1-B *et* L8. ⛔ Un contrôle qui ne vérifierait que M1-B laisserait L8 sans preuve.
+> ⚡ **CORRIGÉ le 2026-08-24 — cette note annonçait que « la part BACKEND de L8 n'a JAMAIS été
+> collée chez Google », et c'était FAUX.** Le relevé fait **avant** le collage de M1-B, exactement
+> comme cette fiche le demande, a montré l'inverse : dans l'éditeur, `API tournoi en ligne` était
+> déjà à **1** et l'ancienne chaîne à **0** — et l'URL publique servait **déjà**
+> `{"ok":true,"message":"API tournoi en ligne"}`. **La part backend de L8 était donc déjà en
+> service.**
+>
+> ⛔ **La date et le geste de cette mise en service ne sont PAS établis, et rien ne sera inventé.**
+> `be57f97` (2026-08-22) est le **premier commit publié** du dépôt portant cette chaîne — ⛔ **mais
+> cela ne date PAS le déploiement chez Google.** Un état **local**, non encore commité, peut être
+> collé dans l'éditeur : *c'est même déjà arrivé dans ce projet* — la fiche de L5 parlait d'un
+> « patch appliqué, non commité ». **Git date le dépôt, jamais le chantier.**
+>
+> 🎯 **La leçon, et elle vaut mieux que le constat** : ce sont **les témoins d'avant collage** qui
+> l'ont révélé. Sans eux, nous aurions attribué à M1-B une mise en service faite par quelqu'un
+> d'autre, un autre jour. **C'est exactement ce que D-040 demande de ne jamais supposer.**
 >
 > ⚠️ **Les deux témoins M1-B n'existaient pas avant ce lot** : leur compte attendu **avant** collage
 > est **0**. C'est ce qui les rend discriminants *(D-040)* — ils sont aussi **sans apostrophe, sans
@@ -161,11 +174,10 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > *(lot **M1-B** : +81 vérifications sur le cycle de vie des `org_*` à la réinitialisation ; elles
 > étaient de **715** et **4314** depuis C-012, étape 3)*.
 >
-> 🔍 **Le bilan de 796 est PRÉDIT, pas encore constaté chez Google** *(relevé le 2026-08-24)* : il a
-> été mesuré **hors ligne**, en exécutant `lancerTestsFFR` sur les deux fichiers du dépôt. La même
-> mesure donnait **715** avant M1-B — exactement le bilan que Google affichait — ce qui rend la
-> prédiction fiable, ⛔ **mais une prédiction reste à confirmer au geste 4** *(`CLAUDE.md` §9 :
-> c'est un **PROBABLE**, pas un **CERTAIN**)*.
+> ✅ **CONSTATÉ CHEZ GOOGLE le 2026-08-24** : `lancerTestsFFR` exécutée dans l'éditeur Apps Script
+> a donné **`R92 — 796/796 OK, 0 FAIL`**, avec `Test.gs` à **4645 lignes**. *(Cette valeur avait
+> d'abord été **prédite** hors ligne ; elle est désormais **mesurée là où elle compte** — ce n'est
+> plus un **PROBABLE** mais un **CERTAIN**, `CLAUDE.md` §9.)*
 > **Elles doivent toujours correspondre au bilan réellement obtenu et à la dernière ligne réelle de
 > `backend/Tests.gs`** — un repère qui ne correspond plus ne prouve plus rien.
 > Les valeurs de référence à jour se lisent toujours dans le dépôt :

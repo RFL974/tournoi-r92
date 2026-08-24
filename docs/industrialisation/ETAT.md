@@ -20,12 +20,42 @@ DE PLUS.**
 | | |
 |---|---|
 | ✅ **Implémentée** | Allowlist **explicite** des **26** champs d'édition *(`CHAMPS_AUTORISATION_A_REINITIALISER`)* · récompenses `org_recompenses_*` par **préfixe complet** · branchement dans `reinitialiserTournoi` · message de confirmation refait |
-| ✅ **Testée HORS LIGNE** | **796/796 OK, 0 FAIL** — **+81** vérifications, dont un test de **branchement** et les tests **négatifs** de **R-B2**. ⛔ **Le bilan chez Google reste à constater** |
+| ✅ **Testée** | **796/796 OK, 0 FAIL** — **+81** vérifications, dont un test de **branchement** et les tests **négatifs** de **R-B2**. ⭐ **Constaté CHEZ GOOGLE le 2026-08-24**, `Test.gs` à **4645** lignes *(la valeur avait d'abord été prédite hors ligne)* |
 | ✅ **Commitée** | **`dc03488`** — 9 fichiers |
 | ✅ **Poussée** | Sur **sa branche seule**, `claude/m1b-reinitialisation-cycle-de-vie`. ⛔ **Aucune exécution GitHub Actions**, ⛔ **aucune fusion vers `main`** *(constaté, pas déduit)* |
-| ⛔ **Frontend publié · backend redéployé · vérifiée en réel** | **AUCUN de ces trois gestes n'a eu lieu** *(détail : `PLAN.md` **§15.8**)* |
-| ⚠️ **Le redéploiement à venir** | Il mettra **DEUX lots** en service d'un coup : **M1-B** *et* la part backend de **CF-4b/L8**, jamais collée |
+| ✅ **Backend REDÉPLOYÉ** | **Version Apps Script 156, 2026-08-24 à 11:13** *(la 155 datait du 22/08 17:31)* — **même déploiement, même adresse**. Témoins après collage : `CHAMPS_AUTORISATION_A_REINITIALISER` **3**, `reinitialiserDonneesAutorisationTournoi` **2**, fichier à **8423** lignes, `viderDonnees` ligne **8418** |
+| ⛔ **Frontend publié** | **NON** — le message de confirmation en ligne est encore l'ancien |
+| ⚠️ **Vérifiée en réel** | **PAS entièrement.** Les tests tournent chez Google et la Web App répond, ⛔ **mais AUCUNE réinitialisation réelle n'a été jouée** — l'effet destructif n'est donc pas constaté sur des données |
+| 🔴 **Découverte sur CF-4b/L8** | Le relevé **avant** collage a montré que **la part backend de L8 était DÉJÀ en service** *(voir plus bas)*. ⛔ **M1-B ne l'a donc pas mise en service, contrairement à ce qui était annoncé ici** |
 | 🔴 **R-033 n'est pas refermé** | Sa part `org_*` est traitée ; **`detail_effectifs` et `nb_educateurs_total` ne le sont PAS** — ce sont des colonnes de `ClubsInvites`, hors périmètre |
+
+> 🔴 **CE QUE LE RELEVÉ D'AVANT COLLAGE A RÉVÉLÉ — et c'est une correction de doctrine, pas un
+> détail.** Le dépôt affirmait depuis le 2026-08-22, en **cinq endroits**, que *« la part backend de
+> CF-4b/L8 n'a jamais été redéployée »*. **C'est faux.**
+>
+> **Constaté le 2026-08-24, AVANT tout collage de M1-B** *(témoins D-040 relevés dans l'éditeur, et
+> appel de l'URL publique)* :
+>
+> | Contrôle | Relevé |
+> |---|---|
+> | `CHAMPS_AUTORISATION_A_REINITIALISER` · `reinitialiserDonneesAutorisationTournoi` | **0** et **0** — ✅ M1-B n'était bien pas là |
+> | `API tournoi en ligne` *(témoin de L8)* | **1** |
+> | `API Tournoi R92 en ligne` *(l'ancienne chaîne)* | **0** |
+> | `…/exec?action=ping` | **`{"ok":true,"message":"API tournoi en ligne"}`** |
+>
+> ➡️ **La part backend de L8 était donc déjà présente dans l'éditeur ET déjà servie publiquement.**
+>
+> ⛔ **La date et le geste de cette mise en service ne sont PAS établis, et rien n'est supposé.**
+> `be57f97` (2026-08-22) est le **premier commit publié** portant cette chaîne *(`git log -S`)*,
+> ⛔ **mais il ne date PAS le déploiement chez Google** : rien n'interdit qu'un état **local**, pas
+> encore commité, ait été collé dans l'éditeur avant. ⭐ **Ce projet en porte justement l'exemple** —
+> la fiche de L5 a parlé d'un *« patch appliqué, non commité »*. **Git date le dépôt, jamais le
+> chantier** *(`CLAUDE.md` §13.6)*.
+>
+> 🎯 **Pourquoi c'est le contrôle qui a bien fonctionné, et non celui qui a échoué** : sans le
+> relevé **avant** collage, nous aurions écrit que M1-B avait mis L8 en service — **une phrase
+> fausse, et flatteuse pour notre propre lot**. C'est précisément ce que **D-040** demande de ne
+> jamais supposer.
 
 ---
 
@@ -75,7 +105,7 @@ depuis** — l'état publié **du jour** ne se recopie pas ici, il se lit avec `
 | 🔻 **Les deux URL du classeur** | **toujours PAS LUES** — la politique réseau de l'environnement refuse `script.google.com` *(403 au `CONNECT`)*. ⭐ **RELIQUAT EXTERNE, NON BLOQUANT** : il est **sorti de M1-A** *(qui est close)* et **tracé au `PLAN.md` §15.8**. ⛔ **Il ne conditionne le statut d'aucune étape** |
 | ⛔ **Données du classeur** | **aucune modifiée**, aucune lue |
 | ⛔ **Backend M1** | **aucun redéploiement** — M1-A ne touche **aucun** fichier `backend/` |
-| ⚠️ **CF-4b/L8** | sa **part backend** reste **NON redéployée** *(sa part frontend, elle, est publiée)* |
+| ✅ **CF-4b/L8** | ⚡ **CORRIGÉ le 2026-08-24 : cette ligne annonçait « part backend NON redéployée ».** Le relevé d'avant collage l'a démentie — **elle était déjà en service** *(voir le bloc de tête)*. ⛔ **Date et geste de mise en service INCONNUS** — ⚠️ `be57f97` ne les date pas |
 | ✅ **CF-4b/L5** | reste **redéployé**, prouvé par un email réellement reçu |
 | ✅ **R-094** | **déjà en service** — sa correction est **frontend**, publiée par GitHub Pages le 22/08 à 17:04 UTC |
 
@@ -573,9 +603,10 @@ plan d'audit** *(`PLAN.md` **§14**, décision **D-038**)*, et **C-015 est en pa
 *(vérification des référentiels)*, **CF-1** *(le cadre documentaire)* et **CF-2** *(le dossier du
 responsable du traitement — ⛔ **décision NON PRISE**)* sont **faits**. 🚧 **CF-4b
 *(neutralisation institutionnelle)* est OUVERTE** : ✅ **ses 8 lots de code et de documentation sont
-TERMINÉS** *(L1 → L8)*, ⛔ **mais elle N'EST PAS CLOSE** — il lui manque le redéploiement chez
-Google ⚠️ **de la part BACKEND de L8 uniquement** *(**L5-B est fait et prouvé par un email reçu** —
-voir le rappel du 2026-08-20)* et **le chantier M1**. ⏸️ **CF-4a** *(mentions légales)*
+TERMINÉS** *(L1 → L8)*, ⛔ **mais elle N'EST PAS CLOSE** — il lui manque **le chantier M1**.
+⚡ **CORRIGÉ le 2026-08-24 : cette phrase ajoutait qu'il manquait « le redéploiement de la part
+BACKEND de L8 ».** Le relevé d'avant collage de M1-B a montré que **cette part était DÉJÀ en
+service** *(bloc de tête)*. ⛔ **Sa date de mise en service reste inconnue.** ⏸️ **CF-4a** *(mentions légales)*
 est **suspendue derrière elle**. **CF-3, CF-5 à CF-13 et CF-14 ne sont pas commencées.**
 
 🏛️ **ET UN CHANTIER DE PLUS EST OUVERT DEPUIS LE 2026-08-24 : M1 — le profil du club**
@@ -685,7 +716,7 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · ✅ ⭐ **L5** — **les DEUX phases faites** : dépôt *(`5649f83`)* **et** redéploiement Google, ⭐ **prouvé par un email reçu** *(en-tête brut `From: "L'organisation du tournoi"`, 20/08/2026 17:08 UTC)*. ⚠️ **Une seule des 4 lignes exercée en réel** *(branche `MailApp`)* · ✅ **L7** — **26 points, 8 fichiers**, dont ⭐ la première phrase du `README.md` et **6 descriptions du bandeau de don devenu inexistant** · ✅ **L8** — ⚡ **CORRIGÉ le 2026-08-24 : cette case annonçait « patch appliqué, non commité »**, faux depuis le **2026-08-22**. L8 est **commité** *(`be57f97`)*, **poussé sur `origin/main`**, et sa **part frontend est PUBLIÉE** *(workflow Pages `success`, 2026-08-22 15:24:34 UTC)* : `perfs_mot_cle_club` *(nouvelle clé, garde-fous)* · `boutique_disponible` *(migration douce)* · `org_club_nom` sans défaut · témoin D-040 `API tournoi en ligne` · **715/715** mesuré. ⛔ **Sa part BACKEND n'est PAS redéployée chez Google** · 🔧 **M1** *(devenu un chantier en 6 étapes — `PLAN.md` §15)* en cours, étape **M1-A** faite |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · ✅ ⭐ **L5** — **les DEUX phases faites** : dépôt *(`5649f83`)* **et** redéploiement Google, ⭐ **prouvé par un email reçu** *(en-tête brut `From: "L'organisation du tournoi"`, 20/08/2026 17:08 UTC)*. ⚠️ **Une seule des 4 lignes exercée en réel** *(branche `MailApp`)* · ✅ **L7** — **26 points, 8 fichiers**, dont ⭐ la première phrase du `README.md` et **6 descriptions du bandeau de don devenu inexistant** · ✅ **L8** — ⚡ **CORRIGÉ le 2026-08-24 : cette case annonçait « patch appliqué, non commité »**, faux depuis le **2026-08-22**. L8 est **commité** *(`be57f97`)*, **poussé sur `origin/main`**, et sa **part frontend est PUBLIÉE** *(workflow Pages `success`, 2026-08-22 15:24:34 UTC)* : `perfs_mot_cle_club` *(nouvelle clé, garde-fous)* · `boutique_disponible` *(migration douce)* · `org_club_nom` sans défaut · témoin D-040 `API tournoi en ligne` · **715/715** mesuré. ⚡ **CORRIGÉ le 2026-08-24 : cette case annonçait « sa part BACKEND n'est PAS redéployée chez Google ».** Le relevé d'avant collage de M1-B l'a démentie — **elle était déjà en service** *(témoin `API tournoi en ligne` à 1 dans l'éditeur, et servi par l'URL publique)*. ⛔ **Date et geste de cette mise en service INCONNUS** — ⚠️ `be57f97` est le premier commit publié portant la chaîne, il ne date **pas** le collage chez Google · 🔧 **M1** *(6 étapes — `PLAN.md` §15)* en cours : **M1-A close**, **M1-B backend EN SERVICE** *(v156)* mais **frontend non publié** |
 | 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
 | **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 | 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |

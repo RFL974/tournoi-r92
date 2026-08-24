@@ -2177,7 +2177,7 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 | **L4** | Identité graphique — logo neutre, favicon, retrait des blasons | ✅ **FAIT** — commits **`4bf3e62`** *(réalisation)* et **`20cba62`** *(correction du contraste, trouvée par le contrôle visuel).* **26 points.** 🆕 **3 assets créés** *(`logo-tournoi.svg`, `logo-tournoi.png`, `grain.svg`)*, **3 supprimés** *(224 Ko)*. ⭐ **La favicon est POSÉE sur les 8 pages** — 7 n'en avaient aucune. ⛔ **Plus aucune ressource graphique distante.** ⚠️ **2 adaptations CSS minimales** : l'ancien logo était un **bandeau large**, le nouveau est **carré** — `width:100%` l'aurait étiré à 260 px de côté |
 | **L7** | Reste de la documentation active du dépôt public | ✅ **FAIT** — **26 points, 8 fichiers** *(= 26 modifications unitaires au diff)*. ⚡ **26 et non 16, et l'écart est une leçon** : **14** attributions institutionnelles *(dont ⭐ la première phrase du `README.md`, celle que **D-039** citait nommément)* — c'est le compte annoncé, **moins `contact@r92.fr` reporté à L8** et **moins les 2 exemples réels conservés en réserve** ; **+ 4** références `CF-4` → `CF-4a` ; **+ 6** que L0 ne pouvait PAS connaître — le **bandeau de don**, supprimé par **L3**, encore décrit comme **existant** dans six documents actifs ; **+ 2** descriptions *« blason »*, fausses depuis **L4**. ⛔ **Aucun code, aucun test, aucun déploiement, aucune donnée du classeur** |
 | **L5** | Backend — nom affiché de l'expéditeur ⚠️ **redéploiement** | ✅ **FAIT — 2 phases.** ✅ **L5-A** *(dépôt Git)* : **4 substitutions littérales**, commit **`5649f83`** · ✅ **L5-B** *(chez Google)* : `Code.gs` et `Tests.gs` recopiés, **enregistrés**, contrôlés dans l'éditeur par des **témoins fixés AVANT le collage**, **nouvelle version du même déploiement**, **`703/703 OK, 0 FAIL`**, ping conforme. ⭐ **Preuve finale à la réception** : `From: "L'organisation du tournoi" <…>` *(20/08/2026 17:08 UTC)*, contre `From: "Génération R92"` le matin même, **même boîte, même adresse d'envoi**. ⚠️ **PORTÉE — à ne jamais élargir** : **une seule des 4 lignes exercée en réel** *(`MailApp` dans `envoyerEmailHtml`, `Code.gs:5086`)* ; les **3 autres** *(`Code.gs:5067`, `5069`, `5082`)* sont **CERTAINES dans le code**, ⛔ **NON TESTÉES EN RÉEL**. 🔴 A produit **D-040** |
-| **L8** | Neutralisation fonctionnelle du club — `org_club_nom`, `MOT_CLE_CLUB`, **tests** ⚠️ **redéploiement** | ✅ ⚡ **CORRIGÉ le 2026-08-24 : cette case annonçait « PATCH APPLIQUÉ, non commité »**, faux depuis le 2026-08-22. **COMMITÉ `be57f97`, poussé sur `origin/main`**, **part frontend PUBLIÉE** *(Pages `success`, 15:24:34 UTC)*, ⛔ **part backend NON redéployée** — audité par **4 agents indépendants** *(A Perfs/architecture · B surfaces · C backend/D-040 · D contre-audit)*. ⭐ **Trois arbitrages rouverts** par leurs constats *(D-041)*. ⚠️ **Redéploiement Google requis** — témoin `API tournoi en ligne`, repères remesurés **715/715** et **4314** |
+| **L8** | Neutralisation fonctionnelle du club — `org_club_nom`, `MOT_CLE_CLUB`, **tests** ⚠️ **redéploiement** | ✅ ⚡ **CORRIGÉ le 2026-08-24 : cette case annonçait « PATCH APPLIQUÉ, non commité »**, faux depuis le 2026-08-22. **COMMITÉ `be57f97`, poussé sur `origin/main`**, **part frontend PUBLIÉE** *(Pages `success`, 15:24:34 UTC)*, ✅ ⚡ **part backend EN SERVICE — corrigé le 2026-08-24 : cette case annonçait « NON redéployée »**, démentie par le relevé d'avant collage de M1-B *(témoin à 1 dans l'éditeur et servi publiquement)*. ⛔ **Date et geste INCONNUS** *(⚠️ `be57f97` ne date pas le collage chez Google)* — audité par **4 agents indépendants** *(A Perfs/architecture · B surfaces · C backend/D-040 · D contre-audit)*. ⭐ **Trois arbitrages rouverts** par leurs constats *(D-041)*. ✅ **Redéploiement Google CONSTATÉ** *(témoin `API tournoi en ligne` servi publiquement ; ⛔ **par quel geste et quand, on l'ignore**)*. ⚠️ **Les repères `715/715` et `4314` étaient ceux de ce lot-là** — ceux du jour vivent dans [`../deploiement.md`](../deploiement.md) *(§8 quater)* |
 
 > ⭐ **Pourquoi L1 puis L6 avant tout le reste** : ce sont les deux seuls lots qui engagent des
 > **tiers réels aujourd'hui** — une association pour le document supprimé, **une personne physique
@@ -2187,8 +2187,11 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 > coup — il ne fait pas partie des huit. **Les lots d'exécution sont L1 → L8.** À ce jour :
 > ✅ ⚡ **CORRIGÉ le 2026-08-24 — cette ligne annonçait « 7 sur 8 terminés · 1 non commencé (L8) »**,
 > ce qui a cessé d'être vrai le 2026-08-22. **Les 8 lots d'exécution sont TERMINÉS et publiés**
-> *(L1, L2, L3, L4, L5, L6, L7, L8)*. ⛔ **Cela ne clôt PAS CF-4b** : il manque le **redéploiement de
-> la part backend de L8** chez Google, et **le chantier M1** *(§15)*.
+> *(L1, L2, L3, L4, L5, L6, L7, L8)*. ⛔ **Cela ne clôt PAS CF-4b** : il manque **le chantier M1**
+> *(§15)*. ⚡ **CORRIGÉ le 2026-08-24 : cette phrase citait aussi « le redéploiement de la part
+> backend de L8 »** — le relevé d'avant collage de M1-B a établi qu'elle était **déjà en service**,
+> à une date et par un geste **NON déterminés**. ⚠️ `be57f97` est le premier commit publié portant
+> la chaîne témoin, ⛔ **il ne date pas le déploiement chez Google.**
 >
 > ⭐ **Pourquoi L5 a compté DEUX phases — et pourquoi la leçon vaut d'être gardée** : le dépôt et le
 > serveur réellement en service chez Google sont **deux choses différentes**. Publier le code ne
@@ -2619,7 +2622,7 @@ M1 est terminé quand **les huit conditions** sont réunies :
 | Plus aucun **lien** institutionnel | ✅ code fait *(L3)* · **valeurs du classeur : 🔻 reliquat externe *(§15.8)*, sinon M1-F** — ⚠️ **plus M1-A, qui est close** |
 | Plus aucun **logo** institutionnel | ✅ fait *(L4)* · **logo du club : M1-F** |
 | **Nom d'expéditeur** neutre | ✅ **FAIT ET EN SERVICE** — code *(L5-A, `5649f83`)* **et** redéploiement Google *(L5-B)*, ⭐ **prouvé par un email réellement reçu**. ⚠️ **Une seule des 4 lignes exercée en réel** |
-| **Couplage fonctionnel** au club retiré | ✅ code fait *(L8, `be57f97`)* · ✅ **part frontend PUBLIÉE** *(Pages `success`)* · ⛔ **part backend PAS en service** — attend le redéploiement de **M1-B** |
+| **Couplage fonctionnel** au club retiré | ✅ code fait *(L8, `be57f97`)* · ✅ **part frontend PUBLIÉE** *(Pages `success`)* · ✅ ⚡ **part backend EN SERVICE** — ⚠️ **corrigé le 2026-08-24** : cette case l'annonçait « PAS en service, attend M1-B », et le relevé d'avant collage l'a démentie. ⛔ **Date inconnue** |
 | **L'affiche** | 🔧 **M1-F** |
 | **Preuves finales** *(email reçu, vues publiques, PDF, dossier)* | 🔧 **M1-F** |
 
@@ -2651,7 +2654,7 @@ M1 est terminé quand **les huit conditions** sont réunies :
 | Étape | État |
 |---|---|
 | **M1-A** | 🏁 **TERMINÉE, FUSIONNÉE, PUBLIÉE dans `main`, et CLÔTURÉE** le 2026-08-24 — **fast-forward**, ⛔ **sans réécrire un seul commit ni créer de commit de fusion** : **`9abaebc`** *(les 7 documents)* · **`b65a6b0`** *(journal §17)* · **`aff6d5f`** *(correctif de statut et de déploiement)*. ⛔ **Plus rien n'est ouvert dans cette étape** |
-| **M1-B** | 🚧 **EN COURS — écrite, testée hors ligne, COMMITÉE et POUSSÉE sur sa branche** *(2026-08-24, `dc03488`)*. ⛔ **Ni publiée, ni redéployée, ni vérifiée en réel** : voir les sept états ci-dessous, dont **trois ne sont PAS atteints** |
+| **M1-B** | 🚧 **EN COURS — le BACKEND est EN SERVICE** *(version Apps Script **156**, 2026-08-24 11:13)*, code commité et poussé sur sa branche *(`dc03488`)*, tests **796/796 constatés chez Google**. ⛔ **Le FRONTEND n'est PAS publié** et ⛔ **aucune réinitialisation réelle n'a été jouée** : voir les sept états ci-dessous |
 | **M1-C → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite** |
 
 > ⭐ **Les sept états de M1-B, et ils ne se déduisent pas les uns des autres** *(`CLAUDE.md` §8 septies)* :
@@ -2659,12 +2662,12 @@ M1 est terminé quand **les huit conditions** sont réunies :
 > | État | Atteint ? |
 > |---|---|
 > | **① Implémentée** | ✅ **oui** — allowlist des 26, récompenses par préfixe, branchement dans `reinitialiserTournoi`, message de confirmation |
-> | **② Testée** | ✅ **oui, HORS LIGNE** — **796/796 OK, 0 FAIL**, dont 81 vérifications neuves. ⛔ **Le bilan chez Google n'est PAS constaté** : il le sera au geste 4 du redéploiement *(`deploiement.md`)* |
+> | **② Testée** | ✅ **oui, ET CONSTATÉ CHEZ GOOGLE** le 2026-08-24 — **`R92 — 796/796 OK, 0 FAIL`** dans le journal Apps Script, `Test.gs` à **4645** lignes. *(La valeur avait d'abord été prédite hors ligne ; elle est désormais mesurée là où elle compte.)* |
 > | **③ Commitée** | ✅ **oui** — **`dc03488`**, 9 fichiers |
 > | **④ Poussée** | ✅ **oui** — sur **la branche `claude/m1b-reinitialisation-cycle-de-vie` UNIQUEMENT**. ⛔ Aucune exécution GitHub Actions déclenchée *(constaté ; le workflow Pages n'écoute que `main`)* |
-> | **⑤ Frontend publié** *(GitHub Pages)* | ⛔ **NON** |
-> | **⑥ Backend redéployé** *(collage Apps Script)* | ⛔ **NON** — ⚠️ **et ce redéploiement mettra AUSSI en service la part backend de CF-4b/L8** |
-> | **⑦ Vérifiée en réel** *(réinitialisation sur une copie)* | ⛔ **NON** |
+> | **⑤ Frontend publié** *(GitHub Pages)* | ⛔ **NON** — ⚠️ **et c'est volontaire** : le serveur efface déjà, l'ancien dialogue ne l'annonce pas encore. ⛔ **Aucune réinitialisation réelle ne doit être lancée tant que cette fenêtre est ouverte** |
+> | **⑥ Backend redéployé** *(collage Apps Script)* | ✅ **OUI — version 156, 2026-08-24 à 11:13** *(la 155 datait du 22/08 à 17:31)*. **Même déploiement, même adresse.** Témoins après collage : **3** et **2** ; fichier **8423** lignes, `viderDonnees` ligne **8418** ; `Test.gs` **4645** lignes. ⚡ **Ce redéploiement n'a PAS mis L8 en service, contrairement à ce qui était annoncé ici** : le relevé d'avant collage a montré qu'elle y était déjà |
+> | **⑦ Vérifiée en réel** *(réinitialisation sur une copie)* | ⛔ **NON — et il ne faut pas confondre.** Les tests passent chez Google et la Web App répond, ⛔ **mais aucune réinitialisation n'a été jouée** : l'effet destructif de M1-B n'est **constaté sur aucune donnée**. ⭐ **Un test vert prouve que le code fait ce qu'il dit ; il ne prouve pas qu'on l'ait fait tourner sur un vrai classeur** |
 
 > ⚡ **Levée d'ambiguïté, 2026-08-24 *(soir)*.** Cette case annonçait *« TERMINÉE »* **et**
 > *« une seule chose reste en attente dans M1-A »* : les deux ensemble rendaient la clôture
