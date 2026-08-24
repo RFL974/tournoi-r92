@@ -14,10 +14,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 
 ### ⏳ Écrit mais PAS ENCORE EN LIGNE — la carte « Publier le tournoi » devient accessible dès le début — 2026-08-24
 
-> ⛔ **Cette entrée décrit un travail qui n'est PAS publié.** Il est écrit et testé localement,
-> ⛔ **ni commité, ni mis en ligne, ni vérifié dans un vrai navigateur.** ⭐ **Rien de ceci n'est
-> visible dans l'application aujourd'hui.** Cette réserve sera levée quand ce sera réellement en
-> ligne et contrôlé. *(Suivi : **R-098** dans `docs/industrialisation/RISQUES.md`.)*
+> ⛔ **Cette entrée décrit un travail qui n'est PAS EN LIGNE.** Il est écrit, testé et **enregistré
+> sur une branche de travail** — ⛔ **mais pas intégré à la version publiée, ni vérifié dans un vrai
+> navigateur.** ⭐ **Rien de ceci n'est visible dans l'application aujourd'hui.** Cette réserve sera
+> levée quand ce sera réellement en ligne et contrôlé.
+> *(Suivi : **R-098** dans `docs/industrialisation/RISQUES.md`.)*
 
 **Le problème, découvert en essayant vraiment.** L'entrée précédente annonçait que l'adresse de la
 page publique était visible dans l'administration. ⚠️ **En pratique, on ne pouvait pas y accéder.**

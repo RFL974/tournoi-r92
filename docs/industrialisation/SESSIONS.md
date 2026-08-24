@@ -8750,3 +8750,41 @@ passe **obligatoirement** par le navigateur de Romain. C'est une confirmation di
 3. ⭐ **Rejouer A1 → E dans le parcours NORMAL** — ⛔ pas en « Vue classique » ;
 4. Établir si **D1 → D4** sont réalisables *(un lien personnel de dossier club fonctionne-t-il
    encore ?)*, ⛔ **sans recréer aucune donnée**.
+
+### 22.8 — ⚡ ADDENDUM APRÈS LE GESTE — le correctif est commité et poussé *(2026-08-24, soir)*
+
+> ⛔ **§22.3 et §22.6 ne sont PAS réécrits.** Ils disaient vrai à leur date — §22.3 annonçait
+> lui-même *« au moment où ces lignes sont écrites, le correctif est dans l'ARBRE DE TRAVAIL et
+> RIEN D'AUTRE »*, en demandant explicitement d'être relu **après** les gestes. ⭐ **C'est ce que
+> fait cet addendum** *(`CLAUDE.md` §8 septies : le nouvel état s'AJOUTE)*.
+
+**Romain a validé le patch complet *(desktop + mobile)*. Il a été commité et poussé sur une branche
+dédiée — ⛔ délibérément SANS fusion ni publication.**
+
+| Geste | ✅ Ce qui le CONSTATE — l'observation, pas le document |
+|---|---|
+| **Branche** | ⛔ **`claude/pub-2-correctif-r098` n'existait ni localement ni à distance** *(vérifié avant création : `git branch --list` et `git ls-remote` tous deux vides)*. Créée depuis **`2ef9ce0`**. 🔬 **L'arbre de travail est passé intact** : empreintes `md5` de `git status --porcelain` **et** de `git diff` identiques avant / après le changement de branche |
+| **Commit A** | **`9bdeb06`**, parent **`2ef9ce0`**, ⭐ **UN SEUL parent — ce n'est donc pas une fusion**. **9 fichiers**, **498 insertions / 15 suppressions**. ⛔ **0 fichier `backend/`**. Arbre de travail **propre** après coup |
+| **Poussée** | `git ls-remote origin refs/heads/claude/pub-2-correctif-r098` = **`9bdeb06`** = `HEAD` · écart **0 / 0** |
+| **Fusion** | ⛔ **AUCUNE.** `origin/main` toujours sur **`2ef9ce0`** · `git branch -r --contains 9bdeb06` ne renvoie **que** `origin/claude/pub-2-correctif-r098` |
+| **Publication GitHub Pages** | ⛔ **AUCUNE, et c'est CONSTATÉ, pas déduit.** 🔬 Interrogation directe de l'API : **total des exécutions toujours 220**, la dernière restant **#220** *(`main`, `b002a57`, 16:17:35 UTC)* — ⭐ **antérieure à ce commit**. 🔬 Filtrage sur la branche : **0 exécution**. ⛔ **0 pull request ouverte** *(le message de `git push` propose un lien de création — ⭐ il n'a pas été suivi)* |
+| **Redéploiement Apps Script** | ⛔ **SANS OBJET** — 🔬 aucun fichier `backend/` dans le commit |
+| **Comportement en production** | ⛔ **NON CONSTATÉ, et il ne peut pas l'être** — rien n'est en ligne |
+
+**Contrôles rejoués juste avant le commit, et tous conformes au rapport de validation**
+
+`node --check` : **30/30** · `git diff --check` : propre · **4 harnais, 57 contrôles, 0 échec** ·
+🔬 `backend/Code.gs` **strictement identique** *(donc `publierTournoi()` intact)* · ⛔ **aucun appel
+serveur ajouté** · ⭐ **une seule occurrence de `libre: true` dans `assistant.js`** · « Résumé »
+conserve `tableau-bord, etat-avancement, bloc-reinitialisation` · `onPublier()` : **une seule ligne
+de code ajoutée**, `majVerrouPublier();` · ⛔ **aucune donnée métier créée**.
+
+**⛔ Ce que ces gestes NE clôturent PAS**
+
+| | |
+|---|---|
+| **PUB-2** | ⛔ **PAS TERMINÉ** — le correctif est **sécurisé sur une branche**, ⛔ ni fusionné, ni republié, ni revalidé dans un navigateur |
+| **R-098** | ⛔ **OUVERT** — ⭐ **ses cinq conditions de fermeture restent ENTIÈRES** *(`RISQUES.md`)* : publication · vérification réelle grand écran · vérification réelle mobile · contrôle de « Publier » · contrôle de « Masquer » |
+| **M1-PUB** | ⛔ **OUVERT** · **R-097** ⛔ OUVERT · **R-096** ⛔ OUVERT et inchangé · **M1-C1** ⏸️ SUSPENDUE |
+| **PUB-3 / PUB-4 / PUB-5** | ⛔ **NON COMMENCÉS** |
+| **Données** | ⛔ **aucune recréée** — le repère *« DONNÉES DE TOURNOI À RECRÉER »* reste **ACTIF** |

@@ -1376,7 +1376,7 @@ vitrine.
 |---|---|
 | **Priorité** | **P1** — ⚠️ **empêche un usage réel** : l'organisateur ne peut pas communiquer l'adresse de son tournoi tant qu'il n'a pas tout préparé |
 | **Domaine** | **E — UX / accessibilité** · **A — métier / product owner** |
-| **Statut** | ⛔ **OUVERT** — correctif **implémenté localement**, ⛔ **non commité, non publié, non vérifié en réel** |
+| **Statut** | ⛔ **OUVERT** — correctif **commité (`9bdeb06`) et poussé** sur la branche `claude/pub-2-correctif-r098`, ⛔ **non fusionné, non publié, non vérifié en réel**. ⚡ *(Cette ligne annonçait « implémenté localement, non commité, non publié » : vrai jusqu'au commit du 2026-08-24 au soir — `CLAUDE.md` §8 septies.)* |
 | **Découvert** | 2026-08-24, **pendant la validation fonctionnelle réelle de PUB-2**, au tout premier contrôle |
 | **Rattachement** | ✅ **M1-PUB / PUB-2** — la correction fait partie de ce micro-lot |
 | **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* · ⭐ *« Une adresse n'est pas une autorisation. »* |
