@@ -7908,16 +7908,26 @@ preuve. **L'application a répondu** : *« Supprimés : 2 catégorie(s), 38 équ
 ⚠️ **Un champ vide avant et vide après ne prouverait rien.** Chacun des 36 a donc été rendu
 **contrôlable** avant le geste :
 
-- les **10 permanents** étaient tous **NON VIDES** au relevé AVANT — certains portaient déjà une
-  valeur du classeur, les autres ont reçu une **sentinelle générique** *(`TEST_M1B_PERM_CODE`,
-  `TEST_M1B_PERM_REPRES`, `TEST_M1B_PERM_PRESID`…)*. ⭐ **L'égalité stricte avant/après porte donc
-  sur des valeurs réellement présentes**, pas sur des cases vides ;
-- les **26 événementiels** portaient tous une valeur, ⭐ **discriminante là où c'était
-  indispensable** : pour les champs à **défaut documenté**, une cellule vide **s'affiche** comme une
-  valeur. `org_label_edr` *(défaut `oui`)* et `org_equipes_etrangeres` *(défaut `non`)* ont donc reçu
-  la valeur **contraire à leur défaut** — seule façon de distinguer *« conservé »* de *« vidé, puis
-  réaffiché par le défaut »* ;
-- les **2 récompenses** étaient **non vides** avant, **vides** après.
+**La règle appliquée, et elle est simple** : ⭐ **une sentinelle n'a été posée que sur une cellule
+VIDE.** Une cellule déjà renseignée est sa propre sentinelle — l'écraser aurait fait perdre une
+valeur pour rien.
+
+- les **10 permanents** étaient tous **NON VIDES** au relevé AVANT. **Trois** étaient vides et ont
+  reçu une **sentinelle générique** — `TEST_M1B_PERM_CODE`, `TEST_M1B_PERM_REPRES`,
+  `TEST_M1B_PERM_PRESID` ; **les sept autres étaient déjà renseignés et n'ont pas été touchés**.
+  ⭐ **L'égalité stricte avant/après porte donc sur des valeurs réellement présentes** ;
+- les **26 événementiels** portaient tous une valeur au relevé AVANT : **les cellules initialement
+  vides ont reçu les sentinelles prévues**, **les cellules déjà renseignées ont été laissées telles
+  quelles** ;
+- les **2 récompenses** étaient **déjà non vides** avant, **vides** après ;
+- ⭐ le **relevé AVANT complet a été relu** avant de lancer le reset, et le **relevé APRÈS a porté
+  directement sur `Config`**.
+
+> ⚡ **RECTIFIÉ le 2026-08-24 — et il faut dire ce que ce paragraphe affirmait.** Une première
+> rédaction écrivait que `org_label_edr` *(défaut `oui`)* et `org_equipes_etrangeres`
+> *(défaut `non`)* **avaient reçu la valeur contraire à leur défaut**, et les présentait tous deux
+> comme des **événementiels**. ⛔ **Les deux affirmations étaient fausses** — voir le rectificatif
+> **§19.14**.
 
 > ⛔ **Les valeurs préexistantes du classeur ne sont PAS reproduites ici** — elles identifieraient un
 > club ou des personnes, et ⭐ **la preuve n'en a aucun besoin** : ce qui l'établit est l'**égalité
@@ -7968,3 +7978,51 @@ reproduit ici**. Ce n'est **pas** un défaut de M1-B *(le code, lui, est neutre 
 club par défaut depuis **L8**)* : c'est une **donnée** du classeur, et son traitement reste prévu
 en **M1-F**. ⭐ **Au passage, elle a servi la démonstration** : c'est l'un des permanents dont la
 conservation a été vérifiée.
+
+### 19.14 — ⚡ RECTIFICATIF du 2026-08-24 — le protocole de preuve de M1-B
+
+> ⛔ **Le commit `7ebacfb` n'est PAS réécrit** — ni amend, ni rebase, ni force. **Son message porte
+> l'erreur, et il la portera toujours.** ⭐ *Une preuve erronée se corrige explicitement, elle ne
+> s'efface pas de l'histoire* — c'est la même doctrine que **§8 septies** pour les états.
+
+**Ce qui avait été écrit, et qui est faux :**
+
+> *« Les deux champs à défaut documenté — `org_label_edr` (défaut `oui`) et
+> `org_equipes_etrangeres` (défaut `non`) — ont reçu la valeur contraire à leur défaut. »*
+
+**Ce qui est vrai, d'après le relevé brut de `Config` :**
+
+| | AVANT | Modifié avant le reset ? | APRÈS |
+|---|---|---|---|
+| `org_label_edr` *(⭐ **un des 10 PERMANENTS**)* | `oui` | ⛔ **NON** — déjà renseigné | `oui` ➡️ ✅ **conservé** |
+| `org_equipes_etrangeres` *(⭐ **un des 26 ÉVÉNEMENTIELS**)* | `non` | ⛔ **NON** — déjà renseigné | **cellule vide** ➡️ ✅ **effacé** |
+
+**Deux erreurs, donc, et non une :**
+
+1. ⛔ ces deux cellules **n'ont pas été modifiées** : elles étaient **déjà non vides**, et la règle
+   appliquée était *« une sentinelle seulement sur une cellule vide »* ;
+2. ⛔ elles ont été présentées comme **deux exemples parmi les 26 événementiels**, alors que
+   **`org_label_edr` appartient aux 10 PERMANENTS**. Les mettre dans le même sac effaçait la
+   distinction que tout M1-B sert à établir.
+
+#### ⭐ Pourquoi le verdict, lui, ne bouge pas d'un pouce
+
+**Parce que la preuve n'a jamais reposé sur l'affichage.** Le raisonnement erroné portait sur un
+risque d'**écran** : *« une cellule vide s'affiche comme une valeur, donc il faut une valeur
+contraire au défaut »*. ⛔ **Ce risque n'existe pas ici** : le relevé a porté sur **la cellule**,
+avant et après.
+
+- `org_label_edr` : `oui` ➡️ `oui`. **La cellule a gardé son contenu** — conservation constatée ;
+- `org_equipes_etrangeres` : `non` ➡️ **vide**. **La cellule a été vidée** — effacement constaté.
+  *(Que l'écran réaffiche `non` par défaut est vrai, et sans effet : on n'a pas regardé l'écran.)*
+
+➡️ **Les verdicts restent identiques** : **PERMANENTS 10/10 conservés** · **ÉVÉNEMENTIELS 26/26
+effacés** · **RÉCOMPENSES 2/2 effacées** · **M1-B ✅ COMPLÈTE ①→⑦**. Même logique pour
+`org_type_terrain`, contrôlé lui aussi sur le stockage brut.
+
+> 🎯 **La leçon, et elle est exactement celle de ce chantier** : j'ai décrit **ce que le plan
+> proposait** — les sentinelles que j'avais suggérées pour ces deux champs — au lieu de **ce qui a
+> été fait**. ⭐ **C'est §8 septies transposé à la preuve** : *un protocole écrit avant le geste est
+> une intention ; seul le relevé dit ce qui s'est passé.* ⛔ **Et une preuve mal décrite est une
+> preuve fragile**, même quand son résultat est juste — car le premier lecteur qui vérifierait la
+> description y trouverait un mensonge, et douterait du reste.
