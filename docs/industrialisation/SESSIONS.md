@@ -8157,15 +8157,35 @@ jour. C'est le mécanisme de **§8 septies** : un état écrit **avant** le gest
 
 > ⚠️ **Cette section est rédigée AVANT le commit et complétée APRÈS** *(`CLAUDE.md` §8 septies et
 > §12.4 bis)*. ⛔ **Tant qu'elle porte une case non renseignée, le geste n'est pas constaté.**
+>
+> ⚡ **Cette section annonçait « commit : PAS ENCORE FAIT · poussée : PAS ENCORE FAITE ».** C'était
+> **vrai au moment où le contenu du commit A a été figé** — et c'est précisément pourquoi elle est
+> entrée telle quelle dans ce commit. ⭐ **Les gestes ont eu lieu depuis, et voici ce qui a été
+> CONSTATÉ**, geste par geste.
 
 | Geste | État constaté |
 |---|---|
-| **Commit** | ⏳ **PAS ENCORE FAIT** — le diff est présenté à Romain pour examen ; ⛔ **le commit est autorisé séparément** |
-| **Poussée** | ⏳ **PAS ENCORE FAITE** |
-| **Fusion dans `main`** | ⏳ **PAS ENCORE FAITE** |
-| **Publication GitHub Pages** | ⛔ **SANS OBJET** — aucun fichier `frontend/` modifié |
-| **Redéploiement backend** | ⛔ **SANS OBJET** — aucun fichier `backend/` modifié |
-| **Comportement en production** | ⛔ **NON ÉTABLI, et hors périmètre de PUB-1** |
+| ✅ **Commit A — le contenu de PUB-1** | **`56dabd322c45232d41947076662ee8ddb48ac8d2`**, créé le 2026-08-24. Parent : **`ebf1b07`** *(relevé par `git rev-parse HEAD^`)* |
+| ✅ **Contrôle du périmètre de A** | **6 fichiers exactement** — `docs/architecture.md`, `DECISIONS.md`, `ETAT.md`, `PLAN.md`, `RISQUES.md`, `SESSIONS.md` · **625 insertions, 6 suppressions** · ⛔ **0 fichier `backend/`, 0 fichier `frontend/`** · ⭐ **le diff commité a été comparé octet à octet au diff validé : identique** |
+| ✅ **Poussée de A — RÉELLEMENT CONSTATÉE** | `git push -u origin claude/m1-pub-documentation-0afcmo` ⇒ **`* [new branch]`**. ⭐ **La branche distante n'existait pas : cette poussée l'a CRÉÉE** |
+| ✅ **Branche distante — état constaté** | `git ls-remote --heads origin` interroge **GitHub directement** et répond **`56dabd32…  refs/heads/claude/m1-pub-documentation-0afcmo`**. Écart local/distant : **0 en avance / 0 en retard** |
+| ⛔ **Fusion dans `main`** | **NON FAITE.** ⭐ **PUB-1 reste sur sa branche seule, et n'est PAS encore déclaré clôturé dans `main`.** La fusion et la clôture finale font l'objet d'une **validation séparée** de Romain |
+| ⛔ **Publication GitHub Pages** | **SANS OBJET, et vérifié DEUX FOIS** — ⭐ voir le double contrôle ci-dessous |
+| ⛔ **Redéploiement backend** | **SANS OBJET** — **0 fichier `backend/`** dans le commit A *(fait structurel, relevé par `git show --name-only`)* |
+| ⛔ **Comportement en production** | **TOUJOURS NON ÉTABLI**, et **hors périmètre de PUB-1** *(`CLAUDE.md` §13.6)* |
+
+> ⭐ **Le double contrôle de GitHub Pages — et pourquoi il compte** *(exigence de Romain,
+> 2026-08-24)*. ⛔ **Un diff ne prouve pas l'absence d'un run** : il dit ce qui a été poussé, pas ce
+> que GitHub en a fait. Les deux faits sont donc relevés **séparément** :
+>
+> | | Ce qui est établi |
+> |---|---|
+> | **Fait STRUCTUREL** | **Aucun fichier `frontend/` n'est contenu dans le commit A** — 0 sur 6 *(`git show --pretty="" --name-only`)*. Et le workflow `pages.yml` ne se déclenche que sur **`push` vers `main`** limité aux chemins `frontend/**` et `.github/workflows/pages.yml`, ou sur une **proposition de fusion** portant ces mêmes chemins |
+> | **Fait OBSERVÉ** | ⭐ **Aucun run Pages observé après la poussée.** Interrogation de l'API GitHub Actions : **0 run sur la branche** ; et sur les 220 runs du dépôt, **le SHA `56dabd32…` n'apparaît nulle part**, **la branche `claude/m1-pub-documentation-0afcmo` non plus**. Le run le plus récent reste **`8dfd28a` sur `main`** *(2026-08-24 09:32 UTC, M1-B)* |
+>
+> ⛔ **Aucun workflow n'a été déclenché manuellement.**
+
+| ✅ **Commit B — la trace post-geste** | Le présent bloc. ⛔ **`SESSIONS.md` SEUL** — ⛔ **ni `PLAN.md`, ni `ETAT.md` ne sont touchés pour y écrire « PUB-1 terminé »**, puisque **PUB-1 n'est pas encore clôturé** |
 
 ### 20.9 — Prochaine session recommandée
 
