@@ -1376,7 +1376,7 @@ vitrine.
 |---|---|
 | **Priorité** | **P1** — ⚠️ **empêche un usage réel** : l'organisateur ne peut pas communiquer l'adresse de son tournoi tant qu'il n'a pas tout préparé |
 | **Domaine** | **E — UX / accessibilité** · **A — métier / product owner** |
-| **Statut** | ⛔ **OUVERT** — correctif **commité (`9bdeb06`) et poussé** sur la branche `claude/pub-2-correctif-r098`, ⛔ **non fusionné, non publié, non vérifié en réel**. ⚡ *(Cette ligne annonçait « implémenté localement, non commité, non publié » : vrai jusqu'au commit du 2026-08-24 au soir — `CLAUDE.md` §8 septies.)* |
+| **Statut** | ⛔ **OUVERT** — correctif **fusionné dans `main` (`9bdeb06`, `b8ce265`) et PUBLIÉ** *(run Pages **#221**, `success`)*, ⛔ **mais NON VÉRIFIÉ dans un navigateur**. ⭐ **La 1ʳᵉ des cinq conditions de fermeture est remplie ; les QUATRE autres restent entières** *(voir la fin de cette fiche)*. ⚡ *(Cette ligne a annoncé successivement « implémenté localement, non commité » puis « commité et poussé sur branche, non fusionné, non publié » : chacune vraie à sa date — `CLAUDE.md` §8 septies.)* |
 | **Découvert** | 2026-08-24, **pendant la validation fonctionnelle réelle de PUB-2**, au tout premier contrôle |
 | **Rattachement** | ✅ **M1-PUB / PUB-2** — la correction fait partie de ce micro-lot |
 | **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* · ⭐ *« Une adresse n'est pas une autorisation. »* |
@@ -1435,8 +1435,13 @@ VISIBLE.** *On a contrôlé le contenu d'une pièce sans essayer d'en ouvrir la 
 > ⚠️ **Ne pas fermer cette fiche avant que les CINQ soient réellement observées.** Le code et les
 > tests d'exécution **ne prouvent pas** le comportement en production *(`CLAUDE.md` §13.6)*.
 
-1. ⛔ **Publication du correctif** *(commit, fusion, GitHub Pages)* ;
+1. ✅ **Publication du correctif** — **FAITE le 2026-08-24** : fusion **fast-forward** dans `main` *(`9bdeb06`, `b8ce265`)* et run Pages **#221** `success` *(`verifier` et `deploy`)* ;
 2. ⛔ **Vérification réelle sur grand écran** ;
 3. ⛔ **Vérification réelle sur mobile / assistant** ;
 4. ⛔ **Contrôle du bouton « Publier »** *(grisé si incomplet, actif sinon)* ;
 5. ⛔ **Contrôle de « Masquer »** *(actif même avec des prérequis incomplets)*.
+
+> ⚠️ **Les points 4 et 5 demanderont un état du classeur permettant réellement de publier.** ⛔ **Ne
+> recréer aucune donnée pour les obtenir sans décision explicite** : le repère *« DONNÉES DE TOURNOI
+> À RECRÉER »* reste **ACTIF**, et la manière d'obtenir cette preuve sans le violer est un sujet à
+> trancher séparément.

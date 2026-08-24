@@ -12,12 +12,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
-### ⏳ Écrit mais PAS ENCORE EN LIGNE — la carte « Publier le tournoi » devient accessible dès le début — 2026-08-24
+### La carte « Publier le tournoi » devient accessible dès le début — 2026-08-24
 
-> ⛔ **Cette entrée décrit un travail qui n'est PAS EN LIGNE.** Il est écrit, testé et **enregistré
-> sur une branche de travail** — ⛔ **mais pas intégré à la version publiée, ni vérifié dans un vrai
-> navigateur.** ⭐ **Rien de ceci n'est visible dans l'application aujourd'hui.** Cette réserve sera
-> levée quand ce sera réellement en ligne et contrôlé.
+> ⚠️ **En ligne, mais pas encore contrôlé de visu.** Ce travail est **publié** *(mis en ligne le
+> 2026-08-24 au soir)* — ⛔ **mais il n'a pas encore été vérifié dans un vrai navigateur.** ⭐ Ce que
+> tu lis ci-dessous décrit ce que le code fait ; ⛔ **personne n'a encore constaté que l'écran s'y
+> conforme.** Cette réserve sera levée après le contrôle manuel.
 > *(Suivi : **R-098** dans `docs/industrialisation/RISQUES.md`.)*
 
 **Le problème, découvert en essayant vraiment.** L'entrée précédente annonçait que l'adresse de la

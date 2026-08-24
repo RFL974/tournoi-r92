@@ -8788,3 +8788,48 @@ de code ajoutée**, `majVerrouPublier();` · ⛔ **aucune donnée métier créé
 | **M1-PUB** | ⛔ **OUVERT** · **R-097** ⛔ OUVERT · **R-096** ⛔ OUVERT et inchangé · **M1-C1** ⏸️ SUSPENDUE |
 | **PUB-3 / PUB-4 / PUB-5** | ⛔ **NON COMMENCÉS** |
 | **Données** | ⛔ **aucune recréée** — le repère *« DONNÉES DE TOURNOI À RECRÉER »* reste **ACTIF** |
+
+### 22.9 — ⚡ ADDENDUM APRÈS LE GESTE — le correctif R-098 est fusionné et PUBLIÉ *(2026-08-24, soir)*
+
+> ⛔ **§22.3, §22.6 et §22.8 ne sont PAS réécrits.** Ils disaient vrai à leur date — §22.8 constatait
+> *« commité et poussé sur une branche, ⛔ ni fusionné, ni publié »*, et c'était exact. ⭐ **Le nouvel
+> état s'AJOUTE ici** *(`CLAUDE.md` §8 septies)*.
+
+| Geste | ✅ Ce qui le CONSTATE — l'observation, pas le document |
+|---|---|
+| **Fusion** | `git merge --ff-only b8ce265` → *« Updating 2ef9ce0..b8ce265 — Fast-forward »*. ⭐ **AUCUN commit de fusion** *(`git log --merges origin/main..HEAD` : **vide**)* · ⭐ **AUCUN SHA réécrit** *(`main` et `origin/claude/pub-2-correctif-r098` pointent **le même objet**)* · **exactement 2 commits ajoutés** : `9bdeb06`, `b8ce265` |
+| **Périmètre réellement publié** | 🔬 **Relevé AVANT la poussée** *(`git diff --name-only origin/main..HEAD`)* : **9 fichiers**, ⛔ **0 sous `backend/`** |
+| **Poussée** | `git push` → `2ef9ce0..b8ce265  main -> main`. **Constaté ensuite côté GitHub** : `git ls-remote origin refs/heads/main` = **`b8ce265`** = `HEAD` · écart **0 / 0** · arbre **propre** |
+| **Publication GitHub Pages** | 🔬 **Interrogation directe de l'API**, ⛔ **pas déduite du push** : run **#221** *(id `32767413339`)*, événement **`push`**, branche **`main`**, `head_sha` **`b8ce265`**, conclusion **`success`** *(19:18:39 → 19:19:11 UTC)*. **Job `verifier` : `success`** — journal : **« 30 fichiers JavaScript vérifiés, aucun cassé »**, ⭐ **`assistant.js`, `ecrans.js` et `admin-tableau-bord.js` y figurent nommément**. **Job `deploy` : `success`** *(7 étapes, dont « Déployer sur GitHub Pages » achevée à 19:19:08)* |
+| **Redéploiement Apps Script** | ⛔ **SANS OBJET** — 🔬 `backend/Code.gs` strictement identique |
+| **Comportement en production** | ⛔ **NON CONSTATÉ** — 🔬 le réseau de l'environnement de travail **refuse `rfl974.github.io`** *(§22.5)*. ⭐ **Seul le navigateur de Romain peut l'établir.** |
+
+**⚠️ Un incident de MESURE, à raconter parce qu'il pourrait se reproduire**
+
+> Au moment de rejouer les contrôles avant fusion, **3 des 57 ont échoué**. ⛔ **Ce n'était pas le
+> code.** Les trois portaient sur la ligne *« AVANT »*, et les harnais lisaient cette référence par
+> `git show HEAD:` — or **`HEAD` valait désormais `b8ce265`, qui PORTE le correctif**. « Avant » et
+> « après » étaient devenus le même fichier, et les tests de contraste ne pouvaient plus passer.
+>
+> 🔬 **Établi, pas supposé** : `git show HEAD:assistant.js | grep -c "libre: true"` = **1**, contre
+> **0** pour `origin/main`. La référence a été corrigée en **`origin/main`** *(l'état SANS
+> correctif)*, et les **57/57** sont revenus.
+>
+> 🎯 **La leçon, et c'est la troisième de cette session sur le même thème.** ⭐ **Un harnais qui
+> compare à `HEAD` mesure autre chose après un commit qu'avant.** La référence d'un test de
+> non-régression doit être un point FIXE — ⛔ jamais un pointeur mouvant. C'est la sœur du défaut de
+> §22.3 ter : là, le test ne pouvait pas échouer ; ici, il ne pouvait plus réussir.
+
+**⛔ Ce que ces gestes NE clôturent PAS**
+
+| | |
+|---|---|
+| **R-098** | ⛔ **OUVERT.** ⭐ **1 condition sur 5 est remplie** *(la publication)*. Restent : vérification réelle **grand écran**, vérification réelle **mobile**, contrôle de **« Publier »**, contrôle de **« Masquer »** |
+| **PUB-2** | ⛔ **PAS TERMINÉ** — correctif fusionné et publié, ⛔ **en attente de revalidation fonctionnelle réelle** |
+| **M1-PUB** | ⛔ **OUVERT** · **R-097** ⛔ OUVERT · **R-096** ⛔ OUVERT et inchangé · **M1-C1** ⏸️ SUSPENDUE |
+| **PUB-3 / PUB-4 / PUB-5** | ⛔ **NON COMMENCÉS** |
+| **Données** | ⛔ **aucune recréée** — le repère *« DONNÉES DE TOURNOI À RECRÉER »* reste **ACTIF** |
+
+> ⚠️ **Les conditions 4 et 5 de R-098 demanderont un état permettant réellement de publier.**
+> ⛔ **Ne recréer aucune donnée pour cela sans décision explicite** — la manière d'obtenir cette
+> preuve sans violer le repère M1-B est un sujet à trancher séparément.
