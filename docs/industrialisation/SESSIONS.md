@@ -7874,3 +7874,97 @@ cela reste à établir par un geste réel, organisé séparément.
 > de trois compteurs, on aurait fabriqué **une preuve d'apparence** — exactement le mécanisme du
 > `ping` vert de **D-040**, qui répondait pareil avant et après. ⭐ *Une observation prouve ce
 > qu'elle montre ; c'est le code qui dit ce qui est atteignable.*
+
+### 19.13 — 🏁 Addendum du 2026-08-24 — le point ⑦ est exercé : M1-B est COMPLET
+
+> ⛔ **Les §19.8 à §19.12 bis ne sont pas réécrits.** Ils disaient vrai à leur date, et notamment
+> que *« le geste destructif n'a pas été exercé »*. ⭐ **Il l'a été.**
+
+**La chaîne parcourue, de bout en bout — et c'est ce qui fait la valeur de cette preuve :**
+
+```
+frontend GitHub Pages publié  →  1er dialogue M1-B  →  CONTINUER
+   →  2e dialogue irréversible  →  OUI, TOUT EFFACER
+      →  backend Apps Script v156  →  classeur connecté
+```
+
+⚠️ **Décision assumée, et il faut qu'elle reste lisible** : le test a été mené sur le **classeur
+réellement connecté à l'application**, ⛔ **pas sur une copie**. Les données présentes étaient des
+**données d'essai** ; leur destruction a été **décidée à l'avance** et acceptée comme prix de la
+preuve. **L'application a répondu** : *« Supprimés : 2 catégorie(s), 38 équipe(s), 10 poule(s),
+51 match(s). Tournoi masqué. »*
+
+#### Le verdict, relevé DANS `Config` — valeur stockée, avant et après
+
+| | Résultat |
+|---|---|
+| **PERMANENTS** | ✅ **10 / 10 CONSERVÉS** — chaque valeur après **strictement identique** à avant |
+| **ÉVÉNEMENTIELS** | ✅ **26 / 26 EFFACÉS** — cellules vides, ⭐ **et les 26 lignes existent toujours** |
+| **RÉCOMPENSES** | ✅ **2 / 2 EFFACÉES** — `org_recompenses_U8`, `org_recompenses_U10` : clés présentes, valeurs vides |
+| **Contrôles annexes** | `tournoi_publie` = **`non`** · `tournoi_affiche_id` **vidé** · `parking_photo_id` **vidé** |
+
+#### Le protocole — pourquoi ce verdict a du sens
+
+⚠️ **Un champ vide avant et vide après ne prouverait rien.** Chacun des 36 a donc été rendu
+**contrôlable** avant le geste :
+
+- les **10 permanents** étaient tous **NON VIDES** au relevé AVANT — certains portaient déjà une
+  valeur du classeur, les autres ont reçu une **sentinelle générique** *(`TEST_M1B_PERM_CODE`,
+  `TEST_M1B_PERM_REPRES`, `TEST_M1B_PERM_PRESID`…)*. ⭐ **L'égalité stricte avant/après porte donc
+  sur des valeurs réellement présentes**, pas sur des cases vides ;
+- les **26 événementiels** portaient tous une valeur, ⭐ **discriminante là où c'était
+  indispensable** : pour les champs à **défaut documenté**, une cellule vide **s'affiche** comme une
+  valeur. `org_label_edr` *(défaut `oui`)* et `org_equipes_etrangeres` *(défaut `non`)* ont donc reçu
+  la valeur **contraire à leur défaut** — seule façon de distinguer *« conservé »* de *« vidé, puis
+  réaffiché par le défaut »* ;
+- les **2 récompenses** étaient **non vides** avant, **vides** après.
+
+> ⛔ **Les valeurs préexistantes du classeur ne sont PAS reproduites ici** — elles identifieraient un
+> club ou des personnes, et ⭐ **la preuve n'en a aucun besoin** : ce qui l'établit est l'**égalité
+> stricte**, jamais le contenu. *(Principe du dépôt public neutre — chantier **CF-4b**.)*
+
+> ⭐ **Le piège annoncé a été évité, et c'est ce qui rend la preuve solide** : `org_type_terrain` a
+> été contrôlé **sur la cellule du classeur**, ⛔ **pas sur l'affichage** — qui aurait pu montrer une
+> nature **recalculée** depuis `terrains_physiques`, lequel survit au reset. *Un relevé fait au bon
+> endroit vaut mieux qu'un relevé fait au bon moment.*
+
+#### ⚠️ Incident de PRÉPARATION — à ne pas confondre avec le comportement de M1-B
+
+Pendant la pose des sentinelles, **une mauvaise requête d'écriture passée par le connecteur Google
+Sheets a temporairement vidé le bloc `A54:B91`** de `Config`.
+
+| | |
+|---|---|
+| **Détection** | immédiate |
+| **Signalement** | explicite, sur le moment |
+| **Restauration** | **ligne par ligne**, depuis le relevé AVANT effectué juste auparavant |
+| **Contrôle** | relecture **intégrale** de `Config!A53:B91`, conformité **confirmée** |
+| **Puis seulement** | la réinitialisation M1-B a été lancée |
+
+> ⛔ **Cet incident n'est PAS un effet de M1-B**, et rien dans ce journal ne doit laisser croire le
+> contraire : il s'est produit **avant** le geste, par un **outil d'écriture externe**, et il a été
+> **entièrement réparé et relu** avant que quoi que ce soit ne soit testé.
+>
+> 🎯 **Il est consigné parce qu'il enseigne deux choses.** ⭐ **La première** : c'est **le relevé
+> AVANT** — fait pour la preuve — qui a permis de restaurer. Sans lui, l'incident aurait été
+> irréparable. ⭐ **La seconde** : un outil d'écriture par plage *(`A54:B91`)* n'a **aucune idée de
+> ce qu'il écrase**, là où l'application écrit **paramètre par paramètre**. C'est exactement la
+> différence que **M1-C1** posera comme contrainte : *écriture partielle, liste blanche, un champ
+> absent n'est jamais effacé.*
+
+#### Ce que cet addendum établit — et ce qu'il n'établit pas
+
+✅ **M1-B est COMPLET** : les sept états sont atteints, le septième par un **geste réel**, mesuré
+sur le **stockage** et non sur l'affichage.
+
+⛔ **Ce qu'il n'établit pas** : rien sur **R-033** dans sa part `detail_effectifs` /
+`nb_educateurs_total` *(colonnes de `ClubsInvites`, toujours ouvertes)* · rien sur le point
+**`statut`** *(§19.5, toujours à arbitrer)* · et ⛔ **le classeur est désormais VIDE de données de
+tournoi** — voir le repère en tête de `ETAT.md`.
+
+🔧 **Un constat pour M1-F, relevé au passage** : la lecture de `Config` confirme qu'**une valeur
+institutionnelle non neutralisée subsiste dans `org_club_nom`** — ⛔ **son contenu n'est pas
+reproduit ici**. Ce n'est **pas** un défaut de M1-B *(le code, lui, est neutre : il ne nomme aucun
+club par défaut depuis **L8**)* : c'est une **donnée** du classeur, et son traitement reste prévu
+en **M1-F**. ⭐ **Au passage, elle a servi la démonstration** : c'est l'un des permanents dont la
+conservation a été vérifiée.

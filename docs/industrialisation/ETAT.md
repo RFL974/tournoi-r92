@@ -9,8 +9,24 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-24 *(soir, suite)* — 🔧 **M1-B EST ÉCRITE ET TESTÉE — ⛔ ET RIEN
-DE PLUS.**
+> # 🔴 DONNÉES DE TOURNOI À RECRÉER AVANT LES PROCHAINS TESTS FONCTIONNELS
+>
+> **Le 2026-08-24, le classeur actuellement connecté à l'application a été VOLONTAIREMENT
+> réinitialisé** pour la vérification réelle de **M1-B**. Les données supprimées — **2 catégories,
+> 38 équipes, 10 poules, 51 matchs** — étaient des **données d'essai**, ⛔ **pas un tournoi réel**.
+>
+> ⛔ **CE N'EST PAS UN INCIDENT.** Un classeur sans catégorie ni équipe n'est **pas** l'état initial
+> « naturel » de ce projet : c'est le résultat d'un geste **décidé, annoncé et utilisé comme
+> preuve**.
+>
+> ➡️ **Avant tout test nécessitant des catégories, des équipes, des poules ou des matchs, un
+> nouveau jeu de données de test doit être recréé.**
+>
+> ⏳ **Ce repère ne se retire QUE lorsqu'un nouveau jeu aura effectivement été recréé** — et il
+> devra alors dire **par quoi** il a été remplacé.
+
+**Dernière mise à jour** : 2026-08-24 *(soir, suite)* — 🏁 **M1-B EST TERMINÉE : LES SEPT ÉTATS SONT
+ATTEINTS**, ⭐ **le septième par une réinitialisation RÉELLE**.
 
 🔴 **Le défaut corrigé, en une phrase** : une réinitialisation laissait la demande d'autorisation
 **entièrement remplie avec les valeurs de l'édition passée**, marquées *« saisi »*, compteur à
@@ -25,7 +41,7 @@ DE PLUS.**
 | ✅ **Poussée, puis FUSIONNÉE dans `main`** | ⚡ **Cette ligne annonçait « sur sa branche seule, aucune fusion vers `main` », vrai jusqu'à la fusion du 2026-08-24.** Les **3 commits** *(`dc03488`, `e515fd7`, `8dfd28a`)* sont dans `main` par **fast-forward** — ⛔ aucun SHA réécrit, aucun commit de fusion créé. `origin/main` : **`1c5cd4f` → `8dfd28a`** |
 | ✅ **Backend REDÉPLOYÉ** | **Version Apps Script 156, 2026-08-24 à 11:13** *(la 155 datait du 22/08 17:31)* — **même déploiement, même adresse**. Témoins après collage : `CHAMPS_AUTORISATION_A_REINITIALISER` **3**, `reinitialiserDonneesAutorisationTournoi` **2**, fichier à **8423** lignes, `viderDonnees` ligne **8418** |
 | ✅ **Frontend PUBLIÉ *et* RÉELLEMENT OBSERVÉ** | Workflow Pages **`success`** sur **`8dfd28a`** *(run 32712062024, 2026-08-24 09:32 UTC)*, **les DEUX jobs** compris. ⭐ **Et le doute a été levé À LA MAIN le 2026-08-24** : la page publiée a été ouverte dans un navigateur, le bouton *« Réinitialiser le tournoi »* cliqué, et **le nouveau dialogue M1-B s'est affiché**. ⚡ **Cette ligne annonçait auparavant que la page servie « n'avait pas pu être observée »** — c'était vrai de l'environnement de travail *(`github.io` refusé, 403)*, ⛔ **plus de la réalité** |
-| ⚠️ **Vérifiée en réel** | **PARTIELLEMENT — et la frontière compte plus que le verdict.** ✅ **Observé au navigateur** *(2026-08-24)* : le dialogue s'affiche **avant** toute opération, avec le bon texte ; **l'annulation n'a déclenché aucune réinitialisation observable** — l'état visible est resté inchangé *(2 catégories, 38 équipes, planning matin « Validé »)*. ✅ **Établi par LECTURE DU CODE PUBLIÉ** *(`origin/main`)* : `ANNULER` rend `false` et `onReinitialiser` **sort à `admin.js:692`**, alors que le seul appel d'écriture — `ecrireAdmin('reinitialiserTournoi')` — est **ligne 702** ; ⛔ **aucun appel serveur n'est atteignable avant la double confirmation**. ⛔ **Ce qui reste NON vérifié : le geste destructif.** **`CONTINUER` n'a jamais été cliqué** — les 26 champs, les récompenses et les 10 permanents n'ont été relevés **ni avant ni après** sur un classeur |
+| ✅ **VÉRIFIÉE EN RÉEL** | ⚡ **Cette ligne annonçait « PARTIELLEMENT », le geste destructif n'ayant pas été exercé. Il l'a été le 2026-08-24.** Chaîne complète parcourue : **frontend publié → 1er dialogue → `CONTINUER` → 2e dialogue → `OUI, TOUT EFFACER` → backend v156 → classeur**. L'application a répondu *« Supprimés : 2 catégorie(s), 38 équipe(s), 10 poule(s), 51 match(s). Tournoi masqué. »* ⭐ **Verdict, relevé DANS `Config` avant et après** : **PERMANENTS 10/10 conservés** · **ÉVÉNEMENTIELS 26/26 effacés** · **RÉCOMPENSES 2/2 effacées** *(`org_recompenses_U8`, `_U10`)*. Les 26 clés **existent toujours** — on a vidé la valeur, pas supprimé le paramètre |
 | 🔴 **Découverte sur CF-4b/L8** | Le relevé **avant** collage a montré que **la part backend de L8 était DÉJÀ en service** *(voir plus bas)*. ⛔ **M1-B ne l'a donc pas mise en service, contrairement à ce qui était annoncé ici** |
 | 🔴 **R-033 n'est pas refermé** | Sa part `org_*` est traitée ; **`detail_effectifs` et `nb_educateurs_total` ne le sont PAS** — ce sont des colonnes de `ClubsInvites`, hors périmètre |
 
