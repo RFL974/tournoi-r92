@@ -25,7 +25,22 @@
 > ⏳ **Ce repère ne se retire QUE lorsqu'un nouveau jeu aura effectivement été recréé** — et il
 > devra alors dire **par quoi** il a été remplacé.
 
-**Dernière mise à jour** : 2026-08-24 *(soir, suite 2)* — 🌐 **UN CHANTIER INTERMÉDIAIRE EST
+**Dernière mise à jour** : 2026-08-24 *(soir, suite 3)* — ✅ **PUB-1 EST TERMINÉ ET FUSIONNÉ DANS
+`main`.**
+
+| | |
+|---|---|
+| ✅ **PUB-1** | 🏁 **TERMINÉ ET FUSIONNÉ DANS `main`**, en **fast-forward** — ⛔ **aucun SHA réécrit, aucun commit de fusion créé**. **Deux commits** : **`56dabd3`** *(le contenu — 6 documents, 625 insertions)* · **`6fdffd8`** *(la trace post-geste)*. `origin/main` : **`ebf1b07` → `6fdffd8`**, ⭐ **relevé par interrogation directe de GitHub** |
+| ⛔ **Aucun effet ailleurs** | **Aucun run GitHub Actions** — ⭐ **OBSERVÉ**, pas déduit : nos deux SHA sont **absents des runs**, et le plus récent reste **`8dfd28a`** *(M1-B, 2026-08-24 09:32 UTC)*. ⛔ **Aucun redéploiement backend** — aucun fichier `backend/`. ⛔ **Aucun workflow déclenché à la main** |
+| ⏭️ **Prochaine étape** | **PUB-2 — Accès autonome à la page publique.** ⛔ **PUB-2 N'EST PAS COMMENCÉE**, et elle ne démarre pas sans validation explicite |
+| ⛔ **M1-PUB** | **PAS TERMINÉ.** Son critère de clôture exige **les cinq lots**, le **découplage réellement prouvé** et **PUB-5 livré** *(`PLAN.md` §15.3 bis)* |
+| ⛔ **R-097** | **RESTE OUVERT.** ⭐ **PUB-1 a DOCUMENTÉ le problème ; il ne l'a pas supprimé** — la correction appartient à **PUB-3** puis **PUB-4** |
+| ⏸️ **M1-C1** | **TOUJOURS SUSPENDUE jusqu'à la CLÔTURE COMPLÈTE de M1-PUB** |
+| 🔴 **Le repère « données à recréer »** | **TOUJOURS ACTIF** — ⛔ **aucune donnée de tournoi n'a été recréée** |
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-24 (soir, suite 2)* : 🌐 **UN CHANTIER INTERMÉDIAIRE EST
 OUVERT : M1-PUB — LA PUBLICATION AUTONOME DU TOURNOI.**
 
 Micro-lot **PUB-1**, ⛔ **strictement documentaire : aucun fichier `backend/`, aucun fichier
@@ -664,7 +679,9 @@ exactement le mécanisme de `CLAUDE.md` §8 septies** : un état écrit **avant*
 **après**.
 
 🌐 **ET UN CHANTIER INTERMÉDIAIRE S'INTERCALE : M1-PUB *(= M1-E7)***, à traiter **avant M1-F**
-*(`PLAN.md` **§15.3 bis**)*. ⏸️ **M1-C1 est SUSPENDUE JUSQU'À LA CLÔTURE COMPLÈTE DE M1-PUB.**
+*(`PLAN.md` **§15.3 bis**)*. ✅ **Son micro-lot PUB-1 est TERMINÉ ET FUSIONNÉ dans `main`**
+*(`56dabd3`, `6fdffd8`)* ; ⏭️ **PUB-2 est le prochain, ⛔ NON COMMENCÉE** ; ⛔ **M1-PUB n'est pas
+terminé et R-097 reste OUVERT**. ⏸️ **M1-C1 est SUSPENDUE JUSQU'À LA CLÔTURE COMPLÈTE DE M1-PUB.**
 ⛔ **M1-C → M1-F ne démarrent pas automatiquement.**
 
 > ⚠️ **Cette ligne annonçait « 2 lots sur 8 », et c'était devenu faux.** Le chiffre datait du jour

@@ -8187,6 +8187,67 @@ jour. C'est le mécanisme de **§8 septies** : un état écrit **avant** le gest
 
 | ✅ **Commit B — la trace post-geste** | Le présent bloc. ⛔ **`SESSIONS.md` SEUL** — ⛔ **ni `PLAN.md`, ni `ETAT.md` ne sont touchés pour y écrire « PUB-1 terminé »**, puisque **PUB-1 n'est pas encore clôturé** |
 
+### 20.8 bis — La fusion dans `main`, constatée
+
+> ⚡ **Le §20.8 ci-dessus annonçait « Fusion dans `main` : NON FAITE ».** C'était **vrai au moment
+> où le commit B a été figé**. ⭐ **La fusion a été validée par Romain et exécutée le 2026-08-24, et
+> voici ce qui a été CONSTATÉ** *(`CLAUDE.md` §8 septies : un état qui décrit un geste se contrôle
+> APRÈS ce geste)*.
+
+| Geste | État constaté |
+|---|---|
+| **État de départ, re-vérifié** | ⭐ **Avant tout geste** : `origin/main` = **`ebf1b07`** · `origin/claude/m1-pub-documentation-0afcmo` = **`6fdffd8`** · **2 commits d'avance, 0 de retard** · base commune **`ebf1b07`** · **les 6 documents**, ⛔ 0 `backend/`, 0 `frontend/`. ⭐ **Relevé par `git ls-remote`, qui interroge GitHub — pas une copie locale** |
+| ⚠️ **`main` LOCAL était en retard** | **de 16 commits** *(`ce64f35`)*. ⛔ **Aucune valeur locale n'a été supposée** : `main` a été remis au niveau de `origin/main` **par avance linéaire** avant toute fusion |
+| ✅ **Méthode de fusion** | **`git merge --ff-only`** — ⭐ **fast-forward pur**. ⛔ **Aucun commit de fusion** *(vérifié : le commit de tête n'a qu'**un seul parent**)*. ⛔ **Ni rebase, ni amend, ni force-push, ni reset** |
+| ✅ **Chaîne obtenue dans `main`** | **`ebf1b07`** → **`56dabd3`** *(A)* → **`6fdffd8`** *(B)* — **linéaire**, dans cet ordre |
+| ✅ **`origin/main` après fusion** | **`6fdffd8e2df4b49ab65d0b00b411cff3253c09c7`** — ⭐ **relevé par `git ls-remote`**. Poussée : **`ebf1b07..6fdffd8`**, une **avance simple** |
+| ✅ **A et B inchangés** | **`56dabd32…`** et **`6fdffd8e…`**, identiques aux SHA relevés avant la fusion. ⭐ **La branche `claude/m1-pub-documentation-0afcmo` pointe toujours sur `6fdffd8`** : les deux références portent le même commit, ⛔ **preuve qu'aucun SHA n'a été réécrit** |
+| ✅ **Périmètre réellement publié** | **6 documents** — `architecture.md`, `DECISIONS.md`, `ETAT.md`, `PLAN.md`, `RISQUES.md`, `SESSIONS.md` · **645 insertions, 6 suppressions** · ⛔ **0 `backend/`, 0 `frontend/`, 0 fichier hors périmètre** |
+| ⛔ **GitHub Actions / Pages** | ⭐ **Double contrôle, à nouveau** — voir ci-dessous |
+| ⛔ **Redéploiement backend** | **AUCUN, et sans objet** — ⛔ **aucun fichier `backend/` n'a changé** |
+| ⛔ **Comportement en production** | **TOUJOURS NON ÉTABLI** *(`CLAUDE.md` §13.6)* |
+
+> ⭐ **GitHub Actions après la poussée sur `main` — les deux faits, séparés :**
+>
+> | | Ce qui est établi |
+> |---|---|
+> | **Fait STRUCTUREL** | ⛔ **Aucun fichier `frontend/` et aucun workflow Pages** ne figurent dans A+B. Le workflow `pages.yml` ne se déclenche que sur `push` vers `main` **limité aux chemins `frontend/**` et `.github/workflows/pages.yml`** |
+> | **Fait OBSERVÉ** | ⭐ **Aucun run Pages observé après la poussée sur `main`.** Interrogation de l'API GitHub Actions **à deux reprises**, dont une **ciblée sur `pages.yml` / `main` / `push`** : ⛔ **les SHA `56dabd32…` et `6fdffd8e…` sont ABSENTS des runs**. Le run le plus récent reste **`8dfd28a`** *(2026-08-24 09:32 UTC, M1-B)* |
+>
+> ⛔ **Aucun workflow n'a été déclenché manuellement.**
+
+### 20.8 ter — Ce que la fusion ne clôt PAS
+
+⛔ **La fusion clôt PUB-1, ⛔ PAS M1-PUB.**
+
+| | |
+|---|---|
+| ✅ **PUB-1** | 🏁 **TERMINÉ, FUSIONNÉ et PUBLIÉ dans `main`** |
+| ⛔ **M1-PUB** | **TOUJOURS OUVERT.** Son critère de clôture exige **les cinq lots**, le **découplage réellement prouvé dans les deux sens**, et **PUB-5 livré** *(`PLAN.md` §15.3 bis)* |
+| ⛔ **R-097** | **RESTE OUVERT — et ce n'est pas un détail de statut.** ⭐ **PUB-1 a DOCUMENTÉ le couplage ; il ne l'a pas supprimé.** Publier dans Maxilou fait toujours apparaître un contenu sur la vitrine. **La correction appartient à PUB-3** *(plan et preuve)* **puis PUB-4** *(exécution)* |
+| ⏭️ **PUB-2** | **Prochain micro-lot — ⛔ NON COMMENCÉ**, et il ne démarre pas sans validation explicite |
+| ⏸️ **M1-C1** | **TOUJOURS SUSPENDUE jusqu'à la clôture complète de M1-PUB** |
+
+### 20.8 quater — Le commit de clôture documentaire
+
+| | |
+|---|---|
+| **Périmètre** | `PLAN.md` · `ETAT.md` · `SESSIONS.md` — ⛔ **trois documents, aucun autre** |
+| **Pourquoi ces trois-là** | `PLAN.md` et `ETAT.md` **deviendraient faux** sans lui : ils présentaient PUB-1 comme *« le lot en cours »*. `SESSIONS.md` porte la trace du geste |
+| ⛔ **Pourquoi PAS les autres** | `DECISIONS.md` *(D-048)*, `RISQUES.md` *(R-097)* et `architecture.md` **ne deviennent pas faux du fait de la fusion** : la doctrine n'a pas bougé, et **R-097 est toujours ouvert et non corrigé**. ⛔ **Aucun fichier n'est touché « pour faire propre »** |
+
+> ⭐ **Pourquoi cette section ne porte NI son propre SHA, NI son état de commit** *(exigence de
+> Romain, 2026-08-24)*. Un commit ne peut pas décrire honnêtement son propre accomplissement :
+> ⛔ **écrire « pas encore commité » produit une phrase qui devient FAUSSE à la seconde où le
+> commit est créé** — et la réparer demanderait un commit de plus, qui porterait le même défaut.
+> ⭐ **Le SHA du commit de clôture est une preuve Git et GitHub, pas une donnée que ce document
+> doit contenir sur lui-même.** Il se lit avec `git log`, jamais ici.
+>
+> 🎯 **C'est la limite de `§8 septies`, et elle mérite d'être écrite** : la règle demande de
+> contrôler un état **après** le geste. ⛔ **Elle ne demande pas — et ne peut pas demander — qu'un
+> document décrive le geste qui le publie lui-même.** ⭐ **La récursion s'arrête ici : le dernier
+> geste d'un lot se constate dans Git, pas dans le lot.**
+
 ### 20.9 — Prochaine session recommandée
 
 ⏸️ **PUB-2 — Accès autonome à la page publique.** ⛔ **Elle ne démarre pas automatiquement.**
