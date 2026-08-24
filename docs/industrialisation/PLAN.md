@@ -24,6 +24,12 @@ un état écrit **avant** le geste et jamais relu **après**.
 fédéral — ⛔ **hors M1**)* et **R-096** *(douze réglages sans écran)* ; **R-033 voit son périmètre
 élargi** de « les contacts FFR » à **36 `org_*` sur 36**.
 
+🌐 **UN CHANTIER INTERMÉDIAIRE S'INTERCALE — M1-PUB *(= M1-E7)*, la publication autonome du
+tournoi** *(nouveau **§15.3 bis**)*. Il est **ouvert le 2026-08-24** et doit être traité **avant
+M1-F**. Doctrine fondatrice : **D-048** — *« Publier ouvre une page. Publier ne parle à
+personne. »* ; dette enregistrée : **R-097** *(P2)*. ⏸️ **M1-C1 reste SUSPENDUE JUSQU'À LA
+CLÔTURE COMPLÈTE DE M1-PUB** — ⛔ **pas seulement jusqu'à son cadrage**.
+
 *Rappel de la mise à jour précédente — 2026-08-19 (soir)* : ⚡ **ARBITRAGE DE R-092 ET R-093** *(**D-037**)* :
 **R-092 rejoint C-015** *(toute invalidation d'un résultat doit effacer le détail périmé)* · ⚡ **R-093
 devient le chantier C-031**, *« les colonnes du classeur : une seule façon de les désigner »*, dont le
@@ -2460,6 +2466,7 @@ loué en ligne, ni parcours de première configuration complet, ni répertoire d
 | **M1-C2** | Le **modèle de doctrine sportive** | Backend | ✅ oui | ⏸️ **NON — REPORTABLE** |
 | **M1-D** | L'écran **« Mon club »**, référentiel **vivant** | Frontend + 1 action | ✅ oui | oui |
 | **M1-E** | **Branchement progressif** des consommateurs *(E1 → E6)* | Mixte | E1, E3 : ✅ · E2, E4, E5, E6 : ⛔ | E2/E3/E4 oui |
+| 🌐 **M1-PUB** *(= **M1-E7**)* | **Publication autonome du tournoi** — doctrine, accès autonome, découplage de la vitrine *(**§15.3 bis**)* | Documentaire *(PUB-1, PUB-3)* puis mixte | PUB-1, PUB-3 : ⛔ · PUB-2, PUB-4, PUB-5 : ✅ | **oui — et AVANT M1-F** |
 | **M1-F** | **Neutralisation et validation finale** — clôture de **CF-4b** | Données + logo + preuves | ⚠️ probablement non | **c'est la clôture** |
 
 > ⛔ **AUCUNE ÉTAPE NE DÉMARRE AUTOMATIQUEMENT.** Chaque étape est présentée, validée par Romain,
@@ -2570,6 +2577,228 @@ loué en ligne, ni parcours de première configuration complet, ni répertoire d
 | **E5** | Page Perfs | 🏛️ mot-clé **proposé** depuis le nom | ⛔ | Proposé, **modifiable** ; vide ou < 3 caractères ⇒ la page ne calcule rien et le dit |
 | **E6** | Lieu, type de terrain, vestiaires du tournoi | 🏟️ **copie volontaire** | ⛔ | ⭐ Après copie, **modifier le profil ne change plus le tournoi** |
 
+### 15.3 bis — 🌐 M1-PUB *(= M1-E7)* — Publication autonome du tournoi
+
+> 🗓️ **Ouvert le 2026-08-24.** Décision fondatrice : **D-048**. Dette enregistrée : **R-097** *(P2)*.
+> ⚠️ **Il s'intercale entre M1-E et M1-F, et doit être traité AVANT M1-F.**
+>
+> ⏸️ **M1-C1 est SUSPENDUE JUSQU'À LA CLÔTURE COMPLÈTE DE M1-PUB.** ⛔ **Pas jusqu'à son
+> cadrage : jusqu'à sa clôture.** ⚡ **Cette ligne annonçait « tant que PUB-1 / PUB-2 / PUB-3 ne
+> sont pas au minimum cadrés »** — or **PUB-1 vient précisément de cadrer PUB-2 et PUB-3**, ce qui
+> aurait autorisé la reprise immédiate de M1-C1. ⭐ **La trajectoire retenue est : on termine
+> M1-PUB avant de reprendre M1-C1** *(arbitrage de Romain, 2026-08-24)*.
+
+> ⭐ **Pourquoi ce chantier est traité MAINTENANT, alors qu'il porte le numéro E7.** Le couplage a
+> été **découvert avant M1-C1**, et il est traité **par anticipation**. ⛔ **`M1-E7` est un
+> rattachement ARCHITECTURAL dans M1 — pas une obligation d'attendre chronologiquement M1-E pour le
+> traiter.** Le numéro dit **où il appartient**, pas **quand il se fait**. ⚠️ **Sa seule contrainte
+> de calendrier est celle qui est écrite ci-dessus : AVANT M1-F.**
+
+#### La doctrine — et elle fait désormais règle d'architecture
+
+| Mot | Ce qu'il veut dire, exactement |
+|---|---|
+| **Publication** | **Rendre la page publique accessible.** Rien d'autre |
+| **Accès** | **Fournir son adresse à l'organisateur** |
+| **Diffusion** | **Un geste volontaire vers un canal externe** |
+
+> > **« Publier ouvre une page. Publier ne parle à personne. »**
+
+> ⚠️ **Ce que « accessible » veut dire ici, précisément** *(D-048)* : **le CONTENU public du
+> tournoi devient visible**. ⭐ **L'adresse de la page, elle, peut exister et être ouverte AVANT la
+> publication ou APRÈS le masquage** — elle présente alors son **état non publié**. 🎯 **Une adresse
+> n'est pas une autorisation** : c'est ce qui rend **PUB-2** possible sans toucher à la publication,
+> et ce qui empêche de lire la doctrine et PUB-2 comme contradictoires.
+
+⛔ **Un clic sur « Publier » ne doit jamais, à lui seul** : envoyer un email · publier sur un site
+tiers · créer une actualité · créer une page sur un autre site · envoyer un message · notifier un
+club · déclencher une diffusion externe quelconque.
+⭐ **Une diffusion externe éventuelle relèvera toujours d'une action distincte et volontaire.**
+
+#### Le risque actuel — ce n'est PAS que Maxilou appelle le site externe
+
+⭐ **`publierTournoi()` respecte déjà la doctrine** *(🔬 `backend/Code.gs:7467-7472` : une ligne
+écrite dans `Config`, aucun appel extérieur)*.
+
+⛔ **Le problème est que le témoin `tournoi_publie` sert encore de signal implicite à un système
+extérieur** :
+
+`Publier dans Maxilou` → `tournoi_publie = oui` → `boutique-r92` **lit** ce témoin → **contenu créé
+automatiquement sur la vitrine**.
+
+🔬 **Vérifié DIRECTEMENT dans le dépôt séparé `RFL974/boutique-r92`** *(commit `164bb8e`,
+2026-08-24, lecture seule)* — ⛔ **et non déduit d'un commentaire de Maxilou**. Détail, preuves,
+niveaux de preuve et dette : **R-097**.
+
+⛔ **NON ÉTABLI** : ce qui est prouvé est **le code des deux dépôts**, ⛔ **pas ce qui est
+réellement servi en ligne** *(`CLAUDE.md` §13.6)*. Cette preuve-là appartient à **PUB-3** *(avant
+coupure)* et **PUB-4** *(après coupure)*.
+
+#### ⭐ L'ordre général du découplage — cadrage architectural *(inscrit par PUB-1)*
+
+> ⛔ **Le découplage ne doit PAS être pensé comme « supprimer côté Maxilou OU côté vitrine ».**
+>
+> ⚠️ **Pourquoi l'ordre est impératif.** ⭐ **La page publique `tournoi.html` de Maxilou existe déjà
+> et son code consomme `tournoi_publie` via la vue `live`** *(🔬 `frontend/js/tournoi.js:206`,
+> `backend/Code.gs:707`)* — ce n'est pas elle qui manque. Mais **couper dans le désordre
+> supprimerait l'ancien chemin de diffusion AVANT que l'organisateur dispose, dans Maxilou, d'un
+> accès explicite et autonome à sa page publique.** Aujourd'hui, ce chemin passe encore par la
+> vitrine.
+
+**La séquence, dans cet ordre :**
+
+1. **Maxilou dispose d'abord** d'un accès explicite et autonome à sa page publique *(PUB-2)* ;
+2. **la vitrine externe cesse ensuite** de consommer automatiquement `tournoi_publie` ;
+3. **on PROUVE** que publier / masquer dans Maxilou n'a **plus aucun effet** sur cette vitrine ;
+4. **seulement ensuite**, Maxilou retire `tournoi_publie` de la vue `invitation`, devenue inutile
+   **pour ce besoin** ;
+5. le test qui protège aujourd'hui ce contrat historique est **retiré ou remplacé** ;
+6. ⭐ un test doit **au contraire garantir** que :
+   - la vue **`live`** continue d'exposer `tournoi_publie` — ⛔ **`tournoi.html` en a besoin** ;
+   - la vue **`invitation`** ne l'expose **plus** après découplage.
+
+> 🎯 **Pourquoi l'étape 6 compte autant que l'étape 4.** Retirer un champ d'une vue est
+> **silencieux** : rien ne casse, une page conclut simplement « non publié » et se tait. Sans un
+> test qui **exige** la présence dans `live`, la page publique de Maxilou pourrait cesser de
+> fonctionner sans qu'aucun voyant ne s'allume.
+
+> ⛔ **Cette séquence est un ORDRE, pas un plan.** Elle ne nomme ni les fichiers, ni les fonctions,
+> ni les preuves à produire, ni le retour arrière : **c'est le livrable de PUB-3.**
+
+#### Les cinq micro-lots
+
+| Lot | Objet | Nature | Redépl. |
+|---|---|---|---|
+| **PUB-1** | **Doctrine et cadrage architectural** | 📄 **Documentaire pur** | ⛔ non |
+| **PUB-2** | **Accès autonome à la page publique** | Frontend *(+ éventuellement 1 paramètre)* | ✅ oui |
+| **PUB-3** | **Plan technique et preuve du découplage** | 📄 **Documentaire** | ⛔ non |
+| **PUB-4** | **Exécution du découplage**, selon le plan validé en PUB-3 | Mixte — Maxilou **et** vitrine | ✅ oui |
+| **PUB-5** | **Aperçu Maxilou réel** | Frontend | ✅ oui |
+
+##### PUB-1 — Doctrine et cadrage architectural  🔧 **LOT EN COURS**
+
+| | |
+|---|---|
+| **Objectif** | Graver la doctrine, le risque, la règle d'absence d'effet externe, l'ordre général du découplage et le critère de clôture de M1-PUB |
+| **Nature** | ⛔ **STRICTEMENT DOCUMENTAIRE** — aucun `backend/`, aucun `frontend/`, aucun test, aucun classeur, aucun Apps Script, ⛔ **aucune touche au dépôt `boutique-r92`** *(lu en seule lecture, comme source de preuve)* |
+| **Fichiers** | `DECISIONS.md` *(D-048)* · `RISQUES.md` *(R-097)* · `PLAN.md` *(ce §15.3 bis)* · `ETAT.md` · `SESSIONS.md` · `../architecture.md` *(renvoi §2.H)* |
+| **Redéploiement** | ⛔ **NON** |
+| **Validation** | La doctrine est écrite **une seule fois**, à **une seule adresse** *(D-048)* · le risque a un identifiant, une priorité et un statut *(R-097)* · **l'ordre général** du découplage est écrit **avant** toute coupure · le **critère de clôture de M1-PUB** est écrit · ⭐ **chaque affirmation porte son niveau de preuve** *(🔬 / 📄 / 🕗 / ⛔)* |
+
+##### PUB-2 — Accès autonome à la page publique
+
+| | |
+|---|---|
+| **Objectif** | Que l'organisateur puisse **atteindre et donner** l'adresse de sa page publique **sans passer par un site tiers** |
+| **Les 4 gestes exigés** | ① **voir l'adresse** de la page publique · ② un bouton **Copier** · ③ un bouton **Ouvrir** · ④ l'état **publié / non publié** clairement visible |
+| ⭐ **Contrainte de conception** | **L'adresse publique doit pouvoir exister INDÉPENDAMMENT de l'état publié.** Une adresse n'est pas une autorisation : elle existe avant la publication et après le masquage |
+| **Point d'appui existant** | ⭐ Le paramètre **`url_tournoi_public`** existe déjà, avec un **repli automatique** vers la page voisine *(🔬 `frontend/js/dossier.js:217-220`, `../structure-google-sheet.md`)*. ⚠️ Il n'a **aucun écran** |
+| ⏸️ **Point à arbitrer EN PUB-2** | `url_tournoi_public` est aujourd'hui rattaché à **R-096 / M1-D** *(les douze réglages sans écran)*. **PUB-2 arbitrera** s'il rejoint M1-PUB ou reste en M1-D. ⛔ **PUB-1 ne change RIEN à R-096** — le chevauchement est **signalé, pas tranché** |
+| **Dépendances** | **PUB-1** |
+| **Redéploiement** | ✅ **OUI** |
+| ⛔ **Hors de ce lot** | ⛔ **Aucune implémentation dans PUB-1** |
+
+##### PUB-3 — Plan technique et preuve du découplage
+
+| | |
+|---|---|
+| **Objectif** | Produire **le plan d'exécution précis** du découplage, et **les preuves** qui l'encadrent — ⛔ **sans rien couper** |
+| **Nature** | 📄 **Documentaire** — ⛔ **AUCUNE modification fonctionnelle** |
+| **Redéploiement** | ⛔ **NON** |
+
+**Les six livrables de PUB-3 :**
+
+| # | Livrable | Ce qu'il contient |
+|---|---|---|
+| **①** | **Vérification directe des DEUX côtés du contrat** | 🔬 Côté **Maxilou** *(vues, action, tests)* **et** 🔬 côté **vitrine externe** — ⛔ **au moment de PUB-3**, pas d'après le relevé de PUB-1 : le dépôt séparé peut avoir bougé |
+| **②** | **L'inventaire précis du périmètre** | Les **fichiers** · les **fonctions** · les **vues** · les **paramètres** · les **tests** concernés, des deux côtés, chacun avec `fichier:ligne` |
+| **③** | **L'ordre technique exact d'exécution** | ⭐ La séquence générale *(cadrage PUB-1 ci-dessus)* traduite en **gestes numérotés** : quel dépôt, quel commit, quel déploiement, dans quel ordre — et **ce qui doit être en service avant le geste suivant** |
+| **④** | **Les preuves à produire AVANT et APRÈS chaque coupure** | ⛔ **Une preuve observée, pas une déduction** *(`CLAUDE.md` §8 septies)* : publier → observer · masquer → observer, **de part et d'autre**. ⚠️ **Le comportement en production ne se constate pas depuis le dépôt** *(§13.6)* |
+| **⑤** | **Le retour arrière** | ⭐ **Que faire si une dépendance inattendue apparaît** : comment revenir à l'état d'avant, geste par geste, **sans laisser un état intermédiaire en service** |
+| **⑥** | ⛔ **Rien d'autre** | **Aucune modification fonctionnelle n'est réalisée dans PUB-3** |
+
+| | |
+|---|---|
+| **Dépendances** | **PUB-1** *(le cadrage)* et **PUB-2** *(l'accès autonome doit exister avant de planifier la coupure)* |
+| **Validation** | Le plan est assez précis pour que **PUB-4 n'ait plus aucune décision à prendre** — seulement à exécuter |
+
+> 🎯 **Pourquoi PUB-3 existe séparément de PUB-4, et ce n'est pas de la procédure.** La coupure
+> touche **deux dépôts** et **un backend partagé**, dont un dépôt que ce chantier **ne pilote
+> pas**. ⛔ **Un geste dans le mauvais ordre ne se voit pas : il se constate plus tard, par une
+> absence.** Le plan doit donc être écrit — et relu — **avant** que quoi que ce soit soit coupé.
+
+##### PUB-4 — Exécution du découplage
+
+| | |
+|---|---|
+| **Objectif** | Couper réellement l'ancien couplage, ⛔ **selon le plan validé en PUB-3**, et **uniquement lui** |
+| **Nature** | Mixte — touche **Maxilou** *(vues, tests)* **et** le dépôt séparé **`boutique-r92`** |
+| **Dépendances** | **PUB-3** — ⛔ **aucune coupure sans plan validé** |
+| **Redéploiement** | ✅ **OUI** |
+| **Validation** | ⭐ **Le critère de RÉUSSITE DU DÉCOUPLAGE** : **publier puis masquer sont observés EN RÉEL** ; **seule la page publique Maxilou change d'état**, et **la vitrine externe ne réagit plus** |
+
+> ⛔ **Ce n'est PAS le critère de clôture de M1-PUB.** PUB-4 prouve que le découplage fonctionne ;
+> **PUB-5 vient après**, et le chantier n'est clos que lorsque **les cinq lots** le sont
+> *(voir le critère de clôture ci-dessous)*.
+
+##### PUB-5 — Aperçu Maxilou réel
+
+| | |
+|---|---|
+| **Objectif** | Remplacer le **faux aperçu** *(`frontend/admin.html:162-180`, rendu par `majApercuTournoi`, `frontend/js/admin-infos-publication.js:99-170`)* par un aperçu de la **véritable page publique Maxilou** |
+| **Pourquoi ce n'est pas cosmétique** | ⚠️ L'aperçu actuel annonce un *« Aperçu RÉEL de la publication »* d'un contenu qui appartient à **un autre site** : il **affirme sa propre fidélité** |
+| **Dépendances** | **PUB-4** — ⛔ tant que le couplage existe, l'ancien aperçu décrit encore quelque chose de vrai |
+| **Redéploiement** | ✅ **OUI** |
+
+#### ⭐ Critère de clôture de M1-PUB
+
+> **À la fin de M1-PUB, changer l'état publié / non publié dans Maxilou ne doit provoquer AUCUN
+> effet ailleurs que sur la page publique Maxilou.**
+
+⛔ **M1-PUB ne peut être déclaré terminé que si les TROIS conditions ci-dessous sont réunies —
+toutes les trois.**
+
+**① Les cinq micro-lots sont terminés ET validés**
+
+| Lot | Attendu |
+|---|---|
+| **PUB-1** | Doctrine, risque, ordre général et critère de clôture **écrits et validés** |
+| **PUB-2** | L'accès autonome à la page publique **existe dans l'admin** |
+| **PUB-3** | Le plan technique et les preuves **écrits et validés** |
+| **PUB-4** | Le découplage **exécuté** |
+| **PUB-5** | L'aperçu réel **livré** |
+
+**② Le découplage fonctionnel est RÉELLEMENT PROUVÉ — dans les deux sens**
+
+| Geste | Chaîne complète attendue |
+|---|---|
+| **`Publier`** | → `tournoi_publie = oui` → **le contenu du tournoi devient visible sur la page publique Maxilou** → ⛔ **rien d'autre.** ⛔ **Aucun effet externe** |
+| **`Masquer`** | → `tournoi_publie = non` → **la même adresse reste utilisable, mais la page revient dans son état non publié** → ⛔ **rien d'autre.** ⛔ **Aucun effet externe** |
+
+⚠️ **La preuve ne se lit pas dans le dépôt** *(`CLAUDE.md` §13.6)* : elle demande une publication
+**réelle**, puis un masquage **réel**, et l'**observation** de la vitrine dans les deux sens.
+
+**③ PUB-5 est terminé — et cela se vérifie sur deux points, pas un**
+
+| | Attendu |
+|---|---|
+| ⛔ | **L'ancien aperçu de la vitrine externe n'existe plus dans l'admin** |
+| ✅ | **L'aperçu présenté est celui de la page publique Maxilou** |
+
+> 🎯 **Pourquoi la condition ③ est écrite séparément, et ce n'est pas une redondance.** Sans elle,
+> ⛔ **M1-PUB pourrait être déclaré clos dès PUB-4** : le découplage serait prouvé, et l'admin
+> continuerait pourtant de montrer, en direct, l'aperçu d'un contenu **qui n'existe plus**. ⚠️ **Un
+> découplage réussi doublé d'un aperçu mensonger n'est pas un chantier terminé.**
+
+#### ⛔ Ce que M1-PUB ne fait PAS
+
+- ❌ **Pas** supprimer la possibilité de diffuser vers l'extérieur — elle devient **un geste
+  volontaire distinct**, pas un effet de bord ;
+- ❌ **Pas** supprimer `tournoi_publie` : la vue **`live`** en a besoin, définitivement ;
+- ❌ **Pas** refondre la page publique ni l'écran d'administration ;
+- ❌ **Pas** décider du sort du site `boutique-r92`, qui est un **dépôt séparé**.
+
+
 ### 15.4 — ⭐ Le scénario obligatoire `S-M1`
 
 **« Le profil vit, le tournoi ne bouge pas. »** Sur une **copie de test**, ⛔ jamais la production.
@@ -2611,6 +2840,14 @@ M1 est terminé quand **les huit conditions** sont réunies :
 7. les **trois frontières** tiennent : aucune donnée personnelle nouvelle en public · aucun champ
    événementiel écrit par le profil · aucun nom d'usage dans une démarche officielle ;
 8. la **phrase du contrôle ⑯** *(`CLAUDE.md` §8 quinquies)* s'écrit en entier.
+
+> 🌐 **Une neuvième condition s'ajoute depuis le 2026-08-24, et elle ne renumérote pas les huit
+> précédentes** : **M1-PUB *(§15.3 bis)* doit être terminé**, son critère de clôture atteint —
+> ⛔ **avant M1-F**.
+>
+> 🎯 **Pourquoi ce n'est pas un détour.** M1-F est **la clôture** de M1 : elle prouve qu'il ne
+> reste plus **aucune** attribution institutionnelle. ⛔ **Or tant que publier dans Maxilou fait
+> apparaître un contenu sur le site d'une association, cette preuve est impossible à écrire.**
 
 ### 15.6 — Quand CF-4b pourra être clos
 
@@ -2655,7 +2892,8 @@ M1 est terminé quand **les huit conditions** sont réunies :
 |---|---|
 | **M1-A** | 🏁 **TERMINÉE, FUSIONNÉE, PUBLIÉE dans `main`, et CLÔTURÉE** le 2026-08-24 — **fast-forward**, ⛔ **sans réécrire un seul commit ni créer de commit de fusion** : **`9abaebc`** *(les 7 documents)* · **`b65a6b0`** *(journal §17)* · **`aff6d5f`** *(correctif de statut et de déploiement)*. ⛔ **Plus rien n'est ouvert dans cette étape** |
 | **M1-B** | 🏁 **TERMINÉE — les SEPT états sont atteints.** Backend *(Apps Script v156)* et frontend *(Pages `success` sur `8dfd28a`)* en service, fusionnée dans `main` en **fast-forward**, **796/796 chez Google**, et ⭐ **vérifiée par une RÉINITIALISATION RÉELLE le 2026-08-24** : **10/10 conservés · 26/26 effacés · 2/2 récompenses effacées** |
-| **M1-C → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite** |
+| **M1-C → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite**. ⏸️ **M1-C1 est de plus SUSPENDUE jusqu'à la CLÔTURE COMPLÈTE de M1-PUB** — ⛔ pas seulement jusqu'à son cadrage |
+| 🌐 **M1-PUB** *(M1-E7)* | 🚧 **OUVERTE le 2026-08-24** *(**§15.3 bis**)*. **PUB-1** *(doctrine et cadrage architectural)* est **le lot en cours** ; ⛔ **PUB-2 → PUB-5 NON COMMENCÉS**. S'intercale **avant M1-F** |
 
 > ⭐ **Les sept états de M1-B, et ils ne se déduisent pas les uns des autres** *(`CLAUDE.md` §8 septies)* :
 >

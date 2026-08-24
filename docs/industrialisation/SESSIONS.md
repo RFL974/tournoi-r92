@@ -8026,3 +8026,148 @@ effacés** · **RÉCOMPENSES 2/2 effacées** · **M1-B ✅ COMPLÈTE ①→⑦**
 > une intention ; seul le relevé dit ce qui s'est passé.* ⛔ **Et une preuve mal décrite est une
 > preuve fragile**, même quand son résultat est juste — car le premier lecteur qui vérifierait la
 > description y trouverait un mensonge, et douterait du reste.
+
+---
+
+## 20. M1-PUB / PUB-1 — la doctrine de publication et le contrat architectural
+
+**Date** : 2026-08-24 · **Branche** : `claude/m1-pub-documentation-0afcmo` · **Point de départ** :
+`ebf1b07` *(= `origin/main` au démarrage)*
+
+**Objectif de la session** : ouvrir le chantier **M1-PUB *(= M1-E7)*** et graver **PUB-1
+uniquement** — la doctrine de publication, le risque architectural découvert, l'ordre général du
+découplage et le critère de clôture de M1-PUB.
+
+⛔ **Lot strictement documentaire.** Aucun fichier `backend/`, aucun fichier `frontend/`, aucun
+test, aucune donnée du classeur, aucun redéploiement, ⛔ **aucune modification du dépôt séparé
+`boutique-r92`**. ⛔ **Aucune donnée de tournoi recréée** — le repère 🔴 de `ETAT.md` reste actif et
+intact. ⛔ **PUB-2 à PUB-5 et M1-C1 ne sont pas commencés.**
+
+### 20.1 — L'état du dépôt au démarrage, constaté
+
+| Contrôle | Constaté |
+|---|---|
+| Branche | `claude/m1-pub-documentation-0afcmo` |
+| `HEAD` | `ebf1b072b16a4cc59e8c465cb74e60f8fa350a32` |
+| `origin/main` | **identique à `HEAD`** |
+| Arbre de travail | **vide** |
+| ⚠️ Écart sans effet | La branche **locale** `main` était restée à `ce64f35` — ⛔ **non utilisée**, le travail part de `origin/main` |
+
+### 20.2 — ⭐ La vérification du dépôt séparé `boutique-r92`
+
+> 🎯 **C'est l'apport principal de cette session, et il change la nature de la preuve.** Le
+> couplage avec le site vitrine était jusqu'ici connu par **ce que Maxilou en écrit** — un
+> commentaire de `Code.gs`, un test, deux lignes du `README`. ⛔ **Aucun de ces éléments ne prouve
+> le comportement de l'autre côté.**
+
+Le dépôt `RFL974/boutique-r92` a été **cloné en lecture seule**, hors du dépôt Maxilou. Relevé au
+commit **`164bb8e`** *(2026-08-03, clone superficiel de la branche par défaut, le 2026-08-24)* :
+
+| Ce qu'il fallait prouver | 🔬 Preuve directe |
+|---|---|
+| Interroge `getConfig` | `assets/js/main.js:348` — dans `chargerInfosTournoi()` *(l. 343)* |
+| Lit `tournoi_publie` | `assets/js/main.js:353` |
+| Conditionne la **carte d'actualité** | `assets/js/main.js:429-431` — dans `chargerActus()` *(l. 409)* ; carte fabriquée par `actuTournoi()` *(l. 389)*, insérée **en tête** |
+| Conditionne la **page tournoi** | `assets/js/main.js:480-485` — dans `chargerArticleTournoi()` *(l. 476)* ; sinon *« Aucun tournoi en cours »* |
+| Déclenchement | `assets/js/main.js:797-799` — les deux fonctions sont appelées **à chaque chargement de page** |
+| Même backend | L'identifiant de déploiement Apps Script est **le même** des deux côtés. ⛔ **Non recopié dans la documentation** |
+
+⛔ **Ce que ce relevé NE prouve PAS, et il faut le dire** : il porte sur **le code de la branche par
+défaut du dépôt**, ⛔ **pas sur ce qui est réellement servi en ligne** *(`CLAUDE.md` §13.6 — le
+dépôt contient d'ailleurs un `netlify.toml`, et le mode d'hébergement effectif n'a pas été établi
+depuis ici)*. **Le comportement en production reste NON ÉTABLI** tant qu'il n'a pas été observé en
+réel — c'est la charge de **PUB-3** *(avant coupure)* et **PUB-4** *(après coupure)*.
+
+### 20.3 — La convention de preuve, posée par ce lot
+
+Application visible de `CLAUDE.md` **§9**, utilisée dans **R-097** et **§15.3 bis** :
+
+| Marqueur | Ce que ça veut dire | §9 |
+|---|---|---|
+| 🔬 **PREUVE DIRECTE** | Lu dans le code **du système concerné**, avec `fichier:ligne` | **CERTAIN** |
+| 📄 **CONTRAT DOCUMENTÉ** | Écrit **dans Maxilou** — dit ce qu'on **attend** de l'autre côté | **PROBABLE** |
+| 🕗 **CONSTAT ANTÉRIEUR** | Établi par une session précédente, **non revérifié** | **PROBABLE** |
+| ⛔ **NON ÉTABLI** | Ni l'un ni l'autre ne le prouve | **INCONNU** |
+
+### 20.4 — Ce qui a été écrit
+
+| Fichier | Ce qui y a été inscrit |
+|---|---|
+| `DECISIONS.md` | 🆕 **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* : les trois mots **Publication / Accès / Diffusion**, la règle des **7 interdits**, et **ce que la décision ne dit PAS** |
+| `RISQUES.md` | 🆕 **R-097** *(P2)* — le témoin de publication comme **signal implicite** vers l'extérieur, avec ses **niveaux de preuve**, la justification du **P2**, et la dette à supprimer. Bloc de tête mis à jour |
+| `PLAN.md` | 🆕 **§15.3 bis** — le chantier **M1-PUB *(= M1-E7)***, l'**ordre général du découplage** *(cadrage)*, les **5 micro-lots**, le **critère de clôture**. + bloc de tête, **§15.2** *(ligne entre M1-E et M1-F)*, **§15.5** *(9ᵉ condition, sans renuméroter les 8)*, **§15.8** *(état d'avancement)* |
+| `ETAT.md` | Nouveau bloc de tête ; ⚡ **correction de deux lignes fausses du §1** *(voir 20.5)* |
+| `SESSIONS.md` | Ce journal |
+| `../architecture.md` | **§2.H** — la doctrine comme **règle d'architecture**, l'écart connu **R-097** et son niveau de preuve |
+
+⭐ **Sept corrections ont été apportées après l'examen du diff par Romain**, avant tout commit —
+elles font partie intégrante de PUB-1 :
+
+| # | Ce qui a été corrigé | Pourquoi |
+|---|---|---|
+| **1** | **PUB-4** ne porte plus *« le critère de clôture de M1-PUB »* mais **le critère de RÉUSSITE DU DÉCOUPLAGE** ; le critère de clôture global exige désormais **3 conditions**, dont **PUB-5 terminé** | ⛔ En l'état, M1-PUB aurait pu être déclaré clos **dès PUB-4**, PUB-5 non fait |
+| **2** | Ce que **« accessible »** veut dire est écrit : **le contenu devient visible** ; ⭐ **l'adresse peut exister avant publication et après masquage**. La chaîne finale est reformulée en conséquence | ⛔ Sans cela, la doctrine et **PUB-2** pouvaient se lire comme **contradictoires** |
+| **3** | **M1-C1 est SUSPENDUE jusqu'à la CLÔTURE COMPLÈTE de M1-PUB** *(5 emplacements)*, et non plus *« jusqu'à son cadrage »* | ⛔ **PUB-1 venait précisément de cadrer PUB-2 et PUB-3** : la formulation autorisait la reprise immédiate |
+| **4** | *« `tournoi.html` existe déjà et **fonctionne** »* devient *« existe déjà et **son code consomme `tournoi_publie` via la vue `live`** »* *(4 emplacements, avec `fichier:ligne`)* | ⛔ **Le dépôt prouve le code, pas ce qui est servi** — c'est la règle que ce lot vient d'inscrire, elle s'applique d'abord à lui-même |
+| **5** | Dans **R-097**, la projection *« le jour où un autre club utilisera Maxilou… »* est remplacée par le **constat actuel** : le couplage lie le témoin à **une vitrine tierce spécifique**, ⛔ **non généralisable tel quel** | ⛔ La projection reposait sur une **architecture future non établie** |
+| **6** | Le point *« `RISQUES.md` affirme encore que le serveur n'a pas été redéployé »* est **retiré** de **§20.7** | ⭐ **Erreur d'analyse** : ce lot déplace lui-même cette phrase en **trace historique**. Elle n'a rien à réparer |
+| **7** | Dans **D-048**, *« elle devient **un autre bouton** »* devient *« une **action distincte et volontaire** »* | ⛔ La doctrine exige **un geste volontaire**, ⛔ **pas nécessairement un bouton** |
+
+### 20.5 — ⚡ Une source d'état courant corrigée — `ETAT.md` §1
+
+Le **§1 « EN UNE PHRASE »** affirmait encore que M1-B était *« NON publiée côté frontend, NON
+redéployée côté backend, et NON vérifiée en réel »*, alors que le **bloc de tête du même fichier**
+établit depuis le 2026-08-24 que les **sept états** sont atteints. Les deux passages se
+contredisaient.
+
+⭐ **La phrase était vraie le 2026-08-24 au matin**, et fausse dès la clôture réelle de M1-B le même
+jour. C'est le mécanisme de **§8 septies** : un état écrit **avant** le geste, jamais relu
+**après**. ✅ **Corrigé, en disant ce que la ligne annonçait** — ⛔ **et sans toucher à un seul bloc
+« Rappel de la mise à jour précédente »**, qui sont des **traces historiques**.
+
+### 20.6 — Ce qui a été volontairement laissé intact
+
+| | Pourquoi |
+|---|---|
+| `backend/`, `frontend/`, `backend/Tests.gs` | ⛔ Hors périmètre. ⭐ **`testCfg_vitrineVoitTournoiPublie` reste en place et inchangé** : il protège le contrat **encore en service**. Il ne se retire qu'en **PUB-4**, et **après** la preuve |
+| `CLAUDE.md` | Les règles §8 sont des règles **de méthode** ; **D-048** est une règle **de produit**. Les mélanger créerait un doublon *(arbitrage de Romain)* |
+| `CHANGELOG.md` | **§8 bis** : le journal ne réclame **pas** de ligne pour un travail purement documentaire. ⭐ **PUB-2, PUB-4 et PUB-5 en mériteront une** |
+| `README.md` | ✅ **Vérifié : ne devient pas faux.** Ses lignes 22, 44 et 224-225 décrivent l'intégration vitrine **telle qu'elle est encore**. Elles changeront **en PUB-4** |
+| `R-096` | ⛔ **Inchangé.** Le chevauchement de `url_tournoi_public` est **signalé**, **arbitré en PUB-2** |
+| `backend/README.md`, `frontend/README.md`, `docs/deploiement.md`, `docs/conservation-donnees.md`, `docs/textes-information-donnees.md`, `REFERENTIELS.md` | ✅ **Vérifiés : aucun ne devient faux.** Aucune action serveur, aucun utilitaire, aucun repère de déploiement, aucune donnée, aucune durée, aucun texte officiel ne change. ⛔ **PUB-1 ne repose sur aucun référentiel** — c'est une doctrine **produit** |
+| Traces historiques *(`AUDIT.md`, `RAPPORT-AUDIT.md`, entrées passées du `CHANGELOG`, blocs « Rappel »)* | ⛔ **§8 septies : on ne repeint jamais le passé** |
+| Le dépôt `boutique-r92` | ⛔ **Lecture seule.** Le clone vit hors du dépôt Maxilou ; ⛔ **aucune poussée n'est possible depuis cette session** |
+
+### 20.7 — Points signalés, ⛔ non traités
+
+| # | Point | Suite |
+|---|---|---|
+| **1** | **`url_tournoi_public`** existe déjà *(`frontend/js/dossier.js:217-220`)*, avec repli automatique, **sans écran**, rattaché à **R-096 / M1-D** | ⏸️ **Arbitrage en PUB-2** |
+| **2** | Le **faux aperçu** annonce un *« Aperçu RÉEL »* d'un contenu appartenant à un autre site : il **affirme sa propre fidélité** | ✅ **Traité par PUB-5** |
+
+> ⛔ **Un point a été retiré de cette liste avant clôture, et il faut dire pourquoi.** Ce lot avait
+> d'abord signalé, comme état courant à réparer, la phrase de `RISQUES.md` *« Le serveur chez
+> Google n'a pas été redéployé »*. ⭐ **C'était une erreur d'analyse** : ce même lot déplace cette
+> phrase de **« Dernière mise à jour »** vers **« Rappel de la mise à jour précédente »**. Elle
+> devient donc une **trace historique contextualisée** — vraie à sa date — et ⛔ **non plus une
+> source d'état courant.** **Elle n'a rien à réparer, et aucun chantier n'est ouvert pour elle**
+> *(`CLAUDE.md` §8 septies : on ne repeint jamais le passé)*.
+
+### 20.8 — État des gestes
+
+> ⚠️ **Cette section est rédigée AVANT le commit et complétée APRÈS** *(`CLAUDE.md` §8 septies et
+> §12.4 bis)*. ⛔ **Tant qu'elle porte une case non renseignée, le geste n'est pas constaté.**
+
+| Geste | État constaté |
+|---|---|
+| **Commit** | ⏳ **PAS ENCORE FAIT** — le diff est présenté à Romain pour examen ; ⛔ **le commit est autorisé séparément** |
+| **Poussée** | ⏳ **PAS ENCORE FAITE** |
+| **Fusion dans `main`** | ⏳ **PAS ENCORE FAITE** |
+| **Publication GitHub Pages** | ⛔ **SANS OBJET** — aucun fichier `frontend/` modifié |
+| **Redéploiement backend** | ⛔ **SANS OBJET** — aucun fichier `backend/` modifié |
+| **Comportement en production** | ⛔ **NON ÉTABLI, et hors périmètre de PUB-1** |
+
+### 20.9 — Prochaine session recommandée
+
+⏸️ **PUB-2 — Accès autonome à la page publique.** ⛔ **Elle ne démarre pas automatiquement.**
+Elle devra aussi **arbitrer le rattachement de `url_tournoi_public`** *(§20.7, point 1)*.

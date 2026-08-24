@@ -217,6 +217,32 @@ en tête de fichier le pilotent : `ACTIONS_SCORES`, `ACTIONS_TOKEN` et `ACTIONS_
 | `enregistrerPhotoParking` | 🔐 | POST | Enregistre la photo du parking (→ Google Drive) |
 | `supprimerPhotoParking` | 🔐 | POST | Retire la photo du parking |
 
+> 🌐 **DOCTRINE DE PUBLICATION — règle d'architecture, décision D-048 :**
+>
+> > **« Publier ouvre une page. Publier ne parle à personne. »**
+>
+> **Publication** = rendre la page publique accessible · **Accès** = fournir son adresse à
+> l'organisateur · **Diffusion** = geste volontaire vers un canal externe. ⛔ **Un clic sur
+> « Publier » ne doit jamais, à lui seul, envoyer un email, créer une actualité, créer une page sur
+> un autre site, notifier un club, ni déclencher aucune diffusion externe.**
+>
+> ⚠️ **Écart CONNU, aujourd'hui — R-097.** `publierTournoi` respecte cette règle *(il écrit une
+> ligne dans `Config`, et rien d'autre)*, **mais le témoin `tournoi_publie` est exposé par la vue
+> `invitation` et LU par le site extérieur `boutique-r92`**, qui en déduit tout seul une carte
+> d'actualité et une page d'événement. 🔬 **Vérifié le 2026-08-24 dans le code de ce dépôt séparé**
+> *(`assets/js/main.js`, commit `164bb8e`)* — ⛔ **le comportement en production, lui, n'est pas
+> établi depuis ici** *(§13.6 de `CLAUDE.md`)*.
+>
+> **Dette à supprimer : chantier M1-PUB** *(`industrialisation/PLAN.md` §15.3 bis)*.
+> ⛔ **L'ordre du découplage est impératif** : ⭐ la page `tournoi.html` existe déjà et **son code
+> consomme `tournoi_publie` via la vue `live`**, mais couper dans le désordre supprimerait l'ancien
+> chemin de diffusion **avant** que l'organisateur dispose, dans Maxilou, d'un **accès explicite et
+> autonome** à sa page publique.
+>
+> ⚠️ **« Accessible » veut dire ici : le CONTENU public du tournoi devient visible.** ⭐ L'adresse de
+> la page, elle, **peut exister et être ouverte avant la publication ou après le masquage** — elle
+> présente alors son **état non publié**. **Une adresse n'est pas une autorisation.**
+
 #### I. Le dossier d'invitation et les clubs invités — 15 actions
 
 > 📬 **C'est le plus gros sous-ensemble du serveur, et il était entièrement absent de ce document

@@ -9,7 +9,23 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-24 *(chantier **M1**, étape **M1-B**)* — ⚡ **R-033 EST CORRIGÉ
+**Dernière mise à jour** : 2026-08-24 *(chantier **M1-PUB**, micro-lot **PUB-1**)* — 🆕 **UN
+PROBLÈME DE PLUS AU REGISTRE : R-097 *(P2)*.**
+
+🌐 **R-097 — le témoin de publication sert de signal implicite à un système extérieur.**
+⭐ `publierTournoi()` respecte **déjà** la doctrine **D-048** *(« Publier ouvre une page. Publier
+ne parle à personne. »)* : il écrit **une seule ligne** dans `Config` et n'appelle aucun site.
+⛔ **Mais le site séparé `boutique-r92` LIT ce témoin et fabrique tout seul une carte d'actualité
+et une page d'événement.** 🔬 **Vérifié directement dans le code de ce dépôt** *(commit `164bb8e`)*,
+⛔ **et non déduit d'un commentaire de Maxilou**. ⚠️ **Le comportement réellement servi en ligne
+reste NON ÉTABLI** *(`CLAUDE.md` §13.6)*. ✅ **Rattaché à M1-PUB / PUB-3 puis PUB-4**
+*(`PLAN.md` §15.3 bis)*.
+
+⛔ **Aucun autre problème n'a été créé, modifié ni refermé par ce lot.** En particulier,
+**R-096 est inchangé** : le chevauchement de `url_tournoi_public` avec l'accès autonome à la page
+publique est **signalé, pas tranché** — il sera **arbitré en PUB-2**.
+
+*Rappel de la mise à jour précédente — 2026-08-24 (chantier **M1**, étape **M1-B**)* : ⚡ **R-033 EST CORRIGÉ
 DANS LE DÉPÔT — MAIS SEULEMENT POUR SA PART `org_*`, ET IL N'EST PAS EN SERVICE.**
 
 | | |
@@ -1242,3 +1258,97 @@ raisonnable — mais **un tournoi sur 3 demi-journées ne peut être déclaré q
 | Les 4 « infos pratiques » du site + les 3 liens | ✅ **M1-D** — ils relèvent du **profil du club** *(famille 🏟️)* |
 | `nb_demi_journees` | ⛔ **HORS M1** — c'est une donnée **de l'édition** et une clé **réglementaire** *(famille 📜)*, elle n'a rien à faire dans « Mon club » |
 | Les repères internes | ⛔ **Rien à faire** — leur absence d'écran est normale |
+
+---
+
+### R-097 — Le témoin de publication sert de signal implicite à un système extérieur
+
+| | |
+|---|---|
+| **Priorité** | **P2** |
+| **Domaine** | **G — architecture** · **A — métier / product owner** |
+| **Statut** | **IDENTIFIÉ** — ⛔ **NON CORRIGÉ** |
+| **Découvert** | 2026-08-24, chantier **M1-PUB**, micro-lot **PUB-1** |
+| **Rattachement** | ✅ **M1-PUB / PUB-3** *(plan et preuve)* puis **PUB-4** *(exécution)* — `PLAN.md` **§15.3 bis** |
+| **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* |
+
+**Comment lire les preuves de cette fiche** *(application de `CLAUDE.md` §9)*
+
+| Marqueur | Ce que ça veut dire | §9 |
+|---|---|---|
+| 🔬 **PREUVE DIRECTE** | Lu dans le code **du système concerné**, avec `fichier:ligne` | **CERTAIN** |
+| 📄 **CONTRAT DOCUMENTÉ** | Écrit **dans Maxilou** *(commentaire, test, README)* — dit ce qu'on **attend** de l'autre côté, ⛔ **ne prouve pas l'autre côté** | **PROBABLE** |
+| 🕗 **CONSTAT ANTÉRIEUR** | Établi par une session précédente, **non revérifié maintenant** | **PROBABLE** |
+| ⛔ **NON ÉTABLI** | Ni l'un ni l'autre ne le prouve | **INCONNU** |
+
+**Le constat — et voici EXACTEMENT ce qui le prouve**
+
+🔬 **PREUVE DIRECTE, côté Maxilou** — `publierTournoi` *(`backend/Code.gs:7467-7472`)* écrit **une
+seule ligne** dans l'onglet `Config` et ⛔ **n'appelle aucun site extérieur**. ⭐ **Maxilou respecte
+donc déjà la doctrine dans son propre code.**
+
+🔬 **PREUVE DIRECTE, côté vitrine** — vérifiée le **2026-08-24** dans le dépôt séparé
+`RFL974/boutique-r92`, commit **`164bb8e`** *(clone superficiel de la branche par défaut, lecture
+seule)* :
+
+| Étape | Ce qui se passe | Preuve |
+|---|---|---|
+| ① | On clique **« Publier »** dans l'admin Maxilou | — |
+| ② | `tournoi_publie` passe à `oui` dans l'onglet `Config` | 🔬 `backend/Code.gs:7470` |
+| ③ | La vitrine interroge **le même backend** par `getConfig` et lit le témoin | 🔬 `boutique-r92 assets/js/main.js:348` *(`chargerInfosTournoi`, l. 343)* et **`:353`** |
+| ④ | Une **carte d'actualité** est insérée **en tête** des actualités | 🔬 `boutique-r92 assets/js/main.js:429-431` *(`chargerActus`, l. 409)* — la carte est fabriquée par `actuTournoi()` *(l. 389)* |
+| ⑤ | La **page d'événement** du site vitrine se remplit *(sinon : « Aucun tournoi en cours »)* | 🔬 `boutique-r92 assets/js/main.js:480-485` *(`chargerArticleTournoi`, l. 476)* |
+| ⑥ | Les deux fonctions sont appelées **à chaque chargement de page** du site | 🔬 `boutique-r92 assets/js/main.js:797-799` |
+
+⛔ **Personne n'a demandé les étapes ④ et ⑤ au moment du clic.**
+
+📄 **CONTRAT DOCUMENTÉ, côté Maxilou** — ce que Maxilou **écrit** de ce couplage, et qui
+**correspond** à ce qui vient d'être prouvé :
+
+| Endroit | Ce qu'on y lit |
+|---|---|
+| `backend/Code.gs:723-726` | Le commentaire dit que `tournoi_publie` est dans la vue `invitation` **pour** que la vitrine puisse le savoir |
+| `backend/Code.gs:729` | `tournoi_publie` est **effectivement** le 1er champ de la vue `invitation` |
+| `backend/Tests.gs:752-773` | `testCfg_vitrineVoitTournoiPublie` — un test **protège explicitement** ce contrat |
+| `frontend/admin.html:162-180` | Un **faux aperçu** simule la carte et la page de l'ancien site |
+| `README.md:22`, `:224-225` | La carte d'actualité et la page d'article sont annoncées comme une **fonctionnalité livrée** |
+
+⛔ **NON ÉTABLI — et ce n'est pas une réserve de forme.** Ce qui précède prouve **le code des deux
+dépôts**, ⛔ **pas ce qui est réellement servi en ligne** *(`CLAUDE.md` §13.6)*. La preuve du
+comportement réel — publier, observer la vitrine, masquer, observer à nouveau — appartient à
+**PUB-3** *(avant coupure)* et **PUB-4** *(après coupure)*.
+
+**Pourquoi c'est un problème, et pas seulement une inélégance**
+
+> 🎯 **Une frontière franchie sans être vue.** Maxilou croit rendre une page accessible ; en
+> réalité il **publie chez quelqu'un d'autre**.
+>
+> ⛔ **Et ce couplage lie AUJOURD'HUI le témoin de publication de Maxilou à une vitrine tierce
+> SPÉCIFIQUE** — une adresse, un dépôt, un site précis. **Ce n'est donc pas un mécanisme de
+> publication autonome, ni généralisable tel quel.**
+>
+> ⚠️ **Et le faux aperçu aggrave le malentendu** : `frontend/admin.html:162-180` annonce un
+> *« Aperçu RÉEL de la publication »*, *« tels qu'ils apparaîtront sur le site de l'association »*.
+> Ce n'est pas seulement l'aperçu du mauvais site : c'est un aperçu qui **affirme sa propre
+> fidélité**. ✅ **Traité par PUB-5.**
+
+**Pourquoi P2, et pas P0 ni P1**
+
+⛔ Ni perte de données, ni accès non autorisé, ni résultat sportif faux : le contenu qui apparaît
+est de l'information **destinée à être publique**, et le masquage la retire **symétriquement**.
+C'est une **dette d'architecture avec un effet produit surprenant** — pas un danger immédiat.
+⚠️ **Elle devient bloquante à un seul endroit** : elle empêche d'écrire le critère de clôture de
+**M1-F** *(voir `PLAN.md` §15.3 bis)*.
+
+**La dette à supprimer**
+
+⛔ **Ce n'est pas « supprimer côté Maxilou » ou « supprimer côté vitrine ».** L'ordre général du
+découplage est **impératif** *(`PLAN.md` §15.3 bis)*, et son plan technique précis est **le
+livrable de PUB-3**.
+
+⚠️ **Pourquoi l'ordre compte.** ⭐ **La page publique `tournoi.html` de Maxilou existe déjà et son
+code consomme `tournoi_publie` via la vue `live`** *(🔬 `frontend/js/tournoi.js:206`,
+`backend/Code.gs:707`)* — ce n'est pas elle qui manque. Mais **couper dans le désordre
+supprimerait l'ancien chemin de diffusion AVANT que l'organisateur dispose, dans Maxilou, d'un
+accès explicite et autonome à sa page publique.** Aujourd'hui, ce chemin passe encore par la
+vitrine.

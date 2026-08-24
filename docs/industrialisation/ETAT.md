@@ -25,7 +25,31 @@
 > ⏳ **Ce repère ne se retire QUE lorsqu'un nouveau jeu aura effectivement été recréé** — et il
 > devra alors dire **par quoi** il a été remplacé.
 
-**Dernière mise à jour** : 2026-08-24 *(soir, suite)* — 🏁 **M1-B EST TERMINÉE : LES SEPT ÉTATS SONT
+**Dernière mise à jour** : 2026-08-24 *(soir, suite 2)* — 🌐 **UN CHANTIER INTERMÉDIAIRE EST
+OUVERT : M1-PUB — LA PUBLICATION AUTONOME DU TOURNOI.**
+
+Micro-lot **PUB-1**, ⛔ **strictement documentaire : aucun fichier `backend/`, aucun fichier
+`frontend/`, aucun test, aucune donnée du classeur, aucun redéploiement, ⛔ aucune touche au dépôt
+séparé `boutique-r92`** *(lu en seule lecture, comme source de preuve)*.
+
+| | |
+|---|---|
+| 🆕 **D-048** | 🎯 **La doctrine : « Publier ouvre une page. Publier ne parle à personne. »** — trois mots distingués une fois pour toutes : **Publication** *(rendre la page accessible)* · **Accès** *(donner son adresse)* · **Diffusion** *(geste volontaire vers un canal externe)* |
+| 🆕 **R-097** *(P2)* | **Le témoin `tournoi_publie` sert de signal implicite à un système extérieur.** ⭐ `publierTournoi()` respecte **déjà** la doctrine ; c'est le site `boutique-r92` qui **lit** le témoin et fabrique **tout seul** une carte d'actualité et une page d'événement |
+| 🆕 **`PLAN.md` §15.3 bis** | Le chantier **M1-PUB *(= M1-E7)*** et ses **5 micro-lots** — dont ⭐ **l'ORDRE GÉNÉRAL du découplage** *(cadrage architectural)* et le **critère de clôture** |
+| 🔬 **Preuve** | Le couplage a été **vérifié DIRECTEMENT** dans le dépôt séparé `boutique-r92` *(commit `164bb8e`)*, ⛔ **et non déduit d'un commentaire de Maxilou**. ⚠️ **Ce qui est prouvé est le CODE des deux dépôts — pas ce qui est servi en ligne** *(`CLAUDE.md` §13.6)* |
+| ⏸️ **M1-C1** | **SUSPENDUE JUSQU'À LA CLÔTURE COMPLÈTE DE M1-PUB** — ⛔ **pas jusqu'à son cadrage** : la trajectoire retenue est **on termine M1-PUB avant de reprendre M1-C1** |
+| ⛔ **PUB-2 → PUB-5** | **NON COMMENCÉS** — et aucun ne démarre sans validation explicite |
+| 🔴 **Le repère « données à recréer »** | **TOUJOURS ACTIF** — ⛔ **aucune donnée de tournoi n'a été recréée par ce lot** |
+
+> 🎯 **Pourquoi ce chantier s'ouvre maintenant, et pas après M1-F.** M1-F est **la clôture** de M1 :
+> elle prouve qu'il ne reste plus aucune attribution institutionnelle. ⛔ **Or tant que publier dans
+> Maxilou fait apparaître un contenu sur le site d'une association, cette preuve est impossible à
+> écrire.** M1-PUB n'est donc pas un détour : c'est **un prérequis de la clôture**.
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-24 (soir, suite)* : 🏁 **M1-B EST TERMINÉE : LES SEPT ÉTATS SONT
 ATTEINTS**, ⭐ **le septième par une réinitialisation RÉELLE**.
 
 🔴 **Le défaut corrigé, en une phrase** : une réinitialisation laissait la demande d'autorisation
@@ -628,9 +652,19 @@ est **suspendue derrière elle**. **CF-3, CF-5 à CF-13 et CF-14 ne sont pas com
 🏛️ **ET UN CHANTIER DE PLUS EST OUVERT DEPUIS LE 2026-08-24 : M1 — le profil du club**
 *(`PLAN.md` **§15**)*. Il n'appartient ni au plan d'audit ni au chantier Confiance : il en **sort**,
 puisque c'est lui qui permettra de clore CF-4b. 🏁 **Son étape M1-A est TERMINÉE et FUSIONNÉE dans
-`main`** *(`9abaebc`, `b65a6b0`, `aff6d5f`)*. 🔧 **Son étape M1-B est écrite, testée hors ligne,
-COMMITÉE et POUSSÉE sur sa branche** *(`dc03488`)* — ⛔ **mais NON publiée côté frontend, NON
-redéployée côté backend, et NON vérifiée en réel** *(les sept états : `PLAN.md` **§15.8**)*.
+`main`** *(`9abaebc`, `b65a6b0`, `aff6d5f`)*. 🏁 **Son étape M1-B est TERMINÉE** — ses **sept
+états** sont atteints *(`PLAN.md` **§15.8**)* : publiée côté frontend, backend redéployé *(Apps
+Script v156)*, fusionnée dans `main`, et **vérifiée par une réinitialisation RÉELLE** le
+2026-08-24.
+
+⚡ **Cette ligne annonçait « NON publiée côté frontend, NON redéployée côté backend, et NON vérifiée
+en réel ». C'était vrai le 2026-08-24 au matin, et FAUX dès la clôture réelle de M1-B le même
+jour** — le bloc de tête le dit depuis, mais ce paragraphe-ci n'avait pas été relu. ⭐ **C'est
+exactement le mécanisme de `CLAUDE.md` §8 septies** : un état écrit **avant** le geste, jamais relu
+**après**.
+
+🌐 **ET UN CHANTIER INTERMÉDIAIRE S'INTERCALE : M1-PUB *(= M1-E7)***, à traiter **avant M1-F**
+*(`PLAN.md` **§15.3 bis**)*. ⏸️ **M1-C1 est SUSPENDUE JUSQU'À LA CLÔTURE COMPLÈTE DE M1-PUB.**
 ⛔ **M1-C → M1-F ne démarrent pas automatiquement.**
 
 > ⚠️ **Cette ligne annonçait « 2 lots sur 8 », et c'était devenu faux.** Le chiffre datait du jour

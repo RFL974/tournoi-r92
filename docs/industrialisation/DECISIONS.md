@@ -3201,3 +3201,69 @@ locale — **et** sur le site réellement servi par GitHub Pages, qui peut diff�
 > - ❌ **Pas** de le déclarer fait, ni de supposer ce que contiennent les deux valeurs — ⛔ **elles
 >   n'ont jamais été lues** *(§9 : c'est un **INCONNU**, pas un probable)* ;
 > - ❌ **Pas** de démarrer **M1-B** au motif que M1-A est close.
+
+---
+
+### D-048 — Publier ouvre une page. Publier ne parle à personne.
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-24 |
+| **Session** | Chantier **M1-PUB**, micro-lot **PUB-1** |
+| **Statut** | ✅ **VALIDÉE — décision de Romain** |
+| **Décidée par** | Romain |
+| **Couvre** | `PLAN.md` **§15.3 bis** · `RISQUES.md` **R-097** · `../architecture.md` **§2.H** |
+
+**Le problème posé**
+
+> Le mot « publier » recouvrait **trois gestes différents** que rien ne distinguait, et cette
+> confusion a une conséquence concrète : dans Maxilou, un clic sur **« Publier le tournoi »** fait
+> apparaître **automatiquement** une carte d'actualité et une page d'événement sur un **site
+> extérieur**, sans que personne ne l'ait demandé à ce moment-là.
+
+**Ce qui est décidé — les trois mots, et ils ne se mélangent plus**
+
+> | Mot | Ce qu'il veut dire, exactement |
+> |---|---|
+> | **Publication** | **Rendre la page publique accessible.** Rien d'autre |
+> | **Accès** | **Fournir son adresse à l'organisateur** — pour qu'il puisse l'ouvrir et la donner |
+> | **Diffusion** | **Un geste volontaire vers un canal externe** — email, réseau social, site tiers |
+
+**⚠️ Ce que « accessible » veut dire ici, précisément — et c'est ce qui évite de contredire PUB-2**
+
+> **« Accessible » signifie que le CONTENU public du tournoi devient visible.**
+>
+> ⭐ **L'adresse de la page, elle, peut exister et être ouverte AVANT la publication ou APRÈS le
+> masquage** : elle présente alors son **état non publié**.
+>
+> 🎯 **Les deux ne sont donc pas le même objet, et c'est tout l'intérêt de la distinction** : une
+> **adresse** n'est pas une **autorisation**. C'est ce qui rend **PUB-2** *(l'accès autonome)*
+> possible **sans** toucher à la publication — et ce qui empêche de lire cette doctrine comme si
+> « publier » faisait naître une adresse qui n'existait pas.
+
+> 🎯 **La formule à conserver telle quelle, et elle fait règle :**
+>
+> > **« Publier ouvre une page. Publier ne parle à personne. »**
+
+**La règle d'absence d'effet externe**
+
+> ⛔ Un clic sur « Publier » ne doit **jamais**, à lui seul :
+>
+> ① envoyer un email · ② publier sur un site tiers · ③ créer une actualité · ④ créer une page sur
+> un autre site · ⑤ envoyer un message · ⑥ notifier un club · ⑦ déclencher une diffusion externe
+> quelconque.
+>
+> ⭐ **Une diffusion externe éventuelle relèvera TOUJOURS d'une action distincte et volontaire de
+> l'utilisateur.**
+
+**Ce que cette décision ne dit PAS**
+
+> - ❌ **Pas** que la diffusion externe est interdite — elle devient **une action distincte et
+>   volontaire**, pas un effet de bord ;
+> - ❌ **Pas** que le site vitrine doit disparaître — il doit cesser de **deviner** ;
+> - ❌ **Pas** que `tournoi_publie` disparaît : la page publique Maxilou en a **besoin** *(vue
+>   `live`)*. C'est son usage comme **signal implicite vers l'extérieur** qui est visé ;
+> - ❌ **Pas** que la page publique Maxilou n'existe pas — ⭐ **`tournoi.html` existe déjà et son
+>   code consomme `tournoi_publie` via la vue `live`** *(🔬 `frontend/js/tournoi.js:206`,
+>   `backend/Code.gs:707`)*. Ce qui manque est **un accès explicite et autonome pour
+>   l'organisateur depuis Maxilou** *(PUB-2)*.
