@@ -8561,3 +8561,192 @@ de faire confiance à ce que les documents annonçaient.
 ⏸️ **PUB-3 — Plan technique et preuve du découplage** *(📄 documentaire, ⛔ aucune coupure)*.
 ⛔ **Elle ne démarre pas automatiquement**, et ⛔ **pas avant que PUB-2 soit validée, commitée,
 fusionnée et contrôlée en réel.**
+
+---
+
+## SESSION 22 — 🔴 LA VALIDATION RÉELLE DE PUB-2 ÉCHOUE AU PREMIER CONTRÔLE *(2026-08-24, soir)*
+
+### 22.1 — Ce que la session cherchait, et ce qu'elle a trouvé
+
+**Objectif** : obtenir la preuve réelle, dans un navigateur, que PUB-2 fonctionne sur le frontend
+servi par GitHub Pages. **Aucun développement prévu.**
+
+> 🔴 **Le contrôle A1 — le tout premier — a échoué.** Romain n'a pas pu atteindre la carte
+> « Publier le tournoi » : dans la barre latérale, **« Publication » est grisé, avec un cadenas**.
+> Maxilou affiche : *« Avant de publier, il reste : HORAIRES · CATÉGORIES · ÉQUIPES · TERRAINS ·
+> POULES & PLANNING »*.
+
+⭐ **La leçon, et elle vaut plus que le défaut lui-même.** PUB-2 avait vérifié **onze cas** de
+non-régression pour garantir que l'adresse affichée serait **la bonne**. Il n'a jamais vérifié
+qu'elle serait **visible**. *On a contrôlé le contenu d'une pièce sans jamais essayer d'en ouvrir
+la porte.*
+
+### 22.2 — Le diagnostic, en lecture seule et sans rien contourner
+
+| Question | Réponse **CONSTATÉE** |
+|---|---|
+| **Qui verrouille ?** | `frontend/js/ecrans.js:221`, `ecransCalculerVerrous` : elle descend `ECRANS_DEF` et **propage** le premier blocage rencontré à tous les écrans suivants qui ne sont pas `libre` |
+| **Pourquoi la Publication ?** | 🔬 Elle a **`cles: []`** — ⭐ **elle n'exige RIEN par elle-même** — mais **pas** `libre: true`. Elle **hérite** donc du blocage des 5 écrans du chemin principal qui la précèdent |
+| **Le verrou est-il né avec PUB-2 ?** | ⛔ **NON.** `ecrans.js` existe depuis le **2026-08-16**, soit **8 jours avant**. 🔬 `git diff ec1f486..2ef9ce0 -- frontend/js/ecrans.js frontend/js/assistant.js` = **0 fichier** |
+| **Bloque-t-il le geste ou la carte ?** | 🔬 **Toute la carte** : `ecransActiver` refuse d'**afficher l'écran**, sans trier son contenu |
+| **PUB-2 l'avait-il analysé ?** | ⛔ **NON.** Recherche de `ecrans.js`, `barre latérale`, `verrou`, `cadenas`, `assistant`, `vue classique`, `accessible` dans **toute** la documentation de PUB-2 : **zéro résultat** |
+
+⭐ **Avant PUB-2, ce verrou était COHÉRENT** : l'écran ne contenait qu'un geste — publier — et on
+empêchait ce geste tant que rien n'était prêt. ⚠️ **PUB-2 a mis dans la même carte trois choses qui
+ne dépendent d'aucune préparation** : l'adresse, « Copier », « Ouvrir ». Le verrou les a emportées
+avec lui.
+
+> 🎯 **La contradiction, et elle est frappante.** La carte affiche *« Publier ou masquer ne change
+> pas cette adresse. **Tu peux la communiquer dès maintenant.** »* — mais **« maintenant » est
+> exactement le seul moment où elle est inatteignable.** Elle ne s'ouvre qu'une fois tout préparé,
+> quand l'intérêt de communiquer l'adresse est passé.
+
+⛔ **Ce n'est PAS une limite de notre jeu de test.** La réinitialisation M1-B n'a rien créé
+d'anormal : elle a remis le classeur dans l'état d'un **premier démarrage**. ⭐ **Tout nouvel
+utilisateur de Maxilou rencontrerait ceci, au tout premier écran.** Et c'est justement tôt qu'on
+veut l'adresse : pour une affiche, pour l'email d'invitation. ⚠️ **Preuve supplémentaire déjà dans
+le dépôt** : le lien « Scores en direct » du dossier club, lui, n'a **jamais** été verrouillé —
+**les clubs recevaient l'adresse avant l'organisateur.**
+
+**Qualification, validée par Romain le 2026-08-24** : ⭐ **anomalie fonctionnelle réelle de
+placement / accessibilité**, ⛔ **pas une régression** — rien ne s'est dégradé, le verrou
+préexistait.
+
+### 22.3 — Le correctif ÉCRIT — ⛔ et ce qu'il n'est PAS encore
+
+> ⛔ **Au moment où ces lignes sont écrites, le correctif est dans l'ARBRE DE TRAVAIL et
+> RIEN D'AUTRE : non validé, non commité, non poussé, non publié, non vérifié en réel.**
+> ⚠️ Cette phrase est à relire **après** les gestes *(`CLAUDE.md` §8 septies)*.
+
+**Principe, validé en amont par Romain : déplacer le garde-fou de l'ÉCRAN vers le BOUTON.**
+
+| Fichier | Ce qui change |
+|---|---|
+| `frontend/js/ecrans.js` | L'écran `publication` reçoit **`libre: true`** → la carte devient atteignable à tout moment |
+| `frontend/admin.html` | Une zone `#message-verrou-publier` sous le bouton, pour dire **pourquoi** il est grisé |
+| `frontend/js/admin-infos-publication.js` | **`majVerrouPublier()`** : grise **« Publier »** tant que les 5 étapes ne sont pas ✅ · appelée depuis `majPublication()` · **+1 ligne dans le `finally` de `onPublier()`** |
+| `frontend/js/admin-tableau-bord.js` | Appel dans `majEtatAvancement()`, à côté de `assistantMajVerrou()` : le bouton suit **chaque** changement d'étape |
+
+⛔ **Une seule définition des prérequis.** `majVerrouPublier()` relit `calculerEtatsEtapes()` — le
+cerveau qui alimente déjà le fil « Où en suis-je ? » — avec **exactement** le filtre du verdict
+« prêt à publier ». 🔬 **Contrôlé par exécution : aucun titre d'étape n'est écrit en dur.**
+
+> ⭐ **INVARIANT, plus important que le verrou lui-même : « Masquer » n'est JAMAIS grisé.** Un
+> tournoi publié dont une donnée redevient incomplète verrait sinon son bouton se bloquer — et
+> **l'organisateur ne pourrait plus retirer son tournoi du public**, alors que c'est le geste
+> d'urgence. Le test `estPublie()` vient donc **en premier**, avant toute lecture des prérequis.
+
+⭐ **Le correctif protège MIEUX que le verrou qu'il remplace.** Le verrou d'écran ne s'appliquait
+qu'aux modes guidés : le bouton **« Vue classique »** remettait la carte dans la page longue et
+laissait **publier un tournoi vide sans rien pour le retenir**. Porté par le bouton, le garde-fou
+suit partout.
+
+**Un piège rencontré, et il valait la peine d'être cherché** : le `finally` de `onPublier()` fait
+`bouton.disabled = false` — or `majPublication()` s'exécute **plus haut, dans le `try`**. Sans
+rappel, la réactivation **écrasait le garde-fou** : après un masquage sur préparation incomplète,
+« Publier » serait resté cliquable. 🔬 **Une ligne ajoutée, zéro ligne supprimée** dans `onPublier()`.
+
+### 22.3 bis — ⚡ Le correctif MOBILE, décidé et écrit dans la foulée *(2026-08-24)*
+
+> ⛔ **§22.4 ci-dessous décrivait le mobile comme « non corrigé ». C'était vrai à sa date** — la
+> limite venait d'être découverte et attendait un arbitrage. **Romain a tranché le même jour :
+> le mobile est corrigé DANS PUB-2.** ⛔ §22.4 n'est pas réécrit, il garde le constat.
+
+**Ce que Romain a explicitement REFUSÉ**, et c'est ce qui a dimensionné la solution :
+
+> ⛔ *« Ne rends surtout pas toute la carte « Résumé » libre simplement pour atteindre
+> `bloc-publication`. »* — car « Résumé » porte aussi **`bloc-reinitialisation`**, l'effacement du
+> tournoi, qui ⛔ **ne doit pas devenir accessible plus tôt par effet collatéral**.
+
+**Les trois changements de `assistant.js`**
+
+| | |
+|---|---|
+| ① **Carte dédiée** | `bloc-publication` **sort** de « Résumé » vers une étape `publication` propre, marquée **`libre`**, placée **après `autorisation`** — ⭐ exactement là où le grand écran la place, pour que les deux parcours racontent la même histoire. ⛔ **Aucun autre bloc déplacé**, ⛔ ordre relatif des autres étapes inchangé |
+| ② **Notion `libre`** | Ajoutée à `allerA()` *(on rejoint une carte libre sans franchir les étapes bloquantes)* et à `assistantMajVerrou()` *(elle n'apparaît jamais grisée)*. ⭐ **Le même mot et la même idée que dans `ECRANS_DEF`** — ⚠️ **c'est l'écart entre ces deux fichiers qui a produit R-098**, ne le réparer que d'un côté l'aurait laissé se reproduire |
+| ③ **`ASSISTANT_ORDRE_ORIGINE`** | Liste **littérale** de l'ordre canonique des blocs de `admin.html`, comme `ECRANS_ORDRE_ORIGINE` côté grand écran |
+
+> ⚠️ **Pourquoi la liste littérale était NÉCESSAIRE, et pas un confort.** L'ordre de restitution de
+> la « Vue classique » était **DÉDUIT** de `ASSISTANT_ETAPES` — donc ⛔ **déplacer un bloc d'une
+> carte à une autre changeait silencieusement l'ordre de la page longue.** Sans elle, sortir
+> `bloc-publication` de « Résumé » aurait déplacé la carte dans la page.
+>
+> ⭐ **Et cela corrige un défaut PRÉEXISTANT au passage** : `tableau-bord` et `etat-avancement`,
+> qui **ouvrent** `admin.html`, étaient jusqu'ici rejetés **à la fin** de la page longue au retour
+> de l'assistant — parce qu'ils vivent dans la carte « Résumé ». 🔬 **Mesuré** : l'ordre restitué
+> est désormais **exactement** celui de `admin.html`, les 27 blocs à leur place.
+
+### 22.3 ter — 🔴 Ce que les tests ont trouvé, et que la relecture n'avait pas vu
+
+⭐ **Deux défauts, tous deux invisibles à la lecture du code.** C'est l'argument le plus net de
+cette session en faveur des preuves par **exécution**.
+
+| | Ce qui n'allait pas |
+|---|---|
+| 🔴 **Un harnais qui mentait** | La première version du test mobile donnait *« tout passe »* même **AVANT** le correctif — `assistantRaisonsEtape` teste `typeof calculerEtatsEtapes === 'function'`, et cette fonction n'existait pas dans le bac à sable : **le verrou ne bloquait donc jamais**. ⭐ **Un test qui ne peut pas échouer ne prouve rien.** Un **autotest** a été ajouté depuis : il vérifie d'abord que l'ancien code **bloque bien**, avant de juger le nouveau |
+| 🔴 **Un TREMPLIN vers Réinitialiser** | ⚠️ **Un vrai trou, introduit par le correctif lui-même.** Jusqu'ici, `assistantIndex` **prouvait** que tout ce qui précède était franchi — on ne pouvait jamais dépasser un blocage. ⭐ **Une carte `libre` casse cette preuve** : on peut se tenir sur « Publication » *(rang 8)* sans avoir rempli les Réglages *(rang 1)*. Le balayage de `allerA` repartant de là, **deux clics suffisaient à atteindre « Résumé » — donc `bloc-reinitialisation` — en sautant tous les prérequis.** ⛔ Exactement ce que Romain avait interdit. **Corrigé** : le balayage part de **0**, avec `Math.max(s, assistantIndex)` pour ne jamais faire reculer l'utilisateur |
+
+> 🎯 **La leçon, et elle prolonge celle de §22.1.** PUB-2 avait manqué la **porte** de la pièce.
+> Son correctif a failli, en ouvrant cette porte, **en ouvrir une seconde qu'on voulait fermée.**
+> ⭐ Aucun des deux ne se voyait en relisant le diff : **il a fallu faire tourner le code.**
+
+**Bilan des preuves d'exécution : 4 harnais, 57 contrôles, 0 échec.**
+
+| Harnais | Contrôles | Ce qu'il établit |
+|---|---|---|
+| `preuve_bouton` | **9** | « Publier » grisé si incomplet · ⭐ **« Masquer » actif dans les 3 cas publiés** · après-midi ne bloque pas · repli si le cerveau manque · ⛔ aucune liste de prérequis en dur |
+| `preuve_ecrans` | **3** | ⭐ **Un seul** des 14 écrans change d'état · mêmes cartes · aucun prérequis ajouté ni retiré |
+| `preuve_mobile` | **34** | Autotest · saut direct vers Publication · ⭐ **les 7 autres étapes restent bloquées** · ⭐ **Publication n'est pas un tremplin** · parcours pas à pas inchangé |
+| `preuve_restauration` | **11** | Ordre canonique restitué · `tableau-bord` 2ᵉ, `etat-avancement` 3ᵉ, `bloc-publication` 26ᵉ · ⛔ aucun bloc perdu ni dupliqué |
+
+> ⛔ **Ce que ces 57 contrôles ne prouvent PAS** : le comportement **en production**. Ils
+> s'exécutent sur le code du dépôt, pas dans un navigateur *(`CLAUDE.md` §13.6)*. ⭐ **R-098 reste
+> OUVERT**, et ses **cinq conditions de fermeture** sont dans `RISQUES.md`.
+
+### 22.4 — ⚠️ La limite CONNUE et NON corrigée : le mobile
+
+> 🔬 **`libre: true` ne corrige que le grand écran, et il faut le dire.** L'assistant mobile
+> n'utilise **pas** `ECRANS_DEF` mais **`ASSISTANT_ETAPES`** *(`assistant.js:25`)*, une liste
+> distincte où **`bloc-publication` vit dans la carte « Résumé » — la DERNIÈRE des douze**.
+> Son verrou est **séquentiel** : on n'avance qu'en complétant l'étape courante.
+>
+> ⛔ **Sur mobile, la carte reste donc inatteignable tant que Réglages, Équipes, Terrains et
+> Poules ne sont pas ✅.** Le corriger supposerait de **déplacer la publication dans le parcours
+> guidé mobile** — ce qui change l'ordre des étapes, dépasse « corriger l'accessibilité », et
+> **appartient à Romain**. ⏸️ **En attente de sa décision.**
+>
+> ⭐ **Constat annexe, hors périmètre et à ne pas traiter ici** : `bloc-reinitialisation` est
+> `libre` sur grand écran *(« on doit pouvoir remettre à zéro un tournoi même à moitié préparé »)*
+> mais vit aussi dans la carte « Résumé » sur mobile — **il y est donc verrouillé**. Cette
+> incohérence entre les deux modes est **antérieure à PUB-2** et **indépendante** de lui.
+
+### 22.5 — Une limite de l'environnement, à connaître pour les sessions suivantes
+
+⛔ **Le réseau de l'environnement de travail REFUSE `rfl974.github.io`** *(le filtre répond « accès
+interdit »)*. ⭐ **Aucune session ne peut donc lire elle-même le site publié** : la preuve réelle
+passe **obligatoirement** par le navigateur de Romain. C'est une confirmation directe de
+`CLAUDE.md` **§13.6**.
+
+### 22.6 — État des gestes
+
+| Geste | État au moment où ces lignes sont écrites |
+|---|---|
+| **Contrôles A1 → E** | ⛔ **ARRÊTÉS après A1** *(choix de Romain : corriger d'abord, rejouer ensuite dans le parcours normal)* |
+| **A1** | ⚠️ **NON VÉRIFIABLE** — et la cause **est** l'anomalie |
+| **A2 → E** | ⛔ **NON TENTÉS** |
+| **D1 → D4** *(dossier club)* | ⛔ **NON TENTÉS** — ⚠️ leur faisabilité reste **inconnue** |
+| **Correctif** | ✍️ **écrit dans l'arbre de travail** · ⛔ **non commité, non poussé, non publié** |
+| **Données** | ⛔ **AUCUNE recréée.** Le repère *« DONNÉES DE TOURNOI À RECRÉER »* reste **ACTIF** |
+| **Backend** | ⛔ **INTACT** — 🔬 `backend/Code.gs` strictement identique |
+
+**⛔ Ce que cette session ne clôt PAS** : **PUB-2** reste ouvert *(et s'éloigne de sa clôture)* ·
+**M1-PUB** OUVERT · **R-097** OUVERT · **R-096** OUVERT et inchangé · **M1-C1** SUSPENDUE ·
+**PUB-3 / PUB-4 / PUB-5** NON COMMENCÉS · **D-048** et **D-049** inchangées.
+
+### 22.7 — Prochaine étape
+
+1. **Validation du correctif par Romain**, puis commit, poussée, publication ;
+2. **Décision sur le mobile** *(§22.4)* ;
+3. ⭐ **Rejouer A1 → E dans le parcours NORMAL** — ⛔ pas en « Vue classique » ;
+4. Établir si **D1 → D4** sont réalisables *(un lien personnel de dossier club fonctionne-t-il
+   encore ?)*, ⛔ **sans recréer aucune donnée**.

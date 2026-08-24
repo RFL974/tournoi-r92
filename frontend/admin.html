@@ -843,6 +843,11 @@
         </div>
 
         <button id="bouton-publier" class="bouton">…</button>
+        <!-- Pourquoi « Publier » est grisé, le cas échéant. Rempli par majVerrouPublier()
+             (admin-infos-publication.js) à partir du MÊME cerveau que le fil « Où en suis-je ? ».
+             ⛔ Ne concerne QUE l'action publier : « Masquer » n'est jamais grisé, et « Copier » /
+             « Ouvrir » restent actifs dans tous les cas. -->
+        <div id="message-verrou-publier" class="message-form" role="status" aria-live="polite"></div>
         <div id="message-publication" class="message-form"></div>
       </section>
 

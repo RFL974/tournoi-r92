@@ -34,12 +34,60 @@ const ASSISTANT_ETAPES = [
   { id: 'terrains',  titre: 'Terrains',     icone: '🗺️', blocs: ['bloc-terrains'] },
   { id: 'poules',    titre: 'Poules',       icone: '🎲', blocs: ['bloc-generation'] },
   { id: 'autorisation', titre: 'Autorisation', icone: '🏛️', blocs: ['bloc-autorisation'] },
+  /* 🌐 PUBLICATION — carte DÉDIÉE et `libre` depuis PUB-2 (R-098).
+     ⚠️ Elle vivait DANS la carte « Résumé », et ce n'était pas une erreur d'origine : en août
+     2026 `bloc-publication` ne portait qu'un état et un bouton, sa place était donc bien dans
+     la carte du bilan, celle où l'on arrive quand tout est prêt.
+     ⭐ PUB-2 a changé la NATURE de ce bloc sans changer sa place : il porte désormais aussi
+     l'ADRESSE de la page publique, « Copier » et « Ouvrir » — qu'il faut pouvoir lire AU TOUT
+     DÉBUT (imprimer une affiche, remplir l'email d'invitation). Une adresse n'est pas une
+     autorisation (doctrine D-048).
+     ⛔ On ne libère PAS « Résumé » pour autant : il garde le tableau de bord, le fil
+     d'avancement et surtout `bloc-reinitialisation`, qui ne doit PAS devenir accessible plus
+     tôt par effet collatéral. Seul `bloc-publication` en sort.
+     ⭐ Placée ici, APRÈS « Autorisation », comme sur grand écran (ecrans.js) : les deux
+     parcours racontent la même histoire. Son rang ne change RIEN pour les autres étapes —
+     c'est `libre` qui la rend joignable, pas sa position.
+     ⛔ Le garde-fou métier n'est pas perdu : il vit sur le BOUTON « Publier »
+     (`majVerrouPublier`, admin-infos-publication.js), donc dans TOUS les modes d'affichage. */
+  { id: 'publication', titre: 'Publication', icone: '🌐', blocs: ['bloc-publication'], libre: true },
   { id: 'apresmidi', titre: 'Après-midi',   icone: '🏉', blocs: ['bloc-apresmidi'] },
   { id: 'feuillejour', titre: 'Feuille de journée', icone: '📋', blocs: ['bloc-feuille-jour'] },
   /* Partenaires (sponsors de la page publique) : réglages, fiches, fiche de visibilité.
      Juste avant le résumé — on habille la page une fois le tournoi prêt. */
   { id: 'sponsors',  titre: 'Partenaires',  icone: '🤝', blocs: ['bloc-sponsors-reglages', 'bloc-sponsors-liste', 'bloc-sponsors-bilan'] },
-  { id: 'resume',    titre: 'Résumé',       icone: '📋', blocs: ['tableau-bord', 'etat-avancement', 'bloc-publication', 'bloc-reinitialisation'] }
+  /* ⛔ « Résumé » N'EST PAS `libre`, et ne doit pas le devenir : il porte
+     `bloc-reinitialisation` (l'effacement du tournoi). ⚠️ `bloc-publication` en a été retiré
+     par PUB-2 — voir la carte « Publication » ci-dessus. */
+  { id: 'resume',    titre: 'Résumé',       icone: '📋', blocs: ['tableau-bord', 'etat-avancement', 'bloc-reinitialisation'] }
+];
+
+/* ⭐ ORDRE CANONIQUE DES BLOCS DANS <main> — la « Vue classique » restitue CET ordre-là.
+ *
+ * ⚠️ POURQUOI CETTE LISTE EXISTE, et c'est une leçon à part entière. Cet ordre était jusqu'ici
+ * DÉDUIT de `ASSISTANT_ETAPES` (une simple concaténation de leurs `blocs`). Deux conséquences,
+ * toutes deux mauvaises :
+ *   ① la page longue sortait de l'assistant dans l'ordre du PARCOURS GUIDÉ, pas dans le sien —
+ *      `tableau-bord` et `etat-avancement`, qui ouvrent la page dans `admin.html`, se
+ *      retrouvaient rejetés À LA FIN, parce qu'ils vivent dans la carte « Résumé » ;
+ *   ② et surtout : ⛔ **déplacer un bloc d'une carte à une autre changeait silencieusement
+ *      l'ordre de la page longue.** Un découpage d'écrans n'a rien à faire dans la définition
+ *      d'un ordre de page — c'est exactement ce qui a rendu PUB-2 risqué à corriger.
+ *
+ * ⭐ La liste est donc LITTÉRALE et figée, comme `ECRANS_ORDRE_ORIGINE` le fait déjà côté
+ * grand écran. Elle reprend l'ordre RÉEL des enfants de `<main>` dans `admin.html`.
+ * ⛔ `barre-connexion` n'y figure pas : l'assistant ne le déplace jamais, il reste en tête.
+ * ⚠️ Tout bloc AJOUTÉ à `admin.html` doit être ajouté ici à sa place — sinon il finira
+ * en tête de page au retour en « Vue classique ». */
+const ASSISTANT_ORDRE_ORIGINE = [
+  'tableau-bord', 'etat-avancement',
+  'bloc-cadre-tournoi', 'bloc-infos-tournoi', 'bloc-apercu-tournoi', 'bloc-contacts-securite',
+  'bloc-sponsors-reglages', 'bloc-sponsors-liste', 'bloc-sponsors-bilan',
+  'reglages', 'bloc-equipes', 'bloc-terrains', 'bloc-generation', 'bloc-apresmidi',
+  'bloc-feuille-jour',
+  'bloc-clubs-invites', 'bloc-apercu-invitation', 'bloc-surplace', 'bloc-reponse',
+  'bloc-modalites', 'bloc-parking', 'bloc-encadrement', 'bloc-dossier',
+  'bloc-autorisation', 'bloc-publication', 'bloc-reinitialisation'
 ];
 
 const ASSISTANT_CLE_PREF = 'r92_mode_admin'; // 'assistant' (défaut) | 'classique'
@@ -50,10 +98,10 @@ let assistantObserver = null;
 
 /** Point d'entrée : appelé à la fin de initAdmin(). Respecte la préférence mémorisée. */
 function initAssistant() {
-  // Mémorise l'ordre d'origine des blocs (pour la « vue classique »).
+  // Ordre d'origine des blocs (pour la « vue classique ») : ⭐ l'ordre CANONIQUE de la page,
+  // et non plus celui du parcours guidé — voir ASSISTANT_ORDRE_ORIGINE et le pourquoi.
   if (!assistantOrdreOrigine) {
-    assistantOrdreOrigine = ASSISTANT_ETAPES
-      .reduce(function (acc, e) { return acc.concat(e.blocs); }, [])
+    assistantOrdreOrigine = ASSISTANT_ORDRE_ORIGINE
       .filter(function (id) { return document.getElementById(id); });
   }
   const pref = (function () { try { return localStorage.getItem(ASSISTANT_CLE_PREF); } catch (e) { return null; } })();
@@ -152,10 +200,27 @@ function allerA(i, direction) {
   // VERROU : impossible d'aller AU-DELÀ d'une étape incomplète ou qui a des
   // modifications non enregistrées. Revenir en arrière reste toujours possible,
   // et atterrir SUR l'étape à corriger aussi (pour la finir).
-  if (i > assistantIndex) {
+  //
+  // ⭐ EXCEPTION `libre` (PUB-2 / R-098) : une carte marquée `libre` est joignable
+  // DIRECTEMENT, sans avoir à franchir les étapes bloquantes qui la précèdent. C'est le même
+  // mot et la même idée que `libre` dans `ECRANS_DEF` (ecrans.js), pour que les deux parcours
+  // se lisent pareil — l'écart entre ces deux fichiers est précisément ce qui a produit R-098.
+  // ⚠️ Ce n'est PAS un assouplissement du verrou : on ne fait que se RENDRE sur cette carte.
+  // ⛔ Les étapes suivantes gardent tous leurs prérequis (on repartira d'ici en les
+  // franchissant normalement), aucune n'est libérée, et leur ordre ne change pas.
+  if (i > assistantIndex && !(ASSISTANT_ETAPES[i] || {}).libre) {
     const etats = (typeof calculerEtatsEtapes === 'function') ? calculerEtatsEtapes() : [];
-    for (let s = assistantIndex; s < i; s++) {
-      if (assistantRaisonsEtape(s, etats).length) { i = s; break; }
+    // ⚠️ LE BALAYAGE PART DE 0, ET NON DE L'ÉTAPE COURANTE — c'est indispensable depuis
+    // l'exception `libre` ci-dessus, et l'oublier ouvre un trou réel (constaté en test) :
+    // ⭐ jusqu'ici, `assistantIndex` PROUVAIT que tout ce qui précède était franchi, puisqu'on
+    // ne pouvait jamais dépasser un blocage. Une carte `libre` casse cette preuve — on peut
+    // désormais se tenir sur « Publication » (rang 8) sans avoir rempli les Réglages (rang 1).
+    // ⛔ Repartir de là ferait de la carte Publication un TREMPLIN : deux clics suffiraient à
+    // atteindre « Résumé », donc `bloc-reinitialisation`, en sautant tous les prérequis.
+    // ⭐ `Math.max(s, assistantIndex)` : on ne RECULE jamais l'utilisateur — soit on l'amène à
+    // l'étape qu'il doit finir, soit on refuse et on reste sur place (comportement d'origine).
+    for (let s = 0; s < i; s++) {
+      if (assistantRaisonsEtape(s, etats).length) { i = Math.max(s, assistantIndex); break; }
     }
     if (i === assistantIndex) assistantSecouerVerrou(); // refusé : on attire l'œil sur l'explication
   }
@@ -419,7 +484,18 @@ function assistantMajVerrou() {
 
   const etats = (typeof calculerEtatsEtapes === 'function') ? calculerEtatsEtapes() : [];
   const derniere = ASSISTANT_ETAPES.length - 1;
-  const raisons = (assistantIndex < derniere) ? assistantRaisonsEtape(assistantIndex, etats) : [];
+  // ⭐ Ce qui empêche d'AVANCER d'ici : la première étape non franchie dans [0 … étape courante].
+  // ⚠️ Même raison que dans `allerA` : arrivé sur une carte `libre`, on peut se tenir APRÈS une
+  // étape qu'on n'a pas faite. Ne regarder que l'étape courante annoncerait « Suivant » libre
+  // alors que `allerA` refusera — l'écran mentirait sur ce que le clic va faire.
+  // ⛔ Comportement INCHANGÉ dans le parcours normal : quand l'étape courante a été atteinte pas
+  // à pas, la seule bloquante possible de cet intervalle est l'étape courante elle-même.
+  let bloquante = -1;
+  for (let s = 0; s <= assistantIndex && s < derniere; s++) {
+    if (assistantRaisonsEtape(s, etats).length) { bloquante = s; break; }
+  }
+  const raisons = (assistantIndex < derniere && bloquante >= 0)
+    ? assistantRaisonsEtape(bloquante, etats) : [];
 
   suiv.disabled = raisons.length > 0;
   if (raisons.length) {
@@ -432,12 +508,19 @@ function assistantMajVerrou() {
   }
 
   // Fil d'étapes : grise ce qui est hors de portée (au-delà de la 1re étape bloquée).
+  // ⭐ Balayage depuis 0 et plancher à l'étape courante — exactement la règle de `allerA`,
+  // pour que ce qui est grisé soit précisément ce que `allerA` refusera. ⛔ On ne grise jamais
+  // l'étape où l'on se tient (`Math.max`), ni une carte `libre` (voir plus bas).
   let limite = derniere;
-  for (let s = assistantIndex; s < derniere; s++) {
-    if (assistantRaisonsEtape(s, etats).length) { limite = s; break; }
+  for (let s = 0; s < derniere; s++) {
+    if (assistantRaisonsEtape(s, etats).length) { limite = Math.max(s, assistantIndex); break; }
   }
   document.querySelectorAll('.asst-step').forEach(function (li, k) {
-    li.classList.toggle('est-verrouillee', k > limite);
+    // ⭐ Une carte `libre` n'est JAMAIS grisée : elle est joignable directement (voir `allerA`).
+    // ⚠️ La griser tout en la laissant cliquable serait pire que le défaut d'origine —
+    // l'écran dirait « fermé » sur une porte ouverte, et personne n'essaierait de la pousser.
+    const libre = (ASSISTANT_ETAPES[k] || {}).libre;
+    li.classList.toggle('est-verrouillee', !libre && k > limite);
   });
 }
 

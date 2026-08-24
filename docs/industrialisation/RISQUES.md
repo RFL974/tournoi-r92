@@ -1367,3 +1367,76 @@ code consomme `tournoi_publie` via la vue `live`** *(🔬 `frontend/js/tournoi.j
 supprimerait l'ancien chemin de diffusion AVANT que l'organisateur dispose, dans Maxilou, d'un
 accès explicite et autonome à sa page publique.** Aujourd'hui, ce chemin passe encore par la
 vitrine.
+
+---
+
+### R-098 — L'accès à la page publique du tournoi est bloqué par le séquencement des parcours guidés avant que les prérequis de publication soient remplis
+
+| | |
+|---|---|
+| **Priorité** | **P1** — ⚠️ **empêche un usage réel** : l'organisateur ne peut pas communiquer l'adresse de son tournoi tant qu'il n'a pas tout préparé |
+| **Domaine** | **E — UX / accessibilité** · **A — métier / product owner** |
+| **Statut** | ⛔ **OUVERT** — correctif **implémenté localement**, ⛔ **non commité, non publié, non vérifié en réel** |
+| **Découvert** | 2026-08-24, **pendant la validation fonctionnelle réelle de PUB-2**, au tout premier contrôle |
+| **Rattachement** | ✅ **M1-PUB / PUB-2** — la correction fait partie de ce micro-lot |
+| **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* · ⭐ *« Une adresse n'est pas une autorisation. »* |
+
+**Le constat, tel qu'il a été OBSERVÉ — et non déduit**
+
+🔬 **Constaté par Romain dans son navigateur, sur le site réellement publié** *(GitHub Pages, run
+#220)*, sur un classeur non préparé : dans la barre latérale de l'administration, l'entrée
+**« Publication » est grisée, avec un cadenas**. Maxilou affiche : *« Avant de publier, il reste :
+HORAIRES · CATÉGORIES · ÉQUIPES · TERRAINS · POULES & PLANNING »*.
+
+⛔ **L'adresse de la page publique, « Copier l'adresse » et « Ouvrir la page » sont donc hors
+d'atteinte** — alors que ce sont précisément les trois gestes que PUB-2 vient d'ajouter.
+
+**La cause, à la ligne près**
+
+| | |
+|---|---|
+| 🔬 **Grand écran** | `frontend/js/ecrans.js` — l'écran `publication` a **`cles: []`** *(⭐ il n'exige RIEN par lui-même)* mais **pas** `libre: true`. `ecransCalculerVerrous` **propage** le blocage accumulé sur les écrans précédents ⇒ il en **hérite** |
+| 🔬 **Mobile** | `frontend/js/assistant.js` — `bloc-publication` vivait dans la carte **« Résumé », la DERNIÈRE des douze**. Le verrou de `allerA` est **séquentiel** ⇒ inatteignable tant que Réglages, Équipes, Terrains et Poules ne sont pas ✅ |
+| 🔬 **Vue classique** | ⭐ **Seul mode où la carte était atteignable** — et, symétriquement, **le seul où l'on pouvait publier un tournoi vide sans aucun frein** |
+
+**Ce que la qualification doit dire — et ce qu'elle ne doit PAS dire**
+
+| ✅ Vrai | ⛔ Faux |
+|---|---|
+| Le **mécanisme de verrou est ANTÉRIEUR à PUB-2** — 🔬 `ecrans.js` et `assistant.js` créés le **2026-08-16**, et `git diff ec1f486..2ef9ce0` montre que **PUB-2 n'a touché ni l'un ni l'autre** | *« PUB-2 a cassé quelque chose »* — ⛔ **non, rien ne s'est dégradé** |
+| **PUB-2 a changé la NATURE du bloc Publication** en lui ajoutant Voir / Copier / Ouvrir, sans changer sa place | *« C'était une erreur de conception d'origine »* — ⛔ **non** : quand ce bloc ne portait qu'un état et un bouton, le verrouiller était **cohérent** |
+| ⭐ **Ce n'est PAS un effet de la réinitialisation M1-B** : un tournoi **neuf** est dans le même état — **tout nouvel utilisateur rencontrerait ceci au premier écran** | *« C'est une limite de notre jeu de test »* — ⛔ **non** |
+
+> 🎯 **La contradiction, en une phrase.** La carte affiche *« Tu peux la communiquer dès
+> maintenant »* — depuis un endroit inatteignable **maintenant**. ⭐ Et le dossier club, lui, n'a
+> **jamais** été verrouillé : **les clubs recevaient l'adresse avant l'organisateur.**
+
+**Ce que PUB-2 avait manqué, et c'est la leçon**
+
+⛔ **Zéro mention** de `ecrans.js`, `barre latérale`, `verrou`, `cadenas`, `assistant`, `vue
+classique` ou `accessible` dans **toute** la documentation de PUB-2. ⭐ **PUB-2 a vérifié onze cas
+de non-régression pour garantir que l'adresse affichée serait la BONNE — jamais qu'elle serait
+VISIBLE.** *On a contrôlé le contenu d'une pièce sans essayer d'en ouvrir la porte.*
+
+**La correction retenue *(validée par Romain le 2026-08-24)* — déplacer le garde-fou, pas le supprimer**
+
+| | |
+|---|---|
+| **Principe** | Le verrou ne porte plus sur **l'écran**, il grise le **BOUTON « Publier »** |
+| 🔬 `ecrans.js` | L'écran `publication` devient **`libre`** |
+| 🔬 `assistant.js` | `bloc-publication` **sort de « Résumé »** vers une carte **« Publication » dédiée et `libre`** · notion `libre` ajoutée à `allerA` et `assistantMajVerrou` · ⭐ **liste littérale `ASSISTANT_ORDRE_ORIGINE`** pour que la « Vue classique » restitue l'ordre **canonique** de `admin.html` |
+| 🔬 `admin-infos-publication.js` | **`majVerrouPublier()`** — relit le **même** cerveau `calculerEtatsEtapes()`, ⛔ **aucune seconde liste de prérequis** |
+| ⭐ **INVARIANT** | **« Masquer » n'est JAMAIS grisé** — ⛔ un tournoi publié ne doit jamais devenir impossible à retirer du public |
+| ⭐ **Bénéfice inattendu** | Porté par le bouton, le garde-fou s'applique **aussi en « Vue classique »**, qui y échappait complètement |
+| ⛔ **« Résumé » n'est PAS libéré** | Il garde `tableau-bord`, `etat-avancement` et **`bloc-reinitialisation`** — 🔬 **prouvé par exécution** : depuis la carte Publication, `resume` **reste bloqué** *(elle n'est pas un tremplin)* |
+
+**⛔ CE QUI MANQUE POUR FERMER R-098 — les cinq conditions**
+
+> ⚠️ **Ne pas fermer cette fiche avant que les CINQ soient réellement observées.** Le code et les
+> tests d'exécution **ne prouvent pas** le comportement en production *(`CLAUDE.md` §13.6)*.
+
+1. ⛔ **Publication du correctif** *(commit, fusion, GitHub Pages)* ;
+2. ⛔ **Vérification réelle sur grand écran** ;
+3. ⛔ **Vérification réelle sur mobile / assistant** ;
+4. ⛔ **Contrôle du bouton « Publier »** *(grisé si incomplet, actif sinon)* ;
+5. ⛔ **Contrôle de « Masquer »** *(actif même avec des prérequis incomplets)*.

@@ -616,7 +616,70 @@ function majPublication() {
     bouton.innerHTML = svgIcone('monde') + 'Publier le tournoi';
   }
   majAccesPublic();   // l'adresse, elle, ne dépend pas de l'état : seule la NOTE change
+  majVerrouPublier(); // le GESTE, lui, reste soumis aux prérequis — mais lui SEUL
   majApercuTournoi(); // la légende de l'aperçu (publié / non publié) suit
+}
+
+/**
+ * 🔒 LE GARDE-FOU DU GESTE « PUBLIER » — et de lui seul.
+ *
+ * ⭐ POURQUOI CE VERROU VIT SUR LE BOUTON, ET PLUS SUR L'ÉCRAN QUI LE CONTIENT.
+ * Jusqu'à PUB-2, l'écran « Publication » ne portait qu'un geste : publier. Le verrouiller
+ * entier tant que la préparation n'était pas finie était donc cohérent (ecrans.js).
+ * ⚠️ PUB-2 a mis dans cette MÊME carte trois choses qui ne dépendent d'aucune préparation :
+ * l'ADRESSE de la page publique, « Copier » et « Ouvrir ». Le verrou d'écran les a emportées
+ * avec lui — et la carte s'est mise à promettre « tu peux la communiquer dès maintenant »
+ * depuis un endroit inatteignable « maintenant ». ⭐ Ce n'était pas une régression : le verrou
+ * préexistait. C'était un défaut de PLACEMENT, constaté en réel le 2026-08-24.
+ *
+ * ⭐ CE VERROU-CI PROTÈGE MIEUX QUE CELUI QU'IL REMPLACE. Le verrou d'écran ne s'appliquait
+ * qu'aux modes guidés : le bouton « Vue classique » remettait la carte dans la page longue
+ * et laissait publier un tournoi vide sans rien pour le retenir. Porté par le bouton, le
+ * garde-fou suit partout — barre latérale, assistant mobile, vue classique.
+ *
+ * ⛔ UNE SEULE DÉFINITION DES PRÉREQUIS. On relit `calculerEtatsEtapes()` — le « cerveau »
+ * qui alimente déjà le fil « Où en suis-je ? » — avec EXACTEMENT son filtre du verdict
+ * « prêt à publier » (`admin-tableau-bord.js`, majEtatAvancement) : tout ce qui n'est pas ✅,
+ * sauf l'après-midi qui se génère plus tard. ⛔ Ne jamais recopier ici la liste Horaires /
+ * Catégories / Équipes / Terrains / Poules : elle se déduit, elle ne se grave pas.
+ *
+ * ⚠️ INVARIANT, ET IL EST PLUS IMPORTANT QUE LE VERROU LUI-MÊME :
+ * ⭐ **MASQUER N'EST JAMAIS GRISÉ.** Un tournoi publié dont une donnée redevient incomplète
+ * (une catégorie supprimée, un planning à regénérer) verrait sinon son bouton se bloquer sur
+ * « Masquer » — l'organisateur ne pourrait PLUS retirer son tournoi du public, alors même que
+ * c'est le geste d'urgence. Le garde-fou porte sur PUBLIER, jamais sur le retrait.
+ */
+function majVerrouPublier() {
+  const bouton = document.getElementById('bouton-publier');
+  const zone = document.getElementById('message-verrou-publier');
+  if (!bouton) return;
+
+  // ⭐ INVARIANT : déjà publié → le bouton dit « Masquer » → TOUJOURS actif. Voir ci-dessus.
+  // ⚠️ Ce test vient en PREMIER, avant toute lecture des prérequis : aucun état du tournoi ne
+  // doit pouvoir emprisonner une publication en ligne.
+  if (estPublie()) {
+    bouton.disabled = false;
+    if (zone) afficherMessage(zone, '', 'ok');
+    return;
+  }
+
+  // ⚠️ Repli OUVERT (et non fermé) si le cerveau n'est pas chargé : on préfère un bouton
+  // actif sans son garde-fou à un organisateur qui ne peut plus publier du tout le jour du
+  // tournoi. Le fil « Où en suis-je ? » avertit de toute façon, et le geste reste confirmé
+  // par un dialogue. Même précaution que `assistantMajVerrou` (assistant.js).
+  const restants = (typeof calculerEtatsEtapes === 'function')
+    ? calculerEtatsEtapes().filter(function (e) { return e.cle !== 'apresmidi' && e.statut !== 'fait'; })
+    : [];
+
+  bouton.disabled = restants.length > 0;
+  if (zone) {
+    // ⭐ La MÊME phrase que le fil d'avancement (« Avant de publier, il reste : ») : deux
+    // formulations différentes pour un seul et même blocage feraient croire à deux causes.
+    afficherMessage(zone, restants.length
+      ? '🔒 Avant de publier, il reste : ' +
+        restants.map(function (e) { return e.titre; }).join(' · ')
+      : '', restants.length ? 'ko' : 'ok');
+  }
 }
 
 /**
@@ -726,5 +789,12 @@ async function onPublier() {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
     bouton.disabled = false;
+    // ⚠️ …puis on lui rend son état JUSTE, et cette ligne n'est pas décorative.
+    // `majPublication()` (donc le garde-fou) s'exécute plus haut, DANS le `try` : sans ce
+    // rappel, la réactivation ci-dessus l'écraserait systématiquement. Le cas concret :
+    // on masque un tournoi dont la préparation est incomplète → le bouton redevient
+    // « Publier le tournoi », et il resterait CLIQUABLE alors qu'il doit être grisé.
+    // ⛔ Aucune règle métier n'est touchée : on ne fait que recalculer un état VISUEL.
+    majVerrouPublier();
   }
 }

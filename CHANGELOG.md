@@ -12,6 +12,42 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### ⏳ Écrit mais PAS ENCORE EN LIGNE — la carte « Publier le tournoi » devient accessible dès le début — 2026-08-24
+
+> ⛔ **Cette entrée décrit un travail qui n'est PAS publié.** Il est écrit et testé localement,
+> ⛔ **ni commité, ni mis en ligne, ni vérifié dans un vrai navigateur.** ⭐ **Rien de ceci n'est
+> visible dans l'application aujourd'hui.** Cette réserve sera levée quand ce sera réellement en
+> ligne et contrôlé. *(Suivi : **R-098** dans `docs/industrialisation/RISQUES.md`.)*
+
+**Le problème, découvert en essayant vraiment.** L'entrée précédente annonçait que l'adresse de la
+page publique était visible dans l'administration. ⚠️ **En pratique, on ne pouvait pas y accéder.**
+Sur un tournoi qui n'est pas encore préparé — c'est-à-dire **au tout début, et pour n'importe quel
+nouveau tournoi** — la rubrique **« Publication »** est verrouillée avec un cadenas, tant que les
+horaires, catégories, équipes, terrains et poules ne sont pas terminés.
+
+⭐ **La carte disait donc *« tu peux communiquer cette adresse dès maintenant »* depuis un endroit
+inaccessible « maintenant ».** Et c'est justement tôt qu'on en a besoin : pour l'imprimer sur une
+affiche, ou la mettre dans l'email d'invitation aux clubs.
+
+**Ce qui change.** Le verrou ne disparaît pas — **il change de place** :
+
+- **voir l'adresse, la copier, ouvrir la page** : accessible **dès le début**, sur ordinateur
+  comme sur téléphone ;
+- **publier le tournoi** : le bouton reste **grisé** tant que la préparation n'est pas finie, et il
+  **dit pourquoi** — *« Avant de publier, il reste : … »*.
+
+⭐ **« Masquer » n'est jamais grisé.** Si le tournoi est déjà en ligne, on doit toujours pouvoir le
+retirer du public, même si une donnée est redevenue incomplète entre-temps.
+
+**Un point de sécurité au passage.** Il existait un chemin — le bouton *« Vue classique »* — par
+lequel on pouvait publier un tournoi entièrement vide sans le moindre garde-fou. ⭐ **Ce n'est plus
+le cas** : l'avertissement suit désormais le bouton, quel que soit le mode d'affichage.
+
+**Et un défaut d'affichage corrigé au passage.** En quittant le mode guidé pour la *« Vue
+classique »*, les cartes de la page se remettaient dans le désordre : le tableau de bord et le fil
+*« Où en suis-je ? »*, qui ouvrent normalement la page, se retrouvaient tout **en bas**. Ils
+retrouvent leur place.
+
 ### L'adresse de la page publique est enfin visible depuis l'administration — 2026-08-24
 
 **Ce qui manquait.** Pour donner l'adresse de sa page de scores en direct, l'organisateur devait

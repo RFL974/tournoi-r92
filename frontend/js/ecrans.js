@@ -52,8 +52,26 @@ const ECRANS_DEF = [
      Publication (on dépose la demande avant d'annoncer). Libre : jamais verrouillée. */
   { id: 'autorisation', titre: 'Demande d\'autorisation', icone: 'dossier', blocs: ['bloc-autorisation'], cles: [], libre: true },
   /* La Publication vient AVANT l'après-midi : elle n'en dépend pas (on publie
-     le matin ; l'après-midi se génère plus tard, une fois les scores saisis). */
-  { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [] },
+     le matin ; l'après-midi se génère plus tard, une fois les scores saisis).
+
+     ⭐ `libre` DEPUIS PUB-2, et ce n'est pas un assouplissement du garde-fou — c'est son
+     DÉPLACEMENT au bon niveau. Cet écran ne contient plus seulement le GESTE « publier » :
+     depuis PUB-2 il porte aussi l'ADRESSE de la page publique, « Copier » et « Ouvrir ».
+     Or une adresse n'est pas une autorisation (doctrine D-048) : elle doit pouvoir être lue
+     et communiquée TRÈS TÔT — c'est même le seul moment où cela sert (l'imprimer sur une
+     affiche, la glisser dans l'email d'invitation). Verrouiller l'écran entier rendait la
+     carte inatteignable exactement quand elle est utile, et lui faisait afficher une phrase
+     qu'elle démentait : « tu peux la communiquer dès maintenant ».
+     ⛔ Le garde-fou métier n'est PAS supprimé : il vit désormais sur le BOUTON lui-même
+     (`majVerrouPublier`, admin-infos-publication.js), qui reste grisé tant que Horaires,
+     Catégories, Équipes, Terrains et Poules ne sont pas ✅ — d'après le MÊME cerveau
+     (`calculerEtatsEtapes`), sans seconde liste de prérequis.
+     ⭐ Et il protège MIEUX qu'avant : porté par le bouton, il suit dans TOUS les modes
+     d'affichage — barre latérale, assistant mobile et « Vue classique », qui échappait
+     complètement au verrou d'écran.
+     🔬 `cles: []` : cet écran n'a jamais rien exigé par lui-même — il HÉRITAIT du blocage
+     accumulé en amont. `libre` ne change donc la séquence d'AUCUN autre écran. */
+  { id: 'publication', titre: 'Publication',       icone: 'monde',    blocs: ['bloc-publication'],        cles: [], libre: true },
   /* Partenaires (sponsors de la page publique) : réglages d'affichage, fiches, puis fiche de
      visibilité à renvoyer. Placé APRÈS la Publication — on habille la page une fois qu'elle
      est en ligne. Libre : jamais verrouillé, on prépare les partenaires quand on veut, et

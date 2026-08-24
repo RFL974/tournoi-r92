@@ -334,6 +334,10 @@ function majEtatAvancement() {
   // Assistant à cartes : l'état des étapes vient (peut-être) de changer → le verrou
   // du bouton « Suivant » doit suivre (grisé tant que l'étape n'est pas complète).
   if (typeof assistantMajVerrou === 'function') assistantMajVerrou();
+  // Même raison, même endroit, pour le bouton « Publier le tournoi » : ses prérequis
+  // sont ces MÊMES étapes, il doit donc se griser (ou se libérer) au même instant —
+  // sinon il resterait figé sur l'état du dernier rechargement complet de la page.
+  if (typeof majVerrouPublier === 'function') majVerrouPublier();
 }
 
 /**
