@@ -7388,5 +7388,66 @@ Aucune fusion vers `main` · aucun code · aucun test · aucune configuration ·
 redéploiement** · **aucune donnée du classeur lue ou modifiée** · ⛔ **l'affiche, `tournoi_affiche_id`
 et le logo n'ont pas été touchés** · ⛔ **M1-B n'est pas commencée.**
 
-🔧 **Reste entier** : la lecture des deux URL · le redéploiement de **L5** et **L8** · **M1-B → M1-F**
-· la clôture de **CF-4b**, et **CF-4a** suspendue derrière elle.
+🔧 **Reste entier** : la lecture des deux URL · le redéploiement de la **part backend de L8** ·
+**M1-B → M1-F** · la clôture de **CF-4b**, et **CF-4a** suspendue derrière elle.
+
+### 12. ⚡ Addendum du 2026-08-24 *(suite)* — deux corrections apportées après le commit `9abaebc`
+
+> ⚠️ **Cette fiche a été publiée avec deux affirmations fausses. Elles sont corrigées ci-dessous, et
+> la correction est inscrite plutôt que la trace effacée** — la première d'entre elles figurait à la
+> ligne « Reste entier » du §11, qui annonçait *« le redéploiement de **L5** et L8 »*.
+
+#### 12.1 — 🔴 L5 EST déployé : l'affirmation contraire était fausse
+
+Le rapport de session de M1-A, comme le §11 ci-dessus, affirmait que le serveur en service
+*« ignore toujours CF-4b/L5 »*. ⛔ **C'est faux, et le dépôt le disait déjà** — `SESSIONS.md` **§13**
+et `PLAN.md` §14.3 documentent **L5-B** en détail : `Code.gs` et `Tests.gs` recopiés chez Google et
+**enregistrés**, **nouvelle version du même déploiement**, `R92 — 703/703 OK, 0 FAIL`, ping conforme,
+et ⭐ **un email réellement reçu** portant `From: "L'organisation du tournoi"` *(20/08/2026,
+17:08 UTC)* là où un message du matin même, **même boîte, même adresse d'envoi**, portait
+`From: "Génération R92"`.
+
+#### 12.2 — ⭐ Ce que l'erreur a révélé : il y a DEUX surfaces de déploiement, pas une
+
+C'est la vraie leçon de cet addendum, et elle vaut au-delà de M1.
+
+| Surface | Comment elle se déploie | Qui la déclenche |
+|---|---|---|
+| **Frontend** *(`frontend/**`)* | **AUTOMATIQUE** — workflow GitHub Pages à chaque poussée vers `main` | ⚙️ la machine |
+| **Backend** *(`backend/Code.gs`, `Tests.gs`)* | **MANUEL** — copier-coller chez Google, puis nouvelle version du même déploiement | 🧑 un humain |
+
+➡️ **Dire « le lot X n'est pas déployé » n'a donc aucun sens tant qu'on n'a pas dit DE QUELLE
+SURFACE on parle.** C'est exactement l'imprécision qui a produit les deux erreurs.
+
+**L'état réel, vérifié le 2026-08-24 :**
+
+| Lot | Part backend | Part frontend |
+|---|---|---|
+| **CF-4b/L5** *(`5649f83`)* | ✅ **redéployée** *(L5-B, prouvée par un email reçu)* | — *(le lot ne touche que `Code.gs`)* |
+| **CF-4b/L8** *(`be57f97`)* | ⛔ **NON redéployée** | ✅ **publiée** — workflow Pages **`success`**, 2026-08-22 **15:24:34 UTC** |
+| **R-094** *(`94cd6a2`)* | — ⭐ **le lot ne touche AUCUN fichier `backend/`** | ✅ **publiée** — Pages **`success`**, 2026-08-22 **17:04:24 UTC** |
+
+> 🎯 **Le point le plus contre-intuitif, et il mérite d'être retenu** : **R-094 n'attend aucun
+> redéploiement.** Son correctif vit dans `commun.js`, `commun-dossier.js` et
+> `admin-infos-publication.js` — **que du frontend**. Écrire *« R-094 n'est pas redéployé »* laissait
+> croire à une correction en attente, alors qu'**elle est en service depuis le 22 août à 17 h 04**.
+
+#### 12.3 — Deux affirmations PRÉEXISTANTES corrigées au passage
+
+Le contrôle a trouvé deux cases de suivi devenues fausses **avant** M1-A, et qui contredisaient
+d'autres passages des mêmes fichiers :
+
+- `ETAT.md` *(tableau des chantiers)* et `PLAN.md` §14.3 annonçaient **L8 « patch appliqué, non
+  commité »** — faux depuis le **2026-08-22** *(`be57f97`, poussé sur `origin/main`)* ;
+- `PLAN.md` §14.3 annonçait **« 7 lots sur 8 terminés, 1 non commencé (L8) »** — **les 8 sont
+  terminés**.
+
+> ⭐ **Trois décrochages du même type en trois jours** *(R-094, « 2 lots sur 8 », L8)*, et **toujours
+> la même cause** : *un état écrit AVANT le geste, jamais relu APRÈS.* C'est **§12.4** appliqué à
+> moitié — le point 1 *(mettre à jour le suivi)* est fait, mais **avant** que le geste n'ait eu lieu.
+
+#### 12.4 — Ce que cet addendum n'a PAS fait
+
+⛔ Aucune fusion vers `main` · aucun code · **aucun redéploiement** · **aucune donnée du classeur** ·
+⛔ **les commits `9abaebc` et `b65a6b0` n'ont été ni amendés ni rebasés** — leurs SHA sont intacts ·
+⛔ **M1-B n'est pas commencée.**

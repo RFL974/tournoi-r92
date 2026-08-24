@@ -9,8 +9,17 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-24 — 🏛️ **LE CHANTIER M1 EST OUVERT, ET SON ÉTAPE M1-A EST
-ÉCRITE.** ⛔ **Non commitée, non poussée** — en attente de la validation de Romain.
+**Dernière mise à jour** : 2026-08-24 *(suite)* — 🏛️ **LE CHANTIER M1 EST OUVERT, ET SON ÉTAPE M1-A
+EST ÉCRITE, COMMITÉE ET SAUVEGARDÉE.**
+✅ **Commit principal `9abaebc`** *(7 fichiers documentaires)* · ✅ **journal de session `b65a6b0`**
+*(`SESSIONS.md` §17)* · ✅ **les deux poussés** sur la branche de travail
+`claude/m1-club-config-analysis-zrqy6g`.
+⛔ **NON FUSIONNÉE dans `main`** — `origin/main` reste à `94cd6a2`. ⛔ **M1-B n'est pas commencée.**
+
+> ⚠️ **Cette ligne annonçait « non commitée, non poussée »** — c'était vrai à l'heure où elle a été
+> écrite, et **faux dès le commit `9abaebc`**. ⭐ **C'est le troisième décrochage du même type en
+> trois jours** *(après R-094 et le « 2 lots sur 8 » de CF-4b)*, et la cause est toujours la même :
+> **un état écrit AVANT le geste, jamais relu APRÈS.** C'est **§12.4** appliqué à moitié.
 
 ⚡ **M1 a changé de nature.** Ce n'était qu'une opération manuelle *(vider deux URL, remplacer une
 affiche)* ; c'est désormais **l'externalisation progressive des données propres à l'organisation**,
@@ -59,10 +68,19 @@ neutralisation, c'est une **correction de fiabilité P1** ouverte séparément p
 au chantier institutionnel.
 ✅ **CORRECTION D'ÉTAT, apportée le 2026-08-24** : cette ligne annonçait *« appliqué localement,
 non commité »*. **C'est faux depuis le 2026-08-22 à 17 h 04** — le travail **est** le commit
-**`94cd6a2`**, et il **est sur `origin/main`**. ⚠️ **La mention « non redéployé » reste vraie**, et
-elle vaut aussi pour **CF-4b/L8** : le serveur en service ignore encore les deux.
+**`94cd6a2`**, et il **est sur `origin/main`**.
+🔴 **DEUXIÈME CORRECTION, apportée le 2026-08-24 (suite)** : cette même ligne ajoutait que *« la
+mention non redéployé reste vraie, et vaut aussi pour CF-4b/L8 : le serveur en service ignore encore
+les deux »*. ⛔ **C'était faux pour R-094, et il faut comprendre pourquoi** : **R-094 ne touche
+AUCUN fichier `backend/`** *(son diff porte sur `commun.js`, `commun-dossier.js`,
+`admin-infos-publication.js` et de la documentation)*. **Il n'attend donc aucun redéploiement chez
+Google** — il n'y a rien à y recopier. Sa part frontend a été **publiée automatiquement** par le
+workflow GitHub Pages : exécution **`success`** sur `94cd6a2`, **2026-08-22 17:04:24 UTC**
+*(vérifié sur GitHub le 2026-08-24)*. ✅ **La correction de la date civile EST donc en service.**
+⚠️ **Ce qui reste vrai** : la part **backend** de **CF-4b/L8** n'est pas redéployée, et le premier
+redéploiement de **M1-B** l'emportera.
 ⭐ **Ce que ce décalage enseigne** : l'état d'un lot avait été écrit **avant** son commit et jamais
-relu après — c'est **§12.4** appliqué à moitié. Le premier redéploiement de **M1-B** emportera L8.
+relu après — c'est **§12.4** appliqué à moitié.
 **9 fichiers** — **3** de code, **2** de documentation active, **1** de règles permanentes
 *(`CLAUDE.md`)*, **3** de suivi. *(Chiffre issu de `git diff --name-only`, pas d'une estimation.)*
 🔴 **Une date configurée au 13/03/2027 s'affichait « 12 mars 2027 »** dans le dossier du club et
@@ -471,12 +489,14 @@ plan d'audit** *(`PLAN.md` **§14**, décision **D-038**)*, et **C-015 est en pa
 responsable du traitement — ⛔ **décision NON PRISE**)* sont **faits**. 🚧 **CF-4b
 *(neutralisation institutionnelle)* est OUVERTE** : ✅ **ses 8 lots de code et de documentation sont
 TERMINÉS** *(L1 → L8)*, ⛔ **mais elle N'EST PAS CLOSE** — il lui manque le redéploiement chez
-Google *(L5 et L8 ne sont pas en service)* et **le chantier M1**. ⏸️ **CF-4a** *(mentions légales)*
+Google ⚠️ **de la part BACKEND de L8 uniquement** *(**L5-B est fait et prouvé par un email reçu** —
+voir le rappel du 2026-08-20)* et **le chantier M1**. ⏸️ **CF-4a** *(mentions légales)*
 est **suspendue derrière elle**. **CF-3, CF-5 à CF-13 et CF-14 ne sont pas commencées.**
 
 🏛️ **ET UN CHANTIER DE PLUS EST OUVERT DEPUIS LE 2026-08-24 : M1 — le profil du club**
 *(`PLAN.md` **§15**)*. Il n'appartient ni au plan d'audit ni au chantier Confiance : il en **sort**,
-puisque c'est lui qui permettra de clore CF-4b. 🚧 **Son étape M1-A est écrite**, ⛔ **non commitée**.
+puisque c'est lui qui permettra de clore CF-4b. ✅ **Son étape M1-A est écrite, commitée
+*(`9abaebc`, `b65a6b0`)* et poussée sur la branche de travail** — ⛔ **non fusionnée dans `main`**.
 **M1-B → M1-F ne démarrent pas automatiquement.**
 
 > ⚠️ **Cette ligne annonçait « 2 lots sur 8 », et c'était devenu faux.** Le chiffre datait du jour
@@ -578,7 +598,7 @@ ne provient pas des huit domaines d'audit.
 | **CF-0** | Vérification des référentiels **à leur source** | ✅ **TERMINÉE** — 18 sources primaires, **9 hypothèses corrigées**, 3 textes écartés |
 | **CF-1** | Le cadre documentaire | ✅ **CLOSE** — commit **`2cb0b12`**, publié et vérifié |
 | **CF-2** | Le responsable du traitement | ✅ **DOSSIER PRODUIT** — 📋 `CF-2-RESPONSABLE-TRAITEMENT.md`. ⛔ **La décision, elle, reste NON PRISE** |
-| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · ✅ ⭐ **L5** — **les DEUX phases faites** : dépôt *(`5649f83`)* **et** redéploiement Google, ⭐ **prouvé par un email reçu** *(en-tête brut `From: "L'organisation du tournoi"`, 20/08/2026 17:08 UTC)*. ⚠️ **Une seule des 4 lignes exercée en réel** *(branche `MailApp`)* · ✅ **L7** — **26 points, 8 fichiers**, dont ⭐ la première phrase du `README.md` et **6 descriptions du bandeau de don devenu inexistant** · 🚧 **L8** — **patch appliqué, non commité** : `perfs_mot_cle_club` *(nouvelle clé, garde-fous)* · `boutique_disponible` *(migration douce)* · `org_club_nom` sans défaut · témoin D-040 `API tournoi en ligne` · **715/715** mesuré · 🔧 **M1** *(élargie à l'affiche)* en attente d'autorisation |
+| 🆕 **CF-4b** | **Neutralisation institutionnelle** | 🚧 **EN COURS.** ✅ **L0** *(préalable, `D-039`)* · ✅ **L1** *(`3375061`)* · ✅ **L6** *(`eac23ad`)* · ✅ **L2** *(`5bff881`)* · ✅ **L3** *(`6c04f10`)* · ✅ **L4** *(`4bf3e62` + `20cba62`)* · ✅ ⭐ **L5** — **les DEUX phases faites** : dépôt *(`5649f83`)* **et** redéploiement Google, ⭐ **prouvé par un email reçu** *(en-tête brut `From: "L'organisation du tournoi"`, 20/08/2026 17:08 UTC)*. ⚠️ **Une seule des 4 lignes exercée en réel** *(branche `MailApp`)* · ✅ **L7** — **26 points, 8 fichiers**, dont ⭐ la première phrase du `README.md` et **6 descriptions du bandeau de don devenu inexistant** · ✅ **L8** — ⚡ **CORRIGÉ le 2026-08-24 : cette case annonçait « patch appliqué, non commité »**, faux depuis le **2026-08-22**. L8 est **commité** *(`be57f97`)*, **poussé sur `origin/main`**, et sa **part frontend est PUBLIÉE** *(workflow Pages `success`, 2026-08-22 15:24:34 UTC)* : `perfs_mot_cle_club` *(nouvelle clé, garde-fous)* · `boutique_disponible` *(migration douce)* · `org_club_nom` sans défaut · témoin D-040 `API tournoi en ligne` · **715/715** mesuré. ⛔ **Sa part BACKEND n'est PAS redéployée chez Google** · 🔧 **M1** *(devenu un chantier en 6 étapes — `PLAN.md` §15)* en cours, étape **M1-A** faite |
 | 🆕 **CF-4a** | Mentions légales | ⏸️ **SUSPENDUE derrière CF-4b** — ⛔ aucune question abandonnée ; la praticabilité de **[R10] II** sur GitHub Pages reste **INDÉTERMINÉE**, et une demande écrite à GitHub est **prête, non envoyée** |
 | **CF-3 · CF-5 → CF-13** | Le reste du chantier | ⬜ **NON lancées** — fiches en `PLAN.md` §14 |
 | 🆕 **CF-14** | Adoption institutionnelle | ⬜ **INSCRITE, non rédigée** — le recueil des décisions d'une structure **si** elle souhaitait adopter le logiciel |

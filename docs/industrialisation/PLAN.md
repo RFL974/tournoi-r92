@@ -2174,7 +2174,7 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 | **L4** | Identité graphique — logo neutre, favicon, retrait des blasons | ✅ **FAIT** — commits **`4bf3e62`** *(réalisation)* et **`20cba62`** *(correction du contraste, trouvée par le contrôle visuel).* **26 points.** 🆕 **3 assets créés** *(`logo-tournoi.svg`, `logo-tournoi.png`, `grain.svg`)*, **3 supprimés** *(224 Ko)*. ⭐ **La favicon est POSÉE sur les 8 pages** — 7 n'en avaient aucune. ⛔ **Plus aucune ressource graphique distante.** ⚠️ **2 adaptations CSS minimales** : l'ancien logo était un **bandeau large**, le nouveau est **carré** — `width:100%` l'aurait étiré à 260 px de côté |
 | **L7** | Reste de la documentation active du dépôt public | ✅ **FAIT** — **26 points, 8 fichiers** *(= 26 modifications unitaires au diff)*. ⚡ **26 et non 16, et l'écart est une leçon** : **14** attributions institutionnelles *(dont ⭐ la première phrase du `README.md`, celle que **D-039** citait nommément)* — c'est le compte annoncé, **moins `contact@r92.fr` reporté à L8** et **moins les 2 exemples réels conservés en réserve** ; **+ 4** références `CF-4` → `CF-4a` ; **+ 6** que L0 ne pouvait PAS connaître — le **bandeau de don**, supprimé par **L3**, encore décrit comme **existant** dans six documents actifs ; **+ 2** descriptions *« blason »*, fausses depuis **L4**. ⛔ **Aucun code, aucun test, aucun déploiement, aucune donnée du classeur** |
 | **L5** | Backend — nom affiché de l'expéditeur ⚠️ **redéploiement** | ✅ **FAIT — 2 phases.** ✅ **L5-A** *(dépôt Git)* : **4 substitutions littérales**, commit **`5649f83`** · ✅ **L5-B** *(chez Google)* : `Code.gs` et `Tests.gs` recopiés, **enregistrés**, contrôlés dans l'éditeur par des **témoins fixés AVANT le collage**, **nouvelle version du même déploiement**, **`703/703 OK, 0 FAIL`**, ping conforme. ⭐ **Preuve finale à la réception** : `From: "L'organisation du tournoi" <…>` *(20/08/2026 17:08 UTC)*, contre `From: "Génération R92"` le matin même, **même boîte, même adresse d'envoi**. ⚠️ **PORTÉE — à ne jamais élargir** : **une seule des 4 lignes exercée en réel** *(`MailApp` dans `envoyerEmailHtml`, `Code.gs:5086`)* ; les **3 autres** *(`Code.gs:5067`, `5069`, `5082`)* sont **CERTAINES dans le code**, ⛔ **NON TESTÉES EN RÉEL**. 🔴 A produit **D-040** |
-| **L8** | Neutralisation fonctionnelle du club — `org_club_nom`, `MOT_CLE_CLUB`, **tests** ⚠️ **redéploiement** | 🚧 **PATCH APPLIQUÉ, non commité** — audité par **4 agents indépendants** *(A Perfs/architecture · B surfaces · C backend/D-040 · D contre-audit)*. ⭐ **Trois arbitrages rouverts** par leurs constats *(D-041)*. ⚠️ **Redéploiement Google requis** — témoin `API tournoi en ligne`, repères remesurés **715/715** et **4314** |
+| **L8** | Neutralisation fonctionnelle du club — `org_club_nom`, `MOT_CLE_CLUB`, **tests** ⚠️ **redéploiement** | ✅ ⚡ **CORRIGÉ le 2026-08-24 : cette case annonçait « PATCH APPLIQUÉ, non commité »**, faux depuis le 2026-08-22. **COMMITÉ `be57f97`, poussé sur `origin/main`**, **part frontend PUBLIÉE** *(Pages `success`, 15:24:34 UTC)*, ⛔ **part backend NON redéployée** — audité par **4 agents indépendants** *(A Perfs/architecture · B surfaces · C backend/D-040 · D contre-audit)*. ⭐ **Trois arbitrages rouverts** par leurs constats *(D-041)*. ⚠️ **Redéploiement Google requis** — témoin `API tournoi en ligne`, repères remesurés **715/715** et **4314** |
 
 > ⭐ **Pourquoi L1 puis L6 avant tout le reste** : ce sont les deux seuls lots qui engagent des
 > **tiers réels aujourd'hui** — une association pour le document supprimé, **une personne physique
@@ -2182,7 +2182,10 @@ les contrôles ① à ⑥. Les traces B, C et D suivent au moment de l'exécutio
 >
 > ⚠️ **Comptage, et il faut le lire ainsi** : **L0 est un préalable documentaire**, ajouté après
 > coup — il ne fait pas partie des huit. **Les lots d'exécution sont L1 → L8.** À ce jour :
-> ✅ **7 sur 8 terminés** *(L1, L6, L2, L3, L4, L5, L7)* · ⬜ **1 non commencé** *(L8)*.
+> ✅ ⚡ **CORRIGÉ le 2026-08-24 — cette ligne annonçait « 7 sur 8 terminés · 1 non commencé (L8) »**,
+> ce qui a cessé d'être vrai le 2026-08-22. **Les 8 lots d'exécution sont TERMINÉS et publiés**
+> *(L1, L2, L3, L4, L5, L6, L7, L8)*. ⛔ **Cela ne clôt PAS CF-4b** : il manque le **redéploiement de
+> la part backend de L8** chez Google, et **le chantier M1** *(§15)*.
 >
 > ⭐ **Pourquoi L5 a compté DEUX phases — et pourquoi la leçon vaut d'être gardée** : le dépôt et le
 > serveur réellement en service chez Google sont **deux choses différentes**. Publier le code ne
@@ -2606,8 +2609,8 @@ M1 est terminé quand **les huit conditions** sont réunies :
 | Plus aucune attribution dans les **textes** | ✅ fait *(L2, L7)* |
 | Plus aucun **lien** institutionnel | ✅ code fait *(L3)* · **valeurs du classeur : M1-A ou M1-F** |
 | Plus aucun **logo** institutionnel | ✅ fait *(L4)* · **logo du club : M1-F** |
-| **Nom d'expéditeur** neutre | ✅ code fait *(L5)* · ⛔ **pas en service** — attend le redéploiement de **M1-B** |
-| **Couplage fonctionnel** au club retiré | ✅ fait *(L8)* · ⛔ **pas en service** — idem |
+| **Nom d'expéditeur** neutre | ✅ **FAIT ET EN SERVICE** — code *(L5-A, `5649f83`)* **et** redéploiement Google *(L5-B)*, ⭐ **prouvé par un email réellement reçu**. ⚠️ **Une seule des 4 lignes exercée en réel** |
+| **Couplage fonctionnel** au club retiré | ✅ code fait *(L8, `be57f97`)* · ✅ **part frontend PUBLIÉE** *(Pages `success`)* · ⛔ **part backend PAS en service** — attend le redéploiement de **M1-B** |
 | **L'affiche** | 🔧 **M1-F** |
 | **Preuves finales** *(email reçu, vues publiques, PDF, dossier)* | 🔧 **M1-F** |
 
@@ -2636,5 +2639,5 @@ M1 est terminé quand **les huit conditions** sont réunies :
 
 | Étape | État |
 |---|---|
-| **M1-A** | 🚧 **EN COURS** — documents écrits, ⛔ **non commité, en attente de validation de Romain** |
+| **M1-A** | ✅ **FAIT et SAUVEGARDÉ** — commits **`9abaebc`** *(7 documents)* et **`b65a6b0`** *(journal §17)*, poussés sur `claude/m1-club-config-analysis-zrqy6g`. ⛔ **NON fusionné dans `main`** — en attente de la validation de Romain. ⏳ **Reste en attente dans M1-A** : la lecture des deux URL, **bloquée par la politique réseau** de l'environnement |
 | **M1-B → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite** |
