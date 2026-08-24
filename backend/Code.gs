@@ -1966,6 +1966,55 @@ var CHAMPS_AUTORISATION = ['org_club_nom', 'org_code_club', 'org_representant_no
   'org_repas_oui', 'org_repas_fournisseur', 'org_repas_prix', 'org_gouters_oui', 'org_gouters_fournisseur',
   'org_gouters_prix'];
 
+/* ⭐ ALLOWLIST D'EFFACEMENT (décision D-043) — les 26 `org_*` qui décrivent UNE ÉDITION et qui sont
+ * les SEULS que `reinitialiserTournoi` a le droit de vider. Les 10 autres champs de
+ * CHAMPS_AUTORISATION (nom et code du club, label, président, représentant) n'y figurent pas et
+ * SURVIVENT : ils décrivent le club, pas le tournoi.
+ * ⛔ Cette liste est EXPLICITE, jamais déduite « tout sauf les 10 permanents ». Sur une opération
+ * destructive, une clé `org_*` ajoutée plus tard ne doit JAMAIS devenir effaçable par le seul fait
+ * qu'on aurait oublié de la classer : l'oubli doit conserver la donnée, pas la détruire.
+ * ⚠️ Les récompenses `org_recompenses_<CAT>` n'y sont PAS : leurs noms sont DYNAMIQUES (une clé par
+ * catégorie), elles se détectent par préfixe — voir clesAutorisationAEffacer. */
+var CHAMPS_AUTORISATION_A_REINITIALISER = [
+  'org_niveau_tournoi', 'org_equipes_etrangeres', 'org_equipes_etrangeres_liste', 'org_nb_participants',
+  'org_type_terrain', 'org_nb_vestiaires',
+  'org_nb_arbitres', 'org_nb_educateurs', 'org_nb_educateurs_club', 'org_nb_doublettes',
+  'org_medecin_oui', 'org_medecin_nom', 'org_medecin_tel',
+  'org_secours_nom', 'org_secours_tel', 'org_ambulance',
+  'org_droits_oui', 'org_droits_montant', 'org_hebergement_oui', 'org_hebergement_structure',
+  'org_repas_oui', 'org_repas_fournisseur', 'org_repas_prix',
+  'org_gouters_oui', 'org_gouters_fournisseur', 'org_gouters_prix'];
+
+/* Préfixe EXACT des récompenses par catégorie. ⚠️ Le `_` final n'est pas cosmétique : sans lui,
+ * `org_re…` attraperait `org_representant_nom`, `_tel` et `_mail` — trois données personnelles
+ * PERMANENTES que D-043 conserve. C'est le risque R-B2, couvert par un test négatif. */
+var PREFIXE_RECOMPENSES_AUTORISATION = 'org_recompenses_';
+
+/**
+ * DÉCISION PURE (aucun classeur) : parmi les paramètres réellement présents dans la zone A,
+ * lesquels une réinitialisation doit-elle vider ? Sépare volontairement la DÉCISION de l'EFFET,
+ * pour que la première soit testable sans Google — y compris ses cas négatifs.
+ *
+ * Renvoie : les 26 de l'allowlist (toujours — les effacer est sans effet si la ligne n'existe pas,
+ * `effacerParamGlobal` n'en crée aucune) + les récompenses RÉELLEMENT présentes.
+ * ⭐ Les récompenses d'une catégorie DISPARUE sont incluses : une réinitialisation supprime les
+ * catégories (zone B) mais laisse leurs `org_recompenses_<CAT>` orphelins en zone A — c'est
+ * précisément ce que D-043 veut effacer.
+ * @param {Array<string>} clesExistantes  les noms de paramètres présents (Object.keys du global)
+ * @return {Array<string>} les clés à vider, sans doublon
+ */
+function clesAutorisationAEffacer(clesExistantes) {
+  var cles = CHAMPS_AUTORISATION_A_REINITIALISER.slice();
+  var p = PREFIXE_RECOMPENSES_AUTORISATION;
+  (clesExistantes || []).forEach(function (k) {
+    var nom = String(k == null ? '' : k);
+    // Préfixe COMPLET, et au moins un caractère derrière : `org_recompenses_` tout seul n'est pas
+    // une récompense de catégorie, et `org_recompense_U8` (sans « s ») n'est pas ce préfixe.
+    if (nom.indexOf(p) === 0 && nom.length > p.length && cles.indexOf(nom) === -1) cles.push(nom);
+  });
+  return cles;
+}
+
 /* Défauts DOCUMENTÉS (pas des devinettes) : hypothèse de label EDR, absence d'équipes étrangères.
  * Tout le reste est vide (⇒ « manquant ») tant que l'organisateur n'a rien saisi.
  * ⛔ `org_club_nom` n'a PLUS de défaut, et c'est délibéré : l'application ne nomme aucun club à la
@@ -7501,6 +7550,16 @@ function reinitialiserTournoi(classeur) {
     });
   reinitialiserPhase2Clubs(classeur);
 
+  // 3 sexies) DEMANDE D'AUTORISATION : les données propres à l'ÉDITION qui vient de se terminer
+  //   (médecin, secours, arbitrage, installations utilisées, hébergement, repas, goûters,
+  //   récompenses…) sont effacées — décision D-043. ⛔ Les 10 champs PERMANENTS du club (nom, code,
+  //   label, président, représentant) sont CONSERVÉS : ils décrivent le club, pas le tournoi.
+  //   Avant ce lot, les 36 `org_*` survivaient TOUS : un tournoi neuf rouvrait la demande
+  //   d'autorisation déjà remplie avec les valeurs de l'édition passée, marquées « saisi », et le
+  //   compteur annonçait 0 champ manquant — le dossier pouvait partir à la Ligue avec un médecin
+  //   absent et un prix périmé, sans aucun signalement.
+  reinitialiserDonneesAutorisationTournoi(classeur);
+
   // 4) Le tournoi redevient masqué pour le public.
   ecrireParamGlobal(ongletConfig, 'tournoi_publie', 'non');
 
@@ -7511,6 +7570,28 @@ function reinitialiserTournoi(classeur) {
     nb_matchs: nbMatchs,
     nb_categories: nbCategories
   };
+}
+
+/**
+ * M1-B (D-043) — Vide les données de la demande d'autorisation qui appartiennent à l'ÉDITION
+ * terminée : les 26 champs de CHAMPS_AUTORISATION_A_REINITIALISER, plus toutes les récompenses
+ * `org_recompenses_<CAT>` réellement présentes (y compris celles d'une catégorie disparue).
+ *
+ * La DÉCISION (quelles clés) est prise par `clesAutorisationAEffacer`, pure et testable sans
+ * classeur ; cette fonction-ci n'en est que l'EFFET. Elle est séparée de `reinitialiserTournoi`
+ * pour être exerçable seule dans les tests.
+ *
+ * ⛔ Comme partout ailleurs dans la réinitialisation, on VIDE la valeur sans supprimer la ligne
+ * (`effacerParamGlobal`) : une ligne vide est comptée « manquant » et le champ du PDF fédéral reste
+ * éditable. Une clé absente n'est pas créée.
+ * @return {number} le nombre de clés soumises à effacement (26 + récompenses trouvées)
+ */
+function reinitialiserDonneesAutorisationTournoi(classeur) {
+  var onglet = classeur.getSheetByName('Config');
+  if (!onglet) return 0;
+  var cles = clesAutorisationAEffacer(Object.keys(lireConfig(classeur).global || {}));
+  cles.forEach(function (champ) { effacerParamGlobal(onglet, champ); });
+  return cles.length;
 }
 
 /**

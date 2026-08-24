@@ -100,17 +100,27 @@ Puis **trois contrôles dans l'éditeur**, avant d'aller plus loin :
 
 | Ce qu'on vérifie | Comment |
 |---|---|
-| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs` — **8342** aujourd'hui. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* |
-| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne — **`viderDonnees`, ligne 8337** aujourd'hui |
+| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs` — **8423** aujourd'hui. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* |
+| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne — **`viderDonnees`, ligne 8418** aujourd'hui |
 | ⭐ **Une chaîne témoin introduite par le lot** | Une recherche qui donne **un résultat DIFFÉRENT avant et après** la modification — et, quand c'est possible, **son contraire** *(l'ancienne chaîne, attendue à 0)* |
 
-> ⭐ **Le témoin du lot en cours (CF-4b / L8)** — à chercher dans l'éditeur, **les quatre mots** :
+> ⭐ **Les témoins du lot en cours** — à chercher dans l'éditeur, **en entier** :
 >
-> | Chercher | Attendu |
-> |---|---|
-> | `API tournoi en ligne` | **1** |
-> | `API Tournoi R92 en ligne` *(l'ancienne)* | **0** |
-> | `Racing Club de France Rugby` *(l'ancien défaut)* | **0** |
+> | Chercher | Attendu | De quel lot |
+> |---|---|---|
+> | `CHAMPS_AUTORISATION_A_REINITIALISER` | **3** | 🆕 **M1-B** — la liste des 26 champs d'édition |
+> | `reinitialiserDonneesAutorisationTournoi` | **2** | 🆕 **M1-B** — la fonction et son appel |
+> | `API tournoi en ligne` | **1** | CF-4b / L8 |
+> | `API Tournoi R92 en ligne` *(l'ancienne)* | **0** | CF-4b / L8 |
+> | `Racing Club de France Rugby` *(l'ancien défaut)* | **0** | CF-4b / L8 |
+>
+> 🔴 **Les témoins de L8 restent à vérifier, et ce n'est pas un reliquat : la part BACKEND de L8
+> n'a JAMAIS été collée chez Google.** Le prochain redéploiement met donc **deux lots** en service
+> d'un coup — M1-B *et* L8. ⛔ Un contrôle qui ne vérifierait que M1-B laisserait L8 sans preuve.
+>
+> ⚠️ **Les deux témoins M1-B n'existaient pas avant ce lot** : leur compte attendu **avant** collage
+> est **0**. C'est ce qui les rend discriminants *(D-040)* — ils sont aussi **sans apostrophe, sans
+> accent et sans guillemet**, comme la règle l'exige.
 >
 > 🔴 **Ne JAMAIS raccourcir à `API tournoi`** : la recherche de l'éditeur est **insensible à la
 > casse**, donc ces deux mots trouvent aussi l'**ancienne** chaîne `API **Tournoi** R92 en ligne`.
@@ -140,15 +150,22 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 
 | Ce qu'on vérifie | Valeur attendue **aujourd'hui** | Ce qu'un écart signifie |
 |---|---|---|
-| **Le bilan** affiché en fin de journal | **`R92 — 715/715 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
-| **La dernière ligne** du fichier collé chez Google | **4314** | Le fichier collé n'est pas celui du dépôt |
+| **Le bilan** affiché en fin de journal | **`R92 — 796/796 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
+| **La dernière ligne** du fichier collé chez Google | **4645** | Le fichier collé n'est pas celui du dépôt |
 
 > 🎯 **Pourquoi deux nombres et pas un.** Le bilan seul ne dit **jamais quelle version** a été
 > exécutée : « 573/573 OK » était un vrai résultat sur un faux fichier. Le nombre de lignes est ce
 > qui identifie le fichier. **Les deux ensemble prouvent ce qu'un seul laisse croire.**
 
-> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-17**
-> *(chantier **C-012, étape 3** : +42 vérifications sur les six garde-fous de la saisie du score)*.
+> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-24**
+> *(lot **M1-B** : +81 vérifications sur le cycle de vie des `org_*` à la réinitialisation ; elles
+> étaient de **715** et **4314** depuis C-012, étape 3)*.
+>
+> 🔍 **Le bilan de 796 est PRÉDIT, pas encore constaté chez Google** *(relevé le 2026-08-24)* : il a
+> été mesuré **hors ligne**, en exécutant `lancerTestsFFR` sur les deux fichiers du dépôt. La même
+> mesure donnait **715** avant M1-B — exactement le bilan que Google affichait — ce qui rend la
+> prédiction fiable, ⛔ **mais une prédiction reste à confirmer au geste 4** *(`CLAUDE.md` §9 :
+> c'est un **PROBABLE**, pas un **CERTAIN**)*.
 > **Elles doivent toujours correspondre au bilan réellement obtenu et à la dernière ligne réelle de
 > `backend/Tests.gs`** — un repère qui ne correspond plus ne prouve plus rien.
 > Les valeurs de référence à jour se lisent toujours dans le dépôt :

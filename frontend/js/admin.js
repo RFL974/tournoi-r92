@@ -657,19 +657,38 @@ async function onClicConnexion(evenement) {
 
 /**
  * Réinitialise entièrement le tournoi (catégories, équipes, poules, matchs, infos)
- * après une double confirmation. Remet aussi les horaires de la journée à zéro ; conserve
- * l'historique de saison. Recharge toute la page ensuite.
+ * après une double confirmation. Remet aussi les horaires de la journée à zéro et efface les
+ * données de la demande d'autorisation PROPRES À L'ÉDITION (D-043) ; conserve l'historique de
+ * saison et les informations permanentes du club. Recharge toute la page ensuite.
  */
 async function onReinitialiser() {
   const message = document.getElementById('message-reinitialisation');
   const bouton = document.getElementById('bouton-reinitialiser');
 
   // Double confirmation : l'action est irréversible.
+  // ⚠️ Le texte ANNONCE ce qui part. Depuis M1-B (D-043), la réinitialisation efface aussi les
+  // données de la demande d'autorisation propres à l'édition : les taire rendrait la perte
+  // invisible. L'ancienne phrase « Seul l'historique de saison est conservé » a été retirée : elle
+  // était fausse (le carnet des clubs et les partenaires survivent, comme les 10 champs permanents
+  // du club). ⛔ On n'annonce donc PAS une liste exhaustive des conservations — d'où « notamment ».
+  // ⚠️ La ligne « clubs invités » suit reinitialiserPhase2Clubs À LA LETTRE : sur les 17 colonnes de
+  // ClubsInvites, 8 sont remises à zéro (categories_engagees, dossier_envoye, invitation_envoyee,
+  // club_token, date_reponse, nb_equipes_par_categorie, nb_joueurs_total, selection_enregistree) et
+  // 9 sont conservées. ⛔ On ne dit donc PAS « les réponses des clubs sont supprimées » : `statut`
+  // (Invité/Accepté/Décliné), `detail_effectifs` et `nb_educateurs_total` SURVIVENT.
   if (!await dialogConfirmer('Réinitialiser le tournoi ?\n\n' +
-               'Cela supprime définitivement les catégories, les équipes, les poules, ' +
-               'les matchs (planning + scores), les infos du tournoi (affiche comprise) ' +
-               'et remet les horaires de la journée à zéro.\n' +
-               'Seul l\'historique de saison (page Perfs) est conservé.',
+               'CE QUI EST SUPPRIMÉ — des données de CETTE ÉDITION, notamment :\n' +
+               '• les catégories, les équipes, les poules, les matchs (planning et scores) ;\n' +
+               '• les infos du tournoi (affiche comprise) et les horaires de la journée ;\n' +
+               '• côté clubs invités : ce qu\'ils ont engagé pour cette édition (catégories, ' +
+               'équipes, joueurs), les marques d\'envoi et de suivi, et leurs liens d\'accès ;\n' +
+               '• dans la demande d\'autorisation : médecin, secours, arbitrage, terrain et ' +
+               'vestiaires utilisés, hébergement, repas, goûters, récompenses…\n\n' +
+               'CE QUI EST CONSERVÉ, notamment :\n' +
+               '• les informations PERMANENTES de votre club dans la demande d\'autorisation ' +
+               '(nom et code du club, label, président, représentant) ;\n' +
+               '• l\'historique de saison (page Perfs) ;\n' +
+               '• le carnet des clubs invités (noms, contacts, statut) et vos partenaires.',
                { ok: 'Continuer', danger: true })) return;
   if (!await dialogConfirmer('Confirmer la remise à zéro ? Cette action est IRRÉVERSIBLE.',
                { ok: 'Oui, tout effacer', danger: true })) return;

@@ -9,7 +9,25 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-24 *(soir)* — 📏 **UNE RÈGLE PERMANENTE DE PLUS, ET M1-A EST
+**Dernière mise à jour** : 2026-08-24 *(soir, suite)* — 🔧 **M1-B EST ÉCRITE ET TESTÉE — ⛔ ET RIEN
+DE PLUS.**
+
+🔴 **Le défaut corrigé, en une phrase** : une réinitialisation laissait la demande d'autorisation
+**entièrement remplie avec les valeurs de l'édition passée**, marquées *« saisi »*, compteur à
+**0 manquant** — un dossier pouvait partir à la Ligue avec un médecin absent et un prix périmé,
+**sans aucun signalement**.
+
+| | |
+|---|---|
+| ✅ **Implémentée** *(local)* | Allowlist **explicite** des **26** champs d'édition *(`CHAMPS_AUTORISATION_A_REINITIALISER`)* · récompenses `org_recompenses_*` par **préfixe complet** · branchement dans `reinitialiserTournoi` · message de confirmation refait |
+| ✅ **Testée** *(local)* | **796/796 OK, 0 FAIL** — **+81** vérifications, dont un test de **branchement** et les tests **négatifs** de **R-B2** |
+| ⛔ **Commitée · poussée · publiée · redéployée · vérifiée en réel** | **AUCUN de ces cinq gestes n'a eu lieu** *(détail : `PLAN.md` **§15.8**)* |
+| ⚠️ **Le redéploiement à venir** | Il mettra **DEUX lots** en service d'un coup : **M1-B** *et* la part backend de **CF-4b/L8**, jamais collée |
+| 🔴 **R-033 n'est pas refermé** | Sa part `org_*` est traitée ; **`detail_effectifs` et `nb_educateurs_total` ne le sont PAS** — ce sont des colonnes de `ClubsInvites`, hors périmètre |
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-24 (soir)* : 📏 **UNE RÈGLE PERMANENTE DE PLUS, ET M1-A EST
 CLÔTURÉE SANS RELIQUAT INTERNE.**
 
 Micro-lot **méthodologique et documentaire**. ⛔ **Aucun changement fonctionnel : aucun fichier
@@ -51,7 +69,7 @@ depuis** — l'état publié **du jour** ne se recopie pas ici, il se lit avec `
 | | |
 |---|---|
 | ✅ **M1-A** | 🏁 **TERMINÉE, FUSIONNÉE, PUBLIÉE — et CLÔTURÉE.** ⛔ **Plus rien n'y est ouvert** |
-| ⛔ **M1-B** | **PAS commencée** — et elle ne démarre pas sans autorisation explicite |
+| ⛔ **M1-B** | **PAS commencée** — et elle ne démarre pas sans autorisation explicite. ⚡ **Cette ligne décrit le 24/08 en fin de journée ; M1-B a été autorisée et ÉCRITE depuis** *(voir le bloc de tête)* |
 | 🔻 **Les deux URL du classeur** | **toujours PAS LUES** — la politique réseau de l'environnement refuse `script.google.com` *(403 au `CONNECT`)*. ⭐ **RELIQUAT EXTERNE, NON BLOQUANT** : il est **sorti de M1-A** *(qui est close)* et **tracé au `PLAN.md` §15.8**. ⛔ **Il ne conditionne le statut d'aucune étape** |
 | ⛔ **Données du classeur** | **aucune modifiée**, aucune lue |
 | ⛔ **Backend M1** | **aucun redéploiement** — M1-A ne touche **aucun** fichier `backend/` |
@@ -561,7 +579,9 @@ est **suspendue derrière elle**. **CF-3, CF-5 à CF-13 et CF-14 ne sont pas com
 🏛️ **ET UN CHANTIER DE PLUS EST OUVERT DEPUIS LE 2026-08-24 : M1 — le profil du club**
 *(`PLAN.md` **§15**)*. Il n'appartient ni au plan d'audit ni au chantier Confiance : il en **sort**,
 puisque c'est lui qui permettra de clore CF-4b. 🏁 **Son étape M1-A est TERMINÉE et FUSIONNÉE dans
-`main`** *(`9abaebc`, `b65a6b0`, `aff6d5f`)*. ⛔ **M1-B → M1-F ne démarrent pas automatiquement.**
+`main`** *(`9abaebc`, `b65a6b0`, `aff6d5f`)*. 🔧 **Son étape M1-B est ÉCRITE ET TESTÉE localement**,
+⛔ **ni commitée, ni déployée** *(les sept états : `PLAN.md` **§15.8**)*. ⛔ **M1-C → M1-F ne
+démarrent pas automatiquement.**
 
 > ⚠️ **Cette ligne annonçait « 2 lots sur 8 », et c'était devenu faux.** Le chiffre datait du jour
 > de l'ouverture de CF-4b ; les six lots suivants ont été livrés sans que la phrase d'en-tête soit

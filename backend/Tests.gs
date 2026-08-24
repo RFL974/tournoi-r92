@@ -382,6 +382,21 @@ function lancerTestsFFR() {
   testDecisionScore_vainqueurHorsCoupe(etat);
   testDecisionScore_modeSimpleNeTouchePasAuDetail(etat);
 
+  // M1-B (D-043) — ce qui survit à une réinitialisation, et ce qui doit être vidé.
+  testM1B_allowlistExactementLes26(etat);
+  testM1B_les10PermanentsJamaisEffaces(etat);
+  testM1B_partition36(etat);
+  testM1B_recompensesDetectees(etat);
+  testM1B_prefixeVoisinsNonAttrapes(etat);
+  testM1B_aucuneCleHorsAutorisation(etat);
+  testM1B_effacementVideSansSupprimerNiCreer(etat);
+  testM1B_branchementDepuisReinitialisation(etat);
+  testM1B_effacementsHistoriquesNonRegresses(etat);
+  testM1B_dossierNestPlusEntierementSaisi(etat);
+  testM1B_permanentsRestentSaisis(etat);
+  testM1B_equipesEtrangeresDefautRestitue(etat);
+  testM1B_typeTerrainCascadeLegitime(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -4311,4 +4326,320 @@ function testDecisionScore_modeSimpleNeTouchePasAuDetail(etat) {
     'T-17 : ⚠️ l\'ordre est celui de ENTETES.Matchs — essais_A, essais_B, transfo_A, transfo_B…');
   _ffrAssert(etat, detaille.reponse.match.essais_A === 3 && detaille.reponse.match.essais_B === 1,
     'T-17 : la réponse renvoie le détail recalculé');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  M1-B — Réinitialisation : cycle de vie des `org_*` (décision D-043)        */
+/*                                                                            */
+/*  Deux choses sont prouvées SÉPARÉMENT, et c'est volontaire :               */
+/*   ① LA DÉCISION — quelles clés doivent être effacées : `clesAutorisationAEffacer`, */
+/*     fonction PURE, testée sans classeur (y compris ses cas NÉGATIFS) ;      */
+/*   ② LE BRANCHEMENT — le chemin réellement emprunté par une réinitialisation */
+/*     appelle bien cette décision et produit l'effacement : testé sur un FAUX */
+/*     onglet écrivable, sans aucun Sheet réel ni effet de bord.               */
+/*  ⚠️ Tester ① seul ne prouverait RIEN sur ② : une liste juste que personne   */
+/*  n'appelle n'efface rien.                                                   */
+/* -------------------------------------------------------------------------- */
+
+/** Les 10 permanents de D-043 — écrits ICI, indépendamment du code, pour que le test constate
+ *  un écart au lieu de le recopier. */
+var _M1B_PERMANENTS = ['org_club_nom', 'org_code_club', 'org_label_edr', 'org_label_date',
+  'org_president_nom', 'org_president_tel', 'org_president_mail',
+  'org_representant_nom', 'org_representant_tel', 'org_representant_mail'];
+
+/** Les 26 à vider de D-043 — même principe : la liste attendue vient de la DÉCISION, pas du code. */
+var _M1B_A_VIDER = ['org_niveau_tournoi', 'org_equipes_etrangeres', 'org_equipes_etrangeres_liste',
+  'org_nb_participants', 'org_type_terrain', 'org_nb_vestiaires', 'org_nb_arbitres',
+  'org_nb_educateurs', 'org_nb_educateurs_club', 'org_nb_doublettes', 'org_medecin_oui',
+  'org_medecin_nom', 'org_medecin_tel', 'org_secours_nom', 'org_secours_tel', 'org_ambulance',
+  'org_droits_oui', 'org_droits_montant', 'org_hebergement_oui', 'org_hebergement_structure',
+  'org_repas_oui', 'org_repas_fournisseur', 'org_repas_prix', 'org_gouters_oui',
+  'org_gouters_fournisseur', 'org_gouters_prix'];
+
+/** Deux listes portent-elles EXACTEMENT les mêmes éléments ? (ordre indifférent, doublons signalés) */
+function _m1bMemesElements(a, b) {
+  if (a.length !== b.length) return false;
+  for (var i = 0; i < a.length; i++) { if (b.indexOf(a[i]) === -1) return false; }
+  for (var j = 0; j < b.length; j++) { if (a.indexOf(b[j]) === -1) return false; }
+  return true;
+}
+
+/** ① La liste d'effacement contient EXACTEMENT les 26 de D-043 — comparaison ensembliste. */
+function testM1B_allowlistExactementLes26(etat) {
+  var l = CHAMPS_AUTORISATION_A_REINITIALISER;
+  _ffrAssert(etat, l.length === 26, 'M1-B : l\'allowlist compte 26 clés (constaté ' + l.length + ')');
+  _ffrAssert(etat, _m1bMemesElements(l, _M1B_A_VIDER),
+    'M1-B : l\'allowlist est EXACTEMENT les 26 champs d\'édition de D-043');
+  var doublons = l.filter(function (k, i) { return l.indexOf(k) !== i; });
+  _ffrAssert(etat, doublons.length === 0, 'M1-B : aucun doublon dans l\'allowlist');
+}
+
+/** ① ⭐ LE TEST QUI PROTÈGE LE CLUB : aucun des 10 permanents n'est effaçable, par aucun chemin. */
+function testM1B_les10PermanentsJamaisEffaces(etat) {
+  var effaces = clesAutorisationAEffacer(_M1B_PERMANENTS.concat(['org_recompenses_U10']));
+  _M1B_PERMANENTS.forEach(function (k) {
+    _ffrAssert(etat, CHAMPS_AUTORISATION_A_REINITIALISER.indexOf(k) === -1,
+      'M1-B : ' + k + ' absent de l\'allowlist');
+    _ffrAssert(etat, effaces.indexOf(k) === -1,
+      'M1-B : ' + k + ' n\'est JAMAIS retenu pour effacement, même présent dans Config');
+  });
+}
+
+/** ① 36 = 10 conservés + 26 vidés, sans recouvrement et sans 27e clé `org_*` fixe. */
+function testM1B_partition36(etat) {
+  var tous = CHAMPS_AUTORISATION;
+  _ffrAssert(etat, tous.length === 36, 'M1-B : CHAMPS_AUTORISATION compte 36 clés (constaté ' + tous.length + ')');
+  var chevauchement = CHAMPS_AUTORISATION_A_REINITIALISER.filter(function (k) {
+    return _M1B_PERMANENTS.indexOf(k) !== -1;
+  });
+  _ffrAssert(etat, chevauchement.length === 0, 'M1-B : aucun champ à la fois conservé et vidé');
+  _ffrAssert(etat, _M1B_PERMANENTS.length + CHAMPS_AUTORISATION_A_REINITIALISER.length === tous.length,
+    'M1-B : 10 + 26 = 36, la partition est complète');
+  // Aucune clé de l'allowlist n'est étrangère au dossier d'autorisation.
+  var etrangeres = CHAMPS_AUTORISATION_A_REINITIALISER.filter(function (k) { return tous.indexOf(k) === -1; });
+  _ffrAssert(etat, etrangeres.length === 0, 'M1-B : aucune clé effaçable hors de CHAMPS_AUTORISATION');
+  // Et réciproquement : pas de 27e `org_*` fixe qui serait effacé sans avoir été décidé.
+  var nonClassees = tous.filter(function (k) {
+    return _M1B_PERMANENTS.indexOf(k) === -1 && CHAMPS_AUTORISATION_A_REINITIALISER.indexOf(k) === -1;
+  });
+  _ffrAssert(etat, nonClassees.length === 0, 'M1-B : aucun des 36 n\'est laissé sans décision');
+}
+
+/** ① Les récompenses dynamiques sont détectées — y compris ORPHELINES (catégorie disparue). */
+function testM1B_recompensesDetectees(etat) {
+  var cles = clesAutorisationAEffacer(['org_recompenses_U8', 'org_recompenses_U10',
+    'org_recompenses_M14F', 'tournoi_nom']);
+  ['org_recompenses_U8', 'org_recompenses_U10', 'org_recompenses_M14F'].forEach(function (k) {
+    _ffrAssert(etat, cles.indexOf(k) !== -1, 'M1-B : ' + k + ' est retenu pour effacement');
+  });
+  // ⭐ Le cas qui motive la détection par préfixe : la catégorie n'existe plus, la clé reste.
+  var orpheline = clesAutorisationAEffacer(['org_recompenses_U6_disparue']);
+  _ffrAssert(etat, orpheline.indexOf('org_recompenses_U6_disparue') !== -1,
+    'M1-B : une récompense ORPHELINE (catégorie supprimée) est quand même effacée');
+  // Aucune récompense inventée quand il n'y en a pas.
+  var sans = clesAutorisationAEffacer(['tournoi_nom']);
+  _ffrAssert(etat, sans.length === 26, 'M1-B : sans récompense présente, exactement les 26');
+}
+
+/** ① ⭐ TEST NÉGATIF R-B2 : les voisins du préfixe ne sont JAMAIS attrapés. */
+function testM1B_prefixeVoisinsNonAttrapes(etat) {
+  var voisins = ['org_representant_nom', 'org_representant_tel', 'org_representant_mail',
+    'org_president_nom', 'org_president_tel', 'org_president_mail',
+    'org_recompense_U8',      // sans le « s » : ce n'est pas le préfixe
+    'org_recompenses',        // sans le « _ » final ni catégorie
+    'org_recompenses_',       // le préfixe nu : aucune catégorie derrière
+    'recompenses_U8',         // ne commence pas par org_
+    'xorg_recompenses_U8'];   // le préfixe n'est pas AU DÉBUT
+  var cles = clesAutorisationAEffacer(voisins);
+  voisins.forEach(function (k) {
+    _ffrAssert(etat, cles.indexOf(k) === -1, 'M1-B (R-B2) : ' + k + ' n\'est PAS emporté par le préfixe');
+  });
+  _ffrAssert(etat, cles.length === 26, 'M1-B (R-B2) : aucun voisin n\'a grossi la liste');
+}
+
+/** ① Aucune clé étrangère au dossier d'autorisation n'entre dans la liste. */
+function testM1B_aucuneCleHorsAutorisation(etat) {
+  var conserves = ['tournoi_nom', 'perfs_mot_cle_club', 'email_expediteur', 'terrains_physiques',
+    'cle_admin', 'boutique_disponible'];
+  var cles = clesAutorisationAEffacer(conserves);
+  conserves.forEach(function (k) {
+    _ffrAssert(etat, cles.indexOf(k) === -1, 'M1-B : ' + k + ' n\'est jamais retenu par ce lot');
+  });
+}
+
+/* --- ② Le BRANCHEMENT : faux onglet Config écrivable, en mémoire, sans Sheet réel --- */
+
+/** Faux onglet minimal : lecture, écriture cellule, suppression et insertion de lignes. */
+function _m1bFauxOnglet(lignes) {
+  var d = lignes.map(function (l) { return l.slice(); });
+  function largeur() {
+    var m = 0;
+    d.forEach(function (l) { if (l.length > m) m = l.length; });
+    return m;
+  }
+  var api = {
+    getLastRow: function () { return d.length; },
+    getLastColumn: function () { return largeur(); },
+    getDataRange: function () { return api.getRange(1, 1, d.length, largeur()); },
+    getRange: function (r, c, nr, nc) {
+      nr = nr || 1; nc = nc || 1;
+      return {
+        getValues: function () {
+          var out = [];
+          for (var i = 0; i < nr; i++) {
+            var ligne = [];
+            for (var j = 0; j < nc; j++) {
+              var v = (d[r - 1 + i] || [])[c - 1 + j];
+              ligne.push(v === undefined ? '' : v);
+            }
+            out.push(ligne);
+          }
+          return out;
+        },
+        setValue: function (v) { if (!d[r - 1]) d[r - 1] = []; d[r - 1][c - 1] = v; },
+        setValues: function (vals) {
+          for (var i = 0; i < vals.length; i++) {
+            if (!d[r - 1 + i]) d[r - 1 + i] = [];
+            for (var j = 0; j < vals[i].length; j++) { d[r - 1 + i][c - 1 + j] = vals[i][j]; }
+          }
+        },
+        clearContent: function () {
+          for (var i = 0; i < nr; i++) {
+            for (var j = 0; j < nc; j++) { if (d[r - 1 + i]) d[r - 1 + i][c - 1 + j] = ''; }
+          }
+        },
+        setNumberFormat: function () { return this; }
+      };
+    },
+    deleteRow: function (r) { d.splice(r - 1, 1); },
+    insertRowsBefore: function (r, n) { for (var i = 0; i < n; i++) { d.splice(r - 1, 0, []); } },
+    _lignes: function () { return d; }
+  };
+  return api;
+}
+
+/** Config factice : les 36 `org_*` RENSEIGNÉS, des récompenses (dont une orpheline), les champs
+ *  historiquement effacés, et deux conservations délibérées. ⛔ Ni affiche ni photo de parking :
+ *  leurs identifiants déclencheraient un appel Drive réel, et un test ne doit avoir AUCUN effet. */
+function _m1bClasseurFactice() {
+  var lignes = [['— Réglages —', '']];
+  CHAMPS_AUTORISATION.forEach(function (k) { lignes.push([k, 'VALEUR-' + k]); });
+  lignes.push(['org_recompenses_U8', 'oui']);
+  lignes.push(['org_recompenses_U10', 'non']);
+  lignes.push(['org_recompenses_U6_disparue', 'oui']);   // catégorie supprimée : clé orpheline
+  ['tournoi_nom', 'tournoi_date', 'heure_debut', 'referent_nom', 'date_limite_confirmation',
+   'buvette_disponible', 'date_limite_reponse'].forEach(function (k) { lignes.push([k, 'X']); });
+  lignes.push(['perfs_mot_cle_club', 'MOTCLE']);         // conservé délibérément
+  lignes.push(['email_expediteur', 'envoi@club.fr']);    // conservé délibérément
+  lignes.push(['tournoi_publie', 'oui']);
+  lignes.push(['categorie', 'presente']);                // en-tête zone B
+  lignes.push(['U10', 'oui']);
+  var config = _m1bFauxOnglet(lignes);
+  return { _config: config, getSheetByName: function (nom) { return nom === 'Config' ? config : null; } };
+}
+
+/** Valeur d'un paramètre dans le faux onglet ('' si absent, null si la LIGNE a disparu). */
+function _m1bValeur(onglet, nom) {
+  var d = onglet._lignes();
+  for (var i = 0; i < d.length; i++) { if (d[i][0] === nom) { var v = d[i][1]; return v === undefined ? '' : v; } }
+  return null;
+}
+
+/** ② L'effacement VIDE la valeur, ne supprime pas la ligne, et ne crée rien pour une clé absente. */
+function testM1B_effacementVideSansSupprimerNiCreer(etat) {
+  var cl = _m1bClasseurFactice();
+  var avant = cl._config._lignes().length;
+  var n = reinitialiserDonneesAutorisationTournoi(cl);
+  _ffrAssert(etat, n === 29, 'M1-B : 26 champs + 3 récompenses soumis à effacement (constaté ' + n + ')');
+  _ffrAssert(etat, cl._config._lignes().length === avant,
+    'M1-B : AUCUNE ligne supprimée — on vide la valeur, on ne retire pas le paramètre');
+  _ffrAssert(etat, _m1bValeur(cl._config, 'org_medecin_nom') === '',
+    'M1-B : org_medecin_nom vidé, mais sa ligne existe toujours');
+  // Une clé de l'allowlist ABSENTE du classeur ne doit pas être créée.
+  var lignes = [['— Réglages —', ''], ['org_club_nom', 'AS Exemple'], ['tournoi_publie', 'oui']];
+  var petit = _m1bFauxOnglet(lignes);
+  var cl2 = { getSheetByName: function (nom) { return nom === 'Config' ? petit : null; } };
+  reinitialiserDonneesAutorisationTournoi(cl2);
+  _ffrAssert(etat, petit._lignes().length === 3, 'M1-B : aucune ligne CRÉÉE pour une clé absente');
+  _ffrAssert(etat, _m1bValeur(petit, 'org_medecin_nom') === null, 'M1-B : org_medecin_nom reste inexistant');
+}
+
+/** ② ⭐ LE TEST DE BRANCHEMENT : `reinitialiserTournoi` — le chemin RÉELLEMENT appelé par
+ *  l'application — déclenche bien l'effacement, et respecte D-043 champ par champ. */
+function testM1B_branchementDepuisReinitialisation(etat) {
+  var cl = _m1bClasseurFactice();
+  reinitialiserTournoi(cl);
+
+  var permanentsIntacts = _M1B_PERMANENTS.every(function (k) {
+    return _m1bValeur(cl._config, k) === 'VALEUR-' + k;
+  });
+  _ffrAssert(etat, permanentsIntacts,
+    'M1-B ⭐ branchement : les 10 permanents du club SURVIVENT à une réinitialisation complète');
+
+  var vides = CHAMPS_AUTORISATION_A_REINITIALISER.filter(function (k) {
+    return _m1bValeur(cl._config, k) === '';
+  });
+  _ffrAssert(etat, vides.length === 26,
+    'M1-B ⭐ branchement : les 26 champs d\'édition sont vidés (constaté ' + vides.length + '/26)');
+
+  ['org_recompenses_U8', 'org_recompenses_U10', 'org_recompenses_U6_disparue'].forEach(function (k) {
+    _ffrAssert(etat, _m1bValeur(cl._config, k) === '',
+      'M1-B ⭐ branchement : ' + k + ' vidé (récompense, orpheline comprise)');
+  });
+}
+
+/** ② NON-RÉGRESSION : ce que la réinitialisation effaçait déjà l'est toujours, et ce qu'elle
+ *  conservait délibérément est toujours conservé. */
+function testM1B_effacementsHistoriquesNonRegresses(etat) {
+  var cl = _m1bClasseurFactice();
+  reinitialiserTournoi(cl);
+  ['tournoi_nom', 'tournoi_date', 'heure_debut', 'referent_nom', 'date_limite_confirmation',
+   'buvette_disponible', 'date_limite_reponse'].forEach(function (k) {
+    _ffrAssert(etat, _m1bValeur(cl._config, k) === '', 'M1-B : ' + k + ' toujours effacé (non-régression)');
+  });
+  _ffrAssert(etat, _m1bValeur(cl._config, 'perfs_mot_cle_club') === 'MOTCLE',
+    'M1-B : perfs_mot_cle_club toujours CONSERVÉ (conservation délibérée)');
+  _ffrAssert(etat, _m1bValeur(cl._config, 'email_expediteur') === 'envoi@club.fr',
+    'M1-B : email_expediteur toujours CONSERVÉ (config d\'infrastructure)');
+  _ffrAssert(etat, _m1bValeur(cl._config, 'tournoi_publie') === 'non',
+    'M1-B : le tournoi redevient masqué');
+  _ffrAssert(etat, _m1bValeur(cl._config, 'U10') === null,
+    'M1-B : les catégories de la zone B sont supprimées');
+}
+
+/* --- ③ L'EFFET MÉTIER : ce que le dossier d'autorisation affiche après un vidage --- */
+
+/** ⭐ LE BUT DE D-043 : après vidage, la demande n'est plus artificiellement « toute saisie ». */
+function testM1B_dossierNestPlusEntierementSaisi(etat) {
+  var pleine = {};
+  CHAMPS_AUTORISATION.forEach(function (k) { pleine[k] = 'V-' + k; });
+  var avant = assemblerDossierAutorisation({}, { global: pleine, categories: [] }, { formes: [] });
+
+  var apres = {};
+  _M1B_PERMANENTS.forEach(function (k) { apres[k] = 'V-' + k; });   // les 10 survivent
+  CHAMPS_AUTORISATION_A_REINITIALISER.forEach(function (k) { apres[k] = ''; }); // les 26 vidés
+  var d = assemblerDossierAutorisation({}, { global: apres, categories: [] }, { formes: [] });
+
+  _ffrAssert(etat, d.nbManquants > avant.nbManquants,
+    'M1-B ⭐ après réinitialisation, le compteur de manquants AUGMENTE (' + avant.nbManquants +
+    ' → ' + d.nbManquants + ')');
+  _ffrAssert(etat, d.nbManquants > 0, 'M1-B ⭐ le compteur n\'annonce plus 0 champ manquant');
+  var medecin = _autoChamp(d, 'édecin');
+  _ffrAssert(etat, !medecin || medecin.etat !== 'saisi',
+    'M1-B : le médecin de l\'édition passée n\'est plus présenté comme « saisi »');
+}
+
+/** Les 10 permanents restent utilisables : ils comptent toujours comme « saisi ». */
+function testM1B_permanentsRestentSaisis(etat) {
+  var g = {};
+  _M1B_PERMANENTS.forEach(function (k) { g[k] = 'V-' + k; });
+  CHAMPS_AUTORISATION_A_REINITIALISER.forEach(function (k) { g[k] = ''; });
+  _ffrAssert(etat, champSaisiAutorisation({ global: g }, 'org_president_nom').etat === 'saisi',
+    'M1-B : le président reste « saisi » après réinitialisation');
+  _ffrAssert(etat, champSaisiAutorisation({ global: g }, 'org_code_club').etat === 'saisi',
+    'M1-B : le code club reste « saisi » après réinitialisation');
+  _ffrAssert(etat, champSaisiAutorisation({ global: g }, 'org_medecin_nom').etat !== 'saisi',
+    'M1-B : le médecin, lui, n\'est plus « saisi »');
+}
+
+/** `org_equipes_etrangeres` vidé ⇒ le défaut DOCUMENTÉ « non » est restitué (jamais « manquant »). */
+function testM1B_equipesEtrangeresDefautRestitue(etat) {
+  var r = champSaisiAutorisation({ global: { org_equipes_etrangeres: '' } }, 'org_equipes_etrangeres');
+  _ffrAssert(etat, r.valeur === 'non' && r.etat === 'calcule',
+    'M1-B : org_equipes_etrangeres vidé ⇒ « non » (défaut documenté), pas « manquant »');
+}
+
+/** ⚠️ STOCKAGE ≠ AFFICHAGE. `org_type_terrain` est vidé du classeur, mais si des terrains réels
+ *  déclarent leur nature, le champ reste CALCULÉ — ce n'est pas une survivance de l'ancienne
+ *  saisie, c'est une valeur reconstruite depuis une donnée actuelle. Le test le fige pour qu'on
+ *  ne « corrige » pas un jour ce comportement légitime en croyant réparer un oubli. */
+function testM1B_typeTerrainCascadeLegitime(etat) {
+  var avecTerrains = { global: { org_type_terrain: '',
+    terrains_physiques: '[{"nom":"T1","nature":"Synthétique"}]' }, categories: [] };
+  var n = naturesTerrainsAutorisation(avecTerrains);
+  _ffrAssert(etat, n.natures.length === 1 && n.natures[0] === 'Synthétique',
+    'M1-B : type de terrain vidé ⇒ la nature vient des terrains déclarés (cascade légitime)');
+  var sansTerrains = { global: { org_type_terrain: '' }, categories: [] };
+  _ffrAssert(etat, naturesTerrainsAutorisation(sansTerrains).natures.length === 0,
+    'M1-B : sans terrain déclaré, rien n\'est inventé — le champ retombe sur la saisie, vide');
 }

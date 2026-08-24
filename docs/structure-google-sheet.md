@@ -159,9 +159,17 @@ créés par `setupSheet()`.
 > 📖 **Le libellé officiel de chaque champ** — celui qu'emploie le formulaire fédéral — est dans
 > [`industrialisation/M1-LIBELLES-OFFICIELS.md`](industrialisation/M1-LIBELLES-OFFICIELS.md).
 
-**Colonne « Réinit. »** : comportement **attendu** après la décision **D-043**.
-⚠️ **`À VIDER` décrit la CIBLE, pas l'état actuel** — aujourd'hui, **les 36 survivent** (voir
-**R-033**). La correction est le lot **M1-B**, ⛔ **non fait à ce jour**.
+**Colonne « Réinit. »** : comportement décidé par **D-043**, appliqué par le lot **M1-B**.
+
+> ⚡ **Où en est cette colonne, au 2026-08-24 — et la distinction est capitale** :
+>
+> | | |
+> |---|---|
+> | **Dans le dépôt** *(`backend/Code.gs`)* | ✅ **APPLIQUÉE** — `reinitialiserTournoi` vide les 26 champs d'édition et les `org_recompenses_*`, et conserve les 10 permanents. Couvert par des tests automatiques |
+> | **Sur le serveur en service chez Google** | ⛔ **PAS ENCORE** — le fichier n'y a pas été recollé. **Une réinitialisation réelle conserve donc encore les 36**, comme avant |
+>
+> ➡️ Tant que le redéploiement n'a pas eu lieu *(`deploiement.md`)*, la colonne décrit **le code du
+> dépôt**, pas le comportement observable en production *(`CLAUDE.md` §13.6)*.
 
 **Familles** *(D-042)* : 🏛️ permanente du club · 🗓️ événementielle · ⚙️ propre à Maxilou.
 

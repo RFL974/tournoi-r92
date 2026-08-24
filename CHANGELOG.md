@@ -12,6 +12,28 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Réinitialiser un tournoi n'emporte plus les infos du club — mais efface enfin celles de l'édition passée — 2026-08-24
+
+**Ce qui se passait.** En réinitialisant pour préparer l'édition suivante, **toute la demande
+d'autorisation restait remplie avec les informations de l'édition précédente** : le médecin, le
+poste de secours, le nombre d'arbitres, le traiteur, le prix des repas, les récompenses. Elles
+étaient présentées comme **« saisi »**, et le compteur annonçait **0 champ manquant**.
+
+**Pourquoi c'était grave.** Le dossier pouvait partir à la Ligue **complet en apparence** — avec un
+médecin qui ne serait pas là et un prix qui n'était plus le bon. ⭐ **Rien ne le signalait**, et
+c'est ce qui rend ce défaut plus dangereux qu'un champ vide : un champ vide se voit.
+
+**Ce qui change.** Une réinitialisation efface désormais les **26 informations qui décrivent une
+édition**, ainsi que les récompenses de chaque catégorie. ⛔ **Les informations permanentes du club
+— nom, code, label, président, représentant — sont conservées** : elles ne changent pas d'un
+tournoi à l'autre, et les ressaisir chaque année n'aurait servi à rien.
+
+**Ce que l'organisateur voit.** Le message de confirmation dit maintenant **ce qui part et ce qui
+reste**. ⚠️ Et une conséquence à connaître : entre cette étape et l'écran « Mon club » à venir, les
+informations comme le type de terrain ou le nombre de vestiaires utilisés **sont à ressaisir** à
+chaque édition. C'est un choix assumé — *un chiffre faux sur un document fédéral est plus grave
+qu'une ressaisie*.
+
 ### La date du tournoi ne dépend plus du téléphone qui la regarde — 2026-08-22
 
 **Ce qui se passait.** Une date réglée au **13 mars 2027** pouvait s'afficher **« 12 mars 2027 »** —
