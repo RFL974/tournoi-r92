@@ -7232,3 +7232,161 @@ C'est un **test qui l'a attrapé**, pas une relecture.
 Aucun commit · aucun push · **aucun redéploiement** · **aucun fichier `backend/` touché** · aucune
 modification du classeur · ⛔ **le dépôt `boutique-r92` n'a pas été ouvert en écriture**.
 🔧 **M1 et le redéploiement de L8 restent entiers.**
+
+---
+
+## 17. M1-A — la mise à plat documentaire du chantier « profil du club »
+
+**2026-08-24** · ✅ **commit `9abaebc`** sur la branche `claude/m1-club-config-analysis-zrqy6g`.
+⛔ **Aucune fusion vers `main`.** ⛔ **Aucun code, aucun test, aucune configuration, aucun
+déploiement, aucune donnée du classeur.**
+
+### 1. Ce qui a été demandé, et ce qui a changé en route
+
+Romain a demandé de **remettre en question le périmètre de M1** avant toute modification. M1 était
+inscrit au plan comme une **opération manuelle** : vider `url_site_association` et `url_instagram`,
+remplacer l'affiche du tournoi.
+
+L'audit a conclu que **ces valeurs sont le symptôme, pas la cause** : l'application **n'a aucun
+endroit où un club se décrit**. Les vider retire l'attribution résiduelle ; cela ne donne à aucun
+club le moyen de mettre la sienne.
+
+➡️ **M1 devient un chantier d'externalisation progressive en 6 étapes M1-A → M1-F**
+*(`PLAN.md` **§15**)*. ⭐ **Arbitrage de Romain** : *« je préfère que la neutralisation finale soit
+la conséquence de la bonne architecture plutôt qu'une modification temporaire que nous devrions
+reprendre ensuite. »*
+
+### 2. Le défaut qui commande la suite
+
+`reinitialiserTournoi` *(`Code.gs:7437-7512`)* efface **40 paramètres** de la zone A.
+⛔ **Aucun n'est un `org_*` : les 36 sur 36 survivent**, dont **26 purement événementiels**.
+
+**Ce que ça produit** : un tournoi neuf rouvre la demande d'autorisation **déjà remplie** avec les
+valeurs de l'édition passée — médecin, association de secours, prix des repas, nombre d'arbitres —
+marquées *« saisi »*, et le compteur annonce **0 champ manquant**. Le dossier peut partir à la Ligue
+avec des chiffres périmés, **sans aucun signalement**.
+
+> ⚠️ **Ce n'est PAS une découverte, et il faut le dire.** **R-033 le décrivait depuis le
+> 2026-08-06**, sous l'angle des **données personnelles** : *« la réinitialisation conserve […] tous
+> les contacts de la demande FFR »*. L'audit du domaine B l'avait vu, et avait même noté que
+> *« `CHAMPS_AUTORISATION` n'est utilisé qu'en écriture, jamais en effacement »*.
+>
+> **Ce qui est réellement nouveau** : ① **l'étendue** — 36 sur 36, pas seulement les contacts ;
+> ② **la nature de la conséquence** — elle est aussi **métier**, pas seulement RGPD.
+> ➡️ **R-033 a donc été ÉLARGI par un addendum daté, jamais dupliqué.**
+
+### 3. Les quatre décisions
+
+| | Ce qu'elle porte |
+|---|---|
+| **D-042** | Principe directeur *(et son garde-fou : une habitude n'est pas une vérité)* · les **7 familles** · ⭐ le **cycle de vie A/B/C** · la **règle des rôles** · le **profil vivant** |
+| **D-043** | Les 36 `org_*` : **10 conservés / 26 vidés + récompenses**, et les 3 points d'application |
+| **D-044** | Profil ≠ **répertoire de tiers** · logo ≠ **charte graphique** |
+| **D-045** | **Fidélité aux libellés officiels** · **nom officiel ≠ nom d'usage** |
+
+⭐ **Le cœur du chantier tient en trois lignes** *(D-042)* :
+🏛️ **permanente ⇒ lecture directe** · 🏟️ **proposée ⇒ copie volontaire, aucun lien vivant** ·
+🗓️ **événementielle ⇒ aucun lien**.
+
+### 4. Le document neuf, et comment il a été fabriqué
+
+🆕 **`M1-LIBELLES-OFFICIELS.md`** — la table **clé technique ↔ libellé officiel FFR ↔ usage**.
+
+⚠️ **Les libellés ne sont pas lisibles directement dans le PDF** : il emploie des **polices en
+sous-ensemble à encodage propre**. Une lecture naïve renvoie du charabia, et **la page 5 ne renvoie
+rien du tout**. La méthode qui marche — et elle est écrite dans le document, sans quoi personne ne
+pourrait la revérifier : extraire les **26 tables `ToUnicode`** du PDF, décompresser les **7 flux de
+page**, puis décoder **police par police** *(la page 5 en utilise **six**)*.
+
+**Résultat : 21 libellés de Maxilou s'écartent du vocabulaire officiel.** Le plus parlant :
+Maxilou demande *« Nombre de vestiaires »*, le formulaire demande *« Nombre de vestiaires
+**utilisés** »*. ⭐ **Un stade peut en avoir six et n'en utiliser que quatre — le mot manquant
+changeait la réponse.**
+
+### 5. ⚠️ Une correction que la session a dû se faire à elle-même
+
+Le plan validé annonçait de corriger `admin-autorisation.js` de **1 011 → 1 014** dans
+`architecture.md`. **Deux choses étaient fausses.**
+
+**① Le nombre.** `1 014` venait d'un lecteur comptant une **ligne fantôme** après le dernier saut de
+ligne. La méthode écrite par le projet — `architecture.md` §7, *« `wc -l` sur chaque fichier »* —
+donne **1013**.
+
+**② Et surtout : `1 011` n'était pas FAUX, il était DATÉ.** Le §7 annonce *« Relevé du
+2026-08-09 »*, et `git show` confirme qu'à cette date le fichier faisait **exactement 1 011
+lignes**. Il a grandi avec le lot CF-4b/L8.
+
+> 🎯 **La leçon, et elle vaut au-delà de ce chiffre.** Corriger **une seule ligne** d'un tableau daté
+> l'aurait rendu **plus trompeur qu'avant** : un chiffre frais parmi vingt-cinq anciens, sans qu'on
+> puisse dire lesquels. ➡️ **Les 26 fichiers ont été remesurés et le relevé redaté.** Contrôle
+> final : **26/26 concordent avec `wc -l`.**
+>
+> ⭐ **C'est exactement ce à quoi sert le §7** : *un chiffre juste ne prouve pas une méthode juste ;
+> seule une méthode écrite peut être prise en défaut.*
+
+### 6. Le registre
+
+| | |
+|---|---|
+| 🆕 **R-095** *(P2)* | **Le nom du stade disparaît du document déposé à la Ligue** — le formulaire demande *« Adresse du tournoi (stade, ville, cp) »* en **un seul champ**, et `admin-autorisation.js:698` écrit l'adresse **OU** le stade. ⛔ **HORS M1** *(arbitrage **H13** de Romain)* : le critère de M1-E1 est *« PDF identique »*, il **masquerait** la correction |
+| 🆕 **R-096** *(P2)* | **Douze réglages n'ont aucun écran** et s'écrivent à la main dans le classeur, dont `nb_demi_journees`, **clé de la grille de temps FFR** |
+| ⚡ **R-033** | **Périmètre élargi** *(voir §2)*. Cible fixée par **D-043**, correction en **M1-B** — ⛔ **NON FAITE** |
+
+> ⛔ **Rien n'a été inscrit là où le registre couvrait déjà** : les miroirs serveur/navigateur
+> restent **R-044** et **R-082**, les bibliothèques orphelines **R-080**, la destructivité de la
+> réinitialisation **R-016**.
+
+### 7. ⛔ Ce qui n'a PAS pu être fait, et ce n'est pas un choix
+
+Romain avait **explicitement autorisé** la lecture seule de `url_site_association` et
+`url_instagram` dans le classeur en service, puis leur vidage **si** elles portaient encore une
+attribution institutionnelle.
+
+⛔ **La lecture est impossible depuis cette session** : la politique réseau de l'environnement
+distant refuse `script.google.com` *(**403** au `CONNECT`)*. Sa documentation interdit de contourner
+un refus de politique. ➡️ **La condition n'a donc pas pu être établie, et rien n'a été vidé.**
+
+⛔ **Aucune valeur du classeur n'a été lue ni modifiée.** **La lecture reste en attente**, et peut
+être faite depuis un navigateur : l'action `getConfig` est **publique**.
+
+### 8. Corrections d'état apportées à la documentation de suivi
+
+- **`ETAT.md` / R-094** — la ligne annonçait *« appliqué localement, non commité »*. **C'était faux
+  depuis le 2026-08-22 à 17 h 04** : le travail **est** le commit `94cd6a2`, présent sur
+  `origin/main`. ⚠️ *(La fiche **§16** de ce journal, elle, **n'est pas réécrite** : elle disait vrai
+  à sa date — règle de l'en-tête de ce fichier.)* La mention **« non redéployé » reste vraie**, et
+  vaut aussi pour **CF-4b/L8** ;
+- **`ETAT.md` / CF-4b** — *« 2 lots sur 8 »* datait du jour de l'ouverture ; **les 8 lots sont
+  faits**. Le chantier reste **non clos** *(redéploiement + M1)* ;
+- **`architecture.md`** — voir §5.
+
+### 9. Contrôles passés
+
+| Contrôle | Résultat |
+|---|---|
+| Les 36 `org_*` documentés = ceux du code | ✅ **36 = 36**, aucun écart · et **3 sources concordent** *(`creerOngletConfig` = `CHAMPS_AUTORISATION` = `AUTORISATION_SAISIE`)* |
+| Les libellés officiels retrouvés dans le PDF | ✅ **55/55** *(le seul « manquant » était une notation compacte, vérifiée ensuite une à une)* |
+| Comptes de lignes de `architecture.md` | ✅ **26/26** concordent avec `wc -l` |
+| Liens relatifs des 7 documents | ✅ **45/45** valides |
+| Comptes structurels remesurés | ✅ **inchangés** : 65 actions · 8 pages · 26 fichiers JS · 4 bibliothèques · 12 onglets · 20 scripts |
+| Fichiers hors périmètre dans l'index | ✅ **aucun** — 7 fichiers indexés nommément |
+
+### 10. Documents ACTIFS vérifiés *(`CLAUDE.md` §12.4 point 2)*
+
+- ✅ **Corrigés dans le lot** : `docs/architecture.md` *(11 comptes de lignes, relevé redaté)* ·
+  `docs/structure-google-sheet.md` *(les 36 `org_*` + 4 paramètres non documentés)* ;
+- ✅ **Vérifiés, ne deviennent PAS faux** : `README.md` *(aucune page, aucun fichier, aucun onglet
+  nouveau)* · `backend/README.md` *(aucun fichier serveur touché)* · `docs/deploiement.md` *(aucun
+  repère de redéploiement ne bouge — ni le bilan de tests, ni les nombres de lignes de `Code.gs` et
+  `Tests.gs`)* · `CHANGELOG.md` — ⭐ **et c'est un choix, pas un oubli** : ce lot **ne change ni ce
+  que l'application fait, ni ce qu'elle montre, ni ce sur quoi on peut compter**. Le journal du
+  produit s'ouvrira à **M1-B**, qui change réellement un comportement.
+
+### 11. ⛔ Ce que ce lot n'a PAS fait
+
+Aucune fusion vers `main` · aucun code · aucun test · aucune configuration · **aucun
+redéploiement** · **aucune donnée du classeur lue ou modifiée** · ⛔ **l'affiche, `tournoi_affiche_id`
+et le logo n'ont pas été touchés** · ⛔ **M1-B n'est pas commencée.**
+
+🔧 **Reste entier** : la lecture des deux URL · le redéploiement de **L5** et **L8** · **M1-B → M1-F**
+· la clôture de **CF-4b**, et **CF-4a** suspendue derrière elle.
