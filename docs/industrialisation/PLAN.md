@@ -2639,5 +2639,5 @@ M1 est terminé quand **les huit conditions** sont réunies :
 
 | Étape | État |
 |---|---|
-| **M1-A** | ✅ **FAIT et SAUVEGARDÉ** — commits **`9abaebc`** *(7 documents)* et **`b65a6b0`** *(journal §17)*, poussés sur `claude/m1-club-config-analysis-zrqy6g`. ⛔ **NON fusionné dans `main`** — en attente de la validation de Romain. ⏳ **Reste en attente dans M1-A** : la lecture des deux URL, **bloquée par la politique réseau** de l'environnement |
+| **M1-A** | 🏁 **TERMINÉE, FUSIONNÉE ET PUBLIÉE dans `main`** le 2026-08-24 — **fast-forward**, ⛔ **sans réécrire un seul commit ni créer de commit de fusion** : **`9abaebc`** *(les 7 documents)* · **`b65a6b0`** *(journal §17)* · **`aff6d5f`** *(correctif de statut et de déploiement)*. ⏳ **Une seule chose reste en attente dans M1-A** : la lecture des deux URL du classeur, **bloquée par la politique réseau** de l'environnement *(403 sur `script.google.com`)* — ⛔ **ce n'est pas un oubli, et cela ne bloque pas M1-B** |
 | **M1-B → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite** |

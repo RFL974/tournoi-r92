@@ -7451,3 +7451,52 @@ d'autres passages des mêmes fichiers :
 ⛔ Aucune fusion vers `main` · aucun code · **aucun redéploiement** · **aucune donnée du classeur** ·
 ⛔ **les commits `9abaebc` et `b65a6b0` n'ont été ni amendés ni rebasés** — leurs SHA sont intacts ·
 ⛔ **M1-B n'est pas commencée.**
+
+### 13. 🏁 Addendum du 2026-08-24 *(fin de journée)* — M1-A est fusionnée dans `main`
+
+> ⚠️ **Les §11 et §12.4 ci-dessus écrivent « Aucune fusion vers `main` ». C'était VRAI à leur date**,
+> et ces lignes **ne sont pas réécrites** : au moment où chacun de ces deux lots a été produit,
+> aucune fusion n'avait eu lieu. **Le nouvel état s'ajoute, il ne remplace pas.**
+
+**Romain a validé M1-A le 2026-08-24 et autorisé sa fusion contrôlée.**
+
+| | |
+|---|---|
+| **Mode** | ⭐ **Fast-forward UNIQUEMENT** *(`git merge --ff-only`)* — exigé par Romain pour **préserver les trois SHA** |
+| **Avant** | `origin/main` = `94cd6a2` · branche = `aff6d5f`, **3 commits d'avance, 0 de retard** |
+| **Après** | `origin/main` = **`aff6d5f`** |
+| **Commits réécrits** | ⛔ **aucun** — ni squash, ni rebase, ni amend |
+| **Commit de fusion créé** | ⛔ **aucun** — le fast-forward n'en produit pas |
+| **Périmètre réellement publié** | **8 fichiers, tous `.md`, tous sous `docs/`** — 1 412 insertions, 24 suppressions |
+
+**Les trois commits, désormais dans l'historique de `main`** : `9abaebc` · `b65a6b0` · `aff6d5f`.
+
+#### 13.1 — ⚠️ Un piège de lecture rencontré pendant la fusion, et il vaut d'être noté
+
+La sortie du `git merge --ff-only` a listé **33 fichiers**, dont `backend/Code.gs`, `backend/Tests.gs`
+et une dizaine de fichiers `frontend/`. **De quoi croire que M1-A touchait au serveur.**
+
+⛔ **Ce n'était pas le cas.** La cause est ailleurs : **le `main` LOCAL de cette session était resté à
+`ce64f35`, trois commits derrière `origin/main`**. Le fast-forward a donc rattrapé **six** commits —
+les trois de M1-A **plus** les trois qui étaient déjà publiés *(`0f3dadb`, `be57f97`, `94cd6a2`)*.
+**`backend/Code.gs` vient de `be57f97`** *(le lot L8)*, présent sur `origin/main` depuis le
+2026-08-22.
+
+> 🎯 **La leçon, et elle est simple** : *ce qu'un fast-forward affiche n'est pas ce qu'il publie.*
+> Le périmètre réellement poussé se lit avec `git diff origin/main..HEAD` **avant** le push — et il
+> donnait bien **8 fichiers `.md`**.
+
+#### 13.2 — Les deux surfaces, une fois de plus
+
+⛔ **Le push n'a déclenché AUCUNE publication.** Vérifié dans les exécutions GitHub Actions : **aucun
+run du workflow Pages pour `aff6d5f`**. C'est le comportement attendu — le workflow ne se déclenche
+que sur `paths: frontend/**`, et cette fusion ne touche que `docs/`.
+
+➡️ **Donc : ni frontend republié, ni backend redéployé.** ⛔ **Rien n'a changé dans ce que voit un
+utilisateur.**
+
+#### 13.3 — Ce que cet addendum n'a PAS fait
+
+⛔ Aucun redéploiement Apps Script · aucun collage de `Code.gs` ni de `Tests.gs` · **aucune donnée du
+classeur** · aucune modification des deux URL *(toujours **non lues** — politique réseau)* · aucune
+modification de l'affiche · ⛔ **M1-B n'est pas commencée.**

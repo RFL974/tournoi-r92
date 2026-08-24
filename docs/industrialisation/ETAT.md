@@ -9,17 +9,43 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-**Dernière mise à jour** : 2026-08-24 *(suite)* — 🏛️ **LE CHANTIER M1 EST OUVERT, ET SON ÉTAPE M1-A
-EST ÉCRITE, COMMITÉE ET SAUVEGARDÉE.**
-✅ **Commit principal `9abaebc`** *(7 fichiers documentaires)* · ✅ **journal de session `b65a6b0`**
-*(`SESSIONS.md` §17)* · ✅ **les deux poussés** sur la branche de travail
-`claude/m1-club-config-analysis-zrqy6g`.
-⛔ **NON FUSIONNÉE dans `main`** — `origin/main` reste à `94cd6a2`. ⛔ **M1-B n'est pas commencée.**
+**Dernière mise à jour** : 2026-08-24 *(fin de journée)* — 🏁 **M1-A EST TERMINÉE, FUSIONNÉE ET
+PUBLIÉE DANS `main`.**
 
-> ⚠️ **Cette ligne annonçait « non commitée, non poussée »** — c'était vrai à l'heure où elle a été
-> écrite, et **faux dès le commit `9abaebc`**. ⭐ **C'est le troisième décrochage du même type en
-> trois jours** *(après R-094 et le « 2 lots sur 8 » de CF-4b)*, et la cause est toujours la même :
-> **un état écrit AVANT le geste, jamais relu APRÈS.** C'est **§12.4** appliqué à moitié.
+**Ses trois commits sont dans l'historique de `main`**, par **fast-forward** — ⛔ **aucun n'a été
+réécrit, aucun commit de fusion créé** :
+
+| Commit | Ce qu'il porte |
+|---|---|
+| **`9abaebc`** | Les 7 documents de M1-A *(dont 🆕 `M1-LIBELLES-OFFICIELS.md`)* |
+| **`b65a6b0`** | Le journal de session — `SESSIONS.md` **§17** |
+| **`aff6d5f`** | Le correctif : statut de M1-A, et **L5 était bien déployé** |
+
+`origin/main` : **`94cd6a2` → `aff6d5f`**.
+
+**L'état exact au terme de M1-A** *(chaque ligne est vérifiée, aucune n'est déduite)* :
+
+| | |
+|---|---|
+| ✅ **M1-A** | **terminée, fusionnée, publiée** |
+| ⛔ **M1-B** | **PAS commencée** — et elle ne démarre pas sans autorisation explicite |
+| ⛔ **Les deux URL du classeur** | **toujours PAS LUES** — la politique réseau de l'environnement refuse `script.google.com` *(403 au `CONNECT`)*. ⏳ **Reste en attente** |
+| ⛔ **Données du classeur** | **aucune modifiée**, aucune lue |
+| ⛔ **Backend M1** | **aucun redéploiement** — M1-A ne touche **aucun** fichier `backend/` |
+| ⚠️ **CF-4b/L8** | sa **part backend** reste **NON redéployée** *(sa part frontend, elle, est publiée)* |
+| ✅ **CF-4b/L5** | reste **redéployé**, prouvé par un email réellement reçu |
+| ✅ **R-094** | **déjà en service** — sa correction est **frontend**, publiée par GitHub Pages le 22/08 à 17:04 UTC |
+
+> ⚠️ **Ce bloc annonçait successivement « non commitée, non poussée » puis « NON FUSIONNÉE dans
+> `main` »** — vrai à chaque fois **au moment où c'était écrit**, et faux **dès le geste suivant**.
+> ⭐ **C'est le quatrième décrochage du même type en trois jours** *(R-094, le « 2 lots sur 8 » de
+> CF-4b, L8, et celui-ci)*, et la cause ne change pas : **un état écrit AVANT le geste, jamais relu
+> APRÈS.** C'est **§12.4** appliqué à moitié — le point 1 est fait, mais **trop tôt**.
+>
+> 🎯 **Ce que quatre répétitions démontrent** : ce n'est plus une inattention, c'est **un défaut de
+> séquence**. La documentation de suivi devrait être écrite **après** le commit, pas avant — ou
+> alors relue juste après. ⏳ **À arbitrer avec Romain** : cela mériterait peut-être une règle
+> permanente, au même titre que **§8 bis** et **§8 ter**.
 
 ⚡ **M1 a changé de nature.** Ce n'était qu'une opération manuelle *(vider deux URL, remplacer une
 affiche)* ; c'est désormais **l'externalisation progressive des données propres à l'organisation**,
@@ -495,9 +521,8 @@ est **suspendue derrière elle**. **CF-3, CF-5 à CF-13 et CF-14 ne sont pas com
 
 🏛️ **ET UN CHANTIER DE PLUS EST OUVERT DEPUIS LE 2026-08-24 : M1 — le profil du club**
 *(`PLAN.md` **§15**)*. Il n'appartient ni au plan d'audit ni au chantier Confiance : il en **sort**,
-puisque c'est lui qui permettra de clore CF-4b. ✅ **Son étape M1-A est écrite, commitée
-*(`9abaebc`, `b65a6b0`)* et poussée sur la branche de travail** — ⛔ **non fusionnée dans `main`**.
-**M1-B → M1-F ne démarrent pas automatiquement.**
+puisque c'est lui qui permettra de clore CF-4b. 🏁 **Son étape M1-A est TERMINÉE et FUSIONNÉE dans
+`main`** *(`9abaebc`, `b65a6b0`, `aff6d5f`)*. ⛔ **M1-B → M1-F ne démarrent pas automatiquement.**
 
 > ⚠️ **Cette ligne annonçait « 2 lots sur 8 », et c'était devenu faux.** Le chiffre datait du jour
 > de l'ouverture de CF-4b ; les six lots suivants ont été livrés sans que la phrase d'en-tête soit
