@@ -7500,3 +7500,105 @@ utilisateur.**
 ⛔ Aucun redéploiement Apps Script · aucun collage de `Code.gs` ni de `Tests.gs` · **aucune donnée du
 classeur** · aucune modification des deux URL *(toujours **non lues** — politique réseau)* · aucune
 modification de l'affiche · ⛔ **M1-B n'est pas commencée.**
+
+---
+
+## 18. Micro-lot méthodologique — la règle de l'état constaté après le geste
+
+> 🗓️ **2026-08-24 *(soir)***, entre **M1-A** *(close)* et **M1-B** *(non commencée)*.
+> ⛔ **Aucun changement fonctionnel.** Lot **documentaire et méthodologique**.
+>
+> ⭐ **Cette fiche est écrite APRÈS la poussée, et c'est le but** : elle est la **première
+> application** de la règle qu'elle raconte. Chaque affirmation ci-dessous a été **constatée par une
+> commande ou par l'interface de GitHub**, pas déduite d'une intention.
+
+### 18.1 — Ce qui a été demandé
+
+Romain a constaté que **quatre fois en trois jours**, un état de suivi avait été écrit **avant** un
+geste, le geste avait eu lieu, et l'état n'avait **jamais été relu après** — laissant la
+documentation fausse alors que l'opération, elle, s'était correctement déroulée.
+
+**Les quatre** : **R-094** *(« appliqué localement, non commité »)* · le **« 2 lots sur 8 »** de
+CF-4b · **CF-4b/L8** *(« patch appliqué, non commité »)* · **M1-A** *(« NON FUSIONNÉE dans `main` »
+après sa fusion)*.
+
+🎯 **La demande** : en faire une **règle permanente**, et lever au passage une ambiguïté de M1-A.
+
+### 18.2 — Ce qui a été écrit
+
+| Où | Quoi |
+|---|---|
+| 🆕 **`CLAUDE.md` §8 septies** | **« Règle de l'état constaté APRÈS le geste »** — la règle, le tableau *« geste ➡️ ce qui le constate »*, les trois temps, le repérage mécanique, et ⛔ **la protection explicite des traces historiques** |
+| **`CLAUDE.md` §12.4** | un **point 5 neuf** : relire, après le geste, ce que les documents d'état en affirment. Les anciens 5, 6, 7 deviennent 6, 7, 8 — ⛔ **les points 1 et 2, seuls cités ailleurs dans le dépôt, sont inchangés** |
+| **`CLAUDE.md` §12.4 bis** | le **rapport de fin de session** dit ce qui a été **constaté** |
+| **`DECISIONS.md`** | **D-046** *(la règle)* et **D-047** *(clôture de M1-A, reliquat externe)* |
+| **`ETAT.md`** · **`PLAN.md`** | la levée d'ambiguïté de M1-A, et le suivi du reliquat |
+
+> 🎯 **La cause n'était pas l'attention, c'était l'ORDRE** — et c'est pour cela que §12.4 a dû
+> bouger : elle demandait d'écrire l'état *(point 1)* **avant** le commit *(point 4)*, et rien
+> ensuite ne demandait de le relire. **Une méthode suivie correctement produisait un document faux.**
+
+### 18.3 — La levée d'ambiguïté sur M1-A
+
+Deux affirmations coexistaient : **« M1-A est TERMINÉE »** et **« une seule chose reste en attente
+dans M1-A »**. ⚠️ **Une étape dont quelque chose reste en attente n'est pas close.**
+
+- 🏁 **M1-A est DÉFINITIVEMENT CLÔTURÉE** — son statut ne dépend plus de rien ;
+- 🔻 la lecture de `url_site_association` et `url_instagram` devient un **RELIQUAT EXTERNE, non
+  bloquant** : l'empêchement vient de **l'environnement** *(403 réseau vers `script.google.com`)*,
+  pas du projet ;
+- il reste **tracé** au `PLAN.md` **§15.8** et **repris par M1-F** à défaut d'être fait avant ;
+- ⛔ **il ne déclenche pas M1-B**, qui n'a **pas commencé**.
+
+### 18.4 — ⭐ Les gestes, et ce qui les a CONSTATÉS
+
+**Commit 1** — `docs(methode): une règle permanente pour les états écrits avant le geste`
+
+| | Constaté |
+|---|---|
+| **SHA réel** | **`d771a0e`** *(`git rev-parse HEAD` après le commit)* |
+| **Contenu réel** | **4 fichiers, tous `.md`** : `CLAUDE.md` · `DECISIONS.md` · `ETAT.md` · `PLAN.md` — **374 insertions, 17 suppressions** *(`git show --stat`)* |
+| **Aucun autre fichier** | ✅ `git status --porcelain` **vide** après le commit |
+| **Branche poussée** | **`claude/verification-post-geste-nar0sp`**, et elle **seule** |
+| **Tête distante** | `origin/claude/verification-post-geste-nar0sp` = **`d771a0e`**, écart local/distant **0 / 0** |
+| **`origin/main`** | **`3300fca`**, ⛔ **inchangé** — vérifié **après** un nouveau `git fetch` |
+| **Fusion vers `main`** | ⛔ **AUCUNE** — `git branch -r --contains d771a0e` ne renvoie que la branche de travail |
+| **GitHub Actions** | ⛔ **AUCUNE exécution déclenchée.** Vérifié dans la liste des exécutions du dépôt : la dernière date du **2026-08-22 17:04 UTC** *(commit `94cd6a2`)*. ⚠️ **Ce n'est pas une déduction** — c'est le comportement attendu *(le workflow ne se déclenche que sur `frontend/**`)*, **mais il a été constaté avant d'être écrit** |
+| **Déploiement applicatif** | ⛔ **AUCUN** — ni GitHub Pages, ni Apps Script |
+
+⛔ **Aucun fichier `frontend/`, aucun fichier `backend/`, aucun test, aucune donnée du classeur.**
+
+### 18.5 — Ce que ce lot n'a PAS fait
+
+⛔ **M1-B n'est pas commencée** · ⛔ aucune fusion vers `main` · ⛔ aucun redéploiement Apps Script ·
+⛔ aucune publication frontend · ⛔ **les deux URL n'ont toujours PAS été lues** *(§9 : leur contenu
+est un **INCONNU**, pas un probable)* · ⛔ aucune trace historique réécrite — `AUDIT.md`,
+`RAPPORT-AUDIT.md`, le `CHANGELOG` et les fiches §1 à §17 de ce journal **ne sont pas touchés**.
+
+### 18.6 — Documents ACTIFS vérifiés *(`CLAUDE.md` §12.4 point 2)*
+
+✅ **`README.md`, `docs/architecture.md`, `backend/README.md` et `CHANGELOG.md` ont été vérifiés :
+aucun ne devient faux.** Le lot ne change ni comportement, ni écran, ni action serveur, ni fiabilité
+— le critère du `CHANGELOG` *(« quelqu'un qui utilise l'application le remarquerait-il ? »)* n'est
+pas atteint.
+
+### 18.7 — Trois points relevés, ⛔ NON corrigés dans ce lot — à arbitrer
+
+1. **`ETAT.md` §7 « DÉCISIONS VALIDÉES » a décroché** : son tableau s'arrête à **D-029**, alors que
+   `DECISIONS.md` porte **47 fiches** *(D-001 → D-047, comptées le 2026-08-24)*. C'est **§8 bis
+   appliqué aux documents de suivi eux-mêmes** — un tableau qu'aucune règle ne garde ;
+2. **les risques de méthode** *(`RAPPORT-AUDIT.md`, M-01 → M-06)* **ne portent pas ce défaut** :
+   faut-il un **M-07** ? ⚠️ `RAPPORT-AUDIT.md` étant une **synthèse close**, cela ne se fait pas sans
+   décision ;
+3. **le `main` LOCAL de la session était resté 7 commits en arrière** — le piège exact qui, pendant
+   la fusion de M1-A, avait fait croire que le lot touchait au serveur *(§13.1)*. ⚠️ **Ce n'est pas
+   un fait du dépôt** mais l'état d'une **copie de travail**, et il ne se constate donc pas depuis
+   GitHub. ⏳ **Au moment où cette fiche est écrite, sa remise à niveau n'a pas encore eu lieu** —
+   elle est demandée juste après, **par fast-forward seul**, ⛔ sans aucun commit ni aucune poussée
+   sur `main`. **Son résultat est constaté dans le rapport de fin de session, pas ici.**
+
+> ⭐ **Cette dernière ligne est la règle en action, et elle mérite d'être lue deux fois.** Une
+> première rédaction de cette fiche annonçait ce geste **comme fait** — alors qu'il ne l'était pas.
+> ⛔ **Écrire au passé un geste qu'on s'apprête à faire est EXACTEMENT le défaut que §8 septies
+> corrige**, et il s'est présenté **dans la fiche même qui l'institue**. La phrase a été remise
+> **au futur** *(§12.4 bis)*.
