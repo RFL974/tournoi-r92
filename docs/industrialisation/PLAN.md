@@ -2651,17 +2651,17 @@ M1 est terminé quand **les huit conditions** sont réunies :
 | Étape | État |
 |---|---|
 | **M1-A** | 🏁 **TERMINÉE, FUSIONNÉE, PUBLIÉE dans `main`, et CLÔTURÉE** le 2026-08-24 — **fast-forward**, ⛔ **sans réécrire un seul commit ni créer de commit de fusion** : **`9abaebc`** *(les 7 documents)* · **`b65a6b0`** *(journal §17)* · **`aff6d5f`** *(correctif de statut et de déploiement)*. ⛔ **Plus rien n'est ouvert dans cette étape** |
-| **M1-B** | 🚧 **EN COURS — implémentée et testée LOCALEMENT** *(2026-08-24)*. ⛔ **Rien de plus n'est acquis** : voir les sept états ci-dessous, dont **cinq ne sont PAS atteints** |
+| **M1-B** | 🚧 **EN COURS — écrite, testée hors ligne, COMMITÉE et POUSSÉE sur sa branche** *(2026-08-24, `dc03488`)*. ⛔ **Ni publiée, ni redéployée, ni vérifiée en réel** : voir les sept états ci-dessous, dont **trois ne sont PAS atteints** |
 | **M1-C → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite** |
 
 > ⭐ **Les sept états de M1-B, et ils ne se déduisent pas les uns des autres** *(`CLAUDE.md` §8 septies)* :
 >
 > | État | Atteint ? |
 > |---|---|
-> | **① Implémentée** *(dépôt local)* | ✅ **oui** — allowlist des 26, récompenses par préfixe, branchement dans `reinitialiserTournoi`, message de confirmation |
-> | **② Testée** | ✅ **oui** — bilan **796/796 OK, 0 FAIL** mesuré hors ligne, dont 81 vérifications neuves |
-> | **③ Commitée** | ⛔ **NON** |
-> | **④ Poussée** | ⛔ **NON** |
+> | **① Implémentée** | ✅ **oui** — allowlist des 26, récompenses par préfixe, branchement dans `reinitialiserTournoi`, message de confirmation |
+> | **② Testée** | ✅ **oui, HORS LIGNE** — **796/796 OK, 0 FAIL**, dont 81 vérifications neuves. ⛔ **Le bilan chez Google n'est PAS constaté** : il le sera au geste 4 du redéploiement *(`deploiement.md`)* |
+> | **③ Commitée** | ✅ **oui** — **`dc03488`**, 9 fichiers |
+> | **④ Poussée** | ✅ **oui** — sur **la branche `claude/m1b-reinitialisation-cycle-de-vie` UNIQUEMENT**. ⛔ Aucune exécution GitHub Actions déclenchée *(constaté ; le workflow Pages n'écoute que `main`)* |
 > | **⑤ Frontend publié** *(GitHub Pages)* | ⛔ **NON** |
 > | **⑥ Backend redéployé** *(collage Apps Script)* | ⛔ **NON** — ⚠️ **et ce redéploiement mettra AUSSI en service la part backend de CF-4b/L8** |
 > | **⑦ Vérifiée en réel** *(réinitialisation sur une copie)* | ⛔ **NON** |

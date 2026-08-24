@@ -19,9 +19,11 @@ DE PLUS.**
 
 | | |
 |---|---|
-| ✅ **Implémentée** *(local)* | Allowlist **explicite** des **26** champs d'édition *(`CHAMPS_AUTORISATION_A_REINITIALISER`)* · récompenses `org_recompenses_*` par **préfixe complet** · branchement dans `reinitialiserTournoi` · message de confirmation refait |
-| ✅ **Testée** *(local)* | **796/796 OK, 0 FAIL** — **+81** vérifications, dont un test de **branchement** et les tests **négatifs** de **R-B2** |
-| ⛔ **Commitée · poussée · publiée · redéployée · vérifiée en réel** | **AUCUN de ces cinq gestes n'a eu lieu** *(détail : `PLAN.md` **§15.8**)* |
+| ✅ **Implémentée** | Allowlist **explicite** des **26** champs d'édition *(`CHAMPS_AUTORISATION_A_REINITIALISER`)* · récompenses `org_recompenses_*` par **préfixe complet** · branchement dans `reinitialiserTournoi` · message de confirmation refait |
+| ✅ **Testée HORS LIGNE** | **796/796 OK, 0 FAIL** — **+81** vérifications, dont un test de **branchement** et les tests **négatifs** de **R-B2**. ⛔ **Le bilan chez Google reste à constater** |
+| ✅ **Commitée** | **`dc03488`** — 9 fichiers |
+| ✅ **Poussée** | Sur **sa branche seule**, `claude/m1b-reinitialisation-cycle-de-vie`. ⛔ **Aucune exécution GitHub Actions**, ⛔ **aucune fusion vers `main`** *(constaté, pas déduit)* |
+| ⛔ **Frontend publié · backend redéployé · vérifiée en réel** | **AUCUN de ces trois gestes n'a eu lieu** *(détail : `PLAN.md` **§15.8**)* |
 | ⚠️ **Le redéploiement à venir** | Il mettra **DEUX lots** en service d'un coup : **M1-B** *et* la part backend de **CF-4b/L8**, jamais collée |
 | 🔴 **R-033 n'est pas refermé** | Sa part `org_*` est traitée ; **`detail_effectifs` et `nb_educateurs_total` ne le sont PAS** — ce sont des colonnes de `ClubsInvites`, hors périmètre |
 
@@ -579,9 +581,10 @@ est **suspendue derrière elle**. **CF-3, CF-5 à CF-13 et CF-14 ne sont pas com
 🏛️ **ET UN CHANTIER DE PLUS EST OUVERT DEPUIS LE 2026-08-24 : M1 — le profil du club**
 *(`PLAN.md` **§15**)*. Il n'appartient ni au plan d'audit ni au chantier Confiance : il en **sort**,
 puisque c'est lui qui permettra de clore CF-4b. 🏁 **Son étape M1-A est TERMINÉE et FUSIONNÉE dans
-`main`** *(`9abaebc`, `b65a6b0`, `aff6d5f`)*. 🔧 **Son étape M1-B est ÉCRITE ET TESTÉE localement**,
-⛔ **ni commitée, ni déployée** *(les sept états : `PLAN.md` **§15.8**)*. ⛔ **M1-C → M1-F ne
-démarrent pas automatiquement.**
+`main`** *(`9abaebc`, `b65a6b0`, `aff6d5f`)*. 🔧 **Son étape M1-B est écrite, testée hors ligne,
+COMMITÉE et POUSSÉE sur sa branche** *(`dc03488`)* — ⛔ **mais NON publiée côté frontend, NON
+redéployée côté backend, et NON vérifiée en réel** *(les sept états : `PLAN.md` **§15.8**)*.
+⛔ **M1-C → M1-F ne démarrent pas automatiquement.**
 
 > ⚠️ **Cette ligne annonçait « 2 lots sur 8 », et c'était devenu faux.** Le chiffre datait du jour
 > de l'ouverture de CF-4b ; les six lots suivants ont été livrés sans que la phrase d'en-tête soit

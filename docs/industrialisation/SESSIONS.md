@@ -7602,3 +7602,120 @@ pas atteint.
 > ⛔ **Écrire au passé un geste qu'on s'apprête à faire est EXACTEMENT le défaut que §8 septies
 > corrige**, et il s'est présenté **dans la fiche même qui l'institue**. La phrase a été remise
 > **au futur** *(§12.4 bis)*.
+
+---
+
+## 19. M1-B — la réinitialisation cesse de conserver l'édition passée
+
+> 🗓️ **2026-08-24**, chantier **M1**, étape **M1-B**. Décision **D-043**, problème **R-033**.
+>
+> ⭐ **Cette fiche est écrite APRÈS le commit et APRÈS la poussée** *(`CLAUDE.md` §8 septies)* : tout
+> ce qu'elle affirme d'un geste a été **constaté** par une commande ou par l'API GitHub. Elle ne
+> nomme pas le commit qui la contient — **on n'écrit pas le SHA d'un commit qui n'existe pas
+> encore.**
+
+### 19.1 — Le défaut, et pourquoi il était dangereux
+
+Une réinitialisation effaçait 40 paramètres — ⛔ **et aucun n'était un `org_*` : les 36 sur 36
+survivaient**. Un tournoi neuf rouvrait donc la demande d'autorisation **déjà remplie** avec les
+valeurs de l'édition passée *(médecin, poste de secours, arbitres, traiteur, prix des repas,
+récompenses)*, marquées **« saisi »**, et le compteur annonçait **0 champ manquant**.
+
+> 🎯 **Ce qui rend ce défaut pire qu'un champ vide** : le dossier pouvait partir à la Ligue
+> **complet en apparence**, avec un médecin qui ne serait pas là et un prix qui n'était plus le bon.
+> **Un champ vide se voit. Une valeur périmée, non.**
+
+### 19.2 — Ce qui a été écrit
+
+| Où | Quoi |
+|---|---|
+| `backend/Code.gs` | ⭐ **`CHAMPS_AUTORISATION_A_REINITIALISER`** — allowlist **explicite** des **26** champs d'édition · `PREFIXE_RECOMPENSES_AUTORISATION` · `clesAutorisationAEffacer()` *(la **décision**, pure)* · `reinitialiserDonneesAutorisationTournoi()` *(l'**effet**)* · son appel dans `reinitialiserTournoi` |
+| `backend/Tests.gs` | **13 fonctions de test**, **+81 vérifications** — ⛔ **aucune ligne supprimée** |
+| `frontend/js/admin.js` | **le message de confirmation, et rien d'autre** *(diff strictement texte + commentaires)* |
+| Documentation | `deploiement.md` *(4 repères + témoins)* · `CHANGELOG.md` · `structure-google-sheet.md` · `ETAT.md` · `PLAN.md` · `RISQUES.md` |
+
+⭐ **Pourquoi une allowlist EXPLICITE, et non « tout sauf les 10 permanents »** *(arbitrage de
+Romain)* : sur une opération **destructive**, une clé `org_*` ajoutée plus tard ne doit jamais
+devenir effaçable parce qu'on aurait oublié de la classer. **L'oubli doit conserver la donnée, pas
+la détruire.**
+
+### 19.3 — Ce que les tests prouvent, et comment on l'a vérifié
+
+**La DÉCISION et le BRANCHEMENT sont prouvés séparément** — une liste juste que personne n'appelle
+n'efface rien.
+
+| Preuve | Résultat |
+|---|---|
+| **26 champs d'édition effacés** · **10 permanents conservés** | ✅ comparaison **ensembliste** avec D-043, listes réécrites dans le test |
+| **Récompenses `org_recompenses_*`** | ✅ effacées, **y compris ORPHELINES** *(catégorie supprimée : la clé reste en zone A)* |
+| ⭐ **Test de BRANCHEMENT réel** | ✅ `reinitialiserTournoi` exercée **de bout en bout** sur un **faux classeur en mémoire** — ⛔ aucun Sheet réel, aucun appel Drive |
+| ⭐ **Test négatif R-B2** | ✅ **11 voisins du préfixe rejetés** — `org_representant_*`, `org_president_*`, `org_recompense_U8` *(sans « s »)*, `org_recompenses` *(sans « _ »)*, le préfixe nu |
+| **Non-régression** | ✅ les effacements historiques tiennent, `perfs_mot_cle_club` et `email_expediteur` restent **conservés** |
+| **Stockage ≠ affichage** | ✅ `org_type_terrain` vidé retombe **légitimement** sur la nature des terrains déclarés : ⛔ **on n'a PAS transformé une cascade correcte en champ manquant** pour faire passer un test |
+
+> 🎯 **Trois mutations de contrôle ont été jouées pour vérifier que les tests MORDENT** — un test qui
+> ne tombe jamais ne prouve rien :
+>
+> | Mutation | Effet |
+> |---|---|
+> | Appel de l'effacement **retiré** | **4 FAIL**, dont *« les 26 champs vidés : **constaté 0/26** »* |
+> | Préfixe raccourci à `org_re` | **12 FAIL**, dont *« les 10 permanents SURVIVENT »* |
+> | Une **37ᵉ clé** ajoutée sans être classée | **3 FAIL** — et la clé **n'était pas effacée** |
+
+**Bilan : `R92 — 796/796 OK, 0 FAIL`** *(était 715)*. ⚠️ **Mesuré HORS LIGNE**, en exécutant
+`lancerTestsFFR` sur les deux fichiers du dépôt : la même méthode donnait **715** avant ce lot,
+exactement le bilan de Google. ⛔ **Cela reste un PROBABLE** *(§9)* — seul le geste 4 du
+redéploiement le confirmera.
+
+### 19.4 — Le message de confirmation, rendu exact
+
+L'ancienne phrase *« Seul l'historique de saison (page Perfs) est conservé »* a été **retirée** :
+elle était **déjà fausse avant ce lot** *(le carnet des clubs et les partenaires survivent)*. Le
+nouveau texte distingue **ce qui part** et **ce qui reste**, ⛔ **sans prétendre à l'exhaustivité**
+*(« notamment », des deux côtés)*.
+
+> ⚠️ **Une ligne a été écrite, puis corrigée avant commit** : *« les réponses des clubs sont
+> supprimées »* était **trop large**. La vérification colonne par colonne de
+> `reinitialiserPhase2Clubs` donne **8 colonnes sur 17 remises à zéro** — `categories_engagees`,
+> `dossier_envoye`, `invitation_envoyee`, `club_token`, `date_reponse`, `nb_equipes_par_categorie`,
+> `nb_joueurs_total`, `selection_enregistree` — et **9 conservées**, dont **`statut`**,
+> **`detail_effectifs`** et **`nb_educateurs_total`**.
+>
+> ⭐ **La formulation d'exemple proposée en consigne — *« les statuts de réponse »* — aurait donc été
+> FAUSSE**, et elle a été écartée pour cette raison. *Un message d'action irréversible ne vaut que
+> s'il dit vrai.*
+
+### 19.5 — 🔎 Point DÉCOUVERT, ⛔ NON corrigé — à arbitrer plus tard
+
+> **Après une réinitialisation, un club peut rester marqué `statut = Accepté` (ou `Décliné`) alors
+> que plusieurs éléments propres à sa participation à cette édition ont été remis à zéro** —
+> catégories engagées, nombre d'équipes et de joueurs, date de réponse, lien d'accès.
+>
+> ⛔ **Aucune logique n'a été modifiée** : c'est le comportement **antérieur à M1-B**, hors de son
+> périmètre. Il est consigné ici pour ne pas être perdu ; ⛔ **aucun risque ni aucune décision
+> n'a été créé** dans ce lot pour l'accueillir.
+
+### 19.6 — Les gestes, et ce qui les a CONSTATÉS
+
+| | Constaté |
+|---|---|
+| **Branche** | `claude/m1b-reinitialisation-cycle-de-vie`, créée sur **`1c5cd4f`** *(= `origin/main`)* |
+| **Commit d'implémentation** | **`dc034880230aef9778ad745db38f135f77351129`** — **9 fichiers**, 551 insertions, 27 suppressions |
+| **Poussée** | ✅ la **branche seule** ; tête locale = tête distante, écart **0 / 0** |
+| **GitHub Actions** | ⛔ **AUCUNE exécution déclenchée** — vérifié par l'API *(0 run sur la branche, aucun run pour `dc03488`)*. ⭐ **Et la cause est lue dans le fichier, pas supposée** : `pages.yml` déclare `on: push: branches: [main]` — un push sur une autre branche ne déclenche rien, **même en touchant `frontend/**`** |
+| **Fusion vers `main`** | ⛔ **AUCUNE** — `git branch -r --contains` ne renvoie que la branche M1-B ; `origin/main` reste à **`1c5cd4f`** |
+| **Déploiement** | ⛔ **AUCUN** — ni GitHub Pages, ni collage Apps Script, ⛔ **aucune donnée du classeur touchée, aucune réinitialisation réelle jouée** |
+
+### 19.7 — Ce que ce lot NE ferme PAS
+
+- 🔴 **R-033 reste OUVERT** : sa part `org_*` est traitée, mais **`detail_effectifs` et
+  `nb_educateurs_total`** sont des **colonnes de `ClubsInvites`**, hors périmètre — **D-020 continue
+  de diverger du code** sur les effectifs ;
+- ⏳ **la friction N2 assumée** : type de terrain, vestiaires et éducateurs du club sont à ressaisir
+  jusqu'à **M1-D** ;
+- ⛔ **le comportement en production est INCONNU** tant que le redéploiement n'a pas eu lieu
+  *(§13.6)* ;
+- ⚠️ **l'ordre de déploiement est décidé mais NON exécuté** : **backend d'abord**, vérification
+  réelle, **frontend ensuite** — sinon la page publiée annoncerait un effacement que le serveur ne
+  ferait pas encore. ⭐ **Et ce redéploiement mettra DEUX lots en service** : M1-B **et** la part
+  backend de **CF-4b/L8**, jamais collée.
