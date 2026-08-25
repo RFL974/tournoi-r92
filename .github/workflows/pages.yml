@@ -38,20 +38,27 @@ permissions:
 
 jobs:
   # --------------------------------------------------------------------------
-  # 1) LE CONTRÔLE — syntaxe uniquement.
+  # 1) LE CONTRÔLE AVANT PUBLICATION — syntaxe + garde-fous comportementaux.
   #
-  # `node --check` répond à UNE seule question : « ce fichier est-il lisible ? ».
-  # Il ne juge ni le style, ni les conventions, ni la qualité. C'est délibéré :
-  # un contrôle trop exigeant qui refuserait de publier une correction urgente
-  # LE JOUR DU TOURNOI serait pire que pas de contrôle du tout.
+  # ⚠️ Ce commentaire annonçait « syntaxe uniquement », et c'était vrai jusqu'au
+  # lot M1-B2 / B2-0.1, qui a ajouté deux étapes de comportement plus bas.
   #
-  # Portée : tous les `.js` de `frontend/`, bibliothèques extérieures comprises
-  # (elles sont déposées à la main, donc elles peuvent arriver tronquées).
-  # Le HTML n'est PAS vérifié : il ne contient aucun script en ligne, et
-  # contrôler sa syntaxe exigerait une dépendance que le projet a refusée.
+  # a) `node --check` répond à UNE seule question : « ce fichier est-il lisible ? ».
+  #    Il ne juge ni le style, ni les conventions, ni la qualité. C'est délibéré :
+  #    un contrôle trop exigeant qui refuserait de publier une correction urgente
+  #    LE JOUR DU TOURNOI serait pire que pas de contrôle du tout.
+  #    Portée : tous les `.js` de `frontend/`, bibliothèques extérieures comprises
+  #    (elles sont déposées à la main, donc elles peuvent arriver tronquées).
+  #    Le HTML n'est PAS vérifié : il ne contient aucun script en ligne, et
+  #    contrôler sa syntaxe exigerait une dépendance que le projet a refusée.
+  #
+  # b) Les garde-fous de `tests/` répondent à l'autre question : « ce code fait-il
+  #    encore ce qu'il doit faire ? ». ⛔ Ils restent VOLONTAIREMENT peu nombreux —
+  #    un seul comportement est gardé aujourd'hui — et suivent la même règle que
+  #    ci-dessus : rien qui puisse bloquer une correction urgente sans raison.
   # --------------------------------------------------------------------------
   verifier:
-    name: Vérifier la syntaxe des fichiers publiés
+    name: Vérifier les fichiers publiés (syntaxe + garde-fous)
     runs-on: ubuntu-latest
     steps:
       - name: Récupérer le code

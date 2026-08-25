@@ -20,8 +20,14 @@
  *  ⛔ Ce fichier ne teste PAS l'affichage : il teste l'ENCHAÎNEMENT et l'ÉTAT MÉMOIRE.
  *  ⭐ Il exécute les VRAIES fonctions `onReinitialiser` (admin.js) et `chargerClubsInvites`
  *  (admin-invitations.js), extraites de leur fichier et lancées dans un contexte Node avec
- *  des doublures. ⛔ Aucune relecture de source, aucune expression régulière sur le code : si
- *  quelqu'un réécrit ces fonctions autrement mais correctement, les contrôles passent.
+ *  des doublures.
+ *
+ *  ⚠️ Les fichiers source SONT lus — c'est bien ainsi qu'on en extrait les fonctions. Ce qui
+ *  est proscrit est autre chose, et c'est la vraie doctrine : ⛔ AUCUNE assertion ne se contente
+ *  de chercher une chaîne ou une expression régulière DANS LE CODE pour conclure qu'il se
+ *  comporte bien. Les fichiers sont lus UNIQUEMENT pour extraire et EXÉCUTER les vraies
+ *  fonctions ; toutes les assertions portent ensuite sur ce que l'exécution a produit.
+ *  ⭐ Conséquence voulue : réécrire ces fonctions autrement mais correctement laisse tout au vert.
  *
  *  ⚠️ POURQUOI HORS DE `frontend/` : tout `frontend/` est publié tel quel sur GitHub Pages.
  *  Un fichier de test y serait mis en ligne pour rien.
@@ -57,6 +63,31 @@ function extraireFonction(cheminRelatif, entete) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*  LE CONTRAT DU JETON, tel qu'il est RÉELLEMENT (doctrine T6 de B2-0)        */
+/*                                                                            */
+/*  ⚠️ Ne pas simplifier ces deux constantes, et voici pourquoi — c'est un      */
+/*  défaut que ce fichier a déjà porté, trouvé par une revue extérieure.        */
+/*                                                                            */
+/*  Le faux serveur renvoyait `club_token: ''` après réinitialisation. C'était  */
+/*  un état PLUS VIDE QUE LA RÉALITÉ, donc un test plus facile que la vie :     */
+/*  `listerClubsInvites` appelle `assurerTokensClubs`, qui redonne un UUID neuf */
+/*  à tout club qui n'en a pas — et renvoie la LIGNE COMPLÈTE, jeton compris.   */
+/*  Après un reset réel suivi d'une relecture réussie, `club_token` est donc    */
+/*  NON VIDE, et c'est CORRECT.                                                */
+/*                                                                            */
+/*  ⭐ La doctrine B2-0 n'est pas « aucun jeton » : c'est « aucun jeton HÉRITÉ, */
+/*  ancien lien définitivement invalide ». Un jeton neuf est attendu.           */
+/*                                                                            */
+/*  ⛔ Ce fichier ne rejoue PAS la sécurité du jeton : `backend/Tests.gs` (T6)  */
+/*  couvre déjà l'ancien lien invalide, le refus de l'ancien jeton et l'unicité */
+/*  du nouveau. Ici on vérifie seulement que le FAUX SERVEUR respecte le vrai   */
+/*  contrat de `listerClubsInvites` — sans quoi tout le reste teste une fiction.*/
+/* -------------------------------------------------------------------------- */
+
+const ANCIEN_JETON = 'JETON-EDITION-PRECEDENTE';
+const NOUVEAU_JETON = 'JETON-NEUF-APRES-RESET';
+
+/* -------------------------------------------------------------------------- */
 /*  Un scénario complet : on joue « Réinitialiser le tournoi » et on observe.  */
 /* -------------------------------------------------------------------------- */
 
@@ -78,7 +109,8 @@ function jouerReinitialisation(opt) {
   const ANCIENNE_PARTICIPATION = [{
     club_nom: 'LE TEST RUGBY CLUB', club_contact_email: 'contact@test-rugby.fr',
     statut: 'Accepté', categories_engagees: 'U8', nb_joueurs_total: '7',
-    nb_educateurs_total: '3', detail_effectifs: '{"U8":[{"j":7,"e":3}]}'
+    nb_educateurs_total: '3', detail_effectifs: '{"U8":[{"j":7,"e":3}]}',
+    selection_enregistree: '2026-08-25', club_token: ANCIEN_JETON
   }];
 
   const contexte = {
@@ -138,23 +170,40 @@ function verifier(condition, libelle) {
   else { etat.fail++; etat.echecs.push(libelle); console.log('  ÉCHEC ' + libelle); }
 }
 
+/** Les champs d'ENGAGEMENT qui, s'ils sont remplis, trahissent une édition non réinitialisée.
+ *  ⛔ `club_token` n'en fait PAS partie : après une relecture réussie il est NON VIDE, et c'est
+ *  le contrat (voir l'encadré du jeton plus haut). Le jeton se contrôle par sa VALEUR — ancien
+ *  ou neuf — pas par sa présence. */
+const CHAMPS_ENGAGEMENT = ['statut', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee',
+  'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total', 'alerte_ecart',
+  'detail_effectifs', 'nb_educateurs_total', 'selection_enregistree'];
+
 /** Une participation de l'édition précédente traîne-t-elle encore en mémoire ?
  *  ⭐ On regarde ce qu'un CONSOMMATEUR verrait (statut, effectifs), pas une colonne précise. */
 function porteUneParticipation(clubs) {
-  return (clubs || []).some((c) => ['statut', 'categories_engagees', 'nb_joueurs_total',
-    'nb_educateurs_total', 'detail_effectifs', 'selection_enregistree', 'club_token']
+  return (clubs || []).some((c) => CHAMPS_ENGAGEMENT
     .some((k) => String(c[k] == null ? '' : c[k]).trim() !== ''));
+}
+
+/** Le jeton de l'édition précédente survit-il en mémoire ? ⭐ Contrôle par la VALEUR. */
+function porteLAncienJeton(clubs) {
+  return (clubs || []).some((c) => String(c.club_token || '').trim() === ANCIEN_JETON);
 }
 
 (async () => {
   console.log('===== B2-0 — réinitialisation et clubs invités (garde-fou frontend) =====');
 
   /* ---- F-C : le chemin nominal ---------------------------------------- */
+  // ⭐ CE QUE LE VRAI SERVEUR RENVOIE après un reset suivi d'un `listerClubsInvites` :
+  //    l'identité et le contact DURABLES, tous les champs d'engagement VIDES,
+  //    et un club_token NON VIDE — le jeton neuf posé par `assurerTokensClubs`.
   const CARNET_APRES_RESET = [{
     club_nom: 'LE TEST RUGBY CLUB', club_contact_nom: 'DUPONT', club_contact_prenom: 'Marie',
     club_contact_email: 'contact@test-rugby.fr', date_ajout: '2026-05-12',
-    statut: '', categories_engagees: '', nb_joueurs_total: '', nb_educateurs_total: '',
-    detail_effectifs: '', selection_enregistree: '', club_token: ''
+    statut: '', categories_engagees: '', dossier_envoye: '', invitation_envoyee: '',
+    date_reponse: '', nb_equipes_par_categorie: '', nb_joueurs_total: '', alerte_ecart: '',
+    detail_effectifs: '', nb_educateurs_total: '', selection_enregistree: '',
+    club_token: NOUVEAU_JETON
   }];
   const nominal = await jouerReinitialisation({ clubsFrais: CARNET_APRES_RESET });
   const iReset = nominal.trace.findIndex((e) => e.action === 'reinitialiserTournoi');
@@ -172,6 +221,17 @@ function porteUneParticipation(clubs) {
   verifier(nominal.messages.some((m) => m.ton === 'ok' && /réinitialisé/.test(m.texte)),
     'F-C ⑥ l\'organisateur est informé du succès');
 
+  /* ---- F-T : le contrat du JETON, tel qu'il est réellement --------------- */
+  //   ⛔ On ne rejoue pas la sécurité backend (T6 la couvre) : on vérifie que le faux serveur
+  //      respecte le contrat de `listerClubsInvites`, et que rien de l'ancien ne traverse.
+  const jetonFrais = String((nominal.clubsEnMemoire[0] || {}).club_token || '').trim();
+  verifier(jetonFrais !== '',
+    'F-T ① le jeton frais EXISTE après relecture — un jeton neuf est attendu, pas interdit');
+  verifier(jetonFrais !== ANCIEN_JETON,
+    'F-T ② ⭐ il est DIFFÉRENT de celui de l\'édition précédente');
+  verifier(!porteLAncienJeton(nominal.clubsEnMemoire),
+    'F-T ③ ⭐ l\'ancien jeton n\'est plus nulle part en mémoire après la relecture nominale');
+
   /* ---- F-B : l'ORDRE ---------------------------------------------------- */
   // ⚠️ `iClubs !== -1` est INDISPENSABLE : sans lui, un -1 « passerait » la comparaison et ce
   //    contrôle validerait un code qui ne relit rien. C'est le piège du garde-fou qui ne mord jamais.
@@ -185,14 +245,16 @@ function porteUneParticipation(clubs) {
   verifier(!porteUneParticipation(panne.clubsEnMemoire),
     'F-D ⭐⭐ BLOQUANT : relecture en échec ⇒ AUCUNE participation de l\'ancienne édition ' +
     'ne subsiste en mémoire (fail-closed)');
+  verifier(!porteLAncienJeton(panne.clubsEnMemoire),
+    'F-D ② ⭐ ni l\'ancien jeton — en panne, RIEN de l\'édition passée ne survit');
   verifier(panne.clubsEnMemoire.length === 0,
-    'F-D ② la liste en mémoire est vide — on affiche moins, jamais du faux');
+    'F-D ③ la liste en mémoire est vide — on affiche moins, jamais du faux');
   verifier(/Impossible de charger les clubs invités/.test(panne.zoneClubs),
-    'F-D ③ l\'écran signale explicitement l\'échec de chargement');
+    'F-D ④ l\'écran signale explicitement l\'échec de chargement');
   verifier(panne.messages.some((m) => m.ton === 'ko' && /pas pu être relue/.test(m.texte)),
-    'F-D ④ le message de fin dit que la réinitialisation a eu lieu MAIS que l\'écran est incomplet');
+    'F-D ⑤ le message de fin dit que la réinitialisation a eu lieu MAIS que l\'écran est incomplet');
   verifier(panne.trace.some((e) => e.type === 'rechargerEtRendre'),
-    'F-D ⑤ la panne n\'interrompt pas le reste de la remise à zéro de l\'écran');
+    'F-D ⑥ la panne n\'interrompt pas le reste de la remise à zéro de l\'écran');
 
   /* ---- F-A : le rechargement lui-même ----------------------------------- */
   const sansFonction = await jouerReinitialisation({ sansRechargement: true });

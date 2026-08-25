@@ -79,6 +79,16 @@ const MUTATIONS = [
     appliquer: (b) => remplacer(b, 'frontend/js/admin.js',
       '\'• le carnet d\\\'adresses des clubs invités — noms, contacts, emails — et vos \' +\n               \'partenaires. Les clubs restent dans la liste : ils redeviennent invitables.\'',
       '\'• le carnet des clubs invités (noms, contacts, statut) et vos partenaires.\'')
+  },
+  {
+    // ⭐ CELLE-CI NE MUTE PAS LE PRODUIT, MAIS LE MODÈLE DU TEST — et c'est le seul cas où
+    //   c'est légitime : un faux serveur infidèle rend TOUTES les autres preuves creuses.
+    //   Le défaut est réel, il a existé : le faux état frais renvoyait `club_token: ''`, plus
+    //   vide que la réalité. Ici on va plus loin — le faux serveur RECYCLE l'ancien jeton.
+    nom: 'F-T — le faux état frais RÉUTILISE l\'ancien jeton (modèle infidèle)',
+    defaut: 'le garde-fou validerait un contrat que le vrai serveur ne respecte pas',
+    appliquer: (b) => remplacer(b, 'tests/frontend-reinitialisation.test.js',
+      '    club_token: NOUVEAU_JETON\n', '    club_token: ANCIEN_JETON\n')
   }
 ];
 
@@ -96,16 +106,20 @@ try {
     fs.rmSync(copie, { recursive: true, force: true });
     fs.mkdirSync(path.join(copie, 'frontend', 'js'), { recursive: true });
     fs.mkdirSync(path.join(copie, 'tests'), { recursive: true });
-    for (const f of ['frontend/js/admin.js', 'frontend/js/admin-invitations.js']) {
+    // ⚠️ Le garde-fou est copié LUI AUSSI : sans cela, la mutation F-T — qui porte sur le
+    //    MODÈLE du test, pas sur le produit — n'aurait aucun endroit où s'appliquer.
+    for (const f of ['frontend/js/admin.js', 'frontend/js/admin-invitations.js',
+                     'tests/frontend-reinitialisation.test.js']) {
       fs.copyFileSync(path.join(RACINE, f), path.join(copie, f));
     }
 
     mutation.appliquer(copie);
 
-    // ⭐ On lance le garde-fou DU DÉPÔT contre la copie mutée : c'est bien lui qu'on éprouve.
+    // ⭐ On lance le garde-fou tel qu'il est dans la COPIE, contre la copie : pour les mutations
+    //   de produit il est identique à celui du dépôt ; pour F-T, c'est justement lui qu'on mute.
     let detectee = false, resume = '';
     try {
-      execFileSync(process.execPath, [path.join(__dirname, 'frontend-reinitialisation.test.js')],
+      execFileSync(process.execPath, [path.join(copie, 'tests', 'frontend-reinitialisation.test.js')],
         { env: Object.assign({}, process.env, { RACINE_TOURNOI_R92: copie }), encoding: 'utf8' });
     } catch (e) {
       detectee = true;
