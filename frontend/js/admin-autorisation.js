@@ -276,7 +276,7 @@ function rendreFeuilleAutorisation(dossier) {
 }
 
 /**
- * ⭐ M1-B2 / B2-0.2 — OUBLIER la feuille affichée, avant de la relire.
+ * ⭐ M1-B2 / B2-0.3 — OUBLIER la feuille affichée, avant de la relire.
  *
  * ⚠️ Constaté EN RÉEL le 2026-08-25, juste après une réinitialisation réussie : en ouvrant
  * « Demande d'autorisation » SANS recharger la page, l'écran montrait encore le nom, la date et

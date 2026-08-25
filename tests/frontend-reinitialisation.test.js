@@ -116,6 +116,21 @@ const ANCIENNE_SAISIE_FFR = '<form>Champs saisis de l\'edition close (117 partic
 const TRACES_ANCIENNE_EDITION = ['TOURNOI TEST ANCIEN', '2019-01-01', 'STADE TEST ANCIEN',
   '117', '38', ': 3 ', ': 12'];
 
+/* -------------------------------------------------------------------------- */
+/*  LA CONFIG DE L'ÉDITION PRÉCÉDENTE — ⚠️ FICTIVE elle aussi                  */
+/*  C'est la SOURCE que lisent « Sur place », « Réponse » et l'aperçu d'email. */
+/* -------------------------------------------------------------------------- */
+
+const CONFIG_ANCIENNE = {
+  tournoi_nom: 'TOURNOI TEST ANCIEN', tournoi_lieu: 'STADE TEST ANCIEN',
+  tournoi_date: '2019-01-01', buvette_disponible: 'oui',
+  date_limite_reponse: '2019-01-01', contact_reponse_nom: 'CONTACT TEST ANCIEN',
+  email_expediteur: 'expediteur@test.invalid'
+};
+
+/** Ce que le serveur renvoie quand la relecture RÉUSSIT : un tournoi vierge. */
+const CONFIG_FRAICHE = { email_expediteur: 'expediteur@test.invalid' };
+
 function porteUneTraceDeLAncienneEdition(html) {
   return TRACES_ANCIENNE_EDITION.some((t) => String(html || '').indexOf(t) !== -1);
 }
@@ -153,6 +168,14 @@ function jouerReinitialisation(opt) {
   // EXACTEMENT ce qui a été constaté en réel le 2026-08-25.
   elements['autorisation-feuille'] = { id: 'autorisation-feuille', innerHTML: ANCIENNE_FEUILLE_FFR };
   elements['autorisation-saisie'] = { id: 'autorisation-saisie', innerHTML: ANCIENNE_SAISIE_FFR };
+  // Les trois écrans du delta + la conformité FFR, eux aussi PEINTS au chargement de la page.
+  elements['bloc-conformite-ffr'] = { id: 'bloc-conformite-ffr',
+    innerHTML: 'Conformite calculee pour le 2019-01-01 (TOURNOI TEST ANCIEN)' };
+  elements['form-surplace'] = { id: 'form-surplace', innerHTML: 'buvette=oui' };
+  elements['form-reponse'] = { id: 'form-reponse',
+    innerHTML: 'limite=2019-01-01 contact=CONTACT TEST ANCIEN' };
+  elements['apercu-invitation-rendu'] = { id: 'apercu-invitation-rendu',
+    innerHTML: 'tournoi=TOURNOI TEST ANCIEN lieu=STADE TEST ANCIEN' };
 
   const contexte = {
     console,
@@ -162,18 +185,48 @@ function jouerReinitialisation(opt) {
     },
     // L'état partagé que tout l'admin lit — le cœur du sujet.
     clubsInvitesCourants: ANCIENNE_PARTICIPATION.map((c) => Object.assign({}, c)),
+    // ⭐ La config de l'édition qui va être effacée : c'est ELLE que les écrans lisent.
+    configCourante: { global: Object.assign({}, CONFIG_ANCIENNE), categories: [{ categorie: 'U8' }] },
+    equipesCourantes: [{ id_equipe: 'E01' }],
+    matchsCourants: [{ id_match: 'M01' }],
 
     dialogConfirmer: async (texte) => { trace.push({ type: 'confirm', texte }); return true; },
     afficherMessage: (el, texte, ton) => { messages.push({ texte, ton }); trace.push({ type: 'message' }); },
     echapper: (s) => String(s == null ? '' : s),
     afficherClubsInvites: () => trace.push({ type: 'afficherClubs' }),
     majApercuDossier: () => {},
-    rechargerEtRendre: async () => { trace.push({ type: 'rechargerEtRendre' }); },
+    // ⭐ Le filet de secours, substitué : on COMPTE les demandes de rechargement.
+    rechargerLaPage: () => { trace.push({ type: 'rechargerLaPage' }); },
 
-    // Les trois autres écrans du delta initAdmin / rechargerEtRendre (voir onReinitialiser).
-    majSurPlace: () => trace.push({ type: 'majSurPlace' }),
-    majReponse: () => trace.push({ type: 'majReponse' }),
-    majApercuInvitation: () => trace.push({ type: 'majApercuInvitation' }),
+    rechargerEtRendre: async () => {
+      trace.push({ type: 'rechargerEtRendre' });
+      // ⚠️ Elle commence par apiGet('getAll') puis lireConfigAdmin() : une coupure réseau à cet
+      //    instant précis est le cas dangereux — le reset serveur, lui, a déjà réussi.
+      if (opt.rechargementEchoue) throw new Error('Échec réseau simulé (getAll)');
+      contexte.configCourante = { global: CONFIG_FRAICHE, categories: [] };
+    },
+
+    // ⭐ Les écrans du delta initAdmin / rechargerEtRendre. Ce ne sont pas de simples témoins :
+    //    ils RECOPIENT ce qu'ils liraient vraiment, c'est-à-dire `configCourante`. Si l'oubli
+    //    n'a pas eu lieu, ils repeignent donc l'ANCIENNE édition — et le test le voit.
+    majSurPlace: () => {
+      trace.push({ type: 'majSurPlace' });
+      const g = contexte.configCourante.global || {};
+      elements['form-surplace'].innerHTML = 'buvette=' + (g.buvette_disponible || '');
+    },
+    majReponse: () => {
+      trace.push({ type: 'majReponse' });
+      const g = contexte.configCourante.global || {};
+      elements['form-reponse'].innerHTML = 'limite=' + (g.date_limite_reponse || '') +
+        ' contact=' + (g.contact_reponse_nom || '');
+    },
+    majApercuInvitation: () => {
+      trace.push({ type: 'majApercuInvitation' });
+      const g = contexte.configCourante.global || {};
+      elements['apercu-invitation-rendu'].innerHTML = 'tournoi=' + (g.tournoi_nom || '') +
+        ' lieu=' + (g.tournoi_lieu || '');
+    },
+    majConformiteFFR: async () => { trace.push({ type: 'majConformiteFFR' }); },
 
     // Doublures de RENDU seulement : ce qu'on éprouve est que les zones soient RÉÉCRITES,
     // ⛔ pas ce qu'elles contiennent — le contenu, c'est le backend qui en répond (T4).
@@ -207,6 +260,8 @@ function jouerReinitialisation(opt) {
   }
   vm.runInContext(extraireFonction('frontend/js/admin-autorisation.js',
     'function invaliderAutorisationAffichee()'), contexte, { filename: 'admin-autorisation.js' });
+  vm.runInContext(extraireFonction('frontend/js/admin-conformite-ffr.js',
+    'function invaliderConformiteFFRAffichee()'), contexte, { filename: 'admin-conformite-ffr.js' });
   // ⚠️ `sansMajAutorisation` ne retire QUE la relecture, jamais l'oubli : c'est précisément ce
   //    qu'il faut isoler pour prouver que l'oubli tient TOUT SEUL (F-G ⑧).
   if (!opt.sansMajAutorisation) {
@@ -222,6 +277,12 @@ function jouerReinitialisation(opt) {
     zoneClubs: (elements['liste-clubs-invites'] || {}).innerHTML || '',
     zoneFeuilleFFR: elements['autorisation-feuille'].innerHTML || '',
     zoneSaisieFFR: elements['autorisation-saisie'].innerHTML || '',
+    zoneConformite: elements['bloc-conformite-ffr'].innerHTML || '',
+    zoneSurPlace: elements['form-surplace'].innerHTML || '',
+    zoneReponse: elements['form-reponse'].innerHTML || '',
+    zoneApercu: elements['apercu-invitation-rendu'].innerHTML || '',
+    configEnMemoire: contexte.configCourante,
+    reloads: trace.filter((e) => e.type === 'rechargerLaPage').length,
     messages
   }));
 }
@@ -319,7 +380,8 @@ function porteLAncienJeton(clubs) {
     'F-D ③ la liste en mémoire est vide — on affiche moins, jamais du faux');
   verifier(/Impossible de charger les clubs invités/.test(panne.zoneClubs),
     'F-D ④ l\'écran signale explicitement l\'échec de chargement');
-  verifier(panne.messages.some((m) => m.ton === 'ko' && /pas pu être relue/.test(m.texte)),
+  verifier(panne.messages.some((m) => m.ton === 'ko' &&
+    /Tournoi réinitialisé/.test(m.texte) && /pas pu être entièrement rafraîchi/.test(m.texte)),
     'F-D ⑤ le message de fin dit que la réinitialisation a eu lieu MAIS que l\'écran est incomplet');
   verifier(panne.trace.some((e) => e.type === 'rechargerEtRendre'),
     'F-D ⑥ la panne n\'interrompt pas le reste de la remise à zéro de l\'écran');
@@ -357,6 +419,55 @@ function porteLAncienJeton(clubs) {
     verifier(nominal.trace.some((e) => e.type === f),
       'F-G ⑨ ' + f + ' est rafraîchi après le reset (données d\'édition effacées)');
   });
+
+  /* ---- F-H : LA RELECTURE ÉCHOUE après un reset RÉUSSI → FILET DE SECOURS -- */
+  //   ⭐⭐ Le cas dangereux : `rechargerEtRendre` commence par `apiGet('getAll')`. Une coupure
+  //      réseau à cet instant laisse une page ENTIÈRE peinte avec l'édition effacée — bien
+  //      au-delà des trois formulaires. ⛔ Aucun rattrapage partiel ne peut couvrir cela : on
+  //      recharge la page, et on SORT sans rien repeindre.
+  const pannePage = await jouerReinitialisation({ clubsFrais: CARNET_APRES_RESET,
+    rechargementEchoue: true });
+
+  verifier(pannePage.trace.some((e) => e.type === 'rechargerEtRendre'),
+    'F-H ① le ré-affichage a bien été TENTÉ (et il a échoué, c\'est le scénario)');
+  verifier(pannePage.reloads === 1,
+    'F-H ② ⭐⭐ BLOQUANT : le rechargement de secours est demandé EXACTEMENT UNE FOIS ' +
+    '(constaté ' + pannePage.reloads + ')');
+
+  //   ⛔ LE POINT QUI PROTÈGE UN RÉGLAGE PERMANENT : on SORT avant tout rendu. Repeindre
+  //      « Réponse » depuis une config vide afficherait `email_expediteur` VIDE — pourtant
+  //      CONSERVÉ par le reset — et un enregistrement ultérieur l'écraserait pour de bon.
+  ['majReponse', 'majSurPlace', 'majApercuInvitation', 'majConformiteFFR'].forEach((f) => {
+    verifier(!pannePage.trace.some((e) => e.type === f),
+      'F-H ③ ⛔ ' + f + ' n\'est PAS exécutée : aucun rendu depuis une config vide');
+  });
+  verifier(!/limite=|contact=/.test(pannePage.zoneReponse.replace(
+      'limite=2019-01-01 contact=CONTACT TEST ANCIEN', '')),
+    'F-H ④ le formulaire « Réponse » n\'a pas été réécrit avant le rechargement');
+
+  //   Et l'état mémoire dangereux est tout de même oublié, avant même le rechargement.
+  verifier(!porteUneParticipation(pannePage.clubsEnMemoire) &&
+           !porteLAncienJeton(pannePage.clubsEnMemoire),
+    'F-H ⑤ ⭐ la liste des clubs est oubliée AVANT tout : rien de l\'ancienne édition ' +
+    'n\'est exploitable, même le temps du rechargement');
+  verifier(!porteUneTraceDeLAncienneEdition(pannePage.zoneFeuilleFFR) &&
+           !porteUneTraceDeLAncienneEdition(pannePage.zoneConformite),
+    'F-H ⑥ ⭐ les deux zones critiques sont invalidées avant le rechargement');
+
+  /* ---- F-I : LE CHEMIN NOMINAL — aucun rechargement, tout est reconstruit -- */
+  verifier(nominal.reloads === 0,
+    'F-I ① ⛔ en marche normale, AUCUN rechargement de page (constaté ' + nominal.reloads + ')');
+  ['majAutorisation', 'majSurPlace', 'majReponse', 'majApercuInvitation', 'majConformiteFFR']
+    .forEach((f) => {
+      const vu = f === 'majAutorisation'
+        ? nominal.trace.some((e) => e.action === 'getDossierAutorisation')
+        : nominal.trace.some((e) => e.type === f);
+      verifier(vu, 'F-I ② ' + f + ' est reconstruite depuis les données fraîches');
+    });
+  verifier(!porteUneTraceDeLAncienneEdition(nominal.zoneSurPlace) &&
+           !porteUneTraceDeLAncienneEdition(nominal.zoneReponse) &&
+           !porteUneTraceDeLAncienneEdition(nominal.zoneApercu),
+    'F-I ③ ⭐ et les trois écrans montrent le tournoi vierge, pas l\'ancien');
 
   /* ---- F-A : le rechargement lui-même ----------------------------------- */
   const sansFonction = await jouerReinitialisation({ sansRechargement: true });

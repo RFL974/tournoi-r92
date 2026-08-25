@@ -90,6 +90,22 @@ const MUTATIONS = [
       '    if (typeof majAutorisation === \'function\') await majAutorisation();\n', '')
   },
   {
+    // ⭐⭐ LE FILET DE SECOURS : sans lui, un échec de rechargerEtRendre laisse une page
+    //   ENTIÈRE peinte avec l'édition que le serveur vient d'effacer.
+    nom: 'F-H — le rechargement de secours est retire',
+    defaut: 'la page entiere resterait peinte avec l edition effacee',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin.js',
+      '      rechargerLaPage();\n      return;\n', '')
+  },
+  {
+    // ⛔ Le `return` est l'autre moitie : sans lui, on repeindrait « Reponse » depuis une
+    //   config vide, et `email_expediteur` — pourtant CONSERVE — apparaitrait vide.
+    nom: 'F-H bis — la sortie apres le rechargement est retiree',
+    defaut: 'email_expediteur s afficherait VIDE et un enregistrement l ecraserait',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin.js',
+      '      rechargerLaPage();\n      return;\n', '      rechargerLaPage();\n')
+  },
+  {
     nom: 'F-G bis — l oubli prealable de la feuille FFR est retire',
     defaut: 'en cas de panne reseau, l ancienne feuille resterait la seule copie visible',
     appliquer: (b) => remplacer(b, 'frontend/js/admin.js',
@@ -124,7 +140,7 @@ try {
     // ⚠️ Le garde-fou est copié LUI AUSSI : sans cela, la mutation F-T — qui porte sur le
     //    MODÈLE du test, pas sur le produit — n'aurait aucun endroit où s'appliquer.
     for (const f of ['frontend/js/admin.js', 'frontend/js/admin-invitations.js',
-                     'frontend/js/admin-autorisation.js',
+                     'frontend/js/admin-autorisation.js', 'frontend/js/admin-conformite-ffr.js',
                      'tests/frontend-reinitialisation.test.js']) {
       fs.copyFileSync(path.join(RACINE, f), path.join(copie, f));
     }
@@ -138,10 +154,21 @@ try {
       execFileSync(process.execPath, [path.join(copie, 'tests', 'frontend-reinitialisation.test.js')],
         { env: Object.assign({}, process.env, { RACINE_TOURNOI_R92: copie }), encoding: 'utf8' });
     } catch (e) {
-      detectee = true;
-      resume = String(e.stdout || '').split('\n')
+      const sortie = String(e.stdout || '');
+      const lignesEchec = sortie.split('\n')
         .filter((l) => l.indexOf('ÉCHEC') !== -1 && l.indexOf('Échecs :') === -1)
-        .map((l) => l.trim()).slice(0, 3).join('\n        ');
+        .map((l) => l.trim());
+      // ⚠️ UN PLANTAGE N'EST PAS UNE DÉTECTION, et ce contrôle a déjà servi : une fois, un
+      //    fichier manquant dans la copie faisait planter le garde-fou à CHAQUE mutation —
+      //    « 10/10 détectées » ne prouvait alors strictement rien. On exige donc au moins une
+      //    ligne ÉCHEC, c'est-à-dire une assertion qui a VRAIMENT mordu.
+      if (!lignesEchec.length) {
+        throw new Error('Le garde-fou a planté au lieu d\'échouer sur une assertion — la ' +
+          'mutation « ' + mutation.nom + ' » ne prouve RIEN.\n' + sortie.slice(-1200) +
+          String(e.stderr || '').slice(-1200));
+      }
+      detectee = true;
+      resume = lignesEchec.slice(0, 3).join('\n        ');
     }
 
     console.log((detectee ? '  DÉTECTÉE      ' : '  ⛔ PASSÉE      ') + mutation.nom);

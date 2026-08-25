@@ -70,6 +70,27 @@ function categoriesPresentesNoms() {
    BLOC « CONFORMITÉ FFR » (sous la date du tournoi)
    -------------------------------------------------------------------------- */
 
+/**
+ * ⭐ M1-B2 / B2-0.3 — OUBLIER le verdict de conformité affiché.
+ *
+ * 🔬 Ce bloc se calcule à partir de la DATE du tournoi et des CATÉGORIES — deux choses qu'une
+ * réinitialisation efface. Comme la feuille FFR, il n'est recalculé qu'à des moments précis :
+ * laissé tel quel, il continuerait d'afficher le verdict de l'édition close.
+ *
+ * ⚠️ Et il ne suffit PAS d'oublier `configCourante` pour l'assainir : `dateTournoiCourante()` lit
+ * D'ABORD le champ `tournoi_date` DANS LA PAGE. Si le ré-affichage échoue, ce champ porte encore
+ * l'ancienne date, et un recalcul produirait un verdict faux — sur une date qui n'existe plus.
+ * ⭐ D'où la règle appliquée par `onReinitialiser` : on efface toujours, et on ne recalcule QUE si
+ * la relecture du serveur a réussi. Sinon la zone reste neutre — on montre moins, jamais du faux.
+ */
+function invaliderConformiteFFRAffichee() {
+  const zone = document.getElementById('bloc-conformite-ffr');
+  if (zone) {
+    zone.innerHTML = '<div class="ffr-bloc ffr-neutre">Conformité FFR à recalculer — ' +
+      'renseigne la date et les catégories du nouveau tournoi.</div>';
+  }
+}
+
 /** (Re)calcule et affiche le bloc « Conformité FFR », puis rafraîchit les formes des cartes. */
 async function majConformiteFFR() {
   const zone = document.getElementById('bloc-conformite-ffr');

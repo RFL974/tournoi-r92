@@ -666,6 +666,18 @@ async function onClicConnexion(evenement) {
  * données de la demande d'autorisation PROPRES À L'ÉDITION (D-043) ; conserve l'historique de
  * saison et les informations permanentes du club. Recharge toute la page ensuite.
  */
+/**
+ * ⭐ M1-B2 / B2-0.4 — Recharge la page. Une ligne, isolée pour UNE raison : la rendre
+ * substituable par le garde-fou de `tests/`, qui n'a pas de navigateur.
+ * ⛔ Ce n'est pas une couche d'abstraction : c'est le strict nécessaire pour que le filet de
+ * secours du reset soit ÉPROUVÉ plutôt que supposé.
+ */
+function rechargerLaPage() {
+  if (typeof location !== 'undefined' && location && typeof location.reload === 'function') {
+    location.reload();
+  }
+}
+
 async function onReinitialiser() {
   const message = document.getElementById('message-reinitialisation');
   const bouton = document.getElementById('bouton-reinitialiser');
@@ -728,36 +740,73 @@ async function onReinitialiser() {
     // ③ Le tout vient AVANT `rechargerEtRendre`, qui recalcule ensuite `majDossier` et
     //    `majTableauBord` : ces deux-là lisent cette liste, une relecture après arriverait trop tard.
     // ⛔ AUCUNE règle du backend n'est recopiée ici : on OUBLIE, puis on RELIT le serveur.
-    clubsInvitesCourants = [];
-    const clubsRelus = (typeof chargerClubsInvites === 'function') && await chargerClubsInvites();
-
-    // ⭐ B2-0.2 — LA FEUILLE FFR AUSSI, et pour la même raison : on l'OUBLIE tout de suite.
+    //
+    // ⭐ B2-0.4 — L'OUBLI DE CE QUI EST DANGEREUX, PUIS UN FILET DE SECOURS.
+    //
     // ⚠️ Constaté EN RÉEL le 2026-08-25 : l'écran « Demande d'autorisation » montrait encore le
     // tournoi précédent (3 clubs, 12 équipes, 117 participants, 38 éducateurs) sur un classeur
     // pourtant vidé — parce que `majAutorisation` n'est appelée qu'au chargement de la page.
     // ⛔ C'est le document destiné à la LIGUE : il ne doit jamais afficher une édition close.
+    //
+    // ⛔ CE QU'ON NE FAIT SURTOUT PAS : vider `configCourante` puis repeindre les formulaires
+    //    avec. Ce serait ouvrir un trou plus grave que celui qu'on ferme — le formulaire
+    //    « Réponse » afficherait `email_expediteur` VIDE, alors que le reset le CONSERVE. Il
+    //    suffirait ensuite que l'organisateur saisisse un contact pour que la validation passe
+    //    et que l'enregistrement écrase ce réglage permanent par une chaîne vide.
+    //    🔬 Vérifié de bout en bout : `onEnregistrerReponse` envoie `email_expediteur` tel quel,
+    //    `enregistrerReponseInvitation` ne contrôle son format QUE s'il est non vide, et
+    //    `ecrireChampsConfig` écrit les valeurs vides. La perte serait donc réelle et silencieuse.
+    clubsInvitesCourants = [];
     if (typeof invaliderAutorisationAffichee === 'function') invaliderAutorisationAffichee();
+    if (typeof invaliderConformiteFFRAffichee === 'function') invaliderConformiteFFRAffichee();
 
-    // On recharge tout l'état depuis le backend et on ré-affiche la page.
-    await rechargerEtRendre({ reglages: true, terrains: true, selectCats: true,
-                              equipes: true, infos: true, publication: true });
+    const clubsRelus = (typeof chargerClubsInvites === 'function') && await chargerClubsInvites();
 
+    // ⭐ LE FILET DE SECOURS, et c'est la garantie de fond de ce lot.
+    //
+    // `rechargerEtRendre` commence par `apiGet('getAll')` puis `lireConfigAdmin()`. Une coupure
+    // réseau à cet instant laisse une page ENTIÈRE peinte avec l'édition que le serveur vient
+    // d'effacer : catégories, équipes, poules, planning, infos du tournoi, dossier, tableau de
+    // bord, formes FFR des cartes. ⛔ Aucun rattrapage partiel ne peut couvrir tout cela.
+    //
+    // ⭐ Alors on ne rattrape pas : ON RECHARGE LA PAGE. Le navigateur repart du serveur, et
+    //    `initAdmin` affiche soit l'état réel, soit sa propre erreur — jamais l'ancienne édition.
+    // ⛔ PAS DE BOUCLE POSSIBLE : ce chemin ne s'atteint que par un clic sur « Réinitialiser » ;
+    //    une page rechargée ne réinitialise rien toute seule.
+    // ⭐ Et l'on SORT immédiatement : ⛔ aucun rendu n'est tenté depuis une config vide.
+    try {
+      await rechargerEtRendre({ reglages: true, terrains: true, selectCats: true,
+                                equipes: true, infos: true, publication: true });
+    } catch (erreurRendu) {
+      rechargerLaPage();
+      return;
+    }
+
+    // ── À PARTIR D'ICI, LA RELECTURE A RÉUSSI : `configCourante` est celle du serveur. ──
+    //
     // ⚠️ LE PIÈGE À CONNAÎTRE : `rechargerEtRendre` ne ré-affiche qu'un SOUS-ENSEMBLE de ce que
-    // `initAdmin` construit au chargement. Tout ce qui manque garde donc à l'écran les valeurs de
-    // l'édition effacée. Le delta EXACT est de quatre fonctions, et les voici — la première est
-    // celle qui a été prise en défaut en réel :
-    //   · majAutorisation      → la feuille FFR (relue depuis le serveur) ;
+    // `initAdmin` construit au chargement. Le delta a été établi FONCTION PAR FONCTION — il en
+    // compte DIX, dont CINQ portent des données d'édition et sont donc rappelées ici :
+    //   · majAutorisation      → la feuille FFR — celle prise en défaut en réel ;
     //   · majSurPlace          → buvette / sandwicherie / boutique (CHAMPS_SURPLACE, effacés) ;
     //   · majReponse           → date limite et contact de réponse (effacés) ;
-    //   · majApercuInvitation  → l'aperçu de l'email, construit depuis la config d'invitation.
-    // ⛔ `majSponsors` est VOLONTAIREMENT absent : les partenaires SURVIVENT à une réinitialisation
-    //    (choix assumé — un partenariat se reconduit), il n'y a donc rien de périmé à rafraîchir.
-    // ⭐ Ces quatre-là lisent `configCourante`, que `rechargerEtRendre` vient de relire : ils
-    //    passent donc APRÈS lui. ⛔ Aucune règle du backend n'est recopiée ici.
-    if (typeof majAutorisation === 'function') await majAutorisation();
-    if (typeof majSurPlace === 'function') majSurPlace();
-    if (typeof majReponse === 'function') majReponse();
-    if (typeof majApercuInvitation === 'function') majApercuInvitation();
+    //   · majApercuInvitation  → l'aperçu de l'email, construit depuis la config d'invitation ;
+    //   · majConformiteFFR     → le verdict de conformité, calculé sur la date et les catégories.
+    // ⛔ Les CINQ autres n'ont rien à voir avec l'édition : `chargerClubsInvites` (déjà relue plus
+    //    haut), `injecterIcones` (décoration), `majBarreConnexion` (état de connexion),
+    //    `majFormesCategories` (rappelée par `majConformiteFFR`, et ses cartes viennent d'être
+    //    reconstruites) et `majSponsors` — les partenaires SURVIVENT délibérément au reset.
+    // ⛔ Aucune règle du backend n'est recopiée ici : on relit, on repeint.
+    let ecranComplet = true;
+    try {
+      if (typeof majAutorisation === 'function') await majAutorisation();
+      if (typeof majSurPlace === 'function') majSurPlace();
+      if (typeof majReponse === 'function') majReponse();
+      if (typeof majApercuInvitation === 'function') majApercuInvitation();
+      if (typeof majConformiteFFR === 'function') await majConformiteFFR();
+    } catch (erreurEcrans) {
+      ecranComplet = false;
+    }
     // Après le rechargement (comme avant le refactor) : en cas d'erreur réseau,
     // l'affichage — pistes d'arbitrage comprises — reste intact.
     document.getElementById('arbitrages').innerHTML = '';
@@ -766,13 +815,14 @@ async function onReinitialiser() {
     const nbE = (res && res.nb_equipes != null) ? res.nb_equipes : '?';
     const nbP = (res && res.nb_poules != null) ? res.nb_poules : '?';
     const nbM = (res && res.nb_matchs != null) ? res.nb_matchs : '?';
-    // ⚠️ Si la relecture des clubs a échoué, la réinitialisation a bel et bien eu lieu côté
-    // serveur : on le dit, et on dit aussi que l'écran, lui, est incomplet — jamais l'inverse.
+    // ⚠️ Si une relecture a échoué, la réinitialisation a bel et bien eu lieu côté serveur : on le
+    // dit, et on dit aussi que l'écran, lui, est incomplet — jamais l'inverse.
+    const toutRelu = clubsRelus && ecranComplet;
     afficherMessage(message,
       '✅ Tournoi réinitialisé. Supprimés : ' + nbC + ' catégorie(s), ' + nbE +
       ' équipe(s), ' + nbP + ' poule(s), ' + nbM + ' match(s). Tournoi masqué.' +
-      (clubsRelus ? '' : ' ⚠️ La liste des clubs invités n\'a pas pu être relue (réseau) : ' +
-       'recharge la page pour la voir à jour.'), clubsRelus ? 'ok' : 'ko');
+      (toutRelu ? '' : ' ⚠️ L\'écran n\'a pas pu être entièrement rafraîchi (réseau) : ' +
+       'recharge la page pour le voir à jour.'), toutRelu ? 'ok' : 'ko');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {
