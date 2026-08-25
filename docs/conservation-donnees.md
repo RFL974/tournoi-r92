@@ -33,8 +33,8 @@
 |---|---|---|---|---|
 | **1** | Contacts des structures invitées *(le carnet)* | **3 éditions** sans participation | Écran **Clubs invités** → supprimer la structure | ✅ **VÉRIFIÉ** *(avec une condition de refus — §2.1)* |
 | **2a** | Effectifs déclarés — *nombre de joueurs, nombre d'équipes* | Effacés **à la réinitialisation** | ⭐ **Rien à faire : c'est automatique** | ✅ **VÉRIFIÉ** |
-| **2b** | Effectifs déclarés — *le détail par équipe et le total d'éducateurs* | Effacés **à la réinitialisation** | ⚠️ **La réinitialisation NE les efface PAS** | ⚠️ **À CONFIRMER — §2.2** |
-| **3** | Contacts de la demande fédérale *(représentant, président, **médecin**, secours)* | **1 an**, ou à chaque réinitialisation | Écran **Demande d'autorisation** → vider les champs → **Enregistrer** | ✅ **VÉRIFIÉ** ⚠️ *(la réinitialisation ne les efface pas — §2.3)* |
+| **2b** | Effectifs déclarés — *le détail par équipe et le total d'éducateurs* | Effacés **à la réinitialisation** | ⚡ **Rien à faire** *(corrigé par **B2-0** — ⚠️ sous réserve du redéploiement, §2.2)* | ⚡ **CORRIGÉ DANS LE DÉPÔT — §2.2** |
+| **3** | Contacts de la demande fédérale *(représentant, président, **médecin**, secours)* | **1 an**, ou à chaque réinitialisation | Écran **Demande d'autorisation** → vider les champs → **Enregistrer** | ✅ **VÉRIFIÉ** ⚡ *(depuis **M1-B / D-043**, la réinitialisation efface aussi les 26 champs d'édition, médecin et secours compris — ⚠️ sous réserve du redéploiement, §2.3)* |
 | **4** | Champ libre « Liste des équipes étrangères » | **Après envoi du dossier** | Même écran → vider le champ → **Enregistrer** | ✅ **VÉRIFIÉ** |
 | **5** | Relevés de visibilité des partenaires | **Après remise de la fiche** au partenaire | Écran **Partenaires** → bouton **« Repartir de zéro »** | ✅ **VÉRIFIÉ** |
 | **6** | Journal de saison | **Conservé** | ⛔ **Ne rien faire** | ⛔ **NE PAS TOUCHER** |
@@ -67,27 +67,35 @@ viennent d'être vidés. Aucun des trois motifs ne peut alors se déclencher.
 
 ---
 
-### 2.2 — ⚠️ Le détail des effectifs et le total d'éducateurs — À CONFIRMER
+### 2.2 — ⚡ Le détail des effectifs et le total d'éducateurs — CORRIGÉ DANS LE DÉPÔT
 
-**Le constat, vérifié** : la réinitialisation remet bien à zéro **huit colonnes** des structures
-invitées — dont le nombre de joueurs et le nombre d'équipes par catégorie.
+⚡ **Cette section annonçait qu'il n'existait AUCUN geste vérifié pour appliquer cette durée** —
+c'était vrai jusqu'au **2026-08-25**. ⭐ **Le lot M1-B2 / B2-0 a corrigé la cause dans le code.**
 
-> ❌ **Mais deux colonnes ne sont dans aucune de ces listes** : `detail_effectifs` *(le détail équipe
-> par équipe)* et `nb_educateurs_total`.
->
-> ❌ **Et aucun écran ne permet de les modifier** : l'édition d'une fiche de structure ne touche que
-> **quatre** colonnes — nom de la structure, nom, prénom et adresse du contact.
+**Ce qui n'allait pas** : la réinitialisation vidait **huit colonnes** des structures invitées —
+dont le nombre de joueurs et le nombre d'équipes par catégorie — mais **`detail_effectifs`** *(le
+détail équipe par équipe)* et **`nb_educateurs_total`** n'étaient dans aucune liste, et **aucun
+écran** ne permettait de les modifier *(l'édition d'une fiche ne touche que quatre colonnes : nom
+de la structure, nom, prénom et adresse du contact)*.
 
-**Conclusion honnête : il n'existe aucun geste vérifié pour appliquer cette durée.**
+> 🎯 **L'incohérence était démontrable sans interprétation** : `nb_joueurs_total` était effacé,
+> `nb_educateurs_total` ne l'était pas. **Les deux sont déclarés par la structure dans la MÊME
+> réponse**, et le dossier les affiche **l'un sous l'autre** — d'où le *« Joueurs annoncés : (vide)
+> / Éducateurs annoncés : 8 »* constaté en réel. C'était le risque **R-099**.
 
-⚠️ **Ce que ce document N'ÉCRIT PAS** : « ouvre le classeur et vide les colonnes à la main ».
-Ce serait une procédure inventée. **Deux raisons de ne pas la recommander sans essai** :
+**Ce qui est fait** : la réinitialisation vide désormais **toutes** les colonnes d'ENGAGEMENT,
+`detail_effectifs`, `nb_educateurs_total` et `alerte_ecart` compris — et **conserve** les seules
+coordonnées. Le détail de la répartition est dans
+[`structure-google-sheet.md`](structure-google-sheet.md), onglet `ClubsInvites`.
 
-1. ces deux colonnes **sont lues** par le calcul des effectifs, qui alimente le **nombre de
-   participants** de la demande d'autorisation ;
-2. **l'effet d'un vidage manuel n'a pas été éprouvé.**
+⚠️ **Sur le serveur en service chez Google, cela dépend du redéploiement** — voir
+[`deploiement.md`](deploiement.md). Tant que `Code.gs` n'y a pas été recollé, **une réinitialisation
+réelle conserve encore ces deux colonnes**, et la conclusion ci-dessus reste celle d'avant.
 
-➡️ **À confirmer par un essai réel**, ou à corriger dans l'application *(voir §5)*.
+⛔ **Ce que ce document N'ÉCRIT TOUJOURS PAS** : « ouvre le classeur et vide les colonnes à la
+main ». Ce serait une procédure inventée — ces colonnes **sont lues** par le calcul des effectifs,
+qui alimente le nombre de participants de la demande d'autorisation, et l'effet d'un vidage manuel
+n'a jamais été éprouvé. ⭐ **Le geste juste est la réinitialisation**, une fois le serveur à jour.
 
 ---
 
@@ -105,9 +113,20 @@ Ce serait une procédure inventée. **Deux raisons de ne pas la recommander sans
 **Les champs concernés** : représentant *(nom, téléphone, adresse)* · président *(nom, téléphone,
 adresse)* · **médecin** *(nom, téléphone)* · secours *(nom, téléphone)*.
 
-> ⚠️ **ATTENTION — la réinitialisation du tournoi ne les efface PAS.** Elle efface le référent du
-> jour et le poste de secours, **mais pas les contacts de la demande fédérale**. **Ce geste est donc
-> à faire séparément, à la main.** *(C'est le problème **R-033**, voir §5.)*
+> ⚡ **CORRECTION D'UN DÉCROCHAGE DOCUMENTAIRE** *(relevé le 2026-08-25)*. Ce paragraphe affirmait :
+> *« ATTENTION — la réinitialisation du tournoi ne les efface PAS […] ce geste est donc à faire
+> séparément, à la main. »* ⛔ **C'était vrai jusqu'au lot M1-B, et faux depuis** : la décision
+> **D-043** a ajouté `reinitialiserDonneesAutorisationTournoi`, qui vide les **26 champs d'édition**
+> de la demande — **médecin et secours compris**. Seuls les **10 champs permanents** du club
+> *(nom, code, label, président, représentant)* survivent, et c'est voulu.
+>
+> ⭐ **Ce que cela change pour toi** : à la réinitialisation, **le geste manuel n'est plus
+> nécessaire** pour le médecin, les secours et l'ambulance. Il le reste pour appliquer la durée
+> **d'1 an** hors réinitialisation — c'est l'objet de cette section.
+>
+> ⚠️ **Sur le serveur en service chez Google, cela dépend du redéploiement** — voir
+> [`deploiement.md`](deploiement.md). Tant que `Code.gs` n'y a pas été recollé, l'ancien
+> comportement subsiste et le geste manuel reste **indispensable**.
 >
 > 🩺 **Et c'est le contact du médecin qui rend ce geste important** : un contact de secours périmé
 > est pire qu'un contact absent — on croit l'avoir, et il ne répond pas.
@@ -185,7 +204,7 @@ décider : **qui** nettoie, **quand**, et **selon quel critère**.
 
 | # | Le comportement | Conséquence | Réf |
 |---|---|---|---|
-| **1** | **La réinitialisation conserve des données que D-020 dit d'effacer** : le détail des effectifs, le total d'éducateurs, et **tous les contacts de la demande fédérale** | ⚠️ **La règle décidée et le code ne disent pas la même chose.** Tant que ce n'est pas corrigé, **la durée n'est tenue que si quelqu'un pense à faire le geste** | **R-033** |
+| **1** | **La réinitialisation conserve des données que D-020 dit d'effacer.** ⚡ **Cette ligne visait TROIS familles ; les trois sont désormais traitées DANS LE DÉPÔT** : le **détail des effectifs** et le **total d'éducateurs** *(lot **B2-0**, 2026-08-25 — §2.2)*, et les **contacts de la demande fédérale** *(lot **M1-B** / **D-043** — §2.3)* | ⚠️ **Tant que le serveur n'est pas redéployé**, le code en service dit encore autre chose que la règle décidée, et la durée n'est tenue que si quelqu'un pense à faire le geste. ⭐ **Une fois redéployé, ce point se ferme** — reste à le **constater en réel** | **R-033** |
 | **2** | **Le droit d'effacement est partiel** : on ne peut pas effacer le seul contact d'une structure en gardant la structure ; et la suppression est refusée tant qu'une équipe est engagée | Une demande de retrait peut être **impossible à satisfaire** au mauvais moment de la saison | **R-031** |
 | **3** | **Rien ne signale ce qui est périmé** | Le rappel de **D-033** repose entièrement sur un humain | **R-030** *(part outillage)* |
 

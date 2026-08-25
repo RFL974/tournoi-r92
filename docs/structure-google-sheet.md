@@ -75,12 +75,22 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 > La description ci-dessus est exacte : il est **posé à chaque génération de poules et planning**.
 > ⭐ Or régénérer est un geste **normal et répété** pendant la préparation — on corrige les poules,
 > on ajoute une équipe, on relance. **Un seul tournoi réel produit donc plusieurs `tournoi_id`**, et
-> les lignes de `Historique` se répartissent entre eux. ⚠️ Il n'est pas non plus effacé par la
-> réinitialisation : l'ancien survit jusqu'à la génération suivante.
+> les lignes de `Historique` se répartissent entre eux.
 >
 > ⭐ **Il identifie une GÉNÉRATION DE PLANNING, pas une édition.** Un identifiant stable d'édition
 > — `edition_id`, créé à l'ouverture et jamais renouvelé — est prévu par **M1-B2 / B2-1**
 > *(décision **D-050**)*.
+>
+> ⚡ **Ce qui a changé avec B2-0** *(2026-08-25)*. Cette note disait aussi : *« Il n'est pas non plus
+> effacé par la réinitialisation : l'ancien survit jusqu'à la génération suivante. »* — **vrai
+> jusqu'à B2-0**. ⭐ **Dans le dépôt, `tournoi_id` est désormais EFFACÉ par la réinitialisation** :
+> l'identifiant de l'édition passée n'est plus hérité, et `assurerTournoiId` en recrée un à la
+> demande *(les lignes déjà écrites dans `Historique` gardent le leur — on n'y touche pas)*.
+> ⛔ **Le renouvellement à chaque génération, lui, est INCHANGÉ** — c'est le cœur de R-106, et il
+> appartient à **B2-1**.
+> ⚠️ **Sur le serveur en service chez Google** : dépend du redéploiement — voir
+> [`deploiement.md`](deploiement.md). Tant que `Code.gs` n'y a pas été recollé, une réinitialisation
+> réelle laisse encore survivre l'ancien `tournoi_id`.
 
 > ⚠️ **Le plan des terrains survit à la réinitialisation** *(risque **R-101**)* : `terrains_physiques`,
 > `couloir_terrain_m`, `dimensions_categories`, `tm_longueur_m`, `tm_largeur_m` et
@@ -467,13 +477,31 @@ clubs qui **acceptent** (Phase 2).
 > sur un Sheet déjà en service (`assurerColonnesClubsInvites`) — les 5 premières gardent leur
 > position. Les clubs **sans jeton** (fiches d'avant le Sprint 6) en reçoivent un automatiquement à
 > l'ouverture de l'admin ou au prochain envoi (`assurerTokensClubs`).
-> ✅ La **réinitialisation du tournoi** CONSERVE le carnet d'adresses (noms, contacts, prénoms,
-> statuts), mais **remet à zéro** les colonnes propres à l'édition — **`club_token` compris** :
-> les liens de l'édition passée (dossiers, pages de réponse, copies partagées aux éducateurs)
-> cessent de fonctionner, et chaque club reçoit un jeton neuf au prochain chargement de l'admin.
-> Sont aussi vidées : `categories_engagees`, `dossier_envoye`, `invitation_envoyee`, `date_reponse`,
-> `nb_equipes_par_categorie`, `nb_joueurs_total`, `selection_enregistree` (les cartes
-> repartent donc en **violet « En attente de réponse »**).
+> ✅ La **réinitialisation du tournoi** suit la doctrine **B2-0** : ⭐ *« conserver le contact,
+> réinitialiser l'engagement »* *(décision **D-050**)*. Les 17 colonnes sont réparties en **deux
+> familles**, déclarées dans `backend/Code.gs` :
+>
+> | Famille | Colonnes | À la réinitialisation |
+> |---|---|---|
+> | **CONTACT** — *« qui est ce club ? »* | `club_nom`, `club_contact_nom`, `club_contact_prenom`, `club_contact_email`, `date_ajout` | ✅ **conservées** — le carnet se réutilise d'une édition à l'autre |
+> | **ENGAGEMENT** — *« que fait ce club CETTE fois ? »* | `statut`, `categories_engagees`, `dossier_envoye`, `invitation_envoyee`, `club_token`, `date_reponse`, `nb_equipes_par_categorie`, `nb_joueurs_total`, `alerte_ecart`, `detail_effectifs`, `nb_educateurs_total`, `selection_enregistree` | ⛔ **vidées** — les cartes repartent en **violet « En attente de réponse »** |
+>
+> ⭐ **`club_token` est vidé lui aussi** : les liens de l'édition passée (dossiers, pages de réponse,
+> copies partagées aux éducateurs) cessent de fonctionner, et chaque club reçoit un jeton neuf au
+> prochain chargement de l'admin.
+>
+> ⚡ **Ce qui a changé avec B2-0** *(2026-08-25)*. Ce paragraphe annonçait que la réinitialisation
+> conservait *« noms, contacts, prénoms, **statuts** »* et ne vidait que **huit** colonnes — **vrai
+> jusqu'à B2-0**. ⛔ **Quatre colonnes y manquaient** : `statut` *(R-100)*, `nb_educateurs_total`,
+> `detail_effectifs` et `alerte_ecart` *(R-099)*. Un club accepté à l'édition précédente restait
+> donc « Accepté » sur un classeur réinitialisé — **non réinvitable**, **compté dans la demande
+> d'autorisation FFR**, et son dossier affichait *« Joueurs annoncés : (vide) / Éducateurs
+> annoncés : 8 »*.
+> ⚠️ **Sur le serveur en service chez Google** : dépend du redéploiement — voir
+> [`deploiement.md`](deploiement.md).
+>
+> ⛔ **B2-0 corrige le COMPORTEMENT, pas la STRUCTURE** : les deux familles cohabitent toujours dans
+> le même onglet *(**R-102**)*. Leur séparation en `Clubs` + `Participations` appartient à **B2-2**.
 
 > 🔓 **Réponse en libre-service (Sprint 6).** Le club répond lui-même via
 > `reponse-invitation.html?tournoi=…&club=…&token=…` : lecture par `getReponseInvitation` (doGet,

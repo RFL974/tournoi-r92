@@ -1990,6 +1990,78 @@ var CHAMPS_AUTORISATION_A_REINITIALISER = [
  * PERMANENTES que D-043 conserve. C'est le risque R-B2, couvert par un test négatif. */
 var PREFIXE_RECOMPENSES_AUTORISATION = 'org_recompenses_';
 
+/* ─────────────────────────────────────────────────────────────────────────────
+ * M1-B2 / B2-0 — « Conserver le contact, réinitialiser l'engagement. »
+ *
+ * Les 17 colonnes de `ClubsInvites` répondent à DEUX questions distinctes :
+ *   « qui est ce club ? »            → le CONTACT, durable, réutilisable d'une édition à l'autre ;
+ *   « que fait ce club CETTE fois ? » → l'ENGAGEMENT, propre à une édition, sans valeur ensuite.
+ * Rien dans la structure de l'onglet ne disait à quelle famille appartient une colonne (R-102) :
+ * le reset s'en remettait à une liste écrite à la main, et TROIS colonnes y ont été oubliées
+ * (`nb_educateurs_total`, `detail_effectifs`, `alerte_ecart` — R-099), tandis que `statut` était
+ * délibérément rangé du côté du carnet d'adresses (R-100).
+ *
+ * ⭐ `statut` est ici un ENGAGEMENT, pas une coordonnée. Un nom et un email décrivent le club ;
+ * « Accepté » est la RÉPONSE À UNE QUESTION POSÉE — « participez-vous au tournoi du 15 juin ? ».
+ * Elle ne vaut pas pour l'édition suivante (décision D-050).
+ *
+ * ⚠️ Ces deux listes sont EXPLICITES, jamais déduites l'une de l'autre — même doctrine que D-043 :
+ * sur une opération destructive, une colonne ajoutée plus tard ne doit JAMAIS devenir effaçable
+ * par le seul fait qu'on aurait oublié de la classer. L'oubli conserve la donnée, il ne la détruit
+ * pas. C'est le test de partition (R-105) qui rend l'oubli VISIBLE, pas le reset qui le devine.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Le CONTACT : ce qu'on garde d'une édition à l'autre — le carnet d'adresses, et rien d'autre. */
+var CLUBS_COLONNES_CONTACT = ['club_nom', 'club_contact_nom', 'club_contact_prenom',
+  'club_contact_email', 'date_ajout'];
+
+/* L'ENGAGEMENT : tout ce qui décrit la participation à UNE édition, et que le reset doit vider.
+ * ⭐ `club_token` en fait partie : réinitialiser, c'est ouvrir une nouvelle édition — les liens de
+ * la précédente (dossiers, pages de réponse, copies partagées aux éducateurs) pointeraient sur des
+ * données qui n'existent plus. `assurerTokensClubs` en réattribue un au prochain chargement de
+ * l'admin : l'effacer, c'est RENOUVELER, pas casser. */
+var CLUBS_COLONNES_ENGAGEMENT = ['statut', 'categories_engagees', 'dossier_envoye',
+  'invitation_envoyee', 'club_token', 'date_reponse', 'nb_equipes_par_categorie',
+  'nb_joueurs_total', 'alerte_ecart', 'detail_effectifs', 'nb_educateurs_total',
+  'selection_enregistree'];
+
+/**
+ * DÉCISION PURE (aucun classeur) : parmi les en-têtes RÉELLEMENT présents dans `ClubsInvites`,
+ * lesquels une réinitialisation doit-elle vider ? Comme pour D-043, la DÉCISION est séparée de
+ * l'EFFET afin d'être testable sans Google, cas négatifs compris.
+ *
+ * ⛔ Une colonne inconnue des deux familles n'est JAMAIS retenue : sur un classeur en service, une
+ * colonne qu'on n'a pas classée est une colonne dont on ignore la nature — la vider serait un pari
+ * sur une donnée qu'on ne comprend pas. Elle est signalée par `colonnesClubsNonClassees`.
+ * @param {Array<string>} entetes  la ligne d'en-tête réelle de l'onglet
+ * @return {Array<string>} les en-têtes à vider, dans l'ordre de la décision, sans doublon
+ */
+function colonnesClubsAEffacer(entetes) {
+  var presents = {};
+  (entetes || []).forEach(function (h) {
+    var nom = String(h == null ? '' : h).trim();
+    if (nom) presents[nom] = true;
+  });
+  return CLUBS_COLONNES_ENGAGEMENT.filter(function (h) { return presents[h] === true; });
+}
+
+/**
+ * DÉCISION PURE (aucun classeur) — le garde-fou de R-105 : quels en-têtes n'appartiennent NI au
+ * contact NI à l'engagement ? Une colonne non classée n'est pas une erreur du reset : c'est une
+ * décision qui n'a pas été prise. Cette fonction la rend visible au lieu de la laisser devenir un
+ * résidu permanent, ce qui est exactement arrivé trois fois (R-099).
+ * @param {Array<string>} entetes  la ligne d'en-tête réelle de l'onglet
+ * @return {Array<string>} les en-têtes sans famille (vide = tout est classé)
+ */
+function colonnesClubsNonClassees(entetes) {
+  return (entetes || []).map(function (h) {
+    return String(h == null ? '' : h).trim();
+  }).filter(function (nom) {
+    return nom !== '' && CLUBS_COLONNES_CONTACT.indexOf(nom) === -1 &&
+      CLUBS_COLONNES_ENGAGEMENT.indexOf(nom) === -1;
+  });
+}
+
 /**
  * DÉCISION PURE (aucun classeur) : parmi les paramètres réellement présents dans la zone A,
  * lesquels une réinitialisation doit-elle vider ? Sépare volontairement la DÉCISION de l'EFFET,
@@ -5449,9 +5521,23 @@ function supprimerClubInvite(classeur, data) {
 }
 
 /**
- * Réinitialisation d'une édition : vide les colonnes PAR ÉDITION de l'onglet ClubsInvites
- * (categories_engagees + dossier_envoye) pour TOUS les clubs, en conservant le carnet
- * d'adresses (noms, contacts, prénoms, statuts). Sans effet s'il n'y a aucun club.
+ * Réinitialisation d'une édition, côté clubs — M1-B2 / B2-0 :
+ * ⭐ « Conserver le contact, réinitialiser l'engagement. »
+ *
+ * Vide, pour TOUS les clubs, les colonnes d'ENGAGEMENT de `ClubsInvites`
+ * (`CLUBS_COLONNES_ENGAGEMENT`) et ne touche à AUCUNE colonne de CONTACT
+ * (`CLUBS_COLONNES_CONTACT`) : le carnet d'adresses reste réutilisable d'une édition à l'autre.
+ * La DÉCISION appartient à `colonnesClubsAEffacer` (pure, testable sans Sheet) ; cette fonction-ci
+ * n'en est que l'EFFET. Sans effet s'il n'y a aucun club.
+ *
+ * ⚠️ Avant B2-0, la liste était écrite à la main ici et il en manquait QUATRE : `statut` (R-100),
+ * `nb_educateurs_total`, `detail_effectifs` et `alerte_ecart` (R-099). Un club accepté à l'édition
+ * précédente restait donc « Accepté » sur un classeur réinitialisé — non réinvitable
+ * (`estInvitable()` exclut les acceptés), compté dans la cascade B.3 de la demande d'autorisation
+ * FFR, et son dossier affichait « Joueurs annoncés : (vide) / Éducateurs annoncés : 8 ».
+ *
+ * ⛔ Ce lot corrige le COMPORTEMENT, pas la STRUCTURE : `ClubsInvites` mêle toujours les deux
+ * familles (R-102). La séparation en `Clubs` + `Participations` appartient à B2-2 (D-050).
  */
 function reinitialiserPhase2Clubs(classeur) {
   var onglet = classeur.getSheetByName('ClubsInvites');
@@ -5460,13 +5546,7 @@ function reinitialiserPhase2Clubs(classeur) {
   var dernier = onglet.getLastRow();
   if (dernier < 2) return; // en-tête seul : rien à vider
   var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
-  // club_token EFFACÉ : réinitialiser, c'est ouvrir une nouvelle édition. Les liens de la
-  // précédente — dossiers, pages de réponse, et toutes les copies partagées aux éducateurs —
-  // pointeraient sur des données qui n'existent plus. `assurerTokensClubs` en réattribue un à
-  // chaque club au prochain chargement de l'admin : effacer ici, c'est RENOUVELER, pas casser.
-  ['club_token', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee',
-   'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total',
-   'selection_enregistree'].forEach(function (h) {
+  colonnesClubsAEffacer(entetes).forEach(function (h) {
     var c = entetes.indexOf(h);
     if (c !== -1) {
       var zone = onglet.getRange(2, c + 1, dernier - 1, 1);
@@ -7522,6 +7602,8 @@ function reinitialiserTournoi(classeur) {
   // 3 quater) Dossier d'invitation : champs effacés + photo du parking mise à la corbeille.
   //           ✅ La LISTE des clubs invités (onglet ClubsInvites) est CONSERVÉE, comme
   //           l'historique : c'est un carnet d'adresses réutilisable d'une édition à l'autre.
+  //           ⚠️ Seules les COORDONNÉES survivent : leur engagement dans l'édition qui s'achève,
+  //           statut compris, est vidé — voir l'étape 3 quinquies et reinitialiserPhase2Clubs.
   //           ✅ Même choix pour l'onglet Sponsors et les réglages d'affichage des partenaires :
   //           un partenariat se reconduit d'une édition à l'autre, le réinitialiser obligerait
   //           à re-téléverser tous les logos. Pour retirer un partenaire, on décoche « actif ».
@@ -7532,8 +7614,9 @@ function reinitialiserTournoi(classeur) {
 
   // 3 quinquies) Phase 1 : « Sur place » + « Réponse à l'invitation » (contact référent) sont
   //   propres à l'édition → effacés. email_expediteur (alias Gmail, config d'infrastructure) est
-  //   CONSERVÉ, comme les clés. Côté clubs invités, on remet à zéro les colonnes PAR ÉDITION
-  //   (categories_engagees + dossier_envoye) sans toucher au carnet d'adresses (noms/contacts/statuts).
+  //   CONSERVÉ, comme les clés. Côté clubs invités (B2-0) : on vide TOUT l'ENGAGEMENT — statut,
+  //   jeton, dates, catégories engagées, effectifs, alertes — et on ne garde que le CONTACT
+  //   (nom, contacts, prénom, date d'ajout). Voir reinitialiserPhase2Clubs.
   // ⭐ `perfs_mot_cle_club` est DÉLIBÉRÉMENT CONSERVÉ, comme les clés et `email_expediteur` :
   //   il décrit le CLUB ORGANISATEUR, pas l'édition. Le club ne change pas d'un tournoi à
   //   l'autre, et l'effacer obligerait à le ressaisir chaque année — avec, entre-temps, une page
@@ -7559,6 +7642,17 @@ function reinitialiserTournoi(classeur) {
   //   compteur annonçait 0 champ manquant — le dossier pouvait partir à la Ligue avec un médecin
   //   absent et un prix périmé, sans aucun signalement.
   reinitialiserDonneesAutorisationTournoi(classeur);
+
+  // 3 septies) B2-0 — `tournoi_id` de l'édition qui s'achève : EFFACÉ.
+  //   🔬 Il ne figurait dans aucune liste d'effacement : l'identifiant de l'édition passée
+  //   survivait jusqu'à la génération de planning suivante (R-106). Entre-temps, tout résultat
+  //   archivé serait allé rejoindre, dans l'onglet Historique, les lignes du tournoi PRÉCÉDENT.
+  //   ⭐ L'effacer ne casse rien : `assurerTournoiId` en recrée un à la demande, et les lignes
+  //   déjà écrites dans Historique gardent la valeur qu'elles portent — on n'y touche pas.
+  //   ⛔ Ce lot ne corrige QUE l'héritage. Le fait qu'un nouvel identifiant soit reposé à CHAQUE
+  //   génération de planning — donc qu'un seul tournoi réel en produise plusieurs — reste entier :
+  //   c'est l'objet de B2-1, qui introduira un `edition_id` créé à l'ouverture et jamais renouvelé.
+  effacerParamGlobal(ongletConfig, 'tournoi_id');
 
   // 4) Le tournoi redevient masqué pour le public.
   ecrireParamGlobal(ongletConfig, 'tournoi_publie', 'non');

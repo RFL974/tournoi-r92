@@ -676,24 +676,30 @@ async function onReinitialiser() {
   // invisible. L'ancienne phrase « Seul l'historique de saison est conservé » a été retirée : elle
   // était fausse (le carnet des clubs et les partenaires survivent, comme les 10 champs permanents
   // du club). ⛔ On n'annonce donc PAS une liste exhaustive des conservations — d'où « notamment ».
-  // ⚠️ La ligne « clubs invités » suit reinitialiserPhase2Clubs À LA LETTRE : sur les 17 colonnes de
-  // ClubsInvites, 8 sont remises à zéro (categories_engagees, dossier_envoye, invitation_envoyee,
-  // club_token, date_reponse, nb_equipes_par_categorie, nb_joueurs_total, selection_enregistree) et
-  // 9 sont conservées. ⛔ On ne dit donc PAS « les réponses des clubs sont supprimées » : `statut`
-  // (Invité/Accepté/Décliné), `detail_effectifs` et `nb_educateurs_total` SURVIVENT.
+  // ⚠️ La ligne « clubs invités » suit reinitialiserPhase2Clubs À LA LETTRE. Depuis M1-B2 / B2-0,
+  // sur les 17 colonnes de ClubsInvites, 12 sont remises à zéro (tout l'ENGAGEMENT : statut,
+  // categories_engagees, dossier_envoye, invitation_envoyee, club_token, date_reponse,
+  // nb_equipes_par_categorie, nb_joueurs_total, alerte_ecart, detail_effectifs,
+  // nb_educateurs_total, selection_enregistree) et 5 sont conservées (le CONTACT).
+  // ⚠️ Ce commentaire annonçait « 8 remises à zéro, 9 conservées » et disait que `statut`,
+  // `detail_effectifs` et `nb_educateurs_total` SURVIVENT : vrai jusqu'à B2-0, faux depuis.
+  // ⭐ Le texte ci-dessous a suivi : il annonce désormais que la RÉPONSE du club est effacée —
+  // taire une perte la rendrait invisible, c'est la même règle que pour D-043.
   if (!await dialogConfirmer('Réinitialiser le tournoi ?\n\n' +
                'CE QUI EST SUPPRIMÉ — des données de CETTE ÉDITION, notamment :\n' +
                '• les catégories, les équipes, les poules, les matchs (planning et scores) ;\n' +
                '• les infos du tournoi (affiche comprise) et les horaires de la journée ;\n' +
-               '• côté clubs invités : ce qu\'ils ont engagé pour cette édition (catégories, ' +
-               'équipes, joueurs), les marques d\'envoi et de suivi, et leurs liens d\'accès ;\n' +
+               '• côté clubs invités : leur RÉPONSE à cette édition (accepté / décliné), ce ' +
+               'qu\'ils ont engagé (catégories, équipes, joueurs, éducateurs), les marques ' +
+               'd\'envoi et de suivi, les alertes, et leurs liens d\'accès ;\n' +
                '• dans la demande d\'autorisation : médecin, secours, arbitrage, terrain et ' +
                'vestiaires utilisés, hébergement, repas, goûters, récompenses…\n\n' +
                'CE QUI EST CONSERVÉ, notamment :\n' +
                '• les informations PERMANENTES de votre club dans la demande d\'autorisation ' +
                '(nom et code du club, label, président, représentant) ;\n' +
                '• l\'historique de saison (page Perfs) ;\n' +
-               '• le carnet des clubs invités (noms, contacts, statut) et vos partenaires.',
+               '• le carnet d\'adresses des clubs invités — noms, contacts, emails — et vos ' +
+               'partenaires. Les clubs restent dans la liste : ils redeviennent invitables.',
                { ok: 'Continuer', danger: true })) return;
   if (!await dialogConfirmer('Confirmer la remise à zéro ? Cette action est IRRÉVERSIBLE.',
                { ok: 'Oui, tout effacer', danger: true })) return;
@@ -705,6 +711,18 @@ async function onReinitialiser() {
 
   try {
     const res = await ecrireAdmin('reinitialiserTournoi', {});
+
+    // ⭐ M1-B2 / B2-0 — LES CLUBS INVITÉS D'ABORD, et il y a deux raisons à cet ordre.
+    // ① `rechargerEtRendre` s'appuie sur `getAll`, qui ne contient PAS les clubs invités (ils
+    //    portent des emails : leur seule lecture est `listerClubsInvites`, protégée par la clé
+    //    admin). Sans cet appel, `clubsInvitesCourants` garderait l'engagement de l'édition
+    //    EFFACÉE : cartes « Accepté », anciens effectifs, anciens liserés — et surtout l'export
+    //    PDF de la demande d'autorisation, qui lit cette même liste en mémoire, partirait à la
+    //    Ligue avec les clubs et les effectifs de l'an dernier.
+    // ② Il vient AVANT parce que `rechargerEtRendre` recalcule ensuite `majDossier` et
+    //    `majTableauBord`, qui lisent cette liste : rechargée après, elle arriverait trop tard.
+    // ⛔ AUCUNE règle du backend n'est recopiée ici : on RELIT simplement l'état réel du serveur.
+    if (typeof chargerClubsInvites === 'function') await chargerClubsInvites();
 
     // On recharge tout l'état depuis le backend et on ré-affiche la page.
     await rechargerEtRendre({ reglages: true, terrains: true, selectCats: true,

@@ -3113,6 +3113,53 @@ aucune nominative)*.
 
 ⭐ **Ordre : B2-0 → B2-1 → B2-2 → B2-3 → B2-4 → B2-5 → B2-6.**
 
+#### 16.5 bis — B2-0 : les huit résultats métier **T1 → T8**
+
+> ⚡ **Provenance, et elle doit être dite** *(ajouté le 2026-08-25)*. Ces huit objectifs sont une
+> **spécification comportementale formalisée LORS DE L'IMPLÉMENTATION du 2026-08-25**. ⛔ **Ils
+> n'existaient PAS auparavant dans le dépôt** : ils viennent du **cadrage de travail, extérieur au
+> dépôt**, et une recherche exhaustive sur les 40 fichiers `.md` suivis n'en trouvait aucune trace.
+> ⚠️ **Ne jamais les présenter comme antérieurs au lot** — le seul repère publié avant cette date
+> était le critère de clôture d'une ligne du tableau ci-dessus.
+
+**Ce que chacun exige APRÈS une réinitialisation** — ce sont des **résultats**, pas des mécaniques :
+
+| # | Résultat métier | Ce qu'il ferme |
+|---|---|---|
+| **T1** | ⛔ **Aucun statut de participation hérité** — plus aucun club n'est `Accepté` | **R-100** |
+| **T2** | ⛔ **Aucun effectif de participation hérité** : `nb_joueurs_total`, `nb_educateurs_total`, `detail_effectifs` | **R-099** |
+| **T3** | ⛔ **Aucune `alerte_ecart` héritée** | **R-099** |
+| **T4** | ⭐ **Cascade FFR** : **0 club accepté compté**, **0 joueur** et **0 éducateur** provenant des clubs invités | **R-099 + R-100**, effet |
+| **T5** | ✅ **Carnet durable conservé** : `club_nom`, `club_contact_nom`, `club_contact_prenom`, `club_contact_email`, `date_ajout` | **D-050** |
+| **T6** | ⛔ **Aucun ancien jeton d'édition ne reste UTILISABLE** *(voir l'encadré ci-dessous)* | sécurité du reset |
+| **T7** | ⛔ **`tournoi_id` de l'édition précédente non hérité** | **R-106**, part reset |
+| **T8** | ⛔ **Aucune colonne de `ClubsInvites` n'échappe à la classification** durable / événementielle | **R-105** |
+
+> ⚠️ **T6 se formule en termes d'USAGE, jamais d'état de cellule** — et c'est le fruit d'un audit du
+> cycle complet, pas d'une préférence de rédaction.
+>
+> ⛔ *« le jeton reste vide pour toujours »* serait **FAUX** : `listerClubsInvites` appelle
+> `assurerTokensClubs`, qui redonne un jeton neuf à tout club qui n'en a pas. **Au premier
+> chargement de l'admin qui suit un reset, les cellules sont donc REMPLIES à nouveau.**
+>
+> ✅ **La formulation juste est : « aucun jeton hérité, ancien lien définitivement invalide ».**
+> Elle est tenable parce que les trois conditions sont réunies et **testées** : ① l'ancien jeton est
+> refusé par `trouverClubParToken`, `getReponseInvitation` **et** `repondreInvitation` ; ② aucun
+> club ne se voit **réattribuer** l'ancien jeton *(UUID neuf, contrôle négatif explicite)* ;
+> ③ le nouveau jeton **n'est communiqué à personne** avant un nouvel envoi d'invitation.
+
+**Contrôles STRUCTURELS complémentaires** *(ils ne remplacent aucun des huit)* : **S1** la décision
+pure et ses cas négatifs · **S2** la non-régression des 8 colonnes déjà effacées · **S3** les cas
+limites *(classeur sans club, sans onglet)* · **F1 → F9** le harnais **frontend** *(l'écran reflète
+le reset)* · un **TÉMOIN R-101** qui fige le défaut des terrains et ⭐ **devra être inversé par
+B2-3**.
+
+> ⭐ **Ces tests sont écrits pour SURVIVRE à B2-2** *(corollaire de D-050)*. Toutes les assertions
+> métier passent par un **joint de lecture unique** rendant l'objet **plat** que la couche
+> d'adaptation s'engage à préserver. **Vérifié par simulation** le 2026-08-25 : rejoués **mot pour
+> mot** contre une fausse structure `Clubs` + `Participations` avec un reset entièrement différent,
+> ils passent — **seuls deux helpers de montage/lecture changent**.
+
 ### 16.6 — Répartition UX cible
 
 | Rubrique | Contenu |

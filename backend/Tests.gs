@@ -397,6 +397,24 @@ function lancerTestsFFR() {
   testM1B_equipesEtrangeresDefautRestitue(etat);
   testM1B_typeTerrainCascadeLegitime(etat);
 
+  // M1-B2 / B2-0 (D-050) — « conserver le contact, réinitialiser l'engagement » : ce qu'une
+  // réinitialisation doit vider côté clubs (R-099, R-100), et ce qu'elle doit conserver.
+  // ⭐ Spécification écrite pour SURVIVRE à la migration B2-2 — voir l'en-tête du bloc.
+  // ⭐ Les HUIT résultats métier de `PLAN.md` §16.5 (formalisés le 2026-08-25).
+  testB20_T1_aucunStatutHerite(etat);
+  testB20_T2_aucunEffectifHerite(etat);
+  testB20_T3_aucuneAlerteHeritee(etat);
+  testB20_T4_cascadeFFRZeroZeroZero(etat);
+  testB20_T5_carnetDurableConserve(etat);
+  testB20_T6_ancienTokenInutilisable(etat);
+  testB20_T7_tournoiIdNonHerite(etat);
+  testB20_T8_aucuneColonneNonClassee(etat);
+  // Contrôles structurels — ils COMPLÈTENT les huit, ils ne les remplacent pas.
+  testB20_S1_decisionPure(etat);
+  testB20_S2_nonRegressionHuitColonnes(etat);
+  testB20_S3_casLimites(etat);
+  testB20_temoinR101TerrainsResteB23(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -4488,11 +4506,17 @@ function _m1bFauxOnglet(lignes) {
             for (var j = 0; j < nc; j++) { if (d[r - 1 + i]) d[r - 1 + i][c - 1 + j] = ''; }
           }
         },
-        setNumberFormat: function () { return this; }
+        setNumberFormat: function () { return this; },
+        // Mise en forme : sans effet ici, mais présente — `assurerColonnesClubsInvites` style
+        // l'en-tête quand il AJOUTE une colonne (cas du vieux classeur, couvert par B2-0 / T8).
+        setBackground: function () { return this; },
+        setFontColor: function () { return this; },
+        setFontWeight: function () { return this; }
       };
     },
     deleteRow: function (r) { d.splice(r - 1, 1); },
     insertRowsBefore: function (r, n) { for (var i = 0; i < n; i++) { d.splice(r - 1, 0, []); } },
+    setFrozenRows: function () { return api; },
     _lignes: function () { return d; }
   };
   return api;
@@ -4642,4 +4666,461 @@ function testM1B_typeTerrainCascadeLegitime(etat) {
   var sansTerrains = { global: { org_type_terrain: '' }, categories: [] };
   _ffrAssert(etat, naturesTerrainsAutorisation(sansTerrains).natures.length === 0,
     'M1-B : sans terrain déclaré, rien n\'est inventé — le champ retombe sur la saisie, vide');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  M1-B2 / B2-0 — « Conserver le contact, réinitialiser l'engagement. »       */
+/*                                                                            */
+/*  ⭐ CE BLOC EST UNE SPÉCIFICATION, PAS UNE VÉRIFICATION D'IMPLÉMENTATION.   */
+/*  Les huit RÉSULTATS MÉTIER T1 → T8 sont ceux formalisés dans `PLAN.md`      */
+/*  §16.5 lors de l'implémentation du 2026-08-25 — ⛔ ils n'existaient PAS     */
+/*  auparavant dans le dépôt : ils viennent du cadrage de travail, et c'est    */
+/*  cette session qui les a écrits. Les tests `S…` qui suivent sont des        */
+/*  contrôles STRUCTURELS supplémentaires : ils complètent les huit, ⛔ ils ne  */
+/*  les remplacent jamais.                                                     */
+/*                                                                            */
+/*  Écrit pour SURVIVRE à B2-2, qui remplacera `ClubsInvites` par              */
+/*  `Clubs` + `Participations` (décision D-050). Trois précautions :           */
+/*   ① les deux familles (_B20_CONTACT / _B20_ENGAGEMENT) sont écrites ICI,    */
+/*     indépendamment du code : le test CONSTATE un écart, il ne le recopie    */
+/*     pas. En B2-2, ces mêmes noms décriront les colonnes de `Participations` ;*/
+/*   ② les assertions métier passent par un joint de lecture unique —          */
+/*     `_b20ClubsApresReset` — qui rend la liste PLATE des clubs, exactement   */
+/*     l'objet que la couche d'adaptation de B2-2 s'engage à préserver.        */
+/*     ⭐ En B2-2, DEUX helpers changent — celui qui MONTE le classeur          */
+/*     (`_b20ClasseurFactice`) et celui qui le LIT — et les huit tests, eux,   */
+/*     sont réutilisés MOT POUR MOT.                                           */
+/*     ⛔ Ne jamais lire une colonne directement dans un onglet depuis un test  */
+/*     de ce bloc : ce serait le rendre jetable en B2-2 ;                      */
+/*   ③ les assertions parlent de RÉSULTAT (« aucun club n'est encore           */
+/*     Accepté ») jamais de MÉCANIQUE (« la colonne 4 a été vidée »).          */
+/*                                                                            */
+/*  ⚠️ Ce que ce lot ne fait PAS : il ne sépare pas les deux familles dans la   */
+/*  STRUCTURE (R-102 → B2-2), et il ne touche pas au découpage des terrains    */
+/*  (R-101 → B2-3, voir le TÉMOIN en fin de bloc).                             */
+/* -------------------------------------------------------------------------- */
+
+/** Le CONTACT — ce qu'une réinitialisation doit CONSERVER. Écrit indépendamment du code. */
+var _B20_CONTACT = ['club_nom', 'club_contact_nom', 'club_contact_prenom', 'club_contact_email',
+  'date_ajout'];
+
+/** L'ENGAGEMENT — ce qu'une réinitialisation doit VIDER. Écrit indépendamment du code.
+ *  ⚠️ Quatre de ces colonnes manquaient avant B2-0 : `statut` (R-100), `alerte_ecart`,
+ *  `detail_effectifs` et `nb_educateurs_total` (R-099). */
+var _B20_ENGAGEMENT = ['statut', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee',
+  'club_token', 'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total',
+  'alerte_ecart', 'detail_effectifs', 'nb_educateurs_total', 'selection_enregistree'];
+
+/** Les trois effectifs de participation visés par T2. */
+var _B20_EFFECTIFS = ['nb_joueurs_total', 'nb_educateurs_total', 'detail_effectifs'];
+
+/** Le jeton de l'édition précédente, dans le classeur factice — la « preuve » de T6. */
+var _B20_ANCIEN_TOKEN = 'JETON-EDITION-PRECEDENTE';
+
+/**
+ * ⭐ LE JOINT DE LECTURE — le seul endroit de ce bloc qui connaît la STRUCTURE.
+ * Renvoie la liste PLATE des clubs telle que l'application la manipule aujourd'hui.
+ * En B2-2, cette fonction lira `Clubs` + `Participations` via la couche d'adaptation ;
+ * ⛔ aucune assertion de ce bloc n'aura à changer.
+ */
+function _b20ClubsApresReset(classeur) {
+  return lireOngletSimple(classeur, 'ClubsInvites');
+}
+
+/** Vrai si la valeur est « rien » au sens du classeur (cellule vidée, jamais supprimée). */
+function _b20EstVide(v) { return v === '' || v === null || v === undefined; }
+
+/**
+ * Classeur factice B2-0 : Config (comme M1-B) + `ClubsInvites` peuplé + `Equipes`.
+ * ⭐ Il reproduit le tournoi témoin réel du 2026-08-25 : le premier club est ACCEPTÉ avec ses
+ * effectifs déclarés et son équipe synchronisée ; le second n'a jamais répondu. Une
+ * réinitialisation doit produire le même résultat sur les deux.
+ * ⚠️ `Equipes` n'est pas décoratif : sans lui, la cascade FFR déduirait les effectifs du club
+ * (« une équipe retirée emporte ses joueurs ») et le point de départ de T4 serait déjà 0 — le
+ * test ne prouverait alors plus rien.
+ */
+function _b20ClasseurFactice(entetesClubs) {
+  var base = _m1bClasseurFactice();
+  // ⚠️ EN ZONE A, jamais après l'en-tête « categorie » : tout ce qui suit celui-ci est de la
+  // zone B, et `supprimerToutesCategories` l'emporterait comme une catégorie.
+  var lignesConfig = base._config._lignes();
+  var zoneB = 0;
+  while (zoneB < lignesConfig.length && lignesConfig[zoneB][0] !== 'categorie') zoneB++;
+  lignesConfig.splice(zoneB, 0, ['tournoi_id', '2026-08-04 14:17:43'],
+    ['repartition_grands_terrains', '{"Rugby 1":["1","2"]}']);
+  var entetes = (entetesClubs || ENTETES.ClubsInvites).slice();
+  var valeurs = {
+    club_nom: 'LE TEST RUGBY CLUB', club_contact_nom: 'DUPONT', club_contact_prenom: 'Marie',
+    club_contact_email: 'contact@test-rugby.fr', date_ajout: '2026-05-12',
+    statut: 'Accepté', categories_engagees: 'U8', dossier_envoye: '2026-08-25',
+    invitation_envoyee: '2026-08-25', club_token: _B20_ANCIEN_TOKEN,
+    date_reponse: '2026-08-25', nb_equipes_par_categorie: '{"U8":1}', nb_joueurs_total: '7',
+    alerte_ecart: 'Une équipe excédentaire n\'a pas pu être retirée',
+    detail_effectifs: '{"U8":[{"j":7,"e":3}]}', nb_educateurs_total: '3',
+    selection_enregistree: '2026-08-25'
+  };
+  var accepte = entetes.map(function (h) { return valeurs[h] === undefined ? 'INCONNU-' + h : valeurs[h]; });
+  var jamaisRepondu = entetes.map(function (h) {
+    return _B20_CONTACT.indexOf(h) !== -1 ? String(valeurs[h]).replace('LE TEST', 'SILENCIEUX') : '';
+  });
+  var clubs = _m1bFauxOnglet([entetes, accepte, jamaisRepondu]);
+  // L'équipe réellement créée par la réponse du club (source 'auto' : jamais recomptée par
+  // effectifsEquipesManuelles — ce qui isole la contribution des CLUBS INVITÉS dans T4).
+  var equipes = _m1bFauxOnglet([ENTETES.Equipes,
+    ['E12', 'LE TEST RUGBY CLUB-1', 'U8', 'C', 'auto', 7, 3]]);
+  var config = base._config;
+  return {
+    _config: config, _clubs: clubs, _equipes: equipes,
+    // `assurerTournoiId` et `assurerTokensClubs` horodatent / tirent un UUID : doublures fournies.
+    getSpreadsheetTimeZone: function () { return 'Europe/Paris'; },
+    getSheetByName: function (nom) {
+      if (nom === 'Config') return config;
+      if (nom === 'ClubsInvites') return clubs;
+      if (nom === 'Equipes') return equipes;
+      return null;
+    }
+  };
+}
+
+/**
+ * Les trois lignes que la demande d'autorisation FFR tire des CLUBS INVITÉS, telles que
+ * l'organisateur les VOIT et telles que le PDF destiné à la Ligue les PORTE.
+ *
+ * ⭐ Passe par `getDossierAutorisation`, la fonction réellement appelée par l'écran FFR et par
+ * l'export PDF — ⛔ jamais par une reproduction de sa logique dans le test.
+ *
+ * ⚠️ Pourquoi on lit les CHAMPS et pas des compteurs bruts : `getDossierAutorisation` ne
+ * réexpose pas `nbClubsInvites` / `nbParticipants` / `nbEducateurs`. Les lire autrement
+ * obligerait à recopier la cascade dans le test — exactement ce qu'il ne faut pas faire.
+ * ⭐ Et les champs prouvent DAVANTAGE : `champClubs` ne vaut « manquant » QUE si le compte des
+ * clubs acceptés est nul ; `Nombre de participants` et `Nombre d'éducateurs` ne valent
+ * « manquant » QUE si la somme déclarée est nulle ET qu'aucune saisie ne prend le relais.
+ * Lire « manquant / vide » sur ces trois lignes, c'est donc lire 0 / 0 / 0 — DÉMONTRÉ, pas déduit.
+ * ⭐ `origine` dit en plus D'OÙ vient un chiffre : c'est ce qui distingue « 0 venant des clubs
+ * invités » de « 0 tout court ».
+ */
+function _b20CascadeFFR(classeur) {
+  var d = (getDossierAutorisation(classeur) || {}).dossier;
+  return {
+    clubs: _autoChamp(d, 'Nombre de clubs'),
+    participants: _autoChamp(d, 'Nombre de participants'),
+    educateurs: _autoChamp(d, 'Nombre d\'éducateurs')
+  };
+}
+
+/** Vrai si un champ du dossier attribue sa valeur aux CLUBS INVITÉS (lecture de son origine). */
+function _b20VientDesClubsInvites(champ) {
+  var o = String((champ && champ.origine) || '');
+  return o.indexOf('invitations') !== -1 || o.indexOf('clubs invités') !== -1 ||
+    o.indexOf('clubs acceptés') !== -1;
+}
+
+/* ========================================================================== */
+/*  LES HUIT RÉSULTATS MÉTIER — `PLAN.md` §16.5                               */
+/* ========================================================================== */
+
+/** T1 — Aucun statut de participation hérité après reset.
+ *  ⭐ Prouvé par `statutClubCanonique`, la fonction que le serveur utilise LUI-MÊME pour décider
+ *  si un club compte comme engagé. */
+function testB20_T1_aucunStatutHerite(etat) {
+  var cl = _b20ClasseurFactice();
+  _ffrAssert(etat, statutClubCanonique(_b20ClubsApresReset(cl)[0].statut) === 'Accepté',
+    'B2-0 T1 : au départ, le club est bien « Accepté » (l\'édition précédente a eu lieu)');
+  reinitialiserTournoi(cl);
+  _b20ClubsApresReset(cl).forEach(function (c, i) {
+    _ffrAssert(etat, statutClubCanonique(c.statut) !== 'Accepté',
+      'B2-0 T1 ⭐ club ' + (i + 1) + ' : aucun statut « Accepté » hérité');
+    _ffrAssert(etat, statutClubCanonique(c.statut) === '',
+      'B2-0 T1 ⭐ club ' + (i + 1) + ' : statut vide = « connu au carnet, sans participation » ' +
+      '(D-050) ⇒ le club redevient INVITABLE (estInvitable exclut Accepté ET Décliné)');
+  });
+}
+
+/** T2 — Aucun effectif de participation hérité : `nb_joueurs_total`, `nb_educateurs_total`,
+ *  `detail_effectifs`. ⭐ Les deux derniers sont le cœur de R-099. */
+function testB20_T2_aucunEffectifHerite(etat) {
+  var cl = _b20ClasseurFactice();
+  var avant = _b20ClubsApresReset(cl)[0];
+  _ffrAssert(etat, String(avant.nb_joueurs_total) === '7' && String(avant.nb_educateurs_total) === '3' &&
+    String(avant.detail_effectifs).indexOf('"j":7') !== -1,
+    'B2-0 T2 : au départ, les TROIS effectifs sont déclarés (le cas réel du 2026-08-24)');
+  reinitialiserTournoi(cl);
+  var apres = _b20ClubsApresReset(cl)[0];
+  _B20_EFFECTIFS.forEach(function (h) {
+    _ffrAssert(etat, _b20EstVide(apres[h]), 'B2-0 T2 ⭐ ' + h + ' : aucun effectif hérité');
+  });
+  // ⭐ LE DÉFAUT LUI-MÊME : les déclarations d'une même réponse ne peuvent plus se séparer.
+  _ffrAssert(etat, _b20EstVide(apres.nb_joueurs_total) === _b20EstVide(apres.nb_educateurs_total),
+    'B2-0 T2 ⭐ joueurs et éducateurs suivent le MÊME sort — plus de « (vide) / 3 » à l\'écran');
+  _ffrAssert(etat, _b20EstVide(apres.nb_equipes_par_categorie),
+    'B2-0 T2 : le nombre d\'équipes engagées part avec les effectifs');
+}
+
+/** T3 — Aucune `alerte_ecart` héritée : le badge ⚠️ d'une édition close ne survit pas. */
+function testB20_T3_aucuneAlerteHeritee(etat) {
+  var cl = _b20ClasseurFactice();
+  _ffrAssert(etat, String(_b20ClubsApresReset(cl)[0].alerte_ecart).length > 0,
+    'B2-0 T3 : au départ, le club porte une alerte d\'écart');
+  reinitialiserTournoi(cl);
+  _b20ClubsApresReset(cl).forEach(function (c, i) {
+    _ffrAssert(etat, _b20EstVide(c.alerte_ecart),
+      'B2-0 T3 ⭐ club ' + (i + 1) + ' : aucune alerte d\'écart héritée');
+  });
+}
+
+/** T4 — ⭐ LA CONSÉQUENCE MÉTIER LA PLUS GRAVE, EXÉCUTÉE : après reset, la demande
+ *  d'autorisation FFR compte 0 club accepté, 0 joueur et 0 éducateur venant des clubs invités.
+ *  ⛔ On ne DÉDUIT pas « statut vide donc probablement zéro » : on APPELLE
+ *  `getDossierAutorisation`, la fonction que l'écran FFR et l'export PDF utilisent réellement. */
+function testB20_T4_cascadeFFRZeroZeroZero(etat) {
+  // ── (a) LE POINT DE DÉPART — sans lui, le test ne prouverait rien : la cascade compte
+  //     VRAIMENT le club de l'édition passée et ses effectifs, et elle le DIT.
+  var cl = _b20ClasseurFactice();
+  var avant = _b20CascadeFFR(cl);
+  _ffrAssert(etat, avant.clubs.valeur === '1' && _b20VientDesClubsInvites(avant.clubs),
+    'B2-0 T4 : au départ, « Nombre de clubs » = 1, origine « ' + avant.clubs.origine + ' »');
+  _ffrAssert(etat, avant.participants.valeur === '7' && _b20VientDesClubsInvites(avant.participants),
+    'B2-0 T4 : au départ, « Nombre de participants » = 7, origine « ' + avant.participants.origine + ' »');
+  _ffrAssert(etat, avant.educateurs.valeur === '3' && _b20VientDesClubsInvites(avant.educateurs),
+    'B2-0 T4 : au départ, « Nombre d\'éducateurs » = 3, origine « ' + avant.educateurs.origine + ' »');
+
+  // ── (b) ISOLATION LA PLUS STRICTE — équipes INTACTES, et les replis « saisis » neutralisés.
+  //     On applique les deux volets backend du reset qui touchent ces chiffres
+  //     (`reinitialiserPhase2Clubs` pour les clubs, `reinitialiserDonneesAutorisationTournoi`
+  //     pour les `org_*` de D-043) SANS vider l'onglet Équipes. L'équipe E12 est 'auto' ⇒
+  //     `effectifsEquipesManuelles` l'ignore ⇒ ⭐ tout chiffre restant ne pourrait venir QUE
+  //     d'une survivance de `ClubsInvites`.
+  reinitialiserPhase2Clubs(cl);
+  reinitialiserDonneesAutorisationTournoi(cl);
+  var isole = _b20CascadeFFR(cl);
+  _ffrAssert(etat, !_b20VientDesClubsInvites(isole.clubs),
+    'B2-0 T4 ⭐ 0 CLUB ACCEPTÉ compté — plus aucun club ne vient des invitations (origine : « ' +
+    isole.clubs.origine + ' »)');
+  _ffrAssert(etat, isole.participants.etat === 'manquant' && isole.participants.valeur === '',
+    'B2-0 T4 ⭐ 0 JOUEUR provenant des clubs invités — « Nombre de participants » redevient ' +
+    'MANQUANT alors que les équipes sont encore là (constaté : ' + isole.participants.etat + ')');
+  _ffrAssert(etat, isole.educateurs.etat === 'manquant' && isole.educateurs.valeur === '',
+    'B2-0 T4 ⭐ 0 ÉDUCATEUR provenant des clubs invités (constaté : ' + isole.educateurs.etat + ')');
+  // ⭐ Et la bascule est VISIBLE : le nombre de clubs retombe sur la source « équipes », pas sur
+  //   les invitations — c'est exactement ce que la cascade documentée prévoit.
+  _ffrAssert(etat, isole.clubs.origine.indexOf('équipes') !== -1,
+    'B2-0 T4 : « Nombre de clubs » retombe sur les clubs déduits des ÉQUIPES (repli documenté)');
+
+  // ── (c) LE CHEMIN RÉEL, COMPLET : un tournoi neuf part de 0 / 0 / 0, affiché comme tel.
+  var complet = _b20ClasseurFactice();
+  reinitialiserTournoi(complet);
+  var apres = _b20CascadeFFR(complet);
+  [['clubs', 'Nombre de clubs'], ['participants', 'Nombre de participants'],
+   ['educateurs', 'Nombre d\'éducateurs']].forEach(function (p) {
+    var ch = apres[p[0]];
+    _ffrAssert(etat, ch.etat === 'manquant' && ch.valeur === '',
+      'B2-0 T4 ⭐⭐ après réinitialisation complète, « ' + p[1] + ' » = MANQUANT et vide ' +
+      '(constaté : ' + ch.etat + ' / « ' + ch.valeur + ' »)');
+    _ffrAssert(etat, !_b20VientDesClubsInvites(ch),
+      'B2-0 T4 ⭐⭐ « ' + p[1] + ' » ne doit plus RIEN aux clubs invités');
+  });
+  // ⛔ Rien n'est INVENTÉ à la place : le dossier signale des manquants, il ne devine pas.
+  _ffrAssert(etat, getDossierAutorisation(complet).dossier.nbManquants > 0,
+    'B2-0 T4 : le dossier d\'un tournoi neuf annonce des champs MANQUANTS — jamais « complet »');
+}
+
+/** T5 — Le carnet durable est conservé : les cinq coordonnées survivent, intactes. */
+function testB20_T5_carnetDurableConserve(etat) {
+  var cl = _b20ClasseurFactice();
+  var lignesAvant = cl._clubs._lignes().length;
+  var largeurAvant = cl._clubs.getLastColumn();
+  var attendu = {
+    club_nom: 'LE TEST RUGBY CLUB', club_contact_nom: 'DUPONT', club_contact_prenom: 'Marie',
+    club_contact_email: 'contact@test-rugby.fr', date_ajout: '2026-05-12'
+  };
+  reinitialiserTournoi(cl);
+  var c = _b20ClubsApresReset(cl)[0];
+  _B20_CONTACT.forEach(function (h) {
+    _ffrAssert(etat, c[h] === attendu[h],
+      'B2-0 T5 ⭐ ' + h + ' conservé à l\'identique (constaté « ' + c[h] + ' »)');
+  });
+  _ffrAssert(etat, _b20ClubsApresReset(cl).length === 2,
+    'B2-0 T5 : les 2 clubs sont TOUJOURS LÀ — aucune fiche supprimée');
+  _ffrAssert(etat, cl._clubs._lignes().length === lignesAvant &&
+    cl._clubs.getLastColumn() === largeurAvant,
+    'B2-0 T5 : aucune ligne ni colonne ajoutée ou retirée');
+}
+
+/** T6 — ⭐ AUCUN ANCIEN JETON D'ÉDITION NE RESTE UTILISABLE APRÈS RESET.
+ *
+ *  ⚠️ Ce test ne dit PAS « la cellule est vide pour toujours » — ce serait FAUX de
+ *  l'architecture actuelle, et ce serait surtout tester la mauvaise chose. `listerClubsInvites`
+ *  appelle `assurerTokensClubs`, qui redonne un jeton neuf à tout club qui n'en a pas : au
+ *  premier chargement de l'admin qui suit, les cellules sont donc REMPLIES à nouveau.
+ *
+ *  ⭐ Le résultat métier qui compte est ailleurs : l'ANCIEN lien doit être MORT, et le nouveau
+ *  jeton ne doit être ni l'ancien, ni connu de quiconque. C'est ce qui est éprouvé ici, par les
+ *  fonctions réellement chargées de valider un jeton — `trouverClubParToken`,
+ *  `getReponseInvitation` et `repondreInvitation` — ⛔ jamais par une lecture de cellule. */
+function testB20_T6_ancienTokenInutilisable(etat) {
+  var cl = _b20ClasseurFactice();
+  var nom = 'LE TEST RUGBY CLUB';
+
+  // ── A. Avant reset : l'ancien lien OUVRE bien la porte (sinon le test ne prouverait rien).
+  _ffrAssert(etat, trouverClubParToken(cl, nom, _B20_ANCIEN_TOKEN) !== null,
+    'B2-0 T6 : AVANT reset, l\'ancien jeton ouvre bien le dossier du club');
+  _ffrAssert(etat, !getReponseInvitation(cl, { club: nom, token: _B20_ANCIEN_TOKEN }).error,
+    'B2-0 T6 : AVANT reset, la page de réponse s\'ouvre avec l\'ancien jeton');
+
+  // ── B. Immédiatement après l'effet backend du reset : le lien est MORT.
+  reinitialiserTournoi(cl);
+  _ffrAssert(etat, trouverClubParToken(cl, nom, _B20_ANCIEN_TOKEN) === null,
+    'B2-0 T6 ⭐ APRÈS reset, l\'ancien jeton n\'ouvre plus AUCUN dossier');
+  _ffrAssert(etat, getReponseInvitation(cl, { club: nom, token: _B20_ANCIEN_TOKEN }).error ===
+    'Lien invalide ou expiré.',
+    'B2-0 T6 ⭐ la page de réponse refuse l\'ancien jeton, avec un message GÉNÉRIQUE');
+  var refus = repondreInvitation(cl, { club: nom, token: _B20_ANCIEN_TOKEN, reponse: 'accepte' });
+  _ffrAssert(etat, refus.error === 'Lien invalide ou expiré.',
+    'B2-0 T6 ⭐ RÉPONDRE avec l\'ancien jeton est REFUSÉ — c\'est le seul geste qui écrirait');
+  _ffrAssert(etat, statutClubCanonique(_b20ClubsApresReset(cl)[0].statut) === '',
+    'B2-0 T6 ⭐ ce refus n\'a RIEN écrit : le club est toujours sans participation');
+
+  // ── C/D/E. Au premier chargement de « Clubs invités », un jeton NEUF est réattribué.
+  //     ⭐ C'est le comportement ACTUEL, assumé et documenté — pas un oubli.
+  var liste = listerClubsInvites(cl);
+  var nouveau = String((liste.clubs[0] || {}).club_token || '').trim();
+  _ffrAssert(etat, nouveau.length > 0,
+    'B2-0 T6 : au chargement de l\'admin, un jeton NEUF est réattribué (assurerTokensClubs)');
+  _ffrAssert(etat, nouveau !== _B20_ANCIEN_TOKEN,
+    'B2-0 T6 ⭐ le nouveau jeton est DIFFÉRENT de l\'ancien');
+  var nouveau2 = String((listerClubsInvites(cl).clubs[1] || {}).club_token || '').trim();
+  _ffrAssert(etat, nouveau2.length > 0 && nouveau2 !== nouveau,
+    'B2-0 T6 : chaque club reçoit son PROPRE jeton (aucun jeton partagé)');
+
+  // ── F. Et l'ancien lien reste mort APRÈS cette réattribution — c'est le point qui compte.
+  _ffrAssert(etat, trouverClubParToken(cl, nom, _B20_ANCIEN_TOKEN) === null,
+    'B2-0 T6 ⭐⭐ même APRÈS réattribution, l\'ancien jeton reste définitivement invalide');
+  _ffrAssert(etat, repondreInvitation(cl, { club: nom, token: _B20_ANCIEN_TOKEN, reponse: 'decline' }).error ===
+    'Lien invalide ou expiré.',
+    'B2-0 T6 ⭐⭐ aucun ancien lien ne retrouve un droit d\'accès');
+  // ⛔ Le contrôle NÉGATIF qui interdit la régression la plus dangereuse : réutiliser un jeton.
+  _ffrAssert(etat, listerClubsInvites(cl).clubs.every(function (c) {
+    return String(c.club_token || '').trim() !== _B20_ANCIEN_TOKEN;
+  }), 'B2-0 T6 ⭐⭐ aucun club ne s\'est vu RÉATTRIBUER l\'ancien jeton');
+}
+
+/** T7 — Le `tournoi_id` de l'édition précédente n'est pas hérité.
+ *  ⛔ Le renouvellement à chaque génération de planning, lui, reste entier — c'est B2-1. */
+function testB20_T7_tournoiIdNonHerite(etat) {
+  var cl = _b20ClasseurFactice();
+  _ffrAssert(etat, _m1bValeur(cl._config, 'tournoi_id') === '2026-08-04 14:17:43',
+    'B2-0 T7 : au départ, le classeur porte le tournoi_id de l\'édition précédente');
+  reinitialiserTournoi(cl);
+  _ffrAssert(etat, _m1bValeur(cl._config, 'tournoi_id') === '',
+    'B2-0 T7 ⭐ après réinitialisation, aucun identifiant de tournoi n\'est hérité');
+  _ffrAssert(etat, _m1bValeur(cl._config, 'tournoi_id') !== null,
+    'B2-0 T7 : la LIGNE du paramètre existe toujours — on vide, on ne supprime pas (D-043)');
+  var recree = assurerTournoiId(cl);
+  _ffrAssert(etat, String(recree).length > 0 && recree !== '2026-08-04 14:17:43',
+    'B2-0 T7 : un NOUVEL identifiant est recréé à la demande, différent de l\'ancien');
+}
+
+/** T8 — ⭐ AUCUNE COLONNE N'ÉCHAPPE À LA CLASSIFICATION (R-105). C'est le test qui empêche
+ *  R-099 de se reproduire : il échoue le jour où quelqu'un ajoute une colonne à `ClubsInvites`
+ *  sans dire si elle décrit le CLUB ou sa PARTICIPATION. */
+function testB20_T8_aucuneColonneNonClassee(etat) {
+  var toutes = ENTETES.ClubsInvites;
+  _ffrAssert(etat, colonnesClubsNonClassees(toutes).length === 0,
+    'B2-0 T8 ⭐ chaque colonne de ClubsInvites appartient à une famille (non classées : ' +
+    (colonnesClubsNonClassees(toutes).join(', ') || 'aucune') + ')');
+  var chevauchement = _B20_CONTACT.filter(function (h) { return _B20_ENGAGEMENT.indexOf(h) !== -1; });
+  _ffrAssert(etat, chevauchement.length === 0,
+    'B2-0 T8 : aucune colonne n\'est à la fois contact ET engagement');
+  _ffrAssert(etat, _B20_CONTACT.length + _B20_ENGAGEMENT.length === toutes.length,
+    'B2-0 T8 : 5 + 12 = ' + toutes.length + ', la partition est COMPLÈTE');
+  _ffrAssert(etat, _m1bMemesElements(CLUBS_COLONNES_CONTACT, _B20_CONTACT),
+    'B2-0 T8 : le code et la décision s\'accordent sur le CONTACT');
+  _ffrAssert(etat, _m1bMemesElements(CLUBS_COLONNES_ENGAGEMENT, _B20_ENGAGEMENT),
+    'B2-0 T8 : le code et la décision s\'accordent sur l\'ENGAGEMENT');
+  // ⭐ LE CAS QUI COMPTE : une colonne FUTURE, non classée, est DÉTECTÉE…
+  var future = toutes.concat(['buvette_reservee_2027']);
+  _ffrAssert(etat, colonnesClubsNonClassees(future).join(',') === 'buvette_reservee_2027',
+    'B2-0 T8 ⭐ une colonne future non classée est SIGNALÉE, au lieu de devenir un résidu permanent');
+  // …et, en attendant qu'on la classe, elle n'est ni vidée par hasard ni oubliée en silence.
+  var cl = _b20ClasseurFactice(future);
+  reinitialiserPhase2Clubs(cl);
+  var c = _b20ClubsApresReset(cl)[0];
+  _ffrAssert(etat, c.buvette_reservee_2027 === 'INCONNU-buvette_reservee_2027',
+    'B2-0 T8 ⛔ une colonne non classée est CONSERVÉE — l\'oubli garde la donnée, il ne la détruit pas');
+  _ffrAssert(etat, _b20EstVide(c.statut) && c.club_nom === 'LE TEST RUGBY CLUB',
+    'B2-0 T8 : sa présence ne perturbe ni l\'effacement de l\'engagement ni la conservation du contact');
+  // Vieux classeur : une colonne MANQUANTE est ajoutée par la migration douce, puis traitée.
+  var ancien = _b20ClasseurFactice(toutes.filter(function (h) { return h !== 'detail_effectifs'; }));
+  reinitialiserPhase2Clubs(ancien);
+  var vieux = _b20ClubsApresReset(ancien)[0];
+  _ffrAssert(etat, _b20EstVide(vieux.detail_effectifs) && vieux.club_nom === 'LE TEST RUGBY CLUB',
+    'B2-0 T8 : un classeur ANCIEN (colonne absente) traverse la réinitialisation sans dommage');
+}
+
+/* ========================================================================== */
+/*  CONTRÔLES STRUCTURELS — ils COMPLÈTENT les huit, ils ne les remplacent pas */
+/* ========================================================================== */
+
+/** S1 — La DÉCISION, fonction pure sans classeur (patron D-043), et ses cas NÉGATIFS. */
+function testB20_S1_decisionPure(etat) {
+  var retenues = colonnesClubsAEffacer(ENTETES.ClubsInvites);
+  _ffrAssert(etat, retenues.length === 12,
+    'B2-0 S1 : 12 colonnes d\'engagement retenues (constaté ' + retenues.length + ')');
+  _ffrAssert(etat, _m1bMemesElements(retenues, _B20_ENGAGEMENT),
+    'B2-0 S1 : la décision est EXACTEMENT l\'engagement décrit par D-050');
+  _B20_CONTACT.forEach(function (h) {
+    _ffrAssert(etat, retenues.indexOf(h) === -1,
+      'B2-0 S1 : ' + h + ' n\'est JAMAIS retenu pour effacement (c\'est un contact)');
+  });
+  var doublons = retenues.filter(function (h, i) { return retenues.indexOf(h) !== i; });
+  _ffrAssert(etat, doublons.length === 0, 'B2-0 S1 : aucun doublon dans la décision');
+  _ffrAssert(etat, colonnesClubsAEffacer(['club_nom', 'statut']).join(',') === 'statut',
+    'B2-0 S1 : un onglet partiel ⇒ seules ses colonnes d\'engagement sont retenues');
+  _ffrAssert(etat, colonnesClubsAEffacer([]).length === 0, 'B2-0 S1 : aucun en-tête ⇒ rien à vider');
+  _ffrAssert(etat, colonnesClubsAEffacer(null).length === 0, 'B2-0 S1 : entrée absente ⇒ rien à vider');
+  _ffrAssert(etat, colonnesClubsAEffacer(['budget_bar_2027']).length === 0,
+    'B2-0 S1 ⛔ une colonne INCONNUE n\'est jamais vidée par surprise');
+}
+
+/** S2 — NON-RÉGRESSION : les 8 colonnes que le reset vidait DÉJÀ le sont toujours. */
+function testB20_S2_nonRegressionHuitColonnes(etat) {
+  var dejaVidees = ['club_token', 'categories_engagees', 'dossier_envoye', 'invitation_envoyee',
+    'date_reponse', 'nb_equipes_par_categorie', 'nb_joueurs_total', 'selection_enregistree'];
+  var cl = _b20ClasseurFactice();
+  reinitialiserTournoi(cl);
+  var c = _b20ClubsApresReset(cl)[0];
+  dejaVidees.forEach(function (h) {
+    _ffrAssert(etat, _b20EstVide(c[h]), 'B2-0 S2 : ' + h + ' toujours vidé (non-régression)');
+  });
+  var restants = _B20_ENGAGEMENT.filter(function (h) { return !_b20EstVide(c[h]); });
+  _ffrAssert(etat, restants.length === 0,
+    'B2-0 S2 ⭐ aucun engagement hérité, colonne par colonne (constaté : ' +
+    (restants.join(', ') || 'aucun') + ')');
+}
+
+/** S3 — CAS LIMITES : un classeur sans club, et un classeur sans l'onglet du tout. */
+function testB20_S3_casLimites(etat) {
+  var vide = _b20ClasseurFactice();
+  vide._clubs._lignes().splice(1);
+  reinitialiserPhase2Clubs(vide);
+  _ffrAssert(etat, vide._clubs._lignes().length === 1,
+    'B2-0 S3 : un onglet sans aucun club traverse la réinitialisation sans dommage');
+  // ⚠️ Contrôle de NON-PLANTAGE : sans onglet, la fonction doit sortir sans lever d'exception
+  // (une exception ferait échouer TOUT le harnais, pas seulement cette ligne).
+  reinitialiserPhase2Clubs({ getSheetByName: function () { return null; } });
+  _ffrAssert(etat, true, 'B2-0 S3 : un classeur sans onglet ClubsInvites ne provoque aucune erreur');
+}
+
+/** ⚠️ TÉMOIN — ⛔ CE N'EST PAS UN TEST DE B2-0, ET IL NE DÉCRIT PAS UN COMPORTEMENT SOUHAITÉ.
+ *  Il fige le défaut R-101 tel qu'il EST aujourd'hui : le découpage des grands terrains survit à
+ *  la réinitialisation, si bien que le dossier d'un tournoi vide annonce encore « 18 terrains de
+ *  jeu, sur 4 grands terrains ». ⭐ Sa correction appartient à B2-3, parce que la donnée est MIXTE
+ *  (l'existence des grands terrains est permanente, leur découpage est propre à une édition).
+ *  ➡️ Ce témoin DOIT être inversé par B2-3 : son échec, ce jour-là, sera le signe que le lot a
+ *  bien agi — pas une régression. */
+function testB20_temoinR101TerrainsResteB23(etat) {
+  var cl = _b20ClasseurFactice();
+  reinitialiserTournoi(cl);
+  _ffrAssert(etat, _m1bValeur(cl._config, 'repartition_grands_terrains') === '{"Rugby 1":["1","2"]}',
+    'B2-0 TÉMOIN (R-101) : le découpage des terrains survit ENCORE — correction attendue en B2-3');
 }
