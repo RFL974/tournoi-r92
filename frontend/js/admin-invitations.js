@@ -971,10 +971,19 @@ function memeTexteSouple(a, b) {
   return plat(a) === plat(b);
 }
 
-/** Charge la liste des clubs invités depuis le backend (clé admin) et l'affiche. */
+/**
+ * Charge la liste des clubs invités depuis le backend (clé admin) et l'affiche.
+ *
+ * ⭐ RENVOIE si la relecture a RÉUSSI (M1-B2 / B2-0). L'erreur reste absorbée ici — c'est
+ * délibéré : sur les quatre autres appels (après un ajout, un envoi, une synchronisation), une
+ * coupure réseau passagère ne doit pas interrompre le geste en cours. ⛔ Mais un appelant qui a
+ * BESOIN de savoir doit pouvoir le savoir : `onReinitialiser` s'en sert pour prévenir que
+ * l'écran n'a pas pu être rafraîchi. Les autres appelants ignorent simplement cette valeur.
+ * @return {Promise<boolean>} true si `clubsInvitesCourants` porte bien l'état du serveur
+ */
 async function chargerClubsInvites() {
   const zone = document.getElementById('liste-clubs-invites');
-  if (!zone) return;
+  if (!zone) return false; // carte absente de cette page : rien n'a été relu
   try {
     const res = await ecrireAdmin('listerClubsInvites', {});
     clubsInvitesCourants = (res && res.clubs) || [];
@@ -982,9 +991,11 @@ async function chargerClubsInvites() {
     // L'aperçu du dossier ouvre le dossier D'UN CLUB : sa liste de choix suit les clubs chargés
     // (elle est vide au premier rendu de la carte, avant cet appel).
     if (typeof majApercuDossier === 'function') majApercuDossier();
+    return true;
   } catch (erreur) {
     zone.innerHTML = '<p class="vide">⚠️ Impossible de charger les clubs invités : '
       + echapper(erreur.message) + '</p>';
+    return false;
   }
 }
 

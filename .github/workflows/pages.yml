@@ -14,11 +14,19 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/pages.yml'
+      # ⛔ `tests/**` N'EST PAS ici, et c'est délibéré : un commit qui ne touche QUE les
+      # garde-fous ne change RIEN au site publié. L'ajouter republierait Pages pour rien.
+      # ⭐ Les tests tournent quand même à chaque publication réelle : le travail `verifier`
+      # les lance à chaque fois qu'il s'exécute, quel que soit le chemin qui l'a déclenché.
   # Le contrôle tourne aussi sur les propositions de fusion : on voit le problème
   # AVANT que le code n'atteigne `main`, pas après. (`deploy` y est neutralisé.)
   pull_request:
     paths:
       - 'frontend/**'
+      # ⭐ `tests/**` EST ici, et seulement ici : modifier un garde-fou doit permettre de
+      # l'éprouver LUI-MÊME avant fusion — sans jamais rien publier (`deploy` est neutralisé
+      # sur les propositions de fusion).
+      - 'tests/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch: {}
 
@@ -71,6 +79,28 @@ jobs:
             exit 1
           fi
           echo "$total fichiers JavaScript vérifiés, aucun cassé."
+
+      # ----------------------------------------------------------------------
+      # M1-B2 / B2-0 — les GARDE-FOUS de comportement.
+      #
+      # `node --check` répond à « ce fichier se lit-il ? ». Ces deux-ci répondent à
+      # « fait-il encore ce qu'il doit faire ? » — et un seul comportement est gardé
+      # pour l'instant : après « Réinitialiser le tournoi », aucune participation de
+      # l'édition effacée ne peut subsister en mémoire, ⭐ MÊME si la relecture des
+      # clubs échoue (l'export PDF de la demande d'autorisation lit cette liste).
+      #
+      # ⚠️ Le second fichier éprouve le premier : il réintroduit les défauts corrigés
+      # dans une COPIE temporaire et exige que le garde-fou les attrape. Un harnais
+      # qu'on n'a jamais vu échouer ne prouve rien — ce projet en a déjà fait les frais.
+      #
+      # Aucune dépendance, aucun navigateur, quelques secondes. Un échec REFUSE la
+      # publication, exactement comme un fichier illisible.
+      # ----------------------------------------------------------------------
+      - name: Vérifier le comportement de la réinitialisation (M1-B2 / B2-0)
+        run: node tests/frontend-reinitialisation.test.js
+
+      - name: Vérifier que ce garde-fou mord encore (rejeu des mutations)
+        run: node tests/mutations-frontend.test.js
 
   # --------------------------------------------------------------------------
   # 2) LA PUBLICATION — ne s'exécute que si le contrôle est passé.

@@ -3146,13 +3146,50 @@ aucune nominative)*.
 > Elle est tenable parce que les trois conditions sont réunies et **testées** : ① l'ancien jeton est
 > refusé par `trouverClubParToken`, `getReponseInvitation` **et** `repondreInvitation` ; ② aucun
 > club ne se voit **réattribuer** l'ancien jeton *(UUID neuf, contrôle négatif explicite)* ;
-> ③ le nouveau jeton **n'est communiqué à personne** avant un nouvel envoi d'invitation.
+> ③ le nouveau jeton **n'est ni transmis au CLUB, ni exposé PUBLIQUEMENT**, avant un nouvel envoi
+> d'invitation.
+>
+> ⚠️ **Le point ③ a été corrigé après une revue extérieure** *(2026-08-25)*. Il disait *« le nouveau
+> jeton n'est communiqué à personne »* — **trop fort, et faux au sens strict**. 🔬
+> `listerClubsInvites` renvoie la **ligne complète** de chaque club, `club_token` compris : le
+> nouveau jeton **est donc bien transmis au frontend admin authentifié**, dès le premier chargement
+> de la carte « Clubs invités ». ⭐ **Ce n'est pas une fuite** — c'est une lecture protégée par la
+> **clé admin**, exactement comme les emails de contact du même onglet, et c'est ce qui permet à
+> l'admin de construire les liens d'invitation. **La propriété de sécurité réellement démontrée est
+> celle du ③ ci-dessus, et elle suffit.**
 
-**Contrôles STRUCTURELS complémentaires** *(ils ne remplacent aucun des huit)* : **S1** la décision
-pure et ses cas négatifs · **S2** la non-régression des 8 colonnes déjà effacées · **S3** les cas
-limites *(classeur sans club, sans onglet)* · **F1 → F9** le harnais **frontend** *(l'écran reflète
-le reset)* · un **TÉMOIN R-101** qui fige le défaut des terrains et ⭐ **devra être inversé par
-B2-3**.
+**Contrôles STRUCTURELS complémentaires** *(ils ne remplacent aucun des huit)*, dans
+`backend/Tests.gs` : **S1** la décision pure et ses cas négatifs · **S2** la non-régression des 8
+colonnes déjà effacées · **S3** les cas limites *(classeur sans club, sans onglet)* · un
+**TÉMOIN R-101** qui fige le défaut des terrains et ⭐ **devra être inversé par B2-3**.
+
+#### 16.5 ter — Où vivent les garde-fous, et lesquels sont DURABLES
+
+> ⚠️ **Distinction posée après une revue extérieure** *(2026-08-25)*, et elle vaut règle générale.
+> Cette section avait annoncé *« le harnais frontend F1 → F9 »* alors que ces neuf contrôles
+> n'étaient **qu'une preuve ponctuelle**, exécutée pendant l'implémentation depuis un fichier
+> temporaire, **absent du dépôt**. ⛔ **Une preuve de session n'est pas un garde-fou.**
+>
+> 🎯 **La différence, en une phrase** : une **preuve ponctuelle** établit qu'à un instant donné le
+> code faisait ce qu'on dit ; un **garde-fou durable** empêche quelqu'un de le défaire **demain**.
+> Seul le second se cite dans un plan.
+
+| Où | Ce que c'est | Rejouable depuis un clone neuf ? |
+|---|---|---|
+| `backend/Tests.gs` | **T1 → T8**, **S1 → S3**, témoin R-101 — lancés par `lancerTestsFFR` | ✅ oui *(dans l'éditeur Apps Script)* |
+| 🆕 `tests/frontend-reinitialisation.test.js` | Le comportement de **« Réinitialiser le tournoi »** côté écran : **F-A** *(les clubs sont bien relus)* · **F-B** *(dans le bon ORDRE)* · **F-C** *(chemin nominal)* · **F-D** ⭐ **BLOQUANT** *(relecture en échec ⇒ aucune participation ne survit en mémoire)* · **F-E** *(le texte de confirmation dit vrai)* | ✅ `node tests/frontend-reinitialisation.test.js` |
+| 🆕 `tests/mutations-frontend.test.js` | **Le garde-fou du garde-fou** : réintroduit les 5 défauts corrigés dans une **copie temporaire** et exige qu'ils soient attrapés | ✅ `node tests/mutations-frontend.test.js` |
+
+⭐ **Les deux fichiers `tests/` tournent dans le contrôle `verifier`** du workflow Pages, **avant**
+`deploy` : un échec **refuse la publication**, exactement comme un fichier JavaScript illisible
+*(même verrou que C-013 / R-043)*.
+
+> ⚠️ **Pourquoi hors de `frontend/`** : tout `frontend/` est **publié tel quel** sur GitHub Pages.
+> Un fichier de test y serait mis en ligne pour rien.
+>
+> ⭐ **Ils exécutent les VRAIES fonctions** — `onReinitialiser` et `chargerClubsInvites`, extraites
+> de leur fichier et lancées avec des doublures. ⛔ **Aucune expression régulière sur le code** :
+> réécrire ces fonctions autrement mais correctement laisse les contrôles au vert.
 
 > ⭐ **Ces tests sont écrits pour SURVIVRE à B2-2** *(corollaire de D-050)*. Toutes les assertions
 > métier passent par un **joint de lecture unique** rendant l'objet **plat** que la couche

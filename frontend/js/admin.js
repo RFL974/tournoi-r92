@@ -712,17 +712,24 @@ async function onReinitialiser() {
   try {
     const res = await ecrireAdmin('reinitialiserTournoi', {});
 
-    // ⭐ M1-B2 / B2-0 — LES CLUBS INVITÉS D'ABORD, et il y a deux raisons à cet ordre.
+    // ⭐ M1-B2 / B2-0 — LES CLUBS INVITÉS D'ABORD, et EN OUBLIANT AVANT DE RELIRE.
+    //
     // ① `rechargerEtRendre` s'appuie sur `getAll`, qui ne contient PAS les clubs invités (ils
     //    portent des emails : leur seule lecture est `listerClubsInvites`, protégée par la clé
-    //    admin). Sans cet appel, `clubsInvitesCourants` garderait l'engagement de l'édition
+    //    admin). Sans relecture, `clubsInvitesCourants` garderait l'engagement de l'édition
     //    EFFACÉE : cartes « Accepté », anciens effectifs, anciens liserés — et surtout l'export
-    //    PDF de la demande d'autorisation, qui lit cette même liste en mémoire, partirait à la
+    //    PDF de la demande d'autorisation, qui lit cette même liste EN MÉMOIRE, partirait à la
     //    Ligue avec les clubs et les effectifs de l'an dernier.
-    // ② Il vient AVANT parce que `rechargerEtRendre` recalcule ensuite `majDossier` et
-    //    `majTableauBord`, qui lisent cette liste : rechargée après, elle arriverait trop tard.
-    // ⛔ AUCUNE règle du backend n'est recopiée ici : on RELIT simplement l'état réel du serveur.
-    if (typeof chargerClubsInvites === 'function') await chargerClubsInvites();
+    // ② L'oubli vient AVANT la relecture, et c'est le point de sûreté : `chargerClubsInvites`
+    //    ABSORBE ses erreurs (à raison — voir sa doc). Sans cet oubli, une coupure réseau à cet
+    //    instant précis laisserait l'ancienne liste intacte en mémoire ALORS QUE le serveur a
+    //    déjà tout effacé — exactement l'état incohérent que ce lot supprime. ⭐ Vider d'abord
+    //    rend le pire cas SÛR : on affiche moins, jamais du faux. Le serveur a raison, pas nous.
+    // ③ Le tout vient AVANT `rechargerEtRendre`, qui recalcule ensuite `majDossier` et
+    //    `majTableauBord` : ces deux-là lisent cette liste, une relecture après arriverait trop tard.
+    // ⛔ AUCUNE règle du backend n'est recopiée ici : on OUBLIE, puis on RELIT le serveur.
+    clubsInvitesCourants = [];
+    const clubsRelus = (typeof chargerClubsInvites === 'function') && await chargerClubsInvites();
 
     // On recharge tout l'état depuis le backend et on ré-affiche la page.
     await rechargerEtRendre({ reglages: true, terrains: true, selectCats: true,
@@ -735,9 +742,13 @@ async function onReinitialiser() {
     const nbE = (res && res.nb_equipes != null) ? res.nb_equipes : '?';
     const nbP = (res && res.nb_poules != null) ? res.nb_poules : '?';
     const nbM = (res && res.nb_matchs != null) ? res.nb_matchs : '?';
+    // ⚠️ Si la relecture des clubs a échoué, la réinitialisation a bel et bien eu lieu côté
+    // serveur : on le dit, et on dit aussi que l'écran, lui, est incomplet — jamais l'inverse.
     afficherMessage(message,
       '✅ Tournoi réinitialisé. Supprimés : ' + nbC + ' catégorie(s), ' + nbE +
-      ' équipe(s), ' + nbP + ' poule(s), ' + nbM + ' match(s). Tournoi masqué.', 'ok');
+      ' équipe(s), ' + nbP + ' poule(s), ' + nbM + ' match(s). Tournoi masqué.' +
+      (clubsRelus ? '' : ' ⚠️ La liste des clubs invités n\'a pas pu être relue (réseau) : ' +
+       'recharge la page pour la voir à jour.'), clubsRelus ? 'ok' : 'ko');
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
   } finally {

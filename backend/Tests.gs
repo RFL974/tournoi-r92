@@ -4954,9 +4954,16 @@ function testB20_T5_carnetDurableConserve(etat) {
  *  premier chargement de l'admin qui suit, les cellules sont donc REMPLIES à nouveau.
  *
  *  ⭐ Le résultat métier qui compte est ailleurs : l'ANCIEN lien doit être MORT, et le nouveau
- *  jeton ne doit être ni l'ancien, ni connu de quiconque. C'est ce qui est éprouvé ici, par les
- *  fonctions réellement chargées de valider un jeton — `trouverClubParToken`,
- *  `getReponseInvitation` et `repondreInvitation` — ⛔ jamais par une lecture de cellule. */
+ *  jeton ne doit être ni l'ancien, ni transmis au CLUB, ni exposé PUBLIQUEMENT avant un nouvel
+ *  envoi d'invitation. C'est ce qui est éprouvé ici, par les fonctions réellement chargées de
+ *  valider un jeton — `trouverClubParToken`, `getReponseInvitation` et `repondreInvitation` —
+ *  ⛔ jamais par une lecture de cellule.
+ *
+ *  ⚠️ Ce commentaire disait « ni connu de quiconque » : trop fort, corrigé après revue.
+ *  🔬 `listerClubsInvites` renvoie la LIGNE COMPLÈTE, `club_token` compris — le nouveau jeton est
+ *  donc bien transmis au frontend ADMIN AUTHENTIFIÉ. ⭐ C'est une lecture protégée par la clé
+ *  admin, au même titre que les emails du même onglet, et c'est ce qui permet de construire les
+ *  liens d'invitation. La propriété démontrée reste entière : rien ne part vers le club. */
 function testB20_T6_ancienTokenInutilisable(etat) {
   var cl = _b20ClasseurFactice();
   var nom = 'LE TEST RUGBY CLUB';
