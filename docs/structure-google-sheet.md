@@ -54,7 +54,7 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 
 | parametre | valeur (exemple) | Signification |
 |---|---|---|
-| `tournoi_id` | `2026-11-11 21:37:00` | Identifiant du tournoi, posé à chaque génération (clé de l'onglet `Historique`) |
+| `tournoi_id` | `2026-11-11 21:37:00` | Identifiant du tournoi, posé à chaque génération (clé de l'onglet `Historique`). ⚠️ **Ne PAS s'en servir comme identifiant d'une ÉDITION** — voir l'avertissement sous ce tableau |
 | `tournoi_publie` | `oui` | `oui` = la page publique est visible ; sinon écran « à venir ». Piloté par le bouton **« Publier le tournoi »** de l'admin. Ce témoin commande AUSSI la carte « Tournoi » des actualités du site vitrine : il doit rester dans les listes blanches `live` **et** `invitation` de `CONFIG_PUBLIQUE_VUES` (Code.gs), sans quoi la vitrine conclut « non publié » en silence |
 | `tournoi_nom` | `Challenge Marc Chevalier` | Nom affiché sur la carte + la page d'article du site vitrine |
 | `tournoi_date` | `2026-11-11` | Date du tournoi (carte, article, agenda .ics) |
@@ -67,7 +67,26 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 | `couloir_terrain_m` | `5` | Couloir de circulation entre mini-terrains (m) |
 | `tm_longueur_m` / `tm_largeur_m` | `4` | Taille de la table des marques (m) |
 | `planning_visible_clubs` | `non` | `oui` = les **dossiers des clubs** affichent poules et matchs. **Vide/absent = `non`** (défaut FERMÉ). Remis à `non` automatiquement par **toute génération ou réorganisation des poules** ; repassé à `oui` par le bouton « Rendre le planning visible par les clubs » (carte *Poules & planning*). ⚠️ **Indépendant de `tournoi_publie`**, qui commande le site public |
-| `repartition_grands_terrains` | `{"Rugby 1":["1","2"],…}` | JSON — **composition de chaque grand terrain** (numéros de mini-terrains), écrite quand la répartition est **appliquée** ; alimente le filtre « Grand terrain » de la page Saisie |
+| `repartition_grands_terrains` | `{"Rugby 1":["1","2"],…}` | JSON — **composition de chaque grand terrain** (numéros de mini-terrains), écrite quand la répartition est **appliquée** ; alimente le filtre « Grand terrain » de la page Saisie. ⚠️ **Survit à la réinitialisation** — voir **R-101** |
+
+> ⚠️ **`tournoi_id` n'identifie PAS une édition, et il ne faut pas s'en servir pour cela**
+> *(risque **R-106**, chantier **M1-B2**)*.
+>
+> La description ci-dessus est exacte : il est **posé à chaque génération de poules et planning**.
+> ⭐ Or régénérer est un geste **normal et répété** pendant la préparation — on corrige les poules,
+> on ajoute une équipe, on relance. **Un seul tournoi réel produit donc plusieurs `tournoi_id`**, et
+> les lignes de `Historique` se répartissent entre eux. ⚠️ Il n'est pas non plus effacé par la
+> réinitialisation : l'ancien survit jusqu'à la génération suivante.
+>
+> ⭐ **Il identifie une GÉNÉRATION DE PLANNING, pas une édition.** Un identifiant stable d'édition
+> — `edition_id`, créé à l'ouverture et jamais renouvelé — est prévu par **M1-B2 / B2-1**
+> *(décision **D-050**)*.
+
+> ⚠️ **Le plan des terrains survit à la réinitialisation** *(risque **R-101**)* : `terrains_physiques`,
+> `couloir_terrain_m`, `dimensions_categories`, `tm_longueur_m`, `tm_largeur_m` et
+> `repartition_grands_terrains` ne figurent dans **aucune** liste d'effacement. ⭐ La donnée est
+> **mixte** — l'existence des grands terrains est **permanente**, leur **découpage** en
+> mini-terrains est **propre à une édition**. La séparation est prévue par **M1-B2 / B2-3**.
 
 Paramètres **Contacts & sécurité** (écrits par la carte « Contacts &amp; sécurité » de la page
 admin — destinés au futur **générateur de dossier club**, tous **optionnels**) :

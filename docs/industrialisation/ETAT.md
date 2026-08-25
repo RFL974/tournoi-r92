@@ -25,11 +25,24 @@
 > ⏳ **Ce repère ne se retire QUE lorsqu'un nouveau jeu aura effectivement été recréé** — et il
 > devra alors dire **par quoi** il a été remplacé.
 
-**Dernière mise à jour** : 2026-08-24 *(soir, suite 9)* — ✅ **LE CORRECTIF R-098 EST FUSIONNÉ DANS
-`main` ET PUBLIÉ SUR GITHUB PAGES** *(run **#221**, `success`)* — ⛔ **MAIS TOUJOURS PAS VÉRIFIÉ DANS
-UN NAVIGATEUR.** ⚡ *(Ce bloc a annoncé successivement « écrit dans l'arbre de travail, NI COMMITÉ »
-puis « commité et poussé sur branche, NI FUSIONNÉ, NI PUBLIÉ » : chacune vraie à sa date, la
-dernière jusqu'à la fusion du 2026-08-24 au soir — `CLAUDE.md` §8 septies.)*
+**Dernière mise à jour** : 2026-08-24 *(soir, suite 10)* — 🏛️ **LE CHANTIER M1-B2 EST OUVERT ET SON
+ARCHITECTURE EST VALIDÉE** *(`PLAN.md` **§16**, décisions **D-050** et **D-051**, risques **R-099 →
+R-108**)* — ⛔ **AUCUNE IMPLÉMENTATION N'A COMMENCÉ.** PUB-2 : correctif R-098 fusionné et publié
+*(run **#221**)*, validé en réel sur les trois parcours, ⛔ **preuve « Masquer » toujours à obtenir**.
+
+## 🏛️ M1-B2 — CLUBS, PARTICIPATIONS, ÉDITIONS ET HISTORIQUE *(ouvert le 2026-08-24)*
+
+| | |
+|---|---|
+| 🔴 **Pourquoi ce chantier existe** | ⭐ **Découvert en essayant, pas planifié.** Pendant la validation réelle de PUB-2, le dossier d'un club **accepté à l'édition précédente** s'est ouvert avec ses données d'alors *(« Éducateurs annoncés : 8 », anciens terrains)* — sur un classeur pourtant **réinitialisé**. ⛔ **Aucun test automatisé ni relecture n'aurait pu le trouver** : le code faisait exactement ce qui était écrit |
+| 🔬 **La cause, établie par audit** | `ClubsInvites` répond à **deux questions** avec **une seule structure** : *« qui est ce club ? »* et *« que fait ce club dans ce tournoi ? »*. **R-102 est la cause ; R-099, R-100 et R-101 en sont les effets constatés** |
+| ⚠️ **Pourquoi c'est P1** | 🔬 `backend/Code.gs:2811` — la **demande d'autorisation FFR** compte les clubs `Accepté` et cumule leurs effectifs. Sur une édition neuve : **les clubs de l'an dernier**, **0 joueur** *(effacé)*, **les éducateurs de l'an dernier** *(conservés)*. ⭐ Exactement le défaut que **D-043** avait fermé côté `org_*` — resté ouvert côté clubs |
+| ✅ **Architecture VALIDÉE** | **D-050** — `Clubs` *(carnet durable)* + `Participations` *(édition)*, **couche d'adaptation** préservant les cartes actuelles · `edition_id` **créé à l'ouverture**, ⛔ jamais renouvelé par une régénération · **D-051** — le classement d'une édition passée est un **fait figé**, ⛔ **jamais recalculé** |
+| 🆕 **10 risques inscrits** | **R-099** *(3 colonnes survivantes)* · **R-100** *(statut `Accepté`)* · **R-101** *(découpage terrains)* · **R-102** *(cause structurelle)* · **R-103** *(RGPD messages)* · **R-104** *(migration)* · **R-105** *(colonne future)* · **R-106** *(`tournoi_id` inapte)* · **R-107** *(archivage destructif)* · **R-108** *(double barème — ⛔ **hors M1-B2**)* |
+| 🔴 **R-106, découvert au cadrage** | 🔬 `tournoi_id` est **renouvelé à CHAQUE génération de planning** et **n'est pas effacé au reset**. Un tournoi réel produit donc **N identifiants**. ⛔ **En l'état, aucune archive fiable n'est possible** — il identifie *une génération*, pas *une édition* |
+| 📋 **Découpage** | **B2-0** *(reset — harnais)* → **B2-1** *(`edition_id` + `Editions`)* → **B2-2** *(migration)* → **B2-3** *(terrains)* → **B2-4** *(UX)* → **B2-5** *(messagerie V1)* → **B2-6** *(archivage + `Arch_Classements`)* |
+| ⏭️ **Prochaine étape** | **B2-0** — ⛔ **plan écrit, NON démarré**, en attente de validation |
+| ⛔ **Ce que M1-B2 ne fait pas** | aucun multi-tournois actif · aucun sélecteur d'édition · aucune simulation de classement · aucun centre de notifications · aucune relance d'invitation · aucun module futur *(buvette, fréquentation…)* |
 
 | | |
 |---|---|

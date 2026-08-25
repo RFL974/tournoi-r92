@@ -1445,3 +1445,224 @@ VISIBLE.** *On a contrôlé le contenu d'une pièce sans essayer d'en ouvrir la 
 > recréer aucune donnée pour les obtenir sans décision explicite** : le repère *« DONNÉES DE TOURNOI
 > À RECRÉER »* reste **ACTIF**, et la manière d'obtenir cette preuve sans le violer est un sujet à
 > trancher séparément.
+
+---
+
+## 🏛️ CHANTIER M1-B2 — les dix risques du modèle « club / participation / édition »
+
+> ⚠️ **Ces dix risques ont une origine commune** — la validation réelle de **PUB-2** du 2026-08-24.
+> En vérifiant la non-régression du dossier club, le dossier d'un club **accepté à l'édition
+> précédente** s'est ouvert avec ses données d'alors : *« Éducateurs annoncés : 8 »*, l'ancienne
+> répartition des terrains. Le classeur était pourtant **réinitialisé** *(M1-B)*.
+>
+> ⭐ **L'audit qui a suivi n'a pas trouvé trois colonnes oubliées : il a trouvé un modèle qui
+> répond à deux questions avec une seule structure** — *« qui est ce club ? »* et *« que fait ce
+> club dans ce tournoi ? »*. **R-102 est la cause ; R-099, R-100 et R-101 en sont les effets
+> observés.**
+
+### R-099 — Trois colonnes événementielles de `ClubsInvites` survivent au reset
+
+| | |
+|---|---|
+| **Priorité** | **P1** — ⚠️ **peut fausser un document officiel destiné à la Ligue** |
+| **Domaine** | **A — métier** · **D — QA / fiabilité** |
+| **Statut** | ⛔ **OUVERT** — rattaché à **M1-B2 / B2-0** *(correction)* puis **B2-2** *(structure)* |
+| **Découvert** | 2026-08-24, pendant la validation réelle de PUB-2 |
+
+🔬 **`reinitialiserPhase2Clubs`** *(`backend/Code.gs`)* efface 8 colonnes sur 17. **Trois colonnes
+strictement événementielles n'y figurent pas** : **`nb_educateurs_total`**, **`detail_effectifs`**,
+**`alerte_ecart`**.
+
+> 🎯 **L'incohérence est démontrable sans interprétation** : `nb_joueurs_total` **est effacé**,
+> `nb_educateurs_total` **ne l'est pas**. Les deux sont déclarés par le club **dans la même
+> réponse**, pour **le même tournoi**. Et le dossier club les affiche **l'un sous l'autre**
+> *(`frontend/js/dossier.js:682-683`)* — d'où le *« Joueurs annoncés : (vide) / Éducateurs
+> annoncés : 8 »* constaté à l'écran. **C'est un oubli, pas un arbitrage.**
+
+⚠️ **Pourquoi P1 et non P2** : 🔬 `backend/Code.gs:2811` compte, pour la **demande d'autorisation
+FFR**, les clubs dont le statut vaut `Accepté`, et cumule leurs effectifs. Sur une édition neuve,
+la cascade compterait donc **les clubs de l'an dernier**, avec **0 joueur** *(effacé)* et **les
+éducateurs de l'édition passée** *(conservés)*. ⭐ **C'est exactement le défaut que D-043 avait
+fermé côté `org_*` — resté ouvert côté clubs.**
+
+### R-100 — Le statut de participation `Accepté` survit au reset
+
+| | |
+|---|---|
+| **Priorité** | **P1** |
+| **Domaine** | **A — métier** · **E — UX** |
+| **Statut** | ⛔ **OUVERT** — **B2-0** puis **B2-2** |
+
+🔬 La colonne `statut` est **délibérément conservée** : le commentaire du code la range dans
+*« le carnet d'adresses (noms/contacts/statuts) »*.
+
+> ⭐ **Ce rangement est faux, et c'est tout le problème.** Un nom et un email sont des
+> **coordonnées** ; un statut est un **engagement**. *« Accepté »* n'est pas une propriété du club :
+> c'est **la réponse à une question posée** — *« participez-vous au tournoi du 15 juin 2026 ? »*.
+> Elle ne vaut pas pour l'édition suivante.
+
+**Trois conséquences constatées dans le code :**
+
+| | |
+|---|---|
+| 🔬 `Code.gs:2811` | Le club **compte comme engagé** dans la demande d'autorisation FFR |
+| 🔬 `admin-invitations.js:674` | ⛔ **Il n'est PLUS invitable** — `estInvitable()` exclut les `Accepté`, et l'envoi groupé les saute. **Après un reset, on ne peut donc plus inviter ces clubs sans corriger leur statut à la main** |
+| — | Il peut encore générer un **dossier complet** *(constaté en réel)* |
+
+### R-101 — Le découpage événementiel des terrains survit au reset
+
+| | |
+|---|---|
+| **Priorité** | **P2** |
+| **Domaine** | **A — métier** |
+| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-3**. ⚠️ **Doit être fermé avant la clôture de M1-B2** *(arbitrage de Romain, 2026-08-24)* |
+
+🔬 **Vérifié par calcul sur les 60 champs effacés** : `repartition_grands_terrains` n'apparaît dans
+**aucune** liste d'effacement — ni les listes explicites de `reinitialiserTournoi`, ni
+`CHAMPS_INVITATION`, `CHAMPS_SURPLACE`, `CHAMPS_CONTACTS_SECURITE`, ni les 26 de
+`CHAMPS_AUTORISATION_A_REINITIALISER`. Ses cinq voisins non plus *(`terrains_physiques`,
+`dimensions_categories`, `couloir_terrain_m`, `tm_longueur_m`, `tm_largeur_m`)*.
+
+🔬 `resumeTerrains` *(`frontend/js/dossier.js:166`)* ne lit **que** ce champ — ⛔ **ni les
+catégories, ni les équipes, ni les matchs**. Les vider n'a donc aucun effet sur la phrase affichée,
+d'où le *« 18 terrains de jeu, sur 4 grands terrains »* d'un tournoi qui n'a aucune catégorie.
+
+> ⭐ **La donnée est MIXTE, et c'est la clé de la correction** : *« il existe 4 grands terrains
+> nommés Rugby 1-4 »* est une **caractéristique permanente de l'installation** ; *« ils sont
+> découpés en 18 mini-terrains de cette façon »* est **événementiel** — le découpage dépend des
+> catégories et des équipes **de cette édition**. Le commentaire du code le dit : la valeur est
+> *« écrite quand la répartition est APPLIQUÉE »*.
+
+### R-102 — `ClubsInvites` mêle identité durable et participation, sans marquage
+
+| | |
+|---|---|
+| **Priorité** | **P2** — ⭐ **c'est la CAUSE STRUCTURELLE de R-099, R-100 et R-101** |
+| **Domaine** | **G — architecture** |
+| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-2** |
+
+🔬 Les 17 colonnes de `ClubsInvites` mélangent **6 colonnes durables** *(nom, contacts, date
+d'ajout)* et **11 colonnes de participation**, sans que **rien dans la structure** ne dise à quelle
+famille appartient une colonne. Le reset s'en remet à **une liste écrite à la main**.
+
+> ⚠️ **Et la doctrine D-043 aggrave mécaniquement le défaut — pour de bonnes raisons.** Elle pose
+> que *« l'oubli doit conserver la donnée, pas la détruire »*. C'est juste sur une opération
+> destructive. Mais la conséquence est inévitable : ⭐ **toute colonne ajoutée sans être classée
+> devient un résidu permanent.** C'est arrivé **trois fois** *(R-099)*.
+
+### R-103 — Les messages libres peuvent contenir des données personnelles
+
+| | |
+|---|---|
+| **Priorité** | **P1** *(RGPD)* |
+| **Domaine** | **B — RGPD / privacy by design** |
+| **Statut** | ⛔ **OUVERT** — ⚠️ **à instruire séparément à partir de [`REFERENTIELS.md`](REFERENTIELS.md)** |
+
+La messagerie **V1** *(M1-B2 / B2-5)* ouvre un champ **libre** au club. Un tel champ peut contenir
+un prénom d'accompagnant, un numéro de téléphone, une contrainte de santé.
+
+**Trois points à instruire — ⛔ aucun n'est tranché :** **minimisation** *(conserver le contenu
+est-il nécessaire, ou un résumé suffit-il ?)* · **durée** *(une conservation sans limite est
+difficile à défendre — voir [`../conservation-donnees.md`](../conservation-donnees.md))* ·
+**information** *(le champ de saisie doit dire au club ce qu'il advient de son message)*.
+
+> ⭐ **Ce risque ne bloque pas l'architecture.** Relier techniquement un message à `edition_id` est
+> acquis ; **décider de l'archiver ou de le purger ne l'est pas** *(D-051)*.
+
+### R-104 — Migration `ClubsInvites` → `Clubs` + `Participations`
+
+| | |
+|---|---|
+| **Priorité** | **P2** |
+| **Domaine** | **G — architecture** · **D — QA** |
+| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-2** |
+
+La migration doit créer un `club_id` stable pour chaque ligne existante et répartir les 17 colonnes
+entre les deux onglets. ⚠️ **Sans identifiant stable**, une archive devient **orpheline** dès qu'un
+club est renommé — et le lien *« ce club est venu 4 fois »* est perdu.
+
+⭐ **Mitigation prévue** : les tests métier de **B2-0** servent de **filet de sécurité** de cette
+migration — ils décrivent le comportement attendu **avant** que la structure ne change *(D-050)*.
+
+### R-105 — Une colonne future peut à nouveau échapper au classement
+
+| | |
+|---|---|
+| **Priorité** | **P2** |
+| **Domaine** | **G — architecture** |
+| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-2** |
+
+Même après la séparation, rien n'empêche d'ajouter une colonne à `Participations` **sans la
+classer**. ⭐ **Mitigation prévue** : un contrôle automatique — *« toute colonne doit appartenir à
+exactement une des deux familles »* — qui **échoue** si une colonne nouvelle n'est pas classée.
+
+### R-106 — `tournoi_id` ne peut pas identifier une édition
+
+| | |
+|---|---|
+| **Priorité** | **P1** — ⛔ **bloque tout archivage fiable** |
+| **Domaine** | **G — architecture** · **A — métier** |
+| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-1** |
+| **Découvert** | 2026-08-24, en préparant l'architecture de l'historique |
+
+🔬 **`backend/Code.gs`, à la fin de la génération du planning** :
+
+```js
+['tournoi_id', Utilities.formatDate(new Date(), …, 'yyyy-MM-dd HH:mm:ss')]
+```
+
+⭐ **Un nouvel identifiant est posé à CHAQUE « Générer poules et planning ».** Or régénérer est un
+geste **normal et répété** pendant la préparation : on corrige les poules, on ajoute une équipe, on
+relance.
+
+| Conséquence | |
+|---|---|
+| 🔴 **Un tournoi réel produit N identifiants** | 3 régénérations = 3 `tournoi_id`. Les matchs de `Historique` se répartissent sur 3 « éditions » fantômes |
+| 🔴 **Il n'est PAS effacé au reset** | 🔬 vérifié par calcul — l'ancien survit jusqu'à la génération suivante |
+| 🔴 **Une carte d'historique serait fausse** | *« 8 clubs · 42 équipes · 63 matchs »* pourrait n'en afficher que 20 |
+
+> 🎯 **`tournoi_id` identifie UNE GÉNÉRATION DE PLANNING, pas une édition.** ⛔ Régénérer un
+> planning ne crée jamais une nouvelle édition *(D-050)*.
+>
+> ⚠️ **[`../structure-google-sheet.md`](../structure-google-sheet.md) le décrit exactement** —
+> *« posé à chaque génération »*. La documentation n'est pas fausse : **c'est le comportement qui
+> est inadapté** à l'usage d'archive qu'on veut lui donner.
+
+### R-107 — L'archivage est une opération destructive en plusieurs temps
+
+| | |
+|---|---|
+| **Priorité** | **P1** |
+| **Domaine** | **D — QA / fiabilité** |
+| **Statut** | ⛔ **OUVERT** — **à traiter DANS M1-B2 / B2-6** |
+
+*« Nouveau tournoi »* enchaînera : construire l'archive → la vérifier → **puis** réinitialiser
+l'actif. ⚠️ **Sans protection, une interruption peut laisser une archive incomplète ET des données
+effacées** — une perte irréversible.
+
+**Protections retenues :** **`LockService`** *(un double clic est bloqué côté serveur, pas
+seulement à l'écran)* · **idempotence** *(refus si l'édition est déjà `archivee`)* · ⭐ **ordre
+impératif : le reset n'a lieu qu'APRÈS `date_archivage` posée** — tant qu'elle est vide, l'archive
+est incomplète et **rien n'est effacé**.
+
+### R-108 — Le barème de classement est implémenté en double, sans contrôle
+
+| | |
+|---|---|
+| **Priorité** | **P2** |
+| **Domaine** | **D — QA** · **G — architecture** |
+| **Statut** | ⛔ **OUVERT** — ⚠️ **HORS M1-B2** *(arbitrage de Romain)* : petit lot séparé de cohérence backend / frontend |
+
+🔬 Le barème et le départage existent **deux fois** : `backend/Code.gs`
+*(`enregistrerResultat`, `comparerClassement`)* et `frontend/js/tournoi.js` *(`appliquer`,
+`comparer`)*. [`../regles-classement.md`](../regles-classement.md) impose de les synchroniser **à la
+main** — ⛔ **aucun contrôle automatique ne le vérifie**.
+
+Une divergence produirait un classement public différent de celui qui sert à **générer
+l'après-midi**. ⚠️ **L'archivage en augmente la portée** : une divergence ne fausserait plus
+seulement un affichage du jour, ⭐ **elle serait gravée définitivement dans l'historique**.
+
+> ⚠️ **Ce risque PRÉEXISTE à M1-B2** — la spec le documente déjà comme un point de vigilance, et le
+> contrôle de C-012 l'a trouvé *« identique au caractère près »* à sa date. ⛔ Il n'est **pas** créé
+> par la décision de figer le classement *(D-051)*, qui **supprime** au contraire le risque de
+> réinterprétation.

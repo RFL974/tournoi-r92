@@ -3366,3 +3366,132 @@ locale — **et** sur le site réellement servi par GitHub Pages, qui peut diff�
 >   seule ligne de `dossier.js` a bougé — elle **délègue** la résolution, elle ne la modifie pas ;
 > - ❌ **Pas** que R-097 avance : ⛔ la vitrine externe **lit toujours** `tournoi_publie`. La
 >   coupure appartient à **PUB-3** puis **PUB-4**.
+
+---
+
+### D-050 — Un club connu n'est pas un club invité : `Clubs` et `Participations` sont deux choses
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-24 |
+| **Session** | Chantier **M1-B2** — cadrage d'architecture |
+| **Statut** | ✅ **VALIDÉE — décision de Romain**, avant implémentation |
+| **Décidée par** | Romain |
+| **Couvre** | `PLAN.md` **§16** *(M1-B2)* · `RISQUES.md` **R-099, R-100, R-102, R-104, R-105, R-106** |
+
+**Le problème posé**
+
+> Le code décrit `ClubsInvites` comme *« un carnet d'adresses réutilisable d'une édition à
+> l'autre »*. ⚠️ **Mais il ne contient pas un carnet d'adresses : il contient un carnet d'adresses
+> ET un registre de participation, dans les mêmes 17 colonnes.** Le reset s'en remet à une liste
+> écrite à la main — et **trois colonnes ont été oubliées** *(R-099)*.
+
+**Ce qui a été comparé**
+
+| | **Option A** — un onglet, deux listes déclaratives | **Option B** — séparation réelle |
+|---|---|---|
+| Ferme R-099/100/102 | ✅ | ✅ |
+| Migration | ✅ aucune | ⚠️ une |
+| **Plusieurs éditions par club** | 🔴 **IMPOSSIBLE** | ✅ |
+
+> 🎯 **L'argument qui a tranché n'est pas esthétique, il est arithmétique.** L'historique doit
+> conserver, **pour chaque édition passée**, le statut final, les catégories engagées et les
+> effectifs de chaque club. Dans l'Option A, un club a **une seule ligne** : il ne peut porter
+> qu'**un seul** statut, **un seul** effectif. ⛔ **L'Option A rend l'historique des clubs
+> structurellement impossible.**
+>
+> ⚠️ **La recommandation initiale était l'Option A** — elle répondait à un cahier des charges
+> **sans historique**. L'horizon a changé le 2026-08-24 ; la réponse a changé avec lui. **Cette
+> trace est conservée volontairement** : elle explique pourquoi le dépôt ne doit plus chercher
+> l'Option A.
+
+**Ce qui est décidé**
+
+| | |
+|---|---|
+| 🆕 **`Clubs`** | `club_id` *(UUID stable, jamais réutilisé)* · nom · contact · prénom · email · date d'ajout · `actif`. ⛔ **Aucun statut, aucun jeton, aucun effectif** |
+| 🆕 **`Participations`** | `edition_id` + `club_id` + **tout ce qui appartient à l'édition** : statut, jeton, dates d'envoi, catégories engagées, effectifs, alertes · 📸 **snapshots** du nom et du contact au moment de l'invitation |
+| ⭐ **Couche d'adaptation** | `listerClubsInvites` **garde sa signature** et renvoie **le même objet plat qu'aujourd'hui** ⇒ badges, tris, liserés, statuts, catégories et actions des cartes actuelles sont **préservés sans réécriture** |
+| ⭐ **`statut` vide** | Nouveau sens : **connu au carnet, sans participation** — l'état d'un club après reset. `Invité` ne se pose plus qu'**après un envoi réussi** |
+
+**Corollaire — `edition_id`**
+
+> **Une édition possède un identifiant stable pendant toute sa vie.** Il est créé **à l'ouverture**
+> de l'édition, jamais à l'archivage : les participations, messages, matchs et terrains le portent
+> **dès leur création**, sans rétro-étiquetage.
+>
+> ⛔ **Il ne change JAMAIS** : ni à une régénération des poules, ni du planning, ni à une
+> modification des équipes. ⭐ **Régénérer un planning ne crée pas une nouvelle édition** — c'est
+> précisément ce que fait `tournoi_id` aujourd'hui, et c'est **R-106**.
+>
+> ⛔ **`edition_id` ne rend PAS Maxilou multi-tournois** : une seule ligne `active` dans `Editions`,
+> aucun sélecteur d'édition. **C'est une étiquette de rattachement, jamais un sélecteur.**
+
+**Corollaire — B2-0 comme harnais**
+
+> La correction immédiate du reset *(B2-0)* n'est **pas un bricolage transitoire** : c'est **la
+> spécification exécutable du comportement cible**. ⭐ Ses **tests métier survivent à B2-2** — ils
+> décrivent un résultat *(« après reset : aucun statut, aucun effectif hérité »)*, pas une
+> structure. **Seules ~10 lignes de code seront remplacées.**
+>
+> 🎯 **Et c'est ce qui rend la migration sûre** : B2-2 est une migration de structure — l'opération
+> la plus risquée du chantier. ⛔ **La faire sans test préalable du comportement attendu, ce serait
+> migrer à l'aveugle.**
+
+---
+
+### D-051 — Le classement d'une édition passée est un fait historique, jamais recalculé
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-24 |
+| **Session** | Chantier **M1-B2** — cadrage de l'historique |
+| **Statut** | ✅ **VALIDÉE — décision de Romain**, avant implémentation |
+| **Décidée par** | Romain |
+| **Couvre** | `PLAN.md` **§16** *(B2-6)* · `RISQUES.md` **R-103, R-108** · [`../regles-classement.md`](../regles-classement.md) |
+
+**Le problème posé**
+
+> Fallait-il **stocker** le classement de chaque édition, ou le **recalculer** au besoin depuis les
+> matchs archivés ?
+
+**Ce qui a tranché — une preuve dans le code**
+
+```
+backend/Code.gs    var POINTS_VICTOIRE = 3;   ⭐ CODÉ EN DUR, pas un paramètre de Config
+```
+
+> 🎯 **Le barème n'est pas dans les données : il est dans le code**, en deux exemplaires. Un
+> classement recalculé plus tard le serait donc **forcément avec les règles du code du jour** —
+> l'ancien barème n'existe plus nulle part après un redéploiement.
+>
+> ⭐ **Recalculer, ce n'est donc pas « reconstituer » : c'est réécrire l'histoire avec les règles
+> d'aujourd'hui.**
+
+**Ce qui est décidé**
+
+> **L'historique est la photographie de l'édition telle qu'elle a réellement eu lieu. Il ne
+> réinterprète jamais une édition passée avec les règles courantes.**
+
+| | |
+|---|---|
+| 🆕 **`Arch_Classements`** | Une ligne = une équipe dans une poule d'une édition. ⭐ **`position` MATÉRIALISÉE** — 🔬 le moteur ne la produit pas, elle n'est que l'index du tri ; sans elle, deux équipes strictement à égalité pourraient permuter à la relecture |
+| ⭐ **Condition de remplissage** | ⛔ **N'écrire le classement QUE si au moins un match comptant est terminé avec deux scores valides.** Sinon l'archive afficherait un classement **qui n'a jamais existé** — l'inverse exact de cette doctrine. **Une édition peut être archivée sans classement** |
+| 🆕 **`regles_classement_json`** | Dans `Editions` : barème, ordre de départage, périmètre des matchs comptés — ⭐ **le strict nécessaire pour EXPLIQUER le résultat**, ⛔ pas la configuration du logiciel |
+| 🆕 **`regles_classement_version`** | Un **entier simple**, incrémenté **uniquement** quand [`../regles-classement.md`](../regles-classement.md) change. ⭐ **C'est le SEUL repère possible**, puisque le barème vit dans le code : il dit *avec quelle implémentation* l'édition a été calculée |
+| ⭐ **Snapshot par valeur** | L'archive contient les **noms**, pas les identifiants — 🔬 **doctrine déjà en vigueur** dans l'onglet `Historique` : *« on stocke les NOMS d'équipe (stables), contrairement aux id »*. `club_id` est conservé **en plus**, pour la relation durable |
+| ⭐ **Faits ≠ indicateurs** | **Faits figés** *(classement, scores, clubs, règles de l'époque)* : **lus, jamais recalculés**. **Indicateurs analytiques** *(moyennes, évolutions, fréquences)* : **recalculés au vol**. ⭐ Cette distinction guide la structure — et devient une distinction **de tables** |
+
+**Ce que la décision permet, et c'est sa raison d'être**
+
+> *« Le club X était 2ᵉ en 2027 avec 7 points ; 2ᵉ en 2028 avec 8 points. »* Deux **faits lus**,
+> chacun produit sous ses propres règles — **dont on connaît la version**. ⭐ **On peut donc étudier
+> si un écart vient de la performance sportive ou d'un changement de règle.** Un classement
+> recalculé détruirait cette information.
+
+⛔ **Aucune simulation** *(« qu'aurait donné 2027 avec les règles 2029 ? »)* n'est développée. Si
+elle existait un jour, ce serait explicitement un **résultat dérivé**, ⛔ **jamais le classement
+historique**.
+
+⛔ **Les phases finales** restent conservées via `Historique` étendu *(`vainqueur`, `tour`,
+`sous_tableau`)* — ⛔ **sans inventer un « classement général » qui n'existe pas aujourd'hui.**

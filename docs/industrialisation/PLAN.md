@@ -3021,3 +3021,133 @@ M1 est terminé quand **les huit conditions** sont réunies :
 | **Déclenche-t-il quelque chose ?** | ⛔ **NON.** ⚠️ **M1-B ne démarre pas parce que ce reliquat existe** — aucune étape ne démarre sans validation explicite *(§15.2)* |
 | **Quand sera-t-il fait ?** | **Dès qu'un environnement autorisant cette lecture sera disponible** *(un accès direct au classeur suffit)*. À défaut, il est **repris par M1-F**, qui traite déjà les valeurs institutionnelles du classeur |
 | **Ce qu'il ne faut PAS faire** | ⛔ **L'oublier** — c'est la raison d'être de cette ligne · ⛔ **le transformer en blocage** — il n'en est pas un · ⛔ **le mélanger à un commit** : il ne touche **aucun fichier du dépôt** |
+
+---
+
+## 16. 🏛️ CHANTIER M1-B2 — CLUBS, PARTICIPATIONS, ÉDITIONS ET HISTORIQUE
+
+> **Ouvert le 2026-08-24.** Il **rouvre M1-B** : le reset était juste dans ce qu'il a prouvé
+> *(côté `Config`)*, ⛔ **mais l'onglet `ClubsInvites` n'avait jamais été audité**.
+>
+> **Doctrines fondatrices** : **D-050** *(« un club connu n'est pas un club invité »)* ·
+> **D-051** *(« le classement d'une édition passée est un fait historique »)*.
+> **Risques portés** : **R-099, R-100, R-101, R-102, R-104, R-105, R-106, R-107**
+> *(⛔ **R-103** — RGPD des messages — s'instruit séparément · ⛔ **R-108** — double barème — est
+> **hors M1-B2**, petit lot de cohérence à part)*.
+
+### 16.1 — Comment ce chantier a été trouvé
+
+⭐ **Il n'a pas été planifié : il a été découvert en essayant.** Pendant la validation réelle de
+**PUB-2**, une vérification de non-régression du dossier club a ouvert le dossier d'un club
+**accepté à l'édition précédente** — avec ses données d'alors, sur un classeur pourtant réinitialisé.
+
+🎯 **La leçon vaut plus que le défaut** : ce sont **les tests fonctionnels réels** qui l'ont trouvé,
+⛔ **aucun test automatisé ni aucune relecture** ne l'aurait fait — le code faisait exactement ce
+qui était écrit.
+
+### 16.2 — Le modèle cible
+
+| Onglet | Rôle | Statut |
+|---|---|---|
+| 🆕 **`Clubs`** | **Carnet durable** : `club_id`, nom, contact, prénom, email, date d'ajout, `actif`. ⛔ **aucun statut, jeton ni effectif** | à créer *(B2-2)* |
+| 🆕 **`Participations`** | **Édition active** : `edition_id` + `club_id` + statut, jeton, dates, catégories engagées, effectifs, alertes, 📸 **snapshots** nom/contact | à créer *(B2-2)* |
+| 🆕 **`Editions`** | **Registre** : `edition_id`, nom, date, lieu, adresse, description, affiche, `statut` *(`active`/`archivee`)*, `date_archivage`, compteurs, `config_json`, 🆕 **`regles_classement_json`**, 🆕 **`regles_classement_version`**. ⭐ **UNE SEULE ligne `active`** | à créer *(B2-1)* |
+| 🆕 **`Messages`** | `message_id`, `edition_id`, `club_id`, auteur, horodatage, contenu, `lu_par_organisateur` | à créer *(B2-5)* |
+| **`Historique`** *(existe)* | ⭐ **devient l'archive des matchs** — à étendre aux colonnes de `Matchs` ; `tournoi_id` → `edition_id` | à étendre *(B2-6)* |
+| 🆕 **`Arch_Equipes` · `Arch_Poules` · `Arch_Terrains` · `Arch_Participations` · `Arch_Classements`** | Colonnes d'origine **+ `edition_id`** | à créer *(B2-6)* |
+| **`ClubsInvites`** | ⛔ **disparaît** après migration | *(B2-2)* |
+
+> ⭐ **Un seul patron partout** : *une ligne = un fait, `edition_id` en colonne.* C'est celui de
+> `Historique`, **déjà éprouvé**. Une famille future *(buvette, fréquentation, bénévoles…)* = **un
+> onglet de plus**, ⛔ sans toucher aux autres. **Volumétrie : ~1 700 cellules par édition pour les
+> matchs — 10 éditions ≈ 20 000 cellules, sans commune mesure avec les limites de Google Sheets.**
+
+### 16.3 — Cycle de vie d'une édition
+
+```
+Ouverture   → edition_id (UUID) créé · Editions.statut = 'active'
+Vie         → participations, messages, matchs, terrains portent cet edition_id
+Archivage   → statut = 'archivee' · date_archivage posée
+Nouveau     → nouvel edition_id · une seule ligne 'active'
+```
+
+⛔ **Mono-tournoi préservé** : plusieurs éditions **archivées** en lecture seule, **une seule
+active**, ⛔ **aucun sélecteur d'édition**.
+
+### 16.4 — L'historique : figé, structuré, interrogeable
+
+⛔ **Pas un PDF, pas une copie HTML, pas un JSON monolithique.** L'archive reste **requêtable** —
+c'est ce qui permettra à la future page **Performances** de filtrer `edition_id = X`, `∈ {X,Y}`, ou
+rien du tout.
+
+| Famille | Support |
+|---|---|
+| Général · config sportive | `Editions` *(+ `config_json` : catégories, horaires, formats, `param_format`)* |
+| Clubs | `Arch_Participations` — statuts finaux, catégories engagées, effectifs, snapshots · ⛔ **sans jeton** |
+| Équipes · Poules · Terrains | `Arch_Equipes` · `Arch_Poules` · `Arch_Terrains` *(le découpage **réellement appliqué**)* |
+| **Planning + matchs + scores** | `Historique` étendu — ⭐ **une seule famille** : un match porte déjà horaire, terrain, phase, statut, scores et détail |
+| **Classements** | 🆕 `Arch_Classements` — `edition_id`, catégorie, poule, **`position`**, `nom_equipe`, `id_equipe`, `j v n d bp bc diff pts` |
+
+⚠️ **Condition de remplissage de `Arch_Classements`** *(D-051)* : ⛔ **n'écrire QUE si au moins un
+match comptant est terminé avec deux scores valides.** ⭐ **Une édition peut être archivée sans
+classement** — c'est honnête ; un classement à zéros ne le serait pas.
+
+⚠️ **Ordre d'écriture** : `Arch_Classements` **après** `Historique` et `Arch_Equipes` — le
+classement se calcule **une dernière fois** depuis `Equipes` + `Matchs`, **avant** leur effacement.
+⭐ **C'est le dernier acte de lecture de l'édition active.**
+
+⛔ **Aucun jeton archivé, aucun nom d'enfant** *(🔬 `Equipes` n'en contient aucun : 7 colonnes,
+aucune nominative)*.
+
+### 16.5 — Les sept sous-lots
+
+| # | Lot | Dépend de | Portée | Migration | Risques fermés | Critère de clôture |
+|---|---|---|---|---|---|---|
+| **B2-0** | 🔴 **Sécurisation du reset** *(harnais)* | — | **backend seul** | ⛔ | **R-099**, **R-100** *(partiels)* | Reset prouvé **en réel** : 0 statut hérité, 0 effectif hérité |
+| **B2-1** | **`edition_id` propre** + registre `Editions` + fin du renouvellement de `tournoi_id` | B2-0 | backend | douce | **R-106** | Régénérer un planning 3× ⇒ **un seul** `edition_id` |
+| **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-099, R-100, R-102, R-104, R-105** | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
+| **B2-3** | **Terrains** permanents / édition | B2-1 | backend + frontend | douce | **R-101** | Dossier d'un tournoi vide ⇒ ⛔ aucun terrain hérité |
+| **B2-4** | **UX** : Carnet · Préparer l'invitation · Clubs invités · sélection · envoi ciblé | B2-2 | **frontend surtout** | ⛔ | — | Plusieurs vagues ciblées prouvées **en réel** |
+| **B2-5** | **Messagerie V1** + notifications + emails | B2-2 | backend + frontend | ⛔ | *(R-103 reste ouvert)* | Message reçu, notifié, répondu **par email** |
+| **B2-6** | **Archivage + historique structuré**, incl. `Arch_Classements` | B2-2, B2-3 | backend + frontend | ⛔ | **R-107** | Archiver puis reset ⇒ archive **fidèle**, actif **vierge** |
+
+⭐ **Ordre : B2-0 → B2-1 → B2-2 → B2-3 → B2-4 → B2-5 → B2-6.**
+
+### 16.6 — Répartition UX cible
+
+| Rubrique | Contenu |
+|---|---|
+| 🆕 **Carnet d'adresses** | création des clubs · cartes du carnet · cases **« Inviter ce club »** *(⭐ sélection **UI temporaire**, ⛔ ne crée aucune participation)* |
+| 🆕 **Préparer l'invitation** | `bloc-modalites` · `bloc-surplace` · `bloc-apercu-invitation` · partie **contenu** de `bloc-reponse` — ⭐ **les quatre répondent à la même question : « que dit l'email ? »** |
+| **Clubs invités** | cartes actuelles **inchangées** *(badges, tris, liserés, statuts, catégories, actions)* + messagerie |
+| **Dossier complet (accepté)** | inchangé |
+| 🆕 **Historique des tournois** | cartes d'éditions archivées, **lecture seule** |
+| ⚙️ **Réglages** | `email_expediteur` — ⚠️ **infrastructure**, pas contenu d'édition |
+| **Tableau de bord** | 🔔 **notifications** — ⭐ y placer plutôt qu'en en-tête : **survit aux trois parcours** *(barre latérale, assistant mobile, Vue classique)* |
+
+**Cycle d'invitation** *(validé)* : `Carnet → sélection UI → envoi → participation créée UNIQUEMENT
+sur succès → statut Invité + jeton + invitation_envoyee → apparition dans Clubs invités`.
+⭐ Plusieurs vagues possibles · un club déjà invité ne reçoit pas de seconde invitation primaire ·
+un échec reste **rééligible**.
+
+### 16.7 — Messagerie V1 : périmètre exact
+
+✅ Club écrit *(champ libre)* → Maxilou enregistre → notification → l'organisateur lit et répond →
+⭐ **la réponse part PAR EMAIL** *(citation du seul message auquel on répond, avec sa date)*.
+
+⛔ **Hors V1** : boîte de réception Maxilou côté club · notification applicative côté club ·
+`lu_par_club` · messagerie interne bidirectionnelle.
+
+⭐ **Aucune configuration email nouvelle** : réponse → `club_contact_email` · alerte organisateur →
+`contact_reponse_email` *(repli `org_representant_mail`)* · expéditeur → `email_expediteur`.
+
+**Isolation** : patron **déjà éprouvé** de `repondreInvitation` — `trouverClubParToken` puis refus.
+⭐ Un jeton n'ouvre que **sa** participation, et le reset **roule les jetons** *(prouvé en réel :
+les deux anciens liens testés sont invalides)*.
+
+### 16.8 — Ce que M1-B2 ne fait PAS
+
+⛔ **Aucun multi-tournois actif** · ⛔ aucun sélecteur d'édition · ⛔ aucune page publique historique ·
+⛔ **aucune simulation** de classement · ⛔ aucun centre de notifications complet · ⛔ aucune relance
+d'invitation · ⛔ **aucun des modules futurs** *(buvette, fréquentation, bénévoles, recettes)* —
+⭐ seule leur **possibilité** est préservée · ⛔ **R-108**, traité à part.
