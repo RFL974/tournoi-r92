@@ -160,8 +160,33 @@ let parkingDataURI = '';
 let clubsInvitesCourants = [];
 
 /* Toute écriture depuis l'admin passe par ici : exige la clé ADMIN (voir api.js). */
-function ecrireAdmin(action, data) {
-  return apiPostProtege(action, data, 'admin', 'admin');
+async function ecrireAdmin(action, data) {
+  const res = await apiPostProtege(action, data, 'admin', 'admin');
+  // ⭐ M1-B2 / B2-0.5 — l'écriture a RÉUSSI (apiPost LÈVE sur {error}, voir api.js:100) : si elle
+  //   touche une donnée que lit la « Demande d'autorisation », la feuille affichée devient fausse
+  //   à CET INSTANT. On l'efface tout de suite — local, certain, gratuit — et on la relira quand
+  //   on la regardera. La classification des actions vit dans admin-autorisation.js.
+  //
+  // ⛔ DEUX GARDE-FOUS, et ils ne sont pas décoratifs :
+  //   ① tout est enfermé dans un try/catch qui ne peut JAMAIS changer ce que cette fonction
+  //     renvoie ni ce qu'elle lève — une panne d'affichage ne doit pas faire croire à un
+  //     enregistrement raté ;
+  //   ② la relecture n'est PAS attendue. `ecrireAdmin` porte 46 des 51 écritures de l'admin :
+  //     lui ajouter la latence d'un aller-retour FFR ralentirait tous les enregistrements pour
+  //     une zone d'affichage. Le succès d'une écriture métier ne dépend pas d'un rafraîchissement.
+  try {
+    if (typeof ecritureImpacteAutorisation === 'function' &&
+        ecritureImpacteAutorisation(action, data, res)) {
+      signalerAutorisationObsolete();
+      // Vue classique (page longue) : personne ne « naviguera » vers la feuille, elle est déjà
+      // sous les yeux — on lance la relecture EN ARRIÈRE-PLAN. En mode écrans / assistant, elle
+      // attend l'ouverture de l'étape (voir ecrans.js et assistant.js).
+      if (autorisationEstAffichee()) {
+        majAutorisationSiObsolete().catch(function () { /* la feuille garde son message */ });
+      }
+    }
+  } catch (e) { /* l'écran peut échouer, l'enregistrement reste acquis */ }
+  return res;
 }
 
 /**

@@ -302,24 +302,275 @@ function invaliderAutorisationAffichee() {
   if (zoneSaisie) zoneSaisie.innerHTML = '';
 }
 
+/* ==========================================================================
+   ⭐ M1-B2 / B2-0.5 — GARDER LA FEUILLE FFR EN PHASE AVEC LE CLASSEUR
+   --------------------------------------------------------------------------
+   ⚠️ Constaté EN RÉEL le 2026-08-25 : « TOURNOI TEST RESET » enregistré dans la carte
+   « Infos du tournoi », puis navigation vers « Demande d'autorisation » — l'ANCIEN nom y
+   était TOUJOURS. Un simple rechargement du navigateur affichait le bon.
+
+   🔬 MÊME CAUSE QUE B2-0.3, une porte plus loin. `majAutorisation` n'était appelée qu'à
+   TROIS endroits : au chargement de la page (`initAdmin`), après une réinitialisation
+   (B2-0.3), et après l'enregistrement de la feuille elle-même. ⛔ Les 28 AUTRES chemins
+   d'enregistrement de l'administration ne la rappellent jamais — `rechargerEtRendre` non
+   plus, et `ecransActiver` ne fait que montrer et cacher des blocs.
+
+   ⭐ DOCTRINE : oublier tout de suite (local, certain, gratuit) ; relire quand on regarde
+   (distant, faillible, payé une seule fois, quel que soit le nombre d'écritures).
+   ========================================================================== */
+
+/* A — IMPACTANTES, prises en charge par le crochet commun de `ecrireAdmin`.
+   ⛔ LISTE EXPLICITE, jamais « tout sauf ». Chaque entrée dit QUELLE section du formulaire
+   FFR elle alimente — vérifié dans `getDossierAutorisation` / `assemblerDossierAutorisation`
+   (backend/Code.gs), pas déduit d'un nom d'action. */
+var ACTIONS_AUTORISATION_CROCHET = {
+  enregistrerInfosTournoi:       'A.2 nom/lieu/adresse/date — et A.3 (le mois choisit les formes)',
+  enregistrerHoraires:           'A.2 heures de début et de fin',
+  enregistrerCategorie:          'A.3 catégories présentes, B.2 format et durée de match',
+  supprimerCategorie:            'A.3, B.2',
+  appliquerValeursFFR:           'A.3, B.2 (durées et forme de jeu écrites dans la catégorie)',
+  enregistrerPlanTerrains:       'B.1 nombre de terrains et nature de la surface',
+  enregistrerContactsSecurite:   'B.4 responsable sécurité, antenne de secours',
+  enregistrerInvitation:         'B.5 droits d\'inscription (tarif_engagement_*)',
+  ajouterClubInvite:             'A.4 (le nom du club sert au rapprochement des équipes)',
+  modifierStatutClubInvite:      'A.4 clubs et participants, B.3 éducateurs',
+  modifierClubInvite:            'A.4',
+  supprimerClubInvite:           'A.4, B.3',
+  enregistrerCategoriesEngagees: 'A.4 équipes créées ou retirées',
+  creerEquipesClub:              'A.4',
+  ajouterEquipe:                 'A.4 nombre d\'équipes et participants, B.2',
+  modifierEquipe:                'A.4',
+  supprimerEquipe:               'A.4',
+  supprimerEquipesCategorie:     'A.4',
+  genererPoulesEtPlanning:       'B.1 terrains (planning), B.2 matchs par équipe',
+  genererApresMidi:              'B.2',
+  genererDimancheScf:            'B.2',
+  recalculerHoraires:            'A.2, B.2',
+  reorganiserPoulesMatin:        'B.1, B.2'
+};
+
+/* B — IMPACTANTES, mais DÉJÀ synchronisées par leur PROPRE chemin.
+   ⛔ Ce ne sont PAS des actions « sans impact » : les ranger ainsi serait un mensonge, et
+   masquerait la régression le jour où leur chemin propre disparaîtrait.
+   ⚠️ Le crochet doit les IGNORER — sinon elles paieraient une seconde route pour rien. */
+var ACTIONS_AUTORISATION_CHEMIN_PROPRE = {
+  enregistrerDossierAutorisation: 'onEnregistrerAutorisation relit la config puis appelle majAutorisation',
+  reinitialiserTournoi:           'onReinitialiser — correctif B2-0.3 / B2-0.4, validé en réel'
+};
+
+/* C — RÉELLEMENT sans impact : aucune des colonnes qu'elles écrivent n'est lue par
+   `getDossierAutorisation` (contrôlé une par une le 2026-08-25). */
+var ACTIONS_AUTORISATION_SANS_IMPACT = {
+  listerClubsInvites:       'lecture seule',
+  publierPlanningClubs:     'drapeau de visibilité du planning',
+  publierTournoi:           'drapeau de publication',
+  enregistrerAffiche:       'image de l\'affiche',
+  supprimerAffiche:         'image de l\'affiche',
+  enregistrerPhotoParking:  'image du parking',
+  supprimerPhotoParking:    'image du parking',
+  envoyerInvitationClub:    'invitation_envoyee — non lue par la feuille',
+  envoyerInvitationsGroupe: 'invitation_envoyee — non lue par la feuille',
+  envoyerDossierEmail:      'dossier_envoye — non lue par la feuille',
+  regenererJetonClub:       'club_token — non lu par la feuille',
+  enregistrerSurPlace:      'buvette / sandwich / boutique — non lues par la feuille',
+  enregistrerReponseInvitation: 'contacts de réponse et email_expediteur — non lus par la feuille'
+};
+
+/* ⚠️ ÉCRITURES PARTIELLES — ces actions n'écrivent QUE les champs reçus (ecrireChampsConfig),
+   et sont appelées avec des charges très différentes : « Modalités » envoie le tarif
+   d'engagement, « Parking » n'envoie que son texte ; « Infos du tournoi » envoie le nom,
+   « Équipes » n'envoie que son mot-clé de performance.
+
+   ⛔ ON ÉNUMÈRE LES CHAMPS SANS IMPACT, JAMAIS L'INVERSE, et c'est la seule formulation sûre :
+   lister « les champs qui impactent » serait une RECOPIE de ce que lit le backend (§8 quater) ;
+   le jour où la feuille lirait un champ de plus, la copie deviendrait fausse EN SILENCE et
+   l'écran redeviendrait périmé. Ici, un champ INCONNU provoque un recalcul.
+   ⭐ L'oubli coûte une route réseau superflue — jamais un écran faux. Même doctrine que
+   l'allowlist d'effacement D-043 : l'oubli doit CONSERVER, pas détruire. */
+var CHAMPS_SANS_IMPACT_AUTORISATION = {
+  enregistrerInfosTournoi: ['tournoi_description', 'zone_vacances', 'perfs_mot_cle_club'],
+  enregistrerInvitation:   ['date_limite_confirmation', 'tarif_engagement_modalites',
+                            'parking_texte', 'encadrement_ratio', 'encadrement_diplomes',
+                            'assurance_attestation_requise']
+};
+
+/* ⭐ DES RÉVISIONS, PAS UN BOOLÉEN — et les deux scénarios qui l'imposent :
+    · une relecture EN ÉCHEC ne doit pas effacer la dette (sinon plus aucun nouvel essai) ;
+    · une écriture ARRIVÉE PENDANT la relecture ne doit pas être comptée comme lue.
+   Un booléen ne sait faire ni l'un ni l'autre. Deux compteurs, comme le courrier reçu et le
+   courrier lu : tant qu'ils diffèrent, il reste à lire. */
+var autorisationRevision = 0;
+var autorisationRevisionLue = 0;
+var autorisationRelectureEnCours = null;
+/* Photo du formulaire org_* tel qu'il a été RENDU (voir autorisationSaisieModifiee). */
+var autorisationSaisiePhoto = null;
+/* ⛔ Borne dure du rattrapage : on ne boucle jamais sans fin, même si une écriture arrive à
+   chaque tour. Au-delà, la dette RESTE et sera reprise à la prochaine ouverture. */
+var AUTORISATION_TOURS_MAX = 5;
+
+/** Efface la FEUILLE affichée — ⛔ jamais le formulaire de saisie : aucune action du crochet
+ *  n'écrit de champ `org_*`, et l'effacer perdrait une saisie en cours (voir B2-0.5 §3).
+ *  ⚠️ À ne pas confondre avec `invaliderAutorisationAffichee` (B2-0.3), qui efface LES DEUX
+ *  parce qu'une réinitialisation, elle, vide réellement 26 champs `org_*`. */
+function invaliderFeuilleAutorisationAffichee() {
+  const zoneFeuille = document.getElementById('autorisation-feuille');
+  if (zoneFeuille) {
+    zoneFeuille.innerHTML = '<div class="ffr-bloc ffr-neutre">Feuille de report en cours de ' +
+      'rechargement…</div>';
+  }
+}
+
+/** Photographie le formulaire org_* tel qu'il vient d'être rendu : c'est la référence
+ *  « rien n'a été tapé depuis ». Réutilise l'outil du verrou d'étapes (assistant.js) plutôt
+ *  que d'en écrire un second. */
+function autorisationPhotographierSaisie() {
+  const form = document.getElementById('form-autorisation');
+  autorisationSaisiePhoto = (form && typeof assistantSerialiser === 'function')
+    ? assistantSerialiser(form) : null;
+}
+
+/** Le formulaire org_* porte-t-il une saisie NON ENREGISTRÉE ?
+ *  ⭐ Dans le doute — outil absent, photo absente — on répond OUI. L'incertitude CONSERVE la
+ *  saisie ; elle ne la détruit jamais. C'est le sens sûr de l'erreur. */
+function autorisationSaisieModifiee() {
+  const form = document.getElementById('form-autorisation');
+  if (!form) return false;                                    // rien à préserver
+  if (typeof assistantSerialiser !== 'function') return true;  // ⛔ dans le doute, on garde
+  if (autorisationSaisiePhoto == null) return true;            // ⛔ idem
+  return assistantSerialiser(form) !== autorisationSaisiePhoto;
+}
+
+/** La feuille est-elle SOUS LES YEUX de l'organisateur en ce moment ?
+ *  Trois modes d'affichage, trois réponses — l'écran « autorisation » ne contient QUE
+ *  `bloc-autorisation`, donc en mode écrans/assistant nul ne peut enregistrer une autre
+ *  carte tout en la regardant : la relecture y attend légitimement la navigation. */
+function autorisationEstAffichee() {
+  if (!document.getElementById('bloc-autorisation')) return false;
+  const ecran = document.getElementById('ecran-autorisation');   // mode « écrans » (≥ 1024px)
+  if (ecran) return !ecran.hidden;
+  if (document.getElementById('asst-track')) return false;       // assistant : relu à l'arrivée
+  return true;                                                   // vue classique : page longue
+}
+
+/** Une écriture vient de rendre la feuille fausse : on l'EFFACE tout de suite, on la relira. */
+function signalerAutorisationObsolete() {
+  autorisationRevision++;
+  invaliderFeuilleAutorisationAffichee();
+}
+
+/**
+ * Cette action, avec CETTE charge et CETTE réponse, touche-t-elle vraiment la feuille ?
+ *
+ * ⚠️ Les deux filtres de réponse sont SCOPÉS PAR ACTION, volontairement : un futur point
+ * d'entrée qui emploierait par hasard un champ `apercu` ou `applique` pour tout autre chose
+ * ne doit PAS pouvoir contourner le marquage.
+ * ⭐ Ces deux filtres ne devinent rien : c'est le SERVEUR qui déclare n'avoir rien écrit.
+ */
+function ecritureImpacteAutorisation(action, data, reponse) {
+  if (!ACTIONS_AUTORISATION_CROCHET[action]) return false;
+  // ① Le serveur déclare lui-même la NON-ÉCRITURE (backend/Code.gs:5508 et :1915).
+  if (action === 'supprimerClubInvite' && reponse && reponse.apercu === true) return false;
+  if (action === 'appliquerValeursFFR' && reponse && reponse.applique === false) return false;
+  // ② Écriture partielle dont AUCUN champ n'est lu par la feuille (voir la liste ci-dessus).
+  const sansImpact = CHAMPS_SANS_IMPACT_AUTORISATION[action];
+  if (sansImpact && data) {
+    const cles = Object.keys(data).filter(function (c) { return c !== 'cle'; });
+    if (cles.length && cles.every(function (c) { return sansImpact.indexOf(c) !== -1; })) return false;
+  }
+  return true;
+}
+
 /** (Re)charge et affiche la section « Demande d'autorisation ». Migration douce : silencieux si indisponible.
  *  La FEUILLE se charge d'abord : la SAISIE se rend ensuite, pour masquer les questions auxquelles
  *  l'app répond déjà (questionsDejaRepondues a besoin du dossier assemblé). Feuille indisponible
- *  ⇒ saisie complète (aucun masquage sans certitude). */
-async function majAutorisation() {
+ *  ⇒ saisie complète (aucun masquage sans certitude).
+ *
+ *  ⭐ B2-0.5 — elle renvoie désormais un BILAN HONNÊTE : `{ ok, feuille, saisie }` ou
+ *  `{ ok:false, motif }`. ⛔ Une panne ne doit jamais ressembler à un succès : sans ce retour,
+ *  l'appelant marquerait la révision comme lue et ne retenterait plus jamais.
+ *
+ *  ⛔ `preserverSaisie` est OPT-IN — sans lui, le comportement est EXACTEMENT celui d'avant :
+ *  c'est ce qui garantit que `initAdmin`, `onReinitialiser` (B2-0.3/0.4, validé en réel) et
+ *  `onEnregistrerAutorisation` ne changent pas d'un iota.
+ *
+ *  @param {Object} [opt] — `preserverSaisie` : ne pas reconstruire le formulaire `org_*` quand
+ *    une saisie y est en cours, ni quand le réseau a échoué (synchronisation automatique). */
+async function majAutorisation(opt) {
+  opt = opt || {};
   const zoneSaisie = document.getElementById('autorisation-saisie');
   const zoneFeuille = document.getElementById('autorisation-feuille');
-  if (!zoneSaisie || !zoneFeuille) return;
+  if (!zoneSaisie || !zoneFeuille) return { ok: false, motif: 'zones-absentes' };
   let dossier = null;
+  let reseauOk = true;
   try {
     const rep = await apiPostProtege('getDossierAutorisation', {}, 'admin', 'admin');
     dossier = (rep && rep.dossier) || null;
     zoneFeuille.innerHTML = rendreFeuilleAutorisation(dossier);
   } catch (e) {
+    reseauOk = false;
     zoneFeuille.innerHTML = '<div class="ffr-bloc ffr-neutre">Feuille de report indisponible ' +
       '(connecte-toi avec la clé admin).</div>';
   }
-  zoneSaisie.innerHTML = rendreSaisieAutorisation(questionsDejaRepondues(dossier));
+  // ⭐ SYNCHRONISATION AUTOMATIQUE (preserverSaisie) — deux cas où l'on NE reconstruit PAS :
+  //   · une saisie org_* est en cours : la reconstruire l'effacerait ;
+  //   · le réseau a échoué : sans dossier fiable, on ne sait pas honnêtement quelles questions
+  //     doivent être masquées — on préfère laisser le formulaire tel quel que le repeindre au
+  //     jugé. ⛔ Dans les DEUX cas, aucune valeur `org_*` fausse n'est affichée : ces valeurs
+  //     n'ont pas changé (aucune action du crochet n'écrit de champ `org_*`).
+  let saisie = 'reconstruite';
+  if (opt.preserverSaisie && !reseauOk) {
+    saisie = 'preservee-panne';
+  } else if (opt.preserverSaisie && typeof autorisationSaisieModifiee === 'function' &&
+             autorisationSaisieModifiee()) {
+    saisie = 'preservee-saisie-en-cours';
+  } else {
+    zoneSaisie.innerHTML = rendreSaisieAutorisation(questionsDejaRepondues(dossier));
+    if (typeof autorisationPhotographierSaisie === 'function') autorisationPhotographierSaisie();
+  }
+  if (!reseauOk) return { ok: false, motif: 'reseau', saisie: saisie };
+  return { ok: true, feuille: 'relue', saisie: saisie };
+}
+
+/**
+ * Relit la feuille — ⛔ SEULEMENT si elle est obsolète, et en RATTRAPANT ce qui arrive pendant.
+ *
+ * ⭐ La CIBLE est capturée AVANT toute attente. Après une relecture réussie on inscrit LA
+ * CIBLE, jamais `autorisationRevision` : une écriture survenue pendant l'attente reste donc
+ * non lue — et la boucle repart aussitôt pour elle. C'est le rattrapage automatique : on
+ * n'attend aucune navigation hypothétique.
+ *
+ * ⛔ ON NE BOUCLE JAMAIS SUR UNE PANNE : le premier échec sort. `autorisationRevisionLue` ne
+ * bouge pas, la dette est conservée, la prochaine ouverture retentera RÉELLEMENT.
+ *
+ * ⭐ Une seule chaîne active à la fois : un second appelant reçoit la promesse en cours, qui
+ * ne se résout qu'une fois le rattrapage terminé — donc il n'a rien à relancer.
+ */
+async function majAutorisationSiObsolete() {
+  if (autorisationRelectureEnCours) return autorisationRelectureEnCours;
+  if (autorisationRevision === autorisationRevisionLue) return { relue: false, motif: 'a-jour' };
+  autorisationRelectureEnCours = (async function () {
+    let tours = 0, dernier = null;
+    while (autorisationRevision !== autorisationRevisionLue && tours < AUTORISATION_TOURS_MAX) {
+      tours++;
+      const cible = autorisationRevision;              // ⭐ capturée AVANT toute attente
+      if (typeof lireConfigAdmin === 'function') {
+        // La config est relue ICI : `rendreSaisieAutorisation` lit `configCourante`, et
+        // l'appelant ne l'a pas forcément encore rafraîchie.
+        try { configCourante = await lireConfigAdmin(); }
+        catch (e) { return { relue: tours > 1, motif: 'config-indisponible', tours: tours }; }
+      }
+      const bilan = await majAutorisation({ preserverSaisie: true });
+      if (!bilan.ok) return { relue: tours > 1, motif: bilan.motif, tours: tours };
+      autorisationRevisionLue = cible;                 // ⛔ la CIBLE, jamais autorisationRevision
+      dernier = { relue: true, revision: cible, saisie: bilan.saisie, tours: tours };
+    }
+    if (autorisationRevision !== autorisationRevisionLue) {
+      return { relue: true, motif: 'trop-de-tours', tours: tours };
+    }
+    return dernier || { relue: false, motif: 'a-jour', tours: tours };
+  })();
+  try { return await autorisationRelectureEnCours; }
+  finally { autorisationRelectureEnCours = null; }
 }
 
 /** Enregistre les champs saisis (org_*), puis recharge la config et la feuille. */
@@ -337,6 +588,9 @@ async function onEnregistrerAutorisation() {
     // La config a changé : on la recharge (source de vérité pour la saisie), puis on ré-assemble.
     if (typeof lireConfigAdmin === 'function') configCourante = await lireConfigAdmin();
     await majAutorisation();
+    // ⭐ B2-0.5 — la feuille vient du serveur à l'instant : si une dette de révision traînait,
+    //   elle est soldée. Sans cette ligne, la prochaine ouverture paierait une route pour rien.
+    if (typeof autorisationRevision !== 'undefined') autorisationRevisionLue = autorisationRevision;
     afficherMessage(message, '✅ Champs enregistrés.', 'ok');
   });
 }

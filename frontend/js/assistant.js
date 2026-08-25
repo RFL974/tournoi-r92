@@ -228,6 +228,15 @@ function allerA(i, direction) {
 
   track.style.transform = 'translateX(' + (-i * 100) + '%)';
 
+  // ⭐ B2-0.5 — JUMEAU du crochet de `ecransActiver` (ecrans.js) : on arrive sur la feuille FFR,
+  //   on la relit si des écritures l'ont rendue fausse depuis. ⚠️ Le parcours mobile doit faire
+  //   EXACTEMENT ce que fait le parcours ordinateur — l'écart entre ces deux fichiers est
+  //   précisément ce qui avait produit R-098. Ils se modifient ENSEMBLE.
+  if ((ASSISTANT_ETAPES[i] || {}).id === 'autorisation' &&
+      typeof majAutorisationSiObsolete === 'function') {
+    majAutorisationSiObsolete().catch(function () { /* la feuille garde son message */ });
+  }
+
   // Fil d'étapes : marque l'active + les précédentes comme « faites ».
   const steps = document.querySelectorAll('.asst-step');
   steps.forEach(function (li, k) {

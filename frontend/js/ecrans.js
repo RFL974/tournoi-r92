@@ -335,6 +335,13 @@ function ecransActiver(id, opt) {
   });
   try { localStorage.setItem(ECRANS_CLE_ACTIF, id); } catch (e) { /* stockage indisponible */ }
   ecransMajPastilles();
+  // ⭐ B2-0.5 — on ARRIVE sur la feuille FFR : si des écritures l'ont rendue fausse depuis, on la
+  //   relit MAINTENANT. Une seule route vers le serveur, quel que soit le nombre d'écritures —
+  //   et zéro route si rien n'a changé. ⚠️ JUMEAU du crochet d'assistant.js : l'écart entre ces
+  //   deux fichiers est exactement ce qui avait produit R-098, ils se modifient ENSEMBLE.
+  if (id === 'autorisation' && typeof majAutorisationSiObsolete === 'function') {
+    majAutorisationSiObsolete().catch(function () { /* la feuille garde son message */ });
+  }
   if (!opt.sansScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 

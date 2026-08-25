@@ -45,15 +45,43 @@ const RACINE = process.env.RACINE_TOURNOI_R92 || path.join(__dirname, '..');
 /* -------------------------------------------------------------------------- */
 /*  Extraction : on découpe une fonction de son fichier, par équilibrage       */
 /*  d'accolades. ⛔ On ne la réécrit pas, on ne la simule pas : on la PREND.    */
+/*                                                                            */
+/*  ⚠️ CE QUE CET EXTRACTEUR A COÛTÉ, et pourquoi il cherche désormais une      */
+/*  DÉCLARATION plutôt qu'un texte (corrigé au lot B2-0.5) :                   */
+/*                                                                            */
+/*   · il comparait l'entête AU CARACTÈRE PRÈS, parenthèses vides comprises.   */
+/*     ⛔ Le code produit était donc INTERDIT d'ajouter un paramètre : il a dû  */
+/*     un temps lire son option dans `arguments[0]`. Un test ne doit jamais    */
+/*     dicter la signature du code qu'il surveille ;                           */
+/*   · et `indexOf` prenait la PREMIÈRE occurrence — COMMENTAIRE COMPRIS. Une  */
+/*     phrase d'explication citant l'entête a réellement été extraite à la     */
+/*     place de la fonction, et le garde-fou plantait sur du texte français.   */
+/*                                                                            */
+/*  ⭐ Le correctif tient en une idée, et surtout PAS en un analyseur de        */
+/*  JavaScript : une déclaration commence AU DÉBUT D'UNE LIGNE ; un commentaire */
+/*  commence par des espaces, une étoile ou deux barres. On ancre donc au       */
+/*  début de ligne, et on ignore la liste des paramètres.                      */
 /* -------------------------------------------------------------------------- */
+
+/** Localise une DÉCLARATION (jamais une occurrence en commentaire).
+ *  ⭐ Pour une fonction, seuls le mot-clé et le NOM comptent : le nombre et le nom des
+ *  paramètres sont libres — `majAutorisation()`, `(opt)` et `(options)` se valent. */
+function situerDeclaration(source, cheminRelatif, entete) {
+  const estFonction = entete.indexOf('(') !== -1;
+  const noyau = estFonction ? entete.replace(/\s*\([\s\S]*$/, '') : entete;
+  const motif = new RegExp('^' + noyau.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
+    (estFonction ? '\\s*\\(' : ''), 'm');
+  const trouve = motif.exec(source);
+  if (!trouve) {
+    throw new Error('Déclaration introuvable dans ' + cheminRelatif + ' : « ' + entete + ' ». ' +
+      'Si elle a été renommée, mets ce garde-fou à jour — ne le supprime pas.');
+  }
+  return trouve.index;
+}
 
 function extraireFonction(cheminRelatif, entete) {
   const source = fs.readFileSync(path.join(RACINE, cheminRelatif), 'utf8');
-  const debut = source.indexOf(entete);
-  if (debut === -1) {
-    throw new Error('Introuvable dans ' + cheminRelatif + ' : « ' + entete + ' ». ' +
-      'Si la fonction a été renommée, mets ce garde-fou à jour — ne le supprime pas.');
-  }
+  const debut = situerDeclaration(source, cheminRelatif, entete);
   let profondeur = 0;
   for (let i = source.indexOf('{', debut); i < source.length; i++) {
     if (source[i] === '{') profondeur++;

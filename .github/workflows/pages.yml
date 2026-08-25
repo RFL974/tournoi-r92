@@ -54,8 +54,9 @@ jobs:
   #
   # b) Les garde-fous de `tests/` répondent à l'autre question : « ce code fait-il
   #    encore ce qu'il doit faire ? ». ⛔ Ils restent VOLONTAIREMENT peu nombreux —
-  #    un seul comportement est gardé aujourd'hui — et suivent la même règle que
-  #    ci-dessus : rien qui puisse bloquer une correction urgente sans raison.
+  #    DEUX comportements sont gardés aujourd'hui (la réinitialisation, et la mise à
+  #    jour de la Demande d'autorisation) — et suivent la même règle que ci-dessus :
+  #    rien qui puisse bloquer une correction urgente sans raison.
   # --------------------------------------------------------------------------
   verifier:
     name: Vérifier les fichiers publiés (syntaxe + garde-fous)
@@ -88,16 +89,23 @@ jobs:
           echo "$total fichiers JavaScript vérifiés, aucun cassé."
 
       # ----------------------------------------------------------------------
-      # M1-B2 / B2-0 — les GARDE-FOUS de comportement.
+      # M1-B2 / B2-0 et B2-0.5 — les GARDE-FOUS de comportement.
       #
-      # `node --check` répond à « ce fichier se lit-il ? ». Ces deux-ci répondent à
-      # « fait-il encore ce qu'il doit faire ? » — et un seul comportement est gardé
-      # pour l'instant : après « Réinitialiser le tournoi », aucune participation de
-      # l'édition effacée ne peut subsister en mémoire, ⭐ MÊME si la relecture des
-      # clubs échoue (l'export PDF de la demande d'autorisation lit cette liste).
+      # `node --check` répond à « ce fichier se lit-il ? ». Ceux-ci répondent à « fait-il
+      # encore ce qu'il doit faire ? » — deux comportements sont gardés :
       #
-      # ⚠️ Le second fichier éprouve le premier : il réintroduit les défauts corrigés
-      # dans une COPIE temporaire et exige que le garde-fou les attrape. Un harnais
+      #  · B2-0   : après « Réinitialiser le tournoi », aucune participation de l'édition
+      #             effacée ne peut subsister en mémoire, ⭐ MÊME si la relecture des clubs
+      #             échoue (l'export PDF de la demande d'autorisation lit cette liste) ;
+      #  · B2-0.5 : après un enregistrement qui change une donnée du formulaire FFR, la
+      #             « Demande d'autorisation » se met à jour SANS rechargement du navigateur
+      #             — sur ordinateur comme sur téléphone —, une panne conserve la dette au
+      #             lieu de la faire disparaître, et ⛔ une saisie en cours n'est jamais
+      #             effacée. Il porte aussi deux contrôles d'INVENTAIRE : toute action
+      #             d'écriture est classée, et aucune n'échappe au point de passage commun.
+      #
+      # ⚠️ Le dernier fichier éprouve les deux autres : il réintroduit les défauts corrigés
+      # dans une COPIE temporaire et exige que les garde-fous les attrapent. Un harnais
       # qu'on n'a jamais vu échouer ne prouve rien — ce projet en a déjà fait les frais.
       #
       # Aucune dépendance, aucun navigateur, quelques secondes. Un échec REFUSE la
@@ -106,7 +114,10 @@ jobs:
       - name: Vérifier le comportement de la réinitialisation (M1-B2 / B2-0)
         run: node tests/frontend-reinitialisation.test.js
 
-      - name: Vérifier que ce garde-fou mord encore (rejeu des mutations)
+      - name: Vérifier la mise à jour de la Demande d'autorisation (M1-B2 / B2-0.5)
+        run: node tests/frontend-autorisation-sync.test.js
+
+      - name: Vérifier que ces garde-fous mordent encore (rejeu des mutations)
         run: node tests/mutations-frontend.test.js
 
   # --------------------------------------------------------------------------
