@@ -177,23 +177,42 @@ officiel le plus **prudent** : *« OUVERT »*, *« DOCUMENTÉ, PAS CORRIGÉ »*,
 refermé »* et *« CLARIFIÉ »* comptent tous comme **IDENTIFIÉ** ; *« SPÉCIFIÉ »* compte comme
 **PLANIFIÉ** ; *« ARBITRÉ »* comme **VALIDÉ**.
 
+⚡ **Une précision de méthode, ajoutée le 2026-08-25 au recomptage** *(pour que la méthode puisse
+être prise en défaut, **§8 quater**)* : **R-092** n'a **pas** de priorité formellement attribuée —
+sa fiche porte *« à confirmer »*. Il est **compté ici avec les P1, au statut `PLANIFIÉ`**, parce
+qu'il est **rattaché au chantier C-015, qui est P1**, et qu'il en suit le calendrier. ⚠️ **C'est un
+choix de comptage, pas une priorité décidée** : si Romain lui attribue un jour une priorité propre,
+la ligne P1 devra être recomptée.
+
 | Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés | Total |
 |---|---|---|---|---|---|---|---|
 | **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** | **1** |
-| P1 | **19** | **2** | **4** | **2** | **1** | ✅ **4** | **32** |
+| P1 | **19** | **2** | **4** | ⚡ **1** | **1** | ✅ ⚡ **5** | **32** |
 | P2 | **55** | **3** | **3** | 0 | **3** | 0 | **64** |
 | P3 | **11** | 0 | 0 | 0 | 0 | 0 | **11** |
-| **Total** | **85** | **5** | **7** | **2** | **4** | **5** | **108** |
+| **Total** | **85** | **5** | **7** | ⚡ **1** | **4** | ⚡ **6** | **108** |
+
+> ⚡ **RECOMPTÉ À NOUVEAU LE 2026-08-25**, après le passage de R-043 à `TESTÉ` — **entrée par
+> entrée, priorité et statut lus dans leur propre ligne ou fiche**. Résultat du contrôle :
+> **108 entrées, R-001 → R-108, ⛔ aucun numéro sauté** ; répartition par priorité **inchangée**
+> *(P0 1 · P1 32 · P2 64 · P3 11)*. **Seules deux cases bougent**, et elles se compensent :
+> **P1 « En cours » 2 → 1** et **P1 « Testés » 4 → 5**. Le total général reste **108**.
 
 > ✅ **Mouvements du 2026-08-25** *(micro-lot **B2-0**)* : **R-099** et **R-100** passent à
 > **TESTÉ** *(prouvés par le harnais **et** par un reset réel)* ; **R-033** passe à **CORRIGÉ**
-> *(⛔ pas à `TESTÉ` — voir la réserve en tête de fichier)*.
+> *(⛔ pas à `TESTÉ` — voir la réserve en tête de fichier)* ; ⚡ **R-043** *(le contrôle avant
+> publication)* passe de **EN COURS** à **TESTÉ** — sa moitié **(b)**, le **harnais du navigateur**,
+> est refermée par B2-0. ⛔ **Avec une réserve explicite : cela ne veut PAS dire que le frontend est
+> couvert** — voir sa fiche. ⚡ **R-044** *(la parité serveur / navigateur)* **ne bouge pas** : seul
+> son **préalable technique** est levé.
 >
 > ✅ **Mouvements antérieurs, conservés pour mémoire** : **R-041** *(le barème et le départage)* et
 > **R-042** *(l'enregistrement d'un score, avec réserve)* sont passés à **TESTÉ**, prouvés **chez
-> Google** ; **R-043** *(le contrôle avant publication)* est **EN COURS** — sa **moitié (a) est
-> refermée et prouvée**, sa moitié **(b)** *(harnais du navigateur)* reste entière ;
-> **R-094** *(la date civile)* est **CORRIGÉ**.
+> Google** ; **R-094** *(la date civile)* est **CORRIGÉ**.
+>
+> ⬇️ *Formulation précédente de cette ligne, vraie jusqu'au 2026-08-25 et conservée à ce titre* :
+> *« **R-043** est **EN COURS** — sa moitié (a) est refermée et prouvée, sa moitié (b) (harnais du
+> navigateur) reste entière. »*
 
 ⚡ **Le total du registre est de 108 au 2026-08-25** *(R-001 → R-108, ⛔ aucun numéro sauté —
 recompté ce jour-là)*. Le décompte ci-dessous explique **comment on est passé de 88 à 93** ; il
@@ -656,7 +675,31 @@ D-030** (tournoi suspendu / annulé).
 |---|---|---|---|---|---|
 | **R-041** | **Le calcul qui décide du vainqueur n'est vérifié par aucun test.** `enregistrerResultat` et `calculerClassement` ne sont **jamais exécutés** ; `comparerClassement` l'est **par accident** (au passage d'un test qui vérifie autre chose). Et **sur 589 vérifications, aucune ne met à l'épreuve le 2ᵉ critère de départage (la différence) ni le 3ᵉ (les points marqués)** : le seul endroit du fichier de tests qui fabrique des statistiques met toujours `diff: 0, bp: 0`. Or **D-014 va modifier ce code** | **P1** | **CERTAIN** (mesuré par exécution instrumentée) | ✅ **TESTÉ le 2026-08-06** — chantier **C-011**, PR #181 **fusionnée**. **5 tests, 27 vérifications** ajoutés ; **aucune ligne de `Code.gs` modifiée**. ⭐ **Preuve fournie par Romain, obtenue CHEZ GOOGLE** : `11:55:15  Infos  R92 — 616/616 OK, 0 FAIL`. Les deux critères de départage qui n'étaient couverts par **aucune** des 589 vérifications précédentes le sont désormais. ⚠️ **Portée** : les deux **règles** sont protégées, **pas la chaîne complète** du classement — `calculerClassement` lit le classeur et reste hors de portée du harnais (**R-046**) | `AUDIT.md` §D.2 |
 | **R-042** | **L'enregistrement d'un score n'est vérifié par aucun test.** `enregistrerScore` — le geste le plus répété de la journée — n'est **jamais exécuté** par le harnais, alors qu'il porte **six garde-fous** (Coupe en attente · score déjà validé · vainqueur obligatoire en élimination · correction en cascade · score détaillé · archivage). Seul chantier du domaine qui demande de **séparer le cœur de l'écriture** | **P1** | CERTAIN | ✅ ⭐ **TESTÉ le 2026-08-19 — AVEC RÉSERVE** *(décision de Romain)*. Chantier **C-012**, 5 étapes : 3 PR de code *(#187, #188, #189)*, redéploiement chez Google *(**`R92 — 703/703 OK, 0 FAIL`**)*, puis **11 vérifications manuelles sur 12 en conditions réelles** — dont ⭐ **V-7, V-8 et V-10** *(V-10 dans ses **deux branches**)*. **5 des 6 risques de non-régression sont écartés** ; ⭐ **N-6 — « le mauvais vainqueur propagé » — l'est enfin.** ⚠️ **RÉSERVE CONSERVÉE : 🟠 V-12 / N-3 reste NON CONCLUANTE** — rien ne prouve que la lecture du match suivant n'est pas devenue systématique, et **aucune mesure homogène d'avant C-012 n'existe ni ne peut plus être obtenue** *(D-C012-5)*. ⚡ A fait entrer **R-092** et **R-093** au registre, **tous deux NON CORRIGÉS**. *(Auparavant : préalable de D-012 et D-015.)* | `AUDIT.md` §D.3 · `C-012-SPECIFICATION.md` **§8 quater** |
-| **R-043** | **Les 17 712 lignes du navigateur n'ont aucun test, et rien ne les empêche d'être publiées.** 26 fichiers JS, aucun outil de test, aucun `package.json` — et `.github/workflows/pages.yml` publie `frontend/` sur Internet **à chaque envoi sur `main`**, sans lancer quoi que ce soit, **pas même un contrôle de syntaxe**. C'est le seul chemin vers la production sans aucun contrôle. Il porte le classement public, le podium et la page de saisie | **P1** | CERTAIN | ⚙️ **EN COURS — moitié (a) FAITE ET PROUVÉE** : chantier **C-013** validé le 2026-08-06, **PR #182**. Le workflow porte un travail `verifier` dont `deploy` dépend (`needs`). **Preuves réelles dans GitHub** : branche cassée → contrôle **failure**, publication **skipped** *(#183, fermée sans fusion)* · branche saine → **« 30 fichiers JavaScript vérifiés, aucun cassé »**, contrôle **success**. ✅ **STATUTS ARRÊTÉS PAR ROMAIN le 2026-08-06**, en trois états distincts — *« je préfère cette preuve réelle plutôt que de provoquer volontairement une exécution du chemin de publication »* :
+| **R-043** | **Les 17 712 lignes du navigateur n'ont aucun test, et rien ne les empêche d'être publiées** *(⚠️ **énoncé du constat initial — session 8, 2026-08-09** ; il est conservé tel quel parce qu'il était vrai à sa date, et il ne l'est plus : voir le statut)*. 26 fichiers JS, aucun outil de test, aucun `package.json` — et `.github/workflows/pages.yml` publie `frontend/` sur Internet **à chaque envoi sur `main`**, sans lancer quoi que ce soit, **pas même un contrôle de syntaxe**. C'est le seul chemin vers la production sans aucun contrôle. Il porte le classement public, le podium et la page de saisie | **P1** | CERTAIN | ✅ ⭐ **TESTÉ — 2026-08-25** *(micro-lot **B2-0**)*. ⚠️ **La portée de ce `TESTÉ` est écrite juste en dessous, et elle est étroite** — voir l'encadré. Ce que R-043 désignait **structurellement** — *aucun harnais du navigateur, et rien de comportemental exécuté avant publication* — est **refermé** : ① un **harnais frontend existe** et **exécute le vrai code** des comportements couverts ; ② ses **mutations prouvent qu'il détecte réellement des régressions** ; ③ GitHub **exécute ces garde-fous dans le travail `verifier`**, dont `deploy` dépend (`needs`) — **un échec empêche donc la publication**.
+
+**Preuves, réexécutées le 2026-08-25 :**
+
+| Garde-fou | Résultat |
+|---|---|
+| `tests/frontend-reinitialisation.test.js` | ✅ **48/48 OK, 0 échec** |
+| `tests/frontend-autorisation-sync.test.js` | ✅ **97/97 OK, 0 échec** |
+| `tests/mutations-frontend.test.js` | ✅ **40/40 mutations détectées, 0 passée inaperçue** |
+
+| Exécution GitHub | Résultat |
+|---|---|
+| Run **#226** *(sur la PR **#192**)* | `verifier` **success** · `deploy` **skipped** |
+| Run **#227** *(sur `main`)* | `verifier` **success** · `deploy` **success** |
+
+> ⛔ **`TESTÉ` NE SIGNIFIE PAS « tout le frontend est couvert ».** La couverture reste **ciblée** :
+> elle porte sur les comportements de la réinitialisation et de la synchronisation de la demande
+> d'autorisation, pas sur les 26 fichiers. ⛔ **Aucune mesure globale de couverture du navigateur
+> n'a été faite** — aucun pourcentage, aucun nombre de lignes couvertes n'est revendiqué ici.
+>
+> ⚠️ **Les risques VOISINS restent OUVERTS et ne sont pas refermés par celui-ci** : **R-044**
+> *(parité des règles serveur / navigateur)*, **R-045** *(scénario d'une journée complète de bout
+> en bout)*, et l'ensemble des comportements du navigateur **encore non couverts**.
+
+⬇️ *Ce qui suit est l'**historique** de la case, conservé tel quel — chaque ligne était vraie à sa date* : ⚙️ **EN COURS — moitié (a) FAITE ET PROUVÉE** : chantier **C-013** validé le 2026-08-06, **PR #182**. Le workflow porte un travail `verifier` dont `deploy` dépend (`needs`). **Preuves réelles dans GitHub** : branche cassée → contrôle **failure**, publication **skipped** *(#183, fermée sans fusion)* · branche saine → **« 30 fichiers JavaScript vérifiés, aucun cassé »**, contrôle **success**. ✅ **STATUTS ARRÊTÉS PAR ROMAIN le 2026-08-06**, en trois états distincts — *« je préfère cette preuve réelle plutôt que de provoquer volontairement une exécution du chemin de publication »* :
 
 | | |
 |---|---|
@@ -680,8 +723,8 @@ D-030** (tournoi suspendu / annulé).
 `js/commun.js` servi par GitHub Pages répond **HTTP 200**, **se lit sans erreur** (`node --check`),
 et ne contient **aucune trace** de la faute volontaire. La page publique répond **HTTP 200**.
 
-⛔ **L'essai supplémentaire sur la branche cassée a été explicitement REFUSÉ par Romain** — il visait le chemin de publication du site en production. La branche `preuve/c-013-syntaxe-cassee` a été **supprimée** ; la preuve reste consultable dans la **PR #183** *(fermée)* et son journal d'exécution. · **(b)** harnais navigateur : **toujours à planifier**, hors périmètre de C-013 | `AUDIT.md` §D.4 |
-| **R-044** | **La même règle métier est écrite deux fois, et rien ne vérifie qu'elles disent la même chose.** **29 mentions de « miroir »** dans le frontend, dont le **barème et le départage** (`comparerClassement` côté serveur / `comparer` côté navigateur) — non testés des deux côtés. Le serveur **génère l'après-midi**, le navigateur **affiche au public** : une divergence rend les deux écrans faux **sans que ni l'un ni l'autre ne paraisse anormal** | **P1** | CERTAIN | IDENTIFIÉ — dépend de **R-043 (b)** | `AUDIT.md` §D.5 |
+⛔ **L'essai supplémentaire sur la branche cassée a été explicitement REFUSÉ par Romain** — il visait le chemin de publication du site en production. La branche `preuve/c-013-syntaxe-cassee` a été **supprimée** ; la preuve reste consultable dans la **PR #183** *(fermée)* et son journal d'exécution. · **(b)** harnais navigateur : **toujours à planifier**, hors périmètre de C-013 — ⚡ *cette phrase décrivait l'état du **2026-08-06** ; elle est **fausse depuis le 2026-08-25**, la moitié **(b)** ayant été refermée par **B2-0** (voir le haut de la case)* | `AUDIT.md` §D.4 |
+| **R-044** | **La même règle métier est écrite deux fois, et rien ne vérifie qu'elles disent la même chose.** **29 mentions de « miroir »** dans le frontend, dont le **barème et le départage** (`comparerClassement` côté serveur / `comparer` côté navigateur) — non testés des deux côtés. Le serveur **génère l'après-midi**, le navigateur **affiche au public** : une divergence rend les deux écrans faux **sans que ni l'un ni l'autre ne paraisse anormal** | **P1** | CERTAIN | **IDENTIFIÉ — toujours OUVERT.** ⚡ **Seul son PRÉALABLE a changé le 2026-08-25** *(micro-lot **B2-0**)* : le **harnais frontend** nécessaire pour construire ses futurs tests **existe désormais**, et tourne avant publication *(voir **R-043**)*. ⛔ **Mais les tests de parité serveur / navigateur eux-mêmes ne sont PAS écrits** — aucune règle n'est aujourd'hui confrontée d'un côté à l'autre par un test automatique. **Le statut ne change donc pas.** *(Auparavant : « dépend de **R-043 (b)** » — dépendance technique **levée**.)* | `AUDIT.md` §D.5 |
 | **R-045** | **Aucun scénario ne rejoue une journée de bout en bout.** Les 589 vérifications portent sur des morceaux isolés ; rien n'enchaîne création → génération → saisie → classement → après-midi. Or les pannes réelles vivent **entre** les morceaux — c'est exactement là que se trouvent R-002 et R-015 | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §D.6 |
 | **R-046** | **Tout ce qui écrit dans le classeur est hors de portée du harnais** : **110 des 277 fonctions** reçoivent le classeur en premier paramètre. C'est un **plafond structurel**, pas une négligence. La réponse n'est pas de les tester, c'est qu'elles contiennent le moins de décisions possible | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §D.6 |
 | **R-047** | **Le refus des équipes en double n'existe que dans le navigateur** (`admin-equipes.js`). Le serveur (`ajouterEquipe`) vérifie seulement que le nom n'est pas vide. Même schéma que R-015 / R-016 — et il existe un autre chemin de création : `creerEquipesClub`, déclenché par la réponse d'un club | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §D.6 |
@@ -717,7 +760,21 @@ et ne contient **aucune trace** de la faute volontaire. La page publique répond
 | Fonctions **jamais exécutées** | **173** |
 | Fonctions recevant le classeur en 1ᵉʳ paramètre (hors de portée par construction) | **110** |
 | Fonctions **pures et non testées** (testables aujourd'hui, sans rien changer) | **85** |
-| Lignes de JavaScript dans le navigateur | **17 712** — **0 test** |
+| Lignes de JavaScript dans le navigateur | **17 712 lignes — 0 test À CETTE DATE** *(mesure de la **session 8**, 2026-08-09 ; ⚡ **plus vraie aujourd'hui** — voir la note juste en dessous)* |
+
+> ⚡ **CE QUE CETTE MESURE EST DEVENUE** *(note ajoutée le 2026-08-25)*. ⛔ **La ligne ci-dessus
+> n'est pas effacée** : elle était **exacte le 2026-08-09**, et c'est elle qui a fait entrer
+> **R-043** au registre. Elle est conservée comme **mesure historique**.
+>
+> **Depuis le micro-lot B2-0 *(2026-08-25)*, ce n'est plus « 0 test »** : **trois garde-fous du
+> navigateur existent** et **tournent dans la CI** avant toute publication —
+> `frontend-reinitialisation.test.js` *(48/48)*, `frontend-autorisation-sync.test.js` *(97/97)* et
+> `mutations-frontend.test.js` *(40/40 mutations détectées)*.
+>
+> ⛔ **AUCUN pourcentage, AUCUN nombre de lignes couvertes n'est revendiqué.** **Aucune mesure
+> globale de couverture du navigateur n'a été faite** — ni en session 8, ni depuis. Dire *« il
+> existe désormais des tests »* est établi ; dire *« X % des 17 712 lignes sont couvertes »* ne
+> l'est **pas**, et ne doit pas être écrit sans une mesure réelle *(**§8 quater**)*.
 
 > ⚠️ **Ce chiffre de 38 % n'est pas comparable à une « couverture » standard** : il compte les
 > fonctions **traversées**, pas les lignes ni les situations. La couverture des **cas** est plus

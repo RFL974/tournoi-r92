@@ -8988,6 +8988,38 @@ Un témoin **`TOURNOI TEST SYNC B2-0.5`** a été saisi dans « Infos du tournoi
 | ⛔ **R-106 : seule sa part « reset » est levée** | `tournoi_id` est effacé, ⛔ **mais toujours renouvelé à chaque génération de planning**. C'est **B2-1** |
 | ⚠️ **R-033 passe à `CORRIGÉ`, ⛔ PAS à `TESTÉ`** | Les **contacts et le poste de secours** sont bien effacés dans le code, ⛔ **sans aucune vérification automatique qui le prouve** |
 | ⛔ **La branche `claude/m1-b2-b2-0-5` n'est PAS supprimée** | Conservée à la demande de Romain |
+| ⚠️ ⚡ **Un commentaire FAUX de `Code.gs` est LAISSÉ EN PLACE — volontairement** | Voir la note ci-dessous |
+
+#### ⚠️ Dette de commentaire : `reinitialiserTournoi` annonce l'inverse de ce qu'il fait
+
+**Le constat, vérifié à la source :**
+
+| | |
+|---|---|
+| **Ce que le commentaire affirme** | 🔬 `backend/Code.gs:7563` — *« On CONSERVE les réglages « Horaires de la journée » (heure début/fin, pauses…) »* |
+| **Ce que le code fait réellement** | 🔬 `backend/Code.gs:7590`, étape **« 3 bis »** — il les **EFFACE** : `heure_debut`, `heure_fin`, `heure_fin_auto`, `battement_terrain_min`, `pause_dejeuner_debut`, `pause_dejeuner_duree_min`, `heure_rdv`, `heure_fin_communiquee`, `marge_fin_communiquee_min`, `signature_generation` |
+| **Verdict** | ⛔ **Le commentaire est FACTUELLEMENT FAUX** sur les horaires. *(⚠️ Sa seconde moitié — le journal de saison, onglet `Historique` — reste **vraie** : elle n'est pas effacée.)* |
+
+⚡ **L'écart est ANTÉRIEUR à B2-0, et il est même né faux** : `git blame` place les **deux** lignes
+— l'affirmation **et** l'effacement qui la contredit — dans le **même commit `217f39f`
+(2026-08-19)**. ⛔ **B2-0 ne l'a donc ni créé ni aggravé.**
+
+**Ce que ça change en pratique : rien.** ✅ **Aucun effet fonctionnel** — c'est un commentaire, pas
+une instruction exécutée. Le comportement réel *(les horaires sont remis à zéro)* est **celui qui
+est voulu**, et il est **couvert par les tests**.
+
+> ⛔ **DÉCISION : NON corrigé dans ce lot, et c'est délibéré.** Ce lot est **documentaire** : il ne
+> touche que `docs/industrialisation/`. Corriger ce commentaire ferait entrer **`backend/Code.gs`**
+> dans un lot de documentation, et surtout : cela créerait une **divergence entre le dépôt et la
+> version en service chez Google *(Apps Script v157)*** — ou imposerait un **redéploiement complet
+> du serveur pour un seul commentaire**. ⚠️ **Le remède serait plus risqué que le défaut.**
+>
+> ⏭️ **À corriger lors du PROCHAIN lot qui modifiera réellement `backend/Code.gs`**, et qui
+> entraînera de toute façon un redéploiement — exactement la méthode déjà retenue pour **R-083**
+> *(`CLAUDE.md` **§8 ter**)* : *les commentaires faux partent avec le prochain redéploiement utile*.
+>
+> ⛔ **Aucun nouveau `R-*` ni `D-*` n'est créé pour autant** : ce n'est ni un risque du registre ni
+> une décision de chantier, mais une **dette de commentaire** — sa trace est **ici**.
 
 ---
 

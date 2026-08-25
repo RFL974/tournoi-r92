@@ -1131,6 +1131,28 @@ C-013 (un contrôle avant publication) — indépendant, le moins cher du plan, 
 - ⛔ **Essai supplémentaire refusé** *(déclencher le workflow sur la branche cassée)* : il visait le chemin de publication du site en production. Branche de preuve **supprimée** ; preuve conservée dans la **PR #183** et son journal
 - 🏁 **Clôturé le 2026-08-06**, après vérification commune du premier passage dans Actions
 
+> ⚡ **NOTE AJOUTÉE LE 2026-08-25 — ⛔ elle ne modifie EN RIEN le périmètre historique de C-013.**
+>
+> C-013 reste **exactement** ce qu'il a été : un **contrôle de syntaxe** et le **chaînage
+> `verifier → deploy`**, clôturé le **2026-08-06**. ⛔ **Rien de ce qui est écrit au-dessus n'est
+> réécrit** — tout y était vrai à sa date, et le reste.
+>
+> **Ce qui a changé APRÈS, et ailleurs** : le micro-lot **B2-0** *(2026-08-25)* a refermé la
+> **moitié (b) de R-043**, celle que C-013 avait explicitement laissée hors de son périmètre — *un
+> vrai harnais du navigateur*. Trois garde-fous frontend existent désormais et **tournent avant
+> publication**, dans le travail `verifier` que C-013 avait créé :
+>
+> | Garde-fou | Résultat |
+> |---|---|
+> | `tests/frontend-reinitialisation.test.js` | ✅ **48/48** |
+> | `tests/frontend-autorisation-sync.test.js` | ✅ **97/97** |
+> | `tests/mutations-frontend.test.js` | ✅ **40/40 mutations détectées** |
+>
+> ⭐ **C'est le socle de C-013 qui a rendu ce branchement possible** : B2-0 n'a pas eu à construire
+> un chemin de contrôle, il en a **rempli un qui existait**. **R-043 passe donc à `TESTÉ`**
+> *(voir `RISQUES.md`)*. ⛔ **Avec sa réserve : la couverture du navigateur reste CIBLÉE**, et
+> **aucune mesure globale de couverture n'a été faite.**
+
 ---
 
 ### C-014 — 🔊 Faire parler l'application le jour J
