@@ -81,6 +81,12 @@ tournoi-r92/
 │   ├── Tests.gs                 → le harnais de tests (à coller AUSSI — voir docs/deploiement.md)
 │   └── README.md                → ce que fait le serveur, et ses utilitaires
 │
+├── tests/                   → garde-fous exécutés AVANT chaque publication (voir docs/deploiement.md)
+│   ├── frontend-reinitialisation.test.js → ce que « Réinitialiser le tournoi » fait à l'écran
+│   ├── frontend-autorisation-sync.test.js→ la demande d'autorisation FFR ne reste jamais périmée
+│   └── mutations-frontend.test.js        → le garde-fou DES garde-fous : il réintroduit des
+│                                           défauts et exige que les deux premiers les attrapent
+│
 ├── cloudflare/              → relais CDN optionnel (dormant par défaut)
 │   └── worker-tournoi.js
 │

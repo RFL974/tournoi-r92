@@ -88,15 +88,28 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 > demande *(les lignes déjà écrites dans `Historique` gardent le leur — on n'y touche pas)*.
 > ⛔ **Le renouvellement à chaque génération, lui, est INCHANGÉ** — c'est le cœur de R-106, et il
 > appartient à **B2-1**.
-> ⚠️ **Sur le serveur en service chez Google** : dépend du redéploiement — voir
-> [`deploiement.md`](deploiement.md). Tant que `Code.gs` n'y a pas été recollé, une réinitialisation
-> réelle laisse encore survivre l'ancien `tournoi_id`.
+>
+> ✅ ⚡ **EN SERVICE, ET CONSTATÉ** *(mise à jour du 2026-08-25)*. Cette note portait la réserve
+> *« sur le serveur en service chez Google : dépend du redéploiement […] une réinitialisation réelle
+> laisse encore survivre l'ancien `tournoi_id` »* : ⛔ **elle n'a plus lieu d'être.** Le serveur a
+> été recollé *(témoins de contrôle dans [`deploiement.md`](deploiement.md), qui en est **la
+> source**)*, et une réinitialisation **RÉELLE** du 2026-08-25 a montré `tournoi_id` **effacé**.
+>
+> ⛔ **Et R-106 RESTE OUVERT malgré cela**, ce qui n'est pas contradictoire : ⭐ **effacer un mauvais
+> identifiant ne le rend pas bon.** Il est toujours **reposé à chaque génération de planning** — un
+> seul tournoi réel en produit donc plusieurs. ⛔ **`edition_id` N'EXISTE PAS ENCORE** : c'est
+> exactement ce que **B2-1** doit créer, et **B2-1 n'est pas démarrée**.
 
 > ⚠️ **Le plan des terrains survit à la réinitialisation** *(risque **R-101**)* : `terrains_physiques`,
 > `couloir_terrain_m`, `dimensions_categories`, `tm_longueur_m`, `tm_largeur_m` et
 > `repartition_grands_terrains` ne figurent dans **aucune** liste d'effacement. ⭐ La donnée est
 > **mixte** — l'existence des grands terrains est **permanente**, leur **découpage** en
 > mini-terrains est **propre à une édition**. La séparation est prévue par **M1-B2 / B2-3**.
+>
+> ⛔ ⚡ **TOUJOURS VRAI APRÈS B2-0, ET CONSTATÉ EN RÉEL** *(2026-08-25)*. La réinitialisation réelle
+> a montré que ces six paramètres **survivent bel et bien** — ⭐ **c'est le résultat ATTENDU**, et
+> B2-0 l'a **figé par un test témoin** pour que **B2-3** parte d'un comportement connu.
+> ⛔ **Figer un défaut n'est pas le corriger : R-101 RESTE OUVERT.**
 
 Paramètres **Contacts & sécurité** (écrits par la carte « Contacts &amp; sécurité » de la page
 admin — destinés au futur **générateur de dossier club**, tous **optionnels**) :
@@ -190,15 +203,19 @@ créés par `setupSheet()`.
 
 **Colonne « Réinit. »** : comportement décidé par **D-043**, appliqué par le lot **M1-B**.
 
-> ⚡ **Où en est cette colonne, au 2026-08-24 — et la distinction est capitale** :
+> ⚡ **Où en est cette colonne — mise à jour du 2026-08-25.** Ce tableau annonçait *« sur le serveur
+> en service chez Google : ⛔ PAS ENCORE — le fichier n'y a pas été recollé. Une réinitialisation
+> réelle conserve donc encore les 36 »*. ⛔ **C'était vrai au 2026-08-24, et c'est faux depuis.**
 >
 > | | |
 > |---|---|
 > | **Dans le dépôt** *(`backend/Code.gs`)* | ✅ **APPLIQUÉE** — `reinitialiserTournoi` vide les 26 champs d'édition et les `org_recompenses_*`, et conserve les 10 permanents. Couvert par des tests automatiques |
-> | **Sur le serveur en service chez Google** | ⛔ **PAS ENCORE** — le fichier n'y a pas été recollé. **Une réinitialisation réelle conserve donc encore les 36**, comme avant |
+> | **Sur le serveur en service chez Google** | ✅ ⚡ **APPLIQUÉE AUSSI** — le fichier **a été recollé** *(témoins de contrôle dans [`deploiement.md`](deploiement.md))*, et une réinitialisation **RÉELLE** a été exercée le **2026-08-25** |
 >
-> ➡️ Tant que le redéploiement n'a pas eu lieu *(`deploiement.md`)*, la colonne décrit **le code du
-> dépôt**, pas le comportement observable en production *(`CLAUDE.md` §13.6)*.
+> ➡️ ⭐ **La colonne décrit donc désormais le comportement OBSERVABLE**, et plus seulement le code du
+> dépôt. ⚠️ **La règle de `CLAUDE.md` §13.6 ne change pas pour autant** : ce qui vaut ici, c'est le
+> **constat réel** qui vient d'être fait — ⛔ **pas la lecture du dépôt**, qui ne prouvera jamais à
+> elle seule ce que fait le serveur.
 
 **Familles** *(D-042)* : 🏛️ permanente du club · 🗓️ événementielle · ⚙️ propre à Maxilou.
 
@@ -497,8 +514,13 @@ clubs qui **acceptent** (Phase 2).
 > donc « Accepté » sur un classeur réinitialisé — **non réinvitable**, **compté dans la demande
 > d'autorisation FFR**, et son dossier affichait *« Joueurs annoncés : (vide) / Éducateurs
 > annoncés : 8 »*.
-> ⚠️ **Sur le serveur en service chez Google** : dépend du redéploiement — voir
-> [`deploiement.md`](deploiement.md).
+>
+> ✅ ⚡ **EN SERVICE, ET CONSTATÉ** *(mise à jour du 2026-08-25)*. Ce paragraphe portait la réserve
+> *« sur le serveur en service chez Google : dépend du redéploiement »* : ⛔ **elle n'a plus lieu
+> d'être.** Le serveur a été recollé, et la réinitialisation **RÉELLE** du 2026-08-25 a montré
+> ⛔ **aucun statut de participation hérité**, ⛔ **aucun effectif, détail ni alerte hérités** —
+> et ⭐ **une structure de l'édition passée redevient invitable**. **R-099** et **R-100** sont
+> **TESTÉS** au registre.
 >
 > ⛔ **B2-0 corrige le COMPORTEMENT, pas la STRUCTURE** : les deux familles cohabitent toujours dans
 > le même onglet *(**R-102**)*. Leur séparation en `Clubs` + `Participations` appartient à **B2-2**.

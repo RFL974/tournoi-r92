@@ -310,13 +310,43 @@ en tête de fichier le pilotent : `ACTIONS_SCORES`, `ACTIONS_TOKEN` et `ACTIONS_
 
 | Action | Accès | Voie | Ce qu'elle fait |
 |---|---|---|---|
-| `reinitialiserTournoi` | 🔐 | POST | **Irréversible.** Vide `Equipes`, `Poules` et `Matchs`, supprime toutes les catégories, efface les infos publiques du tournoi. **`Historique` n'est PAS effacé** |
+| `reinitialiserTournoi` | 🔐 | POST | **Irréversible.** Vide `Equipes`, `Poules` et `Matchs`, supprime toutes les catégories, efface tout ce qui appartient à l'**édition** qui s'achève. **`Historique` n'est PAS effacé** |
 
-> ⚠️ **Ce que la réinitialisation n'efface pas, et qui n'est pas évident** : le détail des effectifs
-> et le total d'éducateurs de l'édition passée, ainsi que **tous les contacts de la demande
-> d'autorisation FFR** — représentant, président, **médecin**, antenne de secours. C'est un écart
-> connu et suivi : voir [`conservation-donnees.md`](conservation-donnees.md) et les problèmes
-> **R-030 / R-033** du chantier d'industrialisation.
+> ⚡ **Cet encadré a été RÉÉCRIT le 2026-08-25** *(micro-lot **B2-0**)*, et il faut dire ce qu'il
+> annonçait : *« ce que la réinitialisation n'efface pas : le détail des effectifs, le total
+> d'éducateurs, ainsi que **tous** les contacts de la demande d'autorisation FFR »*. ⛔ **C'était
+> vrai à sa date, et c'est devenu l'inverse du code.**
+
+> 🎯 **La règle tient en une phrase : PERMANENT ≠ ÉDITION.** ⭐ *« On conserve le contact, on
+> réinitialise l'engagement. »* Ce qui décrit **le club organisateur** ou **le carnet d'adresses**
+> traverse les éditions ; ce qui décrit **CE tournoi-ci** disparaît avec lui.
+
+| ⛔ **EFFACÉ** — appartient à l'édition | ✅ **CONSERVÉ** — permanent |
+|---|---|
+| Les onglets `Equipes`, `Poules`, `Matchs` et **toutes les catégories** | ⭐ Le **journal de saison** `Historique` — ⛔ jamais touché |
+| Les **infos publiques** *(nom, date, lieu, adresse, description)* et l'**affiche** *(mise à la corbeille)* | ⭐ Le **carnet d'adresses** de `ClubsInvites` : nom du club, nom et prénom du contact, **email**, date d'ajout. Les clubs **restent listés et redeviennent invitables** |
+| Les **horaires de la journée** et la signature de génération | ⭐ Les **10 champs PERMANENTS** de la demande FFR — la section **A.1 Organisateur** : nom et code du club, label EDR et sa date, **président**, **représentant** |
+| Les **contacts & sécurité** *(référent du tournoi, poste de secours, référent sécurité)* | Les **partenaires** *(onglet `Sponsors` et ses réglages)* — un partenariat se reconduit |
+| Le **dossier d'invitation** *(modalités, parking — photo comprise —, encadrement, assurance)* et la config **Phase 1** *(« Sur place », « Réponse à l'invitation »)* | Les **réglages d'infrastructure** : `email_expediteur`, `perfs_mot_cle_club`, les deux clés |
+| **Tout l'ENGAGEMENT** de chaque club : `statut`, catégories engagées, nombre d'équipes, `nb_joueurs_total`, ⚡ **`detail_effectifs`**, ⚡ **`nb_educateurs_total`**, ⚡ **`alerte_ecart`**, dates d'envoi, sélection enregistrée, et le **jeton d'accès** *(l'ancien lien cesse de fonctionner)* | ⛔ **Et une exception qui n'en est pas une** : certains **réglages de terrains** *(découpage des grands terrains, dimensions, couloirs)* **survivent encore** — ⛔ **c'est un défaut connu, pas un choix** |
+| Les **26 champs `org_*` d'édition** de la demande FFR — dont ⚡ le **médecin**, le **poste de secours**, l'**ambulance**, l'arbitrage, les installations, l'hébergement, les repas et goûters — plus **toutes** les récompenses par catégorie | |
+| ⚡ **`tournoi_id`** de l'édition qui s'achève, et le tournoi **repasse en masqué** | |
+
+> ⚠️ **Ne pas lire « tous les contacts FFR sont effacés » : ce serait faux dans l'autre sens.**
+> Le **médecin**, le **poste de secours** et l'**ambulance** le sont — ils changent d'un tournoi à
+> l'autre. ⛔ **Le président et le représentant du club ne le sont PAS** : ils décrivent le club,
+> pas l'édition. C'est exactement la frontière **A.1 / le reste** du formulaire fédéral.
+
+> 🔬 **Où en sont les problèmes suivis** *(le registre fait foi :
+> [`industrialisation/RISQUES.md`](industrialisation/RISQUES.md))* :
+>
+> | | |
+> |---|---|
+> | ✅ **R-099** *(les 3 colonnes d'effectifs)* et ✅ **R-100** *(le statut `Accepté`)* | **TESTÉS** — par le harnais du serveur **et** par une réinitialisation **réelle** |
+> | ⚠️ **R-033** | **CORRIGÉ**, ⛔ **pas `TESTÉ`** : les contacts & sécurité sont bien effacés **dans le code**, ⛔ **sans vérification automatique qui le prouve** |
+> | ⛔ **R-101** *(les terrains)* | **OUVERT** — la survie du découpage est **délibérément figée par un test témoin**, en attendant **B2-3** |
+> | ⛔ **R-106** *(`tournoi_id`)* | **OUVERT** — l'identifiant est bien **effacé** au reset, ⛔ **mais il reste reposé à CHAQUE génération de planning** : il identifie une *génération*, pas une *édition*. C'est **B2-1** |
+> | ⛔ **R-030** | **OUVERT** — les durées de conservation n'ont **aucun outillage** : voir [`conservation-donnees.md`](conservation-donnees.md) |
 
 ### 2.3 — Ce qui se passe après chaque écriture
 
