@@ -86,6 +86,46 @@ const extraireFonction = (f, e) => extraireBloc(f, e, '{');
 const extraireObjet = (f, e) => extraireBloc(f, e, '{');
 const extraireTableau = (f, e) => extraireBloc(f, e, '[');
 
+/* -------------------------------------------------------------------------- */
+/*  INVENTAIRE STATIQUE (G-E et G-J) — ⛔ un appel qu'on ne sait pas classer    */
+/*  doit FAIRE ÉCHOUER le contrôle, jamais disparaître de l'inventaire.        */
+/*                                                                            */
+/*  ⚠️ Le défaut corrigé ici : l'inventaire ne cherchait que les actions entre  */
+/*  GUILLEMETS SIMPLES. Un futur appel écrit avec des guillemets doubles, un    */
+/*  gabarit, ou une variable n'aurait tout simplement pas été vu — et le test   */
+/*  aurait annoncé « inventaire complet » en toute bonne foi.                  */
+/* -------------------------------------------------------------------------- */
+
+/** Retire les commentaires de BLOC et les lignes ENTIÈREMENT en commentaire.
+ *  ⛔ On ne touche PAS aux `//` en milieu de ligne : « https:// » y vit, et les couper
+ *  détruirait du vrai code. Un inventaire qui mutile sa source ment autant qu'un
+ *  inventaire aveugle — ici on ne retire que ce qui ne peut pas être du code. */
+function sansCommentaires(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .split('\n').map(function (l) { return /^\s*\/\//.test(l) ? '' : l; }).join('\n');
+}
+
+/** Tous les APPELS à `nom(` d'une source, avec leur premier argument analysé.
+ *  ⭐ Trois formes de littéral STATIQUE sont reconnues — `'x'`, `"x"`, et le gabarit
+ *  `` `x` `` sans interpolation. ⛔ Tout le reste est marqué `dynamique` et devra être
+ *  refusé explicitement par l'appelant.
+ *  ⚠️ La DÉCLARATION de la fonction (`function nom(`) n'est pas un appel : elle est écartée. */
+function appelsA(source, nom) {
+  const trouves = [];
+  const re = new RegExp('(function\\s+)?\\b' + nom + '\\s*\\(', 'g');
+  let m;
+  while ((m = re.exec(source)) !== null) {
+    if (m[1]) continue;
+    const reste = source.slice(re.lastIndex);
+    const litteral = reste.match(/^\s*'([^'\\]*)'\s*[,)]/)
+                  || reste.match(/^\s*"([^"\\]*)"\s*[,)]/)
+                  || reste.match(/^\s*`([^`$\\]*)`\s*[,)]/);
+    if (litteral) trouves.push({ action: litteral[1], dynamique: false });
+    else trouves.push({ action: reste.slice(0, 40).split(/[\n,)]/)[0].trim(), dynamique: true });
+  }
+  return trouves;
+}
+
 /** Une déclaration tenant sur une seule ligne (`var X = 5;`). */
 function extraireLigne(cheminRelatif, entete) {
   const source = lire(cheminRelatif);
@@ -118,10 +158,11 @@ const NIVEAU_ENREGISTRE = 'DEPARTEMENTAL';
 
 /**
  * @param {Object} opt
- *   - mode            : 'classique' (page longue) | 'ecrans' | 'assistant'
- *   - feuilleEchoue   : `getDossierAutorisation` lève (coupure réseau)
- *   - configBloquee   : `lireConfigAdmin` attend une libération manuelle
- *   - avantReponseFFR : fonction(n) appelée AVANT la n-ième réponse du serveur FFR
+ *   - mode               : 'classique' (page longue) | 'ecrans' | 'assistant'
+ *   - feuilleEchoue      : `getDossierAutorisation` lève (coupure réseau)
+ *   - configBloquee      : `lireConfigAdmin` attend une libération manuelle
+ *   - avantReponseFFR    : fonction(n) appelée AVANT la n-ième réponse du serveur FFR
+ *   - avantReponseConfig : fonction(n) appelée AVANT la n-ième réponse de `lireConfigAdmin`
  */
 function banc(opt) {
   opt = opt || {};
@@ -130,6 +171,8 @@ function banc(opt) {
   // Ce que « le classeur » contient : c'est CETTE valeur que la feuille doit finir par montrer.
   const serveur = { nom: NOM_ANCIEN, niveau: NIVEAU_ENREGISTRE };
   let appelsFFR = 0;
+  let appelsConfig = 0;
+  const messages = [];
   let libererConfig = null;
   const configBloquee = opt.configBloquee
     ? new Promise(function (r) { libererConfig = r; }) : null;
@@ -144,7 +187,10 @@ function banc(opt) {
   creer('autorisation-feuille', { innerHTML: 'A.2 Tournoi : ' + NOM_ANCIEN });
   // ⭐ Le formulaire org_* est modélisé par sa VALEUR : le reconstruire l'écrase, exactement
   //   comme `zoneSaisie.innerHTML = …` détruit les champs d'un vrai formulaire.
-  creer('form-autorisation', { valeur: 'org_niveau=' + NIVEAU_ENREGISTRE });
+  creer('form-autorisation', { valeur: 'org_niveau=' + NIVEAU_ENREGISTRE,
+    elements: [{ name: 'org_niveau_tournoi', value: NIVEAU_ENREGISTRE }] });
+  creer('autorisation-message');
+  creer('bouton-enregistrer-autorisation');
   const zoneSaisie = {
     id: 'autorisation-saisie', _html: 'SAISIE ' + NOM_ANCIEN, style: {},
     get innerHTML() { return this._html; },
@@ -181,22 +227,34 @@ function banc(opt) {
     /* L'outil du verrou d'étapes (assistant.js), doublé : il sérialise le formulaire. */
     assistantSerialiser: function (form) { return String((form && form.valeur) || ''); },
 
-    /* ---- le faux serveur ---- */
+    /* ---- le faux serveur ----
+       ⭐ Chaque réponse porte l'état du classeur AU MOMENT DE LA REQUÊTE, pas au moment où
+       elle revient. C'est le comportement d'un vrai serveur — et c'est indispensable ici :
+       sans cela, une réponse « dépassée » reviendrait magiquement à jour, et les tests
+       G-N / G-O ne pourraient rien prouver. */
     apiPostProtege: async function (action) {
       trace.push({ type: 'appel', action: action });
       if (action === 'getDossierAutorisation') {
         appelsFFR++;
+        const instantane = serveur.nom;
         if (opt.avantReponseFFR) await opt.avantReponseFFR(appelsFFR);
         if (opt.feuilleEchoue) throw new Error('Échec réseau simulé (FFR)');
-        return { dossier: { nom: serveur.nom } };
+        return { dossier: { nom: instantane } };
       }
       return { ok: true };
     },
     lireConfigAdmin: async function () {
+      appelsConfig++;
       trace.push({ type: 'lireConfigAdmin' });
+      const instantane = serveur.nom;
+      if (opt.avantReponseConfig) await opt.avantReponseConfig(appelsConfig);
       if (configBloquee) await configBloquee;
-      return { global: { tournoi_nom: serveur.nom }, categories: [] };
+      return { global: { tournoi_nom: instantane }, categories: [] };
     },
+
+    /* ---- doublures nécessaires au CHEMIN PROPRE (onEnregistrerAutorisation) ---- */
+    avecBoutonOccupe: async function (bouton, message, travail) { return travail(); },
+    afficherMessage: function (el, texte, ton) { messages.push({ texte: texte, ton: ton }); },
 
     /* ---- doublures des dépendances de navigation ---- */
     ecransCalculerVerrous: function () { return {}; },
@@ -215,6 +273,7 @@ function banc(opt) {
     __trace: trace,
     __elements: elements,
     __appelsFFR: function () { return appelsFFR; },
+    __messages: messages,
     __libererConfig: function () { if (libererConfig) libererConfig(); }
   };
   contexte.globalThis = contexte;
@@ -244,6 +303,7 @@ function banc(opt) {
     extraireFonction(AUTO, 'function ecritureImpacteAutorisation(action, data, reponse)'),
     extraireFonction(AUTO, 'async function majAutorisation(opt)'),
     extraireFonction(AUTO, 'async function majAutorisationSiObsolete()'),
+    extraireFonction(AUTO, 'async function onEnregistrerAutorisation()'),
     extraireFonction('frontend/js/admin.js', 'async function ecrireAdmin(action, data)'),
     extraireTableau('frontend/js/ecrans.js', 'const ECRANS_DEF = ['),
     extraireFonction('frontend/js/ecrans.js', 'function ecransActiver(id, opt)'),
@@ -651,6 +711,217 @@ function verifier(condition, libelle) {
       'contourne rien');
   }
 
+  /* ==== G-M — CHEMIN PROPRE : une panne ne solde JAMAIS la dette ======= */
+  {
+    // ⚠️ `enregistrerDossierAutorisation` est en catégorie B : le crochet commun l'ignore
+    //    volontairement. Elle doit donc porter SA dette elle-même — et honnêtement.
+    const ctx = banc({ mode: 'ecrans', feuilleEchoue: true });
+    ctx.__serveur.nom = NOM_NOUVEAU;
+    await lancer(ctx, 'onEnregistrerAutorisation()');
+    await laisserTourner(ctx);
+
+    verifier(ctx.autorisationRevision === 1,
+      'G-M ① l\'écriture réussie a bien noté que la feuille est devenue fausse');
+    verifier(ctx.autorisationRevisionLue !== ctx.autorisationRevision,
+      'G-M ② ⭐⭐ BLOQUANT : relecture FFR en échec ⇒ la dette est CONSERVÉE (' +
+      ctx.autorisationRevisionLue + '/' + ctx.autorisationRevision + ')');
+    verifier(feuille(ctx).indexOf(NOM_ANCIEN) === -1,
+      'G-M ③ ⭐ et la feuille ne montre plus l\'ancienne valeur');
+    verifier(ctx.__messages.some(function (m) { return m.texte.indexOf('enregistrés') !== -1; }),
+      'G-M ④ ⛔ l\'ENREGISTREMENT MÉTIER reste annoncé comme réussi — il l\'est');
+    verifier(ctx.__messages.some(function (m) { return m.texte.indexOf('réseau') !== -1; }),
+      'G-M ⑤ ⭐ mais l\'organisateur est prévenu que la feuille n\'a pas pu être relue');
+
+    // Le réseau revient : la prochaine ouverture doit retenter POUR DE VRAI.
+    let relectures = 0;
+    ctx.apiPostProtege = async function (action) {
+      if (action === 'getDossierAutorisation') { relectures++; return { dossier: { nom: ctx.__serveur.nom } }; }
+      return { ok: true };
+    };
+    await lancer(ctx, 'ecransActiver("autorisation")');
+    await laisserTourner(ctx);
+    verifier(relectures === 1,
+      'G-M ⑥ ⭐⭐ la prochaine ouverture RETENTE réellement (constaté ' + relectures + ')');
+    verifier(feuille(ctx).indexOf(NOM_NOUVEAU) !== -1,
+      'G-M ⑦ la feuille montre enfin la valeur enregistrée');
+    verifier(ctx.autorisationRevisionLue === ctx.autorisationRevision,
+      'G-M ⑧ et le succès suivant solde la dette');
+  }
+
+  /* ==== G-N — une réponse DÉPASSÉE ne repeint JAMAIS l'écran =========== */
+  {
+    // ⭐ G-H prouvait que l'ÉTAT FINAL est bon. Ici on éprouve le TEMPS INTERMÉDIAIRE :
+    //   une réponse partie pour la révision 1 et revenue alors que la révision 2 existe
+    //   déjà ne doit pas remettre l'ancienne valeur à l'écran, fût-ce une fraction de seconde.
+    const portes = {};
+    const porte = function (n) {
+      if (!portes[n]) {
+        let ouvrir; const p = new Promise(function (r) { ouvrir = r; });
+        portes[n] = { p: p, ouvrir: ouvrir };
+      }
+      return portes[n];
+    };
+    const ctx = banc({
+      mode: 'ecrans',
+      avantReponseFFR: async function (n) { if (n >= 2) await porte(n).p; }
+    });
+    await lancer(ctx, 'majAutorisation()');                 // lecture n° 1 — rendu initial, libre
+    ctx.__serveur.nom = NOM_NOUVEAU;
+    await lancer(ctx, 'ecrireAdmin("genererPoulesEtPlanning", {})');       // révision 1
+    lancer(ctx, 'ecransActiver("autorisation")');           // lance la lecture n° 2 (cible 1)
+    for (let k = 0; k < 6; k++) await new Promise((r) => setImmediate(r));
+
+    ctx.__serveur.nom = NOM_TROISIEME;
+    await lancer(ctx, 'ecrireAdmin("recalculerHoraires", {})');            // révision 2
+    verifier(ctx.autorisationRevision === 2, 'G-N ① la seconde écriture est bien arrivée pendant');
+
+    porte(2).ouvrir();                                       // ⬅️ la réponse DÉPASSÉE revient
+    for (let k = 0; k < 6; k++) await new Promise((r) => setImmediate(r));
+    verifier(feuille(ctx).indexOf(NOM_NOUVEAU) === -1,
+      'G-N ② ⭐⭐ BLOQUANT : la réponse de la révision 1 n\'a PAS repeint l\'écran');
+    verifier(feuille(ctx).indexOf('rechargement') !== -1,
+      'G-N ③ ⭐ l\'écran est resté dans son état neutre — fail-closed jusqu\'au bout');
+    verifier(ctx.autorisationRevisionLue === 0,
+      'G-N ④ ⛔ et aucune révision n\'a été comptée lue');
+
+    porte(3).ouvrir();                                       // la lecture de la révision 2
+    await laisserTourner(ctx);
+    verifier(feuille(ctx).indexOf(NOM_TROISIEME) !== -1,
+      'G-N ⑤ ⭐ la feuille finale montre bien la DERNIÈRE valeur');
+    verifier(ctx.autorisationRevisionLue === ctx.autorisationRevision,
+      'G-N ⑥ et la dette est soldée (' + ctx.autorisationRevisionLue + '/' +
+      ctx.autorisationRevision + ')');
+  }
+
+  /* ==== G-O — un instantané de config DÉPASSÉ n'écrase pas configCourante */
+  {
+    // ⚠️ Ce trou-là ne se voit sur AUCUN écran : il installerait du passé directement dans
+    //    l'état global que lisent tous les formulaires. D'où un test dédié.
+    const portes = {};
+    const porte = function (n) {
+      if (!portes[n]) {
+        let ouvrir; const p = new Promise(function (r) { ouvrir = r; });
+        portes[n] = { p: p, ouvrir: ouvrir };
+      }
+      return portes[n];
+    };
+    const ctx = banc({
+      mode: 'ecrans',
+      avantReponseConfig: async function (n) { await porte(n).p; }
+    });
+    const nomConfig = function () { return (ctx.configCourante.global || {}).tournoi_nom; };
+    verifier(nomConfig() === NOM_ANCIEN, 'G-O ① au départ, la config porte l\'ancienne valeur');
+
+    ctx.__serveur.nom = NOM_NOUVEAU;
+    await lancer(ctx, 'ecrireAdmin("enregistrerCategorie", { categorie: "U8" })');  // révision 1
+    lancer(ctx, 'ecransActiver("autorisation")');   // tour 1 : lecture de config n° 1, BLOQUÉE
+    for (let k = 0; k < 6; k++) await new Promise((r) => setImmediate(r));
+
+    ctx.__serveur.nom = NOM_TROISIEME;
+    await lancer(ctx, 'ecrireAdmin("ajouterEquipe", { nom_equipe: "TEST-3" })');    // révision 2
+    porte(1).ouvrir();                               // ⬅️ l'instantané DÉPASSÉ (NOM_NOUVEAU) revient
+    for (let k = 0; k < 6; k++) await new Promise((r) => setImmediate(r));
+
+    verifier(nomConfig() !== NOM_NOUVEAU,
+      'G-O ② ⭐⭐ BLOQUANT : l\'instantané de config DÉPASSÉ n\'a PAS écrasé configCourante');
+    verifier(nomConfig() === NOM_ANCIEN,
+      'G-O ③ ⭐ la config connue est restée celle d\'avant, pas une valeur intermédiaire');
+
+    porte(2).ouvrir();                               // tour 2 : la config de la révision 2
+    await laisserTourner(ctx);
+    verifier(nomConfig() === NOM_TROISIEME,
+      'G-O ④ ⭐ puis la config la plus RÉCENTE est bien installée');
+    verifier(ctx.autorisationRevisionLue === ctx.autorisationRevision,
+      'G-O ⑤ et la dette est soldée');
+  }
+
+  /* ==== G-P — CHEMIN PROPRE : concurrence pendant SES PROPRES lectures === */
+  {
+    // ⭐ `majAutorisationSiObsolete` était protégée ; le chemin propre, lui, attendait le réseau
+    //   SANS cible. Une autre écriture pouvait le doubler, et sa réponse — déjà dépassée —
+    //   installer une config ancienne ou repeindre l'écran. La dette n'était plus soldée à
+    //   tort (corrigé au tour précédent), mais du PASSÉ pouvait redevenir visible.
+    //   ⚠️ Mode « écrans », feuille FERMÉE : le crochet commun ne lance donc AUCUNE
+    //   synchronisation de fond. Le seul rattrapage observé est celui du chemin propre lui-même.
+    const nouvellePorte = function () {
+      const portes = {};
+      return function (n) {
+        if (!portes[n]) {
+          let ouvrir; const p = new Promise(function (r) { ouvrir = r; });
+          portes[n] = { p: p, ouvrir: ouvrir };
+        }
+        return portes[n];
+      };
+    };
+    const flush = async function () {
+      for (let k = 0; k < 8; k++) await new Promise((r) => setImmediate(r));
+    };
+
+    /* ---- (a) la lecture de CONFIG du chemin propre est doublée ---------- */
+    const porteA = nouvellePorte();
+    const ctx = banc({ mode: 'ecrans', avantReponseConfig: async function (n) { await porteA(n).p; } });
+    const nomConfig = function () { return (ctx.configCourante.global || {}).tournoi_nom; };
+    ctx.__serveur.nom = NOM_NOUVEAU;
+    lancer(ctx, 'onEnregistrerAutorisation()');        // ⛔ non attendu : il va se bloquer
+    await flush();
+
+    ctx.__serveur.nom = NOM_TROISIEME;
+    await lancer(ctx, 'ecrireAdmin("enregistrerCategorie", { categorie: "U8" })');   // révision 2
+    verifier(ctx.autorisationRevision === 2,
+      'G-P ① une autre écriture est arrivée pendant la relecture du chemin propre');
+
+    porteA(1).ouvrir();                                // ⬅️ l'instantané config DÉPASSÉ revient
+    await flush();
+    verifier(nomConfig() !== NOM_NOUVEAU,
+      'G-P ② ⭐⭐ BLOQUANT : l\'instantané config dépassé n\'a PAS écrasé configCourante');
+    verifier(nomConfig() === NOM_ANCIEN,
+      'G-P ③ ⭐ la config connue est restée celle d\'avant');
+    verifier(feuille(ctx).indexOf(NOM_NOUVEAU) === -1 && feuille(ctx).indexOf(NOM_ANCIEN) === -1,
+      'G-P ④ ⭐⭐ BLOQUANT : aucune valeur de la révision 1 n\'est visible à l\'écran');
+    verifier(feuille(ctx).indexOf('rechargement') !== -1,
+      'G-P ⑤ ⭐ l\'écran est resté neutre — fail-closed');
+    verifier(ctx.autorisationRevisionLue === 0,
+      'G-P ⑥ ⛔ la dette est conservée (' + ctx.autorisationRevisionLue + '/' +
+      ctx.autorisationRevision + ')');
+    verifier(ctx.__messages.some(function (m) { return m.texte.indexOf('enregistrés') !== -1; }) &&
+             !ctx.__messages.some(function (m) { return m.texte.indexOf('réseau') !== -1; }),
+      'G-P ⑦ ⛔ l\'enregistrement org_* est annoncé RÉUSSI, sans fausse alerte réseau');
+
+    porteA(2).ouvrir();                                // le rattrapage lit la révision 2
+    await laisserTourner(ctx);
+    verifier(feuille(ctx).indexOf(NOM_TROISIEME) !== -1,
+      'G-P ⑧ ⭐⭐ le rattrapage AUTOMATIQUE a pris la dernière révision, sans navigation');
+    verifier(nomConfig() === NOM_TROISIEME, 'G-P ⑨ et la config la plus récente est installée');
+    verifier(ctx.autorisationRevisionLue === ctx.autorisationRevision,
+      'G-P ⑩ revisionLue == revision (' + ctx.autorisationRevisionLue + '/' +
+      ctx.autorisationRevision + ')');
+
+    /* ---- (b) la lecture de la FEUILLE du chemin propre est doublée ------ */
+    const porteB = nouvellePorte();
+    const ctx2 = banc({ mode: 'ecrans', avantReponseFFR: async function (n) { await porteB(n).p; } });
+    ctx2.__serveur.nom = NOM_NOUVEAU;
+    lancer(ctx2, 'onEnregistrerAutorisation()');       // config lue tout de suite, FFR bloquée
+    await flush();
+
+    ctx2.__serveur.nom = NOM_TROISIEME;
+    await lancer(ctx2, 'ecrireAdmin("ajouterEquipe", { nom_equipe: "TEST-4" })');    // révision 2
+    porteB(1).ouvrir();                                // ⬅️ la réponse FEUILLE DÉPASSÉE revient
+    await flush();
+    verifier(feuille(ctx2).indexOf(NOM_NOUVEAU) === -1,
+      'G-P ⑪ ⭐⭐ BLOQUANT : la réponse FEUILLE dépassée n\'a PAS repeint l\'écran');
+    verifier(feuille(ctx2).indexOf('rechargement') !== -1,
+      'G-P ⑫ ⭐ l\'écran est resté neutre pendant le rattrapage');
+    verifier(ctx2.autorisationRevisionLue === 0,
+      'G-P ⑬ ⛔ et la dette est conservée');
+
+    porteB(2).ouvrir();
+    await laisserTourner(ctx2);
+    verifier(feuille(ctx2).indexOf(NOM_TROISIEME) !== -1,
+      'G-P ⑭ ⭐ la feuille finale montre uniquement la DERNIÈRE valeur');
+    verifier(ctx2.autorisationRevisionLue === ctx2.autorisationRevision,
+      'G-P ⑮ et la dette est soldée');
+  }
+
   /* ==== G-E — INVENTAIRE : toute action est classée, exactement une fois */
   {
     const dossierJs = path.join(RACINE, 'frontend/js');
@@ -661,10 +932,13 @@ function verifier(condition, libelle) {
     const C = ctx.ACTIONS_AUTORISATION_SANS_IMPACT;
 
     const actions = new Set();
+    const dynamiques = [];
     fichiers.forEach(function (f) {
-      const src = fs.readFileSync(path.join(dossierJs, f), 'utf8');
-      let m; const re = /ecrireAdmin\(\s*'([^']+)'/g;
-      while ((m = re.exec(src)) !== null) actions.add(m[1]);
+      const src = sansCommentaires(fs.readFileSync(path.join(dossierJs, f), 'utf8'));
+      appelsA(src, 'ecrireAdmin').forEach(function (a) {
+        if (a.dynamique) { dynamiques.push(f + ' → ' + a.action); return; }
+        actions.add(a.action);
+      });
     });
     verifier(actions.size > 20, 'G-E ① l\'inventaire a bien trouvé les actions (' + actions.size + ')');
 
@@ -681,6 +955,31 @@ function verifier(condition, libelle) {
     verifier(doubles.length === 0,
       'G-E ③ ⭐ aucune action classée DEUX FOIS' +
       (doubles.length ? ' — en double : ' + doubles.join(', ') : ''));
+    verifier(dynamiques.length === 0,
+      'G-E ④ ⭐⭐ BLOQUANT : aucune ACTION DYNAMIQUE non inventoriable' +
+      (dynamiques.length ? ' — trouvée(s) : ' + dynamiques.join(' ; ') +
+        ' — une action calculée ne peut pas être classée : écris-la en toutes lettres, ' +
+        'ou inscris une exception motivée' : ''));
+
+    // ⭐ PREUVE NOMMÉE que l'analyseur reconnaît bien les TROIS formes de littéral statique et
+    //   refuse le reste — sans quoi « aucune action dynamique » ne voudrait rien dire.
+    const temoin = [
+      'ecrireAdmin(\'ACTION_SIMPLE\', {});',
+      'ecrireAdmin("ACTION_DOUBLE", {});',
+      'ecrireAdmin(`ACTION_GABARIT`, {});',
+      'ecrireAdmin(actionCalculee, {});',
+      'ecrireAdmin(`prefixe${x}`, {});',
+      'async function ecrireAdmin(action, data) {}'
+    ].join('\n');
+    const lus = appelsA(temoin, 'ecrireAdmin');
+    verifier(lus.length === 5,
+      'G-E ⑤ les 5 APPELS sont vus, la déclaration est écartée (constaté ' + lus.length + ')');
+    verifier(lus[0].action === 'ACTION_SIMPLE' && !lus[0].dynamique &&
+             lus[1].action === 'ACTION_DOUBLE' && !lus[1].dynamique &&
+             lus[2].action === 'ACTION_GABARIT' && !lus[2].dynamique,
+      'G-E ⑥ ⭐ guillemets SIMPLES, DOUBLES et gabarit statique : tous les trois classés');
+    verifier(lus[3].dynamique && lus[4].dynamique,
+      'G-E ⑦ ⭐ une variable et un gabarit INTERPOLÉ sont refusés comme dynamiques');
   }
 
   /* ==== G-J — ANTI-CONTOURNEMENT du point de passage =================== */
@@ -700,33 +999,31 @@ function verifier(condition, libelle) {
       'admin-sponsors.js|supprimerSponsor': 'écriture historique — onglet Sponsors',
       'admin-sponsors.js|viderMesuresSponsors': 'écriture historique — onglet Mesures',
       'admin-feuille-jour.js|envoyerFeuilleJour': 'écriture historique — envoi d\'emails, aucune donnée de la feuille',
-      'saisie.js|enregistrerScore': 'clé SCORES, autre page — le score ne change ni terrain ni catégorie'
+      'saisie.js|enregistrerScore': 'clé SCORES, autre page — le score ne change ni terrain ni catégorie',
+      /* ⭐ LE relais générique : c'est `ecrireAdmin` elle-même, le point de passage. Son action
+         est forcément dynamique — c'est sa raison d'être. Elle est donc inscrite NOMMÉMENT
+         plutôt qu'exemptée par une règle générale sur les appels dynamiques. */
+      'admin.js|dyn:action': 'le relais générique de ecrireAdmin — c\'est LUI le point de passage'
     };
     const dossierJs = path.join(RACINE, 'frontend/js');
     const fichiers = fs.readdirSync(dossierJs).filter(function (f) { return /\.js$/.test(f); });
     const hors = [];
-    let vues = 0;
+    const vues = new Set();
     fichiers.forEach(function (f) {
       if (f === 'api.js') return;                       // c'est la définition elle-même
-      const src = fs.readFileSync(path.join(dossierJs, f), 'utf8');
-      let m; const re = /apiPostProtege\(\s*'([^']+)'/g;
-      while ((m = re.exec(src)) !== null) {
-        vues++;
-        if (EXCEPTIONS[f + '|' + m[1]]) continue;
-        hors.push(f + ' → ' + m[1]);
-      }
+      const src = sansCommentaires(fs.readFileSync(path.join(dossierJs, f), 'utf8'));
+      appelsA(src, 'apiPostProtege').forEach(function (a) {
+        const cle = f + '|' + (a.dynamique ? 'dyn:' : '') + a.action;
+        vues.add(cle);
+        if (!EXCEPTIONS[cle]) hors.push(f + ' → ' + (a.dynamique ? 'action dynamique « ' : '« ') +
+          a.action + ' »');
+      });
     });
-    // L'appel générique de `ecrireAdmin` ne porte pas de littéral : il n'apparaît donc pas.
-    verifier(vues >= 10, 'G-J ① l\'inventaire des appels directs est complet (' + vues + ')');
+    verifier(vues.size >= 10, 'G-J ① l\'inventaire des appels directs est complet (' + vues.size + ')');
     verifier(hors.length === 0,
       'G-J ② ⭐⭐ BLOQUANT : aucune écriture ne contourne ecrireAdmin hors exceptions inventoriées' +
       (hors.length ? ' — trouvé : ' + hors.join(' ; ') : ''));
-    const inutiles = Object.keys(EXCEPTIONS).filter(function (cle) {
-      const f = cle.split('|')[0], a = cle.split('|')[1];
-      if (!fs.existsSync(path.join(dossierJs, f))) return true;
-      return fs.readFileSync(path.join(dossierJs, f), 'utf8')
-        .indexOf('apiPostProtege(\'' + a + '\'') === -1;
-    });
+    const inutiles = Object.keys(EXCEPTIONS).filter(function (cle) { return !vues.has(cle); });
     verifier(inutiles.length === 0,
       'G-J ③ ⭐ aucune exception PÉRIMÉE ne reste inscrite' +
       (inutiles.length ? ' — à retirer : ' + inutiles.join(', ') : ''));

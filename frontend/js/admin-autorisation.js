@@ -493,20 +493,36 @@ function ecritureImpacteAutorisation(action, data, reponse) {
  *  c'est ce qui garantit que `initAdmin`, `onReinitialiser` (B2-0.3/0.4, validé en réel) et
  *  `onEnregistrerAutorisation` ne changent pas d'un iota.
  *
+ *  ⭐ `revisionCible` — LE CONTRÔLE DE FRAÎCHEUR, et il ferme un trou TEMPOREL que l'état
+ *  final ne montre pas : pendant qu'une lecture voyage sur le réseau, une écriture peut
+ *  survenir. Quand la réponse arrive, elle décrit alors un état DÉJÀ DÉPASSÉ. La peindre —
+ *  même une fraction de seconde, même si un second tour la corrige ensuite — remettrait à
+ *  l'écran une valeur que le classeur n'a plus. ⛔ C'est exactement ce que le fail-closed
+ *  interdit. On contrôle donc la fraîcheur APRÈS l'attente et AVANT tout rendu.
+ *
  *  @param {Object} [opt] — `preserverSaisie` : ne pas reconstruire le formulaire `org_*` quand
- *    une saisie y est en cours, ni quand le réseau a échoué (synchronisation automatique). */
+ *    une saisie y est en cours, ni quand le réseau a échoué (synchronisation automatique).
+ *    `revisionCible` : n'écrire à l'écran que si cette révision est toujours la plus récente. */
 async function majAutorisation(opt) {
   opt = opt || {};
   const zoneSaisie = document.getElementById('autorisation-saisie');
   const zoneFeuille = document.getElementById('autorisation-feuille');
   if (!zoneSaisie || !zoneFeuille) return { ok: false, motif: 'zones-absentes' };
+  // ⭐ Une réponse est DÉPASSÉE si une écriture est arrivée depuis le départ de la requête.
+  //   ⛔ Sans `revisionCible` (appels historiques : initAdmin, reset, enregistrement du
+  //   dossier), ce contrôle est inactif — le comportement d'avant est intact.
+  const depassee = function () {
+    return opt.revisionCible != null && opt.revisionCible !== autorisationRevision;
+  };
   let dossier = null;
   let reseauOk = true;
   try {
     const rep = await apiPostProtege('getDossierAutorisation', {}, 'admin', 'admin');
+    if (depassee()) return { ok: false, motif: 'revision-depassee' };
     dossier = (rep && rep.dossier) || null;
     zoneFeuille.innerHTML = rendreFeuilleAutorisation(dossier);
   } catch (e) {
+    if (depassee()) return { ok: false, motif: 'revision-depassee' };
     reseauOk = false;
     zoneFeuille.innerHTML = '<div class="ffr-bloc ffr-neutre">Feuille de report indisponible ' +
       '(connecte-toi avec la clé admin).</div>';
@@ -556,12 +572,25 @@ async function majAutorisationSiObsolete() {
       if (typeof lireConfigAdmin === 'function') {
         // La config est relue ICI : `rendreSaisieAutorisation` lit `configCourante`, et
         // l'appelant ne l'a pas forcément encore rafraîchie.
-        try { configCourante = await lireConfigAdmin(); }
+        // ⭐ On la lit dans une VARIABLE LOCALE : un instantané pris pour une cible entre-temps
+        //   dépassée ne doit JAMAIS écraser une config plus récente — l'écrire installerait
+        //   silencieusement du passé dans l'état global, hors de toute zone d'affichage.
+        let instantaneConfig;
+        try { instantaneConfig = await lireConfigAdmin(); }
         catch (e) { return { relue: tours > 1, motif: 'config-indisponible', tours: tours }; }
+        if (cible !== autorisationRevision) continue;  // ⛔ instantané périmé : on le jette
+        configCourante = instantaneConfig;
       }
-      const bilan = await majAutorisation({ preserverSaisie: true });
+      const bilan = await majAutorisation({ preserverSaisie: true, revisionCible: cible });
+      // ⛔ « Dépassée » n'est PAS une panne : rien n'a été peint, la dette est intacte, et on
+      //   repart immédiatement sur la dernière révision connue.
+      if (bilan.motif === 'revision-depassee') continue;
       if (!bilan.ok) return { relue: tours > 1, motif: bilan.motif, tours: tours };
-      autorisationRevisionLue = cible;                 // ⛔ la CIBLE, jamais autorisationRevision
+      // ⛔ La CIBLE, jamais `autorisationRevision`. ⚠️ Depuis le contrôle de fraîcheur, cette
+      //   ligne n'est atteinte QUE lorsque les deux valeurs sont égales — elles sont donc
+      //   aujourd'hui interchangeables. On écrit `cible` parce qu'elle dit l'INTENTION, et
+      //   qu'elle redeviendrait la seule correcte si le contrôle de fraîcheur était affaibli.
+      autorisationRevisionLue = cible;
       dernier = { relue: true, revision: cible, saisie: bilan.saisie, tours: tours };
     }
     if (autorisationRevision !== autorisationRevisionLue) {
@@ -573,7 +602,22 @@ async function majAutorisationSiObsolete() {
   finally { autorisationRelectureEnCours = null; }
 }
 
-/** Enregistre les champs saisis (org_*), puis recharge la config et la feuille. */
+/** Enregistre les champs saisis (org_*), puis recharge la config et la feuille.
+ *
+ *  ⚠️ C'est un CHEMIN PROPRE (catégorie B) : le crochet commun de `ecrireAdmin` ignore
+ *  volontairement cette action, puisqu'elle se rafraîchit elle-même. Elle doit donc porter
+ *  elle-même la DETTE, et honnêtement.
+ *
+ *  🔬 Le défaut corrigé ici : la dette était soldée INCONDITIONNELLEMENT, sans regarder le
+ *  bilan de `majAutorisation`. Scénario réel : les champs `org_*` partent, le serveur les
+ *  écrit, la feuille devient donc fausse — puis `getDossierAutorisation` échoue. La dette
+ *  était pourtant marquée réglée : ⛔ plus aucun nouvel essai, jamais.
+ *
+ *  ⭐ Désormais : on note la dette AVANT de tenter, et on ne la solde QUE sur une relecture
+ *  RÉELLEMENT réussie. En cas de panne, la feuille reste invalidée et la prochaine ouverture
+ *  de l'écran retentera par le mécanisme normal de B2-0.5.
+ *  ⛔ L'ENREGISTREMENT MÉTIER, LUI, RESTE RÉUSSI : un rafraîchissement raté n'est pas une
+ *  écriture ratée, et le message le dit sans mentir dans un sens ni dans l'autre. */
 async function onEnregistrerAutorisation() {
   const form = document.getElementById('form-autorisation');
   const message = document.getElementById('autorisation-message');
@@ -585,13 +629,38 @@ async function onEnregistrerAutorisation() {
   const bouton = document.getElementById('bouton-enregistrer-autorisation');
   await avecBoutonOccupe(bouton, message, async function () {
     await ecrireAdmin('enregistrerDossierAutorisation', data);
-    // La config a changé : on la recharge (source de vérité pour la saisie), puis on ré-assemble.
-    if (typeof lireConfigAdmin === 'function') configCourante = await lireConfigAdmin();
-    await majAutorisation();
-    // ⭐ B2-0.5 — la feuille vient du serveur à l'instant : si une dette de révision traînait,
-    //   elle est soldée. Sans cette ligne, la prochaine ouverture paierait une route pour rien.
-    if (typeof autorisationRevision !== 'undefined') autorisationRevisionLue = autorisationRevision;
-    afficherMessage(message, '✅ Champs enregistrés.', 'ok');
+    // ⭐ L'écriture a réussi : la feuille affichée est FAUSSE à cet instant. On l'efface et on
+    //   note la dette AVANT de tenter le chemin propre — si celui-ci échoue, elle subsistera.
+    signalerAutorisationObsolete();
+    const cible = autorisationRevision;
+    let relueOk = false, cibleDepassee = false;
+    try {
+      // La config a changé : on la recharge (source de vérité pour la saisie), puis on ré-assemble.
+      // ⭐ MÊME PRINCIPE DE CIBLE que dans `majAutorisationSiObsolete`, et pour la même raison :
+      //   ce chemin attend lui aussi le réseau, donc une autre écriture peut le doubler.
+      if (typeof lireConfigAdmin === 'function') {
+        const instantaneConfig = await lireConfigAdmin();
+        if (cible !== autorisationRevision) cibleDepassee = true;   // ⛔ instantané périmé
+        else configCourante = instantaneConfig;
+      }
+      if (!cibleDepassee) {
+        const bilan = await majAutorisation({ revisionCible: cible });
+        if (bilan && bilan.motif === 'revision-depassee') cibleDepassee = true;
+        else relueOk = !!(bilan && bilan.ok);
+      }
+    } catch (e) { relueOk = false; }
+    // ⛔ La dette n'est soldée QUE sur une relecture RÉELLEMENT réussie et NON dépassée.
+    if (relueOk) autorisationRevisionLue = cible;
+    // ⭐ « Dépassée » n'est PAS une panne : une écriture plus récente existe déjà. L'organisateur
+    //   est sur cet écran — on rattrape TOUT DE SUITE avec le mécanisme normal, plutôt que
+    //   d'attendre une navigation hypothétique.
+    if (cibleDepassee && typeof majAutorisationSiObsolete === 'function') {
+      majAutorisationSiObsolete().catch(function () { /* la feuille garde son message */ });
+    }
+    // ⛔ Dans TOUS ces cas l'écriture serveur est acquise : on ne laisse jamais croire l'inverse.
+    afficherMessage(message, (relueOk || cibleDepassee) ? '✅ Champs enregistrés.'
+      : '✅ Champs enregistrés. ⚠️ La feuille n\'a pas pu être relue (réseau) : elle se remettra ' +
+        'à jour toute seule à la prochaine ouverture de cet écran.', 'ok');
   });
 }
 

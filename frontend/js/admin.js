@@ -159,7 +159,14 @@ let parkingDataURI = '';
 /* Liste des clubs invités (chargée avec la clé admin — jamais dans les données publiques). */
 let clubsInvitesCourants = [];
 
-/* Toute écriture depuis l'admin passe par ici : exige la clé ADMIN (voir api.js). */
+/* Point de passage COMMUN de la majorité des écritures de l'admin : exige la clé ADMIN
+ * (voir api.js).
+ * ⚠️ « Commun », et non « unique » — la nuance a de l'importance depuis que B2-0.5 s'appuie
+ * dessus : l'inventaire du 2026-08-25 a trouvé CINQ écritures historiques qui la contournent
+ * (partenaires, feuille de journée). Aucune ne touche la « Demande d'autorisation », ce qui
+ * rend l'architecture valide — mais elle l'était par chance, pas par contrat. Les exceptions
+ * sont désormais inventoriées et verrouillées par le contrôle G-J
+ * (tests/frontend-autorisation-sync.test.js) : toute NOUVELLE écriture doit passer par ici. */
 async function ecrireAdmin(action, data) {
   const res = await apiPostProtege(action, data, 'admin', 'admin');
   // ⭐ M1-B2 / B2-0.5 — l'écriture a RÉUSSI (apiPost LÈVE sur {error}, voir api.js:100) : si elle

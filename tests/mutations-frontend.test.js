@@ -188,13 +188,23 @@ const MUTATIONS = [
       '      const cible = autorisationRevision; autorisationRevisionLue = cible;')
   },
   {
-    // ⭐⭐ LE PIÈGE EXACT que le compteur de révision existe pour éviter.
-    nom: 'M-5 bis — on inscrit la révision COURANTE au lieu de la CIBLE capturée',
+    // ⭐⭐ LA CIBLE N'EST PLUS TRANSMISE : `depassee()` devient inactive, et une réponse
+    //   dépassée repeint l'écran. C'est l'oubli le plus naturel de tous — on ajoute un
+    //   paramètre, on oublie de le passer — et il est invisible sur l'état FINAL.
+    //
+    //   ⚠️ CETTE MUTATION EN REMPLACE UNE AUTRE, et la raison mérite d'être écrite : elle
+    //   portait d'abord sur `autorisationRevisionLue = cible` → `= autorisationRevision`.
+    //   Depuis le contrôle de fraîcheur, cette affectation n'est atteinte QUE lorsque les deux
+    //   valeurs sont égales, et aucune attente ne les sépare : les deux écritures sont devenues
+    //   PROVABLEMENT identiques. ⛔ Un mutant équivalent ne prouve rien — le garder aurait
+    //   affiché un « détecté » de complaisance. La forme `= cible` reste néanmoins écrite : elle
+    //   dit l'intention, et redevient la seule correcte si le contrôle de fraîcheur bougeait.
+    nom: 'M-5 bis — la CIBLE n\'est plus transmise à la relecture',
     garde: 'autorisation',
-    defaut: 'une écriture arrivée pendant la lecture serait comptée lue sans avoir été lue',
+    defaut: 'le contrôle de fraîcheur devient inactif : une réponse dépassée repeint l\'écran',
     appliquer: (b) => remplacer(b, 'frontend/js/admin-autorisation.js',
-      '      autorisationRevisionLue = cible;                 // ⛔ la CIBLE, jamais autorisationRevision',
-      '      autorisationRevisionLue = autorisationRevision;')
+      'await majAutorisation({ preserverSaisie: true, revisionCible: cible })',
+      'await majAutorisation({ preserverSaisie: true })')
   },
   {
     nom: 'M-5 ter — le RATTRAPAGE automatique est supprimé (un seul tour)',
@@ -288,6 +298,104 @@ const MUTATIONS = [
     appliquer: (b) => remplacer(b, 'frontend/js/admin-autorisation.js',
       'if (cles.length && cles.every(function (c) { return sansImpact.indexOf(c) !== -1; })) return false;',
       'if (cles.length && cles.some(function (c) { return sansImpact.indexOf(c) !== -1; })) return false;')
+  },
+
+  /* ---- B2-0.5, second tour : les trois trous trouvés par la revue du commit 8b07a94 ---- */
+  {
+    // ⭐ CHEMIN PROPRE : `enregistrerDossierAutorisation` est en catégorie B, le crochet commun
+    //   l'ignore. Elle doit donc porter sa dette elle-même, et ne la solder que sur un succès.
+    nom: 'M-14 — le chemin propre solde la dette SANS regarder le bilan',
+    garde: 'autorisation',
+    defaut: 'org_* enregistrés + panne réseau ⇒ dette effacée, plus jamais de nouvel essai',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-autorisation.js',
+      '    if (relueOk) autorisationRevisionLue = cible;',
+      '    autorisationRevisionLue = cible;')
+  },
+  {
+    // ⭐⭐ LE TROU TEMPOREL : l'état FINAL était bon, l'état INTERMÉDIAIRE ne l'était pas.
+    nom: 'M-15 — le contrôle de fraîcheur avant rendu est retiré',
+    garde: 'autorisation',
+    defaut: 'une réponse déjà dépassée repeindrait l\'écran avec une valeur que le classeur n\'a plus',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-autorisation.js',
+      '    if (depassee()) return { ok: false, motif: \'revision-depassee\' };\n' +
+      '    dossier = (rep && rep.dossier) || null;',
+      '    dossier = (rep && rep.dossier) || null;')
+  },
+  {
+    // ⛔ Ce trou-là ne se voit sur AUCUN écran : il installe du passé dans l'état global.
+    nom: 'M-16 — un instantané de config DÉPASSÉ est installé quand même',
+    garde: 'autorisation',
+    defaut: 'configCourante reculerait silencieusement, hors de toute zone d\'affichage',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-autorisation.js',
+      '        if (cible !== autorisationRevision) continue;  // ⛔ instantané périmé : on le jette\n', '')
+  },
+  {
+    nom: 'M-16 bis — « révision dépassée » est traitée comme une PANNE (on abandonne)',
+    garde: 'autorisation',
+    defaut: 'la dernière révision ne serait jamais lue : la boucle sortirait au lieu de repartir',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-autorisation.js',
+      '      if (bilan.motif === \'revision-depassee\') continue;\n', '')
+  },
+  {
+    // ⭐ L'inventaire ne doit pas dépendre des guillemets employés.
+    nom: 'M-17 — une action non classée écrite en GUILLEMETS DOUBLES',
+    garde: 'autorisation',
+    defaut: 'l\'inventaire annoncerait « complet » alors qu\'il n\'a pas vu l\'appel',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-equipes.js',
+      'async function', 'async function __mutationGuillemetsDoubles() {\n' +
+      '  return ecrireAdmin("ACTION_TEST_DOUBLE", {});\n}\n\nasync function')
+  },
+  {
+    nom: 'M-17 bis — une action non classée écrite en GABARIT (backticks)',
+    garde: 'autorisation',
+    defaut: 'idem : un appel invisible pour un inventaire qui ne lit que les apostrophes',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-equipes.js',
+      'async function', 'async function __mutationGabarit() {\n' +
+      '  return ecrireAdmin(`ACTION_TEST_GABARIT`, {});\n}\n\nasync function')
+  },
+  {
+    nom: 'M-17 ter — une action DYNAMIQUE (variable) est passée à ecrireAdmin',
+    garde: 'autorisation',
+    defaut: 'une action calculée est inclassable : elle doit être refusée, pas ignorée',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-equipes.js',
+      'async function', 'async function __mutationDynamique(actionCalculee) {\n' +
+      '  return ecrireAdmin(actionCalculee, {});\n}\n\nasync function')
+  },
+  {
+    nom: 'M-18 — un apiPostProtege direct écrit en GUILLEMETS DOUBLES',
+    garde: 'autorisation',
+    defaut: 'le contournement du point de passage échapperait au garde-fou G-J',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-equipes.js',
+      'async function', 'async function __mutationContournementDouble() {\n' +
+      '  return apiPostProtege("ACTION_TEST_DOUBLE", {}, \'admin\', \'admin\');\n}\n\nasync function')
+  },
+
+  /* ---- B2-0.5, troisième tour : la concurrence DANS le chemin propre ---- */
+  {
+    // ⭐ Le chemin propre attend le réseau lui aussi : une autre écriture peut le doubler.
+    nom: 'M-19 — le chemin propre installe une config DÉPASSÉE',
+    garde: 'autorisation',
+    defaut: 'une config ancienne redeviendrait l\'état global, hors de toute zone d\'affichage',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-autorisation.js',
+      '        if (cible !== autorisationRevision) cibleDepassee = true;   // ⛔ instantané périmé\n' +
+      '        else configCourante = instantaneConfig;',
+      '        configCourante = instantaneConfig;')
+  },
+  {
+    nom: 'M-19 bis — le chemin propre ne transmet PAS sa cible à la relecture',
+    garde: 'autorisation',
+    defaut: 'une réponse de feuille déjà dépassée repeindrait l\'écran depuis le chemin propre',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-autorisation.js',
+      'await majAutorisation({ revisionCible: cible })',
+      'await majAutorisation()')
+  },
+  {
+    nom: 'M-19 ter — le rattrapage du chemin propre est retiré',
+    garde: 'autorisation',
+    defaut: 'la dernière révision attendrait une navigation hypothétique pour être vue',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin-autorisation.js',
+      '    if (cibleDepassee && typeof majAutorisationSiObsolete === \'function\') {\n' +
+      '      majAutorisationSiObsolete().catch(function () { /* la feuille garde son message */ });\n    }\n', '')
   }
 ];
 
@@ -332,26 +440,48 @@ try {
     // ⭐ On lance le garde-fou tel qu'il est dans la COPIE, contre la copie : pour les mutations
     //   de produit il est identique à celui du dépôt ; pour F-T, c'est justement lui qu'on mute.
     const garde = GARDES[mutation.garde || 'reset'];
-    let detectee = false, resume = '';
+    let detectee = false, resume = '', sortie = '', erreur = '';
     try {
-      execFileSync(process.execPath, [path.join(copie, 'tests', garde)],
-        { env: Object.assign({}, process.env, { RACINE_TOURNOI_R92: copie }), encoding: 'utf8' });
+      sortie = execFileSync(process.execPath, [path.join(copie, 'tests', garde)],
+        { env: Object.assign({}, process.env, { RACINE_TOURNOI_R92: copie }),
+          encoding: 'utf8', timeout: 120000 });
     } catch (e) {
-      const sortie = String(e.stdout || '');
-      const lignesEchec = sortie.split('\n')
-        .filter((l) => l.indexOf('ÉCHEC') !== -1 && l.indexOf('Échecs :') === -1)
-        .map((l) => l.trim());
-      // ⚠️ UN PLANTAGE N'EST PAS UNE DÉTECTION, et ce contrôle a déjà servi : une fois, un
-      //    fichier manquant dans la copie faisait planter le garde-fou à CHAQUE mutation —
-      //    « 10/10 détectées » ne prouvait alors strictement rien. On exige donc au moins une
-      //    ligne ÉCHEC, c'est-à-dire une assertion qui a VRAIMENT mordu.
-      if (!lignesEchec.length) {
-        throw new Error('Le garde-fou a planté au lieu d\'échouer sur une assertion — la ' +
-          'mutation « ' + mutation.nom + ' » ne prouve RIEN.\n' + sortie.slice(-1200) +
-          String(e.stderr || '').slice(-1200));
-      }
+      sortie = String(e.stdout || '');
+      erreur = String(e.stderr || '');
+    }
+
+    // ⭐ TROIS ISSUES POSSIBLES, ET NON DEUX — la troisième a bien failli passer pour un succès.
+    //
+    //  ⚠️ UN PLANTAGE N'EST PAS UNE DÉTECTION : une fois, un fichier manquant dans la copie
+    //  faisait planter le garde-fou à CHAQUE mutation — « 10/10 détectées » ne prouvait alors
+    //  strictement rien. D'où l'exigence d'au moins une ligne ÉCHEC, c'est-à-dire une assertion
+    //  qui a VRAIMENT mordu.
+    //
+    //  ⚠️ ET UN BLOCAGE N'EST PAS UN SUCCÈS, ce qui est plus retors : une mutation qui fait
+    //  ATTENDRE une promesse jamais tenue vide la file de Node, qui sort alors avec le code 0
+    //  — sans avoir rien conclu. Le harnais lisait ce silence comme « mutation passée
+    //  inaperçue », c'est-à-dire l'inverse exact de la vérité. On exige donc désormais la
+    //  LIGNE DE BILAN : si elle manque, le garde-fou ne s'est pas terminé, et on refuse de
+    //  conclure quoi que ce soit.
+    //
+    //  ⛔ On ne se fie donc PAS au code de sortie : seul le contenu de la sortie fait foi.
+    // ⚠️ ON EXIGE UNE LIGNE D'ASSERTION, pas le mot « ÉCHEC » quelque part : la ligne de BILAN
+    //    dit « 0 ÉCHEC(S) » et contient donc ce mot À CHAQUE EXÉCUTION, même parfaitement verte.
+    //    ⛔ Un filtre qui se contente de le chercher déclare TOUTES les mutations détectées —
+    //    le harnais dirait alors exactement ce qu'on veut entendre, et ne prouverait plus rien.
+    //    Les vraies lignes commencent par « ÉCHEC » (voir `verifier` des deux garde-fous).
+    const lignesEchec = sortie.split('\n')
+      .map((l) => l.trim())
+      .filter((l) => /^ÉCHEC\s/.test(l));
+    const bilanPresent = /frontend — \d+\/\d+ OK/.test(sortie);
+
+    if (lignesEchec.length) {
       detectee = true;
       resume = lignesEchec.slice(0, 3).join('\n        ');
+    } else if (!bilanPresent) {
+      throw new Error('Le garde-fou ne s\'est pas TERMINÉ (plantage ou blocage) au lieu ' +
+        'd\'échouer sur une assertion — la mutation « ' + mutation.nom + ' » ne prouve RIEN.\n' +
+        sortie.slice(-1200) + erreur.slice(-1200));
     }
 
     console.log((detectee ? '  DÉTECTÉE      ' : '  ⛔ PASSÉE      ') + mutation.nom);
