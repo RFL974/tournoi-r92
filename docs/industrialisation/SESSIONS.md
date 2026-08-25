@@ -8833,3 +8833,186 @@ de code ajoutée**, `majVerrouPublier();` · ⛔ **aucune donnée métier créé
 > ⚠️ **Les conditions 4 et 5 de R-098 demanderont un état permettant réellement de publier.**
 > ⛔ **Ne recréer aucune donnée pour cela sans décision explicite** — la manière d'obtenir cette
 > preuve sans violer le repère M1-B est un sujet à trancher séparément.
+
+---
+
+## SESSION 23 — 🏁 **M1-B2 / B2-0 : DU HARNAIS AU RESET RÉEL, PUIS À LA SYNCHRONISATION DE LA DEMANDE D'AUTORISATION** *(2026-08-25)*
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-25 |
+| **Objectif** | Terminer le micro-lot **B2-0** *(sécurisation du reset)*, l'intégrer, le publier, **le valider en conditions réelles**, puis **clôturer sa documentation** |
+| **Étape du plan** | **ÉTAPE 5** — implémentation par petites unités *(chantier **M1-B2**, `PLAN.md` §16.5)* |
+| **Résultat** | ✅ **Objectif atteint** — ⛔ **avec des limites explicitement inscrites** *(voir §23.7)* |
+
+---
+
+### 23.1 — Ce qui a été fait, dans l'ordre
+
+| Étape | Ce qu'elle apporte |
+|---|---|
+| **B2-0** *(`7f49fc1`)* | Le **cœur serveur** : `ClubsInvites` cesse d'être vidé au jugé. Deux familles nommées — **CONTACT** *(durable)* et **ENGAGEMENT** *(l'édition qui s'achève)* — et la **décision** *(« quelles colonnes vider ? »)* séparée de son **effet**, pour être testable sans Google. `tournoi_id` entre dans les champs effacés |
+| **B2-0.1** *(`1ed16c9`)* | Le **navigateur** cessait de croire à ce qu'il avait déjà en mémoire après un reset : les clubs sont relus, **dans le bon ordre**, et ⭐ **si la relecture échoue, aucune participation ne survit à l'écran** |
+| **B2-0.2** *(`43e17d9`)* | Le garde-fou est **aligné sur le cycle réel des jetons** — il testait un comportement qui n'existait plus |
+| **B2-0.3** *(`0d30ac0`)* | La **demande d'autorisation FFR** restait affichée avec les valeurs de l'édition passée après un reset. Elle est **purgée** |
+| **B2-0.4** *(`380c92b`)* | Et **si ce ré-affichage échoue**, la page est **rechargée** plutôt que laissée dans un état mi-ancien mi-neuf |
+| **B2-0.5** *(`8b07a94` puis `8dcff2b`)* | ⭐ **Le défaut trouvé EN ESSAYANT** *(§23.3)* : la feuille FFR ne se mettait à jour qu'au rechargement du navigateur. Elle est désormais **invalidée immédiatement** et **relue au moment où on la regarde**, avec des **compteurs de révision** qui empêchent qu'une réponse en retard ne repeigne l'écran |
+
+> ⭐ **Les sept commits forment une ligne droite** : `7f49fc1` → `1ed16c9` → `43e17d9` → `0d30ac0`
+> → `380c92b` → `8b07a94` → **`8dcff2b`**. ⛔ **Aucun commit de fusion, aucun SHA réécrit** — les
+> deux intégrations dans `main` ont été faites en **fast-forward strict** *(`git merge --ff-only`)*.
+
+---
+
+### 23.2 — ⚡ La validation réelle du reset — ce qu'on est allé chercher, et ce qu'on a vu
+
+Le classeur en service a été **réellement réinitialisé** le 2026-08-25, sur un **backend redéployé
+en version 157**. ⛔ **Ce n'est pas une lecture de code : c'est un relevé avant / après.**
+
+| Ce qui était attendu | Ce qui a été constaté |
+|---|---|
+| Les équipes, poules et matchs disparaissent | ✅ `Equipes`, `Poules`, `Matchs` **vides** |
+| ⭐ **Le carnet d'adresses SURVIT** | ✅ Les clubs sont **toujours là**, avec leurs contacts |
+| ⛔ Aucun **statut de participation** hérité *(R-100)* | ✅ **aucun** — un club « Accepté » l'an dernier **redevient invitable** |
+| ⛔ Aucun **effectif, détail ni alerte** hérité *(R-099)* | ✅ **aucun** — plus de *« Éducateurs annoncés : 8 »* sur un tournoi neuf |
+| ⛔ `tournoi_id` effacé | ✅ **effacé** |
+| Les **liens d'invitation** de l'édition passée sont **renouvelés** | ✅ jeton **neuf** après relecture admin, **différent** de l'ancien |
+
+> ⭐ **Et le meilleur constat du lot n'est pas une cellule, c'est un comportement.** Un **ancien lien
+> d'invitation**, rouvert **depuis l'ancien email**, affiche **« Lien invalide ou expiré. »** ⛔ Ce
+> n'est pas *« la valeur a changé dans le classeur »* : c'est **la porte qui refuse de s'ouvrir**.
+
+> ⛔ **Un résultat attendu qui reste un défaut : R-101.** Le **découpage des terrains a SURVÉCU** au
+> reset — ⭐ **et c'est ce qu'on attendait**. B2-0 l'a **figé par un test témoin** pour que **B2-3**
+> parte d'un comportement connu. **Figer n'est pas corriger : R-101 RESTE OUVERT.**
+
+---
+
+### 23.3 — 🔴 Le défaut que la validation réelle a fait sortir — et pourquoi il n'a pas été rustiné
+
+Après la publication de B2-0.3 / B2-0.4, Romain a saisi un nom de tournoi dans **« Infos du
+tournoi »**, enregistré, puis ouvert **« Demande d'autorisation »** : ⛔ **l'ancienne valeur y était
+toujours**, jusqu'à ce qu'il rafraîchisse son navigateur.
+
+> 🎯 **Le réflexe aurait été d'ajouter une relecture dans l'écran fautif. Romain l'a explicitement
+> refusé**, et il avait raison : ce n'est pas *cet écran* qui est en cause.
+
+**Un audit ciblé a alors classé les 38 actions d'écriture du serveur en trois familles** :
+
+| Famille | Ce qu'on en fait |
+|---|---|
+| **A — elle change la feuille FFR** *(23 actions)* | Poser une **dette de relecture** |
+| **B — chemin propre** *(2 actions)* | L'écran s'occupe **lui-même** de sa relecture |
+| **C — sans impact** *(13 actions)* | ⛔ Ne rien faire |
+
+⭐ **Le classement dépend parfois du CONTENU envoyé, pas seulement de l'action** : enregistrer une
+simple description ne change rien à la feuille FFR, enregistrer une adresse si.
+⛔ **Et la liste des champs « sans impact » est INVERSÉE volontairement** : un champ **inconnu**
+provoque la relecture. **Se tromper coûte une relecture ; l'inverse coûte un dossier faux.**
+
+**Trois principes, tous les trois issus d'une correction demandée par Romain :**
+
+| | |
+|---|---|
+| **Des compteurs, pas un drapeau** | Une relecture **ratée** ne doit pas effacer la dette ; une écriture **arrivée pendant** la relecture ne doit pas être comptée comme lue |
+| ⛔ **Jamais de repeinte périmée** | La fraîcheur est vérifiée **après** la réponse du réseau et **avant** tout affichage — une réponse en retard n'apparaît **jamais**, pas même un instant |
+| ⭐ **Une saisie en cours n'est jamais écrasée** | Ni par une relecture, ni par une panne de réseau |
+
+---
+
+### 23.4 — ⚡ Ce que les garde-fous ont trouvé — dans MES tests, pas dans le produit
+
+**40 mutations** ont été réintroduites une par une dans une copie temporaire du code, pour vérifier
+que les garde-fous les attrapent. ⭐ **Deux sont passées inaperçues au premier passage** — et
+c'étaient de **vrais trous du harnais** : un cas testait un formulaire *déjà modifié* *(donc
+préservé de toute façon)*, et aucun envoi ne **mélangeait** un champ sans impact avec un champ qui
+en a un. Deux contrôles ont été ajoutés.
+
+> 🔴 **Trois pannes SILENCIEUSES du harnais lui-même ont été trouvées et fermées**, et la troisième
+> est la leçon de la session :
+>
+> | Panne | Ce qu'elle produisait |
+> |---|---|
+> | Le garde-fou **plantait** | Lu comme *« mutation non détectée »* |
+> | Le garde-fou **se figeait puis s'arrêtait en annonçant un succès** | ⛔ **L'inverse exact de la vérité** — Node vidait sa file d'attente et sortait sans erreur |
+> | ⭐ **Mon propre filtre comptait la ligne de bilan** | *« 0 ÉCHEC(S) »* contient le mot **ÉCHEC** : le tableau a brièvement affiché **37/37 détectées** en ne prouvant **rien** |
+>
+> 🎯 **Un test vert ne prouve rien tant qu'on ne l'a pas vu ÉCHOUER.** C'est exactement ce que les
+> mutations servent à établir — et il a fallu l'appliquer **au garde-fou lui-même**.
+
+> ⭐ **Une mutation a été RETIRÉE, honnêtement.** Une fois la vérification de fraîcheur en place,
+> l'une des 40 ne changeait **plus rien au comportement** *(un « mutant équivalent »)*. ⛔ **La
+> compter comme détectée aurait été un mensonge de chiffre** : elle a été remplacée par une autre,
+> qui, elle, mord.
+
+---
+
+### 23.5 — ✅ Ce que les gestes ont CONSTATÉ *(`CLAUDE.md` §8 septies)*
+
+| Geste | ✅ L'observation, pas le document |
+|---|---|
+| **Intégration n° 1** *(B2-0.3 + B2-0.4)* | `git merge --ff-only` → `main` sur **`380c92b`** · ⛔ **0 commit de fusion**, **0 SHA réécrit** · publication Pages **run #225**, `verifier` **`success`**, `deploy` **`success`** |
+| **Intégration n° 2** *(B2-0.5, PR **#192** en *draft*)* | Contrôle avant fusion **run #226** *(`pull_request`)* : `verifier` **`success`**, `deploy` **`skipped`** ⭐ *(le verrou C-013 / R-043 fonctionne : une PR ne publie rien)*. Puis `git merge --ff-only` → `main` sur **`8dcff2b`** |
+| **Poussée** | `git ls-remote origin refs/heads/main` = **`8dcff2b`** = `HEAD` · écart **0 / 0** |
+| **Publication** | **Run #227** *(`push`, `main`, `8dcff2b`)* : `verifier` **`success`**, `deploy` **`success`** — ⭐ **le journal de déploiement nomme `8dcff2b`** |
+| **Redéploiement Apps Script** | ⛔ **SANS OBJET pour B2-0.3 / 0.4 / 0.5** — 🔬 `git diff 380c92b..8dcff2b -- backend/` est **vide**. La **version 157**, collée pour la part serveur de B2-0, **couvre tout le backend du lot** |
+| **Comportement en production** | ✅ **CONSTATÉ pour le reset et pour la synchronisation** *(§23.2 et §23.6)*, ⛔ **jamais pour les scénarios de panne** *(§23.7)* |
+
+> ⚠️ **`ping` reste `ping`.** Une réponse du serveur prouve **qu'il est en vie**, ⛔ **jamais quelle
+> version y est collée**. Les seuls témoins de version sont ceux de
+> [`../deploiement.md`](../deploiement.md).
+
+---
+
+### 23.6 — ⭐ La validation de la synchronisation, en vrai, sans rafraîchir
+
+Un témoin **`TOURNOI TEST SYNC B2-0.5`** a été saisi dans « Infos du tournoi », enregistré,
+⛔ **sans aucun rafraîchissement du navigateur**, puis « Demande d'autorisation » a été ouverte.
+
+| | Résultat |
+|---|---|
+| Après l'enregistrement | ✅ **le témoin apparaît immédiatement** dans la section A.2 |
+| Après un reset, toujours **sans rafraîchir** | ✅ **le témoin a disparu** · **A.2 et A.3 repassent en « manquant »** · **A.4 revient à l'état vide** |
+| ⭐ **Ce qui devait RESTER** | ✅ **A.1 Organisateur reste renseigné** — ⛔ le reset ne touche pas aux données permanentes |
+
+---
+
+### 23.7 — ⛔ CE QUI N'A PAS ÉTÉ FAIT, ET QUI RESTE À FAIRE
+
+| | |
+|---|---|
+| ⛔ **Les scénarios de PANNE n'ont jamais été provoqués en réel** | Le rechargement de secours *(B2-0.4)* et les cas de **concurrence / coupure réseau** *(B2-0.5)* sont établis **par le harnais SEUL**. ⛔ **Aucun n'a été induit en production** — `CLAUDE.md` §13.6 |
+| ⛔ **Aucun jeu de données de tournoi n'a été recréé** | Les deux témoins créés ce jour-là étaient **minimaux** et ont été **effacés par les resets suivants**. Le repère *« DONNÉES DE TOURNOI À RECRÉER »* reste **ACTIF** |
+| ⛔ **R-098 : conditions 4 et 5 toujours hors d'atteinte** | Elles exigent un tournoi exploitable, que le classeur n'a pas |
+| ⛔ **R-101, R-102, R-104, R-105 restent OUVERTS** | R-101 est **figé**, R-105 est **outillé** — ⛔ **ni l'un ni l'autre n'est corrigé**. La structure appartient à **B2-2** et **B2-3** |
+| ⛔ **R-106 : seule sa part « reset » est levée** | `tournoi_id` est effacé, ⛔ **mais toujours renouvelé à chaque génération de planning**. C'est **B2-1** |
+| ⚠️ **R-033 passe à `CORRIGÉ`, ⛔ PAS à `TESTÉ`** | Les **contacts et le poste de secours** sont bien effacés dans le code, ⛔ **sans aucune vérification automatique qui le prouve** |
+| ⛔ **La branche `claude/m1-b2-b2-0-5` n'est PAS supprimée** | Conservée à la demande de Romain |
+
+---
+
+### 23.8 — Chiffres du jour *(⚠️ datés — la source vit ailleurs)*
+
+| | Au 2026-08-25 |
+|---|---|
+| Serveur en service | Apps Script **version 157** |
+| `backend/Code.gs` | **8 517** lignes *(dernière fonction `viderDonnees`, ligne 8512)* |
+| `backend/Tests.gs` | **5 133** lignes *(dernière fonction `testB20_temoinR101TerrainsResteB23`, ligne 5128)* |
+| Bilan **chez Google** | **`R92 — 880/880 OK, 0 FAIL`** |
+| Garde-fous navigateur | `tests/frontend-reinitialisation.test.js` **48/48** · `tests/frontend-autorisation-sync.test.js` **97/97** |
+| Mutations | `tests/mutations-frontend.test.js` — **40/40 détectées, 0 passée inaperçue** |
+| Registre des risques | **108** entrées *(R-001 → R-108, ⛔ aucun numéro sauté)* |
+
+> ⚠️ **Ces chiffres sont ceux de CE JOUR et ne sont pas réécrits ensuite** *(§8 quater)*. Les
+> **repères de redéploiement** *(témoins à contrôler après un collage chez Google)* ont **une seule
+> adresse de référence** : [`../deploiement.md`](../deploiement.md).
+
+---
+
+### 23.9 — Prochaine session recommandée
+
+⏭️ **B2-1 — `edition_id`, le registre `Editions`, et la fin du renouvellement de `tournoi_id`.**
+
+> ⛔ **B2-1 EST ÉLIGIBLE, ET ELLE N'EST PAS DÉMARRÉE** : ni conception, ni implémentation, ni fiche
+> de chantier détaillée. ⭐ **Elle ne démarre qu'après une décision explicite de Romain**
+> *(`CLAUDE.md` §12.4)*.

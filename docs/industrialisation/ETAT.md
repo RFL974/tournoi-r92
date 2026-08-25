@@ -24,11 +24,57 @@
 >
 > ⏳ **Ce repère ne se retire QUE lorsqu'un nouveau jeu aura effectivement été recréé** — et il
 > devra alors dire **par quoi** il a été remplacé.
+>
+> ---
+>
+> ⚡ **ÉTAT AU 2026-08-25 — LE REPÈRE RESTE ACTIF, et sa formulation est précisée.**
+>
+> Deux **témoins minimaux** ont été créés puis réinitialisés ce jour-là pour valider **B2-0** —
+> d'abord un tournoi de contrôle du reset, puis le témoin **`TOURNOI TEST SYNC B2-0.5`**. ⛔ **Ce
+> n'étaient pas des jeux de données de tournoi** : quelques champs d'identité, le strict nécessaire
+> pour éprouver un comportement, ⛔ **et ils ont été effacés par les resets qui suivaient**.
+>
+> ⛔ **AUCUN nouveau jeu complet — catégories, équipes, poules, matchs — n'a été recréé.** Le
+> classeur reste donc **volontairement sans tournoi exploitable**, exactement comme le 2026-08-24.
+>
+> ⚠️ **Conséquence inchangée** : tout contrôle exigeant un planning, un classement ou des scores
+> reste **impossible en l'état** — dont les conditions 4 et 5 de **R-098**.
 
-**Dernière mise à jour** : 2026-08-24 *(soir, suite 10)* — 🏛️ **LE CHANTIER M1-B2 EST OUVERT ET SON
+**Dernière mise à jour** : 2026-08-25 — 🏁 **M1-B2 / B2-0 EST TERMINÉ, INTÉGRÉ, PUBLIÉ ET VALIDÉ
+DANS UN VRAI NAVIGATEUR.** Sept commits *(`7f49fc1` → `8dcff2b`)*, backend **v157** en service,
+**880/880** chez Google, **48/48 + 97/97** de garde-fous frontend, **40/40** mutations,
+`origin/main` = **`8dcff2b`** publié sur GitHub Pages. ⛔ **B2-1 N'EST PAS DÉMARRÉ.**
+
+## 🏁 M1-B2 / B2-0 — SÉCURISATION DU RESET *(clôturé le 2026-08-25)*
+
+| | |
+|---|---|
+| ✅ **État** | 🏁 **TERMINÉ** — intégré à `main` en **fast-forward strict**, ⛔ **aucun commit de fusion, aucun SHA réécrit** |
+| 🔬 **Historique final** | `7f49fc1` *(B2-0)* → `1ed16c9` *(B2-0.1)* → `43e17d9` *(B2-0.2)* → `0d30ac0` *(B2-0.3)* → `380c92b` *(B2-0.4)* → `8b07a94` *(B2-0.5)* → **`8dcff2b`** *(B2-0.5, courses résiduelles)* |
+| ✅ **Backend en service** | Apps Script **version 157** · `Code.gs` **8 517 lignes** *(dernière fonction `viderDonnees`, ligne 8512)* · `Tests.gs` **5 133 lignes** *(dernière fonction `testB20_temoinR101TerrainsResteB23`, ligne 5128)* · `lancerTestsFFR` chez Google : **`R92 — 880/880 OK, 0 FAIL`**. ⭐ **Repères opérationnels : la source est [`../deploiement.md`](../deploiement.md)** *(`CLAUDE.md` §8 quater)* |
+| ⛔ **Aucun redéploiement pour B2-0.3 / 0.4 / 0.5** | Ces trois lots sont **frontend seul** — 🔬 `git diff 380c92b..8dcff2b -- backend/` est **vide**. **v157 couvre tout le backend de B2-0.** |
+| ✅ **Garde-fous durables** | `backend/Tests.gs` **T1 → T8** + **S1 → S3** + témoin R-101 · `tests/frontend-reinitialisation.test.js` **48/48** · `tests/frontend-autorisation-sync.test.js` **97/97** · `tests/mutations-frontend.test.js` **40/40 détectées, 0 passée inaperçue** |
+| ✅ **CI et publication** | PR **#192** *(draft, 2 commits)* — run **#226** `pull_request` : `verifier` **success**, `deploy` **skipped**. Puis run **#227** `push`/`main` sur **`8dcff2b`** : `verifier` **success**, `deploy` **success**, ⭐ **Pages a publié `8dcff2b`** *(lu dans le journal de déploiement)* |
+| ⭐ **VALIDÉ EN RÉEL — reset** | Reset réel du 2026-08-25 : `Equipes` / `Poules` / `Matchs` **vides** · ⛔ **aucun statut de participation hérité** · ⛔ **aucun effectif, détail ni alerte hérité** · ✅ **carnet durable conservé** · ⛔ `tournoi_id` **effacé** · jeton **neuf** après relecture admin, **différent** de l'ancien |
+| ⭐ **VALIDÉ EN RÉEL — T6, l'ancien lien** | Un ancien lien d'invitation ouvert **depuis l'ancien email** affiche **« Lien invalide ou expiré. »** ⇒ ⛔ **ancien jeton réellement inutilisable**. ⭐ **C'est un test de comportement, pas une lecture de cellule** |
+| ⭐ **VALIDÉ EN RÉEL — synchronisation** | Témoin **`TOURNOI TEST SYNC B2-0.5`** saisi dans « Infos du tournoi » → **Enregistrer** → ⛔ **aucun rafraîchissement** → navigation vers « Demande d'autorisation » : ✅ **le témoin apparaît immédiatement en A.2**. Puis reset → ⛔ aucun rafraîchissement → ✅ **le témoin a disparu**, **A.2 / A.3 manquants**, **A.4 revenu à l'état vide**, ⭐ **A.1 Organisateur toujours renseigné** |
+| ⛔ **R-101 — le témoin attendu** | Les données de **découpage / terrains ont volontairement SURVÉCU** au reset réel. ⭐ **C'est le résultat attendu**, figé par un test témoin. **R-101 RESTE OUVERT** et appartient à **B2-3** |
+| ⚠️ **Ce qui n'a PAS été provoqué en réel** | Le rechargement de secours `location.reload()` après un échec de relecture *(B2-0.4)* et les scénarios de **concurrence / panne** de B2-0.5 : ⛔ **prouvés par le harnais uniquement**, ⛔ **jamais induits en production** |
+| ⏭️ **Prochaine étape** | **B2-1** — `edition_id` + registre `Editions` + fin du renouvellement de `tournoi_id`. ⛔ **NON DÉMARRÉE** : ni conception, ni implémentation. **Ne démarre qu'après décision explicite de Romain** |
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-24 (soir, suite 10)* : 🏛️ **LE CHANTIER M1-B2 EST OUVERT ET SON
 ARCHITECTURE EST VALIDÉE** *(`PLAN.md` **§16**, décisions **D-050** et **D-051**, risques **R-099 →
 R-108**)* — ⛔ **AUCUNE IMPLÉMENTATION N'A COMMENCÉ.** PUB-2 : correctif R-098 fusionné et publié
 *(run **#221**)*, validé en réel sur les trois parcours, ⛔ **preuve « Masquer » toujours à obtenir**.
+
+> ⚡ **CORRIGÉ APRÈS LE GESTE** *(`CLAUDE.md` §8 septies)* — ⛔ **le bloc ci-dessous n'est PAS
+> réécrit** : il était **vrai à sa date**. Deux de ses affirmations sont devenues fausses le
+> **2026-08-25** : *« AUCUNE IMPLÉMENTATION N'A COMMENCÉ »* et *« B2-0 — plan écrit, NON démarré »*.
+> **B2-0 est terminé, intégré, publié et validé en réel** — voir le bloc du 2026-08-25 ci-dessus.
+> ⭐ **Tout le reste du tableau — la cause, l'architecture, les dix risques, le découpage — demeure
+> exact et reste la référence du chantier.**
 
 ## 🏛️ M1-B2 — CLUBS, PARTICIPATIONS, ÉDITIONS ET HISTORIQUE *(ouvert le 2026-08-24)*
 
@@ -1604,8 +1650,8 @@ vérification supplémentaire.
 
 | Élément | Constat |
 |---|---|
-| `backend/Code.gs` | **8 277 lignes** *(relevé le 2026-08-19)*, **281 fonctions** *(compté le 2026-08-17)*, un seul fichier. 📐 **Valeur du jour : `wc -l backend/Code.gs`** |
-| `backend/Tests.gs` | ⭐ **4 244 lignes** — **300 fonctions de test, 703 vérifications, 0 échec** *(mesuré le 2026-08-17, après C-012 étapes 1 à 3 : 616 + 33 + 12 + 42)*. ✅ **Exécutables hors d'Apps Script** (démontré en session 8, ~1 s, avec une vingtaine de lignes de doublures). ⭐ **Ce total est CONFIRMÉ CHEZ GOOGLE le 2026-08-18** *(C-012 étape 4)* : `lancerTestsFFR` y donne **`R92 — 703/703 OK, 0 FAIL`**, avec la **dernière ligne de `Test.gs` = 4244** comme seconde preuve. *(Repères précédents, historiques : 4 038 lignes / 661 vérifications au 2026-08-16 ; 3 711 lignes / 589 vérifications, session 8.)* |
+| `backend/Code.gs` | **8 277 lignes** *(relevé le 2026-08-19)*, **281 fonctions** *(compté le 2026-08-17)*, un seul fichier. 📐 **Valeur du jour : `wc -l backend/Code.gs`** — ⚡ **8 517 lignes au 2026-08-25** *(après M1-B2 / B2-0)* |
+| `backend/Tests.gs` | ⭐ **4 244 lignes** — **300 fonctions de test, 703 vérifications, 0 échec** *(mesuré le 2026-08-17, après C-012 étapes 1 à 3 : 616 + 33 + 12 + 42)*. ✅ **Exécutables hors d'Apps Script** (démontré en session 8, ~1 s, avec une vingtaine de lignes de doublures). ⭐ **Ce total est CONFIRMÉ CHEZ GOOGLE le 2026-08-18** *(C-012 étape 4)* : `lancerTestsFFR` y donne **`R92 — 703/703 OK, 0 FAIL`**, avec la **dernière ligne de `Test.gs` = 4244** comme seconde preuve. *(Repères précédents, historiques : 4 038 lignes / 661 vérifications au 2026-08-16 ; 3 711 lignes / 589 vérifications, session 8.)* ⚡ **AU 2026-08-25** *(après M1-B2 / B2-0)* : **5 133 lignes**, bilan **`R92 — 880/880 OK, 0 FAIL`** constaté chez Google. ⛔ **Le repère opérationnel du jour ne se lit PAS ici** : sa source unique est [`../deploiement.md`](../deploiement.md) *(`CLAUDE.md` §8 quater)* |
 | **Couverture mesurée** (session 8) | **104 fonctions sur 277 traversées = 38 %** · 173 jamais exécutées · **110** reçoivent le classeur (hors de portée par construction) · **85 pures et non testées** = testables aujourd'hui sans rien changer |
 | Points d'entrée backend | `doGet` (ligne 313) = **15 actions de lecture** · `doPost` (ligne 2801) = **50 actions** |
 | Onglets du Google Sheet | jusqu'à **12** (7 créés par `setupSheet`, `Mesures` à la demande, 4 `RefFFR_*` remplis à la main) |

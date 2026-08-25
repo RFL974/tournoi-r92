@@ -12,6 +12,45 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Repartir sur un nouveau tournoi laisse enfin une ardoise vraiment propre — 2026-08-25
+
+> ✅ **Vérifié dans un vrai navigateur, après mise en ligne.** ⛔ Ce n'est pas une lecture de code :
+> la réinitialisation a été **réellement exercée** sur le classeur en service, et les écrans ont été
+> regardés **avant** et **après**.
+
+**Ce qui n'allait pas.** L'entrée du 2026-08-24 racontait la première moitié de ce chantier : les
+réglages du tournoi *(prix des repas, arbitres, récompenses…)* cessaient de survivre à une remise à
+zéro. ⚠️ **Il en restait une deuxième moitié, du côté des clubs**, et elle était plus gênante :
+
+- un club **accepté l'an dernier** restait *« Accepté »* sur un tournoi neuf — ⛔ **et on ne pouvait
+  donc plus l'inviter**, l'envoi groupé le sautait ;
+- son dossier affichait toujours les **effectifs de l'édition passée** — *« Éducateurs annoncés :
+  8 »* sur un tournoi qui n'a encore aucune équipe ;
+- et **la demande d'autorisation destinée à la Ligue comptait ces clubs-là**, avec les éducateurs
+  d'avant et zéro joueur.
+
+⭐ **Le carnet d'adresses, lui, devait rester** — c'est tout son intérêt d'une année sur l'autre.
+
+**Ce qui change.** La règle est désormais écrite noir sur blanc dans l'application :
+⭐ **on conserve le contact, on réinitialise l'engagement.** Le nom du club, son contact et son
+email traversent les éditions ; sa réponse, ses effectifs, ses catégories engagées et son lien
+d'invitation appartiennent à l'édition qui s'achève, et disparaissent avec elle.
+
+⭐ **Les anciens liens d'invitation ne fonctionnent plus.** Un lien envoyé pour l'édition passée,
+rouvert depuis le vieil email, affiche maintenant **« Lien invalide ou expiré. »** — il ouvrait
+auparavant un dossier qui n'avait plus de sens.
+
+**Et la demande d'autorisation reste en phase avec le tournoi.** C'est le second défaut corrigé, et
+il se voyait tous les jours :
+
+| Avant | Maintenant |
+|---|---|
+| On modifiait le nom ou le lieu du tournoi, on enregistrait, puis on ouvrait *« Demande d'autorisation »* : ⛔ **l'ancienne valeur y était encore.** Il fallait **rafraîchir la page** pour voir la bonne | ✅ **La feuille se met à jour toute seule** au moment où on l'ouvre — ⛔ **sans rien rafraîchir** |
+| Après une réinitialisation, elle restait affichée **entièrement remplie**, et annonçait **0 champ manquant** | ✅ Elle se vide, et les champs à ressaisir **redeviennent « manquants »** |
+
+⚠️ **Si le réseau ne répond pas** au moment de cette mise à jour, l'application le **dit** au lieu
+de laisser croire que tout est à jour — et ⭐ **une saisie en cours n'est jamais écrasée**.
+
 ### La carte « Publier le tournoi » devient accessible dès le début — 2026-08-24
 
 > ⚠️ **En ligne, mais pas encore contrôlé de visu.** Ce travail est **publié** *(mis en ligne le

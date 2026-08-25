@@ -100,19 +100,28 @@ Puis **trois contrôles dans l'éditeur**, avant d'aller plus loin :
 
 | Ce qu'on vérifie | Comment |
 |---|---|
-| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs` — **8423** aujourd'hui. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* |
-| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne — **`viderDonnees`, ligne 8418** aujourd'hui |
+| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs` — **8517** aujourd'hui *(2026-08-25)*. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* |
+| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne — **`viderDonnees`, ligne 8512** aujourd'hui *(2026-08-25)* |
 | ⭐ **Une chaîne témoin introduite par le lot** | Une recherche qui donne **un résultat DIFFÉRENT avant et après** la modification — et, quand c'est possible, **son contraire** *(l'ancienne chaîne, attendue à 0)* |
 
 > ⭐ **Les témoins du lot en cours** — à chercher dans l'éditeur, **en entier** :
 >
 > | Chercher | Attendu | De quel lot |
 > |---|---|---|
-> | `CHAMPS_AUTORISATION_A_REINITIALISER` | **3** | 🆕 **M1-B** — la liste des 26 champs d'édition |
-> | `reinitialiserDonneesAutorisationTournoi` | **2** | 🆕 **M1-B** — la fonction et son appel |
+> | 🆕 `CLUBS_COLONNES_ENGAGEMENT` | **4** | 🆕 **B2-0** — la liste des colonnes que le reset vide |
+> | 🆕 `colonnesClubsNonClassees` | **2** | 🆕 **B2-0** — le signalement d'une colonne non classée |
+> | `CHAMPS_AUTORISATION_A_REINITIALISER` | **3** | **M1-B** — la liste des 26 champs d'édition |
+> | `reinitialiserDonneesAutorisationTournoi` | **2** | **M1-B** — la fonction et son appel |
 > | `API tournoi en ligne` | **1** | CF-4b / L8 |
 > | `API Tournoi R92 en ligne` *(l'ancienne)* | **0** | CF-4b / L8 |
 > | `Racing Club de France Rugby` *(l'ancien défaut)* | **0** | CF-4b / L8 |
+>
+> ⚡ **Les deux premiers témoins ont été ajoutés le 2026-08-25** *(lot **B2-0**, collé chez Google en
+> **version 157**)*. ⭐ **Ils sont DISCRIMINANTS au sens de D-040** : ils n'existaient **pas** avant
+> ce lot — leur compte attendu **avant** collage est **0** — et ils sont **sans apostrophe, sans
+> accent et sans guillemet**. ⛔ **Les deux témoins M1-B restent valables** *(ils sont toujours dans
+> le fichier)*, mais ⛔ **ils ne distinguent plus la 156 de la 157** : seuls les deux nouveaux le
+> font.
 >
 > ⚡ **CORRIGÉ le 2026-08-24 — cette note annonçait que « la part BACKEND de L8 n'a JAMAIS été
 > collée chez Google », et c'était FAUX.** Le relevé fait **avant** le collage de M1-B, exactement
@@ -163,26 +172,30 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 
 | Ce qu'on vérifie | Valeur attendue **aujourd'hui** | Ce qu'un écart signifie |
 |---|---|---|
-| **Le bilan** affiché en fin de journal | **`R92 — 796/796 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
-| **La dernière ligne** du fichier collé chez Google | **4645** | Le fichier collé n'est pas celui du dépôt |
+| **Le bilan** affiché en fin de journal | **`R92 — 880/880 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
+| **La dernière ligne** du fichier collé chez Google | **5133** | Le fichier collé n'est pas celui du dépôt |
 
 > 🎯 **Pourquoi deux nombres et pas un.** Le bilan seul ne dit **jamais quelle version** a été
 > exécutée : « 573/573 OK » était un vrai résultat sur un faux fichier. Le nombre de lignes est ce
 > qui identifie le fichier. **Les deux ensemble prouvent ce qu'un seul laisse croire.**
 
-> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-24**
-> *(lot **M1-B** : +81 vérifications sur le cycle de vie des `org_*` à la réinitialisation ; elles
-> étaient de **715** et **4314** depuis C-012, étape 3)*.
+> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-25**
+> *(lot **B2-0** : +84 vérifications sur le reset des participations — T1 → T8, S1 → S3 et le témoin
+> R-101 ; elles étaient de **796** et **4645** depuis M1-B, et de **715** et **4314** depuis C-012,
+> étape 3)*.
 >
-> ✅ **CONSTATÉ CHEZ GOOGLE le 2026-08-24** : `lancerTestsFFR` exécutée dans l'éditeur Apps Script
-> a donné **`R92 — 796/796 OK, 0 FAIL`**, avec `Test.gs` à **4645 lignes**. *(Cette valeur avait
-> d'abord été **prédite** hors ligne ; elle est désormais **mesurée là où elle compte** — ce n'est
-> plus un **PROBABLE** mais un **CERTAIN**, `CLAUDE.md` §9.)*
-> **Elles doivent toujours correspondre au bilan réellement obtenu et à la dernière ligne réelle de
-> `backend/Tests.gs`** — un repère qui ne correspond plus ne prouve plus rien.
-> Les valeurs de référence à jour se lisent toujours dans le dépôt :
-> `wc -l backend/Tests.gs` pour le nombre de lignes, et
-> `docs/industrialisation/ETAT.md` §9 pour le total attendu.
+> ✅ **CONSTATÉ CHEZ GOOGLE le 2026-08-25** : `lancerTestsFFR` exécutée dans l'éditeur Apps Script
+> a donné **`R92 — 880/880 OK, 0 FAIL`**, avec `Test.gs` à **5133 lignes** — serveur en **version
+> 157**. *(Comme pour M1-B, la valeur avait d'abord été **prédite** hors ligne ; elle est
+> désormais **mesurée là où elle compte** — ce n'est plus un **PROBABLE** mais un **CERTAIN**,
+> `CLAUDE.md` §9.)*
+>
+> ⭐ **CE DOCUMENT EST LA SOURCE de ces deux repères** *(`CLAUDE.md` §8 quater)* : ⛔ **ne pas aller
+> les chercher ailleurs, et ne pas les recopier ailleurs.** *(Une version antérieure de cette note
+> renvoyait à `ETAT.md` §9 « pour le total attendu » — ⛔ **c'était l'inverse de la règle**, et
+> `ETAT.md` renvoie désormais ici.)* Pour recalculer le nombre de lignes depuis le dépôt :
+> `wc -l backend/Tests.gs`. **Le bilan, lui, ne se calcule pas : il se LIT dans le journal chez
+> Google.**
 
 **5. Vérifier que l'adresse publique répond**
 `…/exec?action=ping` → `{"ok":true,"message":"API tournoi en ligne"}`
@@ -255,8 +268,9 @@ Le workflow contient **deux travaux** : `verifier` s'exécute **d'abord**, `depl
 
 | | |
 |---|---|
-| **Ce qui est vérifié** | La **syntaxe** de **tous** les fichiers `.js` de `frontend/`, bibliothèques extérieures comprises *(elles sont déposées à la main, donc elles peuvent arriver tronquées)*. L'outil est `node --check` |
-| **Ce qui n'est PAS vérifié** | Le **style**, les conventions, la qualité — **rien de tout cela**. Ni le **HTML** : il ne contient aucun script en ligne, et contrôler sa syntaxe exigerait une dépendance que le projet a refusée |
+| **Ce qui est vérifié — ① la syntaxe** | La **syntaxe** de **tous** les fichiers `.js` de `frontend/`, bibliothèques extérieures comprises *(elles sont déposées à la main, donc elles peuvent arriver tronquées)*. L'outil est `node --check` |
+| ⚡ **Ce qui est vérifié — ② trois COMPORTEMENTS** *(ajouté par M1-B / M1-B2)* | ⭐ **Ce ne sont plus seulement des fichiers lisibles : ce sont des gestes qui marchent.** `tests/frontend-reinitialisation.test.js` *(ce que « Réinitialiser le tournoi » fait à l'écran)* · `tests/frontend-autorisation-sync.test.js` *(la demande d'autorisation FFR ne reste jamais périmée)* · `tests/mutations-frontend.test.js` *(**le garde-fou du garde-fou** : il réintroduit des défauts et exige qu'ils soient attrapés)*. **Un échec de l'un d'eux refuse la publication**, exactement comme un fichier illisible |
+| **Ce qui n'est PAS vérifié** | Le **style**, les conventions, la qualité — **rien de tout cela**. Ni le **HTML** : il ne contient aucun script en ligne, et contrôler sa syntaxe exigerait une dépendance que le projet a refusée. ⛔ **Ni le comportement RÉEL dans un navigateur** : ces trois contrôles s'exécutent avec des **doublures**, ⛔ **jamais contre le site publié** |
 | **Quand ça tourne** | À chaque envoi sur `main` **et** sur chaque proposition de fusion — on voit le problème **avant** qu'il atteigne `main` |
 | **Sur une proposition de fusion** | Le contrôle tourne, **la publication est neutralisée** (`if: github.event_name != 'pull_request'`) |
 
@@ -266,7 +280,18 @@ Le workflow contient **deux travaux** : `verifier` s'exécute **d'abord**, `depl
 
 **Si la publication échoue** : ouvrir l'onglet **Actions** du dépôt → le travail
 **« Vérifier la syntaxe des fichiers publiés »** nomme le fichier fautif et affiche l'erreur, avec
-son numéro de ligne.
+son numéro de ligne. ⚡ **Depuis B2-0, ce même travail peut aussi échouer sur un COMPORTEMENT** : le
+journal affiche alors une ligne commençant par `ÉCHEC`, qui dit **quel contrôle** n'a pas tenu.
+
+> ⭐ **Dernière publication CONSTATÉE** *(`CLAUDE.md` §8 septies — l'observation, pas le document)* :
+> exécution **#227**, événement `push`, branche `main`, `head_sha` **`8dcff2b`**, le **2026-08-25**.
+> **Job `verifier` : `success`** · **job `deploy` : `success`**, ⭐ **le journal de déploiement
+> nommant `8dcff2b`**.
+>
+> ⚠️ **Ce que cette ligne prouve, et ce qu'elle ne prouve pas.** Elle établit que **GitHub a
+> publié ce commit**. ⛔ **Elle ne dit rien du serveur Apps Script** *(section A — c'est un collage
+> manuel, sans rapport)*, ⛔ **ni de ce qu'un visiteur voit** — cela ne se constate que dans un
+> vrai navigateur *(`CLAUDE.md` §13.6)*.
 
 Adresses (base `https://rfl974.github.io/tournoi-r92/`) :
 - public : `…/tournoi.html` · admin : `…/admin.html` · saisie : `…/saisie.html` · perfs : `…/perfs.html`

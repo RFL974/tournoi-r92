@@ -9,7 +9,43 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-24 *(chantier **M1-PUB**, micro-lot **PUB-1**)* — 🆕 **UN
+**Dernière mise à jour** : 2026-08-25 *(chantier **M1-B2**, micro-lot **B2-0** — clôture)* —
+⚡ **TROIS PROBLÈMES CHANGENT DE STATUT. ⛔ AUCUN PROBLÈME NOUVEAU N'EST INSCRIT.**
+
+| Réf | Avant | Après | Ce qui l'établit |
+|---|---|---|---|
+| **R-099** *(P1)* | ⛔ OUVERT | ✅ **TESTÉ** | Les trois colonnes *(`detail_effectifs`, `nb_educateurs_total`, `alerte_ecart`)* sont **entrées dans la liste d'engagement** de `ClubsInvites`, couvertes par les tests **T1 → T8** du serveur, **et le reset RÉEL du 2026-08-25 l'a montré à l'écran** : ⛔ **aucun effectif, détail ni alerte hérité** |
+| **R-100** *(P1)* | ⛔ OUVERT | ✅ **TESTÉ** | Idem pour la colonne `statut` : ⛔ **aucun statut de participation hérité** après le reset réel — un club de l'édition passée redevient **réinvitable** |
+| **R-033** *(P2)* | IDENTIFIÉ *(« documenté, pas corrigé »)* | ✅ **CORRIGÉ** | ⚠️ **CORRIGÉ, et volontairement PAS `TESTÉ`** — voir la réserve juste en dessous |
+
+> ⚠️ **Pourquoi R-033 s'arrête à `CORRIGÉ`, et c'est une réserve, pas une modestie de forme.**
+> Sa **dernière part ouverte** — `detail_effectifs` et `nb_educateurs_total`, colonnes de
+> `ClubsInvites` — est désormais **effacée par le reset** *(elles sont dans
+> `CLUBS_COLONNES_ENGAGEMENT`)*, et le reset réel du 2026-08-25 l'a confirmé à l'écran.
+> ⛔ **Mais une autre part de la même fiche n'a AUCUN test dédié** : les **contacts et le poste de
+> secours** *(`CHAMPS_CONTACTS_SECURITE`)* sont bien effacés dans le code — 🔬
+> `backend/Code.gs:7600`, section *« 3 ter »* — ⛔ **et aucune vérification automatique ne le
+> prouve**. ⭐ **Une fiche ne passe à `TESTÉ` que si TOUTE sa définition est prouvée**, pas la part
+> qu'un chantier a regardée *(`CLAUDE.md` §12.5)*.
+
+> ⛔ **CE QUE B2-0 NE REFERME PAS, et il faut le lire avec le tableau ci-dessus.**
+>
+> | Réf | Pourquoi il **reste OUVERT** |
+> |---|---|
+> | **R-101** *(P2)* | ⭐ **Volontairement.** Le découpage événementiel des terrains **a bien survécu** au reset réel — ⭐ **c'est le résultat ATTENDU**, et B2-0 l'a **figé par un test témoin** pour que **B2-3** parte d'un comportement connu. ⛔ **Figer un défaut n'est pas le corriger** |
+> | **R-102** *(P2)* | B2-0 corrige le **COMPORTEMENT** du reset ; ⛔ **il ne touche pas à la STRUCTURE**. `ClubsInvites` mêle toujours identité durable et participation — c'est **B2-2** *(D-050)* |
+> | **R-105** *(P2)* | ⚡ **OUTILLÉ, pas refermé.** B2-0 a ajouté un contrôle qui **signale** toute colonne de `ClubsInvites` qu'aucune des deux familles ne classe *(⛔ et qui ne la vide jamais)*. ⭐ **Le piège est devenu visible ; il n'a pas disparu** — la garantie structurelle appartient à **B2-2** |
+> | **R-106** *(P1)* | ⚡ **Sa part « reset » seulement.** `tournoi_id` est bien **effacé** par la réinitialisation *(constaté en réel)*, ⛔ **mais il reste renouvelé à chaque génération de planning** : il n'identifie toujours pas une **édition**. Le reste appartient à **B2-1** |
+> | **R-098** *(P1)* | ⛔ **INCHANGÉ.** Ses conditions 4 et 5 exigent un tournoi exploitable ; le classeur n'en a pas *(voir le repère « données à recréer » de [`ETAT.md`](ETAT.md))* |
+
+⛔ **Aucun problème nouveau n'a été trouvé par ce lot** — ni par les 40 mutations, ni par le reset
+réel, ni par la validation en navigateur. Les défauts rencontrés pendant B2-0 *(la feuille FFR
+périmée après un enregistrement)* étaient des **manifestations de R-099 / R-100 déjà inscrites**,
+⛔ **pas des problèmes distincts**.
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-24 (chantier **M1-PUB**, micro-lot **PUB-1**)* — 🆕 **UN
 PROBLÈME DE PLUS AU REGISTRE : R-097 *(P2)*.**
 
 🌐 **R-097 — le témoin de publication sert de signal implicite à un système extérieur.**
@@ -24,6 +60,14 @@ reste NON ÉTABLI** *(`CLAUDE.md` §13.6)*. ✅ **Rattaché à M1-PUB / PUB-3 pu
 ⛔ **Aucun autre problème n'a été créé, modifié ni refermé par ce lot.** En particulier,
 **R-096 est inchangé** : le chevauchement de `url_tournoi_public` avec l'accès autonome à la page
 publique est **signalé, pas tranché** — il sera **arbitré en PUB-2**.
+
+> ⚡ **CORRIGÉ APRÈS LE GESTE** *(`CLAUDE.md` §8 septies)* — ⛔ **le bloc ci-dessous n'est PAS
+> réécrit** : il était **vrai à sa date**. Deux de ses affirmations sont devenues fausses le
+> **2026-08-25** : *« `detail_effectifs` et `nb_educateurs_total` … `reinitialiserPhase2Clubs` ne les
+> efface pas »* et *« le serveur chez Google n'a pas été redéployé »*. **B2-0 a fait entrer ces deux
+> colonnes dans la liste d'engagement**, et le serveur est en service en **version 157**.
+> ⭐ **Le reste du bloc — la distinction entre la part `org_*` et la part `ClubsInvites` — demeure
+> exact, et c'est lui qui explique pourquoi la fiche s'arrête à `CORRIGÉ`.**
 
 *Rappel de la mise à jour précédente — 2026-08-24 (chantier **M1**, étape **M1-B**)* : ⚡ **R-033 EST CORRIGÉ
 DANS LE DÉPÔT — MAIS SEULEMENT POUR SA PART `org_*`, ET IL N'EST PAS EN SERVICE.**
@@ -119,19 +163,47 @@ Chaque constat porte obligatoirement un niveau de certitude (`CLAUDE.md` §9) :
 
 ## 4. TABLEAU DE SYNTHÈSE
 
-| Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés |
-|---|---|---|---|---|---|---|
-| **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** |
-| P1 | **22** | 0 | **6** | **1** | 0 | ✅ **1** |
-| P2 | **55** | 0 | **2** | 0 | 0 | 0 |
-| P3 | **11** | 0 | 0 | 0 | 0 | 0 |
+> ⚡ **RECOMPTÉ LIGNE À LIGNE LE 2026-08-25**, et le tableau précédent était **faux depuis
+> longtemps** : il annonçait **P1 22 identifiés / 6 validés / 1 en cours** et un **total de 92**,
+> alors que le registre en portait déjà **108**. ⛔ **Ce n'était pas une erreur de saisie** : le
+> tableau n'avait simplement pas été recompté depuis que **R-094 → R-108** sont entrés au registre.
+> ⭐ **La leçon est celle de `CLAUDE.md` §8 quater** : un chiffre juste devient faux tout seul.
 
-> ✅ **Premiers mouvements du tableau depuis l'ouverture de l'ÉTAPE 5** *(2026-08-06)* :
-> **R-041** *(le barème et le départage)* passe à **TESTÉ** — prouvé **chez Google** ;
-> **R-043** *(le contrôle avant publication)* passe à **EN COURS** — sa **moitié (a) est refermée et
-> prouvée**, sa moitié **(b)** *(harnais du navigateur)* reste entière.
+**La méthode de comptage, écrite pour pouvoir être prise en défaut** *(§8 quater)* : on compte
+**une entrée par référence `R-0XX`**, qu'elle vive dans une **ligne de tableau** ou dans une
+**fiche détaillée** ; sa **priorité** et son **statut** sont lus dans **sa propre ligne / fiche**,
+jamais dans un texte de synthèse. Les statuts rédigés en langage libre sont rattachés au statut
+officiel le plus **prudent** : *« OUVERT »*, *« DOCUMENTÉ, PAS CORRIGÉ »*, *« désamorcé, pas
+refermé »* et *« CLARIFIÉ »* comptent tous comme **IDENTIFIÉ** ; *« SPÉCIFIÉ »* compte comme
+**PLANIFIÉ** ; *« ARBITRÉ »* comme **VALIDÉ**.
 
-**Total : 92 problèmes** — **88 issus des 8 domaines d'audit** [domaine A (13) + domaine C (14) +
+| Priorité | Identifiés | Planifiés | Validés | En cours | Corrigés | Testés | Total |
+|---|---|---|---|---|---|---|---|
+| **P0** | 0 | 0 | 0 | 0 | 0 | ✅ **1** | **1** |
+| P1 | **19** | **2** | **4** | **2** | **1** | ✅ **4** | **32** |
+| P2 | **55** | **3** | **3** | 0 | **3** | 0 | **64** |
+| P3 | **11** | 0 | 0 | 0 | 0 | 0 | **11** |
+| **Total** | **85** | **5** | **7** | **2** | **4** | **5** | **108** |
+
+> ✅ **Mouvements du 2026-08-25** *(micro-lot **B2-0**)* : **R-099** et **R-100** passent à
+> **TESTÉ** *(prouvés par le harnais **et** par un reset réel)* ; **R-033** passe à **CORRIGÉ**
+> *(⛔ pas à `TESTÉ` — voir la réserve en tête de fichier)*.
+>
+> ✅ **Mouvements antérieurs, conservés pour mémoire** : **R-041** *(le barème et le départage)* et
+> **R-042** *(l'enregistrement d'un score, avec réserve)* sont passés à **TESTÉ**, prouvés **chez
+> Google** ; **R-043** *(le contrôle avant publication)* est **EN COURS** — sa **moitié (a) est
+> refermée et prouvée**, sa moitié **(b)** *(harnais du navigateur)* reste entière ;
+> **R-094** *(la date civile)* est **CORRIGÉ**.
+
+⚡ **Le total du registre est de 108 au 2026-08-25** *(R-001 → R-108, ⛔ aucun numéro sauté —
+recompté ce jour-là)*. Le décompte ci-dessous explique **comment on est passé de 88 à 93** ; il
+**s'arrête au 2026-08-18** et reste écrit tel quel, car c'est **lui** qui porte la distinction
+entre *« ce que l'audit a trouvé »* et *« ce que le registre suit »*. ⭐ **Les quinze suivants —
+R-094 → R-108 — ont été trouvés APRÈS, en corrigeant et en essayant** : la date civile *(R-094)*,
+les deux constats de l'étape M1-A *(R-095, R-096)*, le couplage de la vitrine *(R-097)*, le verrou
+de publication *(R-098)*, et les **dix** du cadrage de **M1-B2** *(R-099 → R-108)*.
+
+**Total à cette date : 92 problèmes** — **88 issus des 8 domaines d'audit** [domaine A (13) + domaine C (14) +
 domaine B (13) + domaine D (10) + domaine E (10) + domaine F (11) + domaine G (10) + **domaine H
 (7)**] **+ 4 ajoutés après la clôture de l'audit** — les trois premiers le **2026-08-05** autour de
 **D-030**, le quatrième le **2026-08-16** en spécifiant **C-012** :
@@ -549,7 +621,7 @@ D-030** (tournoi suspendu / annulé).
 | **R-030** | **Aucune durée de conservation, aucune purge, nulle part.** Le carnet d'adresses est conservé **délibérément** d'une édition à l'autre, les copies de courriels restent dans Gmail, les contacts FFR et les effectifs passés traversent les réinitialisations. Rien n'expire | **P1** | CERTAIN | IDENTIFIÉ · ✅ **D-020 TRANCHÉE (session 13)** — le **tableau des 7 durées est adopté tel quel** (carnet des clubs = 3 éditions · effectifs = effacés à la réinitialisation · contacts FFR = 1 an · champ « équipes étrangères » = effacé après envoi · relevés de visibilité = effacés après remise de la fiche · `Historique` = conservé · courriels Gmail = 1 an). Met **R-031, R-033, R-034** en ordre de marche. ✅ **2026-08-06 — les durées sont ÉCRITES** (livrable **C-005**) **et OPÉRATIONNALISÉES** (livrable **C-006** : 5 gestes vérifiés dans le code, 2 marqués « à confirmer » plutôt qu'inventés). ⚠️ **R-030 RESTE OUVERT** : sa part **outillage** — rien ne signale ce qui est périmé — dépend d'un changement de comportement de l'application, et **D-033** fixe comment elles seront tenues : **un rappel manuel**, tant qu'aucun outil ne les applique. ⚠️ **Aucun effacement automatique** : toute suppression restera **déclenchée par un humain** | `AUDIT.md` §B.4 |
 | **R-031** | **Le droit d'effacement est partiel et parfois bloqué** : `supprimerClubInvite` est **refusé** tant qu'une équipe du club figure dans un match, il n'existe aucun moyen d'effacer le seul contact en gardant le club, et les copies Gmail restent hors de portée | P2 | **CERTAIN — motifs de refus lus dans le code le 2026-08-06** *(« créée à la main » · « déjà placée en poule X » · « présente dans des matchs générés »)* | ⚙️ **DOCUMENTÉ, PAS CORRIGÉ** — **C-006** décrit le contournement *(supprimer **juste après une réinitialisation**, quand aucun motif ne peut se déclencher)*. ⚠️ **Ce n'est pas une correction** : une demande de retrait au mauvais moment de la saison reste **impossible à satisfaire**. Correction = chantier de code | `AUDIT.md` §B.5 |
 | **R-032** | **Les effectifs d'enfants (`nb_joueurs`, `nb_educateurs`) sortent sans aucune clé**, et surtout : toute colonne ajoutée demain à ces onglets sera publique **sans décision**. Se referme en traitant **R-021** | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
-| **R-033** | **La réinitialisation conserve des données personnelles sans raison écrite** : `detail_effectifs` et le total d'éducateurs de l'édition passée, et **tous** les contacts de la demande FFR — représentant, président, **médecin**, antenne de secours | P2 | **CERTAIN — reconfirmé par lecture du code le 2026-08-06** *(les huit colonnes remises à zéro sont connues ; ces deux-là n'en font pas partie, et `CHAMPS_AUTORISATION` n'est utilisé qu'en écriture, jamais en effacement)* | ⚙️ **DOCUMENTÉ, PAS CORRIGÉ** — le chantier **C-006** décrit le geste manuel de remplacement pour les contacts fédéraux *(✅ vérifié)*, mais **aucun geste vérifié n'existe** pour `detail_effectifs` et `nb_educateurs_total` : aucun écran ne les modifie, et elles sont **lues** par le calcul des effectifs. ⚠️ **La règle décidée (D-020) et le code divergent** — correction à faire au volet ③. ⚡ **PÉRIMÈTRE ÉLARGI ET RATTACHÉ À UN CHANTIER le 2026-08-24 *(M1-A)*** : ① **l'étendue réelle est bien plus large que « les contacts »** — le recomptage ligne à ligne de `reinitialiserTournoi` *(`Code.gs:7437-7512`)* montre que **les 36 `org_*` sur 36 survivent**, dont **26 sont purement événementiels** *(niveau du tournoi, arbitres, doublettes, type de terrain et vestiaires utilisés, récompenses, fournisseurs, prix des repas et des goûters, hébergement, droits d'inscription)* ; ⚡ ② **la conséquence n'est donc pas seulement « données personnelles » mais MÉTIER** — un tournoi neuf rouvre la demande d'autorisation **déjà remplie** avec les valeurs de l'édition passée, marquées *« saisi »*, et le compteur annonce **0 champ manquant** : le dossier peut partir à la Ligue avec un médecin absent et un prix périmé, **sans aucun signalement** ; ③ **s'y ajoutent les clés `org_recompenses_*`, devenues ORPHELINES** *(la réinitialisation supprime toutes les catégories mais laisse leurs lignes)*. ✅ **Cible désormais FIXÉE par D-043** *(10 conservés / 26 vidés / récompenses vidées)*. ⚡ **MISE À JOUR du 2026-08-24 — lot M1-B** : la part `org_*` est **CORRIGÉE DANS LE DÉPÔT et TESTÉE** *(allowlist explicite `CHAMPS_AUTORISATION_A_REINITIALISER`, récompenses par préfixe, test de branchement depuis `reinitialiserTournoi`)*, ⛔ **mais PAS EN SERVICE** — le serveur chez Google n'est pas redéployé. 🔴 **Et la part la PLUS ANCIENNE de cette fiche reste OUVERTE** : `detail_effectifs` et `nb_educateurs_total` sont des **colonnes de `ClubsInvites`**, hors du périmètre des `org_*` — `reinitialiserPhase2Clubs` **ne les efface pas**. **Statut : PARTIELLEMENT CORRIGÉ**, ⛔ ne pas refermer | `AUDIT.md` §B.5 · **D-043** · `PLAN.md` **§15** |
+| **R-033** | **La réinitialisation conserve des données personnelles sans raison écrite** : `detail_effectifs` et le total d'éducateurs de l'édition passée, et **tous** les contacts de la demande FFR — représentant, président, **médecin**, antenne de secours | P2 | **CERTAIN — reconfirmé par lecture du code le 2026-08-06** *(les huit colonnes remises à zéro sont connues ; ces deux-là n'en font pas partie, et `CHAMPS_AUTORISATION` n'est utilisé qu'en écriture, jamais en effacement)* | ✅ **CORRIGÉ *(2026-08-25)*** — ⚠️ **et volontairement PAS `TESTÉ`** : le détail est **à la fin de cette case**. ⬇️ *Ce qui suit est l'**historique** de la case, conservé tel quel — chaque ligne était vraie à sa date* : ⚙️ **DOCUMENTÉ, PAS CORRIGÉ** — le chantier **C-006** décrit le geste manuel de remplacement pour les contacts fédéraux *(✅ vérifié)*, mais **aucun geste vérifié n'existe** pour `detail_effectifs` et `nb_educateurs_total` : aucun écran ne les modifie, et elles sont **lues** par le calcul des effectifs. ⚠️ **La règle décidée (D-020) et le code divergent** — correction à faire au volet ③. ⚡ **PÉRIMÈTRE ÉLARGI ET RATTACHÉ À UN CHANTIER le 2026-08-24 *(M1-A)*** : ① **l'étendue réelle est bien plus large que « les contacts »** — le recomptage ligne à ligne de `reinitialiserTournoi` *(`Code.gs:7437-7512`)* montre que **les 36 `org_*` sur 36 survivent**, dont **26 sont purement événementiels** *(niveau du tournoi, arbitres, doublettes, type de terrain et vestiaires utilisés, récompenses, fournisseurs, prix des repas et des goûters, hébergement, droits d'inscription)* ; ⚡ ② **la conséquence n'est donc pas seulement « données personnelles » mais MÉTIER** — un tournoi neuf rouvre la demande d'autorisation **déjà remplie** avec les valeurs de l'édition passée, marquées *« saisi »*, et le compteur annonce **0 champ manquant** : le dossier peut partir à la Ligue avec un médecin absent et un prix périmé, **sans aucun signalement** ; ③ **s'y ajoutent les clés `org_recompenses_*`, devenues ORPHELINES** *(la réinitialisation supprime toutes les catégories mais laisse leurs lignes)*. ✅ **Cible désormais FIXÉE par D-043** *(10 conservés / 26 vidés / récompenses vidées)*. ⚡ **MISE À JOUR du 2026-08-24 — lot M1-B** : la part `org_*` est **CORRIGÉE DANS LE DÉPÔT et TESTÉE** *(allowlist explicite `CHAMPS_AUTORISATION_A_REINITIALISER`, récompenses par préfixe, test de branchement depuis `reinitialiserTournoi`)*, ⛔ **mais PAS EN SERVICE** — le serveur chez Google n'est pas redéployé. 🔴 **Et la part la PLUS ANCIENNE de cette fiche reste OUVERTE** : `detail_effectifs` et `nb_educateurs_total` sont des **colonnes de `ClubsInvites`**, hors du périmètre des `org_*` — `reinitialiserPhase2Clubs` **ne les efface pas**. **Statut : PARTIELLEMENT CORRIGÉ**, ⛔ ne pas refermer. ⚡ **MISE À JOUR du 2026-08-25 — micro-lot B2-0 : LE STATUT DEVIENT ✅ `CORRIGÉ`.** ① La **part `org_*` est EN SERVICE** — le serveur chez Google est redéployé *(**version 157**)*, et une réinitialisation **réelle** a été exercée ; ② la **part la plus ancienne est refermée dans le code** — `detail_effectifs` et `nb_educateurs_total` sont désormais **dans `CLUBS_COLONNES_ENGAGEMENT`** *(avec `alerte_ecart`)*, donc vidées par `reinitialiserPhase2Clubs`, et le reset réel du 2026-08-25 a montré ⛔ **aucun effectif, détail ni alerte hérité** ; ③ ⚠️ **et c'est pourquoi la fiche s'arrête à `CORRIGÉ` et NON à `TESTÉ`** : les **contacts et le poste de secours** *(`CHAMPS_CONTACTS_SECURITE`)* sont bien effacés — 🔬 `backend/Code.gs:7600`, section *« 3 ter »* — ⛔ **mais aucune vérification automatique ne le prouve**, et cette part-là de la définition n'est donc pas établie | `AUDIT.md` §B.5 · **D-043** · `PLAN.md` **§15** · **§16.5** |
 | **R-034** | ⚠️ **REQUALIFIÉ le 2026-08-06 — le constat d'origine était FAUX.** Le champ « Liste des équipes étrangères » **ne demande pas** de noms d'enfants : le formulaire fédéral dit *« Précisez ci-dessous les équipes étrangères (**nom du club, pays**) »*. **Ce qui reste vrai** : c'est une **zone de texte libre**, donc rien n'empêche techniquement d'y écrire autre chose. **Ce qui était faux** : qu'elle « invite explicitement » à saisir des noms d'enfants. ⚡ **Et la vérification a fait apparaître un point que l'audit n'avait pas vu** : le formulaire fédéral **exige par ailleurs**, dans ses **pièces à fournir**, les *noms, prénoms et dates de naissance des joueurs et dirigeants étrangers*. **Cette liste existe donc dans le dossier de l'association — hors de l'application.** Voir la note ci-dessous | **P2** *(et non plus « P1 le jour où il sert »)* | **CERTAIN** — confirmé par Romain sur le formulaire officiel, 2026-08-06 | ✅ **CLARIFIÉ** — l'engagement du livrable C-005 est **maintenu**, il n'est pas fondé sur une hypothèse de saisie de noms d'enfants | `AUDIT.md` §B.5 |
 | **R-035** | **Toute image déposée est rendue publique en lecture et ne disparaît pas vraiment** (corbeille Drive ~30 j, I-08). Rien n'avertit qu'une photo de parking peut montrer plaques et visages — le code contrôle format et poids, jamais le contenu | P2 | CERTAIN | IDENTIFIÉ | `AUDIT.md` §B.5 |
 | **R-036** | **Le droit à l'image n'est plus outillé** : plus rien ne le charge depuis le **retrait décidé par le club** le 2026-08-03, et le modèle `autorisation-droit-image-template.docx` a été **supprimé du dépôt le 2026-08-19** *(chantier Confiance, CF-4b lot L1)*. Rien n'écrit ce qui l'a remplacé | P2 | CERTAIN | IDENTIFIÉ · **question au club (I-15)** — ⚠️ l'outil n'existe plus, le besoin métier reste entier | `AUDIT.md` §B.5 |
@@ -1466,7 +1538,7 @@ VISIBLE.** *On a contrôlé le contenu d'une pièce sans essayer d'en ouvrir la 
 |---|---|
 | **Priorité** | **P1** — ⚠️ **peut fausser un document officiel destiné à la Ligue** |
 | **Domaine** | **A — métier** · **D — QA / fiabilité** |
-| **Statut** | ⛔ **OUVERT** — rattaché à **M1-B2 / B2-0** *(correction)* puis **B2-2** *(structure)* |
+| **Statut** | ✅ ⚡ **TESTÉ le 2026-08-25** *(micro-lot **B2-0**)* — voir l'encadré de clôture en bas de fiche. ⛔ **La part STRUCTURE reste entière et appartient à B2-2** *(elle est suivie sous **R-102**, ⛔ pas ici)* |
 | **Découvert** | 2026-08-24, pendant la validation réelle de PUB-2 |
 
 🔬 **`reinitialiserPhase2Clubs`** *(`backend/Code.gs`)* efface 8 colonnes sur 17. **Trois colonnes
@@ -1485,13 +1557,26 @@ la cascade compterait donc **les clubs de l'an dernier**, avec **0 joueur** *(ef
 éducateurs de l'édition passée** *(conservés)*. ⭐ **C'est exactement le défaut que D-043 avait
 fermé côté `org_*` — resté ouvert côté clubs.**
 
+> ✅ ⚡ **CLÔTURE — 2026-08-25, micro-lot B2-0.** Les trois colonnes sont entrées dans
+> **`CLUBS_COLONNES_ENGAGEMENT`** *(`backend/Code.gs`)*, la liste que le reset vide, et la décision
+> *« quelles colonnes vider ? »* a été **séparée de son effet** pour être testable sans Google
+> *(`colonnesClubsAEffacer`)*.
+>
+> | Ce qui le prouve | Quoi |
+> |---|---|
+> | 🔬 **Harnais serveur** | **T1 → T8** dans `backend/Tests.gs`, exécutés **chez Google** : **`R92 — 880/880 OK, 0 FAIL`** |
+> | ⭐ **Constat RÉEL** | Reset réel du **2026-08-25** sur le classeur en service *(backend **v157**)* : ⛔ **aucun effectif, aucun détail, aucune alerte hérités** — le dossier d'un club de l'édition précédente ne montre plus *« Éducateurs annoncés : 8 »* |
+>
+> ⛔ **Ce que cette clôture ne dit PAS** : la structure de `ClubsInvites` est **inchangée** — elle
+> mêle toujours identité durable et participation. C'est **R-102**, et c'est **B2-2**.
+
 ### R-100 — Le statut de participation `Accepté` survit au reset
 
 | | |
 |---|---|
 | **Priorité** | **P1** |
 | **Domaine** | **A — métier** · **E — UX** |
-| **Statut** | ⛔ **OUVERT** — **B2-0** puis **B2-2** |
+| **Statut** | ✅ ⚡ **TESTÉ le 2026-08-25** *(micro-lot **B2-0**)* — voir l'encadré de clôture en bas de fiche. ⛔ **La part STRUCTURE reste entière et appartient à B2-2** *(suivie sous **R-102**)* |
 
 🔬 La colonne `statut` est **délibérément conservée** : le commentaire du code la range dans
 *« le carnet d'adresses (noms/contacts/statuts) »*.
@@ -1508,6 +1593,17 @@ fermé côté `org_*` — resté ouvert côté clubs.**
 | 🔬 `Code.gs:2811` | Le club **compte comme engagé** dans la demande d'autorisation FFR |
 | 🔬 `admin-invitations.js:674` | ⛔ **Il n'est PLUS invitable** — `estInvitable()` exclut les `Accepté`, et l'envoi groupé les saute. **Après un reset, on ne peut donc plus inviter ces clubs sans corriger leur statut à la main** |
 | — | Il peut encore générer un **dossier complet** *(constaté en réel)* |
+
+> ✅ ⚡ **CLÔTURE — 2026-08-25, micro-lot B2-0.** `statut` est passé de la famille **CONTACT** à la
+> famille **ENGAGEMENT** *(`CLUBS_COLONNES_ENGAGEMENT`)*, conformément à la doctrine **D-050**
+> — ⭐ *« conserver le contact, réinitialiser l'engagement »*.
+>
+> | Ce qui le prouve | Quoi |
+> |---|---|
+> | 🔬 **Harnais serveur** | **T1 → T8**, exécutés **chez Google** : **`R92 — 880/880 OK, 0 FAIL`** |
+> | ⭐ **Constat RÉEL** | Reset réel du **2026-08-25** : ⛔ **aucun statut de participation hérité**. La conséquence la plus visible du défaut est levée — un club accepté à l'édition précédente **redevient réinvitable** |
+>
+> ⛔ **Ce que cette clôture ne dit PAS** : elle ne range pas `ClubsInvites` — c'est **R-102 / B2-2**.
 
 ### R-101 — Le découpage événementiel des terrains survit au reset
 
@@ -1533,6 +1629,17 @@ d'où le *« 18 terrains de jeu, sur 4 grands terrains »* d'un tournoi qui n'a 
 > catégories et des équipes **de cette édition**. Le commentaire du code le dit : la valeur est
 > *« écrite quand la répartition est APPLIQUÉE »*.
 
+> ⛔ ⚡ **TOUJOURS OUVERT au 2026-08-25, et B2-0 l'a laissé ouvert VOLONTAIREMENT.** Le reset réel de
+> ce jour-là a montré que le découpage des terrains **a bien survécu** — ⭐ **c'est le résultat
+> ATTENDU**, et B2-0 a écrit un **test témoin** *(`testB20_temoinR101TerrainsResteB23` dans
+> `backend/Tests.gs`)* qui **échouera le jour où ce comportement changera par accident**.
+>
+> 🎯 **Pourquoi figer un défaut au lieu de le corriger, et c'est délibéré** : la donnée est
+> **MIXTE** *(voir juste au-dessus)*. La corriger demande de **séparer** la part permanente de la
+> part événementielle — un travail de structure qui appartient à **B2-3**. ⛔ **Un test témoin
+> n'est pas une correction** : il garantit seulement que **B2-3 partira d'un comportement connu**,
+> et non d'une surprise.
+
 ### R-102 — `ClubsInvites` mêle identité durable et participation, sans marquage
 
 | | |
@@ -1549,6 +1656,13 @@ famille appartient une colonne. Le reset s'en remet à **une liste écrite à la
 > que *« l'oubli doit conserver la donnée, pas la détruire »*. C'est juste sur une opération
 > destructive. Mais la conséquence est inévitable : ⭐ **toute colonne ajoutée sans être classée
 > devient un résidu permanent.** C'est arrivé **trois fois** *(R-099)*.
+
+> ⛔ ⚡ **TOUJOURS OUVERT au 2026-08-25.** **B2-0 a corrigé le COMPORTEMENT du reset ; il n'a PAS
+> touché à la STRUCTURE.** Les 17 colonnes sont toujours dans un seul onglet, et le reset s'appuie
+> toujours sur **deux listes écrites à la main** *(`CLUBS_COLONNES_CONTACT` et
+> `CLUBS_COLONNES_ENGAGEMENT`)* — mieux nommées et testées qu'avant, mais ⛔ **toujours écrites à
+> la main**. ⭐ **La séparation en `Clubs` + `Participations` reste entière, et c'est B2-2**
+> *(D-050)*.
 
 ### R-103 — Les messages libres peuvent contenir des données personnelles
 
@@ -1584,6 +1698,14 @@ club est renommé — et le lien *« ce club est venu 4 fois »* est perdu.
 ⭐ **Mitigation prévue** : les tests métier de **B2-0** servent de **filet de sécurité** de cette
 migration — ils décrivent le comportement attendu **avant** que la structure ne change *(D-050)*.
 
+> ⛔ ⚡ **TOUJOURS OUVERT au 2026-08-25 — la mitigation, elle, EXISTE désormais.** Le filet annoncé
+> ci-dessus n'est plus une intention : **T1 → T8** *(serveur)* et **48/48 + 97/97** *(navigateur)*
+> décrivent le comportement attendu du reset **avant** que la structure ne bouge, et ⭐ **ils ont été
+> écrits pour SURVIVRE à B2-2** — rejoués par simulation contre une fausse structure
+> `Clubs` + `Participations`, ils passent, **seuls deux helpers de montage/lecture changeant**
+> *(`PLAN.md` §16.5 ter)*. ⛔ **La migration elle-même reste ENTIÈRE** : aucun `club_id`, aucun
+> onglet nouveau, aucune ligne déplacée.
+
 ### R-105 — Une colonne future peut à nouveau échapper au classement
 
 | | |
@@ -1595,6 +1717,16 @@ migration — ils décrivent le comportement attendu **avant** que la structure 
 Même après la séparation, rien n'empêche d'ajouter une colonne à `Participations` **sans la
 classer**. ⭐ **Mitigation prévue** : un contrôle automatique — *« toute colonne doit appartenir à
 exactement une des deux familles »* — qui **échoue** si une colonne nouvelle n'est pas classée.
+
+> ⛔ ⚡ **TOUJOURS OUVERT au 2026-08-25 — mais OUTILLÉ, et la nuance compte.** B2-0 a livré la
+> **moitié « signalement »** de la mitigation : `colonnesClubsNonClassees` **liste** toute colonne
+> de `ClubsInvites` qu'aucune des deux familles ne connaît, et **T8** échoue si une telle colonne
+> apparaît. ⭐ **Le garde-fou est aussi CONSERVATEUR** : une colonne inconnue n'est **jamais** vidée
+> — *« une colonne qu'on n'a pas classée est une colonne dont on ignore la nature »*.
+>
+> ⛔ **Pourquoi ce n'est pas une fermeture** : la fiche parle de `Participations`, ⭐ **un onglet
+> qui n'existe pas encore**. Le contrôle protège la structure **actuelle** ; celle de **B2-2** devra
+> recevoir le sien. **Le piège est devenu visible ; il n'a pas disparu.**
 
 ### R-106 — `tournoi_id` ne peut pas identifier une édition
 
@@ -1627,6 +1759,18 @@ relance.
 > ⚠️ **[`../structure-google-sheet.md`](../structure-google-sheet.md) le décrit exactement** —
 > *« posé à chaque génération »*. La documentation n'est pas fausse : **c'est le comportement qui
 > est inadapté** à l'usage d'archive qu'on veut lui donner.
+
+> ⛔ ⚡ **TOUJOURS OUVERT au 2026-08-25 — mais UNE de ses trois conséquences est levée.** B2-0 a
+> ajouté `tournoi_id` aux champs que la réinitialisation efface, et le reset **réel** du
+> 2026-08-25 l'a confirmé : ⛔ **plus aucun identifiant hérité**. ✅ **La ligne « Il n'est PAS
+> effacé au reset » ci-dessus n'est donc plus vraie depuis ce jour-là** ; ⛔ **elle reste écrite
+> telle quelle**, car elle décrivait le comportement au moment de la découverte *(`CLAUDE.md`
+> §8 septies)*.
+>
+> ⛔ **Le cœur du problème est INTACT** : `tournoi_id` est **toujours renouvelé à chaque génération
+> de planning**. Il identifie encore *une génération*, pas *une édition* — et c'est **exactement**
+> ce que **B2-1** doit fermer, avec `edition_id` et le registre `Editions`. ⭐ **Effacer un mauvais
+> identifiant ne le rend pas bon.**
 
 ### R-107 — L'archivage est une opération destructive en plusieurs temps
 

@@ -2989,6 +2989,13 @@ M1 est terminé quand **les huit conditions** sont réunies :
 | **M1-C → M1-F** | ⬜ **NON COMMENCÉES** — ⛔ **aucune ne démarre sans validation explicite**. ⏸️ **M1-C1 est de plus SUSPENDUE jusqu'à la CLÔTURE COMPLÈTE de M1-PUB** — ⛔ pas seulement jusqu'à son cadrage |
 | 🌐 **M1-PUB** *(M1-E7)* | 🚧 **OUVERTE le 2026-08-24** *(**§15.3 bis**)*, ⛔ **et TOUJOURS OUVERTE** : ✅ **PUB-1 est TERMINÉ et FUSIONNÉ dans `main`** *(**`56dabd3`** le contenu · **`6fdffd8`** la trace post-geste — **fast-forward**, ⛔ sans réécrire un SHA ni créer de commit de fusion)* ; ✅ ⚡ **PUB-2 est FUSIONNÉ dans `main` et PUBLIÉ** *(**`f62b322`** le contenu · **`b002a57`** la trace post-geste — **fast-forward**, ⛔ sans réécrire un SHA ni créer de commit de fusion ; run Pages **#220** `success`)*, ⛔ **mais NON VÉRIFIÉ EN RÉEL**. ⚡ *(Cette case annonçait « PUB-2 est le prochain micro-lot, ⛔ NON COMMENCÉ » — vrai à l'ouverture du chantier, faux depuis le commit `f62b322` du 2026-08-24, et non relu depuis : `CLAUDE.md` §8 septies.)* ; ⛔ **PUB-3, PUB-4, PUB-5 NON COMMENCÉS**. S'intercale **avant M1-F** |
 
+> ⚡ **Repères de M1-B : ce sont ceux du 2026-08-24, et le serveur a bougé depuis** *(note ajoutée le
+> 2026-08-25, `CLAUDE.md` §8 quater)*. Les valeurs **v156**, **796/796**, **`Test.gs` 4645 lignes**,
+> **`Code.gs` 8423 lignes** citées dans cette section et dans le tableau des sept états sont les
+> constats **de ce jour-là**, et ils restent écrits tels quels : ⛔ **ils ne sont pas des repères
+> « d'aujourd'hui »**. Le serveur en service est passé à la **version 157** lors de **M1-B2 / B2-0**.
+> ⭐ **La source des repères du jour est [`docs/deploiement.md`](../deploiement.md)**, et elle seule.
+
 > ⛔ **M1-PUB n'est PAS terminé, et PUB-1 ne le termine pas.** Son critère de clôture *(§15.3 bis)*
 > exige **les cinq lots**, **le découplage réellement prouvé** et **PUB-5 livré**. ⭐ **PUB-1 a
 > DOCUMENTÉ le problème ; il ne l'a pas supprimé** — **R-097 reste OUVERT**, et sa correction
@@ -3103,7 +3110,7 @@ aucune nominative)*.
 
 | # | Lot | Dépend de | Portée | Migration | Risques fermés | Critère de clôture |
 |---|---|---|---|---|---|---|
-| **B2-0** | 🔴 **Sécurisation du reset** *(harnais)* | — | **backend seul** | ⛔ | **R-099**, **R-100** *(partiels)* | Reset prouvé **en réel** : 0 statut hérité, 0 effectif hérité |
+| **B2-0** | 🏁 **Sécurisation du reset** *(harnais)* — ✅ **CLÔTURÉ le 2026-08-25** | — | ⚡ **backend + frontend + CI** *(voir la note ci-dessous)* | ⛔ | ✅ **R-099**, ✅ **R-100** *(entièrement)* · **R-106** *(part reset seule)* · **R-033** *(dernière part)* | ✅ **ATTEINT** — reset prouvé **en réel** le 2026-08-25 : 0 statut hérité, 0 effectif hérité |
 | **B2-1** | **`edition_id` propre** + registre `Editions` + fin du renouvellement de `tournoi_id` | B2-0 | backend | douce | **R-106** | Régénérer un planning 3× ⇒ **un seul** `edition_id` |
 | **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-099, R-100, R-102, R-104, R-105** | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
 | **B2-3** | **Terrains** permanents / édition | B2-1 | backend + frontend | douce | **R-101** | Dossier d'un tournoi vide ⇒ ⛔ aucun terrain hérité |
@@ -3112,6 +3119,26 @@ aucune nominative)*.
 | **B2-6** | **Archivage + historique structuré**, incl. `Arch_Classements` | B2-2, B2-3 | backend + frontend | ⛔ | **R-107** | Archiver puis reset ⇒ archive **fidèle**, actif **vierge** |
 
 ⭐ **Ordre : B2-0 → B2-1 → B2-2 → B2-3 → B2-4 → B2-5 → B2-6.**
+
+> ⚡ **B2-0 n'a finalement PAS été « backend seul », et il faut le dire** *(corrigé le 2026-08-25)*.
+> La ligne ci-dessus l'annonçait ainsi, et c'était l'intention de départ. **La réalité livrée est
+> plus large**, parce que la validation en conditions réelles a ouvert deux portes que l'audit
+> n'avait pas vues :
+>
+> | Ce que B2-0 comprend réellement | Où |
+> |---|---|
+> | Le **reset serveur** — familles CONTACT / ENGAGEMENT, `tournoi_id` effacé | `backend/Code.gs` |
+> | Les **tests Apps Script** — T1 → T8, S1 → S3, témoin R-101 | `backend/Tests.gs` |
+> | Le **comportement de l'écran APRÈS le reset** *(B2-0.1 / B2-0.3 / B2-0.4)* | `frontend/js/` |
+> | La **synchronisation de la feuille FFR après toute écriture** *(B2-0.5)* | `frontend/js/` |
+> | Les **garde-fous durables et le rejeu des mutations**, exécutés avant publication | `tests/`, `.github/workflows/pages.yml` |
+>
+> 🎯 **La leçon, et elle vaut au-delà de ce lot** : ⭐ **corriger le serveur ne suffit pas quand
+> l'écran garde sa propre copie de la vérité.** Le classeur était juste dès B2-0 ; l'organisateur,
+> lui, voyait encore l'édition précédente. ⛔ **Aucun test backend ne pouvait le montrer.**
+>
+> ⏭️ **B2-1 est la prochaine étape éligible — ⛔ NON DÉMARRÉE.** *(Le détail chronologique de B2-0
+> vit dans [`SESSIONS.md`](SESSIONS.md), pas ici.)*
 
 #### 16.5 bis — B2-0 : les huit résultats métier **T1 → T8**
 
@@ -3163,6 +3190,25 @@ aucune nominative)*.
 colonnes déjà effacées · **S3** les cas limites *(classeur sans club, sans onglet)* · un
 **TÉMOIN R-101** qui fige le défaut des terrains et ⭐ **devra être inversé par B2-3**.
 
+**✅ État des preuves au 2026-08-25 — clôture du lot**
+
+| Résultat | Preuve automatisée | Preuve RÉELLE |
+|---|---|---|
+| **T1** aucun statut hérité | ✅ Apps Script *(880/880)* | ✅ reset réel — aucun club n'est plus `Accepté` |
+| **T2** aucun effectif hérité | ✅ | ✅ reset réel — joueurs, éducateurs et détail vides |
+| **T3** aucune `alerte_ecart` héritée | ✅ | ✅ reset réel |
+| **T4** cascade FFR à 0 / 0 / 0 | ✅ *(champs affichés, via `_autoChamp`)* | ✅ **A.4 revenue à l'état vide** sur l'écran publié |
+| **T5** carnet durable conservé | ✅ | ✅ reset réel — les clubs restent connus et redeviennent invitables |
+| **T6** ancien lien inutilisable | ✅ *(3 refus + UUID neuf + non-exposition)* | ⭐ ✅ **le meilleur constat du lot** : l'ancien lien ouvert **depuis l'ancien email** affiche **« Lien invalide ou expiré. »** |
+| **T7** `tournoi_id` non hérité | ✅ | ✅ reset réel |
+| **T8** aucune colonne non classée | ✅ *(garde-fou de classification)* | — *(contrôle structurel, sans manifestation à l'écran)* |
+| ⛔ **TÉMOIN R-101** | ✅ *(fige le défaut)* | ⭐ ✅ **les terrains ont bien SURVÉCU** — résultat **attendu**, ⛔ **R-101 reste OUVERT pour B2-3** |
+
+> ⚠️ **Ce que ces preuves ne couvrent PAS, et il faut le lire avant de s'en servir** : le
+> rechargement de secours après un échec de relecture *(B2-0.4)* et les scénarios de **concurrence /
+> panne réseau** *(B2-0.5)* sont établis **par le harnais seul**. ⛔ **Aucun n'a été provoqué en
+> production** — `CLAUDE.md` §13.6.
+
 #### 16.5 ter — Où vivent les garde-fous, et lesquels sont DURABLES
 
 > ⚠️ **Distinction posée après une revue extérieure** *(2026-08-25)*, et elle vaut règle générale.
@@ -3174,22 +3220,37 @@ colonnes déjà effacées · **S3** les cas limites *(classeur sans club, sans o
 > code faisait ce qu'on dit ; un **garde-fou durable** empêche quelqu'un de le défaire **demain**.
 > Seul le second se cite dans un plan.
 
+> ⚡ **Ce tableau a été corrigé le 2026-08-25, à la clôture du lot.** Il annonçait **deux** fichiers
+> `tests/` et *« les 5 défauts corrigés »* — chiffres **vrais à la date de B2-0.2**, devenus faux
+> quand B2-0.4 puis B2-0.5 ont élargi le harnais. Les valeurs ci-dessous sont celles **constatées**
+> à la clôture ; ⛔ **elles ne sont pas la source** — la source des bilans attendus est
+> [`docs/deploiement.md`](../deploiement.md).
+
 | Où | Ce que c'est | Rejouable depuis un clone neuf ? |
 |---|---|---|
 | `backend/Tests.gs` | **T1 → T8**, **S1 → S3**, témoin R-101 — lancés par `lancerTestsFFR` | ✅ oui *(dans l'éditeur Apps Script)* |
-| 🆕 `tests/frontend-reinitialisation.test.js` | Le comportement de **« Réinitialiser le tournoi »** côté écran : **F-A** *(les clubs sont bien relus)* · **F-B** *(dans le bon ORDRE)* · **F-C** *(chemin nominal)* · **F-D** ⭐ **BLOQUANT** *(relecture en échec ⇒ aucune participation ne survit en mémoire)* · **F-E** *(le texte de confirmation dit vrai)* | ✅ `node tests/frontend-reinitialisation.test.js` |
-| 🆕 `tests/mutations-frontend.test.js` | **Le garde-fou du garde-fou** : réintroduit les 5 défauts corrigés dans une **copie temporaire** et exige qu'ils soient attrapés | ✅ `node tests/mutations-frontend.test.js` |
+| `tests/frontend-reinitialisation.test.js` | Le comportement de **« Réinitialiser le tournoi »** côté écran : les clubs sont bien relus · **dans le bon ORDRE** · chemin nominal · ⭐ **BLOQUANT** *(relecture en échec ⇒ aucune participation ne survit en mémoire)* · le texte de confirmation dit vrai · ⚡ **rechargement de secours** *(B2-0.4)* | ✅ `node tests/frontend-reinitialisation.test.js` — **48/48** |
+| ⚡ 🆕 `tests/frontend-autorisation-sync.test.js` | *(ajouté par **B2-0.5**)* La **feuille FFR ne reste jamais périmée** : invalidation immédiate, relecture paresseuse, **compteurs de révision**, garde de fraîcheur *(une réponse dépassée ne repeint jamais l'écran)*, rattrapage automatique, préservation d'une saisie en cours, **les deux navigations** *(barre latérale **et** assistant mobile)*, et l'**inventaire anti-contournement** des écritures admin | ✅ `node tests/frontend-autorisation-sync.test.js` — **97/97** |
+| `tests/mutations-frontend.test.js` | **Le garde-fou du garde-fou** : réintroduit **40 défauts** dans une **copie temporaire** et exige que chacun soit attrapé | ✅ `node tests/mutations-frontend.test.js` — **40/40** |
 
-⭐ **Les deux fichiers `tests/` tournent dans le contrôle `verifier`** du workflow Pages, **avant**
+⭐ **Les TROIS fichiers `tests/` tournent dans le contrôle `verifier`** du workflow Pages, **avant**
 `deploy` : un échec **refuse la publication**, exactement comme un fichier JavaScript illisible
 *(même verrou que C-013 / R-043)*.
 
 > ⚠️ **Pourquoi hors de `frontend/`** : tout `frontend/` est **publié tel quel** sur GitHub Pages.
 > Un fichier de test y serait mis en ligne pour rien.
 >
-> ⭐ **Ils exécutent les VRAIES fonctions** — `onReinitialiser` et `chargerClubsInvites`, extraites
-> de leur fichier et lancées avec des doublures. ⛔ **Aucune expression régulière sur le code** :
-> réécrire ces fonctions autrement mais correctement laisse les contrôles au vert.
+> ⭐ **Ils exécutent les VRAIES fonctions** — `onReinitialiser`, `chargerClubsInvites`, et depuis
+> B2-0.5 la chaîne complète de l'autorisation — extraites de leur fichier et lancées avec des
+> doublures. Réécrire ces fonctions autrement mais correctement laisse les contrôles au vert.
+>
+> ⚡ **Une nuance ajoutée le 2026-08-25, parce que la phrase précédente disait « aucune expression
+> régulière sur le code » et que ce n'est plus exact** : deux contrôles du fichier
+> `frontend-autorisation-sync` sont **volontairement statiques** — l'un vérifie que les **deux**
+> navigations *(barre latérale et assistant mobile)* posent bien le crochet, l'autre tient
+> l'**inventaire anti-contournement** des écritures admin. ⭐ **Ils ne peuvent pas être dynamiques** :
+> ils prouvent l'absence d'un chemin qu'on n'a pas écrit, pas le comportement d'un chemin qu'on a
+> écrit. C'est exactement l'écart entre les deux fichiers qui avait produit **R-098**.
 
 > ⭐ **Ces tests sont écrits pour SURVIVRE à B2-2** *(corollaire de D-050)*. Toutes les assertions
 > métier passent par un **joint de lecture unique** rendant l'objet **plat** que la couche
