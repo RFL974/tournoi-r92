@@ -731,9 +731,33 @@ async function onReinitialiser() {
     clubsInvitesCourants = [];
     const clubsRelus = (typeof chargerClubsInvites === 'function') && await chargerClubsInvites();
 
+    // ⭐ B2-0.2 — LA FEUILLE FFR AUSSI, et pour la même raison : on l'OUBLIE tout de suite.
+    // ⚠️ Constaté EN RÉEL le 2026-08-25 : l'écran « Demande d'autorisation » montrait encore le
+    // tournoi précédent (3 clubs, 12 équipes, 117 participants, 38 éducateurs) sur un classeur
+    // pourtant vidé — parce que `majAutorisation` n'est appelée qu'au chargement de la page.
+    // ⛔ C'est le document destiné à la LIGUE : il ne doit jamais afficher une édition close.
+    if (typeof invaliderAutorisationAffichee === 'function') invaliderAutorisationAffichee();
+
     // On recharge tout l'état depuis le backend et on ré-affiche la page.
     await rechargerEtRendre({ reglages: true, terrains: true, selectCats: true,
                               equipes: true, infos: true, publication: true });
+
+    // ⚠️ LE PIÈGE À CONNAÎTRE : `rechargerEtRendre` ne ré-affiche qu'un SOUS-ENSEMBLE de ce que
+    // `initAdmin` construit au chargement. Tout ce qui manque garde donc à l'écran les valeurs de
+    // l'édition effacée. Le delta EXACT est de quatre fonctions, et les voici — la première est
+    // celle qui a été prise en défaut en réel :
+    //   · majAutorisation      → la feuille FFR (relue depuis le serveur) ;
+    //   · majSurPlace          → buvette / sandwicherie / boutique (CHAMPS_SURPLACE, effacés) ;
+    //   · majReponse           → date limite et contact de réponse (effacés) ;
+    //   · majApercuInvitation  → l'aperçu de l'email, construit depuis la config d'invitation.
+    // ⛔ `majSponsors` est VOLONTAIREMENT absent : les partenaires SURVIVENT à une réinitialisation
+    //    (choix assumé — un partenariat se reconduit), il n'y a donc rien de périmé à rafraîchir.
+    // ⭐ Ces quatre-là lisent `configCourante`, que `rechargerEtRendre` vient de relire : ils
+    //    passent donc APRÈS lui. ⛔ Aucune règle du backend n'est recopiée ici.
+    if (typeof majAutorisation === 'function') await majAutorisation();
+    if (typeof majSurPlace === 'function') majSurPlace();
+    if (typeof majReponse === 'function') majReponse();
+    if (typeof majApercuInvitation === 'function') majApercuInvitation();
     // Après le rechargement (comme avant le refactor) : en cas d'erreur réseau,
     // l'affichage — pistes d'arbitrage comprises — reste intact.
     document.getElementById('arbitrages').innerHTML = '';

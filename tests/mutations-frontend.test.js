@@ -81,6 +81,21 @@ const MUTATIONS = [
       '\'• le carnet des clubs invités (noms, contacts, statut) et vos partenaires.\'')
   },
   {
+    // ⭐ LE DÉFAUT TROUVÉ EN VALIDATION RÉELLE le 2026-08-25 : la feuille FFR de l'édition
+    //   effacée restait à l'écran — 3 clubs, 12 équipes, 117 participants, 38 éducateurs — sur
+    //   un classeur pourtant vide.
+    nom: 'F-G — la feuille FFR n\'est plus relue apres le reset (stale state Demande d autorisation)',
+    defaut: 'le document destine a la LIGUE afficherait encore l edition close',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin.js',
+      '    if (typeof majAutorisation === \'function\') await majAutorisation();\n', '')
+  },
+  {
+    nom: 'F-G bis — l oubli prealable de la feuille FFR est retire',
+    defaut: 'en cas de panne reseau, l ancienne feuille resterait la seule copie visible',
+    appliquer: (b) => remplacer(b, 'frontend/js/admin.js',
+      '    if (typeof invaliderAutorisationAffichee === \'function\') invaliderAutorisationAffichee();\n', '')
+  },
+  {
     // ⭐ CELLE-CI NE MUTE PAS LE PRODUIT, MAIS LE MODÈLE DU TEST — et c'est le seul cas où
     //   c'est légitime : un faux serveur infidèle rend TOUTES les autres preuves creuses.
     //   Le défaut est réel, il a existé : le faux état frais renvoyait `club_token: ''`, plus
@@ -109,6 +124,7 @@ try {
     // ⚠️ Le garde-fou est copié LUI AUSSI : sans cela, la mutation F-T — qui porte sur le
     //    MODÈLE du test, pas sur le produit — n'aurait aucun endroit où s'appliquer.
     for (const f of ['frontend/js/admin.js', 'frontend/js/admin-invitations.js',
+                     'frontend/js/admin-autorisation.js',
                      'tests/frontend-reinitialisation.test.js']) {
       fs.copyFileSync(path.join(RACINE, f), path.join(copie, f));
     }

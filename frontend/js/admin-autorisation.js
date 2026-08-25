@@ -275,6 +275,33 @@ function rendreFeuilleAutorisation(dossier) {
   return html + '</div>';
 }
 
+/**
+ * ⭐ M1-B2 / B2-0.2 — OUBLIER la feuille affichée, avant de la relire.
+ *
+ * ⚠️ Constaté EN RÉEL le 2026-08-25, juste après une réinitialisation réussie : en ouvrant
+ * « Demande d'autorisation » SANS recharger la page, l'écran montrait encore le nom, la date et
+ * le lieu de l'ancien tournoi, « 3 clubs », « 12 équipes », « 117 participants », « 38
+ * éducateurs ». ⛔ Le classeur, lui, était bien vide — c'est l'ÉCRAN qui mentait.
+ *
+ * 🔬 La cause : `majAutorisation` n'est appelée QU'AU CHARGEMENT DE LA PAGE (`initAdmin`) et après
+ * un enregistrement. ⛔ Ni la navigation vers l'écran, ni `rechargerEtRendre` ne la rappellent :
+ * le HTML rendu au chargement restait donc en place, intact, pendant que les données changeaient.
+ *
+ * ⭐ Même doctrine que pour `clubsInvitesCourants` : on OUBLIE d'abord, on relit ensuite. L'oubli
+ * est local et certain, la relecture est distante et faillible — l'oubli passe donc devant. Le
+ * pire cas devient « on affiche moins », jamais « on affiche du faux ».
+ * ⛔ Cette fonction n'invente aucune donnée et n'interroge personne : elle EFFACE, c'est tout.
+ */
+function invaliderAutorisationAffichee() {
+  const zoneSaisie = document.getElementById('autorisation-saisie');
+  const zoneFeuille = document.getElementById('autorisation-feuille');
+  if (zoneFeuille) {
+    zoneFeuille.innerHTML = '<div class="ffr-bloc ffr-neutre">Feuille de report en cours de ' +
+      'rechargement…</div>';
+  }
+  if (zoneSaisie) zoneSaisie.innerHTML = '';
+}
+
 /** (Re)charge et affiche la section « Demande d'autorisation ». Migration douce : silencieux si indisponible.
  *  La FEUILLE se charge d'abord : la SAISIE se rend ensuite, pour masquer les questions auxquelles
  *  l'app répond déjà (questionsDejaRepondues a besoin du dossier assemblé). Feuille indisponible

@@ -88,6 +88,39 @@ const ANCIEN_JETON = 'JETON-EDITION-PRECEDENTE';
 const NOUVEAU_JETON = 'JETON-NEUF-APRES-RESET';
 
 /* -------------------------------------------------------------------------- */
+/*  LA FEUILLE FFR D'UNE ÉDITION PRÉCÉDENTE — ⚠️ DONNÉES FICTIVES              */
+/*                                                                            */
+/*  ⛔ Ces valeurs sont INVENTÉES pour le test, et doivent le rester : noms     */
+/*  volontairement reconnaissables comme faux (« TOURNOI TEST ANCIEN »).       */
+/*  ⭐ Un test automatisé n'a aucun besoin de données réelles — il a besoin de  */
+/*  valeurs qu'on puisse RECHERCHER sans ambiguïté après coup.                 */
+/*                                                                            */
+/*  ⚠️ NE PAS CONFONDRE DEUX CHOSES, et c'est le point :                       */
+/*   · le SCÉNARIO reproduit ici — ancien état à l'écran, reset serveur réussi, */
+/*     ouverture de l'écran SANS recharger le navigateur — vient d'un défaut    */
+/*     CONSTATÉ MANUELLEMENT le 2026-08-25 en validation réelle ;              */
+/*   · les VALEURS ci-dessous, elles, sont une mise en scène. ⛔ Elles ne sont   */
+/*     PAS ce qui a été vu à l'écran ce jour-là, et ce fichier ne prétend pas   */
+/*     le contraire. La preuve terrain vit dans le rapport de session, pas ici. */
+/* -------------------------------------------------------------------------- */
+
+const ANCIENNE_FEUILLE_FFR =
+  '<div class="ffr-bloc">A.2 Tournoi : TOURNOI TEST ANCIEN — 2019-01-01 — STADE TEST ANCIEN' +
+  '</div><div class="ffr-bloc">A.4 Nombre de clubs : 3 · Nombre d\'equipes : 12 · ' +
+  'Nombre de participants : 117</div><div class="ffr-bloc">B.3 Nombre d\'educateurs : 38</div>';
+
+const ANCIENNE_SAISIE_FFR = '<form>Champs saisis de l\'edition close (117 participants)</form>';
+
+/** Une valeur de l'ancienne feuille FFR traîne-t-elle encore à l'écran ?
+ *  ⛔ Témoins FICTIFS, choisis pour être introuvables ailleurs dans une feuille fraîche. */
+const TRACES_ANCIENNE_EDITION = ['TOURNOI TEST ANCIEN', '2019-01-01', 'STADE TEST ANCIEN',
+  '117', '38', ': 3 ', ': 12'];
+
+function porteUneTraceDeLAncienneEdition(html) {
+  return TRACES_ANCIENNE_EDITION.some((t) => String(html || '').indexOf(t) !== -1);
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Un scénario complet : on joue « Réinitialiser le tournoi » et on observe.  */
 /* -------------------------------------------------------------------------- */
 
@@ -95,7 +128,9 @@ const NOUVEAU_JETON = 'JETON-NEUF-APRES-RESET';
  * @param {Object} opt
  *   - listerEchoue      : `listerClubsInvites` lève (coupure réseau)
  *   - clubsFrais        : ce que le serveur renvoie quand tout va bien
- *   - sansRechargement  : on retire `chargerClubsInvites` du contexte (mutation F-A)
+ *   - sansRechargement    : on retire `chargerClubsInvites` du contexte (mutation F-A)
+ *   - autorisationEchoue  : la relecture de la feuille FFR leve (coupure reseau)
+ *   - sansMajAutorisation : on retire la RELECTURE de la feuille, mais PAS l'oubli
  * @return {Promise<Object>} { trace, clubsEnMemoire, zoneClubs, messages }
  */
 function jouerReinitialisation(opt) {
@@ -113,6 +148,12 @@ function jouerReinitialisation(opt) {
     selection_enregistree: '2026-08-25', club_token: ANCIEN_JETON
   }];
 
+  // ⚠️ L'ÉCRAN « Demande d'autorisation » TEL QU'IL EST AU MOMENT DU CLIC : rendu au chargement
+  // de la page, il porte encore la feuille FFR de l'édition qui va être effacée. C'est
+  // EXACTEMENT ce qui a été constaté en réel le 2026-08-25.
+  elements['autorisation-feuille'] = { id: 'autorisation-feuille', innerHTML: ANCIENNE_FEUILLE_FFR };
+  elements['autorisation-saisie'] = { id: 'autorisation-saisie', innerHTML: ANCIENNE_SAISIE_FFR };
+
   const contexte = {
     console,
     document: {
@@ -129,6 +170,22 @@ function jouerReinitialisation(opt) {
     majApercuDossier: () => {},
     rechargerEtRendre: async () => { trace.push({ type: 'rechargerEtRendre' }); },
 
+    // Les trois autres écrans du delta initAdmin / rechargerEtRendre (voir onReinitialiser).
+    majSurPlace: () => trace.push({ type: 'majSurPlace' }),
+    majReponse: () => trace.push({ type: 'majReponse' }),
+    majApercuInvitation: () => trace.push({ type: 'majApercuInvitation' }),
+
+    // Doublures de RENDU seulement : ce qu'on éprouve est que les zones soient RÉÉCRITES,
+    // ⛔ pas ce qu'elles contiennent — le contenu, c'est le backend qui en répond (T4).
+    rendreFeuilleAutorisation: () => '<div class="ffr-bloc">FEUILLE FRAICHE</div>',
+    rendreSaisieAutorisation: () => '<div>SAISIE FRAICHE</div>',
+    questionsDejaRepondues: () => ({}),
+    apiPostProtege: async (action) => {
+      trace.push({ type: 'appel', action });
+      if (opt.autorisationEchoue) throw new Error('Échec réseau simulé (FFR)');
+      return { dossier: { sections: [], nbManquants: 12, complet: false } };
+    },
+
     ecrireAdmin: async (action) => {
       trace.push({ type: 'appel', action });
       if (action === 'listerClubsInvites') {
@@ -141,11 +198,20 @@ function jouerReinitialisation(opt) {
   contexte.globalThis = contexte;
   vm.createContext(contexte);
 
-  // ⭐ Les DEUX vraies fonctions, dans le même contexte : `chargerClubsInvites` n'est pas une
-  //   doublure, c'est le code réel — sans quoi F-D ne prouverait rien de son comportement.
+  // ⭐ Les VRAIES fonctions, dans le même contexte — ce ne sont pas des doublures :
+  //   `chargerClubsInvites`, `invaliderAutorisationAffichee` et `majAutorisation` sont le code réel.
+  //   Sans cela, F-D et F-G ne prouveraient rien de leur comportement.
   if (!opt.sansRechargement) {
     vm.runInContext(extraireFonction('frontend/js/admin-invitations.js',
       'async function chargerClubsInvites()'), contexte, { filename: 'admin-invitations.js' });
+  }
+  vm.runInContext(extraireFonction('frontend/js/admin-autorisation.js',
+    'function invaliderAutorisationAffichee()'), contexte, { filename: 'admin-autorisation.js' });
+  // ⚠️ `sansMajAutorisation` ne retire QUE la relecture, jamais l'oubli : c'est précisément ce
+  //    qu'il faut isoler pour prouver que l'oubli tient TOUT SEUL (F-G ⑧).
+  if (!opt.sansMajAutorisation) {
+    vm.runInContext(extraireFonction('frontend/js/admin-autorisation.js',
+      'async function majAutorisation()'), contexte, { filename: 'admin-autorisation.js' });
   }
   vm.runInContext(extraireFonction('frontend/js/admin.js',
     'async function onReinitialiser()'), contexte, { filename: 'admin.js' });
@@ -154,6 +220,8 @@ function jouerReinitialisation(opt) {
     trace,
     clubsEnMemoire: contexte.clubsInvitesCourants,
     zoneClubs: (elements['liste-clubs-invites'] || {}).innerHTML || '',
+    zoneFeuilleFFR: elements['autorisation-feuille'].innerHTML || '',
+    zoneSaisieFFR: elements['autorisation-saisie'].innerHTML || '',
     messages
   }));
 }
@@ -255,6 +323,40 @@ function porteLAncienJeton(clubs) {
     'F-D ⑤ le message de fin dit que la réinitialisation a eu lieu MAIS que l\'écran est incomplet');
   verifier(panne.trace.some((e) => e.type === 'rechargerEtRendre'),
     'F-D ⑥ la panne n\'interrompt pas le reste de la remise à zéro de l\'écran');
+
+  /* ---- F-G : LA DEMANDE D'AUTORISATION — le défaut trouvé EN RÉEL -------- */
+  //   Scénario exact : ancien état à l'écran → reset réussi → on ouvre « Demande d'autorisation »
+  //   SANS recharger le navigateur. ⛔ Aucune donnée de l'ancienne édition ne doit rester visible.
+  verifier(nominal.trace.some((e) => e.action === 'getDossierAutorisation'),
+    'F-G ① la feuille FFR est RELUE depuis le serveur après le reset');
+  verifier(!porteUneTraceDeLAncienneEdition(nominal.zoneFeuilleFFR),
+    'F-G ② ⭐ plus aucune valeur de l\'ancien tournoi dans la feuille (ni nom, ni date, ni ' +
+    'lieu, ni 3 clubs / 12 equipes / 117 participants / 38 educateurs)');
+  verifier(!porteUneTraceDeLAncienneEdition(nominal.zoneSaisieFFR),
+    'F-G ③ ni dans la zone de saisie de la demande');
+  verifier(/FEUILLE FRAICHE/.test(nominal.zoneFeuilleFFR),
+    'F-G ④ la feuille affichée est bien celle que le serveur vient de renvoyer');
+
+  //   ⭐⭐ FAIL-CLOSED : la relecture de la feuille ÉCHOUE (réseau) après un reset réussi.
+  //      C'est le cas dangereux : le classeur est vide, et l'écran est la seule copie restante.
+  const panneFFR = await jouerReinitialisation({ clubsFrais: CARNET_APRES_RESET, autorisationEchoue: true });
+  verifier(!porteUneTraceDeLAncienneEdition(panneFFR.zoneFeuilleFFR),
+    'F-G ⑤ ⭐⭐ BLOQUANT : relecture FFR en échec ⇒ l\'ancienne feuille a DISPARU quand même');
+  verifier(!porteUneTraceDeLAncienneEdition(panneFFR.zoneSaisieFFR),
+    'F-G ⑥ ⭐⭐ idem pour la zone de saisie');
+  verifier(/indisponible/.test(panneFFR.zoneFeuilleFFR),
+    'F-G ⑦ et l\'écran dit clairement que la feuille est indisponible');
+
+  //   ⛔ Même si `majAutorisation` n'existait pas, l'oubli préalable doit avoir eu lieu.
+  const sansMaj = await jouerReinitialisation({ clubsFrais: CARNET_APRES_RESET, sansMajAutorisation: true });
+  verifier(!porteUneTraceDeLAncienneEdition(sansMaj.zoneFeuilleFFR),
+    'F-G ⑧ ⭐ sans même la fonction de relecture, l\'ancienne feuille ne survit pas');
+
+  //   Les trois autres écrans du delta initAdmin / rechargerEtRendre.
+  ['majSurPlace', 'majReponse', 'majApercuInvitation'].forEach((f) => {
+    verifier(nominal.trace.some((e) => e.type === f),
+      'F-G ⑨ ' + f + ' est rafraîchi après le reset (données d\'édition effacées)');
+  });
 
   /* ---- F-A : le rechargement lui-même ----------------------------------- */
   const sansFonction = await jouerReinitialisation({ sansRechargement: true });
