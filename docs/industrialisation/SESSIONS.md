@@ -9717,3 +9717,116 @@ la **réserve de la condition 5** reste écrite · **M9 transmis à PUB-5** comm
 
 ⏭️ **PUB-5 — l'aperçu réel**, avec **M9 comme premier point**. ⛔ **Elle NE COMMENCE PAS** sans
 décision explicite de Romain *(**§12.4**)*.
+
+---
+
+## SESSION 30 — 🏁🏁 **PUB-5 : LE FAUX APERÇU DISPARAÎT, ET M1-PUB EST CLOS** *(2026-08-26, suite 6)*
+
+| | |
+|---|---|
+| **Objectif** | Traiter **M9**, puis clôturer **PUB-5** et, si son critère le permet, **M1-PUB** en entier |
+| **Nature** | **Frontend + documentation**, puis clôture **documentaire pure** |
+| **Décisions** | **D-056** — l'aperçu n'est pas remplacé, il est **supprimé** |
+| **Résultat** | ✅ **PUB-5 CLOS · M1-PUB CLOS** — les 5 lots, les 4 conditions |
+
+### 30.1 — ⚠️ Qui a constaté quoi
+
+⛔ **La preuve visuelle de l'administration n'est PAS de Claude, et il serait malhonnête de
+l'écrire ainsi.** L'écran d'administration exige la **clé admin**, qui n'a été ni manipulée, ni
+demandée, ni contournée.
+
+| Preuve | Par qui |
+|---|---|
+| Audit du périmètre, mise en œuvre, contrôles automatiques, contenu **publié** *(HTML, JS, CSS servis)*, absence d'erreur console, page publique et vitrine | ⭐ **Cette session** |
+| ⭐ **L'écran d'administration lui-même** — aperçu disparu · aucun espace mort ni colonne orpheline sur **ordinateur** · carte « Infos du tournoi » claire **avec les données chargées** · note de publication bien placée et lisible · **Assistant mobile** et **Vue classique** sur **téléphone réel** | ⭐ **ROMAIN**, lui-même |
+
+### 30.2 — L'audit a trouvé plus que le bloc transmis
+
+M9 avait **cinq** ramifications, et non une : la section elle-même · le titre et le texte de la
+carte *« Infos du tournoi (pour l'actualité) »* · `majApercuTournoi()` et ses **5 appels** ·
+**179 lignes de CSS** · et ⚠️ **4 enregistrements dans `ecrans.js` et `assistant.js`**.
+
+> ⭐ **Ce quatrième point était le piège du lot.** La régression de la **session 7** *(hotfix
+> PR #87)* venait d'une `<section>` **non déclarée** dans ces deux fichiers. ⛔ **Le symétrique est
+> vrai** : retirer la section sans retirer ses déclarations aurait laissé les deux parcours pointer
+> vers un bloc inexistant. Un contrôle automatique le vérifie désormais : **22 blocs cités, 22
+> présents, 0 section orpheline.**
+
+### 30.3 — Pourquoi on ne remplace pas — D-056
+
+🔬 **La page publique Maxilou n'affiche que le NOM du tournoi** : la vue `live` n'expose ni la
+description, ni le lieu, ni l'affiche. Une réplique aurait donc été **presque vide**.
+
+⭐ **Mais la vraie raison est ailleurs, et elle vaut au-delà de ce lot.** Le reproche fait à l'ancien
+aperçu n'était pas de montrer le **mauvais site** : c'était d'**affirmer sa propre fidélité**. Il
+s'annonçait *« Aperçu RÉEL »*. Une réplique de la page Maxilou aurait eu **exactement la même
+faiblesse** — juste le jour où on l'écrit, fausse dès que l'original bouge.
+🎯 **On aurait déplacé le mensonge, pas supprimé sa cause.**
+
+> ⭐ **Le dépôt avait déjà tranché la même question ailleurs** : l'aperçu du dossier club, dont le
+> code dit *« un aperçu générique ne peut PAS exister — et tant mieux »*. **D-056 ne fait
+> qu'étendre un principe déjà appliqué ici.**
+
+### 30.4 — Un écart trouvé pendant la mise en œuvre, absent de l'audit
+
+🔴 **`docs/structure-google-sheet.md` ne décrivait pas l'ancien fonctionnement : il DONNAIT UN
+ORDRE.** *« [`tournoi_publie`] doit rester dans les listes blanches `live` **et** `invitation`, sans
+quoi la vitrine conclut “non publié” en silence. »*
+
+> ⛔ **Une session future l'aurait suivi et aurait DÉFAIT PUB-4.** Corrigé : le témoin sort par
+> `live`, et par elle seule. 🎯 **Une documentation périmée ne se contente pas d'être fausse — elle
+> peut prescrire.**
+
+### 30.5 — 🔴 Le filet n'avait pas été levé, et c'est ma clôture de PUB-4 qui l'a manqué
+
+Le critère de clôture de M1-PUB porte une **condition ④** : un tableau des **preuves reportées**,
+qui se déclare lui-même *« la SEULE adresse où l'on va vérifier qu'il ne reste rien »*.
+
+⛔ **Les trois preuves y étaient encore marquées « OUVERTE »** — alors qu'elles avaient été
+**honorées pendant PUB-4**, le même jour. **La session qui les a produites n'est pas venue les y
+inscrire.**
+
+> 🎯 **La leçon, et elle se retourne contre le dispositif lui-même** : un filet qu'on ne relève pas
+> ne signale pas qu'il est plein — ⭐ **il continue d'annoncer un manque, ce qui est aussi trompeur
+> que l'oubli qu'il devait prévenir.** ⭐ **Rien n'a été perdu** : la clôture relit ce tableau, et
+> c'est ce qui a rattrapé l'écart. ⚠️ **Mais il aurait suffi qu'elle ne le relise pas.**
+
+### 30.6 — La clôture de M1-PUB, condition par condition
+
+| | Condition | État |
+|---|---|---|
+| **①** | Les **cinq** micro-lots terminés et validés | ✅ PUB-1 · PUB-2 · PUB-3 · PUB-4 · PUB-5 |
+| **②** | Le découplage **réellement prouvé dans les deux sens** | ✅ PUB-4 — publier puis masquer observés en réel, la vitrine n'a pas bougé |
+| **③** | ⛔ Aucun aperçu mensonger dans l'administration | ✅ M9 — ⚡ **condition RÉÉCRITE par D-056** : le second volet exigeait une **réplique**, ⛔ **il n'a PAS été exécuté** et ne doit jamais être présenté comme tel |
+| **④** | Aucune preuve reportée ouverte | ✅ les **trois** honorées en PUB-4 — le tableau est enfin à jour *(§30.5)* |
+
+⭐ **Le critère de fond est atteint** : *changer l'état publié / non publié dans Maxilou ne provoque
+plus aucun effet ailleurs que sur la page publique Maxilou.*
+
+### 30.7 — ⛔ Ce que cette session n'a PAS fait
+
+- ⛔ **Aucun fichier applicatif touché par la CLÔTURE** — elle est exclusivement documentaire
+  *(M9, lui, était frontend seul : ⛔ aucun backend, aucun Apps Script, aucun redéploiement)* ;
+- ⛔ **Le sort du jeu de tournoi fictif n'est pas décidé** : il reste **intact** *(3 · 1 · 3)* ;
+- ⛔ **M1-C1 n'est pas démarrée** : sa **suspension est levée**, ⭐ **ce qui n'est pas une
+  autorisation** *(**§12.4**)* ;
+- ⛔ **Aucune trace historique réécrite** : les rappels, les fiches de session et les phrases vraies
+  à leur date sont conservés ; le nouvel état s'**ajoute**.
+
+### 30.8 — ⚠️ Un incident de plateforme, à connaître
+
+**La poussée de M9 n'a déclenché AUCUNE exécution GitHub Pages.** Après vérification par l'API
+*(0 exécution sur le SHA)*, la cause a été trouvée : **`githubstatus.com` annonçait un
+« Partial System Outage »**. Le site publié servait encore l'ancienne version.
+
+> ⭐ **Le workflow expose `workflow_dispatch`** : la publication a été déclenchée manuellement sur
+> `main`, et le run **`32990028867`** est `success` **sur le bon commit `8778982`**, ses deux
+> travaux verts. 🎯 **La leçon** : ⛔ *« j'ai poussé »* n'est pas *« c'est publié »* — et l'absence
+> d'exécution peut n'avoir **aucun rapport** avec le dépôt *(**§8 septies**)*.
+
+### 30.9 — Prochaine session recommandée
+
+⏭️ **Aucune n'est engagée.** Les chantiers réellement ouverts sont **M1-B2** *(B2-1 non démarré)* et
+le chantier **Confiance** *(CF-4b)* ; **M1-C1** redevient éligible. ⛔ **Rien ne commence sans
+décision explicite de Romain** *(**§12.4**)*. ⏳ **Et une question lui appartient toujours** : le
+sort du jeu de tournoi fictif.

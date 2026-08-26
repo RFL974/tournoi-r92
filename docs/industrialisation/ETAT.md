@@ -76,11 +76,30 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-26 *(suite 5)* — 🏁 **M1-PUB / PUB-4 EST TERMINÉ ET CLÔTURÉ :
+**Dernière mise à jour** : 2026-08-26 *(suite 6)* — 🏁🏁 **M1-PUB EST TERMINÉ. LE CHANTIER ENTIER
+EST CLOS** — ses **cinq** micro-lots et les **quatre** conditions de son critère de clôture.
+
+> ⭐ **Ce que M1-PUB a définitivement accompli, en une phrase** : *changer l'état publié / non publié
+> dans Maxilou ne provoque plus **aucun** effet ailleurs que sur la page publique Maxilou* — et
+> l'administration ne promet plus le contraire.
+
+| | |
+|---|---|
+| ✅ **PUB-5 est CLOS** | Le **faux aperçu** *(« Aperçu sur le site »)* est **supprimé** : section, 74 lignes de réplique HTML, 179 lignes de CSS, 5 appels et 4 enregistrements d'écran. Commit **`8778982`**, run Pages **`32990028867`** `success` |
+| ⚡ **Son objectif a changé en route** | **D-056** : on **supprime**, on ne **remplace** pas. ⭐ *« On ouvre la vraie page publique, on ne la copie pas »* — une réplique **affirme sa propre fidélité** et redevient fausse dès que l'original bouge |
+| ⭐ **La preuve visuelle est de ROMAIN** | ⛔ **Pas de Claude** : l'écran d'administration exige la clé. **Romain a validé lui-même**, sur **ordinateur** *(aucun espace mort, aucune colonne orpheline)* **et sur téléphone réel** *(Assistant mobile et Vue classique)* |
+| ✅ **Les 4 conditions du critère** | ① les 5 lots · ② le découplage prouvé dans les deux sens · ③ **réécrite par D-056**, aucun aperçu mensonger ne subsiste · ④ **le filet des preuves reportées est vide** |
+| 🔴 **Un écart rattrapé à la clôture** | Le tableau de la condition ④ annonçait encore les **trois** preuves reportées comme **OUVERTES**, alors qu'elles avaient été honorées en PUB-4. ⛔ **Ma clôture de PUB-4 ne l'avait pas relevé.** Corrigé, et l'écart est écrit dans `PLAN.md` |
+| ▶️ **Conséquence de feuille de route** | La suspension de **M1-C1** est **LEVÉE** — ⛔ **ce qui ne l'autorise pas à démarrer** *(`CLAUDE.md` §12.4)* |
+| ⏳ **Toujours à décider par Romain** | Le **sort du jeu de tournoi fictif** — voir le repère en tête de ce document. Il est **intact** : 3 équipes · 1 poule · 3 matchs |
+| ⛔ **Ce lot n'a touché aucun applicatif** | La clôture est **exclusivement documentaire**. M9, lui, était **frontend seul** : ⛔ aucun backend, aucun Apps Script, aucun redéploiement Google |
+
+*Rappel de la mise à jour précédente — 2026-08-26 (suite 5)* — 🏁 **M1-PUB / PUB-4 EST TERMINÉ ET CLÔTURÉ :
 LE DÉCOUPLAGE EST FAIT, EN SERVICE, ET PROUVÉ DES DEUX CÔTÉS.**
 ✅ **R-097 et R-098 sont CLOS** *(décision de Romain — **D-055**)*.
 ⛔ **PUB-5 reste NON COMMENCÉ · B2-1 NON DÉMARRÉ · M1-PUB N'EST PAS TERMINÉ** *(il ne le sera qu'à
-la clôture de PUB-5)*.
+la clôture de PUB-5)*. ⚡ *(Vrai jusqu'au 2026-08-26 suite 6 : **PUB-5 et M1-PUB sont CLOS depuis**.
+⛔ **B2-1 reste NON DÉMARRÉ**.)*
 ➡️ **PREMIER POINT À TRAITER DANS PUB-5 : M9** — le bloc *« Aperçu sur le site »* de
 `frontend/admin.html` promet encore une **carte d'actualité** et une **page d'événement** sur le
 site de l'association. ⛔ **Ces deux choses n'existent plus.** ⭐ **Ce défaut NE ROUVRE PAS PUB-4**
@@ -101,7 +120,7 @@ document.
 | ✅ **Les deux obligations de PUB-4** | ① le **découplage** prouvé en réel · ② les **trois preuves héritées de PUB-2** *(R-098 condition 5, contrôles §21.10 ter **6** et **8**)* — ⭐ **relevées séparément**, comme le plan l'exigeait |
 | ⚠️ **La réserve à ne jamais perdre** | La **condition 5 de R-098** a été honorée **par observation et par lecture du code**, ⛔ **pas par le scénario littéral** *« publié + prérequis volontairement cassés »*, qui **n'a pas été joué**. ⛔ **Ne jamais le présenter comme joué** — `RISQUES.md`, encadré « LA CONDITION 5 » |
 | ⛔ **Ce que PUB-4 n'a PAS fait** | ⛔ **Aucune correction du frontend de l'administration** *(M9 — c'est PUB-5)* · ⛔ aucune décision sur le sort du jeu fictif |
-| ⏭️ **Prochaine étape** | **PUB-5 — l'aperçu réel**, ⛔ **NON COMMENCÉ**, et il ne commence pas sans décision explicite de Romain *(`CLAUDE.md` §12.4)*. **M9 en est le premier point** |
+| ⏭️ **Prochaine étape** | **PUB-5 — l'aperçu réel**, ⛔ **NON COMMENCÉ**, et il ne commence pas sans décision explicite de Romain *(`CLAUDE.md` §12.4)*. **M9 en est le premier point** ⚡ *(vrai à la clôture de PUB-4 ; **PUB-5 a été mené et clos le même jour** — voir le bloc de tête)* |
 
 *Rappel de la mise à jour précédente — 2026-08-26 (suite 4)* — ⚡ **M1-PUB / PUB-3 : LE PLAN DE DÉCOUPLAGE
 EST ÉCRIT.** Livrable unique : [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md) — les
@@ -922,21 +941,29 @@ jour** — le bloc de tête le dit depuis, mais ce paragraphe-ci n'avait pas ét
 exactement le mécanisme de `CLAUDE.md` §8 septies** : un état écrit **avant** le geste, jamais relu
 **après**.
 
-🌐 **ET UN CHANTIER INTERMÉDIAIRE S'INTERCALE : M1-PUB *(= M1-E7)***, à traiter **avant M1-F**
-*(`PLAN.md` **§15.3 bis**)*. ✅ **QUATRE de ses cinq micro-lots sont CLOS** — **PUB-1**, **PUB-2**
-*(vérifié en réel)*, **PUB-3** et **PUB-4** *(le découplage, exécuté, en service et prouvé des deux
-côtés)*. ✅ **R-097 et R-098 sont CLOS** *(décision **D-055**)*.
-⛔ **PUB-5 reste NON COMMENCÉ** — ➡️ **son premier point est M9**, le texte obsolète
-*« Aperçu sur le site »* de l'administration.
-⛔ **M1-PUB n'est donc PAS terminé** : son critère de clôture exige **les cinq lots**.
-⏸️ **M1-C1 est SUSPENDUE JUSQU'À LA CLÔTURE COMPLÈTE DE M1-PUB.** ⛔ **M1-C → M1-F ne démarrent pas
-automatiquement.**
+🌐 🏁 **LE CHANTIER INTERMÉDIAIRE M1-PUB *(= M1-E7)* EST CLOS** *(`PLAN.md` **§15.3 bis**)* —
+ouvert le 2026-08-24, clos le **2026-08-26**. ✅ **Ses CINQ micro-lots sont terminés** : **PUB-1**
+*(doctrine)*, **PUB-2** *(accès autonome, vérifié en réel)*, **PUB-3** *(le plan)*, **PUB-4** *(le
+découplage, prouvé des deux côtés)* et **PUB-5** *(le faux aperçu supprimé, validé visuellement par
+Romain)*. ✅ **Les QUATRE conditions de son critère de clôture sont réunies.**
+✅ **R-097 et R-098 sont CLOS** *(**D-055**)* · **D-056** a réécrit la condition ③.
+▶️ **La suspension de M1-C1 est LEVÉE** — ⛔ **M1-C → M1-F ne démarrent pas automatiquement**, aucune
+étape ne commence sans décision explicite de Romain.
+
+> ⚡ *(Ce paragraphe a annoncé successivement : « ✅ PUB-1 terminé ; ⛔ PUB-2 → PUB-5 non commencés ;
+> M1-PUB n'est pas terminé et R-097 reste OUVERT », puis « ✅ QUATRE de ses cinq micro-lots sont
+> CLOS ; ⛔ PUB-5 reste NON COMMENCÉ, son premier point est M9 ; ⏸️ M1-C1 est SUSPENDUE jusqu'à la
+> clôture complète de M1-PUB ». **Chacune était vraie à sa date.**)*
 
 > ⚡ *(Ce paragraphe annonçait : « PUB-2 est fusionné et publié — **⛔ mais TOUJOURS PAS VÉRIFIÉ EN
 > RÉEL** » · « **⛔ PUB-3, PUB-4 et PUB-5 non commencés** » · « **R-097 reste OUVERT** ». **Chacune
 > de ces phrases était vraie à sa date** : PUB-2 a été vérifié en réel le 2026-08-26 *(et cette
 > vérification a trouvé **R-098**)*, PUB-3 puis PUB-4 ont été menés le même jour. ⛔ **Seule la
 > dernière phrase du paragraphe est restée vraie tout du long** : M1-PUB n'est pas terminé.)*
+>
+> ⚡ *(Et cette annotation-là est à son tour datée : elle a été écrite à la clôture de **PUB-4**, et
+> son « M1-PUB n'est pas terminé » n'a tenu que jusqu'à la clôture de **PUB-5**, le même jour.
+> ⭐ **Aucune phrase d'état ne reste vraie par nature — pas même celle qui corrige une autre.**)*
 
 > ⚠️ **Cette ligne annonçait « PUB-2 est le prochain, NON COMMENCÉE ».** C'était vrai jusqu'à
 > l'implémentation de PUB-2, le 2026-08-24. ⭐ **Relue et corrigée dans le même lot** — c'est

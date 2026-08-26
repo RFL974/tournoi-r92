@@ -5,7 +5,11 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-26 *(suite 5)* — 🏁 **D-055 — LA CLÔTURE DE PUB-4 : R-097 ET
+**Dernière mise à jour** : 2026-08-26 *(suite 6)* — 🏁 **D-056 — LE CRITÈRE DE CLÔTURE DE M1-PUB
+EST CORRIGÉ, PAS CONTOURNÉ : L'APERÇU N'EST PAS REMPLACÉ, IL EST SUPPRIMÉ.** Décision prise par
+Romain le 2026-08-26, à la mise en œuvre de PUB-5 / M9, puis appliquée à la clôture du chantier.
+
+*Rappel de la mise à jour précédente* — 2026-08-26 *(suite 5)* — 🏁 **D-055 — LA CLÔTURE DE PUB-4 : R-097 ET
 R-098 SONT FERMÉS, LA RÉSERVE DE LA CONDITION 5 RESTE ÉCRITE, ET M9 PASSE À PUB-5.** Décision prise
 par Romain le 2026-08-26 au vu du rapport technique de PUB-4.
 
@@ -3785,3 +3789,74 @@ Trois obligations en découlent, et **aucune n'est facultative** :
 - ❌ **Pas** décider du sort du **jeu de tournoi fictif** : ⏳ **il reste en place**, et la décision appartient à Romain ;
 - ❌ **Pas** réputer joué le scénario littéral de la condition 5 — ⛔ **c'est exactement l'inverse** ;
 - ✅ **Seulement ceci** : *ce que je cite de la condition 5, est-ce que je cite AUSSI sa réserve ?*
+
+---
+
+### D-056 — Un aperçu qui affirme sa propre fidélité finit par mentir : la seule copie fiable de la page publique, c'est la page publique elle-même
+
+| | |
+|---|---|
+| **Date** | 2026-08-26 *(suite 6)* |
+| **Prise par** | **Romain**, à la mise en œuvre de **PUB-5 / M9**, sur la base de l'audit en lecture seule |
+| **Porte sur** | `PLAN.md` — **fiche PUB-5** et **critère de clôture de M1-PUB, condition ③** |
+| **Doctrine de référence** | **D-048** *(publier ne parle à personne)* · **D-054 / ②** *(l'annonce reste éditoriale)* · **D-055** *(M9 transmis à PUB-5)* |
+
+**⚠️ POURQUOI CETTE DÉCISION EXISTE — et ce n'est pas pour numéroter une clôture**
+
+> Le **critère de clôture de M1-PUB**, écrit par **PUB-1**, exige à sa **condition ③** *deux* choses,
+> pas une :
+>
+> | | Le texte d'origine | État |
+> |---|---|---|
+> | ⛔ | *« L'ancien aperçu de la vitrine externe n'existe plus dans l'admin »* | ✅ **FAIT** *(M9)* |
+> | ✅ | *« L'aperçu présenté est celui de la page publique Maxilou »* | ⛔ **NON FAIT — délibérément** |
+>
+> 🎯 **Sans cette fiche, M1-PUB serait déclaré clos alors que son propre critère dit autre chose.**
+> Une session future y lirait soit *« la clôture était irrégulière »*, soit — bien pire —
+> *« il manque l'aperçu, construisons-le »*, ⛔ **ce qui défairait M9.** C'est exactement le
+> mécanisme que **D-055 / ⑤** a déjà eu à traiter, et il se répète ici.
+
+**Ce que Romain a tranché**
+
+| # | |
+|---|---|
+| **①** | Le faux aperçu est **SUPPRIMÉ**, ⛔ **pas remplacé** par une réplique HTML de la page publique Maxilou |
+| **②** | Le principe qui remplace la seconde moitié de la condition ③ : ⭐ **on OUVRE la vraie page publique, on ne la copie pas.** Le bouton **« Ouvrir la page »**, déjà présent dans la carte *« Publier le tournoi »*, la montre telle qu'elle est |
+| **③** | La condition ③ du critère de clôture est **RÉÉCRITE** en conséquence — ⛔ **elle n'est ni supprimée, ni réputée satisfaite en l'état** |
+
+**⭐ Les deux raisons, et la seconde est la vraie**
+
+> **① La réplique serait pauvre.** 🔬 La page publique Maxilou n'affiche aujourd'hui que le **nom**
+> du tournoi : la vue `live` n'expose ni la description, ni le lieu, ni l'affiche
+> *(`backend/Code.gs`, `frontend/js/tournoi.js`)*. Un aperçu de cette page ne montrerait presque
+> rien de ce que l'organisateur vient de saisir.
+>
+> **② Elle recréerait le défaut qu'on vient de supprimer.** ⚠️ Le reproche fait à l'ancien aperçu
+> n'était pas de montrer le **mauvais site** : c'était d'**affirmer sa propre fidélité**. Il
+> s'annonçait *« Aperçu RÉEL »*. Une réplique de la page publique Maxilou aurait exactement la même
+> faiblesse — elle serait juste **le jour où on l'écrit**, et fausse dès que la vraie page bouge.
+> 🎯 **On aurait déplacé le mensonge, pas supprimé sa cause.**
+
+**⭐ Le dépôt avait déjà tranché la même question, ailleurs**
+
+> L'aperçu du **dossier club** fut jadis un lien figé qui a cessé de fonctionner. La règle inscrite
+> alors dans le code *(`admin-infos-publication.js`, `majApercuDossier`)* dit :
+>
+> > *« Un aperçu “générique” ne peut donc PAS exister — et tant mieux : ce que tu veux relire avant
+> > d'envoyer, c'est le dossier tel que le club le recevra. »*
+>
+> ⭐ **D-056 ne fait qu'étendre à la page publique un principe que ce projet applique déjà.**
+
+**⛔ Ce que cette décision ne fait PAS**
+
+- ❌ **Pas** supprimer la condition ③ : elle est **réécrite**, et son exigence de fond — ⛔ *aucun
+  aperçu mensonger dans l'administration* — est **plus fortement** satisfaite qu'elle ne l'aurait
+  été par une réplique ;
+- ❌ **Pas** interdire tout aperçu dans l'administration : `bloc-apercu-invitation` *(l'email réel)*
+  et `majApercuDossier` *(le dossier réel d'un club réel)* restent — ⭐ **ils montrent des artefacts
+  RÉELS, pas des copies** ;
+- ❌ **Pas** prétendre que la seconde moitié du texte d'origine a été exécutée : ⛔ **elle ne l'a pas
+  été**, et ce document est là pour qu'on ne puisse jamais l'écrire ;
+- ❌ **Pas** décider du sort du **jeu de tournoi fictif** : ⏳ **il reste en place** ;
+- ✅ **Seulement ceci** : *cet aperçu que je m'apprête à écrire, est-ce l'artefact RÉEL — ou une
+  copie qui devra rester fidèle toute seule ?*
