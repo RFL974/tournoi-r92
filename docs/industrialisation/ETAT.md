@@ -62,7 +62,18 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-26 *(suite 2)* — 🏁 **M1-PUB / PUB-2 EST TERMINÉ ET CLÔTURÉ**,
+**Dernière mise à jour** : 2026-08-26 *(suite 4)* — ⚡ **M1-PUB / PUB-3 : LE PLAN DE DÉCOUPLAGE
+EST ÉCRIT.** Livrable unique : [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md) — les
+**six livrables** y sont traités *(les deux côtés recontrôlés à la date du jour, l'inventaire
+`fichier:ligne`, les **7 gestes numérotés**, les **7 preuves**, le retour arrière)*. ⛔ **Aucune
+coupure, aucun clic, aucune preuve produite, aucune modification fonctionnelle.**
+✅ **PUB-3 EST CLOS** : les **4 décisions** que le plan avait laissées ouvertes ont été tranchées
+par Romain le même jour — **D-054** *(dépôt tiers sous branche · annonce manuelle préservée ·
+`tournoi.html` statique et indépendante · preuves après découplage prouvé)*.
+⛔ **PUB-4 et PUB-5 non commencés · R-097 et R-098 restent OUVERTS · B2-1 NON DÉMARRÉ.**
+⭐ **Reste à soumettre avant PUB-4** : le **texte** de la nouvelle `tournoi.html` *(D-054 / ③)*.
+
+*Rappel de la mise à jour précédente — 2026-08-26 (suite 2)* : 🏁 **M1-PUB / PUB-2 EST TERMINÉ ET CLÔTURÉ**,
 son critère de clôture **entièrement satisfait et vérifié dans un vrai navigateur**.
 ⛔ **R-098 RESTE OUVERT** *(condition 5, nommément reportée à PUB-4)*. ⛔ **M1-PUB N'EST PAS
 TERMINÉ · PUB-3 NON DÉMARRÉ · B2-1 NON DÉMARRÉ.**
@@ -85,7 +96,7 @@ TERMINÉ · PUB-3 NON DÉMARRÉ · B2-1 NON DÉMARRÉ.**
 | 🔻 **Ce qui SORT de PUB-2 et vit désormais en PUB-4** | **R-098 · condition 5** *(« Masquer » jamais grisé)* · **contrôle 6** *(Publier → adresse identique)* · **contrôle 8** *(Masquer → même adresse)*. ⛔ **Ni supprimés, ni réputés acquis** — gardés par la **condition ④** du critère de clôture de M1-PUB |
 | 🟢 **Le jeu fictif est CONSERVÉ** | Voir le repère en tête de ce document : il **décrit exactement** ce qui est présent. ⛔ **Ne pas le supprimer** — PUB-4 en a besoin |
 | ⛔ **`tournoi_publie`** | **reste `non`** — ⭐ **et doit le rester jusqu'à PUB-4** |
-| ⏭️ **Prochaine étape** | **PUB-3** — le plan technique et les preuves du découplage, ⛔ **documentaire, sans rien couper**. ⛔ **NON DÉMARRÉE** : elle ne commence qu'après décision explicite de Romain |
+| ⏭️ **Prochaine étape** | ⚡ **PUB-3 est DÉMARRÉE ET SON PLAN EST ÉCRIT** *(2026-08-26, autorisation explicite de Romain)* — [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md). *(Cette case annonçait « NON DÉMARRÉE » : vrai jusqu'au 2026-08-26.)* ⛔ **Elle n'est pas CLOSE pour autant** — 4 décisions restent à Romain |
 
 ---
 

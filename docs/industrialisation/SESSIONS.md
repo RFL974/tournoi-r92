@@ -9494,3 +9494,78 @@ ailleurs** *(**§8 quater**)*.
 
 ⏭️ **Inchangée : PUB-3.** ⛔ **Toujours NON DÉMARRÉE** — elle ne commence qu'après décision
 explicite de Romain *(**§12.4**)*.
+
+---
+
+## SESSION 28 — 🌐 **PUB-3 : LE PLAN DE DÉCOUPLAGE EST ÉCRIT — ET LE RECONTRÔLE A TROUVÉ TROIS CHOSES** *(2026-08-26, suite 4)*
+
+> 🎯 **La leçon de cette session : le livrable ① — « recontrôler les DEUX côtés à la date de PUB-3 »
+> — n'était pas une formalité. Il a trouvé un écart, et deux faits que le cadrage ne contenait pas.**
+
+### 28.1 — Le livrable ① : ce que le recontrôle a trouvé
+
+| Côté | Relevé du 2026-08-26 |
+|---|---|
+| **Vitrine** `boutique-r92` | ✅ Toujours sur **`164bb8e`** *(dernière poussée le 2026-08-03)* · ✅ **les 10 repères de ligne de R-097 sont TOUS encore exacts** |
+| ⚠️ **Maxilou** | 🔴 **Les repères ont DÉRIVÉ** : `publierTournoi` était cité en `Code.gs:7467-7472`, il est en **`7547-7552`**. ⭐ **Le code n'a pas changé — le fichier, oui** *(`main` a avancé de 40 enregistrements)* |
+| **Même serveur ?** | ✅ **OUI** — comparaison d'empreintes, ⛔ sans recopier d'adresse. ⚠️ **L'empreinte diffère de celle notée dans R-097 parce que la MÉTHODE diffère** — ⛔ ce n'est pas une contradiction, et c'est pourquoi la méthode est désormais **écrite** *(§8 quater)* |
+
+### 28.2 — ⭐ Trois faits que le cadrage ne contenait pas
+
+| # | Fait établi | Pourquoi il compte |
+|---|---|---|
+| ① | 🔬 **`getConfig` sert bien la vue `invitation`** *(`Code.gs:351`)*, et 🔬 **la page publique de Maxilou lit `getAll`** *(`tournoi.js:132`, vue `live`)* | ⭐ **La coupure prévue est EFFICACE et SANS EFFET sur Maxilou.** Le cadrage l'affirmait ; ⛔ personne ne l'avait vérifié |
+| ② | 🔬 **`TOURNOI_API_URL` n'apparaît qu'aux lignes 333 et 348** de la vitrine — produits, sponsors et projets **n'utilisent pas ce serveur** | ⛔ **Couper le tournoi ne peut rien casser d'autre** sur le site de l'association |
+| ③ | 🔴 **Le test `testCfg_vitrineVoitTournoiPublie` porte QUATRE affirmations**, dont **une seule** doit être inversée — et **une autre est la seule garantie que `live` expose encore le témoin** | 🎯 **Le supprimer en bloc supprimerait le garde-fou de l'étape 6 du cadrage** — exactement le défaut **silencieux** qu'elle existe pour empêcher |
+
+### 28.3 — Le livrable
+
+📕 **Une seule adresse** : [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md) — ⛔ **rien
+n'en est recopié ailleurs** *(§8 quater)*. Les six livrables y sont traités : le recontrôle,
+l'inventaire `fichier:ligne` des deux côtés, **7 gestes numérotés**, **7 preuves** *(écrites, ⛔ pas
+produites)*, le retour arrière geste par geste.
+
+⭐ **L'apport de méthode du plan** : l'enchaînement **G1 → G3**. Publier était impossible *tant que
+le lien existait* ; **en coupant d'abord, publier devient inoffensif** — et la preuve qui manquait à
+PUB-2 *(condition 5 de R-098, contrôles 6 et 8)* **devient gratuite**.
+
+### 28.4 — ⛔ Ce que PUB-3 n'a PAS fait
+
+⛔ Aucun clic sur « Publier » ni « Masquer » · ⛔ aucune preuve produite · ⛔ aucun `backend/`,
+`frontend/`, test ou workflow touché · ⛔ aucune touche au dépôt `boutique-r92` *(lu en seule
+lecture)* · ⛔ **le jeu de tournoi fictif est intact**.
+
+### 28.5 — Le plan s'est arrêté sur quatre questions — ⭐ et Romain les a tranchées le jour même
+
+Le critère de PUB-3 exige que **PUB-4 n'ait plus aucune décision à prendre**. Le plan en a laissé
+**quatre** ouvertes — ⭐ **et aucune n'était technique**.
+
+> 🎯 **Ce n'était pas un plan incomplet.** Le plan technique était complet. ⛔ **Ce qui manquait
+> n'était pas de l'analyse — c'était de l'AUTORITÉ.** Un chantier technique n'a pas à décider seul
+> qu'il va modifier le dépôt d'une association, ni ce que ce site doit montrer.
+
+✅ **Les quatre ont été tranchées le 2026-08-26 — `DECISIONS.md` D-054** :
+
+| # | L'arbitrage, en une ligne |
+|---|---|
+| ① | `boutique-r92` modifiable **uniquement dans PUB-4**, sur **branche dédiée**, ⛔ sans fusion ni déploiement sans autorisation après diff et contrôles |
+| ② | ⭐ **L'association garde le droit d'annoncer manuellement son tournoi** — précision essentielle de **D-048** : c'est l'**automatisme** qui est interdit, ⛔ **pas l'annonce** |
+| ③ | `tournoi.html` **conservée**, en page **statique et indépendante** renvoyant explicitement vers Maxilou — ⛔ ni « Aucun tournoi » perpétuel, ni redirection automatique |
+| ④ | Les preuves attendent que le découplage soit **prouvé en production**, puis une **séquence contrôlée en six temps** finissant par un **masquage immédiat** |
+
+⭐ **L'arbitrage ④ a APPORTÉ quelque chose au plan, il ne s'est pas contenté de l'autoriser.** En
+exigeant que la séquence de preuves précède le retrait côté Maxilou, il **renforce** la preuve : au
+moment du test, la vue `invitation` expose **encore** le témoin. Constater qu'une publication reste
+sans effet prouve alors que **c'est bien le LIEN qui a été coupé** — ⛔ et non que la donnée a
+disparu. 🎯 **Une preuve obtenue après le retrait aurait été plus faible.**
+
+### 28.6 — ⛔ Ce qui reste à soumettre avant PUB-4
+
+⭐ **Une seule chose, et D-054 / ③ l'exige** : le **texte et la présentation** de la nouvelle
+`tournoi.html`. ⛔ **Ce n'est pas une décision laissée ouverte** — c'est une **validation de
+rédaction**, inscrite comme l'étape **G2** du plan.
+
+### 28.7 — Prochaine session recommandée
+
+⏭️ **PUB-4 — l'exécution du découplage.** ⛔ **Elle NE COMMENCE PAS** sans décision explicite de
+Romain *(**§12.4**)*.

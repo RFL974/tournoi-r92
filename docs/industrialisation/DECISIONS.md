@@ -5,7 +5,19 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-26 *(suite 3)* — 🌐 **D-053 — « UNE PREUVE PAR LE NAVIGATEUR
+**Dernière mise à jour** : 2026-08-26 *(suite 4)* — 🌐 **D-054 — LES QUATRE ARBITRAGES QUI OUVRENT
+PUB-4**, pris à la clôture de **M1-PUB / PUB-3**. ① **`boutique-r92` modifiable UNIQUEMENT dans
+PUB-4 et pour le découplage**, sur **branche dédiée**, ⛔ sans fusion ni déploiement sans
+autorisation après diff et contrôles. ② **L'association garde le droit d'annoncer manuellement son
+tournoi** — ⭐ précision essentielle de **D-048** : l'automatisme est interdit, ⛔ **pas l'annonce** ;
+⛔ PUB-4 ne fabrique aucune annonce fictive. ③ **`tournoi.html` de la vitrine est conservée**, en
+page **statique et indépendante** renvoyant explicitement vers Maxilou — ⭐ *« le visiteur reste sur
+le site de l'association tant qu'il ne choisit pas lui-même d'ouvrir Maxilou »*. ④ **Les preuves
+reportées attendent que le découplage soit prouvé EN PRODUCTION**, puis une séquence contrôlée en
+six temps finissant par un **masquage immédiat**. Le plan d'exécution :
+[`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md).
+
+*Rappel de la mise à jour précédente — 2026-08-26 (suite 3)* : 🌐 **D-053 — « UNE PREUVE PAR LE NAVIGATEUR
 N'EXISTE QU'À L'ÉTAT FINAL »**, prise après le premier essai réel de **Playwright MCP** sur le Mac
 de Romain. Elle autorise les preuves fonctionnelles **sur ordinateur** par navigateur piloté —
 ⛔ **session locale et Chrome visible uniquement** — maintient qu'une **preuve téléphone exige un
@@ -3655,3 +3667,56 @@ Trois obligations en découlent, et **aucune n'est facultative** :
   d'affichage employé ;
 - ✅ **Seulement ceci** : *ai-je VU l'état final attendu, dans un vrai navigateur visible — ou
   seulement l'écran d'attente, une durée écoulée, ou le code ?*
+
+---
+
+### D-054 — Les quatre arbitrages qui ouvrent PUB-4 : un dépôt tiers sous branche, une annonce qui redevient éditoriale, une page qui informe sans transférer, et des preuves qui attendent le découplage
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-26 |
+| **Session** | **Session 28** — clôture de **M1-PUB / PUB-3** |
+| **Statut** | ✅ **VALIDÉE — décision de Romain**, après présentation du plan et avant tout commit |
+| **Décidée par** | Romain |
+| **Couvre** | [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md) *(§③, §④, §⑥)* · `PLAN.md` **§15.3 bis** *(PUB-3, PUB-4)* · `RISQUES.md` **R-097, R-098** |
+| **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* · **D-052** *(preuve déplacée)* · **D-040** *(preuve discriminante)* |
+
+**Pourquoi cette décision existe**
+
+> ⭐ **PUB-3 a produit un plan technique complet — et s'est arrêté net sur quatre questions.**
+> 🎯 **Aucune n'était technique** : *qui a le droit de modifier le dépôt d'une association ?* ·
+> *cette association peut-elle encore annoncer son tournoi ?* · *que doit montrer sa page ?* ·
+> *quand accepter de publier pour de vrai ?*
+>
+> ⛔ **Un chantier technique n'a pas à trancher cela seul.** Ce qui manquait à PUB-3 n'était pas de
+> l'analyse : **c'était de l'autorité.** Cette fiche l'apporte.
+
+**Les quatre arbitrages**
+
+| # | Ce qui est décidé | ⭐ Ce que ça protège |
+|---|---|---|
+| **①** | ⛔ **`boutique-r92` ne peut être modifié QUE dans le cadre de PUB-4, et QUE pour le découplage défini par PUB-3.** Travail sur **branche dédiée** ; ⛔ **aucun changement direct de `main`, aucune fusion, aucun déploiement** sans autorisation explicite **après présentation du diff et des contrôles** | ⭐ **Le dépôt d'une association tierce n'est pas le terrain de jeu d'un chantier technique.** La branche rend tout réversible **sans rien défaire** : tant qu'elle n'est pas fusionnée, le site en ligne est intact |
+| **②** | **L'association conserve le droit d'annoncer manuellement un tournoi.** Cette annonce est une **décision éditoriale indépendante** : ⛔ **jamais créée, modifiée ou retirée automatiquement** par Maxilou, par `tournoi_publie` ou par le serveur. ⛔ **PUB-4 ne fabrique aucune annonce fictive** | 🎯 **Précision essentielle de D-048.** *« Publier ne parle à personne »* interdit l'**automatisme**, ⛔ **pas l'annonce**. Sans cet arbitrage, une session future aurait pu conclure que toute mention du tournoi sur la vitrine viole la doctrine — **et supprimer un droit que l'association n'a jamais perdu** |
+| **③** | **`tournoi.html` est CONSERVÉE** dans `boutique-r92`, en page **statique et indépendante**, proposant un **lien ou bouton explicite** vers la page publique de Maxilou. ⛔ **Ni page condamnée à « Aucun tournoi », ni redirection automatique, ni appel au serveur Maxilou, ni dépendance à `tournoi_publie`.** ⭐ **Texte et présentation soumis à Romain AVANT mise en œuvre** | ⭐ **« Le visiteur reste sur le site de l'association tant qu'il ne choisit pas lui-même d'ouvrir Maxilou. »** 🎯 **La vitrine INFORME, elle ne TRANSFÈRE pas** — une redirection automatique aurait remplacé un couplage invisible par un autre |
+| **④** | Les preuves reportées se produisent **pendant PUB-4**, ⛔ **uniquement après** ① le déploiement réel du découplage côté vitrine, ② la vérification **en production** que la vitrine n'interroge plus le serveur, ③ la vérification que Maxilou public fonctionne toujours **indépendamment**. Puis, en **séquence contrôlée** : état initial · publier · Maxilou réagit / la vitrine non · condition 5 de **R-098** + contrôles **6** et **8** · ⭐ **masquer immédiatement** · état final `tournoi_publie = non`. ⭐ **Contrôles ordinateur par Playwright MCP, Chrome visible** *(**§8 octies**)* ; ⛔ **preuve téléphone par Romain**. 🟢 **Jeu fictif conservé jusqu'à l'enregistrement COMPLET des preuves** | 🎯 **C'est l'arbitrage qui rend la preuve inoffensive.** Publier était impossible **tant que le lien existait** ; en exigeant que le découplage soit **prouvé en production d'abord**, la publication du tournoi fictif ⛔ **n'atteint plus personne**. ⭐ **Et « masquer immédiatement » borne la seule fenêtre de risque restante** |
+
+**⭐ Ce que l'arbitrage ④ apporte au plan, et qui n'avait pas été vu**
+
+> Au moment où la séquence de preuves se joue, la vue `invitation` **expose encore**
+> `tournoi_publie` : la donnée est **toujours là, toujours servie**. ⭐ **Constater qu'une
+> publication reste sans effet dans ces conditions prouve que c'est bien LE LIEN qui a été coupé** —
+> ⛔ et non que la donnée a disparu.
+>
+> 🎯 **Une preuve obtenue après le retrait côté Maxilou serait plus faible : on ne saurait pas
+> laquelle des deux coupures a agi.** L'ordre imposé par ④ **renforce** la preuve, il ne fait pas
+> que la sécuriser.
+
+**⛔ Ce que cette décision ne fait PAS**
+
+- ❌ **Pas** ouvrir `boutique-r92` aux modifications en général : le périmètre est **PUB-4 et le
+  découplage**, ⛔ rien d'autre ;
+- ❌ **Pas** autoriser PUB-4 à démarrer — ⛔ **il ne commence pas** sans décision explicite ;
+- ❌ **Pas** valider par avance le texte de la nouvelle `tournoi.html` : ⭐ **il sera soumis** ;
+- ❌ **Pas** supprimer les preuves reportées par **D-052** : elle les **date**, elle ne les efface pas ;
+- ✅ **Seulement ceci** : *ce que je m'apprête à faire dans PUB-4, est-ce couvert par l'un des quatre
+  arbitrages — et si non, qui l'a autorisé ?*

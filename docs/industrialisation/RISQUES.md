@@ -1540,6 +1540,17 @@ comportement réel — publier, observer la vitrine, masquer, observer à nouvea
 
 ---
 
+**⚡ MISE À JOUR DU 2026-08-26 *(suite 3)* — PUB-3 A RECONTRÔLÉ LES DEUX CÔTÉS, ET LES REPÈRES ONT DÉRIVÉ**
+
+> ⚠️ **Les `fichier:ligne` côté MAXILOU de cette fiche ne sont plus exacts.** `publierTournoi`
+> était cité en `Code.gs:7467-7472` ; il est en **`Code.gs:7547-7552`** depuis que `main` a
+> avancé. ⭐ **Le code n'a pas changé — le fichier, oui.** ⛔ **Cette fiche n'est PAS réécrite**
+> *(trace datée, `CLAUDE.md` §8 septies)* : l'inventaire à jour vit dans
+> [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md) **§②**, et c'est lui qui fait foi.
+>
+> ✅ **Côté VITRINE, en revanche, les 10 repères sont TOUJOURS EXACTS**, et le dépôt
+> `boutique-r92` est **toujours sur `164bb8e`** — re-constaté le 2026-08-26.
+
 **⚡ MISE À JOUR DU 2026-08-26 — le couplage est RECONTRÔLÉ, et la preuve « avant » est ACQUISE**
 
 > ⭐ **Deux constats neufs, et le second change la trajectoire du chantier** *(**D-052**)*.

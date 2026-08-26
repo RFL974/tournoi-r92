@@ -36,7 +36,7 @@ post-geste — ⛔ aucun commit de fusion, aucun SHA réécrit)* **et PUBLIÉ su
 **`success`**)* — ⛔ **TOUJOURS PAS VÉRIFIÉ EN RÉEL**. ⚡ *(Cette ligne annonçait « NON FUSIONNÉ dans
 `main`, NON PUBLIÉ » : vrai jusqu'à la fusion du 2026-08-24 au soir, relue et corrigée après le
 geste — `CLAUDE.md` §8 septies. Elle avait déjà annoncé « non commité, non poussé » avant cela.)* ;
-⛔ **PUB-3, PUB-4 et PUB-5 non commencés**.
+✅ **PUB-3 EST CLOS** *(2026-08-26)* — plan : [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md) ; les 4 décisions qu'il posait sont tranchées par **D-054**. *(Cette ligne annonçait « PUB-3, PUB-4 et PUB-5 non commencés » : vrai jusqu'au 2026-08-26.)* ; ⛔ **PUB-4 et PUB-5 non commencés**.
 ⛔ **M1-PUB N'EST PAS TERMINÉ pour autant, et R-097 reste OUVERT** *(**§15.8**)*.
 ⭐ **Arbitrage rendu par PUB-2 : D-049** — `url_tournoi_public` est **consommé** par M1-PUB mais sa
 **configuration reste rattachée à R-096 / M1-D**.
@@ -2499,7 +2499,7 @@ loué en ligne, ni parcours de première configuration complet, ni répertoire d
 | **M1-C2** | Le **modèle de doctrine sportive** | Backend | ✅ oui | ⏸️ **NON — REPORTABLE** |
 | **M1-D** | L'écran **« Mon club »**, référentiel **vivant** | Frontend + 1 action | ✅ oui | oui |
 | **M1-E** | **Branchement progressif** des consommateurs *(E1 → E6)* | Mixte | E1, E3 : ✅ · E2, E4, E5, E6 : ⛔ | E2/E3/E4 oui |
-| 🌐 **M1-PUB** *(= **M1-E7**)* | **Publication autonome du tournoi** — doctrine, accès autonome, découplage de la vitrine *(**§15.3 bis**)* | Documentaire *(PUB-1, PUB-3)* puis mixte | PUB-1, PUB-3 : ⛔ · PUB-2, PUB-4, PUB-5 : ✅ | **oui — et AVANT M1-F** |
+| 🌐 **M1-PUB** *(= **M1-E7**)* | **Publication autonome du tournoi** — doctrine, accès autonome, découplage de la vitrine *(**§15.3 bis**)* | Documentaire *(PUB-1, PUB-3)* puis mixte | PUB-1, PUB-3 : ⛔ · PUB-2, PUB-4, PUB-5 : ✅ | **oui — et AVANT M1-F** · ⚡ **PUB-1, PUB-2 et PUB-3 sont CLOS** *(2026-08-26)* |
 | **M1-F** | **Neutralisation et validation finale** — clôture de **CF-4b** | Données + logo + preuves | ⚠️ probablement non | **c'est la clôture** |
 
 > ⛔ **AUCUNE ÉTAPE NE DÉMARRE AUTOMATIQUEMENT.** Chaque étape est présentée, validée par Romain,
@@ -2864,6 +2864,7 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **Dépendances** | **PUB-1** *(le cadrage)* et **PUB-2** *(l'accès autonome doit exister avant de planifier la coupure)* |
 | **Validation** | Le plan est assez précis pour que **PUB-4 n'ait plus aucune décision à prendre** — seulement à exécuter |
 | 🆕 ⛔ **Ce que PUB-3 NE FAIT PAS** *(2026-08-26, D-052)* | ⛔ **Aucun clic sur « Publier », aucun clic sur « Masquer », aucune preuve produite.** PUB-3 est **📄 documentaire** : il **écrit** quelles preuves seront produites, **où** et **dans quel ordre** |
+| 🆕 🏁 **État CONSTATÉ** *(2026-08-26)* | ✅ **CLOS.** Livrable unique : [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md), ⛔ **il n'est recopié nulle part** *(`CLAUDE.md` §8 quater)*. Les **six livrables** y sont traités. ⛔ **Aucune modification fonctionnelle, aucun clic, aucune preuve produite, aucune touche à `boutique-r92`.** ✅ **Critère de validation ATTEINT** : les **4 décisions** que le plan posait sont tranchées — **D-054**. ⭐ **Reste à soumettre avant exécution** : le **texte** de la nouvelle `tournoi.html` *(D-054 / ③, geste G2)*. Détail : `SESSIONS.md` **§28** |
 
 > 🆕 ⭐ **LA PREUVE « AVANT » EST DÉJÀ ACQUISE — et elle n'a rien coûté** *(constatée le 2026-08-26, D-052)*
 >
