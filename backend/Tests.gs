@@ -43,7 +43,7 @@ function lancerTestsFFR() {
   testCfg_vueClubContientLesContacts(etat);
   testCfg_categoriesFiltrees(etat);
   testCfg_invitationVitrineCadreSportif(etat);
-  testCfg_vitrineVoitTournoiPublie(etat);
+  testCfg_temoinPublicationVueLiveSeule(etat);
   testCfg_aliasLegacyBoutique(etat);
   testCfg_motCleClubEnVueLive(etat);
   testCfg_liensPersonnalisesEmail(etat);
@@ -768,25 +768,33 @@ function testCfg_invitationVitrineCadreSportif(etat) {
     && !('heure_debut' in live.global), 'invVitrine : la vue live reste minimale (aucune fuite)');
 }
 
-/** CONTRAT DE LA VITRINE : le site boutique-r92 interroge getConfig (vue « invitation ») et
- *  n'affiche la carte « Tournoi » des actualités — ni sa page d'article — que si le témoin
- *  `tournoi_publie` vaut 'oui'. Retirer ce champ de la liste blanche rend le bouton « Publier le
- *  tournoi » de l'admin SILENCIEUSEMENT sans effet côté vitrine (elle conclut « non publié »).
- *  Ce test tient les DEUX vues publiques consommées par un site : invitation ET live. */
-function testCfg_vitrineVoitTournoiPublie(etat) {
+/** DOCTRINE « PUBLIER NE PARLE À PERSONNE » (D-048, coupure M1-PUB / PUB-4) : le témoin
+ *  `tournoi_publie` ne sort QUE par la vue « live » (getAll), consommée par la page publique du
+ *  tournoi. Il ne sort PLUS par la vue « invitation » (getConfig) : aucun site tiers n'a à
+ *  apprendre d'un serveur qu'un tournoi est publié — l'annonce reste éditoriale et manuelle.
+ *  ⚠️ Ce test tient les DEUX bords, et le second est le plus important : le retirer aussi de
+ *  « live » casserait la page publique du tournoi EN SILENCE (elle conclurait « non publié »).
+ *  ⚡ Ce test s'appelait `testCfg_vitrineVoitTournoiPublie` et affirmait l'inverse pour
+ *  « invitation » : c'était vrai jusqu'au 2026-08-26, et faux depuis la coupure. */
+function testCfg_temoinPublicationVueLiveSeule(etat) {
   var cfg = { global: { tournoi_publie: 'oui', tournoi_nom: 'Challenge', contact_reponse_tel: '0612345678' },
               categories: [] };
   var inv = filtrerConfigPublique(cfg, 'invitation');
-  _ffrAssert(etat, inv.global.tournoi_publie === 'oui',
-    'vitrine : getConfig (invitation) expose tournoi_publie — sinon la carte actus n\'apparaît jamais');
+  _ffrAssert(etat, !('tournoi_publie' in inv.global),
+    'publication : getConfig (invitation) n\'expose PLUS tournoi_publie — publier ne parle à personne');
   var live = filtrerConfigPublique(cfg, 'live');
   _ffrAssert(etat, live.global.tournoi_publie === 'oui',
-    'vitrine : la vue live expose aussi tournoi_publie (page publique du tournoi)');
-  // Le témoin passe bien à 'non' sans emporter les frontières de la vue.
-  var masque = filtrerConfigPublique({ global: { tournoi_publie: 'non' }, categories: [] }, 'invitation');
-  _ffrAssert(etat, masque.global.tournoi_publie === 'non', 'vitrine : le masquage remonte aussi (non)');
+    'publication : la vue live expose toujours tournoi_publie (page publique du tournoi)');
+  // Le témoin passe bien à 'non' par la vue live — c'est elle, désormais, qui porte le masquage.
+  var masqueLive = filtrerConfigPublique({ global: { tournoi_publie: 'non' }, categories: [] }, 'live');
+  _ffrAssert(etat, masqueLive.global.tournoi_publie === 'non',
+    'publication : le masquage remonte par la vue live (non)');
+  // Et la coupure ne dépend PAS de la valeur : la clé est absente d'invitation dans les deux cas.
+  var masqueInv = filtrerConfigPublique({ global: { tournoi_publie: 'non' }, categories: [] }, 'invitation');
+  _ffrAssert(etat, !('tournoi_publie' in masqueInv.global),
+    'publication : invitation ignore le témoin quelle que soit sa valeur (non plus que oui)');
   _ffrAssert(etat, !('contact_reponse_tel' in inv.global),
-    'vitrine : ouvrir tournoi_publie n\'ouvre rien d\'autre (téléphone toujours exclu)');
+    'publication : la vue invitation garde ses frontières (téléphone toujours exclu)');
 }
 
 /** MIGRATION DOUCE d'un paramètre RENOMMÉ (appliquerAliasConfig) — le mécanisme le plus risqué

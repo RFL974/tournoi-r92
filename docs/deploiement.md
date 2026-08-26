@@ -100,28 +100,39 @@ Puis **trois contrôles dans l'éditeur**, avant d'aller plus loin :
 
 | Ce qu'on vérifie | Comment |
 |---|---|
-| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs` — **8517** aujourd'hui *(2026-08-25)*. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* |
-| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne — **`viderDonnees`, ligne 8512** aujourd'hui *(2026-08-25)* |
+| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs` — **8519** aujourd'hui *(2026-08-26)*. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* |
+| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne — **`viderDonnees`, ligne 8514** aujourd'hui *(2026-08-26)* |
 | ⭐ **Une chaîne témoin introduite par le lot** | Une recherche qui donne **un résultat DIFFÉRENT avant et après** la modification — et, quand c'est possible, **son contraire** *(l'ancienne chaîne, attendue à 0)* |
 
 > ⭐ **Les témoins du lot en cours** — à chercher dans l'éditeur, **en entier** :
 >
 > | Chercher | Attendu | De quel lot |
 > |---|---|---|
-> | 🆕 `CLUBS_COLONNES_ENGAGEMENT` | **4** | 🆕 **B2-0** — la liste des colonnes que le reset vide |
-> | 🆕 `colonnesClubsNonClassees` | **2** | 🆕 **B2-0** — le signalement d'une colonne non classée |
+> | 🆕 `D-048, coupure M1-PUB` | **1** | 🆕 **M1-PUB / PUB-4** — la coupure du lien vers le site de l'association |
+> | 🆕 `EST dans cette liste` *(l'ancienne)* | **0** | 🆕 **M1-PUB / PUB-4** — ⭐ **son contraire**, attendu à zéro |
+> | `CLUBS_COLONNES_ENGAGEMENT` | **4** | **B2-0** — la liste des colonnes que le reset vide |
+> | `colonnesClubsNonClassees` | **2** | **B2-0** — le signalement d'une colonne non classée |
 > | `CHAMPS_AUTORISATION_A_REINITIALISER` | **3** | **M1-B** — la liste des 26 champs d'édition |
 > | `reinitialiserDonneesAutorisationTournoi` | **2** | **M1-B** — la fonction et son appel |
 > | `API tournoi en ligne` | **1** | CF-4b / L8 |
 > | `API Tournoi R92 en ligne` *(l'ancienne)* | **0** | CF-4b / L8 |
 > | `Racing Club de France Rugby` *(l'ancien défaut)* | **0** | CF-4b / L8 |
 >
-> ⚡ **Les deux premiers témoins ont été ajoutés le 2026-08-25** *(lot **B2-0**, collé chez Google en
-> **version 157**)*. ⭐ **Ils sont DISCRIMINANTS au sens de D-040** : ils n'existaient **pas** avant
-> ce lot — leur compte attendu **avant** collage est **0** — et ils sont **sans apostrophe, sans
-> accent et sans guillemet**. ⛔ **Les deux témoins M1-B restent valables** *(ils sont toujours dans
-> le fichier)*, mais ⛔ **ils ne distinguent plus la 156 de la 157** : seuls les deux nouveaux le
-> font.
+> ⚡ **Les deux témoins de tête ont été ajoutés le 2026-08-26** *(lot **M1-PUB / PUB-4**)*, et ils
+> forment un **couple** : ⭐ `D-048, coupure M1-PUB` **n'existait pas** avant ce lot *(attendu à
+> **0** avant collage, **1** après)*, et `EST dans cette liste` est **la phrase qu'il remplace**
+> *(attendu à **1** avant collage, **0** après)*. 🎯 **C'est le cas le plus fort au sens de D-040** :
+> ⛔ un collage manqué ne peut pas donner les deux comptes à la fois. Tous deux sont **sans
+> apostrophe, sans accent et sans guillemet**.
+>
+> ⚡ *(Cette note disait « les deux premiers témoins ont été ajoutés le 2026-08-25, lot **B2-0** » —
+> **vrai jusqu'au 2026-08-26**, où deux lignes se sont insérées au-dessus. ⛔ Elle désignait les
+> témoins par leur **position**, ce qui devient faux dès qu'un lot arrive : ils sont désormais
+> nommés par leur **lot**.)*
+>
+> ⛔ **Les témoins B2-0 et M1-B restent valables** *(ils sont toujours dans le fichier)*, mais
+> ⛔ **ils ne distinguent plus la version 157 de celle de ce lot** : seuls les deux témoins de tête
+> le font.
 >
 > ⚡ **CORRIGÉ le 2026-08-24 — cette note annonçait que « la part BACKEND de L8 n'a JAMAIS été
 > collée chez Google », et c'était FAUX.** Le relevé fait **avant** le collage de M1-B, exactement
@@ -172,17 +183,24 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 
 | Ce qu'on vérifie | Valeur attendue **aujourd'hui** | Ce qu'un écart signifie |
 |---|---|---|
-| **Le bilan** affiché en fin de journal | **`R92 — 880/880 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
-| **La dernière ligne** du fichier collé chez Google | **5133** | Le fichier collé n'est pas celui du dépôt |
+| **Le bilan** affiché en fin de journal | **`R92 — 881/881 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
+| **La dernière ligne** du fichier collé chez Google | **5141** | Le fichier collé n'est pas celui du dépôt |
 
 > 🎯 **Pourquoi deux nombres et pas un.** Le bilan seul ne dit **jamais quelle version** a été
 > exécutée : « 573/573 OK » était un vrai résultat sur un faux fichier. Le nombre de lignes est ce
 > qui identifie le fichier. **Les deux ensemble prouvent ce qu'un seul laisse croire.**
 
-> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-25**
-> *(lot **B2-0** : +84 vérifications sur le reset des participations — T1 → T8, S1 → S3 et le témoin
-> R-101 ; elles étaient de **796** et **4645** depuis M1-B, et de **715** et **4314** depuis C-012,
-> étape 3)*.
+> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-26**
+> *(lot **M1-PUB / PUB-4** : **+1 vérification** — le test du témoin de publication passe de 4 à 5
+> affirmations ; elles étaient de **880** et **5133** depuis B2-0, de **796** et **4645** depuis
+> M1-B, et de **715** et **4314** depuis C-012, étape 3)*.
+>
+> 🟡 **ATTENTION — `881` est PRÉDIT, pas encore MESURÉ** *(`CLAUDE.md` §9 : **PROBABLE**)*. Il est
+> calculé hors ligne : **880 − 4 + 5**, les cinq affirmations du test opéré s'exécutant en ligne
+> droite, sans boucle ni condition. ⛔ **Tant que le journal chez Google n'a pas été lu, ce nombre
+> ne prouve rien** — c'est le geste 4 ci-dessus qui le transforme en **CERTAIN**.
+> ⚡ *(Ce bloc annonçait « justes au 2026-08-25, lot B2-0, 880 et 5133 » : **vrai jusqu'au
+> 2026-08-26**.)*
 >
 > ✅ **CONSTATÉ CHEZ GOOGLE le 2026-08-25** : `lancerTestsFFR` exécutée dans l'éditeur Apps Script
 > a donné **`R92 — 880/880 OK, 0 FAIL`**, avec `Test.gs` à **5133 lignes** — serveur en **version

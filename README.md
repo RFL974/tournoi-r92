@@ -19,7 +19,7 @@ puis de suivre les scores et classements en direct — et de garder un **histori
 | 5 | **Page publique** `tournoi.html` (thème clair, charte du site vitrine) : 2 onglets **Mon équipe** / **Classements**, **filtre catégorie**, derniers scores, **podium certain** | ✅ Fait, **en ligne** (GitHub Pages) |
 | 6 | **Publication du tournoi** : bouton admin « Générer le tournoi » (publier / masquer) — la page publique reste un écran « à venir » tant que le tournoi n'est pas publié | ✅ Fait, déployé |
 | 7 | **Infos du tournoi + affiche** : nom, date, lieu, description + **chargeur d'affiche** (stockée dans Google Drive). Enregistrés + publiés d'un clic (« Générer le tournoi ») | ✅ Fait, déployé |
-| 8 | **Intégration au site vitrine** [boutique-r92](https://rfl974.github.io/boutique-r92/) : carte d'actu dynamique (nom + affiche) + **page d'article** (agenda .ics 2 rappels + itinéraire) quand le tournoi est publié | ✅ Fait, en ligne |
+| 8 | ⛔ **Intégration automatique au site vitrine boutique-r92 : RETIRÉE** le 2026-08-26 *(chantier M1-PUB, doctrine « publier ne parle à personne »)*. Le site de l'association n'interroge plus ce serveur ; sa page « Tournoi » est statique et renvoie vers Maxilou par un lien explicite. Toute annonce y reste **éditoriale et manuelle** | ⛔ Retirée — voir [`docs/architecture.md`](docs/architecture.md) |
 | 9 | **Perfs du club** (`perfs.html`) : page interne, bilan du tournoi + **cumul de saison** par adversaire | ✅ Fait, en ligne |
 | 10 | **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé (jamais effacé par une génération) | ✅ Fait, déployé |
 | 11 | **Sécurité écriture** : lectures publiques, écritures protégées par 2 clés (admin / scores) ; « connexion » demandée une fois par session | ✅ Fait, déployé + clés configurées |
@@ -41,9 +41,9 @@ Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
   GitHub Pages** (workflow `.github/workflows/pages.yml` qui publie le dossier `frontend/`) :
   - public : **https://rfl974.github.io/tournoi-r92/tournoi.html**
   - admin : `…/admin.html` · saisie : `…/saisie.html` · perfs (interne) : `…/perfs.html`
-- **Intégration au site vitrine** [boutique-r92](https://github.com/RFL974/boutique-r92) (dépôt séparé) :
-  quand le tournoi est publié, une carte + une page d'article apparaissent dans ses Actualités
-  (elles interrogent le même backend). Voir [`docs/architecture.md`](docs/architecture.md).
+- ⛔ **Aucun lien automatique avec le site vitrine** [boutique-r92](https://github.com/RFL974/boutique-r92)
+  (dépôt séparé) : depuis le 2026-08-26, ce site **n'interroge plus ce backend**. Publier un tournoi
+  n'y crée, n'y modifie et n'y retire **rien**. Voir [`docs/architecture.md`](docs/architecture.md).
 
 Aucun framework, aucune dépendance à installer : c'est volontairement simple et léger.
 
@@ -192,12 +192,15 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 
 ## 📌 Statut d'avancement
 
-**L'application est complète, EN LIGNE et fonctionnelle** — backend Apps Script, frontend GitHub Pages,
-et intégration au site vitrine boutique-r92.
+**L'application est complète, EN LIGNE et fonctionnelle** — backend Apps Script et frontend GitHub Pages.
+⛔ **Elle est INDÉPENDANTE du site vitrine boutique-r92 depuis le 2026-08-26.**
+⚡ *(Cette phrase citait « et intégration au site vitrine boutique-r92 » : vrai jusqu'au 2026-08-26.)*
 
 > 📡 **Vérifié le 2026-08-19**, et c'est reproductible en trois commandes : le backend répond
 > (`…/exec?action=ping` → `{"ok":true,…}`), les quatre pages du frontend répondent (`tournoi.html`,
 > `admin.html`, `saisie.html`, `perfs.html`), et le site vitrine répond.
+> ⚡ *(Le site vitrine était alors interrogé par ce relevé au titre de l'intégration : **elle n'existe
+> plus depuis le 2026-08-26**. Qu'il réponde ou non n'a plus d'effet sur Maxilou.)*
 > ⚠️ **Ce relevé porte sur « le service répond », pas sur chacune des lignes ci-dessous** : celles-ci
 > décrivent des fonctionnalités, et chacune porte son propre état dans le tableau du haut.
 
@@ -229,10 +232,12 @@ et intégration au site vitrine boutique-r92.
   publie**. Tant que le tournoi n'est pas publié, la page publique affiche un écran **« à venir »**.
 - ✅ **Affiche du tournoi** : chargeur d'image dans l'admin ; l'image est redimensionnée côté navigateur
   puis **stockée dans Google Drive** (`tournoi_affiche_id` dans Config). Affichée via `lh3.googleusercontent.com`.
-- ✅ **Intégration boutique-r92** : quand le tournoi est publié, une **carte** (nom + affiche) et une
-  **page d'article** (`boutique-r92/tournoi.html`) apparaissent dans les Actualités du site vitrine ;
-  l'article contient un bouton vers le tournoi en direct, un **agenda .ics (2 rappels : veille + 2 h)**
-  et un bouton **itinéraire « On y va »**.
+- ⛔ **Intégration boutique-r92 : RETIRÉE le 2026-08-26** *(chantier M1-PUB)*. Le site de
+  l'association ne fabrique plus de carte d'actualité ni de page d'article à partir de ce serveur :
+  il ne l'interroge plus du tout. Sa page « Tournoi » est **statique** et propose un lien explicite
+  vers la page publique de Maxilou — **le visiteur choisit lui-même de l'ouvrir**.
+  ⚡ *(Cette ligne décrivait la carte, la page d'article, l'agenda `.ics` et le bouton itinéraire :
+  vrai jusqu'au 2026-08-26.)*
 - ✅ **Perfs du club** (`perfs.html`) : page **interne** (non liée dans le menu), 2 onglets *Ce tournoi*
   et *Saison* (cumul des rencontres par adversaire, via l'historique).
 - ✅ **Historique de saison** : onglet `Historique` alimenté automatiquement à chaque score validé,

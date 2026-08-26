@@ -720,20 +720,22 @@ var CONFIG_PUBLIQUE_VUES = {
   // champs sont des FAITS DE FORMAT ou d'HORAIRE, sans aucune donnée personnelle — le programme
   // d'un tournoi est public par nature. Restent derrière le jeton (vue club) : adresse précise,
   // parking, secours, téléphones — tout ce qui relève de la logistique jour J.
-  // `tournoi_publie` EST dans cette liste, et c'est essentiel : le site vitrine (boutique-r92)
-  // interroge getConfig et n'affiche la carte « Tournoi » des actualités — ni la page d'article —
-  // QUE si ce témoin vaut 'oui'. Sans lui, le bouton « Publier le tournoi » de l'admin écrit bien
-  // dans Config mais la vitrine ne peut jamais le savoir : elle conclut « non publié » en silence.
-  // Non sensible : c'est un simple témoin oui/non, déjà exposé par la vue live (getAll).
+  // ⛔ `tournoi_publie` N'EST PLUS dans cette liste, et c'est le sens même de la doctrine
+  // « publier ne parle à personne » (D-048, coupure M1-PUB / PUB-4) : publier un tournoi écrit une
+  // ligne dans Config et n'informe AUCUN site tiers. Le site de l'association (boutique-r92)
+  // n'interroge plus ce serveur du tout — sa page « Tournoi » est statique et son annonce reste
+  // éditoriale et manuelle. ⚠️ Le témoin reste exposé par la vue `live` (getAll), et c'est là,
+  // et seulement là, qu'il doit rester : la page publique du tournoi (frontend/js/tournoi.js)
+  // ne lit QUE cette vue. Le retirer de `live` casserait cette page en silence.
   invitation: {
-    global: ['tournoi_publie',
-             'tournoi_nom', 'tournoi_description', 'tournoi_affiche_id', 'tournoi_date', 'tournoi_lieu',
-             'heure_rdv', 'heure_debut', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
-             'heure_fin', 'heure_fin_communiquee', 'marge_fin_communiquee_min',
-             'buvette_disponible', 'espace_sandwich_disponible', 'boutique_disponible',
-             'tarif_engagement_oui', 'tarif_engagement_montant', 'date_limite_reponse',
-             'url_instagram', 'url_site_association',
-             'contact_reponse_nom', 'contact_reponse_email'],
+    global: [
+      'tournoi_nom', 'tournoi_description', 'tournoi_affiche_id', 'tournoi_date', 'tournoi_lieu',
+      'heure_rdv', 'heure_debut', 'pause_dejeuner_debut', 'pause_dejeuner_duree_min',
+      'heure_fin', 'heure_fin_communiquee', 'marge_fin_communiquee_min',
+      'buvette_disponible', 'espace_sandwich_disponible', 'boutique_disponible',
+      'tarif_engagement_oui', 'tarif_engagement_montant', 'date_limite_reponse',
+      'url_instagram', 'url_site_association',
+      'contact_reponse_nom', 'contact_reponse_email'],
     // format_apresmidi (session 20) : NON sensible (format de jeu, déjà exposé par la vue live) —
     // sert à la note « pourquoi ce format » de l'invitation (doctrine FFR, poules de niveau).
     // forme_jeu / contexte_tournoi / scf_phase : forme FFR retenue et contexte Super Challenge —

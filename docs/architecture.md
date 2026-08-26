@@ -226,20 +226,25 @@ en tête de fichier le pilotent : `ACTIONS_SCORES`, `ACTIONS_TOKEN` et `ACTIONS_
 > « Publier » ne doit jamais, à lui seul, envoyer un email, créer une actualité, créer une page sur
 > un autre site, notifier un club, ni déclencher aucune diffusion externe.**
 >
-> ⚠️ **Écart CONNU, aujourd'hui — R-097.** `publierTournoi` respecte cette règle *(il écrit une
-> ligne dans `Config`, et rien d'autre)*, **mais le témoin `tournoi_publie` est exposé par la vue
-> `invitation` et LU par le site extérieur `boutique-r92`**, qui en déduit tout seul une carte
-> d'actualité et une page d'événement. 🔬 **Vérifié le 2026-08-24 dans le code de ce dépôt séparé**
-> *(`assets/js/main.js`, commit `164bb8e`)* — ⛔ **le comportement en production, lui, n'est pas
-> établi depuis ici** *(§13.6 de `CLAUDE.md`)*.
+> ✅ **Le découplage est fait — chantier M1-PUB / PUB-4, 2026-08-26.** Il a demandé **deux coupures**,
+> l'une de chaque côté, et **aucune des deux seule n'aurait suffi** :
 >
-> **Dette à supprimer : chantier M1-PUB** *(`industrialisation/PLAN.md` §15.3 bis)*.
-> ⛔ **L'ordre du découplage est impératif** : ⭐ la page `tournoi.html` existe déjà et **son code
-> consomme `tournoi_publie` via la vue `live`**, mais couper dans le désordre supprimerait l'ancien
+> | # | Où | Ce qui a été coupé | État constaté |
+> |---|---|---|---|
+> | ① | Le site extérieur `boutique-r92` *(dépôt séparé)* | Il **n'interroge plus du tout** ce serveur : plus de carte d'actualité automatique, et sa page « Tournoi » est devenue **statique**, avec un lien explicite vers Maxilou | 🔬 Commit `9dbdf0a`, **publié** |
+> | ② | Ce dépôt | La vue **`invitation`** *(servie par `getConfig`)* **n'expose plus** `tournoi_publie` | 🔬 Dans le dépôt — ⚠️ **le serveur en service chez Google est celui de son dernier redéploiement** *(§13.6 de `CLAUDE.md`)* |
+>
+> ⭐ **La vue `live` continue d'exposer `tournoi_publie`, et c'est impératif** : la page publique du
+> tournoi *(`frontend/js/tournoi.js`)* lit `getAll`, donc cette vue-là. Le retirer de `live`
+> casserait cette page **en silence**.
+>
+> ⭐ **L'ordre a compté, et il n'était pas négociable** : couper d'abord aurait supprimé l'ancien
 > chemin de diffusion **avant** que l'organisateur dispose, dans Maxilou, d'un **accès explicite et
-> autonome** à sa page publique.
-> ⭐ **C'est précisément ce qu'apporte PUB-2** *(l'encadré ci-dessous)*. ⛔ **Cela ne referme pas
-> R-097** : la vitrine continue de lire `tournoi_publie` — la coupure appartient à PUB-3 puis PUB-4.
+> autonome** à sa page publique — c'est ce qu'apporte **PUB-2** *(l'encadré ci-dessous)*.
+>
+> ⛔ **La clôture formelle de R-097 relève d'une décision de Romain** et n'est pas acquise ici.
+> ⚡ *(Ce bloc annonçait un **« Écart CONNU, aujourd'hui — R-097 »** où « la vitrine continue de lire
+> `tournoi_publie` » : **vrai jusqu'au 2026-08-26**.)*
 >
 > ⚠️ **« Accessible » veut dire ici : le CONTENU public du tournoi devient visible.** ⭐ L'adresse de
 > la page, elle, **peut exister et être ouverte avant la publication ou après le masquage** — elle

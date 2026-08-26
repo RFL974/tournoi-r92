@@ -12,6 +12,43 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Publier un tournoi ne touche plus au site de l'association — 2026-08-26
+
+> ✅ **Constaté en conditions réelles, des deux côtés** — le site de l'association a été publié avec
+> la coupure, puis un tournoi de démonstration a été **publié puis masqué** dans Maxilou pendant
+> qu'on regardait le site. ⛔ Ce n'est pas une lecture de code.
+
+**Ce qui n'allait pas.** Le site de l'association *(Génération R92)* interrogeait le serveur de
+Maxilou à **chacune de ses pages**. Dès qu'un tournoi passait en « publié », il fabriquait **tout
+seul** une actualité en tête de sa page Actualités et une page d'événement complète — sans que
+personne ne l'ait décidé, et sans qu'aucun écran ne prévienne que cliquer « Publier » allait faire
+paraître une annonce sur le site d'une association.
+
+**Pourquoi c'était gênant.** Deux choses qui n'ont rien à voir étaient devenues la même : *rendre
+le tableau des scores accessible* et *annoncer un événement au public*. Un organisateur qui voulait
+seulement essayer, préparer, ou montrer son planning à un collègue publiait en réalité une annonce
+publique. Et l'inverse était vrai aussi : masquer le tournoi **effaçait** l'actualité du site.
+
+**Ce qui change.** Les deux sont séparés, définitivement.
+
+- Le site de l'association **n'interroge plus du tout** le serveur de Maxilou. Sa page « Tournoi »
+  est devenue une page **fixe**, avec un bouton **« Accéder au suivi du tournoi »** : le visiteur
+  reste sur le site de l'association tant qu'il ne choisit pas lui-même d'ouvrir Maxilou.
+- Toute annonce de tournoi sur ce site redevient **éditoriale et manuelle** — écrite, modifiée et
+  retirée par une personne, jamais par un serveur.
+- Dans Maxilou, **rien ne change pour l'organisateur** : « Publier » et « Masquer » fonctionnent
+  exactement comme avant, et la page publique du tournoi réagit comme avant.
+
+> ⛔ **Ce que la coupure ne fait PAS** : elle ne supprime aucune donnée. Masquer un tournoi cache la
+> page publique, il ne perd ni les équipes, ni les poules, ni les scores — cela a été vérifié.
+> ⭐ L'adresse de la page publique reste **identique** avant, pendant et après une publication.
+
+**Ce qui empêchera le retour du problème.** Un contrôle automatique tient désormais les **deux**
+bords : il vérifie que le témoin de publication **ne sort plus** par la porte que lisait le site de
+l'association, **et** qu'il sort toujours par celle que lit la page publique de Maxilou. ⭐ Le
+second compte autant que le premier : le retirer des deux aurait cassé la page publique **en
+silence**.
+
 ### Sur téléphone, ouvrir « Publication » ne fait plus croire que le tournoi est prêt — 2026-08-26
 
 > ✅ **Vérifié dans un vrai navigateur, après mise en ligne** — sur un téléphone, en navigation
