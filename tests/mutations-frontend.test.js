@@ -399,10 +399,69 @@ const MUTATIONS = [
   }
 ];
 
+/* --------------------------------------------------------------------------
+   R-098 / B5 — LE VERROU DU PARCOURS GUIDÉ (téléphone).
+
+   ⭐ Le défaut a été constaté EN RÉEL le 2026-08-26, sur un téléphone, sur le site
+   publié : entrer sur la carte « Publication » déverrouillait six étapes jamais
+   franchies et peignait « Réglages » en vert.
+   ⚠️ Ces cinq mutations réintroduisent chacune UNE moitié du défaut. Si l'une d'elles
+   passe inaperçue, c'est que `frontend-assistant-verrou.test.js` ne garde plus ce
+   qu'il prétend garder.
+   -------------------------------------------------------------------------- */
+const MUTATIONS_B5 = [
+  {
+    nom: 'A-1 — le verrou relit `assistantIndex` au lieu de la progression acquise',
+    garde: 'assistant',
+    defaut: '⭐ LE DÉFAUT CONSTATÉ EN RÉEL : entrer sur Publication rendrait Inviter, Dossier, ' +
+            'Équipes, Terrains, Poules et Autorisation joignables sans leurs prérequis',
+    appliquer: (b) => remplacer(b, 'frontend/js/assistant.js',
+      'if (i > assistantAtteint && !(ASSISTANT_ETAPES[i] || {}).libre) {',
+      'if (i > assistantIndex && !(ASSISTANT_ETAPES[i] || {}).libre) {')
+  },
+  {
+    nom: 'A-2 — la marque « faite » repart de la carte affichée',
+    garde: 'assistant',
+    defaut: '⭐ L\'EFFET ③ : « Réglages » serait peint EN VERT — l\'écran annoncerait faite ' +
+            'l\'étape qui bloque tout le reste',
+    appliquer: (b) => remplacer(b, 'frontend/js/assistant.js',
+      'li.classList.toggle(\'est-faite\', k < Math.min(i, assistantAtteint));',
+      'li.classList.toggle(\'est-faite\', k < i);')
+  },
+  {
+    nom: 'A-3 — la limite du grisage repart de la carte affichée',
+    garde: 'assistant',
+    defaut: 'le fil d\'étapes montrerait comme atteignables six étapes que `allerA` refuse — ' +
+            'l\'écran et le comportement se contrediraient',
+    appliquer: (b) => remplacer(b, 'frontend/js/assistant.js',
+      'limite = Math.max(s, assistantAtteint); break;',
+      'limite = Math.max(s, assistantIndex); break;')
+  },
+  {
+    nom: 'A-4 — la progression n\'est plus constatée en entrant sur une carte `libre`',
+    garde: 'assistant',
+    defaut: 'RÉGRESSION du parcours ordinaire : franchir les étapes une à une jusqu\'à ' +
+            'Publication ferait PERDRE sa marque « faite » à l\'étape précédente',
+    appliquer: (b) => remplacer(b, 'frontend/js/assistant.js',
+      '} else if (i > assistantAtteint) {', '} else if (false) {')
+  },
+  {
+    nom: 'A-5 — la progression n\'est plus monotone (elle recule)',
+    garde: 'assistant',
+    defaut: 'revenir en arrière relire une carte ferait PERDRE une progression déjà acquise, ' +
+            'et il faudrait refranchir toutes les étapes',
+    appliquer: (b) => remplacer(b, 'frontend/js/assistant.js',
+      'assistantAtteint = Math.max(assistantAtteint, i);', 'assistantAtteint = i;')
+  }
+];
+
+MUTATIONS.push.apply(MUTATIONS, MUTATIONS_B5);
+
 /** Quel garde-fou rejouer pour une mutation donnée. */
 const GARDES = {
   reset: 'frontend-reinitialisation.test.js',
-  autorisation: 'frontend-autorisation-sync.test.js'
+  autorisation: 'frontend-autorisation-sync.test.js',
+  assistant: 'frontend-assistant-verrou.test.js'
 };
 
 /* -------------------------------------------------------------------------- */
@@ -431,7 +490,8 @@ try {
       fs.copyFileSync(path.join(RACINE, 'frontend', 'js', f), path.join(copie, 'frontend', 'js', f));
     }
     for (const f of ['tests/frontend-reinitialisation.test.js',
-                     'tests/frontend-autorisation-sync.test.js']) {
+                     'tests/frontend-autorisation-sync.test.js',
+                     'tests/frontend-assistant-verrou.test.js']) {
       fs.copyFileSync(path.join(RACINE, f), path.join(copie, f));
     }
 

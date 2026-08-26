@@ -286,6 +286,13 @@ function banc(opt) {
   const AUTO = 'frontend/js/admin-autorisation.js';
   const source = [
     'var assistantIndex = 0;',
+    // ⭐ AJOUTÉ PAR R-098/B5 (2026-08-26) : `allerA` distingue désormais la carte AFFICHÉE
+    //   (`assistantIndex`) de la PROGRESSION ACQUISE (`assistantAtteint`). Sans cette ligne,
+    //   ce garde-fou-ci plante au lieu d'éprouver ce qu'il garde.
+    //   ⚠️ Sa valeur volontairement HAUTE neutralise le verrou : ⛔ ce fichier n'éprouve PAS
+    //   le verrou (c'est l'objet de `frontend-assistant-verrou.test.js`), il éprouve le
+    //   CROCHET de relecture de la feuille FFR, et il doit pouvoir atteindre sa carte.
+    'var assistantAtteint = 99;',
     extraireObjet(AUTO, 'var ACTIONS_AUTORISATION_CROCHET = {'),
     extraireObjet(AUTO, 'var ACTIONS_AUTORISATION_CHEMIN_PROPRE = {'),
     extraireObjet(AUTO, 'var ACTIONS_AUTORISATION_SANS_IMPACT = {'),

@@ -93,6 +93,34 @@ const ASSISTANT_ORDRE_ORIGINE = [
 const ASSISTANT_CLE_PREF = 'r92_mode_admin'; // 'assistant' (défaut) | 'classique'
 
 let assistantIndex = 0;
+
+/**
+ * ⭐ LA PROGRESSION RÉELLEMENT ATTEINTE — ⛔ à ne JAMAIS confondre avec `assistantIndex`.
+ *
+ * Ces deux repères ont longtemps eu la même valeur, et c'est ce qui a produit le défaut.
+ *
+ *   · `assistantIndex`   = la carte AFFICHÉE (animation, hauteur, Précédent / Suivant) ;
+ *   · `assistantAtteint` = jusqu'où l'organisateur est LÉGITIMEMENT arrivé, c'est-à-dire
+ *                          en franchissant les prérequis de chaque étape (c'est LUI que le
+ *                          verrou interroge).
+ *
+ * ⚠️ Jusqu'à PUB-2, `assistantIndex` PROUVAIT la progression : on ne pouvait jamais dépasser
+ * une étape bloquée, donc s'y tenir signifiait avoir franchi tout ce qui précède. ⭐ La carte
+ * `libre` (R-098) a ouvert une porte latérale et cassé cette preuve — mais `assistantIndex`
+ * continuait d'être avancé en y entrant. ⛔ Le carnet de route recevait le tampon du poste 8
+ * pour quelqu'un passé par le portillon.
+ *
+ * 🔬 CONSTATÉ EN RÉEL le 2026-08-26, sur téléphone, site publié (contrôle B5) : un clic sur
+ * « 🌐 Publication », depuis un classeur vide, DÉVERROUILLAIT Inviter, Dossier, Équipes,
+ * Terrains, Poules et Autorisation — et peignait « ⏱️ Réglages » EN VERT, c'est-à-dire
+ * « faite », alors que c'est précisément l'étape qui bloque tout le reste.
+ *
+ * ⭐ MONOTONE PAR CONTRAT : il n'avance que par `Math.max`, et ⛔ ne recule JAMAIS — revenir
+ * en arrière pour relire une carte ne fait pas perdre une progression déjà acquise.
+ * ⛔ Il n'est PAS avancé en atterrissant sur une carte `libre` : y entrer ne prouve rien.
+ */
+let assistantAtteint = 0;
+
 let assistantOrdreOrigine = null; // ids des blocs dans leur ordre DOM d'origine (pour restaurer)
 let assistantObserver = null;
 
@@ -188,6 +216,7 @@ function construireAssistant() {
   window.addEventListener('resize', ajusterHauteur);
 
   assistantIndex = 0;
+  assistantAtteint = 0;
   allerA(0, 0);
 }
 
@@ -208,7 +237,12 @@ function allerA(i, direction) {
   // ⚠️ Ce n'est PAS un assouplissement du verrou : on ne fait que se RENDRE sur cette carte.
   // ⛔ Les étapes suivantes gardent tous leurs prérequis (on repartira d'ici en les
   // franchissant normalement), aucune n'est libérée, et leur ordre ne change pas.
-  if (i > assistantIndex && !(ASSISTANT_ETAPES[i] || {}).libre) {
+  // ⚠️ LE TEST PORTE SUR `assistantAtteint`, ⛔ PAS SUR `assistantIndex` — c'est LE point du
+  // correctif. Avec `assistantIndex`, se tenir sur la carte `libre` « Publication » (rang 8)
+  // rendait vraie l'inégalité `i > assistantIndex` pour AUCUNE des étapes 1 à 7 : le contrôle
+  // était sauté, et six étapes jamais franchies devenaient joignables. Constaté en réel
+  // le 2026-08-26 (contrôle B5) — voir le commentaire de `assistantAtteint`.
+  if (i > assistantAtteint && !(ASSISTANT_ETAPES[i] || {}).libre) {
     const etats = (typeof calculerEtatsEtapes === 'function') ? calculerEtatsEtapes() : [];
     // ⚠️ LE BALAYAGE PART DE 0, ET NON DE L'ÉTAPE COURANTE — c'est indispensable depuis
     // l'exception `libre` ci-dessus, et l'oublier ouvre un trou réel (constaté en test) :
@@ -226,6 +260,30 @@ function allerA(i, direction) {
   }
   assistantIndex = i;
 
+  // ⭐ LA PROGRESSION ACQUISE — ⛔ et ce n'est PAS « la carte affichée ».
+  // ⭐ MONOTONE : `Math.max` et lui seul. Revenir en arrière relire une carte ne fait jamais
+  // perdre une progression déjà acquise (exigence posée par Romain le 2026-08-26).
+  if (!(ASSISTANT_ETAPES[i] || {}).libre) {
+    // Carte ORDINAIRE : y atterrir PROUVE que tout ce qui précède est franchi — soit
+    // l'inégalité ci-dessus l'avait déjà établi, soit le balayage vient de le vérifier.
+    assistantAtteint = Math.max(assistantAtteint, i);
+  } else if (i > assistantAtteint) {
+    // Carte `libre` : on y est entré PAR LE CÔTÉ, cela ne prouve rien — c'est exactement ce
+    // que l'ancien code supposait à tort. ⭐ On ne CONSTATE donc que ce qui était de toute
+    // façon atteignable : le premier blocage rencontré depuis 0.
+    // ⛔ AUCUNE étape ne devient joignable pour autant, et c'est démontrable : cette valeur est
+    // précisément celle que le balayage ci-dessus aurait déjà acceptée depuis n'importe quelle
+    // autre carte. C'est un CONSTAT de ce qui est ouvert, ⛔ jamais l'octroi d'un droit neuf.
+    // ⭐ Sans cette branche, franchir les étapes UNE À UNE jusqu'à Publication ferait perdre
+    // sa marque « faite » à l'étape précédente — une régression du parcours ordinaire.
+    const etatsAcquis = (typeof calculerEtatsEtapes === 'function') ? calculerEtatsEtapes() : [];
+    let acquis = i;
+    for (let s = 0; s < i; s++) {
+      if (assistantRaisonsEtape(s, etatsAcquis).length) { acquis = s; break; }
+    }
+    assistantAtteint = Math.max(assistantAtteint, acquis);
+  }
+
   track.style.transform = 'translateX(' + (-i * 100) + '%)';
 
   // ⭐ B2-0.5 — JUMEAU du crochet de `ecransActiver` (ecrans.js) : on arrive sur la feuille FFR,
@@ -238,10 +296,18 @@ function allerA(i, direction) {
   }
 
   // Fil d'étapes : marque l'active + les précédentes comme « faites ».
+  // ⚠️ « FAITE » EST UNE AFFIRMATION, PAS UNE POSITION — et elle s'affiche EN VERT
+  // (`styles.css`, `.asst-step.est-faite`). ⛔ `k < i` disait « tout ce qui est avant la carte
+  // affichée est fait » : vrai tant qu'on ne pouvait y arriver qu'en le faisant, FAUX depuis la
+  // carte `libre`. Entrer sur « Publication » peignait alors « Réglages » en vert sans que rien
+  // n'ait été rempli — 🔬 constaté en réel le 2026-08-26.
+  // ⭐ `Math.min` : dans un parcours ordinaire, `assistantAtteint` vaut exactement `i` sur une
+  // carte non `libre`, donc cette ligne se comporte À L'IDENTIQUE de `k < i`. Elle ne diffère
+  // que là où l'ancienne mentait.
   const steps = document.querySelectorAll('.asst-step');
   steps.forEach(function (li, k) {
     li.classList.toggle('est-active', k === i);
-    li.classList.toggle('est-faite', k < i);
+    li.classList.toggle('est-faite', k < Math.min(i, assistantAtteint));
   });
 
   // Compteur + boutons Précédent/Suivant.
@@ -520,9 +586,15 @@ function assistantMajVerrou() {
   // ⭐ Balayage depuis 0 et plancher à l'étape courante — exactement la règle de `allerA`,
   // pour que ce qui est grisé soit précisément ce que `allerA` refusera. ⛔ On ne grise jamais
   // l'étape où l'on se tient (`Math.max`), ni une carte `libre` (voir plus bas).
+  // ⚠️ Le plancher est `assistantAtteint`, ⛔ PAS `assistantIndex` — même raison qu'en tête de
+  // `allerA` : depuis la carte `libre`, `assistantIndex` valait 8 et repoussait la limite du
+  // grisage à 8, si bien que six étapes hors de portée s'affichaient comme atteignables.
+  // ⭐ L'étape où l'on se tient n'est toujours jamais grisée : sur une carte NON `libre`,
+  // `assistantAtteint` vaut au moins `assistantIndex` ; sur une carte `libre`, c'est
+  // l'exemption `!libre` ci-dessous qui s'en charge.
   let limite = derniere;
   for (let s = 0; s < derniere; s++) {
-    if (assistantRaisonsEtape(s, etats).length) { limite = Math.max(s, assistantIndex); break; }
+    if (assistantRaisonsEtape(s, etats).length) { limite = Math.max(s, assistantAtteint); break; }
   }
   document.querySelectorAll('.asst-step').forEach(function (li, k) {
     // ⭐ Une carte `libre` n'est JAMAIS grisée : elle est joignable directement (voir `allerA`).

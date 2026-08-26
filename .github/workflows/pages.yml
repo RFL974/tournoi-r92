@@ -54,9 +54,10 @@ jobs:
   #
   # b) Les garde-fous de `tests/` répondent à l'autre question : « ce code fait-il
   #    encore ce qu'il doit faire ? ». ⛔ Ils restent VOLONTAIREMENT peu nombreux —
-  #    DEUX comportements sont gardés aujourd'hui (la réinitialisation, et la mise à
-  #    jour de la Demande d'autorisation) — et suivent la même règle que ci-dessus :
-  #    rien qui puisse bloquer une correction urgente sans raison.
+  #    TROIS comportements sont gardés aujourd'hui (la réinitialisation, la mise à jour
+  #    de la Demande d'autorisation, et le verrou du parcours guidé sur téléphone) — et
+  #    suivent la même règle que ci-dessus : rien qui puisse bloquer une correction
+  #    urgente sans raison.
   # --------------------------------------------------------------------------
   verifier:
     name: Vérifier les fichiers publiés (syntaxe + garde-fous)
@@ -89,10 +90,10 @@ jobs:
           echo "$total fichiers JavaScript vérifiés, aucun cassé."
 
       # ----------------------------------------------------------------------
-      # M1-B2 / B2-0 et B2-0.5 — les GARDE-FOUS de comportement.
+      # M1-B2 / B2-0 et B2-0.5, M1-PUB / R-098 — les GARDE-FOUS de comportement.
       #
       # `node --check` répond à « ce fichier se lit-il ? ». Ceux-ci répondent à « fait-il
-      # encore ce qu'il doit faire ? » — deux comportements sont gardés :
+      # encore ce qu'il doit faire ? » — trois comportements sont gardés :
       #
       #  · B2-0   : après « Réinitialiser le tournoi », aucune participation de l'édition
       #             effacée ne peut subsister en mémoire, ⭐ MÊME si la relecture des clubs
@@ -103,8 +104,12 @@ jobs:
       #             lieu de la faire disparaître, et ⛔ une saisie en cours n'est jamais
       #             effacée. Il porte aussi deux contrôles d'INVENTAIRE : toute action
       #             d'écriture est classée, et aucune n'échappe au point de passage commun.
+      #  · R-098  : dans le parcours guidé du TÉLÉPHONE, ouvrir la carte « Publication »
+      #             (joignable à tout moment) ne déverrouille AUCUNE autre étape et
+      #             n'annonce comme « faite » aucune étape qui ne l'est pas. ⭐ Défaut
+      #             constaté en réel le 2026-08-26, sur le site publié.
       #
-      # ⚠️ Le dernier fichier éprouve les deux autres : il réintroduit les défauts corrigés
+      # ⚠️ Le dernier fichier éprouve les trois autres : il réintroduit les défauts corrigés
       # dans une COPIE temporaire et exige que les garde-fous les attrapent. Un harnais
       # qu'on n'a jamais vu échouer ne prouve rien — ce projet en a déjà fait les frais.
       #
@@ -116,6 +121,9 @@ jobs:
 
       - name: Vérifier la mise à jour de la Demande d'autorisation (M1-B2 / B2-0.5)
         run: node tests/frontend-autorisation-sync.test.js
+
+      - name: Vérifier le verrou du parcours guidé (M1-PUB / R-098 — B5)
+        run: node tests/frontend-assistant-verrou.test.js
 
       - name: Vérifier que ces garde-fous mordent encore (rejeu des mutations)
         run: node tests/mutations-frontend.test.js
