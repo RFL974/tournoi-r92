@@ -9569,3 +9569,151 @@ rédaction**, inscrite comme l'étape **G2** du plan.
 
 ⏭️ **PUB-4 — l'exécution du découplage.** ⛔ **Elle NE COMMENCE PAS** sans décision explicite de
 Romain *(**§12.4**)*.
+
+---
+
+## SESSION 29 — 🏁 **PUB-4 : LE DÉCOUPLAGE EST EXÉCUTÉ, EN SERVICE ET PROUVÉ DES DEUX CÔTÉS** *(2026-08-26, suite 5)*
+
+| | |
+|---|---|
+| **Objectif** | Exécuter **PUB-4** selon [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md), puis **clôturer** le lot sur décision de Romain |
+| **Nature** | **Mixte** — dépôt tiers *(vitrine)*, backend Maxilou, tests, redéploiement Apps Script, puis clôture documentaire |
+| **Décisions** | **D-055** — la clôture, la réserve de la condition 5, et le passage de M9 à PUB-5 |
+| **Résultat** | ✅ **PUB-4 CLOS · R-097 CLOS · R-098 CLOS · M9 transmis à PUB-5** |
+
+### 29.1 — ⚠️ Qui a constaté quoi — à lire AVANT le reste
+
+⛔ **Cette session n'a pas tout observé elle-même, et il serait malhonnête de l'écrire ainsi.**
+La séquence de preuves s'est déroulée en **deux temps**, séparés par une reprise de session.
+
+| Preuve | Constatée par | Quand |
+|---|---|---|
+| **P1 → P8** — la première coupure, la séquence contrôlée en six temps *(`non → publié → non`)*, les contrôles §21.10 ter **6** et **8**, la condition **5** de R-098 | ⭐ **La session précédente**, avec **Romain**, dont les preuves **sur téléphone réel** | 2026-08-26, avant la reprise |
+| **G7 → G10, P9, P10**, et **toutes les re-constatations** de cette fiche | ⭐ **Cette session** | 2026-08-26, suite 5 |
+| **Les 6 relevés dans l'éditeur Apps Script** et l'exécution de `lancerTestsFFR` | ⭐ **Romain**, à la main *(⛔ aucun accès automatisé n'existe : ni `clasp`, ni identifiant)* | 2026-08-26, suite 5 |
+
+### 29.2 — Les deux coupures, et pourquoi il en fallait deux
+
+⭐ **Aucune des deux seule n'aurait suffi.** La première supprime le **lecteur** ; la seconde
+supprime la **donnée**.
+
+| # | Où | Ce qui a été coupé | 🔬 Preuve |
+|---|---|---|---|
+| ① | `RFL974/boutique-r92` *(dépôt tiers, autorisé par **D-054 / ①**)* | Le site n'interroge plus le serveur Maxilou · plus de carte d'actualité automatique · `tournoi.html` devenue **statique** avec un lien explicite | Commit **`9dbdf0a`**, **publié** par GitHub Pages |
+| ② | Ce dépôt | La vue **`invitation`** n'expose plus `tournoi_publie` | Commit **`a4ee3bb`**, **redéployé chez Google** |
+
+### 29.3 — G7 et G8 — la modification, et le test qu'il ne fallait PAS supprimer
+
+**G7** — `backend/Code.gs` : `CONFIG_PUBLIQUE_VUES.invitation.global` passe de **23 à 22** champs.
+Le commentaire qui la précédait affirmait **l'inverse** de la ligne d'en dessous *(« `tournoi_publie`
+EST dans cette liste, et c'est essentiel : le site vitrine… »)* : réécrit dans le même lot
+*(`CLAUDE.md` **§8 ter**)*.
+
+**G8** — `backend/Tests.gs`. 🔴 **Le test portait QUATRE affirmations, et le supprimer en bloc aurait
+supprimé la seule garantie que `live` expose encore le témoin.** Chacune a reçu son sort :
+
+| # | Affirmation | Sort |
+|---|---|---|
+| 1 | `invitation` expose le témoin | 🔴 **INVERSÉE** |
+| 2 | `live` l'expose aussi | 🟢 **CONSERVÉE** — ⭐ c'est elle qui protège la page publique |
+| 3 | le masquage remonte | 🔵 **DÉPLACÉE** de `invitation` vers `live` |
+| 4 | le téléphone reste exclu | 🟢 **CONSERVÉE** *(frontière de vue)* |
+| 5 | *(ajoutée)* `invitation` ignore le témoin **quelle que soit sa valeur** | 🆕 la coupure ne dépend ni de `oui` ni de `non` |
+
+Renommé **`testCfg_temoinPublicationVueLiveSeule`** — l'ancien nom, `testCfg_vitrineVoitTournoiPublie`,
+était devenu **littéralement faux**. ⭐ **Il est cité dans le commentaire du test avec sa date de
+validité**, pour qu'une recherche sur l'ancien nom aboutisse encore.
+
+**Contrôles avant redéploiement** : `node --check` sur les deux fichiers ✅ · les **10 tests de la
+famille « config publique »** joués sur les vrais fichiers dans un bac à sable Node *(vm + faux
+services Google)* → **51/51 OK, 0 FAIL** · les **4 harnais frontend** du dépôt inchangés et verts
+*(41/41, 97/97, 48/48, 45/45 mutations détectées)*.
+
+### 29.4 — G9 — le redéploiement, et pourquoi il est DISCRIMINANT
+
+⛔ **Ni un `ping`, ni un bilan vert** *(**D-040**)*. Un **couple** de témoins, relevé par Romain
+dans l'éditeur :
+
+| Chercher | Avant collage | Après collage |
+|---|---|---|
+| `D-048, coupure M1-PUB` | **0** | ✅ **1** |
+| `EST dans cette liste` | **1** | ✅ **0** |
+
+🎯 **Un collage manqué, partiel ou non enregistré ne peut pas produire les deux comptes à la fois.**
+Relevés complémentaires : `Code.gs` **8519** lignes, `viderDonnees` ligne **8514**, `Tests.gs`
+**5141** lignes, bilan **`R92 — 881/881 OK, 0 FAIL`** lu dans le journal.
+
+> ⛔ **Le numéro de version du déploiement n'a PAS été relevé au moment du collage.** Il n'est
+> inscrit nulle part, et ⛔ **rien n'a été deviné** *(la précédente était la **157**)*. La source de
+> ces repères est [`../deploiement.md`](../deploiement.md) — `CLAUDE.md` **§8 quater**.
+
+### 29.5 — P9 et P10 — ce que la mesure a montré
+
+**P9** — ⛔ **il ne suffisait pas de constater que l'API répond** : la réponse de la vue concernée a
+été **inspectée clé par clé**, et comparée à la mesure d'avant.
+
+| | Avant redéploiement | Après |
+|---|---|---|
+| `?action=getConfig`, champs `global` | **21** | **20** |
+| `tournoi_publie` | ✅ présent → `'non'` | ⛔ **absent** |
+| Clés **disparues** entre les deux | — | ⭐ **`['tournoi_publie']` — une seule** |
+| Clés **apparues** entre les deux | — | ⭐ **aucune** |
+
+> ⭐ **Ce qui rend cette preuve forte, ce n'est pas le champ manquant.** Le serveur a changé
+> **exactement là où on l'a modifié, et nulle part ailleurs**. Un collage tronqué ou un mauvais
+> fichier aurait déplacé d'autres clés.
+
+**P10** — le bilan n'est plus prédit : **`R92 — 881/881 OK, 0 FAIL`**, **lu chez Google**. La valeur
+avait d'abord été calculée hors ligne *(880 − 4 + 5)* ; elle est désormais **CERTAINE**
+*(`CLAUDE.md` §9)*.
+
+**Le garde-fou** — la vue `live` expose toujours `tournoi_publie` = **`non`**, relevé **DEUX fois à
+plus de 15 s d'intervalle**. ⚠️ **Pourquoi deux fois** : `getAll` est mis en cache côté serveur et
+sa copie fraîche ne vit que **10 s** *(`backend/Code.gs:500`)* — un relevé unique aurait pu provenir
+d'une copie fabriquée **avant** le redéploiement, et n'aurait donc rien prouvé du nouveau code.
+
+### 29.6 — Les recontrôles finaux
+
+| Ce qui a été recontrôlé | Constat |
+|---|---|
+| **Page publique Maxilou** | Chrome **visible** *(⛔ **0** occurrence de `--headless`)*, attente de **l'état FINAL** et non du premier affichage *(**§8 octies**)* : *« Le tournoi arrive bientôt »*, et ⛔ **zéro occurrence de « Chargement »** dans l'état relevé |
+| **Jeu fictif** | **3 équipes · 1 poule · 3 matchs**, tous *« à venir »*, `tournoi_publie` = `non`. ⭐ **Intact** — le masquage **cache**, ⛔ il ne supprime pas |
+| **Vitrine** | Les **trois** pages porteuses rechargées : `index.html` **15** requêtes · `actualites.html` **16** · `tournoi.html` **14** — ⛔ **ZÉRO vers le serveur Maxilou** |
+| **Comportement automatique** | ⛔ Aucun retour : `tournoi.html` de la vitrine ne contient plus ni *« Aucun tournoi »*, ni *« Chargement »*, ni la moindre trace du témoin. Son bouton **« Accéder au suivi du tournoi »** pointe explicitement vers Maxilou |
+
+> ⚠️ **UN FAUX POSITIF À CONNAÎTRE, ET IL PEUT REVENIR.** La page Actualités de la vitrine affiche
+> une actualité intitulée **« Tournoi amical inter-clubs des Hauts-de-Seine »**. ⛔ **Ce n'est PAS
+> le retour de la carte automatique.** Le fichier `assets/data/actus.json` a été ouvert : il est
+> **statique**, éditorial, et contient **0** occurrence de `script.google.com`, `tournoi_publie`,
+> `exec?action` et `macros/s/`. ⭐ **C'est exactement le droit que D-054 / ② préserve** :
+> l'association garde le droit d'annoncer un tournoi, **à la main**.
+>
+> ⚡ *(Un premier comptage de cette session avait annoncé **3** actualités : c'était un artefact de
+> recherche — le titre du premier article est imbriqué dans un lien. Il y en a bien **4**.)*
+
+### 29.7 — G10 et la clôture — la décision de Romain
+
+✅ **D-055**, prise au vu du rapport technique : PUB-4 **CLOS** · R-097 **CLOS** · R-098 **CLOS** ·
+la **réserve de la condition 5** reste écrite · **M9 transmis à PUB-5** comme premier point.
+
+⭐ **La chaîne de clôture du contrôle ⑯** *(`CLAUDE.md` **§8 quinquies**)*, pour cette mesure :
+
+> *Doctrine **D-048** · écart constaté à `backend/Code.gs:729` · qualifié **P2 / R-097** · solution
+> « retirer le témoin de la vue `invitation` » validée par **D-054** puis **D-055** · testée par
+> `testCfg_temoinPublicationVueLiveSeule` et par la mesure `getConfig` **21 → 20** · recontrôlée au
+> regard de D-048 *(publier n'atteint plus aucun site tiers — observé sur 3 pages, 0 requête)* ·
+> documents actifs vérifiés · commits `a4ee3bb` et `52928d4` · présents dans le dépôt publié.*
+
+### 29.8 — ⛔ Ce que cette session n'a PAS fait
+
+- ⛔ **Aucun fichier applicatif touché par la clôture** — la clôture est **exclusivement documentaire** ;
+- ⛔ **M9 n'est pas corrigé** : le bloc *« Aperçu sur le site »* est **intact**, et c'est voulu ;
+- ⛔ **PUB-5 n'est pas démarré** ;
+- ⛔ **M1-PUB n'est pas terminé** — il reste **PUB-5** ;
+- ⛔ **Le sort du jeu de tournoi fictif n'est pas décidé** : il reste en place, et cela appartient à Romain ;
+- ⛔ **Le scénario littéral de la condition 5 n'a pas été joué**, et n'est présenté nulle part comme l'ayant été.
+
+### 29.9 — Prochaine session recommandée
+
+⏭️ **PUB-5 — l'aperçu réel**, avec **M9 comme premier point**. ⛔ **Elle NE COMMENCE PAS** sans
+décision explicite de Romain *(**§12.4**)*.

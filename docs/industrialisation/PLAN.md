@@ -36,8 +36,9 @@ post-geste — ⛔ aucun commit de fusion, aucun SHA réécrit)* **et PUBLIÉ su
 **`success`**)* — ⛔ **TOUJOURS PAS VÉRIFIÉ EN RÉEL**. ⚡ *(Cette ligne annonçait « NON FUSIONNÉ dans
 `main`, NON PUBLIÉ » : vrai jusqu'à la fusion du 2026-08-24 au soir, relue et corrigée après le
 geste — `CLAUDE.md` §8 septies. Elle avait déjà annoncé « non commité, non poussé » avant cela.)* ;
-✅ **PUB-3 EST CLOS** *(2026-08-26)* — plan : [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md) ; les 4 décisions qu'il posait sont tranchées par **D-054**. *(Cette ligne annonçait « PUB-3, PUB-4 et PUB-5 non commencés » : vrai jusqu'au 2026-08-26.)* ; ⛔ **PUB-4 et PUB-5 non commencés**.
-⛔ **M1-PUB N'EST PAS TERMINÉ pour autant, et R-097 reste OUVERT** *(**§15.8**)*.
+✅ **PUB-3 EST CLOS** *(2026-08-26)* — plan : [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md) ; les 4 décisions qu'il posait sont tranchées par **D-054**. *(Cette ligne annonçait « PUB-3, PUB-4 et PUB-5 non commencés » : vrai jusqu'au 2026-08-26.)* ;
+✅ **PUB-4 EST CLOS** *(2026-08-26)* — le découplage est **exécuté, en service et prouvé des deux côtés** ; **R-097 et R-098 sont CLOS** *(**D-055**)*. *(Cette ligne annonçait « ⛔ PUB-4 et PUB-5 non commencés » : vrai jusqu'au 2026-08-26 suite 5.)* ; ⛔ **PUB-5 non commencé** — ➡️ **M9 en est le premier point à traiter**.
+⛔ **M1-PUB N'EST PAS TERMINÉ pour autant** — ⛔ **PUB-5 reste à faire** *(**§15.8**)*. ⚡ *(Cette ligne ajoutait « et R-097 reste OUVERT » : **vrai jusqu'au 2026-08-26 suite 5**. **R-097 et R-098 sont CLOS depuis** — `RISQUES.md`, décision **D-055**.)*
 ⭐ **Arbitrage rendu par PUB-2 : D-049** — `url_tournoi_public` est **consommé** par M1-PUB mais sa
 **configuration reste rattachée à R-096 / M1-D**.
 
@@ -2499,7 +2500,7 @@ loué en ligne, ni parcours de première configuration complet, ni répertoire d
 | **M1-C2** | Le **modèle de doctrine sportive** | Backend | ✅ oui | ⏸️ **NON — REPORTABLE** |
 | **M1-D** | L'écran **« Mon club »**, référentiel **vivant** | Frontend + 1 action | ✅ oui | oui |
 | **M1-E** | **Branchement progressif** des consommateurs *(E1 → E6)* | Mixte | E1, E3 : ✅ · E2, E4, E5, E6 : ⛔ | E2/E3/E4 oui |
-| 🌐 **M1-PUB** *(= **M1-E7**)* | **Publication autonome du tournoi** — doctrine, accès autonome, découplage de la vitrine *(**§15.3 bis**)* | Documentaire *(PUB-1, PUB-3)* puis mixte | PUB-1, PUB-3 : ⛔ · PUB-2, PUB-4, PUB-5 : ✅ | **oui — et AVANT M1-F** · ⚡ **PUB-1, PUB-2 et PUB-3 sont CLOS** *(2026-08-26)* |
+| 🌐 **M1-PUB** *(= **M1-E7**)* | **Publication autonome du tournoi** — doctrine, accès autonome, découplage de la vitrine *(**§15.3 bis**)* | Documentaire *(PUB-1, PUB-3)* puis mixte | PUB-1, PUB-3 : ⛔ · PUB-2, PUB-4, PUB-5 : ✅ | **oui — et AVANT M1-F** · ⚡ **PUB-1, PUB-2, PUB-3 et PUB-4 sont CLOS** *(2026-08-26)* · ⛔ **PUB-5 reste** *(cette case annonçait « PUB-1, PUB-2 et PUB-3 sont CLOS » : vrai jusqu'au 2026-08-26 suite 5)* |
 | **M1-F** | **Neutralisation et validation finale** — clôture de **CF-4b** | Données + logo + preuves | ⚠️ probablement non | **c'est la clôture** |
 
 > ⛔ **AUCUNE ÉTAPE NE DÉMARRE AUTOMATIQUEMENT.** Chaque étape est présentée, validée par Romain,
@@ -2705,8 +2706,8 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **PUB-1** | **Doctrine et cadrage architectural** | 📄 **Documentaire pur** | ⛔ non |
 | **PUB-2** | **Accès autonome à la page publique** | Frontend *(+ éventuellement 1 paramètre)* | ✅ oui |
 | **PUB-3** | **Plan technique et preuve du découplage** | 📄 **Documentaire** | ⛔ non |
-| **PUB-4** | **Exécution du découplage**, selon le plan validé en PUB-3 | Mixte — Maxilou **et** vitrine | ✅ oui |
-| **PUB-5** | **Aperçu Maxilou réel** | Frontend | ✅ oui |
+| **PUB-4** | **Exécution du découplage**, selon le plan validé en PUB-3 — 🏁 **CLOS** *(2026-08-26)* | Mixte — Maxilou **et** vitrine | ✅ oui — **FAIT** |
+| **PUB-5** | **Aperçu Maxilou réel** — ⛔ **NON COMMENCÉ** · ➡️ **premier point : M9** | Frontend | ✅ oui |
 
 ##### PUB-1 — Doctrine et cadrage architectural  🏁 **TERMINÉ ET FUSIONNÉ DANS `main`**
 
@@ -2719,7 +2720,9 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **Validation** | La doctrine est écrite **une seule fois**, à **une seule adresse** *(D-048)* · le risque a un identifiant, une priorité et un statut *(R-097)* · **l'ordre général** du découplage est écrit **avant** toute coupure · le **critère de clôture de M1-PUB** est écrit · ⭐ **chaque affirmation porte son niveau de preuve** *(🔬 / 📄 / 🕗 / ⛔)* |
 | 🏁 **État CONSTATÉ** | ✅ **TERMINÉ, FUSIONNÉ ET PUBLIÉ dans `main`** le 2026-08-24, en **fast-forward** — ⛔ **aucun SHA réécrit, aucun commit de fusion créé**. **Deux commits** : **`56dabd3`** *(le contenu — 6 fichiers, 625 insertions)* · **`6fdffd8`** *(la trace post-geste — `SESSIONS.md` seul)*. `origin/main` : **`ebf1b07` → `6fdffd8`**. ⛔ **Aucun run GitHub Actions déclenché** *(aucun `frontend/`)* · ⛔ **aucun redéploiement backend** *(aucun `backend/`)*. Détail des observations : `SESSIONS.md` **§20.8** |
 
-##### PUB-2 — Accès autonome à la page publique  🏁 **TERMINÉ ET CLÔTURÉ** *(2026-08-26)* — ⛔ **R-098 reste OUVERT** *(condition 5 reportée à PUB-4)*
+##### PUB-2 — Accès autonome à la page publique  🏁 **TERMINÉ ET CLÔTURÉ** *(2026-08-26)* — ✅ **R-098 est CLOS depuis la clôture de PUB-4** *(D-055)*
+
+> ⚡ **Ce titre annonçait « ⛔ R-098 reste OUVERT *(condition 5 reportée à PUB-4)* » : vrai du 2026-08-26 *(suite 2)* jusqu'à la clôture de PUB-4 le même jour *(suite 5)*.** ⭐ **La condition 5 a bien été honorée en PUB-4**, comme **D-052** l'avait organisé — ⚠️ **avec une réserve écrite** *(`RISQUES.md`, encadré « LA CONDITION 5 »)*.
 
 | | |
 |---|---|
@@ -2757,7 +2760,7 @@ coupure)* et **PUB-4** *(après coupure)*.
 > ⛔ **Ne pas confondre la condition 4b et le contrôle 6.** La **4b** est un **état visuel** ;
 > le **6** exige un **clic**. ⭐ **Seul le second est reporté.**
 | 🏁 **État CONSTATÉ** | ✅ **FUSIONNÉ dans `main` le 2026-08-24, en FAST-FORWARD STRICT** *(`git merge --ff-only`)* — ⛔ **aucun commit de fusion créé, aucun SHA réécrit** *(`main` et la branche PUB-2 pointent le même objet)*. **Deux commits, et deux seulement** : **`f62b322`** *(le contenu — 13 fichiers = **6 frontend** + **7 documentaires**, ⛔ **0 backend**)* · **`b002a57`** *(la trace post-geste — 3 fichiers, `docs/` seuls)*. `origin/main` : **`ec1f486` → `b002a57`**, écart local/distant **0/0**. ✅ **PUBLIÉ** — run Pages **#220** *(`push`, `main`, `b002a57`)* : `verifier` **`success`** *(« 30 fichiers JavaScript vérifiés, aucun cassé »)*, `deploy` **`success`**. ⛔ **Aucun redéploiement Apps Script** *(`backend/Code.gs` strictement identique)*. ⛔ **NON VÉRIFIÉ EN RÉEL**. ⚡ *(Cette case ajoutait « ⭐ c'est le seul état qui manque à ce lot » : **faux depuis le 2026-08-24 au soir** — la vérification réelle a été TENTÉE et a échoué, révélant **R-098** ; voir la ligne suivante.)* Détail des observations : `SESSIONS.md` **§21.10 bis** |
-| 🔴 **R-098 — l'anomalie trouvée en essayant, et son correctif** | ⚡ **La validation réelle a échoué à son PREMIER contrôle le 2026-08-24** : la carte était **inatteignable** sur un classeur non préparé *(verrou de navigation **antérieur** à PUB-2, que PUB-2 n'avait pas analysé)*. ✅ **Correctif FUSIONNÉ et PUBLIÉ le même jour** — fast-forward **`2ef9ce0` → `b8ce265`** *(**`9bdeb06`** le correctif · **`b8ce265`** la trace post-geste)*, run Pages **#221** `success`. Le garde-fou passe de l'**ÉCRAN** au **BOUTON**, sur **les trois parcours** *(barre latérale, assistant mobile, Vue classique)*. ⛔ **R-098 reste OUVERT**. ⚡ **CORRIGÉ APRÈS LE GESTE le 2026-08-26** : cette case annonçait *« 1 de ses 5 conditions de fermeture est remplie »*, vrai jusqu'aux validations réelles du 2026-08-26 — **il y en a désormais 4 sur 5**. Détail : `RISQUES.md` **R-098** et `SESSIONS.md` **§22** |
+| 🔴 **R-098 — l'anomalie trouvée en essayant, et son correctif** | ⚡ **La validation réelle a échoué à son PREMIER contrôle le 2026-08-24** : la carte était **inatteignable** sur un classeur non préparé *(verrou de navigation **antérieur** à PUB-2, que PUB-2 n'avait pas analysé)*. ✅ **Correctif FUSIONNÉ et PUBLIÉ le même jour** — fast-forward **`2ef9ce0` → `b8ce265`** *(**`9bdeb06`** le correctif · **`b8ce265`** la trace post-geste)*, run Pages **#221** `success`. Le garde-fou passe de l'**ÉCRAN** au **BOUTON**, sur **les trois parcours** *(barre latérale, assistant mobile, Vue classique)*. ✅ **R-098 est CLOS depuis la clôture de PUB-4** *(2026-08-26 suite 5, **D-055**)* — ⚠️ **avec la réserve écrite de sa condition 5**. ⚡ **CORRIGÉ APRÈS LE GESTE le 2026-08-26** : cette case a annoncé successivement *« 1 de ses 5 conditions de fermeture est remplie »*, puis *« ⛔ **R-098 reste OUVERT** — il y en a désormais 4 sur 5 »*. **Chacune était vraie à sa date**, et les **cinq** sont désormais honorées. Détail : `RISQUES.md` **R-098** et `SESSIONS.md` **§22** |
 | 🔴 **R-098 / B5 — le défaut RESTANT, trouvé et corrigé le 2026-08-26** | ⚡ **La validation réelle a échoué une SECONDE fois, sur téléphone** : ouvrir la carte « Publication » **déverrouillait six étapes** et peignait **« Réglages » en vert**. 🔬 **Cause** : `assistantIndex` désignait à la fois la **carte affichée** et la **progression atteinte** — le premier correctif avait **diagnostiqué** cette confusion sans la corriger, ne refermant qu'**une conséquence sur trois**. ✅ **Corrigé** par un second repère **`assistantAtteint`**, **monotone**, que seule une carte non `libre` fait monter : **`8b66456`**, fast-forward **`be1b376` → `8b66456`**, run Pages **#228** `success` *(les deux travaux)*. 🆕 **Un garde-fou DURABLE** — `tests/frontend-assistant-verrou.test.js`, **41 contrôles** + **5 mutations** — s'exécute désormais **avant chaque publication** ; ⭐ **les 34 contrôles du premier correctif n'avaient PAS été conservés, et c'est pourquoi le défaut a survécu**. ✅ **REVALIDÉ EN RÉEL** le 2026-08-26 *(11 contrôles sur 11, téléphone, navigation privée)*. Détail : `SESSIONS.md` **§24** |
 
 **⭐ Le constat qui a dimensionné ce lot : l'adresse publique existait DÉJÀ, et les clubs la recevaient**
@@ -2897,7 +2900,7 @@ coupure)* et **PUB-4** *(après coupure)*.
 > pas**. ⛔ **Un geste dans le mauvais ordre ne se voit pas : il se constate plus tard, par une
 > absence.** Le plan doit donc être écrit — et relu — **avant** que quoi que ce soit soit coupé.
 
-##### PUB-4 — Exécution du découplage
+##### PUB-4 — Exécution du découplage  🏁 **TERMINÉ ET CLÔTURÉ** *(2026-08-26)*
 
 | | |
 |---|---|
@@ -2926,14 +2929,29 @@ coupure)* et **PUB-4** *(après coupure)*.
 > **PUB-5 vient après**, et le chantier n'est clos que lorsque **les cinq lots** le sont
 > *(voir le critère de clôture ci-dessous)*.
 
-##### PUB-5 — Aperçu Maxilou réel
+**🏁 État CONSTATÉ de PUB-4** *(2026-08-26 — décision de clôture de Romain, **D-055**)*
 
 | | |
 |---|---|
+| ✅ **Obligation ① — le découplage** | **PROUVÉE EN RÉEL.** Le tournoi fictif a été **publié puis masqué** pendant qu'on observait les deux sites : ⭐ **la page publique Maxilou a réagi**, ⛔ **la vitrine n'a pas bougé d'un octet**. Cycle refermé : `non → publié → non` |
+| ✅ **Obligation ② — les 3 preuves héritées de PUB-2** | **R-098 condition 5** *(« Masquer » jamais grisé)* · **contrôle §21.10 ter 6** *(Publier → vert, adresse identique)* · **contrôle §21.10 ter 8** *(Masquer → même adresse, retour à « à venir »)*. ⭐ **Relevées séparément**, comme le plan l'exigeait |
+| ⚠️ **La réserve de la condition 5** | Elle a été honorée **par observation** *(4 affichages, dont un téléphone réel)* **et par lecture du code** *(publié ⇒ la branche retourne avant toute lecture des prérequis)*. ⛔ **Le scénario littéral « publié + prérequis volontairement cassés » N'A PAS ÉTÉ JOUÉ, et ne doit jamais être présenté comme joué** — `RISQUES.md`, encadré « LA CONDITION 5 » |
+| 🔬 **Les deux coupures** | ① `boutique-r92` **`9dbdf0a`**, publié — 3 pages rechargées, **0** requête vers le serveur Maxilou · ② ce dépôt **`a4ee3bb`**, redéployé — `getConfig` : **21 → 20** champs, ⭐ **une seule clé disparue** |
+| 🔬 **Le redéploiement** | **DISCRIMINANT au sens de D-040** : couple de témoins **1** et **0**, dans les deux sens · bilan **lu chez Google** : `R92 — 881/881 OK, 0 FAIL`. ⛔ **Numéro de version non relevé au collage — rien n'est deviné.** Source des repères : [`../deploiement.md`](../deploiement.md) |
+| ⭐ **L'ordre a renforcé la preuve** | Les preuves ont été produites **AVANT** le retrait côté Maxilou : le témoin était **encore servi**. Constater qu'une publication reste sans effet prouve donc que **c'est le LIEN qui a été coupé**, ⛔ pas que la donnée a disparu |
+| ⛔ **Ce que PUB-4 n'a PAS fait, et c'est voulu** | ⛔ **Aucune correction du frontend de l'administration.** 🔴 **M9** — le bloc *« Aperçu sur le site »* *(`frontend/admin.html:167-180`)* promet encore une **carte d'actualité** et une **page d'événement** sur le site de l'association : ⛔ **ces deux choses n'existent plus**. ⭐ **Ce défaut NE ROUVRE PAS PUB-4** *(D-055)* — ➡️ **il est TRANSMIS À PUB-5 comme son PREMIER point à traiter** |
+| 📄 **Détail** | `SESSIONS.md` **§29** · plan exécuté : [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md) *(gestes G1 → G10)* |
+
+##### PUB-5 — Aperçu Maxilou réel  ⛔ **NON COMMENCÉ**
+
+| | |
+|---|---|
+| ➡️ 🔴 **PREMIER POINT À TRAITER : M9** | ⚡ **Transmis par PUB-4 le 2026-08-26** *(décision de Romain, **D-055**)*. Le bloc **« Aperçu sur le site »** *(`frontend/admin.html:167-180`)* promet encore, en toutes lettres : *« Voici, tels qu'ils apparaîtront sur le **site de l'association** une fois le tournoi **publié** : la **carte d'actualité**, puis la **page de l'événement** »*. ⛔ **Ces deux choses n'existent plus depuis PUB-4.** ⚠️ **C'est aujourd'hui le SEUL endroit du produit qui promet encore quelque chose qui n'arrivera pas**, et il est sous les yeux de l'organisateur **au moment exact où il clique « Publier »** |
 | **Objectif** | Remplacer le **faux aperçu** *(`frontend/admin.html:162-180`, rendu par `majApercuTournoi`, `frontend/js/admin-infos-publication.js:99-170`)* par un aperçu de la **véritable page publique Maxilou** |
-| **Pourquoi ce n'est pas cosmétique** | ⚠️ L'aperçu actuel annonce un *« Aperçu RÉEL de la publication »* d'un contenu qui appartient à **un autre site** : il **affirme sa propre fidélité** |
-| **Dépendances** | **PUB-4** — ⛔ tant que le couplage existe, l'ancien aperçu décrit encore quelque chose de vrai |
+| **Pourquoi ce n'est pas cosmétique** | ⚠️ L'aperçu actuel annonce un *« Aperçu RÉEL de la publication »* d'un contenu qui appartient à **un autre site** : il **affirme sa propre fidélité**. ⚡ **Et depuis PUB-4, il ne décrit plus rien du tout** — ⭐ **le défaut est passé de « trompeur » à « faux »** |
+| **Dépendances** | **PUB-4** — ✅ **satisfaite : PUB-4 est CLOS depuis le 2026-08-26**. ⚡ *(Cette case disait « ⛔ tant que le couplage existe, l'ancien aperçu décrit encore quelque chose de vrai » : **vrai jusqu'au 2026-08-26**, et c'est exactement pourquoi M9 devient urgent maintenant.)* |
 | **Redéploiement** | ✅ **OUI** |
+| ⛔ **Ce lot n'est pas démarré** | Il ne commence **pas** sans décision explicite de Romain *(`CLAUDE.md` §12.4)* |
 
 #### ⭐ Critère de clôture de M1-PUB
 
@@ -2949,9 +2967,9 @@ toutes les quatre.** *(La **④** a été ajoutée le 2026-08-26 par **D-052**.)
 |---|---|
 | **PUB-1** | Doctrine, risque, ordre général et critère de clôture **écrits et validés** — 🏁 **FAIT** |
 | **PUB-2** | L'accès autonome à la page publique **existe dans l'admin** — 🏁 **FAIT et CLÔTURÉ le 2026-08-26**, critère entièrement satisfait et **vérifié en réel** |
-| **PUB-3** | Le plan technique et les preuves **écrits et validés** |
-| **PUB-4** | Le découplage **exécuté** |
-| **PUB-5** | L'aperçu réel **livré** |
+| **PUB-3** | Le plan technique et les preuves **écrits et validés** — 🏁 **FAIT et CLOS le 2026-08-26** |
+| **PUB-4** | Le découplage **exécuté** — 🏁 **FAIT et CLOS le 2026-08-26**, ⭐ **prouvé des deux côtés** *(P1 → P10)*, **R-097 et R-098 CLOS** *(D-055)* |
+| **PUB-5** | L'aperçu réel **livré** — ⛔ **RESTE À FAIRE** · ➡️ **M9 en est le premier point** |
 
 **② Le découplage fonctionnel est RÉELLEMENT PROUVÉ — dans les deux sens**
 
@@ -3112,8 +3130,12 @@ M1 est terminé quand **les huit conditions** sont réunies :
 
 > ⛔ **M1-PUB n'est PAS terminé, et PUB-1 ne le termine pas.** Son critère de clôture *(§15.3 bis)*
 > exige **les cinq lots**, **le découplage réellement prouvé** et **PUB-5 livré**. ⭐ **PUB-1 a
-> DOCUMENTÉ le problème ; il ne l'a pas supprimé** — **R-097 reste OUVERT**, et sa correction
-> appartient toujours à **PUB-3** *(plan et preuve)* puis **PUB-4** *(exécution)*.
+> DOCUMENTÉ le problème ; il ne l'a pas supprimé** — sa correction appartenait à **PUB-3**
+> *(plan et preuve)* puis **PUB-4** *(exécution)*.
+> ⚡ *(Cette phrase disait « **R-097 reste OUVERT**, et sa correction appartient **toujours** à
+> PUB-3 puis PUB-4 » : **vrai jusqu'au 2026-08-26 suite 5**. ✅ **PUB-3 et PUB-4 sont faits, et
+> R-097 est CLOS** — décision **D-055**. ⛔ **La première phrase, elle, reste VRAIE** : M1-PUB
+> attend toujours **PUB-5**.)*
 
 > ⭐ **Les sept états de M1-B, et ils ne se déduisent pas les uns des autres** *(`CLAUDE.md` §8 septies)* :
 >

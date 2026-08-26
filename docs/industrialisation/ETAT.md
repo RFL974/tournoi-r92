@@ -9,7 +9,7 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-> # 🟢 JEU DE TOURNOI FICTIF EN PLACE — À CONSERVER JUSQU'À PUB-4
+> # 🟢 JEU DE TOURNOI FICTIF EN PLACE — ⚡ PUB-4 A CONSOMMÉ SES PREUVES, SON SORT EST À DÉCIDER
 >
 > ⚡ **CE REPÈRE REMPLACE, LE 2026-08-26, celui intitulé « 🔴 DONNÉES DE TOURNOI À RECRÉER AVANT
 > LES PROCHAINS TESTS FONCTIONNELS ».** ⭐ **Il se retire comme sa propre condition l'exigeait** :
@@ -34,24 +34,38 @@
 >
 > ---
 >
-> > ## ⛔ INTERDICTION EN VIGUEUR : NE PAS CLIQUER SUR « PUBLIER LE TOURNOI »
+> > ## ✅ L'INTERDICTION EST LEVÉE — PUBLIER N'ATTEINT PLUS AUCUN SITE TIERS
 > >
-> > 🔬 **La vitrine `boutique-r92` interroge EXACTEMENT le même serveur** *(empreintes de
-> > déploiement identiques, vérifiées le 2026-08-26)*. Publier ferait donc apparaître, en tête des
-> > actualités d'une **association réelle**, l'annonce d'un **tournoi qui n'existe pas**.
+> > ⚡ **Ce bloc portait une INTERDICTION EN VIGUEUR : « NE PAS CLIQUER SUR PUBLIER LE TOURNOI ».
+> > Elle était vraie jusqu'au 2026-08-26, et elle est LEVÉE depuis la clôture de PUB-4.**
 > >
-> > ⭐ **Ce clic devient inoffensif — et obligatoire — en PUB-4**, une fois la vitrine découplée.
-> > C'est là que vivent les trois preuves reportées *(**D-052**)*.
+> > 🔬 **Ce qui a changé** : le site de l'association **n'interroge plus ce serveur** *(commit
+> > `9dbdf0a`, publié)*, et la vue `invitation` **n'expose plus** le témoin *(commit `a4ee3bb`,
+> > redéployé)*. ⭐ **Publier ne fait donc plus apparaître quoi que ce soit ailleurs que sur la page
+> > publique Maxilou** — c'était exactement l'objet du chantier, et c'est **observé**, pas déduit.
+> >
+> > *Ce que ce bloc disait, et qui reste vrai à sa date* : *« la vitrine interroge EXACTEMENT le
+> > même serveur ; publier ferait apparaître, en tête des actualités d'une association réelle,
+> > l'annonce d'un tournoi qui n'existe pas »*. ⭐ **C'est précisément ce qui n'est plus possible.**
 >
 > ---
 >
-> ⛔ **NE SUPPRIME PAS CE JEU, et ne le réinitialise pas.** Il est **conservé pour PUB-4**, où il
-> servira à produire **« Masquer » jamais grisé** *(condition 5 de R-098)* et les **contrôles 6 et
-> 8** de PUB-2. ⭐ **Le recréer plus tard coûterait la même saisie, et surtout : rien ne garantirait
-> qu'il soit identique.**
+> ✅ **PUB-4 A CONSOMMÉ SES PREUVES le 2026-08-26.** Ce jeu a servi exactement à ce pour quoi il
+> était gardé : **« Masquer » jamais grisé** *(condition 5 de R-098)* et les **contrôles §21.10 ter
+> 6 et 8** hérités de PUB-2. ⚡ *(Ce bloc disait « NE SUPPRIME PAS CE JEU, il est conservé POUR
+> PUB-4 » : vrai jusqu'à cette date.)*
 >
-> ⏳ **Quand ce repère se retirera-t-il ?** Lorsque **PUB-4 aura consommé ses preuves**. Il faudra
-> alors décider explicitement du sort de ce jeu — ⛔ **et le dire ici**.
+> 🔬 **Il est TOUJOURS EN PLACE et INTACT — constaté le 2026-08-26 après le redéploiement** :
+> **3 équipes · 1 poule · 3 matchs**, tous au statut *« à venir »*, `tournoi_publie` = **`non`**.
+> ⭐ **Le cycle `non → publié → non` a été joué et refermé** : le masquage **cache** le tournoi,
+> ⛔ **il ne supprime aucune donnée** — et c'est vérifié.
+>
+> ⏳ **CE QUI RESTE À DÉCIDER, ET CE N'EST PAS À UNE SESSION DE LE FAIRE.** Le repère exigeait qu'on
+> *« décide explicitement du sort de ce jeu, et qu'on le dise ici »*. ⭐ **Voici ce qui est dit** :
+> ⛔ **la décision n'est pas prise.** Le jeu est **conservé en l'état** jusqu'à ce que Romain
+> tranche entre le **garder** *(PUB-5 travaille sur l'écran « Publication », qui a besoin d'un
+> tournoi affichable)* et le **réinitialiser**. ⛔ **Aucune session ne doit le supprimer sans cette
+> décision.**
 >
 > ---
 >
@@ -62,7 +76,34 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-26 *(suite 4)* — ⚡ **M1-PUB / PUB-3 : LE PLAN DE DÉCOUPLAGE
+**Dernière mise à jour** : 2026-08-26 *(suite 5)* — 🏁 **M1-PUB / PUB-4 EST TERMINÉ ET CLÔTURÉ :
+LE DÉCOUPLAGE EST FAIT, EN SERVICE, ET PROUVÉ DES DEUX CÔTÉS.**
+✅ **R-097 et R-098 sont CLOS** *(décision de Romain — **D-055**)*.
+⛔ **PUB-5 reste NON COMMENCÉ · B2-1 NON DÉMARRÉ · M1-PUB N'EST PAS TERMINÉ** *(il ne le sera qu'à
+la clôture de PUB-5)*.
+➡️ **PREMIER POINT À TRAITER DANS PUB-5 : M9** — le bloc *« Aperçu sur le site »* de
+`frontend/admin.html` promet encore une **carte d'actualité** et une **page d'événement** sur le
+site de l'association. ⛔ **Ces deux choses n'existent plus.** ⭐ **Ce défaut NE ROUVRE PAS PUB-4**
+*(D-055)* : le couplage technique est supprimé et prouvé ; ce qui reste est un **texte devenu faux
+dans l'administration**.
+⏳ **Le sort du jeu de tournoi fictif reste à décider par Romain** — voir le repère en tête de ce
+document.
+
+## 🏁 M1-PUB / PUB-4 — CLÔTURÉ *(2026-08-26)*
+
+| | |
+|---|---|
+| 🎯 **Ce que PUB-4 a fait** | **Deux coupures**, une de chaque côté. ⭐ **Aucune des deux seule n'aurait suffi** : la première supprime le **lecteur**, la seconde supprime la **donnée** |
+| ① **Côté site de l'association** | `RFL974/boutique-r92` **n'interroge plus ce serveur**. Sa page « Tournoi » est **statique**, avec un lien explicite vers Maxilou — ⭐ *« le visiteur reste sur le site de l'association tant qu'il ne choisit pas lui-même d'ouvrir Maxilou »* *(D-054 / ③)*. Commit **`9dbdf0a`**, **publié** |
+| ② **Côté Maxilou** | La vue **`invitation`** n'expose plus `tournoi_publie`. Commit **`a4ee3bb`**, **redéployé chez Google** |
+| ⭐ **Le garde-fou** | La vue **`live`** l'expose **toujours** — ⛔ **impératif** : la page publique du tournoi ne lit que celle-là. Un test tient désormais les **deux** bords |
+| 🔬 **Les preuves** | **P1 → P10**, toutes acquises. Détail : `SESSIONS.md` **§29** |
+| ✅ **Les deux obligations de PUB-4** | ① le **découplage** prouvé en réel · ② les **trois preuves héritées de PUB-2** *(R-098 condition 5, contrôles §21.10 ter **6** et **8**)* — ⭐ **relevées séparément**, comme le plan l'exigeait |
+| ⚠️ **La réserve à ne jamais perdre** | La **condition 5 de R-098** a été honorée **par observation et par lecture du code**, ⛔ **pas par le scénario littéral** *« publié + prérequis volontairement cassés »*, qui **n'a pas été joué**. ⛔ **Ne jamais le présenter comme joué** — `RISQUES.md`, encadré « LA CONDITION 5 » |
+| ⛔ **Ce que PUB-4 n'a PAS fait** | ⛔ **Aucune correction du frontend de l'administration** *(M9 — c'est PUB-5)* · ⛔ aucune décision sur le sort du jeu fictif |
+| ⏭️ **Prochaine étape** | **PUB-5 — l'aperçu réel**, ⛔ **NON COMMENCÉ**, et il ne commence pas sans décision explicite de Romain *(`CLAUDE.md` §12.4)*. **M9 en est le premier point** |
+
+*Rappel de la mise à jour précédente — 2026-08-26 (suite 4)* — ⚡ **M1-PUB / PUB-3 : LE PLAN DE DÉCOUPLAGE
 EST ÉCRIT.** Livrable unique : [`M1-PUB-3-PLAN-DECOUPLAGE.md`](M1-PUB-3-PLAN-DECOUPLAGE.md) — les
 **six livrables** y sont traités *(les deux côtés recontrôlés à la date du jour, l'inventaire
 `fichier:ligne`, les **7 gestes numérotés**, les **7 preuves**, le retour arrière)*. ⛔ **Aucune
@@ -72,6 +113,7 @@ par Romain le même jour — **D-054** *(dépôt tiers sous branche · annonce m
 `tournoi.html` statique et indépendante · preuves après découplage prouvé)*.
 ⛔ **PUB-4 et PUB-5 non commencés · R-097 et R-098 restent OUVERTS · B2-1 NON DÉMARRÉ.**
 ⭐ **Reste à soumettre avant PUB-4** : le **texte** de la nouvelle `tournoi.html` *(D-054 / ③)*.
+⚡ *(Ces deux lignes étaient vraies au 2026-08-26 suite 4. **PUB-4 est CLOS depuis la suite 5**, le texte de `tournoi.html` a été soumis et validé, et **R-097 / R-098 sont CLOS**.)*
 
 *Rappel de la mise à jour précédente — 2026-08-26 (suite 2)* : 🏁 **M1-PUB / PUB-2 EST TERMINÉ ET CLÔTURÉ**,
 son critère de clôture **entièrement satisfait et vérifié dans un vrai navigateur**.
@@ -881,12 +923,20 @@ exactement le mécanisme de `CLAUDE.md` §8 septies** : un état écrit **avant*
 **après**.
 
 🌐 **ET UN CHANTIER INTERMÉDIAIRE S'INTERCALE : M1-PUB *(= M1-E7)***, à traiter **avant M1-F**
-*(`PLAN.md` **§15.3 bis**)*. ✅ **Son micro-lot PUB-1 est TERMINÉ ET FUSIONNÉ dans `main`**
-*(`56dabd3`, `6fdffd8`)* ; ✅ **PUB-2 est FUSIONNÉ dans `main` en fast-forward (`f62b322`, `b002a57`)
-et PUBLIÉ sur GitHub Pages *(run #220, `success`)* — ⛔ mais TOUJOURS PAS VÉRIFIÉ EN RÉEL** ;
-⛔ **PUB-3, PUB-4 et PUB-5 non commencés** ;
-⛔ **M1-PUB n'est pas terminé et R-097 reste OUVERT**. ⏸️ **M1-C1 est SUSPENDUE JUSQU'À LA CLÔTURE
-COMPLÈTE DE M1-PUB.** ⛔ **M1-C → M1-F ne démarrent pas automatiquement.**
+*(`PLAN.md` **§15.3 bis**)*. ✅ **QUATRE de ses cinq micro-lots sont CLOS** — **PUB-1**, **PUB-2**
+*(vérifié en réel)*, **PUB-3** et **PUB-4** *(le découplage, exécuté, en service et prouvé des deux
+côtés)*. ✅ **R-097 et R-098 sont CLOS** *(décision **D-055**)*.
+⛔ **PUB-5 reste NON COMMENCÉ** — ➡️ **son premier point est M9**, le texte obsolète
+*« Aperçu sur le site »* de l'administration.
+⛔ **M1-PUB n'est donc PAS terminé** : son critère de clôture exige **les cinq lots**.
+⏸️ **M1-C1 est SUSPENDUE JUSQU'À LA CLÔTURE COMPLÈTE DE M1-PUB.** ⛔ **M1-C → M1-F ne démarrent pas
+automatiquement.**
+
+> ⚡ *(Ce paragraphe annonçait : « PUB-2 est fusionné et publié — **⛔ mais TOUJOURS PAS VÉRIFIÉ EN
+> RÉEL** » · « **⛔ PUB-3, PUB-4 et PUB-5 non commencés** » · « **R-097 reste OUVERT** ». **Chacune
+> de ces phrases était vraie à sa date** : PUB-2 a été vérifié en réel le 2026-08-26 *(et cette
+> vérification a trouvé **R-098**)*, PUB-3 puis PUB-4 ont été menés le même jour. ⛔ **Seule la
+> dernière phrase du paragraphe est restée vraie tout du long** : M1-PUB n'est pas terminé.)*
 
 > ⚠️ **Cette ligne annonçait « PUB-2 est le prochain, NON COMMENCÉE ».** C'était vrai jusqu'à
 > l'implémentation de PUB-2, le 2026-08-24. ⭐ **Relue et corrigée dans le même lot** — c'est

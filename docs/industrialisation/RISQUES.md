@@ -9,18 +9,32 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-26 *(suite 2 — clôture de **M1-PUB / PUB-2**)* —
-⚡ **R-098 ATTEINT 4 CONDITIONS SUR 5 ; LA 5ᵉ EST REPORTÉE. ⛔ AUCUN PROBLÈME NOUVEAU.**
+**Dernière mise à jour** : 2026-08-26 *(suite 5 — clôture de **M1-PUB / PUB-4**)* —
+⚡ **DEUX PROBLÈMES SE FERMENT : R-097 ET R-098. ⛔ AUCUN PROBLÈME NOUVEAU.**
 
 | Réf | Avant | Après | Ce qui l'établit |
 |---|---|---|---|
-| **R-098** *(P1)* | ⛔ OUVERT — 4 conditions *(dont 4b manquante)* | ⛔ **TOUJOURS OUVERT** — ✅ **1, 2, 3, 4a et 4b acquises** · 🔻 **5 reportée à PUB-4** | ⭐ **Condition 4b CONSTATÉE EN RÉEL le 2026-08-26**, sur les **trois modes**, ⛔ **sans jamais cliquer sur « Publier »**. Elle exigeait un tournoi exploitable : un **jeu fictif strictement minimal** a été saisi par Romain — décrit exactement dans le repère en tête de [`ETAT.md`](ETAT.md) |
+| **R-097** *(P2)* | ⛔ **IDENTIFIÉ — NON CORRIGÉ** | ✅ **CORRIGÉ ET VÉRIFIÉ — CLOS** *(décision de Romain, **D-055**)* | ⭐ **Les DEUX coupures sont en service et observées.** ① La vitrine n'interroge plus ce serveur *(commit `9dbdf0a`, publié — 3 pages rechargées, **0** requête vers le serveur)*. ② La vue `invitation` n'expose plus le témoin *(commit `a4ee3bb`, redéployé — `getConfig` passe de **21** à **20** champs, ⭐ **une seule clé disparue**)* |
+| **R-098** *(P1)* | ⛔ OUVERT — **4 conditions sur 5**, la 5ᵉ reportée à PUB-4 | ✅ **CORRIGÉ ET VÉRIFIÉ — CLOS** *(décision de Romain, **D-055**)* | ⭐ **La condition 5 a été honorée en PUB-4**, comme **D-052** l'avait prévu. ⚠️ **Sa réserve exacte est inscrite dans la fiche, et elle ne doit jamais être perdue** — voir R-098, encadré « la condition 5 » |
+
+> ⛔ **CE QUE LA CLÔTURE DE R-098 NE DIT PAS, ET NE DIRA JAMAIS** *(exigence de Romain, **D-055**)*
+>
+> Le scénario **littéral** de la condition 5 — *« tournoi publié **+** prérequis volontairement
+> cassés »* — ⛔ **N'A PAS ÉTÉ JOUÉ.** Il ne doit **jamais** être présenté comme ayant été joué.
+> ⭐ **Ce qui a été obtenu à la place est écrit en toutes lettres dans la fiche R-098**, et c'est
+> **cela** qui a fondé la décision de Romain.
+
+*Rappel de la mise à jour précédente* — 2026-08-26 *(suite 2 — clôture de **M1-PUB / PUB-2**)* :
+⚡ **R-098 ATTEINT 4 CONDITIONS SUR 5 ; LA 5ᵉ EST REPORTÉE.** La condition **4b** avait été
+constatée en réel le 2026-08-26, sur les **trois modes**, ⛔ **sans jamais cliquer sur « Publier »**.
 
 > ⭐ **PUB-2 EST CLOS, ET R-098 RESTE OUVERT — ce n'est pas une contradiction.** Le critère de
 > clôture de PUB-2, arrêté par **D-052**, ne porte **que** les preuves obtenables **sans provoquer
 > l'effet externe** que M1-PUB doit supprimer. ⛔ **La condition 5 n'en fait plus partie** : elle est
 > gardée par la **condition ④** du critère de clôture de M1-PUB, qui interdit de clore le chantier
 > tant qu'une preuve reportée reste ouverte.
+> ⚡ *(Ce bloc était vrai jusqu'au 2026-08-26 suite 5 : la condition 5 a depuis été honorée en
+> PUB-4, et **R-098 est CLOS**. Il est conservé tel quel — il dit ce qu'on savait, et quand.)*
 
 > 🔬 **Un prérequis découvert en préparant la saisie — par relecture, ⛔ pas par un échec** : la
 > génération **BLOQUE** tant que la **durée de période** d'une catégorie est vide *(`Code.gs:7845`)*.
@@ -1487,9 +1501,10 @@ raisonnable — mais **un tournoi sur 3 demi-journées ne peut être déclaré q
 |---|---|
 | **Priorité** | **P2** |
 | **Domaine** | **G — architecture** · **A — métier / product owner** |
-| **Statut** | **IDENTIFIÉ** — ⛔ **NON CORRIGÉ** |
+| **Statut** | ✅ **CORRIGÉ ET VÉRIFIÉ — CLOS le 2026-08-26** *(décision de Romain, **D-055**)*. ⚡ *(Cette ligne a annoncé « **IDENTIFIÉ** — ⛔ **NON CORRIGÉ** » du 2026-08-24 au 2026-08-26 : **vraie à sa date**.)* ⭐ **Les DEUX coupures sont en service et OBSERVÉES** — voir l'addendum de clôture en fin de fiche |
 | **Découvert** | 2026-08-24, chantier **M1-PUB**, micro-lot **PUB-1** |
-| **Rattachement** | ✅ **M1-PUB / PUB-3** *(plan et preuve)* puis **PUB-4** *(exécution)* — `PLAN.md` **§15.3 bis** |
+| **Corrigé** | 2026-08-26, chantier **M1-PUB**, micro-lot **PUB-4** |
+| **Rattachement** | ✅ **M1-PUB / PUB-3** *(plan et preuve)* puis ✅ **PUB-4** *(exécution — FAITE)* — `PLAN.md` **§15.3 bis** |
 | **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* |
 
 **Comment lire les preuves de cette fiche** *(application de `CLAUDE.md` §9)*
@@ -1642,13 +1657,85 @@ vitrine.
 
 ---
 
+---
+
+**🏁 ADDENDUM DE CLÔTURE — 2026-08-26 *(PUB-4)* — LES DEUX COUPURES SONT EN SERVICE**
+
+> ⛔ **Rien au-dessus de cette ligne n'a été réécrit.** Tout ce qui précède décrit le couplage **tel
+> qu'il existait**, et reste vrai à sa date *(`CLAUDE.md` §8 septies)*. Cet addendum dit ce qui a
+> **remplacé** cet état.
+
+⭐ **Il fallait DEUX coupures, et aucune des deux seule n'aurait suffi.** La première supprime le
+lecteur ; la seconde supprime la donnée. Couper la seule vitrine aurait laissé le témoin offert à
+quiconque interroge `getConfig` ; couper le seul serveur aurait laissé un site tiers appeler
+Maxilou à chaque page pour n'y plus rien trouver.
+
+| # | Où | Ce qui a été coupé | 🔬 Ce qui l'établit |
+|---|---|---|---|
+| **①** | `RFL974/boutique-r92` *(dépôt séparé, autorisé par **D-054 / ①**)* | Le site **n'interroge plus du tout** ce serveur. Plus de carte d'actualité automatique. `tournoi.html` est devenue une page **statique** avec un lien explicite vers Maxilou | Commit **`9dbdf0a`**, **publié**. ⭐ Les **trois** pages porteuses rechargées dans un Chrome visible : `index.html` **15** requêtes · `actualites.html` **16** · `tournoi.html` **14** — ⛔ **ZÉRO vers le serveur Maxilou** |
+| **②** | Ce dépôt | La vue **`invitation`** *(servie par `getConfig`)* **n'expose plus** `tournoi_publie`. La vue **`live`** l'expose toujours | Commit **`a4ee3bb`**, **redéployé chez Google**. ⭐ `?action=getConfig` : **21** champs avant, **20** après — ⭐ **une seule clé disparue, et aucune apparue** |
+
+**⭐ Ce qui rend la preuve ② forte, et ce n'est pas le champ manquant**
+
+> Entre les deux mesures, **une seule** clé a disparu — `tournoi_publie` — et **aucune** n'est
+> apparue. 🎯 **Le serveur a donc changé exactement là où on l'a modifié, et nulle part ailleurs.**
+> Un collage tronqué ou un mauvais fichier aurait déplacé d'autres clés.
+
+**⭐ Le garde-fou qui accompagne la coupure — il compte autant qu'elle**
+
+> 🔬 La vue **`live`** expose toujours `tournoi_publie` *(valeur relevée : **`non`**)*, et c'est
+> **impératif** : la page publique du tournoi lit `getAll`, donc cette vue-là
+> *(`frontend/js/tournoi.js:132`, `estPublie` l. 206)*. ⛔ **Le retirer aussi de `live` aurait cassé
+> cette page EN SILENCE.**
+>
+> ⚠️ **Cette lecture a été relevée DEUX fois, à plus de 15 s d'intervalle.** `getAll` est mis en
+> cache côté serveur et sa copie fraîche ne vit que **10 s** *(`backend/Code.gs:500`)* : un relevé
+> unique aurait pu provenir d'une copie fabriquée **avant** le redéploiement, et n'aurait donc rien
+> prouvé du nouveau code.
+>
+> 🔬 Un test le tient désormais des **deux** côtés : `testCfg_temoinPublicationVueLiveSeule`
+> *(`backend/Tests.gs`)* — il vérifie que le témoin **ne sort plus** par `invitation` **et** qu'il
+> **sort toujours** par `live`.
+
+**⭐ Le redéploiement est DISCRIMINANT au sens de D-040**
+
+> ⛔ Ni un `ping`, ni un bilan vert. Un **couple** de témoins, relevé par Romain dans l'éditeur
+> Apps Script : `D-048, coupure M1-PUB` → **1** *(**0** avant le collage)* et `EST dans cette
+> liste` → **0** *(**1** avant)*. 🎯 **Un collage manqué ne peut pas produire les deux comptes à la
+> fois.** Bilan des tests **lu chez Google** : **`R92 — 881/881 OK, 0 FAIL`**.
+> ⛔ **Le numéro de version du déploiement n'a PAS été relevé au moment du collage** : il n'est
+> inscrit nulle part, et ⛔ **rien n'est deviné**. *(La source de ces repères est
+> [`../deploiement.md`](../deploiement.md) — `CLAUDE.md` §8 quater.)*
+
+**⭐ L'ordre a compté, et il renforce la preuve**
+
+> Les preuves du découplage *(publier → observer → masquer)* ont été produites **AVANT** le retrait
+> côté Maxilou. À ce moment-là, la vue `invitation` exposait **encore** le témoin : la donnée était
+> **toujours là, toujours servie**. 🎯 **Constater qu'une publication reste sans effet dans ces
+> conditions prouve que c'est bien le LIEN qui a été coupé** — ⛔ et non que la donnée a disparu.
+> Une preuve obtenue après le retrait aurait été plus faible : on n'aurait pas su **laquelle des
+> deux coupures** avait agi.
+
+**⛔ CE QUI RESTE, ET QUI NE ROUVRE PAS R-097**
+
+> ⚠️ **Le faux aperçu de l'administration est toujours là.** `frontend/admin.html:167-180` promet
+> encore *« la carte d'actualité, puis la page de l'événement, tels qu'ils apparaîtront sur le site
+> de l'association »* — ⛔ **ces deux choses n'existent plus.**
+>
+> ⭐ **C'est M9 du plan de découplage, et il appartient à PUB-5** *(décision de Romain, **D-055**)*.
+> ⛔ **Il ne rouvre pas R-097** : le couplage **technique** est supprimé et prouvé ; ce qui reste
+> est un **texte devenu faux dans l'administration**, sans aucun effet sur un site tiers.
+> ➡️ **Transmis à PUB-5 comme son PREMIER point à traiter.**
+
+---
+
 ### R-098 — L'accès à la page publique du tournoi est bloqué par le séquencement des parcours guidés avant que les prérequis de publication soient remplis
 
 | | |
 |---|---|
 | **Priorité** | **P1** — ⚠️ **empêche un usage réel** : l'organisateur ne peut pas communiquer l'adresse de son tournoi tant qu'il n'a pas tout préparé |
 | **Domaine** | **E — UX / accessibilité** · **A — métier / product owner** |
-| **Statut** | ⛔ **OUVERT — et il ne reste EXACTEMENT qu'une chose : la condition 5, nommément REPORTÉE À PUB-4** *(**D-052**)*. ✅ **Les conditions 1, 2, 3, 4a et 4b sont CONSTATÉES EN RÉEL** *(2026-08-26, dans un navigateur, sur le site publié — voir la fin de cette fiche)*. ⚠️ **Ne pas lire ce statut comme un blocage de PUB-2** : ⭐ **PUB-2 est CLOS depuis le 2026-08-26**, son critère de clôture ne portant **que** les preuves obtenables sans provoquer l'effet externe *(`PLAN.md` §15.3 bis)*. ⚡ *(Cette ligne a annoncé successivement : « implémenté localement, non commité » · « commité et poussé sur branche, non fusionné, non publié » · « NON VÉRIFIÉ dans un navigateur — 1 condition sur 5 » · « il reste 4b et 5, suspendues à un tournoi exploitable ». **Chacune était vraie à sa date** — `CLAUDE.md` §8 septies.)* ⚡ **La condition 3 a d'abord ÉCHOUÉ** *(défaut B5)* : elle n'est acquise qu'après le second correctif **`8b66456`**, publié par le run Pages **#228**. |
+| **Statut** | ✅ **CORRIGÉ ET VÉRIFIÉ — CLOS le 2026-08-26** *(décision de Romain, **D-055**)*. ✅ **LES CINQ CONDITIONS SONT HONORÉES** — la 5ᵉ l'a été en **PUB-4**, comme D-052 l'avait prévu. ⚠️ **Sa réserve exacte est écrite dans l'encadré « la condition 5 » ci-dessous, et elle ne doit jamais être perdue.** ⚡ *(Ce qui suit est ce que cette ligne annonçait avant la clôture, conservé tel quel — `CLAUDE.md` §8 septies.)* ⛔ **OUVERT — et il ne reste EXACTEMENT qu'une chose : la condition 5, nommément REPORTÉE À PUB-4** *(**D-052**)*. ✅ **Les conditions 1, 2, 3, 4a et 4b sont CONSTATÉES EN RÉEL** *(2026-08-26, dans un navigateur, sur le site publié — voir la fin de cette fiche)*. ⚠️ **Ne pas lire ce statut comme un blocage de PUB-2** : ⭐ **PUB-2 est CLOS depuis le 2026-08-26**, son critère de clôture ne portant **que** les preuves obtenables sans provoquer l'effet externe *(`PLAN.md` §15.3 bis)*. ⚡ *(Cette ligne a annoncé successivement : « implémenté localement, non commité » · « commité et poussé sur branche, non fusionné, non publié » · « NON VÉRIFIÉ dans un navigateur — 1 condition sur 5 » · « il reste 4b et 5, suspendues à un tournoi exploitable ». **Chacune était vraie à sa date** — `CLAUDE.md` §8 septies.)* ⚡ **La condition 3 a d'abord ÉCHOUÉ** *(défaut B5)* : elle n'est acquise qu'après le second correctif **`8b66456`**, publié par le run Pages **#228**. |
 | **Découvert** | 2026-08-24, **pendant la validation fonctionnelle réelle de PUB-2**, au tout premier contrôle |
 | **Rattachement** | ✅ **M1-PUB / PUB-2** — la correction fait partie de ce micro-lot |
 | **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* · ⭐ *« Une adresse n'est pas une autorisation. »* |
@@ -1713,7 +1800,28 @@ VISIBLE.** *On a contrôlé le contenu d'une pièce sans essayer d'en ouvrir la 
 4. ✅ **Contrôle du bouton « Publier »** — ⭐ **la condition se DÉDOUBLE, et les DEUX moitiés sont désormais acquises** :
    · **4a — grisé quand le tournoi est incomplet** : ✅ **CONSTATÉ le 2026-08-26** *(contrôles A6, A7, B3, C2 — sur les trois modes d'affichage)* ;
    · **4b — actif quand tout est prêt** : ✅ ⚡ **CONSTATÉ le 2026-08-26**, sur les **trois modes**, ⛔ **SANS jamais cliquer** — voir l'encadré 4b en bas de fiche ;
-5. 🔻 **Contrôle de « Masquer »** *(actif même avec des prérequis incomplets)* — ⚡ **REPORTÉE À PUB-4 le 2026-08-26** *(**D-052**)*. ⛔ **NI supprimée, NI réputée acquise, et TOUJOURS comptée dans les cinq** — voir l'encadré ci-dessous.
+5. ✅ **Contrôle de « Masquer »** *(actif même avec des prérequis incomplets)* — ⚡ **HONORÉE EN PUB-4 le 2026-08-26**, avec une **réserve exacte** qui fait partie de la condition et ⛔ **ne s'en détache pas** — voir l'encadré **« LA CONDITION 5 »** juste après. *(Cette ligne annonçait « 🔻 REPORTÉE À PUB-4 · ⛔ NI supprimée, NI réputée acquise » : **vrai du 2026-08-26 suite 2 jusqu'à la clôture de PUB-4**, D-052.)*
+
+> ## ⚠️ LA CONDITION 5 — CE QUI A ÉTÉ OBSERVÉ, ET CE QUI NE L'A PAS ÉTÉ
+>
+> ⛔ **Cet encadré est INDISSOCIABLE de la clôture de R-098** *(exigence de Romain, **D-055**)*.
+> Toute session, tout document, tout rapport qui cite la condition 5 **cite les trois lignes
+> ci-dessous, les trois ensemble**.
+>
+> | | |
+> |---|---|
+> | ✅ **CE QUI A ÉTÉ OBSERVÉ** | *« Masquer »* a été **observé ACTIF en état publié**, sur **quatre affichages**, ⭐ **dont un téléphone réel** |
+> | ✅ **CE QUE LE CODE DÉMONTRE** | Lorsque le tournoi est **publié**, la branche **retourne AVANT toute lecture des prérequis** — le grisage ne peut donc pas s'appliquer à *« Masquer »* |
+> | ⛔ **CE QUI N'A PAS ÉTÉ JOUÉ** | Le scénario **littéral** *« publié **+** prérequis volontairement cassés »*. ⛔ **Il n'a pas été joué, et il ne doit JAMAIS être présenté comme ayant été joué** |
+>
+> 🎯 **Pourquoi Romain a jugé cela suffisant, et pourquoi la réserve reste écrite quand même.**
+> Les deux premières lignes se rejoignent par des chemins **indépendants** — l'une est une
+> **observation** répétée sur quatre affichages, l'autre une **lecture du code** ; elles concluent
+> la même chose. ⛔ **Mais une observation et une lecture de code ne valent pas une exécution du
+> scénario exact**, et `CLAUDE.md` §9 interdit de présenter l'une pour l'autre. ⭐ **La condition
+> est donc close, et sa limite est écrite** — c'est ce qui permet, si un jour le doute revient, de
+> savoir **exactement** ce qui manque : ⛔ **un seul essai**, publié et prérequis cassés.
+
 
 > ⚡ **CE QUI A CHANGÉ LE 2026-08-26, ET POURQUOI — le report de la condition 5** *(**D-052**)*
 >

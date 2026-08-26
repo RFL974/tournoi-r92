@@ -242,7 +242,13 @@ en tête de fichier le pilotent : `ACTIONS_SCORES`, `ACTIONS_TOKEN` et `ACTIONS_
 > chemin de diffusion **avant** que l'organisateur dispose, dans Maxilou, d'un **accès explicite et
 > autonome** à sa page publique — c'est ce qu'apporte **PUB-2** *(l'encadré ci-dessous)*.
 >
-> ⛔ **La clôture formelle de R-097 relève d'une décision de Romain** et n'est pas acquise ici.
+> ✅ **R-097 est formellement CLOS** — décision de Romain du **2026-08-26**, `industrialisation/DECISIONS.md` **D-055**.
+> ⚡ *(Cette ligne disait « ⛔ la clôture formelle relève d'une décision de Romain et **n'est pas acquise ici** » : vrai jusqu'à cette décision, prise le jour même.)*
+>
+> ⚠️ **Ce qui reste, et qui ne rouvre pas R-097** : la carte **« Aperçu sur le site »** de l'administration
+> *(`frontend/admin.html`)* promet toujours une **carte d'actualité** et une **page d'événement** sur le site
+> de l'association — ⛔ **elles n'existent plus**. ⭐ C'est un **texte devenu faux dans un écran**, sans aucun
+> effet sur un site tiers : il est traité par **PUB-5**, dont il est le **premier point**.
 > ⚡ *(Ce bloc annonçait un **« Écart CONNU, aujourd'hui — R-097 »** où « la vitrine continue de lire
 > `tournoi_publie` » : **vrai jusqu'au 2026-08-26**.)*
 >

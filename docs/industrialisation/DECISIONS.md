@@ -5,7 +5,11 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-26 *(suite 4)* — 🌐 **D-054 — LES QUATRE ARBITRAGES QUI OUVRENT
+**Dernière mise à jour** : 2026-08-26 *(suite 5)* — 🏁 **D-055 — LA CLÔTURE DE PUB-4 : R-097 ET
+R-098 SONT FERMÉS, LA RÉSERVE DE LA CONDITION 5 RESTE ÉCRITE, ET M9 PASSE À PUB-5.** Décision prise
+par Romain le 2026-08-26 au vu du rapport technique de PUB-4.
+
+*Rappel de la mise à jour précédente* — 2026-08-26 *(suite 4)* — 🌐 **D-054 — LES QUATRE ARBITRAGES QUI OUVRENT
 PUB-4**, pris à la clôture de **M1-PUB / PUB-3**. ① **`boutique-r92` modifiable UNIQUEMENT dans
 PUB-4 et pour le découplage**, sur **branche dédiée**, ⛔ sans fusion ni déploiement sans
 autorisation après diff et contrôles. ② **L'association garde le droit d'annoncer manuellement son
@@ -3720,3 +3724,64 @@ Trois obligations en découlent, et **aucune n'est facultative** :
 - ❌ **Pas** supprimer les preuves reportées par **D-052** : elle les **date**, elle ne les efface pas ;
 - ✅ **Seulement ceci** : *ce que je m'apprête à faire dans PUB-4, est-ce couvert par l'un des quatre
   arbitrages — et si non, qui l'a autorisé ?*
+
+---
+
+### D-055 — Une réserve écrite vaut mieux qu'une preuve inventée : R-097 et R-098 se ferment, la limite de la condition 5 reste inscrite pour toujours, et le défaut restant change de lot au lieu de rouvrir celui-ci
+
+| | |
+|---|---|
+| **Date** | 2026-08-26 *(suite 5)* |
+| **Prise par** | **Romain**, au vu du rapport technique de clôture de **M1-PUB / PUB-4** |
+| **Porte sur** | `RISQUES.md` *(R-097, R-098)* · `ETAT.md` · `PLAN.md` *(§15.3 bis, PUB-4 et PUB-5)* |
+| **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* · **D-052** *(la preuve déplacée)* · **D-054** *(les quatre arbitrages)* |
+
+**Les cinq points de la décision**
+
+| # | Ce que Romain a tranché |
+|---|---|
+| **①** | **PUB-4 passe à CLOS.** Le résultat technique lui convient |
+| **②** | **R-097 est formellement CLÔTURÉ** — le couplage est supprimé des deux côtés, en service, et prouvé |
+| **③** | **R-098 est formellement CLÔTURÉ** — ses cinq conditions sont honorées |
+| **④** | ⚠️ **La réserve de la condition 5 reste EXPLICITEMENT ÉCRITE**, et ne se détache jamais de la condition |
+| **⑤** | **M9** *(le texte obsolète « Aperçu sur le site »)* ⛔ **NE ROUVRE PAS PUB-4** : il est **transmis à PUB-5 comme son PREMIER point à traiter** |
+
+**⭐ Pourquoi le point ④ est le cœur de cette décision**
+
+> 🔬 **Ce qui a été observé** : *« Masquer »* actif en état publié, sur **quatre affichages**, dont
+> un **téléphone réel**. 🔬 **Ce que le code démontre** : le tournoi publié, la branche **retourne
+> avant toute lecture des prérequis** — le grisage ne peut donc pas s'y appliquer.
+>
+> ⛔ **Ce qui n'a PAS été joué** : le scénario **littéral** *« publié **+** prérequis volontairement
+> cassés »*.
+>
+> 🎯 **La décision n'est pas « c'est équivalent ».** Elle est : *« deux chemins indépendants — une
+> observation répétée et une lecture de code — concluent la même chose, et cela me suffit pour
+> fermer. Mais je veux que le dépôt dise pour toujours ce qui n'a pas été fait. »*
+>
+> ⭐ **C'est exactement `CLAUDE.md` §9 appliqué à une clôture** : on ne présente **jamais** une
+> déduction comme une observation. Une session future qui doutera saura **exactement** ce qui
+> manque — ⛔ **un seul essai**, publié et prérequis cassés — au lieu de devoir tout refaire.
+
+**⭐ Pourquoi le point ⑤ n'est pas un renvoi de commodité**
+
+> ⚠️ **M9 est un vrai défaut, et il est visible par l'utilisateur** : l'administration promet encore
+> *« la carte d'actualité, puis la page de l'événement, tels qu'ils apparaîtront sur le site de
+> l'association »* — ⛔ **elles n'existent plus**.
+>
+> 🎯 **Mais ce n'est PAS le couplage.** R-097 était un **lien technique** entre deux systèmes ; il
+> est coupé et prouvé. Ce qui reste est un **texte devenu faux dans un écran**, sans aucun effet
+> sur un site tiers. ⭐ **Rouvrir PUB-4 pour cela reviendrait à confondre le défaut avec sa trace**
+> — et **PUB-5 existe précisément pour cet écran**, depuis PUB-1.
+>
+> ⛔ **Le risque à éviter était l'autre** : classer M9 « pour plus tard » sans dire **où**. Il est
+> donc inscrit comme **premier point** de PUB-5, dans `PLAN.md` **et** dans `ETAT.md`.
+
+**⛔ Ce que cette décision ne fait PAS**
+
+- ❌ **Pas** clore **M1-PUB** : ⛔ **PUB-5 reste à faire**, et le chantier n'est clos qu'à cinq lots sur cinq ;
+- ❌ **Pas** démarrer PUB-5 — ⛔ **il ne commence pas** sans décision explicite *(`CLAUDE.md` §12.4)* ;
+- ❌ **Pas** corriger le frontend de l'administration : ⛔ **aucun fichier applicatif n'est touché** par la clôture ;
+- ❌ **Pas** décider du sort du **jeu de tournoi fictif** : ⏳ **il reste en place**, et la décision appartient à Romain ;
+- ❌ **Pas** réputer joué le scénario littéral de la condition 5 — ⛔ **c'est exactement l'inverse** ;
+- ✅ **Seulement ceci** : *ce que je cite de la condition 5, est-ce que je cite AUSSI sa réserve ?*
