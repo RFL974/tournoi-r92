@@ -84,8 +84,10 @@ tournoi-r92/
 ├── tests/                   → garde-fous exécutés AVANT chaque publication (voir docs/deploiement.md)
 │   ├── frontend-reinitialisation.test.js → ce que « Réinitialiser le tournoi » fait à l'écran
 │   ├── frontend-autorisation-sync.test.js→ la demande d'autorisation FFR ne reste jamais périmée
+│   ├── frontend-assistant-verrou.test.js → sur téléphone, ouvrir « Publication » ne déverrouille
+│   │                                        aucune autre étape et n'en annonce aucune « faite »
 │   └── mutations-frontend.test.js        → le garde-fou DES garde-fous : il réintroduit des
-│                                           défauts et exige que les deux premiers les attrapent
+│                                           défauts et exige que les trois premiers les attrapent
 │
 ├── cloudflare/              → relais CDN optionnel (dormant par défaut)
 │   └── worker-tournoi.js

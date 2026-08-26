@@ -9,7 +9,30 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-25 *(chantier **M1-B2**, micro-lot **B2-0** — clôture)* —
+**Dernière mise à jour** : 2026-08-26 *(chantier **M1-PUB**, **R-098 / B5** — validation réelle)* —
+⚡ **UN SEUL PROBLÈME BOUGE : R-098. ⛔ AUCUN PROBLÈME NOUVEAU N'EST INSCRIT.**
+
+| Réf | Avant | Après | Ce qui l'établit |
+|---|---|---|---|
+| **R-098** *(P1)* | ⛔ OUVERT — **1 condition sur 5** | ⛔ **TOUJOURS OUVERT** — ✅ **4 conditions sur 5** *(1, 2, 3 et **4a**)* | ⭐ **Deux validations réelles dans un navigateur, le 2026-08-26.** La première a **ÉCHOUÉ** *(contrôle **B5**, sur téléphone)* et a révélé un **défaut restant** : ouvrir la carte « Publication » déverrouillait **six étapes** et peignait « Réglages » **en vert**. Corrigé *(**`8b66456`**, publié par le run Pages **#228**)*, puis **reconstaté sur téléphone** — **11 contrôles sur 11**. ⛔ **Restent 4b et 5**, toutes deux suspendues à un tournoi exploitable |
+
+> ⭐ **Ce que R-098 a coûté, et pourquoi il faut le retenir.** Son premier correctif **avait
+> diagnostiqué la cause mot pour mot** dans son propre commentaire, et n'en avait refermé qu'**une
+> conséquence sur trois**. ⛔ **57 contrôles d'exécution ne l'ont pas vu** — parce qu'ils
+> vérifiaient qu'on ne pouvait pas **dépasser** la carte Publication, jamais ce qui se passait
+> **derrière soi** une fois entré.
+>
+> 🔴 **Et la vraie raison de sa survie** : les *« 34 contrôles du parcours mobile »* de ce premier
+> correctif **n'ont jamais été conservés dans le dépôt**. Joués, puis jetés. **Rien ne surveillait
+> ce comportement.** 🆕 `tests/frontend-assistant-verrou.test.js` *(41 contrôles)* + **5 mutations**
+> y remédient, et tournent **avant chaque publication**.
+
+⛔ **Aucun problème nouveau inscrit** : le défaut B5 est une **manifestation de R-098 lui-même**
+*(sa condition 3)*, ⛔ **pas un risque distinct** — la fiche R-098 le porte en entier.
+
+---
+
+*Rappel de la mise à jour précédente* — 2026-08-25 *(chantier **M1-B2**, micro-lot **B2-0** — clôture)* —
 ⚡ **TROIS PROBLÈMES CHANGENT DE STATUT. ⛔ AUCUN PROBLÈME NOUVEAU N'EST INSCRIT.**
 
 | Réf | Avant | Après | Ce qui l'établit |
@@ -1505,7 +1528,7 @@ vitrine.
 |---|---|
 | **Priorité** | **P1** — ⚠️ **empêche un usage réel** : l'organisateur ne peut pas communiquer l'adresse de son tournoi tant qu'il n'a pas tout préparé |
 | **Domaine** | **E — UX / accessibilité** · **A — métier / product owner** |
-| **Statut** | ⛔ **OUVERT** — correctif **fusionné dans `main` (`9bdeb06`, `b8ce265`) et PUBLIÉ** *(run Pages **#221**, `success`)*, ⛔ **mais NON VÉRIFIÉ dans un navigateur**. ⭐ **La 1ʳᵉ des cinq conditions de fermeture est remplie ; les QUATRE autres restent entières** *(voir la fin de cette fiche)*. ⚡ *(Cette ligne a annoncé successivement « implémenté localement, non commité » puis « commité et poussé sur branche, non fusionné, non publié » : chacune vraie à sa date — `CLAUDE.md` §8 septies.)* |
+| **Statut** | ⛔ **TOUJOURS OUVERT, mais il ne reste plus qu'une chose** — ⚡ **CORRIGÉ APRÈS LE GESTE le 2026-08-26** *(`CLAUDE.md` §8 septies)* : cette ligne annonçait *« NON VÉRIFIÉ dans un navigateur — la 1ʳᵉ des cinq conditions remplie, les QUATRE autres entières »*, **vrai jusqu'à la validation réelle du 2026-08-26**. ✅ **Les conditions 1, 2, 3 et 4a sont désormais CONSTATÉES EN RÉEL** *(voir la fin de cette fiche)*. ⛔ **Il reste 4b et 5** — et **elles seules** —, toutes deux suspendues à un **tournoi exploitable** que le classeur n'a pas. ⚡ **La condition 3 a d'abord ÉCHOUÉ** *(défaut B5)* : elle n'est acquise qu'après le second correctif **`8b66456`**, publié par le run Pages **#228**. *(Cette ligne a auparavant annoncé « implémenté localement, non commité », puis « commité et poussé sur branche, non fusionné, non publié » : chacune vraie à sa date.)* |
 | **Découvert** | 2026-08-24, **pendant la validation fonctionnelle réelle de PUB-2**, au tout premier contrôle |
 | **Rattachement** | ✅ **M1-PUB / PUB-2** — la correction fait partie de ce micro-lot |
 | **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* · ⭐ *« Une adresse n'est pas une autorisation. »* |
@@ -1565,15 +1588,83 @@ VISIBLE.** *On a contrôlé le contenu d'une pièce sans essayer d'en ouvrir la 
 > tests d'exécution **ne prouvent pas** le comportement en production *(`CLAUDE.md` §13.6)*.
 
 1. ✅ **Publication du correctif** — **FAITE le 2026-08-24** : fusion **fast-forward** dans `main` *(`9bdeb06`, `b8ce265`)* et run Pages **#221** `success` *(`verifier` et `deploy`)* ;
-2. ⛔ **Vérification réelle sur grand écran** ;
-3. ⛔ **Vérification réelle sur mobile / assistant** ;
-4. ⛔ **Contrôle du bouton « Publier »** *(grisé si incomplet, actif sinon)* ;
-5. ⛔ **Contrôle de « Masquer »** *(actif même avec des prérequis incomplets)*.
+2. ✅ **Vérification réelle sur grand écran** — **FAITE le 2026-08-26** *(12 contrôles, série A)* ;
+3. ✅ **Vérification réelle sur mobile / assistant** — ⚡ **ÉCHOUÉE le 2026-08-26, puis OBTENUE le même jour après correctif** *(voir l'encadré **B5** ci-dessous)* ;
+4. 🟡 **Contrôle du bouton « Publier »** — ⭐ **la condition se DÉDOUBLE, et sa première moitié est acquise** :
+   · **4a — grisé quand le tournoi est incomplet** : ✅ **CONSTATÉ le 2026-08-26** *(contrôles A6, A7, B3, C2 — sur les trois modes d'affichage)* ;
+   · **4b — actif quand tout est prêt** : ⛔ **exige un tournoi exploitable** ;
+5. ⛔ **Contrôle de « Masquer »** *(actif même avec des prérequis incomplets)* — **exige un tournoi PUBLIÉ**, donc la 4b d'abord.
 
-> ⚠️ **Les points 4 et 5 demanderont un état du classeur permettant réellement de publier.** ⛔ **Ne
+> ⚠️ **Les points 4b et 5 demandent un état du classeur permettant réellement de publier.** ⛔ **Ne
 > recréer aucune donnée pour les obtenir sans décision explicite** : le repère *« DONNÉES DE TOURNOI
 > À RECRÉER »* reste **ACTIF**, et la manière d'obtenir cette preuve sans le violer est un sujet à
 > trancher séparément.
+>
+> 🔬 **Le jeu minimal nécessaire, établi par lecture de `calculerEtatsEtapes`** *(⛔ non créé)* : une
+> **heure de début**, **une** catégorie, **quatre** équipes dans cette catégorie, **un** terrain
+> attribué, puis **une génération**. L'après-midi ne bloque pas. ⚠️ **À revérifier au moment de le
+> créer** — c'est un calcul sur le code, pas un essai.
+
+---
+
+### ⚡ R-098 / B5 — le défaut RESTANT, trouvé en validation réelle et corrigé *(2026-08-26)*
+
+> 🎯 **Ce que cet encadré démontre, au-delà du défaut lui-même** : le correctif R-098 du 2026-08-24
+> avait **diagnostiqué la cause mot pour mot** dans son propre commentaire — et n'en avait refermé
+> qu'**une conséquence sur trois**. ⛔ **57 contrôles d'exécution ne l'ont pas vu.** Un doigt sur un
+> vrai téléphone, oui.
+
+**Le constat, OBSERVÉ par Romain** *(téléphone, navigation privée, site publié en run **#221**, classeur sans aucune donnée de tournoi)* :
+
+| Ce qui a été vu | |
+|---|---|
+| Avant le clic | **Inviter · Dossier · Équipes · Terrains · Poules · Autorisation** sont **grisées** |
+| ⛔ **Au clic sur « 🌐 Publication »** | **les SIX se déverrouillent** — et sont **réellement atteignables**, pas seulement dé-grisées |
+| ⛔ **Effet ③, confirmé sur demande** | **« ⏱️ Réglages » passe AU VERT**, c'est-à-dire *« faite »* — ⚠️ **alors que c'est l'étape qui bloque tout le reste** |
+| ✅ Ce qui tenait | **Après-midi · Feuille de journée · Partenaires · Résumé** restent bloqués ⇒ la part du correctif qui fermait le **tremplin** vers la réinitialisation **fonctionne** |
+
+**La cause, à la ligne près** — 🔬 `frontend/js/assistant.js`, `allerA` :
+
+> ⭐ **`assistantIndex` portait DEUX sens** : la carte **AFFICHÉE**, et la **PROGRESSION ATTEINTE**.
+> Ces deux sens étaient identiques **par construction** — on ne pouvait jamais dépasser une étape
+> bloquée, donc s'y tenir **prouvait** avoir franchi tout ce qui précède. ⛔ **La carte `libre` de
+> PUB-2 a ouvert une porte latérale et cassé cette preuve**, mais `assistantIndex = i` a continué
+> d'avancer le repère. **Trois lectures en dépendaient** : le verrou *(joignabilité)*, la marque
+> *« faite »* *(le vert)*, et la limite du grisage.
+
+**Le correctif — séparer les deux sens, rien d'autre** *(validé par Romain le 2026-08-26)* :
+
+| | |
+|---|---|
+| 🆕 **`assistantAtteint`** | la progression **légitimement acquise** — c'est LUI que le verrou lit. ⭐ **MONOTONE par contrat** *(`Math.max` seul)* : revenir en arrière ne fait jamais perdre une progression |
+| **Carte ordinaire** | y atterrir **prouve** que tout ce qui précède est franchi ⇒ le repère monte |
+| **Carte `libre`** | on y entre **par le côté** : cela ne prouve rien. On **CONSTATE** alors seulement ce qui était **de toute façon atteignable** *(le premier blocage depuis 0)*. ⛔ **Aucune étape ne devient joignable** — c'est la valeur que le balayage aurait déjà acceptée depuis n'importe où |
+| 📐 **Ampleur** | **5 lignes de code** + un bloc de 12. ⛔ **0 fichier `backend/`**, **0 `.html`**, **0 `.css`**, ⛔ **0 ligne** dans `ASSISTANT_ETAPES`, `ASSISTANT_CLES_CERVEAU`, `ASSISTANT_ORDRE_ORIGINE`, `assistantRaisonsEtape`, `quitterAssistant`, `ecrans.js`, `admin-infos-publication.js`, `admin-tableau-bord.js` ⇒ **aucune règle métier, aucune seconde liste de prérequis, vue classique intacte** |
+| ⭐ **Le grand écran n'était pas atteint** | 🔬 `ecransCalculerVerrous` **recalcule les verrous à zéro** à chaque fois : il n'a **aucun repère de progression** à fausser. C'est pourquoi le contrôle **A2 était passé** |
+
+**🆕 Le garde-fou durable — ce que R-098 n'avait PAS fait**
+
+> 🔴 **Les « 34 contrôles du parcours mobile » de R-098 n'ont jamais été conservés dans le dépôt** :
+> joués, puis jetés. Ils ne pouvaient donc pas être rejoués, et **rien ne surveillait ce
+> comportement**. ⭐ C'est la vraie raison pour laquelle ce défaut a survécu.
+
+🆕 **`tests/frontend-assistant-verrou.test.js`** — **41 contrôles**, exécutant les **vraies** fonctions :
+**F** *(6 — fidélité du banc)* · ⭐ **Z** *(5 — **AUTOTEST** : le code d'avant est reconstruit et **doit** reproduire le défaut, sinon le fichier échoue)* · **V** *(14 — le comportement exigé)* · **M** *(5 — monotonie)* · **N** *(5 — non-régression, dont **507 trajets** : le correctif ne déverrouille ni ne verdit **jamais** plus que l'ancien)* · **C** *(1 — grisé **si et seulement si** refusé)*.
+**+5 mutations** *(A-1 → A-5)* dans `mutations-frontend.test.js`, chacune réintroduisant une moitié du défaut. ⭐ **Il tourne désormais AVANT chaque publication** : si ce comportement se casse, **le site en ligne n'est pas remplacé**.
+
+**⭐ LA PREUVE RÉELLE — condition 3 REMPLIE**
+
+🔬 **Constaté par Romain le 2026-08-26**, téléphone, **navigation privée**, sur le site publié par le
+run Pages **#228** *(commit **`8b66456`**)* — **série B5 bis, 11 contrôles sur 11** :
+
+- ✅ les **six étapes restent grisées** après ouverture de « Publication » ;
+- ✅ **« Réglages » ne devient PAS vert** ;
+- ✅ **seule « Infos » est verte** *(attendu et annoncé à l'avance — cette étape n'a aucun prérequis ; l'ancien code la peignait déjà)* ;
+- ⭐ ✅ une **tentative RÉELLE** d'ouvrir « Équipes » laisse sur Publication et **déclenche l'explication du blocage** — ⛔ **pas seulement un grisage constaté à l'œil** ;
+- ✅ **« Résumé » reste bloqué** · ✅ **« Suivant » n'avance pas** ;
+- ✅ non-régression : Publication reste joignable, son adresse et ses deux boutons actifs.
+
+⛔ **Aucune donnée recréée** pour l'obtenir : le repère *« DONNÉES DE TOURNOI À RECRÉER »* est resté **ACTIF** de bout en bout.
 
 ---
 

@@ -40,10 +40,39 @@
 > ⚠️ **Conséquence inchangée** : tout contrôle exigeant un planning, un classement ou des scores
 > reste **impossible en l'état** — dont les conditions 4 et 5 de **R-098**.
 
-**Dernière mise à jour** : 2026-08-25 — 🏁 **M1-B2 / B2-0 EST TERMINÉ, INTÉGRÉ, PUBLIÉ ET VALIDÉ
+**Dernière mise à jour** : 2026-08-26 — 🔴 **LA VALIDATION RÉELLE DE PUB-2 A TROUVÉ UN SECOND
+DÉFAUT SUR TÉLÉPHONE — IL EST CORRIGÉ, PUBLIÉ ET REVALIDÉ.** `origin/main` = **`8b66456`**, run
+Pages **#228** `success`. **R-098 passe de 1 à 4 conditions de fermeture sur 5.**
+⛔ **PUB-2 N'EST PAS CLOS · M1-PUB N'EST PAS TERMINÉ · B2-1 N'EST PAS DÉMARRÉ.**
+
+## 🔴 M1-PUB / PUB-2 — R-098 / B5 : LE DÉFAUT TROUVÉ PAR UN DOIGT SUR UN VRAI TÉLÉPHONE *(2026-08-26)*
+
+| | |
+|---|---|
+| 🎯 **La leçon, avant les faits** | ⭐ **Un diagnostic juste n'est pas une correction complète.** Le correctif R-098 du 24/08 avait écrit la cause **mot pour mot** dans son propre commentaire — et n'en avait traité qu'**un tiers**. ⛔ **57 contrôles d'exécution ne l'ont pas vu** : ils vérifiaient qu'on ne pouvait pas **dépasser** la carte Publication, jamais ce qui se passait **derrière soi** une fois entré |
+| 🔴 **Le défaut, CONSTATÉ** | Téléphone, navigation privée, classeur **sans aucune donnée** : ouvrir **« 🌐 Publication »** *(joignable à tout moment, c'est voulu)* **déverrouillait six étapes** — Inviter · Dossier · Équipes · Terrains · Poules · Autorisation — et peignait **« ⏱️ Réglages » EN VERT**, c'est-à-dire *« faite »*, ⚠️ **alors que c'est l'étape qui bloque tout le reste** |
+| 🔬 **La cause, à la ligne près** | **`assistantIndex` portait DEUX sens** : la carte **AFFICHÉE** et la **PROGRESSION ATTEINTE**. Identiques **par construction** — on ne pouvait jamais dépasser une étape bloquée — jusqu'à ce que la carte `libre` de PUB-2 ouvre une **porte latérale**. ⛔ **Trois lectures en dépendaient** : le verrou, le grisage, et la marque « faite » |
+| ✅ **Le correctif** | 🆕 **`assistantAtteint`** — la progression **légitimement acquise**, ⭐ **MONOTONE par contrat**. Une carte ordinaire la fait monter *(y atterrir le prouve)* ; sur une carte `libre` on **CONSTATE** seulement ce qui était **de toute façon atteignable**. 📐 **5 lignes + un bloc de 12** |
+| ⛔ **Ce que le correctif ne touche PAS** | **0 fichier `backend/`** ⇒ ⛔ **aucun redéploiement Apps Script** · **0 `.html`**, **0 `.css`** · **0 ligne** dans `ASSISTANT_ETAPES`, `ASSISTANT_CLES_CERVEAU`, `ASSISTANT_ORDRE_ORIGINE`, `assistantRaisonsEtape`, `quitterAssistant`, `ecrans.js`, `admin-infos-publication.js`, `admin-tableau-bord.js` ⇒ **aucune règle métier, aucune seconde liste de prérequis, vue classique intacte** |
+| ⭐ **Le grand écran n'était PAS atteint** | 🔬 `ecransCalculerVerrous` **recalcule les verrous à zéro** à chaque fois : aucun repère de progression à fausser. C'est pourquoi le contrôle **A2 était passé** |
+| 🔴 **Ce que R-098 n'avait pas fait** | **Les « 34 contrôles du parcours mobile » du premier correctif n'existaient pas dans le dépôt** — joués, puis jetés. ⭐ **Rien ne surveillait ce comportement, et c'est la vraie raison de la survie du défaut.** 🆕 `tests/frontend-assistant-verrou.test.js` *(**41 contrôles**, dont un **AUTOTEST** qui exige que le code d'avant reproduise le défaut)* **+ 5 mutations** — ⭐ il tourne **avant chaque publication** : si ce comportement se casse, **le site en ligne n'est pas remplacé** |
+| ✅ **Gestes CONSTATÉS** | Commit **`8b66456`** *(5 fichiers, un seul parent)* · fusion **fast-forward strict** `be1b376` → `8b66456`, ⛔ **aucun commit de fusion, aucun SHA réécrit** · poussée : `git ls-remote` = `HEAD`, écart **0/0** · publication **run #228** *(id `32956804198`, 26/08 10:09→10:10 UTC)* : `verifier` **`success`** — dont ⭐ la nouvelle étape *« Vérifier le verrou du parcours guidé »* — et `deploy` **`success`** |
+| ⚠️ **Un piège évité** | La branche locale `main` avait **36 commits de retard** *(le décrochage de `CLAUDE.md` §12.3)*. Contrôlé qu'elle **ne portait aucun commit propre** avant remise à niveau |
+| ⭐ **VALIDÉ EN RÉEL** | 🔬 **Romain, téléphone, navigation privée, site publié par #228 — 11 contrôles sur 11** : les six étapes **restent grisées** · **« Réglages » ne verdit pas** · **seule « Infos » est verte** *(attendu — aucun prérequis, et l'ancien code la peignait déjà)* · ⭐ une **tentative RÉELLE** d'ouvrir « Équipes » laisse sur Publication et **déclenche l'explication** — ⛔ pas un simple grisage constaté à l'œil · **« Résumé » bloqué** · **« Suivant » n'avance pas** |
+| 📐 **Bilan des contrôles** | **48/48 + 97/97 + 41/41** de comportement · **45/45** mutations · **30/30** fichiers JS lisibles |
+| 🟡 **R-098 — 4 conditions sur 5** | ✅ 1 publication · ✅ 2 grand écran · ✅ 3 mobile · ✅ **4a** *(« Publier » grisé si incomplet)* — ⭐ **la condition 4 se DÉDOUBLE, et sa 1ʳᵉ moitié ne demandait aucune donnée**. ⛔ **Restent 4b** *(« Publier » actif quand tout est prêt)* **et 5** *(« Masquer » jamais grisé)*, toutes deux suspendues à un **tournoi exploitable** |
+| ⏭️ **Prochaine étape** | **Trancher 4b et 5.** Le jeu minimal est **établi et chiffré** *(fiche R-098 de `RISQUES.md`)*, ⛔ **et il n'est PAS créé** — la décision appartient à Romain |
+| 🔴 **Le repère « données à recréer »** | **TOUJOURS ACTIF** — ⛔ **aucune donnée recréée** de bout en bout |
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-25* : 🏁 **M1-B2 / B2-0 EST TERMINÉ, INTÉGRÉ, PUBLIÉ ET VALIDÉ
 DANS UN VRAI NAVIGATEUR.** Sept commits *(`7f49fc1` → `8dcff2b`)*, backend **v157** en service,
 **880/880** chez Google, **48/48 + 97/97** de garde-fous frontend, **40/40** mutations,
 `origin/main` = **`8dcff2b`** publié sur GitHub Pages. ⛔ **B2-1 N'EST PAS DÉMARRÉ.**
+⚡ *(Deux repères de ce bloc ont bougé le 2026-08-26 : `origin/main` est désormais **`8b66456`**, et
+les garde-fous frontend sont **48/48 + 97/97 + 41/41** avec **45/45** mutations. ⛔ Le reste — la
+clôture de B2-0, le backend v157, les 880/880 — demeure exact.)*
 
 ## 🏁 M1-B2 / B2-0 — SÉCURISATION DU RESET *(clôturé le 2026-08-25)*
 

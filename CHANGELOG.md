@@ -12,6 +12,36 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Sur téléphone, ouvrir « Publication » ne fait plus croire que le tournoi est prêt — 2026-08-26
+
+> ✅ **Vérifié dans un vrai navigateur, après mise en ligne** — sur un téléphone, en navigation
+> privée. ⛔ Ce n'est pas une lecture de code.
+
+**Ce qui n'allait pas.** Depuis le parcours guidé du téléphone, il suffisait d'ouvrir la carte
+**« Publication »** — accessible à tout moment, c'est voulu — pour que **six étapes se
+déverrouillent d'un coup** : Inviter, Dossier, Équipes, Terrains, Poules et Autorisation. Et
+surtout, **l'étape « Réglages » passait au vert**, c'est-à-dire *« faite »*, **alors qu'elle n'avait
+rien reçu** — et c'est justement celle qui bloque tout le reste.
+
+**Pourquoi c'était gênant.** Un écran qui annonce *« c'est fait »* est pire qu'un écran qui bloque :
+il n'invite pas à vérifier. Un organisateur pouvait croire sa préparation avancée, entrer dans des
+étapes qu'il n'avait pas remplies, et ne s'en apercevoir qu'au moment de publier.
+
+**Ce qui change.** Ouvrir « Publication » ne déverrouille plus rien et ne verdit plus rien. La carte
+reste joignable **en un doigt, depuis n'importe où** — son adresse, « Copier » et « Ouvrir » sont
+toujours là, sans condition. Chaque autre étape **garde ses propres prérequis**.
+
+> ⛔ **Rien d'autre ne bouge** : le bouton « Publier » reste grisé tant que la préparation n'est pas
+> finie, « Masquer » n'est jamais grisé, la « Vue classique » et l'affichage sur grand écran sont
+> inchangés. ⭐ Sur ordinateur, ce défaut n'a **jamais** existé.
+
+**Ce qui empêchera le retour du problème.** Un contrôle automatique **41 vérifications** a été
+ajouté, et il s'exécute **avant chaque mise en ligne** : si ce comportement se casse un jour, **le
+site en ligne n'est pas remplacé**. Il n'en existait aucun jusqu'ici — c'est précisément pour cela
+que le défaut avait survécu.
+
+---
+
 ### Repartir sur un nouveau tournoi laisse enfin une ardoise vraiment propre — 2026-08-25
 
 > ✅ **Vérifié dans un vrai navigateur, après mise en ligne.** ⛔ Ce n'est pas une lecture de code :

@@ -9048,3 +9048,163 @@ est voulu**, et il est **couvert par les tests**.
 > ⛔ **B2-1 EST ÉLIGIBLE, ET ELLE N'EST PAS DÉMARRÉE** : ni conception, ni implémentation, ni fiche
 > de chantier détaillée. ⭐ **Elle ne démarre qu'après une décision explicite de Romain**
 > *(`CLAUDE.md` §12.4)*.
+
+---
+
+## SESSION 24 — 🔴 **B5 ÉCHOUE SUR UN VRAI TÉLÉPHONE : LE CORRECTIF R-098 N'AVAIT REFERMÉ QU'UNE CONSÉQUENCE SUR TROIS** *(2026-08-26)*
+
+> 🎯 **La leçon de cette session tient en une phrase, et elle vaut plus que le défaut lui-même :**
+> **un diagnostic juste n'est pas une correction complète.** Le correctif R-098 du 2026-08-24 avait
+> écrit la cause **mot pour mot** dans son propre commentaire — et n'en avait traité qu'**un tiers**.
+
+### 24.1 — Le point de départ : ce que la session a d'abord CONSTATÉ
+
+⛔ **Aucune modification n'a été faite avant d'avoir établi l'état réel.**
+
+| Contrôle | Relevé |
+|---|---|
+| `origin/main` | **`be1b376`**, copie locale alignée, écart **0/0** |
+| `9bdeb06` et `b8ce265` *(correctif R-098)* | ✅ **ancêtres de `origin/main`** — confirmés |
+| ⚡ **Le périmètre réellement publié** | ⛔ **Ce n'était PLUS le run #221** annoncé : `main` avait avancé de **12 commits** *(tout B2-0)*. Le dernier déploiement était le **#227** *(`8dcff2b`)*, et le dossier `frontend/` y est **strictement identique** à celui de `be1b376` ⇒ le site en ligne portait bien R-098 |
+| Le correctif R-098 a-t-il été abîmé par B2-0 ? | ⛔ **Non** — B2-0 a retouché `ecrans.js` *(+7 l.)* et `assistant.js` *(+9 l.)*, **uniquement** le crochet de relecture FFR ; `admin-infos-publication.js` **inchangé** |
+
+### 24.2 — 🔻 Le blocage d'environnement, et il est structurel
+
+🔬 **Cette session ne peut atteindre NI le site publié, NI le serveur** :
+
+```
+CONNECT rfl974.github.io:443     → HTTP/1.1 403 Forbidden
+CONNECT script.google.com:443    → HTTP/1.1 403 Forbidden
+```
+
+*(relevé deux fois : par l'essai lui-même, et dans le journal du filtre réseau de l'environnement)*
+
+⛔ **Aucune des validations réelles n'était donc réalisable depuis ici** — et il aurait été facile de
+les remplacer par une lecture du code. **Elles ne l'ont pas été.** ⭐ **C'est ce refus qui a permis
+de trouver le défaut** : une fiche de contrôle a été rédigée pour Romain, avec **les libellés exacts
+relevés dans le code publié**, et **c'est son doigt sur un vrai téléphone qui a trouvé.**
+
+> ⭐ **Un apport de méthode au passage** : la condition **4** de R-098 se **dédouble**. Sa moitié
+> *« grisé quand c'est incomplet »* **ne demande AUCUNE donnée** — le classeur vide **est** le cas à
+> tester. Seule *« actif quand tout est prêt »* exige un tournoi. **Quatre conditions et demie sur
+> cinq étaient donc gratuites**, là où le dépôt en annonçait deux bloquées.
+
+### 24.3 — 🔴 Le défaut, CONSTATÉ EN RÉEL
+
+🔬 **Romain, téléphone, navigation privée, site publié, classeur sans aucune donnée de tournoi :**
+
+| | |
+|---|---|
+| Avant le clic | **Inviter · Dossier · Équipes · Terrains · Poules · Autorisation** grisées |
+| ⛔ **Au clic sur « 🌐 Publication »** | **les six se déverrouillent** — et sont **réellement atteignables** |
+| ⛔ **Effet ③** *(prédit par lecture du code, puis CONFIRMÉ par Romain)* | **« ⏱️ Réglages » passe AU VERT** — l'application annonce *« faite »* l'étape qui bloque tout |
+| ✅ Ce qui tenait | Après-midi, Feuille, Partenaires et **Résumé** restent bloqués ⇒ le **tremplin** vers la réinitialisation était bien fermé |
+
+### 24.4 — La cause : un mot qui portait deux sens
+
+🔬 `frontend/js/assistant.js` — **`assistantIndex` désignait à la fois la carte AFFICHÉE et la
+PROGRESSION ATTEINTE.** Ces deux sens étaient identiques **par construction**, puisqu'on ne pouvait
+jamais dépasser une étape bloquée. ⛔ **La carte `libre` de PUB-2 a ouvert une porte latérale et
+cassé cette équivalence** — mais `assistantIndex = i` a continué d'avancer le repère à **8**.
+
+**Trois lectures en dépendaient**, et le correctif du 24 n'en avait réparé aucune :
+
+| | Ligne | Effet |
+|---|---|---|
+| ① | le verrou de `allerA` | six étapes joignables |
+| ② | la limite du grisage | six étapes dé-grisées |
+| ③ | la marque *« faite »* | huit étapes peintes en vert |
+
+> ⚠️ **Le commentaire du correctif R-098 disait déjà** : *« `assistantIndex` PROUVAIT que tout ce qui
+> précède était franchi […] Une carte `libre` casse cette preuve. »* ⭐ **Il avait raison, et il n'a
+> corrigé que le balayage vers l'avant.**
+
+### 24.5 — Le correctif : séparer les deux sens
+
+🆕 **`assistantAtteint`** — la progression **légitimement acquise**, **MONOTONE par contrat**
+*(`Math.max` seul — exigence posée par Romain)*.
+
+- **Carte ordinaire** : y atterrir **prouve** que tout ce qui précède est franchi ⇒ le repère monte ;
+- **Carte `libre`** : on y entre **par le côté**, cela ne prouve rien. On **CONSTATE** alors seulement
+  ce qui était **de toute façon atteignable**. ⛔ **Aucune étape ne devient joignable** — c'est
+  exactement la valeur que le balayage aurait déjà acceptée depuis n'importe quelle autre carte.
+
+> ⚡ **Une version intermédiaire a été écartée, et il faut dire pourquoi.** La première rédaction ne
+> faisait monter le repère que sur une carte non `libre`. ⛔ **Elle violait la 8ᵉ exigence de
+> Romain** : en franchissant les étapes **une à une** jusqu'à Publication, l'étape précédente
+> **perdait sa marque « faite »**. La mutation **A-4** garde désormais cette branche.
+
+📐 **5 lignes de code + un bloc de 12.** ⛔ **0 fichier `backend/`**, **0 `.html`**, **0 `.css`**, et
+**0 ligne** dans `ASSISTANT_ETAPES`, `ASSISTANT_CLES_CERVEAU`, `ASSISTANT_ORDRE_ORIGINE`,
+`assistantRaisonsEtape`, `quitterAssistant`, `ecrans.js`, `admin-infos-publication.js`,
+`admin-tableau-bord.js` ⇒ **aucune règle métier, aucune seconde liste de prérequis.**
+
+⭐ **Le grand écran n'était pas atteint** : `ecransCalculerVerrous` **recalcule tout à zéro**, il n'a
+aucun repère de progression à fausser. C'est pourquoi le contrôle **A2 était passé**.
+
+### 24.6 — 🔴 Ce que R-098 n'avait PAS fait : un garde-fou durable
+
+> **Les « 34 contrôles du parcours mobile » de R-098 n'existent pas dans le dépôt.** Joués, puis
+> jetés. Ils ne pouvaient donc pas être rejoués — et **rien ne surveillait ce comportement.**
+> ⭐ **C'est la vraie raison de la survie du défaut**, et elle compte plus que la ligne fautive.
+
+🆕 **`tests/frontend-assistant-verrou.test.js` — 41 contrôles**, exécutant les **vraies** fonctions :
+
+| Série | | |
+|---|---|---|
+| **F** | 6 | le banc décrit-il la vraie application |
+| ⭐ **Z** | 5 | **AUTOTEST** — le code d'avant est reconstruit et **doit** reproduire le défaut, sinon le fichier **échoue** |
+| **V** | 14 | le comportement exigé, sur trois classeurs |
+| **M** | 5 | **monotonie**, dont 26 navigations × 3 classeurs |
+| **N** | 5 | **non-régression**, dont ⭐ **507 trajets** : le correctif ne déverrouille ni ne verdit **jamais** plus que l'ancien |
+| **C** | 1 | grisé **si et seulement si** refusé |
+
+**+5 mutations** *(A-1 → A-5)*, chacune réintroduisant une moitié du défaut.
+⚠️ **Une régression a été attrapée par les tests eux-mêmes** : `frontend-autorisation-sync.test.js`
+exécute lui aussi `allerA` et **plantait** sur la variable neuve — corrigé, **97/97**.
+
+### 24.7 — Les gestes, et ce qui les CONSTATE *(`CLAUDE.md` §8 septies)*
+
+| Geste | Ce qui l'établit |
+|---|---|
+| **Commit** | **`8b66456`** — 5 fichiers, 781 insertions, **un seul parent** |
+| **Fusion** | **fast-forward strict** — ⛔ **aucun commit de fusion** *(0 relevé)*, **aucun SHA réécrit**. `origin/main` : **`be1b376` → `8b66456`** |
+| ⚠️ **Un piège évité** | La branche locale `main` avait **36 commits de retard** *(le décrochage de `CLAUDE.md` §12.3)*. Contrôlé qu'elle **ne portait aucun commit propre** *(0)* avant remise à niveau |
+| **Poussée** | `git ls-remote` = **`8b66456`** = `HEAD`, écart **0/0** |
+| **Publication** | Run Pages **#228** *(id `32956804198`, `push`/`main`, `8b66456`, 26/08 10:09→10:10 UTC)* : job **`verifier` `success`** — dont ⭐ la nouvelle étape *« Vérifier le verrou du parcours guidé (M1-PUB / R-098 — B5) »* — et job **`deploy` `success`**, étape *« Déployer sur GitHub Pages »* comprise |
+| **Redéploiement Apps Script** | ⛔ **SANS OBJET** — aucun fichier `backend/` |
+
+### 24.8 — ⭐ LA PREUVE RÉELLE — la condition 3 de R-098 est REMPLIE
+
+🔬 **Romain, 2026-08-26, téléphone, navigation privée, sur le site publié par le run #228** —
+**série B5 bis, 11 contrôles sur 11** :
+
+- ✅ les **six étapes restent grisées** après ouverture de « Publication » ;
+- ✅ **« Réglages » ne devient PAS vert** ;
+- ✅ **seule « Infos » est verte** — ⭐ **attendu, et annoncé à l'avance** : cette étape n'a aucun
+  prérequis, et l'ancien code la peignait déjà en vert dès le premier « Suivant » ;
+- ⭐ ✅ une **tentative RÉELLE** d'ouvrir « Équipes » laisse sur Publication et **déclenche
+  l'explication du blocage** — ⛔ **pas seulement un grisage constaté à l'œil** ;
+- ✅ **« Résumé » reste bloqué** · ✅ **« Suivant » n'avance pas** ;
+- ✅ non-régression : Publication reste joignable, adresse et deux boutons actifs.
+
+⛔ **Aucune donnée recréée** de bout en bout : le repère *« DONNÉES DE TOURNOI À RECRÉER »* est resté
+**ACTIF**.
+
+### 24.9 — Bilan des contrôles
+
+```
+frontend-reinitialisation    B2-0     48/48 OK      mutations  45/45 détectées
+frontend-autorisation-sync   B2-0.5   97/97 OK      node --check  30/30 lisibles
+frontend-assistant-verrou    R-098/B5 41/41 OK      git diff --check  propre
+```
+
+### 24.10 — Prochaine session recommandée
+
+⏭️ **Trancher les conditions 4b et 5 de R-098** — les **deux dernières** de PUB-2.
+
+> ⛔ **Elles exigent un tournoi exploitable**, que le classeur n'a pas. Le jeu minimal est **établi
+> et chiffré** *(fiche R-098 de `RISQUES.md`)*, ⛔ **et il n'est PAS créé**. ⭐ **La décision
+> appartient à Romain**, et elle touche le repère *« données à recréer »* — donc `ETAT.md`.
+>
+> ⛔ **PUB-3, PUB-4, PUB-5 et B2-1 restent NON DÉMARRÉS.**
