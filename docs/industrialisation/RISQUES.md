@@ -9,7 +9,30 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-26 *(chantier **M1-PUB**, **R-098 / B5** — validation réelle)* —
+**Dernière mise à jour** : 2026-08-26 *(suite 2 — clôture de **M1-PUB / PUB-2**)* —
+⚡ **R-098 ATTEINT 4 CONDITIONS SUR 5 ; LA 5ᵉ EST REPORTÉE. ⛔ AUCUN PROBLÈME NOUVEAU.**
+
+| Réf | Avant | Après | Ce qui l'établit |
+|---|---|---|---|
+| **R-098** *(P1)* | ⛔ OUVERT — 4 conditions *(dont 4b manquante)* | ⛔ **TOUJOURS OUVERT** — ✅ **1, 2, 3, 4a et 4b acquises** · 🔻 **5 reportée à PUB-4** | ⭐ **Condition 4b CONSTATÉE EN RÉEL le 2026-08-26**, sur les **trois modes**, ⛔ **sans jamais cliquer sur « Publier »**. Elle exigeait un tournoi exploitable : un **jeu fictif strictement minimal** a été saisi par Romain — décrit exactement dans le repère en tête de [`ETAT.md`](ETAT.md) |
+
+> ⭐ **PUB-2 EST CLOS, ET R-098 RESTE OUVERT — ce n'est pas une contradiction.** Le critère de
+> clôture de PUB-2, arrêté par **D-052**, ne porte **que** les preuves obtenables **sans provoquer
+> l'effet externe** que M1-PUB doit supprimer. ⛔ **La condition 5 n'en fait plus partie** : elle est
+> gardée par la **condition ④** du critère de clôture de M1-PUB, qui interdit de clore le chantier
+> tant qu'une preuve reportée reste ouverte.
+
+> 🔬 **Un prérequis découvert en préparant la saisie — par relecture, ⛔ pas par un échec** : la
+> génération **BLOQUE** tant que la **durée de période** d'une catégorie est vide *(`Code.gs:7845`)*.
+> ⭐ **Et trois corrections en sens inverse** ont allégé le jeu annoncé : **3 équipes** suffisent
+> *(minimum FFR exact)*, le **nombre de périodes** est inutile *(vide vaut 1)*, les **terrains sont
+> pré-remplis**. **Un champ en plus, trois en moins.**
+
+⛔ **Aucun problème nouveau inscrit** : la saisie et les trois contrôles n'ont **rien révélé**.
+
+---
+
+*Rappel de la mise à jour précédente* — 2026-08-26 *(chantier **M1-PUB**, **R-098 / B5** — validation réelle)* —
 ⚡ **UN SEUL PROBLÈME BOUGE : R-098. ⛔ AUCUN PROBLÈME NOUVEAU N'EST INSCRIT.**
 
 | Réf | Avant | Après | Ce qui l'établit |
@@ -1614,7 +1637,7 @@ vitrine.
 |---|---|
 | **Priorité** | **P1** — ⚠️ **empêche un usage réel** : l'organisateur ne peut pas communiquer l'adresse de son tournoi tant qu'il n'a pas tout préparé |
 | **Domaine** | **E — UX / accessibilité** · **A — métier / product owner** |
-| **Statut** | ⛔ **TOUJOURS OUVERT, mais il ne reste plus qu'une chose** — ⚡ **CORRIGÉ APRÈS LE GESTE le 2026-08-26** *(`CLAUDE.md` §8 septies)* : cette ligne annonçait *« NON VÉRIFIÉ dans un navigateur — la 1ʳᵉ des cinq conditions remplie, les QUATRE autres entières »*, **vrai jusqu'à la validation réelle du 2026-08-26**. ✅ **Les conditions 1, 2, 3 et 4a sont désormais CONSTATÉES EN RÉEL** *(voir la fin de cette fiche)*. ⛔ **Il reste 4b et 5** — et **elles seules** —, toutes deux suspendues à un **tournoi exploitable** que le classeur n'a pas. ⚡ **La condition 3 a d'abord ÉCHOUÉ** *(défaut B5)* : elle n'est acquise qu'après le second correctif **`8b66456`**, publié par le run Pages **#228**. *(Cette ligne a auparavant annoncé « implémenté localement, non commité », puis « commité et poussé sur branche, non fusionné, non publié » : chacune vraie à sa date.)* |
+| **Statut** | ⛔ **OUVERT — et il ne reste EXACTEMENT qu'une chose : la condition 5, nommément REPORTÉE À PUB-4** *(**D-052**)*. ✅ **Les conditions 1, 2, 3, 4a et 4b sont CONSTATÉES EN RÉEL** *(2026-08-26, dans un navigateur, sur le site publié — voir la fin de cette fiche)*. ⚠️ **Ne pas lire ce statut comme un blocage de PUB-2** : ⭐ **PUB-2 est CLOS depuis le 2026-08-26**, son critère de clôture ne portant **que** les preuves obtenables sans provoquer l'effet externe *(`PLAN.md` §15.3 bis)*. ⚡ *(Cette ligne a annoncé successivement : « implémenté localement, non commité » · « commité et poussé sur branche, non fusionné, non publié » · « NON VÉRIFIÉ dans un navigateur — 1 condition sur 5 » · « il reste 4b et 5, suspendues à un tournoi exploitable ». **Chacune était vraie à sa date** — `CLAUDE.md` §8 septies.)* ⚡ **La condition 3 a d'abord ÉCHOUÉ** *(défaut B5)* : elle n'est acquise qu'après le second correctif **`8b66456`**, publié par le run Pages **#228**. |
 | **Découvert** | 2026-08-24, **pendant la validation fonctionnelle réelle de PUB-2**, au tout premier contrôle |
 | **Rattachement** | ✅ **M1-PUB / PUB-2** — la correction fait partie de ce micro-lot |
 | **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* · ⭐ *« Une adresse n'est pas une autorisation. »* |
@@ -1676,9 +1699,9 @@ VISIBLE.** *On a contrôlé le contenu d'une pièce sans essayer d'en ouvrir la 
 1. ✅ **Publication du correctif** — **FAITE le 2026-08-24** : fusion **fast-forward** dans `main` *(`9bdeb06`, `b8ce265`)* et run Pages **#221** `success` *(`verifier` et `deploy`)* ;
 2. ✅ **Vérification réelle sur grand écran** — **FAITE le 2026-08-26** *(12 contrôles, série A)* ;
 3. ✅ **Vérification réelle sur mobile / assistant** — ⚡ **ÉCHOUÉE le 2026-08-26, puis OBTENUE le même jour après correctif** *(voir l'encadré **B5** ci-dessous)* ;
-4. 🟡 **Contrôle du bouton « Publier »** — ⭐ **la condition se DÉDOUBLE, et sa première moitié est acquise** :
+4. ✅ **Contrôle du bouton « Publier »** — ⭐ **la condition se DÉDOUBLE, et les DEUX moitiés sont désormais acquises** :
    · **4a — grisé quand le tournoi est incomplet** : ✅ **CONSTATÉ le 2026-08-26** *(contrôles A6, A7, B3, C2 — sur les trois modes d'affichage)* ;
-   · **4b — actif quand tout est prêt** : ⛔ **exige un tournoi exploitable** ;
+   · **4b — actif quand tout est prêt** : ✅ ⚡ **CONSTATÉ le 2026-08-26**, sur les **trois modes**, ⛔ **SANS jamais cliquer** — voir l'encadré 4b en bas de fiche ;
 5. 🔻 **Contrôle de « Masquer »** *(actif même avec des prérequis incomplets)* — ⚡ **REPORTÉE À PUB-4 le 2026-08-26** *(**D-052**)*. ⛔ **NI supprimée, NI réputée acquise, et TOUJOURS comptée dans les cinq** — voir l'encadré ci-dessous.
 
 > ⚡ **CE QUI A CHANGÉ LE 2026-08-26, ET POURQUOI — le report de la condition 5** *(**D-052**)*
@@ -1709,14 +1732,41 @@ VISIBLE.** *On a contrôlé le contenu d'une pièce sans essayer d'en ouvrir la 
 > ⛔ **Ne pas la confondre avec le contrôle §21.10 ter 6**, qui exige un **clic** — et qui est
 > **reporté**.
 
-> ⚠️ **La condition 4b demande un état du classeur permettant réellement de publier.** ⛔ **Ne
-> recréer aucune donnée sans décision explicite** : le repère *« DONNÉES DE TOURNOI À RECRÉER »*
-> reste **ACTIF**.
+> ⚡ **CONDITION 4b — ACQUISE LE 2026-08-26** *(cet encadré annonçait « demande un état du classeur
+> permettant réellement de publier · ne recréer aucune donnée sans décision explicite » : vrai
+> jusqu'à la décision de Romain du même jour — `CLAUDE.md` §8 septies)*
 >
-> ⭐ **Recréer ce jeu ne produit AUCUN effet externe, et c'est vérifié** : 🔬 seules **deux** lignes
-> de tout `backend/Code.gs` écrivent `tournoi_publie` — `publierTournoi` *(:7550)* et la
-> réinitialisation *(:7658, qui écrit `non`)*. ⛔ **Ni la création de catégories, ni les équipes, ni
-> la génération du planning n'y touchent.** Le risque tient **au seul clic sur « Publier »**.
+> 🔬 **Constaté par Romain dans son navigateur, sur le site publié** *(run **#228**, commit
+> `8b66456`)*, après saisie d'un **jeu fictif strictement minimal** — décrit **exactement** dans le
+> repère en tête de [`ETAT.md`](ETAT.md). ⭐ **Sur les TROIS modes d'affichage**, et dans chacun :
+>
+> | | Constaté |
+> |---|---|
+> | ① | Le bouton **« Publier le tournoi » n'est plus grisé** |
+> | ② | Le message **« 🔒 Avant de publier, il reste : … » a DISPARU** |
+> | ③ | Le fil affiche exactement **« Tout est prêt — tu peux publier le tournoi. »** |
+>
+> | Mode | |
+> |---|---|
+> | Grand écran *(barre latérale)* | ✅ |
+> | Téléphone *(parcours assistant)* | ✅ |
+> | ⭐ **Vue classique** | ✅ — **le mode qui échappait complètement au verrou d'avant R-098** |
+>
+> ⛔ **OBTENUE SANS AUCUN CLIC SUR « PUBLIER »**, et Romain le confirme. ⭐ **C'est exactement ce que
+> la condition demande** : 🔬 `majVerrouPublier` ne fait qu'un `bouton.disabled = restants.length > 0` —
+> **la 4b est un état visuel, pas un geste.**
+>
+> 🔬 **Un prérequis a été découvert en préparant la saisie**, ⛔ **par relecture du code et non par
+> un échec** : la génération **BLOQUE** tant que la **durée de période** d'une catégorie est vide
+> *(`backend/Code.gs:7845`)* — une catégorie neuve naît **vierge**, et le serveur refuse plutôt que
+> de produire des **matchs de 0 minute**. ⭐ **Trois corrections en sens inverse** ont allégé le jeu :
+> **3 équipes** suffisent *(minimum FFR exact)*, le **nombre de périodes** est inutile *(vide vaut
+> 1)*, et les **terrains sont déjà pré-remplis**.
+>
+> ⭐ **Créer ce jeu n'a produit AUCUN effet externe, et c'était vérifié avant** : 🔬 seules **deux**
+> lignes de tout `backend/Code.gs` écrivent `tournoi_publie` — `publierTournoi` *(:7550)* et la
+> réinitialisation *(:7658, qui écrit `non`)*. ⛔ **Ni les catégories, ni les équipes, ni la
+> génération n'y touchent.** Le risque tenait **au seul clic sur « Publier »**, qui n'a pas eu lieu.
 >
 > 🔬 **Le jeu minimal nécessaire, établi par lecture de `calculerEtatsEtapes`** *(⛔ non créé)* : une
 > **heure de début**, **une** catégorie, **quatre** équipes dans cette catégorie, **un** terrain

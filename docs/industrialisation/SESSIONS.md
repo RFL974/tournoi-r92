@@ -9321,3 +9321,108 @@ et c'est pour cela qu'il est écrit.**
 > ⛔ **La recréation des données n'est PAS autorisée à ce stade** : elle touche le repère *« DONNÉES
 > DE TOURNOI À RECRÉER »*, qui devra alors dire **par quoi** il a été remplacé.
 > ⛔ **PUB-3 ne démarre pas**, ⛔ **B2-1 non plus.**
+
+---
+
+## SESSION 26 — 🏁 **PUB-2 EST CLÔTURÉ : LA DERNIÈRE PREUVE OBTENUE SANS JAMAIS CLIQUER** *(2026-08-26, suite 2)*
+
+> 🎯 **Ce que cette session démontre, et qui dépasse le lot :** ⭐ **une preuve peut être exigeante
+> ET inoffensive, à condition de savoir CE QU'ELLE DEMANDE VRAIMENT.** La condition 4b semblait
+> exiger un clic sur « Publier » — donc l'effet externe que tout le chantier veut supprimer.
+> **Elle ne demandait qu'un état visuel.** ⛔ **Il a fallu lire le code pour le savoir.**
+
+⛔ **Aucun code, aucun test, aucun workflow, aucun backend touché.**
+
+### 26.1 — Ce que Romain a saisi, et ce qu'il n'a pas saisi
+
+La procédure a été **écrite depuis le code courant**, libellé par libellé, avant toute saisie.
+⭐ **Elle a été suivie sans écart, et n'a produit aucune surprise.**
+
+| | |
+|---|---|
+| **Horaires** | `09:00` — ⛔ **un seul champ** ; la case « auto » de l'heure de fin est cochée par défaut |
+| **Catégorie** | `U10` · **durée de période `10` min** ⛔ le reste vide |
+| **Équipes** | `EQUIPE TEST A`, `B`, `C` — ⛔ **sans effectifs** |
+| **Terrains** | ⛔ **aucun déclaré** : les 4 par défaut, enregistrés puis répartis, puis **« ✅ Appliquer aux catégories »** |
+| **Planning** | 1 poule, 3 matchs |
+| ⛔ **Non saisi** | aucun club, aucun contact, aucune personne, ⛔ **« Infos du tournoi » laissée vide** |
+
+### 26.2 — 🔬 Le prérequis découvert AVANT la saisie, et pas pendant
+
+⭐ **C'est le point de méthode de la session.** En relisant `genererPoulesEtPlanning`, un blocage dur
+est apparu, absent de l'estimation initiale :
+
+> 🔬 `backend/Code.gs:7845` — la génération **REFUSE** tant que la **durée de période** d'une
+> catégorie est vide. Motif écrit dans le code : *« Réglages sportifs VIERGES à la création : on ne
+> devine aucune valeur »*, pour ne **jamais produire de matchs de 0 minute**.
+
+⛔ **Sans cette relecture, la saisie aurait échoué à sa dernière étape** — après cinq étapes déjà
+faites, sur un message d'erreur du serveur.
+
+⭐ **Et la même relecture a ALLÉGÉ le jeu de trois façons** :
+
+| Annoncé | Réel |
+|---|---|
+| 4 équipes | 🔬 **3** — minimum FFR exact *(« les matchs secs ne sont pas autorisés »)* |
+| Renseigner le nombre de périodes | 🔬 **inutile** — `parseInt(cat.format_mi_temps \|\| '1')` : vide **vaut 1** |
+| Déclarer un terrain | 🔬 **déjà fait** — 4 grands terrains **pré-remplis** par l'application |
+
+➡️ **Un champ en plus, trois en moins.** ⭐ Et un choix de nommage qui épargne une saisie : `U10`
+porte une **taille de terrain par défaut** *(40 × 30)* — ⛔ avec un nom inventé, « Répartir » aurait
+refusé, faute de dimension.
+
+### 26.3 — ⭐ LA PREUVE : la condition 4b, dans les trois modes
+
+🔬 **Constaté par Romain**, navigateur, site publié par le run **#228** *(commit `8b66456`)*.
+Dans **chacun** des trois modes, **les trois affirmations en même temps** :
+
+| | Constaté |
+|---|---|
+| ① | Le bouton **« Publier le tournoi » n'est plus grisé** |
+| ② | Le message **« 🔒 Avant de publier, il reste : … » a DISPARU** |
+| ③ | Le fil affiche exactement **« Tout est prêt — tu peux publier le tournoi. »** |
+
+| Mode | |
+|---|---|
+| **Grand écran** *(barre latérale → « Publication »)* | ✅ |
+| **Téléphone** *(fil d'étapes → 🌐 Publication)* | ✅ |
+| ⭐ **Vue classique** | ✅ |
+
+> ⭐ **Pourquoi la « Vue classique » compte le plus.** C'est le mode qui **échappait complètement**
+> au verrou d'avant R-098 : il remettait la carte dans la page longue et laissait **publier un
+> tournoi vide sans le moindre frein**. ⭐ **Le voir gouverné par la même règle que les deux autres
+> prouve que le garde-fou est bien porté par le BOUTON, et non par l'écran** — c'est la promesse
+> exacte du correctif R-098, enfin constatée en réel.
+
+⛔ **AUCUN CLIC SUR « PUBLIER », et Romain le confirme.** 🔬 `majVerrouPublier` ne fait qu'un
+`bouton.disabled = restants.length > 0` : **la 4b est un état visuel, pas un geste.**
+⛔ **`tournoi_publie` reste `non`.**
+
+### 26.4 — 🏁 PUB-2 est clôturé — et R-098 reste ouvert
+
+> ⚠️ **Ces deux phrases ne se contredisent pas, et c'est tout l'objet de D-052.**
+
+| | |
+|---|---|
+| ✅ **Critère de clôture de PUB-2** | R-098 · **1, 2, 3, 4a, 4b** + contrôles §21.10 ter **1, 2, 3, 4, 5, 7, 9, 10, 11, 12** — ⭐ **tous constatés en réel** |
+| 🔻 **Hors critère, reporté à PUB-4** | R-098 · **condition 5** · contrôles **6** et **8** — ⛔ **ni supprimés, ni réputés acquis** |
+| ⭐ **Ce qui les garde** | La **condition ④** du critère de clôture de M1-PUB : *« aucune preuve reportée ne reste ouverte »* |
+
+### 26.5 — 🟢 Le repère « données à recréer » est REMPLACÉ, pas retiré
+
+⭐ **Sa propre condition l'exigeait** : *« il devra alors dire PAR QUOI il a été remplacé »*.
+Le nouveau repère, en tête de `ETAT.md`, **décrit exactement** ce qui est présent — champ par champ
+— et porte **deux consignes en vigueur** : ⛔ **ne pas supprimer ce jeu** *(PUB-4 en a besoin)* et
+⛔ **ne pas cliquer sur « Publier »** *(la vitrine interroge le même serveur)*.
+
+### 26.6 — Prochaine session recommandée
+
+⏭️ **PUB-3 — le plan technique et les preuves du découplage.**
+
+> ⛔ **PUB-3 est ÉLIGIBLE et N'EST PAS DÉMARRÉE** : ni conception, ni rédaction. Elle ne commence
+> qu'après **décision explicite de Romain** *(`CLAUDE.md` §12.4)*.
+> ⭐ **Deux de ses six livrables sont déjà à moitié faits** : sa **preuve « avant »** est acquise
+> *(la vitrine affiche « Aucun tournoi en cours », constaté en production)*, et le **recontrôle des
+> deux côtés** l'est aussi *(empreintes identiques, dépôt vitrine toujours sur `164bb8e`)* —
+> ⚠️ **à re-constater à sa date.**
+> ⛔ **B2-1 reste NON DÉMARRÉ.**

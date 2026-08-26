@@ -9,38 +9,87 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-> # 🔴 DONNÉES DE TOURNOI À RECRÉER AVANT LES PROCHAINS TESTS FONCTIONNELS
+> # 🟢 JEU DE TOURNOI FICTIF EN PLACE — À CONSERVER JUSQU'À PUB-4
 >
-> **Le 2026-08-24, le classeur actuellement connecté à l'application a été VOLONTAIREMENT
-> réinitialisé** pour la vérification réelle de **M1-B**. Les données supprimées — **2 catégories,
-> 38 équipes, 10 poules, 51 matchs** — étaient des **données d'essai**, ⛔ **pas un tournoi réel**.
+> ⚡ **CE REPÈRE REMPLACE, LE 2026-08-26, celui intitulé « 🔴 DONNÉES DE TOURNOI À RECRÉER AVANT
+> LES PROCHAINS TESTS FONCTIONNELS ».** ⭐ **Il se retire comme sa propre condition l'exigeait** :
+> *« il devra alors dire PAR QUOI il a été remplacé »*. Voici par quoi.
 >
-> ⛔ **CE N'EST PAS UN INCIDENT.** Un classeur sans catégorie ni équipe n'est **pas** l'état initial
-> « naturel » de ce projet : c'est le résultat d'un geste **décidé, annoncé et utilisé comme
-> preuve**.
+> **Ce qui est PRÉSENT dans le classeur** *(saisi par Romain le 2026-08-26, dans son navigateur)* :
 >
-> ➡️ **Avant tout test nécessitant des catégories, des équipes, des poules ou des matchs, un
-> nouveau jeu de données de test doit être recréé.**
+> | | |
+> |---|---|
+> | **Horaires** | heure de début **`09:00`** · heure de fin en mode **auto** *(le défaut)* |
+> | **Catégorie** | **une seule** : **`U10`**, présente · **durée de période `10` min** · terrains attribués automatiquement |
+> | **Équipes** | **trois** : **`EQUIPE TEST A`**, **`EQUIPE TEST B`**, **`EQUIPE TEST C`** — ⛔ **sans aucun effectif** *(ni joueurs, ni éducateurs)* |
+> | **Terrains** | le **plan par défaut** de l'application *(Rugby 1, Rugby 2, Foot 1, Foot 2)*, enregistré puis réparti |
+> | **Planning** | **1 poule**, **3 matchs** du matin · ⛔ **aucun score saisi** |
+> | ⛔ **`tournoi_publie`** | **`non`** — ⭐ **et il doit le rester** *(voir l'encadré ci-dessous)* |
+> | ⛔ **Ce qu'il n'y a PAS** | aucun **club invité**, aucun **contact**, aucune **personne**, aucun **effectif**, et **« Infos du tournoi » vide** *(ni nom, ni date, ni lieu, ni affiche)* |
 >
-> ⏳ **Ce repère ne se retire QUE lorsqu'un nouveau jeu aura effectivement été recréé** — et il
-> devra alors dire **par quoi** il a été remplacé.
+> ⭐ **Pourquoi ce jeu-là, et pas un autre** : c'est **le strict minimum** que le code exige pour que
+> les cinq étapes passent à ✅ — établi par lecture de `calculerEtatsEtapes`, puis **éprouvé en
+> réel**. `U10` a été choisi parce qu'il porte une **taille de terrain par défaut**, ce qui évite
+> une saisie. ⚠️ **`U10` est un libellé d'âge, ⛔ pas un club ni une personne.**
 >
 > ---
 >
-> ⚡ **ÉTAT AU 2026-08-25 — LE REPÈRE RESTE ACTIF, et sa formulation est précisée.**
+> > ## ⛔ INTERDICTION EN VIGUEUR : NE PAS CLIQUER SUR « PUBLIER LE TOURNOI »
+> >
+> > 🔬 **La vitrine `boutique-r92` interroge EXACTEMENT le même serveur** *(empreintes de
+> > déploiement identiques, vérifiées le 2026-08-26)*. Publier ferait donc apparaître, en tête des
+> > actualités d'une **association réelle**, l'annonce d'un **tournoi qui n'existe pas**.
+> >
+> > ⭐ **Ce clic devient inoffensif — et obligatoire — en PUB-4**, une fois la vitrine découplée.
+> > C'est là que vivent les trois preuves reportées *(**D-052**)*.
 >
-> Deux **témoins minimaux** ont été créés puis réinitialisés ce jour-là pour valider **B2-0** —
-> d'abord un tournoi de contrôle du reset, puis le témoin **`TOURNOI TEST SYNC B2-0.5`**. ⛔ **Ce
-> n'étaient pas des jeux de données de tournoi** : quelques champs d'identité, le strict nécessaire
-> pour éprouver un comportement, ⛔ **et ils ont été effacés par les resets qui suivaient**.
+> ---
 >
-> ⛔ **AUCUN nouveau jeu complet — catégories, équipes, poules, matchs — n'a été recréé.** Le
-> classeur reste donc **volontairement sans tournoi exploitable**, exactement comme le 2026-08-24.
+> ⛔ **NE SUPPRIME PAS CE JEU, et ne le réinitialise pas.** Il est **conservé pour PUB-4**, où il
+> servira à produire **« Masquer » jamais grisé** *(condition 5 de R-098)* et les **contrôles 6 et
+> 8** de PUB-2. ⭐ **Le recréer plus tard coûterait la même saisie, et surtout : rien ne garantirait
+> qu'il soit identique.**
 >
-> ⚠️ **Conséquence inchangée** : tout contrôle exigeant un planning, un classement ou des scores
-> reste **impossible en l'état** — dont les conditions 4 et 5 de **R-098**.
+> ⏳ **Quand ce repère se retirera-t-il ?** Lorsque **PUB-4 aura consommé ses preuves**. Il faudra
+> alors décider explicitement du sort de ce jeu — ⛔ **et le dire ici**.
+>
+> ---
+>
+> *Ce que disait le repère précédent, et qui reste vrai à sa date* : le **2026-08-24**, le classeur
+> a été **volontairement réinitialisé** pour la vérification réelle de **M1-B** — **2 catégories,
+> 38 équipes, 10 poules, 51 matchs** supprimés, ⛔ **des données d'essai, pas un tournoi réel**.
+> ⛔ **Ce n'était pas un incident** : c'était un geste **décidé, annoncé et utilisé comme preuve**.
+> Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
+> ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-26 *(suite)* — 🔻 **UNE CONTRADICTION DE SÉQUENCE EST TRANCHÉE :
+**Dernière mise à jour** : 2026-08-26 *(suite 2)* — 🏁 **M1-PUB / PUB-2 EST TERMINÉ ET CLÔTURÉ**,
+son critère de clôture **entièrement satisfait et vérifié dans un vrai navigateur**.
+⛔ **R-098 RESTE OUVERT** *(condition 5, nommément reportée à PUB-4)*. ⛔ **M1-PUB N'EST PAS
+TERMINÉ · PUB-3 NON DÉMARRÉ · B2-1 NON DÉMARRÉ.**
+
+## 🏁 M1-PUB / PUB-2 — CLÔTURÉ *(2026-08-26)*
+
+> ⚠️ **La distinction la plus importante de ce bloc, et elle doit être lue :**
+> ⭐ **PUB-2 est CLOS. ⛔ R-098 est OUVERT.** Ce n'est pas une contradiction : le critère de clôture
+> de PUB-2 *(arrêté par **D-052**)* ne porte **que** les preuves obtenables **sans provoquer
+> l'effet externe** que M1-PUB doit supprimer. **La condition 5 n'en fait plus partie.**
+
+| | |
+|---|---|
+| ✅ **Critère de clôture — SATISFAIT** | **R-098 · conditions 1, 2, 3, 4a, 4b** · **contrôles §21.10 ter 1, 2, 3, 4, 5, 7, 9, 10, 11, 12** — ⭐ **tous CONSTATÉS EN RÉEL**, dans un navigateur, sur le site publié |
+| ⭐ **La dernière preuve, obtenue le 2026-08-26** | **Condition 4b**, dans **les trois modes** : ⭐ **le bouton « Publier le tournoi » n'est plus grisé** · le message **« 🔒 Avant de publier, il reste : … » a disparu** · le fil affiche **« Tout est prêt — tu peux publier le tournoi. »** |
+| ⛔ **OBTENUE SANS CLIQUER** | ⭐ **C'est le cœur de la méthode** : 🔬 `majVerrouPublier` ne fait qu'un `bouton.disabled = …`. La 4b est un **état visuel**, pas un geste. **Romain confirme n'avoir jamais cliqué sur « Publier ».** |
+| ⭐ **Le mode qui comptait le plus** | La **« Vue classique »** — c'est celui qui **échappait complètement** au verrou d'avant R-098, et qui laissait publier un tournoi vide sans le moindre frein. ⭐ **Le voir gouverné par la même règle que les deux autres prouve que le garde-fou est bien porté par le BOUTON, et non par l'écran** |
+| 🔬 **Le prérequis découvert en préparant la saisie** | La génération **BLOQUE** si la **durée de période** d'une catégorie est vide *(`Code.gs:7845`)* : une catégorie neuve naît **vierge**, et le serveur refuse plutôt que de produire des **matchs de 0 minute**. ⭐ **Trouvé par relecture du code AVANT la saisie**, ⛔ pas par un échec en cours de route |
+| ⭐ **Trois corrections au jeu « minimal » annoncé** | **3 équipes** suffisent *(minimum FFR exact)*, ⛔ pas 4 · le **nombre de périodes** est inutile *(vide vaut 1)* · les **terrains sont déjà pré-remplis**. ⭐ **Un champ en plus, trois en moins** |
+| 🔻 **Ce qui SORT de PUB-2 et vit désormais en PUB-4** | **R-098 · condition 5** *(« Masquer » jamais grisé)* · **contrôle 6** *(Publier → adresse identique)* · **contrôle 8** *(Masquer → même adresse)*. ⛔ **Ni supprimés, ni réputés acquis** — gardés par la **condition ④** du critère de clôture de M1-PUB |
+| 🟢 **Le jeu fictif est CONSERVÉ** | Voir le repère en tête de ce document : il **décrit exactement** ce qui est présent. ⛔ **Ne pas le supprimer** — PUB-4 en a besoin |
+| ⛔ **`tournoi_publie`** | **reste `non`** — ⭐ **et doit le rester jusqu'à PUB-4** |
+| ⏭️ **Prochaine étape** | **PUB-3** — le plan technique et les preuves du découplage, ⛔ **documentaire, sans rien couper**. ⛔ **NON DÉMARRÉE** : elle ne commence qu'après décision explicite de Romain |
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-26 (suite)* : 🔻 **UNE CONTRADICTION DE SÉQUENCE EST TRANCHÉE :
 LA PREUVE DE « MASQUER » PASSE DE PUB-2 À PUB-4.** Décision **D-052**. ⛔ **Lot strictement
 documentaire — aucun code, aucune donnée, aucune configuration.**
 

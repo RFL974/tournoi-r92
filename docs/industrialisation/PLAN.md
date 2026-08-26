@@ -2719,7 +2719,7 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **Validation** | La doctrine est écrite **une seule fois**, à **une seule adresse** *(D-048)* · le risque a un identifiant, une priorité et un statut *(R-097)* · **l'ordre général** du découplage est écrit **avant** toute coupure · le **critère de clôture de M1-PUB** est écrit · ⭐ **chaque affirmation porte son niveau de preuve** *(🔬 / 📄 / 🕗 / ⛔)* |
 | 🏁 **État CONSTATÉ** | ✅ **TERMINÉ, FUSIONNÉ ET PUBLIÉ dans `main`** le 2026-08-24, en **fast-forward** — ⛔ **aucun SHA réécrit, aucun commit de fusion créé**. **Deux commits** : **`56dabd3`** *(le contenu — 6 fichiers, 625 insertions)* · **`6fdffd8`** *(la trace post-geste — `SESSIONS.md` seul)*. `origin/main` : **`ebf1b07` → `6fdffd8`**. ⛔ **Aucun run GitHub Actions déclenché** *(aucun `frontend/`)* · ⛔ **aucun redéploiement backend** *(aucun `backend/`)*. Détail des observations : `SESSIONS.md` **§20.8** |
 
-##### PUB-2 — Accès autonome à la page publique  ✅ **FUSIONNÉ, PUBLIÉ ET VÉRIFIÉ EN RÉEL** — ⛔ **PAS ENCORE CLOS** *(2 conditions de R-098 restent)*
+##### PUB-2 — Accès autonome à la page publique  🏁 **TERMINÉ ET CLÔTURÉ** *(2026-08-26)* — ⛔ **R-098 reste OUVERT** *(condition 5 reportée à PUB-4)*
 
 | | |
 |---|---|
@@ -2732,6 +2732,7 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **Redéploiement** | ⚠️ **À DISTINGUER** : **publication frontend GitHub Pages ✅ OUI** *(automatique à la fusion dans `main`)* · **redéploiement Apps Script ⛔ NON** — 🔬 **aucun fichier `backend/` n'est touché** |
 | ⛔ **Hors de ce lot** | ⛔ **Aucune implémentation dans PUB-1** |
 | 🆕 ⭐ **CRITÈRE DE CLÔTURE — arrêté le 2026-08-26 *(D-052)*** | Voir le tableau ci-dessous. ⭐ **Il se limite aux preuves obtenables SANS provoquer l'effet externe que M1-PUB doit supprimer** |
+| 🏁 **CLÔTURE — CONSTATÉE le 2026-08-26** | ✅ **Le critère ci-dessous est ENTIÈREMENT SATISFAIT**, et **chaque preuve a été observée par Romain dans un navigateur**, sur le site publié par le run Pages **#228** *(commit `8b66456`)*. ⭐ **La dernière — la condition 4b — l'a été sur les TROIS modes d'affichage, ⛔ SANS jamais cliquer sur « Publier ».** Détail : `SESSIONS.md` **§26** |
 
 **🆕 ⭐ Le critère de clôture de PUB-2, nommément *(D-052, 2026-08-26)***
 
@@ -2741,10 +2742,10 @@ coupure)* et **PUB-4** *(après coupure)*.
 > *(**R-097**)*, avec un **jeu de données FICTIF** : l'annonce d'un tournoi **qui n'existe pas**.
 > 🎯 **PUB-2 ne pouvait donc se clore qu'en causant le tort que PUB-4 doit supprimer.**
 
-| ✅ **DANS le critère de clôture de PUB-2** | ⛔ **REPORTÉ À PUB-4** *(⛔ ni supprimé, ni réputé acquis)* |
+| ✅ **DANS le critère de clôture de PUB-2** — 🏁 **TOUT EST ACQUIS** | ⛔ **REPORTÉ À PUB-4** *(⛔ ni supprimé, ni réputé acquis)* |
 |---|---|
-| **R-098 · conditions 1, 2, 3, 4a, 4b** — publication · vérification réelle grand écran · vérification réelle mobile · *« Publier »* **grisé** quand le tournoi est incomplet · *« Publier »* **actif** quand tout est prêt | **R-098 · condition 5** — *« Masquer n'est JAMAIS grisé »* |
-| **Contrôles `SESSIONS.md` §21.10 ter : 1, 2, 3, 4, 5, 7, 9, 10, 11, 12** | **Contrôles §21.10 ter : 6** *(Publier → état vert, adresse identique)* **et 8** *(Masquer → même adresse, retour à l'écran « à venir »)* |
+| ✅ **R-098 · conditions 1, 2, 3, 4a, 4b** — publication · vérification réelle grand écran · vérification réelle mobile · *« Publier »* **grisé** quand le tournoi est incomplet · *« Publier »* **actif** quand tout est prêt | ⛔ **R-098 · condition 5** — *« Masquer n'est JAMAIS grisé »* |
+| ✅ **Contrôles `SESSIONS.md` §21.10 ter : 1, 2, 3, 4, 5, 7, 9, 10, 11, 12** | ⛔ **Contrôles §21.10 ter : 6** *(Publier → état vert, adresse identique)* **et 8** *(Masquer → même adresse, retour à l'écran « à venir »)* |
 
 > ⭐ **La condition 4b se valide PAR OBSERVATION, sans jamais cliquer** — 🔬 `majVerrouPublier`
 > *(`frontend/js/admin-infos-publication.js`)* ne fait qu'une chose : `bouton.disabled = restants.length > 0`.
@@ -2945,8 +2946,8 @@ toutes les quatre.** *(La **④** a été ajoutée le 2026-08-26 par **D-052**.)
 
 | Lot | Attendu |
 |---|---|
-| **PUB-1** | Doctrine, risque, ordre général et critère de clôture **écrits et validés** |
-| **PUB-2** | L'accès autonome à la page publique **existe dans l'admin** |
+| **PUB-1** | Doctrine, risque, ordre général et critère de clôture **écrits et validés** — 🏁 **FAIT** |
+| **PUB-2** | L'accès autonome à la page publique **existe dans l'admin** — 🏁 **FAIT et CLÔTURÉ le 2026-08-26**, critère entièrement satisfait et **vérifié en réel** |
 | **PUB-3** | Le plan technique et les preuves **écrits et validés** |
 | **PUB-4** | Le découplage **exécuté** |
 | **PUB-5** | L'aperçu réel **livré** |
