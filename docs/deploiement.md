@@ -195,12 +195,17 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > affirmations ; elles étaient de **880** et **5133** depuis B2-0, de **796** et **4645** depuis
 > M1-B, et de **715** et **4314** depuis C-012, étape 3)*.
 >
-> 🟡 **ATTENTION — `881` est PRÉDIT, pas encore MESURÉ** *(`CLAUDE.md` §9 : **PROBABLE**)*. Il est
-> calculé hors ligne : **880 − 4 + 5**, les cinq affirmations du test opéré s'exécutant en ligne
-> droite, sans boucle ni condition. ⛔ **Tant que le journal chez Google n'a pas été lu, ce nombre
-> ne prouve rien** — c'est le geste 4 ci-dessus qui le transforme en **CERTAIN**.
-> ⚡ *(Ce bloc annonçait « justes au 2026-08-25, lot B2-0, 880 et 5133 » : **vrai jusqu'au
-> 2026-08-26**.)*
+> ✅ **CONSTATÉ CHEZ GOOGLE le 2026-08-26** : `lancerTestsFFR` exécutée dans l'éditeur Apps Script
+> a donné **`R92 — 881/881 OK, 0 FAIL`**, exécution terminée normalement, avec `Test.gs` à
+> **5141 lignes** et `Code.gs` à **8519** *(`viderDonnees` ligne **8514**)*. Le couple de témoins a
+> répondu **1** et **0**, ⭐ **dans le bon sens tous les deux**.
+> ⛔ **Le numéro de version du déploiement n'a PAS été relevé** au moment du collage : il n'est donc
+> pas inscrit ici, et ⛔ **rien ne sera deviné** *(la version précédente, elle, était la **157**)*.
+>
+> ⚡ *(Ce bloc a d'abord annoncé « **881** est PRÉDIT, pas encore MESURÉ » — c'était vrai le
+> 2026-08-26 **avant** le redéploiement, et faux **après**. ⭐ La valeur avait été calculée hors
+> ligne *(880 − 4 + 5)*, puis **mesurée là où elle compte** : ce n'est plus un **PROBABLE** mais un
+> **CERTAIN**, `CLAUDE.md` §9.)*
 >
 > ✅ **CONSTATÉ CHEZ GOOGLE le 2026-08-25** : `lancerTestsFFR` exécutée dans l'éditeur Apps Script
 > a donné **`R92 — 880/880 OK, 0 FAIL`**, avec `Test.gs` à **5133 lignes** — serveur en **version

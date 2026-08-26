@@ -232,7 +232,7 @@ en tête de fichier le pilotent : `ACTIONS_SCORES`, `ACTIONS_TOKEN` et `ACTIONS_
 > | # | Où | Ce qui a été coupé | État constaté |
 > |---|---|---|---|
 > | ① | Le site extérieur `boutique-r92` *(dépôt séparé)* | Il **n'interroge plus du tout** ce serveur : plus de carte d'actualité automatique, et sa page « Tournoi » est devenue **statique**, avec un lien explicite vers Maxilou | 🔬 Commit `9dbdf0a`, **publié** |
-> | ② | Ce dépôt | La vue **`invitation`** *(servie par `getConfig`)* **n'expose plus** `tournoi_publie` | 🔬 Dans le dépôt — ⚠️ **le serveur en service chez Google est celui de son dernier redéploiement** *(§13.6 de `CLAUDE.md`)* |
+> | ② | Ce dépôt | La vue **`invitation`** *(servie par `getConfig`)* **n'expose plus** `tournoi_publie` | 🔬 Commit `a4ee3bb`, **redéployé chez Google le 2026-08-26** et vérifié sur le service en ligne : `?action=getConfig` renvoyait **21** champs avant, **20** après, ⭐ **une seule clé disparue, et c'est celle-là** |
 >
 > ⭐ **La vue `live` continue d'exposer `tournoi_publie`, et c'est impératif** : la page publique du
 > tournoi *(`frontend/js/tournoi.js`)* lit `getAll`, donc cette vue-là. Le retirer de `live`
