@@ -25,6 +25,7 @@
 - [8 quinquies. Règle de la mesure complète](#8-quinquies-règle-de-la-mesure-complète)
 - [8 sexies. Règle de la date civile](#8-sexies-règle-de-la-date-civile)
 - [8 septies. Règle de l'état constaté après le geste](#8-septies-règle-de-létat-constaté-après-le-geste)
+- [8 octies. Règle de la preuve par le navigateur](#8-octies-règle-de-la-preuve-par-le-navigateur)
 - [9. Règle de transparence](#9-règle-de-transparence)
 - [10. Règle de prudence](#10-règle-de-prudence)
 - [11. Objectif final](#11-objectif-final)
@@ -926,6 +927,108 @@ valeur a bougé, au lieu de la croire stable depuis toujours *(c'est déjà l'us
   sont la démonstration ;
 - ✅ **Seulement** ceci : *ce que ce document affirme du geste que je viens de faire, est-ce encore
   vrai — l'ai-je CONSTATÉ, ou seulement prévu ?*
+
+---
+
+## 8 octies. RÈGLE DE LA PREUVE PAR LE NAVIGATEUR
+
+> ⚠️ **Cette règle s'applique à TOUTES les sessions du projet.** Elle est née du premier essai réel
+> de **Playwright MCP** sur le Mac de Romain *(2026-08-26)*, et **validée par Romain le
+> 2026-08-26 — D-053**.
+>
+> Elle est le **complément d'outil de §8 septies** : celle-ci dit **ce qui constate** un geste ;
+> celle-là dit **avec quoi on observe**, et **à quel moment l'observation vaut preuve**.
+
+**La règle, en deux phrases :**
+
+> **Un contrôle sur ordinateur peut être conduit avec Playwright MCP, mais UNIQUEMENT depuis une
+> session locale sur le Mac de Romain, dans un Chrome VISIBLE. Un contrôle qui exige un vrai
+> téléphone reste fait par Romain.**
+>
+> **Aucune observation ne vaut preuve tant que l'état transitoire n'a pas disparu et que l'état
+> final attendu n'est pas apparu.**
+
+### Pourquoi cette règle existe
+
+Parce que le dépôt porte déjà les deux moitiés du problème, et qu'elles ne se corrigent pas
+l'une l'autre :
+
+| Ce qui s'est passé | Ce que ça enseigne |
+|---|---|
+| **Session 24** — l'environnement ne pouvait atteindre **ni le site publié, ni le serveur** *(`403 Forbidden`, relevé deux fois)*. La tentation était de remplacer la validation réelle par une lecture du code. ⭐ **Elle a été refusée** — et **c'est le doigt de Romain sur un vrai téléphone qui a trouvé le défaut** | ⛔ **Lire le code n'est pas constater.** Un outil qui n'atteint pas la cible ne se remplace pas par une déduction |
+| **2026-08-26, premier essai de Playwright** — la page `tournoi.html` affichait `Chargement…` à la **première** lecture. Le message réel *(« Aucun tournoi en cours… »)* n'est apparu qu'à la **seconde** | ⛔ **Le premier affichage n'est pas l'état de la page.** Un contrôle qui lit trop vite relève l'écran d'attente et **conclut à tort** |
+
+> 🎯 **La leçon, et elle vaut plus que l'outil.** Playwright lève le blocage réseau de la session 24
+> — ⛔ **il ne lève pas l'exigence de constater.** Il déplace la frontière du vérifiable ; il ne
+> supprime pas ce qui reste derrière.
+
+### 1) Où l'outil a le droit de tourner
+
+| | |
+|---|---|
+| ✅ **Autorisé** | Session **locale**, sur le **Mac de Romain**, dans un **Chrome visible** |
+| ⛔ **Interdit** | Session **distante** ou dans le nuage · navigateur **sans fenêtre** *(« headless »)* · tout navigateur qui n'est pas celui de cette machine |
+
+*(« **Headless** » = sans tête : un navigateur qui tourne **invisible**, sans fenêtre à l'écran.
+Il est interdit ici parce qu'il retire à Romain la possibilité de **voir de ses yeux** ce que la
+session prétend avoir constaté.)*
+
+⭐ **Le contrôle est mécanique, et il tient en une commande** : dans les programmes en cours,
+la ligne de lancement de Chrome **ne doit pas contenir `--headless`**.
+
+### 2) ⛔ Ce qu'un ordinateur ne prouvera JAMAIS
+
+> **Un contrôle qui exige un vrai téléphone reste réalisé par Romain, sur son téléphone.**
+
+⛔ **Ne constituent pas une preuve téléphone** : une **émulation** de mobile, une fenêtre **rétrécie**
+aux dimensions d'un écran de téléphone, un changement de « profil d'appareil ».
+
+*(Ces outils montrent une **mise en page**. Ils ne montrent ni le doigt, ni le clavier du téléphone,
+ni son navigateur réel, ni sa connexion — et c'est précisément là qu'était le défaut de la
+**session 24**.)*
+
+### 3) Où vont les captures
+
+Toutes les captures et sorties de Playwright vont dans **`.playwright-mcp/`**, et ⛔ **ne sont jamais
+commitées**. *(Le dossier est exclu localement, hors du dépôt suivi.)*
+
+### 4) L'attente, et c'est le cœur de la règle
+
+**Avant toute conclusion :** attendre la disparition de l'état transitoire — `Chargement…` — **ET**
+l'apparition de **l'état final attendu**. Les deux, pas l'un des deux.
+
+| ⛔ **Ne vaut pas preuve fonctionnelle** | ✅ **Vaut preuve** |
+|---|---|
+| Un **premier affichage** transitoire | L'état final **attendu**, effectivement **relevé** |
+| Une **temporisation arbitraire** *(« j'ai attendu 3 secondes »)* | Une attente **adossée à un état visible précis** |
+| Une **lecture du code** | Une **observation** de la page réelle |
+
+> ⭐ **Pourquoi le nombre de secondes ne suffit pas.** Un délai fixe ne dit rien : il passe quand le
+> réseau est rapide, il échoue quand il est lent — et **il échoue en silence**, en relevant l'écran
+> d'attente comme s'il était le résultat. L'attente doit porter sur **ce qu'on veut voir**, jamais
+> sur une durée.
+
+⚡ **Et cela ne vaut pas que pour le TEXTE affiché : l'ADRESSE aussi a un état transitoire.**
+Tout repère relevé après une action qui déclenche un aller-retour avec un serveur — adresse,
+identifiant, numéro — se relève dans son **état définitif**, jamais au premier affichage.
+
+> ⭐ **La démonstration est réelle, et elle date du jour même où cette règle a été écrite.** À
+> l'envoi d'un message sur ChatGPT, l'adresse affichée était `…/c/WEB:cb5ac131-…` — un numéro
+> **provisoire** que le navigateur s'attribue à lui-même en attendant le serveur. Douze secondes
+> plus tard, elle était `…/c/6a8ee7e5-…` : ⛔ **ni le même identifiant, ni le même format.**
+> Relevée au premier affichage, elle aurait été **enregistrée morte** — et le défaut aurait été
+> **invisible**, puisque tout le reste avait l'air correct.
+
+### Ce que la règle ne demande PAS
+
+- ❌ **Pas** d'ouvrir un navigateur pour un travail purement documentaire ou pour du code non
+  exécutable depuis ici ;
+- ❌ **Pas** de renoncer à Playwright parce qu'un contrôle **voisin** exige un téléphone : **on fait
+  la part faisable**, et on dit précisément laquelle reste à Romain ;
+- ❌ **Pas** de recopier cette règle ailleurs — **§8 quater** l'interdit : ailleurs, on renvoie à
+  **§8 octies** ;
+- ✅ **Seulement** ceci : *ai-je VU l'état final attendu, dans un vrai navigateur visible — ou
+  seulement l'écran d'attente, une durée écoulée, ou le code ?*
 
 ---
 

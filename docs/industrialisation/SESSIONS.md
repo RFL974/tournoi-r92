@@ -9426,3 +9426,71 @@ Le nouveau repère, en tête de `ETAT.md`, **décrit exactement** ce qui est pr�
 > deux côtés** l'est aussi *(empreintes identiques, dépôt vitrine toujours sur `164bb8e`)* —
 > ⚠️ **à re-constater à sa date.**
 > ⛔ **B2-1 reste NON DÉMARRÉ.**
+
+---
+
+## SESSION 27 — 🧰 **PLAYWRIGHT MCP : UN OUTIL DE PREUVE EST INSTALLÉ ET ÉPROUVÉ EN RÉEL** *(2026-08-26, suite 3)*
+
+> 🎯 **Session d'outillage, sans travail de chantier.** ⛔ **PUB-3 n'a pas été démarrée.**
+
+### 27.1 — Ce qui a été fait
+
+**Playwright MCP a été installé et éprouvé EN RÉEL sur le Mac de Romain, dans un Chrome visible.**
+
+| Contrôle | Relevé |
+|---|---|
+| Cible ouverte | `https://rfl974.github.io/boutique-r92/tournoi.html` |
+| Navigateur | ⭐ `/Applications/Google Chrome.app` — **le vrai Chrome du Mac**, lancé dans un profil séparé et neuf |
+| Fenêtre visible ? | ✅ **Oui** — ⛔ **aucun `--headless`** dans la ligne de lancement, vérifié dans les programmes en cours |
+| Titre relevé | `Tournoi \| Génération R92` |
+| Message final relevé | `Aucun tournoi en cours pour le moment. Reviens quand un tournoi sera annoncé !` |
+| Nature du contrôle | **Lecture seule** — aucun clic, aucune donnée touchée |
+
+⚡ **Ce que l'essai a APPRIS, et c'est son apport principal** : à la **première** lecture, la page
+affichait encore `Chargement…`. Le message réel n'est apparu qu'à la **seconde**. ⛔ **Un contrôle
+qui lit trop vite relève l'écran d'attente et conclut à tort.**
+
+### 27.2 — Ce que cela change, et ce que cela ne change pas
+
+| | |
+|---|---|
+| ✅ **Ce que ça lève** | Le blocage réseau de la **session 24** *(`403 Forbidden` vers le site publié et le serveur)* — **depuis une session locale**, le site publié est désormais **atteignable et observable** |
+| ⛔ **Ce que ça NE lève PAS** | L'exigence de **constater** *(**§8 septies**)* · les contrôles qui exigent un **vrai téléphone**, qui restent faits par Romain *(c'est son doigt sur un téléphone qui a trouvé le défaut de la session 24)* · le comportement **du serveur** en production *(**§13.6**)* |
+
+### 27.3 — ⚡ Le second essai, et c'est lui qui a produit la preuve la plus instructive
+
+🔬 **Une conversation ChatGPT « passerelle » a été créée**, sur demande de Romain, pour recevoir les
+rapports du chantier. ⛔ **Sens unique assumé** : Claude Code y **dépose**, il ne lit **rien** en
+retour ; Romain reste le seul décideur.
+
+**Ce que cet essai a révélé** — et ce n'était pas son but :
+
+| Instant | Adresse affichée |
+|---|---|
+| Immédiatement après l'envoi | `…/c/WEB:cb5ac131-…` — ⛔ numéro **provisoire** attribué par le navigateur en attendant le serveur |
+| **Douze secondes plus tard** | `…/c/6a8ee7e5-…` — ⛔ **ni le même identifiant, ni le même format** |
+
+> 🎯 **Relevée au premier affichage, l'adresse aurait été enregistrée MORTE — et le défaut aurait
+> été invisible** : le fichier aurait été un JSON valide, le rapport aurait annoncé un succès, et
+> l'erreur ne serait apparue qu'au premier clic, des semaines plus tard.
+>
+> ⭐ **Un état transitoire VISIBLE (`Chargement…`) trompe une fois ; un état transitoire PLAUSIBLE
+> (une adresse bien formée) trompe durablement.** C'est ce second cas qui a fait naître le point ⑥
+> de **D-053**.
+
+⛔ **Trois refus, à noter parce qu'ils font partie du résultat** : la session a refusé d'écrire un
+fichier de passerelle **sans adresse réelle** *(un fichier absent est honnête, un fichier vide est
+trompeur)* ; elle a refusé de saisir le message dans une **conversation existante** ouverte par
+mégarde dans la fenêtre ; et elle a refusé de **contourner** le garde-fou du mode Auto quand il a
+bloqué l'écriture dans la page.
+
+### 27.4 — La règle et la décision qui en découlent
+
+📕 **La méthode est inscrite en un seul endroit** : `CLAUDE.md` **§8 octies — Règle de la preuve par
+le navigateur**, ✅ **validée par Romain le 2026-08-26 — D-053**. ⛔ **Elle n'est recopiée nulle part
+ailleurs** *(**§8 quater**)*.
+
+### 27.5 — Prochaine session recommandée
+
+⏭️ **Inchangée : PUB-3.** ⛔ **Toujours NON DÉMARRÉE** — elle ne commence qu'après décision
+explicite de Romain *(**§12.4**)*.

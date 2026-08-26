@@ -5,7 +5,21 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-24 *(soir, suite 4)* — 🌐 **D-049 — « CONSOMMER UNE VALEUR
+**Dernière mise à jour** : 2026-08-26 *(suite 3)* — 🌐 **D-053 — « UNE PREUVE PAR LE NAVIGATEUR
+N'EXISTE QU'À L'ÉTAT FINAL »**, prise après le premier essai réel de **Playwright MCP** sur le Mac
+de Romain. Elle autorise les preuves fonctionnelles **sur ordinateur** par navigateur piloté —
+⛔ **session locale et Chrome visible uniquement** — maintient qu'une **preuve téléphone exige un
+téléphone réel manipulé par Romain**, range les sorties dans **`.playwright-mcp/`** *(jamais
+commitées)*, et pose la règle centrale : ⛔ **un état transitoire ne vaut jamais preuve**, l'attente
+vise **un état final observable** et non un délai, ⚡ **y compris pour une ADRESSE**. Elle est
+inscrite en **`CLAUDE.md` §8 octies**.
+
+> ⚠️ **Au passage, un écart de tenue à signaler** *(**§8 septies**)* : ce bloc annonçait encore
+> **D-049** alors que **D-050, D-051 et D-052** avaient été enregistrées depuis — la dernière le
+> **2026-08-26**. Les trois fiches sont bien présentes et complètes ; **seul l'en-tête avait
+> décroché.** Il est remis à jour ici, et les fiches ne sont pas retouchées.
+
+*Rappel de la mise à jour précédente — 2026-08-24 (soir, suite 4)* : 🌐 **D-049 — « CONSOMMER UNE VALEUR
 EXISTANTE N'EST PAS ADMINISTRER CETTE VALEUR »**, prise à l'ouverture du micro-lot **PUB-2**. Elle
 tranche le chevauchement signalé par PUB-1 : ✅ **PUB-2 LIT `url_tournoi_public`** pour afficher,
 copier et ouvrir l'adresse de la page publique ; ⛔ **il ne l'ÉCRIT PAS** — aucun champ, aucun écran
@@ -3575,3 +3589,69 @@ Trois obligations en découlent, et **aucune n'est facultative** :
   redéplacer exige une **nouvelle décision**, ⛔ pas une reconduction tacite ;
 - ✅ **Seulement ceci** : *cette preuve, l'obtenir maintenant causerait-il ce que je suis en train de
   corriger — et si oui, où devient-elle inoffensive, et qui garantit qu'elle sera produite là ?*
+
+---
+
+### D-053 — Une preuve par le navigateur n'existe qu'à l'état FINAL — et une preuve téléphone exige un téléphone
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-26 |
+| **Session** | **Session 27** — installation et premier essai réel de **Playwright MCP** sur le Mac de Romain |
+| **Statut** | ✅ **VALIDÉE — décision de Romain**, après essai réel et avant tout commit |
+| **Décidée par** | Romain |
+| **Couvre** | `CLAUDE.md` **§8 octies** *(la règle permanente qui en découle)* |
+| **Doctrine de référence** | **D-046** — *« un état ne devient vrai qu'APRÈS le geste »* *(`CLAUDE.md` §8 septies)* |
+
+**Ce qui a changé, et pourquoi il fallait décider**
+
+> Jusqu'ici, aucune session ne pouvait atteindre le site publié ni le serveur : la **session 24**
+> l'a constaté deux fois, `403 Forbidden`. ⭐ **C'est ce blocage qui a produit la meilleure
+> discipline du chantier** — faute de pouvoir observer, les sessions ont **refusé de déduire**, et
+> c'est **le doigt de Romain sur un vrai téléphone** qui a trouvé le défaut de B5.
+>
+> 🎯 **Playwright change cette contrainte, et c'est précisément le danger.** Un outil qui atteint
+> enfin la cible rend soudain facile de **conclure vite** — donc de conclure **mal**. La décision
+> ouvre l'outil **et** referme la porte que l'outil entrouvre.
+
+**Ce qui est décidé — six points**
+
+| # | | |
+|---|---|---|
+| ① | **Preuve sur ordinateur** | ✅ Autorisée avec **Playwright MCP**, ⛔ **uniquement depuis une session locale, dans un Chrome VISIBLE**. Ni session distante, ni navigateur sans fenêtre |
+| ② | **Preuve téléphone** | ⛔ **Exige toujours un téléphone réel manipulé par Romain.** Une émulation ou une fenêtre rétrécie montre une **mise en page**, ⛔ **jamais une preuve** |
+| ③ | **Sorties de l'outil** | Captures et relevés dans **`.playwright-mcp/`**, ⛔ **jamais commitées** *(exclusion locale, hors dépôt suivi)* |
+| ④ | **État transitoire** | ⛔ **Ne vaut jamais preuve** — `Chargement…` en particulier |
+| ⑤ | **Nature de l'attente** | L'attente vise **l'apparition d'un état final OBSERVABLE**, ⛔ **jamais un délai arbitraire** |
+| ⑥ | ⚡ **Repère relevé après une action asynchrone** | **Adresse, identifiant, numéro** : se constatent dans leur **état DÉFINITIF**, ⛔ jamais au premier affichage |
+
+**⭐ La démonstration, et elle est du jour même**
+
+> Deux faits **constatés**, à quelques heures d'intervalle, et ils ne disent pas la même chose :
+
+| Fait constaté | Ce qu'il prouve |
+|---|---|
+| 🔬 `boutique-r92/tournoi.html` affichait `Chargement…` à la **première** lecture ; le message réel n'est apparu qu'à la **seconde** | ⑤ — **un contrôle qui lit trop vite relève l'écran d'attente et conclut à tort** |
+| 🔬 À l'envoi d'un message ChatGPT, l'adresse était `…/c/WEB:cb5ac131-…` — numéro **provisoire** du navigateur. **Douze secondes plus tard** : `…/c/6a8ee7e5-…`, ⛔ **ni le même identifiant, ni le même format** | ⑥ — ⭐ **c'est la première démonstration RÉELLE de la règle**, et la plus instructive |
+
+> 🎯 **Pourquoi le second cas est le plus grave des deux, et c'est ce qui a motivé le point ⑥.**
+> L'écran `Chargement…` **se voit** : quiconque relit le rapport comprend que la mesure est
+> prématurée. ⛔ **Une adresse provisoire, non.** Elle a la bonne forme, elle passe une validation
+> JSON, elle s'écrit sans erreur dans un fichier — et **elle ne mène nulle part**. Le défaut ne se
+> révèle qu'au premier clic, des semaines plus tard, quand plus personne ne sait d'où vient
+> l'adresse.
+>
+> ⭐ **Un état transitoire VISIBLE trompe une fois ; un état transitoire PLAUSIBLE trompe
+> durablement.**
+
+**⛔ Ce que la décision ne fait PAS**
+
+- ❌ **Pas** lever l'exigence de constater : Playwright **déplace** la frontière du vérifiable, il
+  ne supprime pas ce qui reste derrière — le comportement **du serveur en production** reste hors
+  d'atteinte du dépôt *(**§13.6**)* ;
+- ❌ **Pas** autoriser l'outil hors d'une session locale, ni en navigateur sans fenêtre : ⛔ ce qui
+  ne peut pas être **vu par Romain** ne peut pas être **présenté comme vu** ;
+- ❌ **Pas** transformer une preuve téléphone en preuve ordinateur, quel que soit le réglage
+  d'affichage employé ;
+- ✅ **Seulement ceci** : *ai-je VU l'état final attendu, dans un vrai navigateur visible — ou
+  seulement l'écran d'attente, une durée écoulée, ou le code ?*
