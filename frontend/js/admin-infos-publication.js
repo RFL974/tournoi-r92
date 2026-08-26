@@ -4,8 +4,7 @@
  * ============================================================================
  *  Cartes de contenu du tournoi et publication, sorties du monolithe admin.js
  *  SANS changement de comportement :
- *   - Infos du tournoi (nom/date/lieu/description) + affiche + aperçu LIVE de la
- *     carte d'actualité et de la page d'article du site vitrine ;
+ *   - Infos du tournoi (nom/date/lieu/description) + affiche ;
  *   - Contacts & sécurité, « Sur place », « Réponse à l'invitation » ;
  *   - État des sections du dossier club ; publication / masquage du tournoi.
  *
@@ -20,7 +19,10 @@
  */
 
 /* --------------------------------------------------------------------------
-   INFOS DU TOURNOI (nom / date / lieu / description) — pour la carte + l'article
+   INFOS DU TOURNOI (nom / date / lieu / description)
+   Le NOM alimente la page publique du tournoi ; nom, date, lieu, description et
+   affiche alimentent les invitations et le dossier transmis aux clubs.
+   ⛔ Aucun site tiers ne les lit (découplage M1-PUB / PUB-4, doctrine D-048).
    -------------------------------------------------------------------------- */
 
 /** Pré-remplit le formulaire des infos du tournoi avec ce qui est déjà enregistré. */
@@ -58,7 +60,6 @@ function majInfosTournoi() {
   // détecteur de « modifications non enregistrées » de l'assistant.
   if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(form);
 
-  majApercuTournoi(); // l'aperçu « carte du site » suit les infos affichées
   // Conformité FFR : (re)vérifie dès que les infos (dont la date) sont (re)chargées.
   if (typeof majConformiteFFR === 'function') majConformiteFFR();
 }
@@ -67,111 +68,25 @@ function majInfosTournoi() {
    désormais dans admin.js (noyau), utilisés aussi par admin-invitations.js (parking). */
 
 /* --------------------------------------------------------------------------
-   APERÇU DE PUBLICATION — réplique EXACTE de la carte d'actualité du site
-   vitrine (BoutiqueR92, main.js → actuTournoi/rendreActus) : mêmes textes de
-   repli, même extrait à 160 caractères, même format de date. Mise à jour en
-   direct pendant la saisie (écouteur input posé dans initAdmin).
+   FORMATAGE DE DATE PARTAGÉ (admin)
+   ⚡ Cette section portait « APERÇU DE PUBLICATION — réplique EXACTE de la carte
+   d'actualité du site vitrine ». Cet aperçu a été SUPPRIMÉ (M1-PUB / PUB-5, M9,
+   2026-08-26) : il décrivait des pages qui n'existent plus depuis le découplage.
+   ⭐ Le principe retenu : on OUVRE la vraie page publique, on ne la copie pas —
+   une réplique affirme sa propre fidélité, et finit par dériver.
+   Seul survit le formateur de date ci-dessous, utilisé par les invitations et
+   par le contrôle de conformité FFR.
    -------------------------------------------------------------------------- */
 
-/** Date « 22 juillet 2026 » — même formatage que le site vitrine (formaterDate).
+/** Date « 22 juillet 2026 ». Utilisée par les invitations (admin-invitations.js) et par
+ *  le contrôle de conformité FFR (admin-conformite-ffr.js).
  *  ⚠️ Passe par `dateLocaleDepuisISO` (commun.js) : une date de tournoi est une date
  *  CIVILE. `new Date('AAAA-MM-JJ')` vaudrait minuit UTC et reculerait d'un jour sur tout
- *  appareil en retard sur UTC — y compris dans les emails DÉJÀ ENVOYÉS aux clubs.
- *  ⏳ Le site vitrine (dépôt séparé `boutique-r92`) porte encore le même défaut. */
+ *  appareil en retard sur UTC — y compris dans les emails DÉJÀ ENVOYÉS aux clubs. */
 function formaterDateFr(dateISO) {
   const d = dateLocaleDepuisISO(dateISO);
   if (!d || isNaN(d)) return String(dateISO == null ? '' : dateISO);
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-/** Coupe un texte au dernier mot entier avant `max` caractères — même règle
- *  que le site vitrine (extraitCourt), pour un aperçu au caractère près.
- *  Comme sur le site, les sauts de ligne saisis deviennent de simples espaces :
- *  l'extrait d'une carte est une accroche, pas une mise en page (celle-ci est
- *  respectée sur la page d'article, cf. .vp-texte / #art-description). */
-function extraitCourt(texte, max) {
-  const t = String(texte || '').replace(/\s+/g, ' ').trim();
-  if (t.length <= max) return t;
-  const coupe = t.slice(0, max);
-  return coupe.slice(0, coupe.lastIndexOf(' ') > 0 ? coupe.lastIndexOf(' ') : max).trim() + '…';
-}
-
-/** (Re)dessine les DEUX aperçus — la carte d'actualité (#apercu-site) et la
- *  page de l'événement (#apercu-page, celle qui s'ouvre au clic sur la carte) —
- *  à partir des valeurs ACTUELLES du formulaire (même pas encore enregistrées)
- *  et de l'affiche (choisie à l'instant, ou déjà enregistrée sur Drive). */
-function majApercuTournoi() {
-  const zone = document.getElementById('apercu-site');
-  const form = document.getElementById('form-infos-tournoi');
-  if (!zone || !form) return;
-  const g = configCourante.global || {};
-  // La date vit dans la carte « Date & conformité FFR » (#form-cadre-tournoi) : on la lit par NOM.
-  const champDate = document.querySelector('[name="tournoi_date"]');
-  const dateSaisie = champDate ? champDate.value : '';
-
-  // Mêmes valeurs de repli que le site vitrine (actuTournoi, main.js).
-  const nom = form.tournoi_nom.value.trim() || 'Le tournoi';
-  const dateISO = dateSaisie || new Date().toISOString().slice(0, 10);
-  const extrait = extraitCourt(form.tournoi_description.value, 160) ||
-    'Le tournoi est ouvert ! Poules, planning et scores en direct.';
-  const imgSrc = afficheDataURI || (g.tournoi_affiche_id ? urlAffiche(g.tournoi_affiche_id, 800) : '');
-
-  zone.innerHTML =
-    '<article class="vitrine-carte">' +
-      (imgSrc
-        ? '<img src="' + echapper(imgSrc) + '" alt="' + echapper(nom) + '">'
-        : '<div class="vitrine-img-vide">Sans affiche : image par défaut du site</div>') +
-      '<div class="vitrine-carte-corps">' +
-        '<span class="vitrine-carte-date">' + echapper(formaterDateFr(dateISO)) + '</span>' +
-        '<h3>' + echapper(nom) + '</h3>' +
-        '<p>' + echapper(extrait) + '</p>' +
-        '<span class="vitrine-btn">Découvrir le tournoi</span>' +
-      '</div>' +
-    '</article>';
-
-  // — La page de l'événement (réplique de tournoi.html du site vitrine :
-  //   bandeau navy, Présentation + affiche, section sombre « Infos pratiques »).
-  //   Mêmes textes de repli que chargerArticleTournoi (main.js du site).
-  const pageZone = document.getElementById('apercu-page');
-  if (pageZone) {
-    const description = form.tournoi_description.value.trim() ||
-      'Suivez notre tournoi et encouragez nos équipes !';
-    const quand = dateSaisie ? formaterDateFr(dateSaisie) : 'À venir';
-    const ou = form.tournoi_lieu.value.trim() || 'À préciser';
-    pageZone.innerHTML =
-      '<div class="vitrine-page">' +
-        '<div class="vp-bandeau">' +
-          '<p class="vp-sous-titre">Actualité · Tournoi</p>' +
-          '<h3 class="vp-titre">' + echapper(nom) + '</h3>' +
-        '</div>' +
-        '<div class="vp-section">' +
-          '<p class="vp-sous-titre">Le tournoi</p>' +
-          '<h4 class="vp-titre-section">Présentation</h4>' +
-          '<p class="vp-texte">' + echapper(description) + '</p>' +
-          (imgSrc ? '<img class="vp-affiche" src="' + echapper(imgSrc) + '" alt="Affiche — ' + echapper(nom) + '">' : '') +
-        '</div>' +
-        '<div class="vp-sombre">' +
-          '<p class="vp-sous-titre">Pratique</p>' +
-          '<h4 class="vp-titre-section est-blanc">Infos pratiques</h4>' +
-          '<ul class="vp-points">' +
-            '<li><strong>Quand :</strong> ' + echapper(quand) + '.</li>' +
-            '<li><strong>Où :</strong> ' + echapper(ou) + '.</li>' +
-          '</ul>' +
-          '<div class="vp-boutons">' +
-            '<span class="vitrine-btn">Voir le tournoi en direct</span>' +
-            '<span class="vitrine-btn">Ajouter à mon agenda</span>' +
-            '<span class="vitrine-btn">On y va !</span>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-  }
-
-  const legende = document.getElementById('apercu-site-legende');
-  if (legende) {
-    legende.textContent = estPublie()
-      ? '🟢 Tournoi publié : cette carte et cette page sont visibles sur le site.'
-      : '⚪️ Tournoi non publié : la carte et la page apparaîtront après la publication.';
-  }
 }
 
 /** Traite un fichier d'affiche (choisi OU déposé) : redimensionne, aperçu immédiat. */
@@ -183,7 +98,6 @@ async function traiterFichierAffiche(fichier) {
     const bloc = document.getElementById('apercu-affiche');
     document.getElementById('apercu-affiche-img').src = afficheDataURI;
     bloc.hidden = false;
-    majApercuTournoi(); // la carte + la page du site montrent la nouvelle affiche
   } catch (e) {
     afficheDataURI = '';
     afficherMessage(message, "⚠️ Image illisible. Choisis un fichier image (JPG, PNG…).", 'ko');
@@ -617,7 +531,6 @@ function majPublication() {
   }
   majAccesPublic();   // l'adresse, elle, ne dépend pas de l'état : seule la NOTE change
   majVerrouPublier(); // le GESTE, lui, reste soumis aux prérequis — mais lui SEUL
-  majApercuTournoi(); // la légende de l'aperçu (publié / non publié) suit
 }
 
 /**

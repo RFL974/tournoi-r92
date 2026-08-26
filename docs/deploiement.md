@@ -320,9 +320,10 @@ Adresses (base `https://rfl974.github.io/tournoi-r92/`) :
 - public : `…/tournoi.html` · admin : `…/admin.html` · saisie : `…/saisie.html` · perfs : `…/perfs.html`
 - `index.html` redirige la racine vers `tournoi.html`.
 
-**Intégration au site vitrine [boutique-r92](https://rfl974.github.io/boutique-r92/)** (dépôt séparé) :
-quand le tournoi est publié, une carte d'actualité et une page d'article y apparaissent (elles
-interrogent le même backend).
+⛔ **Aucun lien avec le site vitrine [boutique-r92](https://rfl974.github.io/boutique-r92/)** (dépôt
+séparé) : depuis le **2026-08-26**, ce site **n'interroge plus ce backend**, et publier un tournoi
+n'y crée rien. ⚡ *(Ce paragraphe annonçait « quand le tournoi est publié, une carte d'actualité et
+une page d'article y apparaissent » : vrai jusqu'au découplage M1-PUB / PUB-4.)*
 
 > **Changer l'URL publique** (nouveau compte GitHub ou **nom de domaine**) : voir la procédure
 > complète dans [`passation.md`](passation.md) (DNS, domaine personnalisé, liens croisés à mettre à jour).

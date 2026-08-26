@@ -23,7 +23,7 @@
 /* Ordre des cartes = ordre logique de préparation (le même que le « cerveau »).
    Chaque carte réutilise un ou plusieurs blocs EXISTANTS (par leur id). */
 const ASSISTANT_ETAPES = [
-  { id: 'infos',     titre: 'Infos',        icone: '📝', blocs: ['bloc-cadre-tournoi', 'bloc-infos-tournoi', 'bloc-apercu-tournoi'] },
+  { id: 'infos',     titre: 'Infos',        icone: '📝', blocs: ['bloc-cadre-tournoi', 'bloc-infos-tournoi'] },
   { id: 'reglages',  titre: 'Réglages',     icone: '⏱️', blocs: ['reglages'] },
   /* « Inviter un club » (Phase 1) puis le Dossier complet (Phase 2) viennent AVANT les Équipes :
      les clubs qui acceptent génèrent leurs équipes automatiquement à l'envoi du dossier final
@@ -81,7 +81,7 @@ const ASSISTANT_ETAPES = [
  * en tête de page au retour en « Vue classique ». */
 const ASSISTANT_ORDRE_ORIGINE = [
   'tableau-bord', 'etat-avancement',
-  'bloc-cadre-tournoi', 'bloc-infos-tournoi', 'bloc-apercu-tournoi', 'bloc-contacts-securite',
+  'bloc-cadre-tournoi', 'bloc-infos-tournoi', 'bloc-contacts-securite',
   'bloc-sponsors-reglages', 'bloc-sponsors-liste', 'bloc-sponsors-bilan',
   'reglages', 'bloc-equipes', 'bloc-terrains', 'bloc-generation', 'bloc-apresmidi',
   'bloc-feuille-jour',

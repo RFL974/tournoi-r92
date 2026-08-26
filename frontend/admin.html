@@ -64,7 +64,7 @@
 
       <!-- Cadre du tournoi : date prévue + zone de vacances + contrôle FFR (conflits, points de
            vigilance et prescriptions). VOLONTAIREMENT séparé des « Infos du tournoi » ci-dessous :
-           ici, c'est la PLANIFICATION et la CONFORMITÉ (rien n'alimente le site vitrine). Enregistré
+           ici, c'est la PLANIFICATION et la CONFORMITÉ (rien n'y est communiqué au public). Enregistré
            via son propre bouton (onEnregistrerCadre) — sauvegarde partielle : date + zone seulement. -->
       <section class="carte" id="bloc-cadre-tournoi">
         <h2>Date &amp; conformité FFR</h2>
@@ -117,14 +117,18 @@
         </form>
       </section>
 
-      <!-- Infos du tournoi : alimentent la carte + la page d'article du site vitrine.
+      <!-- Infos du tournoi : le NOM alimente la page publique du tournoi ; nom, date, lieu,
+           description et affiche alimentent les invitations et le dossier transmis aux clubs.
+           ⛔ Plus aucun site tiers ne les lit (découplage M1-PUB / PUB-4).
            Enregistrées via « Enregistrer les infos ». (Date & zone → carte « Date & conformité FFR ».) -->
       <section class="carte" id="bloc-infos-tournoi">
-        <h2>Infos du tournoi (pour l'actualité)</h2>
+        <h2>Infos du tournoi</h2>
         <p class="note-generation">
-          Ces informations alimentent la <strong>carte</strong> et la <strong>page d'article</strong>
-          du tournoi. Clique sur <strong>« Enregistrer les infos »</strong> pour les sauvegarder —
-          tu peux les modifier à tout moment, <strong>même après publication</strong>.
+          Le <strong>nom</strong> apparaît sur la <strong>page publique</strong> du tournoi. Le nom,
+          la date, le lieu, la description et l'affiche servent aussi aux <strong>invitations</strong>
+          et au <strong>dossier</strong> transmis aux clubs.<br>
+          Clique sur <strong>« Enregistrer les infos »</strong> pour les sauvegarder. Tu peux les
+          modifier à tout moment, <strong>même après publication</strong>.
         </p>
         <form id="form-infos-tournoi">
           <label class="reglage"><span class="r-libelle">Nom du tournoi</span>
@@ -157,26 +161,6 @@
             <span class="message-form" id="message-infos-tournoi"></span>
           </div>
         </form>
-      </section>
-
-      <!-- Aperçu RÉEL de la publication : la carte d'actualité telle qu'elle apparaîtra
-           sur le site de l'association (page Actualités) quand le tournoi sera publié.
-           Réplique fidèle des styles du site vitrine ; rendue par majApercuTournoi
-           (admin.js) et mise à jour EN DIRECT pendant la saisie des infos ci-dessus.
-           En mode écrans (ordinateur), cette carte s'affiche À DROITE des infos. -->
-      <section class="carte" id="bloc-apercu-tournoi" aria-label="Aperçu de la publication sur le site">
-        <h2>Aperçu sur le site</h2>
-        <p class="note-generation">
-          Voici, tels qu'ils apparaîtront sur le <strong>site de l'association</strong> une fois
-          le tournoi <strong>publié</strong> : la <strong>carte d'actualité</strong>, puis la
-          <strong>page de l'événement</strong> (celle qui s'ouvre quand on clique la carte).
-          Les deux se mettent à jour pendant que tu tapes.
-        </p>
-        <h3 class="apercu-sous-titre">La carte (page Actualités)</h3>
-        <div id="apercu-site"></div>
-        <h3 class="apercu-sous-titre">La page de l'événement</h3>
-        <div id="apercu-page"></div>
-        <p class="vitrine-legende" id="apercu-site-legende"></p>
       </section>
 
       <!-- Contacts & sécurité : référent tournoi, poste de secours, référent sécurité.
@@ -820,6 +804,20 @@
           Indépendant de la génération des poules : prépare d'abord tout, publie quand c'est prêt.
         </p>
         <p class="publication-etat">État : <strong id="etat-publication">…</strong></p>
+
+        <!-- ⛔ CE QUE PUBLIER NE FAIT PAS — et c'est le seul endroit où le doute se pose.
+             Doctrine D-048 : « Publier ouvre une page. Publier ne parle à personne. »
+             Jusqu'au découplage M1-PUB / PUB-4 (2026-08-26), publier faisait réellement
+             apparaître une actualité sur le site d'une association tierce, sans que rien ne
+             le dise ici. Ce n'est plus le cas, et l'écran doit le dire.
+             ⭐ D-054 / ② : annoncer le tournoi ailleurs reste un geste ÉDITORIAL et MANUEL —
+             la note invite à le faire, elle ne l'automatise pas. -->
+        <p class="note-generation">
+          Publier rend le tournoi visible sur sa <strong>page publique Maxilou</strong>, à l'adresse
+          ci-dessous. Maxilou <strong>ne crée aucune annonce automatiquement</strong> sur le site
+          d'une association ou sur un autre site. Si tu veux annoncer le tournoi ailleurs,
+          <strong>communique cette adresse toi-même</strong>.
+        </p>
 
         <!-- Accès à la page publique DU TOURNOI actuellement géré. Placé AVANT le bouton, et ce
              n'est pas cosmétique : l'adresse ne dépend PAS du bouton, alors que le bouton est un

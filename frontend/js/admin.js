@@ -438,8 +438,6 @@ async function initAdmin() {
   // Carte « Date & conformité FFR » (date + zone + contrôle FFR) : formulaire dédié, bouton dédié.
   document.getElementById('form-cadre-tournoi').addEventListener('submit', function (e) { e.preventDefault(); });
   document.getElementById('bouton-enregistrer-cadre').addEventListener('click', onEnregistrerCadre);
-  // La date apparaît sur l'aperçu du site → on le redessine quand elle change (frappe/sélection).
-  document.getElementById('form-cadre-tournoi').addEventListener('input', majApercuTournoi);
   // « Trouver une date compatible » : ouvre le panneau, lance la recherche, applique un jour cliqué.
   document.getElementById('bouton-trouver-date').addEventListener('click', onToggleTrouverDate);
   document.getElementById('bouton-chercher-dates').addEventListener('click', onChercherDatesCompatibles);
@@ -449,8 +447,6 @@ async function initAdmin() {
   // (onEnregistrerInfos) — et aussi lors de la publication (onPublier), par sécurité.
   // On empêche juste la soumission du formulaire (touche Entrée) qui rechargerait la page.
   document.getElementById('form-infos-tournoi').addEventListener('submit', function (e) { e.preventDefault(); });
-  // Aperçu « carte du site » : se redessine À CHAQUE frappe dans les infos.
-  document.getElementById('form-infos-tournoi').addEventListener('input', majApercuTournoi);
   // Bouton dédié : enregistre les infos (nom/date/lieu/description + affiche) à tout moment,
   // indépendamment de la publication.
   document.getElementById('bouton-enregistrer-infos').addEventListener('click', onEnregistrerInfos);

@@ -288,8 +288,9 @@ Le principe ci-dessous est celui du **classement croisé**, le format par défau
 - **N'efface pas** les matchs du matin.
 
 ### 1.7 Infos du tournoi + affiche
-Alimentent la **carte d'actualité** et la **page d'article** du site vitrine (boutique-r92) : nom,
-date, lieu, description, et une **affiche** — dépose l'image dans la **zone de glisser-déposer**
+Le **nom** apparaît sur la **page publique** du tournoi. Le nom, la date, le lieu, la description et
+l'**affiche** servent aussi aux **invitations** envoyées aux clubs et à leur **dossier** — dépose
+l'image dans la **zone de glisser-déposer**
 (ou clique dessus pour choisir un fichier) ; elle est redimensionnée puis stockée dans Google Drive.
 On les sauvegarde avec le bouton **Enregistrer les infos**. Elles sont **modifiables à tout moment,
 même après publication** (pour corriger une faute de frappe sans dépublier). Par sécurité, elles
@@ -298,13 +299,16 @@ sont aussi enregistrées lors de la publication.
 Un bouton **Retirer l'affiche** (sous l'aperçu) permet d'**annuler un choix pas encore enregistré**,
 ou de **supprimer l'affiche déjà enregistrée** (le fichier Drive est mis à la corbeille).
 
-**🪟 Aperçu sur le site.** À côté du formulaire (à droite sur ordinateur), une carte **« Aperçu sur
-le site »** montre **exactement ce qui apparaîtra** sur le site de l'association : la **carte
-d'actualité** (mêmes styles, extrait limité à 160 caractères, format de date, textes par défaut si
-un champ est vide, affiche recadrée par le haut) puis, dessous, la **page de l'événement** (celle
-qui s'ouvre au clic sur la carte : bandeau navy, Présentation + affiche, Infos pratiques Quand/Où,
-boutons). Les deux se mettent à jour **pendant que tu tapes**, avant même d'enregistrer, et la
-légende rappelle si le tournoi est **publié** ou non.
+⚡ **La carte « Aperçu sur le site » a été SUPPRIMÉE le 2026-08-26.** Elle montrait la carte
+d'actualité et la page d'événement telles qu'elles seraient apparues sur le site de l'association —
+⛔ **ces deux pages n'existent plus** depuis que Maxilou et ce site ont été séparés.
+
+⭐ **Ce qui la remplace, et c'est mieux : on ouvre la vraie page, on ne la copie pas.** Le bouton
+**« Ouvrir la page »** de la carte *« Publier le tournoi »* affiche la **véritable** page publique du
+tournoi, dans un nouvel onglet, publiée ou non. Un aperçu recopié finit toujours par mentir le jour
+où la vraie page change ; celui-là ne peut pas.
+
+*(L'aperçu de l'**affiche**, lui, reste : c'est l'image elle-même, sous la zone de dépôt.)*
 
 ### 1.8 Publier le tournoi
 Rend le tournoi **visible du public**. Tant qu'il n'est pas publié, les visiteurs voient un écran

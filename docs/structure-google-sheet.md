@@ -55,10 +55,10 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 | parametre | valeur (exemple) | Signification |
 |---|---|---|
 | `tournoi_id` | `2026-11-11 21:37:00` | Identifiant du tournoi, posé à chaque génération (clé de l'onglet `Historique`). ⚠️ **Ne PAS s'en servir comme identifiant d'une ÉDITION** — voir l'avertissement sous ce tableau |
-| `tournoi_publie` | `oui` | `oui` = la page publique est visible ; sinon écran « à venir ». Piloté par le bouton **« Publier le tournoi »** de l'admin. Ce témoin commande AUSSI la carte « Tournoi » des actualités du site vitrine : il doit rester dans les listes blanches `live` **et** `invitation` de `CONFIG_PUBLIQUE_VUES` (Code.gs), sans quoi la vitrine conclut « non publié » en silence |
-| `tournoi_nom` | `Challenge Marc Chevalier` | Nom affiché sur la carte + la page d'article du site vitrine |
-| `tournoi_date` | `2026-11-11` | Date du tournoi (carte, article, agenda .ics) |
-| `tournoi_lieu` | `Stade Paul Langevin` | Lieu (article + itinéraire + agenda .ics) |
+| `tournoi_publie` | `oui` | `oui` = la page publique est visible ; sinon écran « à venir ». Piloté par le bouton **« Publier le tournoi »** de l'admin. ⭐ Il sort par la vue **`live`** de `CONFIG_PUBLIQUE_VUES` (Code.gs), et **par elle seule** : c'est celle que lit la page publique du tournoi. ⛔ **Ne pas le remettre dans la vue `invitation`** — il en a été retiré par le découplage M1-PUB / PUB-4 (doctrine **D-048** : publier ne parle à personne). ⚡ *(Cette case disait « il doit rester dans les listes blanches `live` ET `invitation`, sans quoi la vitrine conclut non publié en silence » : vrai jusqu'au 2026-08-26.)* |
+| `tournoi_nom` | `Challenge Marc Chevalier` | Nom du tournoi — affiché sur la **page publique**, dans les **invitations** et le **dossier club** |
+| `tournoi_date` | `2026-11-11` | Date du tournoi (invitation, dossier club, agenda .ics) |
+| `tournoi_lieu` | `Stade Paul Langevin` | Lieu (invitation, dossier club, itinéraire, agenda .ics) |
 | `tournoi_adresse` | `11 av. Paul Langevin, 92350…` | Adresse postale complète du lieu (dossier club) — carte « Infos du tournoi » de l'admin |
 | `tournoi_description` | `Le Challenge…` | Description (carte + article) |
 | `tournoi_affiche_id` | `1-3DZBDd…` | Identifiant du fichier **Google Drive** de l'affiche (affichée via `lh3.googleusercontent.com/d/{id}`) |

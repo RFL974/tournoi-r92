@@ -13,7 +13,7 @@
  *  admin.js dans admin.html :
  *   - commun.js : echapper, svgIcone, comparerCategorie, afficherMessage, avecBoutonOccupe…
  *   - api.js    : apiGet, apiPost, ecrireAdmin (défini dans admin.js)
- *   - admin.js  : configCourante, clubsInvitesCourants, majDossier, majApercuTournoi,
+ *   - admin.js  : configCourante, clubsInvitesCourants, majDossier,
  *                 rechargerEtRendre, dialog*, redimensionnerImage, brancherZoneImage…
  * ============================================================================
  */

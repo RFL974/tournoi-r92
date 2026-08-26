@@ -12,6 +12,36 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### L'administration ne promet plus une annonce qui n'existe plus — 2026-08-26
+
+**Ce qui n'allait pas.** L'écran **« Infos du tournoi »** affichait une carte **« Aperçu sur le
+site »** annonçant, en toutes lettres : *« Voici, tels qu'ils apparaîtront sur le site de
+l'association une fois le tournoi publié : la carte d'actualité, puis la page de l'événement. »*
+⛔ **Ces deux pages n'existent plus** depuis que Maxilou et le site de l'association ont été séparés.
+
+**Pourquoi c'était gênant.** C'était le **seul endroit du produit** qui promettait encore quelque
+chose qui n'arriverait pas — et il se trouvait sous les yeux de l'organisateur **au moment exact où
+il clique « Publier »**. Un écran qui affirme *« voici ce qui va apparaître »* n'invite pas à
+vérifier.
+
+**Ce qui change.**
+
+- L'aperçu est **supprimé**. ⭐ Le principe retenu : **on ouvre la vraie page, on ne la copie pas.**
+  Le bouton **« Ouvrir la page »**, déjà présent dans la carte « Publier le tournoi », montre la
+  **véritable** page publique — publiée ou non. Une copie finit toujours par mentir le jour où
+  l'original change ; celle-là ne le pourra plus.
+- La carte **« Infos du tournoi »** dit maintenant où vont réellement ces informations : le **nom**
+  sur la page publique du tournoi ; le nom, la date, le lieu, la description et l'affiche dans les
+  **invitations** et le **dossier** transmis aux clubs.
+- La carte **« Publier le tournoi »** porte une note nouvelle, à l'endroit où le doute se pose :
+  publier rend le tournoi visible **sur sa page publique**, à l'adresse indiquée ; Maxilou **ne crée
+  aucune annonce automatiquement** ailleurs ; pour annoncer le tournoi sur un autre site, il faut
+  communiquer cette adresse soi-même.
+
+> ⛔ **Rien d'autre ne bouge.** Le bouton « Publier », le bouton « Masquer » — qui n'est jamais
+> grisé — l'adresse de la page publique, « Copier » et « Ouvrir » sont **inchangés**. L'aperçu de
+> l'**affiche**, lui, reste : c'est l'image elle-même. ⭐ Aucune donnée n'est touchée.
+
 ### Publier un tournoi ne touche plus au site de l'association — 2026-08-26
 
 > ✅ **Constaté en conditions réelles, des deux côtés** — le site de l'association a été publié avec
