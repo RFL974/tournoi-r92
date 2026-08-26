@@ -9208,3 +9208,116 @@ frontend-assistant-verrou    R-098/B5 41/41 OK      git diff --check  propre
 > appartient à Romain**, et elle touche le repère *« données à recréer »* — donc `ETAT.md`.
 >
 > ⛔ **PUB-3, PUB-4, PUB-5 et B2-1 restent NON DÉMARRÉS.**
+
+---
+
+## SESSION 25 — 🔻 **UNE CONTRADICTION DE SÉQUENCE : CLORE PUB-2 EXIGEAIT DE CAUSER CE QUE PUB-4 DOIT SUPPRIMER** *(2026-08-26, suite)*
+
+> 🎯 **La leçon de cette session, et elle ne porte pas sur du code :** un chantier peut être
+> **cohérent lot par lot** et **impossible dans son ensemble**. ⭐ **Ce n'est pas un défaut de
+> rédaction : c'est un défaut que seule la lecture TRANSVERSE révèle** — et c'est Romain qui l'a vu.
+
+⛔ **Lot strictement documentaire : aucun code, aucune donnée, aucune configuration, aucun clic sur
+« Publier ».**
+
+### 25.1 — La boucle, telle qu'elle a été relevée
+
+| | |
+|---|---|
+| **PUB-2** | ne se clôt qu'en vérifiant **« Masquer »** *(condition 5 de R-098)* |
+| **« Masquer »** | 🔬 n'existe à l'écran **que si le tournoi est PUBLIÉ** *(`estPublie()`)* ⇒ le prouver **exige de publier** |
+| **Publier** | ⛔ atteint **aujourd'hui** le site d'une association tierce *(**R-097**)* |
+| **PUB-4** | est le lot qui **supprime** ce couplage — mais il dépend de **PUB-3**, qui dépend de **PUB-2** |
+
+➡️ **Pour clore PUB-2, il fallait causer le tort que PUB-4 doit supprimer.**
+
+### 25.2 — L'audit : trois faits, tous vérifiés
+
+**① 🔬 Les deux sites interrogent le MÊME serveur** *(CERTAIN — code)*
+
+Établi par **comparaison d'empreintes**, ⛔ **sans recopier d'adresse ni de jeton** *(§8 quater)* :
+
+```
+VITRINE  (boutique-r92 assets/js/main.js:333)   c8c92c4eefbea1098f40603ceedec04c
+MAXILOU  (frontend/js/config.js)                c8c92c4eefbea1098f40603ceedec04c
+```
+
+⭐ **Identiques.** La vitrine lit **le classeur connecté à Maxilou**, pas *« un »* classeur.
+🔬 Et le dépôt vitrine est **toujours sur `164bb8e`** — il n'a pas bougé depuis PUB-1.
+
+**② 🔴 Le jeu de données serait FICTIF** *(CERTAIN — code)*
+
+Publier ferait apparaître, **en tête des actualités d'une association réelle**, l'annonce d'**un
+tournoi qui n'existe pas** — nom, date, lieu, affiche. ⭐ **Ce n'est plus une entorse de doctrine :
+c'est une fausse information sur le site d'un tiers**, et **M1 tout entier existe pour que Maxilou
+cesse de s'attribuer cette association.**
+
+**③ ⭐ La preuve « avant » était obtenable SANS publier — et elle l'a été** *(CERTAIN — **production**)*
+
+🔬 **Constaté par Romain**, navigation privée, sur `rfl974.github.io/boutique-r92/tournoi.html` :
+
+> *« Aucun tournoi en cours pour le moment. Reviens quand un tournoi sera annoncé ! »*
+
+⭐ **Cette seule phrase prouve trois choses** : la vitrine **interroge réellement** ce serveur, elle
+**lit réellement** le témoin, elle **réagit réellement** à sa valeur. ⛔ **Sans rien publier.**
+
+> 🎯 **C'est ce constat qui rend la décision possible.** Sans lui, reporter la preuve aurait laissé
+> le couplage **non prouvé en production**. Avec lui, seule la moitié `oui` reste non observée — et
+> le code des deux dépôts en fait déjà une **certitude**.
+
+### 25.3 — 🔴 Ce que l'audit a trouvé EN PLUS, et que personne n'avait demandé
+
+**PUB-3 portait la même contradiction.** Son livrable ④ exigeait *« publier → observer · masquer →
+observer, de part et d'autre »* — ⛔ donc **de publier pendant que le couplage existe**, alors que
+PUB-3 est déclaré **📄 documentaire, aucune modification fonctionnelle**.
+
+⭐ **Sans cette correction, la contradiction se serait simplement déplacée d'un lot** — et se serait
+présentée à nouveau, identique, au démarrage de PUB-3.
+
+### 25.4 — La nature exacte de l'effet externe, ni surestimée ni minimisée
+
+| ✅ Vrai | ⛔ Faux |
+|---|---|
+| La vitrine **LIT** le témoin à chaque chargement *(🔬 `main.js:797-799`)* | *« Publier ÉCRIT sur la vitrine »* — ⛔ elle ne **stocke rien** |
+| L'effet dure **le temps où le témoin vaut `oui`** | *« C'est permanent »*, *« c'est irréversible »* — ⛔ **non** |
+| 🔬 **Deux pages** portent un déclencheur : `actualites.html` et `tournoi.html` | *« Les 20 pages réagissent »* — ⛔ elles chargent `main.js` **sans déclencheur** |
+| 🔬 **Deux lignes seulement** écrivent le témoin : `Code.gs:7550` et `:7658` | *« Recréer des données peut publier »* — ⛔ **non** : ni catégories, ni équipes, ni génération |
+
+⭐ **Conséquence pratique** : **recréer le jeu fictif minimal est SANS risque externe.** Le danger
+tient **au seul clic sur « Publier »**.
+
+### 25.5 — La décision : D-052
+
+> **Une preuve dont l'OBTENTION causerait le tort que le chantier doit supprimer n'est ni
+> abandonnée, ni réputée acquise : elle est DÉPLACÉE au premier moment où elle devient inoffensive
+> — et elle reste TRACÉE, nommément, jusqu'à ce qu'elle soit produite.**
+
+⭐ **Ce n'est pas une exception fabriquée** : **D-047** avait déjà sorti la lecture des deux URL de
+M1-A comme **reliquat externe non bloquant**. ⭐ **D-052 généralise ce geste et lui ajoute ce qui
+manquait : le filet de clôture.**
+
+⚠️ **La différence entre les deux compte** : le reliquat de D-047 est bloqué par **l'environnement**
+*(personne ne peut le lever d'ici)*. Celui-ci est bloqué par **une conséquence** — nous *pouvons*
+le produire, ⛔ **nous choisissons de ne pas le faire tant qu'il est nuisible.** ⭐ **C'est un choix,
+et c'est pour cela qu'il est écrit.**
+
+### 25.6 — Ce qui a été écrit
+
+| Document | Ce qui y entre |
+|---|---|
+| `DECISIONS.md` | 🆕 **D-052** — le principe, les trois obligations, et ce qu'il **ne** permet **pas** |
+| `PLAN.md` — **PUB-2** | 🆕 Un **critère de clôture nommé** : ce qui reste dedans, ce qui est reporté, **contrôle par contrôle** |
+| `PLAN.md` — **PUB-3** | Livrable ④ **reformulé** *(il écrit, il ne produit pas)* · 🆕 l'encadré de la **preuve « avant » déjà acquise** |
+| `PLAN.md` — **PUB-4** | 🆕 **DEUX obligations distinctes** : ① le découplage · ② les **preuves héritées de PUB-2**, nommées une par une |
+| `PLAN.md` — **M1-PUB** | 🆕 **Condition ④** : *« aucune preuve reportée ne reste ouverte »*, avec **le tableau des trois preuves** — ⭐ **la seule adresse où l'on vérifie qu'il ne reste rien** |
+| `RISQUES.md` — **R-098** | Condition 5 **reportée** *(⛔ toujours comptée dans les cinq)* · l'encadré expliquant que **4b se valide sans cliquer** |
+| `RISQUES.md` — **R-097** | 🆕 Le recontrôle du 2026-08-26 : **empreintes identiques**, `164bb8e`, ⭐ **la moitié `non` prouvée EN PRODUCTION** · la nature exacte de l'effet |
+| `ETAT.md` | Nouveau bloc de tête *(l'ancien devient un rappel daté, ⛔ non réécrit)* |
+
+### 25.7 — Prochaine session recommandée
+
+⏭️ **Recréer le jeu fictif minimal, puis valider la condition 4b — ⛔ SANS cliquer sur « Publier ».**
+
+> ⛔ **La recréation des données n'est PAS autorisée à ce stade** : elle touche le repère *« DONNÉES
+> DE TOURNOI À RECRÉER »*, qui devra alors dire **par quoi** il a été remplacé.
+> ⛔ **PUB-3 ne démarre pas**, ⛔ **B2-1 non plus.**

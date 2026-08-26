@@ -3495,3 +3495,83 @@ historique**.
 
 ⛔ **Les phases finales** restent conservées via `Historique` étendu *(`vainqueur`, `tour`,
 `sous_tableau`)* — ⛔ **sans inventer un « classement général » qui n'existe pas aujourd'hui.**
+
+---
+
+### D-052 — Une preuve dangereuse n'est pas supprimée : elle est déplacée au premier moment où elle devient inoffensive, et reste tracée jusque-là
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-26 |
+| **Session** | Chantier **M1-PUB** — audit de la contradiction de séquence entre PUB-2, PUB-3 et PUB-4 |
+| **Statut** | ✅ **VALIDÉE — décision de Romain**, après audit et avant toute écriture |
+| **Décidée par** | Romain |
+| **Couvre** | `PLAN.md` **§15.3 bis** *(PUB-2, PUB-3, PUB-4, critère de clôture M1-PUB)* · `RISQUES.md` **R-097, R-098** |
+| **Doctrine de référence** | **D-048** — *« Publier ouvre une page. Publier ne parle à personne. »* |
+
+**Le problème posé, et il n'était pas théorique**
+
+> Quatre exigences du chantier se contredisaient **en boucle** :
+>
+> | | |
+> |---|---|
+> | **PUB-2** | ne se clôt que si **« Masquer »** est vérifié *(condition 5 de R-098)* |
+> | **« Masquer »** | 🔬 n'existe à l'écran que si le tournoi est **PUBLIÉ** *(`admin-infos-publication.js`, `estPublie()`)* — le prouver **exige donc de publier** |
+> | **Publier aujourd'hui** | ⛔ atteint **le site d'une association tierce** — c'est **R-097**, et c'est **précisément ce que M1-PUB existe pour supprimer** |
+> | **PUB-3** | ne démarre qu'**après la clôture de PUB-2** |
+>
+> 🎯 **La boucle, en une phrase** : *pour clore PUB-2 il fallait causer le tort que PUB-4 doit
+> supprimer — et PUB-4 ne pouvait pas venir avant, puisqu'il dépend de PUB-3, qui dépend de PUB-2.*
+
+**Ce qui a tranché — trois constats, tous vérifiés le 2026-08-26**
+
+| # | Constat | Nature |
+|---|---|---|
+| ① | 🔬 **Les deux sites interrogent le MÊME déploiement Apps Script**, donc **le même classeur** — établi par **comparaison d'empreintes**, ⛔ sans recopier d'adresse. Publier depuis le classeur de test atteindrait **réellement** la vitrine | **CERTAIN** *(code)* |
+| ② | 🔬 **Le jeu de données serait FICTIF.** Publier ferait donc apparaître, sur le site public d'une association réelle, **l'annonce d'un tournoi qui n'existe pas** — nom, date, lieu, affiche, **en tête de ses actualités**. ⭐ **Ce n'est plus une entorse de doctrine, c'est une fausse information chez un tiers** | **CERTAIN** *(code)* |
+| ③ | ⭐ **La preuve « avant » était obtenable SANS publier**, et elle l'a été : `tournoi.html` de la vitrine affiche, **en production**, *« Aucun tournoi en cours pour le moment. »* | **CERTAIN** *(production, constaté par Romain)* |
+
+> ⭐ **Le constat ③ est ce qui rend la décision possible**, et il mérite d'être compris : cette
+> seule phrase, lue en ligne, prouve **trois choses à la fois** — que la vitrine **interroge
+> réellement** ce serveur, qu'elle **lit réellement** le témoin, et qu'elle **réagit réellement à
+> sa valeur**. ⛔ **Sans jamais rien publier.**
+>
+> Il ne reste non prouvé **en production** que la moitié `oui`, dont le code des deux dépôts fait
+> déjà une **certitude**. 🎯 **Produire cette moitié-là coûterait exactement le tort que le
+> chantier existe pour supprimer. C'est un prix que la preuve ne vaut pas.**
+
+**Ce qui est décidé**
+
+> **Une preuve dont l'OBTENTION causerait le tort que le chantier doit supprimer n'est ni
+> abandonnée, ni réputée acquise : elle est DÉPLACÉE au premier moment de la trajectoire où elle
+> devient inoffensive — et elle reste TRACÉE, nommément, jusqu'à ce qu'elle soit produite.**
+
+Trois obligations en découlent, et **aucune n'est facultative** :
+
+| | |
+|---|---|
+| ⛔ **Ne jamais cocher** | Une preuve déplacée **n'est pas validée**. Elle reste **comptée** dans le total de son critère — R-098 garde **cinq** conditions, pas quatre |
+| ⛔ **Ne jamais effacer** | Elle est **nommée** à son point d'arrivée, une par une. ⛔ *« les preuves restantes »* ne suffit pas : ce qui n'est pas nommé se perd |
+| ⭐ **Un filet de fin de chantier** | Le critère de clôture du chantier porte : **« aucune preuve reportée ne reste ouverte »**. ⭐ **Sans lui, un report devient un oubli** — et personne ne s'en aperçoit, puisque chaque lot intermédiaire, lui, aura été déclaré clos |
+
+**⭐ Ce n'est pas une exception fabriquée pour l'occasion**
+
+> Le dépôt porte **déjà** ce mécanisme : **D-047** a sorti la lecture des deux URL de M1-A en la
+> qualifiant de **reliquat externe non bloquant**, tracé au `PLAN.md` §15.8. ⭐ **D-052 généralise
+> ce geste et lui ajoute ce qui manquait à D-047 : le filet de clôture.**
+>
+> ⚠️ **La différence entre les deux mérite d'être notée** : le reliquat de D-047 est bloqué par
+> **l'environnement** *(un blocage réseau que personne ne peut lever depuis ici)*. Celui-ci est
+> bloqué par **une conséquence** — nous *pouvons* le produire, ⛔ **nous choisissons de ne pas le
+> faire tant qu'il est nuisible.** ⭐ **C'est un choix, et c'est pour cela qu'il doit être écrit.**
+
+**Ce que la décision ne dit PAS**
+
+- ❌ **Pas** que toute preuve gênante peut être repoussée : le déclencheur est étroit — **l'obtention
+  de la preuve cause le tort que le chantier corrige**. ⛔ *« C'est long »*, *« c'est compliqué »*,
+  *« on verra plus tard »* ne sont **pas** des motifs ;
+- ❌ **Pas** que le lot d'accueil peut être clos sans elle — **c'est l'inverse** : il ne peut PAS ;
+- ❌ **Pas** de report en cascade : une preuve se déplace **une fois**, vers un point **nommé**. La
+  redéplacer exige une **nouvelle décision**, ⛔ pas une reconduction tacite ;
+- ✅ **Seulement ceci** : *cette preuve, l'obtenir maintenant causerait-il ce que je suis en train de
+  corriger — et si oui, où devient-elle inoffensive, et qui garantit qu'elle sera produite là ?*

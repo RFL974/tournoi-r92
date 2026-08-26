@@ -40,10 +40,35 @@
 > ⚠️ **Conséquence inchangée** : tout contrôle exigeant un planning, un classement ou des scores
 > reste **impossible en l'état** — dont les conditions 4 et 5 de **R-098**.
 
-**Dernière mise à jour** : 2026-08-26 — 🔴 **LA VALIDATION RÉELLE DE PUB-2 A TROUVÉ UN SECOND
+**Dernière mise à jour** : 2026-08-26 *(suite)* — 🔻 **UNE CONTRADICTION DE SÉQUENCE EST TRANCHÉE :
+LA PREUVE DE « MASQUER » PASSE DE PUB-2 À PUB-4.** Décision **D-052**. ⛔ **Lot strictement
+documentaire — aucun code, aucune donnée, aucune configuration.**
+
+## 🔻 M1-PUB — LA CONTRADICTION DE SÉQUENCE, ET COMMENT ELLE EST TRANCHÉE *(2026-08-26, D-052)*
+
+| | |
+|---|---|
+| 🔴 **La boucle, telle qu'elle était** | **PUB-2** ne se clôt qu'en vérifiant **« Masquer »** → 🔬 ce bouton **n'existe que si le tournoi est PUBLIÉ** → **publier atteint aujourd'hui le site d'une association tierce** *(**R-097**)* → **c'est précisément ce que PUB-4 doit supprimer** → mais **PUB-4 dépend de PUB-3, qui dépend de PUB-2**. 🎯 **PUB-2 ne pouvait se clore qu'en causant le tort que le chantier doit corriger** |
+| 🔬 **Le fait qui tranche ①** | **Les deux sites interrogent le MÊME déploiement**, donc **le même classeur** — établi par **comparaison d'empreintes**, ⛔ sans recopier d'adresse. Le dépôt vitrine est **toujours sur `164bb8e`** |
+| 🔴 **Le fait qui tranche ②** | Le jeu de données serait **FICTIF** : publier ferait apparaître, en tête des actualités d'une association **réelle**, **l'annonce d'un tournoi qui n'existe pas**. ⭐ **Ce n'est plus une entorse de doctrine, c'est une fausse information chez un tiers** |
+| ⭐ **Le fait qui tranche ③** | 🔬 **La preuve « avant » était obtenable SANS publier — et elle l'a été, EN PRODUCTION** : `tournoi.html` de la vitrine affiche *« Aucun tournoi en cours pour le moment. »* ⭐ **Une seule phrase prouve que la vitrine interroge ce serveur, lit le témoin, et réagit à sa valeur** |
+| 🆕 **D-052** | *« Une preuve dangereuse n'est pas supprimée : elle est **déplacée** au premier moment où elle devient inoffensive, et reste **tracée** jusque-là. »* ⛔ **Ni cochée, ni effacée, et toujours comptée** |
+| 🔻 **Ce qui est reporté de PUB-2 vers PUB-4** | **R-098 · condition 5** *(« Masquer » jamais grisé)* · **contrôle §21.10 ter 6** *(Publier → adresse identique)* · **contrôle §21.10 ter 8** *(Masquer → même adresse)*. ⭐ **R-098 garde CINQ conditions** |
+| ✅ **Ce qui reste dans PUB-2** | conditions **1, 2, 3, 4a** *(acquises)* + **4b** — ⭐ **validable PAR OBSERVATION, sans jamais cliquer** : 🔬 `majVerrouPublier` ne fait que `bouton.disabled = …` |
+| ⭐ **Le filet** | 🆕 `PLAN.md`, critère de clôture de **M1-PUB, condition ④** — ⛔ **le chantier ne peut être clos tant qu'une preuve reportée reste ouverte.** ⭐ **Sans lui, un report devient un oubli invisible** : chaque lot aura été déclaré clos dans les formes |
+| ⚡ **PUB-3 portait la MÊME contradiction** | Son livrable ④ exigeait *« publier → observer »* **avant** la coupure — ⛔ incompatible avec sa nature **📄 documentaire**. **Reformulé** : PUB-3 **écrit** les preuves, ⛔ **il n'en produit AUCUNE**, et sa preuve « avant » est celle du constat ③ |
+| ✅ **Recréer le jeu fictif est SANS effet externe** | 🔬 **Vérifié** : seules **deux** lignes de `backend/Code.gs` écrivent `tournoi_publie` — `publierTournoi` *(:7550)* et le reset *(:7658 → `non`)*. ⛔ **Ni les catégories, ni les équipes, ni la génération n'y touchent.** Le risque tient **au seul clic sur « Publier »** |
+| ⏭️ **Trajectoire validée** | ① recréer le jeu fictif minimal → ② valider **4b sans cliquer** → ③ **clôturer PUB-2** *(preuves reportées et tracées)* → ④ **PUB-3** → ⑤ **PUB-4** *(découplage)* → ⑥ publier/masquer en réel → ⑦ fermer la **condition 5**, les contrôles **6** et **8**, et **R-097** |
+| 🔴 **Le repère « données à recréer »** | **TOUJOURS ACTIF** — ⛔ **aucune donnée recréée par ce lot** |
+
+---
+
+*Rappel de la mise à jour précédente — 2026-08-26* : 🔴 **LA VALIDATION RÉELLE DE PUB-2 A TROUVÉ UN SECOND
 DÉFAUT SUR TÉLÉPHONE — IL EST CORRIGÉ, PUBLIÉ ET REVALIDÉ.** `origin/main` = **`8b66456`**, run
 Pages **#228** `success`. **R-098 passe de 1 à 4 conditions de fermeture sur 5.**
 ⛔ **PUB-2 N'EST PAS CLOS · M1-PUB N'EST PAS TERMINÉ · B2-1 N'EST PAS DÉMARRÉ.**
+⚡ *(La condition **5** de R-098 a été **REPORTÉE à PUB-4** le jour même — voir le bloc de tête.
+⛔ Le compte « 4 sur 5 » reste exact : une preuve reportée n'est pas une preuve validée.)*
 
 ## 🔴 M1-PUB / PUB-2 — R-098 / B5 : LE DÉFAUT TROUVÉ PAR UN DOIGT SUR UN VRAI TÉLÉPHONE *(2026-08-26)*
 

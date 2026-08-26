@@ -30,6 +30,17 @@
 ⛔ **Aucun problème nouveau inscrit** : le défaut B5 est une **manifestation de R-098 lui-même**
 *(sa condition 3)*, ⛔ **pas un risque distinct** — la fiche R-098 le porte en entier.
 
+**⚡ COMPLÉMENT DU MÊME JOUR — audit de séquence, et report de la condition 5** *(**D-052**)*
+
+| Réf | Ce qui bouge | Ce qui l'établit |
+|---|---|---|
+| **R-098** | 🔻 Sa **condition 5** *(« Masquer »)* est **REPORTÉE À PUB-4** — ⛔ **ni supprimée, ni réputée acquise, et toujours comptée dans les cinq** | 🔬 Le bouton *« Masquer »* n'existe que si le tournoi est **publié** ⇒ le prouver **exige de publier** ⇒ ⛔ cela atteint **aujourd'hui** un site tiers *(R-097)*, avec un jeu **fictif** |
+| **R-097** | ⚡ **Sa qualification progresse : la moitié `non` du couplage est désormais prouvée EN PRODUCTION** — ⛔ le risque reste **IDENTIFIÉ, NON CORRIGÉ** | 🔬 Empreintes de déploiement **identiques** entre les deux sites · vitrine toujours sur `164bb8e` · ⭐ **la page `tournoi.html` de la vitrine affiche « Aucun tournoi en cours »**, constaté en ligne par Romain |
+
+⭐ **Le filet qui empêche ce report de devenir un oubli** : `PLAN.md`, critère de clôture de
+**M1-PUB, condition ④** — ⛔ **le chantier ne peut être clos tant qu'une preuve reportée reste
+ouverte.** C'est la **seule adresse** où l'on vérifie qu'il ne reste rien.
+
 ---
 
 *Rappel de la mise à jour précédente* — 2026-08-25 *(chantier **M1-B2**, micro-lot **B2-0** — clôture)* —
@@ -712,6 +723,25 @@ D-030** (tournoi suspendu / annulé).
 |---|---|
 | Run **#226** *(sur la PR **#192**)* | `verifier` **success** · `deploy` **skipped** |
 | Run **#227** *(sur `main`)* | `verifier` **success** · `deploy` **success** |
+
+> ⚡ **ADDENDUM DATÉ — 2026-08-26.** ⛔ **Le relevé ci-dessus n'est PAS réécrit : il était exact à sa
+> date, et un relevé daté a le droit de le rester** *(`CLAUDE.md` §8 quater et §8 septies)*. Depuis,
+> **un quatrième garde-fou est entré** et **le compte des mutations a changé** :
+>
+> | Garde-fou | Relevé le **2026-08-26** |
+> |---|---|
+> | `tests/frontend-reinitialisation.test.js` | ✅ **48/48** *(inchangé)* |
+> | `tests/frontend-autorisation-sync.test.js` | ✅ **97/97** *(inchangé)* |
+> | 🆕 `tests/frontend-assistant-verrou.test.js` | ✅ **41/41** — le verrou du parcours guidé *(**R-098 / B5**)* |
+> | `tests/mutations-frontend.test.js` | ✅ **45/45** — ⚡ **était `40/40`**, +5 mutations *(A-1 → A-5)* |
+> | Run **#228** *(sur `main`, `8b66456`)* | `verifier` **success** · `deploy` **success** |
+>
+> 🎯 **Pourquoi cet addendum est signalé, et pas glissé en silence.** Ce tableau est une **recopie**
+> de valeurs dont la source est ailleurs — exactement le mécanisme que **§8 quater** décrit comme
+> *« celui qui a produit le plus d'erreurs de ce projet »*. ⭐ **Le `40/40` est devenu faux le
+> 2026-08-26 au matin, et le lot qui l'a rendu faux ne l'a pas vu** : il avait pourtant corrigé
+> `README.md` et `docs/deploiement.md` au même titre. ⛔ **La liste des documents à ouvrir avait été
+> établie sur les documents ACTIFS — et le registre n'en fait pas partie.**
 
 > ⛔ **`TESTÉ` NE SIGNIFIE PAS « tout le frontend est couvert ».** La couverture reste **ciblée** :
 > elle porte sur les comportements de la réinitialisation et de la synchronisation de la demande
@@ -1485,6 +1515,62 @@ dépôts**, ⛔ **pas ce qui est réellement servi en ligne** *(`CLAUDE.md` §13
 comportement réel — publier, observer la vitrine, masquer, observer à nouveau — appartient à
 **PUB-3** *(avant coupure)* et **PUB-4** *(après coupure)*.
 
+---
+
+**⚡ MISE À JOUR DU 2026-08-26 — le couplage est RECONTRÔLÉ, et la preuve « avant » est ACQUISE**
+
+> ⭐ **Deux constats neufs, et le second change la trajectoire du chantier** *(**D-052**)*.
+
+**① 🔬 LES DEUX SITES INTERROGENT LE MÊME SERVEUR — donc le même classeur** *(CERTAIN, code)*
+
+Établi par **comparaison d'empreintes**, ⛔ **sans recopier d'adresse ni de jeton** *(`CLAUDE.md`
+§8 quater)* :
+
+```
+empreinte du déploiement visé par la VITRINE  (boutique-r92 assets/js/main.js:333)  c8c92c4e…
+empreinte du déploiement visé par MAXILOU     (frontend/js/config.js)               c8c92c4e…
+```
+
+⭐ **Identiques.** La vitrine ne lit pas *« un »* classeur : elle lit **celui qui est connecté à
+Maxilou**. ⛔ **Publier depuis le classeur de test atteindrait donc réellement le site de
+l'association.**
+
+🔬 **Et le dépôt vitrine n'a pas bougé** : `RFL974/boutique-r92` est **toujours sur `164bb8e`**, le
+commit relevé par PUB-1 le 2026-08-24 *(clone superficiel, lecture seule)*.
+
+**② ⭐ LA PREUVE « AVANT » A ÉTÉ OBTENUE — SANS RIEN PUBLIER** *(CERTAIN, **production**)*
+
+🔬 **Constaté par Romain le 2026-08-26**, navigation privée, sur
+`rfl974.github.io/boutique-r92/tournoi.html` :
+
+> *« Aucun tournoi en cours pour le moment. Reviens quand un tournoi sera annoncé ! »*
+
+🔬 Cette phrase est produite par `chargerArticleTournoi` *(`boutique-r92 assets/js/main.js:481`)*
+**quand le témoin ne vaut pas `oui`**. ⭐ **Elle prouve TROIS choses d'un coup** : la vitrine
+**interroge réellement** ce serveur · elle **lit réellement** `tournoi_publie` · elle **réagit
+réellement** à sa valeur.
+
+⚡ **Ce que cela déplace dans la qualification de cette fiche** : le couplage n'est plus seulement
+*« prouvé dans le code des deux dépôts »*. ⭐ **Sa moitié `non` est désormais prouvée EN
+PRODUCTION.** ⛔ **Reste non prouvée en production la moitié `oui`** — dont le code fait déjà une
+**certitude**, et dont la production exigerait de publier un tournoi **fictif** sur le site d'une
+association **réelle**. 🎯 **C'est un prix que la preuve ne vaut pas** *(**D-052**)*.
+
+**③ ⛔ La nature exacte de l'effet — à dire précisément, ni plus ni moins**
+
+| ✅ Vrai | ⛔ Faux |
+|---|---|
+| La vitrine **LIT** le témoin à **chaque chargement de page** *(🔬 `main.js:797-799`)* | *« Publier ÉCRIT quelque chose sur la vitrine »* — ⛔ elle ne **stocke rien** |
+| L'effet dure **exactement le temps où le témoin vaut `oui`** ; masquer le fait disparaître au chargement suivant | *« Cela crée un contenu permanent »*, *« c'est irréversible »* — ⛔ **non** |
+| 🔬 **Deux pages seulement** portent un déclencheur : `actualites.html` *(`liste-actus`)* et `tournoi.html` *(`article-tournoi`)* | *« Les 20 pages du site réagissent »* — ⛔ elles chargent `main.js`, mais **sans déclencheur** |
+| ⛔ **Aucun autre consommateur** : 🔬 le relais `cloudflare/worker-tournoi.js` ne touche **ni `getConfig` ni le témoin** | |
+
+> 🔴 **Et pourtant le report reste justifié — c'est même PIRE dans notre cas.** Le jeu de données
+> serait **fictif** : publier ferait apparaître, en tête des actualités d'une association réelle,
+> **l'annonce d'un tournoi qui n'existe pas**, avec son nom, sa date, son lieu et son affiche.
+> ⭐ **Ce n'est plus une entorse de doctrine, c'est une fausse information sur le site d'un tiers**
+> — et **M1 tout entier existe pour que Maxilou cesse de s'attribuer cette association.**
+
 **Pourquoi c'est un problème, et pas seulement une inélégance**
 
 > 🎯 **Une frontière franchie sans être vue.** Maxilou croit rendre une page accessible ; en
@@ -1593,12 +1679,44 @@ VISIBLE.** *On a contrôlé le contenu d'une pièce sans essayer d'en ouvrir la 
 4. 🟡 **Contrôle du bouton « Publier »** — ⭐ **la condition se DÉDOUBLE, et sa première moitié est acquise** :
    · **4a — grisé quand le tournoi est incomplet** : ✅ **CONSTATÉ le 2026-08-26** *(contrôles A6, A7, B3, C2 — sur les trois modes d'affichage)* ;
    · **4b — actif quand tout est prêt** : ⛔ **exige un tournoi exploitable** ;
-5. ⛔ **Contrôle de « Masquer »** *(actif même avec des prérequis incomplets)* — **exige un tournoi PUBLIÉ**, donc la 4b d'abord.
+5. 🔻 **Contrôle de « Masquer »** *(actif même avec des prérequis incomplets)* — ⚡ **REPORTÉE À PUB-4 le 2026-08-26** *(**D-052**)*. ⛔ **NI supprimée, NI réputée acquise, et TOUJOURS comptée dans les cinq** — voir l'encadré ci-dessous.
 
-> ⚠️ **Les points 4b et 5 demandent un état du classeur permettant réellement de publier.** ⛔ **Ne
-> recréer aucune donnée pour les obtenir sans décision explicite** : le repère *« DONNÉES DE TOURNOI
-> À RECRÉER »* reste **ACTIF**, et la manière d'obtenir cette preuve sans le violer est un sujet à
-> trancher séparément.
+> ⚡ **CE QUI A CHANGÉ LE 2026-08-26, ET POURQUOI — le report de la condition 5** *(**D-052**)*
+>
+> 🔬 **Le fait qui a tout décidé** : pour que le bouton affiche **« Masquer »**, il faut
+> `estPublie() === true` *(`frontend/js/admin-infos-publication.js`)*. **Prouver la condition 5
+> exige donc de PUBLIER** — ⛔ **et publier atteint aujourd'hui le site d'une association tierce**
+> *(**R-097**)*, avec un jeu de données **FICTIF** : l'annonce, sur un site public réel, d'**un
+> tournoi qui n'existe pas**.
+>
+> 🎯 **PUB-2 ne pouvait donc se clore qu'en causant le tort que PUB-4 doit supprimer.**
+>
+> | | |
+> |---|---|
+> | **Reste dans PUB-2** | conditions **1, 2, 3, 4a** *(acquises)* et **4b** |
+> | 🔻 **Reporté à PUB-4** | condition **5**, ⭐ **avec les contrôles §21.10 ter 6 et 8**, qui exigent le même clic |
+> | ⛔ **Le compte ne change pas** | **R-098 a toujours CINQ conditions.** Une preuve reportée n'est **pas** une preuve validée |
+> | ⭐ **Le filet** | `PLAN.md`, critère de clôture de **M1-PUB, condition ④** — ⛔ **le chantier ne peut être clos tant qu'une preuve reportée reste ouverte** |
+
+> ⭐ **LA CONDITION 4b SE VALIDE SANS JAMAIS CLIQUER — et c'est établi, pas supposé.**
+>
+> 🔬 `majVerrouPublier` ne fait **qu'une seule chose** : `bouton.disabled = restants.length > 0`.
+> **Le clic n'en fait pas partie.** La condition est écrite *« grisé si incomplet, **actif sinon** »* :
+> ⭐ **c'est un état visuel, pas un geste.** Trois observations la remplissent :
+> le bouton **cesse d'être grisé** · le message *« 🔒 Avant de publier, il reste : … »* **disparaît** ·
+> le fil affiche **« Tout est prêt — tu peux publier le tournoi. »**
+>
+> ⛔ **Ne pas la confondre avec le contrôle §21.10 ter 6**, qui exige un **clic** — et qui est
+> **reporté**.
+
+> ⚠️ **La condition 4b demande un état du classeur permettant réellement de publier.** ⛔ **Ne
+> recréer aucune donnée sans décision explicite** : le repère *« DONNÉES DE TOURNOI À RECRÉER »*
+> reste **ACTIF**.
+>
+> ⭐ **Recréer ce jeu ne produit AUCUN effet externe, et c'est vérifié** : 🔬 seules **deux** lignes
+> de tout `backend/Code.gs` écrivent `tournoi_publie` — `publierTournoi` *(:7550)* et la
+> réinitialisation *(:7658, qui écrit `non`)*. ⛔ **Ni la création de catégories, ni les équipes, ni
+> la génération du planning n'y touchent.** Le risque tient **au seul clic sur « Publier »**.
 >
 > 🔬 **Le jeu minimal nécessaire, établi par lecture de `calculerEtatsEtapes`** *(⛔ non créé)* : une
 > **heure de début**, **une** catégorie, **quatre** équipes dans cette catégorie, **un** terrain

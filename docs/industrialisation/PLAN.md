@@ -2731,6 +2731,30 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **Dépendances** | **PUB-1** |
 | **Redéploiement** | ⚠️ **À DISTINGUER** : **publication frontend GitHub Pages ✅ OUI** *(automatique à la fusion dans `main`)* · **redéploiement Apps Script ⛔ NON** — 🔬 **aucun fichier `backend/` n'est touché** |
 | ⛔ **Hors de ce lot** | ⛔ **Aucune implémentation dans PUB-1** |
+| 🆕 ⭐ **CRITÈRE DE CLÔTURE — arrêté le 2026-08-26 *(D-052)*** | Voir le tableau ci-dessous. ⭐ **Il se limite aux preuves obtenables SANS provoquer l'effet externe que M1-PUB doit supprimer** |
+
+**🆕 ⭐ Le critère de clôture de PUB-2, nommément *(D-052, 2026-08-26)***
+
+> ⚠️ **Pourquoi ce critère a dû être écrit.** Tel qu'il était, PUB-2 exigeait de vérifier
+> **« Masquer »** — 🔬 or ce bouton **n'existe à l'écran que si le tournoi est PUBLIÉ**. Le prouver
+> exigeait donc de **publier**, ⛔ ce qui atteint **aujourd'hui le site d'une association tierce**
+> *(**R-097**)*, avec un **jeu de données FICTIF** : l'annonce d'un tournoi **qui n'existe pas**.
+> 🎯 **PUB-2 ne pouvait donc se clore qu'en causant le tort que PUB-4 doit supprimer.**
+
+| ✅ **DANS le critère de clôture de PUB-2** | ⛔ **REPORTÉ À PUB-4** *(⛔ ni supprimé, ni réputé acquis)* |
+|---|---|
+| **R-098 · conditions 1, 2, 3, 4a, 4b** — publication · vérification réelle grand écran · vérification réelle mobile · *« Publier »* **grisé** quand le tournoi est incomplet · *« Publier »* **actif** quand tout est prêt | **R-098 · condition 5** — *« Masquer n'est JAMAIS grisé »* |
+| **Contrôles `SESSIONS.md` §21.10 ter : 1, 2, 3, 4, 5, 7, 9, 10, 11, 12** | **Contrôles §21.10 ter : 6** *(Publier → état vert, adresse identique)* **et 8** *(Masquer → même adresse, retour à l'écran « à venir »)* |
+
+> ⭐ **La condition 4b se valide PAR OBSERVATION, sans jamais cliquer** — 🔬 `majVerrouPublier`
+> *(`frontend/js/admin-infos-publication.js`)* ne fait qu'une chose : `bouton.disabled = restants.length > 0`.
+> **Le clic n'en fait pas partie.** Trois choses deviennent observables quand les cinq étapes sont ✅ :
+> le bouton **cesse d'être grisé** · le message *« 🔒 Avant de publier, il reste : … »* **disparaît** ·
+> le fil affiche **« Tout est prêt — tu peux publier le tournoi. »** ⭐ **À contrôler sur les TROIS
+> modes d'affichage** — c'est là que le correctif R-098 protège mieux que le verrou qu'il remplace.
+>
+> ⛔ **Ne pas confondre la condition 4b et le contrôle 6.** La **4b** est un **état visuel** ;
+> le **6** exige un **clic**. ⭐ **Seul le second est reporté.**
 | 🏁 **État CONSTATÉ** | ✅ **FUSIONNÉ dans `main` le 2026-08-24, en FAST-FORWARD STRICT** *(`git merge --ff-only`)* — ⛔ **aucun commit de fusion créé, aucun SHA réécrit** *(`main` et la branche PUB-2 pointent le même objet)*. **Deux commits, et deux seulement** : **`f62b322`** *(le contenu — 13 fichiers = **6 frontend** + **7 documentaires**, ⛔ **0 backend**)* · **`b002a57`** *(la trace post-geste — 3 fichiers, `docs/` seuls)*. `origin/main` : **`ec1f486` → `b002a57`**, écart local/distant **0/0**. ✅ **PUBLIÉ** — run Pages **#220** *(`push`, `main`, `b002a57`)* : `verifier` **`success`** *(« 30 fichiers JavaScript vérifiés, aucun cassé »)*, `deploy` **`success`**. ⛔ **Aucun redéploiement Apps Script** *(`backend/Code.gs` strictement identique)*. ⛔ **NON VÉRIFIÉ EN RÉEL**. ⚡ *(Cette case ajoutait « ⭐ c'est le seul état qui manque à ce lot » : **faux depuis le 2026-08-24 au soir** — la vérification réelle a été TENTÉE et a échoué, révélant **R-098** ; voir la ligne suivante.)* Détail des observations : `SESSIONS.md` **§21.10 bis** |
 | 🔴 **R-098 — l'anomalie trouvée en essayant, et son correctif** | ⚡ **La validation réelle a échoué à son PREMIER contrôle le 2026-08-24** : la carte était **inatteignable** sur un classeur non préparé *(verrou de navigation **antérieur** à PUB-2, que PUB-2 n'avait pas analysé)*. ✅ **Correctif FUSIONNÉ et PUBLIÉ le même jour** — fast-forward **`2ef9ce0` → `b8ce265`** *(**`9bdeb06`** le correctif · **`b8ce265`** la trace post-geste)*, run Pages **#221** `success`. Le garde-fou passe de l'**ÉCRAN** au **BOUTON**, sur **les trois parcours** *(barre latérale, assistant mobile, Vue classique)*. ⛔ **R-098 reste OUVERT**. ⚡ **CORRIGÉ APRÈS LE GESTE le 2026-08-26** : cette case annonçait *« 1 de ses 5 conditions de fermeture est remplie »*, vrai jusqu'aux validations réelles du 2026-08-26 — **il y en a désormais 4 sur 5**. Détail : `RISQUES.md` **R-098** et `SESSIONS.md` **§22** |
 | 🔴 **R-098 / B5 — le défaut RESTANT, trouvé et corrigé le 2026-08-26** | ⚡ **La validation réelle a échoué une SECONDE fois, sur téléphone** : ouvrir la carte « Publication » **déverrouillait six étapes** et peignait **« Réglages » en vert**. 🔬 **Cause** : `assistantIndex` désignait à la fois la **carte affichée** et la **progression atteinte** — le premier correctif avait **diagnostiqué** cette confusion sans la corriger, ne refermant qu'**une conséquence sur trois**. ✅ **Corrigé** par un second repère **`assistantAtteint`**, **monotone**, que seule une carte non `libre` fait monter : **`8b66456`**, fast-forward **`be1b376` → `8b66456`**, run Pages **#228** `success` *(les deux travaux)*. 🆕 **Un garde-fou DURABLE** — `tests/frontend-assistant-verrou.test.js`, **41 contrôles** + **5 mutations** — s'exécute désormais **avant chaque publication** ; ⭐ **les 34 contrôles du premier correctif n'avaient PAS été conservés, et c'est pourquoi le défaut a survécu**. ✅ **REVALIDÉ EN RÉEL** le 2026-08-26 *(11 contrôles sur 11, téléphone, navigation privée)*. Détail : `SESSIONS.md` **§24** |
@@ -2830,7 +2854,7 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **①** | **Vérification directe des DEUX côtés du contrat** | 🔬 Côté **Maxilou** *(vues, action, tests)* **et** 🔬 côté **vitrine externe** — ⛔ **au moment de PUB-3**, pas d'après le relevé de PUB-1 : le dépôt séparé peut avoir bougé |
 | **②** | **L'inventaire précis du périmètre** | Les **fichiers** · les **fonctions** · les **vues** · les **paramètres** · les **tests** concernés, des deux côtés, chacun avec `fichier:ligne` |
 | **③** | **L'ordre technique exact d'exécution** | ⭐ La séquence générale *(cadrage PUB-1 ci-dessus)* traduite en **gestes numérotés** : quel dépôt, quel commit, quel déploiement, dans quel ordre — et **ce qui doit être en service avant le geste suivant** |
-| **④** | **Les preuves à produire AVANT et APRÈS chaque coupure** | ⛔ **Une preuve observée, pas une déduction** *(`CLAUDE.md` §8 septies)* : publier → observer · masquer → observer, **de part et d'autre**. ⚠️ **Le comportement en production ne se constate pas depuis le dépôt** *(§13.6)* |
+| **④** | **Les preuves à produire AVANT et APRÈS chaque coupure** | ⚡ **REFORMULÉ le 2026-08-26 *(D-052)* — cette case disait *« publier → observer · masquer → observer, de part et d'autre »*, ce qui exigeait de PUBLIER pendant que le couplage existe : ⛔ exactement le tort que PUB-4 doit supprimer, et ⛔ incompatible avec la nature documentaire de PUB-3.** ⭐ **PUB-3 ÉCRIT la liste des preuves ; il n'en PRODUIT aucune.** ⛔ **Aucun clic sur Publier ni Masquer dans PUB-3.** ✅ **La preuve « AVANT » est déjà acquise, et sans rien publier** — voir l'encadré ci-dessous. Les preuves « APRÈS » sont **listées** ici et **produites en PUB-4** |
 | **⑤** | **Le retour arrière** | ⭐ **Que faire si une dépendance inattendue apparaît** : comment revenir à l'état d'avant, geste par geste, **sans laisser un état intermédiaire en service** |
 | **⑥** | ⛔ **Rien d'autre** | **Aucune modification fonctionnelle n'est réalisée dans PUB-3** |
 
@@ -2838,6 +2862,33 @@ coupure)* et **PUB-4** *(après coupure)*.
 |---|---|
 | **Dépendances** | **PUB-1** *(le cadrage)* et **PUB-2** *(l'accès autonome doit exister avant de planifier la coupure)* |
 | **Validation** | Le plan est assez précis pour que **PUB-4 n'ait plus aucune décision à prendre** — seulement à exécuter |
+| 🆕 ⛔ **Ce que PUB-3 NE FAIT PAS** *(2026-08-26, D-052)* | ⛔ **Aucun clic sur « Publier », aucun clic sur « Masquer », aucune preuve produite.** PUB-3 est **📄 documentaire** : il **écrit** quelles preuves seront produites, **où** et **dans quel ordre** |
+
+> 🆕 ⭐ **LA PREUVE « AVANT » EST DÉJÀ ACQUISE — et elle n'a rien coûté** *(constatée le 2026-08-26, D-052)*
+>
+> 🔬 **Constaté par Romain en production**, navigation privée, sur `rfl974.github.io/boutique-r92/tournoi.html` :
+>
+> > *« Aucun tournoi en cours pour le moment. Reviens quand un tournoi sera annoncé ! »*
+>
+> ⭐ **Cette seule phrase prouve TROIS choses à la fois** — 🔬 elle est produite par
+> `chargerArticleTournoi` *(`boutique-r92 assets/js/main.js:481`)* **quand le témoin ne vaut pas
+> `oui`** :
+>
+> | | Ce qui est prouvé | §9 |
+> |---|---|---|
+> | ① | la vitrine **interroge réellement** ce serveur *(⛔ pas seulement dans son code)* | **CERTAIN** |
+> | ② | elle **lit réellement** `tournoi_publie` | **CERTAIN** |
+> | ③ | elle **réagit réellement** à sa valeur | **CERTAIN** |
+>
+> ⭐ **Et le contrôle de PUB-3 ① — « vérifier les DEUX côtés au moment de PUB-3 » — est à moitié
+> fait** : 🔬 le dépôt `boutique-r92` est **toujours sur `164bb8e`**, le commit relevé par PUB-1, et
+> 🔬 **les deux sites visent le MÊME déploiement Apps Script** *(établi par comparaison
+> d'empreintes, ⛔ sans recopier d'adresse)*. **PUB-3 devra le re-constater à sa date.**
+>
+> ⛔ **Ce qui reste non prouvé EN PRODUCTION** : la moitié `oui` *(le témoin à `oui` fait apparaître
+> la carte et la page)*. ⭐ **Le code des deux dépôts en fait une CERTITUDE** ; la produire en réel
+> exigerait de publier un tournoi **fictif** sur le site d'une association **réelle**.
+> 🎯 **C'est un prix que la preuve ne vaut pas** *(D-052)*.
 
 > 🎯 **Pourquoi PUB-3 existe séparément de PUB-4, et ce n'est pas de la procédure.** La coupure
 > touche **deux dépôts** et **un backend partagé**, dont un dépôt que ce chantier **ne pilote
@@ -2852,7 +2903,22 @@ coupure)* et **PUB-4** *(après coupure)*.
 | **Nature** | Mixte — touche **Maxilou** *(vues, tests)* **et** le dépôt séparé **`boutique-r92`** |
 | **Dépendances** | **PUB-3** — ⛔ **aucune coupure sans plan validé** |
 | **Redéploiement** | ✅ **OUI** |
-| **Validation** | ⭐ **Le critère de RÉUSSITE DU DÉCOUPLAGE** : **publier puis masquer sont observés EN RÉEL** ; **seule la page publique Maxilou change d'état**, et **la vitrine externe ne réagit plus** |
+| **Validation** | ⚡ **PUB-4 porte désormais DEUX obligations distinctes, à ne surtout PAS fondre l'une dans l'autre** — voir le tableau ci-dessous *(2026-08-26, **D-052**)* |
+
+**🆕 ⭐ Les DEUX obligations de PUB-4 — et pourquoi les distinguer**
+
+| | Ce qui doit être prouvé | D'où cela vient |
+|---|---|---|
+| **①** ⭐ **Le découplage** | **Publier puis masquer sont observés EN RÉEL** ; **seule la page publique Maxilou change d'état**, et ⛔ **la vitrine externe ne réagit plus** | Le critère d'origine de PUB-4 |
+| **②** 🆕 **Les preuves HÉRITÉES de PUB-2** | ⭐ **R-098 · condition 5** — *« Masquer n'est JAMAIS grisé »*, à contrôler **avec des prérequis incomplets** · **contrôle §21.10 ter 6** *(Publier → état vert, ⭐ **adresse identique**)* · **contrôle §21.10 ter 8** *(Masquer → ⭐ **même adresse**, retour à l'écran « à venir »)* | **Reportées de PUB-2 le 2026-08-26** *(**D-052**)* — ⛔ **ni supprimées, ni réputées acquises** |
+
+> ⚠️ **Elles s'observent pendant LE MÊME geste, et c'est exactement le piège.** Un seul clic sur
+> « Publier », puis un seul sur « Masquer », suffisent à produire **les cinq** preuves — ⛔ **mais
+> elles ne disent pas la même chose** : ① regarde **la vitrine**, ② regarde **le bouton et
+> l'adresse**. ⭐ **Observer l'une ne prouve pas l'autre. Les cinq se relèvent séparément, ou
+> l'une se perdra dans le compte-rendu de l'autre.**
+>
+> ⛔ **PUB-4 NE PEUT PAS ÊTRE CLOS si l'une des cinq manque.**
 
 > ⛔ **Ce n'est PAS le critère de clôture de M1-PUB.** PUB-4 prouve que le découplage fonctionne ;
 > **PUB-5 vient après**, et le chantier n'est clos que lorsque **les cinq lots** le sont
@@ -2872,8 +2938,8 @@ coupure)* et **PUB-4** *(après coupure)*.
 > **À la fin de M1-PUB, changer l'état publié / non publié dans Maxilou ne doit provoquer AUCUN
 > effet ailleurs que sur la page publique Maxilou.**
 
-⛔ **M1-PUB ne peut être déclaré terminé que si les TROIS conditions ci-dessous sont réunies —
-toutes les trois.**
+⚡ **M1-PUB ne peut être déclaré terminé que si les QUATRE conditions ci-dessous sont réunies —
+toutes les quatre.** *(La **④** a été ajoutée le 2026-08-26 par **D-052**.)*
 
 **① Les cinq micro-lots sont terminés ET validés**
 
@@ -2906,6 +2972,29 @@ toutes les trois.**
 > ⛔ **M1-PUB pourrait être déclaré clos dès PUB-4** : le découplage serait prouvé, et l'admin
 > continuerait pourtant de montrer, en direct, l'aperçu d'un contenu **qui n'existe plus**. ⚠️ **Un
 > découplage réussi doublé d'un aperçu mensonger n'est pas un chantier terminé.**
+
+**🆕 ④ AUCUNE PREUVE REPORTÉE NE RESTE OUVERTE** *(ajouté le 2026-08-26 — **D-052**)*
+
+> ⭐ **C'est le FILET du dispositif de report, et il n'est pas décoratif.**
+
+| Preuve reportée | D'où elle vient | Où elle doit être produite | État |
+|---|---|---|---|
+| **R-098 · condition 5** — *« Masquer n'est JAMAIS grisé »*, avec des prérequis incomplets | **PUB-2** | **PUB-4**, obligation ② | ⛔ **OUVERTE** |
+| **Contrôle §21.10 ter · 6** — Publier → état vert, ⭐ **adresse identique** | **PUB-2** | **PUB-4**, obligation ② | ⛔ **OUVERTE** |
+| **Contrôle §21.10 ter · 8** — Masquer → ⭐ **même adresse**, retour à l'écran « à venir » | **PUB-2** | **PUB-4**, obligation ② | ⛔ **OUVERTE** |
+
+> 🎯 **Pourquoi cette condition existe, et c'est le cœur de D-052.** Un report est **utile** — il
+> évite de causer le tort qu'on est en train de corriger. ⛔ **Mais un report sans filet devient un
+> oubli**, et l'oubli est **invisible** : chaque lot intermédiaire aura été déclaré **clos**, dans
+> les formes, et personne ne remarquera qu'une preuve n'a jamais été produite.
+>
+> ⭐ **Ce tableau est donc la SEULE adresse où l'on va vérifier qu'il ne reste rien** *(`CLAUDE.md`
+> §8 quater : un repère volatil n'a qu'une source de référence)*. ⛔ **Une preuve reportée qui n'y
+> figure pas est une preuve perdue.**
+>
+> ⚠️ **Il se lit dans les deux sens** : ⛔ **on n'ajoute pas non plus une ligne ici pour reporter du
+> travail qu'on n'a pas envie de faire.** Le déclencheur de D-052 est étroit — **l'obtention de la
+> preuve cause le tort que le chantier corrige** — et tout report exige une **décision écrite**.
 
 #### ⛔ Ce que M1-PUB ne fait PAS
 
