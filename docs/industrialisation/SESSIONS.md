@@ -10189,3 +10189,63 @@ prochaine étape de M1-B2. ⛔ **NON DÉMARRÉE**, et elle ne démarre pas sans 
 
 ⏳ **Et une chose appartient à Romain avant toute reprise** : le classeur est **vierge de tournoi**
 depuis le reset. ⛔ **Aucune session ne reconstruira un jeu d'essai sans sa décision.**
+
+---
+
+## SESSION 32 — M1-B2 / B2-2 : `Clubs` + `Participations`, passe locale
+
+**Date** : 2026-08-27 · **Branche** : `claude/b2-2-clubs-participations` *(partie de `a778ff7`)*
+**Objectif** : ouvrir B2-2 — séparer l'identité durable d'un club de son engagement dans une
+édition, ⛔ **sans toucher au frontend ni au classeur réel**.
+
+### Ce qui a été fait
+
+| | |
+|---|---|
+| **Reconstat** | Git propre, `HEAD` = `main` = `origin/main` = `a778ff7`, ⛔ aucun retard après `fetch --prune`. Dernière décision **D-058**, dernier risque **R-108** — reconstatés **deux fois**, à l'ouverture puis **juste avant** d'écrire **D-059** |
+| **Cartographie** | 17 colonnes, **12 écrivains**, **8 lecteurs**, ⛔ **aucun accès par numéro de colonne** *(tout passe par `colClubInvite`)*, et une clé d'API unique : **`club_nom`** |
+| **Arbitrages** | **D-059** — suppression logique, jeton jamais passif, snapshots figés au premier envoi, prédicat de participation legacy, idempotence par convergence, `ClubsInvites` conservé |
+| **Livré** | Le **prédicat** *(pur)* · les onglets **`Clubs`** et **`Participations`** · la **migration** `migrerClubsMaintenant()` · la **couche d'adaptation** · la bascule des **8 lecteurs** et des **12 écrivains** · le **reset** adapté |
+| **Preuves** | **1134/1134** au harnais serveur *(974 avant, +160)* · **48/48**, **97/97**, **41/41**, **45/45** aux suites Node, **inchangées** · **9 mutations** rejouées, **9 attrapées** |
+| **Commits** | `495bf38` *(prédicat)* · `6f6d37d` *(structure + migration)* · `bf502aa` *(bascule)* · + le lot documentaire |
+
+### 🎯 Ce que cette session a appris, et qui vaut au-delà du lot
+
+**① La réponse évidente était fausse, et une seule lecture du code l'a montré.** L'équivalence
+*« 1 ligne `ClubsInvites` = 1 club + 1 participation »* aurait fabriqué une participation pour
+**tout club du carnet**. Deux colonnes d'engagement se posent en effet **avant tout envoi** :
+`club_token` *(posé à chaque ouverture de l'administration)* et `statut = 'Invité'` *(défaut de
+création)*. ⭐ **Ce n'est pas une intuition qui l'a établi : c'est la question « QUI ÉCRIT CETTE
+COLONNE ? », posée aux douze.**
+
+**② Une migration réussie peut créer le défaut qu'elle prétend corriger.** Conserver l'histoire
+conserve aussi les **jetons** des éditions passées. Sans filtre d'édition, un lien mort
+**redeviendrait valide** — la régression exacte de **T6**, introduite par la structure censée
+l'empêcher. ⭐ **Le test qui l'éprouve commence par vérifier que le jeton est BIEN ENCORE EN BASE** :
+sans cette précaution, il passerait pour une bonne raison et pour une mauvaise.
+
+**③ Une mutation qu'aucun test n'attrape est un test qui manque.** Retirer le filtre d'édition de
+`assurerTokensClubs` laissait **1129 tests au vert**. La fonction se serait mise à écrire dans des
+participations **passées** — sans ressusciter aucun lien, mais **en écrivant dans l'histoire**, ce
+que ce lot existe pour empêcher. ⭐ **Le rejeu de mutations a fait exactement ce qu'on lui demande :
+révéler un angle mort.** Le test manquant a été écrit *(S3 bis)*.
+
+**④ Une mutation a révélé un VRAI défaut, et pas dans le code nouveau.** En simulant une
+suppression physique, `clubEstActif(null)` a **levé une erreur** au lieu de répondre non : la
+condition lisait `club.actif` même quand `club` valait `null`. ⛔ **Aucun test ne passait par là.**
+
+**⑤ B2-2 a mis en défaut deux des huit tests de B2-0 — et c'est ce qui les a améliorés.** Le bloc
+promettait des **RÉSULTATS**, jamais des **MÉCANIQUES**. **T4** appelait pourtant
+`reinitialiserPhase2Clubs` *(une fonction interne)* et **T6** vérifiait qu'*« un jeton est
+réattribué »*. Sur la structure neuve, ni l'un ni l'autre n'a de sens — l'engagement s'achève parce
+que **l'édition** change. ⭐ **Le geste est désormais exprimé une fois pour les deux structures, et
+⛔ aucune assertion n'a été affaiblie.** L'engagement du 2026-08-25 — *« seuls deux helpers
+changent »* — est **tenu à la lettre** : ils sont bien deux.
+
+### ⛔ Ce qui n'a PAS été fait, et doit être lu comme tel
+
+⛔ Aucune poussée · aucune fusion dans `main` · **aucun redéploiement** · **aucune migration du
+classeur réel** · aucun reset · aucune restauration ni suppression de sauvegarde · aucune
+suppression de `ClubsInvites` · **pas une ligne de `frontend/`**.
+
+⚠️ **Le classeur réel porte toujours `ClubsInvites` seul, et 13 onglets.**

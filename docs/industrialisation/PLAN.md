@@ -3288,7 +3288,7 @@ aucune nominative)*.
 |---|---|---|---|---|---|---|
 | **B2-0** | 🏁 **Sécurisation du reset** *(harnais)* — ✅ **CLÔTURÉ le 2026-08-25** | — | ⚡ **backend + frontend + CI** *(voir la note ci-dessous)* | ⛔ | ✅ **R-099**, ✅ **R-100** *(entièrement)* · **R-106** *(part reset seule)* · **R-033** *(dernière part)* | ✅ **ATTEINT** — reset prouvé **en réel** le 2026-08-25 : 0 statut hérité, 0 effectif hérité |
 | **B2-1** | **`edition_id` propre** + registre `Editions` ~~+ fin du renouvellement de `tournoi_id`~~ ⚡ **voir la fiche §16.5 quater** — 🏁 **CLÔTURÉ le 2026-08-27** *(**D-058**)* | B2-0 | backend | douce | ✅ **R-106** | ✅ **ATTEINT EN RÉEL** — 3 régénérations ⇒ **un seul** `edition_id`, **et** reset nominal réel *(ancienne fermée, neuve ouverte, une seule active)*. ⚠️ **Ce critère, écrit le 2026-08-24, était plus ÉTROIT que le contrat validé D-057** : voir §16.5 quater ⑥ |
-| **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-099, R-100, R-102, R-104, R-105** | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
+| **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation — ⏳ **PASSE LOCALE LIVRÉE le 2026-08-27**, ⛔ **non déployée, non migrée** *(voir §16.5 quinquies)* | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-102, R-104, R-105** ⚡ *(⛔ pas R-099 ni R-100 : leur part comportement est **TESTÉE** depuis B2-0, leur part structure est suivie sous **R-102**)* | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
 | **B2-3** | **Terrains** permanents / édition | B2-1 | backend + frontend | douce | **R-101** | Dossier d'un tournoi vide ⇒ ⛔ aucun terrain hérité |
 | **B2-4** | **UX** : Carnet · Préparer l'invitation · Clubs invités · sélection · envoi ciblé | B2-2 | **frontend surtout** | ⛔ | — | Plusieurs vagues ciblées prouvées **en réel** |
 | **B2-5** | **Messagerie V1** + notifications + emails | B2-2 | backend + frontend | ⛔ | *(R-103 reste ouvert)* | Message reçu, notifié, répondu **par email** |
@@ -3316,8 +3316,11 @@ aucune nominative)*.
 > ⏭️ 🏁 **B2-1 EST CLÔTURÉ le 2026-08-27** *(décision de Romain — **D-058**)*. Déployée, migrée,
 > vérifiée par trois régénérations **et** par un **reset nominal réel** : voir la fiche
 > **§16.5 quater**. ⛔ **Le cas d'ÉCHEC du reset reste couvert par le harnais seul**, délibérément.
-> ⏭️ **B2-2 est la prochaine étape éligible — ⛔ NON DÉMARRÉE**, et elle ne démarre pas sans
-> validation explicite *(**§15.2**)*. ⚡ *(Cette ligne a annoncé successivement « B2-1 est la
+> ⏭️ ⚡ **B2-2 EST DÉMARRÉE : sa PREMIÈRE PASSE, LOCALE, est livrée le 2026-08-27** — arbitrages
+> de Romain *(**D-059**)*, structure, migration idempotente, couche d'adaptation, bascule des
+> lecteurs et des écrivains, reset adapté. ⛔ **Rien n'est déployé, rien n'est migré, rien n'est
+> intégré dans `main`** : voir la fiche **§16.5 quinquies**. ⚡ *(Cette ligne annonçait « B2-2 est
+> la prochaine étape éligible — ⛔ NON DÉMARRÉE » : vrai jusqu'au 2026-08-27.)* ⚡ *(Cette ligne a annoncé successivement « B2-1 est la
 > prochaine étape éligible — ⛔ NON DÉMARRÉE », « Sa **première passe, locale**, est livrée »,
 > « intégrée dans `main` et publiée sur GitHub — ⛔ rien n'est déployé », puis « EN SERVICE ET
 > PROUVÉE EN RÉEL — ⛔ ELLE N'EST PAS CLOSE POUR AUTANT ». ⭐ **Chacune était vraie à son
@@ -3568,3 +3571,79 @@ les deux anciens liens testés sont invalides)*.
 ⛔ **aucune simulation** de classement · ⛔ aucun centre de notifications complet · ⛔ aucune relance
 d'invitation · ⛔ **aucun des modules futurs** *(buvette, fréquentation, bénévoles, recettes)* —
 ⭐ seule leur **possibilité** est préservée · ⛔ **R-108**, traité à part.
+
+---
+
+#### 16.5 quinquies — B2-2 : `Clubs` + `Participations` — ⏳ **PASSE LOCALE LIVRÉE, ⛔ RIEN N'EST EN SERVICE**
+
+> ⏳ **CE QUI SUIT EST ÉCRIT, TESTÉ ET COMMITÉ EN LOCAL** *(2026-08-27, branche
+> `claude/b2-2-clubs-participations`)*. ⛔ **Rien n'est poussé, rien n'est fusionné, rien n'est
+> déployé, et le classeur réel n'a PAS été migré.** Les arbitrages sont ceux de **D-059**.
+
+**① Le modèle livré.**
+
+| Onglet | Colonnes |
+|---|---|
+| 🆕 **`Clubs`** | `club_id` *(UUID, jamais réutilisé)* · `club_nom` · `club_contact_nom` · `club_contact_prenom` · `club_contact_email` · `date_ajout` · `actif` — **7** |
+| 🆕 **`Participations`** | `edition_id` · `club_id` · les **12** colonnes d'engagement **sous leurs noms d'origine** · `snap_club_nom` · `snap_contact_nom` · `snap_contact_prenom` · `snap_contact_email` — **18** |
+| **`ClubsInvites`** | ⛔ **INTACT**. Rien n'est déplacé, seulement **recopié** *(arbitrage)*. Sa suppression n'est **pas** l'objet de B2-2 |
+
+⭐ **Pourquoi les 12 gardent leurs noms** : la couche d'adaptation reconstruit alors l'objet plat du
+navigateur **sans traduction**, et le joint de lecture de B2-0 n'a eu qu'**une ligne** à changer.
+
+**② Le prédicat de participation legacy** — le cœur de la migration *(D-059)*.
+
+| ⛔ **Ne prouve RIEN** | ✅ **Prouve un engagement** |
+|---|---|
+| `club_token` *(`assurerTokensClubs` en posait un à chaque ouverture d'écran)* · `statut = 'Invité'` *(défaut d'`ajouterClubInvite`)* | `invitation_envoyee` · `dossier_envoye` *(posées au **succès** seul)* · `statut` ∈ {`Accepté`, `Décliné`} · `date_reponse` · `categories_engagees` · `nb_equipes_par_categorie` · `nb_joueurs_total` · `nb_educateurs_total` · `detail_effectifs` · `selection_enregistree` · `alerte_ecart` |
+
+⭐ **Conséquence directe sur le classeur réel** : le reset du 2026-08-27 a vidé les 12 colonnes
+d'engagement des 3 clubs. Le prédicat répondra donc **NON** pour les trois ⇒ **3 lignes dans
+`Clubs`, ⛔ ZÉRO participation dans l'édition active.** ⭐ **Ce résultat tombe tout seul, sans
+règle spéciale** — c'est ce qui montre que le prédicat est le bon mécanisme.
+
+**③ L'idempotence, sans aucun drapeau.**
+
+> ⛔ **Le critère « l'onglet existe et porte une ligne de l'édition active » aurait été FAUX** :
+> *zéro participation active* est un état **parfaitement valide**. Il aurait conclu « pas encore
+> migré » sur un classeur déjà migré, et aurait tout rejoué.
+>
+> ⭐ **La migration ne se demande donc pas si elle a eu lieu : elle calcule l'écart et n'écrit que
+> la différence.** Rejouée ⇒ écart nul ⇒ **0 création**. Interrompue ⇒ la reprise **termine** le
+> travail, sans jamais dupliquer. C'est une **convergence**, pas une bascule.
+
+**④ Les trois changements de comportement, tous voulus.**
+
+| | Avant | Après |
+|---|---|---|
+| **Ajouter un club** | posait `statut = 'Invité'` **et** un jeton | ⛔ **rien** : le club est *« connu, sans participation cette fois »* |
+| **`Invité`** | écrit d'office à la création | ⭐ posé **après un envoi réussi** — le voir signifie *« l'email est parti »* |
+| **Jeton** | réattribué à chaque ouverture de l'admin | ⭐ naît **avec la participation**, sur un geste explicite |
+
+⚠️ **Un classeur PAS ENCORE MIGRÉ garde EXACTEMENT son comportement d'origine** — reset et
+réattribution de jetons compris. ⛔ **Un modèle, un comportement ; jamais un mélange des deux.**
+
+**⑤ 🚨 Le risque que la CONSERVATION crée.** Les participations passées ne sont plus effacées, leurs
+**jetons non plus**. Sans filtre, un lien de l'édition précédente **redeviendrait valide** — la
+régression exacte de **T6**, introduite par la structure censée l'empêcher. Toute lecture par jeton
+est bornée à l'**édition active** ; le test **N3** l'éprouve en vérifiant d'abord que le jeton
+**est bien encore en base**.
+
+**⑥ L'épreuve centrale — les huit de B2-0, rejoués sur la structure neuve.**
+
+> ⭐ **L'engagement pris le 2026-08-25 est tenu** : *« seuls deux helpers changent, les huit tests
+> sont réutilisés mot pour mot »*. Ce sont bien **deux** : `_b20ClubsApresReset` *(le joint de
+> lecture)* et `_b20TerminerEngagementEdition` *(le geste d'isolation de T4)*.
+>
+> ⚡ **Et B2-2 a révélé un défaut dans les huit eux-mêmes** : **T4** et **T6** nommaient une
+> **MÉCANIQUE** *(« appeler `reinitialiserPhase2Clubs` », « un jeton est réattribué »)* là où le
+> bloc promettait des **RÉSULTATS**. ⛔ **Aucune assertion n'a été affaiblie** — le geste est
+> désormais exprimé une fois pour les deux structures.
+
+**⑦ Ce qui reste, et ce qu'il ne faut pas croire.**
+
+| | |
+|---|---|
+| ⛔ **Non fait** | Poussée · fusion dans `main` · redéploiement · **migration réelle du classeur** · suppression de `ClubsInvites` |
+| ⛔ **Ce que le lot ne fait PAS** | ⛔ Aucun sélecteur d'édition · ⛔ aucun multi-tournois · ⛔ aucun parcours du **club organisateur** · ⛔ aucun moteur de fusion / réactivation / dédoublonnage · ⛔ **pas une ligne de `frontend/`** |
+| ⚠️ **Ambiguïté écrite, non résolue** | La correspondance legacy → carnet se fait **par le NOM** : renommer un club **après** migration, puis relancer la migration, recréerait une identité. Inscrit sous **R-104** |

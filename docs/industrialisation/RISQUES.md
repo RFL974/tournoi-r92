@@ -9,7 +9,13 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-27 *(suite 3 — **clôture de M1-B2 / B2-1**)* —
+**Dernière mise à jour** : 2026-08-27 *(session 32 — **passe locale de M1-B2 / B2-2**)* —
+✅ **R-102, R-104 et R-105 passent à CORRIGÉ EN LOCAL** *(⛔ pas TESTÉ : rien n'est déployé ni
+migré)*. ⚠️ **Une ambiguïté non résolue est inscrite sous R-104** *(correspondance par le NOM à la
+relance)*. ⛔ **Aucun risque nouveau n'a été ouvert** : les défauts trouvés pendant le lot sont
+couverts par ces trois fiches.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(suite 3 — **clôture de M1-B2 / B2-1**)* —
 ✅ **UN PROBLÈME SE FERME : R-106. ⛔ AUCUN NOUVEAU N'APPARAÎT.**
 
 | Réf | Avant | Après | Ce qui l'établit |
@@ -2100,7 +2106,7 @@ d'où le *« 18 terrains de jeu, sur 4 grands terrains »* d'un tournoi qui n'a 
 |---|---|
 | **Priorité** | **P2** — ⭐ **c'est la CAUSE STRUCTURELLE de R-099, R-100 et R-101** |
 | **Domaine** | **G — architecture** |
-| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-2** |
+| **Statut** | ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27** *(B2-2)* — ⛔ **pas encore prouvé en réel** |
 
 🔬 Les 17 colonnes de `ClubsInvites` mélangent **6 colonnes durables** *(nom, contacts, date
 d'ajout)* et **11 colonnes de participation**, sans que **rien dans la structure** ne dise à quelle
@@ -2117,6 +2123,18 @@ famille appartient une colonne. Le reset s'en remet à **une liste écrite à la
 > `CLUBS_COLONNES_ENGAGEMENT`)* — mieux nommées et testées qu'avant, mais ⛔ **toujours écrites à
 > la main**. ⭐ **La séparation en `Clubs` + `Participations` reste entière, et c'est B2-2**
 > *(D-050)*.
+
+
+> ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27 — ⛔ PAS ENCORE PROUVÉ SUR LE CLASSEUR RÉEL.** La passe
+> locale de **B2-2** est écrite, testée *(**1134/1134** au harnais serveur, +105)* et commitée sur
+> la branche `claude/b2-2-clubs-participations`. ⛔ **Rien n'est déployé, rien n'est migré** : le
+> classeur réel porte toujours `ClubsInvites` seul. **Statut §12.5 : CORRIGÉ, pas TESTÉ.**
+
+> ⭐ **CE QUE LA SÉPARATION REND IMPOSSIBLE, et c'est la vraie fermeture de ce risque** : il n'y a
+> **plus de liste de colonnes à tenir**. Une donnée d'engagement ne peut plus survivre à un reset —
+> elle appartient à une édition qui n'est plus l'active. ⛔ **Plus rien à tenir à jour, donc plus
+> rien à oublier.** Les deux listes `CLUBS_COLONNES_*` restent vivantes **pour le seul chemin
+> legacy** *(classeur pas encore migré)*, et disparaîtront avec `ClubsInvites`.
 
 ### R-103 — Les messages libres peuvent contenir des données personnelles
 
@@ -2143,7 +2161,7 @@ difficile à défendre — voir [`../conservation-donnees.md`](../conservation-d
 |---|---|
 | **Priorité** | **P2** |
 | **Domaine** | **G — architecture** · **D — QA** |
-| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-2** |
+| **Statut** | ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27** *(B2-2)* — ⛔ **la migration RÉELLE reste à exécuter** |
 
 La migration doit créer un `club_id` stable pour chaque ligne existante et répartir les 17 colonnes
 entre les deux onglets. ⚠️ **Sans identifiant stable**, une archive devient **orpheline** dès qu'un
@@ -2160,13 +2178,32 @@ migration — ils décrivent le comportement attendu **avant** que la structure 
 > *(`PLAN.md` §16.5 ter)*. ⛔ **La migration elle-même reste ENTIÈRE** : aucun `club_id`, aucun
 > onglet nouveau, aucune ligne déplacée.
 
+
+> ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27 — ⛔ PAS ENCORE PROUVÉ SUR LE CLASSEUR RÉEL.** La passe
+> locale de **B2-2** est écrite, testée *(**1134/1134** au harnais serveur, +105)* et commitée sur
+> la branche `claude/b2-2-clubs-participations`. ⛔ **Rien n'est déployé, rien n'est migré** : le
+> classeur réel porte toujours `ClubsInvites` seul. **Statut §12.5 : CORRIGÉ, pas TESTÉ.**
+
+> ⭐ **Ce que la passe locale a établi** : un **prédicat** décide, ligne par ligne, si un club
+> legacy a **réellement** participé — ⛔ ni `club_token` ni `statut = 'Invité'` ne comptent
+> *(**D-059**)*. L'idempotence ne repose sur **aucun drapeau** : la migration converge, donc une
+> relance ne crée rien et une **interruption se reprend** sans perte. ⛔ **`ClubsInvites` n'est pas
+> touché** : rien n'est déplacé, seulement recopié.
+>
+> ⚠️ **UNE AMBIGUÏTÉ SUBSISTE, ET ELLE EST ÉCRITE ICI PARCE QU'ELLE N'EST PAS RÉSOLUE** : la
+> migration relie une ligne legacy à une identité du carnet **par le NOM**. Si un club était
+> renommé dans `Clubs` **après** la migration, une relance ultérieure recréerait une identité sous
+> son ancien nom. ⭐ **Le cas ne se produit pas dans l'usage prévu** — la migration est un geste
+> unique, la relance ne servant qu'à la reprise **avant** tout usage — mais il n'est ⛔ **pas
+> empêché par construction**, et une session future ne doit pas le découvrir seule.
+
 ### R-105 — Une colonne future peut à nouveau échapper au classement
 
 | | |
 |---|---|
 | **Priorité** | **P2** |
 | **Domaine** | **G — architecture** |
-| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-2** |
+| **Statut** | ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27** *(B2-2)* — ⛔ **pas encore prouvé en réel** |
 
 Même après la séparation, rien n'empêche d'ajouter une colonne à `Participations` **sans la
 classer**. ⭐ **Mitigation prévue** : un contrôle automatique — *« toute colonne doit appartenir à
@@ -2181,6 +2218,21 @@ exactement une des deux familles »* — qui **échoue** si une colonne nouvelle
 > ⛔ **Pourquoi ce n'est pas une fermeture** : la fiche parle de `Participations`, ⭐ **un onglet
 > qui n'existe pas encore**. Le contrôle protège la structure **actuelle** ; celle de **B2-2** devra
 > recevoir le sien. **Le piège est devenu visible ; il n'a pas disparu.**
+
+
+> ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27 — ⛔ PAS ENCORE PROUVÉ SUR LE CLASSEUR RÉEL.** La passe
+> locale de **B2-2** est écrite, testée *(**1134/1134** au harnais serveur, +105)* et commitée sur
+> la branche `claude/b2-2-clubs-participations`. ⛔ **Rien n'est déployé, rien n'est migré** : le
+> classeur réel porte toujours `ClubsInvites` seul. **Statut §12.5 : CORRIGÉ, pas TESTÉ.**
+
+> ⭐ **Le garde-fou a été REPORTÉ, pas recopié — parce que le danger a changé de forme.**
+> `colonnesParticipationNonClassees` signale toute colonne de `Participations` sans rôle *(clé,
+> engagement ou snapshot)*. Et un **second** garde-fou a été ajouté, que la fiche n'avait pas
+> prévu : `colonnesCarnetMalPlacees` signale une colonne d'**engagement** égarée dans `Clubs`.
+>
+> 🎯 **Pourquoi ce second contrôle compte plus que le premier** : une telle colonne survivrait à
+> **toutes** les éditions, et ⛔ **aucun reset ne pourrait la rattraper** — le carnet est fait pour
+> durer. C'est **R-099 d'un cran plus haut, et sans filet.**
 
 ### R-106 — `tournoi_id` ne peut pas identifier une édition
 

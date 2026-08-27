@@ -532,6 +532,57 @@ d'une édition : ⛔ `edition_id` ne vit **nulle part ailleurs**, et surtout pas
 
 ---
 
+## ⏳ Onglets `Clubs` et `Participations` (M1-B2 / B2-2) — ⛔ **PAS ENCORE DANS LE CLASSEUR**
+
+> ⏳ **Écrits, testés et commités en local le 2026-08-27** *(branche
+> `claude/b2-2-clubs-participations`)*. ⛔ **Ils n'existent PAS dans le classeur réel** : le code
+> n'est ni poussé ni déployé, et `migrerClubsMaintenant()` n'a pas été lancée.
+
+**Pourquoi deux onglets au lieu d'un** *(décision **D-050**)*. `ClubsInvites` répondait à deux
+questions dans une seule ligne : *« qui est ce club ? »* — durable — et *« que fait-il CETTE
+fois ? »* — propre à une édition. Un club ne pouvait donc porter qu'**un seul** statut et **un
+seul** effectif : ⛔ **l'historique des clubs y était structurellement impossible.**
+
+### Onglet `Clubs` — le carnet durable
+
+| Colonne | Exemple | Signification |
+|---|---|---|
+| `club_id` | `a1b2c3d4-…` | **UUID** tiré une seule fois. ⛔ **Jamais réutilisé, jamais renouvelé** — pas même après un renommage ou une désactivation |
+| `club_nom` | `MASSY` | Nom actuel du club |
+| `club_contact_nom` / `_prenom` / `_email` | `DUPONT` / `Camille` / `contact@club.fr` | Coordonnées **actuelles** du contact |
+| `date_ajout` | `2026-07-23` | Entrée au carnet |
+| `actif` | `oui` / `non` | ⭐ **Suppression LOGIQUE** : retirer un club du tournoi le passe à `non`, ⛔ **sans détruire son identité** — sinon les éditions passées deviendraient orphelines. Colonne vide ⇒ **actif** *(défaut prudent)* |
+
+⛔ **Ne vivent PAS ici** : statut, jeton, catégories, effectifs, dates d'envoi, alertes.
+
+### Onglet `Participations` — l'engagement d'une édition
+
+Une ligne = **(une édition, un club)**. La clé est le couple `edition_id` + `club_id`.
+
+| Famille | Colonnes |
+|---|---|
+| **Rattachement** | `edition_id` *(voir l'onglet `Editions`)*, `club_id` |
+| **Engagement** — les **12** colonnes, **sous leurs noms d'origine** | `statut`, `categories_engagees`, `dossier_envoye`, `invitation_envoyee`, `club_token`, `date_reponse`, `nb_equipes_par_categorie`, `nb_joueurs_total`, `alerte_ecart`, `detail_effectifs`, `nb_educateurs_total`, `selection_enregistree` |
+| 📸 **Snapshots** | `snap_club_nom`, `snap_contact_nom`, `snap_contact_prenom`, `snap_contact_email` — l'identité **au moment de l'invitation**, figée. ⭐ Renommer un club au carnet ⛔ **ne réécrit pas l'histoire** |
+
+> ⭐ **CE QUE CETTE STRUCTURE REND IMPOSSIBLE.** La réinitialisation n'a plus **rien à vider** :
+> l'engagement appartient à l'édition qui s'achève, et la nouvelle édition n'a **aucune**
+> participation. ⛔ **Il n'y a plus de liste de colonnes à tenir à jour — donc plus rien à
+> oublier**, ce qui était la cause de **R-099** et **R-100**.
+>
+> ⚠️ **Une participation ne naît QUE d'une intention** — inviter, enregistrer une sélection,
+> changer un statut à la main. ⛔ **Jamais d'une lecture** : ouvrir l'administration ne crée plus
+> ni participation ni jeton. Et **`Invité` ne se pose qu'après un envoi RÉUSSI** *(**D-059**)*.
+>
+> 🚨 **Les jetons des éditions passées restent en base** — c'est le prix de l'histoire conservée.
+> Toute lecture par jeton est donc bornée à l'**édition active** : ⛔ un ancien lien ne redevient
+> **jamais** valide.
+
+⭐ **`ClubsInvites` est CONSERVÉ INTACT** : la migration **recopie**, ⛔ elle ne déplace rien. Sa
+suppression n'est pas l'objet de B2-2 et devra être décidée séparément.
+
+---
+
 ## Onglet `ClubsInvites` (clubs invités)
 
 La liste des clubs invités, gérée par la carte « **Clubs invités** » de la page admin. Sert

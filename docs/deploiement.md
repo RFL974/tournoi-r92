@@ -189,6 +189,21 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 | **Le bilan** affiché en fin de journal | **`R92 — 974/974 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
 | **La dernière ligne** du fichier collé chez Google | **5554** | Le fichier collé n'est pas celui du dépôt |
 
+> ⏳ ⚡ **CE QUE CES DEUX VALEURS DEVIENDRONT APRÈS LE LOT B2-2** *(passe locale du 2026-08-27,
+> branche `claude/b2-2-clubs-participations`)* : **`R92 — 1134/1134 OK, 0 FAIL`**, `Test.gs` à
+> **6313** lignes et `Code.gs` à **9586** *(relevé par `wc -l` sur la branche, le 2026-08-27)*.
+>
+> ⚠️ **CE SONT DES VALEURS PRÉDITES EN LOCAL, ⛔ PAS ENCORE MESURÉES CHEZ GOOGLE** *(`CLAUDE.md`
+> §9 : **PROBABLE**, pas **CERTAIN**)*. ⛔ **Les valeurs du tableau ci-dessus restent celles à
+> attendre tant que B2-2 n'est pas déployé.** ⭐ Elles ont été obtenues en exécutant le harnais
+> **hors de Google**, dans une doublure Node — laquelle reproduit **exactement** `974/974` sur le
+> code en service, ce qui est la seule raison de leur accorder du crédit.
+>
+> ⚠️ **ET UN GESTE DE PLUS SERA NÉCESSAIRE APRÈS LE REDÉPLOIEMENT** : lancer
+> **`migrerClubsMaintenant()`** *(voir [`../backend/README.md`](../backend/README.md))*. ⭐ **Le
+> serveur fonctionne sans elle** — l'ancien onglet fait foi tant que le carnet est vide — mais les
+> deux nouveaux onglets n'apparaîtront pas d'eux-mêmes.
+
 > ✅ **CONSTATÉ CHEZ GOOGLE le 2026-08-27** *(lot **M1-B2 / B2-1**)* : `lancerTestsFFR` exécutée
 > **deux fois** dans l'éditeur Apps Script a donné **`R92 — 974/974 OK, 0 FAIL`**, avec `Test.gs` à
 > **5554 lignes** et `Code.gs` à **8847** *(`viderDonnees` ligne **8842**)* — serveur passé en

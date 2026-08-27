@@ -30,13 +30,18 @@ Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
 ## 🧱 Stack technique
 
-- **Base de données** : Google Sheets — **13 onglets** :
-  - **9 de travail** : `Config`, `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`,
-    `Sponsors`, `Mesures`, `Editions` *(`setupSheet()` en crée 8 ; `Mesures` apparaît au premier
-    relevé)* — ✅ `Editions` *(le registre des éditions, lot B2-1)* est **en service** : serveur
-    redéployé et migration exécutée le **2026-08-27**, le classeur réel porte bien **13** onglets.
-    ⚡ *(Cette ligne annonçait « dans le code, pas encore déployé : le classeur en service en compte
-    toujours 12 » — vrai jusqu'à ce jour-là.)* ;
+- **Base de données** : Google Sheets — **13 onglets en service**, ⏳ **15 prévus** :
+  - **9 de travail EN SERVICE** : `Config`, `Equipes`, `Poules`, `Matchs`, `Historique`,
+    `ClubsInvites`, `Sponsors`, `Mesures`, `Editions` *(`setupSheet()` en crée 8 ; `Mesures`
+    apparaît au premier relevé)* — ✅ `Editions` *(le registre des éditions, lot B2-1)* est **en
+    service** : serveur redéployé et migration exécutée le **2026-08-27**, le classeur réel porte
+    bien **13** onglets. ⚡ *(Cette ligne annonçait « dans le code, pas encore déployé : le classeur
+    en service en compte toujours 12 » — vrai jusqu'au 2026-08-27.)* ;
+  - ⏳ **2 de travail ÉCRITS MAIS PAS EN SERVICE** *(lot **B2-2**, passe locale du 2026-08-27)* :
+    🆕 `Clubs` *(le carnet durable des clubs — `club_id` stable)* et 🆕 `Participations` *(une ligne
+    = une édition × un club)*. ⛔ **Ils N'EXISTENT PAS dans le classeur réel** : le code n'est ni
+    poussé, ni déployé, et `migrerClubsMaintenant()` n'a **pas** été lancée. ⭐ `ClubsInvites` est
+    **conservé intact** — B2-2 recopie, ⛔ il ne déplace rien ;
   - **4 de référence FFR**, remplis à la main : `RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`,
     `RefFFR_Temps` *(absents ⇒ l'app fonctionne, elle perd seulement la conformité FFR)*
 - **Backend** : Google Apps Script, déployé en **Web App** qui répond en **JSON** — **65 actions**,

@@ -5,7 +5,11 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-26 *(suite 6)* — 🏁 **D-056 — LE CRITÈRE DE CLÔTURE DE M1-PUB
+**Dernière mise à jour** : 2026-08-27 *(session 32)* — 🆕 **D-059 — B2-2 : CE QUI PROUVE UNE
+PARTICIPATION, CE QUI LA CRÉE, ET POURQUOI RETIRER UN CLUB NE L'EFFACE PAS.** Arbitrages donnés
+par Romain le 2026-08-27, **avant** implémentation de la passe locale de B2-2.
+
+*Rappel de la mise à jour précédente* — 2026-08-26 *(suite 6)* — 🏁 **D-056 — LE CRITÈRE DE CLÔTURE DE M1-PUB
 EST CORRIGÉ, PAS CONTOURNÉ : L'APERÇU N'EST PAS REMPLACÉ, IL EST SUPPRIMÉ.** Décision prise par
 Romain le 2026-08-26, à la mise en œuvre de PUB-5 / M9, puis appliquée à la clôture du chantier.
 
@@ -4008,3 +4012,62 @@ Trois obligations en découlent, et **aucune n'est facultative** :
   *(**D-057**)*. Son remplacement éventuel comme clé de `Historique` reste **ouvert pour B2-6** ;
 - ❌ **Pas** que le classeur est prêt : il est **vierge de tournoi** depuis le reset, et ⛔ **il n'a
   pas été reconstruit**. Le refaire appartient à Romain.
+
+---
+
+### D-059 — B2-2 : ce qui prouve une participation, ce qui la crée, et pourquoi retirer un club ne l'efface pas
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-27 |
+| **Session** | Chantier **M1-B2** — sous-lot **B2-2**, passe locale |
+| **Statut** | ✅ **VALIDÉE — arbitrages de Romain**, donnés avant implémentation |
+| **Décidée par** | Romain |
+| **Couvre** | `PLAN.md` **§16.5 quinquies** · `RISQUES.md` **R-102, R-104, R-105** · précise **D-050** |
+
+**Le problème posé**
+
+> **D-050** avait décidé *quoi* faire : séparer `Clubs` et `Participations`. ⛔ Il ne disait pas
+> *comment migrer les données existantes*, et c'est là que tout se joue. Migrer oblige à répondre,
+> ligne par ligne : **ce club a-t-il réellement participé, ou est-il seulement inscrit au carnet ?**
+>
+> ⚠️ **La réponse évidente était fausse.** L'équivalence *« 1 ligne `ClubsInvites` = 1 club + 1
+> participation »* fabriquerait une participation pour **tout club du carnet** — l'inverse exact de
+> D-050. Deux colonnes d'engagement se posent en effet **avant tout envoi** : `club_token`
+> *(`assurerTokensClubs` en pose un à chaque ouverture de l'administration)* et `statut = 'Invité'`
+> *(valeur par défaut d'`ajouterClubInvite`)*.
+
+**Ce qui est décidé**
+
+| | |
+|---|---|
+| ⭐ **La règle de migration** | **1 ligne `ClubsInvites` = 1 `Club`.** Une **`Participation`** n'est créée que si la ligne porte une **preuve réelle d'engagement** |
+| ⭐ **Le prédicat** | ⛔ `club_token` et `statut = 'Invité'` ne sont **jamais** des preuves. Les **dix autres** colonnes le sont : envois réussis, réponse du club, effectifs, catégories, sélection, alerte d'écart |
+| ⭐ **Le cas ambigu** | `Invité` **sans** `invitation_envoyee` ⇒ ⛔ **aucune participation**, toujours, de façon déterministe. On ne fabrique jamais un engagement dont on n'a pas la preuve — et rien n'est perdu, `ClubsInvites` reste intact |
+| ⭐ **Une participation naît d'une INTENTION** | Inviter, enregistrer une sélection, changer un statut à la main. ⛔ **Jamais** d'une lecture, d'un écran ouvert ou d'un helper passif |
+| ⭐ **Le jeton suit la participation** | Il naît avec elle, ⛔ jamais tout seul. `assurerTokensClubs` ne complète plus que les participations **existantes** |
+| ⭐ **`Invité` après l'envoi** | Le statut n'est plus écrit d'office à la création : le voir signifie désormais **« l'email est parti »** *(application littérale de D-050)* |
+| ⭐ **Suppression LOGIQUE** | Retirer un club le fait disparaître de l'écran et emporte ses équipes, **comme avant** — mais son identité reste au carnet, `actif = non`. ⛔ La participation de l'édition **en cours** part ; celles des éditions **fermées**, jamais |
+| ⭐ **Idempotence par CONVERGENCE** | ⛔ **Aucun drapeau « déjà migré »** : *zéro participation active* est un état **valide** — c'est celui du classeur réel depuis le reset. La migration calcule l'écart entre ce qui devrait exister et ce qui existe, et n'écrit que la différence |
+| ⭐ **`ClubsInvites` reste intact** | Rien n'est déplacé, seulement **recopié**. Sa suppression n'est **pas** l'objet de B2-2 et devra être décidée séparément |
+
+**Le risque que la conservation CRÉE — et qui devait être nommé**
+
+> ⭐ **Garder l'histoire garde aussi les jetons.** Les participations passées ne sont plus effacées ;
+> leurs `club_token` non plus. ⛔ Sans filtre, **un lien de l'édition précédente redeviendrait
+> valide du seul fait qu'on conserve désormais le passé** — la régression exacte de **T6**,
+> introduite par la structure censée l'empêcher.
+>
+> 🎯 **C'est le genre de défaut qu'une migration réussie peut produire sans qu'aucun test existant
+> ne bronche.** Toute lecture par jeton est donc bornée à l'**édition active**, et le test
+> **B2-2 / N3** l'éprouve en vérifiant d'abord que le jeton **est bien encore en base**.
+
+**Ce que cette décision NE dit PAS**
+
+- ❌ **Pas** que `ClubsInvites` disparaît : il reste, intact, et sa suppression sera décidée à part ;
+- ❌ **Pas** que Maxilou devient multi-éditions : ⛔ **une seule reste active**, aucun sélecteur ;
+- ❌ **Pas** que le club organisateur est traité : la **structure** le permettra, ⛔ **le parcours
+  n'est pas écrit** *(hors périmètre B2-2)* ;
+- ❌ **Pas** qu'un moteur de fusion, de réactivation ou de dédoublonnage de clubs existe : ⛔ **il
+  n'y en a aucun**, et il n'était pas demandé ;
+- ❌ **Pas** que la migration a eu lieu sur le classeur réel : ⛔ **elle n'a PAS été exécutée**.

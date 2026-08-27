@@ -12,6 +12,50 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Un club connu n'est plus un club invité — 2026-08-27 *(⏳ écrit, ⛔ pas encore en service)*
+
+> ⏳ **CE QUI SUIT N'EST PAS ENCORE EN LIGNE.** Le code est écrit, testé et enregistré, ⛔ **mais il
+> n'est ni publié ni déployé**, et le classeur n'a pas été migré. Cette entrée est ici pour que le
+> jour où ce sera fait, on sache **exactement** ce qui aura changé.
+
+**Ce qui n'allait pas.** La liste des clubs mélangeait deux choses dans une seule ligne : **qui est
+ce club** — son nom, son contact, son email, qu'on garde d'une année sur l'autre — et **ce qu'il
+fait cette fois-ci** : a-t-il été invité, a-t-il répondu, combien d'équipes, combien de joueurs.
+
+**Pourquoi c'était gênant.** Un club ne pouvait donc porter **qu'une seule réponse et un seul
+effectif**. Impossible de dire *« Massy est venu en 2025 avec 3 équipes, et en 2026 avec 5 »* : la
+seconde année écrasait la première. Et à chaque réinitialisation, il fallait **effacer à la main**
+une liste de douze cases pour que l'engagement de l'an dernier ne réapparaisse pas — une liste qu'on
+a déjà oubliée de tenir à jour **trois fois**, laissant un club marqué *« Accepté »* sur un tournoi
+qui n'existait plus.
+
+**Ce qui change.** Le carnet d'adresses et la participation deviennent **deux choses séparées** :
+
+- le **carnet** garde l'identité des clubs, avec un numéro qui ne change jamais — même si le club
+  est renommé, même s'il est retiré du tournoi ;
+- la **participation** décrit ce qu'un club fait pour **une** édition, et rien d'autre.
+
+**Ce qu'un organisateur remarquera** — trois choses, et elles vont toutes dans le même sens :
+
+- **ajouter un club ne l'invite plus.** Il entre au carnet, et c'est tout. Avant, il était marqué
+  *« Invité »* d'office, alors qu'aucun email n'était parti ;
+- **« Invité » veut enfin dire ce qu'il dit** : l'email est bien parti. C'est l'envoi réussi qui
+  pose le mot, plus la création de la fiche ;
+- **retirer un club** le fait disparaître de la liste exactement comme avant — mais son nom reste
+  au carnet, pour que les tournois passés sachent toujours de qui ils parlent.
+
+**Ce qui ne change pas, et c'était l'objectif.** Les cartes, les couleurs, les badges, les tris, les
+boutons, les envois d'invitation, les réponses des clubs : **rien n'est modifié à l'écran**. Aucune
+page du site n'a été retouchée.
+
+**Et un point de sécurité qu'il faut dire.** Comme on garde désormais les participations passées, on
+garde aussi leurs **liens personnels**. Un lien d'un tournoi précédent **ne fonctionne pas** pour
+autant : chaque lien n'ouvre que l'édition à laquelle il appartient, et l'édition précédente est
+fermée. C'est vérifié par un test qui commence par s'assurer que le lien est **bien encore** dans le
+classeur — sans quoi il ne prouverait rien.
+
+---
+
 ### Une édition de tournoi a désormais une identité qui ne bouge plus — 2026-08-27
 
 **Ce qui n'allait pas.** Le logiciel n'avait qu'un seul identifiant de tournoi, `tournoi_id`, et il

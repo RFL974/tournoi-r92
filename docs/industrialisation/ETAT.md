@@ -76,12 +76,23 @@
 > urgente, parce qu'elle en commande une autre ». ⭐ **Chacune était vraie à son heure**, et la
 > dernière disait juste : **la décision a bien commandé la preuve**.)*
 >
-> ⏳ **CE QUI RESTE À DÉCIDER, ET CE N'EST PAS À UNE SESSION DE LE FAIRE.** Le repère exigeait qu'on
-> *« décide explicitement du sort de ce jeu, et qu'on le dise ici »*. ⭐ **Voici ce qui est dit** :
-> ⛔ **la décision n'est pas prise.** Le jeu est **conservé en l'état** jusqu'à ce que Romain
-> tranche entre le **garder** *(PUB-5 travaille sur l'écran « Publication », qui a besoin d'un
-> tournoi affichable)* et le **réinitialiser**. ⛔ **Aucune session ne doit le supprimer sans cette
-> décision.**
+> ✅ ⚡ **LA DÉCISION A ÉTÉ PRISE — CE PARAGRAPHE ÉTAIT DEVENU FAUX, ET IL EST CORRIGÉ ICI**
+> *(constaté au reconstat d'ouverture de **B2-2**, le 2026-08-27)*.
+>
+> *Ce qu'il annonçait, et qui était vrai jusqu'au reset du 2026-08-27* : *« la décision n'est pas
+> prise ; le jeu est conservé en l'état jusqu'à ce que Romain tranche entre le garder et le
+> réinitialiser ; aucune session ne doit le supprimer sans cette décision. »*
+>
+> ⭐ **Romain a tranché, et le geste a eu lieu** : le jeu a été **consommé par le reset nominal
+> réel**, après **création d'une copie complète du classeur** — c'est **D-058**. ⛔ **Il n'y a donc
+> plus rien à décider sur son SORT** ; ce qui reste ouvert est **s'il faut en reconstruire un**,
+> et cela appartient à Romain *(voir le tableau ci-dessous)*.
+>
+> 🎯 **Pourquoi cet écart est signalé au lieu d'être simplement effacé** *(**§8 septies**)* : la
+> phrase a été écrite **avant** le geste et n'a pas été relue **après**. Elle a coexisté quelques
+> heures avec le bloc 🏁 qui, douze lignes plus haut, disait l'inverse — ⛔ **et c'est exactement le
+> décrochage que la règle décrit** : un état qui annonce qu'il *reste* du travail là où il n'en
+> reste plus.
 >
 > ---
 >
@@ -92,8 +103,31 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-27 *(session 31, suite 3)* — 🏁 **M1-B2 / B2-1 EST CLÔTURÉ.
-✅ R-106 EST CLOS.** *(décision de Romain — **D-058**)*
+**Dernière mise à jour** : 2026-08-27 *(session 32)* — ⏳ **M1-B2 / B2-2 — PREMIÈRE PASSE LOCALE
+LIVRÉE.** ⛔ **Rien n'est poussé, rien n'est déployé, et le classeur réel n'est PAS migré.**
+
+> ⭐ **Ce qui est ÉCRIT ET TESTÉ EN LOCAL** *(branche `claude/b2-2-clubs-participations`, trois
+> commits)* : les onglets **`Clubs`** *(carnet durable, `club_id` stable)* et **`Participations`**
+> *(une ligne = une édition × un club, + 4 snapshots)*, un **prédicat** qui décide si une ligne
+> legacy prouve un engagement **réel**, une **migration idempotente par convergence**, une **couche
+> d'adaptation** qui rend au navigateur **exactement** l'objet plat d'aujourd'hui, et la bascule de
+> **tous** les lecteurs et écrivains. Arbitrages : **D-059**.
+>
+> 🔬 **Les preuves LOCALES** : **1134/1134** au harnais serveur *(974 avant)* · **48/48**, **97/97**,
+> **41/41**, **45/45** aux quatre suites Node, **inchangées** · ⭐ **neuf mutations** rejouées, **neuf
+> attrapées** — dont **une qui était d'abord PASSÉE INAPERÇUE** *(le test manquant a été écrit)* et
+> **une qui a révélé un vrai défaut** *(`clubEstActif(null)` levait une erreur)*.
+>
+> ⭐ **L'épreuve centrale est passée** : les **huit résultats T1 → T8** de B2-0 sont rejoués **mot
+> pour mot** sur la structure neuve — l'engagement pris le 2026-08-25 est **tenu**.
+>
+> ⛔ **CE QUI N'A PAS EU LIEU, et il faut le lire comme tel** : aucune poussée · aucune fusion ·
+> **aucun redéploiement** · **aucune migration du classeur réel** · aucune suppression de
+> `ClubsInvites` · **pas une ligne de `frontend/`**. ⚠️ Le classeur réel porte toujours
+> `ClubsInvites` seul, et **13 onglets**.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 31, suite 3)* — 🏁 **M1-B2 / B2-1 EST
+CLÔTURÉ. ✅ R-106 EST CLOS.** *(décision de Romain — **D-058**)*
 
 > ⭐ **Ce qui est acquis sur le classeur RÉEL, le 2026-08-27** : serveur redéployé *(version 159)*,
 > migration exécutée, **idempotence prouvée**, et ⭐ **le critère central atteint** — trois
