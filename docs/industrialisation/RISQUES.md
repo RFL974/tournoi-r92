@@ -10,8 +10,10 @@
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
 **Dernière mise à jour** : 2026-08-27 *(session 32, phase réelle 1 — **ÉCHEC RÉEL EXPLOITÉ**)* —
-🆕 **R-109 OUVERT** : *« le harnais de tests peut mentir en réussissant là où la production
-échoue »*. ⚠️ **Constaté en production** : 1210/1210 en local, **1203/1210 chez Google**.
+✅ **R-109 TESTÉ EN RÉEL** *(email seulement)* : **`1222/1222 OK, 0 FAIL`** constaté chez Google,
+et ⭐ **le classeur n'a pas bougé d'un caractère**. ⚠️ **La généralisation aux autres services
+natifs reste OUVERTE.** *(Ce risque a été ouvert le même jour après un écart constaté en
+production : 1210/1210 en local contre 1203/1210 chez Google.)*
 ⛔ **R-102, R-104 et R-105 restent CORRIGÉS EN LOCAL** — la preuve réelle est **suspendue**, la
 Phase réelle 1 ayant été arrêtée avant l'écriture témoin.
 
@@ -2446,7 +2448,7 @@ seulement un affichage du jour, ⭐ **elle serait gravée définitivement dans l
 |---|---|
 | **Priorité** | **P1** — ⚠️ **il ne casse rien en production, mais il DÉTRUIT la valeur de toutes les autres preuves** |
 | **Domaine** | **D — QA / tests** |
-| **Statut** | ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27**, ⛔ **le recontrôle chez Google reste à faire** |
+| **Statut** | ✅ ⚡ **TESTÉ EN RÉEL le 2026-08-27** — ⛔ **pour le service d'EMAIL seulement** *(voir la limite en bas de fiche)* |
 
 🔬 **Constaté en production, pas déduit.** Le 2026-08-27, la version **160** déployée a donné
 **`R92 — 1203/1210 OK, 7 FAIL`** chez Google, alors que le même code donnait **1210/1210** en
@@ -2481,5 +2483,20 @@ d'intervalle.**
 | ⭐ **Deux garde-fous** | **TR1** *(la forme : aucune fonction d'envoi n'appelle Google directement)* et **TR2** *(le fait : un compteur prouve que l'envoi passe VRAIMENT par le transport)*. ⛔ Le second est le seul qu'une relecture du code ne pourrait pas remplacer |
 | ⚠️ **Deux tests renforcés** | **SN4** et **SN5** comparaient les snapshots avant/après alors qu'ils étaient **vides des deux côtés** : ⛔ comparer du vide à du vide ne prouve rien. Chacun vérifie désormais d'abord qu'ils sont **remplis** |
 
-> ⛔ **CE QUI RESTE À FAIRE** : rejouer `lancerTestsFFR` **chez Google** après redéploiement.
-> ⭐ **Le nouveau bilan attendu est `1222/1222`**, ⛔ **plus `1210/1210`**.
+> ✅ ⚡ **PROUVÉ CHEZ GOOGLE le 2026-08-27** — ⛔ ce n'est plus une prédiction locale.
+> `lancerTestsFFR` exécutée dans le véritable environnement Apps Script a donné
+> **`R92 — 1222/1222 OK, 0 FAIL`**, et le journal porte nommément :
+> *« TR2 : l'envoi a été intercepté par le transport »* · *« TR2 : aucun service Google n'a été
+> atteint »* · *« TR3 : le transport réel est bien remis en place »* · *« TR3 : même après
+> exception, le transport réel est rendu »*.
+>
+> ⭐ **ET LE CLASSEUR N'A PAS BOUGÉ** : après cette exécution, son contenu est **identique
+> caractère pour caractère** au relevé d'avant déploiement *(95 244 caractères)*. ⛔ Lancer les
+> tests ne touche donc **aucune donnée métier réelle** — ce qui était l'autre moitié du risque.
+>
+> ⚠️ **CE QUE CETTE PREUVE NE COUVRE PAS, et il faut le dire.** Elle vaut **pour le service
+> d'EMAIL**. ⛔ **Rien n'établit que les autres services natifs** — `DriveApp`, `UrlFetchApp`,
+> `SpreadsheetApp` — **ne présentent pas le même piège** : une doublure Node qui réussit là où
+> Google échouerait. **TR1 n'inventorie que l'email.** ⭐ **Le mécanisme est fermé pour un
+> service, pas pour la catégorie** — et c'est précisément ce qui avait manqué la première fois
+> *(SN6 corrigé comme un cas, pas comme une cause)*. **La généralisation reste OUVERTE.**
