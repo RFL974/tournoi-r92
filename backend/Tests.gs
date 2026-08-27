@@ -491,6 +491,11 @@ function lancerTestsFFR() {
   testB22_SN8_legacyCasA(etat);
   testB22_SN9_legacyCasB(etat);
   testB22_SN10_dossierNestPasInvitation(etat);
+  // ⭐⭐ Et le garde-fou né du défaut du 2026-08-27 : le transport est le point de passage
+  //     UNIQUE vers les services d'envoi de Google — en forme comme en fait.
+  testB22_TR1_aucunContournementDuTransport(etat);
+  testB22_TR2_leTransportIntercepteVraiment(etat);
+  testB22_TR3_transportToujoursRendu(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -6617,6 +6622,35 @@ function testB22_RE_obstaclesPurs(etat) {
  * mentiraient sur ce qui a été envoyé si les coordonnées changeaient entre-temps.
  * ───────────────────────────────────────────────────────────────────────────── */
 
+/* ⭐ L'ENREGISTREUR D'ENVOIS — il REMPLACE le transport le temps d'un test.
+ * ⚠️ Pourquoi il ne stubbe plus `MailApp` / `GmailApp` : ce sont des services NATIFS de Google,
+ * ⛔ non remplaçables depuis un test qui tourne chez Google. La doublure Node y arrivait, chez
+ * Google non — d'où sept échecs qui n'existaient que là-bas. `TRANSPORT_EMAIL` est une variable
+ * du script : la substitution vaut dans les DEUX environnements. */
+var _b22Envois = [];
+var _b22TransportOrigine = null;
+
+/** Installe l'enregistreur. `panne` = vrai ⇒ chaque envoi LÈVE, comme un quota dépassé. */
+function _b22InterceptEnvois(panne) {
+  _b22Envois = [];
+  if (!_b22TransportOrigine) { _b22TransportOrigine = TRANSPORT_EMAIL; }
+  TRANSPORT_EMAIL = {
+    envoyerTexte: function (dest, sujet, corps, exp) {
+      _b22Envois.push({ type: 'texte', dest: dest, sujet: sujet, exp: exp });
+      if (panne) throw new Error('quota dépassé (panne simulée)');
+    },
+    envoyerHtml: function (dest, sujet, html, texte, blob, exp) {
+      _b22Envois.push({ type: 'html', dest: dest, sujet: sujet, exp: exp });
+      if (panne) throw new Error('quota dépassé (panne simulée)');
+    }
+  };
+}
+
+/** ⛔ À appeler dans un `finally` : le transport RÉEL doit toujours être rendu. */
+function _b22RendreTransport() {
+  if (_b22TransportOrigine) { TRANSPORT_EMAIL = _b22TransportOrigine; }
+}
+
 /** Les 4 snapshots d'un club, en une lecture. */
 function _b22Snapshots(classeur, nom) {
   var club = trouverClubParNom(lireClubs(classeur), nom);
@@ -6662,11 +6696,20 @@ function testB22_SN2_changementAvantPremierEnvoi(etat) {
   _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, 'LE TEST RUGBY CLUB')),
     'B2-2 SN2 ⭐ : les snapshots sont TOUJOURS vides — rien n\'a encore été envoyé');
 
-  var res = envoyerInvitationClub(cl, { club_nom: 'LE TEST RUGBY CLUB', sujet: 'Invitation',
-    html_modele: '<p>Bonjour</p>', texte_modele: 'Bonjour', base_reponse: 'https://x/r',
-    base_invitation: 'https://x/i' });
+  _b22InterceptEnvois(false);
+  var res;
+  try {
+    res = envoyerInvitationClub(cl, { club_nom: 'LE TEST RUGBY CLUB', sujet: 'Invitation',
+      html_modele: '<p>Bonjour</p>', texte_modele: 'Bonjour', base_reponse: 'https://x/r',
+      base_invitation: 'https://x/i' });
+  } finally { _b22RendreTransport(); }
   _ffrAssert(etat, res.ok === true && res.destinataire === 'zoe@test-rugby.fr',
     'B2-2 SN2 ⭐ : le premier envoi part sur l\'adresse RÉELLEMENT COURANTE à cet instant');
+  // ⭐ Et on le vérifie AU TRANSPORT, pas seulement dans la valeur de retour : c'est l'adresse
+  //   à laquelle le message a réellement été remis.
+  _ffrAssert(etat, _b22Envois.length === 1 && _b22Envois[0].dest === 'zoe@test-rugby.fr',
+    'B2-2 SN2 ⭐ : et le TRANSPORT a bien reçu cette adresse (' +
+    (_b22Envois.length ? _b22Envois[0].dest : 'aucun envoi') + ')');
   var snaps = _b22Snapshots(cl, 'LE TEST RUGBY CLUB') || {};
   _ffrAssert(etat, snaps.snap_contact_email === 'zoe@test-rugby.fr' &&
                    snaps.snap_contact_prenom === 'Zoé' && snaps.snap_contact_nom === 'MARTIN',
@@ -6677,8 +6720,11 @@ function testB22_SN2_changementAvantPremierEnvoi(etat) {
 function testB22_SN3_premierEnvoiFige(etat) {
   var cl = _b22ClasseurNeuf();
   var nom = 'LE TEST RUGBY CLUB';
-  envoyerInvitationClub(cl, { club_nom: nom, sujet: 'Invitation', html_modele: '<p>Bonjour</p>',
-    texte_modele: 'Bonjour', base_reponse: 'https://x/r', base_invitation: 'https://x/i' });
+  _b22InterceptEnvois(false);
+  try {
+    envoyerInvitationClub(cl, { club_nom: nom, sujet: 'Invitation', html_modele: '<p>Bonjour</p>',
+      texte_modele: 'Bonjour', base_reponse: 'https://x/r', base_invitation: 'https://x/i' });
+  } finally { _b22RendreTransport(); }
   var snaps = _b22Snapshots(cl, nom) || {};
   _ffrAssert(etat, snaps.snap_club_nom === nom && snaps.snap_contact_email === 'contact@test-rugby.fr',
     'B2-2 SN3 ⭐ : les 4 snapshots sont figés sur les valeurs utilisées');
@@ -6692,8 +6738,16 @@ function testB22_SN3_premierEnvoiFige(etat) {
 function testB22_SN4_changementApresEnvoi(etat) {
   var cl = _b22ClasseurNeuf();
   var nom = 'LE TEST RUGBY CLUB';
-  envoyerInvitationClub(cl, { club_nom: nom, sujet: 'Invitation', html_modele: '<p>Bonjour</p>',
-    texte_modele: 'Bonjour', base_reponse: 'https://x/r', base_invitation: 'https://x/i' });
+  _b22InterceptEnvois(false);
+  try {
+    envoyerInvitationClub(cl, { club_nom: nom, sujet: 'Invitation', html_modele: '<p>Bonjour</p>',
+      texte_modele: 'Bonjour', base_reponse: 'https://x/r', base_invitation: 'https://x/i' });
+  } finally { _b22RendreTransport(); }
+  // ⚠️ CE CONTRÔLE EST NOUVEAU, ET IL EST INDISPENSABLE : sans lui, l'assertion « les snapshots
+  //   n'ont pas bougé » passait alors que l'envoi avait ÉCHOUÉ et qu'ils étaient VIDES des deux
+  //   côtés. ⛔ Un test qui compare du vide à du vide ne prouve rien. (Constaté chez Google.)
+  _ffrAssert(etat, !_b22TousVides(_b22Snapshots(cl, nom)),
+    'B2-2 SN4 ⭐ : point de départ — les snapshots sont bien REMPLIS avant qu\'on ne modifie');
   var avant = JSON.stringify(_b22Snapshots(cl, nom));
 
   modifierClubInvite(cl, { club_nom_actuel: nom, club_nom: 'AUTRE NOM RC',
@@ -6710,33 +6764,42 @@ function testB22_SN5_renvoiNeReecritPas(etat) {
   var nom = 'LE TEST RUGBY CLUB';
   var envoi = { club_nom: nom, sujet: 'Invitation', html_modele: '<p>Bonjour</p>',
     texte_modele: 'Bonjour', base_reponse: 'https://x/r', base_invitation: 'https://x/i' };
-  envoyerInvitationClub(cl, envoi);
-  var avant = JSON.stringify(_b22Snapshots(cl, nom));
-  modifierClubInvite(cl, { club_nom_actuel: nom, club_nom: nom, club_contact_prenom: 'Zoé',
-    club_contact_nom: 'MARTIN', club_contact_email: 'zoe@ailleurs.fr' });
-  var res = envoyerInvitationClub(cl, envoi);            // ⭐ deuxième envoi, adresse changée
-  _ffrAssert(etat, res.ok === true && res.destinataire === 'zoe@ailleurs.fr',
-    'B2-2 SN5 : le renvoi part bien sur la NOUVELLE adresse');
-  _ffrAssert(etat, JSON.stringify(_b22Snapshots(cl, nom)) === avant,
-    'B2-2 SN5 ⭐⭐ : ⛔ et les snapshots du PREMIER envoi restent inchangés');
+  _b22InterceptEnvois(false);
+  var res;
+  try {
+    envoyerInvitationClub(cl, envoi);
+    _ffrAssert(etat, !_b22TousVides(_b22Snapshots(cl, nom)),
+      'B2-2 SN5 ⭐ : point de départ — le premier envoi a bien REMPLI les snapshots');
+    var avant = JSON.stringify(_b22Snapshots(cl, nom));
+    modifierClubInvite(cl, { club_nom_actuel: nom, club_nom: nom, club_contact_prenom: 'Zoé',
+      club_contact_nom: 'MARTIN', club_contact_email: 'zoe@ailleurs.fr' });
+    res = envoyerInvitationClub(cl, envoi);              // ⭐ deuxième envoi, adresse changée
+    _ffrAssert(etat, res.ok === true && res.destinataire === 'zoe@ailleurs.fr',
+      'B2-2 SN5 : le renvoi part bien sur la NOUVELLE adresse');
+    _ffrAssert(etat, _b22Envois.length === 2 && _b22Envois[1].dest === 'zoe@ailleurs.fr',
+      'B2-2 SN5 ⭐ : DEUX envois ont bien atteint le transport, le second sur la nouvelle adresse');
+    _ffrAssert(etat, JSON.stringify(_b22Snapshots(cl, nom)) === avant,
+      'B2-2 SN5 ⭐⭐ : ⛔ et les snapshots du PREMIER envoi restent inchangés');
+  } finally { _b22RendreTransport(); }
 }
 
 /** SN6 ⭐⭐ — ÉCHEC du premier envoi : ⛔ ni snapshots, ni « Invité », ni date. */
 function testB22_SN6_echecNeFigeRien(etat) {
   var cl = _b22ClasseurNeuf();
   var nom = 'LE TEST RUGBY CLUB';
-  // ⚠️ La panne est injectée sur les DEUX chemins d'envoi : `MailApp` (envoi depuis le compte
-  //   exécutant) et `GmailApp` (alias « Envoyer en tant que »). ⭐ N'en couvrir qu'un laissait
-  //   ce test passer pour une mauvaise raison — l'envoi réussissait par l'autre.
-  var origMail = MailApp.sendEmail, origGmail = GmailApp.sendEmail;
-  var panne = function () { throw new Error('quota dépassé (panne simulée)'); };
-  MailApp.sendEmail = panne; GmailApp.sendEmail = panne;
+  // ⭐ La panne est injectée AU TRANSPORT — un seul point, valable dans les deux environnements.
+  //   ⚡ Ce test stubbait auparavant `MailApp` ET `GmailApp` : deux services NATIFS, que le
+  //   harnais ne pouvait remplacer QUE hors de Google. C'est la même racine que les sept échecs
+  //   constatés en production le 2026-08-27.
+  _b22InterceptEnvois(true);
   var res;
   try {
     res = envoyerInvitationClub(cl, { club_nom: nom, sujet: 'Invitation',
       html_modele: '<p>Bonjour</p>', texte_modele: 'Bonjour', base_reponse: 'https://x/r',
       base_invitation: 'https://x/i' });
-  } finally { MailApp.sendEmail = origMail; GmailApp.sendEmail = origGmail; }
+  } finally { _b22RendreTransport(); }
+  _ffrAssert(etat, _b22Envois.length === 1,
+    'B2-2 SN6 ⭐ : l\'envoi a bien été TENTÉ — sans quoi ce test ne prouverait rien');
 
   _ffrAssert(etat, !!res.error, 'B2-2 SN6 : l\'échec est remonté, ⛔ pas avalé');
   _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, nom)),
@@ -6797,9 +6860,12 @@ function testB22_SN9_legacyCasB(etat) {
   _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, 'BOUCHE À OREILLE')),
     'B2-2 SN9 ⭐⭐ (cas B) : ⛔ mais AUCUN historique d\'invitation n\'est fabriqué');
   // ⭐ Et le premier VRAI envoi les figera, exactement comme pour une participation neuve.
-  envoyerInvitationClub(cl, { club_nom: 'BOUCHE À OREILLE', sujet: 'Invitation',
-    html_modele: '<p>Bonjour</p>', texte_modele: 'Bonjour', base_reponse: 'https://x/r',
-    base_invitation: 'https://x/i' });
+  _b22InterceptEnvois(false);
+  try {
+    envoyerInvitationClub(cl, { club_nom: 'BOUCHE À OREILLE', sujet: 'Invitation',
+      html_modele: '<p>Bonjour</p>', texte_modele: 'Bonjour', base_reponse: 'https://x/r',
+      base_invitation: 'https://x/i' });
+  } finally { _b22RendreTransport(); }
   _ffrAssert(etat, (_b22Snapshots(cl, 'BOUCHE À OREILLE') || {}).snap_club_nom === 'BOUCHE À OREILLE',
     'B2-2 SN9 ⭐ : et le premier envoi RÉEL les fige enfin');
 }
@@ -6814,4 +6880,79 @@ function testB22_SN10_dossierNestPasInvitation(etat) {
   _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, 'DOSSIER SEUL')),
     'B2-2 SN10 ⭐⭐ : ⛔ mais les snapshots restent VIDES — le dossier (phase 2) n\'atteste pas ' +
     'l\'invitation principale (phase 1)');
+}
+
+/* ─── TR — LE TRANSPORT D'EMAIL EST UN POINT DE PASSAGE UNIQUE ─────────────────
+ * ⚠️ CE BLOC EXISTE PARCE QU'UN DÉFAUT EST PASSÉ EN PRODUCTION. Le 2026-08-27, le harnais
+ * donnait **1210/1210 en local** et **1203/1210 chez Google** : sept tests appelaient le VRAI
+ * service d'envoi, que la doublure Node remplaçait par un succès silencieux et que Google,
+ * lui, refusait. ⛔ Le code métier était juste — c'est le TEST qui dépendait d'un service
+ * extérieur qu'il ne maîtrisait pas.
+ *
+ * 🎯 La leçon dépasse l'email : **un harnais qui réussit là où la production échoue est un
+ * harnais qui ment.** Les deux contrôles ci-dessous existent pour que cela ne puisse pas
+ * se reproduire — l'un vérifie la FORME (personne n'appelle Google directement), l'autre le
+ * FAIT (quand on remplace le transport, tout passe vraiment par lui).
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Les fonctions d'envoi du serveur — ⛔ AUCUNE ne doit toucher Google directement. */
+var _TR_FONCTIONS_ENVOI = ['envoyerEmailAvec', 'envoyerEmailHtml', 'envoyerInvitationEmail',
+  'envoyerDossierEmail', 'envoyerInvitationClub', 'envoyerInvitationsGroupe', 'envoyerFeuilleJour'];
+
+/** TR1 ⭐⭐ — LA FORME : aucune de ces fonctions n'appelle `MailApp` / `GmailApp`. */
+function testB22_TR1_aucunContournementDuTransport(etat) {
+  var coupables = [];
+  _TR_FONCTIONS_ENVOI.forEach(function (nom) {
+    var f = this[nom] || eval(nom);
+    var src = String(f);
+    if (src.indexOf('MailApp.sendEmail') !== -1 || src.indexOf('GmailApp.sendEmail') !== -1) {
+      coupables.push(nom);
+    }
+  });
+  _ffrAssert(etat, coupables.length === 0,
+    'B2-2 TR1 ⭐⭐ : ⛔ AUCUNE fonction d\'envoi n\'appelle Google directement (' +
+    coupables.join(', ') + ')');
+  // ⭐ Et le contrôle inverse, sans quoi le précédent passerait sur un code qui n'envoie plus rien.
+  var srcTransport = String(TRANSPORT_EMAIL.envoyerHtml) + String(TRANSPORT_EMAIL.envoyerTexte);
+  _ffrAssert(etat, srcTransport.indexOf('MailApp.sendEmail') !== -1 &&
+                   srcTransport.indexOf('GmailApp.sendEmail') !== -1,
+    'B2-2 TR1 ⭐ : et le TRANSPORT, lui, appelle bien les deux services — il n\'est pas vide');
+}
+
+/** TR2 ⭐⭐ — LE FAIT : remplacer le transport suffit à intercepter TOUT envoi. */
+function testB22_TR2_leTransportIntercepteVraiment(etat) {
+  var cl = _b22ClasseurNeuf();
+  var nom = 'LE TEST RUGBY CLUB';
+  _b22InterceptEnvois(false);
+  var res;
+  try {
+    res = envoyerInvitationClub(cl, { club_nom: nom, sujet: 'Invitation',
+      html_modele: '<p>Bonjour</p>', texte_modele: 'Bonjour', base_reponse: 'https://x/r',
+      base_invitation: 'https://x/i' });
+  } finally { _b22RendreTransport(); }
+  // ⚠️ Si un chemin contournait le transport, l'envoi aurait atteint Google : le compteur
+  //   resterait à ZÉRO, et sous Apps Script l'appel aurait levé. ⭐ C'est ce compteur, et lui
+  //   seul, qui prouve que le point de passage est unique EN PRATIQUE et pas seulement en
+  //   apparence — une relecture du code ne l'aurait pas établi.
+  _ffrAssert(etat, _b22Envois.length === 1,
+    'B2-2 TR2 ⭐⭐ : l\'envoi a été INTERCEPTÉ par le transport (' + _b22Envois.length + ')');
+  _ffrAssert(etat, !!res && res.ok === true,
+    'B2-2 TR2 : ⛔ et aucun service Google n\'a été atteint — l\'envoi « réussit » sans partir');
+  _ffrAssert(etat, (_b22Envois[0] || {}).type === 'html',
+    'B2-2 TR2 : l\'invitation part bien en HTML');
+}
+
+/** TR3 ⭐ — Le transport RÉEL est toujours rendu : ⛔ aucun test ne le laisse remplacé. */
+function testB22_TR3_transportToujoursRendu(etat) {
+  var src = String(TRANSPORT_EMAIL.envoyerHtml);
+  _ffrAssert(etat, src.indexOf('MailApp.sendEmail') !== -1,
+    'B2-2 TR3 ⭐⭐ : à cet instant, le transport en place est le VRAI — ⛔ aucun test ne l\'a ' +
+    'laissé remplacé derrière lui');
+  // ⭐ Et l'enregistreur sait se retirer même quand le test qu'il sert échoue (bloc `finally`).
+  _b22InterceptEnvois(false);
+  try { throw new Error('échec simulé pendant un envoi'); }
+  catch (e) { /* attendu */ }
+  finally { _b22RendreTransport(); }
+  _ffrAssert(etat, String(TRANSPORT_EMAIL.envoyerHtml).indexOf('MailApp.sendEmail') !== -1,
+    'B2-2 TR3 ⭐ : même après une exception, le transport réel est RENDU');
 }

@@ -5329,12 +5329,51 @@ function modifierClubInvite(classeur, data) {
  *  - `expediteur` renseigné → GmailApp avec « from » (suppose un alias « Envoyer en tant que ») ;
  *  - sinon → MailApp (part de l'adresse du compte exécutant le script).
  */
-function envoyerEmailAvec(destinataire, sujet, corps, expediteur) {
-  if (expediteur) {
-    GmailApp.sendEmail(destinataire, sujet, corps, { name: 'L\'organisation du tournoi', from: expediteur });
-  } else {
-    MailApp.sendEmail({ to: destinataire, subject: sujet, body: corps, name: 'L\'organisation du tournoi' });
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * ⭐ LE TRANSPORT D'EMAIL — le point de passage UNIQUE vers les services de Google.
+ *
+ * ⚠️ POURQUOI CET OBJET EXISTE, et c'est un défaut RÉEL qui l'a imposé. Le harnais de tests
+ * appelle `envoyerInvitationClub` pour éprouver les snapshots d'invitation. Hors de Google, la
+ * doublure Node remplaçait `MailApp` par une fonction vide : l'envoi « réussissait » toujours.
+ * ⛔ CHEZ GOOGLE, IL N'Y AVAIT RIEN À REMPLACER — les tests appelaient le VRAI service d'envoi,
+ * qui a refusé. Résultat : **1210/1210 en local, 1203/1210 chez Google**, sept échecs tous
+ * situés sur le premier envoi. ⭐ Le code métier était juste ; c'est le TEST qui dépendait
+ * d'un service extérieur qu'il ne maîtrisait pas.
+ *
+ * 🎯 Ce qu'un objet du SCRIPT change, et c'est tout l'intérêt : `MailApp` et `GmailApp` sont
+ * des services natifs de Google, ⛔ non remplaçables depuis un test qui tourne chez Google.
+ * `TRANSPORT_EMAIL`, lui, est une variable ordinaire : un test la remplace de la MÊME façon
+ * dans les deux environnements. ⭐ Le stub devient donc aussi fiable chez Google qu'en local.
+ *
+ * ⚠️ ET C'EST LE SEUL ENDROIT DU SERVEUR QUI A LE DROIT D'APPELER `MailApp` / `GmailApp`.
+ * Un test d'inventaire l'exige, et un compteur prouve qu'aucun chemin ne le contourne — sans
+ * quoi ce point de passage serait une façade, et le défaut reviendrait par la porte de côté.
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+var TRANSPORT_EMAIL = {
+  /** Envoi TEXTE brut. `expediteur` renseigné ⇒ GmailApp (alias « Envoyer en tant que »). */
+  envoyerTexte: function (destinataire, sujet, corps, expediteur) {
+    if (expediteur) {
+      GmailApp.sendEmail(destinataire, sujet, corps, { name: 'L\'organisation du tournoi', from: expediteur });
+    } else {
+      MailApp.sendEmail({ to: destinataire, subject: sujet, body: corps, name: 'L\'organisation du tournoi' });
+    }
+  },
+  /** Envoi HTML (avec version texte de repli et affiche en image intégrée). */
+  envoyerHtml: function (destinataire, sujet, html, texte, afficheBlob, expediteur) {
+    if (expediteur) {
+      var opt = { htmlBody: html, name: 'L\'organisation du tournoi', from: expediteur };
+      if (afficheBlob) opt.inlineImages = { affiche: afficheBlob };
+      GmailApp.sendEmail(destinataire, sujet, texte, opt);
+    } else {
+      var msg = { to: destinataire, subject: sujet, body: texte, htmlBody: html, name: 'L\'organisation du tournoi' };
+      if (afficheBlob) msg.inlineImages = { affiche: afficheBlob };
+      MailApp.sendEmail(msg);
+    }
   }
+};
+
+function envoyerEmailAvec(destinataire, sujet, corps, expediteur) {
+  TRANSPORT_EMAIL.envoyerTexte(destinataire, sujet, corps, expediteur);
 }
 
 /**
@@ -5345,15 +5384,7 @@ function envoyerEmailAvec(destinataire, sujet, corps, expediteur) {
  * LÈVE une exception en cas d'échec (l'appelant décide alors de ne pas marquer la date d'envoi).
  */
 function envoyerEmailHtml(destinataire, sujet, html, texte, afficheBlob, expediteur) {
-  if (expediteur) {
-    var opt = { htmlBody: html, name: 'L\'organisation du tournoi', from: expediteur };
-    if (afficheBlob) opt.inlineImages = { affiche: afficheBlob };
-    GmailApp.sendEmail(destinataire, sujet, texte, opt);
-  } else {
-    var msg = { to: destinataire, subject: sujet, body: texte, htmlBody: html, name: 'L\'organisation du tournoi' };
-    if (afficheBlob) msg.inlineImages = { affiche: afficheBlob };
-    MailApp.sendEmail(msg);
-  }
+  TRANSPORT_EMAIL.envoyerHtml(destinataire, sujet, html, texte, afficheBlob, expediteur);
 }
 
 /**
