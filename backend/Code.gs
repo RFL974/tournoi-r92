@@ -2907,7 +2907,7 @@ function getDossierAutorisation(classeur) {
   var config  = lireConfig(classeur);
   var g = config.global || {};
   var equipes = lireOngletSimple(classeur, 'Equipes');
-  var clubs   = lireOngletSimple(classeur, 'ClubsInvites');
+  var clubs   = clubsEditionActive(classeur);      // M1-B2 / B2-2 : édition active seule
   var matchs  = lireOngletSimple(classeur, 'Matchs');
   var ref     = getRefFFR(classeur);
 
@@ -4403,7 +4403,13 @@ function getConfigClub(classeur, params) {
 function trouverClubParToken(classeur, nom, token) {
   token = String(token || '').trim();
   if (!token) return null;
-  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  // 🚨 M1-B2 / B2-2 — LE FILTRE D'ÉDITION, ET IL N'EST PAS FACULTATIF. Les participations des
+  //   éditions passées ne sont plus effacées : elles sont CONSERVÉES, avec leurs jetons. Sans
+  //   ce filtre, un lien de l'édition précédente — dossier, page de réponse, copie partagée aux
+  //   éducateurs — redeviendrait valide du seul fait qu'on garde désormais l'histoire. Ce serait
+  //   la régression exacte de T6, introduite par la structure censée l'empêcher.
+  //   ⭐ `clubsEditionActive` ne rend QUE l'édition active : le filtre est dans la lecture même.
+  var clubs = clubsEditionActive(classeur);
   for (var i = 0; i < clubs.length; i++) {
     if (String(clubs[i].club_token || '').trim() === token) {
       // Jeton trouvé : si un nom est fourni, il doit correspondre (défense supplémentaire).
@@ -4501,9 +4507,14 @@ function repondreInvitation(classeur, data) {
   if (!club) return { error: 'Lien invalide ou expiré.' };
 
   var reponse = String(data.reponse || '').trim().toLowerCase();
-  var onglet = assurerOngletClubsInvites(classeur);
-  var ligne = ligneClubInvite(onglet, club.club_nom);
-  if (ligne === -1) return { error: 'Lien invalide ou expiré.' };
+  // ⭐ B2-2 : le club a été trouvé PAR SON JETON, et un jeton ne vit que dans une participation
+  //   de l'édition active — celle-ci existe donc forcément. ⛔ Ce chemin n'en crée aucune.
+  var etatModele = assurerModeleClubs(classeur);
+  if (etatModele.error) return { error: etatModele.error };
+  var ctxB22 = contexteClub(classeur, club.club_nom);
+  if (!ctxB22.club || !ctxB22.participation) return { error: 'Lien invalide ou expiré.' };
+  var onglet = assurerOngletParticipations(classeur);
+  var ligne = ctxB22.ligneParticipation;
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 
   // GEL J-16 (décision Romain) : premières réponses COMME modifications sont closes — vérifié
@@ -4535,7 +4546,7 @@ function repondreInvitation(classeur, data) {
         equipesRestantes.map(function (e) { return String(e.nom_equipe).trim(); }).join(', ') +
         ') — retire-les avec le club (icône corbeille) ou à la main.';
     }
-    ecrireCellulesClub(onglet, ligne, champsDecline);
+    ecrireCellulesModele(onglet, ligne, champsDecline);
     return { ok: true, statut: 'Décliné' };
   }
 
@@ -4601,7 +4612,7 @@ function repondreInvitation(classeur, data) {
   var catsTriees = Object.keys(propres).sort(function (a, b) { return comparerCategorieServeur(a, b); });
   champs.categories_engagees = catsTriees.join(',');
 
-  ecrireCellulesClub(onglet, ligne, champs);
+  ecrireCellulesModele(onglet, ligne, champs);
   return { ok: true, statut: 'Accepté', categories_engagees: catsTriees.join(',') };
 }
 
@@ -4669,8 +4680,11 @@ function comparerCategorieServeur(a, b) {
  */
 function listerClubsInvites(classeur) {
   assurerOngletClubsInvites(classeur);
-  assurerTokensClubs(classeur); // rétrocompat : donne un jeton aux clubs qui n'en ont pas encore
-  return { ok: true, clubs: lireOngletSimple(classeur, 'ClubsInvites') };
+  // ⛔ M1-B2 / B2-2 : cette LECTURE ne crée plus rien. `assurerTokensClubs` ne pose désormais
+  //   un jeton qu'aux participations DÉJÀ existantes — ouvrir l'écran ne fabrique aucune
+  //   participation (arbitrage du 2026-08-27). ⭐ Et elle ne migre pas : seule une écriture le fait.
+  assurerTokensClubs(classeur);
+  return { ok: true, clubs: clubsEditionActive(classeur) };
 }
 
 /** Génère un jeton unique (UUID) — sécurise l'accès à la page de réponse d'un club. */
@@ -4684,18 +4698,47 @@ function genererTokenClub() {
  * chaque envoi d'invitation. Sans effet si tous les clubs ont déjà un jeton.
  */
 function assurerTokensClubs(classeur) {
-  var onglet = assurerColonnesClubsInvites(classeur);
-  var dernier = onglet.getLastRow();
-  if (dernier < 2) return;
-  var col = colClubInvite(onglet, 'club_token');
-  if (col === -1) return;
-  var plage = onglet.getRange(2, col, dernier - 1, 1);
-  var vals = plage.getValues();
-  var modifie = false;
-  for (var i = 0; i < vals.length; i++) {
-    if (String(vals[i][0] || '').trim() === '') { vals[i][0] = genererTokenClub(); modifie = true; }
+  // ⭐ M1-B2 / B2-2 — LE CHANGEMENT DE RÈGLE, ET IL EST AU CŒUR DU LOT. Cette fonction posait un
+  //   jeton à TOUT club qui n'en avait pas, À CHAQUE OUVERTURE DE L'ADMINISTRATION. Sur le
+  //   nouveau modèle, ce serait fabriquer une PARTICIPATION à partir d'un écran qu'on regarde —
+  //   ⛔ interdit (arbitrage du 2026-08-27) : une participation naît d'une intention, jamais
+  //   d'une lecture. ⭐ Elle ne complète donc plus QUE les participations DÉJÀ existantes, ce qui
+  //   reste utile : une participation migrée d'un classeur ancien peut n'avoir aucun jeton.
+  // ⚠️ CLASSEUR PAS ENCORE MIGRÉ : le comportement d'ORIGINE est conservé À L'IDENTIQUE.
+  //   Entre le redéploiement et `migrerClubsMaintenant()`, `ClubsInvites` fait encore foi ;
+  //   couper la réattribution là priverait les clubs de tout lien de réponse après un reset.
+  //   ⭐ C'est la même règle que `reinitialiserPhase2Clubs` : l'ancien modèle garde l'ancien
+  //   comportement, le nouveau modèle a le sien. ⛔ Jamais un mélange des deux.
+  if (!modeleClubsEnPlace(classeur)) {
+    var oLegacy = assurerColonnesClubsInvites(classeur);
+    var dernierL = oLegacy.getLastRow();
+    if (dernierL < 2) return;
+    var colL = colClubInvite(oLegacy, 'club_token');
+    if (colL === -1) return;
+    var plageL = oLegacy.getRange(2, colL, dernierL - 1, 1);
+    var valsL = plageL.getValues();
+    var modifieL = false;
+    for (var iL = 0; iL < valsL.length; iL++) {
+      if (String(valsL[iL][0] || '').trim() === '') { valsL[iL][0] = genererTokenClub(); modifieL = true; }
+    }
+    if (modifieL) { plageL.setNumberFormat('@'); plageL.setValues(valsL); }
+    return;
   }
-  if (modifie) { plage.setNumberFormat('@'); plage.setValues(vals); }
+  var registre = editionActive(classeur);
+  if (registre.etat !== 'ok') return;
+  var onglet = assurerOngletParticipations(classeur);
+  var donnees = onglet.getDataRange().getValues();
+  if (donnees.length < 2) return;
+  var cToken = donnees[0].indexOf('club_token');
+  var cEdition = donnees[0].indexOf('edition_id');
+  if (cToken === -1 || cEdition === -1) return;
+  for (var i = 1; i < donnees.length; i++) {
+    if (String(donnees[i][cEdition] || '').trim() !== registre.edition.edition_id) continue;
+    if (String(donnees[i][cToken] || '').trim() !== '') continue;
+    var cellule = onglet.getRange(i + 1, cToken + 1);
+    cellule.setNumberFormat('@');
+    cellule.setValue(genererTokenClub());
+  }
 }
 
 /**
@@ -4715,7 +4758,7 @@ function ajouterClubInvite(classeur, data) {
   var statut = statutClubCanonique(data.statut) || 'Invité';
 
   var onglet = assurerOngletClubsInvites(classeur);
-  var existants = lireOngletSimple(classeur, 'ClubsInvites');
+  var existants = clubsEditionActive(classeur);
   for (var i = 0; i < existants.length; i++) {
     if (memeTexteSouple(existants[i].club_nom, nom)) {
       return { error: 'Le club « ' + existants[i].club_nom + ' » est déjà dans la liste.' };
@@ -4723,19 +4766,20 @@ function ajouterClubInvite(classeur, data) {
   }
 
   var dateAjout = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  // Écriture header-aware : la valeur suit le NOM de colonne (robuste à l'ordre réel du Sheet).
-  var valeurs = {
-    club_nom: nom, club_contact_nom: contactNom, club_contact_prenom: prenom,
-    club_contact_email: email, statut: statut, date_ajout: dateAjout,
-    categories_engagees: '', dossier_envoye: '',
-    club_token: genererTokenClub() // jeton unique dès l'ajout (sécurise la page de réponse)
-  };
-  var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
-  var ligne = onglet.getLastRow() + 1;
-  var row = entetes.map(function (h) { return (valeurs[h] != null) ? valeurs[h] : ''; });
-  var plage = onglet.getRange(ligne, 1, 1, entetes.length);
-  plage.setNumberFormat('@');
-  plage.setValues([row]);
+
+  // ⭐ M1-B2 / B2-2 — AJOUTER UN CLUB, C'EST L'INSCRIRE AU CARNET, PAS L'INVITER (D-050).
+  //   ⛔ Aucune participation n'est créée, ⛔ aucun jeton n'est tiré : les deux naîtront du
+  //   premier geste d'invitation. Le club apparaît donc « sans participation cette fois » —
+  //   exactement l'état d'un club connu après une réinitialisation, que l'écran sait déjà rendre.
+  //   ⚠️ `statut` reçu du client est délibérément IGNORÉ ici : « Invité » ne se pose qu'après un
+  //   envoi réussi. (Il était auparavant écrit d'office à la création — c'est ce défaut qui
+  //   rendait `statut = 'Invité'` inutilisable comme preuve de participation.)
+  var etatModele = assurerModeleClubs(classeur);
+  if (etatModele.error) return { error: etatModele.error };
+  ajouterLignesModele(assurerOngletClubs(classeur), [{
+    club_id: Utilities.getUuid(), club_nom: nom, club_contact_nom: contactNom,
+    club_contact_prenom: prenom, club_contact_email: email, date_ajout: dateAjout, actif: 'oui'
+  }]);
   return { ok: true };
 }
 
@@ -4767,15 +4811,11 @@ function indexerLignesClubs(onglet) {
 function modifierStatutClubInvite(classeur, data) {
   var statut = statutClubCanonique(data.statut);
   if (!statut) return { error: 'Statut inconnu (attendu : Invité, Accepté ou Décliné).' };
-  var onglet = assurerOngletClubsInvites(classeur);
-  var ligne = ligneClubInvite(onglet, data.club_nom);
-  if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
-  var col = colClubInvite(onglet, 'statut');
-  if (col === -1) return { error: 'Colonne « statut » introuvable.' };
-  var cellule = onglet.getRange(ligne, col);
-  cellule.setNumberFormat('@');
-  cellule.setValue(statut);
-  return { ok: true };
+  // ⭐ B2-2 : changer un statut à la main est un geste EXPLICITE de l'organisateur — il vaut
+  //   engagement du club dans l'édition en cours, et crée donc la participation si elle manque.
+  var etatModele = assurerModeleClubs(classeur);
+  if (etatModele.error) return { error: etatModele.error };
+  return ecrireParticipationClub(classeur, data.club_nom, { statut: statut }, true);
 }
 
 /**
@@ -4792,30 +4832,37 @@ function modifierStatutClubInvite(classeur, data) {
  * réclame un nouveau clic, ce qui est la vérité.
  */
 function enregistrerCategoriesEngagees(classeur, data) {
-  var onglet = assurerOngletClubsInvites(classeur);
-  var ligne = ligneClubInvite(onglet, data.club_nom);
-  if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
+  // ⭐ B2-2 : enregistrer une sélection est un geste EXPLICITE — il vaut engagement.
+  var etatModele = assurerModeleClubs(classeur);
+  if (etatModele.error) return { error: etatModele.error };
+  var ctxB22 = contexteClub(classeur, data.club_nom);
+  if (!ctxB22.club) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
+  if (!ctxB22.participation) {
+    var creeB22 = assurerParticipation(classeur, ctxB22.club);
+    if (creeB22.error) return { error: creeB22.error };
+    ctxB22 = contexteClub(classeur, data.club_nom);
+  }
+  var onglet = assurerOngletParticipations(classeur);
+  var ligne = ctxB22.ligneParticipation;
 
-  var colCat = colClubInvite(onglet, 'categories_engagees');
-  if (colCat === -1) return { error: 'Colonne « categories_engagees » introuvable.' };
+  var colCat = ENTETES.Participations.indexOf('categories_engagees') + 1;
+  if (colCat === 0) return { error: 'Colonne « categories_engagees » introuvable.' };
   var cats = String(data.categories_engagees == null ? '' : data.categories_engagees).trim();
   var cellCat = onglet.getRange(ligne, colCat);
   cellCat.setNumberFormat('@');
   cellCat.setValue(cats);
 
   if (data.club_contact_prenom != null) {
-    var colP = colClubInvite(onglet, 'club_contact_prenom');
-    if (colP !== -1) {
-      var cellP = onglet.getRange(ligne, colP);
-      cellP.setNumberFormat('@');
-      cellP.setValue(String(data.club_contact_prenom).trim());
-    }
+    // ⭐ B2-2 : le prénom appartient à l'IDENTITÉ — il s'écrit au carnet, jamais à la
+    //   participation. ⛔ Et il ne touche pas au snapshot : l'histoire ne se réécrit pas.
+    ecrireCellulesModele(assurerOngletClubs(classeur), ctxB22.ligneCarnet,
+      { club_contact_prenom: String(data.club_contact_prenom).trim() });
   }
 
   // SYNCHRONISATION des équipes dans la foulée (même appel) : ajouts + retraits prudents.
   // Réservée aux clubs « Accepté » (le panneau de sélection n'existe que pour eux) : pour tout
   // autre statut on enregistre la sélection sans toucher aux équipes.
-  var clubCourant = null, tousClubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var clubCourant = null, tousClubs = clubsEditionActive(classeur);
   for (var iC = 0; iC < tousClubs.length; iC++) {
     if (memeTexteSouple(tousClubs[iC].club_nom, data.club_nom)) { clubCourant = tousClubs[iC]; break; }
   }
@@ -4832,7 +4879,7 @@ function enregistrerCategoriesEngagees(classeur, data) {
   // Marque « sélection enregistrée » (liseré VERT) : posée SEULEMENT maintenant — après une
   // synchronisation réussie. Effacée par toute nouvelle réponse du club (repondreInvitation).
   var marque = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  ecrireCellulesClub(onglet, ligne, { selection_enregistree: marque });
+  ecrireCellulesModele(onglet, ligne, { selection_enregistree: marque });
 
   return { ok: true, categories_engagees: cats, selection_enregistree: marque,
            equipes_creees: (sync && sync.equipes_creees) || [],
@@ -4851,15 +4898,13 @@ function enregistrerCategoriesEngagees(classeur, data) {
 function regenererJetonClub(classeur, data) {
   var nom = String((data && data.club_nom) || '').trim();
   if (!nom) return { error: 'Club manquant.' };
-  var onglet = assurerOngletClubsInvites(classeur);
-  var ligne = ligneClubInvite(onglet, nom);
-  if (ligne === -1) return { error: 'Club introuvable : ' + nom };
-  var col = colClubInvite(onglet, 'club_token');
-  if (col === -1) return { error: 'Colonne club_token absente de l\'onglet ClubsInvites.' };
+  // ⭐ B2-2 : renouveler un jeton suppose qu'il en existe un — donc une participation. ⛔ Ce
+  //   geste n'en crée AUCUNE : un club seulement connu du carnet n'a pas de lien à renouveler.
+  var etatModele = assurerModeleClubs(classeur);
+  if (etatModele.error) return { error: etatModele.error };
   var jeton = genererTokenClub();
-  var cellule = onglet.getRange(ligne, col);
-  cellule.setNumberFormat('@');
-  cellule.setValue(jeton);
+  var res = ecrireParticipationClub(classeur, nom, { club_token: jeton }, false);
+  if (res.error) return res;
   return { ok: true, club_token: jeton };
 }
 
@@ -4880,8 +4925,10 @@ function envoyerDossierEmail(classeur, data) {
   var ligne = ligneClubInvite(onglet, nom);
   if (ligne === -1) return { error: 'Club introuvable : ' + nom };
 
-  var colEmail = colClubInvite(onglet, 'club_contact_email');
-  var email = (colEmail === -1) ? '' : String(onglet.getRange(ligne, colEmail).getValue() || '').trim();
+  // ⭐ B2-2 : le destinataire est TOUJOURS relu au carnet (jamais pris du client), et le
+  //   dossier suppose un club déjà engagé — ⛔ ce geste ne crée donc aucune participation.
+  var ctxB22 = contexteClub(classeur, nom);
+  var email = ctxB22.club ? String(ctxB22.club.club_contact_email || '').trim() : '';
   if (!email) return { error: 'Ce club n\'a pas d\'email de contact : utilise « Copier le lien ».' };
   if (!estEmailValide(email)) return { error: 'Email du club invalide : « ' + email + ' ».' };
 
@@ -4907,12 +4954,7 @@ function envoyerDossierEmail(classeur, data) {
 
   // Succès → on pose la date d'envoi (et seulement là).
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  var colEnvoye = colClubInvite(onglet, 'dossier_envoye');
-  if (colEnvoye !== -1) {
-    var cell = onglet.getRange(ligne, colEnvoye);
-    cell.setNumberFormat('@');
-    cell.setValue(today);
-  }
+  ecrireParticipationClub(classeur, nom, { dossier_envoye: today }, false);
   return { ok: true, dossier_envoye: today, destinataire: email };
 }
 
@@ -4933,7 +4975,7 @@ function envoyerFeuilleJour(classeur, data) {
   if (!html.trim()) return { error: 'Le contenu du message est vide.' };
 
   var onglet = assurerOngletClubsInvites(classeur);
-  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var clubs = clubsEditionActive(classeur);
   var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
   var texteRepli = texte.trim() ? texte : html.replace(/<[^>]+>/g, ' ');
 
@@ -4981,7 +5023,7 @@ function equipeRattacheeAuClub(nomEquipe, nomClub, autresClubs) {
 /** Noms des clubs invités AUTRES que `nomClub` (comparaison souple). Sert à lever les
  *  collisions « {club}-N » ci-dessus. Renvoie [] si l'onglet est vide/absent. */
 function autresNomsClubsInvites(classeur, nomClub) {
-  return lireOngletSimple(classeur, 'ClubsInvites')
+  return clubsEditionActive(classeur)
     .map(function (c) { return String(c.club_nom || '').trim(); })
     .filter(function (n) { return n && !memeTexteSouple(n, nomClub); });
 }
@@ -5144,13 +5186,14 @@ function planifierSyncEquipesClub(equipes, nomClub, categories, nbMap, nomsRefer
  * d'une valeur pour une catégorie engagée, on crée 1 équipe.
  */
 function creerEquipesClub(classeur, data) {
-  var onglet = assurerOngletClubsInvites(classeur);
   var nomClub = String(data.club_nom || '').trim();
   if (!nomClub) return { error: 'Club manquant.' };
-  var ligne = ligneClubInvite(onglet, nomClub);
-  if (ligne === -1) return { error: 'Club introuvable : ' + nomClub };
+  // ⭐ B2-2 : réservé aux clubs « Accepté » (contrôlé juste en dessous) — la participation
+  //   existe donc forcément. ⛔ Ce geste n'en crée aucune.
+  var etatModele = assurerModeleClubs(classeur);
+  if (etatModele.error) return { error: etatModele.error };
 
-  var club = null, clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var club = null, clubs = clubsEditionActive(classeur);
   for (var i = 0; i < clubs.length; i++) {
     if (memeTexteSouple(clubs[i].club_nom, nomClub)) { club = clubs[i]; break; }
   }
@@ -5207,12 +5250,9 @@ function creerEquipesClub(classeur, data) {
     if (r && r.ok) supprimees.push({ nom: t.nom, categorie: t.categorie });
   });
 
-  var colAlerte = colClubInvite(onglet, 'alerte_ecart');
-  if (colAlerte !== -1) {
-    var cell = onglet.getRange(ligne, colAlerte);
-    cell.setNumberFormat('@');
-    cell.setValue(plan.alertes.length ? plan.alertes.join(' | ') : '');
-  }
+  // ⭐ B2-2 : l'alerte d'écart décrit CETTE édition — elle vit dans la participation.
+  ecrireParticipationClub(classeur, nomClub,
+    { alerte_ecart: plan.alertes.length ? plan.alertes.join(' | ') : '' }, false);
   return { ok: true, equipes_creees: creees, equipes_supprimees: supprimees,
            equipes_renommees: renommees, alerte: plan.alertes.join(' | ') };
 }
@@ -5246,32 +5286,34 @@ function renommerEquipeParId(oEquipes, idEquipe, nouveauNom) {
  * Ne touche PAS au statut, à la réponse déjà donnée, ni au token. Clé = ancien nom (club_nom_actuel).
  */
 function modifierClubInvite(classeur, data) {
-  var onglet = assurerOngletClubsInvites(classeur);
+  var etatModele = assurerModeleClubs(classeur);
+  if (etatModele.error) return { error: etatModele.error };
   var ancien = String(data.club_nom_actuel || '').trim();
-  var ligne = ligneClubInvite(onglet, ancien);
-  if (ligne === -1) return { error: 'Club introuvable : ' + ancien };
+  var ctxB22 = contexteClub(classeur, ancien);
+  if (!ctxB22.club) return { error: 'Club introuvable : ' + ancien };
+  var onglet = assurerOngletClubs(classeur);
+  var ligne = ctxB22.ligneCarnet;
   var nouveauNom = String(data.club_nom || '').trim();
   if (!nouveauNom) return { error: 'Le nom du club ne peut pas être vide.' };
   var email = String(data.club_contact_email || '').trim();
   if (email && !estEmailValide(email)) return { error: 'Email du contact invalide : « ' + email + ' ».' };
 
-  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var clubs = clubsEditionActive(classeur);
   for (var i = 0; i < clubs.length; i++) {
     if (!memeTexteSouple(clubs[i].club_nom, ancien) && memeTexteSouple(clubs[i].club_nom, nouveauNom)) {
       return { error: 'Un autre club porte déjà le nom « ' + clubs[i].club_nom + ' ».' };
     }
   }
-  function ecrire(entete, valeur) {
-    var col = colClubInvite(onglet, entete);
-    if (col === -1) return;
-    var cell = onglet.getRange(ligne, col);
-    cell.setNumberFormat('@');
-    cell.setValue(valeur == null ? '' : String(valeur));
-  }
-  ecrire('club_nom', nouveauNom);
-  ecrire('club_contact_prenom', String(data.club_contact_prenom || '').trim());
-  ecrire('club_contact_nom', String(data.club_contact_nom || '').trim());
-  ecrire('club_contact_email', email);
+  // ⭐ B2-2 — L'IDENTITÉ CHANGE, ⛔ PAS L'HISTOIRE. Ces quatre champs vivent au carnet ; les
+  //   snapshots des participations passées gardent le nom et le contact d'alors, et c'est
+  //   exactement pour ce cas-là qu'ils existent. ⭐ Le `club_id`, lui, ne bouge jamais : après
+  //   renommage, c'est toujours le même club — les éditions passées restent rattachées.
+  ecrireCellulesModele(onglet, ligne, {
+    club_nom: nouveauNom,
+    club_contact_prenom: String(data.club_contact_prenom || '').trim(),
+    club_contact_nom: String(data.club_contact_nom || '').trim(),
+    club_contact_email: email
+  });
   return { ok: true };
 }
 
@@ -5413,16 +5455,21 @@ function envoyerInvitationClub(classeur, data) {
   var errMod = erreurModeleInvitation(sujet, htmlModele, texteModele);
   if (errMod) return { error: errMod };
 
-  var onglet = assurerOngletClubsInvites(classeur);
-  assurerTokensClubs(classeur); // garantit un jeton (lien de réponse personnel)
-  var ligne = ligneClubInvite(onglet, nom);
-  if (ligne === -1) return { error: 'Club introuvable : ' + nom };
-  var colEmail = colClubInvite(onglet, 'club_contact_email');
-  var email = (colEmail === -1) ? '' : String(onglet.getRange(ligne, colEmail).getValue() || '').trim();
+  // ⭐ M1-B2 / B2-2 — C'EST ICI, ET SEULEMENT ICI, QUE NAÎT UNE PARTICIPATION D'INVITATION.
+  //   Inviter un club, c'est l'engager dans cette édition : geste explicite, intention claire.
+  //   ⭐ La participation (et son jeton) est créée AVANT l'envoi — le lien personnel doit
+  //   figurer dans l'email. ⛔ Mais `statut` reste VIDE jusqu'au succès : voir plus bas.
+  var etatModele = assurerModeleClubs(classeur);
+  if (etatModele.error) return { error: etatModele.error };
+  var ctxB22 = contexteClub(classeur, nom);
+  if (!ctxB22.club) return { error: 'Club introuvable : ' + nom };
+  var email = String(ctxB22.club.club_contact_email || '').trim();
   if (!email) return { error: 'Ce club n\'a pas d\'email de contact : à inviter manuellement.' };
   if (!estEmailValide(email)) return { error: 'Email du club invalide : « ' + email + ' ».' };
+  var creeB22 = assurerParticipation(classeur, ctxB22.club);
+  if (creeB22.error) return { error: creeB22.error };
 
-  var club = null, clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var club = null, clubs = clubsEditionActive(classeur);
   for (var i = 0; i < clubs.length; i++) { if (memeTexteSouple(clubs[i].club_nom, nom)) { club = clubs[i]; break; } }
   var prenom = club ? club.club_contact_prenom : '';
   var lienReponse = lienReponseClub(data.base_reponse, nom, club ? club.club_token : '');
@@ -5436,9 +5483,11 @@ function envoyerInvitationClub(classeur, data) {
     return { error: 'Échec de l\'envoi de l\'email : ' + (e && e.message ? e.message : e) };
   }
 
+  // ⭐ SUCCÈS — et c'est seulement maintenant que « Invité » se pose (D-050). Avant B2-2, ce
+  //   statut était écrit d'office à la CRÉATION de la fiche : il ne disait donc rien de ce qui
+  //   s'était réellement passé. Désormais, le voir à l'écran signifie « l'email est parti ».
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  var col = colClubInvite(onglet, 'invitation_envoyee');
-  if (col !== -1) { var cell = onglet.getRange(ligne, col); cell.setNumberFormat('@'); cell.setValue(today); }
+  ecrireParticipationClub(classeur, nom, { invitation_envoyee: today, statut: 'Invité' }, false);
   return { ok: true, invitation_envoyee: today, destinataire: email };
 }
 
@@ -5458,35 +5507,37 @@ function envoyerInvitationsGroupe(classeur, data) {
   if (errMod) return { error: errMod };
   var renvoyer = (String(data.renvoyer).toLowerCase() === 'oui' || data.renvoyer === true);
 
-  var onglet = assurerOngletClubsInvites(classeur);
-  assurerTokensClubs(classeur); // garantit un jeton à tous (lien de réponse personnel)
-  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var etatModele = assurerModeleClubs(classeur);
+  if (etatModele.error) return { error: etatModele.error };
   var expediteur = String((lireConfig(classeur).global || {}).email_expediteur || '').trim();
   var afficheBlob = afficheBlobPourEmail(classeur);
   var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  var colEnvoye = colClubInvite(onglet, 'invitation_envoyee');
-  // Index nom→ligne construit UNE fois (la boucle ne fait qu'écrire, aucune ligne insérée/
-  // supprimée → les numéros restent valides). Avant : ligneClubInvite() relisait tout l'onglet
-  // à chaque club invité → O(n²) sur le carnet d'adresses.
-  var ligneParNom = indexerLignesClubs(onglet);
 
+  // ⚠️ LA LISTE DES CANDIDATS EST FIGÉE AVANT LA BOUCLE, et ce n'est pas un détail : chaque
+  //   envoi CRÉE une participation (donc une ligne), et relire les clubs en cours de route
+  //   ferait bouger le sol sous les pieds de la boucle.
+  var candidats = clubsEditionActive(classeur);
   var envoyes = [], echecs = [], sansEmail = [], dejaInvites = [];
-  clubs.forEach(function (c) {
+  candidats.forEach(function (c) {
     if (!clubEstInvitable(c.statut)) return; // Accepté / Décliné : hors invitation
     var email = String(c.club_contact_email || '').trim();
     if (!email || !estEmailValide(email)) { sansEmail.push(String(c.club_nom || '')); return; }
     var dejaInvite = String(c.invitation_envoyee || '').trim() !== '';
     if (dejaInvite && !renvoyer) { dejaInvites.push(String(c.club_nom || '')); return; }
+    // ⭐ La participation (et son jeton) naît ICI, club par club : inviter est le geste qui
+    //   engage. ⛔ Un club écarté ci-dessus n'en reçoit AUCUNE.
+    var ctxC = contexteClub(classeur, c.club_nom);
+    if (!ctxC.club) { echecs.push({ club: String(c.club_nom || ''), erreur: 'Club introuvable au carnet.' }); return; }
+    var creeC = assurerParticipation(classeur, ctxC.club);
+    if (creeC.error) { echecs.push({ club: String(c.club_nom || ''), erreur: creeC.error }); return; }
+    var jeton = creeC.participation.club_token || c.club_token;
     try {
-      var lienReponse = lienReponseClub(data.base_reponse, c.club_nom, c.club_token);
-      var lienInvitation = lienInvitationClub(data.base_invitation, c.club_nom, c.club_token);
+      var lienReponse = lienReponseClub(data.base_reponse, c.club_nom, jeton);
+      var lienInvitation = lienInvitationClub(data.base_invitation, c.club_nom, jeton);
       envoyerInvitationEmail(email, sujet, htmlModele, texteModele, c.club_contact_prenom, lienReponse, lienInvitation, afficheBlob, expediteur);
-      var ligne = ligneParNom[normaliserTexteSouple(c.club_nom)] || -1;
-      if (ligne !== -1 && colEnvoye !== -1) {
-        var cell = onglet.getRange(ligne, colEnvoye);
-        cell.setNumberFormat('@');
-        cell.setValue(today);
-      }
+      // ⭐ SUCCÈS SEUL : la date ET « Invité » — un échec ne pose ni l'une ni l'autre, et
+      //   ⭐ n'interrompt pas les suivants (comportement d'origine, strictement préservé).
+      ecrireParticipationClub(classeur, c.club_nom, { invitation_envoyee: today, statut: 'Invité' }, false);
       envoyes.push(String(c.club_nom || ''));
     } catch (e) {
       echecs.push({ club: String(c.club_nom || ''), erreur: (e && e.message ? e.message : String(e)) });
@@ -5530,13 +5581,14 @@ function planifierSuppressionClub(equipes, nomClub, nomsReferences, autresClubs)
  * (planning généré entre-temps…) re-bloque la suppression.
  */
 function supprimerClubInvite(classeur, data) {
-  var onglet = assurerOngletClubsInvites(classeur);
-  var ligne = ligneClubInvite(onglet, data.club_nom);
-  if (ligne === -1) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
+  var etatModele = assurerModeleClubs(classeur);
+  if (etatModele.error) return { error: etatModele.error };
+  var ctxB22 = contexteClub(classeur, data.club_nom);
+  if (!ctxB22.club) return { error: 'Club introuvable : ' + String(data.club_nom || '') };
 
   // Casse EXACTE du Sheet (la correspondance des noms d'équipes en dépend).
   var nomExact = String(data.club_nom || '').trim();
-  var clubs = lireOngletSimple(classeur, 'ClubsInvites');
+  var clubs = clubsEditionActive(classeur);
   for (var i = 0; i < clubs.length; i++) {
     if (memeTexteSouple(clubs[i].club_nom, nomExact)) { nomExact = String(clubs[i].club_nom || '').trim(); break; }
   }
@@ -5563,7 +5615,20 @@ function supprimerClubInvite(classeur, data) {
   }
 
   plan.supprimables.forEach(function (t) { supprimerEquipe(classeur, t.id_equipe); });
-  onglet.deleteRow(ligne);
+
+  // ⭐ M1-B2 / B2-2 — SUPPRESSION LOGIQUE. À l'écran, rien ne change : le club disparaît de la
+  //   liste, ses équipes partent comme avant. ⛔ Mais son IDENTITÉ n'est pas détruite : elle
+  //   porte un `club_id` auquel les éditions PASSÉES sont rattachées. L'effacer rendrait leurs
+  //   participations orphelines — on perdrait « ce club est venu quatre fois », qui est
+  //   précisément ce que B2-2 existe pour rendre possible.
+  ecrireCellulesModele(assurerOngletClubs(classeur), ctxB22.ligneCarnet, { actif: 'non' });
+
+  // ⭐ La participation de l'ÉDITION EN COURS, elle, part réellement : retirer un club du
+  //   tournoi courant, c'est bien annuler sa venue CETTE fois. ⛔ Les participations des
+  //   éditions FERMÉES ne sont jamais touchées — l'histoire ne se corrige pas.
+  if (ctxB22.ligneParticipation !== -1) {
+    assurerOngletParticipations(classeur).deleteRow(ctxB22.ligneParticipation);
+  }
   return { ok: true, equipes_supprimees: plan.supprimables };
 }
 
@@ -5587,6 +5652,22 @@ function supprimerClubInvite(classeur, data) {
  * familles (R-102). La séparation en `Clubs` + `Participations` appartient à B2-2 (D-050).
  */
 function reinitialiserPhase2Clubs(classeur) {
+  // ⭐ M1-B2 / B2-2 — SUR LE NOUVEAU MODÈLE, IL N'Y A PLUS RIEN À VIDER, ET C'EST LE GAIN
+  //   CENTRAL DU LOT. L'engagement de l'édition qui s'achève appartient à cette édition ; la
+  //   bascule du registre (`basculerEditionApresReset`, étape 5 du reset) en ouvre une neuve,
+  //   et la nouvelle édition n'a tout simplement AUCUNE participation. Le carnet, lui, ne
+  //   bouge pas — il est fait pour durer.
+  //
+  //   🎯 CE QUE CELA REND IMPOSSIBLE : R-099 et R-100 étaient des colonnes OUBLIÉES par la
+  //   liste ci-dessous. Il n'y a plus de liste. Une colonne d'engagement ajoutée demain ne
+  //   peut plus survivre à un reset — elle est dans la participation, et la participation
+  //   n'est plus l'active. ⛔ Plus rien à tenir à jour, donc plus rien à oublier.
+  //
+  //   ⚠️ Le chemin ci-dessous reste vivant pour un classeur PAS ENCORE MIGRÉ (entre le
+  //   redéploiement et `migrerClubsMaintenant()`) : là, `ClubsInvites` fait encore foi, et
+  //   `colonnesClubsAEffacer` reste la seule protection. ⛔ Ne pas le retirer avant que
+  //   l'ancien onglet ne disparaisse — ce qui n'est PAS l'objet de B2-2.
+  if (modeleClubsEnPlace(classeur)) return;
   var onglet = classeur.getSheetByName('ClubsInvites');
   if (!onglet) return;
   assurerColonnesClubsInvites(classeur);
@@ -8082,7 +8163,11 @@ function lireParticipations(classeur) { return lireOngletSimple(classeur, 'Parti
 /** Vrai si le club est actif au carnet. ⭐ Colonne absente ou vide ⇒ ACTIF : un carnet d'avant
  *  la suppression logique ne doit pas voir tous ses clubs disparaître d'un coup. */
 function clubEstActif(club) {
-  var v = String((club && club.actif) === undefined || club.actif === null ? '' : club.actif).trim();
+  // ⚠️ `club` absent ⇒ FAUX, et sans lever d'erreur. (Une mutation de B2-2 — « supprimer
+  //   physiquement l'identité au lieu de la désactiver » — a fait passer `null` ici et l'a
+  //   révélé : la condition d'origine lisait `club.actif` même quand `club` valait `null`.)
+  if (!club) return false;
+  var v = (club.actif === undefined || club.actif === null) ? '' : String(club.actif).trim();
   return v === '' || memeTexteSouple(v, 'oui');
 }
 
@@ -8269,6 +8354,227 @@ function migrerClubsMaintenant() {
   message += '\n\n⭐ `ClubsInvites` n\'a PAS été modifié : aucune donnée n\'a été déplacée, ' +
     'seulement recopiée.';
   return _b22Journaliser(message);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ⭐ LA COUCHE D'ADAPTATION — « le frontend ne doit rien voir changer » (D-050).
+ *
+ * L'administration manipule aujourd'hui une LISTE PLATE : un objet par club, portant à la
+ * fois son identité et son engagement. Toutes les cartes, les badges, les liserés, les tris,
+ * les statuts et les actions en dépendent — six fichiers du navigateur, et ⛔ B2-2 s'interdit
+ * de les réécrire. Cette fonction reconstruit donc EXACTEMENT cet objet, à partir des deux
+ * onglets. C'est le seul endroit du serveur qui sait que la structure a changé.
+ *
+ * ⭐ CE QUI EN DÉCOULE, ET QUI EST LE VRAI GAIN : un club connu SANS participation à l'édition
+ * active reçoit des champs d'engagement VIDES — pas « hérités », pas « anciens ». Une
+ * participation d'une édition fermée ne peut pas contaminer cet objet : elle n'est jamais lue.
+ * C'est le comportement d'après-reset, obtenu ici par construction et non par un effacement.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * ⭐ PUR — la liste plate attendue par l'administration, reconstruite depuis le nouveau modèle.
+ * @param {Array<Object>} clubs          le carnet
+ * @param {Array<Object>} participations toutes les participations, toutes éditions
+ * @param {string}        editionId      l'édition ACTIVE — ⛔ la seule qui soit lue
+ * @return {Array<Object>} un objet par club ACTIF, aux 17 clés de l'ancien `ClubsInvites`
+ */
+function clubsPlats(clubs, participations, editionId) {
+  var edition = String(editionId || '').trim();
+  return (clubs || []).filter(clubEstActif).map(function (club) {
+    var plat = {};
+    // ① L'identité, depuis le carnet — c'est elle qui est à jour, pas le snapshot.
+    CLUBS_COLONNES_CONTACT.forEach(function (h) {
+      plat[h] = (club[h] === undefined || club[h] === null) ? '' : club[h];
+    });
+    // ② L'engagement, depuis la participation de l'ÉDITION ACTIVE — et d'elle seule.
+    //    ⛔ Aucune participation : tous ces champs restent VIDES. C'est un club connu, pas
+    //    un club invité (D-050) : son statut vide signifie « sans participation cette fois ».
+    var p = edition ? trouverParticipation(participations, edition, club.club_id) : null;
+    CLUBS_COLONNES_ENGAGEMENT.forEach(function (h) {
+      var v = p ? p[h] : '';
+      plat[h] = (v === undefined || v === null) ? '' : v;
+    });
+    return plat;
+  });
+}
+
+/**
+ * Vrai si le classeur travaille déjà sur le nouveau modèle. ⭐ Le critère est le CARNET, jamais
+ * les participations : zéro participation active est un état parfaitement valide (c'est celui
+ * d'un classeur réinitialisé), tandis qu'un carnet peuplé ne peut venir que de la migration
+ * ou d'un ajout postérieur. ⛔ Aucune devinette : la réponse est binaire et observable.
+ */
+function modeleClubsEnPlace(classeur) {
+  return lireClubs(classeur).length > 0;
+}
+
+/**
+ * ⭐ LE POINT DE PASSAGE UNIQUE de toute lecture de clubs par l'application.
+ *
+ * ⚠️ Pourquoi un repli, alors que ce projet s'en méfie : il y a un moment, et un seul, où le
+ * serveur neuf tourne sur un classeur pas encore migré — entre le redéploiement et le
+ * lancement de `migrerClubsMaintenant()`. Sans repli, l'administration afficherait ZÉRO club
+ * pendant cet intervalle. ⭐ Ce repli n'est PAS une devinette : son critère est observable
+ * (le carnet est vide ou non), il est déterministe, et il disparaît de lui-même à la migration.
+ */
+function clubsEditionActive(classeur) {
+  if (!modeleClubsEnPlace(classeur)) {
+    return lireOngletSimple(classeur, 'ClubsInvites');   // ⛔ classeur pas encore migré
+  }
+  var registre = editionActive(classeur);
+  var edition = (registre.etat === 'ok') ? registre.edition.edition_id : '';
+  return clubsPlats(lireClubs(classeur), lireParticipations(classeur), edition);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ⭐ LES ÉCRITURES — un seul chemin, jamais deux.
+ *
+ * ⚠️ POURQUOI LA MIGRATION SE DÉCLENCHE À L'ÉCRITURE, ET JAMAIS À LA LECTURE. Entre le
+ * redéploiement du serveur et le lancement de `migrerClubsMaintenant()`, le classeur porte
+ * encore l'ancienne structure. Faire cohabiter DEUX chemins d'écriture dans douze fonctions
+ * doublerait la complexité de chacune — et ce projet a déjà payé le prix des doubles vérités.
+ *
+ * ⭐ Alors on n'en garde qu'un : la première écriture qui arrive sur un classeur non migré le
+ * fait converger d'abord, puis écrit sur le modèle neuf. C'est le patron « migration douce »
+ * du dépôt (`assurerColonnesClubsInvites`), appliqué à une structure au lieu d'une colonne.
+ *
+ * ⛔ ET UNE LECTURE NE MIGRE JAMAIS : une simple ouverture de l'administration ne doit créer
+ * aucune participation. Le déclencheur est une INTENTION — ajouter, inviter, répondre — pas
+ * un écran qu'on regarde.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Garantit que le classeur travaille sur `Clubs` + `Participations`. ⭐ Idempotent, et sans
+ * effet si le carnet est déjà là. ⛔ À n'appeler que depuis un chemin d'ÉCRITURE.
+ * @return {Object} { ok } ou { error } — refus si le registre des éditions est en anomalie.
+ */
+function assurerModeleClubs(classeur) {
+  assurerOngletClubs(classeur);
+  assurerOngletParticipations(classeur);
+  if (modeleClubsEnPlace(classeur)) return { ok: true };
+
+  var legacy = lireOngletSimple(classeur, 'ClubsInvites');
+  if (!legacy.length) return { ok: true };          // rien à reprendre : classeur neuf
+
+  var registre = editionActive(classeur);
+  if (registre.etat === 'plusieurs_actives') return { error: erreurPlusieursEditionsActives(registre) };
+  var edition = (registre.etat === 'ok') ? registre.edition.edition_id : '';
+  var plan = planifierMigrationClubs(legacy, lireClubs(classeur), lireParticipations(classeur),
+    edition, function () { return Utilities.getUuid(); });
+  if (plan.error) return { error: plan.error };
+  ajouterLignesModele(assurerOngletClubs(classeur), plan.clubsACreer);
+  ajouterLignesModele(assurerOngletParticipations(classeur), plan.participationsACreer);
+  return { ok: true };
+}
+
+/** Ligne (1-based) d'une valeur dans une colonne donnée d'un onglet, ou -1. */
+function ligneParColonne(onglet, nomColonne, valeur, souple) {
+  var donnees = onglet.getDataRange().getValues();
+  if (!donnees.length) return -1;
+  var col = donnees[0].indexOf(nomColonne);
+  if (col === -1) return -1;
+  var cible = String(valeur == null ? '' : valeur).trim();
+  if (!cible) return -1;
+  for (var i = 1; i < donnees.length; i++) {
+    var v = donnees[i][col];
+    if (souple ? memeTexteSouple(v, cible) : String(v == null ? '' : v).trim() === cible) return i + 1;
+  }
+  return -1;
+}
+
+/** Écrit plusieurs cellules d'une ligne, PAR NOM DE COLONNE (robuste à l'ordre réel). */
+function ecrireCellulesModele(onglet, ligne, valeurs) {
+  var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
+  Object.keys(valeurs).forEach(function (h) {
+    var col = entetes.indexOf(h);
+    if (col === -1) return;
+    var cellule = onglet.getRange(ligne, col + 1);
+    cellule.setNumberFormat('@');
+    cellule.setValue(valeurs[h]);
+  });
+}
+
+/**
+ * ⭐ LE CONTEXTE D'UN CLUB — tout ce qu'une écriture doit savoir, en une lecture.
+ * @return {Object} { club, ligneCarnet, participation, ligneParticipation, editionId }
+ *   `club` est null si le nom est inconnu du carnet ; `participation` est null si le club
+ *   n'est pas engagé dans l'édition active. ⛔ Rien n'est créé ici.
+ */
+function contexteClub(classeur, nom) {
+  var registre = editionActive(classeur);
+  var editionId = (registre.etat === 'ok') ? registre.edition.edition_id : '';
+  var club = trouverClubParNom(lireClubs(classeur), nom);
+  var ctx = { club: club, ligneCarnet: -1, participation: null, ligneParticipation: -1,
+    editionId: editionId };
+  if (!club) return ctx;
+  ctx.ligneCarnet = ligneParColonne(assurerOngletClubs(classeur), 'club_id', club.club_id, false);
+  if (!editionId) return ctx;
+  var participations = lireParticipations(classeur);
+  ctx.participation = trouverParticipation(participations, editionId, club.club_id);
+  if (ctx.participation) {
+    var onglet = assurerOngletParticipations(classeur);
+    var donnees = onglet.getDataRange().getValues();
+    var cE = donnees[0].indexOf('edition_id'), cC = donnees[0].indexOf('club_id');
+    for (var i = 1; i < donnees.length; i++) {
+      if (String(donnees[i][cE] || '').trim() === editionId &&
+          String(donnees[i][cC] || '').trim() === club.club_id) { ctx.ligneParticipation = i + 1; break; }
+    }
+  }
+  return ctx;
+}
+
+/**
+ * ⭐ CRÉE la participation d'un club à l'édition active — ⛔ SEULEMENT sur un geste EXPLICITE
+ * (inviter, enregistrer une sélection, changer un statut à la main). Idempotente : si elle
+ * existe déjà, elle est simplement renvoyée.
+ *
+ * ⚠️ Le jeton est posé ICI, à la création, et NULLE PART AILLEURS de façon passive : c'est ce
+ * qui interdit à une ouverture d'écran de fabriquer une participation (arbitrage du
+ * 2026-08-27). ⛔ Le statut, lui, reste VIDE : « Invité » ne se pose qu'après un envoi réussi.
+ * @return {Object} { ok, participation, cree } ou { error }
+ */
+function assurerParticipation(classeur, club) {
+  var registre = editionActive(classeur);
+  if (registre.etat === 'plusieurs_actives') return { error: erreurPlusieursEditionsActives(registre) };
+  if (registre.etat !== 'ok') {
+    return { error: 'Aucune édition active : impossible de rattacher une participation. ' +
+      'Lance `migrerEditionsMaintenant()` (M1-B2 / B2-1).' };
+  }
+  var editionId = registre.edition.edition_id;
+  var existante = trouverParticipation(lireParticipations(classeur), editionId, club.club_id);
+  if (existante) return { ok: true, participation: existante, cree: false };
+
+  var participation = { edition_id: editionId, club_id: club.club_id, club_token: genererTokenClub() };
+  CLUBS_COLONNES_ENGAGEMENT.forEach(function (h) {
+    if (participation[h] === undefined) participation[h] = '';
+  });
+  // 📸 L'identité AU MOMENT DE L'INVITATION : figée maintenant, plus jamais réécrite.
+  PARTICIPATION_COLONNES_SNAPSHOT.forEach(function (snap) {
+    var v = club[PARTICIPATION_SNAPSHOT_SOURCE[snap]];
+    participation[snap] = (v === undefined || v === null) ? '' : String(v).trim();
+  });
+  ajouterLignesModele(assurerOngletParticipations(classeur), [participation]);
+  return { ok: true, participation: participation, cree: true };
+}
+
+/** Écrit dans la PARTICIPATION active d'un club, en la créant si le geste le justifie.
+ *  @param {boolean} creerSiAbsente  ⛔ false pour tout helper passif */
+function ecrireParticipationClub(classeur, nom, valeurs, creerSiAbsente) {
+  var ctx = contexteClub(classeur, nom);
+  if (!ctx.club) return { error: 'Club introuvable : ' + String(nom || '') };
+  if (!ctx.participation) {
+    if (!creerSiAbsente) {
+      return { error: 'Le club « ' + String(ctx.club.club_nom) + ' » n\'est pas engagé dans ' +
+        'l\'édition en cours.' };
+    }
+    var cree = assurerParticipation(classeur, ctx.club);
+    if (cree.error) return cree;
+    ctx = contexteClub(classeur, nom);
+  }
+  ecrireCellulesModele(assurerOngletParticipations(classeur), ctx.ligneParticipation, valeurs);
+  return { ok: true, contexte: ctx };
 }
 
 /** Journalise et, si une interface existe, affiche — même patron que `migrerEditionsMaintenant`. */

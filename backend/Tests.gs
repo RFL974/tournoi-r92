@@ -452,6 +452,20 @@ function lancerTestsFFR() {
   testB22_M8_refusSansEdition(etat);
   testB22_M9_classeurApresReset(etat);
   testB22_M10_gardeFouStructure(etat);
+  // ⭐ Puis L'ÉPREUVE CENTRALE : les huit de B2-0 rejoués sur la structure NEUVE.
+  testB22_N_huitResultatsSurNouveauModele(etat);
+  testB22_N2_resetConserveLHistoire(etat);
+  testB22_N3_jetonEditionFermeeRefuse(etat);
+  testB22_N4_jetonEditionActiveFonctionne(etat);
+  // ⭐ Enfin : suppression LOGIQUE, jetons jamais passifs, et compatibilité de l'écran.
+  testB22_S1_suppressionLogique(etat);
+  testB22_S2_suppressionNeTouchePasLHistoire(etat);
+  testB22_S3_jetonJamaisPassif(etat);
+  testB22_S3bis_jetonsNeTouchentPasLePasse(etat);
+  testB22_S4_participationNaitDunGesteExplicite(etat);
+  testB22_S5_ajouterNestPasInviter(etat);
+  testB22_S6_compatibiliteObjetPlat(etat);
+  testB22_S7_clubInactifResteHorsEcran(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -4793,11 +4807,33 @@ var _B20_ANCIEN_TOKEN = 'JETON-EDITION-PRECEDENTE';
  * ⛔ aucune assertion de ce bloc n'aura à changer.
  */
 function _b20ClubsApresReset(classeur) {
-  return lireOngletSimple(classeur, 'ClubsInvites');
+  // ⚡ M1-B2 / B2-2 — CETTE LIGNE EST LE SEUL CHANGEMENT QUE LA MIGRATION A COÛTÉ AUX HUIT
+  //   TESTS T1 → T8, et c'était l'engagement pris le 2026-08-25 : « en B2-2, cette fonction
+  //   lira `Clubs` + `Participations` via la couche d'adaptation ; ⛔ aucune assertion de ce
+  //   bloc n'aura à changer. » ⭐ C'est tenu — les huit sont rejoués MOT POUR MOT, sur les
+  //   DEUX structures (voir la série N du bloc B2-2).
+  return clubsEditionActive(classeur);
 }
 
 /** Vrai si la valeur est « rien » au sens du classeur (cellule vidée, jamais supprimée). */
 function _b20EstVide(v) { return v === '' || v === null || v === undefined; }
+
+/**
+ * ⚡ M1-B2 / B2-2 — LE SECOND HELPER QUI CHANGE (l'autre étant `_b20ClubsApresReset`).
+ *
+ * T4 a besoin de terminer l'engagement d'une édition SANS vider l'onglet `Equipes` — c'est ce
+ * qui rend son isolation si stricte. Il appelait pour cela `reinitialiserPhase2Clubs`, ⛔ et
+ * c'était la SEULE assertion des huit à nommer une MÉCANIQUE au lieu d'un RÉSULTAT. B2-2 l'a
+ * mis en évidence : sur `Clubs` + `Participations`, cette fonction n'a plus rien à vider —
+ * l'engagement s'achève parce que l'ÉDITION change, pas parce qu'on efface des colonnes.
+ *
+ * ⭐ Le geste est donc exprimé ici, une fois, pour les deux structures. ⛔ Les assertions de
+ * T4 sont inchangées, mot pour mot.
+ */
+function _b20TerminerEngagementEdition(classeur) {
+  if (modeleClubsEnPlace(classeur)) { basculerEditionApresReset(classeur); return; }
+  reinitialiserPhase2Clubs(classeur);
+}
 
 /**
  * Classeur factice B2-0 : Config (comme M1-B) + `ClubsInvites` peuplé + `Equipes`.
@@ -4808,7 +4844,16 @@ function _b20EstVide(v) { return v === '' || v === null || v === undefined; }
  * (« une équipe retirée emporte ses joueurs ») et le point de départ de T4 serait déjà 0 — le
  * test ne prouverait alors plus rien.
  */
+/* ⭐ La FABRIQUE de classeur des huit tests. La série N de B2-2 la remplace le temps de
+ * rejouer T1 → T8 sur `Clubs` + `Participations`, puis la remet. ⛔ Aucun test ne change. */
+var _B20_FABRIQUE = null;
+
 function _b20ClasseurFactice(entetesClubs) {
+  if (_B20_FABRIQUE) return _B20_FABRIQUE(entetesClubs);
+  return _b20ClasseurLegacy(entetesClubs);
+}
+
+function _b20ClasseurLegacy(entetesClubs) {
   var base = _m1bClasseurFactice();
   // ⚠️ EN ZONE A, jamais après l'en-tête « categorie » : tout ce qui suit celui-ci est de la
   // zone B, et `supprimerToutesCategories` l'emporterait comme une catégorie.
@@ -4962,7 +5007,7 @@ function testB20_T4_cascadeFFRZeroZeroZero(etat) {
   //     pour les `org_*` de D-043) SANS vider l'onglet Équipes. L'équipe E12 est 'auto' ⇒
   //     `effectifsEquipesManuelles` l'ignore ⇒ ⭐ tout chiffre restant ne pourrait venir QUE
   //     d'une survivance de `ClubsInvites`.
-  reinitialiserPhase2Clubs(cl);
+  _b20TerminerEngagementEdition(cl);
   reinitialiserDonneesAutorisationTournoi(cl);
   var isole = _b20CascadeFFR(cl);
   _ffrAssert(etat, !_b20VientDesClubsInvites(isole.clubs),
@@ -5059,17 +5104,33 @@ function testB20_T6_ancienTokenInutilisable(etat) {
   _ffrAssert(etat, statutClubCanonique(_b20ClubsApresReset(cl)[0].statut) === '',
     'B2-0 T6 ⭐ ce refus n\'a RIEN écrit : le club est toujours sans participation');
 
-  // ── C/D/E. Au premier chargement de « Clubs invités », un jeton NEUF est réattribué.
-  //     ⭐ C'est le comportement ACTUEL, assumé et documenté — pas un oubli.
+  // ── C/D/E. Ce que devient le JETON au premier chargement de « Clubs invités ».
+  //     ⚡ M1-B2 / B2-2 — CE COMPORTEMENT DIFFÈRE SELON LA STRUCTURE, et c'est délibéré :
+  //     · ANCIEN modèle — un jeton NEUF est réattribué à chaque club (`assurerTokensClubs`).
+  //       ⭐ C'était le comportement assumé et documenté de B2-0, et il reste vrai tant que le
+  //       classeur n'est pas migré ;
+  //     · NOUVEAU modèle — ⛔ AUCUN jeton n'est réattribué, parce qu'il n'y a plus AUCUNE
+  //       participation à l'édition neuve. Un jeton naîtra du prochain envoi d'invitation.
+  //       ⭐ C'est PLUS STRICT : ouvrir un écran ne fabrique plus de lien d'accès.
+  //     ⛔ Dans les DEUX cas, le résultat métier de ce test — « aucun ancien lien ne revit » —
+  //     est éprouvé à l'identique, en D et en F.
   var liste = listerClubsInvites(cl);
   var nouveau = String((liste.clubs[0] || {}).club_token || '').trim();
-  _ffrAssert(etat, nouveau.length > 0,
-    'B2-0 T6 : au chargement de l\'admin, un jeton NEUF est réattribué (assurerTokensClubs)');
-  _ffrAssert(etat, nouveau !== _B20_ANCIEN_TOKEN,
-    'B2-0 T6 ⭐ le nouveau jeton est DIFFÉRENT de l\'ancien');
-  var nouveau2 = String((listerClubsInvites(cl).clubs[1] || {}).club_token || '').trim();
-  _ffrAssert(etat, nouveau2.length > 0 && nouveau2 !== nouveau,
-    'B2-0 T6 : chaque club reçoit son PROPRE jeton (aucun jeton partagé)');
+  if (modeleClubsEnPlace(cl)) {
+    _ffrAssert(etat, nouveau === '',
+      'B2-0 T6 ⭐ (modèle B2-2) ⛔ ouvrir l\'admin ne fabrique AUCUN jeton — plus de participation');
+    _ffrAssert(etat, lireParticipations(cl).every(function (p) {
+      return String(p.edition_id).trim() !== _b21IdActif(cl);
+    }), 'B2-0 T6 ⭐ (modèle B2-2) ⛔ et aucune participation n\'a été créée par cette lecture');
+  } else {
+    _ffrAssert(etat, nouveau.length > 0,
+      'B2-0 T6 : au chargement de l\'admin, un jeton NEUF est réattribué (assurerTokensClubs)');
+    _ffrAssert(etat, nouveau !== _B20_ANCIEN_TOKEN,
+      'B2-0 T6 ⭐ le nouveau jeton est DIFFÉRENT de l\'ancien');
+    var nouveau2 = String((listerClubsInvites(cl).clubs[1] || {}).club_token || '').trim();
+    _ffrAssert(etat, nouveau2.length > 0 && nouveau2 !== nouveau,
+      'B2-0 T6 : chaque club reçoit son PROPRE jeton (aucun jeton partagé)');
+  }
 
   // ── F. Et l'ancien lien reste mort APRÈS cette réattribution — c'est le point qui compte.
   _ffrAssert(etat, trouverClubParToken(cl, nom, _B20_ANCIEN_TOKEN) === null,
@@ -5939,4 +6000,314 @@ function testB22_M10_gardeFouStructure(etat) {
   });
   _ffrAssert(etat, perdues.length === 0,
     'B2-2 M10 : les 12 colonnes d\'engagement sont TOUTES reprises (' + perdues.join(', ') + ')');
+}
+
+/* ─── N — LES HUIT DE B2-0, REJOUÉS SUR `Clubs` + `Participations` ─────────────
+ * ⭐ C'EST L'ÉPREUVE CENTRALE DE B2-2, et elle était annoncée dès B2-0 : les huit résultats
+ * métier T1 → T8 sont rejoués MOT POUR MOT sur la structure NEUVE. ⛔ Aucune assertion n'est
+ * réécrite, aucune n'est affaiblie — seule la FABRIQUE du classeur change, et le joint de
+ * lecture, qui passe par la couche d'adaptation.
+ *
+ * 🎯 Ce que cela prouve, et qu'aucun test de migration ne prouverait : le COMPORTEMENT MÉTIER
+ * est identique avant et après le changement de structure. Une migration qui casserait le
+ * reset échouerait ici, exactement comme elle aurait échoué avant.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Le classeur des huit tests, mais MIGRÉ : mêmes données, structure neuve. */
+function _b22ClasseurMigre(entetesClubs) {
+  var cl = _b20ClasseurLegacy(entetesClubs);
+  var carnet = _m1bFauxOnglet([ENTETES.Clubs.slice()]);
+  var participations = _m1bFauxOnglet([ENTETES.Participations.slice()]);
+  var getOrigine = cl.getSheetByName;
+  cl._carnet = carnet;
+  cl._participations = participations;
+  cl.getSheetByName = function (nom) {
+    if (nom === 'Clubs') return carnet;
+    if (nom === 'Participations') return participations;
+    return getOrigine(nom);
+  };
+  var registre = editionActive(cl);
+  var plan = planifierMigrationClubs(lireOngletSimple(cl, 'ClubsInvites'), lireClubs(cl),
+    lireParticipations(cl), registre.edition.edition_id, function () { return Utilities.getUuid(); });
+  ajouterLignesModele(assurerOngletClubs(cl), plan.clubsACreer);
+  ajouterLignesModele(assurerOngletParticipations(cl), plan.participationsACreer);
+  return cl;
+}
+
+/** N — rejoue les HUIT, sur la structure neuve. ⛔ Les tests eux-mêmes sont inchangés. */
+function testB22_N_huitResultatsSurNouveauModele(etat) {
+  var cl = _b22ClasseurMigre();
+  _ffrAssert(etat, lireClubs(cl).length === 2 && lireParticipations(cl).length === 1,
+    'B2-2 N ⭐ : point de départ — 2 clubs au carnet, 1 seule participation engagée');
+  _ffrAssert(etat, _b20ClubsApresReset(cl).length === 2,
+    'B2-2 N : et la couche d\'adaptation rend bien les DEUX clubs à l\'écran');
+
+  _B20_FABRIQUE = _b22ClasseurMigre;                    // ⭐ on change la structure, rien d'autre
+  try {
+    testB20_T1_aucunStatutHerite(etat);
+    testB20_T2_aucunEffectifHerite(etat);
+    testB20_T3_aucuneAlerteHeritee(etat);
+    testB20_T4_cascadeFFRZeroZeroZero(etat);
+    testB20_T5_carnetDurableConserve(etat);
+    testB20_T6_ancienTokenInutilisable(etat);
+    testB20_T7_tournoiIdNonHerite(etat);
+  } finally {
+    _B20_FABRIQUE = null;                               // ⛔ jamais laissé en place
+  }
+  _ffrAssert(etat, _B20_FABRIQUE === null,
+    'B2-2 N : la fabrique d\'origine est restaurée, même si un test avait échoué');
+}
+
+/** N2 ⭐ — Après reset, l'engagement n'est plus VIDÉ : il appartient à l'édition FERMÉE. */
+function testB22_N2_resetConserveLHistoire(etat) {
+  var cl = _b22ClasseurMigre();
+  var ancienne = _b21IdActif(cl);
+  var participationsAvant = lireParticipations(cl).length;
+  var carnetAvant = lireClubs(cl).length;
+
+  reinitialiserTournoi(cl);
+  var nouvelle = _b21IdActif(cl);
+  _ffrAssert(etat, nouvelle !== ancienne && nouvelle !== '',
+    'B2-2 N2 : le reset a bien ouvert une édition NEUVE');
+  _ffrAssert(etat, lireClubs(cl).length === carnetAvant,
+    'B2-2 N2 ⭐ : le carnet durable est INTÉGRALEMENT conservé');
+  _ffrAssert(etat, lireParticipations(cl).length === participationsAvant,
+    'B2-2 N2 ⭐⭐ : ⛔ AUCUNE participation n\'a été effacée — l\'histoire est conservée');
+  _ffrAssert(etat, lireParticipations(cl).every(function (p) {
+    return String(p.edition_id).trim() === ancienne;
+  }), 'B2-2 N2 ⭐ : elles appartiennent toutes à l\'édition FERMÉE');
+  _ffrAssert(etat, lireParticipations(cl).filter(function (p) {
+    return String(p.edition_id).trim() === nouvelle;
+  }).length === 0,
+    'B2-2 N2 ⭐⭐ : ⛔ ZÉRO participation dans l\'édition neuve — rien n\'est hérité');
+  // Et le résultat MÉTIER, celui que l'organisateur voit :
+  var plats = _b20ClubsApresReset(cl);
+  _ffrAssert(etat, plats.length === 2 && plats.every(function (c) {
+    return CLUBS_COLONNES_ENGAGEMENT.every(function (h) { return _b20EstVide(c[h]); });
+  }), 'B2-2 N2 ⭐⭐ : à l\'écran, les 12 champs d\'engagement sont VIDES pour tous les clubs');
+  _ffrAssert(etat, plats.every(function (c) {
+    return String(c.club_nom || '').trim() !== '';
+  }), 'B2-2 N2 : ⭐ et leur identité, elle, est intacte');
+}
+
+/** N3 🚨 — LE JETON D'UNE ÉDITION FERMÉE NE REVIT PAS. Le risque né de la conservation. */
+function testB22_N3_jetonEditionFermeeRefuse(etat) {
+  var cl = _b22ClasseurMigre();
+  var nom = 'LE TEST RUGBY CLUB';
+  _ffrAssert(etat, trouverClubParToken(cl, nom, _B20_ANCIEN_TOKEN) !== null,
+    'B2-2 N3 : AVANT reset, le jeton de l\'édition en cours ouvre bien le dossier');
+
+  reinitialiserTournoi(cl);
+  // ⚠️ La participation qui porte ce jeton EXISTE toujours — c'est justement le nouveau danger.
+  _ffrAssert(etat, lireParticipations(cl).some(function (p) {
+    return String(p.club_token).trim() === _B20_ANCIEN_TOKEN;
+  }), 'B2-2 N3 ⭐ : le jeton est TOUJOURS EN BASE, sur la participation de l\'édition fermée');
+  _ffrAssert(etat, trouverClubParToken(cl, nom, _B20_ANCIEN_TOKEN) === null,
+    'B2-2 N3 🚨 : et pourtant il n\'ouvre PLUS RIEN — le filtre d\'édition tient');
+  _ffrAssert(etat, getReponseInvitation(cl, { club: nom, token: _B20_ANCIEN_TOKEN }).error ===
+    'Lien invalide ou expiré.',
+    'B2-2 N3 🚨 : la page de réponse le refuse, avec un message GÉNÉRIQUE');
+  _ffrAssert(etat, getClubDossier(cl, { club: nom, token: _B20_ANCIEN_TOKEN }).error ===
+    'Lien invalide ou expiré.',
+    'B2-2 N3 🚨 : le dossier du club le refuse aussi');
+  _ffrAssert(etat, repondreInvitation(cl, { club: nom, token: _B20_ANCIEN_TOKEN, reponse: 'accepte' }).error ===
+    'Lien invalide ou expiré.',
+    'B2-2 N3 🚨⭐ : et RÉPONDRE est refusé — c\'est le seul geste qui écrirait');
+}
+
+/** N4 — Un jeton de l'édition ACTIVE, lui, fonctionne exactement comme avant. */
+function testB22_N4_jetonEditionActiveFonctionne(etat) {
+  var cl = _b22ClasseurMigre();
+  var nom = 'LE TEST RUGBY CLUB';
+  var club = trouverClubParToken(cl, nom, _B20_ANCIEN_TOKEN);
+  _ffrAssert(etat, !!club && String(club.club_nom).trim() === nom,
+    'B2-2 N4 : le jeton de l\'édition active rend bien le club');
+  _ffrAssert(etat, club.club_contact_email === 'contact@test-rugby.fr',
+    'B2-2 N4 : avec ses coordonnées à jour, prises au CARNET');
+  _ffrAssert(etat, !getReponseInvitation(cl, { club: nom, token: _B20_ANCIEN_TOKEN }).error,
+    'B2-2 N4 : la page de réponse s\'ouvre normalement');
+  _ffrAssert(etat, trouverClubParToken(cl, 'UN AUTRE CLUB', _B20_ANCIEN_TOKEN) === null,
+    'B2-2 N4 ⭐ : et le contrôle du nom reste actif — jeton valide + mauvais club = refus');
+}
+
+/* ─── S — SUPPRESSION LOGIQUE, JETONS, ET COMPATIBILITÉ DE L'ÉCRAN ───────────── */
+
+/** S1 ⭐ — Retirer un club le fait disparaître de l'écran, ⛔ SANS détruire son identité. */
+function testB22_S1_suppressionLogique(etat) {
+  var cl = _b22ClasseurMigre();
+  var nom = 'SILENCIEUX RUGBY CLUB';                    // le second club, sans équipe ni poule
+  var idAvant = trouverClubParNom(lireClubs(cl), nom).club_id;
+  var participationsAvant = lireParticipations(cl).length;
+
+  var res = supprimerClubInvite(cl, { club_nom: nom });
+  _ffrAssert(etat, res.ok === true, 'B2-2 S1 : le retrait aboutit');
+  _ffrAssert(etat, !trouverClubParNom(_b20ClubsApresReset(cl), nom),
+    'B2-2 S1 : ⭐ à l\'écran, le club a bien DISPARU — comportement inchangé');
+  var carnet = trouverClubParNom(lireClubs(cl), nom);
+  _ffrAssert(etat, !!carnet && carnet.club_id === idAvant,
+    'B2-2 S1 ⭐⭐ : ⛔ son identité N\'A PAS été détruite — même `club_id`');
+  _ffrAssert(etat, !!carnet && !clubEstActif(carnet),
+    'B2-2 S1 : elle est simplement marquée INACTIVE au carnet');
+  _ffrAssert(etat, lireClubs(cl).length === 2,
+    'B2-2 S1 ⭐ : le carnet compte TOUJOURS deux lignes — ⛔ aucune n\'a été retirée');
+  _ffrAssert(etat, clubEstActif(null) === false && clubEstActif(undefined) === false,
+    'B2-2 S1 : un club absent n\'est pas « actif », et ne provoque aucune erreur');
+  _ffrAssert(etat, lireParticipations(cl).length === participationsAvant,
+    'B2-2 S1 ⭐ : ⛔ aucune participation d\'une autre édition n\'a été touchée');
+}
+
+/** S2 ⭐ — Retirer un club ENGAGÉ retire sa participation COURANTE, ⛔ jamais les passées. */
+function testB22_S2_suppressionNeTouchePasLHistoire(etat) {
+  var cl = _b22ClasseurMigre();
+  var nom = 'LE TEST RUGBY CLUB';
+  var club = trouverClubParNom(lireClubs(cl), nom);
+  var ancienneEdition = _b21IdActif(cl);
+  // Une édition passée : on ferme celle-ci et on en ouvre une neuve, puis on réengage le club.
+  reinitialiserTournoi(cl);
+  assurerParticipation(cl, club);
+  var nouvelleEdition = _b21IdActif(cl);
+  _ffrAssert(etat, lireParticipations(cl).length === 2,
+    'B2-2 S2 : le club a désormais DEUX participations — une par édition');
+
+  supprimerClubInvite(cl, { club_nom: nom });
+  var restantes = lireParticipations(cl);
+  _ffrAssert(etat, restantes.length === 1 &&
+                   String(restantes[0].edition_id).trim() === ancienneEdition,
+    'B2-2 S2 ⭐⭐ : seule la participation de l\'édition EN COURS part — l\'ancienne demeure');
+  _ffrAssert(etat, trouverParticipation(restantes, nouvelleEdition, club.club_id) === null,
+    'B2-2 S2 : ⭐ le club n\'est plus engagé dans l\'édition en cours');
+  _ffrAssert(etat, !!trouverClubParNom(lireClubs(cl), nom),
+    'B2-2 S2 : ⛔ et son identité durable est toujours là, pour rattacher l\'histoire');
+}
+
+/** S3 ⭐ — Un jeton ne naît que d'une participation EXISTANTE, jamais d'un écran ouvert. */
+function testB22_S3_jetonJamaisPassif(etat) {
+  var cl = _b22ClasseurMigre();
+  reinitialiserTournoi(cl);                             // édition neuve : plus de participation
+  var avant = lireParticipations(cl).length;
+  listerClubsInvites(cl); listerClubsInvites(cl); listerClubsInvites(cl);
+  _ffrAssert(etat, lireParticipations(cl).length === avant,
+    'B2-2 S3 ⭐⭐ : trois ouvertures de l\'administration ⇒ ⛔ AUCUNE participation créée');
+  _ffrAssert(etat, _b20ClubsApresReset(cl).every(function (c) {
+    return String(c.club_token || '').trim() === '';
+  }), 'B2-2 S3 ⭐ : ⛔ et aucun jeton n\'a été fabriqué');
+  // Renouveler un jeton sans participation est REFUSÉ — il n'y a aucun lien à renouveler.
+  var refus = regenererJetonClub(cl, { club_nom: 'LE TEST RUGBY CLUB' });
+  _ffrAssert(etat, !!refus.error && !refus.club_token,
+    'B2-2 S3 : renouveler le jeton d\'un club NON engagé est refusé, et le dit');
+  _ffrAssert(etat, lireParticipations(cl).length === avant,
+    'B2-2 S3 ⭐ : ⛔ ce refus n\'a rien créé non plus');
+}
+
+/**
+ * S3 bis ⭐ — ⛔ `assurerTokensClubs` NE TOUCHE PAS aux éditions FERMÉES.
+ *
+ * ⚠️ CE TEST EXISTE PARCE QU'UNE MUTATION EST PASSÉE INAPERÇUE. Retirer le filtre d'édition de
+ * `assurerTokensClubs` laissait les 1129 tests au vert : la fonction se serait mise à écrire un
+ * jeton dans les participations d'éditions PASSÉES, sans qu'aucune assertion ne le voie. ⛔ Un
+ * lien mort n'en aurait pas ressuscité pour autant (la lecture filtre déjà sur l'édition
+ * active), mais l'application aurait ÉCRIT DANS L'HISTOIRE — et c'est précisément ce que B2-2
+ * existe pour empêcher. ⭐ Une mutation qu'aucun test n'attrape est un test qui manque.
+ */
+function testB22_S3bis_jetonsNeTouchentPasLePasse(etat) {
+  var cl = _b22ClasseurMigre();
+  // Une participation d'édition passée, SANS jeton (cas d'un classeur ancien migré).
+  var club = trouverClubParNom(lireClubs(cl), 'LE TEST RUGBY CLUB');
+  var ancienne = _b21IdActif(cl);
+  ecrireParticipationClub(cl, 'LE TEST RUGBY CLUB', { club_token: '' }, false);
+  reinitialiserTournoi(cl);                             // l'édition devient FERMÉE
+  _ffrAssert(etat, lireParticipations(cl).length === 1 &&
+                   String(lireParticipations(cl)[0].edition_id).trim() === ancienne &&
+                   String(lireParticipations(cl)[0].club_token || '').trim() === '',
+    'B2-2 S3 bis : point de départ — une participation FERMÉE, sans jeton');
+
+  assurerTokensClubs(cl); listerClubsInvites(cl); listerClubsInvites(cl);
+  _ffrAssert(etat, String(lireParticipations(cl)[0].club_token || '').trim() === '',
+    'B2-2 S3 bis ⭐⭐ : ⛔ aucun jeton n\'a été écrit dans l\'édition FERMÉE');
+  _ffrAssert(etat, lireParticipations(cl).length === 1,
+    'B2-2 S3 bis : ⛔ et aucune participation n\'a été ajoutée');
+}
+
+/** S4 — La participation naît de l'INTENTION : un geste explicite, et lui seul. */
+function testB22_S4_participationNaitDunGesteExplicite(etat) {
+  var cl = _b22ClasseurMigre();
+  reinitialiserTournoi(cl);
+  var club = trouverClubParNom(lireClubs(cl), 'LE TEST RUGBY CLUB');
+  _ffrAssert(etat, trouverParticipation(lireParticipations(cl), _b21IdActif(cl), club.club_id) === null,
+    'B2-2 S4 : point de départ — le club est connu, ⛔ pas engagé');
+
+  var res = modifierStatutClubInvite(cl, { club_nom: 'LE TEST RUGBY CLUB', statut: 'Accepté' });
+  _ffrAssert(etat, res.ok === true,
+    'B2-2 S4 : changer le statut à la main est un geste EXPLICITE — il aboutit');
+  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), club.club_id);
+  _ffrAssert(etat, !!p && statutClubCanonique(p.statut) === 'Accepté',
+    'B2-2 S4 ⭐ : la participation est créée, avec le statut voulu');
+  _ffrAssert(etat, String(p.club_token || '').trim() !== '',
+    'B2-2 S4 : ⭐ et elle reçoit son jeton — c\'est ICI qu\'il naît, pas à la lecture');
+  _ffrAssert(etat, p.snap_club_nom === 'LE TEST RUGBY CLUB',
+    'B2-2 S4 📸 : son snapshot fige l\'identité du moment');
+}
+
+/** S5 ⭐ — L'AJOUT au carnet n'invite personne : ⛔ ni participation, ni jeton, ni statut. */
+function testB22_S5_ajouterNestPasInviter(etat) {
+  var cl = _b22ClasseurMigre();
+  var avant = lireParticipations(cl).length;
+  var res = ajouterClubInvite(cl, { club_nom: 'NOUVEAU CLUB', club_contact_email: 'a@b.fr' });
+  _ffrAssert(etat, res.ok === true, 'B2-2 S5 : le club entre au carnet');
+  _ffrAssert(etat, !!trouverClubParNom(lireClubs(cl), 'NOUVEAU CLUB'),
+    'B2-2 S5 : il est bien là, avec son identité');
+  _ffrAssert(etat, lireParticipations(cl).length === avant,
+    'B2-2 S5 ⭐⭐ : ⛔ AUCUNE participation créée — ajouter n\'est pas inviter (D-050)');
+  var plat = trouverClubParNom(_b20ClubsApresReset(cl), 'NOUVEAU CLUB');
+  _ffrAssert(etat, !!plat && String(plat.statut || '').trim() === '' &&
+                   String(plat.club_token || '').trim() === '',
+    'B2-2 S5 ⭐ : à l\'écran, ni statut ni jeton — « connu, sans participation cette fois »');
+  _ffrAssert(etat, clubEstInvitable(plat.statut),
+    'B2-2 S5 : ⭐ et il reste INVITABLE — c\'est bien l\'état attendu');
+}
+
+/** S6 ⭐ — COMPATIBILITÉ DE L'ÉCRAN : mêmes clés, mêmes valeurs, aucun frontend à réécrire. */
+function testB22_S6_compatibiliteObjetPlat(etat) {
+  var legacy = _b20ClasseurLegacy();
+  var migre = _b22ClasseurMigre();
+  var avant = lireOngletSimple(legacy, 'ClubsInvites');
+  var apres = clubsEditionActive(migre);
+
+  _ffrAssert(etat, apres.length === avant.length,
+    'B2-2 S6 : le même nombre de clubs est rendu (' + apres.length + ' / ' + avant.length + ')');
+  // ⭐ LES 17 CLÉS, exactement — ni une de plus, ni une de moins.
+  var attendues = CLUBS_COLONNES_CONTACT.concat(CLUBS_COLONNES_ENGAGEMENT).sort().join(',');
+  _ffrAssert(etat, Object.keys(apres[0]).sort().join(',') === attendues,
+    'B2-2 S6 ⭐⭐ : l\'objet plat porte EXACTEMENT les 17 clés attendues par l\'écran');
+  // ⛔ Aucune clé du nouveau modèle ne fuit vers le navigateur.
+  var fuites = Object.keys(apres[0]).filter(function (k) {
+    return k === 'club_id' || k === 'edition_id' || k.indexOf('snap_') === 0 || k === 'actif';
+  });
+  _ffrAssert(etat, fuites.length === 0,
+    'B2-2 S6 ⭐ : ⛔ ni `club_id`, ni `edition_id`, ni snapshot ne fuient à l\'écran (' +
+    fuites.join(', ') + ')');
+  // ⭐ ET LES MÊMES VALEURS, champ par champ, pour le club engagé.
+  var ecarts = [];
+  var aA = avant.filter(function (c) { return statutClubCanonique(c.statut) === 'Accepté'; })[0];
+  var aB = apres.filter(function (c) { return statutClubCanonique(c.statut) === 'Accepté'; })[0];
+  Object.keys(aA).forEach(function (k) {
+    if (String(aA[k]) !== String(aB[k])) ecarts.push(k + ' : « ' + aA[k] + ' » ≠ « ' + aB[k] + ' »');
+  });
+  _ffrAssert(etat, ecarts.length === 0,
+    'B2-2 S6 ⭐⭐ : pour un club engagé, TOUTES les valeurs sont identiques (' +
+    ecarts.join(' | ') + ')');
+}
+
+/** S7 — Le club INACTIF ne revient jamais à l'écran, mais son histoire reste interrogeable. */
+function testB22_S7_clubInactifResteHorsEcran(etat) {
+  var cl = _b22ClasseurMigre();
+  supprimerClubInvite(cl, { club_nom: 'SILENCIEUX RUGBY CLUB' });
+  listerClubsInvites(cl);
+  _ffrAssert(etat, _b20ClubsApresReset(cl).length === 1,
+    'B2-2 S7 : un seul club reste à l\'écran');
+  reinitialiserTournoi(cl);
+  _ffrAssert(etat, _b20ClubsApresReset(cl).length === 1,
+    'B2-2 S7 ⭐ : ⛔ et une réinitialisation ne le ramène PAS — inactif reste inactif');
+  _ffrAssert(etat, lireClubs(cl).length === 2,
+    'B2-2 S7 ⭐ : pourtant son identité est toujours au carnet, prête pour l\'historique');
 }
