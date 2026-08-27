@@ -44,10 +44,14 @@ vingt — sans que rien ne signale l'erreur.
 champ n'a changé. Le seul signe visible est l'onglet `Editions` dans le classeur — et il n'y a rien
 à y faire à la main.
 
-⚠️ **Une réserve, et elle est écrite pour ne pas être oubliée.** La bascule d'édition lors d'une
-réinitialisation est vérifiée par les tests automatiques, ⛔ **mais elle n'a pas encore été
-éprouvée sur un vrai tournoi**. Le reste — la stabilité de l'identifiant après trois régénérations,
-et la migration — a bien été constaté en conditions réelles le 2026-08-27.
+✅ **Tout ceci a été vérifié sur le vrai classeur le 2026-08-27** : la migration, la stabilité de
+l'identifiant après trois régénérations, **et la bascule lors d'une réinitialisation réelle** —
+l'édition en cours fermée avec sa date, une édition neuve ouverte, jamais deux actives à la fois.
+
+⚠️ **Une seule réserve, écrite pour ne pas être oubliée.** Le comportement en cas de
+réinitialisation **qui échoue en cours de route** — l'édition reste alors inchangée — est vérifié
+par les tests automatiques, ⛔ **mais il n'a pas été provoqué sur le vrai classeur**. C'est
+délibéré : le provoquer exigerait de casser volontairement le tournoi.
 
 ### L'administration ne promet plus une annonce qui n'existe plus — 2026-08-26
 

@@ -3287,7 +3287,7 @@ aucune nominative)*.
 | # | Lot | Dépend de | Portée | Migration | Risques fermés | Critère de clôture |
 |---|---|---|---|---|---|---|
 | **B2-0** | 🏁 **Sécurisation du reset** *(harnais)* — ✅ **CLÔTURÉ le 2026-08-25** | — | ⚡ **backend + frontend + CI** *(voir la note ci-dessous)* | ⛔ | ✅ **R-099**, ✅ **R-100** *(entièrement)* · **R-106** *(part reset seule)* · **R-033** *(dernière part)* | ✅ **ATTEINT** — reset prouvé **en réel** le 2026-08-25 : 0 statut hérité, 0 effectif hérité |
-| **B2-1** | **`edition_id` propre** + registre `Editions` ~~+ fin du renouvellement de `tournoi_id`~~ ⚡ **voir la fiche §16.5 quater** — ⏳ **EN SERVICE ET PROUVÉE EN RÉEL le 2026-08-27, ⛔ MAIS PAS CLOSE** *(la bascule au reset n'a pas été jouée)* | B2-0 | backend | douce | **R-106** | ✅ **ATTEINT EN RÉEL** — 3 régénérations ⇒ **un seul** `edition_id`. ⚠️ **Ce critère, écrit le 2026-08-24, est plus ÉTROIT que le contrat validé D-057** : voir §16.5 quater ⑥ |
+| **B2-1** | **`edition_id` propre** + registre `Editions` ~~+ fin du renouvellement de `tournoi_id`~~ ⚡ **voir la fiche §16.5 quater** — 🏁 **CLÔTURÉ le 2026-08-27** *(**D-058**)* | B2-0 | backend | douce | ✅ **R-106** | ✅ **ATTEINT EN RÉEL** — 3 régénérations ⇒ **un seul** `edition_id`, **et** reset nominal réel *(ancienne fermée, neuve ouverte, une seule active)*. ⚠️ **Ce critère, écrit le 2026-08-24, était plus ÉTROIT que le contrat validé D-057** : voir §16.5 quater ⑥ |
 | **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-099, R-100, R-102, R-104, R-105** | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
 | **B2-3** | **Terrains** permanents / édition | B2-1 | backend + frontend | douce | **R-101** | Dossier d'un tournoi vide ⇒ ⛔ aucun terrain hérité |
 | **B2-4** | **UX** : Carnet · Préparer l'invitation · Clubs invités · sélection · envoi ciblé | B2-2 | **frontend surtout** | ⛔ | — | Plusieurs vagues ciblées prouvées **en réel** |
@@ -3313,12 +3313,14 @@ aucune nominative)*.
 > l'écran garde sa propre copie de la vérité.** Le classeur était juste dès B2-0 ; l'organisateur,
 > lui, voyait encore l'édition précédente. ⛔ **Aucun test backend ne pouvait le montrer.**
 >
-> ⏭️ ✅ **B2-1 EST EN SERVICE ET PROUVÉE EN RÉEL — ⛔ ELLE N'EST PAS CLOSE POUR AUTANT.** Déployée,
-> migrée et vérifiée sur le classeur le **2026-08-27** : voir la fiche **§16.5 quater**. ⛔ **Il
-> manque une seule preuve — la bascule d'édition lors d'un RESET RÉEL**, qui est destructive et
-> attend une décision de Romain. ⚡ *(Cette ligne a annoncé successivement « B2-1 est la prochaine
-> étape éligible — ⛔ NON DÉMARRÉE », « Sa **première passe, locale**, est livrée », puis « intégrée
-> dans `main` et publiée sur GitHub — ⛔ rien n'est déployé ». ⭐ **Chacune était vraie à son
+> ⏭️ 🏁 **B2-1 EST CLÔTURÉ le 2026-08-27** *(décision de Romain — **D-058**)*. Déployée, migrée,
+> vérifiée par trois régénérations **et** par un **reset nominal réel** : voir la fiche
+> **§16.5 quater**. ⛔ **Le cas d'ÉCHEC du reset reste couvert par le harnais seul**, délibérément.
+> ⏭️ **B2-2 est la prochaine étape éligible — ⛔ NON DÉMARRÉE**, et elle ne démarre pas sans
+> validation explicite *(**§15.2**)*. ⚡ *(Cette ligne a annoncé successivement « B2-1 est la
+> prochaine étape éligible — ⛔ NON DÉMARRÉE », « Sa **première passe, locale**, est livrée »,
+> « intégrée dans `main` et publiée sur GitHub — ⛔ rien n'est déployé », puis « EN SERVICE ET
+> PROUVÉE EN RÉEL — ⛔ ELLE N'EST PAS CLOSE POUR AUTANT ». ⭐ **Chacune était vraie à son
 > heure.**)* *(Le détail chronologique de B2-0 vit dans [`SESSIONS.md`](SESSIONS.md), pas ici.)*
 
 #### 16.5 bis — B2-0 : les huit résultats métier **T1 → T8**
@@ -3439,14 +3441,15 @@ colonnes déjà effacées · **S3** les cas limites *(classeur sans club, sans o
 > mot** contre une fausse structure `Clubs` + `Participations` avec un reset entièrement différent,
 > ils passent — **seuls deux helpers de montage/lecture changent**.
 
-#### 16.5 quater — B2-1 : `edition_id` et le registre `Editions` — ✅ **EN SERVICE**, ⛔ **PAS CLOSE**
+#### 16.5 quater — B2-1 : `edition_id` et le registre `Editions` — 🏁 **CLÔTURÉ**
 
-> ✅ **CE QUI SUIT EST EN SERVICE ET PROUVÉ SUR LE CLASSEUR RÉEL** *(2026-08-27)* — ⛔ **sauf la
-> bascule au reset**, qui n'a pas été jouée. Le cadrage a été **validé par Romain le 2026-08-27**
-> *(décision **D-057**)*.
+> 🏁 **CE QUI SUIT EST EN SERVICE ET INTÉGRALEMENT PROUVÉ SUR LE CLASSEUR RÉEL** *(2026-08-27)* —
+> ⛔ **sauf le cas d'ÉCHEC du reset, couvert par le harnais, et c'est délibéré** *(**D-058**)*.
+> Le cadrage avait été **validé par Romain le 2026-08-27** *(**D-057**)* ; la **clôture** l'a été
+> le même jour *(**D-058**)*.
 >
-> ⚡ *(Ce titre a annoncé « ⏳ **PREMIÈRE PASSE LOCALE** » *(vrai jusqu'à l'intégration)*, puis
-> « ⏳ **INTÉGRÉ, ⛔ NON DÉPLOYÉ** » *(vrai jusqu'au déploiement du même jour)*.)*
+> ⚡ *(Ce titre a annoncé « ⏳ **PREMIÈRE PASSE LOCALE** », puis « ⏳ **INTÉGRÉ, ⛔ NON DÉPLOYÉ** »,
+> puis « ✅ **EN SERVICE**, ⛔ **PAS CLOSE** ». ⭐ **Chacun était vrai à son heure.**)*
 
 **① Le cadrage validé, en une phrase.** Une édition possède un identifiant **stable** —
 `edition_id` — créé **une seule fois à son ouverture**, qui ne bouge **jamais** ensuite ; une
@@ -3485,27 +3488,40 @@ stabilité appellent les **VRAIES** fonctions *(`genererPoulesEtPlanning`, `reca
 | ✅ **Migration exécutée** | L'onglet `Editions` **existe** : une édition `active`. Relancée, la migration **ne crée rien** — ⭐ idempotence **prouvée sur le classeur réel**. ⚡ *(Cette case disait « ⛔ **Migration non lancée** — l'onglet n'existe pas » : vrai jusqu'à cette date.)* |
 | ⭐ ✅ **Le critère central, en RÉEL** | **3 régénérations ⇒ 3 `tournoi_id` distincts, 1 seul `edition_id`.** ⚡ *(Cette case disait « ⛔ **Aucune preuve en conditions réelles** — le critère n'a été atteint **que sur des onglets factices** » : vrai jusqu'à cette date.)* |
 
-**⑤ ⛔ CE QUI N'EST TOUJOURS PAS FAIT.**
+**⑤ ✅ LA BASCULE AU RESET, PROUVÉE EN RÉEL — et ce qui reste couvert par le harnais.**
 
 | | |
 |---|---|
-| ⛔ ⭐ **La bascule au reset : JAMAIS JOUÉE EN RÉEL** | Ni le cas nominal *(ancienne `fermee` + neuve `active`)*, ni le cas d'échec *(rien ne bouge)*. Établis **par le harnais seul** — ⚠️ **`CLAUDE.md` §13.6**. ⭐ **C'est la SEULE preuve manquante de B2-1** |
+| ✅ ⭐ **Cas NOMINAL : joué en réel** | Reset depuis l'administration, deux confirmations. Ancienne édition **`fermee`** avec sa date, **neuve `active`** avec un autre identifiant, **1 active / 1 fermée** — ⛔ jamais deux actives. ⚡ *(Cette case disait « ⛔ **JAMAIS JOUÉE EN RÉEL** […] la SEULE preuve manquante » : vrai jusqu'au 2026-08-27.)* |
+| ⛔ **Cas d'ÉCHEC : harnais seul, et c'est un CHOIX** | Le provoquer exigerait de **casser volontairement** le classeur. Il est établi par ① **l'ordre du code** *(la bascule est la dernière instruction : toute exception antérieure l'empêche mécaniquement)* et ② le test `testB21_resetEchecPasDeDemiBascule`, ⭐ **éprouvé par rejeu de mutation**. ⚠️ **Ne jamais le présenter comme constaté en production** *(**§13.6**)* |
 | ⛔ **Aucun rattachement** | ⛔ **Rien** ne porte encore d'`edition_id` : ni participation, ni match, ni terrain. C'est **B2-2** et **B2-6** |
 | ⛔ **Aucun frontend** | Pas une ligne de `frontend/` n'a bougé. La réponse du reset porte trois champs de plus, ⭐ **ignorés** par l'écran, qui lit champ par champ |
 
-**⑥ ⚠️ POURQUOI B2-1 N'EST PAS CLOSE ALORS QUE SON CRITÈRE ÉCRIT EST ATTEINT.**
+**⑥ 🎯 POURQUOI LA CLÔTURE A ÉTÉ RETARDÉE D'UNE PASSE — et pourquoi c'était juste.**
+
+⚡ **Ce paragraphe s'intitulait « POURQUOI B2-1 N'EST PAS CLOSE ALORS QUE SON CRITÈRE ÉCRIT EST
+ATTEINT ». Il a rempli son office : la clôture a eu lieu APRÈS la preuve, pas avant.** Son
+raisonnement reste écrit, parce qu'il vaut au-delà de ce lot.
 
 Le critère de la ligne §16.5 — *« régénérer un planning 3× ⇒ un seul `edition_id` »* — a été écrit le
 **2026-08-24**, ⛔ **avant** que le contrat fonctionnel détaillé n'existe. Celui-ci a été **validé le
-2026-08-27** *(**D-057**)* et exige aussi le comportement **au reset**, réussi *et* échoué.
+2026-08-27** *(**D-057**)* et exige aussi le comportement **au reset**.
 
-⭐ **Le critère est donc plus étroit que le contrat.** Le tenir pour suffisant déclarerait terminé un
-lot dont **une moitié n'a jamais été exercée en réel** — et **`CLAUDE.md` §8 quinquies** l'interdit :
-la phrase du contrôle ⑯ ne peut pas s'écrire en entier tant que *« recontrôlée en réel »* manque.
+⭐ **Le critère était donc plus étroit que le contrat.** Le tenir pour suffisant aurait déclaré
+terminé un lot dont une moitié n'avait jamais été exercée en réel — et **`CLAUDE.md` §8 quinquies**
+l'interdisait : la phrase du contrôle ⑯ ne pouvait pas s'écrire en entier.
 
-🎯 **La leçon vaut au-delà de ce lot** : *un critère écrit trop tôt peut être satisfait avant que le
-travail ne soit fini.* ⛔ **Le critère n'est pas le contrat.** ⭐ Et la clôture reste **une décision
-de Romain** *(**§12.5**)*, comme **D-055** l'a été pour R-097 et R-098.
+🎯 **La leçon, et elle est permanente** : *un critère écrit trop tôt peut être satisfait avant que le
+travail ne soit fini.* ⛔ **Le critère n'est pas le contrat.**
+
+⚠️ **Et une seconde leçon, née d'une ERREUR de cette session.** L'audit préparatoire au reset a
+annoncé `Historique` et `ClubsInvites` **vides**. ⛔ **Ils contenaient 211 et 3 lignes.** La cause
+n'était pas une mauvaise lecture du code, mais une **déduction tirée du repère du jeu fictif**
+*(« aucun club invité » — vrai **de ce jeu-là**, ⛔ **pas du classeur**)*, écrite entre parenthèses
+**sans être marquée comme hypothèse** *(**§9**)*. ⭐ **Repérée par Romain, elle a fait remplacer un
+« pas besoin de sauvegarde » par une copie complète du classeur** — et c'est cette copie qui permet
+d'écrire aujourd'hui *« strictement identique à la sauvegarde »* plutôt que *« probablement
+intact »*.
 
 **⑦ Le reliquat de rédaction, et il est signalé, pas masqué.** La ligne B2-1 du tableau §16.5
 annonçait *« + fin du renouvellement de `tournoi_id` »*. ⛔ **Le cadrage validé dit l'inverse**, et

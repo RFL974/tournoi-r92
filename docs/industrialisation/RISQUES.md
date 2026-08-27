@@ -9,12 +9,20 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-27 *(suite 2 — **M1-B2 / B2-1 déployée et prouvée en réel**)* —
-⚡ **AUCUN PROBLÈME NE SE FERME, ET AUCUN NOUVEAU N'APPARAÎT.** **R-106** a franchi ses trois gestes
-— **redéploiement**, **migration**, **constat réel** *(3 régénérations ⇒ un seul `edition_id`)* —
-⭐ **et il reste OUVERT malgré cela**, par décision de méthode : la **bascule d'édition au reset**,
-exigée par le contrat validé **D-057**, n'a jamais été jouée en réel. ⛔ **Sa clôture appartient à
-Romain.** Voir sa fiche.
+**Dernière mise à jour** : 2026-08-27 *(suite 3 — **clôture de M1-B2 / B2-1**)* —
+✅ **UN PROBLÈME SE FERME : R-106. ⛔ AUCUN NOUVEAU N'APPARAÎT.**
+
+| Réf | Avant | Après | Ce qui l'établit |
+|---|---|---|---|
+| **R-106** *(P1)* | ⛔ **OUVERT** — la bascule au reset n'avait jamais été jouée | ✅ **CORRIGÉ ET VÉRIFIÉ — CLOS** *(décision de Romain, **D-058**)* | ⭐ **Reset nominal RÉEL** : ancienne édition **`fermee`** avec sa date, **neuve `active`** avec un autre identifiant, **1 active / 1 fermée**. S'y ajoutent le redéploiement *(v159)*, la migration, l'idempotence, et **3 régénérations ⇒ un seul `edition_id`** |
+
+> ⚠️ **CE QUE LA CLÔTURE DE R-106 NE DIT PAS.** ⛔ Le **cas d'ÉCHEC** du reset n'a **pas** été
+> provoqué en production — délibérément *(**D-058**)*. Il reste établi par **l'ordre du code** et
+> par le harnais, ⛔ **jamais par une observation en conditions réelles** *(`CLAUDE.md` §13.6)*.
+
+*Rappel de la mise à jour précédente — 2026-08-27 (suite 2)* — ⚡ **AUCUN PROBLÈME NE SE FERME.**
+**R-106** a franchi ses trois gestes, ⭐ **et il reste OUVERT malgré cela** : la bascule au reset
+n'a jamais été jouée en réel.
 
 *Rappel de la mise à jour précédente — 2026-08-27 (première passe)* — ⚡ **AUCUN PROBLÈME NE SE
 FERME.** **R-106** avance : une réponse existe désormais **dans le dépôt**, ⛔ **ni déployée, ni
@@ -117,7 +125,7 @@ ouverte.** C'est la **seule adresse** où l'on vérifie qu'il ne reste rien.
 > | **R-101** *(P2)* | ⭐ **Volontairement.** Le découpage événementiel des terrains **a bien survécu** au reset réel — ⭐ **c'est le résultat ATTENDU**, et B2-0 l'a **figé par un test témoin** pour que **B2-3** parte d'un comportement connu. ⛔ **Figer un défaut n'est pas le corriger** |
 > | **R-102** *(P2)* | B2-0 corrige le **COMPORTEMENT** du reset ; ⛔ **il ne touche pas à la STRUCTURE**. `ClubsInvites` mêle toujours identité durable et participation — c'est **B2-2** *(D-050)* |
 > | **R-105** *(P2)* | ⚡ **OUTILLÉ, pas refermé.** B2-0 a ajouté un contrôle qui **signale** toute colonne de `ClubsInvites` qu'aucune des deux familles ne classe *(⛔ et qui ne la vide jamais)*. ⭐ **Le piège est devenu visible ; il n'a pas disparu** — la garantie structurelle appartient à **B2-2** |
-> | **R-106** *(P1)* | ⚡ **Sa part « reset » seulement.** `tournoi_id` est bien **effacé** par la réinitialisation *(constaté en réel)*, ⛔ **mais il reste renouvelé à chaque génération de planning** : il n'identifie toujours pas une **édition**. Le reste appartient à **B2-1** ⚡ *(B2-1 a livré `edition_id` **dans le dépôt** le 2026-08-27, puis l'a **mis en service et prouvé en réel** le même jour — ⛔ **R-106 reste OUVERT**. Voir sa fiche.)* |
+> | **R-106** *(P1)* | ⚡ **Sa part « reset » seulement.** `tournoi_id` est bien **effacé** par la réinitialisation *(constaté en réel)*, ⛔ **mais il reste renouvelé à chaque génération de planning** : il n'identifie toujours pas une **édition**. Le reste appartient à **B2-1** ⚡ *(B2-1 a livré `edition_id` le 2026-08-27, l'a mis en service, prouvé en réel — et **R-106 est CLOS depuis le même jour**, **D-058**. Voir sa fiche.)* |
 > | **R-098** *(P1)* | ⛔ **INCHANGÉ.** Ses conditions 4 et 5 exigent un tournoi exploitable ; le classeur n'en a pas *(voir le repère « données à recréer » de [`ETAT.md`](ETAT.md))* |
 
 ⛔ **Aucun problème nouveau n'a été trouvé par ce lot** — ni par les 40 mutations, ni par le reset
@@ -2180,7 +2188,7 @@ exactement une des deux familles »* — qui **échoue** si une colonne nouvelle
 |---|---|
 | **Priorité** | **P1** — ⛔ **bloque tout archivage fiable** |
 | **Domaine** | **G — architecture** · **A — métier** |
-| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-1** |
+| **Statut** | ✅ **CLOS le 2026-08-27** — **M1-B2 / B2-1**, décision de Romain *(**D-058**)*. ⚡ *(Cette case disait « ⛔ **OUVERT** » : vrai du 2026-08-24 à cette date.)* |
 | **Découvert** | 2026-08-24, en préparant l'architecture de l'historique |
 
 🔬 **`backend/Code.gs`, à la fin de la génération du planning** :
@@ -2268,6 +2276,36 @@ relance.
 > ⚠️ **Ce geste est DESTRUCTIF** : il consommerait le jeu de tournoi fictif. ⛔ **La clôture de
 > R-106 dépend donc d'une décision de Romain** — comme **D-055** l'a été pour R-097 et R-098
 > *(`CLAUDE.md` §12.5)*.
+
+> ## ✅ 🏁 R-106 EST CLOS — 2026-08-27 *(décision de Romain, **D-058**)*
+>
+> ⭐ **La phrase ci-dessus a été exécutée, mot pour mot.** Le reset nominal réel a été lancé depuis
+> l'administration, avec ses deux confirmations, **après création d'une copie complète du
+> classeur**. Message relevé **après disparition de tout état transitoire** *(`CLAUDE.md`
+> §8 octies)* : *« ✅ Tournoi réinitialisé. Supprimés : 1 catégorie(s), 3 équipe(s), 1 poule(s),
+> 3 match(s). Tournoi masqué. »*
+>
+> **Le registre, constaté dans le classeur :**
+>
+> | | |
+> |---|---|
+> | Ancienne édition | `f21ec93b-…` · **`fermee`** · création **inchangée** `10:29:22` · fermeture **`12:10:36`** |
+> | Nouvelle édition | `93349afe-…` · **`active`** · création `12:10:36` · fermeture **vide** |
+> | Unicité | **2 lignes · 1 active · 1 fermée** — ⛔ **jamais deux actives** |
+>
+> **Ce qui devait survivre a survécu, et c'est comparé à la sauvegarde — pas supposé** :
+> `Historique` **211 lignes, contenu strictement identique** ; `ClubsInvites` **3 lignes**, ses
+> **5 colonnes d'identité et de contact identiques**, ses **11 autres champs d'engagement vidés**,
+> ses **jetons renouvelés** — ⭐ exactement le comportement que le dialogue de l'application annonce.
+>
+> ⛔ **CE QUE CETTE CLÔTURE NE COUVRE PAS**, et il ne faut jamais l'écrire autrement :
+>
+> | | |
+> |---|---|
+> | ⛔ **Le cas d'ÉCHEC du reset** | ⭐ **Non provoqué en production, et c'est un CHOIX** : le provoquer exigerait de casser volontairement le classeur. Il est établi par **l'ordre du code** *(la bascule est la dernière instruction — toute exception antérieure l'empêche mécaniquement)* et par `testB21_resetEchecPasDeDemiBascule`, **éprouvé par rejeu de mutation**. ⚠️ **Preuve du harnais, jamais de la production** *(§13.6)* |
+> | ⛔ **R-101** | Les **6 réglages de terrains** ont **survécu** au reset — ⭐ **résultat ATTENDU**, figé par un test témoin. **R-101 RESTE OUVERT**, il appartient à **B2-3** |
+> | ⛔ **Le rattachement** | ⛔ **Rien** ne porte encore d'`edition_id` : ni participation, ni match, ni terrain. C'est **B2-2** et **B2-6** |
+> | ⛔ **`tournoi_id`** | Il reste **délibérément renouvelé** à chaque génération *(**D-057**)* : il est la clé de dédoublonnage de `Historique`. Son remplacement éventuel par `edition_id` reste **une question ouverte pour B2-6** |
 
 ### R-107 — L'archivage est une opération destructive en plusieurs temps
 

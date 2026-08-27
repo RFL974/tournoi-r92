@@ -60,18 +60,21 @@
 > ⭐ **Le cycle `non → publié → non` a été joué et refermé** : le masquage **cache** le tournoi,
 > ⛔ **il ne supprime aucune donnée** — et c'est vérifié.
 >
-> ✅ ⚡ **TOUJOURS INTACT — ET CETTE FOIS C'EST CONSTATÉ, PAS DÉDUIT** *(2026-08-27, suite 2)*.
-> La passe Google de B2-1 a écrit dans le classeur *(un onglet `Editions`, trois régénérations)*,
-> et le jeu a été **relu après chaque geste** : **3 équipes · 1 poule · 3 matchs**, matchs *« à
-> venir »*, scores **vides**, `tournoi_publie` = **`non`**. ⛔ **Aucun reset n'a été exécuté.**
+> 🏁 ⚡ **CE JEU N'EXISTE PLUS — IL A ÉTÉ CONSOMMÉ, ET C'ÉTAIT SON RÔLE** *(2026-08-27, suite 3)*.
+> Le **reset nominal réel** de B2-1 l'a effacé : **0 équipe · 0 poule · 0 match**, catégorie `U10`
+> supprimée, `tournoi_id` vidé, `tournoi_publie` = **`non`**. ⭐ **Ce n'est pas un incident : c'est
+> la dernière preuve du lot**, prise après décision explicite de Romain *(**D-058**)*, et **après
+> création d'une copie complète du classeur**.
 >
-> ⚡ *(Ce bloc disait « cette session n'a fait AUCUNE écriture dans le classeur réel […] par
-> construction et non par vérification » — **vrai jusqu'au 2026-08-27 (suite 2)**, où des écritures
-> ont bien eu lieu et où le jeu a été **vérifié** au lieu d'être **déduit**.)*
+> ⛔ **Le classeur est donc VIERGE DE TOURNOI aujourd'hui**, et ⛔ **il n'a pas été reconstruit** :
+> aucune session ne le refera sans décision de Romain. ⭐ **Ce qui devait survivre a survécu** —
+> `Historique` *(211 lignes)*, les **3 fiches de clubs** et leurs contacts, les partenaires, les
+> réglages de terrains, les clés.
 >
-> 🎯 ⚠️ **ET SA DÉCISION DEVIENT URGENTE, parce qu'elle en commande une autre.** La dernière preuve
-> de **B2-1** — la bascule d'édition lors d'un **reset réel** — est **destructive** : elle
-> consommerait ce jeu. ⛔ **Tant que son sort n'est pas tranché, B2-1 ne peut pas être close.**
+> ⚡ *(Ce repère a annoncé successivement « NE SUPPRIME PAS CE JEU, il est conservé POUR PUB-4 »,
+> puis « TOUJOURS INTACT — et cette fois c'est CONSTATÉ, pas déduit », puis « sa décision devient
+> urgente, parce qu'elle en commande une autre ». ⭐ **Chacune était vraie à son heure**, et la
+> dernière disait juste : **la décision a bien commandé la preuve**.)*
 >
 > ⏳ **CE QUI RESTE À DÉCIDER, ET CE N'EST PAS À UNE SESSION DE LE FAIRE.** Le repère exigeait qu'on
 > *« décide explicitement du sort de ce jeu, et qu'on le dise ici »*. ⭐ **Voici ce qui est dit** :
@@ -89,21 +92,27 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-27 *(session 31, suite 2)* — ✅ **M1-B2 / B2-1 EST EN SERVICE ET
-PROUVÉE EN RÉEL — ⛔ SAUF UNE CHOSE, ET ELLE EST NOMMÉE.**
+**Dernière mise à jour** : 2026-08-27 *(session 31, suite 3)* — 🏁 **M1-B2 / B2-1 EST CLÔTURÉ.
+✅ R-106 EST CLOS.** *(décision de Romain — **D-058**)*
 
 > ⭐ **Ce qui est acquis sur le classeur RÉEL, le 2026-08-27** : serveur redéployé *(version 159)*,
 > migration exécutée, **idempotence prouvée**, et ⭐ **le critère central atteint** — trois
 > régénérations de planning ont produit **trois `tournoi_id` différents** et ⛔ **un seul
 > `edition_id`, inchangé**.
 >
-> ⛔ **ET POURTANT B2-1 N'EST PAS CLOSE, ET R-106 NON PLUS.** ⭐ **Une seule preuve manque**, et
-> c'est une moitié du contrat validé *(**D-057**)* : **la bascule d'édition lors d'un RESET RÉEL**
-> — l'ancienne fermée, une neuve ouverte, et rien qui bouge si le reset échoue. ⛔ **Elle n'a
-> jamais été jouée en réel**, seulement par les tests. Voir le bloc « la seule preuve restante ».
+> ✅ **LA DERNIÈRE PREUVE A ÉTÉ PRISE.** Le **reset nominal réel** a été exécuté le 2026-08-27 :
+> l'édition `f21ec93b-…` est passée à **`fermee`** avec sa date de fermeture *(`12:10:36`)*, une
+> **édition neuve** `93349afe-…` s'est ouverte au même instant, et le registre porte **2 lignes :
+> 1 active, 1 fermée** — ⛔ **jamais deux actives**.
 >
-> ⭐ **Le jeu de tournoi fictif est intact** : 3 équipes · 1 poule · 3 matchs · `tournoi_publie` =
-> `non`. ⛔ **Aucun reset n'a été exécuté.**
+> ⚡ **Le jeu de tournoi fictif a donc été CONSOMMÉ** *(voir le repère en tête de ce document)* :
+> le classeur est **vierge de tournoi** — `Equipes` / `Poules` / `Matchs` à **0 / 0 / 0**, catégorie
+> `U10` supprimée, `tournoi_id` vidé, `tournoi_publie` = `non`. ⛔ **Il n'a pas été reconstruit.**
+>
+> ⭐ **Et rien de ce qui devait survivre n'a bougé** : `Historique` conserve ses **211 lignes**,
+> ⭐ **au contenu strictement identique à la sauvegarde** ; `ClubsInvites` conserve ses **3 lignes**
+> et ses **5 colonnes d'identité et de contact**, elles aussi identiques ; les **6 réglages de
+> terrains** ont survécu *(R-101, résultat attendu)*.
 >
 > ⚡ *(Ce bloc a annoncé « Cette passe est **locale** : ⛔ aucun push… » *(vrai jusqu'à l'intégration
 > du 2026-08-27)*, puis « Le code est INTÉGRÉ ET PUBLIÉ SUR GITHUB — ⛔ mais il n'est pas EN
@@ -118,49 +127,57 @@ PROUVÉE EN RÉEL — ⛔ SAUF UNE CHOSE, ET ELLE EST NOMMÉE.**
 | ⭐ **La migration** | `migrerEditionsMaintenant()` — explicite, **idempotente**, et ⛔ **elle ne touche RIEN d'autre** que l'onglet `Editions` |
 | 🔬 **Les preuves locales** | **974/974** au harnais Apps Script *(881 avant)* · **48/48**, **97/97**, **41/41**, **45/45** aux quatre suites Node, **inchangées** · ⭐ **six mutations** rejouées, **six attrapées** |
 | ✅ ⚡ **Les preuves RÉELLES chez Google** | ⭐ **`974/974 OK, 0 FAIL` LU DEUX FOIS dans le journal Apps Script** — une fois **avant** toute écriture, une fois **après** la migration et les trois régénérations. ⛔ **Ce n'est plus une prédiction.** ⚡ *(Cette case disait « Le bilan `974/974` reste une PRÉDICTION LOCALE […] chez Google, le bilan est toujours **881/881** » : vrai jusqu'au 2026-08-27.)* |
-| ⛔ **Ce qui N'EST PAS prouvé** | ⭐ **Une seule chose, et elle est précise** : la **bascule d'édition au reset**. ⛔ Aucun reset réel n'a été joué — ni le cas nominal *(ancienne fermée + neuve ouverte)*, ni le cas d'échec *(rien ne bouge)*. Ils sont établis **par le harnais seul** *(`CLAUDE.md` §13.6)* |
+| ✅ ⚡ **LA BASCULE AU RESET, PROUVÉE EN RÉEL** | Reset nominal exécuté depuis l'administration, deux confirmations comprises. Message final relevé **après disparition de tout état transitoire** *(`CLAUDE.md` §8 octies)* : *« ✅ Tournoi réinitialisé. Supprimés : 1 catégorie(s), 3 équipe(s), 1 poule(s), 3 match(s). Tournoi masqué. »* ⚡ *(Cette case disait « ⛔ **Aucun reset réel n'a été joué** » : vrai jusqu'au 2026-08-27.)* |
+| ⛔ **Ce qui reste couvert par le HARNAIS SEUL** | ⭐ **Le cas d'ÉCHEC du reset**, et **c'est délibéré** *(D-058)* : le provoquer exigerait de casser volontairement le classeur. Il est établi par **l'ordre du code** *(la bascule est la dernière instruction)* et par le test `testB21_resetEchecPasDeDemiBascule`, **éprouvé par rejeu de mutation**. ⚠️ **Ne jamais le présenter comme constaté en production** |
 | ⛔ **Ce que le lot ne fait PAS** | ⛔ Aucun rattachement *(rien ne porte encore d'`edition_id`)* · ⛔ aucun sélecteur d'édition · ⛔ aucun multi-tournois · ⛔ aucun `club_id` · ⛔ **pas une ligne de `frontend/`** |
 | ⚡ **Un écart de plan signalé** | La ligne B2-1 du plan annonçait *« + fin du renouvellement de `tournoi_id` »* ; ⛔ **le cadrage validé dit l'inverse**, et c'est lui qui fait foi — **D-057** explique pourquoi figer `tournoi_id` **détruirait** des lignes de `Historique` |
 | ✅ **L'état Git CONSTATÉ** | ⚡ **INTÉGRÉ ET POUSSÉ le 2026-08-27.** `origin/main` a été porté en **avance rapide pure** *(`--ff-only`, ⛔ **aucun commit de fusion**)* : **`58ac4a2` → `3667f70` → `ee5db89`**, puis le constat d'intégration **`2c5f48f`**. La branche **`claude/b2-1-edition-id`** est publiée sur **`ee5db89`**. ⭐ **C'est ici, et ici seulement, que ces repères vivent** *(`CLAUDE.md` §8 quater)*. ⚡ *(Cette case disait « Commit `3667f70` … ⛔ **NON POUSSÉ** » : vrai jusqu'à l'intégration.)* |
 | ✅ ⚡ **L'état GOOGLE CONSTATÉ** | ⭐ **Source déployée : commit `2c5f48f`.** `Code.gs` **8847** lignes · `Test.gs` **5554** · déploiement **158 → 159**, ⛔ **même identifiant, même URL, mêmes droits, aucun second déploiement**. ⚡ *(Cette case disait « ⛔ **RIEN N'EST EN SERVICE** — le serveur exécute toujours l'ancien `Code.gs` » : vrai jusqu'au 2026-08-27.)* |
 | ✅ ⚡ **La MIGRATION, constatée** | Onglet **`Editions`** créé — le classeur passe de **12 à 13** onglets. **Une** ligne : `edition_id` **`f21ec93b-27d8-429b-b8d2-ba80a801752b`**, `statut` **`active`**, créée le **`2026-08-27 10:29:22`**, ⛔ `date_fermeture` **vide**. ⭐ **Relancée, elle n'a RIEN créé** — même identifiant, même date **à la seconde près** |
 | ⭐ ⚡ **LE CRITÈRE CENTRAL, ATTEINT EN RÉEL** | **Trois** régénérations ⇒ **quatre** `tournoi_id` distincts *(`2026-08-26 13:49:11` → `10:41:12` → `10:44:28` → `10:48:03`)* et ⛔ **UN SEUL `edition_id`, jamais modifié**. Une seule ligne `active`, **aucune** ligne `fermee`, jeu fictif **intact**, tournoi **toujours masqué** |
-| ⏭️ **Ce qui reste** | ⚡ ~~Push~~ ✅ · ~~redéploiement~~ ✅ · ~~migration~~ ✅ · ~~3 régénérations~~ ✅ → ⭐ **il ne reste QUE la bascule au reset réel** — voir le bloc ci-dessous |
-| ⏳ **Toujours à décider par Romain** | ① le **sort du jeu de tournoi fictif** *(voir le repère en tête)* — ⭐ **et il commande désormais la dernière preuve** · ② la **clôture** de B2-1 et de R-106 |
+| 🏁 **Ce qui reste** | ⚡ ~~Push~~ ✅ · ~~redéploiement~~ ✅ · ~~migration~~ ✅ · ~~3 régénérations~~ ✅ · ~~reset réel~~ ✅ · ~~clôture~~ ✅ → ⛔ **RIEN. B2-1 est terminé.** ⚡ *(Cette case disait « il ne reste QUE la bascule au reset réel » : vrai jusqu'au 2026-08-27 suite 3.)* |
+| ⏳ **Ce qui appartient encore à Romain** | ⭐ **Reconstruire ou non un jeu de tournoi** dans le classeur, aujourd'hui **vierge**. ⛔ **Aucune session ne le fera sans décision.** ⚡ *(Cette case demandait « le sort du jeu de tournoi fictif » et « la clôture de B2-1 et R-106 » : les deux sont tranchés — **D-058**.)* |
 
-### 🎯 LA SEULE PREUVE RESTANTE — et pourquoi elle n'a pas été prise aujourd'hui
+### 🏁 LA DERNIÈRE PREUVE A ÉTÉ PRISE — le reset réel du 2026-08-27
 
-⭐ **Elle tient en une phrase** : *réinitialiser réellement le tournoi, et constater que l'édition
-`f21ec93b-…` passe à `fermee` avec sa date, qu'une édition NEUVE s'ouvre avec un AUTRE identifiant,
-et qu'il n'y a jamais eu deux éditions actives.*
+⚡ **Ce bloc s'intitulait « LA SEULE PREUVE RESTANTE — et pourquoi elle n'a pas été prise
+aujourd'hui ».** Elle a été prise le jour même, après décision de Romain. ⭐ **Le raisonnement qu'il
+portait — *le critère n'est pas le contrat* — reste écrit plus bas : c'est lui qui a empêché une
+clôture prématurée, et il vaut au-delà de ce lot.**
 
-⛔ **Elle n'a pas été prise parce qu'elle est DESTRUCTIVE** : la réinitialisation efface les
-équipes, les catégories, le planning et les infos du tournoi. ⭐ **Elle consommerait le jeu de
-tournoi fictif** — dont le sort est précisément la décision ① ci-dessus. ⚠️ **Les deux questions
-n'en font donc plus qu'une.**
+**Ce qui a été constaté dans le classeur, après le reset :**
 
-> ⚠️ **CE QUI EST LITTÉRALEMENT SATISFAIT, ET POURQUOI ON NE CLÔT PAS QUAND MÊME.**
+| | |
+|---|---|
+| **Ancienne édition** | `f21ec93b-…` · **`fermee`** · création **inchangée** `10:29:22` · fermeture **`12:10:36`** |
+| **Nouvelle édition** | `93349afe-…` · **`active`** · création **`12:10:36`** · fermeture **vide** |
+| **Registre** | **2 lignes · 1 active · 1 fermée** — ⛔ **jamais deux actives** |
+| **Le tournoi** | `Equipes` / `Poules` / `Matchs` = **0 / 0 / 0** · catégorie `U10` supprimée · `tournoi_id` **vidé** · `tournoi_publie` = **`non`** |
+| ✅ **`Historique`** | **211 lignes**, ⭐ **contenu strictement identique à la sauvegarde** |
+| ✅ **`ClubsInvites`** | **3 lignes** conservées · **5 colonnes** d'identité et de contact **identiques à la sauvegarde** · les **11 autres** champs d'engagement vidés · les **jetons renouvelés** — ⭐ **exactement le comportement annoncé par le dialogue de l'application** |
+| ⚠️ **Terrains** | Les **6 réglages structurels** ont survécu, **identiques à la sauvegarde** — ⭐ **résultat ATTENDU** *(R-101, figé par un test témoin, ⛔ **toujours OUVERT**, il appartient à B2-3)* |
+| ⛔ **Drive** | `tournoi_affiche_id` et `parking_photo_id` étaient **vides** avant comme après : ⛔ **aucun fichier n'est parti à la corbeille** |
+
+> ### 🎯 LA LEÇON DE MÉTHODE, ET ELLE RESTE ÉCRITE
 >
-> | Critère **écrit** | Où | État |
-> |---|---|---|
-> | *« Régénérer un planning 3× ⇒ un seul `edition_id` »* | `PLAN.md` §16.5 | ✅ **atteint en réel** |
-> | *« redéploiement + migration + constat réel »* | `RISQUES.md`, fiche R-106 | ✅ **les trois faits** |
+> **① Le critère n'est pas le contrat.** Les deux critères écrits — *« régénérer 3× ⇒ un seul
+> `edition_id` »* *(`PLAN.md` §16.5)* et *« redéploiement + migration + constat réel »*
+> *(fiche R-106)* — étaient **littéralement satisfaits AVANT le reset**. ⛔ **On n'a pas clos pour
+> autant** : ils avaient été rédigés le **2026-08-24**, avant le contrat détaillé **D-057** du
+> **2026-08-27**, qui exige aussi le comportement au reset. ⭐ *Un critère écrit trop tôt peut être
+> satisfait avant que le travail ne soit fini.*
 >
-> ⭐ **Les deux critères écrits sont donc remplis.** ⛔ **Et B2-1 reste ouverte**, pour trois raisons
-> qui ne s'annulent pas :
+> **② ⚠️ Une déduction présentée comme un constat a failli coûter cher — et c'est le plus important
+> de ce lot.** Le rapport d'audit du reset annonçait `Historique` et `ClubsInvites` **vides**.
+> ⛔ **Aucun des deux ne l'était** : **211** et **3** lignes. L'erreur ne venait pas d'une mauvaise
+> lecture du code — elle venait du **repère du jeu fictif**, qui décrit *« aucun club invité »* :
+> vrai **de ce jeu-là**, ⛔ **pas du classeur**. La déduction avait été écrite entre parenthèses,
+> **sans être marquée comme telle** *(`CLAUDE.md` §9)*.
 >
-> 1. ⚠️ **Le critère écrit est plus ÉTROIT que le contrat validé.** La ligne du tableau §16.5 date du
->    **2026-08-24** ; le contrat fonctionnel détaillé a été validé le **2026-08-27** *(**D-057**)* et
->    exige explicitement le comportement au reset — **réussi ET échoué**. ⛔ Clore sur la seule ligne
->    du tableau déclarerait terminé un lot dont **la moitié du contrat n'a jamais été exercée** ;
-> 2. **`CLAUDE.md` §8 quinquies** : la phrase du contrôle ⑯ doit pouvoir s'écrire **en entier**.
->    Pour la part reset, *« recontrôlée en réel »* manque — ⛔ **elle est donc impossible à écrire** ;
-> 3. ⭐ **La clôture appartient à Romain, pas à une session** *(**§12.5**)*. C'est le patron du
->    dépôt : **R-097** et **R-098** ont été fermés par **décision de Romain** *(**D-055**)*.
->
-> 🎯 **Ce qu'il faut retenir, et c'est une leçon de méthode** : *un critère écrit trop tôt peut être
-> satisfait avant que le travail ne soit fini.* ⛔ **Le critère n'est pas le contrat.** Cet écart est
-> inscrit ici plutôt que lissé — c'est exactement ce que le dépôt demande de rendre visible.
+> 🔬 **Conséquence directe, et elle est heureuse** : la recommandation *« pas de sauvegarde »* a été
+> **retirée**, et une **copie complète du classeur a été créée avant le reset**. ⭐ **C'est elle qui
+> permet aujourd'hui d'écrire « strictement identique à la sauvegarde »** au lieu de « probablement
+> intact ». ⛔ **Sans l'erreur repérée à temps, cette comparaison n'existerait pas.**
 
 *Rappel de la mise à jour précédente — 2026-08-26 (suite 6)* — 🏁🏁 **M1-PUB EST TERMINÉ. LE CHANTIER ENTIER
 EST CLOS** — ses **cinq** micro-lots et les **quatre** conditions de son critère de clôture.

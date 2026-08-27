@@ -104,6 +104,11 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 > identifiant ne le rend pas bon.** Il est toujours **reposé à chaque génération de planning** — un
 > seul tournoi réel en produit donc plusieurs.
 >
+> ✅ ⚡ **R-106 EST CLOS DEPUIS LE 2026-08-27** *(**D-058**)*. ⭐ **`tournoi_id` reste pourtant reposé
+> à chaque génération, et c'est voulu** *(**D-057**)* : ce n'est plus un défaut, puisqu'il n'est plus
+> le porteur de l'identité de l'édition — `edition_id` l'est. ⚠️ **Ne pas lire cette clôture comme
+> « `tournoi_id` a été corrigé »** : il n'a pas changé, c'est son RÔLE qui a été clarifié.
+>
 > ⚡ **CE QUI A CHANGÉ LE 2026-08-27** *(lot **B2-1**)*. Cette note disait : *« `edition_id`
 > N'EXISTE PAS ENCORE : c'est exactement ce que B2-1 doit créer, et B2-1 n'est pas démarrée »* —
 > **vrai jusqu'à cette date**. ⭐ **`edition_id` existe désormais DANS LE DÉPÔT**, avec son registre
@@ -479,9 +484,13 @@ ici par le backend (`archiverResultat` dans [`../backend/Code.gs`](../backend/Co
 > ⚡ *(Cette note disait « ⛔ **il N'EXISTE PAS ENCORE dans le classeur en service** […] cette
 > section décrit ce qui arrivera, pas ce qui est » : vrai jusqu'à cette date.)*
 >
-> ⚠️ **Une propriété reste NON éprouvée en réel** : la **bascule au reset** *(ligne « Réinitialisation
-> RÉUSSIE » du cycle de vie ci-dessous)*. Elle est établie par les tests, ⛔ **pas par un reset
-> réel** — voir `docs/industrialisation/RISQUES.md`, fiche **R-106**.
+> ✅ ⚡ **La bascule au reset est PROUVÉE EN RÉEL** *(2026-08-27)* : un reset nominal a fermé
+> l'édition en cours *(avec sa date)* et en a ouvert une neuve, ⛔ **sans jamais deux actives**.
+> ⚡ *(Cette note disait « ⚠️ **Une propriété reste NON éprouvée en réel** […] établie par les tests,
+> ⛔ pas par un reset réel » : vrai jusqu'à cette date.)*
+>
+> ⛔ **Le cas d'ÉCHEC du reset**, lui, reste couvert par le harnais — délibérément. Voir
+> `docs/industrialisation/RISQUES.md`, fiche **R-106**.
 
 **Une ligne = une édition réelle du tournoi.** C'est la **source unique** de l'identité durable
 d'une édition : ⛔ `edition_id` ne vit **nulle part ailleurs**, et surtout pas dans `Config`.

@@ -10116,3 +10116,76 @@ donc OUVERTS**, et leur clôture appartient à Romain *(`CLAUDE.md` §12.5)*. Le
 ⏭️ **Aucune n'est engagée.** ⭐ **Une décision de Romain vient d'abord** : le sort du jeu de tournoi
 fictif — car c'est lui qui commande la dernière preuve de B2-1. ⛔ **Rien ne démarre sans validation
 explicite** *(`CLAUDE.md` §12.4)*.
+
+### 31.16 — 🏁 ADDENDUM du 2026-08-27 *(suite 3)* : le reset réel, et la clôture de B2-1 et R-106
+
+> ⭐ **Addendum, jamais réécriture** *(`CLAUDE.md` §8 septies)*. Le §31.14 s'intitule *« Ce qui n'a
+> PAS été fait, et pourquoi B2-1 n'est pas close »* et affirme *« ⛔ Aucun reset »* : **c'était vrai
+> quand c'était écrit**, et cela le reste à sa date. Le nouvel état s'ajoute ici.
+
+**Ce qui s'est passé, dans l'ordre.**
+
+| # | Geste | Résultat |
+|---|---|---|
+| ① | ⚠️ **Un audit correctif imposé par Romain** | Deux affirmations de mon rapport précédent étaient **fausses** — voir §31.17 |
+| ② | ✅ **Copie complète du classeur** *(Drive)* | ⛔ Son adresse n'est **pas** inscrite au dépôt |
+| ③ | ✅ **Photographie avant reset** | 13 onglets · 1 édition `active` · `tournoi_id` `10:48:03` · masqué · **3 / 1 / 3** · 1 catégorie · **`Historique` 211 lignes** · **`ClubsInvites` 3 lignes** · affiche et photo parking **vides** |
+| ④ | ⭐ **Reset nominal réel** | Depuis l'administration, **deux confirmations**. Message relevé **après disparition de tout état transitoire** : *« ✅ Tournoi réinitialisé. Supprimés : 1 catégorie(s), 3 équipe(s), 1 poule(s), 3 match(s). Tournoi masqué. »* |
+| ⑤ | ✅ **Contrôle direct du classeur, comparé à la sauvegarde** | Voir le tableau ci-dessous |
+
+**Ce qui a été constaté après le reset**
+
+| | |
+|---|---|
+| **Registre** | **2 lignes · 1 `active` · 1 `fermee`** — ⛔ **jamais deux actives** |
+| **Ancienne édition** | `fermee` · création **inchangée** `10:29:22` · fermeture `12:10:36` |
+| **Nouvelle édition** | `active` · identifiant **différent** · création `12:10:36` · fermeture **vide** |
+| **Le tournoi** | `Equipes` / `Poules` / `Matchs` = **0 / 0 / 0** · catégorie supprimée · `tournoi_id` **vidé** · masqué |
+| ✅ **`Historique`** | **211 lignes**, ⭐ **contenu strictement identique à la sauvegarde** |
+| ✅ **`ClubsInvites`** | **3 lignes** · **5 colonnes** d'identité et contact **identiques** · **11 champs d'engagement vidés** · **jetons renouvelés** |
+| ⚠️ **Terrains** | Les **6 réglages** ont survécu, identiques — ⭐ **attendu** *(R-101, **toujours OUVERT**, → B2-3)* |
+| ⛔ **Drive** | Les deux identifiants étaient **vides** : ⛔ **aucun fichier mis à la corbeille** |
+
+⛔ **Aucune donnée personnelle, aucun jeton et aucune adresse de sauvegarde ne figurent dans ce
+dépôt** — ni ici, ni ailleurs.
+
+⚠️ **Les tests n'ont PAS été relancés après le reset.** Les deux lectures de `974/974 OK, 0 FAIL`
+sont **antérieures** au reset. ⛔ **Ne jamais laisser croire l'inverse.**
+
+### 31.17 — ⚠️ L'erreur de cette session, et pourquoi elle a produit un meilleur résultat
+
+Mon audit préparatoire au reset affirmait que `Historique` et `ClubsInvites` étaient **vides**, et
+en concluait qu'une sauvegarde serait superflue. ⛔ **Ils contenaient 211 et 3 lignes.**
+
+🔬 **La cause n'était pas une mauvaise lecture du code.** L'audit du code était juste : `Historique`
+n'est ouvert par aucun chemin du reset, et `ClubsInvites` perd exactement les 12 colonnes annoncées.
+⭐ **L'erreur venait du repère du jeu de tournoi fictif**, qui décrit *« aucun club invité »* — vrai
+**de ce jeu-là**, ⛔ **pas du classeur**. La déduction a été écrite **entre parenthèses, sans être
+marquée comme hypothèse** : exactement ce que **`CLAUDE.md` §9** interdit.
+
+> 🎯 **Ce que la correction a changé, et c'est le point** : Romain a relevé l'écart, la
+> recommandation *« pas de sauvegarde »* a été **retirée**, et une **copie complète du classeur** a
+> été créée avant le reset. ⭐ **C'est cette copie qui permet d'écrire aujourd'hui « strictement
+> identique à la sauvegarde » plutôt que « probablement intact ».**
+>
+> ⛔ **Sans l'erreur repérée à temps, cette comparaison n'existerait pas.** ⭐ *Une déduction non
+> marquée ne se distingue pas d'un constat — et c'est le lecteur suivant qui paie la différence.*
+
+### 31.18 — 🏁 La clôture
+
+✅ **B2-1 est CLÔTURÉ. R-106 est CLOS.** Décision explicite de Romain — **D-058**, qui porte le motif
+complet et la distinction entre ce qui est prouvé **en réel** et ce qui reste couvert par le
+**harnais** *(le cas d'échec du reset, délibérément non provoqué)*.
+
+⛔ **Ce que la clôture ne ferme pas** : **R-101** *(les terrains survivants — B2-3)* · le
+**rattachement** des données à `edition_id` *(B2-2, B2-6)* · la question du remplacement de
+`tournoi_id` comme clé de `Historique` *(ouverte pour B2-6)*.
+
+### 31.19 — Prochaine session recommandée
+
+⏭️ **`PLAN.md` §16.5 désigne B2-2** *(`Clubs` + `Participations` + couche d'adaptation)* comme
+prochaine étape de M1-B2. ⛔ **NON DÉMARRÉE**, et elle ne démarre pas sans validation explicite
+*(`CLAUDE.md` §12.4, `PLAN.md` §15.2)*.
+
+⏳ **Et une chose appartient à Romain avant toute reprise** : le classeur est **vierge de tournoi**
+depuis le reset. ⛔ **Aucune session ne reconstruira un jeu d'essai sans sa décision.**

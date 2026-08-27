@@ -3919,3 +3919,92 @@ Trois obligations en découlent, et **aucune n'est facultative** :
 - ❌ **Pas** que quoi que ce soit porte déjà un `edition_id` : ⛔ **rien** n'est rattaché en B2-1 —
   ni participation, ni match, ni terrain. Le rattachement appartient à **B2-2** et **B2-6** ;
 - ❌ **Pas** que le classeur en service a changé : ⛔ **aucune écriture n'y a été faite.**
+
+---
+
+### D-058 — B2-1 et R-106 se ferment sur une preuve réelle, pas sur un critère satisfait ; le cas d'échec reste au harnais, et une déduction prise pour un constat a valu la sauvegarde qui rend la comparaison possible
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-27 |
+| **Session** | **31** *(suite 3)* — chantier **M1-B2 / B2-1**, clôture |
+| **Statut** | ✅ **VALIDÉE — décision explicite de Romain**, après le reset nominal réel et le contrôle direct du classeur |
+| **Décidée par** | Romain |
+| **Couvre** | `PLAN.md` **§16.5** *(lot B2-1)* · `RISQUES.md` **R-106** · suite de **D-057** |
+
+**Ce qui est décidé**
+
+| | |
+|---|---|
+| 🏁 **B2-1** | **CLÔTURÉ** |
+| ✅ **R-106** | **CLOS** |
+
+**Ce qui l'établit — et il faut distinguer les deux natures de preuve**
+
+⭐ **Prouvé EN RÉEL, sur le classeur** :
+
+| | |
+|---|---|
+| Déploiement | Version **159**, même URL, mêmes droits, aucun second déploiement |
+| Tests | **`974/974 OK, 0 FAIL`** lu **deux fois** dans le journal Apps Script — ⚠️ **les deux AVANT le reset** ; ⛔ **aucun lancement après le reset n'a été fait, et rien ne sera écrit qui le laisse croire** |
+| Migration | Onglet `Editions` créé, une édition `active` |
+| Idempotence | Relance : *« rien à faire »*, ⛔ aucun doublon, même date **à la seconde près** |
+| Stabilité | **3 régénérations ⇒ 3 `tournoi_id` distincts, 1 seul `edition_id`** |
+| ⭐ **Bascule au reset** | Ancienne édition **`fermee`** avec sa date · **neuve `active`**, autre identifiant · **1 active / 1 fermée** — ⛔ **jamais deux actives** |
+| Conservation | `Historique` **211 lignes, contenu strictement identique à la sauvegarde** · `ClubsInvites` **3 lignes**, **5 colonnes d'identité et de contact identiques**, **11 champs d'engagement vidés**, **jetons renouvelés** |
+| Effacement | `Equipes` / `Poules` / `Matchs` = **0 / 0 / 0** · catégorie supprimée · `tournoi_id` vidé · tournoi masqué |
+
+⛔ **Prouvé par le HARNAIS SEUL — et assumé comme tel** :
+
+> **Le cas d'ÉCHEC du reset** *(une panne en cours d'effacement laisse l'édition inchangée)*.
+> ⭐ **Il n'a délibérément PAS été provoqué en production** : le provoquer exigerait de casser
+> volontairement le classeur, pour établir une propriété qui n'est pas comportementale mais
+> **structurelle** — la bascule est la **dernière instruction** de `reinitialiserTournoi`, donc
+> toute exception antérieure l'empêche mécaniquement. Le test
+> `testB21_resetEchecPasDeDemiBascule` l'établit, et ⭐ **il a été vu échouer sur code muté**
+> *(bascule remontée avant les effacements → 3 échecs)*. ⚠️ **Ne jamais l'écrire comme constaté en
+> production** *(`CLAUDE.md` §13.6)*.
+
+**🎯 Les deux leçons de méthode, et elles valent au-delà de ce lot**
+
+> **① Le critère n'est pas le contrat.**
+>
+> Les deux critères **écrits** — *« régénérer 3× ⇒ un seul `edition_id` »* *(`PLAN.md` §16.5)* et
+> *« redéploiement + migration + constat réel »* *(fiche R-106)* — étaient **littéralement
+> satisfaits AVANT le reset**. ⛔ **La clôture a pourtant été refusée**, parce qu'ils avaient été
+> rédigés le **2026-08-24**, avant le contrat détaillé **D-057** du **2026-08-27**, qui exige aussi
+> le comportement au reset.
+>
+> ⭐ *Un critère écrit trop tôt peut être satisfait avant que le travail ne soit fini.* La clôture a
+> été retardée d'une passe, et elle repose maintenant sur une **observation**, pas sur une case
+> cochée.
+
+> **② ⚠️ Une déduction présentée comme un constat a failli faire prendre un risque inutile.**
+>
+> L'audit préparatoire au reset annonçait `Historique` et `ClubsInvites` **vides**, et concluait
+> qu'une sauvegarde serait superflue. ⛔ **Ils contenaient respectivement 211 et 3 lignes.**
+>
+> 🔬 **La cause n'était pas une mauvaise lecture du code** — l'audit du code était juste. Elle
+> venait du **repère du jeu de tournoi fictif**, qui décrit *« aucun club invité »* : vrai **de ce
+> jeu-là**, ⛔ **pas du classeur**. La déduction avait été écrite **entre parenthèses, sans être
+> marquée comme hypothèse** — exactement ce que **`CLAUDE.md` §9** interdit.
+>
+> ⭐ **Repérée par Romain, elle a produit un meilleur résultat que si elle n'avait jamais existé** :
+> la recommandation *« pas de sauvegarde »* a été retirée, **une copie complète du classeur a été
+> créée avant le reset**, et c'est elle qui permet aujourd'hui d'écrire *« strictement identique à
+> la sauvegarde »* au lieu de *« probablement intact »*. ⛔ **Sans la correction, cette comparaison
+> n'existerait pas.**
+>
+> 🎯 **Ce qu'il faut en retenir** : *une déduction non marquée ne se distingue pas d'un constat — et
+> c'est le lecteur suivant qui paie la différence.*
+
+**Ce que cette décision ne dit PAS**
+
+- ❌ **Pas** que **R-101** est réglé : les 6 réglages de terrains ont **survécu** au reset — ⭐ résultat
+  **attendu**, figé par un test témoin. **R-101 RESTE OUVERT**, il appartient à **B2-3** ;
+- ❌ **Pas** que quoi que ce soit porte un `edition_id` : ⛔ **rien** n'est rattaché — ni participation,
+  ni match, ni terrain. C'est **B2-2** et **B2-6** ;
+- ❌ **Pas** que `tournoi_id` a été corrigé : il reste **délibérément** renouvelé à chaque génération
+  *(**D-057**)*. Son remplacement éventuel comme clé de `Historique` reste **ouvert pour B2-6** ;
+- ❌ **Pas** que le classeur est prêt : il est **vierge de tournoi** depuis le reset, et ⛔ **il n'a
+  pas été reconstruit**. Le refaire appartient à Romain.
