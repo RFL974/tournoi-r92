@@ -107,6 +107,29 @@ var ENTETES = {
   // ⚠️ Toute colonne future (ex. le club organisateur) s'ajoutera À DROITE, migration douce,
   //   comme partout ailleurs dans ce fichier. ⛔ B2-1 ne crée AUCUN `club_id`.
   Editions: ['edition_id', 'statut', 'date_creation', 'date_fermeture'],
+  // ─── M1-B2 / B2-2 — LE CARNET DURABLE (D-050 : « un club connu n'est pas un club invité »).
+  //   Une ligne = l'IDENTITÉ d'un club, indépendante de toute édition. ⛔ Aucun statut, aucun
+  //   jeton, aucun effectif : tout cela appartient à une PARTICIPATION, jamais au carnet.
+  //   club_id   : UUID tiré une seule fois à la création. ⛔ Jamais réutilisé, jamais renouvelé —
+  //               pas même si le club est renommé, ni s'il est désactivé puis réactivé. C'est ce
+  //               qui permettra de dire « ce club est venu quatre fois » sans se tromper de club.
+  //   actif     : 'oui' / 'non'. ⭐ SUPPRESSION LOGIQUE : retirer un club du tournoi courant ne
+  //               détruit PAS son identité, sinon les éditions passées deviendraient orphelines.
+  Clubs: ['club_id', 'club_nom', 'club_contact_nom', 'club_contact_prenom',
+          'club_contact_email', 'date_ajout', 'actif'],
+  // ─── M1-B2 / B2-2 — L'ENGAGEMENT D'UNE ÉDITION. Une ligne = (une édition, un club).
+  //   ⭐ C'est la structure qui rend R-099 et R-100 IMPOSSIBLES : une donnée d'engagement ne
+  //   peut plus « survivre à un reset », puisqu'elle appartient à une édition qui n'est plus
+  //   l'active. ⛔ Il n'y a plus de liste de colonnes à vider — donc plus rien à oublier.
+  //   Les 12 colonnes d'engagement gardent EXACTEMENT leurs noms d'avant : la couche
+  //   d'adaptation reconstruit ainsi l'objet plat du frontend sans traduction (D-050).
+  //   snap_*    : l'identité du club AU MOMENT DE L'INVITATION, figée au premier envoi principal
+  //               réussi. ⭐ Renommer un club dans le carnet ne réécrit pas l'histoire.
+  Participations: ['edition_id', 'club_id', 'statut', 'categories_engagees', 'dossier_envoye',
+                   'invitation_envoyee', 'club_token', 'date_reponse', 'nb_equipes_par_categorie',
+                   'nb_joueurs_total', 'alerte_ecart', 'detail_effectifs', 'nb_educateurs_total',
+                   'selection_enregistree', 'snap_club_nom', 'snap_contact_nom',
+                   'snap_contact_prenom', 'snap_contact_email'],
   // PARTENAIRES du tournoi, affichés sur la page publique des scores. Aucune donnée
   // personnelle : un partenaire est une entreprise, tout y est destiné à être public.
   //   logo_id      : id du fichier Drive du logo (public en lecture), comme tournoi_affiche_id.
@@ -7969,6 +7992,293 @@ function preuvesParticipationLegacy(ligne) {
  */
 function participationLegacyReelle(ligne) {
   return preuvesParticipationLegacy(ligne).length > 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * LES DEUX ONGLETS — création à la demande et migration douce des colonnes.
+ * Même patron qu'`assurerOngletClubsInvites` : un classeur en service n'a pas ces onglets,
+ * ils apparaissent au premier accès et les colonnes futures s'ajoutent À DROITE.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Crée l'onglet s'il manque, puis garantit ses colonnes. Rendu générique : les deux
+ *  nouveaux onglets suivent exactement la même règle, et une seule fonction la porte. */
+function assurerOngletModele(classeur, nom, entetes) {
+  var onglet = classeur.getSheetByName(nom);
+  if (!onglet) {
+    creerOngletAvecEntetes(classeur, nom, entetes);
+    return classeur.getSheetByName(nom);
+  }
+  var largeur = Math.max(onglet.getLastColumn(), 1);
+  var presentes = onglet.getRange(1, 1, 1, largeur).getValues()[0];
+  var vues = {}, derniere = 0;
+  for (var i = 0; i < presentes.length; i++) {
+    if (presentes[i] !== '' && presentes[i] !== null) { vues[presentes[i]] = true; derniere = i + 1; }
+  }
+  var manquants = entetes.filter(function (h) { return !vues[h]; });
+  if (manquants.length) {
+    var zone = onglet.getRange(1, derniere + 1, 1, manquants.length);
+    zone.setNumberFormat('@');
+    zone.setValues([manquants]);
+    stylerEntete(zone);
+    onglet.setFrozenRows(1);
+  }
+  return onglet;
+}
+
+function assurerOngletClubs(classeur) {
+  return assurerOngletModele(classeur, 'Clubs', ENTETES.Clubs);
+}
+
+function assurerOngletParticipations(classeur) {
+  return assurerOngletModele(classeur, 'Participations', ENTETES.Participations);
+}
+
+/**
+ * ⭐ LE GARDE-FOU DE R-105, REPORTÉ SUR LA NOUVELLE STRUCTURE — et c'est bien un report, pas
+ * une copie : `colonnesClubsNonClassees` protégeait `ClubsInvites`, dont le reset vidait des
+ * colonnes. Ici le reset ne vide plus rien ; le danger a changé de forme.
+ *
+ * ⚠️ LE NOUVEAU DANGER : une colonne d'ENGAGEMENT ajoutée par erreur à `Clubs`. Elle
+ * survivrait à toutes les éditions — exactement R-099, mais d'un cran plus haut, et cette
+ * fois AUCUN reset ne pourrait la rattraper, puisque le carnet est fait pour durer.
+ * @return {Array<string>} les colonnes de `Clubs` qui décrivent un engagement. ⭐ Vide = sain.
+ */
+function colonnesCarnetMalPlacees(entetesClubs) {
+  var engagement = {};
+  CLUBS_COLONNES_ENGAGEMENT.forEach(function (h) { engagement[h] = true; });
+  return (entetesClubs || []).filter(function (h) {
+    return engagement[String(h == null ? '' : h).trim()] === true;
+  });
+}
+
+/**
+ * ⭐ L'AUTRE MOITIÉ DU GARDE-FOU : toute colonne de `Participations` doit avoir un rôle connu —
+ * clé de rattachement, engagement, ou snapshot. Une colonne inconnue des trois est une décision
+ * qui n'a pas été prise ; elle est SIGNALÉE, ⛔ jamais devinée (même doctrine que B2-0 / T8).
+ * @return {Array<string>} les colonnes sans rôle. ⭐ Vide = sain.
+ */
+function colonnesParticipationNonClassees(entetesParticipations) {
+  var connues = {};
+  ['edition_id', 'club_id'].forEach(function (h) { connues[h] = true; });
+  CLUBS_COLONNES_ENGAGEMENT.forEach(function (h) { connues[h] = true; });
+  PARTICIPATION_COLONNES_SNAPSHOT.forEach(function (h) { connues[h] = true; });
+  return (entetesParticipations || []).filter(function (h) {
+    var nom = String(h == null ? '' : h).trim();
+    return nom !== '' && connues[nom] !== true;
+  });
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * LECTURES — elles ne créent RIEN. Même règle que `editionActive` (B2-1) : un onglet absent
+ * se lit comme une liste vide, ⛔ jamais comme une invitation à le peupler.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Le carnet, tel quel. Un onglet absent ⇒ []. ⛔ Ne crée pas l'onglet. */
+function lireClubs(classeur) { return lireOngletSimple(classeur, 'Clubs'); }
+
+/** Toutes les participations, toutes éditions confondues. Un onglet absent ⇒ []. */
+function lireParticipations(classeur) { return lireOngletSimple(classeur, 'Participations'); }
+
+/** Vrai si le club est actif au carnet. ⭐ Colonne absente ou vide ⇒ ACTIF : un carnet d'avant
+ *  la suppression logique ne doit pas voir tous ses clubs disparaître d'un coup. */
+function clubEstActif(club) {
+  var v = String((club && club.actif) === undefined || club.actif === null ? '' : club.actif).trim();
+  return v === '' || memeTexteSouple(v, 'oui');
+}
+
+/** ⭐ PUR — le club du carnet portant ce nom (comparaison souple, comme partout ailleurs). */
+function trouverClubParNom(clubs, nom) {
+  var cible = String(nom || '').trim();
+  if (!cible) return null;
+  for (var i = 0; i < (clubs || []).length; i++) {
+    if (memeTexteSouple(clubs[i].club_nom, cible)) return clubs[i];
+  }
+  return null;
+}
+
+/** ⭐ PUR — la participation d'un club à UNE édition précise, ou null. */
+function trouverParticipation(participations, editionId, clubId) {
+  var e = String(editionId || '').trim(), c = String(clubId || '').trim();
+  if (!e || !c) return null;
+  for (var i = 0; i < (participations || []).length; i++) {
+    if (String(participations[i].edition_id || '').trim() === e &&
+        String(participations[i].club_id || '').trim() === c) return participations[i];
+  }
+  return null;
+}
+
+/** Ajoute des lignes en bas d'un onglet, en respectant l'ordre RÉEL de ses en-têtes.
+ *  @param {Array<Object>} objets  une entrée par ligne, clés = noms de colonnes */
+function ajouterLignesModele(onglet, objets) {
+  if (!objets || !objets.length) return 0;
+  var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
+  var lignes = objets.map(function (o) {
+    return entetes.map(function (h) { return (o[h] === undefined || o[h] === null) ? '' : o[h]; });
+  });
+  var plage = onglet.getRange(onglet.getLastRow() + 1, 1, lignes.length, entetes.length);
+  plage.setNumberFormat('@');
+  plage.setValues(lignes);
+  return lignes.length;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ⭐ LA MIGRATION — et son idempotence, qui ne repose sur AUCUN drapeau.
+ *
+ * ⚠️ CE QU'ON NE PEUT PAS FAIRE, et pourquoi : « l'onglet existe et porte au moins une ligne
+ * de l'édition active » serait un critère FAUX. **Zéro participation active est un état
+ * parfaitement valide** — c'est exactement celui du classeur réel après le reset du
+ * 2026-08-27 : trois clubs au carnet, aucune participation. Un tel critère conclurait
+ * « pas encore migré » sur un classeur déjà migré, et rejouerait tout.
+ *
+ * ⭐ CE QU'ON FAIT À LA PLACE : la migration ne se DEMANDE pas si elle a déjà eu lieu, elle
+ * CALCULE l'écart entre ce qui devrait exister et ce qui existe, puis n'écrit que la
+ * différence. Rejouée, l'écart est nul, donc elle n'écrit rien. C'est une CONVERGENCE, pas
+ * une bascule — et c'est ce qui rend une interruption inoffensive : une seconde exécution
+ * termine simplement le travail, sans jamais dupliquer ce qui est déjà là.
+ *
+ * ⛔ ELLE N'EFFACE RIEN. `ClubsInvites` reste intact, ligne pour ligne, cellule pour cellule
+ * (arbitrage du 2026-08-27). Tant que la nouvelle structure n'a pas fait ses preuves sur le
+ * classeur réel, l'ancienne reste lisible — et une donnée qu'on n'a pas su reprendre reste
+ * consultable là où elle a toujours été.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * ⭐ CŒUR PUR (aucun classeur) — le PLAN de migration : que faut-il créer, et rien de plus ?
+ *
+ * @param {Array<Object>} legacy         les lignes de `ClubsInvites`
+ * @param {Array<Object>} clubs          le carnet DÉJÀ présent (vide à la première exécution)
+ * @param {Array<Object>} participations les participations DÉJÀ présentes
+ * @param {string}        editionId      l'édition ACTIVE — celle à laquelle rattacher
+ * @param {function():string} faireUuid  fabrique d'identifiants (injectée : le plan reste pur)
+ * @return {Object} { error } ou
+ *   { clubsACreer, participationsACreer, clubsReutilises, participationsExistantes,
+ *     sansParticipation, ignores }
+ *   ⭐ `sansParticipation` liste les clubs migrés SANS engagement : ce n'est pas un incident,
+ *      c'est le résultat normal pour un carnet après reset — et il doit être DIT.
+ */
+function planifierMigrationClubs(legacy, clubs, participations, editionId, faireUuid) {
+  var edition = String(editionId || '').trim();
+  if (!edition) {
+    return { error: 'Aucune édition active : lance d\'abord `migrerEditionsMaintenant()` ' +
+      '(M1-B2 / B2-1). ⛔ Sans édition, une participation n\'aurait à quoi se rattacher.' };
+  }
+
+  var carnet = (clubs || []).slice();          // copie de travail : le plan ne modifie rien
+  var dejaLa = (participations || []).slice();
+  var plan = { clubsACreer: [], participationsACreer: [], clubsReutilises: 0,
+    participationsExistantes: 0, sansParticipation: [], ignores: [] };
+
+  (legacy || []).forEach(function (ligne) {
+    var nom = String((ligne && ligne.club_nom) || '').trim();
+    if (!nom) { plan.ignores.push('(ligne sans nom de club)'); return; }
+
+    // ① L'IDENTITÉ — réutilisée si elle existe déjà, ⛔ jamais recréée. C'est ce qui rend le
+    //    `club_id` STABLE d'une exécution à l'autre, et ce qui interdit les doublons.
+    var club = trouverClubParNom(carnet, nom);
+    if (club) {
+      plan.clubsReutilises++;
+    } else {
+      club = {
+        club_id: faireUuid(), club_nom: nom,
+        club_contact_nom: String((ligne.club_contact_nom == null) ? '' : ligne.club_contact_nom).trim(),
+        club_contact_prenom: String((ligne.club_contact_prenom == null) ? '' : ligne.club_contact_prenom).trim(),
+        club_contact_email: String((ligne.club_contact_email == null) ? '' : ligne.club_contact_email).trim(),
+        date_ajout: String((ligne.date_ajout == null) ? '' : ligne.date_ajout).trim(),
+        actif: 'oui'
+      };
+      carnet.push(club);                       // visible pour les lignes suivantes : anti-doublon
+      plan.clubsACreer.push(club);
+    }
+
+    // ② L'ENGAGEMENT — ⛔ SEULEMENT s'il est PROUVÉ. C'est tout l'objet du prédicat : un club
+    //    seulement connu du carnet ne reçoit AUCUNE participation, et c'est le cas normal
+    //    d'un classeur réinitialisé.
+    if (!participationLegacyReelle(ligne)) { plan.sansParticipation.push(nom); return; }
+
+    if (trouverParticipation(dejaLa, edition, club.club_id)) {
+      plan.participationsExistantes++;         // déjà migrée : ⛔ on ne la réécrit pas
+      return;
+    }
+
+    var participation = { edition_id: edition, club_id: club.club_id };
+    CLUBS_COLONNES_ENGAGEMENT.forEach(function (h) {
+      participation[h] = (ligne[h] === undefined || ligne[h] === null) ? '' : ligne[h];
+    });
+    // 📸 SNAPSHOTS. ⚠️ HONNÊTETÉ DE LA MIGRATION : l'identité RÉELLEMENT ENVOYÉE au moment de
+    //    l'invitation n'est plus reconstructible — le classeur ne l'a jamais conservée. On fige
+    //    donc la MEILLEURE APPROXIMATION DISPONIBLE : l'identité au moment de la migration.
+    //    ⛔ Ne jamais présenter cela comme une preuve exacte de l'état historique.
+    PARTICIPATION_COLONNES_SNAPSHOT.forEach(function (snap) {
+      var source = PARTICIPATION_SNAPSHOT_SOURCE[snap];
+      var v = ligne[source];
+      participation[snap] = (v === undefined || v === null) ? '' : String(v).trim();
+    });
+    dejaLa.push(participation);                // anti-doublon si deux lignes legacy homonymes
+    plan.participationsACreer.push(participation);
+  });
+
+  return plan;
+}
+
+/**
+ * ▶ MIGRATION — à lancer À LA MAIN depuis l'éditeur Apps Script, comme `setupSheet`,
+ * `configurerCles` ou `migrerEditionsMaintenant`.
+ *
+ * ⭐ Ce qu'elle fait : lit `ClubsInvites`, crée les identités manquantes dans `Clubs`, et les
+ * participations manquantes dans `Participations` — pour les seules lignes qui PROUVENT un
+ * engagement. ⛔ Ce qu'elle ne fait PAS : effacer quoi que ce soit, toucher à `ClubsInvites`,
+ * réinitialiser, ni ouvrir une édition (elle REFUSE s'il n'y en a pas).
+ * ⭐ Rejouée : 0 création, 0 doublon, 0 réécriture. Interrompue : reprise sans perte.
+ */
+function migrerClubsMaintenant() {
+  var classeur = SpreadsheetApp.openById(sheetId());
+  var registre = editionActive(classeur);
+  if (registre.etat === 'plusieurs_actives') {
+    return _b22Journaliser('⛔ Migration refusée — ' + erreurPlusieursEditionsActives(registre));
+  }
+  if (registre.etat !== 'ok') {
+    return _b22Journaliser('⛔ Migration refusée — aucune édition active. Lance d\'abord ' +
+      '`migrerEditionsMaintenant()` (M1-B2 / B2-1).');
+  }
+
+  assurerOngletClubs(classeur);
+  assurerOngletParticipations(classeur);
+  var plan = planifierMigrationClubs(
+    lireOngletSimple(classeur, 'ClubsInvites'), lireClubs(classeur),
+    lireParticipations(classeur), registre.edition.edition_id,
+    function () { return Utilities.getUuid(); });
+  if (plan.error) return _b22Journaliser('⛔ Migration refusée — ' + plan.error);
+
+  var nbClubs = ajouterLignesModele(assurerOngletClubs(classeur), plan.clubsACreer);
+  var nbPart = ajouterLignesModele(assurerOngletParticipations(classeur), plan.participationsACreer);
+
+  var message;
+  if (!nbClubs && !nbPart) {
+    message = 'ℹ️ Rien à faire : tout est déjà migré (' + plan.clubsReutilises + ' club(s) au ' +
+      'carnet, ' + plan.participationsExistantes + ' participation(s) pour l\'édition active).';
+  } else {
+    message = '✅ Migration : ' + nbClubs + ' club(s) créé(s) au carnet, ' + nbPart +
+      ' participation(s) rattachée(s) à l\'édition ' + registre.edition.edition_id + '.';
+  }
+  if (plan.sansParticipation.length) {
+    message += '\n\nℹ️ ' + plan.sansParticipation.length + ' club(s) au carnet SANS participation ' +
+      'à cette édition — c\'est normal après une réinitialisation : ' +
+      plan.sansParticipation.join(', ') + '.';
+  }
+  message += '\n\n⭐ `ClubsInvites` n\'a PAS été modifié : aucune donnée n\'a été déplacée, ' +
+    'seulement recopiée.';
+  return _b22Journaliser(message);
+}
+
+/** Journalise et, si une interface existe, affiche — même patron que `migrerEditionsMaintenant`. */
+function _b22Journaliser(message) {
+  Logger.log(message);
+  try {
+    SpreadsheetApp.getUi().alert('Migration Clubs / Participations', message,
+      SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) { /* pas d'interface (exécution depuis l'éditeur) : le journal suffit */ }
+  return message;
 }
 
 /* ===================== RÉINITIALISATION DU TOURNOI ===================== */

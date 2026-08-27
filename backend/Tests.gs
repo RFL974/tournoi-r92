@@ -441,6 +441,17 @@ function lancerTestsFFR() {
   testB22_P7_casAmbiguDeterministe(etat);
   testB22_P8_zeroEstUneValeur(etat);
   testB22_P9_predicatPur(etat);
+  // ⭐ Puis la MIGRATION : idempotence, reprise après interruption, absence de doublon.
+  testB22_M1_deuxClubsDistincts(etat);
+  testB22_M2_carnetSansParticipation(etat);
+  testB22_M3_rattachementEtValeurs(etat);
+  testB22_M4_snapshots(etat);
+  testB22_M5_relanceSansEffet(etat);
+  testB22_M6_repriseApresInterruption(etat);
+  testB22_M7_aucunDoublon(etat);
+  testB22_M8_refusSansEdition(etat);
+  testB22_M9_classeurApresReset(etat);
+  testB22_M10_gardeFouStructure(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -5690,4 +5701,242 @@ function testB22_P9_predicatPur(etat) {
   _ffrAssert(etat, participationLegacyReelle(null) === false &&
                    participationLegacyReelle(undefined) === false,
     'B2-2 P9 : une ligne absente ne provoque aucune erreur et ne prouve rien');
+}
+
+/* ─── M — LA MIGRATION : idempotence, reprise, absence de doublon ───────────── */
+
+/** Un classeur factice B2-2 : `ClubsInvites` legacy + les deux onglets neufs + une édition. */
+function _b22Classeur(lignesLegacy) {
+  var base = _m1bClasseurFactice();
+  var entetes = ENTETES.ClubsInvites;
+  var lignes = [entetes].concat((lignesLegacy || []).map(function (o) {
+    return entetes.map(function (h) { return (o[h] === undefined || o[h] === null) ? '' : o[h]; });
+  }));
+  var clubsInvites = _m1bFauxOnglet(lignes);
+  var clubs = _m1bFauxOnglet([ENTETES.Clubs.slice()]);
+  var participations = _m1bFauxOnglet([ENTETES.Participations.slice()]);
+  var equipes = _m1bFauxOnglet([ENTETES.Equipes]);
+  var config = base._config, editions = base._editions;
+  return {
+    _config: config, _clubs: clubsInvites, _carnet: clubs, _participations: participations,
+    _equipes: equipes, _editions: editions,
+    getSpreadsheetTimeZone: function () { return 'Europe/Paris'; },
+    getSheetByName: function (nom) {
+      if (nom === 'Config') return config;
+      if (nom === 'ClubsInvites') return clubsInvites;
+      if (nom === 'Clubs') return clubs;
+      if (nom === 'Participations') return participations;
+      if (nom === 'Equipes') return equipes;
+      if (nom === 'Editions') return editions;
+      return null;
+    }
+  };
+}
+
+/** Rejoue le PLAN puis l'ÉCRIT — c'est exactement ce que fait `migrerClubsMaintenant`,
+ *  sans `SpreadsheetApp.openById` (indisponible hors de Google). */
+function _b22Migrer(classeur) {
+  var registre = editionActive(classeur);
+  var edition = (registre.etat === 'ok') ? registre.edition.edition_id : '';
+  var plan = planifierMigrationClubs(lireOngletSimple(classeur, 'ClubsInvites'),
+    lireClubs(classeur), lireParticipations(classeur), edition,
+    function () { return Utilities.getUuid(); });
+  if (plan.error) return plan;
+  ajouterLignesModele(assurerOngletClubs(classeur), plan.clubsACreer);
+  ajouterLignesModele(assurerOngletParticipations(classeur), plan.participationsACreer);
+  return plan;
+}
+
+/** Deux clubs legacy : l'un pleinement engagé, l'autre seulement connu du carnet. */
+function _b22DeuxClubs() {
+  return [
+    _b22LigneLegacy({ club_nom: 'MASSY', club_contact_email: 'contact@massy.fr',
+      statut: 'Accepté', invitation_envoyee: '2026-07-24', date_reponse: '2026-07-30',
+      categories_engagees: 'U8,U10', nb_joueurs_total: 24, club_token: 'JETON-MASSY' }),
+    _b22LigneLegacy({ club_nom: 'PUC', club_contact_email: 'contact@puc.fr',
+      club_token: 'JETON-PUC-PASSIF' })          // ⭐ jeton SEUL : jamais sollicité
+  ];
+}
+
+/** M1 — Deux clubs distincts : deux identités, un seul engagement. */
+function testB22_M1_deuxClubsDistincts(etat) {
+  var cl = _b22Classeur(_b22DeuxClubs());
+  _b22Migrer(cl);
+  var carnet = lireClubs(cl);
+  _ffrAssert(etat, carnet.length === 2,
+    'B2-2 M1 : les DEUX clubs entrent au carnet (' + carnet.length + ')');
+  _ffrAssert(etat, carnet[0].club_id !== carnet[1].club_id &&
+                   String(carnet[0].club_id).trim() !== '' && String(carnet[1].club_id).trim() !== '',
+    'B2-2 M1 : chaque club reçoit un `club_id` propre, non vide');
+  _ffrAssert(etat, carnet.every(function (c) { return clubEstActif(c); }),
+    'B2-2 M1 : les clubs migrés sont ACTIFS au carnet');
+  _ffrAssert(etat, lireParticipations(cl).length === 1,
+    'B2-2 M1 ⭐ : UNE seule participation — le club au jeton seul n\'en reçoit AUCUNE');
+}
+
+/** M2 ⭐ — Le club au jeton seul est CONNU mais NON ENGAGÉ : c'est le cas d'après reset. */
+function testB22_M2_carnetSansParticipation(etat) {
+  var cl = _b22Classeur(_b22DeuxClubs());
+  var plan = _b22Migrer(cl);
+  var puc = trouverClubParNom(lireClubs(cl), 'PUC');
+  _ffrAssert(etat, !!puc,
+    'B2-2 M2 : le club jamais sollicité est bien AU CARNET');
+  _ffrAssert(etat, trouverParticipation(lireParticipations(cl), _b21IdActif(cl), puc.club_id) === null,
+    'B2-2 M2 ⭐ : ⛔ AUCUNE participation ne lui est fabriquée');
+  _ffrAssert(etat, plan.sansParticipation.length === 1 && plan.sansParticipation[0] === 'PUC',
+    'B2-2 M2 : la migration le DIT, au lieu de le passer sous silence');
+}
+
+/** M3 — La participation est rattachée à la BONNE édition, avec ses valeurs. */
+function testB22_M3_rattachementEtValeurs(etat) {
+  var cl = _b22Classeur(_b22DeuxClubs());
+  _b22Migrer(cl);
+  var massy = trouverClubParNom(lireClubs(cl), 'MASSY');
+  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), massy.club_id);
+  _ffrAssert(etat, !!p, 'B2-2 M3 : la participation est rattachée à l\'édition ACTIVE');
+  _ffrAssert(etat, statutClubCanonique(p.statut) === 'Accepté' &&
+                   String(p.categories_engagees) === 'U8,U10' &&
+                   String(p.nb_joueurs_total) === '24' &&
+                   String(p.invitation_envoyee) === '2026-07-24' &&
+                   String(p.club_token) === 'JETON-MASSY',
+    'B2-2 M3 : statut, catégories, effectifs, dates et jeton sont CONSERVÉS');
+  _ffrAssert(etat, ENTETES.Clubs.indexOf('statut') === -1 &&
+                   ENTETES.Clubs.indexOf('club_token') === -1,
+    'B2-2 M3 ⭐ : ⛔ ni statut ni jeton ne vivent dans le carnet');
+}
+
+/** M4 📸 — Les snapshots figent l'identité, et un renommage du carnet ne les touche pas. */
+function testB22_M4_snapshots(etat) {
+  var cl = _b22Classeur(_b22DeuxClubs());
+  _b22Migrer(cl);
+  var massy = trouverClubParNom(lireClubs(cl), 'MASSY');
+  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), massy.club_id);
+  _ffrAssert(etat, p.snap_club_nom === 'MASSY' && p.snap_contact_email === 'contact@massy.fr' &&
+                   p.snap_contact_nom === 'DUPONT' && p.snap_contact_prenom === 'Marie',
+    'B2-2 M4 📸 : les quatre snapshots portent l\'identité du moment');
+  // Le carnet change de nom : ⛔ l'histoire, elle, ne bouge pas.
+  var onglet = cl.getSheetByName('Clubs');
+  var entetes = onglet.getRange(1, 1, 1, onglet.getLastColumn()).getValues()[0];
+  onglet.getRange(2, entetes.indexOf('club_nom') + 1).setValue('MASSY RUGBY CLUB');
+  var apres = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), massy.club_id);
+  _ffrAssert(etat, apres.snap_club_nom === 'MASSY',
+    'B2-2 M4 📸 ⭐ : renommer le club au carnet ne RÉÉCRIT PAS l\'histoire');
+  _ffrAssert(etat, trouverClubParNom(lireClubs(cl), 'MASSY RUGBY CLUB').club_id === massy.club_id,
+    'B2-2 M4 : ⭐ et le `club_id` n\'a pas bougé — c\'est bien le même club');
+}
+
+/** M5 ⭐ — IDEMPOTENCE : rejouée, la migration ne crée rien, ne duplique rien, ne perd rien. */
+function testB22_M5_relanceSansEffet(etat) {
+  var cl = _b22Classeur(_b22DeuxClubs());
+  _b22Migrer(cl);
+  var carnetAvant = JSON.stringify(lireClubs(cl));
+  var partAvant = JSON.stringify(lireParticipations(cl));
+  var legacyAvant = JSON.stringify(lireOngletSimple(cl, 'ClubsInvites'));
+
+  var plan2 = _b22Migrer(cl);
+  _ffrAssert(etat, plan2.clubsACreer.length === 0 && plan2.participationsACreer.length === 0,
+    'B2-2 M5 ⭐ : la deuxième exécution ne crée RIEN (0 club, 0 participation)');
+  _ffrAssert(etat, JSON.stringify(lireClubs(cl)) === carnetAvant,
+    'B2-2 M5 : le carnet est identique — mêmes `club_id`, ⛔ aucun doublon');
+  _ffrAssert(etat, JSON.stringify(lireParticipations(cl)) === partAvant,
+    'B2-2 M5 : les participations sont identiques — ⛔ aucune réécriture');
+  _b22Migrer(cl); _b22Migrer(cl);
+  _ffrAssert(etat, lireClubs(cl).length === 2 && lireParticipations(cl).length === 1,
+    'B2-2 M5 : quatre exécutions au total, ⭐ toujours 2 clubs et 1 participation');
+  _ffrAssert(etat, JSON.stringify(lireOngletSimple(cl, 'ClubsInvites')) === legacyAvant,
+    'B2-2 M5 ⭐ : ⛔ `ClubsInvites` n\'a JAMAIS été touché');
+}
+
+/** M6 ⭐ — REPRISE : une exécution interrompue APRÈS le carnet, AVANT les participations. */
+function testB22_M6_repriseApresInterruption(etat) {
+  var cl = _b22Classeur(_b22DeuxClubs());
+  // On simule l'interruption : le plan est calculé, seul le carnet est écrit.
+  var registre = editionActive(cl);
+  var partiel = planifierMigrationClubs(lireOngletSimple(cl, 'ClubsInvites'), lireClubs(cl),
+    lireParticipations(cl), registre.edition.edition_id, function () { return Utilities.getUuid(); });
+  ajouterLignesModele(assurerOngletClubs(cl), partiel.clubsACreer);
+  // ⛔ `ajouterLignesModele(participations)` n'a PAS lieu : la migration s'arrête là.
+  _ffrAssert(etat, lireClubs(cl).length === 2 && lireParticipations(cl).length === 0,
+    'B2-2 M6 : état partiel — le carnet existe, ⛔ aucune participation');
+  var idsAvant = lireClubs(cl).map(function (c) { return c.club_id; }).join('|');
+
+  var reprise = _b22Migrer(cl);                 // ⭐ on relance, tout simplement
+  _ffrAssert(etat, reprise.clubsACreer.length === 0 && reprise.clubsReutilises === 2,
+    'B2-2 M6 ⭐ : la reprise NE RECRÉE PAS les clubs déjà là — elle les réutilise');
+  _ffrAssert(etat, lireClubs(cl).map(function (c) { return c.club_id; }).join('|') === idsAvant,
+    'B2-2 M6 ⭐ : les `club_id` sont STABLES à travers l\'interruption');
+  _ffrAssert(etat, lireParticipations(cl).length === 1,
+    'B2-2 M6 : ⭐ et la participation manquante est enfin créée — la reprise TERMINE le travail');
+}
+
+/** M7 — Aucun doublon (edition_id, club_id), même si deux lignes legacy portent le même nom. */
+function testB22_M7_aucunDoublon(etat) {
+  var cl = _b22Classeur([
+    _b22LigneLegacy({ club_nom: 'MASSY', statut: 'Accepté' }),
+    _b22LigneLegacy({ club_nom: ' massy ', statut: 'Accepté', nb_joueurs_total: 12 })
+  ]);
+  _b22Migrer(cl);
+  _ffrAssert(etat, lireClubs(cl).length === 1,
+    'B2-2 M7 : deux écritures du même nom ⇒ UNE seule identité (' + lireClubs(cl).length + ')');
+  var vus = {}, doublons = 0;
+  lireParticipations(cl).forEach(function (p) {
+    var cle = p.edition_id + '|' + p.club_id;
+    if (vus[cle]) doublons++;
+    vus[cle] = true;
+  });
+  _ffrAssert(etat, doublons === 0 && lireParticipations(cl).length === 1,
+    'B2-2 M7 ⭐ : ⛔ aucun doublon (edition_id, club_id)');
+}
+
+/** M8 — ⛔ Pas d'édition active ⇒ la migration REFUSE, sans rien écrire. */
+function testB22_M8_refusSansEdition(etat) {
+  var cl = _b22Classeur(_b22DeuxClubs());
+  cl._editions._lignes().splice(1);              // registre vidé : plus aucune édition
+  var plan = planifierMigrationClubs(lireOngletSimple(cl, 'ClubsInvites'), lireClubs(cl),
+    lireParticipations(cl), '', function () { return Utilities.getUuid(); });
+  _ffrAssert(etat, !!plan.error && !plan.clubsACreer,
+    'B2-2 M8 : sans édition active, la migration REFUSE');
+  _ffrAssert(etat, lireClubs(cl).length === 0 && lireParticipations(cl).length === 0,
+    'B2-2 M8 ⭐ : ⛔ et elle n\'a RIEN écrit — un refus ne coûte aucune donnée');
+}
+
+/** M9 ⭐ — LE CAS DU CLASSEUR RÉEL : après le reset, un carnet SANS aucune participation. */
+function testB22_M9_classeurApresReset(etat) {
+  // Le reset a conservé l'identité et vidé les 12 colonnes d'engagement (B2-0).
+  var apresReset = ['MASSY', 'PUC', 'RACING'].map(function (nom) {
+    var l = _b22LigneLegacy({ club_nom: nom });
+    CLUBS_COLONNES_ENGAGEMENT.forEach(function (h) { l[h] = ''; });
+    l.club_token = 'JETON-NEUF-' + nom;          // réattribué au chargement suivant de l'admin
+    return l;
+  });
+  var cl = _b22Classeur(apresReset);
+  var plan = _b22Migrer(cl);
+  _ffrAssert(etat, lireClubs(cl).length === 3,
+    'B2-2 M9 ⭐ : les trois clubs du carnet réel sont migrés');
+  _ffrAssert(etat, lireParticipations(cl).length === 0,
+    'B2-2 M9 ⭐⭐ : ⛔ ZÉRO participation dans l\'édition neuve — rien n\'est reconstruit');
+  _ffrAssert(etat, plan.sansParticipation.length === 3,
+    'B2-2 M9 : et la migration le dit pour les trois');
+}
+
+/** M10 — Le garde-fou de R-105, reporté : aucune colonne sans rôle, aucun engagement au carnet. */
+function testB22_M10_gardeFouStructure(etat) {
+  var orphelines = colonnesParticipationNonClassees(ENTETES.Participations);
+  _ffrAssert(etat, orphelines.length === 0,
+    'B2-2 M10 ⭐ : chaque colonne de `Participations` a un rôle (orphelines : ' +
+    orphelines.join(', ') + ')');
+  var malPlacees = colonnesCarnetMalPlacees(ENTETES.Clubs);
+  _ffrAssert(etat, malPlacees.length === 0,
+    'B2-2 M10 ⭐ : ⛔ AUCUNE colonne d\'engagement dans le carnet (' + malPlacees.join(', ') + ')');
+  _ffrAssert(etat, colonnesParticipationNonClassees(['edition_id', 'club_id', 'humeur_du_jour'])
+      .join(',') === 'humeur_du_jour',
+    'B2-2 M10 : le garde-fou SAIT signaler une colonne inconnue');
+  _ffrAssert(etat, colonnesCarnetMalPlacees(['club_id', 'club_nom', 'statut']).join(',') === 'statut',
+    'B2-2 M10 : et il SAIT repérer un engagement égaré dans le carnet');
+  // Les 12 colonnes d'engagement se retrouvent TOUTES dans Participations : rien n'est perdu.
+  var perdues = CLUBS_COLONNES_ENGAGEMENT.filter(function (h) {
+    return ENTETES.Participations.indexOf(h) === -1;
+  });
+  _ffrAssert(etat, perdues.length === 0,
+    'B2-2 M10 : les 12 colonnes d\'engagement sont TOUTES reprises (' + perdues.join(', ') + ')');
 }
