@@ -90,6 +90,23 @@ var ENTETES = {
   // On stocke les NOMS d'équipe (stables d'un tournoi à l'autre, contrairement aux id).
   Historique: ['date', 'tournoi_id', 'id_match', 'categorie', 'phase',
                'equipe_A', 'equipe_B', 'score_A', 'score_B'],
+  // REGISTRE DES ÉDITIONS (M1-B2 / B2-1). Une ligne = une édition réelle du tournoi.
+  // ⭐ C'est la SOURCE UNIQUE de l'identité durable d'une édition — `edition_id` ne vit
+  //   nulle part ailleurs (surtout pas dans Config : il n'aurait alors ni cycle de vie,
+  //   ni garantie d'unicité, et le reset l'effacerait comme n'importe quel réglage).
+  //   edition_id     : UUID tiré une seule fois à l'OUVERTURE de l'édition. ⛔ Jamais réutilisé,
+  //                    jamais renouvelé — ni par une régénération des poules, ni du planning,
+  //                    ni par une modification d'équipes, ni par la publication, ni par un score.
+  //                    ⚠️ À ne pas confondre avec `tournoi_id` (Config), qui reste ce qu'il est :
+  //                    l'identifiant d'une GÉNÉRATION DE PLANNING, reposé à chaque génération.
+  //   statut         : 'active' ou 'fermee'. ⭐ UNE SEULE ligne 'active' à la fois — plusieurs
+  //                    actives est une ANOMALIE, jamais un choix à faire au hasard.
+  //   date_creation  : horodatage de l'ouverture (yyyy-MM-dd HH:mm:ss, fuseau du classeur).
+  //                    ⭐ C'est un INSTANT, pas une date civile (CLAUDE.md §8 sexies).
+  //   date_fermeture : même format, posé à la fermeture ; vide tant que l'édition est active.
+  // ⚠️ Toute colonne future (ex. le club organisateur) s'ajoutera À DROITE, migration douce,
+  //   comme partout ailleurs dans ce fichier. ⛔ B2-1 ne crée AUCUN `club_id`.
+  Editions: ['edition_id', 'statut', 'date_creation', 'date_fermeture'],
   // PARTENAIRES du tournoi, affichés sur la page publique des scores. Aucune donnée
   // personnelle : un partenaire est une entreprise, tout y est destiné à être public.
   //   logo_id      : id du fichier Drive du logo (public en lecture), comme tournoi_affiche_id.
@@ -143,9 +160,14 @@ function setupSheet() {
   creerOngletAvecEntetes(classeur, 'Historique', ENTETES.Historique);
   creerOngletAvecEntetes(classeur, 'ClubsInvites', ENTETES.ClubsInvites);
   creerOngletAvecEntetes(classeur, 'Sponsors', ENTETES.Sponsors);
+  creerOngletAvecEntetes(classeur, 'Editions', ENTETES.Editions);
   creerOngletConfig(classeur);
+  // M1-B2 / B2-1 — un classeur neuf part avec UNE édition ouverte : sans elle, rien de ce qui
+  // sera créé ensuite n'aurait d'édition à laquelle se rattacher. ⭐ Idempotent : si une édition
+  // est déjà active (setupSheet rejoué par mégarde), ⛔ aucun doublon n'est créé.
+  ouvrirEditionSiAucune(classeur);
   try {
-    SpreadsheetApp.getUi().alert('✅ Base prête !', 'Les 7 onglets ont été créés.',
+    SpreadsheetApp.getUi().alert('✅ Base prête !', 'Les 8 onglets ont été créés.',
       SpreadsheetApp.getUi().ButtonSet.OK);
   } catch (e) { Logger.log('Base prête !'); }
 }
@@ -7553,6 +7575,279 @@ function publierTournoi(classeur, publie) {
   return { ok: true, tournoi_publie: valeur };
 }
 
+/* ===================== REGISTRE DES ÉDITIONS (M1-B2 / B2-1) =====================
+ * POURQUOI CE REGISTRE EXISTE (risque R-106, doctrine D-050).
+ *
+ * Jusqu'ici, la seule chose qui ressemblait à un identifiant de tournoi était `tournoi_id`
+ * (onglet Config). Mais il est REPOSÉ à chaque « Générer poules et planning » — or régénérer
+ * est un geste normal et répété pendant la préparation. Un seul tournoi réel produisait donc
+ * plusieurs identifiants : il identifie une GÉNÉRATION DE PLANNING, pas une ÉDITION.
+ *
+ * ⭐ `edition_id` répond à l'autre question : « de quelle édition parle-t-on ? ». Il est tiré
+ * UNE SEULE FOIS, à l'ouverture, et ne bouge plus jamais — quoi qu'on régénère.
+ *
+ * ⛔ CE QUE CE REGISTRE N'EST PAS. Ce n'est pas un sélecteur : Maxilou reste MONO-TOURNOI.
+ * Une seule ligne est `active`, et aucune fonction ne permet de « choisir » une édition.
+ * C'est une ÉTIQUETTE DE RATTACHEMENT pour l'avenir (participations, archives), rien de plus.
+ *
+ * ⚠️ TROIS RÈGLES QUI NE SE DÉDUISENT PAS L'UNE DE L'AUTRE :
+ *   ① une LECTURE ordinaire ne crée JAMAIS d'identifiant (sinon il en naîtrait un par hasard,
+ *     au premier écran ouvert — c'est exactement le défaut de `assurerTournoiId`, qui lui est
+ *     légitime parce qu'il n'a pas à durer) ;
+ *   ② une ouverture rejouée ne crée PAS de doublon (elle est idempotente) ;
+ *   ③ plusieurs éditions actives est une ANOMALIE : on la SIGNALE, on n'en choisit pas une.
+ */
+
+var EDITION_STATUT_ACTIVE = 'active';
+var EDITION_STATUT_FERMEE = 'fermee';
+
+/**
+ * ⭐ LE CŒUR PUR du registre — aucune dépendance à Google, testable seul.
+ * Lit le bloc de DONNÉES du registre (sans la ligne d'en-tête) et dit ce qu'il contient.
+ * @param lignes  tableau de lignes [edition_id, statut, date_creation, date_fermeture]
+ * @return {Object} { etat, actives, edition, total }
+ *   etat = 'vide'             : aucune édition active (registre neuf, ou toutes fermées) ;
+ *          'ok'               : exactement une active — `edition` la porte ;
+ *          'plusieurs_actives': ANOMALIE — `actives` les liste TOUTES, `edition` reste null.
+ * ⛔ Ne choisit jamais entre plusieurs actives, et ne crée rien.
+ */
+function analyserRegistreEditions(lignes) {
+  var actives = [];
+  var total = 0;
+  (lignes || []).forEach(function (l) {
+    var id = String((l && l[0]) === undefined || l[0] === null ? '' : l[0]).trim();
+    if (!id) return;                      // ligne vide : ignorée, jamais comptée
+    total++;
+    var statut = String(l[1] === undefined || l[1] === null ? '' : l[1]).trim().toLowerCase();
+    if (statut === EDITION_STATUT_ACTIVE) {
+      actives.push({ edition_id: id, statut: statut,
+                     date_creation: String(l[2] === undefined || l[2] === null ? '' : l[2]),
+                     date_fermeture: String(l[3] === undefined || l[3] === null ? '' : l[3]) });
+    }
+  });
+  if (actives.length === 0) return { etat: 'vide', actives: [], edition: null, total: total };
+  if (actives.length > 1) return { etat: 'plusieurs_actives', actives: actives, edition: null, total: total };
+  return { etat: 'ok', actives: actives, edition: actives[0], total: total };
+}
+
+/**
+ * ⭐ PUR — Décide ce que devient le registre quand on OUVRE une édition sans en fermer aucune
+ * (classeur neuf, ou migration d'un classeur déjà en service).
+ * IDEMPOTENT : si une édition est déjà active, ⛔ on ne crée RIEN et on renvoie l'existante.
+ * @return { ok, cree, lignes, edition } ou { error } si le registre est en anomalie.
+ */
+function planifierOuvertureEdition(lignes, nouvelId, horodatage) {
+  var etatRegistre = analyserRegistreEditions(lignes);
+  if (etatRegistre.etat === 'plusieurs_actives') {
+    return { error: erreurPlusieursEditionsActives(etatRegistre) };
+  }
+  if (etatRegistre.etat === 'ok') {
+    // Déjà une édition active : la rejouer ne doit RIEN produire (garde-fou ② ci-dessus).
+    return { ok: true, cree: false, lignes: (lignes || []).slice(), edition: etatRegistre.edition };
+  }
+  var id = String(nouvelId || '').trim();
+  if (!id) return { error: 'Identifiant d\'édition manquant.' };
+  if (identifiantEditionDejaPresent(lignes, id)) {
+    return { error: 'Identifiant d\'édition déjà présent dans le registre : ' + id + '.' };
+  }
+  var neuve = [id, EDITION_STATUT_ACTIVE, String(horodatage || ''), ''];
+  var suite = (lignes || []).slice();
+  suite.push(neuve);
+  return { ok: true, cree: true, lignes: suite,
+           edition: { edition_id: id, statut: EDITION_STATUT_ACTIVE,
+                      date_creation: String(horodatage || ''), date_fermeture: '' } };
+}
+
+/**
+ * ⭐ PUR — Décide ce que devient le registre à la BASCULE : l'édition qui s'achève est FERMÉE
+ * et une édition vide est ouverte dans le même mouvement.
+ *
+ * ⚠️ Le résultat est le bloc COMPLET des lignes, destiné à UNE SEULE écriture : c'est ce qui
+ * interdit la demi-bascule (une ancienne fermée sans nouvelle, ou deux actives). Fermer puis
+ * ouvrir en deux écritures laisserait, entre les deux, un registre sans aucune édition active.
+ *
+ * ⛔ Registre en anomalie ⇒ refus. ⭐ Registre vide ⇒ on ouvre simplement (rien à fermer) :
+ *   c'est le cas d'un classeur réinitialisé avant que la migration n'ait été jouée.
+ * @return { ok, lignes, edition, fermee } ou { error }
+ */
+function planifierBasculeEdition(lignes, nouvelId, horodatage) {
+  var etatRegistre = analyserRegistreEditions(lignes);
+  if (etatRegistre.etat === 'plusieurs_actives') {
+    return { error: erreurPlusieursEditionsActives(etatRegistre) };
+  }
+  var id = String(nouvelId || '').trim();
+  if (!id) return { error: 'Identifiant d\'édition manquant.' };
+  if (identifiantEditionDejaPresent(lignes, id)) {
+    return { error: 'Identifiant d\'édition déjà présent dans le registre : ' + id + '.' };
+  }
+  var fermee = null;
+  var suite = (lignes || []).map(function (l) {
+    var ligne = (l || []).slice();
+    var idLigne = String(ligne[0] === undefined || ligne[0] === null ? '' : ligne[0]).trim();
+    var statut = String(ligne[1] === undefined || ligne[1] === null ? '' : ligne[1]).trim().toLowerCase();
+    if (idLigne && statut === EDITION_STATUT_ACTIVE) {
+      ligne[1] = EDITION_STATUT_FERMEE;
+      ligne[3] = String(horodatage || '');
+      fermee = { edition_id: idLigne, statut: EDITION_STATUT_FERMEE,
+                 date_creation: String(ligne[2] === undefined || ligne[2] === null ? '' : ligne[2]),
+                 date_fermeture: String(horodatage || '') };
+    }
+    return ligne;
+  });
+  suite.push([id, EDITION_STATUT_ACTIVE, String(horodatage || ''), '']);
+  return { ok: true, lignes: suite, fermee: fermee,
+           edition: { edition_id: id, statut: EDITION_STATUT_ACTIVE,
+                      date_creation: String(horodatage || ''), date_fermeture: '' } };
+}
+
+/** Vrai si cet identifiant figure DÉJÀ dans le registre, quel que soit son statut.
+ *  ⭐ Un `edition_id` n'est jamais réutilisé — pas même celui d'une édition fermée. */
+function identifiantEditionDejaPresent(lignes, id) {
+  var cible = String(id || '').trim();
+  if (!cible) return false;
+  return (lignes || []).some(function (l) {
+    return String((l && l[0]) === undefined || l[0] === null ? '' : l[0]).trim() === cible;
+  });
+}
+
+/** Message unique de l'anomalie « plusieurs éditions actives » (jamais recopié ailleurs). */
+function erreurPlusieursEditionsActives(etatRegistre) {
+  var ids = (etatRegistre.actives || []).map(function (e) { return e.edition_id; }).join(', ');
+  return 'Registre des éditions incohérent : ' + (etatRegistre.actives || []).length +
+    ' éditions sont marquées « active » (' + ids + '). ' +
+    'Une seule doit l\'être. Aucune n\'a été choisie : corrige l\'onglet Editions à la main ' +
+    '(laisse « active » sur la seule édition en cours, passe les autres à « fermee »).';
+}
+
+/* ---------------------- Les EFFETS : le classeur ---------------------- */
+
+/**
+ * Crée l'onglet Editions à la demande (même patron qu'assurerOngletSponsors : un classeur en
+ * service ne se re-`setupSheet` jamais). ⛔ Ne crée AUCUNE ligne : l'onglet nu ne porte aucun
+ * identifiant, et c'est le point — l'ouverture d'une édition est un geste à part.
+ */
+function assurerOngletEditions(classeur) {
+  var onglet = classeur.getSheetByName('Editions');
+  if (!onglet) {
+    creerOngletAvecEntetes(classeur, 'Editions', ENTETES.Editions);
+    onglet = classeur.getSheetByName('Editions');
+  }
+  return onglet;
+}
+
+/** Lit le bloc de DONNÉES du registre (sans l'en-tête). Onglet absent ⇒ [] — ⛔ rien n'est créé. */
+function lireLignesEditions(classeur) {
+  var onglet = classeur.getSheetByName('Editions');
+  if (!onglet) return [];
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return [];
+  return onglet.getRange(2, 1, dernier - 1, ENTETES.Editions.length).getValues();
+}
+
+/**
+ * Écrit le bloc de données du registre EN UNE SEULE opération (voir planifierBasculeEdition).
+ * Les lignes en trop d'un état précédent sont effacées ensuite — ⭐ jamais avant, sans quoi une
+ * interruption laisserait un registre vide.
+ */
+function ecrireLignesEditions(classeur, lignes) {
+  var onglet = assurerOngletEditions(classeur);
+  var largeur = ENTETES.Editions.length;
+  var bloc = (lignes || []).map(function (l) {
+    var ligne = [];
+    for (var i = 0; i < largeur; i++) {
+      var v = (l || [])[i];
+      ligne.push(v === undefined || v === null ? '' : String(v));
+    }
+    return ligne;
+  });
+  if (bloc.length) {
+    var plage = onglet.getRange(2, 1, bloc.length, largeur);
+    plage.setNumberFormat('@');   // tout en texte, comme Config et Historique
+    plage.setValues(bloc);
+  }
+  var dernier = onglet.getLastRow();
+  var surplus = dernier - 1 - bloc.length;
+  if (surplus > 0) { onglet.getRange(2 + bloc.length, 1, surplus, largeur).clearContent(); }
+}
+
+/**
+ * ⭐ LA LECTURE — l'édition active, ou l'absence d'édition active, ⛔ SANS RIEN CRÉER.
+ * C'est la fonction que tout le reste du logiciel doit appeler.
+ * @return { etat, edition, actives, total } — voir analyserRegistreEditions.
+ *   L'onglet manquant se lit comme un registre vide : `etat` = 'vide'.
+ */
+function editionActive(classeur) {
+  return analyserRegistreEditions(lireLignesEditions(classeur));
+}
+
+/** Horodatage d'un mouvement du registre. ⭐ C'est un INSTANT (CLAUDE.md §8 sexies). */
+function horodatageEdition(classeur) {
+  return Utilities.formatDate(new Date(), classeur.getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+}
+
+/**
+ * OUVRE une édition s'il n'y en a aucune d'active. ⭐ IDEMPOTENT : rejouée, elle ne crée pas de
+ * doublon et renvoie l'édition existante avec `cree: false`.
+ * C'est le seul chemin d'ouverture « hors reset » : classeur neuf (setupSheet) et migration d'un
+ * classeur déjà en service (migrerEditionsMaintenant) l'appellent tous les deux.
+ * @return { ok, cree, edition } ou { error } si le registre est en anomalie.
+ */
+function ouvrirEditionSiAucune(classeur) {
+  var lignes = lireLignesEditions(classeur);
+  var plan = planifierOuvertureEdition(lignes, Utilities.getUuid(), horodatageEdition(classeur));
+  if (plan.error) return { error: plan.error };
+  if (!plan.cree) {
+    assurerOngletEditions(classeur);       // l'onglet existe forcément si une édition est active
+    return { ok: true, cree: false, edition: plan.edition };
+  }
+  ecrireLignesEditions(classeur, plan.lignes);
+  return { ok: true, cree: true, edition: plan.edition };
+}
+
+/**
+ * BASCULE : ferme l'édition qui s'achève et en ouvre une vide, EN UNE SEULE écriture.
+ * ⛔ Appelée UNIQUEMENT à la toute fin d'une réinitialisation RÉUSSIE — jamais avant : si
+ * l'effacement échoue en route, la bascule n'a tout simplement pas lieu et l'ancienne édition
+ * reste active, avec son identifiant. ⭐ Il n'existe aucun état intermédiaire.
+ * @return { ok, edition, fermee } ou { error }
+ */
+function basculerEditionApresReset(classeur) {
+  var lignes = lireLignesEditions(classeur);
+  var plan = planifierBasculeEdition(lignes, Utilities.getUuid(), horodatageEdition(classeur));
+  if (plan.error) return { error: plan.error };
+  ecrireLignesEditions(classeur, plan.lignes);
+  return { ok: true, edition: plan.edition, fermee: plan.fermee };
+}
+
+/**
+ * ▶ MIGRATION — à lancer UNE FOIS, à la main, depuis l'éditeur Apps Script (comme `setupSheet`
+ * ou `configurerCles`). Elle attribue un `edition_id` au tournoi DÉJÀ EN PLACE dans le classeur.
+ *
+ * ⭐ Elle ne touche RIEN d'autre que l'onglet Editions : aucune réinitialisation, aucune donnée
+ * effacée, aucune équipe, aucune poule, aucun match, aucun club. ⛔ Aucune perte possible.
+ * ⭐ Elle est IDEMPOTENTE : relancée, elle constate l'édition existante et ne crée pas de doublon.
+ * ⚠️ Registre en anomalie (plusieurs actives) ⇒ elle REFUSE et le dit, sans rien modifier.
+ */
+function migrerEditionsMaintenant() {
+  var classeur = SpreadsheetApp.openById(sheetId());
+  assurerOngletEditions(classeur);
+  var res = ouvrirEditionSiAucune(classeur);
+  var message;
+  if (res.error) {
+    message = '⛔ Migration refusée — ' + res.error;
+  } else if (res.cree) {
+    message = '✅ Édition ouverte : ' + res.edition.edition_id + ' (créée le ' + res.edition.date_creation + ').';
+  } else {
+    message = 'ℹ️ Rien à faire : une édition est déjà active — ' + res.edition.edition_id +
+      ' (ouverte le ' + res.edition.date_creation + ').';
+  }
+  Logger.log(message);
+  try {
+    SpreadsheetApp.getUi().alert('Registre des éditions', message, SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch (e) { /* pas d'interface (exécution depuis l'éditeur) : le journal suffit */ }
+  return message;
+}
+
 /* ===================== RÉINITIALISATION DU TOURNOI ===================== */
 /**
  * Réinitialise le tournoi pour repartir d'une base vierge (bouton « zone de danger »
@@ -7561,11 +7856,28 @@ function publierTournoi(classeur, publie) {
  *   • supprime TOUTES les catégories de l'onglet Config ;
  *   • efface les infos publiques du tournoi (nom, date, lieu, adresse, description), les
  *     contacts & sécurité (référent, poste de secours) et met l'affiche Drive à la corbeille ;
- *   • repasse le tournoi en « masqué » (tournoi_publie = 'non').
+ *   • repasse le tournoi en « masqué » (tournoi_publie = 'non') ;
+ *   • FERME l'édition qui s'achève et en OUVRE une vide (onglet Editions, M1-B2 / B2-1).
  * On CONSERVE les réglages « Horaires de la journée » (heure début/fin, pauses…) et le
  * journal de saison (onglet Historique), qui accumule les résultats de toute la saison.
+ *
+ * ⭐ ORDRE IMPÉRATIF, et ce n'est pas un détail de rédaction : le registre des éditions est
+ * CONTRÔLÉ en tout premier (étape 0, avant la moindre écriture) et BASCULÉ en tout dernier
+ * (étape 5, une fois tout le reste réussi). Entre les deux, aucune demi-bascule n'est possible.
  */
 function reinitialiserTournoi(classeur) {
+  // 0) M1-B2 / B2-1 — CONTRÔLE PRÉALABLE DU REGISTRE DES ÉDITIONS, ⛔ AVANT LA MOINDRE ÉCRITURE.
+  //   Réinitialiser, c'est fermer une édition et en ouvrir une autre. Si le registre est
+  //   incohérent (plusieurs lignes « active »), on ne saurait pas laquelle fermer — et ⛔ en
+  //   choisir une au hasard serait pire que de ne rien faire. On REFUSE ici, pendant que le
+  //   tournoi est encore intact : rien n'est effacé, l'organisateur corrige, puis relance.
+  //   ⭐ Un registre VIDE, lui, n'est pas une anomalie : c'est le classeur qui n'a pas encore
+  //   été migré, et la bascule de l'étape 5 se contentera d'ouvrir une édition.
+  var registreAvant = editionActive(classeur);
+  if (registreAvant.etat === 'plusieurs_actives') {
+    return { error: erreurPlusieursEditionsActives(registreAvant) };
+  }
+
   // 1) On compte avant de vider (pour le message de retour) puis on vide les 3 onglets.
   var nbEquipes = lireOngletSimple(classeur, 'Equipes').length;
   var nbPoules  = lireOngletSimple(classeur, 'Poules').length;
@@ -7651,20 +7963,36 @@ function reinitialiserTournoi(classeur) {
   //   archivé serait allé rejoindre, dans l'onglet Historique, les lignes du tournoi PRÉCÉDENT.
   //   ⭐ L'effacer ne casse rien : `assurerTournoiId` en recrée un à la demande, et les lignes
   //   déjà écrites dans Historique gardent la valeur qu'elles portent — on n'y touche pas.
-  //   ⛔ Ce lot ne corrige QUE l'héritage. Le fait qu'un nouvel identifiant soit reposé à CHAQUE
-  //   génération de planning — donc qu'un seul tournoi réel en produise plusieurs — reste entier :
-  //   c'est l'objet de B2-1, qui introduira un `edition_id` créé à l'ouverture et jamais renouvelé.
+  //   ⛔ Ce lot ne corrige QUE l'héritage : `tournoi_id` est toujours reposé à CHAQUE génération
+  //   de planning, et il le reste — c'est son rôle, il identifie une GÉNÉRATION.
+  //   ⭐ L'identité DURABLE de l'édition, elle, ne vit plus ici : c'est `edition_id`, dans
+  //   l'onglet Editions (B2-1). Voir la bascule à l'étape 5 ci-dessous.
   effacerParamGlobal(ongletConfig, 'tournoi_id');
 
   // 4) Le tournoi redevient masqué pour le public.
   ecrireParamGlobal(ongletConfig, 'tournoi_publie', 'non');
+
+  // 5) M1-B2 / B2-1 — LA BASCULE D'ÉDITION, et elle est VOLONTAIREMENT LA DERNIÈRE.
+  //   L'édition qui s'achève est FERMÉE et une édition vide est ouverte, en UNE SEULE écriture
+  //   dans l'onglet Editions.
+  //   ⭐ Pourquoi ici, et nulle part ailleurs : si l'un des effacements ci-dessus échoue, une
+  //   exception remonte et cette ligne n'est JAMAIS atteinte — l'ancienne édition reste
+  //   `active`, avec son identifiant, et aucune édition parasite n'a été créée. ⛔ Il n'existe
+  //   aucun état intermédiaire où l'ancienne serait fermée sans que la nouvelle existe.
+  //   ⚠️ Le refus (registre en anomalie) a déjà été traité à l'étape 0, avant tout effacement :
+  //   `basculerEditionApresReset` ne peut donc échouer ici que si le registre a bougé pendant
+  //   l'opération — on le signale sans prétendre que le reset n'a pas eu lieu, car il a eu lieu.
+  var bascule = basculerEditionApresReset(classeur);
 
   return {
     ok: true,
     nb_equipes: nbEquipes,
     nb_poules: nbPoules,
     nb_matchs: nbMatchs,
-    nb_categories: nbCategories
+    nb_categories: nbCategories,
+    edition_id: bascule.edition ? bascule.edition.edition_id : '',
+    edition_fermee: (bascule.fermee && bascule.fermee.edition_id) ? bascule.fermee.edition_id : '',
+    avertissement_edition: bascule.error || ''
   };
 }
 

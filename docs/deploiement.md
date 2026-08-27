@@ -100,15 +100,18 @@ Puis **trois contrôles dans l'éditeur**, avant d'aller plus loin :
 
 | Ce qu'on vérifie | Comment |
 |---|---|
-| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs` — **8519** aujourd'hui *(2026-08-26)*. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* |
-| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne — **`viderDonnees`, ligne 8514** aujourd'hui *(2026-08-26)* |
+| **Le nombre de lignes** | La dernière ligne affichée doit correspondre à `wc -l backend/Code.gs` — **8847** aujourd'hui *(2026-08-27)*. *(Une **ligne vide en plus** à la fin est normale ; **une de moins** = collage tronqué.)* ⚡ *(C'était **8519** au 2026-08-26 ; le lot **B2-1** a ajouté le registre des éditions.)* |
+| **La fin du fichier** | La **dernière fonction déclarée** doit être celle du dépôt, au même numéro de ligne — **`viderDonnees`, ligne 8842** aujourd'hui *(2026-08-27)*. ⚡ *(C'était la ligne **8514** au 2026-08-26.)* |
 | ⭐ **Une chaîne témoin introduite par le lot** | Une recherche qui donne **un résultat DIFFÉRENT avant et après** la modification — et, quand c'est possible, **son contraire** *(l'ancienne chaîne, attendue à 0)* |
 
 > ⭐ **Les témoins du lot en cours** — à chercher dans l'éditeur, **en entier** :
 >
 > | Chercher | Attendu | De quel lot |
 > |---|---|---|
-> | 🆕 `D-048, coupure M1-PUB` | **1** | 🆕 **M1-PUB / PUB-4** — la coupure du lien vers le site de l'association |
+> | 🆕 `basculerEditionApresReset` | **3** | 🆕 **M1-B2 / B2-1** — la bascule d'édition de la réinitialisation |
+> | 🆕 `migrerEditionsMaintenant` | **2** | 🆕 **M1-B2 / B2-1** — la migration à lancer une fois, à la main |
+> | 🆕 `Les 7 onglets ont été créés` *(l'ancienne)* | **0** | 🆕 **M1-B2 / B2-1** — ⭐ **son contraire**, attendu à zéro *(`setupSheet` en crée 8 désormais)* |
+> | `D-048, coupure M1-PUB` | **1** | **M1-PUB / PUB-4** — la coupure du lien vers le site de l'association |
 > | 🆕 `EST dans cette liste` *(l'ancienne)* | **0** | 🆕 **M1-PUB / PUB-4** — ⭐ **son contraire**, attendu à zéro |
 > | `CLUBS_COLONNES_ENGAGEMENT` | **4** | **B2-0** — la liste des colonnes que le reset vide |
 > | `colonnesClubsNonClassees` | **2** | **B2-0** — le signalement d'une colonne non classée |
@@ -183,15 +186,23 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 
 | Ce qu'on vérifie | Valeur attendue **aujourd'hui** | Ce qu'un écart signifie |
 |---|---|---|
-| **Le bilan** affiché en fin de journal | **`R92 — 881/881 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
-| **La dernière ligne** du fichier collé chez Google | **5141** | Le fichier collé n'est pas celui du dépôt |
+| **Le bilan** affiché en fin de journal | **`R92 — 974/974 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
+| **La dernière ligne** du fichier collé chez Google | **5554** | Le fichier collé n'est pas celui du dépôt |
+
+> ⚠️ **CES DEUX VALEURS SONT PRÉDITES, ⛔ PAS ENCORE MESURÉES CHEZ GOOGLE** *(2026-08-27, lot
+> **M1-B2 / B2-1**)*. **974** et **5554** sont les valeurs **du dépôt**, obtenues en exécutant
+> `lancerTestsFFR` **hors ligne**, dans un lanceur local temporaire *(Node + doublures des services
+> Google)*. ⛔ **Le serveur n'a pas été recollé** : chez Google, le bilan est **toujours 881/881**
+> avec `Tests.gs` à **5141 lignes**, et ce sont **ces valeurs-là** qui sont vraies tant que le
+> redéploiement n'a pas eu lieu. ⭐ **Elles deviendront un CERTAIN quand elles seront LUES dans le
+> journal Apps Script** *(`CLAUDE.md` §9)*, et cette note devra alors être corrigée.
 
 > 🎯 **Pourquoi deux nombres et pas un.** Le bilan seul ne dit **jamais quelle version** a été
 > exécutée : « 573/573 OK » était un vrai résultat sur un faux fichier. Le nombre de lignes est ce
 > qui identifie le fichier. **Les deux ensemble prouvent ce qu'un seul laisse croire.**
 
-> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** Elles sont justes **au 2026-08-26**
-> *(lot **M1-PUB / PUB-4** : **+1 vérification** — le test du témoin de publication passe de 4 à 5
+> ⚠️ **Ces deux valeurs changent quand les tests évoluent.** ⚡ Elles étaient de **881** et **5141**
+> au 2026-08-26 *(lot **M1-PUB / PUB-4** : **+1 vérification** — le test du témoin de publication passe de 4 à 5
 > affirmations ; elles étaient de **880** et **5133** depuis B2-0, de **796** et **4645** depuis
 > M1-B, et de **715** et **4314** depuis C-012, étape 3)*.
 >
@@ -227,6 +238,35 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > l'**éditeur**, donc contre le code **enregistré dans le projet**. Ils ne prouvent pas à eux seuls
 > que l'**adresse web publique** sert cette version — Apps Script permet de figer un déploiement sur
 > une version antérieure. C'est le geste **3** qui couvre ça, et lui seul.
+
+### 🆕 🔴 Onglet `Editions` — UNE migration à lancer À LA MAIN, une seule fois *(M1-B2 / B2-1)*
+
+> ⛔ **CE GESTE N'A PAS ENCORE ÉTÉ FAIT** *(état au 2026-08-27)*. Il ne peut l'être qu'**après** le
+> redéploiement du backend : la fonction n'existe pas encore chez Google.
+
+**Ce que c'est.** Le lot **B2-1** introduit un **registre des éditions** *(onglet `Editions`)* qui
+donne au tournoi une identité durable, `edition_id` — voir
+[`structure-google-sheet.md`](structure-google-sheet.md). Un classeur **déjà en service** ne
+possède pas cet onglet : il faut l'ouvrir une fois.
+
+**Ce qu'il faut faire, après avoir recollé `Code.gs` :**
+
+1. éditeur Apps Script → sélectionner la fonction **`migrerEditionsMaintenant`** → **Exécuter** ;
+2. lire le message : *« ✅ Édition ouverte : … »* la première fois, *« ℹ️ Rien à faire : une édition
+   est déjà active — … »* ensuite ;
+3. ouvrir le classeur : l'onglet **`Editions`** contient **une ligne**, `statut` = `active`.
+
+| ⭐ Ce que cette migration fait | ⛔ Ce qu'elle ne fait PAS |
+|---|---|
+| Créer l'onglet `Editions` s'il manque | ⛔ **Aucune réinitialisation**, aucune donnée effacée |
+| Y écrire **une** ligne : identifiant, `active`, date de création | ⛔ Elle ne touche **ni** `Config`, **ni** les équipes, **ni** les poules, **ni** les matchs, **ni** les clubs |
+| ⭐ **Rien du tout** si une édition est déjà active *(idempotente)* | ⛔ Elle ne crée **jamais** de doublon, même relancée dix fois |
+
+> ⚠️ **Si le message dit « Migration refusée — Registre des éditions incohérent »** : c'est que
+> plusieurs lignes portent `active`. ⭐ **Le logiciel ne choisit pas à votre place** — corrigez
+> l'onglet à la main *(une seule ligne `active`, les autres `fermee`)*, puis relancez.
+
+---
 
 ### 🔧 Colonnes de l'onglet `Matchs` — migration automatique
 Les évolutions successives (phase après-midi, formats, score détaillé, arbitre) ont ajouté des

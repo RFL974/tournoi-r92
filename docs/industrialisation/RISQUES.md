@@ -9,7 +9,12 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-26 *(suite 5 — clôture de **M1-PUB / PUB-4**)* —
+**Dernière mise à jour** : 2026-08-27 *(**M1-B2 / B2-1**, première passe locale)* —
+⚡ **AUCUN PROBLÈME NE SE FERME, ET AUCUN NOUVEAU N'APPARAÎT.** **R-106** avance : une réponse
+existe désormais **dans le dépôt** *(`edition_id` + registre `Editions`)*, ⛔ **ni déployée, ni
+migrée, ni constatée en réel** — il reste donc **OUVERT**. Voir sa fiche.
+
+*Rappel de la mise à jour précédente — 2026-08-26 (suite 5 — clôture de **M1-PUB / PUB-4**)* —
 ⚡ **DEUX PROBLÈMES SE FERMENT : R-097 ET R-098. ⛔ AUCUN PROBLÈME NOUVEAU.**
 
 | Réf | Avant | Après | Ce qui l'établit |
@@ -106,7 +111,7 @@ ouverte.** C'est la **seule adresse** où l'on vérifie qu'il ne reste rien.
 > | **R-101** *(P2)* | ⭐ **Volontairement.** Le découpage événementiel des terrains **a bien survécu** au reset réel — ⭐ **c'est le résultat ATTENDU**, et B2-0 l'a **figé par un test témoin** pour que **B2-3** parte d'un comportement connu. ⛔ **Figer un défaut n'est pas le corriger** |
 > | **R-102** *(P2)* | B2-0 corrige le **COMPORTEMENT** du reset ; ⛔ **il ne touche pas à la STRUCTURE**. `ClubsInvites` mêle toujours identité durable et participation — c'est **B2-2** *(D-050)* |
 > | **R-105** *(P2)* | ⚡ **OUTILLÉ, pas refermé.** B2-0 a ajouté un contrôle qui **signale** toute colonne de `ClubsInvites` qu'aucune des deux familles ne classe *(⛔ et qui ne la vide jamais)*. ⭐ **Le piège est devenu visible ; il n'a pas disparu** — la garantie structurelle appartient à **B2-2** |
-> | **R-106** *(P1)* | ⚡ **Sa part « reset » seulement.** `tournoi_id` est bien **effacé** par la réinitialisation *(constaté en réel)*, ⛔ **mais il reste renouvelé à chaque génération de planning** : il n'identifie toujours pas une **édition**. Le reste appartient à **B2-1** |
+> | **R-106** *(P1)* | ⚡ **Sa part « reset » seulement.** `tournoi_id` est bien **effacé** par la réinitialisation *(constaté en réel)*, ⛔ **mais il reste renouvelé à chaque génération de planning** : il n'identifie toujours pas une **édition**. Le reste appartient à **B2-1** ⚡ *(B2-1 a livré `edition_id` **dans le dépôt** le 2026-08-27 — ⛔ non déployé. Voir la fiche R-106.)* |
 > | **R-098** *(P1)* | ⛔ **INCHANGÉ.** Ses conditions 4 et 5 exigent un tournoi exploitable ; le classeur n'en a pas *(voir le repère « données à recréer » de [`ETAT.md`](ETAT.md))* |
 
 ⛔ **Aucun problème nouveau n'a été trouvé par ce lot** — ni par les 40 mutations, ni par le reset
@@ -2206,6 +2211,23 @@ relance.
 > de planning**. Il identifie encore *une génération*, pas *une édition* — et c'est **exactement**
 > ce que **B2-1** doit fermer, avec `edition_id` et le registre `Editions`. ⭐ **Effacer un mauvais
 > identifiant ne le rend pas bon.**
+
+> ⚡ **CE QUI A CHANGÉ LE 2026-08-27 — ET CE QUI N'A PAS CHANGÉ** *(lot **B2-1**, première passe,
+> décision **D-057**)*.
+>
+> | | |
+> |---|---|
+> | ✅ **Écrit dans le dépôt** | `edition_id` *(UUID)* et l'onglet **`Editions`** : ouverture idempotente, unicité de l'édition active, bascule en **une seule écriture** au reset réussi, refus **avant tout effacement** si le registre est incohérent, migration explicite `migrerEditionsMaintenant()` |
+> | ✅ **Prouvé localement** | **12 exigences** couvertes par le harnais `Tests.gs` — dont la **stabilité** de l'identifiant après régénération des poules, du planning, modification d'équipes, publication / masquage, saisie et correction de score, et l'**échec injecté** pendant un reset *(⛔ aucune demi-bascule)*. Bilan local **974/974**, et **six mutations** rejouées ont toutes été attrapées |
+> | ⛔ **NON déployé** | Le serveur chez Google n'a **pas** été recollé. ⛔ **Rien de tout cela n'est en service** |
+> | ⛔ **NON migré** | L'onglet `Editions` **n'existe pas** dans le classeur réel : `migrerEditionsMaintenant()` **n'a jamais été lancée** |
+> | ⛔ **NON constaté en réel** | ⚠️ **`CLAUDE.md` §13.6** — aucune affirmation sur le comportement en production |
+> | ⛔ **Renouvellement de `tournoi_id` : INCHANGÉ, à dessein** | ⭐ **Ce n'est pas un oubli** : c'est **D-057**. `tournoi_id` reste la clé de dédoublonnage de `Historique` ; le figer écraserait des lignes du journal de saison. Ce que B2-1 lui retire, c'est la **sémantique d'édition**, pas son rôle |
+>
+> ⛔ **R-106 RESTE DONC OUVERT.** ⭐ **Il ne se fermera qu'après trois gestes qu'aucune session ne
+> peut faire seule** : le **redéploiement**, la **migration** du classeur, et un **constat réel** —
+> régénérer trois fois un planning et lire **un seul** `edition_id` dans l'onglet `Editions`.
+> ⚠️ ⛔ **Ne jamais présenter B2-1 comme terminé sur la seule foi du dépôt.**
 
 ### R-107 — L'archivage est une opération destructive en plusieurs temps
 

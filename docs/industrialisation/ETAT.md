@@ -60,6 +60,11 @@
 > ⭐ **Le cycle `non → publié → non` a été joué et refermé** : le masquage **cache** le tournoi,
 > ⛔ **il ne supprime aucune donnée** — et c'est vérifié.
 >
+> ✅ ⚡ **TOUJOURS INTACT APRÈS LA SESSION 31** *(2026-08-27)* : ⛔ **cette session n'a fait AUCUNE
+> écriture dans le classeur réel** — ni reset, ni migration, ni publication. Le jeu est donc dans
+> l'état décrit ci-dessus, **par construction** et non par vérification *(⛔ aucune session ne peut
+> constater le classeur depuis le dépôt — `CLAUDE.md` §13.6)*.
+>
 > ⏳ **CE QUI RESTE À DÉCIDER, ET CE N'EST PAS À UNE SESSION DE LE FAIRE.** Le repère exigeait qu'on
 > *« décide explicitement du sort de ce jeu, et qu'on le dise ici »*. ⭐ **Voici ce qui est dit** :
 > ⛔ **la décision n'est pas prise.** Le jeu est **conservé en l'état** jusqu'à ce que Romain
@@ -76,7 +81,27 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-26 *(suite 6)* — 🏁🏁 **M1-PUB EST TERMINÉ. LE CHANTIER ENTIER
+**Dernière mise à jour** : 2026-08-27 *(session 31)* — 🆔 **M1-B2 / B2-1 EST DÉMARRÉE : UNE ÉDITION
+A UNE IDENTITÉ QUI NE BOUGE PLUS — ⛔ DANS LE DÉPÔT SEULEMENT.**
+
+> ⛔ **B2-1 N'EST PAS TERMINÉE, ET R-106 N'EST PAS CLOS.** Cette passe est **locale** : ⛔ aucun
+> push, aucun redéploiement Apps Script, aucune écriture dans le classeur réel, aucune migration.
+> ⭐ **Le jeu de tournoi fictif n'a pas été touché** — il est intact.
+
+| | |
+|---|---|
+| ✅ **Ce qui est écrit** | `edition_id` *(UUID)* + l'onglet **`Editions`** *(`edition_id`, `statut`, `date_creation`, `date_fermeture`)*. ⭐ **Une seule ligne `active`**, jamais deux |
+| ⭐ **Ce qui ne bouge plus** | L'identifiant survit à une **régénération des poules**, du **planning**, à une **modification d'équipes**, à la **publication** et au **masquage**, à la **saisie** et à la **correction** d'un score — ⭐ **prouvé en appelant les vraies fonctions**, pas en relisant le code |
+| ⭐ **Le reset** | Registre **contrôlé en tout premier** *(un refus ne coûte aucune donnée)*, **basculé en tout dernier**, en **une seule écriture**. ⛔ **Aucune demi-bascule n'est représentable** — un échec injecté laisse l'ancienne édition active et n'ouvre rien |
+| ⭐ **La migration** | `migrerEditionsMaintenant()` — explicite, **idempotente**, et ⛔ **elle ne touche RIEN d'autre** que l'onglet `Editions` |
+| 🔬 **Les preuves locales** | **974/974** au harnais Apps Script *(881 avant)* · **48/48**, **97/97**, **41/41**, **45/45** aux quatre suites Node, **inchangées** · ⭐ **six mutations** rejouées, **six attrapées** |
+| ⛔ **Ce qui N'EST PAS prouvé** | ⛔ **Rien en conditions réelles** *(`CLAUDE.md` §13.6)*. Le bilan **974** est un **PRÉDIT** : il a été obtenu par un lanceur local, ⛔ pas lu dans le journal chez Google |
+| ⛔ **Ce que le lot ne fait PAS** | ⛔ Aucun rattachement *(rien ne porte encore d'`edition_id`)* · ⛔ aucun sélecteur d'édition · ⛔ aucun multi-tournois · ⛔ aucun `club_id` · ⛔ **pas une ligne de `frontend/`** |
+| ⚡ **Un écart de plan signalé** | La ligne B2-1 du plan annonçait *« + fin du renouvellement de `tournoi_id` »* ; ⛔ **le cadrage validé dit l'inverse**, et c'est lui qui fait foi — **D-057** explique pourquoi figer `tournoi_id` **détruirait** des lignes de `Historique` |
+| ⏭️ **Ce qui reste** | **Push** *(après contrôle)* → **redéploiement** → **migration** → **constat réel** : régénérer 3× et lire **un seul** `edition_id` |
+| ⏳ **Toujours à décider par Romain** | Le **sort du jeu de tournoi fictif** — voir le repère en tête de ce document |
+
+*Rappel de la mise à jour précédente — 2026-08-26 (suite 6)* — 🏁🏁 **M1-PUB EST TERMINÉ. LE CHANTIER ENTIER
 EST CLOS** — ses **cinq** micro-lots et les **quatre** conditions de son critère de clôture.
 
 > ⭐ **Ce que M1-PUB a définitivement accompli, en une phrase** : *changer l'état publié / non publié

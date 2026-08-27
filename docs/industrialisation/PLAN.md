@@ -3287,7 +3287,7 @@ aucune nominative)*.
 | # | Lot | Dépend de | Portée | Migration | Risques fermés | Critère de clôture |
 |---|---|---|---|---|---|---|
 | **B2-0** | 🏁 **Sécurisation du reset** *(harnais)* — ✅ **CLÔTURÉ le 2026-08-25** | — | ⚡ **backend + frontend + CI** *(voir la note ci-dessous)* | ⛔ | ✅ **R-099**, ✅ **R-100** *(entièrement)* · **R-106** *(part reset seule)* · **R-033** *(dernière part)* | ✅ **ATTEINT** — reset prouvé **en réel** le 2026-08-25 : 0 statut hérité, 0 effectif hérité |
-| **B2-1** | **`edition_id` propre** + registre `Editions` + fin du renouvellement de `tournoi_id` | B2-0 | backend | douce | **R-106** | Régénérer un planning 3× ⇒ **un seul** `edition_id` |
+| **B2-1** | **`edition_id` propre** + registre `Editions` ~~+ fin du renouvellement de `tournoi_id`~~ ⚡ **voir la fiche §16.5 quater** — ⏳ **EN COURS, première passe locale livrée le 2026-08-27** | B2-0 | backend | douce | **R-106** | Régénérer un planning 3× ⇒ **un seul** `edition_id` |
 | **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-099, R-100, R-102, R-104, R-105** | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
 | **B2-3** | **Terrains** permanents / édition | B2-1 | backend + frontend | douce | **R-101** | Dossier d'un tournoi vide ⇒ ⛔ aucun terrain hérité |
 | **B2-4** | **UX** : Carnet · Préparer l'invitation · Clubs invités · sélection · envoi ciblé | B2-2 | **frontend surtout** | ⛔ | — | Plusieurs vagues ciblées prouvées **en réel** |
@@ -3313,7 +3313,10 @@ aucune nominative)*.
 > l'écran garde sa propre copie de la vérité.** Le classeur était juste dès B2-0 ; l'organisateur,
 > lui, voyait encore l'édition précédente. ⛔ **Aucun test backend ne pouvait le montrer.**
 >
-> ⏭️ **B2-1 est la prochaine étape éligible — ⛔ NON DÉMARRÉE.** *(Le détail chronologique de B2-0
+> ⏭️ ⚡ **B2-1 EST DÉMARRÉE — ⛔ ELLE N'EST PAS TERMINÉE.** Sa **première passe, locale**, est
+> livrée le **2026-08-27** : voir la fiche **§16.5 quater** ci-dessous. ⛔ **Rien n'est déployé,
+> rien n'est migré, rien n'est constaté en réel.** ⚡ *(Cette ligne annonçait « B2-1 est la prochaine
+> étape éligible — ⛔ NON DÉMARRÉE » : vrai jusqu'au 2026-08-27.)* *(Le détail chronologique de B2-0
 > vit dans [`SESSIONS.md`](SESSIONS.md), pas ici.)*
 
 #### 16.5 bis — B2-0 : les huit résultats métier **T1 → T8**
@@ -3433,6 +3436,57 @@ colonnes déjà effacées · **S3** les cas limites *(classeur sans club, sans o
 > d'adaptation s'engage à préserver. **Vérifié par simulation** le 2026-08-25 : rejoués **mot pour
 > mot** contre une fausse structure `Clubs` + `Participations` avec un reset entièrement différent,
 > ils passent — **seuls deux helpers de montage/lecture changent**.
+
+#### 16.5 quater — B2-1 : `edition_id` et le registre `Editions` — ⏳ **PREMIÈRE PASSE LOCALE**
+
+> ⚠️ **CE QUI SUIT DÉCRIT LE DÉPÔT, ⛔ PAS LE LOGICIEL EN SERVICE** *(état au 2026-08-27)*.
+> Le cadrage a été **validé par Romain le 2026-08-27** *(décision **D-057**)*.
+
+**① Le cadrage validé, en une phrase.** Une édition possède un identifiant **stable** —
+`edition_id` — créé **une seule fois à son ouverture**, qui ne bouge **jamais** ensuite ; une
+**réinitialisation réussie** ferme cette édition et en ouvre une neuve ; une réinitialisation
+**échouée** ne bouge rien du tout.
+
+**② L'architecture retenue.**
+
+| | |
+|---|---|
+| **Une seule adresse** | `edition_id` vit dans l'onglet **`Editions`**, ⛔ **et nulle part ailleurs** *(`CLAUDE.md` §8 quater)*. ⭐ Effet de bord voulu : n'étant pas un paramètre de `Config`, il ne peut **pas** fuir par une vue publique |
+| **Un cœur PUR, des effets minces** | `analyserRegistreEditions`, `planifierOuvertureEdition`, `planifierBasculeEdition` — ⛔ aucune dépendance à Google, donc testables seuls. Les fonctions à effet *(`ouvrirEditionSiAucune`, `basculerEditionApresReset`)* ne font qu'appliquer leur décision |
+| **La bascule en UNE écriture** | Le plan renvoie le **bloc complet** des lignes, écrit d'un seul `setValues`. ⛔ **Aucune demi-bascule** n'est représentable : ni ancienne fermée sans nouvelle, ni deux actives |
+| **L'ordre du reset** | Le registre est **contrôlé en tout PREMIER** *(avant la moindre écriture — un refus ne coûte donc aucune donnée)* et **basculé en tout DERNIER** *(après que tout le reste a réussi)*. ⭐ C'est cet ordre, et lui seul, qui rend l'échec inoffensif |
+| **La lecture ne crée rien** | `editionActive` renvoie `'vide'` sur un registre neuf. ⛔ **Aucun identifiant ne naît d'une simple lecture** — c'est ce qui distingue `edition_id` de `assurerTournoiId` |
+| **L'anomalie ne se tranche pas** | Plusieurs `active` ⇒ refus d'ouvrir, de basculer **et de réinitialiser**, avec les identifiants nommés. ⛔ **Le code ne choisit jamais à la place d'un humain** |
+| **La migration est explicite** | `migrerEditionsMaintenant()`, à lancer **une fois** depuis l'éditeur Apps Script. ⭐ Elle ne touche **rien** d'autre que l'onglet `Editions`, et elle est **idempotente** |
+
+**③ Ce qui est PROUVÉ, et où.** Les **12 exigences** du cadrage sont couvertes dans
+`backend/Tests.gs`, bloc `testB21_*` — bilan local **974/974** *(881 avant le lot)*. Les tests de
+stabilité appellent les **VRAIES** fonctions *(`genererPoulesEtPlanning`, `recalculerHoraires`,
+`reorganiserPoulesMatin`, `genererApresMidi`, `ajouterEquipe`, `modifierEquipe`, `supprimerEquipe`,
+`publierTournoi`, `enregistrerScore`)*, ⛔ jamais une reproduction de leur logique.
+
+> ⭐ **Et le harnais a été mis à l'épreuve** : **six mutations** ont été réintroduites dans une copie
+> temporaire — bascule remontée avant les effacements, contrôle préalable supprimé, ouverture
+> d'édition glissée dans la génération de planning, idempotence perdue, anomalie tranchée au hasard,
+> création silencieuse à la lecture. ⭐ **Les six ont été attrapées.**
+
+**④ ⛔ CE QUI N'EST PAS FAIT, ET NE DOIT PAS ÊTRE PRÉSENTÉ AUTREMENT.**
+
+| | |
+|---|---|
+| ⛔ **Backend non redéployé** | Le serveur chez Google porte toujours l'ancien `Code.gs`. Repères : [`../deploiement.md`](../deploiement.md) |
+| ⛔ **Migration non lancée** | L'onglet `Editions` **n'existe pas** dans le classeur réel |
+| ⛔ **Aucune preuve en conditions réelles** | ⚠️ **`CLAUDE.md` §13.6.** Le critère de clôture — *« régénérer un planning 3× ⇒ un seul `edition_id` »* — n'a été atteint **que sur des onglets factices** |
+| ⛔ **Aucun rattachement** | ⛔ **Rien** ne porte encore d'`edition_id` : ni participation, ni match, ni terrain. C'est **B2-2** et **B2-6** |
+| ⛔ **Aucun frontend** | Pas une ligne de `frontend/` n'a bougé. La réponse du reset porte trois champs de plus, ⭐ **ignorés** par l'écran, qui lit champ par champ |
+| ⛔ **Non poussé, non fusionné** | La passe est **locale**, sur `main`, ⛔ sans `push` |
+
+**⑤ Le reliquat de rédaction, et il est signalé, pas masqué.** La ligne B2-1 du tableau §16.5
+annonçait *« + fin du renouvellement de `tournoi_id` »*. ⛔ **Le cadrage validé dit l'inverse**, et
+c'est lui qui fait foi — voir **D-057**, qui explique aussi **pourquoi** figer `tournoi_id` serait
+dangereux *(il est la clé de dédoublonnage de `Historique`)*.
+
+---
 
 ### 16.6 — Répartition UX cible
 

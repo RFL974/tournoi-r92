@@ -415,6 +415,21 @@ function lancerTestsFFR() {
   testB20_S3_casLimites(etat);
   testB20_temoinR101TerrainsResteB23(etat);
 
+  // M1-B2 / B2-1 (D-050, R-106) — l'identité DURABLE d'une édition : `edition_id` et le
+  // registre `Editions`. ⭐ Les douze exigences du cadrage, dans leur ordre.
+  testB21_creationInitiale(etat);
+  testB21_initialisationIdempotente(etat);
+  testB21_uniciteEditionActive(etat);
+  testB21_stabiliteRegenerationPoules(etat);
+  testB21_stabiliteRegenerationPlanning(etat);
+  testB21_stabiliteModificationEquipes(etat);
+  testB21_stabilitePublicationMasquage(etat);
+  testB21_stabiliteScores(etat);
+  testB21_resetBascule(etat);
+  testB21_resetEchecPasDeDemiBascule(etat);
+  testB21_migrationSansPerte(etat);
+  testB21_pasDeSelecteurNiMultiTournois(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -4547,7 +4562,30 @@ function _m1bClasseurFactice() {
   lignes.push(['categorie', 'presente']);                // en-tête zone B
   lignes.push(['U10', 'oui']);
   var config = _m1bFauxOnglet(lignes);
-  return { _config: config, getSheetByName: function (nom) { return nom === 'Config' ? config : null; } };
+  // M1-B2 / B2-1 — le registre des éditions, avec UNE édition active : c'est l'état d'un
+  // classeur migré, donc l'état réel de toute réinitialisation à venir. ⚠️ Sans lui, le faux
+  // classeur ne pourrait plus exercer `reinitialiserTournoi`, qui bascule désormais l'édition.
+  var editions = _m1bFauxOnglet([ENTETES.Editions.slice(),
+    [_ED_ANCIENNE_EDITION, EDITION_STATUT_ACTIVE, '2026-05-01 09:00:00', '']]);
+  return {
+    _config: config, _editions: editions,
+    // `horodatageEdition` et `assurerTournoiId` demandent le fuseau du classeur.
+    getSpreadsheetTimeZone: function () { return 'Europe/Paris'; },
+    getSheetByName: function (nom) {
+      if (nom === 'Config') return config;
+      if (nom === 'Editions') return editions;
+      return null;
+    }
+  };
+}
+
+/** L'identifiant de l'édition en cours dans les classeurs factices — la « preuve » que la
+ *  bascule d'une réinitialisation en ouvre bien une AUTRE, et n'en recycle jamais un. */
+var _ED_ANCIENNE_EDITION = 'EDITION-EN-COURS-AVANT-RESET';
+
+/** Les lignes de DONNÉES du registre d'un classeur factice (sans l'en-tête). */
+function _edLignes(classeur) {
+  return classeur._editions._lignes().slice(1);
 }
 
 /** Valeur d'un paramètre dans le faux onglet ('' si absent, null si la LIGNE a disparu). */
@@ -4777,14 +4815,17 @@ function _b20ClasseurFactice(entetesClubs) {
   var equipes = _m1bFauxOnglet([ENTETES.Equipes,
     ['E12', 'LE TEST RUGBY CLUB-1', 'U8', 'C', 'auto', 7, 3]]);
   var config = base._config;
+  var editions = base._editions;   // registre hérité du factice M1-B : une édition active
   return {
-    _config: config, _clubs: clubs, _equipes: equipes,
-    // `assurerTournoiId` et `assurerTokensClubs` horodatent / tirent un UUID : doublures fournies.
+    _config: config, _clubs: clubs, _equipes: equipes, _editions: editions,
+    // `assurerTournoiId`, `assurerTokensClubs` et `horodatageEdition` horodatent / tirent un
+    // UUID : doublures fournies.
     getSpreadsheetTimeZone: function () { return 'Europe/Paris'; },
     getSheetByName: function (nom) {
       if (nom === 'Config') return config;
       if (nom === 'ClubsInvites') return clubs;
       if (nom === 'Equipes') return equipes;
+      if (nom === 'Editions') return editions;
       return null;
     }
   };
@@ -5138,4 +5179,376 @@ function testB20_temoinR101TerrainsResteB23(etat) {
   reinitialiserTournoi(cl);
   _ffrAssert(etat, _m1bValeur(cl._config, 'repartition_grands_terrains') === '{"Rugby 1":["1","2"]}',
     'B2-0 TÉMOIN (R-101) : le découpage des terrains survit ENCORE — correction attendue en B2-3');
+}
+
+/* ========================================================================== */
+/*  M1-B2 / B2-1 — LE REGISTRE DES ÉDITIONS (R-106, doctrine D-050)           */
+/*                                                                            */
+/*  CE QUE CE BLOC PROUVE, ET CE QU'IL NE PROUVE PAS.                         */
+/*                                                                            */
+/*  Il prouve qu'une édition possède un identifiant qui NE BOUGE PAS quand on  */
+/*  régénère les poules, le planning, quand on touche aux équipes, qu'on       */
+/*  publie, qu'on masque ou qu'on saisit un score — et qu'une réinitialisation */
+/*  RÉUSSIE ferme l'édition et en ouvre une AUTRE.                            */
+/*                                                                            */
+/*  ⛔ Il ne prouve RIEN sur le classeur réel : ces tests tournent sur des      */
+/*  onglets factices. La migration du classeur en service reste À FAIRE, et    */
+/*  elle se constate dans le classeur (CLAUDE.md §13.6).                       */
+/*                                                                            */
+/*  ⚠️ RÈGLE D'ÉCRITURE DE CE BLOC : les tests de STABILITÉ appellent les       */
+/*  VRAIES fonctions de l'application (`genererPoulesEtPlanning`,              */
+/*  `enregistrerScore`, `publierTournoi`…), ⛔ jamais une reproduction de leur   */
+/*  logique. C'est ce qui les rend capables d'échouer : le jour où l'une       */
+/*  d'elles touchera au registre, ils tomberont.                              */
+/* ========================================================================== */
+
+/**
+ * Classeur factice « TOURNOI VIVANT » — une catégorie U10 présente, SIX équipes réparties en
+ * DEUX poules, et un registre portant UNE édition active.
+ * ⚠️ Pourquoi six et deux, et pas les trois équipes du jeu fictif réel : en dessous de trois
+ * équipes la règle FFR bloque la génération, et avec une SEULE poule le classement croisé de
+ * l'après-midi ne produit aucun match. Les tests de stabilité passeraient alors sans rien
+ * exercer — ⛔ ce qui est pire qu'un test absent.
+ */
+function _b21ClasseurTournoi() {
+  var config = _m1bFauxOnglet([
+    ['— Réglages —', ''],
+    ['heure_debut', '09:00'],
+    ['heure_fin', '17:00'],
+    ['heure_fin_auto', 'oui'],
+    ['battement_terrain_min', '5'],
+    ['pause_dejeuner_debut', '12:30'],
+    ['pause_dejeuner_duree_min', '60'],
+    ['tournoi_publie', 'non'],
+    ['categorie', 'presente', 'format_mi_temps', 'duree_mi_temps_min', 'nb_terrains',
+     'recup_entre_matchs_min', 'format_apresmidi', 'nb_poules'],
+    ['U10', 'oui', '2', '10', '2', '5', 'CROISE', '2']
+  ]);
+  var equipes = _m1bFauxOnglet([ENTETES.Equipes.slice(),
+    ['E1', 'EQUIPE TEST A', 'U10', '', 'manuel', '', ''],
+    ['E2', 'EQUIPE TEST B', 'U10', '', 'manuel', '', ''],
+    ['E3', 'EQUIPE TEST C', 'U10', '', 'manuel', '', ''],
+    ['E4', 'EQUIPE TEST D', 'U10', '', 'manuel', '', ''],
+    ['E5', 'EQUIPE TEST E', 'U10', '', 'manuel', '', ''],
+    ['E6', 'EQUIPE TEST F', 'U10', '', 'manuel', '', '']
+  ]);
+  var poules  = _m1bFauxOnglet([ENTETES.Poules.slice()]);
+  var matchs  = _m1bFauxOnglet([ENTETES.Matchs.slice()]);
+  var histo   = _m1bFauxOnglet([ENTETES.Historique.slice()]);
+  var editions = _m1bFauxOnglet([ENTETES.Editions.slice(),
+    [_ED_ANCIENNE_EDITION, EDITION_STATUT_ACTIVE, '2026-05-01 09:00:00', '']]);
+  return {
+    _config: config, _equipes: equipes, _poules: poules, _matchs: matchs,
+    _historique: histo, _editions: editions,
+    getSpreadsheetTimeZone: function () { return 'Europe/Paris'; },
+    getSheetByName: function (nom) {
+      if (nom === 'Config')     return config;
+      if (nom === 'Equipes')    return equipes;
+      if (nom === 'Poules')     return poules;
+      if (nom === 'Matchs')     return matchs;
+      if (nom === 'Historique') return histo;
+      if (nom === 'Editions')   return editions;
+      return null;
+    }
+  };
+}
+
+/** L'identifiant de l'édition ACTIVE, ou '' s'il n'y en a pas / si le registre est en anomalie. */
+function _b21IdActif(classeur) {
+  var r = editionActive(classeur);
+  return (r.etat === 'ok') ? r.edition.edition_id : '';
+}
+
+/** Nombre de lignes réellement peuplées du registre (ligne d'en-tête exclue). */
+function _b21NbEditions(classeur) {
+  return _edLignes(classeur).filter(function (l) { return String(l[0] || '').trim() !== ''; }).length;
+}
+
+/**
+ * ⭐ LE MOTIF COMMUN DES SIX TESTS DE STABILITÉ : on relève l'identifiant, on exerce le geste
+ * pour de vrai, on le relève à nouveau. ⛔ Si le geste échoue, on le dit — un geste qui n'a pas
+ * eu lieu ne prouve aucune stabilité.
+ * @param geste  function(classeur) → le résultat de la vraie fonction appelée
+ */
+function _b21StabiliteApres(etat, libelle, geste, classeur) {
+  var cl = classeur || _b21ClasseurTournoi();
+  var avant = _b21IdActif(cl);
+  _ffrAssert(etat, avant === _ED_ANCIENNE_EDITION,
+    'B2-1 stabilité (' + libelle + ') : une édition est bien active AVANT le geste');
+  var res = geste(cl);
+  _ffrAssert(etat, !(res && res.error),
+    'B2-1 stabilité (' + libelle + ') : le geste a RÉELLEMENT eu lieu' +
+    ((res && res.error) ? ' — refusé : ' + res.error : ''));
+  _ffrAssert(etat, _b21IdActif(cl) === avant,
+    'B2-1 stabilité (' + libelle + ') : edition_id INCHANGÉ');
+  _ffrAssert(etat, _b21NbEditions(cl) === 1,
+    'B2-1 stabilité (' + libelle + ') : aucune édition n\'a été créée au passage');
+  return cl;
+}
+
+/** ① Création initiale : un registre vide reçoit UNE édition active, avec un identifiant réel. */
+function testB21_creationInitiale(etat) {
+  var editions = _m1bFauxOnglet([ENTETES.Editions.slice()]);
+  var cl = {
+    _editions: editions,
+    getSpreadsheetTimeZone: function () { return 'Europe/Paris'; },
+    getSheetByName: function (nom) { return nom === 'Editions' ? editions : null; }
+  };
+  _ffrAssert(etat, editionActive(cl).etat === 'vide',
+    'B2-1 ① : au départ, aucune édition active — et la LECTURE n\'en a créé aucune');
+  _ffrAssert(etat, _b21NbEditions(cl) === 0,
+    'B2-1 ① : lire un registre vide ne pose aucune ligne (règle « pas de création silencieuse »)');
+  var res = ouvrirEditionSiAucune(cl);
+  _ffrAssert(etat, res.ok && res.cree === true, 'B2-1 ① : l\'ouverture crée bien une édition');
+  _ffrAssert(etat, String(res.edition.edition_id).length >= 8,
+    'B2-1 ① : l\'identifiant est un vrai identifiant, pas une chaîne vide');
+  _ffrAssert(etat, editionActive(cl).etat === 'ok' && _b21NbEditions(cl) === 1,
+    'B2-1 ① : exactement UNE édition, et elle est active');
+  _ffrAssert(etat, String(_edLignes(cl)[0][2]).length >= 10 && String(_edLignes(cl)[0][3]) === '',
+    'B2-1 ① : date de création posée, date de fermeture VIDE tant que l\'édition vit');
+}
+
+/** ② Idempotence : rejouer l'initialisation ne crée pas de doublon et rend la MÊME édition. */
+function testB21_initialisationIdempotente(etat) {
+  var cl = _b21ClasseurTournoi();
+  var premier = _b21IdActif(cl);
+  for (var i = 0; i < 3; i++) {
+    var res = ouvrirEditionSiAucune(cl);
+    _ffrAssert(etat, res.ok && res.cree === false,
+      'B2-1 ② : rejeu n° ' + (i + 1) + ' — rien n\'est créé' +
+      (res.error ? ' (refusé : ' + res.error + ')' : ''));
+    // ⚠️ Lecture DÉFENSIVE : une perte d'idempotence produit un second appel en anomalie, donc
+    // une réponse SANS `edition`. Sans ce repli, le harnais planterait au lieu d'échouer — et
+    // un harnais qui plante ne dit pas QUEL comportement a cassé.
+    _ffrAssert(etat, !!res.edition && res.edition.edition_id === premier,
+      'B2-1 ② : rejeu n° ' + (i + 1) + ' — c\'est la MÊME édition qui est rendue');
+  }
+  _ffrAssert(etat, _b21NbEditions(cl) === 1,
+    'B2-1 ② : après trois rejeux, le registre ne contient toujours QU\'UNE ligne');
+}
+
+/** ③ Unicité de l'édition active — et l'anomalie ne se règle JAMAIS par un choix au hasard. */
+function testB21_uniciteEditionActive(etat) {
+  // a) Le cœur pur voit l'anomalie et refuse de trancher.
+  var deux = [['A', 'active', '2026-01-01 08:00:00', ''], ['B', 'active', '2026-02-01 08:00:00', '']];
+  var vu = analyserRegistreEditions(deux);
+  _ffrAssert(etat, vu.etat === 'plusieurs_actives' && vu.actives.length === 2,
+    'B2-1 ③ : deux actives ⇒ ANOMALIE signalée, les deux sont nommées');
+  _ffrAssert(etat, vu.edition === null,
+    'B2-1 ③ : ⛔ AUCUNE des deux n\'est choisie — le code ne tranche pas à la place d\'un humain');
+
+  // b) Ouvrir refuse, et n'aggrave pas.
+  _ffrAssert(etat, !!planifierOuvertureEdition(deux, 'C', '2026-03-01 08:00:00').error,
+    'B2-1 ③ : ouvrir une édition sur un registre en anomalie est REFUSÉ');
+  _ffrAssert(etat, !!planifierBasculeEdition(deux, 'C', '2026-03-01 08:00:00').error,
+    'B2-1 ③ : basculer sur un registre en anomalie est REFUSÉ');
+
+  // c) Le RESET refuse AVANT d'effacer quoi que ce soit — c'est là tout l'intérêt.
+  var cl = _b21ClasseurTournoi();
+  cl._editions._lignes().push(['DEUXIEME-ACTIVE', EDITION_STATUT_ACTIVE, '2026-06-01 08:00:00', '']);
+  var equipesAvant = lireOngletSimple(cl, 'Equipes').length;
+  var res = reinitialiserTournoi(cl);
+  _ffrAssert(etat, !!res.error,
+    'B2-1 ③ : la réinitialisation REFUSE tant que le registre est incohérent');
+  _ffrAssert(etat, lireOngletSimple(cl, 'Equipes').length === equipesAvant && equipesAvant === 6,
+    'B2-1 ③ : ⭐ et elle refuse AVANT d\'effacer — les 6 équipes sont intactes');
+  _ffrAssert(etat, _b21NbEditions(cl) === 2,
+    'B2-1 ③ : le registre est laissé tel quel, à corriger à la main');
+
+  // d) Un identifiant n'est jamais réutilisé, pas même celui d'une édition fermée.
+  var fermee = [['X', 'fermee', '2026-01-01 08:00:00', '2026-02-01 08:00:00']];
+  _ffrAssert(etat, !!planifierBasculeEdition(fermee, 'X', '2026-03-01 08:00:00').error,
+    'B2-1 ③ : réutiliser l\'identifiant d\'une édition FERMÉE est refusé');
+}
+
+/** ④ Stabilité après régénération des POULES. */
+function testB21_stabiliteRegenerationPoules(etat) {
+  var cl = _b21StabiliteApres(etat, 'générer poules et planning',
+    function (c) { return genererPoulesEtPlanning(c); });
+  _ffrAssert(etat, lireOngletSimple(cl, 'Poules').length >= 1,
+    'B2-1 ④ : la génération a bien produit des poules (le geste n\'était pas creux)');
+  // ⭐ Le contraste avec `tournoi_id` est LE point du lot : l'un bouge, l'autre pas.
+  var idGeneration1 = _m1bValeur(cl._config, 'tournoi_id');
+  var edition1 = _b21IdActif(cl);
+  genererPoulesEtPlanning(cl);
+  genererPoulesEtPlanning(cl);
+  _ffrAssert(etat, _b21IdActif(cl) === edition1,
+    'B2-1 ④ : ⭐ TROIS générations ⇒ UN SEUL edition_id (le critère de clôture de B2-1)');
+  _ffrAssert(etat, String(idGeneration1) !== '' && String(_m1bValeur(cl._config, 'tournoi_id')) !== '',
+    'B2-1 ④ : `tournoi_id` continue d\'exister — il garde son rôle de clé de génération');
+  _ffrAssert(etat, _b21IdActif(cl) !== String(_m1bValeur(cl._config, 'tournoi_id')),
+    'B2-1 ④ : edition_id et tournoi_id sont bien DEUX choses différentes');
+}
+
+/** ⑤ Stabilité après régénération du PLANNING (horaires, réorganisation, après-midi). */
+function testB21_stabiliteRegenerationPlanning(etat) {
+  var cl = _b21ClasseurTournoi();
+  genererPoulesEtPlanning(cl);
+  _b21StabiliteApres(etat, 'recalculer les horaires',
+    function (c) { return recalculerHoraires(c); }, cl);
+  _b21StabiliteApres(etat, 'réorganiser les poules du matin',
+    function (c) {
+      var vers = {};
+      lireOngletSimple(c, 'Equipes').forEach(function (e, i) { vers[e.id_equipe] = (i % 2 === 0) ? 'A' : 'B'; });
+      return reorganiserPoulesMatin(c, { assignation: vers });
+    }, cl);
+  // L'après-midi n'est générable QUE si le matin est terminé : on saisit les scores d'abord.
+  lireOngletSimple(cl, 'Matchs').forEach(function (m) {
+    enregistrerScore(cl, { id_match: m.id_match, score_A: 10, score_B: 5 });
+  });
+  _b21StabiliteApres(etat, 'générer l\'après-midi',
+    function (c) { return genererApresMidi(c); }, cl);
+}
+
+/** ⑥ Stabilité après MODIFICATION DES ÉQUIPES (ajout, renommage, suppression). */
+function testB21_stabiliteModificationEquipes(etat) {
+  var cl = _b21StabiliteApres(etat, 'ajouter une équipe',
+    function (c) { return ajouterEquipe(c, 'EQUIPE TEST D', 'U10', 8, 2); });
+  _b21StabiliteApres(etat, 'renommer une équipe',
+    function (c) { return modifierEquipe(c, 'E1', 'EQUIPE TEST A BIS'); }, cl);
+  _b21StabiliteApres(etat, 'supprimer une équipe',
+    function (c) { return supprimerEquipe(c, 'E2'); }, cl);
+}
+
+/** ⑦ Stabilité après PUBLICATION puis MASQUAGE. */
+function testB21_stabilitePublicationMasquage(etat) {
+  var cl = _b21StabiliteApres(etat, 'publier le tournoi',
+    function (c) { return publierTournoi(c, true); });
+  _ffrAssert(etat, _m1bValeur(cl._config, 'tournoi_publie') === 'oui',
+    'B2-1 ⑦ : le tournoi a réellement été publié');
+  _b21StabiliteApres(etat, 'masquer le tournoi',
+    function (c) { return publierTournoi(c, false); }, cl);
+  _ffrAssert(etat, _m1bValeur(cl._config, 'tournoi_publie') === 'non',
+    'B2-1 ⑦ : le tournoi a réellement été masqué');
+}
+
+/** ⑧ Stabilité après SAISIE puis CORRECTION d'un score. */
+function testB21_stabiliteScores(etat) {
+  var cl = _b21ClasseurTournoi();
+  genererPoulesEtPlanning(cl);
+  var premier = lireOngletSimple(cl, 'Matchs')[0];
+  _ffrAssert(etat, !!(premier && premier.id_match),
+    'B2-1 ⑧ : un match existe, il y a bien un score à saisir');
+  _b21StabiliteApres(etat, 'saisir un score',
+    function (c) { return enregistrerScore(c, { id_match: premier.id_match, score_A: 12, score_B: 7 }); }, cl);
+  _b21StabiliteApres(etat, 'corriger un score',
+    function (c) {
+      // `modification: true` = le bouton « Corriger » de la page Saisie ; sans lui, un score
+      // définitif est refusé — et le geste n'aurait pas eu lieu.
+      return enregistrerScore(c, { id_match: premier.id_match, score_A: 5, score_B: 5, modification: true });
+    }, cl);
+}
+
+/** ⑨ Reset RÉUSSI : l'ancienne édition est fermée, une AUTRE est ouverte. */
+function testB21_resetBascule(etat) {
+  var cl = _b21ClasseurTournoi();
+  var avant = _b21IdActif(cl);
+  var res = reinitialiserTournoi(cl);
+  _ffrAssert(etat, !res.error && res.ok, 'B2-1 ⑨ : la réinitialisation a réussi');
+  var apres = _b21IdActif(cl);
+  _ffrAssert(etat, apres !== '' && apres !== avant,
+    'B2-1 ⑨ : ⭐ l\'édition active est une AUTRE édition — nouvel identifiant');
+  _ffrAssert(etat, res.edition_id === apres && res.edition_fermee === avant,
+    'B2-1 ⑨ : la réponse du serveur nomme l\'édition ouverte ET celle qui a été fermée');
+  var lignes = _edLignes(cl).filter(function (l) { return String(l[0] || '').trim() !== ''; });
+  _ffrAssert(etat, lignes.length === 2,
+    'B2-1 ⑨ : le registre garde les DEUX éditions — l\'ancienne n\'est pas effacée');
+  var ancienne = lignes.filter(function (l) { return String(l[0]) === avant; })[0];
+  _ffrAssert(etat, String(ancienne[1]) === EDITION_STATUT_FERMEE && String(ancienne[3]).length >= 10,
+    'B2-1 ⑨ : l\'ancienne édition est « fermee », avec sa date de fermeture');
+  _ffrAssert(etat, analyserRegistreEditions(lignes).actives.length === 1,
+    'B2-1 ⑨ : une seule active après la bascule');
+  // ⭐ Et le tournoi a réellement été vidé : sans cela, on ne prouverait qu'un mouvement de registre.
+  _ffrAssert(etat, lireOngletSimple(cl, 'Equipes').length === 0 && lireOngletSimple(cl, 'Matchs').length === 0,
+    'B2-1 ⑨ : la réinitialisation a bien vidé le tournoi (équipes et matchs)');
+}
+
+/** ⑩ ⭐ ÉCHEC INJECTÉ pendant le reset : ⛔ AUCUNE demi-bascule.
+ *  On casse volontairement l'effacement des matchs. L'exception remonte, et le registre doit
+ *  être retrouvé EXACTEMENT dans l'état d'avant : ancienne édition toujours active, aucune
+ *  édition parasite. C'est la seule façon de prouver que la bascule est bien la DERNIÈRE étape. */
+function testB21_resetEchecPasDeDemiBascule(etat) {
+  var cl = _b21ClasseurTournoi();
+  // ⚠️ Il FAUT un planning : sur un onglet Matchs vide, `viderDonnees` n'écrit rien et la panne
+  // simulée ne se déclencherait jamais — le test passerait sans rien éprouver.
+  genererPoulesEtPlanning(cl);
+  var avant = _b21IdActif(cl);
+  var vrai = cl._matchs.getRange;
+  cl._matchs.getRange = function (r, c, nr, nc) {
+    var plage = vrai(r, c, nr, nc);
+    plage.clearContent = function () { throw new Error('PANNE SIMULÉE pendant la réinitialisation'); };
+    return plage;
+  };
+  var leve = false;
+  try { reinitialiserTournoi(cl); } catch (e) { leve = true; }
+  cl._matchs.getRange = vrai;
+  _ffrAssert(etat, leve,
+    'B2-1 ⑩ : la panne a bien interrompu la réinitialisation (sinon le test ne prouverait rien)');
+  _ffrAssert(etat, _b21IdActif(cl) === avant,
+    'B2-1 ⑩ : ⭐ l\'ANCIENNE édition est TOUJOURS active, avec son identifiant');
+  _ffrAssert(etat, _b21NbEditions(cl) === 1,
+    'B2-1 ⑩ : ⛔ aucune édition parasite n\'a été ouverte');
+  _ffrAssert(etat, String(_edLignes(cl)[0][3]) === '',
+    'B2-1 ⑩ : l\'ancienne édition n\'a PAS été fermée — pas de demi-bascule');
+}
+
+/** ⑪ MIGRATION initiale : le tournoi déjà en place reçoit un edition_id, ⛔ sans rien perdre. */
+function testB21_migrationSansPerte(etat) {
+  var cl = _b21ClasseurTournoi();
+  // Un classeur d'AVANT B2-1 : le tournoi existe, le registre est vide.
+  cl._editions._lignes().splice(1);
+  genererPoulesEtPlanning(cl);
+  var equipes = lireOngletSimple(cl, 'Equipes').length;
+  var poules  = lireOngletSimple(cl, 'Poules').length;
+  var matchs  = lireOngletSimple(cl, 'Matchs').length;
+  var tournoiId = _m1bValeur(cl._config, 'tournoi_id');
+  var publie = _m1bValeur(cl._config, 'tournoi_publie');
+  _ffrAssert(etat, equipes === 6 && poules >= 2 && matchs >= 1 && editionActive(cl).etat === 'vide',
+    'B2-1 ⑪ : point de départ — un tournoi peuplé, ⛔ sans aucune édition');
+
+  var res = ouvrirEditionSiAucune(cl);          // ⭐ c'est ce que fait `migrerEditionsMaintenant`
+  _ffrAssert(etat, res.ok && res.cree === true && _b21IdActif(cl) !== '',
+    'B2-1 ⑪ : la migration attribue un edition_id au tournoi existant');
+  _ffrAssert(etat, lireOngletSimple(cl, 'Equipes').length === equipes &&
+                   lireOngletSimple(cl, 'Poules').length === poules &&
+                   lireOngletSimple(cl, 'Matchs').length === matchs,
+    'B2-1 ⑪ : ⛔ AUCUNE donnée perdue — équipes, poules et matchs sont tous là');
+  _ffrAssert(etat, _m1bValeur(cl._config, 'tournoi_id') === tournoiId &&
+                   _m1bValeur(cl._config, 'tournoi_publie') === publie,
+    'B2-1 ⑪ : ⛔ la migration n\'a rien réinitialisé — tournoi_id et tournoi_publie intacts');
+  var idMigre = _b21IdActif(cl);
+  ouvrirEditionSiAucune(cl);
+  ouvrirEditionSiAucune(cl);
+  _ffrAssert(etat, _b21IdActif(cl) === idMigre && _b21NbEditions(cl) === 1,
+    'B2-1 ⑪ : la migration rejouée ne crée AUCUN doublon');
+}
+
+/** ⑫ ⛔ NI SÉLECTEUR, NI MULTI-TOURNOIS — ce que B2-1 s'interdit explicitement. */
+function testB21_pasDeSelecteurNiMultiTournois(etat) {
+  // a) La lecture ne prend qu'un classeur : ⛔ on ne LUI DÉSIGNE PAS l'édition qu'on veut.
+  _ffrAssert(etat, editionActive.length === 1,
+    'B2-1 ⑫ : `editionActive` ne reçoit aucun identifiant à sélectionner');
+  // b) Passer un identifiant en plus ne change rien : il n'existe aucun chemin de sélection.
+  var cl = _b21ClasseurTournoi();
+  reinitialiserTournoi(cl);                       // deux éditions au registre, une seule active
+  var actif = _b21IdActif(cl);
+  var lignes = _edLignes(cl).filter(function (l) { return String(l[0] || '').trim() !== ''; });
+  var fermee = lignes.filter(function (l) { return String(l[1]) === EDITION_STATUT_FERMEE; })[0];
+  _ffrAssert(etat, !!fermee && fermee[0] !== actif,
+    'B2-1 ⑫ : une édition fermée existe bel et bien dans le registre');
+  _ffrAssert(etat, editionActive(cl, fermee[0]).edition.edition_id === actif,
+    'B2-1 ⑫ : ⛔ demander une édition fermée ne la rend PAS — seule l\'active est lisible');
+  // c) Une deuxième réinitialisation n'accumule pas les actives.
+  reinitialiserTournoi(cl);
+  _ffrAssert(etat, editionActive(cl).etat === 'ok' && _b21NbEditions(cl) === 3,
+    'B2-1 ⑫ : après deux cycles, 3 éditions au registre mais ⭐ TOUJOURS une seule active');
+  // d) `edition_id` ne fuit par AUCUNE vue publique (le défaut par défaut est FERMÉ, on le vérifie).
+  var fuite = [];
+  for (var vue in CONFIG_PUBLIQUE_VUES) {
+    if (!Object.prototype.hasOwnProperty.call(CONFIG_PUBLIQUE_VUES, vue)) continue;
+    var v = CONFIG_PUBLIQUE_VUES[vue];
+    (v.global || []).forEach(function (champ) { if (String(champ).indexOf('edition') !== -1) fuite.push(vue + '.' + champ); });
+  }
+  _ffrAssert(etat, fuite.length === 0,
+    'B2-1 ⑫ : aucune vue publique n\'expose d\'identifiant d\'édition (' + fuite.join(', ') + ')');
 }

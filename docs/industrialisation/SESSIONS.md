@@ -9830,3 +9830,158 @@ plus aucun effet ailleurs que sur la page publique Maxilou.*
 le chantier **Confiance** *(CF-4b)* ; **M1-C1** redevient éligible. ⛔ **Rien ne commence sans
 décision explicite de Romain** *(**§12.4**)*. ⏳ **Et une question lui appartient toujours** : le
 sort du jeu de tournoi fictif.
+
+---
+
+## SESSION 31 — 🆔 **M1-B2 / B2-1 : UNE ÉDITION REÇOIT UNE IDENTITÉ QUI NE BOUGE PLUS — ⛔ DANS LE DÉPÔT SEULEMENT** *(2026-08-27)*
+
+> ⚠️ **À lire d'abord.** Cette session est une **première passe LOCALE**. ⛔ **Aucun push, aucun
+> redéploiement Apps Script, aucune écriture dans le classeur réel, aucune migration.** Le jeu de
+> tournoi fictif *(3 équipes · 1 poule · 3 matchs · `tournoi_publie = non`)* n'a **pas été touché**.
+> ⛔ **B2-1 n'est PAS clos, R-106 n'est PAS clos.**
+
+### 31.1 — L'état Git constaté à l'ouverture
+
+`git fetch origin` puis `git status -sb` : branche **`main`**, suivant **`origin/main`**, **dépôt
+propre**, ⛔ **aucune divergence** *(`git rev-list --left-right --count main...origin/main` → `0 0`)*.
+`HEAD` = `origin/main` = **`58ac4a2`** *(« docs(m1-pub): clore PUB-5 et le chantier M1-PUB tout
+entier »)*. ⭐ **Les anciens repères de B2-0 ont donc bien été reconstatés**, comme le cadrage
+l'exigeait — les travaux M1-PUB avaient fait avancer `main` depuis.
+
+### 31.2 — Ce qui a été trouvé avant d'écrire une ligne
+
+| Question | Ce que le code répond |
+|---|---|
+| **Où naît `tournoi_id` ?** | Deux endroits, et c'est le nœud : `assurerTournoiId` en crée un **à la demande** s'il manque *(appelé par `archiverResultat`)*, et `genererPoulesEtPlanning` en **repose un neuf à chaque génération** |
+| **Où meurt-il ?** | `reinitialiserTournoi`, étape « 3 septies » *(ajoutée par B2-0)* — il est **effacé** |
+| **Qui régénère ?** | `genererPoulesEtPlanning`, `reorganiserPoulesMatin`, `recalculerHoraires`, `genererApresMidi`, `genererDimancheScf` |
+| **Qui touche aux équipes ?** | `ajouterEquipe`, `modifierEquipe`, `supprimerEquipe`, `supprimerEquipesCategorie`, `creerEquipesClub` |
+| **Comment sont créés les onglets ?** | `setupSheet()` *(une fois)* + des **`assurerOnglet*` à la demande** *(`Sponsors`, `Mesures`, `Historique`)*. ⛔ **Il n'existe AUCUN point d'initialisation appelé à chaque requête** — les migrations douces sont branchées **là où elles servent** |
+| **Comment sont testés le reset et le frontend ?** | `backend/Tests.gs` *(harnais Apps Script, faux onglets)* et **4 fichiers `tests/*.test.js`** en Node, exécutés par le workflow Pages **avant** publication |
+
+> ⭐ **Conséquence directe sur l'architecture** : n'ayant aucun point d'init global, la migration ne
+> pouvait pas être « automatique et silencieuse » — elle **devait** être un geste explicite. C'est
+> `migrerEditionsMaintenant()`, sur le modèle de `setupSheet()` et `configurerCles()`.
+
+### 31.3 — Les repères AVANT modification
+
+| Suite | Avant |
+|---|---|
+| `lancerTestsFFR` *(exécutée localement, voir 31.6)* | **881/881 OK, 0 FAIL** |
+| `tests/frontend-reinitialisation.test.js` | **48/48** |
+| `tests/frontend-autorisation-sync.test.js` | **97/97** |
+| `tests/frontend-assistant-verrou.test.js` | **41/41** |
+| `tests/mutations-frontend.test.js` | **45/45 détectées** |
+
+### 31.4 — Ce qui a été écrit
+
+**`backend/Code.gs`** — une section nouvelle, `REGISTRE DES ÉDITIONS`, et **deux branchements** :
+
+- le **cœur pur** : `analyserRegistreEditions`, `planifierOuvertureEdition`,
+  `planifierBasculeEdition`, `identifiantEditionDejaPresent`, `erreurPlusieursEditionsActives` ;
+- les **effets** : `assurerOngletEditions`, `lireLignesEditions`, `ecrireLignesEditions`,
+  `editionActive`, `horodatageEdition`, `ouvrirEditionSiAucune`, `basculerEditionApresReset` ;
+- la **migration** : `migrerEditionsMaintenant()` ;
+- `ENTETES.Editions` ; `setupSheet()` crée l'onglet **et ouvre la première édition** ;
+- `reinitialiserTournoi` : **contrôle du registre en étape 0** *(avant tout effacement)* et
+  **bascule en étape 5** *(après tout le reste)*.
+
+**`backend/Tests.gs`** — bloc `testB21_*`, **12 tests** pour les 12 exigences, plus le registre
+ajouté aux **deux classeurs factices** existants *(`_m1bClasseurFactice`, `_b20ClasseurFactice`)*.
+
+> ⚠️ **Cet ajout aux factices n'était pas cosmétique — il a été IMPOSÉ par un échec réel.** Dès la
+> bascule branchée, `testM1B_branchementDepuisReinitialisation` a levé
+> `classeur.getSpreadsheetTimeZone is not a function` : le faux classeur de M1-B n'avait pas de quoi
+> porter un registre. ⭐ **C'est le harnais qui a dit ce qui manquait**, pas une relecture.
+
+### 31.5 — 🎯 La question tranchée en cours de route : faut-il figer `tournoi_id` ?
+
+La ligne **B2-1** du plan annonçait *« + fin du renouvellement de `tournoi_id` »*. Le cadrage validé
+le 2026-08-27, lui, dit : *« `tournoi_id` peut continuer d'exister pour ses rôles techniques
+actuels »*. ⛔ **Les deux ne disent pas la même chose.**
+
+⭐ **Le code a tranché la question mieux qu'un arbitrage de principe** : `tournoi_id` est la **clé de
+dédoublonnage de l'onglet `Historique`**, avec `id_match`. Le figer ferait **écraser** les lignes
+d'une génération par celles de la suivante dès que deux `id_match` coïncident — ⛔ **une perte
+silencieuse dans le journal de saison**, pour un bénéfice nul puisque l'identité de l'édition est
+désormais ailleurs. **Décision : on ne le fige pas** *(**D-057**)*.
+
+### 31.6 — Comment les tests Apps Script ont été exécutés hors ligne, et ce que ça vaut
+
+`backend/Tests.gs` ne se lance normalement que **dans l'éditeur Apps Script**. Pour disposer d'un
+repère avant / après, un **lanceur local temporaire** a été écrit **hors du dépôt** *(scratchpad de
+session)* : Node + le module `vm`, avec des **doublures** des services Google *(`Logger`,
+`Utilities`, `Session`, `SpreadsheetApp`…)*, chargeant `Code.gs` puis `Tests.gs` et appelant
+`lancerTestsFFR()`.
+
+> ⭐ **Ce qui rend ce lanceur crédible, et il faut le dire précisément** : sur le code **avant**
+> modification, il a rendu **`R92 — 881/881 OK, 0 FAIL`** — **exactement** le repère que
+> [`../deploiement.md`](../deploiement.md) porte comme **constaté chez Google le 2026-08-26**.
+>
+> ⛔ **Et ce qu'il ne vaut PAS** : ce n'est **pas** une exécution chez Google. Les doublures peuvent
+> masquer un comportement propre à Apps Script. ⭐ **Le bilan de 974/974 reste donc un PRÉDIT**
+> *(`CLAUDE.md` §9)* jusqu'à sa lecture dans le journal Apps Script. ⛔ Le lanceur **n'est pas
+> commité** : il n'a pas été éprouvé assez pour devenir un garde-fou du dépôt.
+
+### 31.7 — Les résultats
+
+| Suite | Avant | Après |
+|---|---|---|
+| `lancerTestsFFR` *(local)* | 881/881 | ✅ **974/974 OK, 0 FAIL** *(+93)* |
+| `tests/frontend-reinitialisation.test.js` | 48/48 | ✅ **48/48** *(inchangé)* |
+| `tests/frontend-autorisation-sync.test.js` | 97/97 | ✅ **97/97** *(inchangé)* |
+| `tests/frontend-assistant-verrou.test.js` | 41/41 | ✅ **41/41** *(inchangé)* |
+| `tests/mutations-frontend.test.js` | 45/45 | ✅ **45/45** *(inchangé)* |
+
+⭐ **Et le harnais neuf a été mis à l'épreuve** : **six mutations** réintroduites dans une copie
+temporaire — bascule remontée avant les effacements *(3 FAIL)*, contrôle préalable supprimé
+*(2 FAIL)*, ouverture d'édition glissée dans la génération de planning *(17 FAIL)*, idempotence
+perdue *(8 FAIL)*, anomalie tranchée au hasard *(7 FAIL)*, création silencieuse à la lecture
+*(5 FAIL)*. ⭐ **Les six ont été attrapées.**
+
+> ⚠️ **Une septième leçon est venue de là**, et elle a modifié un test : la mutation « idempotence
+> perdue » faisait d'abord **PLANTER** le harnais au lieu de l'échouer. ⛔ **Un harnais qui plante
+> ne dit pas QUEL comportement a cassé.** La lecture a été rendue **défensive** — l'échec est
+> maintenant nommé.
+
+### 31.8 — Playwright : ⛔ non exécuté, et pourquoi
+
+⛔ **Aucun fichier de `frontend/` n'a été modifié** — ni HTML, ni CSS, ni JavaScript. Le seul point
+de contact avec l'écran est la **réponse** de `reinitialiserTournoi`, qui porte trois champs de plus
+*(`edition_id`, `edition_fermee`, `avertissement_edition`)* : 🔬 vérifié dans `frontend/js/admin.js`,
+la réponse est lue **champ par champ** *(`res.nb_categories`, `res.nb_equipes`, `res.nb_poules`,
+`res.nb_matchs`)* — ⛔ **des champs supplémentaires sont ignorés**, aucun parcours visible ne change.
+
+⭐ **Et surtout** : le code écrit **n'est pas en service**. Un navigateur pointé sur le site publié
+ou sur le serveur montrerait **l'ancienne version** — ⛔ **il ne prouverait rien de ce lot**, et
+prétendre le contraire serait exactement ce que **§8 octies** interdit. ⛔ Le seul parcours qui
+exercerait réellement la bascule est **« Réinitialiser le tournoi » sur le classeur réel** :
+destructif, et **hors périmètre de cette passe**.
+
+### 31.9 — Documents actifs *(`CLAUDE.md` §12.4, point 2)*
+
+| Document | Décision |
+|---|---|
+| `README.md` | ✏️ **Modifié** — 12 → **13** onglets, 8 → **9** de travail, `setupSheet()` en crée **8** |
+| `docs/architecture.md` | ✏️ **Modifié** — la liste des onglets, le tableau du reset, l'état de **R-106**, et le **§7** *(compte remesuré par la méthode qui y est écrite)* |
+| `docs/structure-google-sheet.md` | ✏️ **Modifié** — section **`Editions`** complète, et l'avertissement `tournoi_id` recadré |
+| `docs/deploiement.md` | ✏️ **Modifié** — lignes de `Code.gs` *(8847)* et `Tests.gs` *(5554)*, bilan **prédit** 974, **trois témoins** nouveaux, et la **procédure de migration** |
+| `backend/README.md` | ✏️ **Modifié** — `setupSheet()`, `migrerEditionsMaintenant()`, et l'absence de donnée personnelle dans `Editions` |
+| `CHANGELOG.md` | ⛔ **Vérifié, PAS modifié — et c'est délibéré.** Rien n'est en service : un organisateur ne remarquerait **rien**, et rien de ce sur quoi on peut compter n'a changé **dans le produit**. ⭐ **L'entrée s'écrira au déploiement**, pas avant |
+| `docs/conservation-donnees.md`, `textes-information-donnees.md`, `dependances-externes.md`, `passation.md` | ⛔ **Vérifiés : aucun ne devient faux.** `Editions` ne porte **aucune donnée personnelle**, n'ajoute **aucune** dépendance, **aucun** compte ni service |
+
+### 31.10 — Ce qui reste, et à qui
+
+| | |
+|---|---|
+| ⛔ **Non poussé** | La passe est locale. Le contrôle de ChatGPT et la décision de Romain viennent **avant** tout push |
+| ⛔ **Non déployé** | Recoller `Code.gs` **et** `Tests.gs`, puis vérifier les repères de [`../deploiement.md`](../deploiement.md) |
+| ⛔ **Non migré** | Lancer **une fois** `migrerEditionsMaintenant()`. ⭐ Elle ne touche que l'onglet `Editions` — ⛔ **elle ne réinitialise rien** |
+| ⛔ **Non prouvé en réel** | Le critère de clôture *(3 régénérations ⇒ 1 seul `edition_id`)* n'a été atteint que sur des onglets factices |
+| ⏳ **À trancher par Romain** | ① le sort du **jeu de tournoi fictif** *(toujours ouvert depuis PUB-4)* ; ② en **B2-6**, faut-il faire de `edition_id` la clé de `Historique` à la place de `tournoi_id`, et selon quelle règle de dédoublonnage ? *(**D-057**)* |
+
+### 31.11 — Prochaine session recommandée
+
+⏭️ **Aucune n'est engagée.** ⛔ **B2-1 reste OUVERTE** : sa suite est le **déploiement + la
+migration + le constat réel**, et ⛔ **aucun de ces trois gestes ne se décide sans Romain**
+*(`CLAUDE.md` §12.4)*.

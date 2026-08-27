@@ -19,7 +19,7 @@ Le projet repose sur **3 briques** qui se parlent en JSON.
 ```
 ┌─────────────────────┐        ┌──────────────────────────┐        ┌──────────────────────────┐
 │   Frontend (web)    │  HTTP  │  Backend Apps Script     │        │   Google Sheet           │
-│  8 pages            │ <────> │  (Web App, répond JSON)  │ <────> │  12 onglets              │
+│  8 pages            │ <────> │  (Web App, répond JSON)  │ <────> │  13 onglets              │
 │  26 fichiers JS     │  JSON  │  doGet() / doPost()      │        │  8 de travail            │
 │                     │        │  65 actions              │        │  + 4 de référence FFR    │
 └─────────────────────┘        └──────────────────────────┘        └──────────────────────────┘
@@ -36,10 +36,14 @@ Stocke toutes les données. Voir [`structure-google-sheet.md`](structure-google-
 détail des colonnes. C'est aussi l'endroit où l'organisateur peut vérifier ou corriger les données
 à la main.
 
-**12 onglets**, et ils ne jouent pas le même rôle : **8 onglets de travail** — les données du
+**13 onglets**, et ils ne jouent pas le même rôle : **9 onglets de travail** — les données du
 tournoi — et **4 onglets de référence** qui portent le cadre fédéral.
 
-### Les 8 onglets de travail
+> ⚠️ **Ces comptes sont ceux du DÉPÔT, pas du classeur en service** *(relevé le 2026-08-27)*.
+> Le 13ᵉ onglet, `Editions`, est **écrit dans le code mais pas encore déployé** : le classeur réel
+> en compte toujours 12 tant que le serveur n'a pas été recollé et la migration lancée.
+
+### Les 9 onglets de travail
 
 | Onglet | Ce qu'il contient | Créé par |
 |---|---|---|
@@ -51,9 +55,21 @@ tournoi — et **4 onglets de référence** qui portent le cadre fédéral.
 | `ClubsInvites` | Les clubs invités : nom, **email de contact**, statut, jeton, réponse. ⚠️ **Données personnelles** — cet onglet ne sort **jamais** dans l'instantané public | `setupSheet()` |
 | `Sponsors` | Les fiches partenaires (entreprises) | `setupSheet()`, et `assurerOngletSponsors()` **à la demande** sur un classeur plus ancien |
 | `Mesures` | Les relevés de visibilité des partenaires | `assurerOngletMesures()` **à la demande**, au premier relevé |
+| 🆕 `Editions` | Le **registre des éditions** : `edition_id`, `statut` *(`active` / `fermee`)*, date de création, date de fermeture. ⭐ **Une seule ligne `active` à la fois** — aucune donnée personnelle | `setupSheet()`, et `assurerOngletEditions()` **à la demande** sur un classeur plus ancien |
 
-> ℹ️ **`setupSheet()` en crée 7** et l'annonce ainsi dans sa fenêtre de confirmation. Le 8ᵉ,
+> ℹ️ **`setupSheet()` en crée 8** et l'annonce ainsi dans sa fenêtre de confirmation. Le 9ᵉ,
 > `Mesures`, apparaît au premier relevé de visibilité.
+
+> 🆔 **`edition_id` et `tournoi_id` sont DEUX choses différentes, et c'est tout l'objet du lot
+> B2-1.** `tournoi_id` *(dans `Config`)* est reposé **à chaque génération de poules et planning** :
+> il identifie une **génération**. `edition_id` *(dans `Editions`)* est tiré **une seule fois, à
+> l'ouverture de l'édition**, et ne bouge plus — ni si l'on régénère, ni si l'on modifie les
+> équipes, ni si l'on publie, masque ou corrige un score. ⭐ Une **réinitialisation réussie** ferme
+> l'édition en cours et en ouvre une neuve, ⛔ **en une seule écriture** : il n'existe aucun état
+> où l'ancienne serait fermée sans que la nouvelle existe.
+>
+> ⛔ **Ce n'est pas un pas vers le multi-tournois** : aucun sélecteur d'édition n'existe, et aucune
+> fonction ne permet de désigner une autre édition que celle qui est active.
 
 ### Les 4 onglets de référence FFR
 
@@ -71,7 +87,7 @@ propre cache), et **se remplissent à la main** — `setupSheet()` ne les crée 
 > 🛡️ **Migration douce, et c'est une qualité du code** : si l'un de ces onglets est **absent, vide
 > ou illisible**, la lecture renvoie une liste vide **sans jamais lever d'erreur**, et toute la
 > chaîne de conformité se met en repli. **L'application continue de fonctionner exactement comme
-> avant.** C'est pourquoi un classeur peut très bien tourner avec **les 8 onglets de travail
+> avant.** C'est pourquoi un classeur peut très bien tourner avec **les 9 onglets de travail
 > seulement** — il perd alors la conformité FFR, rien d'autre.
 
 ---
@@ -345,7 +361,7 @@ en tête de fichier le pilotent : `ACTIONS_SCORES`, `ACTIONS_TOKEN` et `ACTIONS_
 | Le **dossier d'invitation** *(modalités, parking — photo comprise —, encadrement, assurance)* et la config **Phase 1** *(« Sur place », « Réponse à l'invitation »)* | Les **réglages d'infrastructure** : `email_expediteur`, `perfs_mot_cle_club`, les deux clés |
 | **Tout l'ENGAGEMENT** de chaque club : `statut`, catégories engagées, nombre d'équipes, `nb_joueurs_total`, ⚡ **`detail_effectifs`**, ⚡ **`nb_educateurs_total`**, ⚡ **`alerte_ecart`**, dates d'envoi, sélection enregistrée, et le **jeton d'accès** *(l'ancien lien cesse de fonctionner)* | ⛔ **Et une exception qui n'en est pas une** : certains **réglages de terrains** *(découpage des grands terrains, dimensions, couloirs)* **survivent encore** — ⛔ **c'est un défaut connu, pas un choix** |
 | Les **26 champs `org_*` d'édition** de la demande FFR — dont ⚡ le **médecin**, le **poste de secours**, l'**ambulance**, l'arbitrage, les installations, l'hébergement, les repas et goûters — plus **toutes** les récompenses par catégorie | |
-| ⚡ **`tournoi_id`** de l'édition qui s'achève, et le tournoi **repasse en masqué** | |
+| ⚡ **`tournoi_id`** de l'édition qui s'achève, et le tournoi **repasse en masqué** | 🆕 ⭐ **Le REGISTRE des éditions** *(onglet `Editions`)* : l'édition qui s'achève y reste, **passée en `fermee`** avec sa date, et une **édition neuve** est ouverte. ⛔ Rien n'y est jamais effacé |
 
 > ⚠️ **Ne pas lire « tous les contacts FFR sont effacés » : ce serait faux dans l'autre sens.**
 > Le **médecin**, le **poste de secours** et l'**ambulance** le sont — ils changent d'un tournoi à
@@ -360,7 +376,7 @@ en tête de fichier le pilotent : `ACTIONS_SCORES`, `ACTIONS_TOKEN` et `ACTIONS_
 > | ✅ **R-099** *(les 3 colonnes d'effectifs)* et ✅ **R-100** *(le statut `Accepté`)* | **TESTÉS** — par le harnais du serveur **et** par une réinitialisation **réelle** |
 > | ⚠️ **R-033** | **CORRIGÉ**, ⛔ **pas `TESTÉ`** : les contacts & sécurité sont bien effacés **dans le code**, ⛔ **sans vérification automatique qui le prouve** |
 > | ⛔ **R-101** *(les terrains)* | **OUVERT** — la survie du découpage est **délibérément figée par un test témoin**, en attendant **B2-3** |
-> | ⛔ **R-106** *(`tournoi_id`)* | **OUVERT** — l'identifiant est bien **effacé** au reset, ⛔ **mais il reste reposé à CHAQUE génération de planning** : il identifie une *génération*, pas une *édition*. C'est **B2-1** |
+> | ⛔ **R-106** *(`tournoi_id`)* | **OUVERT** — ⚡ **une réponse existe désormais DANS LE DÉPÔT** *(lot B2-1, 2026-08-27)* : `edition_id` et l'onglet `Editions`. ⛔ **Ni déployée chez Google, ni migrée** — et `tournoi_id` reste, à dessein, reposé à chaque génération : c'est son rôle. ⚡ *(Cette case disait « l'identifiant est bien effacé au reset, mais il reste reposé à CHAQUE génération de planning : il identifie une génération, pas une édition. C'est B2-1 » : vrai jusqu'au 2026-08-27.)* |
 > | ⛔ **R-030** | **OUVERT** — les durées de conservation n'ont **aucun outillage** : voir [`conservation-donnees.md`](conservation-donnees.md) |
 
 ### 2.3 — Ce qui se passe après chaque écriture
@@ -556,7 +572,7 @@ Détails et activation : [`relais-cdn.md`](relais-cdn.md).
 | **Fichiers JavaScript** | **26** | Les fichiers `frontend/js/*.js` — **le sous-dossier `js/vendor/` n'est pas compté** : ce sont des bibliothèques extérieures, inventoriées séparément |
 | **Lignes par fichier** | *voir tableaux* | `wc -l` sur chaque fichier |
 | **Scripts chargés par page** | *voir §3* | Les balises `<script src="js/…">` de chaque page HTML |
-| **Onglets du classeur** | **12** *(8 de travail + 4 de référence)* | ⚠️ **Compter les `getSheetByName('…')` ne suffit pas** — c'est ainsi qu'un compte de 8 a d'abord été obtenu, à tort. Les 4 onglets `RefFFR_*` sont lus par `lireOngletSimple(classeur, '…')`, sans passer par `getSheetByName`. **La méthode juste réunit quatre sources** : `getSheetByName('…')`, `lireOngletSimple(classeur, '…')`, `creerOngletAvecEntetes(classeur, '…')` et `insertSheet('…')`, puis déduplique. Recoupé avec `deploiement.md`, qui documentait déjà les 4 onglets `RefFFR_*` |
+| **Onglets du classeur** | **13** *(9 de travail + 4 de référence)* — ⚡ **remesuré le 2026-08-27** par la méthode ci-contre, après l'ajout de `Editions` *(B2-1)*. ⚠️ **C'est le compte du DÉPÔT** : le classeur en service en porte encore **12** tant que le serveur n'est pas recollé. ⚡ *(Cette case annonçait **12** *(8 + 4)* : vrai jusqu'au 2026-08-27.)* | ⚠️ **Compter les `getSheetByName('…')` ne suffit pas** — c'est ainsi qu'un compte de 8 a d'abord été obtenu, à tort. Les 4 onglets `RefFFR_*` sont lus par `lireOngletSimple(classeur, '…')`, sans passer par `getSheetByName`. **La méthode juste réunit quatre sources** : `getSheetByName('…')`, `lireOngletSimple(classeur, '…')`, `creerOngletAvecEntetes(classeur, '…')` et `insertSheet('…')`, puis déduplique. Recoupé avec `deploiement.md`, qui documentait déjà les 4 onglets `RefFFR_*` |
 | **Bibliothèques extérieures** | **4** | Les fichiers `frontend/js/vendor/*.js` |
 
 > ℹ️ **Ces comptes portent sur ce que le code nomme.** Un onglet ajouté à la main dans un classeur

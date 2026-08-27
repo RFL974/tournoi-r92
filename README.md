@@ -30,9 +30,11 @@ Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 
 ## 🧱 Stack technique
 
-- **Base de données** : Google Sheets — **12 onglets** :
-  - **8 de travail** : `Config`, `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`,
-    `Sponsors`, `Mesures` *(`setupSheet()` en crée 7 ; `Mesures` apparaît au premier relevé)* ;
+- **Base de données** : Google Sheets — **13 onglets** :
+  - **9 de travail** : `Config`, `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`,
+    `Sponsors`, `Mesures`, `Editions` *(`setupSheet()` en crée 8 ; `Mesures` apparaît au premier
+    relevé)* — ⚠️ `Editions` *(le registre des éditions, lot B2-1)* est **dans le code, pas encore
+    déployé** : le classeur en service en compte toujours 12 *(relevé le 2026-08-27)* ;
   - **4 de référence FFR**, remplis à la main : `RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`,
     `RefFFR_Temps` *(absents ⇒ l'app fonctionne, elle perd seulement la conformité FFR)*
 - **Backend** : Google Apps Script, déployé en **Web App** qui répond en **JSON** — **65 actions**,
@@ -145,7 +147,7 @@ tournoi-r92/
         └── vendor/          → 4 bibliothèques extérieures (voir docs/dependances-externes.md)
 ```
 
-> 📐 **Ces comptes sont vérifiables** — 8 pages, 26 fichiers JS, 12 onglets, 65 actions,
+> 📐 **Ces comptes sont vérifiables** — 8 pages, 26 fichiers JS, 13 onglets, 65 actions,
 > 4 bibliothèques. La **méthode de comptage de chacun** est écrite au §7 de
 > [`docs/architecture.md`](docs/architecture.md).
 
@@ -204,9 +206,9 @@ Typographies : **Bebas Neue** (titres), **Barlow Condensed** (données / labels)
 > ⚠️ **Ce relevé porte sur « le service répond », pas sur chacune des lignes ci-dessous** : celles-ci
 > décrivent des fonctionnalités, et chacune porte son propre état dans le tableau du haut.
 
-- ✅ **Base de données** Google Sheets : **8 onglets de travail** créés automatiquement
-  (`setupSheet()` en crée 7, `Mesures` apparaît au premier relevé) **+ 4 onglets de référence FFR**
-  remplis à la main, soit **12**.
+- ✅ **Base de données** Google Sheets : **9 onglets de travail** créés automatiquement
+  (`setupSheet()` en crée 8, `Mesures` apparaît au premier relevé) **+ 4 onglets de référence FFR**
+  remplis à la main, soit **13**.
 - ✅ **Backend** déployé en Web App : API de lecture (`doGet`) et d'écriture (`doPost`), **vérifié en
   ligne** (scores, après-midi, historique, nombre de poules, clés).
 - ✅ **Page admin** complète : horaires (fin auto ou manuelle, battement, pause déjeuner) ; catégories

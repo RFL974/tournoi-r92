@@ -3860,3 +3860,62 @@ Trois obligations en découlent, et **aucune n'est facultative** :
 - ❌ **Pas** décider du sort du **jeu de tournoi fictif** : ⏳ **il reste en place** ;
 - ✅ **Seulement ceci** : *cet aperçu que je m'apprête à écrire, est-ce l'artefact RÉEL — ou une
   copie qui devra rester fidèle toute seule ?*
+
+---
+
+### D-057 — `edition_id` est l'identité durable d'une édition ; `tournoi_id` garde son rôle de génération, et on ne le lui retire pas
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-08-27 |
+| **Session** | **31** — chantier **M1-B2 / B2-1**, première passe locale |
+| **Statut** | ✅ **CADRAGE VALIDÉ PAR ROMAIN le 2026-08-27**, avant implémentation |
+| **Décidée par** | Romain |
+| **Couvre** | `PLAN.md` **§16.5** *(lot B2-1)* · `RISQUES.md` **R-106** · corollaire de **D-050** |
+
+**Le problème posé**
+
+> `tournoi_id` est reposé **à chaque « Générer poules et planning »**. Régénérer étant un geste
+> normal et répété, un seul tournoi réel produit plusieurs identifiants — et l'onglet `Historique`
+> répartit alors ses matchs entre plusieurs « éditions » fantômes. ⭐ **Il identifie une
+> GÉNÉRATION, pas une ÉDITION** *(R-106)*.
+
+**Ce qui est décidé**
+
+| | |
+|---|---|
+| 🆕 **`edition_id`** | UUID tiré **une seule fois, à l'ouverture** de l'édition. ⛔ **Ne change JAMAIS** : ni à une régénération des poules ou du planning, ni à une modification d'équipes, ni à la publication ou au masquage, ni à la saisie ou à la correction d'un score |
+| 🆕 **Registre `Editions`** | `edition_id`, `statut` *(`active` / `fermee`)*, date de création, date de fermeture. ⭐ **UNE SEULE ligne `active`** |
+| ⭐ **Une seule adresse** | `edition_id` vit **dans le registre, et nulle part ailleurs** — ⛔ **surtout pas dans `Config`** *(`CLAUDE.md` §8 quater)*. Effet de bord voulu : il ne peut pas fuir par une vue publique, puisqu'il n'est pas un paramètre de `Config` |
+| ⭐ **Cycle de vie** | Reset **RÉUSSI** ⇒ l'ancienne édition passe à `fermee` **et** une édition neuve est ouverte, ⛔ **en une seule écriture**. Reset **ÉCHOUÉ** ⇒ ⛔ **rien ne bouge** : l'ancienne reste `active` |
+| ⭐ **Anomalie contrôlée** | Plusieurs `active` ⇒ le logiciel **refuse** d'ouvrir, de basculer **et de réinitialiser** — ce dernier refus **avant tout effacement**. ⛔ **Aucune édition n'est choisie au hasard** |
+| ⛔ **Aucun sélecteur** | `edition_id` est une **étiquette de rattachement**, ⛔ **pas** un sélecteur. Maxilou reste **mono-tournoi** |
+| ⛔ **Aucun `club_id`** | B2-1 n'en crée pas. La colonne du club organisateur, si elle vient, s'ajoutera **à droite**, en migration douce |
+
+**⚠️ LE POINT D'ÉCART À CONNAÎTRE — et il faut le dire, pas le lisser**
+
+> La ligne **B2-1** du tableau §16.5 de `PLAN.md` annonce, depuis le 2026-08-24 :
+> *« `edition_id` propre + registre `Editions` **+ fin du renouvellement de `tournoi_id`** »*.
+>
+> ⛔ **Le cadrage validé le 2026-08-27 dit AUTRE CHOSE**, en toutes lettres : *« `tournoi_id` peut
+> continuer d'exister pour ses rôles techniques actuels, mais ne doit plus porter la sémantique
+> historique de l'édition »*. ⭐ **C'est le cadrage validé qui fait foi**, et l'implémentation le
+> suit : **le renouvellement de `tournoi_id` n'a PAS été supprimé.**
+>
+> 🎯 **Et c'est le choix prudent, pour une raison technique précise** : `tournoi_id` est la **clé de
+> dédoublonnage de l'onglet `Historique`**, avec `id_match` *(`archiverResultat`)*. Le figer
+> reviendrait à faire écraser les lignes d'une génération par celles de la suivante dès que deux
+> `id_match` coïncident. ⛔ **Ce serait une perte de données silencieuse dans le journal de saison,
+> pour un bénéfice nul** : l'identité de l'édition est désormais portée par `edition_id`.
+>
+> ⏭️ **Ce qui reste à trancher, et ce n'est PAS à une session de le faire** : faut-il, en **B2-6**,
+> remplacer `tournoi_id` par `edition_id` comme clé de `Historique` *(c'est ce que §16.2 prévoit :
+> « `tournoi_id` → `edition_id` »)*, et selon quelle règle de dédoublonnage ? ⛔ **Question ouverte.**
+
+**Ce que cette décision ne dit PAS**
+
+- ❌ **Pas** que R-106 est clos : il ne le sera qu'après **déploiement, migration réelle et
+  constat en conditions réelles** *(`CLAUDE.md` §13.6)* ;
+- ❌ **Pas** que quoi que ce soit porte déjà un `edition_id` : ⛔ **rien** n'est rattaché en B2-1 —
+  ni participation, ni match, ni terrain. Le rattachement appartient à **B2-2** et **B2-6** ;
+- ❌ **Pas** que le classeur en service a changé : ⛔ **aucune écriture n'y a été faite.**

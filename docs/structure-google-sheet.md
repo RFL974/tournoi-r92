@@ -1,15 +1,20 @@
 # Structure du Google Sheet
 
-Le Google Sheet sert de **base de données** du tournoi. Il contient **12 onglets** :
+Le Google Sheet sert de **base de données** du tournoi. Il contient **13 onglets** :
 
-- **8 de travail** — `Config`, `Equipes`, `Poules`, `Matchs`, `Historique` *(le journal de
-  saison)*, `ClubsInvites` *(les clubs invités)*, `Sponsors` *(les partenaires)* et `Mesures`
-  *(les relevés de visibilité)* ;
+- **9 de travail** — `Config`, `Equipes`, `Poules`, `Matchs`, `Historique` *(le journal de
+  saison)*, `ClubsInvites` *(les clubs invités)*, `Sponsors` *(les partenaires)*, `Mesures`
+  *(les relevés de visibilité)* et 🆕 `Editions` *(le **registre des éditions**, lot B2-1)* ;
 - **4 de référence FFR**, remplis à la main — `RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`,
   `RefFFR_Temps`.
 
 > 📖 Le rôle de chacun, et lequel est créé automatiquement, sont dans
 > [`architecture.md`](architecture.md) §1.
+
+> ⚠️ **`Editions` n'existe PAS ENCORE dans le classeur en service** *(relevé le 2026-08-27)*. Il est
+> écrit dans `backend/Code.gs`, ⛔ **mais le serveur n'a pas été recollé et la migration n'a pas été
+> lancée**. Le classeur réel porte donc toujours **12 onglets**. ⭐ **Voir
+> [`deploiement.md`](deploiement.md)**, qui est la source des repères de redéploiement.
 
 > URL du Sheet :
 > https://docs.google.com/spreadsheets/d/17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U/edit
@@ -97,8 +102,19 @@ Paramètres ajoutés **automatiquement** (pas à saisir à la main) :
 >
 > ⛔ **Et R-106 RESTE OUVERT malgré cela**, ce qui n'est pas contradictoire : ⭐ **effacer un mauvais
 > identifiant ne le rend pas bon.** Il est toujours **reposé à chaque génération de planning** — un
-> seul tournoi réel en produit donc plusieurs. ⛔ **`edition_id` N'EXISTE PAS ENCORE** : c'est
-> exactement ce que **B2-1** doit créer, et **B2-1 n'est pas démarrée**.
+> seul tournoi réel en produit donc plusieurs.
+>
+> ⚡ **CE QUI A CHANGÉ LE 2026-08-27** *(lot **B2-1**)*. Cette note disait : *« `edition_id`
+> N'EXISTE PAS ENCORE : c'est exactement ce que B2-1 doit créer, et B2-1 n'est pas démarrée »* —
+> **vrai jusqu'à cette date**. ⭐ **`edition_id` existe désormais DANS LE DÉPÔT**, avec son registre
+> *(voir la section « Onglet `Editions` » plus bas)*. ⛔ **Ni déployé chez Google, ni migré** : le
+> classeur en service ne le porte pas encore.
+>
+> ⛔ **Et le renouvellement de `tournoi_id` à chaque génération, lui, n'a PAS été supprimé — c'est
+> délibéré.** `tournoi_id` garde son rôle : la clé de dédoublonnage de `Historique`, avec
+> `id_match`. ⭐ Ce que B2-1 corrige, c'est qu'il n'est **plus le porteur de l'identité de
+> l'édition** : cette charge revient à `edition_id`. **R-106 ne sera clos qu'après déploiement,
+> migration et constat en réel.**
 
 > ⚠️ **Le plan des terrains survit à la réinitialisation** *(risque **R-101**)* : `terrains_physiques`,
 > `couloir_terrain_m`, `dimensions_categories`, `tm_longueur_m`, `tm_largeur_m` et
@@ -453,6 +469,52 @@ ici par le backend (`archiverResultat` dans [`../backend/Code.gs`](../backend/Co
 > validation de score (fonction `assurerOngletHistorique`) — inutile de les saisir. Les
 > `setupSheet()` neufs le créent déjà. Le paramètre `tournoi_id` apparaît aussi dans la
 > **Zone A** de l'onglet `Config`.
+
+---
+
+## 🆕 Onglet `Editions` (registre des éditions) — ⛔ PAS ENCORE DÉPLOYÉ
+
+> ⚠️ **Cet onglet est écrit dans `backend/Code.gs` (lot **M1-B2 / B2-1**, 2026-08-27), ⛔ mais il
+> N'EXISTE PAS ENCORE dans le classeur en service** : le serveur n'a pas été recollé et la
+> migration n'a pas été lancée. **Cette section décrit ce qui arrivera, pas ce qui est.**
+
+**Une ligne = une édition réelle du tournoi.** C'est la **source unique** de l'identité durable
+d'une édition : ⛔ `edition_id` ne vit **nulle part ailleurs**, et surtout pas dans `Config`.
+
+| Colonne | Exemple | Signification |
+|---|---|---|
+| `edition_id` | `9b1c…-4f2a` | Identifiant (UUID) tiré **une seule fois, à l'ouverture** de l'édition. ⛔ **Jamais renouvelé, jamais réutilisé** — pas même celui d'une édition fermée |
+| `statut` | `active` | `active` ou `fermee`. ⭐ **Une seule ligne `active` à la fois** |
+| `date_creation` | `2026-08-27 10:14:03` | Horodatage de l'ouverture (fuseau du classeur) |
+| `date_fermeture` | `2027-06-02 18:40:11` | Horodatage de la fermeture. **Vide** tant que l'édition est active |
+
+> 🆔 **`edition_id` n'est PAS `tournoi_id`, et c'est tout l'objet du lot** *(risque **R-106**)*.
+> `tournoi_id` *(Zone A de `Config`)* est **reposé à chaque génération de poules et planning** :
+> il identifie une **GÉNÉRATION**. Régénérer trois fois pendant la préparation produit trois
+> `tournoi_id` — c'est normal, et cela reste ainsi.
+> ⭐ `edition_id`, lui, **ne bouge pas** : ni si l'on régénère les poules ou le planning, ni si
+> l'on ajoute, renomme ou supprime une équipe, ni si l'on publie ou masque le tournoi, ni si l'on
+> saisit ou corrige un score.
+
+**Cycle de vie**
+
+| Moment | Ce qui se passe |
+|---|---|
+| **Classeur neuf** | `setupSheet()` crée l'onglet **et ouvre la première édition** |
+| **Classeur déjà en service** | ▶️ Lancer **une fois** `migrerEditionsMaintenant()` depuis l'éditeur Apps Script. ⭐ Elle ne touche **rien d'autre** que cet onglet : aucune réinitialisation, aucune donnée effacée. ⭐ **Idempotente** : relancée, elle ne crée aucun doublon |
+| **Réinitialisation RÉUSSIE** | L'édition en cours passe à `fermee` *(avec sa date)* et une **édition neuve** est ouverte, ⛔ **en une seule écriture**. Rien n'est jamais effacé de cet onglet |
+| **Réinitialisation ÉCHOUÉE** | ⛔ **Rien ne bouge** : l'ancienne édition reste `active`, avec son identifiant. Il n'existe **aucune demi-bascule** |
+
+> ⚠️ **Plusieurs lignes `active` = ANOMALIE, et le logiciel ne la règle pas tout seul.** Il refuse
+> d'ouvrir, de basculer, **et de réinitialiser** — ce dernier refus arrive **avant tout
+> effacement**, donc sans perte. ⭐ **Aucune édition n'est choisie au hasard.** La correction est
+> manuelle : laisser `active` sur la seule édition en cours, passer les autres à `fermee`.
+
+> ⛔ **Ce n'est pas un pas vers le multi-tournois.** Aucun sélecteur d'édition n'existe, et aucune
+> fonction ne permet de désigner une édition autre que l'active. C'est une **étiquette de
+> rattachement** pour l'avenir *(participations, archives — lots B2-2 et B2-6)*, rien de plus.
+> ⛔ **B2-1 ne crée aucun `club_id`** : la colonne du club organisateur, si elle vient, s'ajoutera
+> **à droite**, en migration douce, comme partout ailleurs dans ce classeur.
 
 ---
 

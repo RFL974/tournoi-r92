@@ -70,6 +70,9 @@ Code **Google Apps Script** du projet, déployé en **Web App**.
 
 ## Données personnelles
 
+- 🆕 **`Editions` ne contient AUCUNE donnée personnelle** : un identifiant technique, un statut et
+  deux horodatages. ⛔ Il n'est exposé par **aucune** vue publique — `edition_id` ne figure dans
+  aucune liste blanche de `CONFIG_PUBLIQUE_VUES`, et un test le vérifie.
 - **`ClubsInvites` contient des emails de contact** → cet onglet n'entre **jamais** dans les données
   publiques (`getAll`, relais CDN). Sa lecture (`listerClubsInvites`) passe par `doPost` et exige la
   **clé admin**, comme les écritures.
@@ -92,7 +95,8 @@ Cache serveur + **relais CDN** optionnel (`pousserSnapshot` / `configurerRelais`
 
 | Fonction | Ce qu'elle fait |
 |---|---|
-| `setupSheet()` | Crée **7 onglets de travail** : `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`, `Sponsors` et `Config`. ⚠️ **Il n'en crée pas d'autres** : `Mesures` apparaît au premier relevé de visibilité, et les **4 onglets de référence FFR** (`RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`, `RefFFR_Temps`) se remplissent **à la main**. Un classeur complet en compte donc **12**. ⚠️ **Ne jamais relancer `setupSheet()` sur un classeur en service** : il réécrirait `Config` |
+| `setupSheet()` | Crée **8 onglets de travail** : `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`, `Sponsors`, 🆕 `Editions` et `Config` — et **ouvre la première édition**. ⚠️ **Il n'en crée pas d'autres** : `Mesures` apparaît au premier relevé de visibilité, et les **4 onglets de référence FFR** (`RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`, `RefFFR_Temps`) se remplissent **à la main**. Un classeur complet en compte donc **13**. ⚠️ **Ne jamais relancer `setupSheet()` sur un classeur en service** : il réécrirait `Config`. ⚡ *(Cette case annonçait **7** onglets et un total de **12** : vrai jusqu'au 2026-08-27, avant le lot B2-1.)* |
+| 🆕 `migrerEditionsMaintenant()` | **M1-B2 / B2-1** — ouvre le **registre des éditions** sur un classeur **déjà en service** : crée l'onglet `Editions` s'il manque et y écrit **une** édition `active`. ⭐ **Elle ne touche RIEN d'autre** — aucune réinitialisation, aucune donnée effacée — et elle est **idempotente** : relancée, elle ne crée aucun doublon. ⚠️ Elle **refuse** si plusieurs éditions sont déjà `active` *(anomalie à corriger à la main)*. 🔴 **PAS ENCORE LANCÉE** — voir [`../docs/deploiement.md`](../docs/deploiement.md) |
 | `configurerCles()` | Définit les deux clés. À lancer **depuis le menu « Tournoi R92 » du classeur**, pas depuis le bouton ▶ de l'éditeur — les fenêtres de saisie ne s'affichent pas depuis l'éditeur |
 | `autoriserDrive()` | Donne au script l'autorisation Google Drive, nécessaire pour l'affiche **et** la photo du parking |
 | `configurerRelais(...)` | Renseigne le relais CDN (optionnel, dormant par défaut) |
