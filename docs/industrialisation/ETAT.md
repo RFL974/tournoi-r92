@@ -103,8 +103,33 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-27 *(session 32, suite)* — ⏳ **M1-B2 / B2-2 — SECONDE PASSE
-LOCALE : quatre points verrouillés.** ⛔ **Rien n'est poussé, rien n'est déployé, et le classeur
+**Dernière mise à jour** : 2026-08-27 *(session 32, phase réelle 1)* — ✅ **B2-2 EST INTÉGRÉ ET
+PUBLIÉ SUR GITHUB.** ⛔ **Il n'est PAS en service, et le classeur n'est PAS migré.**
+
+> ✅ **CE QUI EST CONSTATÉ** *(§8 septies — après le geste, pas avant)* :
+>
+> | | |
+> |---|---|
+> | **Intégration** | **Avance rapide pure** `a778ff7` → **`5ee53a2`**, ⛔ **aucun commit de fusion** *(`git log --merges` : 0)*. Les **6** commits B2-2 sont dans `main` |
+> | **Poussée** | ✅ **Constatée** : `git ls-remote origin refs/heads/main` = **`5ee53a2`**, `main` = `origin/main`, worktree **propre** |
+> | ⭐ **Publication du frontend** | ⛔ **AUCUNE, et c'est VOULU.** Le workflow Pages ne se déclenche que sur `frontend/**` ou sur lui-même — ⛔ **ni l'un ni l'autre n'est touché**. Constaté : la dernière exécution date du **2026-08-26** *(`8778982`)*, ⛔ **aucune sur `5ee53a2`**. **Le site publié est strictement intact** |
+> | ⭐ **Sauvegarde fraîche** | **« Tournoi R92 — sauvegarde avant DÉPLOIEMENT B2-2 — 2026-08-27 »**, créée à **18:04:54 UTC**. ⭐ **Vérifiée : identique à l'original CARACTÈRE POUR CARACTÈRE** *(95 244 caractères de part et d'autre)* — ⛔ pas seulement « le fichier existe ». La sauvegarde du 2026-08-27 10:08 est **conservée** |
+> | ⛔ **Apps Script** | **RIEN N'EST DÉPLOYÉ.** Le serveur exécute toujours la version **159** *(source `2c5f48f`)* — donc `974/974`, ⛔ pas `1210/1210` |
+> | ⛔ **Le classeur** | **13 onglets**, ⛔ **ni `Clubs`, ni `Participations`**, ⛔ **aucune marque `migration_clubs_b22`**. `migrerClubsMaintenant()` ⛔ **NON EXÉCUTÉE** |
+>
+> ⚠️ **UN ÉCART AU RELEVÉ ATTENDU, ET IL EST INSTRUCTIF.** Le relevé demandait de confirmer que
+> *« les 12 colonnes d'engagement sont vides après le reset »*. ⛔ **Elles ne le sont pas toutes** :
+> les **trois** clubs portent un **`club_token`** non vide. ⭐ **Ce n'est pas une anomalie** — c'est
+> le comportement legacy **documenté** : le reset vide le jeton, puis `assurerTokensClubs` en
+> réattribue un au chargement suivant de l'administration *(B2-0 / T6)*.
+>
+> 🎯 **Et c'est exactement le cas que le prédicat de B2-2 est fait pour traiter** : un jeton seul ne
+> prouve **aucune** participation *(**D-059**)*. La migration produira donc **3 clubs et ZÉRO
+> participation** — ce que le test **M9** prédit déjà. ⭐ **Le classeur réel confirme le cas
+> d'espèce sur lequel le prédicat a été construit.**
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32, suite)* — ⏳ **M1-B2 / B2-2 —
+SECONDE PASSE LOCALE : quatre points verrouillés.** ⛔ **Rien n'est poussé, rien n'est déployé, et le classeur
 réel n'est PAS migré.**
 
 > ⚡ **Ce que cette seconde passe a changé** *(arbitrages de Romain, complément de **D-059**)* :
