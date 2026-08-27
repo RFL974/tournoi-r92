@@ -60,10 +60,18 @@
 > ⭐ **Le cycle `non → publié → non` a été joué et refermé** : le masquage **cache** le tournoi,
 > ⛔ **il ne supprime aucune donnée** — et c'est vérifié.
 >
-> ✅ ⚡ **TOUJOURS INTACT APRÈS LA SESSION 31** *(2026-08-27)* : ⛔ **cette session n'a fait AUCUNE
-> écriture dans le classeur réel** — ni reset, ni migration, ni publication. Le jeu est donc dans
-> l'état décrit ci-dessus, **par construction** et non par vérification *(⛔ aucune session ne peut
-> constater le classeur depuis le dépôt — `CLAUDE.md` §13.6)*.
+> ✅ ⚡ **TOUJOURS INTACT — ET CETTE FOIS C'EST CONSTATÉ, PAS DÉDUIT** *(2026-08-27, suite 2)*.
+> La passe Google de B2-1 a écrit dans le classeur *(un onglet `Editions`, trois régénérations)*,
+> et le jeu a été **relu après chaque geste** : **3 équipes · 1 poule · 3 matchs**, matchs *« à
+> venir »*, scores **vides**, `tournoi_publie` = **`non`**. ⛔ **Aucun reset n'a été exécuté.**
+>
+> ⚡ *(Ce bloc disait « cette session n'a fait AUCUNE écriture dans le classeur réel […] par
+> construction et non par vérification » — **vrai jusqu'au 2026-08-27 (suite 2)**, où des écritures
+> ont bien eu lieu et où le jeu a été **vérifié** au lieu d'être **déduit**.)*
+>
+> 🎯 ⚠️ **ET SA DÉCISION DEVIENT URGENTE, parce qu'elle en commande une autre.** La dernière preuve
+> de **B2-1** — la bascule d'édition lors d'un **reset réel** — est **destructive** : elle
+> consommerait ce jeu. ⛔ **Tant que son sort n'est pas tranché, B2-1 ne peut pas être close.**
 >
 > ⏳ **CE QUI RESTE À DÉCIDER, ET CE N'EST PAS À UNE SESSION DE LE FAIRE.** Le repère exigeait qu'on
 > *« décide explicitement du sort de ce jeu, et qu'on le dise ici »*. ⭐ **Voici ce qui est dit** :
@@ -81,17 +89,26 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-27 *(session 31)* — 🆔 **M1-B2 / B2-1 EST DÉMARRÉE : UNE ÉDITION
-A UNE IDENTITÉ QUI NE BOUGE PLUS — ⛔ DANS LE DÉPÔT SEULEMENT.**
+**Dernière mise à jour** : 2026-08-27 *(session 31, suite 2)* — ✅ **M1-B2 / B2-1 EST EN SERVICE ET
+PROUVÉE EN RÉEL — ⛔ SAUF UNE CHOSE, ET ELLE EST NOMMÉE.**
 
-> ⛔ **B2-1 N'EST PAS TERMINÉE, ET R-106 N'EST PAS CLOS.** ⚡ **Le code est INTÉGRÉ ET PUBLIÉ SUR
-> GITHUB** *(2026-08-27)* — ⛔ **mais il n'est pas EN SERVICE** : aucun redéploiement Apps Script,
-> aucune écriture dans le classeur réel, aucune migration.
-> ⭐ **Le jeu de tournoi fictif n'a pas été touché** — il est intact.
+> ⭐ **Ce qui est acquis sur le classeur RÉEL, le 2026-08-27** : serveur redéployé *(version 159)*,
+> migration exécutée, **idempotence prouvée**, et ⭐ **le critère central atteint** — trois
+> régénérations de planning ont produit **trois `tournoi_id` différents** et ⛔ **un seul
+> `edition_id`, inchangé**.
 >
-> ⚡ *(Ce bloc annonçait « Cette passe est **locale** : ⛔ aucun push… » — **vrai jusqu'à
-> l'intégration du 2026-08-27**. ⭐ **Être sur GitHub n'est pas être en service** : le serveur
-> Google exécute toujours l'ancien `Code.gs`.)*
+> ⛔ **ET POURTANT B2-1 N'EST PAS CLOSE, ET R-106 NON PLUS.** ⭐ **Une seule preuve manque**, et
+> c'est une moitié du contrat validé *(**D-057**)* : **la bascule d'édition lors d'un RESET RÉEL**
+> — l'ancienne fermée, une neuve ouverte, et rien qui bouge si le reset échoue. ⛔ **Elle n'a
+> jamais été jouée en réel**, seulement par les tests. Voir le bloc « la seule preuve restante ».
+>
+> ⭐ **Le jeu de tournoi fictif est intact** : 3 équipes · 1 poule · 3 matchs · `tournoi_publie` =
+> `non`. ⛔ **Aucun reset n'a été exécuté.**
+>
+> ⚡ *(Ce bloc a annoncé « Cette passe est **locale** : ⛔ aucun push… » *(vrai jusqu'à l'intégration
+> du 2026-08-27)*, puis « Le code est INTÉGRÉ ET PUBLIÉ SUR GITHUB — ⛔ mais il n'est pas EN
+> SERVICE » *(vrai jusqu'au déploiement du même jour)*. ⭐ **Trois états successifs en un jour,
+> chacun vrai à son heure.**)*
 
 | | |
 |---|---|
@@ -100,13 +117,50 @@ A UNE IDENTITÉ QUI NE BOUGE PLUS — ⛔ DANS LE DÉPÔT SEULEMENT.**
 | ⭐ **Le reset** | Registre **contrôlé en tout premier** *(un refus ne coûte aucune donnée)*, **basculé en tout dernier**, en **une seule écriture**. ⛔ **Aucune demi-bascule n'est représentable** — un échec injecté laisse l'ancienne édition active et n'ouvre rien |
 | ⭐ **La migration** | `migrerEditionsMaintenant()` — explicite, **idempotente**, et ⛔ **elle ne touche RIEN d'autre** que l'onglet `Editions` |
 | 🔬 **Les preuves locales** | **974/974** au harnais Apps Script *(881 avant)* · **48/48**, **97/97**, **41/41**, **45/45** aux quatre suites Node, **inchangées** · ⭐ **six mutations** rejouées, **six attrapées** |
-| ⛔ **Ce qui N'EST PAS prouvé** | ⛔ **Rien en conditions réelles** *(`CLAUDE.md` §13.6)*. ⚠️ **Le bilan `974/974` reste une PRÉDICTION LOCALE**, et l'intégration Git n'y change **rien** : il a été obtenu par un lanceur local, ⛔ **pas lu dans le journal Apps Script**. Chez Google, le bilan est toujours **881/881** |
+| ✅ ⚡ **Les preuves RÉELLES chez Google** | ⭐ **`974/974 OK, 0 FAIL` LU DEUX FOIS dans le journal Apps Script** — une fois **avant** toute écriture, une fois **après** la migration et les trois régénérations. ⛔ **Ce n'est plus une prédiction.** ⚡ *(Cette case disait « Le bilan `974/974` reste une PRÉDICTION LOCALE […] chez Google, le bilan est toujours **881/881** » : vrai jusqu'au 2026-08-27.)* |
+| ⛔ **Ce qui N'EST PAS prouvé** | ⭐ **Une seule chose, et elle est précise** : la **bascule d'édition au reset**. ⛔ Aucun reset réel n'a été joué — ni le cas nominal *(ancienne fermée + neuve ouverte)*, ni le cas d'échec *(rien ne bouge)*. Ils sont établis **par le harnais seul** *(`CLAUDE.md` §13.6)* |
 | ⛔ **Ce que le lot ne fait PAS** | ⛔ Aucun rattachement *(rien ne porte encore d'`edition_id`)* · ⛔ aucun sélecteur d'édition · ⛔ aucun multi-tournois · ⛔ aucun `club_id` · ⛔ **pas une ligne de `frontend/`** |
 | ⚡ **Un écart de plan signalé** | La ligne B2-1 du plan annonçait *« + fin du renouvellement de `tournoi_id` »* ; ⛔ **le cadrage validé dit l'inverse**, et c'est lui qui fait foi — **D-057** explique pourquoi figer `tournoi_id` **détruirait** des lignes de `Historique` |
-| ✅ **L'état Git CONSTATÉ** | ⚡ **INTÉGRÉ ET POUSSÉ le 2026-08-27.** `origin/main` = **`ee5db89`**, atteint en **avance rapide pure** *(`--ff-only`, ⛔ **aucun commit de fusion**)*, filiation linéaire **`58ac4a2` → `3667f70` → `ee5db89`**. La branche **`claude/b2-1-edition-id`** est publiée et pointe sur le même **`ee5db89`**. ⭐ **C'est ici, et ici seulement, que ces repères vivent** *(`CLAUDE.md` §8 quater)*. ⚡ *(Cette case disait « Commit `3667f70` … ⛔ **NON POUSSÉ** — `origin/main` est resté sur `58ac4a2` » : **vrai jusqu'au 2026-08-27**.)* |
-| ⛔ **Et pourtant : RIEN N'EST EN SERVICE** | ⭐ **La distinction à ne jamais perdre.** Le code est sur GitHub ; le serveur chez Google exécute **toujours l'ancien `Code.gs`**. ⛔ **Aucun redéploiement**, ⛔ **aucun onglet `Editions` dans le classeur**, ⛔ **`migrerEditionsMaintenant()` jamais lancée**, ⛔ **aucune preuve réelle** |
-| ⏭️ **Ce qui reste** | ⚡ ~~Push~~ ✅ *(fait)* → **① redéploiement contrôlé** *(recoller `Code.gs` **et** `Tests.gs`)* → **② migration explicite** *(`migrerEditionsMaintenant()`, une fois)* → **③ preuves réelles chez Google** : régénérer 3× et lire **un seul** `edition_id` dans l'onglet `Editions` |
-| ⏳ **Toujours à décider par Romain** | Le **sort du jeu de tournoi fictif** — voir le repère en tête de ce document |
+| ✅ **L'état Git CONSTATÉ** | ⚡ **INTÉGRÉ ET POUSSÉ le 2026-08-27.** `origin/main` a été porté en **avance rapide pure** *(`--ff-only`, ⛔ **aucun commit de fusion**)* : **`58ac4a2` → `3667f70` → `ee5db89`**, puis le constat d'intégration **`2c5f48f`**. La branche **`claude/b2-1-edition-id`** est publiée sur **`ee5db89`**. ⭐ **C'est ici, et ici seulement, que ces repères vivent** *(`CLAUDE.md` §8 quater)*. ⚡ *(Cette case disait « Commit `3667f70` … ⛔ **NON POUSSÉ** » : vrai jusqu'à l'intégration.)* |
+| ✅ ⚡ **L'état GOOGLE CONSTATÉ** | ⭐ **Source déployée : commit `2c5f48f`.** `Code.gs` **8847** lignes · `Test.gs` **5554** · déploiement **158 → 159**, ⛔ **même identifiant, même URL, mêmes droits, aucun second déploiement**. ⚡ *(Cette case disait « ⛔ **RIEN N'EST EN SERVICE** — le serveur exécute toujours l'ancien `Code.gs` » : vrai jusqu'au 2026-08-27.)* |
+| ✅ ⚡ **La MIGRATION, constatée** | Onglet **`Editions`** créé — le classeur passe de **12 à 13** onglets. **Une** ligne : `edition_id` **`f21ec93b-27d8-429b-b8d2-ba80a801752b`**, `statut` **`active`**, créée le **`2026-08-27 10:29:22`**, ⛔ `date_fermeture` **vide**. ⭐ **Relancée, elle n'a RIEN créé** — même identifiant, même date **à la seconde près** |
+| ⭐ ⚡ **LE CRITÈRE CENTRAL, ATTEINT EN RÉEL** | **Trois** régénérations ⇒ **quatre** `tournoi_id` distincts *(`2026-08-26 13:49:11` → `10:41:12` → `10:44:28` → `10:48:03`)* et ⛔ **UN SEUL `edition_id`, jamais modifié**. Une seule ligne `active`, **aucune** ligne `fermee`, jeu fictif **intact**, tournoi **toujours masqué** |
+| ⏭️ **Ce qui reste** | ⚡ ~~Push~~ ✅ · ~~redéploiement~~ ✅ · ~~migration~~ ✅ · ~~3 régénérations~~ ✅ → ⭐ **il ne reste QUE la bascule au reset réel** — voir le bloc ci-dessous |
+| ⏳ **Toujours à décider par Romain** | ① le **sort du jeu de tournoi fictif** *(voir le repère en tête)* — ⭐ **et il commande désormais la dernière preuve** · ② la **clôture** de B2-1 et de R-106 |
+
+### 🎯 LA SEULE PREUVE RESTANTE — et pourquoi elle n'a pas été prise aujourd'hui
+
+⭐ **Elle tient en une phrase** : *réinitialiser réellement le tournoi, et constater que l'édition
+`f21ec93b-…` passe à `fermee` avec sa date, qu'une édition NEUVE s'ouvre avec un AUTRE identifiant,
+et qu'il n'y a jamais eu deux éditions actives.*
+
+⛔ **Elle n'a pas été prise parce qu'elle est DESTRUCTIVE** : la réinitialisation efface les
+équipes, les catégories, le planning et les infos du tournoi. ⭐ **Elle consommerait le jeu de
+tournoi fictif** — dont le sort est précisément la décision ① ci-dessus. ⚠️ **Les deux questions
+n'en font donc plus qu'une.**
+
+> ⚠️ **CE QUI EST LITTÉRALEMENT SATISFAIT, ET POURQUOI ON NE CLÔT PAS QUAND MÊME.**
+>
+> | Critère **écrit** | Où | État |
+> |---|---|---|
+> | *« Régénérer un planning 3× ⇒ un seul `edition_id` »* | `PLAN.md` §16.5 | ✅ **atteint en réel** |
+> | *« redéploiement + migration + constat réel »* | `RISQUES.md`, fiche R-106 | ✅ **les trois faits** |
+>
+> ⭐ **Les deux critères écrits sont donc remplis.** ⛔ **Et B2-1 reste ouverte**, pour trois raisons
+> qui ne s'annulent pas :
+>
+> 1. ⚠️ **Le critère écrit est plus ÉTROIT que le contrat validé.** La ligne du tableau §16.5 date du
+>    **2026-08-24** ; le contrat fonctionnel détaillé a été validé le **2026-08-27** *(**D-057**)* et
+>    exige explicitement le comportement au reset — **réussi ET échoué**. ⛔ Clore sur la seule ligne
+>    du tableau déclarerait terminé un lot dont **la moitié du contrat n'a jamais été exercée** ;
+> 2. **`CLAUDE.md` §8 quinquies** : la phrase du contrôle ⑯ doit pouvoir s'écrire **en entier**.
+>    Pour la part reset, *« recontrôlée en réel »* manque — ⛔ **elle est donc impossible à écrire** ;
+> 3. ⭐ **La clôture appartient à Romain, pas à une session** *(**§12.5**)*. C'est le patron du
+>    dépôt : **R-097** et **R-098** ont été fermés par **décision de Romain** *(**D-055**)*.
+>
+> 🎯 **Ce qu'il faut retenir, et c'est une leçon de méthode** : *un critère écrit trop tôt peut être
+> satisfait avant que le travail ne soit fini.* ⛔ **Le critère n'est pas le contrat.** Cet écart est
+> inscrit ici plutôt que lissé — c'est exactement ce que le dépôt demande de rendre visible.
 
 *Rappel de la mise à jour précédente — 2026-08-26 (suite 6)* — 🏁🏁 **M1-PUB EST TERMINÉ. LE CHANTIER ENTIER
 EST CLOS** — ses **cinq** micro-lots et les **quatre** conditions de son critère de clôture.

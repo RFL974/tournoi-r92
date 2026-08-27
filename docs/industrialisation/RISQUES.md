@@ -9,10 +9,16 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-27 *(**M1-B2 / B2-1**, première passe — **intégrée dans `main`**, ⛔ **non déployée**)* —
-⚡ **AUCUN PROBLÈME NE SE FERME, ET AUCUN NOUVEAU N'APPARAÎT.** **R-106** avance : une réponse
-existe désormais **dans le dépôt** *(`edition_id` + registre `Editions`)*, ⛔ **ni déployée, ni
-migrée, ni constatée en réel** — il reste donc **OUVERT**. Voir sa fiche.
+**Dernière mise à jour** : 2026-08-27 *(suite 2 — **M1-B2 / B2-1 déployée et prouvée en réel**)* —
+⚡ **AUCUN PROBLÈME NE SE FERME, ET AUCUN NOUVEAU N'APPARAÎT.** **R-106** a franchi ses trois gestes
+— **redéploiement**, **migration**, **constat réel** *(3 régénérations ⇒ un seul `edition_id`)* —
+⭐ **et il reste OUVERT malgré cela**, par décision de méthode : la **bascule d'édition au reset**,
+exigée par le contrat validé **D-057**, n'a jamais été jouée en réel. ⛔ **Sa clôture appartient à
+Romain.** Voir sa fiche.
+
+*Rappel de la mise à jour précédente — 2026-08-27 (première passe)* — ⚡ **AUCUN PROBLÈME NE SE
+FERME.** **R-106** avance : une réponse existe désormais **dans le dépôt**, ⛔ **ni déployée, ni
+migrée, ni constatée en réel**.
 
 *Rappel de la mise à jour précédente — 2026-08-26 (suite 5 — clôture de **M1-PUB / PUB-4**)* —
 ⚡ **DEUX PROBLÈMES SE FERMENT : R-097 ET R-098. ⛔ AUCUN PROBLÈME NOUVEAU.**
@@ -111,7 +117,7 @@ ouverte.** C'est la **seule adresse** où l'on vérifie qu'il ne reste rien.
 > | **R-101** *(P2)* | ⭐ **Volontairement.** Le découpage événementiel des terrains **a bien survécu** au reset réel — ⭐ **c'est le résultat ATTENDU**, et B2-0 l'a **figé par un test témoin** pour que **B2-3** parte d'un comportement connu. ⛔ **Figer un défaut n'est pas le corriger** |
 > | **R-102** *(P2)* | B2-0 corrige le **COMPORTEMENT** du reset ; ⛔ **il ne touche pas à la STRUCTURE**. `ClubsInvites` mêle toujours identité durable et participation — c'est **B2-2** *(D-050)* |
 > | **R-105** *(P2)* | ⚡ **OUTILLÉ, pas refermé.** B2-0 a ajouté un contrôle qui **signale** toute colonne de `ClubsInvites` qu'aucune des deux familles ne classe *(⛔ et qui ne la vide jamais)*. ⭐ **Le piège est devenu visible ; il n'a pas disparu** — la garantie structurelle appartient à **B2-2** |
-> | **R-106** *(P1)* | ⚡ **Sa part « reset » seulement.** `tournoi_id` est bien **effacé** par la réinitialisation *(constaté en réel)*, ⛔ **mais il reste renouvelé à chaque génération de planning** : il n'identifie toujours pas une **édition**. Le reste appartient à **B2-1** ⚡ *(B2-1 a livré `edition_id` **dans le dépôt** le 2026-08-27 — ⛔ non déployé. Voir la fiche R-106.)* |
+> | **R-106** *(P1)* | ⚡ **Sa part « reset » seulement.** `tournoi_id` est bien **effacé** par la réinitialisation *(constaté en réel)*, ⛔ **mais il reste renouvelé à chaque génération de planning** : il n'identifie toujours pas une **édition**. Le reste appartient à **B2-1** ⚡ *(B2-1 a livré `edition_id` **dans le dépôt** le 2026-08-27, puis l'a **mis en service et prouvé en réel** le même jour — ⛔ **R-106 reste OUVERT**. Voir sa fiche.)* |
 > | **R-098** *(P1)* | ⛔ **INCHANGÉ.** Ses conditions 4 et 5 exigent un tournoi exploitable ; le classeur n'en a pas *(voir le repère « données à recréer » de [`ETAT.md`](ETAT.md))* |
 
 ⛔ **Aucun problème nouveau n'a été trouvé par ce lot** — ni par les 40 mutations, ni par le reset
@@ -2220,15 +2226,48 @@ relance.
 > | ✅ **Écrit dans le dépôt** | `edition_id` *(UUID)* et l'onglet **`Editions`** : ouverture idempotente, unicité de l'édition active, bascule en **une seule écriture** au reset réussi, refus **avant tout effacement** si le registre est incohérent, migration explicite `migrerEditionsMaintenant()` |
 > | ✅ **Prouvé localement** | **12 exigences** couvertes par le harnais `Tests.gs` — dont la **stabilité** de l'identifiant après régénération des poules, du planning, modification d'équipes, publication / masquage, saisie et correction de score, et l'**échec injecté** pendant un reset *(⛔ aucune demi-bascule)*. Bilan local **974/974**, et **six mutations** rejouées ont toutes été attrapées |
 > | ✅ **Intégré dans `main`** | ⚡ **2026-08-27** — avance rapide pure, ⛔ aucun commit de fusion. Repères exacts : [`ETAT.md`](ETAT.md) |
-> | ⛔ **NON déployé** | ⭐ **Et c'est la distinction à tenir** : être sur GitHub **n'est pas** être en service. Le serveur chez Google n'a **pas** été recollé — ⛔ **rien de tout cela ne s'exécute** |
-> | ⛔ **NON migré** | L'onglet `Editions` **n'existe pas** dans le classeur réel : `migrerEditionsMaintenant()` **n'a jamais été lancée** |
-> | ⛔ **NON constaté en réel** | ⚠️ **`CLAUDE.md` §13.6** — aucune affirmation sur le comportement en production |
+> | ✅ ⚡ **DÉPLOYÉ** | **2026-08-27** — version **158 → 159**, ⛔ même URL, mêmes droits, aucun second déploiement. Bilan **`974/974 OK, 0 FAIL` LU chez Google**, deux fois. ⚡ *(Cette case disait « ⛔ **NON déployé** — rien de tout cela ne s'exécute » : vrai jusqu'à cette date.)* |
+> | ✅ ⚡ **MIGRÉ** | L'onglet `Editions` **existe**, avec **une** édition `active`. ⭐ **Idempotence prouvée en réel** : relancée, la migration ne crée rien et ne réécrit rien *(même date, à la seconde près)*. ⚡ *(Cette case disait « ⛔ **NON migré** — l'onglet n'existe pas » : vrai jusqu'à cette date.)* |
+> | ⭐ ✅ ⚡ **CONSTATÉ EN RÉEL** | **3 régénérations de planning ⇒ 3 `tournoi_id` distincts et UN SEUL `edition_id`, inchangé.** Une seule ligne `active`, **aucune** `fermee`, jeu fictif intact. ⚡ *(Cette case disait « ⛔ **NON constaté en réel** — aucune affirmation sur le comportement en production » : vrai jusqu'à cette date.)* |
+> | ⛔ ⭐ **CE QUI RESTE : LA BASCULE AU RESET** | ⛔ **Jamais jouée en réel** — ni le cas nominal *(ancienne `fermee`, neuve `active`, autre identifiant)*, ni le cas d'échec *(rien ne bouge)*. Établie **par le harnais seul** *(`CLAUDE.md` §13.6)*. ⭐ **C'est la seule preuve manquante**, et elle est **destructive** |
 > | ⛔ **Renouvellement de `tournoi_id` : INCHANGÉ, à dessein** | ⭐ **Ce n'est pas un oubli** : c'est **D-057**. `tournoi_id` reste la clé de dédoublonnage de `Historique` ; le figer écraserait des lignes du journal de saison. Ce que B2-1 lui retire, c'est la **sémantique d'édition**, pas son rôle |
 >
 > ⛔ **R-106 RESTE DONC OUVERT.** ⭐ **Il ne se fermera qu'après trois gestes qu'aucune session ne
 > peut faire seule** : le **redéploiement**, la **migration** du classeur, et un **constat réel** —
 > régénérer trois fois un planning et lire **un seul** `edition_id` dans l'onglet `Editions`.
 > ⚠️ ⛔ **Ne jamais présenter B2-1 comme terminé sur la seule foi du dépôt.**
+
+> ✅ ⚡ **LES TROIS GESTES ONT ÉTÉ FAITS LE 2026-08-27 — ET R-106 RESTE OUVERT. Ce n'est pas une
+> contradiction : c'est une décision, et la voici en entier.**
+>
+> **Ce qui est acquis, sur le classeur réel :**
+>
+> | | |
+> |---|---|
+> | ① **Redéploiement** | Version **158 → 159**, même URL. Bilan **`974/974 OK, 0 FAIL` LU** dans le journal Apps Script — **deux fois**, avant et après les écritures |
+> | ② **Migration** | Onglet `Editions` créé, **une** édition `active`. Relancée : *« rien à faire »*, ⛔ **aucun doublon**, ⭐ même date **à la seconde près** |
+> | ③ **Constat réel** | **3 régénérations ⇒ 3 `tournoi_id` distincts, 1 seul `edition_id`.** Une seule ligne `active`, **aucune** `fermee`, jeu fictif intact, tournoi masqué |
+>
+> ⭐ **Le défaut nommé par cette fiche est donc réparé et mesuré** : *« un tournoi réel produit N
+> identifiants »* — ⛔ **il n'en produit plus qu'un**.
+>
+> ⛔ **POURQUOI NE PAS FERMER, ALORS.** Parce que le contrat validé de B2-1 *(**D-057**)* ne se
+> limite pas à la stabilité : il exige aussi qu'un **reset réussi** ferme l'édition et en ouvre une
+> neuve, et qu'un **reset échoué** ne bouge rien. ⛔ **Ni l'un ni l'autre n'a été joué en réel** —
+> ils reposent sur le harnais seul *(`CLAUDE.md` §13.6)*.
+>
+> ⚠️ **Le critère de fermeture écrit ci-dessus est donc plus ÉTROIT que le contrat**, parce qu'il a
+> été rédigé **avant** lui. ⭐ **Il reste écrit tel quel** — il était juste à sa date — mais il ne
+> suffit plus. 🎯 **La leçon** : *un critère écrit trop tôt peut être satisfait avant que le travail
+> ne soit fini.* ⛔ **Le critère n'est pas le contrat.**
+>
+> ⏳ **CE QU'IL RESTE, EN UNE PHRASE** : *réinitialiser réellement le tournoi et constater que
+> `f21ec93b-…` passe à `fermee` avec sa date, qu'une édition neuve s'ouvre avec un AUTRE
+> identifiant, et qu'il n'y a jamais deux éditions actives.*
+>
+> ⚠️ **Ce geste est DESTRUCTIF** : il consommerait le jeu de tournoi fictif. ⛔ **La clôture de
+> R-106 dépend donc d'une décision de Romain** — comme **D-055** l'a été pour R-097 et R-098
+> *(`CLAUDE.md` §12.5)*.
 
 ### R-107 — L'archivage est une opération destructive en plusieurs temps
 

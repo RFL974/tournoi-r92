@@ -10035,3 +10035,84 @@ non plus *(mauvais chemins)*.
 `Code.gs` **et** `Tests.gs`, vérifier les repères de [`../deploiement.md`](../deploiement.md))* →
 **② migration explicite** *(`migrerEditionsMaintenant()`, une seule fois)* → **③ preuves réelles
 chez Google** *(régénérer 3× et lire **un seul** `edition_id`)*.
+
+### 31.13 — ⚡ ADDENDUM du 2026-08-27 *(suite 2)* : B2-1 est EN SERVICE, et prouvée sur le classeur réel
+
+> ⭐ **Addendum, toujours pas réécriture** *(`CLAUDE.md` §8 septies)*. Le §31.12 disait *« aucun
+> redéploiement Apps Script »*, *« aucun onglet `Editions` chez Google »*, *« `974/974` reste une
+> prédiction locale »* : **tout cela était vrai quand c'était écrit**. Le nouvel état s'ajoute ici.
+
+**Le déroulé, en mode interactif strict.** ⭐ **Aucun geste Google n'a été fait par la session** :
+elle ne peut atteindre ni le classeur ni l'éditeur. **Chaque action a été exécutée par Romain**, qui
+en a rapporté le résultat observé ; la session a préparé les gestes, les témoins et les critères
+d'arrêt. ⚠️ **Cette distinction n'est pas une formalité** — elle définit ce que vaut chaque preuve
+ci-dessous : ce sont des **observations rapportées**, pas des constats de la session.
+
+| Phase | Ce qui a été fait | Ce qui a été relevé |
+|---|---|---|
+| **A** | Reconstat Git + empreintes SHA-256 des deux fichiers | Source figée : commit **`2c5f48f`** · `Code.gs` **8847** l. · `Tests.gs` **5554** l. · les 3 témoins à **3 / 2 / 0** |
+| **B** | Photographie **avant** collage *(éditeur + classeur)* | `Code.gs` **8519** · `Test.gs` **5141** · témoins à **0 / 0 / 1** · ⛔ pas d'onglet `Editions` · **12** onglets · **3 / 1 / 3** · masqué · **`T0` = `2026-08-26 13:49:11`** |
+| **C** | Collage des **deux** fichiers, séparément | Après : **8847** / **5554**, témoins à **3 / 2 / 0** — ⭐ **deux comptes montent, un tombe** |
+| **D** | `lancerTestsFFR` **avant** toute écriture | ⭐ **`R92 — 974/974 OK, 0 FAIL`** *(10:09:44, 2,194 s, mode `Head`)* |
+| **E** | Mise à jour du **même** déploiement | **158 → 159** · ⛔ même identifiant `AKfycbz_jR…fKu2JRQFBA` · mêmes droits · **1** seul déploiement actif |
+| **F** | `migrerEditionsMaintenant()` **deux fois** | ① *« ✅ Édition ouverte »* → **`E0` = `f21ec93b-27d8-429b-b8d2-ba80a801752b`**, `active`, créée à **`10:29:22`**, fermeture **vide** · ② *« ℹ️ Rien à faire »* → ⛔ **aucun doublon**, ⭐ **même date à la seconde près** |
+| **G** | **Trois** régénérations, une par une, avec contrôle complet entre chaque | `T1` **`10:41:12`** · `T2` **`10:44:28`** · `T3` **`10:48:03`** — ⭐ **quatre valeurs distinctes**, et `edition_id` **jamais modifié** |
+| **H** | `lancerTestsFFR` **après** les écritures | ⭐ **`R92 — 974/974 OK, 0 FAIL`** *(11:00:06, 2,525 s)* · registre **intact** après coup |
+
+### 🎯 Les trois choses que cette passe a apprises, et qui valent plus que les chiffres
+
+**① Le critère central de B2-1 est atteint — sur de vraies données.**
+
+| | `tournoi_id` | `edition_id` |
+|---|---|---|
+| Avant | `2026-08-26 13:49:11` | *(n'existait pas)* |
+| Migration | ⭐ **inchangé** | **`E0`** créé |
+| Génération 1 · 2 · 3 | `10:41:12` · `10:44:28` · `10:48:03` | `E0` · `E0` · `E0` |
+
+⭐ **Quatre valeurs d'un côté, une seule de l'autre.** C'est **R-106 mesuré, et sa réponse mesurée
+dans le même mouvement**. Avant B2-1, ces trois générations auraient réparti les matchs d'un même
+tournoi entre **trois éditions fantômes** dans l'onglet `Historique`.
+
+**② Le second lancement des tests n'était pas un doublon — et c'est une leçon de méthode.**
+
+Le premier *(phase D)* a tourné sur un classeur **sans** onglet `Editions` ; le second *(phase H)*
+après que le registre existe et porte une vraie ligne. ⭐ **Seul le second pouvait répondre à la
+question « un test ouvre-t-il le vrai classeur par erreur ? »** — et il y répond deux fois : bilan
+vert **et** registre intact après coup. ⛔ Un seul des deux n'aurait rien prouvé.
+
+**③ ⭐ Romain a refusé une preuve fausse, et il avait raison.**
+
+La capture de la troisième régénération, prise à **10:48:25**, montrait encore le bouton
+**« Génération… »** — l'état **transitoire**. Une ligne verte y était visible ; ⛔ **elle n'a pas été
+retenue comme preuve du message final.** La preuve retenue est la **lecture directe du classeur
+après la fin** : `T3` posé, une poule, trois matchs écrits.
+
+> 🎯 **C'est exactement `CLAUDE.md` §8 octies**, appliqué spontanément et en conditions réelles :
+> *« aucune observation ne vaut preuve tant que l'état transitoire n'a pas disparu et que l'état
+> final attendu n'est pas apparu »*. ⭐ **Et la preuve de remplacement est plus forte que celle
+> qu'elle écarte** : le classeur porte le **résultat**, l'écran n'en portait que l'**annonce**.
+
+### 31.14 — ⛔ Ce qui n'a PAS été fait, et pourquoi B2-1 n'est pas close
+
+| | |
+|---|---|
+| ⛔ **Aucun reset** | Ni `reinitialiserTournoi`, ni `viderDonnees` lancée **directement**, ni le bouton « Réinitialiser le tournoi », ni aucune action de la zone de danger |
+| ⚠️ **Un point d'ambiguïté levé avec Romain, pas en silence** | La consigne interdisait `viderDonnees` **et** autorisait trois générations — ⛔ **or générer l'appelle en interne** sur `Poules` et `Matchs`. ⭐ **La question a été posée AVANT d'agir** et Romain a explicitement autorisé ce seul usage interne |
+| ⛔ **Aucune quatrième génération, aucune migration supplémentaire** | Le périmètre a été tenu à la lettre |
+| ⛔ **Playwright non utilisé** | ⭐ **L'invariant de ce lot vit dans le classeur, pas à l'écran** : `edition_id` n'apparaît dans **aucune** interface. Un test de navigateur n'aurait rien ajouté — et §8 octies interdit de substituer une preuve d'écran à une observation de la donnée |
+| ⛔ **`CHANGELOG.md`** | ✏️ **Modifié cette fois** — le lot est **en service** et change ce sur quoi on peut compter *(un onglet nouveau, un reset qui bascule l'édition)*. ⚡ *(Au commit précédent il ne l'avait pas été, et c'était juste : rien n'était alors en service.)* |
+
+⭐ **La seule preuve manquante, en une phrase** : *réinitialiser réellement le tournoi et constater
+que `f21ec93b-…` passe à `fermee` avec sa date, qu'une édition neuve s'ouvre avec un AUTRE
+identifiant, et qu'il n'y a jamais deux éditions actives.*
+
+⚠️ **Elle est DESTRUCTIVE** — elle consommerait le jeu de tournoi fictif. ⛔ **B2-1 et R-106 restent
+donc OUVERTS**, et leur clôture appartient à Romain *(`CLAUDE.md` §12.5)*. Le raisonnement complet
+— *pourquoi un critère écrit satisfait ne suffit pas* — vit dans [`ETAT.md`](ETAT.md) et
+[`PLAN.md`](PLAN.md) §16.5 quater ⑥.
+
+### 31.15 — Prochaine session recommandée
+
+⏭️ **Aucune n'est engagée.** ⭐ **Une décision de Romain vient d'abord** : le sort du jeu de tournoi
+fictif — car c'est lui qui commande la dernière preuve de B2-1. ⛔ **Rien ne démarre sans validation
+explicite** *(`CLAUDE.md` §12.4)*.

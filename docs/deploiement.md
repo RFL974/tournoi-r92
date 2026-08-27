@@ -189,13 +189,21 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 | **Le bilan** affiché en fin de journal | **`R92 — 974/974 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
 | **La dernière ligne** du fichier collé chez Google | **5554** | Le fichier collé n'est pas celui du dépôt |
 
-> ⚠️ **CES DEUX VALEURS SONT PRÉDITES, ⛔ PAS ENCORE MESURÉES CHEZ GOOGLE** *(2026-08-27, lot
-> **M1-B2 / B2-1**)*. **974** et **5554** sont les valeurs **du dépôt**, obtenues en exécutant
-> `lancerTestsFFR` **hors ligne**, dans un lanceur local temporaire *(Node + doublures des services
-> Google)*. ⛔ **Le serveur n'a pas été recollé** : chez Google, le bilan est **toujours 881/881**
-> avec `Tests.gs` à **5141 lignes**, et ce sont **ces valeurs-là** qui sont vraies tant que le
-> redéploiement n'a pas eu lieu. ⭐ **Elles deviendront un CERTAIN quand elles seront LUES dans le
-> journal Apps Script** *(`CLAUDE.md` §9)*, et cette note devra alors être corrigée.
+> ✅ **CONSTATÉ CHEZ GOOGLE le 2026-08-27** *(lot **M1-B2 / B2-1**)* : `lancerTestsFFR` exécutée
+> **deux fois** dans l'éditeur Apps Script a donné **`R92 — 974/974 OK, 0 FAIL`**, avec `Test.gs` à
+> **5554 lignes** et `Code.gs` à **8847** *(`viderDonnees` ligne **8842**)* — serveur passé en
+> **version 159** *(la précédente était la **158**)*.
+>
+> ⭐ **Les DEUX exécutions, et la seconde n'est pas un doublon** : la première **avant** toute
+> écriture *(10:09:44, 2,194 s)*, la seconde **après** la migration et trois régénérations
+> *(11:00:06, 2,525 s)*. La seconde répond à une question que la première ne pouvait pas poser :
+> l'onglet `Editions` existait alors, et un test qui aurait ouvert le vrai classeur par erreur
+> aurait pu l'abîmer. ⭐ **Bilan vert ET registre intact après coup** : les deux ensemble prouvent
+> que le harnais reste sans effet de bord.
+>
+> ⚡ *(Cette note disait « ⛔ **CES DEUX VALEURS SONT PRÉDITES, PAS ENCORE MESURÉES CHEZ GOOGLE**
+> […] chez Google, le bilan est **toujours 881/881** avec `Tests.gs` à **5141 lignes** » — **vrai
+> jusqu'au 2026-08-27**. ⭐ **974 n'est plus un PROBABLE mais un CERTAIN**, `CLAUDE.md` §9.)*
 
 > 🎯 **Pourquoi deux nombres et pas un.** Le bilan seul ne dit **jamais quelle version** a été
 > exécutée : « 573/573 OK » était un vrai résultat sur un faux fichier. Le nombre de lignes est ce
@@ -212,6 +220,15 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > répondu **1** et **0**, ⭐ **dans le bon sens tous les deux**.
 > ⛔ **Le numéro de version du déploiement n'a PAS été relevé** au moment du collage : il n'est donc
 > pas inscrit ici, et ⛔ **rien ne sera deviné** *(la version précédente, elle, était la **157**)*.
+>
+> ⚡ **ADDENDUM du 2026-08-27 — la lacune ci-dessus est comblée, et voici avec quelle certitude.**
+> Le relevé fait **avant** le déploiement de B2-1 établit que la version en service ce jour-là était
+> la **158**. ⭐ **Cela, c'est un CERTAIN** *(relevé dans « Gérer les déploiements »)*.
+> ⚠️ **Que ce soit le collage du 2026-08-26 qui l'ait produite est un PROBABLE, pas un CERTAIN**
+> *(`CLAUDE.md` §9)* : la déduction ne tient que si aucun autre déploiement n'a eu lieu entre les
+> deux dates — ⛔ **et cela n'a pas été vérifié.** ⭐ **La phrase ci-dessus n'est donc pas réécrite** :
+> elle reste vraie *(le numéro n'a effectivement pas été relevé ce jour-là)*, et ce qu'on sait de
+> plus s'ajoute ici plutôt que de repeindre ce qu'on ne savait pas.
 >
 > ⚡ *(Ce bloc a d'abord annoncé « **881** est PRÉDIT, pas encore MESURÉ » — c'était vrai le
 > 2026-08-26 **avant** le redéploiement, et faux **après**. ⭐ La valeur avait été calculée hors
@@ -239,10 +256,15 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > que l'**adresse web publique** sert cette version — Apps Script permet de figer un déploiement sur
 > une version antérieure. C'est le geste **3** qui couvre ça, et lui seul.
 
-### 🆕 🔴 Onglet `Editions` — UNE migration à lancer À LA MAIN, une seule fois *(M1-B2 / B2-1)*
+### 🆕 ✅ Onglet `Editions` — la migration a été FAITE *(M1-B2 / B2-1)*
 
-> ⛔ **CE GESTE N'A PAS ENCORE ÉTÉ FAIT** *(état au 2026-08-27)*. Il ne peut l'être qu'**après** le
-> redéploiement du backend : la fonction n'existe pas encore chez Google.
+> ✅ **CE GESTE A ÉTÉ EXÉCUTÉ le 2026-08-27**, après le redéploiement : `migrerEditionsMaintenant()`
+> a répondu **`✅ Édition ouverte : f21ec93b-…`**, puis, relancée, **`ℹ️ Rien à faire : une édition
+> est déjà active`** — ⭐ **avec le MÊME identifiant et la MÊME date de création, à la seconde près**.
+> ⚡ *(Ce bloc disait « ⛔ **CE GESTE N'A PAS ENCORE ÉTÉ FAIT** » : vrai jusqu'à cette date.)*
+>
+> ⭐ **La procédure ci-dessous reste écrite, et c'est délibéré** : elle servira à **tout autre
+> classeur** *(un second club, une réinstallation)*, et elle documente ce qui a réellement été fait.
 
 **Ce que c'est.** Le lot **B2-1** introduit un **registre des éditions** *(onglet `Editions`)* qui
 donne au tournoi une identité durable, `edition_id` — voir

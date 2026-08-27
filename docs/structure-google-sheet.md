@@ -11,9 +11,9 @@ Le Google Sheet sert de **base de données** du tournoi. Il contient **13 onglet
 > 📖 Le rôle de chacun, et lequel est créé automatiquement, sont dans
 > [`architecture.md`](architecture.md) §1.
 
-> ⚠️ **`Editions` n'existe PAS ENCORE dans le classeur en service** *(relevé le 2026-08-27)*. Il est
-> écrit dans `backend/Code.gs`, ⛔ **mais le serveur n'a pas été recollé et la migration n'a pas été
-> lancée**. Le classeur réel porte donc toujours **12 onglets**. ⭐ **Voir
+> ✅ **`Editions` EXISTE dans le classeur en service** *(constaté le 2026-08-27, après migration)* :
+> le classeur réel porte bien **13 onglets**. ⚡ *(Cette note disait « ⛔ n'existe PAS ENCORE […] le
+> classeur réel porte donc toujours **12 onglets** » : vrai jusqu'à cette date.)* ⭐ **Voir
 > [`deploiement.md`](deploiement.md)**, qui est la source des repères de redéploiement.
 
 > URL du Sheet :
@@ -472,11 +472,16 @@ ici par le backend (`archiverResultat` dans [`../backend/Code.gs`](../backend/Co
 
 ---
 
-## 🆕 Onglet `Editions` (registre des éditions) — ⛔ PAS ENCORE DÉPLOYÉ
+## 🆕 Onglet `Editions` (registre des éditions) — ✅ EN SERVICE
 
-> ⚠️ **Cet onglet est écrit dans `backend/Code.gs` (lot **M1-B2 / B2-1**, 2026-08-27), ⛔ mais il
-> N'EXISTE PAS ENCORE dans le classeur en service** : le serveur n'a pas été recollé et la
-> migration n'a pas été lancée. **Cette section décrit ce qui arrivera, pas ce qui est.**
+> ✅ **Cet onglet EXISTE dans le classeur** depuis le **2026-08-27** : serveur redéployé
+> *(version 159)* puis `migrerEditionsMaintenant()` exécutée. Il porte **une** édition `active`.
+> ⚡ *(Cette note disait « ⛔ **il N'EXISTE PAS ENCORE dans le classeur en service** […] cette
+> section décrit ce qui arrivera, pas ce qui est » : vrai jusqu'à cette date.)*
+>
+> ⚠️ **Une propriété reste NON éprouvée en réel** : la **bascule au reset** *(ligne « Réinitialisation
+> RÉUSSIE » du cycle de vie ci-dessous)*. Elle est établie par les tests, ⛔ **pas par un reset
+> réel** — voir `docs/industrialisation/RISQUES.md`, fiche **R-106**.
 
 **Une ligne = une édition réelle du tournoi.** C'est la **source unique** de l'identité durable
 d'une édition : ⛔ `edition_id` ne vit **nulle part ailleurs**, et surtout pas dans `Config`.

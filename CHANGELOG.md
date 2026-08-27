@@ -12,6 +12,43 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Une édition de tournoi a désormais une identité qui ne bouge plus — 2026-08-27
+
+**Ce qui n'allait pas.** Le logiciel n'avait qu'un seul identifiant de tournoi, `tournoi_id`, et il
+en **reposait un neuf à chaque « Générer poules et planning »**. Or régénérer est un geste normal et
+répété pendant la préparation : on corrige les poules, on ajoute une équipe, on relance. **Un seul
+tournoi réel produisait donc plusieurs identifiants.**
+
+**Pourquoi c'était gênant.** Le journal de saison — l'onglet `Historique`, qui garde tous les matchs
+terminés — range chaque résultat sous l'identifiant du tournoi. Trois régénérations et les matchs
+d'une **même** journée se retrouvaient répartis entre **trois tournois différents**. Une future page
+d'historique aurait affiché *« 8 clubs · 42 équipes · 63 matchs »* là où il n'y en aurait eu que
+vingt — sans que rien ne signale l'erreur.
+
+**Ce qui change.**
+
+- Une édition possède maintenant une **identité durable**, `edition_id`, créée **une seule fois à
+  son ouverture**. Elle ne bouge **jamais** ensuite : ni si l'on régénère les poules, ni le
+  planning, ni si l'on ajoute, renomme ou retire une équipe, ni si l'on publie ou masque le
+  tournoi, ni si l'on saisit ou corrige un score.
+- `tournoi_id` **existe toujours et garde son rôle** : il identifie une *génération de planning*.
+  Les deux coexistent, chacun à sa place.
+- Un **nouvel onglet `Editions`** apparaît dans le classeur : une ligne par édition, avec son état
+  (`active` ou `fermee`) et ses dates. **Une seule édition est active à la fois** — ce n'est pas un
+  pas vers la gestion de plusieurs tournois simultanés, et aucun sélecteur n'existe.
+- **Réinitialiser le tournoi** ferme désormais l'édition qui s'achève et en ouvre une neuve, en une
+  seule écriture. Si la réinitialisation échoue en route, **rien ne bouge** : l'édition en cours
+  reste active, avec son identifiant.
+
+**Ce que vous verrez, concrètement.** Rien de nouveau à l'écran : aucune page, aucun bouton, aucun
+champ n'a changé. Le seul signe visible est l'onglet `Editions` dans le classeur — et il n'y a rien
+à y faire à la main.
+
+⚠️ **Une réserve, et elle est écrite pour ne pas être oubliée.** La bascule d'édition lors d'une
+réinitialisation est vérifiée par les tests automatiques, ⛔ **mais elle n'a pas encore été
+éprouvée sur un vrai tournoi**. Le reste — la stabilité de l'identifiant après trois régénérations,
+et la migration — a bien été constaté en conditions réelles le 2026-08-27.
+
 ### L'administration ne promet plus une annonce qui n'existe plus — 2026-08-26
 
 **Ce qui n'allait pas.** L'écran **« Infos du tournoi »** affichait une carte **« Aperçu sur le

@@ -39,9 +39,11 @@ détail des colonnes. C'est aussi l'endroit où l'organisateur peut vérifier ou
 **13 onglets**, et ils ne jouent pas le même rôle : **9 onglets de travail** — les données du
 tournoi — et **4 onglets de référence** qui portent le cadre fédéral.
 
-> ⚠️ **Ces comptes sont ceux du DÉPÔT, pas du classeur en service** *(relevé le 2026-08-27)*.
-> Le 13ᵉ onglet, `Editions`, est **écrit dans le code mais pas encore déployé** : le classeur réel
-> en compte toujours 12 tant que le serveur n'a pas été recollé et la migration lancée.
+> ✅ **Ces comptes valent pour le dépôt ET pour le classeur en service** *(constaté le
+> 2026-08-27)*. Le 13ᵉ onglet, `Editions`, a été créé par la migration du lot **B2-1** : serveur
+> redéployé *(version 159)* et `migrerEditionsMaintenant()` exécutée. ⚡ *(Cette note disait
+> « comptes du DÉPÔT, pas du classeur en service — le classeur réel en compte toujours 12 » : vrai
+> jusqu'à cette date.)*
 
 ### Les 9 onglets de travail
 
@@ -572,7 +574,7 @@ Détails et activation : [`relais-cdn.md`](relais-cdn.md).
 | **Fichiers JavaScript** | **26** | Les fichiers `frontend/js/*.js` — **le sous-dossier `js/vendor/` n'est pas compté** : ce sont des bibliothèques extérieures, inventoriées séparément |
 | **Lignes par fichier** | *voir tableaux* | `wc -l` sur chaque fichier |
 | **Scripts chargés par page** | *voir §3* | Les balises `<script src="js/…">` de chaque page HTML |
-| **Onglets du classeur** | **13** *(9 de travail + 4 de référence)* — ⚡ **remesuré le 2026-08-27** par la méthode ci-contre, après l'ajout de `Editions` *(B2-1)*. ⚠️ **C'est le compte du DÉPÔT** : le classeur en service en porte encore **12** tant que le serveur n'est pas recollé. ⚡ *(Cette case annonçait **12** *(8 + 4)* : vrai jusqu'au 2026-08-27.)* | ⚠️ **Compter les `getSheetByName('…')` ne suffit pas** — c'est ainsi qu'un compte de 8 a d'abord été obtenu, à tort. Les 4 onglets `RefFFR_*` sont lus par `lireOngletSimple(classeur, '…')`, sans passer par `getSheetByName`. **La méthode juste réunit quatre sources** : `getSheetByName('…')`, `lireOngletSimple(classeur, '…')`, `creerOngletAvecEntetes(classeur, '…')` et `insertSheet('…')`, puis déduplique. Recoupé avec `deploiement.md`, qui documentait déjà les 4 onglets `RefFFR_*` |
+| **Onglets du classeur** | **13** *(9 de travail + 4 de référence)* — ⚡ **remesuré le 2026-08-27** par la méthode ci-contre, après l'ajout de `Editions` *(B2-1)*, ✅ **et constaté dans le classeur réel le même jour** *(13 onglets relevés après migration)*. ⚡ *(Cette case a annoncé **12** *(8 + 4)* — vrai jusqu'au 2026-08-27 — puis « c'est le compte du DÉPÔT : le classeur en service en porte encore 12 » — vrai jusqu'à la migration du même jour.)* | ⚠️ **Compter les `getSheetByName('…')` ne suffit pas** — c'est ainsi qu'un compte de 8 a d'abord été obtenu, à tort. Les 4 onglets `RefFFR_*` sont lus par `lireOngletSimple(classeur, '…')`, sans passer par `getSheetByName`. **La méthode juste réunit quatre sources** : `getSheetByName('…')`, `lireOngletSimple(classeur, '…')`, `creerOngletAvecEntetes(classeur, '…')` et `insertSheet('…')`, puis déduplique. Recoupé avec `deploiement.md`, qui documentait déjà les 4 onglets `RefFFR_*` |
 | **Bibliothèques extérieures** | **4** | Les fichiers `frontend/js/vendor/*.js` |
 
 > ℹ️ **Ces comptes portent sur ce que le code nomme.** Un onglet ajouté à la main dans un classeur

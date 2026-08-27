@@ -33,8 +33,10 @@ Légende : 🔲 à faire · 🟡 en cours · ✅ terminé
 - **Base de données** : Google Sheets — **13 onglets** :
   - **9 de travail** : `Config`, `Equipes`, `Poules`, `Matchs`, `Historique`, `ClubsInvites`,
     `Sponsors`, `Mesures`, `Editions` *(`setupSheet()` en crée 8 ; `Mesures` apparaît au premier
-    relevé)* — ⚠️ `Editions` *(le registre des éditions, lot B2-1)* est **dans le code, pas encore
-    déployé** : le classeur en service en compte toujours 12 *(relevé le 2026-08-27)* ;
+    relevé)* — ✅ `Editions` *(le registre des éditions, lot B2-1)* est **en service** : serveur
+    redéployé et migration exécutée le **2026-08-27**, le classeur réel porte bien **13** onglets.
+    ⚡ *(Cette ligne annonçait « dans le code, pas encore déployé : le classeur en service en compte
+    toujours 12 » — vrai jusqu'à ce jour-là.)* ;
   - **4 de référence FFR**, remplis à la main : `RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`,
     `RefFFR_Temps` *(absents ⇒ l'app fonctionne, elle perd seulement la conformité FFR)*
 - **Backend** : Google Apps Script, déployé en **Web App** qui répond en **JSON** — **65 actions**,
