@@ -466,6 +466,31 @@ function lancerTestsFFR() {
   testB22_S5_ajouterNestPasInviter(etat);
   testB22_S6_compatibiliteObjetPlat(etat);
   testB22_S7_clubInactifResteHorsEcran(etat);
+  // ⭐ Puis : la migration est EXPLICITE, et un état partiel ne bascule rien.
+  testB22_E1_ecritureNeDeclenchePas(etat);
+  testB22_E2_plusieursEcrituresNeDeclenchentPas(etat);
+  testB22_E3_etatPartielNeBasculePas(etat);
+  testB22_E4_seuleLaMigrationExpliciteBascule(etat);
+  testB22_E5_marqueSeulementSiCoherent(etat);
+  testB22_E6_marqueRefuseeSiIncoherent(etat);
+  testB22_E7_controleAccepteUneMigrationSaine(etat);
+  // ⭐ Puis : relance, renommage, reprise, refus (cas A, B, C, D de l'arbitrage).
+  testB22_RA_relanceImmediate(etat);
+  testB22_RB_renommagePuisRelance(etat);
+  testB22_RC_interruptionPuisReprise(etat);
+  testB22_RD_refusSiRepriseAmbigue(etat);
+  testB22_RE_obstaclesPurs(etat);
+  // ⭐ Enfin : 📸 les snapshots, figés au PREMIER ENVOI PRINCIPAL RÉUSSI.
+  testB22_SN1_creationNeFigeRien(etat);
+  testB22_SN2_changementAvantPremierEnvoi(etat);
+  testB22_SN3_premierEnvoiFige(etat);
+  testB22_SN4_changementApresEnvoi(etat);
+  testB22_SN5_renvoiNeReecritPas(etat);
+  testB22_SN6_echecNeFigeRien(etat);
+  testB22_SN7_jetonNestPasUneInvitation(etat);
+  testB22_SN8_legacyCasA(etat);
+  testB22_SN9_legacyCasB(etat);
+  testB22_SN10_dossierNestPasInvitation(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -5796,16 +5821,22 @@ function _b22Classeur(lignesLegacy) {
 
 /** Rejoue le PLAN puis l'ÉCRIT — c'est exactement ce que fait `migrerClubsMaintenant`,
  *  sans `SpreadsheetApp.openById` (indisponible hors de Google). */
-function _b22Migrer(classeur) {
+/** ⭐ Exécute la VRAIE migration — contrôle de cohérence et marque de fin compris.
+ *  @param {boolean} interrompre  simule une coupure juste AVANT la marque (cas C). */
+function _b22Migrer(classeur, interrompre) {
   var registre = editionActive(classeur);
   var edition = (registre.etat === 'ok') ? registre.edition.edition_id : '';
   var plan = planifierMigrationClubs(lireOngletSimple(classeur, 'ClubsInvites'),
     lireClubs(classeur), lireParticipations(classeur), edition,
     function () { return Utilities.getUuid(); });
-  if (plan.error) return plan;
-  ajouterLignesModele(assurerOngletClubs(classeur), plan.clubsACreer);
-  ajouterLignesModele(assurerOngletParticipations(classeur), plan.participationsACreer);
+  var message = executerMigrationClubs(classeur, !interrompre);
+  plan.message = message;
   return plan;
+}
+
+/** Le classeur factice B2-2 : Config doit accueillir la MARQUE de fin de migration. */
+function _b22MarqueMigration(classeur) {
+  return String((lireConfig(classeur).global || {})[CLE_MIGRATION_CLUBS] || '').trim();
 }
 
 /** Deux clubs legacy : l'un pleinement engagé, l'autre seulement connu du carnet. */
@@ -5839,7 +5870,7 @@ function testB22_M1_deuxClubsDistincts(etat) {
 function testB22_M2_carnetSansParticipation(etat) {
   var cl = _b22Classeur(_b22DeuxClubs());
   var plan = _b22Migrer(cl);
-  var puc = trouverClubParNom(lireClubs(cl), 'PUC');
+  var puc = trouverClubParNom(lireClubs(cl), 'PUC') || {};
   _ffrAssert(etat, !!puc,
     'B2-2 M2 : le club jamais sollicité est bien AU CARNET');
   _ffrAssert(etat, trouverParticipation(lireParticipations(cl), _b21IdActif(cl), puc.club_id) === null,
@@ -5852,9 +5883,9 @@ function testB22_M2_carnetSansParticipation(etat) {
 function testB22_M3_rattachementEtValeurs(etat) {
   var cl = _b22Classeur(_b22DeuxClubs());
   _b22Migrer(cl);
-  var massy = trouverClubParNom(lireClubs(cl), 'MASSY');
-  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), massy.club_id);
-  _ffrAssert(etat, !!p, 'B2-2 M3 : la participation est rattachée à l\'édition ACTIVE');
+  var massy = trouverClubParNom(lireClubs(cl), 'MASSY') || {};
+  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), massy.club_id) || {};
+  _ffrAssert(etat, !!(p && p.club_id), 'B2-2 M3 : la participation est rattachée à l\'édition ACTIVE');
   _ffrAssert(etat, statutClubCanonique(p.statut) === 'Accepté' &&
                    String(p.categories_engagees) === 'U8,U10' &&
                    String(p.nb_joueurs_total) === '24' &&
@@ -5870,8 +5901,8 @@ function testB22_M3_rattachementEtValeurs(etat) {
 function testB22_M4_snapshots(etat) {
   var cl = _b22Classeur(_b22DeuxClubs());
   _b22Migrer(cl);
-  var massy = trouverClubParNom(lireClubs(cl), 'MASSY');
-  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), massy.club_id);
+  var massy = trouverClubParNom(lireClubs(cl), 'MASSY') || {};
+  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), massy.club_id) || {};
   _ffrAssert(etat, p.snap_club_nom === 'MASSY' && p.snap_contact_email === 'contact@massy.fr' &&
                    p.snap_contact_nom === 'DUPONT' && p.snap_contact_prenom === 'Marie',
     'B2-2 M4 📸 : les quatre snapshots portent l\'identité du moment');
@@ -5879,10 +5910,10 @@ function testB22_M4_snapshots(etat) {
   var onglet = cl.getSheetByName('Clubs');
   var entetes = onglet.getRange(1, 1, 1, onglet.getLastColumn()).getValues()[0];
   onglet.getRange(2, entetes.indexOf('club_nom') + 1).setValue('MASSY RUGBY CLUB');
-  var apres = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), massy.club_id);
+  var apres = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), massy.club_id) || {};
   _ffrAssert(etat, apres.snap_club_nom === 'MASSY',
     'B2-2 M4 📸 ⭐ : renommer le club au carnet ne RÉÉCRIT PAS l\'histoire');
-  _ffrAssert(etat, trouverClubParNom(lireClubs(cl), 'MASSY RUGBY CLUB').club_id === massy.club_id,
+  _ffrAssert(etat, (trouverClubParNom(lireClubs(cl), 'MASSY RUGBY CLUB') || {}).club_id === massy.club_id,
     'B2-2 M4 : ⭐ et le `club_id` n\'a pas bougé — c\'est bien le même club');
 }
 
@@ -6026,11 +6057,10 @@ function _b22ClasseurMigre(entetesClubs) {
     if (nom === 'Participations') return participations;
     return getOrigine(nom);
   };
-  var registre = editionActive(cl);
-  var plan = planifierMigrationClubs(lireOngletSimple(cl, 'ClubsInvites'), lireClubs(cl),
-    lireParticipations(cl), registre.edition.edition_id, function () { return Utilities.getUuid(); });
-  ajouterLignesModele(assurerOngletClubs(cl), plan.clubsACreer);
-  ajouterLignesModele(assurerOngletParticipations(cl), plan.participationsACreer);
+  // ⭐ On passe par la VRAIE migration : contrôle de cohérence ET marque de fin de migration.
+  //   ⛔ Sans la marque, le classeur resterait « partiel » — donc LEGACY — et ces tests
+  //   n'éprouveraient pas la structure qu'ils prétendent éprouver.
+  executerMigrationClubs(cl, true);
   return cl;
 }
 
@@ -6136,14 +6166,14 @@ function testB22_N4_jetonEditionActiveFonctionne(etat) {
 function testB22_S1_suppressionLogique(etat) {
   var cl = _b22ClasseurMigre();
   var nom = 'SILENCIEUX RUGBY CLUB';                    // le second club, sans équipe ni poule
-  var idAvant = trouverClubParNom(lireClubs(cl), nom).club_id;
+  var idAvant = (trouverClubParNom(lireClubs(cl), nom) || {}).club_id;
   var participationsAvant = lireParticipations(cl).length;
 
   var res = supprimerClubInvite(cl, { club_nom: nom });
   _ffrAssert(etat, res.ok === true, 'B2-2 S1 : le retrait aboutit');
   _ffrAssert(etat, !trouverClubParNom(_b20ClubsApresReset(cl), nom),
     'B2-2 S1 : ⭐ à l\'écran, le club a bien DISPARU — comportement inchangé');
-  var carnet = trouverClubParNom(lireClubs(cl), nom);
+  var carnet = trouverClubParNom(lireClubs(cl), nom) || {};
   _ffrAssert(etat, !!carnet && carnet.club_id === idAvant,
     'B2-2 S1 ⭐⭐ : ⛔ son identité N\'A PAS été détruite — même `club_id`');
   _ffrAssert(etat, !!carnet && !clubEstActif(carnet),
@@ -6160,7 +6190,7 @@ function testB22_S1_suppressionLogique(etat) {
 function testB22_S2_suppressionNeTouchePasLHistoire(etat) {
   var cl = _b22ClasseurMigre();
   var nom = 'LE TEST RUGBY CLUB';
-  var club = trouverClubParNom(lireClubs(cl), nom);
+  var club = trouverClubParNom(lireClubs(cl), nom) || {};
   var ancienneEdition = _b21IdActif(cl);
   // Une édition passée : on ferme celle-ci et on en ouvre une neuve, puis on réengage le club.
   reinitialiserTournoi(cl);
@@ -6212,17 +6242,17 @@ function testB22_S3_jetonJamaisPassif(etat) {
 function testB22_S3bis_jetonsNeTouchentPasLePasse(etat) {
   var cl = _b22ClasseurMigre();
   // Une participation d'édition passée, SANS jeton (cas d'un classeur ancien migré).
-  var club = trouverClubParNom(lireClubs(cl), 'LE TEST RUGBY CLUB');
+  var club = trouverClubParNom(lireClubs(cl), 'LE TEST RUGBY CLUB') || {};
   var ancienne = _b21IdActif(cl);
-  ecrireParticipationClub(cl, 'LE TEST RUGBY CLUB', { club_token: '' }, false);
+  ecrireEngagementClub(cl, 'LE TEST RUGBY CLUB', { club_token: '' }, false);
   reinitialiserTournoi(cl);                             // l'édition devient FERMÉE
   _ffrAssert(etat, lireParticipations(cl).length === 1 &&
-                   String(lireParticipations(cl)[0].edition_id).trim() === ancienne &&
-                   String(lireParticipations(cl)[0].club_token || '').trim() === '',
+                   String((lireParticipations(cl)[0] || {}).edition_id).trim() === ancienne &&
+                   String((lireParticipations(cl)[0] || {}).club_token || '').trim() === '',
     'B2-2 S3 bis : point de départ — une participation FERMÉE, sans jeton');
 
   assurerTokensClubs(cl); listerClubsInvites(cl); listerClubsInvites(cl);
-  _ffrAssert(etat, String(lireParticipations(cl)[0].club_token || '').trim() === '',
+  _ffrAssert(etat, String((lireParticipations(cl)[0] || {}).club_token || '').trim() === '',
     'B2-2 S3 bis ⭐⭐ : ⛔ aucun jeton n\'a été écrit dans l\'édition FERMÉE');
   _ffrAssert(etat, lireParticipations(cl).length === 1,
     'B2-2 S3 bis : ⛔ et aucune participation n\'a été ajoutée');
@@ -6232,20 +6262,25 @@ function testB22_S3bis_jetonsNeTouchentPasLePasse(etat) {
 function testB22_S4_participationNaitDunGesteExplicite(etat) {
   var cl = _b22ClasseurMigre();
   reinitialiserTournoi(cl);
-  var club = trouverClubParNom(lireClubs(cl), 'LE TEST RUGBY CLUB');
+  var club = trouverClubParNom(lireClubs(cl), 'LE TEST RUGBY CLUB') || {};
   _ffrAssert(etat, trouverParticipation(lireParticipations(cl), _b21IdActif(cl), club.club_id) === null,
     'B2-2 S4 : point de départ — le club est connu, ⛔ pas engagé');
 
   var res = modifierStatutClubInvite(cl, { club_nom: 'LE TEST RUGBY CLUB', statut: 'Accepté' });
   _ffrAssert(etat, res.ok === true,
     'B2-2 S4 : changer le statut à la main est un geste EXPLICITE — il aboutit');
-  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), club.club_id);
+  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), club.club_id) || {};
   _ffrAssert(etat, !!p && statutClubCanonique(p.statut) === 'Accepté',
     'B2-2 S4 ⭐ : la participation est créée, avec le statut voulu');
   _ffrAssert(etat, String(p.club_token || '').trim() !== '',
     'B2-2 S4 : ⭐ et elle reçoit son jeton — c\'est ICI qu\'il naît, pas à la lecture');
-  _ffrAssert(etat, p.snap_club_nom === 'LE TEST RUGBY CLUB',
-    'B2-2 S4 📸 : son snapshot fige l\'identité du moment');
+  // 📸 ⚡ CETTE ASSERTION DISAIT L'INVERSE, ET ELLE ÉTAIT FAUSSE. Elle exigeait que le snapshot
+  //   soit figé À LA CRÉATION de la participation — ⛔ ce n'est pas la règle (D-059) : il se fige
+  //   au PREMIER ENVOI PRINCIPAL RÉUSSI. Une participation créée sans envoi ne doit prétendre à
+  //   AUCUN historique d'invitation.
+  _ffrAssert(etat, PARTICIPATION_COLONNES_SNAPSHOT.every(function (snap) {
+    return String(p[snap] || '').trim() === '';
+  }), 'B2-2 S4 📸 ⭐ : ⛔ ses snapshots restent VIDES — aucune invitation n\'a encore eu lieu');
 }
 
 /** S5 ⭐ — L'AJOUT au carnet n'invite personne : ⛔ ni participation, ni jeton, ni statut. */
@@ -6310,4 +6345,473 @@ function testB22_S7_clubInactifResteHorsEcran(etat) {
     'B2-2 S7 ⭐ : ⛔ et une réinitialisation ne le ramène PAS — inactif reste inactif');
   _ffrAssert(etat, lireClubs(cl).length === 2,
     'B2-2 S7 ⭐ : pourtant son identité est toujours au carnet, prête pour l\'historique');
+}
+
+/* ─── E — LA MIGRATION EST EXPLICITE, ET ELLE SEULE ─────────────────────────────
+ * ⭐ « Un modèle actif à la fois, jamais un mélange » (arbitrage du 2026-08-27). Ces tests
+ * éprouvent que le métier ne bascule PAS tout seul, et qu'un état partiel ne ressemble jamais
+ * à un succès.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Un classeur legacy prêt à migrer : `ClubsInvites` peuplé, ⛔ ni marque ni onglets neufs. */
+function _b22ClasseurLegacyPret() {
+  var cl = _b20ClasseurLegacy();
+  var carnet = _m1bFauxOnglet([ENTETES.Clubs.slice()]);
+  var participations = _m1bFauxOnglet([ENTETES.Participations.slice()]);
+  var getOrigine = cl.getSheetByName;
+  cl._carnet = carnet; cl._participations = participations;
+  cl.getSheetByName = function (nom) {
+    if (nom === 'Clubs') return carnet;
+    if (nom === 'Participations') return participations;
+    return getOrigine(nom);
+  };
+  return cl;
+}
+
+/** E1 ⭐ — Une écriture métier NE DÉCLENCHE PAS la migration. */
+function testB22_E1_ecritureNeDeclenchePas(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  _ffrAssert(etat, etatMigrationClubs(cl).etat === 'non_commencee' && !modeleClubsEnPlace(cl),
+    'B2-2 E1 : point de départ — migration NON commencée, modèle legacy actif');
+
+  ajouterClubInvite(cl, { club_nom: 'CLUB NOUVEAU', club_contact_email: 'a@b.fr' });
+  _ffrAssert(etat, lireClubs(cl).length === 0 && lireParticipations(cl).length === 0,
+    'B2-2 E1 ⭐⭐ : ajouter un club ⇒ ⛔ AUCUNE ligne dans `Clubs` ni `Participations`');
+  _ffrAssert(etat, !modeleClubsEnPlace(cl),
+    'B2-2 E1 ⭐ : ⛔ et le classeur n\'a PAS basculé');
+  // ⭐ Le comportement LEGACY, lui, est intact : le club est bien dans l'ancien onglet.
+  var legacy = lireOngletSimple(cl, 'ClubsInvites');
+  var ajoute = legacy.filter(function (c) { return memeTexteSouple(c.club_nom, 'CLUB NOUVEAU'); })[0];
+  _ffrAssert(etat, !!ajoute && statutClubCanonique(ajoute.statut) === 'Invité' &&
+                   String(ajoute.club_token || '').trim() !== '',
+    'B2-2 E1 ⭐ : et le comportement d\'ORIGINE est conservé — `Invité` et un jeton, comme avant');
+}
+
+/** E2 ⭐ — PLUSIEURS écritures de natures différentes ne déclenchent toujours rien. */
+function testB22_E2_plusieursEcrituresNeDeclenchentPas(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  var nom = 'LE TEST RUGBY CLUB';
+  modifierStatutClubInvite(cl, { club_nom: nom, statut: 'Décliné' });
+  modifierClubInvite(cl, { club_nom_actuel: nom, club_nom: nom, club_contact_prenom: 'Zoé',
+    club_contact_nom: 'MARTIN', club_contact_email: 'zoe@test.fr' });
+  ajouterClubInvite(cl, { club_nom: 'ENCORE UN', club_contact_email: 'c@d.fr' });
+  regenererJetonClub(cl, { club_nom: nom });
+  listerClubsInvites(cl);
+  reinitialiserTournoi(cl);
+
+  _ffrAssert(etat, lireClubs(cl).length === 0 && lireParticipations(cl).length === 0,
+    'B2-2 E2 ⭐⭐ : six gestes métier, dont un RESET ⇒ ⛔ toujours zéro ligne dans les onglets neufs');
+  _ffrAssert(etat, etatMigrationClubs(cl).etat === 'non_commencee',
+    'B2-2 E2 ⭐ : la migration est toujours NON COMMENCÉE');
+  // ⭐ Et le résultat métier legacy est intact : le reset a bien vidé l'engagement.
+  _ffrAssert(etat, _b20ClubsApresReset(cl).every(function (c) {
+    return CLUBS_COLONNES_ENGAGEMENT.every(function (h) { return _b20EstVide(c[h]); });
+  }), 'B2-2 E2 ⭐ : et le reset LEGACY a fait son travail — engagement vidé, comme avant');
+}
+
+/** E3 ⭐⭐ — UN ÉTAT PARTIEL NE FAIT PAS BASCULER LE MÉTIER. Le cas dangereux, nommément. */
+function testB22_E3_etatPartielNeBasculePas(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  _b22Migrer(cl, true);                                 // ⏸️ interrompue AVANT la marque
+  _ffrAssert(etat, lireClubs(cl).length === 2 && _b22MarqueMigration(cl) === '',
+    'B2-2 E3 : point de départ — `Clubs` est rempli, ⛔ mais la marque N\'EST PAS posée');
+  _ffrAssert(etat, etatMigrationClubs(cl).etat === 'partielle',
+    'B2-2 E3 ⭐ : l\'état est reconnu comme PARTIEL');
+  _ffrAssert(etat, !modeleClubsEnPlace(cl),
+    'B2-2 E3 ⭐⭐ : ⛔ et le métier NE BASCULE PAS — « les onglets existent » ne suffit pas');
+  // ⭐ Une écriture arrivant maintenant suit toujours le chemin legacy, sans mélanger les deux.
+  var avantP = lireParticipations(cl).length;
+  ajouterClubInvite(cl, { club_nom: 'PENDANT LA PANNE', club_contact_email: 'e@f.fr' });
+  _ffrAssert(etat, lireClubs(cl).length === 2 && lireParticipations(cl).length === avantP,
+    'B2-2 E3 ⭐⭐ : une écriture pendant l\'état partiel n\'écrit PAS dans les onglets neufs');
+  _ffrAssert(etat, !!trouverClubParNom(lireOngletSimple(cl, 'ClubsInvites'), 'PENDANT LA PANNE'),
+    'B2-2 E3 ⭐ : elle est allée dans `ClubsInvites` — le modèle legacy est resté le seul actif');
+}
+
+/** E4 — Seule la migration EXPLICITE fait basculer, et seulement après contrôle. */
+function testB22_E4_seuleLaMigrationExpliciteBascule(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  _ffrAssert(etat, !modeleClubsEnPlace(cl), 'B2-2 E4 : avant — legacy');
+  var res = _b22Migrer(cl);
+  _ffrAssert(etat, String(res.message).indexOf('TERMINÉE') !== -1,
+    'B2-2 E4 : la migration explicite se déclare terminée');
+  _ffrAssert(etat, _b22MarqueMigration(cl) !== '' && modeleClubsEnPlace(cl),
+    'B2-2 E4 ⭐ : la marque est posée, et LE MÉTIER BASCULE — mais seulement là');
+  _ffrAssert(etat, etatMigrationClubs(cl).etat === 'terminee',
+    'B2-2 E4 : l\'état est reconnu TERMINÉ');
+}
+
+/** E5 ⭐ — La marque n'est posée QU'APRÈS un contrôle de cohérence complet. */
+function testB22_E5_marqueSeulementSiCoherent(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  var legacy = lireOngletSimple(cl, 'ClubsInvites');
+  _ffrAssert(etat, ecartsMigrationClubs(legacy, [], [], 'EDITION-X').length > 0,
+    'B2-2 E5 : un carnet VIDE face à un legacy peuplé ⇒ des écarts sont signalés');
+  _ffrAssert(etat, ecartsMigrationClubs(legacy, [], [], '').join('').indexOf('édition') !== -1,
+    'B2-2 E5 : sans édition active, l\'écart est nommé');
+  // Un doublon de club_id est détecté.
+  var doublon = [{ club_nom: 'A', club_id: 'X' }, { club_nom: 'B', club_id: 'X' }];
+  _ffrAssert(etat, ecartsMigrationClubs([], doublon, [], 'E1').some(function (e) {
+    return e.indexOf('DEUX clubs') !== -1;
+  }), 'B2-2 E5 ⭐ : deux clubs portant le même `club_id` sont détectés');
+  // Une participation fabriquée sans justification legacy est détectée.
+  var l = [_b22LigneLegacy({ club_nom: 'SEUL' })];
+  var c = [{ club_nom: 'SEUL', club_id: 'X' }];
+  var pp = [{ edition_id: 'E1', club_id: 'X' }];
+  _ffrAssert(etat, ecartsMigrationClubs(l, c, pp, 'E1').some(function (e) {
+    return e.indexOf('qu\'aucune donnée legacy ne justifie') !== -1;
+  }), 'B2-2 E5 ⭐⭐ : une participation SANS justification legacy est refusée par le contrôle');
+}
+
+/* ─── R — RELANCE, RENOMMAGE, REPRISE, REFUS (cas A, B, C, D) ────────────────── */
+
+/**
+ * E6 ⭐⭐ — LA MARQUE N'EST PAS POSÉE SI LE RÉSULTAT EST INCOHÉRENT.
+ *
+ * ⚠️ CE TEST EXISTE PARCE QU'UNE MUTATION EST PASSÉE INAPERÇUE. Neutraliser le contrôle de
+ * cohérence — « marquer terminé sans vérifier » — laissait les 1203 tests au vert : ils
+ * éprouvaient tous des migrations qui se passaient BIEN. ⛔ Or c'est exactement là que
+ * l'arbitrage insistait : « ne te contente pas de "les onglets existent", la preuve de succès
+ * doit rester forte ». ⭐ Un contrôle qu'on n'a jamais vu REFUSER ne prouve rien.
+ */
+function testB22_E6_marqueRefuseeSiIncoherent(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  // On injecte une participation qui ne correspond à AUCUN club du carnet : exactement le
+  // genre de résidu qu'une migration interrompue à un mauvais moment pourrait laisser.
+  ajouterLignesModele(assurerOngletParticipations(cl), [{
+    edition_id: _b21IdActif(cl), club_id: 'CLUB-QUI-N-EXISTE-PAS', statut: 'Accepté' }]);
+
+  var msg = executerMigrationClubs(cl, true);
+  _ffrAssert(etat, String(msg).indexOf('INCOMPLÈTE') !== -1,
+    'B2-2 E6 ⭐ : la migration se déclare INCOMPLÈTE au lieu de terminée');
+  _ffrAssert(etat, String(msg).indexOf('CLUB-QUI-N-EXISTE-PAS') !== -1,
+    'B2-2 E6 ⭐ : et elle NOMME l\'écart qu\'elle a trouvé');
+  _ffrAssert(etat, _b22MarqueMigration(cl) === '',
+    'B2-2 E6 ⭐⭐ : ⛔ LA MARQUE N\'EST PAS POSÉE — un contrôle raté n\'est pas un succès');
+  _ffrAssert(etat, !modeleClubsEnPlace(cl),
+    'B2-2 E6 ⭐⭐ : ⛔ et le métier reste sur le modèle legacy, donc cohérent');
+  _ffrAssert(etat, etatMigrationClubs(cl).etat === 'partielle',
+    'B2-2 E6 : l\'état reste PARTIEL — reprenable une fois l\'écart corrigé');
+}
+
+/** E7 — Le contrôle de cohérence SAIT dire oui : sur une migration saine, aucun écart. */
+function testB22_E7_controleAccepteUneMigrationSaine(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  _b22Migrer(cl, true);                                   // écrit tout, ⛔ sans marquer
+  var ecarts = ecartsMigrationClubs(lireOngletSimple(cl, 'ClubsInvites'), lireClubs(cl),
+    lireParticipations(cl), _b21IdActif(cl));
+  _ffrAssert(etat, ecarts.length === 0,
+    'B2-2 E7 ⭐ : sur une migration saine, ⛔ AUCUN écart (' + ecarts.join(' | ') + ')');
+  _ffrAssert(etat, _b22MarqueMigration(cl) === '',
+    'B2-2 E7 : et pourtant la marque n\'est pas encore là — le contrôle et la marque sont deux gestes');
+}
+
+/** R-A ⭐ — Migration normale, puis relance immédiate : 0 création, 0 modification. */
+function testB22_RA_relanceImmediate(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  _b22Migrer(cl);
+  var carnetAvant = JSON.stringify(lireClubs(cl));
+  var partAvant = JSON.stringify(lireParticipations(cl));
+  var marqueAvant = _b22MarqueMigration(cl);
+  var legacyAvant = JSON.stringify(lireOngletSimple(cl, 'ClubsInvites'));
+
+  var msg = executerMigrationClubs(cl, true);
+  _ffrAssert(etat, String(msg).indexOf('déjà TERMINÉE') !== -1,
+    'B2-2 R-A ⭐ : la relance CONSTATE la migration terminée, elle ne la refait pas');
+  _ffrAssert(etat, JSON.stringify(lireClubs(cl)) === carnetAvant &&
+                   JSON.stringify(lireParticipations(cl)) === partAvant,
+    'B2-2 R-A : ⛔ 0 création, 0 modification — carnet et participations à l\'identique');
+  _ffrAssert(etat, _b22MarqueMigration(cl) === marqueAvant,
+    'B2-2 R-A : ⛔ et la marque elle-même n\'a pas bougé');
+  _ffrAssert(etat, JSON.stringify(lireOngletSimple(cl, 'ClubsInvites')) === legacyAvant,
+    'B2-2 R-A : ⛔ `ClubsInvites` toujours intact');
+}
+
+/** R-B ⭐⭐ — LE CAS DU RENOMMAGE : l'ancien nom legacy ne fait renaître AUCUN club. */
+function testB22_RB_renommagePuisRelance(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  _b22Migrer(cl);
+  var nomOrigine = 'LE TEST RUGBY CLUB';
+  var idAvant = (trouverClubParNom(lireClubs(cl), nomOrigine) || {}).club_id;
+  var nbAvant = lireClubs(cl).length;
+
+  // On renomme dans `Clubs` — geste normal de l'administration.
+  modifierClubInvite(cl, { club_nom_actuel: nomOrigine, club_nom: 'LE TEST RC 2027',
+    club_contact_prenom: 'Marie', club_contact_nom: 'DUPONT', club_contact_email: 'contact@test-rugby.fr' });
+  _ffrAssert(etat, !!trouverClubParNom(lireClubs(cl), 'LE TEST RC 2027'),
+    'B2-2 R-B : le club est bien renommé au carnet');
+  _ffrAssert(etat, (trouverClubParNom(lireClubs(cl), 'LE TEST RC 2027') || {}).club_id === idAvant,
+    'B2-2 R-B ⭐ : ⛔ son `club_id` n\'a PAS changé — c\'est le même club');
+  // ⚠️ Et `ClubsInvites` porte TOUJOURS l'ancien nom : c'est exactement le piège.
+  _ffrAssert(etat, !!trouverClubParNom(lireOngletSimple(cl, 'ClubsInvites'), nomOrigine),
+    'B2-2 R-B ⭐ : l\'ANCIEN nom est toujours dans `ClubsInvites` — le piège est bien armé');
+
+  var msg = executerMigrationClubs(cl, true);
+  _ffrAssert(etat, lireClubs(cl).length === nbAvant,
+    'B2-2 R-B ⭐⭐ : après relance, ⛔ AUCUN club nouveau (' + lireClubs(cl).length + ')');
+  _ffrAssert(etat, !trouverClubParNom(lireClubs(cl), nomOrigine),
+    'B2-2 R-B ⭐⭐ : ⛔ l\'ancien nom n\'a PAS fait renaître un second club');
+  _ffrAssert(etat, (trouverClubParNom(lireClubs(cl), 'LE TEST RC 2027') || {}).club_id === idAvant,
+    'B2-2 R-B : ⭐ et l\'identité d\'origine est intacte');
+  _ffrAssert(etat, String(msg).indexOf('plus une source') !== -1,
+    'B2-2 R-B : le message DIT pourquoi — `ClubsInvites` n\'est plus une source d\'identités');
+}
+
+/** R-C ⭐ — INTERRUPTION avant la marque, puis reprise : elle termine, sans rien dupliquer. */
+function testB22_RC_interruptionPuisReprise(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  _b22Migrer(cl, true);                                 // ⏸️ coupée avant la marque
+  var idsAvant = lireClubs(cl).map(function (c) { return c.club_id; }).join('|');
+  _ffrAssert(etat, etatMigrationClubs(cl).etat === 'partielle' && idsAvant !== '',
+    'B2-2 R-C : point de départ — état PARTIEL, avec des identités déjà écrites');
+
+  var msg = executerMigrationClubs(cl, true);
+  _ffrAssert(etat, String(msg).indexOf('TERMINÉE') !== -1 && _b22MarqueMigration(cl) !== '',
+    'B2-2 R-C ⭐ : la reprise TERMINE la migration');
+  _ffrAssert(etat, lireClubs(cl).map(function (c) { return c.club_id; }).join('|') === idsAvant,
+    'B2-2 R-C ⭐⭐ : ⛔ aucune duplication — les `club_id` sont EXACTEMENT les mêmes');
+  _ffrAssert(etat, lireClubs(cl).length === 2 && lireParticipations(cl).length === 1,
+    'B2-2 R-C : ⛔ aucune perte non plus — 2 clubs, 1 participation');
+}
+
+/** R-D ⭐ — ÉTAT PARTIEL INCOHÉRENT : refus explicite, plutôt qu'une identité inventée. */
+function testB22_RD_refusSiRepriseAmbigue(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  _b22Migrer(cl, true);                                 // état partiel
+  // Quelqu'un a ajouté un club à la main dans `Clubs` : on ne sait plus d'où il vient.
+  ajouterLignesModele(assurerOngletClubs(cl), [{ club_id: Utilities.getUuid(),
+    club_nom: 'AJOUTÉ À LA MAIN', actif: 'oui' }]);
+  var avant = JSON.stringify(lireClubs(cl));
+
+  var msg = executerMigrationClubs(cl, true);
+  _ffrAssert(etat, String(msg).indexOf('REFUSÉE') !== -1,
+    'B2-2 R-D ⭐ : la migration REFUSE de reprendre un état qu\'elle ne comprend pas');
+  _ffrAssert(etat, String(msg).indexOf('AJOUTÉ À LA MAIN') !== -1,
+    'B2-2 R-D ⭐ : et elle NOMME précisément ce qui la bloque');
+  _ffrAssert(etat, JSON.stringify(lireClubs(cl)) === avant && _b22MarqueMigration(cl) === '',
+    'B2-2 R-D ⭐⭐ : ⛔ elle n\'a RIEN modifié, et n\'a RIEN marqué comme terminé');
+  _ffrAssert(etat, !modeleClubsEnPlace(cl),
+    'B2-2 R-D : ⛔ le métier reste donc sur le modèle legacy — aucun mélange');
+}
+
+/** R-E — Un obstacle de reprise est détecté par le cœur PUR, sans classeur. */
+function testB22_RE_obstaclesPurs(etat) {
+  var legacy = [_b22LigneLegacy({ club_nom: 'MASSY' })];
+  _ffrAssert(etat, obstaclesRepriseMigrationClubs(legacy,
+      [{ club_nom: 'MASSY', club_id: 'X' }]).length === 0,
+    'B2-2 R-E : un carnet cohérent ne présente AUCUN obstacle');
+  _ffrAssert(etat, obstaclesRepriseMigrationClubs(legacy,
+      [{ club_nom: 'MASSY', club_id: 'X' }, { club_nom: 'PUC', club_id: 'Y' }]).length === 1,
+    'B2-2 R-E ⭐ : un club inconnu du legacy est un obstacle');
+  _ffrAssert(etat, obstaclesRepriseMigrationClubs(legacy,
+      [{ club_nom: 'MASSY', club_id: '' }]).some(function (o) { return o.indexOf('club_id') !== -1; }),
+    'B2-2 R-E : un club sans `club_id` est un obstacle');
+  _ffrAssert(etat, obstaclesRepriseMigrationClubs(legacy,
+      [{ club_nom: 'MASSY', club_id: 'X' }, { club_nom: 'massy', club_id: 'Z' }]).length >= 1,
+    'B2-2 R-E : un doublon de nom dans `Clubs` est un obstacle');
+}
+
+/* ─── SN — 📸 LES SNAPSHOTS : figés au PREMIER ENVOI PRINCIPAL RÉUSSI ──────────
+ * ⚠️ Et pas à la création de la participation : une participation peut exister avant tout
+ * envoi. Des snapshots posés là prétendraient décrire une invitation qui n'a pas eu lieu — et
+ * mentiraient sur ce qui a été envoyé si les coordonnées changeaient entre-temps.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Les 4 snapshots d'un club, en une lecture. */
+function _b22Snapshots(classeur, nom) {
+  var club = trouverClubParNom(lireClubs(classeur), nom);
+  if (!club) return null;
+  var p = trouverParticipation(lireParticipations(classeur), _b21IdActif(classeur), club.club_id);
+  if (!p) return null;
+  var out = {};
+  PARTICIPATION_COLONNES_SNAPSHOT.forEach(function (snap) {
+    out[snap] = String(p[snap] || '').trim();
+  });
+  return out;
+}
+
+function _b22TousVides(snaps) {
+  return !!snaps && PARTICIPATION_COLONNES_SNAPSHOT.every(function (s) { return snaps[s] === ''; });
+}
+
+/** Un classeur migré, remis à une édition NEUVE : carnet plein, ⛔ zéro participation. */
+function _b22ClasseurNeuf() {
+  var cl = _b22ClasseurMigre();
+  reinitialiserTournoi(cl);
+  return cl;
+}
+
+/** SN1 ⭐ — Créer une participation NE FIGE RIEN. */
+function testB22_SN1_creationNeFigeRien(etat) {
+  var cl = _b22ClasseurNeuf();
+  var club = trouverClubParNom(lireClubs(cl), 'LE TEST RUGBY CLUB') || {};
+  assurerParticipation(cl, club);
+  _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, 'LE TEST RUGBY CLUB')),
+    'B2-2 SN1 ⭐⭐ : participation créée ⇒ ⛔ les 4 snapshots restent VIDES');
+  _ffrAssert(etat, String(_b20ClubsApresReset(cl)[0].statut || '').trim() === '',
+    'B2-2 SN1 : ⛔ et « Invité » n\'est pas posé non plus — aucun envoi n\'a eu lieu');
+}
+
+/** SN2 ⭐ — Changer le contact AVANT le premier envoi : c'est la valeur NOUVELLE qui servira. */
+function testB22_SN2_changementAvantPremierEnvoi(etat) {
+  var cl = _b22ClasseurNeuf();
+  var club = trouverClubParNom(lireClubs(cl), 'LE TEST RUGBY CLUB') || {};
+  assurerParticipation(cl, club);
+  modifierClubInvite(cl, { club_nom_actuel: 'LE TEST RUGBY CLUB', club_nom: 'LE TEST RUGBY CLUB',
+    club_contact_prenom: 'Zoé', club_contact_nom: 'MARTIN', club_contact_email: 'zoe@test-rugby.fr' });
+  _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, 'LE TEST RUGBY CLUB')),
+    'B2-2 SN2 ⭐ : les snapshots sont TOUJOURS vides — rien n\'a encore été envoyé');
+
+  var res = envoyerInvitationClub(cl, { club_nom: 'LE TEST RUGBY CLUB', sujet: 'Invitation',
+    html_modele: '<p>Bonjour</p>', texte_modele: 'Bonjour', base_reponse: 'https://x/r',
+    base_invitation: 'https://x/i' });
+  _ffrAssert(etat, res.ok === true && res.destinataire === 'zoe@test-rugby.fr',
+    'B2-2 SN2 ⭐ : le premier envoi part sur l\'adresse RÉELLEMENT COURANTE à cet instant');
+  var snaps = _b22Snapshots(cl, 'LE TEST RUGBY CLUB') || {};
+  _ffrAssert(etat, snaps.snap_contact_email === 'zoe@test-rugby.fr' &&
+                   snaps.snap_contact_prenom === 'Zoé' && snaps.snap_contact_nom === 'MARTIN',
+    'B2-2 SN2 ⭐⭐ : et les snapshots portent EXACTEMENT ces valeurs-là');
+}
+
+/** SN3 ⭐ — Le premier envoi RÉUSSI fige les quatre, et pose « Invité ». */
+function testB22_SN3_premierEnvoiFige(etat) {
+  var cl = _b22ClasseurNeuf();
+  var nom = 'LE TEST RUGBY CLUB';
+  envoyerInvitationClub(cl, { club_nom: nom, sujet: 'Invitation', html_modele: '<p>Bonjour</p>',
+    texte_modele: 'Bonjour', base_reponse: 'https://x/r', base_invitation: 'https://x/i' });
+  var snaps = _b22Snapshots(cl, nom) || {};
+  _ffrAssert(etat, snaps.snap_club_nom === nom && snaps.snap_contact_email === 'contact@test-rugby.fr',
+    'B2-2 SN3 ⭐ : les 4 snapshots sont figés sur les valeurs utilisées');
+  var plat = trouverClubParNom(_b20ClubsApresReset(cl), nom);
+  _ffrAssert(etat, statutClubCanonique(plat.statut) === 'Invité' &&
+                   String(plat.invitation_envoyee || '').trim() !== '',
+    'B2-2 SN3 : ⭐ « Invité » et la date d\'envoi sont posés — au succès, et seulement là');
+}
+
+/** SN4 ⭐⭐ — Changer le contact APRÈS le premier envoi ne touche PAS les snapshots. */
+function testB22_SN4_changementApresEnvoi(etat) {
+  var cl = _b22ClasseurNeuf();
+  var nom = 'LE TEST RUGBY CLUB';
+  envoyerInvitationClub(cl, { club_nom: nom, sujet: 'Invitation', html_modele: '<p>Bonjour</p>',
+    texte_modele: 'Bonjour', base_reponse: 'https://x/r', base_invitation: 'https://x/i' });
+  var avant = JSON.stringify(_b22Snapshots(cl, nom));
+
+  modifierClubInvite(cl, { club_nom_actuel: nom, club_nom: 'AUTRE NOM RC',
+    club_contact_prenom: 'Zoé', club_contact_nom: 'MARTIN', club_contact_email: 'zoe@ailleurs.fr' });
+  _ffrAssert(etat, JSON.stringify(_b22Snapshots(cl, 'AUTRE NOM RC')) === avant,
+    'B2-2 SN4 ⭐⭐ : nom, prénom, contact et email changés ⇒ ⛔ les snapshots ne bougent PAS');
+  _ffrAssert(etat, (_b22Snapshots(cl, 'AUTRE NOM RC') || {}).snap_club_nom === nom,
+    'B2-2 SN4 ⭐ : ils portent toujours le nom du jour de l\'invitation');
+}
+
+/** SN5 ⭐ — Un RENVOI ne réécrit jamais l'histoire. */
+function testB22_SN5_renvoiNeReecritPas(etat) {
+  var cl = _b22ClasseurNeuf();
+  var nom = 'LE TEST RUGBY CLUB';
+  var envoi = { club_nom: nom, sujet: 'Invitation', html_modele: '<p>Bonjour</p>',
+    texte_modele: 'Bonjour', base_reponse: 'https://x/r', base_invitation: 'https://x/i' };
+  envoyerInvitationClub(cl, envoi);
+  var avant = JSON.stringify(_b22Snapshots(cl, nom));
+  modifierClubInvite(cl, { club_nom_actuel: nom, club_nom: nom, club_contact_prenom: 'Zoé',
+    club_contact_nom: 'MARTIN', club_contact_email: 'zoe@ailleurs.fr' });
+  var res = envoyerInvitationClub(cl, envoi);            // ⭐ deuxième envoi, adresse changée
+  _ffrAssert(etat, res.ok === true && res.destinataire === 'zoe@ailleurs.fr',
+    'B2-2 SN5 : le renvoi part bien sur la NOUVELLE adresse');
+  _ffrAssert(etat, JSON.stringify(_b22Snapshots(cl, nom)) === avant,
+    'B2-2 SN5 ⭐⭐ : ⛔ et les snapshots du PREMIER envoi restent inchangés');
+}
+
+/** SN6 ⭐⭐ — ÉCHEC du premier envoi : ⛔ ni snapshots, ni « Invité », ni date. */
+function testB22_SN6_echecNeFigeRien(etat) {
+  var cl = _b22ClasseurNeuf();
+  var nom = 'LE TEST RUGBY CLUB';
+  // ⚠️ La panne est injectée sur les DEUX chemins d'envoi : `MailApp` (envoi depuis le compte
+  //   exécutant) et `GmailApp` (alias « Envoyer en tant que »). ⭐ N'en couvrir qu'un laissait
+  //   ce test passer pour une mauvaise raison — l'envoi réussissait par l'autre.
+  var origMail = MailApp.sendEmail, origGmail = GmailApp.sendEmail;
+  var panne = function () { throw new Error('quota dépassé (panne simulée)'); };
+  MailApp.sendEmail = panne; GmailApp.sendEmail = panne;
+  var res;
+  try {
+    res = envoyerInvitationClub(cl, { club_nom: nom, sujet: 'Invitation',
+      html_modele: '<p>Bonjour</p>', texte_modele: 'Bonjour', base_reponse: 'https://x/r',
+      base_invitation: 'https://x/i' });
+  } finally { MailApp.sendEmail = origMail; GmailApp.sendEmail = origGmail; }
+
+  _ffrAssert(etat, !!res.error, 'B2-2 SN6 : l\'échec est remonté, ⛔ pas avalé');
+  _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, nom)),
+    'B2-2 SN6 ⭐⭐ : ⛔ AUCUN snapshot n\'est figé sur un envoi qui a échoué');
+  var plat = trouverClubParNom(_b20ClubsApresReset(cl), nom);
+  _ffrAssert(etat, String(plat.statut || '').trim() === '' &&
+                   String(plat.invitation_envoyee || '').trim() === '',
+    'B2-2 SN6 ⭐ : ⛔ ni « Invité », ni date d\'envoi — l\'échec ne laisse aucune trace de succès');
+  // ⭐ Et le club reste invitable : le geste peut être refait.
+  _ffrAssert(etat, clubEstInvitable(plat.statut),
+    'B2-2 SN6 : ⭐ le club reste INVITABLE — on peut réessayer');
+}
+
+/** SN7 ⭐ — Un JETON n'est pas une invitation : le créer ne fige rien et ne pose rien. */
+function testB22_SN7_jetonNestPasUneInvitation(etat) {
+  var cl = _b22ClasseurNeuf();
+  var nom = 'LE TEST RUGBY CLUB';
+  var club = trouverClubParNom(lireClubs(cl), nom) || {};
+  assurerParticipation(cl, club);                        // ⭐ un jeton naît ici
+  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), club.club_id) || {};
+  _ffrAssert(etat, String(p.club_token || '').trim() !== '',
+    'B2-2 SN7 : la participation a bien reçu un jeton');
+  _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, nom)),
+    'B2-2 SN7 ⭐⭐ : ⛔ mais aucun snapshot n\'est figé — un jeton n\'est pas un envoi');
+  _ffrAssert(etat, String(p.statut || '').trim() === '' &&
+                   String(p.invitation_envoyee || '').trim() === '',
+    'B2-2 SN7 ⭐⭐ : ⛔ ni « Invité », ni date d\'envoi');
+  // Et renouveler le jeton ne change rien non plus.
+  regenererJetonClub(cl, { club_nom: nom });
+  _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, nom)),
+    'B2-2 SN7 ⭐ : ⛔ renouveler le jeton ne fige toujours rien');
+}
+
+/** SN8 ⭐ — MIGRATION LEGACY, cas A : l'invitation principale est PROUVÉE ⇒ snapshots remplis. */
+function testB22_SN8_legacyCasA(etat) {
+  var cl = _b22ClasseurLegacyPret();                     // le club témoin porte invitation_envoyee
+  _b22Migrer(cl);
+  var snaps = _b22Snapshots(cl, 'LE TEST RUGBY CLUB') || {};
+  _ffrAssert(etat, snaps.snap_club_nom === 'LE TEST RUGBY CLUB' &&
+                   snaps.snap_contact_email === 'contact@test-rugby.fr',
+    'B2-2 SN8 ⭐ (cas A) : `invitation_envoyee` présent ⇒ les snapshots sont remplis');
+  _ffrAssert(etat, !valeurLegacyAbsente(lireOngletSimple(cl, 'ClubsInvites')[0].invitation_envoyee),
+    'B2-2 SN8 : et c\'est bien `invitation_envoyee` qui l\'a permis — la seule preuve d\'envoi');
+}
+
+/** SN9 ⭐⭐ — MIGRATION LEGACY, cas B : participation prouvée AUTREMENT ⇒ snapshots VIDES. */
+function testB22_SN9_legacyCasB(etat) {
+  // Un club qui a RÉPONDU, avec ses effectifs — mais dont l'invitation n'est pas tracée
+  // (invitée de vive voix, ou par un email envoyé hors de l'application).
+  var cl = _b22Classeur([_b22LigneLegacy({ club_nom: 'BOUCHE À OREILLE',
+    statut: 'Accepté', date_reponse: '2026-07-30', nb_joueurs_total: 18,
+    categories_engagees: 'U10' })]);
+  _b22Migrer(cl);
+  var club = trouverClubParNom(lireClubs(cl), 'BOUCHE À OREILLE') || {};
+  var p = trouverParticipation(lireParticipations(cl), _b21IdActif(cl), club.club_id) || {};
+  _ffrAssert(etat, statutClubCanonique((p||{}).statut) === 'Accepté',
+    'B2-2 SN9 (cas B) : la participation EXISTE — la réponse du club la prouve');
+  _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, 'BOUCHE À OREILLE')),
+    'B2-2 SN9 ⭐⭐ (cas B) : ⛔ mais AUCUN historique d\'invitation n\'est fabriqué');
+  // ⭐ Et le premier VRAI envoi les figera, exactement comme pour une participation neuve.
+  envoyerInvitationClub(cl, { club_nom: 'BOUCHE À OREILLE', sujet: 'Invitation',
+    html_modele: '<p>Bonjour</p>', texte_modele: 'Bonjour', base_reponse: 'https://x/r',
+    base_invitation: 'https://x/i' });
+  _ffrAssert(etat, (_b22Snapshots(cl, 'BOUCHE À OREILLE') || {}).snap_club_nom === 'BOUCHE À OREILLE',
+    'B2-2 SN9 ⭐ : et le premier envoi RÉEL les fige enfin');
+}
+
+/** SN10 — `dossier_envoye` seul ne vaut PAS preuve d'invitation principale. */
+function testB22_SN10_dossierNestPasInvitation(etat) {
+  var cl = _b22Classeur([_b22LigneLegacy({ club_nom: 'DOSSIER SEUL',
+    statut: 'Accepté', dossier_envoye: '2026-08-01' })]);
+  _b22Migrer(cl);
+  _ffrAssert(etat, !!_b22Snapshots(cl, 'DOSSIER SEUL'),
+    'B2-2 SN10 : la participation existe (le dossier prouve un engagement)');
+  _ffrAssert(etat, _b22TousVides(_b22Snapshots(cl, 'DOSSIER SEUL')),
+    'B2-2 SN10 ⭐⭐ : ⛔ mais les snapshots restent VIDES — le dossier (phase 2) n\'atteste pas ' +
+    'l\'invitation principale (phase 1)');
 }
