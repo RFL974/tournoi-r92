@@ -9986,3 +9986,52 @@ destructif, et **hors périmètre de cette passe**.
 ⏭️ **Aucune n'est engagée.** ⛔ **B2-1 reste OUVERTE** : sa suite est le **déploiement + la
 migration + le constat réel**, et ⛔ **aucun de ces trois gestes ne se décide sans Romain**
 *(`CLAUDE.md` §12.4)*.
+
+### 31.12 — ⚡ ADDENDUM du 2026-08-27 : l'intégration Git a eu lieu
+
+> ⭐ **Pourquoi un addendum, et pas une réécriture** *(`CLAUDE.md` §8 septies)*. Tout ce qui précède
+> — *« cette session est une première passe LOCALE »*, *« ⛔ Non poussé »*, *« `origin/main` répond
+> toujours `58ac4a2` »* — **était vrai au moment où c'était écrit**, et le reste **à sa date**.
+> ⛔ **On ne repeint pas le passé** : le nouvel état s'ajoute ici, daté.
+
+**Ce qui a été fait**, dans cet ordre, sans qu'un seul fichier ne change entre-temps :
+
+1. **reconstat** avant tout geste, puis `git fetch --prune origin` et **reconstat à nouveau** —
+   ⛔ aucun écart, `origin/main` toujours sur `58ac4a2`, branche B2-1 absente du dépôt distant ;
+2. **publication** de la branche **`claude/b2-1-edition-id`**, avec son upstream, ⛔ **sans force** ;
+3. **intégration** dans `main` en **avance rapide stricte** *(`git merge --ff-only`)* — ⭐ **aucun
+   commit de fusion**, les **deux** commits conservés **dans leur ordre d'origine** ;
+4. **push** de `main`, ⛔ **sans force**, puis **reconstat direct sur le dépôt distant**.
+
+⭐ **Les repères exacts — SHA et pointeurs — vivent dans [`ETAT.md`](ETAT.md), et là seulement**
+*(`CLAUDE.md` §8 quater)*. ⛔ Ils ne sont pas recopiés ici.
+
+**Les workflows GitHub : ⛔ aucun run, et c'est CONFORME.**
+
+Le dépôt ne porte qu'un workflow, `.github/workflows/pages.yml`. Son déclencheur `push` est filtré
+sur `branches: [main]` **et** sur `paths: frontend/**` ou `.github/workflows/pages.yml`.
+⭐ **Aucun des 12 fichiers du lot n'est dans ces chemins** — le lot est **backend et documentation
+uniquement**. Le push de la branche ne pouvait rien déclencher *(mauvaise branche)*, celui de `main`
+non plus *(mauvais chemins)*.
+
+> ⚠️ **La conséquence à connaître, et elle n'est pas un défaut** : les **quatre garde-fous Node**
+> de `tests/` **n'ont pas été rejoués par GitHub** sur ce lot. ⭐ C'est le comportement **voulu**
+> *(un lot qui ne touche pas `frontend/` ne change rien au site publié)*, et ils ont été **lancés
+> localement** — **48/48**, **97/97**, **41/41**, **45/45**. ⛔ **Ne pas conclure « la CI a validé
+> B2-1 » : la CI ne s'est pas exécutée du tout.**
+
+**⛔ CE QUE CETTE INTÉGRATION NE CHANGE PAS — et c'est l'essentiel.**
+
+| | |
+|---|---|
+| ⛔ **Aucun redéploiement Apps Script** | Le serveur chez Google exécute **toujours l'ancien `Code.gs`** |
+| ⛔ **Aucun onglet `Editions` chez Google** | Il n'existe **que dans le dépôt** |
+| ⛔ **`migrerEditionsMaintenant()` jamais lancée** | Pas une fois |
+| ⛔ **Aucune écriture dans le classeur réel** | Jeu de tournoi fictif **intact** |
+| ⚠️ **`974/974` reste une PRÉDICTION LOCALE** | ⭐ **Être sur GitHub ne fait rien exécuter chez Google.** Le bilan réel y est toujours **881/881** |
+| ⛔ **B2-1 et R-106 restent OUVERTS** | ⛔ **Aucune clôture** |
+
+⏭️ **Prochaine étape, et elle se décide séparément** : **① déploiement contrôlé** *(recoller
+`Code.gs` **et** `Tests.gs`, vérifier les repères de [`../deploiement.md`](../deploiement.md))* →
+**② migration explicite** *(`migrerEditionsMaintenant()`, une seule fois)* → **③ preuves réelles
+chez Google** *(régénérer 3× et lire **un seul** `edition_id`)*.

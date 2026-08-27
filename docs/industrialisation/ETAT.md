@@ -84,9 +84,14 @@
 **Dernière mise à jour** : 2026-08-27 *(session 31)* — 🆔 **M1-B2 / B2-1 EST DÉMARRÉE : UNE ÉDITION
 A UNE IDENTITÉ QUI NE BOUGE PLUS — ⛔ DANS LE DÉPÔT SEULEMENT.**
 
-> ⛔ **B2-1 N'EST PAS TERMINÉE, ET R-106 N'EST PAS CLOS.** Cette passe est **locale** : ⛔ aucun
-> push, aucun redéploiement Apps Script, aucune écriture dans le classeur réel, aucune migration.
+> ⛔ **B2-1 N'EST PAS TERMINÉE, ET R-106 N'EST PAS CLOS.** ⚡ **Le code est INTÉGRÉ ET PUBLIÉ SUR
+> GITHUB** *(2026-08-27)* — ⛔ **mais il n'est pas EN SERVICE** : aucun redéploiement Apps Script,
+> aucune écriture dans le classeur réel, aucune migration.
 > ⭐ **Le jeu de tournoi fictif n'a pas été touché** — il est intact.
+>
+> ⚡ *(Ce bloc annonçait « Cette passe est **locale** : ⛔ aucun push… » — **vrai jusqu'à
+> l'intégration du 2026-08-27**. ⭐ **Être sur GitHub n'est pas être en service** : le serveur
+> Google exécute toujours l'ancien `Code.gs`.)*
 
 | | |
 |---|---|
@@ -95,11 +100,12 @@ A UNE IDENTITÉ QUI NE BOUGE PLUS — ⛔ DANS LE DÉPÔT SEULEMENT.**
 | ⭐ **Le reset** | Registre **contrôlé en tout premier** *(un refus ne coûte aucune donnée)*, **basculé en tout dernier**, en **une seule écriture**. ⛔ **Aucune demi-bascule n'est représentable** — un échec injecté laisse l'ancienne édition active et n'ouvre rien |
 | ⭐ **La migration** | `migrerEditionsMaintenant()` — explicite, **idempotente**, et ⛔ **elle ne touche RIEN d'autre** que l'onglet `Editions` |
 | 🔬 **Les preuves locales** | **974/974** au harnais Apps Script *(881 avant)* · **48/48**, **97/97**, **41/41**, **45/45** aux quatre suites Node, **inchangées** · ⭐ **six mutations** rejouées, **six attrapées** |
-| ⛔ **Ce qui N'EST PAS prouvé** | ⛔ **Rien en conditions réelles** *(`CLAUDE.md` §13.6)*. Le bilan **974** est un **PRÉDIT** : il a été obtenu par un lanceur local, ⛔ pas lu dans le journal chez Google |
+| ⛔ **Ce qui N'EST PAS prouvé** | ⛔ **Rien en conditions réelles** *(`CLAUDE.md` §13.6)*. ⚠️ **Le bilan `974/974` reste une PRÉDICTION LOCALE**, et l'intégration Git n'y change **rien** : il a été obtenu par un lanceur local, ⛔ **pas lu dans le journal Apps Script**. Chez Google, le bilan est toujours **881/881** |
 | ⛔ **Ce que le lot ne fait PAS** | ⛔ Aucun rattachement *(rien ne porte encore d'`edition_id`)* · ⛔ aucun sélecteur d'édition · ⛔ aucun multi-tournois · ⛔ aucun `club_id` · ⛔ **pas une ligne de `frontend/`** |
 | ⚡ **Un écart de plan signalé** | La ligne B2-1 du plan annonçait *« + fin du renouvellement de `tournoi_id` »* ; ⛔ **le cadrage validé dit l'inverse**, et c'est lui qui fait foi — **D-057** explique pourquoi figer `tournoi_id` **détruirait** des lignes de `Historique` |
-| ✅ **L'état Git CONSTATÉ** | Commit **`3667f70`** *(parent **`58ac4a2`**)*, **12 fichiers**, sur **`main`**. ⛔ **NON POUSSÉ** — `origin/main` est resté sur `58ac4a2`, constaté par `git rev-parse origin/main` **après** le commit. ⭐ **C'est ici, et ici seulement, que ce repère vit** *(`CLAUDE.md` §8 quater)* |
-| ⏭️ **Ce qui reste** | **Push** *(après contrôle)* → **redéploiement** → **migration** → **constat réel** : régénérer 3× et lire **un seul** `edition_id` |
+| ✅ **L'état Git CONSTATÉ** | ⚡ **INTÉGRÉ ET POUSSÉ le 2026-08-27.** `origin/main` = **`ee5db89`**, atteint en **avance rapide pure** *(`--ff-only`, ⛔ **aucun commit de fusion**)*, filiation linéaire **`58ac4a2` → `3667f70` → `ee5db89`**. La branche **`claude/b2-1-edition-id`** est publiée et pointe sur le même **`ee5db89`**. ⭐ **C'est ici, et ici seulement, que ces repères vivent** *(`CLAUDE.md` §8 quater)*. ⚡ *(Cette case disait « Commit `3667f70` … ⛔ **NON POUSSÉ** — `origin/main` est resté sur `58ac4a2` » : **vrai jusqu'au 2026-08-27**.)* |
+| ⛔ **Et pourtant : RIEN N'EST EN SERVICE** | ⭐ **La distinction à ne jamais perdre.** Le code est sur GitHub ; le serveur chez Google exécute **toujours l'ancien `Code.gs`**. ⛔ **Aucun redéploiement**, ⛔ **aucun onglet `Editions` dans le classeur**, ⛔ **`migrerEditionsMaintenant()` jamais lancée**, ⛔ **aucune preuve réelle** |
+| ⏭️ **Ce qui reste** | ⚡ ~~Push~~ ✅ *(fait)* → **① redéploiement contrôlé** *(recoller `Code.gs` **et** `Tests.gs`)* → **② migration explicite** *(`migrerEditionsMaintenant()`, une fois)* → **③ preuves réelles chez Google** : régénérer 3× et lire **un seul** `edition_id` dans l'onglet `Editions` |
 | ⏳ **Toujours à décider par Romain** | Le **sort du jeu de tournoi fictif** — voir le repère en tête de ce document |
 
 *Rappel de la mise à jour précédente — 2026-08-26 (suite 6)* — 🏁🏁 **M1-PUB EST TERMINÉ. LE CHANTIER ENTIER

@@ -9,7 +9,7 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-27 *(**M1-B2 / B2-1**, première passe locale)* —
+**Dernière mise à jour** : 2026-08-27 *(**M1-B2 / B2-1**, première passe — **intégrée dans `main`**, ⛔ **non déployée**)* —
 ⚡ **AUCUN PROBLÈME NE SE FERME, ET AUCUN NOUVEAU N'APPARAÎT.** **R-106** avance : une réponse
 existe désormais **dans le dépôt** *(`edition_id` + registre `Editions`)*, ⛔ **ni déployée, ni
 migrée, ni constatée en réel** — il reste donc **OUVERT**. Voir sa fiche.
@@ -2219,7 +2219,8 @@ relance.
 > |---|---|
 > | ✅ **Écrit dans le dépôt** | `edition_id` *(UUID)* et l'onglet **`Editions`** : ouverture idempotente, unicité de l'édition active, bascule en **une seule écriture** au reset réussi, refus **avant tout effacement** si le registre est incohérent, migration explicite `migrerEditionsMaintenant()` |
 > | ✅ **Prouvé localement** | **12 exigences** couvertes par le harnais `Tests.gs` — dont la **stabilité** de l'identifiant après régénération des poules, du planning, modification d'équipes, publication / masquage, saisie et correction de score, et l'**échec injecté** pendant un reset *(⛔ aucune demi-bascule)*. Bilan local **974/974**, et **six mutations** rejouées ont toutes été attrapées |
-> | ⛔ **NON déployé** | Le serveur chez Google n'a **pas** été recollé. ⛔ **Rien de tout cela n'est en service** |
+> | ✅ **Intégré dans `main`** | ⚡ **2026-08-27** — avance rapide pure, ⛔ aucun commit de fusion. Repères exacts : [`ETAT.md`](ETAT.md) |
+> | ⛔ **NON déployé** | ⭐ **Et c'est la distinction à tenir** : être sur GitHub **n'est pas** être en service. Le serveur chez Google n'a **pas** été recollé — ⛔ **rien de tout cela ne s'exécute** |
 > | ⛔ **NON migré** | L'onglet `Editions` **n'existe pas** dans le classeur réel : `migrerEditionsMaintenant()` **n'a jamais été lancée** |
 > | ⛔ **NON constaté en réel** | ⚠️ **`CLAUDE.md` §13.6** — aucune affirmation sur le comportement en production |
 > | ⛔ **Renouvellement de `tournoi_id` : INCHANGÉ, à dessein** | ⭐ **Ce n'est pas un oubli** : c'est **D-057**. `tournoi_id` reste la clé de dédoublonnage de `Historique` ; le figer écraserait des lignes du journal de saison. Ce que B2-1 lui retire, c'est la **sémantique d'édition**, pas son rôle |
