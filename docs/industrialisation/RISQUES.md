@@ -2120,7 +2120,7 @@ d'où le *« 18 terrains de jeu, sur 4 grands terrains »* d'un tournoi qui n'a 
 |---|---|
 | **Priorité** | **P2** — ⭐ **c'est la CAUSE STRUCTURELLE de R-099, R-100 et R-101** |
 | **Domaine** | **G — architecture** |
-| **Statut** | ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27** *(B2-2)* — ⛔ **pas encore prouvé en réel** |
+| **Statut** | ✅ **CORRIGÉ EN LOCAL** — ⚡ **une PART est prouvée en réel** *(la non-bascule)*, ⛔ **la séparation elle-même attend la migration** |
 
 🔬 Les 17 colonnes de `ClubsInvites` mélangent **6 colonnes durables** *(nom, contacts, date
 d'ajout)* et **11 colonnes de participation**, sans que **rien dans la structure** ne dise à quelle
@@ -2144,8 +2144,36 @@ famille appartient une colonne. Le reset s'en remet à **une liste écrite à la
 > la branche `claude/b2-2-clubs-participations`. ⛔ **Rien n'est déployé, rien n'est migré** : le
 > classeur réel porte toujours `ClubsInvites` seul. **Statut §12.5 : CORRIGÉ, pas TESTÉ.**
 
-> ✅ ⚡ **PREUVE COMPLÉTÉE le 2026-08-27** *(seconde passe)* : **un seul modèle est actif à la
-> fois, ⛔ jamais un mélange.** La bascule structurelle est réservée au geste **explicite** de
+> ✅ ⚡ **PROUVÉ SUR LE CLASSEUR RÉEL le 2026-08-27 — pour la part « UN SEUL MODÈLE ACTIF ».**
+>
+> 🔬 **Ce qui a été observé, et il n'y a rien à déduire.** Le code B2-2 étant déployé et le
+> classeur encore **legacy**, une **écriture métier réelle** a été faite depuis l'administration
+> *(le contact du club fictif `LE TEST RUGBY CLUB` : `TEST` → `TEST-B22-TEMOIN`, puis retour)*.
+> Trois relevés **du contenu intégral** ont été comparés :
+>
+> | | T0 | T1 *(après écriture)* | T2 *(après retour)* |
+> |---|---|---|---|
+> | Onglets | 13 | **13** | **13** |
+> | `Clubs` · `Participations` · `migration_clubs_b22` | absents | ⛔ **toujours absents** | ⛔ **toujours absents** |
+> | La valeur témoin | absente | ✅ **écrite dans `ClubsInvites`** | effacée |
+> | `Equipes`/`Poules`/`Matchs` · `Editions` · `Historique` | 0/0/0 · 2 · 211 | **identiques** | **identiques** |
+>
+> ⭐ **Dans TOUT le classeur, l'écriture n'a changé que DEUX lignes** — l'ancienne et la nouvelle
+> version de la ligne du club. Sur ses 17 champs, **un seul a bougé** : ⛔ ni `statut`, ni
+> `club_token` *(inchangé, `7afb22c6-…`)*, ni aucun champ d'engagement. **`MASSY` et `LE PUC` :
+> intacts.** ⭐ **Et T2 est identique à T0 CARACTÈRE POUR CARACTÈRE** *(95 244 des deux côtés)*.
+>
+> 🎯 **Ce que cela établit** : *déployer B2-2 ne migre pas le classeur en douce.* Une écriture
+> métier ordinaire suit le chemin **legacy** de bout en bout, et ⛔ **ne crée aucune structure
+> nouvelle**. C'est l'arbitrage *« un modèle actif à la fois, jamais un mélange »*, vérifié en
+> production et non plus seulement au harnais.
+>
+> ⛔ **CE QUE CELA N'ÉTABLIT PAS, et c'est pourquoi le statut ne bouge pas.** Le classeur est
+> **toujours legacy** : la **séparation** `Clubs` + `Participations` — ce que cette fiche porte
+> vraiment — ⛔ **n'est pas en service**. Elle ne le sera qu'après `migrerClubsMaintenant()`.
+> ⭐ **La cohabitation est prouvée ; la séparation ne l'est pas.**
+>
+> *Rappel de la preuve locale* : **un seul modèle est actif à la fois, ⛔ jamais un mélange.** La bascule structurelle est réservée au geste **explicite** de
 > migration — une écriture métier ordinaire ne la déclenche plus *(elle le faisait dans la
 > première passe)*. Un classeur non migré suit le chemin **legacy de bout en bout**, et les
 > assertions T1 → T8 le vérifient **sur les deux structures**.

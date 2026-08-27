@@ -10338,3 +10338,39 @@ comparaison du contenu en est un.
 restaure exactement le code de la version 160)* est attrapée par **16 assertions**.
 
 ⛔ **`migrerClubsMaintenant()` n'a JAMAIS été exécutée.** Le classeur est intact.
+
+### 🏁 SESSION 32 — PHASE RÉELLE 1 TERMINÉE : la preuve de non-bascule *(2026-08-27)*
+
+**Ce qui a été prouvé sur le classeur réel** : le code B2-2 étant déployé et le classeur encore
+**legacy**, une écriture métier ordinaire reste dans `ClubsInvites` et ⛔ **ne crée ni `Clubs`, ni
+`Participations`, ni marque de migration**.
+
+**Le geste**, choisi pour être le moins intrusif possible : le contact du club **fictif**
+`LE TEST RUGBY CLUB` — `TEST` → `TEST-B22-TEMOIN`, puis retour. ⭐ Il traverse
+`modifierClubInvite` → `contexteEcritureClub`, c'est-à-dire **la fonction même qui décide du
+modèle actif**, ⛔ sans envoyer d'email, sans toucher un statut, un jeton, une équipe ni l'édition.
+⭐ **Les deux vrais clubs — `MASSY` et `LE PUC` — n'ont jamais été approchés.**
+
+**Trois relevés du contenu INTÉGRAL** *(T0, T1, T2)*, comparés caractère par caractère :
+**T1 diffère de T0 par exactement DEUX lignes** *(l'ancienne et la nouvelle version de la ligne du
+club)*, et ⭐ **T2 est identique à T0 — 95 244 caractères de part et d'autre.**
+
+### 🎯 Ce que cette phase a appris
+
+**① La preuve tient sur ce qu'on a comparé, pas sur ce qu'on a regardé.** À deux reprises, le
+`modifiedTime` du classeur a bougé **sans qu'un seul caractère change** — ouvrir un classeur suffit
+à le déplacer. ⛔ **Ce n'est pas un témoin de modification de contenu.** Seule la comparaison du
+contenu en est un, et c'est elle qui a servi à chaque étape.
+
+**② Un ordre inversé aurait affaibli la preuve.** Constater **T1 AVANT de restaurer** était
+indispensable : une fois la valeur remise, plus rien ne distinguerait *« l'écriture a eu lieu et
+n'a rien basculé »* de *« l'écriture n'a jamais eu lieu »*. ⭐ **C'est l'état intermédiaire qui
+porte la démonstration**, pas l'état final.
+
+**③ Et un écart de traçabilité a dû être réglé avant de continuer.** Le correctif du transport
+tournait chez Google alors que `main` portait encore le code défectueux. ⛔ **Aucune preuve réelle
+ne vaut si la source de vérité ne représente pas ce qui s'exécute** — une session suivante aurait
+pu recoller la mauvaise version en croyant bien faire.
+
+⛔ **`migrerClubsMaintenant()` n'a JAMAIS été exécutée.** B2-2 **reste ouvert** : la séparation
+`Clubs` + `Participations` n'est pas en service, et R-104 / R-105 attendent la migration réelle.

@@ -103,7 +103,33 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-27 *(session 32, phase réelle 1 — **réalignement Git**)* —
+**Dernière mise à jour** : 2026-08-27 *(session 32 — 🏁 **PHASE RÉELLE 1 TERMINÉE**)* —
+✅ **LA PREUVE DE NON-BASCULE EST ACQUISE SUR LE CLASSEUR RÉEL.** ⛔ **`migrerClubsMaintenant()`
+n'a JAMAIS été exécutée, et B2-2 n'est PAS clos.**
+
+> 🔬 **LA CHAÎNE COMPLÈTE, OBSERVÉE — ⛔ rien n'est déduit.** Code B2-2 déployé *(1222/1222 réel)*,
+> classeur encore **legacy**, puis une **écriture métier réelle** depuis l'administration sur le
+> club fictif `LE TEST RUGBY CLUB` : contact `TEST` → `TEST-B22-TEMOIN`, puis retour.
+>
+> | | **T0** | **T1** *(après écriture)* | **T2** *(après retour)* |
+> |---|---|---|---|
+> | Onglets | 13 | **13** | **13** |
+> | `Clubs` | absent | ⛔ **absent** | ⛔ **absent** |
+> | `Participations` | absent | ⛔ **absent** | ⛔ **absent** |
+> | `migration_clubs_b22` | absente | ⛔ **absente** | ⛔ **absente** |
+> | Valeur témoin | absente | ✅ **dans `ClubsInvites`** | effacée |
+> | `Equipes`/`Poules`/`Matchs` · `Editions` · `Historique` | 0/0/0 · 2 · 211 | identiques | identiques |
+> | Contenu intégral | 95 244 car. | 95 255 | ⭐ **95 244 — IDENTIQUE À T0** |
+>
+> ⭐ **L'écriture n'a changé que DEUX lignes dans tout le classeur**, et **un seul champ sur 17** :
+> ⛔ ni `statut`, ni `club_token`, ni aucun engagement. `MASSY` et `LE PUC` **intacts**.
+> ⭐ **T2 est identique à T0 caractère pour caractère.**
+>
+> 🎯 **Ce qui est établi** : *déployer B2-2 ne migre pas le classeur en douce.* ⛔ **Ce qui ne
+> l'est pas** : la **séparation** elle-même — le classeur reste legacy jusqu'à la migration.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32, phase réelle 1 — **réalignement
+Git**)* —
 ✅ **LE CODE EN SERVICE CHEZ GOOGLE EST DE NOUVEAU CELUI DE `main`.** ⛔ **La preuve de
 non-bascule reste à prendre, et `migrerClubsMaintenant()` n'a jamais été exécutée.**
 
