@@ -10249,3 +10249,50 @@ classeur réel** · aucun reset · aucune restauration ni suppression de sauvega
 suppression de `ClubsInvites` · **pas une ligne de `frontend/`**.
 
 ⚠️ **Le classeur réel porte toujours `ClubsInvites` seul, et 13 onglets.**
+
+### ⚡ SESSION 32 — SUITE : quatre points verrouillés avant toute preuve réelle *(2026-08-27)*
+
+**Objectif** : répondre aux quatre points soulevés par Romain à la lecture du rapport de la
+première passe. ⛔ Toujours aucun geste réel.
+
+| Point | Ce qui a été trouvé |
+|---|---|
+| **① Migration explicite** | La première passe faisait converger un classeur non migré **à la première écriture métier**. ⭐ Écarté : une écriture ordinaire n'a aucune raison de changer seule la structure du classeur |
+| **② Trois états** | *« Les onglets existent »* servait de critère de bascule. ⛔ **Faux** : une migration interrompue laisse un carnet incomplet, et basculer dessus ferait disparaître des clubs de l'écran puis les recréerait en double |
+| **③ Renommage** | Le rapprochement legacy → carnet se faisait **par le nom, à chaque exécution**. Une **marque** de fin de migration ferme le défaut |
+| **④ 📸 Snapshots** | ⚠️ **Le code les figeait à la création de la participation** — ⛔ **un vrai défaut**, pas une imprécision du rapport |
+
+### 🎯 Ce que cette suite a appris
+
+**① Le rapport disait vrai sur trois points, et faux sur un — et c'est le faux qui a été trouvé.**
+Romain a demandé de **reconstater le code** sur les snapshots plutôt que de croire le rapport.
+⭐ **Le code contredisait bien la règle**, et l'aurait fait en silence jusqu'à la première
+invitation réelle. ⛔ **Un rapport n'est pas une preuve** — c'est exactement §9 appliqué à
+soi-même.
+
+**② Une fonction supprimée vaut mieux qu'une fonction neutralisée.** `assurerModeleClubs` n'a pas
+été vidée : elle a été **retirée**, et un commentaire explique à sa place pourquoi elle n'existe
+pas. ⭐ Une fonction qui existe finit par être rappelée.
+
+**③ La dualité ne coûte pas douze fonctions dédoublées.** `ClubsInvites` est le **cas dégénéré**
+où identité et engagement partagent la même ligne : une seule fonction — `contexteEcritureClub` —
+porte la différence, et les douze écrivains ignorent où ils écrivent.
+
+**④ Une mutation est de nouveau PASSÉE INAPERÇUE, et pour la même raison profonde.** Neutraliser
+le contrôle de cohérence laissait **1203 tests au vert** : ⛔ ils éprouvaient tous des migrations
+**qui se passaient bien**. ⭐ **Un contrôle qu'on n'a jamais vu REFUSER ne prouve rien** — c'est la
+deuxième fois en deux passes que le rejeu de mutations révèle un angle mort de cette nature.
+
+**⑤ Deux tests PLANTAIENT au lieu d'échouer.** Un test qui lève une exception **interrompt le
+harnais** et masque tous les résultats suivants — trois mutations rendaient ainsi un bilan
+illisible. ⭐ **Un test doit échouer, jamais planter.** Rendus défensifs.
+
+**⑥ Un test peut passer pour une mauvaise raison.** La panne d'envoi de SN6 était injectée sur
+`MailApp` seul — or le classeur factice porte un `email_expediteur`, donc l'envoi passait par
+`GmailApp` et **réussissait**. ⭐ La panne couvre désormais **les deux chemins**.
+
+**Preuves** : **1210/1210** au harnais *(1134 avant, +76)* · **48/48**, **97/97**, **41/41**,
+**45/45** aux suites Node, **inchangées** · **17 mutations, 17 interceptées**.
+
+⛔ **Toujours aucun geste réel** : ni poussée, ni fusion, ni déploiement, ni migration du classeur,
+ni reset, ni suppression de `ClubsInvites`. ⛔ **Pas une ligne de `frontend/`.**

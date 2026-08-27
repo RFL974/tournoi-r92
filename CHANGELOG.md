@@ -48,6 +48,18 @@ qui n'existait plus.
 boutons, les envois d'invitation, les réponses des clubs : **rien n'est modifié à l'écran**. Aucune
 page du site n'a été retouchée.
 
+**Deux précisions ajoutées le même jour, après relecture.**
+
+- **La bascule ne se fera pas toute seule.** Elle demande un geste explicite de l'organisateur, une
+  seule fois. Tant qu'il n'a pas eu lieu — et tant qu'il ne s'est pas **entièrement** terminé —
+  l'application continue de fonctionner exactement comme avant. Il n'existe pas d'entre-deux où
+  une partie du logiciel utiliserait l'ancienne organisation et une autre la nouvelle ;
+- **le nom et le contact gardés en mémoire pour un tournoi passé** sont ceux du jour où
+  l'invitation est **réellement partie** — pas ceux du jour où la fiche a été préparée. Si un
+  contact change entre la préparation et l'envoi, c'est bien le contact du moment de l'envoi qui
+  reste dans l'histoire. Et si l'envoi échoue, rien n'est enregistré : ni la date, ni le mot
+  « Invité », ni le contact.
+
 **Et un point de sécurité qu'il faut dire.** Comme on garde désormais les participations passées, on
 garde aussi leurs **liens personnels**. Un lien d'un tournoi précédent **ne fonctionne pas** pour
 autant : chaque lien n'ouvre que l'édition à laquelle il appartient, et l'édition précédente est

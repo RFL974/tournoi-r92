@@ -3640,7 +3640,23 @@ est bornée à l'**édition active** ; le test **N3** l'éprouve en vérifiant d
 > bloc promettait des **RÉSULTATS**. ⛔ **Aucune assertion n'a été affaiblie** — le geste est
 > désormais exprimé une fois pour les deux structures.
 
-**⑦ Ce qui reste, et ce qu'il ne faut pas croire.**
+**⑦ ⚡ SECONDE PASSE LOCALE — 2026-08-27 : quatre points verrouillés** *(complément de **D-059**)*.
+
+| | |
+|---|---|
+| ⭐ **Migration EXPLICITE seule** | `assurerModeleClubs` est **supprimée**, pas neutralisée. Une écriture métier ne déclenche plus rien : un classeur non migré suit le chemin **legacy de bout en bout**. La dualité vit dans **une seule** fonction — `contexteEcritureClub` — parce que `ClubsInvites` est le cas dégénéré où identité et engagement **partagent la même ligne** |
+| ⭐ **Trois états** | *non commencée* · ***partielle*** · *terminée*. ⛔ **Les deux premiers restent LEGACY.** Une migration interrompue laisse un carnet incomplet : basculer dessus ferait **disparaître des clubs** puis les **recréerait en double** |
+| ⭐ **La marque** | `Config.migration_clubs_b22`, posée **après** un contrôle de cohérence ligne à ligne. ⛔ **Pas dans les propriétés du script** : elles ne suivent pas les sauvegardes du classeur |
+| ⭐ **Renommage fermé** | Après la marque, `ClubsInvites` **n'est plus une source d'identités**. Un état partiel ambigu ⇒ **REFUS** nommant l'obstacle, ⛔ jamais une identité inventée |
+| 📸 **Snapshots** | Figés au **premier envoi principal RÉUSSI**, avec les valeurs **réellement utilisées**. ⛔ Pas à la création — **c'était un défaut réel de la première passe** |
+| 📸 **Legacy A / B** | `invitation_envoyee` présent ⇒ approximation **documentée** · prouvé autrement ⇒ snapshots **VIDES**. ⛔ `dossier_envoye` n'atteste **pas** l'invitation principale |
+
+🔬 **Preuves** : **1210/1210** au harnais *(1134 avant)* · suites Node **inchangées** · **17
+mutations, 17 interceptées**. ⭐ Une mutation était de nouveau passée inaperçue — *« marquer
+terminé sans vérifier »* — et le test manquant a été écrit : **un contrôle qu'on n'a jamais vu
+REFUSER ne prouve rien.**
+
+**⑧ Ce qui reste, et ce qu'il ne faut pas croire.**
 
 | | |
 |---|---|

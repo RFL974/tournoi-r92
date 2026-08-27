@@ -9,7 +9,13 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-27 *(session 32 — **passe locale de M1-B2 / B2-2**)* —
+**Dernière mise à jour** : 2026-08-27 *(session 32, suite — **seconde passe locale de B2-2**)* —
+⚡ **Les preuves de R-102, R-104 et R-105 sont COMPLÉTÉES**, leurs statuts inchangés *(CORRIGÉ EN
+LOCAL)*. ✅ **L'ambiguïté du renommage inscrite sous R-104 est FERMÉE.** ⛔ **Aucun risque nouveau** :
+la bascule automatique relevait de **R-102** *(structure)*, le renommage et les snapshots de
+**R-104** *(migration)*, le contrôle de cohérence de **R-105** — aucun n'était réellement distinct.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32 — **passe locale de M1-B2 / B2-2**)* —
 ✅ **R-102, R-104 et R-105 passent à CORRIGÉ EN LOCAL** *(⛔ pas TESTÉ : rien n'est déployé ni
 migré)*. ⚠️ **Une ambiguïté non résolue est inscrite sous R-104** *(correspondance par le NOM à la
 relance)*. ⛔ **Aucun risque nouveau n'a été ouvert** : les défauts trouvés pendant le lot sont
@@ -2130,6 +2136,12 @@ famille appartient une colonne. Le reset s'en remet à **une liste écrite à la
 > la branche `claude/b2-2-clubs-participations`. ⛔ **Rien n'est déployé, rien n'est migré** : le
 > classeur réel porte toujours `ClubsInvites` seul. **Statut §12.5 : CORRIGÉ, pas TESTÉ.**
 
+> ✅ ⚡ **PREUVE COMPLÉTÉE le 2026-08-27** *(seconde passe)* : **un seul modèle est actif à la
+> fois, ⛔ jamais un mélange.** La bascule structurelle est réservée au geste **explicite** de
+> migration — une écriture métier ordinaire ne la déclenche plus *(elle le faisait dans la
+> première passe)*. Un classeur non migré suit le chemin **legacy de bout en bout**, et les
+> assertions T1 → T8 le vérifient **sur les deux structures**.
+>
 > ⭐ **CE QUE LA SÉPARATION REND IMPOSSIBLE, et c'est la vraie fermeture de ce risque** : il n'y a
 > **plus de liste de colonnes à tenir**. Une donnée d'engagement ne peut plus survivre à un reset —
 > elle appartient à une édition qui n'est plus l'active. ⛔ **Plus rien à tenir à jour, donc plus
@@ -2190,12 +2202,25 @@ migration — ils décrivent le comportement attendu **avant** que la structure 
 > relance ne crée rien et une **interruption se reprend** sans perte. ⛔ **`ClubsInvites` n'est pas
 > touché** : rien n'est déplacé, seulement recopié.
 >
-> ⚠️ **UNE AMBIGUÏTÉ SUBSISTE, ET ELLE EST ÉCRITE ICI PARCE QU'ELLE N'EST PAS RÉSOLUE** : la
-> migration relie une ligne legacy à une identité du carnet **par le NOM**. Si un club était
-> renommé dans `Clubs` **après** la migration, une relance ultérieure recréerait une identité sous
-> son ancien nom. ⭐ **Le cas ne se produit pas dans l'usage prévu** — la migration est un geste
-> unique, la relance ne servant qu'à la reprise **avant** tout usage — mais il n'est ⛔ **pas
-> empêché par construction**, et une session future ne doit pas le découvrir seule.
+> ✅ ⚡ **L'AMBIGUÏTÉ DU RENOMMAGE EST FERMÉE le 2026-08-27** *(seconde passe locale)*.
+>
+> *Ce que cette fiche annonçait, et qui était vrai jusque-là* : *« la migration relie une ligne
+> legacy à une identité du carnet PAR LE NOM ; renommer un club après la migration, puis
+> relancer, recréerait une identité sous son ancien nom. »*
+>
+> ⭐ **Le mécanisme retenu** : une **marque de fin de migration** — `Config.migration_clubs_b22` —
+> posée **uniquement après un contrôle de cohérence ligne à ligne**. Une fois posée,
+> `ClubsInvites` **n'est plus une source d'identités** : la migration relancée **constate** et
+> s'arrête, ⛔ **sans rapprocher quoi que ce soit d'un nom mutable**.
+>
+> ⭐ **Trois états, et le second est celui qui compte** : *non commencée*, ***partielle*** et
+> *terminée*. ⛔ **Un état partiel reste LEGACY** — « les onglets existent » n'a jamais été un
+> critère : une migration interrompue laisse un carnet incomplet, et basculer dessus ferait
+> **disparaître des clubs de l'écran** puis les **recréerait en double** à la première écriture.
+>
+> 🔬 **Éprouvé** : cas A *(relance immédiate)*, B *(renommage puis relance)*, C *(interruption
+> puis reprise)*, D *(état partiel ambigu ⇒ **refus** nommant l'obstacle)*. **Mutation rejouée** :
+> réintroduire le rapprochement naïf par nom fait échouer le test du renommage.
 
 ### R-105 — Une colonne future peut à nouveau échapper au classement
 
@@ -2233,6 +2258,16 @@ exactement une des deux familles »* — qui **échoue** si une colonne nouvelle
 > 🎯 **Pourquoi ce second contrôle compte plus que le premier** : une telle colonne survivrait à
 > **toutes** les éditions, et ⛔ **aucun reset ne pourrait la rattraper** — le carnet est fait pour
 > durer. C'est **R-099 d'un cran plus haut, et sans filet.**
+>
+> ✅ ⚡ **PREUVE COMPLÉTÉE le 2026-08-27** *(seconde passe)*. Les deux garde-fous ne sont plus
+> seulement **déclarés** : ils sont **exécutés à chaque migration**, à l'intérieur du contrôle de
+> cohérence qui autorise — ou refuse — la marque de fin. ⛔ Une colonne mal placée **empêche donc
+> la migration de se déclarer terminée**, au lieu d'être seulement signalée.
+>
+> ⚠️ **Et ce contrôle a lui-même été éprouvé EN REFUS**, ce qui n'allait pas de soi : une mutation
+> neutralisant la vérification *(« marquer terminé sans vérifier »)* est d'abord **passée
+> inaperçue** — les 1203 tests d'alors éprouvaient tous des migrations **qui se passaient bien**.
+> ⭐ **Un contrôle qu'on n'a jamais vu refuser ne prouve rien.** Le test manquant existe *(E6)*.
 
 ### R-106 — `tournoi_id` ne peut pas identifier une édition
 

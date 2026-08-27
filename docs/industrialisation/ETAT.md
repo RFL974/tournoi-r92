@@ -103,8 +103,26 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-27 *(session 32)* — ⏳ **M1-B2 / B2-2 — PREMIÈRE PASSE LOCALE
-LIVRÉE.** ⛔ **Rien n'est poussé, rien n'est déployé, et le classeur réel n'est PAS migré.**
+**Dernière mise à jour** : 2026-08-27 *(session 32, suite)* — ⏳ **M1-B2 / B2-2 — SECONDE PASSE
+LOCALE : quatre points verrouillés.** ⛔ **Rien n'est poussé, rien n'est déployé, et le classeur
+réel n'est PAS migré.**
+
+> ⚡ **Ce que cette seconde passe a changé** *(arbitrages de Romain, complément de **D-059**)* :
+> la migration ne se déclenche **plus** à la première écriture — elle est **explicite seule** ; une
+> **marque** de fin de migration, posée après contrôle de cohérence, distingue *partielle* de
+> *terminée* et ferme le défaut du **renommage** ; et les 📸 **snapshots** se figent au **premier
+> envoi principal RÉUSSI**, ⛔ plus à la création de la participation.
+>
+> ⚠️ **Trois de ces quatre points corrigeaient un DÉFAUT RÉEL du code de la première passe**, pas
+> une imprécision de rédaction. ⭐ **C'est la relecture de Romain qui les a trouvés**, sur la foi
+> du rapport — et l'un d'eux *(les snapshots)* était contredit par le code lui-même.
+>
+> 🔬 **Preuves** : **1210/1210** au harnais serveur *(1134 avant)* · suites Node **inchangées** ·
+> ⭐ **17 mutations, 17 interceptées**.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32)* — ⏳ **M1-B2 / B2-2 — PREMIÈRE
+PASSE LOCALE LIVRÉE.** ⛔ **Rien n'est poussé, rien n'est déployé, et le classeur réel n'est PAS
+migré.**
 
 > ⭐ **Ce qui est ÉCRIT ET TESTÉ EN LOCAL** *(branche `claude/b2-2-clubs-participations`, trois
 > commits)* : les onglets **`Clubs`** *(carnet durable, `club_id` stable)* et **`Participations`**

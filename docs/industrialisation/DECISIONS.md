@@ -5,7 +5,14 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-27 *(session 32)* — 🆕 **D-059 — B2-2 : CE QUI PROUVE UNE
+**Dernière mise à jour** : 2026-08-27 *(session 32, suite)* — ⚡ **D-059 EST COMPLÉTÉE**, et non
+remplacée : migration structurelle **uniquement explicite** · aucun déclenchement à l'écriture ·
+migration terminée reconnue par une **marque**, ⛔ jamais par un rematching de nom · snapshots
+figés au **premier envoi principal réussi** · distinction migration legacy **avec / sans preuve
+d'invitation**. ⚠️ **Trois de ces points corrigent un défaut RÉEL du code**, pas une imprécision
+de rédaction.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32)* — 🆕 **D-059 — B2-2 : CE QUI PROUVE UNE
 PARTICIPATION, CE QUI LA CRÉE, ET POURQUOI RETIRER UN CLUB NE L'EFFACE PAS.** Arbitrages donnés
 par Romain le 2026-08-27, **avant** implémentation de la passe locale de B2-2.
 
@@ -4062,8 +4069,97 @@ Trois obligations en découlent, et **aucune n'est facultative** :
 > ne bronche.** Toute lecture par jeton est donc bornée à l'**édition active**, et le test
 > **B2-2 / N3** l'éprouve en vérifiant d'abord que le jeton **est bien encore en base**.
 
+---
+
+### ⚡ COMPLÉMENT DU 2026-08-27 *(seconde passe locale)* — quatre points verrouillés avant toute preuve réelle
+
+> ⭐ **Ces clarifications appartiennent au MÊME arbitrage** : elles précisent B2-2 avant son
+> intégration, elles ne le remplacent pas. ⛔ **C'est pourquoi elles vivent ici et non sous un
+> D-060** — la décision est une, sa mise au point s'est faite en deux temps.
+>
+> ⚠️ **Trois des quatre corrigent un DÉFAUT RÉEL du code de la première passe**, pas une simple
+> imprécision de rédaction. Le dire est le seul moyen qu'une session future comprenne pourquoi
+> ces règles sont écrites aussi fermement.
+
+**① LA MIGRATION EST EXPLICITE, ET ELLE SEULE.**
+
+| | |
+|---|---|
+| **Ce qui a été écarté** | La première passe faisait converger un classeur non migré **à la première écriture métier**. Séduisant — c'est le patron « migration douce » du dépôt — ⛔ **mais faux ici** |
+| ⭐ **Pourquoi** | Une écriture ordinaire *(ajouter un club, enregistrer une réponse)* n'a **aucune raison** de décider seule de changer la STRUCTURE du classeur. Si elle échouait à mi-chemin, celui-ci se retrouverait dans un état **que personne n'a demandé**, au milieu d'un geste sans rapport |
+| ✅ **La règle** | Seul `migrerClubsMaintenant()` crée ou fait basculer la structure. Un classeur non migré suit le chemin **legacy de bout en bout** — `Invité` d'office et jeton à l'ajout compris |
+
+**② TROIS ÉTATS, ET « LES ONGLETS EXISTENT » N'EN EST PAS UN.**
+
+| État | Ce qui fait foi |
+|---|---|
+| **① non commencée** — pas de marque, carnet vide | ⭐ **LEGACY** |
+| **② partielle** — pas de marque, carnet non vide | ⭐ **LEGACY ENCORE.** La reprise est possible ; ⛔ **le métier ne bascule pas** |
+| **③ terminée** — la **marque** est posée | ⭐ **B2-2** |
+
+> ⚠️ **Le danger que cela ferme, nommément** : une migration interrompue laisse un carnet
+> **incomplet**. Si le métier basculait sur ce seul constat, des clubs **disparaîtraient de
+> l'écran** — et la première écriture les **recréerait en double**. ⛔ Un état partiel ne doit
+> jamais ressembler à un succès.
+>
+> ⭐ **La marque est `Config.migration_clubs_b22`**, posée **uniquement après** un contrôle de
+> cohérence ligne à ligne. ⛔ **Pas dans les propriétés du script** : elles ne sont **pas
+> sauvegardées avec le classeur**, et restaurer une copie d'avant migration y laisserait une
+> marque **orpheline** affirmant que tout est migré.
+
+**③ APRÈS LA MARQUE, `ClubsInvites` N'EST PLUS UNE SOURCE D'IDENTITÉS.**
+
+> 🎯 **Le défaut fermé** : la première passe rapprochait le legacy du carnet **par le nom**, à
+> chaque exécution. Renommer un club dans `Clubs`, puis relancer la migration, aurait fait
+> **renaître un second club** sous son ancien nom — resté, lui, dans l'ancien onglet.
+>
+> ⭐ **Une migration terminée se reconnaît à sa marque, ⛔ jamais en rematchant un nom mutable.**
+> Relancée, elle **constate** et s'arrête. Et si un état **partiel** n'est pas reprenable sans
+> ambiguïté — un club présent dans `Clubs` mais **inconnu** de `ClubsInvites` — elle **REFUSE en
+> nommant l'obstacle**, plutôt que d'inventer une identité.
+
+**④ 📸 LES SNAPSHOTS SE FIGENT AU PREMIER ENVOI PRINCIPAL RÉUSSI — ⛔ pas à la création.**
+
+> ⚠️ **Le code de la première passe les figeait à la création de la participation, et c'était un
+> vrai défaut**, pas une imprécision du rapport. Une participation peut exister **avant tout
+> envoi** — on prépare une invitation, on l'envoie le lendemain. Des snapshots posés là
+> **prétendent décrire une invitation qui n'a pas eu lieu**, et **mentent** sur ce qui a été
+> envoyé si les coordonnées changent entre-temps.
+
+| Moment | Ce qui se passe |
+|---|---|
+| **Création de la participation** | ⛔ Les 4 snapshots restent **vides**. ⛔ Ni `Invité`, ni date |
+| **Contact modifié avant l'envoi** | ⭐ Le premier envoi part sur les coordonnées **réellement courantes**, et ce sont **elles** qui sont figées |
+| **Premier envoi RÉUSSI** | ⭐ Les 4 snapshots sont posés, avec les valeurs **réellement utilisées** — ⛔ pas celles relues après coup, qui diffèrent dès qu'une fiche change pendant un envoi groupé. `Invité` et la date sont posés |
+| **Contact modifié après** | ⛔ Les snapshots **ne bougent pas**. C'est leur raison d'être |
+| **Renvoi** | ⛔ **Aucune réécriture** — l'histoire ne se refait pas |
+| **Échec de l'envoi** | ⛔ Rien : ni snapshot, ni `Invité`, ni date. Le club reste **invitable** |
+| ⭐ **Création d'un JETON** | ⛔ Ne fige rien et ne pose rien : **un jeton n'est pas un envoi** |
+
+**⑤ MIGRATION LEGACY — deux cas, et le prédicat qui les sépare.**
+
+| Cas | Condition | Snapshots |
+|---|---|---|
+| **A — invitation principale PROUVÉE** | `invitation_envoyee` porte une date *(elle n'est posée qu'au **succès** d'un envoi)* | ✅ Remplis avec les valeurs legacy — ⚠️ **meilleure approximation disponible**, ⛔ **jamais présentée comme preuve exacte de l'adresse historiquement employée** |
+| **B — participation prouvée AUTREMENT** | Réponse du club, effectifs, catégories, sélection… ⛔ mais aucune trace d'envoi | ⛔ **VIDES.** La participation existe, ⛔ mais **on ne fabrique pas un historique d'invitation**. Ils se figeront au premier envoi réel |
+
+> ⚠️ **`dossier_envoye` est délibérément ÉCARTÉ comme preuve d'invitation principale** : il
+> atteste l'envoi du **dossier** *(phase 2)*, pas de l'**invitation** *(phase 1)* — un club a pu
+> être invité de vive voix. ⛔ **Déduire l'un de l'autre serait affirmer plus que la donnée ne
+> permet.**
+
+**⑥ `statut = 'Invité'` legacy seul — règle CONFIRMÉE, inchangée.**
+
+> Il ne crée **aucune** participation à la migration : le code ancien le posait **par défaut** à
+> la création de la fiche. ⭐ **La donnée reste intacte dans `ClubsInvites`** — elle n'est pas
+> perdue, elle n'est pas reprise.
+
+---
+
 **Ce que cette décision NE dit PAS**
 
+- ❌ **Pas** qu'un moteur de dédoublonnage par nom ou par email existe : ⛔ **il n'y en a
+  aucun**, et l'arbitrage l'a explicitement exclu du périmètre ;
 - ❌ **Pas** que `ClubsInvites` disparaît : il reste, intact, et sa suppression sera décidée à part ;
 - ❌ **Pas** que Maxilou devient multi-éditions : ⛔ **une seule reste active**, aucun sélecteur ;
 - ❌ **Pas** que le club organisateur est traité : la **structure** le permettra, ⛔ **le parcours

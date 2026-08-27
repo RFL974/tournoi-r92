@@ -189,9 +189,12 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 | **Le bilan** affiché en fin de journal | **`R92 — 974/974 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
 | **La dernière ligne** du fichier collé chez Google | **5554** | Le fichier collé n'est pas celui du dépôt |
 
-> ⏳ ⚡ **CE QUE CES DEUX VALEURS DEVIENDRONT APRÈS LE LOT B2-2** *(passe locale du 2026-08-27,
-> branche `claude/b2-2-clubs-participations`)* : **`R92 — 1134/1134 OK, 0 FAIL`**, `Test.gs` à
-> **6313** lignes et `Code.gs` à **9586** *(relevé par `wc -l` sur la branche, le 2026-08-27)*.
+> ⏳ ⚡ **CE QUE CES DEUX VALEURS DEVIENDRONT APRÈS LE LOT B2-2** *(branche
+> `claude/b2-2-clubs-participations`, **seconde** passe locale du 2026-08-27)* :
+> **`R92 — 1210/1210 OK, 0 FAIL`**, `Test.gs` à **6817** lignes et `Code.gs` à **9862**
+> *(relevé par `wc -l` sur la branche)*. ⚡ *(Ces valeurs ont d'abord été annoncées à
+> **1134**, **6313** et **9586** — celles de la première passe, vraies jusqu'à ce que les
+> quatre points de sûreté soient verrouillés le même jour.)*
 >
 > ⚠️ **CE SONT DES VALEURS PRÉDITES EN LOCAL, ⛔ PAS ENCORE MESURÉES CHEZ GOOGLE** *(`CLAUDE.md`
 > §9 : **PROBABLE**, pas **CERTAIN**)*. ⛔ **Les valeurs du tableau ci-dessus restent celles à
