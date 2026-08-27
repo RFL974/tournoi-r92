@@ -9974,6 +9974,7 @@ destructif, et **hors périmètre de cette passe**.
 
 | | |
 |---|---|
+| ✅ **Commitée** | ⭐ **CONSTATÉ APRÈS LE GESTE** *(`CLAUDE.md` §8 septies)* : `git show --stat` donne **12 fichiers**, et `git rev-parse origin/main` répond toujours **`58ac4a2`**. Le SHA vit dans [`ETAT.md`](ETAT.md), ⛔ **pas recopié ici** |
 | ⛔ **Non poussé** | La passe est locale. Le contrôle de ChatGPT et la décision de Romain viennent **avant** tout push |
 | ⛔ **Non déployé** | Recoller `Code.gs` **et** `Tests.gs`, puis vérifier les repères de [`../deploiement.md`](../deploiement.md) |
 | ⛔ **Non migré** | Lancer **une fois** `migrerEditionsMaintenant()`. ⭐ Elle ne touche que l'onglet `Editions` — ⛔ **elle ne réinitialise rien** |

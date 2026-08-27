@@ -98,6 +98,7 @@ A UNE IDENTITÉ QUI NE BOUGE PLUS — ⛔ DANS LE DÉPÔT SEULEMENT.**
 | ⛔ **Ce qui N'EST PAS prouvé** | ⛔ **Rien en conditions réelles** *(`CLAUDE.md` §13.6)*. Le bilan **974** est un **PRÉDIT** : il a été obtenu par un lanceur local, ⛔ pas lu dans le journal chez Google |
 | ⛔ **Ce que le lot ne fait PAS** | ⛔ Aucun rattachement *(rien ne porte encore d'`edition_id`)* · ⛔ aucun sélecteur d'édition · ⛔ aucun multi-tournois · ⛔ aucun `club_id` · ⛔ **pas une ligne de `frontend/`** |
 | ⚡ **Un écart de plan signalé** | La ligne B2-1 du plan annonçait *« + fin du renouvellement de `tournoi_id` »* ; ⛔ **le cadrage validé dit l'inverse**, et c'est lui qui fait foi — **D-057** explique pourquoi figer `tournoi_id` **détruirait** des lignes de `Historique` |
+| ✅ **L'état Git CONSTATÉ** | Commit **`3667f70`** *(parent **`58ac4a2`**)*, **12 fichiers**, sur **`main`**. ⛔ **NON POUSSÉ** — `origin/main` est resté sur `58ac4a2`, constaté par `git rev-parse origin/main` **après** le commit. ⭐ **C'est ici, et ici seulement, que ce repère vit** *(`CLAUDE.md` §8 quater)* |
 | ⏭️ **Ce qui reste** | **Push** *(après contrôle)* → **redéploiement** → **migration** → **constat réel** : régénérer 3× et lire **un seul** `edition_id` |
 | ⏳ **Toujours à décider par Romain** | Le **sort du jeu de tournoi fictif** — voir le repère en tête de ce document |
 
