@@ -103,8 +103,33 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-27 *(session 32, phase réelle 1)* — ⚠️ **B2-2 EST DÉPLOYÉ EN
-VERSION 160, ET LE TEST RÉEL A ÉCHOUÉ : `1203/1210`, 7 FAIL.** ⛔ **La Phase réelle 1 est ARRÊTÉE
+**Dernière mise à jour** : 2026-08-27 *(session 32, phase réelle 1 — **réalignement Git**)* —
+✅ **LE CODE EN SERVICE CHEZ GOOGLE EST DE NOUVEAU CELUI DE `main`.** ⛔ **La preuve de
+non-bascule reste à prendre, et `migrerClubsMaintenant()` n'a jamais été exécutée.**
+
+> ⚠️ **L'ÉCART QUI A JUSTIFIÉ CETTE PASSE, et il valait d'être traité avant d'aller plus loin.**
+> La correction du transport a été **collée et déployée** chez Google — elle y a produit
+> **`R92 — 1222/1222 OK, 0 FAIL`** — ⛔ **mais elle n'avait été ni fusionnée ni poussée**.
+> `main` et `origin/main` restaient sur **`41b6cc9`**, c'est-à-dire **le code défectueux de la
+> version 160**. 🎯 **Quiconque aurait lu `main` pour savoir ce qui tourne aurait vu le mauvais
+> code** — et une session suivante aurait pu recoller la version défectueuse en croyant bien faire.
+>
+> ✅ **CE QUI EST CONSTATÉ APRÈS LE GESTE** *(§8 septies)* :
+>
+> | | |
+> |---|---|
+> | **Intégration** | **Avance rapide pure** `41b6cc9` → **`b7cf62b`**, ⛔ **aucun commit de fusion** |
+> | **Poussée** | ✅ **`git ls-remote origin refs/heads/main` = `b7cf62b`** · `HEAD` = `main` = `origin/main` · worktree **propre** |
+> | ⭐ **Cohérence Git ↔ Google** | `backend/` est **identique depuis le commit de correction `c1d6309`** *(les deux commits suivants sont purement documentaires)*. ⭐ **Le code collé chez Google EST donc celui de `main`** : `Code.gs` **9893** lignes, `Tests.gs` **6958**, `TRANSPORT_EMAIL` présent, **TR1/TR2/TR3** présents |
+> | ⛔ **Aucun redéploiement** | Le code présent dans l'éditeur est **déjà** celui de `main` : recoller n'aurait produit qu'un numéro de version de plus, ⛔ **sans rien changer** |
+> | ⭐ **GitHub Pages** | ⛔ **Non déclenché** — `frontend/` n'est pas touché. Dernière exécution : **2026-08-26** sur `8778982` |
+> | ✅ **Le classeur** | ⛔ **STRICTEMENT INCHANGÉ** — aucun geste métier durant cette passe |
+>
+> ⏭️ **La Phase réelle 1 reprendra exactement où elle s'est arrêtée** : l'écriture témoin
+> `TEST → TEST-B22-TEMOIN` sur `LE TEST RUGBY CLUB`, puis constat, restauration, et arrêt.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32, phase réelle 1)* — ⚠️ **B2-2 EST
+DÉPLOYÉ EN VERSION 160, ET LE TEST RÉEL A ÉCHOUÉ : `1203/1210`, 7 FAIL.** ⛔ **La Phase réelle 1 est ARRÊTÉE
 avant l'écriture témoin. `migrerClubsMaintenant()` n'a JAMAIS été exécutée.**
 
 > 🔬 **CE QUI EST CONSTATÉ CHEZ GOOGLE** *(relevé par Romain, journal Apps Script)* :
