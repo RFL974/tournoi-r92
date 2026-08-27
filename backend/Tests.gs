@@ -430,6 +430,18 @@ function lancerTestsFFR() {
   testB21_migrationSansPerte(etat);
   testB21_pasDeSelecteurNiMultiTournois(etat);
 
+  // M1-B2 / B2-2 (D-050, R-102/104/105) — `Clubs` + `Participations`.
+  // ⭐ Le PRÉDICAT d'abord : c'est lui qui décide si un club legacy a réellement participé.
+  testB22_P1_identiteSeuleAucuneParticipation(etat);
+  testB22_P2_jetonSeulAucuneParticipation(etat);
+  testB22_P3_statutInviteSeulAucuneParticipation(etat);
+  testB22_P4_invitationEnvoyeeProuve(etat);
+  testB22_P5_reponseEtEffectifsProuvent(etat);
+  testB22_P6_combinaisonCoherente(etat);
+  testB22_P7_casAmbiguDeterministe(etat);
+  testB22_P8_zeroEstUneValeur(etat);
+  testB22_P9_predicatPur(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -5551,4 +5563,131 @@ function testB21_pasDeSelecteurNiMultiTournois(etat) {
   }
   _ffrAssert(etat, fuite.length === 0,
     'B2-1 ⑫ : aucune vue publique n\'expose d\'identifiant d\'édition (' + fuite.join(', ') + ')');
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════ */
+/*  M1-B2 / B2-2 — `Clubs` + `Participations` (D-050, R-102, R-104, R-105)        */
+/*                                                                                */
+/*  ⭐ CE BLOC ÉPROUVE LA MIGRATION LA PLUS RISQUÉE DU CHANTIER : une STRUCTURE    */
+/*  change, sur des données réelles. Trois précautions, héritées de B2-0 :        */
+/*   ① les assertions parlent de RÉSULTAT MÉTIER (« ce club n'a aucune            */
+/*     participation »), jamais de mécanique (« la colonne 7 est vide ») ;        */
+/*   ② le prédicat legacy est éprouvé SEUL, sans classeur, cas négatifs compris — */
+/*     c'est lui qui décide si un club a réellement participé, et se tromper là   */
+/*     réintroduirait R-100 sur toute une liste de clubs d'un coup ;              */
+/*   ③ chaque invariant important a sa MUTATION : le test doit échouer si l'on    */
+/*     réintroduit volontairement le défaut qu'il prétend attraper.               */
+/* ══════════════════════════════════════════════════════════════════════════════ */
+
+/** Une ligne legacy `ClubsInvites` complète, dont on ne peuple que ce qu'on veut prouver. */
+function _b22LigneLegacy(champs) {
+  var ligne = {};
+  ENTETES.ClubsInvites.forEach(function (h) { ligne[h] = ''; });
+  ligne.club_nom = 'CLUB TEMOIN';
+  ligne.club_contact_nom = 'DUPONT';
+  ligne.club_contact_prenom = 'Marie';
+  ligne.club_contact_email = 'contact@temoin.fr';
+  ligne.date_ajout = '2026-05-12';
+  Object.keys(champs || {}).forEach(function (k) { ligne[k] = champs[k]; });
+  return ligne;
+}
+
+/* ─── P — LE PRÉDICAT DE PARTICIPATION LEGACY, éprouvé SEUL ─────────────────── */
+
+/** P1 — Une identité SEULE ne prouve aucune participation. */
+function testB22_P1_identiteSeuleAucuneParticipation(etat) {
+  var l = _b22LigneLegacy({});
+  _ffrAssert(etat, participationLegacyReelle(l) === false,
+    'B2-2 P1 : un club seulement inscrit au carnet ⇒ ⛔ AUCUNE participation');
+  _ffrAssert(etat, preuvesParticipationLegacy(l).length === 0,
+    'B2-2 P1 : ⛔ aucune preuve d\'engagement n\'est retenue');
+}
+
+/** P2 ⭐ — Un JETON SEUL ne prouve rien : `assurerTokensClubs` en pose passivement. */
+function testB22_P2_jetonSeulAucuneParticipation(etat) {
+  var l = _b22LigneLegacy({ club_token: 'JETON-POSE-PASSIVEMENT' });
+  _ffrAssert(etat, participationLegacyReelle(l) === false,
+    'B2-2 P2 ⭐ : identité + jeton ⇒ ⛔ TOUJOURS aucune participation');
+  _ffrAssert(etat, preuvesParticipationLegacy(l).indexOf('club_token') === -1,
+    'B2-2 P2 ⭐ : `club_token` n\'est JAMAIS retenu comme preuve');
+}
+
+/** P3 ⭐ — `statut = Invité` SEUL non plus : c'est le défaut d'`ajouterClubInvite`. */
+function testB22_P3_statutInviteSeulAucuneParticipation(etat) {
+  var l = _b22LigneLegacy({ statut: 'Invité', club_token: 'JETON' });
+  _ffrAssert(etat, participationLegacyReelle(l) === false,
+    'B2-2 P3 ⭐ : `Invité` sans envoi ⇒ ⛔ aucune participation (c\'est le défaut de création)');
+}
+
+/** P4 — Une INVITATION RÉELLEMENT ENVOYÉE prouve la participation. */
+function testB22_P4_invitationEnvoyeeProuve(etat) {
+  var l = _b22LigneLegacy({ statut: 'Invité', invitation_envoyee: '2026-07-24' });
+  _ffrAssert(etat, participationLegacyReelle(l) === true,
+    'B2-2 P4 : `invitation_envoyee` (posée au SUCCÈS seul) ⇒ participation');
+  _ffrAssert(etat, preuvesParticipationLegacy(l).indexOf('invitation_envoyee') !== -1,
+    'B2-2 P4 : la preuve retenue est bien l\'envoi');
+}
+
+/** P5 — Une RÉPONSE du club (statut + effectifs) prouve la participation. */
+function testB22_P5_reponseEtEffectifsProuvent(etat) {
+  _ffrAssert(etat, participationLegacyReelle(_b22LigneLegacy({ statut: 'Accepté' })) === true,
+    'B2-2 P5 : `Accepté` ⇒ participation');
+  _ffrAssert(etat, participationLegacyReelle(_b22LigneLegacy({ statut: 'Décliné' })) === true,
+    'B2-2 P5 : `Décliné` ⇒ participation (décliner, c\'est avoir été sollicité)');
+  _ffrAssert(etat, participationLegacyReelle(_b22LigneLegacy({ nb_joueurs_total: 24 })) === true,
+    'B2-2 P5 : des effectifs déclarés ⇒ participation');
+  _ffrAssert(etat, participationLegacyReelle(_b22LigneLegacy({ detail_effectifs: '{"U8":[{"j":8,"e":2}]}' })) === true,
+    'B2-2 P5 : un détail d\'effectifs ⇒ participation');
+  _ffrAssert(etat, participationLegacyReelle(_b22LigneLegacy({ date_reponse: '2026-09-10' })) === true,
+    'B2-2 P5 : une date de réponse ⇒ participation');
+}
+
+/** P6 — Une combinaison COHÉRENTE est reconnue, et toutes ses preuves sont listées. */
+function testB22_P6_combinaisonCoherente(etat) {
+  var l = _b22LigneLegacy({ statut: 'Accepté', invitation_envoyee: '2026-07-24',
+    dossier_envoye: '2026-08-01', date_reponse: '2026-07-30', categories_engagees: 'U8,U10',
+    nb_equipes_par_categorie: '{"U8":2}', nb_joueurs_total: 24, nb_educateurs_total: 6,
+    detail_effectifs: '{"U8":[{"j":12,"e":3}]}', selection_enregistree: '2026-08-02',
+    alerte_ecart: 'une equipe conservee', club_token: 'JETON' });
+  var preuves = preuvesParticipationLegacy(l);
+  _ffrAssert(etat, participationLegacyReelle(l) === true && preuves.length === 11,
+    'B2-2 P6 : un club pleinement engagé ⇒ participation, avec ses 11 preuves (' + preuves.length + ')');
+  _ffrAssert(etat, preuves.indexOf('club_token') === -1,
+    'B2-2 P6 : ⛔ même là, le jeton n\'est pas compté comme preuve');
+}
+
+/** P7 ⭐ — Le cas AMBIGU est DÉTERMINISTE : « Invité » seul ne bascule jamais, jamais. */
+function testB22_P7_casAmbiguDeterministe(etat) {
+  var l = _b22LigneLegacy({ statut: 'Invité', club_token: 'JETON' });
+  var vus = {};
+  for (var i = 0; i < 5; i++) { vus[String(participationLegacyReelle(l))] = true; }
+  _ffrAssert(etat, Object.keys(vus).length === 1 && vus['false'] === true,
+    'B2-2 P7 ⭐ : le cas ambigu répond TOUJOURS la même chose, et c\'est NON');
+  // L'ancien libellé « Confirmé » vaut « Accepté » : il DOIT, lui, prouver la participation.
+  _ffrAssert(etat, participationLegacyReelle(_b22LigneLegacy({ statut: 'Confirmé' })) === true,
+    'B2-2 P7 : l\'ancien libellé « Confirmé » est reconnu comme une réponse');
+}
+
+/** P8 — `0` est une valeur SAISIE, pas une absence. */
+function testB22_P8_zeroEstUneValeur(etat) {
+  _ffrAssert(etat, valeurLegacyAbsente('') === true && valeurLegacyAbsente('   ') === true &&
+                   valeurLegacyAbsente(null) === true && valeurLegacyAbsente(undefined) === true,
+    'B2-2 P8 : vide, espaces, null et undefined sont des ABSENCES');
+  _ffrAssert(etat, valeurLegacyAbsente(0) === false,
+    'B2-2 P8 ⭐ : `0` n\'est PAS une absence — c\'est un nombre saisi');
+  _ffrAssert(etat, participationLegacyReelle(_b22LigneLegacy({ nb_joueurs_total: 0 })) === true,
+    'B2-2 P8 : « 0 joueur déclaré » est une réponse, donc une participation');
+}
+
+/** P9 — Le prédicat est PUR : il ne touche aucun classeur et ne modifie pas son entrée. */
+function testB22_P9_predicatPur(etat) {
+  var l = _b22LigneLegacy({ statut: 'Accepté' });
+  var avant = JSON.stringify(l);
+  participationLegacyReelle(l);
+  preuvesParticipationLegacy(l);
+  _ffrAssert(etat, JSON.stringify(l) === avant,
+    'B2-2 P9 : le prédicat ne modifie PAS la ligne qu\'on lui donne');
+  _ffrAssert(etat, participationLegacyReelle(null) === false &&
+                   participationLegacyReelle(undefined) === false,
+    'B2-2 P9 : une ligne absente ne provoque aucune erreur et ne prouve rien');
 }

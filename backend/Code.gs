@@ -7848,6 +7848,129 @@ function migrerEditionsMaintenant() {
   return message;
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * M1-B2 / B2-2 — `Clubs` + `Participations` : « un club connu n'est pas un club invité »
+ *
+ * ⭐ CE QUE CE BLOC SÉPARE, ET POURQUOI. Jusqu'ici, les 17 colonnes de `ClubsInvites`
+ * répondaient à DEUX questions dans une seule ligne : « qui est ce club ? » (durable) et
+ * « que fait-il CETTE fois ? » (propre à une édition). B2-0 a classé ces colonnes en deux
+ * familles ; ⛔ il ne les a pas séparées dans la STRUCTURE (R-102). C'est l'objet d'ici.
+ *
+ *   `Clubs`          : le CARNET. Une ligne = une identité durable, un `club_id` qui ne
+ *                      change jamais et n'est jamais réutilisé.
+ *   `Participations` : l'ENGAGEMENT. Une ligne = (une édition, un club). Un club peut donc
+ *                      participer à plusieurs éditions — ce qu'une ligne unique interdisait
+ *                      structurellement (D-050).
+ *
+ * ⭐ CE QUE LA SÉPARATION REND IMPOSSIBLE, et c'est le vrai gain : R-099 et R-100 étaient des
+ * colonnes d'engagement OUBLIÉES par la liste que le reset vidait à la main. Ici, une donnée
+ * d'engagement ne peut plus « survivre à un reset » : elle appartient à une édition, et cette
+ * édition n'est plus l'active. ⛔ Il n'y a plus de liste à tenir — donc plus rien à oublier.
+ *
+ * ⚠️ CE QUE CE BLOC NE FAIT PAS : il ne supprime PAS `ClubsInvites` (arbitrage du 2026-08-27) —
+ * l'ancien onglet reste intact tant que la nouvelle structure n'a pas fait ses preuves sur le
+ * classeur réel. Il n'introduit AUCUN sélecteur d'édition : Maxilou reste mono-édition active.
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Les 4 SNAPSHOTS d'une participation — l'identité du club AU MOMENT DE L'INVITATION.
+ * ⭐ Ils existent pour une seule raison : renommer un club dans le carnet ne doit pas réécrire
+ * l'histoire. Le dossier d'une édition passée doit continuer de dire à qui l'invitation a été
+ * envoyée, avec le nom et le contact d'alors. */
+var PARTICIPATION_COLONNES_SNAPSHOT = ['snap_club_nom', 'snap_contact_nom',
+  'snap_contact_prenom', 'snap_contact_email'];
+
+/* La correspondance snapshot → colonne du carnet dont il fige la valeur. */
+var PARTICIPATION_SNAPSHOT_SOURCE = {
+  snap_club_nom: 'club_nom', snap_contact_nom: 'club_contact_nom',
+  snap_contact_prenom: 'club_contact_prenom', snap_contact_email: 'club_contact_email'
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ⭐ LE PRÉDICAT — « cette ligne legacy prouve-t-elle un ENGAGEMENT RÉEL ? »
+ *
+ * ⚠️ C'est la décision la plus délicate de la migration, et elle ne se devine pas : elle se
+ * déduit de QUI ÉCRIT CHAQUE COLONNE. Deux colonnes d'engagement sont posées à la simple
+ * CRÉATION DE LA FICHE, avant tout envoi, et ne prouvent donc RIEN :
+ *
+ *   • `club_token` — `ajouterClubInvite` en pose un dès l'ajout au carnet, et
+ *     `assurerTokensClubs` en pose un à tout club qui n'en a pas, À CHAQUE OUVERTURE DE
+ *     L'ADMINISTRATION. ⛔ Un jeton peut donc naître d'une simple LECTURE d'écran ;
+ *   • `statut = 'Invité'` — c'est la valeur PAR DÉFAUT d'`ajouterClubInvite`. Un club
+ *     seulement inscrit au carnet, jamais contacté, porte déjà « Invité ».
+ *
+ * 🎯 Retenir ces deux-là comme preuves fabriquerait une participation pour tout club du carnet
+ * — exactement l'inverse de D-050. Le carnet redeviendrait un registre d'invitation.
+ *
+ * ⭐ Les DIX autres colonnes, elles, ne s'écrivent QUE par un geste réel de l'édition :
+ *   `invitation_envoyee` / `dossier_envoye` — posées au SUCCÈS de l'envoi, jamais à l'échec ;
+ *   `statut` ∈ {Accepté, Décliné}         — réponse du club, ou décision explicite de l'admin ;
+ *   `date_reponse`, `nb_equipes_par_categorie`, `nb_joueurs_total`, `nb_educateurs_total`,
+ *   `detail_effectifs`                    — écrites par `repondreInvitation` seule ;
+ *   `categories_engagees`, `selection_enregistree` — sélection enregistrée par l'admin ;
+ *   `alerte_ecart`                        — conséquence d'une synchronisation d'équipes.
+ *
+ * ⚠️ LE CAS AMBIGU, tranché et documenté : `statut = 'Invité'` SANS `invitation_envoyee`.
+ * L'admin a pu le choisir à la main dans le menu déroulant — mais c'est aussi, et bien plus
+ * souvent, le défaut de création. ⛔ On ne tranche donc PAS en faveur de la participation :
+ * on ne fabrique jamais un engagement dont on n'a pas la preuve. Si un envoi a réellement eu
+ * lieu, `invitation_envoyee` le dit. ⭐ Et rien n'est perdu : `ClubsInvites` reste intact.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Vrai si la cellule ne porte aucune valeur exploitable (vide, nulle, espaces seuls).
+ * ⚠️ `0` et `false` ne sont PAS « vides » — un `nb_joueurs_total` à 0 est une valeur saisie. */
+function valeurLegacyAbsente(v) {
+  if (v === null || v === undefined) return true;
+  if (typeof v === 'string') return v.trim() === '';
+  return String(v).trim() === '';
+}
+
+/**
+ * ⭐ CŒUR PUR (aucun classeur) — les PREUVES d'engagement portées par une ligne legacy.
+ * Renvoie la liste des noms de colonnes qui établissent qu'une participation a réellement
+ * existé. ⛔ Liste vide ⇒ le club n'est QUE connu au carnet.
+ * @param {Object} ligne  une ligne de `ClubsInvites` telle que `lireOngletSimple` la rend
+ * @return {Array<string>} les colonnes probantes, dans l'ordre de la décision
+ */
+function preuvesParticipationLegacy(ligne) {
+  var l = ligne || {};
+  var preuves = [];
+
+  // ① Un envoi RÉUSSI — la preuve la plus forte : ces dates ne sont posées qu'au succès.
+  if (!valeurLegacyAbsente(l.invitation_envoyee)) preuves.push('invitation_envoyee');
+  if (!valeurLegacyAbsente(l.dossier_envoye)) preuves.push('dossier_envoye');
+
+  // ② Une RÉPONSE du club — `Accepté` / `Décliné` ne peuvent pas être un défaut de création.
+  //    ⛔ `Invité` est délibérément exclu : c'est la valeur par défaut d'`ajouterClubInvite`.
+  var statut = statutClubCanonique(l.statut);
+  if (statut === 'Accepté' || statut === 'Décliné') preuves.push('statut');
+  if (!valeurLegacyAbsente(l.date_reponse)) preuves.push('date_reponse');
+
+  // ③ Un ENGAGEMENT chiffré ou catégorisé — écrit par la réponse du club, ou par l'admin.
+  if (!valeurLegacyAbsente(l.categories_engagees)) preuves.push('categories_engagees');
+  if (!valeurLegacyAbsente(l.nb_equipes_par_categorie)) preuves.push('nb_equipes_par_categorie');
+  if (!valeurLegacyAbsente(l.nb_joueurs_total)) preuves.push('nb_joueurs_total');
+  if (!valeurLegacyAbsente(l.nb_educateurs_total)) preuves.push('nb_educateurs_total');
+  if (!valeurLegacyAbsente(l.detail_effectifs)) preuves.push('detail_effectifs');
+  if (!valeurLegacyAbsente(l.selection_enregistree)) preuves.push('selection_enregistree');
+
+  // ④ Une ALERTE d'écart — elle n'existe qu'à la suite d'une synchronisation d'équipes,
+  //    c'est-à-dire d'un engagement déjà enregistré.
+  if (!valeurLegacyAbsente(l.alerte_ecart)) preuves.push('alerte_ecart');
+
+  // ⛔ `club_token` n'apparaît NULLE PART ci-dessus, et c'est le cœur de la règle.
+  return preuves;
+}
+
+/**
+ * ⭐ LA DÉCISION, en un booléen : cette ligne legacy doit-elle produire une `Participation` ?
+ * ⛔ Prudente par construction : en l'absence de preuve, elle répond NON — un club de plus au
+ * carnet ne coûte rien ; une participation fabriquée réintroduirait R-100.
+ */
+function participationLegacyReelle(ligne) {
+  return preuvesParticipationLegacy(ligne).length > 0;
+}
+
 /* ===================== RÉINITIALISATION DU TOURNOI ===================== */
 /**
  * Réinitialise le tournoi pour repartir d'une base vierge (bouton « zone de danger »
