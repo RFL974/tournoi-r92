@@ -189,10 +189,16 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 | **Le bilan** affiché en fin de journal | **`R92 — 974/974 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
 | **La dernière ligne** du fichier collé chez Google | **5554** | Le fichier collé n'est pas celui du dépôt |
 
-> ⏳ ⚡ **CE QUE CES DEUX VALEURS DEVIENDRONT APRÈS LE LOT B2-2** *(branche
-> `claude/b2-2-clubs-participations`, **seconde** passe locale du 2026-08-27)* :
-> **`R92 — 1210/1210 OK, 0 FAIL`**, `Test.gs` à **6817** lignes et `Code.gs` à **9862**
-> *(relevé par `wc -l` sur la branche)*. ⚡ *(Ces valeurs ont d'abord été annoncées à
+> ⚠️ ⚡ **VALEURS À ATTENDRE APRÈS LE PROCHAIN COLLAGE — ⛔ PLUS `1210` !**
+> *(branche `claude/b2-2-transport-email`, commit `c1d6309`)* :
+> **`R92 — 1222/1222 OK, 0 FAIL`**, `Test.gs` à **6958** lignes et `Code.gs` à **9893**
+> *(relevé par `wc -l` sur la branche, le 2026-08-27)*.
+>
+> ⚠️ **POURQUOI LE NOMBRE A CHANGÉ, ET CE QU'IL FAUT EN RETENIR.** La version **160** a donné
+> **`1203/1210`** chez Google alors que le local donnait `1210/1210` : sept tests appelaient le
+> **vrai** service d'envoi, que la doublure Node remplaçait par un succès silencieux *(**R-109**)*.
+> La correction ajoute **12 assertions** — d'où **1222**. ⛔ **Chercher `1210` après ce collage
+> serait chercher la mauvaise valeur.** ⚡ *(Ces valeurs ont d'abord été annoncées à
 > **1134**, **6313** et **9586** — celles de la première passe, vraies jusqu'à ce que les
 > quatre points de sûreté soient verrouillés le même jour.)*
 >

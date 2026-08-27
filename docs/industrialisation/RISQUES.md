@@ -9,7 +9,13 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-27 *(session 32, suite — **seconde passe locale de B2-2**)* —
+**Dernière mise à jour** : 2026-08-27 *(session 32, phase réelle 1 — **ÉCHEC RÉEL EXPLOITÉ**)* —
+🆕 **R-109 OUVERT** : *« le harnais de tests peut mentir en réussissant là où la production
+échoue »*. ⚠️ **Constaté en production** : 1210/1210 en local, **1203/1210 chez Google**.
+⛔ **R-102, R-104 et R-105 restent CORRIGÉS EN LOCAL** — la preuve réelle est **suspendue**, la
+Phase réelle 1 ayant été arrêtée avant l'écriture témoin.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32, suite — **seconde passe locale de B2-2**)* —
 ⚡ **Les preuves de R-102, R-104 et R-105 sont COMPLÉTÉES**, leurs statuts inchangés *(CORRIGÉ EN
 LOCAL)*. ✅ **L'ambiguïté du renommage inscrite sous R-104 est FERMÉE.** ⛔ **Aucun risque nouveau** :
 la bascule automatique relevait de **R-102** *(structure)*, le renommage et les snapshots de
@@ -2432,3 +2438,48 @@ seulement un affichage du jour, ⭐ **elle serait gravée définitivement dans l
 > contrôle de C-012 l'a trouvé *« identique au caractère près »* à sa date. ⛔ Il n'est **pas** créé
 > par la décision de figer le classement *(D-051)*, qui **supprime** au contraire le risque de
 > réinterprétation.
+
+
+### R-109 — Le harnais de tests peut réussir là où la production échoue
+
+| | |
+|---|---|
+| **Priorité** | **P1** — ⚠️ **il ne casse rien en production, mais il DÉTRUIT la valeur de toutes les autres preuves** |
+| **Domaine** | **D — QA / tests** |
+| **Statut** | ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27**, ⛔ **le recontrôle chez Google reste à faire** |
+
+🔬 **Constaté en production, pas déduit.** Le 2026-08-27, la version **160** déployée a donné
+**`R92 — 1203/1210 OK, 7 FAIL`** chez Google, alors que le même code donnait **1210/1210** en
+local. Les sept échecs — **SN2** *(×2)*, **SN3** *(×2)*, **SN4**, **SN5**, **SN9** — portaient tous
+sur le premier envoi d'invitation.
+
+**Le mécanisme, et il est général :** ces tests appellent `envoyerInvitationClub`, qui appelle
+`MailApp.sendEmail`. La doublure Node remplaçait `MailApp` par une **fonction vide** — l'envoi
+« réussissait » toujours. ⛔ **Chez Google, il n'y a rien à remplacer** : `MailApp` et `GmailApp`
+sont des services **natifs**. Les tests appelaient donc le **vrai** service, qui a refusé.
+
+> ⭐ **Le code métier était JUSTE.** C'est le **test** qui dépendait d'un service extérieur qu'il
+> ne maîtrisait pas, et c'est le **harnais** qui mentait — en réussissant là où la production
+> échoue.
+
+⚠️ **POURQUOI C'EST UN RISQUE DISTINCT, et non une part de R-104.** R-104 porte sur la migration
+`ClubsInvites` → `Clubs` + `Participations`. Celui-ci ne porte sur **aucun lot** : il porte sur le
+**dispositif de preuve lui-même**. ⛔ Un harnais qui ment ne casse rien — **il rend fausses toutes
+les affirmations qu'on fonde sur lui**, y compris celles des autres fiches.
+
+🎯 **Et ce n'est pas la première occurrence — c'est ce qui en fait un risque et non un incident.**
+Le 2026-08-27 déjà, **SN6** passait *« pour une mauvaise raison »* : la panne n'était injectée que
+sur `MailApp`, et l'envoi réussissait par `GmailApp`. **Même mécanisme, deux fois, à un jour
+d'intervalle.**
+
+**Ce qui a été fait** *(commit `c1d6309`)* :
+
+| | |
+|---|---|
+| ⭐ **Un point de passage unique** | `TRANSPORT_EMAIL` — une **variable du script**, donc remplaçable **de la même façon dans les deux environnements**, contrairement à un service natif |
+| ⭐ **Le harnais DURCI** | Ses doublures d'envoi **LÈVENT** au lieu de réussir en silence. Tout test qui atteindrait le service réel échoue **en local**, avant tout déploiement. 🔬 **Rejoué sur le code de la version 160, il reproduit `1203/1210` — les sept mêmes assertions, dans le même ordre** |
+| ⭐ **Deux garde-fous** | **TR1** *(la forme : aucune fonction d'envoi n'appelle Google directement)* et **TR2** *(le fait : un compteur prouve que l'envoi passe VRAIMENT par le transport)*. ⛔ Le second est le seul qu'une relecture du code ne pourrait pas remplacer |
+| ⚠️ **Deux tests renforcés** | **SN4** et **SN5** comparaient les snapshots avant/après alors qu'ils étaient **vides des deux côtés** : ⛔ comparer du vide à du vide ne prouve rien. Chacun vérifie désormais d'abord qu'ils sont **remplis** |
+
+> ⛔ **CE QUI RESTE À FAIRE** : rejouer `lancerTestsFFR` **chez Google** après redéploiement.
+> ⭐ **Le nouveau bilan attendu est `1222/1222`**, ⛔ **plus `1210/1210`**.

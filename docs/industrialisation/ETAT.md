@@ -103,8 +103,37 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-27 *(session 32, phase réelle 1)* — ✅ **B2-2 EST INTÉGRÉ ET
-PUBLIÉ SUR GITHUB.** ⛔ **Il n'est PAS en service, et le classeur n'est PAS migré.**
+**Dernière mise à jour** : 2026-08-27 *(session 32, phase réelle 1)* — ⚠️ **B2-2 EST DÉPLOYÉ EN
+VERSION 160, ET LE TEST RÉEL A ÉCHOUÉ : `1203/1210`, 7 FAIL.** ⛔ **La Phase réelle 1 est ARRÊTÉE
+avant l'écriture témoin. `migrerClubsMaintenant()` n'a JAMAIS été exécutée.**
+
+> 🔬 **CE QUI EST CONSTATÉ CHEZ GOOGLE** *(relevé par Romain, journal Apps Script)* :
+>
+> | | |
+> |---|---|
+> | **Déploiement** | ✅ **version 160**, même déploiement, même URL. Le serveur répond : `ping`, `getConfig`, `getEquipes` / `getPoules` / `getMatchs` = `[]` |
+> | ⚠️ **`lancerTestsFFR`** | **`R92 — 1203/1210 OK, 7 FAIL`** — ⛔ le critère `1210/1210` **n'est PAS acquis** |
+> | **Les 7 échecs** | **SN2** *(×2)*, **SN3** *(×2)*, **SN4**, **SN5**, **SN9** — ⭐ **tous sur le premier envoi d'invitation** |
+> | ✅ **Le classeur** | **INTACT** : 13 onglets, ⛔ ni `Clubs`, ni `Participations`, ⛔ aucune marque — **contenu identique au relevé pré-déploiement, caractère pour caractère** |
+> | ⛔ **Non fait** | Aucune écriture témoin · aucune modification de club · **aucune migration** |
+>
+> ⭐ **LA CAUSE EST TROUVÉE, ET LE CODE MÉTIER N'EST PAS EN FAUTE.** Ces sept tests appelaient le
+> **vrai service d'envoi de Google**. La doublure Node le remplaçait par une fonction vide —
+> l'envoi « réussissait » toujours ; ⛔ **chez Google il n'y a rien à remplacer**, `MailApp` étant
+> un service **natif**. 🎯 **C'est le harnais qui mentait, en réussissant là où la production
+> échoue** — nouveau risque **R-109**.
+>
+> ✅ **CORRIGÉ EN LOCAL** *(branche `claude/b2-2-transport-email`, commit `c1d6309`)* : un point de
+> passage unique `TRANSPORT_EMAIL`, et surtout un **harnais durci** dont les doublures d'envoi
+> **lèvent**. 🔬 **Rejoué sur le code de la version 160, il reproduit `1203/1210` — les sept mêmes
+> assertions, dans le même ordre.** ⭐ **Le nouveau bilan attendu devient `1222/1222`.**
+>
+> ⚠️ **La version 160 reste en service et n'est PAS dangereuse en usage normal** : elle ne migre
+> rien automatiquement, et l'envoi d'invitation y fonctionne — c'est le **test** qui échouait, pas
+> l'envoi de l'organisateur.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32, phase réelle 1)* — ✅ **B2-2 EST
+INTÉGRÉ ET PUBLIÉ SUR GITHUB.**
 
 > ✅ **CE QUI EST CONSTATÉ** *(§8 septies — après le geste, pas avant)* :
 >

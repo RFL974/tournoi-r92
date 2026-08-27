@@ -10296,3 +10296,45 @@ illisible. ⭐ **Un test doit échouer, jamais planter.** Rendus défensifs.
 
 ⛔ **Toujours aucun geste réel** : ni poussée, ni fusion, ni déploiement, ni migration du classeur,
 ni reset, ni suppression de `ClubsInvites`. ⛔ **Pas une ligne de `frontend/`.**
+
+### ⚡ SESSION 32 — PHASE RÉELLE 1 : le déploiement révèle un harnais qui mentait *(2026-08-27)*
+
+**Gestes réels effectués** : intégration en avance rapide (`a778ff7` → `5ee53a2`), poussée de
+`main`, sauvegarde fraîche vérifiée, déploiement Apps Script **version 160** par Romain.
+
+**Résultat** : ⛔ **`R92 — 1203/1210 OK, 7 FAIL`** chez Google, contre **1210/1210** en local.
+La phase a été **arrêtée avant l'écriture témoin**, comme prévu.
+
+### 🎯 Ce que cet échec a appris — et il vaut plus que le lot
+
+**① Un harnais qui réussit là où la production échoue est un harnais qui ment.** Sept tests
+appelaient le **vrai** `MailApp.sendEmail`. La doublure Node le remplaçait par une fonction vide ;
+⛔ **chez Google il n'y a rien à remplacer** — c'est un service **natif**. ⭐ **Le code métier
+était juste** : c'est le dispositif de preuve qui était faux.
+
+**② Le même mécanisme avait DÉJÀ frappé la veille, et nous ne l'avions pas généralisé.** SN6
+passait *« pour une mauvaise raison »* — la panne n'était injectée que sur `MailApp`, l'envoi
+réussissait par `GmailApp`. ⭐ **Nous avions corrigé le cas, pas la cause.** Deux occurrences du
+même mécanisme en deux jours : c'est ce qui en fait un **risque** *(**R-109**)* et non un incident.
+
+**③ La correction utile n'est pas le point de passage : c'est le harnais qui refuse.**
+`TRANSPORT_EMAIL` rend le stub possible chez Google ; ⭐ mais c'est le **durcissement des
+doublures** — elles **lèvent** au lieu de réussir en silence — qui fait échouer **en local** tout
+test qui atteindrait encore le service réel. 🔬 **Preuve** : rejoué sur le code de la version 160,
+le harnais durci reproduit **`1203/1210`**, les **sept mêmes assertions, dans le même ordre**.
+
+**④ Deux tests passaient pour une mauvaise raison, et seul l'échec réel l'a montré.** SN4 et SN5
+comparaient les snapshots avant/après alors que l'envoi avait échoué : ⛔ **ils étaient vides des
+deux côtés**. Comparer du vide à du vide ne prouve rien. Chacun vérifie désormais d'abord qu'ils
+sont **remplis**.
+
+**⑤ Et un piège d'observation, noté au passage** : le `modifiedTime` du classeur a bougé
+*(10:10 → 18:24)* alors que **pas un caractère n'avait changé**. Ouvrir un classeur suffit à le
+déplacer. ⛔ **`modifiedTime` n'est pas un témoin de modification de contenu** — seule la
+comparaison du contenu en est un.
+
+**Preuves après correction** : **1222/1222** au harnais durci *(1210 avant, +12)* · suites Node
+**inchangées** · **18 mutations, 18 interceptées** — la nouvelle *(`contourne_transport`, qui
+restaure exactement le code de la version 160)* est attrapée par **16 assertions**.
+
+⛔ **`migrerClubsMaintenant()` n'a JAMAIS été exécutée.** Le classeur est intact.
