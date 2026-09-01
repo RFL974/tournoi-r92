@@ -19,8 +19,8 @@ Le projet repose sur **3 briques** qui se parlent en JSON.
 ```
 ┌─────────────────────┐        ┌──────────────────────────┐        ┌──────────────────────────┐
 │   Frontend (web)    │  HTTP  │  Backend Apps Script     │        │   Google Sheet           │
-│  8 pages            │ <────> │  (Web App, répond JSON)  │ <────> │  13 onglets              │
-│  26 fichiers JS     │  JSON  │  doGet() / doPost()      │        │  8 de travail            │
+│  8 pages            │ <────> │  (Web App, répond JSON)  │ <────> │  15 onglets              │
+│  26 fichiers JS     │  JSON  │  doGet() / doPost()      │        │  11 de travail           │
 │                     │        │  65 actions              │        │  + 4 de référence FFR    │
 └─────────────────────┘        └──────────────────────────┘        └──────────────────────────┘
 ```
@@ -36,16 +36,17 @@ Stocke toutes les données. Voir [`structure-google-sheet.md`](structure-google-
 détail des colonnes. C'est aussi l'endroit où l'organisateur peut vérifier ou corriger les données
 à la main.
 
-**13 onglets**, et ils ne jouent pas le même rôle : **9 onglets de travail** — les données du
+**15 onglets**, et ils ne jouent pas le même rôle : **11 onglets de travail** — les données du
 tournoi — et **4 onglets de référence** qui portent le cadre fédéral.
 
 > ✅ **Ces comptes valent pour le dépôt ET pour le classeur en service** *(constaté le
-> 2026-08-27)*. Le 13ᵉ onglet, `Editions`, a été créé par la migration du lot **B2-1** : serveur
-> redéployé *(version 159)* et `migrerEditionsMaintenant()` exécutée. ⚡ *(Cette note disait
-> « comptes du DÉPÔT, pas du classeur en service — le classeur réel en compte toujours 12 » : vrai
-> jusqu'à cette date.)*
+> 2026-09-01)*. Les 14ᵉ et 15ᵉ onglets, `Clubs` et `Participations`, ont été créés par la migration
+> du lot **B2-2** : serveur en version **161** et `migrerClubsMaintenant()` exécutée. ⚡ *(Cette note
+> disait « **13 onglets** … **9 onglets de travail** … le 13ᵉ, `Editions`, créé par B2-1 (version
+> 159) » — **vrai jusqu'au 2026-09-01**. Elle avait elle-même remplacé « comptes du DÉPÔT, pas du
+> classeur en service — le classeur réel en compte toujours 12 ».)*
 
-### Les 9 onglets de travail
+### Les 11 onglets de travail
 
 | Onglet | Ce qu'il contient | Créé par |
 |---|---|---|
@@ -57,8 +58,8 @@ tournoi — et **4 onglets de référence** qui portent le cadre fédéral.
 | `ClubsInvites` | Les clubs invités : nom, **email de contact**, statut, jeton, réponse. ⚠️ **Données personnelles** — cet onglet ne sort **jamais** dans l'instantané public | `setupSheet()` |
 | `Sponsors` | Les fiches partenaires (entreprises) | `setupSheet()`, et `assurerOngletSponsors()` **à la demande** sur un classeur plus ancien |
 | `Mesures` | Les relevés de visibilité des partenaires | `assurerOngletMesures()` **à la demande**, au premier relevé |
-| ⏳ 🆕 `Clubs` | **Le CARNET DURABLE** *(lot **B2-2**)* : `club_id` *(UUID stable, jamais réutilisé)*, nom, contact, `date_ajout`, `actif`. ⛔ **Aucun statut, aucun jeton, aucun effectif** — tout cela appartient à une participation. ⛔ **PAS ENCORE DANS LE CLASSEUR** | `setupSheet()`, `assurerOngletClubs()` **à la demande**, et `migrerClubsMaintenant()` |
-| ⏳ 🆕 `Participations` | **L'ENGAGEMENT D'UNE ÉDITION** *(lot **B2-2**)* : une ligne = `edition_id` × `club_id`, + les **12** colonnes d'engagement et **4 snapshots** de l'identité au moment de l'invitation. ⛔ **PAS ENCORE DANS LE CLASSEUR** | idem, via `assurerOngletParticipations()` |
+| ✅ 🆕 `Clubs` | **Le CARNET DURABLE** *(lot **B2-2**)* : `club_id` *(UUID stable, jamais réutilisé)*, nom, contact, `date_ajout`, `actif`. ⛔ **Aucun statut, aucun jeton, aucun effectif** — tout cela appartient à une participation. ✅ **EN SERVICE depuis le 2026-09-01** ⚡ *(annonçait « ⛔ PAS ENCORE DANS LE CLASSEUR »)* | `setupSheet()`, `assurerOngletClubs()` **à la demande**, et `migrerClubsMaintenant()` |
+| ✅ 🆕 `Participations` | **L'ENGAGEMENT D'UNE ÉDITION** *(lot **B2-2**)* : une ligne = `edition_id` × `club_id`, + les **12** colonnes d'engagement et **4 snapshots** de l'identité au moment de l'invitation. ✅ **EN SERVICE depuis le 2026-09-01** — ⭐ **0 ligne à ce jour** : aucun club n'est engagé dans l'édition active. ⚡ *(annonçait « ⛔ PAS ENCORE DANS LE CLASSEUR »)* | idem, via `assurerOngletParticipations()` |
 | 🆕 `Editions` | Le **registre des éditions** : `edition_id`, `statut` *(`active` / `fermee`)*, date de création, date de fermeture. ⭐ **Une seule ligne `active` à la fois** — aucune donnée personnelle | `setupSheet()`, et `assurerOngletEditions()` **à la demande** sur un classeur plus ancien |
 
 > ℹ️ **`setupSheet()` en crée 8** et l'annonce ainsi dans sa fenêtre de confirmation. Le 9ᵉ,
@@ -91,7 +92,7 @@ propre cache), et **se remplissent à la main** — `setupSheet()` ne les crée 
 > 🛡️ **Migration douce, et c'est une qualité du code** : si l'un de ces onglets est **absent, vide
 > ou illisible**, la lecture renvoie une liste vide **sans jamais lever d'erreur**, et toute la
 > chaîne de conformité se met en repli. **L'application continue de fonctionner exactement comme
-> avant.** C'est pourquoi un classeur peut très bien tourner avec **les 9 onglets de travail
+> avant.** C'est pourquoi un classeur peut très bien tourner avec **les 11 onglets de travail
 > seulement** — il perd alors la conformité FFR, rien d'autre.
 
 ---
@@ -184,7 +185,7 @@ en tête de fichier le pilotent : `ACTIONS_SCORES`, `ACTIONS_TOKEN` et `ACTIONS_
 | `getDossierAutorisation` | 🔐 | POST | Les champs de la demande d'autorisation FFR (personnels) |
 | `listerSponsors` | 🔐 | POST | Toutes les fiches partenaires, actives **ou non** |
 | `lireMesuresSponsors` | 🔐 | POST | Les relevés de visibilité d'un jour donné |
-| `listerClubsInvites` | 🔐 | POST | La liste des clubs invités. ⚠️ **Elle contient des emails** — c'est précisément pourquoi elle ne passe pas par `doGet` et n'entre **jamais** dans l'instantané public. ⏳ ⚡ **Lot B2-2 : sa SOURCE change, ⛔ pas sa réponse.** Elle ne lit plus un onglet mais **reconstruit** l'objet plat des 17 clés depuis `Clubs` + la participation de l'**édition active** *(couche d'adaptation)*. ⭐ Un club connu **sans** participation reçoit des champs d'engagement **vides** ; ⛔ une participation d'édition fermée n'est **jamais** lue. ⛔ Ni `club_id`, ni `edition_id`, ni snapshot ne sortent vers le navigateur |
+| `listerClubsInvites` | 🔐 | POST | La liste des clubs invités. ⚠️ **Elle contient des emails** — c'est précisément pourquoi elle ne passe pas par `doGet` et n'entre **jamais** dans l'instantané public. ✅ ⚡ **Lot B2-2, EN SERVICE depuis le 2026-09-01 : sa SOURCE a changé, ⛔ pas sa réponse** — ⭐ **vérifié en réel**, l'écran affiche les 3 clubs et leurs contacts, et la lecture ne crée **ni participation ni jeton**. Elle ne lit plus un onglet mais **reconstruit** l'objet plat des 17 clés depuis `Clubs` + la participation de l'**édition active** *(couche d'adaptation)*. ⭐ Un club connu **sans** participation reçoit des champs d'engagement **vides** ; ⛔ une participation d'édition fermée n'est **jamais** lue. ⛔ Ni `club_id`, ni `edition_id`, ni snapshot ne sortent vers le navigateur |
 
 #### D. Les équipes — 4 actions
 
@@ -577,7 +578,7 @@ Détails et activation : [`relais-cdn.md`](relais-cdn.md).
 | **Fichiers JavaScript** | **26** | Les fichiers `frontend/js/*.js` — **le sous-dossier `js/vendor/` n'est pas compté** : ce sont des bibliothèques extérieures, inventoriées séparément |
 | **Lignes par fichier** | *voir tableaux* | `wc -l` sur chaque fichier |
 | **Scripts chargés par page** | *voir §3* | Les balises `<script src="js/…">` de chaque page HTML |
-| **Onglets du classeur** | **13 en service**, ⏳ **15 écrits** *(11 de travail + 4 de référence)* — ⚡ **le lot B2-2 ajoute `Clubs` et `Participations` DANS LE CODE ; ⛔ ils n'existent pas dans le classeur réel**, ni `migrerClubsMaintenant()` lancée *(2026-08-27)*. Ancienne valeur : **13** *(9 de travail + 4 de référence)* — ⚡ **remesuré le 2026-08-27** par la méthode ci-contre, après l'ajout de `Editions` *(B2-1)*, ✅ **et constaté dans le classeur réel le même jour** *(13 onglets relevés après migration)*. ⚡ *(Cette case a annoncé **12** *(8 + 4)* — vrai jusqu'au 2026-08-27 — puis « c'est le compte du DÉPÔT : le classeur en service en porte encore 12 » — vrai jusqu'à la migration du même jour.)* | ⚠️ **Compter les `getSheetByName('…')` ne suffit pas** — c'est ainsi qu'un compte de 8 a d'abord été obtenu, à tort. Les 4 onglets `RefFFR_*` sont lus par `lireOngletSimple(classeur, '…')`, sans passer par `getSheetByName`. **La méthode juste réunit quatre sources** : `getSheetByName('…')`, `lireOngletSimple(classeur, '…')`, `creerOngletAvecEntetes(classeur, '…')` et `insertSheet('…')`, puis déduplique. Recoupé avec `deploiement.md`, qui documentait déjà les 4 onglets `RefFFR_*` |
+| **Onglets du classeur** | ✅ **15 en service** *(11 de travail + 4 de référence)* — ⚡ **remesuré le 2026-09-01** par la méthode ci-contre, ✅ **et constaté dans le classeur réel le même jour** : `migrerClubsMaintenant()` exécutée sous la version **161** a créé `Clubs` et `Participations`, **15 onglets relevés après migration**. ⚡ *(Cette case a annoncé successivement **12** *(8 + 4)*, puis « le compte du DÉPÔT : le classeur en service en porte encore 12 », puis **13 en service / ⏳ 15 écrits** avec la mention « ⛔ ils n'existent pas dans le classeur réel, ni `migrerClubsMaintenant()` lancée » — **chacune vraie à sa date**, la dernière jusqu'au 2026-09-01.)* | ⚠️ **Compter les `getSheetByName('…')` ne suffit pas** — c'est ainsi qu'un compte de 8 a d'abord été obtenu, à tort. Les 4 onglets `RefFFR_*` sont lus par `lireOngletSimple(classeur, '…')`, sans passer par `getSheetByName`. **La méthode juste réunit quatre sources** : `getSheetByName('…')`, `lireOngletSimple(classeur, '…')`, `creerOngletAvecEntetes(classeur, '…')` et `insertSheet('…')`, puis déduplique. Recoupé avec `deploiement.md`, qui documentait déjà les 4 onglets `RefFFR_*` |
 | **Bibliothèques extérieures** | **4** | Les fichiers `frontend/js/vendor/*.js` |
 
 > ℹ️ **Ces comptes portent sur ce que le code nomme.** Un onglet ajouté à la main dans un classeur

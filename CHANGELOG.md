@@ -12,11 +12,20 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
-### Un club connu n'est plus un club invité — 2026-08-27 *(⏳ écrit, ⛔ pas encore en service)*
+### Un club connu n'est plus un club invité — 2026-08-27, ✅ **en service le 2026-09-01**
 
-> ⏳ **CE QUI SUIT N'EST PAS ENCORE EN LIGNE.** Le code est écrit, testé et enregistré, ⛔ **mais il
-> n'est ni publié ni déployé**, et le classeur n'a pas été migré. Cette entrée est ici pour que le
-> jour où ce sera fait, on sache **exactement** ce qui aura changé.
+> ✅ **C'EST EN SERVICE DEPUIS LE 2026-09-01.** La bascule a été faite sur le classeur réel : il
+> porte désormais le **carnet des clubs** et les **participations**, séparés. ⭐ **Les trois clubs
+> connus sont au carnet ; aucun n'est engagé** dans l'édition en cours — ce qui est normal, le
+> tournoi ayant été réinitialisé. ⛔ **L'ancienne liste n'a pas été effacée** : elle est conservée
+> intacte, elle n'est simplement plus consultée.
+>
+> ⭐ **Ce qu'un organisateur voit à l'écran : exactement la même chose qu'avant** — l'écran
+> « Clubs invités » a été ouvert après la bascule, les trois clubs s'affichent avec leurs contacts,
+> et rien n'a changé d'aspect. C'était l'objectif.
+>
+> ⚡ *(Ce bandeau disait « ⏳ **CE QUI SUIT N'EST PAS ENCORE EN LIGNE** […] le classeur n'a pas été
+> migré » : vrai jusqu'au 2026-09-01.)*
 
 **Ce qui n'allait pas.** La liste des clubs mélangeait deux choses dans une seule ligne : **qui est
 ce club** — son nom, son contact, son email, qu'on garde d'une année sur l'autre — et **ce qu'il

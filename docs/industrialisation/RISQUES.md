@@ -9,7 +9,16 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-08-27 *(session 32, phase réelle 1 — **ÉCHEC RÉEL EXPLOITÉ**)* —
+**Dernière mise à jour** : 2026-09-01 *(session 33, phase réelle 2A — **MIGRATION RÉELLE**)* —
+⚡ **UN PROBLÈME NOUVEAU S'OUVRE : 🆕 R-110** *(l'alerte modale qui fait échouer une migration
+réussie)*. ✅ **R-102 passe à CORRIGÉ ET VÉRIFIÉ EN RÉEL.** ⚠️ **R-104 et R-105 avancent
+FORTEMENT mais ne se ferment PAS** : le classeur réel ne contenait **aucune ligne portant une
+preuve d'engagement**, si bien que **la moitié de chaque fiche n'a pas pu être éprouvée** — le
+détail est dans chacune, et il ne doit pas être arrondi.
+⛔ **R-109 reste inchangé** *(TESTÉ EN RÉEL pour l'email seulement)* : cette session n'apporte
+aucune preuve nouvelle sur les autres services natifs.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32, phase réelle 1 — **ÉCHEC RÉEL EXPLOITÉ**)* —
 ✅ **R-109 TESTÉ EN RÉEL** *(email seulement)* : **`1222/1222 OK, 0 FAIL`** constaté chez Google,
 et ⭐ **le classeur n'a pas bougé d'un caractère**. ⚠️ **La généralisation aux autres services
 natifs reste OUVERTE.** *(Ce risque a été ouvert le même jour après un écart constaté en
@@ -2120,7 +2129,7 @@ d'où le *« 18 terrains de jeu, sur 4 grands terrains »* d'un tournoi qui n'a 
 |---|---|
 | **Priorité** | **P2** — ⭐ **c'est la CAUSE STRUCTURELLE de R-099, R-100 et R-101** |
 | **Domaine** | **G — architecture** |
-| **Statut** | ✅ **CORRIGÉ EN LOCAL** — ⚡ **une PART est prouvée en réel** *(la non-bascule)*, ⛔ **la séparation elle-même attend la migration** |
+| **Statut** | ✅ ⚡ **CORRIGÉ ET VÉRIFIÉ EN RÉEL le 2026-09-01** — ⛔ **la CLÔTURE appartient à Romain** *(elle n'est pas prononcée ici)*. ⚡ *(Ce statut disait « CORRIGÉ EN LOCAL — une PART est prouvée en réel (la non-bascule), la séparation elle-même attend la migration » : vrai jusqu'à la migration du 2026-09-01.)* |
 
 🔬 Les 17 colonnes de `ClubsInvites` mélangent **6 colonnes durables** *(nom, contacts, date
 d'ajout)* et **11 colonnes de participation**, sans que **rien dans la structure** ne dise à quelle
@@ -2184,6 +2193,28 @@ famille appartient une colonne. Le reset s'en remet à **une liste écrite à la
 > rien à oublier.** Les deux listes `CLUBS_COLONNES_*` restent vivantes **pour le seul chemin
 > legacy** *(classeur pas encore migré)*, et disparaîtront avec `ClubsInvites`.
 
+> ✅ ⚡ **LA SÉPARATION EST EN SERVICE SUR LE CLASSEUR RÉEL — 2026-09-01** *(phase réelle 2A)*.
+>
+> ⭐ **Ce que cette fiche portait vraiment est désormais acquis** : les 17 colonnes ne sont plus dans
+> un seul onglet. Le classeur porte **`Clubs`** *(7 colonnes d'identité, 3 lignes)* et
+> **`Participations`** *(18 colonnes, 0 ligne)*, et la marque `Config.migration_clubs_b22`
+> = `2026-09-01 14:04:02` fait basculer le métier sur cette structure.
+>
+> 🔬 **Ce qui l'établit, et qui a été RECALCULÉ, pas recopié** : les garde-fous
+> `colonnesCarnetMalPlacees` et `colonnesParticipationNonClassees` ont été **rejoués sur les
+> en-têtes réellement présentes dans le classeur** — ⭐ **les deux rendent une liste vide**.
+> ⛔ **Aucune donnée d'engagement n'a migré dans le carnet** : ni `statut`, ni `club_token`, ni
+> catégorie, ni effectif, ni snapshot.
+>
+> ⭐ **Et `ClubsInvites` est prouvé INTACT** : empreinte `86a1891a…` identique avant et après — la
+> migration a **recopié**, ⛔ elle n'a **rien déplacé**. Les jetons legacy y restent comme trace
+> historique.
+>
+> ⚠️ **CE QUE CELA NE DIT PAS.** Les deux listes `CLUBS_COLONNES_*` **existent toujours dans le
+> code** : elles servent au chemin legacy, qui reste nécessaire tant que `ClubsInvites` n'est pas
+> supprimé. ⭐ **Elles ne pilotent plus le classeur réel** ; ⛔ **elles n'ont pas disparu du dépôt**,
+> et leur suppression n'était pas l'objet de B2-2.
+
 ### R-103 — Les messages libres peuvent contenir des données personnelles
 
 | | |
@@ -2209,7 +2240,7 @@ difficile à défendre — voir [`../conservation-donnees.md`](../conservation-d
 |---|---|
 | **Priorité** | **P2** |
 | **Domaine** | **G — architecture** · **D — QA** |
-| **Statut** | ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27** *(B2-2)* — ⛔ **la migration RÉELLE reste à exécuter** |
+| **Statut** | ⚠️ ⚡ **MIGRATION RÉELLE EXÉCUTÉE le 2026-09-01 — ⛔ PROUVÉE POUR UN SEUL DES DEUX CAS.** Le classeur ne contenait **aucune ligne portant une preuve d'engagement** : le cas **A** de **D-059** *(participation créée + snapshots figés)* ⛔ **n'a jamais été exercé en réel** — voir l'encadré de bas de fiche. ⚡ *(Ce statut disait « CORRIGÉ EN LOCAL — la migration RÉELLE reste à exécuter » : vrai jusqu'au 2026-09-01.)* |
 
 La migration doit créer un `club_id` stable pour chaque ligne existante et répartir les 17 colonnes
 entre les deux onglets. ⚠️ **Sans identifiant stable**, une archive devient **orpheline** dès qu'un
@@ -2258,13 +2289,45 @@ migration — ils décrivent le comportement attendu **avant** que la structure 
 > puis reprise)*, D *(état partiel ambigu ⇒ **refus** nommant l'obstacle)*. **Mutation rejouée** :
 > réintroduire le rapprochement naïf par nom fait échouer le test du renommage.
 
+> ✅ ⚡ **LA MIGRATION A ÉTÉ EXÉCUTÉE SUR LE CLASSEUR RÉEL — 2026-09-01, version 161.**
+>
+> 🔬 **Ce qui est constaté** : **3 `club_id`** créés — UUID **v4 valides** au sens RFC 4122 et
+> **distincts** — chacun rattaché à la bonne identité, avec nom, contact, prénom, email et date
+> d'ajout **recopiés à l'identique** depuis le legacy. **0 participation**, conformément au prédicat
+> **recalculé avant la migration sur les données du jour**. Marque posée à `2026-09-01 14:04:02`,
+> **unique dans tout le classeur**.
+>
+> ⭐ **L'IDEMPOTENCE EST PROUVÉE PLUS FORTEMENT QUE PRÉVU.** Le protocole demandait **une** relance ;
+> il y en a eu **deux** — la première ayant été interrompue par le timeout de **R-110**, faute
+> d'avoir cliqué sur l'alerte. ⭐ **Après ces trois appels au total, l'empreinte globale du classeur
+> est identique à celle d'après la première migration** *(`5af6074a…`, 96 386 caractères)* :
+> ⛔ aucun UUID régénéré, aucune ligne créée, aucune marque réécrite. **L'oubli a produit une preuve
+> que le protocole n'avait pas prévue** — ⛔ et il ne doit pas être présenté comme un scénario voulu.
+>
+> ⛔ **CE QUI N'EST PAS PROUVÉ, ET POURQUOI LE STATUT NE SE FERME PAS.** Les trois lignes legacy ne
+> portaient **aucune preuve d'engagement** : elles relèvent toutes du cas *« club connu, jamais
+> engagé »*. ⭐ **Le chemin le plus délicat de D-059 n'a donc JAMAIS tourné sur des données
+> réelles** :
+>
+> | Cas de D-059 / ⑤ | Éprouvé en réel ? |
+> |---|---|
+> | **B et « aucune preuve »** — pas de participation créée | ✅ **OUI**, trois fois |
+> | **A** — `invitation_envoyee` présent ⇒ participation créée **+ 4 snapshots figés** | ⛔ **JAMAIS** — aucune ligne du classeur n'était dans ce cas |
+> | **Renommage puis relance** *(le défaut que la marque ferme)* | ⛔ **JAMAIS en réel** — établi par le harnais seul |
+> | **Reprise d'un état partiel** *(cas C et D)* | ⛔ **JAMAIS en réel** — établi par le harnais seul |
+>
+> 🎯 **Pourquoi c'est dit aussi précisément** : ces trois cas sont couverts par des tests, et les
+> tests sont bons. ⛔ **Mais `CLAUDE.md` §13.6 interdit de présenter comme constaté en production ce
+> qui ne l'a pas été.** Une migration qui n'a rencontré qu'un seul de ses cas n'a éprouvé qu'un
+> seul de ses cas.
+
 ### R-105 — Une colonne future peut à nouveau échapper au classement
 
 | | |
 |---|---|
 | **Priorité** | **P2** |
 | **Domaine** | **G — architecture** |
-| **Statut** | ✅ ⚡ **CORRIGÉ EN LOCAL le 2026-08-27** *(B2-2)* — ⛔ **pas encore prouvé en réel** |
+| **Statut** | ⚠️ ⚡ **STRUCTURE EN SERVICE le 2026-09-01 — ⛔ le garde-fou côté `Participations` n'a RIEN PU VÉRIFIER**, l'onglet étant vide. Voir l'encadré de bas de fiche. ⚡ *(Ce statut disait « CORRIGÉ EN LOCAL — pas encore prouvé en réel » : vrai jusqu'au 2026-09-01.)* |
 
 Même après la séparation, rien n'empêche d'ajouter une colonne à `Participations` **sans la
 classer**. ⭐ **Mitigation prévue** : un contrôle automatique — *« toute colonne doit appartenir à
@@ -2304,6 +2367,29 @@ exactement une des deux familles »* — qui **échoue** si une colonne nouvelle
 > neutralisant la vérification *(« marquer terminé sans vérifier »)* est d'abord **passée
 > inaperçue** — les 1203 tests d'alors éprouvaient tous des migrations **qui se passaient bien**.
 > ⭐ **Un contrôle qu'on n'a jamais vu refuser ne prouve rien.** Le test manquant existe *(E6)*.
+
+> ⚠️ ⚡ **LA STRUCTURE EST EN SERVICE, ⛔ MAIS UNE MOITIÉ DU GARDE-FOU N'A PAS PU S'EXERCER**
+> *(2026-09-01)*. Et c'est exactement l'avertissement que cette fiche portait déjà — appliqué à
+> elle-même.
+>
+> ✅ **Ce qui a fonctionné** : `colonnesCarnetMalPlacees` a bien inspecté les **7** en-têtes réelles
+> de `Clubs` → **liste vide**. Le carnet est propre, et c'était le contrôle *« qui compte plus que
+> l'autre »*.
+>
+> ⛔ **Ce qui n'a rien inspecté** : `colonnesParticipationNonClassees` reçoit
+> `Object.keys(participations[0] || {})` — c'est-à-dire les clés de la **première ligne**.
+> ⭐ **Avec ZÉRO ligne, il reçoit `{}` et rend une liste vide sans avoir rien regardé.** Le contrôle
+> de cohérence de la migration a donc **passé le contrôle ④ sans l'exercer**.
+>
+> 🎯 **Ce n'est pas un faux résultat, c'est un résultat VIDE — et la nuance est toute la fiche.**
+> ⭐ **Les 18 en-têtes ont bien été vérifiées, mais PAR LA SESSION, pas par le code** : elles ont été
+> passées à la même fonction depuis un bac à sable, avec les valeurs **réellement lues dans le
+> classeur** → liste vide, schéma conforme au code, ordre compris.
+>
+> ⚠️ **Ce qu'il faut en retenir pour la suite** : le jour où une colonne sera ajoutée à
+> `Participations` alors que l'onglet est **encore vide**, ⛔ **le garde-fou ne la signalera pas**.
+> Il ne protégera qu'à partir de la première participation. **Le piège de cette fiche s'est
+> déplacé ; il n'a pas disparu.**
 
 ### R-106 — `tournoi_id` ne peut pas identifier une édition
 
@@ -2528,3 +2614,49 @@ d'intervalle.**
 > Google échouerait. **TR1 n'inventorie que l'email.** ⭐ **Le mécanisme est fermé pour un
 > service, pas pour la catégorie** — et c'est précisément ce qui avait manqué la première fois
 > *(SN6 corrigé comme un cas, pas comme une cause)*. **La généralisation reste OUVERTE.**
+
+### R-110 — Une fonction de maintenance fait échouer son exécution après avoir réussi
+
+| | |
+|---|---|
+| **Priorité** | **P1** — ⛔ **il ne corrompt aucune donnée** ; ⚠️ **il fait croire à un échec là où tout a réussi, et pousse à un geste de réparation dangereux** |
+| **Domaine** | **D — QA** · **E — UX** *(l'exploitant est ici l'organisateur devant l'éditeur Apps Script)* |
+| **Statut** | ⛔ **IDENTIFIÉ — NON CORRIGÉ** *(constaté en conditions réelles le 2026-09-01)* |
+
+🔬 **Constaté en production, pas déduit.** Le 2026-09-01, `migrerClubsMaintenant()` a produit son
+message de succès à **14:04:03** — soit **8 secondes** après le démarrage — puis l'exécution a
+continué jusqu'à **14:09:55**, où Apps Script l'a coupée sur
+`Exceeded maximum execution time`. ⭐ **Le classeur, lui, était complet et cohérent.**
+
+**Le mécanisme, et il est simple.** `_b22Journaliser` *(`backend/Code.gs`)* fait trois choses dans
+cet ordre : `Logger.log(message)`, puis `SpreadsheetApp.getUi().alert(…)`, puis `return`.
+⭐ **L'alerte attend un clic humain.** Le classeur n'étant pas au premier plan, personne ne l'a vue :
+elle a attendu la limite des **6 minutes**.
+
+> ⭐ **POURQUOI CE N'EST PAS UN RISQUE DE DONNÉES, et pourquoi c'en est quand même un.**
+> L'appel à `_b22Journaliser` est le **`return` final** : les écritures, le contrôle de cohérence et
+> la pose de la marque sont **tous antérieurs**. ⛔ **Le blocage ne peut donc rien interrompre.**
+>
+> ⚠️ **Mais un exploitant qui lit `Exceeded maximum execution time` conclut à un échec.** Le geste
+> naturel est alors de **relancer**, ou pire de **réparer à la main** un classeur parfaitement
+> migré. 🎯 **C'est un risque de DÉCISION, pas de donnée** — et c'est le protocole de la session,
+> non le code, qui a évité l'erreur ce jour-là.
+
+⚠️ **Le `try/catch` qui l'entoure ne protège pas, et son commentaire est FAUX.** Il annonce
+*« pas d'interface (exécution depuis l'éditeur) : le journal suffit »*. ⛔ Depuis l'éditeur, sur un
+script lié à un classeur, `getUi()` **réussit** — et `alert()` **ne lève pas d'erreur, il attend**.
+Un `catch` n'attrape pas une attente. *(Relève aussi de **§8 ter** : un commentaire qui affirme
+l'inverse de ce qui se passe.)*
+
+🎯 **ET LE MOTIF N'EST PAS ISOLÉ — c'est ce qui en fait un risque et non un incident.**
+`migrerEditionsMaintenant()` *(B2-1)* porte **exactement le même code**, et `setupSheet()` un
+motif voisin. ⛔ **Pourquoi B2-1 n'a pas bloqué le 2026-08-27 n'est PAS établi** — ce n'est pas
+déduit ici, c'est **inconnu** *(`CLAUDE.md` §9)*.
+
+**Contournement immédiat, éprouvé le jour même** : garder l'onglet du classeur **ouvert et visible**
+pendant l'exécution, et cliquer sur **OK**. ⭐ **La relance a alors duré 4 secondes au lieu de 6
+minutes** — ⛔ c'est un contournement d'exploitation, **pas un correctif**.
+
+> ⛔ **Aucune correction n'a été apportée**, et c'était délibéré : Romain a exigé que les preuves
+> d'idempotence et de lecture passive soient prises **sur le code exact qui venait de migrer**.
+> ⭐ *On ne modifie pas l'objet de la mesure entre deux mesures.*

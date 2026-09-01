@@ -186,9 +186,21 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 
 | Ce qu'on vérifie | Valeur attendue **aujourd'hui** | Ce qu'un écart signifie |
 |---|---|---|
-| **Le bilan** affiché en fin de journal | **`R92 — 974/974 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
-| **La dernière ligne** du fichier collé chez Google | **5554** | Le fichier collé n'est pas celui du dépôt |
+| **Le bilan** affiché en fin de journal | ⚡ **`R92 — 1222/1222 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
+| **La dernière ligne** du fichier collé chez Google | ⚡ **6958** *(et `Code.gs` à **9893**)* | Le fichier collé n'est pas celui du dépôt |
 
+> ⚡ **CES DEUX VALEURS ONT ÉTÉ CORRIGÉES LE 2026-09-01, ET L'ÉCART MÉRITE D'ÊTRE DIT.** Ce tableau
+> annonçait encore **`974/974`** et **5554** comme « valeurs attendues aujourd'hui », alors que
+> **`1222/1222`** avait été **constaté chez Google dès le 2026-08-27**. ⛔ **La source unique des
+> repères de redéploiement a donc porté une valeur périmée pendant cinq jours** — exactement le
+> mécanisme que **§8 quater** décrit, sur le document même qui est censé faire foi.
+> 🎯 **Et le sens de l'écart était le piège habituel** : quelqu'un obtenant le **bon** résultat
+> *(1222)* aurait lu ici qu'il devait en attendre 974, et aurait pu conclure à une anomalie.
+
+> ✅ ⚡ **CONSTATÉ CHEZ GOOGLE — ces valeurs ne sont PLUS des prédictions** *(voir plus bas, relevé
+> du 2026-08-27 sur le transport d'email, et session 33 du 2026-09-01)*. Le bloc ci-dessous est
+> conservé pour son explication du **pourquoi** le nombre a changé.
+>
 > ⚠️ ⚡ **VALEURS À ATTENDRE APRÈS LE PROCHAIN COLLAGE — ⛔ PLUS `1210` !**
 > *(branche `claude/b2-2-transport-email`, commit `c1d6309`)* :
 > **`R92 — 1222/1222 OK, 0 FAIL`**, `Test.gs` à **6958** lignes et `Code.gs` à **9893**
@@ -208,10 +220,28 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > **hors de Google**, dans une doublure Node — laquelle reproduit **exactement** `974/974` sur le
 > code en service, ce qui est la seule raison de leur accorder du crédit.
 >
-> ⚠️ **ET UN GESTE DE PLUS SERA NÉCESSAIRE APRÈS LE REDÉPLOIEMENT** : lancer
-> **`migrerClubsMaintenant()`** *(voir [`../backend/README.md`](../backend/README.md))*. ⭐ **Le
-> serveur fonctionne sans elle** — l'ancien onglet fait foi tant que le carnet est vide — mais les
-> deux nouveaux onglets n'apparaîtront pas d'eux-mêmes.
+> ✅ ⚡ **CE GESTE A ÉTÉ FAIT — `migrerClubsMaintenant()` a été LANCÉE le 2026-09-01**, sous le
+> déploiement **version 161** : le classeur porte désormais **15 onglets**, `Clubs` *(3 lignes)* et
+> `Participations` *(0 ligne)*, avec la marque `Config.migration_clubs_b22` = `2026-09-01 14:04:02`.
+> ⛔ **Elle n'est donc plus à faire.** ⚡ *(Ce bloc disait « ⚠️ **ET UN GESTE DE PLUS SERA NÉCESSAIRE
+> APRÈS LE REDÉPLOIEMENT** […] les deux nouveaux onglets n'apparaîtront pas d'eux-mêmes » : vrai
+> jusqu'à cette date.)*
+>
+> ⚠️ **ET UN PIÈGE À CONNAÎTRE SI ELLE EST RELANCÉE UN JOUR** *(**R-110**)* : elle affiche une
+> **boîte de dialogue** après avoir terminé. Si le classeur n'est pas **ouvert et visible**,
+> l'exécution attend **6 minutes** puis échoue sur `Exceeded maximum execution time` — ⛔ **alors
+> que tout a réussi**. ⭐ Garder l'onglet du classeur visible et cliquer sur **OK** : la relance
+> prend alors **4 secondes**.
+
+> ✅ **CONSTATÉ CHEZ GOOGLE le 2026-09-01** *(lot **M1-B2 / B2-2**, phase réelle 2A)* : le serveur
+> exécute la **version 161** — ⭐ **numéro relevé par Romain** dans *Déployer → Gérer les
+> déploiements*, ⛔ aucun accès automatisé n'existe. C'est cette version qui a exécuté
+> `migrerClubsMaintenant()`, et c'est elle qui porte le bilan **`1222/1222`**.
+>
+> ⚠️ **Le numéro **161** n'apparaissait NULLE PART dans le dépôt avant ce jour.** La dernière
+> version nommée était la **160** *(celle qui donnait `1203/1210`)* ; le redéploiement du correctif
+> de transport a bien eu lieu le 2026-08-27, ⛔ **mais son numéro n'avait pas été consigné**.
+> 🎯 **C'est ici qu'il vit** *(**§8 quater** : une seule adresse de référence)*.
 
 > ✅ **CONSTATÉ CHEZ GOOGLE le 2026-08-27** *(lot **M1-B2 / B2-1**)* : `lancerTestsFFR` exécutée
 > **deux fois** dans l'éditeur Apps Script a donné **`R92 — 974/974 OK, 0 FAIL`**, avec `Test.gs` à

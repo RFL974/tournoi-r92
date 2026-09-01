@@ -1,20 +1,23 @@
 # Structure du Google Sheet
 
-Le Google Sheet sert de **base de données** du tournoi. Il contient **13 onglets** :
+Le Google Sheet sert de **base de données** du tournoi. Il contient **15 onglets** :
 
-- **9 de travail** — `Config`, `Equipes`, `Poules`, `Matchs`, `Historique` *(le journal de
+- **11 de travail** — `Config`, `Equipes`, `Poules`, `Matchs`, `Historique` *(le journal de
   saison)*, `ClubsInvites` *(les clubs invités)*, `Sponsors` *(les partenaires)*, `Mesures`
-  *(les relevés de visibilité)* et 🆕 `Editions` *(le **registre des éditions**, lot B2-1)* ;
+  *(les relevés de visibilité)*, 🆕 `Editions` *(le **registre des éditions**, lot B2-1)* et
+  🆕 `Clubs` + `Participations` *(le carnet durable et l'engagement d'une édition, lot B2-2)* ;
 - **4 de référence FFR**, remplis à la main — `RefFFR_Formes`, `RefFFR_Dates`, `RefFFR_Regles`,
   `RefFFR_Temps`.
 
 > 📖 Le rôle de chacun, et lequel est créé automatiquement, sont dans
 > [`architecture.md`](architecture.md) §1.
 
-> ✅ **`Editions` EXISTE dans le classeur en service** *(constaté le 2026-08-27, après migration)* :
-> le classeur réel porte bien **13 onglets**. ⚡ *(Cette note disait « ⛔ n'existe PAS ENCORE […] le
-> classeur réel porte donc toujours **12 onglets** » : vrai jusqu'à cette date.)* ⭐ **Voir
-> [`deploiement.md`](deploiement.md)**, qui est la source des repères de redéploiement.
+> ✅ **`Clubs` et `Participations` EXISTENT dans le classeur en service** *(constaté le 2026-09-01,
+> après `migrerClubsMaintenant()` sous la version **161**)* : le classeur réel porte bien
+> **15 onglets**. ⚡ *(Cette note disait « ✅ **`Editions` EXISTE** […] le classeur réel porte bien
+> **13 onglets** » — vrai jusqu'au 2026-09-01 ; elle-même avait remplacé « ⛔ n'existe PAS ENCORE
+> […] toujours **12 onglets** ».)* ⭐ **Voir [`deploiement.md`](deploiement.md)**, qui est la source
+> des repères de redéploiement.
 
 > URL du Sheet :
 > https://docs.google.com/spreadsheets/d/17jcZMNHJywE6e1qEXMnp_g6rsVeLo05vbQ-0njdlL7U/edit
@@ -532,11 +535,14 @@ d'une édition : ⛔ `edition_id` ne vit **nulle part ailleurs**, et surtout pas
 
 ---
 
-## ⏳ Onglets `Clubs` et `Participations` (M1-B2 / B2-2) — ⛔ **PAS ENCORE DANS LE CLASSEUR**
+## ✅ Onglets `Clubs` et `Participations` (M1-B2 / B2-2) — **EN SERVICE**
 
-> ⏳ **Écrits, testés et commités en local le 2026-08-27** *(branche
-> `claude/b2-2-clubs-participations`)*. ⛔ **Ils n'existent PAS dans le classeur réel** : le code
-> n'est ni poussé ni déployé, et `migrerClubsMaintenant()` n'a pas été lancée.
+> ✅ **Créés dans le classeur réel le 2026-09-01** par `migrerClubsMaintenant()`, sous le
+> déploiement **version 161**. `Clubs` porte **3 lignes** *(les trois clubs du carnet)* ;
+> `Participations` porte **0 ligne** — ⭐ **aucune ligne legacy ne prouvait un engagement**, et le
+> prédicat de **D-059** refuse d'en fabriquer un. ⛔ **`ClubsInvites` n'a pas bougé d'un caractère.**
+> ⚡ *(Cette note disait « ⏳ **Écrits, testés et commités en local le 2026-08-27** […] ⛔ **Ils
+> n'existent PAS dans le classeur réel** » : vrai jusqu'au 2026-09-01.)*
 
 **Pourquoi deux onglets au lieu d'un** *(décision **D-050**)*. `ClubsInvites` répondait à deux
 questions dans une seule ligne : *« qui est ce club ? »* — durable — et *« que fait-il CETTE

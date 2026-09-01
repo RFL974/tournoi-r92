@@ -10374,3 +10374,108 @@ pu recoller la mauvaise version en croyant bien faire.
 
 ⛔ **`migrerClubsMaintenant()` n'a JAMAIS été exécutée.** B2-2 **reste ouvert** : la séparation
 `Clubs` + `Participations` n'est pas en service, et R-104 / R-105 attendent la migration réelle.
+
+---
+
+## 🏁 SESSION 33 — PHASE RÉELLE 2A : la migration structurelle a eu lieu *(2026-09-01)*
+
+**Objectif** : exécuter `migrerClubsMaintenant()` sur le classeur réel, et prouver ce qu'elle
+produit. ⛔ **Aucune écriture métier post-migration n'était autorisée.**
+
+### 33.1 — Les reconstats d'ouverture
+
+⭐ **Rien n'a été admis sur la foi du prompt de reprise** : Git, documentation, code, tests,
+déploiement et classeur ont tous été **recomptés le jour même**.
+
+| | |
+|---|---|
+| **Git** | `HEAD` = `main` = `origin/main` = **`c4d72e9`** après `git fetch --prune`, worktree propre, 0/0 de divergence. Dernier commit touchant `backend/` : **`c1d6309`**, déjà dans `main` |
+| **Code** | `Code.gs` **9893** lignes · `Tests.gs` **6958** — recomptés. `Clubs` **7** colonnes, `Participations` **18**, relues dans `ENTETES` |
+| **Tests** | ⭐ **`R92 — 1222/1222 OK, 0 FAIL`** au harnais serveur *(lanceur Node local reconstruit)* · **48/48**, **97/97**, **41/41**, **45/45** aux suites Node. **Zéro FAIL** |
+| **Déploiement** | Version **161**, relevée **par Romain** dans « Gérer les déploiements » — ⛔ **la session ne peut pas la lire** |
+| **Classeur M0** | **95 244 caractères**, SHA-256 `73ec1d25…` — ⭐ **exactement le T0/T2 de la phase réelle 1** : le classeur n'avait pas bougé d'un caractère depuis le 2026-08-27 |
+| **Sauvegarde** | *« Tournoi R92 — sauvegarde avant MIGRATION B2-2 — 2026-09-01 »*, créée à **11:53:51 UTC**, ⭐ **contenu relu et prouvé identique à M0 caractère pour caractère** — ⛔ pas seulement « le fichier existe » |
+
+⭐ **Le prédicat a été RECALCULÉ avant la migration**, ligne par ligne, sur les données du jour :
+les trois clubs ne portaient **aucune** des dix colonnes probantes — seulement identité, contact et
+`club_token`. **Résultat prédit : 3 clubs, 0 participation.** ⭐ **C'est ce prédit, écrit avant, que
+le réel est ensuite venu confirmer** — et non l'inverse.
+
+### 33.2 — La migration, et l'incident qui l'a suivie
+
+`migrerClubsMaintenant()` exécutée à **14:03:55**. Message de succès à **14:04:03** :
+
+> `✅ Migration TERMINÉE et vérifiée — marquée le 2026-09-01 14:04:02.`
+> `3 club(s) au carnet, 0 participation(s) rattachée(s) à l'édition 93349afe-….`
+
+Puis, à **14:09:55** : `Exceeded maximum execution time`.
+
+⭐ **La cause a été établie dans le code avant tout autre geste** — 🆕 **R-110** : `_b22Journaliser`
+affiche une boîte de dialogue **après** avoir journalisé, et celle-ci attend un clic. ⛔ **Elle
+intervient après la dernière écriture** : le travail était fini en 8 secondes.
+
+> 🎯 **CE QUE CET INCIDENT A VALIDÉ, ET CE N'ÉTAIT PAS SON OBJET.** Le protocole interdisait de
+> relancer ou de réparer avant constat. ⭐ **Sans cette règle, le geste naturel devant un timeout
+> aurait été de relancer, ou de « réparer » un classeur pourtant intègre.** Un message d'erreur
+> n'est pas la preuve d'un échec : **seul le constat l'est.**
+
+### 33.3 — M1, constaté
+
+**15 onglets** *(13 + `Clubs` + `Participations`)*. `Clubs` : **7 colonnes conformes au code, ordre
+compris**, **3 lignes**, UUID **v4 valides et distincts**, tous les champs recopiés à l'identique.
+`Participations` : **18 colonnes conformes**, ⭐ **0 ligne**. Marque **unique**,
+`2026-09-01 14:04:02` — ⭐ **la valeur en base est exactement celle annoncée dans le message**.
+
+⭐ **`ClubsInvites` intact** : `86a1891a…` avant et après. **`Config` : exactement 1 ligne ajoutée,
+0 retirée, 0 modifiée.** Tous les autres onglets **identiques**, y compris `Historique` *(211)* et
+`Editions` *(2)*.
+
+🔬 **Les invariants ont été REJOUÉS indépendamment** : le vrai `Code.gs` chargé dans un bac à sable,
+`ecartsMigrationClubs` appelée sur les données **réellement lues** du classeur → **`[]`**.
+
+### 33.4 — L'idempotence, prouvée plus fortement que prévu
+
+⚠️ **Il y a eu DEUX relances, pas une.** La première a été lancée sans gérer l'alerte *(oubli
+signalé par Romain)* ; la seconde, procédure suivie, a duré **4 secondes** *(14:22:55 → 14:22:59)* :
+
+> `ℹ️ Rien à faire : la migration est déjà TERMINÉE (marquée le 2026-09-01 14:04:02). …`
+
+⭐ **Après ces trois appels au total, l'empreinte globale est identique à celle de M1** —
+`5af6074a…`, 96 386 caractères. ⛔ Aucun UUID régénéré, aucune marque réécrite, aucune ligne créée.
+
+⭐ **L'oubli a donc produit une preuve que le protocole n'avait pas prévue** : une relance
+**interrompue en cours d'alerte** ne laisse elle non plus **aucune trace**. ⛔ **Ce n'était pas un
+scénario voulu**, et il n'est pas présenté comme tel.
+
+### 33.5 — La lecture passive
+
+Romain a ouvert l'administration et l'écran **« Clubs invités »**, sans toucher à rien. ⭐ **Les
+trois clubs s'affichent avec leurs contacts** — la couche d'adaptation reconstruit bien l'objet plat
+depuis les deux nouveaux onglets — ⛔ **aucune erreur, aucun écran vide**.
+
+⭐ **Et le classeur n'a pas bougé d'un caractère** : `5af6074a…` avant comme après.
+⛔ **Aucune participation créée, aucun jeton posé.** `assurerTokensClubs` ne fabrique plus
+d'engagement à partir d'un écran qu'on regarde — c'était nommément le risque de **D-059**.
+
+### 33.6 — Ce que cette session apprend
+
+**① Un prédit écrit AVANT vaut mieux qu'un constat expliqué après.** Le résultat *3 / 0* a été
+calculé et écrit **avant** la migration. ⭐ Quand le réel l'a confirmé, il n'y avait plus rien à
+interpréter — ⛔ alors qu'un même chiffre découvert après coup aurait pu être rationalisé.
+
+**② Un message d'erreur n'est pas un état.** Le seul incident de la session annonçait un échec sur
+une opération **entièrement réussie**. ⭐ C'est **§8 septies** dans l'autre sens : ici ce n'est pas
+un document qui ment sur un geste, c'est **le journal d'exécution** — et le remède est le même,
+**aller constater**.
+
+**③ Un contrôle peut passer sans avoir rien contrôlé.** `colonnesParticipationNonClassees` a rendu
+une liste vide parce que l'onglet **était vide**, ⛔ pas parce qu'il était sain. ⭐ **La session l'a
+donc exercée elle-même** sur les 18 en-têtes réelles. *Un contrôle vert sur un ensemble vide ne
+prouve rien* — c'est la leçon de R-105, qui vient de s'appliquer à R-105.
+
+**④ Et ce qui n'a pas été éprouvé est nommé.** Le classeur ne contenait que des clubs **sans
+engagement** : ⛔ le cas **A** de D-059 *(participation + snapshots)*, le **renommage** et la
+**reprise d'un état partiel** n'ont **jamais tourné sur des données réelles**. Ils restent couverts
+par le harnais seul *(`CLAUDE.md` §13.6)*.
+
+⛔ **B2-2 n'est PAS clos** : la clôture appartient à Romain.

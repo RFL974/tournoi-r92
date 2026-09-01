@@ -103,7 +103,47 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-08-27 *(session 32 — 🏁 **PHASE RÉELLE 1 TERMINÉE**)* —
+**Dernière mise à jour** : 2026-09-01 *(session 33 — 🏁 **PHASE RÉELLE 2A TERMINÉE**)* —
+✅ **LA MIGRATION RÉELLE A EU LIEU : LE CLASSEUR EST PASSÉ EN `Clubs` + `Participations`.**
+⛔ **B2-2 n'est PAS clos** *(§25 du cadrage : la clôture appartient à Romain)*.
+
+> 🔬 **CE QUI EST CONSTATÉ SUR LE CLASSEUR RÉEL — ⛔ rien n'est déduit.** `migrerClubsMaintenant()`
+> exécutée sous **version 161**, puis **deux relances**, puis une **ouverture passive** de
+> l'administration. Quatre relevés du **contenu intégral**, comparés par empreinte.
+>
+> | | **M0** *(avant)* | **M1** *(après migration)* | **M2** *(après 2 relances)* | **après ouverture admin** |
+> |---|---|---|---|---|
+> | Onglets | 13 | **15** | 15 | 15 |
+> | `Clubs` | absent | ⭐ **3 lignes** | 3 | 3 |
+> | `Participations` | absent | ⭐ **0 ligne** | **0** | ⭐ **0** |
+> | `migration_clubs_b22` | absente | `2026-09-01 14:04:02` | **inchangée** | **inchangée** |
+> | `ClubsInvites` | `86a1891a…` | ⭐ **`86a1891a…`** | `86a1891a…` | `86a1891a…` |
+> | Empreinte globale | `73ec1d25…` *(95 244 car.)* | `5af6074a…` *(96 386)* | ⭐ **`5af6074a…`** | ⭐ **`5af6074a…`** |
+>
+> ⭐ **Trois résultats, et le troisième n'était pas au programme.**
+> ① **La séparation est en service** : 3 identités durables au carnet, `club_id` UUID v4 valides et
+> distincts, ⛔ **aucune donnée d'engagement dans `Clubs`**, et `ClubsInvites` **intact caractère
+> pour caractère**.
+> ② **Zéro participation** — les trois `club_token` legacy n'en ont fabriqué aucune. ⭐ **Le prédicat
+> a été recalculé sur les données du jour AVANT la migration** *(3 clubs / 0 participation)*, puis
+> le résultat réel l'a confirmé. **D-059 est vérifié en production.**
+> ③ **L'idempotence tient sur des appels RÉPÉTÉS** — trois appels au total, dont un interrompu par
+> timeout : ⛔ aucun UUID régénéré, aucune marque réécrite, **empreinte globale identique**.
+>
+> ✅ **ET LA LECTURE PASSIVE NE CRÉE RIEN** : ouvrir « Clubs invités » affiche les 3 clubs avec
+> leurs contacts *(constaté par Romain, l'écran exige la clé)* et laisse le classeur **strictement
+> identique**. ⭐ `assurerTokensClubs` ne fabrique plus de participation à partir d'un écran qu'on
+> regarde — c'était le risque nommé par **D-059**.
+>
+> ⚠️ **UN DÉFAUT RÉEL A ÉTÉ DÉCOUVERT, ET IL N'EST PAS CORRIGÉ** — 🆕 **R-110**. La première
+> exécution s'est terminée sur `Exceeded maximum execution time` **après 6 minutes**, alors que le
+> travail était fini en **8 secondes**. 🎯 **La cause est certaine** : `_b22Journaliser` affiche une
+> **boîte de dialogue** *(`SpreadsheetApp.getUi().alert`)* **après** le journal ; personne ne
+> cliquant, elle a attendu la limite. ⛔ **Elle n'a rien corrompu** — elle intervient après la
+> dernière écriture — ⚠️ **mais elle fait échouer l'exécution EN APPARENCE**, et la tentation
+> naturelle est alors de relancer ou de réparer un classeur pourtant sain.
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32 — 🏁 **PHASE RÉELLE 1 TERMINÉE**)* —
 ✅ **LA PREUVE DE NON-BASCULE EST ACQUISE SUR LE CLASSEUR RÉEL.** ⛔ **`migrerClubsMaintenant()`
 n'a JAMAIS été exécutée, et B2-2 n'est PAS clos.**
 
