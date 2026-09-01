@@ -497,6 +497,16 @@ function lancerTestsFFR() {
   testB22_TR2_leTransportIntercepteVraiment(etat);
   testB22_TR3_transportToujoursRendu(etat);
 
+  // R-110 — une fonction de maintenance ne doit JAMAIS attendre un clic pour rendre la main.
+  testR110_MT1_aucuneAlerteDansLeCheminDeMaintenance(etat);
+  testR110_MT2_laRechercheMordVraiment(etat);
+  testR110_MT3_leJournalResteProduitEtVientEnPremier(etat);
+  testR110_MT4_rendLaMainEtRendLeMessage(etat);
+  testR110_MT5_lesDeuxAppelantsPassentParLePointUnique(etat);
+  testR110_MT6_lesMessagesMetierSontInchanges(etat);
+  testR110_MT7_leCheminNoOpNEcritRien(etat);
+  testR110_MT8_setupSheetCorrigeSansToucherAuSchema(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -6955,4 +6965,166 @@ function testB22_TR3_transportToujoursRendu(etat) {
   finally { _b22RendreTransport(); }
   _ffrAssert(etat, String(TRANSPORT_EMAIL.envoyerHtml).indexOf('MailApp.sendEmail') !== -1,
     'B2-2 TR3 ⭐ : même après une exception, le transport réel est RENDU');
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+ * R-110 — UNE FONCTION DE MAINTENANCE NE DOIT PAS ATTENDRE UN CLIC
+ *
+ * 🔬 CONSTATÉ EN RÉEL le 2026-09-01 : `migrerClubsMaintenant()` a écrit son message de succès
+ * en 8 secondes, puis est restée suspendue jusqu'à `Exceeded maximum execution time` — ⛔ alors
+ * que TOUT avait réussi. La cause : `SpreadsheetApp.getUi().alert(…)` attendait un clic que
+ * personne ne pouvait donner, le classeur n'étant pas au premier plan.
+ *
+ * ⚠️ POURQUOI CES CONTRÔLES SONT STRUCTURELS, ET CE N'EST PAS UN PIS-ALLER. Le défaut est une
+ * ATTENTE, pas une erreur. ⛔ Aucun harnais ne peut la reproduire : un test qui bloque six
+ * minutes n'est pas un test, et une doublure Node d'`alert()` RÉUSSIT là où Google ATTEND —
+ * c'est exactement le piège que `RISQUES.md` documente déjà pour l'email. ⭐ Le seul contrôle
+ * qui morde est donc : « le chemin de retour de maintenance ne contient AUCUN appel qui
+ * suspend », doublé du contrôle inverse qui prouve que la recherche trouve bien ces appels là
+ * où il en reste légitimement.
+ * ═════════════════════════════════════════════════════════════════════════════ */
+
+/** Les fonctions par lesquelles une opération de maintenance rend son résultat. */
+var _R110_CHEMIN_MAINTENANCE = ['retourMaintenance', '_b22Journaliser',
+  'executerMigrationClubs', 'migrerClubsMaintenant', 'migrerEditionsMaintenant',
+  'setupSheet'];
+
+/** Ce qui SUSPEND une exécution Apps Script jusqu'à ce qu'un humain clique. */
+var _R110_APPELS_BLOQUANTS = ['getUi(', '.alert(', '.prompt(', 'Browser.msgBox', 'Browser.inputBox'];
+
+/** Le code source d'une fonction, par son nom — ⭐ COMMENTAIRES RETIRÉS.
+ *
+ * ⚠️ POURQUOI LE RETRAIT, et il a été appris à la dure. `String(f)` rend AUSSI les commentaires
+ * internes de la fonction. Le premier jet de MT8 a échoué sur un commentaire qui contenait le
+ * mot `return` — ⛔ un test structurel qui lit les commentaires ne juge pas le CODE, il juge la
+ * prose. ⭐ Pire dans l'autre sens : un commentaire expliquant pourquoi `getUi()` est proscrit
+ * aurait fait hurler MT1 sur un code parfaitement sain.
+ *
+ * ⚠️ Le `//` précédé de `:` est PRÉSERVÉ : sans cela, une adresse `https://…` dans une chaîne
+ * serait tronquée — et tronquer du code, c'est risquer de CACHER l'appel qu'on cherche.
+ */
+function _r110Source(nom) {
+  var f = this[nom] || eval(nom);
+  return String(f)
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')      // commentaires de bloc
+    .replace(/([^:])\/\/[^\n]*/g, '$1');    // commentaires de ligne, hors « :// »
+}
+
+/** MT1 ⭐⭐ — Aucun appel bloquant dans le chemin de retour de maintenance. */
+function testR110_MT1_aucuneAlerteDansLeCheminDeMaintenance(etat) {
+  var coupables = [];
+  _R110_CHEMIN_MAINTENANCE.forEach(function (nom) {
+    var src = _r110Source(nom);
+    _R110_APPELS_BLOQUANTS.forEach(function (motif) {
+      if (src.indexOf(motif) !== -1) coupables.push(nom + ' → ' + motif);
+    });
+  });
+  _ffrAssert(etat, coupables.length === 0,
+    'R-110 MT1 ⭐⭐ : ⛔ AUCUNE fonction du chemin de maintenance n\'appelle une boîte de ' +
+    'dialogue bloquante (' + coupables.join(', ') + ')');
+}
+
+/** MT2 ⭐ — Le contrôle INVERSE : sans lui, MT1 passerait sur un code où l'on ne cherche rien. */
+function testR110_MT2_laRechercheMordVraiment(etat) {
+  var src = _r110Source('configurerCles');
+  _ffrAssert(etat, src.indexOf('getUi(') !== -1 && src.indexOf('.alert(') !== -1,
+    'R-110 MT2 ⭐ : la recherche TROUVE bien les appels bloquants là où il en reste ' +
+    'légitimement — `configurerCles` demande une VRAIE décision, et n\'est pas visée');
+}
+
+/** MT3 — Le message reste journalisé, et le journal vient AVANT que la main soit rendue. */
+function testR110_MT3_leJournalResteProduitEtVientEnPremier(etat) {
+  var src = _r110Source('retourMaintenance');
+  var iLog = src.indexOf('Logger.log(');
+  var iRet = src.indexOf('return ');
+  _ffrAssert(etat, iLog !== -1,
+    'R-110 MT3 : le message est TOUJOURS journalisé — c\'est le seul canal visible dans tous ' +
+    'les cas depuis l\'éditeur');
+  _ffrAssert(etat, iLog !== -1 && iRet !== -1 && iLog < iRet,
+    'R-110 MT3 ⭐ : et il l\'est AVANT le retour — ⛔ rien ne peut s\'intercaler entre les deux');
+}
+
+/** MT4 ⭐ — Le point de passage rend la main, et rend le message INCHANGÉ. */
+function testR110_MT4_rendLaMainEtRendLeMessage(etat) {
+  var m = 'R-110 — message de contrôle';
+  _ffrAssert(etat, retourMaintenance(m) === m,
+    'R-110 MT4 ⭐ : `retourMaintenance` rend la main SANS interaction, et rend le message');
+  _ffrAssert(etat, _b22Journaliser(m) === m,
+    'R-110 MT4 : `_b22Journaliser` garde sa valeur de retour — les 8 sites d\'appel de la ' +
+    'migration ne changent pas');
+}
+
+/** MT5 ⭐ — LES DEUX appelants passent par le point de passage unique, pas seulement B2-2. */
+function testR110_MT5_lesDeuxAppelantsPassentParLePointUnique(etat) {
+  _ffrAssert(etat, _r110Source('_b22Journaliser').indexOf('retourMaintenance(') !== -1,
+    'R-110 MT5 : `_b22Journaliser` (B2-2) passe par le point de passage unique');
+  _ffrAssert(etat, _r110Source('migrerEditionsMaintenant').indexOf('retourMaintenance(') !== -1,
+    'R-110 MT5 ⭐ : et `migrerEditionsMaintenant` (B2-1) AUSSI — le motif portait le même ' +
+    'défaut, il reçoit la même correction');
+}
+
+/** MT6 ⭐⭐ — Les messages métier sont inchangés, sur les DEUX chemins qui comptent. */
+function testR110_MT6_lesMessagesMetierSontInchanges(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  var res = _b22Migrer(cl);
+  _ffrAssert(etat, String(res.message).indexOf('✅ Migration TERMINÉE et vérifiée — marquée le ') === 0,
+    'R-110 MT6 : le message de SUCCÈS est mot pour mot celui d\'avant la correction');
+  // ⭐ Et le chemin « déjà terminée » — celui, exactement, de la preuve réelle à venir.
+  var noop = executerMigrationClubs(cl, true);
+  _ffrAssert(etat, String(noop).indexOf('ℹ️ Rien à faire : la migration est déjà TERMINÉE') === 0,
+    'R-110 MT6 ⭐⭐ : et le chemin NO-OP rend son message — c\'est celui que la preuve réelle ' +
+    'jouera sur le classeur déjà migré');
+}
+
+/** MT7 ⭐ — Le chemin no-op n'écrit RIEN : la notification ne touche aucune donnée. */
+function testR110_MT7_leCheminNoOpNEcritRien(etat) {
+  var cl = _b22ClasseurLegacyPret();
+  _b22Migrer(cl);
+  var clubsAvant = lireClubs(cl).length;
+  var partAvant = lireParticipations(cl).length;
+  var marqueAvant = _b22MarqueMigration(cl);
+  executerMigrationClubs(cl, true);
+  _ffrAssert(etat, lireClubs(cl).length === clubsAvant && lireParticipations(cl).length === partAvant,
+    'R-110 MT7 ⭐ : le no-op n\'écrit ni club ni participation — ⛔ le retour de maintenance ne ' +
+    'modifie aucune donnée du classeur');
+  _ffrAssert(etat, _b22MarqueMigration(cl) === marqueAvant,
+    'R-110 MT7 : et la marque de migration n\'est pas retouchée');
+}
+
+/** MT8 ⭐⭐ — `setupSheet` : l'alerte part, ⛔ et RIEN D'AUTRE ne bouge.
+ *
+ * ⚠️ POURQUOI CE TEST EXISTE, et il ne ressemble à aucun autre de ce bloc. `setupSheet` CRÉE LE
+ * SCHÉMA du classeur — c'est la seule fonction de maintenance dont une modification étourdie
+ * casserait la structure elle-même. R-110 ne devait y toucher qu'à UNE chose : le message final.
+ * ⭐ Ce test fige donc les onglets, LEUR ORDRE, et l'absence de valeur de retour — de sorte
+ * qu'une correction qui déborderait de son périmètre soit ARRÊTÉE, et pas seulement relue.
+ */
+function testR110_MT8_setupSheetCorrigeSansToucherAuSchema(etat) {
+  var src = _r110Source('setupSheet');
+
+  // ① Le schéma, DANS L'ORDRE — c'est l'ordre d'écriture qui est figé, pas seulement la liste.
+  var attendus = ['Equipes', 'Poules', 'Matchs', 'Historique', 'ClubsInvites', 'Sponsors', 'Editions'];
+  var ordre = [];
+  var re = /creerOngletAvecEntetes\(classeur, '([^']+)'/g;
+  var m;
+  while ((m = re.exec(src)) !== null) { ordre.push(m[1]); }
+  _ffrAssert(etat, ordre.join(' | ') === attendus.join(' | '),
+    'R-110 MT8 ⭐⭐ : `setupSheet` crée les MÊMES onglets, dans le MÊME ordre (' +
+    ordre.join(' | ') + ')');
+
+  // ② Les deux autres gestes de création, intacts eux aussi.
+  _ffrAssert(etat, src.indexOf('creerOngletConfig(classeur)') !== -1 &&
+                   src.indexOf('ouvrirEditionSiAucune(classeur)') !== -1,
+    'R-110 MT8 ⭐ : l\'onglet Config et l\'ouverture d\'édition sont toujours là — ⛔ aucune ' +
+    'logique de création n\'a été retirée');
+
+  // ③ Le message final passe par le point de passage commun.
+  _ffrAssert(etat, src.indexOf('retourMaintenance(') !== -1,
+    'R-110 MT8 : le message final passe par le point de passage commun');
+
+  // ④ ⛔ Et SANS `return` : la valeur de retour de `setupSheet` reste `undefined`, comme avant.
+  _ffrAssert(etat, src.indexOf('return') === -1,
+    'R-110 MT8 ⭐⭐ : ⛔ `setupSheet` ne rend TOUJOURS aucune valeur — le point de passage a ' +
+    'été appelé, pas retourné');
 }

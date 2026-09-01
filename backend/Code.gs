@@ -189,10 +189,10 @@ function setupSheet() {
   // sera créé ensuite n'aurait d'édition à laquelle se rattacher. ⭐ Idempotent : si une édition
   // est déjà active (setupSheet rejoué par mégarde), ⛔ aucun doublon n'est créé.
   ouvrirEditionSiAucune(classeur);
-  try {
-    SpreadsheetApp.getUi().alert('✅ Base prête !', 'Les 8 onglets ont été créés.',
-      SpreadsheetApp.getUi().ButtonSet.OK);
-  } catch (e) { Logger.log('Base prête !'); }
+  // R-110 — même défaut conceptuel que les deux migrations : une alerte PUREMENT INFORMATIVE
+  // en fin de fonction de maintenance, qui attendait un clic. ⛔ Aucun `return` ici : la valeur
+  // de retour de `setupSheet` reste `undefined`, exactement comme avant.
+  retourMaintenance('✅ Base prête ! Les 8 onglets ont été créés.');
 }
 
 /**
@@ -7970,6 +7970,43 @@ function basculerEditionApresReset(classeur) {
   return { ok: true, edition: plan.edition, fermee: plan.fermee };
 }
 
+/* ===================== RETOUR D'UNE FONCTION DE MAINTENANCE ===================== */
+/**
+ * ▶ LE POINT DE PASSAGE UNIQUE par lequel une fonction de maintenance rend son résultat — R-110.
+ *
+ * ⭐ Elle JOURNALISE, puis elle REND LA MAIN. ⛔ Elle n'affiche aucune boîte de dialogue, et
+ * c'est tout l'objet de ce helper.
+ *
+ * ⚠️ CE QU'IL REMPLACE, ET POURQUOI. `setupSheet()`, `migrerEditionsMaintenant()` et
+ * `_b22Journaliser()` — donc les TROIS fonctions de maintenance du projet — affichaient une
+ * boîte de dialogue PUREMENT INFORMATIVE en fin de course. Or une alerte ATTEND un
+ * clic : le 2026-09-01, `migrerClubsMaintenant()` a écrit son message de succès en 8 secondes,
+ * puis est restée suspendue jusqu'à `Exceeded maximum execution time` — ⛔ alors que la
+ * migration, le contrôle de cohérence et la marque étaient TOUS terminés. L'exploitant lit un
+ * échec là où tout a réussi, et le geste naturel — relancer, ou réparer à la main — est
+ * précisément le geste dangereux.
+ *
+ * ⛔ ET LE `try/catch` NE PROTÉGEAIT PAS : depuis l'éditeur, `getUi()` RÉUSSIT, et `alert()`
+ * ne lève pas d'erreur — il attend. ⭐ Un `catch` n'attrape pas une attente.
+ *
+ * ⛔ ET CE HELPER NE VISE QUE L'INFORMATIF. `configurerCles()` garde ses boîtes de dialogue,
+ * et c'est délibéré : elles demandent une VRAIE décision (la saisie des clés), leur réponse est
+ * LUE, et elles sont lancées depuis le menu du classeur — là où quelqu'un regarde.
+ *
+ * ⭐ POURQUOI LE JOURNAL SUFFIT, et pourquoi aucun affichage ne le remplace ici. Ces fonctions
+ * ne sont proposées par AUCUN menu du classeur (`onOpen` n'offre que `configurerCles`) : elles
+ * se lancent depuis l'éditeur Apps Script, où le journal d'exécution est justement ce que
+ * l'opérateur a sous les yeux. ⛔ Un affichage dans le classeur (« toast ») ne serait visible
+ * que si le classeur est ouvert — c'est-à-dire dans le seul cas où l'alerte fonctionnait déjà,
+ * et jamais dans celui qui a produit le défaut.
+ *
+ * ⚠️ Le message reste la VALEUR DE RETOUR, inchangée : les appelants ne changent pas.
+ */
+function retourMaintenance(message) {
+  Logger.log(message);
+  return message;
+}
+
 /**
  * ▶ MIGRATION — à lancer UNE FOIS, à la main, depuis l'éditeur Apps Script (comme `setupSheet`
  * ou `configurerCles`). Elle attribue un `edition_id` au tournoi DÉJÀ EN PLACE dans le classeur.
@@ -7992,11 +8029,7 @@ function migrerEditionsMaintenant() {
     message = 'ℹ️ Rien à faire : une édition est déjà active — ' + res.edition.edition_id +
       ' (ouverte le ' + res.edition.date_creation + ').';
   }
-  Logger.log(message);
-  try {
-    SpreadsheetApp.getUi().alert('Registre des éditions', message, SpreadsheetApp.getUi().ButtonSet.OK);
-  } catch (e) { /* pas d'interface (exécution depuis l'éditeur) : le journal suffit */ }
-  return message;
+  return retourMaintenance(message);
 }
 
 
@@ -8884,14 +8917,9 @@ function figerSnapshotsInvitation(classeur, nom, identite) {
   return { ok: true, fige: true };
 }
 
-/** Journalise et, si une interface existe, affiche — même patron que `migrerEditionsMaintenant`. */
+/** Journalise et rend la main — ⛔ aucune boîte de dialogue (R-110), voir `retourMaintenance`. */
 function _b22Journaliser(message) {
-  Logger.log(message);
-  try {
-    SpreadsheetApp.getUi().alert('Migration Clubs / Participations', message,
-      SpreadsheetApp.getUi().ButtonSet.OK);
-  } catch (e) { /* pas d'interface (exécution depuis l'éditeur) : le journal suffit */ }
-  return message;
+  return retourMaintenance(message);
 }
 
 /* ===================== RÉINITIALISATION DU TOURNOI ===================== */
