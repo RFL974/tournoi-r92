@@ -10590,3 +10590,82 @@ et une trace. 📌 **Sa suppression est une dette assumée**, inscrite dans `PLA
 ⛔ **elle n'appartenait pas à B2-2**, et aucune session ne doit la traiter comme un reste à finir.
 
 ⛔ **B2-3 n'est pas démarré.** ⛔ **R-110 n'est pas corrigé.**
+
+---
+
+## 🏁 SESSION 34 — R-110 : une fonction de maintenance n'attend plus un clic *(2026-09-01)*
+
+**Date** : 2026-09-01 · **Branche** : `main` · **Objectif** : corriger **R-110** — lot **isolé**,
+⛔ **sans toucher à B2-2 ni ouvrir B2-3**.
+
+### Ce qui a été fait
+
+| | |
+|---|---|
+| **Reconstat** | Git propre, `HEAD` = `main` = `origin/main` = **`6998661`**, confirmé par `git ls-remote`. B2-2 **clos** *(D-060)*, **B2-3 non démarré**, R-110 **ouvert et non corrigé** |
+| **Inventaire** | **5 sites** portant `getUi()`/`.alert(` recensés et **qualifiés un par un** : 3 informatifs *(à corriger)*, 1 **vraie décision** *(`configurerCles`, intouchée)*, 1 création de menu *(`onOpen`)* |
+| **Correction** | 🆕 `retourMaintenance(message)` — **4 lignes de code exécutable**. Trois appelants : `_b22Journaliser` *(signature INCHANGÉE)*, `migrerEditionsMaintenant()`, message final de `setupSheet()` |
+| **Preuves locales** | **`R92 — 1238/1238 OK, 0 FAIL`** *(1222 avant, **+16**)* · **48/48**, **97/97**, **41/41**, **45/45** aux suites Node, **inchangées** · ⭐ **14 mutations, 14 interceptées** |
+| **Synchronisation** | `backend/Code.gs` → `Code.gs` **9921** lignes · `backend/Tests.gs` → **`Test.gs`** *(singulier chez Google)* **7130** lignes — nom **reconstaté par Romain avant tout collage**, ⛔ aucun doublon créé |
+| **Régression distante** | ⭐ **`R92 — 1238/1238 OK, 0 FAIL`** à **18:07:14**, `Exécution terminée` à 18:07:15 |
+| **Preuve réelle** | ⭐ `migrerClubsMaintenant()`, **classeur fermé**, **18:17:19 → 18:17:21** : **2 secondes**, `Exécution terminée`, ⛔ **aucune boîte de dialogue, aucun clic, aucune erreur**, journal citant la marque **`2026-09-01 14:04:02`** |
+| **Non-écriture** | Classeur relevé avant et après *(18:20)* : **3 clubs**, **0 participation**, marque **non réécrite** |
+| **Commits** | `e2c9788` *(code + tests)* · + le lot documentaire |
+| **Décision** | 🆕 **D-061** |
+
+### 🎯 Ce que cette session a appris, et qui vaut au-delà du lot
+
+**① La preuve tenait dans une comparaison, pas dans un test.** À 14:04, classeur fermé, la même
+fonction avait attendu **6 minutes** puis échoué. À 18:17, **dans les mêmes conditions**, elle a
+rendu la main en **2 secondes**. ⭐ **Ce sont les conditions identiques qui font la preuve** — un
+succès obtenu classeur ouvert n'aurait rien établi, puisque c'est exactement ce que le
+contournement d'exploitation faisait déjà.
+
+**② Un défaut qui est une ATTENTE ne se teste pas comme une erreur.** Aucun harnais ne peut le
+reproduire : un test qui bloque six minutes n'est pas un test, et une doublure Node d'`alert()`
+**réussit** là où Google **attend** — ⭐ le piège même que **R-109** documente pour l'email. Les
+contrôles sont donc **structurels**, et c'est un choix raisonné : **MT1** interdit les appels
+bloquants, **MT2** est son **contrôle inverse** *(sans lui, MT1 passerait sur un code où l'on ne
+cherche rien)*.
+
+**③ Un test structurel qui lit les commentaires juge la prose, pas le code.** ⭐ **MT8 a échoué du
+premier coup — sur un commentaire** contenant le mot `return`. `String(f)` rend aussi les
+commentaires internes. Pire dans l'autre sens : un commentaire expliquant *pourquoi* `getUi()` est
+proscrit aurait fait échouer MT1 sur un code parfaitement sain. L'analyse **retire donc les
+commentaires**, en préservant le `//` précédé de `:` — ⛔ tronquer une URL, c'est risquer de
+**cacher** l'appel qu'on cherche. **La mutation M12 garde ce point.**
+
+**④ Deux bugs étaient dans le HARNAIS, pas dans le code — et l'un aurait menti.** Un test de
+détection `/0 FAIL$/` acceptait *« 40 FAIL »*, et une mutation visait une fonction **inexistante**.
+⛔ Sans correction, j'aurais rapporté **« 8/9 »** et conclu à un angle mort qui n'existait pas.
+🎯 **Le harnais de mutation doit lui-même être mis en doute** — le dépôt l'avait déjà appris
+*(session 27, « le garde-fou plantait, lu comme mutation non détectée »)*.
+
+**⑤ `git diff --check` a arrêté la phase réelle, et il avait raison.** Une **ligne blanche en fin
+de fichier** — un seul caractère, invisible à l'œil — a suspendu toute la synchronisation. ⭐ C'est
+exactement le rôle de ce contrôle : attraper ce qu'une relecture humaine ne voit pas. La correction
+a retiré **1 octet** *(424 220 → 424 219)*, et tous les contrôles ont été **rejoués**.
+
+**⑥ Le fait décisif n'était pas dans la fiche du risque, il était dans `onOpen`.** Le menu du
+classeur n'offre **que** `configurerCles` : ⛔ **aucune** des trois fonctions corrigées n'est
+atteignable depuis le classeur. Leur boîte de dialogue n'avait donc **aucun contexte légitime
+d'affichage**. ⭐ **C'est ce constat — et non une préférence de style — qui a écarté le « toast »**
+comme remplacement : il n'aurait été visible que dans le seul cas où l'alerte fonctionnait déjà.
+
+### Ce que la session n'a PAS fait
+
+⛔ **Aucune version Apps Script créée, aucun redéploiement** — arbitrage de Romain, figé par
+**D-061** : les trois fonctions se lancent depuis l'éditeur, qui exécute la **source**, et
+⛔ **aucun chemin `doGet`/`doPost` ne les appelle**. ⚠️ **La version déployée reste la 161**
+*(reconstatée le 2026-09-01 : un seul déploiement actif, type Application Web, 2026-08-27 20:47)* —
+⛔ **elle ne porte PAS R-110**, et le prochain déploiement fonctionnel l'embarquera naturellement.
+
+⛔ `setupSheet`, `migrerEditionsMaintenant` et `configurerCles` **n'ont pas été lancées** sur le
+classeur réel — la preuve du chemin no-op de B2-2 suffit, le helper étant **commun** *(MT5)*.
+
+⛔ **B2-3 — Terrains : permanent vs édition — n'est ni démarré, ni préparé, ni documenté.**
+
+### Prochaine session recommandée
+
+⏭️ **`PLAN.md` désigne B2-3** *(terrains : permanent vs édition)*. ⛔ **NON DÉMARRÉE**, et elle ne
+démarre pas sans validation explicite *(`CLAUDE.md` §12.4)*.

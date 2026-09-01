@@ -103,7 +103,60 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-09-01 *(session 33, suite — 🏁🏁 **B2-2 EST CLÔTURÉ**)* —
+**Dernière mise à jour** : 2026-09-01 *(session 34 — 🏁 **R-110 EST CLOS**)* —
+🏁 **R-110 EST CORRIGÉ, TESTÉ, ET PROUVÉ EN RÉEL : une fonction de maintenance n'attend plus
+jamais un clic pour rendre la main.**
+
+> ⭐ **LA PREUVE, ET ELLE EST UNE COMPARAISON.** Le 2026-09-01 à 14:04, `migrerClubsMaintenant()`
+> avait fini son travail en **8 secondes**, puis était restée suspendue jusqu'à
+> `Exceeded maximum execution time` — **6 minutes** — devant une boîte de dialogue que personne ne
+> pouvait voir. **Le même soir à 18:17, dans les MÊMES conditions — classeur fermé, aucun clic —
+> la fonction a rendu la main en 2 secondes**, statut `Exécution terminée`, ⛔ sans aucune erreur.
+>
+> | | 2026-09-01 **14:04** *(avant)* | 2026-09-01 **18:17:19 → 18:17:21** *(après)* |
+> |---|---|---|
+> | Classeur | fermé | **fermé** |
+> | Clic demandé | ⛔ oui, impossible à donner | ⭐ **aucun** |
+> | Durée | **6 minutes** | ⭐ **≈ 2 secondes** |
+> | Issue | ⛔ `Exceeded maximum execution time` | ⭐ **`Exécution terminée`** |
+>
+> ⭐ **ET LE CLASSEUR N'A PAS BOUGÉ**, relevé avant *(18:0x)* et après *(18:20)* : **3 clubs**
+> *(`MASSY`, `LE PUC`, `LE TEST RUGBY CLUB`)*, ⭐ **0 participation**, et la marque
+> `Config!B91 = migration_clubs_b22` toujours à **`2026-09-01 14:04:02`** — ⛔ **non réécrite**.
+> C'est la confirmation en réel de ce que le test **MT7** établissait en local.
+
+> ⭐ **CE QUI A ÉTÉ CORRIGÉ, ET C'EST UN POINT DE PASSAGE UNIQUE.** 🆕 `retourMaintenance(message)`
+> journalise, puis rend la main. ⛔ **Aucune boîte de dialogue.** Ses **trois** appelants sont les
+> trois fonctions de maintenance du projet :
+>
+> | Appelant | Lancée depuis |
+> |---|---|
+> | `_b22Journaliser` — donc `migrerClubsMaintenant()` | l'éditeur Apps Script |
+> | `migrerEditionsMaintenant()` | l'éditeur Apps Script |
+> | le message final de `setupSheet()` | l'éditeur Apps Script |
+>
+> ⛔ **`configurerCles` reste INTACTE, et c'est délibéré** : ses boîtes de dialogue demandent une
+> **vraie décision** *(la saisie des clés)*, leur réponse est **lue**, et elles sont lancées depuis
+> le **menu du classeur** — là où quelqu'un regarde. ⭐ **R-110 ne visait que l'informatif.**
+
+> ⚠️ **UNE DIVERGENCE EST ASSUMÉE, ET ELLE EST TRACÉE ICI** *(arbitrage de Romain, **D-061**)*.
+> La **source de l'éditeur** Apps Script est à jour *(`Code.gs` **9921** lignes, `Test.gs` **7130**,
+> bilan distant **`1238/1238 OK, 0 FAIL`**)*, ⛔ **mais la version déployée reste la 161**
+> *(reconstatée le 2026-09-01, un seul déploiement actif, type Application Web, datée du
+> 2026-08-27 20:47)*. ⛔ **Aucune version nouvelle n'a été créée pour R-110.**
+>
+> 🎯 **Et ce n'est pas un oubli — c'est une conséquence vérifiée du code.** Les trois fonctions
+> corrigées sont lancées **depuis l'éditeur**, qui exécute la **source**, jamais la version
+> déployée. ⛔ **Aucun chemin `doGet`, `doPost` ni aucune action de la Web App ne les appelle** :
+> `retourMaintenance` n'a que ces trois appelants, et `executerMigrationClubs` n'en a qu'**un**.
+> ⭐ **Redéployer ne changerait donc rien à ce que voit un utilisateur.** ⛔ **Il ne faut PAS écrire
+> que R-110 est présent dans la version déployée : il ne l'est pas.** ⭐ **Le prochain déploiement
+> fonctionnel du backend l'embarquera naturellement.**
+
+> ⛔ **B2-3 — Terrains : permanent vs édition — N'EST PAS DÉMARRÉ**, ni préparé, ni documenté.
+> R-110 était un **lot isolé**.
+
+*Rappel de la mise à jour précédente* — 2026-09-01 *(session 33, suite — 🏁🏁 **B2-2 EST CLÔTURÉ**)* —
 🏁 **M1-B2 / B2-2 EST CLOS, ET LE NOUVEAU MODÈLE EST EN SERVICE SUR LE VRAI CLASSEUR**
 *(décision explicite de Romain, après la phase réelle 2B — **D-060**)*.
 
@@ -119,7 +172,8 @@
 > décider séparément — ⛔ elle n'appartenait pas à B2-2.
 >
 > ⛔ **CE QUE LA CLÔTURE NE DIT PAS, et qui ne doit jamais être arrondi** : **R-104**, **R-105** et
-> **R-110** ⛔ **restent OUVERTS avec leurs réserves**. Trois scénarios n'ont **jamais** tourné sur
+> **R-110** ⛔ **restent OUVERTS avec leurs réserves**. ⚡ *(**R-110 a depuis été CLOS** — voir le
+> bloc de tête, 2026-09-01, session 34. **R-104 et R-105 restent ouverts.**)* Trois scénarios n'ont **jamais** tourné sur
 > des données réelles — la migration d'une ligne legacy **portant** une preuve d'engagement *(cas A
 > de D-059, avec ses snapshots)*, le **renommage** d'un club, la **reprise** d'une migration
 > partielle. ⭐ **Ils sont couverts par des tests éprouvés par rejeu de mutation**, ⛔ **pas par une

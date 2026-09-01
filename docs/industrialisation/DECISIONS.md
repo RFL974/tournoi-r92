@@ -5,7 +5,11 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-09-01 *(session 33, suite)* — 🏁 **D-060 — B2-2 EST CLOS ET EN
+**Dernière mise à jour** : 2026-09-01 *(session 34)* — 🆕 **D-061 — UNE INFORMATION FINALE DE
+MAINTENANCE NE S'AFFICHE JAMAIS DANS UNE FENÊTRE QUI ATTEND UN CLIC**, et R-110 se clôt **sans
+redéploiement**, sur une divergence éditeur / version déployée **assumée et écrite**.
+
+*Rappel de la mise à jour précédente* — 2026-09-01 *(session 33, suite)* — 🏁 **D-060 — B2-2 EST CLOS ET EN
 SERVICE, ALORS QUE TROIS DE SES RISQUES RESTENT VOLONTAIREMENT OUVERTS.** Décision de Romain,
 prise après la phase réelle 2B. ⭐ **Elle existe pour qu'une session future comprenne que cette
 coexistence est DÉLIBÉRÉE, ⛔ et non une incohérence documentaire.**
@@ -4263,3 +4267,83 @@ Trois obligations en découlent, et **aucune n'est facultative** :
   contient **zéro**. La première invitation exercera des chemins *(snapshots, jeton, statut
   « Invité »)* que **rien n'a encore vu tourner en production** — ils relèvent de **B2-4** ;
 - ❌ **Pas** que B2-3 est autorisé à démarrer *(`CLAUDE.md` §12.4)*.
+
+---
+
+### D-061 — Une information finale de maintenance ne s'affiche jamais dans une fenêtre qui attend un clic ; et R-110 se clôt sans redéploiement, sur une divergence assumée
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-09-01 |
+| **Session** | **34** — lot isolé **R-110** |
+| **Statut** | ✅ **VALIDÉE — décision explicite de Romain**, après la preuve réelle de 18:17 |
+| **Décidée par** | Romain |
+| **Couvre** | `RISQUES.md` **R-110** *(CLOS)* · `backend/README.md` · `docs/deploiement.md` *(repères actifs et divergence)* · ⛔ **ne modifie AUCUNE décision antérieure, D-040 comprise** |
+
+**Le problème posé**
+
+> Le 2026-09-01 à 14:04, `migrerClubsMaintenant()` a terminé son travail en **8 secondes**, puis
+> est restée suspendue **6 minutes** devant une boîte de dialogue que personne ne pouvait voir —
+> jusqu'à `Exceeded maximum execution time`. ⛔ **Rien n'avait échoué.**
+>
+> ⚠️ **Le danger n'était pas la donnée, il était la DÉCISION.** Un exploitant qui lit
+> *« Exceeded maximum execution time »* conclut à un échec, et le geste naturel — relancer, ou
+> **réparer à la main** un classeur parfaitement migré — est le geste dangereux. 🎯 Ce jour-là,
+> c'est le **protocole** qui a évité l'erreur, ⛔ **pas le code**.
+>
+> ⚠️ **Et le motif n'était pas isolé** : `migrerEditionsMaintenant()` portait **exactement** le même
+> code, et `setupSheet()` un motif identique. **Corriger un cas aurait laissé la cause en place** —
+> c'est précisément le reproche que le dépôt s'était déjà fait *(SN6 corrigé comme un cas, pas comme
+> une cause)*.
+
+**Ce qui est décidé**
+
+| | |
+|---|---|
+| ⛔ **Interdiction permanente** | Une fonction de maintenance ⛔ **n'affiche JAMAIS** une information finale dans une fenêtre qui attend un clic *(`getUi().alert`, `.prompt`, `Browser.msgBox`, `Browser.inputBox`)*. ⭐ Elle **journalise**, et elle **rend la main** |
+| ⭐ **Le point de passage unique** | `retourMaintenance(message)` — `Logger.log`, puis `return message`. ⭐ **Un seul endroit à surveiller**, donc un défaut impossible à réintroduire par recopie sans être vu |
+| ✅ **Les trois cas couverts** | `_b22Journaliser` *(donc `migrerClubsMaintenant()`)* · `migrerEditionsMaintenant()` · le message final de `setupSheet()` — ⭐ **les trois fonctions de maintenance du projet, sans exception** |
+| ⛔ **Ce qui reste hors périmètre** | `configurerCles()` **garde ses fenêtres**, et ce n'est pas une tolérance : elles demandent une **vraie décision** *(la saisie des clés)*, leur réponse est **LUE** *(`getSelectedButton`)*, et elles se lancent depuis le **menu du classeur**. ⭐ **R-110 ne visait que l'INFORMATIF** |
+| ⛔ **Aucun « toast » de remplacement** | Il ne serait visible que si le classeur est **ouvert** — c'est-à-dire dans le seul cas où l'alerte fonctionnait déjà, ⛔ **et jamais dans celui qui a produit le défaut**. ⭐ Le journal d'exécution est visible **dans tous les cas** depuis l'éditeur, qui est le seul lieu de lancement de ces fonctions *(`onOpen` n'offre que `configurerCles`)* |
+| ⛔ **Aucun redéploiement pour R-110** | ⭐ **Vérifié, pas supposé** : les trois fonctions se lancent depuis l'éditeur, qui exécute la **source** ; ⛔ **aucun chemin `doGet`/`doPost` ni action de la Web App ne les appelle**. Redéployer n'aurait rien changé pour un utilisateur |
+| ⚠️ **La divergence est ACCEPTÉE, et TRACÉE** | La source de l'éditeur porte R-110 ; ⛔ **la version déployée 161 ne le porte pas**. ⛔ **Ne jamais écrire l'inverse.** ⭐ **Le prochain déploiement fonctionnel du backend l'embarquera naturellement** — c'est alors que la divergence se refermera |
+
+**Pourquoi cette décision, et pas une autre**
+
+> ⭐ **Parce que le vestige n'avait aucun contexte d'affichage légitime.** Le constat qui a tranché
+> n'est pas une préférence de style : `onOpen` n'offre que `configurerCles`, donc ⛔ **aucune** des
+> trois fonctions corrigées n'est atteignable depuis le classeur. Leur fenêtre ne pouvait s'ouvrir
+> que là où personne ne la verrait.
+>
+> ⚠️ **Et le `try/catch` qui semblait protéger était un faux ami** — son commentaire annonçait même
+> l'inverse de la réalité *(**§8 ter**)* : depuis l'éditeur, `getUi()` **RÉUSSIT**, et `alert()` ne
+> lève pas d'erreur — **il attend**. ⭐ **Un `catch` n'attrape pas une attente.**
+
+**Comment on saura que la règle tient**
+
+> ⭐ **Par des contrôles structurels, et c'est un choix raisonné, pas un pis-aller.** Le défaut est
+> une **ATTENTE** : ⛔ aucun harnais ne peut la reproduire — un test qui bloque six minutes n'est
+> pas un test, et une doublure Node d'`alert()` **réussit** là où Google **attend** *(le piège même
+> de **R-109**)*.
+>
+> ⭐ **MT1** interdit tout appel bloquant dans le chemin de maintenance ; **MT2** est son **contrôle
+> inverse** — il exige que la recherche trouve encore ces appels dans `configurerCles`, ⛔ sans quoi
+> MT1 passerait sur un code où l'on ne cherche rien. **MT8** fige les onglets de `setupSheet`, leur
+> **ordre** et l'absence de valeur de retour. **14 mutations, 14 interceptées.**
+>
+> 🎯 **Une leçon en est sortie, et elle vaut au-delà de R-110** : `String(f)` rend aussi les
+> **commentaires**. Un contrôle structurel qui lit la **prose** ne juge pas le **code** — et un
+> commentaire expliquant *pourquoi* `getUi()` est proscrit ferait échouer MT1 sur un code sain.
+> ⭐ **L'analyse retire donc les commentaires**, et une mutation garde ce retrait *(une alerte suivie
+> d'un commentaire doit rester visible)*.
+
+**Ce que cette décision NE dit PAS**
+
+- ❌ **Pas** que toute boîte de dialogue est proscrite : ⭐ **celles qui demandent une décision et
+  dont la réponse est lue restent légitimes** — `configurerCles` en est l'exemple, et **MT2** la
+  protège activement ;
+- ❌ **Pas** que R-110 est en service pour les utilisateurs : ⛔ **la version déployée reste la
+  161** ;
+- ❌ **Pas** qu'un redéploiement est interdit : ⭐ il est simplement **inutile pour ce lot**, et le
+  prochain déploiement fonctionnel emportera R-110 sans geste supplémentaire ;
+- ❌ **Pas** que **B2-3** est ouvert : ⛔ **il n'est ni démarré, ni préparé, ni documenté.**

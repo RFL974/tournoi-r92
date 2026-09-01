@@ -3288,7 +3288,7 @@ aucune nominative)*.
 |---|---|---|---|---|---|---|
 | **B2-0** | 🏁 **Sécurisation du reset** *(harnais)* — ✅ **CLÔTURÉ le 2026-08-25** | — | ⚡ **backend + frontend + CI** *(voir la note ci-dessous)* | ⛔ | ✅ **R-099**, ✅ **R-100** *(entièrement)* · **R-106** *(part reset seule)* · **R-033** *(dernière part)* | ✅ **ATTEINT** — reset prouvé **en réel** le 2026-08-25 : 0 statut hérité, 0 effectif hérité |
 | **B2-1** | **`edition_id` propre** + registre `Editions` ~~+ fin du renouvellement de `tournoi_id`~~ ⚡ **voir la fiche §16.5 quater** — 🏁 **CLÔTURÉ le 2026-08-27** *(**D-058**)* | B2-0 | backend | douce | ✅ **R-106** | ✅ **ATTEINT EN RÉEL** — 3 régénérations ⇒ **un seul** `edition_id`, **et** reset nominal réel *(ancienne fermée, neuve ouverte, une seule active)*. ⚠️ **Ce critère, écrit le 2026-08-24, était plus ÉTROIT que le contrat validé D-057** : voir §16.5 quater ⑥ |
-| **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation — 🏁 **CLÔTURÉ le 2026-09-01** *(décision de Romain — **D-060**)*, **EN SERVICE sur le classeur réel** : migré, idempotent, lu et **écrit** en réel *(voir §16.5 quinquies)*. ⚠️ **R-104, R-105 et R-110 restent OUVERTS** avec leurs réserves. ⚡ *(a annoncé « ⏳ PASSE LOCALE LIVRÉE le 2026-08-27, ⛔ non déployée, non migrée », puis « EN SERVICE […] ⛔ Non clos »)* | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-102, R-104, R-105** ⚡ *(⛔ pas R-099 ni R-100 : leur part comportement est **TESTÉE** depuis B2-0, leur part structure est suivie sous **R-102**)* | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
+| **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation — 🏁 **CLÔTURÉ le 2026-09-01** *(décision de Romain — **D-060**)*, **EN SERVICE sur le classeur réel** : migré, idempotent, lu et **écrit** en réel *(voir §16.5 quinquies)*. ⚠️ **R-104 et R-105 restent OUVERTS** avec leurs réserves ⚡ *(cette ligne nommait aussi **R-110** — ✅ **CLOS le 2026-09-01**, session 34 : corrigé, testé, prouvé en réel)*. ⚡ *(a annoncé « ⏳ PASSE LOCALE LIVRÉE le 2026-08-27, ⛔ non déployée, non migrée », puis « EN SERVICE […] ⛔ Non clos »)* | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-102, R-104, R-105** ⚡ *(⛔ pas R-099 ni R-100 : leur part comportement est **TESTÉE** depuis B2-0, leur part structure est suivie sous **R-102**)* | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
 | **B2-3** | **Terrains** permanents / édition | B2-1 | backend + frontend | douce | **R-101** | Dossier d'un tournoi vide ⇒ ⛔ aucun terrain hérité |
 | **B2-4** | **UX** : Carnet · Préparer l'invitation · Clubs invités · sélection · envoi ciblé | B2-2 | **frontend surtout** | ⛔ | — | Plusieurs vagues ciblées prouvées **en réel** |
 | **B2-5** | **Messagerie V1** + notifications + emails | B2-2 | backend + frontend | ⛔ | *(R-103 reste ouvert)* | Message reçu, notifié, répondu **par email** |
@@ -3321,7 +3321,8 @@ aucune nominative)*.
 > lecteurs et des écrivains, reset adapté. ⭐ **Migration exécutée sous la version 161, idempotence
 > prouvée, lecture et ÉCRITURE métier vérifiées en réel** : voir la fiche **§16.5 quinquies**.
 > 🏁 **CLÔTURE PRONONCÉE PAR ROMAIN le 2026-09-01**, après la phase réelle 2B — **D-060**.
-> ⚠️ **R-104, R-105 et R-110 restent OUVERTS** : la clôture du LOT ne ferme pas les RISQUES.
+> ⚠️ **R-104 et R-105 restent OUVERTS** : la clôture du LOT ne ferme pas les RISQUES. ⚡ *(**R-110**
+> figurait ici — ✅ **CLOS le 2026-09-01**, session 34.)*
 > ⚡ *(Cette ligne a annoncé « sa PREMIÈRE PASSE, LOCALE, est livrée le 2026-08-27 […] ⛔ Rien n'est
 > déployé, rien n'est migré, rien n'est intégré dans `main` », puis « ⛔ B2-2 n'est pas CLOSE pour
 > autant » — chacune vraie à sa date.)* ⚡ *(Cette ligne annonçait « B2-2 est
@@ -3750,12 +3751,14 @@ explique notamment **pourquoi trois risques restent ouverts sans bloquer la clô
 > |---|---|
 > | **R-104** | ⛔ **OUVERT** — la migration d'une ligne legacy **portant** une preuve d'engagement *(cas A, avec ses 4 snapshots)* ⛔ **n'a jamais tourné en réel** |
 > | **R-105** | ⛔ **OUVERT** — son garde-fou côté `Participations` ⛔ **n'a rien pu inspecter**, l'onglet étant vide |
-> | **R-110** | ⛔ **OUVERT ET NON CORRIGÉ** — l'alerte modale de `_b22Journaliser` |
+> | **R-110** | ⛔ **OUVERT ET NON CORRIGÉ** — l'alerte modale de `_b22Journaliser` ⚡ *(✅ **CLOS le 2026-09-01**, session 34 — voir `RISQUES.md`)* |
 > | **R-109** | ⛔ **inchangé** — il porte sur le dispositif de preuve, pas sur ce lot |
 >
 > ⭐ **Pourquoi ces réserves n'empêchent pas la clôture** : les scénarios manquants sont couverts par
 > des tests **éprouvés par rejeu de mutation** *(un test qu'on a vu refuser prouve quelque chose)* ;
 > ils ne concernent **pas l'exploitation courante** du modèle — la migration a **déjà eu lieu** ;
-> et **R-110** touche une **fonction de maintenance**, ⛔ pas le modèle de données.
+> et **R-110** touche une **fonction de maintenance**, ⛔ pas le modèle de données. ⚡ *(**R-110 a
+> depuis été corrigé et prouvé en réel** — 2026-09-01, session 34. Le raisonnement ci-dessus reste
+> celui qui a permis de clore B2-2 sans attendre cette correction.)*
 > 🎯 **La distinction PROUVÉ EN RÉEL / COUVERT PAR LES TESTS reste inscrite dans chaque fiche**, et
 > la clôture du lot ne l'efface pas.

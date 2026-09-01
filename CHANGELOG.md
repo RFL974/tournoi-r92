@@ -12,6 +12,38 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Une opération de maintenance ne reste plus bloquée en attendant un clic — 2026-09-01
+
+> ✅ **CORRIGÉ ET PROUVÉ SUR LE VRAI CLASSEUR le 2026-09-01.** ⛔ **Rien ne change pour un
+> organisateur, un marqueur ou un spectateur** : cette correction concerne les opérations
+> techniques lancées à la main, hors de l'application.
+
+**Ce qui n'allait pas.** Trois opérations d'entretien du logiciel — celles qu'on lance une fois, à
+la main, pour préparer ou faire évoluer le classeur — affichaient une **fenêtre d'information** à
+la fin de leur travail. Une fenêtre, ça attend qu'on clique dessus. Or ces opérations se lancent
+depuis l'atelier technique, souvent **sans que le classeur soit ouvert à l'écran** : personne ne
+pouvait donc voir cette fenêtre, ni cliquer.
+
+**Pourquoi c'était gênant, et ce n'était pas un détail.** Le 1er septembre, la grande opération de
+séparation des clubs a **fait tout son travail en 8 secondes** — puis est restée figée **six
+minutes** devant cette fenêtre invisible, jusqu'à ce que Google coupe l'exécution avec un message
+d'erreur. ⚠️ **Tout avait réussi, et l'écran annonçait un échec.** Le danger n'était pas la donnée :
+c'était la **réaction**. Devant un message d'erreur, on relance — ou, pire, on va « réparer à la
+main » un classeur qui n'avait aucun problème.
+
+**Ce qui a été fait.** Ces trois opérations **écrivent maintenant leur message dans le journal** et
+rendent la main aussitôt. ⭐ **Plus aucune fenêtre, plus aucun clic à donner** — même si le classeur
+est complètement fermé.
+
+⛔ **Les fenêtres qui posent une VRAIE question, elles, sont conservées** — celle qui demande de
+saisir les clés de sécurité, par exemple. La différence tient en une phrase : *une fenêtre qui
+attend une décision est utile ; une fenêtre qui annonce simplement « c'est fini » ne l'est pas.*
+
+**Comment on le sait.** La même opération a été relancée le soir même à **18:17**, dans les
+**mêmes conditions qu'au moment du blocage** — classeur fermé, personne devant l'écran. Elle a
+terminé en **2 secondes**, sans erreur, et le classeur est ressorti **strictement identique** :
+mêmes clubs, aucune ligne ajoutée, aucune date réécrite.
+
 ### Un club connu n'est plus un club invité — 2026-08-27, ✅ **en service le 2026-09-01**
 
 > ✅ **C'EST EN SERVICE DEPUIS LE 2026-09-01.** La bascule a été faite sur le classeur réel : il

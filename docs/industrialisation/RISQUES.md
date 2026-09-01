@@ -9,7 +9,36 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-09-01 *(session 33, suite — 🏁 **CLÔTURE DE B2-2**)* —
+**Dernière mise à jour** : 2026-09-01 *(session 34 — 🏁 **R-110 SE FERME**)* —
+✅ **R-110 PASSE À CLOS — CORRECTION TESTÉE ET PREUVE RÉELLE ACQUISE.** ⭐ C'est le **premier**
+risque que ce registre ferme depuis la clôture de B2-2, et il se ferme sur ce que **D-060**
+exigeait : **une observation, pas un critère satisfait.**
+
+| Réf | Statut |
+|---|---|
+| **R-110** | ✅ **CLOS — correction testée et preuve réelle acquise** *(2026-09-01, session 34)* |
+| **R-102** | ✅ **CORRIGÉ ET VÉRIFIÉ EN RÉEL** — inchangé |
+| **R-104** | ⛔ **OUVERT** — inchangé, cette session n'a joué **aucun** de ses scénarios |
+| **R-105** | ⛔ **OUVERT** — inchangé |
+| **R-109** | ⛔ **inchangé** — email seulement |
+
+> ⭐ **LA PREUVE EST UNE COMPARAISON, dans des conditions IDENTIQUES.** À **14:04**, classeur fermé,
+> `migrerClubsMaintenant()` avait attendu **6 minutes** puis échoué sur `Exceeded maximum execution
+> time`. À **18:17:19 → 18:17:21**, classeur fermé lui aussi, elle a rendu la main en
+> ⭐ **2 secondes**, statut `Exécution terminée`, ⛔ **aucune boîte de dialogue, aucun clic, aucune
+> erreur** — et le journal citait la marque réellement lue, `2026-09-01 14:04:02`.
+>
+> ⭐ **Et le classeur est resté strictement identique** : **3 clubs**, **0 participation**, marque
+> **non réécrite**. ⛔ Le chemin « déjà terminée » n'écrit rien, et c'est désormais **constaté**,
+> plus seulement testé.
+
+> ⛔ **CE QUE CETTE CLÔTURE NE DIT PAS.** La correction vit dans la **source de l'éditeur** Apps
+> Script, ⛔ **pas dans la version déployée** — qui reste la **161** *(reconstatée le 2026-09-01)*.
+> ⭐ **C'est sans conséquence, et c'est vérifié** : les trois fonctions corrigées se lancent depuis
+> l'éditeur, qui exécute la source ; ⛔ aucun chemin `doGet`/`doPost` ne les appelle. ⚠️ **Il ne
+> faut donc PAS écrire que R-110 est présent dans la version déployée** *(arbitrage **D-061**)*.
+
+*Rappel de la mise à jour précédente* — 2026-09-01 *(session 33, suite — 🏁 **CLÔTURE DE B2-2**)* —
 ⚠️ **B2-2 EST CLÔTURÉ** *(**D-060**)*, **ET POURTANT AUCUN RISQUE NE SE FERME. C'est délibéré, et
 c'est le point le plus important de cette mise à jour** — **D-060** dit fiche par fiche pourquoi.
 
@@ -19,7 +48,7 @@ c'est le point le plus important de cette mise à jour** — **D-060** dit fiche
 | **R-104** | ⛔ **OUVERT** — le cas A de D-059 *(participation prouvée + snapshots)* ⛔ **n'a jamais tourné en réel** |
 | **R-105** | ⛔ **OUVERT** — son garde-fou ⛔ **n'a rien inspecté**, l'onglet `Participations` étant vide |
 | **R-109** | ⛔ **inchangé** — email seulement, la généralisation reste ouverte |
-| **R-110** | ⛔ **OUVERT ET NON CORRIGÉ** — l'alerte modale est intacte |
+| **R-110** | ⛔ **OUVERT ET NON CORRIGÉ** — l'alerte modale est intacte ⚡ *(**CLOS depuis**, session 34 du même jour)* |
 
 > 🎯 **Clore un LOT n'est pas fermer ses RISQUES, et confondre les deux serait exactement le genre
 > d'arrondi que ce registre existe pour empêcher.** B2-2 est clos parce que ce qu'il promettait est
@@ -2664,7 +2693,7 @@ d'intervalle.**
 |---|---|
 | **Priorité** | **P1** — ⛔ **il ne corrompt aucune donnée** ; ⚠️ **il fait croire à un échec là où tout a réussi, et pousse à un geste de réparation dangereux** |
 | **Domaine** | **D — QA** · **E — UX** *(l'exploitant est ici l'organisateur devant l'éditeur Apps Script)* |
-| **Statut** | ⛔ **IDENTIFIÉ — NON CORRIGÉ** *(constaté en conditions réelles le 2026-09-01)* |
+| **Statut** | ✅ **CLOS — correction testée et preuve réelle acquise** *(2026-09-01, session 34)*. ⚡ *(A été **IDENTIFIÉ — NON CORRIGÉ** du 2026-09-01 14:09 au 2026-09-01 18:17, soit quelques heures : le défaut a été constaté en conditions réelles, puis corrigé et prouvé le même jour.)* |
 
 🔬 **Constaté en production, pas déduit.** Le 2026-09-01, `migrerClubsMaintenant()` a produit son
 message de succès à **14:04:03** — soit **8 secondes** après le démarrage — puis l'exécution a
@@ -2703,3 +2732,89 @@ minutes** — ⛔ c'est un contournement d'exploitation, **pas un correctif**.
 > ⛔ **Aucune correction n'a été apportée**, et c'était délibéré : Romain a exigé que les preuves
 > d'idempotence et de lecture passive soient prises **sur le code exact qui venait de migrer**.
 > ⭐ *On ne modifie pas l'objet de la mesure entre deux mesures.*
+
+---
+
+#### ✅ CORRECTION ET PREUVE RÉELLE — *2026-09-01, session 34* *(addendum ; rien de ce qui précède n'est réécrit)*
+
+**La correction, et elle tient en un point de passage.** 🆕 `retourMaintenance(message)`
+*(`backend/Code.gs`)* journalise, puis **rend la main** — ⛔ aucune boîte de dialogue. Ses **trois**
+appelants sont les trois fonctions de maintenance du projet :
+
+| Appelant | Ce qui a changé |
+|---|---|
+| `_b22Journaliser` — donc `migrerClubsMaintenant()` | ⭐ **signature INCHANGÉE** : les 8 sites d'appel de `executerMigrationClubs` ne sont pas touchés |
+| `migrerEditionsMaintenant()` | le motif identique de B2-1, corrigé dans le même lot |
+| le message final de `setupSheet()` | ⭐ appelé **sans `return`** : la valeur de retour reste `undefined`, et le schéma n'a pas bougé |
+
+⛔ **`configurerCles` est restée INTACTE**, et c'est le cœur de l'arbitrage : ses boîtes de dialogue
+demandent une **vraie décision**, leur réponse est **lue** *(`getSelectedButton`)*, et elles sont
+lancées depuis le **menu du classeur**. ⭐ **R-110 ne visait que l'informatif** *(**D-061**)*.
+
+> ⭐ **UN FAIT DÉCISIF, TROUVÉ EN CHEMIN.** Le menu `onOpen` n'offre **que** `configurerCles` :
+> ⛔ **aucune** des trois fonctions corrigées n'est atteignable depuis le classeur. Leur boîte de
+> dialogue n'avait donc **aucun contexte légitime d'affichage** — c'était un pur vestige.
+>
+> ⛔ **Et aucun « toast » ne l'a remplacée**, délibérément : il ne serait visible que si le classeur
+> est **ouvert**, c'est-à-dire dans le seul cas où l'alerte fonctionnait déjà, ⛔ **et jamais dans
+> celui qui a produit le défaut**. Le journal d'exécution, lui, est visible **dans tous les cas**
+> depuis l'éditeur — là où ces fonctions se lancent.
+
+**Les preuves, et pourquoi elles sont structurelles.** Le défaut est une **ATTENTE**, pas une
+erreur. ⛔ **Aucun harnais ne peut la reproduire** : un test qui bloque six minutes n'est pas un
+test, et une doublure Node d'`alert()` **réussit** là où Google **attend** — ⭐ c'est exactement le
+piège que **R-109** documente pour l'email. Les contrôles sont donc :
+
+| | |
+|---|---|
+| **MT1** | ⛔ aucun appel bloquant *(`getUi(`, `.alert(`, `.prompt(`, `Browser.msgBox`, `Browser.inputBox`)* dans le chemin de maintenance |
+| **MT2** ⭐ | **le contrôle INVERSE** — la recherche trouve bien ces appels dans `configurerCles`. ⛔ Sans lui, MT1 passerait sur un code où l'on ne cherche rien |
+| **MT3 → MT7** | le journal produit **avant** le retour · valeur de retour identique · les trois appelants passent par le point unique · messages métier **mot pour mot** ceux d'avant · ⭐ **le chemin no-op n'écrit rien** |
+| **MT8** ⭐⭐ | `setupSheet` : les **7 onglets dans leur ORDRE**, `creerOngletConfig` et `ouvrirEditionSiAucune` présents, et ⛔ **aucun `return`** |
+
+⚠️ **Une leçon est née de MT8, et elle a renforcé tout le bloc.** Le premier jet a échoué **sur un
+commentaire** contenant le mot `return` : `String(f)` rend aussi les commentaires internes. ⛔ Un
+test structurel qui lit la **prose** ne juge pas le **code** — et, pire dans l'autre sens, un
+commentaire expliquant *pourquoi* `getUi()` est proscrit aurait fait échouer MT1 sur un code sain.
+⭐ **L'analyse retire donc les commentaires**, en préservant le `//` précédé de `:` *(sans quoi une
+adresse `https://…` serait tronquée — et tronquer du code, c'est risquer de CACHER l'appel qu'on
+cherche)*. **La mutation M12 garde ce point** : une alerte suivie d'un commentaire est toujours vue.
+
+| Preuve | Résultat |
+|---|---|
+| Harnais serveur, **local** | **`R92 — 1238/1238 OK, 0 FAIL`** *(1222 avant, **+16**)* |
+| Harnais serveur, **chez Google** | ⭐ **`R92 — 1238/1238 OK, 0 FAIL`** *(2026-09-01, 18:07:14)* |
+| **Mutations R-110** | ⭐ **14 rejouées, 14 interceptées, 0 passée inaperçue** |
+| Suites Node frontend | **48/48**, **97/97**, **41/41**, **45/45** — ⛔ **inchangées** |
+
+⭐ **Les mutations couvrent le défaut EXACT d'origine** *(alerte + `try/catch`)*, sa variante sans
+`try/catch`, sa **recopie dans chacun des trois appelants**, la disparition du journal, la perte de
+la valeur de retour, la neutralisation du contrôle inverse, et — pour `setupSheet` — le retour
+ajouté, l'onglet perdu et l'ordre inversé.
+
+**🔬 LA PREUVE RÉELLE, ET ELLE EST UNE COMPARAISON À CONDITIONS IDENTIQUES.**
+
+| | **14:04** *(avant correction)* | **18:17:19 → 18:17:21** *(après)* |
+|---|---|---|
+| Classeur | fermé | **fermé** |
+| Clic demandé | ⛔ oui, impossible à donner | ⭐ **aucun** |
+| Boîte de dialogue | ⛔ oui | ⭐ **aucune** |
+| Durée | ⛔ **6 minutes** | ⭐ **≈ 2 secondes** |
+| Issue | ⛔ `Exceeded maximum execution time` | ⭐ **`Exécution terminée`**, aucune erreur |
+| Journal | *(coupé)* | message informatif à **18:17:20**, citant la marque **réellement lue** |
+
+⭐ **ET LE CLASSEUR N'A PAS BOUGÉ**, relevé avant et après *(18:20)* : **3 clubs** *(`MASSY`,
+`LE PUC`, `LE TEST RUGBY CLUB`)*, ⭐ **0 participation**, marque `Config!B91` toujours à
+**`2026-09-01 14:04:02`** — ⛔ **non réécrite**. C'est **MT7 constaté en réel**.
+
+**Traçabilité** : commit de code **`e2c97883d3f128c7e35f7b737296a7894513cb42`** ·
+source de l'éditeur Apps Script synchronisée — `backend/Code.gs` → `Code.gs` **9921** lignes,
+`backend/Tests.gs` → **`Test.gs`** *(singulier chez Google)* **7130** lignes.
+
+> ⛔ **CE QUE CETTE CLÔTURE NE COUVRE PAS, et il ne faut pas l'arrondir.** La version **déployée**
+> reste la **161** *(reconstatée le 2026-09-01 : un seul déploiement actif, type Application Web,
+> datée du 2026-08-27 20:47)* — ⛔ **elle ne porte PAS R-110**, et aucune version nouvelle n'a été
+> créée. ⭐ **C'est sans conséquence, et c'est vérifié** : les trois fonctions se lancent depuis
+> l'éditeur, qui exécute la **source** ; ⛔ **aucun chemin `doGet`, `doPost` ni action de la Web App
+> ne les appelle** — `retourMaintenance` n'a que trois appelants, `executerMigrationClubs` un seul.
+> ⭐ **Le prochain déploiement fonctionnel du backend embarquera R-110 naturellement** *(**D-061**)*.

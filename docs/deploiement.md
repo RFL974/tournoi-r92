@@ -186,8 +186,15 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 
 | Ce qu'on vérifie | Valeur attendue **aujourd'hui** | Ce qu'un écart signifie |
 |---|---|---|
-| **Le bilan** affiché en fin de journal | ⚡ **`R92 — 1222/1222 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
-| **La dernière ligne** du fichier collé chez Google | ⚡ **6958** *(et `Code.gs` à **9893**)* | Le fichier collé n'est pas celui du dépôt |
+| **Le bilan** affiché en fin de journal | ⚡ **`R92 — 1238/1238 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
+| **La dernière ligne** du fichier collé chez Google | ⚡ **7130** *(et `Code.gs` à **9921**)* | Le fichier collé n'est pas celui du dépôt |
+
+> ⚡ **CES DEUX REPÈRES ONT ÉTÉ PORTÉS À `1238` / `7130` / `9921` LE 2026-09-01** *(lot **R-110**)*,
+> et ils sont **constatés chez Google**, pas prédits : `lancerTestsFFR` a rendu
+> **`R92 — 1238/1238 OK, 0 FAIL`** à **18:07:14**, après collage des deux fichiers.
+> ⚡ *(Ils annonçaient **`1222/1222`**, `Test.gs` à **6958** et `Code.gs` à **9893** — vrai jusqu'à
+> cette date. R-110 ajoute **16 assertions** : ⛔ **chercher `1222` après ce collage serait chercher
+> la mauvaise valeur.**)*
 
 > ⚡ **CES DEUX VALEURS ONT ÉTÉ CORRIGÉES LE 2026-09-01, ET L'ÉCART MÉRITE D'ÊTRE DIT.** Ce tableau
 > annonçait encore **`974/974`** et **5554** comme « valeurs attendues aujourd'hui », alors que
@@ -200,6 +207,11 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > ✅ ⚡ **CONSTATÉ CHEZ GOOGLE — ces valeurs ne sont PLUS des prédictions** *(voir plus bas, relevé
 > du 2026-08-27 sur le transport d'email, et session 33 du 2026-09-01)*. Le bloc ci-dessous est
 > conservé pour son explication du **pourquoi** le nombre a changé.
+>
+> ⛔ ⚡ **CE BLOC N'EST PLUS L'ATTENDU DU JOUR — il est conservé pour son EXPLICATION seule**
+> *(annoté le 2026-09-01, lot **R-110**)*. ⭐ **L'attendu du jour est dans le tableau ci-dessus :
+> `1238` / `7130` / `9921`.** ⛔ Chercher les valeurs ci-dessous après un collage serait chercher
+> les mauvaises.
 >
 > ⚠️ ⚡ **VALEURS À ATTENDRE APRÈS LE PROCHAIN COLLAGE — ⛔ PLUS `1210` !**
 > *(branche `claude/b2-2-transport-email`, commit `c1d6309`)* :
@@ -227,17 +239,54 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > APRÈS LE REDÉPLOIEMENT** […] les deux nouveaux onglets n'apparaîtront pas d'eux-mêmes » : vrai
 > jusqu'à cette date.)*
 >
-> ⚠️ **ET UN PIÈGE À CONNAÎTRE SI ELLE EST RELANCÉE UN JOUR** *(**R-110**)* : elle affiche une
-> **boîte de dialogue** après avoir terminé. Si le classeur n'est pas **ouvert et visible**,
-> l'exécution attend **6 minutes** puis échoue sur `Exceeded maximum execution time` — ⛔ **alors
-> que tout a réussi**. ⭐ Garder l'onglet du classeur visible et cliquer sur **OK** : la relance
-> prend alors **4 secondes**.
+> ✅ **ELLE PEUT ÊTRE RELANCÉE SANS AUCUNE PRÉCAUTION D'INTERFACE** *(**R-110**, corrigé le
+> 2026-09-01)*. Son message final est **journalisé** et n'attend **aucun clic** : elle rend la main
+> même si le classeur est **fermé**. ⭐ **Prouvé en réel le 2026-09-01, 18:17:19 → 18:17:21**,
+> classeur fermé : **2 secondes**, `Exécution terminée`, ⛔ aucune boîte de dialogue, aucune erreur,
+> et le classeur **strictement inchangé** *(3 clubs, 0 participation, marque non réécrite)*.
+>
+> ⚡ *(Ce bloc disait : « elle affiche une **boîte de dialogue** après avoir terminé. Si le classeur
+> n'est pas **ouvert et visible**, l'exécution attend **6 minutes** puis échoue sur `Exceeded
+> maximum execution time` — **alors que tout a réussi**. Garder l'onglet du classeur visible et
+> cliquer sur **OK** : la relance prend alors **4 secondes**. » — **vrai du 2026-09-01 14:09 au
+> 2026-09-01 18:07**, jusqu'à la synchronisation du correctif dans la source Apps Script.)*
+>
+> ⭐ **Le même correctif vaut pour `migrerEditionsMaintenant()` et pour le message final de
+> `setupSheet()`** : les trois passent par le point de passage unique `retourMaintenance(message)`.
+> ⛔ **`configurerCles()` n'est PAS concernée** — ses fenêtres demandent une **vraie décision**,
+> leur réponse est **lue**, et elle se lance depuis le **menu du classeur**.
 
 > ✅ **CONSTATÉ CHEZ GOOGLE le 2026-09-01** *(lot **M1-B2 / B2-2**, phase réelle 2A)* : le serveur
 > exécute la **version 161** — ⭐ **numéro relevé par Romain** dans *Déployer → Gérer les
 > déploiements*, ⛔ aucun accès automatisé n'existe. C'est cette version qui a exécuté
 > `migrerClubsMaintenant()`, et c'est elle qui porte le bilan **`1222/1222`**.
 >
+> ⚠️ ⚡ **ET CE CHIFFRE RESTE CELUI DE LA VERSION 161 — c'est exactement la divergence ouverte le
+> 2026-09-01** *(**D-061**)*. ⭐ La **source de l'éditeur** porte désormais **`1238/1238`** *(lot
+> R-110)* ; ⛔ **la version déployée 161, elle, en est restée à `1222`.** ⛔ **Les deux chiffres sont
+> justes — ils ne décrivent simplement pas le même état.**
+>
+> ✅ ⚡ **VERSION 161 RECONSTATÉE LE 2026-09-01** *(lot **R-110**, en lecture seule dans
+> *Déployer → Gérer les déploiements*)* : **un seul déploiement actif**, type **Application Web**,
+> **version 161**, datée du **2026-08-27 20:47**. ⛔ **Aucune version nouvelle n'a été créée.**
+>
+> ⚠️ 🔴 **ET UNE DIVERGENCE EST ASSUMÉE DEPUIS CE JOUR — elle doit être lue avant tout
+> redéploiement** *(**D-061**)*. La **source de l'éditeur** Apps Script porte le correctif **R-110**
+> *(`Code.gs` **9921**, `Test.gs` **7130**, bilan **`1238/1238`**)* ; ⛔ **la version déployée 161
+> ne le porte PAS.**
+>
+> 🎯 **Ce n'est pas un oubli, c'est un arbitrage vérifié.** Les trois fonctions corrigées —
+> `migrerClubsMaintenant()`, `migrerEditionsMaintenant()` et `setupSheet()` — se lancent **depuis
+> l'éditeur**, qui exécute la **source**, ⛔ **jamais la version déployée**. Et **aucun chemin
+> `doGet`, `doPost` ni aucune action de la Web App ne les appelle** : `retourMaintenance` n'a que
+> ces trois appelants, `executerMigrationClubs` un seul. ⭐ **Redéployer n'aurait donc rien changé
+> pour un utilisateur** — c'est pourquoi aucune version n'a été publiée pour ce seul lot.
+>
+> ⭐ **CE QU'IL FAUT EN FAIRE** : ⛔ **ne jamais écrire que R-110 est présent dans la version
+> déployée** ; ⭐ **le prochain déploiement fonctionnel du backend l'embarquera naturellement**, et
+> c'est à ce moment-là que cette divergence se refermera — ⚠️ **sans geste supplémentaire, mais
+> sans surprise non plus, puisqu'elle est écrite ici.**
+
 > ⚠️ **Le numéro **161** n'apparaissait NULLE PART dans le dépôt avant ce jour.** La dernière
 > version nommée était la **160** *(celle qui donnait `1203/1210`)* ; le redéploiement du correctif
 > de transport a bien eu lieu le 2026-08-27, ⛔ **mais son numéro n'avait pas été consigné**.
