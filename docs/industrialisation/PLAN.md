@@ -3232,13 +3232,13 @@ qui était écrit.
 
 | Onglet | Rôle | Statut |
 |---|---|---|
-| 🆕 **`Clubs`** | **Carnet durable** : `club_id`, nom, contact, prénom, email, date d'ajout, `actif`. ⛔ **aucun statut, jeton ni effectif** | à créer *(B2-2)* |
-| 🆕 **`Participations`** | **Édition active** : `edition_id` + `club_id` + statut, jeton, dates, catégories engagées, effectifs, alertes, 📸 **snapshots** nom/contact | à créer *(B2-2)* |
+| 🆕 **`Clubs`** | **Carnet durable** : `club_id`, nom, contact, prénom, email, date d'ajout, `actif`. ⛔ **aucun statut, jeton ni effectif** | ✅ **CRÉÉ le 2026-09-01** *(B2-2)* |
+| 🆕 **`Participations`** | **Édition active** : `edition_id` + `club_id` + statut, jeton, dates, catégories engagées, effectifs, alertes, 📸 **snapshots** nom/contact | ✅ **CRÉÉ le 2026-09-01** *(B2-2)* — ⭐ **0 ligne** à ce jour |
 | 🆕 **`Editions`** | **Registre** : `edition_id`, nom, date, lieu, adresse, description, affiche, `statut` *(`active`/`archivee`)*, `date_archivage`, compteurs, `config_json`, 🆕 **`regles_classement_json`**, 🆕 **`regles_classement_version`**. ⭐ **UNE SEULE ligne `active`** | à créer *(B2-1)* |
 | 🆕 **`Messages`** | `message_id`, `edition_id`, `club_id`, auteur, horodatage, contenu, `lu_par_organisateur` | à créer *(B2-5)* |
 | **`Historique`** *(existe)* | ⭐ **devient l'archive des matchs** — à étendre aux colonnes de `Matchs` ; `tournoi_id` → `edition_id` | à étendre *(B2-6)* |
 | 🆕 **`Arch_Equipes` · `Arch_Poules` · `Arch_Terrains` · `Arch_Participations` · `Arch_Classements`** | Colonnes d'origine **+ `edition_id`** | à créer *(B2-6)* |
-| **`ClubsInvites`** | ⛔ **disparaît** après migration | *(B2-2)* |
+| **`ClubsInvites`** | ⛔ **disparaît** à terme — ⚠️ **PAS en B2-2** : il est **conservé intact** *(arbitrage **D-059**)*, et sa suppression sera décidée à part | ⏳ **conservé** |
 
 > ⭐ **Un seul patron partout** : *une ligne = un fait, `edition_id` en colonne.* C'est celui de
 > `Historique`, **déjà éprouvé**. Une famille future *(buvette, fréquentation, bénévoles…)* = **un
@@ -3288,7 +3288,7 @@ aucune nominative)*.
 |---|---|---|---|---|---|---|
 | **B2-0** | 🏁 **Sécurisation du reset** *(harnais)* — ✅ **CLÔTURÉ le 2026-08-25** | — | ⚡ **backend + frontend + CI** *(voir la note ci-dessous)* | ⛔ | ✅ **R-099**, ✅ **R-100** *(entièrement)* · **R-106** *(part reset seule)* · **R-033** *(dernière part)* | ✅ **ATTEINT** — reset prouvé **en réel** le 2026-08-25 : 0 statut hérité, 0 effectif hérité |
 | **B2-1** | **`edition_id` propre** + registre `Editions` ~~+ fin du renouvellement de `tournoi_id`~~ ⚡ **voir la fiche §16.5 quater** — 🏁 **CLÔTURÉ le 2026-08-27** *(**D-058**)* | B2-0 | backend | douce | ✅ **R-106** | ✅ **ATTEINT EN RÉEL** — 3 régénérations ⇒ **un seul** `edition_id`, **et** reset nominal réel *(ancienne fermée, neuve ouverte, une seule active)*. ⚠️ **Ce critère, écrit le 2026-08-24, était plus ÉTROIT que le contrat validé D-057** : voir §16.5 quater ⑥ |
-| **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation — ⏳ **PASSE LOCALE LIVRÉE le 2026-08-27**, ⛔ **non déployée, non migrée** *(voir §16.5 quinquies)* | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-102, R-104, R-105** ⚡ *(⛔ pas R-099 ni R-100 : leur part comportement est **TESTÉE** depuis B2-0, leur part structure est suivie sous **R-102**)* | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
+| **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation — 🏁 **CLÔTURÉ le 2026-09-01** *(décision de Romain — **D-060**)*, **EN SERVICE sur le classeur réel** : migré, idempotent, lu et **écrit** en réel *(voir §16.5 quinquies)*. ⚠️ **R-104, R-105 et R-110 restent OUVERTS** avec leurs réserves. ⚡ *(a annoncé « ⏳ PASSE LOCALE LIVRÉE le 2026-08-27, ⛔ non déployée, non migrée », puis « EN SERVICE […] ⛔ Non clos »)* | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-102, R-104, R-105** ⚡ *(⛔ pas R-099 ni R-100 : leur part comportement est **TESTÉE** depuis B2-0, leur part structure est suivie sous **R-102**)* | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
 | **B2-3** | **Terrains** permanents / édition | B2-1 | backend + frontend | douce | **R-101** | Dossier d'un tournoi vide ⇒ ⛔ aucun terrain hérité |
 | **B2-4** | **UX** : Carnet · Préparer l'invitation · Clubs invités · sélection · envoi ciblé | B2-2 | **frontend surtout** | ⛔ | — | Plusieurs vagues ciblées prouvées **en réel** |
 | **B2-5** | **Messagerie V1** + notifications + emails | B2-2 | backend + frontend | ⛔ | *(R-103 reste ouvert)* | Message reçu, notifié, répondu **par email** |
@@ -3316,10 +3316,15 @@ aucune nominative)*.
 > ⏭️ 🏁 **B2-1 EST CLÔTURÉ le 2026-08-27** *(décision de Romain — **D-058**)*. Déployée, migrée,
 > vérifiée par trois régénérations **et** par un **reset nominal réel** : voir la fiche
 > **§16.5 quater**. ⛔ **Le cas d'ÉCHEC du reset reste couvert par le harnais seul**, délibérément.
-> ⏭️ ⚡ **B2-2 EST DÉMARRÉE : sa PREMIÈRE PASSE, LOCALE, est livrée le 2026-08-27** — arbitrages
+> ⏭️ 🏁 ⚡ **B2-2 EST CLÔTURÉ ET EN SERVICE SUR LE CLASSEUR RÉEL depuis le 2026-09-01** — arbitrages
 > de Romain *(**D-059**)*, structure, migration idempotente, couche d'adaptation, bascule des
-> lecteurs et des écrivains, reset adapté. ⛔ **Rien n'est déployé, rien n'est migré, rien n'est
-> intégré dans `main`** : voir la fiche **§16.5 quinquies**. ⚡ *(Cette ligne annonçait « B2-2 est
+> lecteurs et des écrivains, reset adapté. ⭐ **Migration exécutée sous la version 161, idempotence
+> prouvée, lecture et ÉCRITURE métier vérifiées en réel** : voir la fiche **§16.5 quinquies**.
+> 🏁 **CLÔTURE PRONONCÉE PAR ROMAIN le 2026-09-01**, après la phase réelle 2B — **D-060**.
+> ⚠️ **R-104, R-105 et R-110 restent OUVERTS** : la clôture du LOT ne ferme pas les RISQUES.
+> ⚡ *(Cette ligne a annoncé « sa PREMIÈRE PASSE, LOCALE, est livrée le 2026-08-27 […] ⛔ Rien n'est
+> déployé, rien n'est migré, rien n'est intégré dans `main` », puis « ⛔ B2-2 n'est pas CLOSE pour
+> autant » — chacune vraie à sa date.)* ⚡ *(Cette ligne annonçait « B2-2 est
 > la prochaine étape éligible — ⛔ NON DÉMARRÉE » : vrai jusqu'au 2026-08-27.)* ⚡ *(Cette ligne a annoncé successivement « B2-1 est la
 > prochaine étape éligible — ⛔ NON DÉMARRÉE », « Sa **première passe, locale**, est livrée »,
 > « intégrée dans `main` et publiée sur GitHub — ⛔ rien n'est déployé », puis « EN SERVICE ET
@@ -3574,11 +3579,25 @@ d'invitation · ⛔ **aucun des modules futurs** *(buvette, fréquentation, bén
 
 ---
 
-#### 16.5 quinquies — B2-2 : `Clubs` + `Participations` — ⏳ **PASSE LOCALE LIVRÉE, ⛔ RIEN N'EST EN SERVICE**
+#### 16.5 quinquies — B2-2 : `Clubs` + `Participations` — 🏁 **CLÔTURÉ, EN SERVICE SUR LE CLASSEUR RÉEL**
 
-> ⏳ **CE QUI SUIT EST ÉCRIT, TESTÉ ET COMMITÉ EN LOCAL** *(2026-08-27, branche
-> `claude/b2-2-clubs-participations`)*. ⛔ **Rien n'est poussé, rien n'est fusionné, rien n'est
-> déployé, et le classeur réel n'a PAS été migré.** Les arbitrages sont ceux de **D-059**.
+> ✅ **CE QUI SUIT EST EN SERVICE DEPUIS LE 2026-09-01**, sous le déploiement **version 161**.
+> Les arbitrages sont ceux de **D-059**. Le classeur porte **15 onglets**, **3 clubs** au carnet,
+> **0 participation**, et la marque `Config.migration_clubs_b22` = `2026-09-01 14:04:02`.
+> ⭐ **Les quatre preuves réelles sont acquises** : migration, **idempotence** *(3 appels)*,
+> **lecture passive** *(aucune participation créée)* et **écriture métier** *(phase 2B — voir
+> l'encadré de fin de fiche)*.
+>
+> ⚡ *(Ce bandeau disait « ⏳ **PASSE LOCALE LIVRÉE, ⛔ RIEN N'EST EN SERVICE** […] rien n'est
+> poussé, rien n'est fusionné, rien n'est déployé, et le classeur réel n'a PAS été migré » : vrai
+> jusqu'au 2026-09-01.)*
+>
+> ⚠️ **ET IL FAUT DIRE POURQUOI CETTE CORRECTION ARRIVE EN RETARD.** La documentation de la
+> **phase 2A** *(commit `d0c928f`)* a mis à jour `ETAT.md`, `RISQUES.md`, `SESSIONS.md` et la carte
+> — ⛔ **mais pas `PLAN.md`**, qui n'avait pas été inventorié. Ses fiches de chantier ont donc
+> annoncé *« rien n'est en service »* pendant que le classeur était déjà migré. 🎯 **C'est exactement
+> le décrochage de §8 septies**, sur un document que la règle nomme pourtant explicitement parmi
+> les sources d'état courant.
 
 **① Le modèle livré.**
 
@@ -3663,3 +3682,80 @@ REFUSER ne prouve rien.**
 | ⛔ **Non fait** | Poussée · fusion dans `main` · redéploiement · **migration réelle du classeur** · suppression de `ClubsInvites` |
 | ⛔ **Ce que le lot ne fait PAS** | ⛔ Aucun sélecteur d'édition · ⛔ aucun multi-tournois · ⛔ aucun parcours du **club organisateur** · ⛔ aucun moteur de fusion / réactivation / dédoublonnage · ⛔ **pas une ligne de `frontend/`** |
 | ⚠️ **Ambiguïté écrite, non résolue** | La correspondance legacy → carnet se fait **par le NOM** : renommer un club **après** migration, puis relancer la migration, recréerait une identité. Inscrit sous **R-104** |
+##### ⭐ La phase réelle 2B — l'écriture métier, dernière preuve du modèle *(2026-09-01)*
+
+> 🎯 **La preuve qui manquait, et pourquoi elle manquait.** La migration prouvait le **passage** au
+> nouveau modèle ; l'ouverture passive prouvait qu'on le **lit**. ⛔ **Rien ne prouvait encore qu'on
+> y ÉCRIT** — ni qu'une écriture ordinaire cesse d'atteindre `ClubsInvites`.
+
+**Le geste**, le plus petit possible : sur le club fictif `LE TEST RUGBY CLUB`, le nom du contact
+`TEST` → `TEST-B22-POST`, puis retour. ⛔ Aucun envoi, aucun statut, aucun renommage de club.
+
+⭐ **Le périmètre d'écriture a été LU DANS LE CODE avant le geste**, ⛔ pas déduit des tests :
+`enregistrerEditionClub` → action `modifierClubInvite` → `contexteEcritureClub` en modèle `b22` →
+**4 colonnes de `Clubs`**, ligne repérée **par `club_id`**. ⛔ Aucun appel à `assurerParticipation`,
+⛔ aucune écriture secondaire dans le classeur *(le cache est en mémoire, le relais CDN sur le
+réseau)*.
+
+| | P0 | **P1** *(après écriture)* | **P2** *(après retour)* |
+|---|---|---|---|
+| Empreinte globale | `5af6074a…` *(96 386 car.)* | `1215f913…` *(96 395)* | ⭐ **`5af6074a…` — IDENTIQUE À P0** |
+| `Clubs` · contact du témoin | `TEST` | ✅ **`TEST-B22-POST`** | `TEST` |
+| `club_id` du témoin | `47c8d445-…` | ⭐ **inchangé** | ⭐ **inchangé** |
+| `ClubsInvites` | `86a1891a…` | ⭐ **`86a1891a…`** | ⭐ **`86a1891a…`** |
+| `Participations` | 0 | ⭐ **0** | ⭐ **0** |
+| Marque | `14:04:02` | inchangée | inchangée |
+
+⭐ **DANS TOUT LE CLASSEUR, UNE SEULE LIGNE A CHANGÉ** — celle du club au carnet — et l'écart global
+est de **+9 caractères**, soit exactement `len("TEST-B22-POST") − len("TEST")`.
+
+> 🎯 **CE QUE P1 ÉTABLIT, ET QUE RIEN D'AUTRE NE POUVAIT ÉTABLIR.** À cet instant, les deux onglets
+> disaient des choses **différentes** : `Clubs` portait `TEST-B22-POST`, `ClubsInvites` portait
+> toujours `TEST`. ⛔ **Ils ne peuvent plus être confondus.** ⭐ **Et l'écran affichait
+> `TEST-B22-POST`** — une valeur qui n'existait **nulle part** dans le legacy : elle ne pouvait
+> venir que du carnet, via la couche d'adaptation. **La boucle écriture → stockage → relecture est
+> fermée.**
+>
+> ⭐ **Et P2 = P0 caractère pour caractère** : le chemin d'écriture ne laisse **aucune trace
+> secondaire** — ni horodatage, ni journal, ni ligne d'historique. C'est ce que la lecture du code
+> annonçait, et le classeur le confirme.
+
+##### 🏁 La clôture de B2-2 — ce qu'elle dit, et ce qu'elle ne dit pas *(2026-09-01)*
+
+**Décision explicite de Romain**, prononcée après la phase réelle 2B — fiche **D-060**, qui
+explique notamment **pourquoi trois risques restent ouverts sans bloquer la clôture**.
+
+**Ce que B2-2 a livré, et qui est EN SERVICE :**
+
+| | |
+|---|---|
+| ⭐ **`Clubs`** | L'**identité durable** — `club_id` stable, jamais réutilisé |
+| ⭐ **`Participations`** | L'**engagement d'une édition** — une ligne = (une édition, un club) |
+| ⭐ **Migration explicite réelle** | `migrerClubsMaintenant()`, version 161, marque `2026-09-01 14:04:02` |
+| ⭐ **Compatibilité frontend** | Par la **couche d'adaptation** — ⛔ **aucun écran réécrit** |
+| ⭐ **Aucune création passive** | Ouvrir « Clubs invités » ne fabrique ⛔ ni participation, ⛔ ni jeton |
+| ⭐ **Écriture métier courante** | Modifier un club atteint `Clubs`, ⛔ plus `ClubsInvites` |
+
+> ⚠️ **`ClubsInvites` N'EST PAS SUPPRIMÉ — et c'est un choix, pas un reste.** Il est **conservé
+> intact** *(arbitrage **D-059**)* : filet de sécurité tant que le nouveau modèle est jeune, et
+> trace historique des jetons d'avant. ⛔ **Il n'est plus la source métier du modèle migré.**
+>
+> 📌 **DETTE ASSUMÉE, À DÉCIDER SÉPARÉMENT** : sa suppression. ⛔ **Elle n'appartenait pas à B2-2**,
+> et le dépôt porte désormais **deux structures dont une inutilisée**. ⭐ **Le dire ici évite qu'une
+> session future la croie oubliée** — ou, pire, la supprime en croyant finir le travail.
+
+> ⛔ **CE QUE LA CLÔTURE NE DIT PAS.** Clore le **LOT** ne ferme pas les **RISQUES** :
+>
+> | | |
+> |---|---|
+> | **R-104** | ⛔ **OUVERT** — la migration d'une ligne legacy **portant** une preuve d'engagement *(cas A, avec ses 4 snapshots)* ⛔ **n'a jamais tourné en réel** |
+> | **R-105** | ⛔ **OUVERT** — son garde-fou côté `Participations` ⛔ **n'a rien pu inspecter**, l'onglet étant vide |
+> | **R-110** | ⛔ **OUVERT ET NON CORRIGÉ** — l'alerte modale de `_b22Journaliser` |
+> | **R-109** | ⛔ **inchangé** — il porte sur le dispositif de preuve, pas sur ce lot |
+>
+> ⭐ **Pourquoi ces réserves n'empêchent pas la clôture** : les scénarios manquants sont couverts par
+> des tests **éprouvés par rejeu de mutation** *(un test qu'on a vu refuser prouve quelque chose)* ;
+> ils ne concernent **pas l'exploitation courante** du modèle — la migration a **déjà eu lieu** ;
+> et **R-110** touche une **fonction de maintenance**, ⛔ pas le modèle de données.
+> 🎯 **La distinction PROUVÉ EN RÉEL / COUVERT PAR LES TESTS reste inscrite dans chaque fiche**, et
+> la clôture du lot ne l'efface pas.

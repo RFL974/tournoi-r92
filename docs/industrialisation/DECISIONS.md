@@ -5,7 +5,12 @@
 >
 > Une décision non écrite ici est une décision perdue.
 
-**Dernière mise à jour** : 2026-08-27 *(session 32, suite)* — ⚡ **D-059 EST COMPLÉTÉE**, et non
+**Dernière mise à jour** : 2026-09-01 *(session 33, suite)* — 🏁 **D-060 — B2-2 EST CLOS ET EN
+SERVICE, ALORS QUE TROIS DE SES RISQUES RESTENT VOLONTAIREMENT OUVERTS.** Décision de Romain,
+prise après la phase réelle 2B. ⭐ **Elle existe pour qu'une session future comprenne que cette
+coexistence est DÉLIBÉRÉE, ⛔ et non une incohérence documentaire.**
+
+*Rappel de la mise à jour précédente* — 2026-08-27 *(session 32, suite)* — ⚡ **D-059 EST COMPLÉTÉE**, et non
 remplacée : migration structurelle **uniquement explicite** · aucun déclenchement à l'écriture ·
 migration terminée reconnue par une **marque**, ⛔ jamais par un rematching de nom · snapshots
 figés au **premier envoi principal réussi** · distinction migration legacy **avec / sans preuve
@@ -4167,3 +4172,94 @@ Trois obligations en découlent, et **aucune n'est facultative** :
 - ❌ **Pas** qu'un moteur de fusion, de réactivation ou de dédoublonnage de clubs existe : ⛔ **il
   n'y en a aucun**, et il n'était pas demandé ;
 - ❌ **Pas** que la migration a eu lieu sur le classeur réel : ⛔ **elle n'a PAS été exécutée**.
+
+### D-060 — B2-2 se clôt sur un cycle réel complet, et trois de ses risques restent ouverts : clore un LOT n'est pas fermer ses RISQUES
+
+| Champ | Valeur |
+|---|---|
+| **Date** | 2026-09-01 |
+| **Session** | **33** *(suite)* — chantier **M1-B2 / B2-2**, clôture |
+| **Statut** | ✅ **VALIDÉE — décision explicite de Romain**, après la phase réelle 2B et le constat de P2 |
+| **Décidée par** | Romain |
+| **Couvre** | `PLAN.md` **§16.5 quinquies** *(lot B2-2)* · `RISQUES.md` **R-102, R-104, R-105, R-109, R-110** · suite de **D-059** |
+
+**Le problème posé**
+
+> **D-059** avait décidé *comment* migrer. ⛔ Il ne disait pas *à quelles conditions le lot serait
+> terminé* — et la question s'est posée dans une forme inconfortable : **peut-on clore un lot dont
+> trois risques restent ouverts ?**
+>
+> ⚠️ **Sans réponse écrite, la coexistence `B2-2 CLOS` + `R-104 OUVERT` ressemble à une
+> incohérence.** Une session future n'aurait aucun moyen de distinguer *délibéré* de *négligé*.
+> 🎯 **Et les deux corrections « évidentes » seraient fausses** : rouvrir le lot par prudence, ou
+> fermer les risques par cohérence apparente — ⛔ **la seconde effacerait précisément les réserves
+> qui font la valeur du dispositif.**
+
+**Ce qui est décidé**
+
+| | |
+|---|---|
+| 🏁 **B2-2** | **CLOS — et EN SERVICE sur le classeur réel** |
+| ⭐ **`Clubs`** | L'**identité durable** d'un club : `club_id` stable, jamais réutilisé |
+| ⭐ **`Participations`** | L'**engagement d'une édition** : une ligne = (une édition, un club) |
+| ⭐ **L'écriture métier courante** | Écrit désormais dans **`Clubs`** — ⛔ plus dans `ClubsInvites` |
+| ⭐ **Le `club_id`** | **Stable** : une modification ordinaire ne le régénère pas |
+| ⭐ **La lecture** | Ouvrir l'administration ⛔ **ne crée aucune Participation**, ⛔ ni aucun jeton |
+| ⚠️ **`ClubsInvites`** | **Conservé volontairement** *(**D-059**)*, intact — ⛔ **il n'est plus la source métier du modèle migré** |
+| 📌 **Sa suppression** | **Dette SÉPARÉE** — ⛔ **elle ne fait pas partie de B2-2** et sera décidée à part |
+
+**Les cinq preuves réelles sur lesquelles la clôture repose**
+
+| | Ce qui l'établit, **observé sur le vrai classeur** |
+|---|---|
+| **① Migration** | 13 → **15 onglets** · **3 clubs** · **0 participation** · marque `2026-09-01 14:04:02`, unique |
+| **② Idempotence** | **3 appels** au total, dont un interrompu par timeout — ⭐ empreinte globale **inchangée** |
+| **③ Lecture passive** | Les 3 clubs s'affichent avec leurs contacts ; ⛔ **aucune participation, aucun jeton créés** |
+| **④ Écriture métier** | `TEST` → `TEST-B22-POST` atterrit dans **`Clubs`** ; ⭐ `ClubsInvites` reste à `TEST` |
+| **⑤ Restauration** | ⭐ **P2 = P0 caractère pour caractère** *(96 386 des deux côtés ; P1 = 96 395)* |
+
+> ⭐ **C'est le cycle entier — migration → lecture → écriture → restauration — et c'est ce qui rend
+> la clôture défendable.** ⛔ Aucune de ces cinq n'est une déduction : chacune est une comparaison
+> d'empreintes, ou une observation d'écran.
+>
+> 🎯 **La quatrième est la plus instructive, et elle tient à un instant.** À **P1**, `Clubs` disait
+> `TEST-B22-POST` et `ClubsInvites` disait toujours `TEST` : ⭐ **les deux onglets disaient des
+> choses DIFFÉRENTES, donc ils ne peuvent plus être confondus.** Et l'écran affichait
+> `TEST-B22-POST` — une valeur **absente du legacy**. ⛔ Une fois `TEST` remis, cette démonstration
+> n'aurait plus été possible.
+
+**Pourquoi les risques ouverts ne bloquent pas la clôture — fiche par fiche**
+
+| Réf | Statut | Pourquoi il ne bloque pas |
+|---|---|---|
+| **R-104** | ⛔ **OUVERT** | Le cas **A** de D-059 *(ligne legacy portant une preuve d'engagement ⇒ participation **+ 4 snapshots**)*, le **renommage** et la **reprise d'une migration partielle** ⛔ **n'ont jamais tourné en réel**. ⭐ Mais **la migration a DÉJÀ eu lieu** : ces chemins ne concernent **pas l'exploitation courante** — seulement un futur classeur legacy |
+| **R-105** | ⛔ **OUVERT** | Son garde-fou côté `Participations` reçoit les clés de la **première ligne** : avec **0 ligne**, ⛔ **il n'inspecte rien**. ⭐ Le résultat est bon *(les 18 en-têtes ont été vérifiées à la main)*, ⛔ **mais pas grâce au contrôle automatique**. Il ne protège pas *moins* qu'avant ; il protégera **à partir de la première participation** |
+| **R-110** | ⛔ **OUVERT ET NON CORRIGÉ** | L'alerte modale de `_b22Journaliser` touche une **fonction de maintenance déjà exécutée** — ⛔ **aucun effet sur l'exploitation courante du modèle**. ⚠️ Il reste un vrai risque **de décision** *(il fait croire à un échec)*, documenté et contourné |
+| **R-109** | ⛔ **INCHANGÉ** | Il porte sur le **dispositif de preuve**, ⛔ pas sur ce lot. Cette clôture ne le modifie **en rien** |
+| **R-102** | ✅ **CORRIGÉ ET VÉRIFIÉ EN RÉEL** | Sa preuve est **complétée** par l'écriture métier — ⛔ son statut ne change pas |
+
+> ⭐ **LE PRINCIPE QUE CETTE DÉCISION FIXE, ET QUI VAUT AU-DELÀ DE B2-2 :**
+>
+> **Clore un LOT, c'est constater qu'il a livré ce qu'il promettait. ⛔ Ce n'est pas déclarer que
+> tout ce qu'il a effleuré est résolu.** Un lot et un risque n'ont ni le même cycle de vie, ni la
+> même question : le lot demande *« est-ce livré ? »*, le risque demande *« est-ce encore vrai ? »*.
+
+**⛔ CE QUE CETTE DÉCISION NE DIT PAS — et il ne faut jamais l'arrondir**
+
+- ❌ **Pas** que tout a été testé en production. ⭐ **La distinction reste entière** :
+
+  | ✅ **PROUVÉ EN RÉEL** | ⛔ **COUVERT PAR LES TESTS, JAMAIS JOUÉ EN RÉEL** |
+  |---|---|
+  | Migration · idempotence · lecture passive · écriture métier · restauration | Cas **A** de D-059 *(participation + snapshots)* · **renommage** d'un club · **reprise** d'une migration partielle · **cas d'échec** du contrôle de cohérence |
+
+  ⭐ **Ces scénarios sont couverts par des tests éprouvés par REJEU DE MUTATION** — ce qui vaut
+  beaucoup plus qu'un test qui passe, ⛔ **et beaucoup moins qu'une observation**
+  *(`CLAUDE.md` §9 et §13.6)* ;
+- ❌ **Pas** que `ClubsInvites` peut être supprimé : ⛔ **c'est exactement l'inverse** — il est
+  conservé, et sa suppression est une **décision à prendre séparément** ;
+- ❌ **Pas** que **R-110** est acceptable en soi : il est **ouvert**, ⛔ **non corrigé**, et devra
+  être traité — la clôture constate seulement qu'il **ne relève pas de ce lot** ;
+- ❌ **Pas** que le modèle a été éprouvé avec des **participations réelles** : ⛔ le classeur en
+  contient **zéro**. La première invitation exercera des chemins *(snapshots, jeton, statut
+  « Invité »)* que **rien n'a encore vu tourner en production** — ils relèvent de **B2-4** ;
+- ❌ **Pas** que B2-3 est autorisé à démarrer *(`CLAUDE.md` §12.4)*.

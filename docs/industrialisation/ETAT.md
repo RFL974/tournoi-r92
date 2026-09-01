@@ -103,7 +103,63 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-09-01 *(session 33 — 🏁 **PHASE RÉELLE 2A TERMINÉE**)* —
+**Dernière mise à jour** : 2026-09-01 *(session 33, suite — 🏁🏁 **B2-2 EST CLÔTURÉ**)* —
+🏁 **M1-B2 / B2-2 EST CLOS, ET LE NOUVEAU MODÈLE EST EN SERVICE SUR LE VRAI CLASSEUR**
+*(décision explicite de Romain, après la phase réelle 2B — **D-060**)*.
+
+> ⭐ **Ce que B2-2 a livré, et qui est désormais en service** : **`Clubs`** porte l'**identité
+> durable** *(`club_id` stable, jamais réutilisé)* ; **`Participations`** porte l'**engagement d'une
+> édition** ; la **migration explicite** a eu lieu ; la **couche d'adaptation** rend au navigateur
+> l'objet plat d'avant, si bien qu'⛔ **aucun écran n'a été réécrit** ; ⛔ **aucune participation
+> n'est créée passivement** ; et une **écriture métier ordinaire** atteint désormais `Clubs`.
+>
+> ⚠️ **`ClubsInvites` N'EST PAS SUPPRIMÉ, et ce n'est pas un oubli** : il est **conservé
+> volontairement** *(arbitrage **D-059**)*, intact, comme filet de sécurité et trace historique.
+> ⛔ **Il n'est simplement plus la source métier.** Sa suppression est une **dette assumée**, à
+> décider séparément — ⛔ elle n'appartenait pas à B2-2.
+>
+> ⛔ **CE QUE LA CLÔTURE NE DIT PAS, et qui ne doit jamais être arrondi** : **R-104**, **R-105** et
+> **R-110** ⛔ **restent OUVERTS avec leurs réserves**. Trois scénarios n'ont **jamais** tourné sur
+> des données réelles — la migration d'une ligne legacy **portant** une preuve d'engagement *(cas A
+> de D-059, avec ses snapshots)*, le **renommage** d'un club, la **reprise** d'une migration
+> partielle. ⭐ **Ils sont couverts par des tests éprouvés par rejeu de mutation**, ⛔ **pas par une
+> observation en production** *(`CLAUDE.md` §13.6)*.
+
+*Rappel de la mise à jour précédente* — 2026-09-01 *(session 33, suite — 🏁 **PHASE RÉELLE 2B**)* —
+✅ **L'ÉCRITURE MÉTIER POST-MIGRATION EST PROUVÉE SUR LE CLASSEUR RÉEL.**
+
+> 🔬 **LA PREUVE QUI MANQUAIT.** La phase 2A prouvait le **passage** au nouveau modèle et sa
+> **lecture** ; ⛔ rien ne prouvait qu'on y **écrit**. Une modification ordinaire depuis
+> l'administration — le contact du club fictif `LE TEST RUGBY CLUB`, `TEST` → `TEST-B22-POST`, puis
+> retour — l'établit.
+>
+> | | **P0** | **P1** *(après écriture)* | **P2** *(après retour)* |
+> |---|---|---|---|
+> | Empreinte globale | `5af6074a…` — ⭐ **96 386 caractères** | `1215f913…` — **96 395 caractères** | ⭐ **`5af6074a…` — 96 386, IDENTIQUE À P0** |
+> | `Clubs` · ⭐ **`club_contact_nom` — le SEUL champ modifié** | `TEST` | ✅ **`TEST-B22-POST`** | `TEST` |
+> | `club_id` | `47c8d445-…` | ⭐ **inchangé** | ⭐ **inchangé** |
+> | `ClubsInvites` | `86a1891a…` | ⭐ **`86a1891a…`** | ⭐ **`86a1891a…`** |
+> | `Participations` | 0 | ⭐ **0** | ⭐ **0** |
+>
+> ⭐ **UNE SEULE LIGNE A CHANGÉ DANS TOUT LE CLASSEUR**, et l'écart global vaut **+9 caractères** —
+> exactement la différence de longueur entre les deux valeurs. ⛔ **Aucune écriture secondaire** :
+> ni horodatage, ni journal, ni participation.
+>
+> 🎯 **Ce que P1 établit, et rien d'autre ne le pouvait** : à cet instant, `Clubs` disait
+> `TEST-B22-POST` et `ClubsInvites` disait toujours `TEST`. ⛔ **Les deux onglets ne peuvent plus
+> être confondus.** ⭐ **Et l'écran affichait `TEST-B22-POST`** — une valeur absente du legacy :
+> elle ne pouvait venir que du carnet. **La boucle écriture → stockage → relecture est fermée.**
+>
+> ⭐ **Le périmètre d'écriture avait été LU DANS LE CODE avant le geste** *(4 colonnes de `Clubs`,
+> ligne repérée par `club_id`)*, ⛔ pas déduit des tests — et le réel y correspond exactement.
+>
+> ⚠️ **UN ÉCART DE LA PHASE 2A A ÉTÉ RATTRAPÉ ICI, et il est signalé plutôt qu'effacé** :
+> `PLAN.md` n'avait **pas** été inventorié lors du commit `d0c928f`. Ses fiches de chantier ont donc
+> annoncé *« ⏳ passe locale livrée, ⛔ rien n'est en service »* alors que le classeur était migré
+> depuis plusieurs heures. 🎯 **§8 septies nomme pourtant explicitement les fiches de `PLAN.md`**
+> parmi les sources d'état courant à relire après le geste.
+
+*Rappel de la mise à jour précédente* — 2026-09-01 *(session 33 — 🏁 **PHASE RÉELLE 2A TERMINÉE**)* —
 ✅ **LA MIGRATION RÉELLE A EU LIEU : LE CLASSEUR EST PASSÉ EN `Clubs` + `Participations`.**
 ⛔ **B2-2 n'est PAS clos** *(§25 du cadrage : la clôture appartient à Romain)*.
 

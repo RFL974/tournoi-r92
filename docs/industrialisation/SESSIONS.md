@@ -10479,3 +10479,114 @@ engagement** : ⛔ le cas **A** de D-059 *(participation + snapshots)*, le **ren
 par le harnais seul *(`CLAUDE.md` §13.6)*.
 
 ⛔ **B2-2 n'est PAS clos** : la clôture appartient à Romain.
+
+---
+
+## 🏁 SESSION 33 *(suite)* — PHASE RÉELLE 2B : l'écriture métier post-migration *(2026-09-01)*
+
+**Objectif unique** : prouver qu'après migration, une modification ordinaire d'un club écrit dans
+`Clubs`, conserve son `club_id`, ne crée aucune `Participation`, et ⛔ **ne touche plus
+`ClubsInvites`**.
+
+### 33.9 — Le chemin d'écriture, LU dans le code avant d'être utilisé
+
+⭐ **Rien n'a été déduit des tests** — c'est le code réel qui a été suivi de bout en bout :
+
+`enregistrerEditionClub()` *(`frontend/js/admin-invitations.js`)* → action **`modifierClubInvite`**
+→ `modifierClubInvite(classeur, data)` → `contexteEcritureClub` qui, **la marque étant posée**,
+renvoie le modèle **`b22`**.
+
+| | |
+|---|---|
+| **Onglet écrit** | ⭐ **`Clubs`, et lui seul** — ligne repérée **par `club_id`**, jamais par le nom |
+| **Colonnes** | **4** : `club_nom`, `club_contact_prenom`, `club_contact_nom`, `club_contact_email` |
+| **`club_id`** | ⛔ **jamais écrit** — il sert de clé, pas de donnée |
+| **Participation** | ⛔ **impossible** : aucun appel à `assurerParticipation` sur ce chemin |
+| **`ClubsInvites`** | ⛔ **hors d'atteinte** en modèle `b22` |
+| **Écriture secondaire** | ⛔ **aucune dans le classeur** : `apresEcriture` écrit dans `CacheService` *(mémoire)*, `pousserSnapshot` sur le réseau *(et seulement si le relais est réglé)* |
+
+⭐ **Un détail vérifié exprès** : le frontend force les majuscules sur trois champs et les minuscules
+sur l'email. Les valeurs en place l'étaient déjà — ⛔ **aucun changement de casse involontaire** ne
+pouvait survenir sur les champs non visés.
+
+### 33.10 — P0 → P1 → P2
+
+Sauvegarde fraîche **de l'état migré** créée d'abord *(« …avant PREUVE MÉTIER B2-2 — 2026-09-01 »,
+12:56:28 UTC)*, ⭐ **contenu relu et prouvé identique à P0** — elle permet de revenir à un état
+**déjà migré**, ce que la sauvegarde pré-migration ne permettait pas.
+
+| | P0 | **P1** | **P2** |
+|---|---|---|---|
+| Empreinte globale | `5af6074a…` *(96 386)* | `1215f913…` *(96 395)* | ⭐ **`5af6074a…` = P0** |
+| Contact du témoin dans `Clubs` | `TEST` | ✅ **`TEST-B22-POST`** | `TEST` |
+| `club_id` | `47c8d445-…` | inchangé | inchangé |
+| `ClubsInvites` | `86a1891a…` | ⭐ **`86a1891a…`** | ⭐ **`86a1891a…`** |
+| `Participations` | 0 | **0** | **0** |
+| Marque | `14:04:02` | inchangée | inchangée |
+
+⭐ **Le diff intégral P0 → P1 tient en UNE ligne** — celle du club au carnet — et l'écart global vaut
+**+9 caractères**, soit exactement `len("TEST-B22-POST") − len("TEST")`. **MASSY** et **LE PUC** :
+strictement inchangés. Les **13 autres onglets** : identiques.
+
+### 33.11 — Ce que cette phase apprend
+
+**① C'est l'état INTERMÉDIAIRE qui prouve, et il fallait résister à le refermer tout de suite.**
+À P1, `Clubs` disait `TEST-B22-POST` et `ClubsInvites` disait toujours `TEST`. ⭐ **Les deux onglets
+disaient des choses différentes — donc ils ne peuvent plus être confondus.** Une fois `TEST` remis,
+plus rien n'aurait distingué *« l'écriture a atterri au bon endroit »* de *« rien ne s'est passé »*.
+⭐ **Même leçon qu'en phase réelle 1, et elle se confirme une seconde fois.**
+
+**② L'écran a fourni une preuve que le classeur seul ne donnait pas.** La carte affichait
+`TEST-B22-POST` — ⭐ **une valeur qui n'existait NULLE PART dans `ClubsInvites`**. Elle ne pouvait
+donc venir que de `Clubs`, via la couche d'adaptation. **La boucle écriture → stockage → relecture
+est fermée par une observation, pas par un raisonnement.**
+
+**③ Lire le périmètre d'écriture AVANT le geste rend le constat interprétable.** Le code promettait
+4 colonnes d'un seul onglet et aucune trace secondaire ; ⭐ **P2 est revenu à P0 caractère pour
+caractère**, ce qui n'aurait pas été possible avec le moindre horodatage. **Un écart aurait été
+immédiatement lisible comme une anomalie**, au lieu d'être rationalisé après coup.
+
+**④ Et un décrochage documentaire a été trouvé — sur mon propre travail de la veille.** `PLAN.md`
+n'avait **pas** été inventorié en phase 2A : ses fiches annonçaient *« rien n'est en service »*
+alors que le classeur était migré. 🎯 **§8 septies nomme pourtant les fiches de `PLAN.md`** parmi
+les sources d'état courant. ⭐ **La règle était juste ; c'est son application qui a été incomplète**
+— corrigé ici, et signalé plutôt qu'effacé.
+
+⛔ **Ce que cette phase ne prouve TOUJOURS pas** : la migration d'une ligne legacy **portant** une
+preuve d'engagement *(cas A de D-059, avec ses snapshots)*, le **renommage** d'un club, la
+**reprise** d'une migration partielle. ⛔ **R-110 n'est pas corrigé.**
+
+### 🏁🏁 33.12 — LA CLÔTURE DE B2-2 *(2026-09-01)*
+
+**Décision explicite de Romain**, prise après le constat de P2, et enregistrée sous **D-060** —
+la convention du dépôt veut qu'une clôture de lot soit une décision *(comme **D-058** pour B2-1)*.
+
+⭐ **Les cinq preuves réelles, dans l'ordre où elles ont été acquises** :
+
+| | Ce qui l'établit |
+|---|---|
+| **① Migration** | 13 → **15 onglets** · 3 clubs · **0 participation** · marque `2026-09-01 14:04:02` |
+| **② Idempotence** | **3 appels** au total, dont un interrompu par timeout — empreinte **inchangée** |
+| **③ Lecture** | L'écran affiche les 3 clubs, ⛔ **sans créer ni participation ni jeton** |
+| **④ Écriture** | `TEST` → `TEST-B22-POST` atterrit dans **`Clubs`**, ⛔ **pas dans `ClubsInvites`** |
+| **⑤ Restauration** | **P2 = P0 caractère pour caractère** — ⛔ aucune trace secondaire |
+
+**Les volumétries exactes** : **P0 = 96 386** caractères · **P1 = 96 395** · **P2 = 96 386**.
+⭐ Seul **`club_contact_nom`** a changé ; le `club_id` **`47c8d445-ec71-44e9-a223-cc63694442ee`**
+n'a pas bougé ; `Participations` est resté à **0** ; `ClubsInvites` à **`86a1891a…`**.
+
+> ⚠️ **ET POURTANT, AUCUN RISQUE NE SE FERME — c'est ce qu'il faut retenir de cette clôture.**
+> **R-104**, **R-105** et **R-110** restent **OUVERTS**, avec leurs réserves écrites. ⭐ *Clore un
+> LOT, c'est constater qu'il a livré ce qu'il promettait ; ⛔ ce n'est pas déclarer que tout ce
+> qu'il a effleuré est résolu.*
+>
+> 🎯 **La distinction qui tient tout le dispositif** : **prouvé en réel** ≠ **couvert par les
+> tests**. Trois scénarios n'ont jamais tourné en production — cas A de D-059, renommage, reprise
+> partielle. ⭐ Ils sont couverts par des tests **éprouvés par rejeu de mutation** — ce qui vaut
+> beaucoup plus qu'un test qui passe, ⛔ **et beaucoup moins qu'une observation**.
+
+⚠️ **`ClubsInvites` reste en place**, intact *(D-059)* : ⛔ **pas la source métier**, mais un filet
+et une trace. 📌 **Sa suppression est une dette assumée**, inscrite dans `PLAN.md` §16.5 quinquies —
+⛔ **elle n'appartenait pas à B2-2**, et aucune session ne doit la traiter comme un reste à finir.
+
+⛔ **B2-3 n'est pas démarré.** ⛔ **R-110 n'est pas corrigé.**

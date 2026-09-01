@@ -9,7 +9,31 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
-**Dernière mise à jour** : 2026-09-01 *(session 33, phase réelle 2A — **MIGRATION RÉELLE**)* —
+**Dernière mise à jour** : 2026-09-01 *(session 33, suite — 🏁 **CLÔTURE DE B2-2**)* —
+⚠️ **B2-2 EST CLÔTURÉ** *(**D-060**)*, **ET POURTANT AUCUN RISQUE NE SE FERME. C'est délibéré, et
+c'est le point le plus important de cette mise à jour** — **D-060** dit fiche par fiche pourquoi.
+
+| Réf | Statut après la clôture de B2-2 |
+|---|---|
+| **R-102** | ✅ **CORRIGÉ ET VÉRIFIÉ EN RÉEL** — inchangé, sa preuve est simplement **complétée** par l'écriture métier |
+| **R-104** | ⛔ **OUVERT** — le cas A de D-059 *(participation prouvée + snapshots)* ⛔ **n'a jamais tourné en réel** |
+| **R-105** | ⛔ **OUVERT** — son garde-fou ⛔ **n'a rien inspecté**, l'onglet `Participations` étant vide |
+| **R-109** | ⛔ **inchangé** — email seulement, la généralisation reste ouverte |
+| **R-110** | ⛔ **OUVERT ET NON CORRIGÉ** — l'alerte modale est intacte |
+
+> 🎯 **Clore un LOT n'est pas fermer ses RISQUES, et confondre les deux serait exactement le genre
+> d'arrondi que ce registre existe pour empêcher.** B2-2 est clos parce que ce qu'il promettait est
+> **en service et prouvé** ; ⛔ **ces quatre fiches restent ouvertes parce que ce qu'elles décrivent
+> n'a pas cessé d'être vrai.**
+
+*Rappel de la mise à jour précédente* — 2026-09-01 *(session 33, phase réelle 2B — **ÉCRITURE MÉTIER**)* —
+⚡ **AUCUN PROBLÈME NE SE FERME, AUCUN NE S'OUVRE.** ✅ **La preuve de R-102 est COMPLÉTÉE** : une
+écriture métier ordinaire atteint désormais `Clubs` et ⛔ **plus `ClubsInvites`** — le statut, déjà
+*CORRIGÉ ET VÉRIFIÉ EN RÉEL*, ne change pas. ⛔ **R-104 et R-105 restent en l'état** : cette phase
+n'a joué **aucun** des scénarios qui leur manquent. ⛔ **R-109 et R-110 inchangés** — R-110 n'est
+toujours **pas corrigé**.
+
+*Rappel de la mise à jour précédente* — 2026-09-01 *(session 33, phase réelle 2A — **MIGRATION RÉELLE**)* —
 ⚡ **UN PROBLÈME NOUVEAU S'OUVRE : 🆕 R-110** *(l'alerte modale qui fait échouer une migration
 réussie)*. ✅ **R-102 passe à CORRIGÉ ET VÉRIFIÉ EN RÉEL.** ⚠️ **R-104 et R-105 avancent
 FORTEMENT mais ne se ferment PAS** : le classeur réel ne contenait **aucune ligne portant une
@@ -2214,6 +2238,25 @@ famille appartient une colonne. Le reset s'en remet à **une liste écrite à la
 > code** : elles servent au chemin legacy, qui reste nécessaire tant que `ClubsInvites` n'est pas
 > supprimé. ⭐ **Elles ne pilotent plus le classeur réel** ; ⛔ **elles n'ont pas disparu du dépôt**,
 > et leur suppression n'était pas l'objet de B2-2.
+
+> ✅ ⚡ **PREUVE COMPLÉTÉE LE 2026-09-01 — L'ÉCRITURE AUSSI** *(phase réelle 2B)*.
+>
+> ⭐ **Ce qui restait à établir** : la migration prouvait le passage, l'ouverture passive la lecture.
+> ⛔ **Rien ne prouvait qu'une écriture métier ordinaire cesse d'atteindre `ClubsInvites`.**
+>
+> 🔬 **Le geste** : le contact du club fictif `LE TEST RUGBY CLUB`, `TEST` → `TEST-B22-POST`, puis
+> retour, depuis l'administration. **Dans tout le classeur, UNE seule ligne a changé** — celle du
+> carnet — et l'écart global valait **+9 caractères**, la différence exacte de longueur.
+>
+> ⭐ **Le `club_id` `47c8d445-…` n'a pas bougé**, `Participations` est resté à **0**, et
+> ⭐ **`ClubsInvites` est resté à `86a1891a…`, avec sa ligne legacy toujours à `TEST`**.
+>
+> 🎯 **C'est l'état INTERMÉDIAIRE qui porte la démonstration** : à cet instant, les deux onglets
+> disaient des choses **différentes**. ⛔ **La confusion entre identité et participation n'est plus
+> représentable** — ce que cette fiche décrit comme le défaut de fond est structurellement fermé.
+>
+> ⭐ **Et P2 est revenu à P0 caractère pour caractère** : le chemin d'écriture ne laisse aucune trace
+> secondaire.
 
 ### R-103 — Les messages libres peuvent contenir des données personnelles
 
