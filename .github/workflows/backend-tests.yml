@@ -1,0 +1,80 @@
+name: Vérifier le backend (garde-fous exécutables)
+
+# Éprouve le code du SERVEUR (`backend/`) en l'EXÉCUTANT, à chaque changement.
+#
+# ⚠️ POURQUOI UN WORKFLOW À PART, ET PAS UNE ÉTAPE DE `pages.yml` — c'est tout l'objet
+# de ce fichier, et cela mérite d'être écrit une fois pour toutes.
+#
+# `pages.yml` a un seul rôle : PUBLIER `frontend/` sur GitHub Pages. Ses déclencheurs
+# sont donc, à juste titre, ceux d'une publication — `frontend/**` et lui-même. Y greffer
+# les contrôles du serveur obligeait à choisir entre deux maux :
+#   · ajouter `backend/**` à SES déclencheurs ⇒ chaque commit du serveur REPUBLIERAIT le
+#     site, sans qu'une seule ligne de `frontend/` ait changé ;
+#   · ne pas l'ajouter ⇒ une modification purement backend POUSSÉE DIRECTEMENT SUR `main`
+#     ne lancerait AUCUN contrôle. ⛔ Et c'est exactement la façon dont ce dépôt travaille.
+#
+# ⭐ Les deux préoccupations sont donc SÉPARÉES : ici on vérifie, là-bas on publie.
+# ⛔ Ce fichier ne contient aucun droit, aucun job et aucune action Pages — il ne PEUT pas
+# publier quoi que ce soit, même par erreur.
+#
+# CE QU'IL PROTÈGE. Le serveur vit dans Google Apps Script : son code ne s'exécute nulle
+# part ailleurs, et personne ne le lance avant un redéploiement. Les deux bancs ci-dessous
+# en EXTRAIENT les vraies fonctions et les exécutent sur une machine ordinaire — un défaut
+# se voit donc au commit, ⛔ pas trois semaines plus tard dans le journal Apps Script.
+# ⭐ Ils rejouent AUSSI les séries `lancerTestsFFR` correspondantes : une série écrite mais
+# jamais lancée n'est pas un garde-fou, c'est une intention.
+#
+# Aucune dépendance, aucun navigateur, aucun réseau, quelques secondes.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      # ⭐ Les deux bancs sont nommés UN PAR UN, et non `tests/**` : modifier un garde-fou
+      # du frontend n'a aucune raison de relancer les contrôles du serveur.
+      - 'tests/backend-terrains-socle.test.js'
+      - 'tests/backend-terrains-persistance.test.js'
+      - '.github/workflows/backend-tests.yml'
+  # Le contrôle tourne aussi sur les propositions de fusion : on voit le problème AVANT
+  # que le code n'atteigne `main`, pas après.
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'tests/backend-terrains-socle.test.js'
+      - 'tests/backend-terrains-persistance.test.js'
+      - '.github/workflows/backend-tests.yml'
+  workflow_dispatch: {}
+
+# ⛔ LE STRICT MINIMUM, et c'est délibéré : ce workflow LIT le dépôt, il n'écrit nulle part.
+# Aucun droit `pages: write`, aucun `id-token: write` — publier lui est structurellement
+# impossible.
+permissions:
+  contents: read
+
+jobs:
+  verifier-backend:
+    name: Exécuter les garde-fous du serveur
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      # ----------------------------------------------------------------------
+      # M1-B2 / B2-3 — LE PLAN DES TERRAINS, « permanent vs édition ».
+      #
+      #  · B2-3.a : le SOCLE PUR — normalisation des noms et des nombres, identités
+      #    durables des grands terrains, validation d'un plan, garde-fou du pointeur,
+      #    projection historique, signature, calcul des états.
+      #  · B2-3.b : la PERSISTANCE — trois onglets, un pointeur, et la séquence qui
+      #    publie un plan sans qu'une interruption puisse jamais faire passer un
+      #    candidat à moitié écrit pour « le dernier plan confirmé ».
+      #
+      # Un échec fait échouer ce contrôle. ⛔ Il n'empêche AUCUNE publication : le site
+      # en ligne ne dépend pas de ce workflow.
+      # ----------------------------------------------------------------------
+      - name: Vérifier le socle pur des terrains (M1-B2 / B2-3.a)
+        run: node tests/backend-terrains-socle.test.js
+
+      - name: Vérifier la persistance des plans de terrains (M1-B2 / B2-3.b)
+        run: node tests/backend-terrains-persistance.test.js

@@ -106,7 +106,40 @@ var ENTETES = {
   //   date_fermeture : même format, posé à la fermeture ; vide tant que l'édition est active.
   // ⚠️ Toute colonne future (ex. le club organisateur) s'ajoutera À DROITE, migration douce,
   //   comme partout ailleurs dans ce fichier. ⛔ B2-1 ne crée AUCUN `club_id`.
+  //
+  // 🚨 M1-B2 / B2-3.b — POURQUOI `terrains_plan_publie` N'EST PAS DANS CETTE LISTE, ET NE DOIT
+  //   PAS Y ENTRER TANT QUE LA MIGRATION N'A PAS EU LIEU. Cette liste n'est pas qu'une
+  //   déclaration : `lireLignesEditions` et `ecrireLignesEditions` s'en servent comme LARGEUR
+  //   de plage (`ENTETES.Editions.length`). L'allonger ici ferait donc, sur un classeur en
+  //   service dont l'onglet n'a que quatre colonnes, écrire une cinquième colonne SANS EN-TÊTE
+  //   — que `lireOngletSimple` ignore : la valeur partirait dans le Sheet pour n'être jamais
+  //   relue. ⛔ Et cela arriverait pendant une RÉINITIALISATION ou une bascule d'édition,
+  //   c'est-à-dire au milieu d'un geste métier qui n'a rien demandé.
+  //   ⭐ Le schéma CIBLE est donc déclaré à part (`EDITIONS_COLONNE_PLAN_PUBLIE`) et posé par
+  //   une fonction STRUCTURELLE EXPLICITE. Voir le bloc B2-3.b en fin de fichier.
   Editions: ['edition_id', 'statut', 'date_creation', 'date_fermeture'],
+  // ─── M1-B2 / B2-3 — LE PLAN DES TERRAINS D'UNE ÉDITION, en trois grains.
+  //   ⭐ Un plan n'est jamais « promu » : il est écrit sous une identité NEUVE et INERTE
+  //   (`plan_id`), relu, validé, puis DÉSIGNÉ par `Editions.terrains_plan_publie`. Un plan que
+  //   le pointeur ne désigne pas n'existe pour personne — c'est ce qui interdit qu'une
+  //   confirmation interrompue devienne « le dernier plan confirmé ».
+  //   ⚠️ `role = 'plan'` NE VEUT PAS DIRE « publié » : seul le pointeur le dit.
+  //
+  //   TerrainsPlan  : une ligne = un plan (ses réglages d'ensemble).
+  //     signature   : figée à la publication ; ⛔ vide sur un brouillon.
+  //     fige_le     : horodatage — un INSTANT (CLAUDE.md §8 sexies).
+  TerrainsPlan: ['edition_id', 'plan_id', 'role', 'couloir_m', 'tm_longueur_m',
+                 'tm_largeur_m', 'dimensions_json', 'signature', 'fige_le'],
+  //   Terrains      : une ligne = un GRAND terrain retenu (ou écarté) pour ce plan.
+  //     ⭐ Les `snap_*` figent l'installation TELLE QU'ELLE ÉTAIT : renommer ou redimensionner
+  //     un terrain de l'inventaire durable ne réécrit jamais une édition passée.
+  Terrains: ['edition_id', 'plan_id', 'terrain_id', 'selectionne',
+             'snap_nom', 'snap_type', 'snap_longueur_m', 'snap_largeur_m',
+             'snap_enbut_m', 'snap_nature', 'snap_pos'],
+  //   MiniTerrains  : une ligne = un mini-terrain, son grand terrain et sa CATÉGORIE.
+  //     ⭐ C'est cette dernière colonne qui rend une édition passée relisible après un reset :
+  //     `cat.terrains` disparaît avec les catégories, celle-ci reste.
+  MiniTerrains: ['edition_id', 'plan_id', 'numero', 'terrain_id', 'categorie'],
   // ─── M1-B2 / B2-2 — LE CARNET DURABLE (D-050 : « un club connu n'est pas un club invité »).
   //   Une ligne = l'IDENTITÉ d'un club, indépendante de toute édition. ⛔ Aucun statut, aucun
   //   jeton, aucun effectif : tout cela appartient à une PARTICIPATION, jamais au carnet.
@@ -9918,4 +9951,1218 @@ function viderDonnees(onglet) {
   if (dernier >= 2) {
     onglet.getRange(2, 1, dernier - 1, onglet.getLastColumn()).clearContent();
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * M1-B2 / B2-3.a — LE SOCLE PUR DES TERRAINS : « permanent vs édition »
+ *
+ * ⛔ CE BLOC NE CHANGE RIEN AU COMPORTEMENT DE L'APPLICATION, ET C'EST VOULU.
+ * Aucune de ces fonctions n'est appelée par `doGet`, `doPost`, une action serveur, un
+ * écran ou `reinitialiserTournoi`. Elles seront branchées par B2-3.b et B2-3.c. La
+ * phase B2-3.a livre le CŒUR et ses preuves, ⛔ pas son branchement.
+ *
+ * ⭐ TOUTES SONT PURES. ⛔ Aucune ne touche `SpreadsheetApp`, `LockService`,
+ * `CacheService`, `PropertiesService` ni `Utilities` : un identifiant se fabrique par un
+ * GÉNÉRATEUR INJECTÉ, jamais ici. C'est ce qui les rend exécutables — et donc éprouvables —
+ * sans Google, et déterministes au rejeu.
+ *
+ * ⭐ LE MODÈLE, en trois blocs et un pointeur (conception validée) :
+ *
+ *   TerrainsPlan   une ligne = un PLAN            edition_id · plan_id · role
+ *                                                 couloir_m · tm_longueur_m · tm_largeur_m
+ *                                                 dimensions_json · signature · fige_le
+ *   Terrains       une ligne = (plan, grand T.)   edition_id · plan_id · terrain_id
+ *                                                 selectionne · snap_* (nom, type, L, W,
+ *                                                 en-but, nature, emplacement)
+ *   MiniTerrains   une ligne = (plan, mini)       edition_id · plan_id · numero
+ *                                                 terrain_id · categorie
+ *   POINTEUR       Editions.terrains_plan_publie  ⭐ LE SEUL À FAIRE FOI
+ *
+ * ⚠️ `role = 'plan'` NE VEUT PAS DIRE « publié ». Un plan écrit mais non désigné par le
+ * pointeur est un CANDIDAT INERTE : ⛔ aucun lecteur ne le voit. C'est ce qui interdit
+ * qu'une confirmation interrompue devienne « le dernier confirmé ».
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/** Rôle d'une ligne de plan : le brouillon de travail, ou un plan (candidat ou publié). */
+var TERRAINS_ROLE_BROUILLON = 'brouillon';
+var TERRAINS_ROLE_PLAN = 'plan';
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ① NORMALISATION ET IDENTITÉ
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Texte d'une cellule : jamais `null`, jamais `undefined`, toujours élagué. */
+function valeurTexteTerrain(v) {
+  return (v === undefined || v === null) ? '' : String(v).trim();
+}
+
+/**
+ * Forme CANONIQUE d'un nombre de plan. `30`, `'30'`, `' 30 '`, `'30.0'` et `'30,0'` donnent
+ * tous `'30'` ; vide ou illisible donne `''`.
+ * ⭐ C'est elle qui rend la signature insensible à la REPRÉSENTATION : le classeur rend
+ * tantôt un nombre, tantôt une chaîne, selon la façon dont la cellule a été remplie — et
+ * une signature qui bougerait pour cette seule raison crierait au loup à chaque lecture.
+ * ⚠️ L'arrondi au millième évite `30.000000000000004` et la notation exponentielle : on
+ * parle de mètres de terrain, pas de calcul scientifique.
+ */
+function nombreCanoniqueTerrain(v) {
+  var s = valeurTexteTerrain(v).replace(',', '.');
+  if (s === '') return '';
+  var n = Number(s);
+  if (!isFinite(n)) return '';
+  return String(Math.round(n * 1000) / 1000);
+}
+
+/**
+ * CLÉ DE COLLISION d'un nom de grand terrain.
+ *
+ * ⭐ Elle s'appuie sur `normaliserTexteSouple` (le piège NFD du classeur est déjà traité là) et
+ * y AJOUTE l'écrasement des espaces internes — 🔬 sans quoi « Rugby  1 » et « Rugby 1 »
+ * passeraient pour deux noms différents, alors qu'ils sont indiscernables à l'œil.
+ *
+ * ⛔ « Rugby 1 » et « Rugby1 » restent DISTINCTS, et c'est délibéré : ce sont deux libellés
+ * que l'œil sépare. Sur-normaliser refuserait des noms parfaitement légitimes.
+ */
+function cleNomTerrain(nom) {
+  return normaliserTexteSouple(nom).replace(/\s+/g, ' ');
+}
+
+/** Un grand terrain est-il RETENU pour cette édition ? ⭐ Défaut FERMÉ : tout ce qui n'est
+ *  pas « oui » (casse et accents ignorés) vaut NON RETENU. */
+function terrainRetenu(ligne) {
+  return memeTexteSouple((ligne || {}).selectionne, 'oui');
+}
+
+/**
+ * Les noms VIDES et les COLLISIONS de noms, ⛔ parmi les seuls terrains RETENUS.
+ *
+ * ⚠️ Pourquoi seulement les retenus, et ce n'est pas une tolérance : l'inventaire durable est
+ * un CARNET — deux terrains homonymes qu'on n'utilise pas ne gênent personne. Ce qui ne peut
+ * pas exister, c'est deux noms identiques dans un plan CONFIRMÉ, parce que le contrat public
+ * `repartition_grands_terrains` est un objet INDEXÉ PAR LE NOM : une clé écraserait l'autre,
+ * et le dossier envoyé à la Ligue SOUS-COMPTERAIT les terrains.
+ *
+ * @return {{vides:string[], collisions:Array<{cle:string, nom:string, nb:number}>}}
+ *         ⭐ Les deux listes vides = sain.
+ */
+function collisionsNomsTerrains(lignesTerrains) {
+  var vides = [], parCle = {}, cles = [];
+  (lignesTerrains || []).forEach(function (l) {
+    if (!terrainRetenu(l)) return;
+    var nom = valeurTexteTerrain(l.snap_nom);
+    if (nom === '') { vides.push(valeurTexteTerrain(l.terrain_id)); return; }
+    var cle = cleNomTerrain(nom);
+    if (!parCle[cle]) { parCle[cle] = []; cles.push(cle); }
+    parCle[cle].push(nom);
+  });
+  var collisions = [];
+  cles.sort();
+  cles.forEach(function (cle) {
+    if (parCle[cle].length > 1) {
+      collisions.push({ cle: cle, nom: parCle[cle][0], nb: parCle[cle].length });
+    }
+  });
+  return { vides: vides, collisions: collisions };
+}
+
+/**
+ * PLAN d'attribution des identifiants durables de l'inventaire — ⭐ cœur PUR, générateur INJECTÉ.
+ *
+ * Doctrine, reprise de `club_id` (B2-2) : un identifiant existant n'est JAMAIS réattribué, jamais
+ * renouvelé, jamais réutilisé — même si le terrain est renommé.
+ *
+ * ⛔ DEUX REFUS, et ils ne sont pas symétriques :
+ *   · deux entrées portant le MÊME identifiant ⇒ c'est une corruption, pas un choix ;
+ *   · un identifiant que le serveur N'A JAMAIS ÉMIS ⇒ le navigateur transporte les identifiants,
+ *     ⛔ il n'en fabrique aucun. Accepter un identifiant inventé côté client reviendrait à laisser
+ *     n'importe qui rattacher une ligne d'édition au terrain de son choix.
+ *
+ * @param {Array<Object>} recues   l'inventaire tel qu'il arrive (certaines entrées sans `id`)
+ * @param {Array<Object>} connues  l'inventaire DÉJÀ enregistré — la seule source d'identités valides
+ * @param {function():string} faireId  fabrique d'identifiants (injectée : le cœur reste pur)
+ * @return {Object} { error } ou { inventaire, attribues, conserves }
+ */
+function planifierIdentitesTerrains(recues, connues, faireId) {
+  var connus = {};
+  (connues || []).forEach(function (t) {
+    var id = valeurTexteTerrain(t && t.id);
+    if (id) connus[id] = true;
+  });
+
+  var vus = {}, sortie = [], attribues = 0, conserves = 0;
+  var entrees = recues || [];
+  for (var i = 0; i < entrees.length; i++) {
+    var t = entrees[i] || {};
+    var id = valeurTexteTerrain(t.id);
+    if (id) {
+      if (vus[id]) {
+        return { error: 'Deux grands terrains portent le même identifiant (' + id + '). ' +
+          'Corrige la liste des grands terrains, puis réessaie.' };
+      }
+      if (!connus[id]) {
+        return { error: 'Identifiant de grand terrain inconnu (' + id + ') : il n\'a pas été ' +
+          'émis par le serveur. Recharge la page, puis réessaie.' };
+      }
+      vus[id] = true;
+      conserves++;
+    } else {
+      id = valeurTexteTerrain(faireId ? faireId() : '');
+      if (!id) {
+        return { error: 'Aucun identifiant n\'a pu être attribué à un grand terrain.' };
+      }
+      if (vus[id] || connus[id]) {
+        return { error: 'Identifiant déjà utilisé (' + id + ') : attribution refusée.' };
+      }
+      vus[id] = true;
+      attribues++;
+    }
+    // ⭐ Copie : le plan ne modifie JAMAIS ce qu'on lui a donné (il reste rejouable).
+    var copie = {};
+    for (var k in t) {
+      if (Object.prototype.hasOwnProperty.call(t, k)) copie[k] = t[k];
+    }
+    copie.id = id;
+    sortie.push(copie);
+  }
+  return { inventaire: sortie, attribues: attribues, conserves: conserves };
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ② REPRÉSENTATION CANONIQUE D'UN PLAN
+ * ⛔ Aucune de ces fonctions ne lit un onglet : elles reçoivent des LISTES DE LIGNES.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Les lignes d'un bloc appartenant à (édition, plan). ⛔ Ne crée rien, ne devine rien. */
+function lignesDuPlanTerrains(lignes, editionId, planId) {
+  var e = valeurTexteTerrain(editionId), p = valeurTexteTerrain(planId);
+  return (lignes || []).filter(function (l) {
+    return valeurTexteTerrain(l && l.edition_id) === e &&
+           valeurTexteTerrain(l && l.plan_id) === p;
+  });
+}
+
+/**
+ * ⭐ Détecte le MÉLANGE : une ligne qui porte ce `plan_id` mais une AUTRE édition.
+ * ⚠️ `lignesDuPlanTerrains` filtre sur les deux clés — il masquerait donc l'anomalie au lieu de
+ * la signaler. C'est exactement pourquoi ce contrôle existe séparément.
+ */
+function melangeEditionsPlanTerrains(lignes, editionId, planId) {
+  var e = valeurTexteTerrain(editionId), p = valeurTexteTerrain(planId);
+  return (lignes || []).some(function (l) {
+    return valeurTexteTerrain(l && l.plan_id) === p &&
+           valeurTexteTerrain(l && l.edition_id) !== e;
+  });
+}
+
+/**
+ * Assemble les trois blocs d'un plan précis.
+ * ⭐ `null` si la ligne de paramètres est INTROUVABLE (plan inconnu) ou en DOUBLE : deux lignes
+ * pour un même `plan_id` sont une ambiguïté, et ⛔ on ne choisit jamais au hasard.
+ */
+function assemblerPlanTerrains(plans, terrains, minis, editionId, planId) {
+  var e = valeurTexteTerrain(editionId), p = valeurTexteTerrain(planId);
+  if (!e || !p) return null;
+  var lignesPlan = lignesDuPlanTerrains(plans, e, p);
+  if (lignesPlan.length !== 1) return null;
+  return {
+    edition_id: e,
+    plan_id: p,
+    params: lignesPlan[0],
+    terrains: lignesDuPlanTerrains(terrains, e, p),
+    minis: lignesDuPlanTerrains(minis, e, p)
+  };
+}
+
+/** Le BROUILLON d'une édition, ou `null`. ⭐ Plusieurs brouillons = anomalie, mais le premier
+ *  suffit à conclure « un brouillon existe » — le défaut reste ainsi FERMÉ. */
+function brouillonTerrains(plans, editionId) {
+  var e = valeurTexteTerrain(editionId);
+  var trouves = (plans || []).filter(function (l) {
+    return valeurTexteTerrain(l && l.edition_id) === e &&
+           memeTexteSouple(l && l.role, TERRAINS_ROLE_BROUILLON);
+  });
+  return trouves.length ? trouves[0] : null;
+}
+
+/** Les catégories PRÉSENTES, telles que le reste du serveur les entend. */
+function categoriesPresentesTerrains(categories) {
+  return (categories || []).filter(function (c) {
+    return memeTexteSouple(c && c.presente, 'oui');
+  });
+}
+
+/** Numéros de terrains d'une catégorie (« 1, 2,3 ») ramenés à une liste triée. ⭐ Canonique :
+ *  l'ORDRE de saisie ne porte aucun sens, il ne doit donc pas bouger une signature. */
+function numerosCanoniquesTerrains(brut) {
+  return valeurTexteTerrain(brut).split(',')
+    .map(function (s) { return s.trim(); })
+    .filter(function (s) { return s !== ''; })
+    .sort(comparerNumerosMiniTerrain);
+}
+
+/** Ordre des mini-terrains : numérique quand c'est un nombre, textuel sinon. */
+function comparerNumerosMiniTerrain(a, b) {
+  var na = Number(a), nb = Number(b);
+  var aNum = isFinite(na) && String(a).trim() !== '';
+  var bNum = isFinite(nb) && String(b).trim() !== '';
+  if (aNum && bNum && na !== nb) return na - nb;
+  if (aNum && !bNum) return -1;
+  if (!aNum && bNum) return 1;
+  return String(a) < String(b) ? -1 : (String(a) > String(b) ? 1 : 0);
+}
+
+/** Une catégorie est-elle en mode AUTO ? ⭐ Colonne vide ⇒ AUTO, comme partout ailleurs. */
+function categorieTerrainsAuto(cat) {
+  var v = valeurTexteTerrain(cat && cat.terrains_auto);
+  return v === '' || memeTexteSouple(v, 'oui');
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ③ VALIDATION STRUCTURELLE
+ *
+ * ⚠️ DEUX NIVEAUX, et les confondre serait une faute : les contrôles INTERNES ne regardent
+ * que le plan lui-même ; les contrôles avec CATÉGORIES le confrontent à l'édition active.
+ * ⭐ La lecture destinée à la page Saisie n'utilise QUE les internes — sinon supprimer une
+ * catégorie rendrait le plan « invalide » et couperait les marqueurs en plein tournoi, alors
+ * que la doctrine veut seulement qu'il passe à « à reconfirmer » (ce que dit la SIGNATURE).
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Écarts INTERNES d'un plan — ⛔ sans aucune référence aux catégories de l'édition active.
+ * @return {Array<string>} ⭐ Liste vide = plan cohérent avec lui-même.
+ */
+function ecartsInternesPlanTerrains(plan) {
+  var ecarts = [];
+  if (!plan) { ecarts.push('aucun plan'); return ecarts; }
+
+  var edition = valeurTexteTerrain(plan.edition_id);
+  var planId = valeurTexteTerrain(plan.plan_id);
+  if (!edition || !planId) { ecarts.push('plan sans édition ni identifiant'); return ecarts; }
+
+  // ⓪ Cohérence des clés dans les TROIS blocs (filet : l'assemblage filtre déjà, mais un
+  //    appelant futur pourrait construire l'objet autrement).
+  var blocs = [['paramètres', [plan.params]], ['terrains', plan.terrains], ['mini-terrains', plan.minis]];
+  blocs.forEach(function (b) {
+    (b[1] || []).forEach(function (l) {
+      if (valeurTexteTerrain(l && l.edition_id) !== edition ||
+          valeurTexteTerrain(l && l.plan_id) !== planId) {
+        ecarts.push('bloc ' + b[0] + ' : une ligne ne porte pas la bonne édition ou le bon plan');
+      }
+    });
+  });
+
+  // ① Au moins un grand terrain RETENU.
+  var retenus = (plan.terrains || []).filter(terrainRetenu);
+  if (!retenus.length) ecarts.push('aucun grand terrain retenu');
+
+  // ② Au moins un mini-terrain.
+  if (!(plan.minis || []).length) ecarts.push('aucun mini-terrain');
+
+  // ③ Identifiants de grands terrains : présents et uniques.
+  var vusTerrains = {}, idsRetenus = {};
+  (plan.terrains || []).forEach(function (t) {
+    var id = valeurTexteTerrain(t.terrain_id);
+    if (!id) { ecarts.push('un grand terrain n\'a pas d\'identifiant'); return; }
+    if (vusTerrains[id]) ecarts.push('identifiant de grand terrain en double : ' + id);
+    vusTerrains[id] = true;
+    if (terrainRetenu(t)) idsRetenus[id] = true;
+  });
+
+  // ④ Numéros de mini-terrains : uniques.
+  // ⑤ Chaque mini porte une catégorie.
+  // ⑥ Chaque mini est rattaché à un grand terrain RETENU du même plan.
+  var vusNumeros = {};
+  (plan.minis || []).forEach(function (m) {
+    var num = valeurTexteTerrain(m.numero);
+    if (!num) { ecarts.push('un mini-terrain n\'a pas de numéro'); }
+    else {
+      if (vusNumeros[num]) ecarts.push('numéro de mini-terrain en double : ' + num);
+      vusNumeros[num] = true;
+    }
+    if (!valeurTexteTerrain(m.categorie)) {
+      ecarts.push('mini-terrain ' + (num || '?') + ' : aucune catégorie');
+    }
+    var idT = valeurTexteTerrain(m.terrain_id);
+    if (!idT || !vusTerrains[idT]) {
+      ecarts.push('mini-terrain ' + (num || '?') + ' : grand terrain inconnu (' + (idT || 'vide') + ')');
+    } else if (!idsRetenus[idT]) {
+      ecarts.push('mini-terrain ' + (num || '?') + ' : rattaché à un grand terrain NON retenu');
+    }
+  });
+
+  // ⑦ Noms vides ou en collision parmi les RETENUS — ⭐ l'invariant du contrat public.
+  var noms = collisionsNomsTerrains(plan.terrains);
+  noms.vides.forEach(function (id) {
+    ecarts.push('un grand terrain retenu n\'a pas de nom (' + (id || 'sans identifiant') + ')');
+  });
+  noms.collisions.forEach(function (c) {
+    ecarts.push('deux grands terrains retenus portent le même nom : « ' + c.nom + ' »');
+  });
+
+  return ecarts;
+}
+
+/**
+ * Écarts d'un plan CONFRONTÉ aux catégories de l'édition active : les internes, PLUS la
+ * cohérence avec ce que l'organisateur a réglé ailleurs.
+ * ⭐ C'est ce contrôle-là — et lui seul — qui autorise une confirmation.
+ * @param {Array<Object>} categories  les lignes de catégories (zone B), présentes ou non
+ */
+function ecartsPlanTerrains(plan, categories) {
+  var ecarts = ecartsInternesPlanTerrains(plan);
+  if (!plan) return ecarts;
+
+  var presentes = categoriesPresentesTerrains(categories);
+  var dims = {};
+  try { dims = JSON.parse(valeurTexteTerrain(plan.params && plan.params.dimensions_json) || '{}') || {}; }
+  catch (e) { ecarts.push('dimensions illisibles'); dims = {}; }
+
+  // Les numéros réellement attribués, par catégorie et au total.
+  var parCategorie = {}, tousNumeros = {};
+  (plan.minis || []).forEach(function (m) {
+    var cat = valeurTexteTerrain(m.categorie), num = valeurTexteTerrain(m.numero);
+    if (!num) return;
+    tousNumeros[num] = true;
+    if (!cat) return;
+    if (!parCategorie[cat]) parCategorie[cat] = [];
+    parCategorie[cat].push(num);
+  });
+
+  var nomsPresents = {};
+  presentes.forEach(function (c) {
+    var nom = valeurTexteTerrain(c.categorie);
+    if (!nom) return;
+    nomsPresents[nom] = true;
+
+    // ⑧ Une dimension pour chaque catégorie présente — ⛔ jamais devinée.
+    var d = dims[nom];
+    var chiffree = d && (d.plein === true || memeTexteSouple(d.plein, 'oui') ||
+      (nombreCanoniqueTerrain(d.l) !== '' && nombreCanoniqueTerrain(d.w) !== ''));
+    if (!chiffree) ecarts.push('catégorie ' + nom + ' : aucune dimension de terrain');
+
+    // ⑨ `cat.terrains` ≡ les mini-terrains de cette catégorie.
+    //    ⭐ AUTO : égalité stricte — c'est la répartition qui a écrit les deux moitiés.
+    //    ⭐ MANUEL : on n'impose pas l'égalité (l'organisateur a saisi à la main), mais chaque
+    //       numéro cité doit EXISTER : citer un terrain qui n'a pas été découpé est un écart.
+    var cites = numerosCanoniquesTerrains(c.terrains);
+    var attribues = (parCategorie[nom] || []).slice().sort(comparerNumerosMiniTerrain);
+    if (categorieTerrainsAuto(c)) {
+      if (cites.join(',') !== attribues.join(',')) {
+        ecarts.push('catégorie ' + nom + ' (Auto) : « ' + cites.join(',') +
+          ' » ne correspond pas aux mini-terrains attribués « ' + attribues.join(',') + ' »');
+      }
+    } else {
+      cites.forEach(function (n) {
+        if (!tousNumeros[n]) {
+          ecarts.push('catégorie ' + nom + ' (Manuel) : le terrain ' + n + ' n\'existe pas dans le plan');
+        }
+      });
+    }
+  });
+
+  // ⑩ Un mini-terrain affecté à une catégorie qui n'est pas (ou plus) présente.
+  for (var cat in parCategorie) {
+    if (Object.prototype.hasOwnProperty.call(parCategorie, cat) && !nomsPresents[cat]) {
+      ecarts.push('des mini-terrains sont affectés à « ' + cat +' », qui n\'est pas une catégorie présente');
+    }
+  }
+
+  return ecarts;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ④ LE PLAN POINTÉ, ET LUI SEUL
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * ⭐ LE GARDE-FOU DU POINTEUR — la seule porte par laquelle un plan devient lisible.
+ *
+ * ⛔ Elle rend `null` — jamais un plan « à peu près bon » — si :
+ *   le pointeur est vide · le `plan_id` est inconnu · l'un des trois blocs manque ·
+ *   deux lignes de paramètres portent le même `plan_id` · un bloc mélange plusieurs éditions ·
+ *   la signature obligatoire manque · le plan est incohérent avec lui-même.
+ *
+ * ⚠️ ELLE NE REGARDE PAS LES CATÉGORIES, et c'est un choix : un plan publié reste LISIBLE même
+ * si l'édition a changé depuis. Ce changement-là se dit par l'ÉTAT (« à reconfirmer »),
+ * ⛔ jamais en rendant le plan invalide — sans quoi supprimer une catégorie couperait la page
+ * de saisie des marqueurs en plein tournoi.
+ *
+ * @param {{pointeur, plans, terrains, minis, edition_id}} contexte
+ * @return {Object|null} le plan assemblé, ou `null`
+ */
+function planPublieValide(contexte) {
+  contexte = contexte || {};
+  var pointeur = valeurTexteTerrain(contexte.pointeur);
+  var edition = valeurTexteTerrain(contexte.edition_id);
+  if (!pointeur || !edition) return null;
+
+  var blocs = [contexte.plans, contexte.terrains, contexte.minis];
+  for (var i = 0; i < blocs.length; i++) {
+    if (melangeEditionsPlanTerrains(blocs[i], edition, pointeur)) return null;
+  }
+
+  var plan = assemblerPlanTerrains(contexte.plans, contexte.terrains, contexte.minis,
+    edition, pointeur);
+  if (!plan) return null;
+  if (!plan.terrains.length || !plan.minis.length) return null;
+  if (valeurTexteTerrain(plan.params.signature) === '') return null;
+  if (ecartsInternesPlanTerrains(plan).length) return null;
+  return plan;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ⑤ PROJECTION HISTORIQUE
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Ordre des grands terrains dans la projection : par nom normalisé, puis identifiant.
+ *  ⭐ Déterministe : deux lectures du même plan produisent le même objet. */
+function comparerTerrainsProjection(a, b) {
+  var ca = cleNomTerrain((a || {}).snap_nom), cb = cleNomTerrain((b || {}).snap_nom);
+  if (ca !== cb) return ca < cb ? -1 : 1;
+  var ia = valeurTexteTerrain((a || {}).terrain_id), ib = valeurTexteTerrain((b || {}).terrain_id);
+  return ia < ib ? -1 : (ia > ib ? 1 : 0);
+}
+
+/**
+ * LE CONTRAT HISTORIQUE : `{"Rugby 1":["1","2"], "Rugby 2":["3","4"]}`.
+ *
+ * ⭐ Construit UNIQUEMENT depuis le plan pointé : les `snap_nom` FIGÉS et les lignes
+ * `MiniTerrains`. ⛔ L'inventaire courant n'est pas consulté — renommer un terrain en 2028 ne
+ * peut donc pas réécrire la configuration de 2026.
+ *
+ * ⛔ ÉCHEC FERMÉ sur collision : deux clés identiques dans un objet JSON, c'est une valeur qui
+ * en écrase une autre EN SILENCE — et le dossier de la Ligue qui sous-compte les terrains.
+ * ⚠️ Ce contrôle fait doublon avec `ecartsInternesPlanTerrains` : c'est voulu. Il est placé
+ * ICI, au point exact où l'écrasement se produirait.
+ *
+ * ⭐ Un grand terrain retenu SANS mini-terrain reste présent, avec une liste vide : « ne perdre
+ * aucun grand terrain » se lit à la lettre. Les consommateurs actuels ignorent déjà les listes
+ * vides, la sortie leur est donc identique.
+ *
+ * @return {{repartition:Object}|{error:string}}
+ */
+function projectionRepartitionTerrains(plan) {
+  if (!plan) return { error: 'Aucun plan publié.' };
+
+  // ⭐ LA COLLISION D'ABORD, et l'ordre n'est pas cosmétique : placée APRÈS le contrôle
+  //    général, cette vérification n'était jamais atteinte — un plan en collision était déjà
+  //    rejeté comme « incohérent ». 🔬 Une mutation qui la supprimait passait alors INAPERÇUE,
+  //    ce qui est la définition d'un code mort. En tête, elle est atteignable, testée, et elle
+  //    rend un message qui dit LE défaut plutôt qu'un fourre-tout.
+  var noms = collisionsNomsTerrains(plan.terrains);
+  if (noms.collisions.length) {
+    return { error: 'Deux grands terrains retenus portent le nom « ' + noms.collisions[0].nom +
+      ' » : la répartition ne peut pas être publiée sans en perdre un.' };
+  }
+
+  var internes = ecartsInternesPlanTerrains(plan);
+  if (internes.length) return { error: 'Plan incohérent : ' + internes.join(' · ') };
+
+  var parTerrain = {};
+  (plan.minis || []).forEach(function (m) {
+    var id = valeurTexteTerrain(m.terrain_id);
+    if (!parTerrain[id]) parTerrain[id] = [];
+    parTerrain[id].push(valeurTexteTerrain(m.numero));
+  });
+
+  var retenus = (plan.terrains || []).filter(terrainRetenu).slice().sort(comparerTerrainsProjection);
+  var repartition = {};
+  for (var i = 0; i < retenus.length; i++) {
+    var nom = valeurTexteTerrain(retenus[i].snap_nom);
+    if (Object.prototype.hasOwnProperty.call(repartition, nom)) {
+      return { error: 'Deux grands terrains retenus portent le nom « ' + nom + ' » : la ' +
+        'répartition ne peut pas être publiée sans en perdre un.' };
+    }
+    repartition[nom] = (parTerrain[valeurTexteTerrain(retenus[i].terrain_id)] || [])
+      .slice().sort(comparerNumerosMiniTerrain);
+  }
+  return { repartition: repartition };
+}
+
+/**
+ * Natures (surfaces de jeu) DISTINCTES des seuls grands terrains RETENUS du plan.
+ * ⭐ Même forme de retour que la cascade existante : `natures` + `nbSansNature`, pour que
+ * l'appelant retombe sur la saisie `org_type_terrain` sans rien deviner.
+ * ⛔ Un terrain de l'inventaire non retenu n'impose plus sa surface au dossier de la Ligue.
+ */
+function naturesPlanTerrains(plan) {
+  var vide = { natures: [], nbSansNature: 0 };
+  if (!plan) return vide;
+  var vus = {}, natures = [], nbSans = 0;
+  (plan.terrains || []).filter(terrainRetenu).forEach(function (t) {
+    var n = valeurTexteTerrain(t.snap_nature);
+    if (!n) { nbSans++; return; }
+    if (!vus[n]) { vus[n] = true; natures.push(n); }
+  });
+  return { natures: natures, nbSansNature: nbSans };
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ⑥ LA SIGNATURE
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Forme CANONIQUE des dimensions : clés triées, nombres canoniques, `plein` ramené à 0/1.
+ * ⛔ `src` n'est PAS lu — passer de « proposé par la FFR » à « adapté à la main » sans changer
+ * la valeur ne change pas le plan, et ne doit donc pas déclencher une reconfirmation.
+ */
+function dimensionsCanoniquesTerrains(brut) {
+  var obj = {};
+  try { obj = JSON.parse(valeurTexteTerrain(brut) || '{}') || {}; } catch (e) { obj = {}; }
+  if (typeof obj !== 'object') return '';
+  var cles = [];
+  for (var k in obj) { if (Object.prototype.hasOwnProperty.call(obj, k)) cles.push(k); }
+  cles.sort();
+  return cles.map(function (cle) {
+    var v = obj[cle];
+    if (!v || typeof v !== 'object') v = {};
+    var plein = (v.plein === true || memeTexteSouple(v.plein, 'oui')) ? '1' : '0';
+    return cle + '=' + plein + ':' + nombreCanoniqueTerrain(v.l) + 'x' + nombreCanoniqueTerrain(v.w);
+  }).join(';');
+}
+
+/**
+ * ⭐ LA SIGNATURE DES TERRAINS — ⛔ ET CE N'EST PAS `signatureGeneration`.
+ *
+ * 🎯 Pourquoi une fonction NEUVE, et c'est le piège qu'elle évite : `signatureGeneration`
+ * inclut le NOMBRE D'ÉQUIPES par catégorie. Reprise telle quelle ici, elle ferait basculer
+ * l'édition en « à reconfirmer » à CHAQUE équipe inscrite — donc couperait le dossier des clubs
+ * en pleine phase d'inscription, sans que rien du plan n'ait bougé.
+ *
+ * ELLE INCLUT, et rien d'autre : les catégories présentes · leurs terrains et leur mode
+ * Auto/Manuel · la sélection des grands terrains · l'affectation des mini-terrains · les
+ * dimensions · le couloir et la table de marque.
+ *
+ * ⛔ ELLE EXCLUT : le nombre d'équipes · les poules, matchs et scores · l'ordre des clés ·
+ * la représentation des nombres · `src` · l'inventaire durable courant · le reste du tournoi.
+ */
+function signatureTerrains(plan, categories) {
+  var parts = [];
+
+  var cats = categoriesPresentesTerrains(categories).slice().sort(function (a, b) {
+    var x = valeurTexteTerrain(a.categorie), y = valeurTexteTerrain(b.categorie);
+    return x < y ? -1 : (x > y ? 1 : 0);
+  });
+  cats.forEach(function (c) {
+    parts.push('cat=' + valeurTexteTerrain(c.categorie) +
+      '|t=' + numerosCanoniquesTerrains(c.terrains).join(',') +
+      '|auto=' + (categorieTerrainsAuto(c) ? '1' : '0'));
+  });
+
+  var params = (plan && plan.params) || {};
+  var terrains = ((plan && plan.terrains) || []).slice().sort(function (a, b) {
+    var x = valeurTexteTerrain(a.terrain_id), y = valeurTexteTerrain(b.terrain_id);
+    return x < y ? -1 : (x > y ? 1 : 0);
+  });
+  terrains.forEach(function (t) {
+    parts.push('gt=' + valeurTexteTerrain(t.terrain_id) + '|s=' + (terrainRetenu(t) ? '1' : '0'));
+  });
+
+  var minis = ((plan && plan.minis) || []).slice().sort(function (a, b) {
+    return comparerNumerosMiniTerrain(valeurTexteTerrain(a.numero), valeurTexteTerrain(b.numero));
+  });
+  minis.forEach(function (m) {
+    parts.push('mt=' + valeurTexteTerrain(m.numero) +
+      '|gt=' + valeurTexteTerrain(m.terrain_id) +
+      '|c=' + valeurTexteTerrain(m.categorie));
+  });
+
+  parts.push('dim=' + dimensionsCanoniquesTerrains(params.dimensions_json));
+  parts.push('cl=' + nombreCanoniqueTerrain(params.couloir_m));
+  parts.push('tml=' + nombreCanoniqueTerrain(params.tm_longueur_m));
+  parts.push('tmw=' + nombreCanoniqueTerrain(params.tm_largeur_m));
+
+  return hachageChaine(parts.join(';'));
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ⑦ L'ÉTAT — ⭐ DÉRIVÉ, jamais lu tel quel dans une cellule
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * L'état de la configuration des terrains d'une édition ACTIVE.
+ *
+ *   'absent'        aucun plan pointé lisible, aucun brouillon
+ *   'brouillon'     un brouillon, aucun plan pointé lisible
+ *   'a_reconfirmer' un plan pointé lisible, MAIS un brouillon existe ou la signature a bougé
+ *   'confirme'      un plan pointé lisible, aucun brouillon, signature identique
+ *
+ * ⭐ LE DÉFAUT EST FERMÉ DANS LES DEUX SENS : un pointeur vide, inconnu, ambigu, incomplet ou
+ * incohérent ne remonte JAMAIS vers 'confirme'. ⛔ Il n'existe aucun chemin qui déclare
+ * confirmé ce qui n'a pas été confirmé.
+ *
+ * @param {{pointeur, plans, terrains, minis, edition_id, categories}} contexte
+ */
+function etatTerrainsPur(contexte) {
+  contexte = contexte || {};
+  var plan = planPublieValide(contexte);
+  var brouillon = brouillonTerrains(contexte.plans, contexte.edition_id);
+  if (!plan) return brouillon ? 'brouillon' : 'absent';
+  if (brouillon) return 'a_reconfirmer';
+  var courante = signatureTerrains(plan, contexte.categories);
+  return (courante === valeurTexteTerrain(plan.params.signature)) ? 'confirme' : 'a_reconfirmer';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * M1-B2 / B2-3.b — LA PERSISTANCE INERTE PAR ÉDITION
+ *
+ * ⛔ CE BLOC NE CHANGE RIEN AU COMPORTEMENT DE MAXILOU, ET C'EST LE CONTRAT DE LA PHASE.
+ * Aucune de ces fonctions n'est routée (`ACTIONS_*`, `doGet`, `doPost`), aucune n'est appelée
+ * par un écran, ni par `reinitialiserTournoi`, `enregistrerPlanTerrains`, `appliquerValeursFFR`,
+ * `getAll`, `getConfigClub`, `getConfigAdmin`, `getCapacitesCategories` ni
+ * `getDossierAutorisation`. B2-3.c les branchera ; B2-3.b les éprouve.
+ *
+ * ⭐ L'IDÉE, EN UNE PHRASE : un plan n'est jamais promu — il est écrit à part, sous une
+ * identité neuve et inerte, relu, validé, puis DÉSIGNÉ par une seule cellule.
+ *
+ * 🚨 DEUX INVARIANTS QUI COMMANDENT TOUT LE BLOC :
+ *
+ *  ① ⛔ LIRE NE CRÉE JAMAIS. Aucun lecteur ci-dessous n'appelle une fonction « assurer… » :
+ *     un onglet ou une colonne qui manque se lit comme du vide, et le lecteur échoue FERMÉ.
+ *     La bascule de structure est réservée à un geste explicite (§ « STRUCTURE » ci-dessous),
+ *     conformément à l'arbitrage du 2026-08-27 rappelé plus haut dans ce fichier : « une
+ *     écriture métier ordinaire n'a aucune raison de décider, seule, de changer la STRUCTURE ».
+ *
+ *  ② ⛔ UN POINTEUR NON VIDE NE SUFFIT JAMAIS. Tout plan rendu comme consommable a traversé
+ *     `planPublieValide` — donc les huit portes fermées de B2-3.a. La page de saisie ne
+ *     recevra jamais un plan simplement « désigné ».
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * 🚨 LA COLONNE CIBLE D'`Editions`, DÉCLARÉE À PART — et ce n'est pas un détail de rangement.
+ * `ENTETES.Editions` sert de LARGEUR de plage à `lireLignesEditions` et `ecrireLignesEditions`.
+ * L'y ajouter ferait écrire, sur un classeur en service, une colonne SANS EN-TÊTE au milieu
+ * d'une réinitialisation. ⭐ Elle est donc posée par une fonction structurelle explicite, et
+ * lue PAR SON NOM (via `lireOngletSimple`), jamais par un index.
+ */
+var EDITIONS_COLONNE_PLAN_PUBLIE = 'terrains_plan_publie';
+
+/** Les trois onglets du plan des terrains, dans l'ordre où la structure les crée. */
+var ONGLETS_TERRAINS_B23 = ['TerrainsPlan', 'Terrains', 'MiniTerrains'];
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * STRUCTURE — ⛔ EXPLICITE, jamais déclenchée par un chemin métier
+ *
+ * ⚠️ Ces quatre fonctions sont les SEULES du bloc à écrire une ligne d'en-tête. Elles sont
+ * destinées à la migration de B2-3.e, et ⛔ à rien d'autre. Un test vérifie qu'aucun lecteur
+ * ni aucun écrivain de données ne les appelle.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Crée `TerrainsPlan` s'il manque, et complète ses colonnes À DROITE. Idempotent. */
+function assurerOngletTerrainsPlan(classeur) {
+  return assurerOngletModele(classeur, 'TerrainsPlan', ENTETES.TerrainsPlan);
+}
+
+/** Crée `Terrains` s'il manque, et complète ses colonnes À DROITE. Idempotent. */
+function assurerOngletTerrainsB23(classeur) {
+  return assurerOngletModele(classeur, 'Terrains', ENTETES.Terrains);
+}
+
+/** Crée `MiniTerrains` s'il manque, et complète ses colonnes À DROITE. Idempotent. */
+function assurerOngletMiniTerrains(classeur) {
+  return assurerOngletModele(classeur, 'MiniTerrains', ENTETES.MiniTerrains);
+}
+
+/**
+ * Ajoute `terrains_plan_publie` À DROITE de l'en-tête d'`Editions`, si elle manque.
+ *
+ * ⭐ IDEMPOTENTE et NON DESTRUCTIVE : les colonnes existantes ne sont ni renommées, ni
+ * déplacées, ni relues par index. ⛔ Si l'onglet `Editions` n'existe pas, elle ne le crée pas
+ * — ouvrir une édition est un autre geste, et il a déjà sa fonction.
+ * @return {{ajoutee:boolean, position:number}} `position` = 0 si l'onglet manque.
+ */
+function assurerColonnePlanPublieEditions(classeur) {
+  var onglet = classeur.getSheetByName('Editions');
+  if (!onglet) return { ajoutee: false, position: 0 };
+  var largeur = Math.max(onglet.getLastColumn(), 1);
+  var entetes = onglet.getRange(1, 1, 1, largeur).getValues()[0];
+  var derniere = 0;
+  for (var i = 0; i < entetes.length; i++) {
+    var nom = (entetes[i] === null || entetes[i] === undefined) ? '' : String(entetes[i]).trim();
+    if (nom === EDITIONS_COLONNE_PLAN_PUBLIE) return { ajoutee: false, position: i + 1 };
+    if (nom !== '') derniere = i + 1;
+  }
+  var zone = onglet.getRange(1, derniere + 1, 1, 1);
+  zone.setNumberFormat('@');
+  zone.setValues([[EDITIONS_COLONNE_PLAN_PUBLIE]]);
+  stylerEntete(zone);
+  onglet.setFrozenRows(1);
+  return { ajoutee: true, position: derniere + 1 };
+}
+
+/**
+ * ▶ LE GESTE STRUCTUREL COMPLET de B2-3 : les trois onglets et la colonne du pointeur.
+ * ⛔ Appelée par AUCUN chemin métier — elle attend la migration explicite de B2-3.e.
+ * ⭐ Idempotente : rejouée, elle ne crée rien et ne déplace rien.
+ */
+function assurerStructureTerrainsB23(classeur) {
+  assurerOngletTerrainsPlan(classeur);
+  assurerOngletTerrainsB23(classeur);
+  assurerOngletMiniTerrains(classeur);
+  return { colonneEditions: assurerColonnePlanPublieEditions(classeur) };
+}
+
+/**
+ * La structure B2-3 est-elle en place ? ⛔ NE LA CRÉE PAS — c'est une question, pas un geste.
+ * ⭐ Le contrôle porte sur les EN-TÊTES réels, jamais sur la seule existence de l'onglet :
+ * un onglet créé à la main sans ses colonnes n'est pas une structure.
+ */
+function structureTerrainsB23EnPlace(classeur) {
+  for (var i = 0; i < ONGLETS_TERRAINS_B23.length; i++) {
+    var nom = ONGLETS_TERRAINS_B23[i];
+    var onglet = classeur.getSheetByName(nom);
+    if (!onglet) return false;
+    var entetes = onglet.getRange(1, 1, 1, Math.max(onglet.getLastColumn(), 1)).getValues()[0];
+    var vus = {};
+    entetes.forEach(function (h) { vus[String(h === null || h === undefined ? '' : h).trim()] = true; });
+    for (var c = 0; c < ENTETES[nom].length; c++) {
+      if (!vus[ENTETES[nom][c]]) return false;
+    }
+  }
+  var edt = classeur.getSheetByName('Editions');
+  if (!edt) return false;
+  var eEdt = edt.getRange(1, 1, 1, Math.max(edt.getLastColumn(), 1)).getValues()[0];
+  for (var k = 0; k < eEdt.length; k++) {
+    var h2 = String(eEdt[k] === null || eEdt[k] === undefined ? '' : eEdt[k]).trim();
+    if (h2 === EDITIONS_COLONNE_PLAN_PUBLIE) return true;
+  }
+  return false;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * LECTURES — ⛔ elles ne créent RIEN, jamais.
+ * `lireOngletSimple` lit PAR NOM D'EN-TÊTE et rend [] sur un onglet absent : l'échec fermé
+ * est donc obtenu par construction, ⛔ pas par une garde ajoutée après coup.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/** Les lignes d'`Editions` en OBJETS (par nom d'en-tête) — ⛔ pas la lecture par largeur de
+ *  `lireLignesEditions`, qui sert au registre et ne connaît pas la colonne du pointeur. */
+function lireEditionsObjets(classeur) { return lireOngletSimple(classeur, 'Editions'); }
+
+/** La ligne d'une édition précise, ou `null`. ⭐ Plusieurs lignes pour un même identifiant
+ *  ⇒ `null` : c'est une ambiguïté, et ⛔ on ne choisit jamais au hasard. */
+function ligneEditionParId(classeur, editionId) {
+  var cible = valeurTexteTerrain(editionId);
+  if (!cible) return null;
+  var trouvees = lireEditionsObjets(classeur).filter(function (l) {
+    return valeurTexteTerrain(l.edition_id) === cible;
+  });
+  return trouvees.length === 1 ? trouvees[0] : null;
+}
+
+/**
+ * Le POINTEUR d'une édition : le `plan_id` qui fait foi, ou `''`.
+ * ⭐ Colonne absente, onglet absent, édition inconnue ou ambiguë ⇒ `''` — ⛔ jamais une
+ * exception, et ⛔ jamais une création.
+ */
+function pointeurPlanTerrains(classeur, editionId) {
+  var ligne = ligneEditionParId(classeur, editionId);
+  if (!ligne) return '';
+  return valeurTexteTerrain(ligne[EDITIONS_COLONNE_PLAN_PUBLIE]);
+}
+
+/** Les lignes de `TerrainsPlan`. Onglet absent ⇒ []. */
+function lireTerrainsPlan(classeur) { return lireOngletSimple(classeur, 'TerrainsPlan'); }
+
+/** Les lignes de `Terrains` (les grands terrains des plans). Onglet absent ⇒ []. */
+function lireLignesTerrainsB23(classeur) { return lireOngletSimple(classeur, 'Terrains'); }
+
+/** Les lignes de `MiniTerrains`. Onglet absent ⇒ []. */
+function lireLignesMiniTerrains(classeur) { return lireOngletSimple(classeur, 'MiniTerrains'); }
+
+/**
+ * Le CONTEXTE d'une édition, tel que le socle pur B2-3.a l'attend.
+ * ⭐ C'est le seul point du serveur qui lit les trois onglets et le pointeur ensemble — tout
+ * le reste travaille sur cet objet, sans jamais retoucher au classeur.
+ */
+function contexteTerrainsEdition(classeur, editionId, categories) {
+  return {
+    pointeur: pointeurPlanTerrains(classeur, editionId),
+    edition_id: valeurTexteTerrain(editionId),
+    plans: lireTerrainsPlan(classeur),
+    terrains: lireLignesTerrainsB23(classeur),
+    minis: lireLignesMiniTerrains(classeur),
+    categories: categories || []
+  };
+}
+
+/**
+ * Un plan PRÉCIS d'une édition, assemblé depuis le classeur — ⛔ SANS validation.
+ * ⭐ Sert à relire un candidat qu'on vient d'écrire, ou un brouillon. Pour ce qui est
+ * CONSOMMABLE, c'est `planTerrainsPublie` qu'il faut, et lui seul.
+ */
+function lirePlanTerrains(classeur, editionId, planId) {
+  return assemblerPlanTerrains(lireTerrainsPlan(classeur), lireLignesTerrainsB23(classeur),
+    lireLignesMiniTerrains(classeur), editionId, planId);
+}
+
+/** Le brouillon UNIQUE d'une édition, ou `null` (plusieurs brouillons = anomalie, le premier
+ *  suffit à conclure « il y en a un » — le défaut reste FERMÉ). */
+function lireBrouillonTerrains(classeur, editionId) {
+  var ligne = brouillonTerrains(lireTerrainsPlan(classeur), editionId);
+  if (!ligne) return null;
+  return lirePlanTerrains(classeur, editionId, valeurTexteTerrain(ligne.plan_id));
+}
+
+/**
+ * Les `plan_id` ORPHELINS d'une édition : ni pointés, ni brouillon.
+ * ⭐ Ce sont les candidats d'une confirmation interrompue. ⛔ Ils n'ont jamais été lus par
+ * personne — les balayer est donc sans risque, et c'est ce que fait `balayerPlansOrphelins`.
+ */
+function plansOrphelinsTerrains(classeur, editionId) {
+  var edition = valeurTexteTerrain(editionId);
+  var pointe = pointeurPlanTerrains(classeur, edition);
+  var brouillon = brouillonTerrains(lireTerrainsPlan(classeur), edition);
+  var idBrouillon = brouillon ? valeurTexteTerrain(brouillon.plan_id) : '';
+  var vus = {}, orphelins = [];
+  lireTerrainsPlan(classeur).forEach(function (l) {
+    if (valeurTexteTerrain(l.edition_id) !== edition) return;
+    var id = valeurTexteTerrain(l.plan_id);
+    if (!id || id === pointe || id === idBrouillon || vus[id]) return;
+    vus[id] = true;
+    orphelins.push(id);
+  });
+  return orphelins;
+}
+
+/**
+ * ⭐⭐ LE PLAN CONSOMMABLE D'UNE ÉDITION — le seul que la page de saisie recevra un jour.
+ *
+ * ⛔ UN POINTEUR NON VIDE NE SUFFIT PAS : le plan passe par `planPublieValide`, donc par les
+ * huit portes fermées de B2-3.a (pointeur inconnu, bloc manquant, ligne en double, mélange
+ * d'éditions, signature absente, incohérence interne…). Un seul défaut ⇒ `null`.
+ *
+ * ⭐ Fonctionne aussi bien sur l'édition ACTIVE que sur une édition FERMÉE : le pointeur vit
+ * dans la ligne de CHAQUE édition, et rien ici ne consulte l'édition active.
+ */
+function planTerrainsPublie(classeur, editionId) {
+  return planPublieValide(contexteTerrainsEdition(classeur, editionId, []));
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ÉCRITURES — par BLOCS COMPLETS, ⛔ jamais ligne à ligne.
+ *
+ * ⚠️ CE QUI N'EST PAS PROMIS ICI, ET IL FAUT LE DIRE : Google Sheets n'offre AUCUNE
+ * transaction entre plusieurs onglets. `LockService` sérialise les écritures concurrentes ;
+ * ⛔ il n'en annule aucune. Un `setValues` déjà exécuté RESTE écrit si le suivant échoue.
+ *
+ * ⭐ CE QUI EST RÉELLEMENT GARANTI : aucun état partiel n'est CONSOMMABLE, et une relance
+ * CONVERGE. C'est le pointeur qui l'assure — écrit en dernier, sur une seule cellule.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Réécrit un onglet-modèle en entier depuis une liste d'objets.
+ * ⭐ Même patron que `ecrireLignesEditions` : on écrit d'abord, on efface le surplus ENSUITE —
+ * ⛔ jamais l'inverse, sans quoi une interruption laisserait un onglet vide.
+ * @param {Array<Object>} objets  les lignes à conserver, dans l'ordre voulu
+ */
+function reecrireOngletModele(onglet, entetes, objets) {
+  if (!onglet) return 0;
+  var largeur = Math.max(onglet.getLastColumn(), 1);
+  var entetesReels = onglet.getRange(1, 1, 1, largeur).getValues()[0].map(function (h) {
+    return (h === null || h === undefined) ? '' : String(h).trim();
+  });
+  var bloc = (objets || []).map(function (o) {
+    return entetesReels.map(function (h) {
+      if (h === '') return '';
+      var v = o[h];
+      return (v === undefined || v === null) ? '' : String(v);
+    });
+  });
+  if (bloc.length) {
+    var plage = onglet.getRange(2, 1, bloc.length, entetesReels.length);
+    plage.setNumberFormat('@');
+    plage.setValues(bloc);
+  }
+  var dernier = onglet.getLastRow();
+  var surplus = dernier - 1 - bloc.length;
+  if (surplus > 0) { onglet.getRange(2 + bloc.length, 1, surplus, entetesReels.length).clearContent(); }
+  return bloc.length;
+}
+
+/**
+ * Écrit les trois blocs d'UN plan, en remplaçant ce qui portait déjà ce `(edition, plan)`.
+ *
+ * ⛔ NE TOUCHE À AUCUN AUTRE PLAN NI À AUCUNE AUTRE ÉDITION : les lignes des autres couples
+ * sont relues et RÉÉCRITES TELLES QUELLES. ⭐ C'est ce qui rend l'écriture d'un candidat
+ * inoffensive pour le plan actuellement pointé.
+ *
+ * @param {?string} arretApres  ⛔ TESTS UNIQUEMENT — 'mini' | 'terrains' | 'plan' : simule une
+ *        interruption après ce bloc. En service, il vaut toujours `null`.
+ * @return {{ecrits:Object}} le compte par onglet, ou { error }
+ */
+function ecrireBlocsPlanTerrains(classeur, editionId, planId, plan, arretApres) {
+  var edition = valeurTexteTerrain(editionId), id = valeurTexteTerrain(planId);
+  if (!edition || !id) return { error: 'Édition ou plan sans identifiant : écriture refusée.' };
+
+  var oMini = classeur.getSheetByName('MiniTerrains');
+  var oTerr = classeur.getSheetByName('Terrains');
+  var oPlan = classeur.getSheetByName('TerrainsPlan');
+  if (!oMini || !oTerr || !oPlan) {
+    return { error: 'Structure des terrains absente : lance d\'abord la mise en place ' +
+      '(assurerStructureTerrainsB23). ⛔ Aucune écriture n\'a eu lieu.' };
+  }
+
+  // ⭐ « Tout sauf ce couple » — calculé AVANT la moindre écriture.
+  var autre = function (lignes) {
+    return (lignes || []).filter(function (l) {
+      return !(valeurTexteTerrain(l.edition_id) === edition && valeurTexteTerrain(l.plan_id) === id);
+    });
+  };
+  var estampiller = function (lignes) {
+    return (lignes || []).map(function (l) {
+      var copie = {};
+      for (var k in l) { if (Object.prototype.hasOwnProperty.call(l, k)) copie[k] = l[k]; }
+      copie.edition_id = edition;
+      copie.plan_id = id;
+      return copie;
+    });
+  };
+
+  var ecrits = {};
+  ecrits.MiniTerrains = reecrireOngletModele(oMini, ENTETES.MiniTerrains,
+    autre(lireLignesMiniTerrains(classeur)).concat(estampiller(plan.minis)));
+  if (arretApres === 'mini') return { ecrits: ecrits, arrete: 'mini' };
+
+  ecrits.Terrains = reecrireOngletModele(oTerr, ENTETES.Terrains,
+    autre(lireLignesTerrainsB23(classeur)).concat(estampiller(plan.terrains)));
+  if (arretApres === 'terrains') return { ecrits: ecrits, arrete: 'terrains' };
+
+  ecrits.TerrainsPlan = reecrireOngletModele(oPlan, ENTETES.TerrainsPlan,
+    autre(lireTerrainsPlan(classeur)).concat(estampiller([plan.params])));
+  if (arretApres === 'plan') return { ecrits: ecrits, arrete: 'plan' };
+
+  return { ecrits: ecrits };
+}
+
+/**
+ * Écrit ou REMPLACE le brouillon d'une édition.
+ *
+ * ⭐ Un brouillon garde son `plan_id` d'un enregistrement à l'autre : c'est le même objet de
+ * travail, et c'est ce qui garantit qu'il n'y en a JAMAIS deux pour une même édition.
+ * ⛔ Le plan pointé n'est jamais touché — le test le vérifie ligne à ligne.
+ *
+ * ⚠️ L'IDENTIFIANT VIENT DU GÉNÉRATEUR, JAMAIS DU PLAN REÇU, et c'est la même règle que pour
+ * un candidat : le client transporte des données, ⛔ il n'émet aucune identité. Un `plan_id`
+ * qui traînerait dans l'objet reçu est donc ignoré.
+ *
+ * @param {function():string} faireId  fabrique d'identifiants — utilisée SEULEMENT à la
+ *        création du premier brouillon (injectée : le rejeu reste déterministe).
+ */
+function ecrireBrouillonTerrains(classeur, editionId, plan, faireId, arretApres) {
+  var edition = valeurTexteTerrain(editionId);
+  var existant = brouillonTerrains(lireTerrainsPlan(classeur), edition);
+  var id = existant ? valeurTexteTerrain(existant.plan_id)
+                    : valeurTexteTerrain(faireId ? faireId() : '');
+  if (!id) return { error: 'Aucun identifiant de brouillon n\'a pu être fabriqué.' };
+  var params = {};
+  for (var k in (plan.params || {})) {
+    if (Object.prototype.hasOwnProperty.call(plan.params, k)) params[k] = plan.params[k];
+  }
+  params.role = TERRAINS_ROLE_BROUILLON;
+  params.signature = '';                     // ⛔ un brouillon n'est jamais signé
+  var r = ecrireBlocsPlanTerrains(classeur, edition, id,
+    { params: params, terrains: plan.terrains, minis: plan.minis }, arretApres);
+  if (r.error) return r;
+  r.plan_id = id;
+  return r;
+}
+
+/**
+ * ⭐⭐ LA PUBLICATION — et c'est la SEULE écriture qui change ce que les lecteurs voient.
+ *
+ * Une cellule, une seule : `Editions.terrains_plan_publie`. ⛔ L'ancien plan n'est pas touché,
+ * le candidat n'est pas déplacé, rien n'est supprimé. Avant cet instant, le candidat n'existe
+ * pour personne ; après, il fait foi.
+ *
+ * ⛔ ELLE REFUSE si la colonne du pointeur n'existe pas : ⭐ la poser est un geste STRUCTUREL,
+ * et publier n'a pas à décider de changer la forme du classeur.
+ */
+function ecrirePointeurPlanTerrains(classeur, editionId, planId) {
+  var edition = valeurTexteTerrain(editionId);
+  var onglet = classeur.getSheetByName('Editions');
+  if (!onglet) return { error: 'Onglet Editions absent : publication refusée.' };
+  var largeur = Math.max(onglet.getLastColumn(), 1);
+  var entetes = onglet.getRange(1, 1, 1, largeur).getValues()[0];
+  var colonne = 0;
+  for (var i = 0; i < entetes.length; i++) {
+    var nom = (entetes[i] === null || entetes[i] === undefined) ? '' : String(entetes[i]).trim();
+    if (nom === EDITIONS_COLONNE_PLAN_PUBLIE) { colonne = i + 1; break; }
+  }
+  if (!colonne) {
+    return { error: 'La colonne « ' + EDITIONS_COLONNE_PLAN_PUBLIE + ' » n\'existe pas dans ' +
+      'Editions : la structure des terrains n\'a pas été mise en place. ⛔ Rien n\'a été écrit.' };
+  }
+  var dernier = onglet.getLastRow();
+  if (dernier < 2) return { error: 'Registre des éditions vide : publication refusée.' };
+  var ids = onglet.getRange(2, 1, dernier - 1, 1).getValues();
+  var ligne = 0;
+  for (var l = 0; l < ids.length; l++) {
+    if (String(ids[l][0] === null || ids[l][0] === undefined ? '' : ids[l][0]).trim() === edition) {
+      if (ligne) return { error: 'Deux lignes portent l\'édition ' + edition + ' : publication refusée.' };
+      ligne = l + 2;
+    }
+  }
+  if (!ligne) return { error: 'Édition ' + edition + ' absente du registre : publication refusée.' };
+  var cellule = onglet.getRange(ligne, colonne, 1, 1);
+  cellule.setNumberFormat('@');
+  cellule.setValue(valeurTexteTerrain(planId));
+  return { ok: true, ligne: ligne, colonne: colonne };
+}
+
+/**
+ * Supprime toutes les lignes d'un plan — ⛔ SAUF s'il est le plan POINTÉ.
+ * ⭐ Ce refus n'est pas une politesse : c'est le garde-fou qui rend le nettoyage inoffensif.
+ * Un nettoyage interrompu ne peut, par construction, jamais entamer le plan qui fait foi.
+ */
+function supprimerPlanTerrains(classeur, editionId, planId) {
+  var edition = valeurTexteTerrain(editionId), id = valeurTexteTerrain(planId);
+  if (!edition || !id) return { error: 'Édition ou plan sans identifiant : suppression refusée.' };
+  if (pointeurPlanTerrains(classeur, edition) === id) {
+    return { error: 'Le plan ' + id + ' est le plan PUBLIÉ de cette édition : suppression refusée.' };
+  }
+  var oMini = classeur.getSheetByName('MiniTerrains');
+  var oTerr = classeur.getSheetByName('Terrains');
+  var oPlan = classeur.getSheetByName('TerrainsPlan');
+  if (!oMini || !oTerr || !oPlan) return { error: 'Structure des terrains absente.' };
+  var garder = function (lignes) {
+    return (lignes || []).filter(function (l) {
+      return !(valeurTexteTerrain(l.edition_id) === edition && valeurTexteTerrain(l.plan_id) === id);
+    });
+  };
+  reecrireOngletModele(oMini, ENTETES.MiniTerrains, garder(lireLignesMiniTerrains(classeur)));
+  reecrireOngletModele(oTerr, ENTETES.Terrains, garder(lireLignesTerrainsB23(classeur)));
+  reecrireOngletModele(oPlan, ENTETES.TerrainsPlan, garder(lireTerrainsPlan(classeur)));
+  return { ok: true, supprime: id };
+}
+
+/**
+ * Balaie les plans ORPHELINS d'une édition — ni pointés, ni brouillon.
+ * ⭐ Le plan pointé et le brouillon sont exclus PAR `plansOrphelinsTerrains` lui-même, et
+ * `supprimerPlanTerrains` refuse une seconde fois le plan pointé. ⛔ Deux verrous, pas un.
+ */
+function balayerPlansOrphelins(classeur, editionId) {
+  var orphelins = plansOrphelinsTerrains(classeur, editionId);
+  var supprimes = [];
+  for (var i = 0; i < orphelins.length; i++) {
+    var r = supprimerPlanTerrains(classeur, editionId, orphelins[i]);
+    if (r.ok) supprimes.push(orphelins[i]);
+  }
+  return { supprimes: supprimes };
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * L'ORCHESTRATION — écrire un candidat, le relire, le valider, PUIS publier.
+ * ⛔ NON ROUTÉE : c'est B2-3.c qui l'exposera, derrière une action et un verrou.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * ⭐⭐ PUBLIE UN PLAN, dans l'ordre qui rend une interruption inoffensive.
+ *
+ *   ① validation EN MÉMOIRE    ⛔ un défaut ⇒ refus, ZÉRO écriture — ⭐ ET C'EST LA PREMIÈRE
+ *                              ÉTAPE : rien, pas même un balayage, ne précède le refus
+ *   ⓪ balayage des orphelins   ⛔ ils n'étaient lus par personne ; il vient APRÈS la validation
+ *   ② plan_id neuf (injecté)   ⭐ identité INERTE
+ *   ③④⑤ les trois blocs        ⛔ le pointeur n'a pas bougé : l'ancien plan fait toujours foi
+ *   ⑥ RELECTURE + validation   ⭐ depuis le classeur, pas depuis la mémoire
+ *   ⑦ LE POINTEUR              ⭐ une cellule — c'est ICI que la bascule a lieu
+ *   ⑧⑨ nettoyage               ⛔ après coup : un échec ne laisse que de l'inerte
+ *
+ * @param {function():string} faireId     fabrique d'identifiants (injectée : testable, déterministe)
+ * @param {string} horodatage             instant de la confirmation (injecté)
+ * @param {?string} arretApres            ⛔ TESTS UNIQUEMENT — voir la liste dans le code
+ */
+function publierPlanTerrains(classeur, editionId, plan, categories, faireId, horodatage, arretApres) {
+  var edition = valeurTexteTerrain(editionId);
+  if (!edition) return { error: 'Aucune édition : publication refusée.' };
+  if (!structureTerrainsB23EnPlace(classeur)) {
+    return { error: 'Structure des terrains absente : la mise en place n\'a pas eu lieu. ' +
+      '⛔ Aucune écriture.' };
+  }
+
+  // ① Le plan est validé AVANT LA TOUTE PREMIÈRE ÉCRITURE — ⛔ balayage compris.
+  var candidat = {
+    params: {}, terrains: (plan && plan.terrains) || [], minis: (plan && plan.minis) || [],
+    edition_id: edition, plan_id: 'CANDIDAT'
+  };
+  for (var k in ((plan && plan.params) || {})) {
+    if (Object.prototype.hasOwnProperty.call(plan.params, k)) candidat.params[k] = plan.params[k];
+  }
+  candidat.params.edition_id = edition;
+  candidat.params.plan_id = 'CANDIDAT';
+  candidat.params.role = TERRAINS_ROLE_PLAN;
+  var enMemoire = {
+    edition_id: edition, plan_id: 'CANDIDAT', params: candidat.params,
+    terrains: candidat.terrains.map(function (t) {
+      var c = {}; for (var a in t) { if (Object.prototype.hasOwnProperty.call(t, a)) c[a] = t[a]; }
+      c.edition_id = edition; c.plan_id = 'CANDIDAT'; return c;
+    }),
+    minis: candidat.minis.map(function (m) {
+      var c = {}; for (var b in m) { if (Object.prototype.hasOwnProperty.call(m, b)) c[b] = m[b]; }
+      c.edition_id = edition; c.plan_id = 'CANDIDAT'; return c;
+    })
+  };
+  var ecarts = ecartsPlanTerrains(enMemoire, categories);
+  if (ecarts.length) return { error: 'Plan refusé : ' + ecarts.join(' · '), ecarts: ecarts };
+
+  // ⚠️ LE BALAYAGE VIENT ICI, ET PAS UNE LIGNE PLUS HAUT — c'est une correction, pas un
+  //   arrangement. Il était placé AVANT la validation, et les deux garanties annoncées ne
+  //   tenaient alors pas ensemble : « un candidat refusé ne laisse aucune trace » était FAUX
+  //   dès que l'édition portait un plan orphelin, puisque le balayage l'avait déjà supprimé.
+  //   ⛔ Un refus doit laisser le classeur STRICTEMENT identique — orphelins compris.
+  // ⭐ POURQUOI ON NE LE SUPPRIME PAS : le nettoyage de fin (⑧⑨) ne connaît que l'ANCIEN
+  //   plan pointé et le brouillon. Sans ce balayage, un candidat abandonné par une
+  //   interruption resterait orphelin pour toujours — la convergence après reprise en dépend.
+  balayerPlansOrphelins(classeur, edition);
+
+  // ② Identité NEUVE — ⛔ jamais choisie par le client.
+  var planId = valeurTexteTerrain(faireId ? faireId() : '');
+  if (!planId) return { error: 'Aucun identifiant de plan n\'a pu être fabriqué.' };
+  if (lirePlanTerrains(classeur, edition, planId)) {
+    return { error: 'Identifiant de plan déjà utilisé (' + planId + ') : publication refusée.' };
+  }
+
+  // La signature est calculée sur le plan tel qu'il sera écrit.
+  enMemoire.params.signature = signatureTerrains(enMemoire, categories);
+  enMemoire.params.fige_le = valeurTexteTerrain(horodatage);
+
+  // ③④⑤ Les trois blocs — ⛔ le pointeur n'est pas touché.
+  var ecrit = ecrireBlocsPlanTerrains(classeur, edition, planId, enMemoire, arretApres);
+  if (ecrit.error) return ecrit;
+  if (ecrit.arrete) return { arrete: ecrit.arrete, plan_id: planId };
+  if (arretApres === 'avantPublication') return { arrete: 'avantPublication', plan_id: planId };
+
+  // ⑥ RELECTURE depuis le classeur — ⭐ « est-ce que ça répond à l'exigence ? », pas
+  //    « est-ce que ça a tourné ? ». C'est elle qui autorise la bascule.
+  var relu = lirePlanTerrains(classeur, edition, planId);
+  if (!relu) return { error: 'Le candidat relu est introuvable ou ambigu : ⛔ non publié.' };
+  var ecartsRelu = ecartsPlanTerrains(relu, categories);
+  if (ecartsRelu.length) {
+    return { error: 'Le candidat relu est incohérent : ' + ecartsRelu.join(' · ') + ' ⛔ non publié.',
+             ecarts: ecartsRelu };
+  }
+  if (valeurTexteTerrain(relu.params.signature) === '') {
+    return { error: 'Le candidat relu n\'a pas de signature : ⛔ non publié.' };
+  }
+
+  // ⑦ LA BASCULE — une cellule.
+  var ancien = pointeurPlanTerrains(classeur, edition);
+  var pub = ecrirePointeurPlanTerrains(classeur, edition, planId);
+  if (pub.error) return pub;
+  if (arretApres === 'apresPublication') return { ok: true, plan_id: planId, ancien: ancien,
+                                                 arrete: 'apresPublication' };
+
+  // ⑧⑨ Nettoyage — ⛔ APRÈS coup. Un échec ici ne laisse que des données inertes.
+  var nettoye = { ancien: false, brouillon: false };
+  if (ancien && ancien !== planId) {
+    nettoye.ancien = !!supprimerPlanTerrains(classeur, edition, ancien).ok;
+  }
+  if (arretApres === 'nettoyage') return { ok: true, plan_id: planId, ancien: ancien,
+                                           nettoye: nettoye, arrete: 'nettoyage' };
+  var brouillon = brouillonTerrains(lireTerrainsPlan(classeur), edition);
+  if (brouillon) {
+    nettoye.brouillon = !!supprimerPlanTerrains(classeur, edition,
+      valeurTexteTerrain(brouillon.plan_id)).ok;
+  }
+  return { ok: true, plan_id: planId, ancien: ancien, nettoye: nettoye };
 }

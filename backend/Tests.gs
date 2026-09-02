@@ -507,6 +507,44 @@ function lancerTestsFFR() {
   testR110_MT7_leCheminNoOpNEcritRien(etat);
   testR110_MT8_setupSheetCorrigeSansToucherAuSchema(etat);
 
+  // M1-B2 / B2-3.a — LE SOCLE PUR DES TERRAINS (« permanent vs édition »).
+  // ⛔ Aucune de ces fonctions n'est encore branchée : ce bloc éprouve le CŒUR avant qu'il serve.
+  // ⭐ Il porte les INVARIANTS ; le détail vit dans `tests/backend-terrains-socle.test.js`,
+  //    qui exécute AUSSI cette série — deux fichiers, deux rôles, ⛔ pas deux vérités.
+  testB23_A1_normalisationDesNoms(etat);
+  testB23_A2_collisionsSeulementParmiLesRetenus(etat);
+  testB23_A3_defautFermeDeLaSelection(etat);
+  testB23_A4_normalisationDesNombres(etat);
+  testB23_B1_identiteConserveeEtAttribuee(etat);
+  testB23_B2_identitesRefusees(etat);
+  testB23_B3_jsonAncienSansPerte(etat);
+  testB23_C1_planCoherent(etat);
+  testB23_C2_ecartsStructurels(etat);
+  testB23_C3_ecartsAvecCategories(etat);
+  testB23_D1_pointeurValide(etat);
+  testB23_D2_pointeurFerme(etat);
+  testB23_E1_projectionExacte(etat);
+  testB23_E2_projectionEchecFerme(etat);
+  testB23_E3_naturesDesSeulsRetenus(etat);
+  testB23_F1_signatureCeQuiChange(etat);
+  testB23_F2_signatureCeQuiNeChangePas(etat);
+  testB23_G1_transitionsDEtat(etat);
+  testB23_G2_defautFermeDesEtats(etat);
+
+  // M1-B2 / B2-3.b — LA PERSISTANCE INERTE PAR ÉDITION (trois onglets + un pointeur).
+  // ⛔ Toujours aucun branchement : ces fonctions n'existent que pour B2-3.c.
+  // ⭐ Le détail vit dans `tests/backend-terrains-persistance.test.js`, qui exécute AUSSI
+  //    cette série — deux fichiers, deux rôles, ⛔ pas deux vérités.
+  testB23b_S1_structureExpliciteEtIdempotente(etat);
+  testB23b_S2_lireNeCreeJamais(etat);
+  testB23b_P1_publicationParPointeur(etat);
+  testB23b_P2_ancienPlanIntactPendantLeCandidat(etat);
+  testB23b_P3_pointeurFerme(etat);
+  testB23b_B1_brouillonNeTouchePasLePointe(etat);
+  testB23b_N1_balayageNeToucheJamaisLePointe(etat);
+  testB23b_R1_refusNeToucheNiOrphelinNiPointe(etat);
+  testB23b_V1_voisinageIntact(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -4596,6 +4634,7 @@ function _m1bFauxOnglet(lignes) {
         },
         setValue: function (v) { if (!d[r - 1]) d[r - 1] = []; d[r - 1][c - 1] = v; },
         setValues: function (vals) {
+          ecrit.setValues++;
           for (var i = 0; i < vals.length; i++) {
             if (!d[r - 1 + i]) d[r - 1 + i] = [];
             for (var j = 0; j < vals[i].length; j++) { d[r - 1 + i][c - 1 + j] = vals[i][j]; }
@@ -7127,4 +7166,1110 @@ function testR110_MT8_setupSheetCorrigeSansToucherAuSchema(etat) {
   _ffrAssert(etat, src.indexOf('return') === -1,
     'R-110 MT8 ⭐⭐ : ⛔ `setupSheet` ne rend TOUJOURS aucune valeur — le point de passage a ' +
     'été appelé, pas retourné');
+}
+
+/* ========================================================================== */
+/*  M1-B2 / B2-3.a — LE SOCLE PUR DES TERRAINS                                */
+/*                                                                            */
+/*  ⛔ CE BLOC NE TESTE AUCUN BRANCHEMENT, parce qu'il n'y en a aucun : à ce   */
+/*  stade, aucune fonction du socle n'est appelée par une action serveur, un   */
+/*  écran ou `reinitialiserTournoi`. Il éprouve le CŒUR, avant qu'il serve.    */
+/*                                                                            */
+/*  ⭐ CE BLOC PORTE LES INVARIANTS, ⛔ PAS L'EXHAUSTIVITÉ — et c'est délibéré. */
+/*  Le socle étant PUR, il s'éprouve aussi sans Google : le détail (127        */
+/*  assertions : casse, accents, espaces, rejeu des identifiants, ordre des    */
+/*  clés…) vit dans `tests/backend-terrains-socle.test.js`, qui EXÉCUTE ces    */
+/*  mêmes fonctions sur la machine de développement.                          */
+/*  ⚠️ Deux fichiers, deux rôles — ⛔ pas deux vérités : le fichier Node        */
+/*  exécute AUSSI la série ci-dessous, si bien qu'un écart entre les deux est  */
+/*  impossible sans qu'un des deux échoue.                                    */
+/* -------------------------------------------------------------------------- */
+
+/** Édition et plan du jeu d'essai. */
+var _B23_ED = 'ED-2026';
+var _B23_PL = 'PL-A';
+
+/** Un grand terrain du plan d'essai (surcharges par `sur`). */
+function _b23Terrain(id, nom, sur) {
+  var t = {
+    edition_id: _B23_ED, plan_id: _B23_PL, terrain_id: id, selectionne: 'oui',
+    snap_nom: nom, snap_type: 'rugby', snap_longueur_m: '115', snap_largeur_m: '70',
+    snap_enbut_m: '0', snap_nature: 'Gazon', snap_pos: 'CG'
+  };
+  for (var k in (sur || {})) { if (Object.prototype.hasOwnProperty.call(sur, k)) t[k] = sur[k]; }
+  return t;
+}
+
+/** Un mini-terrain du plan d'essai. */
+function _b23Mini(numero, terrainId, categorie) {
+  return { edition_id: _B23_ED, plan_id: _B23_PL, numero: String(numero),
+           terrain_id: terrainId, categorie: categorie };
+}
+
+var _B23_DIMENSIONS = '{"U8":{"l":30,"w":20,"src":"ffr"},"U10":{"l":40,"w":30,"src":"saisie"}}';
+
+/** La ligne de paramètres du plan d'essai. */
+function _b23Params(sur) {
+  var p = { edition_id: _B23_ED, plan_id: _B23_PL, role: 'plan',
+    couloir_m: '5', tm_longueur_m: '4', tm_largeur_m: '4',
+    dimensions_json: _B23_DIMENSIONS, signature: '', fige_le: '2026-09-02 10:00:00' };
+  for (var k in (sur || {})) { if (Object.prototype.hasOwnProperty.call(sur, k)) p[k] = sur[k]; }
+  return p;
+}
+
+/** Les catégories d'essai : deux présentes, une absente. */
+function _b23Categories() {
+  return [
+    { categorie: 'U8', presente: 'oui', terrains: '1,2,3,4', terrains_auto: 'oui' },
+    { categorie: 'U10', presente: 'oui', terrains: '5,6', terrains_auto: 'oui' },
+    { categorie: 'U12', presente: 'non', terrains: '', terrains_auto: 'oui' }
+  ];
+}
+
+/**
+ * Le CONTEXTE d'essai complet : quatre grands terrains, six mini-terrains, deux catégories.
+ * ⭐ La signature est CALCULÉE sur le plan, jamais figée en dur — un hachage recopié à la main
+ * cesserait de rien prouver dès la première refonte.
+ * ⚠️ `sur.signature` se teste par `=== undefined`, ⛔ pas par une négation : la chaîne vide est
+ * précisément le cas « signature obligatoire absente », qu'on doit pouvoir poser.
+ */
+function _b23Contexte(sur) {
+  sur = sur || {};
+  var terrains = sur.terrains || [
+    _b23Terrain('T1', 'Rugby 1'), _b23Terrain('T2', 'Rugby 2'),
+    _b23Terrain('T3', 'Foot 1', { snap_type: 'foot', snap_nature: 'Synthétique', snap_pos: 'HC' }),
+    _b23Terrain('T4', 'Foot 2', { snap_type: 'foot', snap_nature: 'Synthétique', snap_pos: 'CD' })
+  ];
+  var minis = sur.minis || [
+    _b23Mini(1, 'T1', 'U8'), _b23Mini(2, 'T1', 'U8'), _b23Mini(3, 'T2', 'U8'),
+    _b23Mini(4, 'T2', 'U8'), _b23Mini(5, 'T3', 'U10'), _b23Mini(6, 'T4', 'U10')
+  ];
+  var categories = sur.categories || _b23Categories();
+  var params = _b23Params(sur.params);
+  var plans = sur.plans || [params];
+  var ctx = {
+    pointeur: sur.pointeur === undefined ? _B23_PL : sur.pointeur,
+    edition_id: sur.edition_id === undefined ? _B23_ED : sur.edition_id,
+    plans: plans, terrains: terrains, minis: minis, categories: categories
+  };
+  if (sur.signature === undefined) {
+    var assemble = assemblerPlanTerrains(plans, terrains, minis, ctx.edition_id, _B23_PL);
+    if (assemble) params.signature = signatureTerrains(assemble, categories);
+  } else {
+    params.signature = sur.signature;
+  }
+  return ctx;
+}
+
+/** Le plan assemblé d'un contexte d'essai. */
+function _b23Plan(ctx) {
+  return assemblerPlanTerrains(ctx.plans, ctx.terrains, ctx.minis, ctx.edition_id, ctx.pointeur);
+}
+
+/** Vrai si l'un des écarts contient ce fragment. */
+function _b23Ecart(ecarts, fragment) {
+  for (var i = 0; i < (ecarts || []).length; i++) {
+    if (String(ecarts[i]).indexOf(fragment) !== -1) return true;
+  }
+  return false;
+}
+
+/** A1 — La clé de collision : casse, accents, espaces de bord ET espaces internes. */
+function testB23_A1_normalisationDesNoms(etat) {
+  _ffrAssert(etat, cleNomTerrain('Rugby 1') === cleNomTerrain('RUGBY 1'),
+    'B2-3.a A1 : la casse n\'a aucun effet sur la clé de nom');
+  _ffrAssert(etat, cleNomTerrain('Terrain école') === cleNomTerrain('Terrain ecole'),
+    'B2-3.a A1 : les accents non plus');
+  _ffrAssert(etat, cleNomTerrain('Rugby 1') === cleNomTerrain('  Rugby 1  '),
+    'B2-3.a A1 : les espaces de bord non plus');
+  _ffrAssert(etat, cleNomTerrain('Rugby 1') === cleNomTerrain('Rugby  1'),
+    'B2-3.a A1 ⭐ : les espaces internes multiples sont réduits (ce que normaliserTexteSouple ne fait PAS)');
+  _ffrAssert(etat, cleNomTerrain('Rugby 1') !== cleNomTerrain('Rugby1'),
+    'B2-3.a A1 ⛔ : « Rugby 1 » et « Rugby1 » restent DISTINCTS (⛔ ne pas sur-normaliser)');
+}
+
+/** A2 — Les collisions ne regardent QUE les terrains retenus. */
+function testB23_A2_collisionsSeulementParmiLesRetenus(etat) {
+  var deux = collisionsNomsTerrains([_b23Terrain('T1', 'Rugby 1'), _b23Terrain('T2', 'rugby  1')]);
+  _ffrAssert(etat, deux.collisions.length === 1 && deux.collisions[0].nb === 2,
+    'B2-3.a A2 : deux terrains RETENUS homonymes ⇒ collision signalée');
+  var unSeul = collisionsNomsTerrains([_b23Terrain('T1', 'Rugby 1'),
+    _b23Terrain('T2', 'Rugby 1', { selectionne: 'non' })]);
+  _ffrAssert(etat, unSeul.collisions.length === 0,
+    'B2-3.a A2 ⭐ : homonymes dont UN SEUL est retenu ⇒ aucune collision (l\'inventaire est un carnet)');
+  var vide = collisionsNomsTerrains([_b23Terrain('T1', '  ')]);
+  _ffrAssert(etat, vide.vides.length === 1,
+    'B2-3.a A2 : un nom VIDE parmi les retenus est signalé');
+}
+
+/** A3 — Le défaut FERMÉ de la sélection : tout ce qui n'est pas « oui » vaut NON retenu. */
+function testB23_A3_defautFermeDeLaSelection(etat) {
+  _ffrAssert(etat, terrainRetenu({ selectionne: 'oui' }) === true &&
+                   terrainRetenu({ selectionne: 'OUI' }) === true,
+    'B2-3.a A3 : « oui » (quelle que soit la casse) ⇒ retenu');
+  var fermes = [{ selectionne: 'non' }, { selectionne: '' }, { selectionne: 'x' },
+                { selectionne: null }, {}, null];
+  var tousFermes = true;
+  for (var i = 0; i < fermes.length; i++) { if (terrainRetenu(fermes[i]) !== false) tousFermes = false; }
+  _ffrAssert(etat, tousFermes,
+    'B2-3.a A3 ⭐⭐ : vide, absent, null ou fantaisiste ⇒ NON retenu (défaut FERMÉ)');
+}
+
+/** A4 — Les nombres : même forme quelle que soit la représentation. */
+function testB23_A4_normalisationDesNombres(etat) {
+  _ffrAssert(etat, nombreCanoniqueTerrain(30) === '30' && nombreCanoniqueTerrain('30.0') === '30' &&
+                   nombreCanoniqueTerrain(' 30 ') === '30' && nombreCanoniqueTerrain('30,0') === '30',
+    'B2-3.a A4 ⭐ : 30, « 30.0 », «  30  » et « 30,0 » donnent la même forme');
+  _ffrAssert(etat, nombreCanoniqueTerrain('') === '' && nombreCanoniqueTerrain(null) === '' &&
+                   nombreCanoniqueTerrain('abc') === '',
+    'B2-3.a A4 ⛔ : vide, absent ou illisible ⇒ chaîne vide, JAMAIS 0');
+}
+
+/** B1 — Identités : conservées, ou attribuées par un générateur INJECTÉ. */
+function testB23_B1_identiteConserveeEtAttribuee(etat) {
+  var n = 0;
+  var faireId = function () { n++; return 'X-' + n; };
+  var garde = planifierIdentitesTerrains([{ id: 'A1', nom: 'Renommé' }], [{ id: 'A1' }], faireId);
+  _ffrAssert(etat, !garde.error && garde.inventaire[0].id === 'A1' && garde.attribues === 0,
+    'B2-3.a B1 ⭐ : un identifiant existant est CONSERVÉ, même si le nom change');
+  // ⚠️ Le générateur est PARTAGÉ par les trois sous-cas, et le premier ne l'appelle pas
+  //   (l'identifiant existait) : la numérotation repart donc bien à X-1, ⛔ pas à X-2.
+  var neuf = planifierIdentitesTerrains([{ nom: 'A' }, { nom: 'B' }], [], faireId);
+  _ffrAssert(etat, !neuf.error && neuf.attribues === 2 &&
+                   neuf.inventaire[0].id === 'X-1' && neuf.inventaire[1].id === 'X-2',
+    'B2-3.a B1 : un identifiant manquant vient du GÉNÉRATEUR INJECTÉ');
+  var rejeu = planifierIdentitesTerrains(neuf.inventaire, neuf.inventaire, faireId);
+  _ffrAssert(etat, !rejeu.error && rejeu.attribues === 0 && rejeu.conserves === 2,
+    'B2-3.a B1 ⭐ REJEU DÉTERMINISTE : rejouée sur sa propre sortie, elle n\'attribue rien');
+}
+
+/** B2 — Les deux refus : doublon, et identifiant que le serveur n'a jamais émis. */
+function testB23_B2_identitesRefusees(etat) {
+  var faireId = function () { return 'X-1'; };
+  var doublon = planifierIdentitesTerrains([{ id: 'A1' }, { id: 'A1' }], [{ id: 'A1' }], faireId);
+  _ffrAssert(etat, !!doublon.error && doublon.inventaire === undefined,
+    'B2-3.a B2 ⛔ : deux entrées de MÊME identifiant ⇒ REFUS, aucun inventaire rendu');
+  var inconnu = planifierIdentitesTerrains([{ id: 'INVENTE' }], [{ id: 'A1' }], faireId);
+  _ffrAssert(etat, !!inconnu.error,
+    'B2-3.a B2 ⛔ : identifiant que le serveur n\'a jamais émis ⇒ REFUS');
+}
+
+/** B3 — Un inventaire ancien, sans aucun identifiant, traverse sans perte. */
+function testB23_B3_jsonAncienSansPerte(etat) {
+  var n = 0;
+  var ancien = [{ nom: 'Rugby 1', type: 'rugby', L: 115, W: 70, pos: 'CG', nature: 'Gazon' }];
+  var r = planifierIdentitesTerrains(ancien, [], function () { n++; return 'X-' + n; });
+  _ffrAssert(etat, !r.error && r.attribues === 1 && r.inventaire[0].L === 115 &&
+                   r.inventaire[0].nature === 'Gazon' && r.inventaire[0].pos === 'CG',
+    'B2-3.a B3 ⭐ : JSON ancien sans identifiant ⇒ AUCUNE PERTE (taille, nature, emplacement)');
+  _ffrAssert(etat, ancien[0].id === undefined,
+    'B2-3.a B3 ⭐ : l\'entrée d\'ORIGINE n\'est pas modifiée (le plan reste rejouable)');
+}
+
+/** C1 — Le plan de référence est cohérent, seul et face aux catégories. */
+function testB23_C1_planCoherent(etat) {
+  var ctx = _b23Contexte();
+  _ffrAssert(etat, ecartsInternesPlanTerrains(_b23Plan(ctx)).length === 0,
+    'B2-3.a C1 : le plan de référence est cohérent avec lui-même');
+  _ffrAssert(etat, ecartsPlanTerrains(_b23Plan(ctx), ctx.categories).length === 0,
+    'B2-3.a C1 ⭐ : et cohérent avec les catégories de l\'édition');
+}
+
+/** C2 — Les écarts STRUCTURELS, un par un. */
+function testB23_C2_ecartsStructurels(etat) {
+  var sansRetenu = _b23Contexte({ terrains: [_b23Terrain('T1', 'R1', { selectionne: 'non' })],
+    minis: [_b23Mini(1, 'T1', 'U8')] });
+  var e = ecartsInternesPlanTerrains(_b23Plan(sansRetenu));
+  _ffrAssert(etat, _b23Ecart(e, 'aucun grand terrain retenu'),
+    'B2-3.a C2 : aucun grand terrain retenu ⇒ écart');
+  _ffrAssert(etat, _b23Ecart(e, 'NON retenu'),
+    'B2-3.a C2 : un mini rattaché à un terrain NON retenu ⇒ écart');
+
+  var sansMini = _b23Contexte({ terrains: [_b23Terrain('T1', 'R1')], minis: [] });
+  _ffrAssert(etat, _b23Ecart(ecartsInternesPlanTerrains(_b23Plan(sansMini)), 'aucun mini-terrain'),
+    'B2-3.a C2 : aucun mini-terrain ⇒ écart');
+
+  var numDouble = _b23Contexte({ terrains: [_b23Terrain('T1', 'R1')],
+    minis: [_b23Mini(1, 'T1', 'U8'), _b23Mini(1, 'T1', 'U8')] });
+  _ffrAssert(etat, _b23Ecart(ecartsInternesPlanTerrains(_b23Plan(numDouble)), 'en double'),
+    'B2-3.a C2 : numéro de mini-terrain en double ⇒ écart');
+
+  var collision = _b23Contexte({ terrains: [_b23Terrain('T1', 'Rugby 1'), _b23Terrain('T2', 'rugby  1')],
+    minis: [_b23Mini(1, 'T1', 'U8'), _b23Mini(2, 'T2', 'U8')] });
+  _ffrAssert(etat, _b23Ecart(ecartsInternesPlanTerrains(_b23Plan(collision)), 'le même nom'),
+    'B2-3.a C2 ⭐ : collision de noms parmi les RETENUS ⇒ écart (l\'invariant du contrat public)');
+
+  var horsEdition = { edition_id: _B23_ED, plan_id: _B23_PL, params: _b23Params(),
+    terrains: [_b23Terrain('T1', 'R1')],
+    minis: [{ edition_id: 'AUTRE', plan_id: _B23_PL, numero: '1', terrain_id: 'T1', categorie: 'U8' }] };
+  _ffrAssert(etat, _b23Ecart(ecartsInternesPlanTerrains(horsEdition), 'pas la bonne édition'),
+    'B2-3.a C2 ⭐ : cohérence edition_id / plan_id contrôlée dans les trois blocs');
+}
+
+/** C3 — Les écarts face aux CATÉGORIES : dimensions, et cat.terrains ≡ mini-terrains. */
+function testB23_C3_ecartsAvecCategories(etat) {
+  var sansDim = [{ categorie: 'U8', presente: 'oui', terrains: '1,2,3,4', terrains_auto: 'oui' },
+                 { categorie: 'U14', presente: 'oui', terrains: '', terrains_auto: 'oui' }];
+  var ctx1 = _b23Contexte({ categories: sansDim });
+  _ffrAssert(etat, _b23Ecart(ecartsPlanTerrains(_b23Plan(ctx1), sansDim), 'aucune dimension'),
+    'B2-3.a C3 : une catégorie présente SANS dimension ⇒ écart');
+
+  var desaccord = [{ categorie: 'U8', presente: 'oui', terrains: '1,2', terrains_auto: 'oui' },
+                   { categorie: 'U10', presente: 'oui', terrains: '5,6', terrains_auto: 'oui' }];
+  var ctx2 = _b23Contexte({ categories: desaccord });
+  _ffrAssert(etat, _b23Ecart(ecartsPlanTerrains(_b23Plan(ctx2), desaccord), '(Auto)'),
+    'B2-3.a C3 ⭐ : AUTO — cat.terrains ≠ mini-terrains attribués ⇒ écart (l\'état partiel se VOIT)');
+
+  var manuel = [{ categorie: 'U8', presente: 'oui', terrains: '1,2', terrains_auto: 'non' },
+                { categorie: 'U10', presente: 'oui', terrains: '5,6', terrains_auto: 'non' }];
+  var ctx3 = _b23Contexte({ categories: manuel });
+  _ffrAssert(etat, !_b23Ecart(ecartsPlanTerrains(_b23Plan(ctx3), manuel), 'Manuel'),
+    'B2-3.a C3 : MANUEL — citer moins de terrains que le plan n\'est PAS un écart');
+
+  var disparue = [{ categorie: 'U8', presente: 'oui', terrains: '1,2,3,4', terrains_auto: 'oui' }];
+  var ctx4 = _b23Contexte({ categories: disparue });
+  _ffrAssert(etat, _b23Ecart(ecartsPlanTerrains(_b23Plan(ctx4), disparue), 'n\'est pas une catégorie présente'),
+    'B2-3.a C3 ⭐ : des mini-terrains affectés à une catégorie disparue ⇒ écart');
+}
+
+/** D1 — Le plan pointé est lisible quand il est complet. */
+function testB23_D1_pointeurValide(etat) {
+  _ffrAssert(etat, planPublieValide(_b23Contexte()) !== null,
+    'B2-3.a D1 : un plan complet et pointé est lisible');
+  var moinsUneCategorie = _b23Contexte();
+  moinsUneCategorie.categories = [_b23Categories()[0]];
+  _ffrAssert(etat, planPublieValide(moinsUneCategorie) !== null,
+    'B2-3.a D1 ⭐⭐ : une catégorie supprimée NE casse PAS la lecture — elle changera l\'ÉTAT, ' +
+    'pas la validité (sans quoi la page de saisie tomberait en plein tournoi)');
+}
+
+/** D2 — Toutes les portes fermées du pointeur. */
+function testB23_D2_pointeurFerme(etat) {
+  var base = _b23Contexte();
+  _ffrAssert(etat, planPublieValide(_b23Contexte({ pointeur: '' })) === null,
+    'B2-3.a D2 : pointeur vide ⇒ null');
+  _ffrAssert(etat, planPublieValide(_b23Contexte({ pointeur: 'INCONNU' })) === null,
+    'B2-3.a D2 : pointeur désignant un plan inconnu ⇒ null');
+  _ffrAssert(etat, planPublieValide({ pointeur: base.pointeur, edition_id: base.edition_id,
+      plans: base.plans, terrains: [], minis: base.minis }) === null,
+    'B2-3.a D2 : bloc Terrains manquant ⇒ null');
+  _ffrAssert(etat, planPublieValide({ pointeur: base.pointeur, edition_id: base.edition_id,
+      plans: base.plans, terrains: base.terrains, minis: [] }) === null,
+    'B2-3.a D2 : bloc MiniTerrains manquant ⇒ null');
+  _ffrAssert(etat, planPublieValide({ pointeur: base.pointeur, edition_id: base.edition_id,
+      plans: [], terrains: base.terrains, minis: base.minis }) === null,
+    'B2-3.a D2 : bloc TerrainsPlan manquant ⇒ null');
+
+  var doubleLigne = _b23Contexte();
+  doubleLigne.plans = doubleLigne.plans.concat([_b23Params({ couloir_m: '9' })]);
+  _ffrAssert(etat, planPublieValide(doubleLigne) === null,
+    'B2-3.a D2 ⭐ : DEUX lignes de paramètres pour un même plan_id ⇒ null (⛔ jamais au hasard)');
+
+  var melange = _b23Contexte();
+  melange.terrains = melange.terrains.concat([_b23Terrain('T9', 'Autre', { edition_id: 'ED-AUTRE' })]);
+  _ffrAssert(etat, planPublieValide(melange) === null,
+    'B2-3.a D2 ⭐ : un bloc mélangeant DEUX éditions sous le même plan_id ⇒ null');
+
+  _ffrAssert(etat, planPublieValide(_b23Contexte({ signature: '' })) === null,
+    'B2-3.a D2 : signature obligatoire absente ⇒ null');
+  _ffrAssert(etat, planPublieValide(_b23Contexte({
+      terrains: [_b23Terrain('T1', 'Rugby 1'), _b23Terrain('T2', 'Rugby 1')],
+      minis: [_b23Mini(1, 'T1', 'U8'), _b23Mini(2, 'T2', 'U8')] })) === null,
+    'B2-3.a D2 ⭐ : CORRUPTION MANUELLE (collision) ⇒ la lecture destinée à Saisie rend null');
+  _ffrAssert(etat, planPublieValide(null) === null && planPublieValide({}) === null,
+    'B2-3.a D2 : contexte absent ou vide ⇒ null, ⛔ sans exception');
+}
+
+/** E1 — La projection historique : exacte, complète, déterministe. */
+function testB23_E1_projectionExacte(etat) {
+  var ctx = _b23Contexte();
+  var r = projectionRepartitionTerrains(_b23Plan(ctx));
+  var cles = [];
+  for (var k in r.repartition) { if (Object.prototype.hasOwnProperty.call(r.repartition, k)) cles.push(k); }
+  _ffrAssert(etat, !r.error && cles.length === 4,
+    'B2-3.a E1 ⭐ : quatre grands terrains donnent EXACTEMENT quatre clés');
+  _ffrAssert(etat, r.repartition['Rugby 1'].join(',') === '1,2' &&
+                   r.repartition['Rugby 2'].join(',') === '3,4' &&
+                   r.repartition['Foot 1'].join(',') === '5' &&
+                   r.repartition['Foot 2'].join(',') === '6',
+    'B2-3.a E1 : les noms FIGÉS et les numéros historiques sont conservés');
+  _ffrAssert(etat, cles.join('|') === 'Foot 1|Foot 2|Rugby 1|Rugby 2',
+    'B2-3.a E1 ⭐ : ORDRE DÉTERMINISTE (nom normalisé), ⛔ pas celui des lignes');
+
+  var creux = _b23Contexte({ minis: [_b23Mini(1, 'T1', 'U8')] });
+  var r2 = projectionRepartitionTerrains(_b23Plan(creux));
+  var n2 = 0;
+  for (var k2 in r2.repartition) { if (Object.prototype.hasOwnProperty.call(r2.repartition, k2)) n2++; }
+  _ffrAssert(etat, !r2.error && n2 === 4 && r2.repartition['Foot 1'].length === 0,
+    'B2-3.a E1 ⭐ : un grand terrain retenu SANS mini-terrain reste présent — aucun perdu');
+}
+
+/** E2 — La collision ne peut PAS être projetée : échec fermé, par son propre contrôle. */
+function testB23_E2_projectionEchecFerme(etat) {
+  var ctx = _b23Contexte({
+    terrains: [_b23Terrain('T1', 'Rugby 1'), _b23Terrain('T2', 'Rugby 1')],
+    minis: [_b23Mini(1, 'T1', 'U8'), _b23Mini(2, 'T2', 'U8')] });
+  var r = projectionRepartitionTerrains(_b23Plan(ctx));
+  _ffrAssert(etat, !!r.error && r.repartition === undefined,
+    'B2-3.a E2 ⭐⭐ : COLLISION IMPOSSIBLE À PROJETER — échec fermé, ⛔ jamais un écrasement silencieux');
+  _ffrAssert(etat, String(r.error).indexOf('portent le nom') !== -1,
+    'B2-3.a E2 ⭐ : le refus vient du contrôle de COLLISION lui-même, ⛔ pas d\'un fourre-tout');
+  _ffrAssert(etat, projectionRepartitionTerrains(null).error !== undefined,
+    'B2-3.a E2 : plan absent ⇒ erreur, ⛔ jamais une exception');
+}
+
+/** E3 — Les natures viennent des SEULS terrains retenus. */
+function testB23_E3_naturesDesSeulsRetenus(etat) {
+  var ctx = _b23Contexte({
+    terrains: [_b23Terrain('T1', 'Rugby 1', { snap_nature: 'Gazon' }),
+               _b23Terrain('T2', 'Rugby 2', { snap_nature: 'Neige', selectionne: 'non' }),
+               _b23Terrain('T3', 'Foot 1', { snap_nature: '' })],
+    minis: [_b23Mini(1, 'T1', 'U8'), _b23Mini(5, 'T3', 'U10')] });
+  var n = naturesPlanTerrains(_b23Plan(ctx));
+  _ffrAssert(etat, n.natures.join('|') === 'Gazon',
+    'B2-3.a E3 ⭐ : un terrain NON RETENU n\'impose plus sa surface au dossier de la Ligue');
+  _ffrAssert(etat, n.nbSansNature === 1,
+    'B2-3.a E3 : un terrain retenu sans nature est COMPTÉ, ⛔ jamais deviné');
+  _ffrAssert(etat, naturesPlanTerrains(null).natures.length === 0,
+    'B2-3.a E3 : plan absent ⇒ liste vide (l\'appelant retombe sur org_type_terrain)');
+}
+
+/** F1 — Ce qui DOIT changer la signature : les six familles validées. */
+function testB23_F1_signatureCeQuiChange(etat) {
+  var ref = _b23Contexte();
+  var sig = signatureTerrains(_b23Plan(ref), ref.categories);
+
+  var moinsUne = _b23Contexte({ categories: [_b23Categories()[0]] });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(moinsUne), moinsUne.categories) !== sig,
+    'B2-3.a F1 ⭐ : une catégorie retirée change la signature');
+
+  var catsModifiees = _b23Categories();
+  catsModifiees[0].terrains = '1,2';
+  var repartAutre = _b23Contexte({ categories: catsModifiees });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(repartAutre), catsModifiees) !== sig,
+    'B2-3.a F1 ⭐ : la répartition appliquée (cat.terrains) change la signature');
+
+  var catsManuel = _b23Categories();
+  catsManuel[0].terrains_auto = 'non';
+  var mm = _b23Contexte({ categories: catsManuel });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(mm), catsManuel) !== sig,
+    'B2-3.a F1 : le mode Auto/Manuel change la signature');
+
+  var deselect = _b23Contexte({ terrains: [_b23Terrain('T1', 'Rugby 1'),
+    _b23Terrain('T2', 'Rugby 2', { selectionne: 'non' }),
+    _b23Terrain('T3', 'Foot 1'), _b23Terrain('T4', 'Foot 2')] });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(deselect), deselect.categories) !== sig,
+    'B2-3.a F1 ⭐ : la sélection d\'un grand terrain change la signature');
+
+  var dims = _b23Contexte({ params: { dimensions_json: '{"U8":{"l":35,"w":20},"U10":{"l":40,"w":30}}' } });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(dims), dims.categories) !== sig,
+    'B2-3.a F1 ⭐ : une dimension modifiée change la signature');
+
+  var couloir = _b23Contexte({ params: { couloir_m: '6' } });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(couloir), couloir.categories) !== sig,
+    'B2-3.a F1 ⭐ : le couloir change la signature');
+
+  var tm = _b23Contexte({ params: { tm_longueur_m: '5' } });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(tm), tm.categories) !== sig,
+    'B2-3.a F1 : la table de marque change la signature');
+
+  var affect = _b23Contexte({ minis: [_b23Mini(1, 'T1', 'U10'), _b23Mini(2, 'T1', 'U8'),
+    _b23Mini(3, 'T2', 'U8'), _b23Mini(4, 'T2', 'U8'), _b23Mini(5, 'T3', 'U10'), _b23Mini(6, 'T4', 'U10')] });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(affect), affect.categories) !== sig,
+    'B2-3.a F1 ⭐ : l\'affectation d\'un mini-terrain à une autre catégorie change la signature');
+}
+
+/** F2 — Ce qui NE DOIT PAS la changer — ⭐ dont LE piège de `signatureGeneration`. */
+function testB23_F2_signatureCeQuiNeChangePas(etat) {
+  var ref = _b23Contexte();
+  var sig = signatureTerrains(_b23Plan(ref), ref.categories);
+
+  // ⭐⭐ Les effectifs sont INJECTÉS là où ils pourraient être lus — sinon ce test ne
+  //    prouverait rien : une implémentation fautive n'aurait simplement rien trouvé à lire.
+  var catsChargees = _b23Categories();
+  for (var i = 0; i < catsChargees.length; i++) {
+    catsChargees[i].nb_equipes = 12;
+    catsChargees[i].equipes = [{ nom: 'X' }, { nom: 'Y' }];
+    catsChargees[i].nb_poules = '3';
+  }
+  _ffrAssert(etat, signatureTerrains(_b23Plan(ref), catsChargees) === sig,
+    'B2-3.a F2 ⭐⭐ : des ÉQUIPES posées sur les catégories ne changent RIEN — le dossier des ' +
+    'clubs ne se ferme pas en pleine phase d\'inscription (⛔ le piège de signatureGeneration)');
+
+  var planCharge = _b23Plan(ref);
+  planCharge.equipes = [{ nom: 'X' }, { nom: 'Y' }, { nom: 'Z' }];
+  planCharge.matchs = [{ id: 'M1' }];
+  planCharge.poules = [{ id: 'P1' }];
+  _ffrAssert(etat, signatureTerrains(planCharge, ref.categories) === sig,
+    'B2-3.a F2 ⭐⭐ : des équipes, poules et matchs posés sur le PLAN ne changent rien non plus');
+
+  var srcAutre = _b23Contexte({ params: {
+    dimensions_json: '{"U8":{"l":30,"w":20,"src":"saisie"},"U10":{"l":40,"w":30,"src":"ffr"}}' } });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(srcAutre), srcAutre.categories) === sig,
+    'B2-3.a F2 ⭐ : changer `src` SANS changer la valeur ne change RIEN');
+
+  var ordreAutre = _b23Contexte({ params: {
+    dimensions_json: '{"U10":{"w":30,"l":40,"src":"saisie"},"U8":{"w":20,"l":30,"src":"ffr"}}' } });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(ordreAutre), ordreAutre.categories) === sig,
+    'B2-3.a F2 ⭐ : RÉORDONNER les clés du JSON ne change RIEN');
+
+  var nombres = _b23Contexte({ params: { couloir_m: '5.0', tm_longueur_m: '4.0', tm_largeur_m: 4,
+    dimensions_json: '{"U8":{"l":"30.0","w":"20"},"U10":{"l":40,"w":"30.0"}}' } });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(nombres), nombres.categories) === sig,
+    'B2-3.a F2 ⭐ : « 5.0 » et 5, « 30.0 » et 30 — la représentation numérique n\'a aucun effet');
+
+  var figees = _b23Contexte({ terrains: [
+    _b23Terrain('T1', 'Rugby 1', { snap_longueur_m: '999', snap_nature: 'Neige', snap_pos: 'BD' }),
+    _b23Terrain('T2', 'Rugby 2'), _b23Terrain('T3', 'Foot 1'), _b23Terrain('T4', 'Foot 2')] });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(figees), figees.categories) === sig,
+    'B2-3.a F2 ⭐ : les caractéristiques FIGÉES (taille, nature, emplacement) ne sont pas dans la signature');
+
+  var horodatage = _b23Contexte({ params: { fige_le: '2030-01-01 00:00:00' } });
+  _ffrAssert(etat, signatureTerrains(_b23Plan(horodatage), horodatage.categories) === sig,
+    'B2-3.a F2 : l\'horodatage n\'entre pas dans la signature');
+}
+
+/** G1 — Les quatre transitions d'état. */
+function testB23_G1_transitionsDEtat(etat) {
+  var brouillon = { edition_id: _B23_ED, plan_id: 'PL-B', role: 'brouillon',
+    couloir_m: '5', tm_longueur_m: '4', tm_largeur_m: '4',
+    dimensions_json: _B23_DIMENSIONS, signature: '', fige_le: '2026-09-02 11:00:00' };
+
+  var vide = _b23Contexte({ pointeur: '' });
+  vide.plans = [];
+  _ffrAssert(etat, etatTerrainsPur(vide) === 'absent',
+    'B2-3.a G1 : aucun pointeur et aucun brouillon ⇒ absent');
+
+  var seulBrouillon = _b23Contexte({ pointeur: '' });
+  seulBrouillon.plans = [brouillon];
+  _ffrAssert(etat, etatTerrainsPur(seulBrouillon) === 'brouillon',
+    'B2-3.a G1 : brouillon seul ⇒ brouillon');
+
+  _ffrAssert(etat, etatTerrainsPur(_b23Contexte()) === 'confirme',
+    'B2-3.a G1 ⭐ : plan pointé valide, aucun brouillon, signature identique ⇒ confirme');
+
+  var lesDeux = _b23Contexte();
+  lesDeux.plans = lesDeux.plans.concat([brouillon]);
+  _ffrAssert(etat, etatTerrainsPur(lesDeux) === 'a_reconfirmer',
+    'B2-3.a G1 ⭐ : plan pointé valide + brouillon ⇒ a_reconfirmer');
+
+  _ffrAssert(etat, etatTerrainsPur(_b23Contexte({ signature: 'perimee' })) === 'a_reconfirmer',
+    'B2-3.a G1 ⭐ : plan valide sans brouillon mais signature différente ⇒ a_reconfirmer');
+
+  var categorieRetiree = _b23Contexte();
+  categorieRetiree.categories = [_b23Categories()[0]];
+  _ffrAssert(etat, etatTerrainsPur(categorieRetiree) === 'a_reconfirmer',
+    'B2-3.a G1 ⭐⭐ : une catégorie supprimée HORS de l\'écran Terrains ⇒ a_reconfirmer — ' +
+    'c\'est la SIGNATURE qui l\'attrape, aucun code de terrains n\'a tourné');
+}
+
+/** G2 — Le défaut FERMÉ : aucun contexte dégradé ne remonte vers « confirme ». */
+function testB23_G2_defautFermeDesEtats(etat) {
+  var base = _b23Contexte();
+  var ambigu = _b23Contexte();
+  ambigu.plans = ambigu.plans.concat([_b23Params({ couloir_m: '9' })]);
+  var sansMinis = { pointeur: base.pointeur, edition_id: base.edition_id, plans: base.plans,
+    terrains: base.terrains, minis: [], categories: base.categories };
+  var sansTerrains = { pointeur: base.pointeur, edition_id: base.edition_id, plans: base.plans,
+    terrains: [], minis: base.minis, categories: base.categories };
+
+  var degrades = [
+    _b23Contexte({ pointeur: '' }),
+    _b23Contexte({ pointeur: 'INCONNU' }),
+    _b23Contexte({ signature: '' }),
+    _b23Contexte({ terrains: [_b23Terrain('T1', 'Rugby 1'), _b23Terrain('T2', 'Rugby 1')],
+                   minis: [_b23Mini(1, 'T1', 'U8'), _b23Mini(2, 'T2', 'U8')] }),
+    _b23Contexte({ minis: [_b23Mini(1, 'T1', 'U8'), _b23Mini(1, 'T2', 'U8')] }),
+    ambigu, sansMinis, sansTerrains, null, {}
+  ];
+  var aucunConfirme = true, quel = '';
+  for (var i = 0; i < degrades.length; i++) {
+    if (etatTerrainsPur(degrades[i]) === 'confirme') { aucunConfirme = false; quel = 'n° ' + (i + 1); }
+  }
+  _ffrAssert(etat, aucunConfirme,
+    'B2-3.a G2 ⭐⭐ LE DÉFAUT EST FERMÉ : aucun des 10 contextes dégradés ne remonte vers ' +
+    '« confirme »' + (quel ? ' (fautif : ' + quel + ')' : ''));
+  _ffrAssert(etat, etatTerrainsPur(null) === 'absent' && etatTerrainsPur({}) === 'absent',
+    'B2-3.a G2 : contexte absent ou vide ⇒ absent, ⛔ sans exception');
+}
+
+/* ========================================================================== */
+/*  M1-B2 / B2-3.b — LA PERSISTANCE INERTE PAR ÉDITION                        */
+/*                                                                            */
+/*  ⛔ CE BLOC NE TESTE AUCUN BRANCHEMENT : à ce stade, aucune fonction de     */
+/*  persistance n'est routée, ni appelée par un écran ou par le reset.        */
+/*                                                                            */
+/*  ⭐ IL PORTE LES INVARIANTS ; le détail (isolation entre éditions, six      */
+/*  points d'interruption, convergence, voisinage) vit dans                   */
+/*  `tests/backend-terrains-persistance.test.js`, qui exécute AUSSI la série   */
+/*  ci-dessous — deux fichiers, deux rôles, ⛔ pas deux vérités.               */
+/*                                                                            */
+/*  ⚠️ LE FAUX CLASSEUR SE COMPORTE COMME UNE GRILLE, et ce n'est pas un       */
+/*  détail : écrire en colonne 5 d'un onglet qui n'a que quatre en-têtes       */
+/*  agrandit la grille SANS créer d'en-tête, exactement comme Google Sheets.   */
+/*  C'est ce réalisme qui permet au contrôle du voisinage de mordre.          */
+/* -------------------------------------------------------------------------- */
+
+var _B23B_ED = 'ED-2026';
+
+/** ⭐ LE COMPTEUR D'ÉCRITURES — partagé par tous les onglets d'un même classeur.
+ *  ⚠️ Il ne compte pas « des changements de valeur » mais des APPELS aux méthodes qui
+ *  écrivent. C'est plus strict, et c'est le point : comparer deux empreintes prouve que le
+ *  RÉSULTAT est identique ; compter les appels prouve qu'on n'a même pas TENTÉ d'écrire. */
+function _b23bCompteur() {
+  return { setValues: 0, setValue: 0, clearContent: 0, insertSheet: 0 };
+}
+
+/** Total des écritures d'un compteur. */
+function _b23bTotalEcritures(c) {
+  return c.setValues + c.setValue + c.clearContent + c.insertSheet;
+}
+
+/** Faux onglet : une GRILLE, avec les seules méthodes réellement appelées. */
+function _b23bFauxOnglet(nom, lignes, compteur) {
+  var d = (lignes || []).map(function (l) { return l.slice(); });
+  var ecrit = compteur || _b23bCompteur();
+  function assurerCellule(r, c) {
+    while (d.length < r) { d.push([]); }
+    while (d[r - 1].length < c) { d[r - 1].push(''); }
+  }
+  var api = {
+    _nom: nom,
+    _lignes: function () { return d; },
+    _ecritures: function () { return ecrit; },
+    getLastRow: function () {
+      var dernier = 0;
+      for (var i = 0; i < d.length; i++) {
+        for (var j = 0; j < d[i].length; j++) {
+          if (d[i][j] !== '' && d[i][j] !== null && d[i][j] !== undefined) { dernier = i + 1; break; }
+        }
+      }
+      return dernier;
+    },
+    getLastColumn: function () {
+      var dernier = 0;
+      for (var i = 0; i < d.length; i++) {
+        for (var j = 0; j < d[i].length; j++) {
+          if (d[i][j] !== '' && d[i][j] !== null && d[i][j] !== undefined && j + 1 > dernier) {
+            dernier = j + 1;
+          }
+        }
+      }
+      return dernier;
+    },
+    getDataRange: function () {
+      return api.getRange(1, 1, Math.max(api.getLastRow(), 1), Math.max(api.getLastColumn(), 1));
+    },
+    setFrozenRows: function () { return api; },
+    getRange: function (r, c, nr, nc) {
+      nr = nr || 1; nc = nc || 1;
+      var plage = {
+        getValues: function () {
+          var out = [];
+          for (var i = 0; i < nr; i++) {
+            var ligne = [];
+            for (var j = 0; j < nc; j++) {
+              var v = (d[r - 1 + i] || [])[c - 1 + j];
+              ligne.push(v === undefined ? '' : v);
+            }
+            out.push(ligne);
+          }
+          return out;
+        },
+        setValues: function (vals) {
+          for (var i = 0; i < vals.length; i++) {
+            for (var j = 0; j < vals[i].length; j++) {
+              assurerCellule(r + i, c + j);
+              d[r - 1 + i][c - 1 + j] = vals[i][j];
+            }
+          }
+          return plage;
+        },
+        setValue: function (v) {
+          ecrit.setValue++; assurerCellule(r, c); d[r - 1][c - 1] = v; return plage;
+        },
+        clearContent: function () {
+          ecrit.clearContent++;
+          for (var i = 0; i < nr; i++) {
+            for (var j = 0; j < nc; j++) {
+              if (d[r - 1 + i] && d[r - 1 + i][c - 1 + j] !== undefined) { d[r - 1 + i][c - 1 + j] = ''; }
+            }
+          }
+          return plage;
+        },
+        setNumberFormat: function () { return plage; },
+        setBackground: function () { return plage; },
+        setFontColor: function () { return plage; },
+        setFontWeight: function () { return plage; }
+      };
+      return plage;
+    }
+  };
+  return api;
+}
+
+/** Faux classeur : `getSheetByName` et `insertSheet`, rien de plus. */
+function _b23bFauxClasseur(onglets, compteur) {
+  var table = {};
+  var ecrit = compteur || _b23bCompteur();
+  (onglets || []).forEach(function (o) { table[o._nom] = o; });
+  return {
+    _table: table,
+    _ecritures: function () { return ecrit; },
+    getSheetByName: function (n) { return table[n] || null; },
+    insertSheet: function (n) {
+      ecrit.insertSheet++; table[n] = _b23bFauxOnglet(n, [], ecrit); return table[n];
+    }
+  };
+}
+
+/** Un onglet `Editions` tel qu'il est AUJOURD'HUI : quatre colonnes, aucun pointeur. */
+function _b23bEditions(compteur) {
+  return _b23bFauxOnglet('Editions', [ENTETES.Editions.slice(),
+    [_B23B_ED, 'active', '2026-09-01 10:00:00', '']], compteur);
+}
+
+/** Un classeur prêt : `Editions`, la structure B2-3 en place, un compteur PARTAGÉ. */
+function _b23bClasseurPret() {
+  var compteur = _b23bCompteur();
+  var cl = _b23bFauxClasseur([_b23bEditions(compteur)], compteur);
+  assurerStructureTerrainsB23(cl);
+  return cl;
+}
+
+function _b23bTerrain(id, nom, sur) {
+  var t = { terrain_id: id, selectionne: 'oui', snap_nom: nom, snap_type: 'rugby',
+    snap_longueur_m: '115', snap_largeur_m: '70', snap_enbut_m: '0',
+    snap_nature: 'Gazon', snap_pos: 'CG' };
+  for (var k in (sur || {})) { if (Object.prototype.hasOwnProperty.call(sur, k)) t[k] = sur[k]; }
+  return t;
+}
+
+function _b23bMini(numero, terrainId, categorie) {
+  return { numero: String(numero), terrain_id: terrainId, categorie: categorie };
+}
+
+function _b23bCategories() {
+  return [
+    { categorie: 'U8', presente: 'oui', terrains: '1,2,3,4', terrains_auto: 'oui' },
+    { categorie: 'U10', presente: 'oui', terrains: '5,6', terrains_auto: 'oui' }
+  ];
+}
+
+/** Le plan d'essai : quatre grands terrains, six mini-terrains, deux catégories. */
+function _b23bPlan(sur) {
+  sur = sur || {};
+  var params = { role: 'plan', couloir_m: '5', tm_longueur_m: '4', tm_largeur_m: '4',
+    dimensions_json: '{"U8":{"l":30,"w":20},"U10":{"l":40,"w":30}}' };
+  for (var k in (sur.params || {})) {
+    if (Object.prototype.hasOwnProperty.call(sur.params, k)) params[k] = sur.params[k];
+  }
+  return {
+    params: params,
+    terrains: sur.terrains || [
+      _b23bTerrain('T1', 'Rugby 1'), _b23bTerrain('T2', 'Rugby 2'),
+      _b23bTerrain('T3', 'Foot 1'), _b23bTerrain('T4', 'Foot 2')],
+    minis: sur.minis || [
+      _b23bMini(1, 'T1', 'U8'), _b23bMini(2, 'T1', 'U8'), _b23bMini(3, 'T2', 'U8'),
+      _b23bMini(4, 'T2', 'U8'), _b23bMini(5, 'T3', 'U10'), _b23bMini(6, 'T4', 'U10')]
+  };
+}
+
+/** Générateur d'identifiants déterministe — ⭐ INJECTÉ : ⛔ jamais `Utilities.getUuid()` ici. */
+function _b23bGenerateur(prefixe) {
+  var n = 0;
+  return function () { n++; return prefixe + '-' + n; };
+}
+
+/** Empreinte du classeur, pour comparer « bit à bit ». */
+function _b23bEmpreinte(cl) {
+  var noms = ['TerrainsPlan', 'Terrains', 'MiniTerrains', 'Editions', 'Config'];
+  return JSON.stringify(noms.map(function (n) {
+    var o = cl.getSheetByName(n);
+    return o ? o._lignes().map(function (l) { return l.slice(); }) : null;
+  }));
+}
+
+/** S1 — La structure est explicite, complète et idempotente. */
+function testB23b_S1_structureExpliciteEtIdempotente(etat) {
+  var cl = _b23bFauxClasseur([_b23bEditions()]);
+  _ffrAssert(etat, !structureTerrainsB23EnPlace(cl),
+    'B2-3.b S1 : avant toute mise en place, la structure est ABSENTE');
+
+  assurerStructureTerrainsB23(cl);
+  _ffrAssert(etat, structureTerrainsB23EnPlace(cl),
+    'B2-3.b S1 : après le geste EXPLICITE, elle est en place');
+
+  var ok = true;
+  ONGLETS_TERRAINS_B23.forEach(function (n) {
+    if (JSON.stringify(cl.getSheetByName(n)._lignes()[0]) !== JSON.stringify(ENTETES[n])) ok = false;
+  });
+  _ffrAssert(etat, ok,
+    'B2-3.b S1 : les trois onglets portent exactement leurs colonnes, dans l\'ordre');
+
+  var eEdt = cl.getSheetByName('Editions')._lignes()[0];
+  _ffrAssert(etat, eEdt.length === 5 && eEdt[4] === EDITIONS_COLONNE_PLAN_PUBLIE,
+    'B2-3.b S1 ⭐ : la colonne du pointeur est ajoutée À DROITE d\'Editions');
+  _ffrAssert(etat, JSON.stringify(eEdt.slice(0, 4)) === JSON.stringify(ENTETES.Editions),
+    'B2-3.b S1 ⭐ : les quatre colonnes existantes sont INTACTES et à leur place');
+  _ffrAssert(etat, ligneEditionParId(cl, _B23B_ED).statut === 'active',
+    'B2-3.b S1 : les lignes existantes restent lisibles par leur nom d\'en-tête');
+
+  var avant = _b23bEmpreinte(cl);
+  assurerStructureTerrainsB23(cl);
+  assurerStructureTerrainsB23(cl);
+  _ffrAssert(etat, _b23bEmpreinte(cl) === avant,
+    'B2-3.b S1 ⭐⭐ : IDEMPOTENTE — deux exécutions de plus ne changent RIEN, bit à bit');
+}
+
+/** S2 — ⭐⭐ LIRE NE CRÉE JAMAIS, et l'échec est FERMÉ. */
+function testB23b_S2_lireNeCreeJamais(etat) {
+  var cl = _b23bFauxClasseur([_b23bEditions()]);   // ⛔ aucune structure
+  var avant = _b23bEmpreinte(cl);
+  var planté = false;
+  try {
+    pointeurPlanTerrains(cl, _B23B_ED);
+    lireTerrainsPlan(cl);
+    lireLignesTerrainsB23(cl);
+    lireLignesMiniTerrains(cl);
+    lirePlanTerrains(cl, _B23B_ED, 'PL-X');
+    lireBrouillonTerrains(cl, _B23B_ED);
+    plansOrphelinsTerrains(cl, _B23B_ED);
+    planTerrainsPublie(cl, _B23B_ED);
+    contexteTerrainsEdition(cl, _B23B_ED, _b23bCategories());
+  } catch (e) { planté = true; }
+  _ffrAssert(etat, !planté,
+    'B2-3.b S2 : les neuf lecteurs traversent une structure ABSENTE sans exception');
+  _ffrAssert(etat, _b23bEmpreinte(cl) === avant,
+    'B2-3.b S2 ⭐⭐ : LIRE NE CRÉE RIEN — classeur identique bit à bit après neuf lectures');
+  _ffrAssert(etat, cl.getSheetByName('TerrainsPlan') === null &&
+                   cl.getSheetByName('MiniTerrains') === null,
+    'B2-3.b S2 ⛔ : aucun onglet n\'a été créé au passage');
+  _ffrAssert(etat, cl.getSheetByName('Editions')._lignes()[0].length === 4,
+    'B2-3.b S2 ⛔ : la colonne du pointeur n\'a pas été ajoutée non plus');
+  _ffrAssert(etat, planTerrainsPublie(cl, _B23B_ED) === null,
+    'B2-3.b S2 ⭐ : ÉCHEC FERMÉ — sans structure, aucun plan n\'est consommable');
+}
+
+/** P1 — La publication : une seule cellule fait basculer les lecteurs. */
+function testB23b_P1_publicationParPointeur(etat) {
+  var cl = _b23bFauxClasseur([_b23bEditions()]);
+  assurerStructureTerrainsB23(cl);
+  var cats = _b23bCategories();
+
+  _ffrAssert(etat, etatTerrainsPur(contexteTerrainsEdition(cl, _B23B_ED, cats)) === 'absent',
+    'B2-3.b P1 : au départ, l\'état est « absent »');
+
+  var r = publierPlanTerrains(cl, _B23B_ED, _b23bPlan(), cats, _b23bGenerateur('P'), 't1');
+  _ffrAssert(etat, r.ok && r.plan_id === 'P-1',
+    'B2-3.b P1 : la publication réussit et rend le plan_id FABRIQUÉ');
+  _ffrAssert(etat, pointeurPlanTerrains(cl, _B23B_ED) === 'P-1',
+    'B2-3.b P1 ⭐ : le pointeur désigne le nouveau plan');
+  _ffrAssert(etat, planTerrainsPublie(cl, _B23B_ED) !== null &&
+                   etatTerrainsPur(contexteTerrainsEdition(cl, _B23B_ED, cats)) === 'confirme',
+    'B2-3.b P1 ⭐ : le plan est consommable, l\'état passe à « confirme »');
+
+  var proj = projectionRepartitionTerrains(planTerrainsPublie(cl, _B23B_ED));
+  _ffrAssert(etat, !proj.error && proj.repartition['Rugby 1'].join(',') === '1,2',
+    'B2-3.b P1 ⭐ : le plan RELU DU CLASSEUR se projette exactement');
+
+  // ⛔ Le client ne choisit jamais l'identifiant publié.
+  var cl2 = _b23bFauxClasseur([_b23bEditions()]);
+  assurerStructureTerrainsB23(cl2);
+  var p = _b23bPlan();
+  p.params.plan_id = 'CHOISI-PAR-LE-CLIENT';
+  var r2 = publierPlanTerrains(cl2, _B23B_ED, p, cats, _b23bGenerateur('P'), 't1');
+  _ffrAssert(etat, r2.ok && r2.plan_id === 'P-1' &&
+                   lirePlanTerrains(cl2, _B23B_ED, 'CHOISI-PAR-LE-CLIENT') === null,
+    'B2-3.b P1 ⭐ : un plan_id envoyé par le client est IGNORÉ — seul le générateur décide');
+}
+
+/** P2 — ⭐⭐ L'ANCIEN PLAN RESTE INTACT tant que le pointeur n'a pas basculé. */
+function testB23b_P2_ancienPlanIntactPendantLeCandidat(etat) {
+  var cats = _b23bCategories();
+  var points = ['mini', 'terrains', 'plan', 'avantPublication'];
+  var tousIntacts = true, tousPointes = true, aucunMelange = true, toutesConvergent = true;
+
+  for (var i = 0; i < points.length; i++) {
+    var cl = _b23bFauxClasseur([_b23bEditions()]);
+    assurerStructureTerrainsB23(cl);
+    publierPlanTerrains(cl, _B23B_ED, _b23bPlan(), cats, _b23bGenerateur('P'), 't1');
+    var ancien = JSON.stringify(lirePlanTerrains(cl, _B23B_ED, 'P-1'));
+
+    publierPlanTerrains(cl, _B23B_ED, _b23bPlan({ params: { couloir_m: '7' } }), cats,
+      _b23bGenerateur('Q'), 't2', points[i]);
+
+    if (pointeurPlanTerrains(cl, _B23B_ED) !== 'P-1') tousPointes = false;
+    if (JSON.stringify(lirePlanTerrains(cl, _B23B_ED, 'P-1')) !== ancien) tousIntacts = false;
+    var lu = planTerrainsPublie(cl, _B23B_ED);
+    if (!lu || lu.plan_id !== 'P-1') aucunMelange = false;
+
+    var r2 = publierPlanTerrains(cl, _B23B_ED, _b23bPlan({ params: { couloir_m: '7' } }), cats,
+      _b23bGenerateur('R'), 't3');
+    if (!r2.ok || pointeurPlanTerrains(cl, _B23B_ED) !== 'R-1' ||
+        plansOrphelinsTerrains(cl, _B23B_ED).length !== 0) toutesConvergent = false;
+  }
+  _ffrAssert(etat, tousPointes,
+    'B2-3.b P2 ⭐⭐ : aux QUATRE points d\'interruption, le pointeur n\'a PAS bougé');
+  _ffrAssert(etat, tousIntacts,
+    'B2-3.b P2 ⭐⭐ : et l\'ancien plan est intact BIT À BIT');
+  _ffrAssert(etat, aucunMelange,
+    'B2-3.b P2 ⭐⭐ : les lecteurs obtiennent l\'ancien plan ENTIER, jamais un mélange');
+  _ffrAssert(etat, toutesConvergent,
+    'B2-3.b P2 ⭐ : une RELANCE converge à chaque fois, et balaie le candidat abandonné');
+}
+
+/** P3 — Toutes les portes fermées du pointeur persistant. */
+function testB23b_P3_pointeurFerme(etat) {
+  var cats = _b23bCategories();
+  var cl = _b23bFauxClasseur([_b23bEditions()]);
+  assurerStructureTerrainsB23(cl);
+  publierPlanTerrains(cl, _B23B_ED, _b23bPlan(), cats, _b23bGenerateur('P'), 't1');
+
+  ecrirePointeurPlanTerrains(cl, _B23B_ED, 'JAMAIS-ECRIT');
+  _ffrAssert(etat, planTerrainsPublie(cl, _B23B_ED) === null &&
+                   etatTerrainsPur(contexteTerrainsEdition(cl, _B23B_ED, cats)) === 'absent',
+    'B2-3.b P3 ⛔ : pointeur désignant un plan INCONNU ⇒ rien de consommable, état fermé');
+
+  ecrirePointeurPlanTerrains(cl, _B23B_ED, 'P-1');
+  _ffrAssert(etat, planTerrainsPublie(cl, _B23B_ED) !== null,
+    'B2-3.b P3 : remis sur le bon plan, il redevient lisible');
+
+  var oPlan = cl.getSheetByName('TerrainsPlan');
+  oPlan._lignes().push(oPlan._lignes()[1].slice());
+  _ffrAssert(etat, lirePlanTerrains(cl, _B23B_ED, 'P-1') === null &&
+                   planTerrainsPublie(cl, _B23B_ED) === null,
+    'B2-3.b P3 ⭐ : DEUX lignes TerrainsPlan pour un même plan_id ⇒ refus (⛔ jamais au hasard)');
+
+  // ⭐⭐ L'INVARIANT CENTRAL : « un pointeur non vide ne suffit JAMAIS ». ⚠️ Chacune de ces
+  //    corruptions laisse un plan que `lirePlanTerrains` ASSEMBLE sans broncher — seule la
+  //    validation les arrête. C'est ce qui interdira à la page de saisie de recevoir un plan
+  //    simplement « désigné ».
+  var corruptions = [
+    ['signature vidée', 'TerrainsPlan', 1, 'signature', ''],
+    ['deux noms identiques', 'Terrains', 2, 'snap_nom', 'Rugby 1'],
+    ['mini rattaché à un terrain inconnu', 'MiniTerrains', 1, 'terrain_id', 'FANTOME'],
+    ['terrain retenu sans nom', 'Terrains', 1, 'snap_nom', ''],
+    ['ligne d\'une AUTRE édition', 'Terrains', 1, 'edition_id', 'ED-AILLEURS']
+  ];
+  var toutesFermees = true, laquelle = '';
+  corruptions.forEach(function (c) {
+    var cx = _b23bFauxClasseur([_b23bEditions()]);
+    assurerStructureTerrainsB23(cx);
+    publierPlanTerrains(cx, _B23B_ED, _b23bPlan(), cats, _b23bGenerateur('P'), 't1');
+    var o = cx.getSheetByName(c[1]);
+    var col = o._lignes()[0].indexOf(c[3]);
+    o._lignes()[c[2]][col] = c[4];
+    if (pointeurPlanTerrains(cx, _B23B_ED) !== 'P-1') { toutesFermees = false; laquelle = c[0] + ' (pointeur)'; }
+    if (planTerrainsPublie(cx, _B23B_ED) !== null) { toutesFermees = false; laquelle = c[0]; }
+  });
+  _ffrAssert(etat, toutesFermees,
+    'B2-3.b P3 ⭐⭐ : UN POINTEUR NON VIDE NE SUFFIT JAMAIS — les cinq corruptions rendent ' +
+    '`null` malgré un pointeur intact' + (laquelle ? ' (fautive : ' + laquelle + ')' : ''));
+
+  // ⛔ Publier sans structure : refus, et zéro écriture.
+  var vierge = _b23bFauxClasseur([_b23bEditions()]);
+  var avant = _b23bEmpreinte(vierge);
+  var r = publierPlanTerrains(vierge, _B23B_ED, _b23bPlan(), cats, _b23bGenerateur('P'), 't1');
+  _ffrAssert(etat, !!r.error && _b23bEmpreinte(vierge) === avant,
+    'B2-3.b P3 ⛔ : publier sans structure ⇒ REFUS, et AUCUNE écriture');
+
+  // ⛔ Un plan invalide est refusé AVANT la première écriture.
+  var cl3 = _b23bFauxClasseur([_b23bEditions()]);
+  assurerStructureTerrainsB23(cl3);
+  var avant3 = _b23bEmpreinte(cl3);
+  var casse = _b23bPlan({ terrains: [_b23bTerrain('T1', 'Rugby 1'), _b23bTerrain('T2', 'Rugby 1')] });
+  var r3 = publierPlanTerrains(cl3, _B23B_ED, casse, cats, _b23bGenerateur('P'), 't1');
+  _ffrAssert(etat, !!r3.error && _b23bEmpreinte(cl3) === avant3,
+    'B2-3.b P3 ⭐⭐ : un plan en COLLISION est refusé AVANT toute écriture — classeur intact');
+}
+
+/** B1 — Le brouillon ne touche jamais au plan pointé. */
+function testB23b_B1_brouillonNeTouchePasLePointe(etat) {
+  var cats = _b23bCategories();
+  var cl = _b23bFauxClasseur([_b23bEditions()]);
+  assurerStructureTerrainsB23(cl);
+  publierPlanTerrains(cl, _B23B_ED, _b23bPlan(), cats, _b23bGenerateur('P'), 't1');
+  var pointeAvant = JSON.stringify(lirePlanTerrains(cl, _B23B_ED, 'P-1'));
+
+  var br = _b23bPlan({ params: { couloir_m: '8', plan_id: 'IGNORE-MOI' } });
+  var rBr = ecrireBrouillonTerrains(cl, _B23B_ED, br, _b23bGenerateur('BR'));
+  _ffrAssert(etat, !rBr.error && rBr.plan_id === 'BR-1' &&
+                   lirePlanTerrains(cl, _B23B_ED, 'IGNORE-MOI') === null,
+    'B2-3.b B1 ⭐ : le brouillon naît sous un identifiant FABRIQUÉ — ⛔ jamais celui du client');
+
+  _ffrAssert(etat, JSON.stringify(lirePlanTerrains(cl, _B23B_ED, 'P-1')) === pointeAvant,
+    'B2-3.b B1 ⭐⭐ : écrire le brouillon NE TOUCHE PAS au plan pointé, bit à bit');
+  _ffrAssert(etat, planTerrainsPublie(cl, _B23B_ED).plan_id === 'P-1',
+    'B2-3.b B1 ⭐ : le plan consommable reste le plan pointé');
+  _ffrAssert(etat, etatTerrainsPur(contexteTerrainsEdition(cl, _B23B_ED, cats)) === 'a_reconfirmer',
+    'B2-3.b B1 ⭐ : et l\'état passe à « a_reconfirmer »');
+  // ⭐⭐ « UN BROUILLON N'EST JAMAIS SIGNÉ » — et il faut LUI EN DONNER UNE pour le prouver.
+  //    ⚠️ Sans signature fournie, effacer la ligne qui la vide ne changerait rien : la
+  //    mutation resterait invisible, et l'assertion ne prouverait rien.
+  var signe = _b23bPlan({ params: { couloir_m: '8' } });
+  signe.params.signature = 'SIGNATURE-QUI-NE-DOIT-PAS-SURVIVRE';
+  ecrireBrouillonTerrains(cl, _B23B_ED, signe, _b23bGenerateur('XX'));
+  _ffrAssert(etat, lireBrouillonTerrains(cl, _B23B_ED).params.signature === '',
+    'B2-3.b B1 ⭐⭐ : un brouillon n\'est JAMAIS signé — même si on lui fournit une signature');
+
+  // ⭐ POURQUOI cela compte : un brouillon signé qui serait pointé par erreur passerait pour
+  //    un plan confirmé. Sans signature, il reste inconsommable.
+  var cx = _b23bFauxClasseur([_b23bEditions()]);
+  assurerStructureTerrainsB23(cx);
+  var s2 = _b23bPlan();
+  s2.params.signature = 'SIGNATURE-INVENTEE';
+  var rb = ecrireBrouillonTerrains(cx, _B23B_ED, s2, _b23bGenerateur('BR'));
+  ecrirePointeurPlanTerrains(cx, _B23B_ED, rb.plan_id);
+  _ffrAssert(etat, planTerrainsPublie(cx, _B23B_ED) === null,
+    'B2-3.b B1 ⭐⭐ : un BROUILLON pointé par erreur reste INCONSOMMABLE');
+
+  var br2 = _b23bPlan({ params: { couloir_m: '9', plan_id: 'AUTRE' } });
+  ecrireBrouillonTerrains(cl, _B23B_ED, br2, _b23bGenerateur('ZZ'));
+  var brouillons = lireTerrainsPlan(cl).filter(function (l) {
+    return l.edition_id === _B23B_ED && l.role === TERRAINS_ROLE_BROUILLON;
+  });
+  _ffrAssert(etat, brouillons.length === 1 && brouillons[0].plan_id === 'BR-1',
+    'B2-3.b B1 ⭐ : UN SEUL brouillon par édition — le second enregistrement réutilise son id');
+  _ffrAssert(etat, lireBrouillonTerrains(cl, _B23B_ED).params.couloir_m === '9' &&
+                   lirePlanTerrains(cl, _B23B_ED, 'AUTRE') === null,
+    'B2-3.b B1 ⛔ : la nouvelle valeur est bien reprise, et l\'id du client toujours ignoré');
+
+  publierPlanTerrains(cl, _B23B_ED, _b23bPlan({ params: { couloir_m: '6' } }), cats,
+    _b23bGenerateur('Q'), 't2');
+  _ffrAssert(etat, lireBrouillonTerrains(cl, _B23B_ED) === null &&
+                   etatTerrainsPur(contexteTerrainsEdition(cl, _B23B_ED, cats)) === 'confirme',
+    'B2-3.b B1 ⭐ : le brouillon n\'est nettoyé QU\'APRÈS une publication réussie');
+}
+
+/** N1 — ⭐⭐ Le balayage ne peut jamais entamer le plan pointé. */
+function testB23b_N1_balayageNeToucheJamaisLePointe(etat) {
+  var cats = _b23bCategories();
+  var cl = _b23bFauxClasseur([_b23bEditions()]);
+  assurerStructureTerrainsB23(cl);
+  publierPlanTerrains(cl, _B23B_ED, _b23bPlan(), cats, _b23bGenerateur('P'), 't1');
+  ecrireBrouillonTerrains(cl, _B23B_ED, _b23bPlan(), _b23bGenerateur('BR'));
+  publierPlanTerrains(cl, _B23B_ED, _b23bPlan({ params: { couloir_m: '7' } }), cats,
+    _b23bGenerateur('Q'), 't2', 'plan');       // laisse Q-1 orphelin
+
+  var orphelins = plansOrphelinsTerrains(cl, _B23B_ED);
+  _ffrAssert(etat, orphelins.length === 1 && orphelins[0] === 'Q-1',
+    'B2-3.b N1 ⭐ : le candidat abandonné est le SEUL orphelin (pointé et brouillon exclus)');
+
+  balayerPlansOrphelins(cl, _B23B_ED);
+  _ffrAssert(etat, planTerrainsPublie(cl, _B23B_ED) !== null &&
+                   planTerrainsPublie(cl, _B23B_ED).plan_id === 'P-1',
+    'B2-3.b N1 ⭐⭐ : le balayage n\'a PAS touché au plan pointé');
+  _ffrAssert(etat, lireBrouillonTerrains(cl, _B23B_ED) !== null,
+    'B2-3.b N1 ⛔ : ni au brouillon');
+  _ffrAssert(etat, lirePlanTerrains(cl, _B23B_ED, 'Q-1') === null,
+    'B2-3.b N1 : et l\'orphelin est bien parti');
+  _ffrAssert(etat, supprimerPlanTerrains(cl, _B23B_ED, 'P-1').error !== undefined,
+    'B2-3.b N1 ⭐⭐ : SECOND VERROU — supprimer le plan POINTÉ est refusé, explicitement');
+}
+
+/**
+ * R1 — ⭐⭐ UN REFUS NE LAISSE AUCUNE TRACE, MÊME S'IL Y A DES ORPHELINS.
+ *
+ * ⚠️ Ce test est né d'une INCOHÉRENCE RÉELLE, relevée en revue de B2-3.b :
+ * `publierPlanTerrains` BALAYAIT les plans orphelins AVANT de valider le candidat. Les deux
+ * garanties annoncées ne tenaient donc pas ensemble — « un candidat refusé ne laisse aucune
+ * trace » devenait FAUX dès que l'édition portait un orphelin, puisqu'il avait déjà été
+ * supprimé. ⭐ Le balayage a été DÉPLACÉ après la validation ; ⛔ il n'a pas été supprimé,
+ * car la convergence après une interruption en dépend.
+ *
+ * ⭐ Les QUATRE conditions sont réunies volontairement — c'est leur CONJONCTION qui révèle le
+ * défaut : plan publié valide, pointeur valide, orphelin préexistant, candidat invalide.
+ */
+function testB23b_R1_refusNeToucheNiOrphelinNiPointe(etat) {
+  var cats = _b23bCategories();
+  var cl = _b23bClasseurPret();
+
+  // ① Un plan publié valide, et son pointeur.
+  publierPlanTerrains(cl, _B23B_ED, _b23bPlan(), cats, _b23bGenerateur('P'), 't1');
+  // ② Un plan ORPHELIN préexistant : une confirmation interrompue avant la bascule.
+  publierPlanTerrains(cl, _B23B_ED, _b23bPlan({ params: { couloir_m: '7' } }), cats,
+    _b23bGenerateur('ORPH'), 't2', 'plan');
+
+  _ffrAssert(etat, pointeurPlanTerrains(cl, _B23B_ED) === 'P-1' &&
+                   plansOrphelinsTerrains(cl, _B23B_ED).join(',') === 'ORPH-1',
+    'B2-3.b R1 ⓪ : le décor est planté — plan publié « P-1 », orphelin « ORPH-1 »');
+
+  // ③ L'état EXACT, et le compteur d'écritures, juste avant l'appel refusé.
+  var avantBits = _b23bEmpreinte(cl);
+  var avantPublie = JSON.stringify(lirePlanTerrains(cl, _B23B_ED, 'P-1'));
+  var avantOrphelin = JSON.stringify(lirePlanTerrains(cl, _B23B_ED, 'ORPH-1'));
+  var avantEcritures = _b23bTotalEcritures(cl._ecritures());
+
+  // ④ Un candidat INVALIDE : deux grands terrains retenus portent le même nom.
+  var invalide = _b23bPlan({ terrains: [_b23bTerrain('T1', 'Rugby 1'), _b23bTerrain('T2', 'Rugby 1')] });
+  var r = publierPlanTerrains(cl, _B23B_ED, invalide, cats, _b23bGenerateur('X'), 't3');
+
+  _ffrAssert(etat, !!r.error && r.ecarts && r.ecarts.length > 0,
+    'B2-3.b R1 ① : le candidat est REFUSÉ, avec ses écarts');
+  _ffrAssert(etat, JSON.stringify(lirePlanTerrains(cl, _B23B_ED, 'ORPH-1')) === avantOrphelin &&
+                   plansOrphelinsTerrains(cl, _B23B_ED).join(',') === 'ORPH-1',
+    'B2-3.b R1 ② ⭐⭐ : L\'ORPHELIN EXISTE TOUJOURS — ⛔ le refus n\'a rien balayé');
+  _ffrAssert(etat, pointeurPlanTerrains(cl, _B23B_ED) === 'P-1' &&
+                   JSON.stringify(lirePlanTerrains(cl, _B23B_ED, 'P-1')) === avantPublie,
+    'B2-3.b R1 ③ ⭐ : le plan publié et son pointeur sont INCHANGÉS');
+  _ffrAssert(etat, _b23bEmpreinte(cl) === avantBits,
+    'B2-3.b R1 ④ ⭐⭐ : les trois onglets (et Editions) sont identiques BIT À BIT');
+  _ffrAssert(etat, _b23bTotalEcritures(cl._ecritures()) === avantEcritures,
+    'B2-3.b R1 ⑤ ⭐⭐ : AUCUNE méthode d\'écriture n\'a été appelée — constaté ' +
+    (_b23bTotalEcritures(cl._ecritures()) - avantEcritures) + ' appel(s)');
+  _ffrAssert(etat, planTerrainsPublie(cl, _B23B_ED) !== null &&
+                   planTerrainsPublie(cl, _B23B_ED).plan_id === 'P-1',
+    'B2-3.b R1 ⑥ ⭐ : et le plan reste consommable, exactement comme avant');
+
+  // ⑤ ⭐ LA CONTREPARTIE : le balayage n'a pas disparu, il a CHANGÉ DE PLACE.
+  var r2 = publierPlanTerrains(cl, _B23B_ED, _b23bPlan({ params: { couloir_m: '7' } }), cats,
+    _b23bGenerateur('Y'), 't4');
+  _ffrAssert(etat, r2.ok && pointeurPlanTerrains(cl, _B23B_ED) === 'Y-1' &&
+                   plansOrphelinsTerrains(cl, _B23B_ED).length === 0 &&
+                   lirePlanTerrains(cl, _B23B_ED, 'ORPH-1') === null,
+    'B2-3.b R1 ⑦ ⭐⭐ : un candidat VALIDE publie ET balaie l\'orphelin — le balayage a ' +
+    'changé de PLACE, ⛔ pas disparu');
+}
+
+/** V1 — Le voisinage : rien d'autre ne bouge. */
+function testB23b_V1_voisinageIntact(etat) {
+  var cats = _b23bCategories();
+  var cl = _b23bFauxClasseur([_b23bEditions()]);
+  var config = _b23bFauxOnglet('Config', [['parametre', 'valeur'],
+    ['terrains_physiques', '[{"id":"T1","nom":"Rugby 1"}]'],
+    ['repartition_grands_terrains', '{"Rugby 1":["1","2"]}'],
+    ['couloir_terrain_m', '5']]);
+  cl._table.Config = config;
+  assurerStructureTerrainsB23(cl);
+
+  var configAvant = JSON.stringify(config._lignes());
+  var voisinesAvant = JSON.stringify(cl.getSheetByName('Editions')._lignes().map(function (l) {
+    return l.slice(0, 4);
+  }));
+
+  publierPlanTerrains(cl, _B23B_ED, _b23bPlan(), cats, _b23bGenerateur('P'), 't1');
+  ecrireBrouillonTerrains(cl, _B23B_ED, _b23bPlan(), _b23bGenerateur('BR'));
+  publierPlanTerrains(cl, _B23B_ED, _b23bPlan({ params: { couloir_m: '7' } }), cats,
+    _b23bGenerateur('Q'), 't2');
+
+  _ffrAssert(etat, JSON.stringify(config._lignes()) === configAvant,
+    'B2-3.b V1 ⭐⭐ : AUCUN champ de Config n\'est touché (terrains_physiques, répartition, couloir)');
+  _ffrAssert(etat, JSON.stringify(cl.getSheetByName('Editions')._lignes().map(function (l) {
+    return l.slice(0, 4); })) === voisinesAvant,
+    'B2-3.b V1 ⭐⭐ : aucune colonne VOISINE d\'Editions n\'est modifiée — seule la 5ᵉ bouge');
+
+  // ⭐ Aucune donnée dans une colonne SANS en-tête : c'est le piège d'ENTETES.Editions.
+  var propre = true;
+  ['TerrainsPlan', 'Terrains', 'MiniTerrains', 'Editions'].forEach(function (n) {
+    var lignes = cl.getSheetByName(n)._lignes();
+    var nb = lignes[0].filter(function (h) { return String(h || '').trim() !== ''; }).length;
+    lignes.slice(1).forEach(function (l) {
+      for (var j = nb; j < l.length; j++) {
+        if (l[j] !== '' && l[j] !== null && l[j] !== undefined) propre = false;
+      }
+    });
+  });
+  _ffrAssert(etat, propre,
+    'B2-3.b V1 ⭐⭐ : AUCUNE donnée écrite dans une colonne SANS EN-TÊTE');
 }
