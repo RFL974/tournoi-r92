@@ -12,6 +12,48 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/).
 > exhaustif de chaque session d'industrialisation vit dans
 > [`docs/industrialisation/SESSIONS.md`](docs/industrialisation/SESSIONS.md).
 
+### Les terrains d'un tournoi ont désormais leur propre identité — 2026-09-02
+
+> ⚠️ **RIEN NE CHANGE ENCORE DANS L'APPLICATION**, et c'est volontaire. Cette entrée décrit des
+> fondations posées dans le dépôt : ⛔ **elles ne sont pas installées sur le classeur**, et
+> ⛔ **aucun écran ne les utilise**. Un organisateur, un marqueur ou un club ne verra
+> **strictement aucune différence**.
+
+**Le problème de fond, en une image.** Imagine le stade du club. Certaines choses sont vraies toute
+l'année : il existe quatre grands terrains, ils s'appellent Rugby 1, Rugby 2, Foot 1, Foot 2, ils
+font tant de mètres, leur surface est du gazon ou du synthétique. D'autres ne valent que pour **un
+tournoi précis** : *« cette année, on a découpé Rugby 1 en trois petits terrains numérotés 1, 2 et
+3, parce qu'on avait des U8 et des U10 »*. ⚠️ **Aujourd'hui, ces deux choses sont rangées au même
+endroit** — si bien qu'un tournoi tout neuf, sans aucune catégorie ni aucune équipe, peut encore
+annoncer aux clubs *« 18 terrains de jeu, sur 4 grands terrains »*, hérités de l'an dernier.
+
+**Ce qui a été construit.** Un plan de terrains reçoit maintenant une **identité propre à son
+édition**. Chaque édition a son plan ; celui de l'an dernier reste lisible, avec le nom que portait
+chaque terrain **à l'époque** — le renommer aujourd'hui ne réécrit pas le passé.
+
+**Et surtout : un plan à moitié écrit ne peut plus devenir « le plan officiel ».** C'est le cœur du
+travail. Un nouveau plan est d'abord écrit **à côté**, sous une identité neuve que personne ne
+regarde. Il est ensuite **relu depuis le classeur** et vérifié. ⭐ **Ce n'est qu'alors qu'une seule
+case bascule** et le désigne comme officiel. Si quoi que ce soit s'interrompt avant — une coupure,
+un dépassement de temps —, l'ancien plan reste **entier**, et c'est lui que tout le monde continue
+de voir. Relancer l'opération répare et fait le ménage.
+
+**Un plan refusé ne laisse aucune trace.** Si le plan proposé est incohérent — par exemple deux
+grands terrains retenus qui portent le même nom, ce qui ferait disparaître l'un des deux dans le
+dossier envoyé aux clubs —, il est refusé **avant la moindre écriture**. Le classeur reste
+rigoureusement identique, jusqu'au moindre caractère.
+
+**Ce qui le prouve.** Deux séries de contrôles automatiques prennent les vraies fonctions du serveur
+et les exécutent : **148 vérifications** pour les fondations, **134** pour l'enregistrement — dont
+les six façons dont une opération peut être interrompue, chacune vérifiée. Dix-huit défauts ont été
+volontairement réintroduits dans une copie pour s'assurer que ces contrôles les attrapent : **les
+dix-huit ont été détectés**. Un nouveau contrôle automatique tourne désormais sur GitHub à chaque
+modification du serveur, ⛔ **sans jamais republier le site**.
+
+⛔ **Ce qui n'a PAS eu lieu** : aucun code n'a été collé chez Google, aucune opération n'y a été
+lancée, aucun onglet n'a été créé dans le classeur, aucune version ni aucun déploiement. Le
+classeur reste **vierge de tournoi** depuis sa remise à zéro — 0 équipe, 0 poule, 0 match.
+
 ### Une opération de maintenance ne reste plus bloquée en attendant un clic — 2026-09-01
 
 > ✅ **CORRIGÉ ET PROUVÉ SUR LE VRAI CLASSEUR le 2026-09-01.** ⛔ **Rien ne change pour un

@@ -10669,3 +10669,105 @@ classeur réel — la preuve du chemin no-op de B2-2 suffit, le helper étant **
 
 ⏭️ **`PLAN.md` désigne B2-3** *(terrains : permanent vs édition)*. ⛔ **NON DÉMARRÉE**, et elle ne
 démarre pas sans validation explicite *(`CLAUDE.md` §12.4)*.
+
+---
+
+## 🧱 SESSION 35 — M1-B2 / B2-3.a et B2-3.b : le socle et la persistance des terrains *(2026-09-02)*
+
+**Date** : 2026-09-02 · **Branche** : `main` · **Objectif** : livrer **B2-3.a** *(socle pur)* puis
+**B2-3.b** *(persistance inerte par édition)*, ⛔ **sans brancher quoi que ce soit** et ⛔ **sans
+toucher au classeur**.
+
+### Ce qui a été fait
+
+| | |
+|---|---|
+| **Reconstat** | Git propre, `HEAD` = `main` = `origin/main` = **`60d92d9`**, confirmé par `git ls-remote`. Cinq suites de référence au vert avant toute modification |
+| **B2-3.a — le socle pur** | **23 fonctions**, ⛔ aucun accès à `SpreadsheetApp`, `LockService`, `CacheService`, `PropertiesService` ni `Utilities`. Normalisation des noms *(casse, accents, espaces internes — ⛔ « Rugby 1 » ≠ « Rugby1 »)* et des nombres · **identités durables** par générateur **injecté** · validation d'un plan *(interne, puis face aux catégories)* · **garde-fou du pointeur** · **projection historique** depuis les `snap_nom` figés · **signature** · calcul des **quatre états** |
+| **B2-3.b — la persistance** | Trois onglets cibles **`TerrainsPlan`** · **`Terrains`** · **`MiniTerrains`**, rattachés à **`edition_id`** ; colonne **`Editions.terrains_plan_publie`**. ⭐ Un candidat est écrit sous un **`plan_id` neuf et inerte**, **relu depuis le classeur** et **validé**, ⭐ **puis** désigné par **une seule cellule** |
+| ⭐ **La correction de revue** | La validation du candidat a été **déplacée AVANT le balayage des orphelins**. Elle venait après : les deux garanties annoncées ne tenaient alors pas ensemble |
+| **Preuves locales** | Bancs Node **148/148** *(B2-3.a)* et **134/134** *(B2-3.b)* · séries Apps Script **rejouées localement** **76/76** et **53/53** · ⭐ **18 mutations, 18 détectées** · suites historiques **48/48**, **97/97**, **41/41**, **45/45 mutations** — **inchangées** |
+| **CI** | 🆕 `.github/workflows/backend-tests.yml` — un workflow **autonome**, déclenché par un **push direct sur `main`** comme par une PR, ⛔ **sans aucun droit ni action GitHub Pages**. `pages.yml` **restauré octet pour octet** et laissé seul capable de publier |
+| **Commit** | ⭐ **`ed815fd53538871d36286d9991fd787508193087`** — 5 fichiers, **4 412 insertions, 0 suppression**, parent `60d92d9` |
+| **Vérification GitHub** | Exécution **`33637737814`**, workflow *« Vérifier le backend (garde-fous exécutables) »*, événement `push`, conclusion ✅ **`success`** — les deux étapes ont affiché **`148/148`** et **`134/134`** dans le journal de GitHub. ⭐ **Une seule exécution pour ce SHA** : ⛔ **aucun workflow Pages, aucun déploiement** |
+
+### 🎯 Ce que cette session a appris, et qui vaut au-delà du lot
+
+**① Deux garanties peuvent être vraies séparément et fausses ensemble.** Le rapport annonçait
+*« balayage des orphelins »* **puis** *« un candidat invalide provoque zéro écriture »*. Chacune
+était défendable ; ⛔ **leur conjonction ne l'était pas** — sur une édition portant un plan
+orphelin, le balayage avait déjà supprimé des lignes quand le refus survenait. ⭐ **Le défaut
+n'était pas dans le code seul : il était dans l'ORDRE**, et c'est une revue de la cohérence des
+promesses qui l'a trouvé, ⛔ pas un test. La correction a coûté **deux lignes déplacées** ; sa
+preuve a demandé un scénario réunissant **quatre conditions simultanées** — plan publié, pointeur
+valide, orphelin préexistant, candidat invalide. ⭐ **Chacune prise seule laissait le test passer.**
+
+**② Comparer des empreintes ne prouve pas qu'on n'a rien écrit.** Le faux classeur **compte
+désormais les APPELS** aux méthodes d'écriture. La différence n'est pas théorique : ⭐ une
+réécriture à l'identique passerait la comparaison d'empreintes et échouerait le comptage. La preuve
+exigée devient alors littérale — **« 0 appel »**, pas « le résultat est le même ».
+
+**③ Trois mutations ont révélé trois trous que les tests ne voyaient pas**, et aucune n'était
+évidente : un **défaut fermé** jamais éprouvé *(`selectionne` ne connaissait que « oui » et
+« non »)* ; un **contrôle de collision inatteignable**, donc **code mort**, parce qu'un contrôle
+plus général le précédait ; et surtout ⭐ **le piège des équipes** — le test déclarait un tableau
+d'équipes **sans jamais le passer à la fonction**, si bien qu'une implémentation fautive n'aurait
+rien trouvé à lire et serait passée au vert. ⛔ **Un test qui n'injecte pas la donnée qu'il
+surveille ne surveille rien.**
+
+**④ Une série écrite chez Google mais jamais lancée n'est pas un garde-fou.** Les deux bancs Node
+**rejouent** les séries `lancerTestsFFR` sur les vraies fonctions. ⭐ Ce mécanisme a immédiatement
+servi : il a attrapé une **assertion fausse** de la série B2-3.a *(un générateur partagé rendait
+`X-2` là où le test attendait `X-3`)* — ⛔ elle serait partie chez Google et aurait produit un
+`FAIL` au bilan, découvert seulement au redéploiement.
+
+**⑤ Un workflow qui publie ne peut pas servir à vérifier autre chose.** Greffer les contrôles du
+serveur sur `pages.yml` imposait de choisir entre **republier le site à chaque commit backend** et
+**ne rien vérifier du tout sur un push direct**. ⚠️ Le premier arbitrage proposé — *« la protection
+passera par les pull requests »* — reposait sur une **note de mémoire** *(« un lot = une PR »)*
+⛔ **et non sur la pratique constatée du dépôt**, qui pousse directement sur `main`. ⭐ **Séparer
+les deux workflows** a réglé le fond : ici on vérifie, là-bas on publie.
+
+### 🚨 Les limites — ce que cette session n'a PAS fait
+
+⛔ **Aucun routage d'action** *(`ACTIONS_*`, `doGet`, `doPost`)* · ⛔ **aucun consommateur métier** ·
+⛔ **aucun frontend, cache, vue publique ni reset modifié** · ⛔ **aucun collage Apps Script** ·
+⛔ **aucune exécution chez Google** · ⛔ **aucune migration** · ⛔ **aucune version Apps Script
+nouvelle** · ⛔ **aucun déploiement**.
+
+⭐ **Le comportement visible de l'application est donc INCHANGÉ**, et ce n'est pas une précaution de
+langage : 🔬 les 26 noms du lot ont **0 occurrence** avant la ligne 9 957 de `backend/Code.gs`
+*(c'est-à-dire dans tout le code en service)* et **0 occurrence** dans `frontend/`.
+
+⚠️ **Le classeur est TOUJOURS VIERGE DE TOURNOI** depuis le reset nominal réel de **B2-1**
+*(2026-08-27)* : **0 équipe, 0 poule, 0 match**, `tournoi_publie` = **`non`**. ⛔ Cette session n'y a
+pas touché.
+
+⚠️ **Les repères de déploiement ont changé de NATURE.** Le dépôt attend **`1367/1367`**,
+`Test.gs` **8 275** et `Code.gs` **11 168** — ⛔ **valeurs ATTENDUES, jamais lues chez Google.** Le
+dernier **constat réel** reste **`1238/1238`**, **7 130**, **9 921**, **Web App version 161**.
+⭐ La source unique est [`../deploiement.md`](../deploiement.md) *(`CLAUDE.md` §8 quater)*.
+
+⛔ **B2-3 N'EST PAS CLOS**, et **R-101 reste OUVERT** : le modèle existe, ⛔ il n'est en service
+nulle part. Le témoin `testB20_temoinR101TerrainsResteB23` **passe encore** — ⭐ ce qui est
+cohérent, puisque le comportement fautif n'a pas changé.
+
+### Documents actifs
+
+⭐ **Vérifiés** *(`CLAUDE.md` §12.4, point 2)* : `README.md`, `docs/architecture.md`,
+`backend/README.md` — ⛔ **aucun ne devient faux**, puisqu'aucun onglet, aucune action serveur et
+aucun écran n'ont changé. ⚠️ **Ils deviendront faux en B2-3.c/e**, quand la structure sera posée et
+les consommateurs branchés : c'est **B2-3.f** qui les traitera.
+✅ **Mis à jour** : `CHANGELOG.md` *(l'architecture est inerte, et l'entrée le dit)* et
+`docs/deploiement.md` *(la distinction dépôt ↔ Google)*.
+
+### Prochaine session recommandée
+
+⏭️ **B2-3.c — la bascule des consommateurs** : projection sous le nom `repartition_grands_terrains`,
+vues `live` et `club`, ⚠️ **saut obligatoire de la clé de cache `snapshot_json_v3`**,
+`getDossierAutorisation` et son blocage, `getConfigAdmin`, `getCapacitesCategories`,
+`enregistrerPlanTerrains` resserré, `appliquerValeursFFR`, la ceinture du reset, et ⭐ **l'inversion
+du témoin R-101**.
+
+⛔ **NON DÉMARRÉE**, et elle ne démarre pas sans validation explicite *(`CLAUDE.md` §12.4)*.
+⛔ **B2-4, B2-5, B2-6 et M1-C1 ne démarrent pas automatiquement.**

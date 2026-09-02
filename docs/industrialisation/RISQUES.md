@@ -9,6 +9,19 @@
 > révélé **sain** — est dans [`RAPPORT-AUDIT.md`](RAPPORT-AUDIT.md). Ce registre-ci donne le
 > **détail ligne à ligne** ; le rapport donne **le sens**.
 
+**Dernière mise à jour** : 2026-09-02 *(session 35 — **B2-3.a/b livrés, ⛔ R-101 NE SE FERME PAS**)* —
+⏳ **R-101 AVANCE SANS SE FERMER, et c'est la seule lecture honnête.** Le **modèle** et la
+**persistance** qui doivent le corriger existent désormais dans le dépôt *(commit **`ed815fd`**)* ;
+⛔ **ils ne sont branchés sur rien, ne sont pas installés sur le classeur, et n'ont produit aucune
+preuve réelle.** ⭐ **Un risque se ferme sur une observation, pas sur du code écrit** *(doctrine
+**D-060**)* — voir la fiche R-101 ci-dessous.
+
+| Réf | Statut |
+|---|---|
+| **R-101** | ⛔ **OUVERT** — ⏳ **B2-3.a/b livrés au dépôt**, ⛔ **ni branchés, ni migrés, ni prouvés en réel** |
+
+> ⚡ *Rappel de la mise à jour précédente, vraie à sa date* — **2026-09-01** *(session 34)* :
+
 **Dernière mise à jour** : 2026-09-01 *(session 34 — 🏁 **R-110 SE FERME**)* —
 ✅ **R-110 PASSE À CLOS — CORRECTION TESTÉE ET PREUVE RÉELLE ACQUISE.** ⭐ C'est le **premier**
 risque que ce registre ferme depuis la clôture de B2-2, et il se ferme sur ce que **D-060**
@@ -2147,7 +2160,7 @@ fermé côté `org_*` — resté ouvert côté clubs.**
 |---|---|
 | **Priorité** | **P2** |
 | **Domaine** | **A — métier** |
-| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-3**. ⚠️ **Doit être fermé avant la clôture de M1-B2** *(arbitrage de Romain, 2026-08-24)* |
+| **Statut** | ⛔ **OUVERT** — **M1-B2 / B2-3**, ⏳ **en cours de correction**. ⚠️ **Doit être fermé avant la clôture de M1-B2** *(arbitrage de Romain, 2026-08-24)* |
 
 🔬 **Vérifié par calcul sur les 60 champs effacés** : `repartition_grands_terrains` n'apparaît dans
 **aucune** liste d'effacement — ni les listes explicites de `reinitialiserTournoi`, ni
@@ -2175,6 +2188,34 @@ d'où le *« 18 terrains de jeu, sur 4 grands terrains »* d'un tournoi qui n'a 
 > part événementielle — un travail de structure qui appartient à **B2-3**. ⛔ **Un test témoin
 > n'est pas une correction** : il garantit seulement que **B2-3 partira d'un comportement connu**,
 > et non d'une surprise.
+
+> ⏳ ⚡ **AVANCEMENT AU 2026-09-02 — LE MODÈLE EXISTE, LE DÉFAUT DEMEURE.**
+>
+> **B2-3.a** *(socle pur)* et **B2-3.b** *(persistance inerte par édition)* sont **publiés au
+> dépôt**, commit **`ed815fd53538871d36286d9991fd787508193087`**. Ce qui est désormais **écrit et
+> éprouvé** :
+>
+> | | |
+> |---|---|
+> | La **séparation** que R-101 réclame | Trois onglets cibles — **`TerrainsPlan`**, **`Terrains`**, **`MiniTerrains`** — rattachés à **`edition_id`**, et un pointeur **`Editions.terrains_plan_publie`** qui seul fait foi |
+> | La part **permanente** | Reste dans `Config` *(inventaire durable et préférences)* ; les caractéristiques employées par une édition sont **figées** dans ses lignes `snap_*` |
+> | La part **événementielle** | Vit dans le plan de l'édition — ⭐ **elle ne peut donc plus survivre à un reset**, puisqu'elle appartient à une édition qui n'est plus l'active |
+> | Preuves | Bancs Node **148/148** et **134/134** · séries Apps Script rejouées **76/76** et **53/53** · **18/18** mutations détectées · workflow backend GitHub **`success`** |
+>
+> 🚨 **ET POURTANT LE RISQUE RESTE OUVERT — voici exactement pourquoi, et ce ne sont pas des
+> réserves de forme :**
+>
+> | Ce qui manque | Conséquence |
+> |---|---|
+> | ⛔ **Aucun branchement** | Aucune de ces fonctions n'est routée *(`ACTIONS_*`, `doGet`, `doPost`)* ni appelée par un écran, `getAll`, `getConfigClub`, `getDossierAutorisation`, `enregistrerPlanTerrains`, `appliquerValeursFFR` ou `reinitialiserTournoi`. ⭐ **Le code qui corrige R-101 n'est exécuté par rien** |
+> | ⛔ **Aucun collage, aucune exécution chez Google** | Le serveur en service ne contient pas une ligne de ce lot. **Web App toujours en version 161** |
+> | ⛔ **Aucune migration** | Les trois onglets et la colonne du pointeur **n'existent pas** dans le classeur. `assurerStructureTerrainsB23` n'a jamais été lancée |
+> | ⛔ **Aucune preuve réelle** | Le critère de clôture — *« le dossier d'un tournoi vide n'affiche aucun terrain hérité »* — ⭐ **se constate dans un navigateur, sur le vrai classeur** *(`CLAUDE.md` §13.6, §8 octies)*. Rien de tel n'a eu lieu |
+> | ⛔ **Le témoin est toujours en place** | `testB20_temoinR101TerrainsResteB23` **passe encore**, et c'est cohérent : ⭐ **le comportement fautif n'a pas changé.** Son inversion appartient à **B2-3.c** |
+>
+> 🎯 **La leçon, et elle est la même qu'en B2-0** : *écrire la correction n'est pas corriger.*
+> Aujourd'hui, **le découpage des terrains survit toujours au reset sur le classeur réel** — ⛔ très
+> exactement comme au premier jour. ⏭️ **Reprise à B2-3.c.**
 
 ### R-102 — `ClubsInvites` mêle identité durable et participation, sans marquage
 

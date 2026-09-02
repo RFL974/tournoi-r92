@@ -9,7 +9,32 @@
 > domaines, les 88 problèmes (R-001 → R-088), les 6 risques de méthode (M-01 → M-06), ce qui s'est
 > révélé **sain**, ce qui reste à décider, l'ordre proposé, et **les limites de l'audit**.
 
-> # 🟢 JEU DE TOURNOI FICTIF EN PLACE — ⚡ PUB-4 A CONSOMMÉ SES PREUVES, SON SORT EST À DÉCIDER
+> # ⚪ CLASSEUR VIERGE DE TOURNOI — 0 ÉQUIPE, 0 POULE, 0 MATCH, `tournoi_publie` = `non`
+>
+> ⚡ **CE TITRE REMPLACE, LE 2026-09-02, celui intitulé « 🟢 JEU DE TOURNOI FICTIF EN PLACE — PUB-4
+> A CONSOMMÉ SES PREUVES, SON SORT EST À DÉCIDER ».** ⛔ **Il était devenu faux, et il l'était
+> depuis le 2026-08-27** : le reset nominal réel de B2-1 a effacé ce jeu le jour même, et le corps
+> du bloc le disait déjà — ⚠️ **mais le TITRE, lui, n'avait pas été relu.** ⭐ C'est exactement le
+> décrochage que **§8 septies** décrit : un état écrit avant le geste, jamais relu après.
+>
+> **L'ÉTAT RÉEL DU CLASSEUR, au 2026-09-02** *(dernier constat : 2026-08-27, reset nominal réel de
+> B2-1 — ⛔ **aucune session n'y a touché depuis**)* :
+>
+> | | |
+> |---|---|
+> | **Équipes · Poules · Matchs** | ⛔ **0 · 0 · 0** |
+> | `tournoi_publie` | **`non`** |
+> | Catégories | ⛔ aucune *(la catégorie `U10` a été supprimée)* |
+> | `tournoi_id` | ⛔ vidé |
+> | ⭐ **Ce qui a SURVÉCU, et devait survivre** | `Historique` *(211 lignes)* · les **3 fiches de clubs** et leurs contacts · les partenaires · **les réglages de terrains** *(R-101, toujours ouvert)* · les clés |
+> | ⛔ **Ce qu'aucun lot n'a recréé** | Aucun jeu de tournoi. ⭐ **Le reconstruire appartient à Romain** — ⛔ aucune session ne le fera sans décision |
+>
+> ⛔ **B2-3.a et B2-3.b n'ont RIEN changé à cet état** : ⛔ aucun collage Apps Script, ⛔ aucune
+> exécution chez Google, ⛔ aucune migration, ⛔ aucun onglet créé. Voir le bloc de tête ci-dessous.
+>
+> *Ce que le titre précédent disait, et qui reste vrai à sa date* : le jeu fictif a bien été en
+> place du **2026-08-26** au **2026-08-27**, et il a servi exactement à ce pour quoi il était gardé.
+> Le détail de sa vie et de sa consommation est **conservé intégralement ci-dessous**.
 >
 > ⚡ **CE REPÈRE REMPLACE, LE 2026-08-26, celui intitulé « 🔴 DONNÉES DE TOURNOI À RECRÉER AVANT
 > LES PROCHAINS TESTS FONCTIONNELS ».** ⭐ **Il se retire comme sa propre condition l'exigeait** :
@@ -103,9 +128,59 @@
 > Le 2026-08-25, deux **témoins minimaux** ont été créés puis effacés par les resets de **B2-0** ;
 > ⛔ **aucun jeu complet n'avait alors été recréé.** ⭐ **C'est chose faite le 2026-08-26.**
 
-**Dernière mise à jour** : 2026-09-01 *(session 34 — 🏁 **R-110 EST CLOS**)* —
-🏁 **R-110 EST CORRIGÉ, TESTÉ, ET PROUVÉ EN RÉEL : une fonction de maintenance n'attend plus
-jamais un clic pour rendre la main.**
+**Dernière mise à jour** : 2026-09-02 *(session 35 — **B2-3.a et B2-3.b sont LIVRÉS AU DÉPÔT**)* —
+🧱 **LE SOCLE ET LA PERSISTANCE DES TERRAINS EXISTENT — ⛔ ET NE SONT ENCORE UTILISÉS PAR PERSONNE.**
+
+> ⭐ **CE QUE CE LOT A POSÉ, ET CE QU'IL N'A PAS FAIT — les deux comptent autant.**
+>
+> **B2-3.a — le SOCLE PUR** *(23 fonctions, ⛔ aucun service Google)* : normalisation des noms de
+> terrains *(casse, accents, espaces internes — ⛔ mais « Rugby 1 » et « Rugby1 » restent distincts)*
+> et des nombres · **identités durables** des grands terrains, par générateur injecté · validation
+> d'un plan, interne puis face aux catégories · **garde-fou du pointeur** · **projection
+> historique** depuis les noms figés · **signature** · calcul des **quatre états**.
+>
+> **B2-3.b — la PERSISTANCE INERTE PAR ÉDITION** : trois onglets cibles — **`TerrainsPlan`**,
+> **`Terrains`**, **`MiniTerrains`** — rattachés à **`edition_id`**, et une colonne
+> **`Editions.terrains_plan_publie`** qui **seule fait foi**. Un candidat est écrit sous un
+> **`plan_id` neuf et inerte**, **relu depuis le classeur et validé**, ⭐ **puis** désigné par cette
+> unique cellule. ⭐ **La validation du candidat précède le balayage des orphelins** — donc un
+> candidat invalide, même sur une édition portant déjà un plan orphelin, laisse le classeur
+> **identique bit à bit**, avec ⛔ **zéro méthode d'écriture appelée**. Un candidat valide, lui,
+> publie **et** balaie l'orphelin.
+>
+> | Preuve | Valeur |
+> |---|---|
+> | Banc Node **B2-3.a** | ⭐ **148/148** |
+> | Banc Node **B2-3.b** | ⭐ **134/134** — dont les **six scénarios d'interruption**, tous convergents |
+> | Série Apps Script **B2-3.a**, rejouée localement | **76/76** |
+> | Série Apps Script **B2-3.b**, rejouée localement | **53/53** |
+> | Mutations terrains | ⭐ **18/18 détectées** |
+> | Suites historiques frontend | **48/48** · **97/97** · **41/41** · **45/45 mutations détectées** |
+> | **Commit fonctionnel publié** | ⭐ **`ed815fd53538871d36286d9991fd787508193087`** |
+> | **Workflow backend GitHub** | ✅ **`success`** — ⛔ **aucun droit Pages, aucune publication du frontend déclenchée** |
+>
+> 🚨 **CE QUI N'A PAS EU LIEU, ET QUI DOIT ÊTRE LU AVANT TOUTE AUTRE SESSION** :
+> ⛔ **aucun routage d'action** · ⛔ **aucun consommateur métier** · ⛔ **aucun frontend, cache, vue
+> publique ni reset modifié** · ⛔ **aucun collage Apps Script** · ⛔ **aucune exécution chez
+> Google** · ⛔ **aucune migration** · ⛔ **aucune version Apps Script nouvelle** · ⛔ **aucun
+> déploiement**.
+>
+> ⭐ **Le comportement visible de l'application est donc INCHANGÉ**, et ce n'est pas une précaution
+> de langage : ces fonctions existent dans le dépôt et **ne sont appelées par rien**.
+>
+> ⚠️ **Les repères de déploiement ont changé de nature, et c'est une première** : le dépôt attend
+> désormais **`1367/1367`**, `Test.gs` **8 275** et `Code.gs` **11 168** — ⛔ **valeurs ATTENDUES,
+> jamais lues chez Google.** Le dernier **constat réel** reste **`1238/1238`**, **7 130**, **9 921**,
+> **Web App version 161**. ⭐ **La source unique est [`../deploiement.md`](../deploiement.md)**
+> *(`CLAUDE.md` §8 quater)*.
+>
+> ⛔ **B2-3 N'EST PAS CLOS** — il **continue**. ⏭️ **Point de reprise : B2-3.c** *(la bascule des
+> consommateurs)*, ⛔ **non démarrée**. ⛔ **R-101 reste OUVERT** : le modèle existe, il n'est pas
+> en service. ⛔ **B2-4, B2-5, B2-6 et M1-C1 ne démarrent pas automatiquement.**
+
+> ⚡ *Rappel de la mise à jour précédente, vraie à sa date* — **2026-09-01** *(session 34)* :
+> 🏁 **R-110 EST CORRIGÉ, TESTÉ, ET PROUVÉ EN RÉEL : une fonction de maintenance n'attend plus
+> jamais un clic pour rendre la main.**
 
 > ⭐ **LA PREUVE, ET ELLE EST UNE COMPARAISON.** Le 2026-09-01 à 14:04, `migrerClubsMaintenant()`
 > avait fini son travail en **8 secondes**, puis était restée suspendue jusqu'à

@@ -10,6 +10,23 @@
 > **proposition**, pas une décision : elle sera construite à l'ÉTAPE 3 et validée à l'ÉTAPE 4,
 > chantier par chantier.
 
+**Dernière mise à jour** : 2026-09-02 — 🧱 **M1-B2 / B2-3.a ET B2-3.b SONT PUBLIÉS AU DÉPÔT**
+*(commit **`ed815fd53538871d36286d9991fd787508193087`**)*. **B2-3.a** pose le **socle pur** des
+terrains *(normalisation, identités durables, validation, projection historique, signature, états)* ;
+**B2-3.b** pose la **persistance inerte par édition** *(`TerrainsPlan` · `Terrains` ·
+`MiniTerrains`, rattachés à `edition_id`, et le pointeur `Editions.terrains_plan_publie`)*.
+⭐ Preuves : bancs Node **148/148** et **134/134**, séries Apps Script rejouées **76/76** et
+**53/53**, **18/18** mutations détectées, workflow backend GitHub **`success`** ⛔ **sans aucun
+droit ni déclenchement GitHub Pages**.
+🚨 ⛔ **B2-3 N'EST PAS CLOS — il CONTINUE, et il reprend à B2-3.c** *(la bascule des consommateurs,
+⛔ non démarrée)*. ⛔ **R-101 reste OUVERT.** ⛔ **Aucun routage, aucun consommateur métier, aucun
+frontend, cache, vue publique ni reset touché ; aucun collage Apps Script, aucune exécution chez
+Google, aucune migration, aucune version nouvelle, aucun déploiement** — ⭐ **le comportement
+visible de l'application est inchangé**. ⛔ **B2-4, B2-5, B2-6 et M1-C1 ne démarrent pas
+automatiquement.**
+
+> ⚡ *Rappel de la mise à jour précédente, vraie à sa date* — **2026-08-24** :
+
 **Dernière mise à jour** : 2026-08-24 — 🏛️ **LE CHANTIER M1 EST OUVERT, ET IL A CHANGÉ DE NATURE**
 *(nouveau **§15**)*. Ce n'était qu'une opération manuelle de deux valeurs et d'une affiche ; c'est
 désormais **l'externalisation progressive des données propres à l'organisation**, en **6 étapes
@@ -3289,7 +3306,7 @@ aucune nominative)*.
 | **B2-0** | 🏁 **Sécurisation du reset** *(harnais)* — ✅ **CLÔTURÉ le 2026-08-25** | — | ⚡ **backend + frontend + CI** *(voir la note ci-dessous)* | ⛔ | ✅ **R-099**, ✅ **R-100** *(entièrement)* · **R-106** *(part reset seule)* · **R-033** *(dernière part)* | ✅ **ATTEINT** — reset prouvé **en réel** le 2026-08-25 : 0 statut hérité, 0 effectif hérité |
 | **B2-1** | **`edition_id` propre** + registre `Editions` ~~+ fin du renouvellement de `tournoi_id`~~ ⚡ **voir la fiche §16.5 quater** — 🏁 **CLÔTURÉ le 2026-08-27** *(**D-058**)* | B2-0 | backend | douce | ✅ **R-106** | ✅ **ATTEINT EN RÉEL** — 3 régénérations ⇒ **un seul** `edition_id`, **et** reset nominal réel *(ancienne fermée, neuve ouverte, une seule active)*. ⚠️ **Ce critère, écrit le 2026-08-24, était plus ÉTROIT que le contrat validé D-057** : voir §16.5 quater ⑥ |
 | **B2-2** | **`Clubs` + `Participations`** + couche d'adaptation — 🏁 **CLÔTURÉ le 2026-09-01** *(décision de Romain — **D-060**)*, **EN SERVICE sur le classeur réel** : migré, idempotent, lu et **écrit** en réel *(voir §16.5 quinquies)*. ⚠️ **R-104 et R-105 restent OUVERTS** avec leurs réserves ⚡ *(cette ligne nommait aussi **R-110** — ✅ **CLOS le 2026-09-01**, session 34 : corrigé, testé, prouvé en réel)*. ⚡ *(a annoncé « ⏳ PASSE LOCALE LIVRÉE le 2026-08-27, ⛔ non déployée, non migrée », puis « EN SERVICE […] ⛔ Non clos »)* | B2-1 | backend + adaptation | ⚠️ **la vraie** | **R-102, R-104, R-105** ⚡ *(⛔ pas R-099 ni R-100 : leur part comportement est **TESTÉE** depuis B2-0, leur part structure est suivie sous **R-102**)* | Cartes **identiques** à l'écran, ⛔ aucun frontend réécrit |
-| **B2-3** | **Terrains** permanents / édition | B2-1 | backend + frontend | douce | **R-101** | Dossier d'un tournoi vide ⇒ ⛔ aucun terrain hérité |
+| **B2-3** | **Terrains** permanents / édition — ⏳ **EN COURS.** ✅ **B2-3.a** *(socle pur)* et ✅ **B2-3.b** *(persistance inerte par édition)* sont **PUBLIÉS AU DÉPÔT** le 2026-09-02, commit **`ed815fd`** — ⛔ **et utilisés par personne** : aucun routage, aucun consommateur, aucun collage Google, aucune migration. ⏭️ **Reprise à B2-3.c** *(bascule des consommateurs)*, ⛔ non démarrée · puis **B2-3.d** *(frontend)*, **B2-3.e** *(réel + migration)*, **B2-3.f** *(documents actifs + clôture)* | B2-1 | backend + frontend | douce | **R-101** ⛔ **toujours OUVERT** | Dossier d'un tournoi vide ⇒ ⛔ aucun terrain hérité — ⛔ **NON ATTEINT** : le critère se constate **en réel**, et rien n'est encore en service |
 | **B2-4** | **UX** : Carnet · Préparer l'invitation · Clubs invités · sélection · envoi ciblé | B2-2 | **frontend surtout** | ⛔ | — | Plusieurs vagues ciblées prouvées **en réel** |
 | **B2-5** | **Messagerie V1** + notifications + emails | B2-2 | backend + frontend | ⛔ | *(R-103 reste ouvert)* | Message reçu, notifié, répondu **par email** |
 | **B2-6** | **Archivage + historique structuré**, incl. `Arch_Classements` | B2-2, B2-3 | backend + frontend | ⛔ | **R-107** | Archiver puis reset ⇒ archive **fidèle**, actif **vierge** |

@@ -186,8 +186,36 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 
 | Ce qu'on vérifie | Valeur attendue **aujourd'hui** | Ce qu'un écart signifie |
 |---|---|---|
-| **Le bilan** affiché en fin de journal | ⚡ **`R92 — 1238/1238 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
-| **La dernière ligne** du fichier collé chez Google | ⚡ **7130** *(et `Code.gs` à **9921**)* | Le fichier collé n'est pas celui du dépôt |
+| **Le bilan** affiché en fin de journal | ⚡ **`R92 — 1367/1367 OK, 0 FAIL`** | Un nombre **plus petit** ⇒ c'est l'**ancien** `Tests.gs` qui a tourné. Un `FAIL` ⇒ une vraie régression |
+| **La dernière ligne** du fichier collé chez Google | ⚡ **8275** *(et `Code.gs` à **11168**)* | Le fichier collé n'est pas celui du dépôt |
+
+> 🚨 ⚡ **ATTENTION — CES TROIS VALEURS SONT ATTENDUES, ⛔ PAS ENCORE CONSTATÉES**
+> *(portées le **2026-09-02**, lot **M1-B2 / B2-3.a/b**, commit `ed815fd`)*.
+>
+> ⭐ **C'est la première fois que ce tableau annonce des valeurs qui n'ont jamais été lues chez
+> Google**, et il faut le dire net, parce que tout le reste de cette page enseigne le contraire.
+>
+> | | Bilan | `Test.gs` | `Code.gs` |
+> |---|---|---|---|
+> | 📁 **Dépôt GitHub, après B2-3.a/b** *(mesuré, commit `ed815fd`)* | **`1367/1367`** *(attendu)* | **8 275** lignes | **11 168** lignes |
+> | ☁️ **Dernier constat RÉEL chez Google** *(2026-09-01, lot R-110)* | **`1238/1238`** | **7 130** lignes | **9 921** lignes |
+>
+> 🔬 **D'où vient le 1367** : `1238` *(dernier bilan réellement lu chez Google)* **+ 76** *(série
+> B2-3.a)* **+ 53** *(série B2-3.b)*. ⭐ Ces 129 assertions **tournent déjà**, mais **sur GitHub
+> Actions et sur la machine de développement**, ⛔ **pas chez Google** : les deux bancs Node
+> extraient les vraies fonctions de `backend/Code.gs` et rejouent les séries `lancerTestsFFR`.
+>
+> ⛔ **CE QUI N'A PAS EU LIEU, ET QUI DOIT ÊTRE LU AVANT TOUT COLLAGE** : ⛔ **aucun collage**
+> Apps Script, ⛔ **aucune exécution** chez Google, ⛔ **aucune migration**, ⛔ **aucune version
+> nouvelle**, ⛔ **aucun déploiement**. La **Web App reste en version 161**.
+>
+> ⚠️ **Donc, au prochain collage complet** : lire **`1367/1367`** confirme que les deux fichiers du
+> dépôt sont bien en place. ⭐ **Lire `1238/1238` ne serait PAS un succès** — ce serait le signe que
+> l'ancien `Test.gs` a tourné, exactement ce que la colonne de droite décrit.
+> ⭐ **Et ce n'est qu'à ce moment-là que ces trois valeurs deviendront des CONSTATS.**
+>
+> ⚡ *(Ce tableau annonçait **`1238`** / **7130** / **9921** — valeurs **constatées** chez Google le
+> 2026-09-01, et vraies jusqu'au commit `ed815fd`. ⛔ Elles ne décrivent plus le dépôt.)*
 
 > ⚡ **CES DEUX REPÈRES ONT ÉTÉ PORTÉS À `1238` / `7130` / `9921` LE 2026-09-01** *(lot **R-110**)*,
 > et ils sont **constatés chez Google**, pas prédits : `lancerTestsFFR` a rendu
@@ -286,6 +314,23 @@ Sélectionner la fonction `lancerTestsFFR` → **Exécuter** → lire le journal
 > déployée** ; ⭐ **le prochain déploiement fonctionnel du backend l'embarquera naturellement**, et
 > c'est à ce moment-là que cette divergence se refermera — ⚠️ **sans geste supplémentaire, mais
 > sans surprise non plus, puisqu'elle est écrite ici.**
+
+> ⚡ **LA DIVERGENCE S'EST ÉLARGIE LE 2026-09-02, ET ELLE A CHANGÉ DE NATURE** *(lot **B2-3.a/b**,
+> commit `ed815fd`)*. Elle ne portait que sur **R-110** ; elle porte désormais aussi sur **tout le
+> socle et toute la persistance des terrains** — ⭐ **environ 1 200 lignes de `Code.gs` et 1 145 de
+> `Tests.gs` qui n'existent QUE dans le dépôt.**
+>
+> ⛔ **Et cela ne change RIEN pour un utilisateur**, pour la même raison qu'en R-110, mais poussée
+> plus loin : **aucune de ces fonctions n'est appelée**. Elles ne sont ni routées *(`ACTIONS_*`,
+> `doGet`, `doPost`)*, ni lues par un écran, ni par `reinitialiserTournoi`, `enregistrerPlanTerrains`,
+> `appliquerValeursFFR`, `getAll`, `getConfigClub`, `getConfigAdmin`, `getCapacitesCategories` ni
+> `getDossierAutorisation`. ⭐ **Du code présent mais jamais appelé ne modifie aucun comportement.**
+>
+> ⚠️ **CE QUI CHANGERA AU PROCHAIN COLLAGE, et il faut s'y attendre** : le bilan passera de
+> `1238` à **`1367`**, et les deux fichiers grandiront de ~1 200 et ~1 145 lignes. ⛔ **Ce n'est pas
+> une anomalie** : c'est ce lot. ⛔ **Les trois onglets `TerrainsPlan`, `Terrains` et `MiniTerrains`
+> et la colonne `Editions.terrains_plan_publie` ne seront PAS créés pour autant** — leur mise en
+> place est un **geste explicite** *(`assurerStructureTerrainsB23`)* qui appartient à B2-3.e.
 
 > ⚠️ **Le numéro **161** n'apparaissait NULLE PART dans le dépôt avant ce jour.** La dernière
 > version nommée était la **160** *(celle qui donnait `1203/1210`)* ; le redéploiement du correctif
