@@ -1,12 +1,40 @@
 name: Déploiement GitHub Pages (dossier frontend)
 
-# Publie le contenu de `frontend/` sur GitHub Pages à chaque push sur main
+# Vérifie le contenu de `frontend/`, et le publie sur GitHub Pages
 # (URLs : https://rfl974.github.io/tournoi-r92/tournoi.html, /admin.html, …).
 #
 # ⚠️ DEPUIS LE CHANTIER C-013 (R-043) : rien ne part en ligne sans avoir été vérifié.
 # Le travail `verifier` s'exécute AVANT `deploy`, et `deploy` en dépend (`needs`).
 # Si un fichier JavaScript ne se lit pas, la publication N'A PAS LIEU : le site
 # déjà en ligne reste intact.
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🚨 POUSSER N'EST PAS PUBLIER — ET C'EST LE POINT LE PLUS IMPORTANT DE CE FICHIER.
+#
+# ⚡ Ce fichier annonçait « Publie le contenu de `frontend/` à chaque push sur main ».
+# ⛔ C'ÉTAIT VRAI, et c'est précisément ce qui a été corrigé : `deploy` ne se déclenchait
+# pas seulement pour une publication voulue — il partait à CHAQUE poussée touchant
+# `frontend/**` ou ce fichier. Autrement dit, décider d'enregistrer du travail sur GitHub
+# revenait à décider de le mettre EN LIGNE, sans que personne n'ait dit oui à la seconde
+# décision. ⭐ Ce sont deux gestes, et ils demandent deux autorisations.
+#
+# ⭐ LE CONTRAT, DÉSORMAIS — et un garde-fou l'éprouve
+# (`tests/pages-deploiement-manuel.test.js`) :
+#
+#   | Événement                                  | Vérifications | Déploiement |
+#   |--------------------------------------------|---------------|-------------|
+#   | Push sur `main` (chemins surveillés)       |      oui      |     NON     |
+#   | Pull request (chemins surveillés)          |      oui      |     NON     |
+#   | Déclenchement manuel, AUTRE branche        |      oui      |     NON     |
+#   | Déclenchement manuel sur `main`            |      oui      | OUI, après  |
+#
+# ⭐ PUBLIER SE DEMANDE À LA MAIN : onglet « Actions » → ce workflow → « Run workflow »,
+# en choisissant la branche `main`. ⛔ Aucun autre chemin ne publie.
+#
+# ⚠️ CE QUI N'A PAS CHANGÉ, et il ne faut pas le relâcher : les VÉRIFICATIONS tournent
+# toujours à chaque poussée et à chaque proposition de fusion. ⭐ On voit donc un défaut
+# au moment où il arrive — on choisit seulement, séparément, quand le site change.
+# ═══════════════════════════════════════════════════════════════════════════════
 
 on:
   push:
@@ -15,24 +43,29 @@ on:
       - 'frontend/**'
       - '.github/workflows/pages.yml'
       # ⛔ `tests/**` N'EST PAS ici, et c'est délibéré : un commit qui ne touche QUE les
-      # garde-fous ne change RIEN au site publié. L'ajouter republierait Pages pour rien.
+      # garde-fous ne change RIEN au site publié — inutile de relancer ce workflow pour lui.
+      # ⚡ *(Ce commentaire disait « L'ajouter republierait Pages pour rien ». ⛔ Ce n'est plus
+      # vrai depuis que le déploiement est MANUEL : un push ne publie plus. La raison de
+      # l'exclusion tient donc désormais au coût, pas au risque.)*
       # ⭐ Les tests tournent quand même à chaque publication réelle : le travail `verifier`
       # les lance à chaque fois qu'il s'exécute, quel que soit le chemin qui l'a déclenché.
   # Le contrôle tourne aussi sur les propositions de fusion : on voit le problème
-  # AVANT que le code n'atteigne `main`, pas après. (`deploy` y est neutralisé.)
+  # AVANT que le code n'atteigne `main`, pas après. ⛔ `deploy` n'y est pas atteignable —
+  # ⭐ et depuis que la publication est manuelle, il ne l'est plus non plus depuis un push.
   pull_request:
     paths:
       - 'frontend/**'
       # ⭐ `tests/**` EST ici, et seulement ici : modifier un garde-fou doit permettre de
-      # l'éprouver LUI-MÊME avant fusion — sans jamais rien publier (`deploy` est neutralisé
-      # sur les propositions de fusion).
+      # l'éprouver LUI-MÊME avant fusion — ⛔ sans jamais rien publier (une proposition de
+      # fusion n'est pas un déclenchement manuel, donc `deploy` n'est pas atteignable).
       - 'tests/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch: {}
 
 # Droits minimaux ici ; `deploy` demande les siens pour lui seul (voir plus bas).
-# Une exécution déclenchée par une proposition de fusion n'obtient donc JAMAIS
-# le droit d'écrire sur Pages.
+# ⭐ Une exécution qui n'atteint pas `deploy` — une proposition de fusion, un push, un
+# déclenchement manuel depuis une autre branche — n'obtient donc JAMAIS le droit d'écrire
+# sur Pages : `pages: write` et `id-token: write` vivent DANS ce job, ⛔ jamais au-dessus.
 permissions:
   contents: read
 
@@ -135,13 +168,33 @@ jobs:
       - name: Vérifier l'écran des terrains (M1-B2 / B2-3.d)
         run: node tests/backend-terrains-ecran.test.js
 
+      # ⭐⭐ CE CONTRÔLE-CI GARDE CE FICHIER LUI-MÊME, et c'est délibéré : il lit la structure
+      # de ce workflow, en EXTRAIT la condition du job `deploy`, puis l'ÉVALUE sur quatre
+      # événements simulés (push, pull request, déclenchement manuel ailleurs, déclenchement
+      # manuel sur `main`). ⛔ Il ne cherche pas une chaîne : une condition inversée, ou un
+      # simple commentaire, ne le satisferaient pas.
+      # 🎯 Il existe parce que « pousser » et « publier » avaient fini par ne faire qu'un
+      # seul geste — voir l'encadré « POUSSER N'EST PAS PUBLIER » en tête de ce fichier.
+      - name: Vérifier que pousser ne publie pas (séparation push / déploiement)
+        run: node tests/pages-deploiement-manuel.test.js
+
   # --------------------------------------------------------------------------
-  # 2) LA PUBLICATION — ne s'exécute que si le contrôle est passé.
+  # 2) LA PUBLICATION — ⭐ MANUELLE, depuis `main`, et seulement si le contrôle est passé.
+  #
+  # ⚡ Ce titre disait « ne s'exécute que si le contrôle est passé », et c'était vrai —
+  # mais incomplet : il s'exécutait AUSSI à chaque push. ⛔ Deux conditions désormais, et
+  # elles doivent être réunies TOUTES LES DEUX :
+  #   · le déclenchement est MANUEL (`workflow_dispatch`) — ⛔ ni un push, ni une PR ;
+  #   · il vient de la branche `main` — ⛔ pas d'une branche de travail.
+  # ⭐ `needs: verifier` est conservé : la publication reste impossible si un contrôle
+  # échoue. Les trois verrous se cumulent, ⛔ aucun ne remplace un autre.
   # --------------------------------------------------------------------------
   deploy:
     name: Publier sur GitHub Pages
     needs: verifier                              # ⬅️ le verrou de C-013
-    if: github.event_name != 'pull_request'      # jamais depuis une proposition de fusion
+    # ⭐⭐ LE DÉPLOIEMENT EST MANUEL, ET SEULEMENT DEPUIS `main`.
+    # ⛔ Un push ne publie plus — voir l'encadré « POUSSER N'EST PAS PUBLIER » en tête.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
