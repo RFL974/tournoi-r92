@@ -36,6 +36,10 @@ on:
       - 'tests/backend-terrains-socle.test.js'
       - 'tests/backend-terrains-persistance.test.js'
       - 'tests/backend-terrains-bascule.test.js'
+      - 'tests/backend-terrains-ecran.test.js'
+      # ⭐ B2-3.d fait parler le VRAI code du navigateur au VRAI code du serveur : son banc doit
+      # donc tourner aussi quand l'écran des terrains change, pas seulement le backend.
+      - 'frontend/js/admin-terrains.js'
       - '.github/workflows/backend-tests.yml'
   # Le contrôle tourne aussi sur les propositions de fusion : on voit le problème AVANT
   # que le code n'atteigne `main`, pas après.
@@ -45,6 +49,8 @@ on:
       - 'tests/backend-terrains-socle.test.js'
       - 'tests/backend-terrains-persistance.test.js'
       - 'tests/backend-terrains-bascule.test.js'
+      - 'tests/backend-terrains-ecran.test.js'
+      - 'frontend/js/admin-terrains.js'          # ⭐ voir la note du bloc `push` ci-dessus
       - '.github/workflows/backend-tests.yml'
   workflow_dispatch: {}
 
@@ -76,6 +82,12 @@ jobs:
       #    aux réinitialisations (R-101). ⭐ Ce banc-là rejoue aussi `lancerTestsFFR` EN
       #    ENTIER : c'est ce qui a révélé qu'au commit `ed815fd`, la série s'arrêtait sur
       #    une exception et n'affichait AUCUN bilan — sans que rien ne le signale.
+      #  · B2-3.d : L'ÉCRAN ET L'ÉCRITURE COMPLÈTE DU DÉCOUPAGE — le navigateur envoie
+      #    enfin les identités durables des grands terrains et la catégorie de chaque
+      #    mini-terrain, et « enregistrer » cesse d'être confondu avec « confirmer ».
+      #    ⭐ Son banc est le seul du lot à faire parler le VRAI code du navigateur au VRAI
+      #    code du serveur, dans deux bacs séparés reliés par le seul message — d'où
+      #    `frontend/js/admin-terrains.js` dans les déclencheurs ci-dessus.
       #
       # Un échec fait échouer ce contrôle. ⛔ Il n'empêche AUCUNE publication : le site
       # en ligne ne dépend pas de ce workflow.
@@ -88,3 +100,6 @@ jobs:
 
       - name: Vérifier la bascule des consommateurs (M1-B2 / B2-3.c)
         run: node tests/backend-terrains-bascule.test.js
+
+      - name: Vérifier l'écran et l'écriture du découpage (M1-B2 / B2-3.d)
+        run: node tests/backend-terrains-ecran.test.js

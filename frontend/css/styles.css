@@ -1639,6 +1639,23 @@ body.theme-clair {
 .dim-ligne .dim-nom { flex: 0 0 56px; font-weight: 600; }
 .dim-taille[hidden] { display: none; }
 
+/* ---- M1-B2 / B2-3.d — l'état de la configuration, et la case « utilisé » ----
+   ⭐ Trois couleurs pour trois situations, et jamais une de plus : rien de configuré (neutre),
+   une proposition qui n'est utilisée nulle part (orange), la configuration en service (vert).
+   ⚠️ La couleur ne porte JAMAIS l'information seule : chaque bandeau commence par une pastille
+   (⚪ 🟠 🟢) et une phrase complète — un daltonien lit la même chose que tout le monde. */
+.terr-etat {
+  margin: 4px 0 12px; padding: 10px 12px; border-radius: var(--rayon);
+  line-height: 1.55; border-left: 4px solid transparent;
+}
+.terr-etat-absent { background: rgba(255,255,255,.06); border-left-color: rgba(255,255,255,.28); }
+.terr-etat-brouillon { background: rgba(214,141,20,.14); color: #b26a00; border-left-color: #d68d14; }
+.terr-etat-confirme { background: rgba(39,174,96,.13); color: #1e7a45; border-left-color: #27ae60; }
+.terr-etat-date { opacity: .7; font-size: .9em; }
+
+/* Case « utilisé » : elle dit si le grand terrain sert à CE tournoi (jamais s'il existe). */
+.terrain-ligne .tp-retenu-lib { flex: 0 0 auto; white-space: nowrap; opacity: .85; }
+
 /* Petit bouton « ✕ » de suppression d'un grand terrain. */
 .terr-suppr {
   flex: 0 0 auto; border: 1px solid transparent; background: transparent; cursor: pointer;
@@ -1670,6 +1687,9 @@ body.theme-clair {
   border-color: #d6e0ec; background: #ffffff; color: #0C1C2E;
 }
 .theme-clair .terr-titre { color: #0C1C2E; }
+.theme-clair .terr-etat-absent { background: #F5F9FD; border-left-color: #d6e0ec; color: #0C1C2E; }
+.theme-clair .terr-etat-brouillon { background: #FDF4E3; }
+.theme-clair .terr-etat-confirme { background: #EDF9F1; }
 .theme-clair .terr-suppr { color: #c0392b; }
 .theme-clair .terr-suppr:hover { background: rgba(192,57,43,.1); }
 .theme-clair .tab-capacite th, .theme-clair .tab-capacite td { border-color: #e6edf5; }

@@ -128,6 +128,13 @@ jobs:
       - name: Vérifier que ces garde-fous mordent encore (rejeu des mutations)
         run: node tests/mutations-frontend.test.js
 
+      # ⭐ M1-B2 / B2-3.d — l'écran des terrains est PUBLIÉ par ce workflow, et son message est
+      # ce que le serveur écrira dans le plan de l'édition. Ce banc fait parler le vrai code du
+      # navigateur au vrai code du serveur : il a donc sa place ici AUSSI, où il garde ce qui
+      # part en ligne. ⛔ Un échec REFUSE la publication, comme un fichier illisible.
+      - name: Vérifier l'écran des terrains (M1-B2 / B2-3.d)
+        run: node tests/backend-terrains-ecran.test.js
+
   # --------------------------------------------------------------------------
   # 2) LA PUBLICATION — ne s'exécute que si le contrôle est passé.
   # --------------------------------------------------------------------------

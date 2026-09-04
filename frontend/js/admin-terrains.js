@@ -12,9 +12,16 @@
  *   - commun.js : echapper, svgIcone, comparerCategorie, afficherMessage…
  *   - admin.js  : configCourante, equipesCourantes, ecrireAdmin, apiGet,
  *                 majEtatAvancement, dialogAlerter/Confirmer, estPresente…
+ *   - api.js    : apiPostProtege (⭐ pour la LECTURE `getPlanTerrains`, voir B2-3.d)
  *  Expose (globaux, utilisés par admin.js) : injecterTerrains, recalculerCapacite,
  *  onZoneTerrains*, ajouterTerrainPhysique, onRepartir, onAppliquerRepartition,
  *  repartitionCalculee, allouerTerrains, dessinerCarte…
+ *
+ *  ⚡ M1-B2 / B2-3.d — CE FICHIER NE PARLE PLUS SEULEMENT À `Config`. Il charge l'état des
+ *  terrains de l'ÉDITION ACTIVE (inventaire durable · brouillon · plan confirmé), et sépare
+ *  deux gestes que l'écran confondait : ENREGISTRER une proposition, et la CONFIRMER.
+ *  ⛔ Sur un serveur qui ne connaît pas encore `getPlanTerrains`, l'écran reste exactement
+ *  celui d'avant — voir le grand encadré « LES TROIS CHOSES… » plus bas.
  * ============================================================================
  */
 
@@ -145,11 +152,85 @@ function placerDansLibre(fL, fW, occupees, tl, tw, m, maxN) {
   return place;
 }
 
+/* ==========================================================================
+   M1-B2 / B2-3.d — LES TROIS CHOSES QUE L'ÉCRAN NE DOIT PLUS CONFONDRE
+   --------------------------------------------------------------------------
+   ⭐ L'INVENTAIRE DURABLE (l'installation du club), le BROUILLON (la proposition
+   en cours, que personne d'autre ne voit) et le PLAN CONFIRMÉ (le seul que le
+   dossier de la Ligue et la page Saisie consomment) sont TROIS choses distinctes.
+   Les confondre est exactement ce qui produisait R-101 : un tournoi vide annonçait
+   « 18 terrains de jeu, sur 4 grands terrains », hérités de l'année d'avant.
+
+   ⚠️ CE QUI SE PASSE SI LE SERVEUR EST ANCIEN, et ce n'est pas un cas d'école :
+   ce fichier est publié par GitHub Pages, le serveur est recopié à la main dans
+   Google Apps Script. Les deux ne changent JAMAIS au même instant. Tant que le
+   serveur ne connaît pas l'action `getPlanTerrains`, ⭐ l'écran reste EXACTEMENT
+   celui d'avant — régime historique, aucun bandeau, aucun bouton nouveau.
+   ⛔ Aucun message d'erreur : ce n'est pas une panne, c'est l'ordre des phases.
+   ========================================================================== */
+
+/* L'état renvoyé par `getPlanTerrains`. `null` = pas encore demandé. ⭐ `moderne:false`
+   couvre les deux cas où rien ne change : serveur ancien, ou structure B2-3 absente. */
+let planTerrainsB23 = null;
+/* ⛔ Une seule tentative de chargement par page : un serveur ancien ne doit pas être
+   interrogé à chaque re-rendu de la carte. */
+let planTerrainsB23Demande = false;
+
+/** L'état B2-3, ou un état HISTORIQUE sûr tant qu'on ne l'a pas. */
+function etatPlanTerrains() {
+  return planTerrainsB23 || { moderne: false, etat: 'absent', inventaire: [],
+                              brouillon: null, publie: null, selection: {} };
+}
+
+/**
+ * Demande l'état des terrains au serveur, puis re-dessine la carte SI cela change le rendu.
+ *
+ * ⛔ ELLE NE RE-DESSINE PAS EN RÉGIME HISTORIQUE, et c'est délibéré : le rendu serait
+ * identique au caractère près, et un second rendu effacerait une saisie déjà commencée.
+ * ⭐ En régime moderne le re-rendu a lieu UNE fois, juste après le premier affichage.
+ */
+async function chargerPlanTerrainsB23() {
+  if (planTerrainsB23Demande) return planTerrainsB23;
+  planTerrainsB23Demande = true;
+  try {
+    const r = await apiPostProtege('getPlanTerrains', {}, 'admin', 'admin');
+    if (r && typeof r === 'object' && r.moderne !== undefined) planTerrainsB23 = r;
+  } catch (erreur) {
+    // ⛔ Serveur ancien (« Action inconnue »), hors ligne, clé refusée : dans TOUS les cas on
+    //    garde ce qu'on avait déjà, et à défaut le régime historique.
+    //
+    // 🚨 POURQUOI ON N'EFFACE SURTOUT PAS L'ÉTAT DÉJÀ CONNU, et c'est le piège de ce lot :
+    //    l'écran perdrait les IDENTITÉS DURABLES qu'il porte dans son DOM. Le prochain
+    //    enregistrement repartirait sans elles, et le serveur en fabriquerait de NOUVELLES —
+    //    des identités « durables » qui changeraient à chaque coupure réseau. ⛔ Une panne
+    //    d'affichage ne doit jamais devenir une corruption de données.
+    //
+    // ⭐ Il n'y a donc RIEN à faire ici : `planTerrainsB23` garde sa valeur — l'état connu, ou
+    //   `null` si on n'en avait pas. C'est l'affectation ci-dessus qui est conditionnelle,
+    //   ⛔ pas un effacement qu'il faudrait annuler.
+  }
+  if (planTerrainsB23 && planTerrainsB23.moderne) injecterTerrains();
+  return planTerrainsB23;
+}
+
+/** Le plan sur lequel l'écran s'appuie : le BROUILLON s'il existe, sinon le plan CONFIRMÉ.
+ *  ⭐ Le brouillon d'abord — c'est le travail en cours, il ne doit pas être masqué par
+ *  l'ancienne configuration confirmée. */
+function baseAffichageTerrains() {
+  const e = etatPlanTerrains();
+  return e.brouillon || e.publie || null;
+}
+
 /** Plan des terrains actuellement enregistré (repli sur les valeurs par défaut). */
 function planTerrainsActuel() {
   const g = configCourante.global || {};
+  const etatB23 = etatPlanTerrains();
   let terrains = TERRAINS_PHYSIQUES_DEFAUT;
-  try { if (g.terrains_physiques) terrains = JSON.parse(g.terrains_physiques); } catch (e) {}
+  // ⭐ M1-B2 / B2-3.d — en régime MODERNE, l'inventaire vient du serveur AVEC ses identités
+  //   durables. ⛔ On ne les reconstruit pas et on ne les invente pas : elles voyagent telles
+  //   quelles jusqu'au prochain enregistrement, qui les renverra au serveur.
+  if (etatB23.moderne && (etatB23.inventaire || []).length) terrains = etatB23.inventaire;
+  else { try { if (g.terrains_physiques) terrains = JSON.parse(g.terrains_physiques); } catch (e) {} }
   // Complète l'emplacement (pos) manquant depuis les valeurs par défaut connues (par nom) :
   // les terrains enregistrés avant l'ajout des emplacements retrouvent ainsi leur position.
   terrains = terrains.map(function (t) {
@@ -158,12 +239,32 @@ function planTerrainsActuel() {
     return d ? Object.assign({}, t, { pos: d.pos }) : t;
   });
   let dims = {};
-  try { if (g.dimensions_categories) dims = JSON.parse(g.dimensions_categories); } catch (e) {}
+  // ⚠️ LES TAILLES DE TERRAIN ONT CHANGÉ DE SOURCE EN B2-3.c, ET L'ÉCRAN DOIT SUIVRE.
+  //   `appliquerValeursFFR` les écrit désormais dans le BROUILLON du plan ; les lire encore
+  //   dans `Config` afficherait une valeur périmée que plus personne n'écrit — l'organisateur
+  //   appliquerait les valeurs FFR et ne verrait rien bouger.
+  const base = baseAffichageTerrains();
+  const dimsBrut = (etatB23.moderne && base) ? base.dimensions_json : g.dimensions_categories;
+  try { if (dimsBrut) dims = JSON.parse(dimsBrut); } catch (e) {}
   const couloir = (g.couloir_terrain_m != null && g.couloir_terrain_m !== '')
     ? (parseFloat(g.couloir_terrain_m) || 0) : COULOIR_DEFAUT;
   const tmL = (g.tm_longueur_m != null && g.tm_longueur_m !== '') ? (parseFloat(g.tm_longueur_m) || 0) : TM_L_DEFAUT;
   const tmW = (g.tm_largeur_m  != null && g.tm_largeur_m  !== '') ? (parseFloat(g.tm_largeur_m)  || 0) : TM_W_DEFAUT;
   return { terrains: terrains, dims: dims, couloir: couloir, tmL: tmL, tmW: tmW };
+}
+
+/**
+ * Un grand terrain est-il RETENU pour cette édition ?
+ * ⭐ La réponse vient du plan (brouillon, sinon confirmé) — ⛔ jamais de l'inventaire durable :
+ * « cette année on n'utilise pas le terrain du fond » est une décision de l'ÉDITION.
+ * ⭐ Terrain inconnu du plan (fraîchement ajouté) ⇒ l'écran PROPOSE « retenu ». Ce n'est
+ * qu'une proposition : elle n'engage rien tant que personne n'a enregistré.
+ */
+function terrainRetenuEcran(t) {
+  const sel = etatPlanTerrains().selection || {};
+  const id = String((t || {}).id || '');
+  if (id && Object.prototype.hasOwnProperty.call(sel, id)) return !!sel[id];
+  return true;
 }
 
 /** Noms des catégories présentes (celles qu'on dimensionne). */
@@ -186,7 +287,14 @@ function injecterTerrains() {
   const plan = planTerrainsActuel();
   const cats = categoriesPresentes();
 
+  // ⭐ M1-B2 / B2-3.d — l'état vient du serveur. ⛔ Un seul appel par page ; tant qu'il n'a pas
+  //   répondu (ou si le serveur est ancien), le rendu ci-dessous est celui d'avant, à la lettre.
+  if (!planTerrainsB23Demande && typeof apiPostProtege === 'function') {
+    chargerPlanTerrainsB23();
+  }
+
   let h = '<h2>🗺️ Terrains &amp; répartition</h2>';
+  h += bandeauEtatTerrains();
   h += '<p class="note-generation">Déclare tes <strong>grands terrains</strong> réels et la ' +
        '<strong>taille de chaque catégorie</strong>. L\'appli calcule combien de mini-terrains ' +
        'y tiennent (couloirs de circulation compris).</p>';
@@ -243,6 +351,8 @@ function injecterTerrains() {
   h += '<button type="button" class="bouton" id="bouton-repartir">' + svgIcone('terrain') + 'Répartir les terrains</button>';
   h += '<div id="repartition-resultat"></div>';
 
+  h += blocConfirmationTerrains();
+
   zone.innerHTML = h;
 
   // Zone (re)construite depuis l'état ENREGISTRÉ → nouvelle référence pour le
@@ -250,12 +360,90 @@ function injecterTerrains() {
   if (typeof assistantMarquerPropre === 'function') assistantMarquerPropre(zone);
 }
 
+/**
+ * ⭐⭐ LE BANDEAU D'ÉTAT — ce que l'écran doit dire, et qu'il ne disait pas.
+ *
+ * Quatre états, et les quatre se lisent d'un coup d'œil :
+ *
+ *   absent         ⚪ rien n'est configuré pour ce tournoi
+ *   brouillon      🟠 une proposition existe, ⛔ elle n'est utilisée NULLE PART
+ *   a_reconfirmer  🟠 une configuration est confirmée, mais elle a bougé depuis
+ *   confirme       🟢 la configuration fait foi, et alimente les vues et les documents
+ *
+ * ⛔ RIEN EN RÉGIME HISTORIQUE : tant que la structure B2-3 n'existe pas, il n'y a ni
+ * brouillon ni plan — annoncer un état serait mentir. ⭐ L'écran est alors celui d'avant.
+ */
+function bandeauEtatTerrains() {
+  const e = etatPlanTerrains();
+  if (!e.moderne) return '';
+  const textes = {
+    absent: ['terr-etat-absent', '⚪ <strong>Aucune configuration de terrains</strong> pour ce ' +
+      'tournoi. Déclare tes grands terrains, répartis-les, puis confirme.'],
+    brouillon: ['terr-etat-brouillon', '🟠 <strong>Proposition à confirmer.</strong> Elle n\'est ' +
+      'utilisée nulle part — ni pour le planning, ni dans le dossier des clubs, ni dans le ' +
+      'dossier de la Ligue — tant qu\'elle n\'est pas confirmée.'],
+    a_reconfirmer: ['terr-etat-brouillon', '🟠 <strong>À reconfirmer.</strong> Une configuration ' +
+      'est bien en service, mais quelque chose a changé depuis. Tant que tu n\'as pas ' +
+      'reconfirmé, c\'est <strong>l\'ancienne</strong> qui continue de faire foi.'],
+    confirme: ['terr-etat-confirme', '🟢 <strong>Configuration confirmée.</strong> C\'est elle ' +
+      'qui est utilisée pour le planning, le dossier des clubs et le dossier de la Ligue.']
+  };
+  const t = textes[e.etat] || textes.absent;
+  const fige = (e.publie && e.publie.fige_le) ? ' <span class="terr-etat-date">(confirmée le ' +
+    echapper(String(e.publie.fige_le)) + ')</span>' : '';
+  return '<p class="terr-etat ' + t[0] + '" id="terr-etat">' + t[1] +
+         (e.etat === 'confirme' ? fige : '') + '</p>';
+}
+
+/**
+ * Le bloc de CONFIRMATION — ⭐ un geste explicite, séparé de tout enregistrement.
+ *
+ * 🎯 POURQUOI UN BOUTON À PART, ET PAS UNE CASE DANS L'ENREGISTREMENT : « enregistrer » et
+ * « mettre en service » ne sont pas la même décision. Un organisateur qui corrige la largeur
+ * d'un terrain à J-3 doit pouvoir le faire sans que le dossier déjà envoyé aux clubs change
+ * sous ses pieds. ⛔ Tant qu'il n'a pas confirmé, l'ancienne configuration reste la seule
+ * consommable — c'est la garantie que porte le pointeur `Editions.terrains_plan_publie`.
+ */
+function blocConfirmationTerrains() {
+  const e = etatPlanTerrains();
+  if (!e.moderne) return '';
+  const aConfirmer = (e.etat === 'brouillon' || e.etat === 'a_reconfirmer');
+  let h = '<h3 class="terr-titre">Confirmation</h3>';
+  h += '<p class="note-generation">' + (aConfirmer
+    ? 'Ta proposition est prête. <strong>Confirme-la</strong> pour qu\'elle devienne la ' +
+      'configuration du tournoi : c\'est à cet instant, et à cet instant seulement, qu\'elle ' +
+      'sera reprise par le planning et les dossiers.'
+    : (e.etat === 'confirme'
+        ? 'Rien à confirmer : la configuration en service est à jour. Modifie les terrains ou ' +
+          'relance la répartition pour préparer une nouvelle proposition.'
+        : 'Rien à confirmer pour l\'instant : enregistre tes grands terrains, puis applique une ' +
+          'répartition.')) + '</p>';
+  h += '<div class="ligne-action">' +
+       '<button type="button" class="bouton" id="bouton-confirmer-terrains"' +
+       (aConfirmer ? '' : ' disabled') + '>✅ Confirmer la configuration des terrains</button>' +
+       '<span id="message-confirmation-terrains" class="message-form"></span>' +
+       '</div>';
+  return h;
+}
+
 /** Une ligne « grand terrain » (nom, type, longueur × largeur, supprimer). */
 function ligneTerrainPhysique(t, i) {
   const type = (t.type === 'foot') ? 'foot' : 'rugby';
   const opt = function (v, lib, sel) { return '<option value="' + v + '"' + (sel ? ' selected' : '') + '>' + lib + '</option>'; };
   const nature = String(t.nature || '');
-  return '<div class="terrain-ligne" data-i="' + i + '">' +
+  // ⭐ M1-B2 / B2-3.d — L'IDENTITÉ DURABLE VOYAGE DANS LE DOM, ⛔ elle ne s'y fabrique jamais.
+  //   `data-id` vide = terrain que le serveur n'a pas encore identifié : il lui donnera une
+  //   identité au prochain enregistrement, et la renverra ici.
+  //   La case « utilisé » est une décision de l'ÉDITION (voir `terrainRetenuEcran`) ; elle ne
+  //   s'affiche qu'en régime moderne, où elle a un sens et une destination.
+  const moderne = etatPlanTerrains().moderne;
+  const retenu = terrainRetenuEcran(t);
+  return '<div class="terrain-ligne" data-i="' + i + '" data-id="' + echapper(String(t.id || '')) + '">' +
+    (moderne
+      ? '<label class="mini-toggle tp-retenu-lib" title="Ce grand terrain est-il utilisé pour CE tournoi ?">' +
+        '<input type="checkbox" class="tp-retenu"' + (retenu ? ' checked' : '') +
+        ' aria-label="Utiliser ce grand terrain pour ce tournoi"> utilisé</label>'
+      : '') +
     '<input class="tp-nom" type="text" value="' + echapper(String(t.nom || '')) + '" placeholder="Nom" aria-label="Nom du terrain">' +
     '<select class="tp-nature" aria-label="Nature du terrain (surface de jeu)">' +
       opt('', '— Nature —', nature === '') +
@@ -323,7 +511,15 @@ function tableauCapaciteHTML(terrains, dims, couloir, cats) {
 function lireTerrainsDuFormulaire() {
   const out = [];
   document.querySelectorAll('#liste-terrains-physiques .terrain-ligne').forEach(function (row) {
-    out.push({
+    // ⭐ M1-B2 / B2-3.d — l'identité est RELUE telle quelle. ⛔ Aucune n'est créée ici : un
+    //   terrain neuf part sans `id`, et c'est le serveur qui lui en attribuera un.
+    const id = row.getAttribute('data-id') || '';
+    const caseRetenu = row.querySelector('.tp-retenu');
+    out.push(Object.assign(id ? { id: id } : {}, {
+      // ⛔ `selectionne` n'est PAS deviné : hors régime moderne la case n'existe pas, et le
+      //    champ vaut 'oui' — c'est exactement le comportement historique (tout terrain
+      //    déclaré est utilisable), et il n'est de toute façon jamais envoyé dans ce régime.
+      selectionne: caseRetenu ? (caseRetenu.checked ? 'oui' : 'non') : 'oui',
       nom:  row.querySelector('.tp-nom').value.trim(),
       nature: (row.querySelector('.tp-nature') || {}).value || '',
       type: row.querySelector('.tp-type').value,
@@ -333,10 +529,26 @@ function lireTerrainsDuFormulaire() {
       // n'est PAS compté dans L (mesurée d'une ligne de poteaux à l'autre). 0 = non déclaré.
       enBut: parseFloat((row.querySelector('.tp-enbut') || {}).value) || 0,
       pos:  (row.querySelector('.tp-pos') || {}).value || ''
-    });
+    }));
   });
   return out;
 }
+
+/** L'inventaire DURABLE à renvoyer au serveur : ⛔ sans `selectionne`, qui appartient au PLAN
+ *  de l'édition et n'a rien à faire dans l'installation permanente du club. */
+function inventaireDurableDuFormulaire(terrains) {
+  return (terrains || []).map(function (t) {
+    const copie = Object.assign({}, t);
+    delete copie.selectionne;
+    return copie;
+  });
+}
+
+/** La sélection, dans l'ORDRE EXACT de l'inventaire envoyé — c'est ce que le serveur exige. */
+function selectionDuFormulaire(terrains) {
+  return (terrains || []).map(function (t) { return t.selectionne === 'non' ? 'non' : 'oui'; });
+}
+
 function lireDimensionsDuFormulaire() {
   const out = {};
   document.querySelectorAll('#liste-dimensions-categories .dim-ligne').forEach(function (row) {
@@ -397,6 +609,8 @@ function onZoneTerrainsClick(evenement) {
   if (evenement.target.id === 'bouton-enregistrer-terrains') { onEnregistrerPlanTerrains(); return; }
   if (evenement.target.id === 'bouton-repartir') { onRepartir(); return; }
   if (evenement.target.id === 'bouton-appliquer-repartition') { onAppliquerRepartition(); return; }
+  // M1-B2 / B2-3.d — ⭐ le seul geste qui met la configuration EN SERVICE.
+  if (evenement.target.id === 'bouton-confirmer-terrains') { onConfirmerPlanTerrains(); return; }
 }
 
 function ajouterTerrainPhysique() {
@@ -422,27 +636,212 @@ async function onEnregistrerPlanTerrains() {
   if (invalide) { afficherMessage(message, 'Chaque grand terrain doit avoir une longueur et une largeur.', 'ko'); return; }
 
   const data = {
-    terrains_physiques:     JSON.stringify(terrains),
+    terrains_physiques:     JSON.stringify(inventaireDurableDuFormulaire(terrains)),
     couloir_terrain_m:      String(couloir),
     dimensions_categories:  JSON.stringify(dims),
     tm_longueur_m:          String(tm.l),
     tm_largeur_m:           String(tm.w)
   };
+  // ⭐ M1-B2 / B2-3.d — LE PLAN DE L'ÉDITION, envoyé À CÔTÉ de l'installation durable.
+  //   ⛔ SANS `minis` : ce bouton ne parle PAS du découpage. Son absence dit « n'y touche
+  //   pas » — le serveur conserve alors celui du brouillon en cours. ⚠️ Envoyer une liste
+  //   vide voudrait dire « efface tout », et c'est exactement ce qu'il ne faut pas faire.
+  //   ⛔ Cet enregistrement NE CONFIRME RIEN : il écrit un brouillon, rien de plus.
+  if (etatPlanTerrains().moderne) {
+    data.plan_terrains = JSON.stringify({
+      selection:     selectionDuFormulaire(terrains),
+      dimensions:    dims,
+      couloir_m:     String(couloir),
+      tm_longueur_m: String(tm.l),
+      tm_largeur_m:  String(tm.w)
+    });
+  }
   const texte = bouton.textContent;
   bouton.disabled = true; bouton.textContent = 'Enregistrement…';
   try {
-    await ecrireAdmin('enregistrerPlanTerrains', data);
-    configCourante.global = Object.assign({}, configCourante.global, data);
+    const reponse = await ecrireAdmin('enregistrerPlanTerrains', data);
+    // ⭐ LES IDENTITÉS REVIENNENT DU SERVEUR, et c'est le seul endroit où l'écran les apprend.
+    //   ⛔ Sans cette reprise, le prochain enregistrement repartirait sans `id` et le serveur
+    //   en fabriquerait de NOUVELLES — des identités « durables » qui changeraient à chaque
+    //   clic, ce qui est précisément le défaut que B2-3.a interdit.
+    if (reponse && reponse.inventaire) {
+      data.terrains_physiques = JSON.stringify(reponse.inventaire);
+      await rafraichirEtatTerrains();
+    }
+    const pourConfig = Object.assign({}, data);
+    delete pourConfig.plan_terrains;   // ⛔ ce n'est pas un paramètre de Config
+    configCourante.global = Object.assign({}, configCourante.global, pourConfig);
     // Plan ENREGISTRÉ → l'assistant reprend sa photo de référence de la zone terrains.
     if (typeof assistantMarquerPropre === 'function') {
       assistantMarquerPropre(document.getElementById('zone-terrains'));
     }
     majEtatAvancement(); // le fil « Où en suis-je ? » suit le plan des terrains
-    afficherMessage(message, '✅ Terrains enregistrés.', 'ok');
+    // ⚠️ Le message est recherché À NOUVEAU : en régime moderne, la reprise de l'état ci-dessus
+    //    a pu redessiner toute la zone, et l'ancien élément n'est plus dans la page.
+    afficherMessage(document.getElementById('message-terrains') || message,
+      '✅ Terrains enregistrés.' + (etatPlanTerrains().moderne
+        ? ' Proposition à confirmer — elle n\'est utilisée nulle part tant qu\'elle ne l\'est pas.'
+        : ''), 'ok');
   } catch (erreur) {
-    afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
+    afficherMessage(document.getElementById('message-terrains') || message,
+      '⚠️ ' + erreur.message, 'ko');
   } finally {
-    bouton.disabled = false; bouton.textContent = texte;
+    const b = document.getElementById('bouton-enregistrer-terrains') || bouton;
+    b.disabled = false; b.textContent = texte;
+  }
+}
+
+/**
+ * Redemande l'état des terrains au serveur, puis redessine la carte.
+ * ⭐ Appelée APRÈS chaque écriture : c'est ce qui fait apparaître les identités fraîchement
+ * attribuées dans le DOM, et ce qui met le bandeau d'état d'accord avec le classeur.
+ * ⛔ Une panne de rafraîchissement ne remet jamais en cause l'écriture, qui est acquise.
+ */
+async function rafraichirEtatTerrains() {
+  planTerrainsB23Demande = false;
+  // ⭐ `chargerPlanTerrainsB23` redessine elle-même quand l'état est moderne ; on ne redessine
+  //   ici que si elle ne l'a pas fait (serveur injoignable), pour que l'écran reste cohérent
+  //   avec ce qu'on sait — ⛔ jamais deux rendus pour rien.
+  const avant = planTerrainsB23;
+  try { await chargerPlanTerrainsB23(); } catch (e) { /* l'écriture reste acquise */ }
+  if (!(planTerrainsB23 && planTerrainsB23.moderne) || planTerrainsB23 === avant) injecterTerrains();
+}
+
+/** Un nombre du formulaire et une cellule du plan désignent-ils la même mesure ?
+ *  ⭐ `115` et `"115"` sont la MÊME largeur — comparer les textes crierait au loup à chaque fois. */
+function memeNombreTerrain(a, b) {
+  const na = parseFloat(a), nb = parseFloat(b);
+  const va = isFinite(na) ? na : 0, vb = isFinite(nb) ? nb : 0;
+  return va === vb;
+}
+
+/**
+ * ⭐⭐ CE QUE L'ÉCRAN MONTRE CORRESPOND-IL À LA PROPOSITION ENREGISTRÉE ?
+ *
+ * 🚨 LE DÉFAUT QUE CE CONTRÔLE FERME, et il a été constaté avant d'être corrigé : « Confirmer »
+ * publie le BROUILLON DU SERVEUR, pas ce qui est à l'écran. Un organisateur qui corrige la
+ * largeur d'un terrain puis clique directement « Confirmer » — sans enregistrer — mettait donc
+ * en service **l'ancienne valeur**, en croyant publier la nouvelle. ⛔ Silencieusement.
+ *
+ * ⭐ On ne devine pas et on n'enregistre pas à sa place : on REFUSE, en disant quoi faire.
+ * @return {?string} le message à afficher, ou `null` si tout concorde.
+ */
+function ecartFormulaireBrouillon() {
+  const e = etatPlanTerrains();
+  const b = e.brouillon;
+  if (!b) return 'Aucune proposition enregistrée à confirmer.';
+
+  // ⛔ Une répartition calculée mais NON APPLIQUÉE n'est nulle part : la confirmer serait
+  //    publier l'ancien découpage en croyant publier le nouveau.
+  if (repartitionCalculee) {
+    return 'Une répartition vient d\'être calculée mais n\'a pas encore été appliquée. ' +
+      'Clique « ✅ Appliquer aux catégories », puis confirme.';
+  }
+
+  const terrains = lireTerrainsDuFormulaire();
+  const parId = {};
+  (b.terrains || []).forEach(function (l) { parId[String(l.terrain_id)] = l; });
+
+  if (terrains.length !== (b.terrains || []).length) {
+    return 'La liste des grands terrains a changé depuis le dernier enregistrement. ' +
+      'Clique « Enregistrer les terrains », puis confirme.';
+  }
+  for (let i = 0; i < terrains.length; i++) {
+    const t = terrains[i];
+    const l = parId[String(t.id || '')];
+    // ⛔ Un terrain SANS identité n'a jamais été enregistré : il ne peut pas être dans le plan.
+    if (!t.id || !l) {
+      return 'Un grand terrain n\'a pas encore été enregistré. ' +
+        'Clique « Enregistrer les terrains », puis confirme.';
+    }
+    if (String(t.nom || '') !== String(l.snap_nom || '') ||
+        String(t.type || '') !== String(l.snap_type || '') ||
+        String(t.nature || '') !== String(l.snap_nature || '') ||
+        String(t.pos || '') !== String(l.snap_pos || '') ||
+        !memeNombreTerrain(t.L, l.snap_longueur_m) ||
+        !memeNombreTerrain(t.W, l.snap_largeur_m) ||
+        !memeNombreTerrain(t.enBut, l.snap_enbut_m) ||
+        (t.selectionne === 'non') !== (String(l.selectionne) === 'non')) {
+      return 'Le grand terrain « ' + (t.nom || '?') + ' » a été modifié sans être enregistré. ' +
+        'Clique « Enregistrer les terrains », puis confirme.';
+    }
+  }
+
+  // Les tailles par catégorie, le couloir et la table de marque.
+  let dimsPlan = {};
+  try { dimsPlan = JSON.parse(b.dimensions_json || '{}') || {}; } catch (err) { dimsPlan = {}; }
+  const dimsVues = lireDimensionsDuFormulaire();
+  const cles = Object.keys(dimsVues);
+  if (cles.length !== Object.keys(dimsPlan).length) {
+    return 'Les tailles de terrain par catégorie ont changé sans être enregistrées. ' +
+      'Clique « Enregistrer les terrains », puis confirme.';
+  }
+  for (let k = 0; k < cles.length; k++) {
+    const nom = cles[k], a = dimsVues[nom], c = dimsPlan[nom] || {};
+    const pleinA = !!a.plein, pleinC = (c.plein === true || String(c.plein).toLowerCase() === 'oui');
+    if (pleinA !== pleinC || (!pleinA && (!memeNombreTerrain(a.l, c.l) || !memeNombreTerrain(a.w, c.w)))) {
+      return 'La taille de terrain de « ' + nom + ' » a changé sans être enregistrée. ' +
+        'Clique « Enregistrer les terrains », puis confirme.';
+    }
+  }
+  const tm = lireTailleTM();
+  if (!memeNombreTerrain(lireCouloir(), b.couloir_m) ||
+      !memeNombreTerrain(tm.l, b.tm_longueur_m) || !memeNombreTerrain(tm.w, b.tm_largeur_m)) {
+    return 'Le couloir ou la table de marque ont changé sans être enregistrés. ' +
+      'Clique « Enregistrer les terrains », puis confirme.';
+  }
+  return null;
+}
+
+/**
+ * Bouton « Confirmer la configuration des terrains » — ⭐ LE SEUL GESTE QUI PUBLIE.
+ *
+ * ⛔ Il ne calcule rien et ne réécrit rien : il demande au serveur de mettre en service le
+ * brouillon TEL QU'IL EST. Si ce brouillon est incomplet ou incohérent, le serveur refuse et
+ * ⭐ l'ancienne configuration reste en service, intacte — c'est la garantie de B2-3.b.
+ *
+ * 🚨 DEUX VERROUS, ET ILS NE PROTÈGENT PAS DE LA MÊME CHOSE :
+ *   ① ICI, avant l'envoi : ⛔ l'écran refuse si ce qu'il MONTRE diffère de la proposition
+ *     enregistrée — sinon l'organisateur publierait autre chose que ce qu'il regarde ;
+ *   ② LÀ-BAS, dans le serveur : l'EMPREINTE reçue au chargement est recomparée au brouillon
+ *     réel. ⛔ Elle attrape ce que l'écran ne peut pas voir — un autre onglet, une autre
+ *     personne, ou une lecture tombée au milieu d'une écriture.
+ */
+async function onConfirmerPlanTerrains() {
+  const bouton = document.getElementById('bouton-confirmer-terrains');
+  const message = document.getElementById('message-confirmation-terrains');
+  if (!bouton || bouton.disabled) return;
+
+  // ① ⛔ Ce que je vois n'est pas ce qui est enregistré : je ne confirme rien.
+  const ecart = ecartFormulaireBrouillon();
+  if (ecart) { afficherMessage(message, '⚠️ ' + ecart, 'ko'); return; }
+
+  const ok = await dialogConfirmer(
+    'Confirmer la configuration des terrains ?\n\n' +
+    'Elle deviendra la configuration de CE tournoi : le planning, le dossier des clubs et le ' +
+    'dossier de la Ligue s\'en serviront.\n\n' +
+    'La configuration précédente reste conservée dans l\'historique des tournois passés.',
+    { ok: 'Confirmer' });
+  if (!ok) return;
+
+  const texte = bouton.textContent;
+  bouton.disabled = true; bouton.textContent = 'Confirmation…';
+  try {
+    // ② ⭐ L'EMPREINTE REÇUE AU CHARGEMENT part avec la demande. ⛔ Le navigateur ne la
+    //   calcule pas : il RENVOIE celle que le serveur lui a donnée — c'est ce qui la rend
+    //   probante. Le serveur la recompare au brouillon réel et refuse au moindre écart.
+    const b = (etatPlanTerrains().brouillon || {});
+    await ecrireAdmin('confirmerPlanTerrains',
+      { empreinte: b.empreinte || '', plan_id: b.plan_id || '' });
+    await rafraichirEtatTerrains();
+    majEtatAvancement();
+    await dialogAlerter('✅ Configuration des terrains confirmée. Elle est désormais celle du ' +
+      'tournoi.');
+  } catch (erreur) {
+    afficherMessage(document.getElementById('message-confirmation-terrains') || message,
+      '⚠️ ' + erreur.message, 'ko');
+    const b = document.getElementById('bouton-confirmer-terrains');
+    if (b) { b.disabled = false; b.textContent = texte; }
   }
 }
 
@@ -885,7 +1284,13 @@ function allouerTerrains(fields, cats, m, tmL, tmW) {
 /** Bouton « Répartir » : calcule la répartition à partir des saisies en cours, l'affiche. */
 function onRepartir() {
   const cont = document.getElementById('repartition-resultat');
-  const fields = lireTerrainsDuFormulaire().filter(function (t) { return t.L > 0 && t.W > 0; });
+  // ⭐ M1-B2 / B2-3.d — LA PHOTO DE L'INVENTAIRE AU MOMENT DU CALCUL. La répartition est
+  //   calculée SUR CETTE LISTE ; c'est donc elle, et pas une relecture ultérieure du
+  //   formulaire, qui devra accompagner le découpage à l'enregistrement. ⛔ `filter` conserve
+  //   les RÉFÉRENCES : la position d'un `fp.field` dans cette photo se retrouve par `indexOf`,
+  //   sans avoir à comparer des noms ni à reconstruire quoi que ce soit.
+  const tousLesTerrains = lireTerrainsDuFormulaire();
+  const fields = tousLesTerrains.filter(function (t) { return t.L > 0 && t.W > 0; });
   const dims = lireDimensionsDuFormulaire();
   const m = lireCouloir();
   const teams = equipesParCategorie();
@@ -906,6 +1311,7 @@ function onRepartir() {
   });
   // Contexte de l'ajustement manuel (mêmes données que le calcul : dimensions, couloir, TM).
   repartitionCalculee.ctxManuel = { cats: cats, m: m, tmL: tm.l, tmW: tm.w };
+  repartitionCalculee.terrainsSource = tousLesTerrains;   // ⭐ la photo, pour B2-3.d
   repartitionCalculee.misDeCote = [];
   // Les TABLES DES MARQUES ne sont posées qu'À LA FIN, une fois le placement validé : tant qu'on
   // déplace des mini-terrains, elles occuperaient de la place et empêcheraient des positions
@@ -1511,6 +1917,93 @@ function dessinerCarte(res) {
          'role="img" aria-label="Carte de répartition des terrains">' + parts.join('') + '</svg>';
 }
 
+/**
+ * ⭐⭐ LE DÉCOUPAGE, TRADUIT POUR LE SERVEUR — la pièce centrale de B2-3.d.
+ *
+ * Ce que la carte connaît, et que l'ancien message perdait :
+ *   · quel GRAND TERRAIN porte chaque mini-terrain    (`fp.field`)
+ *   · quelle CATÉGORIE occupe chaque mini-terrain     (`zone.cat`)
+ *   · quels grands terrains sont RETENUS cette année  (la case « utilisé »)
+ *
+ * 🚨 COMMENT UN MINI-TERRAIN DÉSIGNE SON GRAND TERRAIN, ET POURQUOI CE N'EST PAS UNE IDENTITÉ.
+ * Il envoie `terrain_index` : la POSITION dans la liste `terrains_physiques` DU MÊME MESSAGE.
+ * ⛔ Ce n'est PAS un identifiant : il ne survit pas à l'appel, il n'est écrit nulle part, et il
+ * ne désigne pas « le terrain n° 3 du classeur » mais « la 3ᵉ ligne de ce que je t'envoie ».
+ * ⭐ C'est le SERVEUR — et lui seul — qui traduit cette position en identité durable. Le
+ * navigateur ne fabrique donc aucune identité, ce que le socle B2-3.a interdit formellement.
+ *
+ * ⚠️ LE GARDE-FOU DU DÉCALAGE. La répartition a été calculée sur une PHOTO de l'inventaire.
+ * Si le formulaire a changé depuis (un terrain ajouté, supprimé, renommé), la position d'un
+ * `fp.field` dans cette photo ne veut plus rien dire. ⛔ On REFUSE alors, en demandant de
+ * relancer « Répartir » — plutôt que d'écrire un découpage qui ne correspond à rien.
+ *
+ * @return {{inventaire:Array, payload:Object}|{error:string}}
+ */
+function planDecoupagePourServeur() {
+  const res = repartitionCalculee;
+  if (!res) return { error: 'Aucune répartition calculée.' };
+  const photo = res.terrainsSource || [];
+  if (!photo.length) {
+    return { error: 'La répartition a été calculée avant cette version de la page : relance ' +
+      '« Répartir les terrains », puis applique.' };
+  }
+
+  // ⛔ LE CONTRÔLE DE DÉCALAGE — on compare la photo à ce que le formulaire dit MAINTENANT.
+  const actuels = lireTerrainsDuFormulaire();
+  const memeListe = actuels.length === photo.length && actuels.every(function (t, i) {
+    return String(t.nom || '') === String(photo[i].nom || '') &&
+           String(t.id || '') === String(photo[i].id || '');
+  });
+  if (!memeListe) {
+    return { error: 'Les grands terrains ont changé depuis le calcul de la répartition : ' +
+      'relance « Répartir les terrains », puis applique.' };
+  }
+
+  const minis = [];
+  let decalage = null;
+  (res.fieldsPlan || []).forEach(function (fp) {
+    const idx = photo.indexOf(fp.field);
+    if (idx < 0) { decalage = fp.field && fp.field.nom; return; }
+    (fp.zones || []).forEach(function (z) {
+      (z.tiles || []).forEach(function (t) {
+        // ⭐ LA CATÉGORIE EST CELLE DE LA ZONE — ⛔ jamais déduite d'un nom de terrain, d'un
+        //   préfixe (« R1 ») ni d'un libellé libre. C'est exactement ce que le socle exige.
+        minis.push({ numero: String(t.id), terrain_index: idx, categorie: String(z.cat) });
+      });
+    });
+  });
+  if (decalage) {
+    return { error: 'Le grand terrain « ' + decalage + ' » n\'a pas pu être retrouvé : ' +
+      'relance « Répartir les terrains », puis applique.' };
+  }
+
+  // ⛔ Un mini-terrain posé sur un grand terrain DÉCOCHÉ serait refusé par le serveur. On le
+  //   dit ici, avec un message qui nomme le terrain — plutôt que de laisser l'aller-retour
+  //   produire une erreur que l'organisateur ne saurait pas relier à sa case décochée.
+  const selection = selectionDuFormulaire(actuels);
+  const utilises = {};
+  minis.forEach(function (m) { utilises[m.terrain_index] = true; });
+  const decoches = Object.keys(utilises).filter(function (i) { return selection[i] === 'non'; })
+    .map(function (i) { return String(photo[i].nom || '?'); });
+  if (decoches.length) {
+    return { error: 'Ces grands terrains portent des mini-terrains mais ne sont pas cochés ' +
+      '« utilisé » : ' + decoches.join(', ') + '. Coche-les, ou relance la répartition.' };
+  }
+
+  const tm = lireTailleTM();
+  return {
+    inventaire: inventaireDurableDuFormulaire(actuels),
+    payload: {
+      selection:     selection,
+      minis:         minis,
+      dimensions:    lireDimensionsDuFormulaire(),
+      couloir_m:     String(lireCouloir()),
+      tm_longueur_m: String(tm.l),
+      tm_largeur_m:  String(tm.w)
+    }
+  };
+}
+
 /** Applique la répartition : écrit le champ « Terrains » de chaque catégorie. */
 async function onAppliquerRepartition() {
   if (!repartitionCalculee) return;
@@ -1581,7 +2074,23 @@ async function onAppliquerRepartition() {
     }
     // Mémorise la composition des grands terrains (pour le filtre de la page Saisie).
     const compositionJson = JSON.stringify(composition);
-    await ecrireAdmin('enregistrerPlanTerrains', { repartition_grands_terrains: compositionJson });
+    const envoi = { repartition_grands_terrains: compositionJson };
+    // ⭐⭐ M1-B2 / B2-3.d — LE DÉCOUPAGE COMPLET PART AVEC, et c'est tout l'objet du lot :
+    //   `composition` est ANONYME (« Rugby 1 contient 1 et 2 ») et perd la catégorie de chaque
+    //   mini-terrain. Le plan de l'édition, lui, a besoin des trois choses ensemble — l'identité
+    //   durable du grand terrain, le numéro du mini, et sa catégorie EXPLICITE.
+    //   ⛔ Cet envoi n'est PAS une confirmation : il écrit le brouillon, un point c'est tout.
+    if (etatPlanTerrains().moderne) {
+      const plan = planDecoupagePourServeur();
+      if (plan.error) {
+        afficherMessage(message, '⚠️ ' + plan.error, 'ko');
+        if (bouton) { bouton.disabled = false; bouton.textContent = '✅ Appliquer aux catégories'; }
+        return;
+      }
+      envoi.terrains_physiques = JSON.stringify(plan.inventaire);
+      envoi.plan_terrains = JSON.stringify(plan.payload);
+    }
+    await ecrireAdmin('enregistrerPlanTerrains', envoi);
     configCourante.global = Object.assign({}, configCourante.global,
       { repartition_grands_terrains: compositionJson });
     injecterReglages(configCourante.global, configCourante.categories); // les cartes catégories montrent les nouveaux terrains
@@ -1590,10 +2099,15 @@ async function onAppliquerRepartition() {
     // calculée → Appliquer » et l'étape suivante reste fermée jusqu'au clic suivant.
     repartitionCalculee = null;
     document.getElementById('repartition-resultat').innerHTML = '';
+    if (etatPlanTerrains().moderne) await rafraichirEtatTerrains();
     majEtatAvancement(); // le fil ET le verrou suivent immédiatement
     await dialogAlerter('✅ Terrains appliqués aux catégories en mode Auto (' + noms.join(', ') + ').' +
       (ignorees.length ? '\nLaissées en Manuel : ' + ignorees.join(', ') + '.' : '') +
-      '\nIls seront utilisés à la prochaine génération du planning.');
+      '\nIls seront utilisés à la prochaine génération du planning.' +
+      (etatPlanTerrains().moderne
+        ? '\n\n🟠 Le découpage est enregistré comme PROPOSITION. Confirme-le plus bas pour qu\'il ' +
+          'devienne la configuration du tournoi.'
+        : ''));
   } catch (erreur) {
     afficherMessage(message, '⚠️ ' + erreur.message, 'ko');
     if (bouton) { bouton.disabled = false; bouton.textContent = '✅ Appliquer aux catégories'; }

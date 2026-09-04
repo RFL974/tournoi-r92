@@ -3109,7 +3109,7 @@ var ACTIONS_TOKEN = { repondreInvitation: true };
  * recharge la config à de nombreux endroits ; un jour de tournoi, prendre le verrou d'écriture
  * la mettrait en concurrence avec la saisie des scores. Ces actions le court-circuitent. */
 var ACTIONS_LECTURE = { getConfigAdmin: true, getDossierAutorisation: true, listerSponsors: true,
-                        lireMesuresSponsors: true };
+                        lireMesuresSponsors: true, getPlanTerrains: true };
 
 function doPost(e) {
   var lock, classeur, snapshotJson = null;
@@ -3162,6 +3162,9 @@ function doPost(e) {
         case 'getConfigAdmin':
           lecture = { ok: true, config: configAvecTerrainsEdition(classeur, lireConfig(classeur)) };
           break;
+        // M1-B2 / B2-3.d : l'écran des terrains reçoit l'inventaire DURABLE, le BROUILLON et
+        // le plan PUBLIÉ, distinctement. ⛔ Lecture pure : elle ne crée ni onglet ni brouillon.
+        case 'getPlanTerrains': lecture = planTerrainsPourEcran(classeur); break;
         case 'getDossierAutorisation': lecture = getDossierAutorisation(classeur); break;
         case 'listerSponsors': lecture = listerSponsors(classeur); break;
         case 'lireMesuresSponsors': lecture = lireMesuresSponsors(classeur, requete); break;
@@ -3203,6 +3206,9 @@ function doPost(e) {
       case 'enregistrerInfosTournoi': resultat = enregistrerInfosTournoi(classeur, requete); break;
       case 'enregistrerContactsSecurite': resultat = enregistrerContactsSecurite(classeur, requete); break;
       case 'enregistrerPlanTerrains': resultat = enregistrerPlanTerrains(classeur, requete); break;
+      // M1-B2 / B2-3.d — ⭐ LA SEULE PORTE QUI PUBLIE UN PLAN DE TERRAINS, et elle demande un
+      // geste explicite de l'organisateur. ⛔ Aucune autre action ne déplace le pointeur.
+      case 'confirmerPlanTerrains': resultat = confirmerPlanTerrains(classeur, requete); break;
       case 'enregistrerAffiche':   resultat = enregistrerAffiche(classeur, requete); break;
       case 'supprimerAffiche':     resultat = supprimerAffiche(classeur); break;
       case 'enregistrerInvitation': resultat = enregistrerInvitation(classeur, requete); break;
@@ -3636,12 +3642,21 @@ function enregistrerContactsSecurite(classeur, data) {
  *     n'aurait plus aucun effet visible et ne ferait que laisser traîner une valeur périmée
  *     que la prochaine édition pourrait croire sienne. ⭐ Seuls les QUATRE durables sont écrits.
  *
+ * ⚡ M1-B2 / B2-3.d — ELLE ÉCRIT DÉSORMAIS LE DÉCOUPAGE, ET C'EST NOUVEAU.
+ * ⚡ *(Ce paragraphe annonçait « ⛔ IL N'ÉCRIT PAS LE DÉCOUPAGE… le navigateur n'envoie
+ * aujourd'hui ni les identités durables, ni la catégorie de chaque mini-terrain ». C'était vrai
+ * de B2-3.c ; ⛔ ça ne l'est plus depuis B2-3.d, qui a rebranché l'écran.)*
+ *
+ * En régime MODERNE, elle attribue les identités durables manquantes *(par
+ * `planifierIdentitesTerrains`, générateur injecté)*, écrit les quatre champs durables dans
+ * `Config`, et — si le message porte un `plan_terrains` — écrit le BROUILLON du plan de
+ * l'édition active.
+ *
  * ⛔ CE QU'ELLE NE FAIT TOUJOURS PAS, et il faut le lire avant de chercher : elle ne publie
- * AUCUN plan et ne crée AUCUNE structure. Le navigateur n'envoie aujourd'hui ni les identités
- * durables des grands terrains, ni la catégorie de chaque mini-terrain ; fabriquer les unes et
- * deviner les autres est exactement ce que le socle interdit. C'est B2-3.d qui rebranchera
- * l'écran, et avec lui l'écriture du découpage.
- * 🔬 Deux tests figent ce contrat, et une mutation par champ retiré les met à l'épreuve.
+ * AUCUN plan — ⛔ elle ne déplace JAMAIS `Editions.terrains_plan_publie`, c'est le rôle de
+ * `confirmerPlanTerrains` — et elle ne crée AUCUNE structure, qui reste le geste de B2-3.e.
+ * 🔬 Les tests de B2-3.c figent le resserrement des champs ; ceux de B2-3.d figent le reste,
+ * et 23 mutations les mettent à l'épreuve.
  */
 
 /** Les QUATRE paramètres DURABLES : ils décrivent l'installation, ⛔ jamais une édition. */
@@ -3654,11 +3669,74 @@ var CHAMPS_TERRAINS_EVENEMENTIELS = ['dimensions_categories', 'repartition_grand
 
 function enregistrerPlanTerrains(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
-  var champs = sourceTerrainsEditionActive(classeur).moderne
+  var source = sourceTerrainsEditionActive(classeur);
+  var champs = source.moderne
     ? CHAMPS_TERRAINS_DURABLES
     : CHAMPS_TERRAINS_DURABLES.concat(CHAMPS_TERRAINS_EVENEMENTIELS);
-  ecrireChampsConfig(onglet, data, champs);
-  return { ok: true };
+
+  // ⭐ RÉGIME HISTORIQUE — ⛔ INCHANGÉ AU CARACTÈRE PRÈS, y compris si le navigateur envoie
+  //   déjà le découpage moderne : il est IGNORÉ, jamais à moitié appliqué. C'est ce qui permet
+  //   de publier le frontend de B2-3.d AVANT que la structure existe (elle arrive en B2-3.e).
+  if (!source.moderne) {
+    ecrireChampsConfig(onglet, data, champs);
+    return { ok: true };
+  }
+
+  // ═══ RÉGIME MODERNE — ⛔ TOUT EST VALIDÉ AVANT LA PREMIÈRE ÉCRITURE ═══
+  var config = lireConfig(classeur);
+
+  // ① L'INVENTAIRE. Les identités manquantes sont attribuées PAR LE SERVEUR, les identités
+  //    reçues sont contrôlées contre celles qu'il a déjà émises. ⛔ Un identifiant inventé par
+  //    le navigateur, ou en double, fait échouer ici — avant toute écriture.
+  var connues = inventaireTerrainsDurables(config);
+  var recues = connues;
+  if (data.terrains_physiques != null) {
+    var lu = analyserInventaireRecu(data.terrains_physiques);
+    if (lu.error) return lu;
+    recues = lu.inventaire;
+  }
+  var identites = planifierIdentitesTerrains(recues, connues, function () { return Utilities.getUuid(); });
+  if (identites.error) return identites;
+
+  // ② LE BROUILLON, s'il est demandé. ⭐ `plan_terrains` absent ⇒ aucun brouillon touché ;
+  //    présent mais illisible ⇒ REFUS, ⛔ jamais un brouillon vidé par accident.
+  var payload = analyserPayloadPlanTerrains(data.plan_terrains);
+  if (payload.error) return payload;
+  var candidat = null;
+  if (payload.plan) {
+    // ⛔ Le refus « pas d'édition active » vient AVANT la construction : rien ne sert de bâtir
+    //    un plan qu'on n'a nulle part où poser.
+    if (!source.edition_id) {
+      return { error: 'Aucune édition active : la configuration des terrains n\'a pas pu être ' +
+        'enregistrée. ⛔ Rien n\'a été écrit.' };
+    }
+    var construit = planCandidatTerrainsDepuisPayload(identites.inventaire, payload.plan,
+      baseBrouillonTerrains(classeur, source), config.categories || []);
+    if (construit.error) return construit;
+    candidat = construit.plan;
+  }
+
+  // ③ LES ÉCRITURES — l'installation DURABLE d'abord (identités comprises), puis le brouillon.
+  //    ⛔ Aucune ne déplace `Editions.terrains_plan_publie` : enregistrer n'est pas confirmer.
+  var durables = {};
+  CHAMPS_TERRAINS_DURABLES.forEach(function (c) { if (data[c] != null) durables[c] = data[c]; });
+  // ⭐ L'inventaire n'est RÉÉCRIT que s'il y a une raison : une liste reçue, ou des identités
+  //   fraîchement attribuées. ⛔ Sans cela, un appel qui ne parle pas des terrains réécrirait
+  //   la cellule pour rien — et écraserait au passage une valeur qu'on n'a pas su relire.
+  if (data.terrains_physiques != null || identites.attribues > 0) {
+    durables.terrains_physiques = JSON.stringify(identites.inventaire);
+  }
+  ecrireChampsConfig(onglet, durables, champs);
+
+  var planId = '';
+  if (candidat) {
+    var ecrit = ecrireBrouillonTerrains(classeur, source.edition_id, candidat,
+      function () { return Utilities.getUuid(); });
+    if (ecrit.error) return ecrit;
+    planId = ecrit.plan_id;
+  }
+  return { ok: true, inventaire: identites.inventaire, plan_id: planId,
+           identites_attribuees: identites.attribues };
 }
 
 /**
@@ -11335,8 +11413,9 @@ function publierPlanTerrains(classeur, editionId, plan, categories, faireId, hor
  *
  *  ④ ⭐ LE CONTRAT DE SORTIE NE BOUGE PAS. Ce que reçoivent les écrans est, au caractère
  *     près, ce qu'ils recevaient : la chaîne JSON `{"Rugby 1":["1","2"],…}`, sous le nom
- *     `repartition_grands_terrains`. ⛔ Aucun fichier de `frontend/` n'est touché — c'est
- *     B2-3.d qui les rebranchera, et il pourra le faire sans urgence.
+ *     `repartition_grands_terrains`. ⛔ Aucun fichier de `frontend/` n'est touché par CE
+ *     lot-ci. ⚡ *(B2-3.d a depuis rebranché l'écran des terrains — ⭐ sans changer ce contrat
+ *     de sortie, qu'un test vérifie au caractère près.)*
  *
  * ⚠️ CE QUE B2-3.c ÉCRIT, ET CE QU'IL N'ÉCRIT PAS — À LIRE AVANT DE CHERCHER.
  *
@@ -11350,25 +11429,27 @@ function publierPlanTerrains(classeur, editionId, plan, categories, faireId, hor
  * ⛔ IL N'ÉCRIT PAS LE DÉCOUPAGE. `enregistrerPlanTerrains` reste une écriture dans `Config`,
  * ⚠️ mais RESSERRÉE, en symétrie stricte de la lecture : les SIX champs tant que la structure
  * B2-3 n'existe pas — régime historique, comportement inchangé — et seulement les QUATRE
- * DURABLES dès qu'elle existe *(voir `CHAMPS_TERRAINS_DURABLES`)*. ⛔ Elle ne publie aucun plan
- * et ne crée aucune structure.
+ * DURABLES dès qu'elle existe *(voir `CHAMPS_TERRAINS_DURABLES`)*.
  *
- * ⭐ ET CE N'EST PAS UN OUBLI : le navigateur n'envoie aujourd'hui NI les identités durables des
- * grands terrains, NI la catégorie de chaque mini-terrain. Écrire le découpage dans le plan à
- * partir de ce qu'il envoie obligerait à fabriquer des identités neuves à chaque enregistrement
- * — donc des identités qui ne seraient pas durables — et à DEVINER les catégories. ⛔ Le socle
- * interdit exactement cela. ⏭️ **B2-3.d** rebranchera l'écran ET l'écriture complète du
- * découpage, avec les identités durables et les catégories des mini-terrains.
+ * ⚡ CE PARAGRAPHE A ÉTÉ DÉPASSÉ PAR B2-3.d, ET C'EST TOUT L'OBJET DE CE LOT SUIVANT.
+ * ⚡ *(Il annonçait : « ⭐ ET CE N'EST PAS UN OUBLI : le navigateur n'envoie aujourd'hui NI les
+ * identités durables des grands terrains, NI la catégorie de chaque mini-terrain… ⏭️ B2-3.d
+ * rebranchera l'écran ET l'écriture complète du découpage. » ⭐ **C'est fait** : le navigateur
+ * envoie désormais les deux, `enregistrerPlanTerrains` écrit le BROUILLON du plan, et
+ * `confirmerPlanTerrains` — elle seule — le publie.)*
  *
- * ⭐ Aucun trou fonctionnel n'en résulte, parce que l'ORDRE des phases l'exclut : la structure
- * n'existera qu'à la migration de B2-3.e, donc APRÈS B2-3.d. Tant qu'elle n'existe pas, la
- * branche ② ci-dessus rend l'ancien comportement, à la lettre.
+ * ⭐ Ce que B2-3.c garantissait reste vrai, et c'est ce qui compte ici : ⛔ `enregistrerPlanTerrains`
+ * ne publie toujours AUCUN plan et ne crée AUCUNE structure ; ⛔ la branche ② rend l'ancien
+ * comportement à la lettre tant que la structure n'existe pas — c'est-à-dire jusqu'à la
+ * migration de **B2-3.e**, ⛔ non démarrée.
  * ═══════════════════════════════════════════════════════════════════════════════ */
 
 /**
  * 🚨 LE NOM HISTORIQUE DU CHAMP, DÉCLARÉ UNE FOIS — ⛔ et il ne se retape nulle part ailleurs
- * dans ce bloc. C'est le contrat de sortie de l'invariant ④ : le jour où B2-3.d le renommera,
- * il y aura UNE ligne à changer, et les tests diront immédiatement qui le lisait encore.
+ * dans ce bloc. C'est le contrat de sortie de l'invariant ④ : le jour où on le renommera, il y
+ * aura UNE ligne à changer, et les tests diront immédiatement qui le lisait encore.
+ * ⚡ *(Cette ligne disait « le jour où B2-3.d le renommera ». ⭐ B2-3.d est passé et ne l'a PAS
+ * renommé — délibérément : le contrat de sortie devait rester intact pour les écrans.)*
  */
 var TERRAINS_CHAMP_PROJETE = 'repartition_grands_terrains';
 
@@ -11574,4 +11655,523 @@ function ecrireDimensionsTerrainsEdition(classeur, dimensions, source) {
     function () { return Utilities.getUuid(); });
   if (ecrit.error) return ecrit;
   return { ok: true, destination: 'brouillon', plan_id: ecrit.plan_id };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * M1-B2 / B2-3.d — L'ÉCRAN, ET L'ÉCRITURE COMPLÈTE DU DÉCOUPAGE
+ *
+ * ⭐ CE QUE CE BLOC FAIT, EN UNE PHRASE : le navigateur cesse d'envoyer un découpage
+ * ANONYME — « Rugby 1 contient les terrains 1 et 2 » — et envoie désormais de quoi écrire
+ * un vrai plan : QUELS grands terrains sont retenus cette année, SOUS QUELLE IDENTITÉ
+ * DURABLE, et à QUELLE CATÉGORIE appartient chaque mini-terrain.
+ *
+ * 🎯 POURQUOI B2-3.c NE POUVAIT PAS LE FAIRE, ET C'EST ÉCRIT DANS SON EN-TÊTE : le
+ * navigateur n'envoyait NI les identités durables, NI les catégories. Écrire le découpage
+ * dans le plan à partir de ce qu'il envoyait aurait obligé à FABRIQUER des identités à
+ * chaque enregistrement — donc des identités qui ne seraient pas durables — et à DEVINER
+ * les catégories depuis un nom de terrain. ⛔ Le socle interdit exactement cela.
+ *
+ * 🚨 LES CINQ INVARIANTS QUI COMMANDENT TOUT LE BLOC :
+ *
+ *  ① ⛔ LE NAVIGATEUR N'ÉMET AUCUNE IDENTITÉ. Il RENVOIE celles que le serveur lui a
+ *     données, et rien d'autre. Un `id` qu'il aurait inventé est refusé par
+ *     `planifierIdentitesTerrains` (« identifiant inconnu »). Pour un grand terrain qui
+ *     n'en a pas encore, il ne fabrique rien : il désigne sa POSITION DANS LE MESSAGE
+ *     QU'IL ENVOIE (`terrain_index`), et c'est le serveur — seul — qui traduit cette
+ *     position en identité. ⭐ La distinction n'est pas un jeu de mots : l'index ne
+ *     survit pas à l'appel, il n'est écrit nulle part, et il ne désigne pas « le terrain
+ *     n° 3 du classeur » mais « la 3ᵉ ligne de CE message ».
+ *
+ *  ② ⛔ ENREGISTRER N'EST PAS CONFIRMER. `enregistrerPlanTerrains` écrit un BROUILLON et
+ *     ⛔ ne déplace JAMAIS `Editions.terrains_plan_publie`. Publier demande une action
+ *     séparée — `confirmerPlanTerrains` — et une intention explicite de l'organisateur.
+ *     ⭐ La garantie est structurelle : le seul appelant de `ecrirePointeurPlanTerrains`
+ *     reste `publierPlanTerrains`, et un test de mutation le vérifie.
+ *
+ *  ③ ⛔ UN REFUS NE LAISSE RIEN. Tout est validé — identités, sélection, catégories,
+ *     numéros — AVANT la première écriture. Un payload incomplet, incohérent ou ambigu
+ *     laisse le classeur strictement identique, `Config` comprise.
+ *
+ *  ④ ⭐ LE RÉGIME HISTORIQUE EST INTACT. Structure B2-3 absente ⇒ `enregistrerPlanTerrains`
+ *     fait exactement ce qu'elle faisait, sur les six mêmes champs, et le découpage moderne
+ *     — s'il arrive quand même — est IGNORÉ, jamais à moitié appliqué. C'est ce qui permet
+ *     de publier ce frontend AVANT que la structure existe : le comportement visible ne
+ *     change pas d'un caractère.
+ *
+ *  ⑤ ⛔ RIEN NE CRÉE LA STRUCTURE. Aucune fonction d'ici n'appelle « assurer… ». La mise en
+ *     place appartient à B2-3.e, et elle seule.
+ *
+ * ⚠️ CE QUE CE BLOC NE FAIT PAS, et il faut le lire avant de chercher : il ne migre rien,
+ * il ne crée aucun onglet, il ne touche pas au moteur géométrique (le découpage est calculé
+ * par le navigateur, comme avant), et il n'introduit AUCUNE demi-disponibilité : un grand
+ * terrain est retenu ou écarté ENTIÈREMENT.
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Correspondance entre une entrée de l'inventaire durable (`Config.terrains_physiques`, tel
+ * que le navigateur l'écrit depuis toujours) et les colonnes `snap_*` de l'onglet `Terrains`.
+ *
+ * ⭐ « snap » pour INSTANTANÉ : ces colonnes figent l'installation TELLE QU'ELLE ÉTAIT au
+ * moment du plan. Renommer « Rugby 1 » en 2028 ne réécrit pas la configuration de 2026 —
+ * c'est tout l'intérêt de recopier plutôt que de pointer vers l'inventaire courant.
+ */
+var TERRAINS_SNAP_DEPUIS_INVENTAIRE = [
+  ['snap_nom', 'nom'], ['snap_type', 'type'], ['snap_longueur_m', 'L'],
+  ['snap_largeur_m', 'W'], ['snap_enbut_m', 'enBut'], ['snap_nature', 'nature'],
+  ['snap_pos', 'pos']
+];
+
+/**
+ * L'INVENTAIRE DURABLE, lu depuis `Config.terrains_physiques`.
+ * ⭐ Toujours un tableau — JSON absent, vide ou illisible ⇒ `[]`, ⛔ jamais d'exception et
+ * ⛔ jamais `null` : l'écran doit pouvoir s'afficher sur un classeur qui n'a jamais servi.
+ */
+function inventaireTerrainsDurables(config) {
+  var brut = valeurTexteTerrain(((config && config.global) || {}).terrains_physiques);
+  if (brut === '') return [];
+  var liste;
+  try { liste = JSON.parse(brut); } catch (e) { return []; }
+  return Array.isArray(liste) ? liste : [];
+}
+
+/**
+ * L'inventaire tel que le NAVIGATEUR l'envoie — ⛔ refusé plutôt que deviné.
+ *
+ * ⚠️ Ce n'est PAS `inventaireTerrainsDurables`, et la différence compte : celle-là lit le
+ * classeur et rend `[]` sur une valeur illisible (⭐ un écran doit toujours pouvoir s'afficher).
+ * Celle-ci lit un MESSAGE, et un message illisible est un REFUS — ⛔ le traiter comme une liste
+ * vide effacerait tout l'inventaire du club sur une simple erreur de transmission.
+ *
+ * @return {{inventaire:Array}|{error:string}}
+ */
+function analyserInventaireRecu(brut) {
+  var texte = valeurTexteTerrain(brut);
+  var liste;
+  try { liste = JSON.parse(texte); } catch (e) { liste = null; }
+  if (!Array.isArray(liste)) {
+    return { error: 'La liste des grands terrains envoyée est illisible. ⛔ Rien n\'a été écrit.' };
+  }
+  return { inventaire: liste };
+}
+
+/** Une entrée d'inventaire (identifiée) ⇒ une ligne de l'onglet `Terrains`, prête à écrire. */
+function ligneTerrainDepuisInventaire(entree, selectionne) {
+  var ligne = { terrain_id: valeurTexteTerrain(entree && entree.id),
+                selectionne: selectionne ? 'oui' : 'non' };
+  TERRAINS_SNAP_DEPUIS_INVENTAIRE.forEach(function (paire) {
+    var v = (entree || {})[paire[1]];
+    ligne[paire[0]] = (v === undefined || v === null) ? '' : String(v);
+  });
+  return ligne;
+}
+
+/**
+ * La SÉLECTION déjà connue d'une édition : `{terrain_id: true|false}`.
+ *
+ * ⭐ Elle vit dans le PLAN, ⛔ pas dans l'inventaire durable — c'est une décision propre à
+ * l'édition (« cette année, on n'utilise pas le terrain du fond »), et l'installation du club
+ * n'a pas à s'en souvenir d'une année sur l'autre.
+ * ⛔ Rend `{}` si aucun plan ne la porte : l'écran PROPOSERA alors « retenu », et cette
+ * proposition n'engage rien tant que personne n'a enregistré.
+ */
+function selectionTerrainsDeBase(base) {
+  var sel = {};
+  ((base && base.terrains) || []).forEach(function (l) {
+    var id = valeurTexteTerrain(l.terrain_id);
+    if (id) sel[id] = terrainRetenu(l);
+  });
+  return sel;
+}
+
+/** Un plan (brouillon ou publié) sous la forme que l'écran attend — ou `null`. */
+function planTerrainsPourNavigateur(plan) {
+  if (!plan) return null;
+  var p = plan.params || {};
+  return {
+    plan_id: valeurTexteTerrain(plan.plan_id),
+    role: valeurTexteTerrain(p.role),
+    couloir_m: valeurTexteTerrain(p.couloir_m),
+    tm_longueur_m: valeurTexteTerrain(p.tm_longueur_m),
+    tm_largeur_m: valeurTexteTerrain(p.tm_largeur_m),
+    dimensions_json: valeurTexteTerrain(p.dimensions_json),
+    signature: valeurTexteTerrain(p.signature),
+    fige_le: valeurTexteTerrain(p.fige_le),
+    terrains: (plan.terrains || []).map(function (l) {
+      var o = { terrain_id: valeurTexteTerrain(l.terrain_id), selectionne: terrainRetenu(l) ? 'oui' : 'non' };
+      TERRAINS_SNAP_DEPUIS_INVENTAIRE.forEach(function (paire) {
+        o[paire[0]] = valeurTexteTerrain(l[paire[0]]);
+      });
+      return o;
+    }),
+    minis: (plan.minis || []).map(function (m) {
+      return { numero: valeurTexteTerrain(m.numero), terrain_id: valeurTexteTerrain(m.terrain_id),
+               categorie: valeurTexteTerrain(m.categorie) };
+    })
+  };
+}
+
+/**
+ * ⭐⭐ L'EMPREINTE D'UN BROUILLON — le jeton qui empêche de confirmer autre chose que ce
+ * qu'on voit.
+ *
+ * 🚨 LE DÉFAUT QU'ELLE FERME, ET IL A ÉTÉ CONSTATÉ AVANT D'ÊTRE CORRIGÉ. Un brouillon garde
+ * le MÊME `plan_id` d'un enregistrement à l'autre — c'est voulu, c'est le même objet de
+ * travail. Mais du coup le `plan_id` ne prouve RIEN sur son contenu : entre le moment où
+ * l'écran affiche le brouillon et le moment où l'organisateur clique « Confirmer », un autre
+ * onglet — ou une autre personne — peut l'avoir entièrement réécrit. ⛔ La confirmation
+ * publiait alors, en silence, un plan que personne n'avait regardé.
+ *
+ * ⚠️ POURQUOI PAS `signatureTerrains`, ET C'EST UNE VRAIE DIFFÉRENCE : celle-là répond à
+ * « la configuration a-t-elle changé de SENS ? » et ⛔ ignore délibérément les NOMS des
+ * terrains (renommer « Rugby 1 » ne doit pas faire passer une édition en « à reconfirmer »).
+ * Celle-ci répond à « est-ce le MÊME ÉCRAN ? » et doit donc couvrir tout ce que l'écran
+ * montre — noms, tailles, nature et emplacement compris.
+ * ⛔ Toucher à `signatureTerrains` pour lui faire ce travail changerait le calcul des états
+ * de B2-3.a. Ce sont deux questions, ce sont deux fonctions.
+ *
+ * ⭐ CANONIQUE : terrains triés par identité, mini-terrains par numéro, nombres normalisés.
+ * ⛔ Réordonner des lignes dans le classeur ne change donc pas l'empreinte — seul le CONTENU
+ * la change.
+ */
+function empreinteBrouillonTerrains(plan) {
+  if (!plan) return '';
+  var vue = planTerrainsPourNavigateur(plan);
+  var parts = ['plan=' + vue.plan_id, 'role=' + vue.role,
+    'cl=' + nombreCanoniqueTerrain(vue.couloir_m),
+    'tml=' + nombreCanoniqueTerrain(vue.tm_longueur_m),
+    'tmw=' + nombreCanoniqueTerrain(vue.tm_largeur_m),
+    'dim=' + dimensionsCanoniquesTerrains(vue.dimensions_json)];
+
+  vue.terrains.slice().sort(function (a, b) {
+    return a.terrain_id < b.terrain_id ? -1 : (a.terrain_id > b.terrain_id ? 1 : 0);
+  }).forEach(function (t) {
+    parts.push('gt=' + t.terrain_id + '|s=' + t.selectionne + '|nom=' + t.snap_nom +
+      '|ty=' + t.snap_type + '|L=' + nombreCanoniqueTerrain(t.snap_longueur_m) +
+      '|W=' + nombreCanoniqueTerrain(t.snap_largeur_m) +
+      '|eb=' + nombreCanoniqueTerrain(t.snap_enbut_m) +
+      '|na=' + t.snap_nature + '|pos=' + t.snap_pos);
+  });
+  vue.minis.slice().sort(function (a, b) {
+    return comparerNumerosMiniTerrain(a.numero, b.numero);
+  }).forEach(function (m) {
+    parts.push('mt=' + m.numero + '|gt=' + m.terrain_id + '|c=' + m.categorie);
+  });
+  return hachageChaine(parts.join(';'));
+}
+
+/**
+ * ⭐⭐ CE QUE L'ÉCRAN DES TERRAINS REÇOIT — et les trois choses y sont DISTINCTES.
+ *
+ *   inventaire  l'installation DURABLE du club (`Config.terrains_physiques`)
+ *   brouillon   la proposition en cours, ⛔ que personne d'autre ne voit
+ *   publie      le plan CONFIRMÉ, le seul que les vues opérationnelles consomment
+ *
+ * 🎯 POURQUOI LES TROIS SÉPARÉMENT, ET C'EST LA DEMANDE MÊME DE CE LOT : les confondre est
+ * exactement ce qui produisait R-101. Un écran qui affiche « voici tes terrains » sans dire
+ * s'ils sont proposés ou confirmés laisse croire qu'une configuration existe là où il n'y a
+ * qu'un brouillon — et le dossier de la Ligue part avec.
+ *
+ * ⛔ NE CRÉE RIEN, N'ÉCRIT RIEN, NE MIGRE RIEN. Sur un classeur d'aujourd'hui, `moderne` est
+ * `false` et l'écran garde son comportement historique, à la lettre.
+ */
+function planTerrainsPourEcran(classeur) {
+  var config = lireConfig(classeur);
+  var global = config.global || {};
+  var src = sourceTerrainsEditionActive(classeur);
+  var reponse = {
+    ok: true,
+    moderne: !!src.moderne,
+    edition_id: valeurTexteTerrain(src.edition_id),
+    etat: 'absent',
+    inventaire: inventaireTerrainsDurables(config),
+    durables: {
+      couloir_terrain_m: valeurTexteTerrain(global.couloir_terrain_m),
+      tm_longueur_m: valeurTexteTerrain(global.tm_longueur_m),
+      tm_largeur_m: valeurTexteTerrain(global.tm_largeur_m)
+    },
+    brouillon: null,
+    publie: null,
+    selection: {}
+  };
+
+  // ⭐ Sans structure, il n'y a NI brouillon NI plan — ils n'existent pas encore dans ce
+  //    classeur. L'écran ne reçoit donc que l'inventaire durable et les préférences, et il
+  //    garde le comportement d'avant. ⛔ On ne fabrique JAMAIS un « publié » depuis `Config` :
+  //    la valeur qui s'y trouve peut être celle de l'édition précédente (c'est R-101).
+  if (!src.moderne) return reponse;
+
+  var brouillon = reponse.edition_id ? lireBrouillonTerrains(classeur, reponse.edition_id) : null;
+  reponse.brouillon = planTerrainsPourNavigateur(brouillon);
+  // ⭐ L'EMPREINTE PART AVEC LE BROUILLON — c'est elle que le navigateur renverra à la
+  //   confirmation, et elle seule qui prouve que l'écran et le classeur parlent du MÊME plan.
+  if (reponse.brouillon) reponse.brouillon.empreinte = empreinteBrouillonTerrains(brouillon);
+  reponse.publie = planTerrainsPourNavigateur(src.plan);
+  reponse.selection = selectionTerrainsDeBase(brouillon || src.plan);
+  reponse.etat = etatTerrainsPur({
+    pointeur: reponse.edition_id ? pointeurPlanTerrains(classeur, reponse.edition_id) : '',
+    edition_id: reponse.edition_id,
+    plans: lireTerrainsPlan(classeur),
+    terrains: lireLignesTerrainsB23(classeur),
+    minis: lireLignesMiniTerrains(classeur),
+    categories: config.categories || []
+  });
+  return reponse;
+}
+
+/**
+ * Construit le CANDIDAT BROUILLON depuis le message du navigateur — ⭐ fonction PURE, et
+ * c'est ce qui la rend éprouvable sans classeur.
+ *
+ * ⛔ ELLE REFUSE PLUTÔT QUE DE DEVINER, et la liste est exhaustive :
+ *   · `selection` absente, ou de longueur différente de l'inventaire ;
+ *   · une valeur de sélection qui n'est ni « oui » ni « non » ;
+ *   · `minis` qui n'est pas une liste ;
+ *   · un `terrain_index` qui n'est pas un entier, ou qui sort des bornes du message ;
+ *   · un mini rattaché à un grand terrain ÉCARTÉ ;
+ *   · un numéro de mini-terrain vide, ou en double ;
+ *   · une catégorie vide, ou absente des catégories PRÉSENTES de l'édition.
+ *
+ * ⚠️ POURQUOI LA CATÉGORIE EST CONTRÔLÉE ICI, alors que `ecartsPlanTerrains` la contrôle
+ * déjà : parce qu'un BROUILLON n'est pas validé. Sans ce contrôle, une catégorie fautive ne
+ * se verrait qu'à la confirmation — c'est-à-dire une demi-heure de travail plus tard, et
+ * l'organisateur n'aurait aucun moyen de savoir laquelle des vingt manipulations l'a produite.
+ *
+ * @param {Array<Object>} inventaire  l'inventaire DÉJÀ identifié (chaque entrée a son `id`)
+ * @param {Object} payload            l'objet `plan_terrains` du message, déjà analysé
+ * @param {?Object} base              le brouillon (ou le plan publié) actuel, pour ce qui n'est
+ *                                    PAS envoyé — ⭐ un enregistrement qui ne parle pas du
+ *                                    découpage ne doit pas l'effacer
+ * @param {Array<Object>} categories  les lignes de catégories (zone B)
+ * @return {{plan:Object}|{error:string}}
+ */
+function planCandidatTerrainsDepuisPayload(inventaire, payload, base, categories) {
+  payload = payload || {};
+  inventaire = inventaire || [];
+
+  // ① LA SÉLECTION — une valeur par entrée de l'inventaire, dans le même ordre.
+  //    ⛔ Aucun défaut : ni « tout retenu », ni « tout écarté ». Le navigateur DIT, ou refuse.
+  var brutSel = payload.selection;
+  if (!Array.isArray(brutSel)) {
+    return { error: 'Message incomplet : la sélection des grands terrains est absente. ' +
+      '⛔ Rien n\'a été écrit.' };
+  }
+  if (brutSel.length !== inventaire.length) {
+    return { error: 'Message incohérent : ' + brutSel.length + ' sélection(s) pour ' +
+      inventaire.length + ' grand(s) terrain(s). Recharge la page, puis réessaie. ' +
+      '⛔ Rien n\'a été écrit.' };
+  }
+  var retenus = [];
+  for (var i = 0; i < brutSel.length; i++) {
+    var v = valeurTexteTerrain(brutSel[i]);
+    if (!memeTexteSouple(v, 'oui') && !memeTexteSouple(v, 'non')) {
+      return { error: 'Sélection illisible pour le grand terrain n° ' + (i + 1) +
+        ' (« ' + v + ' ») : « oui » ou « non » attendu. ⛔ Rien n\'a été écrit.' };
+    }
+    retenus.push(memeTexteSouple(v, 'oui'));
+  }
+
+  var terrains = inventaire.map(function (entree, k) {
+    return ligneTerrainDepuisInventaire(entree, retenus[k]);
+  });
+  var idParIndex = terrains.map(function (l) { return valeurTexteTerrain(l.terrain_id); });
+  var retenuParId = {};
+  terrains.forEach(function (l) {
+    if (l.terrain_id) retenuParId[valeurTexteTerrain(l.terrain_id)] = terrainRetenu(l);
+  });
+
+  // ② LE DÉCOUPAGE — ⭐ facultatif, et l'absence n'est PAS un vide.
+  //    « Enregistrer les terrains » ne parle pas du découpage : celui de la base est conservé.
+  //    « Appliquer la répartition » l'envoie : il remplace intégralement le précédent.
+  var minis;
+  if (payload.minis === undefined || payload.minis === null) {
+    minis = ((base && base.minis) || []).map(function (m) {
+      return { numero: valeurTexteTerrain(m.numero), terrain_id: valeurTexteTerrain(m.terrain_id),
+               categorie: valeurTexteTerrain(m.categorie) };
+    });
+  } else {
+    if (!Array.isArray(payload.minis)) {
+      return { error: 'Message illisible : le découpage attendu est une liste. ' +
+        '⛔ Rien n\'a été écrit.' };
+    }
+    var presentes = {};
+    categoriesPresentesTerrains(categories).forEach(function (c) {
+      var nom = valeurTexteTerrain(c.categorie);
+      if (nom) presentes[nom] = true;
+    });
+
+    var vus = {};
+    minis = [];
+    for (var j = 0; j < payload.minis.length; j++) {
+      var m = payload.minis[j] || {};
+      var numero = valeurTexteTerrain(m.numero);
+      if (numero === '') {
+        return { error: 'Un mini-terrain n\'a pas de numéro. ⛔ Rien n\'a été écrit.' };
+      }
+      if (vus[numero]) {
+        return { error: 'Le numéro de mini-terrain « ' + numero + ' » apparaît deux fois. ' +
+          '⛔ Rien n\'a été écrit.' };
+      }
+      vus[numero] = true;
+
+      // ⭐ L'INDEX, ET RIEN D'AUTRE. Le navigateur désigne la POSITION dans le message qu'il
+      //   vient d'envoyer ; c'est le serveur qui sait à quelle identité durable elle
+      //   correspond. ⛔ Un `terrain_id` envoyé par le navigateur n'est PAS lu ici : il ne
+      //   pourrait qu'ouvrir la porte à une identité fabriquée.
+      var idx = m.terrain_index;
+      if (typeof idx === 'string' && idx.trim() !== '' && isFinite(Number(idx))) idx = Number(idx);
+      if (typeof idx !== 'number' || !isFinite(idx) || Math.floor(idx) !== idx) {
+        return { error: 'Le mini-terrain ' + numero + ' ne désigne aucun grand terrain. ' +
+          '⛔ Rien n\'a été écrit.' };
+      }
+      if (idx < 0 || idx >= idParIndex.length) {
+        return { error: 'Le mini-terrain ' + numero + ' désigne un grand terrain qui n\'existe ' +
+          'pas (position ' + idx + '). Recharge la page, puis réessaie. ⛔ Rien n\'a été écrit.' };
+      }
+      var idTerrain = idParIndex[idx];
+      if (!idTerrain) {
+        return { error: 'Le grand terrain du mini-terrain ' + numero + ' n\'a pas d\'identifiant. ' +
+          '⛔ Rien n\'a été écrit.' };
+      }
+      if (!retenuParId[idTerrain]) {
+        return { error: 'Le mini-terrain ' + numero + ' est posé sur un grand terrain ÉCARTÉ de ' +
+          'cette édition. ⛔ Rien n\'a été écrit.' };
+      }
+
+      // ⭐ LA CATÉGORIE EST EXPLICITE, ⛔ jamais déduite d'un nom de terrain ni d'un libellé.
+      var categorie = valeurTexteTerrain(m.categorie);
+      if (categorie === '') {
+        return { error: 'Le mini-terrain ' + numero + ' n\'a pas de catégorie. ' +
+          '⛔ Rien n\'a été écrit.' };
+      }
+      if (!presentes[categorie]) {
+        return { error: 'Le mini-terrain ' + numero + ' est affecté à « ' + categorie +
+          ' », qui n\'est pas une catégorie présente. ⛔ Rien n\'a été écrit.' };
+      }
+      minis.push({ numero: numero, terrain_id: idTerrain, categorie: categorie });
+    }
+  }
+
+  // ③ LES PARAMÈTRES — ⛔ la signature reste vide et le rôle sera forcé par
+  //    `ecrireBrouillonTerrains` : un brouillon n'est jamais signé, donc jamais confirmé.
+  var baseParams = (base && base.params) || {};
+  var lire = function (cle, secours) {
+    var v = payload[cle];
+    return (v === undefined || v === null || valeurTexteTerrain(v) === '')
+      ? valeurTexteTerrain(secours) : valeurTexteTerrain(v);
+  };
+  var dimensions;
+  if (payload.dimensions === undefined || payload.dimensions === null) {
+    dimensions = valeurTexteTerrain(baseParams.dimensions_json);
+  } else if (typeof payload.dimensions === 'string') {
+    dimensions = valeurTexteTerrain(payload.dimensions);
+  } else {
+    dimensions = JSON.stringify(payload.dimensions);
+  }
+
+  return { plan: {
+    params: {
+      role: TERRAINS_ROLE_BROUILLON,
+      couloir_m: lire('couloir_m', baseParams.couloir_m),
+      tm_longueur_m: lire('tm_longueur_m', baseParams.tm_longueur_m),
+      tm_largeur_m: lire('tm_largeur_m', baseParams.tm_largeur_m),
+      dimensions_json: dimensions,
+      signature: '',
+      fige_le: ''
+    },
+    terrains: terrains,
+    minis: minis
+  } };
+}
+
+/**
+ * Le message `plan_terrains`, analysé. ⭐ Absent ⇒ `null` (l'appelant n'écrit alors aucun
+ * brouillon) ; illisible ⇒ `{error}` — ⛔ jamais un objet vide qui effacerait le découpage.
+ */
+function analyserPayloadPlanTerrains(brut) {
+  if (brut === undefined || brut === null) return { plan: null };
+  if (typeof brut === 'object') return { plan: brut };
+  var texte = valeurTexteTerrain(brut);
+  if (texte === '') return { plan: null };
+  var obj;
+  try { obj = JSON.parse(texte); } catch (e) {
+    return { error: 'Le plan des terrains envoyé est illisible. ⛔ Rien n\'a été écrit.' };
+  }
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+    return { error: 'Le plan des terrains envoyé n\'a pas la forme attendue. ' +
+      '⛔ Rien n\'a été écrit.' };
+  }
+  return { plan: obj };
+}
+
+/**
+ * ⭐⭐ CONFIRME LA CONFIGURATION DES TERRAINS — et c'est la SEULE porte qui publie.
+ *
+ * Elle ne construit rien : elle prend le BROUILLON tel qu'il est et le soumet à
+ * `publierPlanTerrains`, donc à la séquence éprouvée de B2-3.b — validation en mémoire,
+ * écriture d'un candidat inerte, RELECTURE depuis le classeur, puis la bascule d'une seule
+ * cellule.
+ *
+ * ⛔ ELLE REFUSE, sans rien écrire : structure absente · aucune édition active · aucun
+ * brouillon à confirmer · ⭐ **empreinte absente ou différente**. Et un brouillon invalide est
+ * refusé par `publierPlanTerrains` lui-même, AVANT la première écriture : l'ancien plan publié
+ * reste alors la configuration de l'édition, intacte.
+ *
+ * 🚨 L'EMPREINTE EST OBLIGATOIRE, ET CE N'EST PAS UNE FORMALITÉ. Elle a été ajoutée après
+ * qu'un contrôle a montré le défaut EN VRAI : un brouillon garde le même `plan_id` d'un
+ * enregistrement à l'autre, donc un second onglet pouvait le réécrire entièrement — dimensions,
+ * couloir, noms des terrains — entre l'affichage et le clic, et ⛔ « Confirmer » publiait ce
+ * plan-là **en silence**. L'organisateur mettait alors en service une configuration qu'il
+ * n'avait jamais regardée. ⭐ Le navigateur renvoie l'empreinte qu'il a REÇUE ; le serveur la
+ * recalcule sur le brouillon ACTUEL ; s'il y a le moindre écart, il refuse et demande un
+ * rechargement.
+ *
+ * ⭐ ET ELLE FERME AUSSI LA LECTURE CONCURRENTE : un brouillon lu à mi-écriture (les trois
+ * onglets ne sont pas transactionnels — B2-3.b le dit) donne une empreinte qui ne se
+ * retrouvera pas à la confirmation. ⛔ Le défaut est FERMÉ : on ne publie pas, on redemande.
+ *
+ * @param {{empreinte:string, plan_id:string}} data  ⛔ `empreinte` est EXIGÉE : une action
+ *        qui ne la fournit pas est refusée, jamais exécutée « par défaut ».
+ */
+function confirmerPlanTerrains(classeur, data) {
+  data = data || {};
+  if (!structureTerrainsB23EnPlace(classeur)) {
+    return { error: 'La configuration par édition n\'est pas encore en place sur ce classeur. ' +
+      '⛔ Rien n\'a été écrit.' };
+  }
+  var registre = editionActive(classeur);
+  if (!registre || registre.etat !== 'ok' || !registre.edition) {
+    return { error: 'Aucune édition active : la configuration des terrains n\'a pas pu être ' +
+      'confirmée. ⛔ Rien n\'a été écrit.' };
+  }
+  var edition = valeurTexteTerrain(registre.edition.edition_id);
+  var brouillon = lireBrouillonTerrains(classeur, edition);
+  if (!brouillon) {
+    return { error: 'Aucune proposition à confirmer : enregistre d\'abord les terrains et leur ' +
+      'répartition. ⛔ Rien n\'a été écrit.' };
+  }
+
+  // ⭐⭐ LE JETON DE COHÉRENCE — ⛔ on ne publie QUE ce que l'écran a réellement montré.
+  var attendue = valeurTexteTerrain(data.empreinte);
+  if (attendue === '') {
+    return { error: 'Confirmation refusée : la page n\'a pas indiqué QUELLE proposition elle ' +
+      'confirme. Recharge la page, puis réessaie. ⛔ Rien n\'a été écrit.' };
+  }
+  var reelle = empreinteBrouillonTerrains(brouillon);
+  if (attendue !== reelle) {
+    return { error: 'La proposition a changé depuis l\'affichage de cette page — elle a sans ' +
+      'doute été modifiée depuis un autre onglet ou par quelqu\'un d\'autre. Recharge la page ' +
+      'pour voir la proposition actuelle, puis confirme-la. ⛔ Rien n\'a été écrit.',
+      empreinte_attendue: attendue, empreinte_reelle: reelle };
+  }
+  var demande = valeurTexteTerrain(data.plan_id);
+  if (demande !== '' && demande !== valeurTexteTerrain(brouillon.plan_id)) {
+    return { error: 'Confirmation refusée : la proposition visée n\'est plus celle en cours. ' +
+      'Recharge la page, puis réessaie. ⛔ Rien n\'a été écrit.' };
+  }
+
+  var config = lireConfig(classeur);
+  var publie = publierPlanTerrains(classeur, edition, brouillon, config.categories || [],
+    function () { return Utilities.getUuid(); }, horodatageEdition(classeur));
+  if (publie.error) return publie;
+  return { ok: true, plan_id: publie.plan_id, edition_id: edition, etat: 'confirme' };
 }

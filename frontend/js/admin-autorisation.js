@@ -330,6 +330,11 @@ var ACTIONS_AUTORISATION_CROCHET = {
   supprimerCategorie:            'A.3, B.2',
   appliquerValeursFFR:           'A.3, B.2 (durées et forme de jeu écrites dans la catégorie)',
   enregistrerPlanTerrains:       'B.1 nombre de terrains et nature de la surface',
+  /* ⭐ M1-B2 / B2-3.d — confirmer un plan de terrains DÉPLACE le pointeur de l'édition : c'est
+     l'instant précis où `repartitionTerrainsEditionActive` et `naturesTerrainsEditionActive`
+     changent de réponse, donc où B.1 devient faux à l'écran. ⛔ Vérifié dans
+     `assemblerDossierAutorisation` (backend/Code.gs), pas déduit du nom de l'action. */
+  confirmerPlanTerrains:         'B.1 — la configuration confirmée devient celle du dossier',
   enregistrerContactsSecurite:   'B.4 responsable sécurité, antenne de secours',
   enregistrerInvitation:         'B.5 droits d\'inscription (tarif_engagement_*)',
   ajouterClubInvite:             'A.4 (le nom du club sert au rapprochement des équipes)',

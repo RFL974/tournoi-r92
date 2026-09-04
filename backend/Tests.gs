@@ -571,6 +571,20 @@ function lancerTestsFFR() {
   testB23c_C19_applicationsSuccessivesSAccumulent(etat);
   testB23c_C20_appliquerValeursFFRPasseParLePointDePassage(etat);
 
+  // M1-B2 / B2-3.d — L'ÉCRAN ET L'ÉCRITURE COMPLÈTE DU DÉCOUPAGE : le navigateur envoie enfin
+  // les identités durables et la catégorie de chaque mini-terrain. ⭐ Deux gestes SÉPARÉS —
+  // enregistrer une proposition, puis la confirmer. ⛔ Toujours aucune migration : la structure
+  // n'est créée par personne ici, c'est le geste de B2-3.e.
+  // ⭐ Le détail vit dans `tests/backend-terrains-ecran.test.js`, qui exécute AUSSI cette série.
+  testB23d_D1_sansStructureRienNeChange(etat);
+  testB23d_D2_ecranDistingueLesTroisChoses(etat);
+  testB23d_D3_identitesAttribueesPuisConservees(etat);
+  testB23d_D4_refusSansTrace(etat);
+  testB23d_D5_confirmerEstUnGesteAPart(etat);
+  testB23d_D6_confirmerRefuseFerme(etat);
+  testB23d_D7_publicationParUnSeulChemin(etat);
+  testB23d_D8_onNeConfirmeQueCeQuiEstPresente(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -8697,13 +8711,24 @@ function testB23c_C13_resserrementQuatreChampsDurables(etat) {
 
   enregistrerPlanTerrains(cl, envoi);
 
-  // ① Les QUATRE durables sont écrits, à l'identique.
+  // ① Les QUATRE durables sont écrits.
+  //   ⚡ M1-B2 / B2-3.d — CETTE ASSERTION A ÉTÉ PRÉCISÉE, ET C'EST UN RENFORCEMENT, pas un
+  //   assouplissement. Elle exigeait les quatre valeurs « à l'identique » ; depuis B2-3.d,
+  //   `terrains_physiques` revient de `planifierIdentitesTerrains` avec l'IDENTITÉ DURABLE de
+  //   chaque grand terrain — c'est précisément ce que B2-3.d apporte, et son en-tête l'annonçait.
+  //   ⭐ On exige donc davantage : les trois autres inchangées À LA LETTRE, et l'inventaire
+  //   écrit doit conserver TOUT ce qui avait été envoyé (⛔ aucune perte) EN Y AJOUTANT un `id`.
   var durablesOk = true;
-  ['terrains_physiques', 'couloir_terrain_m', 'tm_longueur_m', 'tm_largeur_m'].forEach(function (c) {
+  ['couloir_terrain_m', 'tm_longueur_m', 'tm_largeur_m'].forEach(function (c) {
     if (_m1bValeur(config, c) !== envoi[c]) durablesOk = false;
   });
-  _ffrAssert(etat, durablesOk,
-    'B2-3.c C13 ⭐ : les QUATRE paramètres durables sont bien enregistrés');
+  var inventaireEcrit = [];
+  try { inventaireEcrit = JSON.parse(_m1bValeur(config, 'terrains_physiques')); } catch (e) {}
+  var inventaireOk = inventaireEcrit.length === 1 && inventaireEcrit[0].nom === 'Rugby 1' &&
+    inventaireEcrit[0].nature === 'Gazon' && String(inventaireEcrit[0].id || '').length > 0;
+  _ffrAssert(etat, durablesOk && inventaireOk,
+    'B2-3.c C13 ⭐ : les QUATRE paramètres durables sont bien enregistrés — et l\'inventaire ' +
+      'repart avec son identité durable, sans rien perdre (B2-3.d)');
 
   // ② Les DEUX événementiels ne sont PAS écrits — ⛔ pas même une ligne vide.
   _ffrAssert(etat, _m1bValeur(config, 'dimensions_categories') === _B23C_TEMOIN,
@@ -8949,4 +8974,418 @@ function testB23c_C20_appliquerValeursFFRPasseParLePointDePassage(etat) {
   _ffrAssert(etat, src.indexOf('fusionnerCategorieFFR(catExistante') !== -1 &&
       src.indexOf('absente des réglages') !== -1,
     'B2-3.c C20 ⭐ garde-fou ③ : la zone B est écrite par RELECTURE + FUSION + ligne complète');
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+ *  M1-B2 / B2-3.d — L'ÉCRAN, ET L'ÉCRITURE COMPLÈTE DU DÉCOUPAGE
+ *
+ *  ⭐ CE QUE CETTE SÉRIE PROTÈGE, ET CE N'EST PAS « la fonction rend la bonne valeur » :
+ *  elle protège les DEUX GESTES que B2-3.d sépare — enregistrer une PROPOSITION, et la
+ *  CONFIRMER — et l'ensemble des refus qui empêchent d'écrire un plan que personne ne
+ *  pourrait plus relire.
+ *
+ *  ⚠️ Le détail vit dans `tests/backend-terrains-ecran.test.js`, qui exécute AUSSI cette
+ *  série. Deux fichiers, deux rôles, ⛔ pas deux vérités.
+ * ══════════════════════════════════════════════════════════════════════════════ */
+
+/** Un `Config` complet : zone A (les six réglages, valeur témoin) PUIS la zone B. */
+function _b23dConfig(cl, sur) {
+  var lignes = [['— Réglages —', '']];
+  var valeurs = {};
+  CHAMPS_TERRAINS_DURABLES.concat(CHAMPS_TERRAINS_EVENEMENTIELS).forEach(function (c) {
+    valeurs[c] = _B23C_TEMOIN;
+  });
+  for (var k in (sur || {})) {
+    if (Object.prototype.hasOwnProperty.call(sur, k)) valeurs[k] = sur[k];
+  }
+  Object.keys(valeurs).forEach(function (c) { lignes.push([c, valeurs[c]]); });
+  var colonnes = ['categorie', 'presente', 'terrains', 'terrains_auto'];
+  lignes.push(colonnes);
+  _b23bCategories().forEach(function (c) {
+    lignes.push(colonnes.map(function (col) { return c[col] === undefined ? '' : c[col]; }));
+  });
+  var onglet = _b23bFauxOnglet('Config', lignes, cl._ecritures());
+  cl._table.Config = onglet;
+  return onglet;
+}
+
+/** Un classeur d'essai B2-3.d. `avecStructure` faux ⇒ ⛔ régime HISTORIQUE. */
+function _b23dClasseur(avecStructure, surConfig) {
+  var compteur = _b23bCompteur();
+  var cl = _b23bFauxClasseur([_b23bEditions(compteur)], compteur);
+  // ⭐ `confirmerPlanTerrains` horodate la confirmation : le faux classeur doit savoir répondre.
+  cl.getSpreadsheetTimeZone = function () { return 'Europe/Paris'; };
+  if (avecStructure) assurerStructureTerrainsB23(cl);
+  _b23dConfig(cl, surConfig);
+  return cl;
+}
+
+/**
+ * Confirme comme le VRAI navigateur : en renvoyant l'empreinte reçue au chargement.
+ * ⭐ `surEmpreinte` permet d'éprouver le refus (empreinte absente, ou périmée).
+ */
+function _b23dConfirmer(cl, surEmpreinte) {
+  var vue = planTerrainsPourEcran(cl);
+  var b = vue.brouillon || {};
+  var jeton = { empreinte: b.empreinte || '', plan_id: b.plan_id || '' };
+  if (surEmpreinte !== undefined) jeton.empreinte = surEmpreinte;
+  return confirmerPlanTerrains(cl, jeton);
+}
+
+/** L'inventaire durable d'essai, tel que le navigateur l'envoie (⛔ sans identité). */
+function _b23dInventaire() {
+  return [{ nom: 'Rugby 1', type: 'rugby', L: 115, W: 70, enBut: 0, nature: 'Gazon', pos: 'CG' },
+          { nom: 'Rugby 2', type: 'rugby', L: 110, W: 68, enBut: 0, nature: 'Gazon', pos: 'BG' }];
+}
+
+/**
+ * Le DÉCOUPAGE d'essai — ⭐ aligné sur `_b23bCategories()` : U8 tient les mini-terrains 1 à 4
+ * sur le premier grand terrain, U10 les 5 et 6 sur le second.
+ * ⚠️ L'alignement n'est pas cosmétique : en mode AUTO, `ecartsPlanTerrains` exige l'ÉGALITÉ
+ * STRICTE entre `cat.terrains` et les mini-terrains attribués — un découpage d'essai qui ne
+ * correspondrait pas rendrait toute confirmation impossible, pour une raison sans rapport.
+ */
+function _b23dMinis() {
+  return [{ numero: '1', terrain_index: 0, categorie: 'U8' },
+          { numero: '2', terrain_index: 0, categorie: 'U8' },
+          { numero: '3', terrain_index: 0, categorie: 'U8' },
+          { numero: '4', terrain_index: 0, categorie: 'U8' },
+          { numero: '5', terrain_index: 1, categorie: 'U10' },
+          { numero: '6', terrain_index: 1, categorie: 'U10' }];
+}
+
+/**
+ * Le message complet du navigateur : inventaire + sélection + découpage.
+ * ⚠️ `sur.selection` et `sur.minis` sont lus avec `!== undefined` — ⛔ jamais avec `||` :
+ * `null` est une VALEUR D'ESSAI légitime (« le navigateur n'a rien envoyé »), et l'écraser
+ * par un défaut rendrait le cas de refus intestable.
+ */
+function _b23dEnvoi(sur) {
+  sur = sur || {};
+  var payload = {
+    dimensions: { U8: { l: 30, w: 20 }, U10: { l: 40, w: 30 } },
+    couloir_m: '5', tm_longueur_m: '4', tm_largeur_m: '4'
+  };
+  if (sur.selection !== undefined) { if (sur.selection !== null) payload.selection = sur.selection; }
+  else payload.selection = ['oui', 'oui'];
+  if (sur.minis !== undefined) { if (sur.minis !== null) payload.minis = sur.minis; }
+  else payload.minis = _b23dMinis();
+  return {
+    terrains_physiques: JSON.stringify(sur.inventaire || _b23dInventaire()),
+    couloir_terrain_m: '5', tm_longueur_m: '4', tm_largeur_m: '4',
+    plan_terrains: JSON.stringify(payload)
+  };
+}
+
+/**
+ * D1 — SANS STRUCTURE, RIEN NE CHANGE : les six champs partent dans `Config`, le découpage
+ * moderne est IGNORÉ, ⛔ aucun brouillon n'apparaît.
+ *
+ * ⚠️ C'EST LE TEST QUI AUTORISE À PUBLIER CE FRONTEND AVANT B2-3.e. Le navigateur enverra
+ * `plan_terrains` dès que la page sera en ligne ; le serveur, lui, n'aura la structure qu'à la
+ * migration. ⛔ Entre les deux, le comportement doit être celui d'avant, au caractère près.
+ */
+function testB23d_D1_sansStructureRienNeChange(etat) {
+  var cl = _b23dClasseur(false);
+  var config = cl.getSheetByName('Config');
+  _ffrAssert(etat, !sourceTerrainsEditionActive(cl).moderne,
+    'B2-3.d D1 : le classeur d\'essai est bien en régime HISTORIQUE');
+
+  var envoi = _b23dEnvoi();
+  envoi.dimensions_categories = '{"U8":{"l":30,"w":20}}';
+  envoi.repartition_grands_terrains = '{"Rugby 1":["1","2"]}';
+  var r = enregistrerPlanTerrains(cl, envoi);
+
+  _ffrAssert(etat, r && r.ok === true && r.inventaire === undefined,
+    'B2-3.d D1 : la réponse est celle d\'avant — ⛔ aucun inventaire identifié rendu');
+  _ffrAssert(etat, _m1bValeur(config, 'terrains_physiques') === envoi.terrains_physiques,
+    'B2-3.d D1 ⭐ : l\'inventaire est écrit TEL QUEL — ⛔ aucune identité ajoutée');
+  _ffrAssert(etat, _m1bValeur(config, 'dimensions_categories') === envoi.dimensions_categories &&
+      _m1bValeur(config, 'repartition_grands_terrains') === envoi.repartition_grands_terrains,
+    'B2-3.d D1 ⭐ : les DEUX champs événementiels sont bien écrits (les six, comme avant)');
+  _ffrAssert(etat, lireTerrainsPlan(cl).length === 0,
+    'B2-3.d D1 ⭐⭐ : `plan_terrains` est IGNORÉ — ⛔ aucun brouillon n\'a été créé');
+  _ffrAssert(etat, !structureTerrainsB23EnPlace(cl),
+    'B2-3.d D1 ⭐⭐ : ⛔ l\'écriture n\'a créé AUCUNE structure au passage');
+}
+
+/**
+ * D2 — L'ÉCRAN REÇOIT TROIS CHOSES DISTINCTES, et ne les confond jamais.
+ * ⛔ Et il ne crée rien : `getPlanTerrains` est une LECTURE.
+ */
+function testB23d_D2_ecranDistingueLesTroisChoses(etat) {
+  var cl = _b23dClasseur(false, { terrains_physiques: JSON.stringify(_b23dInventaire()) });
+  var vueHisto = planTerrainsPourEcran(cl);
+  _ffrAssert(etat, vueHisto.moderne === false && vueHisto.brouillon === null &&
+      vueHisto.publie === null && vueHisto.etat === 'absent',
+    'B2-3.d D2 ⭐ : sans structure, ⛔ ni brouillon ni plan — et surtout aucun faux « publié » ' +
+      'fabriqué depuis Config');
+  _ffrAssert(etat, vueHisto.inventaire.length === 2 && vueHisto.inventaire[0].nom === 'Rugby 1',
+    'B2-3.d D2 : l\'inventaire durable est rendu même en régime historique');
+
+  var cl2 = _b23dClasseur(true);
+  var avant = _b23bEmpreinte(cl2);
+  var ecritures = _b23bTotalEcritures(cl2._ecritures());
+  enregistrerPlanTerrains(cl2, _b23dEnvoi());
+  var vue = planTerrainsPourEcran(cl2);
+  _ffrAssert(etat, vue.moderne === true && vue.edition_id === _B23B_ED,
+    'B2-3.d D2 : avec structure, l\'écran sait sur quelle édition il travaille');
+  _ffrAssert(etat, vue.brouillon !== null && vue.publie === null && vue.etat === 'brouillon',
+    'B2-3.d D2 ⭐⭐ : un BROUILLON existe, ⛔ aucun plan publié — l\'état le dit');
+  _ffrAssert(etat, (vue.brouillon.minis || []).length === 6 &&
+      vue.brouillon.minis[0].categorie === 'U8' && vue.brouillon.minis[5].categorie === 'U10',
+    'B2-3.d D2 ⭐⭐ : chaque mini-terrain garde sa CATÉGORIE EXPLICITE');
+  _ffrAssert(etat, vue.brouillon.signature === '',
+    'B2-3.d D2 ⭐ : un brouillon n\'est JAMAIS signé — ⛔ jamais présenté comme confirmé');
+
+  // ⛔ La lecture n'écrit rien : deux appels de plus laissent le compteur au repos.
+  var apres = _b23bTotalEcritures(cl2._ecritures());
+  planTerrainsPourEcran(cl2); planTerrainsPourEcran(cl2);
+  _ffrAssert(etat, _b23bTotalEcritures(cl2._ecritures()) === apres,
+    'B2-3.d D2 ⭐⭐ : ⛔ `getPlanTerrains` n\'écrit RIEN, même rejouée');
+  _ffrAssert(etat, avant !== _b23bEmpreinte(cl2) && ecritures < apres,
+    'B2-3.d D2 : (contrôle du contrôle) l\'enregistrement, lui, a bien écrit');
+}
+
+/**
+ * D3 — LES IDENTITÉS DURABLES : attribuées une fois par le SERVEUR, conservées ensuite.
+ * ⭐ C'est l'invariant qui rend un plan relisible des années plus tard.
+ */
+function testB23d_D3_identitesAttribueesPuisConservees(etat) {
+  var cl = _b23dClasseur(true);
+  var r1 = enregistrerPlanTerrains(cl, _b23dEnvoi());
+  _ffrAssert(etat, r1.ok && r1.inventaire.length === 2 &&
+      String(r1.inventaire[0].id || '').length > 0 && String(r1.inventaire[1].id || '').length > 0,
+    'B2-3.d D3 ⭐ : le SERVEUR attribue une identité à chaque grand terrain');
+  _ffrAssert(etat, r1.inventaire[0].nom === 'Rugby 1' && r1.inventaire[0].L === 115 &&
+      r1.inventaire[0].nature === 'Gazon' && r1.inventaire[0].pos === 'CG',
+    'B2-3.d D3 ⭐ : ⛔ AUCUNE PERTE — taille, nature et emplacement voyagent intacts');
+
+  // Le navigateur renvoie ce qu'il a reçu, avec un nom modifié : l'identité NE BOUGE PAS.
+  var renvoi = JSON.parse(JSON.stringify(r1.inventaire));
+  renvoi[0].nom = 'Rugby Principal';
+  var r2 = enregistrerPlanTerrains(cl, _b23dEnvoi({ inventaire: renvoi }));
+  _ffrAssert(etat, r2.ok && r2.inventaire[0].id === r1.inventaire[0].id &&
+      r2.inventaire[1].id === r1.inventaire[1].id,
+    'B2-3.d D3 ⭐⭐ : les identités sont CONSERVÉES, même quand le terrain est RENOMMÉ');
+  _ffrAssert(etat, r2.identites_attribuees === 0,
+    'B2-3.d D3 ⭐⭐ : ⛔ aucune identité NEUVE n\'est fabriquée au second enregistrement');
+
+  var minis = lireLignesMiniTerrains(cl);
+  var rattaches = minis.every(function (m) {
+    return m.terrain_id === r1.inventaire[0].id || m.terrain_id === r1.inventaire[1].id;
+  });
+  _ffrAssert(etat, minis.length === 6 && rattaches,
+    'B2-3.d D3 ⭐⭐ : les mini-terrains portent l\'IDENTITÉ DURABLE, ⛔ pas une position d\'écran');
+}
+
+/**
+ * D4 — LES REFUS, et ⛔ AUCUN NE LAISSE DE TRACE.
+ *
+ * ⚠️ Le contrôle est double à chaque fois : le message dit non, ET le classeur est identique
+ * BIT À BIT — ⛔ pas « à peu près identique ». Un refus qui aurait déjà écrit `Config` serait
+ * exactement le défaut que la chaîne de publication de B2-3.b s'interdit.
+ */
+function testB23d_D4_refusSansTrace(etat) {
+  var cas = [
+    ['identité INCONNUE du serveur',
+     { inventaire: [{ id: 'FABRIQUE-PAR-LE-NAVIGATEUR', nom: 'Rugby 1', L: 100, W: 60 },
+                    { nom: 'Rugby 2', L: 100, W: 60 }] }],
+    ['sélection ABSENTE', { selection: null }],
+    ['sélection DÉCALÉE (une valeur pour deux terrains)', { selection: ['oui'] }],
+    ['sélection ILLISIBLE', { selection: ['oui', 'peut-être'] }],
+    ['mini-terrain SANS catégorie',
+     { minis: [{ numero: '1', terrain_index: 0, categorie: '' }] }],
+    ['catégorie INCONNUE de l\'édition',
+     { minis: [{ numero: '1', terrain_index: 0, categorie: 'U19' }] }],
+    ['numéro de mini-terrain EN DOUBLE',
+     { minis: [{ numero: '1', terrain_index: 0, categorie: 'U8' },
+               { numero: '1', terrain_index: 1, categorie: 'U10' }] }],
+    ['mini-terrain SANS numéro',
+     { minis: [{ numero: '', terrain_index: 0, categorie: 'U8' }] }],
+    ['grand terrain DÉSIGNÉ HORS BORNES',
+     { minis: [{ numero: '1', terrain_index: 9, categorie: 'U8' }] }],
+    ['grand terrain NON DÉSIGNÉ',
+     { minis: [{ numero: '1', categorie: 'U8' }] }],
+    ['mini-terrain sur un grand terrain ÉCARTÉ',
+     { selection: ['non', 'oui'], minis: [{ numero: '1', terrain_index: 0, categorie: 'U8' }] }]
+  ];
+
+  var tousRefuses = true, tousIntacts = true, premierPasse = '';
+  cas.forEach(function (c) {
+    var cl = _b23dClasseur(true);
+    var avant = _b23bEmpreinte(cl);
+    var ecritures = _b23bTotalEcritures(cl._ecritures());
+    var r = enregistrerPlanTerrains(cl, _b23dEnvoi(c[1]));
+    if (!r || !r.error) { tousRefuses = false; if (!premierPasse) premierPasse = c[0]; }
+    if (_b23bEmpreinte(cl) !== avant || _b23bTotalEcritures(cl._ecritures()) !== ecritures) {
+      tousIntacts = false; if (!premierPasse) premierPasse = c[0] + ' (a écrit)';
+    }
+  });
+  _ffrAssert(etat, tousRefuses,
+    'B2-3.d D4 ⭐⭐ : les ' + cas.length + ' messages fautifs sont REFUSÉS' +
+      (premierPasse ? ' — passé : ' + premierPasse : ''));
+  _ffrAssert(etat, tousIntacts,
+    'B2-3.d D4 ⭐⭐ : ⛔ AUCUN refus n\'a écrit quoi que ce soit — classeur identique bit à bit');
+
+  // Un `plan_terrains` illisible ⛔ ne vide JAMAIS le découpage déjà enregistré.
+  var cl2 = _b23dClasseur(true);
+  enregistrerPlanTerrains(cl2, _b23dEnvoi());
+  var avant2 = _b23bEmpreinte(cl2);
+  var r2 = enregistrerPlanTerrains(cl2, { terrains_physiques: '[]', plan_terrains: '{ pas du json' });
+  _ffrAssert(etat, r2 && r2.error && _b23bEmpreinte(cl2) === avant2,
+    'B2-3.d D4 ⭐⭐ : un message ILLISIBLE est refusé — ⛔ le découpage en place est intact');
+}
+
+/**
+ * D5 — LES DEUX GESTES SONT SÉPARÉS : enregistrer ne publie JAMAIS, confirmer publie.
+ * ⭐ Et pendant qu'un nouveau brouillon se prépare, l'ANCIEN plan publié reste le seul
+ * consommable — c'est ce que voit le dossier des clubs.
+ */
+function testB23d_D5_confirmerEstUnGesteAPart(etat) {
+  var cl = _b23dClasseur(true);
+  enregistrerPlanTerrains(cl, _b23dEnvoi());
+  _ffrAssert(etat, pointeurPlanTerrains(cl, _B23B_ED) === '',
+    'B2-3.d D5 ⭐⭐ : ⛔ enregistrer NE PUBLIE PAS — le pointeur n\'a pas bougé');
+  _ffrAssert(etat, planTerrainsPublie(cl, _B23B_ED) === null,
+    'B2-3.d D5 ⭐⭐ : ⛔ rien n\'est consommable tant que rien n\'est confirmé');
+
+  var conf = _b23dConfirmer(cl);
+  _ffrAssert(etat, conf.ok === true && String(conf.plan_id || '').length > 0,
+    'B2-3.d D5 ⭐ : la CONFIRMATION publie (' + (conf.error || 'ok') + ')');
+  var publie = planTerrainsPublie(cl, _B23B_ED);
+  _ffrAssert(etat, publie !== null && publie.plan_id === conf.plan_id,
+    'B2-3.d D5 ⭐⭐ : le plan confirmé devient le plan CONSOMMABLE de l\'édition');
+  _ffrAssert(etat, planTerrainsPourEcran(cl).etat === 'confirme',
+    'B2-3.d D5 : l\'écran annonce « confirmé »');
+  var projection = repartitionTerrainsEditionActive(cl, lireConfig(cl));
+  _ffrAssert(etat, projection.indexOf('Rugby 1') !== -1 && projection.indexOf('Rugby 2') !== -1,
+    'B2-3.d D5 ⭐ : la forme historique `repartition_grands_terrains` est bien alimentée');
+
+  // ⭐ UN NOUVEAU BROUILLON NE DÉTRÔNE PAS LE PLAN EN SERVICE.
+  var avantPointeur = pointeurPlanTerrains(cl, _B23B_ED);
+  enregistrerPlanTerrains(cl, _b23dEnvoi({
+    minis: _b23dMinis().concat([{ numero: '7', terrain_index: 1, categorie: 'U10' }]) }));
+  _ffrAssert(etat, pointeurPlanTerrains(cl, _B23B_ED) === avantPointeur,
+    'B2-3.d D5 ⭐⭐ : préparer un NOUVEAU brouillon ne déplace pas le pointeur');
+  _ffrAssert(etat, repartitionTerrainsEditionActive(cl, lireConfig(cl)) === projection,
+    'B2-3.d D5 ⭐⭐ : les consommateurs voient TOUJOURS l\'ancien plan confirmé');
+  _ffrAssert(etat, planTerrainsPourEcran(cl).etat === 'a_reconfirmer',
+    'B2-3.d D5 ⭐ : l\'écran annonce « à reconfirmer », ⛔ pas « confirmé »');
+}
+
+/** D6 — `confirmerPlanTerrains` REFUSE quand il n'y a rien à confirmer, ⛔ sans rien écrire. */
+function testB23d_D6_confirmerRefuseFerme(etat) {
+  var sans = _b23dClasseur(false);
+  var avantSans = _b23bEmpreinte(sans);
+  var r1 = _b23dConfirmer(sans);
+  _ffrAssert(etat, r1.error && _b23bEmpreinte(sans) === avantSans,
+    'B2-3.d D6 ⭐ : sans structure ⇒ REFUS, ⛔ et rien n\'est écrit (ni structure créée)');
+  _ffrAssert(etat, !structureTerrainsB23EnPlace(sans),
+    'B2-3.d D6 ⭐⭐ : ⛔ confirmer ne crée JAMAIS la structure — c\'est le geste de B2-3.e');
+
+  var vide = _b23dClasseur(true);
+  var avantVide = _b23bEmpreinte(vide);
+  var r2 = _b23dConfirmer(vide);
+  _ffrAssert(etat, r2.error && _b23bEmpreinte(vide) === avantVide,
+    'B2-3.d D6 ⭐ : aucun brouillon ⇒ REFUS, ⛔ classeur intact');
+
+  // Un brouillon INCOMPLET (aucun mini-terrain) est refusé par la validation, ⛔ sans publier.
+  var partiel = _b23dClasseur(true);
+  enregistrerPlanTerrains(partiel, _b23dEnvoi({ minis: [] }));
+  var r3 = _b23dConfirmer(partiel);
+  _ffrAssert(etat, r3.error && pointeurPlanTerrains(partiel, _B23B_ED) === '',
+    'B2-3.d D6 ⭐⭐ : un brouillon INCOMPLET est refusé — ⛔ le pointeur reste vide');
+}
+
+/**
+ * D8 — ⭐⭐ ON NE CONFIRME QUE CE QUI A ÉTÉ PRÉSENTÉ.
+ *
+ * 🚨 LE DÉFAUT QUE CE TEST FIGE, ET IL A ÉTÉ CONSTATÉ EN VRAI AVANT D'ÊTRE CORRIGÉ. Un
+ * brouillon garde le MÊME `plan_id` d'un enregistrement à l'autre — c'est voulu, c'est le
+ * même objet de travail. Un second onglet pouvait donc le réécrire ENTIÈREMENT entre le
+ * moment où l'écran l'affiche et le clic sur « Confirmer », et ⛔ la publication partait
+ * **en silence** sur un plan que personne n'avait regardé.
+ *
+ * ⭐ La parade est une EMPREINTE : le serveur la donne avec le brouillon, le navigateur la
+ * renvoie telle quelle, le serveur la recalcule et refuse au moindre écart.
+ */
+function testB23d_D8_onNeConfirmeQueCeQuiEstPresente(etat) {
+  var cl = _b23dClasseur(true);
+  enregistrerPlanTerrains(cl, _b23dEnvoi());
+  var vueChargee = planTerrainsPourEcran(cl);
+
+  _ffrAssert(etat, String((vueChargee.brouillon || {}).empreinte || '').length > 0,
+    'B2-3.d D8 : le brouillon rendu à l\'écran porte une EMPREINTE');
+  _ffrAssert(etat, !!confirmerPlanTerrains(cl, {}).error,
+    'B2-3.d D8 ⭐⭐ : ⛔ sans empreinte, la confirmation est REFUSÉE — jamais exécutée par défaut');
+
+  // Un autre onglet réécrit le brouillon : mêmes terrains, mais dimensions et NOM changés.
+  var inv = vueChargee.inventaire;
+  var modifie = JSON.parse(JSON.stringify(inv));
+  modifie[0].nom = 'Réécrit depuis un autre onglet';
+  enregistrerPlanTerrains(cl, {
+    terrains_physiques: JSON.stringify(modifie),
+    plan_terrains: JSON.stringify({ selection: ['oui', 'oui'], minis: _b23dMinis(),
+      dimensions: { U8: { l: 77, w: 77 }, U10: { l: 40, w: 30 } },
+      couloir_m: '42', tm_longueur_m: '4', tm_largeur_m: '4' }) });
+  var vueReelle = planTerrainsPourEcran(cl);
+
+  _ffrAssert(etat, vueReelle.brouillon.plan_id === vueChargee.brouillon.plan_id,
+    'B2-3.d D8 ⭐ : le `plan_id` n\'a PAS bougé — ⛔ il ne prouve rien sur le contenu');
+  _ffrAssert(etat, vueReelle.brouillon.empreinte !== vueChargee.brouillon.empreinte,
+    'B2-3.d D8 ⭐⭐ : l\'EMPREINTE, elle, a changé — c\'est elle qui fait foi');
+
+  var avant = _b23bEmpreinte(cl);
+  var refus = confirmerPlanTerrains(cl, { empreinte: vueChargee.brouillon.empreinte,
+                                          plan_id: vueChargee.brouillon.plan_id });
+  _ffrAssert(etat, !!refus.error && _b23bEmpreinte(cl) === avant,
+    'B2-3.d D8 ⭐⭐⭐ : confirmer avec l\'empreinte PÉRIMÉE est refusé — ⛔ et n\'écrit rien');
+  _ffrAssert(etat, pointeurPlanTerrains(cl, _B23B_ED) === '',
+    'B2-3.d D8 ⭐⭐ : ⛔ rien n\'a été publié');
+
+  // Après rechargement, la confirmation publie EXACTEMENT ce que l'écran montre alors.
+  var ok = _b23dConfirmer(cl);
+  var publie = planTerrainsPublie(cl, _B23B_ED);
+  _ffrAssert(etat, ok.ok === true && publie &&
+      publie.params.dimensions_json === vueReelle.brouillon.dimensions_json &&
+      publie.params.couloir_m === vueReelle.brouillon.couloir_m,
+    'B2-3.d D8 ⭐⭐ : après rechargement, le plan publié est CELUI QUE L\'ÉCRAN MONTRE');
+}
+
+/**
+ * D7 — LE POINT DE PASSAGE UNIQUE DE LA PUBLICATION.
+ *
+ * ⚠️ CONTRÔLE DE STRUCTURE, et il est assumé comme tel : il lit le corps des fonctions
+ * (`String(f)`), exactement comme C20. ⭐ Sa raison d'être : aucun test de comportement ne peut
+ * prouver une ABSENCE de chemin — il peut seulement montrer que les chemins ESSAYÉS ne
+ * publient pas. Ici on établit que les deux portes d'écriture nouvelles ne NOMMENT même pas
+ * la bascule, et que la seule qui la nomme est celle dont c'est le rôle.
+ * ⭐ Le banc Node `tests/backend-terrains-ecran.test.js` complète par un balayage du fichier
+ * ENTIER — les deux ensemble ferment la question.
+ */
+function testB23d_D7_publicationParUnSeulChemin(etat) {
+  var enreg = String(enregistrerPlanTerrains);
+  _ffrAssert(etat, enreg.indexOf('ecrirePointeurPlanTerrains') === -1 &&
+      enreg.indexOf('publierPlanTerrains') === -1,
+    'B2-3.d D7 ⭐⭐ : ⛔ `enregistrerPlanTerrains` ne NOMME même pas la publication');
+  _ffrAssert(etat, enreg.indexOf('ecrireBrouillonTerrains') !== -1,
+    'B2-3.d D7 ⭐ : elle écrit un BROUILLON, et rien d\'autre');
+  _ffrAssert(etat, enreg.indexOf('assurerStructureTerrainsB23') === -1 &&
+      enreg.indexOf('assurerOnglet') === -1 && enreg.indexOf('assurerColonnePlanPublie') === -1,
+    'B2-3.d D7 ⭐⭐ : ⛔ elle ne crée AUCUNE structure — c\'est le geste de B2-3.e');
+
+  var ecran = String(planTerrainsPourEcran);
+  _ffrAssert(etat, ecran.indexOf('ecrire') === -1 && ecran.indexOf('assurer') === -1 &&
+      ecran.indexOf('publier') === -1,
+    'B2-3.d D7 ⭐⭐ : ⛔ `planTerrainsPourEcran` est une LECTURE — elle ne nomme aucune écriture');
+
+  var conf = String(confirmerPlanTerrains);
+  _ffrAssert(etat, conf.indexOf('publierPlanTerrains(') !== -1,
+    'B2-3.d D7 ⭐ : `confirmerPlanTerrains` passe par la séquence éprouvée de B2-3.b');
+  _ffrAssert(etat, conf.indexOf('ecrirePointeurPlanTerrains') === -1 &&
+      conf.indexOf('assurer') === -1,
+    'B2-3.d D7 ⭐⭐ : ⛔ elle ne touche PAS le pointeur elle-même, et ne crée aucune structure');
+  _ffrAssert(etat, String(publierPlanTerrains).indexOf('ecrirePointeurPlanTerrains(') !== -1,
+    'B2-3.d D7 : (contrôle du contrôle) la bascule vit bien dans `publierPlanTerrains`');
 }

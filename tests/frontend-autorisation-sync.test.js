@@ -999,6 +999,10 @@ function verifier(condition, libelle) {
     const EXCEPTIONS = {
       'admin.js|getConfigAdmin': 'lecture de la config (lireConfigAdmin)',
       'admin-autorisation.js|getDossierAutorisation': 'lecture de la feuille elle-même',
+      /* ⭐ M1-B2 / B2-3.d — LECTURE : l'écran des terrains demande l'inventaire durable, le
+         brouillon et le plan publié, distinctement. ⛔ Elle n'écrit rien (elle passe par
+         `ACTIONS_LECTURE` côté serveur, donc sans même prendre le verrou d'écriture). */
+      'admin-terrains.js|getPlanTerrains': 'lecture — inventaire, brouillon et plan publié',
       'admin-sponsors.js|lireMesuresSponsors': 'lecture — onglet Mesures, non lu par la feuille',
       'admin-sponsors.js|listerSponsors': 'lecture — onglet Sponsors, non lu par la feuille',
       'admin-sponsors.js|enregistrerReglagesSponsors': 'écriture historique — réglages d\'affichage des partenaires',

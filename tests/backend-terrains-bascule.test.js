@@ -733,7 +733,10 @@ const MUTATIONS = [
     // ⚠️ LA MUTATION SYMÉTRIQUE, et elle protège l'application TELLE QU'ELLE TOURNE : un
     //    resserrement INCONDITIONNEL couperait la seule écriture de la source historique.
     nom: 'M16 · le resserrement devient INCONDITIONNEL (casse le mode historique)',
-    de: "  var champs = sourceTerrainsEditionActive(classeur).moderne\n" +
+    // ⚡ ANCRE MISE À JOUR par M1-B2 / B2-3.d : la décision de source est désormais prise UNE
+    //   fois dans `var source`, puis relue — la fonction en a besoin deux fois. ⛔ La mutation
+    //   n'a changé ni de sens ni de cible : elle rend le resserrement INCONDITIONNEL.
+    de: "  var champs = source.moderne\n" +
         "    ? CHAMPS_TERRAINS_DURABLES\n" +
         "    : CHAMPS_TERRAINS_DURABLES.concat(CHAMPS_TERRAINS_EVENEMENTIELS);",
     vers: "  var champs = CHAMPS_TERRAINS_DURABLES;"
