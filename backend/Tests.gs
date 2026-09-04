@@ -413,7 +413,10 @@ function lancerTestsFFR() {
   testB20_S1_decisionPure(etat);
   testB20_S2_nonRegressionHuitColonnes(etat);
   testB20_S3_casLimites(etat);
-  testB20_temoinR101TerrainsResteB23(etat);
+  // ⚡ `testB20_temoinR101TerrainsResteB23` a été RETIRÉ ICI par M1-B2 / B2-3.c, et c'est
+  //    le scénario qu'il annonçait : il figeait le défaut R-101 en attendant sa correction,
+  //    et disait lui-même « ce témoin DOIT être inversé par B2-3 ». Son successeur est
+  //    `testB23c_C10_ceintureDuResetInverseLeTemoin`, appelé plus bas avec sa série.
 
   // M1-B2 / B2-1 (D-050, R-106) — l'identité DURABLE d'une édition : `edition_id` et le
   // registre `Editions`. ⭐ Les douze exigences du cadrage, dans leur ordre.
@@ -544,6 +547,29 @@ function lancerTestsFFR() {
   testB23b_N1_balayageNeToucheJamaisLePointe(etat);
   testB23b_R1_refusNeToucheNiOrphelinNiPointe(etat);
   testB23b_V1_voisinageIntact(etat);
+
+  // M1-B2 / B2-3.c (R-101) — LA BASCULE DES CONSOMMATEURS : ils lisent désormais le plan
+  // publié de l'ÉDITION ACTIVE. ⭐ C10 est l'INVERSION du témoin R-101 posé par B2-0.
+  testB23c_C1_sansStructureComportementHistorique(etat);
+  testB23c_C2_consommateurLitLePlanPublie(etat);
+  testB23c_C3_niBrouillonNiOrphelin(etat);
+  testB23c_C4_isolationEntreEditions(etat);
+  testB23c_C5_contratDeSortieInchange(etat);
+  testB23c_C6_lectureNEcritRien(etat);
+  testB23c_C7_configJamaisMutee(etat);
+  testB23c_C8_naturesDesTerrainsRetenus(etat);
+  testB23c_C9_defautFermeJamaisDeRepli(etat);
+  testB23c_C10_ceintureDuResetInverseLeTemoin(etat);
+  testB23c_C11_lePermanentSurvitAuReset(etat);
+  testB23c_C12_ecritureNeMigreJamais(etat);
+  testB23c_C13_resserrementQuatreChampsDurables(etat);
+  testB23c_C14_symetrieSansStructureSixChamps(etat);
+  testB23c_C15_dimensionsSansStructureRestentDansConfig(etat);
+  testB23c_C16_dimensionsVontDansLeBrouillon(etat);
+  testB23c_C17_dimensionsVisentLEditionActive(etat);
+  testB23c_C18_aucunRepliVersConfig(etat);
+  testB23c_C19_applicationsSuccessivesSAccumulent(etat);
+  testB23c_C20_appliquerValeursFFRPasseParLePointDePassage(etat);
 
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
@@ -4634,7 +4660,11 @@ function _m1bFauxOnglet(lignes) {
         },
         setValue: function (v) { if (!d[r - 1]) d[r - 1] = []; d[r - 1][c - 1] = v; },
         setValues: function (vals) {
-          ecrit.setValues++;
+          // ⚠️ Une ligne `ecrit.setValues++;` figurait ici depuis `ed815fd` (session 35). Elle
+          //    visait `_b23bFauxOnglet`, le faux onglet de B2-3.b, et a atterri dans CELUI-CI,
+          //    qui n'a jamais eu de compteur : ⛔ toute écriture levait `ecrit is not defined`,
+          //    donc `lancerTestsFFR` s'arrêtait au premier test M1-B/B2-0 qui écrit. Retirée
+          //    par B2-3.c — ⭐ c'est le retour exact à l'état d'avant ce commit.
           for (var i = 0; i < vals.length; i++) {
             if (!d[r - 1 + i]) d[r - 1 + i] = [];
             for (var j = 0; j < vals[i].length; j++) { d[r - 1 + i][c - 1 + j] = vals[i][j]; }
@@ -5328,20 +5358,6 @@ function testB20_S3_casLimites(etat) {
   // (une exception ferait échouer TOUT le harnais, pas seulement cette ligne).
   reinitialiserPhase2Clubs({ getSheetByName: function () { return null; } });
   _ffrAssert(etat, true, 'B2-0 S3 : un classeur sans onglet ClubsInvites ne provoque aucune erreur');
-}
-
-/** ⚠️ TÉMOIN — ⛔ CE N'EST PAS UN TEST DE B2-0, ET IL NE DÉCRIT PAS UN COMPORTEMENT SOUHAITÉ.
- *  Il fige le défaut R-101 tel qu'il EST aujourd'hui : le découpage des grands terrains survit à
- *  la réinitialisation, si bien que le dossier d'un tournoi vide annonce encore « 18 terrains de
- *  jeu, sur 4 grands terrains ». ⭐ Sa correction appartient à B2-3, parce que la donnée est MIXTE
- *  (l'existence des grands terrains est permanente, leur découpage est propre à une édition).
- *  ➡️ Ce témoin DOIT être inversé par B2-3 : son échec, ce jour-là, sera le signe que le lot a
- *  bien agi — pas une régression. */
-function testB20_temoinR101TerrainsResteB23(etat) {
-  var cl = _b20ClasseurFactice();
-  reinitialiserTournoi(cl);
-  _ffrAssert(etat, _m1bValeur(cl._config, 'repartition_grands_terrains') === '{"Rugby 1":["1","2"]}',
-    'B2-0 TÉMOIN (R-101) : le découpage des terrains survit ENCORE — correction attendue en B2-3');
 }
 
 /* ========================================================================== */
@@ -8272,4 +8288,665 @@ function testB23b_V1_voisinageIntact(etat) {
   });
   _ffrAssert(etat, propre,
     'B2-3.b V1 ⭐⭐ : AUCUNE donnée écrite dans une colonne SANS EN-TÊTE');
+}
+
+/* ========================================================================== */
+/*  M1-B2 / B2-3.c — LA BASCULE DES CONSOMMATEURS (R-101)                     */
+/*                                                                            */
+/*  CE QUE CETTE SÉRIE PROUVE, ET CE QU'ELLE NE PROUVE PAS.                   */
+/*                                                                            */
+/*  Elle prouve qu'un consommateur du serveur lit le PLAN PUBLIÉ DE L'ÉDITION */
+/*  ACTIVE, jamais un brouillon, jamais un plan orphelin, jamais le découpage  */
+/*  d'une AUTRE édition — et que, tant que la structure B2-3 n'existe pas,     */
+/*  il rend exactement ce qu'il rendait avant, au caractère près.             */
+/*                                                                            */
+/*  ⛔ Elle ne prouve RIEN sur le classeur réel : ces tests tournent sur des    */
+/*  onglets factices. La migration reste à faire (CLAUDE.md §13.6).           */
+/*                                                                            */
+/*  ⚠️ RÈGLE D'ÉCRITURE : on appelle les VRAIES fonctions branchées            */
+/*  (`repartitionTerrainsEditionActive`, `configAvecTerrainsEdition`,          */
+/*  `reinitialiserTournoi`), ⛔ jamais une reproduction de leur logique.        */
+/* ========================================================================== */
+
+/** Un `Config` factice minimal, en OBJET — la forme que `lireConfig` rend à ses appelants. */
+function _b23cConfig(repartition, sur) {
+  var g = { tournoi_nom: 'Tournoi test',
+    terrains_physiques: '[{"nom":"Rugby 1","nature":"Gazon"},{"nom":"Foot 9","nature":"Stabilisé"}]' };
+  if (repartition !== null && repartition !== undefined) {
+    g.repartition_grands_terrains = repartition;
+  }
+  for (var k in (sur || {})) { if (Object.prototype.hasOwnProperty.call(sur, k)) g[k] = sur[k]; }
+  return { global: g, categories: _b23bCategories() };
+}
+
+/**
+ * ⭐ LE PIÈGE, ET IL EST DÉLIBÉRÉ : la valeur laissée dans `Config` décrit un AUTRE découpage
+ * que le plan. Un consommateur qui retomberait sur l'ancienne source rendrait CETTE chaîne —
+ * ⛔ elle est donc impossible à confondre avec un succès.
+ */
+var _B23C_PIEGE = '{"Stade de l\'an dernier":["7","8","9"]}';
+
+/** Un classeur prêt : structure en place, une édition active, un plan PUBLIÉ. */
+function _b23cClasseurPublie(sur) {
+  var cl = _b23bClasseurPret();
+  var r = publierPlanTerrains(cl, _B23B_ED, _b23bPlan(sur), _b23bCategories(),
+    _b23bGenerateur('PL'), '2026-09-03 10:00:00');
+  return { classeur: cl, publication: r };
+}
+
+/** La valeur TÉMOIN posée dans les lignes de Config avant l'appel : si elle survit, c'est
+ *  que le champ n'a pas été écrit ; si elle est remplacée, c'est qu'il l'a été. */
+var _B23C_TEMOIN = 'TEMOIN-AVANT-APPEL';
+
+/**
+ * Greffe un onglet `Config` RÉEL sur un faux classeur B2-3.b, et le rend.
+ *
+ * ⭐ LES SIX LIGNES EXISTENT DÉJÀ, chacune portant la même valeur témoin — et ce n'est pas un
+ * raccourci : c'est l'état d'un classeur EN SERVICE, où la carte Terrains a déjà enregistré au
+ * moins une fois. ⚠️ C'est aussi la preuve la plus forte : un champ « non écrit » ne peut plus
+ * l'être par simple absence de ligne, il faut que la valeur EXISTANTE ait survécu intacte.
+ */
+function _b23cOngletConfigReel(cl) {
+  var lignes = [['— Réglages —', '']];
+  CHAMPS_TERRAINS_DURABLES.concat(CHAMPS_TERRAINS_EVENEMENTIELS).forEach(function (c) {
+    lignes.push([c, _B23C_TEMOIN]);
+  });
+  var onglet = _b23bFauxOnglet('Config', lignes, cl._ecritures());
+  cl._table.Config = onglet;
+  return onglet;
+}
+
+/** C1 — Sans structure B2-3, le comportement est HISTORIQUE, au caractère près. */
+function testB23c_C1_sansStructureComportementHistorique(etat) {
+  var cl = _b23bFauxClasseur([_b23bEditions()]);        // ⛔ aucune structure
+  var cfg = _b23cConfig('{"Rugby 1":["1","2"]}');
+
+  _ffrAssert(etat, !structureTerrainsB23EnPlace(cl),
+    'B2-3.c C1 : le classeur d\'essai n\'a PAS la structure B2-3');
+  _ffrAssert(etat, !sourceTerrainsEditionActive(cl).moderne,
+    'B2-3.c C1 : la source reste donc l\'ANCIENNE');
+  _ffrAssert(etat, repartitionTerrainsEditionActive(cl, cfg) === '{"Rugby 1":["1","2"]}',
+    'B2-3.c C1 ⭐ : la valeur rendue est celle de Config, TELLE QUELLE');
+
+  // Champ absent ⇒ chaîne vide, ⛔ jamais `null` ni `undefined` (le contrat de sortie).
+  _ffrAssert(etat, repartitionTerrainsEditionActive(cl, _b23cConfig(null)) === '',
+    'B2-3.c C1 : champ absent ⇒ chaîne vide, ⛔ jamais null');
+}
+
+/** C2 — Avec structure et plan publié, le consommateur lit LE PLAN, ⛔ jamais Config. */
+function testB23c_C2_consommateurLitLePlanPublie(etat) {
+  var pret = _b23cClasseurPublie();
+  _ffrAssert(etat, !!pret.publication.ok, 'B2-3.c C2 : le plan d\'essai est bien publié');
+
+  var src = sourceTerrainsEditionActive(pret.classeur);
+  _ffrAssert(etat, src.moderne && src.edition_id === _B23B_ED && !!src.plan,
+    'B2-3.c C2 : la source est MODERNE et porte le plan de l\'édition active');
+
+  var rendu = repartitionTerrainsEditionActive(pret.classeur, _b23cConfig(_B23C_PIEGE));
+  _ffrAssert(etat, rendu !== _B23C_PIEGE,
+    'B2-3.c C2 ⭐⭐ : la valeur PIÉGÉE de Config n\'est PAS rendue');
+  _ffrAssert(etat, rendu === '{"Foot 1":["5"],"Foot 2":["6"],"Rugby 1":["1","2"],"Rugby 2":["3","4"]}',
+    'B2-3.c C2 ⭐ : la valeur rendue est la PROJECTION du plan publié (constaté ' + rendu + ')');
+}
+
+/** C3 — Un BROUILLON et un plan ORPHELIN ne sont jamais consommés. */
+function testB23c_C3_niBrouillonNiOrphelin(etat) {
+  var cl = _b23bClasseurPret();
+  var cfg = _b23cConfig(_B23C_PIEGE);
+
+  // ① Un brouillon seul : ⛔ aucun pointeur, donc rien à consommer.
+  ecrireBrouillonTerrains(cl, _B23B_ED, _b23bPlan(), _b23bGenerateur('BR'));
+  _ffrAssert(etat, !!lireBrouillonTerrains(cl, _B23B_ED),
+    'B2-3.c C3 : le brouillon existe bien dans le classeur');
+  _ffrAssert(etat, repartitionTerrainsEditionActive(cl, cfg) === '',
+    'B2-3.c C3 ⭐ : un BROUILLON n\'est jamais consommé (⛔ ni retour à Config)');
+
+  // ② Un candidat écrit mais JAMAIS désigné (confirmation interrompue) : orphelin, invisible.
+  var interrompu = publierPlanTerrains(cl, _B23B_ED, _b23bPlan(), _b23bCategories(),
+    _b23bGenerateur('OR'), '2026-09-03 10:00:00', 'avantPublication');
+  _ffrAssert(etat, interrompu.arrete === 'avantPublication' && !!interrompu.plan_id,
+    'B2-3.c C3 : un candidat a bien été écrit puis abandonné avant la bascule');
+  _ffrAssert(etat, !!lirePlanTerrains(cl, _B23B_ED, interrompu.plan_id),
+    'B2-3.c C3 : ses lignes sont bien présentes dans le classeur');
+  _ffrAssert(etat, repartitionTerrainsEditionActive(cl, cfg) === '',
+    'B2-3.c C3 ⭐⭐ : un candidat ORPHELIN n\'est jamais consommé');
+}
+
+/** C4 — ISOLATION : une édition nouvelle ne réutilise AUCUN terrain de la précédente. */
+function testB23c_C4_isolationEntreEditions(etat) {
+  var pret = _b23cClasseurPublie();
+  var cl = pret.classeur;
+  var cfg = _b23cConfig(_B23C_PIEGE);
+  var attendu = '{"Foot 1":["5"],"Foot 2":["6"],"Rugby 1":["1","2"],"Rugby 2":["3","4"]}';
+  _ffrAssert(etat, repartitionTerrainsEditionActive(cl, cfg) === attendu,
+    'B2-3.c C4 : l\'édition A consomme bien SON plan');
+
+  // La bascule d'édition : A est fermée, B est ouverte — exactement ce que fait un reset.
+  var editions = cl.getSheetByName('Editions');
+  var lignes = editions._lignes();
+  for (var i = 1; i < lignes.length; i++) {
+    if (String(lignes[i][0]) === _B23B_ED) lignes[i][1] = 'fermee';
+  }
+  lignes.push(['ED-2027', 'active', '2026-09-03 11:00:00', '']);
+
+  var apres = repartitionTerrainsEditionActive(cl, cfg);
+  _ffrAssert(etat, apres === '',
+    'B2-3.c C4 ⭐⭐ : l\'édition NEUVE ne consomme AUCUN terrain (constaté « ' + apres + ' »)');
+  _ffrAssert(etat, apres !== _B23C_PIEGE,
+    'B2-3.c C4 ⭐ : et elle ne retombe pas non plus sur la valeur laissée dans Config');
+
+  // ⭐ Le plan de l'édition FERMÉE n'a pas été détruit : il reste lisible par son édition.
+  _ffrAssert(etat, !!planTerrainsPublie(cl, _B23B_ED),
+    'B2-3.c C4 ⭐ : le plan de l\'édition FERMÉE reste intact et lisible — c\'est son histoire');
+}
+
+/** C5 — Le CONTRAT DE SORTIE attendu par le frontend existant est conservé. */
+function testB23c_C5_contratDeSortieInchange(etat) {
+  var pret = _b23cClasseurPublie();
+  var rendu = repartitionTerrainsEditionActive(pret.classeur, _b23cConfig(_B23C_PIEGE));
+
+  var objet = null;
+  try { objet = JSON.parse(rendu); } catch (e) { objet = null; }
+  _ffrAssert(etat, objet && typeof objet === 'object',
+    'B2-3.c C5 : la sortie est une CHAÎNE JSON, comme celle qu\'écrivait la carte Terrains');
+
+  var cles = [];
+  for (var k in objet) { if (Object.prototype.hasOwnProperty.call(objet, k)) cles.push(k); }
+  _ffrAssert(etat, cles.length === 4,
+    'B2-3.c C5 : quatre grands terrains, comme dans le plan (constaté ' + cles.length + ')');
+
+  var listes = true, total = 0;
+  cles.forEach(function (c) {
+    if (Object.prototype.toString.call(objet[c]) !== '[object Array]') listes = false;
+    else { total += objet[c].length; objet[c].forEach(function (n) { if (typeof n !== 'string') listes = false; }); }
+  });
+  _ffrAssert(etat, listes,
+    'B2-3.c C5 ⭐ : chaque valeur est un TABLEAU DE CHAÎNES — la forme que lit resumeTerrains');
+  _ffrAssert(etat, total === 6,
+    'B2-3.c C5 : six mini-terrains au total, comme dans le plan (constaté ' + total + ')');
+
+  // ⭐ Les clés sont les NOMS FIGÉS du plan, ⛔ pas ceux de l'inventaire durable courant.
+  _ffrAssert(etat, objet['Rugby 1'] && objet['Rugby 1'].join(',') === '1,2',
+    'B2-3.c C5 ⭐ : « Rugby 1 » porte bien ses mini-terrains 1 et 2, dans l\'ordre');
+}
+
+/** C6 — Une simple LECTURE n'écrit RIEN, ⛔ et ne crée aucune structure. */
+function testB23c_C6_lectureNEcritRien(etat) {
+  // ① Structure ABSENTE : ⛔ la lecture ne doit surtout pas la créer (aucune migration implicite).
+  var compteur = _b23bCompteur();
+  var cl = _b23bFauxClasseur([_b23bEditions(compteur)], compteur);
+  var avant = _b23bEmpreinte(cl);
+  var cfg = _b23cConfig('{"Rugby 1":["1","2"]}');
+
+  sourceTerrainsEditionActive(cl);
+  repartitionTerrainsEditionActive(cl, cfg);
+  naturesTerrainsEditionActive(cl, cfg);
+  configAvecTerrainsEdition(cl, cfg);
+
+  _ffrAssert(etat, _b23bTotalEcritures(compteur) === 0,
+    'B2-3.c C6 ⭐⭐ : structure absente — ZÉRO appel d\'écriture (constaté ' +
+      _b23bTotalEcritures(compteur) + ')');
+  _ffrAssert(etat, !structureTerrainsB23EnPlace(cl),
+    'B2-3.c C6 ⭐⭐ : ⛔ lire n\'a PAS créé la structure — aucune migration implicite');
+  _ffrAssert(etat, _b23bEmpreinte(cl) === avant,
+    'B2-3.c C6 : le classeur est identique bit à bit');
+
+  // ② Structure PRÉSENTE, plan publié : lire reste une lecture.
+  var pret = _b23cClasseurPublie();
+  var cl2 = pret.classeur;
+  var compteur2 = cl2._ecritures();
+  var repere = _b23bTotalEcritures(compteur2);
+  var avant2 = _b23bEmpreinte(cl2);
+
+  sourceTerrainsEditionActive(cl2);
+  repartitionTerrainsEditionActive(cl2, cfg);
+  naturesTerrainsEditionActive(cl2, cfg);
+  configAvecTerrainsEdition(cl2, cfg);
+
+  _ffrAssert(etat, _b23bTotalEcritures(compteur2) === repere,
+    'B2-3.c C6 ⭐⭐ : structure présente — ZÉRO appel d\'écriture de plus');
+  _ffrAssert(etat, _b23bEmpreinte(cl2) === avant2,
+    'B2-3.c C6 : le classeur publié est identique bit à bit');
+}
+
+/** C7 — `configAvecTerrainsEdition` rend une COPIE, ⛔ elle ne mute jamais son entrée. */
+function testB23c_C7_configJamaisMutee(etat) {
+  var pret = _b23cClasseurPublie();
+  var cfg = _b23cConfig(_B23C_PIEGE);
+  var sortie = configAvecTerrainsEdition(pret.classeur, cfg);
+
+  _ffrAssert(etat, cfg.global.repartition_grands_terrains === _B23C_PIEGE,
+    'B2-3.c C7 ⭐⭐ : l\'objet d\'ENTRÉE n\'a PAS été modifié');
+  _ffrAssert(etat, sortie.global !== cfg.global,
+    'B2-3.c C7 : la sortie porte un objet `global` DISTINCT');
+  _ffrAssert(etat, sortie.global.repartition_grands_terrains !== _B23C_PIEGE,
+    'B2-3.c C7 ⭐ : et c\'est bien la copie qui porte la valeur de l\'édition');
+  _ffrAssert(etat, sortie.global.tournoi_nom === 'Tournoi test' &&
+      sortie.global.terrains_physiques === cfg.global.terrains_physiques,
+    'B2-3.c C7 : tous les autres paramètres sont recopiés à l\'identique');
+  _ffrAssert(etat, sortie.categories === cfg.categories,
+    'B2-3.c C7 : les catégories ne sont pas touchées');
+}
+
+/** C8 — Les NATURES viennent des grands terrains RETENUS par l'édition. */
+function testB23c_C8_naturesDesTerrainsRetenus(etat) {
+  var cfg = _b23cConfig(null);   // Config déclare Gazon ET Stabilisé (l'inventaire durable)
+
+  // ① Sans structure : cascade historique sur `terrains_physiques`.
+  var vieux = _b23bFauxClasseur([_b23bEditions()]);
+  var nHist = naturesTerrainsEditionActive(vieux, cfg);
+  _ffrAssert(etat, nHist.natures.join(',') === 'Gazon,Stabilisé',
+    'B2-3.c C8 : sans structure, les natures restent celles de l\'inventaire (constaté ' +
+      nHist.natures.join(',') + ')');
+
+  // ② Avec structure : seuls les terrains RETENUS du plan comptent. « Foot 2 » est écarté,
+  //    et il est le SEUL à porter la surface « Sable » — s'il comptait, elle apparaîtrait.
+  var pret = _b23cClasseurPublie({ terrains: [
+    _b23bTerrain('T1', 'Rugby 1', { snap_nature: 'Gazon' }),
+    _b23bTerrain('T2', 'Rugby 2', { snap_nature: 'Gazon' }),
+    _b23bTerrain('T3', 'Foot 1', { snap_nature: 'Synthétique' }),
+    _b23bTerrain('T4', 'Foot 2', { selectionne: 'non', snap_nature: 'Sable' })],
+    minis: [_b23bMini(1, 'T1', 'U8'), _b23bMini(2, 'T1', 'U8'), _b23bMini(3, 'T2', 'U8'),
+      _b23bMini(4, 'T2', 'U8'), _b23bMini(5, 'T3', 'U10'), _b23bMini(6, 'T3', 'U10')] });
+  _ffrAssert(etat, !!pret.publication.ok,
+    'B2-3.c C8 : le plan à terrain écarté est publié (' + (pret.publication.error || '') + ')');
+
+  var nPlan = naturesTerrainsEditionActive(pret.classeur, cfg);
+  _ffrAssert(etat, nPlan.natures.join(',') === 'Gazon,Synthétique',
+    'B2-3.c C8 ⭐ : seules les surfaces RETENUES sont rendues (constaté ' +
+      nPlan.natures.join(',') + ')');
+  _ffrAssert(etat, nPlan.natures.indexOf('Sable') === -1,
+    'B2-3.c C8 ⭐⭐ : un terrain ÉCARTÉ n\'impose plus sa surface au dossier de la Ligue');
+  _ffrAssert(etat, nPlan.natures.indexOf('Stabilisé') === -1,
+    'B2-3.c C8 ⭐⭐ : ⛔ et l\'inventaire durable n\'est plus consulté du tout');
+}
+
+/** C9 — DÉFAUT FERMÉ : un pointeur cassé rend le VIDE, ⛔ jamais l'ancienne source. */
+function testB23c_C9_defautFermeJamaisDeRepli(etat) {
+  var cfg = _b23cConfig(_B23C_PIEGE);
+
+  // ① Pointeur désignant un plan qui n'existe pas.
+  var pret = _b23cClasseurPublie();
+  var cl = pret.classeur;
+  ecrirePointeurPlanTerrains(cl, _B23B_ED, 'PLAN-FANTOME');
+  _ffrAssert(etat, pointeurPlanTerrains(cl, _B23B_ED) === 'PLAN-FANTOME',
+    'B2-3.c C9 : le pointeur désigne bien un plan inexistant');
+  _ffrAssert(etat, repartitionTerrainsEditionActive(cl, cfg) === '',
+    'B2-3.c C9 ⭐⭐ : pointeur cassé ⇒ VIDE, ⛔ pas de repli sur Config');
+
+  // ② Registre en anomalie (deux éditions actives) : on reste en mode moderne, sans plan.
+  var cl2 = _b23cClasseurPublie().classeur;
+  cl2.getSheetByName('Editions')._lignes().push(['ED-2027', 'active', '2026-09-03 11:00:00', '']);
+  var src2 = sourceTerrainsEditionActive(cl2);
+  _ffrAssert(etat, src2.moderne && !src2.plan,
+    'B2-3.c C9 ⭐ : registre en anomalie ⇒ toujours MODERNE, mais sans plan');
+  _ffrAssert(etat, repartitionTerrainsEditionActive(cl2, cfg) === '',
+    'B2-3.c C9 ⭐⭐ : ⛔ un registre en anomalie ne fait PAS revenir l\'ancienne source');
+
+  // ③ ⭐⭐ LE CAS QUI COMPTE LE PLUS, et il n'y était pas au premier jet : un pointeur qui
+  //    désigne un plan RÉELLEMENT PRÉSENT, mais INVALIDE — ici, sa signature a été effacée
+  //    dans le classeur. ⛔ Un lecteur qui se contenterait du pointeur le servirait sans
+  //    broncher ; `planPublieValide` doit le refuser.
+  //    🔬 C'est une MUTATION qui a révélé le trou : « un pointeur non vide suffit » passait
+  //    inaperçue, parce que les deux cas ci-dessus rendent `null` par une AUTRE porte.
+  var cl3 = _b23cClasseurPublie().classeur;
+  var plans = cl3.getSheetByName('TerrainsPlan')._lignes();
+  var colSignature = plans[0].indexOf('signature');
+  _ffrAssert(etat, colSignature !== -1 && plans.length > 1,
+    'B2-3.c C9 : l\'onglet TerrainsPlan porte bien une colonne `signature` et une ligne');
+  plans[1][colSignature] = '';
+
+  _ffrAssert(etat, !!lirePlanTerrains(cl3, _B23B_ED, pointeurPlanTerrains(cl3, _B23B_ED)),
+    'B2-3.c C9 : le plan pointé est bien PRÉSENT dans le classeur (ses lignes existent)');
+  _ffrAssert(etat, planTerrainsPublie(cl3, _B23B_ED) === null,
+    'B2-3.c C9 ⭐⭐ : ⛔ présent ne veut pas dire consommable — sans signature, il est REFUSÉ');
+  _ffrAssert(etat, repartitionTerrainsEditionActive(cl3, cfg) === '',
+    'B2-3.c C9 ⭐⭐ : un pointeur non vide NE SUFFIT PAS — le consommateur reçoit le vide');
+}
+
+/**
+ * C10 — LA CEINTURE DU RESET, ⭐ ET C'EST L'INVERSION DU TÉMOIN R-101.
+ *
+ * ⚡ CE TEST REMPLACE `testB20_temoinR101TerrainsResteB23`, qui affirmait l'INVERSE et avait
+ * raison de le faire : B2-0 avait FIGÉ le défaut pour que B2-3 parte d'un comportement connu.
+ * ⭐ Ce que ce témoin disait, et qui était vrai jusqu'ici : « le découpage des terrains survit
+ * ENCORE — correction attendue en B2-3 ». La correction est là ; le témoin change de sens.
+ */
+function testB23c_C10_ceintureDuResetInverseLeTemoin(etat) {
+  var cl = _b20ClasseurFactice();
+  _ffrAssert(etat, _m1bValeur(cl._config, 'repartition_grands_terrains') === '{"Rugby 1":["1","2"]}',
+    'B2-3.c C10 : avant le reset, le découpage de l\'édition en cours est bien présent');
+
+  reinitialiserTournoi(cl);
+
+  _ffrAssert(etat, _m1bValeur(cl._config, 'repartition_grands_terrains') === '',
+    'B2-3.c C10 ⭐⭐ (R-101) : le découpage des terrains ne survit PLUS à la réinitialisation');
+  _ffrAssert(etat, _m1bValeur(cl._config, 'repartition_grands_terrains') !== null,
+    'B2-3.c C10 : la LIGNE est conservée, seule la valeur est vidée (D-043)');
+}
+
+/** C11 — Ce que la CEINTURE ne touche PAS : l'installation PERMANENTE du club. */
+function testB23c_C11_lePermanentSurvitAuReset(etat) {
+  var cl = _b20ClasseurFactice();
+  var lignes = cl._config._lignes();
+  var zoneB = 0;
+  while (zoneB < lignes.length && lignes[zoneB][0] !== 'categorie') zoneB++;
+  lignes.splice(zoneB, 0,
+    ['terrains_physiques', '[{"nom":"Rugby 1","nature":"Gazon"}]'],
+    ['couloir_terrain_m', '5'],
+    ['dimensions_categories', '{"U8":{"l":30,"w":20}}'],
+    ['tm_longueur_m', '4'],
+    ['tm_largeur_m', '4']);
+
+  reinitialiserTournoi(cl);
+
+  _ffrAssert(etat, _m1bValeur(cl._config, 'terrains_physiques') === '[{"nom":"Rugby 1","nature":"Gazon"}]',
+    'B2-3.c C11 ⭐ : l\'INVENTAIRE des grands terrains survit — il décrit le stade, pas l\'édition');
+  _ffrAssert(etat, _m1bValeur(cl._config, 'couloir_terrain_m') === '5',
+    'B2-3.c C11 : le couloir de circulation survit');
+  _ffrAssert(etat, _m1bValeur(cl._config, 'dimensions_categories') === '{"U8":{"l":30,"w":20}}',
+    'B2-3.c C11 : les tailles de terrain par catégorie survivent');
+  _ffrAssert(etat, _m1bValeur(cl._config, 'tm_longueur_m') === '4' &&
+      _m1bValeur(cl._config, 'tm_largeur_m') === '4',
+    'B2-3.c C11 : la table de marque survit');
+}
+
+/**
+ * C12 — ⛔ `enregistrerPlanTerrains` NE CRÉE AUCUNE STRUCTURE ET NE PUBLIE AUCUN PLAN.
+ * ⭐ L'écriture d'un plan appartient à B2-3.d, avec l'écran qui l'alimente. Le jour où
+ * quelqu'un la rebranchera sans l'avoir décidé, ce test tombe.
+ */
+function testB23c_C12_ecritureNeMigreJamais(etat) {
+  var cl = _b20ClasseurFactice();
+  enregistrerPlanTerrains(cl, {
+    terrains_physiques: '[{"nom":"Rugby 1","nature":"Gazon"}]',
+    repartition_grands_terrains: '{"Rugby 1":["1","2","3"]}'
+  });
+
+  _ffrAssert(etat, _m1bValeur(cl._config, 'repartition_grands_terrains') === '{"Rugby 1":["1","2","3"]}',
+    'B2-3.c C12 : sans structure, l\'écriture historique dans Config fonctionne, INCHANGÉE');
+  _ffrAssert(etat, cl.getSheetByName('TerrainsPlan') === null &&
+      cl.getSheetByName('Terrains') === null && cl.getSheetByName('MiniTerrains') === null,
+    'B2-3.c C12 ⭐⭐ : ⛔ AUCUN onglet de structure n\'a été créé par une écriture métier');
+  _ffrAssert(etat, !structureTerrainsB23EnPlace(cl),
+    'B2-3.c C12 ⭐⭐ : ⛔ aucune migration implicite');
+}
+
+/**
+ * C13 — ⭐⭐ LE RESSERREMENT : avec la structure, `enregistrerPlanTerrains` n'écrit plus dans
+ * `Config` QUE les quatre paramètres DURABLES.
+ *
+ * 🎯 Ce que ce test empêche, et ce n'est pas théorique : `dimensions_categories` et
+ * `repartition_grands_terrains` décrivent une ÉDITION. Laissés dans une cellule permanente
+ * alors que plus personne ne les lit, ils deviennent une valeur périmée que la prochaine
+ * édition pourrait croire sienne — ⛔ très exactement le mécanisme de R-101.
+ */
+function testB23c_C13_resserrementQuatreChampsDurables(etat) {
+  var cl = _b23bClasseurPret();          // ⭐ structure B2-3 EN PLACE
+  var config = _b23cOngletConfigReel(cl);
+  var envoi = {
+    terrains_physiques: '[{"nom":"Rugby 1","nature":"Gazon"}]',
+    couloir_terrain_m: '5',
+    tm_longueur_m: '4',
+    tm_largeur_m: '3',
+    dimensions_categories: '{"U8":{"l":30,"w":20}}',
+    repartition_grands_terrains: '{"Rugby 1":["1","2","3"]}'
+  };
+  _ffrAssert(etat, sourceTerrainsEditionActive(cl).moderne,
+    'B2-3.c C13 : le classeur d\'essai est bien en mode MODERNE');
+
+  enregistrerPlanTerrains(cl, envoi);
+
+  // ① Les QUATRE durables sont écrits, à l'identique.
+  var durablesOk = true;
+  ['terrains_physiques', 'couloir_terrain_m', 'tm_longueur_m', 'tm_largeur_m'].forEach(function (c) {
+    if (_m1bValeur(config, c) !== envoi[c]) durablesOk = false;
+  });
+  _ffrAssert(etat, durablesOk,
+    'B2-3.c C13 ⭐ : les QUATRE paramètres durables sont bien enregistrés');
+
+  // ② Les DEUX événementiels ne sont PAS écrits — ⛔ pas même une ligne vide.
+  _ffrAssert(etat, _m1bValeur(config, 'dimensions_categories') === _B23C_TEMOIN,
+    'B2-3.c C13 ⭐⭐ : `dimensions_categories` n\'est PLUS écrit dans Config — la valeur ' +
+      'qui s\'y trouvait est intacte');
+  _ffrAssert(etat, _m1bValeur(config, 'repartition_grands_terrains') === _B23C_TEMOIN,
+    'B2-3.c C13 ⭐⭐ : `repartition_grands_terrains` n\'est PLUS écrit dans Config — la ' +
+      'valeur qui s\'y trouvait est intacte');
+
+  // ③ ⛔ Et toujours aucune publication : le pointeur n'a pas bougé, aucun plan n'est né.
+  _ffrAssert(etat, pointeurPlanTerrains(cl, _B23B_ED) === '',
+    'B2-3.c C13 ⭐⭐ : ⛔ aucune publication implicite — le pointeur reste vide');
+  _ffrAssert(etat, lireTerrainsPlan(cl).length === 0,
+    'B2-3.c C13 ⭐⭐ : ⛔ aucun plan, aucun brouillon n\'a été créé au passage');
+}
+
+/**
+ * C14 — LA SYMÉTRIE : sans structure, les SIX champs sont écrits, exactement comme avant.
+ *
+ * ⚠️ CE TEST EST LE PENDANT INDISPENSABLE DE C13, et il protège l'application telle qu'elle
+ * tourne AUJOURD'HUI. Tant que la structure n'existe pas, les lecteurs lisent `Config` :
+ * ⛔ cesser d'y écrire rendrait le filtre « grand terrain » de la page Saisie et la ligne
+ * « terrains » du dossier club définitivement muets, sans aucun moyen de les réalimenter.
+ */
+function testB23c_C14_symetrieSansStructureSixChamps(etat) {
+  var cl = _b23bFauxClasseur([_b23bEditions()]);      // ⛔ aucune structure
+  var config = _b23cOngletConfigReel(cl);
+  var envoi = {
+    terrains_physiques: '[{"nom":"Rugby 1","nature":"Gazon"}]',
+    couloir_terrain_m: '5', tm_longueur_m: '4', tm_largeur_m: '3',
+    dimensions_categories: '{"U8":{"l":30,"w":20}}',
+    repartition_grands_terrains: '{"Rugby 1":["1","2","3"]}'
+  };
+  _ffrAssert(etat, !sourceTerrainsEditionActive(cl).moderne,
+    'B2-3.c C14 : le classeur d\'essai est bien en mode HISTORIQUE');
+
+  enregistrerPlanTerrains(cl, envoi);
+
+  var tousEcrits = true;
+  for (var c in envoi) {
+    if (Object.prototype.hasOwnProperty.call(envoi, c) && _m1bValeur(config, c) !== envoi[c]) {
+      tousEcrits = false;
+    }
+  }
+  _ffrAssert(etat, tousEcrits,
+    'B2-3.c C14 ⭐⭐ : sans structure, les SIX champs sont écrits — comportement historique STRICT');
+  _ffrAssert(etat, _m1bValeur(config, 'repartition_grands_terrains') === envoi.repartition_grands_terrains,
+    'B2-3.c C14 ⭐ : le découpage reste alimenté — la page Saisie garde son filtre');
+}
+
+/* --------------------------------------------------------------------------
+ *  B2-3.c — LES DIMENSIONS PAR CATÉGORIE, DEVENUES ÉVÉNEMENTIELLES (C15 → C19)
+ *
+ *  ⚠️ Ces tests n'appellent PAS `appliquerValeursFFR` en entier : celle-ci a besoin du
+ *  référentiel FFR, des effectifs et de la zone B, et la reproduire ici reviendrait à
+ *  réécrire l'application dans le test. ⭐ Ils exercent le POINT DE PASSAGE réel qu'elle
+ *  emprunte — `dimensionsTerrainsEditionActive` en entrée, `ecrireDimensionsTerrainsEdition`
+ *  en sortie — et un contrôle de FORME vérifie qu'elle passe bien par eux, et par eux seuls.
+ * -------------------------------------------------------------------------- */
+
+var _B23C_DIMS = { U8: { l: 30, w: 20 }, U10: { l: 40, w: 30 } };
+
+/** C15 — Sans structure, les dimensions restent dans `Config`, à l'identique. */
+function testB23c_C15_dimensionsSansStructureRestentDansConfig(etat) {
+  var cl = _b23bFauxClasseur([_b23bEditions()]);
+  var config = _b23cOngletConfigReel(cl);
+  var src = sourceTerrainsEditionActive(cl);
+  _ffrAssert(etat, !src.moderne, 'B2-3.c C15 : le classeur d\'essai est en mode HISTORIQUE');
+
+  var r = ecrireDimensionsTerrainsEdition(cl, _B23C_DIMS, src);
+  _ffrAssert(etat, r.ok && r.destination === 'config',
+    'B2-3.c C15 ⭐ : sans structure, la destination est bien `Config`');
+  _ffrAssert(etat, _m1bValeur(config, 'dimensions_categories') === JSON.stringify(_B23C_DIMS),
+    'B2-3.c C15 : la valeur écrite est exactement celle fusionnée');
+
+  var relu = dimensionsTerrainsEditionActive(cl, { global: { dimensions_categories:
+    _m1bValeur(config, 'dimensions_categories') } }, src);
+  _ffrAssert(etat, relu.U8 && relu.U8.l === 30 && relu.U10 && relu.U10.w === 30,
+    'B2-3.c C15 ⭐ : et la LECTURE d\'entrée la relit à la même adresse — un seul aller-retour');
+}
+
+/** C16 — ⭐⭐ Avec structure : les dimensions vont dans le BROUILLON de l'édition active. */
+function testB23c_C16_dimensionsVontDansLeBrouillon(etat) {
+  var pret = _b23cClasseurPublie();
+  var cl = pret.classeur;
+  var config = _b23cOngletConfigReel(cl);
+  var src = sourceTerrainsEditionActive(cl);
+  var pointeurAvant = pointeurPlanTerrains(cl, _B23B_ED);
+
+  var r = ecrireDimensionsTerrainsEdition(cl, _B23C_DIMS, src);
+  _ffrAssert(etat, r.ok && r.destination === 'brouillon',
+    'B2-3.c C16 ⭐⭐ : avec structure, la destination est le BROUILLON (constaté « ' +
+      (r.destination || r.error) + ' »)');
+
+  var brouillon = lireBrouillonTerrains(cl, _B23B_ED);
+  _ffrAssert(etat, !!brouillon,
+    'B2-3.c C16 : un brouillon existe désormais pour cette édition');
+  _ffrAssert(etat, brouillon && brouillon.params.dimensions_json === JSON.stringify(_B23C_DIMS),
+    'B2-3.c C16 ⭐ : il porte exactement les dimensions fusionnées');
+
+  // ⛔ Et `Config` n'a PAS été touché — pas même une ligne créée.
+  _ffrAssert(etat, _m1bValeur(config, 'dimensions_categories') === _B23C_TEMOIN,
+    'B2-3.c C16 ⭐⭐ : `Config.dimensions_categories` n\'est PLUS écrit — sa valeur est intacte');
+
+  // ⛔ AUCUNE publication implicite.
+  _ffrAssert(etat, pointeurPlanTerrains(cl, _B23B_ED) === pointeurAvant,
+    'B2-3.c C16 ⭐⭐ : ⛔ le pointeur n\'a pas bougé — aucune publication implicite');
+  _ffrAssert(etat, brouillon && valeurTexteTerrain(brouillon.params.role) === TERRAINS_ROLE_BROUILLON,
+    'B2-3.c C16 ⭐⭐ : le plan écrit porte bien le rôle BROUILLON');
+  _ffrAssert(etat, brouillon && valeurTexteTerrain(brouillon.params.signature) === '',
+    'B2-3.c C16 ⭐⭐ : ⛔ et il n\'a AUCUNE signature — un brouillon n\'est jamais confirmé');
+  _ffrAssert(etat, etatTerrainsPur(contexteTerrainsEdition(cl, _B23B_ED, _b23bCategories())) === 'a_reconfirmer',
+    'B2-3.c C16 ⭐ : l\'édition passe à « à reconfirmer » — le geste de confirmation reste à faire');
+
+  // ⭐ Le plan PUBLIÉ, lui, est intact : c'est encore lui que les consommateurs lisent.
+  _ffrAssert(etat, !!planTerrainsPublie(cl, _B23B_ED),
+    'B2-3.c C16 ⭐ : le plan publié reste lisible et consommable');
+}
+
+/**
+ * C17 — L'ÉDITION ACTIVE, ET ELLE SEULE. Une édition fermée qui possède un plan ne reçoit
+ * aucun brouillon, et son plan n'est pas touché.
+ */
+function testB23c_C17_dimensionsVisentLEditionActive(etat) {
+  var pret = _b23cClasseurPublie();
+  var cl = pret.classeur;
+  _b23cOngletConfigReel(cl);
+
+  // L'édition A se ferme, ED-2027 s'ouvre — la bascule d'un reset.
+  var lignes = cl.getSheetByName('Editions')._lignes();
+  for (var i = 1; i < lignes.length; i++) {
+    if (String(lignes[i][0]) === _B23B_ED) lignes[i][1] = 'fermee';
+  }
+  lignes.push(['ED-2027', 'active', '2026-09-03 11:00:00', '']);
+
+  var src = sourceTerrainsEditionActive(cl);
+  _ffrAssert(etat, src.moderne && src.edition_id === 'ED-2027',
+    'B2-3.c C17 : l\'édition active est bien la NOUVELLE');
+
+  // ⛔ ED-2027 n'a ni brouillon ni plan : le refus est explicite, sans repli vers Config.
+  var r = ecrireDimensionsTerrainsEdition(cl, _B23C_DIMS, src);
+  _ffrAssert(etat, !!r.error && !r.ok,
+    'B2-3.c C17 ⭐⭐ : sans plan pour l\'édition active, l\'écriture est REFUSÉE');
+  _ffrAssert(etat, !lireBrouillonTerrains(cl, _B23B_ED),
+    'B2-3.c C17 ⭐⭐ : ⛔ et AUCUN brouillon n\'a été posé sur l\'édition FERMÉE');
+  _ffrAssert(etat, !!planTerrainsPublie(cl, _B23B_ED),
+    'B2-3.c C17 ⭐ : le plan de l\'édition fermée est resté intact');
+
+  // ⭐ Et la LECTURE d'entrée ne va pas non plus chercher les dimensions de l'ancienne.
+  var lues = dimensionsTerrainsEditionActive(cl, { global: { dimensions_categories:
+    '{"U8":{"l":99,"w":99}}' } }, src);
+  var vide = true;
+  for (var k in lues) { if (Object.prototype.hasOwnProperty.call(lues, k)) vide = false; }
+  _ffrAssert(etat, vide,
+    'B2-3.c C17 ⭐⭐ : la lecture d\'entrée rend le VIDE — ⛔ ni l\'ancienne édition, ni Config');
+}
+
+/**
+ * C18 — ⛔ AUCUN REPLI VERS `Config` quand la structure existe mais que rien ne peut recevoir.
+ * ⭐ Écrire quand même dans `Config` serait le pire des deux mondes : l'organisateur croirait
+ * avoir enregistré, et plus aucun lecteur ne verrait la valeur.
+ */
+function testB23c_C18_aucunRepliVersConfig(etat) {
+  var cl = _b23bClasseurPret();          // structure en place, ⛔ aucun plan, aucun brouillon
+  var config = _b23cOngletConfigReel(cl);
+  var src = sourceTerrainsEditionActive(cl);
+  _ffrAssert(etat, src.moderne && !src.plan,
+    'B2-3.c C18 : structure en place, mais aucun plan publié');
+
+  var r = ecrireDimensionsTerrainsEdition(cl, _B23C_DIMS, src);
+  _ffrAssert(etat, !!r.error,
+    'B2-3.c C18 ⭐⭐ : l\'écriture est REFUSÉE, avec un message qui dit quoi faire');
+  _ffrAssert(etat, _m1bValeur(config, 'dimensions_categories') === _B23C_TEMOIN,
+    'B2-3.c C18 ⭐⭐ : ⛔ et RIEN n\'a été écrit dans Config — aucun repli');
+  _ffrAssert(etat, lireTerrainsPlan(cl).length === 0,
+    'B2-3.c C18 ⭐ : ⛔ aucun plan ni brouillon n\'a été fabriqué au passage');
+}
+
+/**
+ * C19 — DEUX APPLICATIONS SUCCESSIVES S'ACCUMULENT dans le même brouillon.
+ * 🎯 C'est le cas d'usage réel : l'organisateur applique les valeurs FFR catégorie par
+ * catégorie. ⛔ Repartir du plan publié à chaque fois effacerait silencieusement la première.
+ */
+function testB23c_C19_applicationsSuccessivesSAccumulent(etat) {
+  var pret = _b23cClasseurPublie();
+  var cl = pret.classeur;
+  _b23cOngletConfigReel(cl);
+
+  // ⚠️ LA VALEUR EST VOLONTAIREMENT DIFFÉRENTE DE CELLE DU PLAN PUBLIÉ (qui porte l=30), et
+  //    c'est ce qui rend ce test capable d'échouer : une mutation qui repartirait du plan
+  //    publié au lieu du brouillon relirait 30 au lieu de 31. 🔬 Écrit d'abord avec 30, le
+  //    test passait au vert sur cette mutation — ⛔ il ne surveillait rien.
+  ecrireDimensionsTerrainsEdition(cl, { U8: { l: 31, w: 21 } });
+  var apres1 = lireBrouillonTerrains(cl, _B23B_ED);
+  var id1 = apres1 ? valeurTexteTerrain(apres1.plan_id) : '';
+
+  // La fusion, elle, est faite par `calculerApplicationFFR` : on lui donne ce que la LECTURE
+  // d'entrée rend, et c'est bien le brouillon qui doit être relu.
+  var lues = dimensionsTerrainsEditionActive(cl, { global: {} });
+  _ffrAssert(etat, lues.U8 && lues.U8.l === 31,
+    'B2-3.c C19 ⭐⭐ : la lecture d\'entrée relit le BROUILLON en cours, ⛔ pas le plan publié ' +
+      '(constaté l=' + (lues.U8 ? lues.U8.l : '?') + ', le plan publié porte 30)');
+
+  lues.U10 = { l: 41, w: 31 };
+  ecrireDimensionsTerrainsEdition(cl, lues);
+  var apres2 = lireBrouillonTerrains(cl, _B23B_ED);
+
+  _ffrAssert(etat, apres2 && valeurTexteTerrain(apres2.plan_id) === id1,
+    'B2-3.c C19 ⭐⭐ : c\'est le MÊME brouillon — ⛔ pas un second');
+  var dims2 = JSON.parse(apres2.params.dimensions_json);
+  _ffrAssert(etat, dims2.U8 && dims2.U8.l === 31 && dims2.U10 && dims2.U10.l === 41,
+    'B2-3.c C19 ⭐⭐ : les deux applications se sont ACCUMULÉES, aucune n\'a été effacée');
+  _ffrAssert(etat, lireTerrainsPlan(cl).length === 2,
+    'B2-3.c C19 : le classeur porte exactement deux plans — le publié et le brouillon');
+}
+
+/**
+ * C20 — LE CONTRÔLE DE FORME : `appliquerValeursFFR` passe par le point de passage, et par
+ * lui seul. ⭐ C'est ce test qui relie les cinq précédents à la vraie fonction.
+ * ⚠️ Il vérifie AUSSI que ses trois garde-fous sont toujours là — un branchement qui les
+ * emporterait au passage laisserait le reste de la série au vert.
+ */
+function testB23c_C20_appliquerValeursFFRPasseParLePointDePassage(etat) {
+  var src = String(appliquerValeursFFR);
+
+  _ffrAssert(etat, src.indexOf('ecrireDimensionsTerrainsEdition(') !== -1,
+    'B2-3.c C20 ⭐⭐ : elle écrit les dimensions par le point de passage unique');
+  _ffrAssert(etat, src.indexOf('dimensionsTerrainsEditionActive(') !== -1,
+    'B2-3.c C20 ⭐⭐ : et elle les LIT par le même — une seule source');
+  _ffrAssert(etat, src.indexOf("'dimensions_categories'") === -1 &&
+      src.indexOf('config.global.dimensions_categories') === -1,
+    'B2-3.c C20 ⭐⭐ : ⛔ elle ne nomme plus `dimensions_categories` — aucun accès direct à Config');
+  _ffrAssert(etat, src.indexOf('publierPlanTerrains') === -1 &&
+      src.indexOf('ecrirePointeurPlanTerrains') === -1 &&
+      src.indexOf('assurerStructureTerrainsB23') === -1,
+    'B2-3.c C20 ⭐⭐ : ⛔ elle ne publie rien et ne crée aucune structure');
+
+  // ⭐ LES TROIS GARDE-FOUS, toujours en place.
+  _ffrAssert(etat, src.indexOf('res.ambigu') !== -1 && src.indexOf('formesDisponibles') !== -1,
+    'B2-3.c C20 ⭐ garde-fou ① : l\'AMBIGUÏTÉ (plusieurs formes) n\'écrit toujours rien');
+  _ffrAssert(etat, src.indexOf('calculerApplicationFFR(getRefFFR(classeur)') !== -1,
+    'B2-3.c C20 ⭐ garde-fou ② : le SERVEUR relit lui-même le référentiel FFR');
+  _ffrAssert(etat, src.indexOf('fusionnerCategorieFFR(catExistante') !== -1 &&
+      src.indexOf('absente des réglages') !== -1,
+    'B2-3.c C20 ⭐ garde-fou ③ : la zone B est écrite par RELECTURE + FUSION + ligne complète');
 }

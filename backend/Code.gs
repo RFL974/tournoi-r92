@@ -538,19 +538,25 @@ function lireSponsorsPublics(classeur) {
  * données, gardées plus longtemps — au pire ~10 s de retard, invisible pour du live).
  */
 function snapshotJsonCache() {
-  // Clés VERSIONNÉES (`_v3`) : le contenu de getAll change à chaque évolution de la vue LIVE.
+  // Clés VERSIONNÉES (`_v4`) : le contenu de getAll change à chaque évolution de la vue LIVE.
   // Sans nouvelle clé, la copie de SECOURS gardée 6 h continuerait à servir l'ANCIEN snapshot
   // jusqu'à 6 h APRÈS le déploiement. Le versionnement rend l'ancien cache inaccessible : dès
   // le déploiement, seule la nouvelle vue est servie.
   //   `_v2` (2026) : la config est passée en vue LIVE filtrée (contacts retirés).
   //   `_v3` (2026-08-22) : ajout de `perfs_mot_cle_club` — sans ce saut, la page Perfs aurait
   //                        conclu « mot-clé non configuré » pendant 6 h après le redéploiement.
+  //   `_v4` (M1-B2 / B2-3.c) : `repartition_grands_terrains` ne vient plus de `Config` mais du
+  //                        PLAN PUBLIÉ de l'édition active. ⚠️ Le nom du champ et sa forme sont
+  //                        INCHANGÉS — c'est sa SOURCE qui change, et c'est précisément le cas
+  //                        où l'on ne verrait rien : sans ce saut, la copie de secours servirait
+  //                        pendant 6 h le découpage de l'édition PRÉCÉDENTE, sous le bon nom et
+  //                        dans la bonne forme. ⛔ Un cache faux qui a l'air juste.
   var cache = CacheService.getScriptCache();
-  var s = cache.get('snapshot_json_v3');
+  var s = cache.get('snapshot_json_v4');
   if (s) return s;
 
   // Cache expiré. Quelqu'un reconstruit déjà ? → on sert la copie de secours sans attendre.
-  var secours = cache.get('snapshot_json_secours_v3');
+  var secours = cache.get('snapshot_json_secours_v4');
   if (secours && cache.get('snapshot_regen')) return secours;
 
   // On devient LE reconstructeur : jeton posé ~15 s (filet si la reconstruction échoue).
@@ -575,8 +581,8 @@ function mettreEnCacheSnapshot(cache, json) {
     // silence → cache jamais rempli → chaque getAll relisait le Sheet (saturation).
     var octets = Utilities.newBlob(json).getBytes().length;
     if (octets < 95000) {
-      cache.put('snapshot_json_v3', json, 10);             // copie fraîche (10 s)
-      cache.put('snapshot_json_secours_v3', json, 21600);  // copie de secours (6 h, le max)
+      cache.put('snapshot_json_v4', json, 10);             // copie fraîche (10 s)
+      cache.put('snapshot_json_secours_v4', json, 21600);  // copie de secours (6 h, le max)
     }
   } catch (e) { /* cache indisponible : on ignore, getAll relira le Sheet */ }
 }
@@ -873,7 +879,11 @@ function filtrerConfigPublique(config, vue) {
 
 /** SEUL point de sortie de la config vers l'extérieur : lit le classeur puis applique la vue. */
 function lireConfigPublique(classeur, vue) {
-  return filtrerConfigPublique(lireConfig(classeur), vue);
+  // M1-B2 / B2-3.c — LA BASCULE, posée AVANT le filtrage et non après, et l'ordre compte :
+  // `filtrerConfigPublique` reste PUR et ignore tout du classeur ; c'est ici, au seul endroit
+  // qui tient le classeur, que le découpage des terrains est pris à sa vraie source.
+  // ⛔ Sans structure B2-3, `configAvecTerrainsEdition` rend la valeur historique inchangée.
+  return filtrerConfigPublique(configAvecTerrainsEdition(classeur, lireConfig(classeur)), vue);
 }
 
 /* ===================== RÉFÉRENTIEL FFR (RefFFR_Formes / RefFFR_Dates) =====================
@@ -1960,8 +1970,15 @@ function getCapacitesCategories(classeur) {
  * écrire n'importe quoi en se réclamant de la FFR). `nb_equipes` (comptes) et `nb_demi_journees`
  * (Config, défaut 2) sont calculés ici, comme dans getConformiteFFR.
  *
- * Écrit : zone B par RELECTURE + FUSION + ligne complète (jamais partielle) ; `dimensions_categories`
- * par fusion de l'objet global. Renvoie le détail de ce qui a été écrit ET ignoré (avec raisons).
+ * Écrit : zone B par RELECTURE + FUSION + ligne complète (jamais partielle) ; les DIMENSIONS par
+ * fusion de l'objet global. Renvoie le détail de ce qui a été écrit ET ignoré (avec raisons).
+ *
+ * ⚡ M1-B2 / B2-3.c — LES DIMENSIONS SONT DEVENUES ÉVÉNEMENTIELLES. ⛔ La règle de fusion n'a
+ * pas bougé d'une ligne ; c'est l'ADRESSE qui a changé : `Config.dimensions_categories` tant
+ * que la structure B2-3 n'existe pas, le BROUILLON du plan de l'édition active dès qu'elle
+ * existe. ⭐ La lecture d'entrée bascule avec elle — sans quoi la fusion mélangerait les deux
+ * sources. ⛔ Aucune publication implicite : un brouillon n'est jamais un plan confirmé.
+ * ⚡ *(Cette ligne nommait `dimensions_categories` comme la destination : c'était vrai jusqu'ici.)*
  */
 function appliquerValeursFFR(classeur, data) {
   var categorie = String(data.categorie == null ? '' : data.categorie).trim();
@@ -1975,9 +1992,12 @@ function appliquerValeursFFR(classeur, data) {
   var comptes = analyserEffectifsCategories(config, equipes).comptes || {};
   var nbEquipes = comptes[categorie];
   var nbDemiJournees = nbDemiJourneesConfig(config); // défaut 2 (§4.6)
-  var dims = {};
-  try { if ((config.global || {}).dimensions_categories) dims = JSON.parse(config.global.dimensions_categories) || {}; }
-  catch (e) { dims = {}; }
+  // M1-B2 / B2-3.c — LES DIMENSIONS SONT ÉVÉNEMENTIELLES : elles se lisent et s'écrivent à la
+  // MÊME source. ⚠️ La décision est prise UNE fois ici et repassée à l'écriture plus bas —
+  // lire d'un côté et écrire de l'autre ferait revenir, à chaque application, une taille que
+  // le plan avait perdue. ⛔ Sans structure B2-3, c'est `Config`, exactement comme avant.
+  var sourceT = sourceTerrainsEditionActive(classeur);
+  var dims = dimensionsTerrainsEditionActive(classeur, config, sourceT);
 
   // Forme retenue par l'organisateur pour CETTE catégorie (Config.forme_jeu) — lève l'ambiguïté
   // « plusieurs formes ce mois » quand elle correspond à l'une d'elles. Vide = comportement inchangé.
@@ -2015,15 +2035,28 @@ function appliquerValeursFFR(classeur, data) {
     if (rZoneB && rZoneB.error) return { error: rZoneB.error };
   }
 
-  // dimensions_categories : objet global fusionné (déjà fusionné par calculerApplicationFFR).
+  // Les dimensions : objet global fusionné (déjà fusionné par calculerApplicationFFR).
+  // ⚡ M1-B2 / B2-3.c — LA DESTINATION A CHANGÉ, ⛔ PAS LA FUSION. `res.dimensions` est
+  // exactement ce qu'il était ; seul l'endroit où il se range dépend désormais de la source :
+  // `Config` tant que la structure B2-3 n'existe pas, le BROUILLON du plan de l'édition active
+  // dès qu'elle existe. ⛔ Aucune publication : appliquer les valeurs FFR PROPOSE un réglage,
+  // la confirmation reste un geste à part.
+  var destinationDims = '';
   if (res.dimensions) {
-    ecrireChampsConfig(classeur.getSheetByName('Config'),
-      { dimensions_categories: JSON.stringify(res.dimensions) }, ['dimensions_categories']);
+    var ecritDims = ecrireDimensionsTerrainsEdition(classeur, res.dimensions, sourceT);
+    // ⛔ Un refus est un REFUS : on ne se rabat pas sur `Config` et on ne prétend pas avoir
+    //    appliqué. La zone B, elle, a bien été écrite — le message le dit sans l'arrondir.
+    if (ecritDims.error) {
+      return { error: 'Les valeurs de jeu ont été enregistrées, mais pas les tailles de ' +
+        'terrain : ' + ecritDims.error };
+    }
+    destinationDims = ecritDims.destination;
   }
 
   return { ok: true, applique: true, categorie: categorie, forme: res.forme,
            champsZoneB: res.champsZoneB,
            dimensions: res.dimensions ? res.dimensions[categorie] : null,
+           dimensions_destination: destinationDims,
            ignores: res.ignores };
 }
 
@@ -2766,7 +2799,11 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
   // Terrains) — même doctrine que les participants : le structurel prime, repli sur la saisie
   // org_type_terrain, sinon manquant. Plusieurs natures ⇒ toutes listées (le formulaire coche
   // plusieurs cases). Terrains sans nature ⇒ signalés dans l'origine (informatif).
-  var naturesT = naturesTerrainsAutorisation(config);
+  // M1-B2 / B2-3.c : quand l'appelant a DÉJÀ décidé la source (il tient le classeur, ce cœur
+  // pur ne le tient pas), on prend sa décision telle quelle — ⛔ liste vide comprise, qui veut
+  // dire « aucune surface retenue par cette édition » et doit renvoyer à la saisie, ⛔ jamais à
+  // l'inventaire durable. Sans cette clé, comportement historique strict.
+  var naturesT = donneesApp.naturesTerrains || naturesTerrainsAutorisation(config);
   var champNature;
   if (naturesT.natures.length) {
     champNature = { libelle: 'Type de terrain', valeur: naturesT.natures.join(', '), etat: 'calcule',
@@ -2934,10 +2971,19 @@ function assemblerDossierAutorisation(donneesApp, config, ref) {
 /**
  * LECTURE authentifiée (clé admin — les champs sont personnels) : dérive `donneesApp` du classeur
  * puis délègue au cœur pur. Nombre de terrains : distinct `terrain` de Matchs (calculé) ; sinon
- * terrains déclarés dans repartition_grands_terrains (saisi) ; sinon manquant.
+ * terrains déclarés dans le découpage (saisi) ; sinon manquant.
+ *
+ * ⚡ M1-B2 / B2-3.c : « le découpage » ne veut plus dire « la cellule `Config` » dès que la
+ * structure B2-3 existe — c'est alors le PLAN PUBLIÉ DE L'ÉDITION ACTIVE. ⭐ La cascade
+ * elle-même n'a pas bougé d'un iota ; seule sa SOURCE a changé, et un tournoi vide n'hérite
+ * donc plus des terrains de l'édition précédente (R-101).
  */
 function getDossierAutorisation(classeur) {
-  var config  = lireConfig(classeur);
+  // M1-B2 / B2-3.c — LA SOURCE DES TERRAINS EST DÉCIDÉE UNE FOIS, puis partagée par les deux
+  // champs qui en dépendent (le NOMBRE de terrains ci-dessous, la NATURE dans la cascade
+  // B.1). ⛔ Sans structure B2-3, les deux retombent sur le comportement historique.
+  var sourceT = sourceTerrainsEditionActive(classeur);
+  var config  = configAvecTerrainsEdition(classeur, lireConfig(classeur), sourceT);
   var g = config.global || {};
   var equipes = lireOngletSimple(classeur, 'Equipes');
   var clubs   = clubsEditionActive(classeur);      // M1-B2 / B2-2 : édition active seule
@@ -3023,7 +3069,11 @@ function getDossierAutorisation(classeur) {
                     retraitsClubs: retraitsClubs, clubsNonDeductibles: clubsNonDeductibles },
     catsPresentes: catsPresentes,
     matchsParCategorie: mpc,
-    terrains: terrains
+    terrains: terrains,
+    // M1-B2 / B2-3.c — la NATURE des surfaces, décidée à la même source que le nombre.
+    // ⭐ Fournie ICI plutôt que recalculée dans le cœur pur : `assemblerDossierAutorisation`
+    // ne touche aucun classeur, et il ne doit pas commencer à le faire.
+    naturesTerrains: naturesTerrainsEditionActive(classeur, config, sourceT)
   };
 
   return { ok: true, dossier: assemblerDossierAutorisation(donneesApp, config, ref) };
@@ -3107,7 +3157,11 @@ function doPost(e) {
       classeur = SpreadsheetApp.openById(sheetId());
       var lecture;
       switch (action) {
-        case 'getConfigAdmin': lecture = { ok: true, config: lireConfig(classeur) }; break;
+        // M1-B2 / B2-3.c : l'écran d'administration lit le découpage des terrains à la même
+        // source que tout le monde. ⛔ Sans structure B2-3, la valeur est celle d'avant.
+        case 'getConfigAdmin':
+          lecture = { ok: true, config: configAvecTerrainsEdition(classeur, lireConfig(classeur)) };
+          break;
         case 'getDossierAutorisation': lecture = getDossierAutorisation(classeur); break;
         case 'listerSponsors': lecture = listerSponsors(classeur); break;
         case 'lireMesuresSponsors': lecture = lireMesuresSponsors(classeur, requete); break;
@@ -3547,7 +3601,10 @@ function enregistrerContactsSecurite(classeur, data) {
 
 /**
  * Enregistre le PLAN DES TERRAINS physiques utilisé par la répartition automatique.
- * Trois paramètres GLOBAUX (stockés dans l'onglet Config, relus par getConfig/getAll) :
+ * ⚡ Les paramètres que le navigateur envoie — ⛔ et non plus « les paramètres écrits » : depuis
+ * B2-3.c, deux d'entre eux ne rejoignent `Config` que par le chemin HISTORIQUE (voir plus bas).
+ * ⚡ *(Cette ligne annonçait « Trois paramètres GLOBAUX (stockés dans l'onglet Config, relus par
+ * getConfig/getAll) » — le compte était déjà faux, ils sont six, et « stockés » l'est devenu.)*
  *   - terrains_physiques    : JSON [{nom,nature,type,L,W}, …] — les grands terrains réels
  *                             (rugby/foot) ; `nature` = surface de jeu (Gazon, Synthétique…),
  *                             reprise par la demande d'autorisation (naturesTerrainsAutorisation).
@@ -3558,11 +3615,48 @@ function enregistrerContactsSecurite(classeur, data) {
  *   - repartition_grands_terrains : JSON {"Rugby 1":["1","2","3"], …} — composition de chaque
  *                             GRAND terrain (numéros de mini-terrains), écrite quand la répartition
  *                             est appliquée ; la page Saisie s'en sert pour filtrer par grand terrain.
+ *
+ * 🚨 M1-B2 / B2-3.c — CETTE FONCTION EST RESSERRÉE AUX SEULES DONNÉES DURABLES.
+ *
+ * ⭐ LE PARTAGE, ET IL SUIT EXACTEMENT CELUI DE LA LECTURE. Sur les six paramètres ci-dessus,
+ * QUATRE décrivent l'INSTALLATION du club — l'inventaire des grands terrains et les trois
+ * préférences permanentes (couloir, longueur et largeur de la table de marque). Ils ne
+ * changent pas d'une édition à l'autre : leur place reste `Config`, pour toujours.
+ * ⛔ Les DEUX autres — `dimensions_categories` et `repartition_grands_terrains` — sont
+ * ÉVÉNEMENTIELS : ils dépendent des catégories et des équipes de CETTE édition. Ils n'ont plus
+ * rien à faire dans une cellule permanente, et c'est toute la correction de R-101.
+ *
+ * ⚠️ LE RESSERREMENT EST CONDITIONNÉ À LA SOURCE, ET CE N'EST PAS UNE TIÉDEUR — c'est la
+ * SYMÉTRIE STRICTE de la bascule en lecture, et sans elle le lot casserait l'application :
+ *   · structure B2-3 ABSENTE ⇒ les lecteurs lisent encore `Config` ; cesser d'y écrire
+ *     rendrait le filtre « grand terrain » de la page Saisie et la ligne « terrains » du
+ *     dossier club définitivement muets, ⛔ sans aucun moyen de les réalimenter avant
+ *     B2-3.d + B2-3.e. Les SIX champs sont donc écrits, exactement comme avant ;
+ *   · structure PRÉSENTE ⇒ les lecteurs ne regardent plus `Config` ; y écrire ces deux-là
+ *     n'aurait plus aucun effet visible et ne ferait que laisser traîner une valeur périmée
+ *     que la prochaine édition pourrait croire sienne. ⭐ Seuls les QUATRE durables sont écrits.
+ *
+ * ⛔ CE QU'ELLE NE FAIT TOUJOURS PAS, et il faut le lire avant de chercher : elle ne publie
+ * AUCUN plan et ne crée AUCUNE structure. Le navigateur n'envoie aujourd'hui ni les identités
+ * durables des grands terrains, ni la catégorie de chaque mini-terrain ; fabriquer les unes et
+ * deviner les autres est exactement ce que le socle interdit. C'est B2-3.d qui rebranchera
+ * l'écran, et avec lui l'écriture du découpage.
+ * 🔬 Deux tests figent ce contrat, et une mutation par champ retiré les met à l'épreuve.
  */
+
+/** Les QUATRE paramètres DURABLES : ils décrivent l'installation, ⛔ jamais une édition. */
+var CHAMPS_TERRAINS_DURABLES = ['terrains_physiques', 'couloir_terrain_m',
+                                'tm_longueur_m', 'tm_largeur_m'];
+
+/** Les DEUX paramètres ÉVÉNEMENTIELS, écrits dans `Config` par le seul chemin HISTORIQUE —
+ *  ⛔ c'est-à-dire tant que la structure B2-3 n'existe pas. */
+var CHAMPS_TERRAINS_EVENEMENTIELS = ['dimensions_categories', 'repartition_grands_terrains'];
+
 function enregistrerPlanTerrains(classeur, data) {
   var onglet = classeur.getSheetByName('Config');
-  var champs = ['terrains_physiques', 'couloir_terrain_m', 'dimensions_categories',
-                'tm_longueur_m', 'tm_largeur_m', 'repartition_grands_terrains'];
+  var champs = sourceTerrainsEditionActive(classeur).moderne
+    ? CHAMPS_TERRAINS_DURABLES
+    : CHAMPS_TERRAINS_DURABLES.concat(CHAMPS_TERRAINS_EVENEMENTIELS);
   ecrireChampsConfig(onglet, data, champs);
   return { ok: true };
 }
@@ -9076,6 +9170,36 @@ function reinitialiserTournoi(classeur) {
   //   l'onglet Editions (B2-1). Voir la bascule à l'étape 5 ci-dessous.
   effacerParamGlobal(ongletConfig, 'tournoi_id');
 
+  // 3 octies) M1-B2 / B2-3.c — LA CEINTURE : le DÉCOUPAGE des terrains de l'édition qui
+  //   s'achève est EFFACÉ. C'est la correction de R-101, prise par l'autre bout.
+  //   🔬 `repartition_grands_terrains` ne figurait dans AUCUNE des listes ci-dessus — ni les
+  //   effacements explicites, ni CHAMPS_INVITATION, ni CHAMPS_SURPLACE, ni les 26 champs de la
+  //   demande d'autorisation. Le dossier d'un tournoi VIDE annonçait donc « 18 terrains de jeu,
+  //   sur 4 grands terrains » : le découpage de l'an dernier, présenté comme celui de cette
+  //   année (`resumeTerrains`, frontend/js/dossier.js).
+  //
+  //   ⭐ POURQUOI CE CHAMP-LÀ, ET LUI SEUL. La donnée des terrains est MIXTE. Ce qui est
+  //   PERMANENT — l'inventaire des grands terrains (`terrains_physiques`), le couloir, la table
+  //   de marque, les tailles par catégorie — décrit l'INSTALLATION du club et ⛔ n'est pas
+  //   touché : l'effacer obligerait à re-saisir chaque année un stade qui n'a pas bougé.
+  //   Ce qui est ÉVÉNEMENTIEL — « ces grands terrains sont découpés en 18 mini-terrains de
+  //   cette façon » — dépend des catégories et des équipes de CETTE édition, qui viennent
+  //   d'être effacées. ⛔ Le garder n'aurait aucun sens : il décrirait un découpage pour des
+  //   catégories qui n'existent plus.
+  //
+  //   ⚠️ CEINTURE **ET** BRETELLES, et les deux sont nécessaires. La bascule ci-dessus
+  //   (`sourceTerrainsEditionActive`) rend ce champ INVISIBLE dès que la structure B2-3 existe ;
+  //   cet effacement, lui, protège la période où elle n'existe pas encore — c'est-à-dire
+  //   AUJOURD'HUI, et jusqu'à la migration de B2-3.e. ⛔ Sans lui, R-101 resterait entier sur
+  //   le classeur réel pendant tout ce temps.
+  //
+  //   ⭐ Comme partout ici, on VIDE la valeur sans supprimer la ligne (`effacerParamGlobal`) :
+  //   un champ vide se lit comme « aucun découpage », et la carte Terrains le réécrira à la
+  //   prochaine répartition appliquée. ⛔ Aucun plan de l'édition FERMÉE n'est supprimé : dans
+  //   le nouveau modèle, il reste attaché à son édition — c'est son histoire, et la nouvelle
+  //   édition naît simplement sans pointeur.
+  effacerParamGlobal(ongletConfig, 'repartition_grands_terrains');
+
   // 4) Le tournoi redevient masqué pour le public.
   ecrireParamGlobal(ongletConfig, 'tournoi_publie', 'non');
 
@@ -11165,4 +11289,262 @@ function publierPlanTerrains(classeur, editionId, plan, categories, faireId, hor
       valeurTexteTerrain(brouillon.plan_id)).ok;
   }
   return { ok: true, plan_id: planId, ancien: ancien, nettoye: nettoye };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * M1-B2 / B2-3.c — LA BASCULE DES CONSOMMATEURS
+ *
+ * ⭐ CE QUE CE BLOC FAIT, EN UNE PHRASE : les lecteurs du serveur cessent de croire
+ * `Config.repartition_grands_terrains` sur parole et vont chercher le PLAN PUBLIÉ DE
+ * L'ÉDITION ACTIVE — dès lors, et seulement dès lors, que la structure de B2-3.b existe.
+ *
+ * 🎯 POURQUOI C'EST LA CORRECTION DE R-101, ET PAS UNE COUCHE DE PLUS. Le découpage des
+ * terrains survivait à une réinitialisation parce qu'il vivait dans une cellule de `Config`
+ * que rien n'effaçait : le dossier d'un tournoi VIDE annonçait « 18 terrains de jeu, sur
+ * 4 grands terrains ». Ici, le découpage appartient à une ÉDITION. Une édition neuve n'a pas
+ * de plan ⇒ ⛔ aucun terrain hérité, sans qu'aucune liste d'effacement n'ait à y penser.
+ *
+ * 🚨 LES QUATRE INVARIANTS QUI COMMANDENT TOUT LE BLOC :
+ *
+ *  ① ⛔ LIRE NE CRÉE JAMAIS, ET NE MIGRE JAMAIS. Aucune fonction d'ici n'appelle
+ *     `assurerStructureTerrainsB23` ni aucune fonction « assurer… ». La structure absente se
+ *     lit comme du vide, et la bascule n'a simplement pas lieu.
+ *
+ *  ② ⭐ C'EST TOUT L'UN OU TOUT L'AUTRE, JAMAIS UN MÉLANGE. Structure absente ⇒ l'ANCIENNE
+ *     source, telle quelle, comportement historique strict. Structure présente ⇒ la NOUVELLE
+ *     source, et ⛔ plus jamais l'ancienne — pas même en repli. C'est cette absence de repli
+ *     qui fait l'ISOLATION : la cellule `Config` de l'édition précédente lui survit, et il
+ *     faut donc qu'elle devienne INVISIBLE, pas seulement « moins prioritaire ».
+ *
+ *  ③ ⛔ UN DÉFAUT NE REMONTE JAMAIS VERS L'ANCIENNE SOURCE. Pas d'édition active, pointeur
+ *     vide, plan invalide, projection en collision : la réponse est le VIDE. ⭐ Le défaut est
+ *     FERMÉ — mieux vaut un dossier qui dit « manquant » qu'un dossier qui affiche les
+ *     terrains de l'an dernier en les présentant comme ceux de cette année.
+ *
+ *  ④ ⭐ LE CONTRAT DE SORTIE NE BOUGE PAS. Ce que reçoivent les écrans est, au caractère
+ *     près, ce qu'ils recevaient : la chaîne JSON `{"Rugby 1":["1","2"],…}`, sous le nom
+ *     `repartition_grands_terrains`. ⛔ Aucun fichier de `frontend/` n'est touché — c'est
+ *     B2-3.d qui les rebranchera, et il pourra le faire sans urgence.
+ *
+ * ⚠️ CE QUE B2-3.c NE FAIT PAS, ET IL FAUT LE LIRE AVANT DE CHERCHER : ⛔ il n'écrit AUCUN
+ * plan. `enregistrerPlanTerrains` continue d'écrire `Config`, à l'identique. ⭐ Et ce n'est
+ * pas un oubli : le navigateur n'envoie aujourd'hui NI les identités durables des grands
+ * terrains, NI la catégorie de chaque mini-terrain. Publier un plan à partir de ce qu'il
+ * envoie obligerait à fabriquer des identités neuves à chaque enregistrement — donc des
+ * identités qui ne seraient pas durables — et à DEVINER les catégories. ⛔ Le socle interdit
+ * exactement cela. L'écriture appartient à B2-3.d, avec l'écran qui l'alimente.
+ * ⭐ Aucun trou fonctionnel n'en résulte, parce que l'ORDRE des phases l'exclut : la structure
+ * n'existera qu'à la migration de B2-3.e, donc APRÈS B2-3.d. Tant qu'elle n'existe pas, la
+ * branche ② ci-dessus rend l'ancien comportement, à la lettre.
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * 🚨 LE NOM HISTORIQUE DU CHAMP, DÉCLARÉ UNE FOIS — ⛔ et il ne se retape nulle part ailleurs
+ * dans ce bloc. C'est le contrat de sortie de l'invariant ④ : le jour où B2-3.d le renommera,
+ * il y aura UNE ligne à changer, et les tests diront immédiatement qui le lisait encore.
+ */
+var TERRAINS_CHAMP_PROJETE = 'repartition_grands_terrains';
+
+/**
+ * ⭐ LA DÉCISION DE SOURCE, PRISE UNE SEULE FOIS — et c'est le point de passage unique.
+ *
+ * ⛔ Ne crée rien, n'écrit rien, ne migre rien. Sur un classeur d'aujourd'hui (les trois
+ * onglets n'existent pas), `structureTerrainsB23EnPlace` répond `false` au premier
+ * `getSheetByName` : le coût de la bascule est alors NUL, y compris sur `getAll`.
+ *
+ * @return {{moderne:boolean, edition_id:string, plan:Object|null}}
+ *   moderne  : la structure B2-3 est en place ⇒ la nouvelle source fait foi, ⛔ seule.
+ *   plan     : le plan publié VALIDE de l'édition active, ou `null`. ⚠️ `moderne` vrai avec
+ *              `plan` à `null` est un état NORMAL — c'est une édition neuve, sans plan.
+ */
+function sourceTerrainsEditionActive(classeur) {
+  var vide = { moderne: false, edition_id: '', plan: null };
+  if (!classeur) return vide;
+  if (!structureTerrainsB23EnPlace(classeur)) return vide;
+
+  var registre = editionActive(classeur);
+  if (!registre || registre.etat !== 'ok' || !registre.edition) {
+    // ⭐ Structure en place mais registre muet ou en anomalie : on est en mode MODERNE quand
+    //    même, donc ⛔ pas de retour à l'ancienne source. Simplement, il n'y a pas de plan.
+    return { moderne: true, edition_id: '', plan: null };
+  }
+  var edition = valeurTexteTerrain(registre.edition.edition_id);
+  return { moderne: true, edition_id: edition,
+           plan: edition ? planTerrainsPublie(classeur, edition) : null };
+}
+
+/**
+ * LE DÉCOUPAGE DES TERRAINS, sous sa forme historique `{"Rugby 1":["1","2"],…}` sérialisée.
+ *
+ * ⭐ C'est la fonction que les consommateurs appellent — ⛔ jamais `g.repartition_grands_terrains`
+ * en direct. Un test de mutation vérifie qu'aucun d'eux n'y revient.
+ *
+ * @param {Object} classeur
+ * @param {Object} config    la config déjà lue (⛔ jamais relue ici : un appelant ne paie pas
+ *                           deux fois la lecture de `Config`)
+ * @param {Object} [source]  la décision de source, si l'appelant l'a déjà prise
+ * @return {string} la chaîne JSON, ou `''` — ⛔ jamais `null`, ⛔ jamais un objet
+ */
+function repartitionTerrainsEditionActive(classeur, config, source) {
+  var src = source || sourceTerrainsEditionActive(classeur);
+
+  // ② Structure absente ⇒ l'ancienne source, TELLE QUELLE. ⛔ On ne « normalise » rien au
+  //    passage : le comportement historique doit rester identique au caractère près.
+  if (!src.moderne) {
+    var g = (config && config.global) || {};
+    var brut = g[TERRAINS_CHAMP_PROJETE];
+    return (brut === undefined || brut === null) ? '' : String(brut);
+  }
+
+  // ③ À partir d'ici, le défaut est FERMÉ : ⛔ aucun chemin ne redescend vers `Config`.
+  if (!src.plan) return '';
+  var projete = projectionRepartitionTerrains(src.plan);
+  if (!projete || projete.error) return '';
+  return JSON.stringify(projete.repartition);
+}
+
+/**
+ * Natures (surfaces de jeu) pour la demande d'autorisation — même forme de retour que la
+ * cascade historique, pour que l'appelant retombe sur `org_type_terrain` sans rien deviner.
+ *
+ * ⭐ Ce que la bascule change ICI, et le socle l'avait annoncé : la surface vient des grands
+ * terrains RETENUS PAR L'ÉDITION, ⛔ plus de l'inventaire durable entier. Un terrain de
+ * l'installation qu'on n'utilise pas cette année n'impose plus sa surface au dossier de la
+ * Ligue.
+ */
+function naturesTerrainsEditionActive(classeur, config, source) {
+  var src = source || sourceTerrainsEditionActive(classeur);
+  if (!src.moderne) return naturesTerrainsAutorisation(config);
+  return naturesPlanTerrains(src.plan);   // plan `null` ⇒ { natures: [], nbSansNature: 0 }
+}
+
+/**
+ * ⭐ LA CONFIG VUE PAR LES CONSOMMATEURS — une COPIE dont le seul champ des terrains a été
+ * remplacé par celui de l'édition active.
+ *
+ * ⛔ ELLE NE MUTE JAMAIS SON ENTRÉE, et ce n'est pas une précaution de style : la même config
+ * est passée à `filtrerConfigPublique`, à la cascade d'autorisation et aux écrans admin.
+ * Muter `global` en place ferait voyager la substitution dans des chemins qui ne l'ont pas
+ * demandée — et la rendrait impossible à tester isolément.
+ *
+ * ⚠️ La copie est SUPERFICIELLE, et cela suffit : `categories` n'est pas modifié, et `global`
+ * — le seul objet touché — est recopié clé à clé.
+ */
+function configAvecTerrainsEdition(classeur, config, source) {
+  config = config || {};
+  var src = source || sourceTerrainsEditionActive(classeur);
+  var gIn = config.global || {};
+  var gOut = {};
+  for (var k in gIn) {
+    if (Object.prototype.hasOwnProperty.call(gIn, k)) gOut[k] = gIn[k];
+  }
+  gOut[TERRAINS_CHAMP_PROJETE] = repartitionTerrainsEditionActive(classeur, config, src);
+  return { global: gOut, categories: config.categories || [] };
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * LES DIMENSIONS PAR CATÉGORIE — ⭐ ÉVÉNEMENTIELLES, elles aussi
+ *
+ * 🎯 POURQUOI ELLES REJOIGNENT LE PLAN, ET CE N'EST PAS UN DÉTAIL DE RANGEMENT.
+ * « Les U8 jouent sur 30 × 20 » décrit CE TOURNOI-CI : cela dépend des catégories présentes
+ * et de la forme de jeu retenue pour la date. Laissé dans une cellule permanente de `Config`,
+ * ce réglage survivait à la réinitialisation exactement comme le découpage — même défaut,
+ * même cause (R-101). ⭐ Il vit désormais dans `TerrainsPlan.dimensions_json`, où le socle le
+ * lisait déjà : `signatureTerrains` en tient compte, donc modifier une taille fait passer
+ * l'édition en « à reconfirmer », ⛔ jamais en « confirmé » par surprise.
+ *
+ * ⚠️ ET C'EST UN BROUILLON, JAMAIS UNE PUBLICATION. Appliquer les valeurs FFR, c'est PROPOSER
+ * un réglage — la confirmation reste un geste à part. ⭐ La garantie est structurelle, pas
+ * déclarative : `ecrireBrouillonTerrains` force `role = 'brouillon'`, vide la signature, et
+ * ⛔ ne touche jamais au pointeur `Editions.terrains_plan_publie`. Il n'existe donc aucun
+ * chemin par lequel ce lot publierait quoi que ce soit.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Le plan sur lequel une modification de dimensions vient se poser : le BROUILLON en cours
+ * s'il existe, sinon le plan PUBLIÉ — qu'on recopiera alors EN brouillon.
+ *
+ * ⭐ Pourquoi le brouillon d'abord : deux applications successives (U8 puis U10) doivent
+ * s'accumuler dans le MÊME brouillon. Repartir du plan publié à chaque fois effacerait
+ * silencieusement la première.
+ * ⛔ Rend `null` s'il n'y a ni l'un ni l'autre — et l'appelant REFUSE alors, sans repli.
+ */
+function baseBrouillonTerrains(classeur, source) {
+  var src = source || sourceTerrainsEditionActive(classeur);
+  if (!src.moderne || !src.edition_id) return null;
+  return lireBrouillonTerrains(classeur, src.edition_id) || src.plan || null;
+}
+
+/**
+ * Les dimensions par catégorie TELLES QUE L'ÉDITION LES CONNAÎT, en objet — c'est l'entrée
+ * de la fusion FFR.
+ *
+ * 🚨 CETTE LECTURE DOIT BASCULER AVEC L'ÉCRITURE, et c'est le point le plus facile à rater :
+ * fusionner dans la valeur de `Config` puis écrire le résultat dans le brouillon MÉLANGERAIT
+ * les deux sources — une taille supprimée du plan reviendrait par la porte de derrière, à
+ * chaque application. ⭐ Une source, un aller-retour.
+ *
+ * @return {Object} `{}` si rien n'est lisible — ⛔ jamais `null`, jamais d'exception.
+ */
+function dimensionsTerrainsEditionActive(classeur, config, source) {
+  var src = source || sourceTerrainsEditionActive(classeur);
+  var brut;
+  if (!src.moderne) {
+    brut = ((config && config.global) || {}).dimensions_categories;
+  } else {
+    var base = baseBrouillonTerrains(classeur, src);
+    brut = base ? (base.params || {}).dimensions_json : '';
+  }
+  try {
+    var obj = JSON.parse(valeurTexteTerrain(brut) || '{}');
+    return (obj && typeof obj === 'object') ? obj : {};
+  } catch (e) { return {}; }
+}
+
+/**
+ * Écrit les dimensions fusionnées LÀ OÙ ELLES DOIVENT ALLER — et nulle part ailleurs.
+ *
+ *   structure ABSENTE  ⇒ `Config.dimensions_categories`, exactement comme avant ;
+ *   structure PRÉSENTE ⇒ le BROUILLON du plan de l'édition active.
+ *
+ * ⛔ AUCUN REPLI VERS `Config` QUAND LA STRUCTURE EXISTE. Pas d'édition active, pas de plan
+ * sur quoi se poser : on REFUSE, avec un message qui dit quoi faire. ⭐ Écrire quand même
+ * dans `Config` serait le pire des deux mondes — l'organisateur croirait avoir enregistré,
+ * et plus aucun lecteur ne verrait la valeur.
+ *
+ * @return {{ok:true, destination:string, plan_id?:string}|{error:string}}
+ */
+function ecrireDimensionsTerrainsEdition(classeur, dimensions, source) {
+  var src = source || sourceTerrainsEditionActive(classeur);
+  var json = JSON.stringify(dimensions || {});
+
+  if (!src.moderne) {
+    ecrireChampsConfig(classeur.getSheetByName('Config'),
+      { dimensions_categories: json }, ['dimensions_categories']);
+    return { ok: true, destination: 'config' };
+  }
+
+  if (!src.edition_id) {
+    return { error: 'Aucune édition active : les tailles de terrain n\'ont pas pu être ' +
+      'enregistrées. ⛔ Rien n\'a été écrit.' };
+  }
+  var base = baseBrouillonTerrains(classeur, src);
+  if (!base) {
+    return { error: 'Cette édition n\'a pas encore de plan de terrains : enregistre d\'abord ' +
+      'le plan des terrains, puis applique les valeurs FFR. ⛔ Rien n\'a été écrit.' };
+  }
+
+  var params = {};
+  for (var k in (base.params || {})) {
+    if (Object.prototype.hasOwnProperty.call(base.params, k)) params[k] = base.params[k];
+  }
+  params.dimensions_json = json;
+
+  // ⭐ `ecrireBrouillonTerrains` réutilise l'identifiant du brouillon existant, force le rôle
+  //    et vide la signature. ⛔ Le générateur n'est sollicité que pour un PREMIER brouillon.
+  var ecrit = ecrireBrouillonTerrains(classeur, src.edition_id,
+    { params: params, terrains: base.terrains, minis: base.minis },
+    function () { return Utilities.getUuid(); });
+  if (ecrit.error) return ecrit;
+  return { ok: true, destination: 'brouillon', plan_id: ecrit.plan_id };
 }

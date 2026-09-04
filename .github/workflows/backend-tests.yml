@@ -18,7 +18,7 @@ name: Vérifier le backend (garde-fous exécutables)
 # publier quoi que ce soit, même par erreur.
 #
 # CE QU'IL PROTÈGE. Le serveur vit dans Google Apps Script : son code ne s'exécute nulle
-# part ailleurs, et personne ne le lance avant un redéploiement. Les deux bancs ci-dessous
+# part ailleurs, et personne ne le lance avant un redéploiement. Les trois bancs ci-dessous
 # en EXTRAIENT les vraies fonctions et les exécutent sur une machine ordinaire — un défaut
 # se voit donc au commit, ⛔ pas trois semaines plus tard dans le journal Apps Script.
 # ⭐ Ils rejouent AUSSI les séries `lancerTestsFFR` correspondantes : une série écrite mais
@@ -31,10 +31,11 @@ on:
     branches: [main]
     paths:
       - 'backend/**'
-      # ⭐ Les deux bancs sont nommés UN PAR UN, et non `tests/**` : modifier un garde-fou
+      # ⭐ Les trois bancs sont nommés UN PAR UN, et non `tests/**` : modifier un garde-fou
       # du frontend n'a aucune raison de relancer les contrôles du serveur.
       - 'tests/backend-terrains-socle.test.js'
       - 'tests/backend-terrains-persistance.test.js'
+      - 'tests/backend-terrains-bascule.test.js'
       - '.github/workflows/backend-tests.yml'
   # Le contrôle tourne aussi sur les propositions de fusion : on voit le problème AVANT
   # que le code n'atteigne `main`, pas après.
@@ -43,6 +44,7 @@ on:
       - 'backend/**'
       - 'tests/backend-terrains-socle.test.js'
       - 'tests/backend-terrains-persistance.test.js'
+      - 'tests/backend-terrains-bascule.test.js'
       - '.github/workflows/backend-tests.yml'
   workflow_dispatch: {}
 
@@ -69,6 +71,11 @@ jobs:
       #  · B2-3.b : la PERSISTANCE — trois onglets, un pointeur, et la séquence qui
       #    publie un plan sans qu'une interruption puisse jamais faire passer un
       #    candidat à moitié écrit pour « le dernier plan confirmé ».
+      #  · B2-3.c : la BASCULE DES CONSOMMATEURS — les lecteurs du serveur vont chercher
+      #    le plan publié de l'ÉDITION ACTIVE, ⛔ plus la cellule de `Config` qui survivait
+      #    aux réinitialisations (R-101). ⭐ Ce banc-là rejoue aussi `lancerTestsFFR` EN
+      #    ENTIER : c'est ce qui a révélé qu'au commit `ed815fd`, la série s'arrêtait sur
+      #    une exception et n'affichait AUCUN bilan — sans que rien ne le signale.
       #
       # Un échec fait échouer ce contrôle. ⛔ Il n'empêche AUCUNE publication : le site
       # en ligne ne dépend pas de ce workflow.
@@ -78,3 +85,6 @@ jobs:
 
       - name: Vérifier la persistance des plans de terrains (M1-B2 / B2-3.b)
         run: node tests/backend-terrains-persistance.test.js
+
+      - name: Vérifier la bascule des consommateurs (M1-B2 / B2-3.c)
+        run: node tests/backend-terrains-bascule.test.js
