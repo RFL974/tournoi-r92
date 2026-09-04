@@ -9178,14 +9178,26 @@ function reinitialiserTournoi(classeur) {
   //   sur 4 grands terrains » : le découpage de l'an dernier, présenté comme celui de cette
   //   année (`resumeTerrains`, frontend/js/dossier.js).
   //
-  //   ⭐ POURQUOI CE CHAMP-LÀ, ET LUI SEUL. La donnée des terrains est MIXTE. Ce qui est
-  //   PERMANENT — l'inventaire des grands terrains (`terrains_physiques`), le couloir, la table
-  //   de marque, les tailles par catégorie — décrit l'INSTALLATION du club et ⛔ n'est pas
-  //   touché : l'effacer obligerait à re-saisir chaque année un stade qui n'a pas bougé.
-  //   Ce qui est ÉVÉNEMENTIEL — « ces grands terrains sont découpés en 18 mini-terrains de
-  //   cette façon » — dépend des catégories et des équipes de CETTE édition, qui viennent
-  //   d'être effacées. ⛔ Le garder n'aurait aucun sens : il décrirait un découpage pour des
-  //   catégories qui n'existent plus.
+  //   ⭐ POURQUOI CE CHAMP-LÀ, ET LUI SEUL. La donnée des terrains est MIXTE, et le partage
+  //   est celui de `CHAMPS_TERRAINS_DURABLES` / `CHAMPS_TERRAINS_EVENEMENTIELS` :
+  //     · DURABLE — `terrains_physiques` (l'inventaire des grands terrains), `couloir_terrain_m`,
+  //       `tm_longueur_m`, `tm_largeur_m`. Cela décrit l'INSTALLATION du club et ⛔ n'est pas
+  //       touché : l'effacer obligerait à re-saisir chaque année un stade qui n'a pas bougé ;
+  //     · ÉVÉNEMENTIEL — `repartition_grands_terrains` (« ces grands terrains sont découpés en
+  //       18 mini-terrains de cette façon ») ET `dimensions_categories` (« les U8 jouent sur
+  //       30 × 20 »). Les deux dépendent des catégories et des équipes de CETTE édition, qui
+  //       viennent d'être effacées. ⛔ Les garder n'aurait aucun sens : ils décriraient un
+  //       découpage et des tailles pour des catégories qui n'existent plus.
+  //
+  //   ⚠️ ET POURTANT CETTE ÉTAPE N'EFFACE QUE `repartition_grands_terrains` — ⛔ pas
+  //   `dimensions_categories`, et ce n'est pas un oubli. Les deux champs sont événementiels,
+  //   mais ils ne sont pas au même endroit : les DIMENSIONS ont déjà quitté `Config` par le
+  //   haut. `appliquerValeursFFR` les range dans `TerrainsPlan.dimensions_json`, c'est-à-dire
+  //   dans le plan de l'édition — voir `ecrireDimensionsTerrainsEdition`. ⭐ Elles ne peuvent
+  //   donc plus survivre à un reset : elles appartiennent à une édition qui n'est plus
+  //   l'active. ⛔ Ce qui reste dans `Config.dimensions_categories` est la valeur du RÉGIME
+  //   HISTORIQUE, celui d'avant la structure B2-3 — et tant que ce régime dure, cette valeur
+  //   est encore LUE : l'effacer ici couperait la carte Terrains sans rien corriger.
   //
   //   ⚠️ CEINTURE **ET** BRETELLES, et les deux sont nécessaires. La bascule ci-dessus
   //   (`sourceTerrainsEditionActive`) rend ce champ INVISIBLE dès que la structure B2-3 existe ;
@@ -11326,13 +11338,28 @@ function publierPlanTerrains(classeur, editionId, plan, categories, faireId, hor
  *     `repartition_grands_terrains`. ⛔ Aucun fichier de `frontend/` n'est touché — c'est
  *     B2-3.d qui les rebranchera, et il pourra le faire sans urgence.
  *
- * ⚠️ CE QUE B2-3.c NE FAIT PAS, ET IL FAUT LE LIRE AVANT DE CHERCHER : ⛔ il n'écrit AUCUN
- * plan. `enregistrerPlanTerrains` continue d'écrire `Config`, à l'identique. ⭐ Et ce n'est
- * pas un oubli : le navigateur n'envoie aujourd'hui NI les identités durables des grands
- * terrains, NI la catégorie de chaque mini-terrain. Publier un plan à partir de ce qu'il
- * envoie obligerait à fabriquer des identités neuves à chaque enregistrement — donc des
- * identités qui ne seraient pas durables — et à DEVINER les catégories. ⛔ Le socle interdit
- * exactement cela. L'écriture appartient à B2-3.d, avec l'écran qui l'alimente.
+ * ⚠️ CE QUE B2-3.c ÉCRIT, ET CE QU'IL N'ÉCRIT PAS — À LIRE AVANT DE CHERCHER.
+ *
+ * ⭐ IL ÉCRIT — `appliquerValeursFFR` crée ou met à jour le BROUILLON du plan de l'édition
+ * active pour y ranger `dimensions_json` *(voir `ecrireDimensionsTerrainsEdition`)*. Les
+ * tailles de terrain par catégorie sont événementielles au même titre que le découpage : leur
+ * place est le plan, ⛔ plus une cellule permanente. ⚠️ Cette écriture ⛔ ne publie JAMAIS le
+ * plan et ⛔ ne déplace JAMAIS le pointeur `Editions.terrains_plan_publie` — la garantie est
+ * structurelle : `ecrireBrouillonTerrains` force `role = 'brouillon'` et vide la signature.
+ *
+ * ⛔ IL N'ÉCRIT PAS LE DÉCOUPAGE. `enregistrerPlanTerrains` reste une écriture dans `Config`,
+ * ⚠️ mais RESSERRÉE, en symétrie stricte de la lecture : les SIX champs tant que la structure
+ * B2-3 n'existe pas — régime historique, comportement inchangé — et seulement les QUATRE
+ * DURABLES dès qu'elle existe *(voir `CHAMPS_TERRAINS_DURABLES`)*. ⛔ Elle ne publie aucun plan
+ * et ne crée aucune structure.
+ *
+ * ⭐ ET CE N'EST PAS UN OUBLI : le navigateur n'envoie aujourd'hui NI les identités durables des
+ * grands terrains, NI la catégorie de chaque mini-terrain. Écrire le découpage dans le plan à
+ * partir de ce qu'il envoie obligerait à fabriquer des identités neuves à chaque enregistrement
+ * — donc des identités qui ne seraient pas durables — et à DEVINER les catégories. ⛔ Le socle
+ * interdit exactement cela. ⏭️ **B2-3.d** rebranchera l'écran ET l'écriture complète du
+ * découpage, avec les identités durables et les catégories des mini-terrains.
+ *
  * ⭐ Aucun trou fonctionnel n'en résulte, parce que l'ORDRE des phases l'exclut : la structure
  * n'existera qu'à la migration de B2-3.e, donc APRÈS B2-3.d. Tant qu'elle n'existe pas, la
  * branche ② ci-dessus rend l'ancien comportement, à la lettre.
