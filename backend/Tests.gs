@@ -585,6 +585,136 @@ function lancerTestsFFR() {
   testB23d_D7_publicationParUnSeulChemin(etat);
   testB23d_D8_onNeConfirmeQueCeQuiEstPresente(etat);
 
+  // IMPL-ACCES-SCORES-NOYAU-PUR-DR-5H — l'accès éphémère aux scores, le NOYAU PUR.
+  // ⛔ Aucune de ces fonctions n'est branchée : ni onglet, ni action, ni route, ni jeton.
+  // ⭐ Le détail vit dans `tests/backend-acces-scores-noyau-pur.test.js`, qui rejoue AUSSI
+  //    cette série et y ajoute des mutants.
+  test5H_A1_transitionsPermises(etat);
+  test5H_A2_transitionsInterdites(etat);
+  test5H_A3_aucuneSortieDeCloture(etat);
+  test5H_A4_rotationTroisEtats(etat);
+  test5H_A5_rotationEnFigeAvantReprise(etat);
+  test5H_A6_versionObligatoireEtPerimee(etat);
+  test5H_A7_etatInconnuBloqueTout(etat);
+  test5H_A8_resetAvecAcces(etat);
+  test5H_A9_resetEnAbsentNeCreeRien(etat);
+  test5H_B1_tournoiVide(etat);
+  test5H_B2_categorieSansMatch(etat);
+  test5H_B3_reglageAbsent(etat);
+  test5H_B4_scfUnePhase(etat);
+  test5H_B5_scfP3SamediDimanche(etat);
+  test5H_B6_matinPuisApresMidi(etat);
+  test5H_B7_tournoiMixte(etat);
+  test5H_B8_attendSuiteMaisAutreIncomplete(etat);
+  test5H_B9_gelPossibleSeulementSiToutesTerminees(etat);
+  test5H_B10_statutNonTerminalResteIncomplet(etat);
+  test5H_B11_calculSansEffet(etat);
+  test5H_B12_categorieNonPresenteIgnoree(etat);
+  test5H_C1_gelDirect(etat);
+  test5H_C2_gelManuelToujoursDisponible(etat);
+  test5H_C3_clotureNormale(etat);
+  test5H_C4_cloturePrematureeRenforcee(etat);
+  test5H_C5_confirmationAutreEdition(etat);
+  test5H_C6_confirmationAutreAction(etat);
+  test5H_C7_confirmationAncienneVersion(etat);
+  test5H_C8_confirmationConsommee(etat);
+  test5H_C9_confirmationCalculModifieEtExpiree(etat);
+  test5H_C10_deuxRequeteIdDistincts(etat);
+  test5H_D1_demandeNouvelle(etat);
+  test5H_D2_rejeuApplique(etat);
+  test5H_D3_rejeuRefuse(etat);
+  test5H_D4_memeIdContenuDifferent(etat);
+  test5H_D5_enCoursReconcilier(etat);
+  test5H_D6_aucuneExceptionPourLeGel(etat);
+  test5H_D7_aucunSecretDansEmpreinte(etat);
+  test5H_D8_resultatRefSansJeton(etat);
+  test5H_D9_recuperationImpossibleNeCreeRien(etat);
+  test5H_D10_dureeConservationInjectee(etat);
+  test5H_E1_deuxAppareilsMemeVersion(etat);
+  test5H_E2_premierScoreAccepte(etat);
+  test5H_E3_secondScorePerimeRefuse(etat);
+  test5H_E4_aucunEcrasementSilencieux(etat);
+  test5H_E5_rejeuPremiereDemandeSansSecondeEcriture(etat);
+
+  // CORR-ACCES-SCORES-NOYAU-PUR-DR-5I — les régressions de la revue indépendante.
+  // ⚠️ Chacune ÉCHOUAIT sur le noyau 5H : elles ferment neuf défauts reproduits.
+  test5I_A1_phase1IncompleteAvecPhase2Terminee(etat);
+  test5I_A2_lesDeuxPhasesIncompletes(etat);
+  test5I_A3_toutesTermineesSuiteNonGenerable(etat);
+  test5I_A4_versionCorrompue(etat);
+  test5I_A5_rotationsCorrompues(etat);
+  test5I_B1_memeNombreIdentifiantsDifferents(etat);
+  test5I_B2_causeEtPhaseChangentLEmpreinte(etat);
+  test5I_B3_confirmationPerimeeParChangementDeMatch(etat);
+  test5I_C1_rejeuAutreEdition(etat);
+  test5I_C2_rejeuAutreRole(etat);
+  test5I_C3_rejeuAutreAction(etat);
+  test5I_C4_enregistrementIncomplet(etat);
+  test5I_C5_contexteManquant(etat);
+  test5I_D1_secretImbriqueDansObjet(etat);
+  test5I_D2_secretImbriqueDansTableau(etat);
+  test5I_D3_secretAutreCasse(etat);
+  test5I_D4_reponseIndependante(etat);
+  test5I_D5_refRequiseEtListeBlanche(etat);
+  test5I_E1_recuperationAutreReference(etat);
+  test5I_E2_recuperationAutreEdition(etat);
+  test5I_E3_recuperationConforme(etat);
+  test5I_F1_vainqueurChangeLaVersion(etat);
+  test5I_F2_compteurDetailleChangeLaVersion(etat);
+  test5I_F3_listeCompleteEtVersionApres(etat);
+  test5I_G1_dateCivileInexistanteRefusee(etat);
+  test5I_G2_bissextileAcceptee(etat);
+  test5I_G3_formatEtDureeStricts(etat);
+
+  // CORR-ACCES-SCORES-NOYAU-PUR-DR-5J — les six cas adverses restants.
+  // ⚠️ Chacun ÉCHOUAIT sur l'état 5I.
+  test5J_A1_collisionSeparateurs(etat);
+  test5J_A2_valeursQuiImitentLaStructure(etat);
+  test5J_A3_ordreDesClesEtDesTableaux(etat);
+  test5J_A4_typesDistingues(etat);
+  test5J_A5_determinismeEtAucunCondense(etat);
+  test5J_B1_matchReduitAuSeulIdentifiant(etat);
+  test5J_B2_unSeulChampManquant(etat);
+  test5J_B3_autreIdentifiantEtObjetComplet(etat);
+  test5J_B4_champsSupplementairesSansEffet(etat);
+  test5J_C1_actionDivergenteDesLaPremiereApplication(etat);
+  test5J_C2_editionEtRoleDivergentsDesLeDepart(etat);
+  test5J_C3_appliquerRendLeContexteFiable(etat);
+  test5J_C4_empreinteLieeAuContexte(etat);
+  test5J_C5_rejeuApresDivergenceInitiale(etat);
+  test5J_D1_horsZoneExacte(etat);
+  test5J_D2_incrementAuPlafondRefuse(etat);
+  test5J_D3_versionLueStricte(etat);
+  test5J_D4_versionDeConfirmationStricte(etat);
+  test5J_D5_dureeHorsPlage(etat);
+  test5J_E1_expirationAbsenteOuIllisible(etat);
+  test5J_E2_instantCourantObligatoire(etat);
+  test5J_E3_instantExactDExpiration(etat);
+  test5J_E4_aucuneDureeDeValiditeGravee(etat);
+  test5J_F1_anneesBasses(etat);
+  test5J_F2_plageExplicite(etat);
+  test5J_F3_bissextilesExactes(etat);
+  test5J_F4_aucunDateEtFormatStable(etat);
+
+  // CORR-ACCES-SCORES-CONFIRMATION-DR-5K — la chaîne de confirmation, fermée.
+  test5K_A1_contexteAbsentOuIncomplet(etat);
+  test5K_A2_roleNonOrganisateur(etat);
+  test5K_A3_actionDuContexte(etat);
+  test5K_A4_demandeNePeutContredireLeContexte(etat);
+  test5K_A5_editionFiablePartout(etat);
+  test5K_B1_confirmationSansEdition(etat);
+  test5K_B2_confirmationAutreEdition(etat);
+  test5K_B3_champsObligatoiresDeLaConfirmation(etat);
+  test5K_B4_attenteIncomplete(etat);
+  test5K_C1_consommeStrict(etat);
+  test5K_C2_consommeFalseEtTrue(etat);
+  test5K_D1_gelManuelPlanifieLaConsommation(etat);
+  test5K_D2_clotureRenforceePlanifieLaConsommation(etat);
+  test5K_D3_aucuneInstructionSansConfirmationUnique(etat);
+  test5K_D4_aucuneInstructionSurRefus(etat);
+  test5K_D5_aucuneMutation(etat);
+  test5K_D6_chaineComplete(etat);
+
   var bilan = 'R92 — ' + etat.ok + '/' + etat.total + ' OK, ' + etat.fail + ' FAIL';
   Logger.log('==============================================');
   Logger.log(bilan);
@@ -9388,4 +9518,2421 @@ function testB23d_D7_publicationParUnSeulChemin(etat) {
     'B2-3.d D7 ⭐⭐ : ⛔ elle ne touche PAS le pointeur elle-même, et ne crée aucune structure');
   _ffrAssert(etat, String(publierPlanTerrains).indexOf('ecrirePointeurPlanTerrains(') !== -1,
     'B2-3.d D7 : (contrôle du contrôle) la bascule vit bien dans `publierPlanTerrains`');
+}
+
+/* ============================================================================
+ *  SÉRIE 5H — ACCÈS ÉPHÉMÈRE AUX SCORES, LE NOYAU PUR
+ *  IMPL-ACCES-SCORES-NOYAU-PUR-DR-5H — conception : voir l'en-tête du bloc
+ *  « ACCÈS ÉPHÉMÈRE AUX SCORES — LE NOYAU PUR » dans backend/Code.gs
+ * ============================================================================
+ *
+ *  ⭐ Cette série n'a besoin de RIEN : ni classeur, ni onglet, ni service Google, ni horloge.
+ *  Elle donne un état et une demande aux fonctions de décision, et regarde ce qu'elles
+ *  répondent. ⛔ Aucune écriture, aucun effet de bord, rejouable à volonté.
+ *
+ *  ⚠️ TOUTES LES VALEURS SONT FICTIVES. Les « jetons » et « clés » qui apparaissent ici sont
+ *  inventés pour ce fichier : ils n'ouvrent rien et n'ont jamais rien ouvert. ⛔ Aucun secret
+ *  réel ne doit jamais entrer dans ce fichier.
+ *
+ *  ⭐ Le détail vit AUSSI dans `tests/backend-acces-scores-noyau-pur.test.js`, qui rejoue
+ *  cette série sous Node et y ajoute des mutants : une série écrite chez Google mais jamais
+ *  lancée n'est pas un garde-fou, c'est une intention.
+ * ============================================================================ */
+
+/* ⚠️ FICTIFS — inventés pour ces tests, ils n'ouvrent rien. */
+var CLE_FACTICE_5H = 'CLE-FACTICE-5H-jamais-reelle';
+var JETON_FACTICE_5H = 'JETON-FACTICE-5H-jamais-reel';
+
+/** Une ligne d'accès de test. `null` se dit en passant `null` directement (= ABSENT). */
+function _5hLigne(etat, version, rotations) {
+  return { etat: etat, version: (version === undefined ? 0 : version),
+           rotations: (rotations === undefined ? 0 : rotations) };
+}
+
+/* ⭐ Un instant de référence et une expiration, ajoutés par 5J : une confirmation EXIGE
+   désormais `expire_le` et `maintenant`, tous deux au format exact et réellement valides. */
+var MAINTENANT_5H = '2026-09-13 12:00:00';
+var EXPIRE_5H = '2026-09-13 23:59:59';
+
+/** Le code d'une fonction SANS ses commentaires — pour compter une occurrence sans se faire
+ *  piéger par une explication qui nomme ce qu'elle explique. */
+function _5hCodeSeul(fn) {
+  return String(fn).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+}
+
+/** Un match COMPLET au sens de `ACCES_CHAMPS_VERSION_MATCH` (les 22 champs présents). */
+function _5hMatchComplet(valeurs) {
+  var v = valeurs || {};
+  var m = {};
+  for (var i = 0; i < ACCES_CHAMPS_VERSION_MATCH.length; i++) {
+    var nom = ACCES_CHAMPS_VERSION_MATCH[i];
+    m[nom] = Object.prototype.hasOwnProperty.call(v, nom) ? v[nom] : '';
+  }
+  return m;
+}
+
+/** Copie superficielle de `base` enrichie de `extra`. ⛔ Ne mute jamais `base`. */
+function _5hFusion(base, extra) {
+  var o = {}, k;
+  for (k in (base || {})) { if (Object.prototype.hasOwnProperty.call(base, k)) o[k] = base[k]; }
+  for (k in (extra || {})) { if (Object.prototype.hasOwnProperty.call(extra, k)) o[k] = extra[k]; }
+  return o;
+}
+
+/** Une ligne de configuration de catégorie. */
+function _5hCat(nom, opts) {
+  var o = opts || {};
+  return { categorie: nom,
+           presente: (o.presente === undefined ? 'oui' : o.presente),
+           contexte_tournoi: o.contexte || '',
+           scf_phase: o.scfPhase || '' };
+}
+
+/** Un match de test. `phase` vaut 'poule' (avant) ou 'classement' (la suite). */
+function _5hMatch(id, cat, phase, statut) {
+  return { id_match: id, categorie: cat, phase: phase, statut: statut,
+           score_A: '', score_B: '' };
+}
+
+/**
+ * ⭐ LE CONTEXTE AUTHENTIFIÉ, ajouté par CORR-…-5I (défaut ⑤).
+ * ⛔ Il ne vient JAMAIS de la demande du navigateur : l'édition est DÉTERMINÉE par le serveur,
+ * le rôle est PROUVÉ par la clé, l'action est AUTORISÉE. Ici, il est simplement fourni.
+ */
+function _5hContexte(opts) {
+  var o = opts || {};
+  return { edition_id: o.edition || 'edition-FICTIVE-0001',
+           role: o.role || 'organisateur',
+           action: o.action || ACCES_ACTION_FIGER };
+}
+
+/**
+ * ⚠️ ADAPTATION 5K — `planifierTransitionAcces` exige désormais un CONTEXTE AUTHENTIFIÉ en
+ * troisième argument. Ce raccourci le DÉDUIT de la demande, pour les tests dont le contexte
+ * n'est pas le sujet. ⛔ Il ne masque rien : la série 5K contrôle le contexte pour lui-même
+ * (absent, incomplet, rôle non organisateur, action ou édition divergente).
+ */
+function _5hPlanifier(ligne, demande) {
+  var d = demande || {};
+  return planifierTransitionAcces(ligne, d, {
+    edition_id: accesTexte(d.edition_id) || 'edition-FICTIVE-0001',
+    role: 'organisateur',
+    action: accesTexte(d.action).toUpperCase()
+  });
+}
+
+/** Le calcul de fin sur un jeu de catégories + matchs. */
+function _5hFin(cats, matchs) {
+  return determinerFinDeTournoiAcces(cats, matchs);
+}
+
+/** L'état d'UNE catégorie dans un résultat de calcul. */
+function _5hEtatDe(fin, nom) {
+  for (var i = 0; i < fin.categories.length; i++) {
+    if (fin.categories[i].categorie === nom) return fin.categories[i].etat;
+  }
+  return '';
+}
+
+/** Une confirmation recevable pour (édition, action, état, version, calcul). */
+function _5hConfirmation(opts) {
+  var o = opts || {};
+  return {
+    confirmation_id: o.id || 'conf-FICTIVE-0001',
+    edition_id: o.edition || 'edition-FICTIVE-0001',
+    action: o.action || ACCES_ACTION_FIGER,
+    etat_evalue: o.etat || ACCES_ETAT_OUVERT,
+    version_evaluee: (o.version === undefined ? 3 : o.version),
+    empreinte_fin: o.empreinte || '',
+    consomme: (o.consomme === true),
+    /* ⚠️ ADAPTÉ EN 5J : une expiration VALIDE est désormais obligatoire (défaut ⑤). */
+    expire_le: (o.expire === undefined ? EXPIRE_5H : o.expire)
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ① LA MACHINE D'ÉTATS                                                     */
+/* -------------------------------------------------------------------------- */
+
+/** Les dix transitions permises aboutissent, et rien de plus. */
+function test5H_A1_transitionsPermises(etat) {
+  var cas = [
+    { depuis: ACCES_ETAT_ABSENT,  action: ACCES_ACTION_PREPARER,  vers: ACCES_ETAT_PREPARE, jeton: 'CREE' },
+    { depuis: ACCES_ETAT_PREPARE, action: ACCES_ACTION_OUVRIR,    vers: ACCES_ETAT_OUVERT,  jeton: 'INCHANGE' },
+    { depuis: ACCES_ETAT_OUVERT,  action: ACCES_ACTION_FIGER,     vers: ACCES_ETAT_FIGE,    jeton: 'INCHANGE' },
+    { depuis: ACCES_ETAT_FIGE,    action: ACCES_ACTION_REPRENDRE, vers: ACCES_ETAT_OUVERT,  jeton: 'INCHANGE' },
+    { depuis: ACCES_ETAT_PREPARE, action: ACCES_ACTION_CLOTURER,  vers: ACCES_ETAT_CLOTURE, jeton: 'MORT' },
+    { depuis: ACCES_ETAT_OUVERT,  action: ACCES_ACTION_CLOTURER,  vers: ACCES_ETAT_CLOTURE, jeton: 'MORT' },
+    { depuis: ACCES_ETAT_FIGE,    action: ACCES_ACTION_CLOTURER,  vers: ACCES_ETAT_CLOTURE, jeton: 'MORT' },
+    { depuis: ACCES_ETAT_PREPARE, action: ACCES_ACTION_ROTATION,  vers: ACCES_ETAT_PREPARE, jeton: 'REMPLACE' },
+    { depuis: ACCES_ETAT_OUVERT,  action: ACCES_ACTION_ROTATION,  vers: ACCES_ETAT_OUVERT,  jeton: 'REMPLACE' },
+    { depuis: ACCES_ETAT_FIGE,    action: ACCES_ACTION_ROTATION,  vers: ACCES_ETAT_FIGE,    jeton: 'REMPLACE' }
+  ];
+  var ok = 0;
+  for (var i = 0; i < cas.length; i++) {
+    var c = cas[i];
+    var ligne = (c.depuis === ACCES_ETAT_ABSENT) ? null : _5hLigne(c.depuis, 3, 0);
+    var d = { action: c.action, version_lue: (c.depuis === ACCES_ETAT_ABSENT) ? 0 : 3,
+              edition_id: 'edition-FICTIVE-0001', horodatage: '2026-09-13 10:00:00' };
+    /* Gel et clôture exigent leurs confirmations : on les fournit ici, l'objet de ce
+       contrôle étant la TABLE des transitions, pas les confirmations (série C). */
+    if (c.action === ACCES_ACTION_FIGER) {
+      var finT = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'classement', 'terminé')]);
+      d.fin = finT;
+    }
+    if (c.action === ACCES_ACTION_CLOTURER) {
+      d.confirme = true;
+      d.fin = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'classement', 'terminé')]);
+    }
+    var r = _5hPlanifier(ligne, d);
+    if (r.ok === true && r.etat_apres === c.vers && r.jeton === c.jeton) ok++;
+  }
+  _ffrAssert(etat, ok === 10,
+    '5H-A1 : les 10 transitions permises aboutissent (' + ok + '/10)');
+}
+
+/** ⛔ Les 20 autres combinaisons (6 actions × 5 états) sont REFUSÉES. */
+function test5H_A2_transitionsInterdites(etat) {
+  var actions = [ACCES_ACTION_PREPARER, ACCES_ACTION_OUVRIR, ACCES_ACTION_FIGER,
+                 ACCES_ACTION_REPRENDRE, ACCES_ACTION_CLOTURER, ACCES_ACTION_ROTATION];
+  var etats = [ACCES_ETAT_ABSENT, ACCES_ETAT_PREPARE, ACCES_ETAT_OUVERT,
+               ACCES_ETAT_FIGE, ACCES_ETAT_CLOTURE];
+  var permises = 0, refusees = 0, malRefusees = [];
+  for (var a = 0; a < actions.length; a++) {
+    for (var e = 0; e < etats.length; e++) {
+      var attendue = accesTransitionPermise(actions[a], etats[e]);
+      var ligne = (etats[e] === ACCES_ETAT_ABSENT) ? null : _5hLigne(etats[e], 3, 0);
+      var d = { action: actions[a], version_lue: (etats[e] === ACCES_ETAT_ABSENT) ? 0 : 3,
+                edition_id: 'edition-FICTIVE-0001', confirme: true,
+                fin: _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'classement', 'terminé')]) };
+      var r = _5hPlanifier(ligne, d);
+      if (attendue) { permises++; continue; }
+      if (r.refus === 'ETAT_INVALIDE') refusees++;
+      else malRefusees.push(actions[a] + '/' + etats[e] + ' → ' + (r.refus || 'ACCEPTÉE'));
+    }
+  }
+  _ffrAssert(etat, permises === 10 && refusees === 20 && malRefusees.length === 0,
+    '5H-A2 : sur 30 combinaisons, 10 permises et 20 refusées ETAT_INVALIDE' +
+    (malRefusees.length ? ' — écarts : ' + malRefusees.join(' ; ') : ''));
+}
+
+/** ⛔ CLÔTURÉ n'a AUCUNE sortie — pas même une rotation. */
+function test5H_A3_aucuneSortieDeCloture(etat) {
+  var actions = [ACCES_ACTION_PREPARER, ACCES_ACTION_OUVRIR, ACCES_ACTION_FIGER,
+                 ACCES_ACTION_REPRENDRE, ACCES_ACTION_CLOTURER, ACCES_ACTION_ROTATION];
+  var toutesRefusees = true;
+  for (var i = 0; i < actions.length; i++) {
+    var r = _5hPlanifier(_5hLigne(ACCES_ETAT_CLOTURE, 7, 1),
+      { action: actions[i], version_lue: 7, confirme: true, edition_id: 'edition-FICTIVE-0001',
+        fin: _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'classement', 'terminé')]) });
+    if (r.ok === true) toutesRefusees = false;
+    if (accesTransitionPermise(actions[i], ACCES_ETAT_CLOTURE) !== null) toutesRefusees = false;
+  }
+  _ffrAssert(etat, toutesRefusees,
+    '5H-A3 : aucune des 6 actions ne sort de CLÔTURÉ, et la table n\'en contient aucune');
+}
+
+/** La rotation vit dans les TROIS états ouverts, garde l'état et incrémente le compteur. */
+function test5H_A4_rotationTroisEtats(etat) {
+  var etats = [ACCES_ETAT_PREPARE, ACCES_ETAT_OUVERT, ACCES_ETAT_FIGE];
+  var ok = 0;
+  for (var i = 0; i < etats.length; i++) {
+    var r = _5hPlanifier(_5hLigne(etats[i], 4, 2),
+      { action: ACCES_ACTION_ROTATION, version_lue: 4, edition_id: 'edition-FICTIVE-0001' });
+    if (r.ok === true && r.etat_apres === etats[i] && r.jeton === 'REMPLACE' &&
+        r.ecrire.rotations === 3 && r.version_apres === 5) ok++;
+  }
+  _ffrAssert(etat, ok === 3,
+    '5H-A4 : rotation en PRÉPARÉ, OUVERT et FIGÉ — état conservé, jeton remplacé (' + ok + '/3)');
+}
+
+/** ⭐ Une rotation en FIGÉ tue l'ancien QR AVANT toute reprise. */
+function test5H_A5_rotationEnFigeAvantReprise(etat) {
+  var rot = _5hPlanifier(_5hLigne(ACCES_ETAT_FIGE, 4, 0),
+    { action: ACCES_ACTION_ROTATION, version_lue: 4, edition_id: 'edition-FICTIVE-0001' });
+  var reprise = _5hPlanifier(_5hLigne(ACCES_ETAT_FIGE, 5, 1),
+    { action: ACCES_ACTION_REPRENDRE, version_lue: 5, edition_id: 'edition-FICTIVE-0001' });
+  _ffrAssert(etat,
+    rot.ok === true && rot.etat_apres === ACCES_ETAT_FIGE && rot.jeton === 'REMPLACE' &&
+    reprise.ok === true && reprise.etat_apres === ACCES_ETAT_OUVERT &&
+    reprise.jeton === 'INCHANGE',
+    '5H-A5 : rotation en FIGÉ remplace le jeton sans rouvrir, puis la reprise le conserve');
+}
+
+/** ⛔ Aucune écriture à l'aveugle, et un écran périmé est refusé sans être appliqué. */
+function test5H_A6_versionObligatoireEtPerimee(etat) {
+  var sansVersion = _5hPlanifier(_5hLigne(ACCES_ETAT_PREPARE, 2, 0),
+    { action: ACCES_ACTION_OUVRIR, edition_id: 'edition-FICTIVE-0001' });
+  var perimee = _5hPlanifier(_5hLigne(ACCES_ETAT_PREPARE, 2, 0),
+    { action: ACCES_ACTION_OUVRIR, version_lue: 1, edition_id: 'edition-FICTIVE-0001' });
+  _ffrAssert(etat,
+    sansVersion.refus === 'VERSION_REQUISE' &&
+    perimee.refus === 'ETAT_MODIFIE' && perimee.version === 2 && perimee.ok !== true,
+    '5H-A6 : sans version → VERSION_REQUISE ; version périmée → ETAT_MODIFIE, rien appliqué');
+}
+
+/** ⛔ Un état de ligne non reconnu bloque tout, plutôt que d'être interprété. */
+function test5H_A7_etatInconnuBloqueTout(etat) {
+  var r = _5hPlanifier({ etat: 'OUVERTE_PEUT_ETRE', version: 1 },
+    { action: ACCES_ACTION_FIGER, version_lue: 1 });
+  var reset = planifierResetAccesScores({ etat: 'BIZARRE', version: 1 }, '2026-09-13 20:00:00');
+  _ffrAssert(etat, r.refus === 'ETAT_INCONNU' && reset.refus === 'ETAT_INCONNU',
+    '5H-A7 : un état non reconnu refuse la transition ET le reset, sans rien deviner');
+}
+
+/** Reset AVEC accès : l'accès est clôturé, la nouvelle édition repart en ABSENT. */
+function test5H_A8_resetAvecAcces(etat) {
+  var ok = 0;
+  var etats = [ACCES_ETAT_PREPARE, ACCES_ETAT_OUVERT, ACCES_ETAT_FIGE];
+  for (var i = 0; i < etats.length; i++) {
+    var r = planifierResetAccesScores(_5hLigne(etats[i], 5, 0), '2026-09-13 20:00:00');
+    if (r.ok === true && r.nouvel_etat === ACCES_ETAT_CLOTURE &&
+        r.ecrire && r.ecrire.etat === ACCES_ETAT_CLOTURE &&
+        r.ecrire.date_cloture === '2026-09-13 20:00:00' &&
+        r.nouvelle_edition_etat === ACCES_ETAT_ABSENT && r.ligne_creee === false) ok++;
+  }
+  _ffrAssert(etat, ok === 3,
+    '5H-A8 : reset avec accès — clôturé depuis les 3 états, nouvelle édition en ABSENT (' + ok + '/3)');
+}
+
+/** ⛔ Reset SANS accès : AUCUNE ligne artificielle CLÔTURÉ n'est créée. */
+function test5H_A9_resetEnAbsentNeCreeRien(etat) {
+  var r = planifierResetAccesScores(null, '2026-09-13 20:00:00');
+  var deja = planifierResetAccesScores(_5hLigne(ACCES_ETAT_CLOTURE, 9, 1), '2026-09-13 20:00:00');
+  _ffrAssert(etat,
+    r.ok === true && r.ecrire === null && r.ligne_creee === false &&
+    r.ancien_etat === ACCES_ETAT_ABSENT && r.nouvel_etat === ACCES_ETAT_ABSENT &&
+    deja.ok === true && deja.ecrire === null && deja.deja_cloture === true,
+    '5H-A9 : reset en ABSENT n\'écrit rien ; un accès déjà clôturé n\'est pas réécrit');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ② LA FIN DU TOURNOI, PAR CATÉGORIE                                       */
+/* -------------------------------------------------------------------------- */
+
+/** Tournoi vide : aucune catégorie → on ne conclut rien. */
+function test5H_B1_tournoiVide(etat) {
+  var f = _5hFin([], []);
+  _ffrAssert(etat,
+    f.suggestion === ACCES_SUGGESTION_AUCUNE && f.motif === 'aucune_categorie' &&
+    f.categories.length === 0 && f.suite_generable === false,
+    '5H-B1 : tournoi vide → AUCUNE, aucune catégorie, suite non générable');
+}
+
+/** Catégorie déclarée SANS match : ⛔ jamais comptée comme terminée. */
+function test5H_B2_categorieSansMatch(etat) {
+  var f = _5hFin([_5hCat('U10'), _5hCat('U12')],
+                 [_5hMatch('M1', 'U10', 'classement', 'terminé')]);
+  _ffrAssert(etat,
+    _5hEtatDe(f, 'U12') === ACCES_CAT_SANS_MATCH &&
+    _5hEtatDe(f, 'U10') === ACCES_CAT_TERMINEE &&
+    f.suggestion === ACCES_SUGGESTION_AUCUNE && f.motif === 'categories_indeterminees' &&
+    f.suite_generable === false,
+    '5H-B2 : une catégorie déclarée sans match empêche GEL_POSSIBLE');
+}
+
+/** Des matchs pour une catégorie dont le réglage a disparu : INDÉTERMINÉE. */
+function test5H_B3_reglageAbsent(etat) {
+  var f = _5hFin([_5hCat('U10')],
+                 [_5hMatch('M1', 'U10', 'classement', 'terminé'),
+                  _5hMatch('M2', 'U16', 'poule', 'à venir')]);
+  var cause = '';
+  for (var i = 0; i < f.categories.length; i++) {
+    if (f.categories[i].categorie === 'U16') cause = f.categories[i].cause;
+  }
+  _ffrAssert(etat,
+    _5hEtatDe(f, 'U16') === ACCES_CAT_INDETERMINEE && cause === 'reglage_absent' &&
+    f.suggestion === ACCES_SUGGESTION_AUCUNE && f.suite_generable === false,
+    '5H-B3 : des matchs orphelins (réglage absent) rendent la catégorie INDÉTERMINÉE');
+}
+
+/** Super Challenge hors P3 : plateau d'un seul tenant, ⛔ aucune suite attendue. */
+function test5H_B4_scfUnePhase(etat) {
+  var cats = [_5hCat('U14', { contexte: 'SCF', scfPhase: 'P2' })];
+  var enCours = _5hFin(cats, [_5hMatch('M1', 'U14', 'poule', 'à venir')]);
+  var fini = _5hFin(cats, [_5hMatch('M1', 'U14', 'poule', 'terminé')]);
+  _ffrAssert(etat,
+    phaseAttendueApresPhase1Acces({ estScf: true, phase: 'P2' }) === '' &&
+    _5hEtatDe(enCours, 'U14') === ACCES_CAT_INCOMPLETE &&
+    _5hEtatDe(fini, 'U14') === ACCES_CAT_TERMINEE &&
+    fini.suggestion === ACCES_SUGGESTION_GEL_POSSIBLE,
+    '5H-B4 : Super Challenge P2 — une seule phase, terminée ⇒ GEL_POSSIBLE');
+}
+
+/** Super Challenge P3 : le dimanche est attendu, puis la fin est reconnue. */
+function test5H_B5_scfP3SamediDimanche(etat) {
+  var cats = [_5hCat('U14', { contexte: 'SCF', scfPhase: 'P3' })];
+  var samediFini = _5hFin(cats, [_5hMatch('M1', 'U14', 'poule', 'terminé')]);
+  var dimancheFini = _5hFin(cats, [_5hMatch('M1', 'U14', 'poule', 'terminé'),
+                                   _5hMatch('M2', 'U14', 'classement', 'terminé')]);
+  var attendue = '';
+  for (var i = 0; i < samediFini.categories.length; i++) {
+    if (samediFini.categories[i].categorie === 'U14') {
+      attendue = samediFini.categories[i].phase_attendue;
+    }
+  }
+  _ffrAssert(etat,
+    _5hEtatDe(samediFini, 'U14') === ACCES_CAT_ATTEND_SUITE && attendue === 'dimanche_scf' &&
+    samediFini.suggestion === ACCES_SUGGESTION_GENERER_SUITE &&
+    _5hEtatDe(dimancheFini, 'U14') === ACCES_CAT_TERMINEE &&
+    dimancheFini.suggestion === ACCES_SUGGESTION_GEL_POSSIBLE,
+    '5H-B5 : SCF P3 — samedi fini ⇒ dimanche attendu ; dimanche fini ⇒ GEL_POSSIBLE');
+}
+
+/** Matin puis après-midi, hors Super Challenge. */
+function test5H_B6_matinPuisApresMidi(etat) {
+  var cats = [_5hCat('U10')];
+  var matinFini = _5hFin(cats, [_5hMatch('M1', 'U10', 'poule', 'terminé')]);
+  var amEnCours = _5hFin(cats, [_5hMatch('M1', 'U10', 'poule', 'terminé'),
+                                _5hMatch('M2', 'U10', 'classement', 'à venir')]);
+  var amFinie = _5hFin(cats, [_5hMatch('M1', 'U10', 'poule', 'terminé'),
+                              _5hMatch('M2', 'U10', 'classement', 'terminé')]);
+  _ffrAssert(etat,
+    _5hEtatDe(matinFini, 'U10') === ACCES_CAT_ATTEND_SUITE &&
+    matinFini.suggestion === ACCES_SUGGESTION_GENERER_SUITE &&
+    matinFini.suite_generable === true &&
+    _5hEtatDe(amEnCours, 'U10') === ACCES_CAT_INCOMPLETE &&
+    _5hEtatDe(amFinie, 'U10') === ACCES_CAT_TERMINEE &&
+    amFinie.suggestion === ACCES_SUGGESTION_GEL_POSSIBLE,
+    '5H-B6 : matin fini ⇒ GENERER_SUITE ; après-midi finie ⇒ GEL_POSSIBLE');
+}
+
+/** ⭐ Tournoi MIXTE : chaque catégorie est jugée séparément. C'est le cœur du correctif. */
+function test5H_B7_tournoiMixte(etat) {
+  var cats = [_5hCat('U14', { contexte: 'SCF', scfPhase: 'P2' }), _5hCat('U10')];
+  var f = _5hFin(cats, [_5hMatch('M1', 'U14', 'poule', 'terminé'),
+                        _5hMatch('M2', 'U10', 'poule', 'terminé')]);
+  _ffrAssert(etat,
+    _5hEtatDe(f, 'U14') === ACCES_CAT_TERMINEE &&
+    _5hEtatDe(f, 'U10') === ACCES_CAT_ATTEND_SUITE &&
+    f.suggestion === ACCES_SUGGESTION_GENERER_SUITE,
+    '5H-B7 : mixte — la SCF est TERMINÉE pendant que la U10 ATTEND sa suite');
+}
+
+/** ⭐ Une catégorie attend la suite pendant qu'une autre est incomplète :
+ *  la suggestion le signale, mais `suite_generable` reste FAUX (garde globale existante). */
+function test5H_B8_attendSuiteMaisAutreIncomplete(etat) {
+  var cats = [_5hCat('U10'), _5hCat('U12')];
+  var f = _5hFin(cats, [_5hMatch('M1', 'U10', 'poule', 'terminé'),
+                        _5hMatch('M2', 'U12', 'poule', 'à venir'),
+                        _5hMatch('M3', 'U12', 'poule', 'à venir')]);
+  var incomplete = null;
+  for (var i = 0; i < f.categories.length; i++) {
+    if (f.categories[i].categorie === 'U12') incomplete = f.categories[i];
+  }
+  _ffrAssert(etat,
+    f.suggestion === ACCES_SUGGESTION_GENERER_SUITE &&
+    _5hEtatDe(f, 'U10') === ACCES_CAT_ATTEND_SUITE &&
+    _5hEtatDe(f, 'U12') === ACCES_CAT_INCOMPLETE &&
+    f.suite_generable === false &&
+    incomplete.matchs_non_termines === 2 && incomplete.matchs.length === 2,
+    '5H-B8 : U10 attend sa suite, U12 incomplète ⇒ GENERER_SUITE mais suite_generable = false');
+}
+
+/** GEL_POSSIBLE seulement lorsque TOUTES les catégories sont TERMINÉE. */
+function test5H_B9_gelPossibleSeulementSiToutesTerminees(etat) {
+  var cats = [_5hCat('U10'), _5hCat('U12')];
+  var uneSeule = _5hFin(cats, [_5hMatch('M1', 'U10', 'classement', 'terminé'),
+                               _5hMatch('M2', 'U12', 'classement', 'à venir')]);
+  var lesDeux = _5hFin(cats, [_5hMatch('M1', 'U10', 'classement', 'terminé'),
+                              _5hMatch('M2', 'U12', 'classement', 'terminé')]);
+  /* ⚠️ ADAPTÉ EN 5I (défaut ②) : quand TOUT est terminé, aucune suite n'est attendue — donc
+     `suite_generable` doit être FAUX. L'attente précédente (`true`) était le défaut lui-même. */
+  _ffrAssert(etat,
+    uneSeule.suggestion === ACCES_SUGGESTION_AUCUNE &&
+    uneSeule.motif === 'categories_incompletes' &&
+    lesDeux.suggestion === ACCES_SUGGESTION_GEL_POSSIBLE &&
+    lesDeux.suite_generable === false,
+    '5H-B9 : GEL_POSSIBLE n\'apparaît que quand les DEUX catégories sont terminées, et il ' +
+    'n\'y a alors plus de suite à générer');
+}
+
+/** ⛔ Aucun statut « annulé » n'est inventé : un match non terminal garde la catégorie incomplète. */
+function test5H_B10_statutNonTerminalResteIncomplet(etat) {
+  var cats = [_5hCat('U10')];
+  var annule = _5hFin(cats, [_5hMatch('M1', 'U10', 'classement', 'annulé')]);
+  var vide = _5hFin(cats, [_5hMatch('M2', 'U10', 'classement', '')]);
+  _ffrAssert(etat,
+    _5hEtatDe(annule, 'U10') === ACCES_CAT_INCOMPLETE &&
+    _5hEtatDe(vide, 'U10') === ACCES_CAT_INCOMPLETE &&
+    annule.suggestion === ACCES_SUGGESTION_AUCUNE,
+    '5H-B10 : un statut non terminal (« annulé », vide) maintient la catégorie INCOMPLÈTE');
+}
+
+/** ⛔ Le calcul ne modifie NI les matchs NI la configuration qu'on lui donne. */
+function test5H_B11_calculSansEffet(etat) {
+  var cats = [_5hCat('U10')];
+  var matchs = [_5hMatch('M1', 'U10', 'poule', 'à venir')];
+  var avant = JSON.stringify({ cats: cats, matchs: matchs });
+  _5hFin(cats, matchs);
+  determinerFinDeTournoiAcces(cats, matchs);
+  _ffrAssert(etat, JSON.stringify({ cats: cats, matchs: matchs }) === avant,
+    '5H-B11 : le calcul de fin ne modifie ni les matchs ni la configuration');
+}
+
+/** Une catégorie non présente et sans match est simplement ignorée. */
+function test5H_B12_categorieNonPresenteIgnoree(etat) {
+  var f = _5hFin([_5hCat('U10'), _5hCat('U12', { presente: 'non' })],
+                 [_5hMatch('M1', 'U10', 'classement', 'terminé')]);
+  _ffrAssert(etat,
+    f.categories.length === 1 && f.categories[0].categorie === 'U10' &&
+    f.suggestion === ACCES_SUGGESTION_GEL_POSSIBLE,
+    '5H-B12 : une catégorie déclarée non présente et sans match n\'entre pas dans le calcul');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ③ CONFIRMATIONS — GEL ET CLÔTURE                                         */
+/* -------------------------------------------------------------------------- */
+
+/** Tout est terminé : le gel est DIRECT, sans confirmation supplémentaire. */
+function test5H_C1_gelDirect(etat) {
+  var fin = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'classement', 'terminé')]);
+  var dec = decisionGelAcces(fin);
+  var r = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin,
+      edition_id: 'edition-FICTIVE-0001', horodatage: '2026-09-13 17:44:00' });
+  _ffrAssert(etat,
+    dec.decision === ACCES_GEL_DIRECT && dec.avertissement === null &&
+    r.ok === true && r.etat_apres === ACCES_ETAT_FIGE &&
+    r.journal.gel_manuel === false,
+    '5H-C1 : fin reconnue ⇒ GEL_DIRECT, exécuté sans confirmation renforcée');
+}
+
+/** ⭐ LE GEL MANUEL RESTE TOUJOURS POSSIBLE — jamais une interdiction. */
+function test5H_C2_gelManuelToujoursDisponible(etat) {
+  var fins = [
+    _5hFin([], []),                                                              /* calcul impossible */
+    _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'à venir')]),        /* incomplète */
+    _5hFin([_5hCat('U10'), _5hCat('U12')], [_5hMatch('M1', 'U10', 'classement', 'terminé')]),
+    _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'terminé')])         /* attend la suite */
+  ];
+  var toujours = true, refusJamaisDefinitif = true;
+  for (var i = 0; i < fins.length; i++) {
+    var dec = decisionGelAcces(fins[i]);
+    if (dec.gel_manuel_possible !== true) toujours = false;
+    if (dec.decision !== ACCES_GEL_CONFIRMATION_REQUISE) toujours = false;
+    /* Sans confirmation : refusé, mais le refus PORTE gel_manuel_possible = true. */
+    var sans = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+      { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fins[i],
+        edition_id: 'edition-FICTIVE-0001' });
+    if (sans.ok === true || sans.gel_manuel_possible !== true) refusJamaisDefinitif = false;
+    /* Avec une confirmation valide : le gel PASSE. */
+    var avec = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+      { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fins[i],
+        edition_id: 'edition-FICTIVE-0001', confirmation_id: 'conf-FICTIVE-0001',
+        confirmation: _5hConfirmation({ empreinte: empreinteFinTournoi(fins[i]) }),
+        maintenant: MAINTENANT_5H,          /* ⚠️ ADAPTÉ EN 5J (défaut ⑤) */
+        horodatage: '2026-09-13 17:52:00' });
+    if (avec.ok !== true || avec.etat_apres !== ACCES_ETAT_FIGE ||
+        avec.journal.gel_manuel !== true) toujours = false;
+  }
+  _ffrAssert(etat, toujours && refusJamaisDefinitif,
+    '5H-C2 ⭐ : dans les 4 situations non concluantes, le gel manuel confirmé ABOUTIT ' +
+    'et aucun refus n\'est définitif');
+}
+
+/** Clôture quand la fin est reconnue : confirmation NORMALE, jamais automatique. */
+function test5H_C3_clotureNormale(etat) {
+  var fin = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'classement', 'terminé')]);
+  var dec = decisionClotureAcces(fin);
+  var sans = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_CLOTURER, version_lue: 3, fin: fin, edition_id: 'edition-FICTIVE-0001' });
+  var avec = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_CLOTURER, version_lue: 3, fin: fin, confirme: true,
+      edition_id: 'edition-FICTIVE-0001', horodatage: '2026-09-13 20:00:00' });
+  _ffrAssert(etat,
+    dec.decision === ACCES_CLOTURE_CONFIRMATION_NORMALE &&
+    sans.refus === 'CONFIRMATION_REQUISE' && sans.niveau === ACCES_CLOTURE_CONFIRMATION_NORMALE &&
+    avec.ok === true && avec.etat_apres === ACCES_ETAT_CLOTURE &&
+    avec.journal.cloture_renforcee === false,
+    '5H-C3 : clôture normale — jamais automatique, `confirme` suffit quand la fin est reconnue');
+}
+
+/** ⭐ Clôture PRÉMATURÉE : la confirmation RENFORCÉE est exigée, et elle reste possible. */
+function test5H_C4_cloturePrematureeRenforcee(etat) {
+  var fin = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'à venir')]);
+  var dec = decisionClotureAcces(fin);
+  var confirmeSeul = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_CLOTURER, version_lue: 3, fin: fin, confirme: true,
+      edition_id: 'edition-FICTIVE-0001' });
+  var renforcee = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_CLOTURER, version_lue: 3, fin: fin, confirme: true,
+      edition_id: 'edition-FICTIVE-0001', confirmation_id: 'conf-FICTIVE-0002',
+      confirmation: _5hConfirmation({ id: 'conf-FICTIVE-0002', action: ACCES_ACTION_CLOTURER,
+                                      empreinte: empreinteFinTournoi(fin) }),
+      maintenant: MAINTENANT_5H,            /* ⚠️ ADAPTÉ EN 5J (défaut ⑤) */
+      horodatage: '2026-09-13 20:10:00' });
+  _ffrAssert(etat,
+    dec.decision === ACCES_CLOTURE_CONFIRMATION_RENFORCEE && dec.cloture_possible === true &&
+    confirmeSeul.ok !== true && confirmeSeul.cloture_possible === true &&
+    renforcee.ok === true && renforcee.etat_apres === ACCES_ETAT_CLOTURE &&
+    renforcee.journal.cloture_renforcee === true,
+    '5H-C4 ⭐ : clôture prématurée — `confirme` seul ne suffit pas, la confirmation renforcée ' +
+    'passe, et l\'organisateur n\'est jamais empêché');
+}
+
+/** ⛔ Une confirmation rattachée à une AUTRE édition est refusée. */
+function test5H_C5_confirmationAutreEdition(etat) {
+  var fin = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'à venir')]);
+  var r = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin,
+      edition_id: 'edition-FICTIVE-0001', confirmation_id: 'conf-FICTIVE-0001',
+      confirmation: _5hConfirmation({ edition: 'edition-FICTIVE-0002',
+                                      empreinte: empreinteFinTournoi(fin) }) });
+  _ffrAssert(etat, r.refus === 'CONFIRMATION_AUTRE_EDITION' && r.gel_manuel_possible === true,
+    '5H-C5 : confirmation d\'une autre édition refusée (et le gel reste possible)');
+}
+
+/** ⛔ Une confirmation délivrée pour une AUTRE action est refusée. */
+function test5H_C6_confirmationAutreAction(etat) {
+  var fin = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'à venir')]);
+  var r = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin,
+      edition_id: 'edition-FICTIVE-0001', confirmation_id: 'conf-FICTIVE-0001',
+      confirmation: _5hConfirmation({ action: ACCES_ACTION_CLOTURER,
+                                      empreinte: empreinteFinTournoi(fin) }) });
+  _ffrAssert(etat, r.refus === 'CONFIRMATION_AUTRE_ACTION',
+    '5H-C6 : une confirmation de CLÔTURE ne sert pas à FIGER');
+}
+
+/** ⛔ Une confirmation évaluée sur une ANCIENNE version est refusée. */
+function test5H_C7_confirmationAncienneVersion(etat) {
+  var fin = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'à venir')]);
+  var r = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 4, 0),
+    { action: ACCES_ACTION_FIGER, version_lue: 4, fin: fin,
+      edition_id: 'edition-FICTIVE-0001', confirmation_id: 'conf-FICTIVE-0001',
+      confirmation: _5hConfirmation({ version: 3, empreinte: empreinteFinTournoi(fin) }) });
+  _ffrAssert(etat, r.refus === 'CONFIRMATION_AUTRE_VERSION',
+    '5H-C7 : une confirmation évaluée sur la version 3 ne vaut plus en version 4');
+}
+
+/** ⛔ Une confirmation DÉJÀ CONSOMMÉE ne vaut plus rien. */
+function test5H_C8_confirmationConsommee(etat) {
+  var fin = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'à venir')]);
+  var r = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin,
+      edition_id: 'edition-FICTIVE-0001', confirmation_id: 'conf-FICTIVE-0001',
+      confirmation: _5hConfirmation({ consomme: true, empreinte: empreinteFinTournoi(fin) }) });
+  _ffrAssert(etat, r.refus === 'CONFIRMATION_CONSOMMEE',
+    '5H-C8 : une confirmation à usage unique déjà consommée est refusée');
+}
+
+/** ⛔ Une confirmation portant sur un AUTRE calcul de fin, ou périmée, est refusée. */
+function test5H_C9_confirmationCalculModifieEtExpiree(etat) {
+  var finA = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'à venir')]);
+  var finB = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'terminé')]);
+  var autreCalcul = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_FIGER, version_lue: 3, fin: finA,
+      edition_id: 'edition-FICTIVE-0001', confirmation_id: 'conf-FICTIVE-0001',
+      confirmation: _5hConfirmation({ empreinte: empreinteFinTournoi(finB) }) });
+  var expiree = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_FIGER, version_lue: 3, fin: finA,
+      edition_id: 'edition-FICTIVE-0001', confirmation_id: 'conf-FICTIVE-0001',
+      maintenant: '2026-09-13 19:00:00',
+      confirmation: _5hConfirmation({ empreinte: empreinteFinTournoi(finA),
+                                      expire: '2026-09-13 18:00:00' }) });
+  _ffrAssert(etat,
+    empreinteFinTournoi(finA) !== empreinteFinTournoi(finB) &&
+    autreCalcul.refus === 'CONFIRMATION_CALCUL_MODIFIE' &&
+    expiree.refus === 'CONFIRMATION_EXPIREE',
+    '5H-C9 : une confirmation liée à un autre calcul, ou périmée, est refusée');
+}
+
+/** ⭐ AVERTISSEMENT ET ÉCRITURE PORTENT DEUX `requete_id` DISTINCTS — aucune exception. */
+function test5H_C10_deuxRequeteIdDistincts(etat) {
+  var fin = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'à venir')]);
+  var empreinte = empreinteFinTournoi(fin);
+  /* ① L'évaluation est une LECTURE : elle ne passe pas par le registre d'idempotence. */
+  var avertissement = decisionGelAcces(fin);
+  /* ② La confirmation est une ÉCRITURE NEUVE, avec SON PROPRE requete_id. */
+  var demandeEcriture = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-0002',
+                          version_lue: 3, confirmation_id: 'conf-FICTIVE-0001',
+                          gel_manuel_confirme: true, cle: CLE_FACTICE_5H };
+  var demandeAvert = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-0001',
+                       version_lue: 3, cle: CLE_FACTICE_5H };
+  var eA = empreinteDemandeAcces(demandeAvert);
+  var eE = empreinteDemandeAcces(demandeEcriture);
+  /* Le MÊME identifiant avec le contenu de la confirmation serait REFUSÉ : pas d'exception. */
+  var memeId = decisionIdempotenceAcces(
+    { etat: ACCES_REQ_REFUSEE, empreinte_demande: eA, reponse_finale: { refus: 'x' },
+      edition_id: 'edition-FICTIVE-0001', role: 'organisateur', action: ACCES_ACTION_FIGER },
+    { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-0001', version_lue: 3,
+      confirmation_id: 'conf-FICTIVE-0001', gel_manuel_confirme: true, cle: CLE_FACTICE_5H },
+    _5hContexte());
+  _ffrAssert(etat,
+    avertissement.decision === ACCES_GEL_CONFIRMATION_REQUISE &&
+    demandeAvert.requete_id !== demandeEcriture.requete_id &&
+    eA !== eE &&
+    memeId.decision === ACCES_IDEM_REFUSER_REUTILISATION &&
+    empreinte !== '',
+    '5H-C10 ⭐ : l\'écriture de confirmation a son PROPRE requete_id ; réutiliser celui de ' +
+    'l\'avertissement avec le contenu de la confirmation est REFUSÉ');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ④ IDEMPOTENCE                                                            */
+/* -------------------------------------------------------------------------- */
+
+/** Demande inconnue du registre → APPLIQUER. */
+function test5H_D1_demandeNouvelle(etat) {
+  var r = decisionIdempotenceAcces(null, { action: 'PREPARER', requete_id: 'req-FICTIF-0001' },
+    _5hContexte({ action: ACCES_ACTION_PREPARER }));
+  _ffrAssert(etat, r.decision === ACCES_IDEM_APPLIQUER && r.empreinte !== '',
+    '5H-D1 : un identifiant absent du registre ⇒ APPLIQUER');
+}
+
+/** Rejeu identique d'une demande APPLIQUÉE → RESSERVIR, ⛔ sans second effet. */
+function test5H_D2_rejeuApplique(etat) {
+  /* ⚠️ ADAPTÉ EN 5J (défaut ③) : l'empreinte est désormais LIÉE au contexte authentifié. */
+  var demande = { action: 'FIGER', requete_id: 'req-FICTIF-0002', version_lue: 3 };
+  var e = empreinteDemandeAcces(demande, _5hContexte());
+  var r = decisionIdempotenceAcces(
+    { etat: ACCES_REQ_APPLIQUEE, empreinte_demande: e,
+      reponse_finale: { ok: true, etat: 'FIGE' }, resultat_ref: 'ref-FICTIVE-0001',
+      edition_id: 'edition-FICTIVE-0001', role: 'organisateur', action: 'FIGER' },
+    demande, _5hContexte());
+  _ffrAssert(etat,
+    r.decision === ACCES_IDEM_RESSERVIR && r.rejeu === true &&
+    r.reponse.etat === 'FIGE' && r.resultat_ref === 'ref-FICTIVE-0001',
+    '5H-D2 : rejeu identique d\'une demande appliquée ⇒ RESSERVIR, avec rejeu = true');
+}
+
+/** Rejeu identique d'une demande REFUSÉE → le MÊME refus est resservi. */
+function test5H_D3_rejeuRefuse(etat) {
+  var demande = { action: 'OUVRIR', requete_id: 'req-FICTIF-0003', version_lue: 1 };
+  var e = empreinteDemandeAcces(demande, _5hContexte({ action: ACCES_ACTION_OUVRIR }));
+  var r = decisionIdempotenceAcces(
+    { etat: ACCES_REQ_REFUSEE, empreinte_demande: e,
+      reponse_finale: { refus: 'ETAT_MODIFIE' },
+      edition_id: 'edition-FICTIVE-0001', role: 'organisateur', action: 'OUVRIR' },
+    demande, _5hContexte({ action: ACCES_ACTION_OUVRIR }));
+  _ffrAssert(etat,
+    r.decision === ACCES_IDEM_RESSERVIR && r.refus_resservi === true &&
+    r.reponse.refus === 'ETAT_MODIFIE',
+    '5H-D3 : rejeu identique d\'une demande refusée ⇒ le même refus est resservi');
+}
+
+/** ⛔ Même identifiant, contenu DIFFÉRENT → REFUSER_REUTILISATION. */
+function test5H_D4_memeIdContenuDifferent(etat) {
+  /* ⚠️ ADAPTÉ EN 5J : le champ qui diffère n'est plus `action` — une action divergente est
+     désormais arrêtée PLUS TÔT par le contrôle de contexte (défaut ③), ce qui ne prouverait
+     plus rien sur la réutilisation d'identifiant. On fait varier `version_lue`. */
+  var e = empreinteDemandeAcces({ action: 'FIGER', requete_id: 'req-FICTIF-0004', version_lue: 3 },
+                                _5hContexte());
+  var r = decisionIdempotenceAcces(
+    { etat: ACCES_REQ_APPLIQUEE, empreinte_demande: e, reponse_finale: { ok: true },
+      edition_id: 'edition-FICTIVE-0001', role: 'organisateur', action: ACCES_ACTION_FIGER },
+    { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-0004', version_lue: 4 },
+    _5hContexte());
+  _ffrAssert(etat,
+    r.decision === ACCES_IDEM_REFUSER_REUTILISATION && r.refus === 'REQUETE_ID_REUTILISE',
+    '5H-D4 : un identifiant réutilisé avec un autre contenu est REFUSÉ');
+}
+
+/** ⛔ Une demande EN_COURS n'est JAMAIS réappliquée : RECONCILIER. */
+function test5H_D5_enCoursReconcilier(etat) {
+  var demande = { action: 'CLOTURER', requete_id: 'req-FICTIF-0005', version_lue: 4 };
+  var ctx = _5hContexte({ action: ACCES_ACTION_CLOTURER });
+  var e = empreinteDemandeAcces(demande, ctx);
+  var base = { empreinte_demande: e, edition_id: 'edition-FICTIVE-0001',
+               role: 'organisateur', action: ACCES_ACTION_CLOTURER };
+  var r = decisionIdempotenceAcces(
+    { etat: ACCES_REQ_EN_COURS, empreinte_demande: base.empreinte_demande,
+      edition_id: base.edition_id, role: base.role, action: base.action }, demande, ctx);
+  var inconnu = decisionIdempotenceAcces(
+    { etat: 'BIZARRE', empreinte_demande: base.empreinte_demande,
+      edition_id: base.edition_id, role: base.role, action: base.action }, demande, ctx);
+  _ffrAssert(etat,
+    r.decision === ACCES_IDEM_RECONCILIER && r.motif === 'requete_en_cours' &&
+    inconnu.decision === ACCES_IDEM_RECONCILIER,
+    '5H-D5 : EN_COURS (et tout état inconnu) ⇒ RECONCILIER, jamais de réapplication');
+}
+
+/** ⛔ AUCUNE EXCEPTION POUR LE GEL : ses champs métier participent à l'empreinte. */
+function test5H_D6_aucuneExceptionPourLeGel(etat) {
+  var base = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-0006', version_lue: 3 };
+  var avecGel = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-0006', version_lue: 3,
+                  gel_manuel_confirme: true };
+  var avecConf = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-0006', version_lue: 3,
+                   confirmation_id: 'conf-FICTIVE-0001' };
+  var avecCloture = { action: ACCES_ACTION_CLOTURER, requete_id: 'req-FICTIF-0006',
+                      version_lue: 3, confirme: true };
+  var eB = empreinteDemandeAcces(base);
+  _ffrAssert(etat,
+    empreinteDemandeAcces(avecGel) !== eB &&
+    empreinteDemandeAcces(avecConf) !== eB &&
+    empreinteDemandeAcces(avecCloture) !== eB &&
+    decisionIdempotenceAcces({ etat: ACCES_REQ_APPLIQUEE, empreinte_demande: eB,
+                               reponse_finale: {}, edition_id: 'edition-FICTIVE-0001',
+                               role: 'organisateur', action: ACCES_ACTION_FIGER },
+                             avecGel, _5hContexte()).decision ===
+      ACCES_IDEM_REFUSER_REUTILISATION,
+    '5H-D6 ⭐ : `gel_manuel_confirme`, `confirme` et `confirmation_id` changent l\'empreinte — ' +
+    'aucun champ métier n\'est exclu');
+}
+
+/** ⛔ Ni clé ni jeton dans l'empreinte — mais tout le reste y est. */
+function test5H_D7_aucunSecretDansEmpreinte(etat) {
+  var sans = { action: 'PREPARER', requete_id: 'req-FICTIF-0007' };
+  var avec = { action: 'PREPARER', requete_id: 'req-FICTIF-0007',
+               cle: CLE_FACTICE_5H, cle_admin: CLE_FACTICE_5H, cle_scores: CLE_FACTICE_5H,
+               jeton: JETON_FACTICE_5H, token: JETON_FACTICE_5H };
+  var e = empreinteDemandeAcces(avec);
+  var imbrique = empreinteDemandeAcces({ a: { b: { cle: CLE_FACTICE_5H, x: 1 } } });
+  _ffrAssert(etat,
+    e === empreinteDemandeAcces(sans) &&
+    e.indexOf(CLE_FACTICE_5H) === -1 && e.indexOf(JETON_FACTICE_5H) === -1 &&
+    /* ⚠️ ADAPTÉ EN 5J (défaut ①) : l'encodage porte désormais des LONGUEURS explicites,
+       donc la forme attendue est `k1:x` suivi de `d1:1`, et non plus `x=d:1`. */
+    imbrique.indexOf(CLE_FACTICE_5H) === -1 &&
+    imbrique.indexOf('k1:x') !== -1 && imbrique.indexOf('d1:1') !== -1,
+    '5H-D7 : clés et jetons sont exclus de l\'empreinte, à tous les niveaux d\'imbrication');
+}
+
+/** ⛔ `resultat_ref` remplace le jeton ET le lien : aucun secret au registre. */
+function test5H_D8_resultatRefSansJeton(etat) {
+  var reponse = { ok: true, etat: 'PREPARE', version: 1,
+                  jeton: JETON_FACTICE_5H,
+                  lien: 'https://exemple.invalide/t/' + JETON_FACTICE_5H };
+  var sansRef = assainirReponsePourRegistre(reponse, '');
+  var avecRef = assainirReponsePourRegistre(reponse, 'ref-FICTIVE-0002');
+  var brut = JSON.stringify(avecRef.reponse);
+  _ffrAssert(etat,
+    sansRef.refus === 'RESULTAT_REF_REQUISE' &&
+    avecRef.ok === true && avecRef.portait_un_secret === true &&
+    brut.indexOf(JETON_FACTICE_5H) === -1 && brut.indexOf('lien') === -1 &&
+    avecRef.reponse.resultat_ref === 'ref-FICTIVE-0002' &&
+    avecRef.reponse.etat === 'PREPARE',
+    '5H-D8 : le registre garde `resultat_ref`, ⛔ ni le jeton ni le lien qui le contient');
+}
+
+/** ⛔ Si la récupération protégée échoue, AUCUN nouveau jeton n'est créé en silence. */
+function test5H_D9_recuperationImpossibleNeCreeRien(etat) {
+  /* ⚠️ ADAPTÉ EN 5I (défaut ⑦) : une récupération doit désormais CONFIRMER la référence,
+     l'édition et le type. `{ ok: true }` seul ne suffit plus — voir 5I-G1 et 5I-G2. */
+  var reg = { etat: ACCES_REQ_APPLIQUEE, resultat_ref: 'ref-FICTIVE-0003',
+              edition_id: 'edition-FICTIVE-0001' };
+  var bonne = { ok: true, resultat_ref: 'ref-FICTIVE-0003',
+                edition_id: 'edition-FICTIVE-0001', type: ACCES_TYPE_SECRET_ATTENDU };
+  var echec = decisionRejeuAvecRecuperation(reg, { ok: false });
+  var succes = decisionRejeuAvecRecuperation(reg, bonne);
+  var sansRef = decisionRejeuAvecRecuperation({ etat: ACCES_REQ_APPLIQUEE,
+    edition_id: 'edition-FICTIVE-0001' }, bonne);
+  _ffrAssert(etat,
+    echec.refus === 'RECUPERATION_IMPOSSIBLE' && echec.nouveau_jeton_cree === false &&
+    echec.rotation_explicite_requise === true &&
+    succes.ok === true && succes.nouveau_jeton_cree === false &&
+    sansRef.refus === 'RESULTAT_REF_ABSENTE' && sansRef.nouveau_jeton_cree === false,
+    '5H-D9 : une récupération impossible ne fabrique JAMAIS un nouveau jeton');
+}
+
+/** ⛔ La durée de conservation est INJECTÉE, jamais gravée dans le noyau. */
+function test5H_D10_dureeConservationInjectee(etat) {
+  var sans = calculerConservationRequete('2026-09-13 20:00:00', undefined);
+  var vide = calculerConservationRequete('2026-09-13 20:00:00', '');
+  var mauvaise = calculerConservationRequete('2026-09-13 20:00:00', -5);
+  var trente = calculerConservationRequete('2026-09-13 20:00:00', 30);
+  var quatreVingtDix = calculerConservationRequete('2026-09-13 20:00:00', 90);
+  /* ⚠️ ADAPTÉ EN 5J : on lit le CODE SEUL. Le commentaire de la fonction mentionne désormais
+     l'année 1901 (le piège de `Date.UTC`), et « 1901 » contient « 90 ». Le contrôle visait le
+     CODE, pas la prose — il le dit maintenant explicitement. */
+  var sourceNoyau = _5hCodeSeul(calculerConservationRequete);
+  _ffrAssert(etat,
+    sans.refus === 'DUREE_CONSERVATION_REQUISE' &&
+    vide.refus === 'DUREE_CONSERVATION_REQUISE' &&
+    mauvaise.refus === 'DUREE_CONSERVATION_INVALIDE' &&
+    trente.ok === true && trente.conserver_jusqu_au === '2026-10-13' &&
+    quatreVingtDix.ok === true && quatreVingtDix.conserver_jusqu_au === '2026-12-12' &&
+    sourceNoyau.indexOf('90') === -1,
+    '5H-D10 ⭐ : sans durée fournie, le calcul REFUSE — et aucun « 90 » n\'est gravé dans le noyau');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ⑤ CONCURRENCE DES SCORES                                                 */
+/* -------------------------------------------------------------------------- */
+
+/** Deux appareils lisent la même version : elle est identique pour les deux. */
+function test5H_E1_deuxAppareilsMemeVersion(etat) {
+  var match = { id_match: 'M-FICTIF-1', score_A: '', score_B: '', statut: 'à venir' };
+  var vueA = empreinteEtatMatch(match);
+  var vueB = empreinteEtatMatch(match);
+  _ffrAssert(etat, vueA !== '' && vueA === vueB,
+    '5H-E1 : deux appareils qui lisent le même match calculent la même version');
+}
+
+/** Le premier score est accepté, et la version évolue de façon prévisible. */
+function test5H_E2_premierScoreAccepte(etat) {
+  var match = { id_match: 'M-FICTIF-1', score_A: '', score_B: '', statut: 'à venir' };
+  var vue = empreinteEtatMatch(match);
+  /* ⚠️ ADAPTÉ EN 5I (défaut ⑧) : `version_apres` n'est calculée QUE depuis un match COMPLET
+     fourni en entrée. Sans lui, le champ est ABSENT — voir 5I-H3. */
+  /* ⚠️ ADAPTÉ EN 5J (défaut ②) : les 22 champs doivent être PRÉSENTS pour qu'une
+     `version_apres` soit produite — le bon identifiant ne suffit plus. */
+  var matchApres = _5hMatchComplet({ id_match: 'M-FICTIF-1', score_A: 3, score_B: 1,
+                                     statut: 'terminé', vainqueur: 'EQ-A', essais_A: 1 });
+  var r = decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, version_lue: vue,
+      match_apres_ecriture: matchApres }, match);
+  var sansMatchComplet = decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, version_lue: vue }, match);
+  _ffrAssert(etat,
+    r.decision === ACCES_SCORE_ADMISSIBLE &&
+    r.version_apres === empreinteEtatMatch(matchApres) && r.version_apres !== vue &&
+    sansMatchComplet.decision === ACCES_SCORE_ADMISSIBLE &&
+    sansMatchComplet.version_apres === undefined,
+    '5H-E2 : le premier score est admissible ; `version_apres` n\'est rendue que depuis un ' +
+    'match complet, et est ABSENTE sinon');
+}
+
+/** ⛔ Le second score, différent et fondé sur l'ancienne version, est REFUSÉ. */
+function test5H_E3_secondScorePerimeRefuse(etat) {
+  var avant = { id_match: 'M-FICTIF-1', score_A: '', score_B: '', statut: 'à venir' };
+  var vuePartagee = empreinteEtatMatch(avant);
+  /* L'appareil A a écrit 3-1 : le match a changé. */
+  var apres = { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, statut: 'terminé' };
+  /* L'appareil B, qui avait lu la même chose que A, tente 0-5. */
+  var r = decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-1', score_A: 0, score_B: 5, version_lue: vuePartagee }, apres);
+  _ffrAssert(etat,
+    r.decision === ACCES_SCORE_MODIFIE && r.refus === 'SCORE_MODIFIE' &&
+    r.version_actuelle === empreinteEtatMatch(apres) &&
+    r.etat_actuel.score_A === '3' && r.etat_actuel.score_B === '1' &&
+    r.etat_actuel.termine === true,
+    '5H-E3 ⭐ : le second appareil est refusé SCORE_MODIFIE et reçoit de quoi relire');
+}
+
+/** ⛔ Aucun écrasement silencieux, et aucune écriture à l'aveugle. */
+function test5H_E4_aucunEcrasementSilencieux(etat) {
+  var apres = { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, statut: 'terminé' };
+  var sansVersion = decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-1', score_A: 0, score_B: 5 }, apres);
+  var introuvable = decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-9', score_A: 1, score_B: 1, version_lue: 'peu importe' }, apres);
+  var sansId = decisionEcritureScoreAcces({ score_A: 1, score_B: 1 }, apres);
+  _ffrAssert(etat,
+    sansVersion.decision === 'VERSION_REQUISE' && sansVersion.refus === 'VERSION_REQUISE' &&
+    introuvable.decision === 'MATCH_INTROUVABLE' &&
+    sansId.refus === 'ID_MATCH_REQUIS',
+    '5H-E4 : sans version lue, sans match ou sans identifiant, ⛔ aucune écriture n\'est admise');
+}
+
+/** Rejeu de la PREMIÈRE demande : l'idempotence le traite, ⛔ sans seconde écriture. */
+function test5H_E5_rejeuPremiereDemandeSansSecondeEcriture(etat) {
+  /* ⚠️ ADAPTÉ EN 5I : la version est CALCULÉE par `empreinteEtatMatch`, ⛔ plus codée en dur —
+     sa forme dépend maintenant de `ACCES_CHAMPS_VERSION_MATCH` (défaut ⑧). */
+  var vueInitiale = empreinteEtatMatch({ id_match: 'M-FICTIF-1', score_A: '', score_B: '',
+                                         statut: 'à venir' });
+  var demande = { action: 'enregistrerScore', requete_id: 'req-FICTIF-0010',
+                  id_match: 'M-FICTIF-1', score_A: 3, score_B: 1,
+                  version_lue: vueInitiale, cle: CLE_FACTICE_5H };
+  var ctxTable = { edition_id: 'edition-FICTIVE-0001', role: 'table',
+                   action: 'enregistrerScore' };
+  var e = empreinteDemandeAcces(demande, ctxTable);
+  var rejeu = decisionIdempotenceAcces(
+    { etat: ACCES_REQ_APPLIQUEE, empreinte_demande: e,
+      reponse_finale: { ok: true, match: { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1 } },
+      edition_id: 'edition-FICTIVE-0001', role: 'table', action: 'enregistrerScore' },
+    demande, ctxTable);
+  /* ⭐ Deux tables, deux identifiants, deux scores différents : ce ne sont PAS des doublons. */
+  var autreTable = { action: 'enregistrerScore', requete_id: 'req-FICTIF-0011',
+                     id_match: 'M-FICTIF-1', score_A: 0, score_B: 5,
+                     version_lue: demande.version_lue, cle: CLE_FACTICE_5H };
+  var pasUnDoublon = decisionIdempotenceAcces(null, autreTable, ctxTable);
+  _ffrAssert(etat,
+    rejeu.decision === ACCES_IDEM_RESSERVIR && rejeu.rejeu === true &&
+    e.indexOf(CLE_FACTICE_5H) === -1 &&
+    pasUnDoublon.decision === ACCES_IDEM_APPLIQUER &&
+    empreinteDemandeAcces(autreTable) !== e,
+    '5H-E5 : le rejeu de la 1re demande est resservi sans réécrire ; une autre table avec un ' +
+    'autre identifiant reste une demande distincte (arbitrée par la version, série E3)');
+}
+
+/* ============================================================================
+ *  SÉRIE 5I — LES RÉGRESSIONS DE LA REVUE INDÉPENDANTE
+ *  CORR-ACCES-SCORES-NOYAU-PUR-DR-5I
+ * ============================================================================
+ *
+ *  ⚠️ POURQUOI CETTE SÉRIE EXISTE. La série 5H passait à 46/46, et pourtant neuf défauts
+ *  indépendants ont été reproduits par une revue extérieure. La leçon est nette : une série
+ *  verte ne prouve que ce qu'elle regarde. Chacun des contrôles ci-dessous a été écrit APRÈS
+ *  avoir vu le défaut se produire, et chacun ÉCHOUAIT sur le noyau 5H.
+ *
+ *  ⭐ Chaque test nomme le défaut qu'il ferme. ⛔ Aucune valeur réelle : tout est fictif.
+ * ============================================================================ */
+
+/* -------------------------------------------------------------------------- */
+/*  ① LA PHASE 1 N'EST JAMAIS MASQUÉE · ② suite_generable · ③ LIGNES CORROMPUES */
+/* -------------------------------------------------------------------------- */
+
+/** ① Phase 1 incomplète + phase 2 terminée ⇒ ⛔ ni TERMINEE, ni GEL_POSSIBLE. */
+function test5I_A1_phase1IncompleteAvecPhase2Terminee(etat) {
+  var f = _5hFin([_5hCat('U10')],
+    [_5hMatch('M1', 'U10', 'poule', 'à venir'),
+     _5hMatch('M2', 'U10', 'classement', 'terminé')]);
+  var c = f.categories[0];
+  _ffrAssert(etat,
+    c.etat === ACCES_CAT_INDETERMINEE &&
+    c.cause === 'phase1_incomplete_avec_phase2' &&
+    c.phase_courante === 'phase2' &&
+    c.matchs_non_termines === 1 && c.matchs.length === 1 && c.matchs[0] === 'M1' &&
+    f.suggestion !== ACCES_SUGGESTION_GEL_POSSIBLE &&
+    f.suite_generable === false,
+    '5I-A1 ⭐ un match du matin non terminé n\'est plus masqué par un après-midi complet : ' +
+    'INDÉTERMINÉE, GEL_POSSIBLE et suite_generable bloqués');
+}
+
+/** ① Les DEUX phases incomplètes : les identifiants des deux sont rendus, triés. */
+function test5I_A2_lesDeuxPhasesIncompletes(etat) {
+  var f = _5hFin([_5hCat('U10')],
+    [_5hMatch('M3', 'U10', 'poule', 'à venir'),
+     _5hMatch('M1', 'U10', 'classement', 'à venir'),
+     _5hMatch('M2', 'U10', 'poule', 'terminé')]);
+  var c = f.categories[0];
+  _ffrAssert(etat,
+    c.etat === ACCES_CAT_INDETERMINEE &&
+    c.cause === 'phase1_incomplete_avec_phase2' &&
+    c.matchs_non_termines === 2 &&
+    c.matchs.join(',') === 'M1,M3' &&
+    f.suggestion === ACCES_SUGGESTION_AUCUNE && f.suite_generable === false,
+    '5I-A2 : phases 1 ET 2 incomplètes ⇒ INDÉTERMINÉE, les deux listes réunies et TRIÉES');
+}
+
+/** ② Toutes les catégories TERMINÉE ⇒ ⛔ `suite_generable` FAUX (il n'y a plus de suite). */
+function test5I_A3_toutesTermineesSuiteNonGenerable(etat) {
+  var une = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'classement', 'terminé')]);
+  var deux = _5hFin([_5hCat('U10'), _5hCat('U14', { contexte: 'SCF', scfPhase: 'P2' })],
+    [_5hMatch('M1', 'U10', 'classement', 'terminé'),
+     _5hMatch('M2', 'U14', 'poule', 'terminé')]);
+  /* Et le cas où une suite est réellement attendue : là, c'est VRAI. */
+  var attend = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'terminé')]);
+  _ffrAssert(etat,
+    une.suggestion === ACCES_SUGGESTION_GEL_POSSIBLE && une.suite_generable === false &&
+    deux.suggestion === ACCES_SUGGESTION_GEL_POSSIBLE && deux.suite_generable === false &&
+    attend.suggestion === ACCES_SUGGESTION_GENERER_SUITE && attend.suite_generable === true,
+    '5I-A3 ⭐ `suite_generable` exige un ATTEND_SUITE : faux quand tout est terminé');
+}
+
+/** ③ Version vide, négative, décimale, non numérique, infinie, absente ⇒ anomalie nommée. */
+function test5I_A4_versionCorrompue(etat) {
+  var cas = [
+    { ligne: { etat: ACCES_ETAT_OUVERT, version: '', rotations: 0 },        quoi: 'vide' },
+    { ligne: { etat: ACCES_ETAT_OUVERT, version: -1, rotations: 0 },        quoi: 'négative' },
+    { ligne: { etat: ACCES_ETAT_OUVERT, version: 1.5, rotations: 0 },       quoi: 'décimale' },
+    { ligne: { etat: ACCES_ETAT_OUVERT, version: 'abc', rotations: 0 },     quoi: 'non numérique' },
+    { ligne: { etat: ACCES_ETAT_OUVERT, version: Infinity, rotations: 0 },  quoi: 'infinie' },
+    { ligne: { etat: ACCES_ETAT_OUVERT, rotations: 0 },                     quoi: 'absente' },
+    { ligne: { etat: ACCES_ETAT_OUVERT, version: '1e3', rotations: 0 },     quoi: 'notation exp.' }
+  ];
+  var vues = 0, transitionsRefusees = 0;
+  for (var i = 0; i < cas.length; i++) {
+    var lu = analyserLigneAccesScores(cas[i].ligne);
+    if (lu.anomalie === 'version_invalide' && lu.version === null) vues++;
+    var t = _5hPlanifier(cas[i].ligne,
+      { action: ACCES_ACTION_FIGER, version_lue: 0, edition_id: 'edition-FICTIVE-0001' });
+    if (t.refus === 'LIGNE_INVALIDE' && t.ok !== true) transitionsRefusees++;
+  }
+  _ffrAssert(etat, vues === cas.length && transitionsRefusees === cas.length,
+    '5I-A4 ⭐ une version illisible n\'est JAMAIS ramenée à zéro : anomalie nommée et ' +
+    'transition refusée (' + vues + '/' + cas.length + ')');
+}
+
+/** ③ Compteur `rotations` corrompu : même règle, et ⛔ aucune rotation planifiée. */
+function test5I_A5_rotationsCorrompues(etat) {
+  var ligne = { etat: ACCES_ETAT_FIGE, version: 4, rotations: -3 };
+  var lu = analyserLigneAccesScores(ligne);
+  var rot = _5hPlanifier(ligne,
+    { action: ACCES_ACTION_ROTATION, version_lue: 4, edition_id: 'edition-FICTIVE-0001' });
+  var reset = planifierResetAccesScores({ etat: ACCES_ETAT_OUVERT, version: 2, rotations: 'x' },
+    '2026-09-13 20:00:00');
+  /* ⭐ L'ABSENCE de ligne, elle, reste le seul chemin légitime vers ABSENT / 0 / 0. */
+  var absent = analyserLigneAccesScores(null);
+  _ffrAssert(etat,
+    lu.anomalie === 'rotations_invalides' && lu.rotations === null &&
+    rot.refus === 'LIGNE_INVALIDE' && rot.ok !== true &&
+    reset.refus === 'LIGNE_INVALIDE' && reset.ecrire === undefined &&
+    absent.existe === false && absent.version === 0 && absent.rotations === 0 &&
+    absent.anomalie === undefined,
+    '5I-A5 : un compteur de rotations corrompu bloque la rotation ET le reset ; seule ' +
+    'l\'absence de ligne donne ABSENT / version 0 / 0 rotation');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ④ L'EMPREINTE DU CALCUL DE FIN                                           */
+/* -------------------------------------------------------------------------- */
+
+/** ④ Même NOMBRE de matchs ouverts, identifiants DIFFÉRENTS ⇒ empreintes différentes. */
+function test5I_B1_memeNombreIdentifiantsDifferents(etat) {
+  var fA = _5hFin([_5hCat('U10')],
+    [_5hMatch('M1', 'U10', 'poule', 'à venir'), _5hMatch('M2', 'U10', 'poule', 'terminé')]);
+  var fB = _5hFin([_5hCat('U10')],
+    [_5hMatch('M1', 'U10', 'poule', 'terminé'), _5hMatch('M2', 'U10', 'poule', 'à venir')]);
+  /* ⭐ Et l'ORDRE de lecture du classeur ne doit rien changer : même situation, même empreinte. */
+  var fAbis = _5hFin([_5hCat('U10')],
+    [_5hMatch('M2', 'U10', 'poule', 'terminé'), _5hMatch('M1', 'U10', 'poule', 'à venir')]);
+  _ffrAssert(etat,
+    fA.categories[0].matchs_non_termines === fB.categories[0].matchs_non_termines &&
+    empreinteFinTournoi(fA) !== empreinteFinTournoi(fB) &&
+    empreinteFinTournoi(fA) === empreinteFinTournoi(fAbis),
+    '5I-B1 ⭐ à nombre de matchs ouverts ÉGAL, des identifiants différents donnent des ' +
+    'empreintes différentes — et l\'ordre de lecture n\'en change aucune');
+}
+
+/** ④ Un changement de CAUSE, de PHASE ATTENDUE ou de DERNIÈRE PHASE change l'empreinte. */
+function test5I_B2_causeEtPhaseChangentLEmpreinte(etat) {
+  /* phase attendue : après-midi (hors SCF) vs dimanche (SCF P3) */
+  var attenduAm = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'terminé')]);
+  var attenduDim = _5hFin([_5hCat('U14', { contexte: 'SCF', scfPhase: 'P3' })],
+    [_5hMatch('M1', 'U14', 'poule', 'terminé')]);
+  /* cause : sans match vs réglage absent — même état agrégé, causes différentes */
+  var sansMatch = _5hFin([_5hCat('U10')], []);
+  var reglageAbsent = _5hFin([], [_5hMatch('M1', 'U10', 'poule', 'à venir')]);
+  /* dernière phase : phase1 (SCF P2) vs phase2 (après-midi jouée) */
+  var derniereP1 = _5hFin([_5hCat('U14', { contexte: 'SCF', scfPhase: 'P2' })],
+    [_5hMatch('M1', 'U14', 'poule', 'terminé')]);
+  var derniereP2 = _5hFin([_5hCat('U14', { contexte: 'SCF', scfPhase: 'P2' })],
+    [_5hMatch('M1', 'U14', 'poule', 'terminé'), _5hMatch('M2', 'U14', 'classement', 'terminé')]);
+  _ffrAssert(etat,
+    empreinteFinTournoi(attenduAm) !== empreinteFinTournoi(attenduDim) &&
+    empreinteFinTournoi(sansMatch) !== empreinteFinTournoi(reglageAbsent) &&
+    empreinteFinTournoi(derniereP1) !== empreinteFinTournoi(derniereP2),
+    '5I-B2 : cause, phase attendue et dernière phase entrent dans l\'empreinte');
+}
+
+/** ④ Le scénario EXACT de la revue : même compte, situation différente ⇒ confirmation refusée. */
+function test5I_B3_confirmationPerimeeParChangementDeMatch(etat) {
+  var avant = _5hFin([_5hCat('U10')],
+    [_5hMatch('M1', 'U10', 'poule', 'à venir'), _5hMatch('M2', 'U10', 'poule', 'terminé')]);
+  var apres = _5hFin([_5hCat('U10')],
+    [_5hMatch('M1', 'U10', 'poule', 'terminé'), _5hMatch('M2', 'U10', 'poule', 'à venir')]);
+  /* La confirmation a été délivrée sur la situation d'AVANT. */
+  var conf = _5hConfirmation({ empreinte: empreinteFinTournoi(avant) });
+  var r = _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_FIGER, version_lue: 3, fin: apres,
+      edition_id: 'edition-FICTIVE-0001', confirmation_id: 'conf-FICTIVE-0001',
+      confirmation: conf });
+  _ffrAssert(etat,
+    r.refus === 'CONFIRMATION_CALCUL_MODIFIE' && r.gel_manuel_possible === true,
+    '5I-B3 ⭐ « M1 terminé, M2 devenu ouvert » périme bien la confirmation — et le gel manuel ' +
+    'reste possible avec une confirmation à jour');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ⑤ L'IDEMPOTENCE LIÉE AU CONTEXTE AUTHENTIFIÉ                             */
+/* -------------------------------------------------------------------------- */
+
+/** ⑤ Même identifiant, même demande, ⛔ AUTRE ÉDITION ⇒ refus de contexte, jamais RESSERVIR. */
+function test5I_C1_rejeuAutreEdition(etat) {
+  var demande = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-5I-1', version_lue: 3 };
+  /* ⚠️ ADAPTÉ EN 5J (défaut ③) : l'empreinte enregistrée est liée au contexte. */
+  var reg = { etat: ACCES_REQ_APPLIQUEE,
+              empreinte_demande: empreinteDemandeAcces(demande, _5hContexte()),
+              edition_id: 'edition-FICTIVE-0001', role: 'organisateur',
+              action: ACCES_ACTION_FIGER, reponse_finale: { ok: true, etat: 'FIGE' } };
+  var bonne = decisionIdempotenceAcces(reg, demande, _5hContexte());
+  var autre = decisionIdempotenceAcces(reg, demande,
+    _5hContexte({ edition: 'edition-FICTIVE-0002' }));
+  _ffrAssert(etat,
+    bonne.decision === ACCES_IDEM_RESSERVIR &&
+    autre.decision === ACCES_IDEM_REFUSER_CONTEXTE &&
+    autre.refus === 'CONTEXTE_DIVERGENT' && autre.champ_divergent === 'edition_id',
+    '5I-C1 ⭐ la réponse d\'une édition n\'est JAMAIS resservie à une autre');
+}
+
+/** ⑤ ⛔ AUTRE RÔLE ⇒ refus de contexte. */
+function test5I_C2_rejeuAutreRole(etat) {
+  var demande = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-5I-2', version_lue: 3 };
+  var reg = { etat: ACCES_REQ_APPLIQUEE, empreinte_demande: empreinteDemandeAcces(demande),
+              edition_id: 'edition-FICTIVE-0001', role: 'organisateur',
+              action: ACCES_ACTION_FIGER, reponse_finale: { ok: true } };
+  var r = decisionIdempotenceAcces(reg, demande, _5hContexte({ role: 'table' }));
+  _ffrAssert(etat,
+    r.decision === ACCES_IDEM_REFUSER_CONTEXTE && r.refus === 'CONTEXTE_DIVERGENT' &&
+    r.champ_divergent === 'role',
+    '5I-C2 : une table ne reçoit pas la réponse enregistrée pour l\'organisateur');
+}
+
+/** ⑤ ⛔ AUTRE ACTION ⇒ refus de contexte. */
+function test5I_C3_rejeuAutreAction(etat) {
+  var demande = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-5I-3', version_lue: 3 };
+  var reg = { etat: ACCES_REQ_APPLIQUEE, empreinte_demande: empreinteDemandeAcces(demande),
+              edition_id: 'edition-FICTIVE-0001', role: 'organisateur',
+              action: ACCES_ACTION_FIGER, reponse_finale: { ok: true } };
+  var r = decisionIdempotenceAcces(reg, demande,
+    _5hContexte({ action: ACCES_ACTION_CLOTURER }));
+  _ffrAssert(etat,
+    r.decision === ACCES_IDEM_REFUSER_CONTEXTE && r.refus === 'CONTEXTE_DIVERGENT' &&
+    r.champ_divergent === 'action',
+    '5I-C3 : une réponse de gel ne sert pas de réponse à une clôture');
+}
+
+/** ⑤ ⛔ Enregistrement INCOMPLET (sans édition, rôle ou action) ⇒ rien n'est resservi. */
+function test5I_C4_enregistrementIncomplet(etat) {
+  var demande = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-5I-4', version_lue: 3 };
+  var e = empreinteDemandeAcces(demande);
+  var base = { etat: ACCES_REQ_APPLIQUEE, empreinte_demande: e, reponse_finale: { ok: true },
+               edition_id: 'edition-FICTIVE-0001', role: 'organisateur',
+               action: ACCES_ACTION_FIGER };
+  var manquants = 0;
+  for (var i = 0; i < ACCES_CONTEXTE_CHAMPS.length; i++) {
+    var mutile = {};
+    for (var k in base) { if (Object.prototype.hasOwnProperty.call(base, k)) mutile[k] = base[k]; }
+    delete mutile[ACCES_CONTEXTE_CHAMPS[i]];
+    var r = decisionIdempotenceAcces(mutile, demande, _5hContexte());
+    if (r.decision === ACCES_IDEM_REFUSER_CONTEXTE && r.refus === 'ENREGISTREMENT_INCOMPLET' &&
+        r.champ_manquant === ACCES_CONTEXTE_CHAMPS[i]) manquants++;
+  }
+  _ffrAssert(etat, manquants === 3,
+    '5I-C4 : un enregistrement sans édition, sans rôle ou sans action ne peut rien resservir ' +
+    '(' + manquants + '/3)');
+}
+
+/** ⑤ ⛔ CONTEXTE AUTHENTIFIÉ MANQUANT ⇒ refus, même pour une demande neuve. */
+function test5I_C5_contexteManquant(etat) {
+  var demande = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-5I-5', version_lue: 3 };
+  var sansRien = decisionIdempotenceAcces(null, demande, null);
+  var sansEdition = decisionIdempotenceAcces(null, demande,
+    { role: 'organisateur', action: ACCES_ACTION_FIGER });
+  var sansRole = decisionIdempotenceAcces(null, demande,
+    { edition_id: 'edition-FICTIVE-0001', action: ACCES_ACTION_FIGER });
+  var sansAction = decisionIdempotenceAcces(null, demande,
+    { edition_id: 'edition-FICTIVE-0001', role: 'organisateur' });
+  _ffrAssert(etat,
+    sansRien.decision === ACCES_IDEM_REFUSER_CONTEXTE && sansRien.refus === 'CONTEXTE_REQUIS' &&
+    sansEdition.refus === 'CONTEXTE_REQUIS' && sansEdition.champ_manquant === 'edition_id' &&
+    sansRole.refus === 'CONTEXTE_REQUIS' && sansRole.champ_manquant === 'role' &&
+    sansAction.refus === 'CONTEXTE_REQUIS' && sansAction.champ_manquant === 'action' &&
+    sansRien.decision !== ACCES_IDEM_APPLIQUER,
+    '5I-C5 ⭐ sans contexte authentifié complet, le registre ne décide RIEN — ⛔ pas même ' +
+    '« appliquer » : l\'autorisation doit précéder la consultation du registre');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ⑥ L'ASSAINISSEMENT RÉCURSIF DES RÉPONSES                                 */
+/* -------------------------------------------------------------------------- */
+
+/** ⑥ Secret imbriqué dans un OBJET — le scénario exact de la revue. */
+function test5I_D1_secretImbriqueDansObjet(etat) {
+  var reponse = { ok: true, data: { lien: 'https://exemple.invalide/t/' + JETON_FACTICE_5H,
+                                    jeton: JETON_FACTICE_5H } };
+  var r = assainirReponsePourRegistre(reponse, 'ref-FICTIVE-5I-1');
+  var brut = JSON.stringify(r.reponse);
+  _ffrAssert(etat,
+    r.ok === true && r.portait_un_secret === true &&
+    brut.indexOf(JETON_FACTICE_5H) === -1 &&
+    brut.indexOf('lien') === -1 && brut.indexOf('jeton') === -1 &&
+    r.reponse.resultat_ref === 'ref-FICTIVE-5I-1' && r.reponse.ok === true,
+    '5I-D1 ⭐ un jeton et un lien imbriqués à un niveau plus bas sont bien retirés');
+}
+
+/** ⑥ Secret imbriqué dans un TABLEAU, et à plusieurs niveaux. */
+function test5I_D2_secretImbriqueDansTableau(etat) {
+  var reponse = { ok: true, liste: [{ jeton: JETON_FACTICE_5H },
+                                    { profond: [{ qr: 'QR-' + JETON_FACTICE_5H }] }] };
+  var r = assainirReponsePourRegistre(reponse, 'ref-FICTIVE-5I-2');
+  var brut = JSON.stringify(r.reponse);
+  _ffrAssert(etat,
+    r.ok === true && r.portait_un_secret === true &&
+    brut.indexOf(JETON_FACTICE_5H) === -1 && brut.indexOf('qr') === -1 &&
+    Object.prototype.toString.call(r.reponse.liste) === '[object Array]' &&
+    r.reponse.liste.length === 2,
+    '5I-D2 : la récursion traverse aussi les tableaux, sans les aplatir');
+}
+
+/** ⑥ Secret écrit avec une AUTRE CASSE — pour l'empreinte comme pour la réponse. */
+function test5I_D3_secretAutreCasse(etat) {
+  var r = assainirReponsePourRegistre(
+    { ok: true, Jeton: JETON_FACTICE_5H, LIEN: 'https://exemple.invalide/t/x',
+      Qr_Svg: '<svg/>', imbrique: { JeTon: JETON_FACTICE_5H } }, 'ref-FICTIVE-5I-3');
+  var brut = JSON.stringify(r.reponse);
+  var e = empreinteDemandeAcces({ a: 1, Cle: CLE_FACTICE_5H, JETON: JETON_FACTICE_5H,
+                                  Token: JETON_FACTICE_5H });
+  _ffrAssert(etat,
+    r.ok === true && brut.indexOf(JETON_FACTICE_5H) === -1 &&
+    brut.toLowerCase().indexOf('jeton') === -1 && brut.toLowerCase().indexOf('lien') === -1 &&
+    e === empreinteDemandeAcces({ a: 1 }) &&
+    e.indexOf(CLE_FACTICE_5H) === -1 && e.indexOf(JETON_FACTICE_5H) === -1,
+    '5I-D3 ⭐ la reconnaissance des champs secrets ignore la casse, dans les réponses ET dans ' +
+    'l\'empreinte des demandes');
+}
+
+/** ⑥ La réponse assainie est une COPIE : ⛔ aucune référence mutable vers l'original. */
+function test5I_D4_reponseIndependante(etat) {
+  var original = { ok: true, data: { x: 1, liste: [1, 2] }, jeton: JETON_FACTICE_5H };
+  var r = assainirReponsePourRegistre(original, 'ref-FICTIVE-5I-4');
+  var avant = JSON.stringify(r.reponse);
+  original.data.x = 999;
+  original.data.liste.push(3);
+  _ffrAssert(etat,
+    r.ok === true &&
+    r.reponse.data !== original.data &&
+    r.reponse.data.liste !== original.data.liste &&
+    r.reponse.data.x === 1 && r.reponse.data.liste.length === 2 &&
+    JSON.stringify(r.reponse) === avant,
+    '5I-D4 ⭐ modifier l\'original après coup ne change PAS la ligne du registre');
+}
+
+/** ⑥ Sans `resultat_ref`, une réponse qui portait un secret est REFUSÉE ; et la liste blanche. */
+function test5I_D5_refRequiseEtListeBlanche(etat) {
+  var avecSecret = { ok: true, etat: 'PREPARE', version: 1, edition_id: 'edition-FICTIVE-0001',
+                     jeton: JETON_FACTICE_5H, lien: 'https://exemple.invalide/t/x',
+                     champ_imprevu: { jeton: JETON_FACTICE_5H } };
+  var sansRef = assainirReponsePourRegistre(avecSecret, '');
+  var blanche = reponsePreparationPourRegistre(avecSecret, 'ref-FICTIVE-5I-5');
+  var blancheSansRef = reponsePreparationPourRegistre(avecSecret, '');
+  var brut = JSON.stringify(blanche.reponse);
+  _ffrAssert(etat,
+    sansRef.refus === 'RESULTAT_REF_REQUISE' &&
+    blanche.ok === true && brut.indexOf(JETON_FACTICE_5H) === -1 &&
+    blanche.reponse.etat === 'PREPARE' && blanche.reponse.resultat_ref === 'ref-FICTIVE-5I-5' &&
+    blanche.reponse.champ_imprevu === undefined &&
+    blanche.champs_ecartes.indexOf('champ_imprevu') !== -1 &&
+    blancheSansRef.refus === 'RESULTAT_REF_REQUISE',
+    '5I-D5 : `resultat_ref` est exigée dès qu\'un secret est retiré ; la liste blanche écarte ' +
+    'aussi les champs IMPRÉVUS');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ⑦ LA RÉCUPÉRATION PROTÉGÉE EST VÉRIFIÉE                                  */
+/* -------------------------------------------------------------------------- */
+
+/** ⑦ Une récupération portant une AUTRE RÉFÉRENCE est refusée. */
+function test5I_E1_recuperationAutreReference(etat) {
+  var reg = { etat: ACCES_REQ_APPLIQUEE, resultat_ref: 'ref-FICTIVE-A',
+              edition_id: 'edition-FICTIVE-0001' };
+  var r = decisionRejeuAvecRecuperation(reg,
+    { ok: true, resultat_ref: 'ref-FICTIVE-B', edition_id: 'edition-FICTIVE-0001',
+      type: ACCES_TYPE_SECRET_ATTENDU });
+  _ffrAssert(etat,
+    r.refus === 'RECUPERATION_AUTRE_REFERENCE' && r.nouveau_jeton_cree === false &&
+    r.rotation_explicite_requise === true && r.ok !== true,
+    '5I-E1 ⭐ une récupération réussie mais portant une autre référence est refusée');
+}
+
+/** ⑦ Une récupération portant une AUTRE ÉDITION est refusée. */
+function test5I_E2_recuperationAutreEdition(etat) {
+  var reg = { etat: ACCES_REQ_APPLIQUEE, resultat_ref: 'ref-FICTIVE-A',
+              edition_id: 'edition-FICTIVE-0001' };
+  var autreEdition = decisionRejeuAvecRecuperation(reg,
+    { ok: true, resultat_ref: 'ref-FICTIVE-A', edition_id: 'edition-FICTIVE-0002',
+      type: ACCES_TYPE_SECRET_ATTENDU });
+  var autreType = decisionRejeuAvecRecuperation(reg,
+    { ok: true, resultat_ref: 'ref-FICTIVE-A', edition_id: 'edition-FICTIVE-0001',
+      type: 'jeton_club' });
+  var sansEditionAuRegistre = decisionRejeuAvecRecuperation(
+    { etat: ACCES_REQ_APPLIQUEE, resultat_ref: 'ref-FICTIVE-A' },
+    { ok: true, resultat_ref: 'ref-FICTIVE-A', edition_id: 'edition-FICTIVE-0001',
+      type: ACCES_TYPE_SECRET_ATTENDU });
+  _ffrAssert(etat,
+    autreEdition.refus === 'RECUPERATION_AUTRE_EDITION' &&
+    autreType.refus === 'RECUPERATION_AUTRE_TYPE' &&
+    sansEditionAuRegistre.refus === 'EDITION_ABSENTE_DU_REGISTRE' &&
+    autreEdition.nouveau_jeton_cree === false && autreType.nouveau_jeton_cree === false &&
+    sansEditionAuRegistre.nouveau_jeton_cree === false,
+    '5I-E2 ⭐ édition et type sont confirmés ; ⛔ aucun cas ne crée de nouveau jeton');
+}
+
+/** ⑦ La récupération conforme, elle, passe — et ne crée toujours aucun jeton. */
+function test5I_E3_recuperationConforme(etat) {
+  var reg = { etat: ACCES_REQ_APPLIQUEE, resultat_ref: 'ref-FICTIVE-A',
+              edition_id: 'edition-FICTIVE-0001' };
+  var r = decisionRejeuAvecRecuperation(reg,
+    { ok: true, resultat_ref: 'ref-FICTIVE-A', edition_id: 'edition-FICTIVE-0001',
+      type: 'JETON_ACCES_SCORES' });   /* ⭐ casse indifférente sur le type */
+  _ffrAssert(etat,
+    r.ok === true && r.rejeu === true && r.nouveau_jeton_cree === false &&
+    r.resultat_ref === 'ref-FICTIVE-A' && r.edition_id === 'edition-FICTIVE-0001',
+    '5I-E3 : une récupération conforme autorise le rejeu, sans jamais créer de jeton');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ⑧ TOUT L'ÉTAT MUTABLE DU MATCH ENTRE DANS SA VERSION                     */
+/* -------------------------------------------------------------------------- */
+
+/** ⑧ Changement de VAINQUEUR à score agrégé identique ⇒ version différente. */
+function test5I_F1_vainqueurChangeLaVersion(etat) {
+  var a = { id_match: 'M-FICTIF-1', score_A: 3, score_B: 3, statut: 'terminé', vainqueur: 'EQ-A' };
+  var b = { id_match: 'M-FICTIF-1', score_A: 3, score_B: 3, statut: 'terminé', vainqueur: 'EQ-B' };
+  var demande = { id_match: 'M-FICTIF-1', score_A: 3, score_B: 3,
+                  version_lue: empreinteEtatMatch(a) };
+  var r = decisionEcritureScoreAcces(demande, b);
+  _ffrAssert(etat,
+    empreinteEtatMatch(a) !== empreinteEtatMatch(b) &&
+    ACCES_CHAMPS_VERSION_MATCH.indexOf('vainqueur') !== -1 &&
+    r.decision === ACCES_SCORE_MODIFIE,
+    '5I-F1 ⭐ un vainqueur différent à score égal change la version — et l\'écriture est refusée');
+}
+
+/** ⑧ Changement d'un COMPTEUR DÉTAILLÉ à score agrégé identique ⇒ version différente. */
+function test5I_F2_compteurDetailleChangeLaVersion(etat) {
+  /* 5 points : un essai, ou une pénalité + un drop (3+3 ≠ 5, donc : essai vs pén.+…).
+     ⭐ On garde volontairement le score agrégé IDENTIQUE pour isoler le détail. */
+  var a = { id_match: 'M-FICTIF-1', score_A: 5, score_B: 0, statut: 'terminé',
+            essais_A: 1, transfo_A: 0, pen_A: 0, drop_A: 0 };
+  var b = { id_match: 'M-FICTIF-1', score_A: 5, score_B: 0, statut: 'terminé',
+            essais_A: 0, transfo_A: 0, pen_A: 1, drop_A: 0 };
+  var attendus = ['essais_A', 'essais_B', 'transfo_A', 'transfo_B', 'pen_A', 'pen_B',
+                  'drop_A', 'drop_B'];
+  var tousPresents = true;
+  for (var i = 0; i < attendus.length; i++) {
+    if (ACCES_CHAMPS_VERSION_MATCH.indexOf(attendus[i]) === -1) tousPresents = false;
+  }
+  _ffrAssert(etat,
+    empreinteEtatMatch(a) !== empreinteEtatMatch(b) && tousPresents,
+    '5I-F2 ⭐ déplacer un point d\'un essai vers une pénalité change la version, à score ' +
+    'agrégé constant');
+}
+
+/** ⑧ La liste des champs de version est COMPLÈTE, et `version_apres` n'est plus fabriquée. */
+function test5I_F3_listeCompleteEtVersionApres(etat) {
+  var exiges = ['id_match', 'categorie', 'phase', 'equipe_A', 'equipe_B', 'score_A', 'score_B',
+                'statut', 'format', 'sous_tableau', 'tour', 'match_suivant', 'place_suivant',
+                'vainqueur', 'essais_A', 'essais_B', 'transfo_A', 'transfo_B', 'pen_A', 'pen_B',
+                'drop_A', 'drop_B'];
+  var manquants = [];
+  for (var i = 0; i < exiges.length; i++) {
+    if (ACCES_CHAMPS_VERSION_MATCH.indexOf(exiges[i]) === -1) manquants.push(exiges[i]);
+  }
+  var match = { id_match: 'M-FICTIF-1', score_A: '', score_B: '', statut: 'à venir' };
+  var vue = empreinteEtatMatch(match);
+  var sans = decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, version_lue: vue }, match);
+  /* Un `match_apres_ecriture` portant un AUTRE identifiant est ignoré, pas cru sur parole. */
+  var mauvais = decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, version_lue: vue,
+      match_apres_ecriture: { id_match: 'M-FICTIF-9', score_A: 3, score_B: 1 } }, match);
+  _ffrAssert(etat,
+    manquants.length === 0 && ACCES_CHAMPS_VERSION_MATCH.length === exiges.length &&
+    sans.version_apres === undefined && mauvais.version_apres === undefined &&
+    sans.decision === ACCES_SCORE_ADMISSIBLE,
+    '5I-F3 : les 22 champs de version sont là ; `version_apres` est absente sans match complet ' +
+    'et ignorée si l\'identifiant ne correspond pas' +
+    (manquants.length ? ' — manquants : ' + manquants.join(', ') : ''));
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ⑨ LES DATES DE CONSERVATION SONT VALIDÉES STRICTEMENT                    */
+/* -------------------------------------------------------------------------- */
+
+/** ⑨ `2026-02-31` n'existe pas : ⛔ refusée, ⛔ pas transformée en mars. */
+function test5I_G1_dateCivileInexistanteRefusee(etat) {
+  var fev31 = calculerConservationRequete('2026-02-31 10:00:00', 30);
+  var fev29NonBissextile = calculerConservationRequete('2026-02-29 10:00:00', 1);
+  var avril31 = calculerConservationRequete('2026-04-31 10:00:00', 1);
+  var mois13 = calculerConservationRequete('2026-13-01 10:00:00', 1);
+  var jour00 = calculerConservationRequete('2026-05-00 10:00:00', 1);
+  _ffrAssert(etat,
+    fev31.refus === 'DATE_CIVILE_INEXISTANTE' &&
+    fev29NonBissextile.refus === 'DATE_CIVILE_INEXISTANTE' &&
+    avril31.refus === 'DATE_CIVILE_INEXISTANTE' &&
+    mois13.refus === 'DATE_CIVILE_INEXISTANTE' &&
+    jour00.refus === 'DATE_CIVILE_INEXISTANTE',
+    '5I-G1 ⭐ 2026-02-31, 2026-02-29, 2026-04-31, mois 13 et jour 00 sont tous REFUSÉS');
+}
+
+/** ⑨ `2028-02-29` existe (bissextile) : acceptée et correctement calculée. */
+function test5I_G2_bissextileAcceptee(etat) {
+  var unJour = calculerConservationRequete('2028-02-29 10:00:00', 1);
+  var trenteJours = calculerConservationRequete('2028-02-29', 30);
+  var finAnnee = calculerConservationRequete('2026-12-31 23:59:59', 1);
+  var seculaire = calculerConservationRequete('2000-02-29 08:00:00', 1);
+  _ffrAssert(etat,
+    unJour.ok === true && unJour.conserver_jusqu_au === '2028-03-01' && unJour.duree_jours === 1 &&
+    trenteJours.ok === true && trenteJours.conserver_jusqu_au === '2028-03-30' &&
+    finAnnee.ok === true && finAnnee.conserver_jusqu_au === '2027-01-01' &&
+    seculaire.ok === true && seculaire.conserver_jusqu_au === '2000-03-01',
+    '5I-G2 : 2028-02-29 et 2000-02-29 (siècle bissextile) sont acceptées et bien calculées');
+}
+
+/** ⑨ Format et durée : les refus restent nommés, et la durée reste INJECTÉE. */
+function test5I_G3_formatEtDureeStricts(etat) {
+  var cas = [
+    calculerConservationRequete('13/09/2026', 30),
+    calculerConservationRequete('2026-9-13', 30),
+    calculerConservationRequete('2026-09-13 25:00:00', 30),
+    calculerConservationRequete('2026-09-13 10:61:00', 30),
+    calculerConservationRequete('', 30)
+  ];
+  var formats = 0;
+  for (var i = 0; i < cas.length; i++) {
+    if (cas[i].refus === 'HORODATAGE_INVALIDE') formats++;
+  }
+  var durees = [
+    calculerConservationRequete('2026-09-13', undefined),
+    calculerConservationRequete('2026-09-13', ''),
+    calculerConservationRequete('2026-09-13', 0),
+    calculerConservationRequete('2026-09-13', -5),
+    calculerConservationRequete('2026-09-13', 1.5),
+    calculerConservationRequete('2026-09-13', 'trente')
+  ];
+  var refusDuree = 0;
+  for (var j = 0; j < durees.length; j++) {
+    if (durees[j].refus === 'DUREE_CONSERVATION_REQUISE' ||
+        durees[j].refus === 'DUREE_CONSERVATION_INVALIDE') refusDuree++;
+  }
+  _ffrAssert(etat,
+    formats === cas.length && refusDuree === durees.length &&
+    _5hCodeSeul(calculerConservationRequete).indexOf('90') === -1,   /* ⚠️ ADAPTÉ EN 5J */
+    '5I-G3 : formats invalides et durées invalides tous refusés (' + formats + '/' + cas.length +
+    ', ' + refusDuree + '/' + durees.length + ') ; aucun « 90 » gravé dans le noyau');
+}
+
+/* ============================================================================
+ *  SÉRIE 5J — LES SIX CAS ADVERSES RESTANTS
+ *  CORR-ACCES-SCORES-NOYAU-PUR-DR-5J
+ * ============================================================================
+ *  Chacun de ces contrôles ÉCHOUAIT sur l'état 5I. Ils ferment six défauts reproduits par une
+ *  revue indépendante : sérialisation ambiguë, faux match complet, première application non
+ *  liée au contexte, entiers hors zone exacte, expiration inexploitable, années 0001–0099.
+ *  ⛔ Toutes les valeurs sont fictives.
+ * ============================================================================ */
+
+/* -------------------------------------------------------------------------- */
+/*  ① SÉRIALISATION CANONIQUE NON AMBIGUË                                     */
+/* -------------------------------------------------------------------------- */
+
+/** ① La collision exacte signalée par la revue. */
+function test5J_A1_collisionSeparateurs(etat) {
+  var a = accesCanonique({ a: 'x;b=s:y' });
+  var b = accesCanonique({ a: 'x', b: 'y' });
+  var m1 = empreinteEtatMatch({ id_match: 'M1', categorie: 'U10;phase=s:classement', phase: '' });
+  var m2 = empreinteEtatMatch({ id_match: 'M1', categorie: 'U10', phase: 'classement' });
+  _ffrAssert(etat, a !== b && m1 !== m2,
+    '5J-A1 ⭐ { a: "x;b=s:y" } et { a: "x", b: "y" } ne partagent plus la même empreinte — ' +
+    'ni au niveau de l\'objet, ni au niveau d\'un match');
+}
+
+/** ① Aucune valeur ne peut plus imiter la structure : ; = { } [ ] " \ et Unicode. */
+function test5J_A2_valeursQuiImitentLaStructure(etat) {
+  var cas = ['x', 'x;', 'x=', 'x;b=s:', 'o{a=s:x}', 'a[s:x]', 'k1:a', 's1:x', 'o1:', '"x"',
+             'x\\y', 'é', 'é', ':', ''];
+  var vues = {}, collisions = [];
+  for (var i = 0; i < cas.length; i++) {
+    var e = accesCanonique({ a: cas[i] });
+    if (Object.prototype.hasOwnProperty.call(vues, e)) collisions.push(cas[i]);
+    vues[e] = cas[i];
+  }
+  /* ⭐ Et une valeur ne peut pas se faire passer pour DEUX clés. */
+  var uneCle = accesCanonique({ a: 'x', b: 'y' });
+  var deuxCles = accesCanonique({ a: 'xk1:bs1:y' });
+  _ffrAssert(etat, collisions.length === 0 && uneCle !== deuxCles,
+    '5J-A2 : 14 valeurs contenant des caractères de structure restent distinctes' +
+    (collisions.length ? ' — collisions : ' + collisions.join(' | ') : ''));
+}
+
+/** ① L'ordre des clés n'a aucun effet ; l'ordre d'un tableau, si. */
+function test5J_A3_ordreDesClesEtDesTableaux(etat) {
+  var ordreA = accesCanonique({ a: 1, b: 2, c: 3 });
+  var ordreB = accesCanonique({ c: 3, a: 1, b: 2 });
+  var tabA = accesCanonique([1, 2]);
+  var tabB = accesCanonique([2, 1]);
+  var imbrique1 = accesCanonique({ x: { p: 1, q: 2 } });
+  var imbrique2 = accesCanonique({ x: { q: 2, p: 1 } });
+  _ffrAssert(etat,
+    ordreA === ordreB && imbrique1 === imbrique2 && tabA !== tabB,
+    '5J-A3 : clés triées (donc insensibles à l\'ordre), ordre des tableaux CONSERVÉ');
+}
+
+/** ① Les types sont distingués, y compris les cas qui se ressemblent. */
+function test5J_A4_typesDistingues(etat) {
+  var cas = [null, undefined, true, false, 0, 1, '', '0', '1', 'true', 'false', 'null',
+             [], {}, [0], [''], { '0': 0 }];
+  var vues = {}, collisions = 0;
+  for (var i = 0; i < cas.length; i++) {
+    var e = accesCanonique(cas[i]);
+    if (Object.prototype.hasOwnProperty.call(vues, e)) collisions++;
+    vues[e] = 1;
+  }
+  /* `null` et `undefined` sont volontairement confondus : une clé absente et une clé à `null`
+     décrivent la même absence de valeur métier. ⭐ C'est le SEUL rapprochement voulu. */
+  _ffrAssert(etat, collisions === 1 && accesCanonique(null) === accesCanonique(undefined),
+    '5J-A4 : tableau, objet, nombre, booléen, chaîne et null sont distingués — seule la paire ' +
+    'null/undefined est volontairement confondue (' + collisions + ' collision attendue)');
+}
+
+/** ① Déterminisme, et absence de tout pseudo-condensé. */
+function test5J_A5_determinismeEtAucunCondense(etat) {
+  var v = { a: [1, { b: 'x' }], c: true };
+  var code = _5hCodeSeul(accesCanonique);
+  _ffrAssert(etat,
+    accesCanonique(v) === accesCanonique(v) &&
+    code.indexOf('computeDigest') === -1 && code.indexOf('Utilities') === -1 &&
+    /^o\d+:/.test(accesCanonique({ a: 1 })) && /^s\d+:/.test(accesCanonique('x')),
+    '5J-A5 : déterministe, sans Google, et la forme reste une forme NORMALE lisible — ' +
+    '⛔ aucun condensé n\'est prétendu');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ② LE MATCH « COMPLET » DOIT VRAIMENT L'ÊTRE                              */
+/* -------------------------------------------------------------------------- */
+
+/** ② Un objet réduit à son seul identifiant n'est pas complet. */
+function test5J_B1_matchReduitAuSeulIdentifiant(etat) {
+  var match = { id_match: 'M-FICTIF-1', score_A: '', score_B: '', statut: 'à venir' };
+  var vue = empreinteEtatMatch(match);
+  var r = decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, version_lue: vue,
+      match_apres_ecriture: { id_match: 'M-FICTIF-1' } }, match);
+  var c = accesMatchComplet({ id_match: 'M-FICTIF-1' });
+  _ffrAssert(etat,
+    r.decision === ACCES_SCORE_ADMISSIBLE &&
+    r.version_apres === undefined &&
+    r.version_apres_indisponible === 'match_incomplet' &&
+    r.champs_manquants.length === 21 &&
+    c.ok === false && c.manquants.length === 21,
+    '5J-B1 ⭐ le bon identifiant ne suffit plus : 21 champs manquants, aucune version_apres');
+}
+
+/** ② Un SEUL champ manquant parmi les 22 suffit à rendre l'objet incomplet. */
+function test5J_B2_unSeulChampManquant(etat) {
+  var match = { id_match: 'M-FICTIF-1', score_A: '', score_B: '', statut: 'à venir' };
+  var vue = empreinteEtatMatch(match);
+  var tousDetectes = true, testes = 0;
+  for (var i = 0; i < ACCES_CHAMPS_VERSION_MATCH.length; i++) {
+    var omis = ACCES_CHAMPS_VERSION_MATCH[i];
+    if (omis === 'id_match') continue;          /* l'identifiant a son propre motif */
+    var partiel = _5hMatchComplet({ id_match: 'M-FICTIF-1' });
+    delete partiel[omis];
+    testes++;
+    var r = decisionEcritureScoreAcces(
+      { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, version_lue: vue,
+        match_apres_ecriture: partiel }, match);
+    if (r.version_apres !== undefined ||
+        r.version_apres_indisponible !== 'match_incomplet' ||
+        r.champs_manquants.length !== 1 || r.champs_manquants[0] !== omis) tousDetectes = false;
+  }
+  _ffrAssert(etat, tousDetectes && testes === 21,
+    '5J-B2 : chacun des 21 champs omis un à un est détecté, et nommé (' + testes + ' cas)');
+}
+
+/** ② Autre identifiant, objet absent, objet complet : trois issues nettes. */
+function test5J_B3_autreIdentifiantEtObjetComplet(etat) {
+  var match = { id_match: 'M-FICTIF-1', score_A: '', score_B: '', statut: 'à venir' };
+  var vue = empreinteEtatMatch(match);
+  var base = { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, version_lue: vue };
+  var autre = decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, version_lue: vue,
+      match_apres_ecriture: _5hMatchComplet({ id_match: 'M-FICTIF-9' }) }, match);
+  var absent = decisionEcritureScoreAcces(base, match);
+  var complet = _5hMatchComplet({ id_match: 'M-FICTIF-1', score_A: 3, score_B: 1,
+                                  statut: 'terminé', vainqueur: 'EQ-FICTIVE-A' });
+  var bon = decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, version_lue: vue,
+      match_apres_ecriture: complet }, match);
+  _ffrAssert(etat,
+    autre.version_apres === undefined && autre.version_apres_indisponible === 'autre_identifiant' &&
+    absent.version_apres === undefined && absent.version_apres_indisponible === 'non_fourni' &&
+    bon.version_apres === empreinteEtatMatch(complet) && bon.version_apres !== vue,
+    '5J-B3 : autre identifiant, objet absent et objet complet donnent trois issues distinctes');
+}
+
+/** ② Des champs SUPPLÉMENTAIRES ne changent pas la version, et rien n'est muté. */
+function test5J_B4_champsSupplementairesSansEffet(etat) {
+  var nu = _5hMatchComplet({ id_match: 'M-FICTIF-1', score_A: 3, score_B: 1 });
+  var charge = _5hMatchComplet({ id_match: 'M-FICTIF-1', score_A: 3, score_B: 1 });
+  charge.terrain = '7'; charge.heure_debut = '09:00'; charge.arbitre = 'X'; charge.inconnu = 1;
+  var avant = JSON.stringify(nu);
+  var match = { id_match: 'M-FICTIF-1', score_A: '', score_B: '', statut: 'à venir' };
+  decisionEcritureScoreAcces(
+    { id_match: 'M-FICTIF-1', score_A: 3, score_B: 1, version_lue: empreinteEtatMatch(match),
+      match_apres_ecriture: nu }, match);
+  _ffrAssert(etat,
+    empreinteEtatMatch(nu) === empreinteEtatMatch(charge) &&
+    accesMatchComplet(charge).ok === true &&
+    JSON.stringify(nu) === avant,
+    '5J-B4 : les champs hors liste (terrain, horaires, arbitre) ne changent pas la version, ' +
+    'et l\'entrée n\'est pas mutée');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ③ LA PREMIÈRE APPLICATION EST LIÉE AU CONTEXTE AUTHENTIFIÉ               */
+/* -------------------------------------------------------------------------- */
+
+/** ③ Le cas exact de la revue : demande ROTATION, contexte PREPARER, aucun enregistrement. */
+function test5J_C1_actionDivergenteDesLaPremiereApplication(etat) {
+  var r = decisionIdempotenceAcces(null,
+    { action: ACCES_ACTION_ROTATION, requete_id: 'req-FICTIF-5J-1' },
+    _5hContexte({ action: ACCES_ACTION_PREPARER }));
+  _ffrAssert(etat,
+    r.decision === ACCES_IDEM_REFUSER_CONTEXTE && r.refus === 'CONTEXTE_DIVERGENT' &&
+    r.source === 'demande' && r.champ_divergent === 'action' &&
+    r.decision !== ACCES_IDEM_APPLIQUER,
+    '5J-C1 ⭐ une rotation demandée sous l\'autorisation d\'une préparation est REFUSÉE dès la ' +
+    'première application');
+}
+
+/** ③ Édition et rôle divergents dans la demande, sans enregistrement. */
+function test5J_C2_editionEtRoleDivergentsDesLeDepart(etat) {
+  var edition = decisionIdempotenceAcces(null,
+    { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-5J-2',
+      edition_id: 'edition-FICTIVE-0002' }, _5hContexte());
+  var role = decisionIdempotenceAcces(null,
+    { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-5J-3', role: 'table' },
+    _5hContexte());
+  /* ⭐ Un champ ABSENT de la demande ne contredit rien : il reste permis. */
+  var muette = decisionIdempotenceAcces(null,
+    { requete_id: 'req-FICTIF-5J-4' }, _5hContexte());
+  _ffrAssert(etat,
+    edition.refus === 'CONTEXTE_DIVERGENT' && edition.champ_divergent === 'edition_id' &&
+    edition.source === 'demande' &&
+    role.refus === 'CONTEXTE_DIVERGENT' && role.champ_divergent === 'role' &&
+    muette.decision === ACCES_IDEM_APPLIQUER,
+    '5J-C2 : édition et rôle divergents refusés ; une demande muette sur ces champs passe');
+}
+
+/** ③ `APPLIQUER` rend explicitement le contexte FIABLE à enregistrer. */
+function test5J_C3_appliquerRendLeContexteFiable(etat) {
+  var r = decisionIdempotenceAcces(null,
+    { action: 'figer', requete_id: 'req-FICTIF-5J-5' },   /* casse indifférente sur l'action */
+    { edition_id: 'edition-FICTIVE-0001', role: 'organisateur', action: 'figer' });
+  _ffrAssert(etat,
+    r.decision === ACCES_IDEM_APPLIQUER && !!r.contexte &&
+    r.contexte.edition_id === 'edition-FICTIVE-0001' &&
+    r.contexte.role === 'organisateur' &&
+    r.contexte.action === 'FIGER' &&                       /* ⭐ normalisé en majuscules */
+    r.empreinte !== '',
+    '5J-C3 ⭐ APPLIQUER fournit l\'édition, le rôle et l\'action à INSCRIRE au registre');
+}
+
+/** ③ L'empreinte dépend du contexte authentifié, pas seulement de la demande. */
+function test5J_C4_empreinteLieeAuContexte(etat) {
+  var dem = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-5J-6', version_lue: 3 };
+  var edA = empreinteDemandeAcces(dem, _5hContexte());
+  var edB = empreinteDemandeAcces(dem, _5hContexte({ edition: 'edition-FICTIVE-0002' }));
+  var roleB = empreinteDemandeAcces(dem, _5hContexte({ role: 'table' }));
+  var sansCtx = empreinteDemandeAcces(dem);
+  /* ⛔ Les secrets restent exclus, contexte ou pas. */
+  var avecSecret = empreinteDemandeAcces(
+    { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-5J-6', version_lue: 3,
+      cle: CLE_FACTICE_5H, JETON: JETON_FACTICE_5H }, _5hContexte());
+  _ffrAssert(etat,
+    edA !== edB && edA !== roleB && edA !== sansCtx &&
+    avecSecret === edA &&
+    avecSecret.indexOf(CLE_FACTICE_5H) === -1 && avecSecret.indexOf(JETON_FACTICE_5H) === -1,
+    '5J-C4 ⭐ l\'empreinte change avec l\'édition et le rôle authentifiés, et les secrets en ' +
+    'restent exclus');
+}
+
+/** ③ Le rejeu correspondant : même identifiant, même demande, mais contexte changé. */
+function test5J_C5_rejeuApresDivergenceInitiale(etat) {
+  var dem = { action: ACCES_ACTION_FIGER, requete_id: 'req-FICTIF-5J-7', version_lue: 3 };
+  var ctx = _5hContexte();
+  var reg = { etat: ACCES_REQ_APPLIQUEE, empreinte_demande: empreinteDemandeAcces(dem, ctx),
+              edition_id: 'edition-FICTIVE-0001', role: 'organisateur',
+              action: ACCES_ACTION_FIGER, reponse_finale: { ok: true } };
+  var bon = decisionIdempotenceAcces(reg, dem, ctx);
+  /* Contexte d'une autre édition : le registre ne resservira rien, et l'empreinte ne
+     correspondrait de toute façon plus. */
+  var autreEdition = decisionIdempotenceAcces(reg, dem,
+    _5hContexte({ edition: 'edition-FICTIVE-0002' }));
+  var autreRole = decisionIdempotenceAcces(reg, dem, _5hContexte({ role: 'table' }));
+  var autreAction = decisionIdempotenceAcces(reg,
+    { action: ACCES_ACTION_CLOTURER, requete_id: 'req-FICTIF-5J-7', version_lue: 3 },
+    _5hContexte({ action: ACCES_ACTION_CLOTURER }));
+  _ffrAssert(etat,
+    bon.decision === ACCES_IDEM_RESSERVIR &&
+    autreEdition.decision === ACCES_IDEM_REFUSER_CONTEXTE &&
+    autreRole.decision === ACCES_IDEM_REFUSER_CONTEXTE &&
+    autreAction.decision === ACCES_IDEM_REFUSER_CONTEXTE &&
+    autreAction.champ_divergent === 'action',
+    '5J-C5 : le rejeu n\'est resservi que sous le contexte exact où il a été appliqué');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ④ LES ENTIERS RESTENT DANS LA ZONE EXACTE                                */
+/* -------------------------------------------------------------------------- */
+
+/** ④ 2^53 et au-delà : refusés, car l'incrément n'y progresse plus. */
+function test5J_D1_horsZoneExacte(etat) {
+  var justeAuMax = analyserLigneAccesScores({ etat: ACCES_ETAT_OUVERT,
+    version: ACCES_ENTIER_MAX, rotations: 0 });
+  var unDeTrop = analyserLigneAccesScores({ etat: ACCES_ETAT_OUVERT,
+    version: 9007199254740992, rotations: 0 });
+  var rotTrop = analyserLigneAccesScores({ etat: ACCES_ETAT_OUVERT, version: 1,
+    rotations: 9007199254740992 });
+  _ffrAssert(etat,
+    ACCES_ENTIER_MAX === 9007199254740991 &&
+    justeAuMax.anomalie === undefined && justeAuMax.version === ACCES_ENTIER_MAX &&
+    unDeTrop.anomalie === 'version_invalide' &&
+    rotTrop.anomalie === 'rotations_invalides',
+    '5J-D1 ⭐ 9007199254740991 passe, 9007199254740992 est refusé — version comme rotations');
+}
+
+/** ④ L'incrément d'une valeur déjà maximale est REFUSÉ, jamais rendu inchangé. */
+function test5J_D2_incrementAuPlafondRefuse(etat) {
+  var inc = accesIncrementer(ACCES_ENTIER_MAX);
+  var incOk = accesIncrementer(5);
+  var finT = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'classement', 'terminé')]);
+  var t = _5hPlanifier(
+    { etat: ACCES_ETAT_OUVERT, version: ACCES_ENTIER_MAX, rotations: 0 },
+    { action: ACCES_ACTION_FIGER, version_lue: ACCES_ENTIER_MAX, fin: finT,
+      edition_id: 'edition-FICTIVE-0001' });
+  var rot = _5hPlanifier(
+    { etat: ACCES_ETAT_OUVERT, version: 3, rotations: ACCES_ENTIER_MAX },
+    { action: ACCES_ACTION_ROTATION, version_lue: 3, edition_id: 'edition-FICTIVE-0001' });
+  var reset = planifierResetAccesScores(
+    { etat: ACCES_ETAT_OUVERT, version: ACCES_ENTIER_MAX, rotations: 0 },
+    '2026-09-13 20:00:00');
+  _ffrAssert(etat,
+    inc.ok === false && inc.motif === 'plafond_atteint' &&
+    incOk.ok === true && incOk.valeur === 6 &&
+    t.refus === 'VERSION_MAX_ATTEINTE' && t.ok !== true &&
+    rot.refus === 'ROTATIONS_MAX_ATTEINTES' && rot.ok !== true &&
+    reset.refus === 'VERSION_MAX_ATTEINTE' && reset.ecrire === undefined,
+    '5J-D2 ⭐ au plafond, transition, rotation et reset REFUSENT — ⛔ aucune version figée');
+}
+
+/** ④ `version_lue` doit être un entier décimal exact : `1e0`, `1.0`, `+1`, `0x1` refusés. */
+function test5J_D3_versionLueStricte(etat) {
+  var ecritures = ['1e0', '1.0', '+1', '0x1', ' 1.', '1 000', 'un'];
+  var refusees = 0;
+  for (var i = 0; i < ecritures.length; i++) {
+    var r = _5hPlanifier(_5hLigne(ACCES_ETAT_PREPARE, 1, 0),
+      { action: ACCES_ACTION_OUVRIR, version_lue: ecritures[i],
+        edition_id: 'edition-FICTIVE-0001' });
+    if (r.refus === 'VERSION_LUE_INVALIDE' && r.ok !== true) refusees++;
+  }
+  /* ⭐ L'écriture décimale exacte, elle, passe — y compris avec des espaces autour. */
+  var bonne = _5hPlanifier(_5hLigne(ACCES_ETAT_PREPARE, 1, 0),
+    { action: ACCES_ACTION_OUVRIR, version_lue: ' 1 ', edition_id: 'edition-FICTIVE-0001' });
+  _ffrAssert(etat, refusees === ecritures.length && bonne.ok === true,
+    '5J-D3 ⭐ « 1e0 » et six autres écritures non décimales sont refusées (' + refusees + '/' +
+    ecritures.length + ') ; « 1 » avec espaces passe');
+}
+
+/** ④ La version d'une confirmation subit la même exigence. */
+function test5J_D4_versionDeConfirmationStricte(etat) {
+  var att = { confirmation_id: 'conf-FICTIVE-0001', edition_id: 'edition-FICTIVE-0001',
+              action: ACCES_ACTION_FIGER, etat_courant: ACCES_ETAT_OUVERT,
+              version_courante: 3, empreinte_fin: 'e', maintenant: MAINTENANT_5H };
+  var conf = function (v) {
+    return { confirmation_id: 'conf-FICTIVE-0001', edition_id: 'edition-FICTIVE-0001',
+             action: ACCES_ACTION_FIGER, etat_evalue: ACCES_ETAT_OUVERT, version_evaluee: v,
+             empreinte_fin: 'e', consomme: false, expire_le: EXPIRE_5H };
+  };
+  var trois = validerConfirmationAcces(conf(3), att);
+  var texte = validerConfirmationAcces(conf('3.0'), att);
+  var expo = validerConfirmationAcces(conf('3e0'), att);
+  var vide = validerConfirmationAcces(conf(''), att);
+  var trop = validerConfirmationAcces(conf(9007199254740992), att);
+  _ffrAssert(etat,
+    trois.ok === true &&
+    texte.refus === 'CONFIRMATION_VERSION_INVALIDE' &&
+    expo.refus === 'CONFIRMATION_VERSION_INVALIDE' &&
+    vide.refus === 'CONFIRMATION_VERSION_INVALIDE' &&
+    trop.refus === 'CONFIRMATION_VERSION_INVALIDE',
+    '5J-D4 : « 3.0 », « 3e0 », vide et 2^53 sont tous refusés comme version de confirmation');
+}
+
+/** ④ Une durée qui ferait sortir du calendrier est refusée, ⛔ jamais `ok` avec `NaN-NaN-NaN`. */
+function test5J_D5_dureeHorsPlage(etat) {
+  var geante = calculerConservationRequete('2026-09-13', 100000000000);
+  var maxEntier = calculerConservationRequete('2026-09-13', ACCES_ENTIER_MAX);
+  var troisMille = calculerConservationRequete('2026-09-13', 3000000);
+  var raisonnable = calculerConservationRequete('2026-09-13', 90);
+  _ffrAssert(etat,
+    geante.refus === 'DATE_HORS_PLAGE' && geante.ok === undefined &&
+    maxEntier.refus === 'DATE_HORS_PLAGE' &&
+    troisMille.refus === 'DATE_HORS_PLAGE' &&
+    String(geante.conserver_jusqu_au) === 'undefined' &&
+    raisonnable.ok === true && raisonnable.conserver_jusqu_au === '2026-12-12',
+    '5J-D5 ⭐ une durée hors plage calendaire REFUSE — ⛔ plus jamais « NaN-NaN-NaN » avec ok');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ⑤ L'EXPIRATION D'UNE CONFIRMATION EST EXPLOITABLE                        */
+/* -------------------------------------------------------------------------- */
+
+/** ⑤ Sans `expire_le`, ou avec une valeur illisible, la confirmation est refusée. */
+function test5J_E1_expirationAbsenteOuIllisible(etat) {
+  var att = { confirmation_id: 'conf-FICTIVE-0001', edition_id: 'edition-FICTIVE-0001',
+              action: ACCES_ACTION_FIGER, etat_courant: ACCES_ETAT_OUVERT,
+              version_courante: 3, empreinte_fin: 'e', maintenant: MAINTENANT_5H };
+  var absente = validerConfirmationAcces(_5hConfirmation({ empreinte: 'e', expire: '' }), att);
+  var jamais = validerConfirmationAcces(_5hConfirmation({ empreinte: 'e', expire: 'jamais' }), att);
+  var sansHeure = validerConfirmationAcces(
+    _5hConfirmation({ empreinte: 'e', expire: '2026-09-13' }), att);
+  var dateFausse = validerConfirmationAcces(
+    _5hConfirmation({ empreinte: 'e', expire: '2026-02-31 10:00:00' }), att);
+  var heureFausse = validerConfirmationAcces(
+    _5hConfirmation({ empreinte: 'e', expire: '2026-09-13 25:00:00' }), att);
+  _ffrAssert(etat,
+    absente.refus === 'CONFIRMATION_EXPIRATION_ABSENTE' &&
+    jamais.refus === 'CONFIRMATION_EXPIRATION_ILLISIBLE' && jamais.motif === 'format' &&
+    sansHeure.refus === 'CONFIRMATION_EXPIRATION_ILLISIBLE' &&
+    dateFausse.refus === 'CONFIRMATION_EXPIRATION_ILLISIBLE' &&
+    dateFausse.motif === 'date_civile' &&
+    heureFausse.refus === 'CONFIRMATION_EXPIRATION_ILLISIBLE' && heureFausse.motif === 'heure',
+    '5J-E1 ⭐ « jamais », une date impossible et une heure impossible sont toutes refusées, ' +
+    'avec un motif nommé');
+}
+
+/** ⑤ `maintenant` est tout aussi obligatoire, et tout aussi validé. */
+function test5J_E2_instantCourantObligatoire(etat) {
+  var base = { confirmation_id: 'conf-FICTIVE-0001', edition_id: 'edition-FICTIVE-0001',
+               action: ACCES_ACTION_FIGER, etat_courant: ACCES_ETAT_OUVERT,
+               version_courante: 3, empreinte_fin: 'e' };
+  var conf = _5hConfirmation({ empreinte: 'e' });
+  var absent = validerConfirmationAcces(conf, base);
+  var illisible = validerConfirmationAcces(conf,
+    { confirmation_id: base.confirmation_id, edition_id: base.edition_id, action: base.action,
+      etat_courant: base.etat_courant, version_courante: 3, empreinte_fin: 'e',
+      maintenant: '13/09/2026' });
+  var valide = validerConfirmationAcces(conf,
+    { confirmation_id: base.confirmation_id, edition_id: base.edition_id, action: base.action,
+      etat_courant: base.etat_courant, version_courante: 3, empreinte_fin: 'e',
+      maintenant: MAINTENANT_5H });
+  _ffrAssert(etat,
+    absent.refus === 'CONFIRMATION_INSTANT_ABSENT' &&
+    illisible.refus === 'CONFIRMATION_INSTANT_ILLISIBLE' && illisible.motif === 'format' &&
+    valide.ok === true,
+    '5J-E2 : sans `maintenant` valide, aucune confirmation n\'est recevable');
+}
+
+/** ⑤ À l'instant EXACT d'expiration, la confirmation est expirée — et le gel reste possible. */
+function test5J_E3_instantExactDExpiration(etat) {
+  var fin = _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'à venir')]);
+  var emp = empreinteFinTournoi(fin);
+  var poser = function (maintenant, expire) {
+    return _5hPlanifier(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+      { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin,
+        edition_id: 'edition-FICTIVE-0001', confirmation_id: 'conf-FICTIVE-0001',
+        maintenant: maintenant,
+        confirmation: _5hConfirmation({ empreinte: emp, expire: expire }),
+        horodatage: '2026-09-13 18:00:00' });
+  };
+  var uneSecondeAvant = poser('2026-09-13 17:59:59', '2026-09-13 18:00:00');
+  var instantExact = poser('2026-09-13 18:00:00', '2026-09-13 18:00:00');
+  var apres = poser('2026-09-13 18:00:01', '2026-09-13 18:00:00');
+  _ffrAssert(etat,
+    uneSecondeAvant.ok === true && uneSecondeAvant.etat_apres === ACCES_ETAT_FIGE &&
+    instantExact.refus === 'CONFIRMATION_EXPIREE' &&
+    instantExact.gel_manuel_possible === true &&
+    apres.refus === 'CONFIRMATION_EXPIREE',
+    '5J-E3 ⭐ une seconde avant : le gel passe. À la seconde exacte : expirée — et le gel ' +
+    'manuel reste possible avec une confirmation fraîche');
+}
+
+/** ⑤ Aucune durée de validité n'est gravée dans le noyau. */
+function test5J_E4_aucuneDureeDeValiditeGravee(etat) {
+  var code = _5hCodeSeul(validerConfirmationAcces) + _5hCodeSeul(accesInstantValide);
+  /* ⚠️ Le contrôle ne peut pas simplement interdire 3600 ou 86400 : ce sont les conversions
+     heures→secondes et jours→secondes, indispensables pour COMPARER deux instants. Ce qu'il
+     faut interdire, c'est de FABRIQUER une expiration — donc toute affectation d'`expire_le`
+     et toute arithmétique partant de `maintenant`. */
+  _ffrAssert(etat,
+    /expire_le/.test(code) && /maintenant/.test(code) &&
+    /expire_le\s*=[^=]/.test(code) === false &&
+    /maintenant[A-Za-z_.]*\s*\+/.test(code) === false &&
+    code.indexOf('new Date') === -1 && code.indexOf('Date.now') === -1,
+    '5J-E4 : le noyau LIT et valide deux instants fournis ; ⛔ il n\'en fabrique aucun — ' +
+    'aucune affectation d\'`expire_le`, aucune arithmétique sur `maintenant`, aucune horloge');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ⑥ LES ANNÉES 0001 À 0099 SONT EXACTES                                    */
+/* -------------------------------------------------------------------------- */
+
+/** ⑥ Le cas exact de la revue, et la plage basse en général. */
+function test5J_F1_anneesBasses(etat) {
+  var an1 = calculerConservationRequete('0001-01-01', 1);
+  var an1fin = calculerConservationRequete('0001-12-31', 1);
+  var an99 = calculerConservationRequete('0099-12-31', 1);
+  var an100 = calculerConservationRequete('0100-02-28', 1);
+  _ffrAssert(etat,
+    an1.ok === true && an1.conserver_jusqu_au === '0001-01-02' &&
+    an1fin.ok === true && an1fin.conserver_jusqu_au === '0002-01-01' &&
+    an99.ok === true && an99.conserver_jusqu_au === '0100-01-01' &&
+    an100.ok === true && an100.conserver_jusqu_au === '0100-03-01',
+    '5J-F1 ⭐ 0001-01-01 + 1 jour = 0001-01-02 — ⛔ plus jamais 1901-01-02');
+}
+
+/** ⑥ La plage supportée est explicite : 0001 à 9999, bornes refusées au-delà. */
+function test5J_F2_plageExplicite(etat) {
+  var an0 = calculerConservationRequete('0000-01-01', 1);
+  var borneHaute = calculerConservationRequete('9999-12-31', 1);
+  var dansLaBorne = calculerConservationRequete('9999-12-30', 1);
+  _ffrAssert(etat,
+    ACCES_ANNEE_MIN === 1 && ACCES_ANNEE_MAX === 9999 &&
+    an0.refus === 'DATE_CIVILE_INEXISTANTE' &&
+    borneHaute.refus === 'DATE_HORS_PLAGE' && borneHaute.plage === '1-9999' &&
+    dansLaBorne.ok === true && dansLaBorne.conserver_jusqu_au === '9999-12-31',
+    '5J-F2 : la plage 0001–9999 est explicite ; l\'an 0000 et tout débordement sont refusés');
+}
+
+/** ⑥ Les règles bissextiles restent exactes, y compris 1900 et 2000. */
+function test5J_F3_bissextilesExactes(etat) {
+  var c = calculerConservationRequete;
+  var f1900 = c('1900-02-28', 1);
+  var j1900 = c('1900-02-29', 1);
+  var f2000 = c('2000-02-28', 1);
+  var f0004 = c('0004-02-28', 1);      /* an 4 : bissextile */
+  var j0100 = c('0100-02-29', 1);      /* an 100 : NON bissextile */
+  var f0400 = c('0400-02-28', 1);      /* an 400 : bissextile */
+  _ffrAssert(etat,
+    f1900.conserver_jusqu_au === '1900-03-01' && j1900.refus === 'DATE_CIVILE_INEXISTANTE' &&
+    f2000.conserver_jusqu_au === '2000-02-29' &&
+    f0004.conserver_jusqu_au === '0004-02-29' &&
+    j0100.refus === 'DATE_CIVILE_INEXISTANTE' &&
+    f0400.conserver_jusqu_au === '0400-02-29',
+    '5J-F3 : 1900 et 0100 non bissextiles, 2000, 0004 et 0400 bissextiles');
+}
+
+/** ⑥ Aucun `Date` ne subsiste dans le calcul, et le format de sortie tient sur 4 chiffres. */
+function test5J_F4_aucunDateEtFormatStable(etat) {
+  var code = _5hCodeSeul(calculerConservationRequete) + _5hCodeSeul(accesJoursCivils) +
+             _5hCodeSeul(accesCivilsDepuisJours) + _5hCodeSeul(accesDateISO);
+  var allerRetour = 0;
+  for (var j = -700000; j <= 700000; j += 97777) {
+    var d = accesCivilsDepuisJours(j);
+    if (accesJoursCivils(d.an, d.mois, d.jour) === j) allerRetour++;
+  }
+  var toutes4 = true;
+  var essais = ['0001-01-01', '0099-06-15', '1900-02-28', '2026-09-13', '9998-12-31'];
+  for (var i = 0; i < essais.length; i++) {
+    var r = calculerConservationRequete(essais[i], 1);
+    if (!r.ok || !/^\d{4}-\d{2}-\d{2}$/.test(r.conserver_jusqu_au)) toutes4 = false;
+  }
+  _ffrAssert(etat,
+    code.indexOf('new Date') === -1 && code.indexOf('Date.UTC') === -1 &&
+    code.indexOf('Date.now') === -1 &&
+    allerRetour === 15 && toutes4,
+    '5J-F4 ⭐ plus aucun `Date` dans le calcul ; jours↔civil est bijectif sur 15 points et ' +
+    'la sortie tient toujours sur quatre chiffres d\'année');
+}
+
+/* ============================================================================
+ *  SÉRIE 5K — LA CHAÎNE DE CONFIRMATION, FERMÉE
+ *  CORR-ACCES-SCORES-CONFIRMATION-DR-5K
+ * ============================================================================
+ *  Quatre défauts fermés : une confirmation sans édition, un indicateur de consommation
+ *  permissif, une édition encore issue de la demande navigateur, et une confirmation à usage
+ *  unique jamais planifiée comme consommée.
+ *  ⛔ Ces tests appellent `planifierTransitionAcces` DIRECTEMENT, avec un contexte explicite :
+ *  le contexte est ici le sujet, pas un détail à masquer par `_5hPlanifier`.
+ * ============================================================================ */
+
+/** Le contexte authentifié d'un organisateur. */
+function _5kCtx(opts) {
+  var o = opts || {};
+  var c = {};
+  /* ⚠️ `=== undefined`, ⛔ pas `||` : une chaîne VIDE doit rester vide, c'est un cas testé. */
+  if (o.sansEdition !== true) {
+    c.edition_id = (o.edition === undefined ? 'edition-FICTIVE-0001' : o.edition);
+  }
+  if (o.sansRole !== true) c.role = (o.role === undefined ? 'organisateur' : o.role);
+  if (o.sansAction !== true) {
+    c.action = (o.action === undefined ? ACCES_ACTION_FIGER : o.action);
+  }
+  return c;
+}
+
+/** Une fin de tournoi NON concluante (donc gel manuel) et son empreinte. */
+function _5kFinOuverte() {
+  return _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'poule', 'à venir')]);
+}
+/** Une fin RECONNUE (donc gel direct). */
+function _5kFinTerminee() {
+  return _5hFin([_5hCat('U10')], [_5hMatch('M1', 'U10', 'classement', 'terminé')]);
+}
+
+/** Une confirmation COMPLÈTE et recevable ; `opts` permet d'en abîmer un champ. */
+function _5kConfirmation(fin, opts) {
+  var o = opts || {};
+  var c = {
+    confirmation_id: o.id || 'conf-FICTIVE-5K',
+    action: o.action || ACCES_ACTION_FIGER,
+    etat_evalue: ACCES_ETAT_OUVERT,
+    version_evaluee: (o.version === undefined ? 3 : o.version),
+    empreinte_fin: (o.empreinte === undefined ? empreinteFinTournoi(fin) : o.empreinte),
+    expire_le: (o.expire === undefined ? EXPIRE_5H : o.expire)
+  };
+  if (o.sansEdition !== true) c.edition_id = o.edition || 'edition-FICTIVE-0001';
+  if (o.sansConsomme !== true) c.consomme = (o.consomme === undefined ? false : o.consomme);
+  return c;
+}
+
+/** Une demande de gel manuel, avec sa confirmation. */
+function _5kDemandeGel(fin, conf, extra) {
+  var d = { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin,
+            confirmation_id: (conf ? conf.confirmation_id : 'conf-FICTIVE-5K'),
+            confirmation: conf, maintenant: MAINTENANT_5H,
+            horodatage: '2026-09-13 18:00:00' };
+  var e = extra || {};
+  for (var k in e) { if (Object.prototype.hasOwnProperty.call(e, k)) d[k] = e[k]; }
+  return d;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ① LE CONTEXTE AUTHENTIFIÉ EST OBLIGATOIRE                                 */
+/* -------------------------------------------------------------------------- */
+
+/** Contexte absent ou incomplet : refus AVANT toute planification. */
+function test5K_A1_contexteAbsentOuIncomplet(etat) {
+  var fin = _5kFinTerminee();
+  var dem = { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin, maintenant: MAINTENANT_5H };
+  var ligne = _5hLigne(ACCES_ETAT_OUVERT, 3, 0);
+  var cas = [
+    [undefined, 'contexte absent'], [null, 'contexte null'], [{}, 'contexte vide'],
+    [_5kCtx({ sansEdition: true }), 'sans édition'],
+    [_5kCtx({ sansRole: true }), 'sans rôle'],
+    [_5kCtx({ sansAction: true }), 'sans action'],
+    [_5kCtx({ edition: '' }), 'édition vide'],
+    [_5kCtx({ edition: '   ' }), 'édition blanche']
+  ];
+  var refuses = 0, ecarts = [];
+  for (var i = 0; i < cas.length; i++) {
+    var r = planifierTransitionAcces(ligne, dem, cas[i][0]);
+    if (r.refus === 'CONTEXTE_REQUIS' && r.ok !== true) refuses++;
+    else ecarts.push(cas[i][1] + ' → ' + (r.refus || 'ACCEPTÉ'));
+  }
+  _ffrAssert(etat, refuses === cas.length,
+    '5K-A1 ⭐ les 8 formes de contexte manquant sont refusées CONTEXTE_REQUIS' +
+    (ecarts.length ? ' — écarts : ' + ecarts.join(' ; ') : ''));
+}
+
+/** Seul le rôle `organisateur` peut solliciter une transition d'accès. */
+function test5K_A2_roleNonOrganisateur(etat) {
+  var fin = _5kFinTerminee();
+  var dem = { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin, maintenant: MAINTENANT_5H };
+  var ligne = _5hLigne(ACCES_ETAT_OUVERT, 3, 0);
+  var table = planifierTransitionAcces(ligne, dem, _5kCtx({ role: 'table' }));
+  var vide = planifierTransitionAcces(ligne, dem, _5kCtx({ role: '' }));
+  var majuscules = planifierTransitionAcces(ligne, dem, _5kCtx({ role: 'ORGANISATEUR' }));
+  var bon = planifierTransitionAcces(ligne, dem, _5kCtx());
+  _ffrAssert(etat,
+    table.refus === 'ROLE_NON_AUTORISE' && table.role === 'table' &&
+    vide.refus === 'CONTEXTE_REQUIS' && vide.champ === 'role' &&
+    majuscules.refus === 'ROLE_NON_AUTORISE' &&
+    bon.ok === true,
+    '5K-A2 ⭐ une table ne fige rien ; le rôle est comparé à l\'identique, sans tolérance de casse');
+}
+
+/** L'action du contexte doit être celle qui est demandée. */
+function test5K_A3_actionDuContexte(etat) {
+  var fin = _5kFinTerminee();
+  var ligne = _5hLigne(ACCES_ETAT_OUVERT, 3, 0);
+  var dem = { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin, maintenant: MAINTENANT_5H };
+  var divergente = planifierTransitionAcces(ligne, dem,
+    _5kCtx({ action: ACCES_ACTION_CLOTURER }));
+  /* Une demande MUETTE sur l'action suit le contexte — c'est lui qui fait autorité. */
+  var muette = planifierTransitionAcces(ligne,
+    { version_lue: 3, fin: fin, maintenant: MAINTENANT_5H }, _5kCtx());
+  /* Une action inconnue du vocabulaire d'administration est refusée. */
+  var inconnue = planifierTransitionAcces(ligne, { version_lue: 3, fin: fin },
+    _5kCtx({ action: 'ENREGISTRER_SCORE' }));
+  _ffrAssert(etat,
+    divergente.refus === 'CONTEXTE_DIVERGENT' && divergente.champ === 'action' &&
+    divergente.attendu === ACCES_ACTION_CLOTURER && divergente.recu === ACCES_ACTION_FIGER &&
+    muette.ok === true && muette.action === ACCES_ACTION_FIGER &&
+    inconnue.refus === 'ACTION_NON_ADMINISTRATIVE',
+    '5K-A3 : l\'action du contexte fait autorité ; une divergence ou une action non ' +
+    'administrative est refusée');
+}
+
+/** Une édition ou un rôle présents dans la demande doivent correspondre au contexte. */
+function test5K_A4_demandeNePeutContredireLeContexte(etat) {
+  var fin = _5kFinTerminee();
+  var ligne = _5hLigne(ACCES_ETAT_OUVERT, 3, 0);
+  var base = { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin, maintenant: MAINTENANT_5H };
+  var autreEdition = planifierTransitionAcces(ligne,
+    _5hFusion(base, { edition_id: 'edition-FICTIVE-0002' }), _5kCtx());
+  var autreRole = planifierTransitionAcces(ligne,
+    _5hFusion(base, { role: 'table' }), _5kCtx());
+  var memeEdition = planifierTransitionAcces(ligne,
+    _5hFusion(base, { edition_id: 'edition-FICTIVE-0001' }), _5kCtx());
+  _ffrAssert(etat,
+    autreEdition.refus === 'CONTEXTE_DIVERGENT' && autreEdition.champ === 'edition_id' &&
+    autreEdition.attendu === 'edition-FICTIVE-0001' &&
+    autreEdition.recu === 'edition-FICTIVE-0002' &&
+    autreRole.refus === 'CONTEXTE_DIVERGENT' && autreRole.champ === 'role' &&
+    memeEdition.ok === true,
+    '5K-A4 ⭐ le navigateur peut répéter l\'édition et le rôle, ⛔ jamais les contredire');
+}
+
+/** L'édition FIABLE est celle du contexte, au journal comme dans la sortie. */
+function test5K_A5_editionFiablePartout(etat) {
+  var fin = _5kFinTerminee();
+  var r = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_FIGER, version_lue: 3, fin: fin, maintenant: MAINTENANT_5H },
+    _5kCtx({ edition: 'edition-FICTIVE-0007' }));
+  _ffrAssert(etat,
+    r.ok === true && r.edition_id === 'edition-FICTIVE-0007' &&
+    r.journal.edition_id === 'edition-FICTIVE-0007' && r.journal.role === 'organisateur',
+    '5K-A5 : l\'édition du contexte se retrouve dans la sortie ET dans le journal');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ② UNE CONFIRMATION SANS ÉDITION NE VAUT RIEN                              */
+/* -------------------------------------------------------------------------- */
+
+/** Le scénario complet de la revue : aucune édition nulle part ⇒ le gel est REFUSÉ. */
+function test5K_B1_confirmationSansEdition(etat) {
+  var fin = _5kFinOuverte();
+  var conf = _5kConfirmation(fin, { sansEdition: true });
+  var r = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    _5kDemandeGel(fin, conf), _5kCtx());
+  _ffrAssert(etat,
+    r.ok !== true && r.refus === 'CONFIRMATION_INVALIDE' && r.champ === 'edition_id' &&
+    r.gel_manuel_possible === true && r.confirmation_a_consommer === undefined,
+    '5K-B1 ⭐ une confirmation non rattachée à une édition est refusée, même quand personne ' +
+    'd\'autre n\'en porte — ⛔ deux absences ne font pas une égalité');
+}
+
+/** Une confirmation rattachée à une AUTRE édition que celle authentifiée est refusée. */
+function test5K_B2_confirmationAutreEdition(etat) {
+  var fin = _5kFinOuverte();
+  var conf = _5kConfirmation(fin, { edition: 'edition-FICTIVE-0002' });
+  /* ⭐ Même si la DEMANDE prétend être sur l'édition 2 : le contexte la contredit d'abord. */
+  var viaDemande = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    _5kDemandeGel(fin, conf, { edition_id: 'edition-FICTIVE-0002' }), _5kCtx());
+  var sansPretention = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    _5kDemandeGel(fin, conf), _5kCtx());
+  _ffrAssert(etat,
+    viaDemande.refus === 'CONTEXTE_DIVERGENT' && viaDemande.champ === 'edition_id' &&
+    sansPretention.refus === 'CONFIRMATION_AUTRE_EDITION' &&
+    viaDemande.confirmation_a_consommer === undefined &&
+    sansPretention.confirmation_a_consommer === undefined,
+    '5K-B2 ⭐ l\'édition de la demande ne rattache plus rien : la confirmation d\'une autre ' +
+    'édition est refusée dans les deux cas');
+}
+
+/** Chacun des six champs obligatoires manquant est refusé, et nommé. */
+function test5K_B3_champsObligatoiresDeLaConfirmation(etat) {
+  var fin = _5kFinOuverte();
+  var att = { confirmation_id: 'conf-FICTIVE-5K', edition_id: 'edition-FICTIVE-0001',
+              action: ACCES_ACTION_FIGER, etat_courant: ACCES_ETAT_OUVERT,
+              version_courante: 3, empreinte_fin: empreinteFinTournoi(fin),
+              maintenant: MAINTENANT_5H };
+  var manques = 0, ecarts = [];
+  for (var i = 0; i < ACCES_CONFIRMATION_CHAMPS.length; i++) {
+    var nom = ACCES_CONFIRMATION_CHAMPS[i];
+    var conf = _5kConfirmation(fin);
+    delete conf[nom];
+    var r = validerConfirmationAcces(conf, att);
+    if (r.refus === 'CONFIRMATION_INVALIDE' && r.champ === nom) manques++;
+    else ecarts.push(nom + ' → ' + (r.refus || 'ACCEPTÉ'));
+  }
+  /* ⭐ Et une empreinte VIDE des deux côtés n'est pas une empreinte. */
+  var vide = validerConfirmationAcces(_5kConfirmation(fin, { empreinte: '' }),
+    _5hFusion(att, { empreinte_fin: '' }));
+  _ffrAssert(etat,
+    manques === ACCES_CONFIRMATION_CHAMPS.length &&
+    ACCES_CONFIRMATION_CHAMPS.length === 6 &&
+    vide.refus === 'CONFIRMATION_INVALIDE' && vide.champ === 'empreinte_fin',
+    '5K-B3 : les 6 champs à présence obligatoire sont nommés un à un (' + manques + '/6)' +
+    (ecarts.length ? ' — écarts : ' + ecarts.join(' ; ') : ''));
+}
+
+/** L'ATTENTE aussi doit être complète : une valeur attendue absente ferme le contrôle. */
+function test5K_B4_attenteIncomplete(etat) {
+  var fin = _5kFinOuverte();
+  var att = { confirmation_id: 'conf-FICTIVE-5K', edition_id: 'edition-FICTIVE-0001',
+              action: ACCES_ACTION_FIGER, etat_courant: ACCES_ETAT_OUVERT,
+              version_courante: 3, empreinte_fin: empreinteFinTournoi(fin),
+              maintenant: MAINTENANT_5H };
+  var manques = 0;
+  for (var i = 0; i < ACCES_CONFIRMATION_ATTENDU_CHAMPS.length; i++) {
+    var mutile = _5hFusion(att, {});
+    delete mutile[ACCES_CONFIRMATION_ATTENDU_CHAMPS[i]];
+    var r = validerConfirmationAcces(_5kConfirmation(fin), mutile);
+    if (r.refus === 'CONFIRMATION_ATTENTE_INVALIDE' &&
+        r.champ === ACCES_CONFIRMATION_ATTENDU_CHAMPS[i]) manques++;
+  }
+  /* ⭐ Les deux champs à validateur dédié gardent leurs refus PRÉCIS (acquis de 5J). */
+  var versionVide = validerConfirmationAcces(_5kConfirmation(fin, { version: '' }), att);
+  var expireVide = validerConfirmationAcces(_5kConfirmation(fin, { expire: '' }), att);
+  var maintenantAbsent = validerConfirmationAcces(_5kConfirmation(fin),
+    _5hFusion(att, { maintenant: '' }));
+  _ffrAssert(etat,
+    manques === ACCES_CONFIRMATION_ATTENDU_CHAMPS.length &&
+    versionVide.refus === 'CONFIRMATION_VERSION_INVALIDE' &&
+    expireVide.refus === 'CONFIRMATION_EXPIRATION_ABSENTE' &&
+    maintenantAbsent.refus === 'CONFIRMATION_INSTANT_ABSENT',
+    '5K-B4 : l\'attente incomplète est refusée, et les validateurs dédiés de 5J gardent leurs ' +
+    'refus précis (version, expiration, instant)');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ③ `consomme` EST UN BOOLÉEN EXACT                                         */
+/* -------------------------------------------------------------------------- */
+
+/** Toute forme autre qu'un booléen est une donnée corrompue, ⛔ jamais une autorisation. */
+function test5K_C1_consommeStrict(etat) {
+  var fin = _5kFinOuverte();
+  var att = { confirmation_id: 'conf-FICTIVE-5K', edition_id: 'edition-FICTIVE-0001',
+              action: ACCES_ACTION_FIGER, etat_courant: ACCES_ETAT_OUVERT,
+              version_courante: 3, empreinte_fin: empreinteFinTournoi(fin),
+              maintenant: MAINTENANT_5H };
+  var invalides = [
+    ['absent', _5kConfirmation(fin, { sansConsomme: true })],
+    ['null', _5kConfirmation(fin, { consomme: null })],
+    ['0', _5kConfirmation(fin, { consomme: 0 })],
+    ['1', _5kConfirmation(fin, { consomme: 1 })],
+    ["'false'", _5kConfirmation(fin, { consomme: 'false' })],
+    ["'true'", _5kConfirmation(fin, { consomme: 'true' })],
+    ["''", _5kConfirmation(fin, { consomme: '' })],
+    ['objet', _5kConfirmation(fin, { consomme: {} })]
+  ];
+  var refuses = 0, ecarts = [];
+  for (var i = 0; i < invalides.length; i++) {
+    var r = validerConfirmationAcces(invalides[i][1], att);
+    if (r.refus === 'CONFIRMATION_INVALIDE' && r.champ === 'consomme' &&
+        r.motif === 'booleen_exact_attendu') refuses++;
+    else ecarts.push(invalides[i][0] + ' → ' + (r.refus || 'ACCEPTÉ'));
+  }
+  _ffrAssert(etat, refuses === invalides.length,
+    '5K-C1 ⭐ absent, null, 0, 1, « false », « true », vide et objet : tous CONFIRMATION_INVALIDE' +
+    (ecarts.length ? ' — écarts : ' + ecarts.join(' ; ') : ''));
+}
+
+/** Les deux seules valeurs acceptées, et leurs deux issues. */
+function test5K_C2_consommeFalseEtTrue(etat) {
+  var fin = _5kFinOuverte();
+  var att = { confirmation_id: 'conf-FICTIVE-5K', edition_id: 'edition-FICTIVE-0001',
+              action: ACCES_ACTION_FIGER, etat_courant: ACCES_ETAT_OUVERT,
+              version_courante: 3, empreinte_fin: empreinteFinTournoi(fin),
+              maintenant: MAINTENANT_5H };
+  var libre = validerConfirmationAcces(_5kConfirmation(fin, { consomme: false }), att);
+  var deja = validerConfirmationAcces(_5kConfirmation(fin, { consomme: true }), att);
+  /* Et au bout de la chaîne : le gel aboutit pour l'une, est refusé pour l'autre. */
+  var gelLibre = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    _5kDemandeGel(fin, _5kConfirmation(fin, { consomme: false })), _5kCtx());
+  var gelDeja = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    _5kDemandeGel(fin, _5kConfirmation(fin, { consomme: true })), _5kCtx());
+  _ffrAssert(etat,
+    libre.ok === true && deja.refus === 'CONFIRMATION_CONSOMMEE' &&
+    gelLibre.ok === true && gelLibre.etat_apres === ACCES_ETAT_FIGE &&
+    gelDeja.refus === 'CONFIRMATION_CONSOMMEE' &&
+    gelDeja.confirmation_a_consommer === undefined,
+    '5K-C2 : `false` ouvre, `true` refuse — et rien d\'autre n\'est accepté');
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ④ LE PLAN DE CONSOMMATION                                                 */
+/* -------------------------------------------------------------------------- */
+
+/** Un gel manuel valide planifie la consommation, avec les valeurs FIABLES. */
+function test5K_D1_gelManuelPlanifieLaConsommation(etat) {
+  var fin = _5kFinOuverte();
+  var conf = _5kConfirmation(fin, { edition: 'edition-FICTIVE-0007' });
+  var r = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    _5kDemandeGel(fin, conf), _5kCtx({ edition: 'edition-FICTIVE-0007' }));
+  _ffrAssert(etat,
+    r.ok === true && r.etat_apres === ACCES_ETAT_FIGE && r.journal.gel_manuel === true &&
+    !!r.confirmation_a_consommer &&
+    r.confirmation_a_consommer.confirmation_id === 'conf-FICTIVE-5K' &&
+    r.confirmation_a_consommer.edition_id === 'edition-FICTIVE-0007' &&
+    r.confirmation_a_consommer.action === ACCES_ACTION_FIGER,
+    '5K-D1 ⭐ un gel manuel validé annonce la confirmation à consommer, avec l\'édition FIABLE');
+}
+
+/** Une clôture RENFORCÉE valide planifie la même instruction. */
+function test5K_D2_clotureRenforceePlanifieLaConsommation(etat) {
+  var fin = _5kFinOuverte();
+  var conf = _5kConfirmation(fin, { id: 'conf-FICTIVE-5K-2', action: ACCES_ACTION_CLOTURER });
+  var r = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_CLOTURER, version_lue: 3, fin: fin, confirme: true,
+      confirmation_id: 'conf-FICTIVE-5K-2', confirmation: conf, maintenant: MAINTENANT_5H,
+      horodatage: '2026-09-13 20:00:00' },
+    _5kCtx({ action: ACCES_ACTION_CLOTURER }));
+  _ffrAssert(etat,
+    r.ok === true && r.etat_apres === ACCES_ETAT_CLOTURE &&
+    r.journal.cloture_renforcee === true &&
+    !!r.confirmation_a_consommer &&
+    r.confirmation_a_consommer.confirmation_id === 'conf-FICTIVE-5K-2' &&
+    r.confirmation_a_consommer.action === ACCES_ACTION_CLOTURER,
+    '5K-D2 : la clôture renforcée planifie aussi la consommation, pour SON action');
+}
+
+/** ⛔ Aucune instruction pour un gel DIRECT ni pour une clôture ORDINAIRE. */
+function test5K_D3_aucuneInstructionSansConfirmationUnique(etat) {
+  var finFinie = _5kFinTerminee();
+  var gelDirect = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_FIGER, version_lue: 3, fin: finFinie, maintenant: MAINTENANT_5H,
+      horodatage: '2026-09-13 18:00:00' }, _5kCtx());
+  var clotureOrdinaire = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    { action: ACCES_ACTION_CLOTURER, version_lue: 3, fin: finFinie, confirme: true,
+      maintenant: MAINTENANT_5H, horodatage: '2026-09-13 20:00:00' },
+    _5kCtx({ action: ACCES_ACTION_CLOTURER }));
+  var ouvrir = planifierTransitionAcces(_5hLigne(ACCES_ETAT_PREPARE, 1, 0),
+    { action: ACCES_ACTION_OUVRIR, version_lue: 1 },
+    _5kCtx({ action: ACCES_ACTION_OUVRIR }));
+  var rotation = planifierTransitionAcces(_5hLigne(ACCES_ETAT_FIGE, 4, 0),
+    { action: ACCES_ACTION_ROTATION, version_lue: 4 },
+    _5kCtx({ action: ACCES_ACTION_ROTATION }));
+  _ffrAssert(etat,
+    gelDirect.ok === true && gelDirect.confirmation_a_consommer === undefined &&
+    gelDirect.journal.gel_manuel === false &&
+    clotureOrdinaire.ok === true && clotureOrdinaire.confirmation_a_consommer === undefined &&
+    ouvrir.ok === true && ouvrir.confirmation_a_consommer === undefined &&
+    rotation.ok === true && rotation.confirmation_a_consommer === undefined,
+    '5K-D3 ⭐ gel direct, clôture ordinaire, ouverture et rotation : ⛔ aucune instruction ' +
+    'de consommation');
+}
+
+/** ⛔ Aucune instruction sur un REFUS, y compris tardif (plafonds atteints). */
+function test5K_D4_aucuneInstructionSurRefus(etat) {
+  var fin = _5kFinOuverte();
+  var confPerimee = _5kConfirmation(fin, { version: 4 });   /* version évaluée ≠ courante */
+  var refusConfirmation = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    _5kDemandeGel(fin, confPerimee), _5kCtx());
+  /* ⭐ LE CAS DÉLICAT : la confirmation est VALIDE, mais un contrôle ULTÉRIEUR refuse. */
+  var confMax = _5kConfirmation(fin, { version: ACCES_ENTIER_MAX });
+  var versionMax = planifierTransitionAcces(
+    { etat: ACCES_ETAT_OUVERT, version: ACCES_ENTIER_MAX, rotations: 0 },
+    _5kDemandeGel(fin, confMax, { version_lue: ACCES_ENTIER_MAX }), _5kCtx());
+  var rotationMax = planifierTransitionAcces(
+    { etat: ACCES_ETAT_OUVERT, version: 3, rotations: ACCES_ENTIER_MAX },
+    { action: ACCES_ACTION_ROTATION, version_lue: 3 },
+    _5kCtx({ action: ACCES_ACTION_ROTATION }));
+  _ffrAssert(etat,
+    refusConfirmation.refus === 'CONFIRMATION_AUTRE_VERSION' &&
+    refusConfirmation.confirmation_a_consommer === undefined &&
+    versionMax.refus === 'VERSION_MAX_ATTEINTE' && versionMax.ok !== true &&
+    versionMax.confirmation_a_consommer === undefined &&
+    rotationMax.refus === 'ROTATIONS_MAX_ATTEINTES' &&
+    rotationMax.confirmation_a_consommer === undefined,
+    '5K-D4 ⭐ une confirmation valide suivie d\'un refus tardif n\'est JAMAIS annoncée consommée');
+}
+
+/** ⛔ Aucun objet fourni n'est muté, et l'instruction est une valeur neuve. */
+function test5K_D5_aucuneMutation(etat) {
+  var fin = _5kFinOuverte();
+  var conf = _5kConfirmation(fin);
+  var ligne = _5hLigne(ACCES_ETAT_OUVERT, 3, 0);
+  var demande = _5kDemandeGel(fin, conf);
+  var ctx = _5kCtx();
+  var avant = JSON.stringify([ligne, demande, ctx, conf, fin]);
+  var r = planifierTransitionAcces(ligne, demande, ctx);
+  var apres = JSON.stringify([ligne, demande, ctx, conf, fin]);
+  /* Modifier l'instruction rendue ne doit rien changer à la confirmation d'origine. */
+  r.confirmation_a_consommer.confirmation_id = 'MODIFIÉ';
+  _ffrAssert(etat,
+    avant === apres && conf.consomme === false &&
+    conf.confirmation_id === 'conf-FICTIVE-5K' &&
+    r.ok === true,
+    '5K-D5 : ligne, demande, contexte, confirmation et calcul de fin ressortent INTACTS ; ' +
+    'l\'instruction est une valeur neuve');
+}
+
+/** La chaîne complète, de bout en bout, sur une édition inhabituelle. */
+function test5K_D6_chaineComplete(etat) {
+  var fin = _5kFinOuverte();
+  var conf = _5kConfirmation(fin, { id: 'conf-FICTIVE-5K-9', edition: 'edition-FICTIVE-0042' });
+  var r = planifierTransitionAcces(_5hLigne(ACCES_ETAT_OUVERT, 3, 0),
+    _5kDemandeGel(fin, conf, { edition_id: 'edition-FICTIVE-0042',
+                               motif: 'Orage : arrêt décidé par l\'arbitre.' }),
+    _5kCtx({ edition: 'edition-FICTIVE-0042' }));
+  _ffrAssert(etat,
+    r.ok === true &&
+    r.edition_id === 'edition-FICTIVE-0042' &&
+    r.etat_avant === ACCES_ETAT_OUVERT && r.etat_apres === ACCES_ETAT_FIGE &&
+    r.version_apres === 4 && r.ecrire.date_gel === '2026-09-13 18:00:00' &&
+    r.journal.edition_id === 'edition-FICTIVE-0042' &&
+    r.journal.gel_manuel === true &&
+    r.journal.motif === 'Orage : arrêt décidé par l\'arbitre.' &&
+    r.confirmation_a_consommer.confirmation_id === 'conf-FICTIVE-5K-9' &&
+    r.confirmation_a_consommer.edition_id === 'edition-FICTIVE-0042',
+    '5K-D6 ⭐ la chaîne complète : contexte → confirmation → transition → journal → plan de ' +
+    'consommation, tous sur la MÊME édition fiable');
 }

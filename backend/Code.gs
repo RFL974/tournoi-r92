@@ -8175,6 +8175,1666 @@ function basculerEditionApresReset(classeur) {
   return { ok: true, edition: plan.edition, fermee: plan.fermee };
 }
 
+/* ===================== ACCÈS ÉPHÉMÈRE AUX SCORES — LE NOYAU PUR =====================
+ * IMPL-ACCES-SCORES-NOYAU-PUR-DR-5H — conception : SPEC-ACCES-SCORES-DR-5G + RECTIF-…-R1
+ *
+ * ⭐ CE QUE CE BLOC EST. Des fonctions de DÉCISION, et rien d'autre : on leur donne l'état
+ * courant et une demande, elles répondent « voici ce qu'il faut faire ». ⛔ Elles n'écrivent
+ * nulle part, n'ouvrent aucun classeur, n'appellent aucun service Google, ne lisent jamais
+ * l'horloge et ne tirent aucun aléa — horodatages et identifiants sont FOURNIS en entrée.
+ * C'est exactement la séparation de `planifierOuvertureEdition` / `ouvrirEditionSiAucune`
+ * ci-dessus : la décision se teste sans Google, l'effet viendra dans un lot distinct.
+ *
+ * ⛔ CE QUE CE BLOC N'EST PAS, et c'est délibéré : il ne rend AUCUNE fonctionnalité utilisable.
+ * ⛔ Personne ne l'appelle. ⛔ Aucun onglet n'existe. ⛔ Aucun jeton n'est généré ni conservé.
+ * ⛔ Aucune route n'est protégée. `ENTETES`, `doGet`, `doPost`, `enregistrerScore`, le schéma
+ * des matchs, le registre des éditions et le reset réel sont INCHANGÉS.
+ *
+ * ⚠️ POURQUOI COMMENCER PAR LÀ. Le défaut à corriger est que `saisie.html` sert aujourd'hui
+ * les données du tournoi AVANT toute autorisation (lectures `getAll` puis demande de clé).
+ * La chaîne complète — jeton, stockage protégé, route — ne peut pas être posée d'un geste sans
+ * risque. On pose donc d'abord la partie qui n'a aucun effet de bord : les RÈGLES. Retour
+ * arrière = supprimer ce bloc, rien d'autre ne bouge.
+ *
+ * ⭐ LES CINQ PROTECTIONS MODÉLISÉES, une phrase chacune :
+ *   ① machine d'états — un accès ne change d'état que par un geste d'organisateur prévu ;
+ *   ② fin de tournoi PAR CATÉGORIE — on ne déclare jamais fini ce qu'on n'a pas prouvé ;
+ *   ③ confirmation LIÉE — un avertissement ne devient un gel qu'avec une confirmation
+ *      rattachée à CETTE édition, CETTE action, CET état, CETTE version et CE calcul ;
+ *   ④ idempotence — une réponse perdue puis rejouée ne produit jamais un second effet ;
+ *   ⑤ conflit de score — deux tables ne peuvent plus s'écraser silencieusement.
+ *
+ * ⚠️ CONVENTION D'HORODATAGE. Comme partout dans ce fichier, un instant s'écrit
+ * `yyyy-MM-dd HH:mm:ss` (voir `horodatageEdition`). Ce format se compare comme du TEXTE :
+ * l'ordre lexicographique EST l'ordre chronologique. C'est ce qui permet de tester une
+ * péremption sans lire l'horloge.
+ * ================================================================================= */
+
+/* --------------------------------------------------------------------------
+   ① LA MACHINE D'ÉTATS
+   -------------------------------------------------------------------------- */
+
+/* ⭐ ABSENT n'est PAS une valeur écrite : c'est l'ABSENCE DE LIGNE pour cette édition.
+   ⛔ Un accès ne peut donc pas « exister à moitié », et une édition neuve part forcément de
+   zéro sans qu'on ait besoin d'écrire quoi que ce soit. */
+var ACCES_ETAT_ABSENT  = 'ABSENT';
+var ACCES_ETAT_PREPARE = 'PREPARE';
+var ACCES_ETAT_OUVERT  = 'OUVERT';
+var ACCES_ETAT_FIGE    = 'FIGE';
+var ACCES_ETAT_CLOTURE = 'CLOTURE';
+
+/* Les états RÉELLEMENT écrits dans une ligne (ABSENT en est exclu, par construction). */
+var ACCES_ETATS_ECRITS = [ACCES_ETAT_PREPARE, ACCES_ETAT_OUVERT, ACCES_ETAT_FIGE,
+                          ACCES_ETAT_CLOTURE];
+
+var ACCES_ACTION_PREPARER  = 'PREPARER';
+var ACCES_ACTION_OUVRIR    = 'OUVRIR';
+var ACCES_ACTION_FIGER     = 'FIGER';
+var ACCES_ACTION_REPRENDRE = 'REPRENDRE';
+var ACCES_ACTION_CLOTURER  = 'CLOTURER';
+var ACCES_ACTION_ROTATION  = 'ROTATION';
+
+/**
+ * ⭐ LA TABLE DES TRANSITIONS — une DONNÉE, pas du code.
+ *
+ * ⚠️ Ce choix n'est pas cosmétique. Écrite en `if/else`, la règle « aucune sortie de CLÔTURÉ »
+ * serait une absence de branche — donc invisible, et impossible à énumérer dans un test. Écrite
+ * en table, elle devient une propriété VÉRIFIABLE : toute paire (action, état) hors de cette
+ * liste est refusée, et un test peut balayer les 6 × 5 = 30 combinaisons.
+ *
+ * `jeton` dit ce qu'il advient du secret, et c'est le cœur du lot :
+ *   · CREE      — il naît (et seulement là, ⛔ jamais par une lecture) ;
+ *   · INCHANGE  — le QR déjà imprimé reste valable ;
+ *   · REMPLACE  — ⛔ l'ancien QR meurt IMMÉDIATEMENT ;
+ *   · MORT      — définitivement révoqué, aucun retour.
+ *
+ * ⭐ ROTATION EN FIGÉ est volontairement permise : si le lien fuite pendant une pause pour
+ * intempéries, l'organisateur renouvelle le jeton SANS rouvrir l'accès, et l'ancien QR est
+ * mort AVANT que les tables ne reviennent.
+ */
+var ACCES_TRANSITIONS = [
+  { action: ACCES_ACTION_PREPARER,  depuis: ACCES_ETAT_ABSENT,  vers: ACCES_ETAT_PREPARE, jeton: 'CREE' },
+  { action: ACCES_ACTION_OUVRIR,    depuis: ACCES_ETAT_PREPARE, vers: ACCES_ETAT_OUVERT,  jeton: 'INCHANGE' },
+  { action: ACCES_ACTION_FIGER,     depuis: ACCES_ETAT_OUVERT,  vers: ACCES_ETAT_FIGE,    jeton: 'INCHANGE' },
+  { action: ACCES_ACTION_REPRENDRE, depuis: ACCES_ETAT_FIGE,    vers: ACCES_ETAT_OUVERT,  jeton: 'INCHANGE' },
+  { action: ACCES_ACTION_CLOTURER,  depuis: ACCES_ETAT_PREPARE, vers: ACCES_ETAT_CLOTURE, jeton: 'MORT' },
+  { action: ACCES_ACTION_CLOTURER,  depuis: ACCES_ETAT_OUVERT,  vers: ACCES_ETAT_CLOTURE, jeton: 'MORT' },
+  { action: ACCES_ACTION_CLOTURER,  depuis: ACCES_ETAT_FIGE,    vers: ACCES_ETAT_CLOTURE, jeton: 'MORT' },
+  { action: ACCES_ACTION_ROTATION,  depuis: ACCES_ETAT_PREPARE, vers: ACCES_ETAT_PREPARE, jeton: 'REMPLACE' },
+  { action: ACCES_ACTION_ROTATION,  depuis: ACCES_ETAT_OUVERT,  vers: ACCES_ETAT_OUVERT,  jeton: 'REMPLACE' },
+  { action: ACCES_ACTION_ROTATION,  depuis: ACCES_ETAT_FIGE,    vers: ACCES_ETAT_FIGE,    jeton: 'REMPLACE' }
+];
+
+/** Texte propre d'un champ de ligne ('' si vide/absent). Pur. */
+function accesTexte(v) {
+  return (v === undefined || v === null) ? '' : String(v).trim();
+}
+
+/**
+ * ⭐ UN ENTIER ≥ 0, OU UNE ANOMALIE NOMMÉE — ⛔ jamais un repli silencieux sur zéro.
+ *
+ * ⚠️ CE QU'IL CORRIGE (CORR-…-5I, défaut ③). La première version faisait
+ * `var version = Number(ligne.version); if (!isFinite(version) || version < 0) version = 0;`
+ * — donc une version vide, négative, décimale, non numérique ou infinie devenait **zéro**. Or
+ * zéro est la version d'un accès QUI N'EXISTE PAS : une ligne corrompue se faisait ainsi passer
+ * pour une ligne neuve, et la première transition tentée était acceptée. ⛔ Une donnée illisible
+ * doit bloquer, pas se laisser interpréter.
+ *
+ * @return { ok: true, valeur } ou { ok: false, motif }
+ */
+function accesEntierPositif(valeur) {
+  if (valeur === undefined || valeur === null) return { ok: false, motif: 'absent' };
+  var brut = accesTexte(valeur);
+  if (brut === '') return { ok: false, motif: 'vide' };
+  /* ⭐ Le test porte sur l'ÉCRITURE, pas sur `Number` : '1.5', '-1', 'abc', 'Infinity' et
+     '1e3' sont tous rejetés, là où `Number` en accepterait plusieurs. */
+  if (!/^[0-9]+$/.test(brut)) return { ok: false, motif: 'pas_un_entier_positif' };
+  var n = Number(brut);
+  if (!isFinite(n)) return { ok: false, motif: 'non_fini' };
+  /* ⛔ AU-DELÀ DE LA ZONE EXACTE, UN ENTIER N'EST PLUS UN COMPTEUR. À 2^53, l'incrément rend
+     la MÊME valeur : une version cesse de progresser, et le contrôle de concurrence devient
+     silencieusement inopérant. On refuse donc plutôt que d'accepter un compteur mort. */
+  if (n > ACCES_ENTIER_MAX) return { ok: false, motif: 'hors_plage_exacte' };
+  return { ok: true, valeur: n };
+}
+
+/**
+ * Incrémente un compteur, ou REFUSE. ⛔ Ne rend jamais la valeur inchangée : c'est précisément
+ * ce que faisait `n + 1` au plafond, et ce silence-là est pire qu'un refus.
+ */
+function accesIncrementer(n) {
+  if (!isFinite(n) || n < 0 || Math.floor(n) !== n) return { ok: false, motif: 'valeur_invalide' };
+  if (n >= ACCES_ENTIER_MAX) return { ok: false, motif: 'plafond_atteint' };
+  return { ok: true, valeur: n + 1 };
+}
+
+/* ⭐ ARITHMÉTIQUE CIVILE PURE — ⛔ sans `Date`, et c'est la raison d'être de ces deux fonctions.
+   `Date.UTC(1, 0, 1)` rend l'an 1901 : le langage réinterprète les années 0 à 99 comme
+   1900+an. Tout calcul de date passant par `Date` est donc faux sur cette plage, silencieusement.
+   ⚠️ Algorithme jours↔civil classique (ère de 400 ans) : exact sur toute la plage, et les
+   règles bissextiles 1900 (non) / 2000 (oui) en découlent sans cas particulier. */
+function accesJoursCivils(an, mois, jour) {
+  var y = an - ((mois <= 2) ? 1 : 0);
+  var ere = Math.floor(y / 400);
+  var anDansEre = y - ere * 400;
+  var jourDansAn = Math.floor((153 * (mois + ((mois > 2) ? -3 : 9)) + 2) / 5) + jour - 1;
+  var jourDansEre = anDansEre * 365 + Math.floor(anDansEre / 4) - Math.floor(anDansEre / 100) +
+                    jourDansAn;
+  return ere * 146097 + jourDansEre - 719468;
+}
+
+function accesCivilsDepuisJours(z) {
+  var j = z + 719468;
+  var ere = Math.floor(j / 146097);
+  var jourDansEre = j - ere * 146097;
+  var anDansEre = Math.floor((jourDansEre - Math.floor(jourDansEre / 1460) +
+                              Math.floor(jourDansEre / 36524) -
+                              Math.floor(jourDansEre / 146096)) / 365);
+  var y = anDansEre + ere * 400;
+  var jourDansAn = jourDansEre - (365 * anDansEre + Math.floor(anDansEre / 4) -
+                                  Math.floor(anDansEre / 100));
+  var moisDecale = Math.floor((5 * jourDansAn + 2) / 153);
+  var jour = jourDansAn - Math.floor((153 * moisDecale + 2) / 5) + 1;
+  var mois = moisDecale + ((moisDecale < 10) ? 3 : -9);
+  return { an: y + ((mois <= 2) ? 1 : 0), mois: mois, jour: jour };
+}
+
+/** Écrit une date civile sur quatre chiffres d'année. Pur. */
+function accesDateISO(d) {
+  var a = String(d.an), m = String(d.mois), j = String(d.jour);
+  while (a.length < 4) a = '0' + a;
+  if (m.length < 2) m = '0' + m;
+  if (j.length < 2) j = '0' + j;
+  return a + '-' + m + '-' + j;
+}
+
+/**
+ * ⭐ UN INSTANT `yyyy-MM-dd HH:mm:ss` VALIDÉ, et rendu COMPARABLE par un nombre.
+ * ⛔ Aucun classement lexicographique n'est fait avant cette validation : `'jamais'` comparé à
+ * un vrai horodatage donnait un ordre parfaitement arbitraire — donc une confirmation
+ * éternellement valide.
+ * @return { ok: true, cle } ou { ok: false, motif: 'absent'|'format'|'date_civile'|'heure' }
+ */
+function accesInstantValide(brut) {
+  var t = accesTexte(brut);
+  if (t === '') return { ok: false, motif: 'absent' };
+  var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/.exec(t);
+  if (!m) return { ok: false, motif: 'format' };
+  var an = Number(m[1]), mois = Number(m[2]), jour = Number(m[3]);
+  var h = Number(m[4]), mi = Number(m[5]), se = Number(m[6]);
+  if (!accesDateCivileExiste(an, mois, jour)) return { ok: false, motif: 'date_civile' };
+  if (h > 23 || mi > 59 || se > 59) return { ok: false, motif: 'heure' };
+  return { ok: true, cle: accesJoursCivils(an, mois, jour) * 86400 + h * 3600 + mi * 60 + se };
+}
+
+/* ⛔ Le plus grand entier que JavaScript représente EXACTEMENT (2^53 − 1), écrit en clair :
+   `Number.MAX_SAFE_INTEGER` n'existe pas dans le dialecte ES5 de ce fichier. */
+var ACCES_ENTIER_MAX = 9007199254740991;
+
+/* ⭐ La plage civile SUPPORTÉE, et elle est explicite : quatre chiffres d'année, de 0001 à 9999.
+   ⛔ L'an 0000 est refusé — il n'existe pas dans le calendrier civil usuel — et tout résultat
+   qui sortirait de cette plage est refusé plutôt que tronqué. */
+var ACCES_ANNEE_MIN = 1;
+var ACCES_ANNEE_MAX = 9999;
+
+/** Vrai si l'année est bissextile (règle grégorienne complète). Pur. */
+function accesAnneeBissextile(an) {
+  return (an % 4 === 0 && an % 100 !== 0) || (an % 400 === 0);
+}
+
+/** Nombre de jours du mois (1-12) pour cette année. Pur. */
+function accesJoursDansLeMois(an, mois) {
+  var jours = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (mois === 2 && accesAnneeBissextile(an)) return 29;
+  return jours[mois - 1];
+}
+
+/**
+ * ⭐ CETTE DATE CIVILE EXISTE-T-ELLE VRAIMENT ?
+ * ⚠️ `new Date(Date.UTC(2026, 1, 31))` ne lève pas : il rend le 3 mars. Un `2026-02-31` reçu
+ * d'un appelant devenait donc une date de mars, silencieusement (défaut ⑨).
+ */
+function accesDateCivileExiste(an, mois, jour) {
+  if (!isFinite(an) || !isFinite(mois) || !isFinite(jour)) return false;
+  if (an < ACCES_ANNEE_MIN || an > ACCES_ANNEE_MAX) return false;
+  if (mois < 1 || mois > 12 || jour < 1) return false;
+  return jour <= accesJoursDansLeMois(an, mois);
+}
+
+/** Vrai si `nom` figure dans `liste` (⭐ comparaison INSENSIBLE À LA CASSE). Pur. */
+function accesEstChampSecret(nom, liste) {
+  var n = accesTexte(nom).toLowerCase();
+  var l = liste || [];
+  for (var i = 0; i < l.length; i++) { if (l[i] === n) return true; }
+  return false;
+}
+
+/**
+ * ⭐ CE QUE DIT UNE LIGNE D'ACCÈS — ⛔ sans rien créer ni corriger.
+ * @param {Object|null} ligne  `null`/absente = il n'y a pas d'accès pour cette édition.
+ * @return {Object} { existe, etat, version, rotations, anomalie? }
+ *   ⚠️ `anomalie: 'etat_inconnu'` : la ligne porte un état que ce code ne connaît pas. ⛔ On ne
+ *   devine PAS et on ne répare PAS — toute transition sera refusée. Mieux vaut un accès bloqué
+ *   qu'un accès ouvert par interprétation.
+ */
+function analyserLigneAccesScores(ligne) {
+  if (!ligne) {
+    return { existe: false, etat: ACCES_ETAT_ABSENT, version: 0, rotations: 0 };
+  }
+  var etat = accesTexte(ligne.etat).toUpperCase();
+  var v = accesEntierPositif(ligne.version);
+  var rot = accesEntierPositif(ligne.rotations);
+  /* ⛔ TROIS ANOMALIES DISTINCTES, ET AUCUN REPLI. ⭐ L'absence complète de ligne reste le SEUL
+     chemin légitime vers ABSENT / version 0 / 0 rotation (voir le début de cette fonction). */
+  if (ACCES_ETATS_ECRITS.indexOf(etat) === -1) {
+    return { existe: true, etat: etat, version: null, rotations: null,
+             anomalie: 'etat_inconnu' };
+  }
+  if (!v.ok) {
+    return { existe: true, etat: etat, version: null, rotations: null,
+             anomalie: 'version_invalide', detail: 'version ' + v.motif };
+  }
+  if (!rot.ok) {
+    return { existe: true, etat: etat, version: v.valeur, rotations: null,
+             anomalie: 'rotations_invalides', detail: 'rotations ' + rot.motif };
+  }
+  return { existe: true, etat: etat, version: v.valeur, rotations: rot.valeur };
+}
+
+/** La transition (action, état) si elle est permise, sinon `null`. Pur. */
+function accesTransitionPermise(action, etat) {
+  var a = accesTexte(action).toUpperCase();
+  var e = accesTexte(etat).toUpperCase();
+  for (var i = 0; i < ACCES_TRANSITIONS.length; i++) {
+    if (ACCES_TRANSITIONS[i].action === a && ACCES_TRANSITIONS[i].depuis === e) {
+      return ACCES_TRANSITIONS[i];
+    }
+  }
+  return null;
+}
+
+/**
+ * ⭐ LA DÉCISION DE TRANSITION — le point de passage unique de tout changement d'état.
+ *
+ * @param {Object|null} ligne     l'accès tel qu'il est (null = ABSENT).
+ * @param {Object} demande        { action, version_lue, fin?, confirme?, confirmation?,
+ *                                  confirmation_id?, edition_id?, maintenant?, horodatage? }
+ * @return {Object} soit { ok: true, … } avec ce qu'il faudra écrire, soit { refus: '…', … }.
+ *
+ * ⚠️ TROIS CONTRÔLES, DANS CET ORDRE, ET L'ORDRE COMPTE :
+ *   ① la transition est-elle permise ? (table ci-dessus) ;
+ *   ② la version lue est-elle encore la bonne ? — c'est ce qui départage deux appareils
+ *     organisateur : celui qui agit sur un écran périmé est REFUSÉ, jamais appliqué ;
+ *   ③ la confirmation exigée est-elle présente ET rattachée à cet état précis ?
+ * ⛔ Inverser ① et ② laisserait fuir l'information « cette action serait possible ».
+ */
+function planifierTransitionAcces(ligne, demande, contexte) {
+  var d = demande || {};
+
+  /* ⓪ LE CONTEXTE AUTHENTIFIÉ, AVANT TOUTE PLANIFICATION (5K, défauts A et C).
+     ⛔ `demande.edition_id` ne fait plus autorité : il peut venir du navigateur. L'édition qui
+     rattache une confirmation vient d'ici, et de nulle part ailleurs. */
+  var vCtx = validerContexteTransition(contexte, d);
+  if (!vCtx.ok) {
+    return { refus: vCtx.refus, champ: vCtx.champ, attendu: vCtx.attendu, recu: vCtx.recu,
+             role: vCtx.role, action: vCtx.action };
+  }
+  var fiable = vCtx.fiable;
+
+  var lu = analyserLigneAccesScores(ligne);
+  if (lu.anomalie) {
+    /* ⭐ Le code de refus NOMME l'anomalie : un état illisible et une version illisible ne se
+       corrigent pas de la même façon. ⛔ Dans les deux cas, AUCUNE transition n'est planifiée. */
+    return { refus: (lu.anomalie === 'etat_inconnu' ? 'ETAT_INCONNU' : 'LIGNE_INVALIDE'),
+             anomalie: lu.anomalie, etat_actuel: lu.etat, version: lu.version,
+             detail: 'Ligne d\'accès illisible (' + lu.anomalie + (lu.detail ? ' : ' + lu.detail : '') +
+                     ') : aucune transition n\'est appliquée. Corrige la ligne à la main.' };
+  }
+  /* ⭐ L'action retenue est celle du CONTEXTE : `validerContexteTransition` a déjà exigé que
+     celle de la demande, si elle est présente, lui soit identique. */
+  var action = fiable.action;
+
+  /* ① La transition existe-t-elle ? ⛔ C'est ici que « aucune sortie de CLÔTURÉ » vit. */
+  var t = accesTransitionPermise(action, lu.etat);
+  if (!t) {
+    return { refus: 'ETAT_INVALIDE', action: action, etat_actuel: lu.etat, version: lu.version };
+  }
+
+  /* ② La version. ⛔ Aucune écriture à l'aveugle : sans version lue, on refuse. */
+  if (d.version_lue === undefined || d.version_lue === null || accesTexte(d.version_lue) === '') {
+    return { refus: 'VERSION_REQUISE', etat_actuel: lu.etat, version: lu.version };
+  }
+  /* ⛔ `Number()` acceptait '1e0', '1.0', '+1', ' 1 ' comme la version 1 (défaut ④ de 5J) :
+     une écriture non décimale exacte passait le contrôle de concurrence. */
+  var vLue = accesEntierPositif(d.version_lue);
+  if (!vLue.ok) {
+    return { refus: 'VERSION_LUE_INVALIDE', motif: vLue.motif,
+             etat_actuel: lu.etat, version: lu.version };
+  }
+  if (vLue.valeur !== lu.version) {
+    return { refus: 'ETAT_MODIFIE', etat_actuel: lu.etat, version: lu.version,
+             version_lue: vLue.valeur };
+  }
+
+  /* ③ Les confirmations. ⭐ `confirmationUtilisee` retient la confirmation À USAGE UNIQUE
+     réellement employée : elle ne sera annoncée à consommer QUE si la transition aboutit. */
+  var gel = null, cloture = null, confirmationUtilisee = null;
+  if (action === ACCES_ACTION_FIGER) {
+    gel = decisionGelAcces(d.fin);
+    if (gel.decision === ACCES_GEL_CONFIRMATION_REQUISE) {
+      var vGel = validerConfirmationAcces(d.confirmation, {
+        confirmation_id: d.confirmation_id, edition_id: fiable.edition_id,
+        action: ACCES_ACTION_FIGER, etat_courant: lu.etat, version_courante: lu.version,
+        empreinte_fin: empreinteFinTournoi(d.fin), maintenant: d.maintenant
+      });
+      if (!vGel.ok) {
+        /* ⭐ CE N'EST JAMAIS UNE INTERDICTION : `gel_manuel_possible` reste VRAI.
+           L'organisateur garde son pouvoir de figer ; il lui manque seulement une
+           confirmation valide, rattachée à l'état qu'il a réellement vu. */
+        return { refus: vGel.refus, champ: vGel.champ, motif: vGel.motif,
+                 etat_actuel: lu.etat, version: lu.version,
+                 gel_manuel_possible: true, avertissement: gel.avertissement };
+      }
+      confirmationUtilisee = { confirmation_id: accesTexte(d.confirmation_id),
+                               edition_id: fiable.edition_id, action: ACCES_ACTION_FIGER };
+    }
+  }
+  if (action === ACCES_ACTION_CLOTURER) {
+    /* ⛔ La clôture n'est JAMAIS automatique : la confirmation ordinaire est toujours exigée. */
+    if (d.confirme !== true) {
+      cloture = decisionClotureAcces(d.fin);
+      return { refus: 'CONFIRMATION_REQUISE', etat_actuel: lu.etat, version: lu.version,
+               cloture_possible: true, niveau: cloture.decision,
+               avertissement: cloture.avertissement };
+    }
+    cloture = decisionClotureAcces(d.fin);
+    if (cloture.decision === ACCES_CLOTURE_CONFIRMATION_RENFORCEE) {
+      var vClo = validerConfirmationAcces(d.confirmation, {
+        confirmation_id: d.confirmation_id, edition_id: fiable.edition_id,
+        action: ACCES_ACTION_CLOTURER, etat_courant: lu.etat, version_courante: lu.version,
+        empreinte_fin: empreinteFinTournoi(d.fin), maintenant: d.maintenant
+      });
+      if (!vClo.ok) {
+        return { refus: vClo.refus, champ: vClo.champ, motif: vClo.motif,
+                 etat_actuel: lu.etat, version: lu.version,
+                 cloture_possible: true, niveau: ACCES_CLOTURE_CONFIRMATION_RENFORCEE,
+                 avertissement: cloture.avertissement };
+      }
+      confirmationUtilisee = { confirmation_id: accesTexte(d.confirmation_id),
+                               edition_id: fiable.edition_id, action: ACCES_ACTION_CLOTURER };
+    }
+  }
+
+  /* ⭐ Accepté : on décrit ce qu'il faudra écrire. ⛔ On n'écrit rien ici.
+     ⛔ Et un compteur au plafond REFUSE plutôt que de rendre la même valeur (défaut ④). */
+  var vSuivante = accesIncrementer(lu.version);
+  if (!vSuivante.ok) {
+    return { refus: 'VERSION_MAX_ATTEINTE', motif: vSuivante.motif,
+             etat_actuel: lu.etat, version: lu.version };
+  }
+  var horodatage = accesTexte(d.horodatage);
+  var ecrire = { etat: t.vers, version: vSuivante.valeur };
+  if (t.jeton === 'REMPLACE') {
+    var rSuivante = accesIncrementer(lu.rotations);
+    if (!rSuivante.ok) {
+      return { refus: 'ROTATIONS_MAX_ATTEINTES', motif: rSuivante.motif,
+               etat_actuel: lu.etat, version: lu.version, rotations: lu.rotations };
+    }
+    ecrire.rotations = rSuivante.valeur;
+  }
+  if (t.jeton === 'CREE')     ecrire.rotations = 0;
+  if (horodatage !== '') {
+    if (action === ACCES_ACTION_PREPARER)  ecrire.date_preparation = horodatage;
+    if (action === ACCES_ACTION_OUVRIR)    ecrire.date_ouverture   = horodatage;
+    if (action === ACCES_ACTION_FIGER)     ecrire.date_gel         = horodatage;
+    if (action === ACCES_ACTION_REPRENDRE) ecrire.date_reprise     = horodatage;
+    if (action === ACCES_ACTION_CLOTURER)  ecrire.date_cloture     = horodatage;
+  }
+  var sortie = {
+    ok: true,
+    action: action,
+    edition_id: fiable.edition_id,
+    etat_avant: lu.etat,
+    etat_apres: t.vers,
+    version_apres: vSuivante.valeur,
+    jeton: t.jeton,
+    ligne_a_creer: (lu.existe === false),
+    ecrire: ecrire,
+    /* Ce que le journal devra retenir. ⛔ Jamais le jeton — seulement sa référence courte. */
+    journal: {
+      action: action, etat_acces_avant: lu.etat, etat_acces_apres: t.vers,
+      edition_id: fiable.edition_id,        /* ⭐ l'édition FIABLE, jamais celle de la demande */
+      role: fiable.role,
+      gel_manuel: (action === ACCES_ACTION_FIGER && gel !== null &&
+                   gel.decision === ACCES_GEL_CONFIRMATION_REQUISE),
+      cloture_renforcee: (action === ACCES_ACTION_CLOTURER && cloture !== null &&
+                          cloture.decision === ACCES_CLOTURE_CONFIRMATION_RENFORCEE),
+      avertissement: (gel && gel.avertissement) || (cloture && cloture.avertissement) || null,
+      motif: accesTexte(d.motif)
+    }
+  };
+  /* ⭐ 3.3 — LE PLAN DE CONSOMMATION. Il n'apparaît QUE lorsqu'une confirmation à usage unique
+     a réellement été employée ET que tous les contrôles ultérieurs ont abouti : les refus
+     ci-dessus (version ou rotations au plafond) sortent AVANT cette ligne, donc ⛔ une
+     confirmation n'est jamais annoncée consommée pour une transition qui n'a pas lieu.
+     ⚠️ Ce lot n'écrit rien : il ne fait que décrire ce que le futur raccordement devra
+     appliquer ATOMIQUEMENT, avec la transition et le registre d'idempotence. */
+  if (confirmationUtilisee) sortie.confirmation_a_consommer = confirmationUtilisee;
+  return sortie;
+}
+
+/**
+ * ⭐ LE RESET — et la règle qui n'a l'air de rien : ⛔ une édition SANS accès ne reçoit AUCUNE
+ * ligne. Créer une ligne CLÔTURÉ « pour la forme » inventerait un accès qui n'a jamais existé,
+ * et l'écran dirait ensuite « lien révoqué » là où il n'y a jamais eu de lien.
+ *
+ * ⚠️ La clôture doit être écrite dans le MÊME mouvement logique que la fermeture de l'édition
+ * (`basculerEditionApresReset`). Une défaillance entre les deux laisserait une édition active
+ * avec un accès incohérent — c'est pourquoi cette fonction rend UN SEUL plan, à appliquer d'un
+ * bloc, et jamais deux écritures séparées.
+ *
+ * @return { ok, ecrire|null, ligne_creee, ancien_etat, nouvel_etat, nouvelle_edition_etat }
+ */
+function planifierResetAccesScores(ligne, horodatage) {
+  var lu = analyserLigneAccesScores(ligne);
+  if (lu.anomalie) {
+    return { refus: (lu.anomalie === 'etat_inconnu' ? 'ETAT_INCONNU' : 'LIGNE_INVALIDE'),
+             anomalie: lu.anomalie, etat_actuel: lu.etat,
+             detail: 'Accès illisible (' + lu.anomalie + ') : le reset ne le clôture pas de force.' };
+  }
+  if (!lu.existe) {
+    return { ok: true, ecrire: null, ligne_creee: false,
+             ancien_etat: ACCES_ETAT_ABSENT, nouvel_etat: ACCES_ETAT_ABSENT,
+             nouvelle_edition_etat: ACCES_ETAT_ABSENT };
+  }
+  if (lu.etat === ACCES_ETAT_CLOTURE) {
+    /* Déjà clôturé : rejouer le reset ne doit rien réécrire (idempotent). */
+    return { ok: true, ecrire: null, ligne_creee: false, deja_cloture: true,
+             ancien_etat: ACCES_ETAT_CLOTURE, nouvel_etat: ACCES_ETAT_CLOTURE,
+             nouvelle_edition_etat: ACCES_ETAT_ABSENT };
+  }
+  var vSuivante = accesIncrementer(lu.version);
+  if (!vSuivante.ok) {
+    return { refus: 'VERSION_MAX_ATTEINTE', motif: vSuivante.motif, etat_actuel: lu.etat,
+             version: lu.version };
+  }
+  var ecrire = { etat: ACCES_ETAT_CLOTURE, version: vSuivante.valeur };
+  var h = accesTexte(horodatage);
+  if (h !== '') ecrire.date_cloture = h;
+  return { ok: true, ecrire: ecrire, ligne_creee: false,
+           ancien_etat: lu.etat, nouvel_etat: ACCES_ETAT_CLOTURE,
+           nouvelle_edition_etat: ACCES_ETAT_ABSENT,
+           journal: { action: 'RESET', etat_acces_avant: lu.etat,
+                      etat_acces_apres: ACCES_ETAT_CLOTURE, role: 'organisateur' } };
+}
+
+/* --------------------------------------------------------------------------
+   ② LA FIN DU TOURNOI, CATÉGORIE PAR CATÉGORIE
+   -------------------------------------------------------------------------- */
+
+var ACCES_CAT_TERMINEE     = 'TERMINEE';
+var ACCES_CAT_ATTEND_SUITE = 'ATTEND_SUITE';
+var ACCES_CAT_INCOMPLETE   = 'INCOMPLETE';
+var ACCES_CAT_INDETERMINEE = 'INDETERMINEE';
+var ACCES_CAT_SANS_MATCH   = 'SANS_MATCH';
+
+var ACCES_SUGGESTION_AUCUNE        = 'AUCUNE';
+var ACCES_SUGGESTION_GENERER_SUITE = 'GENERER_SUITE';
+var ACCES_SUGGESTION_GEL_POSSIBLE  = 'GEL_POSSIBLE';
+
+/* ⚠️ LE SEUL MARQUEUR DE PHASE DU MODÈLE ACTUEL, et il faut le dire tel quel : un match est
+   soit de la phase 'classement' (après-midi, ou dimanche Super Challenge), soit d'avant.
+   ⛔ Ce n'est pas une invention de ce bloc : c'est le filtre qu'emploient déjà
+   `genererApresMidi` et `genererDimancheScf`. On le nomme ici pour ne plus le recopier. */
+var ACCES_PHASE_SUITE = 'classement';
+
+/**
+ * Ce que le FORMAT prévoit après la première phase d'une catégorie.
+ * @param {Object} scf  le retour de `contexteScfCategorie` : { estScf, phase }.
+ * @return {string} 'dimanche_scf' | 'apres_midi' | '' (rien d'autre n'est attendu)
+ *
+ * ⚠️ LA LIMITE, ASSUMÉE ET ÉCRITE. Hors Super Challenge, l'après-midi est TOUJOURS réputée
+ * attendue : `formatApresMidi` retombe sur 'CROISE' par défaut et AUCUN réglage ne permet de
+ * dire « ce tournoi n'a pas d'après-midi ». Conséquence : pour un tournoi d'une demi-journée,
+ * cette fonction répond 'apres_midi', et l'application ne PRÉTENDRA donc jamais avoir reconnu
+ * la fin. ⭐ C'est voulu : le filet est le gel MANUEL confirmé, pas une devinette.
+ */
+function phaseAttendueApresPhase1Acces(scf) {
+  if (scf && scf.estScf === true && scf.phase === 'P3') return 'dimanche_scf';
+  if (scf && scf.estScf === true) return '';   /* plateau d'un seul tenant : rien après */
+  return 'apres_midi';
+}
+
+/**
+ * ⭐ L'ÉTAT D'UNE SEULE CATÉGORIE — le cœur du correctif R1.
+ *
+ * ⚠️ POURQUOI PAR CATÉGORIE. Raisonner sur tous les matchs à la fois est FAUX dès qu'un
+ * tournoi mélange les formats : une U10 en Super Challenge (plateau d'un tenant) n'a pas le
+ * même nombre de phases qu'une U12 ordinaire (matin puis après-midi). Globalement, la U10
+ * paraîtrait « en attente » d'un après-midi qu'elle n'aura jamais.
+ *
+ * @param {string} categorie      le nom de la catégorie.
+ * @param {Object|null} reglage   sa ligne de configuration, ou null si elle a disparu.
+ * @param {Array} mesMatchs       ses matchs, et eux seuls.
+ */
+function etatCategorieAcces(categorie, reglage, mesMatchs) {
+  var cat = accesTexte(categorie);
+  var liste = mesMatchs || [];
+
+  /* Des matchs portent une catégorie qui n'est plus configurée : son format est INCONNU.
+     ⛔ On ne conclut pas. Deviner « après-midi » ou « terminée » serait également faux. */
+  if (!reglage) {
+    var nonTerm = 0;
+    for (var i = 0; i < liste.length; i++) {
+      if (!estTermineServeur(liste[i].statut)) nonTerm++;
+    }
+    return { categorie: cat, etat: ACCES_CAT_INDETERMINEE, cause: 'reglage_absent',
+             matchs_non_termines: nonTerm };
+  }
+
+  /* Catégorie déclarée mais sans aucun match : ⛔ rien ne prouve qu'elle est terminée. */
+  if (liste.length === 0) {
+    return { categorie: cat, etat: ACCES_CAT_SANS_MATCH, cause: 'aucun_match',
+             matchs_non_termines: 0 };
+  }
+
+  var scf = contexteScfCategorie(reglage);
+  var phase1 = [], phase2 = [];
+  for (var j = 0; j < liste.length; j++) {
+    if (accesTexte(liste[j].phase) === ACCES_PHASE_SUITE) phase2.push(liste[j]);
+    else phase1.push(liste[j]);
+  }
+  var nt1 = [], nt2 = [];
+  for (var k = 0; k < phase1.length; k++) {
+    if (!estTermineServeur(phase1[k].statut)) nt1.push(accesTexte(phase1[k].id_match));
+  }
+  for (var m = 0; m < phase2.length; m++) {
+    if (!estTermineServeur(phase2[m].statut)) nt2.push(accesTexte(phase2[m].id_match));
+  }
+
+  nt1.sort(); nt2.sort();   /* ⭐ ordre stable : l'empreinte de fin en dépend */
+
+  /* ⭐⭐ LA PHASE 1 N'EST JAMAIS MASQUÉE PAR LA PHASE 2 (CORR-…-5I, défaut ①).
+     ⛔ LE DÉFAUT CORRIGÉ : dès que la phase 2 existait, elle SEULE décidait. Un match du matin
+     resté non terminé — annulé, oublié, ou dont le score n'a jamais été saisi — disparaissait
+     alors du calcul, et la catégorie était déclarée TERMINÉE. Un après-midi complet suffisait
+     donc à faire dire « tournoi fini » à un tournoi dont un match du matin n'avait pas de score,
+     puis à ouvrir GEL_POSSIBLE. 🔬 Reproduit en scénario indépendant avant correction.
+     ⭐ POURQUOI INDÉTERMINÉE, et pas INCOMPLÈTE. La phase courante EST la phase 2, et sa
+     complétude n'est pas en cause : répondre INCOMPLÈTE désignerait la mauvaise phase. Répondre
+     TERMINÉE serait faux. La seule réponse vraie est « je ne peux pas conclure », avec sa cause
+     nommée — et elle bloque GEL_POSSIBLE comme `suite_generable`.
+     ⭐ Les identifiants des DEUX phases sont rendus : c'est ce que l'organisateur doit aller
+     vérifier sur le terrain avant de figer à la main. */
+  if (phase2.length > 0 && nt1.length > 0) {
+    return { categorie: cat, etat: ACCES_CAT_INDETERMINEE,
+             cause: 'phase1_incomplete_avec_phase2', phase_courante: 'phase2',
+             matchs_non_termines: nt1.length + nt2.length,
+             matchs: nt1.concat(nt2).sort() };
+  }
+
+  /* La phase suivante est générée ET la phase 1 est complète : c'est la phase 2 qui décide. */
+  if (phase2.length > 0) {
+    if (nt2.length > 0) {
+      return { categorie: cat, etat: ACCES_CAT_INCOMPLETE, phase_courante: 'phase2',
+               matchs_non_termines: nt2.length, matchs: nt2 };
+    }
+    /* ⭐ 'classement' est la DERNIÈRE phase de tous les formats connus. */
+    return { categorie: cat, etat: ACCES_CAT_TERMINEE, derniere_phase: 'phase2',
+             matchs_non_termines: 0 };
+  }
+
+  /* Rien après la phase 1. */
+  if (nt1.length > 0) {
+    return { categorie: cat, etat: ACCES_CAT_INCOMPLETE, phase_courante: 'phase1',
+             matchs_non_termines: nt1.length, matchs: nt1 };
+  }
+  var attendue = phaseAttendueApresPhase1Acces(scf);
+  if (attendue !== '') {
+    return { categorie: cat, etat: ACCES_CAT_ATTEND_SUITE, phase_attendue: attendue,
+             matchs_non_termines: 0 };
+  }
+  return { categorie: cat, etat: ACCES_CAT_TERMINEE, derniere_phase: 'phase1',
+           matchs_non_termines: 0 };
+}
+
+/**
+ * ⭐ LA SITUATION D'ENSEMBLE, agrégée depuis les catégories.
+ *
+ * @param {Array} categories  `config.categories` (chaque ligne porte `presente`, `categorie`…).
+ * @param {Array} matchs      l'onglet Matchs, tel quel.
+ * @return {Object} { situation, suggestion, motif, categories, suite_generable, en_cause }
+ *
+ * ⚠️ L'ENSEMBLE EXAMINÉ EST UNE UNION : les catégories déclarées présentes, ET celles qui
+ * apparaissent dans les matchs. ⛔ Ignorer la seconde source laisserait des matchs orphelins
+ * invisibles — exactement le genre de trou qui fait déclarer « terminé » un tournoi qui ne
+ * l'est pas.
+ *
+ * ⚠️ ORDRE DES RÈGLES D'AGRÉGATION — il est imposé par la décision produit (R1 §3) :
+ *   ① une catégorie attend une suite            → GENERER_SUITE ;
+ *   ② sinon une est incomplète ou indéterminée  → AUCUNE ;
+ *   ③ sinon, et seulement alors                 → GEL_POSSIBLE.
+ * ⭐ `suite_generable` corrige ce que cet ordre masquerait : voir sa propre note.
+ */
+function determinerFinDeTournoiAcces(categories, matchs) {
+  var cats = categories || [];
+  var tous = matchs || [];
+
+  /* Les réglages des catégories PRÉSENTES, indexés par nom. */
+  var reglageDe = {}, ordre = [];
+  for (var i = 0; i < cats.length; i++) {
+    var nom = accesTexte(cats[i] && cats[i].categorie);
+    if (nom === '') continue;
+    if (accesTexte(cats[i].presente).toLowerCase() !== 'oui') continue;
+    if (!Object.prototype.hasOwnProperty.call(reglageDe, nom)) {
+      reglageDe[nom] = cats[i];
+      ordre.push(nom);
+    }
+  }
+  /* Les matchs, regroupés par catégorie — et les catégories inattendues ajoutées à la fin. */
+  var matchsDe = {};
+  for (var j = 0; j < tous.length; j++) {
+    var c = accesTexte(tous[j] && tous[j].categorie);
+    if (c === '') continue;
+    if (!Object.prototype.hasOwnProperty.call(matchsDe, c)) {
+      matchsDe[c] = [];
+      if (ordre.indexOf(c) === -1) ordre.push(c);
+    }
+    matchsDe[c].push(tous[j]);
+  }
+
+  if (ordre.length === 0) {
+    return { situation: 'aucune_categorie', suggestion: ACCES_SUGGESTION_AUCUNE,
+             motif: 'aucune_categorie', categories: [], suite_generable: false, en_cause: [] };
+  }
+
+  var resultats = [];
+  for (var k = 0; k < ordre.length; k++) {
+    var n = ordre[k];
+    resultats.push(etatCategorieAcces(n, reglageDe[n] || null, matchsDe[n] || []));
+  }
+
+  var attend = [], bloque = [], indet = [];
+  for (var p = 0; p < resultats.length; p++) {
+    var e = resultats[p].etat;
+    if (e === ACCES_CAT_ATTEND_SUITE) attend.push(resultats[p].categorie);
+    if (e === ACCES_CAT_INCOMPLETE)   bloque.push(resultats[p].categorie);
+    if (e === ACCES_CAT_INDETERMINEE || e === ACCES_CAT_SANS_MATCH) indet.push(resultats[p].categorie);
+  }
+
+  var suggestion, motif, enCause;
+  if (attend.length > 0) {
+    suggestion = ACCES_SUGGESTION_GENERER_SUITE;
+    motif = 'phase_suivante_attendue';
+    enCause = attend;
+  } else if (indet.length > 0) {
+    suggestion = ACCES_SUGGESTION_AUCUNE;
+    motif = 'categories_indeterminees';
+    enCause = indet;
+  } else if (bloque.length > 0) {
+    suggestion = ACCES_SUGGESTION_AUCUNE;
+    motif = 'categories_incompletes';
+    enCause = bloque;
+  } else {
+    suggestion = ACCES_SUGGESTION_GEL_POSSIBLE;
+    motif = 'toutes_categories_terminees';
+    enCause = [];
+  }
+
+  return {
+    situation: motif,
+    suggestion: suggestion,
+    motif: motif,
+    categories: resultats,
+    suite_generable: suiteGenerableAcces(resultats),
+    en_cause: enCause
+  };
+}
+
+/**
+ * ⭐ LA SUITE EST-ELLE RÉELLEMENT GÉNÉRABLE MAINTENANT ?
+ *
+ * ⚠️ CE CHAMP EXISTE POUR NE PAS MENTIR À L'ÉCRAN. L'agrégation place `GENERER_SUITE` en
+ * premier ; or la génération existante refuse dès qu'UN SEUL match d'avant 'classement' n'est
+ * pas terminé, TOUTES CATÉGORIES CONFONDUES (`genererApresMidi`, même garde pour le dimanche
+ * Super Challenge). Avec U10 terminée et U12 incomplète, la suggestion dit « génère la suite »
+ * et le serveur refuserait : le bouton aboutirait à une erreur.
+ *
+ * ⭐ On reproduit donc ici la garde GLOBALE existante, sans la modifier : `suggestion` dit OÙ
+ * EN EST le tournoi, `suite_generable` dit SI LE BOUTON PEUT ABOUTIR. L'écran dispose des deux
+ * et peut écrire la phrase juste : « U10 attend son après-midi, mais U12 a encore 2 matchs. »
+ *
+ * ⛔ Rendre cette garde per-catégorie serait un chantier métier distinct, hors de ce lot.
+ *
+ * ⚠️ DEUX CONDITIONS, ET LA PREMIÈRE MANQUAIT (CORR-…-5I, défaut ②). L'ancienne version rendait
+ * `true` dès qu'aucune catégorie n'était bloquante — donc AUSSI quand toutes étaient TERMINÉE.
+ * L'écran aurait proposé « générer la suite » d'un tournoi fini, où il n'y a plus rien à
+ * générer. ⭐ Il faut qu'une catégorie ATTENDE réellement une suite.
+ */
+function suiteGenerableAcces(resultats) {
+  var r = resultats || [];
+  var auMoinsUneAttend = false;
+  for (var i = 0; i < r.length; i++) {
+    /* ⛔ Une seule catégorie bloquante suffit : la garde de `genererApresMidi` est GLOBALE. */
+    if (r[i].etat === ACCES_CAT_INCOMPLETE ||
+        r[i].etat === ACCES_CAT_INDETERMINEE ||
+        r[i].etat === ACCES_CAT_SANS_MATCH) return false;
+    if (r[i].etat === ACCES_CAT_ATTEND_SUITE) auMoinsUneAttend = true;
+  }
+  return auMoinsUneAttend;
+}
+
+/**
+ * ⭐ L'EMPREINTE DU CALCUL DE FIN — c'est elle qui rattache une confirmation à CE calcul.
+ *
+ * ⚠️ Sans elle, un organisateur pourrait obtenir un avertissement à 17 h, laisser l'écran
+ * ouvert, et confirmer le gel à 19 h alors que l'après-midi a entre-temps été générée : la
+ * confirmation porterait sur une situation qui n'existe plus.
+ *
+ * ⛔ C'est une empreinte TEXTUELLE canonique, pas un condensé cryptographique : `computeDigest`
+ * appartient à Google, et ce bloc doit rester pur. Le condensé, s'il est souhaité, sera posé
+ * par le lot qui raccorde le stockage — l'égalité testée ici est déjà exactement la bonne.
+ *
+ * ⚠️ CE QU'ELLE MANQUAIT (CORR-…-5I, défaut ④). Elle ne retenait que la catégorie, son état et
+ * le NOMBRE de matchs non terminés. 🔬 Reproduit : un avertissement portant sur `M1`, puis `M1`
+ * terminé tandis que `M2` devient non terminé — le compte reste 1, l'empreinte ne changeait pas,
+ * et une confirmation obtenue sur l'ANCIENNE situation restait recevable. ⭐ Elle retient
+ * désormais les IDENTIFIANTS, la cause, la phase courante, la phase attendue et la dernière
+ * phase : deux situations différentes donnent deux empreintes différentes.
+ *
+ * ⛔ CE QU'ELLE N'INCLUT PAS, et c'est délibéré : les champs VOLATILES sans effet métier — un
+ * horodatage d'évaluation, par exemple. La construction part d'une LISTE EXPLICITE de champs,
+ * donc tout ce qui n'y figure pas est exclu par construction, sans liste noire à maintenir.
+ * ⭐ Catégories et identifiants sont TRIÉS avant le calcul : l'ordre de lecture du classeur ne
+ * doit jamais changer l'empreinte.
+ */
+function empreinteFinTournoi(fin) {
+  var f = fin || {};
+  var cats = f.categories || [];
+  var parties = [];
+  for (var i = 0; i < cats.length; i++) {
+    var c = cats[i] || {};
+    var ids = [];
+    var brut = c.matchs || [];
+    for (var j = 0; j < brut.length; j++) ids.push(accesTexte(brut[j]));
+    ids.sort();
+    parties.push(accesCanonique({
+      categorie: accesTexte(c.categorie),
+      etat: accesTexte(c.etat),
+      cause: accesTexte(c.cause),
+      phase_courante: accesTexte(c.phase_courante),
+      phase_attendue: accesTexte(c.phase_attendue),
+      derniere_phase: accesTexte(c.derniere_phase),
+      matchs_non_termines: Number(c.matchs_non_termines) || 0,
+      matchs: ids
+    }));
+  }
+  parties.sort();
+  return 'fin{' + accesCanonique({
+    suggestion: accesTexte(f.suggestion),
+    motif: accesTexte(f.motif),
+    suite_generable: (f.suite_generable === true)
+  }) + '|' + parties.join(',') + '}';
+}
+
+/* --------------------------------------------------------------------------
+   ③ GEL ET CLÔTURE : LA DÉCISION PROPOSE, L'ORGANISATEUR TRANCHE
+   -------------------------------------------------------------------------- */
+
+var ACCES_GEL_DIRECT               = 'GEL_DIRECT';
+var ACCES_GEL_CONFIRMATION_REQUISE = 'CONFIRMATION_REQUISE';
+
+var ACCES_CLOTURE_CONFIRMATION_NORMALE   = 'CONFIRMATION_NORMALE';
+var ACCES_CLOTURE_CONFIRMATION_RENFORCEE = 'CONFIRMATION_RENFORCEE';
+
+/**
+ * Nomme l'obstacle le plus sérieux, pour que l'écran dise quelque chose de vrai.
+ *
+ * ⚠️ L'ordre diffère volontairement de celui de l'agrégation : la SUGGESTION suit la règle
+ * produit (une suite attendue passe devant), tandis que l'AVERTISSEMENT nomme d'abord ce qui
+ * empêche réellement de conclure. Les deux sont exposés : rien n'est masqué.
+ */
+function raisonAvertissementAcces(fin) {
+  var f = fin || {};
+  var cats = f.categories || [];
+  if (f.motif === 'aucune_categorie' || cats.length === 0) {
+    return { raison: 'calcul_impossible', categories_en_cause: [] };
+  }
+  var indet = [], incomp = [], attend = [];
+  for (var i = 0; i < cats.length; i++) {
+    if (cats[i].etat === ACCES_CAT_INDETERMINEE || cats[i].etat === ACCES_CAT_SANS_MATCH) {
+      indet.push(cats[i].categorie);
+    } else if (cats[i].etat === ACCES_CAT_INCOMPLETE) {
+      incomp.push(cats[i].categorie);
+    } else if (cats[i].etat === ACCES_CAT_ATTEND_SUITE) {
+      attend.push(cats[i].categorie);
+    }
+  }
+  if (indet.length)  return { raison: 'categories_indeterminees', categories_en_cause: indet };
+  if (incomp.length) return { raison: 'categories_incompletes',   categories_en_cause: incomp };
+  if (attend.length) return { raison: 'phase_suivante_attendue',  categories_en_cause: attend };
+  return { raison: 'calcul_impossible', categories_en_cause: [] };
+}
+
+/**
+ * ⭐ LA DÉCISION DE GEL — et sa propriété la plus importante : elle N'INTERDIT JAMAIS.
+ *
+ * ⚠️ La première version de cette spécification refusait le gel quand le calcul ne concluait
+ * pas. C'était un défaut de conception : un tournoi peut être interrompu par un orage, un
+ * incident, un terrain impraticable ou un match annulé — et c'est précisément là que
+ * l'organisateur a le plus besoin de fermer l'accès. ⛔ Un calcul ne doit pas pouvoir retenir
+ * la main de celui qui est sur le terrain.
+ *
+ * @return { decision: GEL_DIRECT | CONFIRMATION_REQUISE, gel_manuel_possible: true, avertissement }
+ */
+function decisionGelAcces(fin) {
+  var f = fin || {};
+  if (f.suggestion === ACCES_SUGGESTION_GEL_POSSIBLE) {
+    return { decision: ACCES_GEL_DIRECT, gel_manuel_possible: true, avertissement: null };
+  }
+  return { decision: ACCES_GEL_CONFIRMATION_REQUISE,
+           gel_manuel_possible: true,          /* ⭐ TOUJOURS vrai, dans tous les cas */
+           avertissement: raisonAvertissementAcces(f) };
+}
+
+/**
+ * ⭐ LA DÉCISION DE CLÔTURE — définitive, donc jamais automatique.
+ *
+ * ⛔ Il n'existe pas de « clôture directe » : la confirmation ordinaire est TOUJOURS exigée.
+ * Et si la fin n'est pas reconnue, une confirmation RENFORCÉE s'y ajoute — pour éviter de
+ * clôturer par erreur un tournoi seulement interrompu, qu'aucune reprise ne pourra rouvrir.
+ */
+function decisionClotureAcces(fin) {
+  var f = fin || {};
+  if (f.suggestion === ACCES_SUGGESTION_GEL_POSSIBLE) {
+    return { decision: ACCES_CLOTURE_CONFIRMATION_NORMALE, cloture_possible: true,
+             avertissement: null };
+  }
+  return { decision: ACCES_CLOTURE_CONFIRMATION_RENFORCEE, cloture_possible: true,
+           avertissement: raisonAvertissementAcces(f) };
+}
+
+/**
+ * ⭐ UNE CONFIRMATION EST-ELLE RECEVABLE ? — et c'est ici que l'exception dangereuse est morte.
+ *
+ * ⚠️ CE QUE CE CONTRÔLE REMPLACE. Une première rédaction réutilisait le MÊME `requete_id` pour
+ * l'avertissement et pour la confirmation, avec un contenu différent — donc une exception dans
+ * l'idempotence. ⛔ Interdit : un identifiant de requête ne doit JAMAIS changer de sens.
+ * ⭐ À la place : l'évaluation est une LECTURE sans effet, qui peut délivrer un
+ * `confirmation_id` à usage unique ; la confirmation est une ÉCRITURE NEUVE, avec son PROPRE
+ * `requete_id`, qui ne fait que RÉFÉRENCER ce `confirmation_id`.
+ *
+ * @param {Object|null} enregistrement  la confirmation telle qu'elle a été délivrée (fournie
+ *        en entrée : ⛔ ce lot ne stocke ni ne génère aucune confirmation).
+ * @param {Object} attendu  { confirmation_id, edition_id, action, etat_courant,
+ *                            version_courante, empreinte_fin, maintenant? }
+ * @return { ok: true } ou { refus: '…' }
+ */
+/* ⭐ LES HUIT CHAMPS OBLIGATOIRES D'UNE CONFIRMATION se répartissent en deux groupes, et ce
+   n'est pas un détail : chacun doit être refusé par le contrôle qui sait le NOMMER précisément.
+     · ci-dessous, les six vérifiés par simple présence exploitable ;
+     · `version_evaluee` et `expire_le` gardent leurs validateurs dédiés de 5J
+       (`accesEntierPositif`, `accesInstantValide`), qui rendent des refus plus précis
+       (CONFIRMATION_VERSION_INVALIDE, CONFIRMATION_EXPIRATION_ABSENTE / _ILLISIBLE).
+   ⛔ Deux champs absents ne sont JAMAIS « égaux » : c'est ce raccourci qui laissait passer une
+   confirmation sans édition dès que l'attente n'en portait pas non plus (défaut A de 5K). */
+var ACCES_CONFIRMATION_CHAMPS = ['confirmation_id', 'edition_id', 'action', 'etat_evalue',
+  'empreinte_fin', 'consomme'];
+var ACCES_CONFIRMATION_ATTENDU_CHAMPS = ['confirmation_id', 'edition_id', 'action',
+  'etat_courant', 'empreinte_fin'];
+/* Les deux champs à validateur dédié — listés pour que la couverture des huit reste lisible. */
+var ACCES_CONFIRMATION_CHAMPS_VALIDES_A_PART = ['version_evaluee', 'expire_le'];
+
+/** Vrai si la valeur est exploitable comme champ de confirmation : ⛔ ni vide, ni absente.
+ *  `consomme` est traité à part : lui seul doit être un BOOLÉEN exact. */
+function accesChampConfirmationPresent(v, nom) {
+  if (nom === 'consomme') return (v === true || v === false);
+  return accesTexte(v) !== '';
+}
+
+function validerConfirmationAcces(enregistrement, attendu) {
+  var a = attendu || {};
+  if (!enregistrement) return { refus: 'CONFIRMATION_INTROUVABLE' };
+  var e = enregistrement;
+
+  /* ⭐ ① COMPLÉTUDE D'ABORD, comparaison ensuite. Une donnée corrompue ou absente n'est jamais
+     interprétée comme une autorisation : elle est refusée, nommément. */
+  for (var i = 0; i < ACCES_CONFIRMATION_CHAMPS.length; i++) {
+    var nom = ACCES_CONFIRMATION_CHAMPS[i];
+    if (!accesChampConfirmationPresent(e[nom], nom)) {
+      return { refus: 'CONFIRMATION_INVALIDE', champ: nom,
+               motif: (nom === 'consomme' ? 'booleen_exact_attendu' : 'absent_ou_vide') };
+    }
+  }
+  for (var j = 0; j < ACCES_CONFIRMATION_ATTENDU_CHAMPS.length; j++) {
+    var attendue = ACCES_CONFIRMATION_ATTENDU_CHAMPS[j];
+    if (accesTexte(a[attendue]) === '') {
+      return { refus: 'CONFIRMATION_ATTENTE_INVALIDE', champ: attendue };
+    }
+  }
+
+  var id = accesTexte(e.confirmation_id);
+  if (id !== accesTexte(a.confirmation_id)) {
+    return { refus: 'CONFIRMATION_INTROUVABLE' };
+  }
+  /* ⛔ À USAGE UNIQUE. `consomme` est déjà garanti booléen par le contrôle de complétude. */
+  if (e.consomme === true) return { refus: 'CONFIRMATION_CONSOMMEE' };
+  if (accesTexte(e.edition_id) !== accesTexte(a.edition_id)) {
+    return { refus: 'CONFIRMATION_AUTRE_EDITION' };
+  }
+  if (accesTexte(e.action).toUpperCase() !== accesTexte(a.action).toUpperCase()) {
+    return { refus: 'CONFIRMATION_AUTRE_ACTION' };
+  }
+  if (accesTexte(e.etat_evalue).toUpperCase() !== accesTexte(a.etat_courant).toUpperCase()) {
+    return { refus: 'CONFIRMATION_AUTRE_ETAT' };
+  }
+  /* ⛔ Les deux versions doivent être des entiers décimaux exacts (défaut ④). */
+  var vConf = accesEntierPositif(e.version_evaluee);
+  var vCour = accesEntierPositif(a.version_courante);
+  if (!vConf.ok || !vCour.ok) {
+    return { refus: 'CONFIRMATION_VERSION_INVALIDE',
+             motif: (vConf.ok ? 'version_courante ' + vCour.motif
+                              : 'version_evaluee ' + vConf.motif) };
+  }
+  if (vConf.valeur !== vCour.valeur) {
+    return { refus: 'CONFIRMATION_AUTRE_VERSION' };
+  }
+  if (accesTexte(e.empreinte_fin) !== accesTexte(a.empreinte_fin)) {
+    return { refus: 'CONFIRMATION_CALCUL_MODIFIE' };
+  }
+  /* ⭐ PÉREMPTION : LES DEUX INSTANTS SONT OBLIGATOIRES ET VALIDÉS (défaut ⑤).
+     ⛔ Avant, une confirmation sans `expire_le` — ou portant `'jamais'` — passait : le test
+     était sauté, ou le classement lexicographique rendait un ordre arbitraire. ⭐ Le format,
+     la date civile et l'heure sont vérifiés AVANT toute comparaison, et la comparaison porte
+     sur un nombre de secondes, pas sur du texte.
+     ⚠️ ⛔ Aucune durée de validité n'est gravée ici : sa GÉNÉRATION reste extérieure au noyau —
+     on ne fait que valider les deux instants fournis. */
+  var expire = accesInstantValide(e.expire_le);
+  if (!expire.ok) {
+    return { refus: (expire.motif === 'absent' ? 'CONFIRMATION_EXPIRATION_ABSENTE'
+                                               : 'CONFIRMATION_EXPIRATION_ILLISIBLE'),
+             motif: expire.motif };
+  }
+  var maintenant = accesInstantValide(a.maintenant);
+  if (!maintenant.ok) {
+    return { refus: (maintenant.motif === 'absent' ? 'CONFIRMATION_INSTANT_ABSENT'
+                                                   : 'CONFIRMATION_INSTANT_ILLISIBLE'),
+             motif: maintenant.motif };
+  }
+  /* ⭐ À L'INSTANT EXACT D'EXPIRATION, ELLE EST EXPIRÉE : `>=`, pas `>`. */
+  if (maintenant.cle >= expire.cle) return { refus: 'CONFIRMATION_EXPIREE' };
+  return { ok: true };
+}
+
+/* --------------------------------------------------------------------------
+   ④ L'IDEMPOTENCE — sans aucune exception
+   -------------------------------------------------------------------------- */
+
+var ACCES_REQ_EN_COURS  = 'EN_COURS';
+var ACCES_REQ_APPLIQUEE = 'APPLIQUEE';
+var ACCES_REQ_REFUSEE   = 'REFUSEE';
+
+var ACCES_IDEM_APPLIQUER             = 'APPLIQUER';
+var ACCES_IDEM_RESSERVIR             = 'RESSERVIR';
+var ACCES_IDEM_REFUSER_REUTILISATION = 'REFUSER_REUTILISATION';
+var ACCES_IDEM_RECONCILIER           = 'RECONCILIER';
+/* ⭐ CINQUIÈME ISSUE (CORR-…-5I, défaut ⑤) : la demande est bien la même, mais elle arrive dans
+   un contexte qui n'est pas celui où elle a été appliquée. ⛔ Distincte de
+   REFUSER_REUTILISATION : la cause n'est pas le contenu, et le remède n'est pas le même. */
+var ACCES_IDEM_REFUSER_CONTEXTE      = 'REFUSER_CONTEXTE';
+
+/* Les trois valeurs que le contexte AUTHENTIFIÉ doit porter. ⛔ Aucune ne vient du navigateur. */
+var ACCES_CONTEXTE_CHAMPS = ['edition_id', 'role', 'action'];
+
+/* ⭐ LE SEUL RÔLE QUI CHANGE UN ÉTAT D'ACCÈS. Une table de marque saisit des scores ; elle ne
+   prépare, n'ouvre, ne fige, ne reprend, ne clôture et ne fait tourner aucun jeton. */
+var ACCES_ROLE_ORGANISATEUR = 'organisateur';
+
+/* Les transitions d'administration, et les seules. ⛔ Cette liste ne remplace PAS la machine
+   d'états (`ACCES_TRANSITIONS`) : elle dit QUI a le droit de la solliciter, pas ce qu'elle
+   autorise. Les deux contrôles sont indépendants et s'additionnent. */
+var ACCES_ACTIONS_ORGANISATEUR = [ACCES_ACTION_PREPARER, ACCES_ACTION_OUVRIR, ACCES_ACTION_FIGER,
+  ACCES_ACTION_REPRENDRE, ACCES_ACTION_CLOTURER, ACCES_ACTION_ROTATION];
+
+/**
+ * ⭐ LE CONTEXTE AUTHENTIFIÉ D'UNE TRANSITION — déterminé par le serveur, ⛔ jamais par le
+ * navigateur. C'est lui, et lui seul, qui rattache une confirmation à une édition.
+ *
+ * @param {Object|null} contexte  { edition_id, role, action }
+ * @param {Object} demande        la demande reçue : si elle porte ces champs, ils doivent
+ *                                CORRESPONDRE — ⛔ ils ne peuvent jamais les remplacer.
+ * @return { ok: true, fiable } ou { refus, champ? }
+ */
+function validerContexteTransition(contexte, demande) {
+  var ctx = contexte || null;
+  if (!ctx) return { refus: 'CONTEXTE_REQUIS' };
+  for (var i = 0; i < ACCES_CONTEXTE_CHAMPS.length; i++) {
+    if (accesTexte(ctx[ACCES_CONTEXTE_CHAMPS[i]]) === '') {
+      return { refus: 'CONTEXTE_REQUIS', champ: ACCES_CONTEXTE_CHAMPS[i] };
+    }
+  }
+  var fiable = { edition_id: accesTexte(ctx.edition_id),
+                 role: accesTexte(ctx.role),
+                 action: accesTexte(ctx.action).toUpperCase() };
+  if (fiable.role !== ACCES_ROLE_ORGANISATEUR) {
+    return { refus: 'ROLE_NON_AUTORISE', role: fiable.role };
+  }
+  if (ACCES_ACTIONS_ORGANISATEUR.indexOf(fiable.action) === -1) {
+    return { refus: 'ACTION_NON_ADMINISTRATIVE', action: fiable.action };
+  }
+  var d = demande || {};
+  var demandee = accesTexte(d.action).toUpperCase();
+  if (demandee !== '' && demandee !== fiable.action) {
+    return { refus: 'CONTEXTE_DIVERGENT', champ: 'action', attendu: fiable.action,
+             recu: demandee };
+  }
+  var champsCompares = ['edition_id', 'role'];
+  for (var j = 0; j < champsCompares.length; j++) {
+    var nom = champsCompares[j];
+    var vue = accesTexte(d[nom]);
+    if (vue !== '' && vue !== fiable[nom]) {
+      return { refus: 'CONTEXTE_DIVERGENT', champ: nom, attendu: fiable[nom], recu: vue };
+    }
+  }
+  return { ok: true, fiable: fiable };
+}
+
+/**
+ * ⛔ LA LISTE DES CHAMPS EXCLUS DE L'EMPREINTE EST UNE CONSTANTE, ⛔ PAS UN PARAMÈTRE.
+ *
+ * ⚠️ C'est une décision de conception, et elle est le garde-fou central. Si l'appelant pouvait
+ * choisir ce qu'on exclut, il pourrait exclure `gel_manuel_confirme` ou une décision de
+ * clôture — et alors le MÊME `requete_id` couvrirait deux demandes de sens DIFFÉRENT. Le
+ * rendre constant rend cette triche structurellement impossible.
+ *
+ * ⭐ Seules sortent les valeurs SECRÈTES DE TRANSPORT : les clés et le jeton. Elles n'ont
+ * aucune valeur métier pour distinguer deux demandes, et elles ne doivent jamais entrer dans
+ * un registre. ⛔ Tout le reste — y compris `gel_manuel_confirme`, `confirme`,
+ * `confirmation_id`, `motif` — est du CONTENU MÉTIER et participe à l'empreinte.
+ */
+/* ⚠️ EN MINUSCULES, et comparés SANS TENIR COMPTE DE LA CASSE (CORR-…-5I, défaut ⑥) :
+   `Cle`, `JETON` ou `Token` entraient dans l'empreinte parce que la comparaison était exacte. */
+var ACCES_CHAMPS_TRANSPORT_SECRETS = ['cle', 'cle_admin', 'cle_scores', 'jeton', 'token',
+                                      'secret', 'mot_de_passe'];
+
+/**
+ * ⭐ SÉRIALISATION CANONIQUE À LONGUEURS EXPLICITES — ⛔ et c'est tout l'objet de la correction.
+ *
+ * ⚠️ CE QU'ELLE REMPLACE (CORR-…-5J, défaut ①). L'ancienne forme assemblait des fragments avec
+ * `;`, `=`, `{}`, `[]` — des caractères qui peuvent AUSSI apparaître dans les valeurs. 🔬
+ * Reproduit : `{ a: 'x;b=s:y' }` et `{ a: 'x', b: 'y' }` produisaient la MÊME chaîne. Une valeur
+ * pouvait donc se faire passer pour une structure, et cette ambiguïté contaminait les quatre
+ * usages : empreinte d'idempotence, empreinte de fin, version d'un match, rattachement d'une
+ * confirmation.
+ *
+ * ⭐ LE PRINCIPE : chaque valeur porte SA LONGUEUR. Aucun séparateur n'est alors nécessaire, et
+ * ⛔ il n'y a donc aucun échappement à oublier — c'est plus sûr qu'échapper correctement.
+ *   n             → null / undefined
+ *   b0 / b1       → booléen
+ *   d<len>:<repr> → nombre
+ *   s<len>:<car>  → chaîne (longueur en unités UTF-16, texte recopié tel quel)
+ *   a<n>:<items>  → tableau, ORDRE CONSERVÉ
+ *   o<n>:k<len>:<clé><valeur>…  → objet, clés TRIÉES, `n` = nombre de clés RETENUES
+ *   u             → type non représentable (fonction, symbole) : ⛔ ne doit pas apparaître
+ *
+ * ⛔ CE N'EST PAS UN CONDENSÉ CRYPTOGRAPHIQUE et ne le prétend pas : c'est une forme normale
+ * qui permet de comparer deux valeurs par égalité de chaînes. Un condensé, s'il est voulu un
+ * jour, se calculera SUR cette forme.
+ *
+ * ⚠️ Le compte de clés est celui des clés RETENUES (après exclusion des secrets) : sinon le
+ * préfixe ne décrirait pas le corps, et l'ambiguïté reviendrait par cette porte.
+ */
+function accesCanonique(v) {
+  if (v === null || v === undefined) return 'n';
+  var t = typeof v;
+  if (t === 'boolean') return v ? 'b1' : 'b0';
+  if (t === 'number') { var r = String(v); return 'd' + r.length + ':' + r; }
+  if (t === 'string') return 's' + v.length + ':' + v;
+  if (Object.prototype.toString.call(v) === '[object Array]') {
+    var corpsTableau = '';
+    for (var i = 0; i < v.length; i++) corpsTableau += accesCanonique(v[i]);
+    return 'a' + v.length + ':' + corpsTableau;
+  }
+  if (t === 'object') {
+    var cles = [];
+    for (var k in v) {
+      if (!Object.prototype.hasOwnProperty.call(v, k)) continue;
+      /* ⛔ jamais de secret — et la comparaison ignore la casse. */
+      if (accesEstChampSecret(k, ACCES_CHAMPS_TRANSPORT_SECRETS)) continue;
+      cles.push(k);
+    }
+    cles.sort();
+    var corps = '';
+    for (var j = 0; j < cles.length; j++) {
+      corps += 'k' + cles[j].length + ':' + cles[j] + accesCanonique(v[cles[j]]);
+    }
+    return 'o' + cles.length + ':' + corps;
+  }
+  return 'u';
+}
+
+/**
+ * L'empreinte NORMALISÉE d'une demande — ce qui permet de dire « c'est bien la même demande ».
+ * ⭐ `requete_id` y figure volontairement : il est du contenu, il n'est pas secret, et comme on
+ * ne compare que des enregistrements portant le même identifiant, l'inclure ne coûte rien et
+ * évite d'ouvrir une liste d'exclusions « pour raisons techniques ».
+ */
+function empreinteDemandeAcces(demande, contexte) {
+  /* ⭐ Sans contexte, on n'encode que la demande : cette forme sert aux contrôles qui vérifient
+     qu'un champ métier donné entre bien dans l'empreinte. ⛔ `decisionIdempotenceAcces`, elle,
+     passe TOUJOURS le contexte (défaut ③ de 5J) : sinon l'empreinte ne dépendrait que de
+     valeurs venues du navigateur, et la même demande couvrirait deux éditions. */
+  if (contexte === undefined || contexte === null) return accesCanonique(demande || {});
+  return accesCanonique({
+    contexte_authentifie: {
+      edition_id: accesTexte(contexte.edition_id),
+      role: accesTexte(contexte.role),
+      action: accesTexte(contexte.action).toUpperCase()
+    },
+    demande: demande || {}
+  });
+}
+
+/**
+ * ⭐ LA DÉCISION D'IDEMPOTENCE — cinq issues, aucune exception.
+ *
+ * @param {Object|null} enregistrement  la ligne du registre pour ce `requete_id`, ou null.
+ * @param {Object} demande              la demande reçue (secrets compris : ils seront écartés).
+ * @param {Object} contexte  ⭐ LE CONTEXTE AUTHENTIFIÉ, ⛔ JAMAIS la demande du navigateur :
+ *                           { edition_id, role, action } — l'édition DÉTERMINÉE par le serveur,
+ *                           le rôle PROUVÉ par la clé, et l'action AUTORISÉE.
+ * @return { decision, empreinte, … }
+ *
+ * ⚠️ POURQUOI UN CONTEXTE SÉPARÉ (CORR-…-5I, défaut ⑤). Un `requete_id` seul ne dit rien de
+ * QUI demande, POUR QUELLE ÉDITION, NI POUR QUELLE ACTION. 🔬 Reproduit : le même identifiant et
+ * la même demande, présentés pour une AUTRE édition ou avec un AUTRE rôle, recevaient
+ * `RESSERVIR` — donc la réponse d'une édition pouvait être resservie à une autre. Les trois
+ * valeurs sont désormais comparées à l'enregistrement AVANT tout resservice.
+ *
+ * ⚠️ ⭐ CONSÉQUENCE POUR LE FUTUR RACCORDEMENT, À NE PAS INVERSER : l'AUTORISATION (vérification
+ * de la clé) et la DÉTERMINATION DE L'ÉDITION ACTIVE doivent avoir lieu **AVANT** la consultation
+ * du registre d'idempotence. ⛔ Consulter le registre d'abord reviendrait à répondre à un
+ * appelant non authentifié, et c'est exactement le trou que ce contrôle referme.
+ *
+ * ⚠️ L'ORDRE DES CONTRÔLES EST DÉLIBÉRÉ : le contexte d'abord (il conditionne le droit de
+ * recevoir quoi que ce soit), l'empreinte ensuite (une réutilisation est une erreur d'appelant,
+ * quel que soit l'état d'avancement), l'état de la requête en dernier.
+ */
+function decisionIdempotenceAcces(enregistrement, demande, contexte) {
+  /* ① LE CONTEXTE AUTHENTIFIÉ EST OBLIGATOIRE, et complet.
+     ⛔ L'empreinte n'est même pas calculée avant : elle EN DÉPEND. */
+  var ctx = contexte || null;
+  if (!ctx) {
+    return { decision: ACCES_IDEM_REFUSER_CONTEXTE, refus: 'CONTEXTE_REQUIS' };
+  }
+  for (var c = 0; c < ACCES_CONTEXTE_CHAMPS.length; c++) {
+    if (accesTexte(ctx[ACCES_CONTEXTE_CHAMPS[c]]) === '') {
+      return { decision: ACCES_IDEM_REFUSER_CONTEXTE, refus: 'CONTEXTE_REQUIS',
+               champ_manquant: ACCES_CONTEXTE_CHAMPS[c] };
+    }
+  }
+
+  /* ⭐ LE CONTEXTE FIABLE, normalisé — c'est lui qu'il faudra enregistrer, ⛔ pas ce que le
+     navigateur a envoyé. */
+  var fiable = { edition_id: accesTexte(ctx.edition_id), role: accesTexte(ctx.role),
+                 action: accesTexte(ctx.action).toUpperCase() };
+  var empreinte = empreinteDemandeAcces(demande, fiable);
+
+  /* ② LA DEMANDE NE DOIT PAS CONTREDIRE LE CONTEXTE — dès la PREMIÈRE application.
+     🔬 Reproduit en 5J : `demande.action = 'ROTATION'` avec `contexte.action = 'PREPARER'` et
+     aucun enregistrement recevait `APPLIQUER`. Le contexte était contrôlé PRÉSENT, jamais
+     COHÉRENT : on s'apprêtait donc à appliquer une rotation sous l'autorisation d'une
+     préparation. ⭐ Un champ ABSENT de la demande ne contredit rien et reste permis. */
+  var dem = demande || {};
+  for (var q = 0; q < ACCES_CONTEXTE_CHAMPS.length; q++) {
+    var champ = ACCES_CONTEXTE_CHAMPS[q];
+    var vueDemande = accesTexte(dem[champ]);
+    if (vueDemande === '') continue;
+    var attendue = fiable[champ];
+    var egal = (champ === 'action') ? (vueDemande.toUpperCase() === attendue)
+                                    : (vueDemande === attendue);
+    if (!egal) {
+      return { decision: ACCES_IDEM_REFUSER_CONTEXTE, refus: 'CONTEXTE_DIVERGENT',
+               source: 'demande', champ_divergent: champ, empreinte: empreinte };
+    }
+  }
+
+  if (!enregistrement) {
+    /* ⭐ `contexte` est rendu explicitement : c'est ce que l'appelant devra INSCRIRE au
+       registre, de sorte qu'un rejeu ultérieur puisse être comparé à autre chose que la
+       parole du navigateur. */
+    return { decision: ACCES_IDEM_APPLIQUER, empreinte: empreinte, contexte: fiable };
+  }
+
+  /* ② L'ENREGISTREMENT DOIT LUI AUSSI PORTER LES TROIS VALEURS.
+     ⛔ Un enregistrement incomplet ne peut pas être comparé : on ne resservira rien. */
+  for (var d2 = 0; d2 < ACCES_CONTEXTE_CHAMPS.length; d2++) {
+    if (accesTexte(enregistrement[ACCES_CONTEXTE_CHAMPS[d2]]) === '') {
+      return { decision: ACCES_IDEM_REFUSER_CONTEXTE, refus: 'ENREGISTREMENT_INCOMPLET',
+               champ_manquant: ACCES_CONTEXTE_CHAMPS[d2], empreinte: empreinte };
+    }
+  }
+
+  /* ③ ÉGALITÉ EXACTE DES TROIS VALEURS. ⛔ Une seule différence ⇒ refus de contexte. */
+  if (accesTexte(enregistrement.edition_id) !== fiable.edition_id) {
+    return { decision: ACCES_IDEM_REFUSER_CONTEXTE, refus: 'CONTEXTE_DIVERGENT',
+             source: 'enregistrement', champ_divergent: 'edition_id', empreinte: empreinte };
+  }
+  if (accesTexte(enregistrement.role) !== fiable.role) {
+    return { decision: ACCES_IDEM_REFUSER_CONTEXTE, refus: 'CONTEXTE_DIVERGENT',
+             source: 'enregistrement', champ_divergent: 'role', empreinte: empreinte };
+  }
+  if (accesTexte(enregistrement.action).toUpperCase() !== fiable.action) {
+    return { decision: ACCES_IDEM_REFUSER_CONTEXTE, refus: 'CONTEXTE_DIVERGENT',
+             source: 'enregistrement', champ_divergent: 'action', empreinte: empreinte };
+  }
+
+  var connue = accesTexte(enregistrement.empreinte_demande);
+  if (connue !== empreinte) {
+    return { decision: ACCES_IDEM_REFUSER_REUTILISATION, refus: 'REQUETE_ID_REUTILISE',
+             empreinte: empreinte, empreinte_enregistree: connue,
+             etat_requete: accesTexte(enregistrement.etat).toUpperCase() };
+  }
+  var etatReq = accesTexte(enregistrement.etat).toUpperCase();
+  if (etatReq === ACCES_REQ_EN_COURS) {
+    /* ⛔ ON NE RÉAPPLIQUE PAS. Si le serveur s'est interrompu entre l'effet et la mise à jour
+       du registre, PERSONNE ne peut savoir si l'effet a eu lieu. La seule réponse honnête est
+       « relis l'état » — ⛔ considérer la ligne comme abandonnée après un délai risquerait
+       d'appliquer deux fois. */
+    return { decision: ACCES_IDEM_RECONCILIER, motif: 'requete_en_cours', empreinte: empreinte };
+  }
+  if (etatReq === ACCES_REQ_APPLIQUEE) {
+    return { decision: ACCES_IDEM_RESSERVIR, rejeu: true, empreinte: empreinte,
+             reponse: enregistrement.reponse_finale,
+             resultat_ref: accesTexte(enregistrement.resultat_ref) };
+  }
+  if (etatReq === ACCES_REQ_REFUSEE) {
+    return { decision: ACCES_IDEM_RESSERVIR, rejeu: true, refus_resservi: true,
+             empreinte: empreinte, reponse: enregistrement.reponse_finale };
+  }
+  /* État de requête non reconnu : ⛔ on ne réapplique pas davantage. */
+  return { decision: ACCES_IDEM_RECONCILIER, motif: 'etat_requete_inconnu', empreinte: empreinte };
+}
+
+/* ⭐ Le TYPE de secret qu'une récupération doit confirmer. ⛔ Ce n'est PAS un jeton : c'est
+   l'étiquette de ce qu'on s'attend à recevoir, comparée telle quelle (défaut ⑦). */
+var ACCES_TYPE_SECRET_ATTENDU = 'jeton_acces_scores';
+
+/* ⛔ Les champs d'une réponse qui PORTENT le secret, directement ou par l'adresse.
+   ⚠️ EN MINUSCULES : la reconnaissance ignore la casse (défaut ⑥ — `Jeton`, `LIEN` passaient). */
+var ACCES_CHAMPS_REPONSE_SECRETS = ['jeton', 'token', 'lien', 'lien_complet', 'lien_acces',
+  'lien_qr', 'qr', 'qr_svg', 'qrcode', 'url_acces', 'adresse_acces',
+  'cle', 'cle_admin', 'cle_scores', 'secret'];
+
+/* ⭐ LISTE BLANCHE des réponses de PRÉPARATION et de ROTATION : ce sont les deux seules réponses
+   qui portent un lien, donc les deux seules où une liste noire serait risquée. ⛔ Tout champ
+   non listé ici est écarté, même inconnu — un champ ajouté demain ne fuitera pas par oubli. */
+var ACCES_CHAMPS_REPONSE_PREPARATION = ['ok', 'etat', 'version', 'rotations', 'edition_id',
+  'date_preparation', 'date_ouverture', 'date_gel', 'date_reprise', 'date_cloture',
+  'avertissement', 'resultat_ref'];
+
+/**
+ * ⭐ UNE COPIE PROFONDE, ASSAINIE À TOUTE PROFONDEUR.
+ *
+ * ⚠️ CE QU'ELLE CORRIGE (défaut ⑥). L'ancienne version ne parcourait que le PREMIER niveau, et
+ * recopiait les valeurs par RÉFÉRENCE. 🔬 Reproduit : `{ ok: true, data: { lien: '…/JETON',
+ * jeton: 'JETON' } }` gardait les DEUX secrets, et `reponse.data` restait le même objet que
+ * l'original — une modification ultérieure de l'original changeait la ligne du registre.
+ *
+ * ⭐ Trois propriétés : récursion sur objets ET tableaux · reconnaissance insensible à la casse ·
+ * copie par valeur des primitives, donc ⛔ aucune référence mutable partagée.
+ * `temoin.vu` passe à vrai dès qu'un secret est rencontré, à n'importe quelle profondeur.
+ */
+function accesCopieAssainie(v, temoin, liste) {
+  if (v === null || v === undefined) return v;
+  if (Object.prototype.toString.call(v) === '[object Array]') {
+    var t = [];
+    for (var i = 0; i < v.length; i++) t.push(accesCopieAssainie(v[i], temoin, liste));
+    return t;
+  }
+  if (typeof v === 'object') {
+    var o = {};
+    for (var k in v) {
+      if (!Object.prototype.hasOwnProperty.call(v, k)) continue;
+      if (accesEstChampSecret(k, liste)) { temoin.vu = true; continue; }
+      o[k] = accesCopieAssainie(v[k], temoin, liste);
+    }
+    return o;
+  }
+  return v;   /* primitive : copiée par valeur */
+}
+
+/** ⭐ LE GARDE-FOU DE SORTIE : reste-t-il un nom sensible quelque part ? Pur, récursif. */
+function accesContientChampSecret(v, liste) {
+  if (v === null || v === undefined) return false;
+  if (Object.prototype.toString.call(v) === '[object Array]') {
+    for (var i = 0; i < v.length; i++) {
+      if (accesContientChampSecret(v[i], liste)) return true;
+    }
+    return false;
+  }
+  if (typeof v === 'object') {
+    for (var k in v) {
+      if (!Object.prototype.hasOwnProperty.call(v, k)) continue;
+      if (accesEstChampSecret(k, liste)) return true;
+      if (accesContientChampSecret(v[k], liste)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * ⭐ UNE RÉPONSE PRÊTE POUR LE REGISTRE — ⛔ sans jeton, et sans le lien qui le contient.
+ *
+ * ⚠️ Le lien est aussi dangereux que le jeton : il LE CONTIENT. Ne retirer que `jeton`
+ * laisserait le secret en clair dans le registre, sous un autre nom.
+ *
+ * ⭐ À la place, on conserve `resultat_ref` : une référence vers la copie protégée. Au rejeu,
+ * le serveur reconnaîtra la demande, retrouvera la même référence, récupérera le jeton depuis
+ * le stockage protégé et redonnera le MÊME lien à l'organisateur authentifié.
+ *
+ * @return { ok, reponse } ou { refus: 'RESULTAT_REF_REQUISE' } si un secret était présent sans
+ *         référence de remplacement — ⛔ on ne range jamais une réponse à moitié assainie.
+ */
+function assainirReponsePourRegistre(reponse, resultatRef) {
+  var ref = accesTexte(resultatRef);
+  var temoin = { vu: false };
+  var propre = accesCopieAssainie(reponse || {}, temoin, ACCES_CHAMPS_REPONSE_SECRETS);
+  /* Un tableau au premier niveau n'est pas une réponse : on l'enveloppe plutôt que de le perdre. */
+  if (Object.prototype.toString.call(propre) === '[object Array]') propre = { valeur: propre };
+  if (typeof propre !== 'object' || propre === null) propre = { valeur: propre };
+  /* ⛔ Dès qu'un secret a été RETIRÉ, la référence de remplacement devient obligatoire : sinon
+     la ligne du registre ne permettrait plus de retrouver le lien, et un rejeu serait tenté de
+     le refabriquer — ce qui est précisément interdit (voir `decisionRejeuAvecRecuperation`). */
+  if (temoin.vu && ref === '') return { refus: 'RESULTAT_REF_REQUISE' };
+  if (ref !== '') propre.resultat_ref = ref;
+  /* ⭐ GARDE-FOU DE SORTIE : on ne fait pas que promettre, on vérifie. */
+  if (accesContientChampSecret(propre, ACCES_CHAMPS_REPONSE_SECRETS)) {
+    return { refus: 'ASSAINISSEMENT_INCOMPLET' };
+  }
+  return { ok: true, reponse: propre, portait_un_secret: temoin.vu };
+}
+
+/**
+ * ⭐ LA RÉPONSE DE PRÉPARATION OU DE ROTATION, CONSTRUITE PAR LISTE BLANCHE.
+ *
+ * ⚠️ Pourquoi une seconde fonction. Ce sont les deux seules réponses qui portent un lien ; ce
+ * sont donc celles où une liste noire est le plus risquée — il suffirait qu'un futur champ
+ * s'appelle `adresse_publique` pour qu'il passe. ⭐ Ici, tout ce qui n'est pas explicitement
+ * autorisé est écarté, y compris ce qu'on n'a pas prévu.
+ *
+ * @return { ok, reponse, champs_ecartes } ou { refus: 'RESULTAT_REF_REQUISE' }
+ */
+function reponsePreparationPourRegistre(reponse, resultatRef) {
+  var r = reponse || {};
+  var ref = accesTexte(resultatRef);
+  if (ref === '') return { refus: 'RESULTAT_REF_REQUISE' };
+  var propre = {}, ecartes = [];
+  for (var k in r) {
+    if (!Object.prototype.hasOwnProperty.call(r, k)) continue;
+    if (ACCES_CHAMPS_REPONSE_PREPARATION.indexOf(k) === -1) { ecartes.push(k); continue; }
+    var temoin = { vu: false };
+    propre[k] = accesCopieAssainie(r[k], temoin, ACCES_CHAMPS_REPONSE_SECRETS);
+    if (temoin.vu) ecartes.push(k + '.(secret imbriqué)');
+  }
+  propre.resultat_ref = ref;
+  if (accesContientChampSecret(propre, ACCES_CHAMPS_REPONSE_SECRETS)) {
+    return { refus: 'ASSAINISSEMENT_INCOMPLET' };
+  }
+  ecartes.sort();
+  return { ok: true, reponse: propre, champs_ecartes: ecartes };
+}
+
+/**
+ * ⭐ LE REJEU D'UNE PRÉPARATION OU D'UNE ROTATION — et l'interdiction qui compte.
+ *
+ * ⛔ SI LA RÉCUPÉRATION PROTÉGÉE ÉCHOUE, ON NE CRÉE PAS UN NOUVEAU JETON. Ce serait le pire
+ * des comportements : l'organisateur croirait « revoir » son lien alors qu'il en recevrait un
+ * autre, et tous les QR déjà imprimés seraient morts sans que personne ne l'ait demandé.
+ * ⭐ On répond « récupération impossible », et la rotation reste un geste EXPLICITE.
+ *
+ * ⚠️ CE QU'ELLE NE VÉRIFIAIT PAS (défaut ⑦). Elle se contentait de `{ ok: true }`. 🔬 Reproduit :
+ * une récupération portant une AUTRE référence, ou celle d'une AUTRE édition, était acceptée —
+ * le serveur aurait redonné à l'organisateur le lien d'un autre accès, en croyant rejouer le
+ * sien. ⭐ Elle exige désormais que la récupération CONFIRME les trois choses.
+ *
+ * @param {Object|null} enregistrement  la ligne du registre (doit porter `resultat_ref` ET
+ *                                      `edition_id`).
+ * @param {Object} recuperation  ce que rend le stockage protégé :
+ *                               { ok, resultat_ref, edition_id, type }.
+ *                               ⛔ Aucun jeton n'est manipulé ici, ni attendu : seul le TYPE de
+ *                               secret est confirmé.
+ */
+function decisionRejeuAvecRecuperation(enregistrement, recuperation) {
+  if (!enregistrement) return { refus: 'REQUETE_INCONNUE', nouveau_jeton_cree: false };
+  var ref = accesTexte(enregistrement.resultat_ref);
+  if (ref === '') {
+    return { refus: 'RESULTAT_REF_ABSENTE', nouveau_jeton_cree: false,
+             rotation_explicite_requise: true };
+  }
+  var edition = accesTexte(enregistrement.edition_id);
+  if (edition === '') {
+    return { refus: 'EDITION_ABSENTE_DU_REGISTRE', resultat_ref: ref,
+             nouveau_jeton_cree: false, rotation_explicite_requise: true };
+  }
+  if (!recuperation || recuperation.ok !== true) {
+    return { refus: 'RECUPERATION_IMPOSSIBLE', resultat_ref: ref, nouveau_jeton_cree: false,
+             rotation_explicite_requise: true };
+  }
+  /* ⛔ LA MÊME RÉFÉRENCE. Sans ce contrôle, n'importe quelle récupération réussie ferait office
+     de preuve pour n'importe quelle demande rejouée. */
+  if (accesTexte(recuperation.resultat_ref) !== ref) {
+    return { refus: 'RECUPERATION_AUTRE_REFERENCE', resultat_ref: ref,
+             resultat_ref_recu: accesTexte(recuperation.resultat_ref),
+             nouveau_jeton_cree: false, rotation_explicite_requise: true };
+  }
+  /* ⛔ LA MÊME ÉDITION. C'est la barrière qui empêche de resservir le lien d'un autre tournoi. */
+  if (accesTexte(recuperation.edition_id) !== edition) {
+    return { refus: 'RECUPERATION_AUTRE_EDITION', resultat_ref: ref, edition_id: edition,
+             edition_recue: accesTexte(recuperation.edition_id),
+             nouveau_jeton_cree: false, rotation_explicite_requise: true };
+  }
+  /* ⛔ LE BON TYPE. Un secret d'une autre nature (clé, jeton de club…) n'ouvre pas cet accès. */
+  if (accesTexte(recuperation.type).toLowerCase() !== ACCES_TYPE_SECRET_ATTENDU) {
+    return { refus: 'RECUPERATION_AUTRE_TYPE', resultat_ref: ref,
+             type_attendu: ACCES_TYPE_SECRET_ATTENDU, type_recu: accesTexte(recuperation.type),
+             nouveau_jeton_cree: false, rotation_explicite_requise: true };
+  }
+  return { ok: true, resultat_ref: ref, edition_id: edition,
+           nouveau_jeton_cree: false, rejeu: true };
+}
+
+/**
+ * ⭐ LA DURÉE DE CONSERVATION EST INJECTÉE, ⛔ JAMAIS GRAVÉE ICI.
+ *
+ * ⚠️ Les « 90 jours » évoqués en revue ne sont PAS une décision produit acquise. La graver dans
+ * le noyau la rendrait invisible et difficile à changer. Cette fonction REFUSE donc de calculer
+ * quoi que ce soit sans qu'une durée lui soit passée — c'est la preuve, exécutable, que la
+ * politique reste à décider.
+ *
+ * ⛔ Elle ne lit pas l'horloge : l'instant de fin lui est fourni.
+ */
+function calculerConservationRequete(horodatageFin, dureeJours) {
+  if (dureeJours === undefined || dureeJours === null || accesTexte(dureeJours) === '') {
+    return { refus: 'DUREE_CONSERVATION_REQUISE' };
+  }
+  var duree = accesEntierPositif(dureeJours);
+  if (!duree.ok || duree.valeur <= 0) {
+    return { refus: 'DUREE_CONSERVATION_INVALIDE', duree_recue: accesTexte(dureeJours) };
+  }
+  var n = duree.valeur;
+  /* ⭐ LE FORMAT EXACT, heures comprises si elles sont présentes. */
+  var brut = accesTexte(horodatageFin);
+  var m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2}))?$/.exec(brut);
+  if (!m) return { refus: 'HORODATAGE_INVALIDE', horodatage_recu: brut };
+  var an = Number(m[1]), mois = Number(m[2]), jour = Number(m[3]);
+  /* ⛔ ET L'EXISTENCE RÉELLE DE LA DATE CIVILE (défaut ⑨). 🔬 Reproduit : `2026-02-31` était
+     accepté, parce que `Date.UTC(2026, 1, 31)` ne lève pas — il rend le 3 mars. La conservation
+     était donc calculée à partir d'une date qui n'existe pas, silencieusement décalée. */
+  if (!accesDateCivileExiste(an, mois, jour)) {
+    return { refus: 'DATE_CIVILE_INEXISTANTE', horodatage_recu: brut };
+  }
+  if (m[4] !== undefined) {
+    var h = Number(m[4]), mi = Number(m[5]), se = Number(m[6]);
+    if (h > 23 || mi > 59 || se > 59) {
+      return { refus: 'HORODATAGE_INVALIDE', horodatage_recu: brut };
+    }
+  }
+  /* ⛔ PLUS AUCUN `Date` ICI (défaut ⑥). 🔬 Reproduit : `Date.UTC(1, 0, 1)` rend l'an 1901, donc
+     `0001-01-01 + 1 jour` répondait `1901-01-02` — faux, et silencieusement. L'arithmétique
+     civile pure est exacte sur toute la plage 0001–9999.
+     ⭐ Et un résultat qui sortirait de cette plage est REFUSÉ : ⛔ jamais un `NaN-NaN-NaN`
+     rendu avec `ok: true`, ce que produisait une durée assez grande pour déborder `Date`. */
+  var cible = accesCivilsDepuisJours(accesJoursCivils(an, mois, jour) + n);
+  if (!isFinite(cible.an) || cible.an < ACCES_ANNEE_MIN || cible.an > ACCES_ANNEE_MAX) {
+    return { refus: 'DATE_HORS_PLAGE', horodatage_recu: brut, duree_jours: n,
+             plage: String(ACCES_ANNEE_MIN) + '-' + String(ACCES_ANNEE_MAX) };
+  }
+  return { ok: true, duree_jours: n, conserver_jusqu_au: accesDateISO(cible) };
+}
+
+/* --------------------------------------------------------------------------
+   ⑤ LE CONFLIT DE SCORE — plus jamais « la dernière écriture gagne »
+   -------------------------------------------------------------------------- */
+
+var ACCES_SCORE_ADMISSIBLE = 'ECRITURE_ADMISSIBLE';
+var ACCES_SCORE_MODIFIE    = 'SCORE_MODIFIE';
+
+/**
+ * ⭐ LES CHAMPS DU MATCH QUI PARTICIPENT À SA VERSION — liste EXPLICITE (défaut ⑧).
+ *
+ * ⛔ Ce n'est PAS une colonne ajoutée : ces champs existent déjà dans `ENTETES.Matchs`. La
+ * version est DÉDUITE d'eux, donc le schéma reste intact.
+ *
+ * ⚠️ CE QUI EN EST VOLONTAIREMENT ABSENT, et pourquoi : `poule`, `terrain`, `heure_debut`,
+ * `heure_fin` et `arbitre`. Ces cinq champs décrivent la PLANIFICATION, que l'organisateur peut
+ * remanier sans toucher au résultat. Les inclure ferait refuser l'écriture légitime d'un
+ * marqueur parce qu'un terrain a été renuméroté entre-temps — une gêne au bord du terrain,
+ * sans aucun bénéfice de sécurité. ⭐ Tout l'état mutable du RÉSULTAT, lui, est couvert.
+ */
+var ACCES_CHAMPS_VERSION_MATCH = ['id_match', 'categorie', 'phase', 'equipe_A', 'equipe_B',
+  'score_A', 'score_B', 'statut', 'format', 'sous_tableau', 'tour', 'match_suivant',
+  'place_suivant', 'vainqueur', 'essais_A', 'essais_B', 'transfo_A', 'transfo_B',
+  'pen_A', 'pen_B', 'drop_A', 'drop_B'];
+
+/**
+ * ⭐ L'EMPREINTE DE L'ÉTAT D'UN MATCH — la « version » du match, SANS nouvelle colonne.
+ *
+ * ⚠️ C'est le point élégant de ce correctif. Plutôt que d'ajouter une colonne `version` au
+ * schéma des matchs — ce que ce lot interdit — la version est DÉDUITE des valeurs déjà
+ * présentes. Deux appareils qui lisent le même match calculent la même empreinte ; dès que le
+ * premier écrit, l'empreinte change, et celle du second ne correspond plus.
+ *
+ * ⚠️ LE STATUT EST RÉDUIT À DEUX JETONS (`T` / `NT`) VIA `estTermineServeur`, et ce n'est pas
+ * un détail : le Sheet renvoie parfois « terminé » avec un é DÉCOMPOSÉ (NFD). Recopier le
+ * texte brut ferait changer l'empreinte sans qu'aucun score n'ait bougé, et le marqueur se
+ * verrait refuser une écriture légitime au bord du terrain.
+ *
+ * ⚠️ CE QU'ELLE IGNORAIT (CORR-…-5I, défaut ⑧). Elle ne retenait que l'identifiant, les deux
+ * scores agrégés et le statut. 🔬 Reproduit : changer le VAINQUEUR d'un match nul, ou déplacer
+ * un point d'un essai vers une pénalité à score agrégé constant, ne changeait PAS la version —
+ * deux appareils pouvaient donc s'écraser sur ces champs sans être détectés.
+ * ⭐ La liste `ACCES_CHAMPS_VERSION_MATCH` est désormais EXPLICITE et couvre tout l'état mutable
+ * du résultat, vainqueur et compteurs détaillés compris.
+ */
+function empreinteEtatMatch(match) {
+  if (!match) return '';
+  var vue = {};
+  for (var i = 0; i < ACCES_CHAMPS_VERSION_MATCH.length; i++) {
+    var nom = ACCES_CHAMPS_VERSION_MATCH[i];
+    if (nom === 'statut') { vue.statut = estTermineServeur(match.statut) ? 'T' : 'NT'; continue; }
+    vue[nom] = accesTexte(match[nom]);
+  }
+  return accesCanonique(vue);
+}
+
+/**
+ * ⭐ LE MATCH FOURNI EST-IL RÉELLEMENT COMPLET ?
+ *
+ * ⚠️ Le contrôle porte sur la PRÉSENCE de la propriété (`hasOwnProperty`), ⛔ jamais sur sa
+ * valeur : un score vide ou un vainqueur vide sont légitimes, c'est l'ABSENCE du champ qui rend
+ * l'objet inexploitable. 🔬 Reproduit en 5J : `{ id_match: 'M1' }` — le bon identifiant et rien
+ * d'autre — obtenait une `version_apres`, calculée sur 21 champs implicitement vides.
+ */
+function accesMatchComplet(match) {
+  if (!match || typeof match !== 'object') {
+    return { ok: false, manquants: ACCES_CHAMPS_VERSION_MATCH.slice() };
+  }
+  var manquants = [];
+  for (var i = 0; i < ACCES_CHAMPS_VERSION_MATCH.length; i++) {
+    if (!Object.prototype.hasOwnProperty.call(match, ACCES_CHAMPS_VERSION_MATCH[i])) {
+      manquants.push(ACCES_CHAMPS_VERSION_MATCH[i]);
+    }
+  }
+  return { ok: manquants.length === 0, manquants: manquants };
+}
+
+/**
+ * ⭐ DEUX TABLES NE PEUVENT PLUS S'ÉCRASER SILENCIEUSEMENT.
+ *
+ * ⚠️ LE DÉFAUT VISÉ. Le verrou d'écriture (`LockService`) SÉRIALISE déjà les écritures, mais il
+ * ne fait que les mettre en file : deux appareils qui ont lu le même match peuvent enregistrer
+ * successivement deux valeurs différentes, et la seconde ÉCRASE la première sans que personne
+ * ne le sache. ⛔ « La dernière écriture gagne » est interdit sur le futur parcours protégé.
+ *
+ * @param {Object} demande      { id_match, score_A, score_B, version_lue }
+ * @param {Object|null} matchActuel  le match tel qu'il est MAINTENANT.
+ * @return { decision, … } — sur refus, l'état actuel NON SECRET nécessaire à la relecture.
+ *
+ * ⛔ Aucune écriture à l'aveugle : sans `version_lue`, on refuse. Un appareil qui ne dit pas
+ * ce qu'il a lu ne peut pas prouver qu'il n'écrase rien.
+ */
+function decisionEcritureScoreAcces(demande, matchActuel) {
+  var d = demande || {};
+  var id = accesTexte(d.id_match);
+  if (id === '') return { decision: 'DEMANDE_INVALIDE', refus: 'ID_MATCH_REQUIS' };
+  if (!matchActuel || accesTexte(matchActuel.id_match) !== id) {
+    return { decision: 'MATCH_INTROUVABLE', refus: 'MATCH_INTROUVABLE', id_match: id };
+  }
+  if (d.version_lue === undefined || d.version_lue === null || accesTexte(d.version_lue) === '') {
+    return { decision: 'VERSION_REQUISE', refus: 'VERSION_REQUISE', id_match: id,
+             version_actuelle: empreinteEtatMatch(matchActuel) };
+  }
+  var courante = empreinteEtatMatch(matchActuel);
+  if (accesTexte(d.version_lue) !== courante) {
+    return {
+      decision: ACCES_SCORE_MODIFIE, refus: 'SCORE_MODIFIE', id_match: id,
+      version_actuelle: courante,
+      /* ⭐ De quoi relire, et RIEN DE PLUS : aucun secret ne sort par un message d'erreur. */
+      etat_actuel: {
+        id_match: accesTexte(matchActuel.id_match),
+        score_A: accesTexte(matchActuel.score_A),
+        score_B: accesTexte(matchActuel.score_B),
+        termine: estTermineServeur(matchActuel.statut) === true
+      }
+    };
+  }
+  var sortie = { decision: ACCES_SCORE_ADMISSIBLE, id_match: id,
+                 score_A: d.score_A, score_B: d.score_B,
+                 version_lue: accesTexte(d.version_lue) };
+  /* ⭐ `version_apres` N'EST CALCULÉE QUE si l'appelant fournit le match RÉELLEMENT COMPLET tel
+     qu'il sera après écriture. ⛔ Le bon identifiant ne suffit pas (défaut ② de 5J) : les 22
+     champs doivent être PRÉSENTS. ⚠️ Sinon le champ est ABSENT et le motif est dit — mieux vaut
+     pas de réponse qu'une réponse fausse, et ⛔ on ne complète JAMAIS les champs manquants.
+     `enregistrerScore` sait construire ce match complet (`matchApresEcriture`) : c'est ce que le
+     lot de raccordement lui passera. */
+  if (d.match_apres_ecriture === undefined || d.match_apres_ecriture === null) {
+    sortie.version_apres_indisponible = 'non_fourni';
+  } else if (accesTexte(d.match_apres_ecriture.id_match) !== id) {
+    sortie.version_apres_indisponible = 'autre_identifiant';
+  } else {
+    var complet = accesMatchComplet(d.match_apres_ecriture);
+    if (!complet.ok) {
+      sortie.version_apres_indisponible = 'match_incomplet';
+      sortie.champs_manquants = complet.manquants;
+    } else {
+      sortie.version_apres = empreinteEtatMatch(d.match_apres_ecriture);
+    }
+  }
+  return sortie;
+}
+
+
 /* ===================== RETOUR D'UNE FONCTION DE MAINTENANCE ===================== */
 /**
  * ▶ LE POINT DE PASSAGE UNIQUE par lequel une fonction de maintenance rend son résultat — R-110.
